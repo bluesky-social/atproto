@@ -219,6 +219,7 @@ msgid "Authorized on {0}"
 msgstr "{0}에 승인됨"
 
 #: src/components/sign-in-picker.tsx:107
+#: src/components/layouts/account-shell.tsx:52
 #: src/components/forms/sign-up-wizard.tsx:117
 #: src/components/forms/form-shell.tsx:71
 msgid "Back"
@@ -725,7 +726,7 @@ msgid "Let's get your password reset!"
 msgstr "비밀번호를 재설정해 봅시다!"
 
 #: src/components/layouts/auth-shell.tsx:76
-#: src/components/layouts/account-shell.tsx:113
+#: src/components/layouts/account-shell.tsx:119
 msgid "Logo"
 msgstr "로고"
 
@@ -784,7 +785,7 @@ msgstr "미입력"
 msgid "Moderate"
 msgstr "보통"
 
-#: src/pages/account/(authenticated)/route.tsx:146
+#: src/pages/account/(authenticated)/route.tsx:147
 msgid "My Atmosphere Account"
 msgstr ""
 
@@ -793,7 +794,7 @@ msgctxt "Error"
 msgid "Name"
 msgstr ""
 
-#: src/components/layouts/account-shell.tsx:48
+#: src/components/layouts/account-shell.tsx:51
 msgid "Navigation"
 msgstr ""
 

@@ -219,6 +219,7 @@ msgid "Authorized on {0}"
 msgstr "{0} に承認されました"
 
 #: src/components/sign-in-picker.tsx:107
+#: src/components/layouts/account-shell.tsx:52
 #: src/components/forms/sign-up-wizard.tsx:117
 #: src/components/forms/form-shell.tsx:71
 msgid "Back"
@@ -735,7 +736,7 @@ msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
 #: src/components/layouts/auth-shell.tsx:76
-#: src/components/layouts/account-shell.tsx:113
+#: src/components/layouts/account-shell.tsx:119
 msgid "Logo"
 msgstr "ロゴ"
 
@@ -794,7 +795,7 @@ msgstr "無し"
 msgid "Moderate"
 msgstr "中程度"
 
-#: src/pages/account/(authenticated)/route.tsx:146
+#: src/pages/account/(authenticated)/route.tsx:147
 msgid "My Atmosphere Account"
 msgstr "私のAtmosphereアカウント"
 
@@ -803,7 +804,7 @@ msgctxt "Error"
 msgid "Name"
 msgstr "名前"
 
-#: src/components/layouts/account-shell.tsx:48
+#: src/components/layouts/account-shell.tsx:51
 msgid "Navigation"
 msgstr ""
 

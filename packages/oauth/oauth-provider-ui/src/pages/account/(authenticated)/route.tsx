@@ -143,7 +143,11 @@ function Page({
   }, [subPages, basePath])
 
   return (
-    <AccountShell title={msg`My Atmosphere Account`} links={links}>
+    <AccountShell
+      title={msg`My Atmosphere Account`}
+      basePath={basePath}
+      links={links}
+    >
       <Outlet />
     </AccountShell>
   )

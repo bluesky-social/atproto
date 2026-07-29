@@ -7,9 +7,10 @@ import {
   type ToPathOption,
   useRouterState,
 } from '@tanstack/react-router'
-import type { LucideIcon } from 'lucide-react'
+import { ArrowLeftIcon, type LucideIcon } from 'lucide-react'
 import { type ReactNode, createContext, useContext } from 'react'
 import { AccountMenu } from '#/components/identity/account-menu.tsx'
+import { Button } from '#/components/ui/button.tsx'
 import { Separator } from '#/components/ui/separator.tsx'
 import {
   Sidebar,
@@ -40,12 +41,15 @@ export type AccountShellLink = {
 
 export type AccountShellProps = {
   title?: string | MessageDescriptor
+  /** The account home, and the target of the mobile back button. */
+  basePath: ToPathOption<RegisteredRouter, '/', undefined>
   links: ReadonlyArray<AccountShellLink>
   children?: ReactNode
   prepend?: ReactNode
 }
 
 const navigationLabel = msg`Navigation`
+const backLabel = msg`Back`
 
 const AccountShellLinksContext = createContext<readonly AccountShellLink[]>([])
 
@@ -74,6 +78,7 @@ export function useAccountShellLinks(): readonly AccountShellLink[] {
 export function AccountShell({
   children,
   title,
+  basePath,
   links,
   prepend,
 }: AccountShellProps) {
@@ -81,6 +86,7 @@ export function AccountShell({
   const { pathname } = useRouterState().location
   const { logo, name, links: footerLinks } = useCustomizationData()
 
+  const atBase = pathname === basePath
   const titleString = typeof title === 'object' ? _(title) : title ?? name
 
   const currentLink = links.find((link) => link.to === pathname)
@@ -188,9 +194,26 @@ export function AccountShell({
 
         <SidebarInset>
           <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+            {/* @NOTE On a sub-page the mobile header drills back to the account
+            home instead of opening the sidebar; the trigger stays on desktop,
+            where the sidebar is always reachable. */}
+            {!atBase && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="-ml-1 md:hidden"
+                aria-label={_(backLabel)}
+                render={<Link to={basePath} />}
+              >
+                <ArrowLeftIcon />
+              </Button>
+            )}
             {/* @NOTE SidebarTrigger's sr-only text is hardcoded English; the
             aria-label translates it without forking the primitive. */}
-            <SidebarTrigger aria-label={_(navigationLabel)} />
+            <SidebarTrigger
+              aria-label={_(navigationLabel)}
+              className={atBase ? undefined : 'max-md:hidden'}
+            />
             {/* @NOTE self-center overrides the primitive's `self-stretch`,
             which with a definite `h-4` pins the line to the top instead. */}
             <Separator
