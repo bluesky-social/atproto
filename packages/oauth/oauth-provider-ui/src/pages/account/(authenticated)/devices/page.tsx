@@ -1,22 +1,13 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { Link } from '@tanstack/react-router'
-import { Fragment } from 'react'
 import type {
   ActiveAccountSession,
   DidString,
 } from '@atproto/oauth-provider-api'
-import { ListSkeleton } from '#/components/feedback/list-skeleton.tsx'
 import { Notice, NoticeAction } from '#/components/feedback/notice.tsx'
+import { SessionList } from '#/components/session-list.tsx'
+import { Badge } from '#/components/ui/badge.tsx'
 import { Button } from '#/components/ui/button.tsx'
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemSeparator,
-  ItemTitle,
-} from '#/components/ui/item.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import {
   useAccountSessionsQuery,
@@ -26,14 +17,11 @@ import { useBrowserName } from '#/hooks/use-browser-name'
 import { useDateAgo } from '#/hooks/use-date-ago'
 
 export function Page() {
+  const { t } = useLingui()
   const { account } = useAuthenticatedSession()
   const { data, refetch, isLoading } = useAccountSessionsQuery(account)
 
-  if (!data) {
-    if (isLoading) {
-      return <ListSkeleton />
-    }
-
+  if (!data && !isLoading) {
     return (
       <Notice
         role="status"
@@ -48,7 +36,16 @@ export function Page() {
     )
   }
 
-  return data.length > 0 ? (
+  // @NOTE Most recently seen first. On a long list the device someone is
+  // looking for is almost always one they used recently, and the current
+  // device sorts to the top.
+  const sessions = [...(data ?? [])].sort(
+    (a, b) =>
+      new Date(b.deviceMetadata.lastSeenAt).getTime() -
+      new Date(a.deviceMetadata.lastSeenAt).getTime(),
+  )
+
+  return (
     <div className="flex flex-col gap-4">
       <p>
         <Trans>
@@ -62,83 +59,99 @@ export function Page() {
         </Trans>
       </p>
 
-      {/* @NOTE `ItemGroup` supplies role="list" and the row spacing, and
-        `ItemSeparator` draws the dividers. Each row previously carried its own
-        `border-t`, which also drew a line above the first row — reading as a
-        rule under the paragraph above rather than as a list divider.
-
-        gap-0 because a divider sits between every row here: the group gap and
-        the separator's own margin would otherwise stack to 32px and the list
-        would read as separate blocks rather than one list. */}
-      <ItemGroup className="gap-0">
-        {data.map((session, index) => (
-          <Fragment key={`${account.did}@${session.deviceId}`}>
-            {index > 0 && <ItemSeparator />}
-            <AccountSessionCard did={account.did} session={session} />
-          </Fragment>
-        ))}
-      </ItemGroup>
+      <SessionList
+        items={sessions}
+        rowKey={(session) => `${account.did}@${session.deviceId}`}
+        searchText={(session) =>
+          [
+            session.deviceMetadata.userAgent,
+            session.deviceMetadata.ipAddress,
+          ].join(' ')
+        }
+        loading={isLoading}
+        filterLabel={t`Filter devices`}
+        empty={
+          <Trans>Looks like you aren't logged in on any other devices.</Trans>
+        }
+        mobileTitle={(session) => <DeviceName session={session} />}
+        columns={[
+          {
+            header: <Trans context="device list">Device</Trans>,
+            className: 'font-medium',
+            hideOnMobile: true,
+            cell: (session) => <DeviceName session={session} />,
+          },
+          {
+            header: <Trans context="device list">IP address</Trans>,
+            className: 'font-mono text-xs',
+            cell: (session) => session.deviceMetadata.ipAddress,
+          },
+          {
+            header: <Trans context="device list">Last seen</Trans>,
+            className: 'text-muted-foreground whitespace-nowrap',
+            cell: (session) => <LastSeen session={session} />,
+          },
+        ]}
+        action={(session) => (
+          <SignOutButton did={account.did} session={session} />
+        )}
+      />
     </div>
-  ) : (
-    <p>
-      <Trans>Looks like you aren't logged in on any other devices.</Trans>
-    </p>
   )
 }
 
-function AccountSessionCard({
-  session,
+function DeviceName({ session }: { session: ActiveAccountSession }) {
+  const browserName = useBrowserName(
+    session.deviceMetadata.userAgent || undefined,
+  )
+
+  return (
+    <span className="flex min-w-0 items-center gap-2">
+      <span className="truncate">
+        {browserName || <Trans context="device list">Unknown user agent</Trans>}
+      </span>
+      {/* @NOTE Worth calling out on a long list: it is the one row whose
+        "Sign out" is disabled, and without a marker that reads as a bug. */}
+      {session.isCurrentDevice && (
+        <Badge variant="secondary" className="shrink-0">
+          <Trans context="device list">This device</Trans>
+        </Badge>
+      )}
+    </span>
+  )
+}
+
+function LastSeen({ session }: { session: ActiveAccountSession }) {
+  const lastUsedAgo = useDateAgo(session.deviceMetadata.lastSeenAt)
+  return <>{lastUsedAgo}</>
+}
+
+function SignOutButton({
   did,
+  session,
 }: {
-  session: ActiveAccountSession
   did: DidString
+  session: ActiveAccountSession
 }) {
   const { t } = useLingui()
   const { mutateAsync, isPending } = useRevokeAccountSessionMutation()
 
-  const { userAgent, lastSeenAt, ipAddress } = session.deviceMetadata
-  const browserName = useBrowserName(userAgent || undefined)
-  const lastUsedAgo = useDateAgo(lastSeenAt)
-
   return (
-    <Item>
-      <ItemContent className="min-w-36">
-        <ItemTitle>
-          <span className="truncate">
-            {browserName || (
-              <Trans context="device list">Unknown user agent</Trans>
-            )}
-          </span>
-        </ItemTitle>
-        <ItemDescription className="text-foreground font-mono text-xs">
-          {ipAddress}
-        </ItemDescription>
-        <ItemDescription className="text-xs">
-          <Trans context="device list">Last seen {lastUsedAgo}</Trans>
-        </ItemDescription>
-      </ItemContent>
-      <ItemActions>
-        <Button
-          variant="secondary"
-          size="sm"
-          className="shrink-0"
-          disabled={session.isCurrentDevice || isPending}
-          onClick={(_event) => {
-            void mutateAsync({ did, deviceId: session.deviceId }).catch(
-              (err) => {
-                console.warn('Failed to revoke account session', err)
-              },
-            )
-          }}
-          title={
-            session.isCurrentDevice
-              ? t`Cannot remove current device`
-              : undefined
-          }
-        >
-          <Trans context="device list">Sign out</Trans>
-        </Button>
-      </ItemActions>
-    </Item>
+    <Button
+      variant="secondary"
+      size="sm"
+      className="shrink-0"
+      disabled={session.isCurrentDevice || isPending}
+      onClick={() => {
+        void mutateAsync({ did, deviceId: session.deviceId }).catch((err) => {
+          console.warn('Failed to revoke account session', err)
+        })
+      }}
+      title={
+        session.isCurrentDevice ? t`Cannot remove current device` : undefined
+      }
+    >
+      <Trans context="device list">Sign out</Trans>
+    </Button>
   )
 }

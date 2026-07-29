@@ -1,19 +1,15 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { Fragment } from 'react'
+import { CircleHelpIcon } from 'lucide-react'
 import type { ActiveOAuthSession, DidString } from '@atproto/oauth-provider-api'
-import { ListSkeleton } from '#/components/feedback/list-skeleton.tsx'
 import { Notice, NoticeAction } from '#/components/feedback/notice.tsx'
 import { OAuthSessionDetailsDialog } from '#/components/oauth-session-details-dialog.tsx'
+import { SessionList } from '#/components/session-list.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemSeparator,
-  ItemTitle,
-} from '#/components/ui/item.tsx'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '#/components/ui/popover.tsx'
 import { DateAgo } from '#/components/utils/date-ago'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import {
@@ -24,15 +20,12 @@ import { useOAuthClientIdentifier } from '#/hooks/use-oauth-client-identifier.ts
 import { useOauthClientName } from '#/hooks/use-oauth-client-name.ts'
 
 export function Page() {
+  const { t, i18n } = useLingui()
   const { account } = useAuthenticatedSession()
   const { did } = account
   const { data, isLoading, refetch } = useOAuthSessionsQuery({ did })
 
-  if (!data) {
-    if (isLoading) {
-      return <ListSkeleton />
-    }
-
+  if (!data && !isLoading) {
     return (
       <Notice
         role="status"
@@ -47,7 +40,12 @@ export function Page() {
     )
   }
 
-  return data.length > 0 ? (
+  // @NOTE Most recently used first — the same reasoning as the devices list.
+  const sessions = [...(data ?? [])].sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+  )
+
+  return (
     <div className="flex flex-col gap-4">
       <p>
         <Trans>
@@ -57,112 +55,142 @@ export function Page() {
         </Trans>
       </p>
 
-      {/* @NOTE `ItemGroup` supplies role="list" and the row spacing, and
-        `ItemSeparator` draws the dividers. Each row previously carried its own
-        `border-t`, which also drew a line above the first row — reading as a
-        rule under the paragraph above rather than as a list divider.
-
-        gap-0 because a divider sits between every row here: the group gap and
-        the separator's own margin would otherwise stack to 32px and the list
-        would read as separate blocks rather than one list. */}
-      <ItemGroup className="gap-0">
-        {data.map((session, index) => (
-          <Fragment key={session.tokenId}>
-            {index > 0 && <ItemSeparator />}
-            <ApplicationSessionCard did={did} session={session} />
-          </Fragment>
-        ))}
-      </ItemGroup>
-
-      <p className="text-muted-foreground text-sm">
-        <Trans>
-          Apps may access your account in the background (to check
-          notifications, sync data, etc.) even when you're not actively using
-          them. This is normal behavior and will update the "last accessed" time
-          shown above.
-        </Trans>
-      </p>
+      <SessionList
+        items={sessions}
+        rowKey={(session) => session.tokenId}
+        searchText={(session) =>
+          [session.clientId, session.clientMetadata?.client_name].join(' ')
+        }
+        loading={isLoading}
+        filterLabel={t`Filter apps`}
+        empty={
+          <Trans>
+            It appears that you haven’t used this account to sign in to any apps
+            yet.
+          </Trans>
+        }
+        mobileTitle={(session) => <ClientName session={session} />}
+        columns={[
+          {
+            header: <Trans context="OAuthApp">App</Trans>,
+            className: 'font-medium',
+            hideOnMobile: true,
+            cell: (session) => <ClientName session={session} />,
+          },
+          {
+            header: <Trans context="OAuthApp">Client</Trans>,
+            className: 'font-mono text-xs',
+            cell: (session) => <ClientIdentifier session={session} />,
+          },
+          {
+            header: <Trans context="OAuthApp">Authorized</Trans>,
+            className: 'text-muted-foreground whitespace-nowrap',
+            cell: (session) =>
+              i18n.date(session.createdAt, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              }),
+          },
+          {
+            header: <LastAccessedHeader />,
+            className: 'text-muted-foreground whitespace-nowrap',
+            cell: (session) => <DateAgo date={session.updatedAt} />,
+          },
+        ]}
+        action={(session) => <DetailsButton did={did} session={session} />}
+      />
     </div>
-  ) : (
-    <p>
-      <Trans>
-        It appears that you haven’t used this account to sign in to any apps
-        yet.
-      </Trans>
-    </p>
   )
 }
 
-function ApplicationSessionCard({
-  session: {
-    // active,
-    clientId,
-    clientMetadata,
-    tokenId,
-    createdAt,
-    updatedAt,
-    scope = clientMetadata?.scope,
-  },
+/**
+ * @NOTE This copy used to be a paragraph below the list. It explains one thing
+ * — why "last accessed" is more recent than you'd expect — and on a long list
+ * you only reached it after scrolling past every row, by which point the
+ * question has already been asked and abandoned. Attaching it to the column
+ * keeps it reachable at any list length.
+ *
+ * A Popover rather than a Tooltip: tooltips are hover-only, and this page is
+ * reached from a mobile-first account manager.
+ */
+function LastAccessedHeader() {
+  const { t } = useLingui()
+
+  return (
+    <span className="inline-flex items-center gap-1">
+      <Trans context="OAuthApp">Last accessed</Trans>
+      <Popover>
+        <PopoverTrigger
+          render={
+            <button
+              type="button"
+              aria-label={t`Why is this time so recent?`}
+              className="hover:text-foreground focus-visible:ring-ring rounded-full focus-visible:outline-none focus-visible:ring-2"
+            />
+          }
+        >
+          <CircleHelpIcon aria-hidden className="size-3.5" />
+        </PopoverTrigger>
+        <PopoverContent className="max-w-xs text-sm font-normal">
+          <p>
+            <Trans>
+              Apps may access your account in the background (to check
+              notifications, sync data, etc.) even when you're not actively
+              using them. This is normal behavior and will update the "last
+              accessed" time.
+            </Trans>
+          </p>
+        </PopoverContent>
+      </Popover>
+    </span>
+  )
+}
+
+function ClientName({ session }: { session: ActiveOAuthSession }) {
+  const clientName = useOauthClientName({
+    clientId: session.clientId,
+    clientMetadata: session.clientMetadata,
+  })
+  return <span className="truncate">{clientName}</span>
+}
+
+function ClientIdentifier({ session }: { session: ActiveOAuthSession }) {
+  const friendlyClientId = useOAuthClientIdentifier({
+    clientId: session.clientId,
+  })
+  return <span className="truncate">{friendlyClientId}</span>
+}
+
+function DetailsButton({
   did,
+  session,
 }: {
-  session: ActiveOAuthSession
   did: DidString
+  session: ActiveOAuthSession
 }) {
-  const { i18n } = useLingui()
   const { mutateAsync: revokeSession } = useRevokeOAuthSessionMutation()
 
   const friendlyClientId = useOAuthClientIdentifier({
-    clientId,
+    clientId: session.clientId,
   })
   const clientName = useOauthClientName({
-    clientId,
-    clientMetadata,
+    clientId: session.clientId,
+    clientMetadata: session.clientMetadata,
   })
 
-  // @NOTE if clientMetadata is undefined, it means that the client metadata
-  // could not be fetched. We are unable to determine if the session is still
-  // valid. We should reflect that in the UI.
-
-  // @TODO Show if there is an active oauth access token ("active").
-
   return (
-    <Item>
-      <ItemContent className="min-w-36">
-        <ItemTitle>
-          <span className="truncate">{clientName}</span>
-        </ItemTitle>
-        <ItemDescription className="text-foreground font-mono text-xs">
-          {friendlyClientId}
-        </ItemDescription>
-        <ItemDescription className="text-xs">
-          <Trans context="OAuthApp">
-            Authorized on{' '}
-            {i18n.date(createdAt, {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })}
-          </Trans>
-          {' • '}
-          <Trans context="OAuthApp">
-            Last accessed <DateAgo date={updatedAt} />
-          </Trans>
-        </ItemDescription>
-      </ItemContent>
-      <ItemActions>
-        <OAuthSessionDetailsDialog
-          clientName={clientName}
-          clientIdentifier={friendlyClientId}
-          scope={scope}
-          onRevoke={async () => {
-            await revokeSession({ did, tokenId })
-          }}
-        >
-          <Button variant="secondary" size="sm" className="shrink-0">
-            <Trans>Details</Trans>
-          </Button>
-        </OAuthSessionDetailsDialog>
-      </ItemActions>
-    </Item>
+    <OAuthSessionDetailsDialog
+      clientName={clientName}
+      clientIdentifier={friendlyClientId}
+      scope={session.scope ?? session.clientMetadata?.scope}
+      onRevoke={async () => {
+        await revokeSession({ did, tokenId: session.tokenId })
+      }}
+    >
+      <Button variant="secondary" size="sm" className="shrink-0">
+        <Trans>Details</Trans>
+      </Button>
+    </OAuthSessionDetailsDialog>
   )
 }
