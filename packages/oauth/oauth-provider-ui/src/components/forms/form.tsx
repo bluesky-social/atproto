@@ -24,19 +24,7 @@ import {
   FieldLabel,
 } from '#/components/ui/field.tsx'
 
-/**
- * react-hook-form adapter over the `ui/field` primitives, supplying the `Form*`
- * API that the wrappers under `components/forms/fields/` build on.
- *
- * @NOTE Hand-written, which is why it does not live in `components/ui/`: the
- * `base-nova` registry entry for `form` carries no files, and the only one that
- * ships a component is the legacy Radix style.
- */
-
-/**
- * The `<form>` element and the react-hook-form context in one, so a caller
- * never has to nest the two by hand.
- */
+/** The `<form>` element, inside react-hook-form's context. */
 function Form<TValues extends FieldValues>({
   form,
   ...props
