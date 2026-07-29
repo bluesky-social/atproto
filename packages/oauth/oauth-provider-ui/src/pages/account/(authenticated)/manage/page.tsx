@@ -9,7 +9,7 @@ import {
   SnowflakeIcon,
   TrashIcon,
 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 import { DeactivateAccountDialog } from '#/components/deactivate-account-dialog.tsx'
 import { DeleteAccountDialog } from '#/components/delete-account-dialog.tsx'
 import { Notice } from '#/components/feedback/notice.tsx'
@@ -269,7 +269,7 @@ function HandleUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
 }
 
 type RowProps = Override<
-  Omit<React.ComponentProps<typeof Item>, 'render'>,
+  Omit<ComponentProps<typeof Item>, 'render'>,
   {
     icon: LucideIcon
     value?: ReactNode

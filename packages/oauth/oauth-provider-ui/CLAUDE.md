@@ -24,6 +24,19 @@ Most don't. Default to none, and keep the ones you write to a couple of lines.
 If explaining the code takes a paragraph, the code usually wants the work
 instead.
 
+## Imports
+
+**Import from `react` by name — `import { useState, type ComponentProps }`.**
+Never `import * as React`, and never reach for the `React.*` global without an
+import at all (`@types/react` declares it, so `React.ComponentProps` compiles
+with no import and silently introduces a third style).
+
+The exception is `components/ui/*`, which is shadcn CLI output and stays
+byte-faithful — the registry emits `import * as React`, and rewriting it would
+put a diff in every file on the next `shadcn add`. The boundary is the
+directory: inside it, whatever the registry emits; everywhere else, named
+imports.
+
 ## Verification
 
 Type-check from the package directory:

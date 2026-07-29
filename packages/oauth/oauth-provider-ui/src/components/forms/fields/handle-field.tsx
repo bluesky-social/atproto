@@ -1,6 +1,12 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtSignIcon, CheckIcon, XIcon } from 'lucide-react'
-import { type ReactNode, useEffect, useRef, useState } from 'react'
+import {
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import type { Control, FieldPath, FieldValues } from 'react-hook-form'
 import { type HandleString, isValidHandle } from '@atproto/syntax'
 import {
@@ -93,7 +99,7 @@ function HandleFieldInner({
   label?: ReactNode
   autoFocus?: boolean
   required?: boolean
-  inputRef: React.RefObject<HTMLInputElement | null>
+  inputRef: RefObject<HTMLInputElement | null>
   initialHandle?: HandleString
   onHandle: (handle: HandleString | undefined) => void
   onBlur: () => void

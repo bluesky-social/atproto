@@ -1,11 +1,11 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { CheckIcon, CopyIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { type ComponentProps, useEffect, useState } from 'react'
 import { Button } from '#/components/ui/button.tsx'
 import { cn } from '#/lib/utils.ts'
 
 export type CopyButtonProps = Omit<
-  React.ComponentProps<typeof Button>,
+  ComponentProps<typeof Button>,
   'value' | 'children'
 > & {
   /** The text to copy. When undefined the button is not rendered. */

@@ -1,9 +1,10 @@
 import { Loader2Icon } from 'lucide-react'
+import type { ComponentProps } from 'react'
 import { Button } from '#/components/ui/button.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
 
 export type AsyncButtonProps = Omit<
-  React.ComponentProps<typeof Button>,
+  ComponentProps<typeof Button>,
   'onClick'
 > & {
   action: () => void | PromiseLike<void>

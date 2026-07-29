@@ -1,6 +1,6 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { SendIcon } from 'lucide-react'
-import { type Ref, useImperativeHandle } from 'react'
+import { type ComponentProps, type Ref, useImperativeHandle } from 'react'
 import { Button } from '#/components/ui/button.tsx'
 import { CircularProgress } from '#/components/utils/circular-progress.tsx'
 import {
@@ -14,7 +14,7 @@ import { cn } from '#/lib/utils.ts'
 export type RequestCodeButtonHandler = RateLimitedHandler
 
 export type RequestCodeButtonProps = Override<
-  React.ComponentProps<typeof Button>,
+  ComponentProps<typeof Button>,
   RateLimitedActionOptions & {
     ref?: Ref<RequestCodeButtonHandler>
     /** Show the countdown ring even when idle. */

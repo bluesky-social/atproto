@@ -236,9 +236,7 @@ function EmailPermissions({
                 type="checkbox"
                 className="border-input accent-primary m-2 size-4 shrink-0 rounded-[4px] border"
                 checked={allowEmail}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  onAllowEmail(e.target.checked)
-                }
+                onChange={(e) => onAllowEmail(e.target.checked)}
               />
             )
           }
