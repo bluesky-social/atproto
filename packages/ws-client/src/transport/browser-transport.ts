@@ -14,17 +14,16 @@ import type {
   TransportOptions,
 } from './transport.js'
 
-// A minimal, hand-rolled WHATWG WebSocket shape — only the members this
-// transport actually touches — rather than the full ambient `WebSocket`
-// (which pulls in `EventTarget`'s entire surface: `dispatchEvent`,
-// `removeEventListener`, `readyState`, `bufferedAmount`, `extensions`, the
-// `CONNECTING`/`OPEN`/... constants, etc.). Keeping it narrow means a test's
-// fake WebSocket only has to implement four methods, and keeps this file
-// honest about what it depends on. Checked against the WHATWG WebSockets
-// Standard: `binaryType` is 'blob' | 'arraybuffer'; `close` fires a
-// CloseEvent with `{ code, reason, wasClean }`; `send` also accepts Blob per
-// spec, but this transport only ever sends `string | Uint8Array`, so the
-// narrower parameter type is accurate for our use.
+// Only the WHATWG WebSocket members this transport actually touches, rather than
+// the ambient `WebSocket` — which pulls in all of `EventTarget` plus
+// `readyState`, `bufferedAmount`, `extensions`, the CONNECTING/OPEN constants,
+// and so on. Narrow means a test's fake only implements four methods, and keeps
+// this file honest about what it depends on.
+//
+// Checked against the WHATWG WebSockets Standard: `binaryType` is 'blob' |
+// 'arraybuffer', and `close` fires a CloseEvent with `{ code, reason, wasClean }`.
+// `send` also accepts Blob per spec, but this transport only ever sends
+// `string | Uint8Array`, so the narrower parameter type is accurate here.
 interface WHATWGMessageEvent {
   readonly data: unknown
 }
@@ -35,9 +34,8 @@ interface WHATWGCloseEvent {
   readonly wasClean: boolean
 }
 
-// Browser 'error' events are ErrorEvents (which carry `error`); undici and
-// some runtimes dispatch a plain Event instead. `error` is optional to span
-// both — see the 'error' listener below.
+// Browser 'error' events are ErrorEvents, which carry `error`; undici and some
+// runtimes dispatch a plain Event instead. Optional to span both.
 interface WHATWGErrorEvent {
   readonly error?: unknown
 }
@@ -77,45 +75,40 @@ function hasHeaders(headers: HeadersInit | undefined): boolean {
 
 /**
  * Browser (WHATWG) transport. Created already connecting; torn down by
- * `options.signal`. Delegates every receive-side concern (buffering,
- * watermarks, `dataMode` enforcement, idle timeout) to `createMessageChannel`
- * and wires the raw socket to it.
+ * `options.signal`. Every receive-side concern (buffering, watermarks,
+ * `dataMode` enforcement, idle timeout) belongs to `createMessageChannel`; this
+ * wires the raw socket to it.
  *
- * This module also serves as the fallback transport for non-browser runtimes
- * that ship a global WHATWG `WebSocket` but no `#transport` override of their
- * own (Bun, Deno, workers, Expo) — hence the loud failures below rather than
- * silently assuming a browser.
+ * This is also the fallback for non-browser runtimes that ship a global WHATWG
+ * `WebSocket` but no `#transport` override of their own (Bun, Deno, workers,
+ * Expo) — hence the loud failures below rather than assuming a browser.
  *
- * Two capabilities Node's transport has that this one honestly lacks:
- * - No read-side backpressure hook. The WHATWG API has no equivalent of
- *   `ws.pause()`/`resume()`, so `createMessageChannel` is given neither
- *   `onPause` nor `onResume` here — `maxBufferedBytes` is the only backstop
- *   against an unbounded read buffer.
+ * Two things Node's transport has that this one honestly lacks:
+ * - No read-side backpressure. The WHATWG API has no `ws.pause()`/`resume()`, so
+ *   `createMessageChannel` gets no `backpressure` hooks and `maxBufferedBytes` is
+ *   the only backstop against an unbounded read buffer.
  * - No heartbeat. The WHATWG API has no ping/pong, so `options.heartbeat` is
- *   ignored entirely; `idleTimeoutMs` (enforced by the channel) is this
- *   platform's only dead-connection detector.
+ *   ignored and `idleTimeoutMs` is this platform's only dead-connection detector.
  */
 function createTransportImpl<M extends DataMode>(
   options: TransportOptions<M>,
   // Injectable for tests; defaults to the platform global. Read through a
-  // loosely-typed view of `globalThis` rather than relying on structural
-  // assignability from the ambient DOM `WebSocket` type, which drags in
-  // members our minimal `WHATWGWebSocket` doesn't ask for.
+  // loosely-typed view of `globalThis` rather than relying on assignability from
+  // the ambient DOM `WebSocket`, which drags in members `WHATWGWebSocket`
+  // doesn't ask for.
   WebSocketImpl: WebSocketCtor = (globalThis as { WebSocket?: WebSocketCtor })
     .WebSocket as WebSocketCtor,
 ): Transport<M> {
-  // The WHATWG WebSocket API has no request-header mechanism, so accepting
-  // headers here would silently drop what is usually auth. Fail loudly at
-  // construction instead of corrupting the connection's intended auth state.
+  // The WHATWG API has no request-header mechanism, so accepting headers here
+  // would silently drop what is usually auth. Fail loudly at construction rather
+  // than connect with the wrong credentials.
   if (hasHeaders(options.headers)) {
     throw new TypeError(
       'WebSocket headers are not supported in the browser; use the URL or a subprotocol instead',
     )
   }
-  // This is also the fallback transport for non-browser runtimes (Bun, Deno,
-  // workers, Expo) — fail loudly where a global WebSocket is genuinely
-  // absent, rather than surfacing a confusing "undefined is not a
-  // constructor" a few lines down.
+  // Fail loudly where a global WebSocket is genuinely absent, rather than
+  // surfacing a confusing "undefined is not a constructor" a few lines down.
   if (!WebSocketImpl) {
     throw new TypeError('WebSocket is not available in this environment')
   }
@@ -125,15 +118,12 @@ function createTransportImpl<M extends DataMode>(
     highWaterMark: options.highWaterMark,
     maxBufferedBytes: options.maxBufferedBytes,
     idleTimeoutMs: options.idleTimeoutMs,
-    // Deliberately no `backpressure`: see the module doc above. Its absence is
-    // what lets the idle timeout work here — a merely-full buffer must not read
-    // as a pause, since this platform can never actually pause.
+    // No `backpressure`, per the module doc above. Its absence is also what lets
+    // the idle timeout work here: a merely-full buffer must not read as a pause,
+    // since this platform can never actually pause.
     onAbort: (_error, code) => {
-      // The channel decided the connection must end (a dataMode violation, a
-      // byte-cap overflow, an idle timeout, or the consumer stopping). Send the
-      // requested close code when there is one; otherwise there's nothing clean
-      // to say. Unlike Node's `ws.terminate()`, a polite close is the strongest
-      // teardown the WHATWG API offers.
+      // Send the close code the channel asked for. A polite close is the
+      // strongest teardown the WHATWG API offers — there is no `terminate()`.
       ws.close(code)
     },
   })
@@ -144,11 +134,6 @@ function createTransportImpl<M extends DataMode>(
   let open = false
   let closeReported = false
 
-  // Takes its detail as an argument rather than reading `channel.closeDetail`:
-  // after a consumer-initiated `return()` the channel is already terminal
-  // and never records one (there was no close frame or error to describe),
-  // so relying on it here would report `onClose` with a stale/absent detail
-  // instead of the real one the socket eventually reports.
   function reportClose(detail: CloseEventDetail): void {
     if (closeReported) return
     closeReported = true
@@ -162,11 +147,11 @@ function createTransportImpl<M extends DataMode>(
           reject(new WebSocketConnectionError('WebSocket is not open'))
           return
         }
-        // The WHATWG API gives no flush/delivery notification — `send()`
-        // enqueues the frame and returns. Resolving right after hand-off is
-        // therefore the strongest guarantee this platform can offer; it is
-        // not proof the server received anything, only that the browser
-        // accepted the write (at-most-once, like a bare WebSocket).
+        // The WHATWG API gives no flush notification — `send()` enqueues the
+        // frame and returns. Resolving right after hand-off is the strongest
+        // guarantee this platform offers: not that the server received anything,
+        // only that the browser accepted the write (at-most-once, like a bare
+        // WebSocket).
         ws.send(data)
         resolve()
       }),
@@ -182,13 +167,13 @@ function createTransportImpl<M extends DataMode>(
     if (typeof data === 'string') {
       channel.push(data)
     } else if (data instanceof ArrayBuffer) {
-      // With binaryType 'arraybuffer', a spec-compliant socket delivers
-      // binary data as ArrayBuffer only.
+      // With binaryType 'arraybuffer', a spec-compliant socket delivers binary
+      // data as ArrayBuffer only.
       channel.push(new Uint8Array(data))
     } else {
-      // Neither string nor ArrayBuffer: a spec violation (or a runtime that
-      // ignored binaryType) rather than something to coerce. Nothing else
-      // will end this connection on its own, so close it explicitly.
+      // Neither string nor ArrayBuffer means a spec violation (or a runtime that
+      // ignored binaryType), not something to coerce. Nothing else will end this
+      // connection on its own, so close it explicitly.
       const error = new SocketError(
         new TypeError('Unsupported WebSocket message data type'),
       )
@@ -212,10 +197,10 @@ function createTransportImpl<M extends DataMode>(
   ws.addEventListener('error', (ev) => {
     open = false
     channel.fail(new SocketError(ev.error))
-    // Per spec, an 'error' event is always followed by a 'close' event, so
-    // this is normally redundant with the 'close' listener above — but the
-    // guard in reportClose() keeps it to exactly one call either way, and it
-    // catches any runtime that doesn't honor that ordering.
+    // Per spec an 'error' event is always followed by a 'close', so this is
+    // normally redundant with the listener above — but the guard in
+    // reportClose() keeps it to one call either way, and this covers a runtime
+    // that doesn't honor that ordering.
     reportClose(ABNORMAL_CLOSE_DETAIL)
   })
 
@@ -225,10 +210,9 @@ function createTransportImpl<M extends DataMode>(
       open = false
       channel.fail(options.signal.reason)
       // How the stop was requested decides how the socket ends: a bare abort
-      // closes politely at 1000, a CloseError reason closes with its code, and
-      // any other reason is a failure that destroys the connection. On the
-      // polite paths the real close event carries the detail — which is why
-      // nothing is reported here.
+      // closes politely at 1000, a CloseError closes with its code, anything else
+      // is a failure. On the polite paths the real close event carries the
+      // detail, which is why nothing is reported here.
       const code = closeCodeForStop(options.signal.reason)
       if (code !== undefined) {
         ws.close(code)
@@ -240,9 +224,9 @@ function createTransportImpl<M extends DataMode>(
     { once: true },
   )
 
-  // The channel's iterable is handed out as-is: a connection ending is
-  // reported through `onClose` (above), and the reconnect loop turns that
-  // detail into a classifiable error itself. Nothing here needs to invent one.
+  // The channel's iterable is handed out as-is. A connection ending is reported
+  // through `onClose` above, and the reconnect loop turns that detail into a
+  // classifiable error, so nothing here needs to invent one.
   const iterable = channel.iterable
 
   return {
@@ -251,9 +235,8 @@ function createTransportImpl<M extends DataMode>(
   }
 }
 
-// `satisfies` (rather than a `: TransportFactory` annotation) keeps the
-// exported value's real, wider type — including the injectable
-// `WebSocketCtor` second parameter — while still checking it's assignable
-// everywhere a `TransportFactory` is expected (the `#transport` entrypoint,
-// which only ever calls it with one argument).
+// `satisfies` rather than a `: TransportFactory` annotation, so the exported
+// value keeps its wider type — including the injectable `WebSocketCtor` second
+// parameter — while still being checked against `TransportFactory`, which the
+// `#transport` entrypoint calls with one argument.
 export const createTransport = createTransportImpl satisfies TransportFactory

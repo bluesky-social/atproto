@@ -50,11 +50,11 @@ export interface CommitDeleteEvent extends EventBase {
   } & CommitBase
 }
 
-// The abort reason close() uses. A `CloseError` rather than a bare sentinel for
-// two reasons: the client classifies an abort reason to decide how to end the
-// socket, and only a CloseError (or a bare AbortError) asks for a polite close —
-// anything else destroys the connection outright. Its identity is also what
-// start() checks to tell our own shutdown from a real failure.
+// The abort reason close() uses. A `CloseError` rather than a bare sentinel
+// because the client classifies the abort reason to decide how to end the socket:
+// only a CloseError (or a bare AbortError) asks for a polite close, anything else
+// destroys the connection. Its identity is also how start() tells our own
+// shutdown from a real failure.
 const STOPPED = new CloseError(CloseCode.Normal, 'jetstream stopped', true)
 
 export class Jetstream {
@@ -80,10 +80,10 @@ export class Jetstream {
     onCreate?: Record<string, OnCreateCallback<any>>
     onDelete?: Record<string, (e: CommitDeleteEvent) => Promise<void>>
   }) {
-    // Retained so close() resolves only once the stream has actually unwound
-    // (and with it the connection). Swallows its own outcome: a caller awaiting
-    // close() is asking about shutdown, not about how the stream ended — that
-    // is start()'s promise to report.
+    // Retained so close() resolves only once the stream has unwound, and with it
+    // the connection. Swallows its own outcome: a caller awaiting close() is
+    // asking about shutdown, not about how the stream ended — that's what the
+    // promise start() returns is for.
     const running = this.#consume(options)
     this.#running = running.catch(() => {})
     return running
@@ -125,9 +125,9 @@ export class Jetstream {
   }
 
   /**
-   * Ends the stream and closes the connection, resolving once it has actually
-   * closed — the abort tears the socket down, and the stream's own unwind is
-   * what tells us that finished. A close() before start() is an inert no-op.
+   * Ends the stream and closes the connection, resolving once it has closed: the
+   * abort tears the socket down, and the stream's own unwind is what tells us
+   * that finished. A close() before start() is an inert no-op.
    */
   async close() {
     this.#abort.abort(STOPPED)

@@ -200,10 +200,10 @@ describe('ozone query labels', () => {
     it('streams all labels from initial cursor.', async () => {
       const ac = new AbortController()
       // A sentinel rather than DisconnectError: aborting a subscription now
-      // rejects the iterator with whatever reason it was given, so the test
-      // needs its own marker to tell "we stopped on purpose" from a real
-      // failure. DisconnectError no longer has any special meaning to a client
-      // — it is how a *server* route ends a stream it is serving.
+      // rejects the iterator with whatever reason it was given, so the test needs
+      // its own marker to tell a deliberate stop from a real failure.
+      // DisconnectError means nothing to a client — it's how a *server* route ends
+      // a stream it serves.
       const doneReason = new Error('caught up with the label stream')
       let doneTimer: NodeJS.Timeout
       const resetDoneTimer = () => {
@@ -239,8 +239,8 @@ describe('ozone query labels', () => {
           }
         }
       } catch (err) {
-        // Our own timer-driven stop is the expected way out; anything else is
-        // a genuine failure and must not be swallowed.
+        // Our own timer-driven stop is the expected way out; anything else is a
+        // genuine failure and must not be swallowed.
         if (err !== doneReason) throw err
       }
       expect(streamedLabels).toEqual(labels)

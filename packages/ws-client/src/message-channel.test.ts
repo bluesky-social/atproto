@@ -174,8 +174,8 @@ describe(createMessageChannel, () => {
     })
 
     it('tracks bytes without pausing when no hooks are supplied', async () => {
-      // The browser case: buffering still works, backpressure simply isn't
-      // available without onPause/onResume.
+      // The browser case: buffering still works, backpressure just isn't available
+      // without onPause/onResume.
       const channel = createMessageChannel({
         dataMode: 'auto',
         highWaterMark: 10,
@@ -200,8 +200,8 @@ describe(createMessageChannel, () => {
         maxBufferedBytes: 10,
         onAbort,
       })
-      // No pull is parked, so this buffers instead of delivering directly —
-      // 20 bytes against a 10-byte cap overflows.
+      // No pull is parked, so this buffers rather than delivering directly: 20
+      // bytes against a 10-byte cap overflows.
       channel.push('a'.repeat(10))
       const iterator = channel.iterable[Symbol.asyncIterator]()
       await expect(iterator.next()).rejects.toBeInstanceOf(BufferOverflowError)
@@ -259,15 +259,13 @@ describe(createMessageChannel, () => {
           onAbort,
         })
         const iterator = channel.iterable[Symbol.asyncIterator]()
-        // Attach the rejection assertion synchronously so the rejection
-        // (which fires mid-tick, before this test resumes) is never
-        // observed as unhandled.
+        // Attach the assertion synchronously: the rejection fires mid-tick, before
+        // this test resumes, and would otherwise look unhandled.
         const pending = expect(iterator.next()).rejects.toBeInstanceOf(
           IdleTimeoutError,
         )
-        // Detection latency is 1x-2x idleTimeoutMs: the first tick merely
-        // clears the flag (idleActive starts true), the second tick finds
-        // no evidence since and times out.
+        // Detection latency is 1x-2x idleTimeoutMs: the first tick only clears the
+        // flag (idleActive starts true), and the second finds no evidence since.
         await vi.advanceTimersByTimeAsync(1000)
         await vi.advanceTimersByTimeAsync(1000)
         await pending
@@ -322,11 +320,10 @@ describe(createMessageChannel, () => {
     })
 
     it('times out with a full buffer when the platform cannot pause', async () => {
-      // The browser passes no `backpressure`, so `idleTimeoutMs` is its ONLY
+      // The browser passes no `backpressure`, so `idleTimeoutMs` is its only
       // dead-connection detector. If a merely-full buffer read as a pause, the
-      // liveness exemption above would latch and suppress the timeout entirely
-      // — a browser consumer running a little behind would never notice a dead
-      // peer.
+      // liveness exemption above would latch and suppress the timeout, and a
+      // browser consumer running slightly behind would never notice a dead peer.
       vi.useFakeTimers()
       try {
         const onAbort = vi.fn()
@@ -335,11 +332,11 @@ describe(createMessageChannel, () => {
           highWaterMark: 10,
           idleTimeoutMs: 20,
           onAbort,
-          // Deliberately no `backpressure`: the browser shape.
+          // No `backpressure`: the browser shape.
         })
         const iterator = channel.iterable[Symbol.asyncIterator]()
-        // Leave the buffer between the low mark (5) and the high mark (10),
-        // which is where the pause flag used to latch.
+        // Leave the buffer between the low mark (5) and the high mark (10), where
+        // the pause flag used to latch.
         channel.push('a'.repeat(6)) // 12 bytes
         channel.push('b'.repeat(4)) // +8 = 20 bytes
         await iterator.next() // drain 12 -> 8 bytes remain
@@ -408,8 +405,8 @@ describe(createMessageChannel, () => {
     })
 
     it('ignores a second terminal transition', async () => {
-      // First-wins: whichever terminal landed first is the one the consumer
-      // sees, and a later one cannot overwrite or re-settle it.
+      // First-wins: the consumer sees whichever terminal landed first, and a later
+      // one can't overwrite or re-settle it.
       const failed = createMessageChannel({ dataMode: 'auto' })
       const first = new Error('first')
       failed.fail(first)
@@ -426,8 +423,8 @@ describe(createMessageChannel, () => {
         failedThenFinished.iterable[Symbol.asyncIterator]().next(),
       ).rejects.toBe(first)
 
-      // And a failure after a clean finish cannot turn it into a rejection: the
-      // buffered message still drains, then the stream ends.
+      // And a failure after a clean finish can't turn it into a rejection: the
+      // buffered message drains, then the stream ends.
       const finished = createMessageChannel({ dataMode: 'auto' })
       finished.push('buffered')
       finished.finish()

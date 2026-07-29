@@ -2,10 +2,9 @@
  * WebSocket close codes, per RFC 6455 §7.4.1 and the IANA WebSocket Close
  * Code Number registry.
  *
- * Note that some codes never appear in a Close frame on the wire: an endpoint
- * generates them locally to describe how a connection ended
- * ({@link CloseCode.NoStatus}, {@link CloseCode.Abnormal},
- * {@link CloseCode.TlsHandshake}).
+ * Some codes never appear in a Close frame on the wire — an endpoint generates
+ * them locally to describe how a connection ended ({@link CloseCode.NoStatus},
+ * {@link CloseCode.Abnormal}, {@link CloseCode.TlsHandshake}).
  *
  * https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
  */
@@ -37,15 +36,15 @@ export enum CloseCode {
 }
 
 /**
- * Close codes that are FATAL — the connection should not be retried. These are
- * only codes a peer deliberately sends on the wire to signal normal shutdown
- * (1000) or a malformed-protocol condition (1002/1003/1007/1009).
+ * Close codes that are fatal — the connection should not be retried. Only codes
+ * a peer deliberately sends on the wire to signal normal shutdown (1000) or a
+ * malformed-protocol condition (1002/1003/1007/1009).
  *
- * Synthetic codes (1005 no-status, 1006 abnormal, 1015 TLS) are intentionally
- * absent: per RFC 6455 §7.4.1 they MUST NOT appear in a wire Close frame — an
- * endpoint generates them locally to describe transient connection trouble.
- * They therefore represent the same failures that surface as SocketError in the
- * other runtime, and must classify identically (reconnect). Do not add them.
+ * The synthetic codes (1005 no-status, 1006 abnormal, 1015 TLS) are absent on
+ * purpose. Per RFC 6455 §7.4.1 they never appear in a wire Close frame; an
+ * endpoint generates them locally to describe transient trouble. They are the
+ * same failures that surface as a SocketError in the other runtime, so they must
+ * classify identically — reconnect. Don't add them.
  */
 export const FATAL_CLOSE_CODES: ReadonlySet<number> = new Set([
   CloseCode.Normal,

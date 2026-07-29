@@ -1,12 +1,10 @@
 /**
- * Invoke a user-supplied lifecycle hook from inside a state transition.
+ * Invoke a user-supplied lifecycle hook.
  *
- * - `this` is pinned to `null` so the hook can't reach internal state (the
- *   natural receiver at most call sites would be a private options object).
- * - A throwing hook must not corrupt the state machine mid-transition, so the
- *   error is re-thrown on a microtask — surfacing as an uncaught exception
- *   (crash-visible) without unwinding through connection/client internals.
- *   Hooks are expected not to throw.
+ * - `this` is pinned to `null` so the hook can't reach internal state.
+ * - A throwing hook must not unwind through our own internals mid-transition, so
+ *   the error is re-thrown on a microtask instead: still crash-visible as an
+ *   uncaught exception. Hooks are expected not to throw.
  */
 export function invokeHook<A extends unknown[]>(
   hook: ((...args: A) => void) | undefined,

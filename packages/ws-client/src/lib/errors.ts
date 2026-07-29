@@ -7,10 +7,10 @@ export class WebSocketConnectionError extends Error {
   }
 
   /**
-   * Whether the failure is transient — a reconnect may succeed. Each subclass
-   * answers for itself; the base class covers state-misuse errors (e.g.
-   * `send()` while not open), which are not retryable. Consulted by the
-   * default reconnect policy ({@link defaultShouldReconnect}).
+   * Whether the failure is transient, so a reconnect may succeed. Each subclass
+   * answers for itself; the base class covers state-misuse errors like `send()`
+   * while not open, which are not retryable. Consulted by the default reconnect
+   * policy ({@link defaultShouldReconnect}).
    */
   shouldRetry(): boolean {
     return false
@@ -91,9 +91,9 @@ export class DataModeError extends WebSocketConnectionError {
 }
 
 /**
- * Misuse of the client API itself, as opposed to a connection failing:
- * distinct from the `WebSocketConnectionError` taxonomy, which describes what
- * the socket did. Never retryable — a caller error won't fix itself.
+ * Misuse of the client API itself, as opposed to a connection failing. Separate
+ * from the `WebSocketConnectionError` taxonomy, which describes what the socket
+ * did. Never retryable — a caller error won't fix itself.
  */
 export class WebSocketClientError extends Error {
   constructor(message?: string, options?: { cause?: unknown }) {

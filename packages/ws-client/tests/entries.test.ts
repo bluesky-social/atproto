@@ -13,10 +13,9 @@ describe('public entrypoint', () => {
   })
 
   it('offers no close()/terminate() anywhere in the public surface', () => {
-    // Termination is deliberately one idiom: break/throw on the iteration, or an
-    // aborted signal. This guards against a close-shaped method creeping back
-    // onto either the generator or the sender it hands out, which would give
-    // callers a second, unspecified way to stop a stream.
+    // Stopping is one idiom: break/throw on the iteration, or an aborted signal.
+    // Guards against a close-shaped method creeping back onto the generator or
+    // the sender it hands out, giving callers a second, unspecified way to stop.
     const gen = websocket('ws://example.invalid', { shouldReconnect: false })
     const names = new Set<string>()
     for (
@@ -40,9 +39,9 @@ describe('public entrypoint', () => {
   it('binds dataMode to the yielded type, with all generator type args', () => {
     expectTypeOf<MessageOf<'binary'>>().toEqualTypeOf<Uint8Array>()
     expectTypeOf<MessageOf<'text'>>().toEqualTypeOf<string>()
-    // The named alias is what consumers annotate with; it must stay equivalent
-    // to the spelled-out generator, all three type args included — TReturn and
-    // TNext default to `any`, which would silently un-type next()/return().
+    // The named alias is what consumers annotate with, so it has to stay
+    // equivalent to the spelled-out generator, all three type args included:
+    // TReturn and TNext default to `any`, un-typing next()/return().
     expectTypeOf<WebSocketIterable<'binary'>>().toEqualTypeOf<
       AsyncGenerator<Uint8Array, void, undefined>
     >()

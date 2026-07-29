@@ -14,15 +14,15 @@ import {
 import type { Sender, Transport } from '../src/transport/transport.js'
 import { startServer } from './_util/server.js'
 
-// Node 24 ships a global WHATWG `WebSocket`, so the real-socket tests below
-// use it exactly as a browser would — no `undici` dependency needed. Cast
-// through `unknown`: the ambient DOM/undici type is a structural superset of
-// the minimal shape this transport declares for itself, but TypeScript's
-// overloaded-method comparison doesn't see that automatically.
+// Node 24 ships a global WHATWG `WebSocket`, so the real-socket tests below use
+// it exactly as a browser would, with no `undici` dependency. Cast through
+// `unknown` because the ambient DOM/undici type is a structural superset of the
+// minimal shape this transport declares, which TypeScript's overloaded-method
+// comparison doesn't see on its own.
 const globalWebSocket = globalThis.WebSocket as unknown as WebSocketCtor
 
-// Drains a transport's iteration into an array, tolerating (and returning)
-// the terminal error every transport surfaces — including a clean close.
+// Drains a transport's iteration into an array, returning rather than throwing
+// whatever terminal error it surfaces.
 async function drain<M extends 'auto' | 'text' | 'binary'>(
   transport: Transport<M>,
 ): Promise<{ messages: MessageOf<M>[]; error: unknown }> {
@@ -38,10 +38,9 @@ async function drain<M extends 'auto' | 'text' | 'binary'>(
 }
 
 // A minimal fake for the one branch a real socket can never reach: a message
-// event whose `data` is neither a string nor an ArrayBuffer. Events are
-// fired manually by the test rather than automatically from `close()`/
-// `send()`, matching the real WHATWG API's async event dispatch (a script
-// calling `close()` does not synchronously raise a 'close' event).
+// event whose `data` is neither a string nor an ArrayBuffer. The test fires
+// events manually rather than having `close()`/`send()` do it, matching the real
+// API — a script calling `close()` doesn't synchronously raise a 'close' event.
 class FakeWebSocket {
   binaryType: 'blob' | 'arraybuffer' = 'blob'
   readonly closeCalls: Array<[number?, string?]> = []
@@ -79,8 +78,8 @@ describe(createTransport, () => {
       ws.close(CloseCode.Normal)
     })
     const controller = new AbortController()
-    // Omits the WebSocketCtor argument entirely, exercising the documented
-    // default of `globalThis.WebSocket`.
+    // No WebSocketCtor argument, exercising the documented default of
+    // `globalThis.WebSocket`.
     const transport = createTransport({
       url: server.url,
       dataMode: 'auto',
@@ -99,9 +98,9 @@ describe(createTransport, () => {
 
   it('completes iteration and reports the detail on a clean server close', async () => {
     // A transport signals an orderly close by completing, per the ordinary
-    // iterator contract, and reports the close detail through onClose. It does
-    // not invent an error for something that isn't one — the reconnect loop
-    // above builds a classifiable CloseError from that detail itself.
+    // iterator contract, and reports the detail through onClose. It doesn't
+    // invent an error for something that isn't one; the reconnect loop builds a
+    // classifiable CloseError from that detail itself.
     await using server = await startServer((ws) => {
       ws.close(CloseCode.Normal, 'bye')
     })
@@ -219,8 +218,8 @@ describe(createTransport, () => {
     assert(instances.length === 1)
     const [socket] = instances
     socket.emit('open', {})
-    // Neither a string nor an ArrayBuffer — the one branch a real,
-    // spec-compliant socket can never reach with binaryType 'arraybuffer'.
+    // Neither a string nor an ArrayBuffer: the one branch a spec-compliant
+    // socket can never reach with binaryType 'arraybuffer'.
     socket.emit('message', { data: 42 })
     const { error } = await drain(transport)
     assert(error instanceof SocketError)
@@ -257,9 +256,9 @@ describe(createTransport, () => {
     )
     const drained = drain(transport)
     await vi.waitFor(() => assert(sender))
-    // The server only closes after processing the message, so waiting for
-    // the connection to end (not just send()'s own hand-off) is what proves
-    // the message actually reached it.
+    // The server only closes after processing the message, so waiting for the
+    // connection to end — not just send()'s own hand-off — is what proves the
+    // message actually reached it.
     await sender.send('ping')
     await drained
     expect(seen).toEqual(['ping'])
@@ -326,10 +325,9 @@ describe(createTransport, () => {
     await drain(transport)
     expect(onOpen).toHaveBeenCalledTimes(1)
     expect(onClose).toHaveBeenCalledTimes(1)
-    // Per the WHATWG spec, `wasClean` reflects whether the closing
-    // handshake completed properly, not whether the code was 1000 — a
-    // completed handshake with a non-Normal code is still "clean" in that
-    // sense, unlike Node's own `ws` library which conflates the two.
+    // Per the WHATWG spec, `wasClean` reflects whether the closing handshake
+    // completed, not whether the code was 1000: a completed handshake with a
+    // non-Normal code is still clean. Node's `ws` conflates the two.
     expect(onClose).toHaveBeenCalledWith({
       code: CloseCode.Policy,
       reason: 'nope',
@@ -364,9 +362,9 @@ describe(createTransport, () => {
     await using server = await startServer((ws) => {
       ws.on('message', (data) => {
         if (data.toString() === 'go') {
-          // No read-side backpressure exists in the browser to slow this
-          // down — every frame arrives regardless of consumption, so the
-          // byte cap alone must catch an unbounded read buffer.
+          // The browser has no read-side backpressure to slow this down: every
+          // frame arrives regardless of consumption, so the byte cap alone has
+          // to catch an unbounded read buffer.
           for (let i = 0; i < 64; i++) ws.send('x'.repeat(4096))
         }
       })
@@ -374,13 +372,12 @@ describe(createTransport, () => {
     const controller = new AbortController()
     const onClose = vi.fn()
     let sender!: Sender<'auto'>
-    // Deliberately never drained before the burst: an unconsumed transport
-    // is exactly the scenario the byte cap exists to catch. Iteration only
-    // starts once `onClose` proves the channel has already reached its
-    // terminal state — starting sooner would race a waiter into place, and
-    // `push()` delivers straight to a parked waiter without ever consulting
-    // the byte cap, which would flakily observe an ordinary message instead
-    // of the overflow this test means to exercise.
+    // Never drained before the burst: an unconsumed transport is exactly the
+    // scenario the byte cap exists to catch. Iteration starts only once `onClose`
+    // proves the channel is already terminal — starting sooner would race a
+    // waiter into place, and `push()` delivers straight to a parked waiter
+    // without consulting the byte cap, so the test would flakily see an ordinary
+    // message instead of the overflow.
     const transport = createTransport(
       {
         url: server.url,
@@ -435,11 +432,11 @@ describe(createTransport, () => {
     })
     const iterator = transport[Symbol.asyncIterator]()
     expect(await iterator.next()).toEqual({ value: 'one', done: false })
-    // A consumer stop is not the connection ending: neither the return() nor
+    // A consumer stop is not the connection ending, so neither the return() nor
     // any later pull may surface an error. A pull after the stop used to
-    // synthesize a *retryable* error, which would make a deliberate stop look
-    // like transient trouble to the reconnect policy above — `yield*` in that
-    // layer can pull again after a downstream return() propagates.
+    // synthesize a *retryable* error, making a deliberate stop look like
+    // transient trouble to the reconnect policy — whose `yield*` can pull again
+    // after a downstream return() propagates.
     await expect(iterator.return!()).resolves.toEqual({
       value: undefined,
       done: true,

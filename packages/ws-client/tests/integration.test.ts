@@ -10,7 +10,7 @@ import type { CloseEventDetail } from '../src/message-channel.ts'
 import { startServer } from './_util/server.js'
 
 // Drains a generator into an array. A non-reconnectable clean close ends the
-// generator normally (not a rejection), so most tests below resolve here.
+// generator normally rather than rejecting, so most tests below resolve here.
 async function drain<T>(gen: AsyncGenerator<T, void, undefined>): Promise<T[]> {
   const out: T[] = []
   for await (const m of gen) out.push(m)
@@ -28,8 +28,8 @@ describe('websocket() end-to-end over real sockets', () => {
       ws.send(Buffer.from([1, 2, 3]))
       ws.close(CloseCode.Normal)
     })
-    // A server-sent 1000 is fatal-but-clean under the default policy: the
-    // stream ends rather than rejecting, so drain() resolves normally.
+    // A server-sent 1000 is fatal but clean under the default policy, so the
+    // stream ends rather than rejecting and drain() resolves.
     const messages = await drain(websocket(server.url))
     expect(messages).toHaveLength(2)
     expect(messages[0]).toBe('hello')
@@ -42,8 +42,8 @@ describe('websocket() end-to-end over real sockets', () => {
       ws.send(Buffer.from([9, 9, 9]))
     })
     const gen = websocket(server.url, { dataMode: 'text' })
-    // DataModeError is not retryable, so this rejects instead of driving a
-    // reconnect loop against a server that will keep sending the same frame.
+    // DataModeError isn't retryable, so this rejects rather than redialing a
+    // server that will keep sending the same frame.
     await expect(gen.next()).rejects.toSatisfy((err: unknown) => {
       expect((err as Error).name).toBe('DataModeError')
       return true
@@ -51,9 +51,9 @@ describe('websocket() end-to-end over real sockets', () => {
   })
 
   it('survives a server restart, continuing iteration across the gap', async () => {
-    // The port comes from the first server's own bind rather than being
-    // reserved up front: reserving it and then binding is a race, since another
-    // process (or a parallel test worker) can claim it in between.
+    // The port comes from the first server's own bind rather than being reserved
+    // up front, since another process or a parallel worker could claim it between
+    // the reservation and the bind.
     let server = await startServer((ws) => {
       ws.send('first')
       ws.close(CloseCode.GoingAway, 'restarting')
@@ -63,10 +63,9 @@ describe('websocket() end-to-end over real sockets', () => {
     const gen = websocket(server.url, noBackoff)
     expect(await gen.next()).toEqual({ value: 'first', done: false })
 
-    // The first server is gone; a second one takes its place on the same
-    // port. Only now (on the next pull below) does the generator's reconnect
-    // loop notice the close and redial — the consumer never sees the gap,
-    // only a continuous stream of messages.
+    // The first server is gone and a second takes its place on the same port.
+    // Only on the next pull below does the reconnect loop notice the close and
+    // redial; the consumer sees one continuous stream, not the gap.
     await server[Symbol.asyncDispose]()
     server = await startServer(
       (ws) => {
@@ -146,12 +145,11 @@ describe('websocket() end-to-end over real sockets', () => {
   })
 
   it('reports a consumer break as a clean 1000 close', async () => {
-    // The socket really does close at 1000 here — the bug was in what got
-    // *reported*. The generator's teardown used to terminate over the close
-    // handshake it had just initiated, and a terminated handshake reports 1006
-    // locally even though the peer saw 1000 (measured: `ws.close(1000)` then
-    // `terminate()` gives the client 1006 and the server 1000). So a graceful
-    // shutdown looked abnormal to anything keying on `wasClean`.
+    // The socket really does close at 1000 here; the bug was in what got
+    // *reported*. Teardown used to terminate over the close handshake it had just
+    // initiated, and a terminated handshake reports 1006 locally even though the
+    // peer saw 1000 — so a graceful shutdown looked abnormal to anything keying on
+    // `wasClean`.
     let serverSaw: number | undefined
     let resolveClosed!: () => void
     const closed = new Promise<void>((resolve) => {
@@ -184,9 +182,9 @@ describe('websocket() end-to-end over real sockets', () => {
 
   describe('how a stop maps onto the close', () => {
     // The abort reason decides how the socket ends, so a caller can ask for a
-    // specific close code without a separate knob for it. `break`/`throw` in a
-    // `for await` are indistinguishable to a generator (both produce a return
-    // completion, never `throw()`), so they share the plain clean close.
+    // specific close code without a separate knob. `break` and `throw` in a
+    // `for await` are indistinguishable to a generator — both produce a return
+    // completion, never `throw()` — so they share the plain clean close.
     async function stopWith(
       reason: unknown,
     ): Promise<{ serverSaw?: number; serverReason?: string }> {
@@ -217,7 +215,7 @@ describe('websocket() end-to-end over real sockets', () => {
     }
 
     it('closes politely at 1000 on a bare abort', async () => {
-      // `ac.abort()` with no argument is an AbortError: a plain "please stop".
+      // `ac.abort()` with no argument is an AbortError — a plain "please stop".
       const controller = new AbortController()
       controller.abort()
       const { serverSaw } = await stopWith(controller.signal.reason)
@@ -233,7 +231,7 @@ describe('websocket() end-to-end over real sockets', () => {
     })
 
     it('destroys the connection on any other reason', async () => {
-      // A failure, not a request to stop: no close frame is sent, so the peer
+      // A failure, not a request to stop, so no close frame is sent and the peer
       // observes an abnormal close.
       const { serverSaw } = await stopWith(new Error('something broke'))
       expect(serverSaw).toBe(CloseCode.Abnormal)
@@ -256,11 +254,11 @@ describe('websocket() end-to-end over real sockets', () => {
 
 describe('sending over real sockets', () => {
   it('sends through the sender handed to onConnect, and a fresh one per reconnect', async () => {
-    // Sending is done with the per-connection sender the hooks hand out, not a
-    // client object with a queue: a queued send could only settle on the next
-    // connection, which only happens when the consumer pulls — so awaiting one
-    // from inside iteration deadlocks. The sender makes that impossible to
-    // write by accident, since it either sends now or rejects.
+    // Sending goes through the per-connection sender the hooks hand out, not a
+    // client object with a queue. A queued send could only settle on the next
+    // connection, which only happens when the consumer pulls, so awaiting one from
+    // inside iteration deadlocks. A sender either sends now or rejects, which
+    // makes that impossible to write by accident.
     const received: string[] = []
     let firstConnection = true
     await using server = await startServer((ws) => {
@@ -314,11 +312,11 @@ describe('sending over real sockets', () => {
   })
 
   it('ends a stream parked on a pull when the signal aborts', async () => {
-    // The mechanism matters here, and only a real generator exhibits it: a
-    // `return()` on a generator suspended inside a `yield*` queues behind the
-    // pending pull rather than cancelling it, so a consumer parked waiting for
-    // the next message cannot be stopped by `return()` alone. The signal is
-    // what interrupts the pull — which is why it is the one termination idiom.
+    // Only a real generator exhibits the mechanism under test: a `return()` on a
+    // generator suspended inside a `yield*` queues behind the pending pull rather
+    // than cancelling it, so `return()` alone can't stop a consumer parked waiting
+    // for the next message. The signal is what interrupts the pull, which is why
+    // it's the one termination idiom.
     let opened!: () => void
     const isOpen = new Promise<void>((resolve) => {
       opened = resolve

@@ -88,9 +88,9 @@ export class Firehose {
         return false
       }
     }
-    // Explicit connection options rather than a spread: the old
-    // `ClientOptions &` shape let arbitrary `ws` options through, which the
-    // current Subscription ignores — a spread would silently drop them.
+    // Listed explicitly rather than spread: the old `ClientOptions &` shape let
+    // arbitrary `ws` options through, which Subscription no longer accepts — a
+    // spread would silently drop them.
     this.sub = new Subscription({
       service: opts.service ?? 'wss://bsky.network',
       method: com.atproto.sync.subscribeRepos.$lxm,

@@ -9,11 +9,10 @@ export type {
 } from './message-channel.js'
 // `Sender` is public because `onConnect` hands one to the caller. The rest of
 // the transport contract (`Transport`, `TransportOptions`, `TransportFactory`,
-// `createWebSocket`) is deliberately internal: platform selection happens
-// through the `#transport` imports condition, so a third-party transport has no
-// supported way in, and exporting the interface would commit us to its shape
-// across versions for no consumer that exists. Open it up if a real need
-// appears — widening a public API later is easy; narrowing it isn't.
+// `createWebSocket`) stays internal: platform selection happens through the
+// `#transport` imports condition, so a third-party transport has no supported
+// way in anyway, and exporting the interface would commit us to its shape for no
+// consumer that exists. Widening a public API later is easy; narrowing it isn't.
 export type { HeadersInit, Sender } from './transport/transport.js'
 export type {
   Awaitable,
@@ -43,8 +42,8 @@ export {
 } from './lib/reconnect-policy.js'
 
 /**
- * The public `websocket()` generator, bound to the platform transport
- * selected by the `#transport` package-imports condition. This is the single
- * entrypoint for consuming a WebSocket as a reconnecting async stream.
+ * The `websocket()` generator, bound to the platform transport selected by the
+ * `#transport` imports condition. The single entrypoint for consuming a
+ * WebSocket as a reconnecting async stream.
  */
 export const websocket: WebSocketFn = createWebSocket(createTransport)
