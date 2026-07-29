@@ -124,7 +124,9 @@ function createTransportImpl<M extends DataMode>(
     highWaterMark: options.highWaterMark,
     maxBufferedBytes: options.maxBufferedBytes,
     idleTimeoutMs: options.idleTimeoutMs,
-    // Deliberately no onPause/onResume: see the module doc above.
+    // Deliberately no `backpressure`: see the module doc above. Its absence is
+    // what lets the idle timeout work here — a merely-full buffer must not read
+    // as a pause, since this platform can never actually pause.
     onAbort: (_error, code) => {
       // The channel decided the connection must end (dataMode violation,
       // byte-cap overflow, or idle timeout). Send the requested close code

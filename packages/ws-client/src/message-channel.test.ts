@@ -116,7 +116,7 @@ describe(createMessageChannel, () => {
       const channel = createMessageChannel({
         dataMode: 'auto',
         highWaterMark: 10,
-        onPause,
+        backpressure: { onPause, onResume: () => {} },
       })
       channel.push('a'.repeat(4)) // 8 bytes, under the mark
       expect(onPause).not.toHaveBeenCalled()
@@ -130,8 +130,7 @@ describe(createMessageChannel, () => {
       const channel = createMessageChannel({
         dataMode: 'auto',
         highWaterMark: 10,
-        onPause,
-        onResume,
+        backpressure: { onPause, onResume },
       })
       channel.push('a'.repeat(6)) // 12 bytes: over highWaterMark (10)
       expect(onPause).toHaveBeenCalledTimes(1)
@@ -147,8 +146,7 @@ describe(createMessageChannel, () => {
       const channel = createMessageChannel({
         dataMode: 'auto',
         highWaterMark: 10,
-        onPause,
-        onResume,
+        backpressure: { onPause, onResume },
       })
       // Push two messages summing to 16 bytes (over 10).
       channel.push('a'.repeat(6)) // 12 bytes
@@ -167,7 +165,7 @@ describe(createMessageChannel, () => {
       const channel = createMessageChannel({
         dataMode: 'auto',
         highWaterMark: 10,
-        onPause,
+        backpressure: { onPause, onResume: () => {} },
       })
       channel.push('a'.repeat(10)) // 20 bytes: over the mark
       expect(onPause).toHaveBeenCalledTimes(1)
@@ -221,7 +219,7 @@ describe(createMessageChannel, () => {
         dataMode: 'auto',
         highWaterMark: 5,
         maxBufferedBytes: 10,
-        onPause,
+        backpressure: { onPause, onResume: () => {} },
         onAbort,
       })
       channel.push('a'.repeat(10)) // 20 bytes: over both thresholds
@@ -310,7 +308,7 @@ describe(createMessageChannel, () => {
           dataMode: 'auto',
           idleTimeoutMs: 1000,
           highWaterMark: 5,
-          onPause,
+          backpressure: { onPause, onResume: () => {} },
           onAbort,
         })
         channel.push('a'.repeat(10)) // over the watermark: paused
@@ -318,6 +316,37 @@ describe(createMessageChannel, () => {
         // Many ticks pass with the channel paused and no new messages.
         await vi.advanceTimersByTimeAsync(10_000)
         expect(onAbort).not.toHaveBeenCalled()
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('times out with a full buffer when the platform cannot pause', async () => {
+      // The browser passes no `backpressure`, so `idleTimeoutMs` is its ONLY
+      // dead-connection detector. If a merely-full buffer read as a pause, the
+      // liveness exemption above would latch and suppress the timeout entirely
+      // — a browser consumer running a little behind would never notice a dead
+      // peer.
+      vi.useFakeTimers()
+      try {
+        const onAbort = vi.fn()
+        const channel = createMessageChannel({
+          dataMode: 'auto',
+          highWaterMark: 10,
+          idleTimeoutMs: 20,
+          onAbort,
+          // Deliberately no `backpressure`: the browser shape.
+        })
+        const iterator = channel.iterable[Symbol.asyncIterator]()
+        // Leave the buffer between the low mark (5) and the high mark (10),
+        // which is where the pause flag used to latch.
+        channel.push('a'.repeat(6)) // 12 bytes
+        channel.push('b'.repeat(4)) // +8 = 20 bytes
+        await iterator.next() // drain 12 -> 8 bytes remain
+
+        // The peer is dead: nothing more arrives.
+        vi.advanceTimersByTime(20 * 15)
+        expect(onAbort).toHaveBeenCalledWith(expect.any(IdleTimeoutError))
       } finally {
         vi.useRealTimers()
       }

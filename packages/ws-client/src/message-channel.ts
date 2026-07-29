@@ -26,11 +26,22 @@ export interface MessageChannelOptions<M extends DataMode> {
   highWaterMark?: number
   maxBufferedBytes?: number
   idleTimeoutMs?: number
-  /** Called when buffered bytes pass highWaterMark. Node pauses its socket
-      here; the browser supplies neither hook and relies on the byte cap. */
-  onPause?: () => void
-  /** Called once buffered bytes fall back below highWaterMark / 2. */
-  onResume?: () => void
+  /**
+   * Read-side backpressure, when the platform has it. Node passes both hooks,
+   * wired to `ws.pause()`/`resume()`; the browser passes nothing, because the
+   * WHATWG API cannot pause a socket.
+   *
+   * Present or absent as a unit, deliberately: a channel that could pause but
+   * never resume would stall permanently, and one that tracks a "paused" state
+   * it can never actually enter would suppress the idle timeout — the browser's
+   * only dead-connection detector.
+   */
+  backpressure?: {
+    /** Buffered bytes passed `highWaterMark`. */
+    onPause: () => void
+    /** Buffered bytes fell back below `highWaterMark / 2`. */
+    onResume: () => void
+  }
   /** Invoked when the channel itself decides the connection must end —
       a dataMode violation, a byte-cap overflow, or an idle timeout. The
       transport uses it to send an appropriate close code before tearing
@@ -106,7 +117,11 @@ export function createMessageChannel<M extends DataMode>(
   const highWaterMark = options.highWaterMark ?? 1_048_576
   const maxBufferedBytes = options.maxBufferedBytes ?? Infinity
   const idleTimeoutMs = options.idleTimeoutMs
-  const { onPause, onResume, onAbort } = options
+  const { backpressure, onAbort } = options
+  // Whether this platform can actually stop the peer from sending. Node can
+  // (it pauses the socket); the browser cannot. This gates the pause state
+  // itself, not just the callbacks — see `idleTick`.
+  const canBackpressure = backpressure != null
 
   const buffer: QueueItem[] = []
   const waiters: Waiter[] = []
@@ -135,6 +150,11 @@ export function createMessageChannel<M extends DataMode>(
     // self-inflicted pause as liveness rather than false-timing-out a
     // healthy connection. The refreshed flag grants a full detection window
     // after resume.
+    //
+    // Only reachable when the platform can actually pause (`canBackpressure`):
+    // otherwise a merely-full buffer would latch this exemption and suppress
+    // the timeout entirely, which in the browser is the only dead-connection
+    // detector there is.
     if (paused) {
       idleActive = true
       return
@@ -195,7 +215,7 @@ export function createMessageChannel<M extends DataMode>(
     // rapidly flipped between paused and resumed around the threshold.
     if (paused && bufferedBytes < highWaterMark / 2) {
       paused = false
-      invokeHook(onResume)
+      invokeHook(backpressure?.onResume)
     }
   }
 
@@ -235,9 +255,9 @@ export function createMessageChannel<M extends DataMode>(
       return
     }
 
-    if (!paused && bufferedBytes > highWaterMark) {
+    if (canBackpressure && !paused && bufferedBytes > highWaterMark) {
       paused = true
-      invokeHook(onPause)
+      invokeHook(backpressure.onPause)
     }
   }
 
