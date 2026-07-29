@@ -161,7 +161,7 @@ describe('websocket() end-to-end over real sockets', () => {
 })
 
 describe('sending over real sockets', () => {
-  it('sends through the sender handed to onOpen, and a fresh one on reconnect', async () => {
+  it('sends through the sender handed to onConnect, and a fresh one per reconnect', async () => {
     // Sending is done with the per-connection sender the hooks hand out, not a
     // client object with a queue: a queued send could only settle on the next
     // connection, which only happens when the consumer pulls — so awaiting one
@@ -188,8 +188,8 @@ describe('sending over real sockets', () => {
       ...noBackoff,
       dataMode: 'text',
       signal: controller.signal,
-      onOpen: (sender) => senders.push(sender),
-      onReconnect: (sender) => senders.push(sender),
+      // One hook covers every connection, the first included.
+      onConnect: (sender) => senders.push(sender),
     })
     // Something has to keep pulling for the loop to reconnect at all.
     const pump = (async () => {
@@ -236,7 +236,7 @@ describe('sending over real sockets', () => {
     const gen = websocket(server.url, {
       dataMode: 'text',
       signal: controller.signal,
-      onOpen: () => opened(),
+      onConnect: () => opened(),
     })
     const reason = new Error('stopped')
     const pump = (async () => {

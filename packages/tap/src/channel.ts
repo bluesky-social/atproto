@@ -99,15 +99,10 @@ export class TapChannel implements AsyncDisposable {
         : {},
       signal: this.abortController.signal,
       shouldReconnect,
-      // Flush on every successful connection, the first included: an ack can be
-      // recorded before anything ever connected (a caller may ack before
-      // start(), or between attempts), and only having flushed on *re*connect
-      // would leave it stranded until the second connection.
-      onOpen: (sender) => {
-        this.sender = sender
-        void this.flushPendingAcks()
-      },
-      onReconnect: (sender) => {
+      // Fires for every connection, the first included — so an ack recorded
+      // before anything ever connected (a caller may ack before start(), or
+      // between attempts) is flushed by the connection that finally comes up.
+      onConnect: (sender) => {
         this.sender = sender
         void this.flushPendingAcks()
       },

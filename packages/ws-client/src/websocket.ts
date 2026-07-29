@@ -42,25 +42,34 @@ export interface WebSocketOptions<M extends DataMode = 'auto'>
    */
   shouldReconnect?: boolean | ((error: unknown, attempt: number) => boolean)
   /**
-   * The first connection succeeded. Fires once. `sender` is valid until that
-   * connection ends, after which its `send()` rejects.
+   * The stream is live for the first time. Fires once, immediately before the
+   * first `onConnect`.
+   *
+   * Takes no sender: per-connection concerns belong to `onConnect`, which fires
+   * for the first connection too. Pairs with `onClose` to bookend the stream.
    *
    * Hooks are called with `this` pinned to `null` and must not throw — a
    * thrown error is re-thrown as an uncaught exception on a microtask.
    */
-  onOpen?: (sender: Sender<M>) => void
-  /** A later connection succeeded; fires per reconnect with the fresh sender. */
-  onReconnect?: (sender: Sender<M>) => void
+  onOpen?: () => void
+  /**
+   * A connection is up, including the first. `sender` is valid until that
+   * connection ends, after which its `send()` rejects — so use the one handed
+   * to the most recent `onConnect`, never a retained older one.
+   */
+  onConnect?: (sender: Sender<M>) => void
   /**
    * The current connection ended, so the sender last handed out is now dead.
-   * Fires once per connection that opened, before any `onError`/`onReconnect`
-   * for the same event, and independently of whether a retry follows.
    *
-   * Distinct from `onClose`, which fires once for the whole stream: this is
-   * the per-connection edge, and it is the reliable point at which to stop
-   * using a sender. Waiting for `onError` is not equivalent — the loop only
-   * advances when the consumer pulls, so a hook could otherwise hand data to
-   * a socket that has already gone away.
+   * Pairs with `onConnect` exactly: every `onConnect` is followed by one
+   * `onDisconnect`, and a dial that never connected produces neither. So a
+   * stream stuck retrying reports one `onDisconnect` for the connection it
+   * lost, then an `onError` per failed dial — not a disconnect per attempt.
+   *
+   * This, not `onError`, is the reliable point at which to stop using a sender:
+   * the loop only advances when the consumer pulls, so `onError` can arrive
+   * long after the socket died, and a hook holding the sender in between would
+   * hand data to a dead connection and see it silently dropped.
    */
   onDisconnect?: () => void
   /**
@@ -188,25 +197,27 @@ export function createWebSocket(
                         ),
                       ),
               }
+              // onOpen bookends the stream and fires once, before the first
+              // onConnect; onConnect fires for every connection including this
+              // one.
               if (firstOpen) {
                 firstOpen = false
-                invokeHook(options.onOpen, scoped)
-              } else {
-                invokeHook(options.onReconnect, scoped)
+                invokeHook(options.onOpen)
               }
+              invokeHook(options.onConnect, scoped)
             },
             onClose: (detail) => {
               lastDetail = detail
               closedDetail = detail
               // This connection is over, so the sender handed to onOpen /
-              // onReconnect must stop accepting writes *now*. Waiting for the
+              // onConnect must stop accepting writes *now*. Waiting for the
               // loop to notice would leave a window — the loop only advances
               // when the consumer pulls — in which a hook holding the sender
               // could hand data to a dead socket and see it silently dropped.
               const wasLive = live
               invalidateSender()
-              // Only report the edge for a connection that actually opened,
-              // and only once.
+              // Only for a connection that actually connected, and only once:
+              // this is what makes onConnect/onDisconnect pair exactly.
               if (wasLive && opened) invokeHook(options.onDisconnect)
             },
           })
