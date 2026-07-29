@@ -2,7 +2,7 @@
 
 Code conventions for this repository. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the process around issues and pull requests.
 
-Prettier and ESLint enforce what can be enforced mechanically. The rules below are the ones they can't check.
+Prettier (`pnpm run style`) and ESLint (`pnpm run lint`) enforce what can be enforced mechanically. The rules below are the conventions followed by this repo and are not enforced by tooling.
 
 ## Modules and imports
 
@@ -14,6 +14,12 @@ Prettier and ESLint enforce what can be enforced mechanically. The rules below a
 
 - **Type explicitly where types originate, rely on inference everywhere else.** Annotate public API surfaces: exported functions, class members, and module-level constants whose type isn't obvious.
 - Never re-annotate what the call site already provides. `expressApp.use((...args) => …)` and `onChange={(event) => …}` need no parameter or return type annotations — TypeScript infers them from the expected callback type.
+
+## Comments
+
+- **Write for an experienced developer.** A comment earns its place by explaining something the code can't: a non-obvious invariant, a subtle edge case, a workaround for an upstream bug, or _why_ a counter-intuitive approach was chosen.
+- **Keep them short.** One or two lines is usually enough. Don't write a tutorial where a sentence suffices.
+- **Delete comments that restate the code.** `// increment the counter` above `counter++` is noise. Remove such comments when you touch the surrounding code.
 
 ## Dependencies
 
