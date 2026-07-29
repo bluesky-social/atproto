@@ -29,7 +29,7 @@ The modern, type-safe Lexicon toolchain. Most consumers only need [`@atproto/lex
 
 ## OAuth
 
-- [`oauth-provider`](./oauth/oauth-provider): OAuth 2.0 / OpenID Connect provider, as used by the PDS.
+- [`oauth-provider`](./oauth/oauth-provider): OAuth 2.1 provider, as used by the PDS.
 - [`oauth-provider-api`](./oauth/oauth-provider-api): Shared types between the OAuth provider and its UI.
 - [`oauth-provider-ui`](./oauth/oauth-provider-ui): Sign-in and sign-up interface for the OAuth provider.
 - [`oauth-client`](./oauth/oauth-client): Runtime-agnostic OAuth client base.

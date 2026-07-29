@@ -31,28 +31,42 @@ Remember, we serve a wide community of users. Our day-to-day involves us constan
 
 ## Developer Quickstart
 
-We recommend [`nvm`](https://github.com/nvm-sh/nvm) for managing Node.js installs. This project requires Node.js version 22 or later. `pnpm` is used to manage the workspace of multiple packages. You can install it with `npm install --global pnpm`.
+Node.js 22 is the minimum supported version; the version in [.nvmrc](./.nvmrc) is what we develop and test against. Install [`nvm`](https://github.com/nvm-sh/nvm) to manage Node.js installs, then pick that version up from the repo root:
 
-There is a Makefile which can help with basic development tasks:
-
-```shell
-# use existing nvm to install node 22 and pnpm
-make nvm-setup
-
-# pull dependencies and build all local packages
-make deps
-make build
-
-# run the tests, using Docker services as needed
-make test
-
-# run a local PDS and AppView with fake test accounts and data
-# (this requires a global installation of `jq` and `docker`)
-make run-dev-env
-
-# show all other commands
-make help
+```bash
+nvm install
+nvm use
 ```
+
+`pnpm` manages the workspace, and is itself managed by [Corepack](https://nodejs.org/api/corepack.html) so that everyone runs the version pinned in [package.json](./package.json). Corepack ships with Node.js — enable it, then let it install `pnpm`:
+
+```bash
+corepack enable
+corepack install
+```
+
+From there, install dependencies and build every package:
+
+```bash
+pnpm install
+pnpm build
+```
+
+Once built, `pnpm dev` runs a full local stack — a PDS, an AppView, a PLC directory, an Ozone instance and a bsync service, seeded with fake test accounts and data. It runs against the compiled output, so pair it with `pnpm dev:ts` in a second terminal to rebuild as you edit. This requires [Docker](https://docs.docker.com/get-started/get-docker/) and `jq` for the postgres and redis containers.
+
+```bash
+pnpm dev
+```
+
+The stack prints the URL of every service it starts. The seeded accounts all live on the PDS, and you can sign in as any of them:
+
+| Handle       | Password  |
+| ------------ | --------- |
+| `alice.test` | `hunter2` |
+| `bob.test`   | `hunter2` |
+| `carla.test` | `hunter2` |
+
+The seed data is regenerated from scratch on every run, so feel free to break things.
 
 ## Working in this codebase
 

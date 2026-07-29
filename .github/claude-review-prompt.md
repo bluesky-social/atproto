@@ -45,18 +45,13 @@ Where this repo differs from a typical TypeScript service:
 - XRPC endpoints in pds/bsky/ozone are internet-facing. New endpoints or
   loosened input validation deserve a look at rate limits, payload size
   bounds, and unbounded-fan-out queries (hydration joins, cursors).
-- A few STYLE_GUIDE.md rules are structural rather than cosmetic, and are
-  in scope: a new circular dependency between packages (the only
-  tolerated cycle is `pds` ↔ `bsky` in tests); adding `@atproto/api` as a
-  new dependency (it is being replaced by `@atproto/lex`); pinning an
-  internal package to a published version instead of `workspace:^`; and
-  leaving behind references to code the PR deleted — comments, docs, or
-  names that describe a state that no longer exists ("previously…",
-  "used to…", a removed symbol).
 - Agent files are part of the codebase. If the PR introduces, changes, or
   removes a documented pattern, CLAUDE.md / STYLE_GUIDE.md / the skills
-  under `.agents/skills/` should be updated in the same PR; a doc left
-  describing the old behavior is a finding.
+  under `.agents/skills/` should be updated in the same PR.
+- Documentation and comments must describe the current state of the code.
+  A doc or comment the PR leaves behind describing the old behavior — a
+  stale JSDoc, a comment referring to a deleted symbol, a "previously…" /
+  "used to…" note — is a finding.
 
 Mechanical notes: generated `src/lexicons/` directories in service
 packages are gitignored — do not ask for them in the diff. CONTRIBUTING.md
