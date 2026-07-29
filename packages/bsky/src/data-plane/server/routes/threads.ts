@@ -53,6 +53,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       replies.sort()
     }
 
+    // Walk the oldest contiguous line of OP replies from the root, mirroring
+    // the production dataplane. The full chain is returned untrimmed by the
+    // above/below limits; the appview derives index/count from it.
     const opThreadUris = [rootUri]
     const visited = new Set(opThreadUris)
     let validOpThread = true
@@ -68,16 +71,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       parentUri = oldestReply
     }
 
-    const resultUris = new Set(uris)
-    const opThreadPosts = opThreadUris.flatMap((uri, index) =>
-      resultUris.has(uri) ? [{ uri, index: index + 1 }] : [],
-    )
     return {
       uris,
+      // A chain of one is just the root; only threads with OP replies count.
       opThread:
-        validOpThread && opThreadUris.length > 1 && opThreadPosts.length > 0
-          ? { postCount: opThreadUris.length, posts: opThreadPosts }
-          : undefined,
+        validOpThread && opThreadUris.length > 1 ? opThreadUris : undefined,
     }
   },
 })

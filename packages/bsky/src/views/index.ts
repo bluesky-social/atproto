@@ -1332,10 +1332,9 @@ export class Views {
     skeleton: {
       anchor: AtUriString
       uris: AtUriString[]
-      opThread?: {
-        postCount: number
-        posts: Array<{ uri: AtUriString; index: number }>
-      }
+      // The complete OP thread (root first, in chain order), untrimmed by
+      // above/below limits. See GetThreadResponse.op_thread.
+      opThread?: AtUriString[]
     },
     state: HydrationState,
     {
@@ -1480,18 +1479,19 @@ export class Views {
     )
 
     if (skeleton.opThread) {
-      const postsByUri = new Map(
-        skeleton.opThread.posts.map((post) => [post.uri, post]),
+      const indexByUri = new Map(
+        skeleton.opThread.map((uri, i) => [uri, i + 1]),
       )
+      const postCount = skeleton.opThread.length
       for (const item of thread) {
         if (!app.bsky.unspecced.defs.threadItemPost.$isTypeOf(item.value)) {
           continue
         }
-        const opThreadPost = postsByUri.get(item.uri)
-        item.value.opThread = !!opThreadPost
-        if (opThreadPost) {
-          item.value.opThreadPostIndex = opThreadPost.index
-          item.value.opThreadPostCount = skeleton.opThread.postCount
+        const index = indexByUri.get(item.uri as AtUriString)
+        item.value.opThread = index !== undefined
+        if (index !== undefined) {
+          item.value.opThreadPostIndex = index
+          item.value.opThreadPostCount = postCount
         } else {
           delete item.value.opThreadPostIndex
           delete item.value.opThreadPostCount

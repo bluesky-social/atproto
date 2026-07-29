@@ -75,14 +75,8 @@ const skeleton = async (
     return {
       anchor,
       uris: res.uris as AtUriString[],
-      opThread: res.opThread
-        ? {
-            postCount: res.opThread.postCount,
-            posts: res.opThread.posts.map((post) => ({
-              uri: post.uri as AtUriString,
-              index: post.index,
-            })),
-          }
+      opThread: res.opThread.length
+        ? (res.opThread as AtUriString[])
         : undefined,
     }
   } catch (err) {
@@ -142,10 +136,9 @@ type Params = app.bsky.unspecced.getPostThreadV2.$Params & {
 type Skeleton = {
   anchor: AtUriString
   uris: AtUriString[]
-  opThread?: {
-    postCount: number
-    posts: Array<{ uri: AtUriString; index: number }>
-  }
+  // The complete OP thread (root first, in chain order), untrimmed by
+  // above/below limits. See GetThreadResponse.op_thread.
+  opThread?: AtUriString[]
 }
 
 const calculateAbove = (ctx: Context, params: Params) => {
