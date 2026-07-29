@@ -2,12 +2,11 @@ import { assert, describe, expect, it, vi } from 'vitest'
 import { CloseCode } from '../src/lib/close-codes.js'
 import {
   BufferOverflowError,
-  CloseError,
   IdleTimeoutError,
   SocketError,
   WebSocketConnectionError,
 } from '../src/lib/errors.js'
-import type { MessageOf } from '../src/message-channel.js'
+import type { CloseEventDetail, MessageOf } from '../src/message-channel.js'
 import {
   type WebSocketCtor,
   createTransport,
@@ -94,31 +93,35 @@ describe(createTransport, () => {
     expect(messages[0]).toBe('hello')
     assert(messages[1] instanceof Uint8Array)
     expect(Array.from(messages[1])).toEqual([1, 2, 3])
-    assert(error instanceof CloseError)
-    expect(error.code).toBe(CloseCode.Normal)
+    // A clean close completes the iteration; the code is reported via onClose.
+    expect(error).toBeUndefined()
   })
 
-  it('ends iteration with a CloseError carrying the code on a clean server close', async () => {
+  it('completes iteration and reports the detail on a clean server close', async () => {
+    // A transport signals an orderly close by completing, per the ordinary
+    // iterator contract, and reports the close detail through onClose. It does
+    // not invent an error for something that isn't one — the reconnect loop
+    // above builds a classifiable CloseError from that detail itself.
     await using server = await startServer((ws) => {
       ws.close(CloseCode.Normal, 'bye')
     })
     const controller = new AbortController()
+    const closes: CloseEventDetail[] = []
     const transport = createTransport(
       {
         url: server.url,
         dataMode: 'auto',
         signal: controller.signal,
         onOpen: () => {},
-        onClose: () => {},
+        onClose: (detail) => closes.push(detail),
       },
       globalWebSocket,
     )
     const { error } = await drain(transport)
-    assert(error instanceof CloseError)
-    expect(error.code).toBe(CloseCode.Normal)
-    expect(error.reason).toBe('bye')
-    expect(error.wasClean).toBe(true)
-    expect(error.shouldRetry()).toBe(false)
+    expect(error).toBeUndefined()
+    expect(closes).toEqual([
+      { code: CloseCode.Normal, reason: 'bye', wasClean: true },
+    ])
   })
 
   it('throws TypeError when a non-empty headers record is supplied', () => {

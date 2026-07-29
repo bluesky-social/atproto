@@ -1,12 +1,12 @@
 import { assert, describe, expect, it, vi } from 'vitest'
 import type { WebSocket as WsSocket } from 'ws'
-import { CloseCode } from '../src/lib/close-codes.js'
+import { CloseCode, isReconnectableClose } from '../src/lib/close-codes.js'
 import {
   CloseError,
   HeartbeatTimeoutError,
   WebSocketConnectionError,
 } from '../src/lib/errors.js'
-import type { MessageOf } from '../src/message-channel.js'
+import type { CloseEventDetail, MessageOf } from '../src/message-channel.js'
 import { createTransport } from '../src/transport/node-transport.js'
 import type { Sender, Transport } from '../src/transport/transport.js'
 import { startServer } from './_util/server.js'
@@ -47,8 +47,8 @@ describe(createTransport, () => {
     expect(messages[0]).toBe('hello')
     assert(messages[1] instanceof Uint8Array)
     expect(Array.from(messages[1])).toEqual([1, 2, 3])
-    assert(error instanceof CloseError)
-    expect(error.code).toBe(CloseCode.Normal)
+    // A clean close completes the iteration; the code is reported via onClose.
+    expect(error).toBeUndefined()
   })
 
   it('honors dataMode typing by failing on a mismatched frame', async () => {
@@ -110,42 +110,53 @@ describe(createTransport, () => {
     expect(seenAuth).toBe('Bearer hdr')
   })
 
-  it('ends iteration with a CloseError carrying the code on a clean server close', async () => {
+  it('completes iteration and reports the detail on a clean server close', async () => {
+    // A transport signals an orderly close by completing, per the ordinary
+    // iterator contract, and reports the close detail through onClose. It does
+    // not invent an error for something that isn't one — the reconnect loop
+    // above builds a classifiable CloseError from that detail itself.
     await using server = await startServer((ws) => {
       ws.close(CloseCode.Normal, 'bye')
     })
     const controller = new AbortController()
+    const closes: CloseEventDetail[] = []
     const transport = createTransport({
       url: server.url,
       dataMode: 'auto',
       signal: controller.signal,
       onOpen: () => {},
-      onClose: () => {},
+      onClose: (detail) => closes.push(detail),
     })
     const { error } = await drain(transport)
-    assert(error instanceof CloseError)
-    expect(error.code).toBe(CloseCode.Normal)
-    expect(error.reason).toBe('bye')
-    expect(error.wasClean).toBe(true)
-    expect(error.shouldRetry()).toBe(false)
+    expect(error).toBeUndefined()
+    expect(closes).toEqual([
+      { code: CloseCode.Normal, reason: 'bye', wasClean: true },
+    ])
   })
 
-  it('surfaces a retryable error when the server drops the connection abruptly', async () => {
+  it('reports an abnormal, retryable close when the server drops abruptly', async () => {
     await using server = await startServer((ws) => {
       // @ts-expect-error accessing the underlying socket to force an abrupt drop
       ws._socket.destroy()
     })
     const controller = new AbortController()
+    const closes: CloseEventDetail[] = []
     const transport = createTransport({
       url: server.url,
       dataMode: 'auto',
       signal: controller.signal,
       onOpen: () => {},
-      onClose: () => {},
+      onClose: (detail) => closes.push(detail),
     })
     const { error } = await drain(transport)
-    assert(error instanceof WebSocketConnectionError)
-    expect(error.shouldRetry()).toBe(true)
+    // An abrupt drop reaches `ws` as a close event with 1006 (or as a socket
+    // error, depending on timing), so the transport may complete or reject.
+    // Either way what matters is that the reported detail is abnormal — that
+    // is what the reconnect loop classifies, and 1006 is retryable.
+    const detail = error instanceof CloseError ? error : closes.at(-1)
+    assert(detail)
+    expect(detail.wasClean).toBe(false)
+    expect(isReconnectableClose(detail.code)).toBe(true)
   })
 
   it('resolves send() once the message is flushed to the server', async () => {
