@@ -123,6 +123,14 @@ const NO_STATUS_DETAIL: CloseEventDetail = {
   wasClean: false,
 }
 
+// The detail for a consumer-initiated stop: the transport closes with 1000, and
+// the stop is by definition orderly.
+const NORMAL_CLOSE_DETAIL: CloseEventDetail = {
+  code: CloseCode.Normal,
+  reason: '',
+  wasClean: true,
+}
+
 /**
  * Binds a platform transport factory into the public `websocket()` generator.
  * Called once per entrypoint; the `#transport` package-imports condition is
@@ -147,6 +155,13 @@ export function createWebSocket(
     // The most recent connection's close detail, re-reported by the terminal
     // hook below. Undefined when no close frame ever applied.
     let lastDetail: CloseEventDetail | undefined
+    // Set when the consumer stops us (a `break`/`return` on the iteration). The
+    // transport closes politely with 1000 on that path, but its close event is
+    // asynchronous while the generator's `finally` runs synchronously — so the
+    // real detail arrives too late to report. Waiting for it would make `break`
+    // block on a network round-trip; instead the terminal reports the code we
+    // know we asked for.
+    let stoppedByConsumer = false
 
     try {
       // The generator body doesn't run until the first pull, so an
@@ -234,9 +249,17 @@ export function createWebSocket(
           // A consumer `break` also lands here, resuming the generator with a
           // return completion — which runs the `finally` and leaves the loop
           // without reaching the throw.
+          // A consumer `break`/`return` resumes us here with a return
+          // completion, which unwinds straight through the `finally` blocks
+          // below without reaching either the throw or the catch. Flag it before
+          // yielding so the terminal can tell that case from a connection that
+          // ended on its own; cleared the moment we get control back.
+          stoppedByConsumer = true
           yield* transport
+          stoppedByConsumer = false
           throw closeError(closedDetail)
         } catch (error) {
+          stoppedByConsumer = false
           // An abort is the caller's decision, not a connection failure:
           // surface the reason rather than classifying it as retryable.
           signal?.throwIfAborted()
@@ -277,7 +300,17 @@ export function createWebSocket(
       // non-reconnectable close, abort, or a consumer `break` — and exactly
       // once. A generator that was never pulled never gets here: no
       // lifecycle, no `onClose`.
-      invokeHook(options.onClose, lastDetail ?? NO_STATUS_DETAIL)
+      invokeHook(
+        options.onClose,
+        // A consumer stop is a *clean* end at 1000: that is the code the
+        // transport sends, and reporting it here rather than awaiting the peer's
+        // acknowledgement is what keeps `break` from blocking on the network.
+        // `wasClean` therefore means "we closed politely", not "a close
+        // handshake completed".
+        stoppedByConsumer
+          ? NORMAL_CLOSE_DETAIL
+          : lastDetail ?? NO_STATUS_DETAIL,
+      )
     }
   }
 }

@@ -7,6 +7,7 @@ import {
   WebSocketConnectionError,
   websocket,
 } from '../src/index.ts'
+import type { CloseEventDetail } from '../src/message-channel.ts'
 import { startServer } from './_util/server.js'
 
 // Drains a generator into an array. A non-reconnectable clean close ends the
@@ -144,6 +145,43 @@ describe('websocket() end-to-end over real sockets', () => {
       break
     }
     await closed
+  })
+
+  it('reports a consumer break as a clean 1000 close', async () => {
+    // The socket really does close at 1000 here — the bug was in what got
+    // *reported*. The generator's teardown used to terminate over the close
+    // handshake it had just initiated, and a terminated handshake reports 1006
+    // locally even though the peer saw 1000 (measured: `ws.close(1000)` then
+    // `terminate()` gives the client 1006 and the server 1000). So a graceful
+    // shutdown looked abnormal to anything keying on `wasClean`.
+    let serverSaw: number | undefined
+    let resolveClosed!: () => void
+    const closed = new Promise<void>((resolve) => {
+      resolveClosed = resolve
+    })
+    await using server = await startServer((ws) => {
+      ws.send('one')
+      ws.send('two')
+      ws.on('close', (code) => {
+        serverSaw = code
+        resolveClosed()
+      })
+    })
+
+    const closes: CloseEventDetail[] = []
+    for await (const message of websocket(server.url, {
+      dataMode: 'text',
+      onClose: (detail) => closes.push(detail),
+    })) {
+      expect(message).toBe('one')
+      break
+    }
+    await closed
+
+    expect(serverSaw).toBe(CloseCode.Normal)
+    expect(closes).toEqual([
+      { code: CloseCode.Normal, reason: '', wasClean: true },
+    ])
   })
 
   it('rejects the iterator on a fatal close code rather than reconnecting', async () => {

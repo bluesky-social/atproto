@@ -128,11 +128,11 @@ function createTransportImpl<M extends DataMode>(
     // what lets the idle timeout work here — a merely-full buffer must not read
     // as a pause, since this platform can never actually pause.
     onAbort: (_error, code) => {
-      // The channel decided the connection must end (dataMode violation,
-      // byte-cap overflow, or idle timeout). Send the requested close code
-      // when there is one; otherwise there's nothing clean to say. Unlike
-      // Node's `ws.terminate()`, a polite close is the strongest teardown
-      // the WHATWG API offers.
+      // The channel decided the connection must end (a dataMode violation, a
+      // byte-cap overflow, an idle timeout, or the consumer stopping). Send the
+      // requested close code when there is one; otherwise there's nothing clean
+      // to say. Unlike Node's `ws.terminate()`, a polite close is the strongest
+      // teardown the WHATWG API offers.
       ws.close(code)
     },
   })
