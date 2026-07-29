@@ -11,10 +11,10 @@ import { type ServerOptions, type WebSocket, WebSocketServer } from 'ws'
  *     await using server = await startServer((ws) => { ... })
  *     server.url
  *
- * `port` defaults to an OS-assigned ephemeral port (0); pass an explicit port
- * — e.g. one obtained from `get-port` — to rebind the same address after a
- * prior server on it has been disposed, such as when simulating a server
- * restart.
+ * `port` defaults to an OS-assigned ephemeral port (0). Pass an explicit port to
+ * rebind an address a prior server has released — e.g. taking the port off the
+ * first server's own `url` to simulate a restart, which avoids the race of
+ * reserving a port and binding it later.
  */
 export async function startServer(
   onConnection: (ws: WebSocket, req: IncomingMessage) => void,
