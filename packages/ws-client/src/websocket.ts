@@ -155,9 +155,12 @@ export function createWebSocket(
     // repeated failures with nothing working in between.
     let retries = 0
     let firstOpen = true
-    // The most recent connection's close detail, re-reported by the terminal
-    // hook below. Undefined when no close frame ever applied.
-    let lastDetail: CloseEventDetail | undefined
+    // This attempt's close detail, recorded synchronously by the transport's
+    // `onClose` below — so it is already set when a completed `yield*` resumes,
+    // and it is what both the thrown CloseError and the terminal hook report.
+    // Reset per attempt (see below), so it can never describe an earlier
+    // connection as this stream's ending.
+    let closeDetail: CloseEventDetail | undefined
     // The most recent connection's close promise, awaited by the terminal when
     // no detail has arrived yet. Undefined before the first connection.
     let awaitClose: Promise<void> | undefined
@@ -186,11 +189,6 @@ export function createWebSocket(
         // ends — see the onClose wiring below.
         let live = true
         let opened = false
-        // This connection's close detail, as distinct from `lastDetail`, which
-        // survives across attempts to feed the terminal hook. Recorded
-        // synchronously by `onClose` below, so it is already set by the time a
-        // completed `yield*` resumes.
-        let closedDetail: CloseEventDetail | undefined
         // Settles when the transport reports this connection's close. The
         // terminal awaits it so `onClose` fires with the transport's own detail
         // — one source of truth — and only once the connection has actually
@@ -201,7 +199,7 @@ export function createWebSocket(
         // connection would be reported as this stream's ending, and an
         // `awaitClose` armed for a transport that never got constructed would
         // never settle, stalling the terminal for the full grace period.
-        lastDetail = undefined
+        closeDetail = undefined
         awaitClose = undefined
         let reportClosed!: () => void
         const closeReported = new Promise<void>((resolve) => {
@@ -238,8 +236,7 @@ export function createWebSocket(
               invokeHook(options.onConnect, scoped)
             },
             onClose: (detail) => {
-              lastDetail = detail
-              closedDetail = detail
+              closeDetail = detail
               reportClosed()
               // This connection is over, so the sender handed to onOpen /
               // onConnect must stop accepting writes *now*. Waiting for the
@@ -262,7 +259,7 @@ export function createWebSocket(
           // arrives here as a normal completion, and this layer turns the close
           // detail into the error the policy below classifies. Doing it here
           // rather than inside the transport keeps transports from having to
-          // invent an error for something that isn't one: `closedDetail` is
+          // invent an error for something that isn't one: `closeDetail` is
           // already recorded by the `onClose` above, synchronously, before this
           // resumes.
           //
@@ -270,7 +267,7 @@ export function createWebSocket(
           // return completion — which runs the `finally` and leaves the loop
           // without reaching the throw.
           yield* transport
-          throw closeError(closedDetail)
+          throw closeError(closeDetail)
         } catch (error) {
           // An abort is the caller's decision, not a connection failure:
           // surface the reason rather than classifying it as retryable.
@@ -324,10 +321,10 @@ export function createWebSocket(
       // is done (measured at +1ms, well before the peer observes anything).
       // Waiting on the peer is not something a client can do — a close handshake
       // it never answers would hang teardown indefinitely.
-      if (lastDetail === undefined && awaitClose !== undefined) {
+      if (closeDetail === undefined && awaitClose !== undefined) {
         await Promise.race([awaitClose, sleep(CLOSE_GRACE_MS, undefined)])
       }
-      invokeHook(options.onClose, lastDetail ?? NO_STATUS_DETAIL)
+      invokeHook(options.onClose, closeDetail ?? NO_STATUS_DETAIL)
     }
   }
 }
