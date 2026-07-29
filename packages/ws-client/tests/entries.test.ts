@@ -12,6 +12,24 @@ describe('public entrypoint', () => {
     expect(typeof websocket).toBe('function')
   })
 
+  it('offers no close()/terminate() anywhere in the public surface', () => {
+    // Termination is deliberately one idiom: break/throw on the iteration, or an
+    // aborted signal. This guards against a close-shaped method creeping back
+    // onto either the generator or the sender it hands out, which would give
+    // callers a second, unspecified way to stop a stream.
+    const gen = websocket('ws://example.invalid', { shouldReconnect: false })
+    const names = new Set<string>()
+    for (
+      let obj: object | null = gen;
+      obj && obj !== Object.prototype;
+      obj = Object.getPrototypeOf(obj)
+    ) {
+      for (const key of Object.getOwnPropertyNames(obj)) names.add(key)
+    }
+    expect([...names].filter((n) => /close|terminate/i.test(n))).toEqual([])
+    // Never iterated, so the generator body never ran and no socket was opened.
+  })
+
   it('types browser options as a subset of node options', () => {
     expectTypeOf<BrowserWebSocketOptions>().toExtend<NodeWebSocketOptions>()
     // headers is the one node-only option.

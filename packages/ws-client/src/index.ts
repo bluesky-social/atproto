@@ -7,6 +7,13 @@ export type {
   DataMode,
   MessageOf,
 } from './message-channel.js'
+// `Sender` is public because `onConnect` hands one to the caller. The rest of
+// the transport contract (`Transport`, `TransportOptions`, `TransportFactory`,
+// `createWebSocket`) is deliberately internal: platform selection happens
+// through the `#transport` imports condition, so a third-party transport has no
+// supported way in, and exporting the interface would commit us to its shape
+// across versions for no consumer that exists. Open it up if a real need
+// appears — widening a public API later is easy; narrowing it isn't.
 export type { HeadersInit, Sender } from './transport/transport.js'
 export type {
   Awaitable,

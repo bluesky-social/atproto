@@ -240,15 +240,6 @@ function createTransportImpl<M extends DataMode>(
     { once: true },
   )
 
-  // The channel's own iterable reports a clean `finish()` as a normal
-  // `done: true` completion — that's the right internal representation
-  // (see createMessageChannel), but a transport's every termination must
-  // reach its consumer as an error, even a clean one. A later layer's
-  // reconnect policy is what decides clean-vs-fatal, and it needs the close
-  // code to do that, which only an error can carry. A consumer-initiated
-  // stop (`for await...break`, calling the iterator's `return()`) is exempt:
-  // that's forwarded straight through as a plain completion, since it was
-  // never the connection ending on its own.
   // The channel's iterable is handed out as-is: a connection ending is
   // reported through `onClose` (above), and the reconnect loop turns that
   // detail into a classifiable error itself. Nothing here needs to invent one.
