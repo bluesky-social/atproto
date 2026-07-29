@@ -41,8 +41,8 @@ hashes, so navigate by clicking sidebar links rather than setting
   project and copy across, applying only these rewrites: `@/lib/utils` →
   `#/lib/utils.ts`, `@/registry/…/ui/x` → `#/components/ui/x.tsx`. Keep these
   files byte-faithful to upstream so future `shadcn add` stays mergeable — put
-  deviations in wrapper components instead. Base UI uses `render={<El/>}` where
-  Radix used `asChild`.
+  deviations in wrapper components instead. Base UI composes via
+  `render={<El/>}`, not a `asChild`-style prop.
   The registry's components assume `@custom-variant` bridges that ship in the
   style's `globals.css`, so copying `components/ui/*` alone is not enough — see
   the orientation bridge in `src/style.css`. `Separator` silently rendered at

@@ -1,7 +1,6 @@
 import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
-import { composeEventHandlers } from '@radix-ui/primitive'
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import {
   type ErrorParser,
@@ -58,9 +57,10 @@ export function ErrorNotice({
     <Notice
       {...props}
       role="alert"
-      onClick={composeEventHandlers(onClick, () => {
-        setClickCount((c) => c + 1)
-      })}
+      onClick={(event) => {
+        onClick?.(event)
+        if (!event.defaultPrevented) setClickCount((c) => c + 1)
+      }}
       append={
         <>
           {children}

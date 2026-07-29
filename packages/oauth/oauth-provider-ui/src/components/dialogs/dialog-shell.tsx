@@ -46,10 +46,9 @@ export function DialogShell({
   return (
     <Dialog
       open={open}
-      // @NOTE Base UI has no `dismissible` prop on Dialog.Root (Radix exposed
-      // onEscapeKeyDown / onPointerDownOutside on the content instead), so
-      // non-dismissable is expressed by rejecting close transitions. Opening is
-      // always allowed; only closing is gated.
+      // @NOTE `Dialog.Root` has no `dismissible` prop, so non-dismissable is
+      // expressed by rejecting close transitions. Opening is always allowed;
+      // only closing is gated.
       onOpenChange={(next) => {
         if (next || dismissable) onOpenChange?.(next)
       }}

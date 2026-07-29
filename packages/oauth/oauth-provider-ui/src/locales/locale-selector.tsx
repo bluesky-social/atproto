@@ -27,10 +27,9 @@ export function LocaleSelector({ className }: LocaleSelectorProps) {
         className={cn('rounded-full', className)}
         aria-label={t`Interface language selector`}
       >
-        {/* @NOTE Base UI's `Select.Value` renders the raw `value` unless given
-          a function to map it to a label — Radix's echoed the selected item's
-          own content. Without this the trigger showed the locale key ("en")
-          rather than the language it stands for. */}
+        {/* @NOTE `Select.Value` renders the raw `value` unless given a function
+          to map it to a label. Without this the trigger shows the locale key
+          ("en") rather than the language it stands for. */}
         <SelectValue>
           {(value) => {
             const entry = locales[value as keyof typeof locales]

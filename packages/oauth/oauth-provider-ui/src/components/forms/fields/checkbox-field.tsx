@@ -21,11 +21,10 @@ export type CheckboxFieldProps<TValues extends FieldValues> = {
 
 /**
  * @NOTE Deliberately a native `<input type="checkbox">` rather than
- * `ui/checkbox` (Radix). Radix renders `<button role="checkbox">`, and browsers
- * only forward `<label for>` activation to native form controls — not to
- * buttons. That silently broke `clickOnText('Se souvenir…', 'label')` in the
- * pds e2e suite: the box never ticked, so the session was not remembered and
- * every later test started signed out.
+ * `ui/checkbox`, which renders `<button role="checkbox">`. Browsers only
+ * forward `<label for>` activation to native form controls, not to buttons, so
+ * clicking the label left the box unticked — the session was then not
+ * remembered, which the pds e2e suite caught.
  *
  * The native control is styled to match the shadcn checkbox.
  */

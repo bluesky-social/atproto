@@ -91,9 +91,7 @@ export function NotificationsProvider({
 
       {/* @NOTE The toaster lives inside the provider (rather than being mounted
         separately by each entry page) so that a page can never end up with a
-        notifications context whose toasts have nowhere to render. Positioned
-        bottom-center to match the viewport the previous Radix implementation
-        used. */}
+        notifications context whose toasts have nowhere to render. */}
       <Toaster position="bottom-center" />
     </NotificationsContext>
   )
