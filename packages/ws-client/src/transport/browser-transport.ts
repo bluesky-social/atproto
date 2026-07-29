@@ -4,7 +4,6 @@ import {
   type CloseEventDetail,
   type DataMode,
   createMessageChannel,
-  toTransportIterable,
 } from '../message-channel.js'
 import type {
   HeadersInit,
@@ -237,11 +236,10 @@ function createTransportImpl<M extends DataMode>(
   // stop (`for await...break`, calling the iterator's `return()`) is exempt:
   // that's forwarded straight through as a plain completion, since it was
   // never the connection ending on its own.
-  // Every way the *connection* ends reaches the consumer as an error, even a
-  // clean close, so the reconnect policy above can classify by close code; a
-  // consumer-initiated stop completes normally instead. Shared with the node
-  // transport — see toTransportIterable.
-  const iterable = toTransportIterable(channel)
+  // The channel's iterable is handed out as-is: a connection ending is
+  // reported through `onClose` (above), and the reconnect loop turns that
+  // detail into a classifiable error itself. Nothing here needs to invent one.
+  const iterable = channel.iterable
 
   return {
     send: sender.send,

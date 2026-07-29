@@ -2,10 +2,11 @@ import { CloseCode } from './lib/close-codes.js'
 import { CloseError, WebSocketConnectionError } from './lib/errors.js'
 import { invokeHook } from './lib/invoke-hook.js'
 import { backoffMs, defaultShouldReconnect } from './lib/reconnect-policy.js'
-import type {
-  CloseEventDetail,
-  DataMode,
-  MessageOf,
+import {
+  ABNORMAL_CLOSE_DETAIL,
+  type CloseEventDetail,
+  type DataMode,
+  type MessageOf,
 } from './message-channel.js'
 import type {
   Sender,
@@ -154,6 +155,11 @@ export function createWebSocket(
         // ends — see the onClose wiring below.
         let live = true
         let opened = false
+        // This connection's close detail, as distinct from `lastDetail`, which
+        // survives across attempts to feed the terminal hook. Recorded
+        // synchronously by `onClose` below, so it is already set by the time a
+        // completed `yield*` resumes.
+        let closedDetail: CloseEventDetail | undefined
         const invalidateSender = () => {
           live = false
         }
@@ -184,6 +190,7 @@ export function createWebSocket(
             },
             onClose: (detail) => {
               lastDetail = detail
+              closedDetail = detail
               // This connection is over, so the sender handed to onOpen /
               // onReconnect must stop accepting writes *now*. Waiting for the
               // loop to notice would leave a window — the loop only advances
@@ -197,14 +204,20 @@ export function createWebSocket(
             },
           })
 
-          // Every way a connection ends arrives here as a throw — the
-          // transports surface even a clean close as a `CloseError` carrying
-          // its code, precisely so the policy below can classify it. So this
-          // never falls through: it either throws, or the consumer stopped us
-          // (a `break` resumes the generator at this `yield*` with a return
-          // completion, which runs the `finally` and leaves the loop).
+          // A transport reports a failure by rejecting, and an orderly close by
+          // completing — the ordinary iterator contract. A close therefore
+          // arrives here as a normal completion, and this layer turns the close
+          // detail into the error the policy below classifies. Doing it here
+          // rather than inside the transport keeps transports from having to
+          // invent an error for something that isn't one: `closedDetail` is
+          // already recorded by the `onClose` above, synchronously, before this
+          // resumes.
+          //
+          // A consumer `break` also lands here, resuming the generator with a
+          // return completion — which runs the `finally` and leaves the loop
+          // without reaching the throw.
           yield* transport
-          return
+          throw closeError(closedDetail)
         } catch (error) {
           // An abort is the caller's decision, not a connection failure:
           // surface the reason rather than classifying it as retryable.
@@ -240,6 +253,16 @@ export function createWebSocket(
       invokeHook(options.onClose, lastDetail ?? NO_STATUS_DETAIL)
     }
   }
+}
+
+// The error a completed transport iteration is classified as. A transport
+// completes rather than rejecting when the connection closed in an orderly way,
+// so there is always a recorded detail — but synthesize an abnormal close if a
+// transport ever completes without reporting one, rather than classifying
+// `undefined`.
+function closeError(detail: CloseEventDetail | undefined): CloseError {
+  const { code, reason, wasClean } = detail ?? ABNORMAL_CLOSE_DETAIL
+  return new CloseError(code, reason, wasClean)
 }
 
 function normalizeShouldReconnect(

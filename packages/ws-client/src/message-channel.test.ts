@@ -2,12 +2,10 @@ import { assert, describe, expect, it, vi } from 'vitest'
 import { CloseCode } from './lib/close-codes.js'
 import {
   BufferOverflowError,
-  CloseError,
   DataModeError,
   IdleTimeoutError,
-  SocketError,
 } from './lib/errors.js'
-import { createMessageChannel, toTransportIterable } from './message-channel.js'
+import { createMessageChannel } from './message-channel.js'
 
 describe(createMessageChannel, () => {
   describe('delivery', () => {
@@ -437,98 +435,6 @@ describe(createMessageChannel, () => {
       await expect(iterator.next()).resolves.toEqual({
         value: undefined,
         done: true,
-      })
-    })
-  })
-})
-
-describe(toTransportIterable, () => {
-  it('converts a clean channel completion into a CloseError carrying the code', async () => {
-    const channel = createMessageChannel({ dataMode: 'auto' })
-    const iterator = toTransportIterable(channel)[Symbol.asyncIterator]()
-    channel.finish({
-      code: CloseCode.GoingAway,
-      reason: 'restart',
-      wasClean: true,
-    })
-    await expect(iterator.next()).rejects.toSatisfy((err) => {
-      assert(err instanceof CloseError)
-      expect(err.code).toBe(CloseCode.GoingAway)
-      expect(err.reason).toBe('restart')
-      return true
-    })
-  })
-
-  it('still drains buffered messages before reporting the close', async () => {
-    const channel = createMessageChannel({ dataMode: 'auto' })
-    const iterator = toTransportIterable(channel)[Symbol.asyncIterator]()
-    channel.push('one')
-    channel.finish({ code: 1000, reason: '', wasClean: true })
-    await expect(iterator.next()).resolves.toEqual({
-      value: 'one',
-      done: false,
-    })
-    await expect(iterator.next()).rejects.toBeInstanceOf(CloseError)
-  })
-
-  it('propagates a failure error unchanged rather than converting it', async () => {
-    const channel = createMessageChannel({ dataMode: 'auto' })
-    const iterator = toTransportIterable(channel)[Symbol.asyncIterator]()
-    const cause = new SocketError(new Error('econnreset'))
-    channel.fail(cause)
-    // A failed channel rejects its pull directly, so the wrapper's clean-close
-    // conversion never sees it — the transport's own taxonomy error reaches
-    // the consumer intact, which is what the reconnect policy classifies.
-    await expect(iterator.next()).rejects.toBe(cause)
-  })
-
-  describe('consumer-initiated stop', () => {
-    it('completes on return() and stays complete on a later next()', async () => {
-      const channel = createMessageChannel({ dataMode: 'auto' })
-      const iterator = toTransportIterable(channel)[Symbol.asyncIterator]()
-      channel.push('one')
-      await iterator.next()
-      await expect(iterator.return!()).resolves.toEqual({
-        value: undefined,
-        done: true,
-      })
-      // The bug this guards: a pull after the consumer stopped used to
-      // synthesize a retryable SocketError, which would make a deliberate
-      // stop look like a transient failure to the reconnect policy.
-      await expect(iterator.next()).resolves.toEqual({
-        value: undefined,
-        done: true,
-      })
-    })
-
-    it('tolerates return() twice', async () => {
-      const channel = createMessageChannel({ dataMode: 'auto' })
-      const iterator = toTransportIterable(channel)[Symbol.asyncIterator]()
-      await expect(iterator.return!()).resolves.toEqual({
-        value: undefined,
-        done: true,
-      })
-      await expect(iterator.return!()).resolves.toEqual({
-        value: undefined,
-        done: true,
-      })
-    })
-
-    it('does not mask a real close that happened before the stop', async () => {
-      const channel = createMessageChannel({ dataMode: 'auto' })
-      const iterator = toTransportIterable(channel)[Symbol.asyncIterator]()
-      // Precedence: the connection ended on its own first, so its cause wins
-      // over the consumer's later loss of interest.
-      channel.finish({
-        code: CloseCode.InternalError,
-        reason: 'boom',
-        wasClean: false,
-      })
-      await iterator.return!()
-      await expect(iterator.next()).rejects.toSatisfy((err) => {
-        assert(err instanceof CloseError)
-        expect(err.code).toBe(CloseCode.InternalError)
-        return true
       })
     })
   })

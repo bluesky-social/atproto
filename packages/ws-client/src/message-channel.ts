@@ -4,7 +4,6 @@ import {
   CloseError,
   DataModeError,
   IdleTimeoutError,
-  WebSocketConnectionError,
 } from './lib/errors.js'
 import { invokeHook } from './lib/invoke-hook.js'
 
@@ -293,67 +292,6 @@ export function createMessageChannel<M extends DataMode>(
     finish,
     get closeDetail() {
       return closeDetail
-    },
-  }
-}
-
-/**
- * Adapts a channel's iterable to a *transport's* iteration contract: every
- * way the connection itself ends must reach the consumer as an error, even a
- * clean close. The channel reports a clean `finish()` as a plain `done: true`
- * — the right internal representation — but a transport's consumer needs to
- * know *why* iteration stopped, and the reconnect policy above classifies by
- * close code. Only an error can carry one.
- *
- * A consumer-initiated stop is the exception: `break`ing a `for await`, or
- * calling `return()` directly, is the consumer's own decision and completes
- * normally. Crucially that has to stay true for any *later* pull as well —
- * `yield* transport` can pull again after a downstream `return()` propagates,
- * and turning that into a retryable error would trigger a spurious reconnect.
- *
- * Shared here rather than written per-transport: the logic is entirely
- * platform-neutral, and two copies that must stay behaviorally identical is
- * exactly the divergence risk this module exists to remove.
- */
-export function toTransportIterable<M extends DataMode>(
-  channel: MessageChannel<M>,
-): AsyncIterable<MessageOf<M>, void, undefined> {
-  return {
-    [Symbol.asyncIterator]() {
-      const inner = channel.iterable[Symbol.asyncIterator]()
-      let consumerStopped = false
-      return {
-        async next() {
-          const result = await inner.next()
-          if (!result.done) return result
-          // Precedence: a terminal the *connection* already reached wins over
-          // a later consumer stop. The channel records a close detail only
-          // for a real ending (close frame, socket error, timeout), never for
-          // a consumer stop — so its presence means the connection ended on
-          // its own and the consumer deserves that cause, even if it has
-          // since stopped listening. Absent a detail, a stopped consumer gets
-          // the clean completion it asked for; anything else is a connection
-          // that ended with nothing to say about it.
-          const detail = channel.closeDetail
-          if (detail) {
-            throw new CloseError(detail.code, detail.reason, detail.wasClean)
-          }
-          if (consumerStopped) return { value: undefined, done: true }
-          // Unreachable under the channel's contract: the only `done` terminal
-          // that records no close detail is the consumer's own return(), which
-          // sets the flag above. Assert it rather than guessing — and note the
-          // error is deliberately non-retryable, so an invariant violation
-          // fails fast instead of driving an endless reconnect loop.
-          throw new WebSocketConnectionError(
-            'WebSocket iteration ended with neither a close detail nor a consumer stop',
-          )
-        },
-        async return() {
-          consumerStopped = true
-          await inner.return?.()
-          return { value: undefined, done: true }
-        },
-      }
     },
   }
 }
