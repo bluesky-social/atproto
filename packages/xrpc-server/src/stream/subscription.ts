@@ -39,9 +39,12 @@ export class Subscription<T = unknown> {
         dataMode: 'binary',
         headers: this.opts.headers,
         maxReconnectSeconds: this.opts.maxReconnectSeconds,
+        // `{}` means "on at the default interval" — omitting the option
+        // entirely would also default it on, but being explicit keeps the
+        // intent visible next to the caller-supplied override.
         heartbeat: this.opts.heartbeatIntervalMs
           ? { intervalMs: this.opts.heartbeatIntervalMs }
-          : undefined,
+          : {},
         signal: this.opts.signal,
         onError: (error, reconnect) => {
           // Only reported when a retry is coming; a fatal error reaches the

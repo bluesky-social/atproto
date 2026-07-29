@@ -74,9 +74,10 @@ export class TapChannel implements AsyncDisposable {
       dataMode: 'text',
       headers,
       maxReconnectSeconds: wsOpts.maxReconnectSeconds,
+      // `{}` means "on at the default interval"; see Subscription.
       heartbeat: wsOpts.heartbeatIntervalMs
         ? { intervalMs: wsOpts.heartbeatIntervalMs }
-        : undefined,
+        : {},
       signal: this.abortController.signal,
       shouldReconnect,
       onError: (error, reconnect) => {

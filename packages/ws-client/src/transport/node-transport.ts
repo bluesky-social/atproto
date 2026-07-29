@@ -11,11 +11,12 @@ import {
   type DataMode,
   createMessageChannel,
 } from '../message-channel.js'
-import type {
-  Sender,
-  Transport,
-  TransportFactory,
-  TransportOptions,
+import {
+  DEFAULT_HEARTBEAT_INTERVAL_MS,
+  type Sender,
+  type Transport,
+  type TransportFactory,
+  type TransportOptions,
 } from './transport.js'
 
 /**
@@ -110,7 +111,11 @@ function createTransportImpl<M extends DataMode>(
 
   function startHeartbeat(): void {
     const { heartbeat } = options
-    if (!heartbeat) return
+    // On unless explicitly disabled: a consumer that never thought about
+    // liveness still gets dead-connection detection, which is the behavior
+    // WebSocketKeepAlive had and every consumer in this repo relied on.
+    if (heartbeat === false) return
+    const intervalMs = heartbeat?.intervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS
     heartbeatAlive = true
     heartbeatTimer = setInterval(() => {
       if (paused) {
@@ -125,7 +130,7 @@ function createTransportImpl<M extends DataMode>(
       }
       heartbeatAlive = false
       ws.ping()
-    }, heartbeat.intervalMs)
+    }, intervalMs)
     heartbeatTimer.unref?.()
   }
 

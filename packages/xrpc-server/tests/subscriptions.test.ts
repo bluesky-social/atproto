@@ -1,6 +1,6 @@
 import type * as http from 'node:http'
 import type { AddressInfo } from 'node:net'
-import { WebSocket, createWebSocketStream } from 'ws'
+import { WebSocket, WebSocketServer, createWebSocketStream } from 'ws'
 import { wait } from '@atproto/common'
 import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import {
@@ -286,6 +286,52 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
         }
       }
       await expect(drainStream).rejects.toHaveProperty('code', 'ECONNRESET')
+    })
+
+    describe('Subscription liveness', () => {
+      it('pings a silent server, so a dead connection is detected', async () => {
+        // The previous client started a heartbeat unconditionally and no caller
+        // ever passed the option, so an opt-in default silently removed
+        // dead-connection detection everywhere: a black-holed TCP connection
+        // parks forever with no error and no reconnect.
+        //
+        // A short interval is passed here to keep the test quick; the wiring it
+        // exercises is the same one that carries the 10s default.
+        const wss = new WebSocketServer({ port: 0 })
+        await new Promise((resolve) => wss.once('listening', resolve))
+        const { port: silentPort } = wss.address() as AddressInfo
+
+        let pings = 0
+        wss.on('connection', (socket) => {
+          socket.on('ping', () => pings++)
+        })
+
+        const ac = new AbortController()
+        const sub = new Subscription({
+          service: `ws://localhost:${silentPort}`,
+          method: 'io.example.streamOne',
+          heartbeatIntervalMs: 40,
+          signal: ac.signal,
+          validate: (obj) => obj,
+        })
+
+        const consume = (async () => {
+          try {
+            for await (const _ of sub) {
+              // The server never sends: this parks until aborted below.
+            }
+          } catch {
+            // The abort surfaces here; not what this test is about.
+          }
+        })()
+
+        await wait(400)
+        ac.abort(new Error('test cleanup'))
+        await consume
+        wss.close()
+
+        expect(pings).toBeGreaterThan(0)
+      })
     })
 
     describe('Subscription consumer', () => {
