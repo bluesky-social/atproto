@@ -1,8 +1,8 @@
 import { type Meter, ValueType, diag, metrics } from '@opentelemetry/api'
 import { type Logger, SeverityNumber, logs } from '@opentelemetry/api-logs'
-import type { Logger as PinoLogger } from 'pino'
+import type { DidString } from '@atproto/syntax'
 import type { com } from './lexicons.js'
-import { accountLogger, oauthLogger, sessionLogger } from './logger.js'
+import { eventsLogger } from './logger.js'
 
 const meter: Meter = metrics.getMeter('@atproto/pds')
 const logger: Logger = logs.getLogger('@atproto/pds')
@@ -50,9 +50,7 @@ class EventReporter {
   })
 
   #oauthAuthorizationCounter = meter.createCounter<{
-    clientTrusted: boolean
     clientFirstParty: boolean
-    clientConfidential: boolean
   }>('oauth.authorization', {
     description: 'Increased when an OAuth authorization is granted on this PDS',
     valueType: ValueType.INT,
@@ -65,101 +63,97 @@ class EventReporter {
    * @note this method should never throw
    */
   #log(
-    pino: PinoLogger,
     eventName: string,
-    body: string,
     attributes: Record<string, string | number | boolean | undefined>,
   ) {
     try {
-      pino.info(attributes, body)
       logger.emit({
         eventName,
         severityNumber: SeverityNumber.INFO,
-        body,
         attributes,
       })
+      eventsLogger.info({ eventName, ...attributes })
     } catch (err) {
-      try {
-        diag.error(`Failed to log event ${eventName}:`, err)
-      } catch {
-        // ignore
-      }
+      diag.error(`Failed to log event ${eventName}:`, err)
     }
   }
 
-  /**
-   * A new account was created on this PDS, either through the XRPC
-   * `createAccount` endpoint or the OAuth sign-up flow.
-   */
-  accountCreated(attributes: {
+  accountCreated({
+    source,
+    did,
+    invited,
+    deactivated,
+    clientId,
+  }: {
     source: com.atproto.server.createAccount.$lxm | 'oauth'
-    did: string
+    did: DidString
     invited: boolean
     deactivated: boolean
-    // if present, the user is signing up as part of an OAuth flow
     clientId?: string
   }) {
-    this.#log(accountLogger, 'account.created', 'sign up', attributes)
-    this.#accountCreatedCounter.add(1, {
-      source: attributes.source,
-      deactivated: attributes.deactivated,
+    this.#log('account.created', {
+      source,
+      did,
+      invited,
+      deactivated,
+      clientId,
     })
+    this.#accountCreatedCounter.add(1, { source, deactivated })
   }
 
-  /**
-   * A user signed in through the OAuth flow (without necessarily creating an
-   * account).
-   */
-  signedIn(attributes: {
-    did: string
-    // if present, the user is signing in as part of an OAuth flow
-    clientId?: string
-  }) {
-    this.#log(oauthLogger, 'account.signed-in', 'sign in', attributes)
+  signedIn({ did, clientId }: { did: DidString; clientId?: string }) {
+    this.#log('account.signed-in', { did, clientId })
   }
 
-  /**
-   * A new session (token) was created on this PDS.
-   */
-  sessionCreated(attributes: {
+  sessionCreated({
+    source,
+    did,
+    clientId,
+  }: {
     source:
+      | 'oauth'
       | com.atproto.server.createAccount.$lxm
       | com.atproto.server.createSession.$lxm
-      | 'oauth'
-    did: string
+    did: DidString
     clientId?: string
   }) {
-    this.#log(sessionLogger, 'session.created', 'token created', attributes)
-    this.#sessionCreatedCounter.add(1, { source: attributes.source })
+    this.#log('session.created', { source, did, clientId })
+    this.#sessionCreatedCounter.add(1, { source })
   }
 
-  /**
-   * An existing session (token) was refreshed on this PDS.
-   */
-  sessionRefreshed(attributes: {
-    source: com.atproto.server.refreshSession.$lxm | 'oauth'
-    did: string
+  sessionRefreshed({
+    source,
+    did,
+    clientId,
+  }: {
+    source: 'oauth' | com.atproto.server.refreshSession.$lxm
+    did: DidString
     clientId?: string
   }) {
-    this.#log(sessionLogger, 'session.refreshed', 'token refreshed', attributes)
+    this.#log('session.refreshed', { source, did, clientId })
   }
 
-  /**
-   * An OAuth authorization was granted on this PDS.
-   */
-  oauthAuthorized(attributes: {
-    did: string
+  oauthAuthorized({
+    did,
+    clientId,
+    clientTrusted,
+    clientFirstParty,
+    clientConfidential,
+  }: {
+    did: DidString
     clientId: string
     clientTrusted: boolean
     clientFirstParty: boolean
     clientConfidential: boolean
   }) {
-    this.#log(oauthLogger, 'oauth.authorized', 'authorized', attributes)
-    this.#oauthAuthorizationCounter.add(1, {
-      clientTrusted: attributes.clientTrusted,
-      clientFirstParty: attributes.clientFirstParty,
-      clientConfidential: attributes.clientConfidential,
+    this.#log('oauth.authorized', {
+      did,
+      clientId,
+      clientTrusted,
+      clientFirstParty,
+      clientConfidential,
     })
+    this.#oauthAuthorizationCounter.add(1, { clientFirstParty })
   }
 }
 
