@@ -1,5 +1,3 @@
-'use client'
-
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import { Trans } from '@lingui/react/macro'
 import { XIcon } from 'lucide-react'

@@ -12,7 +12,8 @@ export type CheckboxFieldProps = {
 
 /**
  * @NOTE Deliberately a native `<input type="checkbox">` rather than
- * `ui/checkbox`, which renders `<button role="checkbox">`. Browsers forward
+ * the shadcn checkbox primitive, which renders `<button role="checkbox">`.
+ * Browsers forward
  * `<label for>` activation only to native form controls, not to buttons, so
  * with the primitive a click on the label leaves the box unticked.
  *
