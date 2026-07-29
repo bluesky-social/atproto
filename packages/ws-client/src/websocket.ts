@@ -83,10 +83,27 @@ export type BrowserWebSocketOptions<M extends DataMode = 'auto'> = Omit<
   'headers'
 >
 
+/**
+ * A reconnecting stream of WebSocket messages: `for await` over it and the
+ * stream spans reconnects, so a consumer never has to notice that the
+ * underlying connection was torn down and replaced. Termination is `break`,
+ * `throw`, or an aborted `signal`.
+ *
+ * An `AsyncGenerator` rather than a bare `AsyncIterable`, so a consumer that
+ * wants single-step control (`next()`) or explicit termination (`return()`) can
+ * have it — the runtime object is a generator either way, and a quieter type
+ * would only hide that.
+ */
+export type WebSocketIterable<M extends DataMode = 'auto'> = AsyncGenerator<
+  MessageOf<M>,
+  void,
+  undefined
+>
+
 export type WebSocketFn = <M extends DataMode = 'auto'>(
   url: string | URL | (() => Awaitable<string | URL>),
   options?: WebSocketOptions<M>,
-) => AsyncGenerator<MessageOf<M>, void, undefined>
+) => WebSocketIterable<M>
 
 // The detail reported when a stream ends without any close frame having
 // applied — e.g. a stop while parked in backoff between attempts. 1005 is the
@@ -108,7 +125,7 @@ export function createWebSocket(
   return async function* websocket<M extends DataMode = 'auto'>(
     url: string | URL | (() => Awaitable<string | URL>),
     options: WebSocketOptions<M> = {},
-  ): AsyncGenerator<MessageOf<M>, void, undefined> {
+  ): WebSocketIterable<M> {
     const { signal } = options
     const maxMs = 1000 * (options.maxReconnectSeconds ?? 64)
     const shouldReconnect = normalizeShouldReconnect(options.shouldReconnect)
