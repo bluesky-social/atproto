@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 
+// @NOTE Must equal Tailwind's `md` breakpoint (48rem): the sidebar pairs this
+// hook with `md:` variants, which compile to static media queries — the
+// build emits no `--breakpoint-*` variable that could be read instead.
 const MOBILE_BREAKPOINT = 768
 
 export function useIsMobile() {
