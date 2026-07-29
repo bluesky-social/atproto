@@ -1,23 +1,22 @@
-import { useForm } from 'react-hook-form'
 import type { HandleString } from '@atproto/syntax'
-import { HandleField } from '#/components/forms/fields/handle-field.tsx'
+import {
+  HandleField,
+  composeHandle,
+} from '#/components/forms/fields/handle-field.tsx'
 import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
-import { schemaResolver } from '#/lib/form-resolver.ts'
-import {
-  type UpdateHandleValues,
-  updateHandleSchema,
-} from '#/lib/form-schemas.ts'
 
 export type UpdateHandleDefaultData = {
   handle: HandleString
 }
 
+type HandleFormValues = { handle: string; domain: string }
+
 export type UpdateHandleDefaultFormProps = Omit<
-  FormShellProps<UpdateHandleValues>,
-  'form' | 'onSubmit'
+  FormShellProps<HandleFormValues>,
+  'onSubmit'
 > & {
   domains: string[]
   /** Seeds the field with the account's current handle. */
@@ -34,29 +33,20 @@ export function UpdateHandleDefaultForm({
   handler,
   ...props
 }: UpdateHandleDefaultFormProps) {
-  const form = useForm<UpdateHandleValues>({
-    resolver: schemaResolver(updateHandleSchema),
-    reValidateMode: 'onChange',
-    defaultValues: { handle: handleDefault ?? '' },
-  })
-
   return (
-    <FormShell
+    <FormShell<HandleFormValues>
       {...props}
-      form={form}
-      // @NOTE HandleField only publishes a value once the composed handle is
-      // valid; the domain check is re-asserted here so submission cannot send a
+      // @NOTE The domain check is re-asserted here so submission cannot send a
       // handle outside the available domains.
       onSubmit={(values, signal) => {
-        const handle = values.handle as HandleString
+        const handle = composeHandle(values) as HandleString
         if (!domains.some((dom) => handle.endsWith(dom))) return
         return handler({ handle }, signal)
       }}
     >
       <HandleField
-        control={form.control}
-        name="handle"
         domains={domains}
+        defaultHandle={handleDefault}
         required
         autoFocus
       />

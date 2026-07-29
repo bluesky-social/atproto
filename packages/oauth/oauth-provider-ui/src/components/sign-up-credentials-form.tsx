@@ -1,7 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { HashIcon } from 'lucide-react'
-import { useEffect, useMemo } from 'react'
-import { useForm } from 'react-hook-form'
 import { EmailField } from '#/components/forms/fields/email-field.tsx'
 import { NewPasswordField } from '#/components/forms/fields/new-password-field.tsx'
 import { TextField } from '#/components/forms/fields/text-field.tsx'
@@ -9,12 +7,8 @@ import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
-import { useStableCallback } from '#/hooks/use-stable-callback.ts'
-import { schemaResolver } from '#/lib/form-resolver.ts'
-import {
-  type SignUpCredentialsValues,
-  buildSignUpCredentialsSchema,
-} from '#/lib/form-schemas.ts'
+
+type Values = { email: string; password: string; inviteCode: string }
 
 export type SignUpCredentialsData = {
   email: string
@@ -23,8 +17,8 @@ export type SignUpCredentialsData = {
 }
 
 export type SignUpCredentialsFormProps = Omit<
-  FormShellProps<SignUpCredentialsValues>,
-  'form' | 'onSubmit'
+  FormShellProps<Values>,
+  'onSubmit' | 'onValues'
 > & {
   inviteCodeRequired?: boolean
   values?: Partial<SignUpCredentialsData>
@@ -45,35 +39,12 @@ export function SignUpCredentialsForm({
 }: SignUpCredentialsFormProps) {
   const { t } = useLingui()
 
-  const schema = useMemo(
-    () => buildSignUpCredentialsSchema(inviteCodeRequired),
-    [inviteCodeRequired],
-  )
-
-  const form = useForm<SignUpCredentialsValues>({
-    resolver: schemaResolver(schema),
-    reValidateMode: 'onChange',
-    defaultValues: {
-      email: values?.email ?? '',
-      password: values?.password ?? '',
-      inviteCode: values?.inviteCode ?? '',
-    },
-  })
-
-  // @NOTE Mirror every keystroke back to the wizard, not just the submitted
-  // values, so stepping Back and Forward again restores un-submitted input.
-  const report = useStableCallback((next: unknown) => {
-    onValues?.(next as Partial<SignUpCredentialsData>)
-  })
-  useEffect(() => {
-    const sub = form.watch((next) => report(next))
-    return () => sub.unsubscribe()
-  }, [form, report])
-
   return (
-    <FormShell
+    <FormShell<Values>
       {...props}
-      form={form}
+      // @NOTE Mirror every edit back to the wizard, not just the submitted
+      // values, so stepping Back and Forward again restores un-submitted input.
+      onValues={(next) => onValues?.(next as Partial<SignUpCredentialsData>)}
       onSubmit={(next, signal) => {
         const data: SignUpCredentialsData = inviteCodeRequired
           ? {
@@ -88,8 +59,8 @@ export function SignUpCredentialsForm({
     >
       {inviteCodeRequired && (
         <TextField
-          control={form.control}
           name="inviteCode"
+          defaultValue={values?.inviteCode ?? ''}
           label={<Trans>Invite code</Trans>}
           icon={<HashIcon className="size-5" />}
           autoFocus
@@ -101,8 +72,8 @@ export function SignUpCredentialsForm({
       )}
 
       <EmailField
-        control={form.control}
         name="email"
+        defaultValue={values?.email ?? ''}
         label={<Trans>Email</Trans>}
         autoFocus={!inviteCodeRequired}
         autoComplete="username email"
@@ -111,8 +82,8 @@ export function SignUpCredentialsForm({
       />
 
       <NewPasswordField
-        control={form.control}
         name="password"
+        defaultValue={values?.password ?? ''}
         label={<Trans>Password</Trans>}
         enterKeyHint="next"
         required

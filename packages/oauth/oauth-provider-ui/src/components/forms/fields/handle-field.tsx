@@ -1,21 +1,6 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtSignIcon, CheckIcon, XIcon } from 'lucide-react'
-import {
-  type ReactNode,
-  type RefObject,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
-import type { Control, FieldPath, FieldValues } from 'react-hook-form'
-import { type HandleString, isValidHandle } from '@atproto/syntax'
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '#/components/forms/form.tsx'
+import { type ReactNode, useMemo, useState } from 'react'
 import { Input } from '#/components/ui/input.tsx'
 import {
   Select,
@@ -25,7 +10,6 @@ import {
   SelectValue,
 } from '#/components/ui/select.tsx'
 import { Handle } from '#/components/utils/handle.tsx'
-import { useStableCallback } from '#/hooks/use-stable-callback.ts'
 import {
   MAX_FULL_LENGTH,
   MAX_LENGTH,
@@ -35,134 +19,79 @@ import {
 } from '#/lib/handle.ts'
 import { cn } from '#/lib/utils.ts'
 
-export type HandleFieldProps<TValues extends FieldValues> = {
-  control: Control<TValues>
-  name: FieldPath<TValues>
+export type HandleFieldProps = {
   label?: ReactNode
   /** List of available domains for the handle. */
   domains: readonly string[]
+  defaultHandle?: string
   autoFocus?: boolean
   required?: boolean
 }
 
 /**
- * Composes a full handle out of a user-typed segment and a chosen domain.
+ * Composes a full handle out of a typed segment and a chosen domain.
  *
- * @NOTE The one field that cannot simply wrap an input: the value the form
- * stores (a full `HandleString`) is derived from two controls. It keeps the
- * segment and domain internally and publishes only the composed handle.
+ * @NOTE Two named controls — `handle` for the segment, `domain` for the
+ * suffix — so the form's values hold exactly what the user sees in each.
+ * Callers join them with `composeHandle`.
+ *
+ * Deliberately not wrapped in a `Field.Root`: a Field binds every control
+ * inside it to the field's own name, which would make the Select submit under
+ * `handle` and clobber the segment. The length and charset rules are shown by
+ * `ValidationMessage` below instead of a `Field.Error`.
  */
-export function HandleField<TValues extends FieldValues>({
-  control,
-  name,
+export function HandleField({
   label,
   domains: availableDomains,
+  defaultHandle,
   autoFocus,
   required,
-}: HandleFieldProps<TValues>) {
-  const domains = availableDomains.filter(isValidDomain)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  return (
-    <FormField
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <HandleFieldInner
-          domains={domains}
-          label={label}
-          autoFocus={autoFocus}
-          required={required}
-          inputRef={inputRef}
-          initialHandle={field.value as HandleString | undefined}
-          onHandle={(handle) => field.onChange(handle ?? '')}
-          onBlur={field.onBlur}
-          fieldName={field.name}
-        />
-      )}
-    />
-  )
-}
-
-function HandleFieldInner({
-  domains,
-  label,
-  autoFocus,
-  required,
-  inputRef,
-  initialHandle,
-  onHandle,
-  onBlur,
-  fieldName,
-}: {
-  domains: ValidDomain[]
-  label?: ReactNode
-  autoFocus?: boolean
-  required?: boolean
-  inputRef: RefObject<HTMLInputElement | null>
-  initialHandle?: HandleString
-  onHandle: (handle: HandleString | undefined) => void
-  onBlur: () => void
-  fieldName: string
-}) {
-  // @NOTE useLingui() must be called here rather than receiving `t` as a prop:
-  // the Lingui macro only transforms t in a scope that imports the hook,
-  // so passing t down silently left the strings untranslated and dropped them
-  // from the catalogs.
+}: HandleFieldProps) {
   const { t } = useLingui()
-  const [domainIdx, setDomainIdx] = useState(() => {
-    if (!initialHandle) return 0
-    const idx = domains.findIndex((d) => initialHandle.endsWith(d))
-    return idx === -1 ? 0 : idx
+  const domains = useMemo(
+    () => availableDomains.filter(isValidDomain),
+    [availableDomains],
+  )
+
+  const [domain, setDomain] = useState<ValidDomain | null>(() => {
+    const matched =
+      defaultHandle && domains.find((d) => defaultHandle.endsWith(d))
+    return matched || domains[0] || null
   })
+
   const [segment, setSegment] = useState(() => {
-    if (!initialHandle) return ''
-    const domain = domains[domainIdx]
-    return domain && initialHandle.endsWith(domain)
-      ? initialHandle.slice(0, -domain.length)
+    if (!defaultHandle || !domain) return ''
+    return defaultHandle.endsWith(domain)
+      ? defaultHandle.slice(0, -domain.length)
       : ''
   })
 
-  const domain: ValidDomain | null = domains[domainIdx] || domains[0] || null
-  const { minLength, maxLength, validateSegment } = useSegmentValidator(domain)
-
-  const [handle, setHandle] = useState<HandleString | undefined>(initialHandle)
-  const [validity, setValidity] = useState(() => validateSegment(segment))
-
-  const update = useStableCallback((segment: string, domainIdx: number) => {
-    const validity = validateSegment(segment)
-    const domain = domains[domainIdx]
-    const next = domain && validity.valid && `${segment}${domain}`
-
-    setSegment(segment)
-    setValidity(validity)
-    setDomainIdx(domainIdx)
-
-    if (next && isValidHandle(next)) {
-      setHandle(next)
-      onHandle(next)
-    } else {
-      setHandle(undefined)
-      onHandle(undefined)
-    }
-  })
-
-  // Automatically update the domain index when the list length changes
-  useEffect(() => {
-    if (domainIdx >= domains.length) update(segment, 0)
-  }, [update, segment, domains.length, domainIdx])
+  const minLength = MIN_LENGTH
+  const maxLength = domain
+    ? Math.min(MAX_LENGTH, MAX_FULL_LENGTH - domain.length)
+    : MAX_LENGTH
+  const validLength = segment.length >= minLength && segment.length <= maxLength
+  const validCharset = /^[a-z0-9][a-z0-9-]+[a-z0-9]$/.test(segment)
+  const full = domain && validLength && validCharset ? segment + domain : ''
 
   return (
-    <FormItem>
-      {label && <FormLabel>{label}</FormLabel>}
+    <div className="flex flex-col gap-2">
+      {label && (
+        <label
+          htmlFor="handle"
+          className="flex w-fit items-center gap-2 text-sm font-medium leading-snug"
+        >
+          {label}
+        </label>
+      )}
 
       <div>
-        <ValidationMessage hasValue={!!segment} valid={validity.validLength}>
+        <ValidationMessage hasValue={!!segment} valid={validLength}>
           <Trans>
             Between {minLength} and {maxLength} characters
           </Trans>
         </ValidationMessage>
-        <ValidationMessage hasValue={!!segment} valid={validity.validCharset}>
+        <ValidationMessage hasValue={!!segment} valid={validCharset}>
           <Trans>Only letters, numbers, and hyphens</Trans>
         </ValidationMessage>
       </div>
@@ -174,59 +103,41 @@ function HandleFieldInner({
         >
           <AtSignIcon className="size-5" />
         </span>
-        <FormControl>
-          <Input
-            ref={inputRef}
-            name={fieldName}
-            title={t`Type your username`}
-            type="text"
-            pattern="[a-z0-9][a-z0-9\-]+[a-z0-9]"
-            minLength={minLength}
-            maxLength={maxLength}
-            autoCapitalize="none"
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck="false"
-            dir="auto"
-            autoFocus={autoFocus}
-            required={required}
-            className={cn('pl-10', domains.length > 1 && 'pr-40')}
-            value={segment}
-            onBlur={onBlur}
-            onChange={(event) => {
-              const value = event.target.value.toLowerCase()
+        <Input
+          id="handle"
+          name="handle"
+          title={t`Type your username`}
+          type="text"
+          pattern="[a-z0-9][a-z0-9\-]+[a-z0-9]"
+          minLength={MIN_LENGTH}
+          maxLength={maxLength}
+          autoCapitalize="none"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck="false"
+          dir="auto"
+          autoFocus={autoFocus}
+          required={required}
+          className={cn('pl-10', domains.length > 1 && 'pr-40')}
+          value={segment}
+          onChange={(event) => setSegment(event.target.value.toLowerCase())}
+        />
 
-              // Ensure the input is always lowercase
-              const selectionStart = event.target.selectionStart
-              const selectionEnd = event.target.selectionEnd
-              event.target.value = value
-              event.target.setSelectionRange(selectionStart, selectionEnd)
-
-              update(value, domainIdx)
-            }}
-          />
-        </FormControl>
-
+        {/* @NOTE Holds the domain itself rather than an index, so
+          `Select.Value` renders it without a mapping function. */}
         {domains.length > 1 && (
           <div className="absolute right-1">
             <Select
-              value={String(domainIdx)}
-              onValueChange={(value) => {
-                update(segment, Number(value))
-                inputRef.current?.focus()
-              }}
+              name="domain"
+              value={domain ?? ''}
+              onValueChange={(value) => setDomain(value as ValidDomain)}
             >
               <SelectTrigger size="sm" aria-label={t`Select domain`}>
-                {/* @NOTE `Select.Value` renders the raw `value` and needs a
-                  function to map it to a label. The value here is the domain's
-                  index, so without this the trigger reads "0". */}
-                <SelectValue>
-                  {(value) => domains[Number(value)] ?? null}
-                </SelectValue>
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {domains.map((d, idx) => (
-                  <SelectItem key={d} value={String(idx)}>
+                {domains.map((d) => (
+                  <SelectItem key={d} value={d}>
                     {d}
                   </SelectItem>
                 ))}
@@ -236,13 +147,17 @@ function HandleFieldInner({
         )}
       </div>
 
+      {domains.length <= 1 && (
+        <input type="hidden" name="domain" value={domain ?? ''} />
+      )}
+
       {/* @NOTE The conditional below is placeholder <0> of this Trans block.
         Do not add or reorder elements inside it. */}
       <span className="text-muted-foreground truncate text-sm">
         <Trans>
           Your full username will be:{' '}
-          {handle ? (
-            <Handle className="text-foreground" handle={handle} />
+          {full ? (
+            <Handle className="text-foreground" handle={full} />
           ) : (
             <span
               aria-hidden
@@ -251,10 +166,16 @@ function HandleFieldInner({
           )}
         </Trans>
       </span>
-
-      <FormMessage />
-    </FormItem>
+    </div>
   )
+}
+
+/** Joins the `handle` segment and `domain` suffix a HandleField contributes. */
+export function composeHandle(values: {
+  handle?: unknown
+  domain?: unknown
+}): string {
+  return `${String(values.handle ?? '')}${String(values.domain ?? '')}`
 }
 
 function ValidationMessage({
@@ -298,22 +219,4 @@ function ValidationMessage({
       {children}
     </p>
   )
-}
-
-function useSegmentValidator(domain: ValidDomain | null) {
-  const minLength = MIN_LENGTH
-  const maxLength = domain
-    ? Math.min(MAX_LENGTH, MAX_FULL_LENGTH - domain.length)
-    : MAX_LENGTH
-
-  const validateSegment = (segment: string) => {
-    const validLength =
-      segment.length >= minLength && segment.length <= maxLength
-    // @NOTE `+` not `*`: the middle class must match at least once, so this
-    // requires three characters, consistent with MIN_LENGTH.
-    const validCharset = /^[a-z0-9][a-z0-9-]+[a-z0-9]$/.test(segment)
-    return { validLength, validCharset, valid: validLength && validCharset }
-  }
-
-  return { minLength, maxLength, validateSegment }
 }

@@ -1,7 +1,6 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtSignIcon } from 'lucide-react'
-import { useCallback, useState } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { useCallback, useRef, useState } from 'react'
 import { Notice } from '#/components/feedback/notice.tsx'
 import { CheckboxField } from '#/components/forms/fields/checkbox-field.tsx'
 import { PasswordField } from '#/components/forms/fields/password-field.tsx'
@@ -16,9 +15,17 @@ import {
   InvalidCredentialsError,
   SecondAuthenticationFactorRequiredError,
 } from '#/lib/api.ts'
-import { schemaResolver } from '#/lib/form-resolver.ts'
-import { type SignInValues, signInSchema } from '#/lib/form-schemas.ts'
+import { SIGN_IN_IDENTIFIER_PATTERN } from '#/lib/form-patterns.ts'
 import { isValidDomain } from '#/lib/handle.ts'
+
+// @NOTE `username`, not `identifier`: the key becomes the rendered `name`,
+// which is a public contract.
+type Values = {
+  username: string
+  password: string
+  remember?: string
+  otp?: string
+}
 
 export type SignInData = {
   username: string
@@ -28,8 +35,8 @@ export type SignInData = {
 }
 
 export type SignInFormProps = Omit<
-  FormShellProps<SignInValues>,
-  'form' | 'onSubmit' | 'submitLabel'
+  FormShellProps<Values>,
+  'onSubmit' | 'submitLabel'
 > & {
   usernameDefault?: string
   usernameReadonly?: boolean
@@ -59,32 +66,18 @@ export function SignInForm({
   const [secondFactorError, setSecondFactorError] =
     useState<null | SecondAuthenticationFactorRequiredError>(null)
 
-  const form = useForm<SignInValues>({
-    resolver: schemaResolver(signInSchema),
-    // @NOTE Never `mode: 'onBlur'`: it renders errors under untouched
-    // required fields, which shifts the layout between mousedown and mouseup
-    // and silently drops the click.
-    reValidateMode: 'onChange',
-    defaultValues: {
-      username: usernameDefault,
-      password: '',
-      remember: rememberDefault,
-      otp: '',
-    },
-  })
-
-  const { control, setValue, getValues } = form
-  const otp = useWatch({ control, name: 'otp' })
+  const formRef = useRef<HTMLFormElement>(null)
+  const [otp, setOtp] = useState('')
 
   const clearSecondFactor = useCallback(() => {
-    setValue('otp', '')
+    setOtp('')
     setSecondFactorError(null)
-  }, [setValue])
+  }, [])
 
   return (
-    <FormShell
+    <FormShell<Values>
       {...props}
-      form={form}
+      ref={formRef}
       submitLabel={
         secondFactorError ? (
           <Trans context="verb">Confirm</Trans>
@@ -99,7 +92,7 @@ export function SignInForm({
         const data: SignInData = {
           username: values.username,
           password: values.password,
-          remember: !disableRemember && values.remember,
+          remember: !disableRemember && values.remember != null,
           ...(secondFactorError && values.otp
             ? { [secondFactorError.type]: values.otp }
             : {}),
@@ -135,8 +128,9 @@ export function SignInForm({
       }}
     >
       <TextField
-        control={control}
         name="username"
+        defaultValue={usernameDefault}
+        pattern={SIGN_IN_IDENTIFIER_PATTERN}
         label={<Trans>Identifier</Trans>}
         icon={<AtSignIcon className="size-5" />}
         type="text"
@@ -149,7 +143,8 @@ export function SignInForm({
         enterKeyHint="next"
         required
         readOnly={usernameReadonly}
-        disabled={usernameReadonly}
+        // @NOTE readOnly, not disabled: a disabled control is omitted from the
+        // form values entirely, which would submit without a username.
         autoFocus={!usernameReadonly}
         onBlur={(event) => {
           clearSecondFactor()
@@ -163,13 +158,12 @@ export function SignInForm({
             !value.includes('.') &&
             domains.length > 0
           ) {
-            setValue('username', `${value}${domains[0]}`)
+            event.target.value = `${value}${domains[0]}`
           }
         }}
       />
 
       <PasswordField
-        control={control}
         name="password"
         label={<Trans>Password</Trans>}
         enterKeyHint={secondFactorError ? 'next' : 'done'}
@@ -184,7 +178,9 @@ export function SignInForm({
               size="sm"
               className="text-sm"
               onClick={() => {
-                const value = getValues('username')
+                const value = formRef.current?.querySelector<HTMLInputElement>(
+                  'input[name="username"]',
+                )?.value
                 onForgotPassword(value?.includes('@') ? value : undefined)
               }}
               aria-label={t`Reset your password`}
@@ -204,8 +200,8 @@ export function SignInForm({
 
       {!disableRemember && (
         <CheckboxField
-          control={control}
           name="remember"
+          defaultChecked={rememberDefault}
           label={<Trans>Remember this account on this device</Trans>}
         />
       )}
@@ -213,8 +209,9 @@ export function SignInForm({
       {secondFactorError && (
         <div key="2fa">
           <TokenField
-            control={control}
             name="otp"
+            value={otp}
+            onChange={(event) => setOtp(event.currentTarget.value)}
             label={<Trans>2FA Confirmation</Trans>}
             title={t`Confirmation code`}
             enterKeyHint="done"

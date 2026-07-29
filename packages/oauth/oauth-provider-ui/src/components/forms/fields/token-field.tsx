@@ -1,13 +1,13 @@
 import { Trans } from '@lingui/react/macro'
 import { TicketIcon } from 'lucide-react'
-import type { FieldValues } from 'react-hook-form'
+import { OTP_CODE_PATTERN } from '#/lib/form-patterns.ts'
 import { RequestCodeButton } from '../request-code-button.tsx'
 import { TextField, type TextFieldProps } from './text-field.tsx'
 
 export const OTP_CODE_EXAMPLE = 'XXXXX-XXXXX'
 
-export type TokenFieldProps<TValues extends FieldValues> = Omit<
-  TextFieldProps<TValues>,
+export type TokenFieldProps = Omit<
+  TextFieldProps,
   'type' | 'pattern' | 'minLength' | 'maxLength' | 'placeholder' | 'below'
 > & {
   example?: string
@@ -21,14 +21,14 @@ export function formatToken(value: string) {
   return `${normalized.slice(0, 5)}-${normalized.slice(5, 10)}`
 }
 
-export function TokenField<TValues extends FieldValues>({
+export function TokenField({
   example = OTP_CODE_EXAMPLE,
   onResend,
   icon = <TicketIcon className="size-5" />,
   title = example,
   autoFocus = false,
   ...props
-}: TokenFieldProps<TValues>) {
+}: TokenFieldProps) {
   return (
     <TextField
       {...props}
@@ -42,7 +42,7 @@ export function TokenField<TValues extends FieldValues>({
       minLength={11}
       maxLength={11}
       dir="auto"
-      pattern="^[A-Z2-7]{5}-[A-Z2-7]{5}$"
+      pattern={OTP_CODE_PATTERN}
       placeholder={example}
       title={title}
       below={

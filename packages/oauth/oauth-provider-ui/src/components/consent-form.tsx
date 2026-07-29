@@ -1,6 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { type ReactNode, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { type ReactNode, useState } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import { AccountPermission } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
@@ -72,28 +71,19 @@ export function ConsentForm({
   // scope.
   const canUnsetEmail = !scope?.split(' ').some(isTransitionScope)
 
-  const form = useForm<{ allowEmail: boolean }>({
-    reValidateMode: 'onChange',
-    defaultValues: { allowEmail: true },
-  })
-  const allowEmail = form.watch('allowEmail')
-
-  // Clear a previous rejection error as soon as the user changes anything.
-  useEffect(() => {
-    const sub = form.watch(() => reject.reset())
-    return () => sub.unsubscribe()
-  }, [form, reject])
+  const [allowEmail, setAllowEmail] = useState(true)
 
   return (
-    <FormShell
-      form={form}
+    <FormShell<{ allowEmail: string }>
       onBack={onBack}
+      // Clear a previous rejection error as soon as the user changes anything.
+      onValues={() => reject.reset()}
       disabled={reject.loading}
       submitLabel={<Trans context="OAuthConsent">Authorize</Trans>}
-      onSubmit={(values) =>
+      onSubmit={() =>
         onConsent({
           scope:
-            canUnsetEmail && !values.allowEmail
+            canUnsetEmail && !allowEmail
               ? stripAccountEmailScope(scope)
               : scope,
         })
@@ -102,10 +92,9 @@ export function ConsentForm({
         <Button
           type="button"
           variant="secondary"
-          disabled={form.formState.isSubmitting || reject.loading}
+          disabled={reject.loading}
           onClick={(event) => {
             event.preventDefault()
-            form.reset()
             void reject.run()
           }}
         >
@@ -167,9 +156,7 @@ export function ConsentForm({
         clientFirstParty={clientFirstParty}
         allowEmail={canUnsetEmail ? allowEmail : true}
         onAllowEmail={
-          canUnsetEmail
-            ? (next: boolean) => form.setValue('allowEmail', next)
-            : undefined
+          canUnsetEmail ? (next: boolean) => setAllowEmail(next) : undefined
         }
       />
 

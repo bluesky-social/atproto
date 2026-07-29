@@ -66,7 +66,7 @@ msgstr "1 timme sedan"
 msgid "1 minute ago"
 msgstr "1 minut sedan"
 
-#: src/components/sign-in-form.tsx:218
+#: src/components/sign-in-form.tsx:215
 msgid "2FA Confirmation"
 msgstr "2FA-bekräftelse"
 
@@ -140,7 +140,7 @@ msgstr "Kontots användarnamn"
 msgid "Add the following record to your domain's DNS configuration."
 msgstr "Lägg till följande post i din domäns DNS-konfiguration."
 
-#: src/components/update-handle-custom-form.tsx:84
+#: src/components/update-handle-custom-form.tsx:77
 msgid "alice.com"
 msgstr "alice.com"
 
@@ -207,7 +207,7 @@ msgid "Authenticate"
 msgstr "Autentisera"
 
 #: src/components/consent-view.tsx:39
-#: src/components/consent-form.tsx:92
+#: src/components/consent-form.tsx:82
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Auktorisera"
@@ -221,11 +221,11 @@ msgstr "Auktoriserades {0}"
 #: src/components/sign-in-picker.tsx:107
 #: src/components/layouts/account-shell.tsx:52
 #: src/components/forms/sign-up-wizard.tsx:117
-#: src/components/forms/form-shell.tsx:71
+#: src/components/forms/form-shell.tsx:64
 msgid "Back"
 msgstr "Tillbaka"
 
-#: src/components/forms/fields/handle-field.tsx:161
+#: src/components/forms/fields/handle-field.tsx:90
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Mellan {minLength} och {maxLength} tecken"
 
@@ -241,7 +241,7 @@ msgstr "Bluesky apptjänster"
 msgid "Bluesky Chat services"
 msgstr "Bluesky chattjänster"
 
-#: src/components/consent-form.tsx:177
+#: src/components/consent-form.tsx:164
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "Genom att klicka på <0>Auktorisera</0> ger du den här applikationen åtkomst till ditt konto i enlighet med dess <1>användarvillkor</1> och <2>integritetspolicy</2>."
 
@@ -261,7 +261,7 @@ msgstr "Anrop"
 #: src/components/delete-account-dialog.tsx:119
 #: src/components/delete-account-dialog.tsx:207
 #: src/components/authenticate-welcome-view.tsx:58
-#: src/components/forms/form-shell.tsx:68
+#: src/components/forms/form-shell.tsx:61
 msgid "Cancel"
 msgstr "Avbryt"
 
@@ -286,7 +286,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr "Titta i inkorgen för <0>{email}</0> efter bekräftelsekoden och ange den nedan:"
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:226
+#: src/components/sign-in-form.tsx:223
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Titta i inkorgen för {0} efter en inloggningskod och ange den här."
 
@@ -311,8 +311,8 @@ msgstr "Titta i din inkorg."
 msgid "Choose a new default username."
 msgstr "Välj ett nytt användarnamn med standarddomän"
 
-#: src/components/update-email-dialog.tsx:101
-#: src/components/update-email-dialog.tsx:137
+#: src/components/update-email-dialog.tsx:95
+#: src/components/update-email-dialog.tsx:131
 msgid "Choose a new email address to associate with your account."
 msgstr "Välj en ny e-postadress för att koppla den till ditt konto."
 
@@ -335,7 +335,7 @@ msgctxt "Error"
 msgid "Code"
 msgstr "Kod"
 
-#: src/components/sign-in-form.tsx:90
+#: src/components/sign-in-form.tsx:83
 msgctxt "verb"
 msgid "Confirm"
 msgstr "Bekräfta"
@@ -344,8 +344,8 @@ msgstr "Bekräfta"
 msgid "Confirm your password to continue"
 msgstr "Ange ditt lösenord för att fortsätta"
 
-#: src/components/sign-in-form.tsx:219
-#: src/components/delete-account-confirm-form.tsx:75
+#: src/components/sign-in-form.tsx:216
+#: src/components/delete-account-confirm-form.tsx:57
 msgid "Confirmation code"
 msgstr "Bekräftelsekod"
 
@@ -411,11 +411,11 @@ msgstr "Radera konto"
 msgid "Delete account <0/>"
 msgstr "Radera kontot <0/>"
 
-#: src/components/delete-account-confirm-form.tsx:55
+#: src/components/delete-account-confirm-form.tsx:38
 msgid "Delete my account"
 msgstr "Radera mitt konto"
 
-#: src/components/consent-form.tsx:112
+#: src/components/consent-form.tsx:101
 msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Neka åtkomst"
@@ -445,19 +445,19 @@ msgstr "t.ex. <0>alice.com</0>"
 msgid "e.g. <0>alice{0}</0>"
 msgstr "t.ex <0>alice{0}</0>"
 
-#: src/components/sign-up-credentials-form.tsx:106
+#: src/components/sign-up-credentials-form.tsx:77
 #: src/components/utils/scope-description.tsx:225
 msgid "Email"
 msgstr "E-post"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:151
-#: src/components/reset-password-request-form.tsx:52
-#: src/components/reset-password-request-form.tsx:54
-#: src/components/forms/fields/email-field.tsx:20
+#: src/components/reset-password-request-form.tsx:37
+#: src/components/reset-password-request-form.tsx:39
+#: src/components/forms/fields/email-field.tsx:21
 msgid "Email address"
 msgstr "E-postadress"
 
-#: src/components/update-email-dialog.tsx:67
+#: src/components/update-email-dialog.tsx:61
 msgid "Email address successfully updated"
 msgstr "E-postadressen har uppdaterats"
 
@@ -477,7 +477,7 @@ msgstr "Skicka dessa instruktioner via e-post"
 msgid "Email verified"
 msgstr "E-postadressen har verifierats"
 
-#: src/components/forms/fields/new-password-field.tsx:30
+#: src/components/forms/fields/new-password-field.tsx:29
 msgid "Enter a password"
 msgstr "Ange ett lösenord"
 
@@ -485,7 +485,7 @@ msgstr "Ange ett lösenord"
 msgid "Enter the code you received to reset your password."
 msgstr "Ange den kod du fick för att ändra ditt lösenord."
 
-#: src/components/update-handle-custom-form.tsx:80
+#: src/components/update-handle-custom-form.tsx:73
 msgid "Enter the domain you want to use"
 msgstr "Ange den domän du vill använda"
 
@@ -493,11 +493,11 @@ msgstr "Ange den domän du vill använda"
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Ange den e-postadress som du använde för att skapa ditt konto. Vi skickar ”återställningskod” till dig så att du kan ange ett nytt lösenord."
 
-#: src/components/reset-password-request-form.tsx:53
+#: src/components/reset-password-request-form.tsx:38
 msgid "Enter your email address"
 msgstr "Ange din e-postadress"
 
-#: src/components/forms/fields/new-password-field.tsx:31
+#: src/components/forms/fields/new-password-field.tsx:30
 msgid "Enter your new password"
 msgstr "Ange ditt nya lösenord"
 
@@ -514,7 +514,7 @@ msgstr "Ange ditt användarnamn och lösenord"
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
 msgstr "Alla appar som är kopplade till ditt konto kommer att loggas ut, och alla applösenord du har skapat kommer att sluta gälla. Du måste logga in på nytt om du återaktiverar kontot."
 
-#: src/components/sign-up-credentials-form.tsx:97
+#: src/components/sign-up-credentials-form.tsx:68
 msgid "example-com-xxxxx-xxxxx"
 msgstr "exempel-com-xxxxx-xxxxx"
 
@@ -600,7 +600,7 @@ msgstr "Av säkerhetsskäl kommer vi att skicka en bekräftelsekod till din e-po
 msgid "Forgot Password"
 msgstr "Glömt lösenord"
 
-#: src/components/sign-in-form.tsx:192
+#: src/components/sign-in-form.tsx:188
 msgid "Forgot?"
 msgstr "Glömt?"
 
@@ -641,7 +641,7 @@ msgstr ""
 msgid "Help"
 msgstr "Hjälp"
 
-#: src/components/forms/fields/password-field.tsx:49
+#: src/components/forms/fields/password-field.tsx:45
 msgid "Hide"
 msgstr "Dölj"
 
@@ -658,7 +658,7 @@ msgstr "Värd"
 msgid "HTTP"
 msgstr "HTTP"
 
-#: src/components/sign-in-form.tsx:140
+#: src/components/sign-in-form.tsx:134
 msgid "Identifier"
 msgstr "Identifierare"
 
@@ -690,7 +690,7 @@ msgstr "Om du vill ändra ditt användarnamn eller din e-postadress måste du g�
 msgid "Interface language selector"
 msgstr "Val av gränssnittsspråk"
 
-#: src/components/forms/fields/handle-field.tsx:292
+#: src/components/forms/fields/handle-field.tsx:213
 msgid "Invalid"
 msgstr "Ogiltigt"
 
@@ -698,8 +698,8 @@ msgstr "Ogiltigt"
 msgid "Invalid Handle"
 msgstr "Ogiltigt användarnamn"
 
-#: src/components/sign-up-credentials-form.tsx:93
-#: src/components/sign-up-credentials-form.tsx:96
+#: src/components/sign-up-credentials-form.tsx:64
+#: src/components/sign-up-credentials-form.tsx:67
 msgid "Invite code"
 msgstr "Inbjudningskod"
 
@@ -726,7 +726,7 @@ msgctxt "device list"
 msgid "Last seen {lastUsedAgo}"
 msgstr "Sågs senast {lastUsedAgo}"
 
-#: src/components/update-email-dialog.tsx:231
+#: src/components/update-email-dialog.tsx:212
 msgctxt "verify email"
 msgid "Later"
 msgstr "Senare"
@@ -752,7 +752,7 @@ msgstr "loopback"
 msgid "Make a text file with the contents below available at the following URL."
 msgstr "Lägg upp en textfil med nedanstående innehåll på följande URL."
 
-#: src/components/forms/fields/password-field.tsx:49
+#: src/components/forms/fields/password-field.tsx:45
 msgid "Make visible"
 msgstr "Gör synligt"
 
@@ -808,12 +808,12 @@ msgstr "Namn"
 msgid "Navigation"
 msgstr ""
 
-#: src/components/update-email-form.tsx:79
-#: src/components/update-email-dialog.tsx:198
+#: src/components/update-email-form.tsx:67
+#: src/components/update-email-dialog.tsx:186
 msgid "New email address"
 msgstr "Ny e-postadress"
 
-#: src/components/reset-password-confirm-form.tsx:84
+#: src/components/reset-password-confirm-form.tsx:70
 msgid "New password"
 msgstr "Nytt lösenord"
 
@@ -827,15 +827,15 @@ msgstr "Nästa"
 msgid "Okay"
 msgstr "OK"
 
-#: src/components/forms/fields/handle-field.tsx:166
+#: src/components/forms/fields/handle-field.tsx:95
 msgid "Only letters, numbers, and hyphens"
 msgstr "Endast bokstäver, siffror och bindestreck"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:183
-#: src/components/sign-up-credentials-form.tsx:116
-#: src/components/sign-in-form.tsx:174
-#: src/components/delete-account-confirm-form.tsx:85
-#: src/components/forms/fields/password-field.tsx:31
+#: src/components/sign-up-credentials-form.tsx:87
+#: src/components/sign-in-form.tsx:168
+#: src/components/delete-account-confirm-form.tsx:66
+#: src/components/forms/fields/password-field.tsx:27
 msgid "Password"
 msgstr "Lösenord"
 
@@ -864,7 +864,7 @@ msgstr "Lösenordet har uppdaterats"
 msgid "Password updated!"
 msgstr "Lösenordet har uppdaterats!"
 
-#: src/components/forms/fields/new-password-field.tsx:32
+#: src/components/forms/fields/new-password-field.tsx:31
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Lösenord med minst {MIN_PASSWORD_LENGTH} tecken"
 
@@ -907,7 +907,7 @@ msgstr "Kontrollera din återställningskod och försök igen."
 msgid "Please check your verification code and try again."
 msgstr "Kontrollera din verifieringskod och försök igen."
 
-#: src/components/update-email-form.tsx:91
+#: src/components/update-email-form.tsx:79
 msgid "Please enter the security code that was sent to your email address."
 msgstr "Ange den säkerhetskod som har skickats till din e-postadress."
 
@@ -957,7 +957,7 @@ msgstr "Läsa ditt kontos e-postadress"
 msgid "Read your private preferences"
 msgstr "Läsa dina privata inställningar"
 
-#: src/components/sign-in-form.tsx:209
+#: src/components/sign-in-form.tsx:205
 msgid "Remember this account on this device"
 msgstr "Kom ihåg det här kontot på den här enheten"
 
@@ -966,7 +966,7 @@ msgstr "Kom ihåg det här kontot på den här enheten"
 msgid "Repository"
 msgstr "Dataarkiv"
 
-#: src/components/reset-password-confirm-form.tsx:74
+#: src/components/reset-password-confirm-form.tsx:61
 msgid "Reset code"
 msgstr "Återställningskod"
 
@@ -974,7 +974,7 @@ msgstr "Återställningskod"
 msgid "Reset Password"
 msgstr "Återställ lösenord"
 
-#: src/components/sign-in-form.tsx:190
+#: src/components/sign-in-form.tsx:186
 msgid "Reset your password"
 msgstr "Återställ ditt lösenord"
 
@@ -994,11 +994,11 @@ msgctxt "OAuthApp"
 msgid "Revoke access"
 msgstr "Återkalla åtkomst"
 
-#: src/components/update-email-form.tsx:100
+#: src/components/update-email-form.tsx:87
 msgid "Security code"
 msgstr "Säkerhetskod"
 
-#: src/components/update-email-form.tsx:88
+#: src/components/update-email-form.tsx:76
 msgid "Security step required"
 msgstr "Säkerhetskontroll"
 
@@ -1006,7 +1006,7 @@ msgstr "Säkerhetskontroll"
 msgid "Select another account"
 msgstr "Välj ett annat konto"
 
-#: src/components/forms/fields/handle-field.tsx:219
+#: src/components/forms/fields/handle-field.tsx:135
 msgid "Select domain"
 msgstr ""
 
@@ -1027,7 +1027,7 @@ msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr "Logga in"
 
-#: src/components/sign-in-form.tsx:92
+#: src/components/sign-in-form.tsx:85
 #: src/components/authenticate-welcome-view.tsx:49
 msgctxt "verb"
 msgid "Sign in"
@@ -1083,7 +1083,7 @@ msgstr "Steg {currentPosition} av {count}"
 msgid "Strong"
 msgstr "Starkt"
 
-#: src/components/forms/form-shell.tsx:63
+#: src/components/forms/form-shell.tsx:56
 msgid "Submit"
 msgstr "Skicka"
 
@@ -1099,7 +1099,7 @@ msgstr "Åtkomsten återkallades"
 msgid "Support"
 msgstr "Support"
 
-#: src/components/consent-form.tsx:146
+#: src/components/consent-form.tsx:135
 msgid "Technical details"
 msgstr "Tekniska detaljer"
 
@@ -1177,7 +1177,7 @@ msgstr ""
 msgid "This app has access to your account with the following permissions:"
 msgstr ""
 
-#: src/components/consent-form.tsx:151
+#: src/components/consent-form.tsx:140
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "Den här applikationen begär följande behörigheter (omfång) för att få åtkomst till ditt konto:"
 
@@ -1228,11 +1228,11 @@ msgstr "Felsök"
 msgid "Type"
 msgstr "Typ"
 
-#: src/components/update-handle-custom-form.tsx:83
+#: src/components/update-handle-custom-form.tsx:76
 msgid "Type your domain"
 msgstr "Ange din domän"
 
-#: src/components/forms/fields/handle-field.tsx:181
+#: src/components/forms/fields/handle-field.tsx:109
 msgid "Type your username"
 msgstr ""
 
@@ -1253,8 +1253,8 @@ msgstr "Okänd användaragent"
 msgid "Update"
 msgstr "Ändra"
 
-#: src/components/update-email-dialog.tsx:99
-#: src/components/update-email-dialog.tsx:135
+#: src/components/update-email-dialog.tsx:93
+#: src/components/update-email-dialog.tsx:129
 msgid "Update your email"
 msgstr "Uppdatera din e-postadress"
 
@@ -1288,7 +1288,7 @@ msgstr "Använd ett domännamn jag äger"
 msgid "Username"
 msgstr "Användarnamn"
 
-#: src/components/sign-in-form.tsx:143
+#: src/components/sign-in-form.tsx:137
 msgid "Username or email address"
 msgstr "Användarnamn eller e-postadress"
 
@@ -1296,7 +1296,7 @@ msgstr "Användarnamn eller e-postadress"
 msgid "Username updated"
 msgstr "Användarnamn uppdaterat"
 
-#: src/components/forms/fields/handle-field.tsx:290
+#: src/components/forms/fields/handle-field.tsx:211
 msgid "Valid"
 msgstr "Giltigt"
 
@@ -1304,8 +1304,8 @@ msgstr "Giltigt"
 msgid "Value"
 msgstr "Värde"
 
-#: src/components/verify-email-confirm-form.tsx:49
-#: src/components/update-email-dialog.tsx:240
+#: src/components/verify-email-confirm-form.tsx:37
+#: src/components/update-email-dialog.tsx:220
 msgid "Verification code"
 msgstr "Verifieringskod"
 
@@ -1317,7 +1317,7 @@ msgstr "Ett e-postmeddelande för verifiering har skickats"
 msgid "Verification method"
 msgstr "Verifieringsmetod"
 
-#: src/components/sign-up-hcaptcha-form.tsx:88
+#: src/components/sign-up-hcaptcha-form.tsx:69
 msgid "Verification successful!"
 msgstr "Verifieringen lyckades!"
 
@@ -1326,12 +1326,12 @@ msgid "Verify and Save"
 msgstr "Verifiera och spara"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:102
-#: src/components/update-email-dialog.tsx:232
+#: src/components/update-email-dialog.tsx:213
 msgctxt "verify email"
 msgid "Verify now"
 msgstr "Verifiera nu"
 
-#: src/components/sign-in-form.tsx:199
+#: src/components/sign-in-form.tsx:195
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "Kontrollera webbadressen innan du anger ditt lösenord. Logga bara in på webbplatser som du känner igen och litar på."
 
@@ -1343,15 +1343,15 @@ msgstr "Verifiera att du är människa"
 msgid "Verify your email"
 msgstr "Verifiera din e-postadress"
 
-#: src/components/consent-form.tsx:139
+#: src/components/consent-form.tsx:128
 msgid "wants to access your <0/> account"
 msgstr "vill komma åt ditt konto <0/>"
 
-#: src/components/consent-form.tsx:133
+#: src/components/consent-form.tsx:122
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "vill entydigt identifiera dig via ditt konto <0/>"
 
-#: src/components/sign-in-form.tsx:198
+#: src/components/sign-in-form.tsx:194
 msgid "Warning"
 msgstr "Varning"
 
@@ -1408,7 +1408,7 @@ msgstr "Du omdirigeras…"
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "Om du vill kan du <0>tillfälligt inaktivera</0> ditt konto istället. Det gör att din profil samt dina inlägg, flöden och listor slutar att synas för andra Bluesky-användare. Du kan återaktivera ditt konto när som helst genom att logga in."
 
-#: src/components/sign-up-handle-form.tsx:77
+#: src/components/sign-up-handle-form.tsx:62
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "Du kan ändra ditt användarnamn till ett domännamn du kontrollerar efter att ditt konto har skapats."
 
@@ -1469,7 +1469,7 @@ msgstr "Ditt Atmosphere-konto ligger hos <0/>."
 msgid "Your content (profile, posts, feeds, lists, etc.) will be hidden from the Bluesky app and across the Atmosphere network."
 msgstr "Ditt innehåll (profil, inlägg, flöden, listor m.m.) kommer inte längre att synas i Bluesky-appen eller någon annanstans i Atmosphere-nätverket."
 
-#: src/components/update-email-dialog.tsx:71
+#: src/components/update-email-dialog.tsx:65
 msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
 msgstr "Din e-postadress har uppdaterats och måste nu verifieras. Ange verifieringskoden som skickades till <0>{email}</0>."
 
@@ -1481,8 +1481,8 @@ msgstr "Din e-postadress har verifierats."
 msgid "Your email address needs to be verified."
 msgstr "Din e-postadress behöver verifieras."
 
-#. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
-#: src/components/forms/fields/handle-field.tsx:242
+#. placeholder {0}: full ? ( <Handle className="text-foreground" handle={full} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
+#: src/components/forms/fields/handle-field.tsx:157
 msgid "Your full username will be: {0}"
 msgstr "Ditt fullständiga användarnamn blir: {0}"
 

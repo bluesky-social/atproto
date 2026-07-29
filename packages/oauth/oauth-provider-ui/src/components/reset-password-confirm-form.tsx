@@ -1,16 +1,14 @@
 import { Trans } from '@lingui/react/macro'
-import { useForm } from 'react-hook-form'
 import { NewPasswordField } from '#/components/forms/fields/new-password-field.tsx'
 import { TokenField } from '#/components/forms/fields/token-field.tsx'
 import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
-import { schemaResolver } from '#/lib/form-resolver.ts'
-import {
-  type ResetPasswordConfirmValues,
-  resetPasswordConfirmSchema,
-} from '#/lib/form-schemas.ts'
+
+// @NOTE `code`, not `token`: the key becomes the rendered `name`, which is a
+// public contract. The view maps it to the API's `token` field.
+type Values = { code: string; password: string }
 
 export type ResetPasswordConfirmData = {
   token: string
@@ -18,8 +16,8 @@ export type ResetPasswordConfirmData = {
 }
 
 export type ResetPasswordConfirmFormProps = Omit<
-  FormShellProps<ResetPasswordConfirmValues>,
-  'form' | 'onSubmit'
+  FormShellProps<Values>,
+  'onSubmit'
 > & {
   email?: string
   onResend?: () => void | PromiseLike<void>
@@ -35,19 +33,9 @@ export function ResetPasswordConfirmForm({
   handler,
   ...props
 }: ResetPasswordConfirmFormProps) {
-  const form = useForm<ResetPasswordConfirmValues>({
-    resolver: schemaResolver(resetPasswordConfirmSchema),
-    // @NOTE Never `mode: 'onBlur'`: it renders errors under untouched
-    // required fields, which shifts the layout between mousedown and mouseup
-    // and silently drops the click.
-    reValidateMode: 'onChange',
-    defaultValues: { code: '', password: '' },
-  })
-
   return (
-    <FormShell
+    <FormShell<Values>
       {...props}
-      form={form}
       onSubmit={(values, signal) =>
         // @NOTE The API field is `token`; the form field stays `code` so the
         // rendered input keeps its contracted name.
@@ -69,7 +57,6 @@ export function ResetPasswordConfirmForm({
       )}
 
       <TokenField
-        control={form.control}
         name="code"
         label={<Trans>Reset code</Trans>}
         enterKeyHint="next"
@@ -79,7 +66,6 @@ export function ResetPasswordConfirmForm({
       />
 
       <NewPasswordField
-        control={form.control}
         name="password"
         label={<Trans>New password</Trans>}
         enterKeyHint="done"

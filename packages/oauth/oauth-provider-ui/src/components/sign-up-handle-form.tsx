@@ -1,27 +1,24 @@
 import { Trans } from '@lingui/react/macro'
-import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
 import type { HandleString } from '@atproto/syntax'
 import { Notice } from '#/components/feedback/notice.tsx'
-import { HandleField } from '#/components/forms/fields/handle-field.tsx'
+import {
+  HandleField,
+  composeHandle,
+} from '#/components/forms/fields/handle-field.tsx'
 import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
-import { useStableCallback } from '#/hooks/use-stable-callback.ts'
-import { schemaResolver } from '#/lib/form-resolver.ts'
-import {
-  type SignUpHandleValues,
-  signUpHandleSchema,
-} from '#/lib/form-schemas.ts'
 
 export type SignUpHandleData = {
   handle: HandleString
 }
 
+type HandleFormValues = { handle: string; domain: string }
+
 export type SignUpHandleFormProps = Omit<
-  FormShellProps<SignUpHandleValues>,
-  'form' | 'onSubmit'
+  FormShellProps<HandleFormValues>,
+  'onSubmit' | 'onValues'
 > & {
   domains: string[]
   values?: Partial<SignUpHandleData>
@@ -40,35 +37,23 @@ export function SignUpHandleForm({
   children,
   ...props
 }: SignUpHandleFormProps) {
-  const form = useForm<SignUpHandleValues>({
-    resolver: schemaResolver(signUpHandleSchema),
-    reValidateMode: 'onChange',
-    defaultValues: { handle: values?.handle ?? '' },
-  })
-
-  // @NOTE Mirror every keystroke back to the wizard, not just the submitted
-  // values, so stepping Back and Forward again restores un-submitted input.
-  const report = useStableCallback((next: unknown) => {
-    onValues?.(next as Partial<SignUpHandleData>)
-  })
-  useEffect(() => {
-    const sub = form.watch((next) => report(next))
-    return () => sub.unsubscribe()
-  }, [form, report])
-
   return (
-    <FormShell
+    <FormShell<HandleFormValues>
       {...props}
-      form={form}
+      // @NOTE The wizard stores the composed handle, so both the report and the
+      // seed below speak whole handles rather than the two parts.
+      onValues={(next) =>
+        onValues?.({ handle: composeHandle(next) as HandleString })
+      }
       onSubmit={(next, signal) => {
-        onValues?.({ handle: next.handle as HandleString })
-        return handler({ handle: next.handle as HandleString }, signal)
+        const handle = composeHandle(next) as HandleString
+        onValues?.({ handle })
+        return handler({ handle }, signal)
       }}
     >
       <HandleField
-        control={form.control}
-        name="handle"
         domains={domains}
+        defaultHandle={values?.handle}
         required
         autoFocus
       />

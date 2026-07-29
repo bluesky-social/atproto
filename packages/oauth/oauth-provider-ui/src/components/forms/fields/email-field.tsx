@@ -1,15 +1,16 @@
 import { useLingui } from '@lingui/react/macro'
 import { MailIcon } from 'lucide-react'
-import type { FieldValues } from 'react-hook-form'
 import { TextField, type TextFieldProps } from './text-field.tsx'
 
-export type EmailFieldProps<TValues extends FieldValues> =
-  TextFieldProps<TValues>
+export type EmailFieldProps = TextFieldProps
 
-export function EmailField<TValues extends FieldValues>({
+export function EmailField({
   autoComplete = 'email',
+  // @NOTE `type="email"` alone accepts `user@host` without a dot; the pattern
+  // additionally requires a domain with a TLD.
+  pattern = '^[^@]+@[^@]+\\.[^@]+$',
   ...props
-}: EmailFieldProps<TValues>) {
+}: EmailFieldProps) {
   const { t } = useLingui()
 
   return (
@@ -23,6 +24,7 @@ export function EmailField<TValues extends FieldValues>({
       autoCorrect="off"
       spellCheck="false"
       dir="auto"
+      pattern={pattern}
     />
   )
 }

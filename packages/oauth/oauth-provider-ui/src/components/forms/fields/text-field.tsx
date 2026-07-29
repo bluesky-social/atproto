@@ -1,25 +1,15 @@
+import { Field } from '@base-ui/react/field'
 import type { JSX, ReactNode } from 'react'
-import type { Control, FieldPath, FieldValues } from 'react-hook-form'
-import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '#/components/forms/form.tsx'
 import { Input } from '#/components/ui/input.tsx'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
 
-export type FieldBaseProps<TValues extends FieldValues> = {
-  control: Control<TValues>
+export type FieldBaseProps = {
   /**
-   * The field key. react-hook-form derives the rendered `name` attribute from
-   * it, so these keys are part of the package's public contract rather than an
-   * internal detail — see CLAUDE.md.
+   * The rendered `name` attribute, and the key this field contributes to the
+   * form's values. Part of the package's public contract — see CLAUDE.md.
    */
-  name: FieldPath<TValues>
+  name: string
   label?: ReactNode
   description?: ReactNode
   /** Leading adornment rendered inside the input frame. */
@@ -30,13 +20,17 @@ export type FieldBaseProps<TValues extends FieldValues> = {
   below?: ReactNode
 }
 
-export type TextFieldProps<TValues extends FieldValues> = Override<
-  Omit<JSX.IntrinsicElements['input'], 'name' | 'form'>,
-  FieldBaseProps<TValues>
+export type TextFieldProps = Override<
+  Omit<JSX.IntrinsicElements['input'], 'form'>,
+  FieldBaseProps
 >
 
-export function TextField<TValues extends FieldValues>({
-  control,
+/**
+ * @NOTE The constraints are HTML attributes (`required`, `type`, `pattern`,
+ * `minLength`), so a failure blocks submission with the browser's own message
+ * in the browser's locale. `Field.Error` carries externally-supplied errors.
+ */
+export function TextField({
   name,
   label,
   description,
@@ -45,42 +39,44 @@ export function TextField<TValues extends FieldValues>({
   below,
   className,
   ...props
-}: TextFieldProps<TValues>) {
+}: TextFieldProps) {
   return (
-    <FormField
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <FormItem>
-          {label && <FormLabel>{label}</FormLabel>}
-          <div className="relative flex items-center">
-            {icon && (
-              <span
-                aria-hidden
-                className="text-muted-foreground pointer-events-none absolute left-3 flex items-center"
-              >
-                {icon}
-              </span>
-            )}
-            <FormControl>
-              <Input
-                {...props}
-                {...field}
-                value={field.value ?? ''}
-                className={cn(icon && 'pl-10', append && 'pr-10', className)}
-              />
-            </FormControl>
-            {append && (
-              <span className="absolute right-1 flex items-center">
-                {append}
-              </span>
-            )}
-          </div>
-          {below}
-          {description && <FormDescription>{description}</FormDescription>}
-          <FormMessage />
-        </FormItem>
+    <Field.Root name={name} className="flex flex-col gap-2">
+      {label && (
+        <Field.Label className="flex w-fit items-center gap-2 text-sm font-medium leading-snug">
+          {label}
+        </Field.Label>
       )}
-    />
+
+      <div className="relative flex items-center">
+        {icon && (
+          <span
+            aria-hidden
+            className="text-muted-foreground pointer-events-none absolute left-3 flex items-center"
+          >
+            {icon}
+          </span>
+        )}
+        <Field.Control
+          {...props}
+          name={name}
+          render={<Input />}
+          className={cn(icon && 'pl-10', append && 'pr-10', className)}
+        />
+        {append && (
+          <span className="absolute right-1 flex items-center">{append}</span>
+        )}
+      </div>
+
+      {below}
+
+      {description && (
+        <Field.Description className="text-muted-foreground text-sm font-normal leading-normal">
+          {description}
+        </Field.Description>
+      )}
+
+      <Field.Error className="text-destructive text-sm font-normal" />
+    </Field.Root>
   )
 }

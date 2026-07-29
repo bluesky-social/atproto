@@ -1,16 +1,10 @@
 import { Trans } from '@lingui/react/macro'
 import { CheckIcon } from 'lucide-react'
 import { type ReactElement, type ReactNode, useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
 import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { EmailField } from '#/components/forms/fields/email-field.tsx'
 import { TokenField } from '#/components/forms/fields/token-field.tsx'
 import { FormShell } from '#/components/forms/form-shell.tsx'
-import { schemaResolver } from '#/lib/form-resolver.ts'
-import {
-  emailOnlySchema,
-  verifyEmailConfirmSchema,
-} from '#/lib/form-schemas.ts'
 import { UpdateEmailForm } from './update-email-form.tsx'
 
 export type UpdateEmailDialogProps = {
@@ -182,19 +176,13 @@ function EmailRequestForm({
   onLoadingChange?: (loading: boolean) => void
   handler: (data: { email: string }, signal: AbortSignal) => Promise<void>
 }) {
-  const form = useForm({
-    resolver: schemaResolver(emailOnlySchema),
-    reValidateMode: 'onChange',
-    defaultValues: { email: emailDefault ?? '' },
-  })
-
   return (
-    <FormShell {...props} form={form} onSubmit={handler}>
+    <FormShell<{ email: string }> {...props} onSubmit={handler}>
       {introMessage}
 
       <EmailField
-        control={form.control}
         name="email"
+        defaultValue={emailDefault ?? ''}
         label={<Trans>New email address</Trans>}
         required
         autoFocus
@@ -218,16 +206,9 @@ function VerifyStepForm({
     signal: AbortSignal,
   ) => Promise<void>
 }) {
-  const form = useForm({
-    resolver: schemaResolver(verifyEmailConfirmSchema),
-    reValidateMode: 'onChange',
-    defaultValues: { code: '' },
-  })
-
   return (
-    <FormShell
+    <FormShell<{ code: string }>
       {...props}
-      form={form}
       cancelLabel={<Trans context="verify email">Later</Trans>}
       submitLabel={<Trans context="verify email">Verify now</Trans>}
       onSubmit={(values, signal) =>
@@ -235,7 +216,6 @@ function VerifyStepForm({
       }
     >
       <TokenField
-        control={form.control}
         name="code"
         label={<Trans>Verification code</Trans>}
         required

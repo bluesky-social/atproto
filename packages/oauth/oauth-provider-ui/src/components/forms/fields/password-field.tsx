@@ -1,26 +1,22 @@
 import { useLingui } from '@lingui/react/macro'
 import { EyeIcon, EyeOffIcon, KeyIcon } from 'lucide-react'
 import { useState } from 'react'
-import type { FieldValues } from 'react-hook-form'
 import { Button } from '#/components/ui/button.tsx'
 import { TextField, type TextFieldProps } from './text-field.tsx'
 
-export type PasswordFieldProps<TValues extends FieldValues> = Omit<
-  TextFieldProps<TValues>,
-  'type'
-> & {
+export type PasswordFieldProps = Omit<TextFieldProps, 'type'> & {
   /** Re-hide the value when the field loses focus. */
   autoHide?: boolean
 }
 
-export function PasswordField<TValues extends FieldValues>({
+export function PasswordField({
   autoHide = true,
   autoComplete = 'current-password',
   icon = <KeyIcon className="size-5" />,
   append,
   onBlur,
   ...props
-}: PasswordFieldProps<TValues>) {
+}: PasswordFieldProps) {
   const { t } = useLingui()
   const [visible, setVisible] = useState(false)
 

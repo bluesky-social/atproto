@@ -1,20 +1,11 @@
 import type { ReactNode } from 'react'
-import type { Control, FieldPath, FieldValues } from 'react-hook-form'
-import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '#/components/forms/form.tsx'
 import { cn } from '#/lib/utils.ts'
 
-export type CheckboxFieldProps<TValues extends FieldValues> = {
-  control: Control<TValues>
-  name: FieldPath<TValues>
+export type CheckboxFieldProps = {
+  name: string
   label: ReactNode
   description?: ReactNode
+  defaultChecked?: boolean
   disabled?: boolean
   className?: string
 }
@@ -27,49 +18,40 @@ export type CheckboxFieldProps<TValues extends FieldValues> = {
  *
  * The native control is styled to match the shadcn checkbox.
  */
-export function CheckboxField<TValues extends FieldValues>({
-  control,
+export function CheckboxField({
   name,
   label,
   description,
+  defaultChecked,
   disabled,
   className,
-}: CheckboxFieldProps<TValues>) {
+}: CheckboxFieldProps) {
   return (
-    <FormField
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <FormItem className={className}>
-          <div className="flex items-start gap-3">
-            <FormControl>
-              <input
-                type="checkbox"
-                name={field.name}
-                ref={field.ref}
-                // @NOTE Uncontrolled (`defaultChecked`, not `checked`): a
-                // controlled checkbox drops the very first click, because the
-                // re-render reverts the native toggle before react-hook-form's
-                // state lands. Uncontrolled makes the DOM the source of truth.
-                defaultChecked={Boolean(field.value)}
-                onChange={(event) => field.onChange(event.target.checked)}
-                onBlur={field.onBlur}
-                disabled={disabled}
-                className={cn(
-                  'border-input accent-primary size-4 shrink-0 rounded-[4px] border',
-                  'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2',
-                  'disabled:cursor-not-allowed disabled:opacity-50',
-                )}
-              />
-            </FormControl>
-            <div className="grid gap-1 leading-none">
-              <FormLabel className="font-normal">{label}</FormLabel>
-              {description && <FormDescription>{description}</FormDescription>}
-            </div>
-          </div>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+    <div className={className}>
+      <div className="flex items-start gap-3">
+        <input
+          id={name}
+          type="checkbox"
+          name={name}
+          defaultChecked={defaultChecked}
+          disabled={disabled}
+          className={cn(
+            'border-input accent-primary size-4 shrink-0 rounded-[4px] border',
+            'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2',
+            'disabled:cursor-not-allowed disabled:opacity-50',
+          )}
+        />
+        <div className="grid gap-1 leading-none">
+          <label htmlFor={name} className="text-sm font-normal leading-snug">
+            {label}
+          </label>
+          {description && (
+            <p className="text-muted-foreground text-sm font-normal leading-normal">
+              {description}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }

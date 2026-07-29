@@ -1,5 +1,4 @@
 import { Trans } from '@lingui/react/macro'
-import { useForm } from 'react-hook-form'
 import { EmailField } from '#/components/forms/fields/email-field.tsx'
 import { TokenField } from '#/components/forms/fields/token-field.tsx'
 import {
@@ -7,21 +6,17 @@ import {
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
 import { Separator } from '#/components/ui/separator.tsx'
-import { schemaResolver } from '#/lib/form-resolver.ts'
-import {
-  type UpdateEmailValues,
-  updateEmailSchema,
-} from '#/lib/form-schemas.ts'
+
+// @NOTE `newEmail`, not `email` — the dialog's request step owns
+// `input[name="email"]`, and this confirm step must not collide with it.
+type Values = { newEmail: string; code: string }
 
 export type UpdateEmailFormData = {
   email: string
   token: string
 }
 
-export type UpdateEmailFormProps = Omit<
-  FormShellProps<UpdateEmailValues>,
-  'form' | 'onSubmit'
-> & {
+export type UpdateEmailFormProps = Omit<FormShellProps<Values>, 'onSubmit'> & {
   emailCurrent?: string
   /** Seeds the new-email field when re-opening the dialog. */
   newEmailDefault?: string
@@ -43,16 +38,9 @@ export function UpdateEmailForm({
   handler,
   ...props
 }: UpdateEmailFormProps) {
-  const form = useForm<UpdateEmailValues>({
-    resolver: schemaResolver(updateEmailSchema),
-    reValidateMode: 'onChange',
-    defaultValues: { newEmail: newEmailDefault ?? '', code: '' },
-  })
-
   return (
-    <FormShell
+    <FormShell<Values>
       {...props}
-      form={form}
       loading={props.loading || requestPending}
       onSubmit={(values, signal) =>
         handler({ email: values.newEmail, token: values.code }, signal)
@@ -74,8 +62,8 @@ export function UpdateEmailForm({
       )}
 
       <EmailField
-        control={form.control}
         name="newEmail"
+        defaultValue={newEmailDefault ?? ''}
         label={<Trans>New email address</Trans>}
         required
         autoFocus
@@ -95,7 +83,6 @@ export function UpdateEmailForm({
       </div>
 
       <TokenField
-        control={form.control}
         name="code"
         label={<Trans>Security code</Trans>}
         required

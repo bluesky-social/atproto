@@ -1,16 +1,12 @@
 import HCaptcha from '@hcaptcha/react-hcaptcha'
 import { Trans } from '@lingui/react/macro'
 import { CheckIcon } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
+import { useRef, useState } from 'react'
 import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
 import { useBrowserColorScheme } from '#/hooks/use-browser-color-scheme.ts'
-import { useStableCallback } from '#/hooks/use-stable-callback.ts'
-import { schemaResolver } from '#/lib/form-resolver.ts'
 import { useCurrentLocale } from '#/locales/locale-provider.tsx'
 
 export type VerifyData = {
@@ -22,15 +18,11 @@ export type SignUpHcaptchaData = {
   verify: VerifyData
 }
 
-const hcaptchaSchema = z.object({
-  verify: z.object({ token: z.string().min(1), ekey: z.string() }),
-})
-
-type HcaptchaValues = z.infer<typeof hcaptchaSchema>
+type HcaptchaValues = Record<string, never>
 
 export type SignUpHcaptchaFormProps = Omit<
   FormShellProps<HcaptchaValues>,
-  'form' | 'onSubmit'
+  'onSubmit'
 > & {
   siteKey: string
   values?: Partial<SignUpHcaptchaData>
@@ -55,31 +47,20 @@ export function SignUpHcaptchaForm({
 
   const [verifiedOnMount] = useState(values?.verify != null)
 
-  const form = useForm<HcaptchaValues>({
-    resolver: schemaResolver(hcaptchaSchema),
-    reValidateMode: 'onChange',
-    defaultValues: {
-      verify: values?.verify ?? { token: '', ekey: '' },
-    },
-  })
-
-  // @NOTE Mirror every keystroke back to the wizard, not just the submitted
-  // values, so stepping Back and Forward again restores un-submitted input.
-  const report = useStableCallback((next: unknown) => {
-    onValues?.(next as Partial<SignUpHcaptchaData>)
-  })
-  useEffect(() => {
-    const sub = form.watch((next) => report(next))
-    return () => sub.unsubscribe()
-  }, [form, report])
+  // @NOTE The captcha result is not a form control, so it is held here and
+  // mirrored to the wizard as it arrives rather than read off the element.
+  const [verify, setVerify] = useState<VerifyData | null>(
+    values?.verify ?? null,
+  )
 
   return (
-    <FormShell
+    <FormShell<HcaptchaValues>
       {...props}
-      form={form}
-      onSubmit={(next, signal) => {
-        onValues?.({ verify: next.verify })
-        return handler({ verify: next.verify }, signal)
+      submittable={verify != null}
+      onSubmit={(_next, signal) => {
+        if (!verify) return
+        onValues?.({ verify })
+        return handler({ verify }, signal)
       }}
     >
       {verifiedOnMount ? (
@@ -101,7 +82,7 @@ export function SignUpHcaptchaForm({
             captchaRef.current?.execute()
           }}
           onVerify={(token: string, ekey: string) => {
-            form.setValue('verify', { token, ekey }, { shouldValidate: true })
+            setVerify({ token, ekey })
           }}
         />
       )}

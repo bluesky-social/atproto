@@ -1,40 +1,41 @@
 import { useLingui } from '@lingui/react/macro'
-import type { FieldValues } from 'react-hook-form'
-import { useWatch } from 'react-hook-form'
+import { useState } from 'react'
 import { PasswordStrength } from '#/components/feedback/password-strength.tsx'
 import { MIN_PASSWORD_LENGTH } from '#/lib/password.ts'
 import { PasswordField, type PasswordFieldProps } from './password-field.tsx'
 
-export type NewPasswordFieldProps<TValues extends FieldValues> =
-  PasswordFieldProps<TValues>
+export type NewPasswordFieldProps = PasswordFieldProps
 
-export function NewPasswordField<TValues extends FieldValues>({
-  control,
-  name,
+export function NewPasswordField({
   autoComplete = 'new-password',
   minLength = MIN_PASSWORD_LENGTH,
+  onChange,
+  defaultValue,
   ...props
-}: NewPasswordFieldProps<TValues>) {
+}: NewPasswordFieldProps) {
   const { t } = useLingui()
 
-  // @NOTE Subscribing to the live value here (rather than mirroring it in
-  // local state) keeps the input itself fully controlled by react-hook-form
-  // while still driving the strength meter.
-  const value = useWatch({ control, name })
+  // @NOTE Mirrored locally only to drive the strength meter; the input itself
+  // stays uncontrolled so the DOM remains the source of truth. Seeded from
+  // `defaultValue` so the meter matches a restored value.
+  const [value, setValue] = useState(
+    typeof defaultValue === 'string' ? defaultValue : '',
+  )
 
   return (
     <PasswordField
       {...props}
-      control={control}
-      name={name}
+      defaultValue={defaultValue}
       placeholder={t`Enter a password`}
       aria-label={t`Enter your new password`}
       title={t`Password with at least ${MIN_PASSWORD_LENGTH} characters`}
       minLength={minLength}
       autoComplete={autoComplete}
-      below={
-        <PasswordStrength password={typeof value === 'string' ? value : ''} />
-      }
+      onChange={(event) => {
+        onChange?.(event)
+        setValue(event.currentTarget.value)
+      }}
+      below={<PasswordStrength password={value} />}
     />
   )
 }

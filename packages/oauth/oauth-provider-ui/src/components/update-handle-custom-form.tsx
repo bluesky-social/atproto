@@ -1,6 +1,6 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtSignIcon } from 'lucide-react'
-import { useForm, useWatch } from 'react-hook-form'
+import { useState } from 'react'
 import {
   type HandleString,
   isValidHandle,
@@ -12,19 +12,18 @@ import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
-import { schemaResolver } from '#/lib/form-resolver.ts'
-import {
-  type UpdateHandleCustomValues,
-  updateHandleCustomSchema,
-} from '#/lib/form-schemas.ts'
 import { InputHandleCustomInstructions } from './forms/input-handle-custom-instructions.tsx'
+
+// @NOTE The key is `domain` even though the value is a full handle: the
+// rendered `name` is a public contract.
+type Values = { domain: string }
 
 export type UpdateHandleCustomData = {
   handle: HandleString
 }
 
 export type UpdateHandleCustomFormProps = Omit<
-  FormShellProps<UpdateHandleCustomValues>,
+  FormShellProps<Values>,
   'form' | 'onSubmit'
 > & {
   did: string
@@ -53,20 +52,13 @@ export function UpdateHandleCustomForm({
 }: UpdateHandleCustomFormProps) {
   const { t } = useLingui()
 
-  const form = useForm<UpdateHandleCustomValues>({
-    resolver: schemaResolver(updateHandleCustomSchema),
-    reValidateMode: 'onChange',
-    defaultValues: { domain: domainDefault ?? '' },
-  })
-
   // The DNS/HTTP instructions update live as the user types.
-  const domain = useWatch({ control: form.control, name: 'domain' })
-  const handle = parseHandle(domain ?? '')
+  const [domain, setDomain] = useState(domainDefault ?? '')
+  const handle = parseHandle(domain)
 
   return (
-    <FormShell
+    <FormShell<Values>
       {...props}
-      form={form}
       submittable={handle != null}
       onSubmit={(values, signal) => {
         const parsed = parseHandle(values.domain)
@@ -75,8 +67,9 @@ export function UpdateHandleCustomForm({
       }}
     >
       <TextField
-        control={form.control}
         name="domain"
+        defaultValue={domainDefault ?? ''}
+        onChange={(event) => setDomain(event.currentTarget.value)}
         label={<Trans>Enter the domain you want to use</Trans>}
         icon={<AtSignIcon className="size-5" />}
         type="text"

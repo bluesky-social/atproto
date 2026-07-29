@@ -1,22 +1,12 @@
 import { Trans } from '@lingui/react/macro'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
 import { PasswordField } from '#/components/forms/fields/password-field.tsx'
 import { TokenField } from '#/components/forms/fields/token-field.tsx'
 import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
-import { schemaResolver } from '#/lib/form-resolver.ts'
-import { otpCodeSchema } from '#/lib/form-schemas.ts'
 
-const schema = z.object({
-  // These keys become the rendered `name` attributes; they are contracted.
-  code: otpCodeSchema,
-  password: z.string().min(1),
-})
-
-type Values = z.infer<typeof schema>
+type Values = { code: string; password: string }
 
 export type DeleteAccountConfirmData = {
   token: string
@@ -25,7 +15,7 @@ export type DeleteAccountConfirmData = {
 
 export type DeleteAccountConfirmFormProps = Omit<
   FormShellProps<Values>,
-  'form' | 'onSubmit'
+  'onSubmit'
 > & {
   email?: string
   onResend: () => void | PromiseLike<void>
@@ -41,16 +31,9 @@ export function DeleteAccountConfirmForm({
   handler,
   ...props
 }: DeleteAccountConfirmFormProps) {
-  const form = useForm<Values>({
-    resolver: schemaResolver(schema),
-    reValidateMode: 'onChange',
-    defaultValues: { code: '', password: '' },
-  })
-
   return (
-    <FormShell
+    <FormShell<Values>
       {...props}
-      form={form}
       submitVariant="destructive"
       submitLabel={<Trans>Delete my account</Trans>}
       onSubmit={(values, signal) =>
@@ -70,7 +53,6 @@ export function DeleteAccountConfirmForm({
       )}
 
       <TokenField
-        control={form.control}
         name="code"
         label={<Trans>Confirmation code</Trans>}
         enterKeyHint="next"
@@ -80,7 +62,6 @@ export function DeleteAccountConfirmForm({
       />
 
       <PasswordField
-        control={form.control}
         name="password"
         label={<Trans>Password</Trans>}
         autoComplete="current-password"

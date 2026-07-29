@@ -1664,9 +1664,6 @@ importers:
       '@hcaptcha/react-hcaptcha':
         specifier: ^1.11.2
         version: 1.11.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@hookform/resolvers':
-        specifier: ^3.10.0
-        version: 3.10.0(react-hook-form@7.83.0(react@19.0.0))
       '@lingui/cli':
         specifier: ^5.2.0
         version: 5.2.0(typescript@6.0.3)
@@ -1724,9 +1721,6 @@ importers:
       react-error-boundary:
         specifier: ^5.0.0
         version: 5.0.0(react@19.0.0)
-      react-hook-form:
-        specifier: ^7.83.0
-        version: 7.83.0(react@19.0.0)
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -1748,9 +1742,6 @@ importers:
       vitest:
         specifier: ^4.0.16
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.19.17)(jiti@2.4.2)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1)
-      zod:
-        specifier: ^3.24.2
-        version: 3.25.76
 
   packages/oauth/oauth-scopes:
     dependencies:
@@ -3836,11 +3827,6 @@ packages:
     peerDependencies:
       react: '>= 16.3.0'
       react-dom: '>= 16.3.0'
-
-  '@hookform/resolvers@3.10.0':
-    resolution: {integrity: sha512-79Dv+3mDF7i+2ajj7SkypSKHhl1cbln1OGavqrsF7p6mbUv11xpqpacPsGDCTRvCSjEEIez2ef1NveSVL3b0Ag==}
-    peerDependencies:
-      react-hook-form: ^7.0.0
 
   '@humanwhocodes/config-array@0.11.14':
     resolution: {integrity: sha512-3T8LkOmg45BV5FICb15QQMsyUSWrQ8AygVfC7ZG32zOalnqrilm018ZVCw0eapXux8FtA33q8PSRSstjee3jSg==}
@@ -9611,12 +9597,6 @@ packages:
     peerDependencies:
       react: '>=16.13.1'
 
-  react-hook-form@7.83.0:
-    resolution: {integrity: sha512-AXt8cMCmx5a7u4uvpb2uRFVrWQhllI4pV+LSykxIac/hjt44TnQkmX9BKuQi2i+LDC62esmiLpilkav+kjVf/A==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      react: ^16.8.0 || ^17 || ^18 || ^19
-
   react-is@18.2.0:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
 
@@ -12990,10 +12970,6 @@ snapshots:
       '@hcaptcha/loader': 1.2.4
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
-
-  '@hookform/resolvers@3.10.0(react-hook-form@7.83.0(react@19.0.0))':
-    dependencies:
-      react-hook-form: 7.83.0(react@19.0.0)
 
   '@humanwhocodes/config-array@0.11.14':
     dependencies:
@@ -19784,10 +19760,6 @@ snapshots:
   react-error-boundary@5.0.0(react@19.0.0):
     dependencies:
       '@babel/runtime': 7.22.10
-      react: 19.0.0
-
-  react-hook-form@7.83.0(react@19.0.0):
-    dependencies:
       react: 19.0.0
 
   react-is@18.2.0: {}
