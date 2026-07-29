@@ -18,3 +18,4 @@ test.sqlite
 *.swp
 coverage
 roast-stderr.md
+.swc

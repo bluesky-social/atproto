@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { isAccept, isMime, matchesAccept, matchesAnyAccept } from './mime.js'
 
 describe('isAccept', () => {
