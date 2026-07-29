@@ -5,9 +5,9 @@ import type { CloseEventDetail } from '../src/message-channel.js'
 import type { Transport, TransportFactory } from '../src/transport/transport.js'
 import { createWebSocket } from '../src/websocket.js'
 
-// One entry per connection the loop will make. Transports surface every
-// connection end as a throw (a clean close included, as a CloseError carrying
-// its code), so both scripted outcomes throw.
+// One entry per connection the loop will make. Every connection end reaches the
+// loop as a throw — a clean close included, as a CloseError carrying its code —
+// so both scripted outcomes throw.
 type Step =
   | { messages: string[]; end: 'clean'; detail?: CloseEventDetail }
   | { messages: string[]; end: 'error'; error: unknown }
@@ -21,8 +21,8 @@ function scripted(steps: Step[]) {
     signals.push(options.signal)
     const step = steps[index++]
     assert(step, 'scripted transport: script exhausted')
-    // A scripted connection is one that opened; report it as a real transport
-    // would so the loop fires onOpen/onConnect and resets its backoff.
+    // A scripted connection is one that opened, so report it the way a real
+    // transport would: the loop fires onOpen/onConnect and resets its backoff.
     queueMicrotask(() => options.onOpen(transport))
     const transport: Transport<'auto'> = {
       async send() {},
@@ -47,13 +47,12 @@ function scripted(steps: Step[]) {
 }
 
 // A transport that opens and then never ends on its own, recording whether its
-// teardown signal fired — the only way the loop can end a live connection.
+// teardown signal fired — the loop's only way to end a live connection.
 //
-// Faithful to the real transports on one point that matters here: aborting the
-// signal rejects a parked pull (they route it through the message channel's
-// `fail()`). The loop depends on that contract — a `yield*` parked on a pull
-// cannot observe an abort by itself, so a transport that ignored its signal
-// would hang the stream.
+// Faithful to the real transports on the point that matters here: aborting the
+// signal rejects a parked pull. The loop depends on that, since a `yield*` parked
+// on a pull can't observe an abort by itself, so a transport that ignored its
+// signal would hang the stream.
 function parkingTransport() {
   let tornDown = false
   const createTransport = ((options) => {
@@ -95,8 +94,8 @@ describe(createWebSocket, () => {
       { messages: ['a', 'b'], end: 'clean' },
     ])
     const websocket = createWebSocket(createTransport)
-    // A server-sent 1000 is fatal under the default policy: the stream ends
-    // rather than rejecting.
+    // A server-sent 1000 is fatal under the default policy, and a clean end
+    // completes the stream rather than rejecting.
     expect(await drain(websocket('ws://x', noBackoff))).toEqual(['a', 'b'])
   })
 
@@ -134,8 +133,8 @@ describe(createWebSocket, () => {
     ])
     const websocket = createWebSocket(createTransport)
     await drain(websocket('ws://x', noBackoff))
-    // A transport has no close method: its signal is the only teardown, so
-    // every connection's must be aborted or the socket leaks.
+    // A transport has no close method, so its signal is the only teardown: every
+    // connection's must be aborted or the socket leaks.
     expect(signals).toHaveLength(2)
     expect(signals.every((s) => s.aborted)).toBe(true)
   })
@@ -217,8 +216,8 @@ describe(createWebSocket, () => {
         },
       })
       await expect(drain(gen)).rejects.toBeInstanceOf(CloseError)
-      // Both consultations report attempt 0: each connection opened
-      // successfully before closing, and a stable open resets the counter.
+      // Both report attempt 0: each connection opened before closing, and a
+      // stable open resets the counter.
       expect(attempts).toEqual([0, 0])
     })
   })
@@ -234,9 +233,9 @@ describe(createWebSocket, () => {
       const onConnect = vi.fn()
       const websocket = createWebSocket(createTransport)
       await drain(websocket('ws://x', { ...noBackoff, onOpen, onConnect }))
-      // onOpen bookends the stream; onConnect covers every connection, the
-      // first included — so a consumer wanting "every connection" wires one
-      // hook, not two with identical bodies.
+      // onOpen bookends the stream; onConnect covers every connection, the first
+      // included — so a consumer wanting "every connection" wires one hook, not
+      // two with identical bodies.
       expect(onOpen).toHaveBeenCalledTimes(1)
       expect(onConnect).toHaveBeenCalledTimes(3)
       expect(onOpen.mock.calls[0]).toEqual([])
@@ -244,9 +243,9 @@ describe(createWebSocket, () => {
     })
 
     it('pairs onConnect with onDisconnect, and reports failed dials as errors only', async () => {
-      // A stream stuck retrying must not report a disconnect per attempt: a
-      // dial that never connected produces neither onConnect nor onDisconnect,
-      // just an onError.
+      // A stream stuck retrying must not report a disconnect per attempt. A dial
+      // that never connected produces neither onConnect nor onDisconnect, only an
+      // onError.
       let attempt = 0
       const createTransport = ((options) => {
         const n = attempt++
@@ -325,8 +324,8 @@ describe(createWebSocket, () => {
       ])
       const websocket = createWebSocket(createTransport)
       for await (const _ of websocket('ws://x', noBackoff)) break
-      // A break resumes the generator at its `yield*`, so the teardown has to
-      // live in a `finally` to run at all.
+      // A break resumes the generator at its `yield*`, so the teardown has to live
+      // in a `finally` to run at all.
       expect(signals[0]?.aborted).toBe(true)
     })
 
@@ -361,10 +360,10 @@ describe(createWebSocket, () => {
       const { createTransport } = scripted([{ messages: ['a'], end: 'clean' }])
       const websocket = createWebSocket(createTransport)
       const thrown = new Error('bad hook')
-      // invokeHook rethrows on a microtask: a bad hook crashes visibly rather
+      // invokeHook rethrows on a microtask, so a bad hook crashes visibly rather
       // than unwinding through the loop's state. Intercept the process-level
-      // exception so this deliberate crash is *asserted* rather than merely
-      // escaping into the runner (which would fail the suite).
+      // exception so the deliberate crash is asserted rather than escaping into
+      // the runner, which would fail the suite.
       const uncaught = new Promise<unknown>((resolve) => {
         process.once('uncaughtException', resolve)
       })
@@ -438,8 +437,8 @@ describe(createWebSocket, () => {
         ...noBackoff,
         signal: controller.signal,
       })
-      // Abort before the first pull; the first attempt still runs, but its
-      // failure must surface the abort reason rather than being retried.
+      // Abort before the first pull. The first attempt still runs, but its failure
+      // has to surface the abort reason rather than being retried.
       const pull = gen.next()
       controller.abort(new Error('stop'))
       await expect(pull).rejects.toThrow()
@@ -449,10 +448,10 @@ describe(createWebSocket, () => {
 
   describe('per-attempt state', () => {
     it('fails fast when the transport cannot be constructed', async () => {
-      // The transports fail loudly at construction on purpose (a malformed url,
-      // browser `headers`, no global WebSocket). Nothing was ever wired to
-      // report a close on that path, so the terminal must not sit waiting for
-      // one — a caller's most likely misconfiguration should surface at once.
+      // The transports fail loudly at construction on purpose: a malformed url,
+      // browser `headers`, no global WebSocket. Nothing is wired to report a close
+      // on that path, so the terminal must not sit waiting for one — a caller's
+      // likeliest misconfiguration should surface at once.
       const boom = new SocketError(new Error('cannot construct'))
       const createTransport = (() => {
         throw boom
@@ -468,8 +467,8 @@ describe(createWebSocket, () => {
 
     it('does not report an earlier connection detail as the stream ending', async () => {
       // A detail belongs to the attempt that produced it. If a later dial fails
-      // before it ever connects, the stream did not end with the previous
-      // connection's close — reporting that would be a lie about the outcome.
+      // before ever connecting, the stream did not end with the previous
+      // connection's close, and reporting that would misstate the outcome.
       let attempt = 0
       const dialFailure = new SocketError(new Error('dial refused'))
       const createTransport = ((options) => {
@@ -528,8 +527,8 @@ describe(createWebSocket, () => {
     }) as unknown as typeof setTimeout)
     const websocket = createWebSocket(createTransport)
     await drain(websocket('ws://x'))
-    // Both backoffs are first-attempt-sized (~1s, not 1s then 2s): the second
-    // failure followed a successful open, which resets the counter.
+    // Both backoffs are first-attempt-sized — ~1s, not 1s then 2s — because the
+    // second failure followed a successful open, which resets the counter.
     expect(delays).toHaveLength(2)
     expect(delays[0]).toBeLessThan(2000)
     expect(delays[1]).toBeLessThan(2000)

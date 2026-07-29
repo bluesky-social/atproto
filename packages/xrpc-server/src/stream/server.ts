@@ -5,10 +5,10 @@ import { ErrorFrame, type Frame } from './frames.js'
 import { logger } from './logger.js'
 
 /**
- * Thrown by a subscription handler to end the stream with a specific close
- * code. A server-side concept — it describes how *this* server chooses to
- * close a connection it is serving — so it lives here rather than in the
- * client package, which previously owned it by accident.
+ * Thrown by a subscription handler to end the stream with a specific close code.
+ * A server-side concept: it describes how this server closes a connection it is
+ * serving, so it lives here rather than in the client package, which owned it by
+ * accident.
  */
 export class DisconnectError extends Error {
   constructor(

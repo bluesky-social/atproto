@@ -15,8 +15,8 @@ import {
 } from '../src/transport/transport.js'
 import { startServer } from './_util/server.js'
 
-// Drains a transport's iteration into an array, tolerating (and returning)
-// the terminal error every transport surfaces — including a clean close.
+// Drains a transport's iteration into an array, returning rather than throwing
+// whatever terminal error it surfaces.
 async function drain<M extends 'auto' | 'text' | 'binary'>(
   transport: Transport<M>,
 ): Promise<{ messages: MessageOf<M>[]; error: unknown }> {
@@ -116,9 +116,9 @@ describe(createTransport, () => {
 
   it('completes iteration and reports the detail on a clean server close', async () => {
     // A transport signals an orderly close by completing, per the ordinary
-    // iterator contract, and reports the close detail through onClose. It does
-    // not invent an error for something that isn't one — the reconnect loop
-    // above builds a classifiable CloseError from that detail itself.
+    // iterator contract, and reports the detail through onClose. It doesn't
+    // invent an error for something that isn't one; the reconnect loop builds a
+    // classifiable CloseError from that detail itself.
     await using server = await startServer((ws) => {
       ws.close(CloseCode.Normal, 'bye')
     })
@@ -153,10 +153,10 @@ describe(createTransport, () => {
       onClose: (detail) => closes.push(detail),
     })
     const { error } = await drain(transport)
-    // An abrupt drop reaches `ws` as a close event with 1006 (or as a socket
-    // error, depending on timing), so the transport may complete or reject.
-    // Either way what matters is that the reported detail is abnormal — that
-    // is what the reconnect loop classifies, and 1006 is retryable.
+    // An abrupt drop reaches `ws` as a 1006 close event or as a socket error,
+    // depending on timing, so the transport may complete or reject. What matters
+    // either way is that the reported detail is abnormal: that's what the
+    // reconnect loop classifies, and 1006 is retryable.
     const detail = error instanceof CloseError ? error : closes.at(-1)
     assert(detail)
     expect(detail.wasClean).toBe(false)
@@ -184,8 +184,8 @@ describe(createTransport, () => {
     })
     const drained = drain(transport)
     await vi.waitFor(() => assert(sender))
-    // The server only closes after processing the message, so waiting for
-    // the connection to end (not just send()'s own flush) is what proves the
+    // The server only closes after processing the message, so waiting for the
+    // connection to end — not just send()'s own flush — is what proves the
     // message actually reached it.
     await sender.send('ping')
     await drained
@@ -278,22 +278,19 @@ describe(createTransport, () => {
       serverWs = ws
       ws.on('message', (data) => {
         if (data.toString() === 'go') {
-          // Blast far more data than the client's watermark permits. Once
-          // the transport pauses its socket, the client stops draining its
-          // kernel receive buffer, TCP flow control kicks in, and the
-          // server's own send buffer — `ws.bufferedAmount`, filled by
-          // `ws.send()` faster than the OS can flush it onto a blocked
-          // connection — climbs and stays high. That's the observable proxy
-          // for real backpressure, without reaching into the client's
-          // transport internals.
+          // Blast far more data than the client's watermark permits. Once the
+          // transport pauses its socket, the client stops draining its kernel
+          // receive buffer, TCP flow control kicks in, and the server's own
+          // `bufferedAmount` climbs and stays high. That's the observable proxy
+          // for real backpressure, without reaching into client internals.
           interval = setInterval(() => ws.send('x'.repeat(65536)), 0)
         }
       })
     })
     const controller = new AbortController()
     let sender!: Sender<'auto'>
-    // Deliberately never iterated: an unconsumed transport is exactly the
-    // slow-consumer scenario under test, so only `send()` is exercised here.
+    // Never iterated: an unconsumed transport is exactly the slow-consumer
+    // scenario under test, so only `send()` is exercised here.
     createTransport({
       url: server.url,
       dataMode: 'auto',
@@ -375,11 +372,11 @@ describe(createTransport, () => {
     })
     const iterator = transport[Symbol.asyncIterator]()
     expect(await iterator.next()).toEqual({ value: 'one', done: false })
-    // A consumer stop is not the connection ending: neither the return() nor
+    // A consumer stop is not the connection ending, so neither the return() nor
     // any later pull may surface an error. A pull after the stop used to
-    // synthesize a *retryable* error, which would make a deliberate stop look
-    // like transient trouble to the reconnect policy above — `yield*` in that
-    // layer can pull again after a downstream return() propagates.
+    // synthesize a *retryable* error, making a deliberate stop look like
+    // transient trouble to the reconnect policy — whose `yield*` can pull again
+    // after a downstream return() propagates.
     await expect(iterator.return!()).resolves.toEqual({
       value: undefined,
       done: true,
@@ -392,8 +389,8 @@ describe(createTransport, () => {
   })
 
   it('rejects a parked pull with the abort reason', async () => {
-    // The reconnect loop depends on this: a `yield*` parked on a pull cannot
-    // observe an abort by itself, so the transport must reject the pull rather
+    // The reconnect loop depends on this: a `yield*` parked on a pull can't
+    // observe an abort by itself, so the transport has to reject the pull rather
     // than leave it hanging.
     await using server = await startServer(() => {
       // Never sends, so the consumer's pull parks.
@@ -415,13 +412,12 @@ describe(createTransport, () => {
 
   it('does not arm the heartbeat before the socket opens', async () => {
     // `ws.ping()` throws while the socket is CONNECTING, and a throw inside a
-    // timer callback is an uncaught exception, not a rejection — nothing can
-    // catch it, so a connect slower than the interval (cold DNS, a loaded peer,
-    // TLS) would take the whole process down. 10.255.255.1:9 is a black hole:
-    // the connect hangs rather than being refused, holding the socket in
-    // CONNECTING well past the 20ms interval below.
+    // timer callback is an uncaught exception nothing can catch — so a connect
+    // slower than the interval would take the whole process down. 10.255.255.1:9
+    // is a black hole: the connect hangs rather than being refused, holding the
+    // socket in CONNECTING well past the 20ms interval below.
     //
-    // Observed by prepending a process listener, ahead of the runner's own —
+    // Observed by prepending a process listener, ahead of the runner's own:
     // `process.once` alone sits behind vitest's handler and never sees it.
     const seen: string[] = []
     const onUncaught = (err: Error) => seen.push(err.message)
@@ -447,14 +443,13 @@ describe(createTransport, () => {
 
   it('arms a heartbeat by default, without being asked to', async () => {
     // WebSocketKeepAlive started a heartbeat unconditionally at 10s, and no
-    // consumer in this repo ever passed the option — so if the default were
-    // opt-in, every one of them would silently lose dead-connection detection
-    // and a black-holed TCP connection would park forever with no error.
+    // consumer in this repo ever passed the option — so an opt-in default would
+    // silently cost every one of them dead-connection detection, and a
+    // black-holed connection would park forever with no error.
     //
-    // Asserted on the scheduled interval rather than an observed ping: the
-    // default is 10s, too long to wait for and not worth pinning a fake-timer
-    // dance to a live socket for. What regressed was whether a timer is armed
-    // at all, which is exactly what this observes.
+    // Asserted on the scheduled interval rather than an observed ping: 10s is too
+    // long to wait for, and not worth pinning a fake-timer dance to a live socket
+    // for. What regressed was whether a timer is armed at all.
     using setIntervalSpy = vi.spyOn(globalThis, 'setInterval')
     await using server = await startServer(() => {})
     const controller = new AbortController()
@@ -466,7 +461,7 @@ describe(createTransport, () => {
       url: server.url,
       dataMode: 'text',
       signal: controller.signal,
-      // Deliberately no `heartbeat` option: the default is what's under test.
+      // No `heartbeat` option: the default is what's under test.
       onOpen: () => opened(),
       onClose: () => {},
     })

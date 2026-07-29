@@ -28,13 +28,13 @@ export interface MessageChannelOptions<M extends DataMode> {
   idleTimeoutMs?: number
   /**
    * Read-side backpressure, when the platform has it. Node passes both hooks,
-   * wired to `ws.pause()`/`resume()`; the browser passes nothing, because the
-   * WHATWG API cannot pause a socket.
+   * wired to `ws.pause()`/`resume()`; the browser passes nothing, since the
+   * WHATWG API can't pause a socket.
    *
-   * Present or absent as a unit, deliberately: a channel that could pause but
-   * never resume would stall permanently, and one that tracks a "paused" state
-   * it can never actually enter would suppress the idle timeout — the browser's
-   * only dead-connection detector.
+   * Both or neither, deliberately: a channel that could pause but never resume
+   * would stall permanently, and one that tracks a "paused" state it can never
+   * enter would suppress the idle timeout — the browser's only dead-connection
+   * detector.
    */
   backpressure?: {
     /** Buffered bytes passed `highWaterMark`. */
@@ -42,10 +42,12 @@ export interface MessageChannelOptions<M extends DataMode> {
     /** Buffered bytes fell back below `highWaterMark / 2`. */
     onResume: () => void
   }
-  /** Invoked when the channel itself decides the connection must end —
-      a dataMode violation, a byte-cap overflow, or an idle timeout. The
-      transport uses it to send an appropriate close code before tearing
-      down. `code` is the close code to send, or undefined for none. */
+  /**
+   * The channel decided the connection must end — a dataMode violation, a
+   * byte-cap overflow, or an idle timeout. The transport uses this to send a
+   * close code before tearing down; `code` is undefined when there's nothing
+   * clean to say.
+   */
   onAbort?: (error: unknown, code?: number) => void
 }
 
@@ -59,9 +61,8 @@ export interface MessageChannel<M extends DataMode> {
   /**
    * End the channel cleanly; already-buffered messages still drain.
    *
-   * Takes no detail: how the connection ended is reported by the transport's own
-   * `onClose`, and duplicating it here was a second source of truth for the same
-   * fact.
+   * Takes no detail: how the connection ended is the transport's `onClose` to
+   * report, and duplicating it here was a second source of truth.
    */
   finish(): void
 }
@@ -82,24 +83,23 @@ interface Waiter<M extends DataMode> {
   reject: (err: unknown) => void
 }
 
-// Byte accounting: binary counts byteLength; strings approximate via UTF-16
-// code units (length * 2) — cheap, deterministic, good enough for watermarks.
+// Byte accounting: binary counts byteLength, text approximates via UTF-16 code
+// units (length * 2).
 //
-// Deliberately an over-estimate rather than a real UTF-8 measurement, which
-// would cost an encode per message on the hot path. Mostly-ASCII text is
-// therefore counted at roughly twice its wire size, so `highWaterMark` and
-// `maxBufferedBytes` bite about twice as early for a text stream. Both are
-// safety valves, so erring toward pausing (or failing) sooner is the right
-// direction to be wrong in — but a caller sizing them precisely for text should
-// know the units are "UTF-16 code units × 2", not bytes on the wire.
+// An over-estimate on purpose, rather than a real UTF-8 measurement that would
+// cost an encode per message on the hot path. Mostly-ASCII text is counted at
+// roughly twice its wire size, so `highWaterMark` and `maxBufferedBytes` bite
+// about twice as early for a text stream. Both are safety valves, so pausing (or
+// failing) sooner is the right direction to be wrong in — but a caller sizing
+// them for text should know the units are UTF-16 code units × 2, not wire bytes.
 function messageBytes(data: string | Uint8Array): number {
   return typeof data === 'string' ? data.length * 2 : data.byteLength
 }
 
-// The synthetic detail for an abnormal end with no close frame (socket
-// error, heartbeat/idle timeout, signal abort) — the WHATWG convention of
-// 1006. Exported so the platform transports can report the same shape for
-// their own frame-less failures instead of each duplicating this literal.
+// The detail for an abnormal end with no close frame (socket error,
+// heartbeat/idle timeout, signal abort) — the WHATWG convention of 1006.
+// Exported so both transports report the same shape for their own frame-less
+// failures instead of each duplicating this literal.
 export const ABNORMAL_CLOSE_DETAIL: CloseEventDetail = {
   code: CloseCode.Abnormal,
   reason: '',
@@ -107,10 +107,10 @@ export const ABNORMAL_CLOSE_DETAIL: CloseEventDetail = {
 }
 
 /**
- * How a caller-supplied stop reason maps onto a close: a bare `ac.abort()`
- * (an `AbortError`) is an orderly stop and closes with 1000; a `CloseError`
- * says which code to close with; anything else is a failure and the connection
- * is destroyed rather than closed politely.
+ * How a caller-supplied stop reason maps onto a close: a bare `ac.abort()` (an
+ * `AbortError`) is an orderly stop and closes with 1000; a `CloseError` says
+ * which code to close with; anything else is a failure, so the connection is
+ * destroyed rather than closed politely.
  *
  * Returns the close code to send, or `undefined` to terminate.
  */
@@ -119,11 +119,11 @@ export function closeCodeForStop(reason: unknown): number | undefined {
   // A DOMException named AbortError is what `ac.abort()` produces with no
   // argument; treat that bare "please stop" as orderly.
   //
-  // Matched on shape rather than `instanceof Error`, deliberately: under a
-  // module realm that differs from the one `AbortController` came from — jest's
-  // ESM VM contexts being the case that caught this — the DOMException is not an
-  // `instanceof` of *this* module's `Error`, and the check silently failed,
-  // downgrading every graceful shutdown to a destroyed connection.
+  // Matched on shape rather than `instanceof Error` on purpose: if the module
+  // realm differs from the one `AbortController` came from — jest's ESM VM
+  // contexts being the case that caught this — the DOMException isn't an
+  // `instanceof` of *this* module's `Error`, so the check silently failed and
+  // downgraded every graceful shutdown to a destroyed connection.
   if (
     typeof reason === 'object' &&
     reason !== null &&
@@ -135,12 +135,11 @@ export function closeCodeForStop(reason: unknown): number | undefined {
 }
 
 /**
- * Creates the shared receive-side engine for a WebSocket client: pure logic,
- * no sockets. A transport pushes received frames in via `push()`; a single
- * consumer pulls them out via `iterable`. Owns byte-counted buffering,
- * high/low watermarks, `dataMode` enforcement, and an idle timeout — all as
- * closure state, so two platform transports (Node, browser) can share one
- * implementation instead of duplicating it.
+ * The shared receive-side engine for a WebSocket client: pure logic, no sockets.
+ * A transport pushes received frames in via `push()`; a single consumer pulls
+ * them out via `iterable`. Owns byte-counted buffering, high/low watermarks,
+ * `dataMode` enforcement, and the idle timeout — all as closure state, so both
+ * platform transports share one implementation instead of duplicating it.
  */
 export function createMessageChannel<M extends DataMode>(
   options: MessageChannelOptions<M>,
@@ -150,9 +149,9 @@ export function createMessageChannel<M extends DataMode>(
   const maxBufferedBytes = options.maxBufferedBytes ?? Infinity
   const idleTimeoutMs = options.idleTimeoutMs
   const { backpressure, onAbort } = options
-  // Whether this platform can actually stop the peer from sending. Node can
-  // (it pauses the socket); the browser cannot. This gates the pause state
-  // itself, not just the callbacks — see `idleTick`.
+  // Whether this platform can actually stop the peer from sending: Node can (it
+  // pauses the socket), the browser can't. Gates the pause state itself, not
+  // just the callbacks — see `idleTick`.
   const canBackpressure = backpressure != null
 
   const buffer: QueueItem<M>[] = []
@@ -161,11 +160,10 @@ export function createMessageChannel<M extends DataMode>(
   let terminal: Terminal | null = null
   let paused = false
 
-  // Flag-based idle check: each tick either finds evidence (a message
-  // arrived since the previous tick) and clears the flag, or finds none and
-  // times out. Detection latency is therefore 1x-2x idleTimeoutMs: a message
-  // that arrives just after a tick resets the flag, but the timeout doesn't
-  // fire until the tick after next.
+  // Flag-based idle check: each tick either finds evidence (a message arrived
+  // since the last tick) and clears the flag, or finds none and times out.
+  // Detection latency is therefore 1x-2x idleTimeoutMs — a message arriving just
+  // after a tick resets the flag, so the timeout waits for the tick after next.
   let idleActive = true
   let idleTimer: ReturnType<typeof setInterval> | null = null
 
@@ -177,15 +175,13 @@ export function createMessageChannel<M extends DataMode>(
   }
 
   function idleTick(): void {
-    // No messages can arrive while paused for backpressure — treat the
-    // self-inflicted pause as liveness rather than false-timing-out a
-    // healthy connection. The refreshed flag grants a full detection window
-    // after resume.
+    // No messages can arrive while paused for backpressure, so count the
+    // self-inflicted pause as liveness rather than false-timing-out a healthy
+    // connection. Refreshing the flag grants a full window after resume.
     //
-    // Only reachable when the platform can actually pause (`canBackpressure`):
-    // otherwise a merely-full buffer would latch this exemption and suppress
-    // the timeout entirely, which in the browser is the only dead-connection
-    // detector there is.
+    // Only reachable when the platform can actually pause (`canBackpressure`).
+    // Otherwise a merely-full buffer would latch this exemption and suppress the
+    // timeout, which in the browser is the only dead-connection detector.
     if (paused) {
       idleActive = true
       return
@@ -232,10 +228,10 @@ export function createMessageChannel<M extends DataMode>(
     if (terminal) return
     terminal = { type: 'done' }
     clearIdleTimer()
-    // Buffer is left intact so pull() drains it before reporting done — a
-    // server-initiated clean close never discards received data. Waiters
-    // only exist when the buffer is empty (push() delivers directly to a
-    // waiter instead of buffering), so it's safe to settle them as done.
+    // Leave the buffer intact so pull() drains it before reporting done: a
+    // server-initiated clean close never discards received data. Waiters only
+    // exist when the buffer is empty (push() delivers straight to a waiter
+    // instead of buffering), so settling them as done is safe.
     resolveWaitersDone()
   }
 
@@ -252,8 +248,8 @@ export function createMessageChannel<M extends DataMode>(
     // Drop after a terminal: the channel has already ended.
     if (terminal) return
 
-    // A message arrived: liveness evidence for the idle check, regardless
-    // of whether it turns out to violate dataMode.
+    // A message arrived: liveness evidence for the idle check, even if it turns
+    // out to violate dataMode.
     idleActive = true
 
     const received = typeof data === 'string' ? 'text' : 'binary'
@@ -275,8 +271,8 @@ export function createMessageChannel<M extends DataMode>(
     buffer.push({ value, bytes })
     bufferedBytes += bytes
 
-    // Hard ceiling checked before the watermark: crash over silent
-    // unbounded growth rather than merely pausing on an oversized push.
+    // Hard ceiling checked before the watermark: fail rather than merely pause
+    // on an oversized push, since silent unbounded growth is worse.
     if (bufferedBytes > maxBufferedBytes) {
       const error = new BufferOverflowError(bufferedBytes)
       fail(error)
@@ -291,7 +287,7 @@ export function createMessageChannel<M extends DataMode>(
   }
 
   function pull(): Promise<IteratorResult<MessageOf<M>, void>> {
-    // Drain buffered messages first, even after a `done` terminal — a
+    // Drain buffered messages first, even after a `done` terminal: a
     // server-initiated clean close never drops received data.
     const item = buffer.shift()
     if (item) {
@@ -313,9 +309,9 @@ export function createMessageChannel<M extends DataMode>(
   }
 
   function iteratorReturn(): Promise<IteratorResult<MessageOf<M>, void>> {
-    // Consumer abandoned iteration (a `break`/`return` in a `for await`): a
-    // stop is a loss of interest, not a request to drain, so the buffer is
-    // discarded. First-wins: a channel already ended is left as-is.
+    // The consumer abandoned iteration (a `break`/`return` in a `for await`).
+    // Stopping is a loss of interest, not a request to drain, so discard the
+    // buffer. First-wins: a channel that already ended is left as-is.
     if (!terminal) {
       terminal = { type: 'done' }
       clearIdleTimer()

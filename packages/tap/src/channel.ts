@@ -14,10 +14,10 @@ import {
 import { type TapEvent, parseTapEvent } from './types.js'
 import { formatAdminAuthHeader, isCausedBySignal } from './util.js'
 
-// Matches the reconnect classification the legacy errno-matching client had:
-// reconnect only on a genuine transport failure or an abnormal close (1006).
-// Any other close code — including the synthetic 1005 a bare socket.close()
-// produces — ends the session, as before.
+// Matches the classification the legacy errno-matching client had: reconnect only
+// on a genuine transport failure or an abnormal close (1006). Any other close
+// code, including the synthetic 1005 a bare socket.close() produces, ends the
+// session as before.
 function shouldReconnect(error: unknown): boolean {
   if (error instanceof CloseError) {
     return error.code === CloseCode.Abnormal
@@ -27,8 +27,7 @@ function shouldReconnect(error: unknown): boolean {
     error instanceof HeartbeatTimeoutError ||
     error instanceof IdleTimeoutError
   ) {
-    // Defer to each error's own classification so this can't drift from the
-    // taxonomy as it evolves.
+    // Defer to each error's own answer so this can't drift from the taxonomy.
     return error.shouldRetry()
   }
   return false
@@ -67,14 +66,14 @@ export class TapChannel implements AsyncDisposable {
   /** The current connection's sender, or undefined between connections. */
   private sender?: Sender<'text'>
   /**
-   * Acks accepted while there was no connection to send them on, flushed by
-   * the reconnect hook below.
+   * Acks accepted while there was no connection to send them on, flushed by the
+   * `onConnect` hook below.
    *
-   * Deliberately not a list of promises the caller awaits: a handler runs
-   * inside the iteration, and the reconnect that would flush it only happens
-   * when the iteration advances — so awaiting delivery from a handler would
-   * block the very pull that makes delivery possible. Acks are recorded and
-   * the handler continues; Tap redelivers anything it never sees acked.
+   * Not a list of promises the caller awaits, deliberately: a handler runs inside
+   * the iteration, and the reconnect that would flush it only happens when the
+   * iteration advances — so awaiting delivery from a handler would block the very
+   * pull that makes delivery possible. Acks are recorded and the handler
+   * continues; Tap redelivers anything it never sees acked.
    */
   private readonly pendingAcks = new Set<number>()
 
@@ -99,9 +98,8 @@ export class TapChannel implements AsyncDisposable {
         : {},
       signal: this.abortController.signal,
       shouldReconnect,
-      // Fires for every connection, the first included — so an ack recorded
-      // before anything ever connected (a caller may ack before start(), or
-      // between attempts) is flushed by the connection that finally comes up.
+      // Fires for every connection, the first included, so an ack recorded before
+      // anything ever connected is flushed by whichever connection comes up.
       onConnect: (sender) => {
         this.sender = sender
         void this.flushPendingAcks()
@@ -118,13 +116,13 @@ export class TapChannel implements AsyncDisposable {
   }
 
   /**
-   * Records an ack for delivery. Resolves once the ack has been sent or
-   * accepted for the next connection — not once the peer has processed it.
+   * Records an ack for delivery. Resolves once the ack has been sent, or accepted
+   * for the next connection — not once the peer has processed it.
    *
-   * It cannot mean more than that: a handler runs inside the iteration, and a
+   * It can't mean more than that: a handler runs inside the iteration, and a
    * reconnect only happens when the iteration advances, so awaiting confirmed
-   * delivery here would block the pull that delivery depends on. Tap's own
-   * at-least-once redelivery covers an ack that is lost with its connection.
+   * delivery here would block the pull delivery depends on. Tap's own
+   * at-least-once redelivery covers an ack lost with its connection.
    *
    * Acks are per-event, idempotent, and order-insensitive server-side (see
    * Outbox.AckEvent), so a duplicate or out-of-order ack is harmless.
@@ -138,14 +136,14 @@ export class TapChannel implements AsyncDisposable {
     try {
       await sender.send(ackMessage(id))
     } catch {
-      // The connection died under us: hand it to the next one rather than
+      // The connection died under us: hand the ack to the next one rather than
       // reporting a failure the caller can do nothing about.
       this.pendingAcks.add(id)
     }
   }
 
-  // Driven by the reconnect hook, never by a handler: this runs off the socket's
-  // own event, so it doesn't depend on the iteration making progress.
+  // Driven by `onConnect`, never by a handler: it runs off the socket's own event,
+  // so it doesn't depend on the iteration making progress.
   private async flushPendingAcks(): Promise<void> {
     const sender = this.sender
     if (!sender) return
@@ -170,10 +168,10 @@ export class TapChannel implements AsyncDisposable {
         await this.processWsEvent(chunk)
       }
     } catch (err) {
-      // A CloseError only reaches here once `shouldReconnect` has already
-      // declined to retry — i.e. the peer ended the session with an ordinary
-      // close frame. That is an expected end, matching the previous client's
-      // behavior of ending silently on any non-abnormal close.
+      // A CloseError only reaches here once `shouldReconnect` has declined to
+      // retry — i.e. the peer ended the session with an ordinary close frame.
+      // That's an expected end, matching the previous client's behavior of
+      // ending silently on any non-abnormal close.
       if (
         !isCausedBySignal(err, this.abortController.signal) &&
         !(err instanceof CloseError)

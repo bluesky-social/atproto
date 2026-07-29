@@ -273,15 +273,15 @@ describe('TapChannel', () => {
     it('does not hang when a handler awaits an ack across a dropped connection', async () => {
       // Both shipped indexers `await opts.ack()` inside onEvent. A handler runs
       // inside the iteration, and a reconnect only happens when the iteration
-      // advances — so an ack that awaited confirmed delivery would block the
-      // very pull that delivery depends on. That deadlock is reproducible
-      // against the pre-migration client (see divy/tap-ack-deadlock-repro); it
-      // hung past a 15s timeout, and destroy() could not unwind it either.
+      // advances, so an ack that awaited confirmed delivery would block the very
+      // pull delivery depends on. That deadlock reproduces against the
+      // pre-migration client: it hung past a 15s timeout, and destroy() couldn't
+      // unwind it either.
       //
-      // ackEvent therefore resolves once the ack has been sent or recorded for
-      // the next connection. It cannot promise the peer processed it: `send()`
-      // resolves on hand-off, so an ack handed to a socket that then dies is
-      // lost, and Tap's own at-least-once redelivery is what covers that.
+      // So ackEvent resolves once the ack has been sent, or recorded for the next
+      // connection. It can't promise the peer processed it, since `send()`
+      // resolves on hand-off — an ack handed to a socket that then dies is lost,
+      // and Tap's at-least-once redelivery covers that.
       await using server = await createWebSocketServer()
       const { port } = server.address() as AddressInfo
 
@@ -309,17 +309,17 @@ describe('TapChannel', () => {
 
       const consume = channel.start().catch(() => {})
       // The load-bearing assertion: the handler's awaited ack resolved, so the
-      // loop kept pulling and reconnected. Before the fix this never happened —
-      // the pull was blocked on the ack and the ack on the pull.
+      // loop kept pulling and reconnected. Before the fix the pull was blocked on
+      // the ack and the ack on the pull.
       await vi.waitFor(() => expect(connections).toBeGreaterThan(1))
       await channel.destroy()
       await consume
     })
 
     it('lands an ack recorded while no connection was live', async () => {
-      // The other half: when there genuinely is no sender at ack time, the ack
-      // is recorded and flushed by the reconnect hook — which runs off the
-      // socket's own event, so it does not depend on the iteration advancing.
+      // The other half: with no sender at ack time, the ack is recorded and
+      // flushed by `onConnect`, which runs off the socket's own event and so
+      // doesn't depend on the iteration advancing.
       await using server = await createWebSocketServer()
       const { port } = server.address() as AddressInfo
 
@@ -343,7 +343,7 @@ describe('TapChannel', () => {
         maxReconnectSeconds: 0,
       })
 
-      // Ack before anything is connected: nothing to hand off to, so it queues.
+      // Ack before anything connected, so there's nothing to hand off to.
       await channel.ackEvent(7)
       const consume = channel.start().catch(() => {})
       await vi.waitFor(() =>

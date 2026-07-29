@@ -4,13 +4,13 @@ import { Jetstream } from '../src/jetstream/service.js'
 
 describe('Jetstream.close()', () => {
   it('resolves only once the connection has actually closed', async () => {
-    // The daemon does `await jetstream.close()` and then tears down its
-    // background queue, so close() must not resolve while the stream is still
-    // running — otherwise the socket outlives the things it depends on.
+    // The daemon does `await jetstream.close()` and then tears down its background
+    // queue, so close() must not resolve while the stream is still running, or the
+    // socket outlives what it depends on.
     //
-    // Asserted on our own teardown, not the peer's acknowledgement: a client
-    // cannot wait on the peer without risking an indefinite hang, and `ws` fires
-    // its close event as soon as the local socket is done.
+    // Asserted on our own teardown, not the peer's acknowledgement: a client can't
+    // wait on the peer without risking a hang, and `ws` fires its close event as
+    // soon as the local socket is done.
     const wss = new WebSocketServer({ port: 0 })
     await new Promise((r) => wss.once('listening', r))
     const { port } = wss.address() as AddressInfo

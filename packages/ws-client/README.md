@@ -1,9 +1,9 @@
 # @atproto/ws-client: WebSocket Client Library
 
-A reconnecting WebSocket client for reading long-lived streams — the same
-code path on Node.js and in the browser. Reading is an `AsyncIterable` that
-spans reconnects transparently, backed by a typed error taxonomy and
-close-code-aware reconnect classification.
+A reconnecting WebSocket client for reading long-lived streams, with the same
+code path on Node.js and in the browser. Reading is an `AsyncIterable` that spans
+reconnects, backed by a typed error taxonomy and close-code-aware reconnect
+classification.
 
 [![NPM](https://img.shields.io/npm/v/@atproto/ws-client)](https://www.npmjs.com/package/@atproto/ws-client)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
@@ -16,10 +16,10 @@ npm install @atproto/ws-client
 
 ## Overview
 
-The package exports one thing: **`websocket(url, options?)`**, an async
-generator. Connect, read messages, reconnect on failure, and yield a single
-continuous stream to the consumer regardless of how many times the underlying
-socket was replaced. Its return type is `WebSocketIterable<M>`.
+The package exports one thing: **`websocket(url, options?)`**, an async generator.
+It connects, reads messages, reconnects on failure, and yields one continuous
+stream no matter how many times the underlying socket was replaced. Its return
+type is `WebSocketIterable<M>`.
 
 Everything else (error classes, `CloseCode`, option types) supports that
 entrypoint.
@@ -34,10 +34,10 @@ for await (const message of websocket('wss://example.com/feed')) {
 }
 ```
 
-The `for await` loop runs across reconnects: if the connection drops and a
-retry succeeds, iteration just continues — the consumer never sees the gap
-as a separate stream. A message is a `string` or `Uint8Array` depending on
-the frame's wire type, unless narrowed by `dataMode` (below).
+The loop runs across reconnects: if the connection drops and a retry succeeds,
+iteration continues, and the consumer never sees the gap as a separate stream. A
+message is a `string` or `Uint8Array` depending on the frame's wire type, unless
+narrowed by `dataMode` (below).
 
 ### `dataMode`
 
@@ -52,15 +52,15 @@ for await (const message of websocket(url, { dataMode: 'text' })) { ... }
 for await (const message of websocket(url, { dataMode: 'binary' })) { ... }
 ```
 
-If the server sends a frame of the wrong type under `'text'` or `'binary'`,
-the stream ends with a `DataModeError` (non-retryable — a protocol mismatch
-will recur) rather than silently coercing the data.
+If the server sends a frame of the wrong type under `'text'` or `'binary'`, the
+stream ends with a `DataModeError` (non-retryable — a protocol mismatch will
+recur) rather than silently coercing the data.
 
 ## Lifecycle: one idiom to stop
 
-There is deliberately **no `close()`** anywhere in this package. A stream ends
-in exactly one of two ways: you `break` (or `return`/`throw`) out of the
-`for await` loop, or you abort a `signal` passed in `options`.
+There is deliberately **no `close()`** in this package. A stream ends in one of
+two ways: you `break` (or `return`/`throw`) out of the loop, or you abort a
+`signal` passed in `options`.
 
 ```ts
 const controller = new AbortController()
@@ -80,17 +80,16 @@ specific close code — there is no separate option for it:
 | `controller.abort(new CloseError(…))` | close with that error's code  |
 | `controller.abort(anythingElse)`      | `1006` — connection destroyed |
 
-The last row is the fast path: a reason that isn't a request to stop is treated
-as a failure, and the connection is destroyed rather than closed politely.
-`break` and `throw` are indistinguishable to a generator (both produce a return
-completion), so they share the plain clean close.
+The last row is the fast path: a reason that isn't a request to stop is a failure,
+so the connection is destroyed rather than closed politely. `break` and `throw`
+are indistinguishable to a generator — both produce a return completion — so they
+share the plain clean close.
 
-A non-reconnectable **clean** close (e.g. the server sends close code 1000
-and the reconnect policy declines to retry) ends the stream normally — the
-`for await` loop just finishes, same as `break`. Any other unclean end
-(a network failure, a fatal protocol close, an aborted signal) rejects the
-iterator, so wrap the loop in `try`/`catch` if you need to distinguish
-"the peer said goodbye" from "something went wrong."
+A non-reconnectable **clean** close (the server sends 1000 and the reconnect
+policy declines to retry) ends the stream normally: the loop just finishes, same
+as `break`. Any other unclean end — a network failure, a fatal protocol close, an
+aborted signal — rejects the iterator. Wrap the loop in `try`/`catch` if you need
+to tell "the peer said goodbye" from "something went wrong."
 
 ```ts
 try {
@@ -105,18 +104,18 @@ try {
 
 ## Reconnects
 
-By default, a dropped connection is retried with exponential backoff
-(jittered, capped by `maxReconnectSeconds`, default `64`) and the backoff
-resets to its base after each connection that successfully opens.
+By default a dropped connection is retried with jittered exponential backoff,
+capped by `maxReconnectSeconds` (default `64`), and the backoff resets to its base
+after each connection that opens.
 
-- `url` may be a function: `() => string | URL | Promise<string | URL>`. It
-  is re-invoked on every attempt, including reconnects — this is the idiom
-  for resuming a stream at a cursor (see the firehose example below).
-- `shouldReconnect` controls whether a given failure is retried:
-  - `true` (default) — the built-in policy: each typed error in the error
-    taxonomy self-classifies, and close codes are classified per RFC 6455.
+- `url` may be a function: `() => string | URL | Promise<string | URL>`. It's
+  re-invoked on every attempt, including reconnects — the idiom for resuming a
+  stream at a cursor (see the firehose example below).
+- `shouldReconnect` controls whether a failure is retried:
+  - `true` (default) — the built-in policy: each typed error self-classifies, and
+    close codes are classified per RFC 6455.
   - `false` — never reconnect; the first end is terminal.
-  - `(error, attempt) => boolean` — fully replaces the default classification.
+  - `(error, attempt) => boolean` — replaces the default classification.
 
 ```ts
 websocket(url, {
@@ -136,68 +135,65 @@ bookend each **connection**, as many times as it takes.
 | `onError(error, reconnect?)` | a connection ended badly; `reconnect` present ⟹ retry coming |
 | `onClose(detail)`            | the stream ended, once, after the local socket has closed    |
 
-`onConnect` and `onDisconnect` pair exactly: a dial that never connected
+`onConnect` and `onDisconnect` pair exactly, and a dial that never connected
 produces neither. So a stream stuck retrying reports one `onDisconnect` for the
-connection it lost and an `onError` per failed attempt — not a disconnect per
-attempt.
+connection it lost and an `onError` per failed attempt.
 
-`onDisconnect`, not `onError`, is the reliable point at which to stop using a
-`sender`: the loop only advances when the consumer pulls, so `onError` can
-arrive well after the socket died.
+`onDisconnect`, not `onError`, is where to stop using a `sender`: the loop only
+advances when the consumer pulls, so `onError` can arrive well after the socket
+died.
 
-`onClose` fires only once the local socket is closed, so it is safe to treat as
+`onClose` fires only once the local socket is closed, so it's safe to treat as
 "teardown is done" and release whatever the stream depended on. `wasClean: true`
-means the close was orderly on our end — not that the peer acknowledged, which
-no client can wait on without risking an indefinite hang.
+means the close was orderly on our end, not that the peer acknowledged it — which
+no client can wait on without risking a hang.
 
 ## Liveness
 
 Two independent mechanisms detect a dead connection that hasn't told you so:
 
-- **Heartbeat** (Node.js only): `heartbeat: { intervalMs }` sends a ping each
-  interval and expects any inbound frame (not just a pong) as evidence of
-  life. A missed round trips into a `HeartbeatTimeoutError` and a reconnect.
-  The browser's WebSocket API has no ping/pong, so this option is ignored
-  there.
-- **Idle timeout** (both platforms): `idleTimeoutMs` ends the connection with
-  an `IdleTimeoutError` if no message arrives within the window. This is the
-  browser's only dead-connection detector — set it there if you need one.
+- **Heartbeat** (Node.js only): `heartbeat: { intervalMs }` pings each interval
+  and accepts any inbound frame, not just a pong, as evidence of life. A missed
+  round becomes a `HeartbeatTimeoutError` and a reconnect. The browser's WebSocket
+  API has no ping/pong, so this option is ignored there.
+- **Idle timeout** (both platforms): `idleTimeoutMs` ends the connection with an
+  `IdleTimeoutError` if no message arrives within the window. This is the
+  browser's only dead-connection detector, so set it there if you need one.
 
-Both are on by default only in the Node case: `heartbeat` defaults to a 10s
-interval (pass `heartbeat: false` to disable, or `{ intervalMs }` to change it),
-while `idleTimeoutMs` is off unless you set it.
+Only the Node case is on by default: `heartbeat` defaults to a 10s interval (pass
+`heartbeat: false` to disable, or `{ intervalMs }` to change it), while
+`idleTimeoutMs` is off unless you set it.
 
-**A connection that fails discards whatever it had buffered but undelivered** —
-a liveness timeout, a byte-cap overflow, or a transport error drops those
-messages rather than yielding data from a connection already known to be broken.
-A _clean_ close still drains what arrived before it. For cursor-based streams
-this is harmless, since a reconnect resumes from the cursor; if your stream isn't
+**A connection that fails discards whatever it had buffered but undelivered.** A
+liveness timeout, a byte-cap overflow, or a transport error drops those messages
+rather than yielding data from a connection already known to be broken; a _clean_
+close still drains what arrived before it. For cursor-based streams that's
+harmless, since a reconnect resumes from the cursor. If your stream isn't
 resumable, keep `highWaterMark` low enough that little is ever in flight.
 
 ## Flow control
 
-- **Node.js**: real socket backpressure. Past `highWaterMark` (default 1 MiB
-  of buffered, unread bytes) the underlying socket is paused until the
-  consumer catches up.
+- **Node.js**: real socket backpressure. Past `highWaterMark` (default 1 MiB of
+  buffered, unread bytes) the socket is paused until the consumer catches up.
 - **Both platforms**: `maxBufferedBytes` is a hard cap. Exceeding it fails the
-  connection with a `BufferOverflowError` (non-retryable) rather than growing
-  the buffer without bound. This is the _only_ backstop in the browser, since
-  the WHATWG WebSocket API gives no way to pause a socket.
+  connection with a `BufferOverflowError` (non-retryable) rather than growing the
+  buffer without bound. It's the _only_ backstop in the browser, since the WHATWG
+  API gives no way to pause a socket.
 
-Both thresholds count binary frames exactly and **over-estimate text** — a
-string is measured as UTF-16 code units × 2, which avoids an encode per message
-but counts mostly-ASCII text at roughly twice its wire size. Both are safety
-valves, so pausing or failing early is the safer direction; just don't read them
+Both thresholds count binary frames exactly and **over-estimate text**: a string
+is measured as UTF-16 code units × 2, which avoids an encode per message but
+counts mostly-ASCII text at roughly twice its wire size. Both are safety valves,
+so pausing or failing early is the safer direction to err — just don't read them
 as exact wire bytes when sizing them for a text stream.
 
 ## Compression
 
-`permessage-deflate` is offered by default on both platforms. There is no
-option to configure or disable it.
+`permessage-deflate` is offered by default on both platforms. There's no option to
+configure or disable it.
 
 ## Sending
 
-`websocket()` yields messages; sending is done with the `sender` handed to
+`websocket()` yields messages; sending goes through the `sender` handed to
 `onConnect`. A sender belongs to one connection and rejects once that connection
 ends, so always use the most recent one rather than retaining an older:
 
@@ -221,20 +217,20 @@ for await (const message of stream) {
 }
 ```
 
-`send()` resolves on **hand-off** (flushed on Node, accepted by the browser's
-WebSocket), not on delivery — at-most-once, the same guarantee a bare WebSocket
-gives you. A message handed to a socket that then dies is simply lost.
+`send()` resolves on **hand-off** — flushed on Node, accepted by the browser's
+WebSocket — not on delivery. That's at-most-once, the same guarantee a bare
+WebSocket gives you: a message handed to a socket that then dies is lost.
 
 There is deliberately no send queue. A queued send could only be flushed by a
-later connection, and a reconnect only happens when the consumer pulls — so
-awaiting a queued send from inside the `for await` loop would block the very pull
-that delivery depends on. Sending through the current connection's sender makes
-that deadlock impossible to write by accident.
+later connection, and a reconnect only happens when the consumer pulls, so
+awaiting one from inside the loop would block the very pull that delivery depends
+on. Sending through the current connection's sender makes that deadlock
+impossible to write by accident.
 
-**If you need at-least-once delivery**, own that above this package: record what
-hasn't been acknowledged, and flush it from `onConnect` — which runs off the
-socket's own event, so it doesn't depend on the iteration advancing.
-`@atproto/tap`'s ack path is exactly this.
+**If you need at-least-once delivery**, own it above this package: record what
+hasn't been acknowledged and flush it from `onConnect`, which runs off the socket's
+own event and so doesn't depend on the iteration advancing. `@atproto/tap`'s ack
+path is exactly this.
 
 ## Headers (Node.js only)
 
@@ -242,18 +238,17 @@ socket's own event, so it doesn't depend on the iteration advancing.
 websocket(url, { headers: { Authorization: `Bearer ${token}` } })
 ```
 
-`headers` applies to the connection's upgrade request. It's Node.js-only:
-the WHATWG WebSocket API used in the browser has no way to set request
-headers, so passing `headers` there **throws at construction** rather than
-silently dropping what is usually an auth credential. `BrowserWebSocketOptions`
-omits the field entirely, so this is also a compile-time error if you import the
-browser-specific option type.
+`headers` applies to the connection's upgrade request. It's Node.js-only: the
+WHATWG API used in the browser has no way to set request headers, so passing
+`headers` there **throws at construction** rather than silently dropping what is
+usually an auth credential. `BrowserWebSocketOptions` omits the field entirely, so
+it's also a compile-time error if you import the browser-specific option type.
 
 ## Errors
 
-Every connection-level failure is an instance of `WebSocketConnectionError`,
-which each subclass classifies via its own `shouldRetry()` — this is what
-the default reconnect policy consults:
+Every connection-level failure is a `WebSocketConnectionError`, and each subclass
+classifies itself via `shouldRetry()` — which is what the default reconnect policy
+consults:
 
 | Error                   | Meaning                                                    | Retryable by default                |
 | ----------------------- | ---------------------------------------------------------- | ----------------------------------- |
@@ -264,16 +259,16 @@ the default reconnect policy consults:
 | `BufferOverflowError`   | Buffered bytes exceeded `maxBufferedBytes`                 | No                                  |
 | `DataModeError`         | A frame's type didn't match `dataMode`                     | No                                  |
 
-`WebSocketClientError` is separate from this taxonomy: it marks misuse of the
-API itself rather than anything the connection did, and is never retryable.
+`WebSocketClientError` sits outside this taxonomy: it marks misuse of the API
+itself rather than anything the connection did, and is never retryable.
 
 ## Examples
 
 ### Resuming a firehose from a cursor
 
-A function-valued `url` is re-invoked on every connection attempt, including
-reconnects — read the latest cursor at call time so a reconnect resumes
-where the last connection left off instead of restarting the stream:
+A function-valued `url` is re-invoked on every attempt, including reconnects. Read
+the latest cursor at call time so a reconnect resumes where the last connection
+left off instead of restarting the stream:
 
 ```ts
 import { websocket } from '@atproto/ws-client'
@@ -294,8 +289,8 @@ for await (const message of stream) {
 
 ### A browser client with an idle timeout
 
-The browser has no heartbeat mechanism, so `idleTimeoutMs` is its only way
-to detect a connection that's silently gone dead:
+The browser has no heartbeat mechanism, so `idleTimeoutMs` is its only way to
+detect a connection that has silently gone dead:
 
 ```ts
 import { websocket } from '@atproto/ws-client'
@@ -313,14 +308,12 @@ try {
 
 ## A note for library authors: keep this package external
 
-This package selects its transport (Node vs. browser) via a conditional
-package `imports` entry (`#transport`), resolved at import time by the
-runtime. If you bundle a library that depends on `@atproto/ws-client` and
-pre-bundle this package into your output, that resolution collapses to
-whichever transport your bundler's target happened to pick — the result
-will not adapt to the environment it actually runs in. Mark
-`@atproto/ws-client` as external in your bundler config so each consumer's
-own runtime resolves the transport correctly.
+This package selects its transport (Node vs. browser) via a conditional `imports`
+entry (`#transport`) that the runtime resolves at import time. If you pre-bundle
+it into a library's output, that resolution collapses to whichever transport your
+bundler's target picked, and the result won't adapt to the environment it actually
+runs in. Mark `@atproto/ws-client` as external so each consumer's own runtime
+resolves the transport.
 
 ## License
 
