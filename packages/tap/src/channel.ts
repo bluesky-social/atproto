@@ -8,6 +8,7 @@ import {
   IdleTimeoutError,
   type Sender,
   SocketError,
+  type WebSocketIterable,
   websocket,
 } from '@atproto/ws-client'
 import { type TapEvent, parseTapEvent } from './types.js'
@@ -57,7 +58,7 @@ function ackMessage(id: number): string {
 }
 
 export class TapChannel implements AsyncDisposable {
-  private ws: AsyncGenerator<string, void, undefined>
+  private ws: WebSocketIterable<'text'>
   private handler: TapHandler
 
   private readonly abortController: AbortController = new AbortController()

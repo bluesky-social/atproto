@@ -14,6 +14,7 @@ export type {
   ConnectionOptions,
   NodeWebSocketOptions,
   WebSocketFn,
+  WebSocketIterable,
   WebSocketOptions,
 } from './websocket.js'
 
