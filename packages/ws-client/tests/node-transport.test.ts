@@ -8,7 +8,11 @@ import {
 } from '../src/lib/errors.js'
 import type { CloseEventDetail, MessageOf } from '../src/message-channel.js'
 import { createTransport } from '../src/transport/node-transport.js'
-import type { Sender, Transport } from '../src/transport/transport.js'
+import {
+  DEFAULT_HEARTBEAT_INTERVAL_MS,
+  type Sender,
+  type Transport,
+} from '../src/transport/transport.js'
 import { startServer } from './_util/server.js'
 
 // Drains a transport's iteration into an array, tolerating (and returning)
@@ -439,5 +443,56 @@ describe(createTransport, () => {
       process.removeListener('uncaughtException', onUncaught)
     }
     expect(seen).toEqual([])
+  })
+
+  it('arms a heartbeat by default, without being asked to', async () => {
+    // WebSocketKeepAlive started a heartbeat unconditionally at 10s, and no
+    // consumer in this repo ever passed the option — so if the default were
+    // opt-in, every one of them would silently lose dead-connection detection
+    // and a black-holed TCP connection would park forever with no error.
+    //
+    // Asserted on the scheduled interval rather than an observed ping: the
+    // default is 10s, too long to wait for and not worth pinning a fake-timer
+    // dance to a live socket for. What regressed was whether a timer is armed
+    // at all, which is exactly what this observes.
+    using setIntervalSpy = vi.spyOn(globalThis, 'setInterval')
+    await using server = await startServer(() => {})
+    const controller = new AbortController()
+    let opened!: () => void
+    const isOpen = new Promise<void>((resolve) => {
+      opened = resolve
+    })
+    createTransport({
+      url: server.url,
+      dataMode: 'text',
+      signal: controller.signal,
+      // Deliberately no `heartbeat` option: the default is what's under test.
+      onOpen: () => opened(),
+      onClose: () => {},
+    })
+    await isOpen
+    controller.abort(new Error('test cleanup'))
+
+    const delays = setIntervalSpy.mock.calls.map(([, ms]) => ms)
+    expect(delays).toContain(DEFAULT_HEARTBEAT_INTERVAL_MS)
+  })
+
+  it('does not ping when the heartbeat is disabled', async () => {
+    let pings = 0
+    await using server = await startServer((socket) => {
+      socket.on('ping', () => pings++)
+    })
+    const controller = new AbortController()
+    createTransport({
+      url: server.url,
+      dataMode: 'text',
+      signal: controller.signal,
+      heartbeat: false,
+      onOpen: () => {},
+      onClose: () => {},
+    })
+    await new Promise((resolve) => setTimeout(resolve, 120))
+    controller.abort(new Error('test cleanup'))
+    expect(pings).toBe(0)
   })
 })

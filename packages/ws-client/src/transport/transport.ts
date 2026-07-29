@@ -23,12 +23,24 @@ export interface Transport<M extends DataMode = 'auto'>
   extends AsyncIterable<MessageOf<M>, void, undefined>,
     Sender<M> {}
 
+/** Default protocol-ping interval when `heartbeat` is left unset. */
+export const DEFAULT_HEARTBEAT_INTERVAL_MS = 10_000
+
 export interface TransportOptions<M extends DataMode = 'auto'> {
   url: string | URL
   dataMode: M
   /** Teardown: aborting ends the iteration and closes the socket. */
   signal: AbortSignal
-  heartbeat?: { intervalMs: number }
+  /**
+   * Protocol ping/pong liveness. On by default at
+   * {@link DEFAULT_HEARTBEAT_INTERVAL_MS}; pass `false` to disable, or an
+   * object to set the interval. `intervalMs` is optional so `{}` means
+   * "on, default interval".
+   *
+   * Node only — the WHATWG API has no ping/pong, so the browser transport
+   * ignores this entirely and relies on `idleTimeoutMs` instead.
+   */
+  heartbeat?: { intervalMs?: number } | false
   idleTimeoutMs?: number
   highWaterMark?: number
   maxBufferedBytes?: number
