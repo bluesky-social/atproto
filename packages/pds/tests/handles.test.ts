@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals'
 import type { AtpAgent } from '@atproto/api'
+import { Secp256k1Keypair } from '@atproto/crypto'
 import type { SeedClient } from '@atproto/dev-env'
 import type { AtIdentifierString, DidString } from '@atproto/syntax'
 import type { AppContext } from '../src/index.js'
@@ -35,6 +36,8 @@ describe('handles', () => {
   let sc: SeedClient
   let ctx: AppContext
   let idResolver: InstanceType<typeof IdResolver>
+  let erinDid: DidString
+  let erinKey: Secp256k1Keypair
 
   const newHandle = 'alice2.test'
 
@@ -269,5 +272,53 @@ describe('handles', () => {
       handle: 'bob-alt.test',
     })
     await expect(attempt2).rejects.toThrow('Authentication Required')
+  })
+
+  it('lets a self-custodied account take over its own rotation key', async () => {
+    const { did } = await sc.createAccount('erin', {
+      handle: 'erin.test',
+      email: 'erin@test.com',
+      password: 'erin-pass',
+    })
+    erinDid = did
+    erinKey = await Secp256k1Keypair.create()
+
+    // Take control the same way a real self-custodied client would: add
+    // the held key (signed by the PDS's own key, still current at this
+    // point), then drop the PDS's key from rotationKeys (signed by the
+    // held key, current as of the previous op).
+    await ctx.plcClient.updateRotationKeys(erinDid, ctx.plcRotationKey, [
+      erinKey.did(),
+      ctx.plcRotationKey.did(),
+    ])
+    await ctx.plcClient.updateRotationKeys(erinDid, erinKey, [erinKey.did()])
+  })
+
+  it('succeeds updating a handle already self-signed directly to plc.directory', async () => {
+    // The PDS is no longer a rotation key for this DID, so it could not
+    // have signed this itself - simulates the owner's own client
+    // publishing the change before telling the PDS about it. Without the
+    // fix, this call unconditionally attempts to self-sign with the PDS's
+    // (no longer valid) rotation key and fails outright.
+    await ctx.plcClient.updateHandle(erinDid, erinKey, 'erin2.test')
+
+    await agent.com.atproto.identity.updateHandle(
+      { handle: 'erin2.test' },
+      { headers: sc.getHeaders(erinDid), encoding: 'application/json' },
+    )
+
+    const dbHandle = await getHandleFromDb(erinDid)
+    expect(dbHandle).toBe('erin2.test')
+  })
+
+  it('still fails for a self-custodied account when the change was not already published', async () => {
+    const attempt = agent.com.atproto.identity.updateHandle(
+      { handle: 'erin3.test' },
+      { headers: sc.getHeaders(erinDid), encoding: 'application/json' },
+    )
+    await expect(attempt).rejects.toThrow()
+
+    const dbHandle = await getHandleFromDb(erinDid)
+    expect(dbHandle).toBe('erin2.test')
   })
 })
