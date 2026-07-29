@@ -1,4 +1,3 @@
-import getPort from 'get-port'
 import { assert, describe, expect, it, vi } from 'vitest'
 import {
   CloseCode,
@@ -52,17 +51,16 @@ describe('websocket() end-to-end over real sockets', () => {
   })
 
   it('survives a server restart, continuing iteration across the gap', async () => {
-    const port = await getPort()
-    let server = await startServer(
-      (ws) => {
-        ws.send('first')
-        ws.close(CloseCode.GoingAway, 'restarting')
-      },
-      undefined,
-      port,
-    )
+    // The port comes from the first server's own bind rather than being
+    // reserved up front: reserving it and then binding is a race, since another
+    // process (or a parallel test worker) can claim it in between.
+    let server = await startServer((ws) => {
+      ws.send('first')
+      ws.close(CloseCode.GoingAway, 'restarting')
+    })
+    const { port } = new URL(server.url)
 
-    const gen = websocket(`ws://localhost:${port}`, noBackoff)
+    const gen = websocket(server.url, noBackoff)
     expect(await gen.next()).toEqual({ value: 'first', done: false })
 
     // The first server is gone; a second one takes its place on the same
@@ -75,7 +73,7 @@ describe('websocket() end-to-end over real sockets', () => {
         ws.send('second')
       },
       undefined,
-      port,
+      Number(port),
     )
 
     try {

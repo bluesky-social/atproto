@@ -39,7 +39,6 @@
   },
   "devDependencies": {
     "@types/ws": "^8.5.4",
-    "get-port": "^6.1.2",
     "http-terminator": "^3.2.0",
     "vitest": "^4.0.16"
   },

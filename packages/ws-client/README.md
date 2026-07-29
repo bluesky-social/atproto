@@ -16,18 +16,13 @@ npm install @atproto/ws-client
 
 ## Overview
 
-The package exports two things:
+The package exports one thing: **`websocket(url, options?)`**, an async
+generator. Connect, read messages, reconnect on failure, and yield a single
+continuous stream to the consumer regardless of how many times the underlying
+socket was replaced. Its return type is `WebSocketIterable<M>`.
 
-- **`websocket(url, options?)`** — an async generator. This is the primary
-  API: connect, read messages, reconnect on failure, and yield a single
-  continuous stream to the consumer regardless of how many times the
-  underlying socket was replaced.
-- **`WebSocketClient`** — a thin class wrapping `websocket()` that adds a
-  bounded send queue, so you can call `send()` before the first connection
-  opens or during a reconnect gap.
-
-Everything else (error classes, `CloseCode`, option types) supports one of
-these two entrypoints.
+Everything else (error classes, `CloseCode`, option types) supports that
+entrypoint.
 
 ## Reading
 
@@ -63,12 +58,9 @@ will recur) rather than silently coercing the data.
 
 ## Lifecycle: one idiom to stop
 
-There is deliberately **no `close()`** anywhere in this package. A stream
-ends in exactly one of these ways:
-
-- `break` (or `return`/`throw`) out of the `for await` loop,
-- aborting a `signal` passed in `options`,
-- or, for `WebSocketClient`, `await using` the instance (`[Symbol.asyncDispose]`).
+There is deliberately **no `close()`** anywhere in this package. A stream ends
+in exactly one of two ways: you `break` (or `return`/`throw`) out of the
+`for await` loop, or you abort a `signal` passed in `options`.
 
 ```ts
 const controller = new AbortController()
@@ -77,6 +69,21 @@ const gen = websocket(url, { signal: controller.signal })
 // later, from elsewhere:
 controller.abort()
 ```
+
+**How you stop decides how the socket ends**, which is also how you ask for a
+specific close code — there is no separate option for it:
+
+| how you stop                          | what the peer sees            |
+| ------------------------------------- | ----------------------------- |
+| `break`/`throw` in the loop           | close `1000`                  |
+| `controller.abort()` (no argument)    | close `1000`                  |
+| `controller.abort(new CloseError(…))` | close with that error's code  |
+| `controller.abort(anythingElse)`      | `1006` — connection destroyed |
+
+The last row is the fast path: a reason that isn't a request to stop is treated
+as a failure, and the connection is destroyed rather than closed politely.
+`break` and `throw` are indistinguishable to a generator (both produce a return
+completion), so they share the plain clean close.
 
 A non-reconnectable **clean** close (e.g. the server sends close code 1000
 and the reconnect policy declines to retry) ends the stream normally — the
@@ -117,13 +124,31 @@ websocket(url, {
 })
 ```
 
-Hooks observe the lifecycle: `onOpen(sender)` fires once, for the first
-successful connection; `onReconnect(sender)` fires for every connection after
-that; `onDisconnect()` fires when the current connection ends (the reliable
-point at which to stop using a `sender`); `onError(error, reconnect?)` fires
-when a connection ends with an error (`reconnect` is present, with the
-attempt count, when a retry is coming); and `onClose(detail)` fires exactly
-once, when the stream ends for good.
+Hooks observe the lifecycle at two levels. `onOpen()` and `onClose(detail)`
+bookend the **stream**, once each; `onConnect(sender)` and `onDisconnect()`
+bookend each **connection**, as many times as it takes.
+
+| hook                         | when                                                         |
+| ---------------------------- | ------------------------------------------------------------ |
+| `onOpen()`                   | the stream is live, once, just before the first `onConnect`  |
+| `onConnect(sender)`          | a connection is up — including the first                     |
+| `onDisconnect()`             | that connection ended                                        |
+| `onError(error, reconnect?)` | a connection ended badly; `reconnect` present ⟹ retry coming |
+| `onClose(detail)`            | the stream ended, once, after the local socket has closed    |
+
+`onConnect` and `onDisconnect` pair exactly: a dial that never connected
+produces neither. So a stream stuck retrying reports one `onDisconnect` for the
+connection it lost and an `onError` per failed attempt — not a disconnect per
+attempt.
+
+`onDisconnect`, not `onError`, is the reliable point at which to stop using a
+`sender`: the loop only advances when the consumer pulls, so `onError` can
+arrive well after the socket died.
+
+`onClose` fires only once the local socket is closed, so it is safe to treat as
+"teardown is done" and release whatever the stream depended on. `wasClean: true`
+means the close was orderly on our end — not that the peer acknowledged, which
+no client can wait on without risking an indefinite hang.
 
 ## Liveness
 
@@ -137,6 +162,17 @@ Two independent mechanisms detect a dead connection that hasn't told you so:
 - **Idle timeout** (both platforms): `idleTimeoutMs` ends the connection with
   an `IdleTimeoutError` if no message arrives within the window. This is the
   browser's only dead-connection detector — set it there if you need one.
+
+Both are on by default only in the Node case: `heartbeat` defaults to a 10s
+interval (pass `heartbeat: false` to disable, or `{ intervalMs }` to change it),
+while `idleTimeoutMs` is off unless you set it.
+
+**A connection that fails discards whatever it had buffered but undelivered** —
+a liveness timeout, a byte-cap overflow, or a transport error drops those
+messages rather than yielding data from a connection already known to be broken.
+A _clean_ close still drains what arrived before it. For cursor-based streams
+this is harmless, since a reconnect resumes from the cursor; if your stream isn't
+resumable, keep `highWaterMark` low enough that little is ever in flight.
 
 ## Flow control
 
@@ -155,46 +191,44 @@ option to configure or disable it.
 
 ## Sending
 
-`websocket()` itself has no send capability — the hooks hand you a `sender`
-whose `send()` you can call while that connection is live. `send()` resolves
-on **hand-off** (flush on Node, hand-off to the browser's WebSocket), not on
-delivery — at-most-once, the same guarantee a bare WebSocket gives you.
-
-`WebSocketClient` adds a bounded queue (`sendQueueLimit`, default `64`) so
-you can call `send()` at any time, including before the first connection
-opens or during a reconnect gap:
+`websocket()` yields messages; sending is done with the `sender` handed to
+`onConnect`. A sender belongs to one connection and rejects once that connection
+ends, so always use the most recent one rather than retaining an older:
 
 ```ts
-import { WebSocketClient } from '@atproto/ws-client'
+import { type Sender, websocket } from '@atproto/ws-client'
 
-const client = new WebSocketClient('wss://example.com/feed')
+let sender: Sender<'text'> | undefined
 
-await client.send('hello') // queued if not yet connected, flushed on open
+const stream = websocket(url, {
+  dataMode: 'text',
+  onConnect: (s) => {
+    sender = s
+  },
+  onDisconnect: () => {
+    sender = undefined
+  },
+})
 
-for await (const message of client) {
-  console.log(message)
+for await (const message of stream) {
+  if (message === 'ping') await sender?.send('pong')
 }
 ```
 
-The queue flushes at-most-once: if a queued send fails to flush, that
-promise rejects and is not retried. **At-least-once delivery is a
-consumer-side concern** — catch the rejection and call `send()` again to
-re-queue for the next connection:
+`send()` resolves on **hand-off** (flushed on Node, accepted by the browser's
+WebSocket), not on delivery — at-most-once, the same guarantee a bare WebSocket
+gives you. A message handed to a socket that then dies is simply lost.
 
-```ts
-async function sendReliably(client: WebSocketClient, data: string) {
-  for (;;) {
-    try {
-      return await client.send(data)
-    } catch {
-      // retry on the next connection
-    }
-  }
-}
-```
+There is deliberately no send queue. A queued send could only be flushed by a
+later connection, and a reconnect only happens when the consumer pulls — so
+awaiting a queued send from inside the `for await` loop would block the very pull
+that delivery depends on. Sending through the current connection's sender makes
+that deadlock impossible to write by accident.
 
-`@atproto/tap`'s ack path uses exactly this idiom to guarantee an ack is
-eventually delivered even across reconnects.
+**If you need at-least-once delivery**, own that above this package: record what
+hasn't been acknowledged, and flush it from `onConnect` — which runs off the
+socket's own event, so it doesn't depend on the iteration advancing.
+`@atproto/tap`'s ack path is exactly this.
 
 ## Headers (Node.js only)
 
@@ -206,8 +240,8 @@ websocket(url, { headers: { Authorization: `Bearer ${token}` } })
 the WHATWG WebSocket API used in the browser has no way to set request
 headers, so passing `headers` there **throws at construction** rather than
 silently dropping what is usually an auth credential. `BrowserWebSocketOptions`
-and `BrowserWebSocketClientOptions` omit the field entirely, so this is also
-a compile-time error if you import the browser-specific option types.
+omits the field entirely, so this is also a compile-time error if you import the
+browser-specific option type.
 
 ## Errors
 
@@ -224,10 +258,8 @@ the default reconnect policy consults:
 | `BufferOverflowError`   | Buffered bytes exceeded `maxBufferedBytes`                 | No                                  |
 | `DataModeError`         | A frame's type didn't match `dataMode`                     | No                                  |
 
-`WebSocketClientError` is separate from this taxonomy: it's thrown for
-`WebSocketClient` misuse (e.g. calling `send()` after the stream has ended,
-or iterating the same client twice), not for anything the connection itself
-did.
+`WebSocketClientError` is separate from this taxonomy: it marks misuse of the
+API itself rather than anything the connection did, and is never retryable.
 
 ## Examples
 
@@ -260,14 +292,12 @@ The browser has no heartbeat mechanism, so `idleTimeoutMs` is its only way
 to detect a connection that's silently gone dead:
 
 ```ts
-import { WebSocketClient } from '@atproto/ws-client'
-
-const client = new WebSocketClient('wss://example.com/feed', {
-  idleTimeoutMs: 30_000,
-})
+import { websocket } from '@atproto/ws-client'
 
 try {
-  for await (const message of client) {
+  for await (const message of websocket('wss://example.com/feed', {
+    idleTimeoutMs: 30_000,
+  })) {
     render(message)
   }
 } catch (err) {
