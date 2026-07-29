@@ -101,10 +101,16 @@ export function closeCodeForStop(reason: unknown): number | undefined {
   if (reason instanceof CloseError) return reason.code
   // A DOMException named AbortError is what `ac.abort()` produces with no
   // argument; treat that bare "please stop" as orderly.
+  //
+  // Matched on shape rather than `instanceof Error`, deliberately: under a
+  // module realm that differs from the one `AbortController` came from — jest's
+  // ESM VM contexts being the case that caught this — the DOMException is not an
+  // `instanceof` of *this* module's `Error`, and the check silently failed,
+  // downgrading every graceful shutdown to a destroyed connection.
   if (
-    reason instanceof Error &&
-    reason.name === 'AbortError' &&
-    !(reason instanceof CloseError)
+    typeof reason === 'object' &&
+    reason !== null &&
+    (reason as { name?: unknown }).name === 'AbortError'
   ) {
     return CloseCode.Normal
   }

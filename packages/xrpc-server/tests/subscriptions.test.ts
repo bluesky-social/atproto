@@ -289,6 +289,45 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
     })
 
     describe('Subscription liveness', () => {
+      it('a bare abort() closes 1000, not 1006', async () => {
+        // This is how @atproto/sync's Firehose shuts down, and the realm-crossing
+        // instanceof that used to break it only shows up under jest's ESM contexts
+        // — vitest and plain node both passed while this was broken.
+        const wss = new WebSocketServer({ port: 0 })
+        await new Promise((r) => wss.once('listening', r))
+        const { port } = wss.address() as AddressInfo
+        let serverSaw: number | undefined
+        wss.on('connection', (s) => {
+          s.on('close', (c) => {
+            serverSaw = c
+          })
+        })
+        const ac = new AbortController()
+        const sub = new Subscription({
+          service: `ws://localhost:${port}`,
+          method: 'io.example.streamOne',
+          signal: ac.signal,
+          validate: (o) => o,
+        })
+        const consume = (async () => {
+          try {
+            for await (const _ of sub) {
+              /* silent server */
+            }
+          } catch {
+            /* abort */
+          }
+        })()
+        await new Promise((r) => setTimeout(r, 300))
+        ac.abort()
+        await consume
+        for (let i = 0; i < 40 && serverSaw === undefined; i++) {
+          await new Promise((r) => setTimeout(r, 25))
+        }
+        wss.close()
+        expect(serverSaw).toBe(1000)
+      }, 20000)
+
       it('pings a silent server, so a dead connection is detected', async () => {
         // The previous client started a heartbeat unconditionally and no caller
         // ever passed the option, so an opt-in default silently removed
