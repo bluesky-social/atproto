@@ -1,6 +1,6 @@
 # oauth-provider-ui
 
-UI for the OAuth provider's authorization & account-management screens. React 19, TanStack Router, Tailwind 4, shadcn/ui on Base UI, react-hook-form + zod, Lingui i18n.
+UI for the OAuth provider's authorization & account-management screens. React 19, TanStack Router, Tailwind 4, shadcn/ui on Base UI, native-constraint forms on `@base-ui/react/form`, Lingui i18n.
 
 ## Comments
 
@@ -11,7 +11,7 @@ Most don't. Default to none, and keep the ones you write to a couple of lines.
   "it previously hand-rolled the border", "`w-xl` is gone too" — the reader has
   this file, not the diff that produced it. That belongs in the commit message.
 - **Never mention the tests.** Not their helpers, not their selectors, not their
-  assertion strings, not the suite itself. A test breaking *is* the signal that
+  assertion strings, not the suite itself. A test breaking _is_ the signal that
   markup changed; the source does not need to warn about it in prose. If a
   markup choice matters, give the reason that holds without the test — the
   semantics, the a11y behaviour, the styling contract it satisfies. If there is
@@ -86,10 +86,8 @@ hashes, so navigate by clicking sidebar links rather than setting
   this style returns an item with no files, the component is ours and belongs
   outside this directory.
 - `components/forms/*` — `FormShell` (the form frame: action row, submit/cancel/
-  back, root error), `form.tsx` (the react-hook-form adapter over `ui/field`;
-  hand-written, since the style ships no `form` component), `fields/*` (one
-  wrapper per input type), plus `AsyncButton`, `CopyButton`,
-  `RequestCodeButton`, `SignUpWizard`.
+  back, root error), `fields/*` (one wrapper per input type), plus
+  `AsyncButton`, `CopyButton`, `RequestCodeButton`, `SignUpWizard`.
 - `components/dialogs/*` — `DialogShell` (frame) and `ConfirmForm` (a form with
   no fields, just content + action row).
 - `components/feedback/*` — `Notice`, `ErrorNotice`, `ErrorDetails`,
@@ -104,49 +102,54 @@ hashes, so navigate by clicking sidebar links rather than setting
 
 ## Forms
 
-Every form is `useForm` + a zod schema + `FormShell`. Schemas live in
-`src/lib/form-schemas.ts` and are unit-tested — that is where validation logic
-belongs, not in components.
+Forms are native: `FormShell` (on `@base-ui/react/form`) plus one field wrapper
+per input. Validation is HTML constraint attributes on the controls —
+`required`, `type`, `pattern`, `minLength` — so an invalid submit is blocked by
+the browser with its own bubble, in the browser's locale. There is no form
+library, no schema layer, and no store: the DOM is the source of truth, and
+`FormShell` reads the values off the element with `FormData`.
 
 ```tsx
-const form = useForm<Values>({
-  resolver: schemaResolver(schema),
-  reValidateMode: 'onChange',
-  defaultValues: { … },
-})
-
-return (
-  <FormShell form={form} onSubmit={(values, signal) => handler(values, signal)}>
-    <EmailField control={form.control} name="email" label={<Trans>Email</Trans>} />
-  </FormShell>
-)
+<FormShell<Values> onSubmit={(values, signal) => handler(values, signal)}>
+  <EmailField name="email" required label={<Trans>Email</Trans>} />
+</FormShell>
 ```
 
-**Use `schemaResolver` (`#/lib/form-resolver.ts`), never `zodResolver` directly.**
-Calling `zodResolver` at a call site made every `useForm` fail with `TS2589` and
-the resolver degenerate to `never`. It reproduces only on the linux-x64 tsgo
-binary, so CI caught what a local `tsgo --build --force` could not — when a type
-error appears only in CI, suspect the platform binary before the code.
+Shared regexes for `pattern` attributes live in `src/lib/form-patterns.ts`.
+Note `pattern` sources are implicitly anchored — no `^`/`$`.
 
-**Never set `mode: 'onBlur'`.** It validates on first blur, which renders error
-messages under empty required fields and shifts the layout between mousedown and
-mouseup — the click lands on a different element and is silently lost. This cost
-two full e2e cycles to find. Use the react-hook-form default with
-`reValidateMode: 'onChange'`.
+Base UI rules this layer depends on — each one was a real, browser-only bug:
 
-For the same reason, **reserve space for anything that appears conditionally**
-next to an interactive control.
+- **Values must come from `FormData`, never from `onFormSubmit`'s argument.**
+  Base UI only passes values for controls registered through `Field.Root`; a
+  plain named input (a checkbox, a hidden input) is silently absent. `FormShell`
+  already does this — don't "simplify" it back.
+- **`Form` defaults to `noValidate`.** `FormShell` re-enables the browser's
+  gate; without it, any control outside a `Field.Root` is validated by no one.
+- **A `Field.Root` binds every descendant control to its own name**, even over
+  an explicit `name` prop. A field composed of two controls (`HandleField`)
+  must opt out of `Field` entirely.
+- **A `disabled` control is omitted from form values.** Use `readOnly` when the
+  value must still submit.
+- **`type="email"` accepts `user@host` with no dot** — `EmailField` carries a
+  `pattern` requiring a TLD on top.
 
 `FormShell` submits through `useAsyncAction`, which handles abort-on-unmount,
 abort-on-supersede and error retention. Errors render via `ErrorNotice` +
 `apiErrorParser`, so typed OAuth error payloads keep their user-facing messages.
+For callers that must survive remounting (the sign-up wizard's back/forward),
+`onValues` mirrors the form's values on every edit.
 
-### Field keys are a public contract
+**Reserve space for anything that appears conditionally** next to an
+interactive control — a layout shift between mousedown and mouseup lands the
+click on a different element and silently swallows it.
 
-react-hook-form derives the rendered `name` attribute from the field key, and the
-pds e2e suite selects inputs by `input[name="…"]`. These keys are owned by this
-package and must not be renamed: `username`, `password`, `remember`, `code`,
-`email`, `newEmail`, `handle`, `domain`, `inviteCode`.
+### Field names are a public contract
+
+The `name` attribute on each control is selected on by the pds e2e suite and by
+password managers. These names are owned by this package and must not be
+renamed: `username`, `password`, `remember`, `code`, `email`, `newEmail`,
+`handle`, `domain`, `inviteCode`.
 
 Where the API field differs from the input name, map it in `onSubmit` — e.g. the
 form field is `code` but the API takes `token`.
@@ -161,7 +164,10 @@ form field is `code` but the API takes `token`.
 - msgids are the English source strings, so changing a string orphans five
   locales. `<Trans>` placeholders are positional (`<0>`, `<1>`) and derive from
   JSX nesting — adding or reordering an element inside a `<Trans>` renumbers them
-  and changes the msgid. Recompose _around_ `<Trans>` blocks.
+  and changes the msgid. Recompose _around_ `<Trans>` blocks. Expression
+  placeholders are named by the identifier — `{minLength}` and `{MIN_LENGTH}`
+  are different msgids — so alias a renamed variable back rather than touching
+  the string.
 - **Never pass `t` as a prop.** The macro only transforms `` t`…` `` in a scope
   that imports `useLingui` from `@lingui/react/macro`; passing `t` down leaves
   the template uncompiled and the string untranslated, and it silently vanishes
