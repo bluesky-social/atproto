@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { ScopeStringSyntax } from './syntax-string.js'
 import type { ScopeStringFor } from './syntax.js'
 

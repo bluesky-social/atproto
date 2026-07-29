@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { BlobPermission } from './blob-permission.js'
 
 describe('BlobPermission', () => {

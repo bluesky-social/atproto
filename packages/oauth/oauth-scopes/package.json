@@ -34,10 +34,10 @@
     "@atproto/syntax": "workspace:^"
   },
   "devDependencies": {
-    "jest": "^30.0.0"
+    "vitest": "^4.0.16"
   },
   "scripts": {
     "build": "tsgo --build tsconfig.build.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+    "test": "vitest run"
   }
 }
