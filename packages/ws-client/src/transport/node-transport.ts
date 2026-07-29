@@ -98,9 +98,20 @@ function createTransportImpl<M extends DataMode>(
   // backpressure no frames arrive at all, including pongs, so a paused tick
   // refreshes the flag instead of timing out. Detection latency is therefore
   // 1x-2x the configured interval.
+  //
+  // Armed from the 'open' handler, never at construction: `ws.ping()` throws
+  // while the socket is still CONNECTING, and a throw inside a timer callback
+  // is an uncaught exception rather than a rejection — so a connect slower than
+  // the interval (cold DNS, a loaded peer, TLS, a black-holed route) would take
+  // the whole process down. A hung *connect* is therefore not covered by the
+  // heartbeat, only a hung established connection.
   let heartbeatAlive = true
   let heartbeatTimer: ReturnType<typeof setInterval> | undefined
-  if (options.heartbeat) {
+
+  function startHeartbeat(): void {
+    const { heartbeat } = options
+    if (!heartbeat) return
+    heartbeatAlive = true
     heartbeatTimer = setInterval(() => {
       if (paused) {
         heartbeatAlive = true
@@ -114,7 +125,7 @@ function createTransportImpl<M extends DataMode>(
       }
       heartbeatAlive = false
       ws.ping()
-    }, options.heartbeat.intervalMs)
+    }, heartbeat.intervalMs)
     heartbeatTimer.unref?.()
   }
 
@@ -138,6 +149,7 @@ function createTransportImpl<M extends DataMode>(
 
   ws.on('open', () => {
     open = true
+    startHeartbeat()
     options.onOpen(sender)
   })
 
