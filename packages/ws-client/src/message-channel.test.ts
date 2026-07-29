@@ -359,7 +359,7 @@ describe(createMessageChannel, () => {
         const setIntervalSpy = vi.spyOn(global, 'setInterval')
         const channel = createMessageChannel({ dataMode: 'auto' })
         expect(setIntervalSpy).not.toHaveBeenCalled()
-        channel.finish({ code: 1000, reason: '', wasClean: true })
+        channel.finish()
         expect(clearIntervalSpy).not.toHaveBeenCalled()
       } finally {
         vi.useRealTimers()
@@ -372,7 +372,7 @@ describe(createMessageChannel, () => {
       const channel = createMessageChannel({ dataMode: 'auto' })
       channel.push('one')
       channel.push('two')
-      channel.finish({ code: 1000, reason: 'bye', wasClean: true })
+      channel.finish()
       const iterator = channel.iterable[Symbol.asyncIterator]()
       await expect(iterator.next()).resolves.toEqual({
         value: 'one',
@@ -407,37 +407,40 @@ describe(createMessageChannel, () => {
       await expect(pending).rejects.toBe(boom)
     })
 
-    it('synthesizes 1006 as closeDetail for a frame-less failure', () => {
-      const channel = createMessageChannel({ dataMode: 'auto' })
-      channel.fail(new Error('boom'))
-      expect(channel.closeDetail).toEqual({
-        code: CloseCode.Abnormal,
-        reason: '',
-        wasClean: false,
-      })
-    })
-
-    it('records the supplied detail as closeDetail on finish', () => {
-      const channel = createMessageChannel({ dataMode: 'auto' })
-      const detail = { code: 1000, reason: 'done', wasClean: true }
-      channel.finish(detail)
-      expect(channel.closeDetail).toEqual(detail)
-    })
-
     it('ignores a second terminal transition', async () => {
-      const channel = createMessageChannel({ dataMode: 'auto' })
-      const firstDetail = { code: 1000, reason: 'first', wasClean: true }
-      channel.finish(firstDetail)
-      channel.finish({ code: 1001, reason: 'second', wasClean: true })
-      expect(channel.closeDetail).toEqual(firstDetail)
+      // First-wins: whichever terminal landed first is the one the consumer
+      // sees, and a later one cannot overwrite or re-settle it.
+      const failed = createMessageChannel({ dataMode: 'auto' })
+      const first = new Error('first')
+      failed.fail(first)
+      failed.fail(new Error('second'))
+      await expect(failed.iterable[Symbol.asyncIterator]().next()).rejects.toBe(
+        first,
+      )
 
-      const channel2 = createMessageChannel({ dataMode: 'auto' })
-      const err1 = new Error('first')
-      const err2 = new Error('second')
-      channel2.fail(err1)
-      channel2.fail(err2)
-      const iterator = channel2.iterable[Symbol.asyncIterator]()
-      await expect(iterator.next()).rejects.toBe(err1)
+      // A finish after a failure likewise cannot turn it into a clean end.
+      const failedThenFinished = createMessageChannel({ dataMode: 'auto' })
+      failedThenFinished.fail(first)
+      failedThenFinished.finish()
+      await expect(
+        failedThenFinished.iterable[Symbol.asyncIterator]().next(),
+      ).rejects.toBe(first)
+
+      // And a failure after a clean finish cannot turn it into a rejection: the
+      // buffered message still drains, then the stream ends.
+      const finished = createMessageChannel({ dataMode: 'auto' })
+      finished.push('buffered')
+      finished.finish()
+      finished.fail(new Error('too late'))
+      const iterator = finished.iterable[Symbol.asyncIterator]()
+      await expect(iterator.next()).resolves.toEqual({
+        value: 'buffered',
+        done: false,
+      })
+      await expect(iterator.next()).resolves.toEqual({
+        value: undefined,
+        done: true,
+      })
     })
 
     it('discards the buffer and asks for a 1000 close when the consumer returns', async () => {
@@ -458,7 +461,7 @@ describe(createMessageChannel, () => {
 
     it('drops messages pushed after a terminal', async () => {
       const channel = createMessageChannel({ dataMode: 'auto' })
-      channel.finish({ code: 1000, reason: '', wasClean: true })
+      channel.finish()
       channel.push('too-late')
       const iterator = channel.iterable[Symbol.asyncIterator]()
       await expect(iterator.next()).resolves.toEqual({

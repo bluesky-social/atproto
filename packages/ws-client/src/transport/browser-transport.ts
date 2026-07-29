@@ -205,7 +205,7 @@ function createTransportImpl<M extends DataMode>(
       reason: ev.reason,
       wasClean: ev.wasClean,
     }
-    channel.finish(detail)
+    channel.finish()
     reportClose(detail)
   })
 

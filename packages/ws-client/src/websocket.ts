@@ -175,11 +175,12 @@ export function createWebSocket(
         signal?.throwIfAborted()
 
         // A transport is created already connecting and has no close method —
-        // its signal is the only teardown channel. Linking the caller's signal
-        // in means an outer abort reaches the socket; aborting in the `finally`
-        // means every exit path tears this connection down exactly once.
-        const connection = new AbortController()
-        const unlink = link(signal, connection)
+        // aborting this is the only way to end it. Forwarding the caller's
+        // signal into it means an outer abort reaches the socket; aborting it in
+        // the `finally` means every exit path tears the connection down exactly
+        // once.
+        const teardown = new AbortController()
+        forwardAbort(signal, teardown)
         // Hooks receive a sender scoped to this connection rather than the
         // transport itself, so it can be revoked the moment the connection
         // ends — see the onClose wiring below.
@@ -213,19 +214,19 @@ export function createWebSocket(
           const transport = createTransport<M>({
             ...connectionOptions(options),
             url: resolved,
-            signal: connection.signal,
+            signal: teardown.signal,
             onOpen: (sender) => {
               retries = 0 // a stable open: the backoff starts over
               opened = true
               const scoped: Sender<M> = {
-                send: (data) =>
-                  live
-                    ? sender.send(data)
-                    : Promise.reject(
-                        new WebSocketConnectionError(
-                          'WebSocket is not open: this connection has ended',
-                        ),
-                      ),
+                async send(data) {
+                  if (!live) {
+                    throw new WebSocketConnectionError(
+                      'WebSocket is not open: this connection has ended',
+                    )
+                  }
+                  return sender.send(data)
+                },
               }
               // onOpen bookends the stream and fires once, before the first
               // onConnect; onConnect fires for every connection including this
@@ -301,8 +302,9 @@ export function createWebSocket(
           signal?.throwIfAborted()
           // Loop: re-resolve the url and redial.
         } finally {
-          unlink()
-          connection.abort()
+          // Also detaches the forwarding listener, which is bound to this
+          // controller's own signal.
+          teardown.abort()
         }
       }
     } finally {
@@ -369,21 +371,20 @@ function connectionOptions<M extends DataMode>(
   }
 }
 
-// Forwards an outer abort into a per-connection controller, returning a
-// detach function. Bound with `{ signal }` so it self-removes when the
-// connection ends — no manual listener bookkeeping — and idempotent, since
-// the caller detaches and aborts in the same `finally`.
-function link(
-  signal: AbortSignal | undefined,
-  connection: AbortController,
-): () => void {
-  if (!signal) return () => {}
-  const onAbort = () => connection.abort(signal.reason)
-  signal.addEventListener('abort', onAbort, {
+// Forwards an abort from `source` (the caller's signal, if any) into `target`,
+// preserving the reason — which is what decides how the socket ends.
+//
+// The listener is bound with `{ signal: target.signal }`, so aborting the target
+// detaches it: there is no separate cleanup to remember, and a per-attempt
+// controller that is always aborted in a `finally` can never leak one.
+function forwardAbort(
+  source: AbortSignal | undefined,
+  target: AbortController,
+): void {
+  source?.addEventListener('abort', () => target.abort(source.reason), {
     once: true,
-    signal: connection.signal,
+    signal: target.signal,
   })
-  return () => signal.removeEventListener('abort', onAbort)
 }
 
 // Resolves after `ms`, or promptly when `signal` aborts — never rejects; the
