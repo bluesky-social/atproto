@@ -67,6 +67,14 @@ type Terminal = { type: 'done' } | { type: 'error'; error: unknown }
 
 // Byte accounting: binary counts byteLength; strings approximate via UTF-16
 // code units (length * 2) — cheap, deterministic, good enough for watermarks.
+//
+// Deliberately an over-estimate rather than a real UTF-8 measurement, which
+// would cost an encode per message on the hot path. Mostly-ASCII text is
+// therefore counted at roughly twice its wire size, so `highWaterMark` and
+// `maxBufferedBytes` bite about twice as early for a text stream. Both are
+// safety valves, so erring toward pausing (or failing) sooner is the right
+// direction to be wrong in — but a caller sizing them precisely for text should
+// know the units are "UTF-16 code units × 2", not bytes on the wire.
 function messageBytes(data: string | Uint8Array): number {
   return typeof data === 'string' ? data.length * 2 : data.byteLength
 }

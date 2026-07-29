@@ -184,6 +184,12 @@ resumable, keep `highWaterMark` low enough that little is ever in flight.
   the buffer without bound. This is the _only_ backstop in the browser, since
   the WHATWG WebSocket API gives no way to pause a socket.
 
+Both thresholds count binary frames exactly and **over-estimate text** — a
+string is measured as UTF-16 code units × 2, which avoids an encode per message
+but counts mostly-ASCII text at roughly twice its wire size. Both are safety
+valves, so pausing or failing early is the safer direction; just don't read them
+as exact wire bytes when sizing them for a text stream.
+
 ## Compression
 
 `permessage-deflate` is offered by default on both platforms. There is no
