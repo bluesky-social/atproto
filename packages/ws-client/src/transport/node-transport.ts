@@ -192,7 +192,7 @@ function createTransportImpl<M extends DataMode>(
       reason: reason.toString('utf8'),
       wasClean: code === CloseCode.Normal,
     }
-    channel.finish(detail)
+    channel.finish()
     reportClose(detail)
   })
 

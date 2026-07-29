@@ -56,14 +56,31 @@ export interface MessageChannel<M extends DataMode> {
   push(data: string | Uint8Array): void
   /** End the channel with an error; discards undelivered buffered messages. */
   fail(error: unknown): void
-  /** End the channel cleanly; already-buffered messages still drain. */
-  finish(detail: CloseEventDetail): void
-  /** Close detail once ended; undefined before that. */
-  readonly closeDetail: CloseEventDetail | undefined
+  /**
+   * End the channel cleanly; already-buffered messages still drain.
+   *
+   * Takes no detail: how the connection ended is reported by the transport's own
+   * `onClose`, and duplicating it here was a second source of truth for the same
+   * fact.
+   */
+  finish(): void
 }
 
 // The two terminal outcomes. `done` drains the buffer first; `error` discards it.
 type Terminal = { type: 'done' } | { type: 'error'; error: unknown }
+
+// A buffered message and its accounted size, so a drain can decrement without
+// re-measuring.
+interface QueueItem<M extends DataMode> {
+  value: MessageOf<M>
+  bytes: number
+}
+
+// A pull parked because the buffer was empty.
+interface Waiter<M extends DataMode> {
+  resolve: (result: IteratorResult<MessageOf<M>, void>) => void
+  reject: (err: unknown) => void
+}
 
 // Byte accounting: binary counts byteLength; strings approximate via UTF-16
 // code units (length * 2) — cheap, deterministic, good enough for watermarks.
@@ -117,17 +134,6 @@ export function closeCodeForStop(reason: unknown): number | undefined {
   return undefined
 }
 
-// A codeless failure (overflow / dataMode / idle timeout / any foreign
-// error) synthesizes an abnormal close, matching WHATWG's 1006 for a
-// frame-less end. A `CloseError` (a real close frame the transport
-// observed) carries its own detail through instead.
-function closeDetailForError(error: unknown): CloseEventDetail {
-  if (error instanceof CloseError) {
-    return { code: error.code, reason: error.reason, wasClean: error.wasClean }
-  }
-  return ABNORMAL_CLOSE_DETAIL
-}
-
 /**
  * Creates the shared receive-side engine for a WebSocket client: pure logic,
  * no sockets. A transport pushes received frames in via `push()`; a single
@@ -139,16 +145,6 @@ function closeDetailForError(error: unknown): CloseEventDetail {
 export function createMessageChannel<M extends DataMode>(
   options: MessageChannelOptions<M>,
 ): MessageChannel<M> {
-  type Msg = MessageOf<M>
-  interface QueueItem {
-    value: Msg
-    bytes: number
-  }
-  interface Waiter {
-    resolve: (result: IteratorResult<Msg, void>) => void
-    reject: (err: unknown) => void
-  }
-
   const dataMode: DataMode = options.dataMode
   const highWaterMark = options.highWaterMark ?? 1_048_576
   const maxBufferedBytes = options.maxBufferedBytes ?? Infinity
@@ -159,12 +155,11 @@ export function createMessageChannel<M extends DataMode>(
   // itself, not just the callbacks — see `idleTick`.
   const canBackpressure = backpressure != null
 
-  const buffer: QueueItem[] = []
-  const waiters: Waiter[] = []
+  const buffer: QueueItem<M>[] = []
+  const waiters: Waiter<M>[] = []
   let bufferedBytes = 0
   let terminal: Terminal | null = null
   let paused = false
-  let closeDetail: CloseEventDetail | undefined
 
   // Flag-based idle check: each tick either finds evidence (a message
   // arrived since the previous tick) and clears the flag, or finds none and
@@ -210,14 +205,14 @@ export function createMessageChannel<M extends DataMode>(
   }
 
   function rejectWaiters(error: unknown): void {
-    let waiter: Waiter | undefined
+    let waiter: Waiter<M> | undefined
     while ((waiter = waiters.shift())) {
       waiter.reject(error)
     }
   }
 
   function resolveWaitersDone(): void {
-    let waiter: Waiter | undefined
+    let waiter: Waiter<M> | undefined
     while ((waiter = waiters.shift())) {
       waiter.resolve({ value: undefined as never, done: true })
     }
@@ -226,7 +221,6 @@ export function createMessageChannel<M extends DataMode>(
   function fail(error: unknown): void {
     if (terminal) return
     terminal = { type: 'error', error }
-    closeDetail = closeDetailForError(error)
     clearIdleTimer()
     // Discard undelivered buffered messages: never yield post-failure data.
     buffer.length = 0
@@ -234,10 +228,9 @@ export function createMessageChannel<M extends DataMode>(
     rejectWaiters(error)
   }
 
-  function finish(detail: CloseEventDetail): void {
+  function finish(): void {
     if (terminal) return
     terminal = { type: 'done' }
-    closeDetail = detail
     clearIdleTimer()
     // Buffer is left intact so pull() drains it before reporting done — a
     // server-initiated clean close never discards received data. Waiters
@@ -271,7 +264,7 @@ export function createMessageChannel<M extends DataMode>(
       return
     }
 
-    const value = data as Msg
+    const value = data as MessageOf<M>
     const waiter = waiters.shift()
     if (waiter) {
       waiter.resolve({ value, done: false })
@@ -297,7 +290,7 @@ export function createMessageChannel<M extends DataMode>(
     }
   }
 
-  function pull(): Promise<IteratorResult<Msg, void>> {
+  function pull(): Promise<IteratorResult<MessageOf<M>, void>> {
     // Drain buffered messages first, even after a `done` terminal — a
     // server-initiated clean close never drops received data.
     const item = buffer.shift()
@@ -312,12 +305,14 @@ export function createMessageChannel<M extends DataMode>(
       }
       return Promise.reject(terminal.error)
     }
-    return new Promise<IteratorResult<Msg, void>>((resolve, reject) => {
-      waiters.push({ resolve, reject })
-    })
+    return new Promise<IteratorResult<MessageOf<M>, void>>(
+      (resolve, reject) => {
+        waiters.push({ resolve, reject })
+      },
+    )
   }
 
-  function iteratorReturn(): Promise<IteratorResult<Msg, void>> {
+  function iteratorReturn(): Promise<IteratorResult<MessageOf<M>, void>> {
     // Consumer abandoned iteration (a `break`/`return` in a `for await`): a
     // stop is a loss of interest, not a request to drain, so the buffer is
     // discarded. First-wins: a channel already ended is left as-is.
@@ -332,7 +327,7 @@ export function createMessageChannel<M extends DataMode>(
     return Promise.resolve({ value: undefined as never, done: true })
   }
 
-  const iterable: AsyncIterable<Msg, void, undefined> = {
+  const iterable: AsyncIterable<MessageOf<M>, void, undefined> = {
     [Symbol.asyncIterator]() {
       return {
         next: () => pull(),
@@ -346,8 +341,5 @@ export function createMessageChannel<M extends DataMode>(
     push,
     fail,
     finish,
-    get closeDetail() {
-      return closeDetail
-    },
   }
 }
