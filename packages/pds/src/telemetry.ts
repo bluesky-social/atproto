@@ -32,10 +32,10 @@ const ATTR_XRPC_METHOD = 'xrpc.method'
 //    better-sqlite3.
 // 2) we want to customize the HttpInstrumentation to provide better span name
 //    and attributes for XRPC requests.
-// ) this approach also registers the instrumentation hook
+// 3) this approach also registers the instrumentation hook
 //
-// We also use `startNodeSDK` instead of `registerInstrumentations` because it
-// will setup metric and traces exporters automatically based on conventional
+// We also use `NodeSDK` instead of `registerInstrumentations` because it will
+// setup metric, traces and logs exporters automatically based on conventional
 // OpenTelemetry environment variables.
 
 // @NOTE The SDK is only enabled when telemetry is explicitly configured
@@ -51,19 +51,6 @@ const otelConfigured = tracesConfigured || metricsConfigured || logsConfigured
 const otelEnabled = !otelDisabled && otelConfigured
 
 if (otelEnabled) {
-  // @NOTE The gate above enables the SDK as a whole as soon as *any* signal is
-  // configured, but NodeSDK then auto-configures every signal it wasn't
-  // explicitly told about, defaulting each unspecified OTEL_{SIGNAL}_EXPORTER
-  // to "otlp" (targeting the default http://localhost:4318 endpoint). That
-  // would ship signals the operator never opted into — e.g. configuring only a
-  // traces endpoint would still start the metrics and logs (see ./events.ts)
-  // pipelines. Explicitly disable the signals that weren't opted in so that
-  // "setting an exporter endpoint is what opts you in" actually holds. This
-  // must run before `new NodeSDK()` reads these variables.
-  if (!tracesConfigured) process.env.OTEL_TRACES_EXPORTER = 'none'
-  if (!metricsConfigured) process.env.OTEL_METRICS_EXPORTER = 'none'
-  if (!logsConfigured) process.env.OTEL_LOGS_EXPORTER = 'none'
-
   try {
     register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
 
@@ -75,6 +62,24 @@ if (otelEnabled) {
       // detectors.
       resourceDetectors: getResourceDetectors(),
       instrumentations: getInstrumentations(),
+
+      // @NOTE The gate above enables the SDK as a whole as soon as *any* signal
+      // is configured, but NodeSDK then auto-configures every signal it wasn't
+      // explicitly told about, defaulting each unspecified
+      // OTEL_{SIGNAL}_EXPORTER to "otlp" (targeting the default
+      // http://localhost:4318 endpoint). That would ship signals the operator
+      // never opted into — e.g. configuring only a traces endpoint would still
+      // start the metrics and logs (see ./events.ts) pipelines.
+      //
+      // Passing an *empty* pipeline is how we opt a signal out of that env
+      // fallback: NodeSDK only consults OTEL_{SIGNAL}_EXPORTER for signals
+      // whose pipeline option is `undefined`, and it skips registering a
+      // provider entirely when the pipeline it was handed is empty. Signals
+      // that *were* opted into get `undefined` here, so they keep being
+      // configured purely from the conventional OTEL_* environment variables.
+      spanProcessors: tracesConfigured ? undefined : [],
+      metricReaders: metricsConfigured ? undefined : [],
+      logRecordProcessors: logsConfigured ? undefined : [],
     })
 
     sdk.start()
