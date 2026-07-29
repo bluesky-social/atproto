@@ -184,6 +184,64 @@ describe('websocket() end-to-end over real sockets', () => {
     ])
   })
 
+  describe('how a stop maps onto the close', () => {
+    // The abort reason decides how the socket ends, so a caller can ask for a
+    // specific close code without a separate knob for it. `break`/`throw` in a
+    // `for await` are indistinguishable to a generator (both produce a return
+    // completion, never `throw()`), so they share the plain clean close.
+    async function stopWith(
+      reason: unknown,
+    ): Promise<{ serverSaw?: number; serverReason?: string }> {
+      let serverSaw: number | undefined
+      let serverReason: string | undefined
+      let resolveClosed!: () => void
+      const closed = new Promise<void>((resolve) => {
+        resolveClosed = resolve
+      })
+      await using server = await startServer((ws) => {
+        ws.send('one')
+        ws.on('close', (code, buf) => {
+          serverSaw = code
+          serverReason = buf.toString()
+          resolveClosed()
+        })
+      })
+      const controller = new AbortController()
+      const gen = websocket(server.url, {
+        dataMode: 'text',
+        signal: controller.signal,
+      })
+      await gen.next()
+      controller.abort(reason)
+      await expect(gen.next()).rejects.toBeDefined()
+      await closed
+      return { serverSaw, serverReason }
+    }
+
+    it('closes politely at 1000 on a bare abort', async () => {
+      // `ac.abort()` with no argument is an AbortError: a plain "please stop".
+      const controller = new AbortController()
+      controller.abort()
+      const { serverSaw } = await stopWith(controller.signal.reason)
+      expect(serverSaw).toBe(CloseCode.Normal)
+    })
+
+    it('closes with the code carried by a CloseError reason', async () => {
+      const { serverSaw, serverReason } = await stopWith(
+        new CloseError(CloseCode.Policy, 'over quota', false),
+      )
+      expect(serverSaw).toBe(CloseCode.Policy)
+      expect(serverReason).toBe('')
+    })
+
+    it('destroys the connection on any other reason', async () => {
+      // A failure, not a request to stop: no close frame is sent, so the peer
+      // observes an abnormal close.
+      const { serverSaw } = await stopWith(new Error('something broke'))
+      expect(serverSaw).toBe(CloseCode.Abnormal)
+    })
+  })
+
   it('rejects the iterator on a fatal close code rather than reconnecting', async () => {
     await using server = await startServer((ws) => {
       ws.close(CloseCode.ProtocolError, 'nope')

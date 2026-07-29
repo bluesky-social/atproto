@@ -123,13 +123,10 @@ const NO_STATUS_DETAIL: CloseEventDetail = {
   wasClean: false,
 }
 
-// The detail for a consumer-initiated stop: the transport closes with 1000, and
-// the stop is by definition orderly.
-const NORMAL_CLOSE_DETAIL: CloseEventDetail = {
-  code: CloseCode.Normal,
-  reason: '',
-  wasClean: true,
-}
+// How long the terminal waits for a politely-closed connection to report its
+// close before giving up and reporting "no status". Bounded so an unresponsive
+// peer delays teardown briefly rather than indefinitely.
+const CLOSE_GRACE_MS = 1_000
 
 /**
  * Binds a platform transport factory into the public `websocket()` generator.
@@ -155,13 +152,9 @@ export function createWebSocket(
     // The most recent connection's close detail, re-reported by the terminal
     // hook below. Undefined when no close frame ever applied.
     let lastDetail: CloseEventDetail | undefined
-    // Set when the consumer stops us (a `break`/`return` on the iteration). The
-    // transport closes politely with 1000 on that path, but its close event is
-    // asynchronous while the generator's `finally` runs synchronously — so the
-    // real detail arrives too late to report. Waiting for it would make `break`
-    // block on a network round-trip; instead the terminal reports the code we
-    // know we asked for.
-    let stoppedByConsumer = false
+    // The most recent connection's close promise, awaited by the terminal when
+    // no detail has arrived yet. Undefined before the first connection.
+    let awaitClose: Promise<void> | undefined
 
     try {
       // The generator body doesn't run until the first pull, so an
@@ -191,6 +184,14 @@ export function createWebSocket(
         // synchronously by `onClose` below, so it is already set by the time a
         // completed `yield*` resumes.
         let closedDetail: CloseEventDetail | undefined
+        // Settles when the transport reports this connection's close. The
+        // terminal awaits it so `onClose` fires with the transport's own detail
+        // — one source of truth — and only once the connection has actually
+        // finished, rather than racing the socket's asynchronous close event.
+        let reportClosed!: () => void
+        awaitClose = new Promise<void>((resolve) => {
+          reportClosed = resolve
+        })
         const invalidateSender = () => {
           live = false
         }
@@ -224,6 +225,7 @@ export function createWebSocket(
             onClose: (detail) => {
               lastDetail = detail
               closedDetail = detail
+              reportClosed()
               // This connection is over, so the sender handed to onOpen /
               // onConnect must stop accepting writes *now*. Waiting for the
               // loop to notice would leave a window — the loop only advances
@@ -249,17 +251,9 @@ export function createWebSocket(
           // A consumer `break` also lands here, resuming the generator with a
           // return completion — which runs the `finally` and leaves the loop
           // without reaching the throw.
-          // A consumer `break`/`return` resumes us here with a return
-          // completion, which unwinds straight through the `finally` blocks
-          // below without reaching either the throw or the catch. Flag it before
-          // yielding so the terminal can tell that case from a connection that
-          // ended on its own; cleared the moment we get control back.
-          stoppedByConsumer = true
           yield* transport
-          stoppedByConsumer = false
           throw closeError(closedDetail)
         } catch (error) {
-          stoppedByConsumer = false
           // An abort is the caller's decision, not a connection failure:
           // surface the reason rather than classifying it as retryable.
           signal?.throwIfAborted()
@@ -300,17 +294,16 @@ export function createWebSocket(
       // non-reconnectable close, abort, or a consumer `break` — and exactly
       // once. A generator that was never pulled never gets here: no
       // lifecycle, no `onClose`.
-      invokeHook(
-        options.onClose,
-        // A consumer stop is a *clean* end at 1000: that is the code the
-        // transport sends, and reporting it here rather than awaiting the peer's
-        // acknowledgement is what keeps `break` from blocking on the network.
-        // `wasClean` therefore means "we closed politely", not "a close
-        // handshake completed".
-        stoppedByConsumer
-          ? NORMAL_CLOSE_DETAIL
-          : lastDetail ?? NO_STATUS_DETAIL,
-      )
+      // One source of truth for the close detail: whatever the transport
+      // reported. On the paths where the socket is closed politely rather than
+      // destroyed, its close event is asynchronous and lands just after the
+      // generator unwinds — so wait for it, bounded, rather than synthesizing a
+      // second answer here. That also gives `onClose` a real guarantee: the
+      // connection is finished by the time it fires.
+      if (lastDetail === undefined && awaitClose !== undefined) {
+        await Promise.race([awaitClose, sleep(CLOSE_GRACE_MS, undefined)])
+      }
+      invokeHook(options.onClose, lastDetail ?? NO_STATUS_DETAIL)
     }
   }
 }
