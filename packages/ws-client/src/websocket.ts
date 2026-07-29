@@ -117,7 +117,6 @@ export function createWebSocket(
     // backoff restarts at ~1s after any stable open and escalates only across
     // repeated failures with nothing working in between.
     let retries = 0
-    let firstAttempt = true
     let firstOpen = true
     // The most recent connection's close detail, re-reported by the terminal
     // hook below. Undefined when no close frame ever applied.
@@ -130,15 +129,6 @@ export function createWebSocket(
       signal?.throwIfAborted()
 
       for (;;) {
-        if (!firstAttempt) {
-          await sleep(backoffMs(retries, maxMs), signal)
-          signal?.throwIfAborted()
-          // Escalate for the *next* consecutive failure; a successful open
-          // resets this to 0.
-          retries++
-        }
-        firstAttempt = false
-
         const resolved = typeof url === 'function' ? await url() : url
         // Resolving the url is an async gap: an abort landing while it was in
         // flight must not fall through to a connection nothing tears down.
@@ -238,7 +228,16 @@ export function createWebSocket(
             willReconnect ? { attempt: retries } : undefined,
           )
           if (!willReconnect) throw error
-          // Loop: backoff, then re-resolve the url and redial.
+
+          // Backoff lives here, in the one branch that actually retries,
+          // rather than at the top of the loop: the other three exits (a fatal
+          // error rethrowing, a non-reconnectable clean close returning, a
+          // consumer `break` resuming at the `yield*`) must not be delayed by
+          // it. Post-increment so the first reconnect waits ~1s (2^0) and each
+          // consecutive failure escalates; a successful open resets to 0.
+          await sleep(backoffMs(retries++, maxMs), signal)
+          signal?.throwIfAborted()
+          // Loop: re-resolve the url and redial.
         } finally {
           unlink()
           connection.abort()
