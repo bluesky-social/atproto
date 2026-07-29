@@ -28,6 +28,7 @@
             "validation_failure",
             "encoding_failure",
             "pds_upload_failure",
+            "pds_upload_unsupported_blob_size",
             "generic_failure"
           ]
         },
