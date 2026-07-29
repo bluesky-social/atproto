@@ -172,6 +172,47 @@ describe('report-close-reports', () => {
     expect(accountReports).toHaveLength(1)
   })
 
+  it('scopes message, conversation, and account reports independently', async () => {
+    const convoId = 'close-reports-convo'
+    const messageId = 'close-reports-message'
+    const convoUri = `at://${sc.dids.dan}/chat.bsky.convo/${convoId}`
+    const messageUri = `at://${sc.dids.dan}/chat.bsky.convo.message/${messageId}`
+
+    await sc.createReport({
+      reasonType: REASONSPAM,
+      subject: {
+        $type: 'chat.bsky.convo.defs#messageRef',
+        did: sc.dids.dan,
+        convoId,
+        messageId,
+      },
+      reportedBy: sc.dids.bob,
+    })
+    await sc.createReport({
+      reasonType: REASONSPAM,
+      subject: {
+        $type: 'chat.bsky.convo.defs#convoRef',
+        did: sc.dids.dan,
+        convoId,
+      },
+      reportedBy: sc.dids.bob,
+    })
+    await reportSubject(
+      { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.dan },
+      REASONSPAM,
+    )
+    await network.processAll()
+
+    const accountResult = await closeReports({ subject: sc.dids.dan })
+    expect(accountResult.data.closedCount).toBe(1)
+
+    const messageResult = await closeReports({ subject: messageUri })
+    expect(messageResult.data.closedCount).toBe(1)
+
+    const convoResult = await closeReports({ subject: convoUri })
+    expect(convoResult.data.closedCount).toBe(1)
+  })
+
   it('returns zero when no reports match', async () => {
     const { data } = await closeReports({
       subject: 'did:plc:doesnotexistanywhere',

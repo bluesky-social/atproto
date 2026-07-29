@@ -238,6 +238,7 @@ export type FindReportsForSubjectParams = {
   reportIds?: number[]
   reportTypes?: string[]
   targetAll?: boolean
+  lockForUpdate?: boolean
 }
 
 export type ReportResult = {
@@ -259,16 +260,28 @@ export async function findReportsForSubject(
 ): Promise<ReportResult[]> {
   let builder = reportQuery(db).where('r.did', '=', params.subjectDid)
 
-  // Filter by subject URI (if provided, match exactly; if null/undefined, match repo-level)
+  // Filter by subject URI (if provided, match exactly; if null/undefined,
+  // match repo-level and exclude chat subjects owned by the same DID).
   if (params.subjectUri) {
     const uri = new AtUri(params.subjectUri)
-    builder = builder.where(
-      'r.recordPath',
-      '=',
-      `${uri.collection}/${uri.rkey}`,
-    )
+    if (uri.collection === CHAT_MESSAGE_COLLECTION) {
+      builder = builder.where('r.subjectMessageId', '=', uri.rkey)
+    } else if (uri.collection === CHAT_CONVO_COLLECTION) {
+      builder = builder
+        .where('r.subjectConvoId', '=', uri.rkey)
+        .where('r.subjectMessageId', 'is', null)
+    } else {
+      builder = builder.where(
+        'r.recordPath',
+        '=',
+        `${uri.collection}/${uri.rkey}`,
+      )
+    }
   } else {
-    builder = builder.where('r.recordPath', '=', '')
+    builder = builder
+      .where('r.recordPath', '=', '')
+      .where('r.subjectMessageId', 'is', null)
+      .where('r.subjectConvoId', 'is', null)
   }
 
   if (params.targetAll) {
@@ -289,7 +302,12 @@ export async function findReportsForSubject(
     return []
   }
 
-  const reports = await builder.selectAll('r').execute()
+  let query = builder.selectAll('r')
+  if (params.lockForUpdate) {
+    query = query.forUpdate('r')
+  }
+
+  const reports = await query.execute()
 
   return reports
 }
@@ -334,6 +352,7 @@ export async function closeReportsForSubject(
       subjectUri,
       reportTypes: reportTypes?.length ? reportTypes : undefined,
       targetAll: !reportTypes?.length,
+      lockForUpdate: true,
     })
 
     const validUpdates: { id: number; previousStatus: string }[] = []
