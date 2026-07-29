@@ -95,9 +95,10 @@ hashes, so navigate by clicking sidebar links rather than setting
   `PasswordStrength`.
 - `components/identity/*` — account/client avatars, names, identifiers, the
   account menu.
-- `components/layouts/*` — `AuthShell` (centred auth card, after `login-03`) and
-  `AccountShell` (sidebar + content, after `dashboard-01`). These two own the
-  whole page frame, including the `<title>`, so they must never nest.
+- `components/layouts/*` — `AuthShell` (the centred auth card) and
+  `AccountShell` (sidebar + content, after shadcn's `dashboard-01` block).
+  These two own the whole page frame, including the `<title>`, so they must
+  never nest.
 - Pages under `src/pages/` and the four `*-page.tsx` entry points own contexts,
   TanStack Query and routing.
 

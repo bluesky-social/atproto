@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '#/components/ui/card.tsx'
@@ -29,9 +30,7 @@ export type AuthShellProps = Override<
 >
 
 /**
- * The authorize-flow surface, structured after shadcn's `login-03` block:
- * a muted full-height page, a centred `max-w-sm` column, the brand mark above
- * a `Card`.
+ * The authorize-flow surface.
  *
  * @NOTE This owns the whole page frame: the `<title>`, the locale selector and
  * the footer links. Never nest it inside another shell — both render a
@@ -66,22 +65,22 @@ export function AuthShell({
 
       <div
         {...props}
-        className={cn('flex w-full max-w-sm flex-col gap-6', className)}
+        className={cn('flex w-full max-w-sm flex-col', className)}
       >
-        {(logo || name) && (
-          <div className="flex items-center justify-center gap-2 self-center font-medium">
-            {logo && (
-              <img
-                src={logo}
-                alt={name || _(msg`Logo`)}
-                className="size-6 object-contain"
-              />
-            )}
-            {name}
-          </div>
-        )}
-
         <Card>
+          {(logo || name) && (
+            <div className="px-(--card-spacing) flex items-center justify-center gap-2 pt-2 font-medium">
+              {logo && (
+                <img
+                  src={logo}
+                  alt={name || _(msg`Logo`)}
+                  className="size-6 object-contain"
+                />
+              )}
+              {name}
+            </div>
+          )}
+
           {(titleString || subtitle) && (
             <CardHeader className="text-center">
               {titleString && (
@@ -98,18 +97,22 @@ export function AuthShell({
           )}
 
           <CardContent>{children}</CardContent>
-        </Card>
 
-        <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-4 text-xs">
-          <LocaleSelector />
-          {links?.map((link) => (
-            <LinkAnchor
-              key={link.href}
-              link={link}
-              className="hover:text-foreground rounded-sm transition-colors hover:underline"
-            />
-          ))}
-        </div>
+          <CardFooter className="flex-col justify-center gap-3">
+            <LocaleSelector />
+            {links?.length ? (
+              <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
+                {links.map((link) => (
+                  <LinkAnchor
+                    key={link.href}
+                    link={link}
+                    className="hover:text-foreground rounded-sm transition-colors hover:underline"
+                  />
+                ))}
+              </div>
+            ) : null}
+          </CardFooter>
+        </Card>
       </div>
     </div>
   )

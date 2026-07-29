@@ -736,7 +736,7 @@ msgstr "後で"
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
-#: src/components/layouts/auth-shell.tsx:76
+#: src/components/layouts/auth-shell.tsx:78
 #: src/components/layouts/account-shell.tsx:119
 msgid "Logo"
 msgstr "ロゴ"

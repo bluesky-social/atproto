@@ -726,7 +726,7 @@ msgstr ""
 msgid "Let's get your password reset!"
 msgstr "비밀번호를 재설정해 봅시다!"
 
-#: src/components/layouts/auth-shell.tsx:76
+#: src/components/layouts/auth-shell.tsx:78
 #: src/components/layouts/account-shell.tsx:119
 msgid "Logo"
 msgstr "로고"

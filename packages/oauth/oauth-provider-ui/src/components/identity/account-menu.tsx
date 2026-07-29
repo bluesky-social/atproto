@@ -58,10 +58,9 @@ export function AccountMenu({ className }: AccountMenuProps): ReactNode {
               />
             }
           >
-            {/* @NOTE `dashboard-01`'s nav-user desaturates its avatar, which
-              suits the block's placeholder faces but drains real profile
-              pictures — the one thing on the page that should carry the user's
-              own colour. Deliberate deviation from the block. */}
+            {/* @NOTE Deliberately not desaturated: a real profile picture is
+              the one thing on the page that should carry the user's own
+              colour. */}
             <AccountAvatar
               account={session.account}
               size="lg"
