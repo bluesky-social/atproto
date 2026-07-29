@@ -9,6 +9,3 @@ contact_links:
   - name: Security vulnerabilities
     url: https://github.com/bluesky-social/atproto/blob/main/SECURITY.md
     about: Do not file publicly. Email security@bsky.app instead.
-  - name: Contributing guidelines
-    url: https://github.com/bluesky-social/atproto/blob/main/CONTRIBUTING.md
-    about: Read this before filing an issue or opening a pull request.
