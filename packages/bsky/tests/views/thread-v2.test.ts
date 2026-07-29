@@ -987,7 +987,30 @@ describe('appview thread views v2', () => {
       })
     })
 
-    it(`yields a fully deleted line to its next sibling`, async () => {
+    it(`does not promote a reply that predates the deletion it would replace`, async () => {
+      const root = await sc.post(op, 'root')
+      await network.processAll()
+      const first = await sc.reply(op, root.ref, root.ref, 'first')
+      await network.processAll()
+      const tail = await sc.reply(op, root.ref, first.ref, 'tail')
+      await network.processAll()
+      // Created before the delete, so it was never part of the chain.
+      const bystander = await sc.reply(op, root.ref, first.ref, 'bystander')
+      await network.processAll()
+
+      await sc.deletePost(op, tail.ref.uri)
+      await network.processAll()
+
+      // The vacated slot is not claimed by the pre-existing bystander.
+      const numbering = await getNumbering(root.ref.uriStr)
+      expect(numbering).toEqual([
+        { uri: root.ref.uriStr, index: 1, count: 2 },
+        { uri: first.ref.uriStr, index: 2, count: 2 },
+        { uri: bystander.ref.uriStr, index: undefined, count: undefined },
+      ])
+    })
+
+    it(`yields a fully deleted line only to a reply written after the deletion`, async () => {
       const root = await sc.post(op, 'root')
       await network.processAll()
       const abandoned = await sc.reply(op, root.ref, root.ref, 'abandoned')
@@ -999,17 +1022,31 @@ describe('appview thread views v2', () => {
         'abandoned child',
       )
       await network.processAll()
-      const fork = await sc.reply(op, root.ref, root.ref, 'fork')
+      // Created before the deletes, so it can never claim the vacated slot.
+      const bystander = await sc.reply(op, root.ref, root.ref, 'bystander')
       await network.processAll()
 
-      // Delete the whole abandoned line; the fork reclaims the slot.
+      // Delete the whole abandoned line.
       await sc.deletePost(op, abandonedChild.ref.uri)
       await sc.deletePost(op, abandoned.ref.uri)
       await network.processAll()
 
-      const numbering = await getNumbering(root.ref.uriStr)
+      // The whole line is gone and nothing newer exists yet, so the chain is
+      // just the root — a chain of one, so nothing is numbered.
+      let numbering = await getNumbering(root.ref.uriStr)
+      expect(numbering).toEqual([
+        { uri: root.ref.uriStr, index: undefined, count: undefined },
+        { uri: bystander.ref.uriStr, index: undefined, count: undefined },
+      ])
+
+      // A reply written after the deletion does claim the slot.
+      const fork = await sc.reply(op, root.ref, root.ref, 'fork')
+      await network.processAll()
+
+      numbering = await getNumbering(root.ref.uriStr)
       expect(numbering).toEqual([
         { uri: root.ref.uriStr, index: 1, count: 2 },
+        { uri: bystander.ref.uriStr, index: undefined, count: undefined },
         { uri: fork.ref.uriStr, index: 2, count: 2 },
       ])
     })
