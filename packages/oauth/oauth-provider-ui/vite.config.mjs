@@ -1,3 +1,5 @@
+/// <reference types="vitest/config" />
+
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { lingui } from '@lingui/vite-plugin'
@@ -74,4 +76,5 @@ export default defineConfig({
       'multiformats',
     ],
   },
+  test: {},
 })
