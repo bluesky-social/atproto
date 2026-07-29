@@ -6,9 +6,9 @@ import {
   type HeadersInit,
   HeartbeatTimeoutError,
   IdleTimeoutError,
+  type Sender,
   SocketError,
-  WebSocketClient,
-  WebSocketClientError,
+  websocket,
 } from '@atproto/ws-client'
 import { type TapEvent, parseTapEvent } from './types.js'
 import { formatAdminAuthHeader, isCausedBySignal } from './util.js'
@@ -52,12 +52,30 @@ export type TapWebsocketOptions = {
   onReconnectError?: (error: unknown, n: number, initialSetup: boolean) => void
 }
 
+function ackMessage(id: number): string {
+  return JSON.stringify({ type: 'ack', id })
+}
+
 export class TapChannel implements AsyncDisposable {
-  private ws: WebSocketClient<'text'>
+  private ws: AsyncGenerator<string, void, undefined>
   private handler: TapHandler
 
   private readonly abortController: AbortController = new AbortController()
   private readonly destroyDefer: Deferrable = createDeferrable()
+
+  /** The current connection's sender, or undefined between connections. */
+  private sender?: Sender<'text'>
+  /**
+   * Acks accepted while there was no connection to send them on, flushed by
+   * the reconnect hook below.
+   *
+   * Deliberately not a list of promises the caller awaits: a handler runs
+   * inside the iteration, and the reconnect that would flush it only happens
+   * when the iteration advances — so awaiting delivery from a handler would
+   * block the very pull that makes delivery possible. Acks are recorded and
+   * the handler continues; Tap redelivers anything it never sees acked.
+   */
+  private readonly pendingAcks = new Set<number>()
 
   constructor(
     url: string,
@@ -70,7 +88,7 @@ export class TapChannel implements AsyncDisposable {
     if (adminPassword) {
       headers.set('Authorization', formatAdminAuthHeader(adminPassword))
     }
-    this.ws = new WebSocketClient(url, {
+    this.ws = websocket(url, {
       dataMode: 'text',
       headers,
       maxReconnectSeconds: wsOpts.maxReconnectSeconds,
@@ -80,6 +98,21 @@ export class TapChannel implements AsyncDisposable {
         : {},
       signal: this.abortController.signal,
       shouldReconnect,
+      // Flush on every successful connection, the first included: an ack can be
+      // recorded before anything ever connected (a caller may ack before
+      // start(), or between attempts), and only having flushed on *re*connect
+      // would leave it stranded until the second connection.
+      onOpen: (sender) => {
+        this.sender = sender
+        void this.flushPendingAcks()
+      },
+      onReconnect: (sender) => {
+        this.sender = sender
+        void this.flushPendingAcks()
+      },
+      onDisconnect: () => {
+        this.sender = undefined
+      },
       onError: (error, reconnect) => {
         if (reconnect) {
           onReconnectError?.(error, reconnect.attempt, reconnect.attempt === 0)
@@ -89,32 +122,47 @@ export class TapChannel implements AsyncDisposable {
   }
 
   /**
-   * Resolves once the ack has actually been sent, retrying across reconnects.
+   * Records an ack for delivery. Resolves once the ack has been sent or
+   * accepted for the next connection — not once the peer has processed it.
    *
-   * The client's own queue holds an ack issued while disconnected and flushes
-   * it on the next connection, but at-most-once: a flush that fails rejects.
-   * Re-calling `send()` re-queues, which is what turns that into the
-   * retry-until-sent guarantee the caller expects.
+   * It cannot mean more than that: a handler runs inside the iteration, and a
+   * reconnect only happens when the iteration advances, so awaiting confirmed
+   * delivery here would block the pull that delivery depends on. Tap's own
+   * at-least-once redelivery covers an ack that is lost with its connection.
    *
-   * Retries re-queue at the tail and so are not strictly FIFO, and a send that
-   * fails mid-hand-off may be delivered twice. Both are safe: Tap acks are
-   * per-event, idempotent (a repeat ack for an already-acked id is a no-op)
-   * and order-insensitive.
+   * Acks are per-event, idempotent, and order-insensitive server-side (see
+   * Outbox.AckEvent), so a duplicate or out-of-order ack is harmless.
    */
   async ackEvent(id: number): Promise<void> {
-    const message = JSON.stringify({ type: 'ack', id })
-    for (;;) {
-      if (this.abortController.signal.aborted) return
+    const sender = this.sender
+    if (!sender) {
+      this.pendingAcks.add(id)
+      return
+    }
+    try {
+      await sender.send(ackMessage(id))
+    } catch {
+      // The connection died under us: hand it to the next one rather than
+      // reporting a failure the caller can do nothing about.
+      this.pendingAcks.add(id)
+    }
+  }
+
+  // Driven by the reconnect hook, never by a handler: this runs off the socket's
+  // own event, so it doesn't depend on the iteration making progress.
+  private async flushPendingAcks(): Promise<void> {
+    const sender = this.sender
+    if (!sender) return
+    for (const id of [...this.pendingAcks]) {
       try {
-        return await this.ws.send(message)
+        await sender.send(ackMessage(id))
+        this.pendingAcks.delete(id)
       } catch (cause) {
-        if (this.abortController.signal.aborted) return
-        // A destroyed client or a full queue will never accept this ack, so
-        // retrying would spin forever — surface it instead.
-        if (cause instanceof WebSocketClientError) throw cause
+        // Still unsendable; leave it queued for the connection after this one.
         this.handler.onError(
           new Error(`failed to send ack for event ${id}`, { cause }),
         )
+        return
       }
     }
   }

@@ -91,10 +91,9 @@ export class DataModeError extends WebSocketConnectionError {
 }
 
 /**
- * Thrown by `WebSocketClient` for its own misuse/state errors (e.g. `send()`
- * before connected, or iterating twice) — distinct from the
- * `WebSocketConnectionError` taxonomy, which only ever originates from a
- * `WebSocketConnection`.
+ * Misuse of the client API itself, as opposed to a connection failing:
+ * distinct from the `WebSocketConnectionError` taxonomy, which describes what
+ * the socket did. Never retryable — a caller error won't fix itself.
  */
 export class WebSocketClientError extends Error {
   constructor(message?: string, options?: { cause?: unknown }) {

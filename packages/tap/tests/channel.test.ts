@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { AddressInfo } from 'ws'
 import { TapChannel, type TapHandler } from '../src/channel.js'
 import type { TapEvent } from '../src/types.js'
@@ -270,61 +270,87 @@ describe('TapChannel', () => {
   })
 
   describe('ack delivery', () => {
-    it('retries an ack whose first hand-off fails', async () => {
-      // The channel no longer keeps a FIFO ack buffer of its own. Instead the
-      // client's send queue absorbs an ack issued while disconnected, and
-      // re-calling send() after a failed flush is what makes that
-      // retry-until-sent. That retry is safe because Tap acks are per-event,
-      // idempotent and order-insensitive (verified against the server's
-      // Outbox.AckEvent, which guards on existence and deletes per id).
+    it('does not hang when a handler awaits an ack across a dropped connection', async () => {
+      // Both shipped indexers `await opts.ack()` inside onEvent. A handler runs
+      // inside the iteration, and a reconnect only happens when the iteration
+      // advances — so an ack that awaited confirmed delivery would block the
+      // very pull that delivery depends on. That deadlock is reproducible
+      // against the pre-migration client (see divy/tap-ack-deadlock-repro); it
+      // hung past a 15s timeout, and destroy() could not unwind it either.
       //
-      // Driven here by failing the first send outright, which is the reachable
-      // way to exercise the retry: a handler runs synchronously with delivery,
-      // so it cannot normally observe a disconnected client.
+      // ackEvent therefore resolves once the ack has been sent or recorded for
+      // the next connection. It cannot promise the peer processed it: `send()`
+      // resolves on hand-off, so an ack handed to a socket that then dies is
+      // lost, and Tap's own at-least-once redelivery is what covers that.
       await using server = await createWebSocketServer()
       const { port } = server.address() as AddressInfo
 
-      const receivedAcks: number[] = []
+      let connections = 0
       server.on('connection', (socket) => {
-        socket.send(JSON.stringify(createRecordEvent(7)))
+        const isFirst = ++connections === 1
+        socket.on('message', () => socket.close())
+        if (isFirst) {
+          // Deliver, then drop abruptly (1006 — retryable here).
+          socket.send(JSON.stringify(createRecordEvent(7)))
+          socket.terminate()
+        }
+      })
+
+      const handler: TapHandler = {
+        onEvent: async (_evt, opts) => {
+          await opts.ack()
+        },
+        onError: () => {},
+      }
+
+      await using channel = new TapChannel(`ws://localhost:${port}`, handler, {
+        maxReconnectSeconds: 0,
+      })
+
+      const consume = channel.start().catch(() => {})
+      // The load-bearing assertion: the handler's awaited ack resolved, so the
+      // loop kept pulling and reconnected. Before the fix this never happened —
+      // the pull was blocked on the ack and the ack on the pull.
+      await vi.waitFor(() => expect(connections).toBeGreaterThan(1))
+      await channel.destroy()
+      await consume
+    })
+
+    it('lands an ack recorded while no connection was live', async () => {
+      // The other half: when there genuinely is no sender at ack time, the ack
+      // is recorded and flushed by the reconnect hook — which runs off the
+      // socket's own event, so it does not depend on the iteration advancing.
+      await using server = await createWebSocketServer()
+      const { port } = server.address() as AddressInfo
+
+      const acksByConnection: number[][] = []
+      server.on('connection', (socket) => {
+        const index = acksByConnection.push([]) - 1
         socket.on('message', (data) => {
           const msg = JSON.parse(data.toString())
           if (msg.type === 'ack') {
-            receivedAcks.push(msg.id)
+            acksByConnection[index].push(msg.id)
             socket.close()
           }
         })
       })
 
-      const reportedErrors: Error[] = []
       const handler: TapHandler = {
-        onEvent: async (_evt, opts) => {
-          await opts.ack()
-        },
-        onError: (err) => reportedErrors.push(err),
+        onEvent: () => {},
+        onError: () => {},
       }
+      await using channel = new TapChannel(`ws://localhost:${port}`, handler, {
+        maxReconnectSeconds: 0,
+      })
 
-      await using channel = new TapChannel(`ws://localhost:${port}`, handler)
-
-      // Fail exactly the first hand-off, then let the retry through.
-      const client = channel['ws'] as { send: (d: string) => Promise<void> }
-      const realSend = client.send.bind(client)
-      let failed = false
-      client.send = (data: string) => {
-        if (!failed) {
-          failed = true
-          return Promise.reject(new Error('hand-off failed'))
-        }
-        return realSend(data)
-      }
-
-      await channel.start()
-
-      // The ack still arrived, and the transient failure was reported rather
-      // than swallowed.
-      expect(receivedAcks).toEqual([7])
-      expect(reportedErrors).toHaveLength(1)
-      expect(reportedErrors[0].message).toContain('failed to send ack')
+      // Ack before anything is connected: nothing to hand off to, so it queues.
+      await channel.ackEvent(7)
+      const consume = channel.start().catch(() => {})
+      await vi.waitFor(() =>
+        expect(acksByConnection.some((acks) => acks.includes(7))).toBe(true),
+      )
+      await channel.destroy()
+      await consume
     })
   })
 

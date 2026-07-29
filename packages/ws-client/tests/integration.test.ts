@@ -3,7 +3,8 @@ import { assert, describe, expect, it, vi } from 'vitest'
 import {
   CloseCode,
   CloseError,
-  WebSocketClient,
+  type Sender,
+  WebSocketConnectionError,
   websocket,
 } from '../src/index.ts'
 import { startServer } from './_util/server.js'
@@ -159,8 +160,13 @@ describe('websocket() end-to-end over real sockets', () => {
   })
 })
 
-describe('WebSocketClient end-to-end over real sockets', () => {
-  it('send() delivers to the server, and a queued send lands after a reconnect', async () => {
+describe('sending over real sockets', () => {
+  it('sends through the sender handed to onOpen, and a fresh one on reconnect', async () => {
+    // Sending is done with the per-connection sender the hooks hand out, not a
+    // client object with a queue: a queued send could only settle on the next
+    // connection, which only happens when the consumer pulls — so awaiting one
+    // from inside iteration deadlocks. The sender makes that impossible to
+    // write by accident, since it either sends now or rejects.
     const received: string[] = []
     let firstConnection = true
     await using server = await startServer((ws) => {
@@ -169,64 +175,82 @@ describe('WebSocketClient end-to-end over real sockets', () => {
       ws.on('message', (data) => {
         received.push(data.toString())
         if (isFirstConnection) {
-          // Force an abrupt, retryable drop right after the first message is
-          // received, so a second connection follows.
+          // Force an abrupt, retryable drop so a second connection follows.
           // @ts-expect-error reach into ws internals to force an abrupt drop
           ws._socket.destroy()
         }
       })
     })
 
-    let queued: Promise<void> | undefined
-    await using client = new WebSocketClient(server.url, {
+    const senders: Sender<'text'>[] = []
+    const controller = new AbortController()
+    const gen = websocket(server.url, {
       ...noBackoff,
-      // Fires synchronously the moment the drop is detected — before any
-      // reconnect attempt — so queuing here proves the send lands on the
-      // *next* connection rather than racing a poll against how fast the
-      // reconnect happens to complete.
-      onError: () => {
-        queued = client.send('queued')
-      },
+      dataMode: 'text',
+      signal: controller.signal,
+      onOpen: (sender) => senders.push(sender),
+      onReconnect: (sender) => senders.push(sender),
     })
-    // The reconnect loop only progresses while something keeps pulling the
-    // generator; a background `for await` is what drives it here.
+    // Something has to keep pulling for the loop to reconnect at all.
     const pump = (async () => {
-      for await (const _ of client) {
-        // No messages are expected from the server in this test.
+      try {
+        for await (const _ of gen) {
+          // The server sends nothing in this test.
+        }
+      } catch {
+        // The abort below surfaces here.
       }
     })()
 
-    await vi.waitFor(() => expect(client.connected).toBe(true))
-    await client.send('first')
-    await vi.waitFor(() => expect(received).toEqual(['first', 'queued']))
-    assert(queued)
-    await queued
+    await vi.waitFor(() => expect(senders).toHaveLength(1))
+    await senders[0].send('first')
 
-    await client[Symbol.asyncDispose]()
+    // The drop is detected and a second connection brings a fresh sender.
+    await vi.waitFor(() => expect(senders).toHaveLength(2))
+    await senders[1].send('second')
+    await vi.waitFor(() => expect(received).toEqual(['first', 'second']))
+
+    // The dead sender rejects rather than silently dropping the write.
+    await expect(senders[0].send('too late')).rejects.toBeInstanceOf(
+      WebSocketConnectionError,
+    )
+
+    controller.abort(new Error('test cleanup'))
     await pump
-  }, 15000)
+  })
 
-  it('asyncDispose ends a stream parked on a pull', async () => {
+  it('ends a stream parked on a pull when the signal aborts', async () => {
     // The mechanism matters here, and only a real generator exhibits it: a
     // `return()` on a generator suspended inside a `yield*` queues behind the
-    // pending pull rather than cancelling it. A client parked waiting for the
-    // next message therefore hangs forever unless disposal also aborts. This
-    // test is the one that pins that down — the unit-level equivalent cannot,
-    // because its fake is a plain object with no `yield*` in play.
+    // pending pull rather than cancelling it, so a consumer parked waiting for
+    // the next message cannot be stopped by `return()` alone. The signal is
+    // what interrupts the pull — which is why it is the one termination idiom.
+    let opened!: () => void
+    const isOpen = new Promise<void>((resolve) => {
+      opened = resolve
+    })
     await using server = await startServer(() => {
       // Never sends, so the pump below parks in next().
     })
-    const client = new WebSocketClient(server.url)
+    const controller = new AbortController()
+    const gen = websocket(server.url, {
+      dataMode: 'text',
+      signal: controller.signal,
+      onOpen: () => opened(),
+    })
+    const reason = new Error('stopped')
     const pump = (async () => {
-      for await (const _ of client) {
-        // Parks.
+      try {
+        for await (const _ of gen) {
+          // Parks.
+        }
+        return 'ended'
+      } catch (err) {
+        return err === reason ? 'aborted' : 'other'
       }
-      return 'ended'
     })()
-    await vi.waitFor(() => expect(client.connected).toBe(true))
-    await client[Symbol.asyncDispose]()
-    // Disposal is the consumer's own deliberate stop, so the loop completes
-    // rather than throwing the abort at it.
-    await expect(pump).resolves.toBe('ended')
+    await isOpen
+    controller.abort(reason)
+    await expect(pump).resolves.toBe('aborted')
   })
 })
