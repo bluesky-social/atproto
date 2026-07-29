@@ -3,6 +3,7 @@ import {
   ABNORMAL_CLOSE_DETAIL,
   type CloseEventDetail,
   type DataMode,
+  closeCodeForStop,
   createMessageChannel,
 } from '../message-channel.js'
 import type {
@@ -223,6 +224,16 @@ function createTransportImpl<M extends DataMode>(
     () => {
       open = false
       channel.fail(options.signal.reason)
+      // How the stop was requested decides how the socket ends: a bare abort
+      // closes politely at 1000, a CloseError reason closes with its code, and
+      // any other reason is a failure that destroys the connection. On the
+      // polite paths the real close event carries the detail — which is why
+      // nothing is reported here.
+      const code = closeCodeForStop(options.signal.reason)
+      if (code !== undefined) {
+        ws.close(code)
+        return
+      }
       ws.close()
       reportClose(ABNORMAL_CLOSE_DETAIL)
     },

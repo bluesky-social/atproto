@@ -81,6 +81,28 @@ export const ABNORMAL_CLOSE_DETAIL: CloseEventDetail = {
   wasClean: false,
 }
 
+/**
+ * How a caller-supplied stop reason maps onto a close: a bare `ac.abort()`
+ * (an `AbortError`) is an orderly stop and closes with 1000; a `CloseError`
+ * says which code to close with; anything else is a failure and the connection
+ * is destroyed rather than closed politely.
+ *
+ * Returns the close code to send, or `undefined` to terminate.
+ */
+export function closeCodeForStop(reason: unknown): number | undefined {
+  if (reason instanceof CloseError) return reason.code
+  // A DOMException named AbortError is what `ac.abort()` produces with no
+  // argument; treat that bare "please stop" as orderly.
+  if (
+    reason instanceof Error &&
+    reason.name === 'AbortError' &&
+    !(reason instanceof CloseError)
+  ) {
+    return CloseCode.Normal
+  }
+  return undefined
+}
+
 // A codeless failure (overflow / dataMode / idle timeout / any foreign
 // error) synthesizes an abnormal close, matching WHATWG's 1006 for a
 // frame-less end. A `CloseError` (a real close frame the transport
