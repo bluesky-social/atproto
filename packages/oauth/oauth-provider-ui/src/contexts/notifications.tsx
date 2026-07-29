@@ -1,8 +1,7 @@
 import type { MessageDescriptor } from '@lingui/core'
 import { useLingui } from '@lingui/react'
 import { type ReactNode, createContext, useContext, useMemo } from 'react'
-import { toast } from 'sonner'
-import { Toaster } from '#/components/ui/sonner.tsx'
+import { Toaster, toast } from '#/components/ui/toast.tsx'
 import { errorToNotification } from '#/lib/notification-message.ts'
 
 type Variant = 'success' | 'warning' | 'error' | 'info'
@@ -40,13 +39,6 @@ const NotificationsContext = createContext<NotificationsValue>({
 })
 NotificationsContext.displayName = 'NotificationsContext'
 
-const toasters = {
-  success: toast.success,
-  warning: toast.warning,
-  error: toast.error,
-  info: toast.info,
-} as const satisfies Record<Variant, unknown>
-
 export type NotificationsProviderProps = {
   children?: ReactNode
   duration?: number
@@ -68,12 +60,14 @@ export function NotificationsProvider({
       description,
       duration: dur = duration,
     }: NotificationOptions): NotificationHandler => {
-      const id = toasters[variant](translate(title), {
+      const id = toast.add({
+        type: variant,
+        title: translate(title),
         description: description ? translate(description) : undefined,
-        duration: dur,
+        timeout: dur,
       })
 
-      return { close: () => toast.dismiss(id) }
+      return { close: () => toast.close(id) }
     }
 
     const notifyError = (
@@ -92,7 +86,7 @@ export function NotificationsProvider({
       {/* @NOTE The toaster lives inside the provider (rather than being mounted
         separately by each entry page) so that a page can never end up with a
         notifications context whose toasts have nowhere to render. */}
-      <Toaster position="bottom-center" />
+      <Toaster />
     </NotificationsContext>
   )
 }

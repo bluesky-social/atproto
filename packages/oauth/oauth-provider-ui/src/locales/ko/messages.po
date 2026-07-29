@@ -325,8 +325,9 @@ msgid "Click here if nothing happens"
 msgstr ""
 
 #: src/components/oauth-session-details-dialog.tsx:45
-#: src/components/ui/dialog.tsx:78
-#: src/components/ui/dialog.tsx:117
+#: src/components/ui/toast.tsx:138
+#: src/components/ui/dialog.tsx:76
+#: src/components/ui/dialog.tsx:115
 msgid "Close"
 msgstr ""
 
