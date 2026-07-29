@@ -856,6 +856,165 @@ describe('appview thread views v2', () => {
     })
   })
 
+  describe('OP thread numbering with deleted replies', () => {
+    let op: string
+
+    beforeAll(async () => {
+      await sc.createAccount('opdel', {
+        handle: 'opdel.test',
+        email: 'opdel@test.com',
+        password: 'opdel-pass',
+      })
+      op = sc.dids.opdel
+      await network.processAll()
+    })
+
+    // Maps the rendered post items to their numbering. Non-post items (e.g. a
+    // deleted parent rendered as a not-found placeholder) are skipped.
+    const getNumbering = async (anchor: string) => {
+      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+        { anchor },
+        {
+          headers: await network.serviceHeaders(
+            op,
+            ids.AppBskyUnspeccedGetPostThreadV2,
+          ),
+        },
+      )
+      return data.thread.flatMap((item) =>
+        AppBskyUnspeccedDefs.isThreadItemPost(item.value)
+          ? [
+              {
+                uri: item.uri,
+                index: item.value.opThreadPostIndex,
+                count: item.value.opThreadPostCount,
+              },
+            ]
+          : [],
+      )
+    }
+
+    it(`keeps a deleted middle reply's slot while replies below it survive`, async () => {
+      const root = await sc.post(op, 'root')
+      await network.processAll()
+      const first = await sc.reply(op, root.ref, root.ref, 'first')
+      await network.processAll()
+      const second = await sc.reply(op, root.ref, first.ref, 'second')
+      await network.processAll()
+
+      // Deleting `first` keeps its slot: `second` survives below it.
+      await sc.deletePost(op, first.ref.uri)
+      await network.processAll()
+
+      // The descendants walk cannot route through the deleted post, so
+      // `second` is unreachable from the root and does not render — but the
+      // chain still counts all three slots, keeping the numbering stable.
+      const numbering = await getNumbering(root.ref.uriStr)
+      expect(numbering).toEqual([{ uri: root.ref.uriStr, index: 1, count: 3 }])
+
+      // Anchoring on the surviving reply shows its stable position.
+      const anchored = await getNumbering(second.ref.uriStr)
+      expect(anchored).toContainEqual({
+        uri: second.ref.uriStr,
+        index: 3,
+        count: 3,
+      })
+    })
+
+    it(`frees a deleted tail reply's slot and allows a younger continuation`, async () => {
+      const root = await sc.post(op, 'root')
+      await network.processAll()
+      const first = await sc.reply(op, root.ref, root.ref, 'first')
+      await network.processAll()
+      const tail = await sc.reply(op, root.ref, first.ref, 'tail')
+      await network.processAll()
+
+      // Deleting the tail frees its slot: nothing survives below it.
+      await sc.deletePost(op, tail.ref.uri)
+      await network.processAll()
+
+      let numbering = await getNumbering(root.ref.uriStr)
+      expect(numbering).toEqual([
+        { uri: root.ref.uriStr, index: 1, count: 2 },
+        { uri: first.ref.uriStr, index: 2, count: 2 },
+      ])
+
+      // OP picks the thread back up from the surviving tail. The replacement
+      // takes the freed slot even though it is younger than the deleted reply.
+      const replacement = await sc.reply(op, root.ref, first.ref, 'replacement')
+      await network.processAll()
+
+      numbering = await getNumbering(root.ref.uriStr)
+      expect(numbering).toEqual([
+        { uri: root.ref.uriStr, index: 1, count: 3 },
+        { uri: first.ref.uriStr, index: 2, count: 3 },
+        { uri: replacement.ref.uriStr, index: 3, count: 3 },
+      ])
+    })
+
+    it(`does not let a younger fork re-anchor the chain after a middle delete`, async () => {
+      const root = await sc.post(op, 'root')
+      await network.processAll()
+      const first = await sc.reply(op, root.ref, root.ref, 'first')
+      await network.processAll()
+      const second = await sc.reply(op, root.ref, first.ref, 'second')
+      await network.processAll()
+
+      await sc.deletePost(op, first.ref.uri)
+      await network.processAll()
+
+      // OP replies to the root again. This is a fork, not a continuation: it
+      // is younger than the deleted reply it sits beside, whose slot is held
+      // by the surviving `second` below it.
+      const fork = await sc.reply(op, root.ref, root.ref, 'fork')
+      await network.processAll()
+
+      // `second` is unreachable through the deleted post from the root, so it
+      // does not render — but its held slot keeps the chain at 3, and the fork
+      // renders as a plain reply, unnumbered.
+      const numbering = await getNumbering(root.ref.uriStr)
+      expect(numbering).toEqual([
+        { uri: root.ref.uriStr, index: 1, count: 3 },
+        { uri: fork.ref.uriStr, index: undefined, count: undefined },
+      ])
+
+      // Anchoring on the surviving reply shows its stable position.
+      const anchored = await getNumbering(second.ref.uriStr)
+      expect(anchored).toContainEqual({
+        uri: second.ref.uriStr,
+        index: 3,
+        count: 3,
+      })
+    })
+
+    it(`yields a fully deleted line to its next sibling`, async () => {
+      const root = await sc.post(op, 'root')
+      await network.processAll()
+      const abandoned = await sc.reply(op, root.ref, root.ref, 'abandoned')
+      await network.processAll()
+      const abandonedChild = await sc.reply(
+        op,
+        root.ref,
+        abandoned.ref,
+        'abandoned child',
+      )
+      await network.processAll()
+      const fork = await sc.reply(op, root.ref, root.ref, 'fork')
+      await network.processAll()
+
+      // Delete the whole abandoned line; the fork reclaims the slot.
+      await sc.deletePost(op, abandonedChild.ref.uri)
+      await sc.deletePost(op, abandoned.ref.uri)
+      await network.processAll()
+
+      const numbering = await getNumbering(root.ref.uriStr)
+      expect(numbering).toEqual([
+        { uri: root.ref.uriStr, index: 1, count: 2 },
+        { uri: fork.ref.uriStr, index: 2, count: 2 },
+      ])
+    })
+  })
+
   describe('bumping and sorting', () => {
     describe('sorting', () => {
       let seed: Awaited<ReturnType<typeof seedThreadV2.sort>>
