@@ -42,13 +42,15 @@ function createTransportImpl<M extends DataMode>(
     highWaterMark: options.highWaterMark,
     maxBufferedBytes: options.maxBufferedBytes,
     idleTimeoutMs: options.idleTimeoutMs,
-    onPause: () => {
-      paused = true
-      ws.pause()
-    },
-    onResume: () => {
-      paused = false
-      ws.resume()
+    backpressure: {
+      onPause: () => {
+        paused = true
+        ws.pause()
+      },
+      onResume: () => {
+        paused = false
+        ws.resume()
+      },
     },
     onAbort: (_error, code) => {
       // The channel decided the connection must end (dataMode violation,
