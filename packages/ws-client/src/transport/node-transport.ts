@@ -53,10 +53,10 @@ function createTransportImpl<M extends DataMode>(
       },
     },
     onAbort: (_error, code) => {
-      // The channel decided the connection must end (dataMode violation,
-      // byte-cap overflow, or idle timeout). Send the requested close code
-      // when there is one; otherwise there's nothing clean to say, so drop
-      // the connection outright.
+      // The channel decided the connection must end (a dataMode violation, a
+      // byte-cap overflow, an idle timeout, or the consumer stopping). Send the
+      // requested close code when there is one; otherwise there's nothing clean
+      // to say, so drop the connection outright.
       if (code !== undefined) {
         ws.close(code)
       } else {
