@@ -80,7 +80,13 @@ export interface WebSocketOptions<M extends DataMode = 'auto'>
   /**
    * The stream ended, terminally. Fires exactly once per started stream —
    * however it ended: a fatal error, a non-reconnectable close, an aborted
-   * signal, or a consumer `break`.
+   * signal, or a consumer `break` — and only once the local socket is closed,
+   * so a caller can treat it as "teardown is done" and release what the stream
+   * depended on.
+   *
+   * `detail` is whatever the transport observed. `wasClean: true` means the
+   * close was orderly on our end; it is not a claim that the peer acknowledged,
+   * which no client can wait on without risking an indefinite hang.
    */
   onClose?: (detail: CloseEventDetail) => void
 }
@@ -298,8 +304,13 @@ export function createWebSocket(
       // reported. On the paths where the socket is closed politely rather than
       // destroyed, its close event is asynchronous and lands just after the
       // generator unwinds — so wait for it, bounded, rather than synthesizing a
-      // second answer here. That also gives `onClose` a real guarantee: the
-      // connection is finished by the time it fires.
+      // second answer here.
+      //
+      // NB the guarantee is "our end is closed", not "the peer acknowledged":
+      // both `ws` and WHATWG fire their close event as soon as the local socket
+      // is done (measured at +1ms, well before the peer observes anything).
+      // Waiting on the peer is not something a client can do — a close handshake
+      // it never answers would hang teardown indefinitely.
       if (lastDetail === undefined && awaitClose !== undefined) {
         await Promise.race([awaitClose, sleep(CLOSE_GRACE_MS, undefined)])
       }

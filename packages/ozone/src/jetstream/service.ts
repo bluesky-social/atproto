@@ -1,4 +1,4 @@
-import { websocket } from '@atproto/ws-client'
+import { CloseCode, CloseError, websocket } from '@atproto/ws-client'
 
 type JetstreamRecord = Record<string, unknown>
 type OnCreateCallback<T extends JetstreamRecord> = (
@@ -50,14 +50,18 @@ export interface CommitDeleteEvent extends EventBase {
   } & CommitBase
 }
 
-// The sentinel `close()` aborts with, so `start()` can tell its own
-// shutdown from a genuine failure: an aborted signal rejects the iterator
-// with whatever reason it was given.
-const STOPPED = Symbol('Jetstream stopped')
+// The abort reason close() uses. A `CloseError` rather than a bare sentinel for
+// two reasons: the client classifies an abort reason to decide how to end the
+// socket, and only a CloseError (or a bare AbortError) asks for a polite close —
+// anything else destroys the connection outright. Its identity is also what
+// start() checks to tell our own shutdown from a real failure.
+const STOPPED = new CloseError(CloseCode.Normal, 'jetstream stopped', true)
 
 export class Jetstream {
   public url: URL
   readonly #abort = new AbortController()
+  /** The `start()` run in flight, so `close()` can await its unwind. */
+  #running?: Promise<void>
   /** The current cursor. */
   public cursor?: number
 
@@ -73,6 +77,19 @@ export class Jetstream {
   }
 
   async start(options: {
+    onCreate?: Record<string, OnCreateCallback<any>>
+    onDelete?: Record<string, (e: CommitDeleteEvent) => Promise<void>>
+  }) {
+    // Retained so close() resolves only once the stream has actually unwound
+    // (and with it the connection). Swallows its own outcome: a caller awaiting
+    // close() is asking about shutdown, not about how the stream ended — that
+    // is start()'s promise to report.
+    const running = this.#consume(options)
+    this.#running = running.catch(() => {})
+    return running
+  }
+
+  async #consume(options: {
     onCreate?: Record<string, OnCreateCallback<any>>
     onDelete?: Record<string, (e: CommitDeleteEvent) => Promise<void>>
   }) {
@@ -107,8 +124,13 @@ export class Jetstream {
     }
   }
 
-  /** Ends the stream and closes the connection. */
+  /**
+   * Ends the stream and closes the connection, resolving once it has actually
+   * closed — the abort tears the socket down, and the stream's own unwind is
+   * what tells us that finished. A close() before start() is an inert no-op.
+   */
   async close() {
     this.#abort.abort(STOPPED)
+    await this.#running
   }
 }
