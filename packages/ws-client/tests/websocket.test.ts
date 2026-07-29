@@ -22,7 +22,7 @@ function scripted(steps: Step[]) {
     const step = steps[index++]
     assert(step, 'scripted transport: script exhausted')
     // A scripted connection is one that opened; report it as a real transport
-    // would so the loop fires onOpen/onReconnect and resets its backoff.
+    // would so the loop fires onOpen/onConnect and resets its backoff.
     queueMicrotask(() => options.onOpen(transport))
     const transport: Transport<'auto'> = {
       async send() {},
@@ -224,19 +224,67 @@ describe(createWebSocket, () => {
   })
 
   describe('hooks', () => {
-    it('fires onOpen once with a sender, then onReconnect per later connection', async () => {
+    it('fires onOpen once and onConnect per connection', async () => {
       const { createTransport } = scripted([
         { messages: [], end: 'error', error: new SocketError(new Error('x')) },
         { messages: [], end: 'error', error: new SocketError(new Error('y')) },
         { messages: [], end: 'clean' },
       ])
       const onOpen = vi.fn()
-      const onReconnect = vi.fn()
+      const onConnect = vi.fn()
       const websocket = createWebSocket(createTransport)
-      await drain(websocket('ws://x', { ...noBackoff, onOpen, onReconnect }))
+      await drain(websocket('ws://x', { ...noBackoff, onOpen, onConnect }))
+      // onOpen bookends the stream; onConnect covers every connection, the
+      // first included — so a consumer wanting "every connection" wires one
+      // hook, not two with identical bodies.
       expect(onOpen).toHaveBeenCalledTimes(1)
-      expect(onReconnect).toHaveBeenCalledTimes(2)
-      expect(typeof onOpen.mock.calls[0]?.[0]?.send).toBe('function')
+      expect(onConnect).toHaveBeenCalledTimes(3)
+      expect(onOpen.mock.calls[0]).toEqual([])
+      expect(typeof onConnect.mock.calls[0]?.[0]?.send).toBe('function')
+    })
+
+    it('pairs onConnect with onDisconnect, and reports failed dials as errors only', async () => {
+      // A stream stuck retrying must not report a disconnect per attempt: a
+      // dial that never connected produces neither onConnect nor onDisconnect,
+      // just an onError.
+      let attempt = 0
+      const createTransport = ((options) => {
+        const n = attempt++
+        const transport: Transport<'auto'> = {
+          async send() {},
+          async *[Symbol.asyncIterator]() {
+            if (n === 0) {
+              options.onOpen(transport)
+              yield 'one'
+            }
+            // Later dials never open at all.
+            options.onClose({ code: 1006, reason: '', wasClean: false })
+            throw new SocketError(new Error(`dial ${n}`))
+          },
+        }
+        return transport
+      }) as TransportFactory
+
+      const onConnect = vi.fn()
+      const onDisconnect = vi.fn()
+      const onError = vi.fn()
+      const websocket = createWebSocket(createTransport)
+      await expect(
+        drain(
+          websocket('ws://x', {
+            ...noBackoff,
+            onConnect,
+            onDisconnect,
+            onError,
+            shouldReconnect: (_error, attemptNo) => attemptNo < 3,
+          }),
+        ),
+      ).rejects.toBeInstanceOf(SocketError)
+
+      expect(onConnect).toHaveBeenCalledTimes(1)
+      expect(onDisconnect).toHaveBeenCalledTimes(1)
+      // One per failed dial plus the final give-up.
+      expect(onError.mock.calls.length).toBeGreaterThan(1)
     })
 
     it('fires onClose exactly once with the last close detail', async () => {
