@@ -12,13 +12,13 @@ const rootLogger = /*#__PURE__*/ pino(
   dest ? destination(dest) : undefined,
 )
 
-export const createLogger = (
+export function createLogger(
   name: string,
   options?: {
     serializers?: { [key: string]: SerializerFn }
     msgPrefix?: string
   },
-): Logger => {
+): Logger {
   // can't disable child loggers, so we just set their level to "silent"
   // to effectively turn them off
   const subsystemEnabled = !systems || systems.includes(name)
@@ -36,7 +36,7 @@ const subsystems = new Map<string, Logger>()
  * re-exported from a central place, achieving the same effect as a singleton
  * logger, but with more flexibility. Use {@link createLogger} instead.
  */
-export const subsystemLogger = (name: string): Logger => {
+export function subsystemLogger(name: string): Logger {
   if (subsystems.has(name)) return subsystems.get(name)!
   const logger = createLogger(name)
   subsystems.set(name, logger)
