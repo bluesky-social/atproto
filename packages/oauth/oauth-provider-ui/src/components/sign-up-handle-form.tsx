@@ -47,8 +47,7 @@ export function SignUpHandleForm({
   })
 
   // @NOTE Mirror every keystroke back to the wizard, not just the submitted
-  // values, so stepping Back and Forward again restores un-submitted input —
-  // the behaviour the previous SmartForm's onValues provided.
+  // values, so stepping Back and Forward again restores un-submitted input.
   const report = useStableCallback((next: unknown) => {
     onValues?.(next as Partial<SignUpHandleData>)
   })

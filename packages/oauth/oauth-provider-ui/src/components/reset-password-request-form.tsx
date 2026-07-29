@@ -33,13 +33,9 @@ export function ResetPasswordRequestForm({
 
   const form = useForm<ResetPasswordRequestValues>({
     resolver: schemaResolver(resetPasswordRequestSchema),
-    // @NOTE Deliberately the react-hook-form default (validate on submit,
-    // re-validate on change) rather than 'onBlur'. Validating on blur made
-    // error messages appear under empty required fields at the first
-    // interaction, shifting the layout mid-click. That is a real UX problem,
-    // and it broke the e2e label click on the remember checkbox: pointerdown
-    // landed on the label, the layout shifted, and mouseup landed elsewhere.
-    // It also matches the previous SmartForm, which only validated on submit.
+    // @NOTE Never `mode: 'onBlur'`: it renders errors under untouched
+    // required fields, which shifts the layout between mousedown and mouseup
+    // and silently drops the click.
     reValidateMode: 'onChange',
     defaultValues: { email: emailDefault ?? '' },
   })

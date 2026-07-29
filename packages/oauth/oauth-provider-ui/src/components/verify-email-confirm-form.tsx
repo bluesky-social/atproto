@@ -39,8 +39,8 @@ export function VerifyEmailConfirmForm({
     <FormShell
       {...props}
       form={form}
-      // The API field is `token`; the form field is `code` so the rendered
-      // input keeps the name the e2e suite selects on.
+      // The API field is `token`; the form field stays `code` so the rendered
+      // input keeps its contracted name.
       onSubmit={(values, signal) => handler({ token: values.code }, signal)}
     >
       <TokenField

@@ -26,12 +26,10 @@ export type DialogShellProps = {
 }
 
 /**
- * Common frame for the account-manager dialogs, replacing `utils/dialog-simple`.
+ * Common frame for the account-manager dialogs.
  *
- * @NOTE The content keeps `role="dialog"` and hosts the form's own action row
- * rather than rendering a footer of its own — the pds e2e suite targets
- * `[role="dialog"] button[type="submit"]`, which resolves to the FormShell
- * submit button rendered inside.
+ * @NOTE No footer of its own — the child form supplies the action row, so its
+ * buttons stay wired to the form's own pending and error state.
  */
 export function DialogShell({
   trigger,
@@ -54,12 +52,10 @@ export function DialogShell({
       }}
     >
       <DialogTrigger render={trigger} />
-      {/* @NOTE `max-h` + `overflow-y-auto` are deliberate additions. Base UI's
-        DialogContent is `fixed` and vertically centred with no height cap, so a
-        tall dialog (the DNS instructions, the delete-account flow) overflows
-        both edges of a short viewport with no way to reach its buttons — a
-        fixed element cannot be scrolled into view. The previous DialogSimple
-        capped it at 85vh for the same reason. */}
+      {/* @NOTE The height cap is required, not cosmetic: `DialogContent` is
+        `fixed` with no cap of its own, and a fixed element cannot be scrolled
+        into view — so a tall dialog on a short viewport puts its buttons out of
+        reach. */}
       <DialogContent
         role="dialog"
         className={cn('max-h-[85vh] overflow-y-auto sm:max-w-md', className)}
@@ -68,11 +64,9 @@ export function DialogShell({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && (
-            // @NOTE No explicit <p> wrapper here, unlike CardDescription and
-            // AlertDescription: Base UI's Dialog.Description already renders a
-            // <p>, so wrapping produced `<p><p>` — invalid nesting that React
-            // reports as a hydration error. The e2e's unqualified
-            // ensureTextVisibility calls match this <p> directly.
+            // @NOTE No <p> wrapper here, unlike CardDescription and
+            // AlertDescription: `Dialog.Description` already renders one, and
+            // wrapping it nests <p> inside <p>.
             <DialogDescription>{description}</DialogDescription>
           )}
         </DialogHeader>

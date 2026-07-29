@@ -24,10 +24,7 @@ const segmentColor: Record<number, string> = {
   [Strength.extra]: 'bg-emerald-500',
 }
 
-/**
- * Combines the previous `PasswordStrengthMeter` and `PasswordStrengthLabel`.
- * The meter keeps its `role="meter"` and aria-value* attributes.
- */
+/** A segmented strength meter and its label. */
 export function PasswordStrength({
   password,
   className,

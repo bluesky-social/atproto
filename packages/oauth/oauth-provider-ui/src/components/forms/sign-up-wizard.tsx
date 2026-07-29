@@ -52,9 +52,8 @@ export type SignUpWizardProps<TWizardData extends readonly any[]> = Override<
 >
 
 /**
- * Replaces `WizardCard`. The step machine is unchanged — still `useStepper`,
- * still the same render-prop contract — only the presentation is rebuilt, with
- * a progress bar in place of the bare "Step n of m" line.
+ * Frames the multi-step sign-up: a progress bar over the current step, which
+ * the caller supplies as a render prop. The step machine is `useStepper`.
  */
 export function SignUpWizard<const T extends readonly any[]>({
   prevLabel,

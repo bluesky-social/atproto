@@ -191,8 +191,8 @@ function FieldError({
       ...new Map(errors.map((error) => [error?.message, error])).values(),
     ]
 
-    // @NOTE Upstream ships `== 1`; the repo's eslint enforces `===`. Identical
-    // behaviour for a numeric length.
+    // @NOTE The shadcn registry ships `== 1`; this repo's eslint enforces
+    // `===`. Identical behaviour for a numeric length.
     if (uniqueErrors?.length === 1) {
       return uniqueErrors[0]?.message
     }

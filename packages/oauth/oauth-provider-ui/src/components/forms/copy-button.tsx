@@ -12,7 +12,7 @@ export type CopyButtonProps = Omit<
   value?: string
 }
 
-/** Replaces `forms/button-copy.tsx`. */
+/** Copies `value` to the clipboard, acknowledging with a tick. */
 export function CopyButton({
   value,
   className,
@@ -44,8 +44,7 @@ export function CopyButton({
           await navigator.clipboard.writeText(value)
           setCopied(true)
         } catch {
-          // Clipboard access can be denied; failing silently matches the
-          // previous behaviour.
+          // Clipboard access can be denied; fail silently.
         }
       }}
     >

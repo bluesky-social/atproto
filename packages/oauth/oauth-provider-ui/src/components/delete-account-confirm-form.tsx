@@ -11,7 +11,7 @@ import { schemaResolver } from '#/lib/form-resolver.ts'
 import { otpCodeSchema } from '#/lib/form-schemas.ts'
 
 const schema = z.object({
-  // Field keys are the rendered `name` attributes the e2e suite selects on.
+  // These keys become the rendered `name` attributes; they are contracted.
   code: otpCodeSchema,
   password: z.string().min(1),
 })

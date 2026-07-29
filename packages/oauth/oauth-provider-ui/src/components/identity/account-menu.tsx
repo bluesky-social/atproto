@@ -31,17 +31,13 @@ export type AccountMenuProps = {
  * The sidebar footer account switcher, structured after the dashboard block's
  * `nav-user`.
  *
- * @NOTE Each item is rendered as a real `<button>` via Base UI's `render` prop.
- * `Menu.Item` defaults to a `<div role="menuitem">`, and the pds e2e suite
- * clicks "Se déconnecter" with `clickOnText(text, 'button')` — the `render`
- * override keeps proper menu semantics *and* a button element.
- *
- * The items also need an explicit `w-full`: a <button> shrink-wraps to its
- * content even as a flex container, where the <div> the block uses fills the
- * menu width on its own.
+ * @NOTE `render` gives each item a real `<button>` under `Menu.Item`'s
+ * semantics, which otherwise defaults to a `<div role="menuitem">`. They then
+ * need an explicit `w-full`, since a `<button>` shrink-wraps to its content
+ * where that `<div>` would not.
  *
  * Only valid inside a `SidebarProvider`: it reads `useSidebar()` to place the
- * menu below on mobile and to the side on desktop, as the block does.
+ * menu below on mobile and to the side on desktop.
  */
 export function AccountMenu({ className }: AccountMenuProps): ReactNode {
   const { t } = useLingui()

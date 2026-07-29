@@ -8,8 +8,8 @@ import {
 import type * as React from 'react'
 import { Toaster as Sonner, type ToasterProps } from 'sonner'
 
-// @NOTE Upstream reads the theme from next-themes. This package has no theme
-// provider and no toggle — dark mode is driven purely by prefers-color-scheme
+// @NOTE The shadcn registry reads the theme from next-themes. This package has
+// no theme provider and no toggle — dark mode comes from prefers-color-scheme
 // (see style.css) — so Sonner is handed "system" and follows the media query.
 const Toaster = ({ ...props }: ToasterProps) => {
   return (

@@ -24,9 +24,8 @@ export type ResetPasswordRequestValues = z.infer<
 >
 
 export const resetPasswordConfirmSchema = z.object({
-  // @NOTE The field key is `code`, not `token`, because react-hook-form derives
-  // the rendered `name` attribute from it and the pds e2e suite selects
-  // `input[name="code"]`. The view maps it to the API's `token` field.
+  // @NOTE `code`, not `token`: the key becomes the rendered `name`, which is a
+  // public contract. The view maps it to the API's `token` field.
   code: otpCodeSchema,
   password: newPasswordSchema,
 })
@@ -38,17 +37,15 @@ export type ResetPasswordConfirmValues = z.infer<
 /**
  * Email, handle (with at least one dot), or DID.
  *
- * @NOTE Identical to the `pattern` attribute the sign-in input has always
- * carried — kept as a regex here so react-hook-form reports it the same way it
- * reports every other field error.
+ * @NOTE Kept as a regex rather than a `pattern` attribute so react-hook-form
+ * reports it like every other field error.
  */
 export const SIGN_IN_IDENTIFIER_PATTERN =
   /^([^@]+@[^@]+|[^.@]+(\.[^.@]+)+)|did:[a-z0-9]+:.+$/
 
 export const signInSchema = z.object({
-  // @NOTE `username` (not `identifier`) — the pds e2e suite selects
-  // `input[name="username"]`, and with react-hook-form the field key is the
-  // rendered name.
+  // @NOTE `username`, not `identifier`: the key becomes the rendered `name`,
+  // which is a public contract.
   username: z.string().min(1).regex(SIGN_IN_IDENTIFIER_PATTERN),
   password: z.string().min(1),
   remember: z.boolean().optional(),
@@ -88,8 +85,8 @@ export const updateHandleSchema = z.object({
 export type UpdateHandleValues = z.infer<typeof updateHandleSchema>
 
 export const updateHandleCustomSchema = z.object({
-  // @NOTE Field key is `domain` — the pds e2e suite types into
-  // input[name="domain"] — even though the value is a full handle.
+  // @NOTE The key is `domain` even though the value is a full handle: the
+  // rendered `name` is a public contract.
   domain: z.string().min(1),
 })
 

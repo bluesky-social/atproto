@@ -97,15 +97,10 @@ export function SignInPicker({
 
       {children}
 
-      {/* @NOTE Laid out the way the login blocks do it: the navigation action
-        spans the width, and the alternate path sits centred beneath it as an
-        underlined link. "Sign up" was a right-floated `ghost` button, achieved
-        with `flex-row-reverse` and a `flex-auto` spacer — it rendered as plain
-        bold text with no affordance that it was interactive at all.
-
-        It stays a `<button>` rather than becoming an anchor: the pds e2e suite
-        clicks it with `clickOnText('Inscription')`, which defaults to a
-        `button` tag. */}
+      {/* @NOTE The navigation action spans the width and the alternate path
+        sits centred beneath it, as the login blocks lay it out. "Sign up"
+        stays a `<button>`, not an anchor: it swaps the view in place rather
+        than navigating anywhere. */}
       <div key="actions" className="flex flex-col gap-4">
         {onBack && (
           <Button variant="secondary" className="w-full" onClick={onBack}>

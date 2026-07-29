@@ -16,11 +16,8 @@ export type CodeSnippetProps = Override<
 >
 
 /**
- * A read-only, monospaced display of a value (DNS record, URL, ID, etc.) with
- * an optional label and a copy-to-clipboard button.
- *
- * @NOTE The value stays in a `<code>` element — the pds e2e suite asserts on
- * `_atproto.<votre-domaine>` and `TXT` with the `code` tag.
+ * A read-only `<code>` display of a value (DNS record, URL, ID, etc.) with an
+ * optional label and a copy-to-clipboard button.
  */
 export function CodeSnippet({
   label,

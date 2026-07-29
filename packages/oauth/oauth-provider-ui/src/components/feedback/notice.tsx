@@ -41,17 +41,14 @@ const icons: Record<NoticeVariant, LucideIcon> = {
   error: CircleAlertIcon,
 }
 
-// @NOTE The shadcn palette has no success/warning tokens, only `destructive`.
-// Rather than inventing tokens (which would have to be re-derived when branding
-// is layered back in), these two tint the border, surface and icon from
-// Tailwind's built-in palette — matching the weight of the warning alert in
-// shadcn's own examples, which carries its colour as a background fill and not
-// just an outline.
+// @NOTE The theme has no success/warning tokens, only `destructive`, so those
+// two tint the border, surface and icon from Tailwind's built-in palette rather
+// than inventing tokens that branding would later have to re-derive.
 //
-// `error` takes the same treatment from the `destructive` token. Upstream's
-// `destructive` variant tints only the text and icon, leaving `bg-card` and the
-// default border — a deliberate deviation, so that all three coloured variants
-// read at the same weight instead of the error alone looking uncoloured.
+// `error` takes the same treatment from `destructive`. The shadcn registry's
+// `destructive` alert tints only text and icon, which leaves the error reading
+// as uncoloured next to the other two — this fills it so all three carry the
+// same weight.
 const variantStyles: Record<NoticeVariant, string> = {
   info: 'border-border',
   success:
@@ -109,10 +106,8 @@ export function Notice({
       >
         <Icon className={iconStyles[variant]} aria-hidden />
 
-        {/* @NOTE AlertTitle is a <div> upstream, but the previous Admonition
-          rendered its title in an <h3> and the pds e2e suite asserts
-          `ensureTextVisibility('Avertissement', 'h3')`. Keeping a real heading
-          is also the correct semantics for a titled alert. */}
+        {/* @NOTE An <h3> rather than AlertTitle, which renders a <div>: a
+          titled alert wants a real heading. */}
         {title && (
           <h3
             data-slot="alert-title"
@@ -122,10 +117,8 @@ export function Notice({
           </h3>
         )}
 
-        {/* @NOTE AlertDescription is a <div> upstream. The body copy is wrapped
-          in an explicit <p> because the pds e2e helper
-          `ensureTextVisibility(text, 'p')` looks for a <p>, and because
-          AlertDescription styles `[&_p]` for exactly this shape. */}
+        {/* @NOTE AlertDescription renders a <div>, so the body copy gets its
+          own <p> — the shape its `[&_p]` rules already expect. */}
         {(children || append) && (
           <AlertDescription>
             {children && <p>{children}</p>}
@@ -133,12 +126,9 @@ export function Notice({
           </AlertDescription>
         )}
 
-        {/* @NOTE AlertAction pins the button to `top-2`, which is right for the
-          shadcn example — a title above a description, with the button aligned
-          to the title line. A titleless notice is a single 20px row, and a
-          28px button pinned 8px from the top of a 40px box overhangs the
-          bottom padding (9px above, 3px below). Centre it in that case.
-          `right-2.5` matches the alert's own `px-2.5`. */}
+        {/* @NOTE AlertAction pins the button to `top-2`, which aligns it to the
+          title line. A titleless notice is a single row, where that leaves the
+          button overhanging the bottom padding — centre it instead. */}
         {action && (
           <AlertAction
             className={cn('right-2.5', !title && 'top-1/2 -translate-y-1/2')}

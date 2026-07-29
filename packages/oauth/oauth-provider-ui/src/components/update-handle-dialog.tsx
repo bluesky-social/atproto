@@ -137,14 +137,10 @@ export function UpdateHandleDialog({
       open={open}
       onOpenChange={setOpen}
     >
-      {/* @NOTE These are a choice list, not two form actions, so they are
-        built on `Item` — the shadcn primitive for exactly this — rather than
-        `Button`. `Button` is a fixed-height single-line control: it clipped the
-        example line and painted the whole row in the primary fill.
-
-        `render={<button/>}` is required, not cosmetic: the pds e2e suite
-        selects these with `clickOnText(text)`, which defaults to a `button`
-        tag. */}
+      {/* @NOTE A choice list, not two form actions, so these are built on
+        `Item` rather than `Button` — a fixed-height single-line control would
+        clip the example line. `render={<button/>}` keeps each option keyboard
+        focusable, which `Item`'s default `<div>` is not. */}
       <ItemGroup className="gap-3">
         <Option
           onClick={() => setView(HandleType.Default)}

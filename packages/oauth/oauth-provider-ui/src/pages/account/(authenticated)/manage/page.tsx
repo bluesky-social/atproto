@@ -282,14 +282,10 @@ type RowProps = Override<
  * A tappable settings row, built on the shadcn `item` primitive — the
  * canonical pattern for this kind of list.
  *
- * @NOTE Two deliberate details:
- * - `render={<button/>}` keeps it a real button; the pds e2e suite clicks these
- *   rows, and `Item` defaults to a div.
- * - the label is wrapped in a `<span>` because `ItemTitle` renders a div, and
- *   the suite asserts `ensureTextVisibility('Réactiver le compte', 'span')`.
- *
- * `itemVariants` has no destructive variant (default/outline/muted only), so
- * destructive rows tint the icon and label rather than filling the row.
+ * @NOTE `render={<button/>}` makes the row keyboard focusable, which `Item`'s
+ * default `<div>` is not. `itemVariants` has no destructive variant
+ * (default/outline/muted only), so destructive rows tint the icon and label
+ * rather than filling the row.
  */
 function Row({
   icon: Icon,

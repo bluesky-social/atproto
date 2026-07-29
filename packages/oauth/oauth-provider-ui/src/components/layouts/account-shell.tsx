@@ -64,14 +64,12 @@ export function useAccountShellLinks(): readonly AccountShellLink[] {
 /**
  * Account-manager frame, composed the way shadcn's dashboard block does:
  * `SidebarProvider` + `Sidebar` + `SidebarInset`, with `SidebarTrigger` in the
- * inset header. That brings the collapsible rail, the mobile sheet, the
- * keyboard shortcut and the persisted open/closed state for free — all of which
- * the previous hand-rolled `<aside>` + `Sheet` had to approximate.
+ * inset header — which brings the collapsible rail, the mobile sheet, the
+ * keyboard shortcut and the persisted open/closed state with it.
  *
- * @NOTE This owns the whole page frame, including its own `<title>`.
- * `assertTitle` in the pds e2e suite needs a title element, and the app title
- * (not the page title) must win — React hoists every `<title>` into the head
- * and the last one rendered takes effect.
+ * @NOTE This owns the whole page frame, including its own `<title>`. The app
+ * title must be the one that takes effect, and React hoists every `<title>`
+ * into the head with the last one rendered winning.
  */
 export function AccountShell({
   children,
@@ -100,11 +98,9 @@ export function AccountShell({
 
         <Sidebar collapsible="offcanvas">
           <SidebarHeader>
-            {/* @NOTE The brand row is a SidebarMenuButton rather than a bare div
-            so it shares the nav items' geometry — as a plain flex row it sat on
-            different padding and the header read as cramped against the list
-            below. `render={<div/>}` keeps it non-interactive; the block links
-            it, but there is nowhere to navigate to here. */}
+            {/* @NOTE A SidebarMenuButton rather than a bare div, so the brand
+            row shares the nav items' geometry. `render={<div/>}` keeps it
+            non-interactive — there is nowhere to navigate to. */}
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
@@ -129,18 +125,15 @@ export function AccountShell({
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupContent className="flex flex-col gap-2">
-                {/* @NOTE gap-1 is a deliberate deviation. base-nova's SidebarMenu
-                is gap-0, so an active row and a hovered row directly above or
-                below it merge into a single block. Spacing them keeps each
-                highlight legible as its own target. */}
+                {/* @NOTE gap-1 overrides SidebarMenu's gap-0: without it an
+                active row and a hovered row next to it merge into one block. */}
                 <SidebarMenu className="gap-1">
                   {visibleLinks.map(({ to, title, icon: Icon }) => (
                     <SidebarMenuItem key={to}>
                       <SidebarMenuButton
                         isActive={pathname === to}
-                        // @NOTE base-nova bolds the active row, but `dashboard-01`
-                        // never passes `isActive`, so the block never shows it —
-                        // the background alone marks the current page.
+                        // @NOTE The style bolds the active row; the background
+                        // alone is enough to mark the current page.
                         className="data-active:font-normal"
                         tooltip={typeof title === 'object' ? _(title) : title}
                         render={
@@ -161,8 +154,7 @@ export function AccountShell({
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* @NOTE Mirrors the block's `nav-secondary`: a second group pinned
-            with `mt-auto` so the deployment's links sit at the bottom of the
+            {/* @NOTE `mt-auto` pins the deployment's links to the bottom of the
             sidebar, directly above the user nav. */}
             {footerLinks && footerLinks.length > 0 && (
               <SidebarGroup className="mt-auto">
@@ -196,12 +188,11 @@ export function AccountShell({
 
         <SidebarInset>
           <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
-            {/* @NOTE aria-label overrides SidebarTrigger's hardcoded English
-            "Toggle Sidebar" sr-only text, without forking ui/sidebar.tsx. */}
+            {/* @NOTE SidebarTrigger's sr-only text is hardcoded English; the
+            aria-label translates it without forking the primitive. */}
             <SidebarTrigger aria-label={_(navigationLabel)} />
-            {/* @NOTE self-center overrides the primitive's `self-stretch`. With a
-            definite `h-4`, `align-self: stretch` has nothing to stretch and the
-            rule instead pins the line to the top of the header. */}
+            {/* @NOTE self-center overrides the primitive's `self-stretch`,
+            which with a definite `h-4` pins the line to the top instead. */}
             <Separator
               orientation="vertical"
               className="data-vertical:h-4 data-vertical:self-center mr-2"

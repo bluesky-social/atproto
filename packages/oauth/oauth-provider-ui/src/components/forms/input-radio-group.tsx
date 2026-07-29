@@ -25,12 +25,7 @@ export type RadioGroupProps<T> = Override<
   }
 >
 
-/**
- * Card-style radio group, rebuilt on `ui/radio-group`.
- *
- * @NOTE Each option's label stays in a `<span>` — the pds e2e suite selects the
- * HTTP verification method via `clickOnText('HTTP', 'span')`.
- */
+/** Card-style radio group, built on `ui/radio-group`. */
 export function InputRadioGroup<T>({
   value,
   onChange,

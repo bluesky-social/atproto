@@ -123,8 +123,6 @@ export function ResetPasswordView({
         subtitle={<Trans>Your password has been updated!</Trans>}
       >
         <div className="text-center">
-          {/* @NOTE Must stay an <h2>: the pds e2e suite asserts
-            ensureTextVisibility('Mot de passe mis à jour !', 'h2'). */}
           <h2 className="pb-2 text-xl font-bold">
             <Trans>Password updated!</Trans>
           </h2>

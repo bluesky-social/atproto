@@ -71,9 +71,9 @@ function DialogContent({
             }
           >
             <XIcon />
-            {/* @NOTE Deviation from upstream, which hardcodes "Close". This
-              package is fully localised, so a bare English screen-reader label
-              would surface untranslated in every non-English locale. */}
+            {/* @NOTE Deviates from the shadcn registry, which hardcodes
+              "Close": this package is localised, so a bare English
+              screen-reader label would surface in every other locale. */}
             <span className="sr-only">
               <Trans>Close</Trans>
             </span>

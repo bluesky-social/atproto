@@ -21,10 +21,9 @@ export type CheckboxFieldProps<TValues extends FieldValues> = {
 
 /**
  * @NOTE Deliberately a native `<input type="checkbox">` rather than
- * `ui/checkbox`, which renders `<button role="checkbox">`. Browsers only
- * forward `<label for>` activation to native form controls, not to buttons, so
- * clicking the label left the box unticked — the session was then not
- * remembered, which the pds e2e suite caught.
+ * `ui/checkbox`, which renders `<button role="checkbox">`. Browsers forward
+ * `<label for>` activation only to native form controls, not to buttons, so
+ * with the primitive a click on the label leaves the box unticked.
  *
  * The native control is styled to match the shadcn checkbox.
  */
@@ -48,14 +47,10 @@ export function CheckboxField<TValues extends FieldValues>({
                 type="checkbox"
                 name={field.name}
                 ref={field.ref}
-                // @NOTE Uncontrolled (`defaultChecked`, not `checked`). With a
-                // controlled checkbox the very first click was being dropped —
-                // the native toggle was reverted by the re-render before
-                // react-hook-form's state landed. Since the e2e suite's label
-                // click is the first interaction with the sign-in form, that
-                // silently left "remember this account" unticked, so the
-                // session was never persisted. Uncontrolled makes the DOM the
-                // source of truth and the click can't be lost.
+                // @NOTE Uncontrolled (`defaultChecked`, not `checked`): a
+                // controlled checkbox drops the very first click, because the
+                // re-render reverts the native toggle before react-hook-form's
+                // state lands. Uncontrolled makes the DOM the source of truth.
                 defaultChecked={Boolean(field.value)}
                 onChange={(event) => field.onChange(event.target.checked)}
                 onBlur={field.onBlur}

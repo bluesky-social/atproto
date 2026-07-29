@@ -24,13 +24,11 @@ import {
 } from '#/components/ui/field.tsx'
 
 /**
- * react-hook-form adapter over shadcn's Base UI `field` primitives.
+ * react-hook-form adapter over the `field` primitives.
  *
- * @NOTE The Base UI styles do not ship a `form` component — shadcn dropped the
- * react-hook-form adapter when Base UI became the default, and `field.tsx` is
- * purely presentational. This file keeps the familiar `Form*` API so the field
- * wrappers under `components/forms/fields/` do not have to care which primitive
- * library sits underneath.
+ * @NOTE The style ships no `form` component — `field.tsx` is purely
+ * presentational — so this file supplies the `Form*` API that the wrappers
+ * under `components/forms/fields/` build on.
  */
 
 const Form = FormProvider

@@ -45,9 +45,8 @@ export function UpdateHandleDefaultForm({
       {...props}
       form={form}
       // @NOTE HandleField only publishes a value once the composed handle is
-      // valid, but the domain check is still asserted here — it mirrors the
-      // previous validate(), which required the handle to end with one of the
-      // available domains.
+      // valid; the domain check is re-asserted here so submission cannot send a
+      // handle outside the available domains.
       onSubmit={(values, signal) => {
         const handle = values.handle as HandleString
         if (!domains.some((dom) => handle.endsWith(dom))) return

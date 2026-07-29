@@ -66,7 +66,7 @@ msgstr "1시간 전"
 msgid "1 minute ago"
 msgstr "1분 전"
 
-#: src/components/sign-in-form.tsx:222
+#: src/components/sign-in-form.tsx:218
 msgid "2FA Confirmation"
 msgstr "2단계 인증"
 
@@ -99,7 +99,7 @@ msgstr ""
 msgid "Account"
 msgstr "계정"
 
-#: src/components/identity/account-avatar.tsx:58
+#: src/components/identity/account-avatar.tsx:57
 msgid "Account avatar"
 msgstr "계정 아바타"
 
@@ -128,7 +128,7 @@ msgstr "계정 개요"
 msgid "Account reactivated"
 msgstr ""
 
-#: src/components/identity/account-menu.tsx:60
+#: src/components/identity/account-menu.tsx:56
 msgid "Account selector"
 msgstr "계정 선택기"
 
@@ -144,8 +144,8 @@ msgstr ""
 msgid "alice.com"
 msgstr ""
 
-#: src/components/verify-email-dialog.tsx:84
-#: src/components/update-password-dialog.tsx:86
+#: src/components/verify-email-dialog.tsx:79
+#: src/components/update-password-dialog.tsx:82
 #: src/components/reset-password-view.tsx:84
 msgid "Already have a code?"
 msgstr "이미 코드가 있나요?"
@@ -155,7 +155,7 @@ msgid "An application on your device"
 msgstr "기기에 설치된 애플리케이션"
 
 #: src/lib/notification-message.ts:30
-#: src/components/error-view.tsx:41
+#: src/components/error-view.tsx:38
 msgid "An error occurred"
 msgstr "오류가 발생했습니다"
 
@@ -195,7 +195,7 @@ msgstr "앱은 사용자가 앱을 적극적으로 사용하지 않을 때에도
 msgid "Are you really, really sure?"
 msgstr ""
 
-#: src/components/authenticate-welcome-view.tsx:26
+#: src/components/authenticate-welcome-view.tsx:25
 msgctxt "AuthenticationPage"
 msgid "Authenticate"
 msgstr "인증"
@@ -218,13 +218,13 @@ msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "{0}에 승인됨"
 
-#: src/components/sign-in-picker.tsx:112
-#: src/components/forms/sign-up-wizard.tsx:118
-#: src/components/forms/form-shell.tsx:73
+#: src/components/sign-in-picker.tsx:107
+#: src/components/forms/sign-up-wizard.tsx:117
+#: src/components/forms/form-shell.tsx:71
 msgid "Back"
 msgstr "뒤로"
 
-#: src/components/forms/fields/handle-field.tsx:156
+#: src/components/forms/fields/handle-field.tsx:155
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "{minLength}~{maxLength}자 사이"
 
@@ -258,9 +258,9 @@ msgstr "호출"
 #: src/contexts/authentication.tsx:263
 #: src/components/reactivate-account-view.tsx:48
 #: src/components/delete-account-dialog.tsx:119
-#: src/components/delete-account-dialog.tsx:210
-#: src/components/authenticate-welcome-view.tsx:59
-#: src/components/forms/form-shell.tsx:70
+#: src/components/delete-account-dialog.tsx:207
+#: src/components/authenticate-welcome-view.tsx:58
+#: src/components/forms/form-shell.tsx:68
 msgid "Cancel"
 msgstr "취소"
 
@@ -285,7 +285,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr ""
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:230
+#: src/components/sign-in-form.tsx:226
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "{0} 이메일에서 로그인 코드를 확인한 후 여기에 입력하세요."
 
@@ -334,7 +334,7 @@ msgctxt "Error"
 msgid "Code"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:94
+#: src/components/sign-in-form.tsx:90
 msgctxt "verb"
 msgid "Confirm"
 msgstr "확인"
@@ -343,7 +343,7 @@ msgstr "확인"
 msgid "Confirm your password to continue"
 msgstr "계속하려면 비밀번호를 다시 한번 입력하세요"
 
-#: src/components/sign-in-form.tsx:223
+#: src/components/sign-in-form.tsx:219
 #: src/components/delete-account-confirm-form.tsx:75
 msgid "Confirmation code"
 msgstr "인증 코드"
@@ -352,7 +352,7 @@ msgstr "인증 코드"
 msgid "Confirmation email sent"
 msgstr ""
 
-#: src/cookie-error-page.tsx:62
+#: src/cookie-error-page.tsx:57
 msgid "Continue"
 msgstr "계속"
 
@@ -360,7 +360,7 @@ msgstr "계속"
 msgid "Cookie Error"
 msgstr "쿠키 오류"
 
-#: src/components/forms/copy-button.tsx:56
+#: src/components/forms/copy-button.tsx:55
 msgid "Copied"
 msgstr ""
 
@@ -372,7 +372,7 @@ msgstr ""
 msgid "Create"
 msgstr "생성"
 
-#: src/components/authenticate-welcome-view.tsx:40
+#: src/components/authenticate-welcome-view.tsx:39
 msgid "Create a new account"
 msgstr "새 계정 만들기"
 
@@ -393,7 +393,7 @@ msgstr "데이터"
 msgid "Deactivate account"
 msgstr ""
 
-#: src/components/identity/account-avatar.tsx:75
+#: src/components/identity/account-avatar.tsx:72
 msgid "Deactivated account"
 msgstr ""
 
@@ -435,23 +435,23 @@ msgstr ""
 msgid "DNS"
 msgstr ""
 
-#: src/components/update-handle-dialog.tsx:164
+#: src/components/update-handle-dialog.tsx:160
 msgid "e.g. <0>alice.com</0>"
 msgstr ""
 
 #. placeholder {0}: domains[0]
-#: src/components/update-handle-dialog.tsx:154
+#: src/components/update-handle-dialog.tsx:150
 msgid "e.g. <0>alice{0}</0>"
 msgstr ""
 
-#: src/components/sign-up-credentials-form.tsx:107
+#: src/components/sign-up-credentials-form.tsx:106
 #: src/components/utils/scope-description.tsx:225
 msgid "Email"
 msgstr "이메일"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:151
-#: src/components/reset-password-request-form.tsx:56
-#: src/components/reset-password-request-form.tsx:58
+#: src/components/reset-password-request-form.tsx:52
+#: src/components/reset-password-request-form.tsx:54
 #: src/components/forms/fields/email-field.tsx:20
 msgid "Email address"
 msgstr "이메일 주소"
@@ -492,7 +492,7 @@ msgstr ""
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "계정을 만들 때 사용한 이메일을 입력하세요. 새 비밀번호를 설정할 수 있도록 ‘재설정 코드’를 전송합니다."
 
-#: src/components/reset-password-request-form.tsx:57
+#: src/components/reset-password-request-form.tsx:53
 msgid "Enter your email address"
 msgstr "이메일 주소 입력"
 
@@ -513,7 +513,7 @@ msgstr "사용자 이름 및 비밀번호 입력"
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
 msgstr ""
 
-#: src/components/sign-up-credentials-form.tsx:98
+#: src/components/sign-up-credentials-form.tsx:97
 msgid "example-com-xxxxx-xxxxx"
 msgstr "example-com-xxxxx-xxxxx"
 
@@ -522,7 +522,7 @@ msgid "Expand details"
 msgstr "세부 정보 펼치기"
 
 #: src/components/utils/password-strength-label.tsx:25
-#: src/components/feedback/password-strength.tsx:66
+#: src/components/feedback/password-strength.tsx:63
 msgid "Extra"
 msgstr "매우 강력"
 
@@ -599,7 +599,7 @@ msgstr ""
 msgid "Forgot Password"
 msgstr "비밀번호 분실"
 
-#: src/components/sign-in-form.tsx:196
+#: src/components/sign-in-form.tsx:192
 msgid "Forgot?"
 msgstr "분실"
 
@@ -647,7 +647,7 @@ msgstr ""
 msgid "HTTP"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:144
+#: src/components/sign-in-form.tsx:140
 msgid "Identifier"
 msgstr "아이디"
 
@@ -679,7 +679,7 @@ msgstr ""
 msgid "Interface language selector"
 msgstr "인터페이스 언어 선택기"
 
-#: src/components/forms/fields/handle-field.tsx:288
+#: src/components/forms/fields/handle-field.tsx:286
 msgid "Invalid"
 msgstr "사용 불가"
 
@@ -687,8 +687,8 @@ msgstr "사용 불가"
 msgid "Invalid Handle"
 msgstr ""
 
-#: src/components/sign-up-credentials-form.tsx:94
-#: src/components/sign-up-credentials-form.tsx:97
+#: src/components/sign-up-credentials-form.tsx:93
+#: src/components/sign-up-credentials-form.tsx:96
 msgid "Invite code"
 msgstr "초대 코드"
 
@@ -697,7 +697,7 @@ msgid "It appears that you haven’t used this account to sign in to any apps ye
 msgstr "이 계정으로 아직 어떤 앱에도 로그인한 적이 없는 것 같습니다."
 
 #. placeholder {0}: url.hostname
-#: src/cookie-error-page.tsx:53
+#: src/cookie-error-page.tsx:48
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "브라우저에서 쿠키를 허용하지 않는 것 같습니다. 다시 시도하려면 ‘계속’을 누르세요. 오류가 계속 발생하면 개인정보 설정에서 ‘{0}’ 웹사이트의 쿠키를 허용했는지 확인하세요."
 
@@ -724,8 +724,8 @@ msgstr ""
 msgid "Let's get your password reset!"
 msgstr "비밀번호를 재설정해 봅시다!"
 
-#: src/components/layouts/auth-shell.tsx:77
-#: src/components/layouts/account-shell.tsx:117
+#: src/components/layouts/auth-shell.tsx:76
+#: src/components/layouts/account-shell.tsx:113
 msgid "Logo"
 msgstr "로고"
 
@@ -775,12 +775,12 @@ msgid "Message"
 msgstr ""
 
 #: src/components/utils/password-strength-label.tsx:33
-#: src/components/feedback/password-strength.tsx:74
+#: src/components/feedback/password-strength.tsx:71
 msgid "Missing"
 msgstr "미입력"
 
 #: src/components/utils/password-strength-label.tsx:29
-#: src/components/feedback/password-strength.tsx:70
+#: src/components/feedback/password-strength.tsx:67
 msgid "Moderate"
 msgstr "보통"
 
@@ -802,27 +802,27 @@ msgstr ""
 msgid "New email address"
 msgstr ""
 
-#: src/components/reset-password-confirm-form.tsx:88
+#: src/components/reset-password-confirm-form.tsx:84
 msgid "New password"
 msgstr "새 비밀번호"
 
 #: src/components/reset-password-view.tsx:71
 #: src/components/reset-password-view.tsx:108
-#: src/components/forms/sign-up-wizard.tsx:121
+#: src/components/forms/sign-up-wizard.tsx:120
 msgid "Next"
 msgstr "다음"
 
-#: src/components/reset-password-view.tsx:136
+#: src/components/reset-password-view.tsx:134
 msgid "Okay"
 msgstr "확인"
 
-#: src/components/forms/fields/handle-field.tsx:161
+#: src/components/forms/fields/handle-field.tsx:160
 msgid "Only letters, numbers, and hyphens"
 msgstr "영문자, 숫자, 하이픈만 사용할 수 있습니다"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:183
-#: src/components/sign-up-credentials-form.tsx:117
-#: src/components/sign-in-form.tsx:178
+#: src/components/sign-up-credentials-form.tsx:116
+#: src/components/sign-in-form.tsx:174
 #: src/components/delete-account-confirm-form.tsx:85
 #: src/components/forms/fields/password-field.tsx:31
 msgid "Password"
@@ -837,11 +837,11 @@ msgid "Password reset successful"
 msgstr "비밀번호를 재설정했습니다"
 
 #: src/components/utils/password-strength-label.tsx:23
-#: src/components/feedback/password-strength.tsx:63
+#: src/components/feedback/password-strength.tsx:60
 msgid "Password strength"
 msgstr "비밀번호 강도"
 
-#: src/components/feedback/password-strength.tsx:45
+#: src/components/feedback/password-strength.tsx:42
 msgid "Password strength indicator"
 msgstr "비밀번호 강도 표시자"
 
@@ -849,7 +849,7 @@ msgstr "비밀번호 강도 표시자"
 msgid "Password Updated"
 msgstr "비밀번호 변경됨"
 
-#: src/components/reset-password-view.tsx:129
+#: src/components/reset-password-view.tsx:127
 msgid "Password updated!"
 msgstr "비밀번호를 변경했습니다!"
 
@@ -870,7 +870,7 @@ msgstr "나를 대신하여 작업 수행"
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "귀하를 대신하여 <0>모든 서비스</0>에 대해 인증된 작업을 수행합니다"
 
-#: src/components/authenticate-welcome-view.tsx:31
+#: src/components/authenticate-welcome-view.tsx:30
 msgid "Please authenticate to continue"
 msgstr "계속하려면 인증하세요"
 
@@ -907,7 +907,7 @@ msgstr ""
 msgid "Please try again in a moment."
 msgstr ""
 
-#: src/components/forms/request-code-button.tsx:76
+#: src/components/forms/request-code-button.tsx:75
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr "{remainingSeconds}초 후에 다시 시도해 주세요."
 
@@ -946,7 +946,7 @@ msgstr "내 계정의 이메일 주소 읽기"
 msgid "Read your private preferences"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:213
+#: src/components/sign-in-form.tsx:209
 msgid "Remember this account on this device"
 msgstr "이 기기에서 이 계정 기억하기"
 
@@ -955,7 +955,7 @@ msgstr "이 기기에서 이 계정 기억하기"
 msgid "Repository"
 msgstr "저장소"
 
-#: src/components/reset-password-confirm-form.tsx:78
+#: src/components/reset-password-confirm-form.tsx:74
 msgid "Reset code"
 msgstr "재설정 코드"
 
@@ -963,7 +963,7 @@ msgstr "재설정 코드"
 msgid "Reset Password"
 msgstr "비밀번호 재설정"
 
-#: src/components/sign-in-form.tsx:194
+#: src/components/sign-in-form.tsx:190
 msgid "Reset your password"
 msgstr "비밀번호 재설정"
 
@@ -973,8 +973,8 @@ msgstr "비밀번호 재설정"
 msgid "Retry"
 msgstr "다시 시도"
 
-#: src/components/forms/request-code-button.tsx:73
-#: src/components/forms/request-code-button.tsx:102
+#: src/components/forms/request-code-button.tsx:72
+#: src/components/forms/request-code-button.tsx:99
 msgid "Retry in {remainingSeconds}s"
 msgstr "{remainingSeconds}초 후에 다시 시도"
 
@@ -995,7 +995,7 @@ msgstr ""
 msgid "Select another account"
 msgstr "다른 계정 선택"
 
-#: src/components/forms/fields/handle-field.tsx:214
+#: src/components/forms/fields/handle-field.tsx:213
 msgid "Select domain"
 msgstr ""
 
@@ -1003,11 +1003,11 @@ msgstr ""
 msgid "Select from an existing account"
 msgstr "기존 계정에서 선택하기"
 
-#: src/components/delete-account-dialog.tsx:201
+#: src/components/delete-account-dialog.tsx:198
 msgid "Send email"
 msgstr ""
 
-#: src/components/forms/request-code-button.tsx:40
+#: src/components/forms/request-code-button.tsx:39
 msgid "Send verification code"
 msgstr ""
 
@@ -1016,8 +1016,8 @@ msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr "로그인"
 
-#: src/components/sign-in-form.tsx:96
-#: src/components/authenticate-welcome-view.tsx:50
+#: src/components/sign-in-form.tsx:92
+#: src/components/authenticate-welcome-view.tsx:49
 msgctxt "verb"
 msgid "Sign in"
 msgstr "로그인"
@@ -1046,7 +1046,7 @@ msgstr "로그아웃"
 
 #: src/components/sign-up-view.tsx:54
 #: src/components/sign-up-view.tsx:59
-#: src/components/sign-in-picker.tsx:123
+#: src/components/sign-in-picker.tsx:118
 msgid "Sign up"
 msgstr "가입"
 
@@ -1063,16 +1063,16 @@ msgctxt "Error"
 msgid "Stack"
 msgstr ""
 
-#: src/components/forms/sign-up-wizard.tsx:155
+#: src/components/forms/sign-up-wizard.tsx:154
 msgid "Step {currentPosition} of {count}"
 msgstr "{count}단계 중 {currentPosition}단계"
 
 #: src/components/utils/password-strength-label.tsx:27
-#: src/components/feedback/password-strength.tsx:68
+#: src/components/feedback/password-strength.tsx:65
 msgid "Strong"
 msgstr "강력"
 
-#: src/components/forms/form-shell.tsx:65
+#: src/components/forms/form-shell.tsx:63
 msgid "Submit"
 msgstr "제출"
 
@@ -1221,7 +1221,7 @@ msgstr ""
 msgid "Type your domain"
 msgstr ""
 
-#: src/components/forms/fields/handle-field.tsx:176
+#: src/components/forms/fields/handle-field.tsx:175
 msgid "Type your username"
 msgstr ""
 
@@ -1265,11 +1265,11 @@ msgstr "파일 업로드"
 msgid "URL"
 msgstr ""
 
-#: src/components/update-handle-dialog.tsx:152
+#: src/components/update-handle-dialog.tsx:148
 msgid "Use a default username"
 msgstr ""
 
-#: src/components/update-handle-dialog.tsx:162
+#: src/components/update-handle-dialog.tsx:158
 msgid "Use a domain name I own"
 msgstr ""
 
@@ -1277,7 +1277,7 @@ msgstr ""
 msgid "Username"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:147
+#: src/components/sign-in-form.tsx:143
 msgid "Username or email address"
 msgstr "사용자 이름 또는 이메일 주소"
 
@@ -1285,7 +1285,7 @@ msgstr "사용자 이름 또는 이메일 주소"
 msgid "Username updated"
 msgstr ""
 
-#: src/components/forms/fields/handle-field.tsx:286
+#: src/components/forms/fields/handle-field.tsx:284
 msgid "Valid"
 msgstr "사용 가능"
 
@@ -1306,7 +1306,7 @@ msgstr ""
 msgid "Verification method"
 msgstr ""
 
-#: src/components/sign-up-hcaptcha-form.tsx:89
+#: src/components/sign-up-hcaptcha-form.tsx:88
 msgid "Verification successful!"
 msgstr ""
 
@@ -1320,7 +1320,7 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:203
+#: src/components/sign-in-form.tsx:199
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "비밀번호를 입력하기 전에 웹사이트 주소를 확인하세요. 알고 있고 신뢰하는 사이트에서만 로그인하세요."
 
@@ -1340,7 +1340,7 @@ msgstr "<0/> 계정에 대한 접근 권한을 요청합니다"
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "<0/> 계정을 통해 나를 식별하고자 합니다"
 
-#: src/components/sign-in-form.tsx:202
+#: src/components/sign-in-form.tsx:198
 msgid "Warning"
 msgstr "경고"
 
@@ -1349,11 +1349,11 @@ msgid "We're so excited to have you join us!"
 msgstr "함께하게 되어 정말 기뻐요!"
 
 #: src/components/utils/password-strength-label.tsx:31
-#: src/components/feedback/password-strength.tsx:72
+#: src/components/feedback/password-strength.tsx:69
 msgid "Weak"
 msgstr "취약"
 
-#: src/components/authenticate-welcome-view.tsx:30
+#: src/components/authenticate-welcome-view.tsx:29
 msgid "Welcome"
 msgstr "환영합니다"
 
@@ -1361,7 +1361,7 @@ msgstr "환영합니다"
 msgid "Welcome back!"
 msgstr ""
 
-#: src/pages/account/(authenticated)/page.tsx:107
+#: src/pages/account/(authenticated)/page.tsx:104
 msgid "What does this mean?"
 msgstr "이게 무슨 뜻인가요?"
 
@@ -1393,11 +1393,11 @@ msgstr "어제"
 msgid "You are being redirected..."
 msgstr "페이지 이동 중…"
 
-#: src/components/delete-account-dialog.tsx:215
+#: src/components/delete-account-dialog.tsx:212
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr ""
 
-#: src/components/sign-up-handle-form.tsx:78
+#: src/components/sign-up-handle-form.tsx:77
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "계정 설정을 완료한 후 이 사용자 이름을 내가 소유한 도메인 이름으로 변경할 수 있습니다."
 
@@ -1410,7 +1410,7 @@ msgid "You can now sign in with your new email."
 msgstr ""
 
 #: src/data/password.ts:45
-#: src/components/reset-password-view.tsx:132
+#: src/components/reset-password-view.tsx:130
 msgid "You can now sign in with your new password."
 msgstr "이제 새로운 비밀번호로 로그인할 수 있습니다."
 
@@ -1450,7 +1450,7 @@ msgstr "아래 나열된 기기에서 계정에 로그인되어 있습니다. �
 msgid "Your account is visible again."
 msgstr ""
 
-#: src/pages/account/(authenticated)/page.tsx:94
+#: src/pages/account/(authenticated)/page.tsx:91
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "내 Atmosphere 계정은 <0/>에서 호스팅됩니다."
 
@@ -1471,7 +1471,7 @@ msgid "Your email address needs to be verified."
 msgstr ""
 
 #. placeholder {0}: handle ? ( <Handle className="text-foreground" handle={handle} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
-#: src/components/forms/fields/handle-field.tsx:238
+#: src/components/forms/fields/handle-field.tsx:236
 msgid "Your full username will be: {0}"
 msgstr "내 전체 사용자 이름: {0}"
 

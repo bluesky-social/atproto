@@ -33,10 +33,9 @@ export type AuthShellProps = Override<
  * a muted full-height page, a centred `max-w-sm` column, the brand mark above
  * a `Card`.
  *
- * @NOTE This owns the whole page frame, so it renders the `<title>` itself —
- * which `assertTitle` depends on — and carries the locale selector and footer
- * links. Never nest it inside another shell: both render a `<title>`, React
- * hoists them all into the head, and the last one wins.
+ * @NOTE This owns the whole page frame: the `<title>`, the locale selector and
+ * the footer links. Never nest it inside another shell — both render a
+ * `<title>`, React hoists them all into the head, and the last one wins.
  */
 export function AuthShell({
   title,
@@ -88,9 +87,8 @@ export function AuthShell({
               {titleString && (
                 <CardTitle className="text-xl">{titleString}</CardTitle>
               )}
-              {/* @NOTE CardDescription is a <div> upstream; the subtitle is
-                wrapped in a <p> so unqualified `ensureTextVisibility` calls
-                keep matching. */}
+              {/* @NOTE CardDescription renders a <div>, so the subtitle gets
+                its own <p>. */}
               {subtitle && (
                 <CardDescription>
                   <p>{subtitle}</p>

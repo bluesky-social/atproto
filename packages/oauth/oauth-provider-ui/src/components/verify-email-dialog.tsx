@@ -54,15 +54,10 @@ export function VerifyEmailDialog({
       onOpenChange={setOpen}
       dismissable={dismissable}
     >
-      {/* @NOTE Unlike the username dialog's option list, these are actions
-        rather than destinations, so they stay `Button`s. They do need a
-        hierarchy though: sending the code is the main path, and "Already have a
-        code?" is the escape hatch for someone returning with one. Both were
-        `secondary` at the same weight.
-
-        `RequestCodeButton` defaults to `size="sm"` for the inline resend in
-        `TokenField`; here it is a primary dialog action, so it takes the
-        default size and matches the button below it. */}
+      {/* @NOTE Actions rather than destinations, so these are `Button`s and
+        not an option list: sending the code is the main path, "Already have a
+        code?" the escape hatch. `RequestCodeButton` defaults to `size="sm"` for
+        the inline resend; as a primary dialog action it takes the default. */}
       {state === VerifyEmailDialogState.Request ? (
         <div className="align-stretch flex flex-col gap-2">
           <RequestCodeButton

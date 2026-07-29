@@ -10,11 +10,9 @@ export type AsyncButtonProps = Omit<
 }
 
 /**
- * Replaces `forms/button-async.tsx`. Runs an async action on click, disabling
- * itself and showing a spinner while it is in flight.
- *
- * @NOTE Still backed by `useAsyncAction`, so the abort-on-unmount and
- * abort-on-supersede behaviour is unchanged.
+ * Runs an async action on click, disabling itself and showing a spinner while
+ * it is in flight. Backed by `useAsyncAction`, so the action is aborted on
+ * unmount and when superseded.
  */
 export function AsyncButton({
   action,

@@ -180,13 +180,10 @@ export function DeleteAccountDialog({
       }
     >
       <div className="align-stretch flex flex-col gap-4">
-        {/* @NOTE The two buttons are one action group, so they sit closer to
-          each other than to the Notice below. Cancel was rendering in the
-          primary fill, at the same weight as the action it backs out of;
-          `secondary` matches how `FormShell` treats cancel and back.
-
-          `RequestCodeButton` defaults to `size="sm"` for the inline resend in
-          `TokenField`, so it needs the size stated here to match Cancel. */}
+        {/* @NOTE One action group, so the two buttons sit closer to each other
+          than to the Notice below. Cancel is `secondary`, as `FormShell` treats
+          it. `RequestCodeButton` defaults to `size="sm"` for the inline resend,
+          so the size is restated here to match Cancel. */}
         <div className="flex flex-col gap-2">
           <RequestCodeButton
             action={async () => {

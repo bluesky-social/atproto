@@ -11,10 +11,9 @@ export type AuthenticateWelcomeViewParams = {
 }
 
 /**
- * @NOTE The document title and the card heading differ here, which is why this
- * is the one screen that passes `documentTitle`. The pds e2e suite asserts
- * `assertTitle('Se connecter')` — the `Authenticate` message in the
- * `AuthenticationPage` context — while the card itself reads "Welcome".
+ * @NOTE The only screen whose document title differs from its card heading —
+ * the card reads "Welcome" while the title must stay "Authenticate" — which is
+ * why this is the one caller that passes `documentTitle`.
  */
 export function AuthenticateWelcomeView({
   onSignUp,

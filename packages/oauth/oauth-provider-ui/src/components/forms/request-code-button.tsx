@@ -23,9 +23,8 @@ export type RequestCodeButtonProps = Override<
 >
 
 /**
- * Replaces `ButtonCooldown` + `ButtonRequestCode`. The rate-limiting behaviour
- * (cooldown, remaining-seconds labelling, optional initial cooldown) is
- * unchanged — it still comes from `useRateLimitedAction`.
+ * Requests a one-time code, rate-limited by `useRateLimitedAction`: it holds a
+ * cooldown between attempts and labels itself with the seconds remaining.
  */
 export function RequestCodeButton({
   ref,
@@ -91,12 +90,10 @@ export function RequestCodeButton({
 
       <span className="truncate">{children}</span>
 
-      {/* @NOTE The cooldown is shown as text rather than as a progress ring.
-        At the start of a cooldown the ring is nearly empty and reads as a
-        broken spinner beside greyed-out text. This reuses the existing
-        "Retry in {remainingSeconds}s" message, so no new msgid. These children
-        live inside the component, not inside the caller's <Trans>, so they do
-        not affect the message's placeholder indices. */}
+      {/* @NOTE Text rather than a progress ring: at the start of a cooldown the
+        ring is nearly empty and reads as a broken spinner. These children live
+        inside the component, not the caller's <Trans>, so they do not shift the
+        message's placeholder indices. */}
       {showRateLimit && !showProgressWhenIdle && (
         <span className="text-muted-foreground tabular-nums">
           {t`Retry in ${remainingSeconds}s`}

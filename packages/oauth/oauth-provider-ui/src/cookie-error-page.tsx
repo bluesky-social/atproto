@@ -34,21 +34,16 @@ function CookieErrorView() {
 
   return (
     <AuthShell title={msg`Cookie Error`}>
-      {/* @NOTE The Notice drops its own title: the shell's card heading
-        already reads "Cookie Error", and the two stacked directly on top of
-        each other. The msgid survives — the page title uses the same string.
-
-        `w-xl` is gone too; the shell caps the column at `max-w-sm`, and a
-        fixed width fought it. */}
+      {/* @NOTE The Notice carries no title of its own — the shell's card
+        heading already reads "Cookie Error". */}
       <form action={url.origin} method="GET" className="flex flex-col gap-4">
         {Array.from(new Map(url.searchParams)).map(([key, value]) => (
           <input key={key} type="hidden" name={key} value={value} />
         ))}
 
-        {/* @NOTE `role` drives the a11y semantics, `variant` the styling, and
-          they are set apart deliberately here: this is still an alert, but the
-          amber caution treatment is redundant when the card heading already
-          says "Cookie Error" and the notice is the only thing on the page. */}
+        {/* @NOTE `role` and `variant` are set apart deliberately: this is
+          still an alert, but the amber treatment is redundant when the card
+          heading already says "Cookie Error". */}
         <Notice role="alert" variant="info">
           <Trans>
             It seems that your browser is not accepting cookies. Press

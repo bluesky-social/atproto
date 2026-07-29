@@ -11,9 +11,8 @@ import {
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
 
-// @NOTE Upstream's `Avatar` exposes only sm/default/lg. This component keeps
-// the seven-step scale the previous AccountImage offered, because callers
-// depend on the extremes (the account overview renders at `3xl`).
+// @NOTE `ui/avatar` exposes only sm/default/lg. Callers here need a wider
+// range than that — the account overview renders at `3xl`.
 const sizeMap = {
   xs: 'size-3',
   sm: 'size-5',
@@ -56,9 +55,7 @@ export function AccountAvatar({
     <div className={cn('relative flex-none', className)} {...props}>
       <Avatar className={sizeMap[size]}>
         <AvatarImage src={account?.picture} alt={t`Account avatar`} />
-        {/* @NOTE Left at the shadcn default (bg-muted), matching how the
-          dashboard block styles AvatarFallback. The previous design filled it
-          with the primary colour. */}
+        {/* @NOTE Left at the default `bg-muted` rather than a primary fill. */}
         <AvatarFallback>
           <UserIcon className="m-[10%] size-[80%]" />
         </AvatarFallback>

@@ -25,19 +25,10 @@ export type AccountCardProps = Override<
 
 /**
  * A selectable account row, built on `Item` — the shadcn primitive for a
- * choice list. It previously hand-rolled the border, padding, hover and
- * focus-ring utilities, which had already drifted from the near-identical
- * "Another account" row beside it.
+ * choice list.
  *
- * @NOTE Two markup details are load-bearing for the pds e2e suite, not
- * cosmetic:
- *
- * - `render={<button/>}` keeps this a real `<button>`. `Item` is a `<div>` by
- *   default, and the tests click these rows.
- * - the identifier stays inside a `<span>` (`AccountIdentifier` renders one),
- *   because the suite selects the handle with
- *   `clickOnText('alice.test', 'span')`. `ItemDescription` is a `<p>`, so the
- *   span must survive nested inside it.
+ * @NOTE `render={<button/>}` makes the whole row keyboard focusable, which
+ * `Item`'s default `<div>` is not.
  */
 export function AccountCard({
   account,

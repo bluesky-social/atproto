@@ -16,8 +16,8 @@ export type FieldBaseProps<TValues extends FieldValues> = {
   control: Control<TValues>
   /**
    * The field key. react-hook-form derives the rendered `name` attribute from
-   * it, and the pds e2e suite selects inputs by `input[name="…"]` — so these
-   * keys are part of the package's contract, not an internal detail.
+   * it, so these keys are part of the package's public contract rather than an
+   * internal detail — see CLAUDE.md.
    */
   name: FieldPath<TValues>
   label?: ReactNode

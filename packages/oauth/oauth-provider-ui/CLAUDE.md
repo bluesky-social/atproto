@@ -2,6 +2,28 @@
 
 UI for the OAuth provider's authorization & account-management screens. React 19, TanStack Router, Tailwind 4, shadcn/ui on Base UI, react-hook-form + zod, Lingui i18n.
 
+## Comments
+
+A comment earns its place by naming a constraint the code cannot state itself.
+Most don't. Default to none, and keep the ones you write to a couple of lines.
+
+- **Describe the code, not the change.** "Combines the previous `X` and `Y`",
+  "it previously hand-rolled the border", "`w-xl` is gone too" — the reader has
+  this file, not the diff that produced it. That belongs in the commit message.
+- **Never mention the tests.** Not their helpers, not their selectors, not their
+  assertion strings, not the suite itself. A test breaking *is* the signal that
+  markup changed; the source does not need to warn about it in prose. If a
+  markup choice matters, give the reason that holds without the test — the
+  semantics, the a11y behaviour, the styling contract it satisfies. If there is
+  no such reason, write no comment.
+- **Don't restate the sections below.** The e2e contract, the dialog height cap
+  and the form rules are written down once. A file needs a pointer at most.
+- **Say what "upstream" is** — the shadcn registry, a Base UI default, a spec.
+  On its own the word means nothing to the next reader.
+
+If explaining the code takes a paragraph, the code usually wants the work
+instead.
+
 ## Verification
 
 Type-check from the package directory:

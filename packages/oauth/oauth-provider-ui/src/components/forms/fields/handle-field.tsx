@@ -42,10 +42,9 @@ export type HandleFieldProps<TValues extends FieldValues> = {
 /**
  * Composes a full handle out of a user-typed segment and a chosen domain.
  *
- * @NOTE This is the one field that cannot simply wrap an input: the value the
- * form stores (a full `HandleString`) is derived from two controls. It owns the
- * segment/domain state internally and publishes only the composed handle — the
- * same split the previous `InputHandleDefault` used.
+ * @NOTE The one field that cannot simply wrap an input: the value the form
+ * stores (a full `HandleString`) is derived from two controls. It keeps the
+ * segment and domain internally and publishes only the composed handle.
  */
 export function HandleField<TValues extends FieldValues>({
   control,
@@ -304,8 +303,8 @@ function useSegmentValidator(domain: ValidDomain | null) {
   const validateSegment = (segment: string) => {
     const validLength =
       segment.length >= minLength && segment.length <= maxLength
-    // @NOTE `+` not `*` — matches the original exactly. It requires at least
-    // three characters, consistent with MIN_LENGTH.
+    // @NOTE `+` not `*`: the middle class must match at least once, so this
+    // requires three characters, consistent with MIN_LENGTH.
     const validCharset = /^[a-z0-9][a-z0-9-]+[a-z0-9]$/.test(segment)
     return { validLength, validCharset, valid: validLength && validCharset }
   }

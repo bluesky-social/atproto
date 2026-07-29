@@ -34,12 +34,9 @@ export function Page(): ReactNode {
 }
 
 /**
- * The shell's navigation entries, listed as content.
- *
- * Every sub-page already declares a translated `description` alongside its
- * title (see the route's `DEFAULT_PAGES`), and nothing rendered them — the
- * sidebar shows titles only. Surfacing them here gives the landing page a job
- * beyond restating the identity, and costs no new messages.
+ * The shell's navigation entries, listed as content — each with the translated
+ * `description` its route already declares (see `DEFAULT_PAGES`), which the
+ * sidebar does not show.
  */
 function SectionList(): ReactNode {
   const { _ } = useLingui()

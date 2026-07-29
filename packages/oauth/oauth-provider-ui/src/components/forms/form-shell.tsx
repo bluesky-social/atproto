@@ -49,14 +49,12 @@ export type FormShellProps<TValues extends FieldValues> = Override<
 >
 
 /**
- * Replaces the previous `FormCard` / `SmartForm` pair.
+ * The frame every form shares: the action row, and the root error.
  *
- * Field state and validation come from react-hook-form; the async submission
- * engine is still `useAsyncAction`, which already handles aborting a superseded
- * or unmounted request and retaining the last error until a later submit
- * succeeds. Submission errors are rendered by `ErrorNotice` through
- * `apiErrorParser`, so typed OAuth error payloads keep their user-facing
- * messages.
+ * Field state and validation come from react-hook-form; submission runs through
+ * `useAsyncAction`, which aborts superseded or unmounted requests and retains
+ * the last error until a later submit succeeds. Errors render via `ErrorNotice`
+ * and `apiErrorParser`, so typed OAuth payloads keep their user-facing message.
  */
 export function FormShell<TValues extends FieldValues>({
   form,
