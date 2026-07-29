@@ -3,8 +3,8 @@ import { Loader2Icon } from 'lucide-react'
 import type { JSX, MouseEventHandler, ReactNode } from 'react'
 import type { FieldValues, UseFormReturn } from 'react-hook-form'
 import { ErrorNotice } from '#/components/feedback/error-notice.tsx'
+import { Form } from '#/components/forms/form.tsx'
 import { Button } from '#/components/ui/button.tsx'
-import { Form } from '#/components/ui/form.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
 import { apiErrorParser } from '#/lib/api-error-parser.ts'
 import type { Override } from '#/lib/util.ts'
@@ -91,50 +91,49 @@ export function FormShell<TValues extends FieldValues>({
   const disabled = Boolean(inert || disabledProp || busy)
 
   return (
-    <Form {...form}>
-      <form
-        {...props}
-        action={undefined}
-        inert={disabled}
-        className={cn('flex flex-col gap-4', className)}
-        onSubmit={form.handleSubmit((values) => run(values))}
+    <Form
+      {...props}
+      form={form}
+      action={undefined}
+      inert={disabled}
+      className={cn('flex flex-col gap-4', className)}
+      onSubmit={form.handleSubmit((values) => run(values))}
+    >
+      <div key="children" className="space-y-4">
+        {children}
+      </div>
+
+      {error && !hideError && (
+        <ErrorNotice key="error" error={error} parser={apiErrorParser} />
+      )}
+
+      <div
+        key="actions"
+        className="flex flex-row-reverse flex-wrap items-center justify-start gap-2"
       >
-        <div key="children" className="space-y-4">
-          {children}
-        </div>
-
-        {error && !hideError && (
-          <ErrorNotice key="error" error={error} parser={apiErrorParser} />
+        {submitLabel && (
+          <Button
+            type="submit"
+            variant={submitVariant}
+            disabled={disabled || !submittable}
+          >
+            {busy && <Loader2Icon className="animate-spin" aria-hidden />}
+            {submitLabel}
+          </Button>
         )}
-
-        <div
-          key="actions"
-          className="flex flex-row-reverse flex-wrap items-center justify-start gap-2"
-        >
-          {submitLabel && (
-            <Button
-              type="submit"
-              variant={submitVariant}
-              disabled={disabled || !submittable}
-            >
-              {busy && <Loader2Icon className="animate-spin" aria-hidden />}
-              {submitLabel}
-            </Button>
-          )}
-          {actions}
-          <div className="flex-auto" />
-          {onCancel && cancelLabel ? (
-            <Button type="button" variant="secondary" onClick={onCancel}>
-              {cancelLabel}
-            </Button>
-          ) : null}
-          {onBack && backLabel ? (
-            <Button type="button" variant="secondary" onClick={onBack}>
-              {backLabel}
-            </Button>
-          ) : null}
-        </div>
-      </form>
+        {actions}
+        <div className="flex-auto" />
+        {onCancel && cancelLabel ? (
+          <Button type="button" variant="secondary" onClick={onCancel}>
+            {cancelLabel}
+          </Button>
+        ) : null}
+        {onBack && backLabel ? (
+          <Button type="button" variant="secondary" onClick={onBack}>
+            {backLabel}
+          </Button>
+        ) : null}
+      </div>
     </Form>
   )
 }

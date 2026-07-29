@@ -7,7 +7,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '#/components/ui/form.tsx'
+} from '#/components/forms/form.tsx'
 import { cn } from '#/lib/utils.ts'
 
 export type CheckboxFieldProps<TValues extends FieldValues> = {

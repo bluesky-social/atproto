@@ -82,9 +82,14 @@ hashes, so navigate by clicking sidebar links rather than setting
   style's `globals.css`, so copying `components/ui/*` alone is not enough — see
   the orientation bridge in `src/style.css`. `Separator` silently rendered at
   zero width/height until it was added.
+  Every file in there is a real registry entry — if `shadcn add <name>` under
+  this style returns an item with no files, the component is ours and belongs
+  outside this directory.
 - `components/forms/*` — `FormShell` (the form frame: action row, submit/cancel/
-  back, root error), `fields/*` (one wrapper per input type), plus
-  `AsyncButton`, `CopyButton`, `RequestCodeButton`, `SignUpWizard`.
+  back, root error), `form.tsx` (the react-hook-form adapter over `ui/field`;
+  hand-written, since the style ships no `form` component), `fields/*` (one
+  wrapper per input type), plus `AsyncButton`, `CopyButton`,
+  `RequestCodeButton`, `SignUpWizard`.
 - `components/dialogs/*` — `DialogShell` (frame) and `ConfirmForm` (a form with
   no fields, just content + action row).
 - `components/feedback/*` — `Notice`, `ErrorNotice`, `ErrorDetails`,

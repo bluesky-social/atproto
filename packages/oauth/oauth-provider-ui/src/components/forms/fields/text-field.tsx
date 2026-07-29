@@ -7,7 +7,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '#/components/ui/form.tsx'
+} from '#/components/forms/form.tsx'
 import { Input } from '#/components/ui/input.tsx'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'

@@ -13,6 +13,7 @@ import {
   type FieldPath,
   type FieldValues,
   FormProvider,
+  type UseFormReturn,
   useFormContext,
   useFormState,
 } from 'react-hook-form'
@@ -24,14 +25,28 @@ import {
 } from '#/components/ui/field.tsx'
 
 /**
- * react-hook-form adapter over the `field` primitives.
+ * react-hook-form adapter over the `ui/field` primitives, supplying the `Form*`
+ * API that the wrappers under `components/forms/fields/` build on.
  *
- * @NOTE The style ships no `form` component — `field.tsx` is purely
- * presentational — so this file supplies the `Form*` API that the wrappers
- * under `components/forms/fields/` build on.
+ * @NOTE Hand-written, which is why it does not live in `components/ui/`: the
+ * `base-nova` registry entry for `form` carries no files, and the only one that
+ * ships a component is the legacy Radix style.
  */
 
-const Form = FormProvider
+/**
+ * The `<form>` element and the react-hook-form context in one, so a caller
+ * never has to nest the two by hand.
+ */
+function Form<TValues extends FieldValues>({
+  form,
+  ...props
+}: ComponentProps<'form'> & { form: UseFormReturn<TValues> }) {
+  return (
+    <FormProvider {...form}>
+      <form {...props} />
+    </FormProvider>
+  )
+}
 
 type FormFieldContextValue<
   TFieldValues extends FieldValues = FieldValues,

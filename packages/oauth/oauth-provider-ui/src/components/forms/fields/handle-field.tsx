@@ -15,7 +15,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '#/components/ui/form.tsx'
+} from '#/components/forms/form.tsx'
 import { Input } from '#/components/ui/input.tsx'
 import {
   Select,
