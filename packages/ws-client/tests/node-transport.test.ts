@@ -408,4 +408,36 @@ describe(createTransport, () => {
     ac.abort(reason)
     await expect(pull).rejects.toBe(reason)
   })
+
+  it('does not arm the heartbeat before the socket opens', async () => {
+    // `ws.ping()` throws while the socket is CONNECTING, and a throw inside a
+    // timer callback is an uncaught exception, not a rejection — nothing can
+    // catch it, so a connect slower than the interval (cold DNS, a loaded peer,
+    // TLS) would take the whole process down. 10.255.255.1:9 is a black hole:
+    // the connect hangs rather than being refused, holding the socket in
+    // CONNECTING well past the 20ms interval below.
+    //
+    // Observed by prepending a process listener, ahead of the runner's own —
+    // `process.once` alone sits behind vitest's handler and never sees it.
+    const seen: string[] = []
+    const onUncaught = (err: Error) => seen.push(err.message)
+    process.prependListener('uncaughtException', onUncaught)
+    const controller = new AbortController()
+    try {
+      createTransport({
+        url: 'ws://10.255.255.1:9/',
+        dataMode: 'text',
+        signal: controller.signal,
+        heartbeat: { intervalMs: 20 },
+        onOpen: () => {},
+        onClose: () => {},
+      })
+      // Outlive several intervals while the socket is still connecting.
+      await new Promise((resolve) => setTimeout(resolve, 200))
+    } finally {
+      controller.abort(new Error('test cleanup'))
+      process.removeListener('uncaughtException', onUncaught)
+    }
+    expect(seen).toEqual([])
+  })
 })
