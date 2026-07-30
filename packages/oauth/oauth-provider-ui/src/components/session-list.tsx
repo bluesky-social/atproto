@@ -1,7 +1,8 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { SearchIcon } from 'lucide-react'
-import { type ReactNode, useMemo, useState } from 'react'
+import { Fragment, type ReactNode, useMemo, useState } from 'react'
 import { Input } from '#/components/ui/input.tsx'
+import { Separator } from '#/components/ui/separator.tsx'
 import { Skeleton } from '#/components/ui/skeleton.tsx'
 import {
   Table,
@@ -22,7 +23,7 @@ export type SessionListColumn<T> = {
   className?: string
   /** Type and colour for the cells, so the headings stay uniform. */
   cellClassName?: string
-  /** Hidden below `md`, where the card layout takes over. */
+  /** Hidden below `md`, where the stacked layout takes over. */
   hideOnMobile?: boolean
 }
 
@@ -35,7 +36,7 @@ export type SessionListProps<T> = {
   searchText: (item: T) => string
   /** Trailing action for the row — a button, usually. */
   action: (item: T) => ReactNode
-  /** Card-layout title for narrow screens. */
+  /** Row title for narrow screens. */
   mobileTitle: (item: T) => ReactNode
   /** Shown when the list itself is empty (before any filtering). */
   empty: ReactNode
@@ -55,15 +56,9 @@ const SKELETON_ROWS = 4
 /**
  * Tabular list of sessions, for the connected-apps and devices pages.
  *
- * These lists are unbounded — an account that has signed in to many apps, or
- * from many devices, accumulates rows indefinitely — so this favours density
- * and findability over the stacked `Item` rows it replaces: one line per row,
- * a filter box, and a count.
- *
- * @NOTE The table collapses to a card layout below `md`. A four-column table
- * at 390px either overflows horizontally or crushes every column, and these
- * pages are reached from a mobile-first account manager. The same data is
- * rendered twice rather than horizontally scrolled, which is why `columns`
+ * @NOTE Below `md` the table becomes one stacked row per session: a
+ * four-column table at 390px either scrolls sideways or crushes every column.
+ * The same data is rendered twice rather than scrolled, which is why `columns`
  * carries both `hideOnMobile` and a separate `mobileTitle`.
  */
 export function SessionList<T>({
@@ -156,42 +151,48 @@ export function SessionList<T>({
         </Table>
       </div>
 
-      {/* Mobile: stacked cards */}
-      <div className="flex flex-col gap-3 md:hidden">
+      {/* @NOTE Mobile: one row per session. Not the registry's `Item`, whose
+        `ItemDescription` is a line of text and whose row wraps — a labelled
+        pair per column needs neither. */}
+      <div className="flex flex-col md:hidden">
         {loading &&
           Array.from({ length: SKELETON_ROWS }, (_, row) => (
-            <div
-              key={`skeleton-${row}`}
-              className="flex flex-col gap-2 rounded-lg border p-3"
-            >
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="ml-auto h-8 w-20" />
-            </div>
+            <Fragment key={`skeleton-${row}`}>
+              {row > 0 && <Separator />}
+              <div className="flex items-start justify-between gap-3 py-3">
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-full max-w-[12rem]" />
+                </div>
+                <Skeleton className="h-8 w-20 shrink-0" />
+              </div>
+            </Fragment>
           ))}
         {!loading &&
-          filtered.map((item) => (
-            <div
-              key={rowKey(item)}
-              className="flex flex-col gap-2 rounded-lg border p-3"
-            >
-              <div className="min-w-0 text-sm font-medium">
-                {mobileTitle(item)}
+          filtered.map((item, index) => (
+            <Fragment key={rowKey(item)}>
+              {index > 0 && <Separator />}
+              <div className="flex items-start justify-between gap-3 py-3">
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <div className="truncate text-sm font-medium">
+                    {mobileTitle(item)}
+                  </div>
+                  <dl className="text-muted-foreground flex flex-col gap-0.5 text-xs">
+                    {columns
+                      .filter((column) => !column.hideOnMobile)
+                      .map((column, index) => (
+                        <div key={index} className="flex justify-between gap-4">
+                          <dt className="shrink-0">{column.header}</dt>
+                          <dd className="min-w-0 truncate text-right">
+                            {column.cell(item)}
+                          </dd>
+                        </div>
+                      ))}
+                  </dl>
+                </div>
+                <div className="shrink-0">{action(item)}</div>
               </div>
-              <dl className="text-muted-foreground flex flex-col gap-1 text-xs">
-                {columns
-                  .filter((column) => !column.hideOnMobile)
-                  .map((column, index) => (
-                    <div key={index} className="flex justify-between gap-4">
-                      <dt>{column.header}</dt>
-                      <dd className="min-w-0 truncate text-right">
-                        {column.cell(item)}
-                      </dd>
-                    </div>
-                  ))}
-              </dl>
-              <div className="flex justify-end">{action(item)}</div>
-            </div>
+            </Fragment>
           ))}
       </div>
 
