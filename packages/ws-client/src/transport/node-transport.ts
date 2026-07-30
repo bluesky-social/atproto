@@ -1,4 +1,4 @@
-import { WebSocket } from 'ws'
+import { type ClientOptions, WebSocket } from 'ws'
 import { CloseCode } from '../lib/close-codes.js'
 import {
   HeartbeatTimeoutError,
@@ -19,6 +19,11 @@ import {
   type TransportFactory,
   type TransportOptions,
 } from './transport.js'
+
+// How long a polite close may wait for the peer's answering close frame before
+// the socket is destroyed and 'close' fires anyway. Enforced by `ws` itself via
+// its `closeTimeout` option.
+const CLOSE_TIMEOUT_MS = 1_000
 
 /**
  * Node transport, built on `ws`. Created already connecting; torn down by
@@ -69,7 +74,16 @@ function createTransportImpl<M extends DataMode>(
   // `ws` offers permessage-deflate by default, the same compression a browser
   // WebSocket offers. Leaving the default in place makes negotiation identical
   // cross-platform by construction.
-  const ws = new WebSocket(options.url, options.protocols, { headers })
+  //
+  // `closeTimeout` bounds the polite-close handshake: if the peer never answers
+  // our close frame, `ws` destroys the socket and fires 'close' after this long
+  // (its default is 30s — far too long for a shutdown path to wait). The option
+  // is typed via the intersection because @types/ws lags ws 8.19, which
+  // introduced it.
+  const ws = new WebSocket(options.url, options.protocols, {
+    headers,
+    closeTimeout: CLOSE_TIMEOUT_MS,
+  } as ClientOptions & { closeTimeout: number })
 
   // Pin the default so every frame, text or binary, arrives as a single Buffer.
   ws.binaryType = 'nodebuffer'
