@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-api
 
+## 0.7.7
+
+### Patch Changes
+
+- [#5273](https://github.com/bluesky-social/atproto/pull/5273) [`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix a bug that would cause oauth session not recently refreshed not to be listed in the UI.
+
 ## 0.7.6
 
 ### Patch Changes

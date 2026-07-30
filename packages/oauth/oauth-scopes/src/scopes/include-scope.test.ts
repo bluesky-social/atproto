@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { LexPermissionSyntax } from '../lib/syntax-lexicon.js'
 import type { ScopeStringFor } from '../lib/syntax.js'
 import { AccountPermission } from './account-permission.js'

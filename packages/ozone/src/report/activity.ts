@@ -19,7 +19,10 @@ export type ActivityType =
   | 'noteActivity'
 
 export type CreateActivityParams = {
-  reportId: number
+  /** Exactly one of reportId or eventId must be provided. */
+  reportId?: number
+  /** Resolves the report created from this report moderation event. */
+  eventId?: number
   activityType: ActivityType
   internalNote?: string
   publicNote?: string
@@ -35,6 +38,7 @@ export async function createReportActivity(
 ) {
   const {
     reportId,
+    eventId,
     activityType,
     internalNote,
     publicNote,
@@ -43,19 +47,33 @@ export async function createReportActivity(
     createdBy,
   } = params
 
+  if ((reportId === undefined) === (eventId === undefined)) {
+    throw new InvalidRequestError(
+      'Exactly one of reportId or eventId must be provided',
+    )
+  }
+
   return db.transaction(async (dbTxn) => {
     // Lock the report row for the duration of the transaction to prevent
     // concurrent writes from racing on status validation + update.
+    // Report rows have a unique constraint on eventId, so either lookup
+    // locks at most one row.
     const report = await dbTxn.db
       .selectFrom('report')
       .select(['id', 'status'])
-      .where('id', '=', reportId)
+      .where((eb) =>
+        reportId !== undefined
+          ? eb('id', '=', reportId)
+          : eb('eventId', '=', eventId ?? -1),
+      )
       .forUpdate()
       .executeTakeFirst()
 
     if (!report) {
       throw new InvalidRequestError(
-        `Report ${reportId} not found`,
+        reportId !== undefined
+          ? `Report ${reportId} not found`
+          : `Report for event ${eventId} not found`,
         'ReportNotFound',
       )
     }
@@ -91,14 +109,14 @@ export async function createReportActivity(
       await dbTxn.db
         .updateTable('report')
         .set(updateSet)
-        .where('id', '=', reportId)
+        .where('id', '=', report.id)
         .execute()
     }
 
     const [activity] = await dbTxn.db
       .insertInto('report_activity')
       .values({
-        reportId,
+        reportId: report.id,
         activityType,
         previousStatus: result.activity?.previousStatus ?? null,
         internalNote: internalNote ?? null,

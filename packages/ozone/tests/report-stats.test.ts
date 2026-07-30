@@ -335,7 +335,7 @@ describe('report-stats', () => {
               $type: 'com.atproto.admin.defs#repoRef',
               did: sc.dids.carol,
             },
-            reportAction: { all: true },
+            reportAction: { ids: [report.id] },
           },
           'moderator',
         )

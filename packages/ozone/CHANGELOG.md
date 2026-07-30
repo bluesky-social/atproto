@@ -1,5 +1,21 @@
 # @atproto/ozone
 
+## 0.2.22
+
+### Patch Changes
+
+- [#5253](https://github.com/bluesky-social/atproto/pull/5253) [`de201df`](https://github.com/bluesky-social/atproto/commit/de201dfd8e50a945b085e88c8face3a2e8cefc3c) Thanks [@foysalit](https://github.com/foysalit)! - Add conversation support in ozone account and record stats
+
+- [#5241](https://github.com/bluesky-social/atproto/pull/5241) [`f5de51f`](https://github.com/bluesky-social/atproto/commit/f5de51fb56d33a8be02c4e660b3af276673c615c) Thanks [@foysalit](https://github.com/foysalit)! - Add bulk close report endpoint
+
+- [#5276](https://github.com/bluesky-social/atproto/pull/5276) [`080aedf`](https://github.com/bluesky-social/atproto/commit/080aedf11258ed102a83a7c19dfdbf8dfbdf546d) Thanks [@gcwill70](https://github.com/gcwill70)! - \* Add postgres timeouts to materialized view refresher
+
+- Updated dependencies [[`84781a9`](https://github.com/bluesky-social/atproto/commit/84781a9958357e1f208ff0100cee050c5b42298b), [`ccb57ef`](https://github.com/bluesky-social/atproto/commit/ccb57ef6f015dcdc33fdfdc9c4cf048711acad01), [`d3bbeb5`](https://github.com/bluesky-social/atproto/commit/d3bbeb5fe87f8c389c2f18abd2bc055ef916a63a)]:
+  - @atproto/api@0.20.35
+  - @atproto/lexicon@0.7.8
+  - @atproto/xrpc@0.8.7
+  - @atproto/xrpc-server@0.11.12
+
 ## 0.2.21
 
 ### Patch Changes

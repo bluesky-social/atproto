@@ -1,5 +1,25 @@
 # @atproto/pds
 
+## 0.5.22
+
+### Patch Changes
+
+- [#5277](https://github.com/bluesky-social/atproto/pull/5277) [`44c6cef`](https://github.com/bluesky-social/atproto/commit/44c6cef5fc8333090e9123f752c941c54b3ce164) Thanks [@blackmichael](https://github.com/blackmichael)! - add blobUploadLimit to com.atproto.server.describeServer
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Errors thrown by the scope-reference cache (redis or in-memory) are now logged via the OAuth logger (previously they were silently ignored on read) while continuing to degrade to a cache miss and a refetch from entryway rather than breaking token verification.
+
+- Updated dependencies [[`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753), [`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`9556dcb`](https://github.com/bluesky-social/atproto/commit/9556dcb5855a1a1b9a2dc119e0fd4abbb8b27198), [`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`37989bb`](https://github.com/bluesky-social/atproto/commit/37989bb434e4b1d693e44b0a73dc9697246a6aae), [`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753), [`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753), [`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a)]:
+  - @atproto/oauth-provider@0.21.0
+  - @atproto-labs/simple-store@0.5.0
+  - @atproto/oauth-scopes@0.5.7
+  - @atproto-labs/simple-store-memory@0.2.5
+  - @atproto-labs/simple-store-redis@0.1.5
+  - @atproto-labs/fetch-node@0.3.6
+  - @atproto/xrpc@0.8.7
+  - @atproto/xrpc-server@0.11.12
+  - @atproto-labs/xrpc-utils@0.1.11
+  - @atproto/lex@0.3.1
+
 ## 0.5.21
 
 ### Patch Changes

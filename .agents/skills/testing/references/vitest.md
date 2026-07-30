@@ -19,6 +19,8 @@ When a package doesn't yet have vitest set up:
 
    Set `setupFiles`, `testTimeout`, `exclude`, etc. only when the package needs them.
 
+   **Exception:** if the package already has a `vite.config.*`, do _not_ create a `vitest.config.ts` — add the `test` key to the existing Vite config instead. See [Vite-based packages](#vite-based-packages) below.
+
 3. Register the package in the root [vitest.config.ts](../../../../vitest.config.ts) under `test.projects` so the workspace-level runner picks it up:
 
    ```ts
@@ -51,6 +53,37 @@ When a package doesn't yet have vitest set up:
    The shared [tsconfig/vitest.tsconfig.json](../../../../tsconfig/vitest.tsconfig.json) supplies `lib`, `module`, and `noEmit`. Make sure the package's root `tsconfig.json` references both `./tsconfig.build.json` and `./tsconfig.test.json`.
 
    Extend `include` for any additional test-only sources the package has — benchmarks (`./src/**/*.bench.ts`), ambient declarations (`./src/core-js.d.ts`), etc.
+
+## Vite-based packages
+
+**Any package that already has a `vite.config.*` must use vitest, and must configure it inside that existing Vite config — do not add a separate `vitest.config.ts`.** Vitest reads `vite.config.*` natively, so a second config file would shadow the package's real build setup (plugins, `resolve.alias`, `optimizeDeps`, `conditions`) and the tests would run against a different module graph than the app. Jest is never an option in a Vite package: it can't consume the Vite plugin pipeline at all.
+
+Two things are required in the Vite config:
+
+1. A triple-slash reference on the **first line**, which types the `test` key that `defineConfig` from `vite` doesn't know about on its own:
+
+   ```js
+   /// <reference types="vitest/config" />
+   ```
+
+2. A `test` key in the exported config. Keep it empty unless the package genuinely needs an option:
+
+   ```js
+   import { defineConfig } from 'vite'
+
+   export default defineConfig({
+     plugins: [react(), tailwindcss()],
+     resolve: { alias: { '#': resolve(__dirname, './src') } },
+     build: {
+       /* ... */
+     },
+     test: {},
+   })
+   ```
+
+Everything else is unchanged: `vitest` in `devDependencies`, `"test": "vitest run"` in `package.json`, the package registered in the root [vitest.config.ts](../../../../vitest.config.ts) `projects` list, and a `tsconfig.test.json` extending [tsconfig/vitest.tsconfig.json](../../../../tsconfig/vitest.tsconfig.json).
+
+Because the tests share the app's Vite config, they also inherit its `resolve.alias` — import through the package's own aliases (`#/lib/foo.js`) exactly as production code does, rather than reaching for brittle relative paths.
 
 ## Imports
 

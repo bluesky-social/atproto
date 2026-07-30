@@ -1,5 +1,38 @@
 # @atproto/oauth-provider
 
+## 0.21.0
+
+### Minor Changes
+
+- [#5273](https://github.com/bluesky-social/atproto/pull/5273) [`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **BREAKING:** Rename CONFIDENTIAL_CLIENT_SESSION_LIFETIME and CONFIDENTIAL_CLIENT_REFRESH_LIFETIME constants to SESSION_LIFETIME_EXTENDED and REFRESH_LIFETIME_EXTENDED, respectively
+
+- [#5273](https://github.com/bluesky-social/atproto/pull/5273) [`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **BREAKING:** Rename PUBLIC_CLIENT_SESSION_LIFETIME and PUBLIC_CLIENT_REFRESH_LIFETIME constants to SESSION_LIFETIME and REFRESH_LIFETIME, respectively
+
+### Patch Changes
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Errors thrown by the client (JWKS & metadata) and lexicon caches are now logged (previously they were silently ignored on read) while continuing to degrade to a cache miss and a refetch/re-resolution rather than breaking the operation.
+
+- [#5273](https://github.com/bluesky-social/atproto/pull/5273) [`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Define `sessionLifetime` and `refreshLifetime` as dynamic properties of the `Client` class
+
+- [#5273](https://github.com/bluesky-social/atproto/pull/5273) [`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix a bug that would cause oauth session not recently refreshed not to be listed in the UI.
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Error triggered by the LexiconStore are now propagated instead of being silently swallowed.
+
+- [#5270](https://github.com/bluesky-social/atproto/pull/5270) [`37989bb`](https://github.com/bluesky-social/atproto/commit/37989bb434e4b1d693e44b0a73dc9697246a6aae) Thanks [@bigmoves](https://github.com/bigmoves)! - Display the account's current handle on the authorization page when a client provides a DID as `login_hint`
+
+- [#5273](https://github.com/bluesky-social/atproto/pull/5273) [`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Ensure that client that don't have the `refresh_token` cannot refresh tokens
+
+- [#5273](https://github.com/bluesky-social/atproto/pull/5273) [`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Prevent access tokens from being valid beyond the total session lifetime
+
+- Updated dependencies [[`5d2943e`](https://github.com/bluesky-social/atproto/commit/5d2943ea2ab1eea1f0d522d38ca5a047c3380c79), [`9556dcb`](https://github.com/bluesky-social/atproto/commit/9556dcb5855a1a1b9a2dc119e0fd4abbb8b27198), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`9556dcb`](https://github.com/bluesky-social/atproto/commit/9556dcb5855a1a1b9a2dc119e0fd4abbb8b27198), [`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`0e773f3`](https://github.com/bluesky-social/atproto/commit/0e773f33468c5ecf14c5e999512b86fa697d4bff), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`d692128`](https://github.com/bluesky-social/atproto/commit/d6921289c2c537c8d1cead65e7ad4f81f11299f6), [`602f4a8`](https://github.com/bluesky-social/atproto/commit/602f4a8199d5db0cf98bb6fe09010c0a375c8554), [`28caa70`](https://github.com/bluesky-social/atproto/commit/28caa70dd4c4406eccce35d72adee23354c377ae), [`df27599`](https://github.com/bluesky-social/atproto/commit/df275998ad56b21a49e102b2fc1a2e5ee9e5bfc3), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a)]:
+  - @atproto/oauth-provider-ui@0.8.8
+  - @atproto-labs/simple-store@0.5.0
+  - @atproto/oauth-scopes@0.5.7
+  - @atproto/oauth-provider-api@0.7.7
+  - @atproto-labs/simple-store-memory@0.2.5
+  - @atproto-labs/fetch-node@0.3.6
+  - @atproto/lex-resolver@0.2.3
+
 ## 0.20.2
 
 ### Patch Changes

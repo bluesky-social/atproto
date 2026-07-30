@@ -8,6 +8,17 @@ import { ResetPasswordRequestForm } from './reset-password-request-form.tsx'
 
 export type ResetPasswordViewProps = {
   emailDefault?: string
+  /**
+   * Sub-step to start on. Allows restoring the "confirm" step (the reset
+   * code was already emailed) after a page refresh.
+   */
+  initialView?: 'request' | 'confirm'
+  /**
+   * Reports sub-step changes so the parent can reflect them (e.g. in the
+   * URL). The transient "password updated" screen is reported as
+   * 'request'.
+   */
+  onViewChange?: (view: 'request' | 'confirm') => void
   onResetPasswordRequest: (data: { email: string }) => void | PromiseLike<void>
   onResetPasswordConfirm: (data: {
     token: string
@@ -24,13 +35,22 @@ enum View {
 
 export function ResetPasswordView({
   emailDefault,
+  initialView,
+  onViewChange,
   onResetPasswordRequest,
   onResetPasswordConfirm,
   onBack,
 }: ResetPasswordViewProps) {
   const { t } = useLingui()
-  const [view, setView] = useState<View>(View.RequestReset)
+  const [view, setViewState] = useState<View>(
+    initialView === 'confirm' ? View.ConfirmReset : View.RequestReset,
+  )
   const [email, setEmail] = useState(emailDefault)
+
+  const setView = (next: View) => {
+    setViewState(next)
+    onViewChange?.(next === View.ConfirmReset ? 'confirm' : 'request')
+  }
 
   if (view === View.RequestReset) {
     return (

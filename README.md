@@ -4,103 +4,43 @@ Welcome friends!
 
 This repository contains Bluesky's reference implementation of AT Protocol, and of the `app.bsky` microblogging application service backend.
 
+## About AT Protocol
+
+The Authenticated Transfer Protocol ("ATP" or "atproto") is a decentralized social media protocol, developed by [Bluesky Social PBC](https://bsky.social). Third-party software can be as seamless as first-party: custom feeds, federated services, and alternative clients are all built against the same APIs, so developers are never locked out of the ecosystems they help build. Learn more at:
+
+- [Overview and Guides](https://atproto.com/guides/overview) 👈 Best starting point
+- [Github Discussions](https://github.com/bluesky-social/atproto/discussions) 👈 Great place to ask questions
+- [Protocol Specifications](https://atproto.com/specs/atp)
+
+The Bluesky Social application encompasses a set of schemas and APIs built in the overall AT Protocol framework. The namespace for these "Lexicons" is `app.bsky.*`.
+
 ## What is in here?
-
-**TypeScript Packages:**
-
-| Package                                                                       | Docs                                       | NPMX                                                                                                       |
-| ----------------------------------------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| `@atproto/api`: client library                                                | [README](./packages/api/README.md)         | [![NPM](https://img.shields.io/npm/v/@atproto/api)](https://npmx.dev/package/@atproto/api)                 |
-| `@atproto/common-web`: shared code and helpers which can run in web browsers  | [README](./packages/common-web/README.md)  | [![NPM](https://img.shields.io/npm/v/@atproto/common-web)](https://npmx.dev/package/@atproto/common-web)   |
-| `@atproto/common`: shared code and helpers which doesn't work in web browsers | [README](./packages/common/README.md)      | [![NPM](https://img.shields.io/npm/v/@atproto/common)](https://npmx.dev/package/@atproto/common)           |
-| `@atproto/crypto`: cryptographic signing and key serialization                | [README](./packages/crypto/README.md)      | [![NPM](https://img.shields.io/npm/v/@atproto/crypto)](https://npmx.dev/package/@atproto/crypto)           |
-| `@atproto/identity`: DID and handle resolution                                | [README](./packages/identity/README.md)    | [![NPM](https://img.shields.io/npm/v/@atproto/identity)](https://npmx.dev/package/@atproto/identity)       |
-| `@atproto/lex`: modern type-safe client library with codegen                  | [README](./packages/lex/lex/README.md)     | [![NPM](https://img.shields.io/npm/v/@atproto/lex)](https://npmx.dev/package/@atproto/lex)                 |
-| `@atproto/lexicon`: schema definition language                                | [README](./packages/lexicon/README.md)     | [![NPM](https://img.shields.io/npm/v/@atproto/lexicon)](https://npmx.dev/package/@atproto/lexicon)         |
-| `@atproto/repo`: data storage structure, including MST                        | [README](./packages/repo/README.md)        | [![NPM](https://img.shields.io/npm/v/@atproto/repo)](https://npmx.dev/package/@atproto/repo)               |
-| `@atproto/syntax`: string parsers for identifiers                             | [README](./packages/syntax/README.md)      | [![NPM](https://img.shields.io/npm/v/@atproto/syntax)](https://npmx.dev/package/@atproto/syntax)           |
-| `@atproto/xrpc`: client-side HTTP API helpers                                 | [README](./packages/xrpc/README.md)        | [![NPM](https://img.shields.io/npm/v/@atproto/xrpc)](https://npmx.dev/package/@atproto/xrpc)               |
-| `@atproto/xrpc-server`: server-side HTTP API helpers                          | [README](./packages/xrpc-server/README.md) | [![NPM](https://img.shields.io/npm/v/@atproto/xrpc-server)](https://npmx.dev/package/@atproto/xrpc-server) |
-
-**TypeScript Services:**
-
-- `pds`: "Personal Data Server", hosting repo content for atproto accounts. Most implementation code in `packages/pds`, with runtime wrapper in `services/pds`. See [bluesky-social/pds](https://github.com/bluesky-social/pds) for directions on self-hosting.
-- `bsky`: AppView implementation of the `app.bsky.*` API endpoints. Running on main network at `api.bsky.app`. Most implementation code in `packages/bsky`, with runtime wrapper in `services/bsky`.
 
 **Lexicons:** for both the `com.atproto.*` and `app.bsky.*` are canonically versioned in this repo, for now, under `./lexicons/`. These are JSON files in the [Lexicon schema definition language](https://atproto.com/specs/lexicon), similar to JSON Schema or OpenAPI.
 
-**Interoperability Test Data:** the language-neutral test files in `./interop-test-files/` may be useful for other protocol implementations to ensure that they follow the specification correctly
+**TypeScript Packages:** everything under [`./packages/`](./packages/) is published to npm under the `@atproto/*` scope (except for the shared utilities in [`./packages/internal/`](./packages/internal/), which use the `@atproto-labs/*` scope). Each package has its own README; [`packages/README.md`](./packages/README.md) lists them all. The short version, if you're new here:
+
+- **Building an app or bot?** Start with [`@atproto/lex`](./packages/lex/lex/README.md) — the type-safe SDK that generates TypeScript from Lexicon schemas and gives you an HTTP (XRPC) client. The rest of [`./packages/lex/`](./packages/lex/) contains its building blocks (data model, JSON/CBOR encoding, schema validation, server routing), which you rarely need to install directly. The older [`@atproto/api`](./packages/api/README.md) client still exists and is still used in parts of this repo, but new code should prefer `@atproto/lex`.
+- **Adding "Sign in with Bluesky"?** The OAuth client and server implementations live in [`./packages/oauth/`](./packages/oauth/) — pick the client variant matching your runtime ([browser](./packages/oauth/oauth-client-browser/README.md), [node](./packages/oauth/oauth-client-node/README.md), [expo](./packages/oauth/oauth-client-expo/README.md)).
+- **Implementing atproto itself?** The protocol primitives are split into focused packages: identifier parsing ([`syntax`](./packages/syntax/README.md)), DID/handle resolution ([`identity`](./packages/identity/README.md), [`did`](./packages/did/)), signing ([`crypto`](./packages/crypto/README.md)), repository & Merkle Search Tree ([`repo`](./packages/repo/README.md)), and firehose consumption ([`sync`](./packages/sync/)).
+- **Everything else** is either a service implementation (see below), shared internal glue ([`common`](./packages/common/README.md), [`common-web`](./packages/common-web/README.md), [`./packages/internal/`](./packages/internal/)), or dev tooling ([`dev-env`](./packages/dev-env/), [`dev-infra`](./packages/dev-infra/)).
+
+**TypeScript Services:** each has its implementation in `packages/<name>` and a thin runtime wrapper in `services/<name>`.
+
+- `pds`: "Personal Data Server", hosting repo content for atproto accounts. See [bluesky-social/pds](https://github.com/bluesky-social/pds) for directions on self-hosting.
+- `bsky`: AppView implementation of the `app.bsky.*` API endpoints. Running on main network at `api.bsky.app`.
+- `bsync`: Internal synchronization service used by the AppView for cross-service state such as mutes and notifications.
+- `ozone`: Moderation service implementing the `tools.ozone.*` API.
+
+## What is not in here?
 
 The source code for the Bluesky Social client app (for web and mobile) can be found at [bluesky-social/social-app](https://github.com/bluesky-social/social-app).
 
 Go programming language source code is in [bluesky-social/indigo](https://github.com/bluesky-social/indigo), including the BGS implementation.
 
-## Developer Quickstart
-
-We recommend [`nvm`](https://github.com/nvm-sh/nvm) for managing Node.js installs. This project requires Node.js version 22 or later. `pnpm` is used to manage the workspace of multiple packages. You can install it with `npm install --global pnpm`.
-
-There is a Makefile which can help with basic development tasks:
-
-```shell
-# use existing nvm to install node 22 and pnpm
-make nvm-setup
-
-# pull dependencies and build all local packages
-make deps
-make build
-
-# run the tests, using Docker services as needed
-make test
-
-# run a local PDS and AppView with fake test accounts and data
-# (this requires a global installation of `jq` and `docker`)
-make run-dev-env
-
-# show all other commands
-make help
-```
-
-## About AT Protocol
-
-The Authenticated Transfer Protocol ("ATP" or "atproto") is a decentralized social media protocol, developed by [Bluesky Social PBC](https://bsky.social). Learn more at:
-
-- [Overview and Guides](https://atproto.com/guides/overview) 👈 Best starting point
-- [Github Discussions](https://github.com/bluesky-social/atproto/discussions) 👈 Great place to ask questions
-- [Protocol Specifications](https://atproto.com/specs/atp)
-- [Blogpost on self-authenticating data structures](https://bsky.social/about/blog/3-6-2022-a-self-authenticating-social-protocol)
-
-The Bluesky Social application encompasses a set of schemas and APIs built in the overall AT Protocol framework. The namespace for these "Lexicons" is `app.bsky.*`.
-
 ## Contributions
 
-> While we do accept contributions, we prioritize high quality issues and pull requests. Adhering to the below guidelines will ensure a more timely review.
-
-**Rules:**
-
-- We may not respond to your issue or PR.
-- We may close an issue or PR without much feedback.
-- We may lock discussions or contributions if our attention is getting DDOSed.
-- We do not provide support for build issues.
-
-**Guidelines:**
-
-- Check for existing issues before filing a new one, please.
-- Open an issue and give some time for discussion before submitting a PR.
-- If submitting a PR that includes a lexicon change, please get sign off on the lexicon change _before_ doing the implementation.
-- Issues are for bugs & feature requests related to the TypeScript implementation of atproto and related services.
-  - For high-level discussions, please use the [Discussion Forum](https://github.com/bluesky-social/atproto/discussions).
-  - For client issues, please use the relevant [social-app](https://github.com/bluesky-social/social-app) repo.
-- Stay away from PRs that:
-  - Refactor large parts of the codebase
-  - Add entirely new features without prior discussion
-  - Change the tooling or frameworks used without prior discussion
-  - Introduce new unnecessary dependencies
-
-Remember, we serve a wide community of users. Our day-to-day involves us constantly asking "which top priority is our top priority." If you submit well-written PRs that solve problems concisely, that's an awesome contribution. Otherwise, as much as we'd love to accept your ideas and contributions, we really don't have the bandwidth.
-
-## Are you a developer interested in building on atproto?
-
-Bluesky is an open social network built on the AT Protocol, a flexible technology that will never lock developers out of the ecosystems that they help build. With atproto, third-party can be as seamless as first-party through custom feeds, federated services, clients, and more.
+While we do accept contributions, we prioritize high quality issues and pull requests. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the developer quickstart, the rules and guidelines to follow before filing an issue or submitting a PR, and our policy on LLM-assisted contributions. Code conventions are documented in [STYLE_GUIDE.md](./STYLE_GUIDE.md).
 
 ## Security disclosures
 

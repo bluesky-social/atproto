@@ -76,6 +76,7 @@ export function Page() {
 
 function ApplicationSessionCard({
   session: {
+    // active,
     clientId,
     clientMetadata,
     tokenId,
@@ -98,6 +99,12 @@ function ApplicationSessionCard({
     clientId,
     clientMetadata,
   })
+
+  // @NOTE if clientMetadata is undefined, it means that the client metadata
+  // could not be fetched. We are unable to determine if the session is still
+  // valid. We should reflect that in the UI.
+
+  // @TODO Show if there is an active oauth access token ("active").
 
   return (
     <div className="border-contrast-50 dark:border-contrast-100 flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">

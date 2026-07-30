@@ -356,6 +356,8 @@ export type ActiveOAuthSession = {
   createdAt: ISODateString
   updatedAt: ISODateString
 
+  active: boolean
+
   clientId: string
   /** An "undefined" value means that the client metadata could not be fetched */
   clientMetadata?: OAuthClientMetadata

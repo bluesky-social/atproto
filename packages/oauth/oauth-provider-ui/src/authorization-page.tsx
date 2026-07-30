@@ -39,7 +39,11 @@ if (
   url.search = ''
   url.searchParams.set('client_id', authorizeData.clientId)
   url.searchParams.set('request_uri', authorizeData.requestUri)
-  window.history.replaceState(history.state, '', url.pathname + url.search)
+  window.history.replaceState(
+    history.state,
+    '',
+    url.pathname + url.search + url.hash,
+  )
 }
 
 const container = document.getElementById('root')!
