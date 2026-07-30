@@ -18,8 +18,8 @@ exports[`mute views > fetches mutes for the logged-in user. 1`] = `
     "viewer": {
       "blockedBy": false,
       "muted": true,
-      "mutedQuoteposts": false,
-      "mutedReposts": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   {
@@ -38,8 +38,8 @@ exports[`mute views > fetches mutes for the logged-in user. 1`] = `
     "viewer": {
       "blockedBy": false,
       "muted": true,
-      "mutedQuoteposts": false,
-      "mutedReposts": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   {
@@ -54,8 +54,8 @@ exports[`mute views > fetches mutes for the logged-in user. 1`] = `
     "viewer": {
       "blockedBy": false,
       "muted": true,
-      "mutedQuoteposts": false,
-      "mutedReposts": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   {
@@ -74,8 +74,8 @@ exports[`mute views > fetches mutes for the logged-in user. 1`] = `
     "viewer": {
       "blockedBy": false,
       "muted": true,
-      "mutedQuoteposts": false,
-      "mutedReposts": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   {
@@ -94,8 +94,8 @@ exports[`mute views > fetches mutes for the logged-in user. 1`] = `
     "viewer": {
       "blockedBy": false,
       "muted": true,
-      "mutedQuoteposts": false,
-      "mutedReposts": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   {
@@ -114,8 +114,8 @@ exports[`mute views > fetches mutes for the logged-in user. 1`] = `
     "viewer": {
       "blockedBy": false,
       "muted": true,
-      "mutedQuoteposts": false,
-      "mutedReposts": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   {
@@ -131,8 +131,8 @@ exports[`mute views > fetches mutes for the logged-in user. 1`] = `
       "blockedBy": false,
       "followedBy": "record(0)",
       "muted": true,
-      "mutedQuoteposts": false,
-      "mutedReposts": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   {
@@ -153,8 +153,8 @@ exports[`mute views > fetches mutes for the logged-in user. 1`] = `
       "blockedBy": false,
       "followedBy": "record(1)",
       "muted": true,
-      "mutedQuoteposts": false,
-      "mutedReposts": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
 ]
@@ -194,8 +194,8 @@ exports[`mute views > flags mutes in threads 1`] = `
       "viewer": {
         "blockedBy": false,
         "muted": false,
-        "mutedQuoteposts": false,
-        "mutedReposts": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "bookmarkCount": 0,
@@ -236,8 +236,8 @@ exports[`mute views > flags mutes in threads 1`] = `
             "followedBy": "record(4)",
             "following": "record(3)",
             "muted": true,
-            "mutedQuoteposts": false,
-            "mutedReposts": false,
+            "mutedOnlyQuoteposts": false,
+            "mutedOnlyReposts": false,
           },
         },
         "bookmarkCount": 0,
@@ -292,8 +292,8 @@ exports[`mute views > flags mutes in threads 1`] = `
             "followedBy": "record(7)",
             "following": "record(6)",
             "muted": true,
-            "mutedQuoteposts": false,
-            "mutedReposts": false,
+            "mutedOnlyQuoteposts": false,
+            "mutedOnlyReposts": false,
           },
         },
         "bookmarkCount": 0,

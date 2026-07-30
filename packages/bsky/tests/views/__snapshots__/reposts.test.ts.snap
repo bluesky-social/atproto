@@ -14,8 +14,8 @@ exports[`pds repost views > fetches reposted-by for a post 1`] = `
     "viewer": {
       "blockedBy": false,
       "muted": false,
-      "mutedQuoteposts": false,
-      "mutedReposts": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   {
@@ -34,8 +34,8 @@ exports[`pds repost views > fetches reposted-by for a post 1`] = `
       "blockedBy": false,
       "following": "record(0)",
       "muted": false,
-      "mutedQuoteposts": false,
-      "mutedReposts": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   {
@@ -52,8 +52,8 @@ exports[`pds repost views > fetches reposted-by for a post 1`] = `
       "followedBy": "record(2)",
       "following": "record(1)",
       "muted": false,
-      "mutedQuoteposts": false,
-      "mutedReposts": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   {
@@ -75,8 +75,8 @@ exports[`pds repost views > fetches reposted-by for a post 1`] = `
       "followedBy": "record(4)",
       "following": "record(3)",
       "muted": false,
-      "mutedQuoteposts": false,
-      "mutedReposts": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
 ]
@@ -96,8 +96,8 @@ exports[`pds repost views > fetches reposted-by for a reply 1`] = `
     "viewer": {
       "blockedBy": false,
       "muted": false,
-      "mutedQuoteposts": false,
-      "mutedReposts": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   {
@@ -116,8 +116,8 @@ exports[`pds repost views > fetches reposted-by for a reply 1`] = `
       "blockedBy": false,
       "following": "record(0)",
       "muted": false,
-      "mutedQuoteposts": false,
-      "mutedReposts": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
 ]

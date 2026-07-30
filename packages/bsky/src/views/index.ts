@@ -222,13 +222,13 @@ export class Views {
   viewerRepostMuteExists(did: DidString, state: HydrationState): boolean {
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return false
-    return !!viewer.mutedReposts
+    return !!viewer.mutedOnlyReposts
   }
 
   viewerQuotepostMuteExists(did: DidString, state: HydrationState): boolean {
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return false
-    return !!viewer.mutedQuoteposts
+    return !!viewer.mutedOnlyQuoteposts
   }
 
   blockingByList(
@@ -470,8 +470,8 @@ export class Views {
     const mutedByList = this.mutedByList(viewer, state)
     return {
       muted: !!(viewer.muted || mutedByList),
-      mutedReposts: !!viewer.mutedReposts,
-      mutedQuoteposts: !!viewer.mutedQuoteposts,
+      mutedOnlyReposts: !!viewer.mutedOnlyReposts,
+      mutedOnlyQuoteposts: !!viewer.mutedOnlyQuoteposts,
       mutedByList: mutedByList ? this.listBasic(mutedByList, state) : undefined,
       blockedBy: !!blockedByUri,
       blocking: blockingUri,

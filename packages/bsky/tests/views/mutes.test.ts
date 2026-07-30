@@ -194,7 +194,7 @@ describe('mute views', () => {
         },
       )
       expect(replacedWithFull.data.viewer?.muted).toBe(true)
-      expect(replacedWithFull.data.viewer?.mutedReposts).toBe(false)
+      expect(replacedWithFull.data.viewer?.mutedOnlyReposts).toBe(false)
 
       await agent.api.app.bsky.graph.muteActor(
         { actor: dan, onlyReposts: true },
@@ -216,7 +216,7 @@ describe('mute views', () => {
         },
       )
       expect(profile.data.viewer?.muted).toBe(false)
-      expect(profile.data.viewer?.mutedReposts).toBe(true)
+      expect(profile.data.viewer?.mutedOnlyReposts).toBe(true)
 
       const { data: mutes } = await agent.api.app.bsky.graph.getMutes(
         {},
@@ -229,7 +229,7 @@ describe('mute views', () => {
       )
       const danMute = mutes.mutes.find((mute) => mute.did === dan)
       expect(danMute?.viewer?.muted).toBe(false)
-      expect(danMute?.viewer?.mutedReposts).toBe(true)
+      expect(danMute?.viewer?.mutedOnlyReposts).toBe(true)
 
       const timeline = await agent.api.app.bsky.feed.getTimeline(
         { limit: 100 },
@@ -311,7 +311,7 @@ describe('mute views', () => {
         },
       )
       expect(unmutedProfile.data.viewer?.muted).toBe(false)
-      expect(unmutedProfile.data.viewer?.mutedReposts).toBe(false)
+      expect(unmutedProfile.data.viewer?.mutedOnlyReposts).toBe(false)
     } finally {
       if (!cleanedUp) {
         await agent.api.app.bsky.graph.unmuteActor(
@@ -364,8 +364,8 @@ describe('mute views', () => {
         },
       )
       expect(profile.data.viewer?.muted).toBe(false)
-      expect(profile.data.viewer?.mutedReposts).toBe(false)
-      expect(profile.data.viewer?.mutedQuoteposts).toBe(true)
+      expect(profile.data.viewer?.mutedOnlyReposts).toBe(false)
+      expect(profile.data.viewer?.mutedOnlyQuoteposts).toBe(true)
 
       const timeline = await agent.api.app.bsky.feed.getTimeline(
         { limit: 100 },

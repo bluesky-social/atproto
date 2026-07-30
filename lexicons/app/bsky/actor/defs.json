@@ -197,13 +197,13 @@
       "properties": {
         "muted": {
           "type": "boolean",
-          "description": "Whether the account is fully muted, directly or via a mutelist. False when the mute is scoped to specific kinds; see mutedReposts and mutedQuoteposts."
+          "description": "Whether the account is fully muted, directly or via a mutelist. False when the mute is scoped to specific kinds; see mutedOnlyReposts and mutedOnlyQuoteposts."
         },
-        "mutedReposts": {
+        "mutedOnlyReposts": {
           "type": "boolean",
           "description": "Whether the account's reposts are muted. Scoped mutes are exclusive with muted: this can be true while muted is false."
         },
-        "mutedQuoteposts": {
+        "mutedOnlyQuoteposts": {
           "type": "boolean",
           "description": "Whether the account's quote posts are muted. Scoped mutes are exclusive with muted: this can be true while muted is false."
         },

@@ -85,8 +85,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           row?.muteOnlyReposts != null &&
           !row.muteOnlyReposts &&
           !row.muteOnlyQuoteposts,
-        mutedReposts: row?.muteOnlyReposts ?? false,
-        mutedQuoteposts: row?.muteOnlyQuoteposts ?? false,
+        mutedOnlyReposts: row?.muteOnlyReposts ?? false,
+        mutedOnlyQuoteposts: row?.muteOnlyQuoteposts ?? false,
         mutedByList: row?.mutedByList ?? '',
         blockedBy: row?.blockedBy ?? '',
         blocking: row?.blocking ?? '',

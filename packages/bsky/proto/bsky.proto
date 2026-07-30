@@ -540,7 +540,7 @@ message GetRelationshipsRequest {
 
 message Relationships {
   // whether a full (unscoped) direct mute exists. Mutually exclusive with
-  // the scoped muted_* fields: a reposts- or quoteposts-scoped mute reports
+  // the scoped muted_only_* fields: a reposts- or quoteposts-scoped mute reports
   // muted=false.
   bool muted = 1;
   string muted_by_list = 2;
@@ -550,8 +550,8 @@ message Relationships {
   string blocking_by_list = 6;
   string following = 7;
   string followed_by = 8;
-  bool muted_reposts = 9;
-  bool muted_quoteposts = 10;
+  bool muted_only_reposts = 9;
+  bool muted_only_quoteposts = 10;
 }
 
 message GetRelationshipsResponse {
@@ -652,10 +652,10 @@ message GetActorMutesActorRequest {
 
 message GetActorMutesActorResponse {
   // whether a full (unscoped) mute exists. Mutually exclusive with the
-  // scoped muted_* fields.
+  // scoped muted_only_* fields.
   bool muted = 1;
-  bool muted_reposts = 2;
-  bool muted_quoteposts = 3;
+  bool muted_only_reposts = 2;
+  bool muted_only_quoteposts = 3;
 }
 
 message MuteInfo {

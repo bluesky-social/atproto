@@ -22,8 +22,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .executeTakeFirst()
     return {
       muted: res != null && !res.onlyReposts && !res.onlyQuoteposts,
-      mutedReposts: res?.onlyReposts ?? false,
-      mutedQuoteposts: res?.onlyQuoteposts ?? false,
+      mutedOnlyReposts: res?.onlyReposts ?? false,
+      mutedOnlyQuoteposts: res?.onlyQuoteposts ?? false,
     }
   },
 
