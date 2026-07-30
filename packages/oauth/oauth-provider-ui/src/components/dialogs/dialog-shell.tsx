@@ -1,4 +1,4 @@
-import { type ReactElement, type ReactNode, createContext, use } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -8,33 +8,6 @@ import {
   DialogTrigger,
 } from '#/components/ui/dialog.tsx'
 import { cn } from '#/lib/utils.ts'
-
-/**
- * Layout for a dialog's row of actions, following the shadcn registry's
- * `DialogFooter`: stacked where a row would crowd, a right-aligned row from
- * `sm` up. Buttons in it want `w-full sm:w-auto`.
- *
- * Exported rather than applied by `DialogShell` because the child form owns
- * the row. It expects the row's own order — primary first, as `FormShell`
- * emits — and suppresses that row's spreading spacer, since the registry
- * groups the buttons together instead.
- */
-export const dialogActions = [
-  'flex flex-col items-stretch gap-2',
-  'sm:flex-row-reverse sm:items-center sm:justify-start',
-  '[&_[data-slot=form-actions-spacer]]:hidden',
-].join(' ')
-
-const InDialogContext = createContext(false)
-InDialogContext.displayName = 'InDialogContext'
-
-/**
- * Whether the caller is rendering inside a dialog. `FormShell` reads it to
- * pick `dialogActions` over its own row, since several forms — the handle and
- * email ones especially — render both in a dialog and on an auth page, and
- * only the dialog wants the grouped layout.
- */
-export const useInDialog = () => use(InDialogContext)
 
 export type DialogShellProps = {
   /** The element that opens the dialog. */
@@ -105,7 +78,7 @@ export function DialogShell({
           )}
         </DialogHeader>
 
-        <InDialogContext value={true}>{children}</InDialogContext>
+        {children}
       </DialogContent>
     </Dialog>
   )

@@ -1,10 +1,8 @@
 import { Trans } from '@lingui/react/macro'
 import { type ReactElement, type ReactNode, useEffect, useState } from 'react'
-import {
-  DialogShell,
-  dialogActions,
-} from '#/components/dialogs/dialog-shell.tsx'
+import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { Notice } from '#/components/feedback/notice.tsx'
+import { actionRow } from '#/components/forms/form-shell.tsx'
 import { RequestCodeButton } from '#/components/forms/request-code-button.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
@@ -104,7 +102,7 @@ export function DeleteAccountDialog({
           )
         }
       >
-        <div className={dialogActions}>
+        <div className={actionRow}>
           <Button
             variant="destructive"
             disabled={finalConfirm.loading || confirmPending}
@@ -195,7 +193,7 @@ export function DeleteAccountDialog({
 
         {/* @NOTE `RequestCodeButton` defaults to `size="sm"` for the inline
           resend, so a primary dialog action restates the size. */}
-        <div className={dialogActions}>
+        <div className={actionRow}>
           <RequestCodeButton
             action={async () => {
               await onRequest()

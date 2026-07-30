@@ -2,15 +2,21 @@ import { Form } from '@base-ui/react/form'
 import { Trans } from '@lingui/react/macro'
 import { Loader2Icon } from 'lucide-react'
 import { type MouseEventHandler, type ReactNode, type Ref, useRef } from 'react'
-import {
-  dialogActions,
-  useInDialog,
-} from '#/components/dialogs/dialog-shell.tsx'
 import { ErrorNotice } from '#/components/feedback/error-notice.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
 import { apiErrorParser } from '#/lib/api-error-parser.ts'
 import { cn } from '#/lib/utils.ts'
+
+/**
+ * Layout for a row of form actions: stacked where a row would crowd, then a
+ * right-aligned group from `sm` up, primary last. Buttons in a hand-rolled
+ * group want `w-full sm:w-auto` to match.
+ */
+export const actionRow = [
+  'flex flex-col items-stretch gap-2',
+  'sm:flex-row-reverse sm:flex-wrap sm:items-center sm:justify-start',
+].join(' ')
 
 type SubmitVariant = 'default' | 'destructive' | 'secondary'
 
@@ -35,8 +41,6 @@ export type FormShellProps<TValues extends Record<string, unknown>> = {
   backLabel?: ReactNode
 
   actions?: ReactNode
-  /** Layout override for the action row — see `dialogActions`. */
-  actionsClassName?: string
   loading?: boolean
   disabled?: boolean
   hideError?: boolean
@@ -70,7 +74,6 @@ export function FormShell<TValues extends Record<string, unknown>>({
   backLabel = <Trans>Back</Trans>,
 
   actions,
-  actionsClassName,
   loading: loadingProp = false,
   disabled: disabledProp = false,
   hideError = false,
@@ -80,7 +83,6 @@ export function FormShell<TValues extends Record<string, unknown>>({
   className,
   ref,
 }: FormShellProps<TValues>) {
-  const inDialog = useInDialog()
   const { run, loading, error } = useAsyncAction<[TValues]>(
     (signal, values) => onSubmit(values, signal),
     { onLoadingChange },
@@ -134,15 +136,7 @@ export function FormShell<TValues extends Record<string, unknown>>({
         <ErrorNotice key="error" error={error} parser={apiErrorParser} />
       )}
 
-      <div
-        key="actions"
-        className={cn(
-          'flex flex-col items-stretch gap-2',
-          'sm:flex-row-reverse sm:flex-wrap sm:items-center sm:justify-start',
-          inDialog && dialogActions,
-          actionsClassName,
-        )}
-      >
+      <div key="actions" className={actionRow}>
         {submitLabel && (
           <Button
             type="submit"
@@ -154,7 +148,6 @@ export function FormShell<TValues extends Record<string, unknown>>({
           </Button>
         )}
         {actions}
-        <div data-slot="form-actions-spacer" className="flex-auto" />
         {onCancel && cancelLabel ? (
           <Button type="button" variant="secondary" onClick={onCancel}>
             {cancelLabel}

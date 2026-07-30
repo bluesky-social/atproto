@@ -1,9 +1,7 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { type ReactElement, type ReactNode, useEffect, useState } from 'react'
-import {
-  DialogShell,
-  dialogActions,
-} from '#/components/dialogs/dialog-shell.tsx'
+import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
+import { actionRow } from '#/components/forms/form-shell.tsx'
 import { RequestCodeButton } from '#/components/forms/request-code-button.tsx'
 import { ResetPasswordConfirmForm } from '#/components/reset-password-confirm-form.tsx'
 import { Button } from '#/components/ui/button.tsx'
@@ -65,7 +63,7 @@ export function UpdatePasswordDialog({
         string. `RequestCodeButton` defaults to `size="sm"` for the inline
         resend, so the size is restated here to match the button below. */}
       {state === UpdatePasswordDialogState.Request ? (
-        <div className={dialogActions}>
+        <div className={actionRow}>
           <RequestCodeButton
             action={async () => {
               await onRequest()
