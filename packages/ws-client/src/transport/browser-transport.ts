@@ -202,20 +202,23 @@ function createTransportImpl<M extends DataMode>(
   // the socket.
   ws.addEventListener('close', (ev) => {
     open = false
-    markClosed()
     if (pendingError) {
       // Teardown began with a failure (a socket error, a bad frame, an idle
       // timeout, an aborted signal): report it now that the socket is down.
       channel.fail(pendingError.error)
       reportClose(ABNORMAL_CLOSE_DETAIL)
-      return
+    } else {
+      channel.finish()
+      reportClose({
+        code: ev.code,
+        reason: ev.reason,
+        wasClean: ev.wasClean,
+      })
     }
-    channel.finish()
-    reportClose({
-      code: ev.code,
-      reason: ev.reason,
-      wasClean: ev.wasClean,
-    })
+    // Last, so `onClose` has already run by the time any pull parked in
+    // `closeGuard` resumes: a consumer that reaches the end of iteration is
+    // guaranteed the close was both reported and complete.
+    markClosed()
   })
 
   ws.addEventListener('error', (ev) => {

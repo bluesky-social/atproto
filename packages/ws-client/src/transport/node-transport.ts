@@ -209,20 +209,23 @@ function createTransportImpl<M extends DataMode>(
   ws.on('close', (code: number, reason: Buffer) => {
     open = false
     clearHeartbeat()
-    markClosed()
     if (pendingError) {
       // Teardown began with a failure (a socket error, a liveness timeout, an
       // aborted signal): report it now that the socket is actually down.
       channel.fail(pendingError.error)
       reportClose(ABNORMAL_CLOSE_DETAIL)
-      return
+    } else {
+      channel.finish()
+      reportClose({
+        code,
+        reason: reason.toString('utf8'),
+        wasClean: code === CloseCode.Normal,
+      })
     }
-    channel.finish()
-    reportClose({
-      code,
-      reason: reason.toString('utf8'),
-      wasClean: code === CloseCode.Normal,
-    })
+    // Last, so `onClose` has already run by the time any pull parked in
+    // `closeGuard` resumes: a consumer that reaches the end of iteration is
+    // guaranteed the close was both reported and complete.
+    markClosed()
   })
 
   ws.on('error', (err: Error) => {
