@@ -5,20 +5,6 @@ import type { Service } from '../../../proto/bsky_connect.js'
 import type { Database } from '../db/index.js'
 import { getAncestorsAndSelfQb, getDescendentsQb } from '../util.js'
 
-// createdAfter reports whether the post's rkey places its creation after ts.
-// The rkey is a TID, so this is the post's own claimed creation time rather
-// than when we observed it. An unparseable rkey is treated as not newer, which
-// keeps a malformed reply from claiming a vacated slot.
-const createdAfter = (uri: string, ts: number): boolean => {
-  try {
-    const tid = TID.fromStr(new AtUri(uri).rkey)
-    // TID timestamps are in microseconds.
-    return tid.timestamp() / 1000 > ts
-  } catch {
-    return false
-  }
-}
-
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getThread(req) {
     const { postUri, above, below } = req
@@ -94,7 +80,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           return []
         }
 
-        if (vacatedAt !== 0 && !createdAfter(reply, vacatedAt)) {
+        if (vacatedAt !== 0 && !isOpReplyNewerThanTimestamp(reply, vacatedAt)) {
           continue
         }
 
@@ -126,3 +112,17 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
   },
 })
+
+// isOpReplyNewerThanTimestamp reports whether the post's rkey places its creation after ts.
+// The rkey is a TID, so this is the post's own claimed creation time rather
+// than when we observed it. An unparseable rkey is treated as not newer, which
+// keeps a malformed reply from claiming a vacated slot.
+const isOpReplyNewerThanTimestamp = (uri: string, ts: number): boolean => {
+  try {
+    const tid = TID.fromStr(new AtUri(uri).rkey)
+    // TID timestamps are in microseconds.
+    return tid.timestamp() / 1000 > ts
+  } catch {
+    return false
+  }
+}
