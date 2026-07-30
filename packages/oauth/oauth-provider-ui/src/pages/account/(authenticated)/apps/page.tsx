@@ -77,18 +77,21 @@ export function Page() {
             // of sizing to their longest URL and forcing the table wider than
             // the page.
             header: <Trans context="OAuthApp">App</Trans>,
-            className: 'w-1/3 max-w-0 truncate font-medium',
+            className: 'w-1/3 max-w-0 truncate',
+            cellClassName: 'font-medium',
             hideOnMobile: true,
             cell: (session) => <ClientName session={session} />,
           },
           {
             header: <Trans context="OAuthApp">Client</Trans>,
-            className: 'w-1/2 max-w-0 truncate font-mono text-xs',
+            className: 'w-1/2 max-w-0 truncate',
+            cellClassName: 'font-mono text-xs',
             cell: (session) => <ClientIdentifier session={session} />,
           },
           {
             header: <Trans context="OAuthApp">Authorized</Trans>,
-            className: 'text-muted-foreground whitespace-nowrap',
+            className: 'whitespace-nowrap',
+            cellClassName: 'text-muted-foreground',
             cell: (session) =>
               i18n.date(session.createdAt, {
                 year: 'numeric',
@@ -98,7 +101,8 @@ export function Page() {
           },
           {
             header: <LastAccessedHeader />,
-            className: 'text-muted-foreground whitespace-nowrap',
+            className: 'whitespace-nowrap',
+            cellClassName: 'text-muted-foreground',
             cell: (session) => <DateAgo date={session.updatedAt} />,
           },
         ]}

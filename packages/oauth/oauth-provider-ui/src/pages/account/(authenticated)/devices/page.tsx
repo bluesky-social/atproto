@@ -77,18 +77,19 @@ export function Page() {
         columns={[
           {
             header: <Trans context="device list">Device</Trans>,
-            className: 'font-medium',
+            cellClassName: 'font-medium',
             hideOnMobile: true,
             cell: (session) => <DeviceName session={session} />,
           },
           {
             header: <Trans context="device list">IP address</Trans>,
-            className: 'font-mono text-xs',
+            cellClassName: 'font-mono text-xs',
             cell: (session) => session.deviceMetadata.ipAddress,
           },
           {
             header: <Trans context="device list">Last seen</Trans>,
-            className: 'text-muted-foreground whitespace-nowrap',
+            className: 'whitespace-nowrap',
+            cellClassName: 'text-muted-foreground',
             cell: (session) => <LastSeen session={session} />,
           },
         ]}

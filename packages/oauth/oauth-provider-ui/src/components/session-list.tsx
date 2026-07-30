@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table.tsx'
+import { cn } from '#/lib/utils.ts'
 
 export type SessionListColumn<T> = {
   /** Column heading. Rendered visually and as the row's `<th>` scope. */
@@ -19,6 +20,8 @@ export type SessionListColumn<T> = {
   cell: (item: T) => ReactNode
   /** Tailwind width/alignment classes for both header and cells. */
   className?: string
+  /** Type and colour for the cells, so the headings stay uniform. */
+  cellClassName?: string
   /** Hidden below `md`, where the card layout takes over. */
   hideOnMobile?: boolean
 }
@@ -139,7 +142,10 @@ export function SessionList<T>({
               filtered.map((item) => (
                 <TableRow key={rowKey(item)}>
                   {columns.map((column, index) => (
-                    <TableCell key={index} className={column.className}>
+                    <TableCell
+                      key={index}
+                      className={cn(column.className, column.cellClassName)}
+                    >
                       {column.cell(item)}
                     </TableCell>
                   ))}
