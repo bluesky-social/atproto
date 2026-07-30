@@ -93,7 +93,7 @@ describe('style.css theme tokens', () => {
     (token, branding) => {
       for (const block of [brandedLight, brandedDark]) {
         const pattern = new RegExp(
-          `--${token}: rgb\\(var\\(--branding-color-${branding}, [\\d ]+\\)\\);`,
+          `--${token}: rgb\\(\\s*var\\(--branding-color-${branding}, [\\d ]+\\)\\s*\\);`,
         )
         expect(block).toMatch(pattern)
       }
