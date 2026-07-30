@@ -47,7 +47,7 @@ export function Page() {
 
   return (
     <div className="flex flex-col gap-4">
-      <p>
+      <p className="text-sm">
         <Trans>
           These apps have access to your account. An app may appear multiple
           times if you use it on different devices. You can revoke access to log

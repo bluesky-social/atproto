@@ -47,7 +47,7 @@ export function Page() {
 
   return (
     <div className="flex flex-col gap-4">
-      <p>
+      <p className="text-sm">
         <Trans>
           Your account is signed in on the devices listed below. If your account
           was compromised, sign out all devices, change your password, and check
