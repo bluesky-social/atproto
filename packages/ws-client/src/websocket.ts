@@ -1,5 +1,5 @@
 import { CloseCode } from './lib/close-codes.js'
-import { CloseError, WebSocketClientError } from './lib/errors.js'
+import { CloseError } from './lib/errors.js'
 import { invokeHook } from './lib/invoke-hook.js'
 import { backoffMs, defaultShouldReconnect } from './lib/reconnect-policy.js'
 import {
@@ -173,10 +173,6 @@ export function createWebSocket(
         // means every exit path tears the connection down exactly once.
         const teardown = new AbortController()
         forwardAbort(signal, teardown)
-        // Hooks get a sender scoped to this connection rather than the transport
-        // itself, so it can be revoked as soon as the connection ends — see the
-        // onClose wiring below.
-        let live = true
         let opened = false
         // Both of these are per-attempt, and must be cleared here rather than
         // only written on success: a detail left over from an earlier connection
@@ -192,27 +188,17 @@ export function createWebSocket(
         const closeReported = new Promise<void>((resolve) => {
           reportClosed = resolve
         })
-        const invalidateSender = () => {
-          live = false
-        }
         try {
           const transport = createTransport<M>({
             ...connectionOptions(options),
             url: resolved,
             signal: teardown.signal,
+            // The sender handed out is the transport's own: its send() already
+            // rejects once this connection is no longer open, which the
+            // transport knows the moment its socket closes, errors, or aborts.
             onOpen: (sender) => {
               retries = 0 // a stable open: the backoff starts over
               opened = true
-              const scoped: Sender<M> = {
-                async send(data) {
-                  if (!live) {
-                    throw new WebSocketClientError(
-                      'WebSocket is not open: this connection has ended',
-                    )
-                  }
-                  return sender.send(data)
-                },
-              }
               // onOpen bookends the stream and fires once, before the first
               // onConnect; onConnect fires for every connection including this
               // one.
@@ -220,20 +206,17 @@ export function createWebSocket(
                 firstOpen = false
                 invokeHook(options.onOpen)
               }
-              invokeHook(options.onConnect, scoped)
+              invokeHook(options.onConnect, sender)
             },
             onClose: (detail) => {
               closeDetail = detail
               reportClosed()
-              // Stop accepting writes on the scoped sender *now*. Waiting for
-              // the loop to notice would leave a window — the loop only advances
-              // when the consumer pulls — in which a hook holding the sender
-              // could hand data to a dead socket and see it silently dropped.
-              const wasLive = live
-              invalidateSender()
               // Only for a connection that actually connected, and only once:
               // this is what makes onConnect/onDisconnect pair exactly.
-              if (wasLive && opened) invokeHook(options.onDisconnect)
+              if (opened) {
+                opened = false
+                invokeHook(options.onDisconnect)
+              }
             },
           })
           // Construction succeeded, so a close event is now possible and the
