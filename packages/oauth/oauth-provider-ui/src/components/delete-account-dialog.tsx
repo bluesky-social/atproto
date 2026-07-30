@@ -181,8 +181,17 @@ export function DeleteAccountDialog({
       }
     >
       <div className="align-stretch flex flex-col gap-4">
+        <Notice role="note" className="text-sm">
+          <Trans>
+            You can also temporarily deactivate your account instead. Your
+            profile, posts, feeds, and lists will no longer be visible to other
+            Bluesky users. You can reactivate your account at any time by
+            logging in.
+          </Trans>
+        </Notice>
+
         {/* @NOTE One action group, so the two buttons sit closer to each other
-          than to the Notice below. Cancel is `secondary`, as `FormShell` treats
+          than to the Notice above. Cancel is `secondary`, as `FormShell` treats
           it. `RequestCodeButton` defaults to `size="sm"` for the inline resend,
           so the size is restated here to match Cancel. */}
         <div className="flex flex-col gap-2">
@@ -208,15 +217,6 @@ export function DeleteAccountDialog({
             <Trans>Cancel</Trans>
           </Button>
         </div>
-
-        <Notice role="note" className="text-sm">
-          <Trans>
-            You can also temporarily deactivate your account instead. Your
-            profile, posts, feeds, and lists will no longer be visible to other
-            Bluesky users. You can reactivate your account at any time by
-            logging in.
-          </Trans>
-        </Notice>
       </div>
     </DialogShell>
   )

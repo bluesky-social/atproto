@@ -102,9 +102,12 @@ export function Notice({
           // template wins on specificity, and its `*:[svg]:` rules tie, where
           // stylesheet order rather than class order decides.
           action && 'grid-cols-[auto_1fr_auto]!',
-          // The registry reserves a second row for a title. Without one the
-          // notice is a single row, so its parts centre on each other.
-          !title && '*:[svg]:row-span-1! *:[svg]:translate-y-0! items-center',
+          // An action sets the row height, leaving the copy and the icon
+          // top-aligned against a taller button. Only worth centring when
+          // there is no title to align them to instead.
+          action &&
+            !title &&
+            '*:[svg]:row-span-1! *:[svg]:translate-y-0! items-center',
           className,
         )}
         {...props}

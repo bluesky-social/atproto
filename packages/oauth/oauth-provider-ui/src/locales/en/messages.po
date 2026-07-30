@@ -267,7 +267,7 @@ msgstr "Call"
 #: src/contexts/authentication.tsx:263
 #: src/components/reactivate-account-view.tsx:48
 #: src/components/delete-account-dialog.tsx:120
-#: src/components/delete-account-dialog.tsx:208
+#: src/components/delete-account-dialog.tsx:217
 #: src/components/authenticate-welcome-view.tsx:58
 #: src/components/forms/form-shell.tsx:61
 msgid "Cancel"
@@ -1047,7 +1047,7 @@ msgstr "Select domain"
 msgid "Select from an existing account"
 msgstr "Select from an existing account"
 
-#: src/components/delete-account-dialog.tsx:199
+#: src/components/delete-account-dialog.tsx:208
 msgid "Send email"
 msgstr "Send email"
 
@@ -1446,7 +1446,7 @@ msgstr "yesterday"
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
-#: src/components/delete-account-dialog.tsx:213
+#: src/components/delete-account-dialog.tsx:185
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 

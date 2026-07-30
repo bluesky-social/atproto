@@ -267,7 +267,7 @@ msgstr "Anrop"
 #: src/contexts/authentication.tsx:263
 #: src/components/reactivate-account-view.tsx:48
 #: src/components/delete-account-dialog.tsx:120
-#: src/components/delete-account-dialog.tsx:208
+#: src/components/delete-account-dialog.tsx:217
 #: src/components/authenticate-welcome-view.tsx:58
 #: src/components/forms/form-shell.tsx:61
 msgid "Cancel"
@@ -1047,7 +1047,7 @@ msgstr ""
 msgid "Select from an existing account"
 msgstr "Välj ett befintligt konto"
 
-#: src/components/delete-account-dialog.tsx:199
+#: src/components/delete-account-dialog.tsx:208
 msgid "Send email"
 msgstr "Skicka e-postmeddelande"
 
@@ -1446,7 +1446,7 @@ msgstr "igår"
 msgid "You are being redirected..."
 msgstr "Du omdirigeras…"
 
-#: src/components/delete-account-dialog.tsx:213
+#: src/components/delete-account-dialog.tsx:185
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "Om du vill kan du <0>tillfälligt inaktivera</0> ditt konto istället. Det gör att din profil samt dina inlägg, flöden och listor slutar att synas för andra Bluesky-användare. Du kan återaktivera ditt konto när som helst genom att logga in."
 
