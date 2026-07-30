@@ -13,7 +13,7 @@ import {
   useContext,
   useMemo,
 } from 'react'
-import { Alert, AlertAction, AlertDescription } from '#/components/ui/alert.tsx'
+import { Alert, AlertDescription } from '#/components/ui/alert.tsx'
 import { Button, type buttonVariants } from '#/components/ui/button.tsx'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
@@ -102,7 +102,14 @@ export function Notice({
       <Alert
         role={role}
         variant={variant === 'error' ? 'destructive' : 'default'}
-        className={cn(variantStyles[variant], className)}
+        className={cn(
+          variantStyles[variant],
+          // @NOTE The important modifier outranks Alert's own
+          // `has-[>svg]:grid-cols-[auto_1fr]`, whose :has() selector beats a
+          // plain class.
+          action && 'grid-cols-[auto_1fr_auto]!',
+          className,
+        )}
         {...props}
       >
         <Icon className={iconStyles[variant]} aria-hidden />
@@ -127,15 +134,18 @@ export function Notice({
           </AlertDescription>
         )}
 
-        {/* @NOTE AlertAction pins the button to `top-2`, which aligns it to the
-          title line. A titleless notice is a single row, where that leaves the
-          button overhanging the bottom padding — centre it instead. */}
+        {/* @NOTE A grid column rather than the registry's AlertAction overlay:
+          the overlay reserves a fixed `pr-18`, which a localized button of any
+          other width either wastes or overflows onto the copy. Row 1 puts it
+          beside the title when there is one, and `self-center` centres it
+          against the copy when there is not. */}
         {action && (
-          <AlertAction
-            className={cn('right-2.5', !title && 'top-1/2 -translate-y-1/2')}
+          <div
+            data-slot="notice-action"
+            className="col-start-3 row-start-1 self-center"
           >
             {action}
-          </AlertAction>
+          </div>
         )}
       </Alert>
     </NoticeContext>
