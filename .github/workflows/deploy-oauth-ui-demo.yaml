@@ -60,9 +60,14 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        # @NOTE --branch=main, not github.ref_name: Pages treats deploys from
+        # any branch other than the project's production branch as previews,
+        # reachable only through the per-branch alias while the apex domain
+        # stays pinned to the last production deploy. This project exists to
+        # serve exactly one thing, so every deploy is production.
         run: >-
           npx --yes wrangler@4 pages deploy
           "$GITHUB_WORKSPACE/packages/oauth/oauth-provider-ui/dist-demo"
           --project-name=${{ env.PAGES_PROJECT }}
-          --branch=${{ github.ref_name }}
+          --branch=main
           --commit-dirty=true
