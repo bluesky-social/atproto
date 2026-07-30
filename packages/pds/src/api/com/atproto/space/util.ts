@@ -3,7 +3,7 @@ import { Keypair } from '@atproto/crypto'
 import { xrpc } from '@atproto/lex'
 import { SpacePermissionMatch } from '@atproto/oauth-scopes'
 import { CommitCtx, LtHash, RepoCommit, SignedCommit } from '@atproto/space'
-import { AtUri, AtUriString, DidString } from '@atproto/syntax'
+import { AtUri, AtUriString, DidString, SpaceRef } from '@atproto/syntax'
 import {
   InvalidRequestError,
   createServiceAuthHeaders,
@@ -19,6 +19,21 @@ import { com } from '../../../../lexicons/index.js'
 // Everything except the (type, authority, skey) tuple, derived from the space URI.
 type SpaceScopeOp = Omit<SpacePermissionMatch, 'type' | 'authority' | 'skey'>
 
+/**
+ * Lexicons type a space as an `at-uri`, which does not constrain it to a space
+ * URI, so a malformed one has to be a request error rather than a 500.
+ */
+export function toSpaceRef(spaceUri: string): SpaceRef {
+  const ref = new AtUri(spaceUri).spaceRef()
+  if (!ref) {
+    throw new InvalidRequestError(
+      `Not a space uri: ${spaceUri}`,
+      'InvalidSpaceUri',
+    )
+  }
+  return ref
+}
+
 // Legacy access tokens and space credentials pre-authorize at the auth layer.
 export function assertSpaceScope(
   auth: AccessOutput | OAuthOutput | SpaceCredentialOutput,
@@ -26,7 +41,7 @@ export function assertSpaceScope(
   op: SpaceScopeOp,
 ): void {
   if (auth.credentials.type !== 'oauth') return
-  const { spaceDid, spaceType, skey } = new AtUri(spaceUri).asSpaceUri()
+  const { spaceDid, spaceType, skey } = toSpaceRef(spaceUri)
   auth.credentials.permissions.assertSpace({
     type: spaceType,
     authority: spaceDid,
@@ -69,7 +84,7 @@ export async function buildSignedCommit(opts: {
   if (!state?.setHash || !state.rev) return undefined
 
   const ctx: CommitCtx = {
-    space: new AtUri(spaceUri).asSpaceUri().space,
+    space: toSpaceRef(spaceUri).toString(),
     author,
     rev: state.rev,
   }
@@ -87,7 +102,7 @@ export async function fireNotifyWrite(
   },
 ): Promise<void> {
   const { space, writerDid, rev, setHash } = opts
-  const { spaceDid } = new AtUri(space).asSpaceUri()
+  const { spaceDid } = toSpaceRef(space)
   try {
     const spaceDidDoc = await ctx.idResolver.did.resolve(spaceDid)
     if (!spaceDidDoc) return

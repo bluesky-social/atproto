@@ -1,8 +1,8 @@
 import { isAtIdentifierString } from '@atproto/lex'
-import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import { toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.notifySpaceDeleted, {
@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const { space } = input.body
 
-      const { spaceDid } = new AtUri(space).asSpaceUri()
+      const { spaceDid } = toSpaceRef(space)
       if (auth.credentials.iss !== spaceDid) {
         throw new AuthRequiredError(
           'JWT issuer must be the space DID',

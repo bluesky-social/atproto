@@ -1,8 +1,8 @@
-import { AtUri, toDatetimeString } from '@atproto/syntax'
+import { toDatetimeString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertCredentialSpace } from './util.js'
+import { assertCredentialSpace, toSpaceRef } from './util.js'
 
 // Registrations are valid for 24h; the caller renews before expiry. May be
 // longer than the space-credential window the request was authed with.
@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
 
       assertCredentialSpace(auth.credentials, space)
 
-      const { spaceDid } = new AtUri(space).asSpaceUri()
+      const { spaceDid } = toSpaceRef(space)
 
       // Key the registration by the endpoint it delivers to. (The space
       // credential no longer carries an attested client_id.)

@@ -1,7 +1,7 @@
 import { getServiceEndpoint } from '@atproto/common'
 import { xrpc } from '@atproto/lex'
 import { createSpaceToken, parseSpaceToken } from '@atproto/space'
-import { AtUri, AtUriString, DidString } from '@atproto/syntax'
+import { AtUriString, DidString } from '@atproto/syntax'
 import {
   InvalidRequestError,
   Server,
@@ -9,6 +9,7 @@ import {
 } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import { toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getSpaceCredential, {
@@ -24,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const { spaceDid } = new AtUri(space).asSpaceUri()
+      const { spaceDid } = toSpaceRef(space)
 
       // Parse the client attestation if present. Structural validation only.
       // @TODO Full verification means resolving `iss` (the client_id) to the

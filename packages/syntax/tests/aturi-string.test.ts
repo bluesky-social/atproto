@@ -3,10 +3,12 @@ import { describe, expect, test } from 'vitest'
 import {
   AtUri,
   InvalidAtUriError,
+  SpaceRef,
   assertAtUriString,
   isAtUriString,
   isPublicAtUriString,
   isSpaceAtUriString,
+  isSpaceRefString,
   isSpaceUri,
   parseAtUriString,
 } from '../src/index.js'
@@ -350,27 +352,90 @@ describe('custom cases', () => {
       expect(uri.spaceDid).toBe('did:plc:asdf123')
       expect(uri.spaceType).toBe('com.example.group')
       expect(uri.skey).toBe('default')
-      expect(uri.space).toBe(
-        'at://did:plc:asdf123/space/com.example.group/default',
-      )
-    })
-
-    test('a record uri still names its space', () => {
-      const uri = new AtUri(
-        'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
-      )
-      expect(uri.spaceDid).toBe('did:plc:asdf123')
-      expect(uri.space).toBe(
-        'at://did:plc:asdf123/space/com.example.group/default',
-      )
     })
 
     test('space accessors are undefined on a public uri', () => {
       const uri = new AtUri('at://did:plc:asdf123/com.atproto.feed.post/abc')
       expect(uri.spaceDid).toBeUndefined()
-      expect(uri.space).toBeUndefined()
       expect(uri.spaceType).toBeUndefined()
       expect(uri.skey).toBeUndefined()
+      expect(uri.spaceRef()).toBeUndefined()
+    })
+
+    test('a handle authority has no space parts', () => {
+      const uri = new AtUri(
+        'at://user.bsky.social/space/com.example.group/default',
+      )
+      expect(uri.spaceDid).toBeUndefined()
+      expect(uri.spaceRef()).toBeUndefined()
+    })
+
+    test('a non-nsid space type has no space parts', () => {
+      const uri = new AtUri('at://did:plc:asdf123/space/short/default')
+      expect(uri.spaceType).toBeUndefined()
+      expect(uri.spaceRef()).toBeUndefined()
+    })
+  })
+
+  describe('spaceRef', () => {
+    test('one check yields guaranteed parts', () => {
+      const ref = new AtUri(
+        'at://did:plc:asdf123/space/com.example.group/default',
+      ).spaceRef()
+      if (!ref) throw new Error('expected a space ref')
+
+      expect(ref).toBeInstanceOf(SpaceRef)
+      expect(ref.spaceDid).toBe('did:plc:asdf123')
+      expect(ref.spaceType).toBe('com.example.group')
+      expect(ref.skey).toBe('default')
+      expect(ref.toString()).toBe(
+        'at://did:plc:asdf123/space/com.example.group/default',
+      )
+    })
+
+    // A record uri belongs to a space, so it names one — the tail is dropped.
+    test('a record uri names the space it belongs to', () => {
+      const ref = new AtUri(
+        'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
+      ).spaceRef()
+      expect(ref?.toString()).toBe(
+        'at://did:plc:asdf123/space/com.example.group/default',
+      )
+    })
+
+    test('SpaceRef.parse accepts only the three-part form', () => {
+      const ref = SpaceRef.parse(
+        'at://did:plc:asdf123/space/com.example.group/default',
+      )
+      expect(ref.skey).toBe('default')
+
+      // a record uri is not itself a space ref
+      expect(() =>
+        SpaceRef.parse(
+          'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc',
+        ),
+      ).toThrow(InvalidAtUriError)
+      expect(() =>
+        SpaceRef.parse('at://did:plc:asdf123/com.atproto.feed.post/abc'),
+      ).toThrow(InvalidAtUriError)
+    })
+
+    test('isSpaceRefString accepts only the three-part form', () => {
+      expect(
+        isSpaceRefString(
+          'at://did:plc:asdf123/space/com.example.group/default',
+        ),
+      ).toBe(true)
+      // a record uri within a space is a valid space at-uri, but not a space ref
+      expect(
+        isSpaceRefString(
+          'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc',
+        ),
+      ).toBe(false)
+      expect(
+        isSpaceRefString('at://did:plc:asdf123/com.atproto.feed.post/abc'),
+      ).toBe(false)
+      expect(isSpaceRefString('at://did:plc:asdf123/space')).toBe(false)
     })
   })
 

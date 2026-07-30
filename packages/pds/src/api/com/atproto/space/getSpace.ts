@@ -1,8 +1,8 @@
-import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { toLexSpaceConfig } from '../simplespace/config.js'
+import { toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getSpace, {
@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       const callerDid = auth.credentials.did
       const { space } = params
 
-      const { spaceDid } = new AtUri(space).asSpaceUri()
+      const { spaceDid } = toSpaceRef(space)
       // Served by the space host (the authority's PDS).
       if (spaceDid !== callerDid) {
         throw new InvalidRequestError(

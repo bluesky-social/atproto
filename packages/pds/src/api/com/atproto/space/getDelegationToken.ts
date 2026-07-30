@@ -1,9 +1,8 @@
 import { createSpaceToken } from '@atproto/space'
-import { AtUri } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope } from './util.js'
+import { assertSpaceScope, toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getDelegationToken, {
@@ -22,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
       // whole-space access and so cannot be exchanged for a credential.
       assertSpaceScope(auth, space, { action: 'read' })
 
-      const { spaceDid } = new AtUri(space).asSpaceUri()
+      const { spaceDid } = toSpaceRef(space)
       const keypair = await ctx.actorStore.keypair(userDid)
 
       const token = await createSpaceToken(

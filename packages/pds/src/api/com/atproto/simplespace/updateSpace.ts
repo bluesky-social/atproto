@@ -1,8 +1,7 @@
-import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope } from '../space/util.js'
+import { assertSpaceScope, toSpaceRef } from '../space/util.js'
 import { fromLexAppAccess } from './config.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -18,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
 
       assertSpaceScope(auth, space, { manage: 'update' })
 
-      const { spaceDid } = new AtUri(space).asSpaceUri()
+      const { spaceDid } = toSpaceRef(space)
       if (spaceDid !== ownerDid) {
         throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
       }

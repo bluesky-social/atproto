@@ -1,5 +1,4 @@
 import { xrpc } from '@atproto/lex'
-import { AtUri } from '@atproto/syntax'
 import {
   ForbiddenError,
   Server,
@@ -7,6 +6,7 @@ import {
 } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import { toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.notifyWrite, {
@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const { space, repo, rev, hash } = input.body
 
-      const { spaceDid: ownerDid } = new AtUri(space).asSpaceUri()
+      const { spaceDid: ownerDid } = toSpaceRef(space)
 
       // The JWT is signed by the writer's keypair, so iss is the authoritative
       // identity of the caller. Require it to match the claimed writer so a

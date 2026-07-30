@@ -341,6 +341,24 @@ export function isSpaceAtUriString<I>(
 }
 
 /**
+ * A reference to a space, as distinct from a record within one.
+ *
+ * @example "at://did:plc:ewvi7nxzyoun6zhxrhs64oiz/space/app.bsky.group/default"
+ */
+export type SpaceRefString =
+  `at://${DidString}/${typeof SPACE_MARKER}/${NsidString}/${string}`
+
+/**
+ * Whether a string is a valid space ref — the three-part form only. A URI naming
+ * a record within a space is not a space ref.
+ */
+export function isSpaceRefString<I>(input: I): input is I & SpaceRefString {
+  if (!isSpaceAtUriString(input)) return false
+  const result = parseAtUriString(input)
+  return result.success && result.value.isSpace && result.value.author == null
+}
+
+/**
  * A space's identity and membership are keyed on DIDs, so unlike a public ATURI
  * neither the authority nor the author may be a handle.
  */

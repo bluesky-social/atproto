@@ -7,9 +7,15 @@ import {
   AtUriString,
   InvalidAtUriError,
   SPACE_MARKER,
+  SpaceRefString,
 } from './aturi_validation.js'
-import { DidString, InvalidDidError, isValidDid } from './did.js'
-import { NsidString, ensureValidNsid } from './nsid.js'
+import {
+  DidString,
+  InvalidDidError,
+  ensureValidDid,
+  isValidDid,
+} from './did.js'
+import { NsidString, ensureValidNsid, isValidNsid } from './nsid.js'
 import { RecordKeyString, ensureValidRecordKey } from './recordkey.js'
 
 export * from './aturi_validation.js'
@@ -76,6 +82,11 @@ export class AtUri {
     collection?: string,
     rkey?: string,
   ) {
+    ensureValidDid(spaceDid)
+    ensureValidNsid(spaceType)
+    if (authorDid) ensureValidDid(authorDid)
+    if (collection) ensureValidNsid(collection)
+
     let str = `at://${spaceDid}/${SPACE_MARKER}/${spaceType}/${skey}`
     if (authorDid) str += '/' + authorDid
     if (collection) str += '/' + collection
@@ -178,7 +189,7 @@ export class AtUri {
     return this.parts.spaceDid
   }
 
-  get spaceType(): string | undefined {
+  get spaceType(): NsidString | undefined {
     return this.parts.spaceType
   }
 
@@ -186,14 +197,14 @@ export class AtUri {
     return this.parts.skey
   }
 
-  get space(): AtUriString | undefined {
-    const { isSpace, spaceType, skey } = this.parts
-    if (!isSpace) return undefined
-    return `at://${this.host}/${SPACE_MARKER}/${spaceType}/${skey}` as AtUriString
-  }
-
-  asSpaceUri(): SpaceAtUri {
-    return new SpaceAtUri(this.toString())
+  /**
+   * The space this URI belongs to, whether it names the space itself or a record
+   * within it. Undefined on a public URI.
+   */
+  spaceRef(): SpaceRef | undefined {
+    const { spaceDid, spaceType, skey } = this.parts
+    if (!spaceDid || !spaceType || !skey) return undefined
+    return new SpaceRef(spaceDid, spaceType, skey)
   }
 
   get href() {
@@ -224,38 +235,34 @@ export class AtUri {
 }
 
 /**
- * An {@link AtUri} known to address a space. The space parts are always present;
- * the record path stays optional, since a space uri may name the space itself.
+ * A reference to a space, as distinct from a record within one:
+ *
+ *     at://{spaceDid}/space/{spaceType}/{skey}
  */
-export class SpaceAtUri extends AtUri {
-  constructor(uri: string, base?: string | AtUri) {
-    super(uri, base)
-    if (!super.space || !super.spaceDid || !super.spaceType || !super.skey) {
-      throw new InvalidAtUriError(`Not a space uri: ${this}`)
+export class SpaceRef {
+  constructor(
+    readonly spaceDid: DidString,
+    readonly spaceType: NsidString,
+    readonly skey: string,
+  ) {}
+
+  static parse(ref: string): SpaceRef {
+    const parsed = new AtUri(ref).spaceRef()
+    if (!parsed || parsed.toString() !== ref) {
+      throw new InvalidAtUriError(`Invalid space ref: ${ref}`)
     }
+    return parsed
   }
 
-  override get space(): AtUriString {
-    return super.space!
-  }
-
-  override get spaceDid(): DidString {
-    return super.spaceDid!
-  }
-
-  override get spaceType(): string {
-    return super.spaceType!
-  }
-
-  override get skey(): string {
-    return super.skey!
+  toString(): SpaceRefString {
+    return `at://${this.spaceDid}/${SPACE_MARKER}/${this.spaceType}/${this.skey}` as SpaceRefString
   }
 }
 
 type AtUriPathParts = {
   isSpace: boolean
   spaceDid?: DidString
-  spaceType?: string
+  spaceType?: NsidString
   skey?: string
   authorDid?: DidString
   collection?: string
@@ -279,7 +286,7 @@ function parsePath(host: string, pathname: string): AtUriPathParts {
   return {
     isSpace: true,
     spaceDid: isValidDid(host) ? host : undefined,
-    spaceType,
+    spaceType: spaceType && isValidNsid(spaceType) ? spaceType : undefined,
     skey,
     authorDid: author && isValidDid(author) ? author : undefined,
     collection,

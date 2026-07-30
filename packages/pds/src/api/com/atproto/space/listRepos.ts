@@ -1,9 +1,8 @@
 import { l } from '@atproto/lex'
-import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertCredentialSpace } from './util.js'
+import { assertCredentialSpace, toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.listRepos, {
@@ -13,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
 
       assertCredentialSpace(auth.credentials, space)
 
-      const { spaceDid } = new AtUri(space).asSpaceUri()
+      const { spaceDid } = toSpaceRef(space)
 
       // The writer set: accounts that have written to the space, maintained by
       // the authority from incoming notifyWrite calls. This is the sync

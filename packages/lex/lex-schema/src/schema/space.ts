@@ -3,7 +3,7 @@ import { LexiconRecordKey, NsidString } from '../core.js'
 /**
  * Configuration options for a space declaration.
  *
- * @property description - Optional human-readable description of the space type
+ * @property description - Optional developer-facing description of the space type
  * @property name:lang - Localized names by language code
  */
 export type SpaceOptions = {

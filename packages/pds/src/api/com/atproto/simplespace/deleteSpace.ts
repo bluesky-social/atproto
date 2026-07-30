@@ -1,6 +1,5 @@
 import { getPdsEndpoint } from '@atproto/common'
 import { xrpc } from '@atproto/lex'
-import { AtUri } from '@atproto/syntax'
 import {
   InvalidRequestError,
   Server,
@@ -8,7 +7,7 @@ import {
 } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope } from '../space/util.js'
+import { assertSpaceScope, toSpaceRef } from '../space/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.simplespace.deleteSpace, {
@@ -23,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
 
       assertSpaceScope(auth, space, { manage: 'delete' })
 
-      const { spaceDid } = new AtUri(space).asSpaceUri()
+      const { spaceDid } = toSpaceRef(space)
       if (spaceDid !== ownerDid) {
         throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
       }
