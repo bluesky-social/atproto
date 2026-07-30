@@ -1,7 +1,12 @@
 import { SeedClient, TestNetworkNoAppView, TestPds } from '@atproto/dev-env'
 import { Client, DidString, xrpc } from '@atproto/lex'
 import { parseCid } from '@atproto/lex-data'
-import { LtHash, RepoCommit, verifyRepoCarFull } from '@atproto/space'
+import {
+  LtHash,
+  RepoCommit,
+  createSpaceToken,
+  verifyRepoCarFull,
+} from '@atproto/space'
 import { AtUriString, NsidString } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { com } from '../src/lexicons/index.js'
@@ -829,6 +834,84 @@ describe('spaces', () => {
         { headers: credHeaders },
       ),
     ).rejects.toThrow()
+  })
+
+  it('refuses a credential the space authority did not issue', async () => {
+    // Carol self-signs a credential for one of alice's spaces. It verifies
+    // against her own signing key, so nothing but the iss/authority check
+    // stands between her and the space. Alice writes a record first so the
+    // read would otherwise succeed — the rejection has to come from auth.
+    const spaceUri = await createSpace('cred-forged', [carolDid])
+    await pds1Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: aliceDid,
+        collection: 'app.bsky.feed.post',
+        record: {
+          $type: 'app.bsky.feed.post',
+          text: 'forgery target',
+          createdAt: new Date().toISOString(),
+        },
+      },
+      { headers: aliceHeaders },
+    )
+
+    // A credential alice did issue reads it fine.
+    const valid = await credentialFor(pds3, carolHeaders, spaceUri)
+    expect(
+      await pds1Client.call(
+        com.atproto.space.getLatestCommit,
+        { space: spaceUri, repo: aliceDid },
+        { headers: valid },
+      ),
+    ).toBeDefined()
+
+    const carolKeypair = await pds3.ctx.actorStore.keypair(carolDid)
+    const forged = await createSpaceToken(
+      'credential',
+      { iss: carolDid, sub: spaceUri },
+      carolKeypair,
+    )
+
+    await expect(
+      pds1Client.call(
+        com.atproto.space.getLatestCommit,
+        { space: spaceUri, repo: aliceDid },
+        { headers: { authorization: `Bearer ${forged}` } },
+      ),
+    ).rejects.toThrow(/issuer is not the space authority/)
+
+    // listRepos authorizes off the credential too, on a separate path.
+    await expect(
+      pds1Client.call(
+        com.atproto.space.listRepos,
+        { space: spaceUri },
+        { headers: { authorization: `Bearer ${forged}` } },
+      ),
+    ).rejects.toThrow(/issuer is not the space authority/)
+  })
+
+  it('refuses a credential whose kid names a key the authority does not publish', async () => {
+    // The authority signs with its #atproto key and says so. A credential that
+    // claims #atproto_space must be verified against that key, which alice does
+    // not publish — so it cannot pass by falling back to #atproto.
+    const spaceUri = await createSpace('cred-kid-mismatch', [])
+
+    const aliceKeypair = await pds1.ctx.actorStore.keypair(aliceDid)
+    const mismatched = await createSpaceToken(
+      'credential',
+      { iss: aliceDid, sub: spaceUri, kid: '#atproto_space' },
+      aliceKeypair,
+    )
+
+    await expect(
+      pds1Client.call(
+        com.atproto.space.getLatestCommit,
+        { space: spaceUri, repo: aliceDid },
+        { headers: { authorization: `Bearer ${mismatched}` } },
+      ),
+    ).rejects.toThrow(/missing or bad key/)
   })
 
   // ---------------- Space config ----------------

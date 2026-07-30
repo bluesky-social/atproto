@@ -12,9 +12,12 @@ export const SPACE_TOKEN_TYPES = {
     expiresInSec: 60,
     requireAud: true,
   },
+  // An authority that publishes a dedicated `#atproto_space` key signs with it
+  // and passes that `kid`. Absent one, the space signing key is the account's
+  // `#atproto` key, which is the case for any authority hosted on a PDS.
   credential: {
     typ: 'atproto-space-credential+jwt',
-    kid: '#atproto_space',
+    kid: '#atproto',
     expiresInSec: 7200,
     requireAud: false,
   },

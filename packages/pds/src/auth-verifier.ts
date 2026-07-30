@@ -363,6 +363,24 @@ export class AuthVerifier {
     async (ctx) => {
       setAuthHeaders(ctx.res)
       const { payload } = await this.verifySpaceToken(ctx.req, 'credential')
+
+      // Only the space's own authority may issue credentials for it. Without
+      // this, any DID could sign a credential naming someone else's space and
+      // have it verified against its own signing key.
+      const spaceRef = new AtUri(payload.sub).spaceRef()
+      if (!spaceRef) {
+        throw new AuthRequiredError(
+          'space credential subject is not a space URI',
+          'BadJwtSub',
+        )
+      }
+      if (payload.iss !== spaceRef.spaceDid) {
+        throw new AuthRequiredError(
+          'space credential issuer is not the space authority',
+          'BadJwtIss',
+        )
+      }
+
       return {
         credentials: {
           type: 'space_credential',
@@ -439,19 +457,26 @@ export class AuthVerifier {
   }
 
   private async resolveSpaceKey(iss: string, kid?: string): Promise<string> {
+    if (!kid) {
+      throw new AuthRequiredError('missing token "kid"', 'BadJwt')
+    }
+    const keyId = kid.replace(/^#/, '')
+    if (keyId !== 'atproto' && keyId !== 'atproto_space') {
+      throw new AuthRequiredError(
+        `unsupported space token "kid": ${kid}`,
+        'BadJwt',
+      )
+    }
+
     const didDoc = await this.idResolver.did.resolve(iss)
     if (!didDoc) {
       throw new AuthRequiredError(`could not resolve DID: ${iss}`, 'BadJwtIss')
     }
-    const requested = kid?.replace(/^#/, '') // takes a bare id
-    // Authorities without a dedicated space key sign with their atproto key.
-    const material =
-      (requested && getVerificationMaterial(didDoc, requested)) ||
-      getVerificationMaterial(didDoc, 'atproto')
+    const material = getVerificationMaterial(didDoc, keyId)
     const didKey = material && getDidKeyFromMultibase(material)
     if (!didKey) {
       throw new AuthRequiredError(
-        `missing or bad key (${kid ?? '#atproto'}) in did doc: ${iss}`,
+        `missing or bad key (#${keyId}) in did doc: ${iss}`,
         'BadJwtIss',
       )
     }

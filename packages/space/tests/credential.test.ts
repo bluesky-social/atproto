@@ -115,7 +115,7 @@ describe('space tokens', () => {
         { getSigningKey: getKey(authorityKey), sub: SPACE },
       )
       expect(header.typ).toBe('atproto-space-credential+jwt')
-      expect(header.kid).toBe('#atproto_space')
+      expect(header.kid).toBe('#atproto')
       expect(payload.iss).toBe(AUTHORITY)
       expect(payload.aud).toBeUndefined()
       expect(payload.exp - payload.iat).toBe(7200)
@@ -124,14 +124,14 @@ describe('space tokens', () => {
     it('passes iss and kid to the key resolver', async () => {
       const getSigningKey = vi.fn(() => authorityKey.did())
       await verifySpaceToken('credential', await create(), { getSigningKey })
-      expect(getSigningKey).toHaveBeenCalledWith(AUTHORITY, '#atproto_space')
+      expect(getSigningKey).toHaveBeenCalledWith(AUTHORITY, '#atproto')
     })
 
-    it('honours a kid override for authorities with no dedicated space key', async () => {
+    it('honours a kid override for authorities with a dedicated space key', async () => {
       const getSigningKey = vi.fn(() => authorityKey.did())
-      const jwt = await create({ kid: '#atproto' })
+      const jwt = await create({ kid: '#atproto_space' })
       await verifySpaceToken('credential', jwt, { getSigningKey })
-      expect(getSigningKey).toHaveBeenCalledWith(AUTHORITY, '#atproto')
+      expect(getSigningKey).toHaveBeenCalledWith(AUTHORITY, '#atproto_space')
     })
 
     it('rejects an expired credential', async () => {
