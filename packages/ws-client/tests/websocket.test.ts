@@ -329,8 +329,11 @@ describe(createWebSocket, () => {
       expect(signals[0]?.aborted).toBe(true)
     })
 
-    it('synthesizes 1005 for onClose when no close frame applied', async () => {
-      // Nothing ever connected, so no detail was ever captured.
+    it('reports an abnormal close when no connection ever closed', async () => {
+      // A transport that throws at construction: nothing connected, so no close
+      // detail was ever captured and 1006 is the honest answer. Every other path
+      // reports the transport's own detail, since a transport settles its
+      // iteration only after its socket has closed.
       const createTransport = (() => {
         throw new SocketError(new Error('dns'))
       }) as unknown as TransportFactory
@@ -340,7 +343,7 @@ describe(createWebSocket, () => {
         drain(websocket('ws://x', { shouldReconnect: false, onClose })),
       ).rejects.toBeInstanceOf(SocketError)
       expect(onClose).toHaveBeenCalledWith({
-        code: CloseCode.NoStatus,
+        code: CloseCode.Abnormal,
         reason: '',
         wasClean: false,
       })
@@ -449,9 +452,9 @@ describe(createWebSocket, () => {
   describe('per-attempt state', () => {
     it('fails fast when the transport cannot be constructed', async () => {
       // The transports fail loudly at construction on purpose: a malformed url,
-      // browser `headers`, no global WebSocket. Nothing is wired to report a close
-      // on that path, so the terminal must not sit waiting for one — a caller's
-      // likeliest misconfiguration should surface at once.
+      // browser `headers`, no global WebSocket. There is no socket on that path
+      // and so no close to wait for, and a caller's likeliest misconfiguration
+      // should surface at once rather than after any teardown delay.
       const boom = new SocketError(new Error('cannot construct'))
       const createTransport = (() => {
         throw boom
@@ -461,7 +464,6 @@ describe(createWebSocket, () => {
       await expect(
         drain(websocket('ws://x', { shouldReconnect: false })),
       ).rejects.toBe(boom)
-      // Generous bound: what matters is that it isn't the full close grace.
       expect(Date.now() - started).toBeLessThan(250)
     })
 
@@ -503,7 +505,7 @@ describe(createWebSocket, () => {
       ).rejects.toBe(dialFailure)
       // Not { code: 1001, reason: 'bye' } from the connection before it.
       expect(onClose).toHaveBeenCalledWith({
-        code: CloseCode.NoStatus,
+        code: CloseCode.Abnormal,
         reason: '',
         wasClean: false,
       })

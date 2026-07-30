@@ -1,4 +1,3 @@
-import { CloseCode } from './lib/close-codes.js'
 import { CloseError } from './lib/errors.js'
 import { invokeHook } from './lib/invoke-hook.js'
 import { backoffMs, defaultShouldReconnect } from './lib/reconnect-policy.js'
@@ -76,10 +75,14 @@ export interface WebSocketOptions<M extends DataMode = 'auto'>
   /**
    * The stream ended. Fires exactly once per started stream, however it ended,
    * and only once the local socket is closed — so a caller can treat it as
-   * "teardown is done".
+   * "teardown is done". The end of a `for await` over the stream carries the same
+   * guarantee, since a transport settles its iteration only after its socket has
+   * closed.
    *
-   * `detail` is whatever the transport observed. `wasClean: true` means the
-   * close was orderly on our end, not that the peer acknowledged it.
+   * `detail` is whatever the transport observed, or a 1006 abnormal close if the
+   * stream ended without any connection having closed — a stop while parked in
+   * backoff between attempts, say. `wasClean: true` means the close was orderly
+   * on our end, not that the peer acknowledged it.
    */
   onClose?: (detail: CloseEventDetail) => void
 }
@@ -112,20 +115,6 @@ export type WebSocketFn = <M extends DataMode = 'auto'>(
   options?: WebSocketOptions<M>,
 ) => WebSocketIterable<M>
 
-// Reported when a stream ends with no close frame ever having applied — e.g. a
-// stop while parked in backoff between attempts. 1005 is the WHATWG convention
-// for "no status received".
-const NO_STATUS_DETAIL: CloseEventDetail = {
-  code: CloseCode.NoStatus,
-  reason: '',
-  wasClean: false,
-}
-
-// How long the terminal waits for a politely-closed connection to report its
-// close before reporting "no status" instead. Bounded so an unresponsive peer
-// delays teardown briefly rather than forever.
-const CLOSE_GRACE_MS = 1_000
-
 /**
  * Binds a platform transport factory into the public `websocket()` generator.
  * Called once per entrypoint; the `#transport` imports condition selects the
@@ -147,13 +136,12 @@ export function createWebSocket(
     // repeated failures with nothing working in between.
     let retries = 0
     let firstOpen = true
-    // This attempt's close detail, recorded synchronously by the transport's
-    // `onClose` below — so it is already set when a completed `yield*` resumes.
-    // Both the thrown CloseError and the terminal hook report it.
+    // How the last connection ended, recorded by the transport's `onClose` below.
+    // A transport settles its iteration only after its socket has closed, so this
+    // is always already set when a `yield*` resumes or rejects — which is what
+    // lets both the thrown CloseError and the terminal hook read it directly,
+    // with no synchronization of their own.
     let closeDetail: CloseEventDetail | undefined
-    // The current connection's close promise, awaited by the terminal when no
-    // detail has arrived yet. Undefined before the first connection.
-    let awaitClose: Promise<void> | undefined
 
     try {
       // The generator body doesn't run until the first pull, so an
@@ -174,20 +162,10 @@ export function createWebSocket(
         const teardown = new AbortController()
         forwardAbort(signal, teardown)
         let opened = false
-        // Both of these are per-attempt, and must be cleared here rather than
-        // only written on success: a detail left over from an earlier connection
-        // would be reported as this stream's ending, and an `awaitClose` armed
-        // for a transport that never got constructed would never settle,
-        // stalling the terminal for the full grace period.
+        // Per-attempt, and cleared here rather than only written on success: a
+        // detail left over from an earlier connection would otherwise be reported
+        // as this stream's ending.
         closeDetail = undefined
-        awaitClose = undefined
-        // Settles when the transport reports this connection's close. The
-        // terminal awaits it so `onClose` fires with the transport's own detail,
-        // and only once the connection has really finished.
-        let reportClosed!: () => void
-        const closeReported = new Promise<void>((resolve) => {
-          reportClosed = resolve
-        })
         try {
           const transport = createTransport<M>({
             ...connectionOptions(options),
@@ -210,7 +188,6 @@ export function createWebSocket(
             },
             onClose: (detail) => {
               closeDetail = detail
-              reportClosed()
               // Only for a connection that actually connected, and only once:
               // this is what makes onConnect/onDisconnect pair exactly.
               if (opened) {
@@ -219,16 +196,14 @@ export function createWebSocket(
               }
             },
           })
-          // Construction succeeded, so a close event is now possible and the
-          // terminal may wait for it.
-          awaitClose = closeReported
 
           // Per the ordinary iterator contract, a transport reports a failure by
           // rejecting and an orderly close by completing. So a close arrives
           // here as a normal completion, and this layer turns its detail into
           // the error the policy below classifies — which saves transports from
-          // inventing an error for something that isn't one. `closeDetail` was
-          // recorded synchronously by the `onClose` above, before this resumed.
+          // inventing an error for something that isn't one. `closeDetail` is
+          // always already recorded here, since a transport settles its iteration
+          // only after its socket has closed.
           //
           // A consumer `break` also lands here, resuming with a return
           // completion: it runs the `finally` and leaves the loop without
@@ -275,14 +250,13 @@ export function createWebSocket(
       // The single terminal transition: runs however the stream ends, exactly
       // once. A generator that was never pulled never gets here.
       //
-      // On a polite close the transport's close event lands just after the
-      // generator unwinds, so wait for it (bounded) rather than synthesizing a
-      // second answer. That means "our end is closed", not "the peer
-      // acknowledged" — waiting on the peer could hang teardown forever.
-      if (closeDetail === undefined && awaitClose !== undefined) {
-        await Promise.race([awaitClose, sleep(CLOSE_GRACE_MS)])
-      }
-      invokeHook(options.onClose, closeDetail ?? NO_STATUS_DETAIL)
+      // No waiting for the close: a transport settles its iteration only after
+      // its socket has closed and its detail was reported, so by the time this
+      // runs there is nothing left to synchronize with. `closeDetail` is unset
+      // only when no connection ever closed — a stop while parked in backoff, or
+      // a transport that threw at construction — where an abnormal close is the
+      // honest answer.
+      invokeHook(options.onClose, closeDetail ?? ABNORMAL_CLOSE_DETAIL)
     }
   }
 }
@@ -346,7 +320,7 @@ function forwardAbort(
 //
 // The timer stays ref'd on purpose: a process whose only pending work is this
 // backoff should stay alive to reconnect rather than exiting mid-wait.
-function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+function sleep(ms: number, signal: AbortSignal | undefined): Promise<void> {
   return new Promise((resolve) => {
     if (signal?.aborted) return resolve()
     const timer = setTimeout(() => {

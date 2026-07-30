@@ -107,7 +107,9 @@ Hooks observe the lifecycle at two levels. `onOpen()` and `onClose(detail)` book
 
 `onDisconnect`, not `onError`, is where to stop using a `sender`: the loop only advances when the consumer pulls, so `onError` can arrive well after the socket died.
 
-`onClose` fires only once the local socket is closed, so it's safe to treat as "teardown is done" and release whatever the stream depended on. `wasClean: true` means the close was orderly on our end, not that the peer acknowledged it — which no client can wait on without risking a hang.
+`onClose` fires only once the local socket is closed, so it's safe to treat as "teardown is done" and release whatever the stream depended on. The end of the `for await` carries the same guarantee: iteration doesn't settle until the socket is down, so awaiting the loop is enough — you don't need the hook to sequence a shutdown.
+
+A polite close waits for the peer to answer, so on Node.js that wait is capped at one second (after which the socket is destroyed and reported as an abnormal `1006`) rather than the 30 seconds `ws` allows by default. `wasClean: true` means the close was orderly on our end, not that the peer acknowledged it — which no client can wait on without risking a hang.
 
 ## Liveness
 
