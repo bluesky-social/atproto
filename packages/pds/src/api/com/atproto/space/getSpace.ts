@@ -1,4 +1,4 @@
-import { SpaceUri } from '@atproto/syntax'
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -15,16 +15,16 @@ export default function (server: Server, ctx: AppContext) {
       const callerDid = auth.credentials.did
       const { space } = params
 
-      const authorityDid = new SpaceUri(space).authorityDid
+      const { spaceDid } = new AtUri(space).asSpaceUri()
       // Served by the space host (the authority's PDS).
-      if (authorityDid !== callerDid) {
+      if (spaceDid !== callerDid) {
         throw new InvalidRequestError(
           'getSpace must be called on the space authority',
           'SpaceNotFound',
         )
       }
 
-      const spaceRow = await ctx.actorStore.read(authorityDid, (store) =>
+      const spaceRow = await ctx.actorStore.read(spaceDid, (store) =>
         store.space.getSpace(space),
       )
       if (!spaceRow || spaceRow.deletedAt || !spaceRow.isOwner) {

@@ -1,9 +1,14 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, test } from 'vitest'
 import {
+  AtUri,
   InvalidAtUriError,
   assertAtUriString,
   isAtUriString,
+  isPublicAtUriString,
+  isSpaceAtUriString,
+  isSpaceUri,
+  parseAtUriString,
 } from '../src/index.js'
 
 describe('valid interop', () => {
@@ -204,6 +209,13 @@ describe('custom cases', () => {
     testInvalid('at://did:plc:asdf123/space/short/default')
     // authority must be an at-identifier
     testInvalid('at://not a did/space/com.example.group/default')
+    // spaces are keyed on DIDs — a handle authority is not allowed, even though
+    // it is on a public uri
+    testInvalid('at://user.bsky.social/space/com.example.group/default')
+    // ...nor is a handle author
+    testInvalid(
+      'at://did:plc:asdf123/space/com.example.group/default/user.bsky.social/com.atproto.feed.post/abc123',
+    )
     // missing skey
     testInvalid('at://did:plc:asdf123/space/com.example.group')
     // bare marker
@@ -222,6 +234,174 @@ describe('custom cases', () => {
     testLoose(
       'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/%%%',
     )
+
+    // fragments are allowed, as on a public uri
+    testValid('at://did:plc:asdf123/space/com.example.group/default#/frag')
+    testValid(
+      'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc#/frag',
+    )
+    testInvalid('at://did:plc:asdf123/space/com.example.group/default#')
+    testInvalid('at://did:plc:asdf123/space/com.example.group/default#/a#/b')
+
+    // ...and query and trailing slash are rejected, also as on a public uri
+    testLoose('at://did:plc:asdf123/space/com.example.group/default?foo=bar')
+    testLoose('at://did:plc:asdf123/space/com.example.group/default/')
+  })
+
+  describe('discriminating space from public', () => {
+    const SPACE = 'at://did:plc:asdf123/space/com.example.group/default'
+    const PUBLIC = 'at://did:plc:asdf123/com.atproto.feed.post/abc'
+
+    test('isSpaceUri checks only for the marker', () => {
+      expect(isSpaceUri(SPACE)).toBe(true)
+      expect(isSpaceUri(PUBLIC)).toBe(false)
+      expect(isSpaceUri('at://did:plc:asdf123')).toBe(false)
+      expect(isSpaceUri('at://did:plc:asdf123/spacey/x/y')).toBe(false)
+      expect(isSpaceUri(null)).toBe(false)
+      expect(isSpaceUri(42)).toBe(false)
+    })
+
+    test('isSpaceAtUriString / isPublicAtUriString also validate', () => {
+      expect(isSpaceAtUriString(SPACE)).toBe(true)
+      expect(isPublicAtUriString(SPACE)).toBe(false)
+
+      expect(isPublicAtUriString(PUBLIC)).toBe(true)
+      expect(isSpaceAtUriString(PUBLIC)).toBe(false)
+
+      // unlike isSpaceUri, these reject anything that isn't a valid aturi
+      expect(isPublicAtUriString('hello')).toBe(false)
+      expect(isSpaceAtUriString('at://did:plc:asdf123/space')).toBe(false)
+    })
+
+    test('parseAtUriString discriminates on isSpace', () => {
+      const pub = parseAtUriString(PUBLIC)
+      expect(pub.success && pub.value.isSpace).toBe(false)
+
+      const space = parseAtUriString(
+        `${SPACE}/did:plc:user1/com.atproto.feed.post/abc123`,
+      )
+      if (!space.success || !space.value.isSpace) {
+        throw new Error('expected a space uri')
+      }
+      expect(space.value.authority).toBe('did:plc:asdf123')
+      expect(space.value.spaceType).toBe('com.example.group')
+      expect(space.value.skey).toBe('default')
+      expect(space.value.author).toBe('did:plc:user1')
+      expect(space.value.collection).toBe('com.atproto.feed.post')
+      expect(space.value.rkey).toBe('abc123')
+    })
+
+    test('isSpace', () => {
+      expect(
+        new AtUri('at://did:plc:asdf123/space/com.example.group/default')
+          .isSpace,
+      ).toBe(true)
+      expect(
+        new AtUri('at://did:plc:asdf123/com.atproto.feed.post/abc').isSpace,
+      ).toBe(false)
+      expect(new AtUri('at://did:plc:asdf123').isSpace).toBe(false)
+    })
+  })
+
+  // collection/rkey/authorDid name the record, so they read the same way for
+  // both kinds of uri.
+  describe('reading a record', () => {
+    test('from a public uri', () => {
+      const uri = new AtUri('at://did:plc:asdf123/com.atproto.feed.post/abc123')
+      expect(uri.authorDid).toBe('did:plc:asdf123')
+      expect(uri.collection).toBe('com.atproto.feed.post')
+      expect(uri.rkey).toBe('abc123')
+      // did is deprecated but unchanged
+      expect(uri.did).toBe('did:plc:asdf123')
+    })
+
+    test('from a space uri', () => {
+      const uri = new AtUri(
+        'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
+      )
+      // not 'space' — the record's actual collection
+      expect(uri.collection).toBe('com.atproto.feed.post')
+      expect(uri.rkey).toBe('abc123')
+      // the record's author, not the space's authority
+      expect(uri.authorDid).toBe('did:plc:user1')
+    })
+
+    test('a space uri with no record path names no record', () => {
+      const uri = new AtUri(
+        'at://did:plc:asdf123/space/com.example.group/default',
+      )
+      expect(uri.collection).toBe('')
+      expect(uri.rkey).toBe('')
+      expect(uri.authorDid).toBeUndefined()
+    })
+
+    test('a public uri with a handle authority has no author did', () => {
+      const uri = new AtUri('at://user.bsky.social/com.atproto.feed.post/abc')
+      expect(uri.authorDid).toBeUndefined()
+      expect(uri.collection).toBe('com.atproto.feed.post')
+    })
+  })
+
+  describe('reading a space', () => {
+    test('exposes the space parts', () => {
+      const uri = new AtUri(
+        'at://did:plc:asdf123/space/com.example.group/default',
+      )
+      expect(uri.spaceDid).toBe('did:plc:asdf123')
+      expect(uri.spaceType).toBe('com.example.group')
+      expect(uri.skey).toBe('default')
+      expect(uri.space).toBe(
+        'at://did:plc:asdf123/space/com.example.group/default',
+      )
+    })
+
+    test('a record uri still names its space', () => {
+      const uri = new AtUri(
+        'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
+      )
+      expect(uri.spaceDid).toBe('did:plc:asdf123')
+      expect(uri.space).toBe(
+        'at://did:plc:asdf123/space/com.example.group/default',
+      )
+    })
+
+    test('space accessors are undefined on a public uri', () => {
+      const uri = new AtUri('at://did:plc:asdf123/com.atproto.feed.post/abc')
+      expect(uri.spaceDid).toBeUndefined()
+      expect(uri.space).toBeUndefined()
+      expect(uri.spaceType).toBeUndefined()
+      expect(uri.skey).toBeUndefined()
+    })
+  })
+
+  describe('AtUri.makeSpace', () => {
+    test('builds a space uri', () => {
+      const uri = AtUri.makeSpace(
+        'did:plc:asdf123',
+        'com.example.group',
+        'default',
+      )
+      expect(uri.toString()).toBe(
+        'at://did:plc:asdf123/space/com.example.group/default',
+      )
+      expect(uri.skey).toBe('default')
+    })
+
+    test('builds a record uri', () => {
+      const uri = AtUri.makeSpace(
+        'did:plc:asdf123',
+        'com.example.group',
+        'default',
+        'did:plc:user1',
+        'com.atproto.feed.post',
+        'abc123',
+      )
+      expect(uri.toString()).toBe(
+        'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
+      )
+      expect(uri.authorDid).toBe('did:plc:user1')
+      expect(uri.rkey).toBe('abc123')
+    })
   })
 })
 

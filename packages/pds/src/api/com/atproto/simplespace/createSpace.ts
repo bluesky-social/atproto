@@ -1,5 +1,5 @@
 import { TID } from '@atproto/common'
-import { createSpaceUri } from '@atproto/syntax'
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
       const did = auth.credentials.did
       const { type, config } = input.body
       const skey = input.body.skey ?? TID.nextStr()
-      const spaceUri = createSpaceUri(input.body.did, type, skey)
+      const spaceUri = AtUri.makeSpace(input.body.did, type, skey)
       const space = spaceUri.toString()
       const isOwner = input.body.did === did
 

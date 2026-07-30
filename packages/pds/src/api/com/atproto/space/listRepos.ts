@@ -1,5 +1,5 @@
 import { l } from '@atproto/lex'
-import { SpaceUri } from '@atproto/syntax'
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -13,13 +13,13 @@ export default function (server: Server, ctx: AppContext) {
 
       assertCredentialSpace(auth.credentials, space)
 
-      const authorityDid = new SpaceUri(space).authorityDid
+      const { spaceDid } = new AtUri(space).asSpaceUri()
 
       // The writer set: accounts that have written to the space, maintained by
       // the authority from incoming notifyWrite calls. This is the sync
       // boundary — it enumerates writers, not readers.
       const { spaceRow, writers } = await ctx.actorStore.read(
-        authorityDid,
+        spaceDid,
         async (store) => ({
           spaceRow: await store.space.getSpace(space),
           writers: await store.space.listWriters(space, {

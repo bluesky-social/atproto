@@ -1,4 +1,4 @@
-import { SpaceUri, toDatetimeString } from '@atproto/syntax'
+import { AtUri, toDatetimeString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -16,20 +16,20 @@ export default function (server: Server, ctx: AppContext) {
 
       assertCredentialSpace(auth.credentials, space)
 
-      const authorityDid = new SpaceUri(space).authorityDid
+      const { spaceDid } = new AtUri(space).asSpaceUri()
 
       // Key the registration by the endpoint it delivers to. (The space
       // credential no longer carries an attested client_id.)
       const serviceKey = endpoint
 
-      const spaceRow = await ctx.actorStore.read(authorityDid, (store) =>
+      const spaceRow = await ctx.actorStore.read(spaceDid, (store) =>
         store.space.getSpace(space),
       )
       if (!spaceRow || spaceRow.deletedAt || !spaceRow.isOwner) {
         throw new InvalidRequestError('Space not found', 'SpaceNotFound')
       }
 
-      await ctx.actorStore.transact(authorityDid, async (actorTxn) => {
+      await ctx.actorStore.transact(spaceDid, async (actorTxn) => {
         await actorTxn.space.recordCredentialRecipient(
           space,
           serviceKey,

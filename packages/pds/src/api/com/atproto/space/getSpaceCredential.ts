@@ -1,7 +1,7 @@
 import { getServiceEndpoint } from '@atproto/common'
 import { xrpc } from '@atproto/lex'
 import { createSpaceToken, parseSpaceToken } from '@atproto/space'
-import { AtUriString, DidString, SpaceUri } from '@atproto/syntax'
+import { AtUri, AtUriString, DidString } from '@atproto/syntax'
 import {
   InvalidRequestError,
   Server,
@@ -24,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const authorityDid = new SpaceUri(space).authorityDid
+      const { spaceDid } = new AtUri(space).asSpaceUri()
 
       // Parse the client attestation if present. Structural validation only.
       // @TODO Full verification means resolving `iss` (the client_id) to the
@@ -46,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const { spaceRow, isMember } = await ctx.actorStore.read(
-        authorityDid,
+        spaceDid,
         async (store) => ({
           spaceRow: await store.space.getSpace(space),
           isMember: await store.space.isMember(space, userDid),
@@ -63,7 +63,7 @@ export default function (server: Server, ctx: AppContext) {
       const userAuthorized = await checkUserAuthorized(ctx, {
         policy: spaceRow.policy,
         managingApp: spaceRow.managingApp,
-        authorityDid,
+        spaceDid,
         space,
         userDid,
         clientId,
@@ -87,10 +87,10 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const keypair = await ctx.actorStore.keypair(authorityDid)
+      const keypair = await ctx.actorStore.keypair(spaceDid)
       const credential = await createSpaceToken(
         'credential',
-        { iss: authorityDid, sub: space },
+        { iss: spaceDid, sub: space },
         keypair,
       )
 
@@ -107,7 +107,7 @@ async function checkUserAuthorized(
   opts: {
     policy: string
     managingApp: string | null
-    authorityDid: string
+    spaceDid: string
     space: string
     userDid: string
     clientId?: string
@@ -133,13 +133,13 @@ async function checkManagingApp(
   ctx: AppContext,
   opts: {
     managingApp: string | null
-    authorityDid: string
+    spaceDid: string
     space: string
     userDid: string
     clientId?: string
   },
 ): Promise<boolean> {
-  const { managingApp, authorityDid, space, userDid, clientId } = opts
+  const { managingApp, spaceDid, space, userDid, clientId } = opts
   if (!managingApp) return false
   const [appDid, fragment] = managingApp.split('#')
   try {
@@ -150,9 +150,9 @@ async function checkManagingApp(
     })
     if (!endpoint) return false
 
-    const keypair = await ctx.actorStore.keypair(authorityDid)
+    const keypair = await ctx.actorStore.keypair(spaceDid)
     const { headers } = await createServiceAuthHeaders({
-      iss: authorityDid,
+      iss: spaceDid,
       aud: managingApp,
       lxm: com.atproto.simplespace.checkUserAccess.$lxm,
       keypair,

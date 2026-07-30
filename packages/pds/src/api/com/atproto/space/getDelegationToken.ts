@@ -1,5 +1,5 @@
 import { createSpaceToken } from '@atproto/space'
-import { SpaceUri } from '@atproto/syntax'
+import { AtUri } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       // whole-space access and so cannot be exchanged for a credential.
       assertSpaceScope(auth, space, { action: 'read' })
 
-      const authorityDid = new SpaceUri(space).authorityDid
+      const { spaceDid } = new AtUri(space).asSpaceUri()
       const keypair = await ctx.actorStore.keypair(userDid)
 
       const token = await createSpaceToken(
@@ -32,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
           sub: space,
           // Addressed to the space host (service fragment of the authority), so
           // it can't be replayed against a different authority.
-          aud: `${authorityDid}#atproto_space_host`,
+          aud: `${spaceDid}#atproto_space_host`,
         },
         keypair,
       )

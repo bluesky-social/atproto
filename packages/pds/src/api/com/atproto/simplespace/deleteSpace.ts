@@ -1,6 +1,6 @@
 import { getPdsEndpoint } from '@atproto/common'
 import { xrpc } from '@atproto/lex'
-import { SpaceUri } from '@atproto/syntax'
+import { AtUri } from '@atproto/syntax'
 import {
   InvalidRequestError,
   Server,
@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
 
       assertSpaceScope(auth, space, { manage: 'delete' })
 
-      const spaceDid = new SpaceUri(space).authorityDid
+      const { spaceDid } = new AtUri(space).asSpaceUri()
       if (spaceDid !== ownerDid) {
         throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
       }

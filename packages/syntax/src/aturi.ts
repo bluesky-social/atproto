@@ -3,8 +3,12 @@ import {
   ensureValidAtIdentifier,
   isDidIdentifier,
 } from './at-identifier.js'
-import { AtUriString } from './aturi_validation.js'
-import { DidString, InvalidDidError } from './did.js'
+import {
+  AtUriString,
+  InvalidAtUriError,
+  SPACE_MARKER,
+} from './aturi_validation.js'
+import { DidString, InvalidDidError, isValidDid } from './did.js'
 import { NsidString, ensureValidNsid } from './nsid.js'
 import { RecordKeyString, ensureValidRecordKey } from './recordkey.js'
 
@@ -25,6 +29,12 @@ export const ATP_URI_REGEX =
 //                       --path-----   --query--  --hash--
 const RELATIVE_REGEX = /^(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i
 
+/**
+ * An AT URI, addressing either public repo data or permissioned space data:
+ *
+ *     at://{authorDid}/{collection}/{rkey}                                        (public)
+ *     at://{spaceDid}/space/{spaceType}/{skey}[/{authorDid}/{collection}/{rkey}]  (space)
+ */
 export class AtUri {
   hash: string
   host: AtIdentifierString
@@ -47,11 +57,34 @@ export class AtUri {
     this.searchParams = parsed.searchParams
   }
 
+  private get parts(): AtUriPathParts {
+    return parsePath(this.host, this.pathname)
+  }
+
   static make(handleOrDid: string, collection?: string, rkey?: string) {
     let str = handleOrDid
     if (collection) str += '/' + collection
     if (rkey) str += '/' + rkey
     return new AtUri(str)
+  }
+
+  static makeSpace(
+    spaceDid: string,
+    spaceType: string,
+    skey: string,
+    authorDid?: string,
+    collection?: string,
+    rkey?: string,
+  ) {
+    let str = `at://${spaceDid}/${SPACE_MARKER}/${spaceType}/${skey}`
+    if (authorDid) str += '/' + authorDid
+    if (collection) str += '/' + collection
+    if (rkey) str += '/' + rkey
+    return new AtUri(str)
+  }
+
+  get isSpace(): boolean {
+    return this.parts.isSpace
   }
 
   get protocol() {
@@ -62,10 +95,22 @@ export class AtUri {
     return `at://${this.host}` as const
   }
 
+  /**
+   * The authority, as a DID.
+   *
+   * @deprecated ambiguous on space URIs, where the authority owns the space but
+   * the record belongs to one of its members. Use {@link AtUri#authorDid} for the
+   * account whose record this is, or {@link AtUri#spaceDid} for the space's
+   * authority.
+   */
   get did(): DidString {
     const { host } = this
     if (isDidIdentifier(host)) return host
     throw new InvalidDidError(`AtUri "${this}" does not have a DID hostname`)
+  }
+
+  get authorDid(): DidString | undefined {
+    return this.parts.authorDid
   }
 
   get hostname(): AtIdentifierString {
@@ -86,7 +131,7 @@ export class AtUri {
   }
 
   get collection() {
-    return this.pathname.split('/').filter(Boolean)[0] || ''
+    return this.parts.collection || ''
   }
 
   get collectionSafe(): NsidString {
@@ -101,13 +146,13 @@ export class AtUri {
   }
 
   unsafelySetCollection(v: string) {
-    const parts = this.pathname.split('/').filter(Boolean)
-    parts[0] = v
-    this.pathname = parts.join('/')
+    const segments = this.pathname.split('/').filter(Boolean)
+    segments[this.isSpace ? 4 : 0] = v
+    this.pathname = segments.join('/')
   }
 
   get rkey() {
-    return this.pathname.split('/').filter(Boolean)[1] || ''
+    return this.parts.rkey || ''
   }
 
   get rkeySafe(): RecordKeyString {
@@ -122,10 +167,33 @@ export class AtUri {
   }
 
   unsafelySetRkey(v: string) {
-    const parts = this.pathname.split('/').filter(Boolean)
-    parts[0] ||= 'undefined'
-    parts[1] = v
-    this.pathname = parts.join('/')
+    const segments = this.pathname.split('/').filter(Boolean)
+    const collectionAt = this.isSpace ? 4 : 0
+    segments[collectionAt] ||= 'undefined'
+    segments[collectionAt + 1] = v
+    this.pathname = segments.join('/')
+  }
+
+  get spaceDid(): DidString | undefined {
+    return this.parts.spaceDid
+  }
+
+  get spaceType(): string | undefined {
+    return this.parts.spaceType
+  }
+
+  get skey(): string | undefined {
+    return this.parts.skey
+  }
+
+  get space(): AtUriString | undefined {
+    const { isSpace, spaceType, skey } = this.parts
+    if (!isSpace) return undefined
+    return `at://${this.host}/${SPACE_MARKER}/${spaceType}/${skey}` as AtUriString
+  }
+
+  asSpaceUri(): SpaceAtUri {
+    return new SpaceAtUri(this.toString())
   }
 
   get href() {
@@ -152,6 +220,70 @@ export class AtUri {
       fragment = `#${fragment}`
     }
     return `at://${this.host}${pathname}${qs}${fragment}` as AtUriString
+  }
+}
+
+/**
+ * An {@link AtUri} known to address a space. The space parts are always present;
+ * the record path stays optional, since a space uri may name the space itself.
+ */
+export class SpaceAtUri extends AtUri {
+  constructor(uri: string, base?: string | AtUri) {
+    super(uri, base)
+    if (!super.space || !super.spaceDid || !super.spaceType || !super.skey) {
+      throw new InvalidAtUriError(`Not a space uri: ${this}`)
+    }
+  }
+
+  override get space(): AtUriString {
+    return super.space!
+  }
+
+  override get spaceDid(): DidString {
+    return super.spaceDid!
+  }
+
+  override get spaceType(): string {
+    return super.spaceType!
+  }
+
+  override get skey(): string {
+    return super.skey!
+  }
+}
+
+type AtUriPathParts = {
+  isSpace: boolean
+  spaceDid?: DidString
+  spaceType?: string
+  skey?: string
+  authorDid?: DidString
+  collection?: string
+  rkey?: string
+}
+
+function parsePath(host: string, pathname: string): AtUriPathParts {
+  const segments = pathname.split('/').filter(Boolean)
+
+  if (segments[0] !== SPACE_MARKER) {
+    const [collection, rkey] = segments
+    return {
+      isSpace: false,
+      authorDid: isValidDid(host) ? host : undefined,
+      collection,
+      rkey,
+    }
+  }
+
+  const [, spaceType, skey, author, collection, rkey] = segments
+  return {
+    isSpace: true,
+    spaceDid: isValidDid(host) ? host : undefined,
+    spaceType,
+    skey,
+    authorDid: author && isValidDid(author) ? author : undefined,
+    collection,
+    rkey,
   }
 }
 

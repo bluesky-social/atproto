@@ -1,5 +1,5 @@
 import { xrpc } from '@atproto/lex'
-import { SpaceUri } from '@atproto/syntax'
+import { AtUri } from '@atproto/syntax'
 import {
   ForbiddenError,
   Server,
@@ -14,8 +14,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const { space, repo, rev, hash } = input.body
 
-      const spaceUri = new SpaceUri(space)
-      const ownerDid = spaceUri.authorityDid
+      const { spaceDid: ownerDid } = new AtUri(space).asSpaceUri()
 
       // The JWT is signed by the writer's keypair, so iss is the authoritative
       // identity of the caller. Require it to match the claimed writer so a

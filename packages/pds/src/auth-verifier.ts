@@ -21,7 +21,7 @@ import {
   SpaceTokenType,
   verifySpaceToken,
 } from '@atproto/space'
-import { SpaceUri } from '@atproto/syntax'
+import { AtUri } from '@atproto/syntax'
 import {
   AuthRequiredError,
   Awaitable,
@@ -388,7 +388,7 @@ export class AuthVerifier {
       // from `sub` so a token minted for one authority can't be used at another.
       let expectedAud: string
       try {
-        expectedAud = `${new SpaceUri(payload.sub).authorityDid}#atproto_space_host`
+        expectedAud = `${new AtUri(payload.sub).spaceDid}#atproto_space_host`
       } catch {
         throw new AuthRequiredError(
           'delegation token subject is not a space URI',

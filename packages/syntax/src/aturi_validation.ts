@@ -1,4 +1,5 @@
 import { AtIdentifierString, isAtIdentifierString } from './at-identifier.js'
+import { DidString, isValidDid } from './did.js'
 import { Result, failure, success } from './lib/result.js'
 import { NsidString, isValidNsid } from './nsid.js'
 import { isValidRecordKey } from './recordkey.js'
@@ -177,7 +178,7 @@ export type ParseAtUriStringOptions = {
   detailed?: boolean
 }
 
-export type AtUriParts = {
+type AtUriPartsBase = {
   authority: AtIdentifierString
   query?: string
   hash?: string
@@ -186,22 +187,27 @@ export type AtUriParts = {
   | { collection: NsidString; rkey?: string }
 )
 
+export type PublicAtUriParts = AtUriPartsBase & {
+  isSpace: false
+}
+
+export type SpaceAtUriParts = AtUriPartsBase & {
+  isSpace: true
+  authority: DidString
+  spaceType: NsidString
+  skey: string
+  author?: DidString
+}
+
+export type AtUriParts = PublicAtUriParts | SpaceAtUriParts
+
 const INVALID_CHAR_REGEXP = /[^a-zA-Z0-9._~:@!$&'()*+,;=%/\\[\]#?-]/
 const AT_URI_REGEXP =
   /^(?<uri>at:\/\/(?<authority>[^/?#\s]+)(?:\/(?<collection>[^/?#\s]+)(?:\/(?<rkey>[^/?#\s]+))?)?(?<trailingSlash>\/)?)(?:\?(?<query>[^#\s]*))?(?:#(?<hash>[^\s]*))?$/
 
-// Permissioned "space" URIs reuse the at:// scheme with a literal `space`
-// marker sitting where a collection NSID would (proposal 0016). They carry more
-// path segments than a canonical at-uri, so they need their own grammar:
-//
-//   at://{authority}/space/{spaceType}/{skey}                            (space)
-//   at://{authority}/space/{spaceType}/{skey}/{author}/{collection}/{rkey} (record)
-//
-// The two are unambiguous — a canonical collection is an NSID (≥2 dots) whereas
-// the `space` marker has none.
-const SPACE_MARKER = 'space'
+export const SPACE_MARKER = 'space'
 const SPACE_AT_URI_REGEXP =
-  /^at:\/\/(?<authority>[^/?#\s]+)\/space\/(?<spaceType>[^/?#\s]+)\/(?<skey>[^/?#\s]+)(?:\/(?<author>[^/?#\s]+)\/(?<collection>[^/?#\s]+)\/(?<rkey>[^/?#\s]+))?$/
+  /^at:\/\/(?<authority>[^/?#\s]+)\/space\/(?<spaceType>[^/?#\s]+)\/(?<skey>[^/?#\s]+)(?:\/(?<author>[^/?#\s]+)\/(?<collection>[^/?#\s]+)\/(?<rkey>[^/?#\s]+))?(?<trailingSlash>\/)?(?:\?(?<query>[^#\s]*))?(?:#(?<hash>[^\s]*))?$/
 
 /**
  * Parses a valid {@link AtUriString} into a {@link AtUriParts} object, or
@@ -225,10 +231,9 @@ export function parseAtUriString(
     return failure('Disallowed characters in ATURI (ASCII)')
   }
 
-  // Permissioned space URIs (proposal 0016) reuse the at:// scheme but carry a
-  // `space` marker and extra path segments the canonical grammar disallows.
-  // Route them to their own validation.
-  if (input.startsWith(`at://`) && isSpaceMarkerUri(input)) {
+  // Space URIs carry extra path segments the public grammar disallows, so they
+  // get their own validation.
+  if (isSpaceUri(input)) {
     return parseSpaceAtUriString(input, options)
   }
 
@@ -303,21 +308,41 @@ export function parseAtUriString(
     }
   }
 
-  return success(groups as AtUriParts)
+  return success({ ...groups, isSpace: false } as PublicAtUriParts)
 }
 
-/** True when the first path segment under the authority is the `space` marker. */
-function isSpaceMarkerUri(input: string): boolean {
+/**
+ * Whether a string addresses permissioned space data. Checks only for the `space`
+ * marker — use {@link isAtUriString} to validate the URI itself.
+ */
+export function isSpaceUri(input: unknown): boolean {
+  if (typeof input !== 'string') return false
+  if (!input.startsWith('at://')) return false
   const pathStart = input.indexOf('/', 5) // after "at://"
   if (pathStart === -1) return false
   const rest = input.slice(pathStart + 1)
   return rest === SPACE_MARKER || rest.startsWith(`${SPACE_MARKER}/`)
 }
 
+/** Whether a string is a valid ATURI addressing public repo data. */
+export function isPublicAtUriString<I>(
+  input: I,
+  options?: Omit<ParseAtUriStringOptions, 'detailed'>,
+): input is I & AtUriString {
+  return !isSpaceUri(input) && isAtUriString(input, options)
+}
+
+/** Whether a string is a valid ATURI addressing permissioned space data. */
+export function isSpaceAtUriString<I>(
+  input: I,
+  options?: Omit<ParseAtUriStringOptions, 'detailed'>,
+): input is I & AtUriString {
+  return isSpaceUri(input) && isAtUriString(input, options)
+}
+
 /**
- * Validate a permissioned space URI. In strict mode the spaceType/collection
- * are checked as NSIDs, the author as a DID, and the rkey as a record key. The
- * authority may be any at-identifier (a DID in practice, per proposal 0016).
+ * A space's identity and membership are keyed on DIDs, so unlike a public ATURI
+ * neither the authority nor the author may be a handle.
  */
 function parseSpaceAtUriString(
   input: string,
@@ -328,32 +353,47 @@ function parseSpaceAtUriString(
     return failure('Space ATURI does not match expected format')
   }
 
-  if (!isAtIdentifierString(groups.authority)) {
-    return failure('Space ATURI has invalid authority')
+  if (!isValidDid(groups.authority)) {
+    return failure('Space ATURI authority must be a DID')
+  }
+
+  if (!isValidNsid(groups.spaceType)) {
+    return failure('Space ATURI has invalid space type')
+  }
+
+  if (groups.author != null) {
+    if (!isValidDid(groups.author)) {
+      return failure('Space ATURI author must be a DID')
+    }
+    if (!isValidNsid(groups.collection)) {
+      return failure('Space ATURI has invalid collection')
+    }
+  }
+
+  if (groups.hash != null) {
+    const result = parseJsonPointer(groups.hash, options)
+    if (result.success) {
+      groups.hash = result.value
+    } else {
+      return failure(`Space ATURI has invalid fragment (${result.message})`)
+    }
   }
 
   if (options?.strict !== false) {
-    if (!isValidNsid(groups.spaceType)) {
-      return failure('Space ATURI has invalid space type')
+    if (groups.trailingSlash != null) {
+      return failure('Space ATURI can not have a trailing slash')
     }
-    if (groups.author != null) {
-      if (!isAtIdentifierString(groups.author)) {
-        return failure('Space ATURI has invalid author')
-      }
-      if (!isValidNsid(groups.collection)) {
-        return failure('Space ATURI has invalid collection')
-      }
-      if (!isValidRecordKey(groups.rkey)) {
-        return failure('Space ATURI has invalid record key')
-      }
+
+    if (groups.query != null) {
+      return failure('Space ATURI query part is not allowed')
+    }
+
+    if (groups.rkey != null && !isValidRecordKey(groups.rkey)) {
+      return failure('Space ATURI has invalid record key')
     }
   }
 
-  // Space URIs don't map onto the canonical {collection, rkey} shape; surface
-  // the parts we have under the closest-fitting fields for the return type.
-  return success({
-    authority: groups.authority as AtIdentifierString,
-  } as AtUriParts)
+  return success({ ...groups, isSpace: true } as SpaceAtUriParts)
 }
 
 const BASIC_JSON_POINTER_REGEXP = /^\/[a-zA-Z0-9._~:@!$&')(*+,;=%[\]/-]*$/

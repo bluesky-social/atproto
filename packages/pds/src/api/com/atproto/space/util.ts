@@ -3,7 +3,7 @@ import { Keypair } from '@atproto/crypto'
 import { xrpc } from '@atproto/lex'
 import { SpacePermissionMatch } from '@atproto/oauth-scopes'
 import { CommitCtx, LtHash, RepoCommit, SignedCommit } from '@atproto/space'
-import { AtUriString, DidString, SpaceUri } from '@atproto/syntax'
+import { AtUri, AtUriString, DidString } from '@atproto/syntax'
 import {
   InvalidRequestError,
   createServiceAuthHeaders,
@@ -26,11 +26,11 @@ export function assertSpaceScope(
   op: SpaceScopeOp,
 ): void {
   if (auth.credentials.type !== 'oauth') return
-  const parsed = new SpaceUri(spaceUri)
+  const { spaceDid, spaceType, skey } = new AtUri(spaceUri).asSpaceUri()
   auth.credentials.permissions.assertSpace({
-    type: parsed.spaceType,
-    authority: parsed.authorityDid,
-    skey: parsed.skey,
+    type: spaceType,
+    authority: spaceDid,
+    skey,
     ...op,
   } as SpacePermissionMatch)
 }
@@ -69,7 +69,7 @@ export async function buildSignedCommit(opts: {
   if (!state?.setHash || !state.rev) return undefined
 
   const ctx: CommitCtx = {
-    space: new SpaceUri(spaceUri).space,
+    space: new AtUri(spaceUri).asSpaceUri().space,
     author,
     rev: state.rev,
   }
@@ -87,22 +87,22 @@ export async function fireNotifyWrite(
   },
 ): Promise<void> {
   const { space, writerDid, rev, setHash } = opts
-  const authorityDid = new SpaceUri(space).authorityDid
+  const { spaceDid } = new AtUri(space).asSpaceUri()
   try {
-    const authorityDidDoc = await ctx.idResolver.did.resolve(authorityDid)
-    if (!authorityDidDoc) return
-    const authorityPdsUrl = getPdsEndpoint(authorityDidDoc)
-    if (!authorityPdsUrl) return
+    const spaceDidDoc = await ctx.idResolver.did.resolve(spaceDid)
+    if (!spaceDidDoc) return
+    const spacePdsUrl = getPdsEndpoint(spaceDidDoc)
+    if (!spacePdsUrl) return
 
     const keypair = await ctx.actorStore.keypair(writerDid)
     const { headers } = await createServiceAuthHeaders({
       iss: writerDid,
-      aud: authorityDid,
+      aud: spaceDid,
       lxm: com.atproto.space.notifyWrite.$lxm,
       keypair,
     })
 
-    await xrpc(authorityPdsUrl, com.atproto.space.notifyWrite, {
+    await xrpc(spacePdsUrl, com.atproto.space.notifyWrite, {
       headers,
       body: {
         space: space as AtUriString,
