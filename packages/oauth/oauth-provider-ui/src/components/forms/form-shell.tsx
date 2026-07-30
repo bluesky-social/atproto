@@ -2,6 +2,10 @@ import { Form } from '@base-ui/react/form'
 import { Trans } from '@lingui/react/macro'
 import { Loader2Icon } from 'lucide-react'
 import { type MouseEventHandler, type ReactNode, type Ref, useRef } from 'react'
+import {
+  dialogActions,
+  useInDialog,
+} from '#/components/dialogs/dialog-shell.tsx'
 import { ErrorNotice } from '#/components/feedback/error-notice.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
@@ -76,6 +80,7 @@ export function FormShell<TValues extends Record<string, unknown>>({
   className,
   ref,
 }: FormShellProps<TValues>) {
+  const inDialog = useInDialog()
   const { run, loading, error } = useAsyncAction<[TValues]>(
     (signal, values) => onSubmit(values, signal),
     { onLoadingChange },
@@ -133,6 +138,7 @@ export function FormShell<TValues extends Record<string, unknown>>({
         key="actions"
         className={cn(
           'flex flex-row-reverse flex-wrap items-center justify-start gap-2',
+          inDialog && dialogActions,
           actionsClassName,
         )}
       >

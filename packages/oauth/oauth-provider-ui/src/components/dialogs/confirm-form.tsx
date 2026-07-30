@@ -3,8 +3,6 @@ import {
   FormShell,
   type FormShellProps,
 } from '#/components/forms/form-shell.tsx'
-import { dialogActions } from './dialog-shell.tsx'
-
 type EmptyValues = Record<string, never>
 
 export type ConfirmFormProps = Omit<FormShellProps<EmptyValues>, 'onSubmit'> & {
@@ -18,16 +16,10 @@ export type ConfirmFormProps = Omit<FormShellProps<EmptyValues>, 'onSubmit'> & {
  * Gives the confirm-only dialogs (deactivate, reactivate, revoke session)
  * `FormShell`'s action row and pending/error handling.
  */
-export function ConfirmForm({
-  handler,
-  children,
-  actionsClassName = dialogActions,
-  ...props
-}: ConfirmFormProps) {
+export function ConfirmForm({ handler, children, ...props }: ConfirmFormProps) {
   return (
     <FormShell<EmptyValues>
       {...props}
-      actionsClassName={actionsClassName}
       onSubmit={(_values, signal) => handler(signal)}
     >
       {children}

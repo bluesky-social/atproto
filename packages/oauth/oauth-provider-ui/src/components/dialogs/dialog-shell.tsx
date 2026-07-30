@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react'
+import { type ReactElement, type ReactNode, createContext, use } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,17 @@ export const dialogActions = [
   'sm:flex-row-reverse sm:items-center sm:justify-start',
   '[&_[data-slot=form-actions-spacer]]:hidden',
 ].join(' ')
+
+const InDialogContext = createContext(false)
+InDialogContext.displayName = 'InDialogContext'
+
+/**
+ * Whether the caller is rendering inside a dialog. `FormShell` reads it to
+ * pick `dialogActions` over its own row, since several forms — the handle and
+ * email ones especially — render both in a dialog and on an auth page, and
+ * only the dialog wants the grouped layout.
+ */
+export const useInDialog = () => use(InDialogContext)
 
 export type DialogShellProps = {
   /** The element that opens the dialog. */
@@ -94,7 +105,7 @@ export function DialogShell({
           )}
         </DialogHeader>
 
-        {children}
+        <InDialogContext value={true}>{children}</InDialogContext>
       </DialogContent>
     </Dialog>
   )
