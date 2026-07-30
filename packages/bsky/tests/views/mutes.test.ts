@@ -231,6 +231,22 @@ describe('mute views', () => {
       )
       expect(mutes.mutes.some((mute) => mute.did === dan)).toBe(false)
 
+      // pages are filled server-side: dan's scoped mute is the most recent
+      // and occupies the head of the first underlying page, but the page
+      // still comes back with at least `limit` full mutes.
+      const { data: page } = await agent.api.app.bsky.graph.getMutes(
+        { limit: 2 },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyGraphGetMutes,
+          ),
+        },
+      )
+      expect(page.mutes.length).toBeGreaterThanOrEqual(2)
+      expect(page.mutes.some((mute) => mute.did === dan)).toBe(false)
+      expect(page.cursor).toBeDefined()
+
       const timeline = await agent.api.app.bsky.feed.getTimeline(
         { limit: 100 },
         {
@@ -615,10 +631,12 @@ describe('mute views', () => {
       return view
     }
 
+    // pages hold at least `limit` full mutes when more remain, and may
+    // exceed it when server-side filling appends a whole underlying page
     const paginatedAll = await paginateAll(paginator)
-    paginatedAll.forEach((res) =>
-      expect(res.mutes.length).toBeLessThanOrEqual(2),
-    )
+    paginatedAll.slice(0, -1).forEach((res) => {
+      expect(res.mutes.length).toBeGreaterThanOrEqual(2)
+    })
 
     const full = await agent.api.app.bsky.graph.getMutes(
       {},

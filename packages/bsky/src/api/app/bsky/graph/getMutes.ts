@@ -35,6 +35,12 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
+// Bounds dataplane round trips per request when filling pages. A page can
+// only run short when it contains scoped mutes, so this is only reached by
+// viewers with many consecutive scoped mutes; the client just paginates
+// again from the returned cursor.
+const MAX_PAGE_FILL_FETCHES = 10
+
 const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
@@ -42,23 +48,29 @@ const skeleton = async (
   if (clearlyBadCursor(params.cursor)) {
     return { mutedDids: [] }
   }
-  const { dids, mutes, cursor } = await ctx.hydrator.dataplane.getMutes({
-    actorDid: params.hydrateCtx.viewer,
-    cursor: params.cursor,
-    limit: params.limit,
-  })
   // only fully muted accounts are enumerated: scoped mutes (only reposts /
-  // only quoteposts) are filtered out. Scoped entries still consume cursor
-  // range, so a page may come back short (or empty with a cursor) when the
-  // underlying page contains scoped mutes.
-  return {
-    mutedDids: (mutes.length
-      ? mutes
+  // only quoteposts) are filtered out. Since scoped entries still consume
+  // cursor range, keep fetching until the page holds at least `limit` full
+  // mutes. Whole dataplane pages are appended, so the response may exceed
+  // `limit`; this keeps the returned cursor a plain dataplane cursor.
+  const mutedDids: DidString[] = []
+  let cursor = params.cursor
+  for (let i = 0; i < MAX_PAGE_FILL_FETCHES; i++) {
+    const res = await ctx.hydrator.dataplane.getMutes({
+      actorDid: params.hydrateCtx.viewer,
+      cursor,
+      limit: params.limit,
+    })
+    const fullMuteDids = res.mutes.length
+      ? res.mutes
           .filter((mute) => !mute.onlyReposts && !mute.onlyQuoteposts)
           .map((mute) => mute.did)
-      : dids) as DidString[],
-    cursor: cursor || undefined,
+      : res.dids
+    mutedDids.push(...(fullMuteDids as DidString[]))
+    cursor = res.cursor || undefined
+    if (!cursor || mutedDids.length >= params.limit) break
   }
+  return { mutedDids, cursor }
 }
 
 const hydration = async (
