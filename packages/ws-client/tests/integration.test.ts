@@ -239,15 +239,25 @@ describe('websocket() end-to-end over real sockets', () => {
   })
 
   it('rejects the iterator on a fatal close code rather than reconnecting', async () => {
+    // A 1002 close completes its handshake, so it is reported `wasClean: true` —
+    // but it is still a failure the consumer must catch, not a completed stream.
+    // Only a 1000 close ends the loop normally. Conflating the two would turn a
+    // protocol error into a silent, successful end of iteration.
     await using server = await startServer((ws) => {
       ws.close(CloseCode.ProtocolError, 'nope')
     })
-    const gen = websocket(server.url)
+    const onClose = vi.fn()
+    const gen = websocket(server.url, { onClose })
     await expect(drain(gen)).rejects.toSatisfy((err: unknown) => {
       assert(err instanceof CloseError)
       expect(err.code).toBe(CloseCode.ProtocolError)
       expect(err.shouldRetry()).toBe(false)
       return true
+    })
+    expect(onClose).toHaveBeenCalledWith({
+      code: CloseCode.ProtocolError,
+      reason: 'nope',
+      wasClean: true,
     })
   })
 })
