@@ -3,7 +3,7 @@ import { CloseCode } from '../lib/close-codes.js'
 import {
   HeartbeatTimeoutError,
   SocketError,
-  WebSocketConnectionError,
+  WebSocketClientError,
 } from '../lib/errors.js'
 import {
   ABNORMAL_CLOSE_DETAIL,
@@ -53,8 +53,7 @@ function createTransportImpl<M extends DataMode>(
       },
     },
     onAbort: (_error, code) => {
-      // Send the close code the channel asked for; with no code there's nothing
-      // clean to say, so drop the connection outright.
+      // Send the close code the channel asked for. Missing code here indicates the connection should be dropped outright.
       if (code !== undefined) {
         ws.close(code)
       } else {
@@ -73,8 +72,6 @@ function createTransportImpl<M extends DataMode>(
   const ws = new WebSocket(options.url, options.protocols, { headers })
 
   // Pin the default so every frame, text or binary, arrives as a single Buffer.
-  // ws's RawData is `Buffer | ArrayBuffer | Buffer[]`, and only 'nodebuffer'
-  // guarantees the single Buffer the `message` listener below assumes.
   ws.binaryType = 'nodebuffer'
 
   let open = false
@@ -134,14 +131,14 @@ function createTransportImpl<M extends DataMode>(
   }
 
   const sender: Sender<M> = {
-    send: (data) =>
-      new Promise<void>((resolve, reject) => {
-        if (!open) {
-          reject(new WebSocketConnectionError('WebSocket is not open'))
-          return
-        }
+    async send(data) {
+      if (!open) {
+        throw new WebSocketClientError('WebSocket is not open')
+      }
+      return new Promise<void>((resolve, reject) => {
         ws.send(data, (err) => (err ? reject(new SocketError(err)) : resolve()))
-      }),
+      })
+    },
   }
 
   ws.on('open', () => {

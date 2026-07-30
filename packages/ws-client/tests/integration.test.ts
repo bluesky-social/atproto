@@ -3,7 +3,7 @@ import {
   CloseCode,
   CloseError,
   type Sender,
-  WebSocketConnectionError,
+  WebSocketClientError,
   websocket,
 } from '../src/index.ts'
 import type { CloseEventDetail } from '../src/message-channel.ts'
@@ -304,7 +304,7 @@ describe('sending over real sockets', () => {
 
     // The dead sender rejects rather than silently dropping the write.
     await expect(senders[0].send('too late')).rejects.toBeInstanceOf(
-      WebSocketConnectionError,
+      WebSocketClientError,
     )
 
     controller.abort(new Error('test cleanup'))

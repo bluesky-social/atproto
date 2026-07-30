@@ -1,4 +1,4 @@
-import { SocketError, WebSocketConnectionError } from '../lib/errors.js'
+import { SocketError, WebSocketClientError } from '../lib/errors.js'
 import {
   ABNORMAL_CLOSE_DETAIL,
   type CloseEventDetail,
@@ -83,7 +83,7 @@ function hasHeaders(headers: HeadersInit | undefined): boolean {
  * `WebSocket` but no `#transport` override of their own (Bun, Deno, workers,
  * Expo) — hence the loud failures below rather than assuming a browser.
  *
- * Two things Node's transport has that this one honestly lacks:
+ * Two things Node's transport has that this one lacks:
  * - No read-side backpressure. The WHATWG API has no `ws.pause()`/`resume()`, so
  *   `createMessageChannel` gets no `backpressure` hooks and `maxBufferedBytes` is
  *   the only backstop against an unbounded read buffer.
@@ -122,8 +122,7 @@ function createTransportImpl<M extends DataMode>(
     // the idle timeout work here: a merely-full buffer must not read as a pause,
     // since this platform can never actually pause.
     onAbort: (_error, code) => {
-      // Send the close code the channel asked for. A polite close is the
-      // strongest teardown the WHATWG API offers — there is no `terminate()`.
+      // A polite close is the strongest teardown the WHATWG API offers — there is no `terminate()`.
       ws.close(code)
     },
   })
@@ -141,20 +140,13 @@ function createTransportImpl<M extends DataMode>(
   }
 
   const sender: Sender<M> = {
-    send: (data) =>
-      new Promise<void>((resolve, reject) => {
-        if (!open) {
-          reject(new WebSocketConnectionError('WebSocket is not open'))
-          return
-        }
-        // The WHATWG API gives no flush notification — `send()` enqueues the
-        // frame and returns. Resolving right after hand-off is the strongest
-        // guarantee this platform offers: not that the server received anything,
-        // only that the browser accepted the write (at-most-once, like a bare
-        // WebSocket).
-        ws.send(data)
-        resolve()
-      }),
+    async send(data) {
+      if (!open) {
+        throw new WebSocketClientError('WebSocket is not open')
+      }
+      // The WHATWG API gives no flush notification, only indicates that the browser accepted the write
+      ws.send(data)
+    },
   }
 
   ws.addEventListener('open', () => {
@@ -164,16 +156,13 @@ function createTransportImpl<M extends DataMode>(
 
   ws.addEventListener('message', (ev) => {
     const { data } = ev
+    // With binaryType 'arraybuffer', a spec-compliant socket delivers text data as a string and binary
+    // data as an ArrayBuffer.
     if (typeof data === 'string') {
       channel.push(data)
     } else if (data instanceof ArrayBuffer) {
-      // With binaryType 'arraybuffer', a spec-compliant socket delivers binary
-      // data as ArrayBuffer only.
       channel.push(new Uint8Array(data))
     } else {
-      // Neither string nor ArrayBuffer means a spec violation (or a runtime that
-      // ignored binaryType), not something to coerce. Nothing else will end this
-      // connection on its own, so close it explicitly.
       const error = new SocketError(
         new TypeError('Unsupported WebSocket message data type'),
       )

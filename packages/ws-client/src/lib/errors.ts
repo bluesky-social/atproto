@@ -1,6 +1,6 @@
 import { isReconnectableClose } from './close-codes.js'
 
-export class WebSocketConnectionError extends Error {
+export class WebSocketClientError extends Error {
   constructor(message?: string, options?: { cause?: unknown }) {
     super(message, options)
     this.name = this.constructor.name
@@ -17,7 +17,7 @@ export class WebSocketConnectionError extends Error {
   }
 }
 
-export class CloseError extends WebSocketConnectionError {
+export class CloseError extends WebSocketClientError {
   constructor(
     readonly code: number,
     readonly reason: string,
@@ -32,7 +32,7 @@ export class CloseError extends WebSocketConnectionError {
   }
 }
 
-export class SocketError extends WebSocketConnectionError {
+export class SocketError extends WebSocketClientError {
   constructor(cause: unknown) {
     super('WebSocket transport error', { cause })
   }
@@ -43,7 +43,7 @@ export class SocketError extends WebSocketConnectionError {
   }
 }
 
-export class HeartbeatTimeoutError extends WebSocketConnectionError {
+export class HeartbeatTimeoutError extends WebSocketClientError {
   constructor() {
     super('WebSocket heartbeat timed out')
   }
@@ -54,7 +54,7 @@ export class HeartbeatTimeoutError extends WebSocketConnectionError {
   }
 }
 
-export class IdleTimeoutError extends WebSocketConnectionError {
+export class IdleTimeoutError extends WebSocketClientError {
   constructor() {
     super('WebSocket idle timeout elapsed with no message')
   }
@@ -65,7 +65,7 @@ export class IdleTimeoutError extends WebSocketConnectionError {
   }
 }
 
-export class BufferOverflowError extends WebSocketConnectionError {
+export class BufferOverflowError extends WebSocketClientError {
   constructor(readonly bufferedBytes: number) {
     super(`WebSocket read buffer overflowed (${bufferedBytes} bytes)`)
   }
@@ -76,7 +76,7 @@ export class BufferOverflowError extends WebSocketConnectionError {
   }
 }
 
-export class DataModeError extends WebSocketConnectionError {
+export class DataModeError extends WebSocketClientError {
   constructor(
     readonly expected: 'text' | 'binary',
     readonly received: 'text' | 'binary',
@@ -87,17 +87,5 @@ export class DataModeError extends WebSocketConnectionError {
   /** A protocol mismatch — the server would send the wrong frames again. */
   override shouldRetry(): boolean {
     return false
-  }
-}
-
-/**
- * Misuse of the client API itself, as opposed to a connection failing. Separate
- * from the `WebSocketConnectionError` taxonomy, which describes what the socket
- * did. Never retryable — a caller error won't fix itself.
- */
-export class WebSocketClientError extends Error {
-  constructor(message?: string, options?: { cause?: unknown }) {
-    super(message, options)
-    this.name = this.constructor.name
   }
 }

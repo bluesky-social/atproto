@@ -1,5 +1,5 @@
 import { CloseCode } from './lib/close-codes.js'
-import { CloseError, WebSocketConnectionError } from './lib/errors.js'
+import { CloseError, WebSocketClientError } from './lib/errors.js'
 import { invokeHook } from './lib/invoke-hook.js'
 import { backoffMs, defaultShouldReconnect } from './lib/reconnect-policy.js'
 import {
@@ -206,7 +206,7 @@ export function createWebSocket(
               const scoped: Sender<M> = {
                 async send(data) {
                   if (!live) {
-                    throw new WebSocketConnectionError(
+                    throw new WebSocketClientError(
                       'WebSocket is not open: this connection has ended',
                     )
                   }
@@ -289,21 +289,15 @@ export function createWebSocket(
         }
       }
     } finally {
-      // The single terminal transition. Reaching the generator body started this
-      // stream, so this runs however it ends, exactly once. A generator that was
-      // never pulled never gets here: no lifecycle, no `onClose`.
+      // The single terminal transition: runs however the stream ends, exactly
+      // once. A generator that was never pulled never gets here.
       //
-      // The close detail has one source: whatever the transport reported. Where
-      // the socket is closed politely rather than destroyed, its close event is
-      // asynchronous and lands just after the generator unwinds — so wait for
-      // it, bounded, rather than synthesizing a second answer here.
-      //
-      // NB that means "our end is closed", not "the peer acknowledged". Both
-      // `ws` and WHATWG fire close as soon as the local socket is done, well
-      // before the peer sees anything, and waiting on the peer isn't something a
-      // client can do: a handshake it never answers would hang teardown.
+      // On a polite close the transport's close event lands just after the
+      // generator unwinds, so wait for it (bounded) rather than synthesizing a
+      // second answer. That means "our end is closed", not "the peer
+      // acknowledged" — waiting on the peer could hang teardown forever.
       if (closeDetail === undefined && awaitClose !== undefined) {
-        await Promise.race([awaitClose, sleep(CLOSE_GRACE_MS, undefined)])
+        await Promise.race([awaitClose, sleep(CLOSE_GRACE_MS)])
       }
       invokeHook(options.onClose, closeDetail ?? NO_STATUS_DETAIL)
     }
@@ -367,9 +361,9 @@ function forwardAbort(
 // Resolves after `ms`, or promptly when `signal` aborts. Never rejects — the
 // caller classifies the stop itself.
 //
-// NB the timer stays ref'd: a process whose only pending work is this backoff
-// should stay alive to reconnect rather than exiting mid-wait.
-function sleep(ms: number, signal: AbortSignal | undefined): Promise<void> {
+// The timer stays ref'd on purpose: a process whose only pending work is this
+// backoff should stay alive to reconnect rather than exiting mid-wait.
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve) => {
     if (signal?.aborted) return resolve()
     const timer = setTimeout(() => {
