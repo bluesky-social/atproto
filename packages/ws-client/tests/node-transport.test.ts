@@ -429,6 +429,73 @@ describe(createTransport, () => {
     ac.abort(new Error('test cleanup'))
   })
 
+  it('settles iteration only once the socket has closed', async () => {
+    // The contract a consumer relies on to treat the end of iteration as
+    // "teardown is done": whatever ends the stream, the socket's close event has
+    // already fired by the time the iterator settles. Observed through onClose,
+    // which the transport invokes from that event.
+    //
+    // Checked on the three paths that end an *open* connection, since each
+    // settles the channel from a different place: a consumer stop, a polite
+    // abort, and a destructive abort.
+    const stops: Array<{ name: string; stop: (ac: AbortController) => void }> =
+      [
+        { name: 'polite abort', stop: (ac) => ac.abort() },
+        {
+          name: 'destructive abort',
+          stop: (ac) => ac.abort(new Error('boom')),
+        },
+      ]
+    for (const { name, stop } of stops) {
+      await using server = await startServer(() => {
+        // Never sends, so the consumer's pull parks until the stop lands.
+      })
+      const ac = new AbortController()
+      let closedAt: number | undefined
+      let opened = false
+      const transport = createTransport({
+        url: server.url,
+        dataMode: 'text',
+        signal: ac.signal,
+        onOpen: () => {
+          opened = true
+        },
+        onClose: () => {
+          closedAt = performance.now()
+        },
+      })
+      const iterator = transport[Symbol.asyncIterator]()
+      const parked = iterator.next().catch(() => 'rejected')
+      await vi.waitFor(() => assert(opened))
+      stop(ac)
+      await parked
+      const settledAt = performance.now()
+      assert(closedAt !== undefined, `${name}: onClose never fired`)
+      expect(closedAt, name).toBeLessThanOrEqual(settledAt)
+    }
+
+    // A consumer stop, which reaches the socket through the channel's return()
+    // rather than the signal.
+    await using server = await startServer((ws) => ws.send('one'))
+    const ac = new AbortController()
+    let closedAt: number | undefined
+    const transport = createTransport({
+      url: server.url,
+      dataMode: 'text',
+      signal: ac.signal,
+      onOpen: () => {},
+      onClose: () => {
+        closedAt = performance.now()
+      },
+    })
+    const iterator = transport[Symbol.asyncIterator]()
+    expect(await iterator.next()).toEqual({ value: 'one', done: false })
+    await iterator.return!()
+    const settledAt = performance.now()
+    assert(closedAt !== undefined, 'consumer stop: onClose never fired')
+    expect(closedAt).toBeLessThanOrEqual(settledAt)
+  })
+
   it('rejects a parked pull with the abort reason', async () => {
     // The reconnect loop depends on this: a `yield*` parked on a pull can't
     // observe an abort by itself, so the transport has to reject the pull rather

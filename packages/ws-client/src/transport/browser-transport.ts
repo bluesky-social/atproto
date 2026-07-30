@@ -4,6 +4,7 @@ import {
   type CloseEventDetail,
   type DataMode,
   closeCodeForStop,
+  closeGuard,
   createMessageChannel,
 } from '../message-channel.js'
 import type {
@@ -139,6 +140,26 @@ function createTransportImpl<M extends DataMode>(
     options.onClose(detail)
   }
 
+  // Resolves once the socket's close event has fired — the transport's proof that
+  // teardown finished, handed to the consumer by `closeGuard` below so iteration
+  // doesn't settle until the socket is down.
+  //
+  // Unlike Node there is no `terminate()` here, so a peer that never answers a
+  // close frame is bounded only by the runtime's own handshake timeout. The
+  // WHATWG API offers nothing stronger.
+  let markClosed!: () => void
+  const closed = new Promise<void>((resolve) => {
+    markClosed = resolve
+  })
+
+  // The error that ended this connection, recorded when teardown begins and
+  // applied from the 'close' handler, so a pull settles after the socket closed
+  // rather than racing it. An object so a recorded `undefined` still counts.
+  let pendingError: { error: unknown } | undefined
+  function endWith(error: unknown): void {
+    pendingError ??= { error }
+  }
+
   const sender: Sender<M> = {
     async send(data) {
       if (!open) {
@@ -163,64 +184,67 @@ function createTransportImpl<M extends DataMode>(
     } else if (data instanceof ArrayBuffer) {
       channel.push(new Uint8Array(data))
     } else {
-      const error = new SocketError(
-        new TypeError('Unsupported WebSocket message data type'),
+      // Neither string nor ArrayBuffer means a spec violation (or a runtime that
+      // ignored binaryType), not something to coerce. Nothing else will end this
+      // connection on its own, so close it explicitly.
+      endWith(
+        new SocketError(
+          new TypeError('Unsupported WebSocket message data type'),
+        ),
       )
-      channel.fail(error)
       ws.close()
-      reportClose(ABNORMAL_CLOSE_DETAIL)
     }
   })
 
+  // The one place a connection ends. Per spec every teardown — a peer's close
+  // frame, our own close(), a failed handshake — fires 'close', so settling the
+  // channel here and only here is what guarantees a consumer's iteration outlives
+  // the socket.
   ws.addEventListener('close', (ev) => {
     open = false
-    const detail: CloseEventDetail = {
+    markClosed()
+    if (pendingError) {
+      // Teardown began with a failure (a socket error, a bad frame, an idle
+      // timeout, an aborted signal): report it now that the socket is down.
+      channel.fail(pendingError.error)
+      reportClose(ABNORMAL_CLOSE_DETAIL)
+      return
+    }
+    channel.finish()
+    reportClose({
       code: ev.code,
       reason: ev.reason,
       wasClean: ev.wasClean,
-    }
-    channel.finish()
-    reportClose(detail)
+    })
   })
 
   ws.addEventListener('error', (ev) => {
     open = false
-    channel.fail(new SocketError(ev.error))
-    // Per spec an 'error' event is always followed by a 'close', so this is
-    // normally redundant with the listener above — but the guard in
-    // reportClose() keeps it to one call either way, and this covers a runtime
-    // that doesn't honor that ordering.
-    reportClose(ABNORMAL_CLOSE_DETAIL)
+    // Recorded, not applied: per spec 'close' always follows 'error' and applies
+    // it. A runtime that skipped 'close' would strand the iteration, which is why
+    // the close event is the contract both platforms rely on.
+    endWith(new SocketError(ev.error))
   })
 
   options.signal.addEventListener(
     'abort',
     () => {
       open = false
-      channel.fail(options.signal.reason)
-      // How the stop was requested decides how the socket ends: a bare abort
-      // closes politely at 1000, a CloseError closes with its code, anything else
-      // is a failure. On the polite paths the real close event carries the
-      // detail, which is why nothing is reported here.
+      endWith(options.signal.reason)
+      // How the stop was requested decides the close code: a bare abort closes
+      // politely at 1000, a CloseError closes with its code, anything else is a
+      // failure. A polite close is the strongest teardown the WHATWG API offers,
+      // so unlike Node both branches go through close(); the 'close' handler
+      // above settles the channel either way.
       const code = closeCodeForStop(options.signal.reason)
-      if (code !== undefined) {
-        ws.close(code)
-        return
-      }
-      ws.close()
-      reportClose(ABNORMAL_CLOSE_DETAIL)
+      ws.close(code)
     },
     { once: true },
   )
 
-  // The channel's iterable is handed out as-is. A connection ending is reported
-  // through `onClose` above, and the reconnect loop turns that detail into a
-  // classifiable error, so nothing here needs to invent one.
-  const iterable = channel.iterable
-
   return {
     send: sender.send,
-    [Symbol.asyncIterator]: () => iterable[Symbol.asyncIterator](),
+    [Symbol.asyncIterator]: () => closeGuard(channel.iterable, closed),
   }
 }
 

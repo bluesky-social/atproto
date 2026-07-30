@@ -10,6 +10,7 @@ import {
   type CloseEventDetail,
   type DataMode,
   closeCodeForStop,
+  closeGuard,
   createMessageChannel,
 } from '../message-channel.js'
 import {
@@ -97,6 +98,24 @@ function createTransportImpl<M extends DataMode>(
     options.onClose(detail)
   }
 
+  // Resolves once the socket's close event has fired — the transport's proof
+  // that teardown finished. `closeGuard` below hands that guarantee to the
+  // consumer: iteration doesn't settle until the socket is really down.
+  let markClosed!: () => void
+  const closed = new Promise<void>((resolve) => {
+    markClosed = resolve
+  })
+
+  // The error that ended this connection, recorded the moment teardown begins
+  // and applied to the channel from the 'close' handler. Deferring it that way
+  // is what makes a pull settle *after* the socket closed rather than racing
+  // it. Wrapped in an object so a recorded `undefined` reason is still a
+  // recorded failure.
+  let pendingError: { error: unknown } | undefined
+  function endWith(error: unknown): void {
+    pendingError ??= { error }
+  }
+
   // Flag-based heartbeat loop: each tick either found evidence of life since the
   // last tick and pings again, or decides the connection is dead and fails the
   // channel. Any inbound frame counts, not just a pong, so a busy connection is
@@ -126,9 +145,10 @@ function createTransportImpl<M extends DataMode>(
         return
       }
       if (!heartbeatAlive) {
-        channel.fail(new HeartbeatTimeoutError())
+        // Recorded and applied from 'close', like every other failure; terminate
+        // fires that event promptly since it skips the close handshake.
+        endWith(new HeartbeatTimeoutError())
         ws.terminate()
-        reportClose(ABNORMAL_CLOSE_DETAIL)
         return
       }
       heartbeatAlive = false
@@ -182,26 +202,34 @@ function createTransportImpl<M extends DataMode>(
     }
   })
 
+  // The one place a connection ends. `ws` fires 'close' on every teardown path —
+  // a peer's close frame, our own close() or terminate(), a failed dial, even a
+  // socket error (verified across all four) — so settling the channel here, and
+  // only here, is what guarantees the consumer's iteration outlives the socket.
   ws.on('close', (code: number, reason: Buffer) => {
     open = false
     clearHeartbeat()
-    const detail: CloseEventDetail = {
+    markClosed()
+    if (pendingError) {
+      // Teardown began with a failure (a socket error, a liveness timeout, an
+      // aborted signal): report it now that the socket is actually down.
+      channel.fail(pendingError.error)
+      reportClose(ABNORMAL_CLOSE_DETAIL)
+      return
+    }
+    channel.finish()
+    reportClose({
       code,
       reason: reason.toString('utf8'),
       wasClean: code === CloseCode.Normal,
-    }
-    channel.finish()
-    reportClose(detail)
+    })
   })
 
   ws.on('error', (err: Error) => {
     open = false
     clearHeartbeat()
-    channel.fail(new SocketError(err))
-    // A connection that fails before ever opening (connection refused, say)
-    // emits only 'error', never 'close', so report the closure from here too.
-    // The guard in reportClose() keeps it to exactly one call either way.
-    reportClose(ABNORMAL_CLOSE_DETAIL)
+    // Recorded, not applied: 'close' always follows 'error' and applies it.
+    endWith(new SocketError(err))
   })
 
   options.signal.addEventListener(
@@ -209,30 +237,27 @@ function createTransportImpl<M extends DataMode>(
     () => {
       open = false
       clearHeartbeat()
-      channel.fail(options.signal.reason)
+      endWith(options.signal.reason)
       // How the stop was requested decides how the socket ends: a bare abort
       // closes politely at 1000, a CloseError closes with its code, anything else
-      // is a failure that destroys the connection. On the polite paths the real
-      // close event carries the detail, which is why nothing is reported here.
+      // is a failure that destroys the connection. Either way the 'close' handler
+      // above is what settles the channel, so a consumer awaiting the end of
+      // iteration is awaiting the socket.
       const code = closeCodeForStop(options.signal.reason)
       if (code !== undefined) {
+        // Bounded by `closeTimeout`: a peer that never answers can delay this by
+        // at most CLOSE_TIMEOUT_MS before `ws` forces the close event.
         ws.close(code)
-        return
+      } else {
+        ws.terminate()
       }
-      ws.terminate()
-      reportClose(ABNORMAL_CLOSE_DETAIL)
     },
     { once: true },
   )
 
-  // The channel's iterable is handed out as-is. A connection ending is reported
-  // through `onClose` above, and the reconnect loop turns that detail into a
-  // classifiable error, so nothing here needs to invent one.
-  const iterable = channel.iterable
-
   return {
     send: sender.send,
-    [Symbol.asyncIterator]: () => iterable[Symbol.asyncIterator](),
+    [Symbol.asyncIterator]: () => closeGuard(channel.iterable, closed),
   }
 }
 
