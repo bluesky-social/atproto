@@ -468,10 +468,16 @@ export class Views {
     const blockingUri = viewer.blocking || blockingByList
     const block = !!blockedByUri || !!blockingUri
     const mutedByList = this.mutedByList(viewer, state)
+    // scoped mute flags are exclusive with muted: when the account is fully
+    // muted (directly or via a mutelist), suppress them so a scoped direct
+    // mute underneath a list mute doesn't surface both as true.
+    const muted = !!(viewer.muted || mutedByList)
     return {
-      muted: !!(viewer.muted || mutedByList),
-      mutedOnlyReposts: !!viewer.mutedOnlyReposts,
-      mutedOnlyQuoteposts: !!viewer.mutedOnlyQuoteposts,
+      muted,
+      // when muted is true, these are suppressed to avoid confusion
+      mutedOnlyReposts: !muted && !!viewer.mutedOnlyReposts,
+      // when muted is true, these are suppressed to avoid confusion
+      mutedOnlyQuoteposts: !muted && !!viewer.mutedOnlyQuoteposts,
       mutedByList: mutedByList ? this.listBasic(mutedByList, state) : undefined,
       blockedBy: !!blockedByUri,
       blocking: blockingUri,

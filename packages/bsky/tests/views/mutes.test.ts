@@ -437,6 +437,94 @@ describe('mute views', () => {
     }
   })
 
+  it('suppresses scoped mute flags when a mutelist fully mutes the account', async () => {
+    // a scoped direct mute overlapping a mutelist mute must not surface
+    // both muted and a mutedOnly* flag: the scoped flags are exclusive
+    // with muted, which wins.
+    await agent.api.app.bsky.graph.muteActor(
+      { actor: dan, onlyReposts: true },
+      {
+        headers: await network.serviceHeaders(alice, ids.AppBskyGraphMuteActor),
+        encoding: 'application/json',
+      },
+    )
+    const listRef = await sc.createList(alice, 'exclusivity test', 'mod')
+    await sc.addToList(alice, dan, listRef)
+    await network.processAll()
+    await agent.api.app.bsky.graph.muteActorList(
+      { list: listRef.uriStr },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyGraphMuteActorList,
+        ),
+        encoding: 'application/json',
+      },
+    )
+
+    try {
+      const profile = await agent.api.app.bsky.actor.getProfile(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(profile.data.viewer?.muted).toBe(true)
+      expect(profile.data.viewer?.mutedByList?.uri).toBe(listRef.uriStr)
+      expect(profile.data.viewer?.mutedOnlyReposts).toBe(false)
+      expect(profile.data.viewer?.mutedOnlyQuoteposts).toBe(false)
+
+      // removing the list mute resurfaces the scoped direct mute
+      await agent.api.app.bsky.graph.unmuteActorList(
+        { list: listRef.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyGraphUnmuteActorList,
+          ),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+      const unlisted = await agent.api.app.bsky.actor.getProfile(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(unlisted.data.viewer?.muted).toBe(false)
+      expect(unlisted.data.viewer?.mutedOnlyReposts).toBe(true)
+    } finally {
+      await agent.api.app.bsky.graph.unmuteActorList(
+        { list: listRef.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyGraphUnmuteActorList,
+          ),
+          encoding: 'application/json',
+        },
+      )
+      await agent.api.app.bsky.graph.unmuteActor(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyGraphUnmuteActor,
+          ),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+    }
+  })
+
   it('returns mute status on getProfiles', async () => {
     const res = await agent.api.app.bsky.actor.getProfiles(
       { actors: [bob, carol, dan] },

@@ -201,11 +201,11 @@
         },
         "mutedOnlyReposts": {
           "type": "boolean",
-          "description": "Whether the account's reposts are muted. Scoped mutes are exclusive with muted: this can be true while muted is false."
+          "description": "Whether the account's reposts are muted. Scoped mutes are exclusive with muted: this can be true while muted is false. If muted is true, this will be false."
         },
         "mutedOnlyQuoteposts": {
           "type": "boolean",
-          "description": "Whether the account's quote posts are muted. Scoped mutes are exclusive with muted: this can be true while muted is false."
+          "description": "Whether the account's quote posts are muted. Scoped mutes are exclusive with muted: this can be true while muted is false. If muted is true, this will be false."
         },
         "mutedByList": {
           "type": "ref",
