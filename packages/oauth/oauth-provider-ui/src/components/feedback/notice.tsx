@@ -41,14 +41,10 @@ const icons: Record<NoticeVariant, LucideIcon> = {
   error: CircleAlertIcon,
 }
 
-// @NOTE Each variant tints its border, surface and icon from the theme's
-// branded token (`info` / `warning` / `success` / `destructive`) with opacity
-// modifiers, so a deployment's configured branding colours carry through —
-// a single RGB per variant, tinted, in place of a per-shade palette.
-//
-// The shadcn registry's `destructive` alert tints only text and icon, which
-// leaves the error reading as uncoloured next to the other three — `error`
-// fills the surface so all four carry the same weight.
+// @NOTE Opacity modifiers on the branded tokens, so a deployment's configured
+// colours carry through. `error` fills its surface unlike the shadcn
+// registry's `destructive` alert, which tints only text and icon and so reads
+// as uncoloured beside the other three.
 const variantStyles: Record<NoticeVariant, string> = {
   info: 'border-info/40 bg-info/10 dark:border-info/30',
   success: 'border-success/40 bg-success/10 dark:border-success/30',
@@ -56,9 +52,7 @@ const variantStyles: Record<NoticeVariant, string> = {
   error: 'border-destructive/50 bg-destructive/10 dark:border-destructive/40',
 }
 
-// @NOTE The important modifier is load-bearing: Alert styles direct-child
-// svgs with `*:[svg]:text-current`, whose selector outranks a plain colour
-// class on the icon itself.
+// @NOTE `!` outranks the registry Alert's own `*:[svg]:text-current`.
 const iconStyles: Record<NoticeVariant, string> = {
   info: 'text-info!',
   success: 'text-success!',
@@ -104,10 +98,13 @@ export function Notice({
         variant={variant === 'error' ? 'destructive' : 'default'}
         className={cn(
           variantStyles[variant],
-          // @NOTE The important modifier outranks Alert's own
-          // `has-[>svg]:grid-cols-[auto_1fr]`, whose :has() selector beats a
-          // plain class.
+          // @NOTE `!` throughout: the registry Alert's own `has-[>svg]:`
+          // template wins on specificity, and its `*:[svg]:` rules tie, where
+          // stylesheet order rather than class order decides.
           action && 'grid-cols-[auto_1fr_auto]!',
+          // The registry reserves a second row for a title. Without one the
+          // notice is a single row, so its parts centre on each other.
+          !title && '*:[svg]:row-span-1! *:[svg]:translate-y-0! items-center',
           className,
         )}
         {...props}
@@ -134,11 +131,9 @@ export function Notice({
           </AlertDescription>
         )}
 
-        {/* @NOTE A grid column rather than the registry's AlertAction overlay:
-          the overlay reserves a fixed `pr-18`, which a localized button of any
-          other width either wastes or overflows onto the copy. Row 1 puts it
-          beside the title when there is one, and `self-center` centres it
-          against the copy when there is not. */}
+        {/* @NOTE A real column, not the registry's AlertAction: that overlays
+          the copy on a fixed `pr-18` reservation, which a button wider than
+          4.5rem — in any locale — overflows. */}
         {action && (
           <div
             data-slot="notice-action"
