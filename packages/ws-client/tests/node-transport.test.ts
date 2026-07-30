@@ -251,6 +251,47 @@ describe(createTransport, () => {
     })
   })
 
+  it('bounds a polite close against a peer that never answers it', async () => {
+    // ws.close(code) sends a close frame and then waits for the peer's answer —
+    // so a dead or hung peer controls how long our own teardown takes. `ws`
+    // bounds that wait via its closeTimeout option (destroying the socket and
+    // firing 'close' anyway), which the transport pins to ~1s in place of the
+    // 30s default. Pausing the server's raw socket simulates the hung peer: the
+    // close frame is delivered but never read.
+    await using server = await startServer((ws) => {
+      // @ts-expect-error reaching into ws internals to stop the peer reading
+      ws._socket.pause()
+    })
+    const controller = new AbortController()
+    const onClose = vi.fn()
+    let opened = false
+    createTransport({
+      url: server.url,
+      dataMode: 'auto',
+      signal: controller.signal,
+      onOpen: () => {
+        opened = true
+      },
+      onClose,
+    })
+    // The close-handshake wait only exists on an *open* socket: aborting while
+    // still CONNECTING tears down immediately and would pass vacuously.
+    await vi.waitFor(() => assert(opened))
+    const started = Date.now()
+    // A bare AbortError asks for a polite 1000 close — the path that waits.
+    controller.abort()
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1), {
+      timeout: 5_000,
+    })
+    const elapsed = Date.now() - started
+    expect(elapsed).toBeLessThan(3_000) // well under ws's 30s default
+    expect(onClose).toHaveBeenCalledWith({
+      code: CloseCode.Abnormal,
+      reason: '',
+      wasClean: false,
+    })
+  })
+
   it('ends iteration and closes the socket when signal aborts', async () => {
     await using server = await startServer(() => {})
     const controller = new AbortController()
