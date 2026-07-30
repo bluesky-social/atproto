@@ -59,8 +59,20 @@ class FakeWebSocket {
 
   send(_data: string | ArrayBufferLike | ArrayBufferView): void {}
 
+  // Records the call, then fires 'close' on a later tick like a real socket: the
+  // event is always asynchronous, and it always comes. The transport's contract
+  // depends on the second part — iteration settles from the close event — so a
+  // fake that swallowed it would hang rather than fail.
   close(code?: number, reason?: string): void {
+    if (this.closeCalls.length) return // first close wins, as in the real API
     this.closeCalls.push([code, reason])
+    setTimeout(() => {
+      this.emit('close', {
+        code: code ?? CloseCode.NoStatus,
+        reason: reason ?? '',
+        wasClean: code === CloseCode.Normal,
+      })
+    }, 0)
   }
 
   emit(type: string, ev: unknown): void {

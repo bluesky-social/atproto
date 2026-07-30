@@ -107,6 +107,47 @@ export const ABNORMAL_CLOSE_DETAIL: CloseEventDetail = {
 }
 
 /**
+ * Wraps a channel's iterator so it settles only once `closed` resolves — the
+ * transport's signal that the socket's close event has fired.
+ *
+ * This is what lets a consumer treat the end of iteration as "teardown is done".
+ * Two paths need it, both of which would otherwise settle while the socket is
+ * still closing: a consumer `break` (whose `return()` only *asks* the transport
+ * to close) and a failure the transport records before its close event lands.
+ *
+ * The wait is bounded by the transport — on Node by `ws`'s `closeTimeout`, which
+ * forces the close event if a peer never answers the handshake.
+ */
+export function closeGuard<M extends DataMode>(
+  iterable: AsyncIterable<MessageOf<M>, void, undefined>,
+  closed: Promise<void>,
+): AsyncIterator<MessageOf<M>, void, undefined> {
+  const iterator = iterable[Symbol.asyncIterator]()
+  return {
+    async next(): Promise<IteratorResult<MessageOf<M>, void>> {
+      try {
+        const result = await iterator.next()
+        // Only the terminal pull waits: a yielded message means the connection is
+        // still live, and delaying data until close would deadlock the stream.
+        if (result.done) await closed
+        return result
+      } catch (error) {
+        // A rejection is the end of iteration too, so it waits the same way.
+        await closed
+        throw error
+      }
+    },
+    async return(): Promise<IteratorResult<MessageOf<M>, void>> {
+      // Asks the channel to stop (which asks the transport to close the socket),
+      // then waits for the socket to actually be down.
+      await iterator.return?.()
+      await closed
+      return { value: undefined, done: true }
+    },
+  }
+}
+
+/**
  * How a caller-supplied stop reason maps onto a close: a bare `ac.abort()` (an
  * `AbortError`) is an orderly stop and closes with 1000; a `CloseError` says
  * which code to close with; anything else is a failure, so the connection is
