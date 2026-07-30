@@ -8,6 +8,7 @@ import {
   ids,
 } from '@atproto/api'
 import { type SeedClient, TestNetwork, seedThreadV2 } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import type {
   ThreadItemValuePost,
   ThreadOtherItemValuePost,
@@ -880,7 +881,7 @@ describe('appview thread views v2', () => {
   })
 
   describe('OP thread numbering with deleted replies', () => {
-    let op: string
+    let op: DidString
 
     beforeAll(async () => {
       await sc.createAccount('opdel', {
