@@ -57,7 +57,7 @@ export function UpdateEmailDialog({
         dismissable={dismissable}
         title={
           <>
-            <CheckIcon className="mr-2 inline size-4 text-emerald-600 dark:text-emerald-400" />
+            <CheckIcon className="text-success mr-2 inline size-4" />
             <Trans>Email address successfully updated</Trans>
           </>
         }

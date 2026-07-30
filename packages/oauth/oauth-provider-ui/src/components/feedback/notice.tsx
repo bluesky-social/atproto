@@ -41,27 +41,28 @@ const icons: Record<NoticeVariant, LucideIcon> = {
   error: CircleAlertIcon,
 }
 
-// @NOTE The theme has no success/warning tokens, only `destructive`, so those
-// two tint the border, surface and icon from Tailwind's built-in palette rather
-// than inventing tokens that branding would later have to re-derive.
+// @NOTE Each variant tints its border, surface and icon from the theme's
+// branded token (`info` / `warning` / `success` / `destructive`) with opacity
+// modifiers, so a deployment's configured branding colours carry through —
+// a single RGB per variant, tinted, in place of a per-shade palette.
 //
-// `error` takes the same treatment from `destructive`. The shadcn registry's
-// `destructive` alert tints only text and icon, which leaves the error reading
-// as uncoloured next to the other two — this fills it so all three carry the
-// same weight.
+// The shadcn registry's `destructive` alert tints only text and icon, which
+// leaves the error reading as uncoloured next to the other three — `error`
+// fills the surface so all four carry the same weight.
 const variantStyles: Record<NoticeVariant, string> = {
-  info: 'border-border',
-  success:
-    'border-emerald-500/40 bg-emerald-500/10 dark:border-emerald-400/30 dark:bg-emerald-400/10',
-  warning:
-    'border-amber-500/50 bg-amber-500/10 dark:border-amber-400/30 dark:bg-amber-400/10',
+  info: 'border-info/40 bg-info/10 dark:border-info/30',
+  success: 'border-success/40 bg-success/10 dark:border-success/30',
+  warning: 'border-warning/50 bg-warning/10 dark:border-warning/30',
   error: 'border-destructive/50 bg-destructive/10 dark:border-destructive/40',
 }
 
+// @NOTE The important modifier is load-bearing: Alert styles direct-child
+// svgs with `*:[svg]:text-current`, whose selector outranks a plain colour
+// class on the icon itself.
 const iconStyles: Record<NoticeVariant, string> = {
-  info: 'text-muted-foreground',
-  success: 'text-emerald-600 dark:text-emerald-400',
-  warning: 'text-amber-600 dark:text-amber-500',
+  info: 'text-info!',
+  success: 'text-success!',
+  warning: 'text-warning!',
   error: '',
 }
 

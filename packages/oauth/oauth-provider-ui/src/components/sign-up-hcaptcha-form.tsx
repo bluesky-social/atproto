@@ -65,7 +65,7 @@ export function SignUpHcaptchaForm({
     >
       {verifiedOnMount ? (
         <div className="flex flex-row items-center justify-start gap-2">
-          <CheckIcon className="size-8 text-emerald-600 dark:text-emerald-400" />
+          <CheckIcon className="text-success size-8" />
           <Trans>Verification successful!</Trans>
         </div>
       ) : (

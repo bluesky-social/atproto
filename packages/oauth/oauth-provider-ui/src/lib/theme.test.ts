@@ -14,6 +14,9 @@ const BRANDED_TOKENS = [
   ['primary-foreground', 'primary-contrast'],
   ['destructive', 'error'],
   ['ring', 'primary'],
+  ['info', 'info'],
+  ['warning', 'warning'],
+  ['success', 'success'],
 ] as const
 
 /** Tokens derived from the branded ones. */

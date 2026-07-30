@@ -195,7 +195,7 @@ function ValidationMessage({
         !hasValue
           ? 'text-muted-foreground'
           : valid
-            ? 'text-emerald-600 dark:text-emerald-400'
+            ? 'text-success'
             : 'text-destructive',
       )}
     >

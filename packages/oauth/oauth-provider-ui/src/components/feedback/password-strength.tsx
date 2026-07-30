@@ -14,14 +14,12 @@ export type PasswordStrengthProps = Override<
   }
 >
 
-// @NOTE The neutral palette has no success/warning tokens, so the segments use
-// Tailwind's built-in palette. See the same note in feedback/notice.tsx.
 const segmentColor: Record<number, string> = {
   0: 'bg-muted',
   [Strength.weak]: 'bg-destructive',
-  [Strength.moderate]: 'bg-amber-500',
-  [Strength.strong]: 'bg-emerald-500',
-  [Strength.extra]: 'bg-emerald-500',
+  [Strength.moderate]: 'bg-warning',
+  [Strength.strong]: 'bg-success',
+  [Strength.extra]: 'bg-success',
 }
 
 /** A segmented strength meter and its label. */

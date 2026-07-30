@@ -97,14 +97,12 @@
  * channels) and `--branding-color-{name}-contrast` into the page when the
  * deployment configures branding colours — see the provider's
  * build-customization-css.ts. When it does not, the variables are undefined
- * and each token below resolves to its var() fallback — the neutral default.
- * A deployment with no curated branding therefore keeps the neutral look,
- * deliberately not any operator's brand.
+ * and each token below resolves to its var() fallback — the pre-redesign
+ * stock palette, so an unbranded deployment keeps the look it always had.
  *
- * Only `primary` and `error` map today: they are the two names shadcn has
- * tokens for. `warning` / `info` / `success` are injected too, but their
- * consumers (Notice, PasswordStrength) build from multi-shade Tailwind
- * palettes that a single RGB cannot drive without a tint system.
+ * `warning` / `info` / `success` are single tokens, not the old multi-shade
+ * hue palettes: consumers tint surfaces and borders from them with opacity
+ * modifiers instead of per-shade variables.
  * ------------------------------------------------------------------------- */
 
 /* runtime branding: light */
@@ -116,6 +114,11 @@
   );
   --destructive: rgb(var(--branding-color-error, 220 38 38));
   --ring: rgb(var(--branding-color-primary, 131 56 236));
+
+  /* fallbacks: the pre-redesign stock blue / amber / green */
+  --info: rgb(var(--branding-color-info, 0 122 255));
+  --warning: rgb(var(--branding-color-warning, 255 171 15));
+  --success: rgb(var(--branding-color-success, 23 204 136));
 
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
@@ -132,6 +135,11 @@
     );
     --destructive: rgb(var(--branding-color-error, 248 113 113));
     --ring: rgb(var(--branding-color-primary, 131 56 236));
+
+    /* fallbacks: the same stock blue / amber / green */
+    --info: rgb(var(--branding-color-info, 0 122 255));
+    --warning: rgb(var(--branding-color-warning, 255 171 15));
+    --success: rgb(var(--branding-color-success, 23 204 136));
   }
 }
 
@@ -156,6 +164,9 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-info: var(--info);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
