@@ -89,7 +89,7 @@ describe('style.css theme tokens', () => {
   })
 
   it.each(BRANDED_TOKENS)(
-    '--%s maps --branding-color-%s with a neutral fallback, in both schemes',
+    '--%s maps --branding-color-%s with a static fallback, in both schemes',
     (token, branding) => {
       for (const block of [brandedLight, brandedDark]) {
         const pattern = new RegExp(

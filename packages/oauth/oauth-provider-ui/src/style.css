@@ -109,13 +109,13 @@
 
 /* runtime branding: light */
 :root {
-  /* neutral fallbacks: neutral-900 / neutral-50 / red-600 / neutral-400 */
-  --primary: rgb(var(--branding-color-primary, 23 23 23));
+  /* fallbacks: the pre-redesign stock purple (#8338EC) / white / red-600 */
+  --primary: rgb(var(--branding-color-primary, 131 56 236));
   --primary-foreground: rgb(
-    var(--branding-color-primary-contrast, 250 250 250)
+    var(--branding-color-primary-contrast, 255 255 255)
   );
   --destructive: rgb(var(--branding-color-error, 220 38 38));
-  --ring: rgb(var(--branding-color-primary, 163 163 163));
+  --ring: rgb(var(--branding-color-primary, 131 56 236));
 
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
@@ -125,11 +125,13 @@
 @media (prefers-color-scheme: dark) {
   /* runtime branding: dark */
   :root {
-    /* neutral fallbacks: neutral-200 / neutral-900 / red-400 / neutral-500 */
-    --primary: rgb(var(--branding-color-primary, 229 229 229));
-    --primary-foreground: rgb(var(--branding-color-primary-contrast, 23 23 23));
+    /* fallbacks: the same stock purple / white / red-400 */
+    --primary: rgb(var(--branding-color-primary, 131 56 236));
+    --primary-foreground: rgb(
+      var(--branding-color-primary-contrast, 255 255 255)
+    );
     --destructive: rgb(var(--branding-color-error, 248 113 113));
-    --ring: rgb(var(--branding-color-primary, 115 115 115));
+    --ring: rgb(var(--branding-color-primary, 131 56 236));
   }
 }
 
