@@ -137,7 +137,11 @@ export function FormShell<TValues extends Record<string, unknown>>({
       <div
         key="actions"
         className={cn(
-          'flex flex-row-reverse flex-wrap items-center justify-start gap-2',
+          // @NOTE Stacked until there is room for a row. Wrapping instead put
+          // Back on a second line at the right — the far side from where it
+          // belongs — once a locale's labels outgrew the width.
+          'flex flex-col items-stretch gap-2',
+          'sm:flex-row-reverse sm:flex-wrap sm:items-center sm:justify-start',
           inDialog && dialogActions,
           actionsClassName,
         )}
