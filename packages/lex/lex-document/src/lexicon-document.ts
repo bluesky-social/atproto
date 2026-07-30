@@ -643,6 +643,7 @@ export type LexiconPermissionSet = l.Infer<typeof lexiconPermissionSetSchema>
  */
 export const lexiconSpaceSchema = l.object({
   type: l.literal('space'),
+  key: lexiconRecordKeySchema,
   name: l.string({ minLength: 1, maxLength: 64 }),
   'name:lang': l.optional(lexiconLanguageDict),
   collections: l.array(l.string({ format: 'nsid' })),

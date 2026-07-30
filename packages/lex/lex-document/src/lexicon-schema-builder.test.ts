@@ -13,6 +13,7 @@ describe('LexiconSchemaBuilder', () => {
     | l.Subscription
     | l.Procedure
     | l.PermissionSet
+    | l.Space
   >
 
   const getSchema = <T extends abstract new (...args: any) => any>(

@@ -132,6 +132,36 @@
       "defs": {
         "demo": {
           "type": "space",
+          "key": "any",
+          "name": "Example Space",
+          "collections": []
+        }
+      }
+    }
+  },
+  {
+    "name": "space missing key",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.space",
+      "defs": {
+        "main": {
+          "type": "space",
+          "name": "Example Space",
+          "collections": []
+        }
+      }
+    }
+  },
+  {
+    "name": "space with invalid key type",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.space",
+      "defs": {
+        "main": {
+          "type": "space",
+          "key": "bogus",
           "name": "Example Space",
           "collections": []
         }

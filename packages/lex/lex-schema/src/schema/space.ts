@@ -1,4 +1,4 @@
-import { NsidString } from '../core.js'
+import { LexiconRecordKey, NsidString } from '../core.js'
 
 /**
  * Configuration options for a space declaration.
@@ -24,20 +24,26 @@ export type SpaceOptions = {
  * informs how OAuth consent screens describe the access being requested.
  *
  * @template TNsid - The NSID identifying this space type
+ * @template TKey - The recommended space key type
  *
  * @example
  * ```ts
  * const forum = new Space(
  *   'com.atmoboards.forum',
+ *   'any',
  *   'AtmoBoards Forum',
  *   ['com.atmoboards.thread', 'com.atmoboards.reply'],
  *   { 'name:lang': { es: 'Foro AtmoBoards' } },
  * )
  * ```
  */
-export class Space<const TNsid extends NsidString = any> {
+export class Space<
+  const TNsid extends NsidString = any,
+  const TKey extends LexiconRecordKey = LexiconRecordKey,
+> {
   constructor(
     readonly nsid: TNsid,
+    readonly key: TKey,
     readonly name: string,
     readonly collections: readonly NsidString[],
     readonly options: SpaceOptions = {},
@@ -48,6 +54,7 @@ export class Space<const TNsid extends NsidString = any> {
  * Creates a space declaration.
  *
  * @param nsid - The NSID identifying this space type
+ * @param key - Recommended space key type
  * @param name - Human-readable name shown on OAuth consent screens (e.g. "AtmoBoards Forum")
  * @param collections - Recommended record collections for clients of this space type
  * @param options - Optional metadata (description, localized names)
@@ -57,6 +64,7 @@ export class Space<const TNsid extends NsidString = any> {
  * ```ts
  * const forum = l.space(
  *   'com.atmoboards.forum',
+ *   'any',
  *   'AtmoBoards Forum',
  *   ['com.atmoboards.thread', 'com.atmoboards.reply'],
  *   {
@@ -70,11 +78,15 @@ export class Space<const TNsid extends NsidString = any> {
  * ```
  */
 /*@__NO_SIDE_EFFECTS__*/
-export function space<const N extends NsidString>(
+export function space<
+  const N extends NsidString,
+  const K extends LexiconRecordKey,
+>(
   nsid: N,
+  key: K,
   name: string,
   collections: readonly NsidString[],
   options?: SpaceOptions,
 ) {
-  return new Space<N>(nsid, name, collections, options)
+  return new Space<N, K>(nsid, key, name, collections, options)
 }

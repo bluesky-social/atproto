@@ -81,6 +81,7 @@
       "defs": {
         "main": {
           "type": "space",
+          "key": "any",
           "name": "AtmoBoards Forum",
           "description": "A discussion forum",
           "name:lang": {
@@ -100,6 +101,7 @@
       "defs": {
         "main": {
           "type": "space",
+          "key": "tid",
           "name": "Empty Space",
           "collections": []
         }
