@@ -17,7 +17,6 @@ import {
   type SignUpHcaptchaData,
   SignUpHcaptchaForm,
 } from './sign-up-hcaptcha-form.tsx'
-import { HelpCard } from './utils/help-card.tsx'
 
 export type SignUpViewProps = {
   onBack?: () => void
@@ -129,8 +128,6 @@ export function SignUpView({
           },
         ]}
       />
-
-      <HelpCard className="mt-4" links={links} />
     </AuthShell>
   )
 }

@@ -187,7 +187,7 @@ msgstr "N'importe quelle action"
 msgid "Any service"
 msgstr "N'importe quel service"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:75
+#: src/pages/account/(authenticated)/apps/page.tsx:79
 msgctxt "OAuthApp"
 msgid "App"
 msgstr "Application"
@@ -196,7 +196,7 @@ msgstr "Application"
 msgid "Apps"
 msgstr "Applications"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:137
+#: src/pages/account/(authenticated)/apps/page.tsx:141
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr "Les applications peuvent accéder à votre compte en arrière-plan (pour vérifier les notifications, synchroniser les données, etc.) même lorsque vous ne les utilisez pas activement. C'est un comportement normal qui sera reflété dans l'heure de \"dernier accès\"."
 
@@ -221,7 +221,7 @@ msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Autoriser"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:86
+#: src/pages/account/(authenticated)/apps/page.tsx:90
 msgctxt "OAuthApp"
 msgid "Authorized"
 msgstr "Autorisée"
@@ -324,7 +324,7 @@ msgstr "Choisissez un nouveau nom d'utilisateur par défaut."
 msgid "Choose a new email address to associate with your account."
 msgstr "Choisissez une nouvelle adresse email à associer à votre compte."
 
-#: src/components/sign-up-view.tsx:77
+#: src/components/sign-up-view.tsx:76
 msgid "Choose a username"
 msgstr "Choisissez un nom d'utilisateur"
 
@@ -332,7 +332,7 @@ msgstr "Choisissez un nom d'utilisateur"
 msgid "Click here if nothing happens"
 msgstr "Cliquez ici si rien ne se passe"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:81
+#: src/pages/account/(authenticated)/apps/page.tsx:85
 msgctxt "OAuthApp"
 msgid "Client"
 msgstr "Client"
@@ -434,7 +434,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Refuser l'accès"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:192
+#: src/pages/account/(authenticated)/apps/page.tsx:196
 msgid "Details"
 msgstr "Détails"
 
@@ -542,7 +542,7 @@ msgid "Expand details"
 msgstr "Développer les détails"
 
 #: src/components/utils/password-strength-label.tsx:25
-#: src/components/feedback/password-strength.tsx:63
+#: src/components/feedback/password-strength.tsx:61
 msgid "Extra"
 msgstr "Extra"
 
@@ -634,10 +634,6 @@ msgstr "Oublié ?"
 #: src/components/consent-view.tsx:41
 msgid "Grant access to your <0/> account"
 msgstr "Accorder l'accès à votre compte <0/>"
-
-#: src/components/utils/help-card.tsx:33
-msgid "Having trouble? <0>Contact support</0>"
-msgstr "Vous rencontrez des difficultés ? <0>Contactez le support</0>"
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
 #: src/components/forms/input-handle-custom-instructions.tsx:95
@@ -748,7 +744,7 @@ msgstr "Il semble que votre navigateur n'accepte pas les cookies. Appuyez sur \"
 msgid "just now"
 msgstr "à l'instant"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:122
+#: src/pages/account/(authenticated)/apps/page.tsx:126
 msgctxt "OAuthApp"
 msgid "Last accessed"
 msgstr "Dernier accès"
@@ -819,12 +815,12 @@ msgid "Message"
 msgstr "Message d'erreur"
 
 #: src/components/utils/password-strength-label.tsx:33
-#: src/components/feedback/password-strength.tsx:71
+#: src/components/feedback/password-strength.tsx:69
 msgid "Missing"
 msgstr "Manquant"
 
 #: src/components/utils/password-strength-label.tsx:29
-#: src/components/feedback/password-strength.tsx:67
+#: src/components/feedback/password-strength.tsx:65
 msgid "Moderate"
 msgstr "Modéré"
 
@@ -885,11 +881,11 @@ msgid "Password reset successful"
 msgstr "Réinitialisation du mot de passe réussie"
 
 #: src/components/utils/password-strength-label.tsx:23
-#: src/components/feedback/password-strength.tsx:60
+#: src/components/feedback/password-strength.tsx:58
 msgid "Password strength"
 msgstr "Complexité du mot de passe"
 
-#: src/components/feedback/password-strength.tsx:42
+#: src/components/feedback/password-strength.tsx:40
 msgid "Password strength indicator"
 msgstr "Indicateur de complexité du mot de passe"
 
@@ -1092,8 +1088,8 @@ msgstr "Déconnecter"
 msgid "Sign out"
 msgstr "Se déconnecter"
 
-#: src/components/sign-up-view.tsx:54
-#: src/components/sign-up-view.tsx:59
+#: src/components/sign-up-view.tsx:53
+#: src/components/sign-up-view.tsx:58
 #: src/components/sign-in-picker.tsx:109
 msgid "Sign up"
 msgstr "Inscription"
@@ -1116,7 +1112,7 @@ msgid "Step {currentPosition} of {count}"
 msgstr "Étape {currentPosition} sur {count}"
 
 #: src/components/utils/password-strength-label.tsx:27
-#: src/components/feedback/password-strength.tsx:65
+#: src/components/feedback/password-strength.tsx:63
 msgid "Strong"
 msgstr "Fort"
 
@@ -1377,7 +1373,7 @@ msgstr "Vérifier"
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "Vérifiez l'adresse du site avant de saisir votre mot de passe. N'entrez votre mot de passe que sur des sites que vous reconnaissez et en lesquels vous avez confiance."
 
-#: src/components/sign-up-view.tsx:114
+#: src/components/sign-up-view.tsx:113
 msgid "Verify you are human"
 msgstr "Vérifiez que vous êtes humain"
 
@@ -1397,12 +1393,12 @@ msgstr "veut vous identifier de manière unique via votre compte <0/>"
 msgid "Warning"
 msgstr "Avertissement"
 
-#: src/components/sign-up-view.tsx:55
+#: src/components/sign-up-view.tsx:54
 msgid "We're so excited to have you join us!"
 msgstr "Nous sommes ravis de vous accueillir parmi nous !"
 
 #: src/components/utils/password-strength-label.tsx:31
-#: src/components/feedback/password-strength.tsx:69
+#: src/components/feedback/password-strength.tsx:67
 msgid "Weak"
 msgstr "Faible"
 
@@ -1422,7 +1418,7 @@ msgstr "Qu'est-ce que ça signifie ?"
 msgid "What is an Atmosphere Account?"
 msgstr "Qu'est-ce qu'un compte Atmosphère ?"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:128
+#: src/pages/account/(authenticated)/apps/page.tsx:132
 msgid "Why is this time so recent?"
 msgstr "Pourquoi cette heure est-elle si récente ?"
 
@@ -1479,7 +1475,7 @@ msgstr "Vous avez précédemment désactivé <0/>. Vous pouvez réactiver votre 
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "Vous recevrez un email avec un \"code de réinitialisation\". Saisissez ce code ici puis entrez votre nouveau mot de passe."
 
-#: src/components/sign-up-view.tsx:97
+#: src/components/sign-up-view.tsx:96
 msgid "Your account"
 msgstr "Votre compte"
 
