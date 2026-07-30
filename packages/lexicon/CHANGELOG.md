@@ -1,5 +1,11 @@
 # @atproto/lexicon
 
+## 0.7.8
+
+### Patch Changes
+
+- [#5204](https://github.com/bluesky-social/atproto/pull/5204) [`d3bbeb5`](https://github.com/bluesky-social/atproto/commit/d3bbeb5fe87f8c389c2f18abd2bc055ef916a63a) Thanks [@arjxnt](https://github.com/arjxnt)! - Fix `lexiconDoc.safeParse()` so invalid lexicon user types return validation errors instead of throwing.
+
 ## 0.7.7
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @atproto/lexicon-resolver
 
+## 0.4.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.3.6
+  - @atproto/lex@0.3.1
+
 ## 0.4.10
 
 ### Patch Changes

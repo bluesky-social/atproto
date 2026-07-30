@@ -1,5 +1,11 @@
 # @atproto-labs/fetch
 
+## 0.3.5
+
+### Patch Changes
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix type definition of `JsonObject` to match record variant from `Json` type
+
 ## 0.3.4
 
 ### Patch Changes

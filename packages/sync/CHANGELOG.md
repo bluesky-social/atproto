@@ -1,5 +1,13 @@
 # @atproto/sync
 
+## 0.3.14
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc-server@0.11.12
+  - @atproto/lex@0.3.1
+
 ## 0.3.13
 
 ### Patch Changes

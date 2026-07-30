@@ -1,5 +1,13 @@
 # @atproto/xrpc-server
 
+## 0.11.12
+
+### Patch Changes
+
+- Updated dependencies [[`d3bbeb5`](https://github.com/bluesky-social/atproto/commit/d3bbeb5fe87f8c389c2f18abd2bc055ef916a63a)]:
+  - @atproto/lexicon@0.7.8
+  - @atproto/xrpc@0.8.7
+
 ## 0.11.11
 
 ### Patch Changes

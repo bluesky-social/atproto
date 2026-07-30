@@ -1,5 +1,19 @@
 # @atproto/bsky
 
+## 0.0.268
+
+### Patch Changes
+
+- [#5203](https://github.com/bluesky-social/atproto/pull/5203) [`ccb57ef`](https://github.com/bluesky-social/atproto/commit/ccb57ef6f015dcdc33fdfdc9c4cf048711acad01) Thanks [@arjxnt](https://github.com/arjxnt)! - Mark `app.bsky.draft.createDraft` output IDs as TIDs.
+
+- Updated dependencies [[`84781a9`](https://github.com/bluesky-social/atproto/commit/84781a9958357e1f208ff0100cee050c5b42298b), [`ccb57ef`](https://github.com/bluesky-social/atproto/commit/ccb57ef6f015dcdc33fdfdc9c4cf048711acad01)]:
+  - @atproto/api@0.20.35
+  - @atproto-labs/fetch-node@0.3.6
+  - @atproto/xrpc-server@0.11.12
+  - @atproto-labs/xrpc-utils@0.1.11
+  - @atproto/sync@0.3.14
+  - @atproto/lex@0.3.1
+
 ## 0.0.267
 
 ### Patch Changes

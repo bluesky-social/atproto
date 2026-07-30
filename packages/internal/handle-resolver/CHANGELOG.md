@@ -1,5 +1,15 @@
 # @atproto-labs/handle-resolver
 
+## 0.4.7
+
+### Patch Changes
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Errors thrown by the handle cache are now logged (previously they were silently ignored on read) while continuing to degrade to a cache miss and resolution from the underlying resolver. A new `onHandleCacheError` option (on `CachedHandleResolver` and `createHandleResolver`) allows overriding how these errors are handled (e.g. to route them to an application logger).
+
+- Updated dependencies [[`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a)]:
+  - @atproto-labs/simple-store@0.5.0
+  - @atproto-labs/simple-store-memory@0.2.5
+
 ## 0.4.6
 
 ### Patch Changes
