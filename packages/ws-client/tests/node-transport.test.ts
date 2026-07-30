@@ -244,10 +244,13 @@ describe(createTransport, () => {
     await drain(transport)
     expect(onOpen).toHaveBeenCalledTimes(1)
     expect(onClose).toHaveBeenCalledTimes(1)
+    // `wasClean` reports whether the closing handshake completed, not whether the
+    // code was 1000 — so a policy close the peer announced properly is clean. The
+    // reconnect loop keys its own decisions on the code, not on this flag.
     expect(onClose).toHaveBeenCalledWith({
       code: CloseCode.Policy,
       reason: 'nope',
-      wasClean: false,
+      wasClean: true,
     })
   })
 

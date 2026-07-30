@@ -1,3 +1,4 @@
+import { CloseCode } from './lib/close-codes.js'
 import { CloseError } from './lib/errors.js'
 import { invokeHook } from './lib/invoke-hook.js'
 import { backoffMs, defaultShouldReconnect } from './lib/reconnect-policy.js'
@@ -216,13 +217,17 @@ export function createWebSocket(
           signal?.throwIfAborted()
 
           const willReconnect = shouldReconnect(error, retries)
-          // A clean close goes to the policy like anything else, so an override
-          // can re-dial a server that closes after each batch. But when the
-          // policy declines, a peer that ended the session normally is a
-          // *completed* stream, not a failure the consumer has to catch — only
-          // an unclean end rejects.
-          const wasClean = error instanceof CloseError && error.wasClean
-          if (!willReconnect && wasClean) return
+          // A 1000 close goes to the policy like anything else, so an override can
+          // re-dial a server that closes after each batch. But when the policy
+          // declines, a peer that ended the session normally is a *completed*
+          // stream, not a failure the consumer has to catch.
+          //
+          // Keyed on the code rather than on `wasClean`, which asks a different
+          // question: whether the closing handshake completed. A fatal 1002
+          // protocol close completes its handshake too, and must still reject.
+          const endedNormally =
+            error instanceof CloseError && error.code === CloseCode.Normal
+          if (!willReconnect && endedNormally) return
 
           invokeHook(
             options.onError,

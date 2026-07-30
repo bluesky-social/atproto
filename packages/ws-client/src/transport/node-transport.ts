@@ -1,5 +1,4 @@
 import { type ClientOptions, WebSocket } from 'ws'
-import { CloseCode } from '../lib/close-codes.js'
 import {
   HeartbeatTimeoutError,
   SocketError,
@@ -206,7 +205,13 @@ function createTransportImpl<M extends DataMode>(
   // a peer's close frame, our own close() or terminate(), a failed dial, even a
   // socket error (verified across all four) — so settling the channel here, and
   // only here, is what guarantees the consumer's iteration outlives the socket.
-  ws.on('close', (code: number, reason: Buffer) => {
+  // Read through `addEventListener` rather than ws's node-style `on('close')`,
+  // because only the WHATWG-shaped CloseEvent carries `wasClean` — which ws
+  // defines as "close frames were exchanged in both directions", the real
+  // closing-handshake test. The browser transport reads the same field from its
+  // platform, so both report cleanliness identically instead of one deriving it
+  // from the close code.
+  ws.addEventListener('close', (ev) => {
     open = false
     clearHeartbeat()
     if (pendingError) {
@@ -217,9 +222,9 @@ function createTransportImpl<M extends DataMode>(
     } else {
       channel.finish()
       reportClose({
-        code,
-        reason: reason.toString('utf8'),
-        wasClean: code === CloseCode.Normal,
+        code: ev.code,
+        reason: ev.reason,
+        wasClean: ev.wasClean,
       })
     }
     // Last, so `onClose` has already run by the time any pull parked in

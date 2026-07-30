@@ -64,7 +64,7 @@ controller.abort()
 
 The last row is the fast path: any reason that isn't a `CloseError` is treated as a failure, so the connection is destroyed rather than closed politely. `break` and `throw` share the plain clean close.
 
-A non-reconnectable clean close (the server sends 1000, the reconnect policy declines to retry) ends the stream normally: the loop just finishes, same as `break`. Any other unclean end such as a network failure, a fatal protocol close, or an aborted signal rejects the iterator. Wrap the loop in `try`/`catch` if you need to distinguish "the peer said goodbye" from "something went wrong."
+A non-reconnectable `1000` close — the server says it's done and the reconnect policy declines to retry — ends the stream normally: the loop just finishes, same as `break`. Every other end rejects the iterator, including a fatal protocol close such as `1002`, a network failure, or an aborted signal. Wrap the loop in `try`/`catch` if you need to distinguish "the peer said goodbye" from "something went wrong."
 
 ```ts
 try {
@@ -109,7 +109,9 @@ Hooks observe the lifecycle at two levels. `onOpen()` and `onClose(detail)` book
 
 `onClose` fires only once the local socket is closed, so it's safe to treat as "teardown is done" and release whatever the stream depended on. The end of the `for await` carries the same guarantee: iteration doesn't settle until the socket is down, so awaiting the loop is enough — you don't need the hook to sequence a shutdown.
 
-A polite close waits for the peer to answer, so on Node.js that wait is capped at one second (after which the socket is destroyed and reported as an abnormal `1006`) rather than the 30 seconds `ws` allows by default. `wasClean: true` means the close was orderly on our end, not that the peer acknowledged it — which no client can wait on without risking a hang.
+A polite close waits for the peer to answer, so on Node.js that wait is capped at one second (after which the socket is destroyed and reported as an abnormal `1006`) rather than the 30 seconds `ws` allows by default.
+
+`wasClean: true` means the closing handshake completed — both sides exchanged close frames — not that the close was a `1000`. A `1002` protocol close is reported clean, and still rejects the iterator; the reconnect policy keys on the close code, never on this flag.
 
 ## Liveness
 
