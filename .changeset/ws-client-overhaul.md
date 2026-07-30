@@ -2,10 +2,12 @@
 '@atproto/ws-client': minor
 ---
 
-**BREAKING:** Replace `WebSocketKeepAlive` with `websocket()`, an isomorphic async generator returning a `WebSocketIterable<M>`. Reading is a single `AsyncIterable` that spans reconnects, and there is no `close()`: a stream ends by `break`/`throw`/`return` on the iteration or by aborting a `signal`.
+**BREAKING:** Replace `WebSocketKeepAlive` with `websocket(url, options?)`, an async iterable that connects, reads messages, reconnects on failure, and yields one continuous stream. It works on Node.js and in the browser with the same API.
 
-How you stop decides how the socket ends, which is also how you ask for a specific close code — a bare `abort()` or a loop `break` closes with `1000`, `abort(new CloseError(code, …))` closes with that code, and any other abort reason destroys the connection (`1006`).
+There is no `close()`. A stream ends by breaking out of the loop or aborting a `signal`, and how you stop decides how the socket ends: `break` or a bare `abort()` closes with `1000`, `abort(new CloseError(…))` closes with that error's code, and any other abort reason destroys the connection (`1006`).
 
-Lifecycle hooks come at two levels: `onOpen()`/`onClose(detail)` bookend the stream once each, while `onConnect(sender)`/`onDisconnect()` bookend each connection and pair exactly — a dial that never connected produces neither, so a stream stuck retrying reports one `onDisconnect` and an `onError` per failed attempt. `onClose` fires only once the local socket has closed. Sending goes through the `sender` handed to `onConnect`. There is deliberately no send queue: a queued send could only be flushed by a later connection, so awaiting one from inside the loop would block the pull that delivery depends on.
+Lifecycle hooks come at two levels: `onOpen()`/`onClose(detail)` fire once per stream, while `onConnect(sender)`/`onDisconnect()` fire per connection. Sending goes through the `sender` handed to `onConnect`; there is no send queue.
 
-Reconnect decisions are driven by a typed error taxonomy (`CloseError`, `SocketError`, `HeartbeatTimeoutError`, `IdleTimeoutError`, `BufferOverflowError`, `DataModeError`, all extending `WebSocketClientError` and each self-classifying via `shouldRetry()`) and WebSocket close codes, controllable via `shouldReconnect`. A protocol heartbeat is on by default on Node at a 10s interval (`heartbeat: false` to disable); `idleTimeoutMs` is off by default and is the browser's only dead-connection detector. `DisconnectError` moves to `@atproto/xrpc-server`. `CloseCode` now covers the full RFC 6455 close code list. `@atproto/common` is no longer a dependency.
+Reconnect decisions are driven by close codes and typed errors that extend `WebSocketClientError`, controllable via `shouldReconnect`. On Node.js a heartbeat is on by default at a 10s interval (`heartbeat: false` disables it); `idleTimeoutMs` is off by default and is the browser's only dead-connection detector.
+
+`DisconnectError` moves to `@atproto/xrpc-server`, and `@atproto/common` is no longer a dependency.
