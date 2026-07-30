@@ -1,5 +1,13 @@
 # @atproto/oauth-client-browser-example
 
+## 0.1.6
+
+### Patch Changes
+
+- [#5188](https://github.com/bluesky-social/atproto/pull/5188) [`28caa70`](https://github.com/bluesky-social/atproto/commit/28caa70dd4c4406eccce35d72adee23354c377ae) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use Suspense boundaries to show loading status
+
+- [#5188](https://github.com/bluesky-social/atproto/pull/5188) [`28caa70`](https://github.com/bluesky-social/atproto/commit/28caa70dd4c4406eccce35d72adee23354c377ae) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update react dependency
+
 ## 0.1.5
 
 ### Patch Changes
