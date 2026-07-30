@@ -3,7 +3,7 @@ import { BlobNotFoundError } from '@atproto/repo'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope } from './util.js'
+import { assertSpaceRead } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getBlob, {
@@ -15,13 +15,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, res }) => {
       const { space, repo } = params
 
-      if (auth.credentials.type === 'space_credential') {
-        if (auth.credentials.space !== space) {
-          throw new InvalidRequestError('Credential space mismatch')
-        }
-      } else {
-        assertSpaceScope(auth, space, { action: 'read' })
-      }
+      assertSpaceRead(auth, space)
 
       const cid = parseCid(params.cid)
       const found = await ctx.actorStore.read(repo, async (store) => {

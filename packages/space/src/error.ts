@@ -1,13 +1,23 @@
-export class RecordAlreadyExistsError extends Error {
-  constructor(collection: string, rkey: string) {
-    super(`Record already exists: ${collection}/${rkey}`)
-    this.name = 'RecordAlreadyExistsError'
+export class SpaceTokenError extends Error {
+  constructor(
+    message: string,
+    public readonly code:
+      | 'BadJwt'
+      | 'BadJwtType'
+      | 'BadJwtIss'
+      | 'BadJwtSub'
+      | 'BadJwtAudience'
+      | 'BadJwtSignature'
+      | 'JwtExpired' = 'BadJwt',
+  ) {
+    super(message)
+    this.name = 'SpaceTokenError'
   }
 }
 
-export class RecordNotFoundError extends Error {
-  constructor(collection: string, rkey: string) {
-    super(`Record not found: ${collection}/${rkey}`)
-    this.name = 'RecordNotFoundError'
+export class RepoVerificationError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'RepoVerificationError'
   }
 }

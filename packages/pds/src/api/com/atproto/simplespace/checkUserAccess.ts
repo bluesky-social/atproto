@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     // authority, aud = managingApp). A generic PDS is not a managing app, so
     // the baseline implementation denies. A real managing app overrides this
     // with its own application-layer policy (follower graphs, subscriptions,
-    // join approvals, etc.). See SPACE_RECONCILIATION_NOTES.md.
+    // join approvals, etc.).
     auth: ctx.authVerifier.serviceAuth,
     handler: async () => {
       return {

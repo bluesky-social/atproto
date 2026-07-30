@@ -1,7 +1,7 @@
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope, buildSignedCommit } from './util.js'
+import { assertSpaceRead, buildSignedCommit } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getLatestCommit, {
@@ -13,13 +13,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { space, repo } = params
 
-      if (auth.credentials.type === 'space_credential') {
-        if (auth.credentials.space !== space) {
-          throw new InvalidRequestError('Credential space mismatch')
-        }
-      } else {
-        assertSpaceScope(auth, space, { action: 'read' })
-      }
+      assertSpaceRead(auth, space)
 
       const commit = await ctx.actorStore.read(repo, async (store) => {
         const state = await store.space.getRepoState(space)

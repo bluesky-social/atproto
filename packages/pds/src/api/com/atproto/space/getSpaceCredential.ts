@@ -1,7 +1,7 @@
 import { getServiceEndpoint } from '@atproto/common'
 import { xrpc } from '@atproto/lex'
-import { createSpaceCredential, parseClientAttestation } from '@atproto/space'
-import { DidString, SpaceUri, AtUriString } from '@atproto/syntax'
+import { createSpaceToken, parseSpaceToken } from '@atproto/space'
+import { AtUriString, DidString, SpaceUri } from '@atproto/syntax'
 import {
   InvalidRequestError,
   Server,
@@ -26,13 +26,16 @@ export default function (server: Server, ctx: AppContext) {
 
       const authorityDid = new SpaceUri(space).authorityDid
 
-      // Parse the client attestation if present. Structural validation only —
-      // the attested client_id is taken as advisory until JWKS verification is
-      // implemented (see SPACE_RECONCILIATION_NOTES.md).
+      // Parse the client attestation if present. Structural validation only.
+      // @TODO Full verification means resolving `iss` (the client_id) to the
+      // client's client-metadata.json, fetching its published JWKS, and checking
+      // the signature against the key named by the attestation's `kid`. Until
+      // then the attested client_id is advisory, so an allowList is only as
+      // strong as the caller's honesty.
       let clientId: string | undefined
       if (clientAttestation) {
         try {
-          const parsed = parseClientAttestation(clientAttestation)
+          const parsed = parseSpaceToken('clientAttestation', clientAttestation)
           clientId = parsed.payload.iss
         } catch (err) {
           throw new InvalidRequestError(
@@ -85,11 +88,9 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const keypair = await ctx.actorStore.keypair(authorityDid)
-      const credential = await createSpaceCredential(
-        {
-          iss: authorityDid,
-          sub: space,
-        },
+      const credential = await createSpaceToken(
+        'credential',
+        { iss: authorityDid, sub: space },
         keypair,
       )
 

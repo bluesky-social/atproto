@@ -3,6 +3,7 @@ import { SpaceUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import { assertCredentialSpace } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.listRepos, {
@@ -10,9 +11,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { space, limit, cursor } = params
 
-      if (auth.credentials.space !== space) {
-        throw new InvalidRequestError('Credential space mismatch')
-      }
+      assertCredentialSpace(auth.credentials, space)
 
       const authorityDid = new SpaceUri(space).authorityDid
 

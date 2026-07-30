@@ -263,9 +263,14 @@ export class SpaceReader {
     }
   }
 
+  /**
+   * A rev is never split across responses: ops sharing a rev were applied atomically
+   * and `since` advances by whole revs, so returning part of one would drop the
+   * remainder. A rev larger than `limit` comes back whole.
+   */
   async getRepoOplog(
     space: string,
-    opts: { since?: string; limit?: number; includeValues?: boolean },
+    opts: { since?: string; limit: number; includeValues?: boolean },
   ): Promise<{
     ops: Array<{
       rev: string
@@ -277,46 +282,65 @@ export class SpaceReader {
       prev: string | null
       value?: LexMap
     }>
+    caughtUp: boolean
     setHash: Buffer | null
     rev: string | null
   }> {
     const { since, limit, includeValues } = opts
-    let builder = this.db.db
-      .selectFrom('space_record_oplog')
-      .where('space', '=', space)
-      .orderBy('rev', 'asc')
-      .orderBy('idx', 'asc')
-      .selectAll('space_record_oplog')
-    // Inline the record's current value, but only when the op's cid still
-    // matches the live record — a value superseded by a later op is stale and
-    // must be omitted. The join self-filters to the current row by cid.
-    if (includeValues) {
-      builder = builder
-        .leftJoin('space_record', (join) =>
-          join
-            .onRef('space_record.space', '=', 'space_record_oplog.space')
-            .onRef(
-              'space_record.collection',
-              '=',
-              'space_record_oplog.collection',
-            )
-            .onRef('space_record.rkey', '=', 'space_record_oplog.rkey')
-            .onRef('space_record.cid', '=', 'space_record_oplog.cid'),
-        )
-        .select('space_record.value as value')
+
+    const query = (opts: { since?: string; rev?: string; limit?: number }) => {
+      // Table-qualified throughout: the `space_record` join below shares the
+      // space/rev/collection/rkey/cid column names.
+      let builder = this.db.db
+        .selectFrom('space_record_oplog')
+        .where('space_record_oplog.space', '=', space)
+        .orderBy('space_record_oplog.rev', 'asc')
+        .orderBy('space_record_oplog.idx', 'asc')
+        .selectAll('space_record_oplog')
+      // Inline the record's current value, but only when the op's cid still
+      // matches the live record — a value superseded by a later op is stale and
+      // must be omitted. The join self-filters to the current row by cid.
+      if (includeValues) {
+        builder = builder
+          .leftJoin('space_record', (join) =>
+            join
+              .onRef('space_record.space', '=', 'space_record_oplog.space')
+              .onRef(
+                'space_record.collection',
+                '=',
+                'space_record_oplog.collection',
+              )
+              .onRef('space_record.rkey', '=', 'space_record_oplog.rkey')
+              .onRef('space_record.cid', '=', 'space_record_oplog.cid'),
+          )
+          .select('space_record.value as value')
+      }
+      if (opts.since) {
+        builder = builder.where('space_record_oplog.rev', '>', opts.since)
+      }
+      if (opts.rev) {
+        builder = builder.where('space_record_oplog.rev', '=', opts.rev)
+      }
+      if (opts.limit) builder = builder.limit(opts.limit)
+      return builder.execute()
     }
-    if (since) {
-      builder = builder.where('rev', '>', since)
+
+    const rows = await query({ since, limit: limit + 1 })
+
+    let kept = rows
+    let caughtUp = true
+    if (rows.length > limit) {
+      caughtUp = false
+      const lastRev = rows[rows.length - 1].rev
+      const trimmed = rows.slice(0, limit).filter((r) => r.rev !== lastRev)
+      // One rev filled the whole window, so re-read it in full.
+      kept = trimmed.length > 0 ? trimmed : await query({ rev: rows[0].rev })
     }
-    if (limit) {
-      builder = builder.limit(limit)
-    }
-    const rows = await builder.execute()
+
     const state = await this.getRepoState(space)
     return {
-      ops: rows.map((r) => {
-        // `value` is only present on the joined rows (includeValues); the
-        // conditional select isn't reflected in kysely's row type.
+      ops: kept.map((r) => {
+        // Only present on joined rows; not in kysely's row type.
         const value = (r as { value?: Uint8Array | null }).value
         return {
           rev: r.rev,
@@ -329,8 +353,46 @@ export class SpaceReader {
           ...(value != null ? { value: cborToLexRecord(value) } : {}),
         }
       }),
+      caughtUp,
       setHash: state?.setHash ?? null,
       rev: state?.rev ?? null,
+    }
+  }
+
+  // Paged so a caller can serialize a repo without buffering the whole thing.
+  async *streamRecords(
+    space: string,
+    opts: { batchSize?: number } = {},
+  ): AsyncGenerator<{
+    collection: string
+    rkey: string
+    cid: string
+    value: Uint8Array
+  }> {
+    const batchSize = opts.batchSize ?? 500
+    let cursor: { collection: string; rkey: string } | undefined
+
+    while (true) {
+      let builder = this.db.db
+        .selectFrom('space_record')
+        .select(['collection', 'rkey', 'cid', 'value'])
+        .where('space', '=', space)
+        .orderBy('collection', 'asc')
+        .orderBy('rkey', 'asc')
+        .limit(batchSize)
+      if (cursor) {
+        builder = builder.where(
+          sql<SqlBool>`("collection", "rkey") > (${cursor.collection}, ${cursor.rkey})`,
+        )
+      }
+      const rows = await builder.execute()
+      if (rows.length === 0) return
+      for (const row of rows) {
+        yield row
+      }
+      if (rows.length < batchSize) return
+      const last = rows[rows.length - 1]
+      cursor = { collection: last.collection, rkey: last.rkey }
     }
   }
 

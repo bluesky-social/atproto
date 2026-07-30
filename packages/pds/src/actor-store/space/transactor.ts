@@ -1,6 +1,8 @@
 import { TID } from '@atproto/common'
-import { encode } from '@atproto/lex-cbor'
-import { CommitData, WriteOpAction } from '@atproto/space'
+import { cidForLex, encode } from '@atproto/lex-cbor'
+import { Cid, parseCid } from '@atproto/lex-data'
+import { RepoCommit, SpaceRecord } from '@atproto/space'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorDb } from '../db/index.js'
 import { SpaceReader } from './reader.js'
 
@@ -9,6 +11,49 @@ export type SpaceConfig = {
   managingApp?: string | null
   appAccessType?: string
   appAllowed?: string[]
+}
+
+const MAX_WRITES_PER_COMMIT = 200
+
+// `put` resolves to a create or update depending on what's stored.
+export type SpaceWrite =
+  | { action: 'create'; collection: string; rkey: string; record: SpaceRecord }
+  | { action: 'update'; collection: string; rkey: string; record: SpaceRecord }
+  | { action: 'put'; collection: string; rkey: string; record: SpaceRecord }
+  | { action: 'delete'; collection: string; rkey: string }
+
+export type SpaceWriteResult =
+  | {
+      action: 'create' | 'update'
+      collection: string
+      rkey: string
+      cid: Cid
+      prev: Cid | null
+    }
+  | {
+      action: 'delete'
+      collection: string
+      rkey: string
+      cid: null
+      prev: Cid
+    }
+
+export type SpaceCommit = {
+  rev: string
+  setHash: Uint8Array
+  results: SpaceWriteResult[]
+}
+
+export class SpaceRecordNotFoundError extends InvalidRequestError {
+  constructor(collection: string, rkey: string) {
+    super(`Record not found: ${collection}/${rkey}`, 'RecordNotFound')
+  }
+}
+
+export class SpaceRecordAlreadyExistsError extends InvalidRequestError {
+  constructor(collection: string, rkey: string) {
+    super(`Record already exists: ${collection}/${rkey}`, 'RecordAlreadyExists')
+  }
 }
 
 export class SpaceTransactor extends SpaceReader {
@@ -136,101 +181,166 @@ export class SpaceTransactor extends SpaceReader {
       .execute()
   }
 
-  async applyRepoCommit(
+  /**
+   * One commit sharing a single `rev`. Writes resolve in order against the state the
+   * batch has built up, not just what was stored on entry, so a batch can create then
+   * update a record and a repeated create is caught rather than double-counted in the
+   * set hash. Must run in a transaction.
+   */
+  async applyWrites(
     space: string,
-    commit: CommitData,
+    writes: SpaceWrite[],
     now?: string,
-  ): Promise<string> {
-    // Materialize the local space row + repo state on first write. A writer's
-    // PDS isn't told about membership, so its repo is created lazily here.
+  ): Promise<SpaceCommit> {
+    this.db.assertTransaction()
+    if (writes.length > MAX_WRITES_PER_COMMIT) {
+      throw new InvalidRequestError(
+        `Too many writes. Max: ${MAX_WRITES_PER_COMMIT}`,
+      )
+    }
+
     await this.ensureSpaceRepo(space, now)
+
+    const state = await this.getRepoState(space)
+    const repo = RepoCommit.fromState(state?.setHash)
     const rev = TID.nextStr()
     const timestamp = now ?? new Date().toISOString()
+
+    // Live cid per touched path, so later writes see earlier ones. null = deleted.
+    const staged = new Map<string, Cid | null>()
+    const pathKey = (collection: string, rkey: string) =>
+      `${collection}/${rkey}`
+
+    const results: SpaceWriteResult[] = []
     let idx = 0
 
-    for (const write of commit.writes) {
-      // Look up existing CID for prev field
-      const existing = await this.db.db
-        .selectFrom('space_record')
-        .select('cid')
-        .where('space', '=', space)
-        .where('collection', '=', write.collection)
-        .where('rkey', '=', write.rkey)
-        .executeTakeFirst()
-      const prev = existing?.cid ?? null
+    for (const write of writes) {
+      const { collection, rkey } = write
+      const key = pathKey(collection, rkey)
+      const prev = staged.has(key)
+        ? staged.get(key)!
+        : await this.getRecordCid(space, collection, rkey)
 
-      if (
-        write.action === WriteOpAction.Create ||
-        write.action === WriteOpAction.Update
-      ) {
-        const value = encode(write.record)
-        await this.db.db
-          .insertInto('space_record')
-          .values({
-            space,
-            collection: write.collection,
-            rkey: write.rkey,
-            cid: write.cid.toString(),
-            value,
-            repoRev: rev,
-            indexedAt: timestamp,
-          })
-          .onConflict((oc) =>
-            oc.columns(['space', 'collection', 'rkey']).doUpdateSet({
-              cid: write.cid.toString(),
-              value,
-              repoRev: rev,
-              indexedAt: timestamp,
-            }),
-          )
-          .execute()
-        // Append to oplog
-        await this.db.db
-          .insertInto('space_record_oplog')
-          .values({
-            space,
-            rev,
-            idx,
-            action: write.action,
-            collection: write.collection,
-            rkey: write.rkey,
-            cid: write.cid.toString(),
-            prev,
-          })
-          .execute()
-      } else if (write.action === WriteOpAction.Delete) {
+      if (write.action === 'create' && prev) {
+        throw new SpaceRecordAlreadyExistsError(collection, rkey)
+      }
+      if ((write.action === 'update' || write.action === 'delete') && !prev) {
+        throw new SpaceRecordNotFoundError(collection, rkey)
+      }
+
+      if (write.action === 'delete') {
+        const deleted = prev!
         await this.db.db
           .deleteFrom('space_record')
           .where('space', '=', space)
-          .where('collection', '=', write.collection)
-          .where('rkey', '=', write.rkey)
+          .where('collection', '=', collection)
+          .where('rkey', '=', rkey)
           .execute()
-        // Append to oplog
-        await this.db.db
-          .insertInto('space_record_oplog')
-          .values({
-            space,
-            rev,
-            idx,
-            action: write.action,
-            collection: write.collection,
-            rkey: write.rkey,
-            cid: null,
-            prev,
-          })
-          .execute()
+        repo.applyOp({ collection, rkey, cid: null, prev: deleted })
+        staged.set(key, null)
+        results.push({
+          action: 'delete',
+          collection,
+          rkey,
+          cid: null,
+          prev: deleted,
+        })
+        await this.appendOplog(space, rev, idx++, {
+          action: 'delete',
+          collection,
+          rkey,
+          cid: null,
+          prev: deleted,
+        })
+        continue
       }
-      idx++
+
+      const cid = await cidForLex(write.record)
+      const value = encode(write.record)
+      await this.db.db
+        .insertInto('space_record')
+        .values({
+          space,
+          collection,
+          rkey,
+          cid: cid.toString(),
+          value,
+          repoRev: rev,
+          indexedAt: timestamp,
+        })
+        .onConflict((oc) =>
+          oc.columns(['space', 'collection', 'rkey']).doUpdateSet({
+            cid: cid.toString(),
+            value,
+            repoRev: rev,
+            indexedAt: timestamp,
+          }),
+        )
+        .execute()
+
+      repo.applyOp({ collection, rkey, cid, prev })
+      staged.set(key, cid)
+      const action = prev ? 'update' : 'create'
+      results.push({ action, collection, rkey, cid, prev })
+      await this.appendOplog(space, rev, idx++, {
+        action,
+        collection,
+        rkey,
+        cid,
+        prev,
+      })
     }
 
-    // Update space_repo with new set hash and rev
+    const nextState = repo.setHash.state()
     await this.db.db
       .updateTable('space_repo')
-      .set({ setHash: commit.setHash, rev })
+      .set({ setHash: nextState, rev })
       .where('space', '=', space)
       .execute()
 
-    return rev
+    return { rev, setHash: nextState, results }
+  }
+
+  private async getRecordCid(
+    space: string,
+    collection: string,
+    rkey: string,
+  ): Promise<Cid | null> {
+    const row = await this.db.db
+      .selectFrom('space_record')
+      .select('cid')
+      .where('space', '=', space)
+      .where('collection', '=', collection)
+      .where('rkey', '=', rkey)
+      .executeTakeFirst()
+    return row ? parseCid(row.cid) : null
+  }
+
+  private async appendOplog(
+    space: string,
+    rev: string,
+    idx: number,
+    op: {
+      action: 'create' | 'update' | 'delete'
+      collection: string
+      rkey: string
+      cid: Cid | null
+      prev: Cid | null
+    },
+  ): Promise<void> {
+    await this.db.db
+      .insertInto('space_record_oplog')
+      .values({
+        space,
+        rev,
+        idx,
+        action: op.action,
+        collection: op.collection,
+        rkey: op.rkey,
+        cid: op.cid?.toString() ?? null,
+        prev: op.prev?.toString() ?? null,
+      })
+      .execute()
   }
 
   async recordCredentialRecipient(

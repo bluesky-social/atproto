@@ -2,6 +2,7 @@ import { SpaceUri, toDatetimeString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import { assertCredentialSpace } from './util.js'
 
 // Registrations are valid for 24h; the caller renews before expiry. May be
 // longer than the space-credential window the request was authed with.
@@ -13,9 +14,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const { space, endpoint } = input.body
 
-      if (auth.credentials.space !== space) {
-        throw new InvalidRequestError('Credential space mismatch')
-      }
+      assertCredentialSpace(auth.credentials, space)
 
       const authorityDid = new SpaceUri(space).authorityDid
 

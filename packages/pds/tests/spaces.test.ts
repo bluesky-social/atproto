@@ -1,7 +1,8 @@
 import { SeedClient, TestNetworkNoAppView, TestPds } from '@atproto/dev-env'
 import { Client, DidString, xrpc } from '@atproto/lex'
-import { LtHash } from '@atproto/space'
-import { NsidString, AtUriString } from '@atproto/syntax'
+import { parseCid } from '@atproto/lex-data'
+import { LtHash, RepoCommit, verifyRepoCarFull } from '@atproto/space'
+import { AtUriString, NsidString } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { com } from '../src/lexicons/index.js'
 
@@ -255,7 +256,7 @@ describe('spaces', () => {
     expect(got.value).toMatchObject({ text: 'hello from dan' })
 
     const oplog = await pds1.ctx.actorStore.read(danDid, (store) =>
-      store.space.getRepoOplog(spaceUri, {}),
+      store.space.getRepoOplog(spaceUri, { limit: 100 }),
     )
     const lastOp = oplog.ops[oplog.ops.length - 1]
     expect(lastOp).toMatchObject({
@@ -297,7 +298,7 @@ describe('spaces', () => {
     )
 
     const oplog = await pds1.ctx.actorStore.read(danDid, (store) =>
-      store.space.getRepoOplog(spaceUri, {}),
+      store.space.getRepoOplog(spaceUri, { limit: 100 }),
     )
     const deleteOp = oplog.ops.find((op) => op.action === 'delete')
     expect(deleteOp).toMatchObject({
@@ -331,7 +332,7 @@ describe('spaces', () => {
     )
 
     const oplog = await pds1.ctx.actorStore.read(danDid, (store) =>
-      store.space.getRepoOplog(spaceUri, {}),
+      store.space.getRepoOplog(spaceUri, { limit: 100 }),
     )
     const batchOps = oplog.ops.slice(-3)
     expect(batchOps.map((o) => o.rev)).toEqual([
@@ -340,6 +341,176 @@ describe('spaces', () => {
       batchOps[0].rev,
     ])
     expect(batchOps.map((o) => o.idx)).toEqual([0, 1, 2])
+  })
+
+  // Divergence here is silent and permanent, so assert it directly.
+  const expectSetHashMatchesStore = async (
+    pds: TestPds,
+    did: DidString,
+    space: AtUriString,
+  ) => {
+    const { records, state } = await pds.ctx.actorStore.read(
+      did,
+      async (s) => ({
+        records: await s.space.listRecords(space, { limit: 1000 }),
+        state: await s.space.getRepoState(space),
+      }),
+    )
+    const recomputed = RepoCommit.fromRecords(
+      records.map((r) => ({
+        collection: r.collection,
+        rkey: r.rkey,
+        cid: parseCid(r.cid),
+      })),
+    )
+    expect(
+      recomputed.setHash.equals(RepoCommit.fromState(state?.setHash).setHash),
+    ).toBe(true)
+  }
+
+  const post = (text: string) => ({
+    $type: 'app.bsky.feed.post',
+    text,
+    createdAt: new Date().toISOString(),
+  })
+
+  it('rejects a duplicate create within one batch', async () => {
+    // Resolving against storage alone would let both through, adding to the set
+    // hash twice while the upsert leaves one row.
+    const spaceUri = await createSpace('batch-dupe', [danDid])
+
+    await expect(
+      pds1Client.call(
+        com.atproto.space.applyWrites,
+        {
+          space: spaceUri,
+          repo: danDid,
+          writes: [0, 1].map(() => ({
+            $type: 'com.atproto.space.applyWrites#create' as const,
+            collection: 'app.bsky.feed.post' as NsidString,
+            rkey: 'dupe',
+            value: post('dupe'),
+          })),
+        },
+        { headers: danHeaders },
+      ),
+    ).rejects.toThrow(/already exists/i)
+
+    await expectSetHashMatchesStore(pds1, danDid, spaceUri)
+  })
+
+  it('applies dependent writes within one batch', async () => {
+    // Each write must see the effect of the previous one.
+    const spaceUri = await createSpace('batch-dependent', [danDid])
+    const collection = 'app.bsky.feed.post' as NsidString
+
+    await pds1Client.call(
+      com.atproto.space.applyWrites,
+      {
+        space: spaceUri,
+        repo: danDid,
+        writes: [
+          {
+            $type: 'com.atproto.space.applyWrites#create' as const,
+            collection,
+            rkey: 'dependent',
+            value: post('first'),
+          },
+          {
+            $type: 'com.atproto.space.applyWrites#update' as const,
+            collection,
+            rkey: 'dependent',
+            value: post('second'),
+          },
+          {
+            $type: 'com.atproto.space.applyWrites#create' as const,
+            collection,
+            rkey: 'survivor',
+            value: post('survivor'),
+          },
+          {
+            $type: 'com.atproto.space.applyWrites#delete' as const,
+            collection,
+            rkey: 'dependent',
+          },
+        ],
+      },
+      { headers: danHeaders },
+    )
+
+    const records = await pds1.ctx.actorStore.read(danDid, (store) =>
+      store.space.listRecords(spaceUri, { limit: 100 }),
+    )
+    expect(records.map((r) => r.rkey)).toEqual(['survivor'])
+    await expectSetHashMatchesStore(pds1, danDid, spaceUri)
+  })
+
+  it('never splits a rev across oplog pages', async () => {
+    // `since` advances by rev, so a partial rev would drop the remainder.
+    const spaceUri = await createSpace('oplog-atomic', [danDid])
+
+    await pds1Client.call(
+      com.atproto.space.applyWrites,
+      {
+        space: spaceUri,
+        repo: danDid,
+        writes: [0, 1, 2, 3, 4].map((i) => ({
+          $type: 'com.atproto.space.applyWrites#create' as const,
+          collection: 'app.bsky.feed.post' as NsidString,
+          rkey: `atomic-${i}`,
+          value: post(`atomic ${i}`),
+        })),
+      },
+      { headers: danHeaders },
+    )
+
+    const page = await pds1.ctx.actorStore.read(danDid, (store) =>
+      store.space.getRepoOplog(spaceUri, { limit: 2 }),
+    )
+    // All 5 share one rev, so the batch comes back whole despite limit: 2.
+    expect(page.ops).toHaveLength(5)
+    expect(new Set(page.ops.map((o) => o.rev)).size).toBe(1)
+  })
+
+  it('withholds the commit until the oplog is drained to head', async () => {
+    const spaceUri = await createSpace('oplog-commit', [danDid])
+    const collection = 'app.bsky.feed.post' as NsidString
+
+    for (const i of [0, 1, 2]) {
+      await pds1Client.call(
+        com.atproto.space.createRecord,
+        {
+          space: spaceUri,
+          repo: danDid,
+          collection,
+          rkey: `paged-${i}`,
+          record: post(`paged ${i}`),
+        },
+        { headers: danHeaders },
+      )
+    }
+
+    const credential = await credentialFor(pds1, danHeaders, spaceUri)
+    const first = await pds1Client.call(
+      com.atproto.space.listRepoOps,
+      { space: spaceUri, repo: danDid, limit: 1 },
+      { headers: credential },
+    )
+    expect(first.commit).toBeUndefined()
+    expect(first.cursor).toBeDefined()
+
+    let cursor = first.cursor
+    let commit: unknown
+    for (let i = 0; i < 5 && cursor; i++) {
+      const next = await pds1Client.call(
+        com.atproto.space.listRepoOps,
+        { space: spaceUri, repo: danDid, since: cursor, limit: 1 },
+        { headers: credential },
+      )
+      cursor = next.cursor
+      commit = next.commit
+    }
+    expect(commit).toBeDefined()
   })
 
   // ---------------- Cross-PDS ----------------
@@ -366,7 +537,7 @@ describe('spaces', () => {
     expect(created.uri).toContain(bobDid)
 
     const oplog = await pds2.ctx.actorStore.read(bobDid, (store) =>
-      store.space.getRepoOplog(spaceUri, {}),
+      store.space.getRepoOplog(spaceUri, { limit: 100 }),
     )
     const lastOp = oplog.ops[oplog.ops.length - 1]
     expect(lastOp.action).toBe('create')
@@ -464,6 +635,89 @@ describe('spaces', () => {
       { headers: credHeaders },
     )
     expect(rec.value).toMatchObject({ text: 'for the record' })
+  })
+
+  // ---------------- Full-state recovery ----------------
+
+  it('serves a verifiable repo CAR for full-state recovery', async () => {
+    const spaceUri = await createSpace('get-repo', [bobDid, carolDid])
+    const collections: NsidString[] = [
+      'app.bsky.feed.post' as NsidString,
+      'app.bsky.feed.like' as NsidString,
+    ]
+
+    for (const collection of collections) {
+      for (const i of [0, 1]) {
+        await pds2Client.call(
+          com.atproto.space.createRecord,
+          {
+            space: spaceUri,
+            repo: bobDid,
+            collection,
+            rkey: `car-${i}`,
+            record:
+              collection === 'app.bsky.feed.post'
+                ? post(`car ${i}`)
+                : {
+                    $type: 'app.bsky.feed.like',
+                    subject: { uri: `at://x/y/${i}`, cid: 'bafy' },
+                    createdAt: new Date().toISOString(),
+                  },
+          },
+          { headers: bobHeaders },
+        )
+      }
+    }
+
+    // Carol syncs bob's repo in full, as a syncing service would.
+    const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
+    const res = await fetch(
+      `${pds2.url}/xrpc/com.atproto.space.getRepo?space=${encodeURIComponent(spaceUri)}&repo=${bobDid}`,
+      { headers: credHeaders },
+    )
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain(
+      'application/vnd.ipld.car',
+    )
+    const car = new Uint8Array(await res.arrayBuffer())
+
+    const didKey = (await pds2.ctx.actorStore.keypair(bobDid)).did()
+    const recovered = await verifyRepoCarFull([car], {
+      space: spaceUri,
+      author: bobDid,
+      didKey,
+    })
+
+    expect(recovered.records).toHaveLength(4)
+    expect(recovered.repo.matches(recovered.commit)).toBe(true)
+
+    const state = await pds2.ctx.actorStore.read(bobDid, (store) =>
+      store.space.getRepoState(spaceUri),
+    )
+    expect(
+      recovered.repo.setHash.equals(
+        RepoCommit.fromState(state?.setHash).setHash,
+      ),
+    ).toBe(true)
+    expect(recovered.commit.rev).toBe(state?.rev)
+
+    const texts = recovered.records
+      .filter((r) => r.collection === 'app.bsky.feed.post')
+      .map((r) => (r.record as { text: string }).text)
+      .sort()
+    expect(texts).toEqual(['car 0', 'car 1'])
+  })
+
+  it('refuses a repo CAR without a credential for that space', async () => {
+    const spaceUri = await createSpace('get-repo-auth', [bobDid])
+    const otherSpace = await createSpace('get-repo-auth-other', [carolDid])
+
+    const wrongCred = await credentialFor(pds3, carolHeaders, otherSpace)
+    const res = await fetch(
+      `${pds2.url}/xrpc/com.atproto.space.getRepo?space=${encodeURIComponent(spaceUri)}&repo=${bobDid}`,
+      { headers: wrongCred },
+    )
+    expect(res.status).toBeGreaterThanOrEqual(400)
   })
 
   it('paginates listRecords across collections', async () => {
@@ -810,17 +1064,24 @@ describe('spaces', () => {
     // Incremental pull returns only the post-prune ops; applying them alone
     // yields a setHash that diverges from the server's.
     const incremental = await pds2.ctx.actorStore.read(bobDid, (store) =>
-      store.space.getRepoOplog(spaceUri, { since: consumerSince }),
+      store.space.getRepoOplog(spaceUri, { since: consumerSince, limit: 100 }),
     )
     expect(incremental.ops.length).toBe(2)
 
-    const applied = new LtHash()
+    const applied = new RepoCommit()
     for (const op of incremental.ops) {
-      if (op.cid && (op.action === 'create' || op.action === 'update')) {
-        applied.add(`${op.collection}/${op.rkey}/${op.cid}`)
-      }
+      applied.applyOp({
+        collection: op.collection,
+        rkey: op.rkey,
+        cid: op.cid ? parseCid(op.cid) : null,
+        prev: op.prev ? parseCid(op.prev) : null,
+      })
     }
-    expect(applied.equals(new LtHash(incremental.setHash!))).toBe(false)
+    expect(
+      applied.setHash.equals(
+        RepoCommit.fromState(incremental.setHash!).setHash,
+      ),
+    ).toBe(false)
 
     // Recovery: paginated listRecords across all collections → recompute.
     const allRecords: { collection: string; rkey: string; cid: string }[] = []
@@ -836,14 +1097,21 @@ describe('spaces', () => {
     }
     expect(allRecords.length).toBe(5)
 
-    const recomputed = new LtHash()
-    for (const r of allRecords) {
-      recomputed.add(`${r.collection}/${r.rkey}/${r.cid}`)
-    }
+    const recomputed = RepoCommit.fromRecords(
+      allRecords.map((r) => ({
+        collection: r.collection,
+        rkey: r.rkey,
+        cid: parseCid(r.cid),
+      })),
+    )
     const repoState = await pds2.ctx.actorStore.read(bobDid, (store) =>
       store.space.getRepoState(spaceUri),
     )
-    expect(recomputed.equals(new LtHash(repoState!.setHash!))).toBe(true)
+    expect(
+      recomputed.setHash.equals(
+        RepoCommit.fromState(repoState!.setHash!).setHash,
+      ),
+    ).toBe(true)
   })
 
   // ---------------- Adversarial ----------------
@@ -867,6 +1135,7 @@ describe('spaces', () => {
           space: spaceUri as AtUriString,
           repo: carolDid,
           rev: 'spoof',
+          hash: new LtHash().digest(),
         },
       }),
     ).rejects.toThrow()
@@ -890,6 +1159,7 @@ describe('spaces', () => {
           space: spaceUri as AtUriString,
           repo: carolDid,
           rev: 'spoof',
+          hash: new LtHash().digest(),
         },
       }),
     ).rejects.toThrow()

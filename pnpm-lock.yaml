@@ -613,6 +613,9 @@ importers:
       pino:
         specifier: ^8.21.0
         version: 8.21.0
+      varint:
+        specifier: ^6.0.0
+        version: 6.0.0
     devDependencies:
       jest:
         specifier: ^30.0.0
@@ -2069,9 +2072,6 @@ importers:
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
-      varint:
-        specifier: ^6.0.0
-        version: 6.0.0
       zod:
         specifier: ^3.23.8
         version: 3.24.2
@@ -2082,6 +2082,9 @@ importers:
 
   packages/space:
     dependencies:
+      '@atproto/common':
+        specifier: workspace:^
+        version: link:../common
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto

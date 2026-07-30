@@ -24,7 +24,8 @@
     "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-data": "workspace:^",
     "multiformats": "^13.0.0",
-    "pino": "^8.21.0"
+    "pino": "^8.21.0",
+    "varint": "^6.0.0"
   },
   "devDependencies": {
     "jest": "^30.0.0",

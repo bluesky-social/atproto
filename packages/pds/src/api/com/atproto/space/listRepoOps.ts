@@ -1,8 +1,8 @@
 import { l } from '@atproto/lex'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope, buildSignedCommit } from './util.js'
+import { assertSpaceRead, buildSignedCommit } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.listRepoOps, {
@@ -14,13 +14,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { space, repo, since, limit, excludeValues } = params
 
-      if (auth.credentials.type === 'space_credential') {
-        if (auth.credentials.space !== space) {
-          throw new InvalidRequestError('Credential space mismatch')
-        }
-      } else {
-        assertSpaceScope(auth, space, { action: 'read' })
-      }
+      assertSpaceRead(auth, space)
 
       const result = await ctx.actorStore.read(repo, async (store) => {
         const oplog = await store.space.getRepoOplog(space, {
@@ -28,12 +22,9 @@ export default function (server: Server, ctx: AppContext) {
           limit,
           includeValues: !excludeValues,
         })
-        // Only sign a commit when this batch drains the oplog to head —
-        // otherwise the rev we'd bind into the commit may be ahead of the
-        // ops we returned to the client. They'll get the commit on the
-        // final, smaller-than-limit batch.
-        const caughtUp = oplog.ops.length < limit
-        const commit = caughtUp
+        // Only once at head: mid-backfill the repo's rev is ahead of the ops we
+        // returned, so the commit would describe state the client can't reach yet.
+        const commit = oplog.caughtUp
           ? await buildSignedCommit({
               spaceUri: space,
               author: repo,
@@ -55,6 +46,10 @@ export default function (server: Server, ctx: AppContext) {
             prev: op.prev ? (op.prev as l.CidString) : null,
             value: op.value,
           })),
+          // Absent once caught up, so a syncer keeps its last known position.
+          cursor: result.oplog.caughtUp
+            ? undefined
+            : result.oplog.ops.at(-1)?.rev,
           commit: result.commit,
         },
       }

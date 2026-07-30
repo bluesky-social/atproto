@@ -1,319 +1,209 @@
-import * as crypto from 'node:crypto'
-import { Keypair, verifySignature } from '@atproto/crypto'
+import { Keypair, randomStr, verifySignature } from '@atproto/crypto'
 import { fromBase64, toBase64 } from '@atproto/lex-data'
+import { SpaceTokenError } from './error.js'
 
-// JWT `typ` header values (proposal 0016).
-export const DELEGATION_TOKEN_TYP = 'atproto-space-delegation+jwt'
-export const SPACE_CREDENTIAL_TYP = 'atproto-space-credential+jwt'
-export const CLIENT_ATTESTATION_TYP = 'atproto-client-attestation+jwt'
+// The three token classes share a wire shape and differ only in who signs them,
+// who they're addressed to, and how long they live — hence data, not three impls.
+// A credential is multi-use across repo hosts, so it carries no aud.
+export const SPACE_TOKEN_TYPES = {
+  delegation: {
+    typ: 'atproto-space-delegation+jwt',
+    kid: '#atproto',
+    expiresInSec: 60,
+    requireAud: true,
+  },
+  credential: {
+    typ: 'atproto-space-credential+jwt',
+    kid: '#atproto_space',
+    expiresInSec: 7200,
+    requireAud: false,
+  },
+  clientAttestation: {
+    typ: 'atproto-client-attestation+jwt',
+    kid: undefined,
+    expiresInSec: 60,
+    requireAud: true,
+  },
+} as const
 
-// JWT payloads
+export type SpaceTokenType = keyof typeof SPACE_TOKEN_TYPES
 
-export type DelegationTokenPayload = {
-  iss: string // user DID
-  aud: string // space host (service fragment of the authority DID)
-  sub: string // space URI being requested (at://authority/space/type/skey)
-  iat: number // seconds since epoch
-  exp: number // iat + 60 (60 seconds)
-  jti: string // random nonce
-}
-
-export type SpaceCredentialPayload = {
-  iss: string // space authority DID
-  sub: string // space URI the credential reads
-  iat: number
-  exp: number // iat + 7200 (2 hours default)
-  jti: string // random nonce
-}
-
-export type ClientAttestationPayload = {
-  iss: string // the client_id
-  sub: string // the client_id (== iss)
-  aud: string // space host being asked for a credential
+// `sub` is the space URI, or the client_id for a client attestation.
+export type SpaceTokenPayload = {
+  iss: string
+  sub: string
+  aud?: string
   iat: number
   exp: number
-  jti: string // random nonce
+  jti: string
 }
 
-type JwtHeader = {
+export type SpaceTokenHeader = {
   alg: string
   typ: string
   kid?: string
 }
 
-// Delegation token
-
-export type CreateDelegationTokenOpts = {
-  iss: string
-  aud: string
-  sub: string
-  expSeconds?: number
+export type SpaceToken = {
+  header: SpaceTokenHeader
+  payload: SpaceTokenPayload
 }
 
-export async function createDelegationToken(
-  opts: CreateDelegationTokenOpts,
-  keypair: Keypair,
-): Promise<string> {
-  const iat = Math.floor(Date.now() / 1000)
-  const exp = iat + (opts.expSeconds ?? 60) // 60 seconds
-  const jti = crypto.randomUUID()
+const CLOCK_SKEW_SEC = 5
 
-  const payload: DelegationTokenPayload = {
-    iss: opts.iss,
-    aud: opts.aud,
-    sub: opts.sub,
-    iat,
-    exp,
-    jti,
-  }
-
-  return createJwt(DELEGATION_TOKEN_TYP, payload, keypair, '#atproto')
-}
-
-export async function verifyDelegationToken(
-  jwt: string,
-  didKey: string,
-): Promise<DelegationTokenPayload> {
-  const parsed = parseJwt(jwt)
-
-  if (parsed.header.typ !== DELEGATION_TOKEN_TYP) {
-    throw new Error(
-      `Invalid JWT type: expected ${DELEGATION_TOKEN_TYP}, got ${parsed.header.typ}`,
-    )
-  }
-
-  const valid = await verifySignature(
-    didKey,
-    parsed.signingInput,
-    parsed.signature,
-    { jwtAlg: parsed.header.alg },
-  )
-  if (!valid) {
-    throw new Error('Invalid JWT signature')
-  }
-
-  const payload = parsed.payload as DelegationTokenPayload
-
-  const now = Math.floor(Date.now() / 1000)
-  if (now > payload.exp) {
-    throw new Error('JWT token expired')
-  }
-
-  return payload
-}
-
-// Space credential
-
-export type CreateSpaceCredentialOpts = {
+export type CreateSpaceTokenOpts = {
   iss: string
   sub: string
-  expSeconds?: number
+  aud?: string
+  expiresInSec?: number
   kid?: string
 }
 
-export async function createSpaceCredential(
-  opts: CreateSpaceCredentialOpts,
+export const createSpaceToken = async (
+  type: SpaceTokenType,
+  opts: CreateSpaceTokenOpts,
   keypair: Keypair,
-): Promise<string> {
-  const iat = Math.floor(Date.now() / 1000)
-  const exp = iat + (opts.expSeconds ?? 7200) // 2 hours default
-  const jti = crypto.randomUUID()
+): Promise<string> => {
+  const spec = SPACE_TOKEN_TYPES[type]
+  if (spec.requireAud && !opts.aud) {
+    throw new SpaceTokenError(`a ${type} token requires an "aud"`)
+  }
 
-  const payload: SpaceCredentialPayload = {
+  const iat = Math.floor(Date.now() / 1000)
+  const header: SpaceTokenHeader = { alg: keypair.jwtAlg, typ: spec.typ }
+  const kid = opts.kid ?? spec.kid
+  if (kid) header.kid = kid
+
+  const payload: SpaceTokenPayload = {
     iss: opts.iss,
     sub: opts.sub,
+    ...(opts.aud ? { aud: opts.aud } : undefined),
     iat,
-    exp,
-    jti,
+    exp: iat + (opts.expiresInSec ?? spec.expiresInSec),
+    jti: randomStr(16, 'hex'),
   }
 
-  // Signed by the authority's #atproto_space key, or #atproto when the
-  // authority publishes no dedicated space key (proposal 0016).
-  return createJwt(
-    SPACE_CREDENTIAL_TYP,
-    payload,
-    keypair,
-    opts.kid ?? '#atproto_space',
-  )
+  const signingInput = `${jsonToB64Url(header)}.${jsonToB64Url(payload)}`
+  const sig = await keypair.sign(new TextEncoder().encode(signingInput))
+  return `${signingInput}.${toBase64(sig, 'base64url')}`
 }
 
-export async function verifySpaceCredential(
+// Structural validation only, no signature check. This is as far as we go for
+// client attestations, whose key comes from the client's JWKS, not a DID doc.
+export const parseSpaceToken = (
+  type: SpaceTokenType,
   jwt: string,
-  didKey: string,
-): Promise<SpaceCredentialPayload> {
-  const parsed = parseJwt(jwt)
+): SpaceToken & { signingInput: Uint8Array; sig: Uint8Array } => {
+  const spec = SPACE_TOKEN_TYPES[type]
 
-  if (parsed.header.typ !== SPACE_CREDENTIAL_TYP) {
-    throw new Error(
-      `Invalid JWT type: expected ${SPACE_CREDENTIAL_TYP}, got ${parsed.header.typ}`,
-    )
-  }
-
-  const valid = await verifySignature(
-    didKey,
-    parsed.signingInput,
-    parsed.signature,
-    { jwtAlg: parsed.header.alg },
-  )
-  if (!valid) {
-    throw new Error('Invalid JWT signature')
-  }
-
-  const payload = parsed.payload as SpaceCredentialPayload
-
-  const now = Math.floor(Date.now() / 1000)
-  if (now > payload.exp) {
-    throw new Error('JWT token expired')
-  }
-
-  return payload
-}
-
-// Client attestation
-//
-// @TODO Full verification requires resolving `iss` (the client_id) to the
-// client's client-metadata.json, fetching its published JWKS, and verifying
-// the signature against the key identified by the attestation's `kid`. That
-// network-dependent verification is not implemented here; for now we only
-// parse and structurally validate the attestation and surface its claims.
-// See SPACE_RECONCILIATION_NOTES.md.
-
-export type CreateClientAttestationOpts = {
-  clientId: string
-  aud: string
-  kid?: string
-  expSeconds?: number
-}
-
-// Build a client attestation. Apps sign these with their own client
-// authentication key; this helper exists mainly so the shape is exercised in
-// tests. The space authority verifies it against the client's published JWKS
-// (not implemented here — see parseClientAttestation).
-export async function createClientAttestation(
-  opts: CreateClientAttestationOpts,
-  keypair: Keypair,
-): Promise<string> {
-  const iat = Math.floor(Date.now() / 1000)
-  const exp = iat + (opts.expSeconds ?? 60)
-  const jti = crypto.randomUUID()
-
-  const payload: ClientAttestationPayload = {
-    iss: opts.clientId,
-    sub: opts.clientId,
-    aud: opts.aud,
-    iat,
-    exp,
-    jti,
-  }
-
-  return createJwt(CLIENT_ATTESTATION_TYP, payload, keypair, opts.kid)
-}
-
-export type ParsedClientAttestation = {
-  header: JwtHeader
-  payload: ClientAttestationPayload
-}
-
-export function parseClientAttestation(jwt: string): ParsedClientAttestation {
-  const parsed = parseJwt(jwt)
-
-  if (parsed.header.typ !== CLIENT_ATTESTATION_TYP) {
-    throw new Error(
-      `Invalid JWT type: expected ${CLIENT_ATTESTATION_TYP}, got ${parsed.header.typ}`,
-    )
-  }
-
-  const payload = parsed.payload as ClientAttestationPayload
-  if (!payload.iss || !payload.sub || !payload.aud) {
-    throw new Error('Client attestation missing required claims (iss/sub/aud)')
-  }
-  if (payload.iss !== payload.sub) {
-    throw new Error('Client attestation iss and sub must match (the client_id)')
-  }
-
-  const now = Math.floor(Date.now() / 1000)
-  if (payload.exp && now > payload.exp) {
-    throw new Error('Client attestation expired')
-  }
-
-  return { header: parsed.header, payload }
-}
-
-// Internal JWT helpers
-
-type ParsedJwt = {
-  header: JwtHeader
-  payload: Record<string, unknown>
-  signingInput: Uint8Array
-  signature: Uint8Array
-}
-
-async function createJwt(
-  typ: string,
-  payload: Record<string, unknown>,
-  keypair: Keypair,
-  kid?: string,
-): Promise<string> {
-  const header: JwtHeader = {
-    alg: keypair.jwtAlg,
-    typ,
-  }
-  if (kid) {
-    header.kid = kid
-  }
-
-  const headerB64 = toBase64(
-    new TextEncoder().encode(JSON.stringify(header)),
-    'base64url',
-  )
-  const payloadB64 = toBase64(
-    new TextEncoder().encode(JSON.stringify(payload)),
-    'base64url',
-  )
-
-  const signingInput = `${headerB64}.${payloadB64}`
-  const signingInputBytes = new TextEncoder().encode(signingInput)
-  const signature = await keypair.sign(signingInputBytes)
-  const signatureB64 = toBase64(signature, 'base64url')
-
-  return `${signingInput}.${signatureB64}`
-}
-
-function parseJwt(jwt: string): ParsedJwt {
   const parts = jwt.split('.')
   if (parts.length !== 3) {
-    throw new Error('Invalid JWT: expected 3 parts')
+    throw new SpaceTokenError('malformed token: expected 3 parts', 'BadJwt')
   }
+  const [headerB64, payloadB64, sigB64] = parts
 
-  const [headerB64, payloadB64, signatureB64] = parts
+  const header = decodeJsonPart<SpaceTokenHeader>(headerB64, 'header')
+  const payload = decodeJsonPart<SpaceTokenPayload>(payloadB64, 'payload')
 
-  let header: JwtHeader
-  try {
-    const headerJson = new TextDecoder().decode(
-      fromBase64(headerB64, 'base64url'),
+  if (header.typ !== spec.typ) {
+    throw new SpaceTokenError(
+      `wrong token type: expected "${spec.typ}", got "${header.typ}"`,
+      'BadJwtType',
     )
-    header = JSON.parse(headerJson)
-  } catch (err) {
-    throw new Error(`Invalid JWT header: ${err}`)
   }
-
-  let payload: Record<string, unknown>
-  try {
-    const payloadJson = new TextDecoder().decode(
-      fromBase64(payloadB64, 'base64url'),
+  if (typeof header.alg !== 'string' || !header.alg) {
+    throw new SpaceTokenError('missing token "alg"', 'BadJwt')
+  }
+  if (!payload.iss) {
+    throw new SpaceTokenError('missing token "iss"', 'BadJwtIss')
+  }
+  if (!payload.sub) {
+    throw new SpaceTokenError('missing token "sub"', 'BadJwtSub')
+  }
+  if (typeof payload.exp !== 'number') {
+    throw new SpaceTokenError('missing token "exp"', 'BadJwt')
+  }
+  if (spec.requireAud && !payload.aud) {
+    throw new SpaceTokenError('missing token "aud"', 'BadJwtAudience')
+  }
+  if (type === 'clientAttestation' && payload.iss !== payload.sub) {
+    throw new SpaceTokenError(
+      'client attestation "iss" and "sub" must both be the client_id',
+      'BadJwtIss',
     )
-    payload = JSON.parse(payloadJson)
-  } catch (err) {
-    throw new Error(`Invalid JWT payload: ${err}`)
   }
-
-  const signingInput = new TextEncoder().encode(`${headerB64}.${payloadB64}`)
-  const signature = fromBase64(signatureB64, 'base64url')
 
   return {
     header,
     payload,
-    signingInput,
-    signature,
+    signingInput: new TextEncoder().encode(`${headerB64}.${payloadB64}`),
+    sig: fromBase64(sigB64, 'base64url'),
   }
 }
+
+export type VerifySpaceTokenOpts = {
+  /** Passed `kid` so a verifier can honour the key id. */
+  getSigningKey: (iss: string, kid?: string) => string | Promise<string>
+  aud?: string
+  sub?: string
+}
+
+export const verifySpaceToken = async (
+  type: SpaceTokenType,
+  jwt: string,
+  opts: VerifySpaceTokenOpts,
+): Promise<SpaceToken> => {
+  const { header, payload, signingInput, sig } = parseSpaceToken(type, jwt)
+
+  const now = Math.floor(Date.now() / 1000)
+  if (now - CLOCK_SKEW_SEC >= payload.exp) {
+    throw new SpaceTokenError('token expired', 'JwtExpired')
+  }
+  if (opts.aud !== undefined && payload.aud !== opts.aud) {
+    throw new SpaceTokenError(
+      'token audience does not match this service',
+      'BadJwtAudience',
+    )
+  }
+  if (opts.sub !== undefined && payload.sub !== opts.sub) {
+    throw new SpaceTokenError(
+      'token subject does not match the requested space',
+      'BadJwtSub',
+    )
+  }
+
+  const didKey = await opts.getSigningKey(payload.iss, header.kid)
+  let valid: boolean
+  try {
+    valid = await verifySignature(didKey, signingInput, sig, {
+      jwtAlg: header.alg,
+    })
+  } catch (err) {
+    throw new SpaceTokenError(
+      `could not verify token signature: ${errMsg(err)}`,
+      'BadJwtSignature',
+    )
+  }
+  if (!valid) {
+    throw new SpaceTokenError('invalid token signature', 'BadJwtSignature')
+  }
+
+  return { header, payload }
+}
+
+const jsonToB64Url = (json: Record<string, unknown>): string =>
+  toBase64(new TextEncoder().encode(JSON.stringify(json)), 'base64url')
+
+const decodeJsonPart = <T>(b64: string, part: string): T => {
+  try {
+    return JSON.parse(new TextDecoder().decode(fromBase64(b64, 'base64url')))
+  } catch (err) {
+    throw new SpaceTokenError(
+      `could not parse token ${part}: ${errMsg(err)}`,
+      'BadJwt',
+    )
+  }
+}
+
+const errMsg = (err: unknown): string =>
+  err instanceof Error ? err.message : String(err)

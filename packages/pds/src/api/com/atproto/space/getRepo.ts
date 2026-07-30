@@ -1,6 +1,11 @@
-import { MethodNotImplementedError, Server } from '@atproto/xrpc-server'
+import { byteIterableToStream } from '@atproto/common'
+import { parseCid } from '@atproto/lex-data'
+import { SerializedRecord, serializeRepo } from '@atproto/space'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { SpaceReader } from '../../../../actor-store/space/index.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import { assertSpaceRead, buildSignedCommit } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getRepo, {
@@ -9,12 +14,58 @@ export default function (server: Server, ctx: AppContext) {
         // Performed in the handler as it requires the `space` param
       },
     }),
-    // @TODO Implement full-state CAR export. The CAR declares two roots in
-    // order — the signedCommit, then a DRISL (DAG-CBOR) index mapping
-    // "{collection}/{rkey}" -> record CID (lexicographic) — followed by the
-    // record blocks in the same order. See proposal 0016 "Repo serialization".
-    handler: async () => {
-      throw new MethodNotImplementedError('getRepo is not yet implemented')
+    handler: async ({ params, auth }) => {
+      const { space, repo } = params
+
+      assertSpaceRead(auth, space)
+
+      // Held open for the life of the stream so records page out lazily.
+      const actorDb = await ctx.actorStore.openDb(repo)
+      try {
+        const reader = new SpaceReader(actorDb)
+        const state = await reader.getRepoState(space)
+        const commit = await buildSignedCommit({
+          spaceUri: space,
+          author: repo,
+          state,
+          keypair: await ctx.actorStore.keypair(repo),
+        })
+        if (!commit) {
+          throw new InvalidRequestError(
+            `Could not find repo for space: ${space}`,
+            'RepoNotFound',
+          )
+        }
+
+        const carStream = byteIterableToStream(
+          serializeRepo(commit, readRecords(reader, space)),
+        )
+        const closeDb = () => actorDb.close()
+        carStream.on('error', closeDb)
+        carStream.on('close', closeDb)
+
+        return {
+          encoding: 'application/vnd.ipld.car' as const,
+          body: carStream,
+        }
+      } catch (err) {
+        actorDb.close()
+        throw err
+      }
     },
   })
+}
+
+async function* readRecords(
+  reader: SpaceReader,
+  space: string,
+): AsyncGenerator<SerializedRecord> {
+  for await (const row of reader.streamRecords(space)) {
+    yield {
+      collection: row.collection,
+      rkey: row.rkey,
+      cid: parseCid(row.cid),
+      bytes: row.value,
+    }
+  }
 }

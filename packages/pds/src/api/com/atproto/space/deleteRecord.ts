@@ -1,6 +1,4 @@
-import { SpaceRepo, WriteOpAction } from '@atproto/space'
 import { ForbiddenError, Server } from '@atproto/xrpc-server'
-import { SqlRepoStorage } from '../../../../actor-store/space/index.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertSpaceScope, fireNotifyWrite } from './util.js'
@@ -21,19 +19,18 @@ export default function (server: Server, ctx: AppContext) {
 
       assertSpaceScope(auth, space, { action: 'delete', collection })
 
-      const result = await ctx.actorStore.transact(did, async (actorTxn) => {
-        const storage = new SqlRepoStorage(actorTxn.space, space)
-        const repoStore = await SpaceRepo.loadOrCreate(storage, did)
-        const commit = await repoStore.formatCommit({
-          action: WriteOpAction.Delete,
-          collection,
-          rkey,
-        })
-        const rev = await actorTxn.space.applyRepoCommit(space, commit)
-        return { rev, setHash: commit.setHash }
-      })
+      const commit = await ctx.actorStore.transact(did, (actorTxn) =>
+        actorTxn.space.applyWrites(space, [
+          { action: 'delete', collection, rkey },
+        ]),
+      )
 
-      await fireNotifyWrite(ctx, space, did, result.rev, result.setHash)
+      await fireNotifyWrite(ctx, {
+        space,
+        writerDid: did,
+        rev: commit.rev,
+        setHash: commit.setHash,
+      })
 
       return {
         encoding: 'application/json' as const,

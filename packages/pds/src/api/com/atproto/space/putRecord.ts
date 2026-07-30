@@ -1,8 +1,5 @@
-import { cidForLex } from '@atproto/lex-cbor'
-import { SpaceRepo, WriteOpAction } from '@atproto/space'
 import { AtUriString } from '@atproto/syntax'
 import { ForbiddenError, Server } from '@atproto/xrpc-server'
-import { SqlRepoStorage } from '../../../../actor-store/space/index.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertSpaceScope, fireNotifyWrite } from './util.js'
@@ -21,32 +18,32 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError('repo must match authenticated user')
       }
 
-      assertSpaceScope(auth, space, { action: 'create', collection })
-      assertSpaceScope(auth, space, { action: 'update', collection })
-
-      const result = await ctx.actorStore.transact(did, async (actorTxn) => {
-        const storage = new SqlRepoStorage(actorTxn.space, space)
-        const repoStore = await SpaceRepo.loadOrCreate(storage, did)
-        const exists = await storage.hasRecord(collection, rkey)
-        const action = exists ? WriteOpAction.Update : WriteOpAction.Create
-        const commit = await repoStore.formatCommit({
-          action,
+      const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
+        // Check the scope for what this actually is; requiring both would lock
+        // out an app granted only `update`.
+        const exists = await actorTxn.space.hasRecord(space, collection, rkey)
+        assertSpaceScope(auth, space, {
+          action: exists ? 'update' : 'create',
           collection,
-          rkey,
-          record,
         })
-        const rev = await actorTxn.space.applyRepoCommit(space, commit)
-        const cid = await cidForLex(record)
-        return { cid: cid.toString(), rev, setHash: commit.setHash }
+        return actorTxn.space.applyWrites(space, [
+          { action: 'put', collection, rkey, record },
+        ])
       })
 
-      await fireNotifyWrite(ctx, space, did, result.rev, result.setHash)
+      await fireNotifyWrite(ctx, {
+        space,
+        writerDid: did,
+        rev: commit.rev,
+        setHash: commit.setHash,
+      })
 
+      const [result] = commit.results
       return {
         encoding: 'application/json' as const,
         body: {
           uri: `${space}/${did}/${collection}/${rkey}` as AtUriString,
-          cid: result.cid,
+          cid: result.cid!.toString(),
         },
       }
     },

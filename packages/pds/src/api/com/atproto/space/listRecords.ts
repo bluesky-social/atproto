@@ -1,9 +1,9 @@
 import { NsidString } from '@atproto/syntax'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { Server } from '@atproto/xrpc-server'
 import { formatListCursor } from '../../../../actor-store/space/reader.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope } from './util.js'
+import { assertSpaceRead } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.listRecords, {
@@ -16,13 +16,7 @@ export default function (server: Server, ctx: AppContext) {
       const { space, repo, collection, limit, cursor, reverse, excludeValues } =
         params
 
-      if (auth.credentials.type === 'space_credential') {
-        if (auth.credentials.space !== space) {
-          throw new InvalidRequestError('Credential space mismatch')
-        }
-      } else {
-        assertSpaceScope(auth, space, { action: 'read' })
-      }
+      assertSpaceRead(auth, space)
 
       const records = await ctx.actorStore.read(repo, (store) =>
         store.space.listRecords(space, {

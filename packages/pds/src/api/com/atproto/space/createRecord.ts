@@ -1,9 +1,6 @@
 import { TID } from '@atproto/common'
-import { cidForLex } from '@atproto/lex-cbor'
-import { SpaceRepo, WriteOpAction } from '@atproto/space'
 import { AtUriString } from '@atproto/syntax'
 import { ForbiddenError, Server } from '@atproto/xrpc-server'
-import { SqlRepoStorage } from '../../../../actor-store/space/index.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertSpaceScope, fireNotifyWrite } from './util.js'
@@ -25,27 +22,25 @@ export default function (server: Server, ctx: AppContext) {
 
       assertSpaceScope(auth, space, { action: 'create', collection })
 
-      const result = await ctx.actorStore.transact(did, async (actorTxn) => {
-        const storage = new SqlRepoStorage(actorTxn.space, space)
-        const repoStore = await SpaceRepo.loadOrCreate(storage, did)
-        const commit = await repoStore.formatCommit({
-          action: WriteOpAction.Create,
-          collection,
-          rkey,
-          record,
-        })
-        const rev = await actorTxn.space.applyRepoCommit(space, commit)
-        const cid = await cidForLex(record)
-        return { cid: cid.toString(), rkey, rev, setHash: commit.setHash }
+      const commit = await ctx.actorStore.transact(did, (actorTxn) =>
+        actorTxn.space.applyWrites(space, [
+          { action: 'create', collection, rkey, record },
+        ]),
+      )
+
+      await fireNotifyWrite(ctx, {
+        space,
+        writerDid: did,
+        rev: commit.rev,
+        setHash: commit.setHash,
       })
 
-      await fireNotifyWrite(ctx, space, did, result.rev, result.setHash)
-
+      const [result] = commit.results
       return {
         encoding: 'application/json' as const,
         body: {
-          uri: `${space}/${did}/${collection}/${result.rkey}` as AtUriString,
-          cid: result.cid,
+          uri: `${space}/${did}/${collection}/${rkey}` as AtUriString,
+          cid: result.cid!.toString(),
         },
       }
     },

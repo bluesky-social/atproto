@@ -16,10 +16,12 @@ import {
   ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
 import {
-  SPACE_CREDENTIAL_TYP,
-  verifyDelegationToken,
-  verifySpaceCredential,
+  SPACE_TOKEN_TYPES,
+  SpaceTokenError,
+  SpaceTokenType,
+  verifySpaceToken,
 } from '@atproto/space'
+import { SpaceUri } from '@atproto/syntax'
 import {
   AuthRequiredError,
   Awaitable,
@@ -355,127 +357,106 @@ export class AuthVerifier {
     }
   }
 
+  // Unaddressed by design (one credential is reused across repo hosts), so there's
+  // no aud to check. Handlers confirm the credential's space matches theirs.
   public spaceCredentialAuth: MethodAuthVerifier<SpaceCredentialOutput> =
     async (ctx) => {
       setAuthHeaders(ctx.res)
-      const jwtStr = bearerTokenFromReq(ctx.req)
-      if (!jwtStr) {
-        throw new AuthRequiredError(
-          'missing space credential',
-          'MissingCredential',
-        )
-      }
-
-      try {
-        // Parse the JWT to extract the issuer (space owner DID) before verification
-        // We need to resolve the issuer's DID doc to get the public key
-        const parts = jwtStr.split('.')
-        if (parts.length !== 3) {
-          throw new AuthRequiredError('invalid space credential format')
-        }
-        const payloadJson = Buffer.from(parts[1], 'base64url').toString()
-        const payload = JSON.parse(payloadJson)
-        const iss = payload.iss
-        if (!iss) {
-          throw new AuthRequiredError('missing issuer in space credential')
-        }
-
-        // Resolve the space owner's DID to get their signing key
-        const didDoc = await this.idResolver.did.resolve(iss)
-        if (!didDoc) {
-          throw new AuthRequiredError('could not resolve space owner DID')
-        }
-        const parsedKey = getVerificationMaterial(didDoc, 'atproto')
-        if (!parsedKey) {
-          throw new AuthRequiredError(
-            'missing or bad key in space owner did doc',
-          )
-        }
-        const didKey = getDidKeyFromMultibase(parsedKey)
-        if (!didKey) {
-          throw new AuthRequiredError(
-            'missing or bad key in space owner did doc',
-          )
-        }
-
-        // @TODO the space credential is signed by the authority's
-        // `#atproto_space` verification method (proposal 0016). We resolve the
-        // `#atproto` key here; in simplespace the authority is the user's own
-        // DID backed by the same keypair, so this works in practice. Resolving
-        // a distinct `#atproto_space` key (fallback to `#atproto`) is the
-        // proposal-correct behavior. See SPACE_RECONCILIATION_NOTES.md.
-        const verified = await verifySpaceCredential(jwtStr, didKey)
-
-        return {
-          credentials: {
-            type: 'space_credential' as const,
-            iss: verified.iss,
-            space: verified.sub,
-          },
-        }
-      } catch (err) {
-        if (err instanceof AuthRequiredError) throw err
-        throw new AuthRequiredError(
-          `Invalid space credential: ${err instanceof Error ? err.message : String(err)}`,
-          'InvalidCredential',
-        )
+      const { payload } = await this.verifySpaceToken(ctx.req, 'credential')
+      return {
+        credentials: {
+          type: 'space_credential',
+          iss: payload.iss,
+          space: payload.sub,
+        },
       }
     }
 
+  /**
+   * A delegation token, minted by a user's PDS and presented to this service (as
+   * a space authority) in exchange for a space credential.
+   *
+   * Addressed to this authority's space host, and checked as such: a token minted
+   * for another authority is rejected rather than honoured.
+   */
   public delegationTokenAuth: MethodAuthVerifier<DelegationTokenOutput> =
     async (ctx) => {
       setAuthHeaders(ctx.res)
-      const jwtStr = bearerTokenFromReq(ctx.req)
-      if (!jwtStr) {
+      const { payload } = await this.verifySpaceToken(ctx.req, 'delegation')
+
+      // We answer for many authorities, so there's no one fixed audience: derive it
+      // from `sub` so a token minted for one authority can't be used at another.
+      let expectedAud: string
+      try {
+        expectedAud = `${new SpaceUri(payload.sub).authorityDid}#atproto_space_host`
+      } catch {
         throw new AuthRequiredError(
-          'missing delegation token',
-          'MissingCredential',
+          'delegation token subject is not a space URI',
+          'BadJwtSub',
         )
       }
-      try {
-        const parts = jwtStr.split('.')
-        if (parts.length !== 3) {
-          throw new AuthRequiredError('invalid delegation token format')
-        }
-        const payloadJson = Buffer.from(parts[1], 'base64url').toString()
-        const payload = JSON.parse(payloadJson)
-        const iss = payload.iss
-        if (!iss) {
-          throw new AuthRequiredError('missing issuer in delegation token')
-        }
-
-        // The token is signed by the user's atproto signing key — resolve
-        // their DID document to verify.
-        const didDoc = await this.idResolver.did.resolve(iss)
-        if (!didDoc) {
-          throw new AuthRequiredError('could not resolve user DID')
-        }
-        const parsedKey = getVerificationMaterial(didDoc, 'atproto')
-        if (!parsedKey) {
-          throw new AuthRequiredError('missing or bad key in user did doc')
-        }
-        const didKey = getDidKeyFromMultibase(parsedKey)
-        if (!didKey) {
-          throw new AuthRequiredError('missing or bad key in user did doc')
-        }
-
-        const verified = await verifyDelegationToken(jwtStr, didKey)
-        return {
-          credentials: {
-            type: 'delegation_token' as const,
-            userDid: verified.iss,
-            aud: verified.aud,
-            space: verified.sub,
-          },
-        }
-      } catch (err) {
-        if (err instanceof AuthRequiredError) throw err
+      if (payload.aud !== expectedAud) {
         throw new AuthRequiredError(
-          `Invalid delegation token: ${err instanceof Error ? err.message : String(err)}`,
-          'InvalidDelegationToken',
+          'delegation token audience does not match the space authority',
+          'BadJwtAudience',
         )
+      }
+
+      return {
+        credentials: {
+          type: 'delegation_token',
+          userDid: payload.iss,
+          aud: payload.aud,
+          space: payload.sub,
+        },
       }
     }
+
+  private async verifySpaceToken(
+    req: IncomingMessage,
+    type: SpaceTokenType,
+    opts?: { aud?: string },
+  ) {
+    const jwtStr = bearerTokenFromReq(req)
+    if (!jwtStr) {
+      throw new AuthRequiredError(`missing ${type} token`, 'MissingCredential')
+    }
+    try {
+      return await verifySpaceToken(type, jwtStr, {
+        ...opts,
+        getSigningKey: (iss, kid) => this.resolveSpaceKey(iss, kid),
+      })
+    } catch (err) {
+      if (err instanceof AuthRequiredError) throw err
+      if (err instanceof SpaceTokenError) {
+        throw new AuthRequiredError(err.message, err.code)
+      }
+      throw new AuthRequiredError(
+        `Invalid ${type} token: ${err instanceof Error ? err.message : String(err)}`,
+        'InvalidCredential',
+      )
+    }
+  }
+
+  private async resolveSpaceKey(iss: string, kid?: string): Promise<string> {
+    const didDoc = await this.idResolver.did.resolve(iss)
+    if (!didDoc) {
+      throw new AuthRequiredError(`could not resolve DID: ${iss}`, 'BadJwtIss')
+    }
+    const requested = kid?.replace(/^#/, '') // takes a bare id
+    // Authorities without a dedicated space key sign with their atproto key.
+    const material =
+      (requested && getVerificationMaterial(didDoc, requested)) ||
+      getVerificationMaterial(didDoc, 'atproto')
+    const didKey = material && getDidKeyFromMultibase(material)
+    if (!didKey) {
+      throw new AuthRequiredError(
+        `missing or bad key (${kid ?? '#atproto'}) in did doc: ${iss}`,
+        'BadJwtIss',
+      )
+    }
+    return didKey
+  }
 
   public userServiceAuthOptional: MethodAuthVerifier<
     UserServiceAuthOutput | UnauthenticatedOutput
@@ -815,7 +796,7 @@ const isSpaceCredentialAuth = (req: IncomingMessage): boolean => {
   if (!token) return false
   try {
     const header = jose.decodeProtectedHeader(token)
-    return header.typ === SPACE_CREDENTIAL_TYP
+    return header.typ === SPACE_TOKEN_TYPES.credential.typ
   } catch {
     return false
   }
