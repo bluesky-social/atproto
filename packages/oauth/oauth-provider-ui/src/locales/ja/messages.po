@@ -1375,7 +1375,7 @@ msgstr "おかえりなさい！"
 
 #: src/pages/account/(authenticated)/page.tsx:33
 msgid "What does this mean?"
-msgstr "どういう意味ですか？"
+msgstr "これは何を意味しますか？"
 
 #: src/pages/account/(authenticated)/route.tsx:85
 msgid "What is an Atmosphere Account?"
