@@ -2097,6 +2097,9 @@ importers:
       '@noble/hashes':
         specifier: ^1.6.1
         version: 1.7.0
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
     devDependencies:
       typescript:
         specifier: ^6.0.3

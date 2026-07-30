@@ -50,7 +50,9 @@ export default function (server: Server, ctx: AppContext) {
           cursor: result.oplog.caughtUp
             ? undefined
             : result.oplog.ops.at(-1)?.rev,
-          commit: result.commit,
+          commit:
+            result.commit &&
+            com.atproto.space.defs.signedCommit.build(result.commit),
         },
       }
     },

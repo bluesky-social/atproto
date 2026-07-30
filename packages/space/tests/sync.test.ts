@@ -9,10 +9,6 @@ import {
   RepoVerificationError,
   SerializedRecord,
   SignedCommit,
-  decodeRepoIndex,
-  encodeRepoIndex,
-  repoIndex,
-  repoIndexEntries,
   serializeRecord,
   serializeRepo,
   verifyCommit,
@@ -81,7 +77,7 @@ describe('repo serialization', () => {
     })
 
     expect(recovered.commit.rev).toBe(REV)
-    expect(recovered.index.size).toBe(records.length)
+    expect(Object.keys(recovered.index)).toHaveLength(records.length)
     expect(recovered.records).toHaveLength(records.length)
     expect(recovered.repo.matches(recovered.commit)).toBe(true)
 
@@ -112,7 +108,7 @@ describe('repo serialization', () => {
       author: AUTHOR,
       didKey: keypair.did(),
     })
-    expect(recovered.index.size).toBe(0)
+    expect(Object.keys(recovered.index)).toHaveLength(0)
     expect(recovered.records).toHaveLength(0)
     expect(recovered.repo.setHash.isEmpty()).toBe(true)
   })
@@ -129,7 +125,7 @@ describe('repo serialization', () => {
     const cids: Cid[] = []
     for await (const block of blocks) cids.push(block.cid)
     const recordCids = cids.slice(2).map((c) => c.toString())
-    const indexCids = [...index.values()].map((c) => c.toString())
+    const indexCids = Object.values(index).map((c) => c.toString())
     expect(recordCids).toEqual(indexCids)
   })
 
@@ -142,7 +138,7 @@ describe('repo serialization', () => {
       didKey: keypair.did(),
     })
     expect(repo.matches(commit)).toBe(true)
-    expect(index.size).toBe(records.length)
+    expect(Object.keys(index)).toHaveLength(records.length)
   })
 
   describe('rejects tampering', () => {
@@ -166,7 +162,7 @@ describe('repo serialization', () => {
           author: AUTHOR,
           didKey: keypair.did(),
         }),
-      ).rejects.toThrow(/Commit failed verification/)
+      ).rejects.toThrow(/commit failed verification/)
     })
 
     it('rejects a repo verified against the wrong author', async () => {
@@ -177,7 +173,7 @@ describe('repo serialization', () => {
           author: 'did:example:bob',
           didKey: keypair.did(),
         }),
-      ).rejects.toThrow(/Commit failed verification/)
+      ).rejects.toThrow(/commit failed verification/)
     })
 
     it('rejects an index that disagrees with the commit hash', async () => {
@@ -195,16 +191,12 @@ describe('repo serialization', () => {
 
     it('rejects a record block whose bytes do not match its cid', async () => {
       const commit = await commitFor(records)
-      const index = repoIndex(records)
-      const indexBytes = encodeRepoIndex(index)
-      const commitBytes = encode({
-        ver: commit.ver,
-        hash: commit.hash,
-        ikm: commit.ikm,
-        sig: commit.sig,
-        mac: commit.mac,
-        rev: commit.rev,
-      })
+      const index: Record<string, Cid> = {}
+      for (const r of records) {
+        index[`${r.collection}/${r.rkey}`] = r.cid
+      }
+      const commitBytes = encode(commit)
+      const indexBytes = encode(index)
       const [commitCid, indexCid] = await Promise.all([
         cidForCbor(commitBytes),
         cidForCbor(indexBytes),
@@ -217,7 +209,7 @@ describe('repo serialization', () => {
         encodeCarHeader([commitCid, indexCid]),
         encodeCarBlock({ cid: commitCid, bytes: commitBytes }),
         encodeCarBlock({ cid: indexCid, bytes: indexBytes }),
-        ...[...index.keys()].map((path, i) => {
+        ...Object.keys(index).map((path, i) => {
           const record = byPath.get(path)!
           // Swap in bytes that don't hash to the advertised cid.
           const bytes = i === 0 ? encode({ text: 'tampered' }) : record.bytes
@@ -259,33 +251,49 @@ describe('repo serialization', () => {
         for await (const _ of stream) {
           // drain
         }
-      }).rejects.toThrow(/missing records named in the index/)
+      }).rejects.toThrow(/missing 1 record\(s\) named in the index/)
     })
   })
 
   describe('repo index', () => {
-    it('round-trips through bytes', () => {
-      const index = repoIndex(records)
-      const decoded = decodeRepoIndex(encodeRepoIndex(index))
-      expect([...decoded]).toEqual([...index])
-    })
-
-    it('folds into the same set hash as incremental adds', () => {
-      const folded = RepoCommit.fromRecords(
-        repoIndexEntries(repoIndex(records)),
-      )
+    it('folds into the same set hash as the records it describes', async () => {
+      const car = await carFor(records)
+      const { index, repo } = await verifyRepoCarFull([car], {
+        space: SPACE,
+        author: AUTHOR,
+        didKey: keypair.did(),
+      })
       expect(
-        folded.setHash.equals(RepoCommit.fromRecords(records).setHash),
+        RepoCommit.fromIndex(index).setHash.equals(
+          RepoCommit.fromRecords(records).setHash,
+        ),
       ).toBe(true)
+      expect(repo.setHash.equals(RepoCommit.fromRecords(records).setHash)).toBe(
+        true,
+      )
     })
 
-    it('rejects a malformed index block', () => {
-      expect(() => decodeRepoIndex(encode({ 'no-slash': 1 }))).toThrow(
-        RepoVerificationError,
-      )
-      expect(() =>
-        decodeRepoIndex(encode({ 'app.bsky.feed.post/1': 'not-a-cid' })),
-      ).toThrow(/Invalid cid/)
+    it('rejects an index whose values are not cids', async () => {
+      const commit = await commitFor(records)
+      const commitBytes = encode(commit)
+      const indexBytes = encode({ 'app.bsky.feed.post/1': 'not-a-cid' })
+      const [commitRoot, indexRoot] = await Promise.all([
+        cidForCbor(commitBytes),
+        cidForCbor(indexBytes),
+      ])
+      const car = Buffer.concat([
+        encodeCarHeader([commitRoot, indexRoot]),
+        encodeCarBlock({ cid: commitRoot, bytes: commitBytes }),
+        encodeCarBlock({ cid: indexRoot, bytes: indexBytes }),
+      ])
+
+      await expect(
+        verifyRepoCarFull([car], {
+          space: SPACE,
+          author: AUTHOR,
+          didKey: keypair.did(),
+        }),
+      ).rejects.toThrow(/invalid repo index/)
     })
   })
 
@@ -359,7 +367,7 @@ describe('repo serialization', () => {
           author: AUTHOR,
           didKey: keypair.did(),
         }),
-      ).rejects.toThrow(/Expected 2 CAR roots/)
+      ).rejects.toThrow(/expected 2 car roots/)
     })
 
     it('reads a CAR delivered in arbitrary chunk boundaries', async () => {

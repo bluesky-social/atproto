@@ -28,7 +28,9 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json' as const,
-        body: { commit },
+        body: {
+          commit: commit && com.atproto.space.defs.signedCommit.build(commit),
+        },
       }
     },
   })

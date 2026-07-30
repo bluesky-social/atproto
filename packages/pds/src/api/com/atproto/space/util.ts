@@ -2,7 +2,7 @@ import { getPdsEndpoint } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { xrpc } from '@atproto/lex'
 import { SpacePermissionMatch } from '@atproto/oauth-scopes'
-import { CommitCtx, LtHash, RepoCommit } from '@atproto/space'
+import { CommitCtx, LtHash, RepoCommit, SignedCommit } from '@atproto/space'
 import { AtUriString, DidString, SpaceUri } from '@atproto/syntax'
 import {
   InvalidRequestError,
@@ -64,7 +64,7 @@ export async function buildSignedCommit(opts: {
   author: string
   state: { setHash: Buffer | null; rev: string | null } | null
   keypair: Keypair
-}): Promise<com.atproto.space.defs.SignedCommit | undefined> {
+}): Promise<SignedCommit | undefined> {
   const { spaceUri, author, state, keypair } = opts
   if (!state?.setHash || !state.rev) return undefined
 
@@ -73,8 +73,7 @@ export async function buildSignedCommit(opts: {
     author,
     rev: state.rev,
   }
-  const commit = await RepoCommit.fromState(state.setHash).sign(ctx, keypair)
-  return com.atproto.space.defs.signedCommit.build(commit)
+  return RepoCommit.fromState(state.setHash).sign(ctx, keypair)
 }
 
 // Best effort: the authority records the write and fans out to syncers.

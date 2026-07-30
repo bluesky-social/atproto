@@ -1,12 +1,18 @@
-import { readCarStream } from '@atproto/common'
+import { check, readCarStream } from '@atproto/common'
 import { decode } from '@atproto/lex-cbor'
 import { Cid, LexMap } from '@atproto/lex-data'
 import { RepoVerificationError } from '../error.js'
 import { RepoCommit, verifyCommit } from '../repo-commit.js'
-import { CommitCtx, SignedCommit, SpaceRecord } from '../types.js'
-import { RepoIndex, decodeRepoIndex, repoIndexEntries } from './repo-index.js'
+import {
+  CommitCtx,
+  RepoIndex,
+  SignedCommit,
+  SpaceRecord,
+  def,
+} from '../types.js'
+import { parseRecordPath } from '../util.js'
 
-export type VerifyRepoOpts = {
+export type VerifyRepoParams = {
   space: string
   author: string
   didKey: string
@@ -19,58 +25,57 @@ export type VerifiedRecord = {
   record: SpaceRecord
 }
 
-/**
- * Verifies in three stages, following the CAR's layout so nothing needs buffering:
- * the commit, then the index against the commit's hash (which authenticates every
- * path/cid pair without reading a record), then each block against its index entry.
- *
- * The last stage runs lazily, so `records` must be drained to know the repo was
- * complete. Use {@link verifyRepoCarFull} to do that.
- */
-export const verifyRepoCar = async (
-  car: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
-  opts: VerifyRepoOpts,
-): Promise<{
+export type VerifiedRepo = {
   commit: SignedCommit
   index: RepoIndex
   repo: RepoCommit
   records: AsyncGenerator<VerifiedRecord>
-}> => {
+}
+
+/**
+ * Verify a serialized repo, streaming out its records.
+ *
+ * The three stages follow the CAR's layout, so nothing needs buffering: the
+ * commit, then the index against the commit's hash (which authenticates every
+ * path/cid pair without reading a record), then each block against its index
+ * entry. That last stage runs as `records` is drained, so it must be consumed to
+ * know the repo was complete — {@link verifyRepoCarFull} does that.
+ */
+export const verifyRepoCar = async (
+  car: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
+  params: VerifyRepoParams,
+): Promise<VerifiedRepo> => {
   // The reader hashes every block against its cid as it streams.
   const { roots, blocks } = await readCarStream(car)
   if (roots.length !== 2) {
     throw new RepoVerificationError(
-      `Expected 2 CAR roots (commit, index), got ${roots.length}`,
+      `expected 2 car roots (commit, index), got ${roots.length}`,
     )
   }
-  const [commitCid, indexCid] = roots
+  const [commitRoot, indexRoot] = roots
 
   const commitBlock = await blocks.next()
-  if (commitBlock.done || !commitBlock.value.cid.equals(commitCid)) {
-    throw new RepoVerificationError('Expected the commit block to lead the CAR')
+  if (commitBlock.done || !commitBlock.value.cid.equals(commitRoot)) {
+    throw new RepoVerificationError('expected the commit block to lead the car')
   }
-  const commit = parseSignedCommit(commitBlock.value.bytes)
+  const commit = parseBlock(commitBlock.value.bytes, def.signedCommit)
 
-  const ctx: CommitCtx = {
-    space: opts.space,
-    author: opts.author,
-    rev: commit.rev,
-  }
-  if (!(await verifyCommit(commit, ctx, opts.didKey))) {
-    throw new RepoVerificationError('Commit failed verification')
+  const ctx: CommitCtx = { ...params, rev: commit.rev }
+  if (!(await verifyCommit(commit, ctx, params.didKey))) {
+    throw new RepoVerificationError('commit failed verification')
   }
 
   const indexBlock = await blocks.next()
-  if (indexBlock.done || !indexBlock.value.cid.equals(indexCid)) {
+  if (indexBlock.done || !indexBlock.value.cid.equals(indexRoot)) {
     throw new RepoVerificationError(
-      'Expected the index block to follow the commit',
+      'expected the index block to follow the commit',
     )
   }
-  const index = decodeRepoIndex(indexBlock.value.bytes)
+  const index = parseBlock(indexBlock.value.bytes, def.repoIndex)
 
-  const repo = RepoCommit.fromRecords(repoIndexEntries(index))
+  const repo = RepoCommit.fromIndex(index)
   if (!repo.matches(commit)) {
-    throw new RepoVerificationError('Repo index does not match the commit hash')
+    throw new RepoVerificationError('index does not match the commit hash')
   }
 
   return { commit, index, repo, records: verifyRecords(blocks, index) }
@@ -78,87 +83,58 @@ export const verifyRepoCar = async (
 
 /**
  * Verify a serialized repo and collect its records. Prefer {@link verifyRepoCar}
- * for large repos, where streaming avoids buffering every record at once.
+ * for large repos, where streaming avoids holding every record at once.
  */
 export const verifyRepoCarFull = async (
   car: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
-  opts: VerifyRepoOpts,
-): Promise<{
-  commit: SignedCommit
-  index: RepoIndex
-  repo: RepoCommit
-  records: VerifiedRecord[]
-}> => {
-  const { commit, index, repo, records } = await verifyRepoCar(car, opts)
+  params: VerifyRepoParams,
+): Promise<Omit<VerifiedRepo, 'records'> & { records: VerifiedRecord[] }> => {
+  const { records, ...rest } = await verifyRepoCar(car, params)
   const collected: VerifiedRecord[] = []
   for await (const record of records) {
     collected.push(record)
   }
-  return { commit, index, repo, records: collected }
+  return { ...rest, records: collected }
 }
 
-// Record blocks follow the index, in its order, one per entry.
+// The car holds one record block per index entry, in the index's order.
 async function* verifyRecords(
   blocks: AsyncIterable<{ cid: Cid; bytes: Uint8Array }>,
   index: RepoIndex,
 ): AsyncGenerator<VerifiedRecord> {
-  const entries = repoIndexEntries(index)[Symbol.iterator]()
+  const paths = Object.keys(index)
+  let i = 0
 
   for await (const block of blocks) {
-    const next = entries.next()
-    if (next.done) {
-      throw new RepoVerificationError('CAR has more blocks than index entries')
+    if (i >= paths.length) {
+      throw new RepoVerificationError('car has more blocks than index entries')
     }
-    const { collection, rkey, cid } = next.value
+    const path = paths[i]
+    const cid = index[path]
+    i++
+
     if (!block.cid.equals(cid)) {
       throw new RepoVerificationError(
-        `Expected block ${cid} for ${collection}/${rkey}, got ${block.cid}`,
+        `expected block ${cid} at ${path}, got ${block.cid}`,
       )
     }
-    yield { collection, rkey, cid, record: parseRecord(block.bytes) }
+    const { collection, rkey } = parseRecordPath(path)
+    yield { collection, rkey, cid, record: decode(block.bytes) as LexMap }
   }
 
-  if (!entries.next().done) {
-    throw new RepoVerificationError('CAR is missing records named in the index')
+  if (i < paths.length) {
+    throw new RepoVerificationError(
+      `car is missing ${paths.length - i} record(s) named in the index`,
+    )
   }
 }
 
-const parseSignedCommit = (bytes: Uint8Array): SignedCommit => {
-  const { ver, hash, ikm, sig, mac, rev } = decodeMap(bytes)
-  if (typeof ver !== 'number') {
-    throw new RepoVerificationError('Commit is missing "ver"')
+const parseBlock = <T>(bytes: Uint8Array, def: check.Def<T>): T => {
+  const parsed = def.schema.safeParse(decode(bytes))
+  if (!parsed.success) {
+    throw new RepoVerificationError(
+      `invalid ${def.name}: ${parsed.error.message}`,
+    )
   }
-  if (typeof rev !== 'string' || !rev) {
-    throw new RepoVerificationError('Commit is missing "rev"')
-  }
-  return {
-    ver,
-    hash: asBytes(hash, 'hash'),
-    ikm: asBytes(ikm, 'ikm'),
-    sig: asBytes(sig, 'sig'),
-    mac: asBytes(mac, 'mac'),
-    rev,
-  }
-}
-
-const parseRecord = (bytes: Uint8Array): SpaceRecord =>
-  decodeMap(bytes) as LexMap
-
-const decodeMap = (bytes: Uint8Array): Record<string, unknown> => {
-  const decoded = decode(bytes)
-  if (
-    decoded === null ||
-    typeof decoded !== 'object' ||
-    Array.isArray(decoded)
-  ) {
-    throw new RepoVerificationError('Expected a CBOR map')
-  }
-  return decoded as Record<string, unknown>
-}
-
-const asBytes = (value: unknown, field: string): Uint8Array => {
-  if (!(value instanceof Uint8Array)) {
-    throw new RepoVerificationError(`Commit "${field}" must be bytes`)
-  }
-  return value
+  return parsed.data
 }

@@ -5,10 +5,9 @@ import {
   CommitCtx,
   LTHASH_STATE_BYTES,
   RepoCommit,
+  SignedCommit,
   encodeCommitCtx,
   verifyCommit,
-  verifyCommitMac,
-  verifyCommitSig,
 } from '../src/index.js'
 
 // cids of `{ text: 'hello' }` and `{ text: 'world' }`
@@ -151,10 +150,8 @@ describe('RepoCommit', () => {
       expect(commit.sig.length).toBeGreaterThan(0)
     })
 
-    it('verifies its own mac and signature', async () => {
+    it('verifies its own commit', async () => {
       const commit = await repo.sign(ctx, keypair)
-      expect(verifyCommitMac(commit, ctx)).toBe(true)
-      expect(await verifyCommitSig(commit, ctx, keypair.did())).toBe(true)
       expect(await verifyCommit(commit, ctx, keypair.did())).toBe(true)
       expect(repo.matches(commit)).toBe(true)
     })
@@ -171,7 +168,6 @@ describe('RepoCommit', () => {
     it('rejects a signature from a different key', async () => {
       const other = await Secp256k1Keypair.create()
       const commit = await repo.sign(ctx, keypair)
-      expect(await verifyCommitSig(commit, ctx, other.did())).toBe(false)
       expect(await verifyCommit(commit, ctx, other.did())).toBe(false)
     })
 
@@ -182,17 +178,14 @@ describe('RepoCommit', () => {
     ])('does not verify under a different %s', async (_field, override) => {
       const commit = await repo.sign(ctx, keypair)
       const otherCtx = { ...ctx, ...override }
-      expect(verifyCommitMac(commit, otherCtx)).toBe(false)
-      expect(await verifyCommitSig(commit, otherCtx, keypair.did())).toBe(false)
+      expect(await verifyCommit(commit, otherCtx, keypair.did())).toBe(false)
     })
 
     it('does not verify a tampered hash', async () => {
       const commit = await repo.sign(ctx, keypair)
       const tampered = { ...commit, hash: new RepoCommit().setHash.digest() }
-      expect(verifyCommitMac(tampered, ctx)).toBe(false)
-      // The signature still checks out — it never covered the hash. This is what
-      // makes a leaked commit deniable, and why the MAC is the integrity check.
-      expect(await verifyCommitSig(tampered, ctx, keypair.did())).toBe(true)
+      // The signature over the ctx is still valid — it never covered the hash.
+      // The MAC is what catches this, and what a leaked commit can't prove.
       expect(await verifyCommit(tampered, ctx, keypair.did())).toBe(false)
     })
 
@@ -209,9 +202,8 @@ describe('RepoCommit', () => {
 
     it('rejects an unknown commit version', async () => {
       const commit = await repo.sign(ctx, keypair)
-      expect(
-        await verifyCommit({ ...commit, ver: 2 }, ctx, keypair.did()),
-      ).toBe(false)
+      const future = { ...commit, ver: 2 } as unknown as SignedCommit
+      expect(await verifyCommit(future, ctx, keypair.did())).toBe(false)
     })
 
     it('matches() is false once the repo changes', async () => {

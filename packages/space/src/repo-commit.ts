@@ -5,10 +5,17 @@ import {
   randomBytes,
   verifySignature,
 } from '@atproto/crypto'
-import { Cid } from '@atproto/lex-data'
+import { Cid, ui8Equals } from '@atproto/lex-data'
 import { LtHash } from './lthash.js'
-import { COMMIT_VERSION, CommitCtx, RepoOp, SignedCommit } from './types.js'
-import { bytesEqual, formatSetHashElement } from './util.js'
+import {
+  COMMIT_VERSION,
+  CommitCtx,
+  RecordPath,
+  RepoIndex,
+  RepoOp,
+  SignedCommit,
+} from './types.js'
+import { formatSetHashElement } from './util.js'
 
 export class RepoCommit {
   constructor(public setHash: LtHash = new LtHash()) {}
@@ -18,12 +25,19 @@ export class RepoCommit {
     return new RepoCommit(new LtHash(state))
   }
 
-  static fromRecords(
-    records: Iterable<{ collection: string; rkey: string; cid: Cid }>,
-  ): RepoCommit {
+  static fromRecords(records: Iterable<RecordPath & { cid: Cid }>): RepoCommit {
     const commit = new RepoCommit()
     for (const { collection, rkey, cid } of records) {
       commit.add(collection, rkey, cid)
+    }
+    return commit
+  }
+
+  // Fold in every record an index describes, to compare against a commit.
+  static fromIndex(index: RepoIndex): RepoCommit {
+    const commit = new RepoCommit()
+    for (const [path, cid] of Object.entries(index)) {
+      commit.setHash.add(`${path}/${cid.toString()}`)
     }
     return commit
   }
@@ -56,7 +70,7 @@ export class RepoCommit {
    * on its own this says nothing about authenticity.
    */
   matches(commit: SignedCommit): boolean {
-    return bytesEqual(this.setHash.digest(), commit.hash)
+    return ui8Equals(this.setHash.digest(), commit.hash)
   }
 
   /**
@@ -83,9 +97,9 @@ export class RepoCommit {
 }
 
 /**
- * Verify a commit's signature and MAC. Once this passes, `hash` is trusted as the
- * author's claim about their repo, which is what makes {@link RepoCommit#matches}
- * meaningful.
+ * Verify a commit's signature (authenticity) and MAC (integrity). Once this passes,
+ * `hash` is trusted as the author's claim about their repo, which is what makes
+ * {@link RepoCommit#matches} meaningful.
  */
 export const verifyCommit = async (
   commit: SignedCommit,
@@ -94,34 +108,21 @@ export const verifyCommit = async (
 ): Promise<boolean> => {
   if (commit.ver !== COMMIT_VERSION) return false
   if (commit.rev !== ctx.rev) return false
-  if (!verifyCommitMac(commit, ctx)) return false
-  return verifyCommitSig(commit, ctx, didKey)
-}
 
-// Integrity only. Symmetric, so anyone holding the commit can compute a valid MAC
-// for any hash — which is what gives a leaked commit its deniability.
-export const verifyCommitMac = (
-  commit: SignedCommit,
-  ctx: CommitCtx,
-): boolean => {
   const ctxBytes = encodeCommitCtx(ctx, commit.ikm)
-  return bytesEqual(computeMac(commit.ikm, ctxBytes, commit.hash), commit.mac)
-}
+  const mac = computeMac(commit.ikm, ctxBytes, commit.hash)
+  if (!ui8Equals(mac, commit.mac)) return false
 
-// Authenticity only.
-export const verifyCommitSig = async (
-  commit: SignedCommit,
-  ctx: CommitCtx,
-  didKey: string,
-): Promise<boolean> => {
-  return verifySignature(didKey, encodeCommitCtx(ctx, commit.ikm), commit.sig)
+  return verifySignature(didKey, ctxBytes, commit.sig)
 }
 
 const computeMac = (
   ikm: Uint8Array,
   ctxBytes: Uint8Array,
   hash: Uint8Array,
-): Uint8Array => hmacSha256(hkdfSha256(ikm, ctxBytes), hash)
+): Uint8Array => {
+  return hmacSha256(hkdfSha256(ikm, ctxBytes), hash)
+}
 
 const DOMAIN_PREFIX = new TextEncoder().encode('atproto-space-v1')
 

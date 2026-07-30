@@ -1,9 +1,8 @@
 import { CarBlock, writeCarStream } from '@atproto/common'
 import { cidForLex, encode } from '@atproto/lex-cbor'
 import { Cid, cidForCbor } from '@atproto/lex-data'
-import { SignedCommit, SpaceRecord } from '../types.js'
+import { RepoIndex, SignedCommit, SpaceRecord } from '../types.js'
 import { formatRecordPath } from '../util.js'
-import { encodeRepoIndex, repoIndex } from './repo-index.js'
 
 export type SerializedRecord = {
   collection: string
@@ -13,37 +12,43 @@ export type SerializedRecord = {
 }
 
 /**
- * Two roots in order — the signed commit, then the index — followed by record blocks
- * in the index's order. Records are collected up front because the index has to
- * precede the blocks it describes. Blobs are excluded.
+ * Serialize a repo as a car: two roots in order — the signed commit, then the
+ * index — followed by one block per index entry, in the index's order. Blobs are
+ * excluded.
+ *
+ * Records are collected up front because the index has to precede the blocks it
+ * describes.
  */
 export async function* serializeRepo(
   commit: SignedCommit,
   records: AsyncIterable<SerializedRecord> | Iterable<SerializedRecord>,
 ): AsyncIterable<Uint8Array> {
-  const collected: SerializedRecord[] = []
+  const byPath = new Map<string, SerializedRecord>()
   for await (const record of records) {
-    collected.push(record)
+    byPath.set(formatRecordPath(record.collection, record.rkey), record)
+  }
+  // A consumer walks the index as the cbor encoder ordered its keys, so blocks
+  // have to follow that order too.
+  const paths = [...byPath.keys()].sort(byCanonicalKey)
+
+  const index: RepoIndex = {}
+  for (const path of paths) {
+    index[path] = byPath.get(path)!.cid
   }
 
-  const index = repoIndex(collected)
-  const indexBytes = encodeRepoIndex(index)
-  const commitBytes = encode(commitToLex(commit))
-  const [commitCid, indexCid] = await Promise.all([
+  const commitBytes = encode(commit)
+  const indexBytes = encode(index)
+  const [commitRoot, indexRoot] = await Promise.all([
     cidForCbor(commitBytes),
     cidForCbor(indexBytes),
   ])
 
-  const byPath = new Map(
-    collected.map((r) => [formatRecordPath(r.collection, r.rkey), r]),
-  )
-
   yield* writeCarStream(
-    [commitCid, indexCid],
+    [commitRoot, indexRoot],
     (function* (): Generator<CarBlock> {
-      yield { cid: commitCid, bytes: commitBytes }
-      yield { cid: indexCid, bytes: indexBytes }
-      for (const path of index.keys()) {
+      yield { cid: commitRoot, bytes: commitBytes }
+      yield { cid: indexRoot, bytes: indexBytes }
+      for (const path of paths) {
         const record = byPath.get(path)!
         yield { cid: record.cid, bytes: record.bytes }
       }
@@ -51,20 +56,21 @@ export async function* serializeRepo(
   )
 }
 
+// Canonical dag-cbor map key order: shortest first, then bytewise.
+const byCanonicalKey = (a: string, b: string): number => {
+  if (a.length !== b.length) return a.length - b.length
+  return a < b ? -1 : a > b ? 1 : 0
+}
+
 export const serializeRecord = async (
   collection: string,
   rkey: string,
   record: SpaceRecord,
 ): Promise<SerializedRecord> => {
-  const bytes = encode(record)
-  return { collection, rkey, cid: await cidForLex(record), bytes }
+  return {
+    collection,
+    rkey,
+    cid: await cidForLex(record),
+    bytes: encode(record),
+  }
 }
-
-export const commitToLex = (commit: SignedCommit) => ({
-  ver: commit.ver,
-  hash: commit.hash,
-  ikm: commit.ikm,
-  sig: commit.sig,
-  mac: commit.mac,
-  rev: commit.rev,
-})
