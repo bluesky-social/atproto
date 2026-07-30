@@ -15,10 +15,8 @@
  * match the behaviour this package has always had: system-driven, no toggle,
  * no persisted preference.
  *
- * @NOTE The oauth-provider still injects --branding-color-* variables into the
- * page (see build-customization-css.ts). Nothing consumes them yet — the theme
- * is deliberately neutral — but the injection is preserved so branding colours
- * can be layered back in by mapping them onto the tokens below.
+ * The brandable tokens (primary, destructive, ring, and the sidebar
+ * equivalents) are declared once, in the "Runtime branding" section below.
  * ------------------------------------------------------------------------- */
 
 @custom-variant dark (@media (prefers-color-scheme: dark));
@@ -50,27 +48,20 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
 
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -82,27 +73,63 @@
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.205 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
     --secondary: oklch(0.269 0 0);
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.269 0 0);
     --muted-foreground: oklch(0.708 0 0);
     --accent: oklch(0.269 0 0);
     --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
 
     --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
     --sidebar-accent: oklch(0.269 0 0);
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Runtime branding.
+ *
+ * The oauth-provider injects `--branding-color-{name}` (space-separated RGB
+ * channels) and `--branding-color-{name}-contrast` into the page when the
+ * deployment configures branding colours — see the provider's
+ * build-customization-css.ts. When it does not, the variables are undefined
+ * and each token below resolves to its var() fallback — the neutral default.
+ * A deployment with no curated branding therefore keeps the neutral look,
+ * deliberately not any operator's brand.
+ *
+ * Only `primary` and `error` map today: they are the two names shadcn has
+ * tokens for. `warning` / `info` / `success` are injected too, but their
+ * consumers (Notice, PasswordStrength) build from multi-shade Tailwind
+ * palettes that a single RGB cannot drive without a tint system.
+ * ------------------------------------------------------------------------- */
+
+/* runtime branding: light */
+:root {
+  /* neutral fallbacks: neutral-900 / neutral-50 / red-600 / neutral-400 */
+  --primary: rgb(var(--branding-color-primary, 23 23 23));
+  --primary-foreground: rgb(
+    var(--branding-color-primary-contrast, 250 250 250)
+  );
+  --destructive: rgb(var(--branding-color-error, 220 38 38));
+  --ring: rgb(var(--branding-color-primary, 163 163 163));
+
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-ring: var(--ring);
+}
+
+@media (prefers-color-scheme: dark) {
+  /* runtime branding: dark */
+  :root {
+    /* neutral fallbacks: neutral-200 / neutral-900 / red-400 / neutral-500 */
+    --primary: rgb(var(--branding-color-primary, 229 229 229));
+    --primary-foreground: rgb(var(--branding-color-primary-contrast, 23 23 23));
+    --destructive: rgb(var(--branding-color-error, 248 113 113));
+    --ring: rgb(var(--branding-color-primary, 115 115 115));
   }
 }
 

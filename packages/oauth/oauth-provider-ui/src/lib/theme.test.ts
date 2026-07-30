@@ -8,37 +8,52 @@ const css = readFileSync(
   'utf8',
 )
 
-const SHADCN_TOKENS = [
+/** Tokens that map a provider-injected --branding-color-* at runtime. */
+const BRANDED_TOKENS = [
+  ['primary', 'primary'],
+  ['primary-foreground', 'primary-contrast'],
+  ['destructive', 'error'],
+  ['ring', 'primary'],
+] as const
+
+/** Tokens derived from the branded ones. */
+const DERIVED_TOKENS = [
+  ['sidebar-primary', 'primary'],
+  ['sidebar-primary-foreground', 'primary-foreground'],
+  ['sidebar-ring', 'ring'],
+] as const
+
+const NEUTRAL_TOKENS = [
   'background',
   'foreground',
   'card',
   'card-foreground',
   'popover',
   'popover-foreground',
-  'primary',
-  'primary-foreground',
   'secondary',
   'secondary-foreground',
   'muted',
   'muted-foreground',
   'accent',
   'accent-foreground',
-  'destructive',
   'border',
   'input',
-  'ring',
   'sidebar',
   'sidebar-foreground',
-  'sidebar-primary',
-  'sidebar-primary-foreground',
   'sidebar-accent',
   'sidebar-accent-foreground',
   'sidebar-border',
-  'sidebar-ring',
 ] as const
 
-// Tokens from the pre-redesign branding scale. Phase 4 removed them; these
-// assert they stay gone, so the scale cannot creep back in.
+const SHADCN_TOKENS = [
+  ...NEUTRAL_TOKENS,
+  ...BRANDED_TOKENS.map(([token]) => token),
+  ...DERIVED_TOKENS.map(([token]) => token),
+] as const
+
+// Tokens from the pre-redesign branding scale; these assert they stay gone,
+// so the scale cannot creep back in. (--branding-color-* is not in this list:
+// the provider injects those at runtime and the theme consumes them.)
 const REMOVED_LEGACY_TOKENS = [
   '--color-text-default',
   '--color-text-light',
@@ -46,7 +61,6 @@ const REMOVED_LEGACY_TOKENS = [
   '--color-contrast-25',
   '--color-primary-500',
   '--color-error-500',
-  '--branding-color-primary',
   '--hue-primary',
 ] as const
 
@@ -63,13 +77,31 @@ function blockFor(marker: string): string {
 describe('style.css theme tokens', () => {
   const light = blockFor('/* shadcn tokens: light */')
   const dark = blockFor('/* shadcn tokens: dark */')
+  const brandedLight = blockFor('/* runtime branding: light */')
+  const brandedDark = blockFor('/* runtime branding: dark */')
 
-  it.each(SHADCN_TOKENS)('declares --%s in the light scheme', (token) => {
+  it.each(NEUTRAL_TOKENS)('declares --%s in the light scheme', (token) => {
     expect(light).toContain(`--${token}:`)
   })
 
-  it.each(SHADCN_TOKENS)('declares --%s in the dark scheme', (token) => {
+  it.each(NEUTRAL_TOKENS)('declares --%s in the dark scheme', (token) => {
     expect(dark).toContain(`--${token}:`)
+  })
+
+  it.each(BRANDED_TOKENS)(
+    '--%s maps --branding-color-%s with a neutral fallback, in both schemes',
+    (token, branding) => {
+      for (const block of [brandedLight, brandedDark]) {
+        const pattern = new RegExp(
+          `--${token}: rgb\\(var\\(--branding-color-${branding}, [\\d ]+\\)\\);`,
+        )
+        expect(block).toMatch(pattern)
+      }
+    },
+  )
+
+  it.each(DERIVED_TOKENS)('--%s derives from --%s', (token, source) => {
+    expect(brandedLight).toContain(`--${token}: var(--${source});`)
   })
 
   it('exposes the tokens to tailwind via @theme inline', () => {

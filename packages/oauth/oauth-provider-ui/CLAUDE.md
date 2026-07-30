@@ -202,11 +202,16 @@ buttons out of reach with no way to scroll to them.
 ## Branding
 
 `CustomizationData` supplies the logo, name, footer links and
-`availableUserDomains`; all are still honoured. The colour theme is deliberately
-neutral — the provider still injects `--branding-color-*` (see
-`oauth-provider/src/customization/build-customization-css.ts`) but nothing
-consumes them yet. Layering branding back in means mapping those onto the shadcn
-tokens in `src/style.css`.
+`availableUserDomains`. Colours arrive separately, at runtime: the provider
+injects `--branding-color-*` variables (see
+`oauth-provider/src/customization/build-customization-css.ts`), and the
+"Runtime branding" section of `src/style.css` maps `primary` and `error` onto
+the shadcn tokens, falling back to the neutral defaults when a deployment
+configures nothing. `warning`/`info`/`success` are injected but unmapped —
+their consumers build from multi-shade palettes a single RGB cannot drive.
+
+The mock pages inject the same variables a branded deployment would, so
+`pnpm dev:ui` demonstrates branding without a PDS.
 
 ## Utility types
 

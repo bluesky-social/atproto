@@ -738,6 +738,7 @@ msgstr "Låt oss få ditt lösenord återställt!"
 
 #: src/components/layouts/auth-shell.tsx:76
 #: src/components/layouts/account-shell.tsx:119
+#: src/components/layouts/account-shell.tsx:233
 msgid "Logo"
 msgstr "Logga"
 

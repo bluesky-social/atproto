@@ -193,7 +193,7 @@ export function AccountShell({
         </Sidebar>
 
         <SidebarInset>
-          <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+          <header className="bg-background sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 border-b px-4">
             {/* @NOTE On a sub-page the mobile header drills back to the account
             home instead of opening the sidebar; the trigger stays on desktop,
             where the sidebar is always reachable. */}
@@ -222,6 +222,22 @@ export function AccountShell({
             />
             {pageTitleStr && (
               <h2 className="text-base font-medium">{pageTitleStr}</h2>
+            )}
+            {/* @NOTE On desktop the sidebar keeps the brand in view; on mobile
+            it is closed, so the header carries it instead. */}
+            {(logo || name) && (
+              <div className="ml-auto flex min-w-0 items-center gap-2 md:hidden">
+                {logo && (
+                  <img
+                    src={logo}
+                    alt={name || _(msg`Logo`)}
+                    className="size-5 shrink-0 object-contain"
+                  />
+                )}
+                {name && (
+                  <span className="truncate text-sm font-medium">{name}</span>
+                )}
+              </div>
             )}
           </header>
 
