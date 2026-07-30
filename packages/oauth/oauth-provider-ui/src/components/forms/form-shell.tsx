@@ -31,6 +31,8 @@ export type FormShellProps<TValues extends Record<string, unknown>> = {
   backLabel?: ReactNode
 
   actions?: ReactNode
+  /** Layout override for the action row — see `dialogActions`. */
+  actionsClassName?: string
   loading?: boolean
   disabled?: boolean
   hideError?: boolean
@@ -64,6 +66,7 @@ export function FormShell<TValues extends Record<string, unknown>>({
   backLabel = <Trans>Back</Trans>,
 
   actions,
+  actionsClassName,
   loading: loadingProp = false,
   disabled: disabledProp = false,
   hideError = false,
@@ -128,7 +131,10 @@ export function FormShell<TValues extends Record<string, unknown>>({
 
       <div
         key="actions"
-        className="flex flex-row-reverse flex-wrap items-center justify-start gap-2"
+        className={cn(
+          'flex flex-row-reverse flex-wrap items-center justify-start gap-2',
+          actionsClassName,
+        )}
       >
         {submitLabel && (
           <Button
@@ -141,7 +147,7 @@ export function FormShell<TValues extends Record<string, unknown>>({
           </Button>
         )}
         {actions}
-        <div className="flex-auto" />
+        <div data-slot="form-actions-spacer" className="flex-auto" />
         {onCancel && cancelLabel ? (
           <Button type="button" variant="secondary" onClick={onCancel}>
             {cancelLabel}

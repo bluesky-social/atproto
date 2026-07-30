@@ -9,6 +9,22 @@ import {
 } from '#/components/ui/dialog.tsx'
 import { cn } from '#/lib/utils.ts'
 
+/**
+ * Layout for a dialog's row of actions, following the shadcn registry's
+ * `DialogFooter`: stacked where a row would crowd, a right-aligned row from
+ * `sm` up. Buttons in it want `w-full sm:w-auto`.
+ *
+ * Exported rather than applied by `DialogShell` because the child form owns
+ * the row. It expects the row's own order — primary first, as `FormShell`
+ * emits — and suppresses that row's spreading spacer, since the registry
+ * groups the buttons together instead.
+ */
+export const dialogActions = [
+  'flex flex-col items-stretch gap-2',
+  'sm:flex-row-reverse sm:items-center sm:justify-start',
+  '[&_[data-slot=form-actions-spacer]]:hidden',
+].join(' ')
+
 export type DialogShellProps = {
   /** The element that opens the dialog. */
   trigger: ReactElement

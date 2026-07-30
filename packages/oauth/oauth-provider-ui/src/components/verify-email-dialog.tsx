@@ -1,6 +1,9 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { type ReactElement, type ReactNode, useEffect, useState } from 'react'
-import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
+import {
+  DialogShell,
+  dialogActions,
+} from '#/components/dialogs/dialog-shell.tsx'
 import { RequestCodeButton } from '#/components/forms/request-code-button.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import { VerifyEmailConfirmForm } from '#/components/verify-email-confirm-form.tsx'
@@ -59,7 +62,7 @@ export function VerifyEmailDialog({
         code?" the escape hatch. `RequestCodeButton` defaults to `size="sm"` for
         the inline resend; as a primary dialog action it takes the default. */}
       {state === VerifyEmailDialogState.Request ? (
-        <div className="align-stretch flex flex-col gap-2">
+        <div className={dialogActions}>
           <RequestCodeButton
             action={async () => {
               await onRequest()
@@ -68,13 +71,13 @@ export function VerifyEmailDialog({
             disabled={requestPending || confirmPending}
             variant="default"
             size="default"
-            className="w-full"
+            className="w-full sm:w-auto"
           />
 
           <Button
             variant="ghost"
             onClick={() => setState(VerifyEmailDialogState.Confirm)}
-            className="w-full"
+            className="w-full sm:w-auto"
           >
             <Trans>Already have a code?</Trans>
           </Button>

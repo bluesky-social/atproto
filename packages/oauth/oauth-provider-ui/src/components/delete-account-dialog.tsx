@@ -1,6 +1,9 @@
 import { Trans } from '@lingui/react/macro'
 import { type ReactElement, type ReactNode, useEffect, useState } from 'react'
-import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
+import {
+  DialogShell,
+  dialogActions,
+} from '#/components/dialogs/dialog-shell.tsx'
 import { Notice } from '#/components/feedback/notice.tsx'
 import { RequestCodeButton } from '#/components/forms/request-code-button.tsx'
 import { Button } from '#/components/ui/button.tsx'
@@ -101,12 +104,12 @@ export function DeleteAccountDialog({
           )
         }
       >
-        <div className="align-stretch flex flex-col gap-4">
+        <div className={dialogActions}>
           <Button
             variant="destructive"
             disabled={finalConfirm.loading || confirmPending}
             onClick={() => void finalConfirm.run()}
-            className="w-full"
+            className="w-full sm:w-auto"
           >
             <Trans>Yes, delete my account</Trans>
           </Button>
@@ -115,7 +118,7 @@ export function DeleteAccountDialog({
             variant="secondary"
             onClick={() => setOpen(false)}
             disabled={finalConfirm.loading || confirmPending}
-            className="w-full"
+            className="w-full sm:w-auto"
           >
             <Trans>Cancel</Trans>
           </Button>
@@ -190,11 +193,9 @@ export function DeleteAccountDialog({
           </Trans>
         </Notice>
 
-        {/* @NOTE One action group, so the two buttons sit closer to each other
-          than to the Notice above. Cancel is `secondary`, as `FormShell` treats
-          it. `RequestCodeButton` defaults to `size="sm"` for the inline resend,
-          so the size is restated here to match Cancel. */}
-        <div className="flex flex-col gap-2">
+        {/* @NOTE `RequestCodeButton` defaults to `size="sm"` for the inline
+          resend, so a primary dialog action restates the size. */}
+        <div className={dialogActions}>
           <RequestCodeButton
             action={async () => {
               await onRequest()
@@ -203,7 +204,7 @@ export function DeleteAccountDialog({
             disabled={confirmPending}
             variant="default"
             size="default"
-            className="w-full"
+            className="w-full sm:w-auto"
           >
             <Trans>Send email</Trans>
           </RequestCodeButton>
@@ -212,7 +213,7 @@ export function DeleteAccountDialog({
             variant="secondary"
             onClick={() => setOpen(false)}
             disabled={requestPending}
-            className="w-full"
+            className="w-full sm:w-auto"
           >
             <Trans>Cancel</Trans>
           </Button>
