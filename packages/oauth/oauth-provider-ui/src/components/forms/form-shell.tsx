@@ -137,15 +137,8 @@ export function FormShell<TValues extends Record<string, unknown>>({
       <div
         key="actions"
         className={cn(
-          // @NOTE Stacked until there is room for a row. Wrapping instead put
-          // Back on a second line at the right — the far side from where it
-          // belongs — once a locale's labels outgrew the width. The spacer
-          // that spreads the row only exists once there is a row: stacked, it
-          // is a zero-height item that still takes a gap on either side.
           'flex flex-col items-stretch gap-2',
-          '[&_[data-slot=form-actions-spacer]]:hidden',
           'sm:flex-row-reverse sm:flex-wrap sm:items-center sm:justify-start',
-          'sm:[&_[data-slot=form-actions-spacer]]:block',
           inDialog && dialogActions,
           actionsClassName,
         )}
