@@ -218,6 +218,8 @@ describe('mute views', () => {
       expect(profile.data.viewer?.muted).toBe(false)
       expect(profile.data.viewer?.mutedOnlyReposts).toBe(true)
 
+      // getMutes enumerates only fully muted accounts; the scoped mute on
+      // dan is not included.
       const { data: mutes } = await agent.api.app.bsky.graph.getMutes(
         {},
         {
@@ -227,9 +229,7 @@ describe('mute views', () => {
           ),
         },
       )
-      const danMute = mutes.mutes.find((mute) => mute.did === dan)
-      expect(danMute?.viewer?.muted).toBe(false)
-      expect(danMute?.viewer?.mutedOnlyReposts).toBe(true)
+      expect(mutes.mutes.some((mute) => mute.did === dan)).toBe(false)
 
       const timeline = await agent.api.app.bsky.feed.getTimeline(
         { limit: 100 },

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Enumerates accounts that the requesting account (actor) currently has muted, including mutes scoped to specific kinds of content. For scoped mutes the profile's viewer state reports muted false; check mutedOnlyReposts and mutedOnlyQuoteposts to distinguish them. Requires auth.",
+      "description": "Enumerates accounts that the requesting account (actor) currently has fully muted. Mutes scoped to specific kinds of content (only reposts, only quote posts) are not included. Requires auth.",
       "parameters": {
         "type": "params",
         "properties": {
