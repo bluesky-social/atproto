@@ -55,10 +55,17 @@ export function DialogShell({
       {/* @NOTE The height cap is required, not cosmetic: `DialogContent` is
         `fixed` with no cap of its own, and a fixed element cannot be scrolled
         into view — so a tall dialog on a short viewport puts its buttons out of
-        reach. */}
+        reach.
+
+        `*:min-w-0`: `DialogContent` is a grid, and a grid item's default
+        `min-width: auto` sizes the track to its widest unbreakable run —
+        wider than the popup — instead of letting the content truncate. */}
       <DialogContent
         role="dialog"
-        className={cn('max-h-[85vh] overflow-y-auto sm:max-w-md', className)}
+        className={cn(
+          'max-h-[85vh] overflow-y-auto *:min-w-0 sm:max-w-md',
+          className,
+        )}
         showCloseButton={dismissable}
       >
         <DialogHeader>
