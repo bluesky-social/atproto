@@ -180,10 +180,8 @@ form field is `code` but the API takes `token`.
 ## The pds e2e contract
 
 `packages/pds/tests/{oauth,account-manager}.test.ts` drive this UI by text and
-tag, so markup choices are load-bearing. The full tables — which text must sit in
-which element, and every input name — are in
-[the redesign spec](../../../docs/superpowers/specs/2026-07-27-oauth-provider-ui-shadcn-redesign-design.md).
-The short version:
+tag, so markup choices are load-bearing. The test files themselves are the
+authoritative record of which text sits in which element. The rules:
 
 - actions the tests click must be real `<button>`s
 - body copy in `<p>`, page/section headings in the tag the test names
