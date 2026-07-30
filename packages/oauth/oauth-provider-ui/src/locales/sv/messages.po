@@ -136,6 +136,10 @@ msgstr "Kontoväljare"
 msgid "Account username"
 msgstr "Kontots användarnamn"
 
+#: src/components/session-list.tsx:120
+msgid "Actions"
+msgstr ""
+
 #: src/components/forms/input-handle-custom-instructions.tsx:49
 msgid "Add the following record to your domain's DNS configuration."
 msgstr "Lägg till följande post i din domäns DNS-konfiguration."
@@ -183,13 +187,18 @@ msgstr "Vilken metod som helst"
 msgid "Any service"
 msgstr "Vilken tjänst som helst"
 
+#: src/pages/account/(authenticated)/apps/page.tsx:75
+msgctxt "OAuthApp"
+msgid "App"
+msgstr ""
+
 #: src/pages/account/(authenticated)/route.tsx:76
 msgid "Apps"
 msgstr "Appar"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:78
-msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
-msgstr "Appar kan utföra aktiviteter på ditt konto i bakgrunden (t.ex. för att titta efter notiser eller synkronisera data) även när du själv inte använder dem aktivt. Det är en normal företeelse som också påverkar tidsangivelserna för ”senaste aktivitet” ovan."
+#: src/pages/account/(authenticated)/apps/page.tsx:137
+msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
+msgstr ""
 
 #: src/components/delete-account-dialog.tsx:86
 msgid "Are you really, really sure?"
@@ -212,11 +221,10 @@ msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Auktorisera"
 
-#. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:138
+#: src/pages/account/(authenticated)/apps/page.tsx:86
 msgctxt "OAuthApp"
-msgid "Authorized on {0}"
-msgstr "Auktoriserades {0}"
+msgid "Authorized"
+msgstr ""
 
 #: src/components/sign-in-picker.tsx:103
 #: src/components/layouts/account-shell.tsx:52
@@ -265,7 +273,7 @@ msgstr "Anrop"
 msgid "Cancel"
 msgstr "Avbryt"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:135
+#: src/pages/account/(authenticated)/devices/page.tsx:151
 msgid "Cannot remove current device"
 msgstr "Det går inte att ta bort den enhet som du använder just nu"
 
@@ -323,6 +331,11 @@ msgstr "Välj ett användarnamn"
 #: src/components/redirecting-view.tsx:95
 msgid "Click here if nothing happens"
 msgstr "Klicka här om ingenting händer"
+
+#: src/pages/account/(authenticated)/apps/page.tsx:81
+msgctxt "OAuthApp"
+msgid "Client"
+msgstr ""
 
 #: src/components/oauth-session-details-dialog.tsx:45
 #: src/components/ui/toast.tsx:138
@@ -421,9 +434,14 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Neka åtkomst"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:162
+#: src/pages/account/(authenticated)/apps/page.tsx:192
 msgid "Details"
 msgstr "Detaljer"
+
+#: src/pages/account/(authenticated)/devices/page.tsx:79
+msgctxt "device list"
+msgid "Device"
+msgstr ""
 
 #: src/pages/account/(authenticated)/route.tsx:69
 msgid "Devices"
@@ -540,8 +558,8 @@ msgstr "Det gick inte att inaktivera kontot"
 msgid "Failed to delete account"
 msgstr "Det gick inte att radera kontot"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:46
-#: src/pages/account/(authenticated)/apps/page.tsx:45
+#: src/pages/account/(authenticated)/devices/page.tsx:34
+#: src/pages/account/(authenticated)/apps/page.tsx:38
 msgid "Failed to load connected apps"
 msgstr "Det gick inte att läsa in anslutna appar"
 
@@ -588,6 +606,14 @@ msgstr "Det gick inte att verifiera e-postadressen"
 #: src/components/forms/input-handle-custom-instructions.tsx:71
 msgid "File contents"
 msgstr "Filens innehåll"
+
+#: src/pages/account/(authenticated)/apps/page.tsx:65
+msgid "Filter apps"
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx:72
+msgid "Filter devices"
+msgstr ""
 
 #: src/components/delete-account-dialog.tsx:170
 msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
@@ -704,7 +730,12 @@ msgstr "Ogiltigt användarnamn"
 msgid "Invite code"
 msgstr "Inbjudningskod"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:88
+#: src/pages/account/(authenticated)/devices/page.tsx:85
+msgctxt "device list"
+msgid "IP address"
+msgstr ""
+
+#: src/pages/account/(authenticated)/apps/page.tsx:67
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "Det verkar som att du inte har använt det här kontot för att logga in på någon app ännu."
 
@@ -717,15 +748,15 @@ msgstr "Det verkar som att din webbläsare inte accepterar cookies. Klicka på �
 msgid "just now"
 msgstr "nyss"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:147
+#: src/pages/account/(authenticated)/apps/page.tsx:122
 msgctxt "OAuthApp"
-msgid "Last accessed <0/>"
-msgstr "Senaste aktivitet: <0/>"
+msgid "Last accessed"
+msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:117
+#: src/pages/account/(authenticated)/devices/page.tsx:90
 msgctxt "device list"
-msgid "Last seen {lastUsedAgo}"
-msgstr "Sågs senast {lastUsedAgo}"
+msgid "Last seen"
+msgstr ""
 
 #: src/components/update-email-dialog.tsx:212
 msgctxt "verify email"
@@ -742,7 +773,7 @@ msgstr "Låt oss få ditt lösenord återställt!"
 msgid "Logo"
 msgstr "Logga"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:84
+#: src/pages/account/(authenticated)/devices/page.tsx:74
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Det ser ut som att du inte är inloggad på någon annan enhet."
 
@@ -824,6 +855,10 @@ msgstr "Nytt lösenord"
 #: src/components/forms/sign-up-wizard.tsx:120
 msgid "Next"
 msgstr "Nästa"
+
+#: src/components/session-list.tsx:194
+msgid "No matches"
+msgstr ""
 
 #: src/components/reset-password-view.tsx:134
 msgid "Okay"
@@ -980,8 +1015,8 @@ msgstr "Återställ lösenord"
 msgid "Reset your password"
 msgstr "Återställ ditt lösenord"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:42
-#: src/pages/account/(authenticated)/apps/page.tsx:41
+#: src/pages/account/(authenticated)/devices/page.tsx:30
+#: src/pages/account/(authenticated)/apps/page.tsx:34
 #: src/components/feedback/error-notice.tsx:81
 msgid "Retry"
 msgstr "Försök igen"
@@ -1048,7 +1083,7 @@ msgstr "Logga in som…"
 msgid "Sign in to an account that is not listed"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:139
+#: src/pages/account/(authenticated)/devices/page.tsx:154
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Logga ut"
@@ -1167,7 +1202,7 @@ msgstr "Användarnamnet är ogiltigt"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "Det finns ingen gräns för hur länge ett konto kan vara inaktiverat. Kom tillbaka när du vill."
 
-#: src/pages/account/(authenticated)/apps/page.tsx:53
+#: src/pages/account/(authenticated)/apps/page.tsx:51
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "De här apparna har åtkomst till ditt konto. En app kan visas flera gånger om du använder den på olika enheter. Återkalla åtkomsten för att logga ut dig själv från appen. Därefter kan du ge ny åtkomst genom att logga in igen."
 
@@ -1186,6 +1221,11 @@ msgstr "Den här applikationen begär följande behörigheter (omfång) för att
 #: src/lib/api.ts:379
 msgid "This authorization request has been denied. Please try again."
 msgstr "Denna auktoriseringsbegäran har nekats. Försök igen."
+
+#: src/pages/account/(authenticated)/devices/page.tsx:117
+msgctxt "device list"
+msgid "This device"
+msgstr ""
 
 #: src/lib/api.ts:558
 msgid "This email is already used"
@@ -1246,7 +1286,7 @@ msgstr "Behörighet saknas"
 msgid "Unexpected server response"
 msgstr "Oväntat svar från server"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:109
+#: src/pages/account/(authenticated)/devices/page.tsx:111
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Okänd användaragent"
@@ -1382,6 +1422,10 @@ msgstr "Vad innebär det?"
 msgid "What is an Atmosphere Account?"
 msgstr "Vad är ett Atmosphere-konto?"
 
+#: src/pages/account/(authenticated)/apps/page.tsx:128
+msgid "Why is this time so recent?"
+msgstr ""
+
 #: src/lib/api.ts:530
 msgid "Wrong identifier or password"
 msgstr "Fel identifierare eller lösenord"
@@ -1455,7 +1499,7 @@ msgstr "Ditt konto är för närvarande inaktiverat."
 msgid "Your account is now deactivated."
 msgstr "Ditt konto är nu inaktiverat."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:54
+#: src/pages/account/(authenticated)/devices/page.tsx:51
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "Ditt konto är inloggat på enheterna i listan nedan. Om säkerheten för ditt konto har äventyrats, logga ut från alla enheter, byt lösenord och kontrollera dina anslutna appar."
 

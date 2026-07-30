@@ -136,6 +136,10 @@ msgstr ""
 msgid "Account username"
 msgstr ""
 
+#: src/components/session-list.tsx:120
+msgid "Actions"
+msgstr ""
+
 #: src/components/forms/input-handle-custom-instructions.tsx:49
 msgid "Add the following record to your domain's DNS configuration."
 msgstr ""
@@ -183,12 +187,17 @@ msgstr "Cualquier método"
 msgid "Any service"
 msgstr "Cualquier servicio"
 
+#: src/pages/account/(authenticated)/apps/page.tsx:75
+msgctxt "OAuthApp"
+msgid "App"
+msgstr ""
+
 #: src/pages/account/(authenticated)/route.tsx:76
 msgid "Apps"
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:78
-msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
+#: src/pages/account/(authenticated)/apps/page.tsx:137
+msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr ""
 
 #: src/components/delete-account-dialog.tsx:86
@@ -212,10 +221,9 @@ msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr ""
 
-#. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:138
+#: src/pages/account/(authenticated)/apps/page.tsx:86
 msgctxt "OAuthApp"
-msgid "Authorized on {0}"
+msgid "Authorized"
 msgstr ""
 
 #: src/components/sign-in-picker.tsx:103
@@ -265,7 +273,7 @@ msgstr "Llamar"
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:135
+#: src/pages/account/(authenticated)/devices/page.tsx:151
 msgid "Cannot remove current device"
 msgstr ""
 
@@ -322,6 +330,11 @@ msgstr "Elige un nombre de usuario"
 
 #: src/components/redirecting-view.tsx:95
 msgid "Click here if nothing happens"
+msgstr ""
+
+#: src/pages/account/(authenticated)/apps/page.tsx:81
+msgctxt "OAuthApp"
+msgid "Client"
 msgstr ""
 
 #: src/components/oauth-session-details-dialog.tsx:45
@@ -421,8 +434,13 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:162
+#: src/pages/account/(authenticated)/apps/page.tsx:192
 msgid "Details"
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx:79
+msgctxt "device list"
+msgid "Device"
 msgstr ""
 
 #: src/pages/account/(authenticated)/route.tsx:69
@@ -540,8 +558,8 @@ msgstr ""
 msgid "Failed to delete account"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:46
-#: src/pages/account/(authenticated)/apps/page.tsx:45
+#: src/pages/account/(authenticated)/devices/page.tsx:34
+#: src/pages/account/(authenticated)/apps/page.tsx:38
 msgid "Failed to load connected apps"
 msgstr "Error al cargar las aplicaciones conectadas"
 
@@ -587,6 +605,14 @@ msgstr ""
 
 #: src/components/forms/input-handle-custom-instructions.tsx:71
 msgid "File contents"
+msgstr ""
+
+#: src/pages/account/(authenticated)/apps/page.tsx:65
+msgid "Filter apps"
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx:72
+msgid "Filter devices"
 msgstr ""
 
 #: src/components/delete-account-dialog.tsx:170
@@ -694,7 +720,12 @@ msgstr ""
 msgid "Invite code"
 msgstr "Código de invitación"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:88
+#: src/pages/account/(authenticated)/devices/page.tsx:85
+msgctxt "device list"
+msgid "IP address"
+msgstr ""
+
+#: src/pages/account/(authenticated)/apps/page.tsx:67
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "Parece que aún no has usado esta cuenta para iniciar sesión en ninguna aplicación."
 
@@ -707,14 +738,14 @@ msgstr ""
 msgid "just now"
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:147
+#: src/pages/account/(authenticated)/apps/page.tsx:122
 msgctxt "OAuthApp"
-msgid "Last accessed <0/>"
+msgid "Last accessed"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:117
+#: src/pages/account/(authenticated)/devices/page.tsx:90
 msgctxt "device list"
-msgid "Last seen {lastUsedAgo}"
+msgid "Last seen"
 msgstr ""
 
 #: src/components/update-email-dialog.tsx:212
@@ -732,7 +763,7 @@ msgstr "¡Vamos a restablecer tu contraseña!"
 msgid "Logo"
 msgstr "Logo"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:84
+#: src/pages/account/(authenticated)/devices/page.tsx:74
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Parece que no has iniciado sesión en otros dispositivos."
 
@@ -814,6 +845,10 @@ msgstr "Nueva contraseña"
 #: src/components/forms/sign-up-wizard.tsx:120
 msgid "Next"
 msgstr "Siguiente"
+
+#: src/components/session-list.tsx:194
+msgid "No matches"
+msgstr ""
 
 #: src/components/reset-password-view.tsx:134
 msgid "Okay"
@@ -970,8 +1005,8 @@ msgstr "Restablecer contraseña"
 msgid "Reset your password"
 msgstr "Restablecer tu contraseña"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:42
-#: src/pages/account/(authenticated)/apps/page.tsx:41
+#: src/pages/account/(authenticated)/devices/page.tsx:30
+#: src/pages/account/(authenticated)/apps/page.tsx:34
 #: src/components/feedback/error-notice.tsx:81
 msgid "Retry"
 msgstr ""
@@ -1038,7 +1073,7 @@ msgstr "Iniciar sesión como..."
 msgid "Sign in to an account that is not listed"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:139
+#: src/pages/account/(authenticated)/devices/page.tsx:154
 msgctxt "device list"
 msgid "Sign out"
 msgstr ""
@@ -1157,7 +1192,7 @@ msgstr ""
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:53
+#: src/pages/account/(authenticated)/apps/page.tsx:51
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr ""
 
@@ -1176,6 +1211,11 @@ msgstr ""
 #: src/lib/api.ts:379
 msgid "This authorization request has been denied. Please try again."
 msgstr "Esta solicitud de autorización ha sido denegada. Por favor, inténtalo de nuevo."
+
+#: src/pages/account/(authenticated)/devices/page.tsx:117
+msgctxt "device list"
+msgid "This device"
+msgstr ""
 
 #: src/lib/api.ts:558
 msgid "This email is already used"
@@ -1236,7 +1276,7 @@ msgstr ""
 msgid "Unexpected server response"
 msgstr "Respuesta inesperada del servidor"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:109
+#: src/pages/account/(authenticated)/devices/page.tsx:111
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr ""
@@ -1372,6 +1412,10 @@ msgstr ""
 msgid "What is an Atmosphere Account?"
 msgstr ""
 
+#: src/pages/account/(authenticated)/apps/page.tsx:128
+msgid "Why is this time so recent?"
+msgstr ""
+
 #: src/lib/api.ts:530
 msgid "Wrong identifier or password"
 msgstr "Identificador o contraseña incorrectos"
@@ -1445,7 +1489,7 @@ msgstr ""
 msgid "Your account is now deactivated."
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:54
+#: src/pages/account/(authenticated)/devices/page.tsx:51
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr ""
 
