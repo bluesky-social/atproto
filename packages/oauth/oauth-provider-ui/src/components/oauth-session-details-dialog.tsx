@@ -39,6 +39,7 @@ export function OAuthSessionDetailsDialog({
         actions={
           <Button
             autoFocus
+            variant="secondary"
             disabled={submitting}
             onClick={() => setOpen(false)}
           >

@@ -112,6 +112,7 @@ export function DeleteAccountDialog({
           </Button>
 
           <Button
+            variant="secondary"
             onClick={() => setOpen(false)}
             disabled={finalConfirm.loading || confirmPending}
             className="w-full"
