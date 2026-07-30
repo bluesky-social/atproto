@@ -32,7 +32,7 @@ export function HelpCard({
     >
       <Trans>
         Having trouble?{' '}
-        <LinkAnchor link={helpLink} className="text-primary underline">
+        <LinkAnchor link={helpLink} className="text-foreground underline">
           <Trans>Contact support</Trans>
         </LinkAnchor>
       </Trans>
