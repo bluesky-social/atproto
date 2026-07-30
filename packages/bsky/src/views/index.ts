@@ -1466,6 +1466,7 @@ export class Views {
       anchorTree,
       {
         opDid,
+        opThreadUris: skeleton.opThread && new Set(skeleton.opThread),
         branchingFactor,
         sort,
         viewer: state.ctx?.viewer ?? null,

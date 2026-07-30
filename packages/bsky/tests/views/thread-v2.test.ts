@@ -854,6 +854,29 @@ describe('appview thread views v2', () => {
       expect(data.thread[0].value.opThreadPostIndex).toBeUndefined()
       expect(data.thread[0].value.opThreadPostCount).toBeUndefined()
     })
+
+    it.each(['oldest', 'newest', 'top'] as const)(
+      `keeps the OP thread reply first beneath its parent under %s sort`,
+      async (sort) => {
+        // Root's replies include the chain reply 0 (oldest) and the OP fork 2
+        // (newest). Under newest/top the fork would otherwise sort above the
+        // chain within the OP bump; the chain reply must stay first.
+        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+          { anchor: seed.root.ref.uriStr, sort },
+          {
+            headers: await network.serviceHeaders(
+              seed.users.op.did,
+              ids.AppBskyUnspeccedGetPostThreadV2,
+            ),
+          },
+        )
+
+        assertPosts(data.thread)
+        const depth1 = data.thread.filter((item) => item.depth === 1)
+        expect(depth1[0].uri).toBe(seed.r['0'].ref.uriStr)
+        expect(depth1[0].value.opThread).toBe(true)
+      },
+    )
   })
 
   describe('OP thread numbering with deleted replies', () => {
@@ -1039,15 +1062,16 @@ describe('appview thread views v2', () => {
         { uri: bystander.ref.uriStr, index: undefined, count: undefined },
       ])
 
-      // A reply written after the deletion does claim the slot.
+      // A reply written after the deletion does claim the slot, and as the
+      // chain reply it appears above the older bystander.
       const fork = await sc.reply(op, root.ref, root.ref, 'fork')
       await network.processAll()
 
       numbering = await getNumbering(root.ref.uriStr)
       expect(numbering).toEqual([
         { uri: root.ref.uriStr, index: 1, count: 2 },
-        { uri: bystander.ref.uriStr, index: undefined, count: undefined },
         { uri: fork.ref.uriStr, index: 2, count: 2 },
+        { uri: bystander.ref.uriStr, index: undefined, count: undefined },
       ])
     })
   })
@@ -1167,8 +1191,10 @@ describe('appview thread views v2', () => {
 
         const cases: Case[] = [
           {
+            // `1` is on the OP thread (root's oldest OP reply), so it stays
+            // first within the OP group regardless of sort.
             sort: 'newest',
-            postKeys: ['root', '5', '3', '1', '7', '4', '0', '6', '2'],
+            postKeys: ['root', '1', '5', '3', '7', '4', '0', '6', '2'],
           },
           {
             sort: 'oldest',
