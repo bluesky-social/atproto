@@ -246,19 +246,13 @@ function createTransportImpl<M extends DataMode>(
       open = false
       clearHeartbeat()
       endWith(options.signal.reason)
-      // How the stop was requested decides how the socket ends: a bare abort
-      // closes politely at 1000, a CloseError closes with its code, anything else
-      // is a failure that destroys the connection. Either way the 'close' handler
-      // above is what settles the channel, so a consumer awaiting the end of
-      // iteration is awaiting the socket.
-      const code = closeCodeForStop(options.signal.reason)
-      if (code !== undefined) {
-        // Bounded by `closeTimeout`: a peer that never answers can delay this by
-        // at most CLOSE_TIMEOUT_MS before `ws` forces the close event.
-        ws.close(code)
-      } else {
-        ws.terminate()
-      }
+      // An abort always closes politely — it is a request to stop, not a failure —
+      // and the reason only picks the code: a `CloseError` names one, anything
+      // else means 1000. Bounded by `closeTimeout`, so a peer that never answers
+      // delays this by at most CLOSE_TIMEOUT_MS before `ws` forces the close
+      // event. The 'close' handler above is what settles the channel, so a
+      // consumer awaiting the end of iteration is awaiting the socket.
+      ws.close(closeCodeForStop(options.signal.reason))
     },
     { once: true },
   )

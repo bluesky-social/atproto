@@ -107,10 +107,10 @@ export class TapChannel implements AsyncDisposable {
       onDisconnect: () => {
         this.sender = undefined
       },
-      onError: (error, reconnect) => {
-        if (reconnect) {
-          onReconnectError?.(error, reconnect.attempt, reconnect.attempt === 0)
-        }
+      // Only retries are reported here; a fatal error reaches `start()` as the
+      // iterator's rejection instead.
+      onReconnect: (error, { attempt }) => {
+        onReconnectError?.(error, attempt, attempt === 0)
       },
     })
   }

@@ -234,13 +234,10 @@ function createTransportImpl<M extends DataMode>(
     () => {
       open = false
       endWith(options.signal.reason)
-      // How the stop was requested decides the close code: a bare abort closes
-      // politely at 1000, a CloseError closes with its code, anything else is a
-      // failure. A polite close is the strongest teardown the WHATWG API offers,
-      // so unlike Node both branches go through close(); the 'close' handler
-      // above settles the channel either way.
-      const code = closeCodeForStop(options.signal.reason)
-      ws.close(code)
+      // An abort always closes politely — it is a request to stop, not a failure —
+      // and the reason only picks the code: a `CloseError` names one, anything
+      // else means 1000. The 'close' handler above settles the channel.
+      ws.close(closeCodeForStop(options.signal.reason))
     },
     { once: true },
   )

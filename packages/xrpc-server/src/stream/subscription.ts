@@ -46,18 +46,12 @@ export class Subscription<T = unknown> {
           ? { intervalMs: this.opts.heartbeatIntervalMs }
           : {},
         signal: this.opts.signal,
-        onError: (error, reconnect) => {
-          // Only reported when a retry is coming; a fatal error reaches the
-          // consumer as the iterator's rejection instead. `initialSetup` now means
-          // "first attempt of this reconnect cycle" rather than "before the
-          // first-ever successful connection".
-          if (reconnect) {
-            this.opts.onReconnectError?.(
-              error,
-              reconnect.attempt,
-              reconnect.attempt === 0,
-            )
-          }
+        // Only retries are reported: a fatal error reaches the consumer as the
+        // iterator's rejection instead. `initialSetup` now means "first attempt of
+        // this reconnect cycle" rather than "before the first-ever successful
+        // connection".
+        onReconnect: (error, { attempt }) => {
+          this.opts.onReconnectError?.(error, attempt, attempt === 0)
         },
       },
     )

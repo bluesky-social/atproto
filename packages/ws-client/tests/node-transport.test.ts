@@ -14,6 +14,7 @@ import {
   type Transport,
 } from '../src/transport/transport.js'
 import { startServer } from './_util/server.js'
+import { transportOptions } from './_util/transport-options.js'
 
 // Drains a transport's iteration into an array, returning rather than throwing
 // whatever terminal error it surfaces.
@@ -39,13 +40,15 @@ describe(createTransport, () => {
       ws.close(CloseCode.Normal)
     })
     const controller = new AbortController()
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'auto',
-      signal: controller.signal,
-      onOpen: () => {},
-      onClose: () => {},
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        onOpen: () => {},
+        onClose: () => {},
+      }),
+    )
     const { messages, error } = await drain(transport)
     expect(messages).toHaveLength(2)
     expect(messages[0]).toBe('hello')
@@ -60,13 +63,15 @@ describe(createTransport, () => {
       ws.send(Buffer.from([9, 9, 9]))
     })
     const controller = new AbortController()
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'text',
-      signal: controller.signal,
-      onOpen: () => {},
-      onClose: () => {},
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'text',
+        signal: controller.signal,
+        onOpen: () => {},
+        onClose: () => {},
+      }),
+    )
     const iterator = transport[Symbol.asyncIterator]()
     await expect(iterator.next()).rejects.toSatisfy((err: unknown) => {
       // DataModeError, surfaced from the channel.
@@ -83,14 +88,16 @@ describe(createTransport, () => {
       ws.close(CloseCode.Normal)
     })
     const controller = new AbortController()
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'auto',
-      signal: controller.signal,
-      headers: { Authorization: 'Bearer t0ken' },
-      onOpen: () => {},
-      onClose: () => {},
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        headers: { Authorization: 'Bearer t0ken' },
+        onOpen: () => {},
+        onClose: () => {},
+      }),
+    )
     await drain(transport)
     expect(seenAuth).toBe('Bearer t0ken')
   })
@@ -102,14 +109,16 @@ describe(createTransport, () => {
       ws.close(CloseCode.Normal)
     })
     const controller = new AbortController()
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'auto',
-      signal: controller.signal,
-      headers: new Headers({ Authorization: 'Bearer hdr' }),
-      onOpen: () => {},
-      onClose: () => {},
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        headers: new Headers({ Authorization: 'Bearer hdr' }),
+        onOpen: () => {},
+        onClose: () => {},
+      }),
+    )
     await drain(transport)
     expect(seenAuth).toBe('Bearer hdr')
   })
@@ -124,13 +133,15 @@ describe(createTransport, () => {
     })
     const controller = new AbortController()
     const closes: CloseEventDetail[] = []
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'auto',
-      signal: controller.signal,
-      onOpen: () => {},
-      onClose: (detail) => closes.push(detail),
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        onOpen: () => {},
+        onClose: (detail) => closes.push(detail),
+      }),
+    )
     const { error } = await drain(transport)
     expect(error).toBeUndefined()
     expect(closes).toEqual([
@@ -145,13 +156,15 @@ describe(createTransport, () => {
     })
     const controller = new AbortController()
     const closes: CloseEventDetail[] = []
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'auto',
-      signal: controller.signal,
-      onOpen: () => {},
-      onClose: (detail) => closes.push(detail),
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        onOpen: () => {},
+        onClose: (detail) => closes.push(detail),
+      }),
+    )
     const { error } = await drain(transport)
     // An abrupt drop reaches `ws` as a 1006 close event or as a socket error,
     // depending on timing, so the transport may complete or reject. What matters
@@ -173,15 +186,17 @@ describe(createTransport, () => {
     })
     const controller = new AbortController()
     let sender!: Sender<'auto'>
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'auto',
-      signal: controller.signal,
-      onOpen: (s) => {
-        sender = s
-      },
-      onClose: () => {},
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        onOpen: (s) => {
+          sender = s
+        },
+        onClose: () => {},
+      }),
+    )
     const drained = drain(transport)
     await vi.waitFor(() => assert(sender))
     // The server only closes after processing the message, so waiting for the
@@ -195,13 +210,15 @@ describe(createTransport, () => {
   it('rejects send() before the connection opens', async () => {
     await using server = await startServer(() => {})
     const controller = new AbortController()
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'auto',
-      signal: controller.signal,
-      onOpen: () => {},
-      onClose: () => {},
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        onOpen: () => {},
+        onClose: () => {},
+      }),
+    )
     await expect(transport.send('too-soon')).rejects.toBeInstanceOf(
       WebSocketClientError,
     )
@@ -212,15 +229,17 @@ describe(createTransport, () => {
     await using server = await startServer((ws) => ws.close(CloseCode.Normal))
     const controller = new AbortController()
     let sender!: Sender<'auto'>
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'auto',
-      signal: controller.signal,
-      onOpen: (s) => {
-        sender = s
-      },
-      onClose: () => {},
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        onOpen: (s) => {
+          sender = s
+        },
+        onClose: () => {},
+      }),
+    )
     await drain(transport)
     await expect(sender.send('too-late')).rejects.toBeInstanceOf(
       WebSocketClientError,
@@ -234,13 +253,15 @@ describe(createTransport, () => {
     const controller = new AbortController()
     const onOpen = vi.fn()
     const onClose = vi.fn()
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'auto',
-      signal: controller.signal,
-      onOpen,
-      onClose,
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        onOpen,
+        onClose,
+      }),
+    )
     await drain(transport)
     expect(onOpen).toHaveBeenCalledTimes(1)
     expect(onClose).toHaveBeenCalledTimes(1)
@@ -268,15 +289,17 @@ describe(createTransport, () => {
     const controller = new AbortController()
     const onClose = vi.fn()
     let opened = false
-    createTransport({
-      url: server.url,
-      dataMode: 'auto',
-      signal: controller.signal,
-      onOpen: () => {
-        opened = true
-      },
-      onClose,
-    })
+    createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        onOpen: () => {
+          opened = true
+        },
+        onClose,
+      }),
+    )
     // The close-handshake wait only exists on an *open* socket: aborting while
     // still CONNECTING tears down immediately and would pass vacuously.
     await vi.waitFor(() => assert(opened))
@@ -299,13 +322,15 @@ describe(createTransport, () => {
     await using server = await startServer(() => {})
     const controller = new AbortController()
     const onClose = vi.fn()
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'auto',
-      signal: controller.signal,
-      onOpen: () => {},
-      onClose,
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        onOpen: () => {},
+        onClose,
+      }),
+    )
     const drained = drain(transport)
     await vi.waitFor(() => expect(onClose).not.toHaveBeenCalled())
     const reason = new Error('stop')
@@ -335,16 +360,18 @@ describe(createTransport, () => {
     let sender!: Sender<'auto'>
     // Never iterated: an unconsumed transport is exactly the slow-consumer
     // scenario under test, so only `send()` is exercised here.
-    createTransport({
-      url: server.url,
-      dataMode: 'auto',
-      signal: controller.signal,
-      highWaterMark: 1024,
-      onOpen: (s) => {
-        sender = s
-      },
-      onClose: () => {},
-    })
+    createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        highWaterMark: 1024,
+        onOpen: (s) => {
+          sender = s
+        },
+        onClose: () => {},
+      }),
+    )
     await vi.waitFor(() => assert(sender))
     await sender.send('go')
     await vi.waitFor(
@@ -364,14 +391,16 @@ describe(createTransport, () => {
     await using server = await startServer(() => {})
     const controller = new AbortController()
     const onClose = vi.fn()
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'auto',
-      signal: controller.signal,
-      heartbeat: { intervalMs: 30 },
-      onOpen: () => {},
-      onClose,
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        heartbeat: { intervalMs: 30 },
+        onOpen: () => {},
+        onClose,
+      }),
+    )
     const iterator = transport[Symbol.asyncIterator]()
     const pending = iterator.next()
     // Outlive several heartbeat intervals without the channel failing.
@@ -388,14 +417,16 @@ describe(createTransport, () => {
       ws._autoPong = false
     })
     const controller = new AbortController()
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'auto',
-      signal: controller.signal,
-      heartbeat: { intervalMs: 20 },
-      onOpen: () => {},
-      onClose: () => {},
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        heartbeat: { intervalMs: 20 },
+        onOpen: () => {},
+        onClose: () => {},
+      }),
+    )
     const { error } = await drain(transport)
     assert(error instanceof HeartbeatTimeoutError)
     expect(error.shouldRetry()).toBe(true)
@@ -407,13 +438,15 @@ describe(createTransport, () => {
       ws.send('two')
     })
     const ac = new AbortController()
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'text',
-      signal: ac.signal,
-      onOpen: () => {},
-      onClose: () => {},
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'text',
+        signal: ac.signal,
+        onOpen: () => {},
+        onClose: () => {},
+      }),
+    )
     const iterator = transport[Symbol.asyncIterator]()
     expect(await iterator.next()).toEqual({ value: 'one', done: false })
     // A consumer stop is not the connection ending, so neither the return() nor
@@ -456,17 +489,19 @@ describe(createTransport, () => {
       const ac = new AbortController()
       let closedAt: number | undefined
       let opened = false
-      const transport = createTransport({
-        url: server.url,
-        dataMode: 'text',
-        signal: ac.signal,
-        onOpen: () => {
-          opened = true
-        },
-        onClose: () => {
-          closedAt = performance.now()
-        },
-      })
+      const transport = createTransport(
+        transportOptions({
+          url: server.url,
+          dataMode: 'text',
+          signal: ac.signal,
+          onOpen: () => {
+            opened = true
+          },
+          onClose: () => {
+            closedAt = performance.now()
+          },
+        }),
+      )
       const iterator = transport[Symbol.asyncIterator]()
       const parked = iterator.next().catch(() => 'rejected')
       await vi.waitFor(() => assert(opened))
@@ -482,15 +517,17 @@ describe(createTransport, () => {
     await using server = await startServer((ws) => ws.send('one'))
     const ac = new AbortController()
     let closedAt: number | undefined
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'text',
-      signal: ac.signal,
-      onOpen: () => {},
-      onClose: () => {
-        closedAt = performance.now()
-      },
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'text',
+        signal: ac.signal,
+        onOpen: () => {},
+        onClose: () => {
+          closedAt = performance.now()
+        },
+      }),
+    )
     const iterator = transport[Symbol.asyncIterator]()
     expect(await iterator.next()).toEqual({ value: 'one', done: false })
     await iterator.return!()
@@ -507,13 +544,15 @@ describe(createTransport, () => {
       // Never sends, so the consumer's pull parks.
     })
     const ac = new AbortController()
-    const transport = createTransport({
-      url: server.url,
-      dataMode: 'text',
-      signal: ac.signal,
-      onOpen: () => {},
-      onClose: () => {},
-    })
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'text',
+        signal: ac.signal,
+        onOpen: () => {},
+        onClose: () => {},
+      }),
+    )
     const iterator = transport[Symbol.asyncIterator]()
     const pull = iterator.next()
     const reason = new Error('stopped')
@@ -535,14 +574,16 @@ describe(createTransport, () => {
     process.prependListener('uncaughtException', onUncaught)
     const controller = new AbortController()
     try {
-      createTransport({
-        url: 'ws://10.255.255.1:9/',
-        dataMode: 'text',
-        signal: controller.signal,
-        heartbeat: { intervalMs: 20 },
-        onOpen: () => {},
-        onClose: () => {},
-      })
+      createTransport(
+        transportOptions({
+          url: 'ws://10.255.255.1:9/',
+          dataMode: 'text',
+          signal: controller.signal,
+          heartbeat: { intervalMs: 20 },
+          onOpen: () => {},
+          onClose: () => {},
+        }),
+      )
       // Outlive several intervals while the socket is still connecting.
       await new Promise((resolve) => setTimeout(resolve, 200))
     } finally {
@@ -568,14 +609,16 @@ describe(createTransport, () => {
     const isOpen = new Promise<void>((resolve) => {
       opened = resolve
     })
-    createTransport({
-      url: server.url,
-      dataMode: 'text',
-      signal: controller.signal,
-      // No `heartbeat` option: the default is what's under test.
-      onOpen: () => opened(),
-      onClose: () => {},
-    })
+    createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'text',
+        signal: controller.signal,
+        // No `heartbeat` option: the default is what's under test.
+        onOpen: () => opened(),
+        onClose: () => {},
+      }),
+    )
     await isOpen
     controller.abort(new Error('test cleanup'))
 
@@ -589,14 +632,16 @@ describe(createTransport, () => {
       socket.on('ping', () => pings++)
     })
     const controller = new AbortController()
-    createTransport({
-      url: server.url,
-      dataMode: 'text',
-      signal: controller.signal,
-      heartbeat: false,
-      onOpen: () => {},
-      onClose: () => {},
-    })
+    createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'text',
+        signal: controller.signal,
+        heartbeat: false,
+        onOpen: () => {},
+        onClose: () => {},
+      }),
+    )
     await new Promise((resolve) => setTimeout(resolve, 120))
     controller.abort(new Error('test cleanup'))
     expect(pings).toBe(0)

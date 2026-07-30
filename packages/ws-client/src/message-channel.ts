@@ -100,11 +100,13 @@ function messageBytes(data: string | Uint8Array): number {
 // heartbeat/idle timeout, signal abort) — the WHATWG convention of 1006.
 // Exported so both transports report the same shape for their own frame-less
 // failures instead of each duplicating this literal.
-export const ABNORMAL_CLOSE_DETAIL: CloseEventDetail = {
+// Frozen because it is a singleton that reaches userland through `onClose`: a
+// caller who mutated what they were handed would corrupt every later report.
+export const ABNORMAL_CLOSE_DETAIL: CloseEventDetail = Object.freeze({
   code: CloseCode.Abnormal,
   reason: '',
   wasClean: false,
-}
+})
 
 /**
  * Wraps a channel's iterator so it settles only once `closed` resolves — the
@@ -148,31 +150,17 @@ export function closeGuard<M extends DataMode>(
 }
 
 /**
- * How a caller-supplied stop reason maps onto a close: a bare `ac.abort()` (an
- * `AbortError`) is an orderly stop and closes with 1000; a `CloseError` says
- * which code to close with; anything else is a failure, so the connection is
- * destroyed rather than closed politely.
+ * Which close code a caller-supplied stop reason asks for. A `CloseError` names
+ * its own code; every other reason closes normally with 1000.
  *
- * Returns the close code to send, or `undefined` to terminate.
+ * Aborting is a request to stop, not a connection failure, so the reason only
+ * chooses *how* to say goodbye — it never decides whether to be polite. A caller
+ * aborting with `new Error('SIGTERM')` is shutting down deliberately and should
+ * leave the peer a clean close, and the reason still reaches them as the
+ * iterator's rejection either way.
  */
-export function closeCodeForStop(reason: unknown): number | undefined {
-  if (reason instanceof CloseError) return reason.code
-  // A DOMException named AbortError is what `ac.abort()` produces with no
-  // argument; treat that bare "please stop" as orderly.
-  //
-  // Matched on shape rather than `instanceof Error` on purpose: if the module
-  // realm differs from the one `AbortController` came from — jest's ESM VM
-  // contexts being the case that caught this — the DOMException isn't an
-  // `instanceof` of *this* module's `Error`, so the check silently failed and
-  // downgraded every graceful shutdown to a destroyed connection.
-  if (
-    typeof reason === 'object' &&
-    reason !== null &&
-    (reason as { name?: unknown }).name === 'AbortError'
-  ) {
-    return CloseCode.Normal
-  }
-  return undefined
+export function closeCodeForStop(reason: unknown): number {
+  return reason instanceof CloseError ? reason.code : CloseCode.Normal
 }
 
 /**
