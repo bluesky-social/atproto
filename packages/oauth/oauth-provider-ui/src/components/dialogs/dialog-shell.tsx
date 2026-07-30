@@ -23,6 +23,7 @@ export const dialogActions = [
   'flex flex-col items-stretch gap-2',
   'sm:flex-row-reverse sm:items-center sm:justify-start',
   '[&_[data-slot=form-actions-spacer]]:hidden',
+  'sm:[&_[data-slot=form-actions-spacer]]:hidden',
 ].join(' ')
 
 const InDialogContext = createContext(false)
