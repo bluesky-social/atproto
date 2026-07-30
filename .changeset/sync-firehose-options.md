@@ -2,4 +2,4 @@
 '@atproto/sync': minor
 ---
 
-**BREAKING:** `FirehoseOptions` no longer accepts arbitrary `ws` `ClientOptions`. The supported connection options are now explicit: `headers` (`HeadersInit`), `maxReconnectSeconds`, and `heartbeatIntervalMs`.
+**BREAKING:** `FirehoseOptions` now takes an explicit set of connection options (`headers`, `maxReconnectSeconds`, `heartbeatIntervalMs`) rather than arbitrary `ws` `ClientOptions`.
