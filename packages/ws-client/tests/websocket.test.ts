@@ -157,29 +157,37 @@ describe(createWebSocket, () => {
       expect(await drain(websocket('ws://x', noBackoff))).toEqual(['a', 'b'])
     })
 
-    it('rethrows a fatal error, reporting it with no reconnect', async () => {
+    it('reports a fatal error to onError, not onReconnect', async () => {
       const fatal = new CloseError(CloseCode.ProtocolError, 'protocol', false)
       const { createTransport } = scripted([
         { messages: [], end: 'error', error: fatal },
       ])
       const onError = vi.fn()
+      const onReconnect = vi.fn()
       const websocket = createWebSocket(createTransport)
       await expect(
-        drain(websocket('ws://x', { ...noBackoff, onError })),
+        drain(websocket('ws://x', { ...noBackoff, onError, onReconnect })),
       ).rejects.toBe(fatal)
-      expect(onError).toHaveBeenCalledWith(fatal, undefined)
+      // The error the iterator rejects with is also the one onError sees, so a
+      // caller can handle it in either place.
+      expect(onError).toHaveBeenCalledWith(fatal)
+      expect(onReconnect).not.toHaveBeenCalled()
     })
 
-    it('reports a retryable error with its attempt number', async () => {
+    it('reports a retried error to onReconnect, not onError', async () => {
       const retryable = new SocketError(new Error('x'))
       const { createTransport } = scripted([
         { messages: [], end: 'error', error: retryable },
         { messages: [], end: 'clean' },
       ])
       const onError = vi.fn()
+      const onReconnect = vi.fn()
       const websocket = createWebSocket(createTransport)
-      await drain(websocket('ws://x', { ...noBackoff, onError }))
-      expect(onError).toHaveBeenCalledWith(retryable, { attempt: 0 })
+      await drain(websocket('ws://x', { ...noBackoff, onError, onReconnect }))
+      // A swallowed failure surfaces nowhere else: the stream kept going, so the
+      // consumer never sees this error unless it observes onReconnect.
+      expect(onReconnect).toHaveBeenCalledWith(retryable, { attempt: 0 })
+      expect(onError).not.toHaveBeenCalled()
     })
 
     it('makes every failure fatal when shouldReconnect is false', async () => {
@@ -267,6 +275,7 @@ describe(createWebSocket, () => {
       const onConnect = vi.fn()
       const onDisconnect = vi.fn()
       const onError = vi.fn()
+      const onReconnect = vi.fn()
       const websocket = createWebSocket(createTransport)
       await expect(
         drain(
@@ -275,6 +284,7 @@ describe(createWebSocket, () => {
             onConnect,
             onDisconnect,
             onError,
+            onReconnect,
             shouldReconnect: (_error, attemptNo) => attemptNo < 3,
           }),
         ),
@@ -282,8 +292,10 @@ describe(createWebSocket, () => {
 
       expect(onConnect).toHaveBeenCalledTimes(1)
       expect(onDisconnect).toHaveBeenCalledTimes(1)
-      // One per failed dial plus the final give-up.
-      expect(onError.mock.calls.length).toBeGreaterThan(1)
+      // One onReconnect per retried dial, then exactly one onError when the
+      // policy finally declines.
+      expect(onReconnect.mock.calls.length).toBeGreaterThan(1)
+      expect(onError).toHaveBeenCalledTimes(1)
     })
 
     it('fires onClose exactly once with the last close detail', async () => {

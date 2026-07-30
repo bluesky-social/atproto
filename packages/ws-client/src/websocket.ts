@@ -17,14 +17,21 @@ import type {
 export type Awaitable<T> = T | Promise<T>
 
 /**
- * The receive, liveness, and flow-control options a transport accepts. The
- * per-connection wiring (`url`, `signal`, `onOpen`, `onClose`) is omitted
- * because the reconnect loop supplies it for itself, so a caller can't collide
- * with it.
+ * The receive, liveness, and flow-control options a transport accepts, as a
+ * caller supplies them. The per-connection wiring (`url`, `signal`, `onOpen`,
+ * `onClose`) is omitted because the reconnect loop supplies it for itself, so a
+ * caller can't collide with it.
+ *
+ * `Partial` because a transport's own contract requires every field — being
+ * internal, it is spelled `undefined | T` so a missing one is a type error at the
+ * single call site (see {@link TransportOptions}). Out here every field is
+ * genuinely optional, and {@link connectionOptions} bridges the two.
  */
-export type ConnectionOptions<M extends DataMode = 'auto'> = Omit<
-  TransportOptions<M>,
-  'url' | 'signal' | 'dataMode' | 'onOpen' | 'onClose'
+type ConnectionOptions<M extends DataMode = 'auto'> = Partial<
+  Omit<
+    TransportOptions<M>,
+    'url' | 'signal' | 'dataMode' | 'onOpen' | 'onClose'
+  >
 > & { dataMode?: M }
 
 export interface WebSocketOptions<M extends DataMode = 'auto'>
@@ -62,17 +69,29 @@ export interface WebSocketOptions<M extends DataMode = 'auto'>
    *
    * Pairs with `onConnect` exactly, and a dial that never connected produces
    * neither. So a stream stuck retrying reports one `onDisconnect` for the
-   * connection it lost, then an `onError` per failed dial.
+   * connection it lost, then an `onReconnect` per failed dial.
    *
-   * This, not `onError`, is where to stop using a sender: the loop only advances
-   * when the consumer pulls, so `onError` can arrive long after the socket died.
+   * This, not `onReconnect`, is where to stop using a sender: the loop only
+   * advances when the consumer pulls, so `onReconnect` can arrive long after the
+   * socket died.
    */
   onDisconnect?: () => void
   /**
-   * A connection ended with an error. `reconnect` is present (with the attempt
-   * count) when a retry is coming, absent when giving up.
+   * A connection ended with an error the stream will not retry, so this is the
+   * end of the stream. The same error is what the iterator rejects with, so a
+   * caller can handle it here, in a `catch` around the loop, or both.
    */
-  onError?: (error: unknown, reconnect?: { attempt: number }) => void
+  onError?: (error: unknown) => void
+  /**
+   * A connection ended with an error and a retry is coming, `attempt` counting
+   * consecutive failures since the last successful open (so `0` is the first
+   * retry of a cycle).
+   *
+   * Unlike `onError` this is the *only* place such a failure surfaces: the stream
+   * swallows it and keeps going, so a caller that wants to see transient trouble
+   * has to observe it here.
+   */
+  onReconnect?: (error: unknown, reconnect: { attempt: number }) => void
   /**
    * The stream ended. Fires exactly once per started stream, however it ended,
    * and only once the local socket is closed — so a caller can treat it as
@@ -145,15 +164,16 @@ export function createWebSocket(
     let closeDetail: CloseEventDetail | undefined
 
     try {
-      // The generator body doesn't run until the first pull, so an
-      // already-aborted signal rejects that first `next()` rather than the call
-      // that created the generator.
-      signal?.throwIfAborted()
-
       for (;;) {
+        // One abort check for every way this loop is entered: the first pull (the
+        // generator body doesn't run until then, so an already-aborted signal
+        // rejects that `next()` rather than the call that created the generator),
+        // and each re-entry after a backoff.
+        signal?.throwIfAborted()
+
         const resolved = typeof url === 'function' ? await url() : url
-        // Resolving the url is an async gap: an abort that lands while it's in
-        // flight must not fall through to a connection nothing tears down.
+        // Resolving the url is an async gap of its own: an abort that lands while
+        // it's in flight must not fall through to a connection nothing tears down.
         signal?.throwIfAborted()
 
         // A transport is created already connecting and has no close method —
@@ -229,12 +249,15 @@ export function createWebSocket(
             error instanceof CloseError && error.code === CloseCode.Normal
           if (!willReconnect && endedNormally) return
 
-          invokeHook(
-            options.onError,
-            error,
-            willReconnect ? { attempt: retries } : undefined,
-          )
-          if (!willReconnect) throw error
+          // Two hooks rather than one with an optional argument, because they
+          // report different things: `onReconnect` is the only place a swallowed
+          // failure surfaces, while an `onError` error is also what the iterator
+          // rejects with — so a caller can handle it there or in a `catch`.
+          if (!willReconnect) {
+            invokeHook(options.onError, error)
+            throw error
+          }
+          invokeHook(options.onReconnect, error, { attempt: retries })
 
           // Backoff lives in the one branch that actually retries rather than at
           // the top of the loop, because the other three exits (a fatal error
@@ -243,8 +266,8 @@ export function createWebSocket(
           // Post-increment so the first reconnect waits ~1s (2^0) and each
           // consecutive failure escalates; a successful open resets to 0.
           await sleep(backoffMs(retries++, maxMs), signal)
-          signal?.throwIfAborted()
-          // Loop: re-resolve the url and redial.
+          // Loop: the check at the top catches an abort that landed during the
+          // backoff, then the url is re-resolved and redialed.
         } finally {
           // Also detaches the forwarding listener, which is bound to this
           // controller's own signal.
@@ -287,12 +310,16 @@ function normalizeShouldReconnect(
 // layer's own concerns (reconnect policy, backoff, hooks) and the per-connection
 // wiring the loop supplies itself.
 //
-// `dataMode` is optional to a caller but required by a transport, so the default
-// is resolved here, at the one boundary that has to state it, rather than being
-// re-defaulted inside each transport.
+// This is the boundary between the two shapes — optional out front, explicitly
+// `undefined | T` inside — so every field is listed rather than spread. Adding a
+// transport option therefore fails to compile here until it is forwarded, which
+// is the whole point of the transport's stricter contract.
+//
+// `dataMode` is optional to a caller but required by a transport, so its default
+// is resolved here rather than re-defaulted inside each transport.
 function connectionOptions<M extends DataMode>(
   options: WebSocketOptions<M>,
-): Omit<ConnectionOptions<M>, 'dataMode'> & { dataMode: M } {
+): Omit<TransportOptions<M>, 'url' | 'signal' | 'onOpen' | 'onClose'> {
   return {
     dataMode: options.dataMode ?? ('auto' as M),
     protocols: options.protocols,

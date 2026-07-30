@@ -17,7 +17,6 @@ export type { HeadersInit, Sender } from './transport/transport.js'
 export type {
   Awaitable,
   BrowserWebSocketOptions,
-  ConnectionOptions,
   NodeWebSocketOptions,
   WebSocketFn,
   WebSocketIterable,

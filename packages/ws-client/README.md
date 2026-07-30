@@ -53,16 +53,16 @@ const gen = websocket(url, { signal: controller.signal })
 controller.abort()
 ```
 
-**How you stop decides how the socket ends**, which is also how you specify the websocket close code:
+Stopping always closes the socket politely — it's a request to stop, not a failure — and the abort reason is how you choose the close code:
 
-| how you stop                          | what the peer sees            |
-| ------------------------------------- | ----------------------------- |
-| `break`/`throw` in the loop           | close `1000`                  |
-| `controller.abort()` (no argument)    | close `1000`                  |
-| `controller.abort(new CloseError(…))` | close with that error's code  |
-| `controller.abort(anythingElse)`      | `1006` — connection destroyed |
+| how you stop                          | what the peer sees           |
+| ------------------------------------- | ---------------------------- |
+| `break`/`throw` in the loop           | close `1000`                 |
+| `controller.abort()` (no argument)    | close `1000`                 |
+| `controller.abort(new CloseError(…))` | close with that error's code |
+| `controller.abort(anythingElse)`      | close `1000`                 |
 
-The last row is the fast path: any reason that isn't a `CloseError` is treated as a failure, so the connection is destroyed rather than closed politely. `break` and `throw` share the plain clean close.
+The last row matters for shutdown paths: `controller.abort(new Error('SIGTERM'))` is a deliberate stop, so the peer still gets a clean goodbye. The reason isn't lost — it's what the iterator rejects with. `break` and `throw` are indistinguishable to a generator, so they share the plain clean close.
 
 A non-reconnectable `1000` close — the server says it's done and the reconnect policy declines to retry — ends the stream normally: the loop just finishes, same as `break`. Every other end rejects the iterator, including a fatal protocol close such as `1002`, a network failure, or an aborted signal. Wrap the loop in `try`/`catch` if you need to distinguish "the peer said goodbye" from "something went wrong."
 
@@ -95,17 +95,20 @@ websocket(url, {
 
 Hooks observe the lifecycle at two levels. `onOpen()` and `onClose(detail)` bookend the **stream**, once each; `onConnect(sender)` and `onDisconnect()` bookend each **connection**, as many times as it takes.
 
-| hook                         | when                                                        |
-| ---------------------------- | ----------------------------------------------------------- |
-| `onOpen()`                   | the stream is live, once, just before the first `onConnect` |
-| `onConnect(sender)`          | a connection is up — including the first                    |
-| `onDisconnect()`             | that connection ended                                       |
-| `onError(error, reconnect?)` | a connection ended badly; `reconnect` present, retry coming |
-| `onClose(detail)`            | the stream ended, once, after the local socket has closed   |
+| hook                              | when                                                        |
+| --------------------------------- | ----------------------------------------------------------- |
+| `onOpen()`                        | the stream is live, once, just before the first `onConnect` |
+| `onConnect(sender)`               | a connection is up — including the first                    |
+| `onDisconnect()`                  | that connection ended                                       |
+| `onReconnect(error, { attempt })` | a connection failed and a retry is coming                   |
+| `onError(error)`                  | a connection failed and the stream is giving up             |
+| `onClose(detail)`                 | the stream ended, once, after the local socket has closed   |
 
-`onConnect` and `onDisconnect` pair exactly, and a dial that never connected produces neither. So a stream stuck retrying reports one `onDisconnect` for the connection it lost and an `onError` per failed attempt.
+`onReconnect` and `onError` are exclusive, and the split matters: an `onReconnect` error is swallowed by the retry, so that hook is the _only_ place transient trouble surfaces. An `onError` error is also what the iterator rejects with, so you can handle it there or in a `catch` around the loop.
 
-`onDisconnect`, not `onError`, is where to stop using a `sender`: the loop only advances when the consumer pulls, so `onError` can arrive well after the socket died.
+`onConnect` and `onDisconnect` pair exactly, and a dial that never connected produces neither. So a stream stuck retrying reports one `onDisconnect` for the connection it lost and an `onReconnect` per failed attempt.
+
+`onDisconnect`, not `onReconnect`, is where to stop using a `sender`: the loop only advances when the consumer pulls, so `onReconnect` can arrive well after the socket died.
 
 `onClose` fires only once the local socket is closed, so it's safe to treat as "teardown is done" and release whatever the stream depended on. The end of the `for await` carries the same guarantee: iteration doesn't settle until the socket is down, so awaiting the loop is enough — you don't need the hook to sequence a shutdown.
 
@@ -129,7 +132,25 @@ Only the Node case is on by default: `heartbeat` defaults to a 10s interval (pas
 - **Node.js**: real socket backpressure. Past `highWaterMark` (default 1 MiB of buffered, unread bytes) the socket is paused until the consumer catches up.
 - **Both platforms**: `maxBufferedBytes` is a hard cap. Exceeding it fails the connection with a `BufferOverflowError` (non-retryable) rather than growing the buffer without bound. It's the _only_ backstop in the browser, since the WHATWG API gives no way to pause a socket.
 
-Both thresholds count binary frames exactly and **over-estimate text**: a string is measured as UTF-16 code units × 2, which avoids an encode per message but counts mostly-ASCII text at roughly twice its wire size. Both are safety valves, so pausing or failing early is the safer direction to err — just don't read them as exact wire bytes when sizing them for a text stream.
+Both thresholds count **received, unread** bytes — there is only one buffer in this library, and nothing bounds the write side. They count binary frames exactly and **over-estimate text**: a string is measured as UTF-16 code units × 2, which avoids an encode per message but counts mostly-ASCII text at roughly twice its wire size. Both are safety valves, so pausing or failing early is the safer direction to err — just don't read them as exact wire bytes when sizing them for a text stream.
+
+Overflow is fatal by default, on the reasoning that a consumer which fell behind once will fall behind again. If your stream is resumable — a cursor-based feed, say — you can opt into retrying it, which is worth considering in the browser where there's no backpressure to lean on:
+
+```ts
+import {
+  BufferOverflowError,
+  defaultShouldReconnect,
+  websocket,
+} from '@atproto/ws-client'
+
+websocket(url, {
+  maxBufferedBytes: 10 * 1024 * 1024,
+  shouldReconnect: (error) =>
+    error instanceof BufferOverflowError || defaultShouldReconnect(error),
+})
+```
+
+Whatever was buffered is discarded, so only reconnect on overflow if you can resume from where you left off.
 
 ## Compression
 

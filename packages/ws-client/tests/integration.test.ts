@@ -230,11 +230,27 @@ describe('websocket() end-to-end over real sockets', () => {
       expect(serverReason).toBe('')
     })
 
-    it('destroys the connection on any other reason', async () => {
-      // A failure, not a request to stop, so no close frame is sent and the peer
-      // observes an abnormal close.
-      const { serverSaw } = await stopWith(new Error('something broke'))
-      expect(serverSaw).toBe(CloseCode.Abnormal)
+    it('still closes politely at 1000 on any other reason', async () => {
+      // Aborting is a request to stop however it was spelled, so the peer gets a
+      // clean goodbye even when the reason is an ordinary Error — the common case
+      // being a shutdown sentinel like `ac.abort(new Error('SIGTERM'))`. The
+      // reason is not lost: it is what the iterator rejects with.
+      const reason = new Error('SIGTERM')
+      const { serverSaw } = await stopWith(reason)
+      expect(serverSaw).toBe(CloseCode.Normal)
+    })
+
+    it('rejects the iterator with the abort reason whatever the close code', async () => {
+      const reason = new Error('SIGTERM')
+      await using server = await startServer((ws) => ws.send('one'))
+      const controller = new AbortController()
+      const gen = websocket(server.url, {
+        dataMode: 'text',
+        signal: controller.signal,
+      })
+      await gen.next()
+      controller.abort(reason)
+      await expect(gen.next()).rejects.toBe(reason)
     })
   })
 
