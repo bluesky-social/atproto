@@ -17,11 +17,12 @@ describe(defaultShouldReconnect, () => {
     ).toBe(false)
   })
 
-  it('treats errors outside the taxonomy as fatal', () => {
-    expect(defaultShouldReconnect(new Error('foreign'))).toBe(false)
+  it('treats base-class and foreign errors as fatal', () => {
+    // The base class covers state misuse, which is never retryable.
     expect(defaultShouldReconnect(new WebSocketClientError('misuse'))).toBe(
       false,
     )
+    expect(defaultShouldReconnect(new Error('foreign'))).toBe(false)
     expect(defaultShouldReconnect('not an error')).toBe(false)
   })
 })

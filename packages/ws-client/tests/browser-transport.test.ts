@@ -4,7 +4,7 @@ import {
   BufferOverflowError,
   IdleTimeoutError,
   SocketError,
-  WebSocketConnectionError,
+  WebSocketClientError,
 } from '../src/lib/errors.js'
 import type { CloseEventDetail, MessageOf } from '../src/message-channel.js'
 import {
@@ -278,7 +278,7 @@ describe(createTransport, () => {
       globalWebSocket,
     )
     await expect(transport.send('too-soon')).rejects.toBeInstanceOf(
-      WebSocketConnectionError,
+      WebSocketClientError,
     )
     controller.abort()
   })
@@ -301,7 +301,7 @@ describe(createTransport, () => {
     )
     await drain(transport)
     await expect(sender.send('too-late')).rejects.toBeInstanceOf(
-      WebSocketConnectionError,
+      WebSocketClientError,
     )
   })
 

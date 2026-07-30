@@ -7,7 +7,7 @@ import {
   HeartbeatTimeoutError,
   IdleTimeoutError,
   SocketError,
-  WebSocketConnectionError,
+  WebSocketClientError,
 } from './errors.js'
 
 describe('error taxonomy', () => {
@@ -30,7 +30,7 @@ describe('error taxonomy', () => {
     // A protocol mismatch: the server would send the wrong frames again.
     expect(new DataModeError('text', 'binary').shouldRetry()).toBe(false)
     // The base class covers state misuse, which is never retryable.
-    expect(new WebSocketConnectionError('misuse').shouldRetry()).toBe(false)
+    expect(new WebSocketClientError('misuse').shouldRetry()).toBe(false)
   })
 
   it('classifies a close error by its code', () => {

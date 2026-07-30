@@ -33,7 +33,6 @@ export {
   IdleTimeoutError,
   SocketError,
   WebSocketClientError,
-  WebSocketConnectionError,
 } from './lib/errors.js'
 export {
   FATAL_CLOSE_CODES,

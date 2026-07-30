@@ -4,7 +4,7 @@ import { CloseCode, isReconnectableClose } from '../src/lib/close-codes.js'
 import {
   CloseError,
   HeartbeatTimeoutError,
-  WebSocketConnectionError,
+  WebSocketClientError,
 } from '../src/lib/errors.js'
 import type { CloseEventDetail, MessageOf } from '../src/message-channel.js'
 import { createTransport } from '../src/transport/node-transport.js'
@@ -203,7 +203,7 @@ describe(createTransport, () => {
       onClose: () => {},
     })
     await expect(transport.send('too-soon')).rejects.toBeInstanceOf(
-      WebSocketConnectionError,
+      WebSocketClientError,
     )
     controller.abort()
   })
@@ -223,7 +223,7 @@ describe(createTransport, () => {
     })
     await drain(transport)
     await expect(sender.send('too-late')).rejects.toBeInstanceOf(
-      WebSocketConnectionError,
+      WebSocketClientError,
     )
   })
 
