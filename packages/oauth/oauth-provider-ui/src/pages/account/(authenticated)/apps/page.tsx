@@ -72,14 +72,18 @@ export function Page() {
         mobileTitle={(session) => <ClientName session={session} />}
         columns={[
           {
+            // @NOTE Percentage widths with `max-w-0` make the two text columns
+            // share the space the date columns leave over and truncate, instead
+            // of sizing to their longest URL and forcing the table wider than
+            // the page.
             header: <Trans context="OAuthApp">App</Trans>,
-            className: 'font-medium',
+            className: 'w-1/3 max-w-0 truncate font-medium',
             hideOnMobile: true,
             cell: (session) => <ClientName session={session} />,
           },
           {
             header: <Trans context="OAuthApp">Client</Trans>,
-            className: 'font-mono text-xs',
+            className: 'w-1/2 max-w-0 truncate font-mono text-xs',
             cell: (session) => <ClientIdentifier session={session} />,
           },
           {
