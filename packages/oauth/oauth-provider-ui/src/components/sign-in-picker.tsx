@@ -97,11 +97,7 @@ export function SignInPicker({
 
       {children}
 
-      {/* @NOTE The navigation action spans the width and the alternate path
-        sits centred beneath it, as the login blocks lay it out. "Sign up"
-        stays a `<button>`, not an anchor: it swaps the view in place rather
-        than navigating anywhere. */}
-      <div key="actions" className="flex flex-col gap-4">
+      <div key="actions" className="flex flex-col gap-2">
         {onBack && (
           <Button variant="secondary" className="w-full" onClick={onBack}>
             {backLabel || <Trans>Back</Trans>}
@@ -109,15 +105,9 @@ export function SignInPicker({
         )}
 
         {onSignUp && (
-          <div className="text-center text-sm">
-            <Button
-              variant="link"
-              className="h-auto p-0 underline underline-offset-4"
-              onClick={onSignUp}
-            >
-              <Trans>Sign up</Trans>
-            </Button>
-          </div>
+          <Button className="w-full" onClick={onSignUp}>
+            <Trans>Sign up</Trans>
+          </Button>
         )}
       </div>
     </div>

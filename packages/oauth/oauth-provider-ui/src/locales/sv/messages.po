@@ -119,7 +119,7 @@ msgstr "Kontoidentifierare"
 msgid "Account name"
 msgstr "Kontonamn"
 
-#: src/components/identity/account-menu.tsx:92
+#: src/components/identity/account-menu.tsx:90
 msgid "Account overview"
 msgstr "Kontoöversikt"
 
@@ -128,7 +128,7 @@ msgstr "Kontoöversikt"
 msgid "Account reactivated"
 msgstr "Konto återaktiverat"
 
-#: src/components/identity/account-menu.tsx:56
+#: src/components/identity/account-menu.tsx:55
 msgid "Account selector"
 msgstr "Kontoväljare"
 
@@ -218,7 +218,7 @@ msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Auktoriserades {0}"
 
-#: src/components/sign-in-picker.tsx:107
+#: src/components/sign-in-picker.tsx:103
 #: src/components/layouts/account-shell.tsx:52
 #: src/components/forms/sign-up-wizard.tsx:117
 #: src/components/forms/form-shell.tsx:64
@@ -736,7 +736,7 @@ msgstr "Senare"
 msgid "Let's get your password reset!"
 msgstr "Låt oss få ditt lösenord återställt!"
 
-#: src/components/layouts/auth-shell.tsx:78
+#: src/components/layouts/auth-shell.tsx:76
 #: src/components/layouts/account-shell.tsx:119
 msgid "Logo"
 msgstr "Logga"
@@ -1003,7 +1003,7 @@ msgstr "Säkerhetskod"
 msgid "Security step required"
 msgstr "Säkerhetskontroll"
 
-#: src/components/identity/account-menu.tsx:124
+#: src/components/identity/account-menu.tsx:122
 msgid "Select another account"
 msgstr "Välj ett annat konto"
 
@@ -1052,13 +1052,13 @@ msgctxt "device list"
 msgid "Sign out"
 msgstr "Logga ut"
 
-#: src/components/identity/account-menu.tsx:136
+#: src/components/identity/account-menu.tsx:134
 msgid "Sign out"
 msgstr "Logga ut"
 
 #: src/components/sign-up-view.tsx:54
 #: src/components/sign-up-view.tsx:59
-#: src/components/sign-in-picker.tsx:118
+#: src/components/sign-in-picker.tsx:109
 msgid "Sign up"
 msgstr "Registrera dig"
 

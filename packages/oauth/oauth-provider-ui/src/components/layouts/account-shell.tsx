@@ -66,10 +66,10 @@ export function useAccountShellLinks(): readonly AccountShellLink[] {
 }
 
 /**
- * Account-manager frame, composed the way shadcn's dashboard block does:
- * `SidebarProvider` + `Sidebar` + `SidebarInset`, with `SidebarTrigger` in the
- * inset header — which brings the collapsible rail, the mobile sheet, the
- * keyboard shortcut and the persisted open/closed state with it.
+ * Account-manager frame: `SidebarProvider` + `Sidebar` + `SidebarInset`, with
+ * `SidebarTrigger` in the inset header — a composition that brings the
+ * collapsible rail, the mobile sheet, the keyboard shortcut and the persisted
+ * open/closed state with it.
  *
  * @NOTE This owns the whole page frame, including its own `<title>`. The app
  * title must be the one that takes effect, and React hoists every `<title>`

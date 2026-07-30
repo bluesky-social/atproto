@@ -28,8 +28,7 @@ export type AccountMenuProps = {
 }
 
 /**
- * The sidebar footer account switcher, structured after the dashboard block's
- * `nav-user`.
+ * The sidebar footer account switcher.
  *
  * @NOTE `render` gives each item a real `<button>` under `Menu.Item`'s
  * semantics, which otherwise defaults to a `<div role="menuitem">`. They then

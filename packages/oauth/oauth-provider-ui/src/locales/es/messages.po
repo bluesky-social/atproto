@@ -119,7 +119,7 @@ msgstr ""
 msgid "Account name"
 msgstr ""
 
-#: src/components/identity/account-menu.tsx:92
+#: src/components/identity/account-menu.tsx:90
 msgid "Account overview"
 msgstr ""
 
@@ -128,7 +128,7 @@ msgstr ""
 msgid "Account reactivated"
 msgstr ""
 
-#: src/components/identity/account-menu.tsx:56
+#: src/components/identity/account-menu.tsx:55
 msgid "Account selector"
 msgstr ""
 
@@ -218,7 +218,7 @@ msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr ""
 
-#: src/components/sign-in-picker.tsx:107
+#: src/components/sign-in-picker.tsx:103
 #: src/components/layouts/account-shell.tsx:52
 #: src/components/forms/sign-up-wizard.tsx:117
 #: src/components/forms/form-shell.tsx:64
@@ -726,7 +726,7 @@ msgstr ""
 msgid "Let's get your password reset!"
 msgstr "¡Vamos a restablecer tu contraseña!"
 
-#: src/components/layouts/auth-shell.tsx:78
+#: src/components/layouts/auth-shell.tsx:76
 #: src/components/layouts/account-shell.tsx:119
 msgid "Logo"
 msgstr "Logo"
@@ -993,7 +993,7 @@ msgstr ""
 msgid "Security step required"
 msgstr ""
 
-#: src/components/identity/account-menu.tsx:124
+#: src/components/identity/account-menu.tsx:122
 msgid "Select another account"
 msgstr ""
 
@@ -1042,13 +1042,13 @@ msgctxt "device list"
 msgid "Sign out"
 msgstr ""
 
-#: src/components/identity/account-menu.tsx:136
+#: src/components/identity/account-menu.tsx:134
 msgid "Sign out"
 msgstr "Cerrar sesión"
 
 #: src/components/sign-up-view.tsx:54
 #: src/components/sign-up-view.tsx:59
-#: src/components/sign-in-picker.tsx:118
+#: src/components/sign-in-picker.tsx:109
 msgid "Sign up"
 msgstr "Registrarse"
 
