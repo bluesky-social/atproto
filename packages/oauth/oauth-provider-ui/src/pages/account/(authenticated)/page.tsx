@@ -99,7 +99,7 @@ function HostedByParagraph(props: JSX.IntrinsicElements['p']): ReactNode {
         a link, and outranking the host name beside it. */}
       <Link
         to="/account/about"
-        className="hover:text-primary underline underline-offset-4"
+        className="hover:text-foreground underline underline-offset-4"
       >
         <Trans>What does this mean?</Trans>
       </Link>
