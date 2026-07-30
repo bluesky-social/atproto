@@ -136,7 +136,7 @@ msgstr "Sélecteur de compte"
 msgid "Account username"
 msgstr "Nom d'utilisateur du compte"
 
-#: src/components/session-list.tsx:120
+#: src/components/session-list.tsx:123
 msgid "Actions"
 msgstr "Actions"
 
@@ -196,7 +196,7 @@ msgstr "Application"
 msgid "Apps"
 msgstr "Applications"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:141
+#: src/pages/account/(authenticated)/apps/page.tsx:145
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr "Les applications peuvent accéder à votre compte en arrière-plan (pour vérifier les notifications, synchroniser les données, etc.) même lorsque vous ne les utilisez pas activement. C'est un comportement normal qui sera reflété dans l'heure de \"dernier accès\"."
 
@@ -221,7 +221,7 @@ msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Autoriser"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:90
+#: src/pages/account/(authenticated)/apps/page.tsx:92
 msgctxt "OAuthApp"
 msgid "Authorized"
 msgstr "Autorisée"
@@ -266,14 +266,14 @@ msgstr "Appeler"
 
 #: src/contexts/authentication.tsx:263
 #: src/components/reactivate-account-view.tsx:48
-#: src/components/delete-account-dialog.tsx:119
-#: src/components/delete-account-dialog.tsx:207
+#: src/components/delete-account-dialog.tsx:120
+#: src/components/delete-account-dialog.tsx:208
 #: src/components/authenticate-welcome-view.tsx:58
 #: src/components/forms/form-shell.tsx:61
 msgid "Cancel"
 msgstr "Annuler"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:151
+#: src/pages/account/(authenticated)/devices/page.tsx:152
 msgid "Cannot remove current device"
 msgstr "Impossible de supprimer l'appareil en cours d'utilisation"
 
@@ -289,7 +289,7 @@ msgstr "Changer votre mot de passe"
 msgid "Chat"
 msgstr "Messagerie"
 
-#: src/components/delete-account-dialog.tsx:136
+#: src/components/delete-account-dialog.tsx:137
 msgid "Check <0>{email}</0> for an email with the confirmation code to enter below:"
 msgstr "Vérifiez votre boîte mail <0>{email}</0> pour un email contenant le code de confirmation à saisir ci-dessous :"
 
@@ -298,7 +298,7 @@ msgstr "Vérifiez votre boîte mail <0>{email}</0> pour un email contenant le co
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Consultez la boîte de réception de {0} pour y trouver un code de connexion, et saisissez-le ici."
 
-#: src/components/delete-account-dialog.tsx:141
+#: src/components/delete-account-dialog.tsx:142
 msgid "Check your email for the confirmation code to enter below:"
 msgstr "Vérifiez votre boîte mail pour le code de confirmation à saisir ci-dessous :"
 
@@ -332,12 +332,12 @@ msgstr "Choisissez un nom d'utilisateur"
 msgid "Click here if nothing happens"
 msgstr "Cliquez ici si rien ne se passe"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:85
+#: src/pages/account/(authenticated)/apps/page.tsx:86
 msgctxt "OAuthApp"
 msgid "Client"
 msgstr "Client"
 
-#: src/components/oauth-session-details-dialog.tsx:45
+#: src/components/oauth-session-details-dialog.tsx:46
 #: src/components/ui/toast.tsx:138
 #: src/components/ui/dialog.tsx:76
 #: src/components/ui/dialog.tsx:115
@@ -434,7 +434,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Refuser l'accès"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:196
+#: src/pages/account/(authenticated)/apps/page.tsx:200
 msgid "Details"
 msgstr "Détails"
 
@@ -615,11 +615,11 @@ msgstr "Filtrer les applications"
 msgid "Filter devices"
 msgstr "Filtrer les appareils"
 
-#: src/components/delete-account-dialog.tsx:170
+#: src/components/delete-account-dialog.tsx:171
 msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
 msgstr "Pour des raisons de sécurité, nous devons envoyer un code de confirmation à votre adresse email <0>{email}</0>."
 
-#: src/components/delete-account-dialog.tsx:175
+#: src/components/delete-account-dialog.tsx:176
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr "Pour des raisons de sécurité, nous devons envoyer un code de confirmation à votre adresse email."
 
@@ -744,7 +744,7 @@ msgstr "Il semble que votre navigateur n'accepte pas les cookies. Appuyez sur \"
 msgid "just now"
 msgstr "à l'instant"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:126
+#: src/pages/account/(authenticated)/apps/page.tsx:130
 msgctxt "OAuthApp"
 msgid "Last accessed"
 msgstr "Dernier accès"
@@ -852,7 +852,7 @@ msgstr "Nouveau mot de passe"
 msgid "Next"
 msgstr "Suivant"
 
-#: src/components/session-list.tsx:194
+#: src/components/session-list.tsx:200
 msgid "No matches"
 msgstr "Aucun résultat"
 
@@ -1047,7 +1047,7 @@ msgstr "Sélectionner le domaine"
 msgid "Select from an existing account"
 msgstr "Sélectionner un compte"
 
-#: src/components/delete-account-dialog.tsx:198
+#: src/components/delete-account-dialog.tsx:199
 msgid "Send email"
 msgstr "Envoyer l'email"
 
@@ -1079,7 +1079,7 @@ msgstr "Se connecter en tant que..."
 msgid "Sign in to an account that is not listed"
 msgstr "Se connecter à un compte qui n'est pas listé"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:154
+#: src/pages/account/(authenticated)/devices/page.tsx:155
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Déconnecter"
@@ -1202,11 +1202,11 @@ msgstr "Il n'y a pas de limite de temps pour la désactivation du compte, revene
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "Ces applications ont accès à votre compte. Une application peut apparaître plusieurs fois si vous l'utilisez sur différents appareils. Vous pouvez révoquer l'accès pour déconnecter l'application jusqu'à ce que vous vous reconnectiez."
 
-#: src/components/oauth-session-details-dialog.tsx:56
+#: src/components/oauth-session-details-dialog.tsx:57
 msgid "This app can uniquely identify you through your account."
 msgstr "Cette application peut vous identifier de manière unique grâce à votre compte."
 
-#: src/components/oauth-session-details-dialog.tsx:63
+#: src/components/oauth-session-details-dialog.tsx:64
 msgid "This app has access to your account with the following permissions:"
 msgstr "Cette application a accès à votre compte avec les autorisations suivantes :"
 
@@ -1218,7 +1218,7 @@ msgstr "Cette application demande les autorisations (scopes) suivantes pour acc�
 msgid "This authorization request has been denied. Please try again."
 msgstr "Cette demande d'autorisation a été refusée. Veuillez réessayer."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:117
+#: src/pages/account/(authenticated)/devices/page.tsx:118
 msgctxt "device list"
 msgid "This device"
 msgstr "Cet appareil"
@@ -1282,7 +1282,7 @@ msgstr "Déconnecté"
 msgid "Unexpected server response"
 msgstr "Réponse inattendue du serveur"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:111
+#: src/pages/account/(authenticated)/devices/page.tsx:112
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Agent utilisateur inconnu"
@@ -1410,7 +1410,7 @@ msgstr "Bienvenue"
 msgid "Welcome back!"
 msgstr "Heureux de vous revoir!"
 
-#: src/pages/account/(authenticated)/page.tsx:104
+#: src/pages/account/(authenticated)/page.tsx:98
 msgid "What does this mean?"
 msgstr "Qu'est-ce que ça signifie ?"
 
@@ -1418,7 +1418,7 @@ msgstr "Qu'est-ce que ça signifie ?"
 msgid "What is an Atmosphere Account?"
 msgstr "Qu'est-ce qu'un compte Atmosphère ?"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:132
+#: src/pages/account/(authenticated)/apps/page.tsx:136
 msgid "Why is this time so recent?"
 msgstr "Pourquoi cette heure est-elle si récente ?"
 
@@ -1446,7 +1446,7 @@ msgstr "hier"
 msgid "You are being redirected..."
 msgstr "Redirection en cours..."
 
-#: src/components/delete-account-dialog.tsx:212
+#: src/components/delete-account-dialog.tsx:213
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "Vous pouvez également désactiver temporairement votre compte. Votre profil, vos publications, vos feeds et vos listes ne seront plus visibles par les autres utilisateurs de Bluesky. Vous pouvez réactiver votre compte à tout moment en vous reconnectant."
 

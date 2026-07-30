@@ -91,15 +91,9 @@ function HostedByParagraph(props: JSX.IntrinsicElements['p']): ReactNode {
       <Trans>
         Your Atmosphere account is hosted by <CustomizationName />.
       </Trans>{' '}
-      {/* @NOTE Styled as an inline link the way `ItemDescription` and
-        `AlertDescription` style theirs: it inherits the paragraph's muted
-        colour and carries a persistent underline. Previously it was
-        `text-foreground` with no underline until hover, which made it the
-        darkest text in a muted paragraph — reading as emphasis rather than as
-        a link, and outranking the host name beside it. */}
       <Link
         to="/account/about"
-        className="hover:text-foreground underline underline-offset-4"
+        className="text-foreground underline underline-offset-4"
       >
         <Trans>What does this mean?</Trans>
       </Link>

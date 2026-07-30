@@ -186,3 +186,29 @@
     @apply border-border outline-ring/50;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Long-form copy.
+ *
+ * @NOTE The typography plugin's palettes (`prose-slate` and friends) are fixed
+ * Tailwind colour ramps, so they neither follow the theme tokens nor flip with
+ * the colour scheme. Binding its variables to the tokens keeps prose pages on
+ * the same greys as the rest of the UI, and makes `dark:prose-invert`
+ * unnecessary — the tokens already carry both schemes.
+ * ------------------------------------------------------------------------- */
+
+.prose-app {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-links: var(--foreground);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-counters: var(--muted-foreground);
+  --tw-prose-bullets: var(--muted-foreground);
+  --tw-prose-hr: var(--border);
+  --tw-prose-quotes: var(--foreground);
+  --tw-prose-quote-borders: var(--border);
+  --tw-prose-captions: var(--muted-foreground);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-th-borders: var(--border);
+  --tw-prose-td-borders: var(--border);
+}

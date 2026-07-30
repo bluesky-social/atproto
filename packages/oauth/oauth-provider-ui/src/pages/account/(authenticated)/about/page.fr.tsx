@@ -8,7 +8,7 @@ export function Page(): ReactNode {
   const { account } = useAuthenticatedSession()
 
   return (
-    <div className="prose prose-sm md:prose-base prose-slate dark:prose-invert max-w-none">
+    <div className="prose prose-app max-w-none">
       <section>
         <h2>Qu'est-ce qu'un compte Atmosphère ?</h2>
         <p>

@@ -136,7 +136,7 @@ msgstr "アカウント選択"
 msgid "Account username"
 msgstr "アカウントユーザー名"
 
-#: src/components/session-list.tsx:120
+#: src/components/session-list.tsx:123
 msgid "Actions"
 msgstr ""
 
@@ -196,7 +196,7 @@ msgstr ""
 msgid "Apps"
 msgstr "アプリ"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:141
+#: src/pages/account/(authenticated)/apps/page.tsx:145
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr ""
 
@@ -221,7 +221,7 @@ msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "承認"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:90
+#: src/pages/account/(authenticated)/apps/page.tsx:92
 msgctxt "OAuthApp"
 msgid "Authorized"
 msgstr ""
@@ -266,14 +266,14 @@ msgstr "呼び出し"
 
 #: src/contexts/authentication.tsx:263
 #: src/components/reactivate-account-view.tsx:48
-#: src/components/delete-account-dialog.tsx:119
-#: src/components/delete-account-dialog.tsx:207
+#: src/components/delete-account-dialog.tsx:120
+#: src/components/delete-account-dialog.tsx:208
 #: src/components/authenticate-welcome-view.tsx:58
 #: src/components/forms/form-shell.tsx:61
 msgid "Cancel"
 msgstr "キャンセル"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:151
+#: src/pages/account/(authenticated)/devices/page.tsx:152
 msgid "Cannot remove current device"
 msgstr "現在のデバイスを削除できません"
 
@@ -289,7 +289,7 @@ msgstr "パスワードを変更"
 msgid "Chat"
 msgstr "チャット"
 
-#: src/components/delete-account-dialog.tsx:136
+#: src/components/delete-account-dialog.tsx:137
 msgid "Check <0>{email}</0> for an email with the confirmation code to enter below:"
 msgstr "確認コードが記載されたメール <0>{email}</0> を確認し、ここに入力してください。"
 
@@ -298,7 +298,7 @@ msgstr "確認コードが記載されたメール <0>{email}</0> を確認し�
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "確認コードが記載されたメール {0} を確認し、ここに入力してください。"
 
-#: src/components/delete-account-dialog.tsx:141
+#: src/components/delete-account-dialog.tsx:142
 msgid "Check your email for the confirmation code to enter below:"
 msgstr "確認コードが記載されたメールを確認し、ここに入力してください。"
 
@@ -332,12 +332,12 @@ msgstr "ユーザー名を選んでください"
 msgid "Click here if nothing happens"
 msgstr "何も起こらない場合はここをクリックしてください"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:85
+#: src/pages/account/(authenticated)/apps/page.tsx:86
 msgctxt "OAuthApp"
 msgid "Client"
 msgstr ""
 
-#: src/components/oauth-session-details-dialog.tsx:45
+#: src/components/oauth-session-details-dialog.tsx:46
 #: src/components/ui/toast.tsx:138
 #: src/components/ui/dialog.tsx:76
 #: src/components/ui/dialog.tsx:115
@@ -434,7 +434,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "アクセスを拒否"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:196
+#: src/pages/account/(authenticated)/apps/page.tsx:200
 msgid "Details"
 msgstr "詳細"
 
@@ -615,11 +615,11 @@ msgstr ""
 msgid "Filter devices"
 msgstr ""
 
-#: src/components/delete-account-dialog.tsx:170
+#: src/components/delete-account-dialog.tsx:171
 msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
 msgstr "セキュリティ上の理由から、あなたのメールアドレスに確認コードを送信する必要があります。<0>{email}</0>"
 
-#: src/components/delete-account-dialog.tsx:175
+#: src/components/delete-account-dialog.tsx:176
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr "セキュリティ上の理由から、あなたのメールアドレスに確認コードを送信する必要があります。"
 
@@ -744,7 +744,7 @@ msgstr "あなたのブラウザがクッキーを受け入れていないよう
 msgid "just now"
 msgstr "たった今"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:126
+#: src/pages/account/(authenticated)/apps/page.tsx:130
 msgctxt "OAuthApp"
 msgid "Last accessed"
 msgstr ""
@@ -852,7 +852,7 @@ msgstr "新しいパスワード"
 msgid "Next"
 msgstr "次へ"
 
-#: src/components/session-list.tsx:194
+#: src/components/session-list.tsx:200
 msgid "No matches"
 msgstr ""
 
@@ -1047,7 +1047,7 @@ msgstr ""
 msgid "Select from an existing account"
 msgstr "既存のアカウントから選択"
 
-#: src/components/delete-account-dialog.tsx:198
+#: src/components/delete-account-dialog.tsx:199
 msgid "Send email"
 msgstr "メールを送信"
 
@@ -1079,7 +1079,7 @@ msgstr "アカウントの選択"
 msgid "Sign in to an account that is not listed"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:154
+#: src/pages/account/(authenticated)/devices/page.tsx:155
 msgctxt "device list"
 msgid "Sign out"
 msgstr "サインアウト"
@@ -1202,11 +1202,11 @@ msgstr "アカウントの無効化に期限はありません。いつでも戻
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "これらのアプリはあなたのアカウントにアクセスできます。異なるデバイスで使用している場合、アプリが複数回表示されることがあります。アクセスを取り消すと、再度サインインするまでアプリがログアウトされます。"
 
-#: src/components/oauth-session-details-dialog.tsx:56
+#: src/components/oauth-session-details-dialog.tsx:57
 msgid "This app can uniquely identify you through your account."
 msgstr ""
 
-#: src/components/oauth-session-details-dialog.tsx:63
+#: src/components/oauth-session-details-dialog.tsx:64
 msgid "This app has access to your account with the following permissions:"
 msgstr ""
 
@@ -1218,7 +1218,7 @@ msgstr "このアプリケーションは、あなたのアカウントにアク
 msgid "This authorization request has been denied. Please try again."
 msgstr "この承認リクエストは拒否されました。もう一度お試しください。"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:117
+#: src/pages/account/(authenticated)/devices/page.tsx:118
 msgctxt "device list"
 msgid "This device"
 msgstr ""
@@ -1282,7 +1282,7 @@ msgstr "未承認"
 msgid "Unexpected server response"
 msgstr "予期しないサーバー応答"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:111
+#: src/pages/account/(authenticated)/devices/page.tsx:112
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "不明なユーザーエージェント"
@@ -1410,7 +1410,7 @@ msgstr "ようこそ"
 msgid "Welcome back!"
 msgstr "おかえりなさい！"
 
-#: src/pages/account/(authenticated)/page.tsx:104
+#: src/pages/account/(authenticated)/page.tsx:98
 msgid "What does this mean?"
 msgstr "どういう意味ですか？"
 
@@ -1418,7 +1418,7 @@ msgstr "どういう意味ですか？"
 msgid "What is an Atmosphere Account?"
 msgstr "Atmosphereアカウントとは何ですか？"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:132
+#: src/pages/account/(authenticated)/apps/page.tsx:136
 msgid "Why is this time so recent?"
 msgstr ""
 
@@ -1446,7 +1446,7 @@ msgstr "昨日"
 msgid "You are being redirected..."
 msgstr "リダイレクトしています…"
 
-#: src/components/delete-account-dialog.tsx:212
+#: src/components/delete-account-dialog.tsx:213
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "代わりに、一時的にアカウントを無効にすることもできます。 プロフィール、投稿、フィード、リストは他のBlueskyユーザーには表示されなくなります。 ログインするといつでもアカウントを再開できます。"
 

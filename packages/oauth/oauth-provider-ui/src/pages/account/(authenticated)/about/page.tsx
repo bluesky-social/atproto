@@ -8,7 +8,7 @@ export function Page() {
   const { account } = useAuthenticatedSession()
 
   return (
-    <div className="prose prose-sm md:prose-base prose-slate dark:prose-invert max-w-none">
+    <div className="prose prose-app max-w-none">
       <section>
         <Trans>
           <h2>What is an Atmosphere account?</h2>

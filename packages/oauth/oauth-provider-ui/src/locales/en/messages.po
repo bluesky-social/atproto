@@ -136,7 +136,7 @@ msgstr "Account selector"
 msgid "Account username"
 msgstr "Account username"
 
-#: src/components/session-list.tsx:120
+#: src/components/session-list.tsx:123
 msgid "Actions"
 msgstr "Actions"
 
@@ -196,7 +196,7 @@ msgstr "App"
 msgid "Apps"
 msgstr "Apps"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:141
+#: src/pages/account/(authenticated)/apps/page.tsx:145
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 
@@ -221,7 +221,7 @@ msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Authorize"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:90
+#: src/pages/account/(authenticated)/apps/page.tsx:92
 msgctxt "OAuthApp"
 msgid "Authorized"
 msgstr "Authorized"
@@ -266,14 +266,14 @@ msgstr "Call"
 
 #: src/contexts/authentication.tsx:263
 #: src/components/reactivate-account-view.tsx:48
-#: src/components/delete-account-dialog.tsx:119
-#: src/components/delete-account-dialog.tsx:207
+#: src/components/delete-account-dialog.tsx:120
+#: src/components/delete-account-dialog.tsx:208
 #: src/components/authenticate-welcome-view.tsx:58
 #: src/components/forms/form-shell.tsx:61
 msgid "Cancel"
 msgstr "Cancel"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:151
+#: src/pages/account/(authenticated)/devices/page.tsx:152
 msgid "Cannot remove current device"
 msgstr "Cannot remove current device"
 
@@ -289,7 +289,7 @@ msgstr "Change your password"
 msgid "Chat"
 msgstr "Chat"
 
-#: src/components/delete-account-dialog.tsx:136
+#: src/components/delete-account-dialog.tsx:137
 msgid "Check <0>{email}</0> for an email with the confirmation code to enter below:"
 msgstr "Check <0>{email}</0> for an email with the confirmation code to enter below:"
 
@@ -298,7 +298,7 @@ msgstr "Check <0>{email}</0> for an email with the confirmation code to enter be
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Check your {0} email for a login code and enter it here."
 
-#: src/components/delete-account-dialog.tsx:141
+#: src/components/delete-account-dialog.tsx:142
 msgid "Check your email for the confirmation code to enter below:"
 msgstr "Check your email for the confirmation code to enter below:"
 
@@ -332,12 +332,12 @@ msgstr "Choose a username"
 msgid "Click here if nothing happens"
 msgstr "Click here if nothing happens"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:85
+#: src/pages/account/(authenticated)/apps/page.tsx:86
 msgctxt "OAuthApp"
 msgid "Client"
 msgstr "Client"
 
-#: src/components/oauth-session-details-dialog.tsx:45
+#: src/components/oauth-session-details-dialog.tsx:46
 #: src/components/ui/toast.tsx:138
 #: src/components/ui/dialog.tsx:76
 #: src/components/ui/dialog.tsx:115
@@ -434,7 +434,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Deny access"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:196
+#: src/pages/account/(authenticated)/apps/page.tsx:200
 msgid "Details"
 msgstr "Details"
 
@@ -615,11 +615,11 @@ msgstr "Filter apps"
 msgid "Filter devices"
 msgstr "Filter devices"
 
-#: src/components/delete-account-dialog.tsx:170
+#: src/components/delete-account-dialog.tsx:171
 msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
 msgstr "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
 
-#: src/components/delete-account-dialog.tsx:175
+#: src/components/delete-account-dialog.tsx:176
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr "For security reasons, we'll need to send a confirmation code to your email address."
 
@@ -744,7 +744,7 @@ msgstr "It seems that your browser is not accepting cookies. Press \"Continue\" 
 msgid "just now"
 msgstr "just now"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:126
+#: src/pages/account/(authenticated)/apps/page.tsx:130
 msgctxt "OAuthApp"
 msgid "Last accessed"
 msgstr "Last accessed"
@@ -852,7 +852,7 @@ msgstr "New password"
 msgid "Next"
 msgstr "Next"
 
-#: src/components/session-list.tsx:194
+#: src/components/session-list.tsx:200
 msgid "No matches"
 msgstr "No matches"
 
@@ -1047,7 +1047,7 @@ msgstr "Select domain"
 msgid "Select from an existing account"
 msgstr "Select from an existing account"
 
-#: src/components/delete-account-dialog.tsx:198
+#: src/components/delete-account-dialog.tsx:199
 msgid "Send email"
 msgstr "Send email"
 
@@ -1079,7 +1079,7 @@ msgstr "Sign in as..."
 msgid "Sign in to an account that is not listed"
 msgstr "Sign in to an account that is not listed"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:154
+#: src/pages/account/(authenticated)/devices/page.tsx:155
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Sign out"
@@ -1202,11 +1202,11 @@ msgstr "There is no time limit for account deactivation, come back any time."
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 
-#: src/components/oauth-session-details-dialog.tsx:56
+#: src/components/oauth-session-details-dialog.tsx:57
 msgid "This app can uniquely identify you through your account."
 msgstr "This app can uniquely identify you through your account."
 
-#: src/components/oauth-session-details-dialog.tsx:63
+#: src/components/oauth-session-details-dialog.tsx:64
 msgid "This app has access to your account with the following permissions:"
 msgstr "This app has access to your account with the following permissions:"
 
@@ -1218,7 +1218,7 @@ msgstr "This application is requesting the following permissions (scopes) to acc
 msgid "This authorization request has been denied. Please try again."
 msgstr "This authorization request has been denied. Please try again."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:117
+#: src/pages/account/(authenticated)/devices/page.tsx:118
 msgctxt "device list"
 msgid "This device"
 msgstr "This device"
@@ -1282,7 +1282,7 @@ msgstr "Unauthorized"
 msgid "Unexpected server response"
 msgstr "Unexpected server response"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:111
+#: src/pages/account/(authenticated)/devices/page.tsx:112
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Unknown user agent"
@@ -1410,7 +1410,7 @@ msgstr "Welcome"
 msgid "Welcome back!"
 msgstr "Welcome back!"
 
-#: src/pages/account/(authenticated)/page.tsx:104
+#: src/pages/account/(authenticated)/page.tsx:98
 msgid "What does this mean?"
 msgstr "What does this mean?"
 
@@ -1418,7 +1418,7 @@ msgstr "What does this mean?"
 msgid "What is an Atmosphere Account?"
 msgstr "What is an Atmosphere Account?"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:132
+#: src/pages/account/(authenticated)/apps/page.tsx:136
 msgid "Why is this time so recent?"
 msgstr "Why is this time so recent?"
 
@@ -1446,7 +1446,7 @@ msgstr "yesterday"
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
-#: src/components/delete-account-dialog.tsx:212
+#: src/components/delete-account-dialog.tsx:213
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 

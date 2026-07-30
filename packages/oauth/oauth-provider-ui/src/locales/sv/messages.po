@@ -136,7 +136,7 @@ msgstr "Kontoväljare"
 msgid "Account username"
 msgstr "Kontots användarnamn"
 
-#: src/components/session-list.tsx:120
+#: src/components/session-list.tsx:123
 msgid "Actions"
 msgstr ""
 
@@ -196,7 +196,7 @@ msgstr ""
 msgid "Apps"
 msgstr "Appar"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:141
+#: src/pages/account/(authenticated)/apps/page.tsx:145
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr ""
 
@@ -221,7 +221,7 @@ msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Auktorisera"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:90
+#: src/pages/account/(authenticated)/apps/page.tsx:92
 msgctxt "OAuthApp"
 msgid "Authorized"
 msgstr ""
@@ -266,14 +266,14 @@ msgstr "Anrop"
 
 #: src/contexts/authentication.tsx:263
 #: src/components/reactivate-account-view.tsx:48
-#: src/components/delete-account-dialog.tsx:119
-#: src/components/delete-account-dialog.tsx:207
+#: src/components/delete-account-dialog.tsx:120
+#: src/components/delete-account-dialog.tsx:208
 #: src/components/authenticate-welcome-view.tsx:58
 #: src/components/forms/form-shell.tsx:61
 msgid "Cancel"
 msgstr "Avbryt"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:151
+#: src/pages/account/(authenticated)/devices/page.tsx:152
 msgid "Cannot remove current device"
 msgstr "Det går inte att ta bort den enhet som du använder just nu"
 
@@ -289,7 +289,7 @@ msgstr "Ändra ditt lösenord"
 msgid "Chat"
 msgstr "Chatt"
 
-#: src/components/delete-account-dialog.tsx:136
+#: src/components/delete-account-dialog.tsx:137
 msgid "Check <0>{email}</0> for an email with the confirmation code to enter below:"
 msgstr "Titta i inkorgen för <0>{email}</0> efter bekräftelsekoden och ange den nedan:"
 
@@ -298,7 +298,7 @@ msgstr "Titta i inkorgen för <0>{email}</0> efter bekräftelsekoden och ange de
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Titta i inkorgen för {0} efter en inloggningskod och ange den här."
 
-#: src/components/delete-account-dialog.tsx:141
+#: src/components/delete-account-dialog.tsx:142
 msgid "Check your email for the confirmation code to enter below:"
 msgstr "Titta i din inkorg efter bekräftelsekoden och ange den nedan:"
 
@@ -332,12 +332,12 @@ msgstr "Välj ett användarnamn"
 msgid "Click here if nothing happens"
 msgstr "Klicka här om ingenting händer"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:85
+#: src/pages/account/(authenticated)/apps/page.tsx:86
 msgctxt "OAuthApp"
 msgid "Client"
 msgstr ""
 
-#: src/components/oauth-session-details-dialog.tsx:45
+#: src/components/oauth-session-details-dialog.tsx:46
 #: src/components/ui/toast.tsx:138
 #: src/components/ui/dialog.tsx:76
 #: src/components/ui/dialog.tsx:115
@@ -434,7 +434,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Neka åtkomst"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:196
+#: src/pages/account/(authenticated)/apps/page.tsx:200
 msgid "Details"
 msgstr "Detaljer"
 
@@ -615,11 +615,11 @@ msgstr ""
 msgid "Filter devices"
 msgstr ""
 
-#: src/components/delete-account-dialog.tsx:170
+#: src/components/delete-account-dialog.tsx:171
 msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
 msgstr "Av säkerhetsskäl kommer vi att skicka en bekräftelsekod till din e-postadress <0>{email}</0>."
 
-#: src/components/delete-account-dialog.tsx:175
+#: src/components/delete-account-dialog.tsx:176
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr "Av säkerhetsskäl kommer vi att skicka en bekräftelsekod till din e-postadress."
 
@@ -744,7 +744,7 @@ msgstr "Det verkar som att din webbläsare inte accepterar cookies. Klicka på �
 msgid "just now"
 msgstr "nyss"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:126
+#: src/pages/account/(authenticated)/apps/page.tsx:130
 msgctxt "OAuthApp"
 msgid "Last accessed"
 msgstr ""
@@ -852,7 +852,7 @@ msgstr "Nytt lösenord"
 msgid "Next"
 msgstr "Nästa"
 
-#: src/components/session-list.tsx:194
+#: src/components/session-list.tsx:200
 msgid "No matches"
 msgstr ""
 
@@ -1047,7 +1047,7 @@ msgstr ""
 msgid "Select from an existing account"
 msgstr "Välj ett befintligt konto"
 
-#: src/components/delete-account-dialog.tsx:198
+#: src/components/delete-account-dialog.tsx:199
 msgid "Send email"
 msgstr "Skicka e-postmeddelande"
 
@@ -1079,7 +1079,7 @@ msgstr "Logga in som…"
 msgid "Sign in to an account that is not listed"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:154
+#: src/pages/account/(authenticated)/devices/page.tsx:155
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Logga ut"
@@ -1202,11 +1202,11 @@ msgstr "Det finns ingen gräns för hur länge ett konto kan vara inaktiverat. K
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "De här apparna har åtkomst till ditt konto. En app kan visas flera gånger om du använder den på olika enheter. Återkalla åtkomsten för att logga ut dig själv från appen. Därefter kan du ge ny åtkomst genom att logga in igen."
 
-#: src/components/oauth-session-details-dialog.tsx:56
+#: src/components/oauth-session-details-dialog.tsx:57
 msgid "This app can uniquely identify you through your account."
 msgstr ""
 
-#: src/components/oauth-session-details-dialog.tsx:63
+#: src/components/oauth-session-details-dialog.tsx:64
 msgid "This app has access to your account with the following permissions:"
 msgstr ""
 
@@ -1218,7 +1218,7 @@ msgstr "Den här applikationen begär följande behörigheter (omfång) för att
 msgid "This authorization request has been denied. Please try again."
 msgstr "Denna auktoriseringsbegäran har nekats. Försök igen."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:117
+#: src/pages/account/(authenticated)/devices/page.tsx:118
 msgctxt "device list"
 msgid "This device"
 msgstr ""
@@ -1282,7 +1282,7 @@ msgstr "Behörighet saknas"
 msgid "Unexpected server response"
 msgstr "Oväntat svar från server"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:111
+#: src/pages/account/(authenticated)/devices/page.tsx:112
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Okänd användaragent"
@@ -1410,7 +1410,7 @@ msgstr "Välkommen"
 msgid "Welcome back!"
 msgstr "Välkommen tillbaka!"
 
-#: src/pages/account/(authenticated)/page.tsx:104
+#: src/pages/account/(authenticated)/page.tsx:98
 msgid "What does this mean?"
 msgstr "Vad innebär det?"
 
@@ -1418,7 +1418,7 @@ msgstr "Vad innebär det?"
 msgid "What is an Atmosphere Account?"
 msgstr "Vad är ett Atmosphere-konto?"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:132
+#: src/pages/account/(authenticated)/apps/page.tsx:136
 msgid "Why is this time so recent?"
 msgstr ""
 
@@ -1446,7 +1446,7 @@ msgstr "igår"
 msgid "You are being redirected..."
 msgstr "Du omdirigeras…"
 
-#: src/components/delete-account-dialog.tsx:212
+#: src/components/delete-account-dialog.tsx:213
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "Om du vill kan du <0>tillfälligt inaktivera</0> ditt konto istället. Det gör att din profil samt dina inlägg, flöden och listor slutar att synas för andra Bluesky-användare. Du kan återaktivera ditt konto när som helst genom att logga in."
 
