@@ -199,10 +199,10 @@ function createTransportImpl<M extends DataMode>(
     }
   })
 
-  // The one place a connection ends. Per spec every teardown — a peer's close
-  // frame, our own close(), a failed handshake — fires 'close', so settling the
-  // channel here and only here is what guarantees a consumer's iteration outlives
-  // the socket.
+  // Where a connection ends, and normally the only place: per spec every teardown
+  // fires `close`, with `error` confined to failures before the connection is
+  // established. `markClosed` releases whatever pull `closeGuard` has parked — see
+  // the 'error' handler below for the runtime where `close` alone isn't enough.
   ws.addEventListener('close', (ev) => {
     open = false
     if (pendingError) {
@@ -227,10 +227,25 @@ function createTransportImpl<M extends DataMode>(
 
   ws.addEventListener('error', (ev) => {
     open = false
-    // Recorded, not applied: per spec 'close' always follows 'error' and applies
-    // it. A runtime that skipped 'close' would strand the iteration, which is why
-    // the close event is the contract both platforms rely on.
     endWith(new SocketError(ev.error))
+    // Settled here as well as from 'close', which is defensive against Node 22:
+    // its WebSocket strands two pre-open failures, firing `error` with no `close`
+    // to follow and leaving the socket wedged rather than CLOSED.
+    //
+    // - `close()` on a still-CONNECTING socket fires `error` *twice*, readyState
+    //   stays CLOSING (2)
+    // - a refused dial fires `error` once, readyState stays CONNECTING (0)
+    //
+    // Since iteration waits for the close event to prove teardown finished, either
+    // one would park a consumer forever. Node 24 fires `error` then `close` for
+    // both, where the handler above reports the same outcome — and both paths are
+    // guarded, so whichever arrives first wins and neither repeats.
+    //
+    // `error` carries no detail by design (the spec withholds it so a page cannot
+    // probe the network), which is why this reports an abnormal close rather than
+    // anything more specific.
+    reportClose(ABNORMAL_CLOSE_DETAIL)
+    markClosed()
   })
 
   options.signal.addEventListener(

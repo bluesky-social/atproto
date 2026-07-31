@@ -210,6 +210,37 @@ describe(createTransport, () => {
     ).toThrow(TypeError)
   })
 
+  it('settles iteration when the socket is aborted before it opens', async () => {
+    // Aborting before the handshake completes means calling close() on a
+    // CONNECTING socket, and what happens then is platform-dependent: Node 24
+    // raises 'error' *and* 'close', while Node 22 raises 'error' twice and never
+    // closes at all, leaving the socket stuck in CLOSING. Iteration waits for the
+    // close event to prove teardown finished, so on Node 22 that wait would
+    // otherwise never end.
+    //
+    // Driven through a real socket rather than a fake, since the whole point is
+    // what the platform actually does. Both versions must settle the iteration.
+    await using server = await startServer(() => {})
+    const controller = new AbortController()
+    const onClose = vi.fn()
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        onClose,
+      }),
+      globalWebSocket,
+    )
+    const drained = drain(transport)
+    // No wait for 'open': the abort races the handshake and usually wins.
+    const reason = new Error('stop')
+    controller.abort(reason)
+    const { error } = await drained
+    expect(error).toBe(reason)
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
   it('fails the channel with a SocketError on a malformed message data type', async () => {
     const instances: FakeWebSocket[] = []
     class CapturingWebSocket extends FakeWebSocket {
@@ -354,18 +385,24 @@ describe(createTransport, () => {
     await using server = await startServer(() => {})
     const controller = new AbortController()
     const onClose = vi.fn()
+    let opened = false
     const transport = createTransport(
       transportOptions({
         url: server.url,
         dataMode: 'auto',
         signal: controller.signal,
-        onOpen: () => {},
+        onOpen: () => {
+          opened = true
+        },
         onClose,
       }),
       globalWebSocket,
     )
     const drained = drain(transport)
-    await vi.waitFor(() => expect(onClose).not.toHaveBeenCalled())
+    // Wait for a real open: asserting `onClose` has *not* fired passes on the
+    // first tick and waits for nothing, which would leave the abort racing the
+    // handshake — a different path, covered separately above.
+    await vi.waitFor(() => assert(opened))
     const reason = new Error('stop')
     controller.abort(reason)
     const { error } = await drained
