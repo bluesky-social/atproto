@@ -1091,7 +1091,49 @@ describe('spaces', () => {
         { space: spaceUri },
         { headers: { authorization: `Bearer ${tokenRes.token}` } },
       ),
-    ).rejects.toThrow()
+    ).rejects.toThrow(/Application not authorized/)
+  })
+
+  it('refuses a self-signed attestation claiming an allow-listed client', async () => {
+    // An attestation is only worth anything if its signature is checked against
+    // the client's published JWKS. Carol claims to be the allow-listed app and
+    // signs with her own key. app.example.com is unreachable from the test
+    // network, so the mint fails at metadata resolution — the point being that
+    // the claimed client_id is never taken on faith. Signature-level rejection
+    // is covered by tests/client-attestation.test.ts.
+    const allowedClient = 'https://app.example.com/client-metadata.json'
+    const spaceUri = await createSpace('config-app-forged-attestation', [], {
+      policy: 'public',
+      appAccess: com.atproto.simplespace.defs.allowList.build({
+        allowed: [allowedClient],
+      }),
+    })
+
+    const tokenRes = await pds3Client.call(
+      com.atproto.space.getDelegationToken,
+      { space: spaceUri },
+      { headers: carolHeaders },
+    )
+
+    const carolKeypair = await pds3.ctx.actorStore.keypair(carolDid)
+    const forgedAttestation = await createSpaceToken(
+      'clientAttestation',
+      {
+        iss: allowedClient,
+        sub: allowedClient,
+        aud: `${aliceDid}#atproto_space_host`,
+        kid: 'key-1',
+      },
+      carolKeypair,
+    )
+
+    await expect(
+      pds1Client.call(
+        com.atproto.space.getSpaceCredential,
+        { space: spaceUri, clientAttestation: forgedAttestation },
+        { headers: { authorization: `Bearer ${tokenRes.token}` } },
+      ),
+    ).rejects.toThrow(/client metadata|client attestation/i)
   })
 
   // ---------------- Sync recovery ----------------

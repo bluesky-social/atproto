@@ -46,6 +46,7 @@ import { buildProxyAgent } from './pipethrough.js'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer.js'
 import { getRedisClient } from './redis.js'
 import { Sequencer } from './sequencer/index.js'
+import { ClientAttestationVerifier } from './client-attestation-verifier.js'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -68,6 +69,7 @@ export type AppContextOptions = {
   entrywayAdminClient?: Client
   proxyAgent: undici.Dispatcher
   safeFetch: Fetch
+  clientAttestationVerifier: ClientAttestationVerifier
   oauthProvider?: OAuthProvider
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
@@ -95,6 +97,7 @@ export class AppContext {
   public entrywayAdminClient: Client | undefined
   public proxyAgent: undici.Dispatcher
   public safeFetch: Fetch
+  public clientAttestationVerifier: ClientAttestationVerifier
   public authVerifier: AuthVerifier
   public oauthProvider?: OAuthProvider
   public plcRotationKey: crypto.Keypair
@@ -121,6 +124,7 @@ export class AppContext {
     this.entrywayAdminClient = opts.entrywayAdminClient
     this.proxyAgent = opts.proxyAgent
     this.safeFetch = opts.safeFetch
+    this.clientAttestationVerifier = opts.clientAttestationVerifier
     this.authVerifier = opts.authVerifier
     this.oauthProvider = opts.oauthProvider
     this.plcRotationKey = opts.plcRotationKey
@@ -399,6 +403,11 @@ export class AppContext {
         })
       : undefined
 
+    const clientAttestationVerifier = new ClientAttestationVerifier(
+      safeFetch,
+      redisScratch,
+    )
+
     const scopeRefGetter = entrywayClient
       ? new ScopeReferenceGetter(entrywayClient, redisScratch)
       : undefined
@@ -465,6 +474,7 @@ export class AppContext {
       entrywayAdminClient,
       proxyAgent,
       safeFetch,
+      clientAttestationVerifier,
       authVerifier,
       oauthProvider,
       plcRotationKey,

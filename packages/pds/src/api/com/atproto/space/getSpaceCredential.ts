@@ -1,6 +1,6 @@
 import { getServiceEndpoint } from '@atproto/common'
 import { xrpc } from '@atproto/lex'
-import { createSpaceToken, parseSpaceToken } from '@atproto/space'
+import { createSpaceToken } from '@atproto/space'
 import { AtUriString, DidString } from '@atproto/syntax'
 import {
   InvalidRequestError,
@@ -27,24 +27,12 @@ export default function (server: Server, ctx: AppContext) {
 
       const { spaceDid } = toSpaceRef(space)
 
-      // Parse the client attestation if present. Structural validation only.
-      // @TODO Full verification means resolving `iss` (the client_id) to the
-      // client's client-metadata.json, fetching its published JWKS, and checking
-      // the signature against the key named by the attestation's `kid`. Until
-      // then the attested client_id is advisory, so an allowList is only as
-      // strong as the caller's honesty.
-      let clientId: string | undefined
-      if (clientAttestation) {
-        try {
-          const parsed = parseSpaceToken('clientAttestation', clientAttestation)
-          clientId = parsed.payload.iss
-        } catch (err) {
-          throw new InvalidRequestError(
-            `Invalid client attestation: ${err instanceof Error ? err.message : String(err)}`,
-            'InvalidClientAttestation',
+      const clientId = clientAttestation
+        ? await ctx.clientAttestationVerifier.verify(
+            clientAttestation,
+            `${spaceDid}#atproto_space_host`,
           )
-        }
-      }
+        : undefined
 
       const { spaceRow, isMember } = await ctx.actorStore.read(
         spaceDid,
