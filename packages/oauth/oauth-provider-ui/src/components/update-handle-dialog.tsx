@@ -24,7 +24,7 @@ import { UpdateHandleCustomForm } from './update-handle-custom-form.tsx'
 import { UpdateHandleDefaultForm } from './update-handle-default-form.tsx'
 
 export type UpdateHandleDialogProps = {
-  children: Exclude<ReactNode, false | null | undefined>
+  children: ReactElement
 
   domains: string[]
   currentHandle?: HandleString
@@ -69,7 +69,7 @@ export function UpdateHandleDialog({
         open={open}
         onOpenChange={setOpen}
         dismissable={dismissable}
-        trigger={children as ReactElement}
+        trigger={children}
         title={<Trans>Update your username</Trans>}
         description={<Trans>Choose a new default username.</Trans>}
       >
@@ -93,7 +93,7 @@ export function UpdateHandleDialog({
         open={open}
         onOpenChange={setOpen}
         dismissable={dismissable}
-        trigger={children as ReactElement}
+        trigger={children}
         title={<Trans>Update your username</Trans>}
         description={
           <Trans>
@@ -119,7 +119,7 @@ export function UpdateHandleDialog({
 
   return (
     <DialogShell
-      trigger={children as ReactElement}
+      trigger={children}
       title={<Trans>Update your username</Trans>}
       description={
         <Trans>

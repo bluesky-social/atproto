@@ -1,5 +1,5 @@
 import { Trans } from '@lingui/react/macro'
-import { type ReactElement, type ReactNode, useState } from 'react'
+import { type ReactElement, useState } from 'react'
 import { ConfirmForm } from '#/components/dialogs/confirm-form.tsx'
 import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { Button } from '#/components/ui/button.tsx'
@@ -10,7 +10,7 @@ export type OAuthSessionDetailsDialogProps = {
   clientIdentifier: string
   scope?: string
   onRevoke: () => void | PromiseLike<void>
-  children: Exclude<ReactNode, false | null | undefined>
+  children: ReactElement
 }
 
 export function OAuthSessionDetailsDialog({
@@ -26,7 +26,7 @@ export function OAuthSessionDetailsDialog({
 
   return (
     <DialogShell
-      trigger={children as ReactElement}
+      trigger={children}
       title={clientName}
       description={clientIdentifier}
       open={open}

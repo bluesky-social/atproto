@@ -1,12 +1,12 @@
 import { Trans } from '@lingui/react/macro'
-import { type ReactElement, type ReactNode, useState } from 'react'
+import { type ReactElement, useState } from 'react'
 import { ConfirmForm } from '#/components/dialogs/confirm-form.tsx'
 import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { Notice } from '#/components/feedback/notice.tsx'
 
 export type DeactivateAccountDialogProps = {
   onConfirm: () => void | PromiseLike<void>
-  children: Exclude<ReactNode, false | null | undefined>
+  children: ReactElement
 }
 
 export function DeactivateAccountDialog({
@@ -18,7 +18,7 @@ export function DeactivateAccountDialog({
 
   return (
     <DialogShell
-      trigger={children as ReactElement}
+      trigger={children}
       title={<Trans>Deactivate account</Trans>}
       description={
         <Trans>

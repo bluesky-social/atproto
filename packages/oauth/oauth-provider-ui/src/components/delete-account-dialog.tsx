@@ -1,5 +1,5 @@
 import { Trans } from '@lingui/react/macro'
-import { type ReactElement, type ReactNode, useEffect, useState } from 'react'
+import { type ReactElement, useEffect, useState } from 'react'
 import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { Notice } from '#/components/feedback/notice.tsx'
 import { actionRow } from '#/components/forms/form-shell.tsx'
@@ -19,7 +19,7 @@ export type DeleteAccountDialogProps = {
     token: string
     password: string
   }) => void | PromiseLike<void>
-  children: Exclude<ReactNode, false | null | undefined>
+  children: ReactElement
 }
 
 enum Step {
@@ -80,7 +80,7 @@ export function DeleteAccountDialog({
   if (step === Step.FinalConfirm) {
     return (
       <DialogShell
-        trigger={children as ReactElement}
+        trigger={children}
         open={open}
         onOpenChange={setOpen}
         dismissable={dismissable}
@@ -128,7 +128,7 @@ export function DeleteAccountDialog({
   if (step === Step.Confirm) {
     return (
       <DialogShell
-        trigger={children as ReactElement}
+        trigger={children}
         open={open}
         onOpenChange={setOpen}
         dismissable={dismissable}
@@ -162,7 +162,7 @@ export function DeleteAccountDialog({
 
   return (
     <DialogShell
-      trigger={children as ReactElement}
+      trigger={children}
       open={open}
       onOpenChange={setOpen}
       dismissable={dismissable}

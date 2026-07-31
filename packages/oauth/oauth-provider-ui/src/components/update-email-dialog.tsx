@@ -15,7 +15,7 @@ export type UpdateEmailDialogProps = {
   onUpdateConfirm: (data: { email: string; token?: string }) => Promise<void>
   onVerifyRequest?: () => Promise<void>
   onVerifyConfirm?: (data: { email: string; token: string }) => Promise<void>
-  children: Exclude<ReactNode, false | null | undefined>
+  children: ReactElement
   introMessage?: ReactNode
 }
 
@@ -51,7 +51,7 @@ export function UpdateEmailDialog({
   if (step === Step.Verify && email && onVerifyConfirm) {
     return (
       <DialogShell
-        trigger={children as ReactElement}
+        trigger={children}
         open={open}
         onOpenChange={setOpen}
         dismissable={dismissable}
@@ -86,7 +86,7 @@ export function UpdateEmailDialog({
   if (step === Step.Token) {
     return (
       <DialogShell
-        trigger={children as ReactElement}
+        trigger={children}
         open={open}
         onOpenChange={setOpen}
         dismissable={dismissable}
@@ -122,7 +122,7 @@ export function UpdateEmailDialog({
 
   return (
     <DialogShell
-      trigger={children as ReactElement}
+      trigger={children}
       open={open}
       onOpenChange={setOpen}
       dismissable={dismissable}

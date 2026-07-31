@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { type ReactElement, type ReactNode, useEffect, useState } from 'react'
+import { type ReactElement, useEffect, useState } from 'react'
 import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
 import { actionRow } from '#/components/forms/form-shell.tsx'
 import { RequestCodeButton } from '#/components/forms/request-code-button.tsx'
@@ -15,7 +15,7 @@ export type UpdatePasswordDialogProps = {
     token: string
     password: string
   }) => void | PromiseLike<void>
-  children: Exclude<ReactNode, false | null | undefined>
+  children: ReactElement
 }
 
 enum UpdatePasswordDialogState {
@@ -46,7 +46,7 @@ export function UpdatePasswordDialog({
 
   return (
     <DialogShell
-      trigger={children as ReactElement}
+      trigger={children}
       title={t`Change your password`}
       description={
         <Trans>
