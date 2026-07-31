@@ -396,17 +396,9 @@ export function createMessageChannel<M extends DataMode>(
     return { value: undefined as never, done: true }
   }
 
-  async function iteratorThrow(
-    error: unknown,
-  ): Promise<IteratorResult<MessageOf<M>, void>> {
-    await iteratorReturn()
-    throw error
-  }
-
   const iterator: AsyncIterator<MessageOf<M>, void, unknown> = {
     next: iteratorNext,
     return: iteratorReturn,
-    throw: iteratorThrow,
   }
 
   return {
