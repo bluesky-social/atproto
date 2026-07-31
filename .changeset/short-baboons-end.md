@@ -1,5 +1,6 @@
 ---
 '@atproto/ozone': patch
+'@atproto/api': patch
 ---
 
-Add recommended policy option for ozone queue configuration
+Add recommended policy keys to ozone queue configuration and generated API types
