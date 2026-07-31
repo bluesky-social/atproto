@@ -126,12 +126,12 @@ export function Notice({
         )}
 
         {/* @NOTE AlertDescription renders a <div>, so the body copy gets its
-          own <p> — the shape its `[&_p]` rules already expect. `text-pretty`
-          at every width: the registry balances line lengths below `md`, which
-          on a notice's several lines holds the text short of its own right
-          edge and reads as stray padding. */}
+          own <p> — the shape its `[&_p]` rules already expect. Plain wrapping
+          at every width: the registry balances line lengths below `md` and
+          avoids orphans above it, and in a container this narrow both hold the
+          copy short of its own right edge, reading as stray padding. */}
         {(children || append) && (
-          <AlertDescription className="text-pretty">
+          <AlertDescription className="text-wrap md:text-wrap">
             {children && <p>{children}</p>}
             {append}
           </AlertDescription>
