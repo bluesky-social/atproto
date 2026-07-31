@@ -136,7 +136,7 @@ msgstr "Sélecteur de compte"
 msgid "Account username"
 msgstr "Nom d'utilisateur du compte"
 
-#: src/components/session-list.tsx:123
+#: src/components/session-list.tsx:118
 msgid "Actions"
 msgstr "Actions"
 
@@ -148,8 +148,8 @@ msgstr "Ajoutez le champ suivant à la configuration DNS de votre domaine."
 msgid "alice.com"
 msgstr "alice.com"
 
-#: src/components/verify-email-dialog.tsx:79
-#: src/components/update-password-dialog.tsx:82
+#: src/components/verify-email-dialog.tsx:80
+#: src/components/update-password-dialog.tsx:83
 #: src/components/reset-password-view.tsx:84
 msgid "Already have a code?"
 msgstr "Vous avez déjà un code ?"
@@ -200,7 +200,7 @@ msgstr "Applications"
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr "Les applications peuvent accéder à votre compte en arrière-plan (pour vérifier les notifications, synchroniser les données, etc.) même lorsque vous ne les utilisez pas activement. C'est un comportement normal qui sera reflété dans l'heure de \"dernier accès\"."
 
-#: src/components/delete-account-dialog.tsx:86
+#: src/components/delete-account-dialog.tsx:87
 msgid "Are you really, really sure?"
 msgstr "Êtes-vous vraiment, vraiment sûr ?"
 
@@ -229,7 +229,7 @@ msgstr "Autorisée"
 #: src/components/sign-in-picker.tsx:103
 #: src/components/layouts/account-shell.tsx:52
 #: src/components/forms/sign-up-wizard.tsx:117
-#: src/components/forms/form-shell.tsx:64
+#: src/components/forms/form-shell.tsx:74
 msgid "Back"
 msgstr "Retour"
 
@@ -266,10 +266,10 @@ msgstr "Appeler"
 
 #: src/contexts/authentication.tsx:263
 #: src/components/reactivate-account-view.tsx:48
-#: src/components/delete-account-dialog.tsx:120
-#: src/components/delete-account-dialog.tsx:217
+#: src/components/delete-account-dialog.tsx:121
+#: src/components/delete-account-dialog.tsx:216
 #: src/components/authenticate-welcome-view.tsx:58
-#: src/components/forms/form-shell.tsx:61
+#: src/components/forms/form-shell.tsx:71
 msgid "Cancel"
 msgstr "Annuler"
 
@@ -281,7 +281,7 @@ msgstr "Impossible de supprimer l'appareil en cours d'utilisation"
 msgid "Change your <0>@handle</0>"
 msgstr "Modifier votre <0>@pseudo</0>"
 
-#: src/components/update-password-dialog.tsx:49
+#: src/components/update-password-dialog.tsx:50
 msgid "Change your password"
 msgstr "Changer votre mot de passe"
 
@@ -289,7 +289,7 @@ msgstr "Changer votre mot de passe"
 msgid "Chat"
 msgstr "Messagerie"
 
-#: src/components/delete-account-dialog.tsx:137
+#: src/components/delete-account-dialog.tsx:138
 msgid "Check <0>{email}</0> for an email with the confirmation code to enter below:"
 msgstr "Vérifiez votre boîte mail <0>{email}</0> pour un email contenant le code de confirmation à saisir ci-dessous :"
 
@@ -298,7 +298,7 @@ msgstr "Vérifiez votre boîte mail <0>{email}</0> pour un email contenant le co
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Consultez la boîte de réception de {0} pour y trouver un code de connexion, et saisissez-le ici."
 
-#: src/components/delete-account-dialog.tsx:142
+#: src/components/delete-account-dialog.tsx:143
 msgid "Check your email for the confirmation code to enter below:"
 msgstr "Vérifiez votre boîte mail pour le code de confirmation à saisir ci-dessous :"
 
@@ -417,11 +417,11 @@ msgid "Delete"
 msgstr "Supprimer"
 
 #: src/pages/account/(authenticated)/manage/page.tsx:242
-#: src/components/delete-account-dialog.tsx:76
+#: src/components/delete-account-dialog.tsx:77
 msgid "Delete account"
 msgstr "Supprimer le compte"
 
-#: src/components/delete-account-dialog.tsx:72
+#: src/components/delete-account-dialog.tsx:73
 msgid "Delete account <0/>"
 msgstr "Supprimer le compte <0/>"
 
@@ -615,11 +615,11 @@ msgstr "Filtrer les applications"
 msgid "Filter devices"
 msgstr "Filtrer les appareils"
 
-#: src/components/delete-account-dialog.tsx:171
+#: src/components/delete-account-dialog.tsx:172
 msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
 msgstr "Pour des raisons de sécurité, nous devons envoyer un code de confirmation à votre adresse email <0>{email}</0>."
 
-#: src/components/delete-account-dialog.tsx:176
+#: src/components/delete-account-dialog.tsx:177
 msgid "For security reasons, we'll need to send a confirmation code to your email address."
 msgstr "Pour des raisons de sécurité, nous devons envoyer un code de confirmation à votre adresse email."
 
@@ -852,7 +852,7 @@ msgstr "Nouveau mot de passe"
 msgid "Next"
 msgstr "Suivant"
 
-#: src/components/session-list.tsx:200
+#: src/components/session-list.tsx:201
 msgid "No matches"
 msgstr "Aucun résultat"
 
@@ -1018,7 +1018,7 @@ msgid "Retry"
 msgstr "Réessayer"
 
 #: src/components/forms/request-code-button.tsx:72
-#: src/components/forms/request-code-button.tsx:99
+#: src/components/forms/request-code-button.tsx:101
 msgid "Retry in {remainingSeconds}s"
 msgstr "Réessayer dans {remainingSeconds}s"
 
@@ -1047,7 +1047,7 @@ msgstr "Sélectionner le domaine"
 msgid "Select from an existing account"
 msgstr "Sélectionner un compte"
 
-#: src/components/delete-account-dialog.tsx:208
+#: src/components/delete-account-dialog.tsx:207
 msgid "Send email"
 msgstr "Envoyer l'email"
 
@@ -1116,7 +1116,7 @@ msgstr "Étape {currentPosition} sur {count}"
 msgid "Strong"
 msgstr "Fort"
 
-#: src/components/forms/form-shell.tsx:56
+#: src/components/forms/form-shell.tsx:66
 msgid "Submit"
 msgstr "Valider"
 
@@ -1237,19 +1237,19 @@ msgstr "Cette session de connexion a expiré"
 msgid "This username is reserved"
 msgstr "Ce nom d'utilisateur est réservé"
 
-#: src/components/delete-account-dialog.tsx:89
+#: src/components/delete-account-dialog.tsx:90
 msgid "This will irreversibly delete your Bluesky account <0/> and all associated data. Note that this will affect any other Atmosphere services you use with this account."
 msgstr "Cela supprimera de façon irréversible votre compte Bluesky <0/> et toutes les données associées. Notez que cela affectera tous les autres services de l'Atmosphère que vous utilisez avec ce compte."
 
-#: src/components/delete-account-dialog.tsx:96
+#: src/components/delete-account-dialog.tsx:97
 msgid "This will irreversibly delete your Bluesky account and all associated data. Note that this will affect any other Atmosphere services you use with this account."
 msgstr "Cela supprimera de façon irréversible votre compte Bluesky et toutes les données associées. Notez que cela affectera tous les autres services de l'Atmosphère que vous utilisez avec ce compte."
 
-#: src/components/update-password-dialog.tsx:51
+#: src/components/update-password-dialog.tsx:52
 msgid "To change your password, you'll need to enter a security code sent to your email."
 msgstr "Pour changer votre mot de passe, vous devrez entrer un code de sécurité envoyé à votre adresse email."
 
-#: src/components/verify-email-dialog.tsx:48
+#: src/components/verify-email-dialog.tsx:49
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 msgstr "Pour vérifier votre adresse email, vous devrez entrer un code de sécurité envoyé à <0>{email}</0>."
 
@@ -1377,7 +1377,7 @@ msgstr "Vérifiez l'adresse du site avant de saisir votre mot de passe. N'entrez
 msgid "Verify you are human"
 msgstr "Vérifiez que vous êtes humain"
 
-#: src/components/verify-email-dialog.tsx:46
+#: src/components/verify-email-dialog.tsx:47
 msgid "Verify your email"
 msgstr "Vérifier votre adresse email"
 
@@ -1430,7 +1430,7 @@ msgstr "Identifiant ou mot de passe incorrect"
 msgid "Yes, Deactivate"
 msgstr "Oui, désactiver"
 
-#: src/components/delete-account-dialog.tsx:111
+#: src/components/delete-account-dialog.tsx:112
 msgid "Yes, delete my account"
 msgstr "Oui, supprimer mon compte"
 
@@ -1446,7 +1446,7 @@ msgstr "hier"
 msgid "You are being redirected..."
 msgstr "Redirection en cours..."
 
-#: src/components/delete-account-dialog.tsx:185
+#: src/components/delete-account-dialog.tsx:186
 msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
 msgstr "Vous pouvez également désactiver temporairement votre compte. Votre profil, vos publications, vos feeds et vos listes ne seront plus visibles par les autres utilisateurs de Bluesky. Vous pouvez réactiver votre compte à tout moment en vous reconnectant."
 

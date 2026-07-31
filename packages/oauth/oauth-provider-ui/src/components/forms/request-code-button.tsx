@@ -88,16 +88,16 @@ export function RequestCodeButton({
       )}
       {!showProgressWhenIdle && !showRateLimit && <SendIcon aria-hidden />}
 
-      <span className="truncate">{children}</span>
+      <span data-slot="request-code-label" className="truncate">
+        {children}
+      </span>
 
       {/* @NOTE Text rather than a progress ring: at the start of a cooldown the
         ring is nearly empty and reads as a broken spinner. These children live
         inside the component, not the caller's <Trans>, so they do not shift the
         message's placeholder indices. */}
       {showRateLimit && !showProgressWhenIdle && (
-        <span className="text-muted-foreground tabular-nums">
-          {t`Retry in ${remainingSeconds}s`}
-        </span>
+        <span className="tabular-nums">{t`Retry in ${remainingSeconds}s`}</span>
       )}
     </Button>
   )

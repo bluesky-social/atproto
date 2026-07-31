@@ -61,7 +61,7 @@ export function TokenField({
                 }}
                 variant="link"
                 size="sm"
-                className="h-auto gap-1 px-1 py-0 text-xs"
+                className="text-foreground h-auto gap-1 px-1 py-0 text-xs underline-offset-2 disabled:opacity-100 [&_[data-slot=request-code-label]]:underline [&_svg]:hidden"
                 startWithCooldown
               >
                 Click here to resend.
