@@ -105,6 +105,7 @@ export class DaemonContext {
     const materializedViewRefresher = new MaterializedViewRefresher(
       backgroundQueue,
       cfg.db.materializedViewRefreshIntervalMs,
+      cfg.db.materializedViewRefreshTimeoutMs,
     )
 
     const scheduledActionProcessor = new ScheduledActionProcessor(

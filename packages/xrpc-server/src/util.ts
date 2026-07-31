@@ -163,12 +163,13 @@ export function getQueryParams(
   req: IncomingMessage | ExpressRequest,
   opts?: { parseLoose?: boolean },
 ): UndecodedParams {
-  if ('query' in req) return req.query
-
   const result: UndecodedParams = Object.create(null)
+  const expressQuery = 'query' in req ? req.query : undefined
 
   const searchParams = getSearchParams(req.url, opts)
-  if (!searchParams) return result
+  if (!searchParams) {
+    return expressQuery ?? result
+  }
 
   if (searchParams.has('__proto__')) {
     // Prevent prototype pollution
@@ -181,6 +182,17 @@ export function getQueryParams(
   for (const key of searchParams.keys()) {
     const values = searchParams.getAll(key)
     result[key] = values.length === 1 ? values[0] : values
+  }
+
+  // Preserve Express's support for bracket-style query parameters in the
+  // legacy Lexicons path, but let repeated standard params from the URL win so
+  // Express/qs array limits cannot collapse them into numeric-keyed objects.
+  if (expressQuery) {
+    for (const [key, value] of Object.entries(expressQuery)) {
+      if (!(key in result)) {
+        result[key] = value
+      }
+    }
   }
 
   return result

@@ -1,5 +1,11 @@
 # @atproto/oauth-scopes
 
+## 0.5.7
+
+### Patch Changes
+
+- [#5280](https://github.com/bluesky-social/atproto/pull/5280) [`9556dcb`](https://github.com/bluesky-social/atproto/commit/9556dcb5855a1a1b9a2dc119e0fd4abbb8b27198) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update test runner from `jest` to `vitest`
+
 ## 0.5.6
 
 ### Patch Changes
