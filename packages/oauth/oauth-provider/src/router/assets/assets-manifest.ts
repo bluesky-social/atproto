@@ -25,7 +25,6 @@ type Asset =
       dynamicImports: string[]
       isDynamicEntry: boolean
       isEntry: boolean
-      isImplicitEntry: boolean
       name: string
       stream: () => Readable
     }

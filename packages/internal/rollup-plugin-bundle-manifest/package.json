@@ -33,10 +33,10 @@
     "mime": "^3.0.0"
   },
   "peerDependencies": {
-    "rollup": "^4.0.0"
+    "rolldown": "^1.2.1"
   },
   "devDependencies": {
-    "rollup": "^4.10.0"
+    "rolldown": "^1.2.1"
   },
   "scripts": {
     "build": "tsgo --build tsconfig.json"

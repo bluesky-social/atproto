@@ -11,7 +11,6 @@ files of a Rollup build. The manifest will look as follows:
     "dynamicImports": [],
     "isDynamicEntry": false,
     "isEntry": true,
-    "isImplicitEntry": false,
     "name": "main",
     "sha256": "<sha256-hash>",
     "data": "<base64-encoded-contents>"
