@@ -10,8 +10,8 @@ export type AuthorizationResultAuthorizePage = {
   parameters: OAuthAuthorizationRequestParameters
   permissionSets: Map<string, LexiconPermissionSet>
   spaces: Map<string, LexiconSpace>
-  /** Verified handles keyed by community-owner DID, for `space:` scopes. */
-  communityHandles: Map<string, string>
+  /** Verified handles keyed by space-authority DID, for `space:` scopes. */
+  spaceHandles: Map<string, string>
 
   requestUri: RequestUri
   sessions: readonly Session[]

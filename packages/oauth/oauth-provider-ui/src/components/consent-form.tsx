@@ -5,7 +5,7 @@ import { AccountPermission } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
 import type {
-  CommunityHandles,
+  SpaceHandles,
   PermissionSets,
   Spaces,
 } from '#/hydration-data.d.ts'
@@ -24,7 +24,7 @@ export type ConsentFormProps = {
   clientFirstParty: boolean
   permissionSets: PermissionSets
   spaces: Spaces
-  communityHandles: CommunityHandles
+  spaceHandles: SpaceHandles
 
   account: Account
   scope?: string
@@ -63,7 +63,7 @@ export function ConsentForm({
   clientFirstParty,
   permissionSets,
   spaces,
-  communityHandles,
+  spaceHandles,
 
   account,
   scope,
@@ -163,7 +163,7 @@ export function ConsentForm({
             scope={scope}
             permissionSets={permissionSets}
             spaces={spaces}
-            communityHandles={communityHandles}
+            spaceHandles={spaceHandles}
             clientTrusted={clientTrusted}
             clientFirstParty={clientFirstParty}
             allowEmail={canUnsetEmail ? values.allowEmail : true}

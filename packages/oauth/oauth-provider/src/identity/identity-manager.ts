@@ -5,7 +5,7 @@ import { SpacePermission } from '@atproto/oauth-scopes'
  * Resolves DIDs referenced from authorization-request scopes to handles, for
  * display on the consent screen.
  *
- * Currently the only use is rendering the community owner of `space:` scopes
+ * Currently the only use is rendering the space authority of `space:` scopes
  * — e.g. so the consent screen can say "spaces on protocol-nerds.atmoboards.com"
  * instead of "spaces on did:plc:abc...".
  *
@@ -19,11 +19,11 @@ export class IdentityManager {
   constructor(public readonly idResolver: IdResolver) {}
 
   /**
-   * Extract distinct community-owner DIDs from the request's `space:` scopes
+   * Extract distinct space-authority DIDs from the request's `space:` scopes
    * and resolve each to a verified handle. DIDs that fail verification are
    * omitted from the result.
    */
-  public async getCommunityHandlesFromScope(
+  public async getSpaceHandlesFromScope(
     scope?: string,
   ): Promise<Map<string, string>> {
     const dids = extractSpaceDids(scope)

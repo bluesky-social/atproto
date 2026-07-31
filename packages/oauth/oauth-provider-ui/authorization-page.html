@@ -134,6 +134,18 @@
             },
           },
         },
+        {
+          lexicon: 1,
+          id: 'com.example.forum',
+          defs: {
+            main: {
+              type: 'space',
+              name: 'Example Forum',
+              'name:lang': { fr: 'Exemple de Forum' },
+              collections: ['com.example.thread', 'com.example.reply'],
+            },
+          },
+        },
       ]
 
       window.__customizationData = customizationData
@@ -166,7 +178,9 @@
             .filter((l) => l.defs.main?.type === 'space')
             .map((l) => [l.id, l.defs.main]),
         ),
-        communityHandles: {},
+        spaceHandles: {
+          'did:plc:abc123': 'protocol-nerds.atmoboards.com',
+        },
 
         loginHint: undefined, // 'alice.test'
         uiLocales: undefined, // 'en'
@@ -185,13 +199,21 @@
           // 'blob:image/*',
           // 'blob:video/*',
           // 'repo:app.bsky.feed.post?action=create',
-          // 'repo:app.bsky.feed.like?action=create',
-          // 'repo:app.bsky.graph.follow?action=create',
+          'repo:app.bsky.feed.like?action=create',
+          'repo:app.bsky.graph.follow?action=create',
+          'repo:com.example.post?action=create',
+          'repo:com.example.blah?action=create',
           // 'repo:*?action=delete',
           // 'rpc:*?aud=did:web:bsky.app#bsky_appview',
           // 'rpc:app.bsky.feed.getFeed?aud=*',
           // 'rpc:app.bsky.feed.getFeedSkeleton?aud=*',
           // 'rpc:com.atproto.moderation.createReport?aud=*',
+          // 'space:com.example.forum?authority=did:plc:abc123&skey=default&collection=com.example.thread&action=read&action=create',
+          // 'space:com.example.forum?authority=did:plc:abc123&skey=backup&action=read_self',
+          // 'space:com.example.forum?authority=*&action=read_self&manage=update&manage=delete',
+          'space:*?authority=did:plc:abc123',
+          // 'space:com.unknown.space?authority=*',
+          // 'space:*?authority=*',
         ].join(' '),
       }
 

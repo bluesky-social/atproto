@@ -24,10 +24,10 @@ import {
   SpacePermission,
 } from '@atproto/oauth-scopes'
 import type {
-  CommunityHandles,
   PermissionSet,
   PermissionSets,
   Space,
+  SpaceHandles,
   Spaces,
 } from '#/hydration-data.d.ts'
 import { Override } from '#/lib/util'
@@ -45,7 +45,7 @@ export type ScopeDescriptionProps = Override<
     scope?: string
     permissionSets?: PermissionSets
     spaces?: Spaces
-    communityHandles?: CommunityHandles
+    spaceHandles?: SpaceHandles
 
     allowEmail?: boolean
     onAllowEmail?: (allowed: boolean) => void
@@ -56,7 +56,7 @@ export function ScopeDescription({
   scope,
   permissionSets,
   spaces,
-  communityHandles,
+  spaceHandles,
   clientTrusted = false,
   clientFirstParty = false,
   allowEmail,
@@ -103,13 +103,13 @@ export function ScopeDescription({
         includeScopes={includeScopes}
         permissionSets={permissionSets}
         spaces={spaces}
-        communityHandles={communityHandles}
+        spaceHandles={spaceHandles}
       />
 
       <FineGrainedPermissions
         permissions={permissions}
         spaces={spaces}
-        communityHandles={communityHandles}
+        spaceHandles={spaceHandles}
       />
 
       <SpaceUniversalWarning permissions={permissions} />
@@ -125,12 +125,12 @@ function IncludedPermissions({
   includeScopes,
   permissionSets,
   spaces,
-  communityHandles,
+  spaceHandles,
 }: {
   includeScopes: IncludeScope[]
   permissionSets?: PermissionSets
   spaces?: Spaces
-  communityHandles?: CommunityHandles
+  spaceHandles?: SpaceHandles
 }): ReactNode {
   return includeScopes.map((includeScope, i) => (
     <IncludeScopePermissions
@@ -138,7 +138,7 @@ function IncludedPermissions({
       includeScope={includeScope}
       permissionSet={permissionSets?.[includeScope.nsid]}
       spaces={spaces}
-      communityHandles={communityHandles}
+      spaceHandles={spaceHandles}
     />
   ))
 }
@@ -147,12 +147,12 @@ function IncludeScopePermissions({
   includeScope,
   permissionSet,
   spaces,
-  communityHandles,
+  spaceHandles,
 }: {
   includeScope: IncludeScope
   permissionSet?: PermissionSet
   spaces?: Spaces
-  communityHandles?: CommunityHandles
+  spaceHandles?: SpaceHandles
 }) {
   const { nsid } = includeScope
 
@@ -197,7 +197,7 @@ function IncludeScopePermissions({
               className="mt-2"
               permissions={permissions}
               spaces={spaces}
-              communityHandles={communityHandles}
+              spaceHandles={spaceHandles}
             />
           </>
         ) : null
@@ -353,11 +353,11 @@ function hasOnlyBskyAppSpecificPermissions(
 function FineGrainedPermissions({
   permissions,
   spaces,
-  communityHandles,
+  spaceHandles,
 }: {
   permissions: ScopePermissionsTransition
   spaces?: Spaces
-  communityHandles?: CommunityHandles
+  spaceHandles?: SpaceHandles
 }) {
   const hasOnlyBskySpecific = useMemo(() => {
     return hasOnlyBskyAppSpecificPermissions(permissions)
@@ -372,7 +372,7 @@ function FineGrainedPermissions({
       <SpacePermissions
         permissions={permissions}
         spaces={spaces}
-        communityHandles={communityHandles}
+        spaceHandles={spaceHandles}
       />
     </>
   )
@@ -811,30 +811,14 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
   )
 }
 
-// SPACE PERMISSIONS
-//
-// Space scopes describe access to permissioned spaces (groups, forums, etc.).
-// They have a (type, did, skey) tuple plus a list of (collection, action) write
-// targets. Read access is implicit on any matching grant.
-//
-// Rendering uses lexicon-resolved names where possible:
-//   - `type=com.atmoboards.forum` → "AtmoBoards Forum spaces" (from lexicon)
-//   - `type=*` (community grant) → "spaces under <did>"
-//   - `did=*` → "any community" (modality-only grant)
-//
-// @TODO Community handle resolution: when the space is anchored to a specific
-// owner DID, we'd ideally render its handle (e.g. "protocol-nerds.atmoboards.com")
-// instead of a raw DID string. Left as a follow-up — see the diary on
-// "communities known by handle" — and the consent UI falls back to the DID.
-
 function SpacePermissions({
   permissions,
   spaces,
-  communityHandles,
+  spaceHandles,
 }: {
   permissions: ScopePermissionsTransition
   spaces?: Spaces
-  communityHandles?: CommunityHandles
+  spaceHandles?: SpaceHandles
 }) {
   const { t } = useLingui()
 
@@ -855,7 +839,7 @@ function SpacePermissions({
           className="mt-2"
           permissions={permissions}
           spaces={spaces}
-          communityHandles={communityHandles}
+          spaceHandles={spaceHandles}
         />
       }
     >
@@ -875,32 +859,18 @@ type SpaceWriteCell = {
 }
 
 type SpaceTableRow = {
-  /** Stable key for React. */
   key: string
-  /** Lexicon NSID (or '*' for any). */
   type: string
-  /** Lexicon doc, if resolved. */
   space?: Space
-  /** Owner DID, or '*' for any. */
-  did: string
-  /**
-   * Verified handle for the owner DID, when bidirectional resolution
-   * succeeded. Always undefined when `did === '*'`.
-   */
+  authority: string
   ownerHandle?: string
-  /** Space key, or '*' for any. */
   skey: string
-  /** True iff at least one matching grant lists `read`. */
   read: boolean
-  /**
-   * True iff at least one matching grant lists `manage` — confers space-level
-   * governance (createSpace, addMember, removeMember, deleteSpace).
-   */
+  // `read_self` without `read`: only the user's own data in the space, which
+  // reads differently on the consent screen.
+  readSelf: boolean
   manage: boolean
-  /**
-   * Per-collection write actions. Key is collection NSID or '*'. Empty when
-   * the grant has no write targets — read-only.
-   */
+  // Keyed by collection NSID or '*'. Empty means no write targets.
   writes: Map<string, SpaceWriteCell>
 }
 
@@ -909,38 +879,40 @@ type SpaceTableProps = Override<
   {
     permissions: ScopePermissionsTransition
     spaces?: Spaces
-    communityHandles?: CommunityHandles
+    spaceHandles?: SpaceHandles
     children?: never
   }
 >
 function SpaceTable({
   permissions,
   spaces,
-  communityHandles,
+  spaceHandles,
   className = '',
   ...attrs
 }: SpaceTableProps) {
   const rows = useMemo<SpaceTableRow[]>(() => {
-    // Group scopes by (type, did, skey) tuple. Multiple scopes for the same
-    // tuple get merged action/collection sets.
+    // Scopes sharing a (type, authority, skey) tuple merge into one row.
     const map = new Map<string, SpaceTableRow>()
 
     for (const s of permissions.scopes) {
       const parsed = SpacePermission.fromString(s)
       if (!parsed) continue
 
-      const key = `${parsed.type}|${parsed.did}|${parsed.skey}`
+      const key = `${parsed.type}|${parsed.authority}|${parsed.skey}`
       let row = map.get(key)
       if (!row) {
         row = {
           key,
           type: parsed.type,
           space: parsed.type !== '*' ? spaces?.[parsed.type] : undefined,
-          did: parsed.did,
+          authority: parsed.authority,
           ownerHandle:
-            parsed.did !== '*' ? communityHandles?.[parsed.did] : undefined,
+            parsed.authority !== '*'
+              ? spaceHandles?.[parsed.authority]
+              : undefined,
           skey: parsed.skey,
           read: false,
+          readSelf: false,
           manage: false,
           writes: new Map(),
         }
@@ -948,15 +920,9 @@ function SpaceTable({
       }
 
       if (parsed.action.includes('read')) row.read = true
-      if (parsed.action.includes('manage')) {
-        row.manage = true
-        // manage implies read at the matcher; mirror that here so the UI
-        // doesn't claim "read-only" when the grant is actually broader.
-        row.read = true
-      }
+      if (parsed.action.includes('read_self')) row.readSelf = true
+      if (parsed.manage.length > 0) row.manage = true
 
-      // Merge per-collection writes. If a collection is already present, OR
-      // the new actions in.
       for (const coll of parsed.collection) {
         const existing = row.writes.get(coll)
         const cell: SpaceWriteCell = existing ?? {
@@ -972,7 +938,7 @@ function SpaceTable({
     }
 
     return Array.from(map.values()).sort((a, b) => a.key.localeCompare(b.key))
-  }, [permissions, spaces, communityHandles])
+  }, [permissions, spaces, spaceHandles])
 
   if (!rows.length) return null
 
@@ -1008,15 +974,19 @@ function SpaceRow({ row }: { row: SpaceTableRow }) {
         </div>
       )}
 
+      {!row.read && row.readSelf && (
+        <div className="text-text-light text-xs">
+          <Trans>Read only your own data.</Trans>
+        </div>
+      )}
+
       {writeEntries.length === 0 ? (
         <div className="text-text-light text-xs">
           {row.read ? (
             row.manage ? null : (
               <Trans>Read-only access.</Trans>
             )
-          ) : (
-            // No actions at all — defensive; the parser shouldn't produce this
-            // shape but render something sane anyway.
+          ) : row.readSelf || row.manage ? null : (
             <Trans>No access.</Trans>
           )}
         </div>
@@ -1061,17 +1031,14 @@ function SpaceRow({ row }: { row: SpaceTableRow }) {
 }
 
 function SpaceLabel({ row }: { row: SpaceTableRow }) {
-  // Modality + community: anchored to a specific community. Render as
-  // "<name> spaces on <handle-or-did>".
-  if (row.type !== '*' && row.did !== '*') {
+  if (row.type !== '*' && row.authority !== '*') {
     return (
       <Trans>
         <SpaceTypeLabel type={row.type} space={row.space} /> spaces on{' '}
-        <SpaceOwner did={row.did} handle={row.ownerHandle} />
+        <SpaceOwner did={row.authority} handle={row.ownerHandle} />
       </Trans>
     )
   }
-  // Modality only: any community of this type.
   if (row.type !== '*') {
     return (
       <Trans>
@@ -1079,16 +1046,14 @@ function SpaceLabel({ row }: { row: SpaceTableRow }) {
       </Trans>
     )
   }
-  // Community only: any space type under a specific owner.
-  if (row.did !== '*') {
+  if (row.authority !== '*') {
     return (
       <Trans>
-        All spaces on <SpaceOwner did={row.did} handle={row.ownerHandle} />
+        All spaces on{' '}
+        <SpaceOwner did={row.authority} handle={row.ownerHandle} />
       </Trans>
     )
   }
-  // Universal grant — covered by SpaceUniversalWarning at the top level. We
-  // still render a row here so the table is complete.
   return <Trans>All spaces on the network</Trans>
 }
 
@@ -1104,9 +1069,6 @@ function SpaceTypeLabel({ type, space }: { type: string; space?: Space }) {
 }
 
 function SpaceOwner({ did, handle }: { did: string; handle?: string }) {
-  // When the bidirectional handle resolution succeeded, render the handle
-  // (with the DID as a tooltip for transparency). Otherwise fall back to the
-  // raw DID — keeps the consent screen honest about what's being granted.
   if (handle) {
     return (
       <b className="text-text" title={did}>
@@ -1117,11 +1079,6 @@ function SpaceOwner({ did, handle }: { did: string; handle?: string }) {
   return <code className="text-text-light">{did}</code>
 }
 
-/**
- * Loud admonition for the rare-but-extremely-broad case: a `space:*` scope
- * with no DID anchor. This grants the application access to *every* space on
- * the network, which is almost never what a user wants to authorize.
- */
 function SpaceUniversalWarning({
   permissions,
 }: {
@@ -1130,7 +1087,7 @@ function SpaceUniversalWarning({
   const isUniversal = useMemo(() => {
     return permissions.scopes.some((s) => {
       const parsed = SpacePermission.fromString(s)
-      return parsed != null && parsed.type === '*' && parsed.did === '*'
+      return parsed != null && parsed.type === '*' && parsed.authority === '*'
     })
   }, [permissions])
 
@@ -1140,8 +1097,8 @@ function SpaceUniversalWarning({
     <Admonition role="status">
       <Trans>
         This application is requesting access to{' '}
-        <b>every space on the network</b>. This is an extremely broad
-        permission. Only grant it to applications you deeply trust.
+        <b>every space on the network</b>. This is a very broad permission. Only
+        grant it to applications you deeply trust.
       </Trans>
     </Admonition>
   )

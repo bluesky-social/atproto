@@ -25,6 +25,14 @@ msgstr "{deltaHours} timmar sedan"
 msgid "{deltaMinutes} minutes ago"
 msgstr "{deltaMinutes} minuter sedan"
 
+#: src/components/utils/scope-description.tsx:1083
+msgid "<0/> spaces"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx:1074
+msgid "<0/> spaces on <1/>"
+msgstr ""
+
 #: src/pages/account/(authenticated)/about/page.tsx:136
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>AT-protokollet</0> – Teknisk dokumentation för utvecklare"
@@ -36,6 +44,10 @@ msgstr "<0>Bluesky Social</0> – Allmän information om nätverket"
 #: src/pages/account/(authenticated)/about/page.tsx:119
 msgid "<0>Learn more</0><1>Want to learn more about the technology and network behind your Atmosphere account?</1>"
 msgstr "<0>Läs mer</0><1>Vill du veta mer om tekniken och nätverket bakom ditt Atmosphere-konto?</1>"
+
+#: src/components/utils/scope-description.tsx:1005
+msgid "<0>Manage</0> the space: create new spaces, add and remove members."
+msgstr ""
 
 #: src/pages/account/(authenticated)/about/page.tsx:84
 msgid "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
@@ -78,7 +90,7 @@ msgstr "En lokal app"
 msgid "A second authentication factor is required ({hint})"
 msgstr "En andra autentiseringsfaktor krävs ({hint})"
 
-#: src/components/utils/scope-description.tsx:863
+#: src/components/utils/scope-description.tsx:1251
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "En tjänst som kontrolleras av <0>{domain}</0>"
 
@@ -86,16 +98,20 @@ msgstr "En tjänst som kontrolleras av <0>{domain}</0>"
 msgid "About"
 msgstr "Om"
 
-#: src/components/utils/scope-description.tsx:394
+#: src/components/utils/scope-description.tsx:847
+msgid "Access permissioned spaces"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx:439
 msgid "Access specific parts of your Bluesky account"
 msgstr "Komma åt specifika delar av ditt Bluesky-konto"
 
-#: src/components/utils/scope-description.tsx:389
+#: src/components/utils/scope-description.tsx:434
 msgid "Access specific parts of your Bluesky account and read your private preferences"
 msgstr "Komma åt specifika delar av ditt Bluesky-konto och läsa dina privata inställningar"
 
 #: src/pages/account/(authenticated)/route.tsx:56
-#: src/components/utils/scope-description.tsx:266
+#: src/components/utils/scope-description.tsx:302
 msgid "Account"
 msgstr "Konto"
 
@@ -123,7 +139,8 @@ msgstr "Kontonamn"
 msgid "Account overview"
 msgstr "Kontoöversikt"
 
-#: src/authorization-page.tsx:228 src/data/account.ts:46
+#: src/authorization-page.tsx:230
+#: src/data/account.ts:46
 msgid "Account reactivated"
 msgstr "Konto återaktiverat"
 
@@ -143,6 +160,14 @@ msgstr "Lägg till följande post i din domäns DNS-konfiguration."
 msgid "alice.com"
 msgstr "alice.com"
 
+#: src/components/utils/scope-description.tsx:1091
+msgid "All spaces on <0/>"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx:1099
+msgid "All spaces on the network"
+msgstr ""
+
 #: src/components/verify-email-dialog.tsx:74
 #: src/components/update-password-dialog.tsx:77
 #: src/components/reset-password-view.tsx:61
@@ -153,7 +178,8 @@ msgstr "Har du redan en kod?"
 msgid "An application on your device"
 msgstr "En applikation på din enhet"
 
-#: src/contexts/notifications.tsx:123 src/components/error-view.tsx:25
+#: src/contexts/notifications.tsx:123
+#: src/components/error-view.tsx:25
 msgid "An error occurred"
 msgstr "Ett fel uppstod"
 
@@ -169,15 +195,15 @@ msgstr "Ett okänt fel uppstod"
 msgid "Another account"
 msgstr "Annat konto"
 
-#: src/components/utils/scope-description.tsx:891
+#: src/components/utils/scope-description.tsx:1279
 msgid "Any collection"
 msgstr "Vilken samling som helst"
 
-#: src/components/utils/scope-description.tsx:833
+#: src/components/utils/scope-description.tsx:1221
 msgid "Any method"
 msgstr "Vilken metod som helst"
 
-#: src/components/utils/scope-description.tsx:872
+#: src/components/utils/scope-description.tsx:1260
 msgid "Any service"
 msgstr "Vilken tjänst som helst"
 
@@ -198,13 +224,14 @@ msgctxt "AuthenticationPage"
 msgid "Authenticate"
 msgstr "Autentisera"
 
-#: src/components/utils/scope-description.tsx:504
-#: src/components/utils/scope-description.tsx:520
+#: src/components/utils/scope-description.tsx:549
+#: src/components/utils/scope-description.tsx:565
 msgctxt "OAuthScope"
 msgid "Authenticate"
 msgstr "Autentisera"
 
-#: src/components/consent-view.tsx:39 src/components/consent-form.tsx:84
+#: src/components/consent-view.tsx:47
+#: src/components/consent-form.tsx:92
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Auktorisera"
@@ -225,15 +252,15 @@ msgstr "Tillbaka"
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Mellan {minLength} och {maxLength} tecken"
 
-#: src/components/utils/scope-description.tsx:757
+#: src/components/utils/scope-description.tsx:802
 msgid "Blob storage"
 msgstr "Blob-lagring"
 
-#: src/components/utils/scope-description.tsx:848
+#: src/components/utils/scope-description.tsx:1236
 msgid "Bluesky App services"
 msgstr "Bluesky apptjänster"
 
-#: src/components/utils/scope-description.tsx:855
+#: src/components/utils/scope-description.tsx:1243
 msgid "Bluesky Chat services"
 msgstr "Bluesky chattjänster"
 
@@ -241,7 +268,7 @@ msgstr "Bluesky chattjänster"
 msgid "Branding"
 msgstr "Utseende"
 
-#: src/components/consent-form.tsx:164
+#: src/components/consent-form.tsx:174
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "Genom att klicka på <0>Auktorisera</0> ger du den här applikationen åtkomst till ditt konto i enlighet med dess <1>användarvillkor</1> och <2>integritetspolicy</2>."
 
@@ -251,7 +278,7 @@ msgstr "Genom att klicka på <0>Auktorisera</0> ger du den här applikationen å
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "Genom att skapa ett konto samtycker du till den här tjänstens {0} och {1}."
 
-#: src/components/utils/scope-description.tsx:583
+#: src/components/utils/scope-description.tsx:628
 msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Anrop"
@@ -269,7 +296,7 @@ msgstr "Avbryt"
 msgid "Cannot remove current device"
 msgstr "Det går inte att ta bort den enhet som du använder just nu"
 
-#: src/components/utils/scope-description.tsx:480
+#: src/components/utils/scope-description.tsx:525
 msgid "Change your <0>@handle</0>"
 msgstr "Ändra ditt <0>@användarnamn</0>"
 
@@ -277,7 +304,7 @@ msgstr "Ändra ditt <0>@användarnamn</0>"
 msgid "Change your password"
 msgstr "Ändra ditt lösenord"
 
-#: src/components/utils/scope-description.tsx:440
+#: src/components/utils/scope-description.tsx:485
 msgid "Chat"
 msgstr "Chatt"
 
@@ -302,7 +329,8 @@ msgstr "Titta i din inkorg efter bekräftelsekoden."
 msgid "Check your inbox for the verification code."
 msgstr "Titta efter verifieringskoden i din inkorg."
 
-#: src/data/password.ts:22 src/data/email.ts:23
+#: src/data/password.ts:22
+#: src/data/email.ts:23
 msgid "Check your inbox."
 msgstr "Titta i din inkorg."
 
@@ -362,7 +390,8 @@ msgstr "Ett e-postmeddelande för bekräftelse har skickats"
 msgid "Continue"
 msgstr "Fortsätt"
 
-#: src/cookie-error-page.tsx:36 src/cookie-error-page.tsx:49
+#: src/cookie-error-page.tsx:36
+#: src/cookie-error-page.tsx:49
 msgid "Cookie Error"
 msgstr "Cookie-fel"
 
@@ -374,7 +403,8 @@ msgstr "Kopierat"
 msgid "Copy to clipboard"
 msgstr "Kopiera till urklipp"
 
-#: src/components/utils/scope-description.tsx:726
+#: src/components/utils/scope-description.tsx:771
+#: src/components/utils/scope-description.tsx:1034
 msgid "Create"
 msgstr "Skapa"
 
@@ -382,7 +412,7 @@ msgstr "Skapa"
 msgid "Create a new account"
 msgstr "Skapa ett nytt konto"
 
-#: src/components/utils/scope-description.tsx:630
+#: src/components/utils/scope-description.tsx:675
 msgid "Create, update, and delete any public data linked to your account"
 msgstr "Skapa, ändra och radera vilken publik data som helst som är kopplad till ditt konto"
 
@@ -390,7 +420,8 @@ msgstr "Skapa, ändra och radera vilken publik data som helst som är kopplad ti
 msgid "Custom domains are not supported"
 msgstr "Anpassade domäner stöds inte"
 
-#: src/components/utils/scope-description.tsx:725
+#: src/components/utils/scope-description.tsx:770
+#: src/components/utils/scope-description.tsx:1033
 msgid "Data"
 msgstr "Data"
 
@@ -403,7 +434,8 @@ msgstr "Inaktivera konto"
 msgid "Deactivated account"
 msgstr "Inaktiverat konto"
 
-#: src/components/utils/scope-description.tsx:728
+#: src/components/utils/scope-description.tsx:773
+#: src/components/utils/scope-description.tsx:1036
 msgid "Delete"
 msgstr "Radera"
 
@@ -420,7 +452,7 @@ msgstr "Radera kontot <0/>"
 msgid "Delete my account"
 msgstr "Radera mitt konto"
 
-#: src/components/consent-form.tsx:102
+#: src/components/consent-form.tsx:110
 msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Neka åtkomst"
@@ -451,7 +483,7 @@ msgid "e.g. <0>alice{0}</0>"
 msgstr "t.ex <0>alice{0}</0>"
 
 #: src/components/sign-up-credentials-form.tsx:56
-#: src/components/utils/scope-description.tsx:226
+#: src/components/utils/scope-description.tsx:262
 msgid "Email"
 msgstr "E-post"
 
@@ -510,7 +542,8 @@ msgstr "Ange ditt nya lösenord"
 msgid "Enter your password"
 msgstr "Ange ditt lösenord"
 
-#: src/components/sign-in-view.tsx:92 src/components/sign-in-view.tsx:110
+#: src/components/sign-in-view.tsx:92
+#: src/components/sign-in-view.tsx:110
 msgid "Enter your username and password"
 msgstr "Ange ditt användarnamn och lösenord"
 
@@ -607,7 +640,7 @@ msgstr "Glömt lösenord"
 msgid "Forgot?"
 msgstr "Glömt?"
 
-#: src/components/consent-view.tsx:41
+#: src/components/consent-view.tsx:49
 msgid "Grant access to your <0/> account"
 msgstr "Bevilja åtkomst till ditt konto <0>{0}</0>"
 
@@ -665,7 +698,7 @@ msgstr "HTTP"
 msgid "Identifier"
 msgstr "Identifierare"
 
-#: src/components/utils/scope-description.tsx:473
+#: src/components/utils/scope-description.tsx:518
 msgid "Identity"
 msgstr "Identitet"
 
@@ -774,7 +807,7 @@ msgstr "Gör synligt"
 msgid "Manage applications that have access to your account"
 msgstr "Hantera de applikationer som har åtkomst till ditt konto"
 
-#: src/components/utils/scope-description.tsx:476
+#: src/components/utils/scope-description.tsx:521
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "Hantera din <0>fullständiga identitet</0>, inklusive ditt <1>@användarnamn</1>"
 
@@ -786,11 +819,11 @@ msgstr "Hantera ditt konto"
 msgid "Manage your active sessions"
 msgstr "Hantera dina aktiva sessioner"
 
-#: src/components/utils/scope-description.tsx:387
+#: src/components/utils/scope-description.tsx:432
 msgid "Manage your profile, posts, likes and follows"
 msgstr "Hantera din profil, inlägg, gillamarkeringar och följningar"
 
-#: src/components/utils/scope-description.tsx:382
+#: src/components/utils/scope-description.tsx:427
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "Hantera din profil, inlägg, gillamarkeringar och följningar samt läsa dina privata inställningar."
 
@@ -830,6 +863,10 @@ msgstr "Nytt lösenord"
 #: src/components/forms/wizard-card.tsx:119
 msgid "Next"
 msgstr "Nästa"
+
+#: src/components/utils/scope-description.tsx:1026
+msgid "No access."
+msgstr ""
 
 #: src/components/reset-password-view.tsx:111
 msgid "Okay"
@@ -880,19 +917,24 @@ msgctxt "Error"
 msgid "Payload"
 msgstr "Nyttolast"
 
-#: src/components/utils/scope-description.tsx:521
+#: src/components/utils/scope-description.tsx:566
 msgid "Perform actions on your behalf"
 msgstr "Utföra åtgärder för din räkning"
 
-#: src/components/utils/scope-description.tsx:506
+#: src/components/utils/scope-description.tsx:551
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "Utföra autentiserade åtgärder gentemot <0>vilken tjänst som helst</0> för din räkning"
+
+#: src/components/utils/scope-description.tsx:857
+msgid "Permissioned spaces (such as group chats, forums, or shared albums) hold data that's only visible to their members. The application requests the following access:"
+msgstr ""
 
 #: src/components/authenticate-welcome-view.tsx:27
 msgid "Please authenticate to continue"
 msgstr "Autentisera för att fortsätta"
 
-#: src/data/password.ts:28 src/data/email.ts:29
+#: src/data/password.ts:28
+#: src/data/email.ts:29
 msgid "Please check the email address and try again."
 msgstr "Kontrollera e-postadressen och försök igen."
 
@@ -904,7 +946,8 @@ msgstr "Kontrollera användarnamnet och försök igen."
 msgid "Please check your code and password, then try again."
 msgstr "Kontrollera din kod och ditt lösenord. Försök sedan igen."
 
-#: src/data/password.ts:51 src/data/email.ts:52
+#: src/data/password.ts:51
+#: src/data/email.ts:52
 msgid "Please check your reset code and try again."
 msgstr "Kontrollera din återställningskod och försök igen."
 
@@ -916,7 +959,9 @@ msgstr "Kontrollera din verifieringskod och försök igen."
 msgid "Please enter the security code that was sent to your email address."
 msgstr "Ange den säkerhetskod som har skickats till din e-postadress."
 
-#: src/data/email.ts:75 src/data/account.ts:30 src/data/account.ts:53
+#: src/data/email.ts:75
+#: src/data/account.ts:30
+#: src/data/account.ts:53
 #: src/data/account.ts:76
 msgid "Please try again in a moment."
 msgstr "Försök igen om en stund."
@@ -931,7 +976,7 @@ msgstr "Vänta {remainingSeconds} sekunder innan du försöker igen."
 msgid "Privacy Policy"
 msgstr "Integritetspolicy"
 
-#: src/components/utils/scope-description.tsx:644
+#: src/components/utils/scope-description.tsx:689
 msgid "Publish changes"
 msgstr "Publicera ändringar"
 
@@ -944,28 +989,37 @@ msgstr "Återaktivera"
 msgid "Reactivate account"
 msgstr "Återaktivera konto"
 
-#: src/components/utils/scope-description.tsx:441
+#: src/components/utils/scope-description.tsx:486
 msgid "Read and send messages"
 msgstr "Läsa och skicka meddelanden"
 
-#: src/components/utils/scope-description.tsx:229
+#: src/components/utils/scope-description.tsx:265
 msgid "Read and update your account's email address"
 msgstr "Läsa och uppdatera ditt kontos e-postadress"
 
-#: src/components/utils/scope-description.tsx:231
+#: src/components/utils/scope-description.tsx:1013
+msgid "Read only your own data."
+msgstr ""
+
+#: src/components/utils/scope-description.tsx:267
 msgid "Read your account's email address"
 msgstr "Läsa ditt kontos e-postadress"
 
-#: src/components/utils/scope-description.tsx:396
+#: src/components/utils/scope-description.tsx:441
 msgid "Read your private preferences"
 msgstr "Läsa dina privata inställningar"
 
-#: src/components/sign-in-form.tsx:231 src/components/sign-in-form.tsx:236
+#: src/components/utils/scope-description.tsx:1021
+msgid "Read-only access."
+msgstr ""
+
+#: src/components/sign-in-form.tsx:231
+#: src/components/sign-in-form.tsx:236
 msgid "Remember this account on this device"
 msgstr "Kom ihåg det här kontot på den här enheten"
 
-#: src/components/utils/scope-description.tsx:628
-#: src/components/utils/scope-description.tsx:643
+#: src/components/utils/scope-description.tsx:673
+#: src/components/utils/scope-description.tsx:688
 msgid "Repository"
 msgstr "Dataarkiv"
 
@@ -1053,10 +1107,15 @@ msgstr "Logga ut"
 msgid "Sign out"
 msgstr "Logga ut"
 
-#: src/components/sign-up-view.tsx:51 src/components/sign-up-view.tsx:56
+#: src/components/sign-up-view.tsx:51
+#: src/components/sign-up-view.tsx:56
 #: src/components/sign-in-picker.tsx:85
 msgid "Sign up"
 msgstr "Registrera dig"
+
+#: src/components/utils/scope-description.tsx:846
+msgid "Spaces"
+msgstr ""
 
 #: src/components/utils/error-details.tsx:63
 msgctxt "Error"
@@ -1087,11 +1146,11 @@ msgstr "Åtkomsten återkallades"
 msgid "Support"
 msgstr "Support"
 
-#: src/components/consent-form.tsx:137
+#: src/components/consent-form.tsx:145
 msgid "Technical details"
 msgstr "Tekniska detaljer"
 
-#: src/components/utils/scope-description.tsx:267
+#: src/components/utils/scope-description.tsx:303
 msgid "Temporarily activate or deactivate your account"
 msgstr "Tillfälligt aktivera eller avaktivera ditt konto"
 
@@ -1101,19 +1160,19 @@ msgstr "Tillfälligt aktivera eller avaktivera ditt konto"
 msgid "Terms of Service"
 msgstr "Användarvillkor"
 
-#: src/components/utils/scope-description.tsx:190
+#: src/components/utils/scope-description.tsx:226
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
 msgstr "Applikationen begär full kontroll över din nätverksidentitet, vilket innebär att den kan <0>slå ut ditt konto permanent</0> och till och med <1>kapa det</1>. Bevilja bara den här behörigheten till applikationer du verkligen litar på."
 
-#: src/components/utils/scope-description.tsx:170
+#: src/components/utils/scope-description.tsx:206
 msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
 msgstr "Applikationen begär de behörigheter som krävs för att utföra följande åtgärder för din räkning:"
 
-#: src/components/utils/scope-description.tsx:409
+#: src/components/utils/scope-description.tsx:454
 msgid "The application requests the permissions necessary to perform the following actions on your Bluesky account:"
 msgstr "Applikationen begär de behörigheter som krävs för att utföra följande åtgärder på ditt Bluesky-konto:"
 
-#: src/components/utils/scope-description.tsx:524
+#: src/components/utils/scope-description.tsx:569
 msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
 msgstr "AT‑protokollnätverket använder en autentiserings­mekanism som gör det möjligt att entydigt identifiera användare vid kommunikation med externa tjänster. Den används vanligtvis för att hämta eller ändra data som är kopplad till ditt konto, till exempel chattmeddelanden, flöden eller modererat innehåll. Applikationen begär de behörigheter som krävs för att utföra följande autentiserade åtgärder å dina vägnar:"
 
@@ -1157,7 +1216,11 @@ msgstr "Det finns ingen gräns för hur länge ett konto kan vara inaktiverat. K
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "De här apparna har åtkomst till ditt konto. En app kan visas flera gånger om du använder den på olika enheter. Återkalla åtkomsten för att logga ut dig själv från appen. Därefter kan du ge ny åtkomst genom att logga in igen."
 
-#: src/components/consent-form.tsx:142
+#: src/components/utils/scope-description.tsx:1148
+msgid "This application is requesting access to <0>every space on the network</0>. This is a very broad permission. Only grant it to applications you deeply trust."
+msgstr ""
+
+#: src/components/consent-form.tsx:150
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "Den här applikationen begär följande behörigheter (omfång) för att få åtkomst till ditt konto:"
 
@@ -1169,7 +1232,9 @@ msgstr "Denna auktoriseringsbegäran har nekats. Försök igen."
 msgid "This email is already used"
 msgstr "Den här e-postadressen används redan"
 
-#: src/lib/api.ts:363 src/lib/api.ts:514 src/lib/api.ts:545
+#: src/lib/api.ts:363
+#: src/lib/api.ts:514
+#: src/lib/api.ts:545
 msgid "This sign-in session has expired"
 msgstr "Inloggningssessionen har gått ut"
 
@@ -1193,7 +1258,7 @@ msgstr "För att byta lösenord behöver du ange den säkerhetskod som har skick
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 msgstr "För att verifiera din e-postadress behöver du ange den säkerhetskod som har skickats till <0>{email}</0>."
 
-#: src/components/utils/scope-description.tsx:586
+#: src/components/utils/scope-description.tsx:631
 msgctxt "RPC aud"
 msgid "Towards"
 msgstr "Gentemot"
@@ -1227,7 +1292,8 @@ msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Okänd användaragent"
 
-#: src/components/utils/scope-description.tsx:727
+#: src/components/utils/scope-description.tsx:772
+#: src/components/utils/scope-description.tsx:1035
 msgid "Update"
 msgstr "Ändra"
 
@@ -1246,7 +1312,7 @@ msgstr "Uppdatera ditt användarnamn"
 msgid "Update your username to a domain name you own to self-verify your identity."
 msgstr "Uppdatera ditt användarnamn till ett domännamn som du äger för att själv verifiera din identitet."
 
-#: src/components/utils/scope-description.tsx:760
+#: src/components/utils/scope-description.tsx:805
 msgid "Upload files"
 msgstr "Uppladdning av filer"
 
@@ -1321,11 +1387,11 @@ msgstr "Verifiera att du är människa"
 msgid "Verify your email"
 msgstr "Verifiera din e-postadress"
 
-#: src/components/consent-form.tsx:130
+#: src/components/consent-form.tsx:138
 msgid "wants to access your <0/> account"
 msgstr "vill komma åt ditt konto <0/>"
 
-#: src/components/consent-form.tsx:124
+#: src/components/consent-form.tsx:132
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "vill entydigt identifiera dig via ditt konto <0/>"
 
@@ -1397,7 +1463,8 @@ msgstr "Du kan när som helst inaktivera ditt konto igen från den här sidan."
 msgid "You can now sign in with your new email."
 msgstr "Du kan nu logga in med din nya e-postadress."
 
-#: src/data/password.ts:45 src/components/reset-password-view.tsx:107
+#: src/data/password.ts:45
+#: src/components/reset-password-view.tsx:107
 msgid "You can now sign in with your new password."
 msgstr "Du kan nu logga in med ditt nya lösenord."
 
@@ -1417,7 +1484,7 @@ msgstr "Ditt konto"
 msgid "Your account and all associated data have been deleted."
 msgstr "Ditt konto och all tillhörande data har raderats."
 
-#: src/authorization-page.tsx:229
+#: src/authorization-page.tsx:231
 msgid "Your account has been successfully reactivated."
 msgstr "Ditt konto har återaktiverats."
 
@@ -1470,7 +1537,7 @@ msgstr "Ditt lösenord har uppdaterats!"
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
 msgstr "Din profil samt dina inlägg, flöden och listor kommer återigen att bli synliga över hela Atmosphere-nätverket. Det gäller för Bluesky-appen och alla andra appar som du använder med det här kontot."
 
-#: src/components/utils/scope-description.tsx:647
+#: src/components/utils/scope-description.tsx:692
 msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
 msgstr "Ditt dataarkiv innehåller all din publika data som finns tillgänglig i AT‑protokollnätverket, till exempel Bluesky-inlägg, gillamarkeringar och följningar. Det innehåller också data som skapats via andra appar som du har loggat in på med det här kontot. Applikationen begär de behörigheter som krävs för att utföra följande åtgärder å dina vägnar:"
 

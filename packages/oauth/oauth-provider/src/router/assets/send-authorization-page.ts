@@ -34,7 +34,7 @@ export function sendAuthorizePageFactory(
           promptMode: data.parameters.prompt,
           permissionSets: Object.fromEntries(data.permissionSets),
           spaces: Object.fromEntries(data.spaces),
-          communityHandles: Object.fromEntries(data.communityHandles),
+          spaceHandles: Object.fromEntries(data.spaceHandles),
           selectedDid: data.selectedDid,
         },
         __sessions: data.sessions,

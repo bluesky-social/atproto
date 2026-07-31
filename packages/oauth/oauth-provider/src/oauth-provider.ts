@@ -164,7 +164,7 @@ type OAuthProviderConfig = {
   lexResolver?: LexResolver
 
   /**
-   * An atproto identity resolver, used to resolve DIDs (e.g. community-owner
+   * An atproto identity resolver, used to resolve DIDs (e.g. space-authority
    * DIDs in `space:` scopes) to handles for display on the consent screen.
    * Optional — when omitted, raw DIDs are rendered.
    */
@@ -744,12 +744,12 @@ export class OAuthProvider extends OAuthVerifier {
         // inside the manager — unlike permission sets, missing spaces don't
         // block the authorization flow.
         spaces: await this.lexiconManager.getSpacesFromScope(parameters.scope),
-        // @NOTE community handles for `space:` scopes anchored to a specific
-        // owner DID. Same advisory model as spaces above — verification
+        // @NOTE space handles for `space:` scopes anchored to a specific
+        // authority DID. Same advisory model as spaces above — verification
         // failures fall back to rendering the raw DID. Empty map when no
         // identity resolver was configured.
-        communityHandles:
-          (await this.identityManager?.getCommunityHandlesFromScope(
+        spaceHandles:
+          (await this.identityManager?.getSpaceHandlesFromScope(
             parameters.scope,
           )) ?? new Map(),
       }
