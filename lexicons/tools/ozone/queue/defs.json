@@ -46,6 +46,11 @@
           "type": "string",
           "description": "Optional description of the queue"
         },
+        "recommendedPolicies": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Policy keys recommended when actioning reports in this queue"
+        },
         "createdBy": {
           "type": "string",
           "format": "did",
