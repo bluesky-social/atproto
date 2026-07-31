@@ -171,6 +171,10 @@ function createTransportImpl<M extends DataMode>(
     }
   }
 
+  // Handed to `onOpen`, which the reconnect loop forwards straight to the caller's
+  // `onConnect` — so this object, not just its `send`, is public API. Keep it to
+  // exactly the `Sender` surface: anything else added here becomes reachable from
+  // userland, and the transport itself is deliberately not part of the contract.
   const sender: Sender<M> = {
     async send(data) {
       if (!open) {
