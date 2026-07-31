@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { space, repo } = params
 
-      assertSpaceRead(auth, space)
+      assertSpaceRead(auth, space, repo)
 
       // Held open for the life of the stream so records page out lazily.
       const actorDb = await ctx.actorStore.openDb(repo)

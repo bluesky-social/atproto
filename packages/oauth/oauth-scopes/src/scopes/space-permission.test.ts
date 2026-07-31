@@ -141,6 +141,53 @@ describe('SpacePermission', () => {
           'space:com.atmoboards.forum?authority=did:plc:abc&skey=default&collection=com.atmoboards.thread&action=create',
         )
       })
+
+      it('builds a manage scope without asking for record access', () => {
+        const scope = SpacePermission.scopeNeededFor({
+          type: 'com.atmoboards.forum',
+          authority: 'did:plc:abc',
+          skey: 'default',
+          manage: 'update',
+        })
+        expect(scope).toBe(
+          'space:com.atmoboards.forum?authority=did:plc:abc&skey=default&action=read_self&manage=update',
+        )
+      })
+
+      it.each([
+        [{ action: 'read' } as const],
+        [{ action: 'read_self' } as const],
+        [
+          {
+            action: 'create',
+            collection: 'com.atmoboards.thread',
+          } as const,
+        ],
+        [{ manage: 'delete' } as const],
+      ])('round-trips %o without widening the grant', (op) => {
+        const target = {
+          type: 'com.atmoboards.forum',
+          authority: 'did:plc:abc' as const,
+          skey: 'default',
+          ...op,
+        }
+        const suggested = SpacePermission.scopeNeededFor(target)
+        const reparsed = SpacePermission.fromString(suggested)
+        expect(reparsed).not.toBeNull()
+        expect(reparsed!.matches(target)).toBe(true)
+        // The suggestion must not confer writes the caller never asked for.
+        if (!('collection' in op)) {
+          expect(
+            reparsed!.matches({
+              type: 'com.atmoboards.forum',
+              authority: 'did:plc:abc',
+              skey: 'default',
+              action: 'create',
+              collection: 'com.atmoboards.thread',
+            }),
+          ).toBe(false)
+        }
+      })
     })
   })
 
@@ -229,25 +276,22 @@ describe('SpacePermission', () => {
 
     it('read implies read_self', () => {
       const scope = anyAuthority('&action=read')
-      expect(
-        scope.matches({
-          ...baseTarget,
-          action: 'read_self',
-          collection: 'com.atmoboards.thread',
-        }),
-      ).toBe(true)
+      expect(scope.matches({ ...baseTarget, action: 'read_self' })).toBe(true)
     })
 
     it('read_self grants own-repo read but not whole-space read', () => {
-      const scope = anyAuthority('&action=read_self&collection=*')
-      expect(
-        scope.matches({
-          ...baseTarget,
-          action: 'read_self',
-          collection: 'com.atmoboards.thread',
-        }),
-      ).toBe(true)
+      const scope = anyAuthority('&action=read_self')
+      expect(scope.matches({ ...baseTarget, action: 'read_self' })).toBe(true)
       expect(scope.matches({ ...baseTarget, action: 'read' })).toBe(false)
+    })
+
+    it('read_self is not constrained by collection', () => {
+      // A grant naming one collection still reads the whole of its own repo:
+      // reads are all-or-nothing at the repo boundary.
+      const scope = anyAuthority(
+        '&action=read_self&collection=com.atmoboards.thread',
+      )
+      expect(scope.matches({ ...baseTarget, action: 'read_self' })).toBe(true)
     })
 
     it('explicit collection limits writes to that collection', () => {

@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, res }) => {
       const { space, repo } = params
 
-      assertSpaceRead(auth, space)
+      assertSpaceRead(auth, space, repo)
 
       const cid = parseCid(params.cid)
       const found = await ctx.actorStore.read(repo, async (store) => {

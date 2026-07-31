@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { space, repo, collection, rkey } = params
 
-      assertSpaceRead(auth, space)
+      assertSpaceRead(auth, space, repo)
 
       const record = await ctx.actorStore.read(repo, (store) =>
         store.space.getRecord(space, collection, rkey),

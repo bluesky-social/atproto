@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { space, repo, since, limit, excludeValues } = params
 
-      assertSpaceRead(auth, space)
+      assertSpaceRead(auth, space, repo)
 
       const result = await ctx.actorStore.read(repo, async (store) => {
         const oplog = await store.space.getRepoOplog(space, {

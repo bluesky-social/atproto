@@ -50,15 +50,24 @@ export function assertSpaceScope(
   } as SpacePermissionMatch)
 }
 
+/**
+ * Reading a repo other than the caller's own takes whole-space `read`. Reading
+ * their own takes only `read_self`, which `read` implies.
+ */
 export function assertSpaceRead(
   auth: AccessOutput | OAuthOutput | SpaceCredentialOutput,
   spaceUri: string,
+  repo: string,
 ): void {
   if (auth.credentials.type === 'space_credential') {
     assertCredentialSpace(auth.credentials, spaceUri)
-  } else {
-    assertSpaceScope(auth, spaceUri, { action: 'read' })
+    return
   }
+  const isOwnRepo =
+    auth.credentials.type === 'oauth' && auth.credentials.did === repo
+  assertSpaceScope(auth, spaceUri, {
+    action: isOwnRepo ? 'read_self' : 'read',
+  })
 }
 
 export function assertCredentialSpace(

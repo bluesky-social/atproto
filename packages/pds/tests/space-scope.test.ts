@@ -1,6 +1,9 @@
 import { ScopeMissingError, ScopePermissions } from '@atproto/oauth-scopes'
 import { DidString } from '@atproto/syntax'
-import { assertSpaceScope } from '../src/api/com/atproto/space/util.js'
+import {
+  assertSpaceRead,
+  assertSpaceScope,
+} from '../src/api/com/atproto/space/util.js'
 import {
   AccessOutput,
   OAuthOutput,
@@ -124,10 +127,7 @@ describe('assertSpaceScope', () => {
         'space:com.atmoboards.forum?authority=*&action=read',
       )
       expect(() =>
-        assertSpaceScope(auth, SPACE, {
-          action: 'read_self',
-          collection: 'com.atmoboards.thread',
-        }),
+        assertSpaceScope(auth, SPACE, { action: 'read_self' }),
       ).not.toThrow()
     })
 
@@ -284,5 +284,50 @@ describe('assertSpaceScope', () => {
         }),
       ).toThrow(ScopeMissingError)
     })
+  })
+})
+
+describe('assertSpaceRead', () => {
+  const OTHER_DID = 'did:plc:other' as DidString
+
+  it("reads the caller's own repo with only read_self", () => {
+    const auth = oauthAuth(
+      'space:com.atmoboards.forum?authority=*&action=read_self',
+    )
+    expect(() => assertSpaceRead(auth, SPACE, DID)).not.toThrow()
+  })
+
+  it('refuses another repo with only read_self', () => {
+    const auth = oauthAuth(
+      'space:com.atmoboards.forum?authority=*&action=read_self',
+    )
+    expect(() => assertSpaceRead(auth, SPACE, OTHER_DID)).toThrow(
+      ScopeMissingError,
+    )
+  })
+
+  it('reads any repo with whole-space read', () => {
+    const auth = oauthAuth('space:com.atmoboards.forum?authority=*&action=read')
+    expect(() => assertSpaceRead(auth, SPACE, DID)).not.toThrow()
+    expect(() => assertSpaceRead(auth, SPACE, OTHER_DID)).not.toThrow()
+  })
+
+  it('read_self is not narrowed by collection', () => {
+    const auth = oauthAuth(
+      'space:com.atmoboards.forum?authority=*&action=read_self&collection=com.atmoboards.thread',
+    )
+    expect(() => assertSpaceRead(auth, SPACE, DID)).not.toThrow()
+  })
+
+  it('a space credential reads any repo in its own space', () => {
+    const auth = credentialAuth()
+    expect(() => assertSpaceRead(auth, SPACE, OTHER_DID)).not.toThrow()
+    expect(() =>
+      assertSpaceRead(
+        auth,
+        'at://did:plc:owner/space/com.atmoboards.forum/other',
+        OTHER_DID,
+      ),
+    ).toThrow(/not scoped to this space/)
   })
 })

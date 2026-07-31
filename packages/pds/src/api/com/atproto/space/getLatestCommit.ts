@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { space, repo } = params
 
-      assertSpaceRead(auth, space)
+      assertSpaceRead(auth, space, repo)
 
       const commit = await ctx.actorStore.read(repo, async (store) => {
         const state = await store.space.getRepoState(space)
