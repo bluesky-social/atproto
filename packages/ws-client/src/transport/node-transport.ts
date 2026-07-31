@@ -161,7 +161,6 @@ function createTransportImpl<M extends DataMode>(
       heartbeatAlive = false
       ws.ping()
     }, intervalMs)
-    heartbeatTimer.unref?.()
   }
 
   function clearHeartbeat(): void {
