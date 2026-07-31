@@ -11,7 +11,7 @@ import { startServer } from './_util/server.js'
 
 // Drains a generator into an array. A non-reconnectable clean close ends the
 // generator normally rather than rejecting, so most tests below resolve here.
-async function drain<T>(gen: AsyncGenerator<T, void, undefined>): Promise<T[]> {
+async function drain<T>(gen: AsyncGenerator<T, void, unknown>): Promise<T[]> {
   const out: T[] = []
   for await (const m of gen) out.push(m)
   return out

@@ -1,4 +1,4 @@
-import { type ClientOptions, WebSocket } from 'ws'
+import { WebSocket } from 'ws'
 import {
   HeartbeatTimeoutError,
   SocketError,
@@ -67,10 +67,6 @@ function createTransportImpl<M extends DataMode>(
     },
   })
 
-  const headers = options.headers
-    ? Object.fromEntries(new Headers(options.headers))
-    : undefined
-
   // `ws` offers permessage-deflate by default, the same compression a browser
   // WebSocket offers. Leaving the default in place makes negotiation identical
   // cross-platform by construction.
@@ -80,10 +76,13 @@ function createTransportImpl<M extends DataMode>(
   // (its default is 30s — far too long for a shutdown path to wait). The option
   // is typed via the intersection because @types/ws lags ws 8.19, which
   // introduced it.
-  const ws = new WebSocket(options.url, options.protocols, {
-    headers,
-    closeTimeout: CLOSE_TIMEOUT_MS,
-  } as ClientOptions & { closeTimeout: number })
+  const wsopts = {
+    headers: options.headers
+      ? Object.fromEntries(new Headers(options.headers))
+      : undefined,
+    closeTimeout: CLOSE_TIMEOUT_MS, // supported by our version of ws, but not in @types/ws yet
+  }
+  const ws = new WebSocket(options.url, options.protocols, wsopts)
 
   // Pin the default so every frame, text or binary, arrives as a single Buffer.
   ws.binaryType = 'nodebuffer'
@@ -105,14 +104,23 @@ function createTransportImpl<M extends DataMode>(
     markClosed = resolve
   })
 
-  // The error that ended this connection, recorded the moment teardown begins
-  // and applied to the channel from the 'close' handler. Deferring it that way
-  // is what makes a pull settle *after* the socket closed rather than racing
-  // it. Wrapped in an object so a recorded `undefined` reason is still a
-  // recorded failure.
+  // Ends the connection with a failure, the moment teardown begins.
+  //
+  // The channel is failed here rather than from the 'close' handler, so delivery
+  // stops at once: a polite close is a *handshake*, and the socket stays readable
+  // until the peer answers it, which would otherwise let frames keep arriving and
+  // being yielded after the consumer asked to stop. `closeGuard` is what keeps
+  // the strict contract intact — it holds the resulting rejection until the close
+  // event fires, so iteration still settles only once the socket is down.
+  //
+  // Recorded as well as applied, because the 'close' handler needs to know this
+  // connection ended badly (and must report 1006 rather than the handshake's
+  // code). Wrapped in an object so a recorded `undefined` reason still counts.
   let pendingError: { error: unknown } | undefined
   function endWith(error: unknown): void {
-    pendingError ??= { error }
+    if (pendingError) return
+    pendingError = { error }
+    channel.fail(error)
   }
 
   // Flag-based heartbeat loop: each tick either found evidence of life since the
@@ -216,8 +224,9 @@ function createTransportImpl<M extends DataMode>(
     clearHeartbeat()
     if (pendingError) {
       // Teardown began with a failure (a socket error, a liveness timeout, an
-      // aborted signal): report it now that the socket is actually down.
-      channel.fail(pendingError.error)
+      // aborted signal). The channel was already failed at that point; report the
+      // close as abnormal, since the code from a handshake we cut short would
+      // describe the goodbye rather than what actually ended this connection.
       reportClose(ABNORMAL_CLOSE_DETAIL)
     } else {
       channel.finish()
