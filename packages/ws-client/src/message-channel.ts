@@ -109,56 +109,84 @@ export const ABNORMAL_CLOSE_DETAIL: CloseEventDetail = Object.freeze({
 })
 
 /**
- * Wraps an iterator so its terminal state is gated on a signal. The iterator's
- * own terminal state is still the primary determinant of iteration, but the
- * signal is a secondary gate: if it fires, the iterator's next/return/throw
- * waits for it to settle before reporting done or throwing.
+ * Wraps an iterator so the *end* of iteration is gated on a signal: a terminal
+ * outcome — `done: true`, or a rejection — is withheld until `closeSignal`
+ * fires, letting a consumer treat "iteration finished" as "teardown finished".
+ * The inner iterator still decides *whether* iteration ends; the signal only
+ * decides when the caller is told.
+ *
+ * Only terminal outcomes wait. A `done: false` result means iteration
+ * continues, so gating it would stall a live stream — and that applies to every
+ * method, not just `next()`: per the iterator protocol both `throw()` and
+ * `return()` may answer `done: false` to decline ending iteration.
+ *
+ * @NOTE How this compares to `yield*`, the closest built-in equivalent. Two
+ * deliberate differences, both on one path — an inner iterator with no `throw()`
+ * method:
+ *
+ * - `yield*` rejects with a `TypeError` ("The iterator does not provide a
+ *   'throw' method") and *discards the caller's error*. Defining `throw()` here
+ *   means callers may always call it, so that hole would be ours to fall into:
+ *   instead we close the inner iterator with `return()` — skipping cleanup would
+ *   leak it — and rethrow the caller's error, the more useful of the two.
+ * - `yield*` prefers a failing `return()` over that `TypeError`; we prefer it
+ *   over the caller's error. A cleanup failure is new information, whereas the
+ *   caller's error is something they just handed us and still hold.
+ *
+ * Everything else matches the engine: a recovering `throw()` resumes iteration,
+ * a `return()` the inner iterator declines is forwarded as-is, and an absent
+ * `return()` counts as a clean close.
  */
 export function closeGuard<T>(
   iterator: AsyncIterator<T, void, unknown>,
   closeSignal: AbortSignal,
 ): AsyncIterator<T, void, unknown> {
-  closeSignal.throwIfAborted()
+  if (closeSignal.aborted) return iterator
 
-  const promise = new Promise((resolve) => {
-    closeSignal.addEventListener('abort', resolve, { once: true })
+  const closed = new Promise<void>((resolve) => {
+    // The event is dropped rather than resolved with: nothing here reads it, and
+    // keeping it would pin the event object for the lifetime of the guard.
+    closeSignal.addEventListener('abort', () => resolve(), { once: true })
   })
 
   return {
     async next() {
       try {
         const result = await iterator.next()
-        // Only the terminal pull waits: a yielded message means the connection is
-        // still live, and delaying data until close would deadlock the stream.
-        if (result.done) await promise
+        // Only the terminal pull waits: a yielded message means the connection
+        // is still live, and delaying data until close would deadlock the
+        // stream.
+        if (result.done) await closed
         return result
       } catch (error) {
-        // A rejection is the end of iteration too, so it waits the same way.
-        await promise
+        // A rejection ends iteration too, so it waits the same way.
+        await closed
         throw error
       }
     },
     async return() {
       try {
-        await iterator.return?.()
-        return { value: undefined, done: true }
-      } finally {
-        await promise
+        // An iterator with no `return()` has nothing to release, which the
+        // protocol treats as a successful close.
+        const result = await iterator.return?.()
+        if (!result || result.done) await closed
+        return result ?? { value: undefined, done: true }
+      } catch (error) {
+        await closed
+        throw error
       }
     },
-    async throw(error: unknown) {
+    async throw(error: unknown): Promise<IteratorResult<T, void>> {
       try {
-        // @NOTE Because we define a throw() function, the caller is allowed to
-        // throw() even if the inner iterator doesn't implement it. We have to
-        // ensure proper cleanup in that case, so we call return() instead.
-        if (iterator.throw) {
-          await iterator.throw?.(error)
-        } else {
-          await iterator.return?.()
-        }
+        const result = await iterator.throw?.(error)
+        // A `throw()` may "recover" and decline to end iteration, so it can
+        // return `done: false`.
+        if (result?.done) await closed
         throw error
-      } finally {
-        await promise
+      } catch (error) {
+        // A failing `throw()` ends iteration too, so it waits the same way.
+        await closed
+        throw error
       }
     },
   }
@@ -375,7 +403,7 @@ export function createMessageChannel<M extends DataMode>(
     throw error
   }
 
-  const iterator: Required<AsyncIterator<MessageOf<M>, void, unknown>> = {
+  const iterator: AsyncIterator<MessageOf<M>, void, unknown> = {
     next: iteratorNext,
     return: iteratorReturn,
     throw: iteratorThrow,

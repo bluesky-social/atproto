@@ -5,7 +5,7 @@ import {
   DataModeError,
   IdleTimeoutError,
 } from './lib/errors.js'
-import { createMessageChannel } from './message-channel.js'
+import { closeGuard, createMessageChannel } from './message-channel.js'
 
 describe(createMessageChannel, () => {
   describe('delivery', () => {
@@ -471,6 +471,292 @@ describe(createMessageChannel, () => {
       const boom = new Error('boom')
       await expect(iterator.throw(boom)).rejects.toBe(boom)
       expect(onAbort).toHaveBeenCalled()
+    })
+  })
+})
+
+describe(closeGuard, () => {
+  // The guard holds a terminal on a pending promise, not a timer, so letting one
+  // macrotask turn elapse is enough to tell "held" from "settled".
+  async function isPending(promise: Promise<unknown>): Promise<boolean> {
+    let settled = false
+    const mark = () => {
+      settled = true
+    }
+    promise.then(mark, mark)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    return !settled
+  }
+
+  // An inner iterator that ends however the test asks, plus a `returned` flag so
+  // cleanup can be asserted. `throw` is left off deliberately — the guard's
+  // fallback to `return()` is documented behavior.
+  function source<T>(
+    values: T[],
+    end: { type: 'done' } | { type: 'error'; error: unknown } = {
+      type: 'done',
+    },
+  ) {
+    let returned = false
+    const iterator: AsyncIterator<T, void, unknown> = {
+      async next() {
+        if (values.length) return { value: values.shift()!, done: false }
+        if (end.type === 'error') throw end.error
+        return { value: undefined, done: true }
+      },
+      async return() {
+        returned = true
+        return { value: undefined, done: true }
+      },
+    }
+    return { iterator, returned: () => returned }
+  }
+
+  it('noops when the signal is already aborted', async () => {
+    const controller = new AbortController()
+    controller.abort()
+    const { iterator } = source(['one'])
+    const guarded = closeGuard(iterator, controller.signal)
+    expect(guarded).toBe(iterator)
+  })
+
+  it('yields messages without waiting for the signal', async () => {
+    const controller = new AbortController()
+    const guarded = closeGuard(source(['one']).iterator, controller.signal)
+    await expect(guarded.next()).resolves.toEqual({ value: 'one', done: false })
+  })
+
+  it('holds `done` until the signal aborts', async () => {
+    const controller = new AbortController()
+    const guarded = closeGuard(source([]).iterator, controller.signal)
+    const pending = guarded.next()
+    expect(await isPending(pending)).toBe(true)
+    controller.abort()
+    await expect(pending).resolves.toEqual({ value: undefined, done: true })
+  })
+
+  it('holds a rejection until the signal aborts, then rethrows it', async () => {
+    const controller = new AbortController()
+    const boom = new Error('boom')
+    const guarded = closeGuard(
+      source([], { type: 'error', error: boom }).iterator,
+      controller.signal,
+    )
+    const pending = guarded.next()
+    expect(await isPending(pending)).toBe(true)
+    controller.abort()
+    await expect(pending).rejects.toBe(boom)
+  })
+
+  it('returns the inner iterator, then holds done until the signal aborts', async () => {
+    const controller = new AbortController()
+    const inner = source(['unread'])
+    const guarded = closeGuard(inner.iterator, controller.signal)
+    assert(guarded.return)
+    const pending = guarded.return()
+    expect(await isPending(pending)).toBe(true)
+    // Cleanup ran eagerly; only the reported end waits on the signal.
+    expect(inner.returned()).toBe(true)
+    controller.abort()
+    await expect(pending).resolves.toEqual({ value: undefined, done: true })
+  })
+
+  it('forwards a return() the inner iterator declines', async () => {
+    // An iterator may yield from a `finally` to refuse closing, and that
+    // refusal is the inner iterator's to make.
+    const controller = new AbortController()
+    async function* gen(i = 0): AsyncGenerator<number, void, unknown> {
+      try {
+        yield i++
+      } finally {
+        yield i++
+      }
+    }
+    const inner = gen()
+    await inner.next()
+    const guarded = closeGuard(inner, controller.signal)
+    assert(guarded.return)
+    await expect(guarded.return()).resolves.toEqual({
+      value: 1,
+      done: false,
+    })
+  })
+
+  it('treats a missing return() as a clean close', async () => {
+    const controller = new AbortController()
+    const inner: AsyncIterator<string, void, unknown> = {
+      async next() {
+        return { value: 'a', done: false }
+      },
+    }
+    const guarded = closeGuard(inner, controller.signal)
+    assert(guarded.return)
+    const pending = guarded.return()
+    expect(await isPending(pending)).toBe(true)
+    controller.abort()
+    await expect(pending).resolves.toEqual({ value: undefined, done: true })
+  })
+
+  describe('delegation with yield*', () => {
+    // `closeGuard` hands back a bare iterator, so wrap it the way both transports
+    // expose theirs — `[Symbol.asyncIterator]: () => iterator` — to hand the
+    // engine something it will delegate to.
+    const asIterable = <T>(
+      iterator: AsyncIterator<T, void, unknown>,
+    ): AsyncIterable<T> => ({ [Symbol.asyncIterator]: () => iterator })
+
+    it('forwards values, then holds the end of delegation until the signal aborts', async () => {
+      const controller = new AbortController()
+      const guarded = closeGuard(
+        source(['one', 'two']).iterator,
+        controller.signal,
+      )
+      async function* delegating() {
+        yield* asIterable(guarded)
+        yield 'after'
+      }
+      const outer = delegating()
+      await expect(outer.next()).resolves.toEqual({
+        value: 'one',
+        done: false,
+      })
+      await expect(outer.next()).resolves.toEqual({
+        value: 'two',
+        done: false,
+      })
+      // The inner iterator is exhausted, so `yield*` is ending — and the engine
+      // can't resume the outer generator until the guard releases that `done`.
+      const pending = outer.next()
+      expect(await isPending(pending)).toBe(true)
+      controller.abort()
+      await expect(pending).resolves.toEqual({ value: 'after', done: false })
+    })
+
+    it('holds a `for await` body that exits via break', async () => {
+      // The idiomatic consumer shape, and the reason the guard exists: `break`
+      // makes the engine call `return()`, so the loop cannot be left until the
+      // close has completed.
+      const controller = new AbortController()
+      const inner = source(['one', 'two'])
+      const guarded = closeGuard(inner.iterator, controller.signal)
+      const seen: string[] = []
+      const loop = (async () => {
+        for await (const value of asIterable(guarded)) {
+          seen.push(value)
+          break
+        }
+      })()
+      expect(await isPending(loop)).toBe(true)
+      expect(seen).toEqual(['one'])
+      controller.abort()
+      await loop
+      expect(inner.returned()).toBe(true)
+    })
+
+    it('propagates a refusal to terminate, then gates the eventual close', async () => {
+      // A generator that yields from its `finally` declines to close. The guard
+      // forwards that verbatim, so the engine keeps the delegation alive — and
+      // only once the generator really does end does the gate apply.
+      const controller = new AbortController()
+      async function* stubborn(): AsyncGenerator<string, void, unknown> {
+        try {
+          yield 'live'
+        } finally {
+          yield 'cleanup'
+        }
+      }
+      const guarded = closeGuard(stubborn(), controller.signal)
+      async function* delegating() {
+        yield* asIterable(guarded)
+      }
+      const outer = delegating()
+      await expect(outer.next()).resolves.toEqual({
+        value: 'live',
+        done: false,
+      })
+      // The refusal reaches the caller as a live value, ungated: waiting here
+      // would deadlock on a close that this unfinished iteration is holding up.
+      await expect(outer.return()).resolves.toEqual({
+        value: 'cleanup',
+        done: false,
+      })
+      // Asking again lets the `finally` run out, which is a real terminal.
+      const pending = outer.return()
+      expect(await isPending(pending)).toBe(true)
+      controller.abort()
+      await pending
+    })
+
+    it('gives `yield*` the throw() it demands, even when the inner iterator has none', async () => {
+      // Delegating straight to a throw-less iterator makes the engine raise a
+      // TypeError and discard the caller's error. The guard always defines
+      // `throw()`, so that hole is closed and the caller's error survives.
+      const controller = new AbortController()
+      const inner = source(['one'])
+      assert(inner.iterator.throw === undefined)
+      const guarded = closeGuard(inner.iterator, controller.signal)
+      async function* delegating() {
+        yield* asIterable(guarded)
+      }
+      const outer = delegating()
+      await outer.next()
+      const boom = new Error('boom')
+      const pending = outer.throw(boom)
+      expect(await isPending(pending)).toBe(true)
+      controller.abort()
+      await expect(pending).rejects.toBe(boom)
+    })
+
+    it('ends delegation on throw() even when the inner iterator recovers', async () => {
+      // The guard treats `throw()` as terminal by choice: an inner iterator that
+      // answers `done: false` to keep going is overruled, where bare `yield*`
+      // would have resumed the delegation.
+      const controller = new AbortController()
+      async function* recovering(
+        onError?: (err: unknown) => void,
+      ): AsyncGenerator<string, void, unknown> {
+        while (true) {
+          try {
+            yield 'live'
+          } catch (err) {
+            // Swallows an continue iterating
+            onError?.(err)
+          }
+        }
+      }
+
+      {
+        using onError = vi.fn()
+        const control = recovering(onError)
+        await expect(control.next()).resolves.toEqual({
+          value: 'live',
+          done: false,
+        })
+        const error = new Error('boom')
+        await control.throw(error)
+        expect(onError).toHaveBeenLastCalledWith(error)
+        await expect(control.next()).resolves.toEqual({
+          value: 'live',
+          done: false,
+        })
+        await expect(control.next()).resolves.toEqual({
+          value: 'live',
+          done: false,
+        })
+        await control.return()
+      }
+
+      const guarded = closeGuard(recovering(), controller.signal)
+      async function* delegating() {
+        yield* asIterable(guarded)
+      }
+      const outer = delegating()
+      await outer.next()
+      const boom = new Error('boom')
+      const pending = outer.throw(boom)
+      expect(await isPending(pending)).toBe(true)
+      controller.abort()
+      await expect(pending).rejects.toBe(boom)
     })
   })
 })
