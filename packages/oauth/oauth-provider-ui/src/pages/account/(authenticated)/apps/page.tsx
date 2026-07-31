@@ -1,11 +1,12 @@
+import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import type { ActiveOAuthSession, DidString } from '@atproto/oauth-provider-api'
 import { Button } from '#/components/forms/button'
 import { OAuthSessionDetailsDialog } from '#/components/oauth-session-details-dialog.tsx'
 import { Admonition, AdmonitionAction } from '#/components/utils/admonition.tsx'
 import { CircularProgress } from '#/components/utils/circular-progress'
-import { DateAgo } from '#/components/utils/date-ago'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
+import { useDateAgo } from '#/hooks/use-date-ago'
 import {
   useOAuthSessionsQuery,
   useRevokeOAuthSessionMutation,
@@ -89,7 +90,7 @@ function ApplicationSessionCard({
   session: ActiveOAuthSession
   did: DidString
 }) {
-  const { i18n } = useLingui()
+  const { i18n, t } = useLingui()
   const { mutateAsync: revokeSession } = useRevokeOAuthSessionMutation()
 
   const friendlyClientId = useOAuthClientIdentifier({
@@ -99,6 +100,30 @@ function ApplicationSessionCard({
     clientId,
     clientMetadata,
   })
+  const dateAgo = useDateAgo(updatedAt)
+  const lastAccessedText = (() => {
+    switch (dateAgo.type) {
+      case 'just-now':
+        return t`Last accessed just now`
+      case 'minutes':
+        return t`Last accessed ${plural(dateAgo.count, {
+          one: '# minute',
+          other: '# minutes',
+        })} ago`
+      case 'hours':
+        return t`Last accessed ${plural(dateAgo.count, {
+          one: '# hour',
+          other: '# hours',
+        })} ago`
+      case 'yesterday':
+        return t`Last accessed yesterday`
+      case 'days':
+        return t`Last accessed ${plural(dateAgo.count, {
+          one: '# day',
+          other: '# days',
+        })} ago`
+    }
+  })()
 
   // @NOTE if clientMetadata is undefined, it means that the client metadata
   // could not be fetched. We are unable to determine if the session is still
@@ -121,9 +146,7 @@ function ApplicationSessionCard({
             })}
           </Trans>
           {' • '}
-          <Trans context="OAuthApp">
-            Last accessed <DateAgo date={updatedAt} />
-          </Trans>
+          {lastAccessedText}
         </p>
       </div>
       <OAuthSessionDetailsDialog

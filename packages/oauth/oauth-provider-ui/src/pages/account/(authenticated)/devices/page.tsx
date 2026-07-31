@@ -1,3 +1,4 @@
+import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { Link } from '@tanstack/react-router'
 import type {
@@ -79,7 +80,31 @@ function AccountSessionCard({
 
   const { userAgent, lastSeenAt, ipAddress } = session.deviceMetadata
   const browserName = useBrowserName(userAgent || undefined)
-  const lastUsedAgo = useDateAgo(lastSeenAt)
+  const dateAgo = useDateAgo(lastSeenAt)
+
+  const lastSeenText = (() => {
+    switch (dateAgo.type) {
+      case 'just-now':
+        return t`Last seen just now`
+      case 'minutes':
+        return t`Last seen ${plural(dateAgo.count, {
+          one: '# minute',
+          other: '# minutes',
+        })} ago`
+      case 'hours':
+        return t`Last seen ${plural(dateAgo.count, {
+          one: '# hour',
+          other: '# hours',
+        })} ago`
+      case 'yesterday':
+        return t`Last seen yesterday`
+      case 'days':
+        return t`Last seen ${plural(dateAgo.count, {
+          one: '# day',
+          other: '# days',
+        })} ago`
+    }
+  })()
 
   return (
     <div className="border-contrast-50 dark:border-contrast-100 flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
@@ -90,9 +115,7 @@ function AccountSessionCard({
           )}
         </p>
         <p className="font-mono text-xs">{ipAddress}</p>
-        <p className="text-text-light truncate text-xs">
-          <Trans context="device list">Last seen {lastUsedAgo}</Trans>
-        </p>
+        <p className="text-text-light truncate text-xs">{lastSeenText}</p>
       </div>
       <Button
         size="sm"
