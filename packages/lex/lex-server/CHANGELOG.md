@@ -1,5 +1,16 @@
 # @atproto/lex-server
 
+## 0.1.11
+
+### Patch Changes
+
+- Updated dependencies [[`95aa1d6`](https://github.com/bluesky-social/atproto/commit/95aa1d6dfea71316d5f30dd8bd4ed48afac31c81)]:
+  - @atproto/lex-client@0.3.1
+  - @atproto/lex-schema@0.2.3
+  - @atproto/lex-cbor@0.1.5
+  - @atproto/lex-data@0.1.6
+  - @atproto/lex-json@0.1.5
+
 ## 0.1.10
 
 ### Patch Changes
