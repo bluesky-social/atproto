@@ -11,7 +11,7 @@ describe(createMessageChannel, () => {
   describe('delivery', () => {
     it('yields a pushed message to a parked pull', async () => {
       const channel = createMessageChannel({ dataMode: 'auto' })
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       const pending = iterator.next()
       channel.push('hello')
       await expect(pending).resolves.toEqual({ value: 'hello', done: false })
@@ -22,7 +22,7 @@ describe(createMessageChannel, () => {
       channel.push('one')
       channel.push('two')
       channel.push('three')
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       await expect(iterator.next()).resolves.toEqual({
         value: 'one',
         done: false,
@@ -42,7 +42,7 @@ describe(createMessageChannel, () => {
       const bin = new Uint8Array([1, 2, 3])
       channel.push('text-frame')
       channel.push(bin)
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       await expect(iterator.next()).resolves.toEqual({
         value: 'text-frame',
         done: false,
@@ -56,7 +56,7 @@ describe(createMessageChannel, () => {
     it('yields string for text mode and Uint8Array for binary mode', async () => {
       const textChannel = createMessageChannel({ dataMode: 'text' })
       textChannel.push('hi')
-      const textIterator = textChannel.iterable[Symbol.asyncIterator]()
+      const textIterator = textChannel.iterator
       const textResult = await textIterator.next()
       assert(!textResult.done)
       expect(typeof textResult.value).toBe('string')
@@ -64,7 +64,7 @@ describe(createMessageChannel, () => {
       const binChannel = createMessageChannel({ dataMode: 'binary' })
       const bin = new Uint8Array([9, 8, 7])
       binChannel.push(bin)
-      const binIterator = binChannel.iterable[Symbol.asyncIterator]()
+      const binIterator = binChannel.iterator
       const binResult = await binIterator.next()
       assert(!binResult.done)
       expect(binResult.value).toBeInstanceOf(Uint8Array)
@@ -76,7 +76,7 @@ describe(createMessageChannel, () => {
     it('fails a binary frame in text mode, asking for a 1003 close', async () => {
       const onAbort = vi.fn()
       const channel = createMessageChannel({ dataMode: 'text', onAbort })
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       const pending = iterator.next()
       channel.push(new Uint8Array([1, 2, 3]))
       await expect(pending).rejects.toSatisfy((err: unknown) => {
@@ -94,7 +94,7 @@ describe(createMessageChannel, () => {
     it('fails a text frame in binary mode', async () => {
       const onAbort = vi.fn()
       const channel = createMessageChannel({ dataMode: 'binary', onAbort })
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       const pending = iterator.next()
       channel.push('surprise')
       await expect(pending).rejects.toSatisfy((err: unknown) => {
@@ -134,7 +134,7 @@ describe(createMessageChannel, () => {
       })
       channel.push('a'.repeat(6)) // 12 bytes: over highWaterMark (10)
       expect(onPause).toHaveBeenCalledTimes(1)
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       // Draining down to 12 - 12 = 0 bytes is below half (5), so resume fires.
       await iterator.next()
       expect(onResume).toHaveBeenCalledTimes(1)
@@ -152,7 +152,7 @@ describe(createMessageChannel, () => {
       channel.push('a'.repeat(6)) // 12 bytes
       channel.push('a'.repeat(2)) // +4 = 16 bytes
       expect(onPause).toHaveBeenCalledTimes(1)
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       // Drain the first message: 16 - 12 = 4 bytes remain, below half (5) —
       // resume fires here, so push a third message to keep it above half.
       channel.push('a'.repeat(6)) // +12 = 16 bytes again before draining
@@ -182,7 +182,7 @@ describe(createMessageChannel, () => {
       })
       channel.push('a'.repeat(20)) // 40 bytes: well over the mark
       channel.push('more')
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       await expect(iterator.next()).resolves.toEqual({
         value: 'a'.repeat(20),
         done: false,
@@ -203,7 +203,7 @@ describe(createMessageChannel, () => {
       // No pull is parked, so this buffers rather than delivering directly: 20
       // bytes against a 10-byte cap overflows.
       channel.push('a'.repeat(10))
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       await expect(iterator.next()).rejects.toBeInstanceOf(BufferOverflowError)
       expect(onAbort).toHaveBeenCalledTimes(1)
       const [error, code] = onAbort.mock.calls[0]
@@ -258,7 +258,7 @@ describe(createMessageChannel, () => {
           idleTimeoutMs: 1000,
           onAbort,
         })
-        const iterator = channel.iterable[Symbol.asyncIterator]()
+        const iterator = channel.iterator
         // Attach the assertion synchronously: the rejection fires mid-tick, before
         // this test resumes, and would otherwise look unhandled.
         const pending = expect(iterator.next()).rejects.toBeInstanceOf(
@@ -334,7 +334,7 @@ describe(createMessageChannel, () => {
           onAbort,
           // No `backpressure`: the browser shape.
         })
-        const iterator = channel.iterable[Symbol.asyncIterator]()
+        const iterator = channel.iterator
         // Leave the buffer between the low mark (5) and the high mark (10), where
         // the pause flag used to latch.
         channel.push('a'.repeat(6)) // 12 bytes
@@ -370,7 +370,7 @@ describe(createMessageChannel, () => {
       channel.push('one')
       channel.push('two')
       channel.finish()
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       await expect(iterator.next()).resolves.toEqual({
         value: 'one',
         done: false,
@@ -391,13 +391,13 @@ describe(createMessageChannel, () => {
       channel.push('two')
       const boom = new Error('boom')
       channel.fail(boom)
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       await expect(iterator.next()).rejects.toBe(boom)
     })
 
     it('rejects a parked pull on fail', async () => {
       const channel = createMessageChannel({ dataMode: 'auto' })
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       const pending = iterator.next()
       const boom = new Error('boom')
       channel.fail(boom)
@@ -411,17 +411,13 @@ describe(createMessageChannel, () => {
       const first = new Error('first')
       failed.fail(first)
       failed.fail(new Error('second'))
-      await expect(failed.iterable[Symbol.asyncIterator]().next()).rejects.toBe(
-        first,
-      )
+      await expect(failed.iterator.next()).rejects.toBe(first)
 
       // A finish after a failure likewise cannot turn it into a clean end.
       const failedThenFinished = createMessageChannel({ dataMode: 'auto' })
       failedThenFinished.fail(first)
       failedThenFinished.finish()
-      await expect(
-        failedThenFinished.iterable[Symbol.asyncIterator]().next(),
-      ).rejects.toBe(first)
+      await expect(failedThenFinished.iterator.next()).rejects.toBe(first)
 
       // And a failure after a clean finish can't turn it into a rejection: the
       // buffered message drains, then the stream ends.
@@ -429,7 +425,7 @@ describe(createMessageChannel, () => {
       finished.push('buffered')
       finished.finish()
       finished.fail(new Error('too late'))
-      const iterator = finished.iterable[Symbol.asyncIterator]()
+      const iterator = finished.iterator
       await expect(iterator.next()).resolves.toEqual({
         value: 'buffered',
         done: false,
@@ -445,7 +441,7 @@ describe(createMessageChannel, () => {
       const channel = createMessageChannel({ dataMode: 'auto', onAbort })
       channel.push('one')
       channel.push('two')
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       assert(iterator.return)
       await iterator.return()
       expect(onAbort).toHaveBeenCalledWith(undefined, CloseCode.Normal)
@@ -460,11 +456,21 @@ describe(createMessageChannel, () => {
       const channel = createMessageChannel({ dataMode: 'auto' })
       channel.finish()
       channel.push('too-late')
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       await expect(iterator.next()).resolves.toEqual({
         value: undefined,
         done: true,
       })
+    })
+
+    it('triggers termination when throwing the iterator', async () => {
+      const onAbort = vi.fn()
+      const channel = createMessageChannel({ dataMode: 'auto', onAbort })
+      const iterator = channel.iterator
+      assert(iterator.throw)
+      const boom = new Error('boom')
+      await expect(iterator.throw(boom)).rejects.toBe(boom)
+      expect(onAbort).toHaveBeenCalled()
     })
   })
 })

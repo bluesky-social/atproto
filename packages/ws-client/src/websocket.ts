@@ -27,14 +27,14 @@ export type Awaitable<T> = T | Promise<T>
  * single call site (see {@link TransportOptions}). Out here every field is
  * genuinely optional, and {@link connectionOptions} bridges the two.
  */
-type ConnectionOptions<M extends DataMode = 'auto'> = Partial<
+type ConnectionOptions<M extends DataMode> = Partial<
   Omit<
     TransportOptions<M>,
     'url' | 'signal' | 'dataMode' | 'onOpen' | 'onClose'
   >
 > & { dataMode?: M }
 
-export interface WebSocketOptions<M extends DataMode = 'auto'>
+export interface WebSocketOptions<M extends DataMode>
   extends ConnectionOptions<M> {
   /** Exponential-backoff ceiling in seconds. Default 64. */
   maxReconnectSeconds?: number
@@ -107,22 +107,14 @@ export interface WebSocketOptions<M extends DataMode = 'auto'>
   onClose?: (detail: CloseEventDetail) => void
 }
 
-export type NodeWebSocketOptions<M extends DataMode = 'auto'> =
-  WebSocketOptions<M>
-export type BrowserWebSocketOptions<M extends DataMode = 'auto'> = Omit<
-  WebSocketOptions<M>,
-  'headers'
->
-
 /**
  * A reconnecting stream of WebSocket messages: `for await` over it and the
- * stream spans reconnects, so a consumer never has to notice that the underlying
- * connection was torn down and replaced. Ends on `break`, `throw`, or an aborted
- * `signal`.
- *
- * An `AsyncGenerator` rather than a bare `AsyncIterable`, so a consumer can use
- * `next()` or `return()` if it wants to. The runtime object is a generator
- * either way, and a quieter type would only hide that.
+ * stream spans reconnects, so a consumer never has to notice that the
+ * underlying connection was torn down and replaced. Ends on `break`, `throw`,
+ * or an aborted `signal` (see {@link WebSocketOptions.signal}). When throwing,
+ * or aborting, use a {@link CloseError} to control the close code and message
+ * sent to the server; any other value results in a normal close with code 1000
+ * and no message.
  */
 export type WebSocketIterable<M extends DataMode = 'auto'> = AsyncGenerator<
   MessageOf<M>,
@@ -130,170 +122,163 @@ export type WebSocketIterable<M extends DataMode = 'auto'> = AsyncGenerator<
   unknown
 >
 
-export type WebSocketFn = <M extends DataMode = 'auto'>(
-  url: string | URL | (() => Awaitable<string | URL>),
-  options?: WebSocketOptions<M>,
-) => WebSocketIterable<M>
-
 /**
  * Binds a platform transport factory into the public `websocket()` generator.
  * Called once per entrypoint; the `#transport` imports condition selects the
  * platform.
  */
-export function createWebSocket(
+
+export async function* websocketFactory<M extends DataMode = 'auto'>(
+  url: string | URL | (() => Awaitable<string | URL>),
   createTransport: TransportFactory,
-): WebSocketFn {
-  return async function* websocket<M extends DataMode = 'auto'>(
-    url: string | URL | (() => Awaitable<string | URL>),
-    options: WebSocketOptions<M> = {},
-  ): WebSocketIterable<M> {
-    const { signal } = options
-    const maxMs = 1000 * (options.maxReconnectSeconds ?? 64)
-    const shouldReconnect = normalizeShouldReconnect(options.shouldReconnect)
+  options: WebSocketOptions<M> = {},
+): WebSocketIterable<M> {
+  const { signal } = options
+  const maxMs = 1000 * (options.maxReconnectSeconds ?? 64)
+  const shouldReconnect = normalizeShouldReconnect(options.shouldReconnect)
 
-    // Consecutive failed connections since the last successful open, so the
-    // backoff restarts at ~1s after any stable open and only escalates across
-    // repeated failures with nothing working in between.
-    let retries = 0
-    let firstOpen = true
-    // How the last connection ended, recorded by the transport's `onClose` below.
-    // A transport settles its iteration only after its socket has closed, so this
-    // is always already set when a `yield*` resumes or rejects — which is what
-    // lets both the thrown CloseError and the terminal hook read it directly,
-    // with no synchronization of their own.
-    let closeDetail: CloseEventDetail | undefined
+  // Consecutive failed connections since the last successful open, so the
+  // backoff restarts at ~1s after any stable open and only escalates across
+  // repeated failures with nothing working in between.
+  let retries = 0
+  let firstOpen = true
+  // How the last connection ended, recorded by the transport's `onClose` below.
+  // A transport settles its iteration only after its socket has closed, so this
+  // is always already set when a `yield*` resumes or rejects — which is what
+  // lets both the thrown CloseError and the terminal hook read it directly,
+  // with no synchronization of their own.
+  let closeDetail: CloseEventDetail | undefined
 
-    try {
-      for (;;) {
-        // One abort check for every way this loop is entered: the first pull (the
-        // generator body doesn't run until then, so an already-aborted signal
-        // rejects that `next()` rather than the call that created the generator),
-        // and each re-entry after a backoff.
+  try {
+    for (;;) {
+      // One abort check for every way this loop is entered: the first pull (the
+      // generator body doesn't run until then, so an already-aborted signal
+      // rejects that `next()` rather than the call that created the generator),
+      // and each re-entry after a backoff.
+      signal?.throwIfAborted()
+
+      const resolved = typeof url === 'function' ? await url() : url
+      // Resolving the url is an async gap of its own: an abort that lands while
+      // it's in flight must not fall through to a connection nothing tears down.
+      signal?.throwIfAborted()
+
+      // A transport is created already connecting and has no close method —
+      // aborting is the only way to end it. Forwarding the caller's signal in
+      // means an outer abort reaches the socket; aborting in the `finally`
+      // means every exit path tears the connection down exactly once.
+      const teardown = new AbortController()
+      forwardAbort(signal, teardown)
+      let opened = false
+      // Per-attempt, and cleared here rather than only written on success: a
+      // detail left over from an earlier connection would otherwise be reported
+      // as this stream's ending.
+      closeDetail = undefined
+      try {
+        const transport = createTransport<M>({
+          // The transport-facing subset of the caller's options
+          dataMode: options.dataMode ?? ('auto' as M),
+          protocols: options.protocols,
+          headers: options.headers,
+          heartbeat: options.heartbeat,
+          idleTimeoutMs: options.idleTimeoutMs,
+          highWaterMark: options.highWaterMark,
+          maxBufferedBytes: options.maxBufferedBytes,
+          // Transport options wired by this websocket implementation and not directly by the caller
+          url: resolved,
+          signal: teardown.signal,
+          // The sender handed out is the transport's own: its send() already
+          // rejects once this connection is no longer open, which the
+          // transport knows the moment its socket closes, errors, or aborts.
+          onOpen: (sender) => {
+            retries = 0 // a stable open: the backoff starts over
+            opened = true
+            // onOpen bookends the stream and fires once, before the first
+            // onConnect; onConnect fires for every connection including this
+            // one.
+            if (firstOpen) {
+              firstOpen = false
+              invokeHook(options.onOpen)
+            }
+            invokeHook(options.onConnect, sender)
+          },
+          onClose: (detail) => {
+            closeDetail = detail
+            // Only for a connection that actually connected, and only once:
+            // this is what makes onConnect/onDisconnect pair exactly.
+            if (opened) {
+              opened = false
+              invokeHook(options.onDisconnect)
+            }
+          },
+        })
+
+        // Per the ordinary iterator contract, a transport reports a failure by
+        // rejecting and an orderly close by completing. So a close arrives
+        // here as a normal completion, and this layer turns its detail into
+        // the error the policy below classifies — which saves transports from
+        // inventing an error for something that isn't one. `closeDetail` is
+        // always already recorded here, since a transport settles its iteration
+        // only after its socket has closed.
+        //
+        // A consumer `break` also lands here, resuming with a return
+        // completion: it runs the `finally` and leaves the loop without
+        // reaching the throw.
+        yield* transport
+        throw closeError(closeDetail)
+      } catch (error) {
+        // An abort is the caller's decision, not a connection failure:
+        // surface the reason rather than classifying it as retryable.
         signal?.throwIfAborted()
 
-        const resolved = typeof url === 'function' ? await url() : url
-        // Resolving the url is an async gap of its own: an abort that lands while
-        // it's in flight must not fall through to a connection nothing tears down.
-        signal?.throwIfAborted()
+        const willReconnect = shouldReconnect(error, retries)
+        // A 1000 close goes to the policy like anything else, so an override can
+        // re-dial a server that closes after each batch. But when the policy
+        // declines, a peer that ended the session normally is a *completed*
+        // stream, not a failure the consumer has to catch.
+        //
+        // Keyed on the code rather than on `wasClean`, which asks a different
+        // question: whether the closing handshake completed. A fatal 1002
+        // protocol close completes its handshake too, and must still reject.
+        const endedNormally =
+          error instanceof CloseError && error.code === CloseCode.Normal
+        if (!willReconnect && endedNormally) return
 
-        // A transport is created already connecting and has no close method —
-        // aborting is the only way to end it. Forwarding the caller's signal in
-        // means an outer abort reaches the socket; aborting in the `finally`
-        // means every exit path tears the connection down exactly once.
-        const teardown = new AbortController()
-        forwardAbort(signal, teardown)
-        let opened = false
-        // Per-attempt, and cleared here rather than only written on success: a
-        // detail left over from an earlier connection would otherwise be reported
-        // as this stream's ending.
-        closeDetail = undefined
-        try {
-          const transport = createTransport<M>({
-            // The transport-facing subset of the caller's options
-            dataMode: options.dataMode ?? ('auto' as M),
-            protocols: options.protocols,
-            headers: options.headers,
-            heartbeat: options.heartbeat,
-            idleTimeoutMs: options.idleTimeoutMs,
-            highWaterMark: options.highWaterMark,
-            maxBufferedBytes: options.maxBufferedBytes,
-            // Transport options wired by this websocket implementation and not directly by the caller
-            url: resolved,
-            signal: teardown.signal,
-            // The sender handed out is the transport's own: its send() already
-            // rejects once this connection is no longer open, which the
-            // transport knows the moment its socket closes, errors, or aborts.
-            onOpen: (sender) => {
-              retries = 0 // a stable open: the backoff starts over
-              opened = true
-              // onOpen bookends the stream and fires once, before the first
-              // onConnect; onConnect fires for every connection including this
-              // one.
-              if (firstOpen) {
-                firstOpen = false
-                invokeHook(options.onOpen)
-              }
-              invokeHook(options.onConnect, sender)
-            },
-            onClose: (detail) => {
-              closeDetail = detail
-              // Only for a connection that actually connected, and only once:
-              // this is what makes onConnect/onDisconnect pair exactly.
-              if (opened) {
-                opened = false
-                invokeHook(options.onDisconnect)
-              }
-            },
-          })
-
-          // Per the ordinary iterator contract, a transport reports a failure by
-          // rejecting and an orderly close by completing. So a close arrives
-          // here as a normal completion, and this layer turns its detail into
-          // the error the policy below classifies — which saves transports from
-          // inventing an error for something that isn't one. `closeDetail` is
-          // always already recorded here, since a transport settles its iteration
-          // only after its socket has closed.
-          //
-          // A consumer `break` also lands here, resuming with a return
-          // completion: it runs the `finally` and leaves the loop without
-          // reaching the throw.
-          yield* transport
-          throw closeError(closeDetail)
-        } catch (error) {
-          // An abort is the caller's decision, not a connection failure:
-          // surface the reason rather than classifying it as retryable.
-          signal?.throwIfAborted()
-
-          const willReconnect = shouldReconnect(error, retries)
-          // A 1000 close goes to the policy like anything else, so an override can
-          // re-dial a server that closes after each batch. But when the policy
-          // declines, a peer that ended the session normally is a *completed*
-          // stream, not a failure the consumer has to catch.
-          //
-          // Keyed on the code rather than on `wasClean`, which asks a different
-          // question: whether the closing handshake completed. A fatal 1002
-          // protocol close completes its handshake too, and must still reject.
-          const endedNormally =
-            error instanceof CloseError && error.code === CloseCode.Normal
-          if (!willReconnect && endedNormally) return
-
-          // Two hooks rather than one with an optional argument, because they
-          // report different things: `onReconnect` is the only place a swallowed
-          // failure surfaces, while an `onError` error is also what the iterator
-          // rejects with — so a caller can handle it there or in a `catch`.
-          if (!willReconnect) {
-            invokeHook(options.onError, error)
-            throw error
-          }
-          invokeHook(options.onReconnect, error, { attempt: retries })
-
-          // Backoff lives in the one branch that actually retries rather than at
-          // the top of the loop, because the other three exits (a fatal error
-          // rethrowing, a non-reconnectable clean close returning, a consumer
-          // `break` resuming at the `yield*`) must not be delayed by it.
-          // Post-increment so the first reconnect waits ~1s (2^0) and each
-          // consecutive failure escalates; a successful open resets to 0.
-          await sleep(backoffMs(retries++, maxMs), signal)
-          // Loop: the check at the top catches an abort that landed during the
-          // backoff, then the url is re-resolved and redialed.
-        } finally {
-          // Also detaches the forwarding listener, which is bound to this
-          // controller's own signal.
-          teardown.abort()
+        // Two hooks rather than one with an optional argument, because they
+        // report different things: `onReconnect` is the only place a swallowed
+        // failure surfaces, while an `onError` error is also what the iterator
+        // rejects with — so a caller can handle it there or in a `catch`.
+        if (!willReconnect) {
+          invokeHook(options.onError, error)
+          throw error
         }
+        invokeHook(options.onReconnect, error, { attempt: retries })
+
+        // Backoff lives in the one branch that actually retries rather than at
+        // the top of the loop, because the other three exits (a fatal error
+        // rethrowing, a non-reconnectable clean close returning, a consumer
+        // `break` resuming at the `yield*`) must not be delayed by it.
+        // Post-increment so the first reconnect waits ~1s (2^0) and each
+        // consecutive failure escalates; a successful open resets to 0.
+        await sleep(backoffMs(retries++, maxMs), signal)
+        // Loop: the check at the top catches an abort that landed during the
+        // backoff, then the url is re-resolved and redialed.
+      } finally {
+        // Also detaches the forwarding listener, which is bound to this
+        // controller's own signal.
+        teardown.abort()
       }
-    } finally {
-      // The single terminal transition: runs however the stream ends, exactly
-      // once. A generator that was never pulled never gets here.
-      //
-      // No waiting for the close: a transport settles its iteration only after
-      // its socket has closed and its detail was reported, so by the time this
-      // runs there is nothing left to synchronize with. `closeDetail` is unset
-      // only when no connection ever closed — a stop while parked in backoff, or
-      // a transport that threw at construction — where an abnormal close is the
-      // honest answer.
-      invokeHook(options.onClose, closeDetail ?? ABNORMAL_CLOSE_DETAIL)
     }
+  } finally {
+    // The single terminal transition: runs however the stream ends, exactly
+    // once. A generator that was never pulled never gets here.
+    //
+    // No waiting for the close: a transport settles its iteration only after
+    // its socket has closed and its detail was reported, so by the time this
+    // runs there is nothing left to synchronize with. `closeDetail` is unset
+    // only when no connection ever closed — a stop while parked in backoff, or
+    // a transport that threw at construction — where an abnormal close is the
+    // honest answer.
+    invokeHook(options.onClose, closeDetail ?? ABNORMAL_CLOSE_DETAIL)
   }
 }
 
@@ -311,7 +296,7 @@ function normalizeShouldReconnect(
 ): (error: unknown, attempt: number) => boolean {
   if (typeof option === 'function') return option
   if (option === false) return () => false
-  return (error) => defaultShouldReconnect(error)
+  return defaultShouldReconnect
 }
 
 // Forwards an abort from `source` (the caller's signal, if any) into `target`,
@@ -336,8 +321,8 @@ function forwardAbort(
 // The timer stays ref'd on purpose: a process whose only pending work is this
 // backoff should stay alive to reconnect rather than exiting mid-wait.
 function sleep(ms: number, signal: AbortSignal | undefined): Promise<void> {
+  if (signal?.aborted) return Promise.resolve()
   return new Promise((resolve) => {
-    if (signal?.aborted) return resolve()
     const timer = setTimeout(() => {
       signal?.removeEventListener('abort', onStop)
       resolve()

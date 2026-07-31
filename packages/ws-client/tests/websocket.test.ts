@@ -1,9 +1,22 @@
 import { assert, describe, expect, it, vi } from 'vitest'
 import { CloseCode } from '../src/lib/close-codes.js'
 import { CloseError, SocketError } from '../src/lib/errors.js'
-import type { CloseEventDetail } from '../src/message-channel.js'
+import type { CloseEventDetail, DataMode } from '../src/message-channel.js'
 import type { Transport, TransportFactory } from '../src/transport/transport.js'
-import { createWebSocket } from '../src/websocket.js'
+import {
+  type Awaitable,
+  type WebSocketOptions,
+  websocketFactory,
+} from '../src/websocket.js'
+
+const createWebSocket = (createTransport: TransportFactory) => {
+  return <M extends DataMode>(
+    url: string | URL | (() => Awaitable<string | URL>),
+    options: WebSocketOptions<M> = {},
+  ) => {
+    return websocketFactory(url, createTransport, options)
+  }
+}
 
 // One entry per connection the loop will make. Every connection end reaches the
 // loop as a throw — a clean close included, as a CloseError carrying its code —
