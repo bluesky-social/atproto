@@ -13,18 +13,6 @@ msgstr ""
 "Language-Team: quiple\n"
 "Plural-Forms: \n"
 
-#: src/hooks/use-date-ago.ts:35
-msgid "{deltaDays} days ago"
-msgstr "{deltaDays}일 전"
-
-#: src/hooks/use-date-ago.ts:27
-msgid "{deltaHours} hours ago"
-msgstr "{deltaHours}시간 전"
-
-#: src/hooks/use-date-ago.ts:19
-msgid "{deltaMinutes} minutes ago"
-msgstr "{deltaMinutes}분 전"
-
 #: src/pages/account/(authenticated)/about/page.tsx:136
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>AT 프로토콜</0> — 개발자를 위한 기술 문서"
@@ -57,14 +45,6 @@ msgstr "<0>무엇이 특별한가</0><1>가장 큰 차이점은 데이터가 특
 #: src/components/forms/input-handle-custom-instructions.tsx:69
 msgid "<your-domain>"
 msgstr ""
-
-#: src/hooks/use-date-ago.ts:24
-msgid "1 hour ago"
-msgstr "1시간 전"
-
-#: src/hooks/use-date-ago.ts:16
-msgid "1 minute ago"
-msgstr "1분 전"
 
 #: src/components/sign-in-form.tsx:244
 msgid "2FA Confirmation"
@@ -187,7 +167,7 @@ msgstr "모든 서비스"
 msgid "Apps"
 msgstr "앱"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:59
+#: src/pages/account/(authenticated)/apps/page.tsx:60
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr "앱은 사용자가 앱을 적극적으로 사용하지 않을 때에도 백그라운드에서 계정에 접근할 수 있습니다. (알림 확인, 데이터 동기화 등) 이는 정상적인 동작이며, 위에 표시된 ‘마지막 접근’ 시간이 업데이트됩니다."
 
@@ -213,7 +193,7 @@ msgid "Authorize"
 msgstr "승인"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:115
+#: src/pages/account/(authenticated)/apps/page.tsx:140
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "{0}에 승인됨"
@@ -224,9 +204,9 @@ msgstr "{0}에 승인됨"
 msgid "Back"
 msgstr "뒤로"
 
-#: src/components/forms/input-handle-default.tsx:109
-msgid "Between {minLength} and {maxLength} characters"
-msgstr "{minLength}~{maxLength}자 사이"
+#: src/components/forms/input-handle-default.tsx:110
+msgid "Between {minLength} and {maxLength, plural, other {# characters}}"
+msgstr ""
 
 #: src/components/utils/scope-description.tsx:757
 msgid "Blob storage"
@@ -248,11 +228,9 @@ msgstr "브랜딩"
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "<0>승인</0>을 클릭하면 <1>서비스 이용약관</1> 및 <2>개인정보 처리방침</2>에 따라 이 애플리케이션이 귀하의 계정에 접근할 수 있도록 허용합니다."
 
-#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
-#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/components/sign-up-disclaimer.tsx:27
-msgid "By creating an account you agree to the {0} and the {1} of this service."
-msgstr "계정을 만들면 {0} 및 {1}에 동의하는 것입니다."
+msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
+msgstr ""
 
 #: src/components/utils/scope-description.tsx:583
 msgctxt "RPC lxm"
@@ -268,7 +246,7 @@ msgstr "호출"
 msgid "Cancel"
 msgstr "취소"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:108
+#: src/pages/account/(authenticated)/devices/page.tsx:131
 msgid "Cannot remove current device"
 msgstr "현재 기기를 제거할 수 없습니다"
 
@@ -431,7 +409,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "접근 거부"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:138
+#: src/pages/account/(authenticated)/apps/page.tsx:161
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
 msgstr "세부 정보"
@@ -489,7 +467,7 @@ msgstr ""
 msgid "Email verified"
 msgstr ""
 
-#: src/components/forms/input-new-password.tsx:39
+#: src/components/forms/input-new-password.tsx:40
 msgid "Enter a password"
 msgstr "비밀번호 입력"
 
@@ -509,7 +487,7 @@ msgstr "계정을 만들 때 사용한 이메일을 입력하세요. 새 비밀�
 msgid "Enter your email address"
 msgstr "이메일 주소 입력"
 
-#: src/components/forms/input-new-password.tsx:40
+#: src/components/forms/input-new-password.tsx:41
 msgid "Enter your new password"
 msgstr "새 비밀번호 입력"
 
@@ -550,8 +528,8 @@ msgstr ""
 msgid "Failed to delete account"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:36
-#: src/pages/account/(authenticated)/apps/page.tsx:35
+#: src/pages/account/(authenticated)/devices/page.tsx:37
+#: src/pages/account/(authenticated)/apps/page.tsx:36
 msgid "Failed to load connected apps"
 msgstr "연결된 앱을 불러오지 못했습니다"
 
@@ -691,7 +669,7 @@ msgstr ""
 msgid "Interface language selector"
 msgstr "인터페이스 언어 선택기"
 
-#: src/components/forms/input-handle-default.tsx:254
+#: src/components/forms/input-handle-default.tsx:255
 msgid "Invalid"
 msgstr "사용 불가"
 
@@ -704,7 +682,7 @@ msgstr ""
 msgid "Invite code"
 msgstr "초대 코드"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:69
+#: src/pages/account/(authenticated)/apps/page.tsx:70
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "이 계정으로 아직 어떤 앱에도 로그인한 적이 없는 것 같습니다."
 
@@ -713,19 +691,51 @@ msgstr "이 계정으로 아직 어떤 앱에도 로그인한 적이 없는 것 
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "브라우저에서 쿠키를 허용하지 않는 것 같습니다. 다시 시도하려면 ‘계속’을 누르세요. 오류가 계속 발생하면 개인정보 설정에서 ‘{0}’ 웹사이트의 쿠키를 허용했는지 확인하세요."
 
-#: src/hooks/use-date-ago.ts:11
-msgid "just now"
-msgstr "방금 전"
+#. placeholder {0}: dateAgo.count
+#: src/pages/account/(authenticated)/apps/page.tsx:109
+msgid "Last accessed {0, plural, one {# minute} other {# minutes}} ago"
+msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:124
-msgctxt "OAuthApp"
-msgid "Last accessed <0/>"
-msgstr "<0/>에 마지막으로 접근함"
+#. placeholder {1}: dateAgo.count
+#: src/pages/account/(authenticated)/apps/page.tsx:114
+msgid "Last accessed {1, plural, one {# hour} other {# hours}} ago"
+msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:94
-msgctxt "device list"
-msgid "Last seen {lastUsedAgo}"
-msgstr "{lastUsedAgo}에 마지막으로 확인됨"
+#. placeholder {2}: dateAgo.count
+#: src/pages/account/(authenticated)/apps/page.tsx:121
+msgid "Last accessed {2, plural, one {# day} other {# days}} ago"
+msgstr ""
+
+#: src/pages/account/(authenticated)/apps/page.tsx:107
+msgid "Last accessed just now"
+msgstr ""
+
+#: src/pages/account/(authenticated)/apps/page.tsx:119
+msgid "Last accessed yesterday"
+msgstr ""
+
+#. placeholder {0}: dateAgo.count
+#: src/pages/account/(authenticated)/devices/page.tsx:90
+msgid "Last seen {0, plural, one {# minute} other {# minutes}} ago"
+msgstr ""
+
+#. placeholder {1}: dateAgo.count
+#: src/pages/account/(authenticated)/devices/page.tsx:95
+msgid "Last seen {1, plural, one {# hour} other {# hours}} ago"
+msgstr ""
+
+#. placeholder {2}: dateAgo.count
+#: src/pages/account/(authenticated)/devices/page.tsx:102
+msgid "Last seen {2, plural, one {# day} other {# days}} ago"
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx:88
+msgid "Last seen just now"
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx:100
+msgid "Last seen yesterday"
+msgstr ""
 
 #: src/components/update-email-dialog.tsx:75
 msgctxt "verify email"
@@ -740,7 +750,7 @@ msgstr "비밀번호를 재설정해 봅시다!"
 msgid "Logo"
 msgstr "로고"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:65
+#: src/pages/account/(authenticated)/devices/page.tsx:66
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "다른 기기에는 로그인되어 있지 않은 것 같습니다."
 
@@ -821,7 +831,7 @@ msgstr "다음"
 msgid "Okay"
 msgstr "확인"
 
-#: src/components/forms/input-handle-default.tsx:114
+#: src/components/forms/input-handle-default.tsx:115
 msgid "Only letters, numbers, and hyphens"
 msgstr "영문자, 숫자, 하이픈만 사용할 수 있습니다"
 
@@ -857,9 +867,9 @@ msgstr "비밀번호 변경됨"
 msgid "Password updated!"
 msgstr "비밀번호를 변경했습니다!"
 
-#: src/components/forms/input-new-password.tsx:41
-msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
-msgstr "비밀번호는 {MIN_PASSWORD_LENGTH}자 이상이어야 합니다"
+#: src/components/forms/input-new-password.tsx:42
+msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
+msgstr ""
 
 #: src/components/utils/error-details.tsx:55
 msgctxt "Error"
@@ -911,12 +921,10 @@ msgstr ""
 msgid "Please try again in a moment."
 msgstr ""
 
-#: src/components/forms/button-cooldown.tsx:76
-msgid "Please wait {remainingSeconds} seconds before trying again."
-msgstr "{remainingSeconds}초 후에 다시 시도해 주세요."
+#: src/components/forms/button-cooldown.tsx:77
+msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
+msgstr ""
 
-#: src/components/sign-up-disclaimer.tsx:39
-#: src/components/sign-up-disclaimer.tsx:42
 #: src/components/utils/link-title.tsx:17
 msgid "Privacy Policy"
 msgstr "개인정보 처리방침"
@@ -972,13 +980,13 @@ msgstr "비밀번호 재설정"
 msgid "Reset your password"
 msgstr "비밀번호 재설정"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:32
-#: src/pages/account/(authenticated)/apps/page.tsx:31
+#: src/pages/account/(authenticated)/devices/page.tsx:33
+#: src/pages/account/(authenticated)/apps/page.tsx:32
 #: src/components/utils/error-card.tsx:85
 msgid "Retry"
 msgstr "다시 시도"
 
-#: src/components/forms/button-cooldown.tsx:73
+#: src/components/forms/button-cooldown.tsx:74
 msgid "Retry in {remainingSeconds}s"
 msgstr "{remainingSeconds}초 후에 다시 시도"
 
@@ -999,7 +1007,7 @@ msgstr ""
 msgid "Select another account"
 msgstr "다른 계정 선택"
 
-#: src/components/forms/input-handle-default.tsx:150
+#: src/components/forms/input-handle-default.tsx:151
 msgid "Select domain"
 msgstr "도메인 선택"
 
@@ -1039,7 +1047,7 @@ msgstr "로그인"
 msgid "Sign in to an account that is not listed"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:111
+#: src/pages/account/(authenticated)/devices/page.tsx:134
 msgctxt "device list"
 msgid "Sign out"
 msgstr "로그아웃"
@@ -1099,8 +1107,6 @@ msgstr "기술 세부 정보"
 msgid "Temporarily activate or deactivate your account"
 msgstr "계정을 일시적으로 활성화 또는 비활성화합니다"
 
-#: src/components/sign-up-disclaimer.tsx:31
-#: src/components/sign-up-disclaimer.tsx:34
 #: src/components/utils/link-title.tsx:18
 msgid "Terms of Service"
 msgstr "서비스 이용약관"
@@ -1157,7 +1163,7 @@ msgstr ""
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:43
+#: src/pages/account/(authenticated)/apps/page.tsx:44
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "이 앱은 내 계정에 대한 접근 권한을 가지고 있습니다. 여러 기기에서 동일한 앱을 사용하는 경우 동일한 앱이 여러 번 나타날 수 있습니다. 접근 권한을 취소하면 다시 로그인할 때까지 앱에서 로그아웃됩니다."
 
@@ -1224,7 +1230,7 @@ msgstr ""
 msgid "Type your domain"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx:121
+#: src/components/forms/input-handle-default.tsx:122
 msgid "Type your username"
 msgstr ""
 
@@ -1236,7 +1242,7 @@ msgstr "승인되지 않음"
 msgid "Unexpected server response"
 msgstr "예상치 못한 서버 응답입니다"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:89
+#: src/pages/account/(authenticated)/devices/page.tsx:114
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "알 수 없는 사용자 에이전트"
@@ -1288,7 +1294,7 @@ msgstr "사용자 이름 또는 이메일 주소"
 msgid "Username updated"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx:249
+#: src/components/forms/input-handle-default.tsx:250
 msgid "Valid"
 msgstr "사용 가능"
 
@@ -1387,10 +1393,6 @@ msgstr ""
 msgid "Yes, reactivate my account"
 msgstr ""
 
-#: src/hooks/use-date-ago.ts:31
-msgid "yesterday"
-msgstr "어제"
-
 #: src/components/redirecting-view.tsx:82
 msgid "You are being redirected..."
 msgstr "페이지 이동 중…"
@@ -1444,7 +1446,7 @@ msgstr ""
 msgid "Your account is now deactivated."
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:44
+#: src/pages/account/(authenticated)/devices/page.tsx:45
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "아래 나열된 기기에서 계정에 로그인되어 있습니다. 계정이 해킹당한 경우 모든 기기에서 로그아웃하고 비밀번호를 변경한 다음 연결된 <0>앱</0>을 확인하세요."
 
@@ -1473,7 +1475,7 @@ msgid "Your email address needs to be verified."
 msgstr ""
 
 #. placeholder {0}: handle ? ( <Handle className="text-text-default" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle" /> )
-#: src/components/forms/input-handle-default.tsx:184
+#: src/components/forms/input-handle-default.tsx:185
 msgid "Your full username will be: {0}"
 msgstr "내 전체 사용자 이름: {0}"
 

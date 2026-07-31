@@ -13,18 +13,6 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/hooks/use-date-ago.ts:35
-msgid "{deltaDays} days ago"
-msgstr "il y a {deltaDays} jours"
-
-#: src/hooks/use-date-ago.ts:27
-msgid "{deltaHours} hours ago"
-msgstr "il y a {deltaHours} heures"
-
-#: src/hooks/use-date-ago.ts:19
-msgid "{deltaMinutes} minutes ago"
-msgstr "il y a {deltaMinutes} minutes"
-
 #: src/pages/account/(authenticated)/about/page.tsx:136
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>AT Protocol</0> — Documentation technique pour les développeurs"
@@ -57,14 +45,6 @@ msgstr "<0>Qu'est-ce qui le rend spécial</0><1>La grande différence : vos donn
 #: src/components/forms/input-handle-custom-instructions.tsx:69
 msgid "<your-domain>"
 msgstr "<votre-domaine>"
-
-#: src/hooks/use-date-ago.ts:24
-msgid "1 hour ago"
-msgstr "il y a 1 heure"
-
-#: src/hooks/use-date-ago.ts:16
-msgid "1 minute ago"
-msgstr "il y a 1 minute"
 
 #: src/components/sign-in-form.tsx:244
 msgid "2FA Confirmation"
@@ -187,7 +167,7 @@ msgstr "N'importe quel service"
 msgid "Apps"
 msgstr "Applications"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:59
+#: src/pages/account/(authenticated)/apps/page.tsx:60
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr "Les applications peuvent accéder à votre compte en arrière-plan (pour vérifier les notifications, synchroniser les données, etc.) même lorsque vous ne les utilisez pas activement. C'est un comportement normal qui sera reflété dans l'heure de \"dernier accès\" affichée ci-dessus."
 
@@ -213,7 +193,7 @@ msgid "Authorize"
 msgstr "Autoriser"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:115
+#: src/pages/account/(authenticated)/apps/page.tsx:140
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Autorisé le {0}"
@@ -224,9 +204,9 @@ msgstr "Autorisé le {0}"
 msgid "Back"
 msgstr "Retour"
 
-#: src/components/forms/input-handle-default.tsx:109
-msgid "Between {minLength} and {maxLength} characters"
-msgstr "Entre {minLength} et {maxLength} caractères"
+#: src/components/forms/input-handle-default.tsx:110
+msgid "Between {minLength} and {maxLength, plural, other {# characters}}"
+msgstr ""
 
 #: src/components/utils/scope-description.tsx:757
 msgid "Blob storage"
@@ -248,11 +228,9 @@ msgstr "Personnalisation"
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "En cliquant sur <0>Autoriser</0>, vous accorderez à cette application l'accès à votre compte conformément à ses <1>conditions d'utilisation</1> et sa <2>politique de confidentialité</2>."
 
-#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
-#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/components/sign-up-disclaimer.tsx:27
-msgid "By creating an account you agree to the {0} and the {1} of this service."
-msgstr "En créant un compte, vous acceptez les {0} et la {1} de ce service."
+msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
+msgstr ""
 
 #: src/components/utils/scope-description.tsx:583
 msgctxt "RPC lxm"
@@ -268,7 +246,7 @@ msgstr "Appeler"
 msgid "Cancel"
 msgstr "Annuler"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:108
+#: src/pages/account/(authenticated)/devices/page.tsx:131
 msgid "Cannot remove current device"
 msgstr "Impossible de supprimer l'appareil en cours d'utilisation"
 
@@ -431,7 +409,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Refuser l'accès"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:138
+#: src/pages/account/(authenticated)/apps/page.tsx:161
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
 msgstr "Détails"
@@ -489,7 +467,7 @@ msgstr "Envoyer ces instructions par email"
 msgid "Email verified"
 msgstr "Adresse email vérifiée"
 
-#: src/components/forms/input-new-password.tsx:39
+#: src/components/forms/input-new-password.tsx:40
 msgid "Enter a password"
 msgstr "Saisissez un mot de passe"
 
@@ -509,7 +487,7 @@ msgstr "Saisissez l'email que vous avez utilisé pour créer votre compte. Nous 
 msgid "Enter your email address"
 msgstr "Saisissez votre adresse email"
 
-#: src/components/forms/input-new-password.tsx:40
+#: src/components/forms/input-new-password.tsx:41
 msgid "Enter your new password"
 msgstr "Saisissez votre nouveau mot de passe"
 
@@ -550,8 +528,8 @@ msgstr "Échec de la désactivation du compte"
 msgid "Failed to delete account"
 msgstr "Échec de la suppression du compte"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:36
-#: src/pages/account/(authenticated)/apps/page.tsx:35
+#: src/pages/account/(authenticated)/devices/page.tsx:37
+#: src/pages/account/(authenticated)/apps/page.tsx:36
 msgid "Failed to load connected apps"
 msgstr "Échec du chargement des applications connectées"
 
@@ -701,7 +679,7 @@ msgstr "Si vous souhaitez changer votre pseudo ou votre adresse email, faites-le
 msgid "Interface language selector"
 msgstr "Sélecteur de langue"
 
-#: src/components/forms/input-handle-default.tsx:254
+#: src/components/forms/input-handle-default.tsx:255
 msgid "Invalid"
 msgstr "Invalide"
 
@@ -714,7 +692,7 @@ msgstr "Pseudo invalide"
 msgid "Invite code"
 msgstr "Code d'invitation"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:69
+#: src/pages/account/(authenticated)/apps/page.tsx:70
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "Il semble que vous n'ayez pas encore utilisé ce compte pour vous connecter à des applications."
 
@@ -723,19 +701,51 @@ msgstr "Il semble que vous n'ayez pas encore utilisé ce compte pour vous connec
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "Il semble que votre navigateur n'accepte pas les cookies. Appuyez sur \"Continuer\" pour réessayer. Si l'erreur persiste, veuillez vous assurer que vos paramètres de confidentialité autorisent les cookies pour le site \"{0}\"."
 
-#: src/hooks/use-date-ago.ts:11
-msgid "just now"
-msgstr "à l'instant"
+#. placeholder {0}: dateAgo.count
+#: src/pages/account/(authenticated)/apps/page.tsx:109
+msgid "Last accessed {0, plural, one {# minute} other {# minutes}} ago"
+msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:124
-msgctxt "OAuthApp"
-msgid "Last accessed <0/>"
-msgstr "Dernier accès <0/>"
+#. placeholder {1}: dateAgo.count
+#: src/pages/account/(authenticated)/apps/page.tsx:114
+msgid "Last accessed {1, plural, one {# hour} other {# hours}} ago"
+msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:94
-msgctxt "device list"
-msgid "Last seen {lastUsedAgo}"
-msgstr "Dernière connexion {lastUsedAgo}"
+#. placeholder {2}: dateAgo.count
+#: src/pages/account/(authenticated)/apps/page.tsx:121
+msgid "Last accessed {2, plural, one {# day} other {# days}} ago"
+msgstr ""
+
+#: src/pages/account/(authenticated)/apps/page.tsx:107
+msgid "Last accessed just now"
+msgstr ""
+
+#: src/pages/account/(authenticated)/apps/page.tsx:119
+msgid "Last accessed yesterday"
+msgstr ""
+
+#. placeholder {0}: dateAgo.count
+#: src/pages/account/(authenticated)/devices/page.tsx:90
+msgid "Last seen {0, plural, one {# minute} other {# minutes}} ago"
+msgstr ""
+
+#. placeholder {1}: dateAgo.count
+#: src/pages/account/(authenticated)/devices/page.tsx:95
+msgid "Last seen {1, plural, one {# hour} other {# hours}} ago"
+msgstr ""
+
+#. placeholder {2}: dateAgo.count
+#: src/pages/account/(authenticated)/devices/page.tsx:102
+msgid "Last seen {2, plural, one {# day} other {# days}} ago"
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx:88
+msgid "Last seen just now"
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx:100
+msgid "Last seen yesterday"
+msgstr ""
 
 #: src/components/update-email-dialog.tsx:75
 msgctxt "verify email"
@@ -750,7 +760,7 @@ msgstr "Réinitialisons votre mot de passe !"
 msgid "Logo"
 msgstr "Logo"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:65
+#: src/pages/account/(authenticated)/devices/page.tsx:66
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Il semble que vous n'ayez de session active sur aucun autre appareil."
 
@@ -831,7 +841,7 @@ msgstr "Suivant"
 msgid "Okay"
 msgstr "OK"
 
-#: src/components/forms/input-handle-default.tsx:114
+#: src/components/forms/input-handle-default.tsx:115
 msgid "Only letters, numbers, and hyphens"
 msgstr "Uniquement des lettres, des chiffres et des traits d'union"
 
@@ -867,9 +877,9 @@ msgstr "Mot de passe mis à jour"
 msgid "Password updated!"
 msgstr "Mot de passe mis à jour !"
 
-#: src/components/forms/input-new-password.tsx:41
-msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
-msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
+#: src/components/forms/input-new-password.tsx:42
+msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
+msgstr ""
 
 #: src/components/utils/error-details.tsx:55
 msgctxt "Error"
@@ -921,12 +931,10 @@ msgstr "Veuillez saisir le code de sécurité qui a été envoyé à votre adres
 msgid "Please try again in a moment."
 msgstr "Veuillez réessayer dans un instant."
 
-#: src/components/forms/button-cooldown.tsx:76
-msgid "Please wait {remainingSeconds} seconds before trying again."
-msgstr "Veuillez attendre {remainingSeconds} secondes avant de réessayer."
+#: src/components/forms/button-cooldown.tsx:77
+msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
+msgstr ""
 
-#: src/components/sign-up-disclaimer.tsx:39
-#: src/components/sign-up-disclaimer.tsx:42
 #: src/components/utils/link-title.tsx:17
 msgid "Privacy Policy"
 msgstr "Politique de Confidentialité"
@@ -982,13 +990,13 @@ msgstr "Réinitialiser le mot de passe"
 msgid "Reset your password"
 msgstr "Réinitialisez votre mot de passe"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:32
-#: src/pages/account/(authenticated)/apps/page.tsx:31
+#: src/pages/account/(authenticated)/devices/page.tsx:33
+#: src/pages/account/(authenticated)/apps/page.tsx:32
 #: src/components/utils/error-card.tsx:85
 msgid "Retry"
 msgstr "Réessayer"
 
-#: src/components/forms/button-cooldown.tsx:73
+#: src/components/forms/button-cooldown.tsx:74
 msgid "Retry in {remainingSeconds}s"
 msgstr "Réessayer dans {remainingSeconds}s"
 
@@ -1009,7 +1017,7 @@ msgstr "Étape de sécurité requise"
 msgid "Select another account"
 msgstr "Sélectionner un autre compte"
 
-#: src/components/forms/input-handle-default.tsx:150
+#: src/components/forms/input-handle-default.tsx:151
 msgid "Select domain"
 msgstr "Sélectionner le domaine"
 
@@ -1049,7 +1057,7 @@ msgstr "Se connecter en tant que..."
 msgid "Sign in to an account that is not listed"
 msgstr "Se connecter à un compte qui n'est pas listé"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:111
+#: src/pages/account/(authenticated)/devices/page.tsx:134
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Déconnecter"
@@ -1109,8 +1117,6 @@ msgstr "Détails techniques"
 msgid "Temporarily activate or deactivate your account"
 msgstr "Activer ou désactiver temporairement votre compte"
 
-#: src/components/sign-up-disclaimer.tsx:31
-#: src/components/sign-up-disclaimer.tsx:34
 #: src/components/utils/link-title.tsx:18
 msgid "Terms of Service"
 msgstr "Conditions d'Utilisation"
@@ -1167,7 +1173,7 @@ msgstr "Le nom d'utilisateur est invalide"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "Il n'y a pas de limite de temps pour la désactivation du compte, revenez quand vous le souhaitez."
 
-#: src/pages/account/(authenticated)/apps/page.tsx:43
+#: src/pages/account/(authenticated)/apps/page.tsx:44
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "Ces applications ont accès à votre compte. Une application peut apparaître plusieurs fois si vous l'utilisez sur différents appareils. Vous pouvez révoquer l'accès pour déconnecter l'application jusqu'à ce que vous vous reconnectiez."
 
@@ -1234,7 +1240,7 @@ msgstr "Type"
 msgid "Type your domain"
 msgstr "Saisissez votre nom de domaine"
 
-#: src/components/forms/input-handle-default.tsx:121
+#: src/components/forms/input-handle-default.tsx:122
 msgid "Type your username"
 msgstr "Saisissez votre nom d'utilisateur"
 
@@ -1246,7 +1252,7 @@ msgstr "Déconnecté"
 msgid "Unexpected server response"
 msgstr "Réponse inattendue du serveur"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:89
+#: src/pages/account/(authenticated)/devices/page.tsx:114
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Agent utilisateur inconnu"
@@ -1298,7 +1304,7 @@ msgstr "Nom d'utilisateur ou adresse email"
 msgid "Username updated"
 msgstr "Nom d'utilisateur modifié"
 
-#: src/components/forms/input-handle-default.tsx:249
+#: src/components/forms/input-handle-default.tsx:250
 msgid "Valid"
 msgstr "Valide"
 
@@ -1397,10 +1403,6 @@ msgstr "Oui, supprimer mon compte"
 msgid "Yes, reactivate my account"
 msgstr "Oui, réactiver mon compte"
 
-#: src/hooks/use-date-ago.ts:31
-msgid "yesterday"
-msgstr "hier"
-
 #: src/components/redirecting-view.tsx:82
 msgid "You are being redirected..."
 msgstr "Redirection en cours..."
@@ -1454,7 +1456,7 @@ msgstr "Votre compte est actuellement désactivé."
 msgid "Your account is now deactivated."
 msgstr "Votre compte est maintenant désactivé."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:44
+#: src/pages/account/(authenticated)/devices/page.tsx:45
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "Une session est ouverte sur les appareils listés ci-dessous. Si votre compte a été compromis, déconnectez tous les appareils, changez votre mot de passe et vérifiez vos <0>applications</0> connectées."
 
@@ -1483,7 +1485,7 @@ msgid "Your email address needs to be verified."
 msgstr "Votre adresse email doit être vérifiée."
 
 #. placeholder {0}: handle ? ( <Handle className="text-text-default" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle" /> )
-#: src/components/forms/input-handle-default.tsx:184
+#: src/components/forms/input-handle-default.tsx:185
 msgid "Your full username will be: {0}"
 msgstr "Votre nom d'utilisateur complet sera : {0}"
 
