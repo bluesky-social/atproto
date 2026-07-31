@@ -13,7 +13,7 @@ import {
 } from '../src/transport/browser-transport.js'
 import type { Sender, Transport } from '../src/transport/transport.js'
 import { startServer } from './_util/server.js'
-import { transportOptions } from './_util/transport-options.js'
+import { transportOptionDefaults } from './_util/transport-options.js'
 
 // Node 24 ships a global WHATWG `WebSocket`, so the real-socket tests below use
 // it exactly as a browser would, with no `undici` dependency. Cast through
@@ -93,15 +93,14 @@ describe(createTransport, () => {
     const controller = new AbortController()
     // No WebSocketCtor argument, exercising the documented default of
     // `globalThis.WebSocket`.
-    const transport = createTransport(
-      transportOptions({
-        url: server.url,
-        dataMode: 'auto',
-        signal: controller.signal,
-        onOpen: () => {},
-        onClose: () => {},
-      }),
-    )
+    const transport = createTransport({
+      ...transportOptionDefaults,
+      url: server.url,
+      dataMode: 'auto',
+      signal: controller.signal,
+      onOpen: () => {},
+      onClose: () => {},
+    })
     const { messages, error } = await drain(transport)
     expect(messages).toHaveLength(2)
     expect(messages[0]).toBe('hello')
@@ -122,13 +121,14 @@ describe(createTransport, () => {
     const controller = new AbortController()
     const closes: CloseEventDetail[] = []
     const transport = createTransport(
-      transportOptions({
+      {
+        ...transportOptionDefaults,
         url: server.url,
         dataMode: 'auto',
         signal: controller.signal,
         onOpen: () => {},
         onClose: (detail) => closes.push(detail),
-      }),
+      },
       globalWebSocket,
     )
     const { error } = await drain(transport)
@@ -142,14 +142,15 @@ describe(createTransport, () => {
     const controller = new AbortController()
     expect(() =>
       createTransport(
-        transportOptions({
+        {
+          ...transportOptionDefaults,
           url: 'ws://localhost:1',
           dataMode: 'auto',
           signal: controller.signal,
           headers: { Authorization: 'Bearer t0ken' },
           onOpen: () => {},
           onClose: () => {},
-        }),
+        },
         globalWebSocket,
       ),
     ).toThrow(TypeError)
@@ -159,14 +160,15 @@ describe(createTransport, () => {
     const controller = new AbortController()
     expect(() =>
       createTransport(
-        transportOptions({
+        {
+          ...transportOptionDefaults,
           url: 'ws://localhost:1',
           dataMode: 'auto',
           signal: controller.signal,
           headers: new Headers({ Authorization: 'Bearer t0ken' }),
           onOpen: () => {},
           onClose: () => {},
-        }),
+        },
         globalWebSocket,
       ),
     ).toThrow(TypeError)
@@ -179,14 +181,15 @@ describe(createTransport, () => {
       let transport!: Transport<'auto'>
       expect(() => {
         transport = createTransport(
-          transportOptions({
+          {
+            ...transportOptionDefaults,
             url: server.url,
             dataMode: 'auto',
             signal: controller.signal,
             headers,
             onOpen: () => {},
             onClose: () => {},
-          }),
+          },
           globalWebSocket,
         )
       }).not.toThrow()
@@ -198,13 +201,14 @@ describe(createTransport, () => {
     const controller = new AbortController()
     expect(() =>
       createTransport(
-        transportOptions({
+        {
+          ...transportOptionDefaults,
           url: 'ws://localhost:1',
           dataMode: 'auto',
           signal: controller.signal,
           onOpen: () => {},
           onClose: () => {},
-        }),
+        },
         null as unknown as WebSocketCtor,
       ),
     ).toThrow(TypeError)
@@ -224,12 +228,13 @@ describe(createTransport, () => {
     const controller = new AbortController()
     const onClose = vi.fn()
     const transport = createTransport(
-      transportOptions({
+      {
+        ...transportOptionDefaults,
         url: server.url,
         dataMode: 'auto',
         signal: controller.signal,
         onClose,
-      }),
+      },
       globalWebSocket,
     )
     const drained = drain(transport)
@@ -252,13 +257,14 @@ describe(createTransport, () => {
     const onClose = vi.fn()
     const controller = new AbortController()
     const transport = createTransport(
-      transportOptions({
+      {
+        ...transportOptionDefaults,
         url: 'ws://localhost:1',
         dataMode: 'auto',
         signal: controller.signal,
         onOpen: () => {},
         onClose,
-      }),
+      },
       CapturingWebSocket as unknown as WebSocketCtor,
     )
     assert(instances.length === 1)
@@ -289,7 +295,8 @@ describe(createTransport, () => {
     const controller = new AbortController()
     let sender!: Sender<'auto'>
     const transport = createTransport(
-      transportOptions({
+      {
+        ...transportOptionDefaults,
         url: server.url,
         dataMode: 'auto',
         signal: controller.signal,
@@ -297,7 +304,7 @@ describe(createTransport, () => {
           sender = s
         },
         onClose: () => {},
-      }),
+      },
       globalWebSocket,
     )
     const drained = drain(transport)
@@ -314,13 +321,14 @@ describe(createTransport, () => {
     await using server = await startServer(() => {})
     const controller = new AbortController()
     const transport = createTransport(
-      transportOptions({
+      {
+        ...transportOptionDefaults,
         url: server.url,
         dataMode: 'auto',
         signal: controller.signal,
         onOpen: () => {},
         onClose: () => {},
-      }),
+      },
       globalWebSocket,
     )
     await expect(transport.send('too-soon')).rejects.toBeInstanceOf(
@@ -334,7 +342,8 @@ describe(createTransport, () => {
     const controller = new AbortController()
     let sender!: Sender<'auto'>
     const transport = createTransport(
-      transportOptions({
+      {
+        ...transportOptionDefaults,
         url: server.url,
         dataMode: 'auto',
         signal: controller.signal,
@@ -342,7 +351,7 @@ describe(createTransport, () => {
           sender = s
         },
         onClose: () => {},
-      }),
+      },
       globalWebSocket,
     )
     await drain(transport)
@@ -359,13 +368,14 @@ describe(createTransport, () => {
     const onOpen = vi.fn()
     const onClose = vi.fn()
     const transport = createTransport(
-      transportOptions({
+      {
+        ...transportOptionDefaults,
         url: server.url,
         dataMode: 'auto',
         signal: controller.signal,
         onOpen,
         onClose,
-      }),
+      },
       globalWebSocket,
     )
     await drain(transport)
@@ -387,7 +397,8 @@ describe(createTransport, () => {
     const onClose = vi.fn()
     let opened = false
     const transport = createTransport(
-      transportOptions({
+      {
+        ...transportOptionDefaults,
         url: server.url,
         dataMode: 'auto',
         signal: controller.signal,
@@ -395,7 +406,7 @@ describe(createTransport, () => {
           opened = true
         },
         onClose,
-      }),
+      },
       globalWebSocket,
     )
     const drained = drain(transport)
@@ -431,7 +442,8 @@ describe(createTransport, () => {
     // without consulting the byte cap, so the test would flakily see an ordinary
     // message instead of the overflow.
     const transport = createTransport(
-      transportOptions({
+      {
+        ...transportOptionDefaults,
         url: server.url,
         dataMode: 'auto',
         signal: controller.signal,
@@ -440,7 +452,7 @@ describe(createTransport, () => {
           sender = s
         },
         onClose,
-      }),
+      },
       globalWebSocket,
     )
     await vi.waitFor(() => assert(sender))
@@ -454,14 +466,15 @@ describe(createTransport, () => {
     await using server = await startServer(() => {})
     const controller = new AbortController()
     const transport = createTransport(
-      transportOptions({
+      {
+        ...transportOptionDefaults,
         url: server.url,
         dataMode: 'auto',
         signal: controller.signal,
         idleTimeoutMs: 30,
         onOpen: () => {},
         onClose: () => {},
-      }),
+      },
       globalWebSocket,
     )
     const { error } = await drain(transport)
@@ -475,15 +488,14 @@ describe(createTransport, () => {
       ws.send('two')
     })
     const ac = new AbortController()
-    const transport = createTransport(
-      transportOptions({
-        url: server.url,
-        dataMode: 'text',
-        signal: ac.signal,
-        onOpen: () => {},
-        onClose: () => {},
-      }),
-    )
+    const transport = createTransport({
+      ...transportOptionDefaults,
+      url: server.url,
+      dataMode: 'text',
+      signal: ac.signal,
+      onOpen: () => {},
+      onClose: () => {},
+    })
     const iterator = transport[Symbol.asyncIterator]()
     expect(await iterator.next()).toEqual({ value: 'one', done: false })
     // A consumer stop is not the connection ending, so neither the return() nor
