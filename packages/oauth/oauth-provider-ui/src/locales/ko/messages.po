@@ -66,7 +66,7 @@ msgstr "1시간 전"
 msgid "1 minute ago"
 msgstr "1분 전"
 
-#: src/components/sign-in-form.tsx:215
+#: src/components/sign-in-form.tsx:214
 msgid "2FA Confirmation"
 msgstr "2단계 인증"
 
@@ -294,7 +294,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr ""
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:223
+#: src/components/sign-in-form.tsx:222
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "{0} 이메일에서 로그인 코드를 확인한 후 여기에 입력하세요."
 
@@ -358,7 +358,7 @@ msgstr "확인"
 msgid "Confirm your password to continue"
 msgstr "계속하려면 비밀번호를 다시 한번 입력하세요"
 
-#: src/components/sign-in-form.tsx:216
+#: src/components/sign-in-form.tsx:215
 #: src/components/delete-account-confirm-form.tsx:57
 msgid "Confirmation code"
 msgstr "인증 코드"
@@ -627,7 +627,7 @@ msgstr ""
 msgid "Forgot Password"
 msgstr "비밀번호 분실"
 
-#: src/components/sign-in-form.tsx:188
+#: src/components/sign-in-form.tsx:187
 msgid "Forgot?"
 msgstr "분실"
 
@@ -980,7 +980,7 @@ msgstr "내 계정의 이메일 주소 읽기"
 msgid "Read your private preferences"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:205
+#: src/components/sign-in-form.tsx:204
 msgid "Remember this account on this device"
 msgstr "이 기기에서 이 계정 기억하기"
 
@@ -997,7 +997,7 @@ msgstr "재설정 코드"
 msgid "Reset Password"
 msgstr "비밀번호 재설정"
 
-#: src/components/sign-in-form.tsx:186
+#: src/components/sign-in-form.tsx:185
 msgid "Reset your password"
 msgstr "비밀번호 재설정"
 
@@ -1008,7 +1008,7 @@ msgid "Retry"
 msgstr "다시 시도"
 
 #: src/components/forms/request-code-button.tsx:72
-#: src/components/forms/request-code-button.tsx:101
+#: src/components/forms/request-code-button.tsx:100
 msgid "Retry in {remainingSeconds}s"
 msgstr "{remainingSeconds}초 후에 다시 시도"
 
@@ -1359,7 +1359,7 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:195
+#: src/components/sign-in-form.tsx:194
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "비밀번호를 입력하기 전에 웹사이트 주소를 확인하세요. 알고 있고 신뢰하는 사이트에서만 로그인하세요."
 
@@ -1379,7 +1379,7 @@ msgstr "<0/> 계정에 대한 접근 권한을 요청합니다"
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "<0/> 계정을 통해 나를 식별하고자 합니다"
 
-#: src/components/sign-in-form.tsx:194
+#: src/components/sign-in-form.tsx:193
 msgid "Warning"
 msgstr "경고"
 

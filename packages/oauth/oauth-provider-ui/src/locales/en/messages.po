@@ -66,7 +66,7 @@ msgstr "1 hour ago"
 msgid "1 minute ago"
 msgstr "1 minute ago"
 
-#: src/components/sign-in-form.tsx:215
+#: src/components/sign-in-form.tsx:214
 msgid "2FA Confirmation"
 msgstr "2FA Confirmation"
 
@@ -294,7 +294,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr "Check <0>{email}</0> for an email with the confirmation code to enter below:"
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:223
+#: src/components/sign-in-form.tsx:222
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Check your {0} email for a login code and enter it here."
 
@@ -358,7 +358,7 @@ msgstr "Confirm"
 msgid "Confirm your password to continue"
 msgstr "Confirm your password to continue"
 
-#: src/components/sign-in-form.tsx:216
+#: src/components/sign-in-form.tsx:215
 #: src/components/delete-account-confirm-form.tsx:57
 msgid "Confirmation code"
 msgstr "Confirmation code"
@@ -627,7 +627,7 @@ msgstr "For security reasons, we'll need to send a confirmation code to your ema
 msgid "Forgot Password"
 msgstr "Forgot Password"
 
-#: src/components/sign-in-form.tsx:188
+#: src/components/sign-in-form.tsx:187
 msgid "Forgot?"
 msgstr "Forgot?"
 
@@ -990,7 +990,7 @@ msgstr "Read your account's email address"
 msgid "Read your private preferences"
 msgstr "Read your private preferences"
 
-#: src/components/sign-in-form.tsx:205
+#: src/components/sign-in-form.tsx:204
 msgid "Remember this account on this device"
 msgstr "Remember this account on this device"
 
@@ -1007,7 +1007,7 @@ msgstr "Reset code"
 msgid "Reset Password"
 msgstr "Reset Password"
 
-#: src/components/sign-in-form.tsx:186
+#: src/components/sign-in-form.tsx:185
 msgid "Reset your password"
 msgstr "Reset your password"
 
@@ -1018,7 +1018,7 @@ msgid "Retry"
 msgstr "Retry"
 
 #: src/components/forms/request-code-button.tsx:72
-#: src/components/forms/request-code-button.tsx:101
+#: src/components/forms/request-code-button.tsx:100
 msgid "Retry in {remainingSeconds}s"
 msgstr "Retry in {remainingSeconds}s"
 
@@ -1369,7 +1369,7 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr "Verify now"
 
-#: src/components/sign-in-form.tsx:195
+#: src/components/sign-in-form.tsx:194
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 
@@ -1389,7 +1389,7 @@ msgstr "wants to access your <0/> account"
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "wants to uniquely identify you through your <0/> account"
 
-#: src/components/sign-in-form.tsx:194
+#: src/components/sign-in-form.tsx:193
 msgid "Warning"
 msgstr "Warning"
 

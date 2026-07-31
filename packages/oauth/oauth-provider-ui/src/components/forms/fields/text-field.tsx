@@ -11,6 +11,8 @@ export type FieldBaseProps = {
    */
   name: string
   label?: ReactNode
+  /** Control rendered opposite the label, as the shadcn login blocks place it. */
+  labelAction?: ReactNode
   description?: ReactNode
   /** Leading adornment rendered inside the input frame. */
   icon?: ReactNode
@@ -33,6 +35,7 @@ export type TextFieldProps = Override<
 export function TextField({
   name,
   label,
+  labelAction,
   description,
   icon,
   append,
@@ -43,9 +46,12 @@ export function TextField({
   return (
     <Field.Root name={name} className="flex flex-col gap-2">
       {label && (
-        <Field.Label className="flex w-fit items-center gap-2 text-sm font-medium leading-snug">
-          {label}
-        </Field.Label>
+        <div className="flex items-center gap-2">
+          <Field.Label className="flex w-fit items-center gap-2 text-sm font-medium leading-snug">
+            {label}
+          </Field.Label>
+          {labelAction && <div className="ml-auto">{labelAction}</div>}
+        </div>
       )}
 
       <div className="relative flex items-center">

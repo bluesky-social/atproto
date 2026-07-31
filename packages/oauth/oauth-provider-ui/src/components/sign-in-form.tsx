@@ -170,13 +170,12 @@ export function SignInForm({
         autoFocus={usernameReadonly}
         required
         onBlur={() => clearSecondFactor()}
-        append={
+        labelAction={
           onForgotPassword && (
             <Button
               type="button"
-              variant="ghost"
-              size="sm"
-              className="text-sm"
+              variant="link"
+              className="text-foreground h-auto p-0 text-sm font-normal"
               onClick={() => {
                 const value = formRef.current?.querySelector<HTMLInputElement>(
                   'input[name="username"]',

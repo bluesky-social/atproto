@@ -66,7 +66,7 @@ msgstr ""
 msgid "1 minute ago"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:215
+#: src/components/sign-in-form.tsx:214
 msgid "2FA Confirmation"
 msgstr "Confirmación de doble factor"
 
@@ -294,7 +294,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr ""
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:223
+#: src/components/sign-in-form.tsx:222
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Revisa tu correo electrónico {0} para encontrar un código de inicio de sesión e ingrésalo aquí."
 
@@ -358,7 +358,7 @@ msgstr "Confirmar"
 msgid "Confirm your password to continue"
 msgstr "Confirma tu contraseña para continuar"
 
-#: src/components/sign-in-form.tsx:216
+#: src/components/sign-in-form.tsx:215
 #: src/components/delete-account-confirm-form.tsx:57
 msgid "Confirmation code"
 msgstr "Código de confirmación"
@@ -627,7 +627,7 @@ msgstr ""
 msgid "Forgot Password"
 msgstr "Contraseña olvidada"
 
-#: src/components/sign-in-form.tsx:188
+#: src/components/sign-in-form.tsx:187
 msgid "Forgot?"
 msgstr "¿Olvidaste?"
 
@@ -980,7 +980,7 @@ msgstr "Leer la dirección de correo electrónico de tu cuenta"
 msgid "Read your private preferences"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:205
+#: src/components/sign-in-form.tsx:204
 msgid "Remember this account on this device"
 msgstr "Recordar esta cuenta en este dispositivo"
 
@@ -997,7 +997,7 @@ msgstr "Código de restablecimiento"
 msgid "Reset Password"
 msgstr "Restablecer contraseña"
 
-#: src/components/sign-in-form.tsx:186
+#: src/components/sign-in-form.tsx:185
 msgid "Reset your password"
 msgstr "Restablecer tu contraseña"
 
@@ -1008,7 +1008,7 @@ msgid "Retry"
 msgstr ""
 
 #: src/components/forms/request-code-button.tsx:72
-#: src/components/forms/request-code-button.tsx:101
+#: src/components/forms/request-code-button.tsx:100
 msgid "Retry in {remainingSeconds}s"
 msgstr ""
 
@@ -1359,7 +1359,7 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr ""
 
-#: src/components/sign-in-form.tsx:195
+#: src/components/sign-in-form.tsx:194
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr ""
 
@@ -1379,7 +1379,7 @@ msgstr "quiere acceder a tu cuenta <0/>"
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "quiere identificarte de forma única a través de tu cuenta <0/>"
 
-#: src/components/sign-in-form.tsx:194
+#: src/components/sign-in-form.tsx:193
 msgid "Warning"
 msgstr "Advertencia"
 

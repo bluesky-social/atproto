@@ -66,7 +66,7 @@ msgstr "1 timme sedan"
 msgid "1 minute ago"
 msgstr "1 minut sedan"
 
-#: src/components/sign-in-form.tsx:215
+#: src/components/sign-in-form.tsx:214
 msgid "2FA Confirmation"
 msgstr "2FA-bekräftelse"
 
@@ -294,7 +294,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr "Titta i inkorgen för <0>{email}</0> efter bekräftelsekoden och ange den nedan:"
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:223
+#: src/components/sign-in-form.tsx:222
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Titta i inkorgen för {0} efter en inloggningskod och ange den här."
 
@@ -358,7 +358,7 @@ msgstr "Bekräfta"
 msgid "Confirm your password to continue"
 msgstr "Ange ditt lösenord för att fortsätta"
 
-#: src/components/sign-in-form.tsx:216
+#: src/components/sign-in-form.tsx:215
 #: src/components/delete-account-confirm-form.tsx:57
 msgid "Confirmation code"
 msgstr "Bekräftelsekod"
@@ -627,7 +627,7 @@ msgstr "Av säkerhetsskäl kommer vi att skicka en bekräftelsekod till din e-po
 msgid "Forgot Password"
 msgstr "Glömt lösenord"
 
-#: src/components/sign-in-form.tsx:188
+#: src/components/sign-in-form.tsx:187
 msgid "Forgot?"
 msgstr "Glömt?"
 
@@ -990,7 +990,7 @@ msgstr "Läsa ditt kontos e-postadress"
 msgid "Read your private preferences"
 msgstr "Läsa dina privata inställningar"
 
-#: src/components/sign-in-form.tsx:205
+#: src/components/sign-in-form.tsx:204
 msgid "Remember this account on this device"
 msgstr "Kom ihåg det här kontot på den här enheten"
 
@@ -1007,7 +1007,7 @@ msgstr "Återställningskod"
 msgid "Reset Password"
 msgstr "Återställ lösenord"
 
-#: src/components/sign-in-form.tsx:186
+#: src/components/sign-in-form.tsx:185
 msgid "Reset your password"
 msgstr "Återställ ditt lösenord"
 
@@ -1018,7 +1018,7 @@ msgid "Retry"
 msgstr "Försök igen"
 
 #: src/components/forms/request-code-button.tsx:72
-#: src/components/forms/request-code-button.tsx:101
+#: src/components/forms/request-code-button.tsx:100
 msgid "Retry in {remainingSeconds}s"
 msgstr "Försök igen om {remainingSeconds} s"
 
@@ -1369,7 +1369,7 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr "Verifiera nu"
 
-#: src/components/sign-in-form.tsx:195
+#: src/components/sign-in-form.tsx:194
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "Kontrollera webbadressen innan du anger ditt lösenord. Logga bara in på webbplatser som du känner igen och litar på."
 
@@ -1389,7 +1389,7 @@ msgstr "vill komma åt ditt konto <0/>"
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "vill entydigt identifiera dig via ditt konto <0/>"
 
-#: src/components/sign-in-form.tsx:194
+#: src/components/sign-in-form.tsx:193
 msgid "Warning"
 msgstr "Varning"
 

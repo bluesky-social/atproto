@@ -66,7 +66,7 @@ msgstr "1時間前"
 msgid "1 minute ago"
 msgstr "1分前"
 
-#: src/components/sign-in-form.tsx:215
+#: src/components/sign-in-form.tsx:214
 msgid "2FA Confirmation"
 msgstr "2要素認証の確認"
 
@@ -294,7 +294,7 @@ msgid "Check <0>{email}</0> for an email with the confirmation code to enter bel
 msgstr "確認コードが記載されたメール <0>{email}</0> を確認し、ここに入力してください。"
 
 #. placeholder {0}: secondFactorError.hint
-#: src/components/sign-in-form.tsx:223
+#: src/components/sign-in-form.tsx:222
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "確認コードが記載されたメール {0} を確認し、ここに入力してください。"
 
@@ -358,7 +358,7 @@ msgstr "確認"
 msgid "Confirm your password to continue"
 msgstr "続けるにはパスワードを確認してください"
 
-#: src/components/sign-in-form.tsx:216
+#: src/components/sign-in-form.tsx:215
 #: src/components/delete-account-confirm-form.tsx:57
 msgid "Confirmation code"
 msgstr "確認コード"
@@ -627,7 +627,7 @@ msgstr "セキュリティ上の理由から、あなたのメールアドレス
 msgid "Forgot Password"
 msgstr "パスワードを忘れた"
 
-#: src/components/sign-in-form.tsx:188
+#: src/components/sign-in-form.tsx:187
 msgid "Forgot?"
 msgstr "忘れた？"
 
@@ -990,7 +990,7 @@ msgstr "あなたのアカウントのメールアドレスを読み取る"
 msgid "Read your private preferences"
 msgstr "あなたのプライベート設定を読み取る"
 
-#: src/components/sign-in-form.tsx:205
+#: src/components/sign-in-form.tsx:204
 msgid "Remember this account on this device"
 msgstr "このアカウントをこのデバイスに記憶する"
 
@@ -1007,7 +1007,7 @@ msgstr "リセットコード"
 msgid "Reset Password"
 msgstr "パスワードをリセット"
 
-#: src/components/sign-in-form.tsx:186
+#: src/components/sign-in-form.tsx:185
 msgid "Reset your password"
 msgstr "パスワードをリセット"
 
@@ -1018,7 +1018,7 @@ msgid "Retry"
 msgstr "再試行"
 
 #: src/components/forms/request-code-button.tsx:72
-#: src/components/forms/request-code-button.tsx:101
+#: src/components/forms/request-code-button.tsx:100
 msgid "Retry in {remainingSeconds}s"
 msgstr "{remainingSeconds}秒後に再試行"
 
@@ -1369,7 +1369,7 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr "確認する"
 
-#: src/components/sign-in-form.tsx:195
+#: src/components/sign-in-form.tsx:194
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "パスワードを入力する前に、ウェブサイトのアドレスを確認してください。信頼できるサイトでのみサインインしてください。"
 
@@ -1389,7 +1389,7 @@ msgstr "あなたの <0/> アカウントにアクセスしようとしていま
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "あなたの <0/> アカウントを通じてあなたを識別しようとしています"
 
-#: src/components/sign-in-form.tsx:194
+#: src/components/sign-in-form.tsx:193
 msgid "Warning"
 msgstr "警告"
 
