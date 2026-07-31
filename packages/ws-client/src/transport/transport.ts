@@ -30,8 +30,8 @@ export const DEFAULT_HEARTBEAT_INTERVAL_MS = 10_000
  * Every field is required, and the ones a caller may omit are spelled
  * `undefined | T` rather than `T?`. This is an internal contract with exactly one
  * call site, so the stricter form is worth it: a field the loop forgets to
- * forward becomes a type error instead of silently reading as "unset" — which is
- * how `heartbeat` once silently defaulted to off for every consumer in this repo.
+ * forward becomes a type error instead of silently reading as "unset", which is
+ * how `heartbeat` once silently defaulted to off for every consumer.
  */
 export interface TransportOptions<M extends DataMode = 'auto'> {
   url: string | URL

@@ -141,8 +141,8 @@ function createTransportImpl<M extends DataMode>(
   function startHeartbeat(): void {
     const { heartbeat } = options
     // On unless explicitly disabled, so a consumer that never thought about
-    // liveness still gets dead-connection detection. WebSocketKeepAlive behaved
-    // this way and every consumer in this repo relied on it.
+    // liveness still gets dead-connection detection — the behavior
+    // WebSocketKeepAlive had, and which its consumers relied on.
     if (heartbeat === false) return
     const intervalMs = heartbeat?.intervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS
     heartbeatAlive = true
@@ -213,6 +213,11 @@ function createTransportImpl<M extends DataMode>(
   // a peer's close frame, our own close() or terminate(), a failed dial, even a
   // socket error (verified across all four) — so settling the channel here, and
   // only here, is what guarantees the consumer's iteration outlives the socket.
+  // The one place a connection ends. `ws` emits 'close' on every teardown path — a
+  // peer's close frame, our own close() or terminate(), a refused dial, a socket
+  // error, even close() on a socket that is still connecting — so settling here,
+  // and only here, is what guarantees a consumer's iteration outlives the socket.
+  //
   // Read through `addEventListener` rather than ws's node-style `on('close')`,
   // because only the WHATWG-shaped CloseEvent carries `wasClean` — which ws
   // defines as "close frames were exchanged in both directions", the real
@@ -242,10 +247,13 @@ function createTransportImpl<M extends DataMode>(
     markClosed()
   })
 
+  // `ws` is not limited to raising 'error' before the connection opens — a
+  // mid-connection socket error raises it too — but it always follows with
+  // 'close', on every path. So this only records the outcome; the 'close' handler
+  // above is what settles the channel and releases the parked pull.
   ws.on('error', (err: Error) => {
     open = false
     clearHeartbeat()
-    // Recorded, not applied: 'close' always follows 'error' and applies it.
     endWith(new SocketError(err))
   })
 

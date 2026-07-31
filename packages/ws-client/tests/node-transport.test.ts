@@ -322,17 +322,22 @@ describe(createTransport, () => {
     await using server = await startServer(() => {})
     const controller = new AbortController()
     const onClose = vi.fn()
+    let opened = false
     const transport = createTransport(
       transportOptions({
         url: server.url,
         dataMode: 'auto',
         signal: controller.signal,
-        onOpen: () => {},
+        onOpen: () => {
+          opened = true
+        },
         onClose,
       }),
     )
     const drained = drain(transport)
-    await vi.waitFor(() => expect(onClose).not.toHaveBeenCalled())
+    // Wait for a real open: asserting `onClose` has *not* fired passes on the
+    // first tick and waits for nothing, leaving the abort to race the handshake.
+    await vi.waitFor(() => assert(opened))
     const reason = new Error('stop')
     controller.abort(reason)
     const { error } = await drained
@@ -628,9 +633,9 @@ describe(createTransport, () => {
 
   it('arms a heartbeat by default, without being asked to', async () => {
     // WebSocketKeepAlive started a heartbeat unconditionally at 10s, and no
-    // consumer in this repo ever passed the option — so an opt-in default would
-    // silently cost every one of them dead-connection detection, and a
-    // black-holed connection would park forever with no error.
+    // consumer ever passed the option — so an opt-in default would silently cost
+    // every one of them dead-connection detection, and a black-holed connection
+    // would park forever with no error.
     //
     // Asserted on the scheduled interval rather than an observed ping: 10s is too
     // long to wait for, and not worth pinning a fake-timer dance to a live socket
