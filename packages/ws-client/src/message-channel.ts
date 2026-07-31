@@ -114,14 +114,14 @@ export const ABNORMAL_CLOSE_DETAIL: CloseEventDetail = Object.freeze({
  * signal is a secondary gate: if it fires, the iterator's next/return/throw
  * waits for it to settle before reporting done or throwing.
  */
-export function guarded<T>(
+export function closeGuard<T>(
   iterator: AsyncIterator<T, void, unknown>,
-  signal: AbortSignal,
+  closeSignal: AbortSignal,
 ): AsyncIterator<T, void, unknown> {
-  if (signal.aborted) return iterator
+  closeSignal.throwIfAborted()
 
   const promise = new Promise((resolve) => {
-    signal.addEventListener('abort', resolve, { once: true })
+    closeSignal.addEventListener('abort', resolve, { once: true })
   })
 
   return {
@@ -148,7 +148,14 @@ export function guarded<T>(
     },
     async throw(error: unknown) {
       try {
-        await iterator.throw?.(error)
+        // @NOTE Because we define a throw() function, the caller is allowed to
+        // throw() even if the inner iterator doesn't implement it. We have to
+        // ensure proper cleanup in that case, so we call return() instead.
+        if (iterator.throw) {
+          await iterator.throw?.(error)
+        } else {
+          await iterator.return?.()
+        }
         throw error
       } finally {
         await promise

@@ -5,8 +5,8 @@ import {
   type CloseEventDetail,
   type DataMode,
   closeCodeForStop,
+  closeGuard,
   createMessageChannel,
-  guarded,
 } from '../message-channel.js'
 import type {
   HeadersInit,
@@ -283,7 +283,7 @@ function createTransportImpl<M extends DataMode>(
 
   // This lets consumers treat the end of iteration as "teardown is done"
   // (resources have been released).
-  const iterator = guarded(channel.iterator, closeController.signal)
+  const iterator = closeGuard(channel.iterator, closeController.signal)
 
   return {
     send: sender.send,

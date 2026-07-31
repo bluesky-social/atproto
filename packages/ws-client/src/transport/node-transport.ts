@@ -9,8 +9,8 @@ import {
   type CloseEventDetail,
   type DataMode,
   closeCodeForStop,
+  closeGuard,
   createMessageChannel,
-  guarded,
 } from '../message-channel.js'
 import {
   DEFAULT_HEARTBEAT_INTERVAL_MS,
@@ -280,7 +280,7 @@ function createTransportImpl<M extends DataMode>(
 
   // This lets consumers treat the end of iteration as "teardown is done"
   // (resources have been released).
-  const iterator = guarded(channel.iterator, closeController.signal)
+  const iterator = closeGuard(channel.iterator, closeController.signal)
 
   return {
     send: sender.send,
