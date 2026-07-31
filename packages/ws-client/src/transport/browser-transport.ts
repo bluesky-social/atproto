@@ -67,13 +67,6 @@ export type WebSocketCtor = new (
   protocols?: string | string[],
 ) => WHATWGWebSocket
 
-function hasHeaders(headers: HeadersInit | undefined): boolean {
-  if (!headers) return false
-  // Headers normalizes every HeadersInit form (record, entry pairs, Headers).
-  for (const _ of new Headers(headers)) return true
-  return false
-}
-
 /**
  * Browser (WHATWG) transport. Created already connecting; torn down by
  * `options.signal`. Every receive-side concern (buffering, watermarks,
@@ -152,12 +145,22 @@ function createTransportImpl<M extends DataMode>(
     markClosed = resolve
   })
 
-  // The error that ended this connection, recorded when teardown begins and
-  // applied from the 'close' handler, so a pull settles after the socket closed
-  // rather than racing it. An object so a recorded `undefined` still counts.
+  // Ends the connection with a failure, the moment teardown begins.
+  //
+  // The channel is failed here rather than from the 'close' handler, so delivery
+  // stops at once: a close is a *handshake*, and the socket stays readable until
+  // the peer answers, which would otherwise let frames keep arriving and being
+  // yielded after the consumer asked to stop. `closeGuard` holds the resulting
+  // rejection until the close event fires, so iteration still settles only once
+  // the socket is down.
+  //
+  // Recorded as well as applied, because the 'close' handler needs to know this
+  // connection ended badly. An object so a recorded `undefined` still counts.
   let pendingError: { error: unknown } | undefined
   function endWith(error: unknown): void {
-    pendingError ??= { error }
+    if (pendingError) return
+    pendingError = { error }
+    channel.fail(error)
   }
 
   const sender: Sender<M> = {
@@ -204,8 +207,9 @@ function createTransportImpl<M extends DataMode>(
     open = false
     if (pendingError) {
       // Teardown began with a failure (a socket error, a bad frame, an idle
-      // timeout, an aborted signal): report it now that the socket is down.
-      channel.fail(pendingError.error)
+      // timeout, an aborted signal). The channel was already failed then; report
+      // the close as abnormal, since a handshake we cut short describes the
+      // goodbye rather than what ended this connection.
       reportClose(ABNORMAL_CLOSE_DETAIL)
     } else {
       channel.finish()
@@ -253,3 +257,10 @@ function createTransportImpl<M extends DataMode>(
 // parameter — while still being checked against `TransportFactory`, which the
 // `#transport` entrypoint calls with one argument.
 export const createTransport = createTransportImpl satisfies TransportFactory
+
+function hasHeaders(headers: HeadersInit | undefined): boolean {
+  if (!headers) return false
+  // Headers normalizes every HeadersInit form (record, entry pairs, Headers).
+  for (const _ of new Headers(headers)) return true
+  return false
+}

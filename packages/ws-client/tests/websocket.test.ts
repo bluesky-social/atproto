@@ -81,7 +81,7 @@ function parkingTransport() {
 const noBackoff = { maxReconnectSeconds: 0 }
 
 async function drain(
-  gen: AsyncGenerator<unknown, void, undefined>,
+  gen: AsyncGenerator<unknown, void, unknown>,
 ): Promise<unknown[]> {
   const out: unknown[] = []
   for await (const m of gen) out.push(m)

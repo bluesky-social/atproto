@@ -53,7 +53,7 @@ export interface MessageChannelOptions<M extends DataMode> {
 
 export interface MessageChannel<M extends DataMode> {
   /** Single-consumer async iterable of received messages. */
-  readonly iterable: AsyncIterable<MessageOf<M>, void, undefined>
+  readonly iterable: AsyncIterable<MessageOf<M>, void, unknown>
   /** Feed a received frame. Binary vs text is carried by the data type. */
   push(data: string | Uint8Array): void
   /** End the channel with an error; discards undelivered buffered messages. */
@@ -121,9 +121,9 @@ export const ABNORMAL_CLOSE_DETAIL: CloseEventDetail = Object.freeze({
  * forces the close event if a peer never answers the handshake.
  */
 export function closeGuard<M extends DataMode>(
-  iterable: AsyncIterable<MessageOf<M>, void, undefined>,
+  iterable: AsyncIterable<MessageOf<M>, void, unknown>,
   closed: Promise<void>,
-): AsyncIterator<MessageOf<M>, void, undefined> {
+): AsyncIterator<MessageOf<M>, void, unknown> {
   const iterator = iterable[Symbol.asyncIterator]()
   return {
     async next(): Promise<IteratorResult<MessageOf<M>, void>> {
@@ -352,19 +352,17 @@ export function createMessageChannel<M extends DataMode>(
     return Promise.resolve({ value: undefined as never, done: true })
   }
 
-  const iterable: AsyncIterable<MessageOf<M>, void, undefined> = {
-    [Symbol.asyncIterator]() {
-      return {
-        next: () => pull(),
-        return: () => iteratorReturn(),
-      }
-    },
-  }
-
   return {
-    iterable,
     push,
     fail,
     finish,
+    iterable: {
+      [Symbol.asyncIterator]() {
+        return {
+          next: () => pull(),
+          return: () => iteratorReturn(),
+        }
+      },
+    },
   }
 }

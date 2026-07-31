@@ -40,10 +40,11 @@ describe('public entrypoint', () => {
     expectTypeOf<MessageOf<'binary'>>().toEqualTypeOf<Uint8Array>()
     expectTypeOf<MessageOf<'text'>>().toEqualTypeOf<string>()
     // The named alias is what consumers annotate with, so it has to stay
-    // equivalent to the spelled-out generator, all three type args included:
-    // TReturn and TNext default to `any`, un-typing next()/return().
+    // equivalent to the spelled-out generator, all three type args included —
+    // omitting them defaults TReturn and TNext to `any`, which would silently
+    // un-type next()/return().
     expectTypeOf<WebSocketIterable<'binary'>>().toEqualTypeOf<
-      AsyncGenerator<Uint8Array, void, undefined>
+      AsyncGenerator<Uint8Array, void, unknown>
     >()
     expectTypeOf(websocket<'binary'>).returns.toEqualTypeOf<
       WebSocketIterable<'binary'>

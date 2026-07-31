@@ -127,7 +127,7 @@ export type BrowserWebSocketOptions<M extends DataMode = 'auto'> = Omit<
 export type WebSocketIterable<M extends DataMode = 'auto'> = AsyncGenerator<
   MessageOf<M>,
   void,
-  undefined
+  unknown
 >
 
 export type WebSocketFn = <M extends DataMode = 'auto'>(
@@ -189,7 +189,15 @@ export function createWebSocket(
         closeDetail = undefined
         try {
           const transport = createTransport<M>({
-            ...connectionOptions(options),
+            // The transport-facing subset of the caller's options
+            dataMode: options.dataMode ?? ('auto' as M),
+            protocols: options.protocols,
+            headers: options.headers,
+            heartbeat: options.heartbeat,
+            idleTimeoutMs: options.idleTimeoutMs,
+            highWaterMark: options.highWaterMark,
+            maxBufferedBytes: options.maxBufferedBytes,
+            // Transport options wired by this websocket implementation and not directly by the caller
             url: resolved,
             signal: teardown.signal,
             // The sender handed out is the transport's own: its send() already
@@ -304,31 +312,6 @@ function normalizeShouldReconnect(
   if (typeof option === 'function') return option
   if (option === false) return () => false
   return (error) => defaultShouldReconnect(error)
-}
-
-// The transport-facing subset of the caller's options: everything except this
-// layer's own concerns (reconnect policy, backoff, hooks) and the per-connection
-// wiring the loop supplies itself.
-//
-// This is the boundary between the two shapes — optional out front, explicitly
-// `undefined | T` inside — so every field is listed rather than spread. Adding a
-// transport option therefore fails to compile here until it is forwarded, which
-// is the whole point of the transport's stricter contract.
-//
-// `dataMode` is optional to a caller but required by a transport, so its default
-// is resolved here rather than re-defaulted inside each transport.
-function connectionOptions<M extends DataMode>(
-  options: WebSocketOptions<M>,
-): Omit<TransportOptions<M>, 'url' | 'signal' | 'onOpen' | 'onClose'> {
-  return {
-    dataMode: options.dataMode ?? ('auto' as M),
-    protocols: options.protocols,
-    headers: options.headers,
-    heartbeat: options.heartbeat,
-    idleTimeoutMs: options.idleTimeoutMs,
-    highWaterMark: options.highWaterMark,
-    maxBufferedBytes: options.maxBufferedBytes,
-  }
 }
 
 // Forwards an abort from `source` (the caller's signal, if any) into `target`,

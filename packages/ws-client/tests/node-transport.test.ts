@@ -432,6 +432,39 @@ describe(createTransport, () => {
     expect(error.shouldRetry()).toBe(true)
   })
 
+  it('stops delivering messages as soon as the signal aborts', async () => {
+    // A polite close is a handshake: the socket stays readable until the peer
+    // answers it, so frames already in flight keep arriving. None of them may be
+    // yielded — the consumer asked to stop, and delivering more would mean an
+    // abort no longer promptly ends delivery. The transport therefore fails the
+    // channel when the abort lands, not when the close event arrives.
+    let socket!: WsSocket
+    await using server = await startServer((ws) => {
+      socket = ws
+      ws.send('one')
+    })
+    const ac = new AbortController()
+    const transport = createTransport(
+      transportOptions({
+        url: server.url,
+        dataMode: 'text',
+        signal: ac.signal,
+      }),
+    )
+    const iterator = transport[Symbol.asyncIterator]()
+    expect(await iterator.next()).toEqual({ value: 'one', done: false })
+
+    const reason = new Error('stop')
+    ac.abort(reason)
+    // Frames sent after the abort, while the close handshake is still settling.
+    socket.send('two')
+    socket.send('three')
+
+    await expect(iterator.next()).rejects.toBe(reason)
+    // And nothing leaked through on a later pull either.
+    await expect(iterator.next()).rejects.toBe(reason)
+  })
+
   it('completes rather than erroring on a pull after the consumer stops', async () => {
     await using server = await startServer((ws) => {
       ws.send('one')

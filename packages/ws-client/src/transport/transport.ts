@@ -18,7 +18,7 @@ export interface Sender<M extends DataMode = 'auto'> {
 }
 
 export interface Transport<M extends DataMode = 'auto'>
-  extends AsyncIterable<MessageOf<M>, void, undefined>,
+  extends AsyncIterable<MessageOf<M>, void, unknown>,
     Sender<M> {}
 
 /** Default protocol-ping interval when `heartbeat` is left unset. */
