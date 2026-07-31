@@ -2,6 +2,7 @@ import { assert, describe, expect, it, vi } from 'vitest'
 import { CloseCode } from '../src/lib/close-codes.js'
 import {
   BufferOverflowError,
+  CloseError,
   IdleTimeoutError,
   SocketError,
   WebSocketClientError,
@@ -244,6 +245,66 @@ describe(createTransport, () => {
     const { error } = await drained
     expect(error).toBe(reason)
     expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('substitutes 1000 for close codes the platform rejects', async () => {
+    // `WebSocket.close()` accepts only 1000 and the private-use range 3000-4999;
+    // every other value throws InvalidAccessError synchronously. A dataMode
+    // violation asks the channel to close with 1003, so passing that through would
+    // throw from inside the message handler, where nothing can catch it — taking
+    // the process down rather than ending the connection.
+    await using server = await startServer((ws) => {
+      // Binary under dataMode 'text': the channel fails and asks for 1003.
+      ws.send(Buffer.from([1, 2, 3]))
+    })
+    const controller = new AbortController()
+    const transport = createTransport(
+      {
+        ...transportOptionDefaults,
+        url: server.url,
+        dataMode: 'text',
+        signal: controller.signal,
+      },
+      globalWebSocket,
+    )
+    const { error } = await drain(transport)
+    expect((error as Error).name).toBe('DataModeError')
+  })
+
+  it('passes a private-use close code through unchanged', async () => {
+    // 3000-4999 is the range the spec leaves to applications, so a caller's
+    // CloseError in that range reaches the peer as-is.
+    let serverSaw: number | undefined
+    let resolveClosed!: () => void
+    const closed = new Promise<void>((resolve) => {
+      resolveClosed = resolve
+    })
+    await using server = await startServer((ws) => {
+      ws.on('close', (code) => {
+        serverSaw = code
+        resolveClosed()
+      })
+    })
+    const controller = new AbortController()
+    let opened = false
+    const transport = createTransport(
+      {
+        ...transportOptionDefaults,
+        url: server.url,
+        dataMode: 'auto',
+        signal: controller.signal,
+        onOpen: () => {
+          opened = true
+        },
+      },
+      globalWebSocket,
+    )
+    const drained = drain(transport)
+    await vi.waitFor(() => assert(opened))
+    controller.abort(new CloseError(4001, 'app-specific', false))
+    await drained
+    await closed
+    expect(serverSaw).toBe(4001)
   })
 
   it('fails the channel with a SocketError on a malformed message data type', async () => {

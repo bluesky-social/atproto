@@ -64,6 +64,8 @@ Stopping always closes the socket politely — it's a request to stop, not a fai
 
 The last row matters for shutdown paths: `controller.abort(new Error('SIGTERM'))` is a deliberate stop, so the peer still gets a clean goodbye. The reason isn't lost — it's what the iterator rejects with. `break` and `throw` are indistinguishable to a generator, so they share the plain clean close.
 
+**In the browser, a `CloseError`'s code carries through only if the platform permits it.** The WHATWG API accepts `1000` and the private-use range `3000`–`4999`, and throws on anything else — the rest of the RFC 6455 codes are reserved for the protocol itself to send, even though an endpoint may legitimately receive them. A code outside that set closes with `1000` instead, so pick from `3000`–`4999` for application-specific codes that need to reach a browser peer. Node.js has no such restriction and sends any code as given.
+
 A non-reconnectable `1000` close — the server says it's done and the reconnect policy declines to retry — ends the stream normally: the loop just finishes, same as `break`. Every other end rejects the iterator, including a fatal protocol close such as `1002`, a network failure, or an aborted signal. Wrap the loop in `try`/`catch` if you need to distinguish "the peer said goodbye" from "something went wrong."
 
 ```ts
