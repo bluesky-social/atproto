@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-ui
 
+## 0.8.9
+
+### Patch Changes
+
+- [#5286](https://github.com/bluesky-social/atproto/pull/5286) [`6866a5d`](https://github.com/bluesky-social/atproto/commit/6866a5d40be652bd83177332183ef346223f6012) Thanks [@dolciss](https://github.com/dolciss)! - Add Japanese (ja) translations
+
 ## 0.8.8
 
 ### Patch Changes

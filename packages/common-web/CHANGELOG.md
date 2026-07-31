@@ -1,5 +1,13 @@
 # @atproto/common-web
 
+## 0.5.7
+
+### Patch Changes
+
+- Updated dependencies [[`95aa1d6`](https://github.com/bluesky-social/atproto/commit/95aa1d6dfea71316d5f30dd8bd4ed48afac31c81)]:
+  - @atproto/lex-data@0.1.6
+  - @atproto/lex-json@0.1.5
+
 ## 0.5.6
 
 ### Patch Changes

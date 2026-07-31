@@ -1,5 +1,12 @@
 # @atproto/xrpc
 
+## 0.8.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.7.9
+
 ## 0.8.7
 
 ### Patch Changes
