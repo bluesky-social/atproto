@@ -185,6 +185,14 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  /* @NOTE Tailwind v4's preflight resets buttons to the default arrow. The
+     shadcn registry restores the pointer from the stylesheet rather than in
+     each component — see its 2026-04 pointer-cursor changelog. */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
 }
 
 /* ---------------------------------------------------------------------------
