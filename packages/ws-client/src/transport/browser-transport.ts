@@ -1,3 +1,4 @@
+import { CloseCode } from '../lib/close-codes.js'
 import { SocketError, WebSocketClientError } from '../lib/errors.js'
 import {
   ABNORMAL_CLOSE_DETAIL,
@@ -67,6 +68,25 @@ export type WebSocketCtor = new (
   protocols?: string | string[],
 ) => WHATWGWebSocket
 
+// The close codes `WebSocket.close()` accepts: 1000, or the private-use range
+// 3000-4999. Anything else — including RFC 6455 codes an endpoint may legitimately
+// *receive*, like 1002 or 1003 — throws InvalidAccessError synchronously, because
+// the spec reserves the rest for the protocol itself to send.
+//
+// So a code chosen elsewhere (by the channel, or by a caller's CloseError) cannot
+// be passed through unchecked here: it would throw from inside an event handler or
+// an abort listener, where nothing can catch it. Substituting 1000 loses the
+// specific code but still closes the connection cleanly, which is the part that
+// matters; the specific reason still reaches the consumer as the iterator's
+// rejection. Node's `ws` has no such restriction, hence no equivalent there.
+function closeSocket(ws: WHATWGWebSocket, code: number | undefined): void {
+  const permitted =
+    code === undefined ||
+    code === CloseCode.Normal ||
+    (code >= 3000 && code <= 4999)
+  ws.close(permitted ? code : CloseCode.Normal)
+}
+
 /**
  * Browser (WHATWG) transport. Created already connecting; torn down by
  * `options.signal`. Every receive-side concern (buffering, watermarks,
@@ -116,8 +136,9 @@ function createTransportImpl<M extends DataMode>(
     // the idle timeout work here: a merely-full buffer must not read as a pause,
     // since this platform can never actually pause.
     onAbort: (_error, code) => {
-      // A polite close is the strongest teardown the WHATWG API offers — there is no `terminate()`.
-      ws.close(code)
+      // A polite close is the strongest teardown the WHATWG API offers — there is
+      // no `terminate()`.
+      closeSocket(ws, code)
     },
   })
 
@@ -256,7 +277,7 @@ function createTransportImpl<M extends DataMode>(
       // An abort always closes politely — it is a request to stop, not a failure —
       // and the reason only picks the code: a `CloseError` names one, anything
       // else means 1000. The 'close' handler above settles the channel.
-      ws.close(closeCodeForStop(options.signal.reason))
+      closeSocket(ws, closeCodeForStop(options.signal.reason))
     },
     { once: true },
   )
