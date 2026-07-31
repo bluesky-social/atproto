@@ -19,6 +19,8 @@ exports[`pds quote views > decrements quote count when a quote is deleted 1`] = 
         "viewer": {
           "blockedBy": false,
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
       "bookmarkCount": 0,
@@ -113,6 +115,8 @@ exports[`pds quote views > does not return post when quote is deleted 1`] = `
         "viewer": {
           "blockedBy": false,
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
       "bookmarkCount": 0,
@@ -151,6 +155,8 @@ exports[`pds quote views > does not return post when quote is deleted 1`] = `
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "cid": "cids(1)",
@@ -232,6 +238,8 @@ exports[`pds quote views > fetches post quotes 1`] = `
         "viewer": {
           "blockedBy": false,
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
       "bookmarkCount": 0,
@@ -270,6 +278,8 @@ exports[`pds quote views > fetches post quotes 1`] = `
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "cid": "cids(1)",
@@ -342,6 +352,8 @@ exports[`pds quote views > fetches post quotes 1`] = `
         "viewer": {
           "blockedBy": false,
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
       "bookmarkCount": 0,
@@ -380,6 +392,8 @@ exports[`pds quote views > fetches post quotes 1`] = `
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "cid": "cids(1)",

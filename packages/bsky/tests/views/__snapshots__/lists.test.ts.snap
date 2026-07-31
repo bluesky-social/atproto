@@ -15,6 +15,8 @@ exports[`bsky actor likes feed views > does include users with creator block rel
       "viewer": {
         "blockedBy": true,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(0)",
@@ -37,6 +39,8 @@ exports[`bsky actor likes feed views > does include users with creator block rel
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(1)",
@@ -54,6 +58,8 @@ exports[`bsky actor likes feed views > does include users with creator block rel
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(2)",
@@ -76,6 +82,8 @@ exports[`bsky actor likes feed views > does include users with creator block rel
       "viewer": {
         "blockedBy": true,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(0)",
@@ -98,6 +106,8 @@ exports[`bsky actor likes feed views > does include users with creator block rel
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(1)",
@@ -115,6 +125,8 @@ exports[`bsky actor likes feed views > does include users with creator block rel
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(2)",
@@ -333,6 +345,8 @@ exports[`bsky actor likes feed views > does not include users with creator block
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(0)",
@@ -351,6 +365,8 @@ exports[`bsky actor likes feed views > does not include users with creator block
         "blockedBy": false,
         "blocking": "record(2)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(1)",
@@ -378,6 +394,8 @@ exports[`bsky actor likes feed views > does not include users with creator block
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(0)",
@@ -396,6 +414,8 @@ exports[`bsky actor likes feed views > does not include users with creator block
         "blockedBy": false,
         "blocking": "record(2)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(1)",
@@ -423,6 +443,8 @@ exports[`bsky actor likes feed views > does not include users with creator block
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(0)",
@@ -440,6 +462,8 @@ exports[`bsky actor likes feed views > does not include users with creator block
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(1)",
@@ -467,6 +491,8 @@ exports[`bsky actor likes feed views > does not include users with creator block
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(0)",
@@ -484,6 +510,8 @@ exports[`bsky actor likes feed views > does not include users with creator block
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(1)",
@@ -506,6 +534,8 @@ exports[`bsky actor likes feed views > does return all users regardless of creat
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(0)",
@@ -523,6 +553,8 @@ exports[`bsky actor likes feed views > does return all users regardless of creat
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(1)",

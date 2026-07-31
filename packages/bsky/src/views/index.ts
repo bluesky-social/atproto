@@ -219,6 +219,18 @@ export class Views {
     return !!(viewer.muted || this.mutedByList(viewer, state))
   }
 
+  viewerRepostMuteExists(did: DidString, state: HydrationState): boolean {
+    const viewer = state.profileViewers?.get(did)
+    if (!viewer) return false
+    return !!viewer.mutedOnlyReposts
+  }
+
+  viewerQuotepostMuteExists(did: DidString, state: HydrationState): boolean {
+    const viewer = state.profileViewers?.get(did)
+    if (!viewer) return false
+    return !!viewer.mutedOnlyQuoteposts
+  }
+
   blockingByList(
     viewer: ProfileViewerState,
     state: HydrationState,
@@ -456,8 +468,16 @@ export class Views {
     const blockingUri = viewer.blocking || blockingByList
     const block = !!blockedByUri || !!blockingUri
     const mutedByList = this.mutedByList(viewer, state)
+    // scoped mute flags are exclusive with muted: when the account is fully
+    // muted (directly or via a mutelist), suppress them so a scoped direct
+    // mute underneath a list mute doesn't surface both as true.
+    const muted = !!(viewer.muted || mutedByList)
     return {
-      muted: !!(viewer.muted || mutedByList),
+      muted,
+      // when muted is true, these are suppressed to avoid confusion
+      mutedOnlyReposts: !muted && !!viewer.mutedOnlyReposts,
+      // when muted is true, these are suppressed to avoid confusion
+      mutedOnlyQuoteposts: !muted && !!viewer.mutedOnlyQuoteposts,
       mutedByList: mutedByList ? this.listBasic(mutedByList, state) : undefined,
       blockedBy: !!blockedByUri,
       blocking: blockingUri,
@@ -901,8 +921,10 @@ export class Views {
     state: HydrationState,
   ): {
     originatorMuted: boolean
+    originatorRepostMuted: boolean
     originatorBlocked: boolean
     authorMuted: boolean
+    authorQuotepostMuted: boolean
     authorBlocked: boolean
     ancestorAuthorBlocked: boolean
   } {
@@ -919,8 +941,13 @@ export class Views {
       grandparentUri && creatorFromUri(grandparentUri)
     return {
       originatorMuted: this.viewerMuteExists(originatorDid, state),
+      originatorRepostMuted:
+        !!item.repost && this.viewerRepostMuteExists(originatorDid, state),
       originatorBlocked: this.viewerBlockExists(originatorDid, state),
       authorMuted: this.viewerMuteExists(authorDid, state),
+      authorQuotepostMuted:
+        postIsQuotepost(post?.record) &&
+        this.viewerQuotepostMuteExists(authorDid, state),
       authorBlocked: this.viewerBlockExists(authorDid, state),
       ancestorAuthorBlocked:
         (!!parentAuthorDid && this.viewerBlockExists(parentAuthorDid, state)) ||
@@ -2791,6 +2818,20 @@ export class Views {
 
 const getRootUri = (uri: AtUriString, post: Post): AtUriString => {
   return post.record.reply?.root.uri ?? uri
+}
+
+const postIsQuotepost = (record: PostRecord | undefined): boolean => {
+  const embed = record?.embed
+  if (!embed) return false
+  const recordEmbed = isRecordEmbedType(embed)
+    ? embed
+    : isRecordWithMediaType(embed)
+      ? embed.record
+      : undefined
+  if (!recordEmbed) return false
+  return (
+    new AtUri(recordEmbed.record.uri).collection === app.bsky.feed.post.$type
+  )
 }
 
 const externalEmbedSourceTheme = (

@@ -29,6 +29,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 1 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -76,6 +78,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 1 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -143,6 +147,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 2 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -190,6 +196,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 2 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -247,6 +255,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 2 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -314,6 +324,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 2.
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -361,6 +373,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 2.
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -418,6 +432,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 2.
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -485,6 +501,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 3 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -532,6 +550,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 3 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -599,6 +619,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -648,6 +670,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -707,6 +731,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -774,6 +800,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -823,6 +851,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -882,6 +912,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -949,6 +981,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -998,6 +1032,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -1057,6 +1093,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -1114,6 +1152,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -1171,6 +1211,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -1228,6 +1270,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -1285,6 +1329,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,

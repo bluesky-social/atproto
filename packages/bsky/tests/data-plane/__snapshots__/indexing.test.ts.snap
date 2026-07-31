@@ -42,11 +42,15 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
               "followedBy": "record(1)",
               "following": "record(0)",
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
         ],
       },
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   {
@@ -66,6 +70,8 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -103,6 +109,8 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -148,6 +156,8 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "parent": {
@@ -169,6 +179,8 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
                 "followedBy": "record(1)",
                 "following": "record(0)",
                 "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
               },
             },
             "bookmarkCount": 0,
@@ -256,6 +268,8 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
               "viewer": {
                 "blockedBy": false,
                 "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
               },
             },
             "bookmarkCount": 0,
@@ -294,6 +308,8 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -318,6 +334,8 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
                   "blockedBy": false,
                   "following": "record(8)",
                   "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
                 },
               },
               "cid": "cids(7)",
@@ -339,6 +357,8 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
                         "blockedBy": false,
                         "followedBy": "record(10)",
                         "muted": false,
+                        "mutedOnlyQuoteposts": false,
+                        "mutedOnlyReposts": false,
                       },
                     },
                     "cid": "cids(8)",
@@ -476,6 +496,8 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -513,6 +535,8 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -573,6 +597,8 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
           "blockedBy": false,
           "following": "record(8)",
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
       {
@@ -594,6 +620,8 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
           "followedBy": "record(1)",
           "following": "record(0)",
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
     ],
@@ -611,6 +639,8 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
   },
@@ -652,6 +682,8 @@ exports[`indexing > indexes posts. 1`] = `
         "viewer": {
           "blockedBy": false,
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
       "bookmarkCount": 0,
@@ -729,6 +761,8 @@ exports[`indexing > indexes posts. 2`] = `
         "viewer": {
           "blockedBy": false,
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
       "bookmarkCount": 0,
@@ -826,6 +860,8 @@ exports[`indexing > indexes profiles. 1`] = `
   "viewer": {
     "blockedBy": false,
     "muted": false,
+    "mutedOnlyQuoteposts": false,
+    "mutedOnlyReposts": false,
   },
 }
 `;
@@ -855,6 +891,8 @@ exports[`indexing > indexes profiles. 2`] = `
   "viewer": {
     "blockedBy": false,
     "muted": false,
+    "mutedOnlyQuoteposts": false,
+    "mutedOnlyReposts": false,
   },
 }
 `;
@@ -882,6 +920,8 @@ exports[`indexing > indexes profiles. 3`] = `
   "viewer": {
     "blockedBy": false,
     "muted": false,
+    "mutedOnlyQuoteposts": false,
+    "mutedOnlyReposts": false,
   },
 }
 `;
