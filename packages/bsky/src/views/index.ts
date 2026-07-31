@@ -1333,7 +1333,13 @@ export class Views {
   // ------------
 
   threadV2(
-    skeleton: { anchor: AtUriString; uris: AtUriString[] },
+    skeleton: {
+      anchor: AtUriString
+      uris: AtUriString[]
+      // The complete OP thread (root first, in chain order), untrimmed by
+      // above/below limits. See GetThreadResponse.op_thread.
+      opThread?: AtUriString[]
+    },
     state: HydrationState,
     {
       above,
@@ -1464,6 +1470,7 @@ export class Views {
       anchorTree,
       {
         opDid,
+        opThreadUris: skeleton.opThread && new Set(skeleton.opThread),
         branchingFactor,
         sort,
         viewer: state.ctx?.viewer ?? null,
@@ -1475,6 +1482,27 @@ export class Views {
         state.ctx.features.Gate.ThreadsReplyRankingExplorationEnable,
       ),
     )
+
+    if (skeleton.opThread) {
+      const indexByUri = new Map(
+        skeleton.opThread.map((uri, i) => [uri, i + 1]),
+      )
+      const postCount = skeleton.opThread.length
+      for (const item of thread) {
+        if (!app.bsky.unspecced.defs.threadItemPost.$isTypeOf(item.value)) {
+          continue
+        }
+        const index = indexByUri.get(item.uri as AtUriString)
+        item.value.opThread = index !== undefined
+        if (index !== undefined) {
+          item.value.opThreadPostIndex = index
+          item.value.opThreadPostCount = postCount
+        } else {
+          delete item.value.opThreadPostIndex
+          delete item.value.opThreadPostCount
+        }
+      }
+    }
 
     return {
       hasOtherReplies,

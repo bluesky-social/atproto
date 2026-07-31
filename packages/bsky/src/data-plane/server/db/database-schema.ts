@@ -23,6 +23,7 @@ import type * as list from './tables/list.js'
 import type * as mute from './tables/mute.js'
 import type * as notificationPushToken from './tables/notification-push-token.js'
 import type * as notification from './tables/notification.js'
+import type * as opThreadReply from './tables/op-thread-reply.js'
 import type * as postAgg from './tables/post-agg.js'
 import type * as postEmbed from './tables/post-embed.js'
 import type * as postgate from './tables/post-gate.js'
@@ -85,6 +86,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   privateData.PartialDB &
   activitySubscription.PartialDB &
   bookmark.PartialDB &
-  draft.PartialDB
+  draft.PartialDB &
+  opThreadReply.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>

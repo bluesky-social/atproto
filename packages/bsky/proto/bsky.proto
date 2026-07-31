@@ -1077,6 +1077,12 @@ message GetThreadRequest {
 
 message GetThreadResponse {
   repeated string uris = 1;
+  // The complete OP thread: the root post followed by the oldest contiguous
+  // chain of OP replies, in chain order. Never trimmed to the posts present
+  // in uris — callers derive a post's position with indexOf and the thread
+  // length with len, so completeness and ordering are load-bearing. Empty
+  // when the thread has no OP replies.
+  repeated string op_thread = 2;
 }
 
 //

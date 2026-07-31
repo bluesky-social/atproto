@@ -118,6 +118,11 @@ export function sortTrimFlattenThreadTree(
 type SortTrimFlattenOptions = {
   branchingFactor: GetPostThreadV2QueryParams['branchingFactor']
   opDid: string
+  // Posts on the OP thread (the oldest contiguous chain of OP replies from
+  // the root). A chain reply always appears first beneath its parent,
+  // regardless of the selected sort. The chain is linear, so at most one
+  // reply in any sibling group is on it.
+  opThreadUris?: ReadonlySet<string>
   sort?: GetPostThreadV2QueryParams['sort']
   viewer: HydrateCtx['viewer']
   threadTagsBumpDown: readonly string[]
@@ -179,7 +184,8 @@ function applyBumping(
     return null
   }
 
-  const { opDid, viewer, threadTagsBumpDown, threadTagsHide } = opts
+  const { opDid, opThreadUris, viewer, threadTagsBumpDown, threadTagsHide } =
+    opts
 
   type BumpDirection = 'up' | 'down'
   type BumpPredicateFn = (i: ThreadMaybeOtherPostNode) => boolean
@@ -207,6 +213,9 @@ function applyBumping(
     /*
       General bumps.
     */
+    // OP thread replies: the chain continuation always appears first beneath
+    // its parent, regardless of the selected sort.
+    ['up', (i) => !!opThreadUris?.has(i.item.uri)],
     // OP replies.
     ['up', (i) => i.item.value.post.author.did === opDid],
     // Viewer replies.
@@ -411,7 +420,7 @@ function applyBumpingExploration(
     return null
   }
 
-  const { opDid, viewer } = opts
+  const { opDid, opThreadUris, viewer } = opts
 
   type BumpDirection = 'up' | 'down'
   type BumpPredicateFn = (i: ThreadMaybeOtherPostNode) => boolean
@@ -439,6 +448,9 @@ function applyBumpingExploration(
     /*
       General bumps.
     */
+    // OP thread replies: the chain continuation always appears first beneath
+    // its parent, regardless of the selected sort.
+    ['up', (i) => !!opThreadUris?.has(i.item.uri)],
     // OP replies.
     ['up', (i) => i.item.value.post.author.did === opDid],
     // Viewer replies.
