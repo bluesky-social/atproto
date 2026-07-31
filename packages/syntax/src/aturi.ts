@@ -84,8 +84,10 @@ export class AtUri {
   ) {
     ensureValidDid(spaceDid)
     ensureValidNsid(spaceType)
+    ensureValidRecordKey(skey)
     if (authorDid) ensureValidDid(authorDid)
     if (collection) ensureValidNsid(collection)
+    if (rkey) ensureValidRecordKey(rkey)
 
     let str = `at://${spaceDid}/${SPACE_MARKER}/${spaceType}/${skey}`
     if (authorDid) str += '/' + authorDid

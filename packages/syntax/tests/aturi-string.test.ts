@@ -218,6 +218,15 @@ describe('custom cases', () => {
     testInvalid(
       'at://did:plc:asdf123/space/com.example.group/default/user.bsky.social/com.atproto.feed.post/abc123',
     )
+    // skey carries the same syntax requirements as an rkey
+    testValid('at://did:plc:asdf123/space/com.example.group/self')
+    testValid('at://did:plc:asdf123/space/com.example.group/3jui7kd54zh2y')
+    testValid('at://did:plc:asdf123/space/com.example.group/a.b-c_d~e:f')
+    testInvalid('at://did:plc:asdf123/space/com.example.group/.')
+    testInvalid('at://did:plc:asdf123/space/com.example.group/..')
+    testInvalid(
+      `at://did:plc:asdf123/space/com.example.group/${'x'.repeat(513)}`,
+    )
     // missing skey
     testInvalid('at://did:plc:asdf123/space/com.example.group')
     // bare marker

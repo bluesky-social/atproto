@@ -2,27 +2,14 @@ import { IdResolver, getHandle } from '@atproto/identity'
 import { SpacePermission } from '@atproto/oauth-scopes'
 
 /**
- * Resolves DIDs referenced from authorization-request scopes to handles, for
- * display on the consent screen.
- *
- * Currently the only use is rendering the space authority of `space:` scopes
- * — e.g. so the consent screen can say "spaces on protocol-nerds.atmoboards.com"
- * instead of "spaces on did:plc:abc...".
- *
- * Resolution is best-effort and bidirectionally verified: a DID's handle is
- * accepted only if it appears in the DID doc's `alsoKnownAs` *and* resolving
- * that handle returns the same DID. Failures (timeouts, mismatches, missing
- * handles) silently drop from the result map; the consent screen falls back
- * to the raw DID, mirroring how lexicon resolution failures are handled.
+ * Resolves the space-authority DIDs named in `space:` scopes to handles, so the
+ * consent screen can say "spaces on protocol-nerds.atmoboards.com" rather than
+ * "spaces on did:plc:abc...". A DID that fails verification is omitted and the
+ * screen renders the raw DID instead.
  */
 export class IdentityManager {
   constructor(public readonly idResolver: IdResolver) {}
 
-  /**
-   * Extract distinct space-authority DIDs from the request's `space:` scopes
-   * and resolve each to a verified handle. DIDs that fail verification are
-   * omitted from the result.
-   */
   public async getSpaceHandlesFromScope(
     scope?: string,
   ): Promise<Map<string, string>> {
@@ -42,10 +29,8 @@ export class IdentityManager {
   }
 
   /**
-   * Resolve a DID to its handle, verifying the round-trip:
-   *   1. Resolve the DID doc and read `alsoKnownAs`.
-   *   2. Resolve that handle back to a DID.
-   *   3. Compare — only return the handle if both directions agree.
+   * A handle is only trustworthy if it round-trips: the DID doc claims it, and
+   * resolving it independently returns the same DID.
    */
   protected async resolveVerifiedHandle(
     did: string,

@@ -110,6 +110,37 @@ describe('SpacePermission', () => {
         ).toBeNull()
       })
 
+      it('accepts rkey-shaped skeys', () => {
+        for (const skey of [
+          'self',
+          '3jui7kd54zh2y',
+          'a.b-c_d~e:f',
+          'x'.repeat(512),
+        ]) {
+          const scope = SpacePermission.fromString(
+            `space:com.example.x?skey=${skey}`,
+          )
+          expect(scope?.skey).toBe(skey)
+        }
+      })
+
+      it('rejects skeys that are not valid record keys', () => {
+        for (const skey of [
+          'hello world',
+          '.',
+          '..',
+          'a/b',
+          'a#b',
+          'x'.repeat(513),
+        ]) {
+          expect(
+            SpacePermission.fromString(
+              `space:com.example.x?skey=${encodeURIComponent(skey)}`,
+            ),
+          ).toBeNull()
+        }
+      })
+
       it('returns null for non-space prefix', () => {
         expect(SpacePermission.fromString('repo:com.example.x')).toBeNull()
         expect(SpacePermission.fromString('whatever')).toBeNull()

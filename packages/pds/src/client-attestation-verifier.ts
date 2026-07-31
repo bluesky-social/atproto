@@ -19,17 +19,14 @@ type Jwks = ReturnType<typeof jwksPubSchema.parse>
 const CACHE_TTL = 1 * HOUR
 
 /**
- * Verifies the client attestation a space authority receives alongside a
- * delegation token, establishing which application is asking for a credential.
+ * Establishes which application is asking a space authority for a credential.
  *
  * The attestation is a `private_key_jwt` signed by the client's own
  * authentication key, so verifying it means resolving `iss` (the client_id) to
  * its `client-metadata.json`, fetching the JWKS that document publishes, and
- * checking the signature against the key its `kid` names.
- *
- * Without this, the attested client_id would be whatever the caller claimed and
- * a space gating on app identity (`appAccess: #allowList`) would be advisory
- * rather than enforceable.
+ * checking the signature against the key its `kid` names. Skipping any of that
+ * would leave `appAccess: #allowList` advisory rather than enforceable, since
+ * the client_id is otherwise just a claim.
  */
 export class ClientAttestationVerifier {
   private readonly metadata: CachedGetter<string, OAuthClientMetadata>

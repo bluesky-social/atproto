@@ -1040,6 +1040,20 @@ describe('spaces', () => {
     ).rejects.toThrow()
   })
 
+  it('refuses a space key that is not a valid record key', async () => {
+    await expect(
+      pds1Client.call(
+        com.atproto.simplespace.createSpace,
+        {
+          did: aliceDid,
+          type: 'app.bsky.group' as NsidString,
+          skey: 'not a valid rkey',
+        },
+        { headers: aliceHeaders },
+      ),
+    ).rejects.toThrow(/valid record key/)
+  })
+
   // ---------------- Credential mint: config gates ----------------
 
   it('mints a credential for a non-member when policy is public', async () => {

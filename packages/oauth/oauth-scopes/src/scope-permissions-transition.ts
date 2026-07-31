@@ -4,6 +4,7 @@ import {
   RepoPermissionMatch,
   RpcPermissionMatch,
   ScopePermissions,
+  SpacePermissionMatch,
 } from './scope-permissions.js'
 
 /**
@@ -49,6 +50,15 @@ export class ScopePermissionsTransition extends ScopePermissions {
     }
 
     return super.allowsRepo(options)
+  }
+
+  /**
+   * Grants nothing extra: `transition:generic` predates permissioned data, so a
+   * legacy token must never reach a space. Overridden rather than omitted to
+   * keep that a decision rather than an oversight.
+   */
+  override allowsSpace(options: SpacePermissionMatch): boolean {
+    return super.allowsSpace(options)
   }
 
   override allowsRpc(options: RpcPermissionMatch) {

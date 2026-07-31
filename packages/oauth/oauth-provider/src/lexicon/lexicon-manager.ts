@@ -18,13 +18,6 @@ export class LexiconManager {
     return this.extractPermissionSets(includeScopes)
   }
 
-  /**
-   * Extracts space-type NSIDs referenced by `space:` scopes in the request and
-   * resolves their lexicon documents. Used by the consent screen to render
-   * human-readable space names.
-   *
-   * Wildcard `type=*` scopes are skipped — there's no NSID to resolve.
-   */
   public async getSpacesFromScope(
     scope?: string,
   ): Promise<Map<string, LexiconSpace>> {
@@ -43,7 +36,6 @@ export class LexiconManager {
   ): Promise<string> {
     const { includeScopes, otherScopes } = parseScope(scope)
 
-    // 1. Expand any "include:<nsid>" permission-set scopes into concrete scopes.
     const concreteScopes = includeScopes.length
       ? Array.from(includeScopes)
           .flatMap(
@@ -53,14 +45,9 @@ export class LexiconManager {
           .concat(otherScopes)
       : otherScopes
 
-    // 2. Default `collection` on bare `space:<type>` grants to the space type's
-    //    declared collections. The runtime matcher is context-free, so this
-    //    resolution-at-issuance step is where declared collections are
-    //    materialized (mirrors how include: scopes are expanded above).
+    // The runtime matcher is context-free, so anything needing a lexicon lookup
+    // or the granting user's identity has to be resolved here, at issuance.
     const expanded = await this.expandSpaceCollections(concreteScopes)
-
-    // 3. Resolve `authority=self` on `space:` grants to the granting user's DID
-    //    — likewise at issuance, since the matcher can't resolve `self` itself.
     const resolved = expanded.map((value) =>
       resolveSpaceSelfAuthority(value, userDid),
     )
@@ -69,15 +56,14 @@ export class LexiconManager {
   }
 
   /**
-   * Rewrites `space:<concreteType>` scopes that omit `collection` to carry the
-   * space type's declared collections. Scopes that already name collections
-   * (including `*`), wildcard-type scopes, and non-space scopes pass through
-   * unchanged. Declaration-resolution failures leave the scope untouched.
+   * Rewrites bare `space:<type>` scopes to carry the type's declared
+   * collections. Throws when a declaration cannot be resolved: passing the
+   * scope through unchanged would mint a token with no write targets at all,
+   * which is a narrower grant than the user consented to.
    */
   protected async expandSpaceCollections(
     scopes: readonly string[],
   ): Promise<string[]> {
-    // Collect the concrete space types that need a declaration lookup.
     const nsids = new Set<Nsid>()
     for (const value of scopes) {
       const parsed = SpacePermission.fromString(value)
@@ -135,28 +121,17 @@ export class LexiconManager {
     return lexicon.defs.main
   }
 
-  /**
-   * Resolve a set of space-type NSIDs to their lexicon documents. Failures
-   * are tolerated — a space whose lexicon doesn't resolve, or doesn't have
-   * `type: space` at `defs.main`, is silently dropped from the result so the
-   * consent screen falls back to rendering the bare NSID.
-   */
-  protected async getSpaces(
-    nsids: Set<Nsid>,
-  ): Promise<Map<string, LexiconSpace>> {
-    const entries = await Promise.all(
-      Array.from(nsids, async (nsid) => {
-        try {
-          const space = await this.getSpace(nsid)
-          return [nsid, space] as const
-        } catch {
-          return null
-        }
-      }),
+  protected async getSpaces(nsids: Set<Nsid>) {
+    return new Map<string, LexiconSpace>(
+      await Promise.all(Array.from(nsids, this.getSpaceEntry, this)),
     )
-    return new Map(
-      entries.filter((e): e is readonly [Nsid, LexiconSpace] => e !== null),
-    )
+  }
+
+  protected async getSpaceEntry(
+    nsid: Nsid,
+  ): Promise<[nsid: Nsid, space: LexiconSpace]> {
+    const space = await this.getSpace(nsid)
+    return [nsid, space]
   }
 
   protected async getSpace(nsid: Nsid): Promise<LexiconSpace> {
@@ -175,11 +150,6 @@ export class LexiconManager {
   }
 }
 
-/**
- * Resolve `authority=self` on a `space:` scope to the granting user's DID. Any
- * non-space scope, or a space scope naming a concrete authority or `*`, passes
- * through unchanged.
- */
 function resolveSpaceSelfAuthority(value: string, userDid: string): string {
   const parsed = SpacePermission.fromString(value)
   if (!parsed?.isSelfAuthority) return value

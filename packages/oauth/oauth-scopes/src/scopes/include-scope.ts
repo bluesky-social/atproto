@@ -52,7 +52,11 @@ export class IncludeScope {
    */
   *buildPermissions(
     permissionSet: LexiconPermissionSet,
-  ): Generator<RepoPermission | RpcPermission | SpacePermission, void, unknown> {
+  ): Generator<
+    RepoPermission | RpcPermission | SpacePermission,
+    void,
+    unknown
+  > {
     for (const lexPermission of permissionSet.permissions) {
       const syntax = this.parseLexPermission(lexPermission)
       if (!syntax) continue
@@ -78,8 +82,6 @@ export class IncludeScope {
     }
 
     if (isLexPermissionForResource(permission, 'space')) {
-      // A space permission set entry may not use a wildcard space type — it
-      // must name a concrete type under the set's namespace authority.
       return new LexPermissionSyntax(permission)
     }
 
@@ -126,9 +128,8 @@ export class IncludeScope {
     }
 
     if (permission instanceof SpacePermission) {
-      // The space type must be under the set's namespace authority and may not
-      // be a wildcard. Collections may live under a different authority (per
-      // proposal 0016), so they're not authority-checked here.
+      // Only the space type is authority-checked; collections may live under a
+      // different authority.
       return this.isParentAuthorityOf(permission.type)
     }
 

@@ -164,9 +164,8 @@ type OAuthProviderConfig = {
   lexResolver?: LexResolver
 
   /**
-   * An atproto identity resolver, used to resolve DIDs (e.g. space-authority
-   * DIDs in `space:` scopes) to handles for display on the consent screen.
-   * Optional — when omitted, raw DIDs are rendered.
+   * Resolves space-authority DIDs to handles for the consent screen. When
+   * omitted, raw DIDs are rendered.
    */
   idResolver?: IdResolver
 
@@ -739,15 +738,18 @@ export class OAuthProvider extends OAuthVerifier {
               cause,
             )
           }),
-        // @NOTE space-type lexicons are advisory (used to render human-readable
-        // names on the consent screen). Resolution failures are swallowed
-        // inside the manager — unlike permission sets, missing spaces don't
-        // block the authorization flow.
-        spaces: await this.lexiconManager.getSpacesFromScope(parameters.scope),
-        // @NOTE space handles for `space:` scopes anchored to a specific
-        // authority DID. Same advisory model as spaces above — verification
-        // failures fall back to rendering the raw DID. Empty map when no
-        // identity resolver was configured.
+        spaces: await this.lexiconManager
+          .getSpacesFromScope(parameters.scope)
+          .catch((cause) => {
+            throw new AuthorizationError(
+              parameters,
+              'Unable to retrieve space declarations',
+              'invalid_scope',
+              cause,
+            )
+          }),
+        // @NOTE a handle is only ever displayed, so failing to resolve one
+        // leaves the consent screen showing the raw DID.
         spaceHandles:
           (await this.identityManager?.getSpaceHandlesFromScope(
             parameters.scope,

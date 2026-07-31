@@ -22,10 +22,8 @@ export class LexPermissionSyntax<P extends string = string>
   get(key: string) {
     // Ignore reserved keywords
     if (key === 'type') {
-      // The "space" resource has a "type" scope-param, but lexicon permission
-      // JSON uses `type: 'permission'` as a discriminator. Permission set
-      // entries spell the space type as `spaceType` in JSON; we surface it
-      // here under its scope-string name "type".
+      // JSON spells the space type as `spaceType`, since `type` is taken by the
+      // permission discriminator. The scope string calls it `type`.
       if (this.lexPermission.resource === 'space') {
         if (!Object.hasOwn(this.lexPermission, 'spaceType')) return undefined
         return this.lexPermission['spaceType']
@@ -44,7 +42,6 @@ export class LexPermissionSyntax<P extends string = string>
   *keys() {
     const isSpace = this.lexPermission.resource === 'space'
     for (const key of Object.keys(this.lexPermission)) {
-      // Surface JSON `spaceType` as scope-string `type` for space resources.
       const surfaceKey = isSpace && key === 'spaceType' ? 'type' : key
       if (this.get(surfaceKey) !== undefined) yield surfaceKey
     }

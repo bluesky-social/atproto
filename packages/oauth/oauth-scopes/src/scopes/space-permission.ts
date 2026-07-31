@@ -1,4 +1,4 @@
-import { isValidDid } from '@atproto/syntax'
+import { isValidDid, isValidRecordKey } from '@atproto/syntax'
 import { Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'
 import { ResourcePermission } from '../lib/resource-permission.js'
@@ -50,12 +50,10 @@ export const isSpaceAuthorityParam = (
 ): value is SpaceAuthorityParam =>
   value === '*' || value === 'self' || isDidString(value)
 
+// A space key has the same syntax as a record key.
 export type SpaceSkeyParam = string
-const SKEY_MAX_LENGTH = 512
 export const isSpaceSkeyParam = (value: unknown): value is SpaceSkeyParam =>
-  typeof value === 'string' &&
-  value.length > 0 &&
-  value.length <= SKEY_MAX_LENGTH
+  typeof value === 'string' && isValidRecordKey(value)
 
 export type SpaceCollectionParam = '*' | Nsid
 export const isSpaceCollectionParam = (

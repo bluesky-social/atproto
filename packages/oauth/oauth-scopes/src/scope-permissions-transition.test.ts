@@ -44,6 +44,36 @@ describe('ScopePermissionsTransition', () => {
     })
   })
 
+  describe('allowsSpace', () => {
+    const target = {
+      type: 'com.example.forum',
+      authority: 'did:plc:abc',
+      skey: 'default',
+    } as const
+
+    it('should not allow space with transition:generic', () => {
+      // Legacy tokens predate permissioned data and must not reach a space.
+      const set = new ScopePermissionsTransition('transition:generic')
+      expect(set.allowsSpace({ ...target, action: 'read' })).toBe(false)
+      expect(set.allowsSpace({ ...target, action: 'read_self' })).toBe(false)
+      expect(
+        set.allowsSpace({
+          ...target,
+          action: 'create',
+          collection: 'com.example.thread',
+        }),
+      ).toBe(false)
+      expect(set.allowsSpace({ ...target, manage: 'update' })).toBe(false)
+    })
+
+    it('should allow space with a covering space scope', () => {
+      const set = new ScopePermissionsTransition(
+        'space:com.example.forum?authority=did:plc:abc&action=read',
+      )
+      expect(set.allowsSpace({ ...target, action: 'read' })).toBe(true)
+    })
+  })
+
   describe('allowsRpc', () => {
     it('should allow rpc with transition:generic', () => {
       const set = new ScopePermissionsTransition('transition:generic')

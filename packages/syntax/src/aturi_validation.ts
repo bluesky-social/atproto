@@ -406,6 +406,11 @@ function parseSpaceAtUriString(
       return failure('Space ATURI query part is not allowed')
     }
 
+    // A space key carries the same syntax requirements as a record key.
+    if (!isValidRecordKey(groups.skey)) {
+      return failure('Space ATURI has invalid space key')
+    }
+
     if (groups.rkey != null && !isValidRecordKey(groups.rkey)) {
       return failure('Space ATURI has invalid record key')
     }
