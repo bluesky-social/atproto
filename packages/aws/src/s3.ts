@@ -137,7 +137,6 @@ export class S3BlobStore implements BlobStore {
         Body: bytes,
         Key: path,
       },
-      // @ts-ignore native implementation fine in node >=15
       abortController,
     })
 
