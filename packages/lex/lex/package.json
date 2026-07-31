@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@types/yargs": "^17.0.33",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "codegen:lex": "./bin/lex build --override --indexFile --lexicons ./lexicons --out ./tests/lexicons --lib @atproto/lex-schema",
