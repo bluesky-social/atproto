@@ -3,10 +3,7 @@ import type { Options } from './util.js'
 
 // @NOTE if there are any additions here, ensure to include them on ImageUriBuilder.presets
 export type ImagePreset =
-  | 'avatar'
-  | 'banner'
-  | 'feed_thumbnail'
-  | 'feed_fullsize'
+  'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
 const PATH_REGEX = /^\/(.+?)\/plain\/(.+?)\/(.+?)(?:@(.+?))?$/
 

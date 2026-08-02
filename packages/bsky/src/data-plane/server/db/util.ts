@@ -59,8 +59,7 @@ export const dummyDialect = {
 }
 
 export type DbRef =
-  | RawBuilder<unknown>
-  | ReturnType<DynamicModule<unknown>['ref']>
+  RawBuilder<unknown> | ReturnType<DynamicModule<unknown>['ref']>
 
 export type Subquery = ExpressionBuilder<DatabaseSchemaType, any>
 

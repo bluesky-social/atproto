@@ -11,8 +11,7 @@ import type { OAuthServerAgent, TokenSet } from './oauth-server-agent.js'
 import type { SessionGetter } from './session-getter.js'
 
 const ReadableStream = globalThis.ReadableStream as
-  | typeof globalThis.ReadableStream
-  | undefined
+  typeof globalThis.ReadableStream | undefined
 
 export type { AtprotoDid, AtprotoOAuthScope }
 export type TokenInfo = {

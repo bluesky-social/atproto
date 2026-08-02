@@ -6,9 +6,9 @@ import type { DidResolver, ResolvedDocument } from './did-resolver.js'
 
 export type { DidMethod, ResolveDidOptions, ResolvedDocument }
 
-export class DidResolverBase<M extends string = string>
-  implements DidResolver<M>
-{
+export class DidResolverBase<
+  M extends string = string,
+> implements DidResolver<M> {
   protected readonly methods: Map<string, DidMethod<M>>
 
   constructor(methods: DidMethods<M>) {

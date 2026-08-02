@@ -80,11 +80,7 @@ export type EmbedView =
 export type MaybePostView = PostView | NotFoundPost | BlockedPost
 
 export type RecordEmbedViewInternal =
-  | PostEmbedView
-  | GeneratorView
-  | ListView
-  | LabelerView
-  | StarterPackViewBasic
+  PostEmbedView | GeneratorView | ListView | LabelerView | StarterPackViewBasic
 
 // app.bsky.feed
 

@@ -81,8 +81,7 @@ type AsArrayParamSchema<TSchema extends Validator> =
   TSchema extends any ? ArraySchema<TSchema> : never
 
 export type ParamValueValidator =
-  | ParamScalarValidator
-  | AsArrayParamSchema<ParamScalarValidator>
+  ParamScalarValidator | AsArrayParamSchema<ParamScalarValidator>
 
 export type ParamValidator =
   | ParamValueValidator

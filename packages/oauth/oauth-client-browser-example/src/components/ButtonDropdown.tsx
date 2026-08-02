@@ -105,7 +105,9 @@ function Item({ item: { label, onClick, items }, ...props }: ItemProps) {
 
       {items
         ?.filter((item) => !!item)
-        .map((item, index) => <Item key={index} item={item} />)}
+        .map((item, index) => (
+          <Item key={index} item={item} />
+        ))}
     </div>
   )
 }

@@ -11,8 +11,7 @@ import type { ClientMetadata } from './types.js'
 import type { Awaitable } from './util.js'
 
 export type ClientAuthMethod =
-  | { method: 'none' }
-  | { method: 'private_key_jwt'; kid: string }
+  { method: 'none' } | { method: 'private_key_jwt'; kid: string }
 
 export function negotiateClientAuthMethod(
   serverMetadata: OAuthAuthorizationServerMetadata,

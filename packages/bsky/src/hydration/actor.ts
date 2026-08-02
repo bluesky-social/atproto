@@ -253,8 +253,7 @@ export class ActorHydrator {
       const verifications = mapDefined(
         Object.entries(actor.verifiedBy) as [DidString, VerificationMeta][],
         ([actorDid, verificationMeta]):
-          | VerificationHydrationState
-          | undefined => {
+          VerificationHydrationState | undefined => {
           if (
             verificationMeta.handle &&
             verificationMeta.rkey &&
@@ -545,8 +544,7 @@ export class ActorHydrator {
         // against potentially missing subscription objects in the response, so
         // we keep that defense in place.
         const subscription = subscriptions[i] as
-          | ActivitySubscription
-          | undefined
+          ActivitySubscription | undefined
 
         const state = {
           post: subscription?.post != null,

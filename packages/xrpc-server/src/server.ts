@@ -687,8 +687,7 @@ export class Server {
     // specific rate limiter (HandlerContext<A, P, I>).
 
     const globalRateLimiter = this.globalRateLimiter as
-      | HttpRateLimiter<HandlerContext<A, P, I>>
-      | undefined
+      HttpRateLimiter<HandlerContext<A, P, I>> | undefined
 
     // No route specific rate limiting configured, use the global rate limiter.
     if (!config.rateLimit) return globalRateLimiter
@@ -704,8 +703,7 @@ export class Server {
     const rateLimiters = asArray(config.rateLimit).map((options, i) => {
       if (isSharedRateLimitOpts(options)) {
         const rateLimiter = this.sharedRateLimiters?.get(options.name) as
-          | RateLimiterI<HandlerContext<A, P, I>>
-          | undefined
+          RateLimiterI<HandlerContext<A, P, I>> | undefined
 
         // The route config references a shared rate limiter that does not
         // exist. This is a configuration error.

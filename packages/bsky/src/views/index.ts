@@ -2346,8 +2346,7 @@ export class Views {
   }: {
     document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
     publication:
-      | AssociatedSiteStandardRecord<SiteStandardPublication>
-      | undefined
+      AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
     state: HydrationState
     assumedUrl: string
   }): ExternalEmbedView['external'] | undefined {
@@ -2431,9 +2430,9 @@ export class Views {
     // unit, so doc-scoped and publication-scoped labels end up in the same
     // bucket.
     const labels = [
-      ...(document ? state.labels?.getBySubject(document.ref.uri) ?? [] : []),
+      ...(document ? (state.labels?.getBySubject(document.ref.uri) ?? []) : []),
       ...(publication
-        ? state.labels?.getBySubject(publication.ref.uri) ?? []
+        ? (state.labels?.getBySubject(publication.ref.uri) ?? [])
         : []),
     ]
     if (labels.length) overlay.labels = labels

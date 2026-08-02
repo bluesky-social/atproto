@@ -10,8 +10,7 @@ type Item<V> = {
 export class IndexedDBStore<
   K extends Extract<IDBValidKey, Key>,
   V extends Value,
-> implements SimpleStore<K, V>
-{
+> implements SimpleStore<K, V> {
   constructor(
     private dbName: string,
     protected maxAge = 600e3,

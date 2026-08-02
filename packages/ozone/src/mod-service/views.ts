@@ -157,8 +157,7 @@ export class ModerationViews {
         ? {
             name: row.modTool.name,
             meta: sanitizeUnsafeIntegers(row.modTool.meta) as
-              | Record<string, unknown>
-              | undefined,
+              Record<string, unknown> | undefined,
           }
         : undefined,
     }

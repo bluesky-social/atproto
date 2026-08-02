@@ -34,9 +34,9 @@ export class LexiconGetter extends CachedGetter<Nsid, LexiconData> {
           updatedAt: now,
           // Update the data with fresh data, if available, or keep cached
           // values (if any) otherwise.
-          lastSucceededAt: result ? now : storedData?.lastSucceededAt ?? null,
-          uri: result ? result.uri.toString() : storedData?.uri ?? null,
-          lexicon: result ? result.lexicon : storedData?.lexicon ?? null,
+          lastSucceededAt: result ? now : (storedData?.lastSucceededAt ?? null),
+          uri: result ? result.uri.toString() : (storedData?.uri ?? null),
+          lexicon: result ? result.lexicon : (storedData?.lexicon ?? null),
         }
       },
       {

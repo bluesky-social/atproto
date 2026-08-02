@@ -29,8 +29,7 @@ export class Query<
   const TParameters extends ParamsSchema = ParamsSchema,
   const TOutputPayload extends Payload = Payload,
   const TErrors extends undefined | readonly string[] =
-    | undefined
-    | readonly string[],
+    undefined | readonly string[],
 > {
   readonly type = 'query' as const
 

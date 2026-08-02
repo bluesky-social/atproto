@@ -18,9 +18,7 @@ import { createServer } from '@atproto/xrpc-server'
 
 const server = createServer([], {
   validateResponse: config.debugMode,
-  payload: {
-    /* ... body limits, etc. ... */
-  },
+  payload: {/* ... body limits, etc. ... */},
 })
 
 // Mount on Express
@@ -74,9 +72,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json' as const,
-        body: {
-          /* ... */
-        },
+        body: {/* ... */},
       }
     },
   })
@@ -172,9 +168,7 @@ const code = com.atproto.server.defs.inviteCode.$build({
 For plain (untyped) data shapes, just annotate:
 
 ```ts
-const view: com.atproto.server.defs.InviteCode = {
-  /* ... */
-}
+const view: com.atproto.server.defs.InviteCode = {/* ... */}
 ```
 
 ## Errors

@@ -47,8 +47,7 @@ export class Subscription<
   const TParameters extends ParamsSchema = ParamsSchema,
   const TMessage extends Schema<LexValue> = Schema<LexValue>,
   const TErrors extends undefined | readonly string[] =
-    | undefined
-    | readonly string[],
+    undefined | readonly string[],
 > {
   readonly type = 'subscription' as const
 

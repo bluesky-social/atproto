@@ -12,9 +12,7 @@ import type {
 
 type ThreadMaybeOtherPostNode = ThreadPostNode | ThreadOtherPostNode
 type ThreadNodeWithReplies =
-  | ThreadPostNode
-  | ThreadOtherPostNode
-  | ThreadOtherAnchorPostNode
+  ThreadPostNode | ThreadOtherPostNode | ThreadOtherAnchorPostNode
 
 type ThreadItemValue<T extends ThreadItem['value']> = Omit<
   ThreadItem,
