@@ -23,7 +23,7 @@
   },
   "scripts": {
     "lint:fix": "pnpm lint --fix",
-    "lint": "NODE_OPTIONS=--max_old_space_size=4096 eslint . --ext .ts,.js,.tsx,.jsx",
+    "lint": "NODE_OPTIONS=--max_old_space_size=4096 eslint .",
     "style:fix": "prettier --write .",
     "style": "prettier --check .",
     "verify": "pnpm --stream '/^verify:.+$/'",
@@ -51,6 +51,7 @@
     "@atproto/dev-env": "workspace:^",
     "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.31.0",
+    "@eslint/js": "^9.39.5",
     "@jest/globals": "^30.0.0",
     "@swc/core": "^1.3.42",
     "@swc/jest": "^0.2.24",
@@ -62,12 +63,13 @@
     "@typescript/native-preview": "^7.0.0-beta",
     "@vitest/coverage-v8": "4.0.16",
     "dotenv": "^16.0.3",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.1.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^3.7.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-n": "^17.15.0",
     "eslint-plugin-prettier": "^5.1.3",
+    "globals": "^15.15.0",
     "jest": "^30.0.0",
     "node-gyp": "^9.3.1",
     "pino-pretty": "^9.1.0",
@@ -89,5 +91,6 @@
       "packages/oauth/*",
       "packages/internal/*"
     ]
-  }
+  },
+  "packageManager": "pnpm@8.15.9+sha512.499434c9d8fdd1a2794ebf4552b3b25c0a633abcee5bb15e7b5de90f32f47b513aca98cd5cfd001c31f0db454bc3804edccd578501e4ca293a6816166bbd9f81"
 }

@@ -3,7 +3,6 @@ import type http from 'node:http'
 import type { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
 import express from 'express'
-// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import type { Keypair } from '@atproto/crypto'
 import {

@@ -1,5 +1,4 @@
 export const canParseUrl =
-  // eslint-disable-next-line n/no-unsupported-features/node-builtins
   URL.canParse?.bind(URL) ??
   // URL.canParse is not available in Node.js < 18.7.0
   ((urlStr: string): boolean => {

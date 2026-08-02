@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
-
 import { describe, expect, it } from 'vitest'
 import type { DidString, HandleString } from '@atproto/lex-schema'
 import { LexServerAuthError } from '@atproto/lex-server'

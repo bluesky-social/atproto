@@ -1,6 +1,5 @@
 import { once } from 'node:events'
 import { type Server, createServer } from 'node:http'
-// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 
 export type DisposableServer = Server & {

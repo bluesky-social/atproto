@@ -1,7 +1,6 @@
 import { once } from 'node:events'
 import { createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
-// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import { type WebSocket, WebSocketServer } from 'ws'
 import type { AppBskyGraphVerification, AtpAgent } from '@atproto/api'

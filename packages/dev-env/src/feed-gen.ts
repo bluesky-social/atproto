@@ -2,7 +2,6 @@ import events from 'node:events'
 import type http from 'node:http'
 import * as plc from '@did-plc/lib'
 import getPort from 'get-port'
-// eslint-disable-next-line import/default, import/no-named-as-default-member
 import httpTerminator from 'http-terminator'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { type SkeletonHandler, app } from '@atproto/pds'

@@ -12,7 +12,6 @@ import type { ListenOptions } from 'node:net'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import type { ReadableStream as NodeReadableStream } from 'node:stream/web'
-// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import { WebSocket as WebSocketPonyfill, WebSocketServer } from 'ws'
 import type { FetchHandler } from './lex-router.js'

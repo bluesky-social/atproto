@@ -5,7 +5,6 @@ import compression from 'compression'
 import cors from 'cors'
 import { Etcd3 } from 'etcd3'
 import express from 'express'
-// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'

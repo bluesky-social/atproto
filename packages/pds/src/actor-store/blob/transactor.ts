@@ -1,6 +1,5 @@
 import crypto from 'node:crypto'
 import type stream from 'node:stream'
-// eslint-disable-next-line import/default, import/no-named-as-default-member
 import fileType from 'file-type'
 const { fromStream: fileTypeFromStream } = fileType
 import PQueue from 'p-queue'
