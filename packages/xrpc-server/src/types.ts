@@ -97,8 +97,7 @@ export type Input = void | HandlerInput
 export type Output = void | HandlerSuccess | HandlerPipeThrough | ErrorResult
 
 export type AuthVerifier<C, A extends AuthResult = AuthResult> =
-  | ((ctx: C) => Awaitable<A | ErrorResult>)
-  | ((ctx: C) => Awaitable<A>)
+  ((ctx: C) => Awaitable<A | ErrorResult>) | ((ctx: C) => Awaitable<A>)
 
 export type MethodAuthContext<P extends Params = Params> = {
   params: P
@@ -164,8 +163,7 @@ export type RouteRateLimitOpts<C extends HandlerContext = HandlerContext> = {
 }
 
 export type RateLimitOpts<C extends HandlerContext = HandlerContext> =
-  | SharedRateLimitOpts<C>
-  | RouteRateLimitOpts<C>
+  SharedRateLimitOpts<C> | RouteRateLimitOpts<C>
 
 export function isSharedRateLimitOpts<
   C extends HandlerContext = HandlerContext,

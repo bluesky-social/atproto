@@ -193,7 +193,7 @@ export class AccountManager {
           // This information is only exposed to the hook and is never
           // surfaced to the client.
           const isCredentialsError = err instanceof InvalidCredentialsError
-          const did = isCredentialsError ? err.did ?? null : null
+          const did = isCredentialsError ? (err.did ?? null) : null
 
           // Swallow any error from the hook itself so that it does not mask
           // the underlying authentication failure being reported.

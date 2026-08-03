@@ -34,8 +34,9 @@ export type CommitBase = {
   rkey: string
   cid: string
 }
-export interface CommitCreateEvent<RecordType extends JetstreamRecord>
-  extends EventBase {
+export interface CommitCreateEvent<
+  RecordType extends JetstreamRecord,
+> extends EventBase {
   kind: 'commit'
   commit: {
     operation: 'create'

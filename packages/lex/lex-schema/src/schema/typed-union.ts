@@ -29,10 +29,8 @@ import type { TypedRefSchema } from './typed-ref.js'
  * ```
  */
 export class TypedUnionSchema<
-  const TValidators extends readonly (
-    | TypedRefSchema
-    | TypedObjectSchema
-  )[] = [],
+  const TValidators extends readonly (TypedRefSchema | TypedObjectSchema)[] =
+    [],
   const TClosed extends boolean = boolean,
 > extends Schema<
   TClosed extends true

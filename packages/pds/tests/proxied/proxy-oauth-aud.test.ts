@@ -60,8 +60,7 @@ describe('proxy oauth audience', () => {
       ({ authorize }) => {
         return async (ctx) => {
           const scopeHeader = ctx.req.headers['x-test-scope'] as
-            | string
-            | undefined
+            string | undefined
           const permissions = new ScopePermissions(
             scopeHeader?.split(' ') ?? [],
           )

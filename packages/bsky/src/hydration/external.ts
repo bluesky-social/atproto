@@ -81,8 +81,7 @@ const emptySiteStandardRecords = (): SiteStandardRecords => ({
 
 const buildSiteStandardRecordsHydrationMaps = (
   res:
-    | GetSiteStandardRecordsByURIResponse
-    | GetSiteStandardRecordsByRefResponse,
+    GetSiteStandardRecordsByURIResponse | GetSiteStandardRecordsByRefResponse,
   includeTakedowns: boolean,
 ): SiteStandardRecords => {
   const documents: SiteStandardDocuments = new HydrationMap()
@@ -148,8 +147,7 @@ export const getSiteStandardRecordsFromHydrationMapsByRefs = (
   // each side.
   let document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
   let publication:
-    | AssociatedSiteStandardRecord<SiteStandardPublication>
-    | undefined
+    AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
   for (const ref of associatedRefs) {
     const key = siteStandardRecordKey(ref.uri, ref.cid)
     if (!document) {
@@ -237,8 +235,7 @@ export const getSiteStandardRecordsFromHydrationMapsByDocumentUri = (
   }
 
   let publication:
-    | AssociatedSiteStandardRecord<SiteStandardPublication>
-    | undefined
+    AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
   if (document) {
     const site = document.info.record.site
     if (site && site.startsWith('at://')) {

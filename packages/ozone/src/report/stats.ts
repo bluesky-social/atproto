@@ -632,10 +632,10 @@ export class ReportStatsService {
     stats: ReportStatistics,
   ): UpsertRow {
     const pendingCount =
-      'pendingCount' in stats ? stats.pendingCount ?? null : null
+      'pendingCount' in stats ? (stats.pendingCount ?? null) : null
     const escalatedCount =
-      'escalatedCount' in stats ? stats.escalatedCount ?? null : null
-    const actionRate = 'actionRate' in stats ? stats.actionRate ?? null : null
+      'escalatedCount' in stats ? (stats.escalatedCount ?? null) : null
+    const actionRate = 'actionRate' in stats ? (stats.actionRate ?? null) : null
 
     return {
       date,

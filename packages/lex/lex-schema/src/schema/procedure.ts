@@ -32,8 +32,7 @@ export class Procedure<
   const TInputPayload extends Payload = Payload,
   const TOutputPayload extends Payload = Payload,
   const TErrors extends undefined | readonly string[] =
-    | undefined
-    | readonly string[],
+    undefined | readonly string[],
 > {
   readonly type = 'procedure' as const
 

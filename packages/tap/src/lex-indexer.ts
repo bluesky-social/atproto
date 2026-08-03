@@ -56,10 +56,7 @@ export type IdentityHandler = (
 export type ErrorHandler = (err: Error) => void
 
 export type RecordHandler<R> =
-  | CreateHandler<R>
-  | UpdateHandler<R>
-  | PutHandler<R>
-  | DeleteHandler
+  CreateHandler<R> | UpdateHandler<R> | PutHandler<R> | DeleteHandler
 
 interface RegisteredHandler {
   handler: RecordHandler<any>

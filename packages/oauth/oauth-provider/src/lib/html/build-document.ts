@@ -45,8 +45,7 @@ export type LinkAttrs = Attrs & {
   rel: LinkRel
 }
 export type MetaAttrs =
-  | { name: string; content: string }
-  | { 'http-equiv': string; content: string }
+  { name: string; content: string } | { 'http-equiv': string; content: string }
 
 const defaultViewport = html`<meta
   name="viewport"

@@ -193,7 +193,4 @@ type TypedAccountEvt = {
   evt: AccountEvt
 }
 export type SeqEvt =
-  | TypedCommitEvt
-  | TypedSyncEvt
-  | TypedIdentityEvt
-  | TypedAccountEvt
+  TypedCommitEvt | TypedSyncEvt | TypedIdentityEvt | TypedAccountEvt

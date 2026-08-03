@@ -23,14 +23,12 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     const res = await builder.execute()
     return {
-      drafts: res.map(
-        (d): PlainMessage<DraftInfo> => ({
-          key: d.key,
-          payload: Buffer.from(d.payload),
-          createdAt: Timestamp.fromDate(new Date(d.createdAt)),
-          updatedAt: Timestamp.fromDate(new Date(d.updatedAt)),
-        }),
-      ),
+      drafts: res.map((d): PlainMessage<DraftInfo> => ({
+        key: d.key,
+        payload: Buffer.from(d.payload),
+        createdAt: Timestamp.fromDate(new Date(d.createdAt)),
+        updatedAt: Timestamp.fromDate(new Date(d.updatedAt)),
+      })),
       cursor: key.packFromResult(res),
     }
   },

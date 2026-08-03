@@ -5,8 +5,9 @@ type Encoding = 'utf8' | 'base64' | 'base64url'
 // standalone so it compiles in any environment (see tsconfig/isomorphic.tsconfig.json).
 type WithImplicitCoercion<T> = T | { valueOf(): T }
 
-interface NodeJSBuffer<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>
-  extends Uint8Array<TArrayBuffer> {
+interface NodeJSBuffer<
+  TArrayBuffer extends ArrayBufferLike = ArrayBufferLike,
+> extends Uint8Array<TArrayBuffer> {
   byteLength: number
   toString(encoding?: Encoding): string
   slice(start?: number, end?: number): NodeJSBuffer<ArrayBuffer>

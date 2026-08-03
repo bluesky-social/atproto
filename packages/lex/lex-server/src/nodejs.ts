@@ -402,9 +402,8 @@ function toConnectionInfo(req: IncomingMessage): NodeConnectionInfo {
  */
 export function toRequestListener<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
-  Response extends typeof ServerResponse<
-    InstanceType<Request>
-  > = typeof ServerResponse,
+  Response extends typeof ServerResponse<InstanceType<Request>> =
+    typeof ServerResponse,
 >(fetchHandler: FetchHandler) {
   return ((
     req: InstanceType<Request>,
@@ -433,9 +432,8 @@ export function toRequestListener<
  */
 export type CreateServerOptions<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
-  Response extends typeof ServerResponse<
-    InstanceType<Request>
-  > = typeof ServerResponse,
+  Response extends typeof ServerResponse<InstanceType<Request>> =
+    typeof ServerResponse,
 > = ServerOptions<Request, Response> & {
   /**
    * Timeout in milliseconds for graceful termination.
@@ -476,11 +474,10 @@ export type CreateServerOptions<
  */
 export interface Server<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
-  Response extends typeof ServerResponse<
-    InstanceType<Request>
-  > = typeof ServerResponse,
-> extends HttpServer<Request, Response>,
-    AsyncDisposable {
+  Response extends typeof ServerResponse<InstanceType<Request>> =
+    typeof ServerResponse,
+>
+  extends HttpServer<Request, Response>, AsyncDisposable {
   /**
    * Gracefully terminates the server.
    *
@@ -533,9 +530,8 @@ export interface Server<
  */
 export function createServer<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
-  Response extends typeof ServerResponse<
-    InstanceType<Request>
-  > = typeof ServerResponse,
+  Response extends typeof ServerResponse<InstanceType<Request>> =
+    typeof ServerResponse,
 >(
   handler: FetchHandler | HandlerObject,
   options: CreateServerOptions<Request, Response> = {},
@@ -595,9 +591,8 @@ export function createServer<
  */
 export type StartServerOptions<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
-  Response extends typeof ServerResponse<
-    InstanceType<Request>
-  > = typeof ServerResponse,
+  Response extends typeof ServerResponse<InstanceType<Request>> =
+    typeof ServerResponse,
 > = ListenOptions & CreateServerOptions<Request, Response>
 
 /**
@@ -663,9 +658,8 @@ export type StartServerOptions<
  */
 export async function serve<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
-  Response extends typeof ServerResponse<
-    InstanceType<Request>
-  > = typeof ServerResponse,
+  Response extends typeof ServerResponse<InstanceType<Request>> =
+    typeof ServerResponse,
 >(
   handler: FetchHandler | HandlerObject,
   options?: StartServerOptions<Request, Response>,

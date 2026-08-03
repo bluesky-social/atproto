@@ -286,9 +286,7 @@ const code = com.atproto.server.defs.inviteCode.$build({
 Plain shapes that don't need `$type` — just annotate:
 
 ```ts
-const code: com.atproto.server.defs.InviteCode = {
-  /* ... */
-}
+const code: com.atproto.server.defs.InviteCode = {/* ... */}
 ```
 
 ### Token values

@@ -74,9 +74,7 @@ Two things are required in the Vite config:
    export default defineConfig({
      plugins: [react(), tailwindcss()],
      resolve: { alias: { '#': resolve(__dirname, './src') } },
-     build: {
-       /* ... */
-     },
+     build: {/* ... */},
      test: {},
    })
    ```

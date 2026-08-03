@@ -11,9 +11,10 @@ export type IdentityPermissionMatch = {
   attr: IdentityAttribute
 }
 
-export class IdentityPermission
-  implements ResourcePermission<'identity', IdentityPermissionMatch>
-{
+export class IdentityPermission implements ResourcePermission<
+  'identity',
+  IdentityPermissionMatch
+> {
   constructor(public readonly attr: IdentityAttribute) {}
 
   matches(options: IdentityPermissionMatch) {

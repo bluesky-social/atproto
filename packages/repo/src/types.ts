@@ -159,9 +159,7 @@ export type RecordDeleteDescript = {
 }
 
 export type RecordWriteDescript =
-  | RecordCreateDescript
-  | RecordUpdateDescript
-  | RecordDeleteDescript
+  RecordCreateDescript | RecordUpdateDescript | RecordDeleteDescript
 
 export type WriteLog = RecordWriteDescript[][]
 

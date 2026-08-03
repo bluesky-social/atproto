@@ -154,7 +154,7 @@ export class BlobTransactor extends BlobReader {
     takedown: com.atproto.admin.defs.StatusAttr,
   ) {
     const takedownRef = takedown.applied
-      ? takedown.ref ?? currentDatetimeString()
+      ? (takedown.ref ?? currentDatetimeString())
       : null
     await this.db.db
       .updateTable('blob')

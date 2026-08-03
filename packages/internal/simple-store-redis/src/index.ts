@@ -31,9 +31,10 @@ export type SimpleStoreRedisOptions<K extends string, V extends Value> = {
   decode?: Decoder<K, V>
 }
 
-export class SimpleStoreRedis<K extends string, V extends Value>
-  implements SimpleStore<K, V>
-{
+export class SimpleStoreRedis<
+  K extends string,
+  V extends Value,
+> implements SimpleStore<K, V> {
   constructor(
     protected readonly redis: Redis,
     protected readonly options: SimpleStoreRedisOptions<K, V>,

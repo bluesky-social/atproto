@@ -117,24 +117,18 @@ largest bundle:
 ```ts
 // Smallest — default import (recommended for browser bundles)
 import getRecord from './lexicons/com/atproto/repo/getRecord.js'
-await client.call(getRecord, {
-  /* ... */
-})
+await client.call(getRecord, {/* ... */})
 
 // Same size, less ergonomic — direct named import
 import { main as getRecord } from './lexicons/com/atproto/repo/getRecord.js'
 
 // Same size, leaks `.main` — explicit main reference
 import * as com from './lexicons/com.js'
-await client.call(com.atproto.repo.getRecord.main, {
-  /* ... */
-})
+await client.call(com.atproto.repo.getRecord.main, {/* ... */})
 
 // Largest — namespace notation (drags in sibling defs)
 import * as com from './lexicons/com.js'
-await client.call(com.atproto.repo.getRecord, {
-  /* ... */
-})
+await client.call(com.atproto.repo.getRecord, {/* ... */})
 ```
 
 For services, scripts, and tests where bundle size doesn't matter, the
