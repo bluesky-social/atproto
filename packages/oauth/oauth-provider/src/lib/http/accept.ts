@@ -1,6 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import accept from '@hapi/accept'
-const { mediaType } = accept
+import { mediaType } from '@hapi/accept'
 import { type SubCtx, subCtx } from './context.js'
 import type { Middleware, NextFunction } from './types.js'
 

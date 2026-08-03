@@ -7,8 +7,7 @@ import {
   json,
   text,
 } from 'express'
-import mimeTypes from 'mime-types'
-const { contentType } = mimeTypes
+import { contentType } from 'mime-types'
 import { MaxSizeChecker, createDecoders } from '@atproto/common'
 import { jsonToLex } from '@atproto/lex-json'
 import { l } from '@atproto/lex-schema'
