@@ -34,8 +34,9 @@ type ConnectionOptions<M extends DataMode> = Partial<
   >
 > & { dataMode?: M }
 
-export interface WebSocketOptions<M extends DataMode>
-  extends ConnectionOptions<M> {
+export interface WebSocketOptions<
+  M extends DataMode,
+> extends ConnectionOptions<M> {
   /** Exponential-backoff ceiling in seconds. Default 64. */
   maxReconnectSeconds?: number
   /** Abort to end the stream permanently; the iterator rejects with the reason. */
