@@ -59,7 +59,7 @@ export function useAuthenticatedBskyClient(
 const unauthenticatedClientPromise = Promise.resolve(unauthenticatedClient)
 const cache = new WeakMap<Agent, Promise<Client>>()
 
-function useConfiguredClient(session?: OAuthSession) {
+function useConfiguredClient(session?: OAuthSession): Client {
   // @NOTE The use of promises created in render, without a framework (like
   // NextJS), requires to use stable (cached) promises. Since oauth sessions are
   // stable objects, it is safe to use them as cache key to provide a stable

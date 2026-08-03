@@ -85,13 +85,14 @@
     "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.15.5",
     "@types/qs": "^6.9.7",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "codegen:buf": "buf generate ../bsync/proto && buf generate ./proto",
     "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsgo --build tsconfig.build.json",
+    "verify:import": "node --input-type=module -e \"import '@atproto/bsky'\"",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "../dev-infra/with-test-redis-and-db.sh vitest run",
     "test:log": "tail -50 test.log | pino-pretty",

@@ -37,7 +37,7 @@
     "undici_v8": "npm:undici@^8.x"
   },
   "devDependencies": {
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "build": "tsgo --build tsconfig.json",

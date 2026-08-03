@@ -39,7 +39,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "test": "vitest run",
