@@ -1,5 +1,6 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { Link } from '@tanstack/react-router'
+import { MonitorSmartphoneIcon } from 'lucide-react'
 import type {
   ActiveAccountSession,
   DidString,
@@ -70,6 +71,7 @@ export function Page() {
         }
         loading={isLoading}
         filterLabel={t`Filter devices`}
+        emptyIcon={MonitorSmartphoneIcon}
         empty={
           <Trans>Looks like you aren't logged in on any other devices.</Trans>
         }

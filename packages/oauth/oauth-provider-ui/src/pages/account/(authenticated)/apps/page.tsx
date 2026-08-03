@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { CircleHelpIcon } from 'lucide-react'
+import { CircleHelpIcon, GlobeIcon } from 'lucide-react'
 import type { ActiveOAuthSession, DidString } from '@atproto/oauth-provider-api'
 import { Notice, NoticeAction } from '#/components/feedback/notice.tsx'
 import { OAuthSessionDetailsDialog } from '#/components/oauth-session-details-dialog.tsx'
@@ -63,6 +63,7 @@ export function Page() {
         }
         loading={isLoading}
         filterLabel={t`Filter apps`}
+        emptyIcon={GlobeIcon}
         empty={
           <Trans>
             It appears that you haven’t used this account to sign in to any apps

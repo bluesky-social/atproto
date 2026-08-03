@@ -1,6 +1,12 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { SearchIcon } from 'lucide-react'
+import { type LucideIcon, SearchIcon } from 'lucide-react'
 import { Fragment, type ReactNode, useMemo, useState } from 'react'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from '#/components/ui/empty.tsx'
 import { Input } from '#/components/ui/input.tsx'
 import { Separator } from '#/components/ui/separator.tsx'
 import { Skeleton } from '#/components/ui/skeleton.tsx'
@@ -40,6 +46,8 @@ export type SessionListProps<T> = {
   mobileTitle: (item: T) => ReactNode
   /** Shown when the list itself is empty (before any filtering). */
   empty: ReactNode
+  /** Illustrates the empty state — the page's own nav icon. */
+  emptyIcon: LucideIcon
   filterLabel: string
   /**
    * Renders placeholder rows in place of the data. Owned by this component
@@ -69,6 +77,7 @@ export function SessionList<T>({
   action,
   mobileTitle,
   empty,
+  emptyIcon: EmptyIcon,
   filterLabel,
   loading = false,
 }: SessionListProps<T>) {
@@ -81,7 +90,18 @@ export function SessionList<T>({
     return items.filter((item) => searchText(item).toLowerCase().includes(q))
   }, [items, query, searchText])
 
-  if (!loading && !items.length) return <p>{empty}</p>
+  if (!loading && !items.length) {
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <EmptyIcon aria-hidden />
+          </EmptyMedia>
+          <EmptyDescription>{empty}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-4">

@@ -136,7 +136,7 @@ msgstr "Sélecteur de compte"
 msgid "Account username"
 msgstr "Nom d'utilisateur du compte"
 
-#: src/components/session-list.tsx:118
+#: src/components/session-list.tsx:138
 msgid "Actions"
 msgstr "Actions"
 
@@ -187,7 +187,7 @@ msgstr "N'importe quelle action"
 msgid "Any service"
 msgstr "N'importe quel service"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:79
+#: src/pages/account/(authenticated)/apps/page.tsx:80
 msgctxt "OAuthApp"
 msgid "App"
 msgstr "Application"
@@ -196,7 +196,7 @@ msgstr "Application"
 msgid "Apps"
 msgstr "Applications"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:145
+#: src/pages/account/(authenticated)/apps/page.tsx:146
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr "Les applications peuvent accéder à votre compte en arrière-plan (pour vérifier les notifications, synchroniser les données, etc.) même lorsque vous ne les utilisez pas activement. C'est un comportement normal qui sera reflété dans l'heure de \"dernier accès\"."
 
@@ -221,7 +221,7 @@ msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Autoriser"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:92
+#: src/pages/account/(authenticated)/apps/page.tsx:93
 msgctxt "OAuthApp"
 msgid "Authorized"
 msgstr "Autorisée"
@@ -273,7 +273,7 @@ msgstr "Appeler"
 msgid "Cancel"
 msgstr "Annuler"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:152
+#: src/pages/account/(authenticated)/devices/page.tsx:154
 msgid "Cannot remove current device"
 msgstr "Impossible de supprimer l'appareil en cours d'utilisation"
 
@@ -332,7 +332,7 @@ msgstr "Choisissez un nom d'utilisateur"
 msgid "Click here if nothing happens"
 msgstr "Cliquez ici si rien ne se passe"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:86
+#: src/pages/account/(authenticated)/apps/page.tsx:87
 msgctxt "OAuthApp"
 msgid "Client"
 msgstr "Client"
@@ -434,11 +434,11 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Refuser l'accès"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:200
+#: src/pages/account/(authenticated)/apps/page.tsx:201
 msgid "Details"
 msgstr "Détails"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:79
+#: src/pages/account/(authenticated)/devices/page.tsx:81
 msgctxt "device list"
 msgid "Device"
 msgstr "Appareil"
@@ -558,7 +558,7 @@ msgstr "Échec de la désactivation du compte"
 msgid "Failed to delete account"
 msgstr "Échec de la suppression du compte"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:34
+#: src/pages/account/(authenticated)/devices/page.tsx:35
 #: src/pages/account/(authenticated)/apps/page.tsx:38
 msgid "Failed to load connected apps"
 msgstr "Échec du chargement des applications connectées"
@@ -611,7 +611,7 @@ msgstr "Contenu du fichier"
 msgid "Filter apps"
 msgstr "Filtrer les applications"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:72
+#: src/pages/account/(authenticated)/devices/page.tsx:73
 msgid "Filter devices"
 msgstr "Filtrer les appareils"
 
@@ -726,12 +726,12 @@ msgstr "Pseudo invalide"
 msgid "Invite code"
 msgstr "Code d'invitation"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:85
+#: src/pages/account/(authenticated)/devices/page.tsx:87
 msgctxt "device list"
 msgid "IP address"
 msgstr "Adresse IP"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:67
+#: src/pages/account/(authenticated)/apps/page.tsx:68
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "Il semble que vous n'ayez pas encore utilisé ce compte pour vous connecter à des applications."
 
@@ -744,12 +744,12 @@ msgstr "Il semble que votre navigateur n'accepte pas les cookies. Appuyez sur \"
 msgid "just now"
 msgstr "à l'instant"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:130
+#: src/pages/account/(authenticated)/apps/page.tsx:131
 msgctxt "OAuthApp"
 msgid "Last accessed"
 msgstr "Dernier accès"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:90
+#: src/pages/account/(authenticated)/devices/page.tsx:92
 msgctxt "device list"
 msgid "Last seen"
 msgstr "Dernière connexion"
@@ -769,7 +769,7 @@ msgstr "Réinitialisons votre mot de passe !"
 msgid "Logo"
 msgstr "Logo"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:74
+#: src/pages/account/(authenticated)/devices/page.tsx:76
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Il semble que vous n'ayez de session active sur aucun autre appareil."
 
@@ -852,7 +852,7 @@ msgstr "Nouveau mot de passe"
 msgid "Next"
 msgstr "Suivant"
 
-#: src/components/session-list.tsx:201
+#: src/components/session-list.tsx:221
 msgid "No matches"
 msgstr "Aucun résultat"
 
@@ -1011,7 +1011,7 @@ msgstr "Réinitialiser le mot de passe"
 msgid "Reset your password"
 msgstr "Réinitialisez votre mot de passe"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:30
+#: src/pages/account/(authenticated)/devices/page.tsx:31
 #: src/pages/account/(authenticated)/apps/page.tsx:34
 #: src/components/feedback/error-notice.tsx:81
 msgid "Retry"
@@ -1079,7 +1079,7 @@ msgstr "Se connecter en tant que..."
 msgid "Sign in to an account that is not listed"
 msgstr "Se connecter à un compte qui n'est pas listé"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:155
+#: src/pages/account/(authenticated)/devices/page.tsx:157
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Déconnecter"
@@ -1218,7 +1218,7 @@ msgstr "Cette application demande les autorisations (scopes) suivantes pour acc�
 msgid "This authorization request has been denied. Please try again."
 msgstr "Cette demande d'autorisation a été refusée. Veuillez réessayer."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:118
+#: src/pages/account/(authenticated)/devices/page.tsx:120
 msgctxt "device list"
 msgid "This device"
 msgstr "Cet appareil"
@@ -1282,7 +1282,7 @@ msgstr "Déconnecté"
 msgid "Unexpected server response"
 msgstr "Réponse inattendue du serveur"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:112
+#: src/pages/account/(authenticated)/devices/page.tsx:114
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Agent utilisateur inconnu"
@@ -1418,7 +1418,7 @@ msgstr "Qu'est-ce que ça signifie ?"
 msgid "What is an Atmosphere Account?"
 msgstr "Qu'est-ce qu'un compte Atmosphère ?"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:136
+#: src/pages/account/(authenticated)/apps/page.tsx:137
 msgid "Why is this time so recent?"
 msgstr "Pourquoi cette heure est-elle si récente ?"
 
@@ -1495,7 +1495,7 @@ msgstr "Votre compte est actuellement désactivé."
 msgid "Your account is now deactivated."
 msgstr "Votre compte est maintenant désactivé."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:51
+#: src/pages/account/(authenticated)/devices/page.tsx:52
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "Une session est ouverte sur les appareils listés ci-dessous. Si votre compte a été compromis, déconnectez tous les appareils, changez votre mot de passe et vérifiez vos <0>applications</0> connectées."
 

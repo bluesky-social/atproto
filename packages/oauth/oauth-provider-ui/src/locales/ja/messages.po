@@ -136,7 +136,7 @@ msgstr "アカウント選択"
 msgid "Account username"
 msgstr "アカウントユーザー名"
 
-#: src/components/session-list.tsx:118
+#: src/components/session-list.tsx:138
 msgid "Actions"
 msgstr ""
 
@@ -187,7 +187,7 @@ msgstr "すべてのメソッド"
 msgid "Any service"
 msgstr "すべてのサービス"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:79
+#: src/pages/account/(authenticated)/apps/page.tsx:80
 msgctxt "OAuthApp"
 msgid "App"
 msgstr ""
@@ -196,7 +196,7 @@ msgstr ""
 msgid "Apps"
 msgstr "アプリ"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:145
+#: src/pages/account/(authenticated)/apps/page.tsx:146
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr ""
 
@@ -221,7 +221,7 @@ msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "承認"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:92
+#: src/pages/account/(authenticated)/apps/page.tsx:93
 msgctxt "OAuthApp"
 msgid "Authorized"
 msgstr ""
@@ -273,7 +273,7 @@ msgstr "呼び出し"
 msgid "Cancel"
 msgstr "キャンセル"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:152
+#: src/pages/account/(authenticated)/devices/page.tsx:154
 msgid "Cannot remove current device"
 msgstr "現在のデバイスを削除できません"
 
@@ -332,7 +332,7 @@ msgstr "ユーザー名を選んでください"
 msgid "Click here if nothing happens"
 msgstr "何も起こらない場合はここをクリックしてください"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:86
+#: src/pages/account/(authenticated)/apps/page.tsx:87
 msgctxt "OAuthApp"
 msgid "Client"
 msgstr ""
@@ -434,11 +434,11 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "アクセスを拒否"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:200
+#: src/pages/account/(authenticated)/apps/page.tsx:201
 msgid "Details"
 msgstr "詳細"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:79
+#: src/pages/account/(authenticated)/devices/page.tsx:81
 msgctxt "device list"
 msgid "Device"
 msgstr ""
@@ -558,7 +558,7 @@ msgstr "アカウントの無効化に失敗しました"
 msgid "Failed to delete account"
 msgstr "アカウントの削除に失敗しました"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:34
+#: src/pages/account/(authenticated)/devices/page.tsx:35
 #: src/pages/account/(authenticated)/apps/page.tsx:38
 msgid "Failed to load connected apps"
 msgstr "接続されたアプリの読み込みに失敗しました"
@@ -611,7 +611,7 @@ msgstr "ファイルの内容"
 msgid "Filter apps"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:72
+#: src/pages/account/(authenticated)/devices/page.tsx:73
 msgid "Filter devices"
 msgstr ""
 
@@ -726,12 +726,12 @@ msgstr "無効なハンドル"
 msgid "Invite code"
 msgstr "招待コード"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:85
+#: src/pages/account/(authenticated)/devices/page.tsx:87
 msgctxt "device list"
 msgid "IP address"
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:67
+#: src/pages/account/(authenticated)/apps/page.tsx:68
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "このアカウントをアプリにサインインするためにまだ使用していないようです。"
 
@@ -744,12 +744,12 @@ msgstr "あなたのブラウザがクッキーを受け入れていないよう
 msgid "just now"
 msgstr "たった今"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:130
+#: src/pages/account/(authenticated)/apps/page.tsx:131
 msgctxt "OAuthApp"
 msgid "Last accessed"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:90
+#: src/pages/account/(authenticated)/devices/page.tsx:92
 msgctxt "device list"
 msgid "Last seen"
 msgstr ""
@@ -769,7 +769,7 @@ msgstr "パスワードをリセットしましょう！"
 msgid "Logo"
 msgstr "ロゴ"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:74
+#: src/pages/account/(authenticated)/devices/page.tsx:76
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "他のデバイスでログインしていないようです。"
 
@@ -852,7 +852,7 @@ msgstr "新しいパスワード"
 msgid "Next"
 msgstr "次へ"
 
-#: src/components/session-list.tsx:201
+#: src/components/session-list.tsx:221
 msgid "No matches"
 msgstr ""
 
@@ -1011,7 +1011,7 @@ msgstr "パスワードをリセット"
 msgid "Reset your password"
 msgstr "パスワードをリセット"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:30
+#: src/pages/account/(authenticated)/devices/page.tsx:31
 #: src/pages/account/(authenticated)/apps/page.tsx:34
 #: src/components/feedback/error-notice.tsx:81
 msgid "Retry"
@@ -1079,7 +1079,7 @@ msgstr "アカウントの選択"
 msgid "Sign in to an account that is not listed"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:155
+#: src/pages/account/(authenticated)/devices/page.tsx:157
 msgctxt "device list"
 msgid "Sign out"
 msgstr "サインアウト"
@@ -1218,7 +1218,7 @@ msgstr "このアプリケーションは、あなたのアカウントにアク
 msgid "This authorization request has been denied. Please try again."
 msgstr "この承認リクエストは拒否されました。もう一度お試しください。"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:118
+#: src/pages/account/(authenticated)/devices/page.tsx:120
 msgctxt "device list"
 msgid "This device"
 msgstr ""
@@ -1282,7 +1282,7 @@ msgstr "未承認"
 msgid "Unexpected server response"
 msgstr "予期しないサーバー応答"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:112
+#: src/pages/account/(authenticated)/devices/page.tsx:114
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "不明なユーザーエージェント"
@@ -1418,7 +1418,7 @@ msgstr "どういう意味ですか？"
 msgid "What is an Atmosphere Account?"
 msgstr "Atmosphereアカウントとは何ですか？"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:136
+#: src/pages/account/(authenticated)/apps/page.tsx:137
 msgid "Why is this time so recent?"
 msgstr ""
 
@@ -1495,7 +1495,7 @@ msgstr "アカウントを現在無効化しています。"
 msgid "Your account is now deactivated."
 msgstr "アカウントは現在無効化されています。"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:51
+#: src/pages/account/(authenticated)/devices/page.tsx:52
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "あなたのアカウントは以下にリストされたデバイスでサインインしています。アカウントが侵害された場合は、すべてのデバイスからサインアウトし、パスワードを変更し、接続されている<0>アプリ</0>を確認してください。"
 
