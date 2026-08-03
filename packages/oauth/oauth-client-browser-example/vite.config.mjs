@@ -16,6 +16,5 @@ export default defineConfig({
     rolldownOptions: {
       plugins: [bundleManifest({ name: 'files.json', data: true })],
     },
-    minify: false,
   },
 })
