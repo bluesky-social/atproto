@@ -73,7 +73,6 @@
     "build": "pnpm run build:ui -- ignore additional npm args",
     "dev:ui": "vite --port 5174",
     "dev:src": "vite build --watch",
-    "test": "vitest run",
-    "build:demo": "vite build --config vite.demo.config.mjs"
+    "test": "vitest run"
   }
 }
