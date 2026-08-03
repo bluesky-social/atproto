@@ -58,7 +58,7 @@
     "disposable-email-domains-js": "^1.5.0",
     "express": "^4.17.2",
     "express-async-errors": "^3.1.1",
-    "file-type": "^22.0.1",
+    "file-type": "^16.5.4",
     "glob": "^10.3.10",
     "handlebars": "^4.7.7",
     "http-terminator": "^3.2.0",
