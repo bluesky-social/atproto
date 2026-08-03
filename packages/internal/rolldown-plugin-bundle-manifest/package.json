@@ -1,6 +1,7 @@
 {
   "name": "@atproto-labs/rolldown-plugin-bundle-manifest",
   "private": true,
+  "version": "0.0.0",
   "license": "MIT",
   "description": "Library for generating a manifest of bundled files from a Rolldown build",
   "keywords": [
