@@ -1,6 +1,7 @@
 import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { Link } from '@tanstack/react-router'
+import { useMemo } from 'react'
 import type {
   ActiveAccountSession,
   DidString,
@@ -68,6 +69,32 @@ export function Page() {
   )
 }
 
+/**
+ * Returns a fully localised "Last seen …" string.
+ * The complete phrase is spelled out in each branch so that translators receive
+ * the full sentence as a single translatable unit, enabling correct pluralisation
+ * and other grammar related flexibility across all languages.
+ */
+function useLastSeenText(date: Date | string): string {
+  const { t } = useLingui()
+  const bucket = useDateAgo(date)
+
+  return useMemo(() => {
+    switch (bucket.type) {
+      case 'just-now':
+        return t`Last seen just now`
+      case 'minutes':
+        return t`Last seen ${plural(bucket.count, { one: '# minute', other: '# minutes' })} ago`
+      case 'hours':
+        return t`Last seen ${plural(bucket.count, { one: '# hour', other: '# hours' })} ago`
+      case 'yesterday':
+        return t`Last seen yesterday`
+      case 'days':
+        return t`Last seen ${plural(bucket.count, { one: '# day', other: '# days' })} ago`
+    }
+  }, [t, bucket])
+}
+
 function AccountSessionCard({
   session,
   did,
@@ -80,31 +107,7 @@ function AccountSessionCard({
 
   const { userAgent, lastSeenAt, ipAddress } = session.deviceMetadata
   const browserName = useBrowserName(userAgent || undefined)
-  const dateAgo = useDateAgo(lastSeenAt)
-
-  const lastSeenText = (() => {
-    switch (dateAgo.type) {
-      case 'just-now':
-        return t`Last seen just now`
-      case 'minutes':
-        return t`Last seen ${plural(dateAgo.count, {
-          one: '# minute',
-          other: '# minutes',
-        })} ago`
-      case 'hours':
-        return t`Last seen ${plural(dateAgo.count, {
-          one: '# hour',
-          other: '# hours',
-        })} ago`
-      case 'yesterday':
-        return t`Last seen yesterday`
-      case 'days':
-        return t`Last seen ${plural(dateAgo.count, {
-          one: '# day',
-          other: '# days',
-        })} ago`
-    }
-  })()
+  const lastSeenText = useLastSeenText(lastSeenAt)
 
   return (
     <div className="border-contrast-50 dark:border-contrast-100 flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
