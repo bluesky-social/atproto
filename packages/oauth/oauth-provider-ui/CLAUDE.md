@@ -2,28 +2,6 @@
 
 UI for the OAuth provider's authorization & account-management screens. React 19, TanStack Router, Tailwind 4, shadcn/ui on Base UI, native-constraint forms on `@base-ui/react/form`, Lingui i18n.
 
-## Comments
-
-A comment earns its place by naming a constraint the code cannot state itself.
-Most don't. Default to none, and keep the ones you write to a couple of lines.
-
-- **Describe the code, not the change.** "Combines the previous `X` and `Y`",
-  "it previously hand-rolled the border", "`w-xl` is gone too" — the reader has
-  this file, not the diff that produced it. That belongs in the commit message.
-- **Never mention the tests.** Not their helpers, not their selectors, not their
-  assertion strings, not the suite itself. A test breaking _is_ the signal that
-  markup changed; the source does not need to warn about it in prose. If a
-  markup choice matters, give the reason that holds without the test — the
-  semantics, the a11y behaviour, the styling contract it satisfies. If there is
-  no such reason, write no comment.
-- **Don't restate the sections below.** The e2e contract, the dialog height cap
-  and the form rules are written down once. A file needs a pointer at most.
-- **Say what "upstream" is** — the shadcn registry, a Base UI default, a spec.
-  On its own the word means nothing to the next reader.
-
-If explaining the code takes a paragraph, the code usually wants the work
-instead.
-
 ## Imports
 
 **Import from `react` by name — `import { useState, type ComponentProps }`.**
@@ -203,10 +181,12 @@ buttons out of reach with no way to scroll to them.
 `availableUserDomains`. Colours arrive separately, at runtime: the provider
 injects `--branding-color-*` variables (see
 `oauth-provider/src/customization/build-customization-css.ts`), and the
-"Runtime branding" section of `src/style.css` maps `primary` and `error` onto
-the shadcn tokens, falling back to the neutral defaults when a deployment
-configures nothing. `warning`/`info`/`success` are injected but unmapped —
-their consumers build from multi-shade palettes a single RGB cannot drive.
+"Runtime branding" section of `src/style.css` maps `primary`, `error`, `info`,
+`warning` and `success` onto the shadcn tokens. Each is one injected RGB that
+consumers tint with opacity modifiers, not the old multi-shade hue palette.
+When a deployment configures nothing the tokens fall back to the pre-redesign
+stock palette (a purple primary) — deliberately not Bluesky's, so an
+uncurated PDS is not mistaken for one.
 
 The mock pages inject the same variables a branded deployment would, so
 `pnpm dev:ui` demonstrates branding without a PDS.
