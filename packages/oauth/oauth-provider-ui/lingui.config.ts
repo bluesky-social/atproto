@@ -1,4 +1,6 @@
-import '@lingui/conf' // https://github.com/lingui/js-lingui/pull/2639
+// https://github.com/lingui/js-lingui/pull/2639
+/// <reference types="@lingui/conf" />
+
 import { defineConfig } from '@lingui/cli'
 import { formatter } from '@lingui/format-po'
 

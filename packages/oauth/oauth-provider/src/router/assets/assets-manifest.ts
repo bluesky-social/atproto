@@ -1,6 +1,6 @@
 import { createReadStream } from 'node:fs'
 import { createRequire } from 'node:module'
-import { basename, join } from 'node:path'
+import { join } from 'node:path'
 import { Readable } from 'node:stream'
 import type { Manifest } from '@atproto-labs/rolldown-plugin-bundle-manifest'
 import type { AssetRef } from '../../lib/html/build-document.js'
@@ -42,7 +42,7 @@ export function parseAssetsManifest(manifestPath: string) {
   const assets = new Map<string, Asset>(
     Object.entries(manifest).map(([filename, { data, ...item }]) => {
       const buffer = data ? Buffer.from(data, 'base64') : null
-      const filepath = join(basename(manifestPath), filename)
+      const filepath = join(manifestPath, '..', filename)
       const stream = buffer
         ? () => Readable.from(buffer)
         : () => createReadStream(filepath)
@@ -76,7 +76,12 @@ export function parseAssetsManifest(manifestPath: string) {
     res.setHeader('ETag', asset.sha256)
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
 
-    writeStream(res, asset.stream(), { contentType: asset.mime })
+    writeStream(res, asset.stream(), {
+      contentType: asset.mime,
+      onError: (cause) => {
+        next(new Error(`Error serving asset "${filename}"`, { cause }))
+      },
+    })
   }
 
   return {
