@@ -37,6 +37,7 @@
     "@atproto/syntax": "workspace:^",
     "@hcaptcha/react-hcaptcha": "^1.11.2",
     "@lingui/cli": "^6.6.0",
+    "@lingui/conf": "^6.6.0",
     "@lingui/core": "^6.6.0",
     "@lingui/format-po": "^6.6.0",
     "@lingui/react": "^6.6.0",
