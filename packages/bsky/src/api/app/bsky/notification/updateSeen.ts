@@ -1,5 +1,6 @@
 import { Struct, Timestamp } from '@bufbuild/protobuf'
-import { v3 as murmurHash3 } from 'murmurhash'
+// @NOTE does not support named imports
+import * as murmurhash from 'murmurhash'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
