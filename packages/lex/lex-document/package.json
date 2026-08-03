@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-document",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "license": "MIT",
   "description": "Lexicon document validation tools for AT",
   "keywords": [
@@ -17,6 +17,7 @@
   },
   "files": [
     "./dist",
+    "./README.md",
     "./CHANGELOG.md"
   ],
   "sideEffects": false,
@@ -37,7 +38,7 @@
   },
   "devDependencies": {
     "@atproto/lex-data": "workspace:^",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "build": "tsgo --build tsconfig.build.json",

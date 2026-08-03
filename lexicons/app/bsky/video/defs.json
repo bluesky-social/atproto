@@ -21,6 +21,17 @@
         },
         "blob": { "type": "blob" },
         "error": { "type": "string" },
+        "failureCode": {
+          "type": "string",
+          "description": "A machine-readable code for why the video processing job failed.",
+          "knownValues": [
+            "validation_failure",
+            "encoding_failure",
+            "pds_upload_failure",
+            "pds_upload_unsupported_blob_size",
+            "generic_failure"
+          ]
+        },
         "message": { "type": "string" }
       }
     }

@@ -1,6 +1,5 @@
 import EventEmitter from 'node:events'
 import type { Selectable } from 'kysely'
-// eslint-disable-next-line import/default
 import type pg from 'pg'
 type PoolClient = pg.PoolClient
 import type TypedEmitter from 'typed-emitter'

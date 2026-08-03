@@ -14,6 +14,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 1 
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
+        "opThreadPostCount": 3,
+        "opThreadPostIndex": 1,
         "post": {
           "author": {
             "associated": {
@@ -27,6 +29,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 1 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -74,6 +78,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 1 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -126,6 +132,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 2 
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
+        "opThreadPostCount": 3,
+        "opThreadPostIndex": 1,
         "post": {
           "author": {
             "associated": {
@@ -139,6 +147,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 2 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -186,6 +196,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 2 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -243,6 +255,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 2 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -295,6 +309,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 2.
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
+        "opThreadPostCount": 3,
+        "opThreadPostIndex": 1,
         "post": {
           "author": {
             "associated": {
@@ -308,6 +324,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 2.
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -355,6 +373,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 2.
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -412,6 +432,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 2.
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -464,6 +486,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 3 
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
+        "opThreadPostCount": 3,
+        "opThreadPostIndex": 1,
         "post": {
           "author": {
             "associated": {
@@ -477,6 +501,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 3 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -524,6 +550,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on 3 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -576,6 +604,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
+        "opThreadPostCount": 3,
+        "opThreadPostIndex": 1,
         "post": {
           "author": {
             "associated": {
@@ -589,6 +619,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -623,6 +655,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
+        "opThreadPostCount": 3,
+        "opThreadPostIndex": 2,
         "post": {
           "author": {
             "associated": {
@@ -636,6 +670,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -680,6 +716,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
+        "opThreadPostCount": 3,
+        "opThreadPostIndex": 3,
         "post": {
           "author": {
             "associated": {
@@ -693,6 +731,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -745,6 +785,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
+        "opThreadPostCount": 3,
+        "opThreadPostIndex": 1,
         "post": {
           "author": {
             "associated": {
@@ -758,6 +800,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -792,6 +836,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
+        "opThreadPostCount": 3,
+        "opThreadPostIndex": 2,
         "post": {
           "author": {
             "associated": {
@@ -805,6 +851,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -849,6 +897,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
+        "opThreadPostCount": 3,
+        "opThreadPostIndex": 3,
         "post": {
           "author": {
             "associated": {
@@ -862,6 +912,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on r 
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -914,6 +966,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
+        "opThreadPostCount": 3,
+        "opThreadPostIndex": 1,
         "post": {
           "author": {
             "associated": {
@@ -927,6 +981,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -961,6 +1017,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
+        "opThreadPostCount": 3,
+        "opThreadPostIndex": 2,
         "post": {
           "author": {
             "associated": {
@@ -974,6 +1032,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -1018,6 +1078,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
         "moreReplies": 0,
         "mutedByViewer": false,
         "opThread": true,
+        "opThreadPostCount": 3,
+        "opThreadPostIndex": 3,
         "post": {
           "author": {
             "associated": {
@@ -1031,6 +1093,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -1088,6 +1152,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -1145,6 +1211,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -1202,6 +1270,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,
@@ -1259,6 +1329,8 @@ exports[`appview thread views v2 > simple thread > returns thread anchored on ro
             "viewer": {
               "blockedBy": false,
               "muted": false,
+              "mutedOnlyQuoteposts": false,
+              "mutedOnlyReposts": false,
             },
           },
           "bookmarkCount": 0,

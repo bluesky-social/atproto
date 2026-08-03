@@ -34,6 +34,8 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack by uri 
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "feeds": [
@@ -71,6 +73,8 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack by uri 
           "viewer": {
             "blockedBy": false,
             "muted": false,
+            "mutedOnlyQuoteposts": false,
+            "mutedOnlyReposts": false,
           },
         },
         "did": "did:web:example.com",
@@ -112,6 +116,8 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack by uri 
           "viewer": {
             "blockedBy": false,
             "muted": false,
+            "mutedOnlyQuoteposts": false,
+            "mutedOnlyReposts": false,
           },
         },
         "uri": "record(4)",
@@ -134,6 +140,8 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack by uri 
           "viewer": {
             "blockedBy": false,
             "muted": false,
+            "mutedOnlyQuoteposts": false,
+            "mutedOnlyReposts": false,
           },
         },
         "uri": "record(5)",
@@ -154,6 +162,8 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack by uri 
           "viewer": {
             "blockedBy": false,
             "muted": false,
+            "mutedOnlyQuoteposts": false,
+            "mutedOnlyReposts": false,
           },
         },
         "uri": "record(6)",
@@ -208,6 +218,8 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack while t
     "viewer": {
       "blockedBy": false,
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   "feeds": [
@@ -245,6 +257,8 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack while t
         "viewer": {
           "blockedBy": false,
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
       "did": "did:web:example.com",
@@ -288,6 +302,8 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack while t
           "followedBy": "record(6)",
           "following": "record(5)",
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
       "uri": "record(4)",
@@ -312,6 +328,8 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack while t
           "followedBy": "record(9)",
           "following": "record(8)",
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
       "uri": "record(7)",
@@ -333,6 +351,8 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack while t
           "blockedBy": false,
           "following": "record(11)",
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
       "uri": "record(10)",
@@ -386,6 +406,8 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack while t
     "viewer": {
       "blockedBy": false,
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   "feeds": [
@@ -423,6 +445,8 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack while t
         "viewer": {
           "blockedBy": false,
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
       "did": "did:web:example.com",
@@ -472,6 +496,8 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack while t
         "viewer": {
           "blockedBy": false,
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
       "uri": "record(4)",
@@ -494,6 +520,8 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack while t
         "viewer": {
           "blockedBy": false,
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
       "uri": "record(5)",
@@ -514,6 +542,8 @@ exports[`admin get starter pack view getStarterPack() gets a starterpack while t
         "viewer": {
           "blockedBy": false,
           "muted": false,
+          "mutedOnlyQuoteposts": false,
+          "mutedOnlyReposts": false,
         },
       },
       "uri": "record(6)",

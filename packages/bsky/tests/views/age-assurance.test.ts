@@ -3,8 +3,7 @@ import { once } from 'node:events'
 import { type Server, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import express, { type Application, type RequestHandler } from 'express'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import {
   afterAll,
   afterEach,
@@ -382,7 +381,7 @@ class MockKwsServer {
   private webhookSecret: string
   private app: Application
   private server: Server
-  private terminator: httpTerminator.HttpTerminator
+  private terminator: HttpTerminator
 
   constructor({
     verificationSecret,
@@ -403,7 +402,7 @@ class MockKwsServer {
       .post('/v1/verifications/send-email', sendEmailMock)
 
     this.server = createServer(this.app)
-    this.terminator = httpTerminator.createHttpTerminator({
+    this.terminator = createHttpTerminator({
       server: this.server,
     })
   }

@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { ScopePermissions } from './scope-permissions.js'
 
 describe('ScopePermissions', () => {

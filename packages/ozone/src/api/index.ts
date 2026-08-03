@@ -33,6 +33,7 @@ import routeReports from './queue/routeReports.js'
 import unassignQueueModerator from './queue/unassignModerator.js'
 import updateQueue from './queue/updateQueue.js'
 import assignReportModerator from './report/assignModerator.js'
+import closeReports from './report/closeReports.js'
 import createActivity from './report/createActivity.js'
 import createReport from './report/createReport.js'
 import getReportAssignments from './report/getAssignments.js'
@@ -139,6 +140,7 @@ export default function (server: Server, ctx: AppContext) {
   unassignReportModerator(server, ctx)
   getReportAssignments(server, ctx)
   createActivity(server, ctx)
+  closeReports(server, ctx)
   listActivities(server, ctx)
   queryActivities(server, ctx)
   reassignQueue(server, ctx)

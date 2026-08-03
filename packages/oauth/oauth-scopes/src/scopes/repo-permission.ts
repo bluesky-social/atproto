@@ -29,9 +29,10 @@ export type RepoPermissionMatch = {
   action: RepoAction
 }
 
-export class RepoPermission
-  implements ResourcePermission<'repo', RepoPermissionMatch>
-{
+export class RepoPermission implements ResourcePermission<
+  'repo',
+  RepoPermissionMatch
+> {
   constructor(
     public readonly collection: NeRoArray<'*' | Nsid>,
     public readonly action: NeRoArray<RepoAction>,

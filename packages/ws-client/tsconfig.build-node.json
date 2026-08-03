@@ -1,0 +1,10 @@
+{
+  // Node.js-only transport: compiled against Node.js types, no DOM lib.
+  "extends": ["../../tsconfig/node.tsconfig.json"],
+  "include": ["./src/transport/node-transport.ts"],
+  "references": [{ "path": "./tsconfig.build-core.json" }],
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+  },
+}

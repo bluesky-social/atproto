@@ -4,8 +4,7 @@ import type { AddressInfo } from 'node:net'
 import compression from 'compression'
 import cors from 'cors'
 import express from 'express'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
 import API, { health, wellKnown } from './api/index.js'
 import type { OzoneConfig, OzoneSecrets } from './config/index.js'
@@ -26,7 +25,7 @@ export class OzoneService {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
-  private terminator?: httpTerminator.HttpTerminator
+  private terminator?: HttpTerminator
   private dbStatsInterval?: NodeJS.Timeout
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
@@ -123,7 +122,7 @@ export class OzoneService {
     const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
     server.keepAliveTimeout = 90000
-    this.terminator = httpTerminator.createHttpTerminator({ server })
+    this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.assignPort(port)

@@ -9,11 +9,15 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["reportId", "activity"],
+          "required": ["activity"],
           "properties": {
             "reportId": {
               "type": "integer",
-              "description": "ID of the report to record activity on"
+              "description": "ID of the report to record activity on. Exactly one of reportId or eventId must be provided."
+            },
+            "eventId": {
+              "type": "integer",
+              "description": "ID of the report moderation event. Resolves to the report created from that event. Exactly one of reportId or eventId must be provided."
             },
             "activity": {
               "type": "union",
@@ -59,7 +63,7 @@
       "errors": [
         {
           "name": "ReportNotFound",
-          "description": "No report exists with the given reportId"
+          "description": "No report exists with the given reportId or eventId"
         },
         {
           "name": "InvalidStateTransition",

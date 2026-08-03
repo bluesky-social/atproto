@@ -1,5 +1,34 @@
 # @atproto/oauth-provider-ui
 
+## 0.8.9
+
+### Patch Changes
+
+- [#5286](https://github.com/bluesky-social/atproto/pull/5286) [`6866a5d`](https://github.com/bluesky-social/atproto/commit/6866a5d40be652bd83177332183ef346223f6012) Thanks [@dolciss](https://github.com/dolciss)! - Add Japanese (ja) translations
+
+## 0.8.8
+
+### Patch Changes
+
+- [#5220](https://github.com/bluesky-social/atproto/pull/5220) [`5d2943e`](https://github.com/bluesky-social/atproto/commit/5d2943ea2ab1eea1f0d522d38ca5a047c3380c79) Thanks [@AG0708](https://github.com/AG0708)! - Show each connected app's granted OAuth permissions before access is revoked.
+
+- [#5280](https://github.com/bluesky-social/atproto/pull/5280) [`9556dcb`](https://github.com/bluesky-social/atproto/commit/9556dcb5855a1a1b9a2dc119e0fd4abbb8b27198) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove redundent `vitest.config.ts` file
+
+- [#5273](https://github.com/bluesky-social/atproto/pull/5273) [`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix a bug that would cause oauth session not recently refreshed not to be listed in the UI.
+
+- [#5274](https://github.com/bluesky-social/atproto/pull/5274) [`0e773f3`](https://github.com/bluesky-social/atproto/commit/0e773f33468c5ecf14c5e999512b86fa697d4bff) Thanks [@bigmoves](https://github.com/bigmoves)! - Fix missing list bullets on the account "About" page at mobile widths, where the base `prose` class was only applied from the `md` breakpoint up.
+
+- [#5275](https://github.com/bluesky-social/atproto/pull/5275) [`d692128`](https://github.com/bluesky-social/atproto/commit/d6921289c2c537c8d1cead65e7ad4f81f11299f6) Thanks [@bigmoves](https://github.com/bigmoves)! - Remove the `↗` marker appended to external links.
+
+- [#5268](https://github.com/bluesky-social/atproto/pull/5268) [`602f4a8`](https://github.com/bluesky-social/atproto/commit/602f4a8199d5db0cf98bb6fe09010c0a375c8554) Thanks [@bigmoves](https://github.com/bigmoves)! - Restore the current authorization flow step on page refresh by encoding it in the URL fragment (`#step=<slug>`)
+
+- [#5188](https://github.com/bluesky-social/atproto/pull/5188) [`28caa70`](https://github.com/bluesky-social/atproto/commit/28caa70dd4c4406eccce35d72adee23354c377ae) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update react dependency
+
+- [#5269](https://github.com/bluesky-social/atproto/pull/5269) [`df27599`](https://github.com/bluesky-social/atproto/commit/df275998ad56b21a49e102b2fc1a2e5ee9e5bfc3) Thanks [@bigmoves](https://github.com/bigmoves)! - Use "sign in" terminology consistently in the OAuth authorization flow: the post-authorization redirect screen now says "Sign-in complete" / "Sign-in canceled" (previously "Login complete" / "Login canceled"), and the account picker's "Another account" option is labeled "Sign in to an account that is not listed"
+
+- Updated dependencies [[`87e6a95`](https://github.com/bluesky-social/atproto/commit/87e6a95c39f199e53b6a68b7d1fa23fbe8459753)]:
+  - @atproto/oauth-provider-api@0.7.7
+
 ## 0.8.7
 
 ### Patch Changes

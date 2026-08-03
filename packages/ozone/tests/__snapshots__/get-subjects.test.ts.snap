@@ -43,6 +43,8 @@ exports[`admin get multiple subjects with all relevant details gets multiple sub
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "repo": {
@@ -228,6 +230,8 @@ exports[`admin get multiple subjects with all relevant details gets multiple sub
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "record": {

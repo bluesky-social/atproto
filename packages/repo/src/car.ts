@@ -1,5 +1,4 @@
 import { setImmediate } from 'node:timers/promises'
-// eslint-disable-next-line import/default, import/no-named-as-default-member
 import varint from 'varint'
 import * as cbor from '@atproto/lex-cbor'
 import { type Cid, decodeCid, isCidForBytes } from '@atproto/lex-data'

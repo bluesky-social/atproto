@@ -21,7 +21,9 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('subjectDid', '=', targetDid)
       .executeTakeFirst()
     return {
-      muted: !!res,
+      muted: res != null && !res.onlyReposts && !res.onlyQuoteposts,
+      mutedOnlyReposts: res?.onlyReposts ?? false,
+      mutedOnlyQuoteposts: res?.onlyQuoteposts ?? false,
     }
   },
 
@@ -35,6 +37,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('mute.mutedByDid', '=', actorDid)
       .selectAll('actor')
       .select('mute.createdAt as createdAt')
+      .select('mute.onlyReposts as onlyReposts')
+      .select('mute.onlyQuoteposts as onlyQuoteposts')
 
     const keyset = new CreatedAtDidKeyset(
       ref('mute.createdAt'),
@@ -50,6 +54,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     return {
       dids: mutes.map((m) => m.did),
+      mutes: mutes.map((m) => ({
+        did: m.did,
+        onlyReposts: m.onlyReposts,
+        onlyQuoteposts: m.onlyQuoteposts,
+      })),
       cursor: keyset.packFromResult(mutes),
     }
   },
@@ -114,7 +123,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async createActorMute(req) {
-    const { actorDid, subjectDid } = req
+    const { actorDid, subjectDid, onlyReposts, onlyQuoteposts } = req
     assert(actorDid !== subjectDid, 'cannot mute yourself') // @TODO pass message through in http error
     await db.db
       .insertInto('mute')
@@ -122,8 +131,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         subjectDid,
         mutedByDid: actorDid,
         createdAt: new Date().toISOString(),
+        onlyReposts,
+        onlyQuoteposts,
       })
-      .onConflict((oc) => oc.doNothing())
+      .onConflict((oc) =>
+        oc
+          .columns(['mutedByDid', 'subjectDid'])
+          .doUpdateSet({ onlyReposts, onlyQuoteposts }),
+      )
       .execute()
   },
 

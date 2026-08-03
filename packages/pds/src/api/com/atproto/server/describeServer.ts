@@ -9,6 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     const did = ctx.cfg.service.did as DidString
     const availableUserDomains = ctx.cfg.identity.serviceHandleDomains
     const inviteCodeRequired = ctx.cfg.invites.required
+    const blobUploadLimit = ctx.cfg.service.blobUploadLimit
     const privacyPolicy = ctx.cfg.service.privacyPolicyUrl as UriString
     const termsOfService = ctx.cfg.service.termsOfServiceUrl as UriString
     const contactEmailAddress = ctx.cfg.service.contactEmailAddress
@@ -19,6 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         did,
         availableUserDomains,
         inviteCodeRequired,
+        blobUploadLimit,
         links: { privacyPolicy, termsOfService },
         contact: {
           email: contactEmailAddress,

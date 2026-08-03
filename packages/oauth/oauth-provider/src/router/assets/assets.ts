@@ -18,29 +18,13 @@ import { type WriteHtmlOptions, writeHtml } from '../../lib/write-html.js'
 import { parseAssetsManifest } from './assets-manifest.js'
 import { setupCsrfToken } from './csrf.js'
 
-// If the "ui" and "frontend" packages are ever unified, this can be replaced
-// with a single expression:
-//
-// const { getAssets, assetsMiddleware } = parseAssetsManifest(
-//   require.resolve('@atproto/oauth-provider-ui/bundle-manifest.json'),
-// )
-
 const require = createRequire(import.meta.url)
-const ui = parseAssetsManifest(
+
+export const { getAssets, assetsMiddleware } = parseAssetsManifest(
   require.resolve('@atproto/oauth-provider-ui/bundle-manifest.json'),
 )
 
 type HydrationData = Simplify<UiHydrationData>
-
-function getAssets(entryName: keyof HydrationData) {
-  const assetRef = ui.getAssets(entryName)
-  if (assetRef) return assetRef
-
-  // Fool-proof. Should never happen.
-  throw new Error(`Entry "${entryName}" not found in assets`)
-}
-
-export const assetsMiddleware = ui.assetsMiddleware
 
 const SPA_CSP: CspConfig = {
   // API calls are made to the same origin
@@ -71,7 +55,11 @@ export function sendWebAppFactory<P extends keyof HydrationData>(
   // Pre-computed options:
   const customizationData = buildCustomizationData(customization)
   const customizationCss = cssCode(buildCustomizationCss(customization))
-  const { scripts, styles } = getAssets(page)
+
+  const assets = getAssets(page)
+  if (!assets) throw new Error(`No assets found for page: ${page}`)
+
+  const { scripts, styles } = assets
 
   const csp = mergeCsp(
     SPA_CSP,

@@ -1,15 +1,18 @@
-import type { ClientOptions } from 'ws'
 import { isPlainObject } from '@atproto/lex-data'
-import { WebSocketKeepAlive } from '@atproto/ws-client'
+import { type HeadersInit, websocket } from '@atproto/ws-client'
 import { ensureChunkIsMessage } from './stream.js'
+
+export type { HeadersInit } from '@atproto/ws-client'
 
 export class Subscription<T = unknown> {
   constructor(
-    public opts: ClientOptions & {
+    public opts: {
       service: string
       method: string
       maxReconnectSeconds?: number
       heartbeatIntervalMs?: number
+      /** Applied to the connection's upgrade request (Node.js only). */
+      headers?: HeadersInit
       signal?: AbortSignal
       validate: (obj: unknown) => T | undefined
       onReconnectError?: (
@@ -24,15 +27,34 @@ export class Subscription<T = unknown> {
     },
   ) {}
 
-  async *[Symbol.asyncIterator](): AsyncGenerator<T> {
-    const ws = new WebSocketKeepAlive({
-      ...this.opts,
-      getUrl: async () => {
+  async *[Symbol.asyncIterator](): AsyncGenerator<T, void, undefined> {
+    const ws = websocket(
+      async () => {
         const params = (await this.opts.getParams?.()) ?? {}
         const query = encodeQueryParams(params)
         return `${this.opts.service}/xrpc/${this.opts.method}?${query}`
       },
-    })
+      {
+        // Subscription frames are CBOR.
+        dataMode: 'binary',
+        headers: this.opts.headers,
+        maxReconnectSeconds: this.opts.maxReconnectSeconds,
+        // `{}` means "on at the default interval". Omitting the option entirely
+        // would also default it on, but being explicit keeps the intent visible
+        // next to the caller-supplied override.
+        heartbeat: this.opts.heartbeatIntervalMs
+          ? { intervalMs: this.opts.heartbeatIntervalMs }
+          : {},
+        signal: this.opts.signal,
+        // Only retries are reported: a fatal error reaches the consumer as the
+        // iterator's rejection instead. `initialSetup` now means "first attempt of
+        // this reconnect cycle" rather than "before the first-ever successful
+        // connection".
+        onReconnect: (error, { attempt }) => {
+          this.opts.onReconnectError?.(error, attempt, attempt === 0)
+        },
+      },
+    )
     for await (const chunk of ws) {
       const message = ensureChunkIsMessage(chunk)
       const t = message.header.t

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-data",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "license": "MIT",
   "description": "Core utilities for AT Lexicons",
   "keywords": [
@@ -16,6 +16,7 @@
   },
   "files": [
     "./dist",
+    "./README.md",
     "./CHANGELOG.md"
   ],
   "sideEffects": false,
@@ -36,7 +37,7 @@
   },
   "devDependencies": {
     "core-js": "^3",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "build": "tsgo --build tsconfig.build.json",

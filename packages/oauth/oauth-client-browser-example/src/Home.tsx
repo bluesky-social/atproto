@@ -10,12 +10,13 @@ export function Home() {
   const { did } = useOAuthSession()
   return (
     <Layout nav={<UserMenu />}>
-      <ProfileCard actor={did}>
-        <div className="p-4">
-          <ProfileInfo />
-          <SessionInfo />
-          <TokenInfo />
-        </div>
+      <ProfileCard
+        actor={did}
+        className="rounded-md bg-white text-slate-900 shadow-md dark:bg-slate-900 dark:text-slate-100"
+      >
+        <ProfileInfo className="m-4" />
+        <SessionInfo className="m-4" />
+        <TokenInfo className="m-4" />
       </ProfileCard>
     </Layout>
   )

@@ -1,5 +1,30 @@
 # @atproto/xrpc-server
 
+## 0.11.13
+
+### Patch Changes
+
+- [#5282](https://github.com/bluesky-social/atproto/pull/5282) [`c8399b6`](https://github.com/bluesky-social/atproto/commit/c8399b6b051377be66f660105b14646a1c2fa460) Thanks [@cyphercodes](https://github.com/cyphercodes)! - Parse repeated query parameters from the request URL so Express query parser array limits do not collapse XRPC array params above 20 values.
+
+- Updated dependencies [[`95aa1d6`](https://github.com/bluesky-social/atproto/commit/95aa1d6dfea71316d5f30dd8bd4ed48afac31c81)]:
+  - @atproto/lex-client@0.3.1
+  - @atproto/lex-schema@0.2.3
+  - @atproto/lex-cbor@0.1.5
+  - @atproto/lex-data@0.1.6
+  - @atproto/lex-json@0.1.5
+  - @atproto/common@0.7.3
+  - @atproto/ws-client@0.1.8
+  - @atproto/lexicon@0.7.9
+  - @atproto/xrpc@0.8.8
+
+## 0.11.12
+
+### Patch Changes
+
+- Updated dependencies [[`d3bbeb5`](https://github.com/bluesky-social/atproto/commit/d3bbeb5fe87f8c389c2f18abd2bc055ef916a63a)]:
+  - @atproto/lexicon@0.7.8
+  - @atproto/xrpc@0.8.7
+
 ## 0.11.11
 
 ### Patch Changes

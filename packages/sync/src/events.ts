@@ -64,7 +64,4 @@ export type AccountEvt = {
 }
 
 export type AccountStatus =
-  | 'takendown'
-  | 'suspended'
-  | 'deleted'
-  | 'deactivated'
+  'takendown' | 'suspended' | 'deleted' | 'deactivated'

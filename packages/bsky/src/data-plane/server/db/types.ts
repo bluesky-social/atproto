@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/default
 import type pg from 'pg'
 type PgPool = pg.Pool
 

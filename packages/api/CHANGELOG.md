@@ -1,5 +1,26 @@
 # @atproto/api
 
+## 0.20.36
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.7
+  - @atproto/lexicon@0.7.9
+  - @atproto/xrpc@0.8.8
+
+## 0.20.35
+
+### Patch Changes
+
+- [#5284](https://github.com/bluesky-social/atproto/pull/5284) [`84781a9`](https://github.com/bluesky-social/atproto/commit/84781a9958357e1f208ff0100cee050c5b42298b) Thanks [@blackmichael](https://github.com/blackmichael)! - add failureCodes field to app.bsky.video.defs#jobStatus lexicon
+
+- [#5203](https://github.com/bluesky-social/atproto/pull/5203) [`ccb57ef`](https://github.com/bluesky-social/atproto/commit/ccb57ef6f015dcdc33fdfdc9c4cf048711acad01) Thanks [@arjxnt](https://github.com/arjxnt)! - Mark `app.bsky.draft.createDraft` output IDs as TIDs.
+
+- Updated dependencies [[`d3bbeb5`](https://github.com/bluesky-social/atproto/commit/d3bbeb5fe87f8c389c2f18abd2bc055ef916a63a)]:
+  - @atproto/lexicon@0.7.8
+  - @atproto/xrpc@0.8.7
+
 ## 0.20.34
 
 ### Patch Changes

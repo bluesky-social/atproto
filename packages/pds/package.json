@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.5.21",
+  "version": "0.5.23",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -100,6 +100,7 @@
     "codegen:templates": "node ./build.templates.cjs",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsgo --build tsconfig.build.json",
+    "verify:import": "node --input-type=module -e \"import '@atproto/pds'\"",
     "dev": "node ./build.templates.cjs --watch",
     "pretest": "puppeteer browsers install chrome",
     "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",

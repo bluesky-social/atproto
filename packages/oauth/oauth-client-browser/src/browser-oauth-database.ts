@@ -202,8 +202,7 @@ export class BrowserOAuthDatabase {
   }
 
   getAuthorizationServerMetadataCache():
-    | undefined
-    | DatabaseStore<OAuthAuthorizationServerMetadata> {
+    undefined | DatabaseStore<OAuthAuthorizationServerMetadata> {
     return this.createStore('authorizationServerMetadataCache', {
       expiresAt: (_value) => new Date(Date.now() + 60e3),
       encode: (value) => value,
@@ -212,8 +211,7 @@ export class BrowserOAuthDatabase {
   }
 
   getProtectedResourceMetadataCache():
-    | undefined
-    | DatabaseStore<OAuthProtectedResourceMetadata | null> {
+    undefined | DatabaseStore<OAuthProtectedResourceMetadata | null> {
     return this.createStore('protectedResourceMetadataCache', {
       expiresAt: (_value) => new Date(Date.now() + 60e3),
       encode: (value) => value,

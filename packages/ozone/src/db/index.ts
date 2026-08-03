@@ -11,9 +11,7 @@ import {
   type UnknownRow,
 } from 'kysely'
 import { Migrator } from 'kysely/migration'
-// eslint-disable-next-line import/default
 import pg from 'pg'
-// eslint-disable-next-line import/no-named-as-default-member
 const { Pool: PgPool, types: pgTypes } = pg
 type PgPool = InstanceType<typeof PgPool>
 import type TypedEmitter from 'typed-emitter'
@@ -22,6 +20,11 @@ import * as migrations from './migrations/index.js'
 import { CtxMigrationProvider } from './migrations/provider.js'
 import type { DatabaseSchema, DatabaseSchemaType } from './schema/index.js'
 import type { PgOptions } from './types.js'
+
+// Stable pg advisory lock IDs used to coordinate daemon work across
+// instances. Centralized here so IDs can never silently collide.
+export const STATS_COMPUTER_LOCK_ID = 7_239_401
+export const MATERIALIZED_VIEW_REFRESH_LOCK_ID = 7_239_402
 
 export class Database {
   pool: PgPool

@@ -52,6 +52,8 @@ exports[`verification list returns paginated list of verifications 1`] = `
     "viewer": {
       "blockedBy": false,
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   "issuerRepo": {
@@ -132,6 +134,8 @@ exports[`verification list returns paginated list of verifications 1`] = `
     "viewer": {
       "blockedBy": false,
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   "subjectRepo": {
@@ -218,6 +222,8 @@ exports[`verification list returns paginated list of verifications 2`] = `
     "viewer": {
       "blockedBy": false,
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   "issuerRepo": {
@@ -282,6 +288,8 @@ exports[`verification list returns paginated list of verifications 2`] = `
     "viewer": {
       "blockedBy": false,
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
   "subjectRepo": {

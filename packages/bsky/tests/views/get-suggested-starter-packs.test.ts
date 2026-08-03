@@ -2,8 +2,7 @@ import { once } from 'node:events'
 import { type Server, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import express, { type Application } from 'express'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   type AppBskyUnspeccedGetSuggestedStarterPacksSkeleton,
@@ -91,7 +90,7 @@ describe('getSuggestedStarterPacks', () => {
 class MockServer {
   app: Application
   server: Server
-  terminator: httpTerminator.HttpTerminator
+  terminator: HttpTerminator
 
   mockedStarterPackUris = new Map<
     string,
@@ -101,7 +100,7 @@ class MockServer {
   constructor() {
     this.app = this.createApp()
     this.server = createServer(this.app)
-    this.terminator = httpTerminator.createHttpTerminator({
+    this.terminator = createHttpTerminator({
       server: this.server,
     })
   }

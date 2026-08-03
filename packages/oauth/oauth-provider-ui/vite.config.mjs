@@ -6,7 +6,7 @@ import { lingui } from '@lingui/vite-plugin'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react-swc'
 import { defineConfig } from 'vite'
-import { bundleManifest } from '@atproto-labs/rollup-plugin-bundle-manifest'
+import { bundleManifest } from '@atproto-labs/rolldown-plugin-bundle-manifest'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -28,7 +28,7 @@ export default defineConfig({
     emptyOutDir: false,
     outDir: './dist',
     sourcemap: true,
-    rollupOptions: {
+    rolldownOptions: {
       input: [
         './src/account-page.tsx',
         './src/authorization-page.tsx',
@@ -43,17 +43,6 @@ export default defineConfig({
         assetFileNames: '[name]-[hash][extname]',
       },
       plugins: [bundleManifest()],
-    },
-    commonjsOptions: {
-      include: [
-        /node_modules/,
-        /did/,
-        /jwk/,
-        /oauth-scopes/,
-        /oauth-types/,
-        /oauth-provider-api/,
-        /syntax/,
-      ],
     },
     // this
     // @NOTE the "env" arg (when defineConfig is used with a function) does not

@@ -1,8 +1,5 @@
 type LangStringValue =
-  | undefined
-  | null
-  | string
-  | Record<string, string | undefined>
+  undefined | null | string | Record<string, string | undefined>
 
 /**
  * Only returns a string if it matches the desired {@link locale}, or return the

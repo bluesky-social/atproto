@@ -3,9 +3,9 @@ import 'core-js/es/symbol/dispose.js'
 import { DBObjectStore } from './db-object-store.js'
 import type { DatabaseSchema } from './schema.js'
 
-export class DBTransaction<Schema extends DatabaseSchema>
-  implements Disposable
-{
+export class DBTransaction<
+  Schema extends DatabaseSchema,
+> implements Disposable {
   #tx: IDBTransaction | null
 
   constructor(tx: IDBTransaction) {

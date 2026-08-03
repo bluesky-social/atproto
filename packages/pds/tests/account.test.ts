@@ -39,6 +39,7 @@ describe('account', () => {
         contactEmailAddress: 'abuse@example.com',
         termsOfServiceUrl: 'https://example.com/tos',
         privacyPolicyUrl: 'https://example.com/privacy-policy',
+        blobUploadLimit: 123_456,
       },
     })
     ctx = network.pds.ctx
@@ -64,6 +65,7 @@ describe('account', () => {
     expect(res.data.inviteCodeRequired).toBe(false)
     expect(res.data.availableUserDomains[0]).toBe('.test')
     expect(typeof res.data.inviteCodeRequired).toBe('boolean')
+    expect(res.data.blobUploadLimit).toBe(123_456)
     expect(res.data.links?.privacyPolicy).toBe(
       'https://example.com/privacy-policy',
     )

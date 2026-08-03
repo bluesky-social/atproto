@@ -1,5 +1,19 @@
 # @atproto-labs/simple-store
 
+## 0.5.0
+
+### Minor Changes
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **BREAKING:** Remove `onStoreError` from the `CachedGetterOptions`. The same behavior can be reproduced by either overriding the `setStored` method, or by handling errors in the `SimpleStore.set` method.
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **BREAKING:** `CachedGetter` now propagates errors thrown by the underlying store.
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `swallowStoreErrors`, a `SimpleStore` decorator that catches errors thrown by the underlying store and forwards them to an error handler (defaulting to `logStoreError`, which logs to the console) instead of propagating them. Use it when the store acts as a cache in front of a source of truth, so that a transient store failure degrades to a cache miss + refetch rather than breaking the operation. Also exports `StoreErrorHandler` and `logStoreError`.
+
+### Patch Changes
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make `CachedGetter` properties actually private
+
 ## 0.4.4
 
 ### Patch Changes

@@ -539,6 +539,9 @@ message GetRelationshipsRequest {
 }
 
 message Relationships {
+  // whether a full (unscoped) direct mute exists. Mutually exclusive with
+  // the scoped muted_only_* fields: a reposts- or quoteposts-scoped mute reports
+  // muted=false.
   bool muted = 1;
   string muted_by_list = 2;
   string blocked_by = 3;
@@ -547,6 +550,8 @@ message Relationships {
   string blocking_by_list = 6;
   string following = 7;
   string followed_by = 8;
+  bool muted_only_reposts = 9;
+  bool muted_only_quoteposts = 10;
 }
 
 message GetRelationshipsResponse {
@@ -646,7 +651,19 @@ message GetActorMutesActorRequest {
 }
 
 message GetActorMutesActorResponse {
+  // whether a full (unscoped) mute exists. Mutually exclusive with the
+  // scoped muted_only_* fields.
   bool muted = 1;
+  bool muted_only_reposts = 2;
+  bool muted_only_quoteposts = 3;
+}
+
+message MuteInfo {
+  string did = 1;
+  // scope restrictions: when any is set, just the scoped content is muted;
+  // when none are set, the subject is fully muted.
+  bool only_reposts = 2;
+  bool only_quoteposts = 3;
 }
 
 // - return list of user dids of users who A mutes
@@ -658,8 +675,10 @@ message GetMutesRequest {
 }
 
 message GetMutesResponse {
-  repeated string dids = 1;
+  // Deprecated: use mutes, which carries the scope of each mute.
+  repeated string dids = 1 [deprecated = true];
   string cursor = 2;
+  repeated MuteInfo mutes = 3;
 }
 
 //
@@ -1077,6 +1096,12 @@ message GetThreadRequest {
 
 message GetThreadResponse {
   repeated string uris = 1;
+  // The complete OP thread: the root post followed by the oldest contiguous
+  // chain of OP replies, in chain order. Never trimmed to the posts present
+  // in uris — callers derive a post's position with indexOf and the thread
+  // length with len, so completeness and ordering are load-bearing. Empty
+  // when the thread has no OP replies.
+  repeated string op_thread = 2;
 }
 
 //
@@ -1851,6 +1876,11 @@ message UntakedownRecordResponse {
 message CreateActorMuteRequest {
   string actor_did = 1;
   string subject_did = 2;
+  // scope restrictions: when any is set, just the scoped content is muted;
+  // when none are set, the subject is fully muted. If a mute already exists
+  // for the pair, its stored scope is replaced with this one.
+  bool only_reposts = 3;
+  bool only_quoteposts = 4;
 }
 
 message CreateActorMuteResponse {}

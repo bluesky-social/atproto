@@ -16,6 +16,7 @@ export function writeRedirect(
 export type WriteResponseOptions = {
   status?: number
   contentType?: string
+  onError?: (err: NodeJS.ErrnoException) => void
 }
 
 export function writeStream(
@@ -24,6 +25,7 @@ export function writeStream(
   {
     status = 200,
     contentType = 'application/octet-stream',
+    onError,
   }: WriteResponseOptions = {},
 ): void {
   res.statusCode = status
@@ -33,8 +35,8 @@ export function writeStream(
     res.end()
     stream.destroy()
   } else {
-    pipeline([stream, res], (_err: Error | null) => {
-      // The error will be propagated through the streams
+    pipeline([stream, res], (err) => {
+      if (err) onError?.(err)
     })
   }
 }

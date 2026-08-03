@@ -1,5 +1,21 @@
 # @atproto/lex-cli
 
+## 0.10.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.7.9
+
+## 0.10.7
+
+### Patch Changes
+
+- [#5205](https://github.com/bluesky-social/atproto/pull/5205) [`2de1da2`](https://github.com/bluesky-social/atproto/commit/2de1da2ff2ad00ab8b697b036a609b5b113e8787) Thanks [@arjxnt](https://github.com/arjxnt)! - Allow lex-cli input paths to include directories containing nested lexicon JSON files.
+
+- Updated dependencies [[`d3bbeb5`](https://github.com/bluesky-social/atproto/commit/d3bbeb5fe87f8c389c2f18abd2bc055ef916a63a)]:
+  - @atproto/lexicon@0.7.8
+
 ## 0.10.6
 
 ### Patch Changes

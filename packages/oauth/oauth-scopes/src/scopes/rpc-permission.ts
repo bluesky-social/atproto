@@ -31,9 +31,10 @@ export type RpcPermissionMatch = {
   aud: string
 }
 
-export class RpcPermission
-  implements ResourcePermission<'rpc', RpcPermissionMatch>
-{
+export class RpcPermission implements ResourcePermission<
+  'rpc',
+  RpcPermissionMatch
+> {
   constructor(
     public readonly aud: AudParam,
     public readonly lxm: NeRoArray<LxmParam>,

@@ -133,9 +133,7 @@ const profile = await client.call(app.bsky.actor.getProfile, {
 
 // Procedure (POST)
 const result = await client.call(app.bsky.feed.sendInteractions, {
-  interactions: [
-    /* ... */
-  ],
+  interactions: [/* ... */],
 })
 
 // With options

@@ -1,8 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-// eslint-disable-next-line import/default, import/no-named-as-default-member
-import accept from '@hapi/accept'
-// eslint-disable-next-line import/no-named-as-default-member
-const { languages, mediaType } = accept
+// @NOTE named imports don't work here
+// SyntaxError: The requested module '@hapi/accept' does not provide an export named 'languages'
+import * as accept from '@hapi/accept'
 import {
   type CookieSerializeOptions,
   parse as parseCookie,
@@ -37,11 +36,7 @@ export function validateHeaderValue(
 export function validateFetchMode(
   req: IncomingMessage,
   expectedMode: readonly (
-    | null
-    | 'navigate'
-    | 'same-origin'
-    | 'no-cors'
-    | 'cors'
+    null | 'navigate' | 'same-origin' | 'no-cors' | 'cors'
   )[],
 ) {
   validateHeaderValue(req, 'sec-fetch-mode', expectedMode)
@@ -73,11 +68,7 @@ export function validateFetchDest(
 export function validateFetchSite(
   req: IncomingMessage,
   expectedSite: readonly (
-    | null
-    | 'same-origin'
-    | 'same-site'
-    | 'cross-site'
-    | 'none'
+    null | 'same-origin' | 'same-site' | 'cross-site' | 'none'
   )[],
 ) {
   validateHeaderValue(req, 'sec-fetch-site', expectedSite)
@@ -242,14 +233,14 @@ function extractPort(req: IncomingMessage, ip: string): number {
 
 export function extractLocales(req: IncomingMessage) {
   const acceptLanguage = req.headers['accept-language']
-  return acceptLanguage ? languages(acceptLanguage) : []
+  return acceptLanguage ? accept.languages(acceptLanguage) : []
 }
 
 export function negotiateResponseContent<T extends string>(
   req: IncomingMessage,
   types: readonly T[],
 ): T | undefined {
-  const type = mediaType(req.headers['accept'], types)
+  const type = accept.mediaType(req.headers['accept'], types)
   if (type) return type as T
 
   return undefined
