@@ -1,5 +1,3 @@
-/* eslint-env node, commonjs */
-
 const { validateNsid, validateNsidRegex } = require('.')
 
 // $ node benchmark.js

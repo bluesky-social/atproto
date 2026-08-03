@@ -2,7 +2,6 @@ import console from 'node:console'
 import { once } from 'node:events'
 import { createServer } from 'node:http'
 import process, { argv, env } from 'node:process'
-// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import { middleware } from './server.js'
 

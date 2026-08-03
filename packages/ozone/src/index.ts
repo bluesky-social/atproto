@@ -4,7 +4,6 @@ import type { AddressInfo } from 'node:net'
 import compression from 'compression'
 import cors from 'cors'
 import express from 'express'
-// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
 import API, { health, wellKnown } from './api/index.js'
