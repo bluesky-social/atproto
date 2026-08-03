@@ -1,7 +1,6 @@
 import events from 'node:events'
 import type http from 'node:http'
 import express from 'express'
-// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import type { TestBsky } from './bsky.js'
 import type { TestBsync } from './bsync.js'

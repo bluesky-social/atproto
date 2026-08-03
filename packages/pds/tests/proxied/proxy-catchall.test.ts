@@ -4,7 +4,6 @@ import type { AddressInfo } from 'node:net'
 import { setTimeout as sleep } from 'node:timers/promises'
 import * as plc from '@did-plc/lib'
 import express from 'express'
-// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import type AtpAgent from '@atproto/api'
 import type { Keypair } from '@atproto/crypto'

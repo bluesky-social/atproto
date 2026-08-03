@@ -1,7 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-// eslint-disable-next-line import/default, import/no-named-as-default-member
 import accept from '@hapi/accept'
-// eslint-disable-next-line import/no-named-as-default-member
 const { languages, mediaType } = accept
 import {
   type CookieSerializeOptions,

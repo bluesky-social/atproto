@@ -1,5 +1,3 @@
-/* eslint-env node */
-
 const hbsPlugin = require('esbuild-plugin-handlebars')
 const { globSync } = require('glob')
 

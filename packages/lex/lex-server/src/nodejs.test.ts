@@ -78,7 +78,6 @@ describe('Node.js RequestListener', () => {
 
     const reader = res.body!.getReader()
 
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const result = await reader.read()
       if (result.done) break

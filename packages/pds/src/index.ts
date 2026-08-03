@@ -9,7 +9,6 @@ import type http from 'node:http'
 import { PlcClientError } from '@did-plc/lib'
 import cors from 'cors'
 import express from 'express'
-// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
 import {

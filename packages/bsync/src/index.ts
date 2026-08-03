@@ -1,7 +1,6 @@
 import events, { setMaxListeners } from 'node:events'
 import http from 'node:http'
 import { connectNodeAdapter } from '@connectrpc/connect-node'
-// eslint-disable-next-line import/default
 import httpTerminator from 'http-terminator'
 import type { ServerConfig } from './config.js'
 import { AppContext, type AppContextOptions } from './context.js'
