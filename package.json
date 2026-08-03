@@ -26,7 +26,7 @@
     "lint": "eslint .",
     "style:fix": "prettier --experimental-cli --write .",
     "style": "prettier --experimental-cli --check .",
-    "verify": "pnpm --stream '/^verify:.+$/'",
+    "verify": "pnpm run --stream --recursive --parallel --include-workspace-root '/^verify:.+$/'",
     "verify:style": "pnpm run style",
     "verify:lint": "pnpm lint",
     "format": "pnpm lint:fix && pnpm style:fix",
