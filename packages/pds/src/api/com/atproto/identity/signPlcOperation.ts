@@ -64,8 +64,8 @@ export default function (server: Server, ctx: AppContext) {
             verificationMethods:
               // @TODO: actually validate instead of type casting
               (input.body.verificationMethods as
-                | undefined
-                | Record<string, string>) ?? lastOp.verificationMethods,
+                undefined | Record<string, string>) ??
+              lastOp.verificationMethods,
             services:
               // @TODO: actually validate instead of type casting
               (input.body.services as

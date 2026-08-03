@@ -347,9 +347,7 @@ import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 declare const data:
-  | app.bsky.feed.post.Main
-  | app.bsky.feed.like.Main
-  | l.Unknown$TypedObject
+  app.bsky.feed.post.Main | app.bsky.feed.like.Main | l.Unknown$TypedObject
 
 // Discriminate by $type without re-validating
 if (app.bsky.feed.post.$isTypeOf(data)) {
@@ -631,9 +629,7 @@ import { Client } from '@atproto/lex'
 import { OAuthClient } from '@atproto/oauth-client-node'
 
 // Setup OAuth client (see @atproto/oauth-client documentation)
-const oauthClient = new OAuthClient({
-  /* ... */
-})
+const oauthClient = new OAuthClient({/* ... */})
 const session = await oauthClient.restore(userDid)
 
 // Create authenticated client
@@ -713,9 +709,7 @@ const profile = await client.call(app.bsky.actor.getProfile, {
 
 // Procedure (POST request)
 const result = await client.call(app.bsky.feed.sendInteractions, {
-  interactions: [
-    /* ... */
-  ],
+  interactions: [/* ... */],
 })
 
 // With options
@@ -1189,9 +1183,7 @@ The most ergonomic style is to use a namespace import and reference schemas thro
 ```typescript
 import * as com from './lexicons/com.js'
 
-await client.call(com.atproto.repo.getRecord, {
-  /* ... */
-})
+await client.call(com.atproto.repo.getRecord, {/* ... */})
 ```
 
 This style is convenient and reads naturally as it mirrors the NSID of the schema. However, it produces the largest bundles. From the bundler's point of view, `com.atproto.repo.getRecord` is the whole schema namespace (which contains the `main` schema as well as helpers, and any other definitions). The bundler cannot know that `client.call()` only consumes the `main` schema, so it has to keep the rest of the namespace alive in the bundle.
@@ -1203,9 +1195,7 @@ You can mitigate the bundle-size cost by explicitly naming the `main` definition
 ```typescript
 import * as com from './lexicons/com.js'
 
-await client.call(com.atproto.repo.getRecord.main, {
-  /* ... */
-})
+await client.call(com.atproto.repo.getRecord.main, {/* ... */})
 ```
 
 This lets the bundler drop the sibling definitions inside `getRecord` that aren't referenced. The drawback is that it leaks an implementation detail: the `main` segment of the path. In Lexicon, `main` is typically implicit:
@@ -1222,9 +1212,7 @@ You can also import the `main` schema directly from the file that defines it:
 ```typescript
 import { main as getRecord } from './lexicons/com/atproto/repo/getRecord.js'
 
-await client.call(getRecord, {
-  /* ... */
-})
+await client.call(getRecord, {/* ... */})
 ```
 
 This produces equally small bundles as the explicit `.main` reference, but it still surfaces the `main` identifier: you have to know to import `main` and likely rename it.
@@ -1245,12 +1233,8 @@ This means you can write:
 import getRecord from './lexicons/com/atproto/repo/getRecord.js'
 import post from './lexicons/app/bsky/feed/post.js'
 
-await client.call(getRecord, {
-  /* ... */
-})
-await client.create(post, {
-  /* ... */
-})
+await client.call(getRecord, {/* ... */})
+await client.create(post, {/* ... */})
 ```
 
 This is the most bundle-friendly style: the bundler only pulls in the `main` schema, and the import name doesn't have to mention `main` at all. This helps keeping application code aligned with how Lexicons are usually identified.

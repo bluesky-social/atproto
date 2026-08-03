@@ -25,9 +25,9 @@ export type DidResolverCachedOptions = {
   onDidCacheError?: DidCacheErrorHandler
 }
 
-export class DidResolverCached<M extends string = string>
-  implements DidResolver<M>
-{
+export class DidResolverCached<
+  M extends string = string,
+> implements DidResolver<M> {
   protected readonly getter: CachedGetter<Did, DidDocument>
   constructor(
     resolver: DidResolver<M>,

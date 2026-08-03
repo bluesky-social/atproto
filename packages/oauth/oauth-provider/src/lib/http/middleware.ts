@@ -114,9 +114,9 @@ function buildFallbackPayload(
     status,
     error: err
       ? expose
-        ? getProp(err, 'code', 'string') ??
+        ? (getProp(err, 'code', 'string') ??
           getProp(err, 'error', 'string') ??
-          'unknown_error'
+          'unknown_error')
         : 'system_error'
       : 'not_found',
     error_description:

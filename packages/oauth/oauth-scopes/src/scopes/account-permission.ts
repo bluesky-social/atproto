@@ -23,9 +23,10 @@ export type AccountPermissionMatch = {
   action: AccountAction
 }
 
-export class AccountPermission
-  implements ResourcePermission<'account', AccountPermissionMatch>
-{
+export class AccountPermission implements ResourcePermission<
+  'account',
+  AccountPermissionMatch
+> {
   constructor(
     public readonly attr: AccountAttribute,
     public readonly action: NeRoArray<AccountAction>,

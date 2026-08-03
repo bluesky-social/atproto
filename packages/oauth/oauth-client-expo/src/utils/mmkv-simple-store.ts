@@ -9,9 +9,10 @@ export type MMKVSimpleStoreOptions<V extends Value> = {
 /**
  * A {@link SimpleStore} implementation using {@link MMKV} for storage.
  */
-export class MMKVSimpleStore<V extends Value>
-  implements SimpleStore<string, V>
-{
+export class MMKVSimpleStore<V extends Value> implements SimpleStore<
+  string,
+  V
+> {
   readonly #store: MMKV
   readonly #encode: (value: V) => string
   readonly #decode: (value: string) => V

@@ -147,8 +147,7 @@ export const validateStandardSiteForUrl = (
       }
     | undefined,
   publication:
-    | { ref: { uri: string }; info: { record: { url: string } } }
-    | undefined,
+    { ref: { uri: string }; info: { record: { url: string } } } | undefined,
   assumedUrl: string,
 ): boolean => {
   const canonicalAssumed = canonicalizeHttpUrl(assumedUrl)

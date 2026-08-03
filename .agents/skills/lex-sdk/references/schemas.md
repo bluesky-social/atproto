@@ -125,9 +125,7 @@ For values that _don't_ need `$type` (plain object types from defs), just
 use the namespace type as a TS annotation — no runtime call needed:
 
 ```ts
-const view: app.bsky.feed.defs.PostView = {
-  /* ... */
-}
+const view: app.bsky.feed.defs.PostView = {/* ... */}
 ```
 
 ## Strict mode

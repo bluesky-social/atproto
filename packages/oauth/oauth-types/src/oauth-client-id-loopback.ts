@@ -63,8 +63,7 @@ export function parseOAuthLoopbackClientId(
  * string instead of an "error" Error object.
  */
 type LightParseReturnType<T> =
-  | { success: true; value: T }
-  | { success: false; message: string }
+  { success: true; value: T } | { success: false; message: string }
 
 export function safeParseOAuthLoopbackClientId(
   input: string,

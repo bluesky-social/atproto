@@ -458,8 +458,8 @@ export type SecondAuthenticationFactorRequiredPayload =
     hint: string
   }
 export class SecondAuthenticationFactorRequiredError<
-  P extends
-    SecondAuthenticationFactorRequiredPayload = SecondAuthenticationFactorRequiredPayload,
+  P extends SecondAuthenticationFactorRequiredPayload =
+    SecondAuthenticationFactorRequiredPayload,
 > extends OAuthErrorResponse<P> {
   constructor(payload: P, message = payload.error_description) {
     const { type, hint } = payload

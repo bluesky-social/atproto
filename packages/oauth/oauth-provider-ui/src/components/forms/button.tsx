@@ -3,13 +3,7 @@ import type { JSX } from 'react'
 import type { Override } from '#/lib/util.ts'
 
 export type ButtonColor =
-  | 'primary'
-  | 'gray'
-  | 'darkGrey'
-  | 'error'
-  | 'warning'
-  | 'info'
-  | 'success'
+  'primary' | 'gray' | 'darkGrey' | 'error' | 'warning' | 'info' | 'success'
 
 export type ButtonColoring = 'transparent' | 'bordered' | 'default'
 
