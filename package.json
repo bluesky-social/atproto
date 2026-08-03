@@ -23,7 +23,7 @@
   },
   "scripts": {
     "lint:fix": "pnpm lint --fix",
-    "lint": "NODE_OPTIONS=--max_old_space_size=4096 eslint .",
+    "lint": "eslint .",
     "style:fix": "prettier --write .",
     "style": "prettier --check .",
     "verify": "pnpm --stream '/^verify:.+$/'",
