@@ -37,11 +37,7 @@ export function validateHeaderValue(
 export function validateFetchMode(
   req: IncomingMessage,
   expectedMode: readonly (
-    | null
-    | 'navigate'
-    | 'same-origin'
-    | 'no-cors'
-    | 'cors'
+    null | 'navigate' | 'same-origin' | 'no-cors' | 'cors'
   )[],
 ) {
   validateHeaderValue(req, 'sec-fetch-mode', expectedMode)
@@ -73,11 +69,7 @@ export function validateFetchDest(
 export function validateFetchSite(
   req: IncomingMessage,
   expectedSite: readonly (
-    | null
-    | 'same-origin'
-    | 'same-site'
-    | 'cross-site'
-    | 'none'
+    null | 'same-origin' | 'same-site' | 'cross-site' | 'none'
   )[],
 ) {
   validateHeaderValue(req, 'sec-fetch-site', expectedSite)

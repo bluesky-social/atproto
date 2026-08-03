@@ -181,10 +181,9 @@ function _string<
   const TOptions extends {
     knownValues: StringSchemaOptions['knownValues']
   } & {
-    [K in Exclude<
-      keyof StringSchemaOptions,
-      'knownValues'
-    >]?: Restricted<`An options argument is required when using the "${K}" option`>
+    [
+      K in Exclude<keyof StringSchemaOptions, 'knownValues'>
+    ]?: Restricted<`An options argument is required when using the "${K}" option`>
   },
 >(): StringSchema<
   IfAny<TOptions, any, { knownValues: TOptions['knownValues'] }>

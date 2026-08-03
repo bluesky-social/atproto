@@ -196,12 +196,7 @@ export class IssueRequiredKey extends Issue {
  * - `'blob'` - Blob size
  */
 export type MeasurableType =
-  | 'array'
-  | 'string'
-  | 'integer'
-  | 'grapheme'
-  | 'bytes'
-  | 'blob'
+  'array' | 'string' | 'integer' | 'grapheme' | 'bytes' | 'blob'
 
 /**
  * Issue for values that exceed a maximum constraint.

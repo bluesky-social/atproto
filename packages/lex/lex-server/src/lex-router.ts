@@ -654,13 +654,11 @@ export class LexRouter {
   add<M extends LexMethod, Credentials = unknown>(
     ns: Main<M>,
     config: M extends Subscription
-      ?
-          | LexRouterSubscriptionHandler<M, Credentials>
-          | LexRouterSubscriptionConfig<M, Credentials>
+      ? | LexRouterSubscriptionHandler<M, Credentials>
+        | LexRouterSubscriptionConfig<M, Credentials>
       : M extends Query | Procedure
-        ?
-            | LexRouterMethodHandler<M, Credentials>
-            | LexRouterMethodConfig<M, Credentials>
+        ? | LexRouterMethodHandler<M, Credentials>
+          | LexRouterMethodConfig<M, Credentials>
         : never,
   ): this
   add<M extends LexMethod>(
@@ -782,8 +780,7 @@ export class LexRouter {
     const {
       onSocketError,
       upgradeWebSocket = (globalThis as any).Deno?.upgradeWebSocket as
-        | UpgradeWebSocket
-        | undefined,
+        UpgradeWebSocket | undefined,
     } = this.options
     if (!upgradeWebSocket) {
       throw new TypeError(

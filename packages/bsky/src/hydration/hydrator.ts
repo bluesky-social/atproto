@@ -1054,9 +1054,10 @@ export class Hydrator {
     const listCreatorMemberPairs = [...listMembersByList.entries()].flatMap(
       ([listUri, members]) => {
         const creator = didFromUri(listUri)
-        return members.listitems.map(
-          (li): RelationshipPair => [creator, li.did as DidString],
-        )
+        return members.listitems.map((li): RelationshipPair => [
+          creator,
+          li.did as DidString,
+        ])
       },
     )
     const [blocks, listMemberAggs] = await Promise.all([

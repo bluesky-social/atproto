@@ -24,8 +24,8 @@
   "scripts": {
     "lint:fix": "pnpm lint --fix",
     "lint": "NODE_OPTIONS=--max_old_space_size=4096 eslint . --ext .ts,.js,.tsx,.jsx",
-    "style:fix": "prettier --write .",
-    "style": "prettier --check .",
+    "style:fix": "prettier --experimental-cli --write .",
+    "style": "prettier --experimental-cli --check .",
     "verify": "pnpm --stream '/^verify:.+$/'",
     "verify:style": "pnpm run style",
     "verify:lint": "pnpm lint",
@@ -71,7 +71,7 @@
     "jest": "^30.0.0",
     "node-gyp": "^9.3.1",
     "pino-pretty": "^9.1.0",
-    "prettier": "^3.2.5",
+    "prettier": "^3.9.6",
     "prettier-config-standard": "^7.0.0",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "vitest": "^4.1.10"

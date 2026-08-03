@@ -59,10 +59,7 @@ export type LabelTarget = 'account' | 'profile' | 'content'
 export type LabelPreference = 'ignore' | 'warn' | 'hide'
 
 export type LabelValueDefinitionFlag =
-  | 'no-override'
-  | 'adult'
-  | 'unauthed'
-  | 'no-self'
+  'no-override' | 'adult' | 'unauthed' | 'no-self'
 
 export interface InterpretedLabelValueDefinition
   extends ComAtprotoLabelDefs.LabelValueDefinition {
@@ -99,8 +96,7 @@ export type ModerationSubjectNotification =
 export type ModerationSubjectFeedGenerator = AppBskyFeedDefs.GeneratorView
 
 export type ModerationSubjectUserList =
-  | AppBskyGraphDefs.ListViewBasic
-  | AppBskyGraphDefs.ListView
+  AppBskyGraphDefs.ListViewBasic | AppBskyGraphDefs.ListView
 
 export type ModerationSubject =
   | ModerationSubjectProfile

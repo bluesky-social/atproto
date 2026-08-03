@@ -36,8 +36,8 @@ export class DidError extends Error {
 
     const status =
       typeof cause === 'object' && cause != null
-        ? ('statusCode' in cause ? ifNumber(cause.statusCode) : undefined) ??
-          ('status' in cause ? ifNumber(cause.status) : undefined)
+        ? (('statusCode' in cause ? ifNumber(cause.statusCode) : undefined) ??
+          ('status' in cause ? ifNumber(cause.status) : undefined))
         : undefined
 
     return new DidError(did, message, 'did-unknown-error', status, cause)

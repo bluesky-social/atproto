@@ -1871,7 +1871,7 @@ describe('Subscription', () => {
       io.example.subscribe,
       async function* ({ params: { message }, signal }) {
         try {
-          for (; sentCount < maxMessages; ) {
+          for (; sentCount < maxMessages;) {
             await scheduler.wait(5, { signal })
             yield { message, count: ++sentCount }
           }

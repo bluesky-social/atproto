@@ -285,7 +285,7 @@ export const updateAccountTakedownStatus = async (
   takedown: com.atproto.admin.defs.StatusAttr,
 ) => {
   const takedownRef = takedown.applied
-    ? takedown.ref ?? currentDatetimeString()
+    ? (takedown.ref ?? currentDatetimeString())
     : null
   await db.executeWithRetry(
     db.db.updateTable('actor').set({ takedownRef }).where('did', '=', did),

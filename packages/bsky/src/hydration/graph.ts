@@ -205,8 +205,7 @@ export class GraphHydrator {
       const block = res.blocks[i]
       blocks.set(pair.a, pair.b, {
         blockUri: (block.blockedBy || block.blocking || undefined) as
-          | AtUriString
-          | undefined,
+          AtUriString | undefined,
         blockListUri: (block.blockedByList ||
           block.blockingByList ||
           undefined) as AtUriString | undefined,
