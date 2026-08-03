@@ -51,10 +51,9 @@
     "@tanstack/react-query": "^5.71.10",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react-swc": "^3.8.0",
+    "@vitejs/plugin-react": "^6.0.5",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-json-view": "^1.21.3",
     "tailwindcss": "^4.3.3",
     "vite": "^8.2.0"
   },
