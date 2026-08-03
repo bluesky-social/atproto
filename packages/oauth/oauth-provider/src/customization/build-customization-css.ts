@@ -64,9 +64,8 @@ function* buildCustomizationVars(branding?: Branding): Generator<string> {
   }
 }
 
-// The background images are validated URLs, so they cannot contain whitespace or
-// newlines; escaping the two characters that would break out of the url("…")
-// literal is enough to keep the injected stylesheet well-formed.
+// The value is a validated URL, so escaping the two characters that could break
+// out of the url("…") literal is enough.
 function escapeCssUrl(url: string): string {
   return url.replace(/["\\]/g, (char) => `\\${char}`)
 }
