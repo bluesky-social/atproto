@@ -462,16 +462,6 @@ describe(createMessageChannel, () => {
         done: true,
       })
     })
-
-    it('triggers termination when throwing the iterator', async () => {
-      const onAbort = vi.fn()
-      const channel = createMessageChannel({ dataMode: 'auto', onAbort })
-      const iterator = channel.iterator
-      assert(iterator.throw)
-      const boom = new Error('boom')
-      await expect(iterator.throw(boom)).rejects.toBe(boom)
-      expect(onAbort).toHaveBeenCalled()
-    })
   })
 })
 
@@ -580,6 +570,59 @@ describe(closeGuard, () => {
       value: 1,
       done: false,
     })
+  })
+
+  it('closes the inner iterator on throw() when it has no throw()', async () => {
+    const controller = new AbortController()
+    const inner = source(['unread'])
+    assert(inner.iterator.throw === undefined)
+    const guarded = closeGuard(inner.iterator, controller.signal)
+    assert(guarded.throw)
+    const boom = new Error('boom')
+    const pending = guarded.throw(boom)
+    expect(await isPending(pending)).toBe(true)
+    // Cleanup ran eagerly; only the reported end waits on the signal.
+    expect(inner.returned()).toBe(true)
+    controller.abort()
+    await expect(pending).rejects.toBe(boom)
+  })
+
+  it("prefers a failing return() over the caller's error on throw()", async () => {
+    // A cleanup failure is new information, whereas the caller's error is
+    // something they just handed us and still hold.
+    const controller = new AbortController()
+    const cleanupError = new Error('cleanup failed')
+    const inner: AsyncIterator<string, void, unknown> = {
+      async next() {
+        return { value: 'a', done: false }
+      },
+      async return() {
+        throw cleanupError
+      },
+    }
+    const guarded = closeGuard(inner, controller.signal)
+    assert(guarded.throw)
+    const pending = guarded.throw(new Error('boom'))
+    expect(await isPending(pending)).toBe(true)
+    controller.abort()
+    await expect(pending).rejects.toBe(cleanupError)
+  })
+
+  it('terminates a guarded message channel on throw()', async () => {
+    // The channel iterator has no throw() of its own, so the guard's return()
+    // fallback is what triggers termination — in real use, what tells the
+    // transport to send a close frame.
+    const controller = new AbortController()
+    const onAbort = vi.fn()
+    const channel = createMessageChannel({ dataMode: 'auto', onAbort })
+    const guarded = closeGuard(channel.iterator, controller.signal)
+    assert(guarded.throw)
+    const boom = new Error('boom')
+    const pending = guarded.throw(boom)
+    expect(await isPending(pending)).toBe(true)
+    expect(onAbort).toHaveBeenCalledWith(undefined, CloseCode.Normal)
+    controller.abort()
+    await expect(pending).rejects.toBe(boom)
   })
 
   it('treats a missing return() as a clean close', async () => {

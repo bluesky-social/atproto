@@ -116,26 +116,32 @@ export const ABNORMAL_CLOSE_DETAIL: CloseEventDetail = Object.freeze({
  * decides when the caller is told.
  *
  * Only terminal outcomes wait. A `done: false` result means iteration
- * continues, so gating it would stall a live stream — and that applies to every
- * method, not just `next()`: per the iterator protocol both `throw()` and
- * `return()` may answer `done: false` to decline ending iteration.
+ * continues, so gating it would stall a live stream — and that applies to
+ * `return()` as well as `next()`: per the iterator protocol `return()` may
+ * answer `done: false` to decline ending iteration, and that refusal is
+ * forwarded ungated.
  *
- * @NOTE How this compares to `yield*`, the closest built-in equivalent. Two
- * deliberate differences, both on one path — an inner iterator with no `throw()`
- * method:
+ * @NOTE How this compares to `yield*`, the closest built-in equivalent. Three
+ * deliberate differences:
  *
- * - `yield*` rejects with a `TypeError` ("The iterator does not provide a
- *   'throw' method") and *discards the caller's error*. Defining `throw()` here
- *   means callers may always call it, so that hole would be ours to fall into:
- *   instead we close the inner iterator with `return()` — skipping cleanup would
- *   leak it — and rethrow the caller's error, the more useful of the two.
- * - `yield*` prefers a failing `return()` over that `TypeError`; we prefer it
- *   over the caller's error. A cleanup failure is new information, whereas the
- *   caller's error is something they just handed us and still hold.
+ * - `throw()` is always terminal here: an inner `throw()` that answers
+ *   `done: false` to keep iterating is overruled, and the caller's error is
+ *   rethrown (gated) instead — where `yield*` would have resumed the
+ *   delegation. Callers reach for `throw()` to tear the stream down, not to
+ *   negotiate with it.
+ * - When the inner iterator has no `throw()`, `yield*` rejects with a
+ *   `TypeError` ("The iterator does not provide a 'throw' method") and
+ *   *discards the caller's error*. Defining `throw()` here means callers may
+ *   always call it, so that hole would be ours to fall into: instead we close
+ *   the inner iterator with `return()` — skipping cleanup would leak it — and
+ *   rethrow the caller's error, the more useful of the two.
+ * - On that same path, `yield*` prefers a failing `return()` over its
+ *   `TypeError`; we prefer it over the caller's error. A cleanup failure is new
+ *   information, whereas the caller's error is something they just handed us
+ *   and still hold.
  *
- * Everything else matches the engine: a recovering `throw()` resumes iteration,
- * a `return()` the inner iterator declines is forwarded as-is, and an absent
- * `return()` counts as a clean close.
+ * Everything else matches the engine: a `return()` the inner iterator declines
+ * is forwarded as-is, and an absent `return()` counts as a clean close.
  */
 export function closeGuard<T>(
   iterator: AsyncIterator<T, void, unknown>,
@@ -178,13 +184,20 @@ export function closeGuard<T>(
     },
     async throw(error: unknown): Promise<IteratorResult<T, void>> {
       try {
-        const result = await iterator.throw?.(error)
-        // A `throw()` may "recover" and decline to end iteration, so it can
-        // return `done: false`.
-        if (result?.done) await closed
+        if (iterator.throw) {
+          // The result is deliberately ignored: even an inner `throw()` that
+          // recovers with `done: false` is overruled (see the doc comment).
+          await iterator.throw(error)
+        } else {
+          // No `throw()` to forward to: close the inner iterator instead —
+          // skipping cleanup would leak it. A failing `return()` rejects here
+          // and wins over the caller's error, per the doc comment above.
+          await iterator.return?.()
+        }
         throw error
       } catch (error) {
-        // A failing `throw()` ends iteration too, so it waits the same way.
+        // `throw()` is always terminal, so every path gates on the close
+        // signal before rejecting.
         await closed
         throw error
       }
