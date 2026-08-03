@@ -16,6 +16,8 @@ import type {
   TransportOptions,
 } from './transport.js'
 
+export const HEADERS_SUPPORTED = false
+
 // Only the WHATWG WebSocket members this transport actually touches, rather than
 // the ambient `WebSocket` — which pulls in all of `EventTarget` plus
 // `readyState`, `bufferedAmount`, `extensions`, the CONNECTING/OPEN constants,
@@ -44,7 +46,7 @@ interface WHATWGErrorEvent {
 
 interface WHATWGWebSocket {
   binaryType: 'blob' | 'arraybuffer'
-  send(data: string | ArrayBufferLike | ArrayBufferView): void
+  send(data: string | BufferSource): void
   close(code?: number, reason?: string): void
   addEventListener(type: 'open', listener: () => void): void
   addEventListener(
@@ -110,8 +112,7 @@ function createTransportImpl<M extends DataMode>(
   // loosely-typed view of `globalThis` rather than relying on assignability from
   // the ambient DOM `WebSocket`, which drags in members `WHATWGWebSocket`
   // doesn't ask for.
-  WebSocketImpl: WebSocketCtor = (globalThis as { WebSocket?: WebSocketCtor })
-    .WebSocket as WebSocketCtor,
+  WebSocketImpl: WebSocketCtor = globalThis.WebSocket,
 ): Transport<M> {
   // The WHATWG API has no request-header mechanism, so accepting headers here
   // would silently drop what is usually auth. Fail loudly at construction rather
@@ -127,6 +128,12 @@ function createTransportImpl<M extends DataMode>(
     throw new TypeError('WebSocket is not available in this environment')
   }
 
+  // Marked as aborted once the socket's close event has fired — the transport's
+  // proof that teardown finished, handed to the channel so iteration doesn't
+  // settle until the socket is down.
+  const closeController = new AbortController()
+  const markClosed = () => closeController.abort()
+
   const channel = createMessageChannel<M>({
     dataMode: options.dataMode,
     highWaterMark: options.highWaterMark,
@@ -135,7 +142,7 @@ function createTransportImpl<M extends DataMode>(
     // No `backpressure`, per the module doc above. Its absence is also what lets
     // the idle timeout work here: a merely-full buffer must not read as a pause,
     // since this platform can never actually pause.
-    onAbort: (_error, code) => {
+    onAbort: (error, code) => {
       // A polite close is the strongest teardown the WHATWG API offers — there is
       // no `terminate()`.
       closeSocket(ws, code)
@@ -153,18 +160,6 @@ function createTransportImpl<M extends DataMode>(
     closeReported = true
     options.onClose(detail)
   }
-
-  // Resolves once the socket's close event has fired — the transport's proof that
-  // teardown finished, handed to the consumer by `closeGuard` below so iteration
-  // doesn't settle until the socket is down.
-  //
-  // Unlike Node there is no `terminate()` here, so a peer that never answers a
-  // close frame is bounded only by the runtime's own handshake timeout. The
-  // WHATWG API offers nothing stronger.
-  let markClosed!: () => void
-  const closed = new Promise<void>((resolve) => {
-    markClosed = resolve
-  })
 
   // Ends the connection with a failure, the moment teardown begins.
   //
@@ -226,8 +221,8 @@ function createTransportImpl<M extends DataMode>(
 
   // Where a connection ends, and normally the only place: per spec every teardown
   // fires `close`, with `error` confined to failures before the connection is
-  // established. `markClosed` releases whatever pull `closeGuard` has parked — see
-  // the 'error' handler below for the runtime where `close` alone isn't enough.
+  // established. See the 'error' handler below for the runtime where `close`
+  // alone isn't enough.
   ws.addEventListener('close', (ev) => {
     open = false
     if (pendingError) {
@@ -286,9 +281,13 @@ function createTransportImpl<M extends DataMode>(
     { once: true },
   )
 
+  // This lets consumers treat the end of iteration as "teardown is done"
+  // (resources have been released).
+  const iterator = closeGuard(channel.iterator, closeController.signal)
+
   return {
     send: sender.send,
-    [Symbol.asyncIterator]: () => closeGuard(channel.iterable, closed),
+    [Symbol.asyncIterator]: () => iterator,
   }
 }
 

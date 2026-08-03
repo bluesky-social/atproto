@@ -5,13 +5,13 @@ import {
   DataModeError,
   IdleTimeoutError,
 } from './lib/errors.js'
-import { createMessageChannel } from './message-channel.js'
+import { closeGuard, createMessageChannel } from './message-channel.js'
 
 describe(createMessageChannel, () => {
   describe('delivery', () => {
     it('yields a pushed message to a parked pull', async () => {
       const channel = createMessageChannel({ dataMode: 'auto' })
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       const pending = iterator.next()
       channel.push('hello')
       await expect(pending).resolves.toEqual({ value: 'hello', done: false })
@@ -22,7 +22,7 @@ describe(createMessageChannel, () => {
       channel.push('one')
       channel.push('two')
       channel.push('three')
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       await expect(iterator.next()).resolves.toEqual({
         value: 'one',
         done: false,
@@ -42,7 +42,7 @@ describe(createMessageChannel, () => {
       const bin = new Uint8Array([1, 2, 3])
       channel.push('text-frame')
       channel.push(bin)
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       await expect(iterator.next()).resolves.toEqual({
         value: 'text-frame',
         done: false,
@@ -56,7 +56,7 @@ describe(createMessageChannel, () => {
     it('yields string for text mode and Uint8Array for binary mode', async () => {
       const textChannel = createMessageChannel({ dataMode: 'text' })
       textChannel.push('hi')
-      const textIterator = textChannel.iterable[Symbol.asyncIterator]()
+      const textIterator = textChannel.iterator
       const textResult = await textIterator.next()
       assert(!textResult.done)
       expect(typeof textResult.value).toBe('string')
@@ -64,7 +64,7 @@ describe(createMessageChannel, () => {
       const binChannel = createMessageChannel({ dataMode: 'binary' })
       const bin = new Uint8Array([9, 8, 7])
       binChannel.push(bin)
-      const binIterator = binChannel.iterable[Symbol.asyncIterator]()
+      const binIterator = binChannel.iterator
       const binResult = await binIterator.next()
       assert(!binResult.done)
       expect(binResult.value).toBeInstanceOf(Uint8Array)
@@ -76,7 +76,7 @@ describe(createMessageChannel, () => {
     it('fails a binary frame in text mode, asking for a 1003 close', async () => {
       const onAbort = vi.fn()
       const channel = createMessageChannel({ dataMode: 'text', onAbort })
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       const pending = iterator.next()
       channel.push(new Uint8Array([1, 2, 3]))
       await expect(pending).rejects.toSatisfy((err: unknown) => {
@@ -94,7 +94,7 @@ describe(createMessageChannel, () => {
     it('fails a text frame in binary mode', async () => {
       const onAbort = vi.fn()
       const channel = createMessageChannel({ dataMode: 'binary', onAbort })
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       const pending = iterator.next()
       channel.push('surprise')
       await expect(pending).rejects.toSatisfy((err: unknown) => {
@@ -134,7 +134,7 @@ describe(createMessageChannel, () => {
       })
       channel.push('a'.repeat(6)) // 12 bytes: over highWaterMark (10)
       expect(onPause).toHaveBeenCalledTimes(1)
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       // Draining down to 12 - 12 = 0 bytes is below half (5), so resume fires.
       await iterator.next()
       expect(onResume).toHaveBeenCalledTimes(1)
@@ -152,7 +152,7 @@ describe(createMessageChannel, () => {
       channel.push('a'.repeat(6)) // 12 bytes
       channel.push('a'.repeat(2)) // +4 = 16 bytes
       expect(onPause).toHaveBeenCalledTimes(1)
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       // Drain the first message: 16 - 12 = 4 bytes remain, below half (5) —
       // resume fires here, so push a third message to keep it above half.
       channel.push('a'.repeat(6)) // +12 = 16 bytes again before draining
@@ -182,7 +182,7 @@ describe(createMessageChannel, () => {
       })
       channel.push('a'.repeat(20)) // 40 bytes: well over the mark
       channel.push('more')
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       await expect(iterator.next()).resolves.toEqual({
         value: 'a'.repeat(20),
         done: false,
@@ -203,7 +203,7 @@ describe(createMessageChannel, () => {
       // No pull is parked, so this buffers rather than delivering directly: 20
       // bytes against a 10-byte cap overflows.
       channel.push('a'.repeat(10))
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       await expect(iterator.next()).rejects.toBeInstanceOf(BufferOverflowError)
       expect(onAbort).toHaveBeenCalledTimes(1)
       const [error, code] = onAbort.mock.calls[0]
@@ -258,7 +258,7 @@ describe(createMessageChannel, () => {
           idleTimeoutMs: 1000,
           onAbort,
         })
-        const iterator = channel.iterable[Symbol.asyncIterator]()
+        const iterator = channel.iterator
         // Attach the assertion synchronously: the rejection fires mid-tick, before
         // this test resumes, and would otherwise look unhandled.
         const pending = expect(iterator.next()).rejects.toBeInstanceOf(
@@ -334,7 +334,7 @@ describe(createMessageChannel, () => {
           onAbort,
           // No `backpressure`: the browser shape.
         })
-        const iterator = channel.iterable[Symbol.asyncIterator]()
+        const iterator = channel.iterator
         // Leave the buffer between the low mark (5) and the high mark (10), where
         // the pause flag used to latch.
         channel.push('a'.repeat(6)) // 12 bytes
@@ -370,7 +370,7 @@ describe(createMessageChannel, () => {
       channel.push('one')
       channel.push('two')
       channel.finish()
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       await expect(iterator.next()).resolves.toEqual({
         value: 'one',
         done: false,
@@ -391,13 +391,13 @@ describe(createMessageChannel, () => {
       channel.push('two')
       const boom = new Error('boom')
       channel.fail(boom)
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       await expect(iterator.next()).rejects.toBe(boom)
     })
 
     it('rejects a parked pull on fail', async () => {
       const channel = createMessageChannel({ dataMode: 'auto' })
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       const pending = iterator.next()
       const boom = new Error('boom')
       channel.fail(boom)
@@ -411,17 +411,13 @@ describe(createMessageChannel, () => {
       const first = new Error('first')
       failed.fail(first)
       failed.fail(new Error('second'))
-      await expect(failed.iterable[Symbol.asyncIterator]().next()).rejects.toBe(
-        first,
-      )
+      await expect(failed.iterator.next()).rejects.toBe(first)
 
       // A finish after a failure likewise cannot turn it into a clean end.
       const failedThenFinished = createMessageChannel({ dataMode: 'auto' })
       failedThenFinished.fail(first)
       failedThenFinished.finish()
-      await expect(
-        failedThenFinished.iterable[Symbol.asyncIterator]().next(),
-      ).rejects.toBe(first)
+      await expect(failedThenFinished.iterator.next()).rejects.toBe(first)
 
       // And a failure after a clean finish can't turn it into a rejection: the
       // buffered message drains, then the stream ends.
@@ -429,7 +425,7 @@ describe(createMessageChannel, () => {
       finished.push('buffered')
       finished.finish()
       finished.fail(new Error('too late'))
-      const iterator = finished.iterable[Symbol.asyncIterator]()
+      const iterator = finished.iterator
       await expect(iterator.next()).resolves.toEqual({
         value: 'buffered',
         done: false,
@@ -445,7 +441,7 @@ describe(createMessageChannel, () => {
       const channel = createMessageChannel({ dataMode: 'auto', onAbort })
       channel.push('one')
       channel.push('two')
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       assert(iterator.return)
       await iterator.return()
       expect(onAbort).toHaveBeenCalledWith(undefined, CloseCode.Normal)
@@ -460,11 +456,307 @@ describe(createMessageChannel, () => {
       const channel = createMessageChannel({ dataMode: 'auto' })
       channel.finish()
       channel.push('too-late')
-      const iterator = channel.iterable[Symbol.asyncIterator]()
+      const iterator = channel.iterator
       await expect(iterator.next()).resolves.toEqual({
         value: undefined,
         done: true,
       })
+    })
+
+    it('triggers termination when throwing the iterator', async () => {
+      const onAbort = vi.fn()
+      const channel = createMessageChannel({ dataMode: 'auto', onAbort })
+      const iterator = channel.iterator
+      assert(iterator.throw)
+      const boom = new Error('boom')
+      await expect(iterator.throw(boom)).rejects.toBe(boom)
+      expect(onAbort).toHaveBeenCalled()
+    })
+  })
+})
+
+describe(closeGuard, () => {
+  // The guard holds a terminal on a pending promise, not a timer, so letting one
+  // macrotask turn elapse is enough to tell "held" from "settled".
+  async function isPending(promise: Promise<unknown>): Promise<boolean> {
+    let settled = false
+    const mark = () => {
+      settled = true
+    }
+    promise.then(mark, mark)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    return !settled
+  }
+
+  // An inner iterator that ends however the test asks, plus a `returned` flag so
+  // cleanup can be asserted. `throw` is left off deliberately — the guard's
+  // fallback to `return()` is documented behavior.
+  function source<T>(
+    values: T[],
+    end: { type: 'done' } | { type: 'error'; error: unknown } = {
+      type: 'done',
+    },
+  ) {
+    let returned = false
+    const iterator: AsyncIterator<T, void, unknown> = {
+      async next() {
+        if (values.length) return { value: values.shift()!, done: false }
+        if (end.type === 'error') throw end.error
+        return { value: undefined, done: true }
+      },
+      async return() {
+        returned = true
+        return { value: undefined, done: true }
+      },
+    }
+    return { iterator, returned: () => returned }
+  }
+
+  it('noops when the signal is already aborted', async () => {
+    const controller = new AbortController()
+    controller.abort()
+    const { iterator } = source(['one'])
+    const guarded = closeGuard(iterator, controller.signal)
+    expect(guarded).toBe(iterator)
+  })
+
+  it('yields messages without waiting for the signal', async () => {
+    const controller = new AbortController()
+    const guarded = closeGuard(source(['one']).iterator, controller.signal)
+    await expect(guarded.next()).resolves.toEqual({ value: 'one', done: false })
+  })
+
+  it('holds `done` until the signal aborts', async () => {
+    const controller = new AbortController()
+    const guarded = closeGuard(source([]).iterator, controller.signal)
+    const pending = guarded.next()
+    expect(await isPending(pending)).toBe(true)
+    controller.abort()
+    await expect(pending).resolves.toEqual({ value: undefined, done: true })
+  })
+
+  it('holds a rejection until the signal aborts, then rethrows it', async () => {
+    const controller = new AbortController()
+    const boom = new Error('boom')
+    const guarded = closeGuard(
+      source([], { type: 'error', error: boom }).iterator,
+      controller.signal,
+    )
+    const pending = guarded.next()
+    expect(await isPending(pending)).toBe(true)
+    controller.abort()
+    await expect(pending).rejects.toBe(boom)
+  })
+
+  it('returns the inner iterator, then holds done until the signal aborts', async () => {
+    const controller = new AbortController()
+    const inner = source(['unread'])
+    const guarded = closeGuard(inner.iterator, controller.signal)
+    assert(guarded.return)
+    const pending = guarded.return()
+    expect(await isPending(pending)).toBe(true)
+    // Cleanup ran eagerly; only the reported end waits on the signal.
+    expect(inner.returned()).toBe(true)
+    controller.abort()
+    await expect(pending).resolves.toEqual({ value: undefined, done: true })
+  })
+
+  it('forwards a return() the inner iterator declines', async () => {
+    // An iterator may yield from a `finally` to refuse closing, and that
+    // refusal is the inner iterator's to make.
+    const controller = new AbortController()
+    async function* gen(i = 0): AsyncGenerator<number, void, unknown> {
+      try {
+        yield i++
+      } finally {
+        yield i++
+      }
+    }
+    const inner = gen()
+    await inner.next()
+    const guarded = closeGuard(inner, controller.signal)
+    assert(guarded.return)
+    await expect(guarded.return()).resolves.toEqual({
+      value: 1,
+      done: false,
+    })
+  })
+
+  it('treats a missing return() as a clean close', async () => {
+    const controller = new AbortController()
+    const inner: AsyncIterator<string, void, unknown> = {
+      async next() {
+        return { value: 'a', done: false }
+      },
+    }
+    const guarded = closeGuard(inner, controller.signal)
+    assert(guarded.return)
+    const pending = guarded.return()
+    expect(await isPending(pending)).toBe(true)
+    controller.abort()
+    await expect(pending).resolves.toEqual({ value: undefined, done: true })
+  })
+
+  describe('delegation with yield*', () => {
+    // `closeGuard` hands back a bare iterator, so wrap it the way both transports
+    // expose theirs — `[Symbol.asyncIterator]: () => iterator` — to hand the
+    // engine something it will delegate to.
+    const asIterable = <T>(
+      iterator: AsyncIterator<T, void, unknown>,
+    ): AsyncIterable<T> => ({ [Symbol.asyncIterator]: () => iterator })
+
+    it('forwards values, then holds the end of delegation until the signal aborts', async () => {
+      const controller = new AbortController()
+      const guarded = closeGuard(
+        source(['one', 'two']).iterator,
+        controller.signal,
+      )
+      async function* delegating() {
+        yield* asIterable(guarded)
+        yield 'after'
+      }
+      const outer = delegating()
+      await expect(outer.next()).resolves.toEqual({
+        value: 'one',
+        done: false,
+      })
+      await expect(outer.next()).resolves.toEqual({
+        value: 'two',
+        done: false,
+      })
+      // The inner iterator is exhausted, so `yield*` is ending — and the engine
+      // can't resume the outer generator until the guard releases that `done`.
+      const pending = outer.next()
+      expect(await isPending(pending)).toBe(true)
+      controller.abort()
+      await expect(pending).resolves.toEqual({ value: 'after', done: false })
+    })
+
+    it('holds a `for await` body that exits via break', async () => {
+      // The idiomatic consumer shape, and the reason the guard exists: `break`
+      // makes the engine call `return()`, so the loop cannot be left until the
+      // close has completed.
+      const controller = new AbortController()
+      const inner = source(['one', 'two'])
+      const guarded = closeGuard(inner.iterator, controller.signal)
+      const seen: string[] = []
+      const loop = (async () => {
+        for await (const value of asIterable(guarded)) {
+          seen.push(value)
+          break
+        }
+      })()
+      expect(await isPending(loop)).toBe(true)
+      expect(seen).toEqual(['one'])
+      controller.abort()
+      await loop
+      expect(inner.returned()).toBe(true)
+    })
+
+    it('propagates a refusal to terminate, then gates the eventual close', async () => {
+      // A generator that yields from its `finally` declines to close. The guard
+      // forwards that verbatim, so the engine keeps the delegation alive — and
+      // only once the generator really does end does the gate apply.
+      const controller = new AbortController()
+      async function* stubborn(): AsyncGenerator<string, void, unknown> {
+        try {
+          yield 'live'
+        } finally {
+          yield 'cleanup'
+        }
+      }
+      const guarded = closeGuard(stubborn(), controller.signal)
+      async function* delegating() {
+        yield* asIterable(guarded)
+      }
+      const outer = delegating()
+      await expect(outer.next()).resolves.toEqual({
+        value: 'live',
+        done: false,
+      })
+      // The refusal reaches the caller as a live value, ungated: waiting here
+      // would deadlock on a close that this unfinished iteration is holding up.
+      await expect(outer.return()).resolves.toEqual({
+        value: 'cleanup',
+        done: false,
+      })
+      // Asking again lets the `finally` run out, which is a real terminal.
+      const pending = outer.return()
+      expect(await isPending(pending)).toBe(true)
+      controller.abort()
+      await pending
+    })
+
+    it('gives `yield*` the throw() it demands, even when the inner iterator has none', async () => {
+      // Delegating straight to a throw-less iterator makes the engine raise a
+      // TypeError and discard the caller's error. The guard always defines
+      // `throw()`, so that hole is closed and the caller's error survives.
+      const controller = new AbortController()
+      const inner = source(['one'])
+      assert(inner.iterator.throw === undefined)
+      const guarded = closeGuard(inner.iterator, controller.signal)
+      async function* delegating() {
+        yield* asIterable(guarded)
+      }
+      const outer = delegating()
+      await outer.next()
+      const boom = new Error('boom')
+      const pending = outer.throw(boom)
+      expect(await isPending(pending)).toBe(true)
+      controller.abort()
+      await expect(pending).rejects.toBe(boom)
+    })
+
+    it('ends delegation on throw() even when the inner iterator recovers', async () => {
+      // The guard treats `throw()` as terminal by choice: an inner iterator that
+      // answers `done: false` to keep going is overruled, where bare `yield*`
+      // would have resumed the delegation.
+      const controller = new AbortController()
+      async function* recovering(
+        onError?: (err: unknown) => void,
+      ): AsyncGenerator<string, void, unknown> {
+        while (true) {
+          try {
+            yield 'live'
+          } catch (err) {
+            // Swallows an continue iterating
+            onError?.(err)
+          }
+        }
+      }
+
+      {
+        using onError = vi.fn()
+        const control = recovering(onError)
+        await expect(control.next()).resolves.toEqual({
+          value: 'live',
+          done: false,
+        })
+        const error = new Error('boom')
+        await control.throw(error)
+        expect(onError).toHaveBeenLastCalledWith(error)
+        await expect(control.next()).resolves.toEqual({
+          value: 'live',
+          done: false,
+        })
+        await expect(control.next()).resolves.toEqual({
+          value: 'live',
+          done: false,
+        })
+        await control.return()
+      }
+
+      const guarded = closeGuard(recovering(), controller.signal)
+      async function* delegating() {
+        yield* asIterable(guarded)
+      }
+      const outer = delegating()
+      await outer.next()
+      const boom = new Error('boom')
+      const pending = outer.throw(boom)
+      expect(await isPending(pending)).toBe(true)
+      controller.abort()
+      await expect(pending).rejects.toBe(boom)
     })
   })
 })

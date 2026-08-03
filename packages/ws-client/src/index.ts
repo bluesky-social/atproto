@@ -1,6 +1,11 @@
-import { createTransport } from '#transport'
-import { createWebSocket } from './websocket.js'
-import type { WebSocketFn } from './websocket.js'
+import { HEADERS_SUPPORTED, createTransport } from '#transport'
+import type { DataMode } from './message-channel.js'
+import {
+  type Awaitable,
+  type WebSocketIterable,
+  type WebSocketOptions,
+  websocketFactory,
+} from './websocket.js'
 
 export type {
   CloseEventDetail,
@@ -16,9 +21,6 @@ export type {
 export type { HeadersInit, Sender } from './transport/transport.js'
 export type {
   Awaitable,
-  BrowserWebSocketOptions,
-  NodeWebSocketOptions,
-  WebSocketFn,
   WebSocketIterable,
   WebSocketOptions,
 } from './websocket.js'
@@ -40,8 +42,37 @@ export {
 } from './lib/reconnect-policy.js'
 
 /**
- * The `websocket()` generator, bound to the platform transport selected by the
- * `#transport` imports condition. The single entrypoint for consuming a
- * WebSocket as a reconnecting async stream.
+ * Whether the platform WebSocket implementation supports creating WebSockets
+ * with a {@link WebSocketOptions.headers} option. Node does, the browser
+ * doesn't. Creating a WebSocket with headers on a platform that doesn't support
+ * them throws an error.
  */
-export const websocket: WebSocketFn = createWebSocket(createTransport)
+// @NOTE Must be explicitly typed a boolean
+export const HEADERS_SUPPORTED_PLATFORM: boolean = HEADERS_SUPPORTED
+
+export type NodeWebSocketOptions<M extends DataMode = 'auto'> =
+  WebSocketOptions<M>
+export type BrowserWebSocketOptions<M extends DataMode = 'auto'> = Omit<
+  WebSocketOptions<M>,
+  'headers'
+>
+
+/**
+ * A function allows building an isomorphic {@link WebSocketIterable}.
+ */
+export function websocket(
+  url: string | URL | (() => Awaitable<string | URL>),
+  options?: WebSocketOptions<'auto'>,
+): WebSocketIterable<'auto'>
+export function websocket<M extends DataMode>(
+  url: string | URL | (() => Awaitable<string | URL>),
+  options: M extends 'auto'
+    ? WebSocketOptions<'auto'>
+    : WebSocketOptions<M> & { dataMode: M },
+): WebSocketIterable<M>
+export function websocket<M extends DataMode>(
+  url: string | URL | (() => Awaitable<string | URL>),
+  options: WebSocketOptions<M> = {},
+): WebSocketIterable<M> {
+  return websocketFactory(url, createTransport, options)
+}

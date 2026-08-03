@@ -37,14 +37,14 @@ describe('public entrypoint', () => {
   })
 
   it('binds dataMode to the yielded type, with all generator type args', () => {
-    expectTypeOf<MessageOf<'binary'>>().toEqualTypeOf<Uint8Array>()
+    expectTypeOf<MessageOf<'binary'>>().toEqualTypeOf<Uint8Array<ArrayBuffer>>()
     expectTypeOf<MessageOf<'text'>>().toEqualTypeOf<string>()
     // The named alias is what consumers annotate with, so it has to stay
     // equivalent to the spelled-out generator, all three type args included —
     // omitting them defaults TReturn and TNext to `any`, which would silently
     // un-type next()/return().
     expectTypeOf<WebSocketIterable<'binary'>>().toEqualTypeOf<
-      AsyncGenerator<Uint8Array, void, unknown>
+      AsyncGenerator<Uint8Array<ArrayBuffer>, void, unknown>
     >()
     expectTypeOf(websocket<'binary'>).returns.toEqualTypeOf<
       WebSocketIterable<'binary'>

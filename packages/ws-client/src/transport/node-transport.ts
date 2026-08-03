@@ -20,6 +20,8 @@ import {
   type TransportOptions,
 } from './transport.js'
 
+export const HEADERS_SUPPORTED = true
+
 // How long a polite close may wait for the peer's answering close frame before
 // the socket is destroyed and 'close' fires anyway. Enforced by `ws` itself via
 // its `closeTimeout` option.
@@ -42,6 +44,12 @@ function createTransportImpl<M extends DataMode>(
   // have seen a pong (or anything else) arrive.
   let paused = false
 
+  // Marked as aborted once the socket's close event has fired — the transport's
+  // proof that teardown finished, handed to the channel so iteration doesn't
+  // settle until the socket is down.
+  const closeController = new AbortController()
+  const markClosed = () => closeController.abort()
+
   const channel = createMessageChannel<M>({
     dataMode: options.dataMode,
     highWaterMark: options.highWaterMark,
@@ -57,7 +65,7 @@ function createTransportImpl<M extends DataMode>(
         ws.resume()
       },
     },
-    onAbort: (_error, code) => {
+    onAbort: (error, code) => {
       // Send the close code the channel asked for. Missing code here indicates the connection should be dropped outright.
       if (code !== undefined) {
         ws.close(code)
@@ -95,14 +103,6 @@ function createTransportImpl<M extends DataMode>(
     closeReported = true
     options.onClose(detail)
   }
-
-  // Resolves once the socket's close event has fired — the transport's proof
-  // that teardown finished. `closeGuard` below hands that guarantee to the
-  // consumer: iteration doesn't settle until the socket is really down.
-  let markClosed!: () => void
-  const closed = new Promise<void>((resolve) => {
-    markClosed = resolve
-  })
 
   // Ends the connection with a failure, the moment teardown begins.
   //
@@ -161,7 +161,6 @@ function createTransportImpl<M extends DataMode>(
       heartbeatAlive = false
       ws.ping()
     }, intervalMs)
-    heartbeatTimer.unref?.()
   }
 
   function clearHeartbeat(): void {
@@ -278,9 +277,13 @@ function createTransportImpl<M extends DataMode>(
     { once: true },
   )
 
+  // This lets consumers treat the end of iteration as "teardown is done"
+  // (resources have been released).
+  const iterator = closeGuard(channel.iterator, closeController.signal)
+
   return {
     send: sender.send,
-    [Symbol.asyncIterator]: () => closeGuard(channel.iterable, closed),
+    [Symbol.asyncIterator]: () => iterator,
   }
 }
 

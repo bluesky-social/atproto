@@ -12,8 +12,8 @@ export type DataMode = 'auto' | 'text' | 'binary'
 export type MessageOf<M extends DataMode> = M extends 'text'
   ? string
   : M extends 'binary'
-    ? Uint8Array
-    : string | Uint8Array
+    ? Uint8Array<ArrayBuffer>
+    : string | Uint8Array<ArrayBuffer>
 
 export interface CloseEventDetail {
   code: number
@@ -52,8 +52,8 @@ export interface MessageChannelOptions<M extends DataMode> {
 }
 
 export interface MessageChannel<M extends DataMode> {
-  /** Single-consumer async iterable of received messages. */
-  readonly iterable: AsyncIterable<MessageOf<M>, void, unknown>
+  /** Single-consumer async iterator of received messages. */
+  readonly iterator: AsyncIterator<MessageOf<M>, void, unknown>
   /** Feed a received frame. Binary vs text is carried by the data type. */
   push(data: string | Uint8Array): void
   /** End the channel with an error; discards undelivered buffered messages. */
@@ -109,42 +109,85 @@ export const ABNORMAL_CLOSE_DETAIL: CloseEventDetail = Object.freeze({
 })
 
 /**
- * Wraps a channel's iterator so it settles only once `closed` resolves — the
- * transport's signal that the socket's close event has fired.
+ * Wraps an iterator so the *end* of iteration is gated on a signal: a terminal
+ * outcome — `done: true`, or a rejection — is withheld until `closeSignal`
+ * fires, letting a consumer treat "iteration finished" as "teardown finished".
+ * The inner iterator still decides *whether* iteration ends; the signal only
+ * decides when the caller is told.
  *
- * This is what lets a consumer treat the end of iteration as "teardown is done".
- * Two paths need it, both of which would otherwise settle while the socket is
- * still closing: a consumer `break` (whose `return()` only *asks* the transport
- * to close) and a failure the transport records before its close event lands.
+ * Only terminal outcomes wait. A `done: false` result means iteration
+ * continues, so gating it would stall a live stream — and that applies to every
+ * method, not just `next()`: per the iterator protocol both `throw()` and
+ * `return()` may answer `done: false` to decline ending iteration.
  *
- * The wait is bounded by the transport — on Node by `ws`'s `closeTimeout`, which
- * forces the close event if a peer never answers the handshake.
+ * @NOTE How this compares to `yield*`, the closest built-in equivalent. Two
+ * deliberate differences, both on one path — an inner iterator with no `throw()`
+ * method:
+ *
+ * - `yield*` rejects with a `TypeError` ("The iterator does not provide a
+ *   'throw' method") and *discards the caller's error*. Defining `throw()` here
+ *   means callers may always call it, so that hole would be ours to fall into:
+ *   instead we close the inner iterator with `return()` — skipping cleanup would
+ *   leak it — and rethrow the caller's error, the more useful of the two.
+ * - `yield*` prefers a failing `return()` over that `TypeError`; we prefer it
+ *   over the caller's error. A cleanup failure is new information, whereas the
+ *   caller's error is something they just handed us and still hold.
+ *
+ * Everything else matches the engine: a recovering `throw()` resumes iteration,
+ * a `return()` the inner iterator declines is forwarded as-is, and an absent
+ * `return()` counts as a clean close.
  */
-export function closeGuard<M extends DataMode>(
-  iterable: AsyncIterable<MessageOf<M>, void, unknown>,
-  closed: Promise<void>,
-): AsyncIterator<MessageOf<M>, void, unknown> {
-  const iterator = iterable[Symbol.asyncIterator]()
+export function closeGuard<T>(
+  iterator: AsyncIterator<T, void, unknown>,
+  closeSignal: AbortSignal,
+): AsyncIterator<T, void, unknown> {
+  if (closeSignal.aborted) return iterator
+
+  const closed = new Promise<void>((resolve) => {
+    // The event is dropped rather than resolved with: nothing here reads it, and
+    // keeping it would pin the event object for the lifetime of the guard.
+    closeSignal.addEventListener('abort', () => resolve(), { once: true })
+  })
+
   return {
-    async next(): Promise<IteratorResult<MessageOf<M>, void>> {
+    async next() {
       try {
         const result = await iterator.next()
-        // Only the terminal pull waits: a yielded message means the connection is
-        // still live, and delaying data until close would deadlock the stream.
+        // Only the terminal pull waits: a yielded message means the connection
+        // is still live, and delaying data until close would deadlock the
+        // stream.
         if (result.done) await closed
         return result
       } catch (error) {
-        // A rejection is the end of iteration too, so it waits the same way.
+        // A rejection ends iteration too, so it waits the same way.
         await closed
         throw error
       }
     },
-    async return(): Promise<IteratorResult<MessageOf<M>, void>> {
-      // Asks the channel to stop (which asks the transport to close the socket),
-      // then waits for the socket to actually be down.
-      await iterator.return?.()
-      await closed
-      return { value: undefined, done: true }
+    async return() {
+      try {
+        // An iterator with no `return()` has nothing to release, which the
+        // protocol treats as a successful close.
+        const result = await iterator.return?.()
+        if (!result || result.done) await closed
+        return result ?? { value: undefined, done: true }
+      } catch (error) {
+        await closed
+        throw error
+      }
+    },
+    async throw(error: unknown): Promise<IteratorResult<T, void>> {
+      try {
+        const result = await iterator.throw?.(error)
+        // A `throw()` may "recover" and decline to end iteration, so it can
+        // return `done: false`.
+        if (result?.done) await closed
+        throw error
+      } catch (error) {
+        // A failing `throw()` ends iteration too, so it waits the same way.
+        await closed
+        throw error
+      }
     },
   }
 }
@@ -173,11 +216,15 @@ export function closeCodeForStop(reason: unknown): number {
 export function createMessageChannel<M extends DataMode>(
   options: MessageChannelOptions<M>,
 ): MessageChannel<M> {
-  const dataMode: DataMode = options.dataMode
-  const highWaterMark = options.highWaterMark ?? 1_048_576
-  const maxBufferedBytes = options.maxBufferedBytes ?? Infinity
-  const idleTimeoutMs = options.idleTimeoutMs
-  const { backpressure, onAbort } = options
+  const {
+    dataMode,
+    backpressure,
+    highWaterMark = 1_048_576,
+    maxBufferedBytes = Infinity,
+    idleTimeoutMs,
+    onAbort,
+  } = options
+
   // Whether this platform can actually stop the peer from sending: Node can (it
   // pauses the socket), the browser can't. Gates the pause state itself, not
   // just the callbacks — see `idleTick`.
@@ -226,7 +273,6 @@ export function createMessageChannel<M extends DataMode>(
 
   if (idleTimeoutMs != null) {
     idleTimer = setInterval(idleTick, idleTimeoutMs)
-    idleTimer.unref?.()
   }
 
   function rejectWaiters(error: unknown): void {
@@ -315,29 +361,27 @@ export function createMessageChannel<M extends DataMode>(
     }
   }
 
-  function pull(): Promise<IteratorResult<MessageOf<M>, void>> {
+  async function iteratorNext(): Promise<IteratorResult<MessageOf<M>, void>> {
     // Drain buffered messages first, even after a `done` terminal: a
     // server-initiated clean close never drops received data.
     const item = buffer.shift()
     if (item) {
       bufferedBytes -= item.bytes
       afterDrain()
-      return Promise.resolve({ value: item.value, done: false })
+      return { value: item.value, done: false }
     }
     if (terminal) {
       if (terminal.type === 'done') {
-        return Promise.resolve({ value: undefined as never, done: true })
+        return { value: undefined as never, done: true }
       }
-      return Promise.reject(terminal.error)
+      throw terminal.error
     }
-    return new Promise<IteratorResult<MessageOf<M>, void>>(
-      (resolve, reject) => {
-        waiters.push({ resolve, reject })
-      },
-    )
+    return new Promise((resolve, reject) => {
+      waiters.push({ resolve, reject })
+    })
   }
 
-  function iteratorReturn(): Promise<IteratorResult<MessageOf<M>, void>> {
+  async function iteratorReturn(): Promise<IteratorResult<MessageOf<M>, void>> {
     // The consumer abandoned iteration (a `break`/`return` in a `for await`).
     // Stopping is a loss of interest, not a request to drain, so discard the
     // buffer. First-wins: a channel that already ended is left as-is.
@@ -349,20 +393,18 @@ export function createMessageChannel<M extends DataMode>(
       resolveWaitersDone()
       invokeHook(onAbort, undefined, CloseCode.Normal)
     }
-    return Promise.resolve({ value: undefined as never, done: true })
+    return { value: undefined as never, done: true }
+  }
+
+  const iterator: AsyncIterator<MessageOf<M>, void, unknown> = {
+    next: iteratorNext,
+    return: iteratorReturn,
   }
 
   return {
     push,
     fail,
     finish,
-    iterable: {
-      [Symbol.asyncIterator]() {
-        return {
-          next: () => pull(),
-          return: () => iteratorReturn(),
-        }
-      },
-    },
+    iterator,
   }
 }

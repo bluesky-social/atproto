@@ -36,7 +36,12 @@ export const DEFAULT_HEARTBEAT_INTERVAL_MS = 10_000
 export interface TransportOptions<M extends DataMode = 'auto'> {
   url: string | URL
   dataMode: M
-  /** Teardown: aborting ends the iteration and closes the socket. */
+  /**
+   * Teardown: aborting ends the iteration and closes the socket. Use a
+   * {@link CloseError} instance as the reason for controlling the close code
+   * and message sent to the server. Any other value will result in a normal
+   * close with code 1000 and no message.
+   */
   signal: AbortSignal
   /**
    * Protocol ping/pong liveness. On by default at
