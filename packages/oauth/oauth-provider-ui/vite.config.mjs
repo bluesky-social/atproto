@@ -28,7 +28,7 @@ export default defineConfig({
     emptyOutDir: false,
     outDir: './dist',
     sourcemap: true,
-    rollupOptions: {
+    rolldownOptions: {
       input: [
         './src/account-page.tsx',
         './src/authorization-page.tsx',
@@ -44,17 +44,6 @@ export default defineConfig({
       },
       plugins: [bundleManifest()],
     },
-    commonjsOptions: {
-      include: [
-        /node_modules/,
-        /did/,
-        /jwk/,
-        /oauth-scopes/,
-        /oauth-types/,
-        /oauth-provider-api/,
-        /syntax/,
-      ],
-    },
     // this
     // @NOTE the "env" arg (when defineConfig is used with a function) does not
     // allow to detect watch mode. We do want to set the "buildDelay" though to
@@ -63,18 +52,6 @@ export default defineConfig({
     watch: process.argv.includes('--watch')
       ? { buildDelay: 500, clearScreen: false }
       : undefined,
-  },
-  optimizeDeps: {
-    // Needed because this is a monorepo and it exposes CommonJS
-    include: [
-      '@atproto/oauth-provider-api',
-      '@atproto/did',
-      '@atproto/jwk',
-      '@atproto/oauth-scopes',
-      '@atproto/oauth-types',
-      '@atproto/syntax',
-      'multiformats',
-    ],
   },
   test: {},
 })
