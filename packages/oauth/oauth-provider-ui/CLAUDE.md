@@ -188,6 +188,14 @@ When a deployment configures nothing the tokens fall back to the pre-redesign
 stock palette (a purple primary) — deliberately not Bluesky's, so an
 uncurated PDS is not mistaken for one.
 
+`branding.background` customises the auth screen's page area (behind the card,
+not the card itself). It carries a light and a dark image URL; the provider
+injects `--branding-background-{light,dark}-image` (wrapped in `url(...)`), and
+the `.auth-background` rule in `src/style.css` paints that image over the neutral
+`muted` base, picking the mode by `prefers-color-scheme`. Unset, it falls back to
+the plain `muted` surface it always was. The card keeps its own opaque surface so
+copy stays legible over any background.
+
 The mock pages inject the same variables a branded deployment would, so
 `pnpm dev:ui` demonstrates branding without a PDS.
 

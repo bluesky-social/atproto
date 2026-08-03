@@ -42,6 +42,13 @@
         --branding-color-success: 2 195 154;
         --branding-color-success-contrast: 0 0 0;
         --branding-color-success-hue: 167.2538860103627;
+
+        /* Auth screen background (branding.background). The account manager's
+         * signed-out sign-in step renders through AuthShell, so it uses the
+         * same surface as authorization-page.html. Dev-only mock assets served
+         * from ./mock-assets (not part of the prod build). */
+        --branding-background-light-image: url('/mock-assets/illustration-light.png');
+        --branding-background-dark-image: url('/mock-assets/illustration-dark.png');
       }
     </style>
     <script type="module">

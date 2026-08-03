@@ -52,4 +52,21 @@ function* buildCustomizationVars(branding?: Branding): Generator<string> {
       yield `--branding-color-${name}-hue: ${hue};`
     }
   }
+
+  if (branding?.background) {
+    const { light, dark } = branding.background
+    if (light) {
+      yield `--branding-background-light-image: url("${escapeCssUrl(light)}");`
+    }
+    if (dark) {
+      yield `--branding-background-dark-image: url("${escapeCssUrl(dark)}");`
+    }
+  }
+}
+
+// The background images are validated URLs, so they cannot contain whitespace or
+// newlines; escaping the two characters that would break out of the url("…")
+// literal is enough to keep the injected stylesheet well-formed.
+function escapeCssUrl(url: string): string {
+  return url.replace(/["\\]/g, (char) => `\\${char}`)
 }

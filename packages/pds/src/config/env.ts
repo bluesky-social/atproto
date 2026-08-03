@@ -47,6 +47,9 @@ export function readEnv() {
     successColorContrast: envStr('PDS_SUCCESS_COLOR_CONTRAST'),
     successColorHue: envInt('PDS_SUCCESS_COLOR_HUE'),
 
+    backgroundLightImage: envStr('PDS_BACKGROUND_LIGHT_IMAGE'),
+    backgroundDarkImage: envStr('PDS_BACKGROUND_DARK_IMAGE'),
+
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
     disableWalAutoCheckpoint: envBool('PDS_SQLITE_DISABLE_WAL_AUTO_CHECKPOINT'),

@@ -60,7 +60,7 @@ export function AuthShell({
         : undefined
 
   return (
-    <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+    <div className="auth-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
       {documentTitleString && <title>{documentTitleString}</title>}
 
       <div

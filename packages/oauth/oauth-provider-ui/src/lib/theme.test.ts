@@ -127,3 +127,27 @@ describe('style.css theme tokens', () => {
     expect(css).not.toContain(token)
   })
 })
+
+describe('auth screen background', () => {
+  const light = blockFor('/* auth background: light */')
+  const dark = blockFor('/* auth background: dark */')
+
+  it('paints the light background image over the muted base', () => {
+    expect(light).toContain('background-color: var(--muted);')
+    expect(light).toMatch(
+      /background-image: var\(--branding-background-light-image, none\);/,
+    )
+  })
+
+  it('swaps to the dark background image in the dark scheme', () => {
+    expect(dark).toMatch(
+      /background-image: var\(--branding-background-dark-image, none\);/,
+    )
+  })
+
+  it('picks the dark background via prefers-color-scheme', () => {
+    const idx = css.indexOf('/* auth background: dark */')
+    const media = css.lastIndexOf('@media (prefers-color-scheme: dark)', idx)
+    expect(media).toBeGreaterThan(-1)
+  })
+})

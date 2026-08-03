@@ -143,6 +143,35 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+ * Auth screen background.
+ *
+ * The auth card floats over a full-viewport surface. The surface colour is the
+ * neutral `muted` token, so it flips with the colour scheme exactly as it always
+ * has. When a deployment configures `branding.background`, the provider injects
+ * `--branding-background-{light,dark}-image` (see the provider's
+ * build-customization-css.ts) and this surface paints that image over the muted
+ * base, picked per mode by prefers-color-scheme. The card keeps its own opaque
+ * surface on top, so copy stays legible over any background — only the page area
+ * behind the card is customised.
+ * ------------------------------------------------------------------------- */
+
+/* auth background: light */
+.auth-background {
+  background-color: var(--muted);
+  background-image: var(--branding-background-light-image, none);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* auth background: dark */
+  .auth-background {
+    background-image: var(--branding-background-dark-image, none);
+  }
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

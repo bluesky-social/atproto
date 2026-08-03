@@ -297,6 +297,10 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       successContrast: env.successColorContrast,
       successHue: env.successColorHue,
     },
+    background: {
+      light: env.backgroundLightImage,
+      dark: env.backgroundDarkImage,
+    },
     links: [
       {
         title: { en: 'Home', fr: 'Accueil' },
