@@ -60,7 +60,7 @@
     "@typescript-eslint/eslint-plugin": "^8.59.2",
     "@typescript-eslint/parser": "^8.59.2",
     "@typescript/native-preview": "^7.0.0-beta",
-    "@vitest/coverage-v8": "4.0.16",
+    "@vitest/coverage-v8": "^4.1.10",
     "dotenv": "^16.0.3",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
