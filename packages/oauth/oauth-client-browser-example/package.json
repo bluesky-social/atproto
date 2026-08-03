@@ -43,7 +43,7 @@
     "http-terminator": "^3.2.0"
   },
   "devDependencies": {
-    "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:^",
+    "@atproto-labs/rolldown-plugin-bundle-manifest": "workspace:^",
     "@atproto/lex": "workspace:^",
     "@atproto/oauth-client-browser": "workspace:^",
     "@phosphor-icons/react": "^2.1.10",

@@ -1,18 +1,18 @@
 {
-  "name": "@atproto-labs/rollup-plugin-bundle-manifest",
-  "version": "0.3.3",
+  "name": "@atproto-labs/rolldown-plugin-bundle-manifest",
+  "private": true,
   "license": "MIT",
-  "description": "Library for generating a manifest of bundled files from a Rollup build",
+  "description": "Library for generating a manifest of bundled files from a Rolldown build",
   "keywords": [
     "atproto",
-    "rollup",
+    "rolldown",
     "manifest"
   ],
   "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/bluesky-social/atproto",
-    "directory": "packages/internal/rollup-plugin-bundle-manifest"
+    "directory": "packages/internal/rolldown-plugin-bundle-manifest"
   },
   "files": [
     "./dist",

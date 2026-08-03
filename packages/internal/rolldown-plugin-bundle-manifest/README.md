@@ -1,7 +1,7 @@
-# @atproto-labs/rollup-plugin-bundle-manifest
+# @atproto-labs/rolldown-plugin-bundle-manifest
 
-This Rollup plugin allows to generate a (JSON) manifest containing the output
-files of a Rollup build. The manifest will look as follows:
+This Rolldown plugin allows to generate a (JSON) manifest containing the output
+files of a Rolldown build. The manifest will look as follows:
 
 ```json
 {
@@ -39,9 +39,9 @@ themselves.
 ## Usage
 
 ```js
-// rollup.config.js
+// rolldown.config.js
 
-import bundleManifest from '@atproto-labs/rollup-plugin-bundle-manifest'
+import { bundleManifest } from '@atproto-labs/rolldown-plugin-bundle-manifest'
 
 export default {
   input: 'src/index.js',

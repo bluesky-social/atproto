@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@atproto-labs/fetch": "workspace:^",
-    "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:^",
+    "@atproto-labs/rolldown-plugin-bundle-manifest": "workspace:^",
     "@atproto/oauth-scopes": "workspace:^",
     "@atproto/oauth-types": "workspace:^",
     "@atproto/syntax": "workspace:^",

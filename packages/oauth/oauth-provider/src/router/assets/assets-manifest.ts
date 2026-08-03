@@ -1,8 +1,8 @@
 import { createReadStream } from 'node:fs'
 import { createRequire } from 'node:module'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 import { Readable } from 'node:stream'
-import type { Manifest } from '@atproto-labs/rollup-plugin-bundle-manifest'
+import type { Manifest } from '@atproto-labs/rolldown-plugin-bundle-manifest'
 import type { AssetRef } from '../../lib/html/build-document.js'
 import {
   type Middleware,
@@ -42,7 +42,7 @@ export function parseAssetsManifest(manifestPath: string) {
   const assets = new Map<string, Asset>(
     Object.entries(manifest).map(([filename, { data, ...item }]) => {
       const buffer = data ? Buffer.from(data, 'base64') : null
-      const filepath = join(manifestPath, '..', filename)
+      const filepath = join(basename(manifestPath), filename)
       const stream = buffer
         ? () => Readable.from(buffer)
         : () => createReadStream(filepath)

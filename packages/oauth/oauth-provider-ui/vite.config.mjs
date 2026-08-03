@@ -6,7 +6,7 @@ import { lingui } from '@lingui/vite-plugin'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react-swc'
 import { defineConfig } from 'vite'
-import { bundleManifest } from '@atproto-labs/rollup-plugin-bundle-manifest'
+import { bundleManifest } from '@atproto-labs/rolldown-plugin-bundle-manifest'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
