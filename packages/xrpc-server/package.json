@@ -41,7 +41,7 @@
     "@atproto/xrpc": "workspace:^",
     "express": "^4.17.2",
     "http-errors": "^2.0.0",
-    "mime-types": "^2.1.35",
+    "mime-types": "^3.0.2",
     "rate-limiter-flexible": "^2.4.1",
     "ws": "^8.12.0"
   },

@@ -48,5 +48,5 @@ function getNotifId(viewer: string, seenAt: Date) {
     '::',
   )
 
-  return murmurHash3(key).toString(16)
+  return murmurhash.v3(key).toString(16)
 }

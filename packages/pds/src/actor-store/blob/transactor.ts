@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
-import type stream from 'node:stream'
-import { fromStream as fileTypeFromStream } from 'file-type'
+import { Readable } from 'node:stream'
+import { fileTypeFromStream } from 'file-type'
 import PQueue from 'p-queue'
 import { SECOND, cloneStream, streamSize } from '@atproto/common'
 import {
@@ -54,7 +54,7 @@ export class BlobTransactor extends BlobReader {
 
   async uploadBlobAndGetMetadata(
     userSuggestedMime: string,
-    blobStream: stream.Readable,
+    blobStream: Readable,
   ): Promise<BlobMetadata> {
     const [tempKey, size, sha256, sniffedMime] = await Promise.all([
       this.blobstore.putTemp(cloneStream(blobStream)),
@@ -326,7 +326,7 @@ export class CidNotFound extends Error {
   }
 }
 
-async function sha256Stream(toHash: stream.Readable): Promise<Uint8Array> {
+async function sha256Stream(toHash: Readable): Promise<Uint8Array> {
   const hash = crypto.createHash('sha256')
   try {
     for await (const chunk of toHash) {
@@ -341,10 +341,9 @@ async function sha256Stream(toHash: stream.Readable): Promise<Uint8Array> {
 }
 
 async function mimeTypeFromStream(
-  blobStream: stream.Readable,
+  blobStream: Readable,
 ): Promise<string | undefined> {
-  const fileType = await fileTypeFromStream(blobStream)
-  blobStream.destroy()
+  const fileType = await fileTypeFromStream(Readable.toWeb(blobStream))
   return fileType?.mime
 }
 
