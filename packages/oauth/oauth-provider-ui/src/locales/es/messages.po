@@ -793,7 +793,7 @@ msgstr "Faltante"
 msgid "Moderate"
 msgstr "Moderada"
 
-#: src/pages/account/(authenticated)/route.tsx:147
+#: src/pages/account/(authenticated)/route.tsx:145
 msgid "My Atmosphere Account"
 msgstr ""
 

@@ -1,6 +1,6 @@
 import { type RequestListener, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
-import httpTerminator from 'http-terminator'
+import { createHttpTerminator } from 'http-terminator'
 import { expect } from 'vitest'
 import {
   type $Typed,
@@ -286,6 +286,6 @@ export async function startServer(listener: RequestListener) {
       .once('listening', onListen)
       .once('error', onError)
 
-    const terminator = httpTerminator.createHttpTerminator({ server })
+    const terminator = createHttpTerminator({ server })
   })
 }

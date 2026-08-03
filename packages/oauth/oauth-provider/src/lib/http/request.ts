@@ -1,6 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import accept from '@hapi/accept'
-const { languages, mediaType } = accept
+import { languages, mediaType } from '@hapi/accept'
 import {
   type CookieSerializeOptions,
   parse as parseCookie,

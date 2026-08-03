@@ -1,7 +1,7 @@
 import { once } from 'node:events'
 import { createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
-import httpTerminator from 'http-terminator'
+import { createHttpTerminator } from 'http-terminator'
 import { WebSocketServer } from 'ws'
 import { wait } from '@atproto/common'
 import { CloseCode, WebSocketKeepAlive } from '../src/index.js'
@@ -14,7 +14,7 @@ describe('WebSocketKeepAlive', () => {
     const server = createServer()
 
     // make sure to always close the server (even in case of test failure)
-    const { terminate } = httpTerminator.createHttpTerminator({ server })
+    const { terminate } = createHttpTerminator({ server })
     await using _ = { [Symbol.asyncDispose]: async () => terminate() }
 
     const wsServer = new WebSocketServer({ server })

@@ -37,7 +37,7 @@ export function parseAssetsManifest(manifestPath: string) {
   // watch mode can pick up changes to the manifest file.
   const require = createRequire(import.meta.url)
 
-  // eslint-disable-next-line import/no-dynamic-require
+  // eslint-disable-next-line import-x/no-dynamic-require
   const manifest = require(manifestPath) as Manifest
 
   const assets = new Map<string, Asset>(

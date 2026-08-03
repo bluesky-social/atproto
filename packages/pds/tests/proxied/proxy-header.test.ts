@@ -4,7 +4,7 @@ import type http from 'node:http'
 import type { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
 import express from 'express'
-import httpTerminator from 'http-terminator'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import type { Keypair } from '@atproto/crypto'
 import {
   type SeedClient,
@@ -177,7 +177,7 @@ type ProxyReq = {
 }
 
 class ProxyServer {
-  private terminator: httpTerminator.HttpTerminator
+  private terminator: HttpTerminator
 
   constructor(
     server: http.Server,
@@ -185,7 +185,7 @@ class ProxyServer {
     public did: string,
     public requests: ProxyReq[],
   ) {
-    this.terminator = httpTerminator.createHttpTerminator({ server })
+    this.terminator = createHttpTerminator({ server })
   }
 
   static async create(

@@ -1,6 +1,7 @@
 import js from '@eslint/js'
 import tseslint from '@typescript-eslint/eslint-plugin'
-import importPlugin from 'eslint-plugin-import'
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
+import importPlugin from 'eslint-plugin-import-x'
 import n from 'eslint-plugin-n'
 import prettierRecommended from 'eslint-plugin-prettier/recommended'
 import globals from 'globals'
@@ -46,26 +47,21 @@ export default [
     plugins: { n },
     settings: {
       node: { version: '>=22' },
-      'import/internal-regex': '^@atproto(?:-labs)?/',
-      'import/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx'] },
-      'import/resolver': {
-        typescript: {
-          project: [
-            'packages/lex/*/tsconfig.build.json',
-            'packages/lex/*/tsconfig.test.json',
-            'packages/oauth/*/tsconfig.build.json',
-            'packages/oauth/*/tsconfig.test.json',
-            'packages/oauth/*/tsconfig.lib.json',
-            'packages/internal/*/tsconfig.build.json',
-            'packages/internal/*/tsconfig.test.json',
-            'packages/*/tsconfig.build.json',
-            'packages/*/tsconfig.test.json',
-          ],
-        },
-        node: {
-          extensions: ['.js', '.jsx', '.json'],
-        },
-      },
+      'import-x/internal-regex': '^@atproto(?:-labs)?/',
+      'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx'] },
+      'import-x/resolver-next': createTypeScriptImportResolver({
+        project: [
+          'packages/lex/*/tsconfig.build.json',
+          'packages/lex/*/tsconfig.test.json',
+          'packages/oauth/*/tsconfig.build.json',
+          'packages/oauth/*/tsconfig.test.json',
+          'packages/oauth/*/tsconfig.lib.json',
+          'packages/internal/*/tsconfig.build.json',
+          'packages/internal/*/tsconfig.test.json',
+          'packages/*/tsconfig.build.json',
+          'packages/*/tsconfig.test.json',
+        ],
+      }),
     },
     rules: {
       'no-var': 'error',
@@ -75,14 +71,14 @@ export default [
       'n/global-require': 'error',
       'n/no-extraneous-import': 'error',
       'n/prefer-node-protocol': 'error',
-      'import/extensions': ['off', 'ignorePackages'],
-      'import/export': 'off',
-      'import/namespace': 'off',
-      'import/no-deprecated': 'off',
-      'import/no-absolute-path': 'error',
-      'import/no-dynamic-require': 'error',
-      'import/no-self-import': 'error',
-      'import/order': [
+      'import-x/extensions': ['off', 'ignorePackages'],
+      'import-x/export': 'off',
+      'import-x/namespace': 'off',
+      'import-x/no-deprecated': 'off',
+      'import-x/no-absolute-path': 'error',
+      'import-x/no-dynamic-require': 'error',
+      'import-x/no-self-import': 'error',
+      'import-x/order': [
         'error',
         {
           named: true,
