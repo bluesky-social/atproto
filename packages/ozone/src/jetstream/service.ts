@@ -51,11 +51,11 @@ export interface CommitDeleteEvent extends EventBase {
   } & CommitBase
 }
 
-// The abort reason close() uses. A `CloseError` rather than a bare sentinel
-// because the client classifies the abort reason to decide how to end the socket:
-// only a CloseError (or a bare AbortError) asks for a polite close, anything else
-// destroys the connection. Its identity is also how start() tells our own
-// shutdown from a real failure.
+// The abort reason close() uses. Any abort closes the socket politely; a
+// `CloseError` rather than a bare sentinel because the reason picks the close
+// code sent to the peer — a CloseError names its own (1000 here), anything else
+// defaults to 1000 anyway, so this spells the intent out. Its identity is also
+// how start() tells our own shutdown from a real failure.
 const STOPPED = new CloseError(CloseCode.Normal, 'jetstream stopped', true)
 
 export class Jetstream {

@@ -212,10 +212,6 @@ function createTransportImpl<M extends DataMode>(
     }
   })
 
-  // The one place a connection ends. `ws` fires 'close' on every teardown path —
-  // a peer's close frame, our own close() or terminate(), a failed dial, even a
-  // socket error (verified across all four) — so settling the channel here, and
-  // only here, is what guarantees the consumer's iteration outlives the socket.
   // The one place a connection ends. `ws` emits 'close' on every teardown path — a
   // peer's close frame, our own close() or terminate(), a refused dial, a socket
   // error, even close() on a socket that is still connecting — so settling here,
