@@ -1,5 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { languages, mediaType } from '@hapi/accept'
+// @NOTE named imports don't work here
+// SyntaxError: The requested module '@hapi/accept' does not provide an export named 'languages'
+import * as accept from '@hapi/accept'
 import {
   type CookieSerializeOptions,
   parse as parseCookie,
@@ -231,14 +233,14 @@ function extractPort(req: IncomingMessage, ip: string): number {
 
 export function extractLocales(req: IncomingMessage) {
   const acceptLanguage = req.headers['accept-language']
-  return acceptLanguage ? languages(acceptLanguage) : []
+  return acceptLanguage ? accept.languages(acceptLanguage) : []
 }
 
 export function negotiateResponseContent<T extends string>(
   req: IncomingMessage,
   types: readonly T[],
 ): T | undefined {
-  const type = mediaType(req.headers['accept'], types)
+  const type = accept.mediaType(req.headers['accept'], types)
   if (type) return type as T
 
   return undefined
