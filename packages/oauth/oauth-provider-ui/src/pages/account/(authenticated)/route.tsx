@@ -127,19 +127,17 @@ function Page({
         }
         return ap.localeCompare(bp)
       })
-      .map(
-        ([subPath, page]): Explicit<AccountShellLink> => ({
-          to: ((basePath as string) === '/'
-            ? subPath
-            : subPath === '/'
-              ? basePath
-              : `${basePath}${subPath}`) as any,
-          title: page.title,
-          description: page.description,
-          hidden: page.hidden,
-          icon: page.icon,
-        }),
-      )
+      .map(([subPath, page]): Explicit<AccountShellLink> => ({
+        to: ((basePath as string) === '/'
+          ? subPath
+          : subPath === '/'
+            ? basePath
+            : `${basePath}${subPath}`) as any,
+        title: page.title,
+        description: page.description,
+        hidden: page.hidden,
+        icon: page.icon,
+      }))
   }, [subPages, basePath])
 
   return (

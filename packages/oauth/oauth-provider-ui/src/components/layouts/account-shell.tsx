@@ -87,7 +87,7 @@ export function AccountShell({
   const { logo, name, links: footerLinks } = useCustomizationData()
 
   const atBase = pathname === basePath
-  const titleString = typeof title === 'object' ? _(title) : title ?? name
+  const titleString = typeof title === 'object' ? _(title) : (title ?? name)
 
   const currentLink = links.find((link) => link.to === pathname)
   const pageTitle = currentLink?.title
