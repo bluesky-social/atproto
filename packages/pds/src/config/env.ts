@@ -47,8 +47,8 @@ export function readEnv() {
     successColorContrast: envStr('PDS_SUCCESS_COLOR_CONTRAST'),
     successColorHue: envInt('PDS_SUCCESS_COLOR_HUE'),
 
-    backgroundLightImage: envStr('PDS_BACKGROUND_LIGHT_IMAGE'),
-    backgroundDarkImage: envStr('PDS_BACKGROUND_DARK_IMAGE'),
+    backgroundLightUrl: envStr('PDS_BACKGROUND_LIGHT_URL'),
+    backgroundDarkUrl: envStr('PDS_BACKGROUND_DARK_URL'),
 
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),

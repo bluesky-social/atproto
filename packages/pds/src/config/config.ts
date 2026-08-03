@@ -298,8 +298,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       successHue: env.successColorHue,
     },
     background: {
-      light: env.backgroundLightImage,
-      dark: env.backgroundDarkImage,
+      light: env.backgroundLightUrl,
+      dark: env.backgroundDarkUrl,
     },
     links: [
       {
