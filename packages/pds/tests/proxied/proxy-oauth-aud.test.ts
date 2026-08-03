@@ -3,7 +3,7 @@ import type http from 'node:http'
 import type { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
 import express from 'express'
-import httpTerminator from 'http-terminator'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import type { Keypair } from '@atproto/crypto'
 import {
   type SeedClient,
@@ -35,7 +35,7 @@ describe('proxy oauth audience', () => {
   let sc: SeedClient
   let alice: string
   let upstream: ProxyServer
-  let terminator: httpTerminator.HttpTerminator
+  let terminator: HttpTerminator
   let serverUrl: string
 
   beforeAll(async () => {
@@ -94,7 +94,7 @@ describe('proxy oauth audience', () => {
     )
     const server = app.listen(0)
     await once(server, 'listening')
-    terminator = httpTerminator.createHttpTerminator({ server })
+    terminator = createHttpTerminator({ server })
     serverUrl = `http://localhost:${(server.address() as AddressInfo).port}`
   })
 
@@ -134,14 +134,14 @@ describe('proxy oauth audience', () => {
 })
 
 class ProxyServer {
-  private terminator: httpTerminator.HttpTerminator
+  private terminator: HttpTerminator
 
   constructor(
     server: http.Server,
     public url: string,
     public did: string,
   ) {
-    this.terminator = httpTerminator.createHttpTerminator({ server })
+    this.terminator = createHttpTerminator({ server })
   }
 
   static async create(

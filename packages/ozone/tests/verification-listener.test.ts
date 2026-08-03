@@ -1,7 +1,7 @@
 import { once } from 'node:events'
 import { createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
-import httpTerminator from 'http-terminator'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { type WebSocket, WebSocketServer } from 'ws'
 import type { AppBskyGraphVerification, AtpAgent } from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
@@ -13,11 +13,11 @@ describe('verification-listener', () => {
   let adminAgent: AtpAgent
   let jetstream: WebSocketServer
   let relay: WebSocket
-  let terminator: httpTerminator.HttpTerminator
+  let terminator: HttpTerminator
 
   beforeAll(async () => {
     const server = createServer()
-    terminator = httpTerminator.createHttpTerminator({ server })
+    terminator = createHttpTerminator({ server })
 
     await once(server.listen(0), 'listening')
     const jetstreamPort = (server.address() as AddressInfo).port

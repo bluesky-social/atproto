@@ -1,7 +1,6 @@
 import crypto from 'node:crypto'
 import type stream from 'node:stream'
-import fileType from 'file-type'
-const { fromStream: fileTypeFromStream } = fileType
+import { fromStream as fileTypeFromStream } from 'file-type'
 import PQueue from 'p-queue'
 import { SECOND, cloneStream, streamSize } from '@atproto/common'
 import {
