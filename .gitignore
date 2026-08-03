@@ -3,7 +3,6 @@ lerna-debug.log
 npm-debug.log
 yarn-error.log
 packages/**/dist
-packages/**/dist-demo
 .idea
 packages/*/coverage
 test.sqlite
