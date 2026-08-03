@@ -1,6 +1,6 @@
 import { Struct, Timestamp } from '@bufbuild/protobuf'
-// @NOTE does not support named imports
-import * as murmurhash from 'murmurhash'
+import * as MurmurhashModule from 'murmurhash'
+const Murmurhash = ((m) => m.default ?? m)(MurmurhashModule)
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
@@ -48,5 +48,5 @@ function getNotifId(viewer: string, seenAt: Date) {
     '::',
   )
 
-  return murmurhash.v3(key).toString(16)
+  return Murmurhash.v3(key).toString(16)
 }
