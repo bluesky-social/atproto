@@ -1,5 +1,12 @@
 # @atproto-labs/simple-store-memory
 
+## 0.2.6
+
+### Patch Changes
+
+- Updated dependencies [[`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c)]:
+  - @atproto-labs/simple-store@0.5.1
+
 ## 0.2.5
 
 ### Patch Changes
