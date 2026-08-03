@@ -65,11 +65,7 @@ export type IdentityEvent = {
 }
 
 export type RepoStatus =
-  | 'active'
-  | 'takendown'
-  | 'suspended'
-  | 'deactivated'
-  | 'deleted'
+  'active' | 'takendown' | 'suspended' | 'deactivated' | 'deleted'
 
 export type TapEvent = IdentityEvent | RecordEvent
 

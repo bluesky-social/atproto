@@ -56,13 +56,9 @@ export type IdentityHandler = (
 export type ErrorHandler = (err: Error) => void
 
 export type RecordHandler<R> =
-  | CreateHandler<R>
-  | UpdateHandler<R>
-  | PutHandler<R>
-  | DeleteHandler
+  CreateHandler<R> | UpdateHandler<R> | PutHandler<R> | DeleteHandler
 
 interface RegisteredHandler {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handler: RecordHandler<any>
   schema: RecordSchema
 }

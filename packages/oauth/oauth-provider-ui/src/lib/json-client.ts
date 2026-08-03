@@ -135,9 +135,7 @@ export class JsonClient<Endpoints extends EndpointDefinitions> {
 }
 
 export class JsonErrorResponse<P = unknown> extends Error {
-  name = 'JsonErrorResponse'
-
-  msg: MessageDescriptor = msg`Unexpected server response`
+  msg: MessageDescriptor
 
   constructor(
     public readonly payload: P,
@@ -145,5 +143,6 @@ export class JsonErrorResponse<P = unknown> extends Error {
     options?: ErrorOptions,
   ) {
     super(message, options)
+    this.msg = msg`Unexpected server response`
   }
 }

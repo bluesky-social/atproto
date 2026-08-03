@@ -12,8 +12,7 @@ import type { SimpleStore } from '@atproto-labs/simple-store'
 const subtle = globalThis.crypto?.subtle as SubtleCrypto | undefined
 
 const ReadableStream = globalThis.ReadableStream as
-  | typeof globalThis.ReadableStream
-  | undefined
+  typeof globalThis.ReadableStream | undefined
 
 export type DpopFetchWrapperOptions<C = FetchContext> = {
   key: Key

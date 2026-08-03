@@ -147,10 +147,7 @@ export interface ModSubject {
   isConvo(): this is ConvoSubject
   info(): SubjectInfo
   lex():
-    | $Typed<RepoRef>
-    | $Typed<StrongRef>
-    | $Typed<MessageRef>
-    | $Typed<ConvoRef>
+    $Typed<RepoRef> | $Typed<StrongRef> | $Typed<MessageRef> | $Typed<ConvoRef>
 }
 
 export class RepoSubject implements ModSubject {

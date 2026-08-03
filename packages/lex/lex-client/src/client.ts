@@ -423,7 +423,7 @@ export class Client {
       service:
         options.service === undefined && service != null && isService(service)
           ? service
-          : options.service ?? null,
+          : (options.service ?? null),
       labelers: new Set(options.labelers),
       // @NOTE when provided (including `null`), will override the class wide
       // Client.appLabelers

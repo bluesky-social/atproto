@@ -251,10 +251,7 @@ export const getScheduledActionStatus = (
 
 export type ScheduledActionType = 'takedown'
 export type ScheduledActionStatus =
-  | 'pending'
-  | 'executed'
-  | 'cancelled'
-  | 'failed'
+  'pending' | 'executed' | 'cancelled' | 'failed'
 
 const scheduledActionTypes = new Set(['takedown'])
 const scheduledActionStatuses = new Set([

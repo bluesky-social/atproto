@@ -47,8 +47,7 @@ export type ValidationFailure = LexValidationError
  * ```
  */
 export type ValidationResult<Value = unknown> =
-  | ValidationSuccess<Value>
-  | ValidationFailure
+  ValidationSuccess<Value> | ValidationFailure
 
 /**
  * Extracts the input type that a validator accepts.

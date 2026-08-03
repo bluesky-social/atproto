@@ -145,17 +145,12 @@ export class LocalViewer {
   }
 
   formatImageEmbed(embed: app.bsky.embed.images.Main) {
-    const images = embed.images.map(
-      (img): app.bsky.embed.images.ViewImage => ({
-        thumb: this.getImageUrl('feed_thumbnail', getBlobCidString(img.image)),
-        fullsize: this.getImageUrl(
-          'feed_fullsize',
-          getBlobCidString(img.image),
-        ),
-        aspectRatio: img.aspectRatio,
-        alt: img.alt,
-      }),
-    )
+    const images = embed.images.map((img): app.bsky.embed.images.ViewImage => ({
+      thumb: this.getImageUrl('feed_thumbnail', getBlobCidString(img.image)),
+      fullsize: this.getImageUrl('feed_fullsize', getBlobCidString(img.image)),
+      aspectRatio: img.aspectRatio,
+      alt: img.alt,
+    }))
     return app.bsky.embed.images.view.$build({ images })
   }
 

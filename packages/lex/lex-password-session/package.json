@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-password-session",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "license": "MIT",
   "description": "Password based client authentication for AT Lexicons",
   "keywords": [
@@ -37,7 +37,7 @@
   "devDependencies": {
     "@atproto/lex-builder": "workspace:^",
     "@atproto/lex-server": "workspace:^",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "codegen:lex": "node ./scripts/lex-build.mjs",

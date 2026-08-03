@@ -4,8 +4,7 @@ import type { AddressInfo } from 'node:net'
 import { setTimeout as sleep } from 'node:timers/promises'
 import * as plc from '@did-plc/lib'
 import express from 'express'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import type AtpAgent from '@atproto/api'
 import type { Keypair } from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
@@ -160,13 +159,13 @@ describe('proxy header', () => {
 })
 
 class ProxyServer {
-  private terminator: httpTerminator.HttpTerminator
+  private terminator: HttpTerminator
 
   constructor(
     server: http.Server,
     public did: string,
   ) {
-    this.terminator = httpTerminator.createHttpTerminator({ server })
+    this.terminator = createHttpTerminator({ server })
   }
 
   static async create(

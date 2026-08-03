@@ -94,8 +94,7 @@ const RETRY_ERRORS = new Set([
 export type Ref = ReferenceExpression<any, any>
 
 export type DbRef =
-  | RawBuilder<unknown>
-  | ReturnType<DynamicModule<unknown>['ref']>
+  RawBuilder<unknown> | ReturnType<DynamicModule<unknown>['ref']>
 
 export type AnyQb = SelectQueryBuilder<any, any, any>
 

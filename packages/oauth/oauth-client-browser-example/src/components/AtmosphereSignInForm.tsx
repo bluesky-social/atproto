@@ -1,10 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
-import { type JSX, useEffect, useState } from 'react'
+import { type JSX, useDeferredValue, useEffect, useState } from 'react'
 import { type HandleString, isHandleString } from '@atproto/lex'
-import { com } from '../lexicons.ts'
-import { useDebounced } from '../lib/use-debounced.ts'
-import { useBskyClient } from '../providers/BskyClientProvider.tsx'
-import { useLexQuery } from '../queries/use-lex-query.ts'
 import { Button } from './Button.tsx'
 
 function ifHandleString<T extends string>(
@@ -37,22 +33,14 @@ export function AtmosphereSignInForm({
   role = 'dialog',
   ...props
 }: AtmosphereSignInFormProps) {
-  const client = useBskyClient()
   const [value, setValue] = useState('')
 
   const handleInput =
     !value.includes(':') && value.includes('.') && value.length > 3
       ? ifHandleString(value.replace('@', '').toLowerCase())
       : undefined
-  const handle = useDebounced(handleInput, 750)
+  const handle = useDeferredValue(handleInput)
   const handleDebouncing = handle != null && handle !== handleInput
-
-  const resolveMutation = useLexQuery(
-    client,
-    com.atproto.identity.resolveHandle,
-    handle ? { handle } : false,
-    { enabled: !handleDebouncing },
-  )
 
   const signInMutation = useMutation({
     mutationFn: signIn,
@@ -77,11 +65,6 @@ export function AtmosphereSignInForm({
         inert={signInMutation.isPending}
         onSubmit={(event) => {
           event.preventDefault()
-
-          // handle does not resolve to a DID, no point in submitting
-          if (handle && !resolveMutation.data) {
-            return
-          }
 
           if (event.currentTarget.reportValidity()) {
             signInMutation.mutate(value.replace('@', '').toLowerCase())
@@ -119,26 +102,15 @@ export function AtmosphereSignInForm({
             />
             <Button
               type="submit"
-              loading={
-                signInMutation.isPending ||
-                resolveMutation.isLoading ||
-                handleDebouncing
-              }
-              disabled={!value || (handle && !resolveMutation.data)}
+              disabled={!value || handleDebouncing}
+              loading={signInMutation.isPending}
             >
               Login
             </Button>
           </div>
         </fieldset>
 
-        {signInMutation.error ? (
-          <p>{String(signInMutation.error)}</p>
-        ) : handle != null &&
-          handle === handleInput &&
-          !resolveMutation.isLoading &&
-          resolveMutation.error ? (
-          <p>{resolveMutation.error.message}</p>
-        ) : null}
+        {signInMutation.error && <p>{String(signInMutation.error)}</p>}
       </form>
 
       {pdsOperatorUrl && (

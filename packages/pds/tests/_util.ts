@@ -1,7 +1,6 @@
 import { type RequestListener, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { createHttpTerminator } from 'http-terminator'
 import { type ToolsOzoneModerationDefs, lexToJson } from '@atproto/api'
 import { isCidString } from '@atproto/lex'
 import { isCid, isPlainObject } from '@atproto/lex-data'
@@ -168,7 +167,7 @@ export async function startServer(listener: RequestListener) {
       .once('listening', onListen)
       .once('error', onError)
 
-    const terminator = httpTerminator.createHttpTerminator({ server })
+    const terminator = createHttpTerminator({ server })
   })
 }
 

@@ -48,12 +48,8 @@ For procedures, pass the body as `input`:
 
 ```ts
 await xrpc('https://example.com', someProcedure, {
-  input: {
-    /* ... */
-  },
-  headers: {
-    /* ... */
-  },
+  input: {/* ... */},
+  headers: {/* ... */},
 })
 ```
 

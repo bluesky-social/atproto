@@ -69,8 +69,7 @@ type RecordHostingView = {
 }
 
 export type ModerationSubjectHostingView =
-  | AccountHostingView
-  | RecordHostingView
+  AccountHostingView | RecordHostingView
 
 export type ReporterStats = {
   did: string

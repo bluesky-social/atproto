@@ -7,10 +7,7 @@ import {
   json,
   text,
 } from 'express'
-// eslint-disable-next-line import/default, import/no-named-as-default-member
-import mimeTypes from 'mime-types'
-// eslint-disable-next-line import/no-named-as-default-member
-const { contentType } = mimeTypes
+import { contentType } from 'mime-types'
 import { MaxSizeChecker, createDecoders } from '@atproto/common'
 import { jsonToLex } from '@atproto/lex-json'
 import { l } from '@atproto/lex-schema'

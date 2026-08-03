@@ -1,5 +1,19 @@
 # @atproto/lexicon-resolver
 
+## 0.4.13
+
+### Patch Changes
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update vitest dependencies
+
+- Updated dependencies [[`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c)]:
+  - @atproto-labs/fetch-node@0.3.7
+  - @atproto/lex-document@0.1.8
+  - @atproto/lex@0.3.3
+  - @atproto/syntax@0.7.3
+  - @atproto/repo@0.10.8
+  - @atproto/identity@0.5.8
+
 ## 0.4.12
 
 ### Patch Changes

@@ -127,9 +127,9 @@ export function AuthenticationProvider({
       )
       // @NOTE There is only one session per did
       const matchingSession = currentSession
-        ? matchingSessions.find(
+        ? (matchingSessions.find(
             ({ account }) => account.did === currentSession.account.did,
-          ) ?? null
+          ) ?? null)
         : null
 
       return [false, matchingSession, matchingSessions]
