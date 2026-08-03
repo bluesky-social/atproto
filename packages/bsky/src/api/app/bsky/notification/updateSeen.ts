@@ -1,5 +1,5 @@
 import { Struct, Timestamp } from '@bufbuild/protobuf'
-import murmur from 'murmurhash'
+import { v3 as murmurHash3 } from 'murmurhash'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
@@ -47,5 +47,5 @@ function getNotifId(viewer: string, seenAt: Date) {
     '::',
   )
 
-  return murmur.v3(key).toString(16)
+  return murmurHash3(key).toString(16)
 }

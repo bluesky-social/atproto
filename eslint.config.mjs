@@ -1,7 +1,7 @@
 import js from '@eslint/js'
 import tseslint from '@typescript-eslint/eslint-plugin'
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
-import importPlugin from 'eslint-plugin-import-x'
+import { importX } from 'eslint-plugin-import-x'
 import n from 'eslint-plugin-n'
 import prettierRecommended from 'eslint-plugin-prettier/recommended'
 import globals from 'globals'
@@ -41,8 +41,8 @@ export default [
   js.configs.recommended,
   ...tseslint.configs['flat/recommended'],
   prettierRecommended,
-  importPlugin.flatConfigs.recommended,
-  importPlugin.flatConfigs.typescript,
+  importX.flatConfigs.recommended,
+  importX.flatConfigs.typescript,
   {
     plugins: { n },
     settings: {
