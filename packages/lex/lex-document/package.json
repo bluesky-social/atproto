@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@atproto/lex-data": "workspace:^",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "build": "tsgo --build tsconfig.build.json",

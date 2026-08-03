@@ -85,7 +85,7 @@
     "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.15.5",
     "@types/qs": "^6.9.7",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "codegen:buf": "buf generate ../bsync/proto && buf generate ./proto",

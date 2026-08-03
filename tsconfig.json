@@ -17,7 +17,7 @@
     { "path": "./packages/internal/handle-resolver" },
     { "path": "./packages/internal/handle-resolver-node" },
     { "path": "./packages/internal/pipe" },
-    { "path": "./packages/internal/rollup-plugin-bundle-manifest" },
+    { "path": "./packages/internal/rolldown-plugin-bundle-manifest" },
     { "path": "./packages/internal/simple-store" },
     { "path": "./packages/internal/simple-store-memory" },
     { "path": "./packages/internal/xrpc-utils" },
