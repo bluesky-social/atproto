@@ -20,6 +20,7 @@ allowBuilds:
   '@datadog/native-metrics': false
   '@datadog/pprof': false
   core-js: false
+  rolldown: true
 
 overrides:
   cookie: ^0.7.2
