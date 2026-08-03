@@ -1,8 +1,7 @@
 import { once } from 'node:events'
 import { type IncomingMessage, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { createHttpTerminator } from 'http-terminator'
 import { type ServerOptions, type WebSocket, WebSocketServer } from 'ws'
 
 /**
@@ -22,7 +21,7 @@ export async function startServer(
   port = 0,
 ): Promise<{ url: string } & AsyncDisposable> {
   const server = createServer()
-  const { terminate } = httpTerminator.createHttpTerminator({ server })
+  const { terminate } = createHttpTerminator({ server })
   const wss = new WebSocketServer({ ...wssOptions, server })
   wss.on('connection', onConnection)
   await once(server.listen(port), 'listening')
