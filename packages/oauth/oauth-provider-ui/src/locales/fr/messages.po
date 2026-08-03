@@ -1,17 +1,17 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2025-02-27 14:03+0100\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"X-Generator: @lingui/cli\n"
-"Language: fr\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-02-27 14:03+0100\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: \n"
+"X-Generator: Poedit 3.9\n"
 
 #: src/pages/account/(authenticated)/about/page.tsx:136
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
@@ -167,7 +167,7 @@ msgstr "N'importe quel service"
 msgid "Apps"
 msgstr "Applications"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:60
+#: src/pages/account/(authenticated)/apps/page.tsx:61
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr "Les applications peuvent accéder à votre compte en arrière-plan (pour vérifier les notifications, synchroniser les données, etc.) même lorsque vous ne les utilisez pas activement. C'est un comportement normal qui sera reflété dans l'heure de \"dernier accès\" affichée ci-dessus."
 
@@ -193,7 +193,7 @@ msgid "Authorize"
 msgstr "Autoriser"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:140
+#: src/pages/account/(authenticated)/apps/page.tsx:144
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Autorisé le {0}"
@@ -206,7 +206,7 @@ msgstr "Retour"
 
 #: src/components/forms/input-handle-default.tsx:110
 msgid "Between {minLength} and {maxLength, plural, other {# characters}}"
-msgstr ""
+msgstr "Entre {minLength} et {maxLength, plural, other {# caractères}}"
 
 #: src/components/utils/scope-description.tsx:757
 msgid "Blob storage"
@@ -230,7 +230,7 @@ msgstr "En cliquant sur <0>Autoriser</0>, vous accorderez à cette application l
 
 #: src/components/sign-up-disclaimer.tsx:27
 msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
-msgstr ""
+msgstr "En créant un compte, vous acceptez les <0>Conditions d'utilisation</0> et la <1>Politique de confidentialité</1> de ce service."
 
 #: src/components/utils/scope-description.tsx:583
 msgctxt "RPC lxm"
@@ -246,7 +246,7 @@ msgstr "Appeler"
 msgid "Cancel"
 msgstr "Annuler"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:131
+#: src/pages/account/(authenticated)/devices/page.tsx:134
 msgid "Cannot remove current device"
 msgstr "Impossible de supprimer l'appareil en cours d'utilisation"
 
@@ -409,7 +409,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Refuser l'accès"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:161
+#: src/pages/account/(authenticated)/apps/page.tsx:165
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
 msgstr "Détails"
@@ -528,8 +528,8 @@ msgstr "Échec de la désactivation du compte"
 msgid "Failed to delete account"
 msgstr "Échec de la suppression du compte"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:37
-#: src/pages/account/(authenticated)/apps/page.tsx:36
+#: src/pages/account/(authenticated)/devices/page.tsx:38
+#: src/pages/account/(authenticated)/apps/page.tsx:37
 msgid "Failed to load connected apps"
 msgstr "Échec du chargement des applications connectées"
 
@@ -692,7 +692,7 @@ msgstr "Pseudo invalide"
 msgid "Invite code"
 msgstr "Code d'invitation"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:70
+#: src/pages/account/(authenticated)/apps/page.tsx:71
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "Il semble que vous n'ayez pas encore utilisé ce compte pour vous connecter à des applications."
 
@@ -701,51 +701,51 @@ msgstr "Il semble que vous n'ayez pas encore utilisé ce compte pour vous connec
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "Il semble que votre navigateur n'accepte pas les cookies. Appuyez sur \"Continuer\" pour réessayer. Si l'erreur persiste, veuillez vous assurer que vos paramètres de confidentialité autorisent les cookies pour le site \"{0}\"."
 
-#. placeholder {0}: dateAgo.count
-#: src/pages/account/(authenticated)/apps/page.tsx:109
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx:94
 msgid "Last accessed {0, plural, one {# minute} other {# minutes}} ago"
-msgstr ""
+msgstr "Dernier accès il y a {0, plural, one {# minute} other {# minutes}}"
 
-#. placeholder {1}: dateAgo.count
-#: src/pages/account/(authenticated)/apps/page.tsx:114
+#. placeholder {1}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx:96
 msgid "Last accessed {1, plural, one {# hour} other {# hours}} ago"
-msgstr ""
+msgstr "Dernier accès il y a {1, plural, one {# heure} other {# heures}}"
 
-#. placeholder {2}: dateAgo.count
-#: src/pages/account/(authenticated)/apps/page.tsx:121
+#. placeholder {2}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx:100
 msgid "Last accessed {2, plural, one {# day} other {# days}} ago"
-msgstr ""
+msgstr "Dernier accès il y a {2, plural, one {# jour} other {# jours}}"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:107
+#: src/pages/account/(authenticated)/apps/page.tsx:92
 msgid "Last accessed just now"
-msgstr ""
+msgstr "Dernier accès à l'instant"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:119
+#: src/pages/account/(authenticated)/apps/page.tsx:98
 msgid "Last accessed yesterday"
-msgstr ""
+msgstr "Dernier accès hier"
 
-#. placeholder {0}: dateAgo.count
-#: src/pages/account/(authenticated)/devices/page.tsx:90
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx:87
 msgid "Last seen {0, plural, one {# minute} other {# minutes}} ago"
-msgstr ""
+msgstr "Vu il y a {0, plural, one {# minute} other {# minutes}}"
 
-#. placeholder {1}: dateAgo.count
-#: src/pages/account/(authenticated)/devices/page.tsx:95
+#. placeholder {1}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx:89
 msgid "Last seen {1, plural, one {# hour} other {# hours}} ago"
-msgstr ""
+msgstr "Vu il y a {1, plural, one {# heure} other {# heures}}"
 
-#. placeholder {2}: dateAgo.count
-#: src/pages/account/(authenticated)/devices/page.tsx:102
+#. placeholder {2}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx:93
 msgid "Last seen {2, plural, one {# day} other {# days}} ago"
-msgstr ""
+msgstr "Vu il y a {2, plural, one {# jour} other {# jours}}"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:88
+#: src/pages/account/(authenticated)/devices/page.tsx:85
 msgid "Last seen just now"
-msgstr ""
+msgstr "Vu à l'instant"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:100
+#: src/pages/account/(authenticated)/devices/page.tsx:91
 msgid "Last seen yesterday"
-msgstr ""
+msgstr "Vu hier"
 
 #: src/components/update-email-dialog.tsx:75
 msgctxt "verify email"
@@ -760,7 +760,7 @@ msgstr "Réinitialisons votre mot de passe !"
 msgid "Logo"
 msgstr "Logo"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:66
+#: src/pages/account/(authenticated)/devices/page.tsx:67
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Il semble que vous n'ayez de session active sur aucun autre appareil."
 
@@ -879,7 +879,7 @@ msgstr "Mot de passe mis à jour !"
 
 #: src/components/forms/input-new-password.tsx:42
 msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
-msgstr ""
+msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH, plural, other {# caractères}}"
 
 #: src/components/utils/error-details.tsx:55
 msgctxt "Error"
@@ -933,7 +933,7 @@ msgstr "Veuillez réessayer dans un instant."
 
 #: src/components/forms/button-cooldown.tsx:77
 msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
-msgstr ""
+msgstr "Veuillez patienter {remainingSeconds, plural, one {# seconde} other {# secondes}} avant de réessayer."
 
 #: src/components/utils/link-title.tsx:17
 msgid "Privacy Policy"
@@ -990,8 +990,8 @@ msgstr "Réinitialiser le mot de passe"
 msgid "Reset your password"
 msgstr "Réinitialisez votre mot de passe"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:33
-#: src/pages/account/(authenticated)/apps/page.tsx:32
+#: src/pages/account/(authenticated)/devices/page.tsx:34
+#: src/pages/account/(authenticated)/apps/page.tsx:33
 #: src/components/utils/error-card.tsx:85
 msgid "Retry"
 msgstr "Réessayer"
@@ -1057,7 +1057,7 @@ msgstr "Se connecter en tant que..."
 msgid "Sign in to an account that is not listed"
 msgstr "Se connecter à un compte qui n'est pas listé"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:134
+#: src/pages/account/(authenticated)/devices/page.tsx:137
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Déconnecter"
@@ -1173,7 +1173,7 @@ msgstr "Le nom d'utilisateur est invalide"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "Il n'y a pas de limite de temps pour la désactivation du compte, revenez quand vous le souhaitez."
 
-#: src/pages/account/(authenticated)/apps/page.tsx:44
+#: src/pages/account/(authenticated)/apps/page.tsx:45
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "Ces applications ont accès à votre compte. Une application peut apparaître plusieurs fois si vous l'utilisez sur différents appareils. Vous pouvez révoquer l'accès pour déconnecter l'application jusqu'à ce que vous vous reconnectiez."
 
@@ -1252,7 +1252,7 @@ msgstr "Déconnecté"
 msgid "Unexpected server response"
 msgstr "Réponse inattendue du serveur"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:114
+#: src/pages/account/(authenticated)/devices/page.tsx:117
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Agent utilisateur inconnu"
@@ -1456,7 +1456,7 @@ msgstr "Votre compte est actuellement désactivé."
 msgid "Your account is now deactivated."
 msgstr "Votre compte est maintenant désactivé."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:45
+#: src/pages/account/(authenticated)/devices/page.tsx:46
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "Une session est ouverte sur les appareils listés ci-dessous. Si votre compte a été compromis, déconnectez tous les appareils, changez votre mot de passe et vérifiez vos <0>applications</0> connectées."
 

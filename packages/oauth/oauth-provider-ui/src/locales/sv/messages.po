@@ -167,7 +167,7 @@ msgstr "Vilken tjänst som helst"
 msgid "Apps"
 msgstr "Appar"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:60
+#: src/pages/account/(authenticated)/apps/page.tsx:61
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr "Appar kan utföra aktiviteter på ditt konto i bakgrunden (t.ex. för att titta efter notiser eller synkronisera data) även när du själv inte använder dem aktivt. Det är en normal företeelse som också påverkar tidsangivelserna för ”senaste aktivitet” ovan."
 
@@ -193,7 +193,7 @@ msgid "Authorize"
 msgstr "Auktorisera"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:140
+#: src/pages/account/(authenticated)/apps/page.tsx:144
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Auktoriserades {0}"
@@ -246,7 +246,7 @@ msgstr "Anrop"
 msgid "Cancel"
 msgstr "Avbryt"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:131
+#: src/pages/account/(authenticated)/devices/page.tsx:134
 msgid "Cannot remove current device"
 msgstr "Det går inte att ta bort den enhet som du använder just nu"
 
@@ -409,7 +409,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Neka åtkomst"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:161
+#: src/pages/account/(authenticated)/apps/page.tsx:165
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
 msgstr "Detaljer"
@@ -528,8 +528,8 @@ msgstr "Det gick inte att inaktivera kontot"
 msgid "Failed to delete account"
 msgstr "Det gick inte att radera kontot"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:37
-#: src/pages/account/(authenticated)/apps/page.tsx:36
+#: src/pages/account/(authenticated)/devices/page.tsx:38
+#: src/pages/account/(authenticated)/apps/page.tsx:37
 msgid "Failed to load connected apps"
 msgstr "Det gick inte att läsa in anslutna appar"
 
@@ -692,7 +692,7 @@ msgstr "Ogiltigt användarnamn"
 msgid "Invite code"
 msgstr "Inbjudningskod"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:70
+#: src/pages/account/(authenticated)/apps/page.tsx:71
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "Det verkar som att du inte har använt det här kontot för att logga in på någon app ännu."
 
@@ -701,49 +701,49 @@ msgstr "Det verkar som att du inte har använt det här kontot för att logga in
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "Det verkar som att din webbläsare inte accepterar cookies. Klicka på ”Fortsätt” för att försöka igen. Om felet kvarstår, kontrollera att dina sekretessinställningar tillåter cookies för webbplatsen ”{0}”."
 
-#. placeholder {0}: dateAgo.count
-#: src/pages/account/(authenticated)/apps/page.tsx:109
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx:94
 msgid "Last accessed {0, plural, one {# minute} other {# minutes}} ago"
 msgstr ""
 
-#. placeholder {1}: dateAgo.count
-#: src/pages/account/(authenticated)/apps/page.tsx:114
+#. placeholder {1}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx:96
 msgid "Last accessed {1, plural, one {# hour} other {# hours}} ago"
 msgstr ""
 
-#. placeholder {2}: dateAgo.count
-#: src/pages/account/(authenticated)/apps/page.tsx:121
+#. placeholder {2}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx:100
 msgid "Last accessed {2, plural, one {# day} other {# days}} ago"
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:107
+#: src/pages/account/(authenticated)/apps/page.tsx:92
 msgid "Last accessed just now"
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx:119
+#: src/pages/account/(authenticated)/apps/page.tsx:98
 msgid "Last accessed yesterday"
 msgstr ""
 
-#. placeholder {0}: dateAgo.count
-#: src/pages/account/(authenticated)/devices/page.tsx:90
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx:87
 msgid "Last seen {0, plural, one {# minute} other {# minutes}} ago"
 msgstr ""
 
-#. placeholder {1}: dateAgo.count
-#: src/pages/account/(authenticated)/devices/page.tsx:95
+#. placeholder {1}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx:89
 msgid "Last seen {1, plural, one {# hour} other {# hours}} ago"
 msgstr ""
 
-#. placeholder {2}: dateAgo.count
-#: src/pages/account/(authenticated)/devices/page.tsx:102
+#. placeholder {2}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx:93
 msgid "Last seen {2, plural, one {# day} other {# days}} ago"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:88
+#: src/pages/account/(authenticated)/devices/page.tsx:85
 msgid "Last seen just now"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:100
+#: src/pages/account/(authenticated)/devices/page.tsx:91
 msgid "Last seen yesterday"
 msgstr ""
 
@@ -760,7 +760,7 @@ msgstr "Låt oss få ditt lösenord återställt!"
 msgid "Logo"
 msgstr "Logga"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:66
+#: src/pages/account/(authenticated)/devices/page.tsx:67
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Det ser ut som att du inte är inloggad på någon annan enhet."
 
@@ -990,8 +990,8 @@ msgstr "Återställ lösenord"
 msgid "Reset your password"
 msgstr "Återställ ditt lösenord"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:33
-#: src/pages/account/(authenticated)/apps/page.tsx:32
+#: src/pages/account/(authenticated)/devices/page.tsx:34
+#: src/pages/account/(authenticated)/apps/page.tsx:33
 #: src/components/utils/error-card.tsx:85
 msgid "Retry"
 msgstr "Försök igen"
@@ -1057,7 +1057,7 @@ msgstr "Logga in som…"
 msgid "Sign in to an account that is not listed"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx:134
+#: src/pages/account/(authenticated)/devices/page.tsx:137
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Logga ut"
@@ -1173,7 +1173,7 @@ msgstr "Användarnamnet är ogiltigt"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "Det finns ingen gräns för hur länge ett konto kan vara inaktiverat. Kom tillbaka när du vill."
 
-#: src/pages/account/(authenticated)/apps/page.tsx:44
+#: src/pages/account/(authenticated)/apps/page.tsx:45
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "De här apparna har åtkomst till ditt konto. En app kan visas flera gånger om du använder den på olika enheter. Återkalla åtkomsten för att logga ut dig själv från appen. Därefter kan du ge ny åtkomst genom att logga in igen."
 
@@ -1252,7 +1252,7 @@ msgstr "Behörighet saknas"
 msgid "Unexpected server response"
 msgstr "Oväntat svar från server"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:114
+#: src/pages/account/(authenticated)/devices/page.tsx:117
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Okänd användaragent"
@@ -1456,7 +1456,7 @@ msgstr "Ditt konto är för närvarande inaktiverat."
 msgid "Your account is now deactivated."
 msgstr "Ditt konto är nu inaktiverat."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:45
+#: src/pages/account/(authenticated)/devices/page.tsx:46
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "Ditt konto är inloggat på enheterna i listan nedan. Om säkerheten för ditt konto har äventyrats, logga ut från alla enheter, byt lösenord och kontrollera dina anslutna appar."
 

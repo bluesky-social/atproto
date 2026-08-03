@@ -167,7 +167,7 @@ msgstr "Any service"
 msgid "Apps"
 msgstr "Apps"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:60
+#: src/pages/account/(authenticated)/apps/page.tsx:61
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 msgstr "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
 
@@ -193,7 +193,7 @@ msgid "Authorize"
 msgstr "Authorize"
 
 #. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
-#: src/pages/account/(authenticated)/apps/page.tsx:140
+#: src/pages/account/(authenticated)/apps/page.tsx:144
 msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Authorized on {0}"
@@ -246,7 +246,7 @@ msgstr "Call"
 msgid "Cancel"
 msgstr "Cancel"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:131
+#: src/pages/account/(authenticated)/devices/page.tsx:134
 msgid "Cannot remove current device"
 msgstr "Cannot remove current device"
 
@@ -409,7 +409,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Deny access"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:161
+#: src/pages/account/(authenticated)/apps/page.tsx:165
 #: src/components/utils/description-card.tsx:70
 msgid "Details"
 msgstr "Details"
@@ -528,8 +528,8 @@ msgstr "Failed to deactivate account"
 msgid "Failed to delete account"
 msgstr "Failed to delete account"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:37
-#: src/pages/account/(authenticated)/apps/page.tsx:36
+#: src/pages/account/(authenticated)/devices/page.tsx:38
+#: src/pages/account/(authenticated)/apps/page.tsx:37
 msgid "Failed to load connected apps"
 msgstr "Failed to load connected apps"
 
@@ -692,7 +692,7 @@ msgstr "Invalid Handle"
 msgid "Invite code"
 msgstr "Invite code"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:70
+#: src/pages/account/(authenticated)/apps/page.tsx:71
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "It appears that you haven’t used this account to sign in to any apps yet."
 
@@ -701,49 +701,49 @@ msgstr "It appears that you haven’t used this account to sign in to any apps y
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 
-#. placeholder {0}: dateAgo.count
-#: src/pages/account/(authenticated)/apps/page.tsx:109
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx:94
 msgid "Last accessed {0, plural, one {# minute} other {# minutes}} ago"
 msgstr "Last accessed {0, plural, one {# minute} other {# minutes}} ago"
 
-#. placeholder {1}: dateAgo.count
-#: src/pages/account/(authenticated)/apps/page.tsx:114
+#. placeholder {1}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx:96
 msgid "Last accessed {1, plural, one {# hour} other {# hours}} ago"
 msgstr "Last accessed {1, plural, one {# hour} other {# hours}} ago"
 
-#. placeholder {2}: dateAgo.count
-#: src/pages/account/(authenticated)/apps/page.tsx:121
+#. placeholder {2}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx:100
 msgid "Last accessed {2, plural, one {# day} other {# days}} ago"
 msgstr "Last accessed {2, plural, one {# day} other {# days}} ago"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:107
+#: src/pages/account/(authenticated)/apps/page.tsx:92
 msgid "Last accessed just now"
 msgstr "Last accessed just now"
 
-#: src/pages/account/(authenticated)/apps/page.tsx:119
+#: src/pages/account/(authenticated)/apps/page.tsx:98
 msgid "Last accessed yesterday"
 msgstr "Last accessed yesterday"
 
-#. placeholder {0}: dateAgo.count
-#: src/pages/account/(authenticated)/devices/page.tsx:90
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx:87
 msgid "Last seen {0, plural, one {# minute} other {# minutes}} ago"
 msgstr "Last seen {0, plural, one {# minute} other {# minutes}} ago"
 
-#. placeholder {1}: dateAgo.count
-#: src/pages/account/(authenticated)/devices/page.tsx:95
+#. placeholder {1}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx:89
 msgid "Last seen {1, plural, one {# hour} other {# hours}} ago"
 msgstr "Last seen {1, plural, one {# hour} other {# hours}} ago"
 
-#. placeholder {2}: dateAgo.count
-#: src/pages/account/(authenticated)/devices/page.tsx:102
+#. placeholder {2}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx:93
 msgid "Last seen {2, plural, one {# day} other {# days}} ago"
 msgstr "Last seen {2, plural, one {# day} other {# days}} ago"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:88
+#: src/pages/account/(authenticated)/devices/page.tsx:85
 msgid "Last seen just now"
 msgstr "Last seen just now"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:100
+#: src/pages/account/(authenticated)/devices/page.tsx:91
 msgid "Last seen yesterday"
 msgstr "Last seen yesterday"
 
@@ -760,7 +760,7 @@ msgstr "Let's get your password reset!"
 msgid "Logo"
 msgstr "Logo"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:66
+#: src/pages/account/(authenticated)/devices/page.tsx:67
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Looks like you aren't logged in on any other devices."
 
@@ -990,8 +990,8 @@ msgstr "Reset Password"
 msgid "Reset your password"
 msgstr "Reset your password"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:33
-#: src/pages/account/(authenticated)/apps/page.tsx:32
+#: src/pages/account/(authenticated)/devices/page.tsx:34
+#: src/pages/account/(authenticated)/apps/page.tsx:33
 #: src/components/utils/error-card.tsx:85
 msgid "Retry"
 msgstr "Retry"
@@ -1057,7 +1057,7 @@ msgstr "Sign in as..."
 msgid "Sign in to an account that is not listed"
 msgstr "Sign in to an account that is not listed"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:134
+#: src/pages/account/(authenticated)/devices/page.tsx:137
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Sign out"
@@ -1173,7 +1173,7 @@ msgstr "The username is invalid"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "There is no time limit for account deactivation, come back any time."
 
-#: src/pages/account/(authenticated)/apps/page.tsx:44
+#: src/pages/account/(authenticated)/apps/page.tsx:45
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 
@@ -1252,7 +1252,7 @@ msgstr "Unauthorized"
 msgid "Unexpected server response"
 msgstr "Unexpected server response"
 
-#: src/pages/account/(authenticated)/devices/page.tsx:114
+#: src/pages/account/(authenticated)/devices/page.tsx:117
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Unknown user agent"
@@ -1456,7 +1456,7 @@ msgstr "Your account is currently deactivated."
 msgid "Your account is now deactivated."
 msgstr "Your account is now deactivated."
 
-#: src/pages/account/(authenticated)/devices/page.tsx:45
+#: src/pages/account/(authenticated)/devices/page.tsx:46
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 
