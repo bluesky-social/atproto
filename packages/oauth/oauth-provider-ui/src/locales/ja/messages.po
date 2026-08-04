@@ -15,15 +15,15 @@ msgstr ""
 
 #: src/components/utils/date-ago.tsx
 msgid "{deltaDays} days ago"
-msgstr ""
+msgstr "{deltaDays} 日前"
 
 #: src/components/utils/date-ago.tsx
 msgid "{deltaHours} hours ago"
-msgstr ""
+msgstr "{deltaHours} 時間前"
 
 #: src/components/utils/date-ago.tsx
 msgid "{deltaMinutes} minutes ago"
-msgstr ""
+msgstr "{deltaMinutes} 分前"
 
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
@@ -59,11 +59,11 @@ msgstr "<あなたのドメイン>"
 
 #: src/components/utils/date-ago.tsx
 msgid "1 hour ago"
-msgstr ""
+msgstr "1時間前"
 
 #: src/components/utils/date-ago.tsx
 msgid "1 minute ago"
-msgstr ""
+msgstr "1分前"
 
 #: src/components/sign-in-form.tsx
 msgid "2FA Confirmation"
@@ -728,7 +728,7 @@ msgstr "あなたのブラウザがクッキーを受け入れていないよう
 
 #: src/components/utils/date-ago.tsx
 msgid "just now"
-msgstr ""
+msgstr "たった今"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "OAuthApp"
@@ -1412,7 +1412,7 @@ msgstr "はい、アカウントを再有効化します"
 
 #: src/components/utils/date-ago.tsx
 msgid "yesterday"
-msgstr ""
+msgstr "昨日"
 
 #: src/components/redirecting-view.tsx
 msgid "You are being redirected..."

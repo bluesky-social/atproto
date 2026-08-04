@@ -15,15 +15,15 @@ msgstr ""
 
 #: src/components/utils/date-ago.tsx
 msgid "{deltaDays} days ago"
-msgstr ""
+msgstr "{deltaDays}일 전"
 
 #: src/components/utils/date-ago.tsx
 msgid "{deltaHours} hours ago"
-msgstr ""
+msgstr "{deltaHours}시간 전"
 
 #: src/components/utils/date-ago.tsx
 msgid "{deltaMinutes} minutes ago"
-msgstr ""
+msgstr "{deltaMinutes}분 전"
 
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
@@ -59,11 +59,11 @@ msgstr ""
 
 #: src/components/utils/date-ago.tsx
 msgid "1 hour ago"
-msgstr ""
+msgstr "1시간 전"
 
 #: src/components/utils/date-ago.tsx
 msgid "1 minute ago"
-msgstr ""
+msgstr "1분 전"
 
 #: src/components/sign-in-form.tsx
 msgid "2FA Confirmation"
@@ -719,7 +719,7 @@ msgstr "브라우저에서 쿠키를 허용하지 않는 것 같습니다. 다�
 
 #: src/components/utils/date-ago.tsx
 msgid "just now"
-msgstr ""
+msgstr "방금 전"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "OAuthApp"
@@ -1403,7 +1403,7 @@ msgstr ""
 
 #: src/components/utils/date-ago.tsx
 msgid "yesterday"
-msgstr ""
+msgstr "어제"
 
 #: src/components/redirecting-view.tsx
 msgid "You are being redirected..."

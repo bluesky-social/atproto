@@ -15,15 +15,15 @@ msgstr ""
 
 #: src/components/utils/date-ago.tsx
 msgid "{deltaDays} days ago"
-msgstr ""
+msgstr "{deltaDays} dagar sedan"
 
 #: src/components/utils/date-ago.tsx
 msgid "{deltaHours} hours ago"
-msgstr ""
+msgstr "{deltaHours} timmar sedan"
 
 #: src/components/utils/date-ago.tsx
 msgid "{deltaMinutes} minutes ago"
-msgstr ""
+msgstr "{deltaMinutes} minuter sedan"
 
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
@@ -59,11 +59,11 @@ msgstr "<din-domän>"
 
 #: src/components/utils/date-ago.tsx
 msgid "1 hour ago"
-msgstr ""
+msgstr "1 timme sedan"
 
 #: src/components/utils/date-ago.tsx
 msgid "1 minute ago"
-msgstr ""
+msgstr "1 minut sedan"
 
 #: src/components/sign-in-form.tsx
 msgid "2FA Confirmation"
@@ -728,7 +728,7 @@ msgstr "Det verkar som att din webbläsare inte accepterar cookies. Klicka på �
 
 #: src/components/utils/date-ago.tsx
 msgid "just now"
-msgstr ""
+msgstr "nyss"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "OAuthApp"
@@ -1412,7 +1412,7 @@ msgstr "Ja, återaktivera mitt konto"
 
 #: src/components/utils/date-ago.tsx
 msgid "yesterday"
-msgstr ""
+msgstr "igår"
 
 #: src/components/redirecting-view.tsx
 msgid "You are being redirected..."
