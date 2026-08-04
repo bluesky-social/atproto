@@ -78,7 +78,7 @@ The lexicon JSON schemas are derived into TypeScript runtime schemas by `@atprot
 
 - Node ≥22 runtime floor; build/dev default to Node 24 (`.nvmrc`). Use `node --enable-source-maps` for production-style runs.
 - TypeScript compilation uses `tsgo` (TS7, `@typescript/native-preview`), not `tsc`. There is no per-package `typescript` devDependency — `tsgo` is hoisted at the root.
-- **Every package touched by a change needs a changeset entry.** Add a file under [.changeset/](.changeset/) listing each modified package with an appropriate bump level (`minor` for breaking or new public API, `patch` otherwise). Dependency-only bumps are generated automatically — don't list them by hand.
+- **Every package touched by a change needs a changeset entry.** Add a file under [.changeset/](.changeset/) listing each modified package with an appropriate bump level (`minor` for breaking or new public API, `patch` otherwise). Dependency-only bumps are generated automatically — don't list them by hand. Dependabot PRs get their changeset auto-committed by [.github/workflows/dependabot-changeset.yml](.github/workflows/dependabot-changeset.yml) — never add one manually there.
 
 ## Agent files
 
