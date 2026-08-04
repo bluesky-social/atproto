@@ -1,12 +1,34 @@
+---
+name: lex-schemas
+description: >
+  Use generated Lexicon schemas and build custom ones. Trigger on: `$`-prefixed
+  schema accessors — `$build`, `$matches`, `$isTypeOf`, `$parse`, `$safeParse`,
+  `$validate`, `$check`, `$type`, `$lxm`, `$nsid`, `$Params`, `$Output`;
+  the `l` schema-builder namespace; lexicon token values (`.value`); strict
+  mode; the Standard Schema interface; validation in place of zod/joi/ajv where
+  `@atproto/lex` is already a dependency; or namespace dot-path access like
+  `app.bsky.feed.post` / `com.atproto.repo.getRecord` from
+  `./lexicons/index.js`.
+disable-model-invocation: false
+---
+
 # Working with generated schemas
 
 Each Lexicon document compiled by `lex build --indexFile` produces a TypeScript
 module that exposes runtime helpers and types. All of them are addressed via the
-namespace tree (`app.bsky.feed.post`, `com.atproto.repo.getRecord`, …).
+namespace tree by NSID dot-path.
 
 ```ts
-import { app, com } from './lexicons/index.js'
+import { app, com, chat } from './lexicons/index.js'
+
+app.bsky.feed.post // record schema
+app.bsky.feed.defs.postView // object def
+com.atproto.repo.getRecord // query/procedure schema
 ```
+
+The generated tree lives in `./src/lexicons/` (plural) and is gitignored —
+regenerate with `lex build` rather than editing it. See the
+[lex-setup skill](../lex-setup/SKILL.md) for install/build configuration.
 
 ## Schema accessors
 
@@ -147,7 +169,7 @@ schema.$validate(data, { strict: false })
 
 The `Client` constructor's `strictResponseProcessing` option threads
 through to response validation — set it to `false` to accept legacy/lenient
-responses across all calls. See [client.md](client.md).
+responses across all calls. See [lex-client skill](../lex-client/SKILL.md).
 
 ## Token values
 
@@ -212,3 +234,11 @@ if (!result.issues) {
   result.issues // errors
 }
 ```
+
+## Related skills
+
+[lex-setup](../lex-setup/SKILL.md) for generating this tree,
+[lex-data-model](../lex-data-model/SKILL.md) for the value types schemas
+validate against, and [lex-client](../lex-client/SKILL.md) /
+[lex-xrpc](../lex-xrpc/SKILL.md) / [xrpc-server](../xrpc-server/SKILL.md) for
+passing schemas to calls and routes.

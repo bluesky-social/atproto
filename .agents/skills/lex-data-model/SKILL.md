@@ -1,3 +1,18 @@
+---
+name: lex-data-model
+description: >
+  Work with AT Protocol data values. Trigger on: `LexValue`, `LexMap`,
+  `LexScalar`; CIDs (`Cid`, `parseCid`, replacing `multiformats/cid`); bytes;
+  JSON ↔ Lex conversion (`lexParse`, `lexStringify`, `jsonToLex`, `lexToJson`,
+  `parseLexLink`, `parseLexBytes`); CBOR / DRISL encode-decode via
+  `@atproto/lex-cbor`; datetime strings (`DatetimeString`,
+  `currentDatetimeString`, `toDatetimeString`); branded strings (`DidString`,
+  `HandleString`, `AtUriString`, `AtIdentifierString`, `isDidString`, …);
+  blobs (`BlobRef`, `TypedBlobRef`, `LegacyBlobRef`); or string length helpers
+  (`graphemeLen`, `utf8Len`).
+disable-model-invocation: false
+---
+
 # Data model: types, JSON, CBOR, branded strings, blobs
 
 The AT Protocol data model extends JSON with two extra primitives — **CIDs**
@@ -295,3 +310,9 @@ import {
 isLanguageString('en-US') // true
 lexEquals(a, b) // boolean
 ```
+
+## Related skills
+
+[lex-schemas](../lex-schemas/SKILL.md) for validating these values against
+lexicon schemas, and [lex-setup](../lex-setup/SKILL.md) for adding
+`@atproto/lex-cbor` and the rest of the package family.

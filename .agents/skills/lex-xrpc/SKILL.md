@@ -1,3 +1,17 @@
+---
+name: lex-xrpc
+description: >
+  Make low-level, session-less XRPC calls with `xrpc()` / `xrpcSafe()` against
+  a service URL — service-to-service calls (AppView → feed generator),
+  unauthenticated calls, or single requests needing granular control. Trigger
+  on: `xrpc(`, `xrpcSafe(`, the discriminated `{ success, body, error }`
+  result, `shouldRetry()`, `matchesSchemaErrors()`, `XrpcResponseError`,
+  `XrpcInvalidResponseError`, `XrpcInternalError`,
+  `XrpcResponseValidationError`, `strictResponseProcessing`, or response
+  `Headers.get()`. For session-bound calls use the `lex-client` skill.
+disable-model-invocation: false
+---
+
 # Low-level XRPC: `xrpc()` and `xrpcSafe()`
 
 `xrpc` and `xrpcSafe` make typed XRPC requests against a service URL
@@ -8,7 +22,7 @@ without a `Client` instance. Use them when:
 - You're calling a service from inside another service (e.g. AppView →
   feed generator).
 
-For session-bound calls, prefer the higher-level [`Client`](client.md).
+For session-bound calls, prefer the higher-level [lex-client skill](../lex-client/SKILL.md).
 
 ## Schema overview
 
@@ -85,15 +99,15 @@ if (result.success) {
 
 Common options on both `xrpc` and `xrpcSafe`:
 
-| Option                     | Type                                  | Effect                                                             |
-| -------------------------- | ------------------------------------- | ------------------------------------------------------------------ |
-| `params`                   | object                                | Query/procedure params (merged with method schema)                 |
-| `input`                    | object                                | Procedure body                                                     |
-| `headers`                  | `Record<string, string>` or `Headers` | Extra headers                                                      |
-| `signal`                   | `AbortSignal`                         | Cancel the request                                                 |
-| `validateRequest`          | `boolean`                             | Validate body before send (default `false`)                        |
-| `validateResponse`         | `boolean`                             | Validate response body (default `true`)                            |
-| `strictResponseProcessing` | `boolean`                             | Strict Lex decoding (default `true`; see [schemas.md](schemas.md)) |
+| Option                     | Type                                  | Effect                                                                                 |
+| -------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------- |
+| `params`                   | object                                | Query/procedure params (merged with method schema)                                     |
+| `input`                    | object                                | Procedure body                                                                         |
+| `headers`                  | `Record<string, string>` or `Headers` | Extra headers                                                                          |
+| `signal`                   | `AbortSignal`                         | Cancel the request                                                                     |
+| `validateRequest`          | `boolean`                             | Validate body before send (default `false`)                                            |
+| `validateResponse`         | `boolean`                             | Validate response body (default `true`)                                                |
+| `strictResponseProcessing` | `boolean`                             | Strict Lex decoding (default `true`; see [lex-schemas skill](../lex-schemas/SKILL.md)) |
 
 ## Error types
 
@@ -217,9 +231,16 @@ import { Headers as HeadersMap } from '@atproto/xrpc-server'
 
 ## When to choose `xrpc` vs `Client.xrpc` vs `Client.call`
 
-| Goal                                                       | Use                                      |
-| ---------------------------------------------------------- | ---------------------------------------- |
-| Stateless service-to-service call, no auth                 | `xrpc()` / `xrpcSafe()`                  |
-| Authenticated session, want full response (headers/status) | `client.xrpc()` ([client.md](client.md)) |
-| Authenticated session, just want body or error             | `client.call()`                          |
-| Authenticated session, structured error handling           | `client.xrpcSafe()`                      |
+| Goal                                                       | Use                                                          |
+| ---------------------------------------------------------- | ------------------------------------------------------------ |
+| Stateless service-to-service call, no auth                 | `xrpc()` / `xrpcSafe()`                                      |
+| Authenticated session, want full response (headers/status) | `client.xrpc()` ([lex-client skill](../lex-client/SKILL.md)) |
+| Authenticated session, just want body or error             | `client.call()`                                              |
+| Authenticated session, structured error handling           | `client.xrpcSafe()`                                          |
+
+## Related skills
+
+[lex-client](../lex-client/SKILL.md) for session-bound calls,
+[lex-schemas](../lex-schemas/SKILL.md) for the schemas passed to `xrpc()`, and
+[lexification-client](../lexification-client/SKILL.md) when migrating off
+`@atproto/xrpc`.

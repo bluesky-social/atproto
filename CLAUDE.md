@@ -7,7 +7,7 @@ This is the TypeScript reference implementation of [AT Protocol](https://atproto
 Workspace layout (see [pnpm-workspace.yaml](./pnpm-workspace.yaml) and [tsconfig.json](./tsconfig.json)):
 
 - [packages/\*](packages/) — top-level libraries: `api`, `common`, `crypto`, `identity`, `lexicon`, `repo`, `syntax`, `xrpc`, `xrpc-server`, `pds`, `bsky`, `bsync`, `ozone`, `dev-env`, `dev-infra`, etc.
-- [packages/lex/\*](packages/lex/) — the modern type-safe Lexicon SDK family (`@atproto/lex`, `lex-builder`, `lex-cbor`, `lex-client`, `lex-data`, `lex-document`, `lex-json`, `lex-resolver`, `lex-server`, `lex-schema`, `lex-installer`, `lex-password-session`). New service code should use this in preference to the older `@atproto/api` / `@atproto/lexicon` / `@atproto/xrpc` / `@atproto/lex-cli` stack — see the `lex-sdk` skill.
+- [packages/lex/\*](packages/lex/) — the modern type-safe Lexicon SDK family (`@atproto/lex`, `lex-builder`, `lex-cbor`, `lex-client`, `lex-data`, `lex-document`, `lex-json`, `lex-resolver`, `lex-server`, `lex-schema`, `lex-installer`, `lex-password-session`). New service code should use this in preference to the older `@atproto/api` / `@atproto/lexicon` / `@atproto/xrpc` / `@atproto/lex-cli` stack — see the `lex-*` skills listed under [Codegen](#codegen).
 - [packages/oauth/\*](packages/oauth/) — OAuth client/provider implementations and JWK helpers.
 - [packages/internal/\*](packages/internal/) — `@atproto-labs/*` internal shared utilities (fetch, handle/identity/DID resolvers, simple-store, pipe, xrpc-utils).
 - [services/{pds,bsky,bsync,ozone}](services/) — thin runtime wrappers; the actual implementation code lives in `packages/{pds,bsky,bsync,ozone}`.
@@ -61,7 +61,7 @@ Before writing or extending any test, invoke the `testing` skill ([.claude/skill
 
 After editing anything under [lexicons/](lexicons/), or any `.proto` file, run `pnpm codegen` from the repo root.
 
-The lexicon JSON schemas are derived into TypeScript runtime schemas by `@atproto/lex` (`lex install` / `lex build`, wired through each package's `prebuild`). For anything involving those, invoke the `lex-sdk` skill ([.claude/skills/lex-sdk/SKILL.md](.claude/skills/lex-sdk/SKILL.md)).
+The lexicon JSON schemas are derived into TypeScript runtime schemas by `@atproto/lex` (`lex build`, wired through each package's `prebuild`).
 
 ## Architecture notes
 

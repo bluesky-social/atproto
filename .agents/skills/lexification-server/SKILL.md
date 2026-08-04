@@ -1,7 +1,23 @@
+---
+name: lexification-server
+description: >
+  Migrate **service / server** code off the legacy `@atproto/lex-cli`
+  `lex gen-server` stack to `@atproto/lex` + `@atproto/xrpc-server` —
+  server-side "lexification". Trigger on: generated `src/lexicon/` (singular)
+  imports, `createServer` / `Server` imported from `./lexicon`,
+  `server.xrpc.router`, `server.app.bsky.<method>()` registration chains →
+  `server.add(schema, handler)`, `ids.AppBsky…` → `$type` / `$lxm`,
+  `lexicon/types/...` imports → namespace dot-paths, legacy `isX()` guards →
+  `$matches` / `$isTypeOf` / `$build`, a `codegen` script running
+  `lex gen-server`, or applying branded types across a service's boundaries.
+  For consumer/client code use `lexification-client`.
+disable-model-invocation: false
+---
+
 # Lexification: migrating a service package
 
-This reference describes how to migrate an AT Protocol **service / server**
-package from the legacy code-generation stack to `@atproto/lex`.
+How to migrate an AT Protocol **service / server** package from the legacy
+code-generation stack to `@atproto/lex`.
 
 Replaces:
 
@@ -10,9 +26,9 @@ Replaces:
 - `@atproto/xrpc` (old XRPC client types)
 - `@atproto/lex-cli` codegen (`lex gen-server` → `src/lexicon/`)
 
-For migrating consumer / client-only code, see
-[lexification-client.md](lexification-client.md) — but note that service
-packages typically need both kinds of changes (defining routes **and**
+For migrating consumer / client-only code, see the
+[lexification-client skill](../lexification-client/SKILL.md) — but note that
+service packages typically need both kinds of changes (defining routes **and**
 calling other services).
 
 ## Guiding principles
@@ -33,10 +49,10 @@ calling other services).
 3. **Endpoint registration** — `server.<ns>.<method>(...)` chain →
    `server.add(schema, handler)`.
 4. **XRPC client calls** — `agent.api.…` → `client.xrpc()`/`call()` (see
-   [lexification-client.md](lexification-client.md)).
+   [lexification-client skill](../lexification-client/SKILL.md)).
 5. **Type strictness** — branded types at boundaries.
 6. **Data utilities** — `jsonStringToLex` → `lexParse`, datetime helpers,
-   `BlobRef` (see [lexification-client.md](lexification-client.md)).
+   `BlobRef` (see [lexification-client skill](../lexification-client/SKILL.md)).
 7. **Schema validation / type guards** — `isX()` / `ids.X` →
    `$matches` / `$isTypeOf` / `$build` / `$type` / `$lxm`.
 
@@ -90,7 +106,7 @@ Gitignore the generated output:
 echo '/src/lexicons/' >> .gitignore
 ```
 
-For full setup details, see [setup.md](setup.md).
+For full setup details, see [lex-setup skill](../lex-setup/SKILL.md).
 
 ## 2. Project code setup
 
@@ -120,7 +136,7 @@ code. Note the empty array first arg.
 + app.use(server.router)
 ```
 
-See [server.md](server.md) for the full server reference.
+See [xrpc-server skill](../xrpc-server/SKILL.md) for the full server reference.
 
 ### App context / agent → client
 
@@ -152,7 +168,7 @@ See [server.md](server.md) for the full server reference.
 ```
 
 Headers are passed in the constructor rather than set imperatively
-afterward. See [client.md](client.md) for `Client` details.
+afterward. See [lex-client skill](../lex-client/SKILL.md) for `Client` details.
 
 ### Type aliases file (if applicable)
 
@@ -326,7 +342,7 @@ acceptable:
 
 Apply branded types at type boundaries (function signatures, interface
 fields, DB schema types) while keeping runtime code unchanged where
-possible. See [data-model.md](data-model.md) for the full list and rules.
+possible. See [lex-data-model skill](../lex-data-model/SKILL.md) for the full list and rules.
 Common cases:
 
 ```diff
@@ -480,7 +496,7 @@ keeps tests stable as a runtime regression check during the migration.
 4. **`'application/json' as const`**: required on handler returns, or
    the inferred `string` type breaks the schema match.
 5. **Response header changes** (in calls _out_ — see
-   [lexification-client.md](lexification-client.md)): `result.data` →
+   [lexification-client skill](../lexification-client/SKILL.md)): `result.data` →
    `result.body`, header object → `Headers` with `.get()`.
 6. **`@atproto/lex-data` vs `@atproto/lex`**: `Cid`, `parseCid`,
    `BlobRef` are in `@atproto/lex-data` and re-exported from
@@ -503,3 +519,12 @@ keeps tests stable as a runtime regression check during the migration.
 | `../lexicon` (`Server`, `createServer`)           | `@atproto/xrpc-server` (`Server`, `createServer`)                            |
 | `../lexicon/lexicons` (`ids`)                     | `../lexicons/index.js` (`app`, `com`, `chat`)                                |
 | `../lexicon/types/...` (types, guards)            | `../lexicons/index.js` (namespace-qualified access)                          |
+
+## Related skills
+
+[xrpc-server](../xrpc-server/SKILL.md) for the target route-definition
+patterns, [lexification-client](../lexification-client/SKILL.md) for the
+calls-out half (service packages usually need both),
+[lex-setup](../lex-setup/SKILL.md) for the codegen/dependency changes, and
+[lex-schemas](../lex-schemas/SKILL.md) for the `$`-accessors that replace
+`ids.*` and the legacy `isX()` guards.

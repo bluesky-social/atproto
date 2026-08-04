@@ -27,7 +27,7 @@ Decide which runner to use by following these steps in order:
 2. Does the package directory contain `vitest.config.ts`? → use Vitest, follow [references/vitest.md](references/vitest.md).
 3. Does the package directory contain `jest.config.cjs`? → use Jest, follow [references/jest.md](references/jest.md).
 4. None of the above? → the package has no tests yet. Adopt Vitest: before writing any test code, create `vitest.config.ts` and `tsconfig.test.json` by following the setup section of [references/vitest.md](references/vitest.md), then write the test.
-5. Does the test code import `@atproto/lex` (or any `@atproto/lex-*` sub-packages)? → also consult the [lex-sdk skill](../lex-sdk/SKILL.md) — schemas have validation helpers (`$parse`, `$safeParse`, `$matches`) that are useful in assertions.
+5. Does the test code import `@atproto/lex` (or any `@atproto/lex-*` sub-packages)? → also consult the [lex-schemas skill](../lex-schemas/SKILL.md) — schemas have validation helpers (`$parse`, `$safeParse`, `$matches`) that are useful in assertions.
 
 Runner-reference summary:
 

@@ -1,10 +1,25 @@
+---
+name: lexification-client
+description: >
+  Migrate **client / consumer** code ("calls out") off the legacy
+  `@atproto/api` / `@atproto/lexicon` / `@atproto/xrpc` stack to
+  `@atproto/lex` — "lexification". Trigger on: `AtpAgent` → `Client`,
+  `agent.api.<ns>.<method>()` call chains, `result.data` → `result.body`,
+  header objects → `Headers.get()`, `HeadersMap`, `XRPCError` → `XrpcError`,
+  try/catch → `xrpcSafe()`, `jsonStringToLex` → `lexParse`, `stringifyLex` →
+  `lexStringify`, `CID` from `multiformats` → `Cid`, legacy `isX()` type
+  guards → `$matches` / `$isTypeOf`, or applying branded types at migrated
+  boundaries. For service/route code use `lexification-server`.
+disable-model-invocation: false
+---
+
 # Lexification: migrating client / consumer code
 
 This reference covers migrating **calls out** — code that used `AtpAgent`
 or the old `@atproto/lexicon` / `@atproto/xrpc` runtime to talk to AT
-Proto services. For migrating a service that **defines** routes, see
-[lexification-server.md](lexification-server.md). The two are typically
-done together in a service package.
+Proto services. Migrating a service that **defines** routes is covered by the
+[lexification-server skill](../lexification-server/SKILL.md), though the two
+are typically done together in a service package.
 
 ## What changes
 
@@ -106,7 +121,7 @@ For calls where errors are a normal part of the contract:
 + // result.body is typed
 ```
 
-See [xrpc.md](xrpc.md) for the full error class hierarchy.
+See [lex-xrpc skill](../lex-xrpc/SKILL.md) for the full error class hierarchy.
 
 ## Agent → Client setup
 
@@ -139,7 +154,7 @@ Headers move into the constructor instead of being set imperatively:
 +   : undefined
 ```
 
-See [client.md](client.md) for the full `Client` API (auth, labelers,
+See [lex-client skill](../lex-client/SKILL.md) for the full `Client` API (auth, labelers,
 service proxy, repo helpers).
 
 ## Errors
@@ -150,11 +165,10 @@ service proxy, repo helpers).
 ```
 
 (Server-side `@atproto/xrpc-server` still exports its own `XRPCError` for
-**throwing** errors inside handlers — that one stays. See
-[server.md](server.md).)
+**throwing** errors inside handlers — that one stays.)
 
 For typed error handling, prefer `xrpcSafe()` over try/catch — see
-[xrpc.md](xrpc.md).
+[lex-xrpc skill](../lex-xrpc/SKILL.md).
 
 ## Headers map type
 
@@ -200,7 +214,7 @@ standard Headers API:**
 + import { lexStringify } from '@atproto/lex'
 ```
 
-See [data-model.md](data-model.md) for the full set of conversion
+See [lex-data-model skill](../lex-data-model/SKILL.md) for the full set of conversion
 helpers (`jsonToLex`, `lexToJson`, `parseLexLink`, `parseLexBytes`, …).
 
 ### Datetime strings
@@ -222,7 +236,7 @@ import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
 ```
 
 These return `DatetimeString` (branded) and validate format
-correctness — see [data-model.md](data-model.md).
+correctness — see [lex-data-model skill](../lex-data-model/SKILL.md).
 
 ### CIDs
 
@@ -263,13 +277,13 @@ are gone; use type guards.
 
 For the full TypedBlobRef / LegacyBlobRef story (and the strict-mode
 behavior that controls which gets accepted), see
-[data-model.md](data-model.md).
+[lex-data-model skill](../lex-data-model/SKILL.md).
 
 ## Branded types at boundaries
 
 Apply branded types (`DidString`, `HandleString`, `AtUriString`,
 `DatetimeString`, `Cid`, etc.) at function signatures, interface fields,
-and DB schemas. See [data-model.md](data-model.md) for the full list.
+and DB schemas. See [lex-data-model skill](../lex-data-model/SKILL.md) for the full list.
 
 ```diff
 - did: string
@@ -320,7 +334,7 @@ Use `$isTypeOf` on already-validated unions for speed:
 + )
 ```
 
-See [schemas.md](schemas.md) for the full schema-accessor cheat sheet.
+See [lex-schemas skill](../lex-schemas/SKILL.md) for the full schema-accessor cheat sheet.
 
 ## Tests in this phase
 
@@ -347,3 +361,10 @@ that the lexified service still behaves the same at runtime.
 | `@atproto/xrpc` (`HeadersMap`)                    | `@atproto/xrpc-server` (`Headers as HeadersMap`) |
 | `multiformats/cid` (`CID`)                        | `@atproto/lex` (`Cid`, `parseCid`)               |
 | `@atproto/syntax` (`DidString`, etc.)             | `@atproto/lex` (prefer this)                     |
+
+## Related skills
+
+[lex-setup](../lex-setup/SKILL.md) for the codegen/dependency changes a
+migration needs, and [lexification-server](../lexification-server/SKILL.md) for
+the server-side half (route registration, `src/lexicon/` removal) — service
+packages usually need both.

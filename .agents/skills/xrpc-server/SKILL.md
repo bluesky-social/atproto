@@ -1,15 +1,44 @@
-# Defining XRPC server routes (`@atproto/xrpc-server`)
+---
+name: xrpc-server
+description: >
+  Use whenever code defines the **server side** of an AT Protocol XRPC service
+  with `@atproto/xrpc-server`. Trigger on ANY of: (1) `createServer`,
+  `server.add(schema, handler)`, `server.router`, or the `Server` type;
+  (2) writing/editing an XRPC route handler — `{ params, input, auth, req, res,
+  signal }` args, `{ encoding, body }` returns, `'application/json' as const`,
+  `satisfies $Output`; (3) throwing server-side errors (`XRPCError` — capital R,
+  `InvalidRequestError`, `AuthRequiredError`, `ForbiddenError`,
+  `UpstreamFailureError`); (4) its `Headers` / `HeadersMap`; (5) WebSocket
+  subscription endpoints; (6) handler layout under `src/api/<namespace>/`.
+  Client-side calls → `lex-client` / `lex-xrpc`; schemas → `lex-schemas`;
+  codegen → `lex-setup`; migrating off `lex gen-server` → `lexification-server`.
+disable-model-invocation: false
+---
 
-The server side of `@atproto/lex` is `@atproto/xrpc-server` — it
-exposes the `Server` type and `createServer` factory. Service code
-defines XRPC endpoints by passing generated lexicon schemas to
-`server.add()`.
+# `@atproto/xrpc-server`
 
-This package is **not re-exported** by `@atproto/lex`; import directly:
+`@atproto/xrpc-server` is the server half of the AT Protocol XRPC stack. It
+exposes `createServer` and the `Server` type; service code registers endpoints
+by passing generated lexicon schemas to `server.add()`.
+
+It is **not re-exported** by `@atproto/lex` — always import it directly:
 
 ```ts
 import { createServer, Server, InvalidRequestError } from '@atproto/xrpc-server'
 ```
+
+## What this package provides
+
+| Export                                                                         | Purpose                                                                                                             |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `createServer`, `Server`                                                       | Server factory and type; `server.router` for Express                                                                |
+| `XRPCError` (capital R)                                                        | Base class for errors **thrown** in handlers                                                                        |
+| `InvalidRequestError` (400), `AuthRequiredError` (401), `ForbiddenError` (403) | Typed error responses                                                                                               |
+| `UpstreamFailureError`, `UpstreamTimeoutError`                                 | Upstream failure signalling                                                                                         |
+| `Headers`                                                                      | `Record<string, string>` header map — usually imported as `HeadersMap` to avoid colliding with the global `Headers` |
+
+Note the casing split: `XRPCError` is server-side (thrown in handlers);
+`XrpcError` is the client-side class from `@atproto/lex`.
 
 ## Creating the server
 
@@ -183,15 +212,6 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 throw new InvalidRequestError('Drafts limit reached', 'DraftLimitReached')
 ```
 
-Other server-side error classes from `@atproto/xrpc-server`:
-
-- `XRPCError` — base class (note: capital R, server-side; the client
-  side uses `XrpcError` from `@atproto/lex`)
-- `InvalidRequestError` — 400
-- `AuthRequiredError` — 401
-- `ForbiddenError` — 403
-- `UpstreamFailureError`, `UpstreamTimeoutError`, etc.
-
 ## Token / NSID checks
 
 To compare a URI's collection to a known NSID:
@@ -251,3 +271,21 @@ export default function (server: Server, ctx: AppContext) {
   // ...
 }
 ```
+
+## Related skills
+
+- **[lex-schemas skill](../lex-schemas/SKILL.md)** — the generated schemas
+  passed to `server.add()` (`./lexicons/index.js`, `$Params`, `$Output`,
+  `$lxm`, `$type`, `$build`). Needed alongside this skill for almost any
+  route work.
+- **[lexification-server skill](../lexification-server/SKILL.md)** — migrating
+  an existing service off the legacy `lex gen-server` stack onto the patterns
+  above.
+- **[lex-setup skill](../lex-setup/SKILL.md)** — lexicon install/build
+  configuration and `@atproto/lex` package layout.
+- **[lex-data-model skill](../lex-data-model/SKILL.md)** — branded strings,
+  `BlobRef`, CBOR, and datetime handling at route boundaries.
+- **[lex-client skill](../lex-client/SKILL.md)** / **[lex-xrpc skill](../lex-xrpc/SKILL.md)**
+  — when the service also calls _out_ to other services.
+- **[testing skill](../testing/SKILL.md)** — runner choice (vitest vs jest),
+  test file location, and tsconfig setup when testing route handlers.

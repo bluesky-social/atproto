@@ -1,4 +1,18 @@
-# `Client` — high-level XRPC client
+---
+name: lex-client
+description: >
+  Use the `Client` class from `@atproto/lex` — the session-bound, high-level
+  XRPC client. Trigger on: `new Client(`, `client.call` / `client.xrpc` /
+  `client.xrpcSafe`; AT Proto repo helpers `create`, `get`, `put`, `delete`,
+  `list`, `applyWrites`, `uploadBlob`; per-service config (headers, auth,
+  labelers, `proxy` / service proxy target); Client validation options such as
+  `strictResponseProcessing`; Actions (composable client operations); or
+  replacing `AtpAgent` with `Client`. For session-less service-to-service
+  calls use the `lex-xrpc` skill.
+disable-model-invocation: false
+---
+
+# high-level XRPC client
 
 `Client` wraps an XRPC session with helpers for AT Proto repo operations
 (`create`, `get`, `put`, `delete`, `list`, `applyWrites`, `uploadBlob`),
@@ -6,7 +20,7 @@ plus low-level `call`/`xrpc`/`xrpcSafe` methods. Use it whenever you have
 an authenticated session, or you want to encapsulate per-service config
 (headers, labelers, proxy target).
 
-For unauthenticated stateless calls, see [xrpc.md](xrpc.md).
+For unauthenticated stateless calls, see [lex-xrpc skill](../lex-xrpc/SKILL.md).
 
 ## Constructing
 
@@ -21,13 +35,13 @@ const client = new Client('https://public.api.bsky.app')
 ### Authenticated — OAuth
 
 ```ts
-import { OAuthClient } from '@atproto/oauth-client-node'
+import { OAuthClient, type OAuthSession } from '@atproto/oauth-client-node'
 
-const session = await oauthClient.restore(userDid)
+const session: OAuthSession = await oauthClient.restore(userDid)
 const client = new Client(session)
 ```
 
-### Authenticated — password (CLI / scripts / bots)
+### Authenticated — "app password" (CLI / scripts / bots)
 
 ```ts
 import { PasswordSession } from '@atproto/lex-password-session'
@@ -42,7 +56,7 @@ const session = await PasswordSession.login({
 const client = new Client(session)
 ```
 
-### Service proxy (auth required)
+### Service proxy (requires authenticated session)
 
 ```ts
 const client = new Client(session, {
@@ -102,11 +116,11 @@ const client = new Client(session, {
 })
 ```
 
-| Option                     | Default | Meaning                                                                                                                   |
-| -------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `validateRequest`          | `false` | Validate request bodies against input schema before sending                                                               |
-| `validateResponse`         | `true`  | Validate response bodies against output schema                                                                            |
-| `strictResponseProcessing` | `true`  | Strict Lex decoding; set `false` to accept legacy blobs, datetimes without timezones, etc. (see [schemas.md](schemas.md)) |
+| Option                     | Default | Meaning                                                                                                                                       |
+| -------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `validateRequest`          | `false` | Validate request bodies against input schema before sending                                                                                   |
+| `validateResponse`         | `true`  | Validate response bodies against output schema                                                                                                |
+| `strictResponseProcessing` | `true`  | Strict Lex decoding; set `false` to accept legacy blobs, datetimes without timezones, etc. (see [lex-schemas skill](../lex-schemas/SKILL.md)) |
 
 All three can be overridden per-call via `client.call`/`xrpc`/`xrpcSafe`
 options.
@@ -169,7 +183,7 @@ response.body
 
 ### `client.xrpcSafe()` — discriminated result
 
-Same as [xrpc.md](xrpc.md)'s `xrpcSafe()` but bound to the client's
+Same as [lex-xrpc skill](../lex-xrpc/SKILL.md)'s `xrpcSafe()` but bound to the client's
 session/config:
 
 ```ts
@@ -359,3 +373,12 @@ Action best practices:
 3. Check `options.signal?.throwIfAborted()` between long operations.
 4. Implement retry loops for swap-error / optimistic-concurrency cases.
 5. Export actions individually so consumers can tree-shake.
+
+## Related skills
+
+[lex-xrpc](../lex-xrpc/SKILL.md) for session-less calls,
+[lex-schemas](../lex-schemas/SKILL.md) for the schemas passed to client
+methods, [lex-data-model](../lex-data-model/SKILL.md) for blobs and branded
+strings at call boundaries, and
+[lexification-client](../lexification-client/SKILL.md) when migrating from
+`AtpAgent`.
