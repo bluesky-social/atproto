@@ -76,7 +76,7 @@
     "prettier": "^3.9.6",
     "prettier-config-standard": "^7.0.0",
     "prettier-plugin-tailwindcss": "^0.6.11",
-    "typescript": "7.1.0-dev.20260802.1",
+    "typescript": "7.0.2",
     "vitest": "^4.1.10"
   },
   "workspace": [
