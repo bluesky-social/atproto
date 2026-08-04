@@ -13,18 +13,6 @@ msgstr ""
 "Plural-Forms: \n"
 "X-Generator: Poedit 3.9\n"
 
-#: src/hooks/use-date-ago.ts
-msgid "{deltaDays} days ago"
-msgstr "{deltaDays} dagar sedan"
-
-#: src/hooks/use-date-ago.ts
-msgid "{deltaHours} hours ago"
-msgstr "{deltaHours} timmar sedan"
-
-#: src/hooks/use-date-ago.ts
-msgid "{deltaMinutes} minutes ago"
-msgstr "{deltaMinutes} minuter sedan"
-
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>AT-protokollet</0> – Teknisk dokumentation för utvecklare"
@@ -56,14 +44,6 @@ msgstr "<0>Vad som gör det speciellt</0><1>Den viktigaste skillnaden: din data 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "<your-domain>"
 msgstr "<din-domän>"
-
-#: src/hooks/use-date-ago.ts
-msgid "1 hour ago"
-msgstr "1 timme sedan"
-
-#: src/hooks/use-date-ago.ts
-msgid "1 minute ago"
-msgstr "1 minut sedan"
 
 #: src/components/sign-in-form.tsx
 msgid "2FA Confirmation"
@@ -223,8 +203,8 @@ msgid "Back"
 msgstr "Tillbaka"
 
 #: src/components/forms/input-handle-default.tsx
-msgid "Between {minLength} and {maxLength} characters"
-msgstr "Mellan {minLength} och {maxLength} tecken"
+msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
+msgstr "Mellan {minLength, plural, zero {0} one {ett} other {#}} och {maxLength, plural, one {ett tecken} other {# tecken}}"
 
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
@@ -246,11 +226,9 @@ msgstr "Utseende"
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "Genom att klicka på <0>Auktorisera</0> ger du den här applikationen åtkomst till ditt konto i enlighet med dess <1>användarvillkor</1> och <2>integritetspolicy</2>."
 
-#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
-#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/components/sign-up-disclaimer.tsx
-msgid "By creating an account you agree to the {0} and the {1} of this service."
-msgstr "Genom att skapa ett konto samtycker du till den här tjänstens {0} och {1}."
+msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
+msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgctxt "RPC lxm"
@@ -709,19 +687,61 @@ msgstr "Det verkar som att du inte har använt det här kontot för att logga in
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "Det verkar som att din webbläsare inte accepterar cookies. Klicka på ”Fortsätt” för att försöka igen. Om felet kvarstår, kontrollera att dina sekretessinställningar tillåter cookies för webbplatsen ”{0}”."
 
-#: src/hooks/use-date-ago.ts
-msgid "just now"
-msgstr "nyss"
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {# day} other {# days}} ago"
+msgstr "Senast åtkomst {0, plural, one {# dag} other {# dagar}} sedan"
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {a minute} other {# minutes}} ago"
+msgstr "Senast åtkomst {0, plural, one {en minut} other {# minuter}} sedan"
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {an hour} other {# hours}} ago"
+msgstr "Senast åtkomst {0, plural, one {en timme} other {# timmar}} sedan"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
-msgctxt "OAuthApp"
-msgid "Last accessed <0/>"
-msgstr "Senaste aktivitet: <0/>"
+msgctxt "sessions list"
+msgid "Last accessed just now"
+msgstr ""
+
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed yesterday"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen {0, plural, one {# day} other {# days}} ago"
+msgstr "Senast sedd {0, plural, one {# dag} other {# dagar}} sedan"
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen {0, plural, one {a minute} other {# minutes}} ago"
+msgstr "Senast sedd {0, plural, one {en minut} other {# minuter}} sedan"
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen {0, plural, one {an hour} other {# hours}} ago"
+msgstr "Senast sedd {0, plural, one {en timme} other {# timmar}} sedan"
 
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
-msgid "Last seen {lastUsedAgo}"
-msgstr "Sågs senast {lastUsedAgo}"
+msgid "Last seen just now"
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen yesterday"
+msgstr ""
 
 #: src/components/update-email-dialog.tsx
 msgctxt "verify email"
@@ -853,8 +873,8 @@ msgid "Password updated!"
 msgstr "Lösenordet har uppdaterats!"
 
 #: src/components/forms/input-new-password.tsx
-msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
-msgstr "Lösenord med minst {MIN_PASSWORD_LENGTH} tecken"
+msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
+msgstr ""
 
 #: src/components/utils/error-details.tsx
 msgctxt "Error"
@@ -905,10 +925,9 @@ msgid "Please try again in a moment."
 msgstr "Försök igen om en stund."
 
 #: src/components/forms/button-cooldown.tsx
-msgid "Please wait {remainingSeconds} seconds before trying again."
-msgstr "Vänta {remainingSeconds} sekunder innan du försöker igen."
+msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
+msgstr ""
 
-#: src/components/sign-up-disclaimer.tsx
 #: src/components/utils/link-title.tsx
 msgid "Privacy Policy"
 msgstr "Integritetspolicy"
@@ -1088,7 +1107,6 @@ msgstr "Tekniska detaljer"
 msgid "Temporarily activate or deactivate your account"
 msgstr "Tillfälligt aktivera eller avaktivera ditt konto"
 
-#: src/components/sign-up-disclaimer.tsx
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"
 msgstr "Användarvillkor"
@@ -1369,10 +1387,6 @@ msgstr "Ja, radera mitt konto"
 #: src/components/reactivate-account-view.tsx
 msgid "Yes, reactivate my account"
 msgstr "Ja, återaktivera mitt konto"
-
-#: src/hooks/use-date-ago.ts
-msgid "yesterday"
-msgstr "igår"
 
 #: src/components/redirecting-view.tsx
 msgid "You are being redirected..."

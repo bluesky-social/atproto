@@ -1,5 +1,7 @@
+import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { Link } from '@tanstack/react-router'
+import { useMemo } from 'react'
 import type {
   ActiveAccountSession,
   DidString,
@@ -67,6 +69,47 @@ export function Page() {
   )
 }
 
+/**
+ * Returns a fully localised "Last seen …" string.
+ * The complete phrase is spelled out in each branch so that translators receive
+ * the full sentence as a single translatable unit, enabling correct pluralisation
+ * and other grammar related flexibility across all languages.
+ */
+function useLastSeenText(date: Date | string): string {
+  const { t } = useLingui()
+  const bucket = useDateAgo(date)
+
+  return useMemo(() => {
+    switch (bucket.type) {
+      case 'seconds':
+        return t({
+          context: 'device list',
+          message: 'Last seen just now',
+        })
+      case 'minutes':
+        return t({
+          context: 'device list',
+          message: `Last seen ${plural(bucket.count, { one: 'a minute', other: '# minutes' })} ago`,
+        })
+      case 'hours':
+        return t({
+          context: 'device list',
+          message: `Last seen ${plural(bucket.count, { one: 'an hour', other: '# hours' })} ago`,
+        })
+      case 'days':
+        return bucket.count === 1
+          ? t({
+              context: 'device list',
+              message: `Last seen yesterday`,
+            })
+          : t({
+              context: 'device list',
+              message: `Last seen ${plural(bucket.count, { one: '# day', other: '# days' })} ago`,
+            })
+    }
+  }, [t, bucket])
+}
+
 function AccountSessionCard({
   session,
   did,
@@ -79,7 +122,7 @@ function AccountSessionCard({
 
   const { userAgent, lastSeenAt, ipAddress } = session.deviceMetadata
   const browserName = useBrowserName(userAgent || undefined)
-  const lastUsedAgo = useDateAgo(lastSeenAt)
+  const lastSeenText = useLastSeenText(lastSeenAt)
 
   return (
     <div className="border-contrast-50 dark:border-contrast-100 flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
@@ -90,9 +133,7 @@ function AccountSessionCard({
           )}
         </p>
         <p className="font-mono text-xs">{ipAddress}</p>
-        <p className="text-text-light truncate text-xs">
-          <Trans context="device list">Last seen {lastUsedAgo}</Trans>
-        </p>
+        <p className="text-text-light truncate text-xs">{lastSeenText}</p>
       </div>
       <Button
         size="sm"

@@ -1,15 +1,17 @@
+import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
+import { useMemo } from 'react'
 import type { ActiveOAuthSession, DidString } from '@atproto/oauth-provider-api'
 import { Button } from '#/components/forms/button'
 import { OAuthSessionDetailsDialog } from '#/components/oauth-session-details-dialog.tsx'
 import { Admonition, AdmonitionAction } from '#/components/utils/admonition.tsx'
 import { CircularProgress } from '#/components/utils/circular-progress'
-import { DateAgo } from '#/components/utils/date-ago'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import {
   useOAuthSessionsQuery,
   useRevokeOAuthSessionMutation,
 } from '#/data/oauth-sessions.ts'
+import { useDateAgo } from '#/hooks/use-date-ago'
 import { useOAuthClientIdentifier } from '#/hooks/use-oauth-client-identifier.ts'
 import { useOauthClientName } from '#/hooks/use-oauth-client-name.ts'
 
@@ -74,6 +76,47 @@ export function Page() {
   )
 }
 
+/**
+ * Returns a fully localised "Last accessed …" string.
+ * The complete phrase is spelled out in each branch so that translators receive
+ * the full sentence as a single translatable unit, enabling correct pluralisation
+ * and other grammar related flexibility across all languages.
+ */
+function useLastAccessedText(date: Date | string): string {
+  const { t } = useLingui()
+  const bucket = useDateAgo(date)
+
+  return useMemo(() => {
+    switch (bucket.type) {
+      case 'seconds':
+        return t({
+          context: 'sessions list',
+          message: 'Last accessed just now',
+        })
+      case 'minutes':
+        return t({
+          context: 'sessions list',
+          message: `Last accessed ${plural(bucket.count, { one: 'a minute', other: '# minutes' })} ago`,
+        })
+      case 'hours':
+        return t({
+          context: 'sessions list',
+          message: `Last accessed ${plural(bucket.count, { one: 'an hour', other: '# hours' })} ago`,
+        })
+      case 'days':
+        return bucket.count === 1
+          ? t({
+              context: 'sessions list',
+              message: `Last accessed yesterday`,
+            })
+          : t({
+              context: 'sessions list',
+              message: `Last accessed ${plural(bucket.count, { one: '# day', other: '# days' })} ago`,
+            })
+    }
+  }, [t, bucket])
+}
+
 function ApplicationSessionCard({
   session: {
     // active,
@@ -99,6 +142,7 @@ function ApplicationSessionCard({
     clientId,
     clientMetadata,
   })
+  const lastSeenText = useLastAccessedText(updatedAt)
 
   // @NOTE if clientMetadata is undefined, it means that the client metadata
   // could not be fetched. We are unable to determine if the session is still
@@ -121,9 +165,7 @@ function ApplicationSessionCard({
             })}
           </Trans>
           {' • '}
-          <Trans context="OAuthApp">
-            Last accessed <DateAgo date={updatedAt} />
-          </Trans>
+          {lastSeenText}
         </p>
       </div>
       <OAuthSessionDetailsDialog

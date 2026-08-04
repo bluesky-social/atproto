@@ -1,3 +1,4 @@
+import { plural } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react/macro'
 import type { Icon } from '@phosphor-icons/react'
 import { composeEventHandlers } from '@radix-ui/primitive'
@@ -73,7 +74,10 @@ export function ButtonCooldown({
       title={showRateLimit ? t`Retry in ${remainingSeconds}s` : title}
       aria-label={
         showRateLimit
-          ? t`Please wait ${remainingSeconds} seconds before trying again.`
+          ? t`Please wait ${plural(remainingSeconds, {
+              one: '# second',
+              other: '# seconds',
+            })} before trying again.`
           : ariaLabel
       }
       aria-live={showRateLimit ? 'polite' : ariaLive}

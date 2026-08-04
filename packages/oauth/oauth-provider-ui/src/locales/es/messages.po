@@ -13,18 +13,6 @@ msgstr ""
 "Language-Team: Spanish\n"
 "Plural-Forms: \n"
 
-#: src/hooks/use-date-ago.ts
-msgid "{deltaDays} days ago"
-msgstr ""
-
-#: src/hooks/use-date-ago.ts
-msgid "{deltaHours} hours ago"
-msgstr ""
-
-#: src/hooks/use-date-ago.ts
-msgid "{deltaMinutes} minutes ago"
-msgstr ""
-
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr ""
@@ -55,14 +43,6 @@ msgstr ""
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "<your-domain>"
-msgstr ""
-
-#: src/hooks/use-date-ago.ts
-msgid "1 hour ago"
-msgstr ""
-
-#: src/hooks/use-date-ago.ts
-msgid "1 minute ago"
 msgstr ""
 
 #: src/components/sign-in-form.tsx
@@ -223,8 +203,8 @@ msgid "Back"
 msgstr "Volver"
 
 #: src/components/forms/input-handle-default.tsx
-msgid "Between {minLength} and {maxLength} characters"
-msgstr "Entre {minLength} y {maxLength} caracteres"
+msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
+msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
@@ -246,11 +226,9 @@ msgstr "Marca"
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr ""
 
-#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
-#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/components/sign-up-disclaimer.tsx
-msgid "By creating an account you agree to the {0} and the {1} of this service."
-msgstr "Al crear una cuenta, aceptas los {0} y la {1} de este servicio."
+msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
+msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgctxt "RPC lxm"
@@ -700,18 +678,60 @@ msgstr "Parece que aún no has usado esta cuenta para iniciar sesión en ninguna
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr ""
 
-#: src/hooks/use-date-ago.ts
-msgid "just now"
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {# day} other {# days}} ago"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {a minute} other {# minutes}} ago"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {an hour} other {# hours}} ago"
 msgstr ""
 
 #: src/pages/account/(authenticated)/apps/page.tsx
-msgctxt "OAuthApp"
-msgid "Last accessed <0/>"
+msgctxt "sessions list"
+msgid "Last accessed just now"
+msgstr ""
+
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed yesterday"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen {0, plural, one {# day} other {# days}} ago"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen {0, plural, one {a minute} other {# minutes}} ago"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen {0, plural, one {an hour} other {# hours}} ago"
 msgstr ""
 
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
-msgid "Last seen {lastUsedAgo}"
+msgid "Last seen just now"
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen yesterday"
 msgstr ""
 
 #: src/components/update-email-dialog.tsx
@@ -844,8 +864,8 @@ msgid "Password updated!"
 msgstr "¡Contraseña actualizada!"
 
 #: src/components/forms/input-new-password.tsx
-msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
-msgstr "Contraseña con al menos {MIN_PASSWORD_LENGTH} caracteres"
+msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
+msgstr ""
 
 #: src/components/utils/error-details.tsx
 msgctxt "Error"
@@ -896,10 +916,9 @@ msgid "Please try again in a moment."
 msgstr ""
 
 #: src/components/forms/button-cooldown.tsx
-msgid "Please wait {remainingSeconds} seconds before trying again."
+msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
 msgstr ""
 
-#: src/components/sign-up-disclaimer.tsx
 #: src/components/utils/link-title.tsx
 msgid "Privacy Policy"
 msgstr "Política de privacidad"
@@ -1079,7 +1098,6 @@ msgstr "Detalles técnicos"
 msgid "Temporarily activate or deactivate your account"
 msgstr "Activar o desactivar temporalmente tu cuenta"
 
-#: src/components/sign-up-disclaimer.tsx
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"
 msgstr "Términos del servicio"
@@ -1359,10 +1377,6 @@ msgstr ""
 
 #: src/components/reactivate-account-view.tsx
 msgid "Yes, reactivate my account"
-msgstr ""
-
-#: src/hooks/use-date-ago.ts
-msgid "yesterday"
 msgstr ""
 
 #: src/components/redirecting-view.tsx

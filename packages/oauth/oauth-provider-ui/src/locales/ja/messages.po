@@ -13,18 +13,6 @@ msgstr ""
 "Language-Team: Japanese\n"
 "Plural-Forms: \n"
 
-#: src/hooks/use-date-ago.ts
-msgid "{deltaDays} days ago"
-msgstr "{deltaDays} 日前"
-
-#: src/hooks/use-date-ago.ts
-msgid "{deltaHours} hours ago"
-msgstr "{deltaHours} 時間前"
-
-#: src/hooks/use-date-ago.ts
-msgid "{deltaMinutes} minutes ago"
-msgstr "{deltaMinutes} 分前"
-
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>ATプロトコル</0> — 開発者向け技術ドキュメント"
@@ -56,14 +44,6 @@ msgstr "<0>何が特別なのか</0><1>主な違い：あなたのデータは�
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "<your-domain>"
 msgstr "<あなたのドメイン>"
-
-#: src/hooks/use-date-ago.ts
-msgid "1 hour ago"
-msgstr "1時間前"
-
-#: src/hooks/use-date-ago.ts
-msgid "1 minute ago"
-msgstr "1分前"
 
 #: src/components/sign-in-form.tsx
 msgid "2FA Confirmation"
@@ -223,8 +203,8 @@ msgid "Back"
 msgstr "戻る"
 
 #: src/components/forms/input-handle-default.tsx
-msgid "Between {minLength} and {maxLength} characters"
-msgstr "{minLength} 文字以上 {maxLength} 文字以下"
+msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
+msgstr "{minLength, plural, zero {0} one {1} other {#}} 文字以上、{maxLength, plural, one {1文字} other {#文字}} 以下"
 
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
@@ -246,11 +226,9 @@ msgstr "ブランディング"
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "<0>承認</0>をクリックすると、このアプリケーションは、あなたのアカウントへのアクセスを、その<1>利用規約</1>と<2>プライバシーポリシー</2>に従って付与します。"
 
-#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
-#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/components/sign-up-disclaimer.tsx
-msgid "By creating an account you agree to the {0} and the {1} of this service."
-msgstr "アカウントを作成することで、このサービスの {0} および {1} に同意したものとみなされます。"
+msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
+msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgctxt "RPC lxm"
@@ -709,19 +687,61 @@ msgstr "このアカウントをアプリにサインインするためにまだ
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "あなたのブラウザがクッキーを受け入れていないようです。「続行」を押してもう一度試してください。エラーが続く場合は、プライバシー設定で「{0}」のウェブサイトのクッキーを許可していることを確認してください。"
 
-#: src/hooks/use-date-ago.ts
-msgid "just now"
-msgstr "たった今"
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {# day} other {# days}} ago"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {a minute} other {# minutes}} ago"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {an hour} other {# hours}} ago"
+msgstr ""
 
 #: src/pages/account/(authenticated)/apps/page.tsx
-msgctxt "OAuthApp"
-msgid "Last accessed <0/>"
-msgstr "最終アクセス <0/>"
+msgctxt "sessions list"
+msgid "Last accessed just now"
+msgstr ""
+
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed yesterday"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen {0, plural, one {# day} other {# days}} ago"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen {0, plural, one {a minute} other {# minutes}} ago"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen {0, plural, one {an hour} other {# hours}} ago"
+msgstr ""
 
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
-msgid "Last seen {lastUsedAgo}"
-msgstr "最終閲覧 {lastUsedAgo}"
+msgid "Last seen just now"
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen yesterday"
+msgstr ""
 
 #: src/components/update-email-dialog.tsx
 msgctxt "verify email"
@@ -853,8 +873,8 @@ msgid "Password updated!"
 msgstr "パスワードが更新されました！"
 
 #: src/components/forms/input-new-password.tsx
-msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
-msgstr "パスワードは {MIN_PASSWORD_LENGTH} 文字以上"
+msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
+msgstr ""
 
 #: src/components/utils/error-details.tsx
 msgctxt "Error"
@@ -905,10 +925,9 @@ msgid "Please try again in a moment."
 msgstr "しばらくしてからもう一度お試しください。"
 
 #: src/components/forms/button-cooldown.tsx
-msgid "Please wait {remainingSeconds} seconds before trying again."
-msgstr "{remainingSeconds} 秒待ってからもう一度やり直してください。"
+msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
+msgstr ""
 
-#: src/components/sign-up-disclaimer.tsx
 #: src/components/utils/link-title.tsx
 msgid "Privacy Policy"
 msgstr "プライバシーポリシー"
@@ -1088,7 +1107,6 @@ msgstr "技術的な詳細"
 msgid "Temporarily activate or deactivate your account"
 msgstr "一時的にアカウントを有効化または無効化する"
 
-#: src/components/sign-up-disclaimer.tsx
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"
 msgstr "利用規約"
@@ -1369,10 +1387,6 @@ msgstr "はい、アカウントを削除します"
 #: src/components/reactivate-account-view.tsx
 msgid "Yes, reactivate my account"
 msgstr "はい、アカウントを再有効化します"
-
-#: src/hooks/use-date-ago.ts
-msgid "yesterday"
-msgstr "昨日"
 
 #: src/components/redirecting-view.tsx
 msgid "You are being redirected..."

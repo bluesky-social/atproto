@@ -13,18 +13,6 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/hooks/use-date-ago.ts
-msgid "{deltaDays} days ago"
-msgstr "il y a {deltaDays} jours"
-
-#: src/hooks/use-date-ago.ts
-msgid "{deltaHours} hours ago"
-msgstr "il y a {deltaHours} heures"
-
-#: src/hooks/use-date-ago.ts
-msgid "{deltaMinutes} minutes ago"
-msgstr "il y a {deltaMinutes} minutes"
-
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>AT Protocol</0> — Documentation technique pour les développeurs"
@@ -56,14 +44,6 @@ msgstr "<0>Qu'est-ce qui le rend spécial</0><1>La grande différence : vos donn
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "<your-domain>"
 msgstr "<votre-domaine>"
-
-#: src/hooks/use-date-ago.ts
-msgid "1 hour ago"
-msgstr "il y a 1 heure"
-
-#: src/hooks/use-date-ago.ts
-msgid "1 minute ago"
-msgstr "il y a 1 minute"
 
 #: src/components/sign-in-form.tsx
 msgid "2FA Confirmation"
@@ -223,8 +203,8 @@ msgid "Back"
 msgstr "Retour"
 
 #: src/components/forms/input-handle-default.tsx
-msgid "Between {minLength} and {maxLength} characters"
-msgstr "Entre {minLength} et {maxLength} caractères"
+msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
+msgstr "Entre {minLength, plural, zero {0} one {un} other {#}} et {maxLength, plural, one {un caractère} other {# caractères}}"
 
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
@@ -246,11 +226,9 @@ msgstr "Personnalisation"
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "En cliquant sur <0>Autoriser</0>, vous accorderez à cette application l'accès à votre compte conformément à ses <1>conditions d'utilisation</1> et sa <2>politique de confidentialité</2>."
 
-#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
-#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/components/sign-up-disclaimer.tsx
-msgid "By creating an account you agree to the {0} and the {1} of this service."
-msgstr "En créant un compte, vous acceptez les {0} et la {1} de ce service."
+msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
+msgstr "En créant un compte, vous acceptez les <0>Conditions d'utilisation</0> et la <1>Politique de confidentialité</1> de ce service."
 
 #: src/components/utils/scope-description.tsx
 msgctxt "RPC lxm"
@@ -709,19 +687,61 @@ msgstr "Il semble que vous n'ayez pas encore utilisé ce compte pour vous connec
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "Il semble que votre navigateur n'accepte pas les cookies. Appuyez sur \"Continuer\" pour réessayer. Si l'erreur persiste, veuillez vous assurer que vos paramètres de confidentialité autorisent les cookies pour le site \"{0}\"."
 
-#: src/hooks/use-date-ago.ts
-msgid "just now"
-msgstr "à l'instant"
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {# day} other {# days}} ago"
+msgstr "Dernier accès il y a {0, plural, one {# jour} other {# jours}}"
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {a minute} other {# minutes}} ago"
+msgstr "Dernier accès il y a {0, plural, one {une minute} other {# minutes}}"
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {an hour} other {# hours}} ago"
+msgstr "Dernier accès il y a {0, plural, one {une heure} other {# heures}}"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
-msgctxt "OAuthApp"
-msgid "Last accessed <0/>"
-msgstr "Dernier accès <0/>"
+msgctxt "sessions list"
+msgid "Last accessed just now"
+msgstr "Dernier accès à l'instant"
+
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed yesterday"
+msgstr "Dernier accès hier"
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen {0, plural, one {# day} other {# days}} ago"
+msgstr "Dernière connexion il y a {0, plural, one {# jour} other {# jours}}"
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen {0, plural, one {a minute} other {# minutes}} ago"
+msgstr "Dernière connexion il y a {0, plural, one {une minute} other {# minutes}}"
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen {0, plural, one {an hour} other {# hours}} ago"
+msgstr "Dernière connexion il y a {0, plural, one {une heure} other {# heures}}"
 
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
-msgid "Last seen {lastUsedAgo}"
-msgstr "Dernière connexion {lastUsedAgo}"
+msgid "Last seen just now"
+msgstr "Dernière connexion à l'instant"
+
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen yesterday"
+msgstr "Dernière connexion hier"
 
 #: src/components/update-email-dialog.tsx
 msgctxt "verify email"
@@ -853,8 +873,8 @@ msgid "Password updated!"
 msgstr "Mot de passe mis à jour !"
 
 #: src/components/forms/input-new-password.tsx
-msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
-msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
+msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
+msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH, plural, other {# caractères}}"
 
 #: src/components/utils/error-details.tsx
 msgctxt "Error"
@@ -905,10 +925,9 @@ msgid "Please try again in a moment."
 msgstr "Veuillez réessayer dans un instant."
 
 #: src/components/forms/button-cooldown.tsx
-msgid "Please wait {remainingSeconds} seconds before trying again."
-msgstr "Veuillez attendre {remainingSeconds} secondes avant de réessayer."
+msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
+msgstr "Veuillez patienter {remainingSeconds, plural, one {# seconde} other {# secondes}} avant de réessayer."
 
-#: src/components/sign-up-disclaimer.tsx
 #: src/components/utils/link-title.tsx
 msgid "Privacy Policy"
 msgstr "Politique de Confidentialité"
@@ -1088,7 +1107,6 @@ msgstr "Détails techniques"
 msgid "Temporarily activate or deactivate your account"
 msgstr "Activer ou désactiver temporairement votre compte"
 
-#: src/components/sign-up-disclaimer.tsx
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"
 msgstr "Conditions d'Utilisation"
@@ -1369,10 +1387,6 @@ msgstr "Oui, supprimer mon compte"
 #: src/components/reactivate-account-view.tsx
 msgid "Yes, reactivate my account"
 msgstr "Oui, réactiver mon compte"
-
-#: src/hooks/use-date-ago.ts
-msgid "yesterday"
-msgstr "hier"
 
 #: src/components/redirecting-view.tsx
 msgid "You are being redirected..."

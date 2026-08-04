@@ -13,18 +13,6 @@ msgstr ""
 "Language-Team: quiple\n"
 "Plural-Forms: \n"
 
-#: src/hooks/use-date-ago.ts
-msgid "{deltaDays} days ago"
-msgstr "{deltaDays}일 전"
-
-#: src/hooks/use-date-ago.ts
-msgid "{deltaHours} hours ago"
-msgstr "{deltaHours}시간 전"
-
-#: src/hooks/use-date-ago.ts
-msgid "{deltaMinutes} minutes ago"
-msgstr "{deltaMinutes}분 전"
-
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>AT 프로토콜</0> — 개발자를 위한 기술 문서"
@@ -56,14 +44,6 @@ msgstr "<0>무엇이 특별한가</0><1>가장 큰 차이점은 데이터가 특
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "<your-domain>"
 msgstr ""
-
-#: src/hooks/use-date-ago.ts
-msgid "1 hour ago"
-msgstr "1시간 전"
-
-#: src/hooks/use-date-ago.ts
-msgid "1 minute ago"
-msgstr "1분 전"
 
 #: src/components/sign-in-form.tsx
 msgid "2FA Confirmation"
@@ -223,8 +203,8 @@ msgid "Back"
 msgstr "뒤로"
 
 #: src/components/forms/input-handle-default.tsx
-msgid "Between {minLength} and {maxLength} characters"
-msgstr "{minLength}~{maxLength}자 사이"
+msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
+msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
@@ -246,11 +226,9 @@ msgstr "브랜딩"
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "<0>승인</0>을 클릭하면 <1>서비스 이용약관</1> 및 <2>개인정보 처리방침</2>에 따라 이 애플리케이션이 귀하의 계정에 접근할 수 있도록 허용합니다."
 
-#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
-#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/components/sign-up-disclaimer.tsx
-msgid "By creating an account you agree to the {0} and the {1} of this service."
-msgstr "계정을 만들면 {0} 및 {1}에 동의하는 것입니다."
+msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
+msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgctxt "RPC lxm"
@@ -700,19 +678,61 @@ msgstr "이 계정으로 아직 어떤 앱에도 로그인한 적이 없는 것 
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "브라우저에서 쿠키를 허용하지 않는 것 같습니다. 다시 시도하려면 ‘계속’을 누르세요. 오류가 계속 발생하면 개인정보 설정에서 ‘{0}’ 웹사이트의 쿠키를 허용했는지 확인하세요."
 
-#: src/hooks/use-date-ago.ts
-msgid "just now"
-msgstr "방금 전"
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {# day} other {# days}} ago"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {a minute} other {# minutes}} ago"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {an hour} other {# hours}} ago"
+msgstr ""
 
 #: src/pages/account/(authenticated)/apps/page.tsx
-msgctxt "OAuthApp"
-msgid "Last accessed <0/>"
-msgstr "<0/>에 마지막으로 접근함"
+msgctxt "sessions list"
+msgid "Last accessed just now"
+msgstr ""
+
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
+msgid "Last accessed yesterday"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen {0, plural, one {# day} other {# days}} ago"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen {0, plural, one {a minute} other {# minutes}} ago"
+msgstr ""
+
+#. placeholder {0}: bucket.count
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen {0, plural, one {an hour} other {# hours}} ago"
+msgstr ""
 
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
-msgid "Last seen {lastUsedAgo}"
-msgstr "{lastUsedAgo}에 마지막으로 확인됨"
+msgid "Last seen just now"
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Last seen yesterday"
+msgstr ""
 
 #: src/components/update-email-dialog.tsx
 msgctxt "verify email"
@@ -844,8 +864,8 @@ msgid "Password updated!"
 msgstr "비밀번호를 변경했습니다!"
 
 #: src/components/forms/input-new-password.tsx
-msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
-msgstr "비밀번호는 {MIN_PASSWORD_LENGTH}자 이상이어야 합니다"
+msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
+msgstr ""
 
 #: src/components/utils/error-details.tsx
 msgctxt "Error"
@@ -896,10 +916,9 @@ msgid "Please try again in a moment."
 msgstr ""
 
 #: src/components/forms/button-cooldown.tsx
-msgid "Please wait {remainingSeconds} seconds before trying again."
-msgstr "{remainingSeconds}초 후에 다시 시도해 주세요."
+msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
+msgstr ""
 
-#: src/components/sign-up-disclaimer.tsx
 #: src/components/utils/link-title.tsx
 msgid "Privacy Policy"
 msgstr "개인정보 처리방침"
@@ -1079,7 +1098,6 @@ msgstr "기술 세부 정보"
 msgid "Temporarily activate or deactivate your account"
 msgstr "계정을 일시적으로 활성화 또는 비활성화합니다"
 
-#: src/components/sign-up-disclaimer.tsx
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"
 msgstr "서비스 이용약관"
@@ -1360,10 +1378,6 @@ msgstr ""
 #: src/components/reactivate-account-view.tsx
 msgid "Yes, reactivate my account"
 msgstr ""
-
-#: src/hooks/use-date-ago.ts
-msgid "yesterday"
-msgstr "어제"
 
 #: src/components/redirecting-view.tsx
 msgid "You are being redirected..."

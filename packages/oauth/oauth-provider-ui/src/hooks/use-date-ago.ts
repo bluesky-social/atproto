@@ -1,38 +1,28 @@
-import { useLingui } from '@lingui/react/macro'
 import { useEffect, useMemo, useState } from 'react'
 
-export function useDateAgo(date: Date | string): string {
-  const { t } = useLingui()
+export type DateAgoBucket =
+  | { type: 'seconds'; count: number }
+  | { type: 'minutes'; count: number }
+  | { type: 'hours'; count: number }
+  | { type: 'days'; count: number }
+
+export function useDateAgo(date: Date | string): DateAgoBucket {
   const delta = useDateDelta(date)
   const todayTimestamp = useTodayTimestamp()
 
-  const deltaSeconds = Math.floor(delta / 1000)
-  if (deltaSeconds < 60) {
-    return t`just now`
-  }
+  return useMemo(() => {
+    const deltaSeconds = Math.floor(delta / 1000)
+    if (deltaSeconds < 60) return { type: 'seconds', count: deltaSeconds }
 
-  const deltaMinutes = Math.floor(deltaSeconds / 60)
-  if (deltaMinutes === 1) {
-    return t`1 minute ago`
-  }
-  if (deltaMinutes < 60) {
-    return t`${deltaMinutes} minutes ago`
-  }
+    const deltaMinutes = Math.floor(deltaSeconds / 60)
+    if (deltaMinutes < 60) return { type: 'minutes', count: deltaMinutes }
 
-  const deltaHours = Math.floor(deltaMinutes / 60)
-  if (deltaHours === 1) {
-    return t`1 hour ago`
-  }
-  if (deltaHours < 24) {
-    return t`${deltaHours} hours ago`
-  }
+    const deltaHours = Math.floor(deltaMinutes / 60)
+    if (deltaHours < 24) return { type: 'hours', count: deltaHours }
 
-  if (deltaHours < 48 && new Date(date).getTime() < todayTimestamp) {
-    return t`yesterday`
-  }
-
-  const deltaDays = Math.floor(deltaHours / 24)
-  return t`${deltaDays} days ago`
+    const deltaDays = Math.floor(deltaHours / 24)
+    return { type: 'days', count: deltaDays }
+  }, [delta, todayTimestamp, date])
 }
 
 function useDateDelta(input: Date | string) {
