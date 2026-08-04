@@ -8,7 +8,7 @@ msgstr ""
 "Language: ja\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-07-27 21:20+0900\n"
+"PO-Revision-Date: 2026-08-04 21:35+0900\n"
 "Last-Translator: dolciss\n"
 "Language-Team: Japanese\n"
 "Plural-Forms: \n"
@@ -204,7 +204,7 @@ msgstr "戻る"
 
 #: src/components/forms/input-handle-default.tsx
 msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
-msgstr "{minLength, plural, zero {0} one {1} other {#}} 文字以上、{maxLength, plural, one {1文字} other {#文字}} 以下"
+msgstr "{minLength, plural, other {#文字}}以上、{maxLength, plural, other {#文字}}以下"
 
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
@@ -228,7 +228,7 @@ msgstr "<0>承認</0>をクリックすると、このアプリケーション�
 
 #: src/components/sign-up-disclaimer.tsx
 msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
-msgstr ""
+msgstr "アカウントを作成することで、このサービスの<0>利用規約</0>および<1>プライバシーポリシー</1>に同意したものとみなされます。"
 
 #: src/components/utils/scope-description.tsx
 msgctxt "RPC lxm"
@@ -691,57 +691,57 @@ msgstr "あなたのブラウザがクッキーを受け入れていないよう
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "sessions list"
 msgid "Last accessed {0, plural, one {# day} other {# days}} ago"
-msgstr ""
+msgstr "最終アクセス {0, plural, other {#日前}}"
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "sessions list"
 msgid "Last accessed {0, plural, one {a minute} other {# minutes}} ago"
-msgstr ""
+msgstr "最終アクセス {0, plural, other {#分前}}"
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "sessions list"
 msgid "Last accessed {0, plural, one {an hour} other {# hours}} ago"
-msgstr ""
+msgstr "最終アクセス {0, plural, other {#時間前}}"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "sessions list"
 msgid "Last accessed just now"
-msgstr ""
+msgstr "最終アクセス たった今"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "sessions list"
 msgid "Last accessed yesterday"
-msgstr ""
+msgstr "最終アクセス 昨日"
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
 msgid "Last seen {0, plural, one {# day} other {# days}} ago"
-msgstr ""
+msgstr "最終閲覧 {0, plural, other {#日前}}"
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
 msgid "Last seen {0, plural, one {a minute} other {# minutes}} ago"
-msgstr ""
+msgstr "最終閲覧 {0, plural, other {#分前}}"
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
 msgid "Last seen {0, plural, one {an hour} other {# hours}} ago"
-msgstr ""
+msgstr "最終閲覧 {0, plural, other {#時間前}}"
 
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
 msgid "Last seen just now"
-msgstr ""
+msgstr "最終閲覧 たった今"
 
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
 msgid "Last seen yesterday"
-msgstr ""
+msgstr "最終閲覧 昨日"
 
 #: src/components/update-email-dialog.tsx
 msgctxt "verify email"
@@ -874,7 +874,7 @@ msgstr "パスワードが更新されました！"
 
 #: src/components/forms/input-new-password.tsx
 msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
-msgstr ""
+msgstr "パスワードは{MIN_PASSWORD_LENGTH, plural, other {#文字}}以上"
 
 #: src/components/utils/error-details.tsx
 msgctxt "Error"
@@ -926,7 +926,7 @@ msgstr "しばらくしてからもう一度お試しください。"
 
 #: src/components/forms/button-cooldown.tsx
 msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
-msgstr ""
+msgstr "{remainingSeconds, plural, other {#秒}}待ってからもう一度やり直してください。"
 
 #: src/components/utils/link-title.tsx
 msgid "Privacy Policy"
