@@ -282,20 +282,9 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       primaryHue: env.primaryColorHue,
 
       error: env.errorColor,
-      errorContrast: env.errorColorContrast,
-      errorHue: env.errorColorHue,
-
       warning: env.warningColor,
-      warningContrast: env.warningColorContrast,
-      warningHue: env.warningColorHue,
-
       info: env.infoColor,
-      infoContrast: env.infoColorContrast,
-      infoHue: env.infoColorHue,
-
       success: env.successColor,
-      successContrast: env.successColorContrast,
-      successHue: env.successColorHue,
     },
     background: {
       light: env.backgroundLightUrl,

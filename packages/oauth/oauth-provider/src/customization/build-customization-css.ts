@@ -1,6 +1,5 @@
 import {
   type RgbColor,
-  extractHue,
   hslToRgb,
   pickContrastColor,
 } from '../lib/util/color.js'
@@ -17,39 +16,35 @@ export function buildCustomizationCss({
 
 function* buildCustomizationVars(branding?: Branding): Generator<string> {
   if (branding?.colors) {
-    const contrastSaturation = branding.colors.contrastSaturation ?? 30
-    yield `--contrast-sat: ${contrastSaturation.toFixed(2)}%;`
-
-    const contrastLight: RgbColor =
-      branding.colors.light ??
-      // Corresponds to color-contrast-975
-      hslToRgb({
-        h: branding.colors.primaryHue ?? 0,
-        s: contrastSaturation / 100,
-        l: 0.07,
-      })
-    const contrastDark: RgbColor =
-      branding.colors.dark ??
-      // Corresponds to color-contrast-25
-      hslToRgb({
-        h: branding.colors.primaryHue ?? 0,
-        s: contrastSaturation / 100,
-        l: 0.953,
-      })
-
     for (const name of COLOR_NAMES) {
       const value = branding.colors[name]
-      if (!value) continue // Skip missing colors
+      if (value) {
+        yield `--branding-color-${name}: ${value.r} ${value.g} ${value.b};`
+      }
+    }
 
+    // Only the primary colour needs a contrast pair (for --primary-foreground).
+    const primary = branding.colors.primary
+    if (primary) {
+      const contrastSaturation = branding.colors.contrastSaturation ?? 30
+      const contrastLight: RgbColor =
+        branding.colors.light ??
+        hslToRgb({
+          h: branding.colors.primaryHue ?? 0,
+          s: contrastSaturation / 100,
+          l: 0.07,
+        })
+      const contrastDark: RgbColor =
+        branding.colors.dark ??
+        hslToRgb({
+          h: branding.colors.primaryHue ?? 0,
+          s: contrastSaturation / 100,
+          l: 0.953,
+        })
       const contrast =
-        branding.colors[`${name}Contrast`] ??
-        pickContrastColor(value, contrastLight, contrastDark)
-
-      const hue = branding.colors[`${name}Hue`] ?? extractHue(value)
-
-      yield `--branding-color-${name}: ${value.r} ${value.g} ${value.b};`
-      yield `--branding-color-${name}-contrast: ${contrast.r} ${contrast.g} ${contrast.b};`
-      yield `--branding-color-${name}-hue: ${hue};`
+        branding.colors.primaryContrast ??
+        pickContrastColor(primary, contrastLight, contrastDark)
+      yield `--branding-color-primary-contrast: ${contrast.r} ${contrast.g} ${contrast.b};`
     }
   }
 

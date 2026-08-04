@@ -1,6 +1,7 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { Link } from '@tanstack/react-router'
 import { MonitorSmartphoneIcon } from 'lucide-react'
+import { useMemo } from 'react'
 import type {
   ActiveAccountSession,
   DidString,
@@ -22,6 +23,16 @@ export function Page() {
   const { account } = useAuthenticatedSession()
   const { data, refetch, isLoading } = useAccountSessionsQuery(account)
 
+  const sessions = useMemo(
+    () =>
+      [...(data ?? [])].sort(
+        (a, b) =>
+          new Date(b.deviceMetadata.lastSeenAt).getTime() -
+          new Date(a.deviceMetadata.lastSeenAt).getTime(),
+      ),
+    [data],
+  )
+
   if (!data && !isLoading) {
     return (
       <Notice
@@ -36,15 +47,6 @@ export function Page() {
       </Notice>
     )
   }
-
-  // @NOTE Most recently seen first. On a long list the device someone is
-  // looking for is almost always one they used recently, and the current
-  // device sorts to the top.
-  const sessions = [...(data ?? [])].sort(
-    (a, b) =>
-      new Date(b.deviceMetadata.lastSeenAt).getTime() -
-      new Date(a.deviceMetadata.lastSeenAt).getTime(),
-  )
 
   return (
     <div className="flex flex-col gap-4">

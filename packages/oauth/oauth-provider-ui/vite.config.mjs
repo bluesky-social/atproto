@@ -53,17 +53,5 @@ export default defineConfig({
       ? { buildDelay: 500, clearScreen: false }
       : undefined,
   },
-  optimizeDeps: {
-    // Needed because this is a monorepo and it exposes CommonJS
-    include: [
-      '@atproto/oauth-provider-api',
-      '@atproto/did',
-      '@atproto/jwk',
-      '@atproto/oauth-scopes',
-      '@atproto/oauth-types',
-      '@atproto/syntax',
-      'multiformats',
-    ],
-  },
   test: {},
 })

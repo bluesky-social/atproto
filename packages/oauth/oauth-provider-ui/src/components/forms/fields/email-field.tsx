@@ -1,14 +1,18 @@
 import { useLingui } from '@lingui/react/macro'
 import { MailIcon } from 'lucide-react'
+import { EMAIL_PATTERN } from '#/lib/form-patterns.ts'
 import { TextField, type TextFieldProps } from './text-field.tsx'
 
-export type EmailFieldProps = TextFieldProps
+export type EmailFieldProps = Omit<
+  TextFieldProps,
+  'type' | 'autoCapitalize' | 'autoCorrect' | 'dir' | 'spellCheck'
+>
 
 export function EmailField({
   autoComplete = 'email',
   // @NOTE `type="email"` alone accepts `user@host` without a dot; the pattern
   // additionally requires a domain with a TLD.
-  pattern = '^[^@]+@[^@]+\\.[^@]+$',
+  pattern = EMAIL_PATTERN,
   ...props
 }: EmailFieldProps) {
   const { t } = useLingui()

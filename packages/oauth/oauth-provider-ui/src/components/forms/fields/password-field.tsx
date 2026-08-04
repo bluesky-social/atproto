@@ -4,7 +4,10 @@ import { useState } from 'react'
 import { Button } from '#/components/ui/button.tsx'
 import { TextField, type TextFieldProps } from './text-field.tsx'
 
-export type PasswordFieldProps = Omit<TextFieldProps, 'type'> & {
+export type PasswordFieldProps = Omit<
+  TextFieldProps,
+  'type' | 'autoCapitalize' | 'autoCorrect' | 'dir' | 'spellCheck'
+> & {
   /** Re-hide the value when the field loses focus. */
   autoHide?: boolean
 }

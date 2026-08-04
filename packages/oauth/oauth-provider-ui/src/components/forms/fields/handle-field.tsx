@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '#/components/ui/select.tsx'
 import { Handle } from '#/components/utils/handle.tsx'
+import { HANDLE_SEGMENT_PATTERN } from '#/lib/form-patterns.ts'
 import {
   MAX_FULL_LENGTH,
   MAX_LENGTH,
@@ -108,7 +109,7 @@ export function HandleField({
           name="handle"
           title={t`Type your username`}
           type="text"
-          pattern="[a-z0-9][a-z0-9\-]+[a-z0-9]"
+          pattern={HANDLE_SEGMENT_PATTERN}
           minLength={MIN_LENGTH}
           maxLength={maxLength}
           autoCapitalize="none"

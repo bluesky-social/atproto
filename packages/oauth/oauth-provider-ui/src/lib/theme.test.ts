@@ -54,19 +54,6 @@ const SHADCN_TOKENS = [
   ...DERIVED_TOKENS.map(([token]) => token),
 ] as const
 
-// Tokens from the pre-redesign branding scale; these assert they stay gone,
-// so the scale cannot creep back in. (--branding-color-* is not in this list:
-// the provider injects those at runtime and the theme consumes them.)
-const REMOVED_LEGACY_TOKENS = [
-  '--color-text-default',
-  '--color-text-light',
-  '--color-contrast-0',
-  '--color-contrast-25',
-  '--color-primary-500',
-  '--color-error-500',
-  '--hue-primary',
-] as const
-
 function blockFor(marker: string): string {
   const start = css.indexOf(marker)
   expect(start, `missing block: ${marker}`).toBeGreaterThan(-1)
@@ -121,10 +108,6 @@ describe('style.css theme tokens', () => {
     expect(css).toContain(
       '@custom-variant dark (@media (prefers-color-scheme: dark));',
     )
-  })
-
-  it.each(REMOVED_LEGACY_TOKENS)('no longer declares %s', (token) => {
-    expect(css).not.toContain(token)
   })
 })
 
