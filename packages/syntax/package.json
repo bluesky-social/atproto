@@ -1,6 +1,6 @@
 {
   "name": "@atproto/syntax",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "license": "MIT",
   "description": "Validation for atproto identifiers and formats: DID, handle, NSID, AT URI, etc",
   "keywords": [
@@ -38,6 +38,6 @@
   },
   "scripts": {
     "test": "vitest run",
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   }
 }

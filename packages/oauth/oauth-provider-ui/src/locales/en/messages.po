@@ -13,15 +13,15 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaDays} days ago"
 msgstr "{deltaDays} days ago"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaHours} hours ago"
 msgstr "{deltaHours} hours ago"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaMinutes} minutes ago"
 msgstr "{deltaMinutes} minutes ago"
 
@@ -57,11 +57,11 @@ msgstr "<0>What makes it special</0><1>The key difference: your data isn't trapp
 msgid "<your-domain>"
 msgstr "<your-domain>"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "1 hour ago"
 msgstr "1 hour ago"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "1 minute ago"
 msgstr "1 minute ago"
 
@@ -726,7 +726,7 @@ msgstr "It appears that you haven’t used this account to sign in to any apps y
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "just now"
 msgstr "just now"
 
@@ -1410,7 +1410,7 @@ msgstr "Yes, delete my account"
 msgid "Yes, reactivate my account"
 msgstr "Yes, reactivate my account"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "yesterday"
 msgstr "yesterday"
 

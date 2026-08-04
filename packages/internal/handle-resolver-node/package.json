@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/handle-resolver-node",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "license": "MIT",
   "description": "Node specific ATProto handle to DID resolver",
   "keywords": [
@@ -36,6 +36,6 @@
     "@atproto/did": "workspace:^"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   }
 }

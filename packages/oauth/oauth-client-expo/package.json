@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-expo",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "license": "MIT",
   "description": "ATPROTO OAuth client for Expo applications",
   "authors": [
@@ -55,6 +55,6 @@
     "react-native": "*"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   }
 }

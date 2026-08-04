@@ -1,5 +1,30 @@
 # @atproto/oauth-provider
 
+## 0.21.2
+
+### Patch Changes
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update vitest dependencies
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Old code cleanup
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Replace `@atproto-labs/rollup-plugin-bundle-manifest` with
+  `@atproto-labs/rolldown-plugin-bundle-manifest` internal utility.
+
+- [#5301](https://github.com/bluesky-social/atproto/pull/5301) [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7) Thanks [@43081j](https://github.com/43081j)! - Switch from destructured default imports to named imports of CommonJS dependencies.
+
+- Updated dependencies [[`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c), [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c), [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c), [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7)]:
+  - @atproto/oauth-provider-ui@0.8.10
+  - @atproto-labs/simple-store@0.5.1
+  - @atproto-labs/fetch-node@0.3.7
+  - @atproto/oauth-scopes@0.5.8
+  - @atproto/lex-document@0.1.8
+  - @atproto/lex-resolver@0.2.5
+  - @atproto/syntax@0.7.3
+  - @atproto-labs/simple-store-memory@0.2.6
+  - @atproto/common@0.7.4
+  - @atproto/oauth-provider-api@0.7.8
+
 ## 0.21.1
 
 ### Patch Changes

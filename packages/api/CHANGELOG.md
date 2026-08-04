@@ -1,5 +1,23 @@
 # @atproto/api
 
+## 0.20.37
+
+### Patch Changes
+
+- [#5118](https://github.com/bluesky-social/atproto/pull/5118) [`ee4a0cf`](https://github.com/bluesky-social/atproto/commit/ee4a0cf0ebb3e078a014bef882720f46aca5cb89) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add support for muting reposts and quote-posts (or a combination) when muting other users.
+
+- [#5249](https://github.com/bluesky-social/atproto/pull/5249) [`29dcbc0`](https://github.com/bluesky-social/atproto/commit/29dcbc091ca72cb9dda7a2cea846f3eb4bfcef6c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add OP thread numbering to getPostThreadV2
+
+- [#5303](https://github.com/bluesky-social/atproto/pull/5303) [`a8186e7`](https://github.com/bluesky-social/atproto/commit/a8186e7cdb5ea3d8a88c2e9283d742de1bc0bba6) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - update chat lexicons
+
+- [#5301](https://github.com/bluesky-social/atproto/pull/5301) [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7) Thanks [@43081j](https://github.com/43081j)! - Switch from destructured default imports to named imports of CommonJS dependencies.
+
+- Updated dependencies [[`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c)]:
+  - @atproto/syntax@0.7.3
+  - @atproto/common-web@0.5.8
+  - @atproto/lexicon@0.7.10
+  - @atproto/xrpc@0.8.9
+
 ## 0.20.36
 
 ### Patch Changes
@@ -1590,12 +1608,10 @@
     - `XrpcClient` is the base class.
 
   #### Non-breaking changes
-
   - The `com.*` and `app.*` namespaces have been made directly available to every
     `Agent` instances.
 
   #### Deprecations
-
   - The default export of the `@atproto/xrpc` package has been deprecated. Use
     named exports instead.
   - The `Client` and `ServiceClient` classes are now deprecated. They are replaced by a single `XrpcClient` class.

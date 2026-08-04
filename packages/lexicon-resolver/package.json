@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lexicon-resolver",
-  "version": "0.4.12",
+  "version": "0.4.13",
   "license": "MIT",
   "description": "ATProto Lexicon resolution",
   "keywords": [
@@ -42,7 +42,7 @@
   },
   "scripts": {
     "test": "vitest run",
-    "build": "tsgo --build tsconfig.build.json",
+    "build": "tsc --build tsconfig.build.json",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema"
   }

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/identity",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "license": "MIT",
   "description": "Library for decentralized identities in atproto using DIDs and handles",
   "keywords": [
@@ -47,6 +47,6 @@
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:log": "cat test.log | pino-pretty",
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   }
 }

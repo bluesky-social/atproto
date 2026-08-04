@@ -13,15 +13,15 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaDays} days ago"
 msgstr "il y a {deltaDays} jours"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaHours} hours ago"
 msgstr "il y a {deltaHours} heures"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaMinutes} minutes ago"
 msgstr "il y a {deltaMinutes} minutes"
 
@@ -57,11 +57,11 @@ msgstr "<0>Qu'est-ce qui le rend spécial</0><1>La grande différence : vos donn
 msgid "<your-domain>"
 msgstr "<votre-domaine>"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "1 hour ago"
 msgstr "il y a 1 heure"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "1 minute ago"
 msgstr "il y a 1 minute"
 
@@ -726,7 +726,7 @@ msgstr "Il semble que vous n'ayez pas encore utilisé ce compte pour vous connec
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "Il semble que votre navigateur n'accepte pas les cookies. Appuyez sur \"Continuer\" pour réessayer. Si l'erreur persiste, veuillez vous assurer que vos paramètres de confidentialité autorisent les cookies pour le site \"{0}\"."
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "just now"
 msgstr "à l'instant"
 
@@ -1410,7 +1410,7 @@ msgstr "Oui, supprimer mon compte"
 msgid "Yes, reactivate my account"
 msgstr "Oui, réactiver mon compte"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "yesterday"
 msgstr "hier"
 

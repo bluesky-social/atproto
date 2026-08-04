@@ -1,6 +1,6 @@
 {
   "name": "@atproto/repo",
-  "version": "0.10.7",
+  "version": "0.10.8",
   "engines": {
     "node": ">=22"
   },
@@ -44,6 +44,6 @@
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:profile": "node --experimental-vm-modules --inspect ../../node_modules/.bin/jest",
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   }
 }

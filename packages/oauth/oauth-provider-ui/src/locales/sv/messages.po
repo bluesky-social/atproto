@@ -13,17 +13,17 @@ msgstr ""
 "Plural-Forms: \n"
 "X-Generator: Poedit 3.9\n"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaDays} days ago"
-msgstr "{deltaDays} dagar sedan"
+msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaHours} hours ago"
-msgstr "{deltaHours} timmar sedan"
+msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaMinutes} minutes ago"
-msgstr "{deltaMinutes} minuter sedan"
+msgstr ""
 
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
@@ -57,13 +57,13 @@ msgstr "<0>Vad som gör det speciellt</0><1>Den viktigaste skillnaden: din data 
 msgid "<your-domain>"
 msgstr "<din-domän>"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "1 hour ago"
-msgstr "1 timme sedan"
+msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "1 minute ago"
-msgstr "1 minut sedan"
+msgstr ""
 
 #: src/components/sign-in-form.tsx
 msgid "2FA Confirmation"
@@ -726,9 +726,9 @@ msgstr "Det verkar som att du inte har använt det här kontot för att logga in
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "Det verkar som att din webbläsare inte accepterar cookies. Klicka på ”Fortsätt” för att försöka igen. Om felet kvarstår, kontrollera att dina sekretessinställningar tillåter cookies för webbplatsen ”{0}”."
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "just now"
-msgstr "nyss"
+msgstr ""
 
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "OAuthApp"
@@ -1410,9 +1410,9 @@ msgstr "Ja, radera mitt konto"
 msgid "Yes, reactivate my account"
 msgstr "Ja, återaktivera mitt konto"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "yesterday"
-msgstr "igår"
+msgstr ""
 
 #: src/components/redirecting-view.tsx
 msgid "You are being redirected..."

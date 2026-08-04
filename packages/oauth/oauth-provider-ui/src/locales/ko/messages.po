@@ -13,17 +13,17 @@ msgstr ""
 "Language-Team: quiple\n"
 "Plural-Forms: \n"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaDays} days ago"
-msgstr "{deltaDays}일 전"
+msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaHours} hours ago"
-msgstr "{deltaHours}시간 전"
+msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaMinutes} minutes ago"
-msgstr "{deltaMinutes}분 전"
+msgstr ""
 
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
@@ -57,13 +57,13 @@ msgstr "<0>무엇이 특별한가</0><1>가장 큰 차이점은 데이터가 특
 msgid "<your-domain>"
 msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "1 hour ago"
-msgstr "1시간 전"
+msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "1 minute ago"
-msgstr "1분 전"
+msgstr ""
 
 #: src/components/sign-in-form.tsx
 msgid "2FA Confirmation"
@@ -717,9 +717,9 @@ msgstr "이 계정으로 아직 어떤 앱에도 로그인한 적이 없는 것 
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "브라우저에서 쿠키를 허용하지 않는 것 같습니다. 다시 시도하려면 ‘계속’을 누르세요. 오류가 계속 발생하면 개인정보 설정에서 ‘{0}’ 웹사이트의 쿠키를 허용했는지 확인하세요."
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "just now"
-msgstr "방금 전"
+msgstr ""
 
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "OAuthApp"
@@ -1401,9 +1401,9 @@ msgstr ""
 msgid "Yes, reactivate my account"
 msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "yesterday"
-msgstr "어제"
+msgstr ""
 
 #: src/components/redirecting-view.tsx
 msgid "You are being redirected..."

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-json",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "license": "MIT",
   "description": "Lexicon encoding utilities for AT Lexicon data in JSON format",
   "keywords": [
@@ -41,7 +41,7 @@
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.build.json",
+    "build": "tsc --build tsconfig.build.json",
     "test": "vitest run"
   }
 }

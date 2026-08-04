@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-cli",
-  "version": "0.10.8",
+  "version": "0.10.9",
   "engines": {
     "node": ">=22"
   },
@@ -42,6 +42,6 @@
     "zod": "^3.23.8"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   }
 }

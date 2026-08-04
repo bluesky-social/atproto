@@ -13,15 +13,15 @@ msgstr ""
 "Language-Team: Spanish\n"
 "Plural-Forms: \n"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaDays} days ago"
 msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaHours} hours ago"
 msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaMinutes} minutes ago"
 msgstr ""
 
@@ -57,11 +57,11 @@ msgstr ""
 msgid "<your-domain>"
 msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "1 hour ago"
 msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "1 minute ago"
 msgstr ""
 
@@ -717,7 +717,7 @@ msgstr "Parece que aún no has usado esta cuenta para iniciar sesión en ninguna
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "just now"
 msgstr ""
 
@@ -1401,7 +1401,7 @@ msgstr ""
 msgid "Yes, reactivate my account"
 msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "yesterday"
 msgstr ""
 

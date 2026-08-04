@@ -1,5 +1,25 @@
 # @atproto/ozone
 
+## 0.2.24
+
+### Patch Changes
+
+- [#5300](https://github.com/bluesky-social/atproto/pull/5300) [`2cbbb5d`](https://github.com/bluesky-social/atproto/commit/2cbbb5d16ccb1597e0391aa674349f795b404b8b) Thanks [@foysalit](https://github.com/foysalit)! - Fix createReport reporter validation to only consult the reporter's account-level moderation status. Previously a takedown or pending appeal on any of the reporter's records (posts, lists, etc.) could incorrectly block them from submitting reports or appeals.
+
+- [#5285](https://github.com/bluesky-social/atproto/pull/5285) [`d12f6ac`](https://github.com/bluesky-social/atproto/commit/d12f6ac6e2cb2590446bf9f2051287bac058c092) Thanks [@devinivy](https://github.com/devinivy)! - Migrate the internal Jetstream client to `@atproto/ws-client`. `Jetstream.close()` now resolves once the stream has fully stopped rather than returning immediately.
+
+- [#5301](https://github.com/bluesky-social/atproto/pull/5301) [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7) Thanks [@43081j](https://github.com/43081j)! - Switch from destructured default imports to named imports of CommonJS dependencies.
+
+- Updated dependencies [[`5a222b0`](https://github.com/bluesky-social/atproto/commit/5a222b05da5f9c0d32d41fb1c4437ea188aa2c32), [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c), [`ee4a0cf`](https://github.com/bluesky-social/atproto/commit/ee4a0cf0ebb3e078a014bef882720f46aca5cb89), [`29dcbc0`](https://github.com/bluesky-social/atproto/commit/29dcbc091ca72cb9dda7a2cea846f3eb4bfcef6c), [`a8186e7`](https://github.com/bluesky-social/atproto/commit/a8186e7cdb5ea3d8a88c2e9283d742de1bc0bba6), [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7), [`d12f6ac`](https://github.com/bluesky-social/atproto/commit/d12f6ac6e2cb2590446bf9f2051287bac058c092), [`d12f6ac`](https://github.com/bluesky-social/atproto/commit/d12f6ac6e2cb2590446bf9f2051287bac058c092)]:
+  - @atproto/xrpc-server@0.12.0
+  - @atproto/syntax@0.7.3
+  - @atproto/api@0.20.37
+  - @atproto/ws-client@0.2.0
+  - @atproto/common@0.7.4
+  - @atproto/lexicon@0.7.10
+  - @atproto/identity@0.5.8
+  - @atproto/xrpc@0.8.9
+
 ## 0.2.23
 
 ### Patch Changes

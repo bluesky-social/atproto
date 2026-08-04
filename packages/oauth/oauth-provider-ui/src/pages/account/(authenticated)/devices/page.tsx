@@ -10,13 +10,13 @@ import { Notice, NoticeAction } from '#/components/feedback/notice.tsx'
 import { SessionList } from '#/components/session-list.tsx'
 import { Badge } from '#/components/ui/badge.tsx'
 import { Button } from '#/components/ui/button.tsx'
+import { DateAgo } from '#/components/utils/date-ago'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import {
   useAccountSessionsQuery,
   useRevokeAccountSessionMutation,
 } from '#/data/account-sessions.ts'
 import { useBrowserName } from '#/hooks/use-browser-name'
-import { useDateAgo } from '#/hooks/use-date-ago'
 
 export function Page() {
   const { t } = useLingui()
@@ -127,8 +127,7 @@ function DeviceName({ session }: { session: ActiveAccountSession }) {
 }
 
 function LastSeen({ session }: { session: ActiveAccountSession }) {
-  const lastUsedAgo = useDateAgo(session.deviceMetadata.lastSeenAt)
-  return <>{lastUsedAgo}</>
+  return <DateAgo date={session.deviceMetadata.lastSeenAt} />
 }
 
 function SignOutButton({

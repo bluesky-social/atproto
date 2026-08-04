@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsky",
-  "version": "0.0.269",
+  "version": "0.0.270",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [
@@ -91,7 +91,7 @@
     "codegen:buf": "buf generate ../bsync/proto && buf generate ./proto",
     "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
-    "build": "tsgo --build tsconfig.build.json",
+    "build": "tsc --build tsconfig.build.json",
     "verify:import": "node --input-type=module -e \"import '@atproto/bsky'\"",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "../dev-infra/with-test-redis-and-db.sh vitest run",

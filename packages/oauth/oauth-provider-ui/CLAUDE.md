@@ -21,7 +21,7 @@ Type-check from the package directory:
 
 ```bash
 cd packages/oauth/oauth-provider-ui
-pnpm exec tsgo --build tsconfig.json
+pnpm exec tsc --build tsconfig.json
 pnpm test
 pnpm run build:ui
 ```

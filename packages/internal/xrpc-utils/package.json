@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/xrpc-utils",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "license": "MIT",
   "description": "XRPC server utilities for Node.JS",
   "keywords": [
@@ -37,6 +37,6 @@
     "@atproto/xrpc-server": "workspace:^"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   }
 }

@@ -1,5 +1,19 @@
 # @atproto/oauth-client
 
+## 0.8.2
+
+### Patch Changes
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update vitest dependencies
+
+- Updated dependencies [[`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c)]:
+  - @atproto-labs/handle-resolver@0.4.8
+  - @atproto-labs/simple-store@0.5.1
+  - @atproto-labs/identity-resolver@0.4.7
+  - @atproto-labs/did-resolver@0.3.7
+  - @atproto-labs/simple-store-memory@0.2.6
+  - @atproto/xrpc@0.8.9
+
 ## 0.8.1
 
 ### Patch Changes

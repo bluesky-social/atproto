@@ -13,17 +13,17 @@ msgstr ""
 "Language-Team: Japanese\n"
 "Plural-Forms: \n"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaDays} days ago"
-msgstr "{deltaDays} 日前"
+msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaHours} hours ago"
-msgstr "{deltaHours} 時間前"
+msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "{deltaMinutes} minutes ago"
-msgstr "{deltaMinutes} 分前"
+msgstr ""
 
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
@@ -57,13 +57,13 @@ msgstr "<0>何が特別なのか</0><1>主な違い：あなたのデータは�
 msgid "<your-domain>"
 msgstr "<あなたのドメイン>"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "1 hour ago"
-msgstr "1時間前"
+msgstr ""
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "1 minute ago"
-msgstr "1分前"
+msgstr ""
 
 #: src/components/sign-in-form.tsx
 msgid "2FA Confirmation"
@@ -726,9 +726,9 @@ msgstr "このアカウントをアプリにサインインするためにまだ
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "あなたのブラウザがクッキーを受け入れていないようです。「続行」を押してもう一度試してください。エラーが続く場合は、プライバシー設定で「{0}」のウェブサイトのクッキーを許可していることを確認してください。"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "just now"
-msgstr "たった今"
+msgstr ""
 
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "OAuthApp"
@@ -1410,9 +1410,9 @@ msgstr "はい、アカウントを削除します"
 msgid "Yes, reactivate my account"
 msgstr "はい、アカウントを再有効化します"
 
-#: src/hooks/use-date-ago.ts
+#: src/components/utils/date-ago.tsx
 msgid "yesterday"
-msgstr "昨日"
+msgstr ""
 
 #: src/components/redirecting-view.tsx
 msgid "You are being redirected..."

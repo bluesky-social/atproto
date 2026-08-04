@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/handle-resolver",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "license": "MIT",
   "description": "Isomorphic ATProto handle to DID resolver",
   "keywords": [
@@ -43,6 +43,6 @@
   },
   "scripts": {
     "test": "vitest run",
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   }
 }
