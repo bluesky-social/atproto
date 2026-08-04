@@ -20,6 +20,16 @@ updates:
         update-types:
           - 'minor'
           - 'patch'
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    groups:
+      # CI-only, and a bad bump fails loudly on the next run, so batch every
+      # action bump (majors included) into one PR.
+      actions:
+        patterns:
+          - '*'
   - package-ecosystem: 'docker'
     directories:
       - '/services/bsky'
