@@ -16,7 +16,11 @@
   ],
   "languages": {
     "JavaScript": {
-      "language_servers": ["typescript-ls", "!vtsls", "!typescript-language-server"],
+      "language_servers": [
+        "typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+      ],
       // Formatting (prettier) applied through eslint
       "formatter": "none",
       "code_actions_on_format": {
@@ -24,7 +28,11 @@
       },
     },
     "TypeScript": {
-      "language_servers": ["typescript-ls", "!vtsls", "!typescript-language-server"],
+      "language_servers": [
+        "typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+      ],
       // Formatting (prettier) applied through eslint
       "formatter": "none",
       "code_actions_on_format": {
@@ -32,7 +40,11 @@
       },
     },
     "TSX": {
-      "language_servers": ["typescript-ls", "!vtsls", "!typescript-language-server"],
+      "language_servers": [
+        "typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+      ],
       // Formatting (prettier) applied through eslint
       "formatter": "none",
       "code_actions_on_format": {
