@@ -16,6 +16,7 @@
   ],
   "languages": {
     "JavaScript": {
+      "language_servers": ["tsgo", "!vtsls"],
       // Formatting (prettier) applied through eslint
       "formatter": "none",
       "code_actions_on_format": {
@@ -23,6 +24,7 @@
       },
     },
     "TypeScript": {
+      "language_servers": ["tsgo", "!vtsls"],
       // Formatting (prettier) applied through eslint
       "formatter": "none",
       "code_actions_on_format": {
