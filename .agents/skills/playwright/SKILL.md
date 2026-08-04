@@ -1,19 +1,11 @@
 ---
 name: playwright
 description: >
-  Drive a real browser via the Playwright MCP against the OAuth flows and the
-  Account Manager UI. Use in TWO situations: (A) writing or extending an
-  end-to-end UI test using Puppeteer + `PageHelper` (e.g.
-  `packages/pds/tests/oauth.test.ts`, `account-manager.test.ts`, or any test
-  booting a browser) — the skill enforces walking the flow in the running app to
-  capture exact strings before writing code; (B) demoing, navigating, or
-  debugging the OAuth flow or Account Manager (http://localhost:2583/account)
-  against a local dev env, or against production via the demo OAuth client at
-  http://127.0.0.1:8080/?env=production. Trigger on: `puppeteer` / `playwright`
-  imports in tests, requests to demo / show / walk through / debug OAuth or the
-  account manager, mentions of `PageHelper`, `_puppeteer.ts`,
-  `browser_navigate` / `browser_click` / `browser_snapshot`, or anything that
-  needs to drive the PDS web UI.
+  Drive a real browser against this repository's OAuth flows and Account
+  Manager UI. Use when asked to write or extend a browser-based end-to-end
+  test, discover exact visible UI text before writing a test, demonstrate,
+  navigate, or debug OAuth locally or in production, exercise account-management
+  flows, or investigate behavior that requires interaction with the PDS web UI.
 disable-model-invocation: false
 ---
 

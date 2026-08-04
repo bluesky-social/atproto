@@ -1,16 +1,12 @@
 ---
 name: lexification-server
 description: >
-  Migrate **service / server** code off the legacy `@atproto/lex-cli`
-  `lex gen-server` stack to `@atproto/lex` + `@atproto/xrpc-server` —
-  server-side "lexification". Trigger on: generated `src/lexicon/` (singular)
-  imports, `createServer` / `Server` imported from `./lexicon`,
-  `server.xrpc.router`, `server.app.bsky.<method>()` registration chains →
-  `server.add(schema, handler)`, `ids.AppBsky…` → `$type` / `$lxm`,
-  `lexicon/types/...` imports → namespace dot-paths, legacy `isX()` guards →
-  `$matches` / `$isTypeOf` / `$build`, a `codegen` script running
-  `lex gen-server`, or applying branded types across a service's boundaries.
-  For consumer/client code use `lexification-client`.
+  Migrate an AT Protocol service from the legacy generated server stack to
+  `@atproto/lex` and `@atproto/xrpc-server`. Use when asked to modernize server
+  code generation, generated imports, route registration, request and response
+  validation, error handling, schema type checks, or branded types at service
+  boundaries. For outbound calls made by the service, also use the client
+  migration skill.
 disable-model-invocation: false
 ---
 

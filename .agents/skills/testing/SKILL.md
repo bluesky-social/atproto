@@ -1,7 +1,11 @@
 ---
 name: testing
 description: >
-  Testing practices for this monorepo — choosing between unit and end-to-end tests, where test files live, how tsconfig.test.json fits in, how to drive Playwright, to to write/adapt UI/end-to-end tests, and which test runner (vitest vs jest) to use. MUST be invoked BEFORE any code search or file reads whenever the user asks to add, write, or extend a test, add coverage, create a test file, set up testing in a new package, mentions vitest/jest, or refers to an existing `*.test.ts` file. Applies equally to unit tests and to end-to-end / UI tests — the skill routes to a Playwright-MCP-first discovery flow for the latter, which differs from normal code-search workflow.
+  Apply this monorepo's testing practices. Use before any code search when asked
+  to add, write, or extend tests, add coverage, choose a test runner, configure
+  testing in a package, decide where tests belong, or test a browser-based user
+  flow. Covers unit, integration, and end-to-end tests and routes UI work
+  through browser-first discovery.
 disable-model-invocation: false
 ---
 

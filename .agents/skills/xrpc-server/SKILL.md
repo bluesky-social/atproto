@@ -1,17 +1,12 @@
 ---
 name: xrpc-server
 description: >
-  Use whenever code defines the **server side** of an AT Protocol XRPC service
-  with `@atproto/xrpc-server`. Trigger on ANY of: (1) `createServer`,
-  `server.add(schema, handler)`, `server.router`, or the `Server` type;
-  (2) writing/editing an XRPC route handler — `{ params, input, auth, req, res,
-  signal }` args, `{ encoding, body }` returns, `'application/json' as const`,
-  `satisfies $Output`; (3) throwing server-side errors (`XRPCError` — capital R,
-  `InvalidRequestError`, `AuthRequiredError`, `ForbiddenError`,
-  `UpstreamFailureError`); (4) its `Headers` / `HeadersMap`; (5) WebSocket
-  subscription endpoints; (6) handler layout under `src/api/<namespace>/`.
-  Client-side calls → `lex-client`; schemas → `lex-schemas`;
-  codegen → `lex-setup`; migrating off `lex gen-server` → `lexification-server`.
+  Build or modify the server side of an AT Protocol XRPC service with
+  `@atproto/xrpc-server`. Use when asked to create an XRPC server, add or edit
+  an endpoint or route handler, process parameters, input, authentication,
+  requests, responses, or cancellation, return JSON or binary data, report
+  protocol errors, expose a WebSocket subscription, or organize server API
+  handlers. For calls to another service, use the XRPC client skill.
 disable-model-invocation: false
 ---
 

@@ -1,15 +1,12 @@
 ---
 name: lexification-client
 description: >
-  Migrate **client / consumer** code ("calls out") off the legacy
-  `@atproto/api` / `@atproto/lexicon` / `@atproto/xrpc` stack to
-  `@atproto/lex` — "lexification". Trigger on: `AtpAgent` → `Client`,
-  `agent.api.<ns>.<method>()` call chains, `result.data` → `result.body`,
-  header objects → `Headers.get()`, `HeadersMap`, `XRPCError` → `XrpcError`,
-  try/catch → `xrpcSafe()`, `jsonStringToLex` → `lexParse`, `stringifyLex` →
-  `lexStringify`, `CID` from `multiformats` → `Cid`, legacy `isX()` type
-  guards → `$matches` / `$isTypeOf`, or applying branded types at migrated
-  boundaries. For service/route code use `lexification-server`.
+  Migrate AT Protocol client or consumer code from the legacy API, Lexicon,
+  and XRPC libraries to `@atproto/lex`. Use when asked to modernize code that
+  calls external XRPC services, replace a legacy agent or client, update
+  response, error, header, JSON, CID, or runtime type handling, use branded AT
+  Protocol types at client boundaries, or adopt the modern session-aware
+  client. For service or route code, use the server migration skill.
 disable-model-invocation: false
 ---
 

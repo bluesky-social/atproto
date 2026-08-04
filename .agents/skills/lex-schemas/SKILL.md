@@ -1,14 +1,12 @@
 ---
 name: lex-schemas
 description: >
-  Use generated Lexicon schemas and build custom ones. Trigger on: `$`-prefixed
-  schema accessors — `$build`, `$matches`, `$isTypeOf`, `$parse`, `$safeParse`,
-  `$validate`, `$check`, `$type`, `$lxm`, `$nsid`, `$Params`, `$Output`;
-  the `l` schema-builder namespace; lexicon token values (`.value`); strict
-  mode; the Standard Schema interface; validation in place of zod/joi/ajv where
-  `@atproto/lex` is already a dependency; or namespace dot-path access like
-  `app.bsky.feed.post` / `com.atproto.repo.getRecord` from
-  `./lexicons/index.js`.
+  Use generated Lexicon schemas or define custom ones. Use when asked to
+  validate, parse, construct, or identify AT Protocol records and XRPC data;
+  access generated schemas, types, parameters, outputs, NSIDs, or token values;
+  enable strict validation; build a custom Lexicon schema; integrate with
+  Standard Schema; or replace a general-purpose validation library with
+  Lexicon validation.
 disable-model-invocation: false
 ---
 

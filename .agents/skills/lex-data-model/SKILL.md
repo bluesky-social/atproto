@@ -1,15 +1,10 @@
 ---
 name: lex-data-model
 description: >
-  Work with AT Protocol data values. Trigger on: `LexValue`, `LexMap`,
-  `LexScalar`; CIDs (`Cid`, `parseCid`, replacing `multiformats/cid`); bytes;
-  JSON ↔ Lex conversion (`lexParse`, `lexStringify`, `jsonToLex`, `lexToJson`,
-  `parseLexLink`, `parseLexBytes`); CBOR / DRISL encode-decode via
-  `@atproto/lex-cbor`; datetime strings (`DatetimeString`,
-  `currentDatetimeString`, `toDatetimeString`); branded strings (`DidString`,
-  `HandleString`, `AtUriString`, `AtIdentifierString`, `isDidString`, …);
-  blobs (`BlobRef`, `TypedBlobRef`, `LegacyBlobRef`); or string length helpers
-  (`graphemeLen`, `utf8Len`).
+  Represent, validate, parse, serialize, or convert AT Protocol data. Use when
+  asked to work with CIDs, raw bytes, JSON, CBOR or DRISL encoding, datetime
+  values, DIDs, handles, AT URIs and identifiers, blob references, Unicode or
+  byte string lengths, or to replace older CID and data-conversion utilities.
 disable-model-invocation: false
 ---
 

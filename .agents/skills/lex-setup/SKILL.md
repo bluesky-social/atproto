@@ -1,12 +1,11 @@
 ---
 name: lex-setup
 description: >
-  Set up or maintain `@atproto/lex` codegen in a package. Trigger on:
-  `lex install` / `lex build` / `lex install --ci`, the `lexicons.json` or
-  `manifest.json` manifest, adding or updating an NSID, editing lexicon JSON
-  and needing regeneration, wiring `prebuild` / `postinstall` / `codegen`
-  scripts, gitignoring `src/lexicons/`, tree-shaking generated code, or stale
-  codegen errors ("type X is not assignable to Y" after a lexicon edit).
+  Set up, maintain, or troubleshoot `@atproto/lex` code generation in a
+  package. Use when asked to install or update Lexicon schemas, add an NSID,
+  regenerate TypeScript after editing Lexicon JSON, configure build or install
+  scripts, manage generated schema files and tree-shaking, remove legacy code
+  generation, or fix stale, missing, or incompatible generated types.
 disable-model-invocation: false
 ---
 

@@ -1,13 +1,13 @@
 ---
 name: lex-client
 description: >
-  Use the `Client` class from `@atproto/lex` — the session-bound, high-level
-  XRPC client. Trigger on: `new Client(`, `client.call` / `client.xrpc` /
-  `client.xrpcSafe`; standalone `xrpc()` / `xrpcSafe()`; AT Proto repo helpers
-  `create`, `get`, `put`, `delete`, `list`, `applyWrites`, `uploadBlob`;
-  per-service config (headers, auth, labelers, `proxy` / service proxy target);
-  Client validation and retry options; Actions (composable client operations);
-  or replacing `AtpAgent` with `Client`.
+  Make XRPC requests to AT Protocol services with `@atproto/lex`. Use when
+  asked to make an authenticated or unauthenticated HTTP call to an XRPC
+  service, use an OAuth or password session to make requests, read or modify
+  repository records, upload blobs, configure authentication, headers,
+  labelers, service proxies, retries, or validation, compose reusable client
+  operations, or replace a legacy AT Protocol agent with the high-level client.
+  For broader client migration work, use the client migration skill.
 disable-model-invocation: false
 ---
 
