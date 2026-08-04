@@ -39,7 +39,7 @@ const paramScalarSchema: Schema<ParamScalar> = union([
 /**
  * A single parameter value: scalar or array of scalars.
  */
-export type Param = ParamScalar | ParamScalar[]
+export type Param = ParamScalar | boolean[] | number[] | string[]
 
 /**
  * Schema for validating individual parameter values.
