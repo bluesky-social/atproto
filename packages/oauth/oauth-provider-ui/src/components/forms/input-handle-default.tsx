@@ -107,7 +107,12 @@ export function InputHandleDefault({
     <>
       <div>
         <ValidationMessage hasValue={!!segment} valid={validity.validLength}>
-          {t`Between ${minLength} and ${plural(maxLength, {
+          {t`Between ${plural(minLength, {
+            zero: '0',
+            one: 'one',
+            other: '#',
+          })} and ${plural(maxLength, {
+            one: 'one character',
             other: '# characters',
           })}`}
         </ValidationMessage>

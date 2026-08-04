@@ -203,8 +203,8 @@ msgid "Back"
 msgstr "Tillbaka"
 
 #: src/components/forms/input-handle-default.tsx
-msgid "Between {minLength} and {maxLength, plural, other {# characters}}"
-msgstr ""
+msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
+msgstr "Mellan {minLength, plural, zero {0} one {ett} other {#}} och {maxLength, plural, one {ett tecken} other {# tecken}}"
 
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
@@ -689,47 +689,57 @@ msgstr "Det verkar som att din webbläsare inte accepterar cookies. Klicka på �
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
 msgid "Last accessed {0, plural, one {# day} other {# days}} ago"
-msgstr ""
+msgstr "Senast åtkomst {0, plural, one {# dag} other {# dagar}} sedan"
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/apps/page.tsx
-msgid "Last accessed {0, plural, one {# hour} other {# hours}} ago"
-msgstr ""
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {a minute} other {# minutes}} ago"
+msgstr "Senast åtkomst {0, plural, one {en minut} other {# minuter}} sedan"
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/apps/page.tsx
-msgid "Last accessed {0, plural, one {# minute} other {# minutes}} ago"
-msgstr ""
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {an hour} other {# hours}} ago"
+msgstr "Senast åtkomst {0, plural, one {en timme} other {# timmar}} sedan"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
 msgid "Last accessed just now"
 msgstr ""
 
 #: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
 msgid "Last accessed yesterday"
 msgstr ""
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
 msgid "Last seen {0, plural, one {# day} other {# days}} ago"
-msgstr ""
+msgstr "Senast sedd {0, plural, one {# dag} other {# dagar}} sedan"
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/devices/page.tsx
-msgid "Last seen {0, plural, one {# hour} other {# hours}} ago"
-msgstr ""
+msgctxt "device list"
+msgid "Last seen {0, plural, one {a minute} other {# minutes}} ago"
+msgstr "Senast sedd {0, plural, one {en minut} other {# minuter}} sedan"
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/devices/page.tsx
-msgid "Last seen {0, plural, one {# minute} other {# minutes}} ago"
-msgstr ""
+msgctxt "device list"
+msgid "Last seen {0, plural, one {an hour} other {# hours}} ago"
+msgstr "Senast sedd {0, plural, one {en timme} other {# timmar}} sedan"
 
 #: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
 msgid "Last seen just now"
 msgstr ""
 
 #: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
 msgid "Last seen yesterday"
 msgstr ""
 

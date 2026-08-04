@@ -88,16 +88,31 @@ function useLastAccessedText(date: Date | string): string {
 
   return useMemo(() => {
     switch (bucket.type) {
-      case 'just-now':
-        return t`Last accessed just now`
+      case 'seconds':
+        return t({
+          context: 'sessions list',
+          message: 'Last accessed just now',
+        })
       case 'minutes':
-        return t`Last accessed ${plural(bucket.count, { one: '# minute', other: '# minutes' })} ago`
+        return t({
+          context: 'sessions list',
+          message: `Last accessed ${plural(bucket.count, { one: 'a minute', other: '# minutes' })} ago`,
+        })
       case 'hours':
-        return t`Last accessed ${plural(bucket.count, { one: '# hour', other: '# hours' })} ago`
-      case 'yesterday':
-        return t`Last accessed yesterday`
+        return t({
+          context: 'sessions list',
+          message: `Last accessed ${plural(bucket.count, { one: 'an hour', other: '# hours' })} ago`,
+        })
       case 'days':
-        return t`Last accessed ${plural(bucket.count, { one: '# day', other: '# days' })} ago`
+        return bucket.count === 1
+          ? t({
+              context: 'sessions list',
+              message: `Last accessed yesterday`,
+            })
+          : t({
+              context: 'sessions list',
+              message: `Last accessed ${plural(bucket.count, { one: '# day', other: '# days' })} ago`,
+            })
     }
   }, [t, bucket])
 }

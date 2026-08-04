@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 
 export type DateAgoBucket =
-  | { type: 'just-now' }
+  | { type: 'seconds'; count: number }
   | { type: 'minutes'; count: number }
   | { type: 'hours'; count: number }
-  | { type: 'yesterday' }
   | { type: 'days'; count: number }
 
 export function useDateAgo(date: Date | string): DateAgoBucket {
@@ -13,7 +12,7 @@ export function useDateAgo(date: Date | string): DateAgoBucket {
 
   return useMemo(() => {
     const deltaSeconds = Math.floor(delta / 1000)
-    if (deltaSeconds < 60) return { type: 'just-now' }
+    if (deltaSeconds < 60) return { type: 'seconds', count: deltaSeconds }
 
     const deltaMinutes = Math.floor(deltaSeconds / 60)
     if (deltaMinutes < 60) return { type: 'minutes', count: deltaMinutes }
@@ -21,11 +20,8 @@ export function useDateAgo(date: Date | string): DateAgoBucket {
     const deltaHours = Math.floor(deltaMinutes / 60)
     if (deltaHours < 24) return { type: 'hours', count: deltaHours }
 
-    if (deltaHours < 48 && new Date(date).getTime() < todayTimestamp) {
-      return { type: 'yesterday' }
-    }
-
-    return { type: 'days', count: Math.floor(deltaHours / 24) }
+    const deltaDays = Math.floor(deltaHours / 24)
+    return { type: 'days', count: deltaDays }
   }, [delta, todayTimestamp, date])
 }
 

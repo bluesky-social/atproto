@@ -81,16 +81,31 @@ function useLastSeenText(date: Date | string): string {
 
   return useMemo(() => {
     switch (bucket.type) {
-      case 'just-now':
-        return t`Last seen just now`
+      case 'seconds':
+        return t({
+          context: 'device list',
+          message: 'Last seen just now',
+        })
       case 'minutes':
-        return t`Last seen ${plural(bucket.count, { one: '# minute', other: '# minutes' })} ago`
+        return t({
+          context: 'device list',
+          message: `Last seen ${plural(bucket.count, { one: 'a minute', other: '# minutes' })} ago`,
+        })
       case 'hours':
-        return t`Last seen ${plural(bucket.count, { one: '# hour', other: '# hours' })} ago`
-      case 'yesterday':
-        return t`Last seen yesterday`
+        return t({
+          context: 'device list',
+          message: `Last seen ${plural(bucket.count, { one: 'an hour', other: '# hours' })} ago`,
+        })
       case 'days':
-        return t`Last seen ${plural(bucket.count, { one: '# day', other: '# days' })} ago`
+        return bucket.count === 1
+          ? t({
+              context: 'device list',
+              message: `Last seen yesterday`,
+            })
+          : t({
+              context: 'device list',
+              message: `Last seen ${plural(bucket.count, { one: '# day', other: '# days' })} ago`,
+            })
     }
   }, [t, bucket])
 }

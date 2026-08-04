@@ -1,17 +1,17 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: \n"
-"Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-02-27 14:03+0100\n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
-"Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: fr\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
 "Plural-Forms: \n"
-"X-Generator: Poedit 3.9\n"
 
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
@@ -102,7 +102,8 @@ msgstr "Nom du compte"
 msgid "Account overview"
 msgstr "Aperçu du compte"
 
-#: src/authorization-page.tsx src/data/account.ts
+#: src/authorization-page.tsx
+#: src/data/account.ts
 msgid "Account reactivated"
 msgstr "Compte réactivé"
 
@@ -132,7 +133,8 @@ msgstr "Vous avez déjà un code ?"
 msgid "An application on your device"
 msgstr "Une application sur votre appareil"
 
-#: src/components/error-view.tsx src/contexts/notifications.tsx
+#: src/components/error-view.tsx
+#: src/contexts/notifications.tsx
 msgid "An error occurred"
 msgstr "Une erreur s'est produite"
 
@@ -182,7 +184,8 @@ msgctxt "OAuthScope"
 msgid "Authenticate"
 msgstr "Vous authentifier"
 
-#: src/components/consent-form.tsx src/components/consent-view.tsx
+#: src/components/consent-form.tsx
+#: src/components/consent-view.tsx
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Autoriser"
@@ -193,14 +196,15 @@ msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Autorisé le {0}"
 
-#: src/components/forms/form-card.tsx src/components/forms/wizard-card.tsx
+#: src/components/forms/form-card.tsx
+#: src/components/forms/wizard-card.tsx
 #: src/components/sign-in-picker.tsx
 msgid "Back"
 msgstr "Retour"
 
 #: src/components/forms/input-handle-default.tsx
-msgid "Between {minLength} and {maxLength, plural, other {# characters}}"
-msgstr "Entre {minLength} et {maxLength, plural, other {# caractères}}"
+msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
+msgstr "Entre {minLength, plural, zero {0} one {un} other {#}} et {maxLength, plural, one {un caractère} other {# caractères}}"
 
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
@@ -232,8 +236,10 @@ msgid "Call"
 msgstr "Appeler"
 
 #: src/components/authenticate-welcome-view.tsx
-#: src/components/delete-account-dialog.tsx src/components/forms/form-card.tsx
-#: src/components/reactivate-account-view.tsx src/contexts/authentication.tsx
+#: src/components/delete-account-dialog.tsx
+#: src/components/forms/form-card.tsx
+#: src/components/reactivate-account-view.tsx
+#: src/contexts/authentication.tsx
 msgid "Cancel"
 msgstr "Annuler"
 
@@ -274,7 +280,8 @@ msgstr "Vérifiez votre boîte mail pour le code de confirmation."
 msgid "Check your inbox for the verification code."
 msgstr "Consultez votre boîte de réception pour obtenir le code de vérification."
 
-#: src/data/email.ts src/data/password.ts
+#: src/data/email.ts
+#: src/data/password.ts
 msgid "Check your inbox."
 msgstr "Vérifiez votre boîte de réception."
 
@@ -589,8 +596,7 @@ msgstr "Vous rencontrez des difficultés ? <0>Contactez le support</0>"
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
 #: src/components/forms/input-handle-custom-instructions.tsx
-msgid ""
-"Hello,\n"
+msgid "Hello,\n"
 "\n"
 "To associate the domain \"{handle}\" with my AT Protocol identity ({did}), one of the following configuration changes is required. Either method is sufficient, only one needs to be applied.\n"
 "\n"
@@ -600,8 +606,7 @@ msgid ""
 "A detailed tutorial can be found here: {tutorialHref}\n"
 "\n"
 "Thank you."
-msgstr ""
-"Bonjour,\n"
+msgstr "Bonjour,\n"
 "\n"
 "Pour associer le domaine \"{handle}\" à mon identité AT Protocol ({did}), l'une des modifications de configuration suivantes est requise. Chaque méthode est suffisante, une seule doit être appliquée.\n"
 "\n"
@@ -684,49 +689,59 @@ msgstr "Il semble que votre navigateur n'accepte pas les cookies. Appuyez sur \"
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
 msgid "Last accessed {0, plural, one {# day} other {# days}} ago"
 msgstr "Dernier accès il y a {0, plural, one {# jour} other {# jours}}"
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/apps/page.tsx
-msgid "Last accessed {0, plural, one {# hour} other {# hours}} ago"
-msgstr "Dernier accès il y a {0, plural, one {# heure} other {# heures}}"
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {a minute} other {# minutes}} ago"
+msgstr "Dernier accès il y a {0, plural, one {une minute} other {# minutes}}"
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/apps/page.tsx
-msgid "Last accessed {0, plural, one {# minute} other {# minutes}} ago"
-msgstr "Dernier accès il y a {0, plural, one {# minute} other {# minutes}}"
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {an hour} other {# hours}} ago"
+msgstr "Dernier accès il y a {0, plural, one {une heure} other {# heures}}"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
 msgid "Last accessed just now"
 msgstr "Dernier accès à l'instant"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
 msgid "Last accessed yesterday"
 msgstr "Dernier accès hier"
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
 msgid "Last seen {0, plural, one {# day} other {# days}} ago"
-msgstr "Vu il y a {0, plural, one {# jour} other {# jours}}"
+msgstr "Dernière connexion il y a {0, plural, one {# jour} other {# jours}}"
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/devices/page.tsx
-msgid "Last seen {0, plural, one {# hour} other {# hours}} ago"
-msgstr "Vu il y a {0, plural, one {# heure} other {# heures}}"
+msgctxt "device list"
+msgid "Last seen {0, plural, one {a minute} other {# minutes}} ago"
+msgstr "Dernière connexion il y a {0, plural, one {une minute} other {# minutes}}"
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/devices/page.tsx
-msgid "Last seen {0, plural, one {# minute} other {# minutes}} ago"
-msgstr "Vu il y a {0, plural, one {# minute} other {# minutes}}"
+msgctxt "device list"
+msgid "Last seen {0, plural, one {an hour} other {# hours}} ago"
+msgstr "Dernière connexion il y a {0, plural, one {une heure} other {# heures}}"
 
 #: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
 msgid "Last seen just now"
-msgstr "Vu à l'instant"
+msgstr "Dernière connexion à l'instant"
 
 #: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
 msgid "Last seen yesterday"
-msgstr "Vu hier"
+msgstr "Dernière connexion hier"
 
 #: src/components/update-email-dialog.tsx
 msgctxt "verify email"
@@ -803,7 +818,8 @@ msgctxt "Error"
 msgid "Name"
 msgstr "Nom"
 
-#: src/components/update-email-dialog.tsx src/components/update-email-form.tsx
+#: src/components/update-email-dialog.tsx
+#: src/components/update-email-form.tsx
 msgid "New email address"
 msgstr "Nouvelle adresse email"
 
@@ -811,7 +827,8 @@ msgstr "Nouvelle adresse email"
 msgid "New password"
 msgstr "Nouveau mot de passe"
 
-#: src/components/forms/wizard-card.tsx src/components/reset-password-view.tsx
+#: src/components/forms/wizard-card.tsx
+#: src/components/reset-password-view.tsx
 msgid "Next"
 msgstr "Suivant"
 
@@ -824,7 +841,8 @@ msgid "Only letters, numbers, and hyphens"
 msgstr "Uniquement des lettres, des chiffres et des traits d'union"
 
 #: src/components/delete-account-confirm-form.tsx
-#: src/components/forms/input-password.tsx src/components/sign-in-form.tsx
+#: src/components/forms/input-password.tsx
+#: src/components/sign-in-form.tsx
 #: src/components/sign-up-credentials-form.tsx
 #: src/pages/account/(authenticated)/manage/page.tsx
 msgid "Password"
@@ -875,7 +893,8 @@ msgstr "Effectuer des actions authentifiées vers <0>n'importe quel service</0> 
 msgid "Please authenticate to continue"
 msgstr "Veuillez vous connecter pour continuer"
 
-#: src/data/email.ts src/data/password.ts
+#: src/data/email.ts
+#: src/data/password.ts
 msgid "Please check the email address and try again."
 msgstr "Veuillez vérifier l'adresse email et réessayer."
 
@@ -887,7 +906,8 @@ msgstr "Veuillez vérifier le nom d'utilisateur et réessayer."
 msgid "Please check your code and password, then try again."
 msgstr "Veuillez vérifier votre code et votre mot de passe, puis réessayer."
 
-#: src/data/email.ts src/data/password.ts
+#: src/data/email.ts
+#: src/data/password.ts
 msgid "Please check your reset code and try again."
 msgstr "Veuillez vérifier votre code de réinitialisation et réessayer."
 
@@ -899,7 +919,8 @@ msgstr "Veuillez vérifier votre code de vérification et réessayer."
 msgid "Please enter the security code that was sent to your email address."
 msgstr "Veuillez saisir le code de sécurité qui a été envoyé à votre adresse email."
 
-#: src/data/account.ts src/data/email.ts
+#: src/data/account.ts
+#: src/data/email.ts
 msgid "Please try again in a moment."
 msgstr "Veuillez réessayer dans un instant."
 
@@ -1008,7 +1029,8 @@ msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr "Connexion"
 
-#: src/components/authenticate-welcome-view.tsx src/components/sign-in-form.tsx
+#: src/components/authenticate-welcome-view.tsx
+#: src/components/sign-in-form.tsx
 msgctxt "verb"
 msgid "Sign in"
 msgstr "Se connecter"
@@ -1035,7 +1057,8 @@ msgctxt "device list"
 msgid "Sign out"
 msgstr "Déconnecter"
 
-#: src/components/sign-in-picker.tsx src/components/sign-up-view.tsx
+#: src/components/sign-in-picker.tsx
+#: src/components/sign-up-view.tsx
 msgid "Sign up"
 msgstr "Inscription"
 
@@ -1385,7 +1408,8 @@ msgstr "Vous pouvez désactiver votre compte à nouveau à tout moment depuis ce
 msgid "You can now sign in with your new email."
 msgstr "Vous pouvez maintenant vous connecter avec votre nouvelle adresse email."
 
-#: src/components/reset-password-view.tsx src/data/password.ts
+#: src/components/reset-password-view.tsx
+#: src/data/password.ts
 msgid "You can now sign in with your new password."
 msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
 

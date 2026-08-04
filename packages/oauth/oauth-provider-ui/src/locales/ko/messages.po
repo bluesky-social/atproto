@@ -203,7 +203,7 @@ msgid "Back"
 msgstr "뒤로"
 
 #: src/components/forms/input-handle-default.tsx
-msgid "Between {minLength} and {maxLength, plural, other {# characters}}"
+msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
@@ -680,47 +680,57 @@ msgstr "브라우저에서 쿠키를 허용하지 않는 것 같습니다. 다�
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
 msgid "Last accessed {0, plural, one {# day} other {# days}} ago"
 msgstr ""
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/apps/page.tsx
-msgid "Last accessed {0, plural, one {# hour} other {# hours}} ago"
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {a minute} other {# minutes}} ago"
 msgstr ""
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/apps/page.tsx
-msgid "Last accessed {0, plural, one {# minute} other {# minutes}} ago"
+msgctxt "sessions list"
+msgid "Last accessed {0, plural, one {an hour} other {# hours}} ago"
 msgstr ""
 
 #: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
 msgid "Last accessed just now"
 msgstr ""
 
 #: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "sessions list"
 msgid "Last accessed yesterday"
 msgstr ""
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
 msgid "Last seen {0, plural, one {# day} other {# days}} ago"
 msgstr ""
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/devices/page.tsx
-msgid "Last seen {0, plural, one {# hour} other {# hours}} ago"
+msgctxt "device list"
+msgid "Last seen {0, plural, one {a minute} other {# minutes}} ago"
 msgstr ""
 
 #. placeholder {0}: bucket.count
 #: src/pages/account/(authenticated)/devices/page.tsx
-msgid "Last seen {0, plural, one {# minute} other {# minutes}} ago"
+msgctxt "device list"
+msgid "Last seen {0, plural, one {an hour} other {# hours}} ago"
 msgstr ""
 
 #: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
 msgid "Last seen just now"
 msgstr ""
 
 #: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
 msgid "Last seen yesterday"
 msgstr ""
 
