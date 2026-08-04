@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+  - package-ecosystem: 'docker'
+    directories:
+      - '/services/bsky'
+      - '/services/bsync'
+      - '/services/ozone'
+      - '/services/pds'
+    schedule:
+      interval: 'weekly'
