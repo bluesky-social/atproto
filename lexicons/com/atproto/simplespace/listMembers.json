@@ -11,7 +11,7 @@
         "properties": {
           "space": {
             "type": "string",
-            "format": "at-uri",
+            "format": "space-ref",
             "description": "Reference to the space."
           },
           "limit": {
@@ -45,7 +45,14 @@
           }
         }
       },
-      "errors": [{ "name": "SpaceNotFound" }, { "name": "NotSpaceOwner" }]
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "NotSpaceOwner"
+        }
+      ]
     },
     "member": {
       "type": "object",

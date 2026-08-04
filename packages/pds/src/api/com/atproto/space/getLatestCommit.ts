@@ -1,4 +1,4 @@
-import { Server } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertSpaceRead, buildSignedCommit } from './util.js'
@@ -26,10 +26,17 @@ export default function (server: Server, ctx: AppContext) {
         })
       })
 
+      if (!commit) {
+        throw new InvalidRequestError(
+          `Could not find repo for space: ${space}`,
+          'RepoNotFound',
+        )
+      }
+
       return {
         encoding: 'application/json' as const,
         body: {
-          commit: commit && com.atproto.space.defs.signedCommit.build(commit),
+          commit: com.atproto.space.defs.signedCommit.build(commit),
         },
       }
     },

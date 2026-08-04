@@ -4,14 +4,14 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Describe a space. Served by the space host. Returns the space URI plus an open-union `config` carrying host-implementation-specific configuration (e.g. com.atproto.simplespace.defs#spaceConfig). Clients that don't recognize the config variant should ignore it.",
+      "description": "Describe a space. Served by the space host. Requires either OAuth (for a caller with an account on this host) or a space credential (for a member hosted elsewhere); either way the caller must be authorized for the space. Returns the space URI plus an open-union `config` carrying host-implementation-specific configuration (e.g. com.atproto.simplespace.defs#spaceConfig). Clients that don't recognize the config variant should ignore it.",
       "parameters": {
         "type": "params",
         "required": ["space"],
         "properties": {
           "space": {
             "type": "string",
-            "format": "at-uri",
+            "format": "space-ref",
             "description": "Reference to the space."
           }
         }
@@ -24,7 +24,7 @@
           "properties": {
             "uri": {
               "type": "string",
-              "format": "at-uri",
+              "format": "space-ref",
               "description": "URI of the space."
             },
             "config": {

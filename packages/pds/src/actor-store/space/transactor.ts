@@ -1,8 +1,9 @@
 import { TID } from '@atproto/common'
 import { cidForLex, encode } from '@atproto/lex-cbor'
-import { Cid, parseCid } from '@atproto/lex-data'
+import { Cid, TypedBlobRef, parseCid } from '@atproto/lex-data'
 import { RepoCommit, SpaceRecord } from '@atproto/space'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { BlobTransactor } from '../blob/transactor.js'
 import { ActorDb } from '../db/index.js'
 import { SpaceReader } from './reader.js'
 
@@ -16,10 +17,17 @@ export type SpaceConfig = {
 const MAX_WRITES_PER_COMMIT = 200
 
 // `put` resolves to a create or update depending on what's stored.
+type SpaceRecordWrite = {
+  collection: string
+  rkey: string
+  record: SpaceRecord
+  blobs?: TypedBlobRef[]
+}
+
 export type SpaceWrite =
-  | { action: 'create'; collection: string; rkey: string; record: SpaceRecord }
-  | { action: 'update'; collection: string; rkey: string; record: SpaceRecord }
-  | { action: 'put'; collection: string; rkey: string; record: SpaceRecord }
+  | ({ action: 'create' } & SpaceRecordWrite)
+  | ({ action: 'update' } & SpaceRecordWrite)
+  | ({ action: 'put' } & SpaceRecordWrite)
   | { action: 'delete'; collection: string; rkey: string }
 
 export type SpaceWriteResult =
@@ -57,7 +65,10 @@ export class SpaceRecordAlreadyExistsError extends InvalidRequestError {
 }
 
 export class SpaceTransactor extends SpaceReader {
-  constructor(public db: ActorDb) {
+  constructor(
+    public db: ActorDb,
+    public blob: BlobTransactor,
+  ) {
     super(db)
   }
 
@@ -298,7 +309,42 @@ export class SpaceTransactor extends SpaceReader {
       .where('space', '=', space)
       .execute()
 
+    await this.processBlobs(space, writes, results)
+
     return { rev, setHash: nextState, results }
+  }
+
+  // Until a blob is linked to a record it stays at its temp key, so getBlob would
+  // find its metadata but none of its bytes.
+  private async processBlobs(
+    space: string,
+    writes: SpaceWrite[],
+    results: SpaceWriteResult[],
+  ): Promise<void> {
+    const touchedPaths = results.map((res) => ({
+      space,
+      collection: res.collection,
+      rkey: res.rkey,
+    }))
+    const writtenBlobs: TypedBlobRef[] = []
+    for (const write of writes) {
+      if (write.action !== 'delete') {
+        writtenBlobs.push(...(write.blobs ?? []))
+      }
+    }
+    await this.blob.deleteDereferencedSpaceBlobs(touchedPaths, writtenBlobs)
+
+    for (const write of writes) {
+      if (write.action === 'delete') continue
+      for (const blob of write.blobs ?? []) {
+        await this.blob.associateSpaceBlob(blob, {
+          space,
+          collection: write.collection,
+          rkey: write.rkey,
+        })
+        await this.blob.verifyBlobAndMakePermanent(blob)
+      }
+    }
   }
 
   private async getRecordCid(
@@ -363,6 +409,17 @@ export class SpaceTransactor extends SpaceReader {
           lastIssuedAt: timestamp,
         }),
       )
+      .execute()
+  }
+
+  async removeCredentialRecipient(
+    space: string,
+    serviceDid: string,
+  ): Promise<void> {
+    await this.db.db
+      .deleteFrom('space_credential_recipient')
+      .where('space', '=', space)
+      .where('serviceDid', '=', serviceDid)
       .execute()
   }
 }

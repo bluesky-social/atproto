@@ -11,7 +11,7 @@
         "properties": {
           "space": {
             "type": "string",
-            "format": "at-uri",
+            "format": "space-ref",
             "description": "Reference to the space."
           },
           "limit": {
@@ -45,11 +45,15 @@
           }
         }
       },
-      "errors": [{ "name": "SpaceNotFound" }]
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        }
+      ]
     },
     "repo": {
       "type": "object",
-      "required": ["did"],
+      "required": ["did", "rev", "hash"],
       "properties": {
         "did": {
           "type": "string",
@@ -58,7 +62,8 @@
         },
         "rev": {
           "type": "string",
-          "description": "The repo's current revision (TID), as last reported to the authority. May lag the repo host, which is the source of truth."
+          "description": "The repo's current revision (TID), as last reported to the authority. May lag the repo host, which is the source of truth.",
+          "format": "tid"
         },
         "hash": {
           "type": "bytes",

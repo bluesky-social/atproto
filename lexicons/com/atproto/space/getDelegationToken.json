@@ -11,7 +11,7 @@
         "properties": {
           "space": {
             "type": "string",
-            "format": "at-uri",
+            "format": "space-ref",
             "description": "Reference to the space."
           }
         }

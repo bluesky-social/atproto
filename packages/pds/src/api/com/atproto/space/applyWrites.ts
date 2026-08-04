@@ -8,6 +8,8 @@ import {
 import { SpaceWrite } from '../../../../actor-store/space/index.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import { ValidationStatus } from '../../../../repo/index.js'
+import { prepareSpaceWrite } from './prepare.js'
 import { assertSpaceScope, fireNotifyWrite } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -24,31 +26,55 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError('repo must match authenticated user')
       }
 
+      // One entry per write, in order, so it lines up with `commit.results`.
+      const statuses: (ValidationStatus | undefined)[] = []
+
       // No `put` here, so every action is directly scope-checkable.
-      const ops: Exclude<SpaceWrite, { action: 'put' }>[] = writes.map((w) => {
-        if (com.atproto.space.applyWrites.create.isTypeOf(w)) {
-          return {
-            action: 'create',
-            collection: w.collection,
-            rkey: w.rkey ?? TID.nextStr(),
-            record: w.value,
+      const ops: Exclude<SpaceWrite, { action: 'put' }>[] = writes.map(
+        (w, i) => {
+          if (com.atproto.space.applyWrites.create.isTypeOf(w)) {
+            const rkey = w.rkey ?? TID.nextStr()
+            const prepared = prepareSpaceWrite({
+              collection: w.collection,
+              rkey,
+              record: w.value,
+              validate: input.body.validate,
+              validationPath: ['writes', i, 'value'],
+            })
+            statuses[i] = prepared.validationStatus
+            return {
+              action: 'create',
+              collection: w.collection,
+              rkey,
+              record: prepared.record,
+              blobs: prepared.blobs,
+            }
+          } else if (com.atproto.space.applyWrites.update.isTypeOf(w)) {
+            const prepared = prepareSpaceWrite({
+              collection: w.collection,
+              rkey: w.rkey,
+              record: w.value,
+              validate: input.body.validate,
+              validationPath: ['writes', i, 'value'],
+            })
+            statuses[i] = prepared.validationStatus
+            return {
+              action: 'update',
+              collection: w.collection,
+              rkey: w.rkey,
+              record: prepared.record,
+              blobs: prepared.blobs,
+            }
+          } else if (com.atproto.space.applyWrites.delete.isTypeOf(w)) {
+            return {
+              action: 'delete',
+              collection: w.collection,
+              rkey: w.rkey,
+            }
           }
-        } else if (com.atproto.space.applyWrites.update.isTypeOf(w)) {
-          return {
-            action: 'update',
-            collection: w.collection,
-            rkey: w.rkey,
-            record: w.value,
-          }
-        } else if (com.atproto.space.applyWrites.delete.isTypeOf(w)) {
-          return {
-            action: 'delete',
-            collection: w.collection,
-            rkey: w.rkey,
-          }
-        }
-        throw new InvalidRequestError('Unknown write type')
-      })
+          throw new InvalidRequestError('Unknown write type')
+        },
+      )
 
       for (const op of ops) {
         assertSpaceScope(auth, space, {
@@ -71,7 +97,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json' as const,
         body: {
-          results: commit.results.map((result) => {
+          results: commit.results.map((result, i) => {
             const uri =
               `${space}/${did}/${result.collection}/${result.rkey}` as AtUriString
             if (result.action === 'delete') {
@@ -81,7 +107,11 @@ export default function (server: Server, ctx: AppContext) {
               result.action === 'create'
                 ? com.atproto.space.applyWrites.createResult
                 : com.atproto.space.applyWrites.updateResult
-            return resultType.build({ uri, cid: result.cid.toString() })
+            return resultType.build({
+              uri,
+              cid: result.cid.toString(),
+              validationStatus: statuses[i],
+            })
           }),
         },
       }

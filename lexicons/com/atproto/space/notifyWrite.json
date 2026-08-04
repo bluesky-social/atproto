@@ -13,7 +13,7 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "at-uri",
+              "format": "space-ref",
               "description": "Reference to the space."
             },
             "repo": {
@@ -23,7 +23,8 @@
             },
             "rev": {
               "type": "string",
-              "description": "The revision of the write."
+              "description": "The revision of the write.",
+              "format": "tid"
             },
             "hash": {
               "type": "bytes",

@@ -2,6 +2,7 @@ import { AtUriString } from '@atproto/syntax'
 import { ForbiddenError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import { prepareSpaceWrite } from './prepare.js'
 import { assertSpaceScope, fireNotifyWrite } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -18,6 +19,13 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError('repo must match authenticated user')
       }
 
+      const prepared = prepareSpaceWrite({
+        collection,
+        rkey,
+        record,
+        validate: input.body.validate,
+      })
+
       const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
         // Check the scope for what this actually is; requiring both would lock
         // out an app granted only `update`.
@@ -27,7 +35,13 @@ export default function (server: Server, ctx: AppContext) {
           collection,
         })
         return actorTxn.space.applyWrites(space, [
-          { action: 'put', collection, rkey, record },
+          {
+            action: 'put',
+            collection,
+            rkey,
+            record: prepared.record,
+            blobs: prepared.blobs,
+          },
         ])
       })
 
@@ -44,6 +58,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           uri: `${space}/${did}/${collection}/${rkey}` as AtUriString,
           cid: result.cid!.toString(),
+          validationStatus: prepared.validationStatus,
         },
       }
     },

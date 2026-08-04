@@ -19,18 +19,23 @@ export default function (server: Server, ctx: AppContext) {
 
       assertSpaceScope(auth, space, { action: 'delete', collection })
 
-      const commit = await ctx.actorStore.transact(did, (actorTxn) =>
-        actorTxn.space.applyWrites(space, [
+      // Idempotent, as com.atproto.repo.deleteRecord is.
+      const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
+        const existing = await actorTxn.space.getRecord(space, collection, rkey)
+        if (!existing) return null
+        return actorTxn.space.applyWrites(space, [
           { action: 'delete', collection, rkey },
-        ]),
-      )
-
-      await fireNotifyWrite(ctx, {
-        space,
-        writerDid: did,
-        rev: commit.rev,
-        setHash: commit.setHash,
+        ])
       })
+
+      if (commit) {
+        await fireNotifyWrite(ctx, {
+          space,
+          writerDid: did,
+          rev: commit.rev,
+          setHash: commit.setHash,
+        })
+      }
 
       return {
         encoding: 'application/json' as const,

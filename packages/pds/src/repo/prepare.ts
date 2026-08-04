@@ -61,7 +61,7 @@ const knownSchemas = new Map<string, RecordSchema>(
   ].map((schema: RecordSchema) => [schema.$type, schema]),
 )
 
-const validateRecord = (
+export const validateRecord = (
   record: TypedLexMap,
   rkey: RecordKeyString,
   opts: {

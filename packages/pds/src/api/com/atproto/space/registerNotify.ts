@@ -2,7 +2,11 @@ import { toDatetimeString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertCredentialSpace, toSpaceRef } from './util.js'
+import {
+  assertCredentialSpace,
+  resolveNotifyService,
+  toSpaceRef,
+} from './util.js'
 
 // Registrations are valid for 24h; the caller renews before expiry. May be
 // longer than the space-credential window the request was authed with.
@@ -12,15 +16,19 @@ export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.registerNotify, {
     auth: ctx.authVerifier.spaceCredentialAuth,
     handler: async ({ input, auth }) => {
-      const { space, endpoint } = input.body
+      const { space, service } = input.body
 
       assertCredentialSpace(auth.credentials, space)
 
       const { spaceDid } = toSpaceRef(space)
 
-      // Key the registration by the endpoint it delivers to. (The space
-      // credential no longer carries an attested client_id.)
-      const serviceKey = endpoint
+      const endpoint = await resolveNotifyService(ctx, service)
+      if (!endpoint) {
+        throw new InvalidRequestError(
+          `Could not resolve a service endpoint for ${service}`,
+          'ServiceNotResolvable',
+        )
+      }
 
       const spaceRow = await ctx.actorStore.read(spaceDid, (store) =>
         store.space.getSpace(space),
@@ -30,11 +38,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       await ctx.actorStore.transact(spaceDid, async (actorTxn) => {
-        await actorTxn.space.recordCredentialRecipient(
-          space,
-          serviceKey,
-          endpoint,
-        )
+        await actorTxn.space.recordCredentialRecipient(space, service, endpoint)
       })
 
       const expiresAt = toDatetimeString(

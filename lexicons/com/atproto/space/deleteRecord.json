@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Delete a record in a permissioned space, or ensure it doesn't exist. Requires auth, implemented by PDS.",
+      "description": "Delete a record from a permissioned space, or ensure it doesn't exist. Succeeds whether or not the record was present. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -13,7 +13,7 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "at-uri",
+              "format": "space-ref",
               "description": "Reference to the space."
             },
             "repo": {
@@ -41,7 +41,11 @@
           "properties": {}
         }
       },
-      "errors": [{ "name": "SpaceNotFound" }]
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        }
+      ]
     }
   }
 }

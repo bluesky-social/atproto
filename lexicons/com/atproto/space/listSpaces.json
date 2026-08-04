@@ -4,19 +4,19 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the spaces the authenticated user holds a repo in (i.e. spaces the user has written data to), optionally filtered by type and/or owner DID. Note this is not 'spaces I'm a member of' — a member's PDS only tracks spaces its user has written to. Requires auth, implemented by PDS.",
+      "description": "List the spaces the authenticated user holds a repo in (i.e. spaces the user has written data to), optionally filtered by type and/or authority DID. Note this is not 'spaces I'm a member of' — a member's PDS only tracks spaces its user has written to. Requires auth, implemented by PDS.",
       "parameters": {
         "type": "params",
         "properties": {
           "type": {
             "type": "string",
             "format": "nsid",
-            "description": "Filter to spaces of this type. Required if the caller's OAuth scope is narrower than `space:*`."
+            "description": "Filter to spaces of this type."
           },
           "did": {
             "type": "string",
             "format": "did",
-            "description": "Filter to spaces owned by this DID. Required if the caller's OAuth scope is narrower than `?did=*`."
+            "description": "Filter to spaces under this authority DID."
           },
           "limit": {
             "type": "integer",
@@ -52,16 +52,12 @@
     },
     "spaceView": {
       "type": "object",
-      "required": ["uri", "isOwner"],
+      "required": ["uri"],
       "properties": {
         "uri": {
           "type": "string",
-          "format": "at-uri",
+          "format": "space-ref",
           "description": "URI of the space."
-        },
-        "isOwner": {
-          "type": "boolean",
-          "description": "Whether the authenticated user is the owner of the space."
         }
       }
     }

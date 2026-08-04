@@ -29,6 +29,7 @@
         },
         "rev": {
           "type": "string",
+          "format": "tid",
           "description": "Commit revision (TID), also bound into ctx."
         }
       }

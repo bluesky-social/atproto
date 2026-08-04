@@ -18,10 +18,15 @@ export type SerializedRecord = {
  *
  * Records are collected up front because the index has to precede the blocks it
  * describes.
+ *
+ * With `excludeValues` only the two roots are written. The index still
+ * authenticates against the commit, since the set hash is folded from the index's
+ * entries rather than from the blocks.
  */
 export async function* serializeRepo(
   commit: SignedCommit,
   records: AsyncIterable<SerializedRecord> | Iterable<SerializedRecord>,
+  opts: { excludeValues?: boolean } = {},
 ): AsyncIterable<Uint8Array> {
   const byPath = new Map<string, SerializedRecord>()
   for await (const record of records) {
@@ -48,6 +53,7 @@ export async function* serializeRepo(
     (function* (): Generator<CarBlock> {
       yield { cid: commitRoot, bytes: commitBytes }
       yield { cid: indexRoot, bytes: indexBytes }
+      if (opts.excludeValues) return
       for (const path of paths) {
         const record = byPath.get(path)!
         yield { cid: record.cid, bytes: record.bytes }

@@ -4,14 +4,14 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the operation log for an account's permissioned repo within a space, returning operations after a given revision. Primary incremental sync mechanism. By default each created or updated operation inlines the record's current value; set excludeValues for metadata-only entries. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services).",
+      "description": "List the operation log for an account's permissioned repo within a space, returning operations after a given revision. Primary incremental sync mechanism. By default each created or updated operation inlines the record's current value; set excludeValues for metadata-only entries. Note the oplog is a transport optimization with no history guarantee: a host may compact it or drop it, and it does not survive account migration, so omitting `since` returns the retained window rather than the repo's full history. Use getRepo for an initial sync or when a `since` revision is no longer available. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services).",
       "parameters": {
         "type": "params",
         "required": ["space", "repo"],
         "properties": {
           "space": {
             "type": "string",
-            "format": "at-uri",
+            "format": "space-ref",
             "description": "Reference to the space."
           },
           "repo": {
@@ -21,7 +21,8 @@
           },
           "since": {
             "type": "string",
-            "description": "Return operations after this revision."
+            "format": "tid",
+            "description": "Return operations after this revision. The caller's own sync position; use `cursor` to continue a paginated response."
           },
           "limit": {
             "type": "integer",
@@ -29,6 +30,10 @@
             "maximum": 1000,
             "default": 100,
             "description": "Maximum number of operations to return."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Opaque pagination cursor from a previous response. Takes precedence over `since` when both are supplied."
           },
           "excludeValues": {
             "type": "boolean",
@@ -56,13 +61,15 @@
               "description": "The account's current signed commit. Included when the response reaches the head of the oplog; omitted on backfill responses."
             },
             "cursor": {
-              "type": "string"
+              "type": "string",
+              "description": "Pass as `cursor` to fetch the next page. Absent once the response reaches the head of the oplog."
             }
           }
         }
       },
       "errors": [
         { "name": "SpaceNotFound" },
+        { "name": "RepoNotFound" },
         { "name": "RepoTakendown" },
         { "name": "RepoSuspended" },
         { "name": "RepoDeactivated" }
@@ -74,11 +81,26 @@
       "required": ["rev", "collection", "rkey", "cid", "prev"],
       "nullable": ["cid", "prev"],
       "properties": {
-        "rev": { "type": "string" },
-        "collection": { "type": "string", "format": "nsid" },
-        "rkey": { "type": "string", "format": "record-key" },
-        "cid": { "type": "string", "format": "cid" },
-        "prev": { "type": "string", "format": "cid" },
+        "rev": {
+          "type": "string",
+          "format": "tid"
+        },
+        "collection": {
+          "type": "string",
+          "format": "nsid"
+        },
+        "rkey": {
+          "type": "string",
+          "format": "record-key"
+        },
+        "cid": {
+          "type": "string",
+          "format": "cid"
+        },
+        "prev": {
+          "type": "string",
+          "format": "cid"
+        },
         "value": {
           "type": "unknown",
           "description": "The record's current value, inlined for create and update operations. Omitted when excludeValues is set, for deletes, or when the value has been superseded by a later operation."

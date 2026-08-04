@@ -23,8 +23,8 @@
             },
             "skey": {
               "type": "string",
-              "maxLength": 512,
-              "description": "The space key. Used to differentiate multiple spaces of the same type under the same owner. If not provided, one will be auto-generated (TID)."
+              "format": "record-key",
+              "description": "The space key. Used to differentiate multiple spaces of the same type under the same owner. Same syntax requirements as a record key. If not provided, one will be auto-generated (TID)."
             },
             "config": {
               "type": "ref",
@@ -42,7 +42,7 @@
           "properties": {
             "uri": {
               "type": "string",
-              "format": "at-uri",
+              "format": "space-ref",
               "description": "URI of the created space."
             }
           }

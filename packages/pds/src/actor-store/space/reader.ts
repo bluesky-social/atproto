@@ -362,7 +362,7 @@ export class SpaceReader {
   // Paged so a caller can serialize a repo without buffering the whole thing.
   async *streamRecords(
     space: string,
-    opts: { batchSize?: number } = {},
+    opts: { batchSize?: number; excludeValues?: boolean } = {},
   ): AsyncGenerator<{
     collection: string
     rkey: string
@@ -375,7 +375,11 @@ export class SpaceReader {
     while (true) {
       let builder = this.db.db
         .selectFrom('space_record')
-        .select(['collection', 'rkey', 'cid', 'value'])
+        .select(
+          opts.excludeValues
+            ? ['collection', 'rkey', 'cid']
+            : ['collection', 'rkey', 'cid', 'value'],
+        )
         .where('space', '=', space)
         .orderBy('collection', 'asc')
         .orderBy('rkey', 'asc')
@@ -394,6 +398,43 @@ export class SpaceReader {
       const last = rows[rows.length - 1]
       cursor = { collection: last.collection, rkey: last.rkey }
     }
+  }
+
+  // Scoped per-space: com.atproto.sync.listBlobs is unauthenticated and must
+  // never enumerate these.
+  async listBlobs(
+    space: string,
+    opts: { since?: string; cursor?: string; limit: number },
+  ): Promise<string[]> {
+    const { since, cursor, limit } = opts
+    // Table-qualified throughout: the `space_record` join below shares the
+    // space/collection/rkey column names.
+    let builder = this.db.db
+      .selectFrom('space_record_blob')
+      .select('space_record_blob.blobCid as blobCid')
+      .where('space_record_blob.space', '=', space)
+      .groupBy('space_record_blob.blobCid')
+      .orderBy('space_record_blob.blobCid', 'asc')
+      .limit(limit)
+    if (since) {
+      builder = builder
+        .innerJoin('space_record', (join) =>
+          join
+            .onRef('space_record.space', '=', 'space_record_blob.space')
+            .onRef(
+              'space_record.collection',
+              '=',
+              'space_record_blob.collection',
+            )
+            .onRef('space_record.rkey', '=', 'space_record_blob.rkey'),
+        )
+        .where('space_record.repoRev', '>', since)
+    }
+    if (cursor) {
+      builder = builder.where('space_record_blob.blobCid', '>', cursor)
+    }
+    const rows = await builder.execute()
+    return rows.map((row) => row.blobCid)
   }
 
   async getCredentialRecipients(space: string): Promise<

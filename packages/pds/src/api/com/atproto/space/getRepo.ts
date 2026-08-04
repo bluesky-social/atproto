@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const { space, repo } = params
+      const { space, repo, excludeValues } = params
 
       assertSpaceRead(auth, space, repo)
 
@@ -38,7 +38,9 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         const carStream = byteIterableToStream(
-          serializeRepo(commit, readRecords(reader, space)),
+          serializeRepo(commit, readRecords(reader, space, excludeValues), {
+            excludeValues,
+          }),
         )
         const closeDb = () => actorDb.close()
         carStream.on('error', closeDb)
@@ -59,8 +61,9 @@ export default function (server: Server, ctx: AppContext) {
 async function* readRecords(
   reader: SpaceReader,
   space: string,
+  excludeValues?: boolean,
 ): AsyncGenerator<SerializedRecord> {
-  for await (const row of reader.streamRecords(space)) {
+  for await (const row of reader.streamRecords(space, { excludeValues })) {
     yield {
       collection: row.collection,
       rkey: row.rkey,

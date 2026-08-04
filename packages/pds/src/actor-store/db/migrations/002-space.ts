@@ -48,6 +48,28 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .columns(['space', 'repoRev'])
     .execute()
 
+  // Keyed as space_record is, rather than by uri as record_blob is, so listing
+  // blobs since a revision is a plain join. Metadata stays in `blob`.
+  await db.schema
+    .createTable('space_record_blob')
+    .addColumn('space', 'varchar', (col) => col.notNull())
+    .addColumn('collection', 'varchar', (col) => col.notNull())
+    .addColumn('rkey', 'varchar', (col) => col.notNull())
+    .addColumn('blobCid', 'varchar', (col) => col.notNull())
+    .addPrimaryKeyConstraint('space_record_blob_pkey', [
+      'space',
+      'collection',
+      'rkey',
+      'blobCid',
+    ])
+    .execute()
+
+  await db.schema
+    .createIndex('space_record_blob_cid_idx')
+    .on('space_record_blob')
+    .column('blobCid')
+    .execute()
+
   // Per-repo commit state (LtHash set hash + rev).
   await db.schema
     .createTable('space_repo')
@@ -100,6 +122,7 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('space_writer').execute()
   await db.schema.dropTable('space_record_oplog').execute()
   await db.schema.dropTable('space_repo').execute()
+  await db.schema.dropTable('space_record_blob').execute()
   await db.schema.dropTable('space_record').execute()
   await db.schema.dropTable('space_member').execute()
   await db.schema.dropTable('space').execute()

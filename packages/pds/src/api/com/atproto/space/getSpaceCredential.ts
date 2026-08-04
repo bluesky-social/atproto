@@ -1,7 +1,7 @@
 import { getServiceEndpoint } from '@atproto/common'
 import { xrpc } from '@atproto/lex'
 import { createSpaceToken } from '@atproto/space'
-import { AtUriString, DidString } from '@atproto/syntax'
+import { DidString, SpaceRefString } from '@atproto/syntax'
 import {
   InvalidRequestError,
   Server,
@@ -97,7 +97,7 @@ async function checkUserAuthorized(
     policy: string
     managingApp: string | null
     spaceDid: string
-    space: string
+    space: SpaceRefString
     userDid: string
     clientId?: string
     isMember: boolean
@@ -123,7 +123,7 @@ async function checkManagingApp(
   opts: {
     managingApp: string | null
     spaceDid: string
-    space: string
+    space: SpaceRefString
     userDid: string
     clientId?: string
   },
@@ -149,7 +149,7 @@ async function checkManagingApp(
     const res = await xrpc(endpoint, com.atproto.simplespace.checkUserAccess, {
       headers,
       params: {
-        space: space as AtUriString,
+        space,
         user: userDid as DidString,
         clientId,
       },

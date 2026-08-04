@@ -193,32 +193,51 @@ export class BlobTransactor extends BlobReader {
     const uris = [...deletes, ...updates].map((w) => w.uri.toString())
     if (uris.length === 0) return
 
-    const deletedRepoBlobs = await this.db.db
+    const dereferenced = await this.db.db
       .deleteFrom('record_blob')
       .where('recordUri', 'in', uris)
       .returning('blobCid')
       .execute()
-    if (deletedRepoBlobs.length === 0) return
 
-    const deletedRepoBlobCids = deletedRepoBlobs.map((row) => row.blobCid)
-    const duplicateCids = await this.db.db
-      .selectFrom('record_blob')
-      .where('blobCid', 'in', deletedRepoBlobCids)
-      .select('blobCid')
-      .execute()
-
-    const newBlobCids = writes
+    const keepCids = writes
       .filter((w) => isUpdate(w) || isCreate(w))
       .flatMap((w) => w.blobs.map((b) => b.ref.toString()))
 
-    const cidsToKeep = [
-      ...newBlobCids,
-      ...duplicateCids.map((row) => row.blobCid),
-    ]
-
-    const cidsToDelete = deletedRepoBlobCids.filter(
-      (cid) => !cidsToKeep.includes(cid),
+    await this.deleteBlobsIfUnreferenced(
+      dereferenced.map((row) => row.blobCid),
+      keepCids,
+      skipBlobStore,
     )
+  }
+
+  // Reachability spans both link tables, so deleting a public record can't
+  // strand the bytes a space record still points at.
+  private async deleteBlobsIfUnreferenced(
+    dereferencedCids: string[],
+    keepCids: string[],
+    skipBlobStore?: boolean,
+  ) {
+    if (dereferencedCids.length === 0) return
+
+    const [stillInRepo, stillInSpaces] = await Promise.all([
+      this.db.db
+        .selectFrom('record_blob')
+        .where('blobCid', 'in', dereferencedCids)
+        .select('blobCid')
+        .execute(),
+      this.db.db
+        .selectFrom('space_record_blob')
+        .where('blobCid', 'in', dereferencedCids)
+        .select('blobCid')
+        .execute(),
+    ])
+
+    const keep = new Set([
+      ...keepCids,
+      ...stillInRepo.map((row) => row.blobCid),
+      ...stillInSpaces.map((row) => row.blobCid),
+    ])
+    const cidsToDelete = dereferencedCids.filter((cid) => !keep.has(cid))
     if (cidsToDelete.length === 0) return
 
     await this.db.db
@@ -226,21 +245,20 @@ export class BlobTransactor extends BlobReader {
       .where('cid', 'in', cidsToDelete)
       .execute()
 
-    if (!skipBlobStore) {
-      this.db.onCommit(() => {
-        this.backgroundQueue.add(async () => {
-          try {
-            const cids = cidsToDelete.map((cid) => parseCid(cid))
-            await this.blobstore.deleteMany(cids)
-          } catch (err) {
-            log.error(
-              { err, cids: cidsToDelete },
-              'could not delete blobs from blobstore',
-            )
-          }
-        })
+    if (skipBlobStore) return
+    this.db.onCommit(() => {
+      this.backgroundQueue.add(async () => {
+        try {
+          const cids = cidsToDelete.map((cid) => parseCid(cid))
+          await this.blobstore.deleteMany(cids)
+        } catch (err) {
+          log.error(
+            { err, cids: cidsToDelete },
+            'could not delete blobs from blobstore',
+          )
+        }
       })
-    }
+    })
   }
 
   async verifyBlobAndMakePermanent(
@@ -318,6 +336,47 @@ export class BlobTransactor extends BlobReader {
       .onConflict((oc) => oc.doNothing())
       .execute()
   }
+
+  async associateSpaceBlob(
+    blob: TypedBlobRef,
+    path: SpaceRecordPath,
+  ): Promise<void> {
+    await this.db.db
+      .insertInto('space_record_blob')
+      .values({ ...path, blobCid: blob.ref.toString() })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+  }
+
+  async deleteDereferencedSpaceBlobs(
+    paths: SpaceRecordPath[],
+    keepBlobs: Iterable<TypedBlobRef>,
+  ): Promise<void> {
+    if (paths.length === 0) return
+
+    const dereferencedCids: string[] = []
+    for (const path of paths) {
+      const rows = await this.db.db
+        .deleteFrom('space_record_blob')
+        .where('space', '=', path.space)
+        .where('collection', '=', path.collection)
+        .where('rkey', '=', path.rkey)
+        .returning('blobCid')
+        .execute()
+      dereferencedCids.push(...rows.map((row) => row.blobCid))
+    }
+
+    await this.deleteBlobsIfUnreferenced(
+      dereferencedCids,
+      Array.from(keepBlobs, (blob) => blob.ref.toString()),
+    )
+  }
+}
+
+export type SpaceRecordPath = {
+  space: string
+  collection: string
+  rkey: string
 }
 
 export class CidNotFound extends Error {

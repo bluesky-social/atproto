@@ -1,5 +1,6 @@
 import { Keypair } from '@atproto/crypto'
 import { ActorStoreResources } from './actor-store-resources.js'
+import { BlobTransactor } from './blob/transactor.js'
 import { ActorDb } from './db/index.js'
 import { PreferenceTransactor } from './preference/transactor.js'
 import { RecordTransactor } from './record/transactor.js'
@@ -22,7 +23,10 @@ export class ActorStoreTransactor {
 
     this.record = new RecordTransactor(db, blobstore)
     this.pref = new PreferenceTransactor(db)
-    this.space = new SpaceTransactor(db)
+    this.space = new SpaceTransactor(
+      db,
+      new BlobTransactor(db, blobstore, resources.backgroundQueue),
+    )
     this.repo = new RepoTransactor(
       db,
       blobstore,

@@ -3,6 +3,7 @@ import {
   isAtIdentifierString,
   isAtUriString,
   isDatetimeStringLenient,
+  isSpaceRefString,
   isValidDid,
   isValidHandle,
   isValidLanguage,
@@ -35,6 +36,10 @@ export const tid = createValidator(isValidTid, 'must be a valid TID')
 export const recordKey = createValidator(
   isValidRecordKey,
   'must be a valid Record Key',
+)
+export const spaceRef = createValidator(
+  isSpaceRefString,
+  'must be a valid space ref',
 )
 
 // Internal helpers

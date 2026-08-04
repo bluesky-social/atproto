@@ -1,5 +1,5 @@
 import { TID } from '@atproto/common'
-import { AtUri, isValidRecordKey } from '@atproto/syntax'
+import { SpaceRef, isValidRecordKey } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -23,8 +23,7 @@ export default function (server: Server, ctx: AppContext) {
           'InvalidSpaceKey',
         )
       }
-      const spaceUri = AtUri.makeSpace(input.body.did, type, skey)
-      const space = spaceUri.toString()
+      const space = new SpaceRef(input.body.did, type, skey).toString()
       const isOwner = input.body.did === did
 
       // createSpace is a space-level "manage" (create) operation.

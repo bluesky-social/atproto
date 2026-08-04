@@ -3,6 +3,7 @@ import { AtUriString } from '@atproto/syntax'
 import { ForbiddenError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import { prepareSpaceWrite } from './prepare.js'
 import { assertSpaceScope, fireNotifyWrite } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -22,9 +23,22 @@ export default function (server: Server, ctx: AppContext) {
 
       assertSpaceScope(auth, space, { action: 'create', collection })
 
+      const prepared = prepareSpaceWrite({
+        collection,
+        rkey,
+        record,
+        validate: input.body.validate,
+      })
+
       const commit = await ctx.actorStore.transact(did, (actorTxn) =>
         actorTxn.space.applyWrites(space, [
-          { action: 'create', collection, rkey, record },
+          {
+            action: 'create',
+            collection,
+            rkey,
+            record: prepared.record,
+            blobs: prepared.blobs,
+          },
         ]),
       )
 
@@ -41,6 +55,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           uri: `${space}/${did}/${collection}/${rkey}` as AtUriString,
           cid: result.cid!.toString(),
+          validationStatus: prepared.validationStatus,
         },
       }
     },

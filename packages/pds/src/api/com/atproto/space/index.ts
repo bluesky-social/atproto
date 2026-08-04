@@ -10,6 +10,7 @@ import getRecord from './getRecord.js'
 import getRepo from './getRepo.js'
 import getSpace from './getSpace.js'
 import getSpaceCredential from './getSpaceCredential.js'
+import listBlobs from './listBlobs.js'
 import listRecords from './listRecords.js'
 import listRepoOps from './listRepoOps.js'
 import listRepos from './listRepos.js'
@@ -18,6 +19,7 @@ import notifySpaceDeleted from './notifySpaceDeleted.js'
 import notifyWrite from './notifyWrite.js'
 import putRecord from './putRecord.js'
 import registerNotify from './registerNotify.js'
+import unregisterNotify from './unregisterNotify.js'
 
 export default function (server: Server, ctx: AppContext) {
   applyWrites(server, ctx)
@@ -30,6 +32,7 @@ export default function (server: Server, ctx: AppContext) {
   getRepo(server, ctx)
   getSpace(server, ctx)
   getSpaceCredential(server, ctx)
+  listBlobs(server, ctx)
   listRecords(server, ctx)
   listRepoOps(server, ctx)
   listRepos(server, ctx)
@@ -38,4 +41,5 @@ export default function (server: Server, ctx: AppContext) {
   notifyWrite(server, ctx)
   putRecord(server, ctx)
   registerNotify(server, ctx)
+  unregisterNotify(server, ctx)
 }

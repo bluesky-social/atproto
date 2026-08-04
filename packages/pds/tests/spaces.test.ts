@@ -1,15 +1,20 @@
 import { SeedClient, TestNetworkNoAppView, TestPds } from '@atproto/dev-env'
 import { Client, DidString, xrpc } from '@atproto/lex'
-import { parseCid } from '@atproto/lex-data'
+import { getBlobCidString, parseCid } from '@atproto/lex-data'
 import {
   LtHash,
   RepoCommit,
   createSpaceToken,
   verifyRepoCarFull,
 } from '@atproto/space'
-import { AtUriString, NsidString } from '@atproto/syntax'
+import { NsidString, SpaceRefString } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { com } from '../src/lexicons/index.js'
+
+// Third-party collections, as a space's are in practice. A first-party schema
+// would also constrain rkeys, which these tests set to readable strings.
+const TEST_COLLECTION = 'com.example.spaceRecord' as NsidString
+const TEST_COLLECTION_ALT = 'com.example.spaceNote' as NsidString
 
 // Spaces tests run against a 3-PDS network:
 //   pds1: alice (authority/owner), dan (co-located member)
@@ -76,7 +81,7 @@ describe('spaces', () => {
     skey: string,
     members: DidString[] = [],
     config?: CreateSpaceConfig,
-  ): Promise<AtUriString> => {
+  ): Promise<SpaceRefString> => {
     const res = await pds1Client.call(
       com.atproto.simplespace.createSpace,
       {
@@ -94,7 +99,7 @@ describe('spaces', () => {
       },
       { headers: aliceHeaders },
     )
-    const uri = res.uri as AtUriString
+    const uri = res.uri
     for (const did of members) {
       await pds1Client.call(
         com.atproto.simplespace.addMember,
@@ -105,12 +110,23 @@ describe('spaces', () => {
     return uri
   }
 
+  const blobExists = async (cid: string): Promise<boolean> => {
+    const row = await pds1.ctx.actorStore.read(aliceDid, (store) =>
+      store.repo.blob.db.db
+        .selectFrom('blob')
+        .select('cid')
+        .where('cid', '=', cid)
+        .executeTakeFirst(),
+    )
+    return !!row
+  }
+
   // Issues a fresh space credential for a `memberPds`-hosted member: mint a
   // delegation token on the member's PDS, exchange it with the authority.
   const credentialFor = async (
     memberPds: TestPds,
     memberHeaders: { authorization: string },
-    space: AtUriString,
+    space: SpaceRefString,
   ): Promise<{ authorization: string }> => {
     const memberClient = memberPds.getClient()
     const tokenRes = await memberClient.call(
@@ -180,7 +196,7 @@ describe('spaces', () => {
       { headers: aliceHeaders },
     )
     const match = res.spaces.find((s) => s.uri === spaceUri)
-    expect(match).toMatchObject({ uri: spaceUri, isOwner: true })
+    expect(match).toMatchObject({ uri: spaceUri })
   })
 
   it('adds and lists members on the authority', async () => {
@@ -241,9 +257,9 @@ describe('spaces', () => {
       {
         space: spaceUri,
         repo: danDid,
-        collection: 'app.bsky.feed.post',
+        collection: TEST_COLLECTION,
         record: {
-          $type: 'app.bsky.feed.post',
+          $type: TEST_COLLECTION,
           text: 'hello from dan',
           createdAt: new Date().toISOString(),
         },
@@ -255,7 +271,7 @@ describe('spaces', () => {
     const rkey = created.uri.split('/').pop()!
     const got = await pds1Client.call(
       com.atproto.space.getRecord,
-      { space: spaceUri, repo: danDid, collection: 'app.bsky.feed.post', rkey },
+      { space: spaceUri, repo: danDid, collection: TEST_COLLECTION, rkey },
       { headers: danHeaders },
     )
     expect(got.value).toMatchObject({ text: 'hello from dan' })
@@ -266,7 +282,7 @@ describe('spaces', () => {
     const lastOp = oplog.ops[oplog.ops.length - 1]
     expect(lastOp).toMatchObject({
       action: 'create',
-      collection: 'app.bsky.feed.post',
+      collection: TEST_COLLECTION,
       rkey,
     })
 
@@ -285,9 +301,9 @@ describe('spaces', () => {
       {
         space: spaceUri,
         repo: danDid,
-        collection: 'app.bsky.feed.post',
+        collection: TEST_COLLECTION,
         record: {
-          $type: 'app.bsky.feed.post',
+          $type: TEST_COLLECTION,
           text: 'to be deleted',
           createdAt: new Date().toISOString(),
         },
@@ -298,7 +314,7 @@ describe('spaces', () => {
 
     await pds1Client.call(
       com.atproto.space.deleteRecord,
-      { space: spaceUri, repo: danDid, collection: 'app.bsky.feed.post', rkey },
+      { space: spaceUri, repo: danDid, collection: TEST_COLLECTION, rkey },
       { headers: danHeaders },
     )
 
@@ -307,7 +323,7 @@ describe('spaces', () => {
     )
     const deleteOp = oplog.ops.find((op) => op.action === 'delete')
     expect(deleteOp).toMatchObject({
-      collection: 'app.bsky.feed.post',
+      collection: TEST_COLLECTION,
       rkey,
       cid: null,
     })
@@ -321,9 +337,9 @@ describe('spaces', () => {
       (i) =>
         ({
           $type: 'com.atproto.space.applyWrites#create' as const,
-          collection: 'app.bsky.feed.post' as NsidString,
+          collection: TEST_COLLECTION as NsidString,
           value: {
-            $type: 'app.bsky.feed.post',
+            $type: TEST_COLLECTION,
             text: `batch ${i}`,
             createdAt: new Date().toISOString(),
           },
@@ -352,7 +368,7 @@ describe('spaces', () => {
   const expectSetHashMatchesStore = async (
     pds: TestPds,
     did: DidString,
-    space: AtUriString,
+    space: SpaceRefString,
   ) => {
     const { records, state } = await pds.ctx.actorStore.read(
       did,
@@ -374,7 +390,7 @@ describe('spaces', () => {
   }
 
   const post = (text: string) => ({
-    $type: 'app.bsky.feed.post',
+    $type: TEST_COLLECTION,
     text,
     createdAt: new Date().toISOString(),
   })
@@ -392,7 +408,7 @@ describe('spaces', () => {
           repo: danDid,
           writes: [0, 1].map(() => ({
             $type: 'com.atproto.space.applyWrites#create' as const,
-            collection: 'app.bsky.feed.post' as NsidString,
+            collection: TEST_COLLECTION as NsidString,
             rkey: 'dupe',
             value: post('dupe'),
           })),
@@ -407,7 +423,7 @@ describe('spaces', () => {
   it('applies dependent writes within one batch', async () => {
     // Each write must see the effect of the previous one.
     const spaceUri = await createSpace('batch-dependent', [danDid])
-    const collection = 'app.bsky.feed.post' as NsidString
+    const collection = TEST_COLLECTION as NsidString
 
     await pds1Client.call(
       com.atproto.space.applyWrites,
@@ -461,7 +477,7 @@ describe('spaces', () => {
         repo: danDid,
         writes: [0, 1, 2, 3, 4].map((i) => ({
           $type: 'com.atproto.space.applyWrites#create' as const,
-          collection: 'app.bsky.feed.post' as NsidString,
+          collection: TEST_COLLECTION as NsidString,
           rkey: `atomic-${i}`,
           value: post(`atomic ${i}`),
         })),
@@ -479,7 +495,7 @@ describe('spaces', () => {
 
   it('withholds the commit until the oplog is drained to head', async () => {
     const spaceUri = await createSpace('oplog-commit', [danDid])
-    const collection = 'app.bsky.feed.post' as NsidString
+    const collection = TEST_COLLECTION as NsidString
 
     for (const i of [0, 1, 2]) {
       await pds1Client.call(
@@ -530,9 +546,9 @@ describe('spaces', () => {
       {
         space: spaceUri,
         repo: bobDid,
-        collection: 'app.bsky.feed.post',
+        collection: TEST_COLLECTION,
         record: {
-          $type: 'app.bsky.feed.post',
+          $type: TEST_COLLECTION,
           text: 'hello from bob',
           createdAt: new Date().toISOString(),
         },
@@ -556,7 +572,6 @@ describe('spaces', () => {
     )
     expect(bobList.spaces.find((s) => s.uri === spaceUri)).toMatchObject({
       uri: spaceUri,
-      isOwner: false,
     })
   })
 
@@ -570,9 +585,9 @@ describe('spaces', () => {
       {
         space: spaceUri,
         repo: bobDid,
-        collection: 'app.bsky.feed.post',
+        collection: TEST_COLLECTION,
         record: {
-          $type: 'app.bsky.feed.post',
+          $type: TEST_COLLECTION,
           text: 'writer set entry',
           createdAt: new Date().toISOString(),
         },
@@ -608,9 +623,9 @@ describe('spaces', () => {
       {
         space: spaceUri,
         repo: bobDid,
-        collection: 'app.bsky.feed.post',
+        collection: TEST_COLLECTION,
         record: {
-          $type: 'app.bsky.feed.post',
+          $type: TEST_COLLECTION,
           text: 'for the record',
           createdAt: new Date().toISOString(),
         },
@@ -624,7 +639,7 @@ describe('spaces', () => {
 
     const list = await pds2Client.call(
       com.atproto.space.listRecords,
-      { space: spaceUri, repo: bobDid, collection: 'app.bsky.feed.post' },
+      { space: spaceUri, repo: bobDid, collection: TEST_COLLECTION },
       { headers: credHeaders },
     )
     expect(list.records.length).toBe(1)
@@ -634,7 +649,7 @@ describe('spaces', () => {
       {
         space: spaceUri,
         repo: bobDid,
-        collection: 'app.bsky.feed.post',
+        collection: TEST_COLLECTION,
         rkey: list.records[0].rkey,
       },
       { headers: credHeaders },
@@ -647,8 +662,8 @@ describe('spaces', () => {
   it('serves a verifiable repo CAR for full-state recovery', async () => {
     const spaceUri = await createSpace('get-repo', [bobDid, carolDid])
     const collections: NsidString[] = [
-      'app.bsky.feed.post' as NsidString,
-      'app.bsky.feed.like' as NsidString,
+      TEST_COLLECTION as NsidString,
+      TEST_COLLECTION_ALT,
     ]
 
     for (const collection of collections) {
@@ -661,10 +676,10 @@ describe('spaces', () => {
             collection,
             rkey: `car-${i}`,
             record:
-              collection === 'app.bsky.feed.post'
+              collection === TEST_COLLECTION
                 ? post(`car ${i}`)
                 : {
-                    $type: 'app.bsky.feed.like',
+                    $type: TEST_COLLECTION_ALT,
                     subject: { uri: `at://x/y/${i}`, cid: 'bafy' },
                     createdAt: new Date().toISOString(),
                   },
@@ -707,7 +722,7 @@ describe('spaces', () => {
     expect(recovered.commit.rev).toBe(state?.rev)
 
     const texts = recovered.records
-      .filter((r) => r.collection === 'app.bsky.feed.post')
+      .filter((r) => r.collection === TEST_COLLECTION)
       .map((r) => (r.record as { text: string }).text)
       .sort()
     expect(texts).toEqual(['car 0', 'car 1'])
@@ -725,13 +740,366 @@ describe('spaces', () => {
     expect(res.status).toBeGreaterThanOrEqual(400)
   })
 
+  it('serves an index-only CAR with excludeValues', async () => {
+    const spaceUri = await createSpace('car-index-only', [bobDid, carolDid])
+    for (let i = 0; i < 2; i++) {
+      await pds2Client.call(
+        com.atproto.space.createRecord,
+        {
+          space: spaceUri,
+          repo: bobDid,
+          collection: TEST_COLLECTION,
+          record: { $type: TEST_COLLECTION, text: `idx ${i}` },
+        },
+        { headers: bobHeaders },
+      )
+    }
+
+    const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
+    const res = await fetch(
+      `${pds2.url}/xrpc/com.atproto.space.getRepo?space=${encodeURIComponent(spaceUri)}&repo=${bobDid}&excludeValues=true`,
+      { headers: credHeaders },
+    )
+    expect(res.status).toBe(200)
+    const car = new Uint8Array(await res.arrayBuffer())
+
+    // The set hash is folded from the index alone, so it matches the commit even
+    // with no record blocks present.
+    const didKey = (await pds2.ctx.actorStore.keypair(bobDid)).did()
+    const recovered = await verifyRepoCarFull([car], {
+      space: spaceUri,
+      author: bobDid,
+      didKey,
+      expectValues: false,
+    })
+    expect(recovered.records).toHaveLength(0)
+    expect(Object.keys(recovered.index)).toHaveLength(2)
+    expect(recovered.repo.matches(recovered.commit)).toBe(true)
+  })
+
+  it('tracks blobs on space records and serves them', async () => {
+    const spaceUri = await createSpace('blobs', [carolDid])
+
+    // Spaces have no upload method of their own.
+    const bytes = new Uint8Array([1, 2, 3, 4, 5])
+    const { body: uploaded } = await pds1Client.uploadBlob(bytes, {
+      headers: aliceHeaders,
+      encoding: 'image/png',
+    })
+    const blob = uploaded.blob
+    const blobCid = getBlobCidString(blob)
+
+    // Untethered until a record references it.
+    await expect(
+      pds1.ctx.blobstore(aliceDid).getBytes(parseCid(blobCid)),
+    ).rejects.toThrow()
+
+    await pds1Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: aliceDid,
+        collection: TEST_COLLECTION,
+        rkey: 'with-blob',
+        record: { $type: TEST_COLLECTION, text: 'has a blob', image: blob },
+      },
+      { headers: aliceHeaders },
+    )
+
+    const stored = await pds1.ctx
+      .blobstore(aliceDid)
+      .getBytes(parseCid(blobCid))
+    expect(new Uint8Array(stored)).toEqual(bytes)
+
+    const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
+    const listed = await pds1Client.call(
+      com.atproto.space.listBlobs,
+      { space: spaceUri, repo: aliceDid },
+      { headers: credHeaders },
+    )
+    expect(listed.cids).toEqual([blobCid])
+
+    const blobRes = await fetch(
+      `${pds1.url}/xrpc/com.atproto.space.getBlob?space=${encodeURIComponent(spaceUri)}&repo=${aliceDid}&cid=${blobCid}`,
+      { headers: credHeaders },
+    )
+    expect(blobRes.status).toBe(200)
+    expect(new Uint8Array(await blobRes.arrayBuffer())).toEqual(bytes)
+  })
+
+  it('keeps a blob shared with a public record', async () => {
+    const spaceUri = await createSpace('blobs-shared', [])
+
+    const { body: uploaded } = await pds1Client.uploadBlob(
+      new Uint8Array([7, 7, 7]),
+      { headers: aliceHeaders, encoding: 'image/png' },
+    )
+    const blob = uploaded.blob
+    const blobCid = getBlobCidString(blob)
+
+    const publicRes = await pds1Client.call(
+      com.atproto.repo.createRecord,
+      {
+        repo: aliceDid,
+        collection: 'app.bsky.actor.profile' as NsidString,
+        rkey: 'self',
+        record: { $type: 'app.bsky.actor.profile', avatar: blob },
+      },
+      { headers: aliceHeaders },
+    )
+    await pds1Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: aliceDid,
+        collection: TEST_COLLECTION,
+        rkey: 'shared',
+        record: { $type: TEST_COLLECTION, text: 'shared', image: blob },
+      },
+      { headers: aliceHeaders },
+    )
+
+    // Deleting the public record must not strand the space record's bytes.
+    await pds1Client.call(
+      com.atproto.repo.deleteRecord,
+      {
+        repo: aliceDid,
+        collection: 'app.bsky.actor.profile' as NsidString,
+        rkey: 'self',
+      },
+      { headers: aliceHeaders },
+    )
+    expect(publicRes.uri).toBeDefined()
+    await network.processAll()
+    expect(await blobExists(blobCid)).toBe(true)
+
+    // And the reverse: dropping the space record leaves nothing behind.
+    await pds1Client.call(
+      com.atproto.space.deleteRecord,
+      {
+        space: spaceUri,
+        repo: aliceDid,
+        collection: TEST_COLLECTION,
+        rkey: 'shared',
+      },
+      { headers: aliceHeaders },
+    )
+    await network.processAll()
+    expect(await blobExists(blobCid)).toBe(false)
+  })
+
+  it('filters listBlobs by revision', async () => {
+    const spaceUri = await createSpace('blobs-since', [carolDid])
+
+    const upload = async (byte: number) => {
+      const { body } = await pds1Client.uploadBlob(new Uint8Array([byte]), {
+        headers: aliceHeaders,
+        encoding: 'image/png',
+      })
+      return body.blob
+    }
+    const write = async (
+      rkey: string,
+      blob: Awaited<ReturnType<typeof upload>>,
+    ) =>
+      pds1Client.call(
+        com.atproto.space.createRecord,
+        {
+          space: spaceUri,
+          repo: aliceDid,
+          collection: TEST_COLLECTION,
+          rkey,
+          record: { $type: TEST_COLLECTION, text: rkey, image: blob },
+        },
+        { headers: aliceHeaders },
+      )
+
+    const firstBlob = await upload(1)
+    await write('first', firstBlob)
+    const state = await pds1.ctx.actorStore.read(aliceDid, (store) =>
+      store.space.getRepoState(spaceUri),
+    )
+    const midRev = state?.rev ?? undefined
+    const secondBlob = await upload(2)
+    await write('second', secondBlob)
+
+    const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
+    const all = await pds1Client.call(
+      com.atproto.space.listBlobs,
+      { space: spaceUri, repo: aliceDid },
+      { headers: credHeaders },
+    )
+    expect(all.cids.sort()).toEqual(
+      [getBlobCidString(firstBlob), getBlobCidString(secondBlob)].sort(),
+    )
+
+    const sinceMid = await pds1Client.call(
+      com.atproto.space.listBlobs,
+      { space: spaceUri, repo: aliceDid, since: midRev },
+      { headers: credHeaders },
+    )
+    expect(sinceMid.cids).toEqual([getBlobCidString(secondBlob)])
+  })
+
+  it('scopes listBlobs to one space', async () => {
+    const spaceUri = await createSpace('blobs-scoped', [carolDid])
+    const otherSpace = await createSpace('blobs-scoped-other', [carolDid])
+
+    const { body: uploaded } = await pds1Client.uploadBlob(
+      new Uint8Array([9, 9, 9]),
+      { headers: aliceHeaders, encoding: 'image/png' },
+    )
+    await pds1Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: aliceDid,
+        collection: TEST_COLLECTION,
+        rkey: 'scoped-blob',
+        record: {
+          $type: TEST_COLLECTION,
+          text: 'blob',
+          image: uploaded.blob,
+        },
+      },
+      { headers: aliceHeaders },
+    )
+
+    const credHeaders = await credentialFor(pds3, carolHeaders, otherSpace)
+    const listed = await pds1Client.call(
+      com.atproto.space.listBlobs,
+      { space: otherSpace, repo: aliceDid },
+      { headers: credHeaders },
+    )
+    expect(listed.cids).toEqual([])
+  })
+
+  it('validates space records like public records', async () => {
+    const spaceUri = await createSpace('validation', [])
+
+    await expect(
+      pds1Client.call(
+        com.atproto.space.createRecord,
+        {
+          space: spaceUri,
+          repo: aliceDid,
+          collection: TEST_COLLECTION,
+          record: { $type: TEST_COLLECTION_ALT, text: 'mismatched' },
+        },
+        { headers: aliceHeaders },
+      ),
+    ).rejects.toThrow()
+
+    // No resolvable schema, as for a public write of a third-party collection.
+    const created = await pds1Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: aliceDid,
+        collection: TEST_COLLECTION,
+        record: { $type: TEST_COLLECTION, text: 'unvalidatable' },
+      },
+      { headers: aliceHeaders },
+    )
+    expect(created.validationStatus).toBe('unknown')
+
+    await expect(
+      pds1Client.call(
+        com.atproto.space.createRecord,
+        {
+          space: spaceUri,
+          repo: aliceDid,
+          collection: TEST_COLLECTION,
+          validate: true,
+          record: { $type: TEST_COLLECTION, text: 'strict' },
+        },
+        { headers: aliceHeaders },
+      ),
+    ).rejects.toThrow()
+  })
+
+  it('deleteRecord is idempotent', async () => {
+    const spaceUri = await createSpace('delete-idempotent', [])
+    const args = {
+      space: spaceUri,
+      repo: aliceDid,
+      collection: TEST_COLLECTION,
+      rkey: 'gone',
+    }
+    // Never existed.
+    await pds1Client.call(com.atproto.space.deleteRecord, args, {
+      headers: aliceHeaders,
+    })
+
+    await pds1Client.call(
+      com.atproto.space.createRecord,
+      { ...args, record: { $type: TEST_COLLECTION, text: 'here' } },
+      { headers: aliceHeaders },
+    )
+    await pds1Client.call(com.atproto.space.deleteRecord, args, {
+      headers: aliceHeaders,
+    })
+    // Already deleted.
+    await pds1Client.call(com.atproto.space.deleteRecord, args, {
+      headers: aliceHeaders,
+    })
+  })
+
+  it('getLatestCommit throws RepoNotFound for an unwritten repo', async () => {
+    const spaceUri = await createSpace('no-writes', [carolDid])
+    const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
+    await expect(
+      pds1Client.call(
+        com.atproto.space.getLatestCommit,
+        { space: spaceUri, repo: aliceDid },
+        { headers: credHeaders },
+      ),
+    ).rejects.toThrow(/RepoNotFound|Could not find repo/)
+  })
+
+  it('unregisterNotify withdraws a registration', async () => {
+    const spaceUri = await createSpace('unregister', [carolDid])
+    const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
+    // Stands in for a syncer's service entry; needs a DID this network resolves.
+    const service = `${carolDid}#atproto_pds`
+
+    const reg = await pds1Client.call(
+      com.atproto.space.registerNotify,
+      { space: spaceUri, service },
+      { headers: credHeaders },
+    )
+    expect(reg.expiresAt).toBeDefined()
+    expect(
+      await pds1.ctx.actorStore.read(aliceDid, (store) =>
+        store.space.getCredentialRecipients(spaceUri),
+      ),
+    ).toHaveLength(1)
+
+    await pds1Client.call(
+      com.atproto.space.unregisterNotify,
+      { space: spaceUri, service },
+      { headers: credHeaders },
+    )
+    expect(
+      await pds1.ctx.actorStore.read(aliceDid, (store) =>
+        store.space.getCredentialRecipients(spaceUri),
+      ),
+    ).toHaveLength(0)
+
+    await pds1Client.call(
+      com.atproto.space.unregisterNotify,
+      { space: spaceUri, service },
+      { headers: credHeaders },
+    )
+  })
+
   it('paginates listRecords across collections', async () => {
     const spaceUri = await createSpace('list-multi-collection', [danDid])
 
     // Two records in two different collections.
     const collections: NsidString[] = [
-      'app.bsky.feed.post' as NsidString,
-      'app.bsky.feed.like' as NsidString,
+      TEST_COLLECTION as NsidString,
+      TEST_COLLECTION_ALT,
     ]
     for (const collection of collections) {
       await pds1Client.call(
@@ -741,14 +1109,14 @@ describe('spaces', () => {
           repo: danDid,
           collection,
           record:
-            collection === 'app.bsky.feed.post'
+            collection === TEST_COLLECTION
               ? {
-                  $type: 'app.bsky.feed.post',
+                  $type: TEST_COLLECTION,
                   text: 'post',
                   createdAt: new Date().toISOString(),
                 }
               : {
-                  $type: 'app.bsky.feed.like',
+                  $type: TEST_COLLECTION_ALT,
                   subject: {
                     uri: `at://${danDid}/app.bsky.feed.post/self`,
                     cid: 'bafyreib2rxk3rybk3aobmv5cjuql3bm2twh4jo5uxgf5zpaw6odwtgdgzy',
@@ -818,6 +1186,19 @@ describe('spaces', () => {
     const targetSpace = await createSpace('cred-target', [carolDid])
     const otherSpace = await createSpace('cred-other', [])
 
+    // getLatestCommit throws RepoNotFound without a write, and this is about the
+    // credential's scope.
+    await pds1Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: targetSpace,
+        repo: aliceDid,
+        collection: TEST_COLLECTION,
+        record: { $type: TEST_COLLECTION, text: 'scoped' },
+      },
+      { headers: aliceHeaders },
+    )
+
     const credHeaders = await credentialFor(pds3, carolHeaders, targetSpace)
 
     const ok = await pds1Client.call(
@@ -825,7 +1206,7 @@ describe('spaces', () => {
       { space: targetSpace, repo: aliceDid },
       { headers: credHeaders },
     )
-    expect(ok).toBeDefined()
+    expect(ok.commit).toBeDefined()
 
     await expect(
       pds1Client.call(
@@ -847,9 +1228,9 @@ describe('spaces', () => {
       {
         space: spaceUri,
         repo: aliceDid,
-        collection: 'app.bsky.feed.post',
+        collection: TEST_COLLECTION,
         record: {
-          $type: 'app.bsky.feed.post',
+          $type: TEST_COLLECTION,
           text: 'forgery target',
           createdAt: new Date().toISOString(),
         },
@@ -956,6 +1337,33 @@ describe('spaces', () => {
     expect(config.appAccess).toMatchObject({
       $type: 'com.atproto.simplespace.defs#open',
     })
+  })
+
+  it('serves the config to a member with a space credential', async () => {
+    const spaceUri = await createSpace('config-member-read', [carolDid])
+    const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
+
+    const got = await pds1Client.call(
+      com.atproto.space.getSpace,
+      { space: spaceUri },
+      { headers: credHeaders },
+    )
+    expect(got.uri).toBe(spaceUri)
+    expect(asSpaceConfig(got.config).policy).toBe('member-list')
+  })
+
+  it('refuses the config to a credential for another space', async () => {
+    const spaceUri = await createSpace('config-cred-wrong', [carolDid])
+    const otherSpace = await createSpace('config-cred-wrong-other', [carolDid])
+    const credHeaders = await credentialFor(pds3, carolHeaders, otherSpace)
+
+    await expect(
+      pds1Client.call(
+        com.atproto.space.getSpace,
+        { space: spaceUri },
+        { headers: credHeaders },
+      ),
+    ).rejects.toThrow()
   })
 
   it('getSpace refuses non-authority', async () => {
@@ -1165,9 +1573,9 @@ describe('spaces', () => {
         {
           space: spaceUri,
           repo: bobDid,
-          collection: 'app.bsky.feed.post',
+          collection: TEST_COLLECTION,
           record: {
-            $type: 'app.bsky.feed.post',
+            $type: TEST_COLLECTION,
             text,
             createdAt: new Date().toISOString(),
           },
@@ -1271,7 +1679,7 @@ describe('spaces', () => {
       xrpc(pds1.url, com.atproto.space.notifyWrite, {
         headers,
         body: {
-          space: spaceUri as AtUriString,
+          space: spaceUri as SpaceRefString,
           repo: carolDid,
           rev: 'spoof',
           hash: new LtHash().digest(),
@@ -1295,7 +1703,7 @@ describe('spaces', () => {
       xrpc(pds1.url, com.atproto.space.notifyWrite, {
         headers,
         body: {
-          space: spaceUri as AtUriString,
+          space: spaceUri as SpaceRefString,
           repo: carolDid,
           rev: 'spoof',
           hash: new LtHash().digest(),

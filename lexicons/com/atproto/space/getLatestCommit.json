@@ -4,14 +4,14 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get the current signed commit for an account's permissioned repo within a space. Served by a repo host. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services).",
+      "description": "Get the current signed commit for an account's permissioned repo within a space. Served by a repo host. Throws RepoNotFound when the account holds no repo in the space, including the case of a member that has never written to it. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services).",
       "parameters": {
         "type": "params",
         "required": ["space", "repo"],
         "properties": {
           "space": {
             "type": "string",
-            "format": "at-uri",
+            "format": "space-ref",
             "description": "Reference to the space."
           },
           "repo": {
@@ -31,14 +31,26 @@
               "ref": "com.atproto.space.defs#signedCommit",
               "description": "The account's current signed commit."
             }
-          }
+          },
+          "required": ["commit"]
         }
       },
       "errors": [
-        { "name": "SpaceNotFound" },
-        { "name": "RepoTakendown" },
-        { "name": "RepoSuspended" },
-        { "name": "RepoDeactivated" }
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "RepoNotFound"
+        },
+        {
+          "name": "RepoTakendown"
+        },
+        {
+          "name": "RepoSuspended"
+        },
+        {
+          "name": "RepoDeactivated"
+        }
       ]
     }
   }

@@ -13,7 +13,7 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "at-uri",
+              "format": "space-ref",
               "description": "Reference to the space."
             },
             "repo": {
@@ -52,7 +52,23 @@
           }
         }
       },
-      "errors": [{ "name": "SpaceNotFound" }]
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "RecordNotFound",
+          "description": "An update or delete targeted a record that does not exist."
+        },
+        {
+          "name": "RecordAlreadyExists",
+          "description": "A create targeted a collection and rkey that already holds a record."
+        },
+        {
+          "name": "InvalidRecord",
+          "description": "One of the records failed validation. No writes were applied."
+        }
+      ]
     },
     "create": {
       "type": "object",

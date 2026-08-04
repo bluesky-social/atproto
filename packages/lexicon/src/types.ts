@@ -45,6 +45,7 @@ export const lexStringFormat = z.enum([
   'language',
   'tid',
   'record-key',
+  'space-ref',
 ])
 export type LexStringFormat = z.infer<typeof lexStringFormat>
 

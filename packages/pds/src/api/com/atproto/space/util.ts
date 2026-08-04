@@ -1,9 +1,9 @@
-import { getPdsEndpoint } from '@atproto/common'
+import { getPdsEndpoint, getServiceEndpoint } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { xrpc } from '@atproto/lex'
 import { SpacePermissionMatch } from '@atproto/oauth-scopes'
 import { CommitCtx, LtHash, RepoCommit, SignedCommit } from '@atproto/space'
-import { AtUri, AtUriString, DidString, SpaceRef } from '@atproto/syntax'
+import { AtUri, DidString, SpaceRef, SpaceRefString } from '@atproto/syntax'
 import {
   InvalidRequestError,
   createServiceAuthHeaders,
@@ -19,11 +19,9 @@ import { com } from '../../../../lexicons/index.js'
 // Everything except the (type, authority, skey) tuple, derived from the space URI.
 type SpaceScopeOp = Omit<SpacePermissionMatch, 'type' | 'authority' | 'skey'>
 
-/**
- * Lexicons type a space as an `at-uri`, which does not constrain it to a space
- * URI, so a malformed one has to be a request error rather than a 500.
- */
-export function toSpaceRef(spaceUri: string): SpaceRef {
+// Lexicons type a space as a `space-ref`, so schema validation rejects a
+// malformed one before any handler runs. Defensive for other callers.
+export function toSpaceRef(spaceUri: SpaceRefString): SpaceRef {
   const ref = new AtUri(spaceUri).spaceRef()
   if (!ref) {
     throw new InvalidRequestError(
@@ -37,7 +35,7 @@ export function toSpaceRef(spaceUri: string): SpaceRef {
 // Legacy access tokens and space credentials pre-authorize at the auth layer.
 export function assertSpaceScope(
   auth: AccessOutput | OAuthOutput | SpaceCredentialOutput,
-  spaceUri: string,
+  spaceUri: SpaceRefString,
   op: SpaceScopeOp,
 ): void {
   if (auth.credentials.type !== 'oauth') return
@@ -56,7 +54,7 @@ export function assertSpaceScope(
  */
 export function assertSpaceRead(
   auth: AccessOutput | OAuthOutput | SpaceCredentialOutput,
-  spaceUri: string,
+  spaceUri: SpaceRefString,
   repo: string,
 ): void {
   if (auth.credentials.type === 'space_credential') {
@@ -72,7 +70,7 @@ export function assertSpaceRead(
 
 export function assertCredentialSpace(
   credentials: SpaceCredentialOutput['credentials'],
-  spaceUri: string,
+  spaceUri: SpaceRefString,
 ): void {
   if (credentials.space !== spaceUri) {
     throw new InvalidRequestError(
@@ -84,7 +82,7 @@ export function assertCredentialSpace(
 
 // Undefined when the repo has never been written to.
 export async function buildSignedCommit(opts: {
-  spaceUri: string
+  spaceUri: SpaceRefString
   author: string
   state: { setHash: Buffer | null; rev: string | null } | null
   keypair: Keypair
@@ -100,11 +98,23 @@ export async function buildSignedCommit(opts: {
   return RepoCommit.fromState(state.setHash).sign(ctx, keypair)
 }
 
+// The fragment is required: it names the DID document entry to deliver to.
+export async function resolveNotifyService(
+  ctx: AppContext,
+  service: string,
+): Promise<string | undefined> {
+  const [did, fragment] = service.split('#')
+  if (!fragment) return undefined
+  const didDoc = await ctx.idResolver.did.resolve(did).catch(() => null)
+  if (!didDoc) return undefined
+  return getServiceEndpoint(didDoc, { id: `#${fragment}` })
+}
+
 // Best effort: the authority records the write and fans out to syncers.
 export async function fireNotifyWrite(
   ctx: AppContext,
   opts: {
-    space: string
+    space: SpaceRefString
     writerDid: string
     rev: string
     setHash: Uint8Array
@@ -129,7 +139,7 @@ export async function fireNotifyWrite(
     await xrpc(spacePdsUrl, com.atproto.space.notifyWrite, {
       headers,
       body: {
-        space: space as AtUriString,
+        space,
         repo: writerDid as DidString,
         rev,
         hash: new LtHash(setHash).digest(),

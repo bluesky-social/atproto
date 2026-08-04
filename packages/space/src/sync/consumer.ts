@@ -16,6 +16,8 @@ export type VerifyRepoParams = {
   space: string
   author: string
   didKey: string
+  // False for an index-only car, which carries no record blocks. Defaults to true.
+  expectValues?: boolean
 }
 
 export type VerifiedRecord = {
@@ -78,7 +80,12 @@ export const verifyRepoCar = async (
     throw new RepoVerificationError('index does not match the commit hash')
   }
 
-  return { commit, index, repo, records: verifyRecords(blocks, index) }
+  return {
+    commit,
+    index,
+    repo,
+    records: verifyRecords(blocks, index, params.expectValues !== false),
+  }
 }
 
 /**
@@ -101,6 +108,7 @@ export const verifyRepoCarFull = async (
 async function* verifyRecords(
   blocks: AsyncIterable<{ cid: Cid; bytes: Uint8Array }>,
   index: RepoIndex,
+  expectValues: boolean,
 ): AsyncGenerator<VerifiedRecord> {
   const paths = Object.keys(index)
   let i = 0
@@ -122,7 +130,8 @@ async function* verifyRecords(
     yield { collection, rkey, cid, record: decode(block.bytes) as LexMap }
   }
 
-  if (i < paths.length) {
+  const isIndexOnly = !expectValues && i === 0
+  if (i < paths.length && !isIndexOnly) {
     throw new RepoVerificationError(
       `car is missing ${paths.length - i} record(s) named in the index`,
     )

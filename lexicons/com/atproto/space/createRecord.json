@@ -13,7 +13,7 @@
           "properties": {
             "space": {
               "type": "string",
-              "format": "at-uri",
+              "format": "space-ref",
               "description": "Reference to the space."
             },
             "repo": {
@@ -65,7 +65,19 @@
           }
         }
       },
-      "errors": [{ "name": "SpaceNotFound" }]
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "RecordAlreadyExists",
+          "description": "A record already exists at this collection and rkey. Retry with a different rkey, or use putRecord."
+        },
+        {
+          "name": "InvalidRecord",
+          "description": "The record failed validation."
+        }
+      ]
     }
   }
 }
