@@ -43,6 +43,6 @@
   },
   "scripts": {
     "test": "vitest run",
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   }
 }

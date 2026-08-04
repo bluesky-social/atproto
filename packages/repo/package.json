@@ -44,6 +44,6 @@
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:profile": "node --experimental-vm-modules --inspect ../../node_modules/.bin/jest",
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   }
 }
