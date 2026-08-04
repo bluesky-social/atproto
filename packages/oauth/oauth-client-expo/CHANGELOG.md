@@ -1,5 +1,22 @@
 # @atproto/oauth-client-expo
 
+## 0.1.11
+
+### Patch Changes
+
+- Updated dependencies [[`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c)]:
+  - @atproto-labs/simple-store@0.5.1
+  - @atproto/oauth-client@0.8.2
+  - @atproto/oauth-client-browser@0.5.2
+
+## 0.1.10
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-client@0.8.1
+  - @atproto/oauth-client-browser@0.5.1
+
 ## 0.1.9
 
 ### Patch Changes

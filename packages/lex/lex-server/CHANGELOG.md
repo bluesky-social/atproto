@@ -1,5 +1,32 @@
 # @atproto/lex-server
 
+## 0.1.12
+
+### Patch Changes
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update vitest dependencies
+
+- [#5301](https://github.com/bluesky-social/atproto/pull/5301) [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7) Thanks [@43081j](https://github.com/43081j)! - Switch from destructured default imports to named imports of CommonJS dependencies.
+
+- Updated dependencies [[`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c)]:
+  - @atproto/lex-client@0.3.2
+  - @atproto/lex-schema@0.2.4
+  - @atproto/lex-cbor@0.1.6
+  - @atproto/lex-data@0.1.7
+  - @atproto/lex-json@0.1.6
+  - @atproto-labs/did-resolver@0.3.7
+
+## 0.1.11
+
+### Patch Changes
+
+- Updated dependencies [[`95aa1d6`](https://github.com/bluesky-social/atproto/commit/95aa1d6dfea71316d5f30dd8bd4ed48afac31c81)]:
+  - @atproto/lex-client@0.3.1
+  - @atproto/lex-schema@0.2.3
+  - @atproto/lex-cbor@0.1.5
+  - @atproto/lex-data@0.1.6
+  - @atproto/lex-json@0.1.5
+
 ## 0.1.10
 
 ### Patch Changes

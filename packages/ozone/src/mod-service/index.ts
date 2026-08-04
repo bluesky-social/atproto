@@ -1,5 +1,4 @@
 import { type Expression, type Insertable, sql } from 'kysely'
-import type { CID } from 'multiformats/cid'
 import type { AtpAgent, ToolsOzoneModerationDefs } from '@atproto/api'
 import { addHoursToDate, chunkArray } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
@@ -429,19 +428,6 @@ export class ModerationService {
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
-  }
-
-  async getCurrentStatus(
-    subject: { did: string } | { uri: AtUri } | { cids: CID[] },
-  ) {
-    let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
-    if ('did' in subject) {
-      builder = builder.where('did', '=', subject.did)
-    } else if ('uri' in subject) {
-      builder = builder.where('recordPath', '=', subject.uri.toString())
-    }
-    // TODO: Handle the cid status
-    return await builder.execute()
   }
 
   async resolveSubjectsForAccount(

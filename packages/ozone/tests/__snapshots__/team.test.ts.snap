@@ -72,6 +72,8 @@ exports[`team management listMembers allows all members to list all members 1`] 
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "role": "tools.ozone.team.defs#roleAdmin",
@@ -121,6 +123,8 @@ exports[`team management listMembers allows all members to list all members 1`] 
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "role": "tools.ozone.team.defs#roleAdmin",
@@ -155,6 +159,8 @@ exports[`team management listMembers allows all members to list all members 1`] 
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "role": "tools.ozone.team.defs#roleModerator",
@@ -184,6 +190,8 @@ exports[`team management listMembers allows all members to list all members 1`] 
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "role": "tools.ozone.team.defs#roleTriage",
@@ -253,6 +261,8 @@ exports[`team management listMembers allows all members to list all members 2`] 
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "role": "tools.ozone.team.defs#roleAdmin",
@@ -302,6 +312,8 @@ exports[`team management listMembers allows all members to list all members 2`] 
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "role": "tools.ozone.team.defs#roleAdmin",
@@ -336,6 +348,8 @@ exports[`team management listMembers allows all members to list all members 2`] 
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "role": "tools.ozone.team.defs#roleModerator",
@@ -365,6 +379,8 @@ exports[`team management listMembers allows all members to list all members 2`] 
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "role": "tools.ozone.team.defs#roleTriage",

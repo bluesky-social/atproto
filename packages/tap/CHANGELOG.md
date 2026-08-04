@@ -1,5 +1,36 @@
 # @atproto/tap
 
+## 0.4.0
+
+### Minor Changes
+
+- [#5285](https://github.com/bluesky-social/atproto/pull/5285) [`d12f6ac`](https://github.com/bluesky-social/atproto/commit/d12f6ac6e2cb2590446bf9f2051287bac058c092) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** `TapWebsocketOptions` now takes an explicit set of options rather than arbitrary `ws` `ClientOptions`, and adds a `headers` option for the upgrade request.
+
+  `ackEvent()` now resolves once the ack has been sent — or recorded for the next connection — rather than once it is confirmed delivered. Awaiting confirmed delivery from a handler could deadlock the channel (a bug that predates this change). Acks issued while disconnected are flushed when the next connection comes up, and Tap's at-least-once redelivery covers an ack lost with its connection.
+
+  `onReconnectError`'s `initialSetup` argument now means "first attempt of this reconnect cycle" rather than "before the first-ever successful connection".
+
+### Patch Changes
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update vitest dependencies
+
+- [#5301](https://github.com/bluesky-social/atproto/pull/5301) [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7) Thanks [@43081j](https://github.com/43081j)! - Switch from destructured default imports to named imports of CommonJS dependencies.
+
+- Updated dependencies [[`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c), [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7), [`d12f6ac`](https://github.com/bluesky-social/atproto/commit/d12f6ac6e2cb2590446bf9f2051287bac058c092)]:
+  - @atproto/lex@0.3.3
+  - @atproto/syntax@0.7.3
+  - @atproto/ws-client@0.2.0
+  - @atproto/common@0.7.4
+
+## 0.3.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.3.2
+  - @atproto/common@0.7.3
+  - @atproto/ws-client@0.1.8
+
 ## 0.3.11
 
 ### Patch Changes

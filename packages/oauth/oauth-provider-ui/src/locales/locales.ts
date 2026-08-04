@@ -1,5 +1,5 @@
 // @TODO Add more locales as they become available. Keep this in sync with
-// .linguirc and the actual locale files in this directory.
+// lingui.config.ts and the actual locale files in this directory.
 export const locales = {
   en: {
     name: 'English',

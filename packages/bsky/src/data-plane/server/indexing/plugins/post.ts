@@ -124,6 +124,20 @@ const insertFn = async (
         .set({ invalidReplyRoot, violatesThreadGate })
         .executeTakeFirst()
     }
+    // Denormalized OP replies per thread, mirroring the production dataplane.
+    // Includes all OP replies, regardless of where they occur in the tree.
+    if (obj.reply.parent.uri && post.creator === uriToDid(obj.reply.root.uri)) {
+      await db
+        .insertInto('op_thread_reply')
+        .values({
+          rootUri: obj.reply.root.uri,
+          parentUri: obj.reply.parent.uri,
+          uri: post.uri,
+          deletedAt: null,
+        })
+        .onConflict((oc) => oc.doNothing())
+        .execute()
+    }
   }
 
   const facets = (obj.facets || [])
@@ -402,6 +416,14 @@ const deleteFn = async (
       .returningAll()
       .executeTakeFirst(),
     db.deleteFrom('feed_item').where('postUri', '=', uriStr).executeTakeFirst(),
+    // Soft delete rather than remove, mirroring the production dataplane: the
+    // OP thread walk can still route through a deleted reply to replies that
+    // outlive it.
+    db
+      .updateTable('op_thread_reply')
+      .where('uri', '=', uriStr)
+      .set({ deletedAt: new Date().toISOString() })
+      .executeTakeFirst(),
   ])
   await db.deleteFrom('quote').where('subject', '=', uriStr).execute()
   const deletedEmbeds: (

@@ -24,8 +24,7 @@ import type {
 } from './types.js'
 
 const ReadableStream = globalThis.ReadableStream as
-  | typeof globalThis.ReadableStream
-  | undefined
+  typeof globalThis.ReadableStream | undefined
 
 export type AtpAgentOptions = {
   service: string | URL

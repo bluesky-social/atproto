@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-cbor",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "license": "MIT",
   "description": "Lexicon encoding utilities for AT Lexicon data in CBOR format",
   "keywords": [
@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@atproto/lex-json": "workspace:^",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "build": "tsgo --build tsconfig.build.json",

@@ -3,7 +3,7 @@
   "include": ["./*.js", "./*.cjs", "./*.mjs", "./*.ts", "./*.cts", "./*.mts"],
   "references": [
     {
-      "path": "../../internal/rollup-plugin-bundle-manifest/tsconfig.build.json",
+      "path": "../../internal/rolldown-plugin-bundle-manifest/tsconfig.build.json",
     },
   ],
   "compilerOptions": {

@@ -1,5 +1,27 @@
 # @atproto/aws
 
+## 0.3.10
+
+### Patch Changes
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update vitest dependencies
+
+- [#5294](https://github.com/bluesky-social/atproto/pull/5294) [`5782f19`](https://github.com/bluesky-social/atproto/commit/5782f195e834b5af80e5bcc163c4247893b95e0a) Thanks [@devinivy](https://github.com/devinivy)! - Revert aws sdk upgrade to 3.1073 and @smithy/core pin, restoring the 3.879 sdk with prior request timeout behavior
+
+- Updated dependencies []:
+  - @atproto/common@0.7.4
+  - @atproto/repo@0.10.8
+  - @atproto/common-web@0.5.8
+
+## 0.3.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.7.3
+  - @atproto/repo@0.10.7
+  - @atproto/common-web@0.5.7
+
 ## 0.3.8
 
 ### Patch Changes

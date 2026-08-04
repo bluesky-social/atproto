@@ -1,5 +1,58 @@
 # @atproto/xrpc-server
 
+## 0.12.0
+
+### Minor Changes
+
+- [#5285](https://github.com/bluesky-social/atproto/pull/5285) [`d12f6ac`](https://github.com/bluesky-social/atproto/commit/d12f6ac6e2cb2590446bf9f2051287bac058c092) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** `Subscription` now takes an explicit set of options rather than arbitrary `ws` `ClientOptions`, and adds a `headers` option for the upgrade request. A subscription also now reconnects on transient close codes (such as a graceful server restart, 1001) where it previously gave up, and `onReconnectError`'s `initialSetup` argument now means "first attempt of this reconnect cycle" rather than "before the first-ever successful connection".
+
+  `DisconnectError` is now defined by this package rather than re-exported from the client: it describes how a server route ends a stream it is serving. Aborting a subscription's `signal` now always rejects the iterator with the abort reason — aborting with a `DisconnectError` no longer ends the stream cleanly. To stop deliberately, abort with a sentinel of your own and rethrow anything else:
+
+  ```ts
+  const doneReason = new Error('done')
+  try {
+    for await (const msg of sub) {
+      /* ... */
+    }
+  } catch (err) {
+    if (err !== doneReason) throw err
+  }
+  ```
+
+### Patch Changes
+
+- [#5302](https://github.com/bluesky-social/atproto/pull/5302) [`5a222b0`](https://github.com/bluesky-social/atproto/commit/5a222b05da5f9c0d32d41fb1c4437ea188aa2c32) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update mime-types dependency
+
+- [#5301](https://github.com/bluesky-social/atproto/pull/5301) [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7) Thanks [@43081j](https://github.com/43081j)! - Switch from destructured default imports to named imports of CommonJS dependencies.
+
+- Updated dependencies [[`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c), [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7), [`d12f6ac`](https://github.com/bluesky-social/atproto/commit/d12f6ac6e2cb2590446bf9f2051287bac058c092)]:
+  - @atproto/lex-client@0.3.2
+  - @atproto/lex-schema@0.2.4
+  - @atproto/lex-cbor@0.1.6
+  - @atproto/lex-data@0.1.7
+  - @atproto/lex-json@0.1.6
+  - @atproto/ws-client@0.2.0
+  - @atproto/common@0.7.4
+  - @atproto/lexicon@0.7.10
+  - @atproto/xrpc@0.8.9
+
+## 0.11.13
+
+### Patch Changes
+
+- [#5282](https://github.com/bluesky-social/atproto/pull/5282) [`c8399b6`](https://github.com/bluesky-social/atproto/commit/c8399b6b051377be66f660105b14646a1c2fa460) Thanks [@cyphercodes](https://github.com/cyphercodes)! - Parse repeated query parameters from the request URL so Express query parser array limits do not collapse XRPC array params above 20 values.
+
+- Updated dependencies [[`95aa1d6`](https://github.com/bluesky-social/atproto/commit/95aa1d6dfea71316d5f30dd8bd4ed48afac31c81)]:
+  - @atproto/lex-client@0.3.1
+  - @atproto/lex-schema@0.2.3
+  - @atproto/lex-cbor@0.1.5
+  - @atproto/lex-data@0.1.6
+  - @atproto/lex-json@0.1.5
+  - @atproto/common@0.7.3
+  - @atproto/ws-client@0.1.8
+  - @atproto/lexicon@0.7.9
+  - @atproto/xrpc@0.8.8
+
 ## 0.11.12
 
 ### Patch Changes

@@ -1,5 +1,19 @@
 # @atproto/xrpc
 
+## 0.8.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.7.10
+
+## 0.8.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.7.9
+
 ## 0.8.7
 
 ### Patch Changes
@@ -354,12 +368,10 @@
     - `XrpcClient` is the base class.
 
   #### Non-breaking changes
-
   - The `com.*` and `app.*` namespaces have been made directly available to every
     `Agent` instances.
 
   #### Deprecations
-
   - The default export of the `@atproto/xrpc` package has been deprecated. Use
     named exports instead.
   - The `Client` and `ServiceClient` classes are now deprecated. They are replaced by a single `XrpcClient` class.

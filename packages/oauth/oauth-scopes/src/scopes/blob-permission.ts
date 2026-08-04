@@ -18,9 +18,10 @@ export type BlobPermissionMatch = {
   mime: string
 }
 
-export class BlobPermission
-  implements ResourcePermission<'blob', BlobPermissionMatch>
-{
+export class BlobPermission implements ResourcePermission<
+  'blob',
+  BlobPermissionMatch
+> {
   constructor(public readonly accept: NeRoArray<Accept>) {}
 
   matches(options: BlobPermissionMatch) {

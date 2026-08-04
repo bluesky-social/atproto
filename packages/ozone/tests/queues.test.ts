@@ -642,11 +642,7 @@ describe('ozone-queues', () => {
     const queryLatestReportForSubject = async (
       subjectOrUri: string,
       status:
-        | 'open'
-        | 'closed'
-        | 'escalated'
-        | 'queued'
-        | 'assigned' = 'queued',
+        'open' | 'closed' | 'escalated' | 'queued' | 'assigned' = 'queued',
     ) => {
       const { reports } = await modClient.queryReports({
         status,

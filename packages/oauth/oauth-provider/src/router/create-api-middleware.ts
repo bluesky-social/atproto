@@ -893,11 +893,11 @@ export function createApiMiddleware<
           : never
       }[keyof ApiEndpoints],
     S extends // A schema that validates the POST input or GET params
-      ApiEndpoints[E] extends { method: 'POST'; input: infer I }
+      (ApiEndpoints[E] extends { method: 'POST'; input: infer I }
         ? z.ZodType<I, z.ZodTypeDef, unknown>
         : ApiEndpoints[E] extends { method: 'GET'; params: infer P }
           ? z.ZodType<P, z.ZodTypeDef, unknown>
-          : void,
+          : void),
   >(options: {
     method: M
     endpoint: E

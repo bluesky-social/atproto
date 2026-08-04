@@ -56,8 +56,7 @@ export type AtUriStringFragment = `#/${string}`
  * @see {@link https://atproto.com/specs/at-uri-scheme AT protocol - AT URI Scheme}
  */
 export type AtUriString =
-  | AtUriStringBase
-  | `${AtUriStringBase}${AtUriStringFragment}`
+  AtUriStringBase | `${AtUriStringBase}${AtUriStringFragment}`
 
 /**
  * Type guard that checks if a value is a valid {@link AtUriString}

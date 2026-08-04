@@ -7,18 +7,18 @@ const getParam = <T extends string | undefined>(
 // Inserted during build
 declare const process: { env: { NODE_ENV: string } }
 
-export const ENV_DEFAULT = process.env.NODE_ENV
+const ENV_DEFAULT = process.env.NODE_ENV
 export const ENV = getParam('env', ENV_DEFAULT)
 
-export const PLC_DIRECTORY_URL_DEFAULT =
+const PLC_DIRECTORY_URL_DEFAULT =
   ENV === 'development' ? 'http://localhost:2582' : undefined
-export const HANDLE_RESOLVER_URL_DEFAULT =
+const HANDLE_RESOLVER_URL_DEFAULT =
   ENV === 'development' ? 'http://localhost:2584' : 'https://bsky.social'
-export const PDS_OPERATOR_URL_DEFAULT =
+const PDS_OPERATOR_URL_DEFAULT =
   ENV === 'development' ? 'http://localhost:2583' : 'https://bsky.social'
-export const BSKY_API_URL_DEFAULT =
+const BSKY_API_URL_DEFAULT =
   ENV === 'development' ? 'http://localhost:2584' : 'https://api.bsky.app'
-export const BSKY_API_DID_DEFAULT =
+const BSKY_API_DID_DEFAULT =
   ENV === 'development' ? 'did:example:invalid' : 'did:web:api.bsky.app'
 
 export const BSKY_API_URL = getParam('bsky_api_url', BSKY_API_URL_DEFAULT)

@@ -1,3 +1,4 @@
+import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtIcon, CheckIcon, XIcon } from '@phosphor-icons/react'
 import { composeRefs } from '@radix-ui/react-compose-refs'
@@ -106,9 +107,14 @@ export function InputHandleDefault({
     <>
       <div>
         <ValidationMessage hasValue={!!segment} valid={validity.validLength}>
-          <Trans>
-            Between {minLength} and {maxLength} characters
-          </Trans>
+          {t`Between ${plural(minLength, {
+            zero: '0',
+            one: 'one',
+            other: '#',
+          })} and ${plural(maxLength, {
+            one: 'one character',
+            other: '# characters',
+          })}`}
         </ValidationMessage>
         <ValidationMessage hasValue={!!segment} valid={validity.validCharset}>
           <Trans>Only letters, numbers, and hyphens</Trans>

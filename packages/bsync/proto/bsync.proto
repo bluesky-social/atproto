@@ -19,12 +19,21 @@ message MuteOperation {
   Type type = 2;
   string actor_did = 3;
   string subject = 4;
+  // scope restrictions: when any is set, just the scoped content is muted;
+  // when none are set, the subject is fully muted.
+  bool only_reposts = 5;
+  bool only_quoteposts = 6;
 }
 
 message AddMuteOperationRequest {
   MuteOperation.Type type = 1;
   string actor_did = 2;
   string subject = 3;
+  // scope restrictions: when any is set, just the scoped content is muted;
+  // when none are set, the subject is fully muted. On an add for an
+  // already-muted subject, the stored scope is replaced with this one.
+  bool only_reposts = 4;
+  bool only_quoteposts = 5;
 }
 
 message AddMuteOperationResponse {

@@ -113,6 +113,68 @@ describe('mutes', () => {
       })
     })
 
+    it('upserts mute scopes and removes mutes regardless of scope.', async () => {
+      await client.addMuteOperation({
+        type: MuteOperation_Type.ADD,
+        actorDid: 'did:example:a',
+        subject: 'did:example:b',
+        onlyReposts: true,
+      })
+      expect(await dumpMuteScopes(bsync.ctx.db)).toEqual({
+        'did:example:a': {
+          'did:example:b': { onlyReposts: true, onlyQuoteposts: false },
+        },
+      })
+
+      await client.addMuteOperation({
+        type: MuteOperation_Type.ADD,
+        actorDid: 'did:example:a',
+        subject: 'did:example:b',
+        onlyReposts: true,
+        onlyQuoteposts: true,
+      })
+      expect(await dumpMuteScopes(bsync.ctx.db)).toEqual({
+        'did:example:a': {
+          'did:example:b': { onlyReposts: true, onlyQuoteposts: true },
+        },
+      })
+
+      await client.addMuteOperation({
+        type: MuteOperation_Type.ADD,
+        actorDid: 'did:example:a',
+        subject: 'did:example:b',
+        onlyReposts: false,
+        onlyQuoteposts: false,
+      })
+      expect(await dumpMuteScopes(bsync.ctx.db)).toEqual({
+        'did:example:a': {
+          'did:example:b': { onlyReposts: false, onlyQuoteposts: false },
+        },
+      })
+
+      await client.addMuteOperation({
+        type: MuteOperation_Type.REMOVE,
+        actorDid: 'did:example:a',
+        subject: 'did:example:b',
+      })
+      expect(await dumpMuteScopes(bsync.ctx.db)).toEqual({})
+    })
+
+    it('defaults a missing mute scope to a full mute.', async () => {
+      const { operation } = await client.addMuteOperation({
+        type: MuteOperation_Type.ADD,
+        actorDid: 'did:example:a',
+        subject: 'did:example:b',
+      })
+      expect(operation?.onlyReposts).toBe(false)
+      expect(operation?.onlyQuoteposts).toBe(false)
+      expect(await dumpMuteScopes(bsync.ctx.db)).toEqual({
+        'did:example:a': {
+          'did:example:b': { onlyReposts: false, onlyQuoteposts: false },
+        },
+      })
+    })
+
     it('adds mute operations to clear mutes.', async () => {
       await client.addMuteOperation({
         type: MuteOperation_Type.ADD,
@@ -224,6 +286,19 @@ describe('mutes', () => {
       ).rejects.toEqual(
         new ConnectError('bad mute operation type', Code.InvalidArgument),
       )
+      await expect(
+        client.addMuteOperation({
+          type: MuteOperation_Type.ADD,
+          actorDid: 'did:example:a',
+          subject: 'at://did:example:b/app.bsky.graph.list/rkey1',
+          onlyReposts: true,
+        }),
+      ).rejects.toEqual(
+        new ConnectError(
+          'mute scopes only apply to actor mutes',
+          Code.InvalidArgument,
+        ),
+      )
     })
 
     it('requires auth', async () => {
@@ -314,6 +389,9 @@ describe('mutes', () => {
       const operationIds = operations.map((op) => parseInt(op.id, 10))
       const ascending = (a: number, b: number) => a - b
       expect(operationIds).toEqual([...operationIds].sort(ascending))
+      expect(
+        operations.every((op) => !op.onlyReposts && !op.onlyQuoteposts),
+      ).toBe(true)
     })
 
     it('supports long-poll, finding an operation.', async () => {
@@ -346,6 +424,22 @@ const dumpMuteState = async (db: Database) => {
     result[item.actorDid].push(item.subject)
   })
   Object.values(result).forEach((subjects) => subjects.sort())
+  return result
+}
+
+const dumpMuteScopes = async (db: Database) => {
+  const items = await db.db.selectFrom('mute_item').selectAll().execute()
+  const result: Record<
+    string,
+    Record<string, { onlyReposts: boolean; onlyQuoteposts: boolean }>
+  > = {}
+  items.forEach((item) => {
+    result[item.actorDid] ??= {}
+    result[item.actorDid][item.subject] = {
+      onlyReposts: item.onlyReposts,
+      onlyQuoteposts: item.onlyQuoteposts,
+    }
+  })
   return result
 }
 

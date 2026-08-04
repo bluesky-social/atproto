@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-scopes",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "license": "MIT",
   "description": "A library for manipulating and validating ATproto OAuth scopes in TypeScript.",
   "keywords": [
@@ -34,7 +34,7 @@
     "@atproto/syntax": "workspace:^"
   },
   "devDependencies": {
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "scripts": {
     "build": "tsgo --build tsconfig.build.json",

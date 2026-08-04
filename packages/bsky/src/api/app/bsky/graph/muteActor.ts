@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.graph.muteActor, {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
-      const { actor } = input.body
+      const { actor, onlyReposts = false, onlyQuoteposts = false } = input.body
       const requester = auth.credentials.iss
       const [did] = await ctx.hydrator.actor.getDids([actor])
       if (!did) throw new InvalidRequestError('Actor not found')
@@ -18,6 +18,8 @@ export default function (server: Server, ctx: AppContext) {
         type: MuteOperation_Type.ADD,
         actorDid: requester,
         subject: did,
+        onlyReposts,
+        onlyQuoteposts,
       })
     },
   })

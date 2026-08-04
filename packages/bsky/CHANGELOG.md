@@ -1,5 +1,43 @@
 # @atproto/bsky
 
+## 0.0.270
+
+### Patch Changes
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update vitest dependencies
+
+- [#5118](https://github.com/bluesky-social/atproto/pull/5118) [`ee4a0cf`](https://github.com/bluesky-social/atproto/commit/ee4a0cf0ebb3e078a014bef882720f46aca5cb89) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add support for muting reposts and quote-posts (or a combination) when muting other users.
+
+- [#5249](https://github.com/bluesky-social/atproto/pull/5249) [`29dcbc0`](https://github.com/bluesky-social/atproto/commit/29dcbc091ca72cb9dda7a2cea846f3eb4bfcef6c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add OP thread numbering to getPostThreadV2
+
+- [#5301](https://github.com/bluesky-social/atproto/pull/5301) [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7) Thanks [@43081j](https://github.com/43081j)! - Switch from destructured default imports to named imports of CommonJS dependencies.
+
+- Updated dependencies [[`5a222b0`](https://github.com/bluesky-social/atproto/commit/5a222b05da5f9c0d32d41fb1c4437ea188aa2c32), [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c), [`ee4a0cf`](https://github.com/bluesky-social/atproto/commit/ee4a0cf0ebb3e078a014bef882720f46aca5cb89), [`29dcbc0`](https://github.com/bluesky-social/atproto/commit/29dcbc091ca72cb9dda7a2cea846f3eb4bfcef6c), [`a8186e7`](https://github.com/bluesky-social/atproto/commit/a8186e7cdb5ea3d8a88c2e9283d742de1bc0bba6), [`d12f6ac`](https://github.com/bluesky-social/atproto/commit/d12f6ac6e2cb2590446bf9f2051287bac058c092), [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7), [`d12f6ac`](https://github.com/bluesky-social/atproto/commit/d12f6ac6e2cb2590446bf9f2051287bac058c092)]:
+  - @atproto/xrpc-server@0.12.0
+  - @atproto-labs/fetch-node@0.3.7
+  - @atproto/lex@0.3.3
+  - @atproto/syntax@0.7.3
+  - @atproto/api@0.20.37
+  - @atproto/sync@0.4.0
+  - @atproto-labs/xrpc-utils@0.1.13
+  - @atproto/common@0.7.4
+  - @atproto/repo@0.10.8
+  - @atproto/identity@0.5.8
+
+## 0.0.269
+
+### Patch Changes
+
+- Updated dependencies [[`c8399b6`](https://github.com/bluesky-social/atproto/commit/c8399b6b051377be66f660105b14646a1c2fa460)]:
+  - @atproto/xrpc-server@0.11.13
+  - @atproto/lex@0.3.2
+  - @atproto/common@0.7.3
+  - @atproto/repo@0.10.7
+  - @atproto-labs/xrpc-utils@0.1.12
+  - @atproto/sync@0.3.15
+  - @atproto/api@0.20.36
+  - @atproto/identity@0.5.7
+
 ## 0.0.268
 
 ### Patch Changes

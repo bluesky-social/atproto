@@ -1,6 +1,5 @@
 export type Identifier<D extends string, I extends string> =
-  | `#${I}`
-  | `${D}#${I}`
+  `#${I}` | `${D}#${I}`
 export function matchesIdentifier<D extends string, I extends string>(
   did: D,
   id: I,

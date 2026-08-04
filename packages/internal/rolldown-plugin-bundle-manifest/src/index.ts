@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { extname } from 'node:path'
 import mime from 'mime'
-import type { Plugin } from 'rollup'
+import type { Plugin } from 'rolldown'
 
 type AssetItem = {
   type: 'asset'
@@ -17,7 +17,6 @@ type ChunkItem = {
   dynamicImports: string[]
   isDynamicEntry: boolean
   isEntry: boolean
-  isImplicitEntry: boolean
   name: string
   data?: string
 }
@@ -59,7 +58,6 @@ export function bundleManifest({
             dynamicImports: chunk.dynamicImports,
             isDynamicEntry: chunk.isDynamicEntry,
             isEntry: chunk.isEntry,
-            isImplicitEntry: chunk.isImplicitEntry,
             name: chunk.name,
           }
         }

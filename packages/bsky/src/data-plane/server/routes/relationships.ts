@@ -21,8 +21,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           .selectFrom('mute')
           .where('mute.mutedByDid', '=', actorDid)
           .whereRef('mute.subjectDid', '=', ref('actor.did'))
-          .select(sql<true>`${true}`.as('val'))
-          .as('muted'),
+          .select('mute.onlyReposts')
+          .as('muteOnlyReposts'),
+        db.db
+          .selectFrom('mute')
+          .where('mute.mutedByDid', '=', actorDid)
+          .whereRef('mute.subjectDid', '=', ref('actor.did'))
+          .select('mute.onlyQuoteposts')
+          .as('muteOnlyQuoteposts'),
         db.db
           .selectFrom('list_item')
           .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
@@ -74,7 +80,13 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const relationships = targetDids.map((did) => {
       const row = byDid.get(did)
       return {
-        muted: row?.muted ?? false,
+        // a null scope column means no mute row exists at all
+        muted:
+          row?.muteOnlyReposts != null &&
+          !row.muteOnlyReposts &&
+          !row.muteOnlyQuoteposts,
+        mutedOnlyReposts: row?.muteOnlyReposts ?? false,
+        mutedOnlyQuoteposts: row?.muteOnlyQuoteposts ?? false,
         mutedByList: row?.mutedByList ?? '',
         blockedBy: row?.blockedBy ?? '',
         blocking: row?.blocking ?? '',

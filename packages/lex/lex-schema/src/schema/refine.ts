@@ -55,8 +55,7 @@ export type InferRefinement<R> =
  * @template Out - The output type (same as T for checks, narrowed for assertions)
  */
 export type Refinement<T = any, Out extends T = T> =
-  | RefinementCheck<T>
-  | RefinementAssertion<T, Out>
+  RefinementCheck<T> | RefinementAssertion<T, Out>
 
 /**
  * Creates a refined schema by adding additional validation constraints.

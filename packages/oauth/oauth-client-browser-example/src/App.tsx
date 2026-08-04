@@ -2,7 +2,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { type ReactNode, Suspense, useEffect } from 'react'
 import { Home } from './Home.tsx'
 import { Spinner } from './components/Spinner.js'
-import * as lexicons from './lexicons.ts'
 import { AuthenticationProvider } from './providers/AuthenticationProvider.tsx'
 import {
   BskyClientProvider,
@@ -68,16 +67,6 @@ function DevTools({ children }: { children?: ReactNode }) {
       delete global.bskyClient
     }
   }, [bskyClient])
-
-  useEffect(() => {
-    const global = window as Partial<typeof lexicons>
-    Object.assign(global, lexicons)
-    return () => {
-      for (const key of Object.keys(lexicons)) {
-        delete global[key as keyof typeof lexicons]
-      }
-    }
-  }, [lexicons])
 
   return <>{children}</>
 }

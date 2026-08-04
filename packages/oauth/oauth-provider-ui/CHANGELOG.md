@@ -1,5 +1,26 @@
 # @atproto/oauth-provider-ui
 
+## 0.8.10
+
+### Patch Changes
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update lingui dependency
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update vitest dependencies
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update Vite to version 8
+
+- [#5301](https://github.com/bluesky-social/atproto/pull/5301) [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7) Thanks [@43081j](https://github.com/43081j)! - Switch from destructured default imports to named imports of CommonJS dependencies.
+
+- Updated dependencies []:
+  - @atproto/oauth-provider-api@0.7.8
+
+## 0.8.9
+
+### Patch Changes
+
+- [#5286](https://github.com/bluesky-social/atproto/pull/5286) [`6866a5d`](https://github.com/bluesky-social/atproto/commit/6866a5d40be652bd83177332183ef346223f6012) Thanks [@dolciss](https://github.com/dolciss)! - Add Japanese (ja) translations
+
 ## 0.8.8
 
 ### Patch Changes

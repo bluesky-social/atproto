@@ -99,6 +99,8 @@ export type Statuses = HydrationMap<AtUriString, Status>
 export type ProfileViewerState = {
   did: DidString
   muted?: boolean
+  mutedOnlyReposts?: boolean
+  mutedOnlyQuoteposts?: boolean
   mutedByList?: AtUriString
   blockedBy?: AtUriString
   blocking?: AtUriString
@@ -251,8 +253,7 @@ export class ActorHydrator {
       const verifications = mapDefined(
         Object.entries(actor.verifiedBy) as [DidString, VerificationMeta][],
         ([actorDid, verificationMeta]):
-          | VerificationHydrationState
-          | undefined => {
+          VerificationHydrationState | undefined => {
           if (
             verificationMeta.handle &&
             verificationMeta.rkey &&
@@ -466,6 +467,8 @@ export class ActorHydrator {
       map.set(actor, {
         did,
         muted: rels.muted ?? false,
+        mutedOnlyReposts: rels.mutedOnlyReposts ?? false,
+        mutedOnlyQuoteposts: rels.mutedOnlyQuoteposts ?? false,
         mutedByList: parseString(rels.mutedByList),
         blockedBy: parseString(rels.blockedBy),
         blocking: parseString<AtUriString>(rels.blocking),
@@ -541,8 +544,7 @@ export class ActorHydrator {
         // against potentially missing subscription objects in the response, so
         // we keep that defense in place.
         const subscription = subscriptions[i] as
-          | ActivitySubscription
-          | undefined
+          ActivitySubscription | undefined
 
         const state = {
           post: subscription?.post != null,

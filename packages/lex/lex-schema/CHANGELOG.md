@@ -1,5 +1,24 @@
 # @atproto/lex-schema
 
+## 0.2.4
+
+### Patch Changes
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update vitest dependencies
+
+- Updated dependencies [[`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c)]:
+  - @atproto/lex-data@0.1.7
+  - @atproto/syntax@0.7.3
+
+## 0.2.3
+
+### Patch Changes
+
+- [#5287](https://github.com/bluesky-social/atproto/pull/5287) [`95aa1d6`](https://github.com/bluesky-social/atproto/commit/95aa1d6dfea71316d5f30dd8bd4ed48afac31c81) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add README.md file
+
+- Updated dependencies [[`95aa1d6`](https://github.com/bluesky-social/atproto/commit/95aa1d6dfea71316d5f30dd8bd4ed48afac31c81)]:
+  - @atproto/lex-data@0.1.6
+
 ## 0.2.2
 
 ### Patch Changes

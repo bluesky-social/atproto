@@ -33,6 +33,8 @@ exports[`verification-listener indexes new and revoked verifications 1`] = `
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "issuerRepo": {
@@ -105,6 +107,8 @@ exports[`verification-listener indexes new and revoked verifications 1`] = `
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "subjectRepo": {

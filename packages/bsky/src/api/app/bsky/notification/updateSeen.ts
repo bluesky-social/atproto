@@ -1,6 +1,6 @@
 import { Struct, Timestamp } from '@bufbuild/protobuf'
-// eslint-disable-next-line import/no-named-as-default-member
-import murmur from 'murmurhash'
+import * as MurmurhashModule from 'murmurhash'
+const Murmurhash = ((m) => m.default ?? m)(MurmurhashModule)
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
@@ -47,6 +47,6 @@ function getNotifId(viewer: string, seenAt: Date) {
   const key = ['mark-read-generic', viewer, seenAt.getTime().toString()].join(
     '::',
   )
-  // eslint-disable-next-line import/no-named-as-default-member
-  return murmur.v3(key).toString(16)
+
+  return Murmurhash.v3(key).toString(16)
 }

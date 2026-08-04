@@ -5,9 +5,10 @@ import { ValidationContext } from './validator.js'
 /**
  * The Standard Schema adapter for {@link Validator} instances.
  */
-export class StandardSchemaAdapter<TInput, TOutput>
-  implements StandardSchemaV1.Props<TInput, TOutput>
-{
+export class StandardSchemaAdapter<
+  TInput,
+  TOutput,
+> implements StandardSchemaV1.Props<TInput, TOutput> {
   readonly version = 1
 
   readonly vendor = '@atproto/lex-schema'

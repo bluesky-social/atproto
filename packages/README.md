@@ -79,7 +79,7 @@ Utility packages published under the `@atproto-labs/*` scope, all located in [`.
 - [`simple-store-memory`](./internal/simple-store-memory): In-memory `SimpleStore`.
 - [`simple-store-redis`](./internal/simple-store-redis): Redis-backed `SimpleStore`.
 - [`xrpc-utils`](./internal/xrpc-utils): XRPC server utilities for Node.js.
-- [`rollup-plugin-bundle-manifest`](./internal/rollup-plugin-bundle-manifest): Generates a manifest of bundled files from a Rollup build.
+- [`rolldown-plugin-bundle-manifest`](./internal/rolldown-plugin-bundle-manifest): Generates a manifest of bundled files from a Rolldown build.
 
 A few further shared libraries live at the top level under the `@atproto/*` scope:
 

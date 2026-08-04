@@ -219,6 +219,18 @@ export class Views {
     return !!(viewer.muted || this.mutedByList(viewer, state))
   }
 
+  viewerRepostMuteExists(did: DidString, state: HydrationState): boolean {
+    const viewer = state.profileViewers?.get(did)
+    if (!viewer) return false
+    return !!viewer.mutedOnlyReposts
+  }
+
+  viewerQuotepostMuteExists(did: DidString, state: HydrationState): boolean {
+    const viewer = state.profileViewers?.get(did)
+    if (!viewer) return false
+    return !!viewer.mutedOnlyQuoteposts
+  }
+
   blockingByList(
     viewer: ProfileViewerState,
     state: HydrationState,
@@ -456,8 +468,16 @@ export class Views {
     const blockingUri = viewer.blocking || blockingByList
     const block = !!blockedByUri || !!blockingUri
     const mutedByList = this.mutedByList(viewer, state)
+    // scoped mute flags are exclusive with muted: when the account is fully
+    // muted (directly or via a mutelist), suppress them so a scoped direct
+    // mute underneath a list mute doesn't surface both as true.
+    const muted = !!(viewer.muted || mutedByList)
     return {
-      muted: !!(viewer.muted || mutedByList),
+      muted,
+      // when muted is true, these are suppressed to avoid confusion
+      mutedOnlyReposts: !muted && !!viewer.mutedOnlyReposts,
+      // when muted is true, these are suppressed to avoid confusion
+      mutedOnlyQuoteposts: !muted && !!viewer.mutedOnlyQuoteposts,
       mutedByList: mutedByList ? this.listBasic(mutedByList, state) : undefined,
       blockedBy: !!blockedByUri,
       blocking: blockingUri,
@@ -901,8 +921,10 @@ export class Views {
     state: HydrationState,
   ): {
     originatorMuted: boolean
+    originatorRepostMuted: boolean
     originatorBlocked: boolean
     authorMuted: boolean
+    authorQuotepostMuted: boolean
     authorBlocked: boolean
     ancestorAuthorBlocked: boolean
   } {
@@ -919,8 +941,13 @@ export class Views {
       grandparentUri && creatorFromUri(grandparentUri)
     return {
       originatorMuted: this.viewerMuteExists(originatorDid, state),
+      originatorRepostMuted:
+        !!item.repost && this.viewerRepostMuteExists(originatorDid, state),
       originatorBlocked: this.viewerBlockExists(originatorDid, state),
       authorMuted: this.viewerMuteExists(authorDid, state),
+      authorQuotepostMuted:
+        postIsQuotepost(post?.record) &&
+        this.viewerQuotepostMuteExists(authorDid, state),
       authorBlocked: this.viewerBlockExists(authorDid, state),
       ancestorAuthorBlocked:
         (!!parentAuthorDid && this.viewerBlockExists(parentAuthorDid, state)) ||
@@ -1333,7 +1360,13 @@ export class Views {
   // ------------
 
   threadV2(
-    skeleton: { anchor: AtUriString; uris: AtUriString[] },
+    skeleton: {
+      anchor: AtUriString
+      uris: AtUriString[]
+      // The complete OP thread (root first, in chain order), untrimmed by
+      // above/below limits. See GetThreadResponse.op_thread.
+      opThread?: AtUriString[]
+    },
     state: HydrationState,
     {
       above,
@@ -1464,6 +1497,7 @@ export class Views {
       anchorTree,
       {
         opDid,
+        opThreadUris: skeleton.opThread && new Set(skeleton.opThread),
         branchingFactor,
         sort,
         viewer: state.ctx?.viewer ?? null,
@@ -1475,6 +1509,27 @@ export class Views {
         state.ctx.features.Gate.ThreadsReplyRankingExplorationEnable,
       ),
     )
+
+    if (skeleton.opThread) {
+      const indexByUri = new Map(
+        skeleton.opThread.map((uri, i) => [uri, i + 1]),
+      )
+      const postCount = skeleton.opThread.length
+      for (const item of thread) {
+        if (!app.bsky.unspecced.defs.threadItemPost.$isTypeOf(item.value)) {
+          continue
+        }
+        const index = indexByUri.get(item.uri as AtUriString)
+        item.value.opThread = index !== undefined
+        if (index !== undefined) {
+          item.value.opThreadPostIndex = index
+          item.value.opThreadPostCount = postCount
+        } else {
+          delete item.value.opThreadPostIndex
+          delete item.value.opThreadPostCount
+        }
+      }
+    }
 
     return {
       hasOtherReplies,
@@ -2291,8 +2346,7 @@ export class Views {
   }: {
     document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
     publication:
-      | AssociatedSiteStandardRecord<SiteStandardPublication>
-      | undefined
+      AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
     state: HydrationState
     assumedUrl: string
   }): ExternalEmbedView['external'] | undefined {
@@ -2376,9 +2430,9 @@ export class Views {
     // unit, so doc-scoped and publication-scoped labels end up in the same
     // bucket.
     const labels = [
-      ...(document ? state.labels?.getBySubject(document.ref.uri) ?? [] : []),
+      ...(document ? (state.labels?.getBySubject(document.ref.uri) ?? []) : []),
       ...(publication
-        ? state.labels?.getBySubject(publication.ref.uri) ?? []
+        ? (state.labels?.getBySubject(publication.ref.uri) ?? [])
         : []),
     ]
     if (labels.length) overlay.labels = labels
@@ -2763,6 +2817,20 @@ export class Views {
 
 const getRootUri = (uri: AtUriString, post: Post): AtUriString => {
   return post.record.reply?.root.uri ?? uri
+}
+
+const postIsQuotepost = (record: PostRecord | undefined): boolean => {
+  const embed = record?.embed
+  if (!embed) return false
+  const recordEmbed = isRecordEmbedType(embed)
+    ? embed
+    : isRecordWithMediaType(embed)
+      ? embed.record
+      : undefined
+  if (!recordEmbed) return false
+  return (
+    new AtUri(recordEmbed.record.uri).collection === app.bsky.feed.post.$type
+  )
 }
 
 const externalEmbedSourceTheme = (

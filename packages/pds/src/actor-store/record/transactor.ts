@@ -100,7 +100,7 @@ export class RecordTransactor extends RecordReader {
     takedown: com.atproto.admin.defs.StatusAttr,
   ) {
     const takedownRef = takedown.applied
-      ? takedown.ref ?? new Date().toISOString()
+      ? (takedown.ref ?? new Date().toISOString())
       : null
     await this.db.db
       .updateTable('record')

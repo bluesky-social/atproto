@@ -26,8 +26,7 @@ export type HttpRateLimiterOptions<
  */
 export class HttpRateLimiter<
   C extends HttpRateLimiterContext = HttpRateLimiterContext,
-> implements RateLimiterI<C>
-{
+> implements RateLimiterI<C> {
   constructor(
     private readonly rateLimiter: RateLimiterI<C>,
     private readonly options: Readonly<HttpRateLimiterOptions<C>> = {},

@@ -9,8 +9,7 @@ import type http from 'node:http'
 import { PlcClientError } from '@did-plc/lib'
 import cors from 'cors'
 import express from 'express'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
 import {
   type MethodHandler,
@@ -68,7 +67,7 @@ export class PDS implements AsyncDisposable {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
-  private terminator?: httpTerminator.HttpTerminator
+  private terminator?: HttpTerminator
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
@@ -219,7 +218,7 @@ export class PDS implements AsyncDisposable {
     const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
     this.server.keepAliveTimeout = 90_000
-    this.terminator = httpTerminator.createHttpTerminator({ server })
+    this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
     return server
   }
