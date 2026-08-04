@@ -60,7 +60,10 @@ calling other services).
 
 ### Dependencies
 
-Add `@atproto/lex` as a dependency.
+Add as dependencies:
+
+- `@atproto/lex` — generated schemas, client, and data helpers.
+- `@atproto/xrpc-server` — `createServer`, `Server`, `Headers`, route handling.
 
 Remove from dependencies (if present):
 

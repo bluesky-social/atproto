@@ -83,7 +83,7 @@ schema.$check(data) // void
 ### `$matches` — type guard
 
 ```ts
-if (app.bsky.feed.post.$check(data)) {
+if (app.bsky.feed.post.$matches(data)) {
   // data: app.bsky.feed.post.Main
   console.log(data.text)
 }
@@ -173,10 +173,11 @@ responses across all calls. See [lex-client skill](../lex-client/SKILL.md).
 
 ## Token values
 
-For lexicon `token` definitions, the constant is exposed via `.$token`:
+For lexicon `token` definitions, the constant is exposed via `.value` (or the
+`.$token` alias):
 
 ```ts
-const CURATELIST = app.bsky.graph.defs.curatelist.$token // 'app.bsky.graph.defs#curatelist'
+const CURATELIST = app.bsky.graph.defs.curatelist.value // 'app.bsky.graph.defs#curatelist'
 ```
 
 Standard Schema validation runs in **parse mode** — defaults and coercion

@@ -44,16 +44,17 @@ if (isTypedLexMap(data)) {
 
 ## CIDs
 
-A `Cid` is an objet interface that represents a parsed CID string (`CidString`).
+A `Cid` is an object interface representing a parsed CID string.
 
 ```ts
-import { Cid, parseCid, ifCid, isCid } from '@atproto/lex'
+import type { Cid, CidString } from '@atproto/lex'
+import { parseCid, parseCidSafe, ifCid, isCid } from '@atproto/lex'
 
 const cidString: CidString = 'bafyreiabc...'
 
-const cidMaybe: Cid | null = parseCidSafe(CidString)
-const cid: Cid = parseCid(CidString) // throws on invalid
-const maybe = ifCid(unknownValue) // Cid | undefined
+const cid: Cid = parseCid(cidString) // throws on invalid
+const cidMaybe: Cid | null = parseCidSafe(cidString) // null on invalid
+const maybe = ifCid(unknownValue) // Cid | null
 isCid(unknownValue) // type guard
 ```
 

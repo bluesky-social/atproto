@@ -63,6 +63,8 @@ After editing anything under [lexicons/](lexicons/), or any `.proto` file, run `
 
 The lexicon JSON schemas are derived into TypeScript runtime schemas by `@atproto/lex` (`lex build`, wired through each package's `prebuild`).
 
+For working with that SDK, invoke the focused skills under [.agents/skills/](.agents/skills/): `lex-setup` (install/build config), `lex-schemas` and `lex-data-model` (schemas and values), `lex-client` / `lex-xrpc` (calls out), `xrpc-server` (defining routes), and `lexification-client` / `lexification-server` (migrating off the legacy stack).
+
 ## Architecture notes
 
 - **Lexicons are the contract.** The JSON files in [lexicons/](lexicons/) drive both client types and server route validation. Service packages don't hand-write XRPC method signatures — they import the generated definitions from their `src/lexicons/` directory (gitignored / regenerated).

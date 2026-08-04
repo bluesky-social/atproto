@@ -209,9 +209,13 @@ to Y" errors after a lexicon edit.
 If migrating from `@atproto/lex-cli` codegen:
 
 ```bash
-rm -rf ./src/lexicon ./lexicons    # plural & singular both
-lex install <nsids...>             # rebuild the manifest
+rm -rf ./src/lexicon    # generated legacy output — safe to delete
+lex install <nsids...>  # populates ./lexicons/ + the manifest
 ```
+
+Only `./src/lexicon` (singular) is generated. `./lexicons/` is committed
+source — if the package already has one, back it up before letting
+`lex install` write there, and reconcile any local edits afterwards.
 
 Then remove `@atproto/lex-cli` from `devDependencies` and the old
 `codegen` script that called `lex gen-server`.

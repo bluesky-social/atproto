@@ -254,7 +254,7 @@ are gone; use type guards.
 
 ```diff
 - import { BlobRef } from '@atproto/lexicon'
-+ import { BlobRef } from '@atproto/lex-data'
++ import { getBlobCidString, type BlobRef } from '@atproto/lex-data'
 
 - export const cidFromBlobJson = (json: BlobRef) => {
 -   if (json instanceof BlobRef) {
@@ -266,7 +266,7 @@ are gone; use type guards.
 -   return (json['cid'] ?? '') as string
 - }
 + export const cidFromBlobJson = (json: BlobRef): string => {
-+   return json.ref.toString()
++   return getBlobCidString(json)
 + }
 ```
 
