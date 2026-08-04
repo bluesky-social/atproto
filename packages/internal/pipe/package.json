@@ -24,6 +24,6 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.json"
+    "build": "tsc --build tsconfig.json"
   }
 }

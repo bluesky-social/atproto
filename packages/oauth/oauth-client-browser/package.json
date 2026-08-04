@@ -45,6 +45,6 @@
     "core-js": "^3"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   }
 }

@@ -40,6 +40,6 @@
     "rolldown": "^1.2.1"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.json"
+    "build": "tsc --build tsconfig.json"
   }
 }
