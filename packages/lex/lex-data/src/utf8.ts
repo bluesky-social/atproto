@@ -25,7 +25,8 @@ import { utf8ToBase64Node, utf8ToBase64Ponyfill } from './utf8-to-base64.js'
  * utf8FromBytes(bytes)  // 'Hello'
  * ```
  */
-export const utf8FromBytes = utf8FromBytesNode ?? utf8FromBytesNative
+export const utf8FromBytes: (bytes: Uint8Array) => string =
+  utf8FromBytesNode ?? utf8FromBytesNative
 
 /**
  * Counts the number of grapheme clusters (user-perceived characters) in a string.

@@ -94,7 +94,10 @@ export class DiscriminatedUnionSchema<
     this.variantsMap = buildVariantsMap(discriminator, variants)
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<DiscriminatedUnionSchemaInput<TVariants>> {
     if (!isPlainObject(input)) {
       return ctx.issueUnexpectedType(input, 'object')
     }
@@ -188,9 +191,9 @@ function buildVariantsMap<Discriminator extends string>(
 export function discriminatedUnion<
   const Discriminator extends string,
   const Options extends DiscriminatedUnionVariants<Discriminator>,
->(discriminator: Discriminator, variants: Options) {
-  return new DiscriminatedUnionSchema<Discriminator, Options>(
-    discriminator,
-    variants,
-  )
+>(
+  discriminator: Discriminator,
+  variants: Options,
+): DiscriminatedUnionSchema<Discriminator, Options> {
+  return new DiscriminatedUnionSchema(discriminator, variants)
 }

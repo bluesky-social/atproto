@@ -193,5 +193,7 @@ export function ui8Equals(a: Uint8Array, b: Uint8Array): boolean {
  * ui8Concat([a, b])  // Uint8Array([1, 2, 3, 4])
  * ```
  */
-export const ui8Concat =
+export const ui8Concat: (
+  array: readonly Uint8Array[],
+) => Uint8Array<ArrayBuffer> =
   /* v8 ignore next -- @preserve */ ui8ConcatNode ?? ui8ConcatPonyfill

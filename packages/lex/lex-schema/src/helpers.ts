@@ -118,12 +118,12 @@ export type InferMethodError<
 /**
  * @see {@link https://atproto.com/specs/xrpc#error-responses}
  */
-export const lexErrorDataSchema = object({
+export const lexErrorDataSchema: Schema<LexErrorData> = object({
   // type name of the error (generic ASCII constant, no whitespace)
   error: regexp(/^[\w_-]+$/, 'Expected ASCII constant with no whitespace'),
   // description of the error, appropriate for display to humans
   message: optional(string()),
-}) satisfies Schema<LexErrorData>
+})
 
 /**
  * Helper function to construct AT Protocol URIs with compile-time & runtime
