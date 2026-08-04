@@ -30,7 +30,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }} # branch, not merge ref, so we can push
+          # The event's head commit, not the merge ref (so the push below is a
+          # fast-forward of the PR branch) and not the branch name (so a ref
+          # that moved after the event was validated makes the push fail
+          # loudly instead of silently building on an unvetted commit).
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0 # needed for git diff against base branch
 
       - name: Generate and push changeset

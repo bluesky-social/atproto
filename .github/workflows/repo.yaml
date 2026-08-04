@@ -10,6 +10,12 @@ on:
   # type.
   workflow_dispatch:
 
+# Read-only: every job here only checks out and builds. Declared explicitly
+# because workflow_dispatch runs would otherwise inherit the repository-default
+# token scopes, which can include write.
+permissions:
+  contents: read
+
 concurrency:
   # head_ref is only set on pull_request runs; ref_name covers the
   # workflow_dispatch re-runs. Both resolve to the bare branch name (unlike
