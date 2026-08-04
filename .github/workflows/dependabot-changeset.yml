@@ -1,3 +1,10 @@
+# Keeps Dependabot PRs compatible with the Changeset check in repo.yaml by
+# generating (and force-refreshing) a changeset from the PR's diff.
+#
+# Side effect: once this workflow pushes, Dependabot considers the branch
+# externally modified and stops auto-rebasing the PR. That's fine — grouped
+# updates arrive as fresh PRs weekly, and `@dependabot recreate` still works
+# (the recreated branch re-triggers this workflow).
 name: Dependabot Changeset
 
 on:
