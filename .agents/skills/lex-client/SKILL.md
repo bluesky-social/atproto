@@ -3,12 +3,11 @@ name: lex-client
 description: >
   Use the `Client` class from `@atproto/lex` — the session-bound, high-level
   XRPC client. Trigger on: `new Client(`, `client.call` / `client.xrpc` /
-  `client.xrpcSafe`; AT Proto repo helpers `create`, `get`, `put`, `delete`,
-  `list`, `applyWrites`, `uploadBlob`; per-service config (headers, auth,
-  labelers, `proxy` / service proxy target); Client validation options such as
-  `strictResponseProcessing`; Actions (composable client operations); or
-  replacing `AtpAgent` with `Client`. For session-less service-to-service
-  calls use the `lex-xrpc` skill.
+  `client.xrpcSafe`; standalone `xrpc()` / `xrpcSafe()`; AT Proto repo helpers
+  `create`, `get`, `put`, `delete`, `list`, `applyWrites`, `uploadBlob`;
+  per-service config (headers, auth, labelers, `proxy` / service proxy target);
+  Client validation and retry options; Actions (composable client operations);
+  or replacing `AtpAgent` with `Client`.
 disable-model-invocation: false
 ---
 
@@ -20,7 +19,11 @@ plus low-level `call`/`xrpc`/`xrpcSafe` methods. Use it whenever you have
 an authenticated session, or you want to encapsulate per-service config
 (headers, labelers, proxy target).
 
-For unauthenticated stateless calls, see [lex-xrpc skill](../lex-xrpc/SKILL.md).
+Prefer `Client` for both authenticated and unauthenticated calls. The standalone
+`xrpc()` / `xrpcSafe()` exports are available for one-off, session-less calls
+that do not benefit from shared client configuration; they take the service URL
+first and otherwise use the same options, responses, and errors as the client
+methods.
 
 ## Constructing
 
@@ -183,16 +186,31 @@ response.body
 
 ### `client.xrpcSafe()` — discriminated result
 
-Same as [lex-xrpc skill](../lex-xrpc/SKILL.md)'s `xrpcSafe()` but bound to the client's
-session/config:
+Same request as `client.xrpc()`, but returns a failure instead of throwing:
 
 ```ts
 const result = await client.xrpcSafe(com.atproto.identity.resolveHandle, {
   params: { handle: 'alice.bsky.social' },
 })
-if (result.success) result.body
-else result.error
+if (result.success) {
+  result.body
+} else if (result.matchesSchemaErrors()) {
+  result.error // narrowed to errors declared by the schema
+} else {
+  throw result.reason
+}
 ```
+
+Failures are `XrpcResponseError` (4xx/5xx), `XrpcInvalidResponseError`
+(non-compliant successful response, redirects, or malformed data),
+`XrpcResponseValidationError` (schema validation; a subclass of
+`XrpcInvalidResponseError`), or `XrpcInternalError` (network/client failure).
+Response headers use the standard `Headers` API: `result.headers.get(name)`.
+
+Retries are handled by `client.call()`, `client.xrpc()`, `client.xrpcSafe()`,
+and their standalone counterparts. Configure `maxRetries` (default `0`) and,
+when needed, the backoff options; the request layer uses `shouldRetry()` and
+rate-limit headers automatically. Do not wrap calls in a manual retry loop.
 
 ### `client.create()` — create a record
 
@@ -376,7 +394,6 @@ Action best practices:
 
 ## Related skills
 
-[lex-xrpc](../lex-xrpc/SKILL.md) for session-less calls,
 [lex-schemas](../lex-schemas/SKILL.md) for the schemas passed to client
 methods, [lex-data-model](../lex-data-model/SKILL.md) for blobs and branded
 strings at call boundaries, and

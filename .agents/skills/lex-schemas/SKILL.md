@@ -241,5 +241,4 @@ if (!result.issues) {
 [lex-setup](../lex-setup/SKILL.md) for generating this tree,
 [lex-data-model](../lex-data-model/SKILL.md) for the value types schemas
 validate against, and [lex-client](../lex-client/SKILL.md) /
-[lex-xrpc](../lex-xrpc/SKILL.md) / [xrpc-server](../xrpc-server/SKILL.md) for
-passing schemas to calls and routes.
+[xrpc-server](../xrpc-server/SKILL.md) for passing schemas to calls and routes.

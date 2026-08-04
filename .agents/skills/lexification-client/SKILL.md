@@ -121,7 +121,7 @@ For calls where errors are a normal part of the contract:
 + // result.body is typed
 ```
 
-See [lex-xrpc skill](../lex-xrpc/SKILL.md) for the full error class hierarchy.
+See [lex-client skill](../lex-client/SKILL.md) for the full error class hierarchy.
 
 ## Agent → Client setup
 
@@ -168,7 +168,7 @@ service proxy, repo helpers).
 **throwing** errors inside handlers — that one stays.)
 
 For typed error handling, prefer `xrpcSafe()` over try/catch — see
-[lex-xrpc skill](../lex-xrpc/SKILL.md).
+[lex-client skill](../lex-client/SKILL.md).
 
 ## Headers map type
 

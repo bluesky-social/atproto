@@ -10,7 +10,7 @@ description: >
   `InvalidRequestError`, `AuthRequiredError`, `ForbiddenError`,
   `UpstreamFailureError`); (4) its `Headers` / `HeadersMap`; (5) WebSocket
   subscription endpoints; (6) handler layout under `src/api/<namespace>/`.
-  Client-side calls → `lex-client` / `lex-xrpc`; schemas → `lex-schemas`;
+  Client-side calls → `lex-client`; schemas → `lex-schemas`;
   codegen → `lex-setup`; migrating off `lex gen-server` → `lexification-server`.
 disable-model-invocation: false
 ---
@@ -285,7 +285,7 @@ export default function (server: Server, ctx: AppContext) {
   configuration and `@atproto/lex` package layout.
 - **[lex-data-model skill](../lex-data-model/SKILL.md)** — branded strings,
   `BlobRef`, CBOR, and datetime handling at route boundaries.
-- **[lex-client skill](../lex-client/SKILL.md)** / **[lex-xrpc skill](../lex-xrpc/SKILL.md)**
-  — when the service also calls _out_ to other services.
+- **[lex-client skill](../lex-client/SKILL.md)** — when the service also calls
+  _out_ to other services.
 - **[testing skill](../testing/SKILL.md)** — runner choice (vitest vs jest),
   test file location, and tsconfig setup when testing route handlers.

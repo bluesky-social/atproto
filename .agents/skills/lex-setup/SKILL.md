@@ -224,8 +224,8 @@ Then remove `@atproto/lex-cli` from `devDependencies` and the old
 
 Once the package is generating code: [lex-schemas](../lex-schemas/SKILL.md)
 (`$`-accessors, validation), [lex-data-model](../lex-data-model/SKILL.md)
-(values, blobs, CBOR, branded strings), [lex-client](../lex-client/SKILL.md) /
-[lex-xrpc](../lex-xrpc/SKILL.md) (calls out),
+(values, blobs, CBOR, branded strings), [lex-client](../lex-client/SKILL.md)
+(calls out),
 [xrpc-server](../xrpc-server/SKILL.md) (defining routes), and
 [lexification-client](../lexification-client/SKILL.md) /
 [lexification-server](../lexification-server/SKILL.md) (migrating off the
