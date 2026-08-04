@@ -1,20 +1,19 @@
 ---
 name: playwright
 description: >
-  Drive a real browser via the Playwright MCP to interact with the OAuth flows, and the Account Manager UI. Use this skill in TWO situations:
-  (A) writing or extending an end-to-end UI test that uses Puppeteer +
-  `PageHelper` (e.g. `packages/pds/tests/oauth.test.ts`,
-  `packages/pds/tests/account-manager.test.ts`, or any test that boots a browser
-  via `puppeteer` / `playwright`) — the skill enforces a discovery-first flow
-  where flows are walked through the running app to capture exact strings before
-  any code is written; AND (B) demoing, navigating, or debugging the OAuth flow
-  or Account Manager interface (http://localhost:2583/account) against a local
-  dev environment OR against production via the demo OAuth client at
+  Drive a real browser via the Playwright MCP against the OAuth flows and the
+  Account Manager UI. Use in TWO situations: (A) writing or extending an
+  end-to-end UI test using Puppeteer + `PageHelper` (e.g.
+  `packages/pds/tests/oauth.test.ts`, `account-manager.test.ts`, or any test
+  booting a browser) — the skill enforces walking the flow in the running app to
+  capture exact strings before writing code; (B) demoing, navigating, or
+  debugging the OAuth flow or Account Manager (http://localhost:2583/account)
+  against a local dev env, or against production via the demo OAuth client at
   http://127.0.0.1:8080/?env=production. Trigger on: `puppeteer` / `playwright`
-  imports in tests, requests to "demo / show / walk through / debug" OAuth or
-  the account manager, mentions of `PageHelper`, `_puppeteer.ts`,
-  `browser_navigate`/`browser_click`/`browser_snapshot`, or anything that needs
-  to drive the PDS web UI.
+  imports in tests, requests to demo / show / walk through / debug OAuth or the
+  account manager, mentions of `PageHelper`, `_puppeteer.ts`,
+  `browser_navigate` / `browser_click` / `browser_snapshot`, or anything that
+  needs to drive the PDS web UI.
 disable-model-invocation: false
 ---
 

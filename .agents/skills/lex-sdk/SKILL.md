@@ -1,29 +1,7 @@
 ---
 name: lex-sdk
 description: >
-  Use this skill whenever code interacts with the `@atproto/lex` SDK family.
-  This family covers `@atproto/lex` and its companion packages:
-  `@atproto/lex-client`, `@atproto/lex-data`, `@atproto/lex-json`, and
-  `@atproto/lex-schema` (all re-exported by `@atproto/lex`), plus
-  `@atproto/lex-cbor` and `@atproto/xrpc-server` (related companion packages
-  that must be imported directly — they are NOT re-exported by `@atproto/lex`).
-  Trigger on ANY of the following (OR logic — match any one):
-  (1) XRPC calls with `Client`, `xrpc`, or `xrpcSafe`;
-  (2) defining XRPC server routes (`createServer`, `server.add`);
-  (3) validating lexicon-derived data (`$build`, `$matches`, `$isTypeOf`,
-  `$parse`, `$safeParse`, `$validate`);
-  (4) processing AT Protocol data: JSON ↔ Lex with `lexParse` / `lexStringify` /
-  `jsonToLex` / `lexToJson`, or CBOR via the separate `@atproto/lex-cbor` package;
-  (5) installing or building lexicons (`lex install`, `lex build`);
-  (6) working with branded strings (`DidString`, `HandleString`, `AtUriString`,
-  `Cid`, `DatetimeString`);
-  (7) handling blobs (`BlobRef`, `TypedBlobRef`, `LegacyBlobRef`);
-  (8) migrating a package from the legacy `@atproto/api` / `@atproto/lexicon` /
-  `@atproto/xrpc` / `@atproto/lex-cli` stack to `@atproto/lex` ("lexification").
-  (9) replacement for zod/joi/ajv validation libraries, in projects that already
-  require `@atproto/lex`.
-  When a task matches multiple triggers, consult all corresponding references
-  in the routing table below before responding.
+  Use whenever code touches the `@atproto/lex` SDK family (`lex-cbor`, `lex-client`, `lex-data`, `lex-json`, `lex-schema`, `xrpc-server`). Trigger on ANY of: (1) XRPC calls via `Client`, `xrpc`, `xrpcSafe`; (2) XRPC server routes (`server.add`); (3) validating lexicon-derived data (`$build`, `$matches`, `$isTypeOf`, `$parse`, `$safeParse`, `$validate`); (4) AT Protocol data conversion — JSON ↔ Lex (`lexParse`, `lexStringify`, `jsonToLex`, `lexToJson`) or CBOR; (5) `lex install` / `lex build`; (`DidString`, `HandleString`, `AtUriString`, `Cid`, `DatetimeString`); (6) blobs (`BlobRef`, `TypedBlobRef`, `LegacyBlobRef`); (7) migrating a package off the legacy `@atproto/api` / `@atproto/lexicon` / `@atproto/xrpc` / `@atproto/lex-cli` stack ("lexification"); (8) validation in place of zod where `@atproto/lex` is already a dependency.
 disable-model-invocation: false
 ---
 
