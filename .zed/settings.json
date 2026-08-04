@@ -1,6 +1,19 @@
 {
   // Prettier should be configured to handle formatting of all files
   "format_on_save": "on",
+  // Includes zed defaults, plus claude worktrees
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/.svn",
+    "**/.hg",
+    "**/.jj",
+    "**/CVS",
+    "**/.DS_Store",
+    "**/Thumbs.db",
+    "**/.classpath",
+    "**/.settings",
+    "**/.claude/worktrees",
+  ],
   "languages": {
     "JavaScript": {
       // Formatting (prettier) applied through eslint

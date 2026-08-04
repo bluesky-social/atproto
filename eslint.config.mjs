@@ -11,6 +11,7 @@ export default [
     ignores: [
       '**/dist/**',
       '**/node_modules/**',
+      '.claude/worktrees/**',
 
       // buf
       'packages/bsky/src/proto/**',
