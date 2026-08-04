@@ -1,5 +1,3 @@
-/* eslint-env node */
-
 import { register } from 'node:module'
 import { diag } from '@opentelemetry/api'
 import { getResourceDetectors } from '@opentelemetry/auto-instrumentations-node'
@@ -97,7 +95,7 @@ function getInstrumentations(): Instrumentation[] {
       // into "http.route" and renames the span from it, clobbering anything a
       // requestHook set. This hook runs after that, so it wins.
       applyCustomAttributesOnSpan: (span, request) => {
-        const url = 'path' in request ? request.path : request.url ?? '/'
+        const url = 'path' in request ? request.path : (request.url ?? '/')
         const method = request.method ?? 'GET'
         const nsid =
           method === 'GET' || method === 'POST'
