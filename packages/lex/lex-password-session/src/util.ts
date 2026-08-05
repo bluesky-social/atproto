@@ -37,11 +37,6 @@ function extractType({ headers }: Response) {
 }
 
 export function extractPdsEndpoint(didDoc?: LexMap): string | null {
-  return extractPdsUrl(didDoc)
-}
-
-/** @deprecated Use {@link extractPdsEndpoint} instead */
-export function extractPdsUrl(didDoc?: LexMap): string | null {
   const pdsService = ifArray(didDoc?.service)?.find((service) =>
     ifString((service as any)?.id)?.endsWith('#atproto_pds'),
   )
