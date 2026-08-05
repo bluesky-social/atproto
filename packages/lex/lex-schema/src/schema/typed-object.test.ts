@@ -750,66 +750,59 @@ describe('TypedObjectSchema', () => {
   })
 
   describe('TypedObject type utility', () => {
-    type PostType = 'app.bsky.feed.post'
-    type WithMatchingType = { $type: PostType; text: string }
-    type WithOptionalType = { $type?: PostType; text: string }
-    type WithoutType = { text: string }
-    type WithOtherType = { $type: 'other.type'; text: string }
-    type WithUnknownType = Unknown$TypedObject & { extra: string }
-
     it('TypedObject resolves to the value when $type already matches', () => {
       expectTypeOf<
-        TypedObject<PostType, WithMatchingType>
-      >().toEqualTypeOf<WithMatchingType>()
+        TypedObject<'app.bsky.feed.post', { $type: 'app.bsky.feed.post'; text: string }>
+      >().toEqualTypeOf<{ $type: 'app.bsky.feed.post'; text: string }>()
     })
 
     it('TypedObject adds required $type when value has no $type', () => {
       expectTypeOf<
-        TypedObject<PostType, WithoutType>
-      >().toEqualTypeOf<$Typed<WithoutType, PostType>>()
+        TypedObject<'app.bsky.feed.post', { text: string }>
+      >().toEqualTypeOf<$Typed<{ text: string }, 'app.bsky.feed.post'>>()
     })
 
     it('TypedObject adds required $type when value has optional $type', () => {
       expectTypeOf<
-        TypedObject<PostType, WithOptionalType>
-      >().toEqualTypeOf<$Typed<WithOptionalType, PostType>>()
+        TypedObject<'app.bsky.feed.post', { $type?: 'app.bsky.feed.post'; text: string }>
+      >().toEqualTypeOf<$Typed<{ $type?: 'app.bsky.feed.post'; text: string }, 'app.bsky.feed.post'>>()
     })
 
     it('TypedObject adds required $type when value has different $type', () => {
       expectTypeOf<
-        TypedObject<PostType, WithOtherType>
-      >().toEqualTypeOf<$Typed<WithOtherType, PostType>>()
+        TypedObject<'app.bsky.feed.post', { $type: 'other.type'; text: string }>
+      >().toEqualTypeOf<$Typed<{ $type: 'other.type'; text: string }, 'app.bsky.feed.post'>>()
     })
 
     it('TypedObject excludes Unknown$TypedObject from narrowed type', () => {
       expectTypeOf<
-        TypedObject<PostType, WithUnknownType>
-      >().toEqualTypeOf<$Typed<{ extra: string }, PostType>>()
+        TypedObject<'app.bsky.feed.post', Unknown$TypedObject & { extra: string }>
+      >().toEqualTypeOf<$Typed<{ extra: string }, 'app.bsky.feed.post'>>()
     })
 
     it('$TypedLexMap is equivalent to TypedObject for matching inputs', () => {
       expectTypeOf<
-        $TypedLexMap<PostType, WithMatchingType>
-      >().toEqualTypeOf<TypedObject<PostType, WithMatchingType>>()
+        $TypedLexMap<'app.bsky.feed.post', { $type: 'app.bsky.feed.post'; text: string }>
+      >().toEqualTypeOf<TypedObject<'app.bsky.feed.post', { $type: 'app.bsky.feed.post'; text: string }>>()
 
       expectTypeOf<
-        $TypedLexMap<PostType, WithoutType>
-      >().toEqualTypeOf<TypedObject<PostType, WithoutType>>()
+        $TypedLexMap<'app.bsky.feed.post', { text: string }>
+      >().toEqualTypeOf<TypedObject<'app.bsky.feed.post', { text: string }>>()
     })
 
     it('isTypeOf narrows to TypedObject on true branch', () => {
       const obj = { $type: 'app.bsky.feed.post', text: 'hi' } as {
-        $type: PostType
+        $type: 'app.bsky.feed.post'
         text: string
       }
       if (schema.isTypeOf(obj)) {
-        expectTypeOf(obj).toEqualTypeOf<WithMatchingType>()
+        expectTypeOf(obj).toEqualTypeOf<{ $type: 'app.bsky.feed.post'; text: string }>()
       }
     })
 
     it('isTypeOf return type is boolean', () => {
-      const obj = { $type: 'app.bsky.feed.post' as unknown }
-      expectTypeOf(schema.isTypeOf(obj as { $type?: unknown })).toEqualTypeOf<boolean>()
+      const obj: { $type?: unknown } = { $type: 'app.bsky.feed.post' as unknown }
+      expectTypeOf(schema.isTypeOf(obj)).toEqualTypeOf<boolean>()
     })
   })
 })
