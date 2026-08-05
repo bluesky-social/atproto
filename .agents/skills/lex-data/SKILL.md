@@ -1,5 +1,5 @@
 ---
-name: lex-data-model
+name: lex-data
 description: >
   Represent, validate, parse, serialize, or convert AT Protocol data. Use when
   asked to work with CIDs, raw bytes, JSON, CBOR or DRISL encoding, datetime
@@ -13,7 +13,9 @@ disable-model-invocation: false
 The AT Protocol data model extends JSON with two extra primitives — **CIDs**
 (content-addressed links) and **bytes** (raw binary). It can be encoded as JSON
 or as CBOR. `@atproto/lex` re-exports most of what you need; the underlying
-packages are `@atproto/lex-data` (types) and `@atproto/lex-json` (JSON helpers).
+packages is `@atproto/lex-data` (internal representation of Lex values in
+JavaScript runtimes). `@atproto/lex-json` and `@atproto/lex-cbor` provide JSON
+and CBOR encoding/decoding utilities.
 
 ## Lex value types
 
@@ -42,13 +44,13 @@ if (isTypedLexMap(data)) {
 A `Cid` is an object interface representing a parsed CID string.
 
 ```ts
-import type { Cid, CidString } from '@atproto/lex'
+import type { Cid } from '@atproto/lex'
 import { parseCid, parseCidSafe, ifCid, isCid } from '@atproto/lex'
 
-const cidString: CidString = 'bafyreiabc...'
+const someString = 'bafyreiabc...'
 
-const cid: Cid = parseCid(cidString) // throws on invalid
-const cidMaybe: Cid | null = parseCidSafe(cidString) // null on invalid
+const cid: Cid = parseCid(someString) // throws on invalid
+const cidMaybe: Cid | null = parseCidSafe(someString) // null on invalid
 const maybe = ifCid(unknownValue) // Cid | null
 isCid(unknownValue) // type guard
 ```
@@ -57,8 +59,8 @@ In Lex JSON, CIDs are encoded as `{ "$link": "bafyrei..." }`.
 
 ## Bytes
 
-Binary data is `Uint8Array` in Lex; JSON-encoded as
-`{ "$bytes": "base64..." }`.
+Binary data is `Uint8Array` in JavaScript Lex; JSON-encoded as `{ "$bytes":
+"base64..." }`.
 
 ## JSON ↔ Lex
 
@@ -206,7 +208,7 @@ if (typeof iss === 'string' && isDidString(iss)) {
 
 ### Casting at boundaries
 
-Data from protobuf, data plane responses, and Kysely queries arrives as
+Data from protobuf, data plane responses, and Kysely queries may arrive as
 `string`. Cast at the entry point rather than asserting later:
 
 ```ts
@@ -309,6 +311,6 @@ lexEquals(a, b) // boolean
 
 ## Related skills
 
-[lex-schemas](../lex-schemas/SKILL.md) for validating these values against
+[lex-schema](../lex-schema/SKILL.md) for validating these values against
 lexicon schemas, and [lex-setup](../lex-setup/SKILL.md) for adding
 `@atproto/lex-cbor` and the rest of the package family.

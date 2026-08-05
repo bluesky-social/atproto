@@ -1,20 +1,20 @@
 ---
-name: lex-schemas
+name: lex-schema
 description: >
   Use generated Lexicon schemas or define custom ones. Use when asked to
   validate, parse, construct, or identify AT Protocol records and XRPC data;
   access generated schemas, types, parameters, outputs, NSIDs, or token values;
   enable strict validation; build a custom Lexicon schema; integrate with
   Standard Schema; or replace a general-purpose validation library with
-  Lexicon validation.
+  Lexicon validation (@atproto/lex or @atproto/lex-schema).
 disable-model-invocation: false
 ---
 
 # Working with generated schemas
 
-Each Lexicon document compiled by `lex build --indexFile` produces a TypeScript
-module that exposes runtime helpers and types. All of them are addressed via the
-namespace tree by NSID dot-path.
+Each Lexicon document compiled by `lex build` produces a TypeScript module that
+exposes runtime helpers and types. All of them are addressed via the namespace
+tree by NSID dot-path.
 
 ```ts
 import { app, com, chat } from './lexicons/index.js'
@@ -24,8 +24,8 @@ app.bsky.feed.defs.postView // object def
 com.atproto.repo.getRecord // query/procedure schema
 ```
 
-The generated tree lives in `./src/lexicons/` (plural) and is gitignored —
-regenerate with `lex build` rather than editing it. See the
+The generated tree lives in `./src/lexicons/` (plural) by default and is
+gitignored. Regenerate with `lex build` rather than editing it. See the
 [lex-setup skill](../lex-setup/SKILL.md) for install/build configuration.
 
 ## Schema accessors
@@ -98,7 +98,7 @@ const personalDetails = prefs.find(
 )
 ```
 
-This skips schema validation — it only checks the `$type` tag.
+This only checks the `$type` tag (no validation).
 
 ### `$parse` / `$safeParse` — parse + validate
 
@@ -130,8 +130,8 @@ same === value // true
 
 ### `$build` — construct without validating
 
-Adds `$type` and types the result. **Does not validate** — use `$parse`
-afterwards if you need both.
+Adds `$type` and types the result. **Does not validate or provide defaults** —
+use `$parse` afterwards if you need both.
 
 ```ts
 const post = app.bsky.feed.post.$build({
@@ -175,17 +175,14 @@ For lexicon `token` definitions, the constant is exposed via `.value` (or the
 `.$token` alias):
 
 ```ts
-const CURATELIST = app.bsky.graph.defs.curatelist.value // 'app.bsky.graph.defs#curatelist'
+app.bsky.graph.defs.curatelist.value // 'app.bsky.graph.defs#curatelist'
 ```
-
-Standard Schema validation runs in **parse mode** — defaults and coercion
-apply to the output.
 
 ## Building schemas with `l`
 
 To define schemas in code (rather than via JSON lexicons + `lex build`),
-`@atproto/lex-schema` exports an `l` namespace that implements the Standard
-Schema builder API:
+`@atproto/lex-schema` exports an `l` namespace that implements a schema builder
+API:
 
 ```ts
 import { l } from '@atproto/lex'
@@ -195,18 +192,15 @@ const myObj = l.typedObject('com.example.thing', {
   count: l.optional(l.integer()),
 })
 
-type MyObj = l.Infer<typeof myObj> // { name: string; count?: number }
+type MyObj = l.Infer<typeof myObj> // { $type?: 'com.example.thing'; name: string; count?: number }
 ```
 
 Common builders:
 
-- Primitives: `l.string()`, `l.integer()`, `l.boolean()`, `l.bytes()`,
-  `l.cid()`, `l.blob()`
-- Composites: `l.object()`, `l.array()`, `l.union()`, `l.ref()`,
-  `l.literal()`, `l.enum()`, `l.typedRef()`, `l.typedUnion()`
+- Primitives: `l.string()`, `l.integer()`, `l.boolean()`, `l.bytes()`, `l.cid()`, `l.blob()`
+- Composites: `l.object()`, `l.array()`, `l.union()`, `l.ref()`, `l.literal()`, `l.enum()`, `l.typedRef()`, `l.typedUnion()`
 - Modifiers: `l.optional()`, `l.nullable()`, `l.withDefault()`
-- Lexicon docs: `l.typedObject()`, `l.record()`, `l.query()`,
-  `l.procedure()`, `l.subscription()`
+- Lexicon docs: `l.typedObject()`, `l.record()`, `l.query()`, `l.procedure()`, `l.subscription()`
 
 The `l` namespace also exports the datetime helpers (`l.toDatetimeString`,
 `l.currentDatetimeString`, `l.asDatetimeString`, `l.isDatetimeString`,
@@ -234,9 +228,12 @@ if (!result.issues) {
 }
 ```
 
+Standard Schema validation runs in **parse mode** — defaults and coercion
+apply to the output.
+
 ## Related skills
 
 [lex-setup](../lex-setup/SKILL.md) for generating this tree,
-[lex-data-model](../lex-data-model/SKILL.md) for the value types schemas
+[lex-data](../lex-data/SKILL.md) for the value types schemas
 validate against, and [lex-client](../lex-client/SKILL.md) /
 [xrpc-server](../xrpc-server/SKILL.md) for passing schemas to calls and routes.

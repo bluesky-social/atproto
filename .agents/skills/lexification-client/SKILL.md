@@ -211,7 +211,7 @@ standard Headers API:**
 + import { lexStringify } from '@atproto/lex'
 ```
 
-See [lex-data-model skill](../lex-data-model/SKILL.md) for the full set of conversion
+See [lex-data skill](../lex-data/SKILL.md) for the full set of conversion
 helpers (`jsonToLex`, `lexToJson`, `parseLexLink`, `parseLexBytes`, …).
 
 ### Datetime strings
@@ -233,7 +233,7 @@ import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
 ```
 
 These return `DatetimeString` (branded) and validate format
-correctness — see [lex-data-model skill](../lex-data-model/SKILL.md).
+correctness — see [lex-data skill](../lex-data/SKILL.md).
 
 ### CIDs
 
@@ -274,13 +274,13 @@ are gone; use type guards.
 
 For the full TypedBlobRef / LegacyBlobRef story (and the strict-mode
 behavior that controls which gets accepted), see
-[lex-data-model skill](../lex-data-model/SKILL.md).
+[lex-data skill](../lex-data/SKILL.md).
 
 ## Branded types at boundaries
 
 Apply branded types (`DidString`, `HandleString`, `AtUriString`,
 `DatetimeString`, `Cid`, etc.) at function signatures, interface fields,
-and DB schemas. See [lex-data-model skill](../lex-data-model/SKILL.md) for the full list.
+and DB schemas. See [lex-data skill](../lex-data/SKILL.md) for the full list.
 
 ```diff
 - did: string
@@ -331,7 +331,7 @@ Use `$isTypeOf` on already-validated unions for speed:
 + )
 ```
 
-See [lex-schemas skill](../lex-schemas/SKILL.md) for the full schema-accessor cheat sheet.
+See [lex-schema skill](../lex-schema/SKILL.md) for the full schema-accessor cheat sheet.
 
 ## Tests in this phase
 

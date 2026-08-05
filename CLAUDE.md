@@ -63,7 +63,7 @@ After editing anything under [lexicons/](lexicons/), or any `.proto` file, run `
 
 The lexicon JSON schemas are derived into TypeScript runtime schemas by `@atproto/lex` (`lex build`, wired through each package's `prebuild`).
 
-For working with that SDK, invoke the focused skills under [.agents/skills/](.agents/skills/): `lex-setup` (install/build config), `lex-schemas` and `lex-data-model` (schemas and values), `lex-client` (calls out), `xrpc-server` (defining server routes), and `lexification-client` / `lexification-server` (migrating off the legacy stack).
+For working with that SDK, invoke the focused skills under [.agents/skills/](.agents/skills/): `lex-setup` (install/build config), `lex-schema` and `lex-data` (schemas and values), `lex-client` (calls out), `xrpc-server` (defining server routes), and `lexification-client` / `lexification-server` (migrating off the legacy stack).
 
 ## Architecture notes
 

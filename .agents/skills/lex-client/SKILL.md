@@ -64,6 +64,7 @@ const client = new Client(session)
 ```ts
 const client = new Client(session, {
   service: 'did:web:api.bsky.app#bsky_appview',
+  labelers: ['did:plc:labeler1', 'did:plc:labeler2'],
 })
 ```
 
@@ -81,14 +82,17 @@ via the `appLabelers` option (`null` disables).
 ```ts
 const client = new Client(session, {
   service: 'did:web:api.bsky.app#bsky_appview',
+  labelers: ['did:plc:labeler1', 'did:plc:labeler2'],
 })
 
 // Proxied to the AppView (client default)
 await client.call(app.bsky.feed.getTimeline)
 
-// Straight to the user's PDS (no atproto-proxy header)
+// Straight to the user's PDS (no atproto-proxy or atproto-accept-labelers headers)
 await client.xrpc(com.atproto.repo.getRecord, {
   service: null,
+  labelers: null,
+  appLabelers: null,
   params: { repo: client.assertDid, collection, rkey: 'self' },
 })
 ```
@@ -99,31 +103,44 @@ When wiring a service to call another service with a static API key, you
 don't need a session — pass headers in the constructor:
 
 ```ts
-const sc = config.serviceUrl
-  ? new Client({
-      service: config.serviceUrl,
-      headers: config.serviceApiKey
-        ? { authorization: `Bearer ${config.serviceApiKey}` }
-        : undefined,
-    })
-  : undefined
+const client = new Client({
+  service: config.serviceUrl,
+  headers: { authorization: `Bearer ${config.serviceApiKey}` },
+})
+```
+
+If you need to dynamically refresh the headers or service URL, pass a custom agent instead:
+
+```ts
+const agent: Agent = {
+  get did() {
+    return undefined
+  },
+  async fetchHandler(path, init) {
+    const { serviceUrl, serviceApiKey } = await getConfig()
+    const headers = new Headers(init?.headers)
+    headers.set('authorization', `Bearer ${serviceApiKey}`)
+    return fetch(new URL(path, serviceUrl), { ...init, headers })
+  },
+}
+
+const client = new Client(agent)
 ```
 
 ## Validation options
 
 ```ts
 const client = new Client(session, {
-  validateRequest: false, // default
-  validateResponse: true, // default
-  strictResponseProcessing: true, // default
+  // Validate request bodies against input schema before sending. Enable in dev and test environments to catch schema errors early.
+  validateRequest: true, // default: false
+
+  // Validate response bodies against output schema. Disable if you control & trust the service
+  validateResponse: false, // default: true
+
+  // Strict Lex decoding; set `false` to accept legacy blobs, datetimes without timezones, etc. (see [lex-schema skill](../lex-schema/SKILL.md))
+  strictResponseProcessing: false, // default: true
 })
 ```
-
-| Option                     | Default | Meaning                                                                                                                                       |
-| -------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `validateRequest`          | `false` | Validate request bodies against input schema before sending                                                                                   |
-| `validateResponse`         | `true`  | Validate response bodies against output schema                                                                                                |
-| `strictResponseProcessing` | `true`  | Strict Lex decoding; set `false` to accept legacy blobs, datetimes without timezones, etc. (see [lex-schemas skill](../lex-schemas/SKILL.md)) |
 
 All three can be overridden per-call via `client.call`/`xrpc`/`xrpcSafe`
 options.
@@ -132,13 +149,13 @@ options.
 
 ```ts
 client.did // Did | undefined
-client.assertAuthenticated() // throws if not authed; narrows did to Did
+client.assertAuthenticated() // throws if not authed; narrows client.did to Did
 client.assertDid // Did (throws if not authed)
 ```
 
 ## Core methods
 
-### `client.call()` — call a method, return body
+### `client.call()` — call a method or action, return body
 
 ```ts
 import { app } from './lexicons/index.js'
@@ -152,6 +169,9 @@ const profile = await client.call(app.bsky.actor.getProfile, {
 const result = await client.call(app.bsky.feed.sendInteractions, {
   interactions: [/* ... */],
 })
+
+// Action
+const like = await client.call(likePost, { uri, cid })
 
 // With options
 const timeline = await client.call(
@@ -229,7 +249,7 @@ Options:
 
 - `rkey` — custom record key (auto-generated otherwise)
 - `validate` — ask the PDS to validate
-- `validateRequest` — locally validate before sending
+- `validateRequest` — locally validate the record before sending
 - `swapCommit` — optimistic concurrency (commit CID)
 
 ### `client.get()` — read a record
@@ -251,8 +271,13 @@ await client.put(app.bsky.actor.profile, {
 })
 ```
 
-Options: `rkey`, `validate` / `validateRequest`, `swapCommit`,
-`swapRecord` (optimistic concurrency on the existing record's CID).
+Options:
+
+- `rkey` — custom record key. only needed for non literal record keys
+- `validate` — ask the PDS to validate
+- `validateRequest` — locally validate the record before sending
+- `swapCommit` — optimistic concurrency (commit CID)
+- `swapRecord` — optimistic concurrency on the existing record's CID
 
 ### `client.delete()` — delete a record
 
@@ -358,6 +383,7 @@ const upsertPreference: Action<Preference, Preference[]> = async (
     app.bsky.actor.getPreferences,
     options,
   )
+  options?.signal?.throwIfAborted()
   const updated = [...preferences.filter((p) => p.$type !== pref.$type), pref]
   await client.call(
     app.bsky.actor.putPreferences,
@@ -388,14 +414,14 @@ Action best practices:
 
 1. Always type as `Action<Input, Output>`.
 2. Call `client.assertAuthenticated()` if auth is required.
-3. Check `options.signal?.throwIfAborted()` between long operations.
+3. Check `options?.signal?.throwIfAborted()` between long operations.
 4. Implement retry loops for swap-error / optimistic-concurrency cases.
 5. Export actions individually so consumers can tree-shake.
 
 ## Related skills
 
-[lex-schemas](../lex-schemas/SKILL.md) for the schemas passed to client
-methods, [lex-data-model](../lex-data-model/SKILL.md) for blobs and branded
+[lex-schema](../lex-schema/SKILL.md) for the schemas passed to client
+methods, [lex-data](../lex-data/SKILL.md) for blobs and branded
 strings at call boundaries, and
 [lexification-client](../lexification-client/SKILL.md) when migrating from
 `AtpAgent`.

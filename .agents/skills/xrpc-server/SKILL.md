@@ -269,7 +269,7 @@ export default function (server: Server, ctx: AppContext) {
 
 ## Related skills
 
-- **[lex-schemas skill](../lex-schemas/SKILL.md)** — the generated schemas
+- **[lex-schema skill](../lex-schema/SKILL.md)** — the generated schemas
   passed to `server.add()` (`./lexicons/index.js`, `$Params`, `$Output`,
   `$lxm`, `$type`, `$build`). Needed alongside this skill for almost any
   route work.
@@ -278,7 +278,7 @@ export default function (server: Server, ctx: AppContext) {
   above.
 - **[lex-setup skill](../lex-setup/SKILL.md)** — lexicon install/build
   configuration and `@atproto/lex` package layout.
-- **[lex-data-model skill](../lex-data-model/SKILL.md)** — branded strings,
+- **[lex-data skill](../lex-data/SKILL.md)** — branded strings,
   `BlobRef`, CBOR, and datetime handling at route boundaries.
 - **[lex-client skill](../lex-client/SKILL.md)** — when the service also calls
   _out_ to other services.

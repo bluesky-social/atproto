@@ -341,7 +341,7 @@ acceptable:
 
 Apply branded types at type boundaries (function signatures, interface
 fields, DB schema types) while keeping runtime code unchanged where
-possible. See [lex-data-model skill](../lex-data-model/SKILL.md) for the full list and rules.
+possible. See [lex-data skill](../lex-data/SKILL.md) for the full list and rules.
 Common cases:
 
 ```diff
@@ -525,5 +525,5 @@ keeps tests stable as a runtime regression check during the migration.
 patterns, [lexification-client](../lexification-client/SKILL.md) for the
 calls-out half (service packages usually need both),
 [lex-setup](../lex-setup/SKILL.md) for the codegen/dependency changes, and
-[lex-schemas](../lex-schemas/SKILL.md) for the `$`-accessors that replace
+[lex-schema](../lex-schema/SKILL.md) for the `$`-accessors that replace
 `ids.*` and the legacy `isX()` guards.
