@@ -206,10 +206,11 @@ export function coerceToString(input: unknown): string | null {
  */
 export const string: {
   (): StringSchema<NonNullable<unknown>>
+
+  // Allow calling `string<{ knownValues: [...] }>()` without passing an options
+  // object, since knownValues is only used for typing and has no runtime
+  // effect, so it can be safely omitted at runtime.
   <
-    // Allow calling `string<{ knownValues: [...] }>()` without passing an options
-    // object, since knownValues is only used for typing and has no runtime
-    // effect, so it can be safely omitted at runtime.
     const TOptions extends {
       knownValues: StringSchemaOptions['knownValues']
     } & {
@@ -220,10 +221,11 @@ export const string: {
   >(): StringSchema<
     IfAny<TOptions, any, { knownValues: TOptions['knownValues'] }>
   >
+
+  // If TOptions is explicitly provided (e.g. `string<{ ... }>({ ... })`), we
+  // allow the actual options argument to omit the "knownValues" property since
+  // it's only used for inferring the type and has no runtime effect.
   <const TOptions extends StringSchemaOptions>(
-    // If TOptions is explicitly provided (e.g. `string<{ ... }>({ ... })`), we
-    // allow the actual options argument to omit the "knownValues" property since
-    // it's only used for inferring the type and has no runtime effect.
     options: TOptions | Omit<TOptions, 'knownValues'>,
   ): StringSchema<TOptions>
 } = /*#__PURE__*/ memoizedOptions(
