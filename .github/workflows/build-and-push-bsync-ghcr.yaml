@@ -53,5 +53,7 @@ jobs:
           file: ./services/bsync/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BSYNC_VERSION=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
