@@ -63,10 +63,6 @@
         {
           "name": "RecordAlreadyExists",
           "description": "A create targeted a collection and rkey that already holds a record."
-        },
-        {
-          "name": "InvalidRecord",
-          "description": "One of the records failed validation. No writes were applied."
         }
       ]
     },

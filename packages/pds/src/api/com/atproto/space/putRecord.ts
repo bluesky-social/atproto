@@ -2,7 +2,7 @@ import { AtUriString } from '@atproto/syntax'
 import { ForbiddenError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { prepareSpaceWrite } from './prepare.js'
+import { prepareWrite } from '../../../../repo/index.js'
 import { assertSpaceScope, fireNotifyWrite } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -19,7 +19,9 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError('repo must match authenticated user')
       }
 
-      const prepared = prepareSpaceWrite({
+      const prepared = await prepareWrite({
+        did,
+        space,
         collection,
         rkey,
         record,
@@ -52,12 +54,11 @@ export default function (server: Server, ctx: AppContext) {
         setHash: commit.setHash,
       })
 
-      const [result] = commit.results
       return {
         encoding: 'application/json' as const,
         body: {
-          uri: `${space}/${did}/${collection}/${rkey}` as AtUriString,
-          cid: result.cid!.toString(),
+          uri: prepared.uri.toString() as AtUriString,
+          cid: prepared.cid.toString(),
           validationStatus: prepared.validationStatus,
         },
       }

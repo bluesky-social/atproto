@@ -18,7 +18,6 @@ import { dbLogger } from '../../../../logger.js'
 import {
   BadCommitSwapError,
   BadRecordSwapError,
-  InvalidRecordError,
   PreparedCreate,
   PreparedUpdate,
   prepareCreate,
@@ -115,17 +114,9 @@ export default function (server: Server, ctx: AppContext) {
             validate,
           }
 
-          let write: PreparedCreate | PreparedUpdate
-          try {
-            write = isUpdate
-              ? await prepareUpdate(writeInfo)
-              : await prepareCreate(writeInfo)
-          } catch (err) {
-            if (err instanceof InvalidRecordError) {
-              throw new InvalidRequestError(err.message)
-            }
-            throw err
-          }
+          const write: PreparedCreate | PreparedUpdate = isUpdate
+            ? await prepareUpdate(writeInfo)
+            : await prepareCreate(writeInfo)
 
           // no-op
           if (current && current.cid === write.cid.toString()) {

@@ -22,6 +22,8 @@ import {
   DidString,
   NsidString,
   RecordKeyString,
+  SpaceRef,
+  SpaceRefString,
   isValidRecordKey,
 } from '@atproto/syntax'
 import { hasExplicitSlur } from '../handle/explicit-slurs.js'
@@ -150,8 +152,10 @@ export const prepareUpdate = async (opts: {
   }
 }
 
-async function prepareWrite(opts: {
+export async function prepareWrite(opts: {
   did: string
+  // Set for a permissioned space record, whose uri nests under the space ref.
+  space?: SpaceRefString
   collection: NsidString
   rkey?: RecordKeyString
   record: LexMap
@@ -213,9 +217,21 @@ async function prepareWrite(opts: {
         return blob
       },
     ),
-    uri: AtUri.make(opts.did, opts.collection, rkey),
+    uri: opts.space
+      ? spaceRecordUri(opts.space, opts.did, opts.collection, rkey)
+      : AtUri.make(opts.did, opts.collection, rkey),
     cid: await cidForCbor(encode(record)),
   }
+}
+
+const spaceRecordUri = (
+  space: SpaceRefString,
+  author: string,
+  collection: NsidString,
+  rkey: string,
+): AtUri => {
+  const { spaceDid, spaceType, skey } = SpaceRef.parse(space)
+  return AtUri.makeSpace(spaceDid, spaceType, skey, author, collection, rkey)
 }
 
 export const prepareDelete = (opts: {

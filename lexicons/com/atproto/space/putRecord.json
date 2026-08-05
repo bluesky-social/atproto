@@ -68,10 +68,6 @@
       "errors": [
         {
           "name": "SpaceNotFound"
-        },
-        {
-          "name": "InvalidRecord",
-          "description": "The record failed validation."
         }
       ]
     }

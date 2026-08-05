@@ -72,10 +72,6 @@
         {
           "name": "RecordAlreadyExists",
           "description": "A record already exists at this collection and rkey. Retry with a different rkey, or use putRecord."
-        },
-        {
-          "name": "InvalidRecord",
-          "description": "The record failed validation."
         }
       ]
     }

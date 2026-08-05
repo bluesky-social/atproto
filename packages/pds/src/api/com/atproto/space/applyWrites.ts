@@ -8,8 +8,7 @@ import {
 import { SpaceWrite } from '../../../../actor-store/space/index.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { ValidationStatus } from '../../../../repo/index.js'
-import { prepareSpaceWrite } from './prepare.js'
+import { ValidationStatus, prepareWrite } from '../../../../repo/index.js'
 import { assertSpaceScope, fireNotifyWrite } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -30,11 +29,13 @@ export default function (server: Server, ctx: AppContext) {
       const statuses: (ValidationStatus | undefined)[] = []
 
       // No `put` here, so every action is directly scope-checkable.
-      const ops: Exclude<SpaceWrite, { action: 'put' }>[] = writes.map(
-        (w, i) => {
+      const ops: Exclude<SpaceWrite, { action: 'put' }>[] = await Promise.all(
+        writes.map(async (w, i) => {
           if (com.atproto.space.applyWrites.create.isTypeOf(w)) {
             const rkey = w.rkey ?? TID.nextStr()
-            const prepared = prepareSpaceWrite({
+            const prepared = await prepareWrite({
+              did,
+              space,
               collection: w.collection,
               rkey,
               record: w.value,
@@ -50,7 +51,9 @@ export default function (server: Server, ctx: AppContext) {
               blobs: prepared.blobs,
             }
           } else if (com.atproto.space.applyWrites.update.isTypeOf(w)) {
-            const prepared = prepareSpaceWrite({
+            const prepared = await prepareWrite({
+              did,
+              space,
               collection: w.collection,
               rkey: w.rkey,
               record: w.value,
@@ -73,7 +76,7 @@ export default function (server: Server, ctx: AppContext) {
             }
           }
           throw new InvalidRequestError('Unknown write type')
-        },
+        }),
       )
 
       for (const op of ops) {
