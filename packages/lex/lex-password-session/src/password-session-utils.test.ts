@@ -175,7 +175,7 @@ describe('AuthVerifier', () => {
   })
 })
 
-describe('extractPdsEndpoint', () => {
+describe(extractPdsEndpoint, () => {
   const validDidDoc = (serviceEndpoint: string) => ({
     service: [
       { id: 'did:example:alice#atproto_pds', serviceEndpoint },
