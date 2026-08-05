@@ -75,6 +75,13 @@ describe('handles', () => {
     })
     expect(res.data.did).toBe(alice)
   })
+  it('does not resolve unknown handles', async () => {
+    const rejection = agent.api.com.atproto.identity.resolveHandle({
+      handle: 'john.test',
+    })
+    await expect(rejection).rejects.toThrow('Unable to resolve handle')
+    await expect(rejection).rejects.toHaveProperty('error', 'HandleNotFound')
+  })
 
   it('resolves non-normalize handles', async () => {
     const res = await agent.api.com.atproto.identity.resolveHandle({
