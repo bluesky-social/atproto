@@ -1,115 +1,97 @@
 ---
 name: lex-client
 description: >
-  Make XRPC requests to AT Protocol services with `@atproto/lex`. Use when
-  asked to make an authenticated or unauthenticated HTTP call to an XRPC
-  service, use an OAuth or password session to make requests, read or modify
-  repository records, upload blobs, configure authentication, headers,
-  labelers, service proxies, retries, or validation, compose reusable client
-  operations, or replace a legacy AT Protocol agent with the high-level client.
-  For broader client migration work, use the client migration skill.
+  Call AT Protocol XRPC services with the `Client` from `@atproto/lex`. Use
+  when making an authenticated or unauthenticated HTTP request to an XRPC
+  service, wiring one service to call another, logging in with OAuth or an app
+  password, reading or writing repository records, uploading or fetching blobs,
+  configuring headers, labelers, service proxying, retries, or request/response
+  validation, handling XRPC errors, or composing reusable client actions. Also
+  use when replacing `AtpAgent`, `XrpcClient`, or a hand-rolled `fetch` call to
+  an `/xrpc/` endpoint. For a full migration off the legacy client stack, use
+  the lexification-client skill.
 disable-model-invocation: false
 ---
 
 # high-level XRPC client
 
-`Client` wraps an XRPC session with helpers for AT Proto repo operations
-(`create`, `get`, `put`, `delete`, `list`, `applyWrites`, `uploadBlob`),
-plus low-level `call`/`xrpc`/`xrpcSafe` methods. Use it whenever you have
-an authenticated session, or you want to encapsulate per-service config
-(headers, labelers, proxy target).
+`Client` wraps an authenticated (or anonymous) session with helpers for AT Proto
+repo operations (`create`, `get`, `put`, `delete`, `list`, `listAll`,
+`applyWrites`, `uploadBlob`, `getBlob`) plus the low-level
+`call`/`xrpc`/`xrpcSafe` request methods. Reach for it whenever there is a
+session to carry, or per-service config (headers, labelers, proxy target) worth
+encapsulating.
 
-Prefer `Client` for both authenticated and unauthenticated calls. The standalone
-`xrpc()` / `xrpcSafe()` exports are available for one-off, session-less calls
-that do not benefit from shared client configuration; they take the service URL
-first and otherwise use the same options, responses, and errors as the client
-methods.
+The standalone `xrpc()` / `xrpcSafe()` exports exist for one-off, session-less
+calls. Their first argument is an `Agent | AgentOptions` — a URL string, `URL`,
+`AgentConfig` object, or bare `FetchHandler` — and they otherwise share the same
+options, responses, and errors as the client methods.
+
+```ts
+import { xrpc } from '@atproto/lex'
+
+await xrpc(hostUrl, com.atproto.sync.requestCrawl, { body: { hostname } })
+```
 
 ## Constructing
 
-### Unauthenticated
+The constructor takes an `Agent` (anything with `fetchHandler`, optionally
+`did`) or `AgentOptions` (a URL string/`URL`, or an `AgentConfig`).
 
 ```ts
 import { Client } from '@atproto/lex'
 
+// Unauthenticated
 const client = new Client('https://public.api.bsky.app')
-```
 
-### Authenticated — OAuth
-
-```ts
-import { OAuthClient, type OAuthSession } from '@atproto/oauth-client-node'
-
+// OAuth — OAuthSession implements Agent
+import { type OAuthSession } from '@atproto/oauth-client-node'
 const session: OAuthSession = await oauthClient.restore(userDid)
 const client = new Client(session)
 ```
 
-### Authenticated — "app password" (CLI / scripts / bots)
+### App password sessions (CLI / scripts / bots)
+
+`PasswordSession` also implements `Agent`, plus `AsyncDisposable` — prefer
+`await using` so the session is deleted server-side on scope exit.
 
 ```ts
-import { PasswordSession } from '@atproto/lex-password-session'
+import {
+  LexAuthFactorError,
+  PasswordSession,
+} from '@atproto/lex-password-session'
 
-const session = await PasswordSession.login({
-  service: 'https://bsky.social',
-  identifier: 'alice.bsky.social',
-  password: 'xxxx-xxxx-xxxx-xxxx',
-  onUpdated: (data) => saveToStorage(data),
-  onDeleted: (data) => clearStorage(data.did),
-})
+// Credentials as a single URL: https://<handle>:<app-password>@<pds-host>
+await using session = await PasswordSession.login(
+  process.env.APP_PASSWORD_CREDENTIALS,
+)
 const client = new Client(session)
 ```
 
-### Service proxy (requires authenticated session)
+Long-lived apps should persist session data via `onUpdated` and use
+`PasswordSession.resume(data, options)` on the next run rather than re-sending
+credentials. Other statics: `createAccount(body, { service, ... })` and
+`delete(data)` (revoke stored session data without resuming it). `login` throws
+`LexAuthFactorError` when the account requires 2FA — catch it, prompt, and retry
+with `authFactorToken`.
+
+### Server-side calls with a static credential
+
+No session needed — put the credential in the constructor headers. Internal
+services typically also relax response processing:
 
 ```ts
-const client = new Client(session, {
-  service: 'did:web:api.bsky.app#bsky_appview',
-  labelers: ['did:plc:labeler1', 'did:plc:labeler2'],
-})
+const client = new Client(
+  {
+    service: config.serviceUrl,
+    headers: { authorization: `Bearer ${config.serviceApiKey}` },
+  },
+  // Trust internal services to send well-formed responses
+  { strictResponseProcessing: false, validateResponse: config.devMode },
+)
 ```
 
-### One client, multiple services
-
-`service` and `labelers` are _defaults_, overridable per request. `null`
-disables the corresponding header for that request. This lets a single
-AppView-configured client also reach the user's PDS directly. Record helpers
-(`create`, `get`, `put`, `delete`, `list`, `*Record`, `applyWrites`,
-`uploadBlob`, `getBlob`) always default to `service: null` /
-`labelers: null` (PDS-targeted). Static `appLabelers` (via
-`Client.configure()`) are always applied with `;redact` unless overridden
-via the `appLabelers` option (`null` disables).
-
-```ts
-const client = new Client(session, {
-  service: 'did:web:api.bsky.app#bsky_appview',
-  labelers: ['did:plc:labeler1', 'did:plc:labeler2'],
-})
-
-// Proxied to the AppView (client default)
-await client.call(app.bsky.feed.getTimeline)
-
-// Straight to the user's PDS (no atproto-proxy or atproto-accept-labelers headers)
-await client.xrpc(com.atproto.repo.getRecord, {
-  service: null,
-  labelers: null,
-  appLabelers: null,
-  params: { repo: client.assertDid, collection, rkey: 'self' },
-})
-```
-
-### Server-side service calls (no user session)
-
-When wiring a service to call another service with a static API key, you
-don't need a session — pass headers in the constructor:
-
-```ts
-const client = new Client({
-  service: config.serviceUrl,
-  headers: { authorization: `Bearer ${config.serviceApiKey}` },
-})
-```
-
-If you need to dynamically refresh the headers or service URL, pass a custom agent instead:
+If the credential or URL must be resolved per-request, supply a custom agent:
 
 ```ts
 const agent: Agent = {
@@ -127,86 +109,117 @@ const agent: Agent = {
 const client = new Client(agent)
 ```
 
+`AgentConfig` and `fetchHandler` are mutually exclusive — passing both throws a
+`TypeError`.
+
+### Service proxying, and one client for several services
+
+`service` and `labelers` set the `atproto-proxy` / `atproto-accept-labelers`
+headers. Both are _defaults_ and are overridable per request, so a single
+AppView-configured client can still reach the user's PDS directly — pass `null`
+to suppress the header for that request.
+
+```ts
+const client = new Client(session, {
+  service: 'did:web:api.bsky.app#bsky_appview',
+  labelers: ['did:plc:labeler1', 'did:plc:labeler2'],
+})
+
+// Proxied to the AppView (client default)
+await client.call(app.bsky.feed.getTimeline)
+
+// Straight to the user's PDS
+await client.xrpc(com.atproto.repo.getRecord, {
+  service: null,
+  labelers: null,
+  appLabelers: null,
+  params: { repo: client.assertDid, collection, rkey: 'self' },
+})
+```
+
+The record helpers (`create`, `get`, `put`, `delete`, `list`, `listAll`,
+`*Record`, `applyWrites`, `uploadBlob`, `getBlob`) already default to
+`service: null` / `labelers: null`, since repo operations belong on the PDS. Set
+them explicitly to proxy one.
+
 ## Validation options
 
 ```ts
 const client = new Client(session, {
-  // Validate request bodies against input schema before sending. Enable in dev and test environments to catch schema errors early.
+  // Validate request bodies against the input schema before sending. Worth
+  // enabling in dev/test to catch schema mistakes at the source.
   validateRequest: true, // default: false
 
-  // Validate response bodies against output schema. Disable if you control & trust the service
+  // Validate response bodies against the output schema.
   validateResponse: false, // default: true
 
-  // Strict Lex decoding; set `false` to accept legacy blobs, datetimes without timezones, etc. (see [lex-schema skill](../lex-schema/SKILL.md))
+  // Strict Lex decoding. `false` accepts legacy blobs, datetimes without
+  // timezones, etc. — see the lex-schema skill.
   strictResponseProcessing: false, // default: true
 })
 ```
 
-All three can be overridden per-call via `client.call`/`xrpc`/`xrpcSafe`
-options.
+All three are overridable per-call on `call` / `xrpc` / `xrpcSafe`.
 
 ## Authentication accessors
 
 ```ts
-client.did // Did | undefined
-client.assertAuthenticated() // throws if not authed; narrows client.did to Did
-client.assertDid // Did (throws if not authed)
+client.did // DidString | undefined
+client.assertAuthenticated() // throws if unauthenticated; narrows client.did
+client.assertDid // DidString (throws if unauthenticated)
 ```
 
-## Core methods
+`assertAuthenticated()` is an assertion function, so TypeScript requires the
+receiver to have an explicit type annotation. `const client = new Client(...)`
+(inferred) will fail with TS2775 — write `const client: Client = new Client(...)`
+or annotate the parameter.
 
-### `client.call()` — call a method or action, return body
+## Requests
+
+### `client.call()` — returns the body, throws on failure
 
 ```ts
 import { app } from './lexicons/index.js'
 
-// Query (GET)
 const profile = await client.call(app.bsky.actor.getProfile, {
   actor: 'pfrazee.com',
 })
 
-// Procedure (POST)
-const result = await client.call(app.bsky.feed.sendInteractions, {
-  interactions: [/* ... */],
-})
+await client.call(app.bsky.feed.sendInteractions, { interactions })
 
-// Action
-const like = await client.call(likePost, { uri, cid })
-
-// With options
 const timeline = await client.call(
   app.bsky.feed.getTimeline,
   { limit: 50 },
-  {
-    signal: abortSignal,
-    headers: { 'custom-header': 'value' },
-    strictResponseProcessing: false,
-    validateResponse: false,
-  },
+  { signal, maxRetries: 3, headers: { 'custom-header': 'value' } },
 )
 ```
 
-`call` returns the body directly. Errors throw — wrap in try/catch or use
-`xrpcSafe` for structured errors.
+The input argument is positional and distinct from the options: for a query it
+is the `params`, for a procedure the body, for an action the input. Methods that
+take neither can be called with the schema alone, but **the options must never
+occupy the input slot** — `client.call(schema, options)` sends `options` as
+query parameters and fails validation. Use `client.call(schema, {}, options)`,
+or `client.xrpc(schema, options)`.
 
-### `client.xrpc()` — full response (status, headers, body)
+### `client.xrpc()` — full response
 
 ```ts
 const response = await client.xrpc(app.bsky.feed.getTimeline, {
   params: { limit: 50 },
-  signal: abortSignal,
+  signal,
   headers: { 'custom-header': 'value' },
-  strictResponseProcessing: false,
-  validateResponse: false,
 })
 response.status
 response.headers.get('content-language')
 response.body
 ```
 
+Unlike `call`, `xrpc` takes a single options object with `params` / `body` as
+named fields, so options-only calls are unambiguous.
+
 ### `client.xrpcSafe()` — discriminated result
 
-Same request as `client.xrpc()`, but returns a failure instead of throwing:
+Same request as `xrpc()`, but returns the failure instead of throwing:
 
 ```ts
 const result = await client.xrpcSafe(com.atproto.identity.resolveHandle, {
@@ -215,94 +228,107 @@ const result = await client.xrpcSafe(com.atproto.identity.resolveHandle, {
 if (result.success) {
   result.body
 } else if (result.matchesSchemaErrors()) {
-  result.error // narrowed to errors declared by the schema
+  result.error // narrowed to the errors declared by the schema
 } else {
   throw result.reason
 }
 ```
 
-Failures are `XrpcResponseError` (4xx/5xx), `XrpcInvalidResponseError`
-(non-compliant successful response, redirects, or malformed data),
-`XrpcResponseValidationError` (schema validation; a subclass of
-`XrpcInvalidResponseError`), or `XrpcInternalError` (network/client failure).
-Response headers use the standard `Headers` API: `result.headers.get(name)`.
+### Errors
 
-Retries are handled by `client.call()`, `client.xrpc()`, `client.xrpcSafe()`,
-and their standalone counterparts. Configure `maxRetries` (default `0`) and,
-when needed, the backoff options; the request layer uses `shouldRetry()` and
-rate-limit headers automatically. Do not wrap calls in a manual retry loop.
+All failures extend `XrpcError` (`error`, `message`, `matchesSchemaErrors()`,
+`shouldRetry()`). The three concrete branches of `XrpcFailure`:
 
-### `client.create()` — create a record
+| Class                      | Meaning                                                    |
+| -------------------------- | ---------------------------------------------------------- |
+| `XrpcResponseError`        | Server returned a non-2xx status                           |
+| `XrpcInvalidResponseError` | 2xx but non-compliant — redirect, wrong encoding, bad data |
+| `XrpcInternalError`        | Failed before a usable response existed (network, client)  |
+
+Subclasses worth narrowing on: `XrpcAuthenticationError` (401, exposes
+`wwwAuthenticate`), `XrpcResponseValidationError` (response failed schema
+validation), and `XrpcFetchError` (the underlying `fetch` threw — the retryable
+internal error).
+
+Only `XrpcResponseError` carries HTTP data. `status`, `headers`, and `body` do
+**not** exist on the `XrpcFailure` union, so narrow first:
+
+```ts
+if (!result.success && result instanceof XrpcResponseError) {
+  result.status
+  result.headers.get('retry-after')
+}
+```
+
+### Retries
+
+`call`, `xrpc`, `xrpcSafe`, and the standalone functions all retry internally.
+Set `maxRetries` (default `0`); tune with `minRetryTimeout` (500ms),
+`maxRetryTimeout` (30s), `retryTimeoutFactor` (2), `retryHeaders` (honour
+`Retry-After` / `RateLimit-Reset`, default `true`), or replace the predicate with
+`retry(failure, { counter })`. The defaults already cover the retryable status
+codes (408, 425, 429, 5xx) and network errors, so do not wrap calls in a manual
+retry loop.
+
+## Records
+
+### `create` / `get` / `put` / `delete`
 
 ```ts
 import { currentDatetimeString } from '@atproto/lex'
 
-const result = await client.create(app.bsky.feed.post, {
+const { uri, cid } = await client.create(app.bsky.feed.post, {
   text: 'Hello, world!',
   createdAt: currentDatetimeString(),
 })
-result.uri // at://did:plc:.../app.bsky.feed.post/...
-result.cid
-```
 
-Options:
-
-- `rkey` — custom record key (auto-generated otherwise)
-- `validate` — ask the PDS to validate
-- `validateRequest` — locally validate the record before sending
-- `swapCommit` — optimistic concurrency (commit CID)
-
-### `client.get()` — read a record
-
-```ts
-// Records with literal keys (e.g. profile uses rkey 'self')
+// Literal-key records (profile is rkey 'self') need no rkey
 const profile = await client.get(app.bsky.actor.profile)
+profile.value.displayName
 
-// Records with non-literal keys
 const post = await client.get(app.bsky.feed.post, { rkey: '3jxf7z2k3q2' })
-```
 
-### `client.put()` — update a record
-
-```ts
-await client.put(app.bsky.actor.profile, {
-  displayName: 'New Name',
-  description: 'Updated bio',
-})
-```
-
-Options:
-
-- `rkey` — custom record key. only needed for non literal record keys
-- `validate` — ask the PDS to validate
-- `validateRequest` — locally validate the record before sending
-- `swapCommit` — optimistic concurrency (commit CID)
-- `swapRecord` — optimistic concurrency on the existing record's CID
-
-### `client.delete()` — delete a record
-
-```ts
+await client.put(app.bsky.actor.profile, { displayName: 'New Name' })
 await client.delete(app.bsky.feed.post, { rkey: '3jxf7z2k3q2' })
 ```
 
-### `client.list()` — paginate a collection
+`rkey` is optional for `literal:` and auto-generated (`tid`) keys and required
+otherwise; the type system enforces this, so a missing `rkey` shows up as a
+compile error rather than a runtime one. Shared options: `validate` (ask the PDS
+to validate), `validateRequest` (validate locally before sending), `swapCommit`
+(optimistic concurrency on the commit CID), and for `put`/`delete` also
+`swapRecord` (on the record's own CID).
+
+### `list` / `listAll` — paginating a collection
+
+Listed records are a discriminated union on `valid`: entries that fail schema
+validation still come back, with `value` widened to `LexMap`. Check `valid`
+before touching typed fields.
 
 ```ts
-const result = await client.list(app.bsky.feed.post, {
-  limit: 50,
-  reverse: true,
-})
-for (const r of result.records) console.log(r.uri, r.value.text)
-
-if (result.cursor) {
-  const next = await client.list(app.bsky.feed.post, {
-    cursor: result.cursor,
-    limit: 50,
-  })
+const page = await client.list(app.bsky.feed.post, { limit: 50, reverse: true })
+for (const record of page.records) {
+  if (record.valid) console.log(record.uri, record.value.text)
+}
+if (page.cursor) {
+  await client.list(app.bsky.feed.post, { cursor: page.cursor, limit: 50 })
 }
 ```
 
-### `client.applyWrites()` — atomic batch writes
+`listAll()` is the auto-paginating async generator — prefer it over hand-rolling
+a cursor loop. It defaults to `maxRetries: 3` since a long walk is far more
+likely to hit a transient failure:
+
+```ts
+for await (const record of client.listAll(app.bsky.feed.post)) {
+  if (record.valid) console.log(record.value.text)
+}
+```
+
+### `applyWrites` — atomic batch writes
+
+All ops succeed or fail together. Options: `repo` (defaults to `client.did`),
+`validate`, `swapCommit`.
 
 ```ts
 const response = await client.applyWrites((op) => [
@@ -313,28 +339,51 @@ const response = await client.applyWrites((op) => [
   op.update(app.bsky.actor.profile, { displayName: 'Alice' }),
   op.delete(app.bsky.feed.post, { rkey: '3jxf7z2k3q2' }),
 ])
-for (const r of response.body.results) console.log(r.uri, r.cid)
 ```
 
-All ops succeed or fail together. Options: `repo` (defaults to
-`client.did`), `validate`, `swapCommit`.
+`response.body.results` is **optional**, and is a union in which `deleteResult`
+has no `uri` or `cid`. Narrow before reading them:
+
+```ts
+for (const result of response.body.results ?? []) {
+  if (com.atproto.repo.applyWrites.createResult.$isTypeOf(result)) {
+    console.log(result.uri, result.cid)
+  }
+}
+```
+
+The callback may also be a generator, which reads better for dynamic batches:
+
+```ts
+await client.applyWrites(function* (op) {
+  for (const rkey of staleRkeys) yield op.delete(app.bsky.feed.post, { rkey })
+})
+```
+
+### Blobs
+
+```ts
+const { body } = await client.uploadBlob(bytes, { encoding: 'image/png' })
+body.blob // BlobRef — store this in a record
+
+const image = await client.getBlob(did, cid)
+```
 
 ## Labelers
 
 ```ts
-// App-wide defaults (process-global)
+// Process-global defaults, always sent with `;redact`
 Client.configure({ appLabelers: ['did:plc:labeler1'] })
 
-// Per-client
+// Per-client, and mutable at runtime
 const client = new Client(session, { labelers: ['did:plc:labeler3'] })
-
 client.addLabelers(['did:plc:labeler4'])
 client.setLabelers(['did:plc:labeler5'])
 client.clearLabelers()
 ```
 
-A common flow: read user prefs after login, configure labelers from the
-`labelersPref`:
+Pass `appLabelers: null` on a request to drop the process-global ones. The usual
+post-login flow reads the user's preference:
 
 ```ts
 const { preferences } = await client.call(app.bsky.actor.getPreferences)
@@ -344,18 +393,18 @@ client.setLabelers(pref?.labelers.map((l) => l.did) ?? [])
 
 ## Actions — composable client operations
 
-An `Action` is a function that receives a `Client`, an input, and call
-options, and returns a result. It can be invoked via `client.call()`.
+An `Action<Input, Output>` is `(client, input, options) => Output | Promise<Output>`.
+`client.call()` accepts one anywhere a schema fits, so an action is
+interchangeable with a lexicon method at the call site.
 
 ```ts
-import { Action, Client } from '@atproto/lex'
+import { type Action, Client, currentDatetimeString } from '@atproto/lex'
 import { app } from './lexicons/index.js'
 
-type LikeInput = { uri: string; cid: string }
-type LikeOutput = { uri: string; cid: string }
+type LikeInput = { uri: AtUriString; cid: CidString }
 
-export const likePost: Action<LikeInput, LikeOutput> = async (
-  client,
+export const likePost: Action<LikeInput, CreateOutput> = async (
+  client: Client, // explicit — required by assertAuthenticated() below
   { uri, cid },
   options,
 ) => {
@@ -367,11 +416,10 @@ export const likePost: Action<LikeInput, LikeOutput> = async (
   )
 }
 
-// Use it
 await client.call(likePost, { uri, cid })
 ```
 
-Actions compose:
+Actions compose — thread `options` through so cancellation propagates:
 
 ```ts
 const upsertPreference: Action<Preference, Preference[]> = async (
@@ -381,6 +429,7 @@ const upsertPreference: Action<Preference, Preference[]> = async (
 ) => {
   const { preferences } = await client.call(
     app.bsky.actor.getPreferences,
+    {},
     options,
   )
   options?.signal?.throwIfAborted()
@@ -394,34 +443,33 @@ const upsertPreference: Action<Preference, Preference[]> = async (
 }
 ```
 
-Build a library by exporting actions individually (good for tree-shaking):
+Export actions individually rather than as one object, so consumers tree-shake
+what they don't call:
 
 ```ts
 // actions.ts
-export const post: Action</* ... */> = async (c, i, o) => {
-  /* ... */
-}
-export const follow: Action</* ... */> = async (c, i, o) => {
-  /* ... */
-}
+export const post: Action</* ... */> = async (c, i, o) => {/* ... */}
+export const follow: Action</* ... */> = async (c, i, o) => {/* ... */}
 
 // usage
 import * as actions from './actions.js'
 await client.call(actions.post, { text: 'Hello!' })
 ```
 
-Action best practices:
-
-1. Always type as `Action<Input, Output>`.
-2. Call `client.assertAuthenticated()` if auth is required.
-3. Check `options?.signal?.throwIfAborted()` between long operations.
-4. Implement retry loops for swap-error / optimistic-concurrency cases.
-5. Export actions individually so consumers can tree-shake.
+Guidelines: annotate as `Action<Input, Output>` (it contextually types the
+parameters); call `client.assertAuthenticated()` when auth is required;
+`options?.signal?.throwIfAborted()` between long steps; and handle swap-error
+retries here rather than pushing optimistic-concurrency handling onto callers.
 
 ## Related skills
 
-[lex-schema](../lex-schema/SKILL.md) for the schemas passed to client
-methods, [lex-data](../lex-data/SKILL.md) for blobs and branded
-strings at call boundaries, and
-[lexification-client](../lexification-client/SKILL.md) when migrating from
-`AtpAgent`.
+- **[lex-schema](../lex-schema/SKILL.md)** — the generated schemas passed to
+  every client method, and `$isTypeOf` / `$build` / `$type`.
+- **[lex-data](../lex-data/SKILL.md)** — blobs, CIDs, branded strings, and
+  datetimes at the call boundary.
+- **[lexification-client](../lexification-client/SKILL.md)** — migrating from
+  `AtpAgent` / `XrpcClient`.
+- **[xrpc-server](../xrpc-server/SKILL.md)** — the other half, when the service
+  also _serves_ XRPC routes.
+- **[lex-setup](../lex-setup/SKILL.md)** — installing lexicons and configuring
+  the codegen that produces `./lexicons/index.js`.

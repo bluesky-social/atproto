@@ -1,52 +1,61 @@
 ---
 name: testing
 description: >
-  Apply this monorepo's testing practices. Use before any code search when asked
-  to add, write, or extend tests, add coverage, choose a test runner, configure
-  testing in a package, decide where tests belong, or test a browser-based user
-  flow. Covers unit, integration, and end-to-end tests and routes UI work
-  through browser-first discovery.
+  Apply this monorepo's testing practices — runner choice (vitest vs jest),
+  where test files belong, tsconfig wiring, and the dev-env fixture used by
+  integration tests. Use before any code search when asked to add, write, or
+  extend tests, add coverage, reproduce a bug with a failing test, choose or
+  configure a test runner, decide where a test belongs, run a single test file,
+  or test a browser-based user flow. Covers unit, integration, and end-to-end
+  tests, and routes UI work through browser-first discovery.
 disable-model-invocation: false
 ---
 
 # Testing in this repo
 
-## End-to-end UI tests: Playwright MCP first
+## UI tests: discover in a browser before reading source
 
-If the test you're about to write drives a UI (anything in `packages/pds/tests/{oauth,account-manager}.test.ts`, or any test that boots a browser via `puppeteer` / Playwright), STOP before grepping or reading source.
+If the test drives a UI (`packages/pds/tests/{oauth,account-manager}.test.ts`, or anything using the `puppeteer` `PageHelper`), stop before grepping. Assertion strings are localized and conditional — the running app is the only reliable source for them. Walk the flow with the Playwright MCP and copy the exact strings out of the snapshots.
 
-**Discover the flow by driving the running app through the Playwright MCP**, not by reading the implementation. Boot the dev env (`cd packages/dev-env && pnpm dev`, PDS at http://localhost:2583), then use `browser_navigate` / `browser_click` / `browser_snapshot` to walk the user flow yourself and copy the exact visible strings out of the snapshot. This catches what the user actually sees — including i18n strings, conditional UI, and edge cases that source-reading misses.
+Full workflow, `PageHelper` API, and dev-env boot instructions: [playwright skill](../playwright/SKILL.md). Come back here for runner and tsconfig questions.
 
-Reading code is the fallback only when Playwright MCP can't reach the state (e.g. the feature isn't wired up yet). See the [playwright skill](../playwright/SKILL.md) for the full workflow and `PageHelper` API.
+## Choosing a runner
 
-## Test runner
+Vitest is the standard and now covers the majority of the repo (~25 packages, ~270 test files) — including `bsky`, all of `packages/lex/*`, `packages/oauth/*`, and the tested `packages/internal/*`. Jest remains in 13 unmigrated packages (~165 files), among them `pds`, `ozone`, `api`, `repo`, and `xrpc-server`. Jest is deprecated: don't introduce it anywhere new, and prefer migrating a file to vitest over deepening its jest usage.
 
-This monorepo uses two test runners. **Vitest is the standard going forward.** Jest is deprecated and only used by packages that haven't been migrated yet — write new jest tests _only_ in packages that already use jest, and migrate to vitest when feasible.
+Decide from the package's own config files, not from a memorized list — they are the only drift-proof signal:
 
-The root [vitest.config.ts](../../../vitest.config.ts) `projects` list includes `lex/*`, `syntax`, `tap`, and other packages. `bsky` also uses Vitest, but is intentionally omitted from that list because its package-level `pnpm test` must start development infrastructure. Most other packages — including `pds` — are still on jest, aggregated by the root [jest.config.cjs](../../../jest.config.cjs).
+1. Package has a `vite.config.*` → **Vitest, configured inside that Vite config** (never a separate `vitest.config.ts`). See [Vite-based packages](references/vitest.md#vite-based-packages).
+2. Package has a `vitest.config.ts` → Vitest. See [references/vitest.md](references/vitest.md).
+3. Package has a `jest.config.cjs` → Jest. See [references/jest.md](references/jest.md).
+4. None of the above → the package has no test setup. Adopt vitest: create `vitest.config.ts` and `tsconfig.test.json` first, following [the setup section](references/vitest.md#adopting-vitest-in-a-new-package), then write the test.
 
-Decide which runner to use by following these steps in order:
+If the test imports `@atproto/lex` or any `@atproto/lex-*` package, also read the [lex-schema skill](../lex-schema/SKILL.md) — schemas expose `$parse` / `$safeParse` / `$matches`, which make better assertions than hand-rolled shape checks.
 
-1. Does the package directory contain a `vite.config.*`? → **always Vitest**, configured inside that existing Vite config (`/// <reference types="vitest/config" />` on line 1 plus a `test: {}` key) — never a separate `vitest.config.ts`, never Jest. See the "Vite-based packages" section of [references/vitest.md](references/vitest.md).
-2. Does the package directory contain `vitest.config.ts`? → use Vitest, follow [references/vitest.md](references/vitest.md).
-3. Does the package directory contain `jest.config.cjs`? → use Jest, follow [references/jest.md](references/jest.md).
-4. None of the above? → the package has no tests yet. Adopt Vitest: before writing any test code, create `vitest.config.ts` and `tsconfig.test.json` by following the setup section of [references/vitest.md](references/vitest.md), then write the test.
-5. Does the test code import `@atproto/lex` (or any `@atproto/lex-*` sub-packages)? → also consult the [lex-schema skill](../lex-schema/SKILL.md) — schemas have validation helpers (`$parse`, `$safeParse`, `$matches`) that are useful in assertions.
+## Where tests go
 
-Runner-reference summary:
+- **Unit tests** sit next to their subject: `foo.ts` + `foo.test.ts`. This is the default whenever the test needs no infra and no cross-package setup.
+- **Integration / end-to-end tests** go in the package's top-level `./tests` folder (`packages/{pds,bsky,ozone}/tests`, `packages/lex/lex/tests`, …). Use it for tests that boot real services, hit a database, or exercise several modules together.
+- **Shared helpers** go in `./tests/_util.ts` (or a `./tests/_util/` directory). The leading underscore keeps them out of glob-based test discovery — see [packages/bsky/tests/\_util.ts](../../../packages/bsky/tests/_util.ts) and [packages/ws-client/tests/\_util/](../../../packages/ws-client/tests/_util).
 
-- [references/vitest.md](references/vitest.md) — preferred. Patterns for writing vitest tests, plus setup instructions for adopting vitest in a package that doesn't have tests yet.
-- [references/jest.md](references/jest.md) — deprecated. Only for adding cases to existing jest test files or maintaining them until migration. UI tests in `pds` are currently jest-based; combine this reference with the [playwright skill](../playwright/SKILL.md) when extending them.
+Jest packages predate the colocation convention and keep everything in `./tests` — `packages/api/src/age-assurance.test.ts` is the lone exception. Don't relocate existing files just to match the convention.
 
-## Test file location
+## Integration tests use the dev-env fixture
 
-- **Unit tests** live next to the unit being tested as `foo.ts` + `foo.test.ts`. This is the default — prefer it whenever the test does not need infra, or complex cross-package setup.
-- **End-to-end / integration tests** live in a top-level `./tests` folder inside the package (for example, the `pds` and `bsky` packages each have their own `./tests` folder). Use this for tests that boot real services, hit a database, or exercise multiple modules together.
-- **Shared test helpers** live in `./tests/_util.ts` (or `./tests/_util/*`). The leading underscore keeps them out of glob-based test discovery. Used by [packages/bsky/tests/\_util.ts](../../../packages/bsky/tests/_util.ts) and [packages/tap/tests/\_util.ts](../../../packages/tap/tests/_util.ts).
+Almost every integration test in `pds`, `bsky`, `ozone`, and `lexicon-resolver` boots a real service constellation through `@atproto/dev-env` rather than mocking. Reach for it instead of hand-wiring servers:
+
+- `TestNetwork.create({ dbPostgresSchema })` — PDS + AppView + bsync + ozone + PLC. Needs postgres and redis. The schema must be unique per test file: it's the isolation boundary (the AppView and ozone databases are derived from it), so parallel files sharing one corrupt each other's data.
+- `TestNetworkNoAppView.create({ pds, plc })` — PDS + PLC only, on a temp-dir store and a mock PLC database. Lighter; use it when the test doesn't touch the AppView. It forwards only the `pds` and `plc` sub-options, so passing a top-level `dbPostgresSchema` here does nothing.
+- `network.getSeedClient()` plus a seed exported from `@atproto/dev-env` (`basicSeed`, `usersSeed`, `quotesSeed`, …) populates accounts and records.
+- `await network.processAll()` flushes the firehose so the AppView has caught up before you assert.
+
+Tear down with `afterAll(async () => network?.close())` — the prevailing pattern, and the only option for `TestNetworkNoAppView`, which exposes `close()` but no `Symbol.asyncDispose`. Only `TestNetwork` implements it.
+
+Snapshot assertions go through each package's `forSnapshot()` helper in `tests/_util.ts`, which swaps DIDs, CIDs, and timestamps for stable placeholders so snapshots don't churn on every run. Refresh them with `pnpm test:updateSnapshot` (defined in `bsky`, `pds`, `ozone`, `bsync`).
 
 ## TypeScript config for tests
 
-Each package splits its TS config into three files referenced from the root `tsconfig.json`:
+Tested packages split their TS config in two, both referenced from the package's `tsconfig.json`:
 
 ```json
 {
@@ -58,18 +67,22 @@ Each package splits its TS config into three files referenced from the root `tsc
 }
 ```
 
-- `tsconfig.build.json` — production code in `./src`, excludes `**/*.test.ts`, emits to `./dist`.
-- `tsconfig.test.json` — test code. For vitest packages it extends `../../tsconfig/vitest.tsconfig.json`; for jest packages it extends `../../tsconfig/jest.tsconfig.json` (which adds `"types": ["node", "jest"]`). The `include` list typically covers both `./tests` and `./src/**/*.test.ts`.
+- `tsconfig.build.json` — `./src`, excludes `**/*.test.ts`, emits to `./dist`.
+- `tsconfig.test.json` — test code, extending `tsconfig/vitest.tsconfig.json` or `tsconfig/jest.tsconfig.json`. Both set `noEmit` and `composite: false`; the jest one additionally pulls in `@types/jest`. `include` is `["./tests", "./src/**/*.test.ts"]` in nearly every package, regardless of runner.
 
-When adding tests to a package that doesn't already have a `tsconfig.test.json`, create one before writing tests. See the runner-specific reference for the exact contents.
+The build is a TS project graph, so `references` is what makes imports resolve. `./tsconfig.build.json` alone covers anything the package already depends on at build time — which is most workspace imports. Add a further entry only for a package the tests import but `src` doesn't: in practice that means `{ "path": "../dev-env/tsconfig.build.json" }`, and only in the six packages with integration tests (`api`, `bsky`, `lexicon-resolver`, `ozone`, `pds`, `sync`).
+
+Create `tsconfig.test.json` before writing the first test in a package that lacks one — `packages/did` has jest tests without one, so don't take its layout as the pattern. Exact contents per runner: [vitest](references/vitest.md#adopting-vitest-in-a-new-package) / [jest](references/jest.md#typescript-config).
 
 ## Running tests
 
-From a package directory:
+Run from inside the package directory:
 
 ```bash
-pnpm test                         # full suite (vitest run / jest)
-pnpm test -- path/to/file.test.ts # single file
+pnpm test                        # full package suite
+pnpm test path/to/file.test.ts   # single file
 ```
 
-For packages whose tests need postgres + redis (`bsky`, `pds`, `ozone`), always go through `pnpm test` — the `test` script wraps invocations in [packages/dev-infra/with-test-redis-and-db.sh](../../../packages/dev-infra/with-test-redis-and-db.sh). Calling `pnpm exec vitest run` (or `jest`) directly will fail because the infra isn't started. These packages are intentionally absent from the root [vitest.config.ts](../../../vitest.config.ts) `projects` list for the same reason.
+Packages whose tests need docker infra wrap the runner in a dev-infra script — `bsky`, `pds`, `ozone`, and `sync` use [with-test-redis-and-db.sh](../../../packages/dev-infra/with-test-redis-and-db.sh); `bsync` uses `with-test-db.sh`. Always go through `pnpm test`; invoking `vitest` or `jest` directly skips the script, so postgres and redis aren't running and the suite dies on connection errors. `pds` also offers `pnpm test:sqlite` for a faster loop that skips the docker infra.
+
+From the repo root, `pnpm test` runs every package's suite with infra up, and `pnpm test:unit` runs only the projects registered in [vitest.config.ts](../../../vitest.config.ts). That list is not the full set of vitest packages: `bsky` is commented out because it needs infra, and `lexicon-resolver` is simply absent. Run either from its own directory.

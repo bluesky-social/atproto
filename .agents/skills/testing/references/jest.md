@@ -1,21 +1,12 @@
 # Jest patterns (deprecated)
 
-**Jest is deprecated in this repo.** Vitest is the standard going forward. This reference exists only to:
+Jest (currently v30) is deprecated here; vitest is the standard. This reference covers adding cases to existing jest files and maintaining them until migration. Don't introduce jest into a package that doesn't already have it — for a fresh package, see [vitest.md](vitest.md).
 
-1. Add cases to existing jest test files in packages that haven't been migrated.
-2. Maintain existing jest tests until they are migrated to vitest.
-
-**Do not introduce jest into a package that doesn't already use it.** If you're setting up tests in a fresh package, use vitest — see [vitest.md](vitest.md).
-
-## Identifying a jest package
-
-A package is on jest if it has a `jest.config.cjs` and its `package.json` has `"test": "NODE_OPTIONS=--experimental-vm-modules jest"` (or similar). Examples currently on jest: [packages/api](../../../../packages/api), [packages/pds](../../../../packages/pds), [packages/lexicon](../../../../packages/lexicon), [packages/identity](../../../../packages/identity), [packages/crypto](../../../../packages/crypto), and a few others. Always inspect the package's current configuration rather than relying on this example list.
-
-The root [jest.config.cjs](../../../../jest.config.cjs) aggregates these via `projects: ['<rootDir>/packages/*/jest.config.cjs']`.
+A package is on jest if it has a `jest.config.cjs` and a `"test"` script invoking `jest` with `NODE_OPTIONS=--experimental-vm-modules` (required because the repo is ESM-only). The root [jest.config.cjs](../../../../jest.config.cjs) aggregates them via `projects: ['<rootDir>/packages/*/jest.config.cjs']` — note the single-level glob, so a jest package nested under `packages/lex/` or `packages/oauth/` would not be picked up. Check the package's own config rather than trusting any list.
 
 ## TypeScript config
 
-Jest packages extend [tsconfig/jest.tsconfig.json](../../../../tsconfig/jest.tsconfig.json), which adds `"types": ["node", "jest"]`. A typical `tsconfig.test.json`:
+Jest packages extend [tsconfig/jest.tsconfig.json](../../../../tsconfig/jest.tsconfig.json), which adds `"types": ["node", "jest"]` on top of the shared node config:
 
 ```jsonc
 {
@@ -26,41 +17,36 @@ Jest packages extend [tsconfig/jest.tsconfig.json](../../../../tsconfig/jest.tsc
   },
   "references": [
     { "path": "./tsconfig.build.json" },
-    // [Add references to any local packages imported from tests]
+    // Integration tests only — see below
+    { "path": "../dev-env/tsconfig.build.json" },
   ],
 }
 ```
 
-Note: jest packages typically only `include: ["./tests"]` because they don't use colocated `*.test.ts` files. Don't change that — colocation is a vitest-era convention.
+`./tsconfig.build.json` covers the package's own build-time deps and is all most jest packages have. Of the 13, only `api`, `ozone`, `pds`, and `sync` add the `dev-env` entry, because their tests import `@atproto/dev-env` while `src` doesn't. `packages/did` has jest tests but no `tsconfig.test.json` at all — a gap, not a pattern.
 
-## Imports
-
-Jest globals are ambient (provided by `@types/jest`), but several packages also import from `@jest/globals`:
-
-```ts
-import { describe, it, expect, jest } from '@jest/globals'
-```
-
-Match whatever the existing files in the package do.
+The `include` glob covers colocated `src/**/*.test.ts` even though jest packages barely use them (`packages/api/src/age-assurance.test.ts` is the only one) — leave it as-is so the two runners' configs stay uniform. A package adding custom matchers also needs them declared: [packages/api](../../../../packages/api/tsconfig.test.json) sets `"types": ["jest", "./jest.d.ts"]` to pick up its ambient `jest.d.ts`.
 
 ## Writing tests
 
-Most of the structural patterns from [vitest.md](vitest.md) apply equally to jest — `describe`/`it`/`expect`, parameterized `it.each`, fixtures at the top of the file, error assertions with `rejects.toThrow()` or `rejects.toMatchObject()`. Differences to watch for:
+Most structural conventions from [vitest.md](vitest.md) carry over — `describe`/`it`, `it.each`, fixtures at the top of the file, `using` for spies (jest 30's spies are `Disposable` too). What differs:
 
-- Use `jest.fn()` instead of `vi.fn()`. The type-parameter form differs slightly: `jest.fn<ReturnType, ArgsTuple>()` rather than `vi.fn<FnType>()`.
-- Use `jest.spyOn()` / `jest.mock()` instead of `vi.spyOn()` / `vi.mock()`.
-- `assert()` from vitest has no jest equivalent — for type narrowing, use a plain `if`/`else` guard or `expect(...).toBeInstanceOf(...)` followed by a manual cast. Prefer migrating the file to vitest if narrowing patterns become a recurring need.
-- `toSatisfy` is not a jest matcher. Use `toMatchObject`, `toHaveProperty`, or destructure the rejection: `const err = await fn().catch((e) => e); expect(err).toBeInstanceOf(...)`.
+| vitest                   | jest                                                                                                                              |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `vi.fn<FnType>()`        | `jest.fn<FnType>()` (single type param since jest 30)                                                                             |
+| `vi.spyOn` / `vi.mock`   | `jest.spyOn` / `jest.mock`                                                                                                        |
+| `assert()` from `vitest` | `import assert from 'node:assert'` — the prevailing pattern in `pds` tests                                                        |
+| `rejects.toSatisfy(cb)`  | not a jest matcher; use `rejects.toMatchObject({ error: '…' })`, or `const err = await fn().catch((e) => e)` then assert on `err` |
+| `expectTypeOf`           | no equivalent; skip type-level assertions or migrate the file                                                                     |
+
+Jest globals are ambient via `@types/jest`, but a minority of files import them explicitly from `@jest/globals`. Match whatever the surrounding files in the package do rather than mixing styles within one package.
 
 ## Setup files
 
-Jest packages use the shared root [test.setup.ts](../../../../test.setup.ts) (loads `test.env` via dotenv) and may add a per-package `jest.setup.ts` for matchers (e.g. [packages/api/jest.setup.ts](../../../../packages/api/jest.setup.ts)).
+Every jest package loads the shared root [test.setup.ts](../../../../test.setup.ts), which reads an optional `test.env` via dotenv (that file isn't committed — it's for local overrides). Packages with custom matchers add a `setupFilesAfterEnv` entry pointing at their own `jest.setup.ts`, as [packages/api](../../../../packages/api/jest.setup.ts) does.
+
+Transpilation is `@swc/jest`, not `ts-jest`, with a `moduleNameMapper` that resolves the repo's explicit `.js` import extensions back to `.ts` sources.
 
 ## Running tests
 
-```bash
-pnpm test                         # full package suite
-pnpm test -- path/to/file.test.ts # single file
-```
-
-Some packages require `NODE_OPTIONS=--experimental-vm-modules`, or depend in infrastructure — the `pnpm test` script handles this; avoind invoking jest directly.
+See [Running tests in SKILL.md](../SKILL.md#running-tests). Jest does accept a path after `--`, but omitting `--` works in both runners — so just use `pnpm test path/to/file.test.ts` and the habit stays correct when the file migrates.

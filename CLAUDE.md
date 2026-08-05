@@ -47,7 +47,7 @@ pnpm run build
 pnpm run test
 ```
 
-Every package ships a `tsconfig.build.json` (composite, with explicit `references` to its workspace deps) and a `tsconfig.test.json` for the test sources. The root `tsconfig.json` is a project-graph aggregator only.
+Every package ships a `tsconfig.build.json` (composite, with explicit `references` to its workspace deps), and nearly every package with tests adds a `tsconfig.test.json` for the test sources. The root `tsconfig.json` is a project-graph aggregator only.
 
 Avoid `pnpm run style:fix` (whole-repo prettier) unless the user explicitly asks for a repo-wide formatting pass.
 
@@ -55,7 +55,7 @@ Run the formatter/linter once the work is complete: when about to commit, or whe
 
 ## Tests
 
-Before writing or extending any test, invoke the `testing` skill ([.claude/skills/testing/SKILL.md](.claude/skills/testing/SKILL.md)). It covers runner selection (vitest vs jest), file layout, and tsconfig setup. For browser-driven UI tests, or for demoing/debugging the OAuth flows or the Account Manager interface, invoke the `playwright` skill ([.claude/skills/playwright/SKILL.md](.claude/skills/playwright/SKILL.md)) instead.
+Before writing or extending any test, invoke the `testing` skill ([.agents/skills/testing/SKILL.md](.agents/skills/testing/SKILL.md)). It covers runner selection (vitest vs jest), file layout, and tsconfig setup. For browser-driven UI tests, or for demoing/debugging the OAuth flows or the Account Manager interface, invoke the `playwright` skill ([.agents/skills/playwright/SKILL.md](.agents/skills/playwright/SKILL.md)) instead.
 
 ## Codegen
 
@@ -63,7 +63,7 @@ After editing anything under [lexicons/](lexicons/), or any `.proto` file, run `
 
 The lexicon JSON schemas are derived into TypeScript runtime schemas by `@atproto/lex` (`lex build`, wired through each package's `prebuild`).
 
-For working with that SDK, invoke the focused skills under [.agents/skills/](.agents/skills/): `lex-setup` (install/build config), `lex-schema` and `lex-data` (schemas and values), `lex-client` (calls out), `xrpc-server` (defining server routes), and `lexification-client` / `lexification-server` (migrating off the legacy stack).
+For working with that SDK, invoke the focused skills under [.agents/skills/](.agents/skills/): `lex-setup` (install/build config), `lex-schema` and `lex-data` (schemas and values), `lex-client` (calls out), `xrpc-server` (defining server routes), and `lexification-client` / `lexification-server` (migrating off the legacy stack). To sync `chat.bsky.*` schemas from the chat repo, use `update-chat-lexicons`.
 
 ## Architecture notes
 

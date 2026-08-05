@@ -1,42 +1,67 @@
 ---
 name: lexification-client
 description: >
-  Migrate AT Protocol client or consumer code from the legacy API, Lexicon,
-  and XRPC libraries to `@atproto/lex`. Use when asked to modernize code that
-  calls external XRPC services, replace a legacy agent or client, update
-  response, error, header, JSON, CID, or runtime type handling, use branded AT
-  Protocol types at client boundaries, or adopt the modern session-aware
-  client. For service or route code, use the server migration skill.
+  Migrate AT Protocol client and consumer code off the legacy `@atproto/api`,
+  `@atproto/lexicon`, and `@atproto/xrpc` stack onto `@atproto/lex`. Use
+  whenever code that *calls out* to an XRPC service is being modernized —
+  replacing an `AtpAgent` with `Client`, `result.data` / `result.headers[…]`
+  response handling, `XRPCError` try/catch, `jsonStringToLex` / `stringifyLex`,
+  `BlobRef` `instanceof` checks, `CID` from `multiformats`,
+  `new Date().toISOString()` on AT Proto datetimes, bare `string` DIDs and
+  handles, or legacy `isX()` type guards — including when the request is
+  phrased as "clean this up" or "modernize this file" rather than "migrate".
+  For code that *defines* routes, use the lexification-server skill.
 disable-model-invocation: false
 ---
 
 # Lexification: migrating client / consumer code
 
-This reference covers migrating **calls out** — code that used `AtpAgent`
-or the old `@atproto/lexicon` / `@atproto/xrpc` runtime to talk to AT
-Proto services. Migrating a service that **defines** routes is covered by the
-[lexification-server skill](../lexification-server/SKILL.md), though the two
-are typically done together in a service package.
+Scope: **calls out**. Anything that used `AtpAgent` or the `@atproto/lexicon` /
+`@atproto/xrpc` runtime to talk to an AT Proto service, plus the data types
+that flow across that boundary.
+
+Route _definitions_ (`server.add`, handler signatures, codegen removal) are the
+[lexification-server skill](../lexification-server/SKILL.md). A service package
+almost always needs both: it defines routes **and** calls other services. If
+you're mid-migration on a service and reach an `agent.api.…` call, you're in
+the right file.
 
 ## What changes
 
-| Old                                                 | New                                                                             |
-| --------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `AtpAgent` from `@atproto/api`                      | `Client` from `@atproto/lex`                                                    |
-| `agent.api.<ns>.<method>(params, { headers })`      | `client.xrpc(<schema>, { params, headers })` or `client.call(<schema>, params)` |
-| `result.data` (response body)                       | `result.body`                                                                   |
-| `result.headers['content-language']` (plain object) | `result.headers.get('content-language')` (Headers API)                          |
-| `XRPCError` from `@atproto/xrpc`                    | `XrpcError` from `@atproto/lex`                                                 |
-| try/catch + `instanceof XRPCError`                  | `xrpcSafe()` discriminated result                                               |
-| `jsonStringToLex`                                   | `lexParse`                                                                      |
-| `stringifyLex`                                      | `lexStringify`                                                                  |
-| `BlobRef` class from `@atproto/lexicon`             | `BlobRef` interface from `@atproto/lex-data` (or `@atproto/lex`)                |
-| `CID` from `multiformats/cid`                       | `Cid` / `parseCid` from `@atproto/lex`                                          |
-| `new Date().toISOString()` for AT Proto datetimes   | `currentDatetimeString()` / `toDatetimeString()`                                |
+| Old                                               | New                                                                    |
+| ------------------------------------------------- | ---------------------------------------------------------------------- |
+| `AtpAgent` from `@atproto/api`                    | `Client` from `@atproto/lex`                                           |
+| `agent.api.<ns>.<method>(params, { headers })`    | `client.call(<schema>, params, opts)` or `client.xrpc(<schema>, opts)` |
+| `result.data`                                     | `result.body`                                                          |
+| `result.headers['content-language']`              | `result.headers.get('content-language')` (standard `Headers`)          |
+| `XRPCError` from `@atproto/xrpc`                  | `XrpcError` from `@atproto/lex`                                        |
+| try/catch + `instanceof XRPCError`                | `xrpcSafe()` / `client.xrpcSafe()` discriminated result                |
+| `HeadersMap` from `@atproto/xrpc`                 | `Headers as HeadersMap` from `@atproto/xrpc-server`                    |
+| `jsonStringToLex` / `stringifyLex`                | `lexParse` / `lexStringify`                                            |
+| `BlobRef` class from `@atproto/lexicon`           | `BlobRef` interface from `@atproto/lex-data` (or `@atproto/lex`)       |
+| `CID` from `multiformats/cid`                     | `Cid` / `parseCid` from `@atproto/lex`                                 |
+| `new Date().toISOString()` for AT Proto datetimes | `currentDatetimeString()` / `toDatetimeString()`                       |
+| `isX(v)` from `src/lexicon/types/…`               | `<ns>.<def>.$matches(v)` / `.$isTypeOf(v)`                             |
 
-## XRPC call migration
+## XRPC calls
 
-### Pattern 1 — `Client.xrpc()` for full response
+Three shapes, in rough order of preference — pick the least machinery that
+covers what the call site actually uses.
+
+### `call()` — you only want the body
+
+Errors propagate as exceptions. Params (query) or body (procedure) go in the
+second argument; everything else in the third.
+
+```ts
+return ctx.suggestionsClient.call(
+  app.bsky.unspecced.getSuggestedUsersSkeleton,
+  { limit: params.limit, viewer: params.hydrateCtx.viewer ?? undefined },
+  { headers: params.headers },
+)
+```
+
+### `xrpc()` — you need status or headers too
 
 ```diff
 - const res = await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton(
@@ -45,7 +70,7 @@ are typically done together in a service package.
 - )
 - return {
 -   suggestedDids: res.data.actors.map((a) => a.did),
--   headers: res.headers,
+-   resHeaders: res.headers,
 - }
 + const res = await ctx.suggestionsClient.xrpc(
 +   app.bsky.unspecced.getSuggestionsSkeleton,
@@ -54,85 +79,110 @@ are typically done together in a service package.
 +     headers: params.headers,
 +   },
 + )
++ const contentLang = res.headers.get('content-language')
 + return {
 +   suggestedDids: res.body.actors.map((a) => a.did),
-+   contentLanguage: res.headers.get('content-language') ?? undefined,
++   resHeaders: contentLang ? { 'content-language': contentLang } : undefined,
 + }
 ```
 
-Key differences:
+Everything is one options object: query params under `params`, procedure
+bodies under `body` (not `input`), plus `headers`, `signal`, `service`,
+`labelers`, `maxRetries`, and the validation flags.
 
-- Body is on `.body` (not `.data`).
-- Headers use the `Headers` API (`.get()`), not plain object access.
-- Params go in a `params` sub-object.
-- Procedure bodies go in an `input` sub-object.
+Response headers are a standard `Headers` instance. If the value flows into
+something typed `HeadersMap` (`Record<string, string>`), pull the specific
+headers out with `.get()` as above; if the consumer takes `Headers`, pass it
+through unchanged.
 
-### Pattern 2 — `Client.call()` when you only want the body
+### `xrpcSafe()` — errors are part of the contract
 
-`call()` returns the body directly and lets errors propagate:
+Returns a discriminated result instead of throwing, and the failure is typed
+against the method schema. Use it where the call site already had a `catch`
+that inspected the error rather than just rethrowing.
+
+Narrow on the concrete failure class when the branches map to different
+downstream responses (see `packages/bsky/src/api/app/bsky/feed/getFeed.ts`):
 
 ```ts
-const body = await ctx.suggestionsClient.call(
-  app.bsky.unspecced.getSuggestionsSkeleton,
-  { viewer: params.hydrateCtx.viewer, relativeToDid }, // params for query, input for procedure
-  { headers, signal }, // optional
-)
+import {
+  XrpcInvalidResponseError,
+  XrpcResponseError,
+  xrpcSafe,
+} from '@atproto/lex'
+
+const result = await xrpcSafe(fgEndpoint, app.bsky.feed.getFeedSkeleton, {
+  strictResponseProcessing: false,
+  signal: AbortSignal.timeout(10_000),
+  headers,
+  params: { feed, limit, cursor },
+})
+
+if (!result.success) {
+  const cause = result.reason
+
+  // Structurally valid XRPC error (4xx/5xx) — pass it through
+  if (cause instanceof XrpcResponseError) {
+    const { status, body } = cause.toDownstreamError()
+    throw new XRPCError(status, body.message, body.error, { cause })
+  }
+
+  // Response didn't match the schema
+  if (cause instanceof XrpcInvalidResponseError) {
+    throw new UpstreamFailureError(
+      'feed provided an invalid response',
+      'InvalidFeedResponse',
+      { cause },
+    )
+  }
+
+  // Typically a network error
+  throw new UpstreamFailureError('feed unavailable', undefined, { cause })
+}
+
+const { feed: feedSkele, cursor } = result.body // typed
 ```
 
-### Pattern 3 — `xrpcSafe()` for structured error handling
+`toDownstreamError()` is what replaces hand-mapping upstream status codes: it
+already remaps 500 → 502, strips hop-by-hop headers, and redacts internal error
+details.
 
-For calls where errors are a normal part of the contract:
+When you only care about one schema-declared error code, skip the class checks:
 
-```diff
-- import { AtpAgent } from '@atproto/api'
-- import { ResponseType, XRPCError } from '@atproto/xrpc'
-+ import { xrpcSafe } from '@atproto/lex'
-
-- const agent = new AtpAgent({ service: fgEndpoint })
-- try {
--   const result = await agent.api.app.bsky.feed.getFeedSkeleton(
--     { feed, limit, cursor },
--     { headers },
--   )
--   skeleton = result.data
-- } catch (err) {
--   if (err instanceof AppBskyFeedGetFeedSkeleton.UnknownFeedError) { ... }
--   if (err instanceof XRPCError) {
--     if (err.status === ResponseType.Unknown) { ... }
--     if (err.status === ResponseType.InvalidResponse) { ... }
--   }
--   throw err
-- }
-+ const result = await xrpcSafe(fgEndpoint, app.bsky.feed.getFeedSkeleton, {
-+   headers,
-+   params: { feed, limit, cursor },
-+ })
-+ if (!result.success) {
-+   if (result.matchesSchemaErrors()) {
-+     throw new InvalidRequestError(result.message, result.error)
-+   }
-+   if (result.error === 'InternalServerError') { ... }
-+   if (result.error === 'UpstreamFailure') { ... }
-+   throw result.reason
-+ }
-+ // result.body is typed
+```ts
+const res = await xrpcSafe(pds, com.atproto.sync.getLatestCommit, {
+  params: { did },
+})
+if (res.success) return true
+if (res.error === 'RepoNotFound') return false
+throw res.reason
 ```
 
-See [lex-client skill](../lex-client/SKILL.md) for the full error class hierarchy.
+`result.matchesSchemaErrors()` narrows `result.error` to the codes the method
+declares, for when you want the compiler to check the code strings.
 
-## Agent → Client setup
+The old `ResponseType` enum comparisons have no replacement and don't need one:
+`XrpcInvalidResponseError` covers `ResponseType.InvalidResponse`, and
+`XrpcInternalError` / `XrpcFetchError` cover `ResponseType.Unknown`.
+
+Retries are built in (`maxRetries`, default `0`), so delete any hand-rolled
+retry loop wrapped around the call. See [lex-client](../lex-client/SKILL.md)
+for the full error hierarchy and client API.
+
+## Agent → Client
 
 ```diff
 - import { AtpAgent } from '@atproto/api'
 + import { Client } from '@atproto/lex'
-```
 
-```diff
 - searchAgent: AtpAgent | undefined
 + searchClient: Client | undefined
 ```
 
-Headers move into the constructor instead of being set imperatively:
+`Client` takes **two** arguments: the agent (a service URL, an `AgentConfig`,
+or a session), then per-client options. Static headers belong in the agent
+config rather than an imperative `setHeader` after construction — one frozen
+config then describes the whole client (see `packages/bsky/src/index.ts`):
 
 ```diff
 - const myServiceAgent = config.serviceUrl
@@ -142,17 +192,25 @@ Headers move into the constructor instead of being set imperatively:
 -   myServiceAgent.api.setHeader('authorization', `Bearer ${config.serviceApiKey}`)
 - }
 + const myServiceClient = config.serviceUrl
-+   ? new Client({
-+       service: config.serviceUrl,
-+       headers: config.serviceApiKey
-+         ? { authorization: `Bearer ${config.serviceApiKey}` }
-+         : undefined,
-+     })
++   ? new Client(
++       {
++         service: config.serviceUrl,
++         headers: config.serviceApiKey
++           ? { authorization: `Bearer ${config.serviceApiKey}` }
++           : undefined,
++       },
++       {
++         // Trust internal services to send us well-formed responses
++         strictResponseProcessing: false,
++         validateResponse: config.debugMode,
++       },
++     )
 +   : undefined
 ```
 
-See [lex-client skill](../lex-client/SKILL.md) for the full `Client` API (auth, labelers,
-service proxy, repo helpers).
+That second argument is worth setting for internal service-to-service clients:
+`Client` validates responses by default, which is stricter than `AtpAgent` was,
+so a migrated call can start failing on data the old code happily accepted.
 
 ## Errors
 
@@ -161,32 +219,20 @@ service proxy, repo helpers).
 + import { XrpcError } from '@atproto/lex'
 ```
 
-(Server-side `@atproto/xrpc-server` still exports its own `XRPCError` for
-**throwing** errors inside handlers — that one stays.)
-
-For typed error handling, prefer `xrpcSafe()` over try/catch — see
-[lex-client skill](../lex-client/SKILL.md).
+`@atproto/xrpc-server` keeps its own `XRPCError` for **throwing** errors out of
+handlers — that one is unrelated and stays. A file can legitimately import
+both (getFeed.ts above does): `XrpcError` describes a failed call out,
+`XRPCError` produces the response going back down.
 
 ## Headers map type
 
-When you need the `Record<string, string>` shape (forwarding, building
-request headers, etc.):
-
 ```diff
 - import { HeadersMap } from '@atproto/xrpc'
-+ import { Headers as HeadersMap } from '@atproto/xrpc-server'
++ import type { Headers as HeadersMap } from '@atproto/xrpc-server'
 ```
 
-The `Headers` from `@atproto/xrpc-server` collides with the global
-`Headers` type — alias to `HeadersMap` to avoid confusion.
-
-For response headers from `xrpc()` / `client.xrpc()` calls, **use the
-standard Headers API:**
-
-```diff
-- result.headers['content-language']
-+ result.headers.get('content-language')
-```
+Alias it — the unaliased `Headers` shadows the global `Headers` type, which the
+same file usually also needs.
 
 ## Data utilities
 
@@ -196,75 +242,56 @@ standard Headers API:**
 - import { jsonStringToLex } from '@atproto/lexicon'
 + import { lexParse } from '@atproto/lex'
 
-- const parsed = jsonStringToLex(
--   Buffer.from(payload).toString('utf8'),
-- ) as SubjectActivitySubscription
+- const parsed = jsonStringToLex(payload.toString('utf8')) as SubjectActivitySubscription
 + const parsed = lexParse<app.bsky.notification.defs.SubjectActivitySubscription>(
-+   Buffer.from(payload).toString('utf8'),
++   payload.toString('utf8'),
 + )
 ```
 
-`lexParse` accepts a type parameter — no `as` cast needed.
-
-```diff
-- import { stringifyLex } from '@atproto/lexicon'
-+ import { lexStringify } from '@atproto/lex'
-```
-
-See [lex-data skill](../lex-data/SKILL.md) for the full set of conversion
-helpers (`jsonToLex`, `lexToJson`, `parseLexLink`, `parseLexBytes`, …).
+`lexParse` takes a type parameter, so the `as` cast goes away. `stringifyLex` →
+`lexStringify`. See [lex-data](../lex-data/SKILL.md) for `jsonToLex`,
+`lexToJson`, `lexParseJsonBytes`, `parseLexLink`, `parseLexBytes`.
 
 ### Datetime strings
-
-Replace `new Date().toISOString()` for AT Proto datetime fields:
 
 ```diff
 - createdAt: new Date().toISOString(),
 + createdAt: currentDatetimeString(),
-```
 
-```diff
 - indexedAt: someDate.toISOString(),
 + indexedAt: toDatetimeString(someDate),
 ```
 
-```ts
-import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
-```
-
-These return `DatetimeString` (branded) and validate format
-correctness — see [lex-data skill](../lex-data/SKILL.md).
+Both come from `@atproto/lex` and return the branded `DatetimeString`, so a
+value that reaches a lexicon field is checked at the type level rather than at
+validation time.
 
 ### CIDs
 
 ```diff
 - import { CID } from 'multiformats/cid'
-+ import { Cid, parseCid } from '@atproto/lex-data'
++ import { type Cid, parseCid } from '@atproto/lex'
 ```
 
-(or import directly from `@atproto/lex` — both paths work.)
+`Cid` is an interface. Drop `multiformats` from the package's dependencies once
+no imports remain.
 
 ### BlobRef
 
-`BlobRef` is no longer a class — it's an interface. `instanceof` checks
-are gone; use type guards.
+`BlobRef` is now an interface (a union of `TypedBlobRef` and `LegacyBlobRef`),
+so `instanceof` no longer works — and the hand-written fallbacks that used to
+paper over the two JSON shapes are exactly what the helpers replace:
 
 ```diff
 - import { BlobRef } from '@atproto/lexicon'
-+ import { getBlobCidString, type BlobRef } from '@atproto/lex-data'
++ import { type BlobRef, getBlobCidString } from '@atproto/lex-data'
 
 - export const cidFromBlobJson = (json: BlobRef) => {
--   if (json instanceof BlobRef) {
--     return json.ref.toString()
--   }
--   if (json['$type'] === 'blob') {
--     return (json['ref']?.['$link'] ?? '') as string
--   }
+-   if (json instanceof BlobRef) return json.ref.toString()
+-   if (json['$type'] === 'blob') return (json['ref']?.['$link'] ?? '') as string
 -   return (json['cid'] ?? '') as string
 - }
-+ export const cidFromBlobJson = (json: BlobRef): string => {
-+   return getBlobCidString(json)
-+ }
++ export const cidFromBlobJson = (json: BlobRef): string => getBlobCidString(json)
 ```
 
 ```diff
@@ -272,82 +299,88 @@ are gone; use type guards.
 + if (isBlobRef(value)) { ... }
 ```
 
-For the full TypedBlobRef / LegacyBlobRef story (and the strict-mode
-behavior that controls which gets accepted), see
-[lex-data skill](../lex-data/SKILL.md).
+`isBlobRef` validates the CID strictly by default; pass `{ strict: false }` for
+legacy data. See [lex-data](../lex-data/SKILL.md) for the
+`TypedBlobRef` / `LegacyBlobRef` split.
 
 ## Branded types at boundaries
 
-Apply branded types (`DidString`, `HandleString`, `AtUriString`,
-`DatetimeString`, `Cid`, etc.) at function signatures, interface fields,
-and DB schemas. See [lex-data skill](../lex-data/SKILL.md) for the full list.
+Apply `DidString`, `HandleString`, `AtUriString`, `DatetimeString`, `Cid` at
+signatures, interface fields, and DB schema types — that's where they stop bad
+values propagating. Prefer importing them from `@atproto/lex` over
+`@atproto/syntax`.
 
 ```diff
 - did: string
 + did: DidString
 
-- handle: string
-+ handle: HandleString
+- iss: string
++ iss: DidString | `${DidString}#${string}`
 ```
 
-Replace `startsWith('did:')` checks with type guards:
+Prefix checks become guards:
 
 ```diff
 - if (typeof iss !== 'string' || !iss.startsWith('did:')) {
 + if (typeof iss !== 'string' || !isDidString(iss)) {
 ```
 
-For union types like `did:plc:.../#key1`:
-
-```diff
-- iss: string
-+ iss: DidString | `${DidString}#${string}`
-```
-
-Cast at data boundaries (protobuf, data plane, Kysely) rather than
-asserting later:
+Data arriving from protobuf, the data plane, or Kysely is plain `string`. Cast
+once at that entry point rather than asserting at every later use:
 
 ```diff
 - suggestedDids: dids,
 + suggestedDids: dids as DidString[],
 ```
 
-## Use `$matches` / `$isTypeOf` instead of legacy guards
+## Type guards
 
 ```diff
 - import { isRepoRef } from '../../../../lexicon/types/com/atproto/admin/defs'
 - if (isRepoRef(subject)) { ... }
-+ if (com.atproto.admin.defs.repoRef.$matches(subject)) { ... }
++ if (com.atproto.admin.defs.repoRef.$isTypeOf(subject)) { ... }
 ```
 
-Use `$isTypeOf` on already-validated unions for speed:
+`$isTypeOf` is the behavioral equivalent of a legacy `isX()` guard, so it is the
+default when replacing one — this is what the repo migrated to (see
+`packages/pds/src/api/com/atproto/admin/updateSubjectStatus.ts`). It checks only
+the `$type` tag, which is all that matters on an already-validated union, and it
+doubles as a predicate:
 
 ```diff
-- const personalDetailsPref = prefs.find(
--   (pref) => pref.$type === 'app.bsky.actor.defs#personalDetailsPref'
-- )
-+ const personalDetailsPref = prefs.find(
-+   app.bsky.actor.defs.personalDetailsPref.$isTypeOf,
-+ )
+- const pref = prefs.find((p) => p.$type === 'app.bsky.actor.defs#personalDetailsPref')
++ const pref = prefs.find(app.bsky.actor.defs.personalDetailsPref.$isTypeOf)
 ```
 
-See [lex-schema skill](../lex-schema/SKILL.md) for the full schema-accessor cheat sheet.
+Reach for `$matches` instead only where the data is genuinely untrusted and a
+`$type` tag alone isn't enough of a guarantee — it validates the whole value, so
+it costs more. Treat that as a deliberate upgrade at an entry point, not the
+default swap for an `isX()` call.
 
-## Tests in this phase
+See [lex-schema](../lex-schema/SKILL.md) for the full `$`-accessor cheat sheet.
 
-Tests still use `@atproto/api`. Don't migrate test code — redirect any
-test imports from old `src/lexicon/` to `@atproto/api`:
+## Tests
 
-```diff
-- import { ids } from '../../src/lexicon/lexicons'
-- import { RepoRef, isRepoRef } from '../../src/lexicon/types/com/atproto/admin/defs'
-+ import { ComAtprotoAdminDefs, ids } from '@atproto/api'
-```
+Test migration is partial and lags the source migration. The `pds` and `bsky`
+suites mostly still drive `AtpAgent` from `@atproto/api`, and `dev-env` exposes
+both `getAgent(): AtpAgent` and `getClient(): Client` for exactly that reason.
+`ozone` is entirely un-migrated.
 
-Test XRPC calls keep using `AtpAgent` — they act as a regression check
-that the lexified service still behaves the same at runtime.
+Default to leaving passing tests alone: during a source migration their value
+is being an unchanged runtime regression check. Two things force a change:
 
-## Import source changes summary
+- **A test imports a legacy path you deleted** (`src/lexicon/…`). Point it at
+  the `@atproto/api` equivalent (`ComAtprotoAdminDefs`, `ids`, `$Typed`) — the
+  smallest edit that keeps the test running.
+- **You are deliberately migrating that test file.** Then it moves wholesale:
+  `network.pds.getClient()`, schemas from `src/lexicons/index.js`, `res.body`,
+  and helpers like `getBlobCidString` from `@atproto/lex-data`.
+  `packages/pds/tests/file-uploads.test.ts` is a migrated example.
+
+Avoid half-migrating a file — a suite mixing `agent.api.…` and `client.call(…)`
+for the same operation is harder to read than either end state.
+
+## Import source summary
 
 | Before                                            | After                                            |
 | ------------------------------------------------- | ------------------------------------------------ |
@@ -359,9 +392,13 @@ that the lexified service still behaves the same at runtime.
 | `multiformats/cid` (`CID`)                        | `@atproto/lex` (`Cid`, `parseCid`)               |
 | `@atproto/syntax` (`DidString`, etc.)             | `@atproto/lex` (prefer this)                     |
 
+Dropped imports usually mean dropped `package.json` dependencies
+(`multiformats`, `@atproto/lexicon`, `@atproto/xrpc`), and every package
+touched needs a changeset entry.
+
 ## Related skills
 
-[lex-setup](../lex-setup/SKILL.md) for the codegen/dependency changes a
-migration needs, and [lexification-server](../lexification-server/SKILL.md) for
-the server-side half (route registration, `src/lexicon/` removal) — service
-packages usually need both.
+[lex-client](../lex-client/SKILL.md) for the full `Client` API you're migrating
+onto, [lex-setup](../lex-setup/SKILL.md) for codegen and dependency wiring, and
+[lexification-server](../lexification-server/SKILL.md) for the route-definition
+half — service packages need both.

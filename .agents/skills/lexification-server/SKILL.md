@@ -1,548 +1,180 @@
 ---
 name: lexification-server
 description: >
-  Migrate an AT Protocol service from the legacy generated server stack to
-  `@atproto/lex` and `@atproto/xrpc-server`. Use when asked to modernize server
-  code generation, generated imports, route registration, request and response
-  validation, error handling, schema type checks, or branded types at service
-  boundaries. For outbound calls made by the service, also use the client
-  migration skill.
+  Migrate a service package off the legacy server stack — `lex gen-server`
+  codegen, a committed `src/lexicon/` tree, `server.<ns>.<method>()` route
+  chains, `@atproto/api` inside service code — onto `@atproto/lex` and
+  `@atproto/xrpc-server`. Use when asked to lexify, modernize, or migrate a
+  server package; when a route file imports `Server` or `createServer` from
+  `../lexicon/index.js`; when replacing `ids.*` constants, generated `isX()`
+  guards, `server.xrpc.router`, or `QueryParams`/`OutputSchema` type imports;
+  and when a package still runs `lex gen-server` in its `codegen:lex` script.
+  For the calls a service makes *out* to other services, use
+  lexification-client. For writing new routes on an already-migrated package,
+  use xrpc-server.
 disable-model-invocation: false
 ---
 
 # Lexification: migrating a service package
 
-How to migrate an AT Protocol **service / server** package from the legacy
-code-generation stack to `@atproto/lex`.
+Moves a package from `@atproto/lex-cli`'s `lex gen-server` output to
+`@atproto/lex` schemas plus `@atproto/xrpc-server` routing.
 
-Replaces:
+`packages/pds` and `packages/bsky` are already migrated — **read them before
+inventing a pattern.** `packages/ozone` is the only service left, so it is
+both the likely subject of the task and the reference "before" state.
 
-- `@atproto/api` (high-level client used in services)
-- `@atproto/lexicon` (old runtime validation)
-- `@atproto/xrpc` (old XRPC client types)
-- `@atproto/lex-cli` codegen (`lex gen-server` → `src/lexicon/`)
+## Which skill applies
 
-For migrating consumer / client-only code, see the
-[lexification-client skill](../lexification-client/SKILL.md) — but note that
-service packages typically need both kinds of changes (defining routes **and**
-calling other services).
+| Situation                                                    | Skill                                                  |
+| ------------------------------------------------------------ | ------------------------------------------------------ |
+| Package has `src/lexicon/` (singular) and route chains       | **this skill**                                         |
+| Adding a route to a package already on `server.add()`        | [xrpc-server](../xrpc-server/SKILL.md)                 |
+| The same package's outbound `AtpAgent` / `agent.api.…` calls | [lexification-client](../lexification-client/SKILL.md) |
+
+A service migration almost always needs this skill _and_
+lexification-client: one package both serves routes and calls other services.
+Do the server half first — it forces `src/lexicons/` into existence, which the
+client half then imports from.
 
 ## Guiding principles
 
-- **Minimize runtime changes.** Prefer type-level changes over runtime
-  changes. If old code works at runtime, keep its logic and just improve
-  the types around it.
-- **Tests still use `@atproto/api`.** Do not migrate test files in this
-  phase. Tests that imported from old `src/lexicon/` should switch to
-  importing from `@atproto/api` instead. Tests will be migrated in a
-  separate phase after all service code is lexified.
+- **Type-level changes over runtime changes.** Working runtime logic stays;
+  what changes is where types and constants come from. A migration diff that
+  alters behavior is a bug in the migration.
+- **Migrate one namespace of route files at a time**, building in between.
+  A route file is self-contained, so a broken one doesn't block the rest.
+- **Leave test call sites on `AtpAgent`.** Tests double as the regression
+  check that the migration didn't change behavior — swapping the client they
+  use destroys that signal. Tests that import _types or constants_ from the
+  deleted `src/lexicon/` do have to move (details below).
 
-## Recommended order
+## Order of work
 
-1. **Project configuration** — dependencies, build scripts, gitignore.
-2. **Project code setup** — `createServer` source, `Server` type imports,
-   `AtpAgent` → `Client`, type alias files.
-3. **Endpoint registration** — `server.<ns>.<method>(...)` chain →
-   `server.add(schema, handler)`.
-4. **XRPC client calls** — `agent.api.…` → `client.xrpc()`/`call()` (see
-   [lexification-client skill](../lexification-client/SKILL.md)).
-5. **Type strictness** — branded types at boundaries.
-6. **Data utilities** — `jsonStringToLex` → `lexParse`, datetime helpers,
-   `BlobRef` (see [lexification-client skill](../lexification-client/SKILL.md)).
-7. **Schema validation / type guards** — `isX()` / `ids.X` →
-   `$matches` / `$isTypeOf` / `$build` / `$type` / `$lxm`.
+1. **Project config** — swap codegen, deps, gitignore, delete `src/lexicon/`.
+   → [references/project-config.md](references/project-config.md)
+2. **Server bootstrap** — `createServer`, `Server` type, Express mount.
+3. **Route files** — `server.<ns>.<method>(…)` → `server.add(schema, …)`.
+   → [references/routes.md](references/routes.md)
+4. **Constants and guards** — `ids.*`, `isX()`, token exports, `$build`.
+   → [references/types-and-guards.md](references/types-and-guards.md)
+5. **Outbound calls** — [lexification-client](../lexification-client/SKILL.md).
+6. **Branded types** at function/interface/DB boundaries.
+   → [references/types-and-guards.md](references/types-and-guards.md)
 
-## 1. Project configuration
+Steps 1–2 are a single non-splittable commit (the package won't compile
+in between). Steps 3–6 are incremental.
 
-### Dependencies
+## Server bootstrap
 
-Add as dependencies:
-
-- `@atproto/lex` — generated schemas, client, and data helpers.
-- `@atproto/xrpc-server` — `createServer`, `Server`, `Headers`, route handling.
-
-Remove from dependencies (if present):
-
-- `multiformats` — CID handling moves to `@atproto/lex-data`.
-
-Remove from devDependencies:
-
-- `@atproto/api` (unless still needed for tests in this phase)
-- `@atproto/lexicon`
-- `@atproto/lex-cli`
-- `@atproto/xrpc`
-
-### Remove legacy generated output
-
-```sh
-rm -rf ./src/lexicon     # generated legacy output (singular)
-```
-
-Do not delete `./lexicons` until you have confirmed it is a disposable copy.
-Lexicon JSON may be canonical committed source, either package-local or in a
-monorepo root. Preserve canonical schemas and point `lex build --lexicons` at
-their directory. Only remove package-local inputs after replacing them with an
-installed or canonical source.
-
-### Choose a Lexicon source and configure build
-
-Choose exactly one source strategy.
-
-#### Repository-local canonical Lexicons
-
-Preserve the canonical JSON. Do not run `lex install`, create a second
-manifest, or add an install hook. Configure only the build step, resolving the
-canonical path from the package root:
+The only structural change in the whole migration. `createServer` and `Server`
+stop coming from generated code:
 
 ```diff
-- "codegen": "lex gen-server --yes ./src/lexicon ./lexicons/com/atproto/*/* ./lexicons/app/bsky/*/* ...",
-+ "prebuild": "lex build --lexicons ../../lexicons --clear --indexFile",
-```
-
-Adjust `../../lexicons` for the package's location.
-
-#### Network-installed Lexicons
-
-```sh
-lex install com.atproto.identity.resolveHandle app.bsky.feed.post  # ...all NSIDs the package uses
-```
-
-This creates `manifest.json` (or `lexicons.json`) and `./lexicons/`. Both
-get committed.
-
-Update `package.json` scripts:
-
-```diff
-- "codegen": "lex gen-server --yes ./src/lexicon ./lexicons/com/atproto/*/* ./lexicons/app/bsky/*/* ...",
-+ "prebuild": "lex build --lexicons ./lexicons --clear --indexFile",
-+ "postinstall": "lex install --ci",
-```
-
-Gitignore the generated output:
-
-```sh
-echo '/src/lexicons/' >> .gitignore
-```
-
-For full setup details, see [lex-setup skill](../lex-setup/SKILL.md).
-
-## 2. Project code setup
-
-### Server creation
-
-`createServer` now comes from `@atproto/xrpc-server`, not from generated
-code. Note the empty array first arg.
-
-```diff
-- import { createServer } from './lexicon'
+- import { createServer } from './lexicon/index.js'
 + import { createServer } from '@atproto/xrpc-server'
 
 - let server = createServer({
 + const server = createServer([], {
     validateResponse: config.debugMode,
-    payload: { ... },
+    payload: { /* … */ },
   })
-```
 
-```diff
-- import { Server } from '../../../../lexicon'
-+ import { Server } from '@atproto/xrpc-server'
-```
-
-```diff
 - app.use(server.xrpc.router)
 + app.use(server.router)
 ```
 
-See [xrpc-server skill](../xrpc-server/SKILL.md) for the full server reference.
+The new first argument is an array of legacy `LexiconDoc`s for routes not
+backed by a generated schema; schema-based setups pass `[]`. Option names
+(`validateResponse`, `payload`, `catchall`, `rateLimits`, `errorParser`) are
+unchanged — see [packages/pds/src/index.ts](../../../packages/pds/src/index.ts).
 
-### App context / agent → client
-
-```diff
-- import { AtpAgent } from '@atproto/api'
-+ import { Client } from '@atproto/lex'
-```
+In route files, `Server` comes from the same package:
 
 ```diff
-- searchAgent: AtpAgent | undefined
-+ searchClient: Client | undefined
+- import { Server } from '../../../../lexicon/index.js'
++ import type { Server } from '@atproto/xrpc-server'
 ```
 
-```diff
-- const myServiceAgent = config.serviceUrl
--   ? new AtpAgent({ service: config.serviceUrl })
--   : undefined
-- if (myServiceAgent && config.serviceApiKey) {
--   myServiceAgent.api.setHeader('authorization', `Bearer ${config.serviceApiKey}`)
-- }
-+ const myServiceClient = config.serviceUrl
-+   ? new Client({
-+       service: config.serviceUrl,
-+       headers: config.serviceApiKey
-+         ? { authorization: `Bearer ${config.serviceApiKey}` }
-+         : undefined,
-+     })
-+   : undefined
-```
-
-Headers are passed in the constructor rather than set imperatively
-afterward. See [lex-client skill](../lex-client/SKILL.md) for `Client` details.
-
-### Type aliases file (if applicable)
-
-If the package has a centralized `types.ts` re-exporting from old
-`src/lexicon/types/...`, point it at the new generated tree:
-
-```ts
-import { app, chat, com } from '../lexicons/index.js'
-
-// Type aliases
-export type PostRecord = app.bsky.feed.post.Main
-export type PostView = app.bsky.feed.defs.PostView
-export type Label = com.atproto.label.defs.Label
-export type StrongRef = com.atproto.repo.strongRef.Main
-
-// Type guard aliases
-export const isPostRecord = app.bsky.feed.post.$matches
-export const isImagesEmbed = app.bsky.embed.images.$matches
-
-// Validation aliases
-export const parseStrongRef = com.atproto.repo.strongRef.$safeParse
-```
-
-Pattern:
-
-- **Type**: `export type Foo = namespace.path.TypeName`
-- **Type guard**: `export const isFoo = namespace.path.$matches`
-- **Validation**: `export const parseFoo = namespace.path.$safeParse`
-
-`.Main` for the main definition; sub-defs use their own name (`.ReplyRef`,
-`.ViewRecord`, etc).
-
-## 3. Endpoint handler registration
-
-Old: method-chain registration on the server object.
-New: `server.add(schema, handler)`.
-
-```diff
-- server.app.bsky.feed.getAuthorFeed({
-+ server.add(app.bsky.feed.getAuthorFeed, {
-    auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ params, auth, req }) => { ... },
-  })
-```
-
-```diff
-- server.com.atproto.identity.resolveHandle(async ({ req, params }) => {
-+ server.add(com.atproto.identity.resolveHandle, async ({ params }) => {
-```
-
-The schema object is always imported from `./lexicons/index.js`.
-
-### Handler return type
-
-Use `'application/json' as const` (or `satisfies $Output`) to keep the
-literal narrow:
-
-```ts
-return {
-  encoding: 'application/json' as const,
-  body: { preferences },
-}
-
-// or
-return {
-  encoding: 'application/json',
-  body: { preferences },
-} satisfies app.bsky.actor.getPreferences.$Output
-```
-
-Without `as const`, TypeScript widens to `string` and the return type
-won't match. This is a type-level change only.
-
-### LXM references
-
-```ts
-const lxm = app.bsky.actor.getPreferences.$lxm
-const aud = computeProxyTo(ctx, req, lxm)
-permissions.assertRpc({ aud, lxm })
-```
-
-### Parameter types
-
-```diff
-- import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
-+ import { app } from '../../../../lexicons/index.js'
-
-- type Params = QueryParams
-+ type Params = app.bsky.feed.getAuthorFeed.$Params
-```
-
-### Output types
-
-```ts
-return {
-  encoding: 'application/json' as const,
-  body: { actor, relationships },
-} satisfies app.bsky.graph.getRelationships.$Output
-```
-
-### Record / object types
-
-```diff
-- import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
-+ // From a centralized types file, or directly:
-+ import { app } from '../lexicons/index.js'
-+ type PostRecord = app.bsky.feed.post.Main
-```
-
-### Defs
-
-```diff
-- import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
-+ type StatusAttr = com.atproto.admin.defs.StatusAttr
-```
-
-When constructing a value that needs `$type`, use `$build()`:
-
-```ts
-const code = com.atproto.server.defs.inviteCode.$build({
-  code: invite.code,
-  available: invite.availableUses - invite.uses.length,
-  disabled: invite.disabled === 1,
-  forAccount: invite.forUser,
-  createdBy: invite.createdBy,
-  createdAt: invite.createdAt,
-  uses: invite.uses,
-})
-```
-
-Plain shapes that don't need `$type` — just annotate:
-
-```ts
-const code: com.atproto.server.defs.InviteCode = {/* ... */}
-```
-
-### Token values
-
-```diff
-- import { CURATELIST, MODLIST } from '../../../../lexicon/types/app/bsky/graph/defs'
-+ import { app } from '../../../../lexicons/index.js'
-+ const CURATELIST = app.bsky.graph.defs.curatelist.value
-+ const MODLIST = app.bsky.graph.defs.modlist.value
-```
-
-### NSID string constants — `ids.*` → `$type` / `$lxm`
-
-```diff
-- import { ids } from '../../../lexicon/lexicons'
-- if (uri.collection === ids.AppBskyGraphList) {
-+ import { app } from '../../../lexicons/index.js'
-+ if (uri.collection === app.bsky.graph.list.$type) {
-```
-
-For LXM checks in auth code:
-
-```diff
-- method === ids.AppBskyFeedGetFeedSkeleton
-+ method === app.bsky.feed.getFeedSkeleton.$lxm
-```
-
-For simple comparisons in utility code, plain string literals are also
-acceptable:
-
-```diff
-- if (uri.collection === ids.AppBskyFeedPost) {
-+ if (uri.collection === 'app.bsky.feed.post') {
-```
-
-## 5. Type strictness — branded types
-
-Apply branded types at type boundaries (function signatures, interface
-fields, DB schema types) while keeping runtime code unchanged where
-possible. See [lex-data skill](../lex-data/SKILL.md) for the full list and rules.
-Common cases:
-
-```diff
-- did: string
-+ did: DidString
-
-- handle: string
-+ handle: HandleString
-
-- handleOrDid: string
-+ handleOrDid: AtIdentifierString
-
-- iss: string
-+ iss: DidString | `${DidString}#${string}`
-
-- indexedAt: string
-+ indexedAt: DatetimeString
-```
-
-Replace string-prefix checks with type guards:
-
-```diff
-- if (typeof iss !== 'string' || !iss.startsWith('did:')) {
-+ if (typeof iss !== 'string' || !isDidString(iss)) {
-```
-
-At data-plane / Kysely / protobuf boundaries, cast at the entry point:
-
-```diff
-- suggestedDids: dids,
-+ suggestedDids: dids as DidString[],
-
-- qb.where('actor.did', '=', filter.sub!)
-+ qb.where('actor.did', '=', filter.sub! as DidString)
-
-- post: { uri: item.uri, cid: item.cid || undefined },
-+ post: { uri: item.uri as AtUriString, cid: item.cid || undefined },
-```
-
-`HeadersMap` for `Record<string,string>` headers:
-
-```diff
-- import { HeadersMap } from '@atproto/xrpc'
-+ import { Headers as HeadersMap } from '@atproto/xrpc-server'
-```
-
-## 7. Schema validation / type guards
-
-### `$matches()` — validates unknown data
-
-When data hasn't been pre-validated:
-
-```diff
-- import { isRepoRef } from '../../../../lexicon/types/com/atproto/admin/defs'
-- if (isRepoRef(subject)) { ... }
-+ if (com.atproto.admin.defs.repoRef.$matches(subject)) { ... }
-```
-
-```diff
-- repost: isSkeletonReasonRepost(item.reason) ? ... : undefined,
-+ repost: app.bsky.feed.defs.skeletonReasonRepost.$matches(item.reason) ? ... : undefined,
-```
-
-### `$isTypeOf` — discriminates pre-validated unions
-
-When data is already validated, only the `$type` tag matters. Faster
-than `$matches`:
-
-```diff
-- const personalDetailsPref = prefs.find(
--   (pref) => pref.$type === 'app.bsky.actor.defs#personalDetailsPref'
-- )
-+ const personalDetailsPref = prefs.find(
-+   app.bsky.actor.defs.personalDetailsPref.$isTypeOf,
-+ )
-```
-
-`$isTypeOf` is a type-predicate; TS narrows automatically in `.find` /
-`.filter` / `if`.
-
-### `$build()` — typed object construction
-
-```diff
-- return {
--   $type: 'app.bsky.graph.defs#relationship',
--   did,
--   following: subject.following,
-- }
-+ return app.bsky.graph.defs.relationship.$build({
-+   did,
-+   following: subject.following,
-+ })
-```
-
-```diff
-- prefs.push({
--   $type: 'app.bsky.actor.defs#declaredAgePref',
--   isOverAge13: age >= 13,
--   isOverAge16: age >= 16,
--   isOverAge18: age >= 18,
-- })
-+ prefs.push(
-+   app.bsky.actor.defs.declaredAgePref.$build({
-+     isOverAge13: age >= 13,
-+     isOverAge16: age >= 16,
-+     isOverAge18: age >= 18,
-+   }),
-+ )
-```
-
-`$build()` sets `$type` and types the result.
-
-## XrpcError
-
-```diff
-- import { XRPCError } from '@atproto/xrpc'
-+ import { XrpcError } from '@atproto/lex'
-```
-
-(Note: `@atproto/xrpc-server` still exports its own `XRPCError` class for
-**throwing** server-side. The client-side error class is `XrpcError` from
-`@atproto/lex`.)
-
-## Tests in this phase
-
-Tests still rely exclusively on `@atproto/api`. When tests previously
-imported from `src/lexicon/`, redirect those imports to `@atproto/api`:
+## Import mapping
+
+| Before                                                 | After                                                                |
+| ------------------------------------------------------ | -------------------------------------------------------------------- |
+| `../lexicon` (`Server`, `createServer`)                | `@atproto/xrpc-server`                                               |
+| `../lexicon/lexicons` (`ids`)                          | `../lexicons/index.js` → `.$type` / `.$lxm`                          |
+| `../lexicon/types/…` (record & def types)              | `../lexicons/index.js` → `.Main`, `.ViewRecord`, …                   |
+| `../lexicon/types/…` (`QueryParams`, `OutputSchema`)   | `../lexicons/index.js` → `.$Params`, `.$OutputBody`                  |
+| `../lexicon/types/…` (`isX`, `validateX`)              | `../lexicons/index.js` → `.$isTypeOf`, `.$matches`, `.$safeValidate` |
+| `../lexicon/util` (`$Typed`, `Un$Typed`)               | `@atproto/lex`                                                       |
+| `@atproto/api` (`AtpAgent`)                            | `@atproto/lex` (`Client`)                                            |
+| `@atproto/lexicon` (`jsonStringToLex`, `stringifyLex`) | `@atproto/lex` (`lexParse`, `lexStringify`)                          |
+| `@atproto/lexicon` (`BlobRef`)                         | `@atproto/lex` (`BlobRef`)                                           |
+| `@atproto/xrpc` (`HeadersMap`)                         | `@atproto/xrpc-server` (`Headers`, usually aliased)                  |
+| `@atproto/xrpc` (`XRPCError`, thrown by a _caller_)    | `@atproto/lex` (`XrpcError`)                                         |
+| `multiformats/cid` (`CID`)                             | `@atproto/lex` (`Cid`, `parseCid`)                                   |
+
+`@atproto/xrpc-server` keeps its own `XRPCError` for errors handlers **throw**.
+The casing distinguishes them: `XRPCError` server-side (concrete, thrown),
+`XrpcError` client-side (abstract, caught). Both can appear in one file.
+
+`@atproto/lex` re-exports `lex-client`, `lex-schema`, `lex-data`, and
+`lex-json`, so `Cid`, `BlobRef`, `lexParse`, and `$Typed` all resolve from it.
+`@atproto/lex-cbor` is **not** re-exported. Importing from either the umbrella
+or the sub-package is fine; match whatever the file already does.
+
+## Pitfalls
+
+- **`$type` vs `$lxm` vs `$nsid`.** `$type` is the record/object type string
+  (`app.bsky.feed.post.$type` → `'app.bsky.feed.post'`), used for collections
+  and union tags. `$lxm` is the method id, used in auth and proxy checks.
+  `$nsid` is the raw NSID, needed for `defs` documents that have no `main`.
+  They can hold identical strings, so a wrong one type-checks and only fails
+  at runtime.
+- **`$matches` vs `$isTypeOf`.** `$isTypeOf` only reads the `$type` tag;
+  `$matches` validates the whole value. Substituting `$isTypeOf` where the
+  data is unvalidated silently accepts malformed records. See
+  [references/types-and-guards.md](references/types-and-guards.md).
+- **`encoding` widening** affects only the bare-handler form of `server.add`,
+  not the object form. Don't sprinkle `as const` everywhere — see
+  [references/routes.md](references/routes.md).
+- **Branded strings arriving from outside TypeScript's view** — protobuf,
+  Kysely rows, `JSON.parse` — are plain `string`. Cast once at the boundary
+  (`as DidString`), never deep in the call graph.
+- **Generated `src/lexicons/` is gitignored.** It won't exist until
+  `pnpm run codegen` (or a build) runs. "Cannot find module '../lexicons/index.js'"
+  means codegen hasn't run, not that the import is wrong.
+
+## Tests
+
+Test _call sites_ keep using `AtpAgent`, deliberately (see principles above).
+`dev-env` exposes both `getAgent(): AtpAgent` and `getClient(): Client`, so a
+new-style client is available when a test genuinely needs one.
+
+What must move is anything a test imported from the now-deleted
+`src/lexicon/`. Two valid destinations, both already used in migrated
+packages:
 
 ```diff
 - import { ids } from '../../src/lexicon/lexicons'
-- import { RepoRef, isRepoRef } from '../../src/lexicon/types/com/atproto/admin/defs'
-- import { $Typed } from '../../src/lexicon/util'
-+ import { $Typed, AtpAgent, ComAtprotoAdminDefs, ids } from '@atproto/api'
+- import { isRepoRef } from '../../src/lexicon/types/com/atproto/admin/defs'
++ import { com } from '../../src/lexicons/index.js'      // generated schemas
++ import { $Typed, ComAtprotoAdminDefs, ids } from '@atproto/api'  // legacy equivalents
 ```
 
-Don't change how tests make XRPC calls — they keep using `AtpAgent`. This
-keeps tests stable as a runtime regression check during the migration.
+Prefer `../../src/lexicons/index.js` for new code; `@atproto/api` is the
+lower-churn option when the surrounding test is otherwise untouched. Do not
+add `@atproto/api` back to a package's dependencies just for this — it is a
+devDependency in `pds` and only a runtime dependency in `bsky` because of
+`getAgeAssuranceRegionConfig`, unrelated to tests.
 
-## Common pitfalls
-
-1. **`$type` vs `$lxm` vs `$nsid`**: `$type` for record/object type
-   strings (`app.bsky.feed.post.$type` = `'app.bsky.feed.post'`). `$lxm`
-   for XRPC method ids (auth/proxy). `$nsid` for the raw NSID — useful
-   for defs that have no `main` type but still need the NSID.
-2. **`$matches` vs `$isTypeOf`**: `$matches` for unvalidated data;
-   `$isTypeOf` for pre-validated unions where only the `$type` tag
-   matters.
-3. **Branded type casts at boundaries**: data from protobuf / data plane
-   / Kysely arrives as plain strings — cast (`as DidString`,
-   `as AtUriString`) at entry, not later.
-4. **`'application/json' as const`**: required on handler returns, or
-   the inferred `string` type breaks the schema match.
-5. **Response header changes** (in calls _out_ — see
-   [lexification-client skill](../lexification-client/SKILL.md)): `result.data` →
-   `result.body`, header object → `Headers` with `.get()`.
-6. **`@atproto/lex-data` vs `@atproto/lex`**: `Cid`, `parseCid`,
-   `BlobRef` are in `@atproto/lex-data` and re-exported from
-   `@atproto/lex`. Either import path works.
-7. **Prefer `@atproto/lex` over `@atproto/syntax`** for shared symbols
-   (`DidString`, `AtUriString`).
-8. **Avoid `assert()`** — use type guards (`isDidString`, `isHandleString`)
-   with conditional logic instead.
-
-## Import source changes summary
-
-| Before                                            | After                                                                        |
-| ------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `@atproto/api` (`AtpAgent`)                       | `@atproto/lex` (`Client`)                                                    |
-| `@atproto/lexicon` (`jsonStringToLex`, `BlobRef`) | `@atproto/lex` (`lexParse`, `BlobRef`)                                       |
-| `@atproto/lexicon` (`stringifyLex`)               | `@atproto/lex` (`lexStringify`)                                              |
-| `@atproto/xrpc` (`HeadersMap`, `XRPCError`)       | `@atproto/xrpc-server` (`Headers`), `@atproto/lex` (`XrpcError`, `xrpcSafe`) |
-| `multiformats/cid` (`CID`)                        | `@atproto/lex` (`Cid`, `parseCid`)                                           |
-| `@atproto/syntax` (`DidString`, etc.)             | `@atproto/lex` (`DidString`, `HandleString`, etc.) — prefer `@atproto/lex`   |
-| `../lexicon` (`Server`, `createServer`)           | `@atproto/xrpc-server` (`Server`, `createServer`)                            |
-| `../lexicon/lexicons` (`ids`)                     | `../lexicons/index.js` (`app`, `com`, `chat`)                                |
-| `../lexicon/types/...` (types, guards)            | `../lexicons/index.js` (namespace-qualified access)                          |
+Before writing or restructuring tests, use the
+[testing skill](../testing/SKILL.md) — `pds` and `ozone` are jest, `bsky` is
+vitest.
 
 ## Related skills
 
-[xrpc-server](../xrpc-server/SKILL.md) for the target route-definition
-patterns, [lexification-client](../lexification-client/SKILL.md) for the
-calls-out half (service packages usually need both),
-[lex-setup](../lex-setup/SKILL.md) for the codegen/dependency changes, and
-[lex-schema](../lex-schema/SKILL.md) for the `$`-accessors that replace
-`ids.*` and the legacy `isX()` guards.
+[xrpc-server](../xrpc-server/SKILL.md) documents the target route API in full
+and is the better reference once a package is migrated.
+[lex-setup](../lex-setup/SKILL.md) owns codegen wiring,
+[lex-schema](../lex-schema/SKILL.md) the `$`-accessors, and
+[lex-data](../lex-data/SKILL.md) branded strings, CIDs, and blobs.
