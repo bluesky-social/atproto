@@ -83,10 +83,10 @@ export class TypedObjectSchema<
     return $typed(input, this.$type)
   }
 
-  isTypeOf<TValue extends Record<string, unknown>>(
+  isTypeOf<TValue extends { $type?: unknown }>(
     value: TValue,
   ): value is MaybeTypedObject<TType, TValue> {
-    return value.$type === undefined || value.$type === this.$type
+    return value.$type === this.$type
   }
 
   /**

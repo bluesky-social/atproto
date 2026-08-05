@@ -177,14 +177,14 @@ describe('TypedObjectSchema', () => {
   })
 
   describe('isTypeOf method', () => {
-    it('returns true for objects without $type', () => {
+    it('returns false for objects without $type', () => {
       const obj = { text: 'Hello' }
-      expect(schema.isTypeOf(obj)).toBe(true)
+      expect(schema.isTypeOf(obj)).toBe(false)
     })
 
-    it('returns true for objects with undefined $type', () => {
+    it('returns false for objects with undefined $type', () => {
       const obj = { $type: undefined, text: 'Hello' }
-      expect(schema.isTypeOf(obj)).toBe(true)
+      expect(schema.isTypeOf(obj)).toBe(false)
     })
 
     it('returns true for objects with matching $type', () => {
@@ -233,9 +233,9 @@ describe('TypedObjectSchema', () => {
   })
 
   describe('$isTypeOf method', () => {
-    it('returns true for objects without $type', () => {
+    it('returns false for objects without $type', () => {
       const obj = { text: 'Hello' }
-      expect(schema.$isTypeOf(obj)).toBe(true)
+      expect(schema.$isTypeOf(obj)).toBe(false)
     })
 
     it('returns true for objects with matching $type', () => {
