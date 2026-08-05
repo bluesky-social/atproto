@@ -177,9 +177,7 @@ describe('AuthVerifier', () => {
 
 describe(extractPdsEndpoint, () => {
   const validDidDoc = (serviceEndpoint: string) => ({
-    service: [
-      { id: 'did:example:alice#atproto_pds', serviceEndpoint },
-    ],
+    service: [{ id: 'did:example:alice#atproto_pds', serviceEndpoint }],
   })
 
   it('returns the PDS endpoint from a valid DID document', () => {
@@ -195,7 +193,12 @@ describe(extractPdsEndpoint, () => {
   it('returns null when service does not include #atproto_pds', () => {
     expect(
       extractPdsEndpoint({
-        service: [{ id: 'did:example:alice#other', serviceEndpoint: 'https://other.example.com' }],
+        service: [
+          {
+            id: 'did:example:alice#other',
+            serviceEndpoint: 'https://other.example.com',
+          },
+        ],
       }),
     ).toBeNull()
   })
