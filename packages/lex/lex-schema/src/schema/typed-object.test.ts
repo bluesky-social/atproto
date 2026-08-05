@@ -1,12 +1,18 @@
-import { describe, expect, it } from 'vitest'
-import type { Infer, Unknown$Type, Unknown$TypedObject } from '../core.js'
+import { describe, expect, expectTypeOf, it } from 'vitest'
+import type {
+  $Typed,
+  $TypedLexMap,
+  Infer,
+  Unknown$Type,
+  Unknown$TypedObject,
+} from '../core.js'
 import { enumSchema } from './enum.js'
 import { integer } from './integer.js'
 import { nullable } from './nullable.js'
 import { object } from './object.js'
 import { optional } from './optional.js'
 import { string } from './string.js'
-import { typedObject } from './typed-object.js'
+import { type TypedObject, typedObject } from './typed-object.js'
 
 describe('TypedObjectSchema', () => {
   const schema = typedObject(
@@ -421,7 +427,7 @@ describe('TypedObjectSchema', () => {
 
     it('$isTypeOf can be used as a detached function', () => {
       const { $isTypeOf } = schema
-      expect($isTypeOf({ text: 'Hello' })).toBe(true)
+      expect($isTypeOf({ text: 'Hello' })).toBe(false)
       expect($isTypeOf({ $type: 'app.bsky.feed.post', text: 'Hello' })).toBe(
         true,
       )
@@ -740,6 +746,70 @@ describe('TypedObjectSchema', () => {
       const input = { $type: 'app.bsky.feed.post', text: 'Hello' }
       const typedResult = schema.safeParse(input)
       expect(typedResult.success).toBe(true)
+    })
+  })
+
+  describe('TypedObject type utility', () => {
+    type PostType = 'app.bsky.feed.post'
+    type WithMatchingType = { $type: PostType; text: string }
+    type WithOptionalType = { $type?: PostType; text: string }
+    type WithoutType = { text: string }
+    type WithOtherType = { $type: 'other.type'; text: string }
+    type WithUnknownType = Unknown$TypedObject & { extra: string }
+
+    it('TypedObject resolves to the value when $type already matches', () => {
+      expectTypeOf<
+        TypedObject<PostType, WithMatchingType>
+      >().toEqualTypeOf<WithMatchingType>()
+    })
+
+    it('TypedObject adds required $type when value has no $type', () => {
+      expectTypeOf<
+        TypedObject<PostType, WithoutType>
+      >().toEqualTypeOf<$Typed<WithoutType, PostType>>()
+    })
+
+    it('TypedObject adds required $type when value has optional $type', () => {
+      expectTypeOf<
+        TypedObject<PostType, WithOptionalType>
+      >().toEqualTypeOf<$Typed<WithOptionalType, PostType>>()
+    })
+
+    it('TypedObject adds required $type when value has different $type', () => {
+      expectTypeOf<
+        TypedObject<PostType, WithOtherType>
+      >().toEqualTypeOf<$Typed<WithOtherType, PostType>>()
+    })
+
+    it('TypedObject excludes Unknown$TypedObject from narrowed type', () => {
+      expectTypeOf<
+        TypedObject<PostType, WithUnknownType>
+      >().toEqualTypeOf<$Typed<{ extra: string }, PostType>>()
+    })
+
+    it('$TypedLexMap is equivalent to TypedObject for matching inputs', () => {
+      expectTypeOf<
+        $TypedLexMap<PostType, WithMatchingType>
+      >().toEqualTypeOf<TypedObject<PostType, WithMatchingType>>()
+
+      expectTypeOf<
+        $TypedLexMap<PostType, WithoutType>
+      >().toEqualTypeOf<TypedObject<PostType, WithoutType>>()
+    })
+
+    it('isTypeOf narrows to TypedObject on true branch', () => {
+      const obj = { $type: 'app.bsky.feed.post', text: 'hi' } as {
+        $type: PostType
+        text: string
+      }
+      if (schema.isTypeOf(obj)) {
+        expectTypeOf(obj).toEqualTypeOf<WithMatchingType>()
+      }
+    })
+
+    it('isTypeOf return type is boolean', () => {
+      const obj = { $type: 'app.bsky.feed.post' as unknown }
+      expectTypeOf(schema.isTypeOf(obj as { $type?: unknown })).toEqualTypeOf<boolean>()
     })
   })
 })

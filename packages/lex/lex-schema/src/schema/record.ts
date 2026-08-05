@@ -1,5 +1,6 @@
 import type { LexMap } from '@atproto/lex-data'
 import {
+  type $TypedLexMap,
   type $Typed,
   $typed,
   type InferInput,
@@ -8,7 +9,6 @@ import {
   type NsidString,
   type RecordKeyValue,
   Schema,
-  type Unknown$TypedObject,
   type ValidationContext,
   type Validator,
 } from '../core.js'
@@ -28,9 +28,7 @@ export type InferRecordKey<R extends RecordSchema> =
 export type TypedRecord<
   TType extends NsidString,
   TValue extends { $type?: unknown } = { $type?: unknown },
-> = TValue extends { $type: TType }
-  ? TValue
-  : $Typed<Exclude<TValue, Unknown$TypedObject>, TType>
+> = $TypedLexMap<TType, TValue>
 
 /**
  * Schema for AT Protocol records with a type identifier and key constraints.

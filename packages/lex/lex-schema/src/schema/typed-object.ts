@@ -1,6 +1,7 @@
 import { type LexMap, isPlainObject } from '@atproto/lex-data'
 import {
   type $Type,
+  type $TypedLexMap,
   type $TypeOf,
   type $Typed,
   type $TypedMaybe,
@@ -15,6 +16,11 @@ import {
   type Validator,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
+
+export type TypedObject<
+  TType extends $Type,
+  TValue extends { $type?: unknown } = { $type?: unknown },
+> = $TypedLexMap<TType, TValue>
 
 export type MaybeTypedObject<
   TType extends $Type,
@@ -85,7 +91,7 @@ export class TypedObjectSchema<
 
   isTypeOf<TValue extends { $type?: unknown }>(
     value: TValue,
-  ): value is MaybeTypedObject<TType, TValue> {
+  ): value is TypedObject<TType, TValue> {
     return value.$type === this.$type
   }
 
