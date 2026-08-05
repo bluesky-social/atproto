@@ -1,7 +1,7 @@
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope, toSpaceRef } from '../space/util.js'
+import { assertSpaceOwner, assertSpaceScope } from '../space/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.simplespace.addMember, {
@@ -16,23 +16,11 @@ export default function (server: Server, ctx: AppContext) {
 
       // Membership management is a space-level "manage" (update) operation.
       assertSpaceScope(auth, space, { manage: 'update' })
+      assertSpaceOwner(ownerDid, space)
 
-      const { spaceDid } = toSpaceRef(space)
-      if (spaceDid !== ownerDid) {
-        throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
-      }
-
-      // The member list is plain host-internal state consulted at mint time.
-      // No protocol notification to the member — their PDS materializes its
-      // repo lazily on first write.
+      // The member isn't notified: their PDS materializes its repo on first write.
       await ctx.actorStore.transact(ownerDid, async (actorTxn) => {
-        const spaceRow = await actorTxn.space.getSpace(space)
-        if (!spaceRow || spaceRow.deletedAt) {
-          throw new InvalidRequestError('Space not found', 'SpaceNotFound')
-        }
-        if (!spaceRow.isOwner) {
-          throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
-        }
+        await actorTxn.space.getActiveSpace(space)
         await actorTxn.space.addMember(space, memberDid)
       })
     },

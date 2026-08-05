@@ -1,0 +1,53 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.simplespace.getSpace",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Describe a space managed by the simplespace implementation, including its configuration. Served by the space host. Requires either OAuth (for a caller with an account on this host) or a space credential (for a member hosted elsewhere); either way the caller must be authorized for the space.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref",
+            "description": "Reference to the space."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "policy", "appAccess"],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "space-ref",
+              "description": "URI of the space."
+            },
+            "policy": {
+              "type": "union",
+              "description": "How the authority decides whether to authorize a requesting user.",
+              "refs": [
+                "com.atproto.simplespace.defs#publicPolicy",
+                "com.atproto.simplespace.defs#memberListPolicy",
+                "com.atproto.simplespace.defs#managingAppPolicy"
+              ]
+            },
+            "appAccess": {
+              "type": "union",
+              "description": "How the authority decides whether to authorize a requesting app.",
+              "refs": [
+                "com.atproto.simplespace.defs#open",
+                "com.atproto.simplespace.defs#allowList"
+              ]
+            }
+          }
+        }
+      },
+      "errors": [{ "name": "SpaceNotFound" }]
+    }
+  }
+}

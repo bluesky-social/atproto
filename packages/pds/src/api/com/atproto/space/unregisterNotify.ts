@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
       const spaceRow = await ctx.actorStore.read(spaceDid, (store) =>
         store.space.getSpace(space),
       )
-      if (!spaceRow || spaceRow.deletedAt || !spaceRow.isOwner) {
+      if (!spaceRow || spaceRow.deletedAt) {
         throw new InvalidRequestError('Space not found', 'SpaceNotFound')
       }
 

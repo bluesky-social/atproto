@@ -8,7 +8,6 @@ import getDelegationToken from './getDelegationToken.js'
 import getLatestCommit from './getLatestCommit.js'
 import getRecord from './getRecord.js'
 import getRepo from './getRepo.js'
-import getSpace from './getSpace.js'
 import getSpaceCredential from './getSpaceCredential.js'
 import listBlobs from './listBlobs.js'
 import listRecords from './listRecords.js'
@@ -30,7 +29,6 @@ export default function (server: Server, ctx: AppContext) {
   getLatestCommit(server, ctx)
   getRecord(server, ctx)
   getRepo(server, ctx)
-  getSpace(server, ctx)
   getSpaceCredential(server, ctx)
   listBlobs(server, ctx)
   listRecords(server, ctx)

@@ -2,24 +2,24 @@
   "lexicon": 1,
   "id": "com.atproto.simplespace.defs",
   "defs": {
-    "spaceConfig": {
+    "publicPolicy": {
       "type": "object",
-      "description": "Configuration for a space managed by the simplespace implementation. A credential is minted only when the user is authorized by `policy` and their app by `appAccess`.",
-      "required": ["policy", "appAccess"],
+      "description": "User access policy: any user may access the space.",
+      "properties": {}
+    },
+    "memberListPolicy": {
+      "type": "object",
+      "description": "User access policy: only users on the space's member list may access it.",
+      "properties": {}
+    },
+    "managingAppPolicy": {
+      "type": "object",
+      "description": "User access policy: the managing app is asked, via checkUserAccess, whether to authorize each user.",
+      "required": ["managingApp"],
       "properties": {
-        "policy": {
-          "type": "string",
-          "knownValues": ["public", "member-list", "managing-app"],
-          "description": "How the authority decides whether to authorize a requesting user. 'member-list' (default) consults the member list, 'public' authorizes anyone, 'managing-app' asks the managingApp via checkUserAccess."
-        },
-        "appAccess": {
-          "type": "union",
-          "description": "How the authority decides whether to authorize a requesting app.",
-          "refs": ["#open", "#allowList"]
-        },
         "managingApp": {
           "type": "string",
-          "description": "Service identifier (e.g. did:web:example.com#forum) of the app that manages this space. Routes application-level requests and is the checkUserAccess target when policy is 'managing-app'."
+          "description": "Service identifier of the managing app: a DID with an optional service fragment (e.g. 'did:web:example.com#forum')."
         }
       }
     },

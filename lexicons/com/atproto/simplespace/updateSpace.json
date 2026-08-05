@@ -17,13 +17,13 @@
               "description": "Reference to the space to update."
             },
             "policy": {
-              "type": "string",
-              "knownValues": ["public", "member-list", "managing-app"],
-              "description": "How the authority decides whether to authorize a requesting user."
-            },
-            "managingApp": {
-              "type": "string",
-              "description": "Service identifier of the managing application. Pass an empty string to clear."
+              "type": "union",
+              "description": "How the authority decides whether to authorize a requesting user. When supplied, replaces the current policy wholesale.",
+              "refs": [
+                "com.atproto.simplespace.defs#publicPolicy",
+                "com.atproto.simplespace.defs#memberListPolicy",
+                "com.atproto.simplespace.defs#managingAppPolicy"
+              ]
             },
             "appAccess": {
               "type": "union",
@@ -42,6 +42,14 @@
         },
         {
           "name": "NotSpaceOwner"
+        },
+        {
+          "name": "UnsupportedPolicy",
+          "description": "The requested policy is not one the host implements."
+        },
+        {
+          "name": "UnsupportedAppAccess",
+          "description": "The requested appAccess variant is not one the host implements. A host will not store an app access policy it cannot enforce."
         }
       ]
     }

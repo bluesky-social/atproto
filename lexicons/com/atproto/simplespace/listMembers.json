@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the members in a space's host-internal member list. Must be called on the space owner's PDS, by the space owner. This reflects the simplespace member list, not a protocol-level reader set.",
+      "description": "List the members in a space's host-internal member list. Must be called on the space authority's PDS. Requires OAuth with a covering read grant; a space credential is not sufficient, so members hosted elsewhere cannot enumerate the list. This reflects the simplespace member list, not a protocol-level reader set.",
       "parameters": {
         "type": "params",
         "required": ["space"],
@@ -48,9 +48,6 @@
       "errors": [
         {
           "name": "SpaceNotFound"
-        },
-        {
-          "name": "NotSpaceOwner"
         }
       ]
     },

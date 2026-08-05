@@ -1,5 +1,6 @@
 import { getPdsEndpoint, getServiceEndpoint } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
+import { IdResolver } from '@atproto/identity'
 import { xrpc } from '@atproto/lex'
 import { SpacePermissionMatch } from '@atproto/oauth-scopes'
 import { CommitCtx, LtHash, RepoCommit, SignedCommit } from '@atproto/space'
@@ -8,6 +9,7 @@ import {
   InvalidRequestError,
   createServiceAuthHeaders,
 } from '@atproto/xrpc-server'
+import { ActorStore } from '../../../../actor-store/actor-store.js'
 import {
   AccessOutput,
   OAuthOutput,
@@ -15,6 +17,7 @@ import {
 } from '../../../../auth-output.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import { spaceLogger } from '../../../../logger.js'
 
 // Everything except the (type, authority, skey) tuple, derived from the space URI.
 type SpaceScopeOp = Omit<SpacePermissionMatch, 'type' | 'authority' | 'skey'>
@@ -30,6 +33,18 @@ export function toSpaceRef(spaceUri: SpaceRefString): SpaceRef {
     )
   }
   return ref
+}
+
+// A simplespace space is anchored on its authority's own DID, so ownership is a
+// comparison against the space URI.
+export function assertSpaceOwner(
+  callerDid: string,
+  spaceUri: SpaceRefString,
+): void {
+  const { spaceDid } = toSpaceRef(spaceUri)
+  if (spaceDid !== callerDid) {
+    throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
+  }
 }
 
 // Legacy access tokens and space credentials pre-authorize at the auth layer.
@@ -98,19 +113,49 @@ export async function buildSignedCommit(opts: {
   return RepoCommit.fromState(state.setHash).sign(ctx, keypair)
 }
 
-// The fragment is required: it names the DID document entry to deliver to.
-export async function resolveNotifyService(
-  ctx: AppContext,
+/**
+ * Resolve a service identifier — a DID with an optional service fragment, e.g.
+ * `did:web:syncer.example.com#atproto_space_syncer` — to its endpoint. Without a
+ * fragment the DID's own `#atproto_pds` entry is used, since a bare DID names an
+ * account and an account is served by its PDS.
+ */
+export async function resolveServiceEndpoint(
+  idResolver: IdResolver,
   service: string,
 ): Promise<string | undefined> {
   const [did, fragment] = service.split('#')
-  if (!fragment) return undefined
-  const didDoc = await ctx.idResolver.did.resolve(did).catch(() => null)
+  const didDoc = await idResolver.did.resolve(did).catch((err) => {
+    spaceLogger.warn({ err, service }, 'could not resolve service did')
+    return null
+  })
   if (!didDoc) return undefined
-  return getServiceEndpoint(didDoc, { id: `#${fragment}` })
+  return fragment
+    ? getServiceEndpoint(didDoc, { id: `#${fragment}` })
+    : getPdsEndpoint(didDoc)
 }
 
-// Best effort: the authority records the write and fans out to syncers.
+/**
+ * Resolve a notification target and mint the service auth to reach it. `aud` is the
+ * service identifier itself, so a fragment-bearing target is addressed as published.
+ */
+export async function resolveNotifyTarget(
+  deps: { idResolver: IdResolver; actorStore: ActorStore },
+  opts: { iss: string; service: string; lxm: string },
+): Promise<{ endpoint: string; headers: Record<string, string> } | undefined> {
+  const { iss, service, lxm } = opts
+  const endpoint = await resolveServiceEndpoint(deps.idResolver, service)
+  if (!endpoint) return undefined
+  const keypair = await deps.actorStore.keypair(iss)
+  const { headers } = await createServiceAuthHeaders({
+    iss,
+    aud: service,
+    lxm,
+    keypair,
+  })
+  return { endpoint, headers }
+}
+
+// Notifications are best-effort: sync recovers on a later notification or a sweep.
 export async function fireNotifyWrite(
   ctx: AppContext,
   opts: {
@@ -122,22 +167,19 @@ export async function fireNotifyWrite(
 ): Promise<void> {
   const { space, writerDid, rev, setHash } = opts
   const { spaceDid } = toSpaceRef(space)
+  const lxm = com.atproto.space.notifyWrite.$lxm
   try {
-    const spaceDidDoc = await ctx.idResolver.did.resolve(spaceDid)
-    if (!spaceDidDoc) return
-    const spacePdsUrl = getPdsEndpoint(spaceDidDoc)
-    if (!spacePdsUrl) return
-
-    const keypair = await ctx.actorStore.keypair(writerDid)
-    const { headers } = await createServiceAuthHeaders({
+    const target = await resolveNotifyTarget(ctx, {
       iss: writerDid,
-      aud: spaceDid,
-      lxm: com.atproto.space.notifyWrite.$lxm,
-      keypair,
+      service: spaceDid,
+      lxm,
     })
-
-    await xrpc(spacePdsUrl, com.atproto.space.notifyWrite, {
-      headers,
+    if (!target) {
+      spaceLogger.warn({ space, lxm }, 'could not resolve space host')
+      return
+    }
+    await xrpc(target.endpoint, com.atproto.space.notifyWrite, {
+      headers: target.headers,
       body: {
         space,
         repo: writerDid as DidString,
@@ -145,7 +187,7 @@ export async function fireNotifyWrite(
         hash: new LtHash(setHash).digest(),
       },
     })
-  } catch {
-    // Sync recovers on a later notification or a sweep.
+  } catch (err) {
+    spaceLogger.warn({ err, space, repo: writerDid, lxm }, 'notify failed')
   }
 }

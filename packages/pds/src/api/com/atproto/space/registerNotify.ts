@@ -4,7 +4,7 @@ import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import {
   assertCredentialSpace,
-  resolveNotifyService,
+  resolveServiceEndpoint,
   toSpaceRef,
 } from './util.js'
 
@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const { spaceDid } = toSpaceRef(space)
 
-      const endpoint = await resolveNotifyService(ctx, service)
+      const endpoint = await resolveServiceEndpoint(ctx.idResolver, service)
       if (!endpoint) {
         throw new InvalidRequestError(
           `Could not resolve a service endpoint for ${service}`,
@@ -33,7 +33,7 @@ export default function (server: Server, ctx: AppContext) {
       const spaceRow = await ctx.actorStore.read(spaceDid, (store) =>
         store.space.getSpace(space),
       )
-      if (!spaceRow || spaceRow.deletedAt || !spaceRow.isOwner) {
+      if (!spaceRow || spaceRow.deletedAt) {
         throw new InvalidRequestError('Space not found', 'SpaceNotFound')
       }
 

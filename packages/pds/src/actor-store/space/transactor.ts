@@ -72,29 +72,34 @@ export class SpaceTransactor extends SpaceReader {
     super(db)
   }
 
+  /**
+   * A previously deleted space may be created again under the same uri. Its config
+   * is reset to the new request's rather than revived, so a new space never inherits
+   * the access rules of the deleted one.
+   */
   async createSpace(
     uri: string,
-    isOwner: boolean,
     config: SpaceConfig = {},
     now?: string,
   ): Promise<void> {
     const timestamp = now ?? new Date().toISOString()
+    const values = {
+      policy: config.policy ?? 'member-list',
+      managingApp: config.managingApp ?? null,
+      appAccessType: config.appAccessType ?? 'open',
+      appAllowed: JSON.stringify(config.appAllowed ?? []),
+      createdAt: timestamp,
+      deletedAt: null,
+    }
     await this.db.db
       .insertInto('space')
-      .values({
-        uri,
-        isOwner: isOwner ? 1 : 0,
-        policy: config.policy ?? 'member-list',
-        managingApp: config.managingApp ?? null,
-        appAccessType: config.appAccessType ?? 'open',
-        appAllowed: JSON.stringify(config.appAllowed ?? []),
-        createdAt: timestamp,
-        deletedAt: null,
-      })
+      .values({ uri, ...values })
+      .onConflict((oc) => oc.column('uri').doUpdateSet(values))
       .execute()
     await this.db.db
       .insertInto('space_repo')
       .values({ space: uri, setHash: null, rev: null })
+      .onConflict((oc) => oc.column('space').doNothing())
       .execute()
   }
 
@@ -103,8 +108,11 @@ export class SpaceTransactor extends SpaceReader {
   // the authority's concern), so it materializes the repo when its user writes.
   async ensureSpaceRepo(uri: string, now?: string): Promise<void> {
     const existing = await this.getSpace(uri)
+    if (existing?.deletedAt) {
+      throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+    }
     if (existing) return
-    await this.createSpace(uri, false, {}, now)
+    await this.createSpace(uri, {}, now)
   }
 
   async addMember(space: string, did: string): Promise<void> {
@@ -155,23 +163,40 @@ export class SpaceTransactor extends SpaceReader {
   }
 
   /**
-   * Authority-side cleanup of space-scoped data after deletion. Purges the
-   * member list, writer set, and credential recipients. Does NOT touch
-   * space_record / space_record_oplog — those belong to the writer's own repo.
+   * Cleanup after an authority deletes its own space: the authority-side state
+   * (member list, writer set, credential recipients) and its own repo in the space.
+   * The repo goes because the authority and the repo host are the same account here,
+   * so there is no other party whose data this is.
+   *
+   * The `space` row itself is kept as a tombstone — see markSpaceDeleted.
    */
-  async purgeOwnerSpaceData(uri: string): Promise<void> {
-    await this.db.db
-      .deleteFrom('space_member')
+  async purgeSpaceData(uri: string): Promise<void> {
+    const records = await this.db.db
+      .selectFrom('space_record')
+      .select(['collection', 'rkey'])
       .where('space', '=', uri)
       .execute()
-    await this.db.db
-      .deleteFrom('space_writer')
-      .where('space', '=', uri)
-      .execute()
-    await this.db.db
-      .deleteFrom('space_credential_recipient')
-      .where('space', '=', uri)
-      .execute()
+
+    for (const table of [
+      'space_member',
+      'space_writer',
+      'space_credential_recipient',
+      'space_record',
+      'space_record_oplog',
+      'space_repo',
+    ] as const) {
+      await this.db.db.deleteFrom(table).where('space', '=', uri).execute()
+    }
+
+    // Drops the space_record_blob rows and any blob left unreferenced by them.
+    await this.blob.deleteDereferencedSpaceBlobs(
+      records.map((record) => ({
+        space: uri,
+        collection: record.collection,
+        rkey: record.rkey,
+      })),
+      [],
+    )
   }
 
   // Record (or advance) a writer in the space's writer set. Called by the

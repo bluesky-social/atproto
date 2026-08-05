@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Tombstone a space. The authenticated user must be the space owner. After deletion, all reads and writes against the space will fail with SpaceNotFound. Requires auth, implemented by PDS.",
+      "description": "Delete a space. The authenticated user must be the space owner. The authority's own repo in the space is deleted along with it, since the space host and the repo host are the same service here; other members' repos are flagged as belonging to a deleted space rather than erased. After deletion, all reads and writes against the space fail with SpaceNotFound, and getSpaceCredential answers SpaceDeleted so a syncer that missed the notification still learns to drop its copy. Idempotent. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {

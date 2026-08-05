@@ -24,10 +24,10 @@ const TEST_COLLECTION_ALT = 'com.example.spaceNote' as NsidString
 // dedicated space per-test (distinct skey) so they don't order-depend on each
 // other.
 //
-// NOTE (proposal 0016): the member list is the authority's internal concern and
-// is NOT pushed to a member's PDS. A member's PDS materializes its local space
-// row lazily on first write. So `listSpaces` on a member PDS reflects "spaces
-// the user has written to", not "spaces the user was added to".
+// The member list is the authority's internal concern and is NOT pushed to a
+// member's PDS, which materializes its local space row lazily on first write. So
+// `listSpaces` on a member PDS reflects spaces the user has written to, not spaces
+// the user was added to.
 describe('spaces', () => {
   let network: TestNetworkNoAppView
   let pds1: TestPds
@@ -62,19 +62,11 @@ describe('spaces', () => {
     }
   }
 
-  // getSpace returns config as an open union; in simplespace it's always a
-  // spaceConfig. Narrow it for assertions.
-  const asSpaceConfig = (
-    config: Record<string, unknown>,
-  ): com.atproto.simplespace.defs.SpaceConfig => {
-    expect(config.$type).toBe('com.atproto.simplespace.defs#spaceConfig')
-    return config as unknown as com.atproto.simplespace.defs.SpaceConfig
-  }
+  const { defs } = com.atproto.simplespace
 
   type CreateSpaceConfig = {
-    policy?: 'public' | 'member-list' | 'managing-app'
-    managingApp?: string
-    appAccess?: com.atproto.simplespace.defs.SpaceConfig['appAccess']
+    policy?: com.atproto.simplespace.createSpace.$InputBody['policy']
+    appAccess?: com.atproto.simplespace.createSpace.$InputBody['appAccess']
   }
 
   const createSpace = async (
@@ -85,17 +77,10 @@ describe('spaces', () => {
     const res = await pds1Client.call(
       com.atproto.simplespace.createSpace,
       {
-        did: aliceDid,
         type: 'app.bsky.group' as NsidString,
         skey,
-        config: config
-          ? com.atproto.simplespace.defs.spaceConfig.build({
-              policy: config.policy ?? 'member-list',
-              appAccess:
-                config.appAccess ?? com.atproto.simplespace.defs.open.build({}),
-              managingApp: config.managingApp,
-            })
-          : undefined,
+        policy: config?.policy ?? defs.memberListPolicy.build({}),
+        appAccess: config?.appAccess ?? defs.open.build({}),
       },
       { headers: aliceHeaders },
     )
@@ -1299,25 +1284,23 @@ describe('spaces', () => {
 
   it('createSpace persists config (managing-app + allowList)', async () => {
     const spaceUri = await createSpace('config-create', [], {
-      policy: 'managing-app',
-      managingApp: 'did:web:example.com#forum',
-      appAccess: com.atproto.simplespace.defs.allowList.build({
-        allowed: ['app:one', 'app:two'],
+      policy: defs.managingAppPolicy.build({
+        managingApp: 'did:web:example.com#forum',
       }),
+      appAccess: defs.allowList.build({ allowed: ['app:one', 'app:two'] }),
     })
 
     const got = await pds1Client.call(
-      com.atproto.space.getSpace,
+      com.atproto.simplespace.getSpace,
       { space: spaceUri },
       { headers: aliceHeaders },
     )
     expect(got.uri).toBe(spaceUri)
-    const config = asSpaceConfig(got.config)
-    expect(config).toMatchObject({
-      policy: 'managing-app',
+    expect(got.policy).toEqual({
+      $type: 'com.atproto.simplespace.defs#managingAppPolicy',
       managingApp: 'did:web:example.com#forum',
     })
-    expect(config.appAccess).toMatchObject({
+    expect(got.appAccess).toMatchObject({
       $type: 'com.atproto.simplespace.defs#allowList',
       allowed: ['app:one', 'app:two'],
     })
@@ -1326,15 +1309,14 @@ describe('spaces', () => {
   it('createSpace defaults to a member-list + open space', async () => {
     const spaceUri = await createSpace('config-defaults')
     const got = await pds1Client.call(
-      com.atproto.space.getSpace,
+      com.atproto.simplespace.getSpace,
       { space: spaceUri },
       { headers: aliceHeaders },
     )
-    const config = asSpaceConfig(got.config)
-    expect(config).toMatchObject({
-      policy: 'member-list',
+    expect(got.policy).toEqual({
+      $type: 'com.atproto.simplespace.defs#memberListPolicy',
     })
-    expect(config.appAccess).toMatchObject({
+    expect(got.appAccess).toMatchObject({
       $type: 'com.atproto.simplespace.defs#open',
     })
   })
@@ -1344,12 +1326,14 @@ describe('spaces', () => {
     const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
 
     const got = await pds1Client.call(
-      com.atproto.space.getSpace,
+      com.atproto.simplespace.getSpace,
       { space: spaceUri },
       { headers: credHeaders },
     )
     expect(got.uri).toBe(spaceUri)
-    expect(asSpaceConfig(got.config).policy).toBe('member-list')
+    expect(got.policy.$type).toBe(
+      'com.atproto.simplespace.defs#memberListPolicy',
+    )
   })
 
   it('refuses the config to a credential for another space', async () => {
@@ -1359,7 +1343,7 @@ describe('spaces', () => {
 
     await expect(
       pds1Client.call(
-        com.atproto.space.getSpace,
+        com.atproto.simplespace.getSpace,
         { space: spaceUri },
         { headers: credHeaders },
       ),
@@ -1368,15 +1352,16 @@ describe('spaces', () => {
 
   it('getSpace refuses non-authority', async () => {
     const spaceUri = await createSpace('config-getspace-nonowner', [bobDid])
-    // Bob is a member but the space lives on alice's PDS — even calling on
-    // his own PDS, getSpace must refuse since he's not the authority.
+    // Bob is a member but the space lives on alice's PDS, which pds2 does not host,
+    // so asking his own PDS reports the space as not found rather than leaking a
+    // store-level error.
     await expect(
       pds2Client.call(
-        com.atproto.space.getSpace,
+        com.atproto.simplespace.getSpace,
         { space: spaceUri },
         { headers: bobHeaders },
       ),
-    ).rejects.toThrow()
+    ).rejects.toThrow(/Space not found/)
   })
 
   it('updateSpace patches policy and appAccess', async () => {
@@ -1384,57 +1369,57 @@ describe('spaces', () => {
 
     await pds1Client.call(
       com.atproto.simplespace.updateSpace,
-      { space: spaceUri, policy: 'public' },
+      { space: spaceUri, policy: defs.publicPolicy.build({}) },
       { headers: aliceHeaders },
     )
     let got = await pds1Client.call(
-      com.atproto.space.getSpace,
+      com.atproto.simplespace.getSpace,
       { space: spaceUri },
       { headers: aliceHeaders },
     )
-    expect(got.config).toMatchObject({ policy: 'public' })
+    expect(got.policy.$type).toBe('com.atproto.simplespace.defs#publicPolicy')
 
     await pds1Client.call(
       com.atproto.simplespace.updateSpace,
       {
         space: spaceUri,
-        appAccess: com.atproto.simplespace.defs.allowList.build({
-          allowed: ['app:x'],
-        }),
+        appAccess: defs.allowList.build({ allowed: ['app:x'] }),
       },
       { headers: aliceHeaders },
     )
     got = await pds1Client.call(
-      com.atproto.space.getSpace,
+      com.atproto.simplespace.getSpace,
       { space: spaceUri },
       { headers: aliceHeaders },
     )
     // policy untouched; appAccess replaced.
-    const config = asSpaceConfig(got.config)
-    expect(config).toMatchObject({ policy: 'public' })
-    expect(config.appAccess).toMatchObject({
+    expect(got.policy.$type).toBe('com.atproto.simplespace.defs#publicPolicy')
+    expect(got.appAccess).toMatchObject({
       $type: 'com.atproto.simplespace.defs#allowList',
       allowed: ['app:x'],
     })
   })
 
-  it('updateSpace clears managingApp on empty string', async () => {
-    const spaceUri = await createSpace('config-clear-managing', [], {
-      policy: 'member-list',
-      managingApp: 'did:web:example.com#forum',
+  it('updateSpace drops managingApp by switching policy', async () => {
+    const spaceUri = await createSpace('config-managing-app', [], {
+      policy: defs.managingAppPolicy.build({
+        managingApp: 'did:web:example.com#forum',
+      }),
     })
 
     await pds1Client.call(
       com.atproto.simplespace.updateSpace,
-      { space: spaceUri, managingApp: '' },
+      { space: spaceUri, policy: defs.memberListPolicy.build({}) },
       { headers: aliceHeaders },
     )
     const got = await pds1Client.call(
-      com.atproto.space.getSpace,
+      com.atproto.simplespace.getSpace,
       { space: spaceUri },
       { headers: aliceHeaders },
     )
-    expect(asSpaceConfig(got.config).managingApp).toBeUndefined()
+    expect(got.policy).toEqual({
+      $type: 'com.atproto.simplespace.defs#memberListPolicy',
+    })
   })
 
   it('updateSpace refuses non-owner', async () => {
@@ -1442,7 +1427,7 @@ describe('spaces', () => {
     await expect(
       pds2Client.call(
         com.atproto.simplespace.updateSpace,
-        { space: spaceUri, policy: 'public' },
+        { space: spaceUri, policy: defs.publicPolicy.build({}) },
         { headers: bobHeaders },
       ),
     ).rejects.toThrow()
@@ -1453,13 +1438,100 @@ describe('spaces', () => {
       pds1Client.call(
         com.atproto.simplespace.createSpace,
         {
-          did: aliceDid,
           type: 'app.bsky.group' as NsidString,
           skey: 'not a valid rkey',
+          policy: defs.memberListPolicy.build({}),
+          appAccess: defs.open.build({}),
         },
         { headers: aliceHeaders },
       ),
-    ).rejects.toThrow(/valid record key/)
+    ).rejects.toThrow(/record key/)
+  })
+
+  it('refuses an unrecognized appAccess variant rather than widening the space', async () => {
+    // appAccess is an open union, so an unknown variant is well-formed on the wire.
+    // Storing it would mean enforcing something weaker than the owner asked for.
+    const spaceUri = await createSpace('config-unknown-appaccess', [], {
+      appAccess: defs.allowList.build({ allowed: ['app:one'] }),
+    })
+
+    await expect(
+      pds1Client.call(
+        com.atproto.simplespace.updateSpace,
+        {
+          space: spaceUri,
+          appAccess: { $type: 'com.example.denyEverything' } as never,
+        },
+        { headers: aliceHeaders },
+      ),
+    ).rejects.toThrow(/Unsupported appAccess/)
+
+    const got = await pds1Client.call(
+      com.atproto.simplespace.getSpace,
+      { space: spaceUri },
+      { headers: aliceHeaders },
+    )
+    expect(got.appAccess).toMatchObject({
+      $type: 'com.atproto.simplespace.defs#allowList',
+      allowed: ['app:one'],
+    })
+  })
+
+  it('refuses an unrecognized policy variant', async () => {
+    const spaceUri = await createSpace('config-unknown-policy')
+    await expect(
+      pds1Client.call(
+        com.atproto.simplespace.updateSpace,
+        { space: spaceUri, policy: { $type: 'com.example.whatever' } as never },
+        { headers: aliceHeaders },
+      ),
+    ).rejects.toThrow(/Unsupported policy/)
+  })
+
+  it('refuses a managingApp that does not name a service', async () => {
+    const spaceUri = await createSpace('config-managing-app-garbage')
+    await expect(
+      pds1Client.call(
+        com.atproto.simplespace.updateSpace,
+        {
+          space: spaceUri,
+          policy: defs.managingAppPolicy.build({
+            managingApp: 'not-a-did-at-all',
+          }),
+        },
+        { headers: aliceHeaders },
+      ),
+    ).rejects.toThrow(/must be a DID/)
+  })
+
+  it('refuses a space under another account as authority', async () => {
+    // The `did` param is gone: a space is anchored on the caller's own DID, so
+    // there is no way to ask for one under bob's authority.
+    const spaceUri = await createSpace('config-own-authority')
+    expect(spaceUri.startsWith(`at://${aliceDid}/`)).toBe(true)
+  })
+
+  it('listMembers refuses a space credential and a non-owner member', async () => {
+    const spaceUri = await createSpace('members-auth', [carolDid, danDid])
+
+    // Carol is a member, but hosted elsewhere: her credential is not enough.
+    const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
+    await expect(
+      pds1Client.call(
+        com.atproto.simplespace.listMembers,
+        { space: spaceUri },
+        { headers: credHeaders },
+      ),
+    ).rejects.toThrow()
+
+    // Dan is co-located with the authority, but the space is not his.
+    await expect(
+      pds1Client.call(
+        com.atproto.simplespace.listMembers,
+        { space: spaceUri },
+        { headers: danHeaders },
+      ),
+    ).rejects.toThrow('Not the space owner')
   })
 
   // ---------------- Credential mint: config gates ----------------
@@ -1467,7 +1539,7 @@ describe('spaces', () => {
   it('mints a credential for a non-member when policy is public', async () => {
     // Carol is NOT a member, but policy=public bypasses the member check.
     const spaceUri = await createSpace('config-public-mint', [], {
-      policy: 'public',
+      policy: defs.publicPolicy.build({}),
     })
 
     const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
@@ -1496,8 +1568,8 @@ describe('spaces', () => {
     // policy public so the user passes; appAccess allowList requires an
     // attested client_id, which the test flow does not supply.
     const spaceUri = await createSpace('config-app-allowlist', [], {
-      policy: 'public',
-      appAccess: com.atproto.simplespace.defs.allowList.build({
+      policy: defs.publicPolicy.build({}),
+      appAccess: defs.allowList.build({
         allowed: ['https://app.example.com/client-metadata.json'],
       }),
     })
@@ -1525,10 +1597,8 @@ describe('spaces', () => {
     // is covered by tests/client-attestation.test.ts.
     const allowedClient = 'https://app.example.com/client-metadata.json'
     const spaceUri = await createSpace('config-app-forged-attestation', [], {
-      policy: 'public',
-      appAccess: com.atproto.simplespace.defs.allowList.build({
-        allowed: [allowedClient],
-      }),
+      policy: defs.publicPolicy.build({}),
+      appAccess: defs.allowList.build({ allowed: [allowedClient] }),
     })
 
     const tokenRes = await pds3Client.call(
@@ -1710,5 +1780,274 @@ describe('spaces', () => {
         },
       }),
     ).rejects.toThrow()
+  })
+
+  // ---------------- Writer set ----------------
+
+  // The writer set is what listRepos enumerates, so a repo missing from it is a
+  // repo no syncer can discover. It has to follow the same admission decision that
+  // mints credentials rather than the member list, which they diverge from under
+  // every policy but member-list.
+  const expectWriterSet = async (
+    spaceUri: SpaceRefString,
+    expected: DidString[],
+  ) => {
+    const writers = await pds1.ctx.actorStore.read(aliceDid, (store) =>
+      store.space.listWriters(spaceUri, { limit: 100 }),
+    )
+    expect(writers.map((w) => w.did).sort()).toEqual([...expected].sort())
+  }
+
+  it('records a writer admitted by policy public, who was never a member', async () => {
+    const spaceUri = await createSpace('writer-public', [], {
+      policy: defs.publicPolicy.build({}),
+    })
+
+    await pds2Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: bobDid,
+        collection: TEST_COLLECTION,
+        record: { $type: TEST_COLLECTION, text: 'from a non-member' },
+      },
+      { headers: bobHeaders },
+    )
+
+    await expectWriterSet(spaceUri, [bobDid])
+  })
+
+  it('records a writer into an allowList space, whose PDS presents no attestation', async () => {
+    // notifyWrite comes from the writer's PDS, not an app, so there is no client
+    // attestation. Applying the app perimeter here would reject every write.
+    const spaceUri = await createSpace('writer-allowlist', [bobDid], {
+      appAccess: defs.allowList.build({
+        allowed: ['https://app.example.com/client-metadata.json'],
+      }),
+    })
+
+    await pds2Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: bobDid,
+        collection: TEST_COLLECTION,
+        record: { $type: TEST_COLLECTION, text: 'app-gated space' },
+      },
+      { headers: bobHeaders },
+    )
+
+    await expectWriterSet(spaceUri, [bobDid])
+  })
+
+  // ---------------- Deletion ----------------
+
+  it('purges the authority own repo and keeps a tombstone', async () => {
+    const spaceUri = await createSpace('delete-purges', [bobDid])
+    const blobBytes = Buffer.from('space blob for deletion')
+    const uploaded = await pds1Client.call(
+      com.atproto.repo.uploadBlob,
+      blobBytes,
+      { headers: aliceHeaders, encoding: 'application/octet-stream' },
+    )
+    await pds1Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: aliceDid,
+        collection: TEST_COLLECTION,
+        rkey: 'doomed',
+        record: {
+          $type: TEST_COLLECTION,
+          text: 'owner record',
+          image: uploaded.blob,
+        },
+      },
+      { headers: aliceHeaders },
+    )
+    expect(await blobExists(getBlobCidString(uploaded.blob))).toBe(true)
+
+    await pds1Client.call(
+      com.atproto.simplespace.deleteSpace,
+      { space: spaceUri },
+      { headers: aliceHeaders },
+    )
+
+    const [spaceRow, records, members] = await pds1.ctx.actorStore.read(
+      aliceDid,
+      async (store) => [
+        await store.space.getSpace(spaceUri),
+        await store.space.listRecords(spaceUri, { limit: 10 }),
+        await store.space.listMembers(spaceUri, { limit: 10 }),
+      ],
+    )
+    expect(spaceRow?.deletedAt).toBeDefined()
+    expect(records).toEqual([])
+    expect(members).toEqual([])
+    expect(await blobExists(getBlobCidString(uploaded.blob))).toBe(false)
+
+    // Reads and writes both fail, as the lexicon says.
+    await expect(
+      pds1Client.call(
+        com.atproto.simplespace.getSpace,
+        { space: spaceUri },
+        { headers: aliceHeaders },
+      ),
+    ).rejects.toThrow(/Space not found/)
+    await expect(
+      pds1Client.call(
+        com.atproto.space.createRecord,
+        {
+          space: spaceUri,
+          repo: aliceDid,
+          collection: TEST_COLLECTION,
+          record: { $type: TEST_COLLECTION, text: 'after deletion' },
+        },
+        { headers: aliceHeaders },
+      ),
+    ).rejects.toThrow(/Space not found/)
+
+    // Idempotent.
+    await pds1Client.call(
+      com.atproto.simplespace.deleteSpace,
+      { space: spaceUri },
+      { headers: aliceHeaders },
+    )
+  })
+
+  it('answers SpaceDeleted on credential renewal after deletion', async () => {
+    // The durable drop signal: a syncer that missed notifySpaceDeleted learns the
+    // space is gone here, and can distinguish it from an authority being down.
+    const spaceUri = await createSpace('delete-signal', [carolDid])
+    const tokenRes = await pds3Client.call(
+      com.atproto.space.getDelegationToken,
+      { space: spaceUri },
+      { headers: carolHeaders },
+    )
+
+    await pds1Client.call(
+      com.atproto.simplespace.deleteSpace,
+      { space: spaceUri },
+      { headers: aliceHeaders },
+    )
+
+    await expect(
+      pds1Client.call(
+        com.atproto.space.getSpaceCredential,
+        { space: spaceUri },
+        { headers: { authorization: `Bearer ${tokenRes.token}` } },
+      ),
+    ).rejects.toThrow(/deleted/)
+  })
+
+  it('notifies a writer who is not on the member list', async () => {
+    // Bob writes under policy=public without ever being a member, so only the
+    // writer set knows his repo needs flagging.
+    const spaceUri = await createSpace('delete-notifies-writer', [], {
+      policy: defs.publicPolicy.build({}),
+    })
+    await pds2Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: bobDid,
+        collection: TEST_COLLECTION,
+        record: { $type: TEST_COLLECTION, text: 'non-member write' },
+      },
+      { headers: bobHeaders },
+    )
+    await expectWriterSet(spaceUri, [bobDid])
+
+    await pds1Client.call(
+      com.atproto.simplespace.deleteSpace,
+      { space: spaceUri },
+      { headers: aliceHeaders },
+    )
+    await pds1.ctx.backgroundQueue.processAll()
+
+    // Bob's own repo is flagged rather than erased: the data is his.
+    const [spaceRow, records] = await pds2.ctx.actorStore.read(
+      bobDid,
+      async (store) => [
+        await store.space.getSpace(spaceUri),
+        await store.space.listRecords(spaceUri, { limit: 10 }),
+      ],
+    )
+    expect(spaceRow?.deletedAt).toBeDefined()
+    expect(records).toHaveLength(1)
+  })
+
+  it('allows re-creating a deleted space, with fresh config', async () => {
+    const spaceUri = await createSpace('delete-recreate', [], {
+      policy: defs.publicPolicy.build({}),
+    })
+    await pds1Client.call(
+      com.atproto.simplespace.deleteSpace,
+      { space: spaceUri },
+      { headers: aliceHeaders },
+    )
+
+    const recreated = await createSpace('delete-recreate')
+    expect(recreated).toBe(spaceUri)
+
+    // Reset, not revived: the deleted space's `public` policy must not carry over.
+    const got = await pds1Client.call(
+      com.atproto.simplespace.getSpace,
+      { space: spaceUri },
+      { headers: aliceHeaders },
+    )
+    expect(got.policy.$type).toBe(
+      'com.atproto.simplespace.defs#memberListPolicy',
+    )
+
+    await pds1Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: aliceDid,
+        collection: TEST_COLLECTION,
+        record: { $type: TEST_COLLECTION, text: 'after recreation' },
+      },
+      { headers: aliceHeaders },
+    )
+  })
+
+  it('materializes a self-authority space written to before createSpace', async () => {
+    // A personal-data client may write to at://me/space/<type>/<skey> without ever
+    // calling createSpace. The lazily created row must still be manageable.
+    const spaceUri =
+      `at://${aliceDid}/space/app.bsky.group/lazy` as SpaceRefString
+    await pds1Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: aliceDid,
+        collection: TEST_COLLECTION,
+        record: { $type: TEST_COLLECTION, text: 'lazy space' },
+      },
+      { headers: aliceHeaders },
+    )
+
+    await pds1Client.call(
+      com.atproto.simplespace.addMember,
+      { space: spaceUri, did: bobDid },
+      { headers: aliceHeaders },
+    )
+    await pds1Client.call(
+      com.atproto.simplespace.updateSpace,
+      { space: spaceUri, policy: defs.publicPolicy.build({}) },
+      { headers: aliceHeaders },
+    )
+    const got = await pds1Client.call(
+      com.atproto.simplespace.getSpace,
+      { space: spaceUri },
+      { headers: aliceHeaders },
+    )
+    expect(got.policy.$type).toBe('com.atproto.simplespace.defs#publicPolicy')
+    await pds1Client.call(
+      com.atproto.simplespace.deleteSpace,
+      { space: spaceUri },
+      { headers: aliceHeaders },
+    )
   })
 })

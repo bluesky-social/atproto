@@ -4,8 +4,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('space')
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
-    .addColumn('isOwner', 'integer', (col) => col.notNull())
-    // simplespace config (only meaningful when isOwner)
     .addColumn('policy', 'varchar', (col) =>
       col.notNull().defaultTo('member-list'),
     )

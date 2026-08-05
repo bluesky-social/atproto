@@ -1,6 +1,6 @@
 // Plain host-internal member list, consulted at credential-mint time when a
 // space's policy is 'member-list'. Not a synced protocol structure and not
-// enumerated to the network (proposal 0016).
+// enumerated to the network.
 export interface SpaceMember {
   space: string
   did: string

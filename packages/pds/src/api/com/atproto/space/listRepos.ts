@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
           }),
         }),
       )
-      if (!spaceRow || spaceRow.deletedAt || !spaceRow.isOwner) {
+      if (!spaceRow || spaceRow.deletedAt) {
         throw new InvalidRequestError('Space not found', 'SpaceNotFound')
       }
 

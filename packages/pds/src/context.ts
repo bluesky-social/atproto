@@ -34,6 +34,7 @@ import {
 } from './auth-verifier.js'
 import { BackgroundQueue } from './background.js'
 import { BskyAppView } from './bsky-app-view.js'
+import { ClientAttestationVerifier } from './client-attestation-verifier.js'
 import { ServerConfig, ServerSecrets } from './config/index.js'
 import { Crawlers } from './crawlers.js'
 import { DidSqliteCache } from './did-cache/index.js'
@@ -46,7 +47,7 @@ import { buildProxyAgent } from './pipethrough.js'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer.js'
 import { getRedisClient } from './redis.js'
 import { Sequencer } from './sequencer/index.js'
-import { ClientAttestationVerifier } from './client-attestation-verifier.js'
+import { SimpleSpaceManager } from './simplespace/manager.js'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -70,6 +71,7 @@ export type AppContextOptions = {
   proxyAgent: undici.Dispatcher
   safeFetch: Fetch
   clientAttestationVerifier: ClientAttestationVerifier
+  simpleSpaceManager: SimpleSpaceManager
   oauthProvider?: OAuthProvider
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
@@ -98,6 +100,7 @@ export class AppContext {
   public proxyAgent: undici.Dispatcher
   public safeFetch: Fetch
   public clientAttestationVerifier: ClientAttestationVerifier
+  public simpleSpaceManager: SimpleSpaceManager
   public authVerifier: AuthVerifier
   public oauthProvider?: OAuthProvider
   public plcRotationKey: crypto.Keypair
@@ -125,6 +128,7 @@ export class AppContext {
     this.proxyAgent = opts.proxyAgent
     this.safeFetch = opts.safeFetch
     this.clientAttestationVerifier = opts.clientAttestationVerifier
+    this.simpleSpaceManager = opts.simpleSpaceManager
     this.authVerifier = opts.authVerifier
     this.oauthProvider = opts.oauthProvider
     this.plcRotationKey = opts.plcRotationKey
@@ -408,6 +412,12 @@ export class AppContext {
       redisScratch,
     )
 
+    const simpleSpaceManager = new SimpleSpaceManager(
+      actorStore,
+      idResolver,
+      backgroundQueue,
+    )
+
     const scopeRefGetter = entrywayClient
       ? new ScopeReferenceGetter(entrywayClient, redisScratch)
       : undefined
@@ -475,6 +485,7 @@ export class AppContext {
       proxyAgent,
       safeFetch,
       clientAttestationVerifier,
+      simpleSpaceManager,
       authVerifier,
       oauthProvider,
       plcRotationKey,

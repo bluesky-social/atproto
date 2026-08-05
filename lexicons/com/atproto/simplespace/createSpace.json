@@ -4,18 +4,13 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Create a new space managed by the simplespace implementation. The authenticated user becomes the space owner. Requires auth, implemented by PDS.",
+      "description": "Create a new space managed by the simplespace implementation. The space is anchored on the authenticated user's DID, who becomes the space owner. Requires auth, implemented by PDS.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["did", "type"],
+          "required": ["type", "policy", "appAccess"],
           "properties": {
-            "did": {
-              "type": "string",
-              "format": "did",
-              "description": "The DID of the space."
-            },
             "type": {
               "type": "string",
               "format": "nsid",
@@ -26,10 +21,22 @@
               "format": "record-key",
               "description": "The space key. Used to differentiate multiple spaces of the same type under the same owner. Same syntax requirements as a record key. If not provided, one will be auto-generated (TID)."
             },
-            "config": {
-              "type": "ref",
-              "ref": "com.atproto.simplespace.defs#spaceConfig",
-              "description": "Initial configuration for the space. If omitted, the host applies its defaults (policy 'member-list', appAccess '#open')."
+            "policy": {
+              "type": "union",
+              "description": "How the authority decides whether to authorize a requesting user.",
+              "refs": [
+                "com.atproto.simplespace.defs#publicPolicy",
+                "com.atproto.simplespace.defs#memberListPolicy",
+                "com.atproto.simplespace.defs#managingAppPolicy"
+              ]
+            },
+            "appAccess": {
+              "type": "union",
+              "description": "How the authority decides whether to authorize a requesting app.",
+              "refs": [
+                "com.atproto.simplespace.defs#open",
+                "com.atproto.simplespace.defs#allowList"
+              ]
             }
           }
         }
@@ -51,11 +58,15 @@
       "errors": [
         {
           "name": "SpaceAlreadyExists",
-          "description": "A space with this owner, type, and skey already exists."
+          "description": "A space with this owner, type, and skey already exists. A space that was previously deleted may be created again."
         },
         {
-          "name": "InvalidType",
-          "description": "The provided space type NSID is not a recognized or valid space type."
+          "name": "UnsupportedPolicy",
+          "description": "The requested policy is not one the host implements."
+        },
+        {
+          "name": "UnsupportedAppAccess",
+          "description": "The requested appAccess variant is not one the host implements. A host will not store an app access policy it cannot enforce."
         }
       ]
     }

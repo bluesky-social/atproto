@@ -1,8 +1,7 @@
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope, toSpaceRef } from '../space/util.js'
-import { fromLexAppAccess } from './config.js'
+import { assertSpaceOwner, assertSpaceScope } from '../space/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.simplespace.updateSpace, {
@@ -12,39 +11,12 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ input, auth }) => {
-      const ownerDid = auth.credentials.did
-      const { space, policy, managingApp, appAccess } = input.body
+      const { space, policy, appAccess } = input.body
 
       assertSpaceScope(auth, space, { manage: 'update' })
+      assertSpaceOwner(auth.credentials.did, space)
 
-      const { spaceDid } = toSpaceRef(space)
-      if (spaceDid !== ownerDid) {
-        throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
-      }
-
-      const appAccessPatch = appAccess ? fromLexAppAccess(appAccess) : {}
-
-      await ctx.actorStore.transact(ownerDid, async (actorTxn) => {
-        const spaceRow = await actorTxn.space.getSpace(space)
-        if (!spaceRow || spaceRow.deletedAt) {
-          throw new InvalidRequestError('Space not found', 'SpaceNotFound')
-        }
-        if (!spaceRow.isOwner) {
-          throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
-        }
-
-        await actorTxn.space.updateSpaceConfig(space, {
-          policy,
-          // Empty string clears managingApp; any other string sets it.
-          managingApp:
-            managingApp === undefined
-              ? undefined
-              : managingApp === ''
-                ? null
-                : managingApp,
-          ...appAccessPatch,
-        })
-      })
+      await ctx.simpleSpaceManager.updateSpace(space, { policy, appAccess })
     },
   })
 }

@@ -1,11 +1,13 @@
 import { l } from '@atproto/lex'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope, toSpaceRef } from '../space/util.js'
+import { assertSpaceOwner, assertSpaceScope } from '../space/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.simplespace.listMembers, {
+    // OAuth only: the member list is the authority's own state, so a space
+    // credential does not reach it.
     auth: ctx.authVerifier.authorization({
       authorize: () => {
         // Performed in the handler as it requires the `space` param
@@ -15,29 +17,13 @@ export default function (server: Server, ctx: AppContext) {
       const ownerDid = auth.credentials.did
       const { space, limit, cursor } = params
 
-      assertSpaceScope(auth, space, { manage: 'update' })
+      assertSpaceScope(auth, space, { action: 'read_self' })
+      assertSpaceOwner(ownerDid, space)
 
-      const { spaceDid } = toSpaceRef(space)
-      if (spaceDid !== ownerDid) {
-        throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
-      }
-
-      const { spaceRow, members } = await ctx.actorStore.read(
-        ownerDid,
-        async (store) => ({
-          spaceRow: await store.space.getSpace(space),
-          members: await store.space.listMembers(space, {
-            limit: limit ?? 100,
-            cursor,
-          }),
-        }),
-      )
-      if (!spaceRow || spaceRow.deletedAt) {
-        throw new InvalidRequestError('Space not found', 'SpaceNotFound')
-      }
-      if (!spaceRow.isOwner) {
-        throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
-      }
+      const members = await ctx.actorStore.read(ownerDid, async (store) => {
+        await store.space.getActiveSpace(space)
+        return store.space.listMembers(space, { limit: limit ?? 100, cursor })
+      })
 
       return {
         encoding: 'application/json' as const,

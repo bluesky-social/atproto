@@ -1,12 +1,9 @@
 import { xrpc } from '@atproto/lex'
-import {
-  ForbiddenError,
-  Server,
-  createServiceAuthHeaders,
-} from '@atproto/xrpc-server'
+import { ForbiddenError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { toSpaceRef } from './util.js'
+import { spaceLogger } from '../../../../logger.js'
+import { resolveNotifyTarget, toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.notifyWrite, {
@@ -16,9 +13,8 @@ export default function (server: Server, ctx: AppContext) {
 
       const { spaceDid: ownerDid } = toSpaceRef(space)
 
-      // The JWT is signed by the writer's keypair, so iss is the authoritative
-      // identity of the caller. Require it to match the claimed writer so a
-      // PDS can't deliver a notification on someone else's behalf.
+      // iss is the signer, so requiring it to match keeps a PDS from notifying on
+      // another account's behalf.
       if (auth.credentials.iss !== repo) {
         throw new ForbiddenError(
           'notifyWrite iss does not match claimed writer',
@@ -31,19 +27,31 @@ export default function (server: Server, ctx: AppContext) {
       const account = await ctx.accountManager.getAccount(ownerDid)
       if (!account) return
 
-      const [isMember, recipients] = await ctx.actorStore.read(
+      const { spaceRow, checked, recipients } = await ctx.actorStore.read(
         ownerDid,
         async (store) => {
-          return [
-            await store.space.isMember(space, repo),
-            await store.space.getCredentialRecipients(space),
-          ] as const
+          const spaceRow = await store.space.getSpace(space)
+          return {
+            spaceRow,
+            checked:
+              spaceRow &&
+              (await store.space.checkUserAuthorized(spaceRow, repo)),
+            recipients: await store.space.getCredentialRecipients(space),
+          }
         },
       )
-      if (!isMember) {
-        throw new ForbiddenError(
-          'notifyWrite writer is not a member of the space',
-        )
+      if (!spaceRow || spaceRow.deletedAt) return
+
+      // The same check that mints credentials, so the writer set can't diverge from
+      // who may read the space. User perimeter only: this comes from the writer's PDS,
+      // not an app, so there is no attestation to evaluate.
+      const authorized = await ctx.simpleSpaceManager.authorizeUser({
+        space: spaceRow,
+        checked: checked ?? false,
+        userDid: repo,
+      })
+      if (!authorized) {
+        throw new ForbiddenError('notifyWrite writer is not authorized')
       }
 
       // Record the writer in the space's writer set (the sync boundary that
@@ -52,21 +60,36 @@ export default function (server: Server, ctx: AppContext) {
         txn.space.recordWriter(space, repo, rev, hash),
       )
 
-      const keypair = await ctx.actorStore.keypair(ownerDid)
-      for (const recipient of recipients) {
-        const { headers } = await createServiceAuthHeaders({
-          iss: ownerDid,
-          aud: recipient.serviceDid,
-          lxm: com.atproto.space.notifyWrite.$lxm,
-          keypair,
-        })
-        xrpc(recipient.serviceEndpoint, com.atproto.space.notifyWrite, {
-          headers,
-          body: { space, repo, rev, hash },
-        }).catch(() => {
-          // Best effort — notification delivery is not guaranteed
-        })
-      }
+      // Forward to the syncers registered for this space, on the background queue so
+      // the writer's PDS isn't kept waiting on the fan-out.
+      const lxm = com.atproto.space.notifyWrite.$lxm
+      ctx.backgroundQueue.add(async () => {
+        for (const recipient of recipients) {
+          try {
+            const target = await resolveNotifyTarget(ctx, {
+              iss: ownerDid,
+              service: recipient.serviceDid,
+              lxm,
+            })
+            if (!target) {
+              spaceLogger.warn(
+                { space, service: recipient.serviceDid, lxm },
+                'could not resolve notify recipient',
+              )
+              continue
+            }
+            await xrpc(target.endpoint, com.atproto.space.notifyWrite, {
+              headers: target.headers,
+              body: { space, repo, rev, hash },
+            })
+          } catch (err) {
+            spaceLogger.warn(
+              { err, space, service: recipient.serviceDid, lxm },
+              'notify failed',
+            )
+          }
+        }
+      })
     },
   })
 }

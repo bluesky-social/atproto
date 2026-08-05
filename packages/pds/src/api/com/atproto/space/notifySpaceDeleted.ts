@@ -1,4 +1,3 @@
-import { isAtIdentifierString } from '@atproto/lex'
 import { AuthRequiredError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -8,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.notifySpaceDeleted, {
     auth: ctx.authVerifier.serviceAuth,
     handler: async ({ input, auth }) => {
-      const { space } = input.body
+      const { space, repo } = input.body
 
       const { spaceDid } = toSpaceRef(space)
       if (auth.credentials.iss !== spaceDid) {
@@ -18,18 +17,13 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const recipientDid = auth.credentials.aud
-      if (!isAtIdentifierString(recipientDid)) {
-        // aud isn't a recognizable DID/handle — best-effort no-op.
-        return
-      }
-      const account = await ctx.accountManager.getAccount(recipientDid)
-      if (!account) {
-        // Recipient is not hosted here — best-effort no-op.
-        return
-      }
+      // No repo named, or an account this host doesn't hold: nothing to flag. A
+      // syncer implementation drops its copy of the space here instead.
+      if (!repo) return
+      const account = await ctx.accountManager.getAccount(repo)
+      if (!account) return
 
-      await ctx.actorStore.transact(recipientDid, async (actorTxn) => {
+      await ctx.actorStore.transact(repo, async (actorTxn) => {
         const existing = await actorTxn.space.getSpace(space)
         if (!existing) return
         await actorTxn.space.markSpaceDeleted(space)

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Notify a repo host or syncing service that a space has been deleted. Sent by the space authority, best-effort. Authenticated with service auth.",
+      "description": "Notify a repo host or syncing service that a space has been deleted. Sent by the space authority, best-effort. Authenticated with service auth addressed to the receiving service.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -15,6 +15,11 @@
               "type": "string",
               "format": "space-ref",
               "description": "Reference to the deleted space."
+            },
+            "repo": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the account whose repo in the space should be flagged as deleted. Sent to a repo host; omitted when notifying a syncer, which drops its whole copy of the space."
             }
           }
         }

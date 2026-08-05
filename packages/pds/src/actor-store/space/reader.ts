@@ -1,6 +1,8 @@
 import { SqlBool, sql } from 'kysely'
 import { LexMap } from '@atproto/lex-data'
 import { cborToLexRecord } from '@atproto/repo'
+import { DidString, SpaceRef, SpaceRefString } from '@atproto/syntax'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorDb } from '../db/index.js'
 
 // Cursor is `${collection}/${rkey}`. Parser is lenient — returns null for a
@@ -26,13 +28,19 @@ const parseStringArray = (raw: string): string[] => {
 }
 
 export type SpaceRow = {
-  uri: string
-  isOwner: boolean
+  uri: SpaceRefString
   policy: string
   managingApp: string | null
   appAccessType: string
   appAllowed: string[]
   deletedAt: string | null
+}
+
+// The app perimeter, evaluated against the attested client_id. Local to the space row,
+// so it needs no store access.
+export function isAppAuthorized(space: SpaceRow, clientId?: string): boolean {
+  if (space.appAccessType !== 'allowList') return true
+  return !!clientId && space.appAllowed.includes(clientId)
 }
 
 export class SpaceReader {
@@ -46,8 +54,7 @@ export class SpaceReader {
       .executeTakeFirst()
     if (!row) return null
     return {
-      uri: row.uri,
-      isOwner: row.isOwner === 1,
+      uri: row.uri as SpaceRefString,
       policy: row.policy,
       managingApp: row.managingApp,
       appAccessType: row.appAccessType,
@@ -56,17 +63,27 @@ export class SpaceReader {
     }
   }
 
+  // Throws rather than returning null: a deleted space is indistinguishable from one
+  // that never existed to everything but deleteSpace.
+  async getActiveSpace(uri: string): Promise<SpaceRow> {
+    const space = await this.getSpace(uri)
+    if (!space || space.deletedAt) {
+      throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+    }
+    return space
+  }
+
   async listSpaces(opts: {
     limit: number
     cursor?: string
     type?: string
     did?: string
-  }): Promise<{ uri: string; isOwner: boolean }[]> {
+  }): Promise<{ uri: string }[]> {
     const { limit, cursor, type, did } = opts
     // "Spaces the caller holds a repo in" — every local, non-deleted space row.
     let builder = this.db.db
       .selectFrom('space')
-      .select(['uri', 'isOwner'])
+      .select(['uri'])
       .where('deletedAt', 'is', null)
       .orderBy('uri', 'asc')
       .limit(limit)
@@ -82,8 +99,7 @@ export class SpaceReader {
     if (cursor !== undefined) {
       builder = builder.where('uri', '>', cursor)
     }
-    const rows = await builder.execute()
-    return rows.map((r) => ({ uri: r.uri, isOwner: r.isOwner === 1 }))
+    return builder.execute()
   }
 
   async getRecord(
@@ -228,6 +244,31 @@ export class SpaceReader {
       .where('did', '=', did)
       .executeTakeFirst()
     return !!row
+  }
+
+  /**
+   * Whether this space's policy authorizes the user, for the policies answerable from
+   * local state. A `managing-app` policy needs a call out to that app, so it returns
+   * 'ask-managing-app' for the caller to resolve — see SimpleSpaceManager.authorizeUser.
+   */
+  async checkUserAuthorized(
+    space: SpaceRow,
+    userDid: string,
+  ): Promise<boolean | 'ask-managing-app'> {
+    // The authority is the only party who can reconfigure the space, so it must not be
+    // able to lock itself out.
+    if (userDid === SpaceRef.parse(space.uri).spaceDid) return true
+
+    switch (space.policy) {
+      case 'public':
+        return true
+      case 'member-list':
+        return this.isMember(space.uri, userDid)
+      case 'managing-app':
+        return 'ask-managing-app'
+      default:
+        return false
+    }
   }
 
   async getSetHash(space: string): Promise<Buffer | null> {
@@ -435,6 +476,30 @@ export class SpaceReader {
     }
     const rows = await builder.execute()
     return rows.map((row) => row.blobCid)
+  }
+
+  /**
+   * Who to notify that a space was deleted: the accounts holding a repo in it, and the
+   * services registered for its notifications. Not the member list — membership
+   * doesn't imply a repo, and under a `public` or `managing-app` policy a writer need
+   * never have been a member.
+   */
+  async listDeletionRecipients(space: string): Promise<{
+    writers: DidString[]
+    services: string[]
+  }> {
+    const [writers, recipients] = await Promise.all([
+      this.db.db
+        .selectFrom('space_writer')
+        .select('did')
+        .where('space', '=', space)
+        .execute(),
+      this.getCredentialRecipients(space),
+    ])
+    return {
+      writers: writers.map((writer) => writer.did as DidString),
+      services: recipients.map((recipient) => recipient.serviceDid),
+    }
   }
 
   async getCredentialRecipients(space: string): Promise<

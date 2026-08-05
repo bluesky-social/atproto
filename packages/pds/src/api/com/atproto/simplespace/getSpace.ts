@@ -1,11 +1,10 @@
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { toLexSpaceConfig } from '../simplespace/config.js'
-import { assertCredentialSpace, assertSpaceScope, toSpaceRef } from './util.js'
+import { assertCredentialSpace, assertSpaceScope } from '../space/util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.add(com.atproto.space.getSpace, {
+  server.add(com.atproto.simplespace.getSpace, {
     // An OAuth token is audience-bound to its own PDS, so a member hosted
     // elsewhere presents a space credential instead.
     auth: ctx.authVerifier.authorizationOrSpaceCredential({
@@ -23,20 +22,9 @@ export default function (server: Server, ctx: AppContext) {
         assertSpaceScope(auth, space, { action: 'read' })
       }
 
-      const { spaceDid } = toSpaceRef(space)
-      const spaceRow = await ctx.actorStore.read(spaceDid, (store) =>
-        store.space.getSpace(space),
-      )
-      if (!spaceRow || spaceRow.deletedAt || !spaceRow.isOwner) {
-        throw new InvalidRequestError('Space not found', 'SpaceNotFound')
-      }
-
       return {
         encoding: 'application/json' as const,
-        body: {
-          uri: space,
-          config: toLexSpaceConfig(spaceRow),
-        },
+        body: await ctx.simpleSpaceManager.getSpace(space),
       }
     },
   })
