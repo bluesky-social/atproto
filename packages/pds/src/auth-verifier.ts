@@ -134,7 +134,7 @@ export class AuthVerifier {
     }
   }
 
-  /** @deprecated We are steering await from this auth method */
+  /** @deprecated We are steering away from this auth method */
   public adminToken: MethodAuthVerifier<AdminTokenOutput> = async (ctx) => {
     setAuthHeaders(ctx.res)
     const parsed = parseBasicAuth(ctx.req)
@@ -165,7 +165,7 @@ export class AuthVerifier {
     }
   }
 
-  /** @deprecated We are steering await from {@link adminToken} auth. Use {@link modService} instead. */
+  /** @deprecated We are steering away from {@link adminToken} auth. Use {@link modService} instead. */
   public moderator: MethodAuthVerifier<AdminTokenOutput | ModServiceOutput> =
     async (ctx) => {
       const type = extractAuthType(ctx.req)
@@ -290,8 +290,11 @@ export class AuthVerifier {
     return async (ctx) => {
       try {
         return await this.modService(ctx)
-      } catch {
-        return authorization(ctx)
+      } catch (err) {
+        if (err instanceof AuthRequiredError) {
+          return authorization(ctx)
+        }
+        throw err
       }
     }
   }
