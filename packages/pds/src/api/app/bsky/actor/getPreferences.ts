@@ -1,6 +1,5 @@
-import type { DidString } from '@atproto/lex'
 import { asDidString } from '@atproto/lex'
-import type { Server } from '@atproto/xrpc-server'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { AuthScope, isAccessFull } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
@@ -24,15 +23,18 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ auth, req, params }) => {
-      const did: DidString =
+      const { did, isModerator } =
         auth.credentials.type === 'mod_service' ||
         auth.credentials.type === 'admin_token'
-          ? asDidString((params as Record<string, unknown>).did)
-          : auth.credentials.did
-
-      const isModerator =
-        auth.credentials.type === 'mod_service' ||
-        auth.credentials.type === 'admin_token'
+          ? {
+              // @NOTE undocumented parameter
+              did: asDidString((params as Record<string, unknown>).did),
+              isModerator: true,
+            }
+          : {
+              did: auth.credentials.did,
+              isModerator: false,
+            }
 
       // If the request has a proxy header different from the bsky app view,
       // we need to proxy the request to the requested app view.
@@ -40,6 +42,12 @@ export default function (server: Server, ctx: AppContext) {
       const lxm = app.bsky.actor.getPreferences.$lxm
       const aud = computeProxyTo(ctx, req, lxm)
       if (aud !== `${bskyAppView.did}#bsky_appview`) {
+        if (isModerator) {
+          throw new InvalidRequestError(
+            'Moderator requests cannot be proxied to other app views',
+          )
+        }
+
         // Phase 1 of service auth updates: outbound JWT keeps bare-DID aud.
         return pipethrough(ctx, req, {
           iss: did,
