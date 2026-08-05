@@ -77,7 +77,7 @@ The lexicon JSON schemas are derived into TypeScript runtime schemas by `@atprot
 **Code style rules live in [STYLE_GUIDE.md](./STYLE_GUIDE.md)** — imports, typing, dependencies, change scope, and formatting. Read it before writing code. The rest of this section covers repository mechanics only.
 
 - Node ≥22 runtime floor; build/dev default to Node 24 (`.nvmrc`). Use `node --enable-source-maps` for production-style runs.
-- TypeScript compilation uses `tsgo` (TS7, `@typescript/native-preview`), not `tsc`. There is no per-package `typescript` devDependency — `tsgo` is hoisted at the root.
+- TypeScript compilation uses the native TS7 `tsc` (the standard `typescript` package). There is no per-package `typescript` devDependency — it is hoisted at the root. Note TS7 has no stable programmatic API yet; tools needing one must pin TS6.
 - **Every package touched by a change needs a changeset entry.** Add a file under [.changeset/](.changeset/) listing each modified package with an appropriate bump level (`minor` for breaking or new public API, `patch` otherwise). Dependency-only bumps are generated automatically — don't list them by hand.
 
 ## Agent files

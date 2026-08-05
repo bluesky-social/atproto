@@ -6,6 +6,8 @@
     "vitest.explorer",
     "wengerk.highlight-bad-chars",
     "yzhang.markdown-all-in-one",
+    // The "TypeScript 7" language server extension — renamed in place on the
+    // marketplace, so the id still says native-preview.
     "typescriptteam.native-preview",
   ],
 }

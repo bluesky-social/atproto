@@ -31,6 +31,6 @@
     "@atproto-labs/pipe": "workspace:^"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.json"
+    "build": "tsc --build tsconfig.json"
   }
 }
