@@ -1,6 +1,5 @@
 import { type KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { deprecate } from 'node:util'
 import * as jose from 'jose'
 import KeyEncoderModule from 'key-encoder'
 import { getVerificationMaterial } from '@atproto/common'
