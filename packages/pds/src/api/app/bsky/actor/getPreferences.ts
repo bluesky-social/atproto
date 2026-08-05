@@ -1,4 +1,4 @@
-import { asDidString } from '@atproto/lex'
+import { type DidString, isDidString } from '@atproto/lex'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { AuthScope, isAccessFull } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
 
   server.add(app.bsky.actor.getPreferences, {
-    auth: ctx.authVerifier.authorizationOrModerator({
+    auth: ctx.authVerifier.authorizationOrModService({
       additional: [AuthScope.Takendown],
       authorize: (permissions, { req }) => {
         const lxm = app.bsky.actor.getPreferences.$lxm
@@ -23,18 +23,10 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ auth, req, params }) => {
-      const { did, isModerator } =
-        auth.credentials.type === 'mod_service' ||
-        auth.credentials.type === 'admin_token'
-          ? {
-              // @NOTE undocumented parameter
-              did: asDidString((params as Record<string, unknown>).did),
-              isModerator: true,
-            }
-          : {
-              did: auth.credentials.did,
-              isModerator: false,
-            }
+      const isModerator = auth.credentials.type === 'mod_service'
+      const did: DidString = isModerator
+        ? getAccountDidFromParams(params)
+        : auth.credentials.did
 
       // If the request has a proxy header different from the bsky app view,
       // we need to proxy the request to the requested app view.
@@ -71,4 +63,10 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+function getAccountDidFromParams(params: Record<string, unknown>): DidString {
+  // @NOTE undocumented parameters used only internally by mod service
+  if (isDidString(params.did)) return params.did
+  throw new InvalidRequestError('Invalid or missing did parameter')
 }

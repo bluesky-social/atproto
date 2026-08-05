@@ -22,7 +22,7 @@ import {
   isValidUri,
   parseLanguageString,
 } from '@atproto/syntax'
-import { type CheckFn, buildCaster } from '../util/assertion-util.js'
+import type { CheckFn } from '../util/assertion-util.js'
 
 // -----------------------------------------------------------------------------
 // Individual string format types and type guards
@@ -98,7 +98,6 @@ export type CidString = string
  * @returns `true` if the value is a valid DID string
  */
 export const isDidString: CheckFn<DidString> = isValidDid
-export const asDidString = buildCaster(isDidString, 'Invalid DID string')
 export type {
   /**
    * A Decentralized Identifier (DID) string.
