@@ -239,11 +239,11 @@ if (result.success) {
 All failures extend `XrpcError` (`error`, `message`, `matchesSchemaErrors()`,
 `shouldRetry()`). The three concrete branches of `XrpcFailure`:
 
-| Class                      | Meaning                                                    |
-| -------------------------- | ---------------------------------------------------------- |
-| `XrpcResponseError`        | Server returned a non-2xx status                           |
+| Class                      | Meaning                                                                 |
+| -------------------------- | ----------------------------------------------------------------------- |
+| `XrpcResponseError`        | Server returned a non-2xx status                                        |
 | `XrpcInvalidResponseError` | Response is non-compliant — unexpected status, wrong encoding, bad data |
-| `XrpcInternalError`        | Failed before a usable response existed (network, client)  |
+| `XrpcInternalError`        | Failed before a usable response existed (network, client)               |
 
 Subclasses worth narrowing on: `XrpcAuthenticationError` (401, exposes
 `wwwAuthenticate`), `XrpcResponseValidationError` (response failed schema

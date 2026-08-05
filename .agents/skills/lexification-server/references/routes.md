@@ -52,13 +52,15 @@ intermediate variable first, or when the handler declares no parameters at all
 fails with `TS2769: No overload matches this call`.
 
 ```ts
-// contextually typed — no `as const` needed, in either form
+// contextually typed — `as const` unnecessary in either form
 server.add(app.bsky.graph.getRelationships, {
   handler: async ({ params }) => {
     return { encoding: 'application/json', body: { actor, relationships } }
   },
 })
 
+// also contextually typed; the `as const` here is redundant but harmless,
+// and is what the real resolveHandle route still carries
 server.add(com.atproto.identity.resolveHandle, async ({ params }) => {
   return { encoding: 'application/json' as const, body: { did } }
 })
