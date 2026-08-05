@@ -78,12 +78,11 @@ Against `production`, sign in only with accounts you own — this is a real auth
 
 ## Browser automation: confirm what you have
 
-Neither this repo nor the checked-in editor configs register a browser MCP server. `.claude/settings.local.json` carries stale `mcp__mcp-server-playwright__*` permission entries from an editor-provided server that is no longer configured; permissions alone don't make tools exist. Run `claude mcp list` and work with what is actually connected rather than assuming `browser_*` tools are available.
+This repo registers two browser MCP servers in [`.mcp.json`](../../../.mcp.json) — `playwright` (`@playwright/mcp`) and `chrome-devtools` (`chrome-devtools-mcp`), both launched via `pnpx`. Registration is not connection: the server still has to be enabled and started in your harness, and permissions alone don't make tools exist. Run `claude mcp list` and work with what is actually connected rather than assuming `browser_*` tools are available.
 
-To add the Playwright MCP:
+If the Playwright server is registered but has no browser to drive:
 
 ```sh
-claude plugin install playwright@claude-plugins-official
 pnpx @playwright/mcp install-browser chrome-for-testing
 ```
 

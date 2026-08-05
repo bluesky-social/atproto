@@ -7,15 +7,15 @@ description: >
   extend tests, add coverage, reproduce a bug with a failing test, choose or
   configure a test runner, decide where a test belongs, run a single test file,
   or test a browser-based user flow. Covers unit, integration, and end-to-end
-  tests, and routes UI work through browser-first discovery.
+  tests, and routes UI work to the playwright skill.
 disable-model-invocation: false
 ---
 
 # Testing in this repo
 
-## UI tests: discover in a browser before reading source
+## UI tests: get the assertion strings right first
 
-If the test drives a UI (`packages/pds/tests/{oauth,account-manager}.test.ts`, or anything using the `puppeteer` `PageHelper`), stop before grepping. Assertion strings are localized and conditional — the running app is the only reliable source for them. Walk the flow with the Playwright MCP and copy the exact strings out of the snapshots.
+If the test drives a UI (`packages/pds/tests/{oauth,account-manager}.test.ts`, or anything using the `puppeteer` `PageHelper`), the assertion strings are the whole problem — they are **French** and branch-dependent, so they can't be guessed from the JSX. Read the playwright skill before asserting on any of them: the fastest source is the `fr` message catalog, with a browser walkthrough as the fallback when the rendered branch is unclear.
 
 Full workflow, `PageHelper` API, and dev-env boot instructions: [playwright skill](../playwright/SKILL.md). Come back here for runner and tsconfig questions.
 

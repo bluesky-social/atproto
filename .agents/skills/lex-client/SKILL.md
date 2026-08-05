@@ -242,7 +242,7 @@ All failures extend `XrpcError` (`error`, `message`, `matchesSchemaErrors()`,
 | Class                      | Meaning                                                    |
 | -------------------------- | ---------------------------------------------------------- |
 | `XrpcResponseError`        | Server returned a non-2xx status                           |
-| `XrpcInvalidResponseError` | 2xx but non-compliant — redirect, wrong encoding, bad data |
+| `XrpcInvalidResponseError` | Response is non-compliant — unexpected status, wrong encoding, bad data |
 | `XrpcInternalError`        | Failed before a usable response existed (network, client)  |
 
 Subclasses worth narrowing on: `XrpcAuthenticationError` (401, exposes

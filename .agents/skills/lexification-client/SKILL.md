@@ -144,8 +144,10 @@ const { feed: feedSkele, cursor } = result.body // typed
 ```
 
 `toDownstreamError()` is what replaces hand-mapping upstream status codes: it
-already remaps 500 → 502, strips hop-by-hop headers, and redacts internal error
-details.
+remaps 500 → 502 and strips hop-by-hop headers. It does **not** redact — when
+the upstream payload is a structurally valid XRPC error, its `error` / `message`
+are passed through verbatim for transparency. Sanitize them yourself before
+re-throwing if the upstream may leak internal detail.
 
 When you only care about one schema-declared error code, skip the class checks:
 

@@ -42,27 +42,31 @@ already had; there is no reason to convert between them during a migration.
 
 ## `encoding` and literal widening
 
-`'application/json' as const` is required
-**only in the bare-handler form**, where the handler's return type is inferred
-before it is checked against the schema, so `encoding` widens to `string` and
-the overload fails with `TS2769: No overload matches this call`.
-
-In the object form, `handler` is contextually typed by `LexMethodConfig`, so
-the literal is preserved and `as const` is unnecessary:
+The form of the route — bare handler vs `{ handler }` object — is not what
+decides this. What matters is whether the returned literal is still
+_contextually typed_ by `server.add()`. Returning it directly from a handler
+that declares at least one parameter is, in both forms, so `as const` is
+unnecessary. Contextual typing is lost when the response is built into an
+intermediate variable first, or when the handler declares no parameters at all
+(`async () => ({ … })`); then `encoding` widens to `string` and the overload
+fails with `TS2769: No overload matches this call`.
 
 ```ts
-// object form — no `as const`
+// contextually typed — no `as const` needed, in either form
 server.add(app.bsky.graph.getRelationships, {
   handler: async ({ params }) => {
     return { encoding: 'application/json', body: { actor, relationships } }
   },
 })
 
-// bare-handler form — `as const` required
 server.add(com.atproto.identity.resolveHandle, async ({ params }) => {
   return { encoding: 'application/json' as const, body: { did } }
 })
 ```
+
+Many existing routes carry `as const` where it is not strictly needed; it is
+harmless, so leave it alone rather than churning call sites. Full rules live in
+the [xrpc-server skill](../../xrpc-server/SKILL.md).
 
 `satisfies …$Output` on the returned envelope also pins the literal and works
 in either form, but it is verbose and the repo does not use it. If a return
