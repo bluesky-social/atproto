@@ -281,6 +281,22 @@ export class AuthVerifier {
     }
   }
 
+  public authorizationOrModerator<P extends Params>(
+    opts: VerifiedOptions & ExtraScopedOptions & AuthorizedOptions<P>,
+  ): MethodAuthVerifier<
+    AccessOutput | OAuthOutput | AdminTokenOutput | ModServiceOutput,
+    P
+  > {
+    const authorization = this.authorization(opts)
+    return async (ctx) => {
+      try {
+        return await this.moderator(ctx)
+      } catch {
+        return authorization(ctx)
+      }
+    }
+  }
+
   public authorizationOrAdminTokenOptional<P extends Params>(
     opts: VerifiedOptions & ExtraScopedOptions & AuthorizedOptions<P>,
   ): MethodAuthVerifier<
