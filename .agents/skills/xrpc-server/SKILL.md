@@ -49,8 +49,10 @@ const server = createServer([], {
 app.use(server.router)
 ```
 
-The first argument is an array reserved for global middleware (usually
-`[]`). The second is the server config (validation, payload limits, …).
+The optional first argument is an array of legacy `LexiconDoc` definitions;
+schema-based `server.add()` setups normally pass `[]`. The second argument is
+the server config (validation, payload limits, …). The first argument is not
+middleware.
 
 Note: `server.router` is the Express handler. Older code accessed
 `server.xrpc.router` — that path no longer exists.
@@ -235,8 +237,9 @@ const MODLIST = app.bsky.graph.defs.modlist.value
 ## Subscriptions
 
 WebSocket subscription endpoints use the same `server.add()` pattern with
-the subscription schema. The handler is async-iterator-shaped — see the
-relevant subscription schema's `$Frames` / `$Output` for typing.
+the subscription schema. The handler is async-iterator-shaped; use the
+generated subscription namespace's `$Message` for message bodies and `$Params`
+for request parameters, and let `server.add()` infer the handler type.
 
 ## File layout convention
 

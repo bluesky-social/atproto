@@ -30,17 +30,18 @@ gitignored. Regenerate with `lex build` rather than editing it. See the
 
 ## Schema accessors
 
-Every schema (record, object def, query, procedure, subscription) carries
-a uniform set of `$`-prefixed properties.
+Generated namespaces expose accessors according to schema kind.
 
-| Accessor  | Returns                                                                                                     | Use                                       |
-| --------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| `$nsid`   | NSID string (`'app.bsky.feed.defs'`)                                                                        | Reference the lexicon doc itself          |
-| `$type`   | `$type` string for record/object schemas (`'app.bsky.feed.post'`, `'app.bsky.actor.defs#profileViewBasic'`) | Compare/discriminate, set `$type` on data |
-| `$lxm`    | LXM (XRPC method id) for query/procedure schemas                                                            | Auth checks, proxy routing                |
-| `$Params` | TS type of query/procedure input params                                                                     | Handler param typing                      |
-| `$Output` | TS type of query/procedure response body                                                                    | `satisfies` clauses on handler returns    |
-| `.Main`   | TS type of a record/object's main definition                                                                | `let post: app.bsky.feed.post.Main`       |
+| Accessor      | Schema kind                   | Returns                                                                           | Use                                            |
+| ------------- | ----------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `$nsid`       | all                           | NSID string (`'app.bsky.feed.defs'`)                                              | Reference the Lexicon document                 |
+| `$type`       | record/object                 | `$type` string (`'app.bsky.feed.post'`, `'app.bsky.actor.defs#profileViewBasic'`) | Compare/discriminate, set `$type` on data      |
+| `$lxm`        | query/procedure/subscription  | LXM (XRPC method ID)                                                              | Auth checks, proxy routing                     |
+| `$Params`     | query/procedure/subscription  | Request parameter type                                                            | Handler and client parameter typing            |
+| `$Output`     | query/procedure               | Response envelope type, including `encoding` and `body`                           | `satisfies` on complete server handler returns |
+| `$OutputBody` | query/procedure               | Response body type                                                                | Work with the decoded response body            |
+| `$Message`    | subscription                  | Subscription message-body type                                                    | Subscription frame typing                      |
+| `.Main`       | main record/object definition | Main definition type                                                              | `let post: app.bsky.feed.post.Main`            |
 
 Sub-definitions are accessed as siblings of `.Main` (e.g.
 `app.bsky.feed.post.ReplyRef`, `app.bsky.feed.defs.PostView`).

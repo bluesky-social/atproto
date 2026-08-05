@@ -63,12 +63,25 @@ Install the `mcp-server-playwright` extension, then edit `~/.config/zed/settings
 
 ### Full AT Protocol dev stack
 
-Run in the background:
+On a fresh checkout, first follow the repository quickstart. This requires the
+Node version from `.nvmrc`, Corepack/pnpm, Docker, and `jq`. Install dependencies
+and build the compiled service output from the repository root:
+
+```sh
+pnpm install
+pnpm build
+```
+
+After that one-time setup, run the dev environment in the background:
 
 ```sh
 cd packages/dev-env
 pnpm dev
 ```
+
+Rebuild when compiled or generated output becomes stale. For continuous
+TypeScript rebuilding, run `pnpm dev:ts` from the repository root in another
+terminal.
 
 - PDS server: `http://localhost:2583`
 - Account Manager: `http://localhost:2583/account`

@@ -23,7 +23,7 @@ Reading code is the fallback only when Playwright MCP can't reach the state (e.g
 
 This monorepo uses two test runners. **Vitest is the standard going forward.** Jest is deprecated and only used by packages that haven't been migrated yet — write new jest tests _only_ in packages that already use jest, and migrate to vitest when feasible.
 
-Currently on vitest (per the root [vitest.config.ts](../../../vitest.config.ts) `projects` list): `bsky`, `lex/*`, `syntax`, `tap`, plus a growing list. Most other packages — including `pds` — are still on jest, aggregated by the root [jest.config.cjs](../../../jest.config.cjs).
+The root [vitest.config.ts](../../../vitest.config.ts) `projects` list includes `lex/*`, `syntax`, `tap`, and other packages. `bsky` also uses Vitest, but is intentionally omitted from that list because its package-level `pnpm test` must start development infrastructure. Most other packages — including `pds` — are still on jest, aggregated by the root [jest.config.cjs](../../../jest.config.cjs).
 
 Decide which runner to use by following these steps in order:
 

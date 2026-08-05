@@ -72,17 +72,36 @@ Remove from devDependencies:
 - `@atproto/lex-cli`
 - `@atproto/xrpc`
 
-### Wipe legacy lexicon directories
+### Remove legacy generated output
 
 ```sh
-rm -rf ./src/lexicon     # generated output (singular)
-rm -rf ./lexicons        # manually maintained inputs
+rm -rf ./src/lexicon     # generated legacy output (singular)
 ```
 
-### Install lexicons + configure build
+Do not delete `./lexicons` until you have confirmed it is a disposable copy.
+Lexicon JSON may be canonical committed source, either package-local or in a
+monorepo root. Preserve canonical schemas and point `lex build --lexicons` at
+their directory. Only remove package-local inputs after replacing them with an
+installed or canonical source.
 
-> [!NOTE]
-> This is **not** true if the canonical source for the lexicon json files is the same repo/monorepo. If the lexicon files are maintained in the same repo (for example, in a `lexicons/` directory at the root), you should not run `lex install` or add `lex install --ci` to `postinstall`. Instead, point your build script at the local lexicon files (for example, `lex build --clear --lexicons ../../lexicons` from a package's `src/` directory).
+### Choose a Lexicon source and configure build
+
+Choose exactly one source strategy.
+
+#### Repository-local canonical Lexicons
+
+Preserve the canonical JSON. Do not run `lex install`, create a second
+manifest, or add an install hook. Configure only the build step, resolving the
+canonical path from the package root:
+
+```diff
+- "codegen": "lex gen-server --yes ./src/lexicon ./lexicons/com/atproto/*/* ./lexicons/app/bsky/*/* ...",
++ "prebuild": "lex build --lexicons ../../lexicons --clear --indexFile",
+```
+
+Adjust `../../lexicons` for the package's location.
+
+#### Network-installed Lexicons
 
 ```sh
 lex install com.atproto.identity.resolveHandle app.bsky.feed.post  # ...all NSIDs the package uses

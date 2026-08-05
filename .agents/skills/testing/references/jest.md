@@ -9,7 +9,7 @@
 
 ## Identifying a jest package
 
-A package is on jest if it has a `jest.config.cjs` and its `package.json` has `"test": "NODE_OPTIONS=--experimental-vm-modules jest"` (or similar). Examples currently on jest: [packages/api](../../../../packages/api), [packages/pds](../../../../packages/pds), [packages/lexicon](../../../../packages/lexicon), [packages/identity](../../../../packages/identity), [packages/crypto](../../../../packages/crypto), [packages/oauth/oauth-scopes](../../../../packages/oauth/oauth-scopes), and a few others.
+A package is on jest if it has a `jest.config.cjs` and its `package.json` has `"test": "NODE_OPTIONS=--experimental-vm-modules jest"` (or similar). Examples currently on jest: [packages/api](../../../../packages/api), [packages/pds](../../../../packages/pds), [packages/lexicon](../../../../packages/lexicon), [packages/identity](../../../../packages/identity), [packages/crypto](../../../../packages/crypto), and a few others. Always inspect the package's current configuration rather than relying on this example list.
 
 The root [jest.config.cjs](../../../../jest.config.cjs) aggregates these via `projects: ['<rootDir>/packages/*/jest.config.cjs']`.
 

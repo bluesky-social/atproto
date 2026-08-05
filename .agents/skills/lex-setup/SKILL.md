@@ -19,8 +19,10 @@ Two CLI commands drive everything: `lex install` (fetch schemas) and
 `lex build` (generate TypeScript). The `lex` binary ships with `@atproto/lex`.
 
 > [!NOTE]
-> Some systems already have a `lex` binary. Use `pnpm exec lex`, `npx lex`,
-> or `ts-lex` if it conflicts.
+> Some systems already have a `lex` binary. Use `pnpm exec lex` when the
+> dependency is installed locally, `npx @atproto/lex` when bootstrapping, or
+> `ts-lex` if it conflicts. Bare `npx lex` may download the unrelated unscoped
+> `lex` package when no local binary exists.
 
 ## Package layout
 
@@ -32,18 +34,30 @@ The SDK family is split into two groups:
 - **Companion package (NOT re-exported)**: `@atproto/lex-cbor`. Import it
   directly from its own package path — never from `@atproto/lex`.
 
-| Sub-package           | Provides                                                                                                                                                                                                             |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@atproto/lex-client` | `Client`, `xrpc`, `xrpcSafe`, `XrpcResponseError`, `XrpcInvalidResponseError`, `XrpcInternalError`, `XrpcResponseValidationError`                                                                                    |
-| `@atproto/lex-schema` | The `l` schema-builder namespace, `Schema` types, validation primitives                                                                                                                                              |
-| `@atproto/lex-data`   | `LexValue`, `LexMap`, `Cid`, `parseCid`, `BlobRef`, `TypedBlobRef`, `LegacyBlobRef`, branded strings (`DidString`, `HandleString`, `AtUriString`, `DatetimeString`, …), `graphemeLen`, `utf8Len`, `isLanguageString` |
-| `@atproto/lex-json`   | `lexParse`, `lexStringify`, `jsonToLex`, `lexToJson`, `parseLexLink`, `encodeLexLink`, `parseLexBytes`, `encodeLexBytes`                                                                                             |
-| `@atproto/lex-cbor`   | CBOR `encode` / `decode` (separate package, not re-exported by `@atproto/lex`)                                                                                                                                       |
+| Sub-package           | Provides                                                                                                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@atproto/lex-client` | `Client`, `xrpc`, `xrpcSafe`, `XrpcResponseError`, `XrpcInvalidResponseError`, `XrpcInternalError`, `XrpcResponseValidationError`                                              |
+| `@atproto/lex-schema` | The `l` schema-builder namespace, `Schema` types, validation primitives, branded strings (`DidString`, `HandleString`, `AtUriString`, `DatetimeString`, …), `isLanguageString` |
+| `@atproto/lex-data`   | `LexValue`, `LexMap`, `Cid`, `parseCid`, `BlobRef`, `TypedBlobRef`, `LegacyBlobRef`, `graphemeLen`, `utf8Len`                                                                  |
+| `@atproto/lex-json`   | `lexParse`, `lexStringify`, `jsonToLex`, `lexToJson`, `parseLexLink`, `encodeLexLink`, `parseLexBytes`, `encodeLexBytes`                                                       |
+| `@atproto/lex-cbor`   | CBOR `encode` / `decode` (separate package, not re-exported by `@atproto/lex`)                                                                                                 |
 
 Add `@atproto/lex` as a dependency; add `@atproto/lex-cbor` separately if the
 package encodes or decodes CBOR.
 
-## 1. Install lexicon JSON schemas
+## 1. Select the Lexicon source
+
+Before running `lex install`, determine where the canonical Lexicon JSON is
+maintained:
+
+- **Repository-local canonical schemas:** do not run `lex install`, create a
+  second manifest, or add `lex install --ci` to `postinstall`. Preserve the
+  canonical files and point `lex build --lexicons <canonical-dir>` at them.
+- **Network-installed schemas:** use `lex install` to populate `./lexicons/`
+  and track the files in a manifest. Commit both the manifest and installed
+  JSON.
+
+### Network-installed schemas
 
 `lex install` fetches Lexicon documents from the Atmosphere network into
 `./lexicons/` and tracks them in a manifest (`lexicons.json` by default;
@@ -79,8 +93,9 @@ input contract.
 
 ## 2. Generate TypeScript schemas
 
-`lex build` reads `./lexicons/` and emits a generated tree under
-`./src/lexicons/` (plural).
+`lex build` reads the selected canonical directory and emits a generated tree
+under `./src/lexicons/` (plural). For network-installed schemas, the input is
+`./lexicons/`; for repository-local schemas, pass their canonical path instead.
 
 ```bash
 lex build --lexicons ./lexicons --clear --indexFile
@@ -94,7 +109,6 @@ Useful flags:
 - `--override` — overwrite existing files (no-op with `--clear`)
 - `--indexFile` — emit an index re-exporting root namespaces (`app`, `com`, `chat`, …)
 - `--no-pretty` — skip prettier
-- `--pure-annotations` — add `/*#__PURE__*/` markers (use for libraries)
 - `--exclude <patterns…>` / `--include <patterns…>` — filter by NSID
 - `--lib <package>` — library to import the `l` builder from (default `@atproto/lex`)
 - `--importExt <ext>` — extension for emitted imports (default `.js`; pass `""` for extensionless)
@@ -109,7 +123,8 @@ echo '/src/lexicons/' >> .gitignore
 
 ## 3. Wire up `package.json`
 
-Standard scripts for service packages:
+For network-installed schemas, configure install verification and update
+scripts:
 
 ```json
 {
@@ -129,6 +144,20 @@ Behavior:
 2. `prebuild` regenerates `./src/lexicons/` before TypeScript builds.
 3. `update-lexicons` is the human-driven escape hatch to refresh schemas.
 
+For repository-local canonical schemas, omit `postinstall` and
+`update-lexicons`; configure only the build step:
+
+```json
+{
+  "scripts": {
+    "prebuild": "lex build --lexicons ../../lexicons --clear --indexFile",
+    "build": "tsc --build tsconfig.build.json"
+  }
+}
+```
+
+Adjust `../../lexicons` for the package's location.
+
 ## 4. Use the generated code
 
 After `lex build`, import namespaces from the index file:
@@ -147,8 +176,9 @@ If your bundler supports it, set up a path alias (e.g. `#lexicons` →
 
 Directory conventions, in short:
 
-- Lexicon JSON input lives in `./lexicons/` (singular file per NSID), with the
-  manifest in `lexicons.json`. Both are committed.
+- Lexicon JSON input is committed source. Network-installed schemas normally
+  live in `./lexicons/` with a `lexicons.json` manifest; repository-local
+  canonical schemas may live elsewhere in the same tree.
 - Generated TypeScript lives in `./src/lexicons/` (**plural**) — gitignored and
   regenerated by `lex build`. Never edit by hand.
 
@@ -180,10 +210,15 @@ browser apps, prefer default imports.
 
 ## Adding a new NSID later
 
+For network-installed schemas:
+
 ```bash
 lex install com.atproto.identity.resolveHandle
 pnpm run prebuild   # regenerate ./src/lexicons/
 ```
+
+For repository-local schemas, add or update the canonical Lexicon JSON and run
+the dependent package's prebuild without invoking `lex install`.
 
 The new schema appears under the matching namespace path automatically.
 
@@ -209,12 +244,12 @@ If migrating from `@atproto/lex-cli` codegen:
 
 ```bash
 rm -rf ./src/lexicon    # generated legacy output — safe to delete
-lex install <nsids...>  # populates ./lexicons/ + the manifest
 ```
 
-Only `./src/lexicon` (singular) is generated. `./lexicons/` is committed
-source — if the package already has one, back it up before letting
-`lex install` write there, and reconcile any local edits afterwards.
+Only `./src/lexicon` (singular) is generated. Preserve the existing Lexicon
+JSON, determine whether it is repository-local canonical source, and configure
+the matching source strategy from section 1. Run `lex install <nsids...>` only
+for the network-installed strategy.
 
 Then remove `@atproto/lex-cli` from `devDependencies` and the old
 `codegen` script that called `lex gen-server`.
