@@ -2,10 +2,9 @@ import { NodeJSBuffer } from './lib/nodejs-buffer.js'
 
 const Buffer = NodeJSBuffer
 
-export const ui8ConcatNode = Buffer
-  ? function ui8ConcatNode(
-      array: readonly Uint8Array[],
-    ): Uint8Array<ArrayBuffer> {
+export const ui8ConcatNode:
+  ((array: readonly Uint8Array[]) => Uint8Array<ArrayBuffer>) | null = Buffer
+  ? function ui8ConcatNode(array) {
       return Buffer.concat(array)
     }
   : /* v8 ignore next -- @preserve */ null

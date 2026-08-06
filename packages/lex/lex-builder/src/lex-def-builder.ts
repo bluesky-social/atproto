@@ -78,7 +78,7 @@ export class LexDefBuilder {
     this.refResolver = new RefResolver(doc, file, indexer, options)
   }
 
-  async build() {
+  async build(): Promise<void> {
     this.addExportedString('$nsid', JSON.stringify(this.doc.id))
 
     const defs = Object.keys(this.doc.defs)

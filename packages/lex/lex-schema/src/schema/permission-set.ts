@@ -83,6 +83,10 @@ export class PermissionSet<
 export function permissionSet<
   const N extends NsidString,
   const P extends readonly Permission[],
->(nsid: N, permissions: P, options?: PermissionSetOptions) {
+>(
+  nsid: N,
+  permissions: P,
+  options?: PermissionSetOptions,
+): PermissionSet<N, P> {
   return new PermissionSet<N, P>(nsid, permissions, options)
 }

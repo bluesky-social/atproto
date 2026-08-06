@@ -167,7 +167,7 @@ export class Payload<
 export function payload<
   const E extends string | undefined = undefined,
   const S extends PayloadSchema<E> = undefined,
->(encoding: E = undefined as E, validator: S = undefined as S) {
+>(encoding: E = undefined as E, validator: S = undefined as S): Payload<E, S> {
   return new Payload<E, S>(encoding, validator)
 }
 
