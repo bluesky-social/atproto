@@ -5,7 +5,8 @@ import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { SpaceReader } from '../../../../actor-store/space/reader.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceRead, buildSignedCommit } from './util.js'
+import { assertRepoAvailability } from '../sync/util.js'
+import { assertSpaceRead, buildSignedCommit, isSpaceSelfRead } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getRepo, {
@@ -18,6 +19,7 @@ export default function (server: Server, ctx: AppContext) {
       const { space, repo, excludeValues } = params
 
       assertSpaceRead(auth, space, repo)
+      await assertRepoAvailability(ctx, repo, isSpaceSelfRead(auth, repo))
 
       // Held open for the life of the stream so records page out lazily.
       const actorDb = await ctx.actorStore.openDb(repo)

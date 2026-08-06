@@ -124,14 +124,63 @@ describe('space tokens', () => {
     it('passes iss and kid to the key resolver', async () => {
       const getSigningKey = vi.fn(() => authorityKey.did())
       await verifySpaceToken('credential', await create(), { getSigningKey })
-      expect(getSigningKey).toHaveBeenCalledWith(AUTHORITY, '#atproto')
+      expect(getSigningKey).toHaveBeenCalledWith(AUTHORITY, '#atproto', false)
     })
 
     it('honours a kid override for authorities with a dedicated space key', async () => {
       const getSigningKey = vi.fn(() => authorityKey.did())
       const jwt = await create({ kid: '#atproto_space' })
       await verifySpaceToken('credential', jwt, { getSigningKey })
-      expect(getSigningKey).toHaveBeenCalledWith(AUTHORITY, '#atproto_space')
+      expect(getSigningKey).toHaveBeenCalledWith(
+        AUTHORITY,
+        '#atproto_space',
+        false,
+      )
+    })
+
+    it('retries with a freshly resolved key when the signing key has rotated', async () => {
+      const rotatedKey = await Secp256k1Keypair.create()
+      const jwt = await createSpaceToken(
+        'credential',
+        { iss: AUTHORITY, sub: SPACE },
+        rotatedKey,
+      )
+      // First resolution returns the stale key, the retry the rotated one.
+      const getSigningKey = vi
+        .fn()
+        .mockResolvedValueOnce(authorityKey.did())
+        .mockResolvedValueOnce(rotatedKey.did())
+
+      const { payload } = await verifySpaceToken('credential', jwt, {
+        getSigningKey,
+      })
+      expect(payload.iss).toBe(AUTHORITY)
+      expect(getSigningKey).toHaveBeenNthCalledWith(
+        1,
+        AUTHORITY,
+        '#atproto',
+        false,
+      )
+      expect(getSigningKey).toHaveBeenNthCalledWith(
+        2,
+        AUTHORITY,
+        '#atproto',
+        true,
+      )
+    })
+
+    it('does not retry when the resolved key is unchanged', async () => {
+      const otherKey = await Secp256k1Keypair.create()
+      const jwt = await createSpaceToken(
+        'credential',
+        { iss: AUTHORITY, sub: SPACE },
+        otherKey,
+      )
+      const getSigningKey = vi.fn(() => authorityKey.did())
+      await expect(
+        verifySpaceToken('credential', jwt, { getSigningKey }),
+      ).rejects.toMatchObject({ code: 'BadJwtSignature' })
+      expect(getSigningKey).toHaveBeenCalledTimes(2)
     })
 
     it('rejects an expired credential', async () => {

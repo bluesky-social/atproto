@@ -1,5 +1,5 @@
 import { ScopePermissions } from '@atproto/oauth-scopes'
-import { DidString } from '@atproto/syntax'
+import { DidString, SpaceRefString } from '@atproto/syntax'
 import { AuthScope } from './auth-scope.js'
 
 export type UnauthenticatedOutput = {
@@ -63,20 +63,15 @@ export type ServiceAuthOutput = {
 export type SpaceCredentialOutput = {
   credentials: {
     type: 'space_credential'
-    iss: string
-    // The space URI the credential reads (the credential's `sub`).
-    space: string
+    iss: DidString
+    space: SpaceRefString
   }
 }
 
 export type DelegationTokenOutput = {
   credentials: {
     type: 'delegation_token'
-    // The user the token acts for (the token's `iss`).
-    userDid: string
-    // The space host the token is addressed to (the token's `aud`).
-    aud: string
-    // The space URI being requested (the token's `sub`).
-    space: string
+    userDid: DidString
+    space: SpaceRefString
   }
 }

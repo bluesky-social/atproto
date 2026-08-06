@@ -20,6 +20,16 @@ export default function (server: Server, ctx: AppContext) {
       // No repo named, or an account this host doesn't hold: nothing to flag. A
       // syncer implementation drops its copy of the space here instead.
       if (!repo) return
+
+      // The authority addresses each recipient individually, so the audience is
+      // the account being flagged rather than this service.
+      if (auth.credentials.aud !== repo) {
+        throw new AuthRequiredError(
+          'JWT audience must be the repo being flagged',
+          'BadJwtAudience',
+        )
+      }
+
       const account = await ctx.accountManager.getAccount(repo)
       if (!account) return
 

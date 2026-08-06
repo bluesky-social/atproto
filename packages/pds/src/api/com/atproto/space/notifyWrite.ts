@@ -21,6 +21,14 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      // Not checked during auth: a PDS answers for many authorities, so the
+      // audience is only knowable from the space the body names.
+      if (auth.credentials.aud !== ownerDid) {
+        throw new ForbiddenError(
+          'notifyWrite aud does not match the space authority',
+        )
+      }
+
       // Only the space owner's PDS has the member list and fan-out state; for
       // non-owner PDSes this handler is a no-op (e.g. re-delivery to a
       // syncing service that also hosts a replica).

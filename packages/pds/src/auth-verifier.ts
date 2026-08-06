@@ -21,7 +21,7 @@ import {
   SpaceTokenType,
   verifySpaceToken,
 } from '@atproto/space'
-import { AtUri } from '@atproto/syntax'
+import { SpaceRef } from '@atproto/syntax'
 import {
   AuthRequiredError,
   Awaitable,
@@ -317,36 +317,14 @@ export class AuthVerifier {
     }
   }
 
+  /**
+   * Service auth for methods whose audience only the handler can derive. It is
+   * the handler's job to check {@link ServiceAuthOutput.aud}.
+   */
   public serviceAuth: MethodAuthVerifier<ServiceAuthOutput> = async (ctx) => {
     setAuthHeaders(ctx.res)
-    const jwtStr = bearerTokenFromReq(ctx.req)
-    if (!jwtStr) {
-      throw new AuthRequiredError('missing jwt', 'MissingJwt')
-    }
     const nsid = parseReqNsid(ctx.req)
-    const payload = await verifyServiceJwt(
-      jwtStr,
-      null,
-      nsid,
-      async (iss, forceRefresh) => {
-        const [did, serviceId] = iss.split('#')
-        const keyId =
-          serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
-        const didDoc = await this.idResolver.did.resolve(did, forceRefresh)
-        if (!didDoc) {
-          throw new AuthRequiredError('could not resolve iss did')
-        }
-        const parsedKey = getVerificationMaterial(didDoc, keyId)
-        if (!parsedKey) {
-          throw new AuthRequiredError('missing or bad key in did doc')
-        }
-        const didKey = getDidKeyFromMultibase(parsedKey)
-        if (!didKey) {
-          throw new AuthRequiredError('missing or bad key in did doc')
-        }
-        return didKey
-      },
-    )
+    const payload = await this.verifyServiceJwt(ctx.req, { audience: null })
     return {
       credentials: {
         type: 'service_auth',
@@ -362,19 +340,14 @@ export class AuthVerifier {
   public spaceCredentialAuth: MethodAuthVerifier<SpaceCredentialOutput> =
     async (ctx) => {
       setAuthHeaders(ctx.res)
-      const { payload } = await this.verifySpaceToken(ctx.req, 'credential')
 
-      // Only the space's own authority may issue credentials for it. Without
-      // this, any DID could sign a credential naming someone else's space and
-      // have it verified against its own signing key.
-      const spaceRef = new AtUri(payload.sub).spaceRef()
-      if (!spaceRef) {
-        throw new AuthRequiredError(
-          'space credential subject is not a space URI',
-          'BadJwtSub',
-        )
-      }
-      if (payload.iss !== spaceRef.spaceDid) {
+      const { payload } = await this.verifySpaceToken(ctx.req, 'credential')
+      const space = parseSpaceSub(payload.sub)
+
+      // Only the space's own authority may issue credentials for it. Without this,
+      // any DID could sign a credential naming someone else's space and have it
+      // verified against its own signing key.
+      if (payload.iss !== space.spaceDid) {
         throw new AuthRequiredError(
           'space credential issuer is not the space authority',
           'BadJwtIss',
@@ -384,8 +357,8 @@ export class AuthVerifier {
       return {
         credentials: {
           type: 'space_credential',
-          iss: payload.iss,
-          space: payload.sub,
+          iss: space.spaceDid,
+          space: space.toString(),
         },
       }
     }
@@ -400,23 +373,23 @@ export class AuthVerifier {
   public delegationTokenAuth: MethodAuthVerifier<DelegationTokenOutput> =
     async (ctx) => {
       setAuthHeaders(ctx.res)
+
       const { payload } = await this.verifySpaceToken(ctx.req, 'delegation')
+      const space = parseSpaceSub(payload.sub)
 
       // We answer for many authorities, so there's no one fixed audience: derive it
       // from `sub` so a token minted for one authority can't be used at another.
-      let expectedAud: string
-      try {
-        expectedAud = `${new AtUri(payload.sub).spaceDid}#atproto_space_host`
-      } catch {
-        throw new AuthRequiredError(
-          'delegation token subject is not a space URI',
-          'BadJwtSub',
-        )
-      }
-      if (payload.aud !== expectedAud) {
+      if (payload.aud !== `${space.spaceDid}#atproto_space_host`) {
         throw new AuthRequiredError(
           'delegation token audience does not match the space authority',
           'BadJwtAudience',
+        )
+      }
+
+      if (!isDidString(payload.iss)) {
+        throw new AuthRequiredError(
+          'delegation token issuer is not a DID',
+          'BadJwtIss',
         )
       }
 
@@ -424,25 +397,20 @@ export class AuthVerifier {
         credentials: {
           type: 'delegation_token',
           userDid: payload.iss,
-          aud: payload.aud,
-          space: payload.sub,
+          space: space.toString(),
         },
       }
     }
 
-  private async verifySpaceToken(
-    req: IncomingMessage,
-    type: SpaceTokenType,
-    opts?: { aud?: string },
-  ) {
+  private async verifySpaceToken(req: IncomingMessage, type: SpaceTokenType) {
     const jwtStr = bearerTokenFromReq(req)
     if (!jwtStr) {
-      throw new AuthRequiredError(`missing ${type} token`, 'MissingCredential')
+      throw new AuthRequiredError(`missing ${type} token`, 'MissingJwt')
     }
     try {
       return await verifySpaceToken(type, jwtStr, {
-        ...opts,
-        getSigningKey: (iss, kid) => this.resolveSpaceKey(iss, kid),
+        getSigningKey: (iss, kid, forceRefresh) =>
+          this.resolveSpaceKey(iss, kid, forceRefresh),
       })
     } catch (err) {
       if (err instanceof AuthRequiredError) throw err
@@ -451,12 +419,16 @@ export class AuthVerifier {
       }
       throw new AuthRequiredError(
         `Invalid ${type} token: ${err instanceof Error ? err.message : String(err)}`,
-        'InvalidCredential',
+        'BadJwt',
       )
     }
   }
 
-  private async resolveSpaceKey(iss: string, kid?: string): Promise<string> {
+  private async resolveSpaceKey(
+    iss: string,
+    kid: string | undefined,
+    forceRefresh: boolean,
+  ): Promise<string> {
     if (!kid) {
       throw new AuthRequiredError('missing token "kid"', 'BadJwt')
     }
@@ -468,7 +440,7 @@ export class AuthVerifier {
       )
     }
 
-    const didDoc = await this.idResolver.did.resolve(iss)
+    const didDoc = await this.idResolver.did.resolve(iss, forceRefresh)
     if (!didDoc) {
       throw new AuthRequiredError(`could not resolve DID: ${iss}`, 'BadJwtIss')
     }
@@ -707,9 +679,10 @@ export class AuthVerifier {
     return { sub, aud, jti, scope: scope as S }
   }
 
+  /** `audience: null` leaves the audience for the caller to check. */
   protected async verifyServiceJwt(
     req: IncomingMessage,
-    opts?: { iss?: string[] },
+    opts?: { iss?: string[]; audience?: null },
   ) {
     const jwtStr = bearerTokenFromReq(req)
     if (!jwtStr) {
@@ -744,6 +717,7 @@ export class AuthVerifier {
       },
     )
     if (
+      opts?.audience !== null &&
       payload.aud !== this.dids.pds &&
       (!this.dids.entryway || payload.aud !== this.dids.entryway)
     ) {
@@ -824,6 +798,17 @@ const isSpaceCredentialAuth = (req: IncomingMessage): boolean => {
     return header.typ === SPACE_TOKEN_TYPES.credential.typ
   } catch {
     return false
+  }
+}
+
+const parseSpaceSub = (sub: string): SpaceRef => {
+  try {
+    return SpaceRef.parse(sub)
+  } catch {
+    throw new AuthRequiredError(
+      `space token subject is not a space URI: ${sub}`,
+      'BadJwtSub',
+    )
   }
 }
 

@@ -2,7 +2,8 @@ import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { spaceRecordUri } from '../../../../repo/index.js'
-import { assertSpaceRead } from './util.js'
+import { assertRepoAvailability } from '../sync/util.js'
+import { assertSpaceRead, isSpaceSelfRead } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getRecord, {
@@ -15,6 +16,7 @@ export default function (server: Server, ctx: AppContext) {
       const { space, repo, collection, rkey } = params
 
       assertSpaceRead(auth, space, repo)
+      await assertRepoAvailability(ctx, repo, isSpaceSelfRead(auth, repo))
 
       const uri = spaceRecordUri(space, repo, collection, rkey)
       const record = await ctx.actorStore.read(repo, (store) =>

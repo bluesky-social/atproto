@@ -1954,6 +1954,106 @@ describe('spaces', () => {
     ).rejects.toThrow()
   })
 
+  it('stops serving permissioned records for a taken-down account', async () => {
+    // A takedown covers everything the account holds, permissioned data included.
+    const spaceUri = await createSpace('takedown-read', [danDid, carolDid])
+    await pds1Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: danDid,
+        collection: TEST_COLLECTION,
+        record: { $type: TEST_COLLECTION, text: 'before takedown' },
+      },
+      { headers: danHeaders },
+    )
+
+    const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
+    const readOps = () =>
+      pds1Client.call(
+        com.atproto.space.listRepoOps,
+        { space: spaceUri, repo: danDid },
+        { headers: credHeaders },
+      )
+
+    const before = await readOps()
+    expect(before.ops.length).toBe(1)
+
+    await pds1.ctx.accountManager.takedownAccount(danDid, {
+      applied: true,
+      ref: 'test-space-takedown',
+    })
+    try {
+      await expect(readOps()).rejects.toThrow(/takendown/i)
+    } finally {
+      await pds1.ctx.accountManager.takedownAccount(danDid, {
+        applied: false,
+      })
+    }
+
+    // Gated, not deleted.
+    expect((await readOps()).ops.length).toBe(1)
+  })
+
+  it('rejects a notifyWrite addressed to another authority', async () => {
+    // Everything but the audience checks out: bob is a member signing for
+    // himself, off a real write. Only the aud stands between him and moving the
+    // writer set that listRepos publishes.
+    const spaceUri = await createSpace('spoof-aud', [bobDid])
+
+    await pds2Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: bobDid,
+        collection: TEST_COLLECTION,
+        record: { $type: TEST_COLLECTION, text: 'misaddressed' },
+      },
+      { headers: bobHeaders },
+    )
+    const state = await pds2.ctx.actorStore.read(bobDid, (store) =>
+      store.space.getRepoState(spaceUri),
+    )
+
+    const keypair = await pds2.ctx.actorStore.keypair(bobDid)
+    const { headers } = await createServiceAuthHeaders({
+      iss: bobDid,
+      aud: carolDid,
+      lxm: com.atproto.space.notifyWrite.$lxm,
+      keypair,
+    })
+    await expect(
+      xrpc(pds1.url, com.atproto.space.notifyWrite, {
+        headers,
+        body: {
+          space: spaceUri as SpaceRefString,
+          repo: bobDid,
+          rev: state!.rev!,
+          hash: new LtHash(state!.setHash!).digest(),
+        },
+      }),
+    ).rejects.toThrow(/aud does not match the space authority/)
+  })
+
+  it('rejects a delegation token addressed to another authority', async () => {
+    const spaceUri = await createSpace('deleg-wrong-authority', [carolDid])
+
+    const tokenRes = await pds3Client.call(
+      com.atproto.space.getDelegationToken,
+      { space: spaceUri },
+      { headers: carolHeaders },
+    )
+
+    // Same token, presented to bob's PDS instead of alice's.
+    await expect(
+      pds2Client.call(
+        com.atproto.space.getSpaceCredential,
+        { space: spaceUri },
+        { headers: { authorization: `Bearer ${tokenRes.token}` } },
+      ),
+    ).rejects.toThrow()
+  })
+
   it('rejects a notifyWrite from a non-member', async () => {
     // iss === body.repo, but the signer isn't in the member list.
     const spaceUri = await createSpace('spoof-nonmember', [bobDid])

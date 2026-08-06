@@ -146,7 +146,11 @@ export const parseSpaceToken = (
 
 export type VerifySpaceTokenOpts = {
   /** Passed `kid` so a verifier can honour the key id. */
-  getSigningKey: (iss: string, kid?: string) => string | Promise<string>
+  getSigningKey: (
+    iss: string,
+    kid: string | undefined,
+    forceRefresh: boolean,
+  ) => string | Promise<string>
   aud?: string
   sub?: string
 }
@@ -174,11 +178,31 @@ export const verifySpaceToken = async (
       'BadJwtSub',
     )
   }
+  const didKey = await opts.getSigningKey(payload.iss, header.kid, false)
+  if (await matchesSignature(didKey, header, signingInput, sig)) {
+    return { header, payload }
+  }
 
-  const didKey = await opts.getSigningKey(payload.iss, header.kid)
-  let valid: boolean
+  // The signing key may have rotated since the one we hold was cached.
+  const freshDidKey = await opts.getSigningKey(payload.iss, header.kid, true)
+  if (
+    freshDidKey !== didKey &&
+    (await matchesSignature(freshDidKey, header, signingInput, sig))
+  ) {
+    return { header, payload }
+  }
+
+  throw new SpaceTokenError('invalid token signature', 'BadJwtSignature')
+}
+
+const matchesSignature = async (
+  didKey: string,
+  header: SpaceTokenHeader,
+  signingInput: Uint8Array,
+  sig: Uint8Array,
+): Promise<boolean> => {
   try {
-    valid = await verifySignature(didKey, signingInput, sig, {
+    return await verifySignature(didKey, signingInput, sig, {
       jwtAlg: header.alg,
     })
   } catch (err) {
@@ -187,11 +211,6 @@ export const verifySpaceToken = async (
       'BadJwtSignature',
     )
   }
-  if (!valid) {
-    throw new SpaceTokenError('invalid token signature', 'BadJwtSignature')
-  }
-
-  return { header, payload }
 }
 
 const jsonToB64Url = (json: Record<string, unknown>): string =>

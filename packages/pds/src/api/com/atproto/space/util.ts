@@ -84,6 +84,16 @@ export function assertSpaceRead(
   })
 }
 
+// The space analogue of `isUserOrAdmin`: a space credential names a syncer rather
+// than an account, so it is never the repo's own owner.
+export function isSpaceSelfRead(
+  auth: AccessOutput | OAuthOutput | SpaceCredentialOutput,
+  repo: string,
+): boolean {
+  if (auth.credentials.type === 'space_credential') return false
+  return auth.credentials.did === repo
+}
+
 export function assertCredentialSpace(
   credentials: SpaceCredentialOutput['credentials'],
   spaceUri: SpaceRefString,

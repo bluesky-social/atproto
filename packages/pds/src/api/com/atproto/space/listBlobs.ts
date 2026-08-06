@@ -2,7 +2,8 @@ import { l } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceRead } from './util.js'
+import { assertRepoAvailability } from '../sync/util.js'
+import { assertSpaceRead, isSpaceSelfRead } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.listBlobs, {
@@ -15,6 +16,7 @@ export default function (server: Server, ctx: AppContext) {
       const { space, repo, since, limit, cursor } = params
 
       assertSpaceRead(auth, space, repo)
+      await assertRepoAvailability(ctx, repo, isSpaceSelfRead(auth, repo))
 
       const cids = await ctx.actorStore.read(repo, (store) =>
         store.space.listBlobs(space, { since, cursor, limit }),

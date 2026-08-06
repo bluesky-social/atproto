@@ -1,7 +1,8 @@
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceRead, buildSignedCommit } from './util.js'
+import { assertRepoAvailability } from '../sync/util.js'
+import { assertSpaceRead, buildSignedCommit, isSpaceSelfRead } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getLatestCommit, {
@@ -14,6 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       const { space, repo } = params
 
       assertSpaceRead(auth, space, repo)
+      await assertRepoAvailability(ctx, repo, isSpaceSelfRead(auth, repo))
 
       const commit = await ctx.actorStore.read(repo, async (store) => {
         const state = await store.space.getRepoState(space)
