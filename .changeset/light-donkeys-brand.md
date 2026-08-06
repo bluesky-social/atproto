@@ -1,6 +1,7 @@
 ---
 '@atproto/oauth-provider': minor
 '@atproto/pds': patch
+'@atproto/dev-env': patch
 ---
 
 Simplify branding color customization to match the redesigned OAuth UI. Each color is a single RGB value (`primary`, `error`, `warning`, `info`, `success`). Only `primary` gets a foreground (`--primary-foreground`), now computed automatically as black or white — whichever has the higher WCAG 2.1 contrast against `primary`. It can no longer be overridden or tuned.
