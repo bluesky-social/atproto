@@ -32,18 +32,22 @@ export const streamSize = async (stream: Readable): Promise<number> => {
   return size
 }
 
-export const streamToBytes = async (stream: AsyncIterable<Uint8Array>) =>
+export const streamToBytes = async (
+  stream: AsyncIterable<Uint8Array>,
+  maxSize?: number,
+) =>
   // @NOTE Though Buffer is a sub-class of Uint8Array, we have observed
   // inconsistencies when using a Buffer in place of Uint8Array. For this
   // reason, we convert the Buffer to a Uint8Array.
-  new Uint8Array(await streamToNodeBuffer(stream))
+  new Uint8Array(await streamToNodeBuffer(stream, maxSize))
 
 // streamToBuffer identifier name already taken by @atproto/common-web
 export const streamToNodeBuffer = async (
   stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+  maxSize = Infinity,
 ): Promise<Buffer> => {
   const chunks: Uint8Array[] = []
-  let totalLength = 0 // keep track of total length for Buffer.concat
+  let totalLength = 0
   for await (const chunk of stream) {
     if (chunk instanceof Uint8Array) {
       chunks.push(chunk)
@@ -51,8 +55,13 @@ export const streamToNodeBuffer = async (
     } else {
       throw new TypeError('expected Uint8Array')
     }
+    if (totalLength > maxSize) {
+      throw new Error('Stream exceeds maximum size')
+    }
   }
-  return Buffer.concat(chunks, totalLength)
+  return chunks.length === 1
+    ? Buffer.from(chunks[0].buffer, chunks[0].byteOffset, chunks[0].byteLength)
+    : Buffer.concat(chunks, totalLength)
 }
 
 export const byteIterableToStream = (
