@@ -13,23 +13,19 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const did = auth.credentials.did
-      const { type, did: ownerDid, limit, cursor } = params
+      const { type, did: authority, limit, cursor } = params
 
-      const spaces = await ctx.actorStore.read(did, (store) =>
-        store.space.listSpaces({
-          limit: limit ?? 50,
-          cursor,
-          type,
-          did: ownerDid,
-        }),
+      const spaces = await ctx.actorStore.read(auth.credentials.did, (store) =>
+        store.space.listSpaces({ limit, cursor, type, authority }),
       )
 
       return {
         encoding: 'application/json' as const,
         body: {
           cursor: spaces.at(-1)?.uri,
-          spaces: spaces.map((s) => ({ uri: s.uri as SpaceRefString })),
+          spaces: spaces.map((space) => ({
+            uri: space.uri as SpaceRefString,
+          })),
         },
       }
     },

@@ -1,6 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { SimplespaceConfig } from '../actor-store/db/index.js'
-import { SpaceAppAccess, SpacePolicy } from '../actor-store/space/reader.js'
 import { com } from '../lexicons/index.js'
 
 const { defs } = com.atproto.simplespace
@@ -9,7 +8,9 @@ type LexSpace = com.atproto.simplespace.getSpace.$OutputBody
 type LexPolicy = LexSpace['policy']
 type LexAppAccess = LexSpace['appAccess']
 
-export function lexPolicyToDb(policy: LexPolicy): SpacePolicy {
+export function lexPolicyToDb(
+  policy: LexPolicy,
+): Pick<SimplespaceConfig, 'policy' | 'managingApp'> {
   if (defs.publicPolicy.$isTypeOf(policy)) {
     return { policy: 'public', managingApp: null }
   }
@@ -32,7 +33,9 @@ export function lexPolicyToDb(policy: LexPolicy): SpacePolicy {
   )
 }
 
-export function lexAppAccessToDb(appAccess: LexAppAccess): SpaceAppAccess {
+export function lexAppAccessToDb(
+  appAccess: LexAppAccess,
+): Pick<SimplespaceConfig, 'appAccessType' | 'appAllowed'> {
   if (defs.open.$isTypeOf(appAccess)) {
     return { appAccessType: 'open', appAllowed: JSON.stringify([]) }
   }
@@ -56,7 +59,7 @@ export function toLexConfig(config: SimplespaceConfig): LexSpace {
   }
 }
 
-function policyToLex(config: SpacePolicy): LexPolicy {
+function policyToLex(config: SimplespaceConfig): LexPolicy {
   switch (config.policy) {
     case 'public':
       return defs.publicPolicy.build({})
@@ -69,7 +72,7 @@ function policyToLex(config: SpacePolicy): LexPolicy {
   }
 }
 
-function appAccessToLex(config: SpaceAppAccess): LexAppAccess {
+function appAccessToLex(config: SimplespaceConfig): LexAppAccess {
   if (config.appAccessType === 'allowList') {
     return defs.allowList.build({ allowed: JSON.parse(config.appAllowed) })
   }

@@ -21,17 +21,17 @@ export default function (server: Server, ctx: AppContext) {
         // Throws unless this host is the space's authority: the writer set is the
         // authority's to maintain and to answer for.
         await store.space.getActiveSpaceConfig(space)
-        return store.space.listWriters(space, { limit: limit ?? 100, cursor })
+        return store.space.listWriters(space, { limit, cursor })
       })
 
       return {
         encoding: 'application/json' as const,
         body: {
           cursor: writers.at(-1)?.did,
-          repos: writers.map((w) => ({
-            did: w.did as l.DidString,
-            rev: w.rev,
-            hash: w.hash,
+          repos: writers.map((writer) => ({
+            did: writer.did as l.DidString,
+            rev: writer.rev,
+            hash: writer.hash,
           })),
         },
       }

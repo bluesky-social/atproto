@@ -27,29 +27,21 @@ export default function (server: Server, ctx: AppContext) {
           )
         : undefined
 
-      const { config, checked } = await ctx.actorStore.read(
-        spaceDid,
-        async (store) => {
-          const existing = await store.space.getSpace(space)
-          if (existing?.deletedAt) {
-            // The durable signal that a space is gone: a syncer that missed
-            // notifySpaceDeleted learns it here, on its next renewal.
-            throw new InvalidRequestError(
-              'Space has been deleted',
-              'SpaceDeleted',
-            )
-          }
-          const config = await store.space.getActiveSpaceConfig(space)
-          return {
-            config,
-            checked: await store.space.checkUserAuthorized(config, userDid),
-          }
-        },
-      )
+      const config = await ctx.actorStore.read(spaceDid, async (store) => {
+        const existing = await store.space.getSpace(space)
+        if (existing?.deletedAt) {
+          // The durable signal that a space is gone: a syncer that missed
+          // notifySpaceDeleted learns it here, on its next renewal.
+          throw new InvalidRequestError(
+            'Space has been deleted',
+            'SpaceDeleted',
+          )
+        }
+        return store.space.getActiveSpaceConfig(space)
+      })
 
       await ctx.simpleSpaceManager.authorizeCredential({
-        space: config,
-        checked,
+        config,
         userDid,
         clientId,
       })

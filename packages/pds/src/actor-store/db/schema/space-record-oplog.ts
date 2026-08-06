@@ -5,6 +5,7 @@ export interface SpaceRecordOplog {
   rev: string
   idx: number
   action: WriteOpAction
+  uri: string
   collection: string
   rkey: string
   cid: string | null

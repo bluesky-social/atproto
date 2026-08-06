@@ -265,7 +265,7 @@ describe('spaces', () => {
     const oplog = await pds1.ctx.actorStore.read(danDid, (store) =>
       store.space.listRepoOps(spaceUri, { limit: 100 }),
     )
-    const lastOp = oplog.ops[oplog.ops.length - 1]
+    const lastOp = oplog[oplog.length - 1]
     expect(lastOp).toMatchObject({
       action: 'create',
       collection: TEST_COLLECTION,
@@ -307,7 +307,7 @@ describe('spaces', () => {
     const oplog = await pds1.ctx.actorStore.read(danDid, (store) =>
       store.space.listRepoOps(spaceUri, { limit: 100 }),
     )
-    const deleteOp = oplog.ops.find((op) => op.action === 'delete')
+    const deleteOp = oplog.find((op) => op.action === 'delete')
     expect(deleteOp).toMatchObject({
       collection: TEST_COLLECTION,
       rkey,
@@ -341,7 +341,7 @@ describe('spaces', () => {
     const oplog = await pds1.ctx.actorStore.read(danDid, (store) =>
       store.space.listRepoOps(spaceUri, { limit: 100 }),
     )
-    const batchOps = oplog.ops.slice(-3)
+    const batchOps = oplog.slice(-3)
     expect(batchOps.map((o) => o.rev)).toEqual([
       batchOps[0].rev,
       batchOps[0].rev,
@@ -474,7 +474,7 @@ describe('spaces', () => {
       ],
     )
     expect(state).toBeNull()
-    expect(oplog.ops).toEqual([])
+    expect(oplog).toEqual([])
 
     // No commit to sign, so the repo still reads as unwritten.
     await expect(
@@ -638,7 +638,7 @@ describe('spaces', () => {
     const oplog = await pds2.ctx.actorStore.read(bobDid, (store) =>
       store.space.listRepoOps(spaceUri, { limit: 100 }),
     )
-    const lastOp = oplog.ops[oplog.ops.length - 1]
+    const lastOp = oplog[oplog.length - 1]
     expect(lastOp.action).toBe('create')
     expect(lastOp.cid).toBe(created.cid)
 
@@ -1249,16 +1249,11 @@ describe('spaces', () => {
         .execute(),
     )
 
-    // Withheld from both fan-outs: writes and deletion.
-    const [recipients, deletion] = await pds1.ctx.actorStore.read(
-      aliceDid,
-      async (store) => [
-        await store.space.getCredentialRecipients(spaceUri),
-        await store.space.listDeletionRecipients(spaceUri),
-      ],
+    // Withheld from the fan-outs for both writes and deletion, which read the same list.
+    const recipients = await pds1.ctx.actorStore.read(aliceDid, (store) =>
+      store.space.getCredentialRecipients(spaceUri),
     )
     expect(recipients).toHaveLength(0)
-    expect(deletion.services).toHaveLength(0)
 
     // Renewing brings it back — the row was withheld, not dropped.
     await pds1Client.call(
@@ -1874,13 +1869,20 @@ describe('spaces', () => {
 
     // Incremental pull returns only the post-prune ops; applying them alone
     // yields a setHash that diverges from the server's.
-    const incremental = await pds2.ctx.actorStore.read(bobDid, (store) =>
-      store.space.listRepoOps(spaceUri, { since: consumerSince, limit: 100 }),
+    const [incremental, stateAfterPrune] = await pds2.ctx.actorStore.read(
+      bobDid,
+      async (store) => [
+        await store.space.listRepoOps(spaceUri, {
+          since: consumerSince,
+          limit: 100,
+        }),
+        await store.space.getRepoState(spaceUri),
+      ],
     )
-    expect(incremental.ops.length).toBe(2)
+    expect(incremental.length).toBe(2)
 
     const applied = new RepoCommit()
-    for (const op of incremental.ops) {
+    for (const op of incremental) {
       applied.applyOp({
         collection: op.collection,
         rkey: op.rkey,
@@ -1890,7 +1892,7 @@ describe('spaces', () => {
     }
     expect(
       applied.setHash.equals(
-        RepoCommit.fromState(incremental.state?.setHash).setHash,
+        RepoCommit.fromState(stateAfterPrune?.setHash).setHash,
       ),
     ).toBe(false)
 
@@ -1903,7 +1905,7 @@ describe('spaces', () => {
       )
       if (res.length === 0) break
       allRecords.push(...res)
-      cursor = `${res[res.length - 1].collection}/${res[res.length - 1].rkey}`
+      cursor = res.at(-1)?.uri
       if (res.length < 2) break
     }
     expect(allRecords.length).toBe(5)

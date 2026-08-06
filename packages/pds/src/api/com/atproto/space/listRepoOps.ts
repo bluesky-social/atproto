@@ -1,18 +1,8 @@
 import { l } from '@atproto/lex'
-import { Server } from '@atproto/xrpc-server'
-import { OplogPosition } from '../../../../actor-store/space/reader.js'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertSpaceRead, buildSignedCommit } from './util.js'
-
-// The cursor is opaque to the caller, so it can grow past (rev, idx) later.
-const formatCursor = (op: OplogPosition): string => `${op.rev}/${op.idx}`
-
-const parseCursor = (cursor: string): OplogPosition | undefined => {
-  const [rev, idx] = cursor.split('/')
-  if (!rev || !/^\d+$/.test(idx ?? '')) return undefined
-  return { rev, idx: Number(idx) }
-}
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.listRepoOps, {
@@ -22,34 +12,33 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const { space, repo, since, cursor, limit, excludeValues } = params
+      const { space, repo, since, limit, excludeValues } = params
 
       assertSpaceRead(auth, space, repo)
 
-      const { ops, caughtUp, commit } = await ctx.actorStore.read(
-        repo,
-        async (store) => {
-          // `since` and `cursor` compose: a caller paging through holds `since` at its
-          // own sync position and passes back the cursor from each response.
-          const res = await store.space.listRepoOps(space, {
-            since,
-            position: cursor ? parseCursor(cursor) : undefined,
-            limit,
-            includeValues: !excludeValues,
-          })
-          // Only sent at head. Mid-backfill the repo's rev is ahead of these ops, so
-          // the commit would describe state the caller can't reach yet.
-          const commit =
-            res.caughtUp &&
-            (await buildSignedCommit({
-              spaceUri: space,
-              author: repo,
-              state: res.state,
-              keypair: await store.keypair(),
-            }))
-          return { ...res, commit: commit || undefined }
-        },
-      )
+      const cursor = params.cursor ? parseCursor(params.cursor) : undefined
+
+      const { ops, commit } = await ctx.actorStore.read(repo, async (store) => {
+        const ops = await store.space.listRepoOps(space, {
+          since,
+          cursor,
+          limit,
+          excludeValues,
+        })
+
+        // If a full page (ie not done iterating), then return the ops with no commit
+        // In the rare event that the page happens to end on the last op, it's fine. Just
+        // an extra request by the client
+        if (ops.length === limit) return { ops, commit: undefined }
+
+        const commit = await buildSignedCommit({
+          spaceUri: space,
+          author: repo,
+          state: await store.space.getRepoState(space),
+          keypair: await store.keypair(),
+        })
+        return { ops, commit }
+      })
 
       const last = ops.at(-1)
 
@@ -64,11 +53,24 @@ export default function (server: Server, ctx: AppContext) {
             prev: op.prev as l.CidString | null,
             value: op.value,
           })),
-          // Absent once caught up, so a syncer keeps its own position instead.
-          cursor: caughtUp || !last ? undefined : formatCursor(last),
-          commit: commit && com.atproto.space.defs.signedCommit.build(commit),
+          cursor:
+            commit || !last ? undefined : formatCursor(last.rev, last.idx),
+          commit: commit,
         },
       }
     },
   })
+}
+
+const parseCursor = (cursor: string): { rev: string; idx: number } => {
+  const [rev, idxStr] = cursor.split('/')
+  const idx = parseInt(idxStr, 10)
+  if (isNaN(idx)) {
+    throw new InvalidRequestError('Malformed cursor', 'MalformedCursor')
+  }
+  return { rev, idx }
+}
+
+const formatCursor = (rev: string, idx: number): string => {
+  return `${rev}/${idx}`
 }

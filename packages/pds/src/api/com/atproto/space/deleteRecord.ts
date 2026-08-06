@@ -1,7 +1,7 @@
 import { ForbiddenError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { prepareDelete } from '../../../../repo/index.js'
+import { prepareDelete, spaceRecordUri } from '../../../../repo/index.js'
 import { assertSpaceScope, fireNotifyWrite } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -23,9 +23,10 @@ export default function (server: Server, ctx: AppContext) {
       const write = prepareDelete({ did, space, collection, rkey })
 
       // Idempotent, as com.atproto.repo.deleteRecord is.
+      const uri = spaceRecordUri(space, did, collection, rkey)
       const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
-        const existing = await actorTxn.space.getRecord(space, collection, rkey)
-        if (!existing) return null
+        const exists = await actorTxn.space.hasRecord(uri.toString())
+        if (!exists) return null
         return actorTxn.space.applyWrites(space, [write])
       })
 

@@ -1,8 +1,6 @@
 export interface SpaceRecordBlob {
-  space: string
-  collection: string
-  rkey: string
   blobCid: string
+  recordUri: string
 }
 
 const tableName = 'space_record_blob'

@@ -4,6 +4,7 @@ import { DidString, SpaceRefString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorStore } from '../actor-store/actor-store.js'
 import { SimplespaceConfig } from '../actor-store/db/index.js'
+import { SpaceConfig } from '../actor-store/space/transactor.js'
 import {
   resolveNotifyTarget,
   toSpaceRef,
@@ -25,12 +26,13 @@ export class SimpleSpaceManager {
 
   async createSpace(
     space: SpaceRefString,
-    config: { policy: LexPolicy; appAccess: LexAppAccess },
+    input: { policy: LexPolicy; appAccess: LexAppAccess },
   ): Promise<void> {
     const { spaceDid } = toSpaceRef(space)
-    const policy = lexPolicyToDb(config.policy)
-    const appAccess = lexAppAccessToDb(config.appAccess)
-
+    const config = {
+      ...lexPolicyToDb(input.policy),
+      ...lexAppAccessToDb(input.appAccess),
+    }
     await this.actorStore.transact(spaceDid, async (actorTxn) => {
       const existing = await actorTxn.space.getSpaceConfig(space)
       if (existing) {
@@ -39,20 +41,19 @@ export class SimpleSpaceManager {
           'SpaceAlreadyExists',
         )
       }
-
-      await actorTxn.space.createSpace(space, policy, appAccess)
+      await actorTxn.space.createSpace(space, config)
     })
   }
 
   async updateSpace(
     space: SpaceRefString,
-    patch: { policy?: LexPolicy; appAccess?: LexAppAccess },
+    input: { policy?: LexPolicy; appAccess?: LexAppAccess },
   ): Promise<void> {
-    const config = {
-      ...(patch.policy && { policy: lexPolicyToDb(patch.policy) }),
-      ...(patch.appAccess && { appAccess: lexAppAccessToDb(patch.appAccess) }),
-    }
     const { spaceDid } = toSpaceRef(space)
+    const config: Partial<SpaceConfig> = {
+      ...(input.policy && lexPolicyToDb(input.policy)),
+      ...(input.appAccess && lexAppAccessToDb(input.appAccess)),
+    }
     await this.actorStore.transact(spaceDid, async (actorTxn) => {
       await actorTxn.space.getActiveSpaceConfig(space)
       await actorTxn.space.updateSpaceConfig(space, config)
@@ -73,15 +74,14 @@ export class SimpleSpaceManager {
    * managing app.
    */
   async authorizeCredential(opts: {
-    space: SimplespaceConfig
-    checked: boolean | 'ask-managing-app'
+    config: SimplespaceConfig
     userDid: string
     clientId?: string
   }): Promise<void> {
-    const { space, clientId } = opts
+    const { config, clientId } = opts
 
-    if (space.appAccessType === 'allowList') {
-      const allowed: string[] = JSON.parse(space.appAllowed)
+    if (config.appAccessType === 'allowList') {
+      const allowed: string[] = JSON.parse(config.appAllowed)
       if (!clientId || !allowed.includes(clientId)) {
         throw new InvalidRequestError(
           'Application not authorized for this space',
@@ -98,21 +98,32 @@ export class SimpleSpaceManager {
     }
   }
 
-  /**
-   * The user perimeter. `checked` is the decision the store could reach on its own,
-   * since the caller already holds it open; only a `managing-app` policy needs the call
-   * out from here.
-   */
+  // Whether the space's policy admits this user. Everything but `managing-app` is
+  // answerable from the authority's own state.
   async authorizeUser(opts: {
-    space: SimplespaceConfig
-    checked: boolean | 'ask-managing-app'
+    config: SimplespaceConfig
     userDid: string
     clientId?: string
   }): Promise<boolean> {
-    const { space, checked, userDid, clientId } = opts
-    if (checked !== 'ask-managing-app') return checked
-    const { spaceDid } = toSpaceRef(space.uri as SpaceRefString)
-    return this.checkManagingApp({ space, spaceDid, userDid, clientId })
+    const { config, userDid } = opts
+    const { spaceDid } = toSpaceRef(config.uri as SpaceRefString)
+
+    // The authority is the only party who can reconfigure the space, so it must not be
+    // able to lock itself out.
+    if (userDid === spaceDid) return true
+
+    switch (config.policy) {
+      case 'public':
+        return true
+      case 'member-list':
+        return this.actorStore.read(spaceDid, (store) =>
+          store.space.isMember(config.uri, userDid),
+        )
+      case 'managing-app':
+        return this.checkManagingApp({ ...opts, spaceDid })
+      default:
+        return false
+    }
   }
 
   /**
@@ -125,69 +136,66 @@ export class SimpleSpaceManager {
   async deleteSpace(space: SpaceRefString): Promise<void> {
     const { spaceDid } = toSpaceRef(space)
 
-    const recipients = await this.actorStore.transact(
+    // Who to notify: the accounts holding a repo in the space, and the services
+    // registered for its notifications. Not the member list — membership doesn't imply
+    // a repo, and under a `public` or `managing-app` policy a writer need never have
+    // been a member.
+    const { writers, services } = await this.actorStore.transact(
       spaceDid,
       async (actorTxn) => {
-        const recipients = await actorTxn.space.listDeletionRecipients(space)
+        const writers = await actorTxn.space.listWriters(space)
+        const services = await actorTxn.space.getCredentialRecipients(space)
         await actorTxn.space.deleteSpace(space)
-        return recipients
+        return { writers, services }
       },
     )
 
-    this.backgroundQueue.add(() =>
-      this.notifySpaceDeleted(space, spaceDid, recipients),
-    )
-  }
-
-  private async notifySpaceDeleted(
-    space: SpaceRefString,
-    spaceDid: DidString,
-    recipients: { writers: DidString[]; services: string[] },
-  ): Promise<void> {
     // A bare DID resolves to that account's PDS, and `repo` tells it which of its
     // accounts to flag. A registered syncer names its own service entry and drops the
     // space entirely, so it needs no repo.
     const targets = [
-      ...recipients.writers.map((did) => ({ service: did, repo: did })),
-      ...recipients.services.map((service) => ({ service, repo: undefined })),
+      ...writers.map((w) => ({ service: w.did, repo: w.did as DidString })),
+      ...services.map((s) => ({ service: s.serviceDid, repo: undefined })),
     ]
-
     const lxm = com.atproto.space.notifySpaceDeleted.$lxm
-    for (const { service, repo } of targets) {
-      // Best effort: a recipient that misses this learns the space is gone from
-      // SpaceDeleted on its next credential renewal.
-      try {
-        const target = await resolveNotifyTarget(this, {
-          iss: spaceDid,
-          service,
-          lxm,
-        })
-        if (!target) {
-          spaceLogger.warn(
-            { space, service, lxm },
-            'could not resolve recipient',
-          )
-          continue
+    this.backgroundQueue.add(async () => {
+      for (const { service, repo } of targets) {
+        // Best effort: a recipient that misses this learns the space is gone from
+        // SpaceDeleted on its next credential renewal.
+        try {
+          const target = await resolveNotifyTarget(this, {
+            iss: spaceDid,
+            service,
+            lxm,
+          })
+          if (!target) {
+            spaceLogger.warn(
+              { space, service, lxm },
+              'could not resolve recipient',
+            )
+            continue
+          }
+          await xrpc(target.endpoint, com.atproto.space.notifySpaceDeleted, {
+            headers: target.headers,
+            body: { space, repo },
+          })
+        } catch (err) {
+          spaceLogger.warn({ err, space, service, lxm }, 'notify failed')
         }
-        await xrpc(target.endpoint, com.atproto.space.notifySpaceDeleted, {
-          headers: target.headers,
-          body: { space, repo },
-        })
-      } catch (err) {
-        spaceLogger.warn({ err, space, service, lxm }, 'notify failed')
       }
-    }
+    })
   }
 
   private async checkManagingApp(opts: {
-    space: SimplespaceConfig
+    config: SimplespaceConfig
     spaceDid: DidString
     userDid: string
     clientId?: string
   }): Promise<boolean> {
-    const { space, spaceDid, userDid, clientId } = opts
-    const { managingApp } = space
+    const { config, spaceDid, userDid, clientId } = opts
+    const { managingApp } = config
     if (!managingApp) return false
+
     const lxm = com.atproto.simplespace.checkUserAccess.$lxm
     try {
       const target = await resolveNotifyTarget(this, {
@@ -197,7 +205,7 @@ export class SimpleSpaceManager {
       })
       if (!target) {
         spaceLogger.warn(
-          { space: space.uri, managingApp },
+          { space: config.uri, managingApp },
           'could not resolve managing app',
         )
         return false
@@ -208,7 +216,7 @@ export class SimpleSpaceManager {
         {
           headers: target.headers,
           params: {
-            space: space.uri as SpaceRefString,
+            space: config.uri as SpaceRefString,
             user: userDid as DidString,
             clientId,
           },
@@ -219,7 +227,7 @@ export class SimpleSpaceManager {
       // An unreachable managing app denies: failing open would hand out credentials
       // for the spaces that asked for the strictest gate.
       spaceLogger.warn(
-        { err, space: space.uri, managingApp, user: userDid },
+        { err, space: config.uri, managingApp, user: userDid },
         'managing app check failed',
       )
       return false

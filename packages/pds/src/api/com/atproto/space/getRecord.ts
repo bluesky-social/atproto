@@ -16,12 +16,13 @@ export default function (server: Server, ctx: AppContext) {
 
       assertSpaceRead(auth, space, repo)
 
+      const uri = spaceRecordUri(space, repo, collection, rkey)
       const record = await ctx.actorStore.read(repo, (store) =>
-        store.space.getRecord(space, collection, rkey),
+        store.space.getRecord(uri.toString()),
       )
       if (!record) {
         throw new InvalidRequestError(
-          `Could not locate record: ${space}/${collection}/${rkey}`,
+          `Could not locate record: ${uri}`,
           'RecordNotFound',
         )
       }
@@ -29,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json' as const,
         body: {
-          uri: spaceRecordUri(space, repo, collection, rkey).toString(),
+          uri: uri.toString(),
           cid: record.cid,
           value: record.value,
         },

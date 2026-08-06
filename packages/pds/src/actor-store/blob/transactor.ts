@@ -14,7 +14,7 @@ import {
   parseCid,
 } from '@atproto/lex-data'
 import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
-import { AtUri, SpaceRefString, currentDatetimeString } from '@atproto/syntax'
+import { AtUri, currentDatetimeString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BackgroundQueue } from '../../background.js'
 import { com } from '../../lexicons/index.js'
@@ -339,39 +339,27 @@ export class BlobTransactor extends BlobReader {
 
   async associateSpaceBlob(
     blob: TypedBlobRef,
-    space: SpaceRefString,
     recordUri: AtUri,
   ): Promise<void> {
-    const { collection, rkey } = recordUri
     await this.db.db
       .insertInto('space_record_blob')
-      .values({ blobCid: blob.ref.toString(), space, collection, rkey })
+      .values({
+        blobCid: blob.ref.toString(),
+        recordUri: recordUri.toString(),
+      })
       .onConflict((oc) => oc.doNothing())
       .execute()
   }
 
-  async deleteDereferencedSpaceBlobs(
-    space: SpaceRefString,
-    writes: PreparedWrite[],
-  ): Promise<void> {
+  async deleteDereferencedSpaceBlobs(writes: PreparedWrite[]): Promise<void> {
     const deletes = writes.filter(isDelete)
     const updates = writes.filter(isUpdate)
-    const uris = [...deletes, ...updates].map((w) => w.uri)
+    const uris = [...deletes, ...updates].map((w) => w.uri.toString())
     if (uris.length === 0) return
 
     const dereferenced = await this.db.db
       .deleteFrom('space_record_blob')
-      .where('space', '=', space)
-      .where((eb) =>
-        eb.or(
-          uris.map((uri) =>
-            eb.and([
-              eb('collection', '=', uri.collection),
-              eb('rkey', '=', uri.rkey),
-            ]),
-          ),
-        ),
-      )
+      .where('recordUri', 'in', uris)
       .returning('blobCid')
       .execute()
 
@@ -385,10 +373,13 @@ export class BlobTransactor extends BlobReader {
     )
   }
 
+  // Must run before the space's records are dropped, since it scopes by them.
   async deleteSpaceBlobs(space: string): Promise<void> {
     const dereferenced = await this.db.db
       .deleteFrom('space_record_blob')
-      .where('space', '=', space)
+      .where('recordUri', 'in', (eb) =>
+        eb.selectFrom('space_record').select('uri').where('space', '=', space),
+      )
       .returning('blobCid')
       .execute()
 

@@ -19,25 +19,23 @@ export default function (server: Server, ctx: AppContext) {
 
       const records = await ctx.actorStore.read(repo, (store) =>
         store.space.listRecords(space, {
-          limit: limit ?? 50,
+          limit,
           cursor,
           reverse,
           collection,
-          includeValues: !excludeValues,
+          excludeValues,
         }),
       )
-
-      const last = records.at(-1)
 
       return {
         encoding: 'application/json' as const,
         body: {
-          cursor: last && `${last.collection}/${last.rkey}`,
-          records: records.map((r) => ({
-            collection: r.collection as NsidString,
-            rkey: r.rkey,
-            cid: r.cid,
-            value: r.value,
+          cursor: records.at(-1)?.uri,
+          records: records.map((record) => ({
+            collection: record.collection as NsidString,
+            rkey: record.rkey,
+            cid: record.cid,
+            value: record.value,
           })),
         },
       }

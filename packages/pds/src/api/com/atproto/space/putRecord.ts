@@ -1,7 +1,11 @@
 import { ForbiddenError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { prepareCreate, prepareUpdate } from '../../../../repo/index.js'
+import {
+  prepareCreate,
+  prepareUpdate,
+  spaceRecordUri,
+} from '../../../../repo/index.js'
 import { assertSpaceScope, fireNotifyWrite } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -23,7 +27,8 @@ export default function (server: Server, ctx: AppContext) {
         async (actorTxn) => {
           // Resolve to what this write actually is, so an app granted only `update`
           // isn't asked for `create` too.
-          const exists = await actorTxn.space.hasRecord(space, collection, rkey)
+          const uri = spaceRecordUri(space, did, collection, rkey)
+          const exists = await actorTxn.space.hasRecord(uri.toString())
           assertSpaceScope(auth, space, {
             action: exists ? 'update' : 'create',
             collection,

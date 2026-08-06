@@ -63,14 +63,14 @@ async function* readRecords(
   space: string,
   excludeValues?: boolean,
 ): AsyncGenerator<SerializedRecord> {
-  for await (const row of reader.streamRecords(space, { excludeValues })) {
+  for await (const record of reader.streamRecords(space, { excludeValues })) {
     yield {
-      collection: row.collection,
-      rkey: row.rkey,
-      cid: parseCid(row.cid),
+      collection: record.collection,
+      rkey: record.rkey,
+      cid: parseCid(record.cid),
       // Absent under excludeValues, where serializeRepo writes the index and no
       // record blocks, so the bytes are never read.
-      bytes: row.value ?? new Uint8Array(),
+      bytes: record.value ?? new Uint8Array(),
     }
   }
 }

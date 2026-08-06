@@ -22,15 +22,15 @@ export default function (server: Server, ctx: AppContext) {
 
       const members = await ctx.actorStore.read(ownerDid, async (store) => {
         await store.space.getActiveSpaceConfig(space)
-        return store.space.listMembers(space, { limit: limit ?? 100, cursor })
+        return store.space.listMembers(space, { limit, cursor })
       })
 
       return {
         encoding: 'application/json' as const,
         body: {
           cursor: members.at(-1)?.did,
-          members: members.map((m) => ({
-            did: m.did as l.DidString,
+          members: members.map((member) => ({
+            did: member.did as l.DidString,
           })),
         },
       }

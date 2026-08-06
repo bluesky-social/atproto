@@ -39,6 +39,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
   await db.schema
     .createTable('space_record')
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
     .addColumn('space', 'varchar', (col) => col.notNull())
     .addColumn('collection', 'varchar', (col) => col.notNull())
     .addColumn('rkey', 'varchar', (col) => col.notNull())
@@ -46,11 +47,14 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('value', 'blob', (col) => col.notNull())
     .addColumn('repoRev', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint('space_record_pkey', [
-      'space',
-      'collection',
-      'rkey',
-    ])
+    .execute()
+
+  // Serves listRecords, which pages a space by (collection, rkey).
+  await db.schema
+    .createIndex('space_record_path_idx')
+    .on('space_record')
+    .columns(['space', 'collection', 'rkey'])
+    .unique()
     .execute()
 
   await db.schema
@@ -59,34 +63,26 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .columns(['space', 'repoRev'])
     .execute()
 
-  // Keyed as space_record is, rather than by uri as record_blob is, so listing
-  // blobs since a revision is a plain join. Metadata stays in `blob`.
+  // Keyed by record uri as record_blob is. Metadata stays in `blob`.
   await db.schema
     .createTable('space_record_blob')
-    .addColumn('space', 'varchar', (col) => col.notNull())
-    .addColumn('collection', 'varchar', (col) => col.notNull())
-    .addColumn('rkey', 'varchar', (col) => col.notNull())
     .addColumn('blobCid', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint('space_record_blob_pkey', [
-      'space',
-      'collection',
-      'rkey',
-      'blobCid',
-    ])
+    .addColumn('recordUri', 'varchar', (col) => col.notNull())
+    .addPrimaryKeyConstraint('space_record_blob_pkey', ['blobCid', 'recordUri'])
     .execute()
 
-  // By cid alone for reachability checks across the whole store; by (space, blobCid)
-  // for listBlobs, which the pkey can't serve with blobCid as its 4th column.
+  // For reachability checks across the whole store, which look up by cid alone.
   await db.schema
     .createIndex('space_record_blob_cid_idx')
     .on('space_record_blob')
     .column('blobCid')
     .execute()
 
+  // Serves the space_record join in listBlobs and the space-wide delete.
   await db.schema
-    .createIndex('space_record_blob_space_cid_idx')
+    .createIndex('space_record_blob_record_idx')
     .on('space_record_blob')
-    .columns(['space', 'blobCid'])
+    .column('recordUri')
     .execute()
 
   // Per-repo commit state (LtHash set hash + rev).
@@ -104,6 +100,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('rev', 'varchar', (col) => col.notNull())
     .addColumn('idx', 'integer', (col) => col.notNull())
     .addColumn('action', 'varchar', (col) => col.notNull())
+    .addColumn('uri', 'varchar', (col) => col.notNull())
     .addColumn('collection', 'varchar', (col) => col.notNull())
     .addColumn('rkey', 'varchar', (col) => col.notNull())
     .addColumn('cid', 'varchar')

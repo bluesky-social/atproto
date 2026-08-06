@@ -1,4 +1,5 @@
 export interface SpaceRecord {
+  uri: string
   space: string
   collection: string
   rkey: string
