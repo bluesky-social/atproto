@@ -5,7 +5,7 @@
 # externally modified and stops auto-rebasing the PR. That's fine — grouped
 # updates arrive as fresh PRs weekly, and `@dependabot recreate` still works
 # (the recreated branch re-triggers this workflow).
-name: Dependabot Changeset
+name: Changeset
 
 on:
   pull_request:
@@ -19,7 +19,27 @@ concurrency:
 
 jobs:
   changeset:
-    name: Generate changeset
+    name: Check changeset
+    runs-on: ubuntu-latest
+    if: github.event.sender.login != 'dependabot[bot]'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # needed for git diff against base branch
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          cache: pnpm
+          node-version-file: '.nvmrc'
+      - run: pnpm install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+      # github.base_ref is only set on pull_request events; workflow_dispatch
+      # runs compare against the default branch.
+      - run: pnpm changeset status --since=origin/${{ github.base_ref || 'main' }}
+
+  generate-dependabot-changeset:
+    name: Generate dependabot changeset
     runs-on: ubuntu-latest
     # Only same-repo PRs authored by dependabot. PR author (not actor) so a
     # human reopening/rebasing the PR still gets a changeset regenerated, but

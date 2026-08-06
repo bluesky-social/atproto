@@ -7,13 +7,16 @@ permissions:
   contents: read
 
 concurrency:
-  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
+  group: '${{ github.workflow }}-${{ github.head_ref }}'
   cancel-in-progress: true
 
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    # The "changeset" workflow will trigger a new commit after Dependabot
+    # updates, which will re-trigger this workflow.
+    if: github.event.sender.login != 'dependabot[bot]'
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v6
@@ -70,25 +73,6 @@ jobs:
             packages/api/src/client
             packages/api/src/moderation/const/labels.ts
             packages/ozone/src/lexicon
-
-  changeset:
-    name: Changeset
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # needed for git diff against base branch
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
-        with:
-          cache: pnpm
-          node-version-file: '.nvmrc'
-      - run: pnpm install --frozen-lockfile
-        env:
-          PUPPETEER_SKIP_DOWNLOAD: true
-      # github.base_ref is only set on pull_request events; workflow_dispatch
-      # runs compare against the default branch.
-      - run: pnpm changeset status --since=origin/${{ github.base_ref || 'main' }}
 
   test:
     name: Test
