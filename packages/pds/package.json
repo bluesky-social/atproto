@@ -90,7 +90,6 @@
     "p-queue": "^8.0.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
-    "typed-emitter": "^2.1.0",
     "uint8arrays": "^5.0.0",
     "undici": "^8.5.0",
     "zod": "^3.23.8"
