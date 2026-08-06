@@ -27,26 +27,30 @@ export default function (server: Server, ctx: AppContext) {
       const account = await ctx.accountManager.getAccount(ownerDid)
       if (!account) return
 
-      const { spaceRow, checked, recipients } = await ctx.actorStore.read(
+      const { config, checked, recipients } = await ctx.actorStore.read(
         ownerDid,
         async (store) => {
-          const spaceRow = await store.space.getSpace(space)
+          // Null once the space is deleted, or if this host isn't its authority.
+          const existing = await store.space.getSpace(space)
+          const config =
+            existing && !existing.deletedAt
+              ? await store.space.getSpaceConfig(space)
+              : null
           return {
-            spaceRow,
+            config,
             checked:
-              spaceRow &&
-              (await store.space.checkUserAuthorized(spaceRow, repo)),
+              config && (await store.space.checkUserAuthorized(config, repo)),
             recipients: await store.space.getCredentialRecipients(space),
           }
         },
       )
-      if (!spaceRow || spaceRow.deletedAt) return
+      if (!config) return
 
       // The same check that mints credentials, so the writer set can't diverge from
       // who may read the space. User perimeter only: this comes from the writer's PDS,
       // not an app, so there is no attestation to evaluate.
       const authorized = await ctx.simpleSpaceManager.authorizeUser({
-        space: spaceRow,
+        space: config,
         checked: checked ?? false,
         userDid: repo,
       })

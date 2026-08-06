@@ -1,76 +1,81 @@
 import { SqlBool, sql } from 'kysely'
 import { LexMap } from '@atproto/lex-data'
 import { cborToLexRecord } from '@atproto/repo'
-import { DidString, SpaceRef, SpaceRefString } from '@atproto/syntax'
+import { DidString, SpaceRef } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ActorDb } from '../db/index.js'
+import {
+  ActorDb,
+  SimplespaceConfig,
+  SimplespaceMember,
+  Space,
+  SpaceRecord,
+  SpaceRecordOplog,
+  SpaceRepo,
+  SpaceWriter,
+} from '../db/index.js'
 
-// Cursor is `${collection}/${rkey}`. Parser is lenient — returns null for a
-// malformed cursor so callers can choose to ignore it instead of 500ing.
-const parseListCursor = (
-  cursor: string,
-): { collection: string; rkey: string } | null => {
-  const slash = cursor.indexOf('/')
-  if (slash < 0) return null
-  const collection = cursor.slice(0, slash)
-  const rkey = cursor.slice(slash + 1)
-  if (!collection || !rkey) return null
-  return { collection, rkey }
-}
+// The two halves of a space's config, as updateSpace patches them.
+export type SpacePolicy = Pick<SimplespaceConfig, 'policy' | 'managingApp'>
+export type SpaceAppAccess = Pick<
+  SimplespaceConfig,
+  'appAccessType' | 'appAllowed'
+>
 
-export const formatListCursor = (collection: string, rkey: string): string =>
-  `${collection}/${rkey}`
+// A record's path within its space.
+export type SpaceRecordPath = Pick<SpaceRecord, 'collection' | 'rkey'>
 
-const parseStringArray = (raw: string): string[] => {
-  const parsed = JSON.parse(raw)
-  if (!Array.isArray(parsed)) return []
-  return parsed.filter((v): v is string => typeof v === 'string')
-}
+// An oplog row, plus the record's value when values were requested and this op's is
+// still the current one.
+export type SpaceOp = Omit<SpaceRecordOplog, 'space'> & { value?: LexMap }
 
-export type SpaceRow = {
-  uri: SpaceRefString
-  policy: string
-  managingApp: string | null
-  appAccessType: string
-  appAllowed: string[]
-  deletedAt: string | null
-}
-
-// The app perimeter, evaluated against the attested client_id. Local to the space row,
-// so it needs no store access.
-export function isAppAuthorized(space: SpaceRow, clientId?: string): boolean {
-  if (space.appAccessType !== 'allowList') return true
-  return !!clientId && space.appAllowed.includes(clientId)
-}
+// Where a paginated response left off. Ops are unique and ordered by (rev, idx), so
+// this resumes exactly, even mid-rev.
+export type OplogPosition = Pick<SpaceRecordOplog, 'rev' | 'idx'>
 
 export class SpaceReader {
   constructor(public db: ActorDb) {}
 
-  async getSpace(uri: string): Promise<SpaceRow | null> {
+  async getSpace(uri: string): Promise<Space | null> {
     const row = await this.db.db
       .selectFrom('space')
       .selectAll()
       .where('uri', '=', uri)
       .executeTakeFirst()
-    if (!row) return null
-    return {
-      uri: row.uri as SpaceRefString,
-      policy: row.policy,
-      managingApp: row.managingApp,
-      appAccessType: row.appAccessType,
-      appAllowed: parseStringArray(row.appAllowed),
-      deletedAt: row.deletedAt,
-    }
+    return row ?? null
   }
 
   // Throws rather than returning null: a deleted space is indistinguishable from one
   // that never existed to everything but deleteSpace.
-  async getActiveSpace(uri: string): Promise<SpaceRow> {
+  async getActiveSpace(uri: string): Promise<Space> {
     const space = await this.getSpace(uri)
     if (!space || space.deletedAt) {
       throw new InvalidRequestError('Space not found', 'SpaceNotFound')
     }
     return space
+  }
+
+  /**
+   * The governance for a space this account is the authority for. Null for a space
+   * governed elsewhere — a member's store holds the repo but not the policy.
+   */
+  async getSpaceConfig(uri: string): Promise<SimplespaceConfig | null> {
+    const row = await this.db.db
+      .selectFrom('simplespace_config')
+      .selectAll()
+      .where('uri', '=', uri)
+      .executeTakeFirst()
+    return row ?? null
+  }
+
+  // The pair every credential decision needs: that the space is live here, and how it
+  // is governed. Throws SpaceNotFound if this account isn't its authority.
+  async getActiveSpaceConfig(uri: string): Promise<SimplespaceConfig> {
+    await this.getActiveSpace(uri)
+    const config = await this.getSpaceConfig(uri)
+    if (!config) {
+      throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+    }
+    return config
   }
 
   async listSpaces(opts: {
@@ -87,14 +92,11 @@ export class SpaceReader {
       .where('deletedAt', 'is', null)
       .orderBy('uri', 'asc')
       .limit(limit)
-    // Filter by URI shape `at://<did>/space/<type>/<skey>`. DIDs can't contain
-    // `/` so a `%/space/<type>/%` LIKE is unambiguous.
-    if (did && type) {
-      builder = builder.where('uri', 'like', `at://${did}/space/${type}/%`)
-    } else if (did) {
-      builder = builder.where('uri', 'like', `at://${did}/space/%`)
-    } else if (type) {
-      builder = builder.where('uri', 'like', `at://%/space/${type}/%`)
+    if (did) {
+      builder = builder.where('authority', '=', did)
+    }
+    if (type) {
+      builder = builder.where('type', '=', type)
     }
     if (cursor !== undefined) {
       builder = builder.where('uri', '>', cursor)
@@ -107,7 +109,7 @@ export class SpaceReader {
     collection: string,
     rkey: string,
     cid?: string | null,
-  ): Promise<{ cid: string; value: LexMap; indexedAt: string } | null> {
+  ): Promise<(SpaceRecordPath & { cid: string; value: LexMap }) | null> {
     let builder = this.db.db
       .selectFrom('space_record')
       .where('space', '=', space)
@@ -120,9 +122,10 @@ export class SpaceReader {
     const row = await builder.executeTakeFirst()
     if (!row) return null
     return {
+      collection: row.collection,
+      rkey: row.rkey,
       cid: row.cid,
       value: cborToLexRecord(row.value),
-      indexedAt: row.indexedAt,
     }
   }
 
@@ -141,16 +144,6 @@ export class SpaceReader {
     return !!row
   }
 
-  async listCollections(space: string): Promise<string[]> {
-    const rows = await this.db.db
-      .selectFrom('space_record')
-      .select('collection')
-      .where('space', '=', space)
-      .groupBy('collection')
-      .execute()
-    return rows.map((r) => r.collection)
-  }
-
   async listRecords(
     space: string,
     opts: {
@@ -160,12 +153,8 @@ export class SpaceReader {
       collection?: string
       includeValues?: boolean
     },
-  ): Promise<
-    { collection: string; rkey: string; cid: string; value?: LexMap }[]
-  > {
+  ): Promise<(SpaceRecordPath & { cid: string; value?: LexMap })[]> {
     const { limit, cursor, reverse, collection, includeValues } = opts
-    // Pagination is ordered by (collection, rkey) so a single cursor works
-    // across collections. Cursor format: `${collection}/${rkey}`.
     const direction = reverse ? 'asc' : 'desc'
     const columns = includeValues
       ? (['collection', 'rkey', 'cid', 'value'] as const)
@@ -180,19 +169,17 @@ export class SpaceReader {
     if (collection) {
       builder = builder.where('collection', '=', collection)
     }
-    if (cursor !== undefined) {
-      const cursorKey = parseListCursor(cursor)
-      if (cursorKey) {
-        // Lexicographic tuple comparison: (collection, rkey) </> cursor.
-        // Written with `sql` because not all kysely versions expose tuple
-        // expressions in the typed builder.
-        const { collection: c, rkey: r } = cursorKey
-        builder = builder.where(
-          reverse
-            ? sql<SqlBool>`("collection", "rkey") > (${c}, ${r})`
-            : sql<SqlBool>`("collection", "rkey") < (${c}, ${r})`,
-        )
-      }
+    // A malformed cursor is ignored rather than an error, matching the rest of the
+    // paginated read paths.
+    const [cursorCollection, cursorRkey] = cursor?.split('/') ?? []
+    if (cursorCollection && cursorRkey) {
+      // Tuple comparison, written as raw sql because kysely's typed builder doesn't
+      // expose it.
+      builder = builder.where(
+        reverse
+          ? sql<SqlBool>`("collection", "rkey") > (${cursorCollection}, ${cursorRkey})`
+          : sql<SqlBool>`("collection", "rkey") < (${cursorCollection}, ${cursorRkey})`,
+      )
     }
     const rows = await builder.execute()
     return rows.map((r) => ({
@@ -206,9 +193,9 @@ export class SpaceReader {
   async listMembers(
     space: string,
     opts: { limit: number; cursor?: string },
-  ): Promise<{ did: string }[]> {
+  ): Promise<Pick<SimplespaceMember, 'did'>[]> {
     let builder = this.db.db
-      .selectFrom('space_member')
+      .selectFrom('simplespace_member')
       .select(['did'])
       .where('space', '=', space)
       .orderBy('did', 'asc')
@@ -223,7 +210,7 @@ export class SpaceReader {
   async listWriters(
     space: string,
     opts: { limit: number; cursor?: string },
-  ): Promise<{ did: string; rev: string; hash: Uint8Array }[]> {
+  ): Promise<Omit<SpaceWriter, 'space'>[]> {
     let builder = this.db.db
       .selectFrom('space_writer')
       .select(['did', 'rev', 'hash'])
@@ -238,7 +225,7 @@ export class SpaceReader {
 
   async isMember(space: string, did: string): Promise<boolean> {
     const row = await this.db.db
-      .selectFrom('space_member')
+      .selectFrom('simplespace_member')
       .select('did')
       .where('space', '=', space)
       .where('did', '=', did)
@@ -252,18 +239,18 @@ export class SpaceReader {
    * 'ask-managing-app' for the caller to resolve — see SimpleSpaceManager.authorizeUser.
    */
   async checkUserAuthorized(
-    space: SpaceRow,
+    config: SimplespaceConfig,
     userDid: string,
   ): Promise<boolean | 'ask-managing-app'> {
     // The authority is the only party who can reconfigure the space, so it must not be
     // able to lock itself out.
-    if (userDid === SpaceRef.parse(space.uri).spaceDid) return true
+    if (userDid === SpaceRef.parse(config.uri).spaceDid) return true
 
-    switch (space.policy) {
+    switch (config.policy) {
       case 'public':
         return true
       case 'member-list':
-        return this.isMember(space.uri, userDid)
+        return this.isMember(config.uri, userDid)
       case 'managing-app':
         return 'ask-managing-app'
       default:
@@ -271,147 +258,106 @@ export class SpaceReader {
     }
   }
 
-  async getSetHash(space: string): Promise<Buffer | null> {
+  async getRepoState(space: string): Promise<SpaceRepo | null> {
     const row = await this.db.db
       .selectFrom('space_repo')
-      .select('setHash')
+      .selectAll()
       .where('space', '=', space)
       .executeTakeFirst()
-    return row?.setHash ? Buffer.from(row.setHash) : null
-  }
-
-  async getRev(space: string): Promise<string | null> {
-    const row = await this.db.db
-      .selectFrom('space_repo')
-      .select('rev')
-      .where('space', '=', space)
-      .executeTakeFirst()
-    return row?.rev ?? null
-  }
-
-  async getRepoState(
-    space: string,
-  ): Promise<{ setHash: Buffer | null; rev: string | null } | null> {
-    const row = await this.db.db
-      .selectFrom('space_repo')
-      .select(['setHash', 'rev'])
-      .where('space', '=', space)
-      .executeTakeFirst()
-    if (!row) return null
-    return {
-      setHash: row.setHash ? Buffer.from(row.setHash) : null,
-      rev: row.rev,
-    }
+    return row ?? null
   }
 
   /**
-   * A rev is never split across responses: ops sharing a rev were applied atomically
-   * and `since` advances by whole revs, so returning part of one would drop the
-   * remainder. A rev larger than `limit` comes back whole.
+   * A repo's ops, ordered by (rev, idx), alongside the repo's current commit state.
+   *
+   * `since` is a rev — the caller's sync position — and `position` resumes a paginated
+   * response mid-rev. A caller paging through holds `since` steady and passes back the
+   * position from each response.
    */
-  async getRepoOplog(
+  async listRepoOps(
     space: string,
-    opts: { since?: string; limit: number; includeValues?: boolean },
+    opts: {
+      since?: string
+      position?: OplogPosition
+      limit: number
+      includeValues?: boolean
+    },
   ): Promise<{
-    ops: Array<{
-      rev: string
-      idx: number
-      action: string
-      collection: string
-      rkey: string
-      cid: string | null
-      prev: string | null
-      value?: LexMap
-    }>
+    ops: SpaceOp[]
+    state: SpaceRepo | null
     caughtUp: boolean
-    setHash: Buffer | null
-    rev: string | null
   }> {
-    const { since, limit, includeValues } = opts
+    const { since, position, limit, includeValues } = opts
 
-    const query = (opts: { since?: string; rev?: string; limit?: number }) => {
-      // Table-qualified throughout: the `space_record` join below shares the
-      // space/rev/collection/rkey/cid column names.
-      let builder = this.db.db
-        .selectFrom('space_record_oplog')
-        .where('space_record_oplog.space', '=', space)
-        .orderBy('space_record_oplog.rev', 'asc')
-        .orderBy('space_record_oplog.idx', 'asc')
-        .selectAll('space_record_oplog')
-      // Inline the record's current value, but only when the op's cid still
-      // matches the live record — a value superseded by a later op is stale and
-      // must be omitted. The join self-filters to the current row by cid.
-      if (includeValues) {
-        builder = builder
-          .leftJoin('space_record', (join) =>
-            join
-              .onRef('space_record.space', '=', 'space_record_oplog.space')
-              .onRef(
-                'space_record.collection',
-                '=',
-                'space_record_oplog.collection',
-              )
-              .onRef('space_record.rkey', '=', 'space_record_oplog.rkey')
-              .onRef('space_record.cid', '=', 'space_record_oplog.cid'),
-          )
-          .select('space_record.value as value')
-      }
-      if (opts.since) {
-        builder = builder.where('space_record_oplog.rev', '>', opts.since)
-      }
-      if (opts.rev) {
-        builder = builder.where('space_record_oplog.rev', '=', opts.rev)
-      }
-      if (opts.limit) builder = builder.limit(opts.limit)
-      return builder.execute()
+    // Table-qualified throughout: space_record shares most of these column names.
+    let builder = this.db.db
+      .selectFrom('space_record_oplog')
+      .selectAll('space_record_oplog')
+      .where('space_record_oplog.space', '=', space)
+      .orderBy('space_record_oplog.rev', 'asc')
+      .orderBy('space_record_oplog.idx', 'asc')
+      // One extra row, to tell a full page from the last one.
+      .limit(limit + 1)
+    if (includeValues) {
+      // Joining on the op's cid as well as its path means only the record's *current*
+      // value comes back. An op that a later one superseded joins to nothing, so its
+      // stale value is left off rather than served.
+      builder = builder
+        .leftJoin('space_record', (join) =>
+          join
+            .onRef('space_record.space', '=', 'space_record_oplog.space')
+            .onRef(
+              'space_record.collection',
+              '=',
+              'space_record_oplog.collection',
+            )
+            .onRef('space_record.rkey', '=', 'space_record_oplog.rkey')
+            .onRef('space_record.cid', '=', 'space_record_oplog.cid'),
+        )
+        .select('space_record.value as value')
+    }
+    if (since) {
+      builder = builder.where('space_record_oplog.rev', '>', since)
+    }
+    if (position) {
+      // Strictly after (rev, idx), so a page can resume in the middle of a rev.
+      builder = builder.where(
+        sql<SqlBool>`("space_record_oplog"."rev", "space_record_oplog"."idx") > (${position.rev}, ${position.idx})`,
+      )
     }
 
-    const rows = await query({ since, limit: limit + 1 })
+    // `value` is only selected on the joined variant, so kysely can't type it here.
+    const rows: Array<SpaceOp & { value?: unknown }> = await builder.execute()
+    const hasMore = rows.length > limit
+    const ops = rows
+      .slice(0, limit)
+      .map(({ value, ...op }) =>
+        value instanceof Uint8Array
+          ? { ...op, value: cborToLexRecord(value) }
+          : op,
+      )
 
-    let kept = rows
-    let caughtUp = true
-    if (rows.length > limit) {
-      caughtUp = false
-      const lastRev = rows[rows.length - 1].rev
-      const trimmed = rows.slice(0, limit).filter((r) => r.rev !== lastRev)
-      // One rev filled the whole window, so re-read it in full.
-      kept = trimmed.length > 0 ? trimmed : await query({ rev: rows[0].rev })
-    }
-
+    // Read after the ops, so a write landing in between shows up as the page trailing
+    // the repo rather than as a commit paired with ops that precede it.
     const state = await this.getRepoState(space)
-    return {
-      ops: kept.map((r) => {
-        // Only present on joined rows; not in kysely's row type.
-        const value = (r as { value?: Uint8Array | null }).value
-        return {
-          rev: r.rev,
-          idx: r.idx,
-          action: r.action,
-          collection: r.collection,
-          rkey: r.rkey,
-          cid: r.cid,
-          prev: r.prev,
-          ...(value != null ? { value: cborToLexRecord(value) } : {}),
-        }
-      }),
-      caughtUp,
-      setHash: state?.setHash ?? null,
-      rev: state?.rev ?? null,
-    }
+    const lastRev = ops.at(-1)?.rev
+    const caughtUp =
+      !hasMore && (lastRev === undefined || lastRev === state?.rev)
+    return { ops, state, caughtUp }
   }
 
-  // Paged so a caller can serialize a repo without buffering the whole thing.
+  /**
+   * Paged so a caller can serialize a repo without buffering the whole thing.
+   *
+   * `value` is absent under `excludeValues` — the column isn't selected — so a caller
+   * that needs bytes must not pass it.
+   */
   async *streamRecords(
     space: string,
     opts: { batchSize?: number; excludeValues?: boolean } = {},
-  ): AsyncGenerator<{
-    collection: string
-    rkey: string
-    cid: string
-    value: Uint8Array
-  }> {
+  ): AsyncGenerator<SpaceRecordPath & { cid: string; value?: Uint8Array }> {
     const batchSize = opts.batchSize ?? 500
-    let cursor: { collection: string; rkey: string } | undefined
+    let cursor: SpaceRecordPath | undefined
 
     while (true) {
       let builder = this.db.db
@@ -502,18 +448,16 @@ export class SpaceReader {
     }
   }
 
-  async getCredentialRecipients(space: string): Promise<
-    Array<{
-      serviceDid: string
-      serviceEndpoint: string
-      lastIssuedAt: string
-    }>
-  > {
-    const rows = await this.db.db
+  // A lapsed registration is left in place rather than deleted, so re-registering the
+  // same service reuses its row.
+  async getCredentialRecipients(
+    space: string,
+  ): Promise<Array<{ serviceDid: string; serviceEndpoint: string }>> {
+    return this.db.db
       .selectFrom('space_credential_recipient')
-      .select(['serviceDid', 'serviceEndpoint', 'lastIssuedAt'])
+      .select(['serviceDid', 'serviceEndpoint'])
       .where('space', '=', space)
+      .where('expiresAt', '>', new Date().toISOString())
       .execute()
-    return rows
   }
 }

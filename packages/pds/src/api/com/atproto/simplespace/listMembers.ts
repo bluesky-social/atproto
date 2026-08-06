@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
       assertSpaceOwner(ownerDid, space)
 
       const members = await ctx.actorStore.read(ownerDid, async (store) => {
-        await store.space.getActiveSpace(space)
+        await store.space.getActiveSpaceConfig(space)
         return store.space.listMembers(space, { limit: limit ?? 100, cursor })
       })
 

@@ -3,7 +3,7 @@ import { xrpc } from '@atproto/lex'
 import { DidString, SpaceRefString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorStore } from '../actor-store/actor-store.js'
-import { SpaceRow } from '../actor-store/space/index.js'
+import { SimplespaceConfig } from '../actor-store/db/index.js'
 import {
   resolveNotifyTarget,
   toSpaceRef,
@@ -11,7 +11,7 @@ import {
 import { BackgroundQueue } from '../background.js'
 import { com } from '../lexicons/index.js'
 import { spaceLogger } from '../logger.js'
-import { appAccessToStorage, policyToStorage, toLexConfig } from './config.js'
+import { lexAppAccessToDb, lexPolicyToDb, toLexConfig } from './config.js'
 
 type LexPolicy = com.atproto.simplespace.createSpace.$InputBody['policy']
 type LexAppAccess = com.atproto.simplespace.createSpace.$InputBody['appAccess']
@@ -28,22 +28,19 @@ export class SimpleSpaceManager {
     config: { policy: LexPolicy; appAccess: LexAppAccess },
   ): Promise<void> {
     const { spaceDid } = toSpaceRef(space)
-    const columns = {
-      ...policyToStorage(config.policy),
-      ...appAccessToStorage(config.appAccess),
-    }
+    const policy = lexPolicyToDb(config.policy)
+    const appAccess = lexAppAccessToDb(config.appAccess)
 
     await this.actorStore.transact(spaceDid, async (actorTxn) => {
-      const existing = await actorTxn.space.getSpace(space)
-      if (existing && !existing.deletedAt) {
+      const existing = await actorTxn.space.getSpaceConfig(space)
+      if (existing) {
         throw new InvalidRequestError(
           'Space already exists',
           'SpaceAlreadyExists',
         )
       }
-      await actorTxn.space.createSpace(space, columns)
-      // The authority is a member of its own space.
-      await actorTxn.space.addMember(space, spaceDid)
+
+      await actorTxn.space.createSpace(space, policy, appAccess)
     })
   }
 
@@ -52,38 +49,69 @@ export class SimpleSpaceManager {
     patch: { policy?: LexPolicy; appAccess?: LexAppAccess },
   ): Promise<void> {
     const config = {
-      ...(patch.policy && policyToStorage(patch.policy)),
-      ...(patch.appAccess && appAccessToStorage(patch.appAccess)),
+      ...(patch.policy && { policy: lexPolicyToDb(patch.policy) }),
+      ...(patch.appAccess && { appAccess: lexAppAccessToDb(patch.appAccess) }),
     }
     const { spaceDid } = toSpaceRef(space)
     await this.actorStore.transact(spaceDid, async (actorTxn) => {
-      await actorTxn.space.getActiveSpace(space)
+      await actorTxn.space.getActiveSpaceConfig(space)
       await actorTxn.space.updateSpaceConfig(space, config)
     })
   }
 
   async getSpace(space: SpaceRefString) {
     const { spaceDid } = toSpaceRef(space)
-    const spaceRow = await this.actorStore
-      .read(spaceDid, (store) => store.space.getActiveSpace(space))
-      .catch(asSpaceNotFound)
-    return toLexConfig(spaceRow)
+    const config = await this.actorStore.read(spaceDid, (store) =>
+      store.space.getActiveSpaceConfig(space),
+    )
+    return toLexConfig(config)
   }
 
   /**
-   * Resolve a `checkUserAuthorized` result that the store couldn't answer alone, by
-   * asking the space's managing app. Callers read the space from a store they already
-   * hold open, so the local decision doesn't come back through here.
+   * Both perimeters a credential has to clear. The app goes first because it decides
+   * from the config alone, so a refused app is never disclosed to a third-party
+   * managing app.
+   */
+  async authorizeCredential(opts: {
+    space: SimplespaceConfig
+    checked: boolean | 'ask-managing-app'
+    userDid: string
+    clientId?: string
+  }): Promise<void> {
+    const { space, clientId } = opts
+
+    if (space.appAccessType === 'allowList') {
+      const allowed: string[] = JSON.parse(space.appAllowed)
+      if (!clientId || !allowed.includes(clientId)) {
+        throw new InvalidRequestError(
+          'Application not authorized for this space',
+          'AppNotAuthorized',
+        )
+      }
+    }
+
+    if (!(await this.authorizeUser(opts))) {
+      throw new InvalidRequestError(
+        'User not authorized for this space',
+        'UserNotAuthorized',
+      )
+    }
+  }
+
+  /**
+   * The user perimeter. `checked` is the decision the store could reach on its own,
+   * since the caller already holds it open; only a `managing-app` policy needs the call
+   * out from here.
    */
   async authorizeUser(opts: {
-    space: SpaceRow
+    space: SimplespaceConfig
     checked: boolean | 'ask-managing-app'
     userDid: string
     clientId?: string
   }): Promise<boolean> {
     const { space, checked, userDid, clientId } = opts
     if (checked !== 'ask-managing-app') return checked
-    const { spaceDid } = toSpaceRef(space.uri)
+    const { spaceDid } = toSpaceRef(space.uri as SpaceRefString)
     return this.checkManagingApp({ space, spaceDid, userDid, clientId })
   }
 
@@ -101,8 +129,7 @@ export class SimpleSpaceManager {
       spaceDid,
       async (actorTxn) => {
         const recipients = await actorTxn.space.listDeletionRecipients(space)
-        await actorTxn.space.markSpaceDeleted(space)
-        await actorTxn.space.purgeSpaceData(space)
+        await actorTxn.space.deleteSpace(space)
         return recipients
       },
     )
@@ -153,7 +180,7 @@ export class SimpleSpaceManager {
   }
 
   private async checkManagingApp(opts: {
-    space: SpaceRow
+    space: SimplespaceConfig
     spaceDid: DidString
     userDid: string
     clientId?: string
@@ -181,7 +208,7 @@ export class SimpleSpaceManager {
         {
           headers: target.headers,
           params: {
-            space: space.uri,
+            space: space.uri as SpaceRefString,
             user: userDid as DidString,
             clientId,
           },
@@ -198,16 +225,4 @@ export class SimpleSpaceManager {
       return false
     }
   }
-}
-
-// A space is read out of its authority's own store, so a host that doesn't hold that
-// account can't answer for it.
-function asSpaceNotFound(err: unknown): never {
-  if (
-    err instanceof InvalidRequestError &&
-    err.customErrorName === 'NotFound'
-  ) {
-    throw new InvalidRequestError('Space not found', 'SpaceNotFound')
-  }
-  throw err
 }

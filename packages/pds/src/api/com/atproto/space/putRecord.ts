@@ -1,8 +1,7 @@
-import { AtUriString } from '@atproto/syntax'
 import { ForbiddenError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { prepareWrite } from '../../../../repo/index.js'
+import { prepareCreate, prepareUpdate } from '../../../../repo/index.js'
 import { assertSpaceScope, fireNotifyWrite } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -19,47 +18,42 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError('repo must match authenticated user')
       }
 
-      const prepared = await prepareWrite({
+      const { commit, write } = await ctx.actorStore.transact(
         did,
-        space,
-        collection,
-        rkey,
-        record,
-        validate: input.body.validate,
-      })
+        async (actorTxn) => {
+          // Resolve to what this write actually is, so an app granted only `update`
+          // isn't asked for `create` too.
+          const exists = await actorTxn.space.hasRecord(space, collection, rkey)
+          assertSpaceScope(auth, space, {
+            action: exists ? 'update' : 'create',
+            collection,
+          })
 
-      const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
-        // Check the scope for what this actually is; requiring both would lock
-        // out an app granted only `update`.
-        const exists = await actorTxn.space.hasRecord(space, collection, rkey)
-        assertSpaceScope(auth, space, {
-          action: exists ? 'update' : 'create',
-          collection,
-        })
-        return actorTxn.space.applyWrites(space, [
-          {
-            action: 'put',
+          const writeInfo = {
+            did,
+            space,
             collection,
             rkey,
-            record: prepared.record,
-            blobs: prepared.blobs,
-          },
-        ])
-      })
+            record,
+            validate: input.body.validate,
+          }
+          const write = exists
+            ? await prepareUpdate(writeInfo)
+            : await prepareCreate(writeInfo)
 
-      await fireNotifyWrite(ctx, {
-        space,
-        writerDid: did,
-        rev: commit.rev,
-        setHash: commit.setHash,
-      })
+          const commit = await actorTxn.space.applyWrites(space, [write])
+          return { commit, write }
+        },
+      )
+
+      await fireNotifyWrite(ctx, { space, writerDid: did, commit })
 
       return {
         encoding: 'application/json' as const,
         body: {
-          uri: prepared.uri.toString() as AtUriString,
-          cid: prepared.cid.toString(),
-          validationStatus: prepared.validationStatus,
+          uri: write.uri.toString(),
+          cid: write.cid.toString(),
+          validationStatus: write.validationStatus,
         },
       }
     },

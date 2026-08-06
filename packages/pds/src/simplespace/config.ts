@@ -1,5 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { SpaceConfig, SpaceRow } from '../actor-store/space/index.js'
+import { SimplespaceConfig } from '../actor-store/db/index.js'
+import { SpaceAppAccess, SpacePolicy } from '../actor-store/space/reader.js'
 import { com } from '../lexicons/index.js'
 
 const { defs } = com.atproto.simplespace
@@ -8,10 +9,7 @@ type LexSpace = com.atproto.simplespace.getSpace.$OutputBody
 type LexPolicy = LexSpace['policy']
 type LexAppAccess = LexSpace['appAccess']
 
-// Both unions are open, so an unrecognized variant is well-formed on the wire and
-// arrives here. Storing it would mean enforcing something the host doesn't implement,
-// so it's refused rather than coerced to a default.
-export function policyToStorage(policy: LexPolicy): SpaceConfig {
+export function lexPolicyToDb(policy: LexPolicy): SpacePolicy {
   if (defs.publicPolicy.$isTypeOf(policy)) {
     return { policy: 'public', managingApp: null }
   }
@@ -34,12 +32,15 @@ export function policyToStorage(policy: LexPolicy): SpaceConfig {
   )
 }
 
-export function appAccessToStorage(appAccess: LexAppAccess): SpaceConfig {
+export function lexAppAccessToDb(appAccess: LexAppAccess): SpaceAppAccess {
   if (defs.open.$isTypeOf(appAccess)) {
-    return { appAccessType: 'open', appAllowed: [] }
+    return { appAccessType: 'open', appAllowed: JSON.stringify([]) }
   }
   if (defs.allowList.$isTypeOf(appAccess)) {
-    return { appAccessType: 'allowList', appAllowed: appAccess.allowed }
+    return {
+      appAccessType: 'allowList',
+      appAllowed: JSON.stringify(appAccess.allowed),
+    }
   }
   throw new InvalidRequestError(
     `Unsupported appAccess: ${appAccess.$type}`,
@@ -47,30 +48,30 @@ export function appAccessToStorage(appAccess: LexAppAccess): SpaceConfig {
   )
 }
 
-export function toLexConfig(space: SpaceRow): LexSpace {
+export function toLexConfig(config: SimplespaceConfig): LexSpace {
   return {
-    uri: space.uri as LexSpace['uri'],
-    policy: policyToLex(space),
-    appAccess: appAccessToLex(space),
+    uri: config.uri as LexSpace['uri'],
+    policy: policyToLex(config),
+    appAccess: appAccessToLex(config),
   }
 }
 
-function policyToLex(space: SpaceRow): LexPolicy {
-  switch (space.policy) {
+function policyToLex(config: SpacePolicy): LexPolicy {
+  switch (config.policy) {
     case 'public':
       return defs.publicPolicy.build({})
     case 'managing-app':
       return defs.managingAppPolicy.build({
-        managingApp: space.managingApp ?? '',
+        managingApp: config.managingApp ?? '',
       })
     default:
       return defs.memberListPolicy.build({})
   }
 }
 
-function appAccessToLex(space: SpaceRow): LexAppAccess {
-  if (space.appAccessType === 'allowList') {
-    return defs.allowList.build({ allowed: space.appAllowed })
+function appAccessToLex(config: SpaceAppAccess): LexAppAccess {
+  if (config.appAccessType === 'allowList') {
+    return defs.allowList.build({ allowed: JSON.parse(config.appAllowed) })
   }
   return defs.open.build({})
 }

@@ -10,6 +10,7 @@ import {
   createServiceAuthHeaders,
 } from '@atproto/xrpc-server'
 import { ActorStore } from '../../../../actor-store/actor-store.js'
+import { SpaceRepo } from '../../../../actor-store/db/index.js'
 import {
   AccessOutput,
   OAuthOutput,
@@ -99,7 +100,7 @@ export function assertCredentialSpace(
 export async function buildSignedCommit(opts: {
   spaceUri: SpaceRefString
   author: string
-  state: { setHash: Buffer | null; rev: string | null } | null
+  state: SpaceRepo | null
   keypair: Keypair
 }): Promise<SignedCommit | undefined> {
   const { spaceUri, author, state, keypair } = opts
@@ -156,16 +157,19 @@ export async function resolveNotifyTarget(
 }
 
 // Notifications are best-effort: sync recovers on a later notification or a sweep.
+// Takes a nullable commit so callers whose write may be a no-op — an already-deleted
+// record, an empty batch — don't each have to guard.
 export async function fireNotifyWrite(
   ctx: AppContext,
   opts: {
     space: SpaceRefString
     writerDid: string
-    rev: string
-    setHash: Uint8Array
+    commit: { rev: string; setHash: Uint8Array } | null
   },
 ): Promise<void> {
-  const { space, writerDid, rev, setHash } = opts
+  const { space, writerDid, commit } = opts
+  if (!commit) return
+  const { rev, setHash } = commit
   const { spaceDid } = toSpaceRef(space)
   const lxm = com.atproto.space.notifyWrite.$lxm
   try {

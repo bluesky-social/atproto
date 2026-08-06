@@ -1,7 +1,7 @@
-import { AtUriString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import { spaceRecordUri } from '../../../../repo/index.js'
 import { assertSpaceRead } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -29,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json' as const,
         body: {
-          uri: `${space}/${repo}/${collection}/${rkey}` as AtUriString,
+          uri: spaceRecordUri(space, repo, collection, rkey).toString(),
           cid: record.cid,
           value: record.value,
         },

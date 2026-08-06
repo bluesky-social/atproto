@@ -110,6 +110,7 @@ export const validateRecord = (
 
 export const prepareCreate = async (opts: {
   did: DidString
+  space?: SpaceRefString
   collection: NsidString
   rkey?: RecordKeyString
   swapCid?: Cid | null
@@ -132,6 +133,7 @@ export const prepareCreate = async (opts: {
 
 export const prepareUpdate = async (opts: {
   did: DidString
+  space?: SpaceRefString
   collection: NsidString
   rkey: RecordKeyString
   swapCid?: Cid | null
@@ -153,7 +155,7 @@ export const prepareUpdate = async (opts: {
 }
 
 export async function prepareWrite(opts: {
-  did: string
+  did: DidString
   // Set for a permissioned space record, whose uri nests under the space ref.
   space?: SpaceRefString
   collection: NsidString
@@ -224,9 +226,9 @@ export async function prepareWrite(opts: {
   }
 }
 
-const spaceRecordUri = (
+export const spaceRecordUri = (
   space: SpaceRefString,
-  author: string,
+  author: DidString,
   collection: NsidString,
   rkey: string,
 ): AtUri => {
@@ -236,14 +238,17 @@ const spaceRecordUri = (
 
 export const prepareDelete = (opts: {
   did: DidString
+  space?: SpaceRefString
   collection: NsidString
   rkey: RecordKeyString
   swapCid?: Cid | null
 }): PreparedDelete => {
-  const { did, collection, rkey, swapCid } = opts
+  const { did, space, collection, rkey, swapCid } = opts
   return {
     action: WriteOpAction.Delete,
-    uri: AtUri.make(did, collection, rkey),
+    uri: space
+      ? spaceRecordUri(space, did, collection, rkey)
+      : AtUri.make(did, collection, rkey),
     swapCid,
   }
 }

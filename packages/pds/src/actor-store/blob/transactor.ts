@@ -14,7 +14,7 @@ import {
   parseCid,
 } from '@atproto/lex-data'
 import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
-import { AtUri, currentDatetimeString } from '@atproto/syntax'
+import { AtUri, SpaceRefString, currentDatetimeString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BackgroundQueue } from '../../background.js'
 import { com } from '../../lexicons/index.js'
@@ -339,44 +339,64 @@ export class BlobTransactor extends BlobReader {
 
   async associateSpaceBlob(
     blob: TypedBlobRef,
-    path: SpaceRecordPath,
+    space: SpaceRefString,
+    recordUri: AtUri,
   ): Promise<void> {
+    const { collection, rkey } = recordUri
     await this.db.db
       .insertInto('space_record_blob')
-      .values({ ...path, blobCid: blob.ref.toString() })
+      .values({ blobCid: blob.ref.toString(), space, collection, rkey })
       .onConflict((oc) => oc.doNothing())
       .execute()
   }
 
   async deleteDereferencedSpaceBlobs(
-    paths: SpaceRecordPath[],
-    keepBlobs: Iterable<TypedBlobRef>,
+    space: SpaceRefString,
+    writes: PreparedWrite[],
   ): Promise<void> {
-    if (paths.length === 0) return
+    const deletes = writes.filter(isDelete)
+    const updates = writes.filter(isUpdate)
+    const uris = [...deletes, ...updates].map((w) => w.uri)
+    if (uris.length === 0) return
 
-    const dereferencedCids: string[] = []
-    for (const path of paths) {
-      const rows = await this.db.db
-        .deleteFrom('space_record_blob')
-        .where('space', '=', path.space)
-        .where('collection', '=', path.collection)
-        .where('rkey', '=', path.rkey)
-        .returning('blobCid')
-        .execute()
-      dereferencedCids.push(...rows.map((row) => row.blobCid))
-    }
+    const dereferenced = await this.db.db
+      .deleteFrom('space_record_blob')
+      .where('space', '=', space)
+      .where((eb) =>
+        eb.or(
+          uris.map((uri) =>
+            eb.and([
+              eb('collection', '=', uri.collection),
+              eb('rkey', '=', uri.rkey),
+            ]),
+          ),
+        ),
+      )
+      .returning('blobCid')
+      .execute()
+
+    const keepCids = writes
+      .filter((w) => isUpdate(w) || isCreate(w))
+      .flatMap((w) => w.blobs.map((b) => b.ref.toString()))
 
     await this.deleteBlobsIfUnreferenced(
-      dereferencedCids,
-      Array.from(keepBlobs, (blob) => blob.ref.toString()),
+      dereferenced.map((row) => row.blobCid),
+      keepCids,
     )
   }
-}
 
-export type SpaceRecordPath = {
-  space: string
-  collection: string
-  rkey: string
+  async deleteSpaceBlobs(space: string): Promise<void> {
+    const dereferenced = await this.db.db
+      .deleteFrom('space_record_blob')
+      .where('space', '=', space)
+      .returning('blobCid')
+      .execute()
+
+    await this.deleteBlobsIfUnreferenced(
+      dereferenced.map((row) => row.blobCid),
+      [],
+    )
+  }
 }
 
 export class CidNotFound extends Error {

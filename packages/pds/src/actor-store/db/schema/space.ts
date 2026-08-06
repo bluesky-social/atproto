@@ -1,9 +1,8 @@
 export interface Space {
   uri: string
-  policy: string // 'public' | 'member-list' | 'managing-app'
-  managingApp: string | null // set iff policy is 'managing-app'
-  appAccessType: string // 'open' | 'allowList'
-  appAllowed: string // JSON-encoded string[] of allowed client_ids
+  // Both denormalized out of the uri, so spaces can be filtered without matching on it.
+  authority: string
+  type: string
   createdAt: string
   deletedAt: string | null
 }

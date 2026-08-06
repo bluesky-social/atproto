@@ -1,8 +1,23 @@
 import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
+  // A space this account holds a repo in, whoever governs it.
   await db.schema
     .createTable('space')
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    // Denormalized out of the uri (`at://<authority>/space/<type>/<skey>`) so that
+    // listSpaces can filter on columns rather than pattern-matching the uri.
+    .addColumn('authority', 'varchar', (col) => col.notNull())
+    .addColumn('type', 'varchar', (col) => col.notNull())
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('deletedAt', 'varchar')
+    .execute()
+
+  // Governance for the spaces this account is the authority for. Separate from `space`
+  // because a member holds a repo in spaces it has no say over, and is never told their
+  // policy — so a row here exists only for a space this account created.
+  await db.schema
+    .createTable('simplespace_config')
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
     .addColumn('policy', 'varchar', (col) =>
       col.notNull().defaultTo('member-list'),
@@ -12,16 +27,14 @@ export async function up(db: Kysely<unknown>): Promise<void> {
       col.notNull().defaultTo('open'),
     )
     .addColumn('appAllowed', 'text', (col) => col.notNull().defaultTo('[]'))
-    .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .addColumn('deletedAt', 'varchar')
     .execute()
 
   // Plain host-internal member list (no rev / commit state).
   await db.schema
-    .createTable('space_member')
+    .createTable('simplespace_member')
     .addColumn('space', 'varchar', (col) => col.notNull())
     .addColumn('did', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint('space_member_pkey', ['space', 'did'])
+    .addPrimaryKeyConstraint('simplespace_member_pkey', ['space', 'did'])
     .execute()
 
   await db.schema
@@ -62,10 +75,18 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     ])
     .execute()
 
+  // By cid alone for reachability checks across the whole store; by (space, blobCid)
+  // for listBlobs, which the pkey can't serve with blobCid as its 4th column.
   await db.schema
     .createIndex('space_record_blob_cid_idx')
     .on('space_record_blob')
     .column('blobCid')
+    .execute()
+
+  await db.schema
+    .createIndex('space_record_blob_space_cid_idx')
+    .on('space_record_blob')
+    .columns(['space', 'blobCid'])
     .execute()
 
   // Per-repo commit state (LtHash set hash + rev).
@@ -107,7 +128,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('space', 'varchar', (col) => col.notNull())
     .addColumn('serviceDid', 'varchar', (col) => col.notNull())
     .addColumn('serviceEndpoint', 'varchar', (col) => col.notNull())
-    .addColumn('lastIssuedAt', 'varchar', (col) => col.notNull())
+    .addColumn('expiresAt', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint('space_credential_recipient_pkey', [
       'space',
       'serviceDid',
@@ -122,6 +143,7 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('space_repo').execute()
   await db.schema.dropTable('space_record_blob').execute()
   await db.schema.dropTable('space_record').execute()
-  await db.schema.dropTable('space_member').execute()
+  await db.schema.dropTable('simplespace_member').execute()
+  await db.schema.dropTable('simplespace_config').execute()
   await db.schema.dropTable('space').execute()
 }

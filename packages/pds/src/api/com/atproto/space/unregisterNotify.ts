@@ -1,4 +1,4 @@
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertCredentialSpace, toSpaceRef } from './util.js'
@@ -13,12 +13,9 @@ export default function (server: Server, ctx: AppContext) {
 
       const { spaceDid } = toSpaceRef(space)
 
-      const spaceRow = await ctx.actorStore.read(spaceDid, (store) =>
-        store.space.getSpace(space),
+      await ctx.actorStore.read(spaceDid, (store) =>
+        store.space.getActiveSpaceConfig(space),
       )
-      if (!spaceRow || spaceRow.deletedAt) {
-        throw new InvalidRequestError('Space not found', 'SpaceNotFound')
-      }
 
       // Not resolved here: a subscriber whose DID document has since changed must
       // still be able to withdraw. Succeeds when nothing was registered.

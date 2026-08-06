@@ -5,8 +5,9 @@ import * as recordBlob from './record-blob.js'
 import * as record from './record.js'
 import * as repoBlock from './repo-block.js'
 import * as repoRoot from './repo-root.js'
+import * as simplespaceConfig from './simplespace-config.js'
+import * as simplespaceMember from './simplespace-member.js'
 import * as spaceCredentialRecipient from './space-credential-recipient.js'
-import * as spaceMember from './space-member.js'
 import * as spaceRecordBlob from './space-record-blob.js'
 import * as spaceRecordOplog from './space-record-oplog.js'
 import * as spaceRecord from './space-record.js'
@@ -22,7 +23,8 @@ export type DatabaseSchema = accountPref.PartialDB &
   blob.PartialDB &
   recordBlob.PartialDB &
   space.PartialDB &
-  spaceMember.PartialDB &
+  simplespaceConfig.PartialDB &
+  simplespaceMember.PartialDB &
   spaceRecord.PartialDB &
   spaceRecordBlob.PartialDB &
   spaceRepo.PartialDB &
@@ -38,7 +40,8 @@ export type { RepoBlock } from './repo-block.js'
 export type { Blob } from './blob.js'
 export type { RecordBlob } from './record-blob.js'
 export type { Space } from './space.js'
-export type { SpaceMember } from './space-member.js'
+export type { SimplespaceConfig } from './simplespace-config.js'
+export type { SimplespaceMember } from './simplespace-member.js'
 export type { SpaceRecord } from './space-record.js'
 export type { SpaceRecordBlob } from './space-record-blob.js'
 export type { SpaceRepo } from './space-repo.js'

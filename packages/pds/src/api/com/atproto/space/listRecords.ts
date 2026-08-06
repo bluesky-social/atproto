@@ -1,6 +1,5 @@
 import { NsidString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
-import { formatListCursor } from '../../../../actor-store/space/reader.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertSpaceRead } from './util.js'
@@ -29,14 +28,11 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       const last = records.at(-1)
-      const nextCursor = last
-        ? formatListCursor(last.collection, last.rkey)
-        : undefined
 
       return {
         encoding: 'application/json' as const,
         body: {
-          cursor: nextCursor,
+          cursor: last && `${last.collection}/${last.rkey}`,
           records: records.map((r) => ({
             collection: r.collection as NsidString,
             rkey: r.rkey,

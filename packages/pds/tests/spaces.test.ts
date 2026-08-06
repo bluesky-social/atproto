@@ -207,9 +207,10 @@ describe('spaces', () => {
       { space: spaceUri },
       { headers: aliceHeaders },
     )
+    // Alice is the authority, which is checked against the space uri rather than
+    // carried on the member list.
     const dids = members.members.map((m) => m.did)
-    // alice (owner, auto-added) + dan + bob
-    expect(dids).toContain(aliceDid)
+    expect(dids).not.toContain(aliceDid)
     expect(dids).toContain(danDid)
     expect(dids).toContain(bobDid)
 
@@ -262,7 +263,7 @@ describe('spaces', () => {
     expect(got.value).toMatchObject({ text: 'hello from dan' })
 
     const oplog = await pds1.ctx.actorStore.read(danDid, (store) =>
-      store.space.getRepoOplog(spaceUri, { limit: 100 }),
+      store.space.listRepoOps(spaceUri, { limit: 100 }),
     )
     const lastOp = oplog.ops[oplog.ops.length - 1]
     expect(lastOp).toMatchObject({
@@ -304,7 +305,7 @@ describe('spaces', () => {
     )
 
     const oplog = await pds1.ctx.actorStore.read(danDid, (store) =>
-      store.space.getRepoOplog(spaceUri, { limit: 100 }),
+      store.space.listRepoOps(spaceUri, { limit: 100 }),
     )
     const deleteOp = oplog.ops.find((op) => op.action === 'delete')
     expect(deleteOp).toMatchObject({
@@ -338,7 +339,7 @@ describe('spaces', () => {
     )
 
     const oplog = await pds1.ctx.actorStore.read(danDid, (store) =>
-      store.space.getRepoOplog(spaceUri, { limit: 100 }),
+      store.space.listRepoOps(spaceUri, { limit: 100 }),
     )
     const batchOps = oplog.ops.slice(-3)
     expect(batchOps.map((o) => o.rev)).toEqual([
@@ -451,8 +452,43 @@ describe('spaces', () => {
     await expectSetHashMatchesStore(pds1, danDid, spaceUri)
   })
 
-  it('never splits a rev across oplog pages', async () => {
-    // `since` advances by rev, so a partial rev would drop the remainder.
+  it('treats an empty batch as a no-op', async () => {
+    // A rev with no op behind it reads to a syncer as state it never received, and
+    // would let a batch that writes nothing materialize a repo.
+    const spaceUri = await createSpace('batch-empty', [danDid])
+
+    const res = await pds1Client.call(
+      com.atproto.space.applyWrites,
+      { space: spaceUri, repo: danDid, writes: [] },
+      { headers: danHeaders },
+    )
+    expect(res.results).toEqual([])
+
+    // Dan's repo state is materialized on his first write, so a batch that writes
+    // nothing leaves no repo state at all.
+    const [state, oplog] = await pds1.ctx.actorStore.read(
+      danDid,
+      async (store) => [
+        await store.space.getRepoState(spaceUri),
+        await store.space.listRepoOps(spaceUri, { limit: 10 }),
+      ],
+    )
+    expect(state).toBeNull()
+    expect(oplog.ops).toEqual([])
+
+    // No commit to sign, so the repo still reads as unwritten.
+    await expect(
+      pds1Client.call(
+        com.atproto.space.getLatestCommit,
+        { space: spaceUri, repo: danDid },
+        { headers: danHeaders },
+      ),
+    ).rejects.toThrow(/RepoNotFound|Could not find repo/)
+  })
+
+  it('pages through a single rev without dropping ops', async () => {
+    // One batch is one rev, so a page boundary can land inside it. The cursor carries
+    // (rev, idx), so resuming picks up mid-rev rather than re-reading or skipping it.
     const spaceUri = await createSpace('oplog-atomic', [danDid])
 
     await pds1Client.call(
@@ -470,12 +506,20 @@ describe('spaces', () => {
       { headers: danHeaders },
     )
 
-    const page = await pds1.ctx.actorStore.read(danDid, (store) =>
-      store.space.getRepoOplog(spaceUri, { limit: 2 }),
-    )
-    // All 5 share one rev, so the batch comes back whole despite limit: 2.
-    expect(page.ops).toHaveLength(5)
-    expect(new Set(page.ops.map((o) => o.rev)).size).toBe(1)
+    const credential = await credentialFor(pds1, danHeaders, spaceUri)
+    const rkeys: string[] = []
+    let cursor: string | undefined
+    for (let i = 0; i < 10; i++) {
+      const page = await pds1Client.call(
+        com.atproto.space.listRepoOps,
+        { space: spaceUri, repo: danDid, limit: 2, cursor },
+        { headers: credential },
+      )
+      rkeys.push(...page.ops.map((op) => op.rkey))
+      cursor = page.cursor
+      if (!cursor) break
+    }
+    expect(rkeys).toEqual([0, 1, 2, 3, 4].map((i) => `atomic-${i}`))
   })
 
   it('withholds the commit until the oplog is drained to head', async () => {
@@ -507,16 +551,65 @@ describe('spaces', () => {
 
     let cursor = first.cursor
     let commit: unknown
+    const seen = [first.ops[0].rev]
     for (let i = 0; i < 5 && cursor; i++) {
       const next = await pds1Client.call(
         com.atproto.space.listRepoOps,
-        { space: spaceUri, repo: danDid, since: cursor, limit: 1 },
+        { space: spaceUri, repo: danDid, cursor, limit: 1 },
         { headers: credential },
       )
+      if (next.ops[0]) seen.push(next.ops[0].rev)
       cursor = next.cursor
       commit = next.commit
     }
+    // Each page advances: paging on a cursor that was ignored would repeat a rev.
+    expect(new Set(seen).size).toBe(seen.length)
     expect(commit).toBeDefined()
+  })
+
+  it('pages with since and cursor together', async () => {
+    // A syncer holds `since` at its own position and passes back each `cursor`, so the
+    // two compose rather than one overriding the other.
+    const spaceUri = await createSpace('oplog-since-cursor', [danDid])
+    const collection = TEST_COLLECTION as NsidString
+
+    for (const i of [0, 1, 2, 3]) {
+      await pds1Client.call(
+        com.atproto.space.createRecord,
+        {
+          space: spaceUri,
+          repo: danDid,
+          collection,
+          rkey: `prec-${i}`,
+          record: post(`prec ${i}`),
+        },
+        { headers: danHeaders },
+      )
+    }
+
+    const credential = await credentialFor(pds1, danHeaders, spaceUri)
+    const all = await pds1Client.call(
+      com.atproto.space.listRepoOps,
+      { space: spaceUri, repo: danDid, limit: 100 },
+      { headers: credential },
+    )
+    expect(all.ops).toHaveLength(4)
+
+    // Synced through op 0; page the rest one at a time, holding `since` steady.
+    const since = all.ops[0].rev
+    const rkeys: string[] = []
+    let cursor: string | undefined
+    for (let i = 0; i < 10; i++) {
+      const page = await pds1Client.call(
+        com.atproto.space.listRepoOps,
+        { space: spaceUri, repo: danDid, since, cursor, limit: 1 },
+        { headers: credential },
+      )
+      rkeys.push(...page.ops.map((op) => op.rkey))
+      cursor = page.cursor
+      if (!cursor) break
+    }
+    expect(rkeys).toEqual(['prec-1', 'prec-2', 'prec-3'])
   })
 
   // ---------------- Cross-PDS ----------------
@@ -543,7 +636,7 @@ describe('spaces', () => {
     expect(created.uri).toContain(bobDid)
 
     const oplog = await pds2.ctx.actorStore.read(bobDid, (store) =>
-      store.space.getRepoOplog(spaceUri, { limit: 100 }),
+      store.space.listRepoOps(spaceUri, { limit: 100 }),
     )
     const lastOp = oplog.ops[oplog.ops.length - 1]
     expect(lastOp.action).toBe('create')
@@ -1003,6 +1096,62 @@ describe('spaces', () => {
     ).rejects.toThrow()
   })
 
+  it('reports each result against the write it came from', async () => {
+    // Results are built from the prepared writes, so a delete in the middle of a batch
+    // can't shift the uris or validation statuses of the writes around it.
+    const spaceUri = await createSpace('batch-results', [danDid])
+    const collection = TEST_COLLECTION as NsidString
+
+    await pds1Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: danDid,
+        collection,
+        rkey: 'doomed',
+        record: post('doomed'),
+      },
+      { headers: danHeaders },
+    )
+
+    const res = await pds1Client.call(
+      com.atproto.space.applyWrites,
+      {
+        space: spaceUri,
+        repo: danDid,
+        writes: [
+          {
+            $type: 'com.atproto.space.applyWrites#create' as const,
+            collection,
+            rkey: 'first',
+            value: post('first'),
+          },
+          {
+            $type: 'com.atproto.space.applyWrites#delete' as const,
+            collection,
+            rkey: 'doomed',
+          },
+          {
+            $type: 'com.atproto.space.applyWrites#create' as const,
+            collection,
+            rkey: 'last',
+            value: post('last'),
+          },
+        ],
+      },
+      { headers: danHeaders },
+    )
+
+    const [first, deleted, last] = res.results ?? []
+    expect(deleted.$type).toBe('com.atproto.space.applyWrites#deleteResult')
+    expect(first['uri']).toBe(`${spaceUri}/${danDid}/${collection}/first`)
+    expect(last['uri']).toBe(`${spaceUri}/${danDid}/${collection}/last`)
+    // A third-party collection, so both creates report 'unknown' — on themselves, not
+    // shifted onto the delete's slot.
+    expect(first['validationStatus']).toBe('unknown')
+    expect(last['validationStatus']).toBe('unknown')
+  })
+
   it('deleteRecord is idempotent', async () => {
     const spaceUri = await createSpace('delete-idempotent', [])
     const args = {
@@ -1076,6 +1225,52 @@ describe('spaces', () => {
       { space: spaceUri, service },
       { headers: credHeaders },
     )
+  })
+
+  it('stops notifying a registration past its expiry', async () => {
+    // registerNotify hands back an expiresAt and tells the caller to renew before it,
+    // so a registration nobody renewed has to stop being delivered to.
+    const spaceUri = await createSpace('notify-expiry', [carolDid])
+    const credHeaders = await credentialFor(pds3, carolHeaders, spaceUri)
+    const service = `${carolDid}#atproto_pds`
+
+    await pds1Client.call(
+      com.atproto.space.registerNotify,
+      { space: spaceUri, service },
+      { headers: credHeaders },
+    )
+
+    // Expire it rather than waiting out the TTL.
+    await pds1.ctx.actorStore.transact(aliceDid, (actorTxn) =>
+      actorTxn.space.db.db
+        .updateTable('space_credential_recipient')
+        .set({ expiresAt: new Date(Date.now() - 1000).toISOString() })
+        .where('space', '=', spaceUri)
+        .execute(),
+    )
+
+    // Withheld from both fan-outs: writes and deletion.
+    const [recipients, deletion] = await pds1.ctx.actorStore.read(
+      aliceDid,
+      async (store) => [
+        await store.space.getCredentialRecipients(spaceUri),
+        await store.space.listDeletionRecipients(spaceUri),
+      ],
+    )
+    expect(recipients).toHaveLength(0)
+    expect(deletion.services).toHaveLength(0)
+
+    // Renewing brings it back — the row was withheld, not dropped.
+    await pds1Client.call(
+      com.atproto.space.registerNotify,
+      { space: spaceUri, service },
+      { headers: credHeaders },
+    )
+    expect(
+      await pds1.ctx.actorStore.read(aliceDid, (store) =>
+        store.space.getCredentialRecipients(spaceUri),
+      ),
+    ).toHaveLength(1)
   })
 
   it('paginates listRecords across collections', async () => {
@@ -1350,18 +1545,17 @@ describe('spaces', () => {
     ).rejects.toThrow()
   })
 
-  it('getSpace refuses non-authority', async () => {
+  it('getSpace refuses a host that does not govern the space', async () => {
     const spaceUri = await createSpace('config-getspace-nonowner', [bobDid])
-    // Bob is a member but the space lives on alice's PDS, which pds2 does not host,
-    // so asking his own PDS reports the space as not found rather than leaking a
-    // store-level error.
+    // Bob is a member, but the space is governed on alice's PDS. His own PDS holds no
+    // config for it and so can't answer.
     await expect(
       pds2Client.call(
         com.atproto.simplespace.getSpace,
         { space: spaceUri },
         { headers: bobHeaders },
       ),
-    ).rejects.toThrow(/Space not found/)
+    ).rejects.toThrow()
   })
 
   it('updateSpace patches policy and appAccess', async () => {
@@ -1681,7 +1875,7 @@ describe('spaces', () => {
     // Incremental pull returns only the post-prune ops; applying them alone
     // yields a setHash that diverges from the server's.
     const incremental = await pds2.ctx.actorStore.read(bobDid, (store) =>
-      store.space.getRepoOplog(spaceUri, { since: consumerSince, limit: 100 }),
+      store.space.listRepoOps(spaceUri, { since: consumerSince, limit: 100 }),
     )
     expect(incremental.ops.length).toBe(2)
 
@@ -1696,7 +1890,7 @@ describe('spaces', () => {
     }
     expect(
       applied.setHash.equals(
-        RepoCommit.fromState(incremental.setHash!).setHash,
+        RepoCommit.fromState(incremental.state?.setHash).setHash,
       ),
     ).toBe(false)
 
@@ -1886,23 +2080,11 @@ describe('spaces', () => {
     expect(members).toEqual([])
     expect(await blobExists(getBlobCidString(uploaded.blob))).toBe(false)
 
-    // Reads and writes both fail, as the lexicon says.
+    // Reads fail, as the lexicon says.
     await expect(
       pds1Client.call(
         com.atproto.simplespace.getSpace,
         { space: spaceUri },
-        { headers: aliceHeaders },
-      ),
-    ).rejects.toThrow(/Space not found/)
-    await expect(
-      pds1Client.call(
-        com.atproto.space.createRecord,
-        {
-          space: spaceUri,
-          repo: aliceDid,
-          collection: TEST_COLLECTION,
-          record: { $type: TEST_COLLECTION, text: 'after deletion' },
-        },
         { headers: aliceHeaders },
       ),
     ).rejects.toThrow(/Space not found/)
@@ -1913,6 +2095,63 @@ describe('spaces', () => {
       { space: spaceUri },
       { headers: aliceHeaders },
     )
+  })
+
+  it('a write into a tombstoned space revives it, keeping existing records', async () => {
+    // A member's `deletedAt` only records what notifySpaceDeleted last told it, and
+    // an authority may recreate a space under the same uri. So a write — which
+    // already carries a covering scope — is treated as the fresher signal, rather
+    // than the tombstone locking the repo permanently.
+    const spaceUri = await createSpace('tombstone-revive', [bobDid])
+    await pds2Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: bobDid,
+        collection: TEST_COLLECTION,
+        rkey: 'before',
+        record: { $type: TEST_COLLECTION, text: 'before deletion' },
+      },
+      { headers: bobHeaders },
+    )
+
+    await pds1Client.call(
+      com.atproto.simplespace.deleteSpace,
+      { space: spaceUri },
+      { headers: aliceHeaders },
+    )
+    await pds1.ctx.backgroundQueue.processAll()
+    const tombstoned = await pds2.ctx.actorStore.read(bobDid, (store) =>
+      store.space.getSpace(spaceUri),
+    )
+    expect(tombstoned?.deletedAt).toBeDefined()
+
+    // Alice brings the space back and re-admits bob.
+    await createSpace('tombstone-revive', [bobDid])
+
+    await pds2Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: bobDid,
+        collection: TEST_COLLECTION,
+        rkey: 'after',
+        record: { $type: TEST_COLLECTION, text: 'after revival' },
+      },
+      { headers: bobHeaders },
+    )
+
+    // Same space, so bob's earlier record is still his.
+    const [revived, records] = await pds2.ctx.actorStore.read(
+      bobDid,
+      async (store) => [
+        await store.space.getSpace(spaceUri),
+        await store.space.listRecords(spaceUri, { limit: 10 }),
+      ],
+    )
+    expect(revived?.deletedAt).toBeNull()
+    expect(records.map((r) => r.rkey).sort()).toEqual(['after', 'before'])
+    await expectSetHashMatchesStore(pds2, bobDid, spaceUri)
   })
 
   it('answers SpaceDeleted on credential renewal after deletion', async () => {
@@ -2012,9 +2251,10 @@ describe('spaces', () => {
     )
   })
 
-  it('materializes a self-authority space written to before createSpace', async () => {
-    // A personal-data client may write to at://me/space/<type>/<skey> without ever
-    // calling createSpace. The lazily created row must still be manageable.
+  it('governs a self-authority space written to before createSpace', async () => {
+    // Writing to at://me/space/<type>/<skey> materializes a repo but does not create a
+    // simplespace: there is no config until the owner asks for one, and no default to
+    // guess at. So the space isn't administrable yet, and createSpace is what makes it.
     const spaceUri =
       `at://${aliceDid}/space/app.bsky.group/lazy` as SpaceRefString
     await pds1Client.call(
@@ -2028,14 +2268,26 @@ describe('spaces', () => {
       { headers: aliceHeaders },
     )
 
+    await expect(
+      pds1Client.call(
+        com.atproto.simplespace.getSpace,
+        { space: spaceUri },
+        { headers: aliceHeaders },
+      ),
+    ).rejects.toThrow(/Space not found/)
+    await expect(
+      pds1Client.call(
+        com.atproto.simplespace.addMember,
+        { space: spaceUri, did: bobDid },
+        { headers: aliceHeaders },
+      ),
+    ).rejects.toThrow(/Space not found/)
+
+    // Creating it over the existing repo governs it, and the records stay put.
+    await createSpace('lazy')
     await pds1Client.call(
       com.atproto.simplespace.addMember,
       { space: spaceUri, did: bobDid },
-      { headers: aliceHeaders },
-    )
-    await pds1Client.call(
-      com.atproto.simplespace.updateSpace,
-      { space: spaceUri, policy: defs.publicPolicy.build({}) },
       { headers: aliceHeaders },
     )
     const got = await pds1Client.call(
@@ -2043,11 +2295,12 @@ describe('spaces', () => {
       { space: spaceUri },
       { headers: aliceHeaders },
     )
-    expect(got.policy.$type).toBe('com.atproto.simplespace.defs#publicPolicy')
-    await pds1Client.call(
-      com.atproto.simplespace.deleteSpace,
-      { space: spaceUri },
-      { headers: aliceHeaders },
+    expect(got.policy.$type).toBe(
+      'com.atproto.simplespace.defs#memberListPolicy',
     )
+    const records = await pds1.ctx.actorStore.read(aliceDid, (store) =>
+      store.space.listRecords(spaceUri, { limit: 10 }),
+    )
+    expect(records).toHaveLength(1)
   })
 })

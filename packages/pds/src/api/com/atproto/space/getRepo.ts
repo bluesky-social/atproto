@@ -2,7 +2,7 @@ import { byteIterableToStream } from '@atproto/common'
 import { parseCid } from '@atproto/lex-data'
 import { SerializedRecord, serializeRepo } from '@atproto/space'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { SpaceReader } from '../../../../actor-store/space/index.js'
+import { SpaceReader } from '../../../../actor-store/space/reader.js'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertSpaceRead, buildSignedCommit } from './util.js'
@@ -68,7 +68,9 @@ async function* readRecords(
       collection: row.collection,
       rkey: row.rkey,
       cid: parseCid(row.cid),
-      bytes: row.value,
+      // Absent under excludeValues, where serializeRepo writes the index and no
+      // record blocks, so the bytes are never read.
+      bytes: row.value ?? new Uint8Array(),
     }
   }
 }

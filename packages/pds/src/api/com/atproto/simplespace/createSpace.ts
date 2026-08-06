@@ -17,10 +17,8 @@ export default function (server: Server, ctx: AppContext) {
       const { type, policy, appAccess } = input.body
       const skey = input.body.skey ?? TID.nextStr()
 
-      // Simplespace spaces are anchored on the caller's own DID.
       const space = new SpaceRef(ownerDid, type, skey).toString()
 
-      // createSpace is a space-level "manage" (create) operation.
       assertSpaceScope(auth, space, { manage: 'create' })
 
       await ctx.simpleSpaceManager.createSpace(space, { policy, appAccess })

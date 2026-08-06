@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
       assertSpaceOwner(ownerDid, space)
 
       await ctx.actorStore.transact(ownerDid, async (actorTxn) => {
-        await actorTxn.space.getActiveSpace(space)
+        await actorTxn.space.getActiveSpaceConfig(space)
         await actorTxn.space.removeMember(space, memberDid)
       })
     },

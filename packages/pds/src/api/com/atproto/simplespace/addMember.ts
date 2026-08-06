@@ -20,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
 
       // The member isn't notified: their PDS materializes its repo on first write.
       await ctx.actorStore.transact(ownerDid, async (actorTxn) => {
-        await actorTxn.space.getActiveSpace(space)
+        await actorTxn.space.getActiveSpaceConfig(space)
         await actorTxn.space.addMember(space, memberDid)
       })
     },
