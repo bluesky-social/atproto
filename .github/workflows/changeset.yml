@@ -34,9 +34,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
-      # github.base_ref is only set on pull_request events; workflow_dispatch
-      # runs compare against the default branch.
-      - run: pnpm changeset status --since=origin/${{ github.base_ref || 'main' }}
+      - run: pnpm changeset status --since=origin/${{ github.base_ref }}
 
   generate-dependabot-changeset:
     name: Generate dependabot changeset
