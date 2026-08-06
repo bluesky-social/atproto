@@ -20,6 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         collection,
         reportTypes = [],
         description,
+        recommendedPolicies = [],
       } = input.body
       const createdBy =
         access.type === 'admin_token' ? 'admin_token' : access.iss
@@ -43,6 +44,8 @@ export default function (server: Server, ctx: AppContext) {
 
       const queueService = ctx.queueService(ctx.db)
 
+      await queueService.assertRecommendedPolicies(recommendedPolicies)
+
       await queueService.checkConflict({
         name,
         subjectTypes,
@@ -56,6 +59,7 @@ export default function (server: Server, ctx: AppContext) {
         collection,
         reportTypes,
         description,
+        recommendedPolicies,
         createdBy,
       })
 

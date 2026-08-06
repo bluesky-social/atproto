@@ -9,6 +9,8 @@ import { jsonb } from '../db/types.js'
 import { handleReportUpdate } from '../report/handle-report-update.js'
 import { ReportStatsService } from '../report/stats.js'
 import { viewQueueStats } from '../report/views.js'
+import { PolicyListSettingKey } from '../setting/constants.js'
+import { SettingService } from '../setting/service.js'
 
 const MOD_EVENT_REPORT_ACTION = 'tools.ozone.moderation.defs#modEventReport'
 const REASON_OTHER = 'com.atproto.moderation.defs#reasonOther'
@@ -65,6 +67,29 @@ export class QueueService {
 
   static creator() {
     return (db: Database) => new QueueService(db)
+  }
+
+  async assertRecommendedPolicies(
+    recommendedPolicies: string[],
+  ): Promise<void> {
+    const { options } = await new SettingService(this.db).query({
+      limit: 1,
+      scope: 'instance',
+      keys: [PolicyListSettingKey],
+    })
+    const policyList = options[0]?.value
+    const validKeys = new Set(
+      policyList && typeof policyList === 'object'
+        ? Object.keys(policyList)
+        : [],
+    )
+    const invalid = recommendedPolicies.filter((key) => !validKeys.has(key))
+    if (invalid.length) {
+      throw new InvalidRequestError(
+        `Unknown recommended policy keys: ${invalid.join(', ')}`,
+        'InvalidRecommendedPolicies',
+      )
+    }
   }
 
   async checkConflict({
@@ -124,6 +149,7 @@ export class QueueService {
     collection,
     reportTypes,
     description,
+    recommendedPolicies,
     createdBy,
   }: {
     name: string
@@ -131,6 +157,7 @@ export class QueueService {
     collection?: string | null
     reportTypes: string[]
     description?: string | null
+    recommendedPolicies: string[]
     createdBy: string
   }): Promise<Selectable<ReportQueue>> {
     const now = new Date().toISOString()
@@ -142,6 +169,7 @@ export class QueueService {
         collection: collection ?? null,
         reportTypes: jsonb(reportTypes),
         description: description ?? null,
+        recommendedPolicies: jsonb(recommendedPolicies),
         createdBy,
         enabled: true,
         createdAt: now,
@@ -174,12 +202,24 @@ export class QueueService {
 
   async update(
     id: number,
-    updates: { name?: string; enabled?: boolean; description?: string },
+    updates: {
+      name?: string
+      enabled?: boolean
+      description?: string
+      recommendedPolicies?: string[]
+    },
   ): Promise<Selectable<ReportQueue>> {
     const now = new Date().toISOString()
     return await this.db.db
       .updateTable('report_queue')
-      .set({ ...updates, updatedAt: now })
+      .set({
+        ...updates,
+        recommendedPolicies:
+          updates.recommendedPolicies === undefined
+            ? undefined
+            : jsonb(updates.recommendedPolicies),
+        updatedAt: now,
+      })
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirstOrThrow()
@@ -277,6 +317,7 @@ export class QueueService {
       collection: queue.collection ?? undefined,
       reportTypes: queue.reportTypes,
       description: queue.description ?? undefined,
+      recommendedPolicies: queue.recommendedPolicies,
       createdBy: queue.createdBy,
       createdAt: queue.createdAt,
       updatedAt: queue.updatedAt,
