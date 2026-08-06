@@ -1,8 +1,6 @@
-.DS_Store
 .git
-*.log
-node_modules
 
+**/*.log
 **/.DS_Store
 **/Dockerfile
 **/node_modules
