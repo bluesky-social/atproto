@@ -91,7 +91,7 @@
     "esbuild-plugin-handlebars": "^1.0.3",
     "get-port": "^6.1.2",
     "jest": "^30.0.0",
-    "puppeteer": "^23.11.1",
+    "puppeteer": "^25.4.0",
     "ws": "^8.12.0"
   },
   "scripts": {
