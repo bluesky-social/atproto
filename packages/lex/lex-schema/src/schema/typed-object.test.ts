@@ -786,7 +786,7 @@ describe('TypedObjectSchema', () => {
       >().toEqualTypeOf<TypedObject<'app.bsky.feed.post', { $type: 'app.bsky.feed.post'; text: string }>>()
 
       expectTypeOf<
-        $TypedLexMap<'app.bsky.feed.post', { text: string }>
+        $TypedLexMap<'app.bsky.feed.post', { text: string; $type?: unknown }>
       >().toEqualTypeOf<TypedObject<'app.bsky.feed.post', { text: string }>>()
     })
 

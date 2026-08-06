@@ -27,7 +27,7 @@ export type InferRecordKey<R extends RecordSchema> =
 
 export type TypedRecord<
   TType extends NsidString,
-  TValue extends object = object,
+  TValue extends { $type?: unknown } = { $type?: unknown },
 > = $TypedLexMap<TType, TValue>
 
 /**
@@ -95,10 +95,10 @@ export class RecordSchema<
     return $typed(input, this.$type)
   }
 
-  isTypeOf<TValue extends object>(
+  isTypeOf<TValue extends { $type?: unknown }>(
     value: TValue,
   ): value is TypedRecord<TType, TValue> {
-    return (value as { $type?: unknown }).$type === this.$type
+    return value.$type === this.$type
   }
 
   /**
