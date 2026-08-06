@@ -246,11 +246,9 @@ msgstr "Bluesky Chat services"
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 
-#. placeholder {0}: tosLink ? ( <LinkAnchor className="text-foreground underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
-#. placeholder {1}: ppLink ? ( <LinkAnchor className="text-foreground underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/components/sign-up-disclaimer.tsx
-msgid "By creating an account you agree to the {0} and the {1} of this service."
-msgstr "By creating an account you agree to the {0} and the {1} of this service."
+msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
+msgstr "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
 
 #: src/components/utils/scope-description.tsx
 msgctxt "RPC lxm"
@@ -932,7 +930,6 @@ msgstr "Please try again in a moment."
 msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
 msgstr "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
 
-#: src/components/sign-up-disclaimer.tsx
 #: src/components/utils/link-title.tsx
 msgid "Privacy Policy"
 msgstr "Privacy Policy"
@@ -1113,7 +1110,6 @@ msgstr "Technical details"
 msgid "Temporarily activate or deactivate your account"
 msgstr "Temporarily activate or deactivate your account"
 
-#: src/components/sign-up-disclaimer.tsx
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"
 msgstr "Terms of Service"

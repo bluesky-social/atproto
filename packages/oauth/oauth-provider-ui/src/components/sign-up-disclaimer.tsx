@@ -1,5 +1,5 @@
 import { Trans } from '@lingui/react/macro'
-import type { JSX } from 'react'
+import type { JSX, ReactNode } from 'react'
 import type { LinkDefinition } from '@atproto/oauth-provider-api'
 import { LinkAnchor } from '#/components/utils/link-anchor.tsx'
 import type { Override } from '#/lib/util.ts'
@@ -26,23 +26,28 @@ export function SignUpDisclaimer({
     <p className={cn('text-muted-foreground text-sm', className)} {...attrs}>
       <Trans>
         By creating an account you agree to the{' '}
-        {tosLink ? (
-          <LinkAnchor className="text-foreground underline" link={tosLink}>
-            <Trans>Terms of Service</Trans>
-          </LinkAnchor>
-        ) : (
-          <Trans>Terms of Service</Trans>
-        )}
+        <ConditionalLink link={tosLink}>Terms of Service</ConditionalLink>
         {' and the '}
-        {ppLink ? (
-          <LinkAnchor className="text-foreground underline" link={ppLink}>
-            <Trans>Privacy Policy</Trans>
-          </LinkAnchor>
-        ) : (
-          <Trans>Privacy Policy</Trans>
-        )}{' '}
-        of this service.
+        <ConditionalLink link={ppLink}>Privacy Policy</ConditionalLink>
+        {' of this service.'}
       </Trans>
     </p>
   )
+}
+
+function ConditionalLink({
+  link,
+  children,
+}: {
+  link: LinkDefinition | undefined
+  children: ReactNode
+}) {
+  if (link) {
+    return (
+      <LinkAnchor className="text-foreground underline" link={link}>
+        {children}
+      </LinkAnchor>
+    )
+  }
+  return <>{children}</>
 }
