@@ -19,7 +19,8 @@ jobs:
     # depend on this job, and will be skipped too. If Dependabot updates non NPM
     # dependencies (Dockerfile, GitHub Actions), this workflow should not be
     # affected (build/verify/test are not using the docker images) and can be
-    # skipped.
+    # skipped. Note that in case, dependabot-changeset.yml will not trigger a
+    # new commit, so this workflow will not be re-triggered. This is expected.
     if: github.event.sender.login != 'dependabot[bot]'
     steps:
       - uses: actions/checkout@v4

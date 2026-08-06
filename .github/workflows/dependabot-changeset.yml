@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  dependabot-changeset:
+  changeset:
     name: Generate changeset
     runs-on: ubuntu-latest
     # Only same-repo PRs authored by dependabot. PR author (not actor) so a
