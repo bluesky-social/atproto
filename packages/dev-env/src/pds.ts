@@ -6,8 +6,7 @@ import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { Client } from '@atproto/lex'
-import * as pds from '@atproto/pds'
-import { createSecretKeyObject } from '@atproto/pds'
+import { type AppContext, PDS, createSecretKeyObject } from '@atproto/pds'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER, JWT_SECRET } from './const.js'
 import type { PdsConfig } from './types.js'
 
@@ -15,7 +14,7 @@ export class TestPds {
   constructor(
     public url: string,
     public port: number,
-    public server: pds.PDS,
+    public server: PDS,
   ) {}
 
   static async create(config: PdsConfig): Promise<TestPds> {
@@ -30,7 +29,7 @@ export class TestPds {
     const dataDirectory = path.join(os.tmpdir(), randomStr(8, 'base32'))
     await fs.mkdir(dataDirectory, { recursive: true })
 
-    const env: pds.ServerEnvironment = {
+    const server = await PDS.fromEnv({
       devMode: true,
       port,
       dataDirectory: dataDirectory,
@@ -63,18 +62,14 @@ export class TestPds {
       privacyPolicyUrl: 'https://bsky.social/about/support/privacy-policy',
       supportUrl: 'https://blueskyweb.zendesk.com/hc/en-us',
       ...config,
-    }
-    const cfg = pds.envToCfg(env)
-    const secrets = pds.envToSecrets(env)
-
-    const server = await pds.PDS.create(cfg, secrets)
+    })
 
     await server.start()
 
     return new TestPds(url, port, server)
   }
 
-  get ctx(): pds.AppContext {
+  get ctx(): AppContext {
     return this.server.ctx
   }
 
