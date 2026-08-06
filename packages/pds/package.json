@@ -65,7 +65,7 @@
     "jose": "^5.0.1",
     "key-encoder": "^2.0.3",
     "kysely": "^0.29.2",
-    "nodemailer": "^6.8.0",
+    "nodemailer": "^9.0.3",
     "nodemailer-html-to-text": "^3.2.0",
     "p-queue": "^8.0.0",
     "pino": "^10.3.1",
