@@ -25,24 +25,19 @@ export const colorsSchema = z
     // The "contrastSaturation" is used to compute the saturation of the
     // "contrast" color. The "contrast" color is a (dynamic) color derived from
     // the "primaryHue" color with the specified saturation and a variable
-    // lightness. "color-contrast-900" is used for default text, while
-    // "color-contrast-0" is used for the page background.
+    // lightness.
     contrastSaturation: z.number().min(0).max(100).optional(),
+
+    // Only the primary colour gets a contrast pair (for --primary-foreground),
+    // so it is the only colour that accepts an explicit contrast override or a
+    // hue for deriving one.
+    primaryContrast: rgbColorSchema.optional(),
+    primaryHue: colorHueSchema.optional(),
   })
   .extend(
     Object.fromEntries(
       COLOR_NAMES.map((name) => [name, rgbColorSchema.optional()]),
     ) as Record<ColorName, z.ZodOptional<typeof rgbColorSchema>>,
-  )
-  .extend(
-    Object.fromEntries(
-      COLOR_NAMES.map((name) => [`${name}Contrast`, rgbColorSchema.optional()]),
-    ) as Record<`${ColorName}Contrast`, z.ZodOptional<typeof rgbColorSchema>>,
-  )
-  .extend(
-    Object.fromEntries(
-      COLOR_NAMES.map((name) => [`${name}Hue`, colorHueSchema.optional()]),
-    ) as Record<`${ColorName}Hue`, z.ZodOptional<typeof colorHueSchema>>,
   )
 
 export type Colors = z.infer<typeof colorsSchema>
