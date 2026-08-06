@@ -1,11 +1,12 @@
-import {
-  type RgbColor,
-  hslToRgb,
-  pickContrastColor,
-} from '../lib/util/color.js'
+import { type RgbColor, pickContrastColor } from '../lib/util/color.js'
 import type { Branding } from './branding.js'
 import { COLOR_NAMES } from './colors.js'
 import type { Customization } from './customization.js'
+
+// Candidates for the primary foreground: whichever of black/white has the
+// higher WCAG 2.1 contrast against the primary colour is used.
+const BLACK: RgbColor = { r: 0, g: 0, b: 0 }
+const WHITE: RgbColor = { r: 255, g: 255, b: 255 }
 
 export function buildCustomizationCss({
   branding,
@@ -23,27 +24,11 @@ function* buildCustomizationVars(branding?: Branding): Generator<string> {
       }
     }
 
-    // Only the primary colour needs a contrast pair (for --primary-foreground).
+    // The primary colour gets a contrast pair (--primary-foreground): black or
+    // white, whichever has the higher WCAG contrast against it.
     const primary = branding.colors.primary
     if (primary) {
-      const contrastSaturation = branding.colors.contrastSaturation ?? 30
-      const contrastLight: RgbColor =
-        branding.colors.light ??
-        hslToRgb({
-          h: branding.colors.primaryHue ?? 0,
-          s: contrastSaturation / 100,
-          l: 0.07,
-        })
-      const contrastDark: RgbColor =
-        branding.colors.dark ??
-        hslToRgb({
-          h: branding.colors.primaryHue ?? 0,
-          s: contrastSaturation / 100,
-          l: 0.953,
-        })
-      const contrast =
-        branding.colors.primaryContrast ??
-        pickContrastColor(primary, contrastLight, contrastDark)
+      const contrast = pickContrastColor(primary, BLACK, WHITE)
       yield `--branding-color-primary-contrast: ${contrast.r} ${contrast.g} ${contrast.b};`
     }
   }

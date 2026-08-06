@@ -28,12 +28,7 @@ export function readEnv() {
     trustedOAuthClients: envList('PDS_OAUTH_TRUSTED_CLIENTS'),
 
     // branding
-    lightColor: envStr('PDS_LIGHT_COLOR'),
-    darkColor: envStr('PDS_DARK_COLOR'),
-    contrastSaturation: envInt('PDS_CONTRAST_SATURATION'),
     primaryColor: envStr('PDS_PRIMARY_COLOR'),
-    primaryColorContrast: envStr('PDS_PRIMARY_COLOR_CONTRAST'),
-    primaryColorHue: envInt('PDS_PRIMARY_COLOR_HUE'),
     errorColor: envStr('PDS_ERROR_COLOR'),
     warningColor: envStr('PDS_WARNING_COLOR'),
     infoColor: envStr('PDS_INFO_COLOR'),

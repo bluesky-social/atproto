@@ -273,14 +273,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     name: env.serviceName ?? `${hostname} PDS`,
     logo: env.logoUrl,
     colors: {
-      light: env.lightColor,
-      dark: env.darkColor,
-
-      contrastSaturation: env.contrastSaturation,
-
       primary: env.primaryColor,
-      primaryContrast: env.primaryColorContrast,
-      primaryHue: env.primaryColorHue,
 
       error: env.errorColor,
       warning: env.warningColor,
