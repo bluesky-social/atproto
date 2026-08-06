@@ -33,7 +33,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@swc/jest": "^0.2.24",
+    "@swc/jest": "^0.2.39",
     "jest": "^30.0.0"
   },
   "scripts": {
