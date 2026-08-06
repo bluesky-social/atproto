@@ -1,13 +1,11 @@
 # Vitest patterns
 
-Conventions for writing vitest tests in this codebase, plus the steps for adopting vitest in a package that doesn't yet have it.
+Repo-specific conventions and setup. Assumes working knowledge of vitest itself (currently v4) — only the things this codebase does differently from the defaults are documented here.
 
 ## Adopting vitest in a new package
 
-When a package doesn't yet have vitest set up:
-
 1. Add `vitest` to `devDependencies` and set `"test": "vitest run"` in `package.json`.
-2. Create `packages/<scope>/<pkg>/vitest.config.ts`. Most packages need only:
+2. Create `vitest.config.ts` in the package root. Nearly every package in the repo has exactly this and nothing more:
 
    ```ts
    import { defineProject } from 'vitest/config'
@@ -17,24 +15,15 @@ When a package doesn't yet have vitest set up:
    })
    ```
 
-   Set `setupFiles`, `testTimeout`, `exclude`, etc. only when the package needs them.
+   `defineProject` (not `defineConfig`) is what makes the package composable into the root workspace runner. Add `setupFiles`, `testTimeout`, `resolve.alias`, etc. only when the package actually needs them — [packages/bsky](../../../../packages/bsky/vitest.config.ts) and [packages/ws-client](../../../../packages/ws-client/vitest.config.ts) are the only two that do.
 
-   **Exception:** if the package already has a `vite.config.*`, do _not_ create a `vitest.config.ts` — add the `test` key to the existing Vite config instead. See [Vite-based packages](#vite-based-packages) below.
+   **Exception:** if the package already has a `vite.config.*`, don't create `vitest.config.ts` — see [Vite-based packages](#vite-based-packages).
 
-3. Register the package in the root [vitest.config.ts](../../../../vitest.config.ts) under `test.projects` so the workspace-level runner picks it up:
+3. Register the package in the root [vitest.config.ts](../../../../vitest.config.ts) under `test.projects` so `pnpm test:unit` and the VSCode Vitest extension pick it up. Several entries are globs (`packages/lex/*`, `packages/oauth/*`, `packages/internal/*`), so a package placed under one of those directories needs no edit.
 
-   ```ts
-   projects: [
-     'packages/lex/*',
-     'packages/syntax',
-     'packages/tap',
-     'packages/<your-package>', // add here
-   ],
-   ```
+   **Skip this step if the tests need dev-infra** (the postgres + redis docker stack). The workspace runner doesn't start dev-infra, so those tests would fail when invoked from the root. That's why `packages/bsky` is commented out of the list — it must run from its own directory via `pnpm test`, which goes through [with-test-redis-and-db.sh](../../../../packages/dev-infra/with-test-redis-and-db.sh). `packages/lexicon-resolver` is also missing from the list, but without a comment and without a dev-infra wrapper on its `test` script, so treat its absence as an oversight rather than a pattern to copy.
 
-   **Do not add the package to the root `projects` list if its tests depend on dev-infra** (postgres + redis docker stack). The workspace-level runner does not start dev-infra, so those tests would fail when invoked from the root. This is why `packages/bsky` is intentionally omitted from the root config — it must be run from its own directory via `pnpm test`, which goes through [packages/dev-infra/with-test-redis-and-db.sh](../../../../packages/dev-infra/with-test-redis-and-db.sh). See the comment in [vitest.config.ts](../../../../vitest.config.ts) for context.
-
-4. Create `tsconfig.test.json` extending the shared vitest config. Always extend `../../tsconfig/vitest.tsconfig.json` (the jest-typed `../../tsconfig/jest.tsconfig.json` pulls in `@types/jest` and is for jest packages only):
+4. Create `tsconfig.test.json` extending the shared vitest config (never the jest one, which pulls in `@types/jest`):
 
    ```json
    {
@@ -43,136 +32,78 @@ When a package doesn't yet have vitest set up:
      "compilerOptions": {
        "rootDir": "."
      },
-     "references": [
-       { "path": "./tsconfig.build.json" }
-       // [Add references to any local packages imported from tests]
-     ]
+     "references": [{ "path": "./tsconfig.build.json" }]
    }
    ```
 
-   The shared [tsconfig/vitest.tsconfig.json](../../../../tsconfig/vitest.tsconfig.json) supplies `lib`, `module`, and `noEmit`. Make sure the package's root `tsconfig.json` references both `./tsconfig.build.json` and `./tsconfig.test.json`.
+   Adjust the `../../` depth for nested packages (`packages/lex/*` and `packages/oauth/*` need `../../../`). `./tsconfig.build.json` is normally the only reference needed — it already pulls in the package's build-time deps, so a test importing `@atproto/lex-data` from `lex-json` resolves without an extra entry. Add one only for a package the tests import but `src` doesn't; that's `{ "path": "../dev-env/tsconfig.build.json" }` in the integration-test packages, and little else.
 
-   Extend `include` for any additional test-only sources the package has — benchmarks (`./src/**/*.bench.ts`), ambient declarations (`./src/core-js.d.ts`), etc.
+   Extend `include` for other test-only sources: benchmarks (`./src/**/*.bench.ts`, as [lex-json](../../../../packages/lex/lex-json/tsconfig.test.json) does) or ambient declarations (`./src/core-js.d.ts`, as [lex-document](../../../../packages/lex/lex-document/tsconfig.test.json) does).
+
+5. Make sure the package's `tsconfig.json` references both `./tsconfig.build.json` and `./tsconfig.test.json`.
 
 ## Vite-based packages
 
-**Any package that already has a `vite.config.*` must use vitest, and must configure it inside that existing Vite config — do not add a separate `vitest.config.ts`.** Vitest reads `vite.config.*` natively, so a second config file would shadow the package's real build setup (plugins, `resolve.alias`, `optimizeDeps`, `conditions`) and the tests would run against a different module graph than the app. Jest is never an option in a Vite package: it can't consume the Vite plugin pipeline at all.
+A package with a `vite.config.*` must use vitest, configured **inside that existing Vite config**. Vitest reads `vite.config.*` natively, so a separate `vitest.config.ts` would shadow the package's real build setup (plugins, `resolve.alias`, `optimizeDeps`, `conditions`) and the tests would run against a different module graph than the app. Jest isn't an option at all here — it can't consume the Vite plugin pipeline.
 
-Two things are required in the Vite config:
+Two additions to the Vite config, as in [oauth-provider-ui](../../../../packages/oauth/oauth-provider-ui/vite.config.mjs):
 
-1. A triple-slash reference on the **first line**, which types the `test` key that `defineConfig` from `vite` doesn't know about on its own:
+1. `/// <reference types="vitest/config" />` on the **first line** — this types the `test` key, which `defineConfig` from `vite` doesn't know about on its own.
+2. A `test: {}` key in the exported config, kept empty unless an option is genuinely needed.
 
-   ```js
-   /// <reference types="vitest/config" />
-   ```
+Everything else is unchanged: `vitest` in `devDependencies`, `"test": "vitest run"`, root `projects` registration, and a `tsconfig.test.json`.
 
-2. A `test` key in the exported config. Keep it empty unless the package genuinely needs an option:
-
-   ```js
-   import { defineConfig } from 'vite'
-
-   export default defineConfig({
-     plugins: [react(), tailwindcss()],
-     resolve: { alias: { '#': resolve(__dirname, './src') } },
-     build: {/* ... */},
-     test: {},
-   })
-   ```
-
-Everything else is unchanged: `vitest` in `devDependencies`, `"test": "vitest run"` in `package.json`, the package registered in the root [vitest.config.ts](../../../../vitest.config.ts) `projects` list, and a `tsconfig.test.json` extending [tsconfig/vitest.tsconfig.json](../../../../tsconfig/vitest.tsconfig.json).
-
-Because the tests share the app's Vite config, they also inherit its `resolve.alias` — import through the package's own aliases (`#/lib/foo.js`) exactly as production code does, rather than reaching for brittle relative paths.
+Because the tests share the app's Vite config, they inherit its `resolve.alias` — import through the package's own aliases (`#/lib/foo.js`) exactly as production code does, rather than reaching for brittle relative paths.
 
 ## Imports
 
-Always import test utilities from `vitest` using named imports:
+Import test utilities by name from `vitest`; nothing is ambient:
 
 ```ts
 import { assert, describe, expect, it, vi } from 'vitest'
 ```
 
-Pick between `it` and `test` based on what the label is:
+Prefer vitest's `assert` over `node:assert` — it narrows types and reports through vitest's error formatting.
 
-- **`it('<description>', ...)`** — use when the label is a sentence describing behavior. Reads as "it <description>". Example: `it('rejects invalid request bodies', ...)`.
-- **`test(implementation, ...)`** / **`test.each(cases)(...)`** — use when the label is a specific case identifier: a function reference, a fixture name, a parameterized case. Reads as "test <case>". Example: `test(parseCid, ...)`, `test.each(fixtures)('%s', ...)`.
+## Labels
 
-For `assert`, prefer vitest's named import over `node:assert`.
+`it` and `test` are aliases at runtime, but this repo picks between them by what the label _is_:
 
-## Test structure
+- **`it('<description>', …)`** when the label is a sentence describing behavior. Reads as "it rejects invalid request bodies".
+- **`test(case, …)`** when the label identifies a specific case: a function reference, a fixture name, a parameterized row. Reads as "test `parseCid`".
 
-### Describe labels
-
-Pass the function/class reference as the describe label when the export is a named function or class. Use a string label when testing an arrow function assigned to a variable, a class method, or multiple related behaviors that don't map to a single export:
+For `describe`, pass the function or class **reference** rather than a string when the suite covers a single named export — the label stays correct through renames:
 
 ```ts
-// Function or class reference as label (preferred when testing a single export)
-describe(parseCid, () => { ... })
-describe(isLexValue, () => { ... })
-describe(XrpcResponseError, () => { ... })
-
-// String label for conceptual groups or when testing multiple related behaviors
-describe('roundtrip toBase64 <-> fromBase64', () => { ... })
+describe(parseCid, () => { … })
+describe(XrpcResponseError, () => { … })
 ```
 
-**Integration tests are an exception.** End-to-end suites under a package's `./tests` folder typically span many endpoints and don't map to a single export — string labels are the norm there:
-
-```ts
-describe('pds profile views', () => { ... })
-```
-
-### Grouping
-
-Nest logical groupings inside the top-level describe:
-
-```ts
-describe(someFunction, () => {
-  describe('valid inputs', () => { ... })
-  describe('invalid inputs', () => { ... })
-  describe('edge cases', () => { ... })
-})
-```
-
-For features with a default behavior and an override, cover both:
-
-```ts
-describe(validateResponse, () => {
-  it('rejects invalid response body by default', ...)
-  it('accepts invalid response body when disabled', ...)
-  it('succeeds with valid response body when enabled', ...)
-})
-```
-
-For code that handles unbounded inputs, recursion, or untrusted data (parsers, validators, serializers), include safety and edge case tests:
-
-```ts
-it('handles cyclic structures without infinite loops', () => { ... })
-it('handles deep structures without exceeding call stack', () => { ... })
-```
+Use a string label for conceptual groups that don't map to one export — an arrow function assigned to a const, a class method, a roundtrip pair (`describe('roundtrip toBase64 <-> fromBase64', …)`). Integration suites under `./tests` span many endpoints and are string-labeled by convention: `describe('pds profile views', …)`.
 
 ## Parameterized tests
 
-Use `test.each` over test case arrays — each row is a specific case, not a behavior description:
+Prefer `test.each` over a hand-rolled `for` loop. Each row is a case identifier, hence `test` and not `it`:
 
 ```ts
-describe(isLexScalar, () => {
+describe(isReconnectableClose, () => {
   test.each([
-    { note: 'string', value: 'hello', expected: true },
-    { note: 'number (int)', value: 42, expected: true },
-    { note: 'null', value: null, expected: true },
-    { note: 'number (float)', value: 3.14, expected: false },
-    { note: 'undefined', value: undefined, expected: false },
-  ])('{note}', ({ value, expected }) => {
-    expect(isLexScalar(value)).toBe(expected)
+    { note: 'normal shutdown', code: CloseCode.Normal, expected: false },
+    { note: 'internal error', code: CloseCode.InternalError, expected: true },
+  ])('$note', ({ code, expected }) => {
+    expect(isReconnectableClose(code)).toBe(expected)
   })
 })
 ```
 
-This also works for running the same test suite against multiple implementations. The outer `describe.each` parameterizes the suite by implementation; the inner labels stay as `it('<description>', ...)` because they describe behavior:
+The label template is `'$note'` — `$`-prefixed, referring to a property of the row object. `'{note}'` does _not_ interpolate; it renders literally, so every case ends up with the same name.
+
+To run one suite against several implementations of an interface, the implementation is the case identifier, so `describe.each` takes it — but the inner labels still describe behavior, so they stay `it`:
 
 ```ts
-describe.each([utf8LenNode, utf8LenCompute] as const)('%o', (utf8Len) => {
-  // if some implementations are optional, assert they exist before running tests
-  assert(utf8Len)
+describe.each([utf8LenNode, utf8LenCompute])('%o', (utf8Len) => {
+  // some implementations are runtime-optional; assert before the tests read them
+  assert(utf8Len, 'utf8Len implementation should not be null')
 
   it('computes utf8 string length', () => {
     expect(utf8Len('a')).toBe(1)
@@ -180,71 +111,79 @@ describe.each([utf8LenNode, utf8LenCompute] as const)('%o', (utf8Len) => {
 })
 ```
 
-## Assertions
+Fall back to `for (const c of cases) { test(c.name, …) }` only when the body shape genuinely can't be expressed as `test.each` — different nesting or a different number of assertions per case.
 
-### Type narrowing with `assert`
+### Fixture files
 
-Use `assert()` from vitest for type narrowing and boolean checks. **Always prefer `assert(result.success)` over `expect(result.success).toBe(true)`** — `assert` provides type narrowing in TypeScript, which lets the rest of the test access narrowed properties without additional type guards.
+Import JSON fixtures with the import attribute and hand the array straight to `test.each`, keyed on a label property:
 
 ```ts
-// Narrow to a specific type before further assertions
-assert(err instanceof XrpcFetchError)
-expect(err.cause).toBeInstanceOf(TypeError)
+import fixtures from './data-model-valid.json' with { type: 'json' }
 
-// Discriminated union checks - PREFERRED
-assert(result.success)
-expect(result.body).toEqual({ value: 'hello' })
-// TypeScript now knows result.body exists
-
-assert(!result.success)
-expect(result).toBeInstanceOf(XrpcResponseError)
-// TypeScript now knows result has error properties
-
-// DON'T do this - it doesn't narrow types
-expect(result.success).toBe(true) // ❌ No type narrowing
-if (result.success) {
-  expect(result.body).toEqual({ value: 'hello' }) // Still need type guard
-}
-
-// DON'T do this either - even less informative on failure
-expect(result).toMatchObject({ success: true }) // ❌ No narrowing, weak diagnostic
+test.each(fixtures)('$note', (fixture) => { … })
 ```
 
-### Error assertions with `rejects.toSatisfy`
+For the shared text fixtures in `interop-test-files/`, use the existing [`readInteropFile`](../../../../packages/syntax/tests/_utils.ts) helper rather than re-implementing the read-and-filter logic:
 
-Decision rule:
+```ts
+test.each(readInteropFile('aturi_syntax_valid.txt'))('%s', (value) => { … })
+```
 
-- Use `rejects.toThrow()` (no argument) when the only assertion is that an error was thrown.
-- Use `rejects.toThrow(message)` (string or regex) **only** when the only assertion beyond "an error was thrown" is the message string itself. No other property of the error is checked.
-- Use `rejects.toSatisfy()` in every other case, including when asserting any property besides the message (e.g. `err.cause`, `err instanceof X`, `err.code`) — even if exactly one such property is being checked.
+## Assertions
 
-If any `expect()` or `assert()` inside the `toSatisfy` callback throws, the test will fail with that assertion error. The `return true` is only reached when all inner assertions pass. Do not wrap inner assertions in try/catch.
+### `assert` for narrowing
+
+`assert()` narrows types; `expect(…).toBe(true)` does not. Preferring it means the rest of the test can read narrowed properties without a second guard or a cast:
+
+```ts
+assert(result.success)
+expect(result.body).toEqual({ value: 'hello' }) // result.body is typed here
+```
+
+The same applies to instance checks before property assertions:
+
+```ts
+assert(err instanceof XrpcFetchError)
+expect(err.cause).toBeInstanceOf(TypeError)
+```
+
+`expect(result).toMatchObject({ success: true })` is the worst of the three — no narrowing, and a weaker diagnostic on failure.
+
+### Rejections
+
+- `rejects.toThrow()` — the only assertion is that something threw.
+- `rejects.toThrow(message)` — the only assertion beyond that is the message, as a string or regex.
+- `rejects.toSatisfy(…)` — everything else, including checking exactly one non-message property (`err.cause`, `err instanceof X`, `err.code`).
+
+Inside a `toSatisfy` callback, a failing `expect()` or `assert()` propagates as the test failure, so the assertions read normally and no try/catch is needed. The callback has to `return true` at the end — that line is only reached when everything passed:
 
 ```ts
 await expect(someAsyncFn()).rejects.toSatisfy((err) => {
   assert(err instanceof SomeError)
   expect(err.cause).toBeInstanceOf(TypeError)
-  expect(err.message).toContain('failed')
-  return true // must return true
+  return true
 })
 ```
 
-Always `return true` at the end of `toSatisfy` callbacks.
+### Type-level assertions
 
-Examples of valid `toThrow()` usage (message-only or no argument):
+Use `expectTypeOf` rather than a hand-rolled `const expectType = <T>(_: T) => {}` helper — it compiles to nothing, so it's free at runtime. This repo uses `toEqualTypeOf` for exact matches and `toMatchObjectType` for partial ones. Avoid `toMatchTypeOf`, which upstream deprecated in favor of those two.
 
 ```ts
-expect(() => parseCid(invalidStr)).toThrow()
-expect(() => cidForRawHash(new Uint8Array(31))).toThrow(
-  'Invalid SHA-256 hash length',
-)
+expectTypeOf(result.body).toEqualTypeOf<{ blobRef: l.BlobRef }>()
+expectTypeOf(response.body).toMatchObjectType<{ cursor?: string }>()
 ```
 
-## Mock functions
+For deliberately invalid arguments, `// @ts-expect-error` with a reason:
 
-### Use `vi.fn()` with type parameters
+```ts
+// @ts-expect-error intentionally passing invalid params
+params: { limit: 'not-a-number' },
+```
 
-When you need to inspect how a function was called, use `vi.fn<Type>()`:
+## Mocks and spies
+
+Type `vi.fn` with the function type when the test inspects how it was called:
 
 ```ts
 const fetchHandler = vi.fn<FetchHandler>(async () =>
@@ -254,39 +193,33 @@ const fetchHandler = vi.fn<FetchHandler>(async () =>
 await xrpc(fetchHandler, testQuery, { params: { limit: 25 } })
 
 expect(fetchHandler).toHaveBeenCalledOnce()
-const [path, init] = fetchHandler.mock.calls[0]
+const [path] = fetchHandler.mock.calls[0]
 expect(path).toContain('/xrpc/io.example.testQuery')
 ```
 
-When you don't need to inspect calls, use a plain typed function:
+When calls don't need inspecting, a plain typed function is clearer than a mock: `const fetchHandler: FetchHandler = async () => …`.
 
-```ts
-const fetchHandler: FetchHandler = async () => Response.json({ value: 'hello' })
-```
+### `using` for auto-restored spies
 
-### Use `using` for auto-restored spies
-
-`vi.spyOn` and `vi.fn` results are `Disposable` — declaring them with `using` automatically calls `mockRestore()` at the end of the enclosing block, so you don't need an `afterEach` or a `try`/`finally` to clean up. Prefer `using` whenever the spy is scoped to a single test (or a single block within a test):
+Spies are `Disposable`, so declaring one with `using` calls `mockRestore()` at the end of the enclosing block — no `afterEach`, no `try`/`finally`:
 
 ```ts
 it('sends an update email when the address changes', async () => {
   using sendUpdateEmailMock = vi
     .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')
-    .mockImplementation(async () => {
-      // noop
-    })
+    .mockImplementation(async () => {})
 
   await client.call(com.atproto.server.requestEmailUpdate)
 
   expect(sendUpdateEmailMock).toHaveBeenCalledOnce()
-}) // spy is automatically restored here
+}) // restored here
 ```
 
-This applies broadly to anything resource-like that exposes `[Symbol.dispose]` / `[Symbol.asyncDispose]` — reach for `using` (or `await using`) before falling back to manual cleanup.
+This generalizes to anything that actually implements `[Symbol.dispose]` / `[Symbol.asyncDispose]` — test servers (`await using server = await startServer(app)`) and `PageHelper` do, and `TestNetwork` does. `TestNetworkNoAppView` does not: it has `close()` only, so clean it up in `afterAll`. Check the type before reaching for `using`.
 
-### Mocking node built-ins
+### Module mocks
 
-`vi.mock` of a node built-in usually needs both default and named exports, since callers may use either form:
+Mocking a node built-in usually needs both the default and the named exports, since callers may use either form ([lexicon-resolver](../../../../packages/lexicon-resolver/tests/lexicon.test.ts) does this for DNS):
 
 ```ts
 vi.mock('node:dns/promises', () => {
@@ -295,120 +228,17 @@ vi.mock('node:dns/promises', () => {
 })
 ```
 
-### Partial module mocks with `vi.importActual`
-
-Spread the actual module to mock only specific exports:
+To override only part of a module, spread the actual one:
 
 ```ts
-vi.mock('../../src/api/age-assurance/const.js', async () => {
-  const actual = await vi.importActual<typeof import('...')>('...')
-  return { ...actual, FOO: 'overridden' }
+vi.mock('./const.js', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>('./const.js')
+  return { ...actual, KWS_V2_COUNTRIES: new Set(['AA']) }
 })
 ```
 
-## Test fixtures
-
-Define reusable fixtures at the top of the file, outside describe blocks:
-
-```ts
-const invalidCidStr = 'invalidcidstring'
-const cborCidStr = 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'
-const cborCid = parseCid(cborCidStr, { flavor: 'cbor' })
-```
-
-Keep fixtures minimal and focused on what the tests need.
-
-### JSON fixture files
-
-When fixtures are large or shared across SDKs (`interop-test-files/`, generated vector files), import them with the JSON import attribute and feed them to `test.each`. Each fixture is a case identifier, so use `test.each` (not `it.each`) and use `$name` (or another property) as the label template:
-
-```ts
-import fixtures from './fixtures.json' with { type: 'json' }
-
-describe('decode', () => {
-  test.each(fixtures)('$name', ({ input, expected }) => {
-    expect(decode(input)).toEqual(expected)
-  })
-})
-```
-
-For text-based interop fixtures, read the file at module load, parse it once, and pass the resulting array straight to `test.each`:
-
-```ts
-const fixtureCases = fs
-  .readFileSync(
-    path.join(__dirname, '../../../interop-test-files/syntax/aturi_valid.txt'),
-    'utf8',
-  )
-  .split('\n')
-  .filter((l) => l && !l.startsWith('#'))
-
-test.each(fixtureCases)('%s', (line) => { ... })
-```
-
-When the same suite must run against several implementations of the same interface, parameterize the suite with `describe.each` (the implementation is the case identifier) and keep the inner labels as `it('<description>', ...)`:
-
-```ts
-describe.each([utf8LenNode, utf8LenCompute] as const)('%o', (utf8Len) => {
-  assert(utf8Len)
-
-  it('computes utf8 string length', () => {
-    expect(utf8Len('a')).toBe(1)
-  })
-})
-```
-
-Reach for raw `for (const x of cases) { test(x.name, ...) }` only when the body shape genuinely can't be expressed via `test.each` — for example, when each case needs a different `describe` nesting or a different number of assertions.
-
-## TypeScript in tests
-
-### Intentionally invalid arguments
-
-Use `// @ts-expect-error` with a description:
-
-```ts
-await xrpc(fetchHandler, testQuery, {
-  // @ts-expect-error intentionally passing invalid params
-  params: { limit: 'not-a-number' },
-  validateRequest: true,
-})
-```
-
-### Type-level assertions with `expectTypeOf`
-
-For assertions about _types_ (not runtime values), use vitest's `expectTypeOf`:
-
-```ts
-import { expectTypeOf } from 'vitest'
-
-expectTypeOf(result).toEqualTypeOf<{ value: string }>()
-expectTypeOf(handler).parameter(0).toMatchTypeOf<Request>()
-expectTypeOf(client.foo).not.toBeAny()
-```
-
-`expectTypeOf` is preferred over a hand-rolled `const expectType = <T>(_: T) => {}` helper. It compiles to nothing at runtime, so it's free.
-
-## Roundtrip tests
-
-When testing encode/decode or serialize/deserialize pairs, add a dedicated roundtrip describe:
-
-```ts
-describe('roundtrip toBase64 <-> fromBase64', () => {
-  it('roundtrips empty array', () => {
-    const original = new Uint8Array(0)
-    expect(ui8Equals(fromBase64(toBase64(original)), original)).toBe(true)
-  })
-
-  it('roundtrips all byte values', () => {
-    const allBytes = new Uint8Array(256)
-    for (let i = 0; i < 256; i++) allBytes[i] = i
-    expect(ui8Equals(fromBase64(toBase64(allBytes)), allBytes)).toBe(true)
-  })
-})
-```
+Note that `bsky` integration tests mock the **compiled** path (`../../dist/api/…`), not `../../src/…`, because the service under test is loaded from `dist`. Match whatever the module graph actually resolves, or the mock silently won't apply.
 
 ## Running tests
 
-```bash
-pnpm run test -- path/to/file.test.ts
-```
+See [Running tests in SKILL.md](../SKILL.md#running-tests) — in particular, don't put `--` before a file path.
