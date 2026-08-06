@@ -12,7 +12,6 @@ on:
 
 permissions:
   contents: write # push the changeset commit
-  actions: write # dispatch repo.yaml on the new head
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref }}'
@@ -23,10 +22,13 @@ jobs:
     name: Generate changeset
     runs-on: ubuntu-latest
     # Only same-repo PRs authored by dependabot. PR author (not actor) so a
-    # human reopening/rebasing the PR still gets a changeset regenerated.
+    # human reopening/rebasing the PR still gets a changeset regenerated, but
+    # never react to our own changeset commit (sender is the pusher on
+    # `synchronize`, and the commit below is made as github-actions[bot]).
     if: >
       github.event.pull_request.user.login == 'dependabot[bot]' &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.sender.login != 'github-actions[bot]'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -84,14 +86,3 @@ jobs:
           git commit -m 'Sync changeset with Dependabot update'
           git push origin "HEAD:$HEAD_REF"
           echo 'pushed=true' >>"$GITHUB_OUTPUT"
-
-      # A push made with GITHUB_TOKEN does not re-trigger pull_request
-      # workflows, so the new head commit would show no checks. Explicit
-      # workflow_dispatch is exempt from that rule and attaches its check
-      # runs to the new head commit.
-      - name: Re-run CI on the new head
-        if: steps.generate.outputs.pushed == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          HEAD_REF: ${{ github.event.pull_request.head.ref }}
-        run: gh workflow run repo.yaml --repo "$GITHUB_REPOSITORY" --ref "$HEAD_REF"
