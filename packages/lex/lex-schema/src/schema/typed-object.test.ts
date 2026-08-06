@@ -776,7 +776,7 @@ describe('TypedObjectSchema', () => {
 
     it('TypedObject excludes Unknown$TypedObject from narrowed type', () => {
       expectTypeOf<
-        TypedObject<'app.bsky.feed.post', Unknown$TypedObject & { extra: string }>
+        TypedObject<'app.bsky.feed.post', Unknown$TypedObject | { extra: string }>
       >().toEqualTypeOf<$Typed<{ extra: string }, 'app.bsky.feed.post'>>()
     })
 

@@ -211,7 +211,7 @@ export type Unknown$TypedObject = { $type: Unknown$Type }
  */
 export type $TypedLexMap<
   TType extends string,
-  TValue extends { $type?: unknown } = { $type?: unknown },
+  TValue extends object = object,
 > = TValue extends { $type: TType }
   ? TValue
   : $Typed<Exclude<TValue, Unknown$TypedObject>, TType>

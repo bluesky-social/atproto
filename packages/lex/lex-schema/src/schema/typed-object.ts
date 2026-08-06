@@ -19,12 +19,12 @@ import { lazyProperty } from '../util/lazy-property.js'
 
 export type TypedObject<
   TType extends $Type,
-  TValue extends { $type?: unknown } = { $type?: unknown },
+  TValue extends object = object,
 > = $TypedLexMap<TType, TValue>
 
 export type MaybeTypedObject<
   TType extends $Type,
-  TValue extends { $type?: unknown } = { $type?: unknown },
+  TValue extends object = object,
 > = TValue extends { $type?: TType }
   ? TValue
   : $TypedMaybe<Exclude<TValue, Unknown$TypedObject>, TType>
@@ -89,10 +89,10 @@ export class TypedObjectSchema<
     return $typed(input, this.$type)
   }
 
-  isTypeOf<TValue extends { $type?: unknown }>(
+  isTypeOf<TValue extends object>(
     value: TValue,
   ): value is TypedObject<TType, TValue> {
-    return value.$type === this.$type
+    return (value as { $type?: unknown }).$type === this.$type
   }
 
   /**
