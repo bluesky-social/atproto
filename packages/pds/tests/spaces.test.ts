@@ -2199,63 +2199,6 @@ describe('spaces', () => {
     )
   })
 
-  it('a write into a tombstoned space revives it, keeping existing records', async () => {
-    // A member's `deletedAt` only records what notifySpaceDeleted last told it, and
-    // an authority may recreate a space under the same uri. So a write — which
-    // already carries a covering scope — is treated as the fresher signal, rather
-    // than the tombstone locking the repo permanently.
-    const spaceUri = await createSpace('tombstone-revive', [bobDid])
-    await pds2Client.call(
-      com.atproto.space.createRecord,
-      {
-        space: spaceUri,
-        repo: bobDid,
-        collection: TEST_COLLECTION,
-        rkey: 'before',
-        record: { $type: TEST_COLLECTION, text: 'before deletion' },
-      },
-      { headers: bobHeaders },
-    )
-
-    await pds1Client.call(
-      com.atproto.simplespace.deleteSpace,
-      { space: spaceUri },
-      { headers: aliceHeaders },
-    )
-    await pds1.ctx.backgroundQueue.processAll()
-    const tombstoned = await pds2.ctx.actorStore.read(bobDid, (store) =>
-      store.space.getSpace(spaceUri),
-    )
-    expect(tombstoned?.deletedAt).toBeDefined()
-
-    // Alice brings the space back and re-admits bob.
-    await createSpace('tombstone-revive', [bobDid])
-
-    await pds2Client.call(
-      com.atproto.space.createRecord,
-      {
-        space: spaceUri,
-        repo: bobDid,
-        collection: TEST_COLLECTION,
-        rkey: 'after',
-        record: { $type: TEST_COLLECTION, text: 'after revival' },
-      },
-      { headers: bobHeaders },
-    )
-
-    // Same space, so bob's earlier record is still his.
-    const [revived, records] = await pds2.ctx.actorStore.read(
-      bobDid,
-      async (store) => [
-        await store.space.getSpace(spaceUri),
-        await store.space.listRecords(spaceUri, { limit: 10 }),
-      ],
-    )
-    expect(revived?.deletedAt).toBeNull()
-    expect(records.map((r) => r.rkey).sort()).toEqual(['after', 'before'])
-    await expectSetHashMatchesStore(pds2, bobDid, spaceUri)
-  })
-
   it('answers SpaceDeleted on credential renewal after deletion', async () => {
     // The durable drop signal: a syncer that missed notifySpaceDeleted learns the
     // space is gone here, and can distinguish it from an authority being down.
@@ -2281,23 +2224,21 @@ describe('spaces', () => {
     ).rejects.toThrow(/deleted/)
   })
 
-  it('notifies a writer who is not on the member list', async () => {
-    // Bob writes under policy=public without ever being a member, so only the
-    // writer set knows his repo needs flagging.
-    const spaceUri = await createSpace('delete-notifies-writer', [], {
-      policy: defs.publicPolicy.build({}),
-    })
+  it('leaves a member repo untouched on deletion', async () => {
+    // A member's PDS is never notified: the records are the member's own, and it
+    // is the application's job to tell them the space is gone. What deletion takes
+    // away is the ability to obtain a credential to read them.
+    const spaceUri = await createSpace('delete-leaves-member', [bobDid])
     await pds2Client.call(
       com.atproto.space.createRecord,
       {
         space: spaceUri,
         repo: bobDid,
         collection: TEST_COLLECTION,
-        record: { $type: TEST_COLLECTION, text: 'non-member write' },
+        record: { $type: TEST_COLLECTION, text: 'member write' },
       },
       { headers: bobHeaders },
     )
-    await expectWriterSet(spaceUri, [bobDid])
 
     await pds1Client.call(
       com.atproto.simplespace.deleteSpace,
@@ -2306,7 +2247,6 @@ describe('spaces', () => {
     )
     await pds1.ctx.backgroundQueue.processAll()
 
-    // Bob's own repo is flagged rather than erased: the data is his.
     const [spaceRow, records] = await pds2.ctx.actorStore.read(
       bobDid,
       async (store) => [
@@ -2314,7 +2254,7 @@ describe('spaces', () => {
         await store.space.listRecords(spaceUri, { limit: 10 }),
       ],
     )
-    expect(spaceRow?.deletedAt).toBeDefined()
+    expect(spaceRow?.deletedAt).toBeNull()
     expect(records).toHaveLength(1)
   })
 

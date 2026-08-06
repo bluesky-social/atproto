@@ -128,7 +128,9 @@ export class SimpleSpaceManager {
 
   /**
    * Deletes the authority's own repo in the space along with it: no other party's data
-   * is involved. Other members' hosts flag theirs on notifySpaceDeleted.
+   * is involved. A member's records stay where they are, as records nobody can obtain
+   * a credential to read — their PDS is not notified, and the application is what
+   * tells the user their space is gone.
    *
    * The space row stays as a tombstone so getSpaceCredential keeps answering
    * SpaceDeleted, which is how a syncer that missed the notification finds out.
@@ -136,51 +138,42 @@ export class SimpleSpaceManager {
   async deleteSpace(space: SpaceRefString): Promise<void> {
     const { spaceDid } = toSpaceRef(space)
 
-    // Who to notify: the accounts holding a repo in the space, and the services
-    // registered for its notifications. Not the member list — membership doesn't imply
-    // a repo, and under a `public` or `managing-app` policy a writer need never have
-    // been a member.
-    const { writers, services } = await this.actorStore.transact(
+    const services = await this.actorStore.transact(
       spaceDid,
       async (actorTxn) => {
-        const writers = await actorTxn.space.listWriters(space)
         const services = await actorTxn.space.getCredentialRecipients(space)
         await actorTxn.space.deleteSpace(space)
-        return { writers, services }
+        return services
       },
     )
 
-    // A bare DID resolves to that account's PDS, and `repo` tells it which of its
-    // accounts to flag. A registered syncer names its own service entry and drops the
-    // space entirely, so it needs no repo.
-    const targets = [
-      ...writers.map((w) => ({ service: w.did, repo: w.did as DidString })),
-      ...services.map((s) => ({ service: s.serviceDid, repo: undefined })),
-    ]
     const lxm = com.atproto.space.notifySpaceDeleted.$lxm
     this.backgroundQueue.add(async () => {
-      for (const { service, repo } of targets) {
-        // Best effort: a recipient that misses this learns the space is gone from
+      for (const { serviceDid } of services) {
+        // Best effort: a syncer that misses this learns the space is gone from
         // SpaceDeleted on its next credential renewal.
         try {
           const target = await resolveNotifyTarget(this, {
             iss: spaceDid,
-            service,
+            service: serviceDid,
             lxm,
           })
           if (!target) {
             spaceLogger.warn(
-              { space, service, lxm },
+              { space, service: serviceDid, lxm },
               'could not resolve recipient',
             )
             continue
           }
           await xrpc(target.endpoint, com.atproto.space.notifySpaceDeleted, {
             headers: target.headers,
-            body: { space, repo },
+            body: { space },
           })
         } catch (err) {
-          spaceLogger.warn({ err, space, service, lxm }, 'notify failed')
+          spaceLogger.warn(
+            { err, space, service: serviceDid, lxm },
+            'notify failed',
+          )
         }
       }
     })

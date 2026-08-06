@@ -59,21 +59,15 @@ export class SpaceTransactor extends SpaceReader {
       .execute()
   }
 
-  // Flag a space as deleted without dropping anything, for a member whose authority
-  // deleted a space out from under them. The records are the member's own.
-  async markSpaceDeleted(uri: string): Promise<void> {
+  // Delete a space this account is the authority for, including its own repo in the
+  // space. The `space` row survives as a tombstone, so getSpaceCredential can
+  // keep reporting the space as deleted.
+  async deleteSpace(uri: string): Promise<void> {
     await this.db.db
       .updateTable('space')
       .set({ deletedAt: new Date().toISOString() })
       .where('uri', '=', uri)
       .execute()
-  }
-
-  // Delete a space this account is the authority for, including its own repo in the
-  // space. The `space` row survives as a tombstone, so getSpaceCredential can
-  // keep reporting the space as deleted.
-  async deleteSpace(uri: string): Promise<void> {
-    await this.markSpaceDeleted(uri)
     await this.blob.deleteSpaceBlobs(uri)
     await this.db.db
       .deleteFrom('simplespace_config')
