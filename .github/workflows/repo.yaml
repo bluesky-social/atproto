@@ -2,27 +2,12 @@ name: Repository CI
 
 on:
   pull_request:
-  # Dispatched by dependabot-changeset.yml after it pushes a changeset commit:
-  # pushes made with GITHUB_TOKEN don't trigger pull_request runs, so checks
-  # for the new head commit have to be created explicitly. Required status
-  # checks match on check-run (job) names, so those dispatched runs only
-  # satisfy the merge gate as long as job names don't depend on the event
-  # type.
-  workflow_dispatch:
 
-# Read-only: every job here only checks out and builds. Declared explicitly
-# because workflow_dispatch runs would otherwise inherit the repository-default
-# token scopes, which can include write.
 permissions:
   contents: read
 
 concurrency:
-  # head_ref is only set on pull_request runs; ref_name covers the
-  # workflow_dispatch re-runs. Both resolve to the bare branch name (unlike
-  # ref, which is the fully qualified refs/heads/... on dispatch), so a
-  # dispatched re-run cancels the same branch's in-flight PR run and
-  # vice-versa instead of running alongside it.
-  group: '${{ github.workflow }}-${{ github.head_ref || github.ref_name }}'
+  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
   cancel-in-progress: true
 
 jobs:
