@@ -2,18 +2,48 @@ name: Repository CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
 
 concurrency:
-  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
+  group: '${{ github.workflow }}-${{ github.head_ref }}'
   cancel-in-progress: true
 
 jobs:
+  changeset:
+    name: Changeset
+    runs-on: ubuntu-latest
+    # The dependabot-changeset.yml workflow will trigger a new commit after
+    # Dependabot updates, which will re-trigger this workflow. Other jobs below
+    # depend on this job, and will be skipped too. If Dependabot updates non NPM
+    # dependencies (Dockerfile, GitHub Actions), this workflow should not be
+    # affected (build/verify/test are not using the docker images) and can be
+    # skipped. Note that in case, dependabot-changeset.yml will not trigger a
+    # new commit, so this workflow will not be re-triggered. This is expected.
+    if: >
+      github.event.pull_request.draft == false &&
+      github.event.sender.login != 'dependabot[bot]'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # needed for git diff against base branch
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          cache: pnpm
+          node-version-file: '.nvmrc'
+      - run: pnpm install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+      - run: pnpm changeset status --since=origin/${{ github.base_ref }}
+
   build:
     name: Build
     runs-on: ubuntu-latest
+    # Ensure a changeset is present before we spend time building and testing.
+    needs: changeset
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v6
@@ -55,8 +85,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          # Preserve the result of codegen and build steps.
-          name: dist
+          name: build-artifacts
           retention-days: 2
           path: |
             packages/*/dist
@@ -70,25 +99,6 @@ jobs:
             packages/api/src/client
             packages/api/src/moderation/const/labels.ts
             packages/ozone/src/lexicon
-
-  changeset:
-    name: Changeset
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # needed for git diff against base branch
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
-        with:
-          cache: pnpm
-          node-version-file: '.nvmrc'
-      - run: pnpm install --frozen-lockfile
-        env:
-          PUPPETEER_SKIP_DOWNLOAD: true
-      # github.base_ref is only set on pull_request events; workflow_dispatch
-      # runs compare against the default branch.
-      - run: pnpm changeset status --since=origin/${{ github.base_ref || 'main' }}
 
   test:
     name: Test
@@ -126,7 +136,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - uses: actions/download-artifact@v4
         with:
-          name: dist
+          name: build-artifacts
           path: packages
       - run: pnpm test:withFlags --maxWorkers=1 --shard=${{ matrix.shard }} --passWithNoTests
 
@@ -146,6 +156,6 @@ jobs:
           PUPPETEER_SKIP_DOWNLOAD: true
       - uses: actions/download-artifact@v4
         with:
-          name: dist
+          name: build-artifacts
           path: packages
       - run: pnpm verify
