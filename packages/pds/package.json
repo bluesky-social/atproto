@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.5.24",
+  "version": "0.5.25",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -48,7 +48,6 @@
     "@atproto/oauth-scopes": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/syntax": "workspace:^",
-    "@atproto/xrpc": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.4",
     "@hapi/address": "^5.1.1",
@@ -71,7 +70,6 @@
     "p-queue": "^8.0.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
-    "typed-emitter": "^2.1.0",
     "uint8arrays": "^5.0.0",
     "undici": "^8.5.0",
     "zod": "^3.23.8"

@@ -14,7 +14,6 @@ import { Migrator } from 'kysely/migration'
 import pg from 'pg'
 const { Pool: PgPool, types: pgTypes } = pg
 type PgPool = InstanceType<typeof PgPool>
-import type TypedEmitter from 'typed-emitter'
 import { dbLogger } from '../../../logger.js'
 import type { DatabaseSchema, DatabaseSchemaType } from './database-schema.js'
 import * as migrations from './migrations/index.js'
@@ -27,7 +26,7 @@ export class Database {
   pool: PgPool
   db: DatabaseSchema
   migrator: Migrator
-  txEvt = new EventEmitter() as TxnEmitter
+  txEvt = new EventEmitter<TxnEvents>()
   destroyed = false
 
   constructor(
@@ -193,10 +192,8 @@ class LeakyTxPlugin implements KyselyPlugin {
   }
 }
 
-type TxnEmitter = TypedEmitter.default<TxnEvents>
-
 type TxnEvents = {
-  commit: () => void
+  commit: []
 }
 
 const noopAsync = async () => {}

@@ -60,6 +60,7 @@ type AssignmentRowWithQueue = Selectable<ModeratorAssignment> & {
   queueCollection: string | null
   queueDescription: string | null
   queueReportTypes: string[] | null
+  queueRecommendedPolicies: string[] | null
   queueCreatedBy: string | null
   queueCreatedAt: string | null
   queueUpdatedAt: string | null
@@ -118,6 +119,7 @@ export class AssignmentService {
         'report_queue.collection as queueCollection',
         'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
+        'report_queue.recommendedPolicies as queueRecommendedPolicies',
         'report_queue.createdBy as queueCreatedBy',
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
@@ -188,6 +190,7 @@ export class AssignmentService {
         'report_queue.collection as queueCollection',
         'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
+        'report_queue.recommendedPolicies as queueRecommendedPolicies',
         'report_queue.createdBy as queueCreatedBy',
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
@@ -313,6 +316,7 @@ export class AssignmentService {
         'report_queue.collection as queueCollection',
         'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
+        'report_queue.recommendedPolicies as queueRecommendedPolicies',
         'report_queue.createdBy as queueCreatedBy',
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
@@ -649,6 +653,7 @@ export class AssignmentService {
         'report_queue.collection as queueCollection',
         'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
+        'report_queue.recommendedPolicies as queueRecommendedPolicies',
         'report_queue.createdBy as queueCreatedBy',
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
@@ -675,6 +680,7 @@ export class AssignmentService {
       subjectTypes: row.queueSubjectTypes ?? [],
       collection: row.queueCollection,
       reportTypes: row.queueReportTypes ?? [],
+      recommendedPolicies: row.queueRecommendedPolicies ?? [],
       description: row.queueDescription ?? null,
       createdBy: row.queueCreatedBy ?? '',
       createdAt: row.queueCreatedAt ?? '',

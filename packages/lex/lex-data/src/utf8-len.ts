@@ -4,8 +4,8 @@ import { NodeJSBuffer } from './lib/nodejs-buffer.js'
 // public functions from ./utf8.ts. The reason for this separation is that this
 // file allows to test both the NodeJS-optimized and ponyfill implementations.
 
-export const utf8LenNode = NodeJSBuffer
-  ? function utf8LenNode(string: string): number {
+export const utf8LenNode: ((string: string) => number) | null = NodeJSBuffer
+  ? function utf8LenNode(string) {
       return NodeJSBuffer!.byteLength(string, 'utf8')
     }
   : /* v8 ignore next -- @preserve */ null

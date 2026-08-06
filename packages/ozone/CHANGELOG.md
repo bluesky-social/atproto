@@ -1,5 +1,22 @@
 # @atproto/ozone
 
+## 0.2.25
+
+### Patch Changes
+
+- [#5340](https://github.com/bluesky-social/atproto/pull/5340) [`8145a99`](https://github.com/bluesky-social/atproto/commit/8145a999e03219e846ae4773ec66f0de72939511) Thanks [@43081j](https://github.com/43081j)! - Remove typed-emitter and use built-in strongly typed `EventEmitter`
+
+- [#5293](https://github.com/bluesky-social/atproto/pull/5293) [`675953e`](https://github.com/bluesky-social/atproto/commit/675953e8c0ac5154baf7c5fd0b84aba01559a879) Thanks [@foysalit](https://github.com/foysalit)! - Add recommended policy keys to ozone queue configuration and generated API types
+
+- Updated dependencies [[`8b55a4a`](https://github.com/bluesky-social/atproto/commit/8b55a4ab69c24e5038f67c479b3b9953666ea0c2), [`675953e`](https://github.com/bluesky-social/atproto/commit/675953e8c0ac5154baf7c5fd0b84aba01559a879)]:
+  - @atproto/syntax@0.7.4
+  - @atproto/api@0.20.38
+  - @atproto/lexicon@0.7.11
+  - @atproto/xrpc-server@0.12.1
+  - @atproto/common@0.7.5
+  - @atproto/identity@0.5.9
+  - @atproto/xrpc@0.8.10
+
 ## 0.2.24
 
 ### Patch Changes
