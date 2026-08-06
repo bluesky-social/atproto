@@ -1,8 +1,26 @@
 {
   // Prettier should be configured to handle formatting of all files
   "format_on_save": "on",
+  // Includes zed defaults, plus claude worktrees
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/.svn",
+    "**/.hg",
+    "**/.jj",
+    "**/CVS",
+    "**/.DS_Store",
+    "**/Thumbs.db",
+    "**/.classpath",
+    "**/.settings",
+    "**/.claude/worktrees",
+  ],
   "languages": {
     "JavaScript": {
+      "language_servers": [
+        "typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+      ],
       // Formatting (prettier) applied through eslint
       "formatter": "none",
       "code_actions_on_format": {
@@ -10,6 +28,23 @@
       },
     },
     "TypeScript": {
+      "language_servers": [
+        "typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+      ],
+      // Formatting (prettier) applied through eslint
+      "formatter": "none",
+      "code_actions_on_format": {
+        "source.fixAll.eslint": true,
+      },
+    },
+    "TSX": {
+      "language_servers": [
+        "typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+      ],
       // Formatting (prettier) applied through eslint
       "formatter": "none",
       "code_actions_on_format": {

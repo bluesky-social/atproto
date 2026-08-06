@@ -8,8 +8,8 @@ const segmenter =
     ? /*#__PURE__*/ new Intl.Segmenter()
     : /* v8 ignore next -- @preserve */ null
 
-export const graphemeLenNative = segmenter
-  ? function graphemeLenNative(str: string): number {
+export const graphemeLenNative: ((str: string) => number) | null = segmenter
+  ? function graphemeLenNative(str) {
       let length = 0
       for (const _ of segmenter.segment(str)) length++
       return length

@@ -11,6 +11,7 @@ export default [
     ignores: [
       '**/dist/**',
       '**/node_modules/**',
+      '.claude/worktrees/**',
 
       // buf
       'packages/bsky/src/proto/**',
@@ -49,19 +50,7 @@ export default [
       node: { version: '>=22' },
       'import-x/internal-regex': '^@atproto(?:-labs)?/',
       'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx'] },
-      'import-x/resolver-next': createTypeScriptImportResolver({
-        project: [
-          'packages/lex/*/tsconfig.build.json',
-          'packages/lex/*/tsconfig.test.json',
-          'packages/oauth/*/tsconfig.build.json',
-          'packages/oauth/*/tsconfig.test.json',
-          'packages/oauth/*/tsconfig.lib.json',
-          'packages/internal/*/tsconfig.build.json',
-          'packages/internal/*/tsconfig.test.json',
-          'packages/*/tsconfig.build.json',
-          'packages/*/tsconfig.test.json',
-        ],
-      }),
+      'import-x/resolver-next': createTypeScriptImportResolver(),
     },
     rules: {
       'no-var': 'error',

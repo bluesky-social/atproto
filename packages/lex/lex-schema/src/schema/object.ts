@@ -4,6 +4,7 @@ import {
   type InferOutput,
   Schema,
   type ValidationContext,
+  type ValidationResult,
   type Validator,
   type WithOptionalProperties,
 } from '../core.js'
@@ -55,7 +56,10 @@ export class ObjectSchema<
     return lazyProperty(this, 'validatorsMap', map)
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<Record<string, unknown>> {
     if (!isPlainObject(input)) {
       return ctx.issueUnexpectedType(input, 'object')
     }
@@ -131,6 +135,6 @@ export class ObjectSchema<
 /*@__NO_SIDE_EFFECTS__*/
 export function object<const TShape extends ObjectSchemaShape>(
   properties: TShape,
-) {
+): ObjectSchema<TShape> {
   return new ObjectSchema<TShape>(properties)
 }

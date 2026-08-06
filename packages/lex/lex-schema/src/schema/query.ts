@@ -80,6 +80,11 @@ export function query<
   const P extends ParamsSchema,
   const O extends Payload,
   const E extends undefined | readonly string[] = undefined,
->(nsid: N, parameters: P, output: O, errors: E = undefined as E) {
+>(
+  nsid: N,
+  parameters: P,
+  output: O,
+  errors: E = undefined as E,
+): Query<N, P, O, E> {
   return new Query<N, P, O, E>(nsid, parameters, output, errors)
 }

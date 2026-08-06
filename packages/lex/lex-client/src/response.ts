@@ -159,7 +159,7 @@ export class XrpcResponse<M extends Procedure | Query> implements ResultSuccess<
    * Whether the response payload was parsed as {@link LexValue} (`true`) or is
    * in binary form {@link Uint8Array} (`false`).
    */
-  get isParsed() {
+  get isParsed(): boolean {
     return this.method.output.encoding === CONTENT_TYPE_JSON
   }
 

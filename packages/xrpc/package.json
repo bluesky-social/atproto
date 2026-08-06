@@ -33,6 +33,6 @@
     "zod": "^3.23.8"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   }
 }

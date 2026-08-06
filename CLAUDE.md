@@ -7,7 +7,7 @@ This is the TypeScript reference implementation of [AT Protocol](https://atproto
 Workspace layout (see [pnpm-workspace.yaml](./pnpm-workspace.yaml) and [tsconfig.json](./tsconfig.json)):
 
 - [packages/\*](packages/) — top-level libraries: `api`, `common`, `crypto`, `identity`, `lexicon`, `repo`, `syntax`, `xrpc`, `xrpc-server`, `pds`, `bsky`, `bsync`, `ozone`, `dev-env`, `dev-infra`, etc.
-- [packages/lex/\*](packages/lex/) — the modern type-safe Lexicon SDK family (`@atproto/lex`, `lex-builder`, `lex-cbor`, `lex-client`, `lex-data`, `lex-document`, `lex-json`, `lex-resolver`, `lex-server`, `lex-schema`, `lex-installer`, `lex-password-session`). New service code should use this in preference to the older `@atproto/api` / `@atproto/lexicon` / `@atproto/xrpc` / `@atproto/lex-cli` stack — see the `lex-sdk` skill.
+- [packages/lex/\*](packages/lex/) — the modern type-safe Lexicon SDK family (`@atproto/lex`, `lex-builder`, `lex-cbor`, `lex-client`, `lex-data`, `lex-document`, `lex-json`, `lex-resolver`, `lex-server`, `lex-schema`, `lex-installer`, `lex-password-session`). New service code should use this in preference to the older `@atproto/api` / `@atproto/lexicon` / `@atproto/xrpc` / `@atproto/lex-cli` stack — see the `lex-*` skills listed under [Codegen](#codegen).
 - [packages/oauth/\*](packages/oauth/) — OAuth client/provider implementations and JWK helpers.
 - [packages/internal/\*](packages/internal/) — `@atproto-labs/*` internal shared utilities (fetch, handle/identity/DID resolvers, simple-store, pipe, xrpc-utils).
 - [services/{pds,bsky,bsync,ozone}](services/) — thin runtime wrappers; the actual implementation code lives in `packages/{pds,bsky,bsync,ozone}`.
@@ -47,7 +47,7 @@ pnpm run build
 pnpm run test
 ```
 
-Every package ships a `tsconfig.build.json` (composite, with explicit `references` to its workspace deps) and a `tsconfig.test.json` for the test sources. The root `tsconfig.json` is a project-graph aggregator only.
+Every package ships a `tsconfig.build.json` (composite, with explicit `references` to its workspace deps), and nearly every package with tests adds a `tsconfig.test.json` for the test sources. The root `tsconfig.json` is a project-graph aggregator only.
 
 Avoid `pnpm run style:fix` (whole-repo prettier) unless the user explicitly asks for a repo-wide formatting pass.
 
@@ -55,13 +55,15 @@ Run the formatter/linter once the work is complete: when about to commit, or whe
 
 ## Tests
 
-Before writing or extending any test, invoke the `testing` skill ([.claude/skills/testing/SKILL.md](.claude/skills/testing/SKILL.md)). It covers runner selection (vitest vs jest), file layout, and tsconfig setup. For browser-driven UI tests, or for demoing/debugging the OAuth flows or the Account Manager interface, invoke the `playwright` skill ([.claude/skills/playwright/SKILL.md](.claude/skills/playwright/SKILL.md)) instead.
+Before writing or extending any test, invoke the `testing` skill ([.agents/skills/testing/SKILL.md](.agents/skills/testing/SKILL.md)). It covers runner selection (vitest vs jest), file layout, and tsconfig setup. For browser-driven UI tests, or for demoing/debugging the OAuth flows or the Account Manager interface, invoke the `playwright` skill ([.agents/skills/playwright/SKILL.md](.agents/skills/playwright/SKILL.md)) instead.
 
 ## Codegen
 
 After editing anything under [lexicons/](lexicons/), or any `.proto` file, run `pnpm codegen` from the repo root.
 
-The lexicon JSON schemas are derived into TypeScript runtime schemas by `@atproto/lex` (`lex install` / `lex build`, wired through each package's `prebuild`). For anything involving those, invoke the `lex-sdk` skill ([.claude/skills/lex-sdk/SKILL.md](.claude/skills/lex-sdk/SKILL.md)).
+The lexicon JSON schemas are derived into TypeScript runtime schemas by `@atproto/lex` (`lex build`, wired through each package's `prebuild`).
+
+For working with that SDK, invoke the focused skills under [.agents/skills/](.agents/skills/): `lex-setup` (install/build config), `lex-schema` and `lex-data` (schemas and values), `lex-client` (calls out), `xrpc-server` (defining server routes), and `lexification-client` / `lexification-server` (migrating off the legacy stack). To sync `chat.bsky.*` schemas from the chat repo, use `update-chat-lexicons`.
 
 ## Architecture notes
 
@@ -77,8 +79,8 @@ The lexicon JSON schemas are derived into TypeScript runtime schemas by `@atprot
 **Code style rules live in [STYLE_GUIDE.md](./STYLE_GUIDE.md)** — imports, typing, dependencies, change scope, and formatting. Read it before writing code. The rest of this section covers repository mechanics only.
 
 - Node ≥22 runtime floor; build/dev default to Node 24 (`.nvmrc`). Use `node --enable-source-maps` for production-style runs.
-- TypeScript compilation uses `tsgo` (TS7, `@typescript/native-preview`), not `tsc`. There is no per-package `typescript` devDependency — `tsgo` is hoisted at the root.
-- **Every package touched by a change needs a changeset entry.** Add a file under [.changeset/](.changeset/) listing each modified package with an appropriate bump level (`minor` for breaking or new public API, `patch` otherwise). Dependency-only bumps are generated automatically — don't list them by hand. Dependabot PRs get their changeset auto-committed by [.github/workflows/dependabot-changeset.yml](.github/workflows/dependabot-changeset.yml) — never add one manually there.
+- TypeScript compilation uses the native TS7 `tsc` (the standard `typescript` package). There is no per-package `typescript` devDependency — it is hoisted at the root. Note TS7 has no stable programmatic API yet; tools needing one must pin TS6.
+- **Every package touched by a change needs a changeset entry.** Add a file under [.changeset/](.changeset/) listing each modified package with an appropriate bump level (`minor` for breaking or new public API, `patch` otherwise). Dependency-only bumps are generated automatically — don't list them by hand.
 
 ## Agent files
 
