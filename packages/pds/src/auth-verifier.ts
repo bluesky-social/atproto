@@ -134,6 +134,7 @@ export class AuthVerifier {
     }
   }
 
+  /** @deprecated We are steering away from this auth method */
   public adminToken: MethodAuthVerifier<AdminTokenOutput> = async (ctx) => {
     setAuthHeaders(ctx.res)
     const parsed = parseBasicAuth(ctx.req)
@@ -164,6 +165,7 @@ export class AuthVerifier {
     }
   }
 
+  /** @deprecated We are steering away from {@link adminToken} auth. Use {@link modService} instead. */
   public moderator: MethodAuthVerifier<AdminTokenOutput | ModServiceOutput> =
     async (ctx) => {
       const type = extractAuthType(ctx.req)
@@ -278,6 +280,22 @@ export class AuthVerifier {
       }
 
       throw new AuthRequiredError(undefined, 'AuthMissing')
+    }
+  }
+
+  public authorizationOrModService<P extends Params>(
+    opts: VerifiedOptions & ExtraScopedOptions & AuthorizedOptions<P>,
+  ): MethodAuthVerifier<AccessOutput | OAuthOutput | ModServiceOutput, P> {
+    const authorization = this.authorization(opts)
+    return async (ctx) => {
+      try {
+        return await this.modService(ctx)
+      } catch (err) {
+        if (err instanceof AuthRequiredError) {
+          return authorization(ctx)
+        }
+        throw err
+      }
     }
   }
 
