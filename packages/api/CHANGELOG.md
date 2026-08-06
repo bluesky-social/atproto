@@ -1,5 +1,17 @@
 # @atproto/api
 
+## 0.20.38
+
+### Patch Changes
+
+- [#5293](https://github.com/bluesky-social/atproto/pull/5293) [`675953e`](https://github.com/bluesky-social/atproto/commit/675953e8c0ac5154baf7c5fd0b84aba01559a879) Thanks [@foysalit](https://github.com/foysalit)! - Add recommended policy keys to ozone queue configuration and generated API types
+
+- Updated dependencies [[`8b55a4a`](https://github.com/bluesky-social/atproto/commit/8b55a4ab69c24e5038f67c479b3b9953666ea0c2)]:
+  - @atproto/syntax@0.7.4
+  - @atproto/common-web@0.5.9
+  - @atproto/lexicon@0.7.11
+  - @atproto/xrpc@0.8.10
+
 ## 0.20.37
 
 ### Patch Changes

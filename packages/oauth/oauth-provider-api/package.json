@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-provider-api",
-  "version": "0.7.8",
+  "version": "0.7.9",
   "license": "MIT",
   "description": "Shared data types for the @atproto/oauth-provider and @atproto/oauth-provider-ui packages",
   "keywords": [
