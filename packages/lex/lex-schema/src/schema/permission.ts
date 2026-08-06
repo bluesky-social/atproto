@@ -58,6 +58,6 @@ export class Permission<
 export function permission<
   const R extends string,
   const O extends PermissionOptions,
->(resource: R, options: PermissionOptions & O = {} as O) {
+>(resource: R, options: PermissionOptions & O = {} as O): Permission<R, O> {
   return new Permission<R, O>(resource, options)
 }

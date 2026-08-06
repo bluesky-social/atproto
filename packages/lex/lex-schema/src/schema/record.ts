@@ -10,6 +10,7 @@ import {
   Schema,
   type Unknown$TypedObject,
   type ValidationContext,
+  type ValidationResult,
   type Validator,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
@@ -73,7 +74,10 @@ export class RecordSchema<
     this.keySchema = recordKey(key)
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<InferInput<TShape>> {
     const result = ctx.validate(input, this.schema)
 
     if (!result.success) {

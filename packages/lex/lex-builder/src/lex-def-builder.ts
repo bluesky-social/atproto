@@ -78,7 +78,7 @@ export class LexDefBuilder {
     this.refResolver = new RefResolver(doc, file, indexer, options)
   }
 
-  async build() {
+  async build(): Promise<void> {
     this.file.addVariableStatement({
       declarationKind: VariableDeclarationKind.Const,
       declarations: [

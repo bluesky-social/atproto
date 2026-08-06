@@ -12,6 +12,7 @@ import {
   Schema,
   type Unknown$TypedObject,
   type ValidationContext,
+  type ValidationResult,
   type Validator,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
@@ -57,7 +58,10 @@ export class TypedObjectSchema<
     super()
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<InferInput<TShape>> {
     if (!isPlainObject(input)) {
       return ctx.issueUnexpectedType(input, 'object')
     }

@@ -148,15 +148,15 @@ export class LexBuilder {
 
   constructor(private readonly options: LexBuilderOptions = {}) {}
 
-  get fileExt() {
+  get fileExt(): string {
     return this.options.fileExt ?? '.ts'
   }
 
-  get importExt() {
+  get importExt(): string {
     return this.options.importExt ?? '.js'
   }
 
-  public async load(options: LexBuilderLoadOptions) {
+  public async load(options: LexBuilderLoadOptions): Promise<void> {
     await using indexer = new FilteredIndexer(
       new LexiconDirectoryIndexer(options),
       buildFilter(options),
@@ -174,7 +174,7 @@ export class LexBuilder {
     }
   }
 
-  public async save(options: LexBuilderSaveOptions) {
+  public async save(options: LexBuilderSaveOptions): Promise<void> {
     const files = this.#project.getSourceFiles()
 
     const destination = resolve(options.out)

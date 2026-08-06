@@ -28,13 +28,13 @@ export type RAW_DATA_CODEC = typeof RAW_DATA_CODEC
 /**
  * Hash code that indicates that a CID uses SHA-256.
  */
-export const SHA256_HASH_CODE = sha256.code
+export const SHA256_HASH_CODE: typeof sha256.code = sha256.code
 export type SHA256_HASH_CODE = typeof SHA256_HASH_CODE
 
 /**
  * Hash code that indicates that a CID uses SHA-512.
  */
-export const SHA512_HASH_CODE = sha512.code
+export const SHA512_HASH_CODE: typeof sha512.code = sha512.code
 export type SHA512_HASH_CODE = typeof SHA512_HASH_CODE
 
 /**

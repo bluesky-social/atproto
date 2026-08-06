@@ -25,12 +25,10 @@ declare global {
   }
 }
 
-export const fromBase64Native =
+export const fromBase64Native:
+  ((b64: string, alphabet?: Base64Alphabet) => Uint8Array<ArrayBuffer>) | null =
   typeof Uint8Array.fromBase64 === 'function'
-    ? function fromBase64Native(
-        b64: string,
-        alphabet: Base64Alphabet = 'base64',
-      ): Uint8Array<ArrayBuffer> {
+    ? function fromBase64Native(b64, alphabet = 'base64') {
         return Uint8Array.fromBase64!(b64, {
           alphabet,
           lastChunkHandling: 'loose',
@@ -38,19 +36,18 @@ export const fromBase64Native =
       }
     : /* v8 ignore next -- @preserve */ null
 
-export const fromBase64Node = Buffer
-  ? function fromBase64Node(
-      b64: string,
-      alphabet: Base64Alphabet = 'base64',
-    ): Uint8Array<ArrayBuffer> {
-      const bytes = Buffer.from(b64, alphabet)
-      verifyBase64ForBytes(b64, bytes)
-      // Convert to Uint8Array because even though Buffer is a sub class of
-      // Uint8Array, it serializes differently to Uint8Array (e.g. in JSON) and
-      // results in unexpected behavior downstream (e.g. in tests)
-      return new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
-    }
-  : /* v8 ignore next -- @preserve */ null
+export const fromBase64Node:
+  ((b64: string, alphabet?: Base64Alphabet) => Uint8Array<ArrayBuffer>) | null =
+  Buffer
+    ? function fromBase64Node(b64, alphabet = 'base64') {
+        const bytes = Buffer.from(b64, alphabet)
+        verifyBase64ForBytes(b64, bytes)
+        // Convert to Uint8Array because even though Buffer is a sub class of
+        // Uint8Array, it serializes differently to Uint8Array (e.g. in JSON) and
+        // results in unexpected behavior downstream (e.g. in tests)
+        return new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+      }
+    : /* v8 ignore next -- @preserve */ null
 
 export function fromBase64Ponyfill(
   b64: string,

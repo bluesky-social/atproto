@@ -4,11 +4,9 @@ import type { Base64Alphabet } from './uint8array-base64.js'
 
 const Buffer = NodeJSBuffer
 
-export const utf8FromBase64Node = Buffer
-  ? function utf8FromBase64Node(
-      b64: string,
-      alphabet: Base64Alphabet = 'base64',
-    ): string {
+export const utf8FromBase64Node:
+  ((b64: string, alphabet?: Base64Alphabet) => string) | null = Buffer
+  ? function utf8FromBase64Node(b64, alphabet = 'base64') {
       return Buffer.from(b64, alphabet).toString('utf8')
     }
   : /* v8 ignore next -- @preserve */ null

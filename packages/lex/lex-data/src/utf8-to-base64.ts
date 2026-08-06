@@ -5,8 +5,9 @@ import { toBase64Node } from './uint8array-to-base64.js'
 
 const Buffer = NodeJSBuffer
 
-export const utf8ToBase64Node = Buffer
-  ? function utf8ToBase64Node(text: string, alphabet?: Base64Alphabet): string {
+export const utf8ToBase64Node:
+  ((text: string, alphabet?: Base64Alphabet) => string) | null = Buffer
+  ? function utf8ToBase64Node(text, alphabet) {
       const buffer = Buffer.from(text, 'utf8')
       return toBase64Node!(buffer, alphabet)
     }

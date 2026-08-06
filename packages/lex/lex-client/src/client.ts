@@ -391,7 +391,7 @@ export class Client {
   /**
    * Configures the Client (or its sub classes) globally.
    */
-  static configure(opts: { appLabelers?: Iterable<DidString> }) {
+  static configure(opts: { appLabelers?: Iterable<DidString> }): void {
     if (opts.appLabelers) this.appLabelers = [...opts.appLabelers]
   }
 
@@ -482,7 +482,7 @@ export class Client {
    * Replaces all labelers with the given set.
    * @param labelers - Iterable of labeler DIDs
    */
-  public setLabelers(labelers: Iterable<DidString> = []) {
+  public setLabelers(labelers: Iterable<DidString> = []): void {
     this.clearLabelers()
     this.addLabelers(labelers)
   }
@@ -491,14 +491,14 @@ export class Client {
    * Adds labelers to the current set.
    * @param labelers - Iterable of labeler DIDs to add
    */
-  public addLabelers(labelers: Iterable<DidString>) {
+  public addLabelers(labelers: Iterable<DidString>): void {
     for (const labeler of labelers) this.xrpcDefaults.labelers.add(labeler)
   }
 
   /**
    * Removes all labelers from this client instance.
    */
-  public clearLabelers() {
+  public clearLabelers(): void {
     this.xrpcDefaults.labelers.clear()
   }
 
@@ -656,7 +656,7 @@ export class Client {
     record: TypedLexMap<NsidString>,
     rkey?: string,
     { service = null, labelers = null, ...options }: CreateRecordOptions = {},
-  ) {
+  ): Promise<XrpcResponse<typeof createRecord>> {
     return this.xrpc(createRecord, {
       ...options,
       service,
@@ -689,7 +689,7 @@ export class Client {
     collection: NsidString,
     rkey: string,
     { service = null, labelers = null, ...options }: DeleteRecordOptions = {},
-  ) {
+  ): Promise<XrpcResponse<typeof deleteRecord>> {
     return this.xrpc(deleteRecord, {
       ...options,
       service,
@@ -721,7 +721,7 @@ export class Client {
     collection: NsidString,
     rkey: string,
     { service = null, labelers = null, ...options }: GetRecordOptions = {},
-  ) {
+  ): Promise<XrpcResponse<typeof getRecord>> {
     return this.xrpc(getRecord, {
       ...options,
       service,
@@ -751,7 +751,7 @@ export class Client {
     record: TypedLexMap<NsidString>,
     rkey: string,
     { service = null, labelers = null, ...options }: PutRecordOptions = {},
-  ) {
+  ): Promise<XrpcResponse<typeof putRecord>> {
     return this.xrpc(putRecord, {
       ...options,
       service,
@@ -783,7 +783,7 @@ export class Client {
   async listRecords(
     nsid: NsidString,
     { service = null, labelers = null, ...options }: ListRecordsOptions = {},
-  ) {
+  ): Promise<XrpcResponse<typeof listRecords>> {
     return this.xrpc(listRecords, {
       ...options,
       service,
@@ -828,7 +828,7 @@ export class Client {
   async applyWrites(
     factory: WriteOperationsFactory,
     { service = null, labelers = null, ...options }: ApplyWritesOptions = {},
-  ) {
+  ): Promise<XrpcResponse<typeof applyWrites>> {
     return this.xrpc(applyWrites, {
       ...options,
       service,
@@ -865,7 +865,7 @@ export class Client {
   async uploadBlob(
     body: BinaryBodyInit,
     { service = null, labelers = null, ...options }: UploadBlobOptions = {},
-  ) {
+  ): Promise<XrpcResponse<typeof uploadBlob>> {
     return this.xrpc(uploadBlob, { ...options, service, labelers, body })
   }
 
@@ -884,7 +884,7 @@ export class Client {
     did: DidString,
     cid: CidString,
     { service = null, labelers = null, ...options }: GetBlobOptions = {},
-  ) {
+  ): Promise<XrpcResponse<typeof getBlob>> {
     return this.xrpc(getBlob, {
       ...options,
       service,

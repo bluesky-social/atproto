@@ -17,21 +17,17 @@ declare global {
   }
 }
 
-export const toBase64Native =
+export const toBase64Native:
+  ((bytes: Uint8Array, alphabet?: Base64Alphabet) => string) | null =
   typeof Uint8Array.prototype.toBase64 === 'function'
-    ? function toBase64Native(
-        bytes: Uint8Array,
-        alphabet: Base64Alphabet = 'base64',
-      ): string {
+    ? function toBase64Native(bytes, alphabet = 'base64') {
         return bytes.toBase64!({ alphabet, omitPadding: true })
       }
     : /* v8 ignore next -- @preserve */ null
 
-export const toBase64Node = Buffer
-  ? function toBase64Node(
-      bytes: Uint8Array,
-      alphabet: Base64Alphabet = 'base64',
-    ): string {
+export const toBase64Node:
+  ((bytes: Uint8Array, alphabet?: Base64Alphabet) => string) | null = Buffer
+  ? function toBase64Node(bytes, alphabet = 'base64') {
       const buffer = bytes instanceof Buffer ? bytes : Buffer.from(bytes)
       const b64 = buffer.toString(alphabet)
 

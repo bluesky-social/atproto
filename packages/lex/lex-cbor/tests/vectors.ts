@@ -1,6 +1,13 @@
-import { parseCid } from '@atproto/lex-data'
+import { type LexValue, parseCid } from '@atproto/lex-data'
+import type { JsonValue } from '@atproto/lex-json'
 
-export const vectors = [
+export const vectors: ReadonlyArray<{
+  name: string
+  json: JsonValue
+  lex: LexValue
+  cbor: Uint8Array<ArrayBuffer>
+  cid: string
+}> = [
   {
     name: 'basic',
     json: {
