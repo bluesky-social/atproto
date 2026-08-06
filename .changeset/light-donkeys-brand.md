@@ -1,6 +1,6 @@
 ---
 '@atproto/oauth-provider': minor
-'@atproto/pds': minor
+'@atproto/pds': patch
 ---
 
 Simplify branding color customization to match the redesigned OAuth UI. The `primary` color is now the only one that derives a contrast pair (for `--primary-foreground`); the other colors are consumed as flat values, so their per-color contrast and hue inputs no longer do anything and have been removed. `primary`, `error`, `warning`, `info` and `success` remain configurable as single RGB values.
