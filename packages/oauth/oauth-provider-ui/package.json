@@ -60,7 +60,7 @@
     "postcss": "^8.4.38",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-error-boundary": "^5.0.0",
+    "react-error-boundary": "^6.1.2",
     "tailwindcss": "^4.3.3",
     "ua-parser-js": "^2.0.3",
     "vite": "^8.2.0",
