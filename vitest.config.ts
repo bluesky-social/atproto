@@ -15,6 +15,7 @@ export default defineConfig({
       'packages/aws',
       'packages/internal/*',
       'packages/lex/*',
+      'packages/lexicon-resolver',
       'packages/oauth/*',
       'packages/syntax',
       'packages/tap',
