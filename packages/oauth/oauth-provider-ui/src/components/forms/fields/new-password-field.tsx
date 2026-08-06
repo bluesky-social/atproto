@@ -1,3 +1,4 @@
+import { plural } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react/macro'
 import { useState } from 'react'
 import { PasswordStrength } from '#/components/feedback/password-strength.tsx'
@@ -28,7 +29,9 @@ export function NewPasswordField({
       defaultValue={defaultValue}
       placeholder={t`Enter a password`}
       aria-label={t`Enter your new password`}
-      title={t`Password with at least ${MIN_PASSWORD_LENGTH} characters`}
+      title={t`Password with at least ${plural(MIN_PASSWORD_LENGTH, {
+        other: '# characters',
+      })}`}
       minLength={minLength}
       autoComplete={autoComplete}
       onChange={(event) => {

@@ -1,3 +1,4 @@
+import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtSignIcon, CheckIcon, XIcon } from 'lucide-react'
 import { type ReactNode, useMemo, useState } from 'react'
@@ -88,9 +89,14 @@ export function HandleField({
 
       <div>
         <ValidationMessage hasValue={!!segment} valid={validLength}>
-          <Trans>
-            Between {minLength} and {maxLength} characters
-          </Trans>
+          {t`Between ${plural(minLength, {
+            zero: '0',
+            one: 'one',
+            other: '#',
+          })} and ${plural(maxLength, {
+            one: 'one character',
+            other: '# characters',
+          })}`}
         </ValidationMessage>
         <ValidationMessage hasValue={!!segment} valid={validCharset}>
           <Trans>Only letters, numbers, and hyphens</Trans>

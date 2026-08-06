@@ -13,16 +13,19 @@ msgstr ""
 "Language-Team: Spanish\n"
 "Plural-Forms: \n"
 
+#. placeholder {0}: bucket.count
 #: src/components/utils/date-ago.tsx
-msgid "{deltaDays} days ago"
+msgid "{0, plural, one {# hour ago} other {# hours ago}}"
 msgstr ""
 
+#. placeholder {0}: bucket.count
 #: src/components/utils/date-ago.tsx
-msgid "{deltaHours} hours ago"
+msgid "{0, plural, one {# minute ago} other {# minutes ago}}"
 msgstr ""
 
+#. placeholder {0}: bucket.count
 #: src/components/utils/date-ago.tsx
-msgid "{deltaMinutes} minutes ago"
+msgid "{0, plural, one {yesterday} other {# days ago}}"
 msgstr ""
 
 #: src/pages/account/(authenticated)/about/page.tsx
@@ -55,14 +58,6 @@ msgstr ""
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "<your-domain>"
-msgstr ""
-
-#: src/components/utils/date-ago.tsx
-msgid "1 hour ago"
-msgstr ""
-
-#: src/components/utils/date-ago.tsx
-msgid "1 minute ago"
 msgstr ""
 
 #: src/components/sign-in-form.tsx
@@ -232,8 +227,8 @@ msgid "Back"
 msgstr "Volver"
 
 #: src/components/forms/fields/handle-field.tsx
-msgid "Between {minLength} and {maxLength} characters"
-msgstr "Entre {minLength} y {maxLength} caracteres"
+msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
+msgstr "Entre {minLength, plural, other {#}} y {maxLength, plural, other {# caracteres}}"
 
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
@@ -873,8 +868,8 @@ msgid "Password updated!"
 msgstr "¡Contraseña actualizada!"
 
 #: src/components/forms/fields/new-password-field.tsx
-msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
-msgstr "Contraseña con al menos {MIN_PASSWORD_LENGTH} caracteres"
+msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
+msgstr "Contraseña con al menos {MIN_PASSWORD_LENGTH, plural, other {# caracteres}}"
 
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
@@ -925,7 +920,7 @@ msgid "Please try again in a moment."
 msgstr ""
 
 #: src/components/forms/request-code-button.tsx
-msgid "Please wait {remainingSeconds} seconds before trying again."
+msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
 msgstr ""
 
 #: src/components/sign-up-disclaimer.tsx
@@ -1011,7 +1006,7 @@ msgstr ""
 
 #: src/components/forms/fields/handle-field.tsx
 msgid "Select domain"
-msgstr ""
+msgstr "Seleccionar dominio"
 
 #: src/components/sign-in-view.tsx
 msgid "Select from an existing account"
@@ -1028,7 +1023,7 @@ msgstr ""
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
 msgid "Sign in"
-msgstr ""
+msgstr "Iniciar sesión"
 
 #: src/components/authenticate-welcome-view.tsx
 #: src/components/sign-in-form.tsx
@@ -1399,10 +1394,6 @@ msgstr ""
 
 #: src/components/reactivate-account-view.tsx
 msgid "Yes, reactivate my account"
-msgstr ""
-
-#: src/components/utils/date-ago.tsx
-msgid "yesterday"
 msgstr ""
 
 #: src/components/redirecting-view.tsx

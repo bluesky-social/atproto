@@ -13,17 +13,20 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#. placeholder {0}: bucket.count
 #: src/components/utils/date-ago.tsx
-msgid "{deltaDays} days ago"
-msgstr "il y a {deltaDays} jours"
+msgid "{0, plural, one {# hour ago} other {# hours ago}}"
+msgstr "{0, plural, one {il y a # heure} other {il y a # heures}}"
 
+#. placeholder {0}: bucket.count
 #: src/components/utils/date-ago.tsx
-msgid "{deltaHours} hours ago"
-msgstr "il y a {deltaHours} heures"
+msgid "{0, plural, one {# minute ago} other {# minutes ago}}"
+msgstr "{0, plural, one {il y a # minute} other {il y a # minutes}}"
 
+#. placeholder {0}: bucket.count
 #: src/components/utils/date-ago.tsx
-msgid "{deltaMinutes} minutes ago"
-msgstr "il y a {deltaMinutes} minutes"
+msgid "{0, plural, one {yesterday} other {# days ago}}"
+msgstr "{0, plural, one {hier} other {il y a # jours}}"
 
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
@@ -56,14 +59,6 @@ msgstr "<0>Qu'est-ce qui le rend spécial</0><1>La grande différence : vos donn
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "<your-domain>"
 msgstr "<votre-domaine>"
-
-#: src/components/utils/date-ago.tsx
-msgid "1 hour ago"
-msgstr "il y a 1 heure"
-
-#: src/components/utils/date-ago.tsx
-msgid "1 minute ago"
-msgstr "il y a 1 minute"
 
 #: src/components/sign-in-form.tsx
 msgid "2FA Confirmation"
@@ -232,8 +227,8 @@ msgid "Back"
 msgstr "Retour"
 
 #: src/components/forms/fields/handle-field.tsx
-msgid "Between {minLength} and {maxLength} characters"
-msgstr "Entre {minLength} et {maxLength} caractères"
+msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
+msgstr "Entre {minLength, plural, zero {0} one {un} other {#}} et {maxLength, plural, one {un caractère} other {# caractères}}"
 
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
@@ -882,8 +877,8 @@ msgid "Password updated!"
 msgstr "Mot de passe mis à jour !"
 
 #: src/components/forms/fields/new-password-field.tsx
-msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
-msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
+msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
+msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH, plural, other {# caractères}}"
 
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
@@ -934,8 +929,8 @@ msgid "Please try again in a moment."
 msgstr "Veuillez réessayer dans un instant."
 
 #: src/components/forms/request-code-button.tsx
-msgid "Please wait {remainingSeconds} seconds before trying again."
-msgstr "Veuillez attendre {remainingSeconds} secondes avant de réessayer."
+msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
+msgstr "Veuillez patienter {remainingSeconds, plural, one {# seconde} other {# secondes}} avant de réessayer."
 
 #: src/components/sign-up-disclaimer.tsx
 #: src/components/utils/link-title.tsx
@@ -1409,10 +1404,6 @@ msgstr "Oui, supprimer mon compte"
 #: src/components/reactivate-account-view.tsx
 msgid "Yes, reactivate my account"
 msgstr "Oui, réactiver mon compte"
-
-#: src/components/utils/date-ago.tsx
-msgid "yesterday"
-msgstr "hier"
 
 #: src/components/redirecting-view.tsx
 msgid "You are being redirected..."

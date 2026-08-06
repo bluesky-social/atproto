@@ -13,17 +13,20 @@ msgstr ""
 "Language-Team: Japanese\n"
 "Plural-Forms: \n"
 
+#. placeholder {0}: bucket.count
 #: src/components/utils/date-ago.tsx
-msgid "{deltaDays} days ago"
-msgstr "{deltaDays} 日前"
+msgid "{0, plural, one {# hour ago} other {# hours ago}}"
+msgstr "{0, plural, one {1時間前} other {# 時間前}}"
 
+#. placeholder {0}: bucket.count
 #: src/components/utils/date-ago.tsx
-msgid "{deltaHours} hours ago"
-msgstr "{deltaHours} 時間前"
+msgid "{0, plural, one {# minute ago} other {# minutes ago}}"
+msgstr "{0, plural, one {1分前} other {# 分前}}"
 
+#. placeholder {0}: bucket.count
 #: src/components/utils/date-ago.tsx
-msgid "{deltaMinutes} minutes ago"
-msgstr "{deltaMinutes} 分前"
+msgid "{0, plural, one {yesterday} other {# days ago}}"
+msgstr "{0, plural, one {昨日} other {# 日前}}"
 
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
@@ -56,14 +59,6 @@ msgstr "<0>何が特別なのか</0><1>主な違い：あなたのデータは�
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "<your-domain>"
 msgstr "<あなたのドメイン>"
-
-#: src/components/utils/date-ago.tsx
-msgid "1 hour ago"
-msgstr "1時間前"
-
-#: src/components/utils/date-ago.tsx
-msgid "1 minute ago"
-msgstr "1分前"
 
 #: src/components/sign-in-form.tsx
 msgid "2FA Confirmation"
@@ -232,8 +227,8 @@ msgid "Back"
 msgstr "戻る"
 
 #: src/components/forms/fields/handle-field.tsx
-msgid "Between {minLength} and {maxLength} characters"
-msgstr "{minLength} 文字以上 {maxLength} 文字以下"
+msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
+msgstr "{minLength, plural, zero {0} one {1} other {#}} 文字以上、{maxLength, plural, one {1文字} other {#文字}} 以下"
 
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
@@ -882,8 +877,8 @@ msgid "Password updated!"
 msgstr "パスワードが更新されました！"
 
 #: src/components/forms/fields/new-password-field.tsx
-msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
-msgstr "パスワードは {MIN_PASSWORD_LENGTH} 文字以上"
+msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
+msgstr "パスワードは {MIN_PASSWORD_LENGTH, plural, other {# 文字}}以上"
 
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
@@ -934,8 +929,8 @@ msgid "Please try again in a moment."
 msgstr "しばらくしてからもう一度お試しください。"
 
 #: src/components/forms/request-code-button.tsx
-msgid "Please wait {remainingSeconds} seconds before trying again."
-msgstr "{remainingSeconds} 秒待ってからもう一度やり直してください。"
+msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
+msgstr "{remainingSeconds, plural, other {# 秒}}待ってからもう一度やり直してください。"
 
 #: src/components/sign-up-disclaimer.tsx
 #: src/components/utils/link-title.tsx
@@ -1020,7 +1015,7 @@ msgstr "別のアカウントを選択"
 
 #: src/components/forms/fields/handle-field.tsx
 msgid "Select domain"
-msgstr ""
+msgstr "ドメインを選択"
 
 #: src/components/sign-in-view.tsx
 msgid "Select from an existing account"
@@ -1056,7 +1051,7 @@ msgstr "アカウントの選択"
 
 #: src/components/sign-in-picker.tsx
 msgid "Sign in to an account that is not listed"
-msgstr ""
+msgstr "リストにないアカウントにサインイン"
 
 #: src/components/identity/account-menu.tsx
 msgid "Sign out"
@@ -1074,11 +1069,11 @@ msgstr "サインアップ"
 
 #: src/authorization-page.tsx
 msgid "Sign-in canceled"
-msgstr ""
+msgstr "サインインキャンセル"
 
 #: src/authorization-page.tsx
 msgid "Sign-in complete"
-msgstr ""
+msgstr "サインイン完了"
 
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
@@ -1181,11 +1176,11 @@ msgstr "これらのアプリはあなたのアカウントにアクセスでき
 
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app can uniquely identify you through your account."
-msgstr ""
+msgstr "このアプリは、あなたのアカウントを通じてあなたを一意に識別できます。"
 
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app has access to your account with the following permissions:"
-msgstr ""
+msgstr "このアプリは、あなたのアカウントに次の権限でアクセスできます："
 
 #: src/components/consent-form.tsx
 msgid "This application is requesting the following permissions (scopes) to access your account:"
@@ -1247,7 +1242,7 @@ msgstr "ドメイン名を入力"
 
 #: src/components/forms/fields/handle-field.tsx
 msgid "Type your username"
-msgstr ""
+msgstr "ユーザー名を入力"
 
 #: src/contexts/session.tsx
 msgid "Unauthorized"
@@ -1409,10 +1404,6 @@ msgstr "はい、アカウントを削除します"
 #: src/components/reactivate-account-view.tsx
 msgid "Yes, reactivate my account"
 msgstr "はい、アカウントを再有効化します"
-
-#: src/components/utils/date-ago.tsx
-msgid "yesterday"
-msgstr "昨日"
 
 #: src/components/redirecting-view.tsx
 msgid "You are being redirected..."

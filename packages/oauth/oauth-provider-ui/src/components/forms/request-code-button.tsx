@@ -1,3 +1,4 @@
+import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { SendIcon } from 'lucide-react'
 import { type ComponentProps, type Ref, useImperativeHandle } from 'react'
@@ -72,7 +73,10 @@ export function RequestCodeButton({
       title={showRateLimit ? t`Retry in ${remainingSeconds}s` : title}
       aria-label={
         showRateLimit
-          ? t`Please wait ${remainingSeconds} seconds before trying again.`
+          ? t`Please wait ${plural(remainingSeconds, {
+              one: '# second',
+              other: '# seconds',
+            })} before trying again.`
           : ariaLabel
       }
       aria-live={showRateLimit ? 'polite' : ariaLive}
