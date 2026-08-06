@@ -2,6 +2,7 @@ name: Repository CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
@@ -21,7 +22,9 @@ jobs:
     # affected (build/verify/test are not using the docker images) and can be
     # skipped. Note that in case, dependabot-changeset.yml will not trigger a
     # new commit, so this workflow will not be re-triggered. This is expected.
-    if: github.event.sender.login != 'dependabot[bot]'
+    if: >
+      github.event.pull_request.draft == false &&
+      github.event.sender.login != 'dependabot[bot]'
     steps:
       - uses: actions/checkout@v4
         with:
