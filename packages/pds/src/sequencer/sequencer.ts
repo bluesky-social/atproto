@@ -1,5 +1,4 @@
 import EventEmitter from 'node:events'
-import type TypedEmitter from 'typed-emitter'
 import { SECOND, wait } from '@atproto/common'
 import { decode as cborDecode } from '@atproto/lex-cbor'
 import type { DatetimeString, DidString, HandleString } from '@atproto/syntax'
@@ -29,7 +28,7 @@ import {
 
 export * from './events.js'
 
-export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
+export class Sequencer extends EventEmitter<SequencerEvents> {
   db: SequencerDb
   destroyed = false
   pollPromise: Promise<void> | null = null
@@ -281,10 +280,10 @@ export const parseRepoSeqRows = (rows: RepoSeqEntry[]): SeqEvt[] => {
 type SeqRow = RepoSeqEntry
 
 type SequencerEvents = {
-  events: (evts: SeqEvt[]) => void
-  close: () => void
+  events: [evts: SeqEvt[]]
+  close: []
 }
 
-export type SequencerEmitter = TypedEmitter.default<SequencerEvents>
+export type SequencerEmitter = EventEmitter<SequencerEvents>
 
 export default Sequencer

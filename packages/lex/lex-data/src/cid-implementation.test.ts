@@ -18,15 +18,15 @@ export class BytesCid implements Cid {
     }
   }
 
-  get version() {
+  get version(): 0 | 1 {
     return this.bytes[0] as 0 | 1
   }
 
-  get code() {
+  get code(): number {
     return this.bytes[1]
   }
 
-  get multihash() {
+  get multihash(): { code: number; digest: Uint8Array } {
     const code = this.bytes[2]
     const digest = this.bytes.subarray(4)
     return { code, digest }

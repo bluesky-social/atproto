@@ -1,5 +1,17 @@
 # @atproto/lex-password-session
 
+## 0.2.0
+
+### Minor Changes
+
+- [#5320](https://github.com/bluesky-social/atproto/pull/5320) [`b767720`](https://github.com/bluesky-social/atproto/commit/b767720b9cac7c81bb5f26f758cd26ee644041e5) Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Export `extractPdsEndpoint` (DID doc → PDS URL) from the public API
+
+### Patch Changes
+
+- Updated dependencies [[`8b55a4a`](https://github.com/bluesky-social/atproto/commit/8b55a4ab69c24e5038f67c479b3b9953666ea0c2)]:
+  - @atproto/lex-schema@0.2.5
+  - @atproto/lex-client@0.3.3
+
 ## 0.1.10
 
 ### Patch Changes

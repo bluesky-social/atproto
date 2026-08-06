@@ -6,6 +6,7 @@ import type {
   HcaptchaConfig,
 } from '@atproto/oauth-provider/provider'
 import { type DidString, ensureValidDid, isValidDid } from '@atproto/syntax'
+import pkg from '../../package.json' with { type: 'json' }
 import type { ServerEnvironment } from './env.js'
 
 export type { BrandingConfig }
@@ -31,7 +32,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     hostname,
     publicUrl,
     did,
-    version: env.version, // default?
+    version: env.version || pkg.version,
     privacyPolicyUrl: env.privacyPolicyUrl,
     termsOfServiceUrl: env.termsOfServiceUrl,
     contactEmailAddress: env.contactEmailAddress,
@@ -401,7 +402,7 @@ export type ServiceConfig = {
   hostname: string
   publicUrl: string
   did: DidString
-  version?: string
+  version: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
   acceptingImports: boolean

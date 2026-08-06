@@ -102,6 +102,11 @@ export function subscription<
   const P extends ParamsSchema,
   const M extends Schema<LexValue>,
   const E extends undefined | readonly string[] = undefined,
->(nsid: N, parameters: P, message: M, errors: E = undefined as E) {
+>(
+  nsid: N,
+  parameters: P,
+  message: M,
+  errors: E = undefined as E,
+): Subscription<N, P, M, E> {
   return new Subscription<N, P, M, E>(nsid, parameters, message, errors)
 }

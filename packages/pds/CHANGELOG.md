@@ -1,5 +1,27 @@
 # @atproto/pds
 
+## 0.5.25
+
+### Patch Changes
+
+- [#5318](https://github.com/bluesky-social/atproto/pull/5318) [`8b55a4a`](https://github.com/bluesky-social/atproto/commit/8b55a4ab69c24e5038f67c479b3b9953666ea0c2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow moderators to call `app.bsky.actor.getPreferences` endpoint
+
+- [#5315](https://github.com/bluesky-social/atproto/pull/5315) [`8bf8f6b`](https://github.com/bluesky-social/atproto/commit/8bf8f6b1faa625af9e924bec83c69ad709fc9a22) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove unused `@atproto/xrpc` dependency
+
+- [#5340](https://github.com/bluesky-social/atproto/pull/5340) [`8145a99`](https://github.com/bluesky-social/atproto/commit/8145a999e03219e846ae4773ec66f0de72939511) Thanks [@43081j](https://github.com/43081j)! - Remove typed-emitter and use built-in strongly typed `EventEmitter`
+
+- Updated dependencies [[`8b55a4a`](https://github.com/bluesky-social/atproto/commit/8b55a4ab69c24e5038f67c479b3b9953666ea0c2)]:
+  - @atproto/syntax@0.7.4
+  - @atproto/oauth-provider@0.21.3
+  - @atproto/oauth-scopes@0.5.9
+  - @atproto/repo@0.10.9
+  - @atproto/lex@0.3.4
+  - @atproto/xrpc-server@0.12.1
+  - @atproto/aws@0.3.11
+  - @atproto/common@0.7.5
+  - @atproto/identity@0.5.9
+  - @atproto-labs/xrpc-utils@0.1.14
+
 ## 0.5.24
 
 ### Patch Changes

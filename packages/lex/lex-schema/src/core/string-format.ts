@@ -80,7 +80,8 @@ export function isAtUriStringLenient<I>(input: I): input is I & AtUriString {
  * @param value - The value to check
  * @returns `true` if the value is a valid CID string
  */
-export const isCidString = ((v) => validateCidString(v)) as CheckFn<CidString>
+export const isCidString = ((input) =>
+  typeof input === 'string' && validateCidString(input)) as CheckFn<CidString>
 /**
  * A Content Identifier (CID) string.
  *
@@ -134,8 +135,9 @@ export type {
  * @param value - The value to check
  * @returns `true` if the value is a valid language string
  */
-export const isLanguageString = ((v) =>
-  parseLanguageString(v) !== null) as CheckFn<LanguageString>
+export const isLanguageString = ((input) =>
+  typeof input === 'string' &&
+  parseLanguageString(input) !== null) as CheckFn<LanguageString>
 
 /**
  * Lenient version of {@link isLanguageString} that only checks well-formed

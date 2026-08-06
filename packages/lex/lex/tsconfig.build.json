@@ -1,5 +1,8 @@
 {
-  "extends": ["../../../tsconfig/isomorphic.tsconfig.json"],
+  "extends": [
+    "../../../tsconfig/isomorphic.tsconfig.json",
+    "../../../tsconfig/isolated.tsconfig.json",
+  ],
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
   "references": [

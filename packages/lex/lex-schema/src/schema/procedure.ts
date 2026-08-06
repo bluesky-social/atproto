@@ -92,6 +92,12 @@ export function procedure<
   const I extends Payload,
   const O extends Payload,
   const E extends undefined | readonly string[] = undefined,
->(nsid: N, parameters: P, input: I, output: O, errors: E = undefined as E) {
+>(
+  nsid: N,
+  parameters: P,
+  input: I,
+  output: O,
+  errors: E = undefined as E,
+): Procedure<N, P, I, O, E> {
   return new Procedure<N, P, I, O, E>(nsid, parameters, input, output, errors)
 }

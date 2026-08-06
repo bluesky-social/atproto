@@ -103,10 +103,15 @@ export function createApiMiddleware<
       async handler() {
         const { deviceId, deviceMetadata, input, requestUri } = this
 
+        const clientId = requestUri
+          ? await server.requestManager.peekClientId(requestUri)
+          : undefined
+
         const account = await server.accountManager.createAccount(
           deviceId,
           deviceMetadata,
           input,
+          clientId,
         )
 
         // Remember when not in the context of a request by default
@@ -123,7 +128,7 @@ export function createApiMiddleware<
           : await server.signer.createEphemeralToken({
               sub: account.did,
               deviceId,
-              requestUri: this.requestUri,
+              requestUri,
             })
 
         const json = { account, ephemeralToken }

@@ -39,6 +39,11 @@
             "description": {
               "type": "string",
               "description": "Optional description of the queue"
+            },
+            "recommendedPolicies": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Policy keys to recommend when actioning reports in this queue"
             }
           }
         }
@@ -57,6 +62,10 @@
         }
       },
       "errors": [
+        {
+          "name": "InvalidRecommendedPolicies",
+          "description": "One or more recommended policy keys do not exist in the configured policy list"
+        },
         {
           "name": "ConflictingQueue",
           "description": "The queue configuration conflicts with an existing queue"
