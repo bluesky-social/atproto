@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { Link } from '@tanstack/react-router'
+import { Link, useParams } from '@tanstack/react-router'
 import { MonitorSmartphoneIcon } from 'lucide-react'
 import { useMemo } from 'react'
 import type {
@@ -20,6 +20,7 @@ import { useBrowserName } from '#/hooks/use-browser-name'
 
 export function Page() {
   const { t } = useLingui()
+  const { accountId } = useParams({ strict: false }) as { accountId?: string }
   const { account } = useAuthenticatedSession()
   const { data, refetch, isLoading } = useAccountSessionsQuery(account)
 
@@ -55,7 +56,10 @@ export function Page() {
           Your account is signed in on the devices listed below. If your account
           was compromised, sign out all devices, change your password, and check
           your connected{' '}
-          <Link to="/account/apps" className="text-foreground hover:underline">
+          <Link
+            to={`/account/u/${accountId}/apps` as never}
+            className="text-foreground hover:underline"
+          >
             apps
           </Link>
           .
