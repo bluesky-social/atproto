@@ -3,6 +3,7 @@ import type { AtpAgent } from '@atproto/api'
 import type { SeedClient } from '@atproto/dev-env'
 import type { AtIdentifierString, DidString } from '@atproto/syntax'
 import type { AppContext } from '../src/index.js'
+import { createSelfCustodiedAccount } from './_util.js'
 
 // outside of suite so they can be used in mock
 let alice: DidString
@@ -269,5 +270,38 @@ describe('handles', () => {
       handle: 'bob-alt.test',
     })
     await expect(attempt2).rejects.toThrow('Authentication Required')
+  })
+
+  it('fails cleanly when the server no longer holds the rotation key', async () => {
+    const { account: erin } = await createSelfCustodiedAccount(sc, ctx, 'erin')
+
+    const attempt = agent.api.com.atproto.identity.updateHandle(
+      { handle: 'erin2.test' },
+      { headers: sc.getHeaders(erin.did), encoding: 'application/json' },
+    )
+    await expect(attempt).rejects.toThrow(
+      "Rotation keys do not include server's rotation key",
+    )
+
+    const dbHandle = await getHandleFromDb(erin.did)
+    expect(dbHandle).toBe('erin.test')
+  })
+
+  it('fails cleanly when the did is tombstoned', async () => {
+    const jill = await sc.createAccount('jill', {
+      handle: 'jill.test',
+      email: 'jill@test.com',
+      password: 'jill-pass',
+    })
+    await ctx.plcClient.tombstone(jill.did, ctx.plcRotationKey)
+
+    const attempt = agent.api.com.atproto.identity.updateHandle(
+      { handle: 'jill2.test' },
+      { headers: sc.getHeaders(jill.did), encoding: 'application/json' },
+    )
+    await expect(attempt).rejects.toThrow('Did is tombstoned')
+
+    const dbHandle = await getHandleFromDb(jill.did)
+    expect(dbHandle).toBe('jill.test')
   })
 })

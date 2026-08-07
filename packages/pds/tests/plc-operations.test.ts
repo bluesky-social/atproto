@@ -11,6 +11,7 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import type { AppContext } from '../src/index.js'
+import { createSelfCustodiedAccount } from './_util.js'
 
 describe('plc operations', () => {
   let network: TestNetworkNoAppView
@@ -237,5 +238,76 @@ describe('plc operations', () => {
     assert(lastEvt)
     expect(lastEvt.did).toBe(alice.did)
     expect(lastEvt.eventType).toBe('identity')
+  })
+
+  it('fails cleanly signing for a self-custodied account the server no longer controls', async () => {
+    const { account: erin } = await createSelfCustodiedAccount(sc, ctx, 'erin')
+
+    using sendPlcOperationMock = jest.spyOn(ctx.mailer, 'sendPlcOperation')
+    await agent.api.com.atproto.identity.requestPlcOperationSignature(
+      undefined,
+      { headers: sc.getHeaders(erin.did) },
+    )
+    const [{ token: erinToken }] = sendPlcOperationMock.mock.lastCall!
+
+    const attempt = agent.api.com.atproto.identity.signPlcOperation(
+      { token: erinToken, rotationKeys: [sampleKey] },
+      { headers: sc.getHeaders(erin.did), encoding: 'application/json' },
+    )
+    await expect(attempt).rejects.toThrow(
+      "Rotation keys do not include server's rotation key",
+    )
+  })
+
+  it('fails cleanly activating an account the server no longer controls', async () => {
+    const { account: fiona } = await createSelfCustodiedAccount(
+      sc,
+      ctx,
+      'fiona',
+    )
+
+    const attempt = agent.api.com.atproto.server.activateAccount(undefined, {
+      headers: sc.getHeaders(fiona.did),
+    })
+    await expect(attempt).rejects.toThrow(
+      "Rotation keys do not include server's rotation key",
+    )
+  })
+
+  it('fails cleanly activating a tombstoned did', async () => {
+    const hank = await sc.createAccount('hank', {
+      handle: 'hank.test',
+      email: 'hank@test.com',
+      password: 'hank-pass',
+    })
+    await ctx.plcClient.tombstone(hank.did, ctx.plcRotationKey)
+
+    const attempt = agent.api.com.atproto.server.activateAccount(undefined, {
+      headers: sc.getHeaders(hank.did),
+    })
+    await expect(attempt).rejects.toThrow('Did is tombstoned')
+  })
+
+  it('fails cleanly signing for a tombstoned did', async () => {
+    const ivy = await sc.createAccount('ivy', {
+      handle: 'ivy.test',
+      email: 'ivy@test.com',
+      password: 'ivy-pass',
+    })
+
+    using sendPlcOperationMock = jest.spyOn(ctx.mailer, 'sendPlcOperation')
+    await agent.api.com.atproto.identity.requestPlcOperationSignature(
+      undefined,
+      { headers: sc.getHeaders(ivy.did) },
+    )
+    const [{ token: ivyToken }] = sendPlcOperationMock.mock.lastCall!
+
+    await ctx.plcClient.tombstone(ivy.did, ctx.plcRotationKey)
+
+    const attempt = agent.api.com.atproto.identity.signPlcOperation(
+      { token: ivyToken, rotationKeys: [sampleKey] },
+      { headers: sc.getHeaders(ivy.did), encoding: 'application/json' },
+    )
+    await expect(attempt).rejects.toThrow('Did is tombstoned')
   })
 })

@@ -20,7 +20,11 @@ import {
 } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import type { ActorStore } from '../actor-store/actor-store.js'
-import { assertValidDidDocumentForService } from '../api/com/atproto/server/util.js'
+import {
+  assertCanSignUpdatesForDid,
+  assertValidDidDocumentForService,
+  serverRotationKeyDid,
+} from '../api/com/atproto/server/util.js'
 import { AuthScope } from '../auth-scope.js'
 import type { ServerConfig } from '../config/config.js'
 import { softDeleted } from '../db/index.js'
@@ -326,7 +330,10 @@ export class AccountManager {
     )
 
     if (did.startsWith('did:plc:')) {
-      // @TODO We should verify the status before issuing a PLC update.
+      assertCanSignUpdatesForDid(
+        await this.plcClient.getLastOp(did),
+        serverRotationKeyDid(this),
+      )
       await this.plcClient.updateHandle(did, this.plcRotationKey, handle)
     } else {
       const resolved = await this.idResolver.did.resolveAtprotoData(did, true)
