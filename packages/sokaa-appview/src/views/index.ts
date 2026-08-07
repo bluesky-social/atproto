@@ -9,6 +9,7 @@ import * as AppSokaaEmbedVideo from '../lexicon/types/app/sokaa/embed/video'
 import * as AppSokaaFeedDefs from '../lexicon/types/app/sokaa/feed/defs'
 import * as AppSokaaFeedPost from '../lexicon/types/app/sokaa/feed/post'
 import { CdnUriBuilder } from './uri'
+import { buildVideoEmbedView, videoAssetKey } from './video-embed'
 
 type Un$Typed<T> = Omit<T, '$type'>
 
@@ -134,17 +135,17 @@ export class Views {
       const thumbCid = video.thumbnail
         ? cidFromBlobRef(video.thumbnail)
         : undefined
-      return {
-        $type: 'app.sokaa.embed.video#view',
-        cid: videoCid,
-        playlist: this.cdnUriBuilder.videoPlaylist(authorDid, videoCid),
-        thumbnail: thumbCid
-          ? this.cdnUriBuilder.videoThumbnail(authorDid, thumbCid)
-          : undefined,
+      const asset = _state.videoAssets?.get(videoAssetKey(authorDid, videoCid))
+      return buildVideoEmbedView({
+        authorDid,
+        videoCid,
+        thumbCid,
         alt: video.alt,
         duration: video.duration,
         aspectRatio: video.aspectRatio,
-      }
+        asset: asset ?? undefined,
+        cdn: this.cdnUriBuilder,
+      })
     }
 
     if (type === ids.AppSokaaEmbedImages) {

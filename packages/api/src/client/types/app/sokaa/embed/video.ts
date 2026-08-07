@@ -58,12 +58,22 @@ export function validateAspectRatio<V>(v: V) {
 export interface View {
   $type?: 'app.sokaa.embed.video#view'
   cid: string
-  /** HLS/DASH playlist URL served by the media CDN. */
-  playlist: string
+  /** HLS processing state. Playable playlist is present only when ready. */
+  state: 'processing' | 'ready' | 'failed' | (string & {})
+  /** HLS master playlist URI. Present only when state is ready and assets are retrievable. */
+  playlist?: string
   thumbnail?: string
   alt?: string
   duration?: number
   aspectRatio?: AspectRatio
+  /** Stable client-safe failure category when state is failed. */
+  error?:
+    | 'InvalidSource'
+    | 'TranscodeFailed'
+    | 'Timeout'
+    | 'ModerationBlocked'
+    | 'Unavailable'
+    | (string & {})
 }
 
 const hashView = 'view'

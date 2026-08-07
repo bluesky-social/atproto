@@ -57,6 +57,16 @@ describe('indexing', () => {
     expect(post?.mediaType).toBe('video')
     expect(post?.likeCount).toBe(0)
 
+    const asset = await database.db
+      .selectFrom('video_asset')
+      .where('did', '=', alice)
+      .where('videoCid', '=', blobCid.toString())
+      .selectAll()
+      .executeTakeFirst()
+    expect(asset?.state).toBe('processing')
+    expect(asset?.playlistUrl).toBeNull()
+    expect(asset?.attempts).toBe(0)
+
     const actor = await database.db
       .selectFrom('actor')
       .where('did', '=', alice)

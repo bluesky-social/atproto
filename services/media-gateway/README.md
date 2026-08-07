@@ -1,12 +1,27 @@
 # Sokaa media gateway
 
-Cloudflare Worker that exposes private R2 media objects over the versioned
-`GET|HEAD /v1/media/:did/:cid` route. Objects must use the R2 key
-`blocks/{did}/{cid}`.
+Cloudflare Worker that exposes private R2 media objects over versioned routes:
+
+| Route                           | R2 key                | Notes                                                                          |
+| ------------------------------- | --------------------- | ------------------------------------------------------------------------------ |
+| `GET\|HEAD /v1/media/:did/:cid` | `blocks/{did}/{cid}`  | Original blobs (images, MP4 uploads)                                           |
+| `GET\|HEAD /v1/hls/:did/:cid/*` | `video/{did}/{cid}/…` | Mirrored HLS (`.m3u8` → `application/vnd.apple.mpegurl`, `.ts` → `video/mp2t`) |
+
+Allowed HLS asset paths: `master.m3u8`, `poster.jpg`, `status.json`,
+`v{bitrate}/index.m3u8`, `v{bitrate}/segN.ts`.
 
 The bucket stays private: clients access it only through the Worker binding
 named `MEDIA`. Responses include immutable public caching, credential-free
 CORS, object metadata, and single-byte-range support.
+
+## Video / HLS
+
+Canonical processing ADR (vendor Stream, cost, deletion SLA):
+`sokaa` repo `docs/decisions/video-processing.md`.
+
+Raw `/v1/media` MP4 delivery is **not** an HLS readiness signal. AppView emits
+`playlist` only when Cloudflare Stream (or a mirrored master under `/v1/hls`)
+is ready.
 
 ## Configuration
 
@@ -42,4 +57,5 @@ route suffix:
 SOKAA_APPVIEW_CDN_URL=https://sokaa-media-gateway.sokaa-media.workers.dev
 ```
 
-AppView appends `/v1/media/:did/:cid` itself — do not include that path in the env var.
+AppView appends `/v1/media/:did/:cid` (and optional `/v1/hls/...`) itself —
+do not include those paths in the env var.

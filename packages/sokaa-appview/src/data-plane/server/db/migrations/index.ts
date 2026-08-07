@@ -4,3 +4,4 @@
 // not play nicely with the TypeScript build — same pattern as packages/bsky.
 
 export * as _20260607T000000000Z from './20260607T000000000Z-init'
+export * as _20260801T000000000Z from './20260801T000000000Z-video-asset'

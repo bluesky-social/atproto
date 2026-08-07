@@ -8,6 +8,9 @@ export interface Env {
 const CACHE_CONTROL = 'public, max-age=31536000, immutable'
 const ALLOWED_METHODS = 'GET, HEAD, OPTIONS'
 const MEDIA_PATH = '/v1/media/'
+const HLS_PATH = '/v1/hls/'
+const HLS_MASTER_MIME = 'application/vnd.apple.mpegurl'
+const HLS_SEGMENT_MIME = 'video/mp2t'
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -25,12 +28,17 @@ export default {
       return response('Method not allowed\n', 405, { Allow: ALLOWED_METHODS })
     }
 
-    const media = parseMediaPath(new URL(request.url).pathname)
-    if (!media) {
+    const pathname = new URL(request.url).pathname
+    const media = parseMediaPath(pathname)
+    const hls = media ? undefined : parseHlsPath(pathname)
+    if (!media && !hls) {
       return response('Invalid media path\n', 400)
     }
 
-    const key = `blocks/${media.did}/${media.cid}`
+    const key = media
+      ? `blocks/${media.did}/${media.cid}`
+      : `video/${hls!.did}/${hls!.cid}/${hls!.assetPath}`
+
     const object = await env.MEDIA.head(key)
     if (!object) {
       return response('Media not found\n', 404)
@@ -46,7 +54,7 @@ export default {
       })
     }
 
-    const headers = await objectHeaders(env.MEDIA, key, object)
+    const headers = await objectHeaders(env.MEDIA, key, object, hls?.assetPath)
     let status = 200
     if (range) {
       status = 206
@@ -91,6 +99,37 @@ function parseMediaPath(
 
   if (!isStrictDid(did) || !isCanonicalCid(cid)) return
   return { did, cid }
+}
+
+function parseHlsPath(
+  pathname: string,
+): { did: string; cid: string; assetPath: string } | undefined {
+  if (!pathname.startsWith(HLS_PATH)) return
+  const parts = pathname.slice(HLS_PATH.length).split('/')
+  if (parts.length < 3 || !parts[0] || !parts[1] || !parts[2]) return
+
+  let did: string
+  let cid: string
+  try {
+    did = decodeURIComponent(parts[0])
+    cid = decodeURIComponent(parts[1])
+  } catch {
+    return
+  }
+  if (!isStrictDid(did) || !isCanonicalCid(cid)) return
+
+  const assetParts = parts.slice(2)
+  if (assetParts.some((part) => !part || part === '.' || part === '..')) return
+  const assetPath = assetParts.join('/')
+  if (!isSafeHlsAssetPath(assetPath)) return
+  return { did, cid, assetPath }
+}
+
+function isSafeHlsAssetPath(assetPath: string): boolean {
+  if (assetPath.length > 512) return false
+  return /^(master\.m3u8|poster\.jpg|status\.json|v\d+\/(index\.m3u8|seg\d+\.ts))$/.test(
+    assetPath,
+  )
 }
 
 function isStrictDid(value: string): boolean {
@@ -141,20 +180,34 @@ async function objectHeaders(
   bucket: R2Bucket,
   key: string,
   object: R2Object,
+  hlsAssetPath?: string,
 ): Promise<Headers> {
   const headers = new Headers()
   object.writeHttpMetadata(headers)
   if (!headers.has('Content-Type')) {
     headers.set(
       'Content-Type',
-      await sniffObjectContentType(bucket, key, object),
+      hlsAssetPath
+        ? contentTypeForHlsAsset(hlsAssetPath)
+        : await sniffObjectContentType(bucket, key, object),
     )
+  } else if (hlsAssetPath) {
+    // Prefer correct HLS MIME even if R2 metadata is wrong/missing.
+    headers.set('Content-Type', contentTypeForHlsAsset(hlsAssetPath))
   }
   headers.set('Content-Length', String(object.size))
   headers.set('ETag', object.httpEtag)
   headers.set('Accept-Ranges', 'bytes')
   headers.set('Cache-Control', CACHE_CONTROL)
   return headers
+}
+
+function contentTypeForHlsAsset(assetPath: string): string {
+  if (assetPath.endsWith('.m3u8')) return HLS_MASTER_MIME
+  if (assetPath.endsWith('.ts')) return HLS_SEGMENT_MIME
+  if (assetPath.endsWith('.jpg')) return 'image/jpeg'
+  if (assetPath.endsWith('.json')) return 'application/json'
+  return 'application/octet-stream'
 }
 
 async function sniffObjectContentType(

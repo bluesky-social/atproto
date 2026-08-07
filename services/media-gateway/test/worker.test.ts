@@ -172,4 +172,62 @@ describe('media gateway worker', () => {
       'public, max-age=31536000, immutable',
     )
   })
+
+  it('serves mirrored HLS master playlists with the HLS MIME type', async () => {
+    const master =
+      '#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=800000\nv540/index.m3u8\n'
+    const hlsKey = `video/${did}/${cid}/master.m3u8`
+    const objects = new Map<string, StoredObject>([
+      [
+        hlsKey,
+        {
+          bytes: new TextEncoder().encode(master),
+          etag: 'hls-etag',
+        },
+      ],
+    ])
+    const response = await worker.fetch(
+      new Request(
+        `https://media.example/v1/hls/${encodeURIComponent(did)}/${cid}/master.m3u8`,
+      ),
+      { MEDIA: new TestBucket(objects) as unknown as R2Bucket },
+    )
+    expect(response.status).toBe(200)
+    expect(response.headers.get('Content-Type')).toBe(
+      'application/vnd.apple.mpegurl',
+    )
+    expect(await response.text()).toBe(master)
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*')
+  })
+
+  it('serves HLS segments with video/mp2t', async () => {
+    const segKey = `video/${did}/${cid}/v540/seg0.ts`
+    const objects = new Map<string, StoredObject>([
+      [
+        segKey,
+        {
+          bytes: new Uint8Array([0, 1, 2, 3]),
+          etag: 'seg-etag',
+        },
+      ],
+    ])
+    const response = await worker.fetch(
+      new Request(
+        `https://media.example/v1/hls/${encodeURIComponent(did)}/${cid}/v540/seg0.ts`,
+      ),
+      { MEDIA: new TestBucket(objects) as unknown as R2Bucket },
+    )
+    expect(response.status).toBe(200)
+    expect(response.headers.get('Content-Type')).toBe('video/mp2t')
+  })
+
+  it('rejects unsafe HLS asset paths', async () => {
+    const response = await worker.fetch(
+      new Request(
+        `https://media.example/v1/hls/${encodeURIComponent(did)}/${cid}/../secret`,
+      ),
+      env(false),
+    )
+    expect(response.status).toBe(400)
+  })
 })

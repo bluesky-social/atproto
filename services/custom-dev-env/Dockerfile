@@ -39,6 +39,7 @@ COPY packages/xrpc ./packages/xrpc
 COPY packages/xrpc-server ./packages/xrpc-server
 COPY packages/ws-client ./packages/ws-client
 COPY packages/pds ./packages/pds
+COPY packages/video-processing ./packages/video-processing
 COPY packages/sokaa-appview ./packages/sokaa-appview
 COPY packages/oauth/jwk ./packages/oauth/jwk
 COPY packages/oauth/jwk-jose ./packages/oauth/jwk-jose

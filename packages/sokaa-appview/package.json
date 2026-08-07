@@ -24,6 +24,7 @@
     "@atproto/repo": "workspace:^",
     "@atproto/sync": "workspace:^",
     "@atproto/syntax": "workspace:^",
+    "@atproto/video-processing": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "@bufbuild/protobuf": "^1.5.0",
     "@connectrpc/connect": "^1.1.4",

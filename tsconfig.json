@@ -54,6 +54,7 @@
     { "path": "./packages/pds" },
     { "path": "./packages/repo" },
     { "path": "./packages/sokaa-appview" },
+    { "path": "./packages/video-processing" },
     { "path": "./packages/sync" },
     { "path": "./packages/syntax" },
     { "path": "./packages/tap" },

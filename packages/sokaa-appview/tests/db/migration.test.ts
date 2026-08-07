@@ -62,6 +62,16 @@ const EXPECTED_COLUMNS: Record<string, Record<string, string>> = {
     lastSeq: 'bigint',
     updatedAt: 'character varying',
   },
+  video_asset: {
+    did: 'character varying',
+    videoCid: 'character varying',
+    state: 'character varying',
+    streamUid: 'character varying',
+    playlistUrl: 'character varying',
+    error: 'character varying',
+    attempts: 'integer',
+    updatedAt: 'character varying',
+  },
 }
 
 // Columns we expect to be index-backed (timeline + graph + like lookups).
@@ -69,6 +79,7 @@ const EXPECTED_INDEX_COLUMNS: Record<string, string[]> = {
   post: ['creator', 'createdAt'],
   follow: ['creator', 'subjectDid'],
   like: ['subject'],
+  video_asset: ['state'],
 }
 
 describe('sokaa-appview db migrations', () => {

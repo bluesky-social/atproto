@@ -26,12 +26,21 @@ export const parseString = (str: string | undefined): string | undefined => {
   return str && str.length > 0 ? str : undefined
 }
 
+export type VideoAssetState = {
+  state: 'processing' | 'ready' | 'failed'
+  playlistUrl?: string | null
+  error?: string | null
+}
+
+export type VideoAssets = HydrationMap<VideoAssetState>
+
 export type HydrationState = {
   ctx?: HydrateCtx
   actors?: import('./actor').Actors
   posts?: import('./feed').Posts
   postViewers?: import('./feed').PostViewerStates
   profileViewers?: import('./actor').ProfileViewerStates
+  videoAssets?: VideoAssets
 }
 
 export type HydrateCtx = {
@@ -49,5 +58,6 @@ export const mergeStates = (
     posts: mergeMaps(stateA.posts, stateB.posts),
     postViewers: mergeMaps(stateA.postViewers, stateB.postViewers),
     profileViewers: mergeMaps(stateA.profileViewers, stateB.profileViewers),
+    videoAssets: mergeMaps(stateA.videoAssets, stateB.videoAssets),
   }
 }

@@ -1,0 +1,21 @@
+{
+  "name": "@atproto/video-processing",
+  "version": "0.0.1",
+  "private": true,
+  "license": "MIT",
+  "description": "Sokaa Cloudflare Stream job contract: idempotency, readiness, retries, takedown",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=18.7.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^4.0.16"
+  }
+}

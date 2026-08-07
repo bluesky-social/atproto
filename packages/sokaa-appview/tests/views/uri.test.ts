@@ -23,6 +23,12 @@ describe('CdnUriBuilder', () => {
     expect(builder.videoPlaylist(did, cid)).toBe(mediaUrl)
     expect(builder.videoThumbnail(did, cid)).toBe(mediaUrl)
   })
+
+  it('builds mirrored HLS master URLs under /v1/hls', () => {
+    expect(builder.videoHlsMaster(did, cid)).toBe(
+      `https://media.example/v1/hls/${encodeURIComponent(did)}/${cid}/master.m3u8`,
+    )
+  })
 })
 
 describe('ServerConfig media gateway URL', () => {

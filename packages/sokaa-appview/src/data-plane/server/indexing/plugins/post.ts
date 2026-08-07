@@ -45,7 +45,52 @@ const insertFn = async (
     .onConflict((oc) => oc.doNothing())
     .returningAll()
     .executeTakeFirst()
+  if (inserted && mediaType === 'video') {
+    await ensureVideoAssetRow(db, uri.host, mediaJson, timestamp)
+  }
   return inserted || null
+}
+
+const ensureVideoAssetRow = async (
+  db: DatabaseSchema,
+  did: string,
+  mediaJson: AppSokaaFeedPost.Record['media'],
+  timestamp: string,
+) => {
+  const videoCid = cidFromBlobRef(
+    (mediaJson as { video?: unknown } | null)?.video,
+  )
+  if (!videoCid) return
+  await db
+    .insertInto('video_asset')
+    .values({
+      did,
+      videoCid,
+      state: 'processing',
+      streamUid: null,
+      playlistUrl: null,
+      error: null,
+      attempts: 0,
+      updatedAt: timestamp,
+    })
+    .onConflict((oc) => oc.columns(['did', 'videoCid']).doNothing())
+    .execute()
+}
+
+const cidFromBlobRef = (ref: unknown): string | undefined => {
+  if (!ref || typeof ref !== 'object') return
+  const blob = ref as Record<string, unknown>
+  if (typeof blob.ref === 'string') return blob.ref
+  if (blob.ref && typeof blob.ref === 'object') {
+    const nested = blob.ref as { $link?: string; toString?: () => string }
+    if (typeof nested.$link === 'string') return nested.$link
+    if (typeof nested.toString === 'function') {
+      const asString = nested.toString()
+      if (asString && asString !== '[object Object]') return asString
+    }
+  }
+  if (typeof blob.cid === 'string') return blob.cid
+  return
 }
 
 const deleteFn = async (

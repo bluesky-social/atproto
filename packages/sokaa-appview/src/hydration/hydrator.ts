@@ -1,6 +1,8 @@
 import { dedupeStrs } from '@atproto/common'
 import { DataPlaneClient } from '../data-plane/client'
 import { Database } from '../data-plane/server/db'
+import { ids } from '../data-plane/server/indexing/collections'
+import { videoAssetKey } from '../views/video-embed'
 import { Actor, Actors, ProfileViewerState, ProfileViewerStates } from './actor'
 import {
   FeedItem,
@@ -9,7 +11,14 @@ import {
   PostViewerStates,
   Posts,
 } from './feed'
-import { HydrateCtx, HydrationMap, HydrationState, mergeStates } from './util'
+import {
+  HydrateCtx,
+  HydrationMap,
+  HydrationState,
+  VideoAssetState,
+  VideoAssets,
+  mergeStates,
+} from './util'
 
 export type { HydrateCtx, HydrationState } from './util'
 export { mergeStates } from './util'
@@ -101,11 +110,14 @@ export class Hydrator {
       )
     }
 
+    const videoAssets = await this.getVideoAssets(posts)
+
     return {
       ctx,
       posts,
       actors,
       postViewers,
+      videoAssets,
     }
   }
 
@@ -159,6 +171,48 @@ export class Hydrator {
       })
     }
     return posts
+  }
+
+  private async getVideoAssets(posts: Posts): Promise<VideoAssets> {
+    const assets = new HydrationMap<VideoAssetState>()
+    if (!this.db) return assets
+
+    const keys: { did: string; videoCid: string }[] = []
+    for (const post of posts.values()) {
+      if (!post || post.mediaType !== 'video') continue
+      const media = post.mediaJson as { $type?: string; video?: unknown }
+      if (media?.$type !== ids.AppSokaaEmbedVideo) continue
+      const videoCid = cidFromBlobRef(media.video)
+      if (!videoCid) continue
+      keys.push({ did: post.creator, videoCid })
+    }
+    if (keys.length === 0) return assets
+
+    // Batch by did to keep the query simple without a composite IN helper.
+    const byDid = new Map<string, string[]>()
+    for (const key of keys) {
+      const list = byDid.get(key.did) ?? []
+      list.push(key.videoCid)
+      byDid.set(key.did, list)
+    }
+
+    for (const [did, videoCids] of byDid) {
+      const rows = await this.db.db
+        .selectFrom('video_asset')
+        .selectAll()
+        .where('did', '=', did)
+        .where('videoCid', 'in', dedupeStrs(videoCids))
+        .execute()
+      for (const row of rows) {
+        const state = normalizeVideoState(row.state)
+        assets.set(videoAssetKey(row.did, row.videoCid), {
+          state,
+          playlistUrl: row.playlistUrl,
+          error: row.error,
+        })
+      }
+    }
+    return assets
   }
 
   private async getPostViewerStates(
@@ -217,3 +271,24 @@ export class Hydrator {
 }
 
 export { mergeStates as mergeHydrationStates }
+
+function normalizeVideoState(state: string): 'processing' | 'ready' | 'failed' {
+  if (state === 'ready' || state === 'failed') return state
+  return 'processing'
+}
+
+const cidFromBlobRef = (ref: unknown): string | undefined => {
+  if (!ref || typeof ref !== 'object') return
+  const blob = ref as Record<string, unknown>
+  if (typeof blob.ref === 'string') return blob.ref
+  if (blob.ref && typeof blob.ref === 'object') {
+    const nested = blob.ref as { $link?: string; toString?: () => string }
+    if (typeof nested.$link === 'string') return nested.$link
+    if (typeof nested.toString === 'function') {
+      const asString = nested.toString()
+      if (asString && asString !== '[object Object]') return asString
+    }
+  }
+  if (typeof blob.cid === 'string') return blob.cid
+  return
+}

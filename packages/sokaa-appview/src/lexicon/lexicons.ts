@@ -337,17 +337,23 @@ export const schemaDict = {
       view: {
         type: 'object',
         description: 'Hydrated video view returned by the AppView.',
-        required: ['cid', 'playlist'],
+        required: ['cid', 'state'],
         properties: {
           cid: {
             type: 'string',
             format: 'cid',
           },
+          state: {
+            type: 'string',
+            knownValues: ['processing', 'ready', 'failed'],
+            description:
+              'HLS processing state. Playable playlist is present only when ready.',
+          },
           playlist: {
             type: 'string',
             format: 'uri',
             description:
-              'Raw video URL served by the media gateway. The legacy field name is retained for compatibility.',
+              'HLS master playlist URI. Present only when state is ready and assets are retrievable.',
           },
           thumbnail: {
             type: 'string',
@@ -365,6 +371,18 @@ export const schemaDict = {
           aspectRatio: {
             type: 'ref',
             ref: 'lex:app.sokaa.embed.video#aspectRatio',
+          },
+          error: {
+            type: 'string',
+            knownValues: [
+              'InvalidSource',
+              'TranscodeFailed',
+              'Timeout',
+              'ModerationBlocked',
+              'Unavailable',
+            ],
+            description:
+              'Stable client-safe failure category when state is failed.',
           },
         },
       },

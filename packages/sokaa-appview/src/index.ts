@@ -3,7 +3,7 @@ import http from 'node:http'
 import { AddressInfo } from 'node:net'
 import compression from 'compression'
 import cors from 'cors'
-import express from 'express'
+import express, { json as expressJson } from 'express'
 import { HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
@@ -17,6 +17,7 @@ import * as error from './error'
 import { Hydrator } from './hydration/hydrator'
 import { createServer } from './lexicon'
 import { loggerMiddleware } from './logger'
+import { createVideoRouter } from './video/routes'
 import { Views } from './views'
 import { CdnUriBuilder } from './views/uri'
 
@@ -52,6 +53,7 @@ export class SokaaAppView {
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(loggerMiddleware)
     app.use(compression())
+    app.use(expressJson({ limit: '100kb' }))
 
     const idResolver = new IdResolver({
       plcUrl: config.didPlcUrl,
@@ -93,6 +95,7 @@ export class SokaaAppView {
     server = API(server, ctx)
 
     app.use(health(ctx))
+    app.use('/_sokaa/video', createVideoRouter({ ctx, db }))
     app.use(server.xrpc.router)
     app.use(error.handler)
 
