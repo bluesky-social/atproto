@@ -1,6 +1,6 @@
 import { Trans } from '@lingui/react/macro'
 import { CustomizationName } from '#/components/customization-name.tsx'
-import { AccountIdentifier } from '#/components/utils/account-identifier'
+import { AccountIdentifier } from '#/components/identity/account-identifier.tsx'
 import { LinkExternal } from '#/components/utils/link-external'
 import { useAuthenticatedSession } from '#/contexts/authentication'
 
@@ -8,7 +8,7 @@ export function Page() {
   const { account } = useAuthenticatedSession()
 
   return (
-    <div className="prose prose-sm md:prose-base prose-slate dark:prose-invert max-w-none">
+    <div className="prose prose-sm prose-app max-w-none">
       <section>
         <Trans>
           <h2>What is an Atmosphere account?</h2>
