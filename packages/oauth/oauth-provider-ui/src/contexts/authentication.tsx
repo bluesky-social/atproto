@@ -284,3 +284,23 @@ export function useAuthenticationContext() {
 export function useAuthenticatedSession() {
   return useAuthenticationContext().session
 }
+
+/**
+ * Supplies the authenticated-session context directly, without the
+ * {@link AuthenticationProvider} view-machine.
+ *
+ * The account manager gates authentication through the router (a route guard
+ * redirects to the sign-in route when no usable session is selected), so by the
+ * time this renders a concrete session is already known. The consent entry, by
+ * contrast, is a linear wizard with no router and keeps using
+ * {@link AuthenticationProvider}.
+ */
+export function ProvideAuthenticatedSession({
+  value,
+  children,
+}: {
+  value: AuthenticationContextType
+  children: ReactNode
+}) {
+  return <AuthenticationContext value={value}>{children}</AuthenticationContext>
+}

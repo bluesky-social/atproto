@@ -1,11 +1,11 @@
 import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 import {
+  Navigate,
   Outlet,
-  type RegisteredRouter,
-  type ToPathOption,
   createRoute,
-  useRouter,
+  useNavigate,
+  useParams,
 } from '@tanstack/react-router'
 import {
   CircleQuestionMarkIcon,
@@ -17,17 +17,22 @@ import {
 } from 'lucide-react'
 import {
   type FunctionComponent,
-  type ReactNode,
+  useCallback,
   useEffect,
   useMemo,
-  useRef,
+  useState,
 } from 'react'
+import type { Account } from '@atproto/oauth-provider-api'
+import { AuthenticateWelcomeView } from '#/components/authenticate-welcome-view.tsx'
 import {
   AccountShell,
   type AccountShellLink,
 } from '#/components/layouts/account-shell.tsx'
-import { AuthenticationProvider } from '#/contexts/authentication.tsx'
-import { useSessionContext } from '#/contexts/session.tsx'
+import { SignInView } from '#/components/sign-in-view.tsx'
+import { SignUpView } from '#/components/sign-up-view.tsx'
+import { ProvideAuthenticatedSession } from '#/contexts/authentication.tsx'
+import { useCustomizationData } from '#/contexts/customization.tsx'
+import { type Session, useSessionContext } from '#/contexts/session.tsx'
 import type { Explicit } from '#/lib/util.ts'
 import { RootRoute } from '../../route.tsx'
 import { Page as AccountAboutPage } from './about/page.tsx'
@@ -35,6 +40,11 @@ import { Page as AccountOAuthPage } from './apps/page.tsx'
 import { Page as AccountDevicesPage } from './devices/page.tsx'
 import { Page as AccountManagePage } from './manage/page.tsx'
 import { Page as AccountIndexPage } from './page.tsx'
+
+// @NOTE `to` targets are cast to `any`: this file *defines* the routes that
+// make up the registered router, so referencing the router's own path types
+// here is circular. The existing shell already casts link `to` values the same
+// way.
 
 type SubPage = {
   title: string | MessageDescriptor
@@ -86,117 +96,50 @@ const DEFAULT_PAGES = {
   },
 } satisfies SubPages
 
-export function buildRoutes<T extends `/${string}`>(
-  path: T,
-  customPages?: SubPages,
-) {
-  const subPages = { ...DEFAULT_PAGES, ...customPages }
-
-  const route = createRoute({
-    getParentRoute: () => RootRoute,
-    path,
-    component: () => (
-      <AuthGate signOutTo={path as any}>
-        <Page basePath={path as any} subPages={subPages} />
-      </AuthGate>
-    ),
-  })
-
-  const childRoutes = (
-    Object.entries(subPages) as [keyof typeof subPages, SubPage][]
-  ).map(([path, { component }]) => {
-    return createRoute({ getParentRoute: () => route, path, component })
-  })
-
-  return [route, ...childRoutes] as const
+/**
+ * A stable, URL-safe key for the account segment (`/account/u/<id>`). Handles
+ * are readable and stable enough for a device-local portal; DID is the
+ * fallback (and true stable identity) when no handle is available.
+ */
+function accountKey(account: Pick<Account, 'did' | 'handle'>): string {
+  return account.handle || account.did
 }
 
-function Page({
-  basePath,
-  subPages,
-}: {
-  basePath: ToPathOption<RegisteredRouter, '/', undefined>
-  subPages: SubPages
-}) {
-  const links = useMemo<readonly AccountShellLink[]>(() => {
-    return Object.entries(subPages)
-      .sort(([ap, a], [bp, b]) => {
-        if (a.position != null && b.position != null) {
-          const diff = a.position - b.position
-          if (diff !== 0) return diff
-        }
-        return ap.localeCompare(bp)
-      })
-      .map(([subPath, page]): Explicit<AccountShellLink> => ({
-        to: ((basePath as string) === '/'
-          ? subPath
-          : subPath === '/'
-            ? basePath
-            : `${basePath}${subPath}`) as any,
-        title: page.title,
-        description: page.description,
-        hidden: page.hidden,
-        icon: page.icon,
-      }))
-  }, [subPages, basePath])
-
-  return (
-    <AccountShell
-      title={msg`My Atmosphere Account`}
-      basePath={basePath}
-      links={links}
-    >
-      <Outlet />
-    </AccountShell>
-  )
+function findSession(
+  sessions: readonly Session[],
+  id: string | undefined,
+): Session | undefined {
+  if (!id) return undefined
+  return sessions.find((s) => s.account.handle === id || s.account.did === id)
 }
 
+/**
+ * Popup / webview embedding controls. Mirrors the (very experimental) behavior
+ * that used to live in `AuthGate`: an app can open this page constrained to a
+ * single account and be notified when the user is "done".
+ *
+ * @NOTE This EXPERIMENTAL API **WILL** change. It MUST NOT be relied upon.
+ */
 const initialUrl = new URL(window.location.href)
 
-function AuthGate({
-  children,
-  signOutTo,
-}: {
-  children?: ReactNode
-  signOutTo?: ToPathOption<RegisteredRouter, '/', undefined>
-}) {
-  // This page supports a mode where it is loaded, by an app, in a webview or
-  // popup, to let the user manage their atmosphere account without leaving the
-  // app. In that case, we constrain the user to only use the account for which
-  // they opened the page, and we send a signal to the opener when they perform
-  // actions that signal the user is done with the page (like logging out, or
-  // explicitly "canceling" the sign-in).
-
-  // @NOTE The VERY EXPERIMENTAL API used here **WILL** change in the future as
-  // it gets specified (or not) in the AT Protocol specification. It MUST NOT be
-  // used in places where security is a concern and is ONLY there for testing
-  // and experimentation purposes. DO NOT USE.
-
-  const router = useRouter()
-  const { session } = useSessionContext()
-  const hasSession = useRef(session != null)
+function usePopupControls(signOutTo: any) {
+  const navigate = useNavigate()
 
   const isPopup = initialUrl.searchParams.get('display') === 'popup'
-  const identifier = initialUrl.searchParams.get('login_hint') || undefined
+  const forcedIdentifier =
+    initialUrl.searchParams.get('login_hint') || undefined
   const nonce = initialUrl.searchParams.get('nonce') || undefined
   const callbackUrl = initialUrl.searchParams.get('redirect_uri') || undefined
 
   const done = useMemo<undefined | (() => void)>(() => {
     if (callbackUrl && nonce) {
       return () => {
-        const url = new URL(callbackUrl)
-        window.location.href = url.toString()
+        window.location.href = new URL(callbackUrl).toString()
       }
     } else if (isPopup) {
       return () => {
-        // Due to the various ways this page can be embedded (e.g. webview in a
-        // mobile app, a popup in a browser), and the fact that the opener might
-        // be on a different origin, we post the message on various targets to
-        // ensure it is received. We might want to configure this based on
-        // query params.
-
-        // @NOTE We might want to restrict the targetOrigin based on the client
-        // metadata.
+        // Posted on several targets because the opener may be on a different
+        // origin (mobile webview, browser popup, ...).
         window.opener?.postMessage({ nonce, event: 'done' }, '*')
         window.postMessage({ nonce, event: 'done' }, '*')
         window.close()
@@ -204,23 +147,265 @@ function AuthGate({
     }
   }, [isPopup, callbackUrl, nonce])
 
-  useEffect(() => {
-    if (session && !hasSession.current) {
-      hasSession.current = true
-    } else if (!session && hasSession.current) {
-      hasSession.current = false
-      if (signOutTo) router.navigate({ to: signOutTo })
-      done?.()
-    }
-  }, [session, done])
+  const leave = useCallback(() => {
+    if (done) done()
+    else navigate({ to: signOutTo })
+  }, [done, navigate, signOutTo])
 
-  return (
-    <AuthenticationProvider
-      forcedIdentifier={identifier}
-      disableRemember={isPopup}
-      onCancel={done}
-    >
-      {children}
-    </AuthenticationProvider>
-  )
+  return {
+    isPopup,
+    forcedIdentifier,
+    disableRemember: isPopup,
+    done,
+    leave,
+  }
+}
+
+export function buildRoutes<T extends `/${string}`>(
+  basePath: T,
+  customPages?: SubPages,
+) {
+  const subPages = { ...DEFAULT_PAGES, ...customPages }
+
+  const signInPath = `${basePath}/sign-in` as any
+  const signUpPath = `${basePath}/sign-up` as any
+  const resetPasswordPath = `${basePath}/reset-password` as any
+  // `$accountId` is interpolated from params at navigation time.
+  const accountToPath = `${basePath}/u/$accountId` as any
+
+  // -- Bare `/account`: resolve the default selection -----------------------
+  // A single session is entered directly; several means the user must pick
+  // (mirrors the old `InitialSelectedSession.Only` stance).
+  const indexRoute = createRoute({
+    getParentRoute: () => RootRoute,
+    path: basePath,
+    component: function AccountIndexRedirect() {
+      const { sessions } = useSessionContext()
+      if (sessions.length === 1) {
+        return (
+          <Navigate
+            to={accountToPath}
+            params={{ accountId: accountKey(sessions[0].account) } as never}
+            replace
+          />
+        )
+      }
+      return <Navigate to={signInPath} replace />
+    },
+  })
+
+  // -- `/account/sign-in`: welcome, account picker, and credentials form -----
+  const signInRoute = createRoute({
+    getParentRoute: () => RootRoute,
+    path: signInPath as string,
+    component: function AccountSignIn() {
+      const { sessions, api } = useSessionContext()
+      const navigate = useNavigate()
+      const { availableUserDomains } = useCustomizationData()
+      const { isPopup, forcedIdentifier, disableRemember, done, leave } =
+        usePopupControls(basePath as any)
+
+      const canSignUp =
+        Boolean(availableUserDomains?.length) && !forcedIdentifier
+
+      // Account pending password confirmation (a `loginRequired` session picked
+      // from the list, or an account added via the form).
+      const [pending, setPending] = useState<Session | null>(null)
+      // The create-vs-sign-in choice, only relevant with zero sessions.
+      const [showWelcome, setShowWelcome] = useState(
+        sessions.length === 0 && canSignUp,
+      )
+
+      const goToAccount = useCallback(
+        (account: Pick<Account, 'did' | 'handle'>) => {
+          navigate({
+            to: accountToPath,
+            params: { accountId: accountKey(account) } as never,
+            replace: true,
+          })
+        },
+        [navigate],
+      )
+
+      if (showWelcome && !pending) {
+        return (
+          <AuthenticateWelcomeView
+            onSignIn={() => setShowWelcome(false)}
+            onSignUp={
+              canSignUp ? () => navigate({ to: signUpPath }) : undefined
+            }
+            onCancel={done}
+          />
+        )
+      }
+
+      return (
+        <SignInView
+          disableRemember={disableRemember}
+          forcedIdentifier={forcedIdentifier}
+          sessions={sessions}
+          session={pending}
+          setSession={(next) => {
+            if (!next) {
+              setPending(null)
+              return
+            }
+            const full = findSession(sessions, next.account.did) ?? null
+            // A remembered session goes straight in; otherwise confirm password.
+            if (full && !full.loginRequired) goToAccount(full.account)
+            else setPending(full)
+          }}
+          onSignIn={async (data) => {
+            const output = await api.signIn(data)
+            goToAccount(output.account)
+          }}
+          onSignUp={canSignUp ? () => navigate({ to: signUpPath }) : undefined}
+          onForgotPassword={(email) =>
+            navigate({
+              to: resetPasswordPath,
+              search: (email ? { email } : {}) as never,
+            })
+          }
+          onBack={
+            pending
+              ? undefined
+              : isPopup || done
+                ? leave
+                : canSignUp
+                  ? () => setShowWelcome(true)
+                  : undefined
+          }
+        />
+      )
+    },
+  })
+
+  // -- `/account/sign-up` ----------------------------------------------------
+  const signUpRoute = createRoute({
+    getParentRoute: () => RootRoute,
+    path: signUpPath as string,
+    component: function AccountSignUp() {
+      const { api } = useSessionContext()
+      const navigate = useNavigate()
+      return (
+        <SignUpView
+          onValidateNewHandle={async (data) => {
+            await api.validateHandleAvailability(data)
+          }}
+          onBack={() => navigate({ to: signInPath })}
+          onDone={async (data) => {
+            const output = await api.signUp(data)
+            // Sign-up establishes a session; go straight into its manager.
+            navigate({
+              to: accountToPath,
+              params: { accountId: accountKey(output.account) } as never,
+              replace: true,
+            })
+          }}
+        />
+      )
+    },
+  })
+
+  // -- `/account/u/$accountId`: the account-scoped manager -------------------
+  const accountRoute = createRoute({
+    getParentRoute: () => RootRoute,
+    path: `${basePath}/u/$accountId` as string,
+    component: function AccountScoped() {
+      const params = useParams({ strict: false }) as { accountId?: string }
+      const accountId = params.accountId
+      const {
+        sessions,
+        session: ctxSession,
+        setSession,
+        api,
+      } = useSessionContext()
+      const { forcedIdentifier } = usePopupControls(basePath as any)
+
+      const selected = findSession(sessions, accountId)
+
+      // Mirror the URL selection into the session context so that `api` carries
+      // the right account's token (the context is the single owner of `api`).
+      useEffect(() => {
+        if (selected && ctxSession?.account.did !== selected.account.did) {
+          setSession(selected)
+        }
+      }, [selected, ctxSession, setSession])
+
+      const scopedBase = `${basePath}/u/${accountId}`
+
+      const links = useMemo<readonly AccountShellLink[]>(() => {
+        return (Object.entries(subPages) as [string, SubPage][])
+          .sort(([ap, a], [bp, b]) => {
+            if (a.position != null && b.position != null) {
+              const diff = a.position - b.position
+              if (diff !== 0) return diff
+            }
+            return ap.localeCompare(bp)
+          })
+          .map(([subPath, page]): Explicit<AccountShellLink> => ({
+            to: (subPath === '/'
+              ? scopedBase
+              : `${scopedBase}${subPath}`) as any,
+            title: page.title,
+            description: page.description,
+            hidden: page.hidden,
+            icon: page.icon,
+          }))
+      }, [scopedBase])
+
+      // Guard: no such (usable) session, or the popup constrains to another
+      // account -> back to the picker.
+      const forcedMismatch =
+        forcedIdentifier != null &&
+        selected != null &&
+        selected.account.did !== forcedIdentifier &&
+        selected.account.handle !== forcedIdentifier
+      if (!selected || selected.loginRequired || forcedMismatch) {
+        return <Navigate to={signInPath} replace />
+      }
+
+      // Wait one tick for the context mirror so children fetch with the right
+      // token instead of the previously-selected account's.
+      if (ctxSession?.account.did !== selected.account.did) {
+        return null
+      }
+
+      return (
+        <ProvideAuthenticatedSession
+          value={{
+            session: ctxSession,
+            sessions,
+            canSwitchAccounts: forcedIdentifier == null,
+            api,
+          }}
+        >
+          <AccountShell
+            title={msg`My Atmosphere Account`}
+            basePath={scopedBase as any}
+            links={links}
+          >
+            <Outlet />
+          </AccountShell>
+        </ProvideAuthenticatedSession>
+      )
+    },
+  })
+
+  const childRoutes = (
+    Object.entries(subPages) as [keyof typeof subPages, SubPage][]
+  ).map(([path, { component }]) => {
+    return createRoute({
+      getParentRoute: () => accountRoute,
+      path: path as string,
+      component,
+    })
+  })
+
+  return [
+    indexRoute,
+    signInRoute,
+    signUpRoute,
+    accountRoute.addChildren(childRoutes),
+  ] as const
 }

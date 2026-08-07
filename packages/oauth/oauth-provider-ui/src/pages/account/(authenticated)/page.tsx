@@ -1,6 +1,6 @@
 import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
-import { Link, useRouterState } from '@tanstack/react-router'
+import { Link, useParams, useRouterState } from '@tanstack/react-router'
 import { ChevronRightIcon } from 'lucide-react'
 import { Fragment, type ReactNode } from 'react'
 import type { JSX } from 'react/jsx-runtime'
@@ -86,13 +86,14 @@ function SectionList(): ReactNode {
 }
 
 function HostedByParagraph(props: JSX.IntrinsicElements['p']): ReactNode {
+  const { accountId } = useParams({ strict: false }) as { accountId?: string }
   return (
     <p {...props}>
       <Trans>
         Your Atmosphere account is hosted by <CustomizationName />.
       </Trans>{' '}
       <Link
-        to="/account/about"
+        to={`/account/u/${accountId}/about` as never}
         className="text-foreground underline underline-offset-4"
       >
         <Trans>What does this mean?</Trans>
