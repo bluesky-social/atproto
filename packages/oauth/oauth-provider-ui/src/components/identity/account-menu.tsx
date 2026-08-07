@@ -1,4 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
+import { useNavigate } from '@tanstack/react-router'
 import { EllipsisVerticalIcon, LogOutIcon, UsersIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import {
@@ -41,8 +42,9 @@ export type AccountMenuProps = {
 export function AccountMenu({ className }: AccountMenuProps): ReactNode {
   const { t } = useLingui()
   const { session, canSwitchAccounts } = useAuthenticationContext()
-  const { setSession, api } = useSessionContext()
+  const { api } = useSessionContext()
   const { isMobile } = useSidebar()
+  const navigate = useNavigate()
 
   return (
     <SidebarMenu>
@@ -116,7 +118,7 @@ export function AccountMenu({ className }: AccountMenuProps): ReactNode {
                 <DropdownMenuItem
                   className="w-full"
                   render={<button type="button" />}
-                  onClick={() => setSession(null)}
+                  onClick={() => navigate({ to: '/account/sign-in' as never })}
                 >
                   <UsersIcon aria-hidden />
                   <Trans>Select another account</Trans>
@@ -128,6 +130,7 @@ export function AccountMenu({ className }: AccountMenuProps): ReactNode {
                 render={<button type="button" />}
                 onClick={async () => {
                   await api.signOut(session.account)
+                  navigate({ to: '/account/sign-in' as never })
                 }}
               >
                 <LogOutIcon aria-hidden />
