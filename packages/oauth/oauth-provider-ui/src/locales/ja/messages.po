@@ -8,7 +8,7 @@ msgstr ""
 "Language: ja\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-07-02 00:00+0900\n"
+"PO-Revision-Date: 2026-08-07 18:00+0900\n"
 "Last-Translator: dolciss\n"
 "Language-Team: Japanese\n"
 "Plural-Forms: \n"
@@ -132,7 +132,7 @@ msgstr "アカウントユーザー名"
 
 #: src/components/session-list.tsx
 msgid "Actions"
-msgstr ""
+msgstr "アクション"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Add the following record to your domain's DNS configuration."
@@ -184,7 +184,7 @@ msgstr "すべてのサービス"
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "OAuthApp"
 msgid "App"
-msgstr ""
+msgstr "アプリ"
 
 #: src/pages/account/(authenticated)/route.tsx
 msgid "Apps"
@@ -192,7 +192,7 @@ msgstr "アプリ"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
-msgstr ""
+msgstr "アプリは、あなたが積極的に使用していないときでも、バックグラウンドであなたのアカウントにアクセスすることがあります（通知の確認、データの同期など）。これは正常な動作であり、「最終アクセス」時間が更新されます。"
 
 #: src/components/delete-account-dialog.tsx
 msgid "Are you really, really sure?"
@@ -217,7 +217,7 @@ msgstr "承認"
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "OAuthApp"
 msgid "Authorized"
-msgstr ""
+msgstr "承認日"
 
 #: src/components/forms/form-shell.tsx
 #: src/components/forms/sign-up-wizard.tsx
@@ -228,7 +228,7 @@ msgstr "戻る"
 
 #: src/components/forms/fields/handle-field.tsx
 msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
-msgstr "{minLength, plural, zero {0} one {1} other {#}} 文字以上、{maxLength, plural, one {1文字} other {#文字}} 以下"
+msgstr "{minLength, plural, other {#文字}}以上、{maxLength, plural, other {#文字}}以下"
 
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
@@ -244,11 +244,11 @@ msgstr "Blueskyチャットサービス"
 
 #: src/components/consent-form.tsx
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
-msgstr "<0>承認</0>をクリックすると、このアプリケーションは、あなたのアカウントへのアクセスを、その<1>利用規約</1>と<2>プライバシーポリシー</2>に従って付与します。"
+msgstr "<0>承認</0>をクリックすると、このアプリケーションの<1>利用規約</1>と<2>プライバシーポリシー</2>に従って、あなたのアカウントへのアクセスを付与します。"
 
 #: src/components/sign-up-disclaimer.tsx
 msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
-msgstr "アカウントを作成することで、このサービスの <0>利用規約</0> および <1>プライバシーポリシー</1> に同意したものとみなされます。"
+msgstr "アカウントを作成することで、このサービスの<0>利用規約</0>および<1>プライバシーポリシー</1>に同意したものとみなされます。"
 
 #: src/components/utils/scope-description.tsx
 msgctxt "RPC lxm"
@@ -324,7 +324,7 @@ msgstr "何も起こらない場合はここをクリックしてください"
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "OAuthApp"
 msgid "Client"
-msgstr ""
+msgstr "クライアント"
 
 #: src/components/oauth-session-details-dialog.tsx
 #: src/components/ui/dialog.tsx
@@ -429,7 +429,7 @@ msgstr "詳細"
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
 msgid "Device"
-msgstr ""
+msgstr "デバイス"
 
 #: src/pages/account/(authenticated)/route.tsx
 msgid "Devices"
@@ -595,11 +595,11 @@ msgstr "ファイルの内容"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgid "Filter apps"
-msgstr ""
+msgstr "アプリをフィルタ"
 
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgid "Filter devices"
-msgstr ""
+msgstr "デバイスをフィルタ"
 
 #: src/components/delete-account-dialog.tsx
 msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
@@ -708,7 +708,7 @@ msgstr "招待コード"
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
 msgid "IP address"
-msgstr ""
+msgstr "IPアドレス"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
@@ -726,12 +726,12 @@ msgstr "たった今"
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "OAuthApp"
 msgid "Last accessed"
-msgstr ""
+msgstr "最終アクセス"
 
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
 msgid "Last seen"
-msgstr ""
+msgstr "最終閲覧"
 
 #: src/components/update-email-dialog.tsx
 msgctxt "verify email"
@@ -813,7 +813,7 @@ msgstr "名前"
 
 #: src/components/layouts/account-shell.tsx
 msgid "Navigation"
-msgstr ""
+msgstr "ナビゲーション"
 
 #: src/components/update-email-dialog.tsx
 #: src/components/update-email-form.tsx
@@ -831,7 +831,7 @@ msgstr "次へ"
 
 #: src/components/session-list.tsx
 msgid "No matches"
-msgstr ""
+msgstr "一致なし"
 
 #: src/components/reset-password-view.tsx
 msgid "Okay"
@@ -876,7 +876,7 @@ msgstr "パスワードが更新されました！"
 
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
-msgstr "パスワードは {MIN_PASSWORD_LENGTH, plural, other {# 文字}}以上"
+msgstr "パスワードは{MIN_PASSWORD_LENGTH, plural, other {#文字}}以上"
 
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
@@ -928,7 +928,7 @@ msgstr "しばらくしてからもう一度お試しください。"
 
 #: src/components/forms/request-code-button.tsx
 msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
-msgstr "{remainingSeconds, plural, other {# 秒}}待ってからもう一度やり直してください。"
+msgstr "{remainingSeconds, plural, other {#秒}}待ってからもう一度やり直してください。"
 
 #: src/components/utils/link-title.tsx
 msgid "Privacy Policy"
@@ -1189,7 +1189,7 @@ msgstr "この承認リクエストは拒否されました。もう一度お試
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
 msgid "This device"
-msgstr ""
+msgstr "このデバイス"
 
 #: src/lib/api.ts
 msgid "This email is already used"
@@ -1350,7 +1350,7 @@ msgstr "あなたの <0/> アカウントにアクセスしようとしていま
 
 #: src/components/consent-form.tsx
 msgid "wants to uniquely identify you through your <0/> account"
-msgstr "あなたの <0/> アカウントを通じてあなたを識別しようとしています"
+msgstr "あなたの <0/> アカウントを通じてあなたを一意に識別しようとしています"
 
 #: src/components/sign-in-form.tsx
 msgid "Warning"
@@ -1375,7 +1375,7 @@ msgstr "おかえりなさい！"
 
 #: src/pages/account/(authenticated)/page.tsx
 msgid "What does this mean?"
-msgstr "どういう意味ですか？"
+msgstr "これは何を意味しますか？"
 
 #: src/pages/account/(authenticated)/route.tsx
 msgid "What is an Atmosphere Account?"
@@ -1383,7 +1383,7 @@ msgstr "Atmosphereアカウントとは何ですか？"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgid "Why is this time so recent?"
-msgstr ""
+msgstr "時間が最近なのは何故ですか？"
 
 #: src/lib/api.ts
 msgid "Wrong identifier or password"
