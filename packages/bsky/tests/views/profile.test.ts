@@ -153,7 +153,7 @@ describe('pds profile views', () => {
       email: 'carol-bidi@test.com',
       password: 'carol-bidi-pass',
     })
-    await sc.createProfile(sc.dids['carol-bidi'], maliciousDisplayName)
+    await sc.createProfile(sc.dids['carol-bidi'], maliciousDisplayName, '')
     await network.processAll()
 
     const res = await agent.api.app.bsky.actor.getProfile(
