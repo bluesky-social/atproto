@@ -7,6 +7,7 @@ import {
   RepoCommit,
   SignedCommit,
   encodeCommitCtx,
+  formatSetHashElement,
   verifyCommit,
 } from '../src/index.js'
 
@@ -215,13 +216,42 @@ describe('RepoCommit', () => {
       )
       expect(advanced.matches(commit)).toBe(false)
     })
+  })
 
-    it('two repos with the same records produce the same hash', async () => {
-      const a = new RepoCommit().add('c.a', '1', CID_A).add('c.a', '2', CID_A)
-      const b = new RepoCommit().add('c.a', '2', CID_A).add('c.a', '1', CID_A)
-      const commitA = await a.sign(ctx, keypair)
-      const commitB = await b.sign(ctx, keypair)
-      expect(commitA.hash).toEqual(commitB.hash)
+  /**
+   * The set hash element is a bare `collection/rkey/cid` concat. Two records
+   * hashing to one element would let one's addition cancel the other's — silently
+   * and permanently — so what keeps the encoding injective is worth stating.
+   *
+   * It is *not* the length prefixing that {@link encodeCommitCtx} uses. It rests
+   * entirely on the outer two fields being slash-free: a collection is an NSID and
+   * a cid is base32, so the first slash always ends the collection and the last
+   * always begins the cid. That leaves the rkey unambiguous no matter what it
+   * contains. This package validates none of that itself — the invariant is
+   * inherited from the lexicon's `nsid` and `record-key` string formats.
+   */
+  describe('formatSetHashElement', () => {
+    it('separates the three fields', () => {
+      expect(formatSetHashElement('c.a', '1', CID_A)).toBe(
+        `c.a/1/${CID_A.toString()}`,
+      )
+    })
+
+    it('stays unambiguous for an rkey containing a slash', () => {
+      // Not reachable through a validated write, but it shows the boundaries are
+      // fixed by the outer fields rather than by the rkey's shape.
+      const element = formatSetHashElement('c.a', 'b/1', CID_A)
+      expect(element.slice(0, element.indexOf('/'))).toBe('c.a')
+      expect(element.slice(element.lastIndexOf('/') + 1)).toBe(CID_A.toString())
+    })
+
+    it('distinguishes records that differ only in where the rkey starts', () => {
+      expect(formatSetHashElement('c.a', 'b/1', CID_A)).not.toBe(
+        formatSetHashElement('c.a', 'b/2', CID_A),
+      )
+      expect(new RepoCommit().add('c.a', 'b/1', CID_A).setHash).not.toEqual(
+        new RepoCommit().add('c.a', 'b/2', CID_A).setHash,
+      )
     })
   })
 

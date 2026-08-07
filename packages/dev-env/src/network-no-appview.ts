@@ -4,6 +4,7 @@ import { TestFeedGen } from './feed-gen.js'
 import { TestPds } from './pds.js'
 import { TestPlc } from './plc.js'
 import { SeedClient } from './seed/client.js'
+import { LexiconAuthorityProfile } from './service-profile-lexicon.js'
 import { TestServerParams } from './types.js'
 import { mockNetworkUtilities } from './util.js'
 
@@ -13,6 +14,7 @@ export class TestNetworkNoAppView {
     public plc: TestPlc,
     public pds: TestPds,
     public extraPdses: TestPds[] = [],
+    public lexiconAuthority?: LexiconAuthorityProfile,
   ) {}
 
   static async create(
@@ -43,7 +45,20 @@ export class TestNetworkNoAppView {
 
     mockNetworkUtilities([pds, ...extraPdses])
 
-    return new TestNetworkNoAppView(plc, pds, extraPdses)
+    let lexiconAuthority: LexiconAuthorityProfile | undefined
+    if (params.lexiconAuthority) {
+      // The authority account has to live on a PDS, but a PDS wants the authority
+      // DID in its config — so it's created after boot and the DID assigned here.
+      // The resolver hook reads `cfg.lexicon.didAuthority` per call rather than at
+      // construction (see pds `context.ts`), so assigning it now takes effect.
+      lexiconAuthority = await LexiconAuthorityProfile.create(pds)
+      for (const each of [pds, ...extraPdses]) {
+        each.ctx.cfg.lexicon.didAuthority = lexiconAuthority.did
+      }
+      await lexiconAuthority.createRecords()
+    }
+
+    return new TestNetworkNoAppView(plc, pds, extraPdses, lexiconAuthority)
   }
 
   async createFeedGen(

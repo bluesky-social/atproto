@@ -30,7 +30,7 @@ const collect = async (
   return Buffer.concat(chunks)
 }
 
-describe('repo serialization', () => {
+describe('space sync', () => {
   let keypair: Keypair
   let records: SerializedRecord[]
 

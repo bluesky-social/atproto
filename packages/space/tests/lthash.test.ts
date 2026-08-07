@@ -66,7 +66,9 @@ describe('LtHash', () => {
     })
   })
 
-  it('clone is independent of the original', () => {
+  // How a caller stages a change without committing it: build from `state()`,
+  // mutate the copy, and leave the original where it was.
+  it('a hash built from another state does not share it', () => {
     const original = new LtHash().add('a')
     const staged = new LtHash(original.state()).add('b')
     expect(original.equals(staged)).toBe(false)

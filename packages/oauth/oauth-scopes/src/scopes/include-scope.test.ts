@@ -703,7 +703,7 @@ describe('IncludeScope', () => {
           })
         })
 
-        describe('allows cross-namespace collections (proposal 0016)', () => {
+        describe('allows cross-namespace collections', () => {
           // The space type must be under the set's authority, but collections
           // may be a wildcard or live under a different authority.
           it('collection outside the include namespace', () => {

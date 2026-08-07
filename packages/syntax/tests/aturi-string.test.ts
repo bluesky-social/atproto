@@ -198,7 +198,7 @@ describe('custom cases', () => {
   })
 
   // Permissioned space URIs reuse the at:// scheme with a `space` marker and
-  // extra path segments (proposal 0016).
+  // extra path segments.
   describe('space URIs', () => {
     // space reference (authority/space/type/skey)
     testValid('at://did:plc:asdf123/space/com.example.group/default')
