@@ -1328,6 +1328,74 @@ describe('spaces', () => {
     expect(third.records).toEqual([])
   })
 
+  it('refuses a co-located non-member reading a member repo over OAuth', async () => {
+    // Alice and dan share pds1. Dan is not a member, but holds an ordinary
+    // any-authority read grant — the membership gate lives in getSpaceCredential,
+    // so the read methods have to refuse him on their own.
+    const spaceUri = await createSpace('oauth-read-boundary', [])
+    await pds1Client.call(
+      com.atproto.space.createRecord,
+      {
+        space: spaceUri,
+        repo: aliceDid,
+        collection: TEST_COLLECTION,
+        rkey: 'private',
+        record: { $type: TEST_COLLECTION, text: 'members only' },
+      },
+      { headers: aliceHeaders },
+    )
+
+    const reads = [
+      () =>
+        pds1Client.call(
+          com.atproto.space.getRecord,
+          {
+            space: spaceUri,
+            repo: aliceDid,
+            collection: TEST_COLLECTION,
+            rkey: 'private',
+          },
+          { headers: danHeaders },
+        ),
+      () =>
+        pds1Client.call(
+          com.atproto.space.listRecords,
+          { space: spaceUri, repo: aliceDid },
+          { headers: danHeaders },
+        ),
+      () =>
+        pds1Client.call(
+          com.atproto.space.listRepoOps,
+          { space: spaceUri, repo: aliceDid },
+          { headers: danHeaders },
+        ),
+      () =>
+        pds1Client.call(
+          com.atproto.space.getLatestCommit,
+          { space: spaceUri, repo: aliceDid },
+          { headers: danHeaders },
+        ),
+    ]
+    for (const read of reads) {
+      await expect(read()).rejects.toThrow(/Could not find repo/)
+    }
+
+    const carRes = await fetch(
+      `${pds1.url}/xrpc/com.atproto.space.getRepo?space=${encodeURIComponent(spaceUri)}&repo=${aliceDid}`,
+      { headers: danHeaders },
+    )
+    expect(carRes.status).toBe(400)
+
+    // Alice reads her own repo in the same space, so the refusal is about the
+    // repo boundary and not about the space being unreadable.
+    const own = await pds1Client.call(
+      com.atproto.space.listRecords,
+      { space: spaceUri, repo: aliceDid },
+      { headers: aliceHeaders },
+    )
+    expect(own.records.length).toBe(1)
+  })
+
   // ---------------- Credential issuance ----------------
 
   it('refuses a credential for a revoked member', async () => {
@@ -1538,6 +1606,29 @@ describe('spaces', () => {
         { headers: credHeaders },
       ),
     ).rejects.toThrow()
+  })
+
+  it('reports SpaceNotFound from a host that is not the space authority', async () => {
+    // pds2 hosts no account for alice, so it holds no store to answer from. The
+    // error has to name the space, not leak that as a missing repo.
+    const spaceUri = await createSpace('wrong-host', [bobDid])
+    const credHeaders = await credentialFor(pds2, bobHeaders, spaceUri)
+
+    await expect(
+      pds2Client.call(
+        com.atproto.space.listRepos,
+        { space: spaceUri },
+        { headers: credHeaders },
+      ),
+    ).rejects.toThrow(/Space not found/)
+
+    await expect(
+      pds2Client.call(
+        com.atproto.space.registerNotify,
+        { space: spaceUri, service: bobDid },
+        { headers: credHeaders },
+      ),
+    ).rejects.toThrow(/Space not found/)
   })
 
   it('getSpace refuses a host that does not govern the space', async () => {
@@ -1993,6 +2084,80 @@ describe('spaces', () => {
 
     // Gated, not deleted.
     expect((await readOps()).ops.length).toBe(1)
+  })
+
+  it('refuses to mint a delegation token on an app password', async () => {
+    // An app password carries no space grants to bound it by, and a delegation
+    // token is exchanged for whole-space read. Records it may still write.
+    const spaceUri = await createSpace('app-pass-delegation', [])
+    const agent = pds1.getAgent()
+    const { data: created } = await agent.com.atproto.server.createAppPassword(
+      { name: 'space-pass' },
+      { headers: aliceHeaders, encoding: 'application/json' },
+    )
+    const { data: session } = await agent.com.atproto.server.createSession({
+      identifier: aliceDid,
+      password: created.password,
+    })
+    const appPassHeaders = SeedClient.getHeaders(session.accessJwt)
+
+    await expect(
+      pds1Client.call(
+        com.atproto.space.getDelegationToken,
+        { space: spaceUri },
+        { headers: appPassHeaders },
+      ),
+    ).rejects.toThrow()
+
+    await expect(
+      pds1Client.call(
+        com.atproto.space.createRecord,
+        {
+          space: spaceUri,
+          repo: aliceDid,
+          collection: TEST_COLLECTION,
+          record: { $type: TEST_COLLECTION, text: 'from an app password' },
+        },
+        { headers: appPassHeaders },
+      ),
+    ).resolves.toBeDefined()
+  })
+
+  it('stops accepting permissioned writes from a taken-down account', async () => {
+    const spaceUri = await createSpace('takedown-write', [danDid])
+    const write = () =>
+      pds1Client.call(
+        com.atproto.space.createRecord,
+        {
+          space: spaceUri,
+          repo: danDid,
+          collection: TEST_COLLECTION,
+          record: { $type: TEST_COLLECTION, text: 'during takedown' },
+        },
+        { headers: danHeaders },
+      )
+
+    await pds1.ctx.accountManager.takedownAccount(danDid, {
+      applied: true,
+      ref: 'test-space-write-takedown',
+    })
+    try {
+      await expect(write()).rejects.toThrow(/taken down/i)
+      // Minting a read credential is gated on the same status.
+      await expect(
+        pds1Client.call(
+          com.atproto.space.getDelegationToken,
+          { space: spaceUri },
+          { headers: danHeaders },
+        ),
+      ).rejects.toThrow(/taken down/i)
+    } finally {
+      await pds1.ctx.accountManager.takedownAccount(danDid, {
+        applied: false,
+      })
+    }
+
+    await expect(write()).resolves.toBeDefined()
   })
 
   it('rejects a notifyWrite addressed to another authority', async () => {

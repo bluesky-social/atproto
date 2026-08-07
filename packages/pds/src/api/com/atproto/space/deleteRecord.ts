@@ -7,10 +7,24 @@ import { assertSpaceScope, fireNotifyWrite } from './util.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.deleteRecord, {
     auth: ctx.authVerifier.authorization({
+      checkTakedown: true,
+      checkDeactivated: true,
       authorize: () => {
         // Performed in the handler as it requires the request body
       },
     }),
+    rateLimit: [
+      {
+        name: 'repo-write-hour',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: () => 1,
+      },
+      {
+        name: 'repo-write-day',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: () => 1,
+      },
+    ],
     handler: async ({ input, auth }) => {
       const did = auth.credentials.did
       const { space, repo, collection, rkey } = input.body

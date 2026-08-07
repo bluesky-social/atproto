@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Register a service to be notified of writes. On a space host, subscribes to all repos in the space; on a repo host with a `repo`, subscribes to that repo only. The registering service is named by its service identifier rather than a bare URL, because notifyWrite is delivered with service auth addressed to that identifier; the delivery endpoint is resolved from the service's DID document. Authenticated with a space credential. Re-registering an existing service replaces its registration and extends the expiry.",
+      "description": "Register a service to be notified of writes to any repo in a space. Called on the space host. The registering service is named by its service identifier rather than a bare URL, because notifyWrite is delivered with service auth addressed to that identifier; the delivery endpoint is resolved from the service's DID document. Authenticated with a space credential. Re-registering an existing service replaces its registration and extends the expiry.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -15,11 +15,6 @@
               "type": "string",
               "format": "space-ref",
               "description": "Reference to the space."
-            },
-            "repo": {
-              "type": "string",
-              "format": "did",
-              "description": "The DID of a specific repo to subscribe to (repo host). Omit to subscribe to the whole space (space host)."
             },
             "service": {
               "type": "string",

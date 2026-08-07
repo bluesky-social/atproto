@@ -17,13 +17,48 @@ import { assertSpaceScope, fireNotifyWrite } from './util.js'
 // Matches com.atproto.repo.applyWrites.
 const MAX_WRITES = 200
 
+const ratelimitPoints = ({
+  input,
+}: {
+  input: com.atproto.space.applyWrites.$Input
+}) => {
+  let points = 0
+  for (const op of input.body.writes) {
+    if (com.atproto.space.applyWrites.create.$isTypeOf(op)) {
+      points += 3
+    } else if (com.atproto.space.applyWrites.update.$isTypeOf(op)) {
+      points += 2
+    } else {
+      points += 1
+    }
+  }
+  return points
+}
+
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.applyWrites, {
     auth: ctx.authVerifier.authorization({
+      checkTakedown: true,
+      checkDeactivated: true,
       authorize: () => {
         // Performed in the handler as it requires the request body
       },
     }),
+    rateLimit: [
+      {
+        name: 'repo-write-hour',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: ratelimitPoints,
+      },
+      {
+        name: 'repo-write-day',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: ratelimitPoints,
+      },
+    ],
+    opts: {
+      jsonLimit: 1_000_000,
+    },
     handler: async ({ input, auth }) => {
       const did = auth.credentials.did
       const { space, repo, writes, validate } = input.body

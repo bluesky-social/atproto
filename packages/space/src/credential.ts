@@ -2,6 +2,15 @@ import { Keypair, randomStr, verifySignature } from '@atproto/crypto'
 import { fromBase64, toBase64 } from '@atproto/lex-data'
 import { SpaceTokenError } from './error.js'
 
+/**
+ * How a space authority is addressed when acting as the space host: the service
+ * entry a delegation token and a client attestation name as their audience. Note
+ * this is the *audience*, not necessarily where requests are sent — an authority
+ * that publishes no such entry is still reached at its `#atproto_pds` endpoint.
+ */
+export const spaceHostAud = (spaceDid: string): string =>
+  `${spaceDid}#atproto_space_host`
+
 // The three token classes share a wire shape and differ only in who signs them,
 // who they're addressed to, and how long they live — hence data, not three impls.
 // A credential is multi-use across repo hosts, so it carries no aud.

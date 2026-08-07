@@ -1,8 +1,8 @@
-import { createSpaceToken } from '@atproto/space'
+import { createSpaceToken, spaceHostAud } from '@atproto/space'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { toSpaceRef } from './util.js'
+import { assertSpaceHost } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getSpaceCredential, {
@@ -18,12 +18,12 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const { spaceDid } = toSpaceRef(space)
+      const spaceDid = await assertSpaceHost(ctx, space)
 
       const clientId = clientAttestation
         ? await ctx.clientAttestationVerifier.verify(
             clientAttestation,
-            `${spaceDid}#atproto_space_host`,
+            spaceHostAud(spaceDid),
           )
         : undefined
 

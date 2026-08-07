@@ -36,6 +36,26 @@ export function toSpaceRef(spaceUri: SpaceRefString): SpaceRef {
   return ref
 }
 
+/**
+ * Assert that this host is the space's authority, returning its DID. Space-host
+ * methods reach straight into the authority's actor store, which would otherwise
+ * fail as `Repo not found` — an error none of their lexicons declare.
+ */
+export async function assertSpaceHost(
+  ctx: AppContext,
+  spaceUri: SpaceRefString,
+): Promise<DidString> {
+  const { spaceDid } = toSpaceRef(spaceUri)
+  const account = await ctx.accountManager.getAccount(spaceDid, {
+    includeDeactivated: true,
+    includeTakenDown: true,
+  })
+  if (!account) {
+    throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+  }
+  return spaceDid
+}
+
 // A simplespace space is anchored on its authority's own DID, so ownership is a
 // comparison against the space URI.
 export function assertSpaceOwner(
@@ -48,7 +68,12 @@ export function assertSpaceOwner(
   }
 }
 
-// Legacy access tokens and space credentials pre-authorize at the auth layer.
+/**
+ * Space credentials carry their own space, checked by {@link assertCredentialSpace}.
+ * Legacy access tokens (including app passwords) predate granular permissions and
+ * carry no space grants at all, so there is nothing to evaluate — they are bounded
+ * instead by the handlers, which require the caller to be the repo they name.
+ */
 export function assertSpaceScope(
   auth: AccessOutput | OAuthOutput | SpaceCredentialOutput,
   spaceUri: SpaceRefString,
@@ -65,8 +90,11 @@ export function assertSpaceScope(
 }
 
 /**
- * Reading a repo other than the caller's own takes whole-space `read`. Reading
- * their own takes only `read_self`, which `read` implies.
+ * An account credential reads only that account's own repo in the space. Reaching
+ * another member's repo takes a space credential, which only the authority issues
+ * and only after deciding the holder may read the space — a repo host has no member
+ * list of its own to consult. A whole-space `read` grant is what an app exchanges
+ * for such a credential (see getDelegationToken); it is not itself one.
  */
 export function assertSpaceRead(
   auth: AccessOutput | OAuthOutput | SpaceCredentialOutput,
@@ -77,11 +105,15 @@ export function assertSpaceRead(
     assertCredentialSpace(auth.credentials, spaceUri)
     return
   }
-  const isOwnRepo =
-    auth.credentials.type === 'oauth' && auth.credentials.did === repo
-  assertSpaceScope(auth, spaceUri, {
-    action: isOwnRepo ? 'read_self' : 'read',
-  })
+  if (auth.credentials.did !== repo) {
+    // Deliberately the same error an absent repo gets: whether a given account
+    // holds a repo in a space the caller cannot read is not the caller's business.
+    throw new InvalidRequestError(
+      `Could not find repo for DID: ${repo}`,
+      'RepoNotFound',
+    )
+  }
+  assertSpaceScope(auth, spaceUri, { action: 'read_self' })
 }
 
 // The space analogue of `isUserOrAdmin`: a space credential names a syncer rather

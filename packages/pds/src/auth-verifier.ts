@@ -19,6 +19,7 @@ import {
   SPACE_TOKEN_TYPES,
   SpaceTokenError,
   SpaceTokenType,
+  spaceHostAud,
   verifySpaceToken,
 } from '@atproto/space'
 import { SpaceRef } from '@atproto/syntax'
@@ -379,7 +380,7 @@ export class AuthVerifier {
 
       // We answer for many authorities, so there's no one fixed audience: derive it
       // from `sub` so a token minted for one authority can't be used at another.
-      if (payload.aud !== `${space.spaceDid}#atproto_space_host`) {
+      if (payload.aud !== spaceHostAud(space.spaceDid)) {
         throw new AuthRequiredError(
           'delegation token audience does not match the space authority',
           'BadJwtAudience',

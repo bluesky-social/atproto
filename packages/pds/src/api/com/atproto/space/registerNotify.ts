@@ -5,8 +5,8 @@ import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import {
   assertCredentialSpace,
+  assertSpaceHost,
   resolveServiceEndpoint,
-  toSpaceRef,
 } from './util.js'
 
 // How long a registration lasts before the service has to renew it.
@@ -20,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
 
       assertCredentialSpace(auth.credentials, space)
 
-      const { spaceDid } = toSpaceRef(space)
+      const spaceDid = await assertSpaceHost(ctx, space)
 
       const endpoint = await resolveServiceEndpoint(ctx.idResolver, service)
       if (!endpoint) {

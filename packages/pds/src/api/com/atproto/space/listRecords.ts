@@ -32,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json' as const,
         body: {
-          cursor: records.at(-1)?.uri,
+          cursor: records.length < limit ? undefined : records.at(-1)?.uri,
           records: records.map((record) => ({
             collection: record.collection as NsidString,
             rkey: record.rkey,

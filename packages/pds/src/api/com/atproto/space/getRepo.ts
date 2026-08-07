@@ -53,7 +53,7 @@ export default function (server: Server, ctx: AppContext) {
           body: carStream,
         }
       } catch (err) {
-        actorDb.close()
+        await actorDb.close()
         throw err
       }
     },

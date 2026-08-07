@@ -2,7 +2,7 @@ import { l } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertCredentialSpace, toSpaceRef } from './util.js'
+import { assertCredentialSpace, assertSpaceHost } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.listRepos, {
@@ -12,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
 
       assertCredentialSpace(auth.credentials, space)
 
-      const { spaceDid } = toSpaceRef(space)
+      const spaceDid = await assertSpaceHost(ctx, space)
 
       // The writer set: accounts that have written to the space, maintained by
       // the authority from incoming notifyWrite calls. This is the sync
@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json' as const,
         body: {
-          cursor: writers.at(-1)?.did,
+          cursor: writers.length < limit ? undefined : writers.at(-1)?.did,
           repos: writers.map((writer) => ({
             did: writer.did as l.DidString,
             rev: writer.rev,

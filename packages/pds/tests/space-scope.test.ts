@@ -302,14 +302,27 @@ describe('assertSpaceRead', () => {
       'space:com.atmoboards.forum?authority=*&action=read_self',
     )
     expect(() => assertSpaceRead(auth, SPACE, OTHER_DID)).toThrow(
-      ScopeMissingError,
+      /Could not find repo/,
     )
   })
 
-  it('reads any repo with whole-space read', () => {
+  it('refuses another repo even with whole-space read', () => {
+    // `read` covers the caller's own repo and buys a delegation token; reaching
+    // another member's repo takes a credential the authority issued.
     const auth = oauthAuth('space:com.atmoboards.forum?authority=*&action=read')
     expect(() => assertSpaceRead(auth, SPACE, DID)).not.toThrow()
-    expect(() => assertSpaceRead(auth, SPACE, OTHER_DID)).not.toThrow()
+    expect(() => assertSpaceRead(auth, SPACE, OTHER_DID)).toThrow(
+      /Could not find repo/,
+    )
+  })
+
+  it('refuses another repo on a legacy access token', () => {
+    // Legacy tokens skip the scope check, so the self-only rule is the only
+    // thing standing between an app password and another member's repo.
+    expect(() => assertSpaceRead(accessAuth(), SPACE, DID)).not.toThrow()
+    expect(() => assertSpaceRead(accessAuth(), SPACE, OTHER_DID)).toThrow(
+      /Could not find repo/,
+    )
   })
 
   it('read_self is not narrowed by collection', () => {
