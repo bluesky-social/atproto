@@ -1,6 +1,7 @@
 import { type LexMap, isPlainObject } from '@atproto/lex-data'
 import {
   type $Type,
+  type $TypedLexMap,
   type $TypeOf,
   type $Typed,
   type $TypedMaybe,
@@ -17,12 +18,17 @@ import {
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 
+export type TypedObject<
+  TType extends $Type,
+  TValue extends object = object,
+> = $TypedLexMap<TType, TValue & { $type?: unknown }>
+
 export type MaybeTypedObject<
   TType extends $Type,
-  TValue extends { $type?: unknown } = { $type?: unknown },
-> = TValue extends { $type?: TType }
-  ? TValue
-  : $TypedMaybe<Exclude<TValue, Unknown$TypedObject>, TType>
+  TValue extends object = object,
+> = (TValue & { $type?: unknown }) extends { $type?: TType }
+  ? TValue & { $type?: unknown }
+  : $TypedMaybe<Exclude<TValue & { $type?: unknown }, Unknown$TypedObject>, TType>
 
 /**
  * Schema for typed objects in Lexicon unions.
@@ -87,10 +93,12 @@ export class TypedObjectSchema<
     return $typed(input, this.$type)
   }
 
-  isTypeOf<TValue extends Record<string, unknown>>(
+  isTypeOf<TValue extends { $type?: unknown }>(
     value: TValue,
-  ): value is MaybeTypedObject<TType, TValue> {
-    return value.$type === undefined || value.$type === this.$type
+  ): value is TypedObject<TType, TValue>
+  isTypeOf(value: Record<string, unknown>): boolean
+  isTypeOf(value: { $type?: unknown }): boolean {
+    return value.$type === this.$type
   }
 
   /**

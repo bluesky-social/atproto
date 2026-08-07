@@ -197,3 +197,21 @@ export type Unknown$Type = string & { [unknown$TypeSymbol]: true }
  * ```
  */
 export type Unknown$TypedObject = { $type: Unknown$Type }
+
+/**
+ * Narrows a value type to one with a specific required `$type` field.
+ *
+ * If the value already has the correct `$type`, returns it unchanged.
+ * Otherwise, adds the required `$type` to the value (excluding unknown typed objects).
+ *
+ * This is the shared foundation for both `TypedRecord` and `TypedObject`.
+ *
+ * @typeParam TType - The expected `$type` string literal
+ * @typeParam TValue - The value type being narrowed
+ */
+export type $TypedLexMap<
+  TType extends string,
+  TValue extends { $type?: unknown } = { $type?: unknown },
+> = TValue extends { $type: TType }
+  ? TValue
+  : $Typed<Exclude<TValue, Unknown$TypedObject>, TType>
