@@ -2013,9 +2013,6 @@ importers:
       file-type:
         specifier: ^16.5.4
         version: 16.5.4
-      glob:
-        specifier: ^10.3.10
-        version: 10.3.10
       handlebars:
         specifier: ^4.7.7
         version: 4.7.7
