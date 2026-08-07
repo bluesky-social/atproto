@@ -1,5 +1,5 @@
+const { globSync } = require('node:fs')
 const hbsPlugin = require('esbuild-plugin-handlebars')
-const { globSync } = require('glob')
 
 require('esbuild').build({
   logLevel: 'info',
