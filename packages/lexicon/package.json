@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lexicon",
-  "version": "0.7.10",
+  "version": "0.7.11",
   "license": "MIT",
   "description": "atproto Lexicon schema language library",
   "keywords": [
@@ -39,6 +39,6 @@
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   }
 }

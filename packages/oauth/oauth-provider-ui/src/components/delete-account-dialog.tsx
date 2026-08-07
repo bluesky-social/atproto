@@ -1,9 +1,10 @@
 import { Trans } from '@lingui/react/macro'
-import { type ReactNode, useEffect, useState } from 'react'
-import { ButtonRequestCode } from '#/components/forms/button-request-code.tsx'
-import { Button } from '#/components/forms/button.tsx'
-import { Admonition } from '#/components/utils/admonition.tsx'
-import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
+import { type ReactElement, useEffect, useState } from 'react'
+import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
+import { Notice } from '#/components/feedback/notice.tsx'
+import { actionRow } from '#/components/forms/form-shell.tsx'
+import { RequestCodeButton } from '#/components/forms/request-code-button.tsx'
+import { Button } from '#/components/ui/button.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
 import { DeleteAccountConfirmForm } from './delete-account-confirm-form.tsx'
 import { Handle } from './utils/handle.tsx'
@@ -18,7 +19,7 @@ export type DeleteAccountDialogProps = {
     token: string
     password: string
   }) => void | PromiseLike<void>
-  children: Exclude<ReactNode, false | null | undefined>
+  children: ReactElement
 }
 
 enum Step {
@@ -78,7 +79,7 @@ export function DeleteAccountDialog({
 
   if (step === Step.FinalConfirm) {
     return (
-      <DialogSimple
+      <DialogShell
         trigger={children}
         open={open}
         onOpenChange={setOpen}
@@ -101,32 +102,32 @@ export function DeleteAccountDialog({
           )
         }
       >
-        <div className="align-stretch flex flex-col gap-4">
+        <div className={actionRow}>
           <Button
-            color="error"
-            loading={finalConfirm.loading || confirmPending}
+            variant="destructive"
             disabled={finalConfirm.loading || confirmPending}
             onClick={() => void finalConfirm.run()}
-            className="w-full"
+            className="w-full sm:w-auto"
           >
             <Trans>Yes, delete my account</Trans>
           </Button>
 
           <Button
+            variant="secondary"
             onClick={() => setOpen(false)}
             disabled={finalConfirm.loading || confirmPending}
-            className="w-full"
+            className="w-full sm:w-auto"
           >
             <Trans>Cancel</Trans>
           </Button>
         </div>
-      </DialogSimple>
+      </DialogShell>
     )
   }
 
   if (step === Step.Confirm) {
     return (
-      <DialogSimple
+      <DialogShell
         trigger={children}
         open={open}
         onOpenChange={setOpen}
@@ -148,7 +149,6 @@ export function DeleteAccountDialog({
         <DeleteAccountConfirmForm
           email={email}
           // Disables the form while a code is being requested
-          loading={requestPending}
           onResend={onRequest}
           onCancel={() => setOpen(false)}
           handler={async (data) => {
@@ -156,12 +156,12 @@ export function DeleteAccountDialog({
             setStep(Step.FinalConfirm)
           }}
         />
-      </DialogSimple>
+      </DialogShell>
     )
   }
 
   return (
-    <DialogSimple
+    <DialogShell
       trigger={children}
       open={open}
       onOpenChange={setOpen}
@@ -182,36 +182,41 @@ export function DeleteAccountDialog({
       }
     >
       <div className="align-stretch flex flex-col gap-4">
-        <ButtonRequestCode
-          action={async () => {
-            await onRequest()
-            setStep(Step.Confirm)
-          }}
-          loading={requestPending}
-          disabled={confirmPending}
-          color="primary"
-          className="w-full"
-        >
-          <Trans>Send email</Trans>
-        </ButtonRequestCode>
-
-        <Button
-          onClick={() => setOpen(false)}
-          disabled={requestPending}
-          className="w-full"
-        >
-          <Trans>Cancel</Trans>
-        </Button>
-
-        <Admonition role="note" className="text-sm">
+        <Notice role="note" className="text-sm">
           <Trans>
             You can also temporarily deactivate your account instead. Your
             profile, posts, feeds, and lists will no longer be visible to other
             Bluesky users. You can reactivate your account at any time by
             logging in.
           </Trans>
-        </Admonition>
+        </Notice>
+
+        {/* @NOTE `RequestCodeButton` defaults to `size="sm"` for the inline
+          resend, so a primary dialog action restates the size. */}
+        <div className={actionRow}>
+          <RequestCodeButton
+            action={async () => {
+              await onRequest()
+              setStep(Step.Confirm)
+            }}
+            disabled={confirmPending}
+            variant="default"
+            size="default"
+            className="w-full sm:w-auto"
+          >
+            <Trans>Send email</Trans>
+          </RequestCodeButton>
+
+          <Button
+            variant="secondary"
+            onClick={() => setOpen(false)}
+            disabled={requestPending}
+            className="w-full sm:w-auto"
+          >
+            <Trans>Cancel</Trans>
+          </Button>
+        </div>
       </div>
-    </DialogSimple>
+    </DialogShell>
   )
 }

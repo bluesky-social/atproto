@@ -60,5 +60,6 @@
   "chat.tools.terminal.autoApprove": {
     "pnpm exec": true,
     "pnpm run": true,
+    "roast": true,
   },
 }

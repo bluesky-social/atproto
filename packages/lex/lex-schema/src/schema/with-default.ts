@@ -3,6 +3,7 @@ import {
   type InferOutput,
   Schema,
   type ValidationContext,
+  type ValidationResult,
   type Validator,
 } from '../core.js'
 
@@ -34,7 +35,10 @@ export class WithDefaultSchema<
     super()
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<InferInput<TValidator>> {
     // When in a validation context, the output should not be altered,
     // so we don't apply the default.
     if (input === undefined && ctx.options.mode !== 'validate') {
@@ -76,6 +80,6 @@ export class WithDefaultSchema<
 export function withDefault<const TValidator extends Validator>(
   validator: TValidator,
   defaultValue: InferInput<TValidator>,
-) {
+): WithDefaultSchema<TValidator> {
   return new WithDefaultSchema<TValidator>(validator, defaultValue)
 }

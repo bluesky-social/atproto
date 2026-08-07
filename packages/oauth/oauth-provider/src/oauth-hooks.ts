@@ -82,7 +82,10 @@ export type OAuthHooks = {
    */
   getClientInfo?: (
     clientId: ClientId,
-    data: { metadata: OAuthClientMetadata; jwks?: Jwks },
+    data: {
+      metadata: OAuthClientMetadata
+      jwks: Jwks | undefined
+    },
   ) => Awaitable<undefined | Partial<ClientInfo>>
 
   /**
@@ -290,6 +293,7 @@ export type OAuthHooks = {
     input: SignUpInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    clientId: ClientId | undefined
   }) => Awaitable<void>
 
   /**
@@ -358,6 +362,7 @@ export type OAuthHooks = {
     account: Account
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    clientId: ClientId | undefined
   }) => Awaitable<void>
 
   /**
@@ -370,7 +375,7 @@ export type OAuthHooks = {
     data: SignInData
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    clientId?: ClientId
+    clientId: ClientId | undefined
   }) => Awaitable<void>
 
   /**
@@ -386,7 +391,7 @@ export type OAuthHooks = {
     account: Account
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    clientId?: ClientId
+    clientId: ClientId | undefined
   }) => Awaitable<void>
 
   /**
@@ -413,7 +418,7 @@ export type OAuthHooks = {
     did: Did | null
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    clientId?: ClientId
+    clientId: ClientId | undefined
   }) => Awaitable<void>
 
   /**

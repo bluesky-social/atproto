@@ -4,6 +4,7 @@ import {
   Schema,
   type Simplify,
   type ValidationContext,
+  type ValidationResult,
 } from '../core.js'
 import type { DictSchema } from './dict.js'
 import type { ObjectSchema } from './object.js'
@@ -65,7 +66,10 @@ export class IntersectionSchema<
     super()
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<Record<string, unknown>> {
     const leftResult = ctx.validate(input, this.left)
     if (!leftResult.success) return leftResult
 
@@ -108,6 +112,6 @@ export class IntersectionSchema<
 export function intersection<
   const Left extends ObjectSchema,
   const Right extends DictSchema,
->(left: Left, right: Right) {
+>(left: Left, right: Right): IntersectionSchema<Left, Right> {
   return new IntersectionSchema<Left, Right>(left, right)
 }

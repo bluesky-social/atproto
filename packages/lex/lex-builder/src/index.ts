@@ -49,7 +49,7 @@ export type TsProjectBuildOptions = LexBuilderOptions &
  * })
  * ```
  */
-export async function build(options: TsProjectBuildOptions) {
+export async function build(options: TsProjectBuildOptions): Promise<void> {
   const builder = new LexBuilder(options)
   await builder.load(options)
   await builder.save(options)

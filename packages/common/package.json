@@ -1,6 +1,6 @@
 {
   "name": "@atproto/common",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "license": "MIT",
   "description": "Shared web-platform-friendly code for atproto libraries",
   "keywords": [
@@ -40,6 +40,6 @@
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   }
 }

@@ -1,5 +1,13 @@
 # @atproto/lexicon
 
+## 0.7.11
+
+### Patch Changes
+
+- Updated dependencies [[`8b55a4a`](https://github.com/bluesky-social/atproto/commit/8b55a4ab69c24e5038f67c479b3b9953666ea0c2)]:
+  - @atproto/syntax@0.7.4
+  - @atproto/common-web@0.5.9
+
 ## 0.7.10
 
 ### Patch Changes

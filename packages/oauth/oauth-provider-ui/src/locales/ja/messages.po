@@ -8,10 +8,25 @@ msgstr ""
 "Language: ja\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-08-04 21:35+0900\n"
+"PO-Revision-Date: 2026-08-07 18:00+0900\n"
 "Last-Translator: dolciss\n"
 "Language-Team: Japanese\n"
 "Plural-Forms: \n"
+
+#. placeholder {0}: bucket.count
+#: src/components/utils/date-ago.tsx
+msgid "{0, plural, one {# hour ago} other {# hours ago}}"
+msgstr "{0, plural, one {1時間前} other {# 時間前}}"
+
+#. placeholder {0}: bucket.count
+#: src/components/utils/date-ago.tsx
+msgid "{0, plural, one {# minute ago} other {# minutes ago}}"
+msgstr "{0, plural, one {1分前} other {# 分前}}"
+
+#. placeholder {0}: bucket.count
+#: src/components/utils/date-ago.tsx
+msgid "{0, plural, one {yesterday} other {# days ago}}"
+msgstr "{0, plural, one {昨日} other {# 日前}}"
 
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
@@ -78,7 +93,7 @@ msgstr "Blueskyアカウントの特定の部分にアクセスし、プライ�
 msgid "Account"
 msgstr "アカウント"
 
-#: src/components/utils/account-image.tsx
+#: src/components/identity/account-avatar.tsx
 msgid "Account avatar"
 msgstr "アカウントのアバター"
 
@@ -90,15 +105,15 @@ msgstr "アカウント無効化"
 msgid "Account deleted"
 msgstr "アカウント削除"
 
-#: src/components/utils/account-identifier.tsx
+#: src/components/identity/account-identifier.tsx
 msgid "Account identifier"
 msgstr "アカウント識別子"
 
-#: src/components/utils/account-name.tsx
+#: src/components/identity/account-name.tsx
 msgid "Account name"
 msgstr "アカウント名"
 
-#: src/components/utils/account-selector.tsx
+#: src/components/identity/account-menu.tsx
 msgid "Account overview"
 msgstr "アカウントの概要"
 
@@ -107,7 +122,7 @@ msgstr "アカウントの概要"
 msgid "Account reactivated"
 msgstr "アカウント再有効化"
 
-#: src/components/utils/account-selector.tsx
+#: src/components/identity/account-menu.tsx
 msgid "Account selector"
 msgstr "アカウント選択"
 
@@ -115,11 +130,15 @@ msgstr "アカウント選択"
 msgid "Account username"
 msgstr "アカウントユーザー名"
 
+#: src/components/session-list.tsx
+msgid "Actions"
+msgstr ""
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Add the following record to your domain's DNS configuration."
 msgstr "あなたのドメインのDNS設定に次のレコードを追加してください。"
 
-#: src/components/forms/input-handle-custom.tsx
+#: src/components/update-handle-custom-form.tsx
 msgid "alice.com"
 msgstr "alice.com"
 
@@ -129,12 +148,12 @@ msgstr "alice.com"
 msgid "Already have a code?"
 msgstr "コードをすでに持っていますか？"
 
-#: src/components/utils/client-name.tsx
+#: src/components/identity/client-name.tsx
 msgid "An application on your device"
 msgstr "デバイス上のアプリ"
 
 #: src/components/error-view.tsx
-#: src/contexts/notifications.tsx
+#: src/lib/notification-message.ts
 msgid "An error occurred"
 msgstr "エラーが発生しました"
 
@@ -142,7 +161,7 @@ msgstr "エラーが発生しました"
 msgid "An unexpected error occurred. Please try again."
 msgstr "予期しないエラーが発生しました。もう一度お試しください。"
 
-#: src/components/utils/error-card.tsx
+#: src/components/feedback/error-notice.tsx
 msgid "An unknown error occurred"
 msgstr "何らかのエラーが発生しました"
 
@@ -162,13 +181,18 @@ msgstr "すべてのメソッド"
 msgid "Any service"
 msgstr "すべてのサービス"
 
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "OAuthApp"
+msgid "App"
+msgstr ""
+
 #: src/pages/account/(authenticated)/route.tsx
 msgid "Apps"
 msgstr "アプリ"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
-msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
-msgstr "アプリは、あなたが積極的に使用していないときでも、バックグラウンドであなたのアカウントにアクセスすることがあります（通知の確認、データの同期など）。これは正常な動作であり、上記に表示されている「最終アクセス」時間が更新されます。"
+msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
+msgstr "アプリは、あなたが積極的に使用していないときでも、バックグラウンドであなたのアカウントにアクセスすることがあります（通知の確認、データの同期など）。これは正常な動作であり、「最終アクセス」時間が更新されます。"
 
 #: src/components/delete-account-dialog.tsx
 msgid "Are you really, really sure?"
@@ -190,19 +214,19 @@ msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "承認"
 
-#. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "OAuthApp"
-msgid "Authorized on {0}"
-msgstr "{0} に承認されました"
+msgid "Authorized"
+msgstr ""
 
-#: src/components/forms/form-card.tsx
-#: src/components/forms/wizard-card.tsx
+#: src/components/forms/form-shell.tsx
+#: src/components/forms/sign-up-wizard.tsx
+#: src/components/layouts/account-shell.tsx
 #: src/components/sign-in-picker.tsx
 msgid "Back"
 msgstr "戻る"
 
-#: src/components/forms/input-handle-default.tsx
+#: src/components/forms/fields/handle-field.tsx
 msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
 msgstr "{minLength, plural, other {#文字}}以上、{maxLength, plural, other {#文字}}以下"
 
@@ -217,10 +241,6 @@ msgstr "Blueskyアプリサービス"
 #: src/components/utils/scope-description.tsx
 msgid "Bluesky Chat services"
 msgstr "Blueskyチャットサービス"
-
-#: src/pages/router.tsx
-msgid "Branding"
-msgstr "ブランディング"
 
 #: src/components/consent-form.tsx
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
@@ -237,7 +257,7 @@ msgstr "呼び出し"
 
 #: src/components/authenticate-welcome-view.tsx
 #: src/components/delete-account-dialog.tsx
-#: src/components/forms/form-card.tsx
+#: src/components/forms/form-shell.tsx
 #: src/components/reactivate-account-view.tsx
 #: src/contexts/authentication.tsx
 msgid "Cancel"
@@ -301,20 +321,18 @@ msgstr "ユーザー名を選んでください"
 msgid "Click here if nothing happens"
 msgstr "何も起こらない場合はここをクリックしてください"
 
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "OAuthApp"
+msgid "Client"
+msgstr ""
+
 #: src/components/oauth-session-details-dialog.tsx
-#: src/components/utils/dialog-simple.tsx
+#: src/components/ui/dialog.tsx
+#: src/components/ui/toast.tsx
 msgid "Close"
 msgstr "閉じる"
 
-#: src/components/utils/account-selector.tsx
-msgid "Close account selector"
-msgstr "アカウント選択を閉じる"
-
-#: src/components/utils/description-card.tsx
-msgid "Close details"
-msgstr "詳細を閉じる"
-
-#: src/components/utils/error-details.tsx
+#: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Code"
 msgstr "コード"
@@ -345,11 +363,11 @@ msgstr "続行"
 msgid "Cookie Error"
 msgstr "Cookie エラー"
 
-#: src/components/forms/button-copy.tsx
+#: src/components/forms/copy-button.tsx
 msgid "Copied"
 msgstr "コピーされました"
 
-#: src/components/forms/button-copy.tsx
+#: src/components/forms/copy-button.tsx
 msgid "Copy to clipboard"
 msgstr "クリップボードにコピー"
 
@@ -378,7 +396,7 @@ msgstr "データ"
 msgid "Deactivate account"
 msgstr "アカウントを無効化"
 
-#: src/components/utils/account-image.tsx
+#: src/components/identity/account-avatar.tsx
 msgid "Deactivated account"
 msgstr "無効化されたアカウント"
 
@@ -404,16 +422,20 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "アクセスを拒否"
 
-#: src/components/utils/description-card.tsx
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgid "Details"
 msgstr "詳細"
+
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Device"
+msgstr ""
 
 #: src/pages/account/(authenticated)/route.tsx
 msgid "Devices"
 msgstr "デバイス"
 
-#: src/components/forms/input-token.tsx
+#: src/components/forms/fields/token-field.tsx
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "コードが届いていませんか？<0>ここをクリックすれば再送信します。</0>"
 
@@ -435,7 +457,7 @@ msgstr "例: <0>alice{0}</0>"
 msgid "Email"
 msgstr "メールアドレス"
 
-#: src/components/forms/input-email-address.tsx
+#: src/components/forms/fields/email-field.tsx
 #: src/components/reset-password-request-form.tsx
 #: src/pages/account/(authenticated)/manage/page.tsx
 msgid "Email address"
@@ -461,7 +483,7 @@ msgstr "これらの手順をメールで送信"
 msgid "Email verified"
 msgstr "メールアドレスが確認されました"
 
-#: src/components/forms/input-new-password.tsx
+#: src/components/forms/fields/new-password-field.tsx
 msgid "Enter a password"
 msgstr "パスワードを入力"
 
@@ -481,7 +503,7 @@ msgstr "アカウントの作成に使用したメールアドレスを入力し
 msgid "Enter your email address"
 msgstr "メールアドレスを入力してください"
 
-#: src/components/forms/input-new-password.tsx
+#: src/components/forms/fields/new-password-field.tsx
 msgid "Enter your new password"
 msgstr "新しいパスワードを入力してください"
 
@@ -505,6 +527,7 @@ msgstr "example-com-xxxxx-xxxxx"
 msgid "Expand details"
 msgstr "詳細を開く"
 
+#: src/components/feedback/password-strength.tsx
 #: src/components/utils/password-strength-label.tsx
 msgid "Extra"
 msgstr "最強"
@@ -570,6 +593,14 @@ msgstr "メールアドレスの確認に失敗しました"
 msgid "File contents"
 msgstr "ファイルの内容"
 
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgid "Filter apps"
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgid "Filter devices"
+msgstr ""
+
 #: src/components/delete-account-dialog.tsx
 msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
 msgstr "セキュリティ上の理由から、あなたのメールアドレスに確認コードを送信する必要があります。<0>{email}</0>"
@@ -589,10 +620,6 @@ msgstr "忘れた？"
 #: src/components/consent-view.tsx
 msgid "Grant access to your <0/> account"
 msgstr "あなたの <0/> アカウントへのアクセスを許可"
-
-#: src/components/utils/help-card.tsx
-msgid "Having trouble? <0>Contact support</0>"
-msgstr "なにか問題が発生しましたか？ <0>サポートに連絡</0>"
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
 #: src/components/forms/input-handle-custom-instructions.tsx
@@ -621,7 +648,7 @@ msgstr "こんにちは、\n"
 msgid "Help"
 msgstr "ヘルプ"
 
-#: src/components/forms/button-toggle-visibility.tsx
+#: src/components/forms/fields/password-field.tsx
 msgid "Hide"
 msgstr "隠す"
 
@@ -666,7 +693,7 @@ msgstr "メールアドレスを更新すると、メールでの2要素認証(�
 msgid "If you're trying to change your handle or email, do so before you deactivate."
 msgstr "ハンドルやメールアドレスを変えるのであれば、無効化の前に変更してください。"
 
-#: src/components/forms/input-handle-default.tsx
+#: src/components/forms/fields/handle-field.tsx
 msgid "Invalid"
 msgstr "無効"
 
@@ -678,6 +705,11 @@ msgstr "無効なハンドル"
 msgid "Invite code"
 msgstr "招待コード"
 
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "IP address"
+msgstr ""
+
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "このアカウントをアプリにサインインするためにまだ使用していないようです。"
@@ -687,61 +719,19 @@ msgstr "このアカウントをアプリにサインインするためにまだ
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "あなたのブラウザがクッキーを受け入れていないようです。「続行」を押してもう一度試してください。エラーが続く場合は、プライバシー設定で「{0}」のウェブサイトのクッキーを許可していることを確認してください。"
 
-#. placeholder {0}: bucket.count
-#: src/pages/account/(authenticated)/apps/page.tsx
-msgctxt "sessions list"
-msgid "Last accessed {0, plural, one {# day} other {# days}} ago"
-msgstr "最終アクセス {0, plural, other {#日前}}"
-
-#. placeholder {0}: bucket.count
-#: src/pages/account/(authenticated)/apps/page.tsx
-msgctxt "sessions list"
-msgid "Last accessed {0, plural, one {a minute} other {# minutes}} ago"
-msgstr "最終アクセス {0, plural, other {#分前}}"
-
-#. placeholder {0}: bucket.count
-#: src/pages/account/(authenticated)/apps/page.tsx
-msgctxt "sessions list"
-msgid "Last accessed {0, plural, one {an hour} other {# hours}} ago"
-msgstr "最終アクセス {0, plural, other {#時間前}}"
+#: src/components/utils/date-ago.tsx
+msgid "just now"
+msgstr "たった今"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
-msgctxt "sessions list"
-msgid "Last accessed just now"
-msgstr "最終アクセス たった今"
-
-#: src/pages/account/(authenticated)/apps/page.tsx
-msgctxt "sessions list"
-msgid "Last accessed yesterday"
-msgstr "最終アクセス 昨日"
-
-#. placeholder {0}: bucket.count
-#: src/pages/account/(authenticated)/devices/page.tsx
-msgctxt "device list"
-msgid "Last seen {0, plural, one {# day} other {# days}} ago"
-msgstr "最終閲覧 {0, plural, other {#日前}}"
-
-#. placeholder {0}: bucket.count
-#: src/pages/account/(authenticated)/devices/page.tsx
-msgctxt "device list"
-msgid "Last seen {0, plural, one {a minute} other {# minutes}} ago"
-msgstr "最終閲覧 {0, plural, other {#分前}}"
-
-#. placeholder {0}: bucket.count
-#: src/pages/account/(authenticated)/devices/page.tsx
-msgctxt "device list"
-msgid "Last seen {0, plural, one {an hour} other {# hours}} ago"
-msgstr "最終閲覧 {0, plural, other {#時間前}}"
+msgctxt "OAuthApp"
+msgid "Last accessed"
+msgstr "最終アクセス"
 
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
-msgid "Last seen just now"
-msgstr "最終閲覧 たった今"
-
-#: src/pages/account/(authenticated)/devices/page.tsx
-msgctxt "device list"
-msgid "Last seen yesterday"
-msgstr "最終閲覧 昨日"
+msgid "Last seen"
+msgstr "最終閲覧"
 
 #: src/components/update-email-dialog.tsx
 msgctxt "verify email"
@@ -752,7 +742,8 @@ msgstr "後で"
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
-#: src/components/layouts/layout-app.tsx
+#: src/components/layouts/account-shell.tsx
+#: src/components/layouts/auth-shell.tsx
 msgid "Logo"
 msgstr "ロゴ"
 
@@ -768,7 +759,7 @@ msgstr "ループバック"
 msgid "Make a text file with the contents below available at the following URL."
 msgstr "次のURLで以下の内容のテキストファイルを利用できるようにしてください。"
 
-#: src/components/forms/button-toggle-visibility.tsx
+#: src/components/forms/fields/password-field.tsx
 msgid "Make visible"
 msgstr "表示する"
 
@@ -796,15 +787,17 @@ msgstr "あなたのプロフィール、投稿、いいね、フォローを管
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "あなたのプロフィール、投稿、いいね、フォローを管理し、あなたのプライベートな設定を読み取る"
 
-#: src/components/utils/error-details.tsx
+#: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Message"
 msgstr "メッセージ"
 
+#: src/components/feedback/password-strength.tsx
 #: src/components/utils/password-strength-label.tsx
 msgid "Missing"
 msgstr "無し"
 
+#: src/components/feedback/password-strength.tsx
 #: src/components/utils/password-strength-label.tsx
 msgid "Moderate"
 msgstr "中程度"
@@ -813,10 +806,14 @@ msgstr "中程度"
 msgid "My Atmosphere Account"
 msgstr "私のAtmosphereアカウント"
 
-#: src/components/utils/error-details.tsx
+#: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Name"
 msgstr "名前"
+
+#: src/components/layouts/account-shell.tsx
+msgid "Navigation"
+msgstr ""
 
 #: src/components/update-email-dialog.tsx
 #: src/components/update-email-form.tsx
@@ -827,21 +824,25 @@ msgstr "新しいメールアドレス"
 msgid "New password"
 msgstr "新しいパスワード"
 
-#: src/components/forms/wizard-card.tsx
+#: src/components/forms/sign-up-wizard.tsx
 #: src/components/reset-password-view.tsx
 msgid "Next"
 msgstr "次へ"
+
+#: src/components/session-list.tsx
+msgid "No matches"
+msgstr ""
 
 #: src/components/reset-password-view.tsx
 msgid "Okay"
 msgstr "OK"
 
-#: src/components/forms/input-handle-default.tsx
+#: src/components/forms/fields/handle-field.tsx
 msgid "Only letters, numbers, and hyphens"
 msgstr "英数字とハイフンのみ"
 
 #: src/components/delete-account-confirm-form.tsx
-#: src/components/forms/input-password.tsx
+#: src/components/forms/fields/password-field.tsx
 #: src/components/sign-in-form.tsx
 #: src/components/sign-up-credentials-form.tsx
 #: src/pages/account/(authenticated)/manage/page.tsx
@@ -856,11 +857,12 @@ msgstr "パスワードをリセットするためのメールが送信されま
 msgid "Password reset successful"
 msgstr "パスワードのリセットに成功しました"
 
+#: src/components/feedback/password-strength.tsx
 #: src/components/utils/password-strength-label.tsx
 msgid "Password strength"
 msgstr "パスワード強度"
 
-#: src/components/utils/password-strength-meter.tsx
+#: src/components/feedback/password-strength.tsx
 msgid "Password strength indicator"
 msgstr "パスワード強度表示"
 
@@ -872,11 +874,11 @@ msgstr "パスワード更新"
 msgid "Password updated!"
 msgstr "パスワードが更新されました！"
 
-#: src/components/forms/input-new-password.tsx
+#: src/components/forms/fields/new-password-field.tsx
 msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
 msgstr "パスワードは{MIN_PASSWORD_LENGTH, plural, other {#文字}}以上"
 
-#: src/components/utils/error-details.tsx
+#: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Payload"
 msgstr "ペイロード"
@@ -924,7 +926,7 @@ msgstr "メールアドレスに送信されたセキュリティコードを入
 msgid "Please try again in a moment."
 msgstr "しばらくしてからもう一度お試しください。"
 
-#: src/components/forms/button-cooldown.tsx
+#: src/components/forms/request-code-button.tsx
 msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
 msgstr "{remainingSeconds, plural, other {#秒}}待ってからもう一度やり直してください。"
 
@@ -981,13 +983,13 @@ msgstr "パスワードをリセット"
 msgid "Reset your password"
 msgstr "パスワードをリセット"
 
-#: src/components/utils/error-card.tsx
+#: src/components/feedback/error-notice.tsx
 #: src/pages/account/(authenticated)/apps/page.tsx
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgid "Retry"
 msgstr "再試行"
 
-#: src/components/forms/button-cooldown.tsx
+#: src/components/forms/request-code-button.tsx
 msgid "Retry in {remainingSeconds}s"
 msgstr "{remainingSeconds}秒後に再試行"
 
@@ -1004,11 +1006,11 @@ msgstr "セキュリティコード"
 msgid "Security step required"
 msgstr "セキュリティステップが必要です"
 
-#: src/components/utils/account-selector.tsx
+#: src/components/identity/account-menu.tsx
 msgid "Select another account"
 msgstr "別のアカウントを選択"
 
-#: src/components/forms/input-handle-default.tsx
+#: src/components/forms/fields/handle-field.tsx
 msgid "Select domain"
 msgstr "ドメインを選択"
 
@@ -1020,7 +1022,7 @@ msgstr "既存のアカウントから選択"
 msgid "Send email"
 msgstr "メールを送信"
 
-#: src/components/forms/button-request-code.tsx
+#: src/components/forms/request-code-button.tsx
 msgid "Send verification code"
 msgstr "確認コードを送信"
 
@@ -1048,7 +1050,7 @@ msgstr "アカウントの選択"
 msgid "Sign in to an account that is not listed"
 msgstr "リストにないアカウントにサインイン"
 
-#: src/components/utils/account-selector.tsx
+#: src/components/identity/account-menu.tsx
 msgid "Sign out"
 msgstr "サインアウト"
 
@@ -1070,20 +1072,21 @@ msgstr "サインインキャンセル"
 msgid "Sign-in complete"
 msgstr "サインイン完了"
 
-#: src/components/utils/error-details.tsx
+#: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Stack"
 msgstr "スタック"
 
-#: src/components/forms/wizard-card.tsx
+#: src/components/forms/sign-up-wizard.tsx
 msgid "Step {currentPosition} of {count}"
 msgstr "ステップ {currentPosition} / {count}"
 
+#: src/components/feedback/password-strength.tsx
 #: src/components/utils/password-strength-label.tsx
 msgid "Strong"
 msgstr "強い"
 
-#: src/components/forms/form-card.tsx
+#: src/components/forms/form-shell.tsx
 msgid "Submit"
 msgstr "送信"
 
@@ -1183,6 +1186,11 @@ msgstr "このアプリケーションは、あなたのアカウントにアク
 msgid "This authorization request has been denied. Please try again."
 msgstr "この承認リクエストは拒否されました。もう一度お試しください。"
 
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "This device"
+msgstr ""
+
 #: src/lib/api.ts
 msgid "This email is already used"
 msgstr "このメールアドレスはすでに使用されています"
@@ -1224,11 +1232,11 @@ msgstr "トラブルシュート"
 msgid "Type"
 msgstr "タイプ"
 
-#: src/components/forms/input-handle-custom.tsx
+#: src/components/update-handle-custom-form.tsx
 msgid "Type your domain"
 msgstr "ドメイン名を入力"
 
-#: src/components/forms/input-handle-default.tsx
+#: src/components/forms/fields/handle-field.tsx
 msgid "Type your username"
 msgstr "ユーザー名を入力"
 
@@ -1289,7 +1297,7 @@ msgstr "ユーザー名またはメールアドレス"
 msgid "Username updated"
 msgstr "ユーザー名更新"
 
-#: src/components/forms/input-handle-default.tsx
+#: src/components/forms/fields/handle-field.tsx
 msgid "Valid"
 msgstr "有効"
 
@@ -1352,6 +1360,7 @@ msgstr "警告"
 msgid "We're so excited to have you join us!"
 msgstr "私たちはあなたが参加してくれることをとても楽しみにしています！"
 
+#: src/components/feedback/password-strength.tsx
 #: src/components/utils/password-strength-label.tsx
 msgid "Weak"
 msgstr "弱い"
@@ -1371,6 +1380,10 @@ msgstr "これは何を意味しますか？"
 #: src/pages/account/(authenticated)/route.tsx
 msgid "What is an Atmosphere Account?"
 msgstr "Atmosphereアカウントとは何ですか？"
+
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgid "Why is this time so recent?"
+msgstr ""
 
 #: src/lib/api.ts
 msgid "Wrong identifier or password"
@@ -1469,8 +1482,8 @@ msgstr "メールアドレスが確認されました。"
 msgid "Your email address needs to be verified."
 msgstr "メールアドレスを確認する必要があります。"
 
-#. placeholder {0}: handle ? ( <Handle className="text-text-default" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle" /> )
-#: src/components/forms/input-handle-default.tsx
+#. placeholder {0}: full ? ( <Handle className="text-foreground" handle={full} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
+#: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "あなたのフルユーザー名： {0}"
 

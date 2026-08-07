@@ -1,0 +1,46 @@
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 10
+    groups:
+      # Dev tooling churns the most and never ships in a published artifact,
+      # so a single PR per week keeps the review surface small.
+      dev-dependencies:
+        dependency-type: 'development'
+        update-types:
+          - 'minor'
+          - 'patch'
+      # Non-breaking runtime bumps, batched into one PR. Majors are excluded
+      # here so they land individually and stay attributable.
+      prod-dependencies:
+        dependency-type: 'production'
+        update-types:
+          - 'minor'
+          - 'patch'
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    groups:
+      # CI-only, and a bad bump fails loudly on the next run, so batch every
+      # action bump (majors included) into one PR.
+      actions:
+        patterns:
+          - '*'
+  - package-ecosystem: 'docker'
+    directories:
+      - '/services/bsky'
+      - '/services/bsync'
+      - '/services/ozone'
+      - '/services/pds'
+    schedule:
+      interval: 'weekly'
+    groups:
+      # All four services pin the same node:*-alpine base image; group them so
+      # a base image bump is one PR instead of four near-identical ones.
+      base-images:
+        patterns:
+          - '*'

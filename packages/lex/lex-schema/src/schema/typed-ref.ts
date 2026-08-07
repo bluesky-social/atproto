@@ -4,6 +4,7 @@ import {
   type InferOutput,
   Schema,
   type ValidationContext,
+  type ValidationResult,
   type Validator,
 } from '../core.js'
 
@@ -72,7 +73,10 @@ export class TypedRefSchema<
     return this.validator.$type
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<InferInput<TValidator>> {
     const result = ctx.validate(input, this.validator)
     if (!result.success) return result
 

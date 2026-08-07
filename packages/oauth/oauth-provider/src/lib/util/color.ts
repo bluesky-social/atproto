@@ -134,35 +134,3 @@ function computeContrastRatio(a: RgbColor, b: RgbColor) {
   const [lighter, darker] = aLum > bLum ? [aLum, bLum] : [bLum, aLum]
   return (lighter + 0.05) / (darker + 0.05)
 }
-
-export function extractHue(input: RgbColor): number {
-  const r = input.r / 255
-  const g = input.g / 255
-  const b = input.b / 255
-
-  const max = Math.max(r, g, b)
-  const min = Math.min(r, g, b)
-
-  const chroma = max - min
-
-  switch (max) {
-    case min:
-      return 0 // Achromatic
-    case r: {
-      const segment = (g - b) / chroma
-      const shift = segment < 0 ? 360 / 60 : 0 / 60
-      return 60 * (segment + shift)
-    }
-    case g: {
-      const segment = (b - r) / chroma
-      const shift = 120 / 60
-      return 60 * (segment + shift)
-    }
-    // "default" needed for type safety. In practice, should be same as "case b:"
-    default: {
-      const segment = (r - g) / chroma
-      const shift = 240 / 60
-      return 60 * (segment + shift)
-    }
-  }
-}

@@ -15,8 +15,12 @@ export function ensureValidTid<I extends string>(
   }
 }
 
-export function isValidTid<I extends string>(input: I): input is I & TidString {
-  return input.length === TID_LENGTH && TID_REGEX.test(input)
+export function isValidTid<I>(input: I): input is I & TidString {
+  return (
+    typeof input === 'string' &&
+    input.length === TID_LENGTH &&
+    TID_REGEX.test(input)
+  )
 }
 
 export class InvalidTidError extends Error {}

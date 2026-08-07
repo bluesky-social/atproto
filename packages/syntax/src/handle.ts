@@ -104,10 +104,10 @@ export function normalizeAndEnsureValidHandle(handle: string): HandleString {
   return normalized
 }
 
-export function isValidHandle<I extends string>(
-  input: I,
-): input is I & HandleString {
-  return input.length <= 253 && HANDLE_REGEX.test(input)
+export function isValidHandle<I>(input: I): input is I & HandleString {
+  return (
+    typeof input === 'string' && input.length <= 253 && HANDLE_REGEX.test(input)
+  )
 }
 
 export function isValidTld(handle: string): boolean {

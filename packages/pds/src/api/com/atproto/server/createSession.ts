@@ -12,6 +12,7 @@ import {
 import { formatAccountStatus } from '../../../../account-manager/account-manager.js'
 import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
 import type { AppContext } from '../../../../context.js'
+import { events } from '../../../../events.js'
 import { com } from '../../../../lexicons/index.js'
 import { didDocForSession } from './util.js'
 
@@ -78,6 +79,11 @@ export default function (server: Server, ctx: AppContext) {
         ])
 
         const { status, active } = formatAccountStatus(user)
+
+        events.sessionCreated({
+          source: com.atproto.server.createSession.$lxm,
+          did: user.did,
+        })
 
         return {
           encoding: 'application/json',

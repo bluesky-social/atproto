@@ -37,10 +37,9 @@ export function ensureValidRecordKey<I extends string>(
   }
 }
 
-export function isValidRecordKey<I extends string>(
-  input: I,
-): input is I & RecordKeyString {
+export function isValidRecordKey<I>(input: I): input is I & RecordKeyString {
   return (
+    typeof input === 'string' &&
     input.length >= RECORD_KEY_MIN_LENGTH &&
     input.length <= RECORD_KEY_MAX_LENGTH &&
     RECORD_KEY_REGEX.test(input) &&

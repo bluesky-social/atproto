@@ -40,7 +40,7 @@
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.json",
+    "build": "tsc --build tsconfig.json",
     "test": "vitest run"
   }
 }

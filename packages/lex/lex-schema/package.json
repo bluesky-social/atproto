@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-schema",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "license": "MIT",
   "description": "Lexicon schema system for AT Lexicons",
   "keywords": [
@@ -40,7 +40,7 @@
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.build.json",
+    "build": "tsc --build tsconfig.build.json",
     "test": "vitest run"
   }
 }

@@ -7,15 +7,15 @@ import {
   useState,
 } from 'react'
 import {
-  LayoutTitle,
-  type LayoutTitleProps,
-} from '#/components/layouts/layout-title.tsx'
+  AuthShell,
+  type AuthShellProps,
+} from '#/components/layouts/auth-shell.tsx'
+import { buttonVariants } from '#/components/ui/button.tsx'
 import { useCountdown } from '#/hooks/use-countdown.ts'
 import type { Override } from '#/lib/util.ts'
-import { buttonClassName } from './forms/button.tsx'
 
 export type RedirectingViewProps = Override<
-  LayoutTitleProps,
+  AuthShellProps,
   {
     redirectUrl: string
     redirectMode?: 'replace' | 'assign'
@@ -29,7 +29,7 @@ export function RedirectingView({
   redirectMode = 'assign',
   redirectCooldown = 5,
 
-  // LayoutTitleProps
+  // AuthShellProps
   ...props
 }: RedirectingViewProps) {
   const [cooldown, setCooldown] = useCountdown(redirectCooldown)
@@ -78,7 +78,7 @@ export function RedirectingView({
   )
 
   return (
-    <LayoutTitle {...props}>
+    <AuthShell {...props}>
       <Trans>You are being redirected...</Trans>
 
       {showLink && (
@@ -86,13 +86,16 @@ export function RedirectingView({
           href={url}
           onClick={onClick}
           aria-disabled={!canClick}
-          className={buttonClassName({ color: 'primary', disabled: !canClick })}
+          className={buttonVariants({
+            variant: 'default',
+            className: canClick ? undefined : 'pointer-events-none opacity-50',
+          })}
         >
           <span className="truncate">
             <Trans>Click here if nothing happens</Trans>
           </span>
         </a>
       )}
-    </LayoutTitle>
+    </AuthShell>
   )
 }

@@ -1,5 +1,16 @@
 # @atproto/oauth-provider-ui
 
+## 0.8.11
+
+### Patch Changes
+
+- [#5310](https://github.com/bluesky-social/atproto/pull/5310) [`2021690`](https://github.com/bluesky-social/atproto/commit/2021690f281bcee7178a040bf9fa6baadff06f82) Thanks [@nilaallj](https://github.com/nilaallj)! - Updated Swedish translations
+
+- [#5296](https://github.com/bluesky-social/atproto/pull/5296) [`aad541b`](https://github.com/bluesky-social/atproto/commit/aad541bb0577cefecdc2af315dd1ad216912b1ad) Thanks [@nilaallj](https://github.com/nilaallj)! - l10n: Plural formatting + string concatenation fixes
+
+- Updated dependencies []:
+  - @atproto/oauth-provider-api@0.7.9
+
 ## 0.8.10
 
 ### Patch Changes

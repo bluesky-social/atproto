@@ -37,7 +37,7 @@
     "jest": "^30.0.0"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.build.json",
+    "build": "tsc --build tsconfig.build.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   }
 }
