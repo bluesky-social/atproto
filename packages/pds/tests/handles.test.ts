@@ -304,4 +304,159 @@ describe('handles', () => {
     const dbHandle = await getHandleFromDb(jill.did)
     expect(dbHandle).toBe('jill.test')
   })
+
+  it('updates locally when a self-custodied account already published the change', async () => {
+    const { account: mona, key: monaKey } = await createSelfCustodiedAccount(
+      sc,
+      ctx,
+      'mona',
+    )
+
+    // Simulates the owner's own client publishing the change before telling
+    // the PDS about it - the PDS is no longer a rotation key for this DID,
+    // so it could not have signed this itself.
+    await ctx.plcClient.updateHandle(mona.did, monaKey, 'mona2.test')
+
+    await agent.api.com.atproto.identity.updateHandle(
+      { handle: 'mona2.test' },
+      { headers: sc.getHeaders(mona.did), encoding: 'application/json' },
+    )
+
+    const dbHandle = await getHandleFromDb(mona.did)
+    expect(dbHandle).toBe('mona2.test')
+  })
+
+  it('updates locally when a self-custodied account published a differently-cased handle', async () => {
+    const { account: olga, key: olgaKey } = await createSelfCustodiedAccount(
+      sc,
+      ctx,
+      'olga',
+    )
+
+    // Handles are case-insensitive, but plc.directory doesn't normalize
+    // alsoKnownAs entries - a self-custodied user's own tooling might not
+    // lowercase it the way our own signing path always does.
+    await ctx.plcClient.updateHandle(olga.did, olgaKey, 'Olga2.test')
+
+    await agent.api.com.atproto.identity.updateHandle(
+      { handle: 'olga2.test' },
+      { headers: sc.getHeaders(olga.did), encoding: 'application/json' },
+    )
+
+    const dbHandle = await getHandleFromDb(olga.did)
+    expect(dbHandle).toBe('olga2.test')
+  })
+
+  it('does not submit a redundant plc operation when retrying an already-applied handle update', async () => {
+    const nora = await sc.createAccount('nora', {
+      handle: 'nora.test',
+      email: 'nora@test.com',
+      password: 'nora-pass',
+    })
+
+    // Simulates a previous call whose plc update succeeded but which failed
+    // before the local db write, per updateHandle's @NOTE on not rolling
+    // back - the caller just calls updateHandle again with the same handle.
+    await ctx.plcClient.updateHandle(nora.did, ctx.plcRotationKey, 'nora2.test')
+    const logBefore = await ctx.plcClient.getOperationLog(nora.did)
+
+    await agent.api.com.atproto.identity.updateHandle(
+      { handle: 'nora2.test' },
+      { headers: sc.getHeaders(nora.did), encoding: 'application/json' },
+    )
+
+    const logAfter = await ctx.plcClient.getOperationLog(nora.did)
+    expect(logAfter.length).toBe(logBefore.length)
+
+    const dbHandle = await getHandleFromDb(nora.did)
+    expect(dbHandle).toBe('nora2.test')
+  })
+
+  it('skips the update when the first at:// entry already matches, leaving a later one untouched', async () => {
+    const pia = await sc.createAccount('pia', {
+      handle: 'pia.test',
+      email: 'pia@test.com',
+      password: 'pia-pass',
+    })
+    // Directly construct a doc with two at:// entries, since our own
+    // updateHandleOp-based code never produces this - it always replaces
+    // the first one it finds rather than adding a second.
+    await ctx.plcClient.updateData(pia.did, ctx.plcRotationKey, (op) => ({
+      ...op,
+      alsoKnownAs: ['at://pia2.test', 'at://pia-stale.test'],
+    }))
+    const logBefore = await ctx.plcClient.getOperationLog(pia.did)
+
+    await agent.api.com.atproto.identity.updateHandle(
+      { handle: 'pia2.test' },
+      { headers: sc.getHeaders(pia.did), encoding: 'application/json' },
+    )
+
+    const logAfter = await ctx.plcClient.getOperationLog(pia.did)
+    expect(logAfter.length).toBe(logBefore.length)
+
+    const didData = await ctx.plcClient.getDocumentData(pia.did)
+    expect(didData.alsoKnownAs).toEqual([
+      'at://pia2.test',
+      'at://pia-stale.test',
+    ])
+
+    const dbHandle = await getHandleFromDb(pia.did)
+    expect(dbHandle).toBe('pia2.test')
+  })
+
+  it('signs an update, creating a duplicate, when the matching handle is not the first at:// entry', async () => {
+    const quinn = await sc.createAccount('quinn', {
+      handle: 'quinn.test',
+      email: 'quinn@test.com',
+      password: 'quinn-pass',
+    })
+    await ctx.plcClient.updateData(quinn.did, ctx.plcRotationKey, (op) => ({
+      ...op,
+      alsoKnownAs: ['at://quinn-stale.test', 'at://quinn2.test'],
+    }))
+    const logBefore = await ctx.plcClient.getOperationLog(quinn.did)
+
+    await agent.api.com.atproto.identity.updateHandle(
+      { handle: 'quinn2.test' },
+      { headers: sc.getHeaders(quinn.did), encoding: 'application/json' },
+    )
+
+    const logAfter = await ctx.plcClient.getOperationLog(quinn.did)
+    expect(logAfter.length).toBe(logBefore.length + 1)
+
+    const didData = await ctx.plcClient.getDocumentData(quinn.did)
+    // updateHandleOp only ever replaces the first at:// entry it finds, so
+    // this is now a duplicate of the second, unrelated to the update itself
+    expect(didData.alsoKnownAs).toEqual([
+      'at://quinn2.test',
+      'at://quinn2.test',
+    ])
+
+    const dbHandle = await getHandleFromDb(quinn.did)
+    expect(dbHandle).toBe('quinn2.test')
+  })
+
+  it('adds a handle when the did document has none yet', async () => {
+    const rex = await sc.createAccount('rex', {
+      handle: 'rex.test',
+      email: 'rex@test.com',
+      password: 'rex-pass',
+    })
+    await ctx.plcClient.updateData(rex.did, ctx.plcRotationKey, (op) => ({
+      ...op,
+      alsoKnownAs: [],
+    }))
+
+    await agent.api.com.atproto.identity.updateHandle(
+      { handle: 'rex2.test' },
+      { headers: sc.getHeaders(rex.did), encoding: 'application/json' },
+    )
+
+    const didData = await ctx.plcClient.getDocumentData(rex.did)
+    expect(didData.alsoKnownAs).toEqual(['at://rex2.test'])
+
+    const dbHandle = await getHandleFromDb(rex.did)
+    expect(dbHandle).toBe('rex2.test')
+  })
 })
