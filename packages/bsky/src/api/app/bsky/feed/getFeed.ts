@@ -13,6 +13,7 @@ import {
   XRPCError,
   serverTimingHeader,
 } from '@atproto/xrpc-server'
+import type { ServerConfig } from '../../../../config.js'
 import type { AppContext } from '../../../../context.js'
 import {
   Code,
@@ -53,7 +54,13 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({ viewer, req }),
+        ),
+      })
       const headers = noUndefinedVals({
         'user-agent': BSKY_USER_AGENT,
         authorization: req.headers['authorization'],
@@ -177,11 +184,42 @@ type Skeleton = {
   timerHydr: ServerTimer
 }
 
-const skeletonFromFeedGen = async (
+/**
+ * Iris' endpoint, when it should serve this request in place of the feed's
+ * registered feed generator (seeemore).
+ */
+export const irisUrlForFeed = (
+  cfg: Pick<ServerConfig, 'irisUrl' | 'irisFeedUris'>,
+  params: {
+    feed: string
+    hydrateCtx: {
+      viewer: HydrateCtx['viewer']
+      features: Pick<HydrateCtx['features'], 'Gate' | 'checkGate'>
+    }
+  },
+): string | undefined => {
+  const { irisUrl } = cfg
+  if (!irisUrl) return
+  if (!cfg.irisFeedUris?.has(params.feed)) return
+  if (!params.hydrateCtx.viewer) return
+  if (
+    !params.hydrateCtx.features.checkGate(
+      params.hydrateCtx.features.Gate.IrisFeed,
+    )
+  ) {
+    return
+  }
+  return irisUrl
+}
+
+const resolveSkeletonEndpoint = async (
   ctx: Context,
   params: Params,
-): Promise<AlgoResponse> => {
-  const { feed, headers } = params
+): Promise<string> => {
+  const irisUrl = irisUrlForFeed(ctx.cfg, params)
+  if (irisUrl) return irisUrl
+
+  const { feed } = params
   const found = await ctx.hydrator.feed.getFeedGens([feed], true)
   const feedDid = found.get(feed)?.record.did
   if (!feedDid) {
@@ -209,8 +247,18 @@ const skeletonFromFeedGen = async (
     )
   }
 
+  return fgEndpoint
+}
+
+const skeletonFromFeedGen = async (
+  ctx: Context,
+  params: Params,
+): Promise<AlgoResponse> => {
+  const { headers } = params
+  const endpoint = await resolveSkeletonEndpoint(ctx, params)
+
   // @TODO currently passthrough auth headers from pds
-  const result = await xrpcSafe(fgEndpoint, app.bsky.feed.getFeedSkeleton, {
+  const result = await xrpcSafe(endpoint, app.bsky.feed.getFeedSkeleton, {
     strictResponseProcessing: false,
     signal: AbortSignal.timeout(10_000),
     headers,

@@ -13,6 +13,7 @@ export enum Gate {
   SuggestedUsersForSeeMoreEnable = 'suggested_users:for_see_more:enable',
   SearchV2Enable = 'search:v2:enable',
   TrendingTopicsV2 = 'trending_topics_v2',
+  IrisFeed = 'iris:feed:enable',
 
   // temp
   AATest = 'aa-test-appview',
