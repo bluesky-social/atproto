@@ -24,6 +24,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./telemetry": {
+      "types": "./dist/telemetry.d.ts",
+      "default": "./dist/telemetry.js"
+    },
     "./package.json": "./package.json"
   },
   "engines": {
@@ -51,6 +55,21 @@
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.4",
     "@hapi/address": "^5.1.1",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/api-logs": "^0.219.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.77.0",
+    "@opentelemetry/core": "^2.9.0",
+    "@opentelemetry/instrumentation": "^0.219.0",
+    "@opentelemetry/instrumentation-aws-sdk": "^0.74.0",
+    "@opentelemetry/instrumentation-express": "^0.67.0",
+    "@opentelemetry/instrumentation-http": "^0.219.0",
+    "@opentelemetry/instrumentation-ioredis": "^0.67.0",
+    "@opentelemetry/instrumentation-pino": "^0.65.0",
+    "@opentelemetry/instrumentation-runtime-node": "^0.32.0",
+    "@opentelemetry/instrumentation-undici": "^0.29.0",
+    "@opentelemetry/resource-detector-container": "^0.8.10",
+    "@opentelemetry/sdk-node": "^0.219.0",
+    "@opentelemetry/semantic-conventions": "^1.41.1",
     "better-sqlite3": "^12.0.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
@@ -67,6 +86,7 @@
     "kysely": "^0.29.2",
     "nodemailer": "^6.8.0",
     "nodemailer-html-to-text": "^3.2.0",
+    "opentelemetry-plugin-better-sqlite3": "^1.13.0",
     "p-queue": "^8.0.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
@@ -76,7 +96,6 @@
   },
   "devDependencies": {
     "@atproto/api": "workspace:^",
-    "@atproto/bsky": "workspace:^",
     "@atproto/lex-document": "workspace:^",
     "@atproto/oauth-client-browser-example": "workspace:^",
     "@did-plc/server": "^0.0.1",

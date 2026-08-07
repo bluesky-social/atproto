@@ -1,15 +1,15 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import {
   AtomIcon,
+  BadgeCheckIcon,
   BookOpenIcon,
-  CertificateIcon,
-  ChatCircleDotsIcon,
   CheckIcon,
-  EnvelopeIcon,
   HandIcon,
-  IdentificationBadgeIcon,
+  IdCardIcon,
+  MailIcon,
+  MessageCircleMoreIcon,
   UserIcon,
-} from '@phosphor-icons/react'
+} from 'lucide-react'
 import { Fragment, type HTMLAttributes, type ReactNode, useMemo } from 'react'
 import {
   type AudParam,
@@ -21,10 +21,9 @@ import {
   RpcPermission,
   ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
+import { Notice } from '#/components/feedback/notice.tsx'
 import type { PermissionSet, PermissionSets } from '#/hydration-data.d.ts'
 import type { Override } from '#/lib/util'
-import { Checkbox } from '../forms/checkbox.tsx'
-import { Admonition } from './admonition.tsx'
 import { DescriptionCard } from './description-card.tsx'
 import { ButterflyIcon } from './icons.tsx'
 import { LangProp } from './lang-string.tsx'
@@ -138,7 +137,7 @@ function IncludeScopePermissions({
         isBskyAppNsid(nsid) ? (
           <ButterflyIcon className="size-6" />
         ) : isBskyChatNsid(nsid) ? (
-          <ChatCircleDotsIcon className="size-6" />
+          <MessageCircleMoreIcon className="size-6" />
         ) : nsid.startsWith('com.atproto.moderation.') ? (
           <HandIcon className="size-6" />
         ) : (
@@ -186,14 +185,14 @@ function IdentityWarning({
 
   if (hasFullIdentityAccess) {
     return (
-      <Admonition role="status">
+      <Notice role="status">
         <Trans>
           The application is asking for full control over your network identity,
           meaning that it could <b>permanently break</b>, or even <b>steal</b>,
           your account. Only grant this permission to applications you really
           trust.
         </Trans>
-      </Admonition>
+      </Notice>
     )
   }
 
@@ -222,7 +221,7 @@ function EmailPermissions({
       <label className={onAllowEmail ? 'cursor-pointer' : undefined}>
         <DescriptionCard
           role="listitem"
-          image={<EnvelopeIcon className="size-6" />}
+          image={<MailIcon className="size-6" />}
           title={t`Email`}
           description={
             allowedAction === 'manage' ? (
@@ -233,8 +232,9 @@ function EmailPermissions({
           }
           append={
             onAllowEmail && (
-              <Checkbox
-                className="m-2"
+              <input
+                type="checkbox"
+                className="border-input accent-primary m-2 size-4 shrink-0 rounded-[4px] border"
                 checked={allowEmail}
                 onChange={(e) => onAllowEmail(e.target.checked)}
               />
@@ -436,7 +436,7 @@ function BlueskyChatPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<ChatCircleDotsIcon className="size-6" />}
+        image={<MessageCircleMoreIcon className="size-6" />}
         title={t`Chat`}
         description={t`Read and send messages`}
       />
@@ -469,7 +469,7 @@ function IdentityPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<IdentificationBadgeIcon className="size-6" />}
+        image={<IdCardIcon className="size-6" />}
         title={t`Identity`}
         description={
           attr === '*' ? (
@@ -500,7 +500,7 @@ function RpcMethodsDetails({
     return (
       <DescriptionCard
         role="listitem"
-        image={<CertificateIcon className="size-6" />}
+        image={<BadgeCheckIcon className="size-6" />}
         title={t({ context: 'OAuthScope', message: 'Authenticate' })}
         description={
           <Trans>
@@ -516,7 +516,7 @@ function RpcMethodsDetails({
     return (
       <DescriptionCard
         role="listitem"
-        image={<CertificateIcon className="size-6" />}
+        image={<BadgeCheckIcon className="size-6" />}
         title={t({ context: 'OAuthScope', message: 'Authenticate' })}
         description={t`Perform actions on your behalf`}
         extra={<RpcMethodsTable className="mt-2" permissions={permissions} />}
@@ -902,7 +902,7 @@ function ItemDescription({
   ...attrs
 }: ItemDescriptionProps) {
   return (
-    <em {...attrs} className={`text-text-light ${className}`}>
+    <em {...attrs} className={`text-muted-foreground ${className}`}>
       {children}
     </em>
   )
@@ -935,7 +935,7 @@ function Identifier({
   ...attrs
 }: IdentifierProps): ReactNode {
   return (
-    <code {...attrs} className={`text-text-light ${className}`}>
+    <code {...attrs} className={`text-muted-foreground ${className}`}>
       {children}
     </code>
   )

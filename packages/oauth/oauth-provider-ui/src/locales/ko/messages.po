@@ -13,6 +13,21 @@ msgstr ""
 "Language-Team: quiple\n"
 "Plural-Forms: \n"
 
+#. placeholder {0}: bucket.count
+#: src/components/utils/date-ago.tsx
+msgid "{0, plural, one {# hour ago} other {# hours ago}}"
+msgstr "{0, plural, one {1시간 전} other {#시간 전}}"
+
+#. placeholder {0}: bucket.count
+#: src/components/utils/date-ago.tsx
+msgid "{0, plural, one {# minute ago} other {# minutes ago}}"
+msgstr "{0, plural, one {1분 전} other {#분 전}}"
+
+#. placeholder {0}: bucket.count
+#: src/components/utils/date-ago.tsx
+msgid "{0, plural, one {yesterday} other {# days ago}}"
+msgstr "{0, plural, one {어제} other {#일 전}}"
+
 #: src/pages/account/(authenticated)/about/page.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>AT 프로토콜</0> — 개발자를 위한 기술 문서"
@@ -78,7 +93,7 @@ msgstr ""
 msgid "Account"
 msgstr "계정"
 
-#: src/components/utils/account-image.tsx
+#: src/components/identity/account-avatar.tsx
 msgid "Account avatar"
 msgstr "계정 아바타"
 
@@ -90,15 +105,15 @@ msgstr ""
 msgid "Account deleted"
 msgstr ""
 
-#: src/components/utils/account-identifier.tsx
+#: src/components/identity/account-identifier.tsx
 msgid "Account identifier"
 msgstr "계정 아이디"
 
-#: src/components/utils/account-name.tsx
+#: src/components/identity/account-name.tsx
 msgid "Account name"
 msgstr "계정 이름"
 
-#: src/components/utils/account-selector.tsx
+#: src/components/identity/account-menu.tsx
 msgid "Account overview"
 msgstr "계정 개요"
 
@@ -107,7 +122,7 @@ msgstr "계정 개요"
 msgid "Account reactivated"
 msgstr ""
 
-#: src/components/utils/account-selector.tsx
+#: src/components/identity/account-menu.tsx
 msgid "Account selector"
 msgstr "계정 선택기"
 
@@ -115,11 +130,15 @@ msgstr "계정 선택기"
 msgid "Account username"
 msgstr ""
 
+#: src/components/session-list.tsx
+msgid "Actions"
+msgstr ""
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Add the following record to your domain's DNS configuration."
 msgstr ""
 
-#: src/components/forms/input-handle-custom.tsx
+#: src/components/update-handle-custom-form.tsx
 msgid "alice.com"
 msgstr ""
 
@@ -129,12 +148,12 @@ msgstr ""
 msgid "Already have a code?"
 msgstr "이미 코드가 있나요?"
 
-#: src/components/utils/client-name.tsx
+#: src/components/identity/client-name.tsx
 msgid "An application on your device"
 msgstr "기기에 설치된 애플리케이션"
 
 #: src/components/error-view.tsx
-#: src/contexts/notifications.tsx
+#: src/lib/notification-message.ts
 msgid "An error occurred"
 msgstr "오류가 발생했습니다"
 
@@ -142,7 +161,7 @@ msgstr "오류가 발생했습니다"
 msgid "An unexpected error occurred. Please try again."
 msgstr ""
 
-#: src/components/utils/error-card.tsx
+#: src/components/feedback/error-notice.tsx
 msgid "An unknown error occurred"
 msgstr "알 수 없는 오류가 발생했습니다"
 
@@ -162,13 +181,18 @@ msgstr "모든 메서드"
 msgid "Any service"
 msgstr "모든 서비스"
 
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "OAuthApp"
+msgid "App"
+msgstr ""
+
 #: src/pages/account/(authenticated)/route.tsx
 msgid "Apps"
 msgstr "앱"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
-msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
-msgstr "앱은 사용자가 앱을 적극적으로 사용하지 않을 때에도 백그라운드에서 계정에 접근할 수 있습니다. (알림 확인, 데이터 동기화 등) 이는 정상적인 동작이며, 위에 표시된 ‘마지막 접근’ 시간이 업데이트됩니다."
+msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
+msgstr ""
 
 #: src/components/delete-account-dialog.tsx
 msgid "Are you really, really sure?"
@@ -190,21 +214,21 @@ msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "승인"
 
-#. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgctxt "OAuthApp"
-msgid "Authorized on {0}"
-msgstr "{0}에 승인됨"
+msgid "Authorized"
+msgstr ""
 
-#: src/components/forms/form-card.tsx
-#: src/components/forms/wizard-card.tsx
+#: src/components/forms/form-shell.tsx
+#: src/components/forms/sign-up-wizard.tsx
+#: src/components/layouts/account-shell.tsx
 #: src/components/sign-in-picker.tsx
 msgid "Back"
 msgstr "뒤로"
 
-#: src/components/forms/input-handle-default.tsx
+#: src/components/forms/fields/handle-field.tsx
 msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
-msgstr ""
+msgstr "{minLength, plural, other {#}}~{maxLength, plural, other {#}}자 사이"
 
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
@@ -218,17 +242,13 @@ msgstr "Bluesky 앱 서비스"
 msgid "Bluesky Chat services"
 msgstr "Bluesky 대화 서비스"
 
-#: src/pages/router.tsx
-msgid "Branding"
-msgstr "브랜딩"
-
 #: src/components/consent-form.tsx
 msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
 msgstr "<0>승인</0>을 클릭하면 <1>서비스 이용약관</1> 및 <2>개인정보 처리방침</2>에 따라 이 애플리케이션이 귀하의 계정에 접근할 수 있도록 허용합니다."
 
 #: src/components/sign-up-disclaimer.tsx
 msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
-msgstr ""
+msgstr "계정을 만들면 <0>서비스 이용약관</0> 및 <1>개인정보 처리방침</1>에 동의하는 것입니다."
 
 #: src/components/utils/scope-description.tsx
 msgctxt "RPC lxm"
@@ -237,7 +257,7 @@ msgstr "호출"
 
 #: src/components/authenticate-welcome-view.tsx
 #: src/components/delete-account-dialog.tsx
-#: src/components/forms/form-card.tsx
+#: src/components/forms/form-shell.tsx
 #: src/components/reactivate-account-view.tsx
 #: src/contexts/authentication.tsx
 msgid "Cancel"
@@ -301,20 +321,18 @@ msgstr "사용자 이름 선택"
 msgid "Click here if nothing happens"
 msgstr ""
 
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgctxt "OAuthApp"
+msgid "Client"
+msgstr ""
+
 #: src/components/oauth-session-details-dialog.tsx
-#: src/components/utils/dialog-simple.tsx
+#: src/components/ui/dialog.tsx
+#: src/components/ui/toast.tsx
 msgid "Close"
 msgstr ""
 
-#: src/components/utils/account-selector.tsx
-msgid "Close account selector"
-msgstr "계정 선택기 닫기"
-
-#: src/components/utils/description-card.tsx
-msgid "Close details"
-msgstr "세부 정보 닫기"
-
-#: src/components/utils/error-details.tsx
+#: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Code"
 msgstr ""
@@ -345,11 +363,11 @@ msgstr "계속"
 msgid "Cookie Error"
 msgstr "쿠키 오류"
 
-#: src/components/forms/button-copy.tsx
+#: src/components/forms/copy-button.tsx
 msgid "Copied"
 msgstr ""
 
-#: src/components/forms/button-copy.tsx
+#: src/components/forms/copy-button.tsx
 msgid "Copy to clipboard"
 msgstr ""
 
@@ -378,7 +396,7 @@ msgstr "데이터"
 msgid "Deactivate account"
 msgstr ""
 
-#: src/components/utils/account-image.tsx
+#: src/components/identity/account-avatar.tsx
 msgid "Deactivated account"
 msgstr ""
 
@@ -404,16 +422,20 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "접근 거부"
 
-#: src/components/utils/description-card.tsx
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgid "Details"
 msgstr "세부 정보"
+
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "Device"
+msgstr ""
 
 #: src/pages/account/(authenticated)/route.tsx
 msgid "Devices"
 msgstr "기기"
 
-#: src/components/forms/input-token.tsx
+#: src/components/forms/fields/token-field.tsx
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr ""
 
@@ -435,7 +457,7 @@ msgstr ""
 msgid "Email"
 msgstr "이메일"
 
-#: src/components/forms/input-email-address.tsx
+#: src/components/forms/fields/email-field.tsx
 #: src/components/reset-password-request-form.tsx
 #: src/pages/account/(authenticated)/manage/page.tsx
 msgid "Email address"
@@ -461,7 +483,7 @@ msgstr ""
 msgid "Email verified"
 msgstr ""
 
-#: src/components/forms/input-new-password.tsx
+#: src/components/forms/fields/new-password-field.tsx
 msgid "Enter a password"
 msgstr "비밀번호 입력"
 
@@ -481,7 +503,7 @@ msgstr "계정을 만들 때 사용한 이메일을 입력하세요. 새 비밀�
 msgid "Enter your email address"
 msgstr "이메일 주소 입력"
 
-#: src/components/forms/input-new-password.tsx
+#: src/components/forms/fields/new-password-field.tsx
 msgid "Enter your new password"
 msgstr "새 비밀번호 입력"
 
@@ -505,6 +527,7 @@ msgstr "example-com-xxxxx-xxxxx"
 msgid "Expand details"
 msgstr "세부 정보 펼치기"
 
+#: src/components/feedback/password-strength.tsx
 #: src/components/utils/password-strength-label.tsx
 msgid "Extra"
 msgstr "매우 강력"
@@ -570,6 +593,14 @@ msgstr ""
 msgid "File contents"
 msgstr ""
 
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgid "Filter apps"
+msgstr ""
+
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgid "Filter devices"
+msgstr ""
+
 #: src/components/delete-account-dialog.tsx
 msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
 msgstr ""
@@ -590,10 +621,6 @@ msgstr "분실"
 msgid "Grant access to your <0/> account"
 msgstr "<0/> 계정에 대한 접근 권한을 부여합니다"
 
-#: src/components/utils/help-card.tsx
-msgid "Having trouble? <0>Contact support</0>"
-msgstr "문제가 있나요? <0>지원팀에 연락하기</0>"
-
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Hello,\n"
@@ -612,7 +639,7 @@ msgstr ""
 msgid "Help"
 msgstr ""
 
-#: src/components/forms/button-toggle-visibility.tsx
+#: src/components/forms/fields/password-field.tsx
 msgid "Hide"
 msgstr "숨기기"
 
@@ -657,7 +684,7 @@ msgstr ""
 msgid "If you're trying to change your handle or email, do so before you deactivate."
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx
+#: src/components/forms/fields/handle-field.tsx
 msgid "Invalid"
 msgstr "사용 불가"
 
@@ -669,6 +696,11 @@ msgstr ""
 msgid "Invite code"
 msgstr "초대 코드"
 
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "IP address"
+msgstr ""
+
 #: src/pages/account/(authenticated)/apps/page.tsx
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "이 계정으로 아직 어떤 앱에도 로그인한 적이 없는 것 같습니다."
@@ -678,60 +710,18 @@ msgstr "이 계정으로 아직 어떤 앱에도 로그인한 적이 없는 것 
 msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 msgstr "브라우저에서 쿠키를 허용하지 않는 것 같습니다. 다시 시도하려면 ‘계속’을 누르세요. 오류가 계속 발생하면 개인정보 설정에서 ‘{0}’ 웹사이트의 쿠키를 허용했는지 확인하세요."
 
-#. placeholder {0}: bucket.count
-#: src/pages/account/(authenticated)/apps/page.tsx
-msgctxt "sessions list"
-msgid "Last accessed {0, plural, one {# day} other {# days}} ago"
-msgstr ""
-
-#. placeholder {0}: bucket.count
-#: src/pages/account/(authenticated)/apps/page.tsx
-msgctxt "sessions list"
-msgid "Last accessed {0, plural, one {a minute} other {# minutes}} ago"
-msgstr ""
-
-#. placeholder {0}: bucket.count
-#: src/pages/account/(authenticated)/apps/page.tsx
-msgctxt "sessions list"
-msgid "Last accessed {0, plural, one {an hour} other {# hours}} ago"
-msgstr ""
+#: src/components/utils/date-ago.tsx
+msgid "just now"
+msgstr "방금 전"
 
 #: src/pages/account/(authenticated)/apps/page.tsx
-msgctxt "sessions list"
-msgid "Last accessed just now"
-msgstr ""
-
-#: src/pages/account/(authenticated)/apps/page.tsx
-msgctxt "sessions list"
-msgid "Last accessed yesterday"
-msgstr ""
-
-#. placeholder {0}: bucket.count
-#: src/pages/account/(authenticated)/devices/page.tsx
-msgctxt "device list"
-msgid "Last seen {0, plural, one {# day} other {# days}} ago"
-msgstr ""
-
-#. placeholder {0}: bucket.count
-#: src/pages/account/(authenticated)/devices/page.tsx
-msgctxt "device list"
-msgid "Last seen {0, plural, one {a minute} other {# minutes}} ago"
-msgstr ""
-
-#. placeholder {0}: bucket.count
-#: src/pages/account/(authenticated)/devices/page.tsx
-msgctxt "device list"
-msgid "Last seen {0, plural, one {an hour} other {# hours}} ago"
+msgctxt "OAuthApp"
+msgid "Last accessed"
 msgstr ""
 
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgctxt "device list"
-msgid "Last seen just now"
-msgstr ""
-
-#: src/pages/account/(authenticated)/devices/page.tsx
-msgctxt "device list"
-msgid "Last seen yesterday"
+msgid "Last seen"
 msgstr ""
 
 #: src/components/update-email-dialog.tsx
@@ -743,7 +733,8 @@ msgstr ""
 msgid "Let's get your password reset!"
 msgstr "비밀번호를 재설정해 봅시다!"
 
-#: src/components/layouts/layout-app.tsx
+#: src/components/layouts/account-shell.tsx
+#: src/components/layouts/auth-shell.tsx
 msgid "Logo"
 msgstr "로고"
 
@@ -759,7 +750,7 @@ msgstr "루프백"
 msgid "Make a text file with the contents below available at the following URL."
 msgstr ""
 
-#: src/components/forms/button-toggle-visibility.tsx
+#: src/components/forms/fields/password-field.tsx
 msgid "Make visible"
 msgstr "표시"
 
@@ -787,15 +778,17 @@ msgstr "프로필, 게시물, 좋아요, 팔로우 관리"
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "프로필, 게시물, 좋아요, 팔로우 관리 및 비공개 설정 읽기"
 
-#: src/components/utils/error-details.tsx
+#: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Message"
 msgstr ""
 
+#: src/components/feedback/password-strength.tsx
 #: src/components/utils/password-strength-label.tsx
 msgid "Missing"
 msgstr "미입력"
 
+#: src/components/feedback/password-strength.tsx
 #: src/components/utils/password-strength-label.tsx
 msgid "Moderate"
 msgstr "보통"
@@ -804,9 +797,13 @@ msgstr "보통"
 msgid "My Atmosphere Account"
 msgstr ""
 
-#: src/components/utils/error-details.tsx
+#: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Name"
+msgstr ""
+
+#: src/components/layouts/account-shell.tsx
+msgid "Navigation"
 msgstr ""
 
 #: src/components/update-email-dialog.tsx
@@ -818,21 +815,25 @@ msgstr ""
 msgid "New password"
 msgstr "새 비밀번호"
 
-#: src/components/forms/wizard-card.tsx
+#: src/components/forms/sign-up-wizard.tsx
 #: src/components/reset-password-view.tsx
 msgid "Next"
 msgstr "다음"
+
+#: src/components/session-list.tsx
+msgid "No matches"
+msgstr ""
 
 #: src/components/reset-password-view.tsx
 msgid "Okay"
 msgstr "확인"
 
-#: src/components/forms/input-handle-default.tsx
+#: src/components/forms/fields/handle-field.tsx
 msgid "Only letters, numbers, and hyphens"
 msgstr "영문자, 숫자, 하이픈만 사용할 수 있습니다"
 
 #: src/components/delete-account-confirm-form.tsx
-#: src/components/forms/input-password.tsx
+#: src/components/forms/fields/password-field.tsx
 #: src/components/sign-in-form.tsx
 #: src/components/sign-up-credentials-form.tsx
 #: src/pages/account/(authenticated)/manage/page.tsx
@@ -847,11 +848,12 @@ msgstr "비밀번호 재설정 이메일을 전송했습니다"
 msgid "Password reset successful"
 msgstr "비밀번호를 재설정했습니다"
 
+#: src/components/feedback/password-strength.tsx
 #: src/components/utils/password-strength-label.tsx
 msgid "Password strength"
 msgstr "비밀번호 강도"
 
-#: src/components/utils/password-strength-meter.tsx
+#: src/components/feedback/password-strength.tsx
 msgid "Password strength indicator"
 msgstr "비밀번호 강도 표시자"
 
@@ -863,11 +865,11 @@ msgstr "비밀번호 변경됨"
 msgid "Password updated!"
 msgstr "비밀번호를 변경했습니다!"
 
-#: src/components/forms/input-new-password.tsx
+#: src/components/forms/fields/new-password-field.tsx
 msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
-msgstr ""
+msgstr "비밀번호는 {MIN_PASSWORD_LENGTH, plural, other {#자}} 이상이어야 합니다"
 
-#: src/components/utils/error-details.tsx
+#: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Payload"
 msgstr ""
@@ -915,9 +917,9 @@ msgstr ""
 msgid "Please try again in a moment."
 msgstr ""
 
-#: src/components/forms/button-cooldown.tsx
+#: src/components/forms/request-code-button.tsx
 msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
-msgstr ""
+msgstr "{remainingSeconds, plural, other {#초}} 후에 다시 시도해 주세요."
 
 #: src/components/utils/link-title.tsx
 msgid "Privacy Policy"
@@ -972,13 +974,13 @@ msgstr "비밀번호 재설정"
 msgid "Reset your password"
 msgstr "비밀번호 재설정"
 
-#: src/components/utils/error-card.tsx
+#: src/components/feedback/error-notice.tsx
 #: src/pages/account/(authenticated)/apps/page.tsx
 #: src/pages/account/(authenticated)/devices/page.tsx
 msgid "Retry"
 msgstr "다시 시도"
 
-#: src/components/forms/button-cooldown.tsx
+#: src/components/forms/request-code-button.tsx
 msgid "Retry in {remainingSeconds}s"
 msgstr "{remainingSeconds}초 후에 다시 시도"
 
@@ -995,11 +997,11 @@ msgstr ""
 msgid "Security step required"
 msgstr ""
 
-#: src/components/utils/account-selector.tsx
+#: src/components/identity/account-menu.tsx
 msgid "Select another account"
 msgstr "다른 계정 선택"
 
-#: src/components/forms/input-handle-default.tsx
+#: src/components/forms/fields/handle-field.tsx
 msgid "Select domain"
 msgstr "도메인 선택"
 
@@ -1011,7 +1013,7 @@ msgstr "기존 계정에서 선택하기"
 msgid "Send email"
 msgstr ""
 
-#: src/components/forms/button-request-code.tsx
+#: src/components/forms/request-code-button.tsx
 msgid "Send verification code"
 msgstr ""
 
@@ -1039,7 +1041,7 @@ msgstr "로그인"
 msgid "Sign in to an account that is not listed"
 msgstr ""
 
-#: src/components/utils/account-selector.tsx
+#: src/components/identity/account-menu.tsx
 msgid "Sign out"
 msgstr "로그아웃"
 
@@ -1061,20 +1063,21 @@ msgstr ""
 msgid "Sign-in complete"
 msgstr ""
 
-#: src/components/utils/error-details.tsx
+#: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Stack"
 msgstr ""
 
-#: src/components/forms/wizard-card.tsx
+#: src/components/forms/sign-up-wizard.tsx
 msgid "Step {currentPosition} of {count}"
 msgstr "{count}단계 중 {currentPosition}단계"
 
+#: src/components/feedback/password-strength.tsx
 #: src/components/utils/password-strength-label.tsx
 msgid "Strong"
 msgstr "강력"
 
-#: src/components/forms/form-card.tsx
+#: src/components/forms/form-shell.tsx
 msgid "Submit"
 msgstr "제출"
 
@@ -1174,6 +1177,11 @@ msgstr "이 애플리케이션은 사용자 계정에 접근하기 위해 다음
 msgid "This authorization request has been denied. Please try again."
 msgstr "승인 요청이 거부되었습니다. 다시 시도해 주세요."
 
+#: src/pages/account/(authenticated)/devices/page.tsx
+msgctxt "device list"
+msgid "This device"
+msgstr ""
+
 #: src/lib/api.ts
 msgid "This email is already used"
 msgstr "이미 사용 중인 이메일입니다"
@@ -1215,11 +1223,11 @@ msgstr ""
 msgid "Type"
 msgstr ""
 
-#: src/components/forms/input-handle-custom.tsx
+#: src/components/update-handle-custom-form.tsx
 msgid "Type your domain"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx
+#: src/components/forms/fields/handle-field.tsx
 msgid "Type your username"
 msgstr ""
 
@@ -1280,7 +1288,7 @@ msgstr "사용자 이름 또는 이메일 주소"
 msgid "Username updated"
 msgstr ""
 
-#: src/components/forms/input-handle-default.tsx
+#: src/components/forms/fields/handle-field.tsx
 msgid "Valid"
 msgstr "사용 가능"
 
@@ -1343,6 +1351,7 @@ msgstr "경고"
 msgid "We're so excited to have you join us!"
 msgstr "함께하게 되어 정말 기뻐요!"
 
+#: src/components/feedback/password-strength.tsx
 #: src/components/utils/password-strength-label.tsx
 msgid "Weak"
 msgstr "취약"
@@ -1362,6 +1371,10 @@ msgstr "이게 무슨 뜻인가요?"
 #: src/pages/account/(authenticated)/route.tsx
 msgid "What is an Atmosphere Account?"
 msgstr "Atmosphere 계정이란?"
+
+#: src/pages/account/(authenticated)/apps/page.tsx
+msgid "Why is this time so recent?"
+msgstr ""
 
 #: src/lib/api.ts
 msgid "Wrong identifier or password"
@@ -1460,8 +1473,8 @@ msgstr ""
 msgid "Your email address needs to be verified."
 msgstr ""
 
-#. placeholder {0}: handle ? ( <Handle className="text-text-default" handle={handle} /> ) : ( <span aria-hidden className="bg-text-light inline-block h-[1em] w-24 rounded-md align-middle" /> )
-#: src/components/forms/input-handle-default.tsx
+#. placeholder {0}: full ? ( <Handle className="text-foreground" handle={full} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
+#: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "내 전체 사용자 이름: {0}"
 

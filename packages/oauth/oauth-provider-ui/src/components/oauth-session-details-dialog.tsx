@@ -1,8 +1,8 @@
 import { Trans } from '@lingui/react/macro'
-import { type ReactNode, useState } from 'react'
-import { Button } from '#/components/forms/button.tsx'
-import { SmartForm } from '#/components/forms/smart-form.tsx'
-import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
+import { type ReactElement, useState } from 'react'
+import { ConfirmForm } from '#/components/dialogs/confirm-form.tsx'
+import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
+import { Button } from '#/components/ui/button.tsx'
 import { ScopeDescription } from '#/components/utils/scope-description.tsx'
 
 export type OAuthSessionDetailsDialogProps = {
@@ -10,7 +10,7 @@ export type OAuthSessionDetailsDialogProps = {
   clientIdentifier: string
   scope?: string
   onRevoke: () => void | PromiseLike<void>
-  children: Exclude<ReactNode, false | null | undefined>
+  children: ReactElement
 }
 
 export function OAuthSessionDetailsDialog({
@@ -25,7 +25,7 @@ export function OAuthSessionDetailsDialog({
   const hasIdentityOnlyAccess = !scope || scope === 'atproto'
 
   return (
-    <DialogSimple
+    <DialogShell
       trigger={children}
       title={clientName}
       description={clientIdentifier}
@@ -33,12 +33,13 @@ export function OAuthSessionDetailsDialog({
       onOpenChange={setOpen}
       dismissable={!submitting}
     >
-      <SmartForm
-        submitColor="error"
+      <ConfirmForm
+        submitVariant="destructive"
         submitLabel={<Trans context="OAuthApp">Revoke access</Trans>}
         actions={
           <Button
             autoFocus
+            variant="secondary"
             disabled={submitting}
             onClick={() => setOpen(false)}
           >
@@ -46,31 +47,29 @@ export function OAuthSessionDetailsDialog({
           </Button>
         }
         onLoadingChange={setSubmitting}
-        validate={() => ({})}
         handler={async () => {
           await onRevoke()
           setOpen(false)
         }}
-        fields={() =>
-          hasIdentityOnlyAccess ? (
+      >
+        {hasIdentityOnlyAccess ? (
+          <p>
+            <Trans>
+              This app can uniquely identify you through your account.
+            </Trans>
+          </p>
+        ) : (
+          <>
             <p>
               <Trans>
-                This app can uniquely identify you through your account.
+                This app has access to your account with the following
+                permissions:
               </Trans>
             </p>
-          ) : (
-            <>
-              <p>
-                <Trans>
-                  This app has access to your account with the following
-                  permissions:
-                </Trans>
-              </p>
-              <ScopeDescription scope={scope} />
-            </>
-          )
-        }
-      />
-    </DialogSimple>
+            <ScopeDescription scope={scope} />
+          </>
+        )}
+      </ConfirmForm>
+    </DialogShell>
   )
 }

@@ -1,103 +1,215 @@
 # oauth-provider-ui
 
-UI for the OAuth provider's authorization & account-management screens. React 19, TanStack Router, Tailwind, Radix primitives, Lingui i18n.
+UI for the OAuth provider's authorization & account-management screens. React 19, TanStack Router, Tailwind 4, shadcn/ui on Base UI, native-constraint forms on `@base-ui/react/form`, Lingui i18n.
+
+## Imports
+
+**Import from `react` by name — `import { useState, type ComponentProps }`.**
+Never `import * as React`, and never reach for the `React.*` global without an
+import at all (`@types/react` declares it, so `React.ComponentProps` compiles
+with no import and silently introduces a third style).
+
+The exception is `components/ui/*`, which is shadcn CLI output and stays
+byte-faithful — the registry emits `import * as React`, and rewriting it would
+put a diff in every file on the next `shadcn add`. The boundary is the
+directory: inside it, whatever the registry emits; everywhere else, named
+imports.
 
 ## Verification
 
-Type-check from the package directory only — root `pnpm verify:types` is fine but slow:
+Type-check from the package directory:
 
 ```bash
 cd packages/oauth/oauth-provider-ui
 pnpm exec tsc --build tsconfig.json
+pnpm test
+pnpm run build:ui
 ```
 
-The hooks-driven IDE diagnostics surface prettier-tailwind class-ordering violations as errors. When the formatter reorders Tailwind classes, accept its order — don't argue with it.
+**Run eslint from the repo root, not the package.** `.eslintrc`'s
+`import/resolver` project globs are repo-root-relative, so running it per-package
+produces phantom `import/no-unresolved` errors:
 
-## Component naming & composition
+```bash
+cd /path/to/atproto
+pnpm exec eslint --fix 'packages/oauth/oauth-provider-ui/src/**/*.tsx'
+```
 
-Everything under [src/components/](src/components/) is expected to be **pure** — driven by props, free of business logic and app-specific endpoints. No `useQuery`/`useMutation` against API clients, no `useSessionContext`/`useAuthenticationContext` reads, no direct calls into `#/lib/api.ts`. State is allowed (open flags, multi-step wizards, controlled inputs) as long as it's UI state, not domain state.
+Prettier's Tailwind plugin reorders class strings. Accept its order.
 
-The boundary works as a layered stack:
+## Looking at the UI
 
-1. **Low-level pure components** — `forms/*`, `utils/*`, `layouts/*`. Inputs, buttons, dialogs primitives, layout shells.
-2. **High-level pure components** — `*-form.tsx`, `*-dialog.tsx`, `*-view.tsx`. Compose the low-level pieces into a feature surface and expose callbacks (`onSignIn`, `onConsent`, `onUpdateEmail`, …) for the parent to wire up.
-3. **Pages** — entry points under [src/](src/) (e.g. [authorization-page.tsx](src/authorization-page.tsx), [account-page.tsx](src/account-page.tsx)) and the route components under [src/pages/](src/pages/). These are the _only_ layer that pulls in contexts (`useSessionContext`, `useAuthenticationContext`, …), TanStack Query, the API client, and routing. They translate domain state into props and callbacks for the components in step 2.
+`pnpm dev:ui` serves all four entry pages on port 5174 against `src/mock-api.ts`
+— no PDS, no docker, no dev-env. Prefer it over booting the dev environment.
 
-For example, [authorization-page.tsx](src/authorization-page.tsx) reads `useSessionContext()` and threads `session.account`, `api.myMethod()` into a pure `<ConsentView>`; the `ConsentView` itself never knows the session context exists. Same shape for the router-driven pages in [account-page.tsx](src/account-page.tsx) — each route component pulls business logic from contexts and renders pure components.
+The account page starts signed out. The account rows in the picker are not
+`<button>`s — click `[aria-label^="Sign in as"]`. The router uses real paths, not
+hashes, so navigate by clicking sidebar links rather than setting
+`location.hash`.
 
-When unsure where to add a piece of code: if it imports from `#/contexts/*`, an API client, or a router hook, it belongs in `src/pages/` or one of the top-level `*-page.tsx` files — not in `src/components/`.
+## Components
 
-- `*-form.tsx` — pure form. Owns input state, emits a structured value via `onSubmit`, takes pending flags & cancel callbacks. No data fetching.
-- `*-dialog.tsx` — Radix `Dialog` wrapper that takes a trigger child via `asChild`. Owns `open` state, optionally orchestrates multi-step flows. No data fetching.
-- `*-view.tsx` — page-level composition of forms/dialogs/layout. Still pure: receives the data it needs as props and emits callbacks.
-
-## i18n (Lingui)
-
-- `.po` files under `src/locales/*` are generated and reference source line numbers; deleting/renaming a component invalidates those references but extraction will refresh them — don't hand-edit.
-- After any edit to a `.tsx` file in this package, run `pnpm i18n` from the package directory. This re-extracts the message catalogs and rebuilds them — both source-line references and any newly-introduced `<Trans>` / ``t`...` `` strings get picked up.
-- After `pnpm i18n`, fill in the **French** translations (only) for any newly-extracted entries in [src/locales/fr/messages.po](src/locales/fr/messages.po) — leave every other locale's `.po` file untouched (those are translated externally). Then re-run `pnpm i18n` so [src/locales/fr/messages.ts](src/locales/fr/messages.ts) reflects the new strings.
+- `components/ui/*` — shadcn primitives, style `base-nova`, on `@base-ui/react`.
+  **Generated by the shadcn CLI, not hand-written.** Regenerate into a scratch
+  project and copy across, applying only these rewrites: `@/lib/utils` →
+  `#/lib/utils.ts`, `@/registry/…/ui/x` → `#/components/ui/x.tsx`, and drop any
+  `'use client'` directive (a Next.js RSC marker; this app is Vite). Keep these
+  files byte-faithful to upstream so future `shadcn add` stays mergeable — put
+  deviations in wrapper components instead. Base UI composes via
+  `render={<El/>}`, not a `asChild`-style prop.
+  The registry's components assume `@custom-variant` bridges that ship in the
+  style's `globals.css`, so copying `components/ui/*` alone is not enough — see
+  the orientation bridge in `src/style.css`. `Separator` silently rendered at
+  zero width/height until it was added.
+  Every file in there is a real registry entry — if `shadcn add <name>` under
+  this style returns an item with no files, the component is ours and belongs
+  outside this directory.
+- `components/forms/*` — `FormShell` (the form frame: action row, submit/cancel/
+  back, root error), `fields/*` (one wrapper per input type), plus
+  `AsyncButton`, `CopyButton`, `RequestCodeButton`, `SignUpWizard`.
+- `components/dialogs/*` — `DialogShell` (frame) and `ConfirmForm` (a form with
+  no fields, just content + action row).
+- `components/feedback/*` — `Notice`, `ErrorNotice`, `ErrorDetails`,
+  `PasswordStrength`.
+- `components/identity/*` — account/client avatars, names, identifiers, the
+  account menu.
+- `components/layouts/*` — `AuthShell` (the centred auth card) and
+  `AccountShell` (sidebar + content). These two own the whole page frame,
+  including the `<title>`, so they must never nest.
+- Pages under `src/pages/` and the four `*-page.tsx` entry points own contexts,
+  TanStack Query and routing.
 
 ## Forms
 
-Three layers of primitives live under [src/components/forms/](src/components/forms/). Pick the highest-level one that fits — don't reach for `FormCard` directly when `SmartForm` would do.
+Forms are native: `FormShell` (on `@base-ui/react/form`) plus one field wrapper
+per input. Validation is HTML constraint attributes on the controls —
+`required`, `type`, `pattern`, `minLength` — so an invalid submit is blocked by
+the browser with its own bubble, in the browser's locale. There is no form
+library, no schema layer, and no store: the DOM is the source of truth, and
+`FormShell` reads the values off the element with `FormData`.
 
-- **`FormCard`** — the lowest-level primitive. Renders a `<form>` with the standard submit / cancel / back button row, error rendering, and a `disabled`/`loading`/`submittable` context. It does NOT track any state — the caller owns inputs, validity, and submit handling. In practice it is only consumed by `SmartForm`; feature components import `FormCardProps` for prop forwarding (e.g. [sign-in-form.tsx](src/components/sign-in-form.tsx)) but should not render `<FormCard>` directly.
+```tsx
+<FormShell<Values> onSubmit={(values, signal) => handler(values, signal)}>
+  <EmailField name="email" required label={<Trans>Email</Trans>} />
+</FormShell>
+```
 
-- **`SmartForm<TData, TValues>`** — `FormCard` + full controlled state. Caller provides `values` (initial), `validate(values) → TData | undefined` (also gates submit — returning `undefined` disables the submit button), and `handler(data, signal)`. The `fields` render-prop receives `{ values, set, setterFor, loading, error, data }` for wiring inputs. Pass a `ref` to expose the same handler imperatively when a parent needs to mutate fields (e.g. clearing the OTP field on credential change in [sign-in-form.tsx](src/components/sign-in-form.tsx)). This is the default for new forms — most `*-form.tsx` components are thin `SmartForm` wrappers (see [reset-password-request-form.tsx](src/components/reset-password-request-form.tsx) for the minimal shape).
+Shared regexes for `pattern` attributes live in `src/lib/form-patterns.ts`.
+Note `pattern` sources are implicitly anchored — no `^`/`$`.
 
-When authoring a `SmartForm`-based component, type its props as `WrappedSmartFormProps<TData>` (also exported from `smart-form.tsx`) — that omits `fields` and `validate` so callers only pass the outer `FormCard` props plus any feature-specific extras.
+Base UI rules this layer depends on — each one was a real, browser-only bug:
 
-**`*-form.tsx` MUST be built on `SmartForm`** — never hand-roll `<form>` + `useAsyncAction` + `useState` even when the form has unusual extras (extra inputs, a resend button, custom error rendering, an error-colored submit). Pass-throughs that already exist on `FormCardProps` cover almost every case:
+- **Values must come from `FormData`, never from `onFormSubmit`'s argument.**
+  Base UI only passes values for controls registered through `Field.Root`; a
+  plain named input (a checkbox, a hidden input) is silently absent. `FormShell`
+  already does this — don't "simplify" it back.
+- **`Form` defaults to `noValidate`.** `FormShell` re-enables the browser's
+  gate; without it, any control outside a `Field.Root` is validated by no one.
+- **A `Field.Root` binds every descendant control to its own name**, even over
+  an explicit `name` prop. A field composed of two controls (`HandleField`)
+  must opt out of `Field` entirely.
+- **A `disabled` control is omitted from form values.** Use `readOnly` when the
+  value must still submit.
+- **`type="email"` accepts `user@host` with no dot** — `EmailField` carries a
+  `pattern` requiring a TLD on top.
 
-- Custom submit label or color: `submitLabel` / pass through `submitColor` (or override the row via `actions`).
-- Cancel / back: `onCancel` + `cancelLabel`, `onBack` + `backLabel` — the parent dialog/page provides them.
-- Wider button styling (e.g. stacked full-width buttons): supply your own row via `actions` and set `submitLabel={null}` if needed; do NOT rebuild the form to get a different layout.
-- Extra pending state from outside the form (e.g. an in-flight resend): merge it into `props.loading` (`loading={props.loading || requestPending}`).
-- Error display: `FormCard` already renders `error` via `errorRender` / `errorParser` — don't call `errorCardRender` yourself.
-- Loading-state mirroring to the parent: pass `onLoadingChange` straight through (it's a `SmartFormProps` prop already).
+`FormShell` submits through `useAsyncAction`, which handles abort-on-unmount,
+abort-on-supersede and error retention. Errors render via `ErrorNotice` +
+`apiErrorParser`, so typed OAuth error payloads keep their user-facing messages.
+For callers that must survive remounting (the sign-up wizard's back/forward),
+`onValues` mirrors the form's values on every edit.
 
-If a constraint genuinely cannot be expressed through these props, extend `FormCard`/`SmartForm` itself rather than forking the form. See [reset-password-confirm-form.tsx](src/components/reset-password-confirm-form.tsx) and [update-email-form.tsx](src/components/update-email-form.tsx) for the canonical shapes — including a form that already mixes a SmartForm with a `ButtonRequestCode` resend link inside the `fields` render-prop.
+**Reserve space for anything that appears conditionally** next to an
+interactive control — a layout shift between mousedown and mouseup lands the
+click on a different element and silently swallows it.
 
-## Input components (`input-*.tsx`)
+### Field names are a public contract
 
-Low-level input wrappers (`InputText`, `InputEmailAddress`, `InputPassword`, `InputToken`, `InputHandleCustom`, `InputCheckbox`, …) are thin layers over a native `<input>`. They MUST NOT force the input into controlled or uncontrolled mode — pass both `value` and `defaultValue` straight through to the underlying `<input>` (typically by spreading `...props` into `InputText`) and let the parent pick.
+The `name` attribute on each control is selected on by the pds e2e suite and by
+password managers. These names are owned by this package and must not be
+renamed: `username`, `password`, `remember`, `code`, `email`, `newEmail`,
+`handle`, `domain`, `inviteCode`.
 
-Adding internal `useState` to mirror `value`/`defaultValue` so the wrapper can re-render is the anti-pattern. If you need a derived UI element that depends on the live value (e.g. a strength meter, a character counter), it is fine to keep a _separate_ internal state seeded from `props.defaultValue ?? props.value` and updated via the `onChange` handler — but the `<input>` itself still reads `value`/`defaultValue` from the parent's props, not from that internal state. See [input-new-password.tsx](src/components/forms/input-new-password.tsx) for the canonical shape (the local `current` drives the strength meter; the input remains controllable by the parent).
+Where the API field differs from the input name, map it in `onSubmit` — e.g. the
+form field is `code` but the API takes `token`.
 
-Higher-level semantic callbacks (`onEmail`, `onPassword`, `onToken`, `onHandle`, …) are encouraged on top of `onChange`. Implement them by composing with the user-supplied `onChange` (use `composeEventHandlers` from `@radix-ui/primitive`) and emitting the parsed/validated value — `undefined`/`null` when the input is not yet valid. This is typically used with uncontrolled mode (with the initial value being passed as `defaultValue`). See [input-email-address.tsx](src/components/forms/input-email-address.tsx) and [input-token.tsx](src/components/forms/input-token.tsx) for the pattern.
+## i18n (Lingui)
 
-Exception: components that compose a single logical value out of multiple native inputs (e.g. [input-handle-default.tsx](src/components/forms/input-handle-default.tsx) splits the handle into a text segment + a domain `<select>`) can't pass `value`/`defaultValue` straight through and may legitimately own internal state. They expose only the high-level pair (`handle` + `onHandle`) instead.
+- `.po` files under `src/locales/*` are generated; don't hand-edit except to add
+  French translations.
+- After any `.tsx` edit run `pnpm i18n`, then **check the diff for added or
+  removed `msgid`s**. Only line-reference churn is expected. This check has
+  caught two bugs that nothing else would have.
+- msgids are the English source strings, so changing a string orphans five
+  locales. `<Trans>` placeholders are positional (`<0>`, `<1>`) and derive from
+  JSX nesting — adding or reordering an element inside a `<Trans>` renumbers them
+  and changes the msgid. Recompose _around_ `<Trans>` blocks. Expression
+  placeholders are named by the identifier — `{minLength}` and `{MIN_LENGTH}`
+  are different msgids — so alias a renamed variable back rather than touching
+  the string.
+- **Never pass `t` as a prop.** The macro only transforms `` t`…` `` in a scope
+  that imports `useLingui` from `@lingui/react/macro`; passing `t` down leaves
+  the template uncompiled and the string untranslated, and it silently vanishes
+  from the catalogs.
+- A msgid that disappears and returns loses its translation. After extraction,
+  check the _count_ of untranslated entries, not just the msgid diff.
+- Fill in French only; other locales are translated externally.
+
+## The pds e2e contract
+
+`packages/pds/tests/{oauth,account-manager}.test.ts` drive this UI by text and
+tag, so markup choices are load-bearing. The test files themselves are the
+authoritative record of which text sits in which element. The rules:
+
+- actions the tests click must be real `<button>`s
+- body copy in `<p>`, page/section headings in the tag the test names
+  (`h2`/`h3`), identifiers and radio labels in `<span>`, code samples in `<code>`
+- dialog content keeps `role="dialog"` and a `button[type="submit"]`
+- `CardDescription` and `AlertDescription` render `<div>`, so wrap asserted copy
+  in an explicit `<p>`. **`DialogDescription` does not** — Base UI's
+  `Dialog.Description` is already a `<p>`, and wrapping it produced `<p><p>`,
+  which React reports as invalid nesting. Check the primitive's rendered element
+  before adding a wrapper rather than assuming they match.
+
+Dialogs must cap their height (`DialogShell` does): Base UI's `DialogContent` is
+`fixed` with no height limit, and a tall dialog on a short viewport puts its
+buttons out of reach with no way to scroll to them.
+
+## Branding
+
+`CustomizationData` supplies the logo, name, footer links and
+`availableUserDomains`. Colours arrive separately, at runtime: the provider
+injects `--branding-color-*` variables (see
+`oauth-provider/src/customization/build-customization-css.ts`), and the
+"Runtime branding" section of `src/style.css` maps `primary`, `error`, `info`,
+`warning` and `success` onto the shadcn tokens. Each is one injected RGB that
+consumers tint with opacity modifiers, not the old multi-shade hue palette.
+When a deployment configures nothing the tokens fall back to the pre-redesign
+stock palette (a purple primary) — deliberately not Bluesky's, so an
+uncurated PDS is not mistaken for one.
+
+`branding.background` customises the auth screen's page area (behind the card,
+not the card itself). It carries a light and a dark image URL; the provider
+injects `--branding-background-{light,dark}-image` (wrapped in `url(...)`), and
+the `.auth-background` rule in `src/style.css` paints that image over the neutral
+`muted` base, picking the mode by `prefers-color-scheme`. Unset, it falls back to
+the plain `muted` surface it always was. The card keeps its own opaque surface so
+copy stays legible over any background.
+
+The mock pages inject the same variables a branded deployment would, so
+`pnpm dev:ui` demonstrates branding without a PDS.
 
 ## Utility types
 
-`Override<A, B>` (from `#/lib/util.ts`) is the standard prop-extension pattern across the package:
+`Override<A, B>` (from `#/lib/util.ts`) is the standard prop-extension pattern:
 
 ```tsx
-type Props = Override<
-  JSX.IntrinsicElements['button'],
-  { icon: Icon; value?: ReactNode }
->
+type Props = Override<JSX.IntrinsicElements['button'], { icon: LucideIcon }>
 ```
 
-Phosphor icons are typed as `Icon` (the exported type), not `ComponentType<IconProps>`.
-
-## Tailwind
-
-- Class strings are scanned statically. When picking classes from a variable (e.g. column counts), use a literal-string lookup table so all candidates are present in the source.
-- The `disabled:hover:bg-transparent` / `disabled:cursor-default` pair is the convention for non-interactive button rows.
-- `text-text-default` / `text-text-light` and `border-contrast-25` / `border-contrast-50` are the tokens — don't introduce raw slate/gray utilities for content.
-
-## API client ([src/lib/api.ts](src/lib/api.ts))
-
-`Api` extends `JsonClient<ApiEndpoints>` and is the single seam between the UI and the OAuth provider's `~api` endpoints. Three rules apply when adding or modifying an endpoint:
-
-1. **One method per endpoint.** Every endpoint gets its own `async` method on `Api` — pages and `data/*` hooks never call `this.fetch` directly. The method takes the typed input as the first argument and an optional `options?: Options` (for `AbortSignal`, etc.) as the second, forwarded to `this.fetch(method, path, body, options)`.
-
-2. **Destructure and rebuild the payload.** Pull each field out of the input by name and pass a fresh object literal to `fetch` — never spread the input. Inputs are typed against `@atproto/oauth-provider-api` and callers may pass values that _extend_ the declared type (extra UI-only fields, derived state); spreading would forward those over the wire and the server would reject them. For inputs with a `locale` field, wrap the type in `WithOptionalLocale<T>` and default to `this.locale` during destructuring (`locale = this.locale`) so callers can omit it.
-
-3. **Register expected error payloads in `parseError`.** When the server adds a new typed error response, define the payload type and an `OAuthErrorResponse` subclass with a static `is(json)` discriminator alongside the existing ones, then add add it to the list of Error classes in the `parseError` method.
+Icons are `lucide-react`.
 
 ## Linting quirks
 
-- ESLint requires unused vars/args to match `/^_/u`. Drop the destructure rather than prefixing with `_` when the prop is genuinely unused.
-- Prettier's tailwind plugin will reorder classes. The IDE surfaces the violation; the fix is mechanical.
+ESLint requires unused vars/args to match `/^_/u`. Drop the destructure rather
+than prefixing when the prop is genuinely unused.

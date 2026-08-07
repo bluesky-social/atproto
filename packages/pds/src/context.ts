@@ -38,6 +38,7 @@ import type { ServerConfig, ServerSecrets } from './config/index.js'
 import { Crawlers } from './crawlers.js'
 import { DidSqliteCache } from './did-cache/index.js'
 import { DiskBlobStore } from './disk-blobstore.js'
+import { events } from './events.js'
 import { ImageUrlBuilder } from './image/image-url-builder.js'
 import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
@@ -77,7 +78,7 @@ export type AppContextOptions = {
   cfg: ServerConfig
 }
 
-export class AppContext {
+export class AppContext implements AsyncDisposable {
   public actorStore: ActorStore
   public blobstore: (did: string) => BlobStore
   public localViewer: LocalViewerCreator
@@ -135,6 +136,8 @@ export class AppContext {
     secrets: ServerSecrets,
     overrides?: Partial<AppContextOptions>,
   ): Promise<AppContext> {
+    // @TODO Implement using an AsyncDisposableStack
+
     const blobstore =
       cfg.blobstore.provider === 's3'
         ? S3BlobStore.creator({
@@ -401,6 +404,44 @@ export class AppContext {
               isTrusted: cfg.oauth.provider?.trustedClients?.includes(clientId),
             }
           },
+          onSignedUp({ account, data, clientId }) {
+            events.accountCreated({
+              source: 'oauth',
+              did: account.did,
+              clientId,
+              invited: data.inviteCode != null,
+              deactivated: false,
+            })
+          },
+          onSignedIn({ account, clientId }) {
+            events.signedIn({
+              did: account.did,
+              clientId,
+            })
+          },
+          onAuthorized({ account, client }) {
+            events.oauthAuthorized({
+              did: account.did,
+              clientId: client.id,
+              clientFirstParty: client.isFirstParty,
+              clientTrusted: client.isTrusted,
+              clientConfidential: client.isConfidential,
+            })
+          },
+          onTokenCreated({ account, client }) {
+            events.sessionCreated({
+              source: 'oauth',
+              did: account.did,
+              clientId: client.id,
+            })
+          },
+          onTokenRefreshed({ account, client }) {
+            events.sessionRefreshed({
+              source: 'oauth',
+              did: account.did,
+              clientId: client.id,
+            })
+          },
         })
       : undefined
 
@@ -515,6 +556,30 @@ export class AppContext {
       lxm,
       keypair,
     })
+  }
+
+  async destroy(): Promise<void> {
+    try {
+      await this.backgroundQueue.destroy()
+    } finally {
+      try {
+        await this.sequencer.destroy()
+      } finally {
+        try {
+          await this.accountManager.close()
+        } finally {
+          try {
+            await this.redisScratch?.quit()
+          } finally {
+            await this.proxyAgent.destroy()
+          }
+        }
+      }
+    }
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.destroy()
   }
 }
 
