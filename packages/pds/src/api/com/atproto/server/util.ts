@@ -56,7 +56,6 @@ export const isValidDidDocForService = async (
     plcClient: plc.Client
     idResolver: IdResolver
     cfg: ServerConfig
-    plcRotationKey: crypto.Keypair
     actorStore: ActorStore
   },
   did: string,
@@ -101,14 +100,13 @@ export const assertValidDidDocumentForService = async (
     plcClient: plc.Client
     idResolver: IdResolver
     cfg: ServerConfig
-    plcRotationKey: crypto.Keypair
     actorStore: ActorStore
   },
   did: string,
 ) => {
   if (did.startsWith('did:plc')) {
     const lastOp = await ctx.plcClient.getLastOp(did)
-    assertCanSignUpdatesForDid(lastOp, serverRotationKeyDid(ctx))
+    assertNotTombstoned(lastOp)
     const resolved = plc.normalizeOp(lastOp)
     await assertValidDocContents(ctx, did, {
       pdsEndpoint: resolved.services['atproto_pds']?.endpoint,

@@ -259,18 +259,63 @@ describe('plc operations', () => {
     )
   })
 
-  it('fails cleanly activating an account the server no longer controls', async () => {
+  it('activates an account the server does not control the rotation key for', async () => {
     const { account: fiona } = await createSelfCustodiedAccount(
       sc,
       ctx,
       'fiona',
     )
 
-    const attempt = agent.api.com.atproto.server.activateAccount(undefined, {
+    await agent.api.com.atproto.server.activateAccount(undefined, {
       headers: sc.getHeaders(fiona.did),
     })
+
+    const status = await agent.api.com.atproto.server.checkAccountStatus(
+      undefined,
+      { headers: sc.getHeaders(fiona.did) },
+    )
+    expect(status.data.activated).toBe(true)
+    expect(status.data.validDid).toBe(true)
+  })
+
+  it('fails cleanly activating when the pds endpoint does not match', async () => {
+    const kim = await sc.createAccount('kim', {
+      handle: 'kim.test',
+      email: 'kim@test.com',
+      password: 'kim-pass',
+    })
+    await ctx.plcClient.updatePds(
+      kim.did,
+      ctx.plcRotationKey,
+      'https://example.com',
+    )
+
+    const attempt = agent.api.com.atproto.server.activateAccount(undefined, {
+      headers: sc.getHeaders(kim.did),
+    })
     await expect(attempt).rejects.toThrow(
-      "Rotation keys do not include server's rotation key",
+      'DID document atproto_pds service endpoint does not match PDS public url',
+    )
+  })
+
+  it('fails cleanly activating when the signing key does not match', async () => {
+    const leo = await sc.createAccount('leo', {
+      handle: 'leo.test',
+      email: 'leo@test.com',
+      password: 'leo-pass',
+    })
+    const otherKey = await Secp256k1Keypair.create()
+    await ctx.plcClient.updateAtprotoKey(
+      leo.did,
+      ctx.plcRotationKey,
+      otherKey.did(),
+    )
+
+    const attempt = agent.api.com.atproto.server.activateAccount(undefined, {
+      headers: sc.getHeaders(leo.did),
+    })
+    await expect(attempt).rejects.toThrow(
+      'DID document verification method does not match expected signing key',
     )
   })
 
