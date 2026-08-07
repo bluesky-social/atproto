@@ -22,6 +22,8 @@ import { ATTR_HTTP_ROUTE } from '@opentelemetry/semantic-conventions'
 import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite3'
 
 const ATTR_XRPC_METHOD = 'xrpc.method'
+const ATTR_XRPC_PROXIED = 'xrpc.proxied'
+const ATTR_XRPC_PROXY = 'xrpc.proxy'
 
 // @NOTE Hand-rolled equivalent of "@opentelemetry/auto-instrumentations-node"'s
 // register script, because that one lacks better-sqlite3 instrumentation and
@@ -95,20 +97,38 @@ function getInstrumentations(): Instrumentation[] {
       // into "http.route" and renames the span from it, clobbering anything a
       // requestHook set. This hook runs after that, so it wins.
       applyCustomAttributesOnSpan: (span, request) => {
-        const url = 'path' in request ? request.path : (request.url ?? '/')
-        const method = request.method ?? 'GET'
-        const nsid =
+        const { url, method, proxy } =
+          'path' in request
+            ? // ClientRequest
+              {
+                url: request.path,
+                method: request.method,
+                proxy: request.getHeader('atproto-proxy'),
+              }
+            : // IncomingMessage
+              {
+                url: request.url ?? '/',
+                method: request.method ?? 'GET',
+                proxy: request.headers['atproto-proxy'],
+              }
+
+        const lxm =
           method === 'GET' || method === 'POST'
-            ? extractNormalizedXrpcNsid(url)
+            ? extractNormalizedLxm(url)
             : undefined
 
         // Normalized route for XRPC, raw path otherwise
-        const route = nsid ? `/xrpc/${nsid}` : url.split('?')[0]
+        const route = lxm ? `/xrpc/${lxm}` : url.split('?')[0]
         span.setAttribute(ATTR_HTTP_ROUTE, route)
 
-        if (nsid) {
-          span.updateName(`${method} /xrpc/${nsid}`)
-          span.setAttribute(ATTR_XRPC_METHOD, nsid)
+        if (lxm) {
+          span.updateName(`${method} /xrpc/${lxm}`)
+          span.setAttribute(ATTR_XRPC_METHOD, lxm)
+          span.setAttribute(ATTR_XRPC_PROXIED, !!proxy)
+
+          if (proxy) {
+            span.setAttribute(ATTR_XRPC_PROXY, proxy)
+          }
         }
       },
     }),
@@ -117,9 +137,9 @@ function getInstrumentations(): Instrumentation[] {
     }),
     new UndiciInstrumentation({
       requestHook: (span, request) => {
-        const nsid = extractNormalizedXrpcNsid(request.path)
-        if (nsid) {
-          span.setAttribute(ATTR_XRPC_METHOD, nsid)
+        const lxm = extractNormalizedLxm(request.path)
+        if (lxm) {
+          span.setAttribute(ATTR_XRPC_METHOD, lxm)
         }
       },
     }),
@@ -157,7 +177,7 @@ function isSignalConfigured(signal: 'TRACES' | 'METRICS' | 'LOGS'): boolean {
 // @NOTE Hand-rolled (rather than using URL/split) because this runs on every
 // instrumented request. Should become obsolete once we have dedicated
 // XrpcClient/XrpcServer instrumentations.
-function extractNormalizedXrpcNsid(url: unknown): string | undefined {
+function extractNormalizedLxm(url: unknown): string | undefined {
   if (typeof url !== 'string') {
     return undefined
   }
