@@ -1,8 +1,8 @@
 import { type KeyObject, createPrivateKey } from 'node:crypto'
 import type * as http from 'node:http'
 import type { AddressInfo } from 'node:net'
+import { secp256k1 } from '@noble/curves/secp256k1'
 import * as jose from 'jose'
-import KeyEncoderModule from 'key-encoder'
 import { MINUTE } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import type { LexiconDoc } from '@atproto/lexicon'
@@ -14,9 +14,6 @@ import {
   createBasicAuth,
   createServer,
 } from './_util.js'
-
-// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
-const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)
 
 const LEXICONS: LexiconDoc[] = [
   {
@@ -323,11 +320,15 @@ const createPrivateKeyObject = async (
   privateKey: Secp256k1Keypair,
 ): Promise<KeyObject> => {
   const raw = await privateKey.export()
-  const encoder = new KeyEncoder('secp256k1')
-  const key = encoder.encodePrivate(
-    Buffer.from(raw).toString('hex'),
-    'raw',
-    'pem',
-  )
-  return createPrivateKey({ format: 'pem', key })
+  const pub = secp256k1.getPublicKey(raw, false)
+  return createPrivateKey({
+    format: 'jwk',
+    key: {
+      kty: 'EC',
+      crv: 'secp256k1',
+      d: Buffer.from(raw).toString('base64url'),
+      x: Buffer.from(pub.subarray(1, 33)).toString('base64url'),
+      y: Buffer.from(pub.subarray(33, 65)).toString('base64url'),
+    },
+  })
 }
