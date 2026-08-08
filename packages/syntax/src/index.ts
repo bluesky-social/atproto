@@ -1,5 +1,6 @@
 export * from './at-identifier.js'
 export * from './aturi.js'
+export * from './bidi.js'
 export * from './datetime.js'
 export * from './did.js'
 export * from './handle.js'

@@ -14,6 +14,7 @@ import {
   type DidString,
   INVALID_HANDLE,
   normalizeDatetimeAlways,
+  stripBidiControls,
 } from '@atproto/syntax'
 import type { Actor, ProfileViewerState } from '../hydration/actor.js'
 import {
@@ -386,10 +387,11 @@ export class Views {
         record: actor.profile,
       }),
     ]
+    const rawDisplayName = actor.profile?.displayName
     return {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
-      displayName: actor.profile?.displayName,
+      displayName: rawDisplayName && stripBidiControls(rawDisplayName),
       pronouns: actor.profile?.pronouns,
       avatar: actor.profile?.avatar
         ? this.imgUriBuilder.getPresetUri(
@@ -578,10 +580,12 @@ export class Views {
         // Expose the *issuer's* current handle/displayName, sourced from the
         // issuer's hydrated actor record (see `Hydrator.hydrateProfiles`).
         const issuerActor = state.actors?.get(issuer)
+        const rawIssuerDisplayName = issuerActor?.profile?.displayName
 
         return {
           issuer,
-          issuerDisplayName: issuerActor?.profile?.displayName,
+          issuerDisplayName:
+            rawIssuerDisplayName && stripBidiControls(rawIssuerDisplayName),
           issuerHandle: issuerActor?.handle,
           uri,
           isValid,

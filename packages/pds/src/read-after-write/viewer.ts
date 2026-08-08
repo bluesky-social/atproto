@@ -4,6 +4,7 @@ import {
   type DidString,
   type HandleString,
   INVALID_HANDLE,
+  stripBidiControls,
 } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import type { AccountManager } from '../account-manager/account-manager.js'
@@ -73,7 +74,8 @@ export class LocalViewer {
     return {
       did: this.did,
       handle: (accountRes.handle ?? INVALID_HANDLE) as HandleString,
-      displayName: profileRes?.displayName,
+      displayName:
+        profileRes?.displayName && stripBidiControls(profileRes.displayName),
       avatar: profileRes?.avatar
         ? this.getImageUrl('avatar', getBlobCidString(profileRes.avatar))
         : undefined,
@@ -257,7 +259,7 @@ export class LocalViewer {
   >(view: T, record: app.bsky.actor.profile.Main): T {
     return {
       ...view,
-      displayName: record.displayName,
+      displayName: record.displayName && stripBidiControls(record.displayName),
       avatar: record.avatar
         ? this.getImageUrl('avatar', getBlobCidString(record.avatar))
         : undefined,
