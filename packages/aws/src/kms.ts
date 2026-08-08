@@ -1,13 +1,6 @@
 import * as aws from '@aws-sdk/client-kms'
 import { secp256k1 as noble } from '@noble/curves/secp256k1'
-import KeyEncoderModule from 'key-encoder'
-import * as ui8 from 'uint8arrays'
 import * as crypto from '@atproto/crypto'
-
-// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
-const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)
-
-const keyEncoder = new KeyEncoder('secp256k1')
 
 export type KmsConfig = { keyId: string } & Omit<
   aws.KMSClientConfig,
@@ -33,13 +26,12 @@ export class KmsKeypair implements crypto.Keypair {
     if (!res.PublicKey) {
       throw new Error('Could not find public key')
     }
-    // public key comes back DER-encoded, so we translate it to raw 65 byte encoding
-    const rawPublicKeyHex = keyEncoder.encodePublic(
-      Buffer.from(res.PublicKey),
-      'der',
-      'raw',
-    )
-    const publicKey = ui8.fromString(rawPublicKeyHex, 'hex')
+    // public key comes back SPKI DER-encoded, whose BIT STRING payload is the
+    // trailing 65-byte uncompressed point; fromHex validates the 0x04 prefix
+    // and that the point is on the curve
+    const publicKey = noble.ProjectivePoint.fromHex(
+      new Uint8Array(res.PublicKey).slice(-65),
+    ).toRawBytes(false)
     return new KmsKeypair(client, keyId, publicKey)
   }
 
