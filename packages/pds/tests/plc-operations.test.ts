@@ -84,12 +84,22 @@ describe('plc operations', () => {
     await expect(attempt).rejects.toThrow(expectedErr)
   }
 
-  it("prevents submitting an operation that removes the server's rotation key", async () => {
-    await expectFailedOp(
-      alice.did,
-      { rotationKeys: [sampleKey] },
-      "Rotation keys do not include server's rotation key",
+  it("allows submitting an operation that removes the server's rotation key", async () => {
+    const gwen = await sc.createAccount('gwen', {
+      handle: 'gwen.test',
+      email: 'gwen@test.com',
+      password: 'gwen-pass',
+    })
+    const operation = await signOp(gwen.did, { rotationKeys: [sampleKey] })
+    await agent.com.atproto.identity.submitPlcOperation(
+      { operation },
+      {
+        encoding: 'application/json',
+        headers: sc.getHeaders(gwen.did),
+      },
     )
+    const didData = await ctx.plcClient.getDocumentData(gwen.did)
+    expect(didData.rotationKeys).toEqual([sampleKey])
   })
 
   it('prevents submitting an operation that incorrectly sets the signing key', async () => {

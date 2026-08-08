@@ -4,10 +4,6 @@ import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { httpLogger as log } from '../../../../logger.js'
-import {
-  assertCanSignUpdatesForDid,
-  serverRotationKeyDid,
-} from '../server/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.identity.submitPlcOperation, {
@@ -24,7 +20,6 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Invalid operation')
       }
 
-      assertCanSignUpdatesForDid(op, serverRotationKeyDid(ctx))
       if (op.services['atproto_pds']?.type !== 'AtprotoPersonalDataServer') {
         throw new InvalidRequestError('Incorrect type on atproto_pds service')
       }
