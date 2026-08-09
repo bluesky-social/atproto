@@ -20,9 +20,7 @@
         },
         "alt": {
           "type": "string",
-          "description": "Alt text description of the video, for accessibility.",
-          "maxGraphemes": 1000,
-          "maxLength": 10000
+          "description": "Alt text description of the video, for accessibility."
         },
         "aspectRatio": {
           "type": "ref",
@@ -58,9 +56,7 @@
         "playlist": { "type": "string", "format": "uri" },
         "thumbnail": { "type": "string", "format": "uri" },
         "alt": {
-          "type": "string",
-          "maxGraphemes": 1000,
-          "maxLength": 10000
+          "type": "string"
         },
         "aspectRatio": {
           "type": "ref",
