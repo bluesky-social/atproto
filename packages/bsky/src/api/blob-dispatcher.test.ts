@@ -42,8 +42,8 @@ async function getRequestCount(statusCode: number, proxyMaxRetries: number) {
 }
 
 describe(createBlobDispatcher, () => {
-  it('limits 429 responses to one retry', async () => {
-    expect(await getRequestCount(429, 3)).toBe(2)
+  it('does not retry 429 responses', async () => {
+    expect(await getRequestCount(429, 3)).toBe(1)
   })
 
   it('retains the configured retry count for other statuses', async () => {

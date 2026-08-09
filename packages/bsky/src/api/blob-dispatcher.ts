@@ -43,7 +43,7 @@ export function createBlobDispatcher(cfg: ServerConfig): Dispatcher {
       statusCodes: [429],
       errorCodes: [],
       methods: ['GET', 'HEAD'],
-      maxRetries: Math.min(cfg.proxyMaxRetries, 1),
+      maxRetries: 0,
     }),
   )
 }
