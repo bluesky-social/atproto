@@ -16,7 +16,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json",
+    "test": "vitest run"
   },
   "engines": {
     "node": ">=18.7.0"
@@ -36,6 +37,7 @@
     "uint8arrays": "3.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^4.0.16"
   }
 }

@@ -11,7 +11,7 @@ import {
   rmIfExists,
 } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
-import { BlobNotFoundError, BlobStore } from '@atproto/repo'
+import { BlobNotFoundError, BlobPutOptions, BlobStore } from '@atproto/repo'
 import { blobStoreLogger as log } from './logger'
 
 export class DiskBlobStore implements BlobStore {
@@ -72,7 +72,10 @@ export class DiskBlobStore implements BlobStore {
     return fileExists(this.getStoredPath(cid))
   }
 
-  async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
+  async putTemp(
+    bytes: Uint8Array | stream.Readable,
+    _options?: BlobPutOptions,
+  ): Promise<string> {
     await this.ensureTemp()
     const key = this.genKey()
     await fs.writeFile(this.getTmpPath(key), bytes)
@@ -98,6 +101,7 @@ export class DiskBlobStore implements BlobStore {
   async putPermanent(
     cid: CID,
     bytes: Uint8Array | stream.Readable,
+    _options?: BlobPutOptions,
   ): Promise<void> {
     await this.ensureDir()
     await fs.writeFile(this.getStoredPath(cid), bytes)

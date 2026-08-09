@@ -4,7 +4,8 @@ import { Upload } from '@aws-sdk/lib-storage'
 import { CID } from 'multiformats/cid'
 import { SECOND, aggregateErrors, chunkArray } from '@atproto/common-web'
 import { randomStr } from '@atproto/crypto'
-import { BlobNotFoundError, BlobStore } from '@atproto/repo'
+import { BlobNotFoundError, BlobPutOptions, BlobStore } from '@atproto/repo'
+import { resolveUploadContentType } from './content-type'
 
 export type S3Config = {
   bucket: string
@@ -69,7 +70,11 @@ export class S3BlobStore implements BlobStore {
     return `quarantine/${this.did}/${cid.toString()}`
   }
 
-  private async uploadBytes(path: string, bytes: Uint8Array | stream.Readable) {
+  private async uploadBytes(
+    path: string,
+    bytes: Uint8Array | stream.Readable,
+    options?: BlobPutOptions,
+  ) {
     // @NOTE we use Upload rather than client.putObject because stream length is
     // not known in advance. See also aws/aws-sdk-js-v3#2348.
     //
@@ -82,12 +87,14 @@ export class S3BlobStore implements BlobStore {
     const abortController = new AbortController()
     abortSignal.addEventListener('abort', () => abortController.abort())
 
+    const contentType = resolveUploadContentType(bytes, options?.contentType)
     const upload = new Upload({
       client: this.client,
       params: {
         Bucket: this.bucket,
         Body: bytes,
         Key: path,
+        ...(contentType ? { ContentType: contentType } : {}),
       },
       // @ts-ignore native implementation fine in node >=15
       abortController,
@@ -105,9 +112,12 @@ export class S3BlobStore implements BlobStore {
     }
   }
 
-  async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
+  async putTemp(
+    bytes: Uint8Array | stream.Readable,
+    options?: BlobPutOptions,
+  ): Promise<string> {
     const key = this.genKey()
-    await this.uploadBytes(this.getTmpPath(key), bytes)
+    await this.uploadBytes(this.getTmpPath(key), bytes, options)
     return key
   }
 
@@ -139,8 +149,9 @@ export class S3BlobStore implements BlobStore {
   async putPermanent(
     cid: CID,
     bytes: Uint8Array | stream.Readable,
+    options?: BlobPutOptions,
   ): Promise<void> {
-    await this.uploadBytes(this.getStoredPath(cid), bytes)
+    await this.uploadBytes(this.getStoredPath(cid), bytes, options)
   }
 
   async quarantine(cid: CID): Promise<void> {

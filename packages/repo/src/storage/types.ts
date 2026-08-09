@@ -30,10 +30,21 @@ export interface RepoStorage {
   readRecord(cid: CID): Promise<RepoRecord>
 }
 
+export type BlobPutOptions = {
+  contentType?: string
+}
+
 export interface BlobStore {
-  putTemp(bytes: Uint8Array | stream.Readable): Promise<string>
+  putTemp(
+    bytes: Uint8Array | stream.Readable,
+    options?: BlobPutOptions,
+  ): Promise<string>
   makePermanent(key: string, cid: CID): Promise<void>
-  putPermanent(cid: CID, bytes: Uint8Array | stream.Readable): Promise<void>
+  putPermanent(
+    cid: CID,
+    bytes: Uint8Array | stream.Readable,
+    options?: BlobPutOptions,
+  ): Promise<void>
   quarantine(cid: CID): Promise<void>
   unquarantine(cid: CID): Promise<void>
   getBytes(cid: CID): Promise<Uint8Array>

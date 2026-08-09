@@ -132,6 +132,54 @@ describe('media gateway worker', () => {
     expect(response.headers.get('Content-Type')).toBe('image/png')
   })
 
+  it('sniffs image MIME when R2 metadata is application/octet-stream', async () => {
+    const png = Uint8Array.from([
+      137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82,
+    ])
+    const objects = new Map<string, StoredObject>([
+      [
+        key,
+        {
+          bytes: png,
+          contentType: 'application/octet-stream',
+          etag: 'png-octet-etag',
+        },
+      ],
+    ])
+    const response = await worker.fetch(
+      new Request(
+        `https://media.example/v1/media/${encodeURIComponent(did)}/${cid}`,
+      ),
+      { MEDIA: new TestBucket(objects) as unknown as R2Bucket },
+    )
+
+    expect(response.headers.get('Content-Type')).toBe('image/png')
+  })
+
+  it('keeps a specific non-generic Content-Type from R2 metadata', async () => {
+    const png = Uint8Array.from([
+      137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82,
+    ])
+    const objects = new Map<string, StoredObject>([
+      [
+        key,
+        {
+          bytes: png,
+          contentType: 'image/jpeg',
+          etag: 'keep-etag',
+        },
+      ],
+    ])
+    const response = await worker.fetch(
+      new Request(
+        `https://media.example/v1/media/${encodeURIComponent(did)}/${cid}`,
+      ),
+      { MEDIA: new TestBucket(objects) as unknown as R2Bucket },
+    )
+
+    expect(response.headers.get('Content-Type')).toBe('image/jpeg')
+  })
+
   it('serves HEAD metadata without a body', async () => {
     const response = await request(undefined, { method: 'HEAD' })
     expect(response.status).toBe(200)

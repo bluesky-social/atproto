@@ -14,6 +14,9 @@ The bucket stays private: clients access it only through the Worker binding
 named `MEDIA`. Responses include immutable public caching, credential-free
 CORS, object metadata, and single-byte-range support.
 
+When R2 metadata is missing or `application/octet-stream`, the Worker sniffs
+magic bytes (PNG/JPEG/WebP/GIF/MP4) so image embeds get a real `Content-Type`.
+
 ## Video / HLS
 
 Canonical processing ADR (vendor Stream, cost, deletion SLA):

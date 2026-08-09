@@ -184,22 +184,29 @@ async function objectHeaders(
 ): Promise<Headers> {
   const headers = new Headers()
   object.writeHttpMetadata(headers)
-  if (!headers.has('Content-Type')) {
-    headers.set(
-      'Content-Type',
-      hlsAssetPath
-        ? contentTypeForHlsAsset(hlsAssetPath)
-        : await sniffObjectContentType(bucket, key, object),
-    )
-  } else if (hlsAssetPath) {
+  if (hlsAssetPath) {
     // Prefer correct HLS MIME even if R2 metadata is wrong/missing.
     headers.set('Content-Type', contentTypeForHlsAsset(hlsAssetPath))
+  } else if (isGenericContentType(headers.get('Content-Type'))) {
+    // PDS/S3 uploads often store application/octet-stream; sniff real MIME.
+    headers.set(
+      'Content-Type',
+      await sniffObjectContentType(bucket, key, object),
+    )
   }
   headers.set('Content-Length', String(object.size))
   headers.set('ETag', object.httpEtag)
   headers.set('Accept-Ranges', 'bytes')
   headers.set('Cache-Control', CACHE_CONTROL)
   return headers
+}
+
+function isGenericContentType(contentType: string | null): boolean {
+  if (!contentType) return true
+  return (
+    contentType.split(';')[0].trim().toLowerCase() ===
+    'application/octet-stream'
+  )
 }
 
 function contentTypeForHlsAsset(assetPath: string): string {
