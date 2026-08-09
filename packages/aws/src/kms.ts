@@ -26,9 +26,12 @@ export class KmsKeypair implements crypto.Keypair {
     if (!res.PublicKey) {
       throw new Error('Could not find public key')
     }
-    // public key comes back SPKI DER-encoded, whose BIT STRING payload is the
-    // trailing 65-byte uncompressed point; fromHex validates the 0x04 prefix
-    // and that the point is on the curve
+    // public key comes back SPKI DER-encoded. we can slice instead of parsing
+    // the ASN.1 because the uncompressed point (0x04 prefix + 32-byte x +
+    // 32-byte y = 65 bytes) is the payload of the final field, so it always
+    // sits at the very end of the DER. fromHex then rejects anything that
+    // isn't a valid on-curve point, so a malformed structure can't slip
+    // through
     const publicKey = noble.ProjectivePoint.fromHex(
       new Uint8Array(res.PublicKey).slice(-65),
     ).toRawBytes(false)
