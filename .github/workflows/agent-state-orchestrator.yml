@@ -1,0 +1,535 @@
+name: Agent state orchestrator
+
+on:
+  pull_request:
+    branches: [main]
+    types: [ready_for_review, reopened, synchronize, labeled]
+  pull_request_review:
+    types: [submitted]
+  workflow_run:
+    workflows: ['Test', 'codegen-check', 'integration-tests']
+    types: [completed]
+
+permissions:
+  actions: read
+  checks: read
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  orchestrate:
+    name: Update agent state
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.event == 'pull_request'
+
+    steps:
+      - name: Route agent state
+        uses: actions/github-script@v7
+        env:
+          AGENT_ORCHESTRATOR_TOKEN: ${{ secrets.AGENT_ORCHESTRATOR_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          script: |
+            const owner = context.repo.owner
+            const repo = context.repo.repo
+            const commentToken = process.env.AGENT_ORCHESTRATOR_TOKEN
+
+            const labels = {
+              readyForReview: 'agent:ready-for-review',
+              changesRequested: 'agent:changes-requested',
+              readyToMerge: 'agent:ready-to-merge',
+              inProgress: 'agent:in-progress',
+              reviewedChangesRequested: 'agent:reviewed-changes-requested',
+              reviewedReadyToMerge: 'agent:reviewed-ready-to-merge',
+            }
+
+            const stateLabels = [
+              labels.readyForReview,
+              labels.changesRequested,
+              labels.readyToMerge,
+              labels.inProgress,
+            ]
+
+            const labelDefinitions = {
+              [labels.readyForReview]: {
+                color: '2da44e',
+                description: 'Automation: code is ready for review',
+              },
+              [labels.changesRequested]: {
+                color: 'd1242f',
+                description: 'Automation: code agent should address review comments',
+              },
+              [labels.readyToMerge]: {
+                color: '8250df',
+                description: 'Automation: review passed and CI is green',
+              },
+              [labels.inProgress]: {
+                color: 'fbca04',
+                description: 'Automation: an agent is actively working',
+              },
+              [labels.reviewedChangesRequested]: {
+                color: 'cf222e',
+                description: 'Automation: reviewer found blocking changes',
+              },
+              [labels.reviewedReadyToMerge]: {
+                color: '1a7f37',
+                description: 'Automation: reviewer approved and PR is ready to merge',
+              },
+            }
+
+            const requiredChecks = [
+              'Build',
+              'Test (1/2)',
+              'Test (2/2)',
+              'Verify',
+              'codegen-check',
+              'integration-tests',
+            ]
+
+            async function ensureLabels() {
+              for (const [name, definition] of Object.entries(labelDefinitions)) {
+                try {
+                  await github.rest.issues.getLabel({ owner, repo, name })
+                } catch (error) {
+                  if (error.status !== 404) throw error
+                  await github.rest.issues.createLabel({
+                    owner,
+                    repo,
+                    name,
+                    color: definition.color,
+                    description: definition.description,
+                  })
+                }
+              }
+            }
+
+            async function findPullRequest() {
+              if (context.payload.pull_request) {
+                return context.payload.pull_request
+              }
+
+              if (context.payload.workflow_run) {
+                const workflowRun = context.payload.workflow_run
+                if (workflowRun.pull_requests?.length) {
+                  const pull = workflowRun.pull_requests[0]
+                  const { data } = await github.rest.pulls.get({
+                    owner,
+                    repo,
+                    pull_number: pull.number,
+                  })
+                  return data
+                }
+
+                const { data: pulls } =
+                  await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                    owner,
+                    repo,
+                    commit_sha: workflowRun.head_sha,
+                  })
+                return pulls.find((pull) => pull.state === 'open') ?? pulls[0]
+              }
+
+              return null
+            }
+
+            async function getFreshPullRequest(number) {
+              const { data } = await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number: number,
+              })
+              return data
+            }
+
+            async function getCiState(headSha) {
+              const { data } = await github.rest.checks.listForRef({
+                owner,
+                repo,
+                ref: headSha,
+                per_page: 100,
+              })
+
+              const latestByName = new Map()
+              for (const checkRun of data.check_runs) {
+                if (!requiredChecks.includes(checkRun.name)) continue
+                const existing = latestByName.get(checkRun.name)
+                const existingTime = Date.parse(existing?.started_at ?? existing?.created_at ?? 0)
+                const currentTime = Date.parse(checkRun.started_at ?? checkRun.created_at ?? 0)
+                if (!existing || currentTime >= existingTime) {
+                  latestByName.set(checkRun.name, checkRun)
+                }
+              }
+
+              const missing = requiredChecks.filter((name) => !latestByName.has(name))
+              const pending = [...latestByName.values()].filter(
+                (checkRun) => checkRun.status !== 'completed',
+              )
+              const failing = [...latestByName.values()].filter(
+                (checkRun) =>
+                  checkRun.status === 'completed' &&
+                  !['success', 'skipped', 'neutral'].includes(checkRun.conclusion),
+              )
+
+              if (missing.length || pending.length) {
+                return {
+                  state: 'pending',
+                  missing,
+                  pending: pending.map((checkRun) => checkRun.name),
+                  failing: [],
+                }
+              }
+
+              if (failing.length) {
+                return {
+                  state: 'failure',
+                  missing: [],
+                  pending: [],
+                  failing: failing.map((checkRun) => checkRun.name),
+                }
+              }
+
+              return {
+                state: 'success',
+                missing: [],
+                pending: [],
+                failing: [],
+              }
+            }
+
+            async function removeLabelIfPresent(issueNumber, name) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  name,
+                })
+              } catch (error) {
+                if (error.status !== 404) throw error
+              }
+            }
+
+            async function setStateLabel(issueNumber, targetLabel) {
+              for (const label of stateLabels) {
+                if (label !== targetLabel) {
+                  await removeLabelIfPresent(issueNumber, label)
+                }
+              }
+
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                labels: [targetLabel],
+              })
+            }
+
+            async function commentOnce(issueNumber, marker, body) {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                per_page: 100,
+              })
+
+              if (comments.some((comment) => comment.body?.includes(marker))) {
+                return
+              }
+
+              const commentBody = `${marker}\n${body}`
+              if (!commentToken) {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  body: commentBody,
+                })
+                return
+              }
+
+              const response = await fetch(
+                `https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}/comments`,
+                {
+                  method: 'POST',
+                  headers: {
+                    accept: 'application/vnd.github+json',
+                    authorization: `Bearer ${commentToken}`,
+                    'content-type': 'application/json',
+                    'x-github-api-version': '2022-11-28',
+                  },
+                  body: JSON.stringify({ body: commentBody }),
+                },
+              )
+
+              if (!response.ok) {
+                throw new Error(`Issue comment failed with ${response.status}: ${await response.text()}`)
+              }
+            }
+
+            async function postSlackReady(pr) {
+              const webhookUrl = process.env.SLACK_WEBHOOK_URL
+              if (!webhookUrl) {
+                core.info('SLACK_WEBHOOK_URL is not set; skipping Slack notification.')
+                return
+              }
+
+              const shortSha = pr.head.sha.slice(0, 7)
+              const text = [
+                `PR ready: ${pr.title}`,
+                pr.html_url,
+                `Branch: ${pr.head.ref}`,
+                `Head: ${shortSha}`,
+                'CI status: green',
+                'Review status: approved/no blocking changes',
+                'Next action: merge manually unless auto-merge is enabled elsewhere.',
+              ].join('\n')
+
+              const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ text }),
+              })
+
+              if (!response.ok) {
+                throw new Error(`Slack webhook failed with ${response.status}`)
+              }
+            }
+
+            function firstReviewStateLine(body) {
+              return (body ?? '')
+                .split('\n')
+                .map((line) => line.trim())
+                .find((line) => line && !line.startsWith('<!--'))
+                ?.toLowerCase()
+            }
+
+            function reviewBodyStartsWith(body, tokens) {
+              const firstStateLine = firstReviewStateLine(body)
+              return Boolean(firstStateLine && tokens.includes(firstStateLine))
+            }
+
+            async function hasBlockingReviewForHead(pr) {
+              const { data: reviews } = await github.rest.pulls.listReviews({
+                owner,
+                repo,
+                pull_number: pr.number,
+                per_page: 100,
+              })
+
+              const relevantReviews = reviews
+                .filter((review) => review.commit_id === pr.head.sha)
+                .sort(
+                  (a, b) =>
+                    Date.parse(b.submitted_at ?? b.submittedAt ?? 0) -
+                    Date.parse(a.submitted_at ?? a.submittedAt ?? 0),
+                )
+
+              for (const review of relevantReviews) {
+                if (
+                  reviewBodyStartsWith(review.body, [
+                    'agent:reviewed-ready-to-merge',
+                    'agent:ready-to-merge',
+                    '@code-agent approved',
+                  ])
+                ) {
+                  return false
+                }
+
+                if (
+                  reviewBodyStartsWith(review.body, [
+                    'agent:reviewed-changes-requested',
+                    'agent:changes-requested',
+                    '@code-agent changes-requested',
+                  ])
+                ) {
+                  return true
+                }
+              }
+
+              return false
+            }
+
+            async function markChangesRequested(pr, reason) {
+              const shortSha = pr.head.sha.slice(0, 7)
+              await setStateLabel(pr.number, labels.changesRequested)
+              await commentOnce(
+                pr.number,
+                `<!-- agent-state-orchestrator:changes-requested:${pr.head.sha} -->`,
+                [
+                  'agent:changes-requested',
+                  '',
+                  '@code-agent changes-requested',
+                  '',
+                  reason,
+                  '',
+                  `Head: ${shortSha}`,
+                ].join('\n'),
+              )
+            }
+
+            async function markReadyForReview(pr) {
+              const shortSha = pr.head.sha.slice(0, 7)
+              await setStateLabel(pr.number, labels.readyForReview)
+              await commentOnce(
+                pr.number,
+                `<!-- agent-state-orchestrator:ready-for-review:${pr.head.sha} -->`,
+                [
+                  'agent:ready-for-review',
+                  '',
+                  '@review-agent ready-for-review',
+                  '',
+                  'Latest CI is green for this PR head. Please review.',
+                  '',
+                  `Head: ${shortSha}`,
+                ].join('\n'),
+              )
+            }
+
+            async function markReadyToMerge(pr) {
+              const shortSha = pr.head.sha.slice(0, 7)
+              await setStateLabel(pr.number, labels.readyToMerge)
+              await commentOnce(
+                pr.number,
+                `<!-- agent-state-orchestrator:ready-to-merge:${pr.head.sha} -->`,
+                [
+                  'agent:ready-to-merge',
+                  '',
+                  'Review passed and latest CI is green.',
+                  '',
+                  `Head: ${shortSha}`,
+                ].join('\n'),
+              )
+              await postSlackReady(pr)
+            }
+
+            async function routeCiCompletion(pr) {
+              if (pr.draft) {
+                core.info(`PR #${pr.number} is draft; skipping CI state routing.`)
+                return
+              }
+
+              const ci = await getCiState(pr.head.sha)
+              if (ci.state === 'success') {
+                if (pr.labels.some((label) => label.name === labels.readyToMerge)) {
+                  core.info(`PR #${pr.number} is already ready to merge; leaving state unchanged.`)
+                  return
+                }
+
+                if (await hasBlockingReviewForHead(pr)) {
+                  core.info(
+                    `PR #${pr.number} has a blocking Cursor review for ${pr.head.sha}; leaving state unchanged.`,
+                  )
+                  return
+                }
+
+                await markReadyForReview(pr)
+                return
+              }
+
+              if (ci.state === 'failure') {
+                await markChangesRequested(
+                  pr,
+                  `CI failed for the latest head. Failing checks: ${ci.failing.join(', ')}`,
+                )
+                return
+              }
+
+              core.info(
+                `CI is not complete for ${pr.head.sha}: missing=${ci.missing.join(', ')} pending=${ci.pending.join(', ')}`,
+              )
+            }
+
+            async function routeReviewSubmission(pr) {
+              const review = context.payload.review
+              const body = review?.body ?? ''
+              const ci = await getCiState(pr.head.sha)
+
+              const marksReadyToMerge = reviewBodyStartsWith(body, [
+                'agent:reviewed-ready-to-merge',
+                'agent:ready-to-merge',
+                '@code-agent approved',
+              ])
+
+              const marksChangesRequested = reviewBodyStartsWith(body, [
+                'agent:reviewed-changes-requested',
+                'agent:changes-requested',
+                '@code-agent changes-requested',
+              ])
+
+              if (marksReadyToMerge) {
+                if (ci.state !== 'success') {
+                  await markChangesRequested(
+                    pr,
+                    'Review approved the PR, but latest required CI is not green yet.',
+                  )
+                  return
+                }
+
+                await markReadyToMerge(pr)
+                return
+              }
+
+              if (marksChangesRequested) {
+                await markChangesRequested(pr, 'Review requested changes on this PR.')
+              }
+            }
+
+            async function routeLabelEvent(pr) {
+              const labelName = context.payload.label?.name
+              if (labelName === labels.reviewedChangesRequested) {
+                await removeLabelIfPresent(pr.number, labels.reviewedChangesRequested)
+                await markChangesRequested(pr, 'Review requested changes on this PR.')
+                return
+              }
+
+              if (labelName === labels.reviewedReadyToMerge) {
+                await removeLabelIfPresent(pr.number, labels.reviewedReadyToMerge)
+                const ci = await getCiState(pr.head.sha)
+                if (ci.state === 'success') {
+                  await markReadyToMerge(pr)
+                } else {
+                  await markChangesRequested(
+                    pr,
+                    'Review marked the PR ready to merge, but latest required CI is not green yet.',
+                  )
+                }
+              }
+            }
+
+            await ensureLabels()
+
+            const initialPr = await findPullRequest()
+            if (!initialPr) {
+              core.info('No pull request found for this event.')
+              return
+            }
+
+            const pr = await getFreshPullRequest(initialPr.number)
+
+            if (context.eventName === 'workflow_run') {
+              await routeCiCompletion(pr)
+              return
+            }
+
+            if (context.eventName === 'pull_request_review') {
+              await routeReviewSubmission(pr)
+              return
+            }
+
+            if (context.eventName === 'pull_request') {
+              if (context.payload.action === 'labeled') {
+                await routeLabelEvent(pr)
+                return
+              }
+
+              if (
+                ['ready_for_review', 'reopened', 'synchronize'].includes(
+                  context.payload.action,
+                )
+              ) {
+                await routeCiCompletion(pr)
+              }
+            }
