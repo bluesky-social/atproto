@@ -30,7 +30,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.sender.login != 'github-actions[bot]'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # The event's head commit, not the merge ref (so the push below is a
           # fast-forward of the PR branch) and not the branch name (so a ref
