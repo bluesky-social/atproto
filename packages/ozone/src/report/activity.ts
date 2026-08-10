@@ -1,6 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
+import { jsonb } from '../db/types.js'
 import type { ReportView } from '../lexicon/types/tools/ozone/report/defs.js'
 import type { QueryParams as QueryActivitiesParams } from '../lexicon/types/tools/ozone/report/queryActivities.js'
 import type { Member } from '../lexicon/types/tools/ozone/team/defs.js'
@@ -27,6 +28,8 @@ export type CreateActivityParams = {
   internalNote?: string
   publicNote?: string
   meta?: Record<string, unknown>
+  /** Moderation events linked to this transition, not report-wide history. */
+  actionEventIds?: number[]
   /** Set true for activities created by automated processes (e.g. queue router). */
   isAutomated?: boolean
   createdBy: string
@@ -43,6 +46,7 @@ export async function createReportActivity(
     internalNote,
     publicNote,
     meta,
+    actionEventIds,
     isAutomated = false,
     createdBy,
   } = params
@@ -113,6 +117,13 @@ export async function createReportActivity(
         .execute()
     }
 
+    const provenance = await getReportActivityProvenance(
+      dbTxn,
+      [report.id],
+      now,
+    )
+    const snapshot = provenance.get(report.id)
+
     const [activity] = await dbTxn.db
       .insertInto('report_activity')
       .values({
@@ -125,6 +136,11 @@ export async function createReportActivity(
         isAutomated,
         createdBy,
         createdAt: now,
+        actionEventIds: actionEventIds?.length ? jsonb(actionEventIds) : null,
+        queueId: snapshot?.queueId ?? null,
+        assignmentId: snapshot?.assignmentId ?? null,
+        moderatorDid: snapshot?.moderatorDid ?? null,
+        assignmentStartAt: snapshot?.assignmentStartAt ?? null,
       })
       .returningAll()
       .execute()
@@ -143,6 +159,60 @@ export type BulkActivityInsert = {
   isAutomated: boolean
   createdBy: string
   createdAt: string
+  actionEventIds?: number[]
+}
+
+export type ReportActivityProvenance = {
+  queueId: number | null
+  assignmentId: number | null
+  moderatorDid: string | null
+  assignmentStartAt: string | null
+}
+
+export async function getReportActivityProvenance(
+  db: Database,
+  reportIds: number[],
+  at: string,
+): Promise<Map<number, ReportActivityProvenance>> {
+  const result = new Map<number, ReportActivityProvenance>()
+  if (!reportIds.length) return result
+
+  // These queries may run on an existing moderation transaction. Keep them
+  // sequential because a transaction owns one connection.
+  const reports = await db.db
+    .selectFrom('report')
+    .select(['id', 'queueId'])
+    .where('id', 'in', reportIds)
+    .execute()
+  const assignments = await db.db
+    .selectFrom('moderator_assignment')
+    .select(['id', 'reportId', 'did', 'startAt'])
+    .where('reportId', 'in', reportIds)
+    .where('startAt', '<=', at)
+    .where((eb) => eb.or([eb('endAt', 'is', null), eb('endAt', '>', at)]))
+    .orderBy('startAt', 'desc')
+    .orderBy('id', 'desc')
+    .execute()
+
+  const assignmentByReport = new Map<number, (typeof assignments)[number]>()
+  for (const assignment of assignments) {
+    if (
+      assignment.reportId !== null &&
+      !assignmentByReport.has(assignment.reportId)
+    ) {
+      assignmentByReport.set(assignment.reportId, assignment)
+    }
+  }
+  for (const report of reports) {
+    const assignment = assignmentByReport.get(report.id)
+    result.set(report.id, {
+      queueId: report.queueId,
+      assignmentId: assignment?.id ?? null,
+      moderatorDid: assignment?.did ?? null,
+      assignmentStartAt: assignment?.startAt ?? null,
+    })
+  }
+  return result
 }
 
 /**
@@ -154,20 +224,43 @@ export async function bulkInsertReportActivities(
   activities: BulkActivityInsert[],
 ) {
   if (!activities.length) return
+  const provenanceByTime = new Map<
+    string,
+    Map<number, ReportActivityProvenance>
+  >()
+  for (const createdAt of new Set(activities.map((a) => a.createdAt))) {
+    const reportIds = activities
+      .filter((a) => a.createdAt === createdAt)
+      .map((a) => a.reportId)
+    provenanceByTime.set(
+      createdAt,
+      await getReportActivityProvenance(db, reportIds, createdAt),
+    )
+  }
   await db.db
     .insertInto('report_activity')
     .values(
-      activities.map((a) => ({
-        reportId: a.reportId,
-        activityType: a.activityType,
-        previousStatus: a.previousStatus,
-        internalNote: a.internalNote ?? null,
-        publicNote: a.publicNote ?? null,
-        meta: a.meta ?? null,
-        isAutomated: a.isAutomated,
-        createdBy: a.createdBy,
-        createdAt: a.createdAt,
-      })),
+      activities.map((a) => {
+        const snapshot = provenanceByTime.get(a.createdAt)?.get(a.reportId)
+        return {
+          reportId: a.reportId,
+          activityType: a.activityType,
+          previousStatus: a.previousStatus,
+          internalNote: a.internalNote ?? null,
+          publicNote: a.publicNote ?? null,
+          meta: a.meta ?? null,
+          isAutomated: a.isAutomated,
+          createdBy: a.createdBy,
+          createdAt: a.createdAt,
+          actionEventIds: a.actionEventIds?.length
+            ? jsonb(a.actionEventIds)
+            : null,
+          queueId: snapshot?.queueId ?? null,
+          assignmentId: snapshot?.assignmentId ?? null,
+          moderatorDid: snapshot?.moderatorDid ?? null,
+          assignmentStartAt: snapshot?.assignmentStartAt ?? null,
+        }
+      }),
     )
     .execute()
 }

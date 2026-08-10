@@ -1,6 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import type { QueueService } from '../queue/service.js'
+import { getReportActivityProvenance } from './activity.js'
 
 export type ReassignReportQueueParams = {
   reportId: number
@@ -88,6 +89,10 @@ export async function reassignReportQueue(
       .where('id', '=', reportId)
       .execute()
 
+    const snapshot = (
+      await getReportActivityProvenance(dbTxn, [reportId], now)
+    ).get(reportId)
+
     await dbTxn.db
       .insertInto('report_activity')
       .values({
@@ -103,6 +108,11 @@ export async function reassignReportQueue(
         isAutomated: false,
         createdBy,
         createdAt: now,
+        actionEventIds: null,
+        queueId: snapshot?.queueId ?? null,
+        assignmentId: snapshot?.assignmentId ?? null,
+        moderatorDid: snapshot?.moderatorDid ?? null,
+        assignmentStartAt: snapshot?.assignmentStartAt ?? null,
       })
       .execute()
   })

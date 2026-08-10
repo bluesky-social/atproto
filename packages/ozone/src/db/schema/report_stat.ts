@@ -20,6 +20,15 @@ export interface ReportStat {
   escalatedCount: number | null // Reports escalated during this calendar day
   actionRate: number | null // actionedCount / inboundCount * 100
   avgHandlingTimeSec: number | null // Average time from creation/assignment to close, in seconds
+  closedCount: number | null // Close transitions during this calendar day
+  acknowledgedCount: number | null // Closures without an enforcement event
+  labelActionCount: number | null // Closures linked to a label event
+  tagActionCount: number | null // Closures linked to a tag event
+  takedownActionCount: number | null // Closures linked to a takedown event
+  ahtDurationSec: number | null // Sum of creation-to-first-close durations
+  ahtSampleCount: number | null // First-close samples in ahtDurationSec
+  moderatorHandlingDurationSec: number | null // Sum of assignment-to-first-close durations
+  moderatorHandlingSampleCount: number | null // Samples in moderatorHandlingDurationSec
 }
 
 export type PartialDB = {

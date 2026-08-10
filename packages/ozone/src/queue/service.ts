@@ -6,6 +6,7 @@ import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
 import type { ReportQueue } from '../db/schema/report_queue.js'
 import { jsonb } from '../db/types.js'
+import { getReportActivityProvenance } from '../report/activity.js'
 import { handleReportUpdate } from '../report/handle-report-update.js'
 import { ReportStatsService } from '../report/stats.js'
 import { viewQueueStats } from '../report/views.js'
@@ -501,20 +502,33 @@ export class QueueService {
         .flat()
         .filter((r) => r.activity !== null)
       if (withActivities.length) {
+        const provenance = await getReportActivityProvenance(
+          this.db,
+          withActivities.map((r) => r.id),
+          now,
+        )
         await this.db.db
           .insertInto('report_activity')
           .values(
-            withActivities.map((r) => ({
-              reportId: r.id,
-              activityType: r.activity!.activityType,
-              previousStatus: r.activity!.previousStatus,
-              internalNote: null,
-              publicNote: null,
-              meta: null,
-              isAutomated: true,
-              createdBy: opts.serviceDid!,
-              createdAt: now,
-            })),
+            withActivities.map((r) => {
+              const snapshot = provenance.get(r.id)
+              return {
+                reportId: r.id,
+                activityType: r.activity!.activityType,
+                previousStatus: r.activity!.previousStatus,
+                internalNote: null,
+                publicNote: null,
+                meta: null,
+                isAutomated: true,
+                createdBy: opts.serviceDid!,
+                createdAt: now,
+                actionEventIds: null,
+                queueId: snapshot?.queueId ?? null,
+                assignmentId: snapshot?.assignmentId ?? null,
+                moderatorDid: snapshot?.moderatorDid ?? null,
+                assignmentStartAt: snapshot?.assignmentStartAt ?? null,
+              }
+            }),
           )
           .execute()
       }

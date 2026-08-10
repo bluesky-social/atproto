@@ -15,6 +15,11 @@ export interface ReportActivity {
   isAutomated: boolean
   createdBy: string // DID of actor (or service DID for automated activities)
   createdAt: string // ISO string
+  actionEventIds: number[] | null // Moderation events linked to this transition only
+  queueId: number | null // Queue snapshot at transition time
+  assignmentId: number | null // Active report assignment at transition time
+  moderatorDid: string | null // Assigned moderator snapshot
+  assignmentStartAt: string | null // Active assignment start snapshot
 }
 
 export type PartialDB = {

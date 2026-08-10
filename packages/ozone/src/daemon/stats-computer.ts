@@ -11,14 +11,8 @@ import type { ReportStatsServiceCreator } from '../report/stats.js'
  * and yesterday's snapshot is finalized if it wasn't already. Historical snapshots (completed
  * days) are write-once and never recomputed unless explicitly refreshed via the API.
  *
- * Query profile per cycle (assuming ~10K reports/day, 10 queues, 20 moderators, 9 type groups):
- * - 7 batched GROUP BY queries against the report table for today's date window
- *   (+ 7 more for yesterday if finalization is needed).
- *   Day-window queries scan ~10K rows. Pending-count queries use partial indexes
- *   (WHERE status != 'closed') so only scan open reports, not the full table.
- *   Expected: ~10-50ms per query, ~100-350ms total report-table time.
- * - ~40 lightweight reads against report_stat for freshness checks (small indexed table).
- * - ~40 lightweight writes to report_stat for upserts.
+ * Each materialization batches inbound, pending, and lifecycle aggregation queries,
+ * then replaces the small set of daily aggregate, queue, reason, and moderator rows.
  *
  * Locking: Uses pg_try_advisory_lock to ensure only one instance materializes at a time
  * when running multiple containers. Advisory locks are cooperative, session-level locks —
@@ -64,6 +58,7 @@ export class StatsComputer {
   }
 
   private async materializeStats() {
+    const startedAt = Date.now()
     const lockResult = await sql<{
       locked: boolean
     }>`SELECT pg_try_advisory_lock(${STATS_COMPUTER_LOCK_ID}) as locked`.execute(
@@ -72,6 +67,7 @@ export class StatsComputer {
     const acquired = lockResult.rows[0]?.locked === true
     if (!acquired) {
       dbLogger.info(
+        { event: 'stats_computer_lock_skip', lockSkipped: 1 },
         'stats materialization skipped, another instance holds lock',
       )
       return
@@ -79,7 +75,25 @@ export class StatsComputer {
 
     try {
       const statsService = this.reportStatsServiceCreator(this.db)
-      await statsService.materializeAll()
+      const { rowsWritten } = await statsService.materializeAll()
+      const today = new Date().toISOString().slice(0, 10)
+      const latest = await this.db.db
+        .selectFrom('report_stat')
+        .select(sql<string | null>`max("computedAt")`.as('computedAt'))
+        .where('date', '=', today)
+        .executeTakeFirst()
+      const stalenessMs = latest?.computedAt
+        ? Math.max(0, Date.now() - new Date(latest.computedAt).getTime())
+        : null
+      dbLogger.info(
+        {
+          event: 'stats_computer_cycle',
+          durationMs: Date.now() - startedAt,
+          rowsWritten,
+          stalenessMs,
+        },
+        'stats computer cycle completed',
+      )
     } finally {
       await sql`SELECT pg_advisory_unlock(${STATS_COMPUTER_LOCK_ID})`.execute(
         this.db.db,

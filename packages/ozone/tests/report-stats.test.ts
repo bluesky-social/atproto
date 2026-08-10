@@ -7,7 +7,9 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons.js'
-import { REPORT_TYPE_GROUPS } from '../src/report/stats.js'
+
+const SPAM_REASON = 'com.atproto.moderation.defs#reasonSpam'
+const THREAT_REASON = 'tools.ozone.report.defs#reasonViolenceThreats'
 
 describe('report-stats', () => {
   let network: TestNetwork
@@ -313,6 +315,8 @@ describe('report-stats', () => {
             status: 'open',
             createdAt: backdate,
             updatedAt: backdate,
+            assignedTo: moderatorDid,
+            assignedAt: backdate,
           })
           .where('id', '=', report.id)
           .execute()
@@ -358,48 +362,44 @@ describe('report-stats', () => {
 
       expect(stats.actionedCount).toBe(0)
       expect(stats.inboundCount).toBe(0)
-      expect(stats.escalatedCount).toBeUndefined()
+      expect(stats.escalatedCount).toBe(0)
       expect(stats.pendingCount).toBeUndefined()
     })
   })
 
-  describe('report type group', () => {
-    it('computes per-group stats for Legacy group', async () => {
+  describe('report reason', () => {
+    it('computes stats for a singular legacy reason', async () => {
       await modClient.computeStats()
 
-      const legacyStats = await getLiveStats({
-        reportTypes: REPORT_TYPE_GROUPS['Legacy'],
+      const spamStats = await getLiveStats({
+        reportTypes: [SPAM_REASON],
       })
       const allStats = await getLiveStats()
 
-      // Legacy group includes spam, etc. seeded above
-      expect(legacyStats.inboundCount).toBeGreaterThanOrEqual(3)
+      expect(spamStats.inboundCount).toBeGreaterThanOrEqual(2)
 
-      // Aggregate should be >= legacy group
       expect(allStats.inboundCount).toBeGreaterThanOrEqual(
-        legacyStats.inboundCount!,
+        spamStats.inboundCount!,
       )
     })
 
-    it('only counts matching report types within group', async () => {
+    it('isolates singular report reasons', async () => {
       await modClient.computeStats()
 
-      const legacyStats = await getLiveStats({
-        reportTypes: REPORT_TYPE_GROUPS['Legacy'],
+      const spamStats = await getLiveStats({
+        reportTypes: [SPAM_REASON],
       })
-      const violenceStats = await getLiveStats({
-        reportTypes: REPORT_TYPE_GROUPS['Violence'],
+      const threatStats = await getLiveStats({
+        reportTypes: [THREAT_REASON],
       })
 
-      // Legacy group should include spam + misleading
-      expect(legacyStats.inboundCount).toBeGreaterThanOrEqual(2)
-      expect(legacyStats.pendingCount).toBeGreaterThanOrEqual(0)
-      // Violence group should only include threats
-      expect(violenceStats.inboundCount).toBeGreaterThanOrEqual(1)
-      expect(violenceStats.pendingCount).toBeGreaterThanOrEqual(1)
+      expect(spamStats.inboundCount).toBeGreaterThanOrEqual(2)
+      expect(spamStats.pendingCount).toBeGreaterThanOrEqual(0)
+      expect(threatStats.inboundCount).toBeGreaterThanOrEqual(1)
+      expect(threatStats.pendingCount).toBeGreaterThanOrEqual(1)
     })
 
-    it('tracks escalated counts within group', async () => {
+    it('tracks escalation activities for a reason', async () => {
       const db = network.ozone.ctx.db
 
       await sc.createReport({
@@ -420,30 +420,33 @@ describe('report-stats', () => {
 
       await db.db
         .updateTable('report')
-        .set({ status: 'escalated', updatedAt: new Date().toISOString() })
+        .set({ status: 'open', updatedAt: new Date().toISOString() })
         .where('id', '=', report.id)
         .execute()
+
+      await modClient.emitEvent(
+        {
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventEscalate',
+          },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.bob,
+          },
+          reportAction: { ids: [report.id] },
+        },
+        'moderator',
+      )
 
       await modClient.computeStats()
 
       const stats = await getLiveStats({
-        reportTypes: REPORT_TYPE_GROUPS['Legacy'],
+        reportTypes: [SPAM_REASON],
       })
       expect(stats.escalatedCount).toBeGreaterThanOrEqual(1)
     })
 
-    it('returns zeroed stats for unused report type group', async () => {
-      await modClient.computeStats()
-
-      // Civic group has no seeded reports: all counts should be 0
-      const stats = await getLiveStats({
-        reportTypes: REPORT_TYPE_GROUPS.Civic,
-      })
-      expect(stats.inboundCount).toBe(0)
-      expect(stats.pendingCount).toBe(0)
-    })
-
-    it('handles avg handling time within group', async () => {
+    it('handles first-close AHT within a reason', async () => {
       const db = network.ozone.ctx.db
 
       await sc.createReport({
@@ -463,27 +466,110 @@ describe('report-stats', () => {
         .executeTakeFirstOrThrow()
 
       const backdate = new Date(Date.now() - 120 * 1000).toISOString()
-      const now = new Date().toISOString()
       await db.db
         .updateTable('report')
         .set({
           createdAt: backdate,
-          updatedAt: now,
-          closedAt: now,
-          status: 'closed',
+          updatedAt: backdate,
         })
         .where('id', '=', report.id)
         .execute()
 
+      await modClient.emitEvent(
+        {
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
+          },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.alice,
+          },
+          reportAction: { ids: [report.id] },
+        },
+        'moderator',
+      )
+
       await modClient.computeStats()
 
       const stats = await getLiveStats({
-        reportTypes: REPORT_TYPE_GROUPS['Legacy'],
+        reportTypes: ['com.atproto.moderation.defs#reasonRude'],
       })
-      expect(stats.actionedCount).toBeGreaterThanOrEqual(1)
+      expect(stats.closedCount).toBeGreaterThanOrEqual(1)
+      expect(stats.acknowledgedCount).toBeGreaterThanOrEqual(1)
       expect(stats.avgHandlingTimeSec).toBeDefined()
-      // Group includes all legacy types; avg is diluted by other closed reports
-      expect(stats.avgHandlingTimeSec).toBeGreaterThanOrEqual(1)
+      expect(stats.avgHandlingTimeSec).toBeGreaterThanOrEqual(115)
+    })
+
+    it('classifies label and takedown closures as actioned', async () => {
+      const db = network.ozone.ctx.db
+      const before = await getLiveStats()
+
+      const cases = [
+        {
+          did: sc.dids.bob,
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventLabel' as const,
+            createLabelVals: ['spam'],
+            negateLabelVals: [],
+          },
+        },
+        {
+          did: sc.dids.carol,
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventTakedown' as const,
+          },
+        },
+      ]
+
+      const reportIds: number[] = []
+      for (const action of cases) {
+        await sc.createReport({
+          reasonType: 'com.atproto.moderation.defs#reasonOther',
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: action.did,
+          },
+          reportedBy: sc.dids.alice,
+        })
+        await network.processAll()
+        const report = await db.db
+          .selectFrom('report')
+          .select('id')
+          .orderBy('id', 'desc')
+          .executeTakeFirstOrThrow()
+        reportIds.push(report.id)
+
+        await modClient.emitEvent(
+          {
+            event: action.event,
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: action.did,
+            },
+            reportAction: { ids: [report.id] },
+          },
+          'moderator',
+        )
+      }
+
+      const activities = await db.db
+        .selectFrom('report_activity')
+        .select(['reportId', 'actionEventIds'])
+        .where('reportId', 'in', reportIds)
+        .where('activityType', '=', 'closeActivity')
+        .execute()
+      expect(activities).toHaveLength(2)
+      expect(activities.every((row) => row.actionEventIds?.length === 1)).toBe(
+        true,
+      )
+
+      await modClient.computeStats()
+      const after = await getLiveStats()
+      expect(after.closedCount! - before.closedCount!).toBe(2)
+      expect(after.actionedCount! - before.actionedCount!).toBe(2)
+      expect(after.acknowledgedCount! - before.acknowledgedCount!).toBe(0)
+      expect(after.labelActionCount! - before.labelActionCount!).toBe(1)
+      expect(after.takedownActionCount! - before.takedownActionCount!).toBe(1)
     })
   })
 
@@ -540,6 +626,39 @@ describe('report-stats', () => {
         expect(stat.date >= yesterdayStr).toBe(true)
         expect(stat.date <= todayStr).toBe(true)
       }
+    })
+
+    it('preserves historical pending snapshots during refresh', async () => {
+      const db = network.ozone.ctx.db
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10)
+
+      await modClient.computeStats()
+      await db.db
+        .updateTable('report_stat')
+        .set({ pendingCount: 4242 })
+        .where('date', '=', yesterday)
+        .where('queueId', 'is', null)
+        .where('moderatorDid', 'is', null)
+        .where('reportTypes', 'is', null)
+        .execute()
+
+      const statsService = network.ozone.ctx.reportStatsService(db)
+      await statsService.refreshDateRange({
+        startDate: yesterday,
+        endDate: yesterday,
+      })
+
+      const refreshed = await db.db
+        .selectFrom('report_stat')
+        .select('pendingCount')
+        .where('date', '=', yesterday)
+        .where('queueId', 'is', null)
+        .where('moderatorDid', 'is', null)
+        .where('reportTypes', 'is', null)
+        .executeTakeFirstOrThrow()
+      expect(refreshed.pendingCount).toBe(4242)
     })
   })
 })

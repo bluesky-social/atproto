@@ -273,11 +273,29 @@ export function viewLiveStats(
 ): ToolsOzoneReportDefs.LiveStats {
   return {
     pendingCount: row?.pendingCount ?? undefined,
+    closedCount: row?.closedCount ?? undefined,
     actionedCount: row?.actionedCount ?? undefined,
+    acknowledgedCount: row?.acknowledgedCount ?? undefined,
     escalatedCount: row?.escalatedCount ?? undefined,
     inboundCount: row?.inboundCount ?? undefined,
+    labelActionCount: row?.labelActionCount ?? undefined,
+    tagActionCount: row?.tagActionCount ?? undefined,
+    takedownActionCount: row?.takedownActionCount ?? undefined,
+    ahtDurationSec: row?.ahtDurationSec ?? undefined,
+    ahtSampleCount: row?.ahtSampleCount ?? undefined,
+    moderatorHandlingDurationSec:
+      row?.moderatorHandlingDurationSec ?? undefined,
+    moderatorHandlingSampleCount:
+      row?.moderatorHandlingSampleCount ?? undefined,
     actionRate: row?.actionRate ?? undefined,
     avgHandlingTimeSec: row?.avgHandlingTimeSec ?? undefined,
+    avgModeratorHandlingTimeSec:
+      row?.moderatorHandlingSampleCount &&
+      row.moderatorHandlingDurationSec != null
+        ? Math.round(
+            row.moderatorHandlingDurationSec / row.moderatorHandlingSampleCount,
+          )
+        : undefined,
     lastUpdated: row?.computedAt,
   }
 }
@@ -289,10 +307,26 @@ export function viewHistoricalStats(
     date: row.date,
     computedAt: row.computedAt,
     pendingCount: row.pendingCount ?? undefined,
+    closedCount: row.closedCount ?? undefined,
     actionedCount: row.actionedCount ?? undefined,
+    acknowledgedCount: row.acknowledgedCount ?? undefined,
     escalatedCount: row.escalatedCount ?? undefined,
     inboundCount: row.inboundCount ?? undefined,
+    labelActionCount: row.labelActionCount ?? undefined,
+    tagActionCount: row.tagActionCount ?? undefined,
+    takedownActionCount: row.takedownActionCount ?? undefined,
+    ahtDurationSec: row.ahtDurationSec ?? undefined,
+    ahtSampleCount: row.ahtSampleCount ?? undefined,
+    moderatorHandlingDurationSec: row.moderatorHandlingDurationSec ?? undefined,
+    moderatorHandlingSampleCount: row.moderatorHandlingSampleCount ?? undefined,
     actionRate: row.actionRate ?? undefined,
     avgHandlingTimeSec: row.avgHandlingTimeSec ?? undefined,
+    avgModeratorHandlingTimeSec:
+      row.moderatorHandlingSampleCount &&
+      row.moderatorHandlingDurationSec != null
+        ? Math.round(
+            row.moderatorHandlingDurationSec / row.moderatorHandlingSampleCount,
+          )
+        : undefined,
   }
 }
