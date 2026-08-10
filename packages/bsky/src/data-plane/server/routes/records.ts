@@ -5,9 +5,11 @@ import { keyBy } from '@atproto/common'
 import { l } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { app, chat, com } from '../../../lexicons/index.js'
+import { dataplaneLogger } from '../../../logger.js'
 import type { Service } from '../../../proto/bsky_connect.js'
 import { PostRecordMeta, Record } from '../../../proto/bsky_pb.js'
 import type { Database } from '../db/index.js'
+import { resolveCanonicalOpThread } from '../op-thread.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getBlockRecords: getRecords(db, app.bsky.graph.block),
@@ -79,11 +81,12 @@ export const getPostRecords = (db: Database) => {
   const getBaseRecords = getRecords(db, app.bsky.feed.post)
   return async (req: {
     uris: string[]
+    includeOpThreadMetadata?: boolean
   }): Promise<{ records: Record[]; meta: PostRecordMeta[] }> => {
-    const [{ records }, details] = await Promise.all([
+    const [{ records }, details, opThreadMetadata] = await Promise.all([
       getBaseRecords(req),
       req.uris.length
-        ? await db.db
+        ? db.db
             .selectFrom('post')
             .where('uri', 'in', req.uris)
             .select([
@@ -95,18 +98,126 @@ export const getPostRecords = (db: Database) => {
             ])
             .execute()
         : [],
+      req.includeOpThreadMetadata
+        ? getOpThreadMetadata(db, req.uris)
+        : new Map<string, OpThreadMetadata>(),
     ])
     const byKey = keyBy(details, 'uri')
     const meta = req.uris.map((uri) => {
+      const thread = opThreadMetadata.get(uri)
       return new PostRecordMeta({
         violatesThreadGate: !!byKey.get(uri)?.violatesThreadGate,
         violatesEmbeddingRules: !!byKey.get(uri)?.violatesEmbeddingRules,
         hasThreadGate: !!byKey.get(uri)?.hasThreadGate,
         hasPostGate: !!byKey.get(uri)?.hasPostGate,
+        opThreadPostIndex: thread?.index,
+        opThreadPostCount: thread?.count,
       })
     })
     return { records, meta }
   }
+}
+
+type OpThreadMetadata = {
+  index: number
+  count: number
+}
+
+// Ceiling on OP replies fetched per thread root. op_thread_reply holds every
+// reply the OP wrote anywhere in their own thread, so a high-engagement thread
+// whose OP answers many commenters can carry far more rows than the canonical
+// chain ever uses. Resolving those on the hydration path is unbounded work, so
+// a root over this ceiling yields no metadata at all rather than metadata
+// derived from a truncated — and therefore wrong — set of replies.
+export const OP_THREAD_REPLY_LIMIT = 1000
+
+const getOpThreadMetadata = async (
+  db: Database,
+  uris: string[],
+): Promise<Map<string, OpThreadMetadata>> => {
+  if (!uris.length) return new Map()
+
+  const requestedRoots = db.db
+    .selectFrom('post')
+    .where('uri', 'in', uris)
+    .select((eb) => eb.fn.coalesce('replyRoot', 'uri').as('rootUri'))
+    .distinct()
+
+  const ranked = db.db
+    .selectFrom('op_thread_reply')
+    .innerJoin(
+      requestedRoots.as('requested_root'),
+      'requested_root.rootUri',
+      'op_thread_reply.rootUri',
+    )
+    .select((eb) => [
+      'op_thread_reply.rootUri',
+      'op_thread_reply.uri',
+      'op_thread_reply.parentUri',
+      'op_thread_reply.deletedAt',
+      eb.fn
+        .agg<number>('row_number')
+        .over((ob) =>
+          ob
+            .partitionBy('op_thread_reply.rootUri')
+            .orderBy('op_thread_reply.uri'),
+        )
+        .as('rank'),
+    ])
+
+  // Fetch one row past the ceiling so an over-limit root is distinguishable
+  // from one that lands exactly on it.
+  const rows = await db.db
+    .selectFrom(ranked.as('ranked'))
+    .selectAll()
+    .where('rank', '<=', OP_THREAD_REPLY_LIMIT + 1)
+    .execute()
+
+  const repliesByRoot = new Map<
+    string,
+    { uri: string; parentUri: string; deletedAt: string | null }[]
+  >()
+  for (const row of rows) {
+    const replies = repliesByRoot.get(row.rootUri) ?? []
+    replies.push(row)
+    repliesByRoot.set(row.rootUri, replies)
+  }
+
+  const metadata = new Map<string, OpThreadMetadata>()
+  const skippedRoots: string[] = []
+  for (const [rootUri, replies] of repliesByRoot) {
+    if (replies.length > OP_THREAD_REPLY_LIMIT) {
+      skippedRoots.push(rootUri)
+      continue
+    }
+
+    const opThread = resolveCanonicalOpThread(rootUri, replies)
+    if (!opThread) continue
+
+    const count = opThread.length
+    for (let i = 0; i < count; i++) {
+      metadata.set(opThread[i], { index: i + 1, count })
+    }
+  }
+
+  // Volume stats stay at debug so the hydration path pays nothing by default;
+  // raise the bsky:dp level to size batches during rollout. Hitting the
+  // ceiling is rare and actionable, so that warns.
+  const stats = {
+    uris: uris.length,
+    roots: repliesByRoot.size,
+    rows: rows.length,
+  }
+  if (skippedRoots.length) {
+    dataplaneLogger.warn(
+      { ...stats, skippedRoots },
+      'op thread reply ceiling hit, metadata omitted for these roots',
+    )
+  } else {
+    dataplaneLogger.debug(stats, 'op thread metadata resolved')
+  }
+
+  return metadata
 }
 
 const compositeTime = (
