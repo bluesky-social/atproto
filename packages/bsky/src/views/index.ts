@@ -1096,6 +1096,8 @@ export class Views {
       post,
       reason,
       reply,
+      opThreadPostIndex: postInfo?.opThreadPostIndex,
+      opThreadPostCount: postInfo?.opThreadPostCount,
     }
   }
 
