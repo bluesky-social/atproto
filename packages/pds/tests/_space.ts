@@ -4,11 +4,16 @@ import { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
 import { HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { SeedClient, TestNetworkNoAppView, TestPds } from '@atproto/dev-env'
+import {
+  EXAMPLE_LABELER,
+  SeedClient,
+  TestNetworkNoAppView,
+  TestPds,
+} from '@atproto/dev-env'
 import { Client, DidString } from '@atproto/lex'
 import { LexMap, parseCid } from '@atproto/lex-data'
 import { JoseKey } from '@atproto/oauth-provider'
-import { RepoCommit } from '@atproto/space'
+import { RepoCommit, createDpopProof, dpopJktForKey } from '@atproto/space'
 import {
   NsidString,
   RecordKeyString,
@@ -221,17 +226,20 @@ export class SpaceClient {
   async credentialFor(
     actor: Actor,
     space: SpaceRefString,
-    opts: { clientAttestation?: string } = {},
-  ): Promise<{ authorization: string }> {
+    opts: { clientAttestation?: string; key?: JoseKey } = {},
+  ): Promise<SpaceCredential> {
+    const key = opts.key ?? (await JoseKey.generate(['ES256']))
     const token = await this.delegationTokenFor(actor, space)
-    const res = await this.authority
-      .getClient()
-      .call(
-        com.atproto.space.getSpaceCredential,
-        { space, clientAttestation: opts.clientAttestation },
-        { headers: { authorization: `Bearer ${token}` } },
-      )
-    return { authorization: `Bearer ${res.credential}` }
+    const res = await this.authority.getClient().call(
+      com.atproto.space.getSpaceCredential,
+      {
+        space,
+        dpopJkt: await dpopJktForKey(key),
+        clientAttestation: opts.clientAttestation,
+      },
+      { headers: { authorization: `Bearer ${token}` } },
+    )
+    return new SpaceCredential(res.credential, key)
   }
 
   async delegationTokenFor(
@@ -244,6 +252,35 @@ export class SpaceClient {
       { headers: actor.headers },
     )
     return res.token
+  }
+
+  /**
+   * Hand-mint a credential the authority would never issue. Its proof is valid, so a
+   * rejection comes from what the test set out to exercise, not a missing proof.
+   */
+  async forgedCredential(
+    sign: (dpopJkt: string) => Promise<string>,
+  ): Promise<SpaceCredential> {
+    const key = await JoseKey.generate(['ES256'])
+    return new SpaceCredential(await sign(await dpopJktForKey(key)), key)
+  }
+
+  /** The exchange on its own, for tests about minting rather than about reading. */
+  async mintCredential(
+    space: SpaceRefString,
+    token: string,
+    opts: { clientAttestation?: string } = {},
+  ) {
+    const key = await JoseKey.generate(['ES256'])
+    return this.authority.getClient().call(
+      com.atproto.space.getSpaceCredential,
+      {
+        space,
+        dpopJkt: await dpopJktForKey(key),
+        clientAttestation: opts.clientAttestation,
+      },
+      { headers: { authorization: `Bearer ${token}` } },
+    )
   }
 
   /** Read a repo's state directly. No endpoint exposes the raw set hash. */
@@ -306,10 +343,10 @@ export class SpaceClient {
     reader: Actor,
     expected: Actor[],
   ) {
-    const credHeaders = await this.credentialFor(reader, space)
-    const res = await this.authority
-      .getClient()
-      .call(com.atproto.space.listRepos, { space }, { headers: credHeaders })
+    const cred = await this.credentialFor(reader, space)
+    const res = await cred
+      .clientFor(this.authority)
+      .call(com.atproto.space.listRepos, { space })
     expect(res.repos.map((r) => r.did).sort()).toEqual(
       expected.map((a) => a.did).sort(),
     )
@@ -347,6 +384,45 @@ export class SpaceClient {
         .executeTakeFirst(),
     )
     return !!row
+  }
+}
+
+/**
+ * A space credential together with the key it is bound to. Mints a proof per request,
+ * so it can't be reduced to a reusable header bag the way an access token can.
+ *
+ * The credential carries no holder identity — the requesting user's DID is spent at
+ * mint time and is not in the token. Name these clients for the role (`asSyncer`),
+ * never for the user, or a test reads as an identity assertion this path can't make.
+ */
+export class SpaceCredential {
+  constructor(
+    public credential: string,
+    public key: JoseKey,
+  ) {}
+
+  clientFor(pds: TestPds): Client {
+    const client = new Client({ service: pds.url, fetch: this.fetch })
+    client.setLabelers([EXAMPLE_LABELER])
+    return client
+  }
+
+  /** For requests made outside the client, e.g. a raw `getRepo` CAR download. */
+  fetch = async (
+    input: string | URL | Request,
+    init?: RequestInit,
+  ): Promise<Response> => {
+    const request = new Request(input, init)
+    request.headers.set('authorization', `DPoP ${this.credential}`)
+    request.headers.set(
+      'dpop',
+      await createDpopProof(this.key, {
+        htm: request.method,
+        htu: request.url,
+        credential: this.credential,
+      }),
+    )
+    return globalThis.fetch(request)
   }
 }
 

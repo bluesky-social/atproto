@@ -23,12 +23,15 @@
   "dependencies": {
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
+    "@atproto/jwk": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-data": "workspace:^",
     "@noble/hashes": "^1.6.1",
+    "jose": "^5.2.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@atproto/jwk-jose": "workspace:^",
     "typescript": "^6.0.3",
     "vitest": "^4.0.16"
   },

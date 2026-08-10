@@ -13,13 +13,15 @@ export const spaceHostAud = (spaceDid: string): string =>
 
 // The three token classes share a wire shape and differ only in who signs them,
 // who they're addressed to, and how long they live — hence data, not three impls.
-// A credential is multi-use across repo hosts, so it carries no aud.
+// A credential is multi-use across repo hosts, so it carries no aud; it is bound
+// to the holder's DPoP key instead (see dpop.ts).
 export const SPACE_TOKEN_TYPES = {
   delegation: {
     typ: 'atproto-space-delegation+jwt',
     kid: '#atproto',
     expiresInSec: 60,
     requireAud: true,
+    requireCnf: false,
   },
   // An authority that publishes a dedicated `#atproto_space` key signs with it
   // and passes that `kid`. Absent one, the space signing key is the account's
@@ -29,12 +31,14 @@ export const SPACE_TOKEN_TYPES = {
     kid: '#atproto',
     expiresInSec: 7200,
     requireAud: false,
+    requireCnf: true,
   },
   clientAttestation: {
     typ: 'atproto-client-attestation+jwt',
     kid: undefined,
     expiresInSec: 60,
     requireAud: true,
+    requireCnf: false,
   },
 } as const
 
@@ -48,6 +52,7 @@ export type SpaceTokenPayload = {
   iat: number
   exp: number
   jti: string
+  cnf?: { jkt: string }
 }
 
 export type SpaceTokenHeader = {
@@ -61,12 +66,13 @@ export type SpaceToken = {
   payload: SpaceTokenPayload
 }
 
-const CLOCK_SKEW_SEC = 5
+export const CLOCK_SKEW_SEC = 5
 
 export type CreateSpaceTokenOpts = {
   iss: string
   sub: string
   aud?: string
+  dpopJkt?: string
   expiresInSec?: number
   kid?: string
 }
@@ -80,6 +86,9 @@ export const createSpaceToken = async (
   if (spec.requireAud && !opts.aud) {
     throw new SpaceTokenError(`a ${type} token requires an "aud"`)
   }
+  if (spec.requireCnf && !opts.dpopJkt) {
+    throw new SpaceTokenError(`a ${type} token requires a "dpopJkt"`)
+  }
 
   const iat = Math.floor(Date.now() / 1000)
   const header: SpaceTokenHeader = { alg: keypair.jwtAlg, typ: spec.typ }
@@ -90,6 +99,7 @@ export const createSpaceToken = async (
     iss: opts.iss,
     sub: opts.sub,
     ...(opts.aud ? { aud: opts.aud } : undefined),
+    ...(opts.dpopJkt ? { cnf: { jkt: opts.dpopJkt } } : undefined),
     iat,
     exp: iat + (opts.expiresInSec ?? spec.expiresInSec),
     jti: randomStr(16, 'hex'),
@@ -137,6 +147,9 @@ export const parseSpaceToken = (
   }
   if (spec.requireAud && !payload.aud) {
     throw new SpaceTokenError('missing token "aud"', 'BadJwtAudience')
+  }
+  if (spec.requireCnf && !payload.cnf?.jkt) {
+    throw new SpaceTokenError('missing token "cnf.jkt"', 'BadJwtCnf')
   }
   if (type === 'clientAttestation' && payload.iss !== payload.sub) {
     throw new SpaceTokenError(

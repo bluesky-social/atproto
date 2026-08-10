@@ -185,13 +185,11 @@ describe('simplespace', () => {
 
       // Carol is a member, hosted elsewhere: a credential reads the space's data,
       // but the member list is the authority's own.
-      const credHeaders = await sc.credentialFor(carol, space)
+      const cred = await sc.credentialFor(carol, space)
       await expect(
-        alice.client.call(
-          com.atproto.simplespace.listMembers,
-          { space },
-          { headers: credHeaders },
-        ),
+        cred
+          .clientFor(alice.pds)
+          .call(com.atproto.simplespace.listMembers, { space }),
       ).rejects.toThrow()
 
       // Dan is co-located with the authority, but the space is not his.
@@ -378,13 +376,11 @@ describe('simplespace', () => {
 
     it('serves the config to a member with a space credential', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
-      const credHeaders = await sc.credentialFor(carol, space)
+      const cred = await sc.credentialFor(carol, space)
 
-      const got = await alice.client.call(
-        com.atproto.simplespace.getSpace,
-        { space },
-        { headers: credHeaders },
-      )
+      const got = await cred
+        .clientFor(alice.pds)
+        .call(com.atproto.simplespace.getSpace, { space })
       expect(got.uri).toBe(space)
       expect(got.policy.$type).toBe(
         'com.atproto.simplespace.defs#memberListPolicy',
@@ -400,29 +396,23 @@ describe('simplespace', () => {
         skey: 'cfg-wrong-other',
         members: [carol],
       })
-      const credHeaders = await sc.credentialFor(carol, other)
+      const cred = await sc.credentialFor(carol, other)
 
       await expect(
-        alice.client.call(
-          com.atproto.simplespace.getSpace,
-          { space },
-          { headers: credHeaders },
-        ),
+        cred
+          .clientFor(alice.pds)
+          .call(com.atproto.simplespace.getSpace, { space }),
       ).rejects.toThrow()
     })
 
     it('refuses to answer for a space this host does not govern', async () => {
       // pds2 hosts no account for alice, so it holds no config to answer from.
       const space = await sc.createSpace(alice, { members: [bob] })
-      const credHeaders = await sc.credentialFor(bob, space)
+      const cred = await sc.credentialFor(bob, space)
 
       // The error names the space rather than leaking it as a missing repo.
       await expect(
-        bob.client.call(
-          com.atproto.space.listRepos,
-          { space },
-          { headers: credHeaders },
-        ),
+        cred.clientFor(bob.pds).call(com.atproto.space.listRepos, { space }),
       ).rejects.toMatchObject({ error: 'SpaceNotFound' })
       await expect(
         bob.client.call(
@@ -444,20 +434,16 @@ describe('simplespace', () => {
       const space = await sc.createSpace(alice, {
         policy: defs.publicPolicy.build({}),
       })
-      const credHeaders = await sc.credentialFor(carol, space)
-      expect(credHeaders.authorization).toMatch(/^Bearer /)
+      const cred = await sc.credentialFor(carol, space)
+      expect(cred.credential).toBeDefined()
     })
 
     it('refuses a non-member under member-list policy', async () => {
       const space = await sc.createSpace(alice)
       const token = await sc.delegationTokenFor(carol, space)
-      await expect(
-        alice.client.call(
-          com.atproto.space.getSpaceCredential,
-          { space },
-          { headers: { authorization: `Bearer ${token}` } },
-        ),
-      ).rejects.toMatchObject({ error: 'UserNotAuthorized' })
+      await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
+        error: 'UserNotAuthorized',
+      })
     })
 
     it('always admits the authority, whatever the policy', async () => {
@@ -468,8 +454,8 @@ describe('simplespace', () => {
           managingApp: 'did:web:unreachable.invalid#forum',
         }),
       })
-      const credHeaders = await sc.credentialFor(alice, space)
-      expect(credHeaders.authorization).toMatch(/^Bearer /)
+      const cred = await sc.credentialFor(alice, space)
+      expect(cred.credential).toBeDefined()
     })
 
     it('refuses when appAccess is an allowList and no attestation is presented', async () => {
@@ -482,13 +468,9 @@ describe('simplespace', () => {
         }),
       })
       const token = await sc.delegationTokenFor(carol, space)
-      await expect(
-        alice.client.call(
-          com.atproto.space.getSpaceCredential,
-          { space },
-          { headers: { authorization: `Bearer ${token}` } },
-        ),
-      ).rejects.toMatchObject({ error: 'AppNotAuthorized' })
+      await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
+        error: 'AppNotAuthorized',
+      })
     })
 
     /**
@@ -511,12 +493,7 @@ describe('simplespace', () => {
         space: SpaceRefString,
         token: string,
         attestation: string,
-      ) =>
-        alice.client.call(
-          com.atproto.space.getSpaceCredential,
-          { space, clientAttestation: attestation },
-          { headers: { authorization: `Bearer ${token}` } },
-        )
+      ) => sc.mintCredential(space, token, { clientAttestation: attestation })
 
       it('mints for an allow-listed app that signs with its published key', async () => {
         await using app = await MockClientApp.create()
@@ -611,8 +588,8 @@ describe('simplespace', () => {
         })
         const space = await spaceWith(app)
 
-        const credHeaders = await sc.credentialFor(carol, space)
-        expect(credHeaders.authorization).toMatch(/^Bearer /)
+        const cred = await sc.credentialFor(carol, space)
+        expect(cred.credential).toBeDefined()
 
         // It was actually consulted, and told who was asking.
         const asked = app.callsTo('com.atproto.simplespace.checkUserAccess')
@@ -631,13 +608,9 @@ describe('simplespace', () => {
         const space = await spaceWith(app)
 
         const token = await sc.delegationTokenFor(carol, space)
-        await expect(
-          alice.client.call(
-            com.atproto.space.getSpaceCredential,
-            { space },
-            { headers: { authorization: `Bearer ${token}` } },
-          ),
-        ).rejects.toMatchObject({ error: 'UserNotAuthorized' })
+        await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
+          error: 'UserNotAuthorized',
+        })
       })
 
       it('denies when the managing app errors', async () => {
@@ -650,26 +623,18 @@ describe('simplespace', () => {
         const space = await spaceWith(app)
 
         const token = await sc.delegationTokenFor(carol, space)
-        await expect(
-          alice.client.call(
-            com.atproto.space.getSpaceCredential,
-            { space },
-            { headers: { authorization: `Bearer ${token}` } },
-          ),
-        ).rejects.toMatchObject({ error: 'UserNotAuthorized' })
+        await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
+          error: 'UserNotAuthorized',
+        })
       })
 
       it('denies when the managing app cannot be resolved', async () => {
         // Same reasoning as an error response: an unreachable gate is a closed one.
         const space = await spaceWith('did:web:nonexistent.invalid#forum')
         const token = await sc.delegationTokenFor(carol, space)
-        await expect(
-          alice.client.call(
-            com.atproto.space.getSpaceCredential,
-            { space },
-            { headers: { authorization: `Bearer ${token}` } },
-          ),
-        ).rejects.toMatchObject({ error: 'UserNotAuthorized' })
+        await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
+          error: 'UserNotAuthorized',
+        })
       })
 
       it('records a writer the managing app admits', async () => {
@@ -702,13 +667,13 @@ describe('simplespace', () => {
         serviceId: 'atproto_space_syncer',
       })
       const space = await sc.createSpace(alice, { members: [bob, carol] })
-      const credHeaders = await sc.credentialFor(carol, space)
+      const cred = await sc.credentialFor(carol, space)
+      const asSyncer = cred.clientFor(alice.pds)
 
-      const reg = await alice.client.call(
-        com.atproto.space.registerNotify,
-        { space, service: syncer.serviceRef },
-        { headers: credHeaders },
-      )
+      const reg = await asSyncer.call(com.atproto.space.registerNotify, {
+        space,
+        service: syncer.serviceRef,
+      })
       // The registration expires, and the caller is told when: a syncer has to
       // renew rather than assume it stays registered forever.
       expect(reg.expiresAt).toBeDefined()
@@ -726,11 +691,10 @@ describe('simplespace', () => {
       expect(delivered[0].body).toMatchObject({ space, repo: bob.did })
 
       // Withdrawn: no further deliveries.
-      await alice.client.call(
-        com.atproto.space.unregisterNotify,
-        { space, service: syncer.serviceRef },
-        { headers: credHeaders },
-      )
+      await asSyncer.call(com.atproto.space.unregisterNotify, {
+        space,
+        service: syncer.serviceRef,
+      })
       const before = syncer.callsTo('com.atproto.space.notifyWrite').length
       await sc.write(bob, space, { text: 'not forwarded' })
       await network.pds.ctx.backgroundQueue.processAll()
@@ -739,11 +703,10 @@ describe('simplespace', () => {
       )
 
       // Unregistering again is idempotent.
-      await alice.client.call(
-        com.atproto.space.unregisterNotify,
-        { space, service: syncer.serviceRef },
-        { headers: credHeaders },
-      )
+      await asSyncer.call(com.atproto.space.unregisterNotify, {
+        space,
+        service: syncer.serviceRef,
+      })
     })
 
     it('stops delivering to a registration past its expiry, and resumes on renewal', async () => {
@@ -751,13 +714,13 @@ describe('simplespace', () => {
         serviceId: 'atproto_space_syncer',
       })
       const space = await sc.createSpace(alice, { members: [bob, carol] })
-      const credHeaders = await sc.credentialFor(carol, space)
+      const cred = await sc.credentialFor(carol, space)
+      const asSyncer = cred.clientFor(alice.pds)
 
-      await alice.client.call(
-        com.atproto.space.registerNotify,
-        { space, service: syncer.serviceRef },
-        { headers: credHeaders },
-      )
+      await asSyncer.call(com.atproto.space.registerNotify, {
+        space,
+        service: syncer.serviceRef,
+      })
 
       // Expire it rather than waiting out the TTL. No endpoint does this, so it
       // reaches into storage deliberately.
@@ -774,11 +737,10 @@ describe('simplespace', () => {
       expect(syncer.callsTo('com.atproto.space.notifyWrite')).toHaveLength(0)
 
       // Renewing brings it back — the row was withheld, not dropped.
-      await alice.client.call(
-        com.atproto.space.registerNotify,
-        { space, service: syncer.serviceRef },
-        { headers: credHeaders },
-      )
+      await asSyncer.call(com.atproto.space.registerNotify, {
+        space,
+        service: syncer.serviceRef,
+      })
       await sc.write(bob, space, { text: 'after renewal' })
       await sc.awaitNotify(
         async () => syncer.callsTo('com.atproto.space.notifyWrite'),
@@ -792,13 +754,12 @@ describe('simplespace', () => {
 
     it('refuses a service that cannot be resolved', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
-      const credHeaders = await sc.credentialFor(carol, space)
+      const cred = await sc.credentialFor(carol, space)
       await expect(
-        alice.client.call(
-          com.atproto.space.registerNotify,
-          { space, service: 'did:web:nonexistent.invalid#syncer' },
-          { headers: credHeaders },
-        ),
+        cred.clientFor(alice.pds).call(com.atproto.space.registerNotify, {
+          space,
+          service: 'did:web:nonexistent.invalid#syncer',
+        }),
       ).rejects.toMatchObject({ error: 'ServiceNotResolvable' })
     })
   })
@@ -869,13 +830,9 @@ describe('simplespace', () => {
         { headers: alice.headers },
       )
 
-      await expect(
-        alice.client.call(
-          com.atproto.space.getSpaceCredential,
-          { space },
-          { headers: { authorization: `Bearer ${token}` } },
-        ),
-      ).rejects.toMatchObject({ error: 'SpaceDeleted' })
+      await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
+        error: 'SpaceDeleted',
+      })
     })
 
     it('notifies registered syncers', async () => {
@@ -883,12 +840,11 @@ describe('simplespace', () => {
         serviceId: 'atproto_space_syncer',
       })
       const space = await sc.createSpace(alice, { members: [carol] })
-      const credHeaders = await sc.credentialFor(carol, space)
-      await alice.client.call(
-        com.atproto.space.registerNotify,
-        { space, service: syncer.serviceRef },
-        { headers: credHeaders },
-      )
+      const cred = await sc.credentialFor(carol, space)
+      await cred.clientFor(alice.pds).call(com.atproto.space.registerNotify, {
+        space,
+        service: syncer.serviceRef,
+      })
 
       await alice.client.call(
         com.atproto.simplespace.deleteSpace,

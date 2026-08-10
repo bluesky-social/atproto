@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getSpaceCredential, {
     auth: ctx.authVerifier.delegationTokenAuth,
     handler: async ({ input, auth }) => {
-      const { space, clientAttestation } = input.body
+      const { space, dpopJkt, clientAttestation } = input.body
       const { userDid, space: tokenSpace } = auth.credentials
 
       if (tokenSpace !== space) {
@@ -49,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
       const keypair = await ctx.actorStore.keypair(spaceDid)
       const credential = await createSpaceToken(
         'credential',
-        { iss: spaceDid, sub: space },
+        { iss: spaceDid, sub: space, dpopJkt },
         keypair,
       )
 

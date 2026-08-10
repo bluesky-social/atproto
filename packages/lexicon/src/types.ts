@@ -238,6 +238,7 @@ export type LexPermissionSet = z.infer<typeof lexPermissionSet>
 export const lexSpace = z.object({
   type: z.literal('space'),
   description: z.string().optional(),
+  key: z.string().optional(),
   name: z.string().min(1).max(64),
   'name:lang': lexLang.optional(),
   collections: z.array(z.string()),

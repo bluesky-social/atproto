@@ -2091,6 +2091,9 @@ importers:
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
+      '@atproto/jwk':
+        specifier: workspace:^
+        version: link:../oauth/jwk
       '@atproto/lex-cbor':
         specifier: workspace:^
         version: link:../lex/lex-cbor
@@ -2100,10 +2103,16 @@ importers:
       '@noble/hashes':
         specifier: ^1.6.1
         version: 1.7.0
+      jose:
+        specifier: ^5.2.0
+        version: 5.3.0
       zod:
         specifier: ^3.23.8
         version: 3.25.76
     devDependencies:
+      '@atproto/jwk-jose':
+        specifier: workspace:^
+        version: link:../oauth/jwk-jose
       typescript:
         specifier: ^6.0.3
         version: 6.0.3

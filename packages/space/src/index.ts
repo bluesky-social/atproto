@@ -1,4 +1,5 @@
 export * from './credential.js'
+export * from './dpop.js'
 export * from './error.js'
 export * from './lthash.js'
 export * from './repo-commit.js'

@@ -584,17 +584,14 @@ describe('space records', () => {
         .getBytes(parseCid(blobCid))
       expect(new Uint8Array(stored)).toEqual(bytes)
 
-      const credHeaders = await sc.credentialFor(carol, space)
-      const listed = await alice.client.call(
-        com.atproto.space.listBlobs,
-        { space, repo: alice.did },
-        { headers: credHeaders },
-      )
+      const cred = await sc.credentialFor(carol, space)
+      const listed = await cred
+        .clientFor(alice.pds)
+        .call(com.atproto.space.listBlobs, { space, repo: alice.did })
       expect(listed.cids).toEqual([blobCid])
 
-      const res = await fetch(
+      const res = await cred.fetch(
         `${network.pds.url}/xrpc/com.atproto.space.getBlob?space=${encodeURIComponent(space)}&repo=${alice.did}&cid=${blobCid}`,
-        { headers: credHeaders },
       )
       expect(res.status).toBe(200)
       expect(new Uint8Array(await res.arrayBuffer())).toEqual(bytes)
@@ -655,22 +652,22 @@ describe('space records', () => {
         record: { $type: TEST_COLLECTION, text: 'second', image: second },
       })
 
-      const credHeaders = await sc.credentialFor(carol, space)
-      const all = await alice.client.call(
-        com.atproto.space.listBlobs,
-        { space, repo: alice.did },
-        { headers: credHeaders },
-      )
+      const cred = await sc.credentialFor(carol, space)
+      const asSyncer = cred.clientFor(alice.pds)
+      const all = await asSyncer.call(com.atproto.space.listBlobs, {
+        space,
+        repo: alice.did,
+      })
       expect(all.cids.sort()).toEqual(
         [getBlobCidString(first), getBlobCidString(second)].sort(),
       )
 
       // What an incremental blob sync asks for: only what landed after its cursor.
-      const sinceMid = await alice.client.call(
-        com.atproto.space.listBlobs,
-        { space, repo: alice.did, since: midRev },
-        { headers: credHeaders },
-      )
+      const sinceMid = await asSyncer.call(com.atproto.space.listBlobs, {
+        space,
+        repo: alice.did,
+        since: midRev,
+      })
       expect(sinceMid.cids).toEqual([getBlobCidString(second)])
     })
 
@@ -690,12 +687,10 @@ describe('space records', () => {
         record: { $type: TEST_COLLECTION, text: 'blob', image: blob },
       })
 
-      const credHeaders = await sc.credentialFor(carol, other)
-      const listed = await alice.client.call(
-        com.atproto.space.listBlobs,
-        { space: other, repo: alice.did },
-        { headers: credHeaders },
-      )
+      const cred = await sc.credentialFor(carol, other)
+      const listed = await cred
+        .clientFor(alice.pds)
+        .call(com.atproto.space.listBlobs, { space: other, repo: alice.did })
       expect(listed.cids).toEqual([])
     })
 
@@ -717,9 +712,8 @@ describe('space records', () => {
       })
 
       const wrongCred = await sc.credentialFor(carol, other)
-      const res = await fetch(
+      const res = await wrongCred.fetch(
         `${network.pds.url}/xrpc/com.atproto.space.getBlob?space=${encodeURIComponent(space)}&repo=${alice.did}&cid=${blobCid}`,
-        { headers: wrongCred },
       )
       expect(res.status).toBeGreaterThanOrEqual(400)
     })

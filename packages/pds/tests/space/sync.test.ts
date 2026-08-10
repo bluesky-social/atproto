@@ -88,15 +88,17 @@ describe('space sync', () => {
         { headers: dan.headers },
       )
 
-      const credential = await sc.credentialFor(dan, space)
+      const cred = await sc.credentialFor(dan, space)
+      const asSyncer = cred.clientFor(dan.pds)
       const rkeys: string[] = []
       let cursor: string | undefined
       for (let i = 0; i < 10; i++) {
-        const page = await dan.client.call(
-          com.atproto.space.listRepoOps,
-          { space, repo: dan.did, limit: 2, cursor },
-          { headers: credential },
-        )
+        const page = await asSyncer.call(com.atproto.space.listRepoOps, {
+          space,
+          repo: dan.did,
+          limit: 2,
+          cursor,
+        })
         rkeys.push(...page.ops.map((op) => op.rkey))
         cursor = page.cursor
         if (!cursor) break
@@ -112,12 +114,13 @@ describe('space sync', () => {
         await sc.write(dan, space, { rkey: `paged-${i}` })
       }
 
-      const credential = await sc.credentialFor(dan, space)
-      const first = await dan.client.call(
-        com.atproto.space.listRepoOps,
-        { space, repo: dan.did, limit: 1 },
-        { headers: credential },
-      )
+      const cred = await sc.credentialFor(dan, space)
+      const asSyncer = cred.clientFor(dan.pds)
+      const first = await asSyncer.call(com.atproto.space.listRepoOps, {
+        space,
+        repo: dan.did,
+        limit: 1,
+      })
       expect(first.commit).toBeUndefined()
       expect(first.cursor).toBeDefined()
 
@@ -125,11 +128,12 @@ describe('space sync', () => {
       let commit: unknown
       const seen = [first.ops[0].rev]
       for (let i = 0; i < 5 && cursor; i++) {
-        const next = await dan.client.call(
-          com.atproto.space.listRepoOps,
-          { space, repo: dan.did, cursor, limit: 1 },
-          { headers: credential },
-        )
+        const next = await asSyncer.call(com.atproto.space.listRepoOps, {
+          space,
+          repo: dan.did,
+          cursor,
+          limit: 1,
+        })
         if (next.ops[0]) seen.push(next.ops[0].rev)
         cursor = next.cursor
         commit = next.commit
@@ -148,12 +152,13 @@ describe('space sync', () => {
         await sc.write(dan, space, { rkey: `prec-${i}` })
       }
 
-      const credential = await sc.credentialFor(dan, space)
-      const all = await dan.client.call(
-        com.atproto.space.listRepoOps,
-        { space, repo: dan.did, limit: 100 },
-        { headers: credential },
-      )
+      const cred = await sc.credentialFor(dan, space)
+      const asSyncer = cred.clientFor(dan.pds)
+      const all = await asSyncer.call(com.atproto.space.listRepoOps, {
+        space,
+        repo: dan.did,
+        limit: 100,
+      })
       expect(all.ops).toHaveLength(4)
 
       // Synced through op 0; page the rest one at a time, holding `since` steady.
@@ -161,11 +166,13 @@ describe('space sync', () => {
       const rkeys: string[] = []
       let cursor: string | undefined
       for (let i = 0; i < 10; i++) {
-        const page = await dan.client.call(
-          com.atproto.space.listRepoOps,
-          { space, repo: dan.did, since, cursor, limit: 1 },
-          { headers: credential },
-        )
+        const page = await asSyncer.call(com.atproto.space.listRepoOps, {
+          space,
+          repo: dan.did,
+          since,
+          cursor,
+          limit: 1,
+        })
         rkeys.push(...page.ops.map((op) => op.rkey))
         cursor = page.cursor
         if (!cursor) break
@@ -180,12 +187,13 @@ describe('space sync', () => {
       await sc.put(dan, space, { rkey: 'inlined', text: 'first' })
       await sc.put(dan, space, { rkey: 'inlined', text: 'second' })
 
-      const credential = await sc.credentialFor(dan, space)
-      const { ops } = await dan.client.call(
-        com.atproto.space.listRepoOps,
-        { space, repo: dan.did, limit: 100 },
-        { headers: credential },
-      )
+      const cred = await sc.credentialFor(dan, space)
+      const asSyncer = cred.clientFor(dan.pds)
+      const { ops } = await asSyncer.call(com.atproto.space.listRepoOps, {
+        space,
+        repo: dan.did,
+        limit: 100,
+      })
       expect(ops).toHaveLength(2)
       expect(ops[0].value).toBeUndefined()
       expect(ops[1].value).toMatchObject({ text: 'second' })
@@ -195,12 +203,13 @@ describe('space sync', () => {
       const space = await sc.createSpace(alice, { members: [dan] })
       await sc.write(dan, space, { rkey: 'no-value', text: 'body' })
 
-      const credential = await sc.credentialFor(dan, space)
-      const { ops } = await dan.client.call(
-        com.atproto.space.listRepoOps,
-        { space, repo: dan.did, excludeValues: true },
-        { headers: credential },
-      )
+      const cred = await sc.credentialFor(dan, space)
+      const asSyncer = cred.clientFor(dan.pds)
+      const { ops } = await asSyncer.call(com.atproto.space.listRepoOps, {
+        space,
+        repo: dan.did,
+        excludeValues: true,
+      })
       expect(ops).toHaveLength(1)
       expect(ops[0].value).toBeUndefined()
       // The op still names the record, so a syncer can fetch what it needs.
@@ -210,14 +219,15 @@ describe('space sync', () => {
     it('rejects a malformed cursor', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
       await sc.write(dan, space, { rkey: 'cursor-check' })
-      const credential = await sc.credentialFor(dan, space)
+      const cred = await sc.credentialFor(dan, space)
+      const asSyncer = cred.clientFor(dan.pds)
 
       await expect(
-        dan.client.call(
-          com.atproto.space.listRepoOps,
-          { space, repo: dan.did, cursor: 'not-a-cursor' },
-          { headers: credential },
-        ),
+        asSyncer.call(com.atproto.space.listRepoOps, {
+          space,
+          repo: dan.did,
+          cursor: 'not-a-cursor',
+        }),
       ).rejects.toMatchObject({ error: 'MalformedCursor' })
     })
   })
@@ -232,11 +242,11 @@ describe('space sync', () => {
       await sc.put(dan, space, { rkey: 'two', text: 'two revised' })
       await sc.del(dan, space, { rkey: 'one' })
 
-      const credential = await sc.credentialFor(dan, space)
-      const { ops, commit } = await dan.client.call(
+      const cred = await sc.credentialFor(dan, space)
+      const asSyncer = cred.clientFor(dan.pds)
+      const { ops, commit } = await asSyncer.call(
         com.atproto.space.listRepoOps,
         { space, repo: dan.did, limit: 100 },
-        { headers: credential },
       )
       expect(commit).toBeDefined()
 
@@ -257,11 +267,11 @@ describe('space sync', () => {
       await sc.write(dan, space, { rkey: 'kept', text: 'kept' })
       await sc.write(dan, space, { rkey: 'missed', text: 'missed' })
 
-      const credential = await sc.credentialFor(dan, space)
-      const { ops, commit } = await dan.client.call(
+      const cred = await sc.credentialFor(dan, space)
+      const asSyncer = cred.clientFor(dan.pds)
+      const { ops, commit } = await asSyncer.call(
         com.atproto.space.listRepoOps,
         { space, repo: dan.did, limit: 100 },
-        { headers: credential },
       )
 
       // Apply all but the last: the mismatch is what tells a syncer to recover.
@@ -306,12 +316,14 @@ describe('space sync', () => {
           .execute()
       })
 
-      const credential = await sc.credentialFor(bob, space)
-      const incremental = await bob.client.call(
-        com.atproto.space.listRepoOps,
-        { space, repo: bob.did, since: consumerSince, limit: 100 },
-        { headers: credential },
-      )
+      const cred = await sc.credentialFor(bob, space)
+      const asSyncer = cred.clientFor(bob.pds)
+      const incremental = await asSyncer.call(com.atproto.space.listRepoOps, {
+        space,
+        repo: bob.did,
+        since: consumerSince,
+        limit: 100,
+      })
       expect(incremental.ops).toHaveLength(2)
 
       const applied = new RepoCommit()
@@ -330,11 +342,12 @@ describe('space sync', () => {
         []
       let cursor: string | undefined
       for (let page = 0; page < 10; page++) {
-        const res = await bob.client.call(
-          com.atproto.space.listRecords,
-          { space, repo: bob.did, limit: 2, cursor },
-          { headers: credential },
-        )
+        const res = await asSyncer.call(com.atproto.space.listRecords, {
+          space,
+          repo: bob.did,
+          limit: 2,
+          cursor,
+        })
         recovered.push(
           ...res.records.map((r) => ({
             collection: r.collection,
@@ -354,11 +367,10 @@ describe('space sync', () => {
           cid: parseCid(r.cid),
         })),
       )
-      const latest = await bob.client.call(
-        com.atproto.space.getLatestCommit,
-        { space, repo: bob.did },
-        { headers: credential },
-      )
+      const latest = await asSyncer.call(com.atproto.space.getLatestCommit, {
+        space,
+        repo: bob.did,
+      })
       expect(rebuilt.matches(asSignedCommit(latest.commit))).toBe(true)
     })
   })
@@ -377,10 +389,9 @@ describe('space sync', () => {
       }
 
       // Carol syncs bob's repo in full, as a syncing service would.
-      const credHeaders = await sc.credentialFor(carol, space)
-      const res = await fetch(
+      const cred = await sc.credentialFor(carol, space)
+      const res = await cred.fetch(
         `${bob.pds.url}/xrpc/com.atproto.space.getRepo?space=${encodeURIComponent(space)}&repo=${bob.did}`,
-        { headers: credHeaders },
       )
       expect(res.status).toBe(200)
       expect(res.headers.get('content-type')).toContain(
@@ -418,10 +429,9 @@ describe('space sync', () => {
         await sc.write(bob, space, { rkey: `idx-${i}`, text: `idx ${i}` })
       }
 
-      const credHeaders = await sc.credentialFor(carol, space)
-      const res = await fetch(
+      const cred = await sc.credentialFor(carol, space)
+      const res = await cred.fetch(
         `${bob.pds.url}/xrpc/com.atproto.space.getRepo?space=${encodeURIComponent(space)}&repo=${bob.did}&excludeValues=true`,
-        { headers: credHeaders },
       )
       expect(res.status).toBe(200)
       const car = new Uint8Array(await res.arrayBuffer())
@@ -452,22 +462,20 @@ describe('space sync', () => {
       })
 
       const wrongCred = await sc.credentialFor(carol, other)
-      const res = await fetch(
+      const res = await wrongCred.fetch(
         `${bob.pds.url}/xrpc/com.atproto.space.getRepo?space=${encodeURIComponent(space)}&repo=${bob.did}`,
-        { headers: wrongCred },
       )
       expect(res.status).toBeGreaterThanOrEqual(400)
     })
 
     it('reports RepoNotFound for an unwritten repo', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
-      const credHeaders = await sc.credentialFor(carol, space)
+      const cred = await sc.credentialFor(carol, space)
       await expect(
-        alice.client.call(
-          com.atproto.space.getLatestCommit,
-          { space, repo: alice.did },
-          { headers: credHeaders },
-        ),
+        cred.clientFor(alice.pds).call(com.atproto.space.getLatestCommit, {
+          space,
+          repo: alice.did,
+        }),
       ).rejects.toMatchObject({ error: 'RepoNotFound' })
     })
   })
@@ -480,14 +488,10 @@ describe('space sync', () => {
       // authority, which records him in the writer set.
       await sc.write(bob, space, { text: 'writer set entry' })
 
-      const credHeaders = await sc.credentialFor(bob, space)
+      const cred = await sc.credentialFor(bob, space)
+      const asSyncer = cred.clientFor(alice.pds)
       const repos = await sc.awaitNotify(
-        () =>
-          alice.client.call(
-            com.atproto.space.listRepos,
-            { space },
-            { headers: credHeaders },
-          ),
+        () => asSyncer.call(com.atproto.space.listRepos, { space }),
         (res) => res.repos.some((r) => r.did === bob.did),
       )
       const dids = repos.repos.map((r) => r.did)
