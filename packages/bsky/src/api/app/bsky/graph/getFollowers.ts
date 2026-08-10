@@ -40,15 +40,40 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const result = await getFollowers({ ...params, hydrateCtx }, ctx)
+      const followers = result.followers
+      let cursor = result.cursor
+      for (
+        let fetches = 1;
+        fetches < MAX_PAGE_FILL_FETCHES &&
+        cursor &&
+        followers.length < params.limit;
+        fetches++
+      ) {
+        const previousCursor = cursor
+        const page = await getFollowers(
+          {
+            ...params,
+            cursor,
+            limit: params.limit - followers.length,
+            hydrateCtx,
+          },
+          ctx,
+        )
+        followers.push(...page.followers)
+        cursor = page.cursor
+        if (cursor === previousCursor) break
+      }
 
       return {
         encoding: 'application/json',
-        body: result,
+        body: { ...result, followers, cursor },
         headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
 }
+
+const MAX_PAGE_FILL_FETCHES = 10
 
 const skeleton = async (
   input: SkeletonFnInput<Context, Params>,

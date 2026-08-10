@@ -2,7 +2,6 @@
 
 exports[`pds follow views > fetches followers 1`] = `
 {
-  "cursor": "0000000000000__bafycid",
   "followers": [
     {
       "associated": {
@@ -123,7 +122,6 @@ exports[`pds follow views > fetches followers 1`] = `
 
 exports[`pds follow views > fetches followers 2`] = `
 {
-  "cursor": "0000000000000__bafycid",
   "followers": [
     {
       "associated": {
@@ -198,7 +196,6 @@ exports[`pds follow views > fetches followers 2`] = `
 
 exports[`pds follow views > fetches followers 3`] = `
 {
-  "cursor": "0000000000000__bafycid",
   "followers": [
     {
       "associated": {
@@ -296,7 +293,6 @@ exports[`pds follow views > fetches followers 3`] = `
 
 exports[`pds follow views > fetches followers 4`] = `
 {
-  "cursor": "0000000000000__bafycid",
   "followers": [
     {
       "associated": {
@@ -348,7 +344,6 @@ exports[`pds follow views > fetches followers 4`] = `
 
 exports[`pds follow views > fetches followers 5`] = `
 {
-  "cursor": "0000000000000__bafycid",
   "followers": [
     {
       "associated": {
