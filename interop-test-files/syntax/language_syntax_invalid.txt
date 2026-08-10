@@ -1,0 +1,13 @@
+.
+123
+j
+ja-
+a-DE
+
+# part of the "invalid" interop test, but current tests allow them:
+
+# jaja
+# JA
+
+# technically not valid, but allowing in naive parser
+de-419-DE

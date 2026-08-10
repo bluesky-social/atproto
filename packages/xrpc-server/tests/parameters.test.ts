@@ -1,6 +1,7 @@
-import * as http from 'node:http'
-import { AddressInfo } from 'node:net'
-import { LexiconDoc } from '@atproto/lexicon'
+import type * as http from 'node:http'
+import type { AddressInfo } from 'node:net'
+import express from 'express'
+import type { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
 import * as xrpcServer from '../src/index.js'
 import {
@@ -158,6 +159,87 @@ describe('Parameters', () => {
         arr: [1, 2, 3],
       }),
     ).rejects.toThrow('Error: arr must not have more than 2 elements')
+  })
+})
+
+describe('Express query parsing compatibility', () => {
+  let s: http.Server
+  let url: string
+
+  const lexicons: LexiconDoc[] = [
+    {
+      lexicon: 1,
+      id: 'io.example.repeatedArrayQueryTest',
+      defs: {
+        main: {
+          type: 'query',
+          parameters: {
+            type: 'params',
+            required: ['dids'],
+            properties: {
+              dids: {
+                type: 'array',
+                items: { type: 'string', format: 'did' },
+                maxLength: 100,
+              },
+            },
+          },
+          output: {
+            encoding: 'application/json',
+          },
+        },
+      },
+    },
+  ]
+
+  beforeAll(async () => {
+    const server = xrpcServer.createServer(lexicons)
+    server.method('io.example.repeatedArrayQueryTest', (ctx) => ({
+      encoding: 'application/json',
+      body: ctx.params,
+    }))
+
+    const app = express()
+    app.set('query parser', (queryString: string) => {
+      const parsed: Record<string, unknown> = {}
+      const searchParams = new URLSearchParams(queryString)
+      for (const key of new Set(searchParams.keys())) {
+        const values = searchParams.getAll(key)
+        parsed[key] =
+          values.length > 20
+            ? Object.fromEntries(values.map((value, index) => [index, value]))
+            : values.length === 1
+              ? values[0]
+              : values
+      }
+      return parsed
+    })
+    app.use(server.router)
+
+    s = app.listen(0)
+    await new Promise((resolve) => s.once('listening', resolve))
+    const { port } = s.address() as AddressInfo
+    url = `http://localhost:${port}`
+  })
+
+  afterAll(async () => {
+    await closeServer(s)
+  })
+
+  it('handles repeated array params above Express query parser array limits', async () => {
+    const did = 'did:plc:t76alsfrlr2zewmi2nsy6rls'
+    const params = new URLSearchParams()
+    for (let index = 0; index < 21; index++) {
+      params.append('dids', did)
+    }
+
+    const res = await fetch(
+      `${url}/xrpc/io.example.repeatedArrayQueryTest?${params}`,
+    )
+
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.dids).toEqual(Array.from({ length: 21 }, () => did))
   })
 })
 

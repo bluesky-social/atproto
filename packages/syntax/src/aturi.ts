@@ -1,22 +1,13 @@
-import {
-  AtIdentifierString,
-  ensureValidAtIdentifier,
-  isDidIdentifier,
-} from './at-identifier.js'
-import {
-  AtUriString,
-  InvalidAtUriError,
-  SPACE_MARKER,
-  SpaceRefString,
-} from './aturi_validation.js'
-import {
-  DidString,
-  InvalidDidError,
-  ensureValidDid,
-  isValidDid,
-} from './did.js'
-import { NsidString, ensureValidNsid, isValidNsid } from './nsid.js'
-import { RecordKeyString, ensureValidRecordKey } from './recordkey.js'
+import { ensureValidAtIdentifier, isDidIdentifier } from './at-identifier.js'
+import type { AtIdentifierString } from './at-identifier.js'
+import type { AtUriString, SpaceRefString } from './aturi_validation.js'
+import { InvalidAtUriError, SPACE_MARKER } from './aturi_validation.js'
+import type { DidString } from './did.js'
+import { InvalidDidError, ensureValidDid, isValidDid } from './did.js'
+import type { NsidString } from './nsid.js'
+import { ensureValidNsid, isValidNsid } from './nsid.js'
+import type { RecordKeyString } from './recordkey.js'
+import { ensureValidRecordKey } from './recordkey.js'
 
 export * from './aturi_validation.js'
 

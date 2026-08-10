@@ -1,5 +1,127 @@
 # @atproto/oauth-client-node
 
+## 0.5.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-client@0.8.3
+
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies [[`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c)]:
+  - @atproto-labs/simple-store@0.5.1
+  - @atproto/oauth-client@0.8.2
+  - @atproto-labs/handle-resolver-node@0.2.8
+  - @atproto-labs/did-resolver@0.3.7
+
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-client@0.8.1
+
+## 0.5.0
+
+### Minor Changes
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **BREAKING:** The session hooks exposed on `NodeOAuthClientOptions` have been renamed: `onUpdate` → `onSessionUpdated` and `onDelete` → `onSessionDeleted` (following the rename in `@atproto/oauth-client`).
+
+### Patch Changes
+
+- Updated dependencies [[`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a)]:
+  - @atproto/oauth-client@0.8.0
+  - @atproto-labs/simple-store@0.5.0
+  - @atproto-labs/did-resolver@0.3.6
+  - @atproto-labs/handle-resolver-node@0.2.7
+
+## 0.4.9
+
+### Patch Changes
+
+- Updated dependencies [[`ce386ee`](https://github.com/bluesky-social/atproto/commit/ce386eed324f813601db57f873fbb3b987492001)]:
+  - @atproto-labs/handle-resolver-node@0.2.6
+  - @atproto/oauth-client@0.7.11
+
+## 0.4.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-client@0.7.10
+
+## 0.4.7
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto-labs/handle-resolver-node@0.2.5
+  - @atproto-labs/did-resolver@0.3.5
+  - @atproto-labs/simple-store@0.4.4
+  - @atproto/jwk-webcrypto@0.3.4
+  - @atproto/oauth-client@0.7.9
+  - @atproto/oauth-types@0.7.5
+  - @atproto/jwk-jose@0.2.4
+  - @atproto/jwk@0.7.4
+  - @atproto/did@0.5.4
+
+## 0.4.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-client@0.7.8
+
+## 0.4.5
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build with `noImplicitAny` enabled
+
+- Updated dependencies [[`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto-labs/handle-resolver-node@0.2.4
+  - @atproto-labs/did-resolver@0.3.4
+  - @atproto-labs/simple-store@0.4.3
+  - @atproto/jwk-webcrypto@0.3.3
+  - @atproto/oauth-client@0.7.7
+  - @atproto/oauth-types@0.7.4
+  - @atproto/jwk-jose@0.2.3
+  - @atproto/jwk@0.7.3
+  - @atproto/did@0.5.3
+
+## 0.4.4
+
+### Patch Changes
+
+- Updated dependencies [[`8bcba69`](https://github.com/bluesky-social/atproto/commit/8bcba69cf1f02d09e07b51ce091918312029df63)]:
+  - @atproto/oauth-client@0.7.6
+
+## 0.4.3
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- Updated dependencies [[`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7)]:
+  - @atproto/did@0.5.2
+  - @atproto-labs/did-resolver@0.3.3
+  - @atproto-labs/handle-resolver-node@0.2.3
+  - @atproto-labs/simple-store@0.4.2
+  - @atproto/jwk@0.7.2
+  - @atproto/jwk-jose@0.2.2
+  - @atproto/jwk-webcrypto@0.3.2
+  - @atproto/oauth-client@0.7.5
+  - @atproto/oauth-types@0.7.3
+
 ## 0.4.2
 
 ### Patch Changes

@@ -1,11 +1,11 @@
 import { beforeAll, describe, expect, it } from 'vitest'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { parseCid } from '@atproto/lex-data'
 import {
-  CommitCtx,
+  type CommitCtx,
   LTHASH_STATE_BYTES,
   RepoCommit,
-  SignedCommit,
+  type SignedCommit,
   encodeCommitCtx,
   formatSetHashElement,
   verifyCommit,

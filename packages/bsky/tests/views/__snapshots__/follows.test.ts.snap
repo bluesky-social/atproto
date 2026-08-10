@@ -2,7 +2,6 @@
 
 exports[`pds follow views > fetches followers 1`] = `
 {
-  "cursor": "0000000000000__bafycid",
   "followers": [
     {
       "associated": {
@@ -23,6 +22,8 @@ exports[`pds follow views > fetches followers 1`] = `
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     {
@@ -44,6 +45,8 @@ exports[`pds follow views > fetches followers 1`] = `
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     {
@@ -65,6 +68,8 @@ exports[`pds follow views > fetches followers 1`] = `
         "followedBy": "record(5)",
         "following": "record(4)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     {
@@ -86,6 +91,8 @@ exports[`pds follow views > fetches followers 1`] = `
         "followedBy": "record(7)",
         "following": "record(6)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
   ],
@@ -106,6 +113,8 @@ exports[`pds follow views > fetches followers 1`] = `
     "viewer": {
       "blockedBy": false,
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
 }
@@ -113,7 +122,6 @@ exports[`pds follow views > fetches followers 1`] = `
 
 exports[`pds follow views > fetches followers 2`] = `
 {
-  "cursor": "0000000000000__bafycid",
   "followers": [
     {
       "associated": {
@@ -134,6 +142,8 @@ exports[`pds follow views > fetches followers 2`] = `
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     {
@@ -153,6 +163,8 @@ exports[`pds follow views > fetches followers 2`] = `
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
   ],
@@ -175,6 +187,8 @@ exports[`pds follow views > fetches followers 2`] = `
       "followedBy": "record(3)",
       "following": "record(2)",
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
 }
@@ -182,7 +196,6 @@ exports[`pds follow views > fetches followers 2`] = `
 
 exports[`pds follow views > fetches followers 3`] = `
 {
-  "cursor": "0000000000000__bafycid",
   "followers": [
     {
       "associated": {
@@ -203,6 +216,8 @@ exports[`pds follow views > fetches followers 3`] = `
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     {
@@ -224,6 +239,8 @@ exports[`pds follow views > fetches followers 3`] = `
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     {
@@ -243,6 +260,8 @@ exports[`pds follow views > fetches followers 3`] = `
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
   ],
@@ -265,6 +284,8 @@ exports[`pds follow views > fetches followers 3`] = `
       "followedBy": "record(5)",
       "following": "record(4)",
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
 }
@@ -272,7 +293,6 @@ exports[`pds follow views > fetches followers 3`] = `
 
 exports[`pds follow views > fetches followers 4`] = `
 {
-  "cursor": "0000000000000__bafycid",
   "followers": [
     {
       "associated": {
@@ -291,6 +311,8 @@ exports[`pds follow views > fetches followers 4`] = `
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
   ],
@@ -313,6 +335,8 @@ exports[`pds follow views > fetches followers 4`] = `
       "followedBy": "record(1)",
       "following": "record(0)",
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
 }
@@ -320,7 +344,6 @@ exports[`pds follow views > fetches followers 4`] = `
 
 exports[`pds follow views > fetches followers 5`] = `
 {
-  "cursor": "0000000000000__bafycid",
   "followers": [
     {
       "associated": {
@@ -341,6 +364,8 @@ exports[`pds follow views > fetches followers 5`] = `
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     {
@@ -360,6 +385,8 @@ exports[`pds follow views > fetches followers 5`] = `
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
   ],
@@ -382,6 +409,8 @@ exports[`pds follow views > fetches followers 5`] = `
       "followedBy": "record(3)",
       "following": "record(2)",
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
 }
@@ -410,6 +439,8 @@ exports[`pds follow views > fetches follows 1`] = `
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     {
@@ -431,6 +462,8 @@ exports[`pds follow views > fetches follows 1`] = `
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     {
@@ -452,6 +485,8 @@ exports[`pds follow views > fetches follows 1`] = `
         "followedBy": "record(5)",
         "following": "record(4)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     {
@@ -473,6 +508,8 @@ exports[`pds follow views > fetches follows 1`] = `
         "followedBy": "record(7)",
         "following": "record(6)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
   ],
@@ -493,6 +530,8 @@ exports[`pds follow views > fetches follows 1`] = `
     "viewer": {
       "blockedBy": false,
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
 }
@@ -521,6 +560,8 @@ exports[`pds follow views > fetches follows 2`] = `
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     {
@@ -540,6 +581,8 @@ exports[`pds follow views > fetches follows 2`] = `
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
   ],
@@ -562,6 +605,8 @@ exports[`pds follow views > fetches follows 2`] = `
       "followedBy": "record(3)",
       "following": "record(2)",
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
 }
@@ -588,6 +633,8 @@ exports[`pds follow views > fetches follows 3`] = `
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
   ],
@@ -610,6 +657,8 @@ exports[`pds follow views > fetches follows 3`] = `
       "followedBy": "record(1)",
       "following": "record(0)",
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
 }
@@ -638,6 +687,8 @@ exports[`pds follow views > fetches follows 4`] = `
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     {
@@ -659,6 +710,8 @@ exports[`pds follow views > fetches follows 4`] = `
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     {
@@ -678,6 +731,8 @@ exports[`pds follow views > fetches follows 4`] = `
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
   ],
@@ -700,6 +755,8 @@ exports[`pds follow views > fetches follows 4`] = `
       "followedBy": "record(5)",
       "following": "record(4)",
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
 }
@@ -728,6 +785,8 @@ exports[`pds follow views > fetches follows 5`] = `
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     {
@@ -747,6 +806,8 @@ exports[`pds follow views > fetches follows 5`] = `
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
   ],
@@ -769,6 +830,8 @@ exports[`pds follow views > fetches follows 5`] = `
       "followedBy": "record(3)",
       "following": "record(2)",
       "muted": false,
+      "mutedOnlyQuoteposts": false,
+      "mutedOnlyReposts": false,
     },
   },
 }

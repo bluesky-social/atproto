@@ -35,6 +35,8 @@ exports[`starter packs > does include users with creator block relationship in l
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(0)",
@@ -52,6 +54,8 @@ exports[`starter packs > does include users with creator block relationship in l
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(2)",
@@ -69,6 +73,8 @@ exports[`starter packs > does include users with creator block relationship in l
       "viewer": {
         "blockedBy": true,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(3)",
@@ -112,6 +118,8 @@ exports[`starter packs > does not include users with creator block relationship 
         "blockedBy": false,
         "blocking": "record(1)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(0)",
@@ -129,6 +137,8 @@ exports[`starter packs > does not include users with creator block relationship 
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(3)",
@@ -173,6 +183,8 @@ exports[`starter packs > does not include users with creator block relationship 
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(0)",
@@ -190,6 +202,8 @@ exports[`starter packs > does not include users with creator block relationship 
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "uri": "record(4)",
@@ -268,6 +282,8 @@ exports[`starter packs > generates notifications 1`] = `
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "cid": "cids(0)",
@@ -318,6 +334,8 @@ exports[`starter packs > generates notifications 1`] = `
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "cid": "cids(3)",
@@ -368,6 +386,8 @@ exports[`starter packs > generates notifications 1`] = `
       "viewer": {
         "blockedBy": false,
         "muted": false,
+        "mutedOnlyQuoteposts": false,
+        "mutedOnlyReposts": false,
       },
     },
     "cid": "cids(4)",

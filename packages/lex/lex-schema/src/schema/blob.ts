@@ -1,13 +1,17 @@
 import {
-  BlobRef,
-  LegacyBlobRef,
-  TypedBlobRef,
+  type BlobRef,
+  type LegacyBlobRef,
+  type TypedBlobRef,
   getBlobSize,
   isBlobRef,
   isLegacyBlobRef,
   isTypedBlobRef,
 } from '@atproto/lex-data'
-import { Schema, ValidationContext } from '../core.js'
+import {
+  Schema,
+  type ValidationContext,
+  type ValidationResult,
+} from '../core.js'
 import { memoizedOptions } from '../util/memoize.js'
 
 /**
@@ -56,7 +60,10 @@ export class BlobSchema<
     super()
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<BlobRef> {
     const blob = parseValue.call(ctx, input)
     if (!blob) {
       return ctx.issueUnexpectedType(input, 'blob')
@@ -143,8 +150,8 @@ function matchesMime(mime: string, accepted: string[]): boolean {
  * const avatarSchema = l.blob({ accept: ['image/*'], maxSize: 1000000 })
  * ```
  */
-export const blob = /*#__PURE__*/ memoizedOptions(function <
-  O extends BlobSchemaOptions = NonNullable<unknown>,
->(options?: O) {
-  return new BlobSchema(options)
-})
+export const blob: <O extends BlobSchemaOptions = NonNullable<unknown>>(
+  options?: O,
+) => BlobSchema<O> = /*#__PURE__*/ memoizedOptions(
+  (options) => new BlobSchema(options),
+)

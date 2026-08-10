@@ -1,25 +1,25 @@
 import events from 'node:events'
-import http from 'node:http'
+import type http from 'node:http'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { IdResolver, MemoryCache } from '@atproto/identity'
-import { Database, DatabaseSchema } from './db/index.js'
+import type { Database, DatabaseSchema } from './db/index.js'
 import createRoutes from './routes/index.js'
 
 export type { DatabaseSchema }
 
+export { BsyncSubscription } from './bsync-subscription.js'
 export { RepoSubscription } from './subscription.js'
 
 export class DataPlaneServer {
-  private terminator: httpTerminator.HttpTerminator
+  private terminator: HttpTerminator
 
   constructor(
     public server: http.Server,
     public idResolver: IdResolver,
   ) {
-    this.terminator = httpTerminator.createHttpTerminator({ server })
+    this.terminator = createHttpTerminator({ server })
   }
 
   static async create(db: Database, port: number, plcUrl?: string) {

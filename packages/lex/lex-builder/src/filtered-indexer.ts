@@ -1,5 +1,5 @@
-import { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
-import { Filter } from './filter.js'
+import type { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
+import type { Filter } from './filter.js'
 
 /**
  * A lexicon indexer that filters documents based on a provided filter.
@@ -8,7 +8,7 @@ import { Filter } from './filter.js'
  * will be bypassed for that document.
  */
 export class FilteredIndexer implements LexiconIndexer, AsyncDisposable {
-  protected readonly returned = new Set<string>()
+  protected readonly returned: Set<string> = new Set<string>()
 
   constructor(
     readonly indexer: LexiconIndexer & AsyncIterable<LexiconDocument>,
@@ -20,7 +20,11 @@ export class FilteredIndexer implements LexiconIndexer, AsyncDisposable {
     return this.indexer.get(id)
   }
 
-  async *[Symbol.asyncIterator]() {
+  async *[Symbol.asyncIterator](): AsyncGenerator<
+    LexiconDocument,
+    void,
+    unknown
+  > {
     const returned = new Set<string>()
 
     for await (const doc of this.indexer) {

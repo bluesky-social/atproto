@@ -1,14 +1,17 @@
 import assert from 'node:assert'
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
-import express, { Application } from 'express'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { type Server, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import express, { type Application } from 'express'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { AppBskyUnspeccedGetTrendsSkeleton, AtpAgent, ids } from '@atproto/api'
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { Users, trendsSeed } from '../seed/get-trends.js'
+import {
+  type AppBskyUnspeccedGetTrendsSkeleton,
+  type AtpAgent,
+  ids,
+} from '@atproto/api'
+import { type SeedClient, TestNetwork } from '@atproto/dev-env'
+import { type Users, trendsSeed } from '../seed/get-trends.js'
 
 describe('getTrends', () => {
   let network: TestNetwork
@@ -95,7 +98,7 @@ describe('getTrends', () => {
 class MockTrendsServer {
   app: Application
   server: Server
-  terminator: httpTerminator.HttpTerminator
+  terminator: HttpTerminator
 
   mockedTrendSkeletons = new Map<
     string,
@@ -105,7 +108,7 @@ class MockTrendsServer {
   constructor() {
     this.app = this.createApp()
     this.server = createServer(this.app)
-    this.terminator = httpTerminator.createHttpTerminator({
+    this.terminator = createHttpTerminator({
       server: this.server,
     })
   }

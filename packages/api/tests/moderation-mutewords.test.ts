@@ -1,16 +1,16 @@
-import { $Typed } from '../src/client/util.js'
+import type { $Typed } from '../src/client/util.js'
 import {
-  AppBskyEmbedGallery,
-  AppBskyEmbedRecord,
-  AppBskyEmbedRecordWithMedia,
-  AppBskyFeedPost,
+  type AppBskyEmbedGallery,
+  type AppBskyEmbedRecord,
+  type AppBskyEmbedRecordWithMedia,
+  type AppBskyFeedPost,
   BlobRef,
   RichText,
   mock,
   moderatePost,
 } from '../src/index.js'
 import { matchMuteWords } from '../src/moderation/mutewords.js'
-import { ModerationOpts } from '../src/moderation/types.js'
+import type { ModerationOpts } from '../src/moderation/types.js'
 
 const FAKE_CID = 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq'
 
@@ -19,27 +19,23 @@ const fakeBlob = (): BlobRef =>
 
 const galleryRecord = (alts: string[]): $Typed<AppBskyEmbedGallery.Main> => ({
   $type: 'app.bsky.embed.gallery',
-  items: alts.map(
-    (alt): $Typed<AppBskyEmbedGallery.Image> => ({
-      $type: 'app.bsky.embed.gallery#image',
-      image: fakeBlob(),
-      alt,
-      aspectRatio: { width: 4, height: 3 },
-    }),
-  ),
+  items: alts.map((alt): $Typed<AppBskyEmbedGallery.Image> => ({
+    $type: 'app.bsky.embed.gallery#image',
+    image: fakeBlob(),
+    alt,
+    aspectRatio: { width: 4, height: 3 },
+  })),
 })
 
 const galleryView = (alts: string[]): $Typed<AppBskyEmbedGallery.View> => ({
   $type: 'app.bsky.embed.gallery#view',
-  items: alts.map(
-    (alt): $Typed<AppBskyEmbedGallery.ViewImage> => ({
-      $type: 'app.bsky.embed.gallery#viewImage',
-      thumbnail: 'https://example.test/thumb.jpg',
-      fullsize: 'https://example.test/full.jpg',
-      alt,
-      aspectRatio: { width: 4, height: 3 },
-    }),
-  ),
+  items: alts.map((alt): $Typed<AppBskyEmbedGallery.ViewImage> => ({
+    $type: 'app.bsky.embed.gallery#viewImage',
+    thumbnail: 'https://example.test/thumb.jpg',
+    fullsize: 'https://example.test/full.jpg',
+    alt,
+    aspectRatio: { width: 4, height: 3 },
+  })),
 })
 
 const galleryMuteOpts = (): ModerationOpts => ({
@@ -165,9 +161,7 @@ describe(`matchMuteWords`, () => {
       rt.detectFacetsWithoutResolution()
 
       const match = matchMuteWords({
-        mutedWords: [
-          { value: '☠︎', targets: ['content'], actorTarget: 'all' },
-        ],
+        mutedWords: [{ value: '☠︎', targets: ['content'], actorTarget: 'all' }],
         text: rt.text,
         facets: rt.facets,
         outlineTags: [],

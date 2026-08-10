@@ -1,9 +1,6 @@
 {
   "name": "@atproto/lex-json",
-  "version": "0.1.1",
-  "engines": {
-    "node": ">=22"
-  },
+  "version": "0.1.6",
   "license": "MIT",
   "description": "Lexicon encoding utilities for AT Lexicon data in JSON format",
   "keywords": [
@@ -21,11 +18,8 @@
     "directory": "packages/lex/lex-json"
   },
   "files": [
-    "./src",
-    "./tsconfig.build.json",
-    "./tsconfig.tests.json",
-    "./tsconfig.json",
     "./dist",
+    "./README.md",
     "./CHANGELOG.md"
   ],
   "sideEffects": false,
@@ -36,15 +30,18 @@
       "default": "./dist/index.js"
     }
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@atproto/lex-data": "workspace:^",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.build.json",
+    "build": "tsc --build tsconfig.build.json",
     "test": "vitest run"
   }
 }

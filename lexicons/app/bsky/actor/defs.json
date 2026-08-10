@@ -195,7 +195,18 @@
       "type": "object",
       "description": "Metadata about the requesting account's relationship with the subject account. Only has meaningful content for authed requests.",
       "properties": {
-        "muted": { "type": "boolean" },
+        "muted": {
+          "type": "boolean",
+          "description": "Whether the account is fully muted, directly or via a mutelist. False when the mute is scoped to specific kinds; see mutedOnlyReposts and mutedOnlyQuoteposts."
+        },
+        "mutedOnlyReposts": {
+          "type": "boolean",
+          "description": "Whether the account's reposts are muted. Scoped mutes are exclusive with muted: this can be true while muted is false. If muted is true, this will be false."
+        },
+        "mutedOnlyQuoteposts": {
+          "type": "boolean",
+          "description": "Whether the account's quote posts are muted. Scoped mutes are exclusive with muted: this can be true while muted is false. If muted is true, this will be false."
+        },
         "mutedByList": {
           "type": "ref",
           "ref": "app.bsky.graph.defs#listViewBasic"
@@ -571,6 +582,10 @@
         "activeProgressGuide": {
           "type": "ref",
           "ref": "#bskyAppProgressGuide"
+        },
+        "isBetaUser": {
+          "description": "Indicates if the user is participating in the beta features program.",
+          "type": "boolean"
         },
         "queuedNudges": {
           "description": "An array of tokens which identify nudges (modals, popups, tours, highlight dots) that should be shown to the user.",

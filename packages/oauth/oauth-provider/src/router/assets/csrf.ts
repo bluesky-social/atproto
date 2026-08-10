@@ -2,7 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import createHttpError from 'http-errors'
 import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from '@atproto/oauth-provider-api'
 import {
-  CookieSerializeOptions,
+  type CookieSerializeOptions,
   getCookie,
   setCookie,
 } from '../../lib/http/index.js'

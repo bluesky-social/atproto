@@ -1,6 +1,6 @@
-import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../../proto/bsky_connect.js'
-import { Database } from '../db/index.js'
+import type { ServiceImpl } from '@connectrpc/connect'
+import type { Service } from '../../../proto/bsky_connect.js'
+import type { Database } from '../db/index.js'
 import { TimeCidKeyset, paginate } from '../db/pagination.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({

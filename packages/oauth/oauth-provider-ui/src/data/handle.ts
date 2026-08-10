@@ -1,6 +1,6 @@
 import { msg } from '@lingui/core/macro'
 import { useMutation } from '@tanstack/react-query'
-import { UpdateHandleInput } from '@atproto/oauth-provider-api'
+import type { UpdateHandleInput } from '@atproto/oauth-provider-api'
 import { useNotificationsContext } from '#/contexts/notifications.tsx'
 import { useApi } from '#/contexts/session.tsx'
 

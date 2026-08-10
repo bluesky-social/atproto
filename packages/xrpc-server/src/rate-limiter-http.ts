@@ -1,11 +1,11 @@
-import { IncomingMessage, ServerResponse } from 'node:http'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import {
   CombinedRateLimiter,
   RateLimitExceededError,
-  RateLimiterConsume,
-  RateLimiterI,
-  RateLimiterReset,
-  RateLimiterStatus,
+  type RateLimiterConsume,
+  type RateLimiterI,
+  type RateLimiterReset,
+  type RateLimiterStatus,
 } from './rate-limiter.js'
 
 export interface HttpRateLimiterContext {
@@ -26,8 +26,7 @@ export type HttpRateLimiterOptions<
  */
 export class HttpRateLimiter<
   C extends HttpRateLimiterContext = HttpRateLimiterContext,
-> implements RateLimiterI<C>
-{
+> implements RateLimiterI<C> {
   constructor(
     private readonly rateLimiter: RateLimiterI<C>,
     private readonly options: Readonly<HttpRateLimiterOptions<C>> = {},
@@ -45,6 +44,12 @@ export class HttpRateLimiter<
     } catch (err) {
       if (err instanceof RateLimitExceededError) {
         setStatusHeaders(ctx, err.status)
+
+        ctx.res?.setHeader(
+          'Retry-After',
+          Math.ceil(err.status.msBeforeNext / 1e3),
+        )
+        ctx.res?.appendHeader('Access-Control-Expose-Headers', 'Retry-After')
       }
 
       throw err
@@ -79,4 +84,10 @@ function setStatusHeaders<
   ctx.res?.setHeader('RateLimit-Reset', resetAt)
   ctx.res?.setHeader('RateLimit-Remaining', status.remainingPoints)
   ctx.res?.setHeader('RateLimit-Policy', `${status.limit};w=${status.duration}`)
+
+  // Expose the rate limit headers to browser clients (CORS)
+  ctx.res?.appendHeader(
+    'Access-Control-Expose-Headers',
+    'RateLimit-Limit, RateLimit-Reset, RateLimit-Remaining, RateLimit-Policy',
+  )
 }

@@ -1,6 +1,6 @@
 import { createSpaceToken, spaceHostAud } from '@atproto/space'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertSpaceHost } from './util.js'
 

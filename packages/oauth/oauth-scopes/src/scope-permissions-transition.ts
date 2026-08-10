@@ -1,10 +1,10 @@
 import {
-  AccountPermissionMatch,
-  BlobPermissionMatch,
-  RepoPermissionMatch,
-  RpcPermissionMatch,
+  type AccountPermissionMatch,
+  type BlobPermissionMatch,
+  type RepoPermissionMatch,
+  type RpcPermissionMatch,
   ScopePermissions,
-  SpacePermissionMatch,
+  type SpacePermissionMatch,
 } from './scope-permissions.js'
 
 /**

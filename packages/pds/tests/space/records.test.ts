@@ -1,9 +1,9 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { getBlobCidString, parseCid } from '@atproto/lex-data'
-import { NsidString } from '@atproto/syntax'
+import type { NsidString } from '@atproto/syntax'
 import { com } from '../../src/lexicons/index.js'
 import {
-  Actor,
+  type Actor,
   SpaceClient,
   TEST_COLLECTION,
   TEST_COLLECTION_ALT,

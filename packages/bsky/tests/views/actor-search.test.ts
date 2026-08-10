@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { AppBskyActorSearchActors, AtpAgent, ids } from '@atproto/api'
+import { type AppBskyActorSearchActors, type AtpAgent, ids } from '@atproto/api'
 import { wait } from '@atproto/common'
-import { SeedClient, TestNetwork, usersBulkSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, usersBulkSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewer } from '../_util.js'
 
 // @NOTE skipped to help with CI failures

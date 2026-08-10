@@ -1,6 +1,6 @@
 {
   "name": "@atproto/ws-client",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "license": "MIT",
   "description": "Websocket client library",
   "keywords": [
@@ -13,28 +13,37 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/ws-client"
   },
-  "engines": {
-    "node": ">=22"
-  },
-  "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "build": "tsgo --build tsconfig.build.json"
-  },
-  "dependencies": {
-    "@atproto/common": "workspace:^",
-    "ws": "^8.12.0"
-  },
-  "devDependencies": {
-    "@types/ws": "^8.5.4",
-    "get-port": "^6.1.2",
-    "http-terminator": "^3.2.0",
-    "jest": "^30.0.0"
-  },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "imports": {
+    "#transport": {
+      "node": "./dist/transport/node-transport.js",
+      "default": "./dist/transport/browser-transport.js"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.4",
+    "http-terminator": "^3.2.0",
+    "vitest": "^4.0.16"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsc --build tsconfig.build.json"
   }
 }

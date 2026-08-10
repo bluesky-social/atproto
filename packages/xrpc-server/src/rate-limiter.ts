@@ -1,5 +1,5 @@
 import {
-  RateLimiterAbstract,
+  type RateLimiterAbstract,
   RateLimiterMemory,
   RateLimiterRedis,
   RateLimiterRes,

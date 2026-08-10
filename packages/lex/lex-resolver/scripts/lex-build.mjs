@@ -1,5 +1,3 @@
-/* eslint-env node  */
-
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from '@atproto/lex-builder'
@@ -14,6 +12,7 @@ build({
   lib: '@atproto/lex-schema',
   pretty: true,
   indexFile: true,
+  importExt: '.js',
 }).catch((err) => {
   console.error('Error building lexicon schemas:', err)
   process.exit(1)

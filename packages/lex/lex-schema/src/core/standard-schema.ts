@@ -1,12 +1,14 @@
-import { StandardSchemaV1 } from '@standard-schema/spec'
-import { ValidationContext, Validator } from './validator.js'
+import type { StandardSchemaV1 } from '@standard-schema/spec'
+import type { Validator } from './validator.js'
+import { ValidationContext } from './validator.js'
 
 /**
  * The Standard Schema adapter for {@link Validator} instances.
  */
-export class StandardSchemaAdapter<TInput, TOutput>
-  implements StandardSchemaV1.Props<TInput, TOutput>
-{
+export class StandardSchemaAdapter<
+  TInput,
+  TOutput,
+> implements StandardSchemaV1.Props<TInput, TOutput> {
   readonly version = 1
 
   readonly vendor = '@atproto/lex-schema'

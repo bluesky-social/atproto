@@ -55,6 +55,7 @@
             "app.bsky.graph.getStarterPacksWithMembership",
             "app.bsky.graph.getSuggestedFollowsByActor",
             "app.bsky.graph.searchStarterPacks",
+            "app.bsky.graph.searchStarterPacksV2",
             "app.bsky.labeler.getServices",
             "app.bsky.notification.getPreferences",
             "app.bsky.notification.getUnreadCount",

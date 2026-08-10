@@ -1,5 +1,63 @@
 # @atproto/oauth-client-browser-example
 
+## 0.1.7
+
+### Patch Changes
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix login input not being immediately actionable
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update vitest dependencies
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update Vite to version 8
+
+- [#5301](https://github.com/bluesky-social/atproto/pull/5301) [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7) Thanks [@43081j](https://github.com/43081j)! - Switch from destructured default imports to named imports of CommonJS dependencies.
+
+## 0.1.6
+
+### Patch Changes
+
+- [#5188](https://github.com/bluesky-social/atproto/pull/5188) [`28caa70`](https://github.com/bluesky-social/atproto/commit/28caa70dd4c4406eccce35d72adee23354c377ae) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use Suspense boundaries to show loading status
+
+- [#5188](https://github.com/bluesky-social/atproto/pull/5188) [`28caa70`](https://github.com/bluesky-social/atproto/commit/28caa70dd4c4406eccce35d72adee23354c377ae) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update react dependency
+
+## 0.1.5
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+## 0.1.4
+
+### Patch Changes
+
+- [#5158](https://github.com/bluesky-social/atproto/pull/5158) [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve dark mode support
+
+- [#5158](https://github.com/bluesky-social/atproto/pull/5158) [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export pdsClient in console
+
+- [#5158](https://github.com/bluesky-social/atproto/pull/5158) [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve bskyClient preferences setup (avoid infinite error loop)
+
+- [#5158](https://github.com/bluesky-social/atproto/pull/5158) [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add account manager link in user menu
+
+## 0.1.3
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Convert source from CJS to ESM
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly type the `default` export
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `start` function from `/server` export
+
+## 0.1.2
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
 ## 0.1.1
 
 ### Patch Changes

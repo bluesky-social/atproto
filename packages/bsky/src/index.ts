@@ -1,14 +1,13 @@
 import events from 'node:events'
-import http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import compression from 'compression'
 import cors from 'cors'
 import { Etcd3 } from 'etcd3'
 import express from 'express'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
-import { Keypair } from '@atproto/crypto'
+import type { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { Client } from '@atproto/lex'
 import { createServer } from '@atproto/xrpc-server'
@@ -22,7 +21,7 @@ import API, {
 } from './api/index.js'
 import { AuthVerifier, createPublicKeyObject } from './auth-verifier.js'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync.js'
-import { ServerConfig } from './config.js'
+import type { ServerConfig } from './config.js'
 import { AppContext } from './context.js'
 import {
   authWithApiKey as courierAuth,
@@ -60,7 +59,7 @@ export class BskyAppView {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
-  private terminator?: httpTerminator.HttpTerminator
+  private terminator?: HttpTerminator
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
@@ -136,6 +135,19 @@ export class BskyAppView {
             headers: config.topicsApiKey
               ? { authorization: `Bearer ${config.topicsApiKey}` }
               : undefined,
+          },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: config.debugMode,
+          },
+        )
+      : undefined
+
+    const irisClient = config.irisUrl
+      ? new Client(
+          {
+            service: config.irisUrl,
           },
           {
             // Trust internal services to send us well-formed responses
@@ -236,6 +248,7 @@ export class BskyAppView {
       searchClient,
       suggestionsClient,
       topicsClient,
+      irisClient,
       hydrator,
       views,
       signingKey,
@@ -285,7 +298,7 @@ export class BskyAppView {
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
-    this.terminator = httpTerminator.createHttpTerminator({ server })
+    this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.cfg.assignPort(port)

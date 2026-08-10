@@ -1,9 +1,6 @@
 {
   "name": "@atproto/lex",
-  "version": "0.1.4",
-  "engines": {
-    "node": ">=22"
-  },
+  "version": "0.3.5",
   "license": "MIT",
   "description": "Lexicon tooling for AT",
   "keywords": [
@@ -20,6 +17,7 @@
   "files": [
     "./dist",
     "./bin",
+    "./README.md",
     "./CHANGELOG.md"
   ],
   "bin": {
@@ -34,6 +32,9 @@
       "default": "./dist/index.js"
     }
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@atproto/lex-builder": "workspace:^",
     "@atproto/lex-client": "workspace:^",
@@ -46,12 +47,12 @@
   },
   "devDependencies": {
     "@types/yargs": "^17.0.33",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "scripts": {
-    "codegen": "./bin/lex build --override --indexFile --lexicons ./lexicons --out ./tests/lexicons --lib @atproto/lex-schema",
-    "prebuild": "pnpm run codegen",
-    "build": "tsgo --build tsconfig.build.json",
+    "codegen:lex": "./bin/lex build --override --indexFile --lexicons ./lexicons --out ./tests/lexicons --lib @atproto/lex-schema",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
+    "build": "tsc --build tsconfig.build.json",
     "test": "vitest run"
   }
 }

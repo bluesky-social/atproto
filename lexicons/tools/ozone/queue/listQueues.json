@@ -14,7 +14,7 @@
           },
           "subjectType": {
             "type": "string",
-            "description": "Filter queues that handle this subject type ('account' or 'record')."
+            "description": "Filter queues that handle this subject type ('account', 'record', 'message', or 'conversation')."
           },
           "collection": {
             "type": "string",

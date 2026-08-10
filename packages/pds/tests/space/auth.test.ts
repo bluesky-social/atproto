@@ -1,10 +1,10 @@
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { JoseKey } from '@atproto/oauth-provider'
+import { JoseKey } from '@atproto/oauth-provider/provider'
 import { createDpopProof, createSpaceToken, spaceHostAud } from '@atproto/space'
-import { NsidString } from '@atproto/syntax'
+import type { NsidString } from '@atproto/syntax'
 import { com } from '../../src/lexicons/index.js'
 import {
-  Actor,
+  type Actor,
   SPACE_TYPE_COLLECTIONS,
   SpaceClient,
   SpaceCredential,

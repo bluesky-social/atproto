@@ -1,0 +1,88 @@
+# Keeps Dependabot PRs compatible with the Changeset check in repo.yaml by
+# generating (and force-refreshing) a changeset from the PR's diff.
+#
+# Side effect: once this workflow pushes, Dependabot considers the branch
+# externally modified and stops auto-rebasing the PR. That's fine — grouped
+# updates arrive as fresh PRs weekly, and `@dependabot recreate` still works
+# (the recreated branch re-triggers this workflow).
+name: Dependabot Changeset
+
+on:
+  pull_request:
+
+permissions:
+  contents: write # push the changeset commit
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref }}'
+  cancel-in-progress: true
+
+jobs:
+  changeset:
+    name: Generate changeset
+    runs-on: ubuntu-latest
+    # Only same-repo PRs authored by dependabot. PR author (not actor) so a
+    # human reopening/rebasing the PR still gets a changeset regenerated, but
+    # never react to our own changeset commit (sender is the pusher on
+    # `synchronize`, and the commit below is made as github-actions[bot]).
+    if: >
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.sender.login != 'github-actions[bot]'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The event's head commit, not the merge ref (so the push below is a
+          # fast-forward of the PR branch) and not the branch name (so a ref
+          # that moved after the event was validated makes the push fail
+          # loudly instead of silently building on an unvetted commit).
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0 # needed for git diff against base branch
+
+      - name: Generate and push changeset
+        id: generate
+        env: # env indirection: never interpolate PR-controlled strings into the script
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          # Dependabot only touches package.json files and the root lockfile,
+          # and the lockfile lives outside every workspace package, so the
+          # changed non-private package.json files are exactly the packages
+          # `changeset status` would report as changed. Private / versionless
+          # packages (services/*, root) cannot be versioned by changesets.
+          pkgs=$(git diff --name-only "origin/$BASE_REF"...HEAD -- '*/package.json' |
+            while read -r f; do
+              [ -f "$f" ] && jq -r 'if .private == true or .version == null then empty else .name end' "$f"
+            done | sort -u)
+
+          # Always (re)compute our changeset from the current diff: grouped PRs
+          # are re-created with a different set of bumped packages every week,
+          # so a changeset from an earlier run may list stale packages — or
+          # need to disappear entirely if no versionable package changed.
+          changeset=".changeset/dependabot-${PR_NUMBER}.md"
+          if [ -z "$pkgs" ]; then
+            rm -f "$changeset"
+          else
+            {
+              echo '---'
+              while read -r name; do echo "'$name': patch"; done <<<"$pkgs"
+              echo '---'
+              echo
+              printf '%s\n' "$PR_TITLE"
+            } >"$changeset"
+          fi
+
+          git add .changeset
+          if git diff --cached --quiet; then
+            echo 'Changeset up to date; nothing to push.'
+            exit 0
+          fi
+          # Commit as the github-actions[bot] app account, matching the
+          # identity changesets/action uses for "Version packages" commits.
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Sync changeset with Dependabot update'
+          git push origin "HEAD:$HEAD_REF"
+          echo 'pushed=true' >>"$GITHUB_OUTPUT"

@@ -1,17 +1,17 @@
 import assert from 'node:assert'
-import { isHandleString, l } from '@atproto/lex'
-import { AtUri, AtUriString } from '@atproto/syntax'
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import { isHandleString, type l } from '@atproto/lex'
+import { AtUri, type AtUriString } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   PipethroughUpstreamError,
   computeProxyTo,
 } from '../../../../pipethrough.js'
 import {
-  LocalViewer,
-  MungeFn,
-  RecordDescript,
+  type LocalViewer,
+  type MungeFn,
+  type RecordDescript,
   formatMungedResponse,
   getLocalLag,
   pipethroughReadAfterWrite,

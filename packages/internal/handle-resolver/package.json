@@ -1,9 +1,6 @@
 {
   "name": "@atproto-labs/handle-resolver",
-  "version": "0.4.2",
-  "engines": {
-    "node": ">=22"
-  },
+  "version": "0.4.8",
   "license": "MIT",
   "description": "Isomorphic ATProto handle to DID resolver",
   "keywords": [
@@ -21,6 +18,10 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/internal/handle-resolver"
   },
+  "files": [
+    "./dist",
+    "./CHANGELOG.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -28,14 +29,20 @@
       "default": "./dist/index.js"
     }
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@atproto-labs/simple-store": "workspace:^",
     "@atproto-labs/simple-store-memory": "workspace:^",
     "@atproto/did": "workspace:^",
     "zod": "^3.23.8"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  },
   "scripts": {
-    "build": "tsgo --build tsconfig.build.json"
+    "test": "vitest run",
+    "build": "tsc --build tsconfig.build.json"
   }
 }

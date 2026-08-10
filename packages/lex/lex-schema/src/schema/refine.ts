@@ -1,11 +1,11 @@
 import {
-  InferInput,
+  type InferInput,
   IssueCustom,
-  ValidationContext,
-  ValidationResult,
-  Validator,
+  type ValidationContext,
+  type ValidationResult,
+  type Validator,
 } from '../core.js'
-import { CustomAssertionContext } from './custom.js'
+import type { CustomAssertionContext } from './custom.js'
 
 /**
  * Configuration for a refinement check that validates a condition.
@@ -55,8 +55,7 @@ export type InferRefinement<R> =
  * @template Out - The output type (same as T for checks, narrowed for assertions)
  */
 export type Refinement<T = any, Out extends T = T> =
-  | RefinementCheck<T>
-  | RefinementAssertion<T, Out>
+  RefinementCheck<T> | RefinementAssertion<T, Out>
 
 /**
  * Creates a refined schema by adding additional validation constraints.

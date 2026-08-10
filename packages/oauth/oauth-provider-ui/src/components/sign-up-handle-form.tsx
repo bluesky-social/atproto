@@ -1,50 +1,71 @@
 import { Trans } from '@lingui/react/macro'
-import { HandleString } from '@atproto/syntax'
-import { InputHandleDefault } from '#/components/forms/input-handle-default'
-import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
-import { Admonition } from '#/components/utils/admonition.tsx'
+import type { HandleString } from '@atproto/syntax'
+import { Notice } from '#/components/feedback/notice.tsx'
+import {
+  HandleField,
+  composeHandle,
+} from '#/components/forms/fields/handle-field.tsx'
+import {
+  FormShell,
+  type FormShellProps,
+} from '#/components/forms/form-shell.tsx'
 
 export type SignUpHandleData = {
   handle: HandleString
 }
 
-export type SignUpHandleFormProps = WrappedSmartFormProps<SignUpHandleData> & {
+type HandleFormValues = { handle: string; domain: string }
+
+export type SignUpHandleFormProps = Omit<
+  FormShellProps<HandleFormValues>,
+  'onSubmit' | 'onValues'
+> & {
   domains: string[]
+  values?: Partial<SignUpHandleData>
+  onValues?: (values: Partial<SignUpHandleData>) => void
+  handler: (
+    data: SignUpHandleData,
+    signal: AbortSignal,
+  ) => void | PromiseLike<void>
 }
 
 export function SignUpHandleForm({
   domains,
-
-  // FormProp
+  values,
+  onValues,
+  handler,
+  children,
   ...props
 }: SignUpHandleFormProps) {
   return (
-    <SmartForm
+    <FormShell<HandleFormValues>
       {...props}
-      validate={({ handle }) => {
-        if (handle) return { handle }
+      // @NOTE The wizard stores the composed handle, so both the report and the
+      // seed below speak whole handles rather than the two parts.
+      onValues={(next) =>
+        onValues?.({ handle: composeHandle(next) as HandleString })
+      }
+      onSubmit={(next, signal) => {
+        const handle = composeHandle(next) as HandleString
+        onValues?.({ handle })
+        return handler({ handle }, signal)
       }}
-      fields={({ values, setterFor }) => (
-        <>
-          <InputHandleDefault
-            handle={values.handle}
-            onHandle={setterFor('handle')}
-            domains={domains}
-            name="handle"
-            required
-            autoFocus
-            enterKeyHint="done"
-            autoComplete="nickname"
-          />
+    >
+      <HandleField
+        domains={domains}
+        defaultHandle={values?.handle}
+        required
+        autoFocus
+      />
 
-          <Admonition role="note">
-            <Trans>
-              You can change this username to any domain name you control after
-              your account is set up.
-            </Trans>
-          </Admonition>
-        </>
-      )}
-    />
+      <Notice role="note">
+        <Trans>
+          You can change this username to any domain name you control after your
+          account is set up.
+        </Trans>
+      </Notice>
+
+      {children}
+    </FormShell>
   )
 }

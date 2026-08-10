@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import { join } from 'node:path'
-import { SourceFile } from 'ts-morph'
-import { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
+import type { SourceFile } from 'ts-morph'
+import type { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
 import {
   isGlobalIdentifier,
   isJsKeyword,
@@ -88,8 +88,8 @@ export class RefResolver {
     private options: RefResolverOptions,
   ) {}
 
-  public readonly resolve = memoize(
-    async (ref: string): Promise<ResolvedRef> => {
+  public readonly resolve: (ref: string) => Promise<ResolvedRef> = memoize(
+    async (ref) => {
       const [nsid, hash = 'main'] = ref.split('#')
 
       if (nsid === '' || nsid === this.doc.id) {
@@ -145,8 +145,8 @@ export class RefResolver {
    * @note The returned `typeName` and `varName` are *both* guaranteed to be
    * valid TypeScript identifiers.
    */
-  public readonly resolveLocal = memoize(
-    async (hash: string): Promise<ResolvedRef> => {
+  public readonly resolveLocal: (hash: string) => Promise<ResolvedRef> =
+    memoize(async (hash) => {
       const hashes = Object.keys(this.doc.defs)
 
       if (!hashes.includes(hash)) {
@@ -200,8 +200,7 @@ export class RefResolver {
       assert(varName !== typeName, 'Variable and type name should be different')
 
       return { varName, typeName }
-    },
-  )
+    })
 
   /**
    * @note Since this is a memoized function, and is used to generate the name

@@ -1,12 +1,13 @@
 import assert from 'node:assert'
 import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
-import {
-  BrandingInput as BrandingConfig,
+import type {
+  BrandingConfig,
   HcaptchaConfig,
-} from '@atproto/oauth-provider'
-import { DidString, ensureValidDid, isValidDid } from '@atproto/syntax'
-import { ServerEnvironment } from './env.js'
+} from '@atproto/oauth-provider/provider'
+import { type DidString, ensureValidDid, isValidDid } from '@atproto/syntax'
+import pkg from '../../package.json' with { type: 'json' }
+import type { ServerEnvironment } from './env.js'
 
 export type { BrandingConfig }
 
@@ -31,7 +32,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     hostname,
     publicUrl,
     did,
-    version: env.version, // default?
+    version: env.version || pkg.version,
     privacyPolicyUrl: env.privacyPolicyUrl,
     termsOfServiceUrl: env.termsOfServiceUrl,
     contactEmailAddress: env.contactEmailAddress,
@@ -69,6 +70,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       provider: 's3',
       bucket: env.blobstoreS3Bucket,
       uploadTimeoutMs: env.blobstoreS3UploadTimeoutMs || 20000,
+      requestTimeoutMs: env.blobstoreS3RequestTimeoutMs,
       region: env.blobstoreS3Region,
       endpoint: env.blobstoreS3Endpoint,
       forcePathStyle: env.blobstoreS3ForcePathStyle,
@@ -94,6 +96,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     throw new Error('Must configure either S3 or disk blobstore')
   }
 
+  // @NOTE when behind an entryway, this should be configured to match the entryway's domains
   let serviceHandleDomains: string[]
   if (env.serviceHandleDomains && env.serviceHandleDomains.length > 0) {
     serviceHandleDomains = env.serviceHandleDomains
@@ -270,30 +273,16 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     name: env.serviceName ?? `${hostname} PDS`,
     logo: env.logoUrl,
     colors: {
-      light: env.lightColor,
-      dark: env.darkColor,
-
-      contrastSaturation: env.contrastSaturation,
-
       primary: env.primaryColor,
-      primaryContrast: env.primaryColorContrast,
-      primaryHue: env.primaryColorHue,
 
       error: env.errorColor,
-      errorContrast: env.errorColorContrast,
-      errorHue: env.errorColorHue,
-
       warning: env.warningColor,
-      warningContrast: env.warningColorContrast,
-      warningHue: env.warningColorHue,
-
       info: env.infoColor,
-      infoContrast: env.infoColorContrast,
-      infoHue: env.infoColorHue,
-
       success: env.successColor,
-      successContrast: env.successColorContrast,
-      successHue: env.successColorHue,
+    },
+    background: {
+      light: env.backgroundLightUrl,
+      dark: env.backgroundDarkUrl,
     },
     links: [
       {
@@ -406,7 +395,7 @@ export type ServiceConfig = {
   hostname: string
   publicUrl: string
   did: DidString
-  version?: string
+  version: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
   acceptingImports: boolean
@@ -436,6 +425,7 @@ export type S3BlobstoreConfig = {
   endpoint?: string
   forcePathStyle?: boolean
   uploadTimeoutMs?: number
+  requestTimeoutMs?: number
   credentials?: {
     accessKeyId: string
     secretAccessKey: string

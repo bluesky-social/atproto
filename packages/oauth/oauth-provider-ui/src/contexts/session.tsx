@@ -1,6 +1,6 @@
 import { msg } from '@lingui/core/macro'
 import {
-  ReactNode,
+  type ReactNode,
   createContext,
   useCallback,
   useContext,
@@ -69,7 +69,7 @@ export function SessionProvider({
 
   const session = useMemo(() => {
     return current
-      ? sessions.find((s) => s.account.did === current) ?? null
+      ? (sessions.find((s) => s.account.did === current) ?? null)
       : null
   }, [sessions, current])
 

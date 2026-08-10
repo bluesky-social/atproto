@@ -1,18 +1,18 @@
 import assert from 'node:assert'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
-  AppBskyFeedDefs,
-  AppBskyFeedGetTimeline,
-  AtpAgent,
+  type AppBskyFeedDefs,
+  type AppBskyFeedGetTimeline,
+  type AtpAgent,
   ids,
 } from '@atproto/api'
 import {
   EXAMPLE_LABELER,
-  SeedClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { Database } from '../../src/index.js'
+import type { Database } from '../../src/index.js'
 import { forSnapshot, getOriginator, paginateAll } from '../_util.js'
 
 const REVERSE_CHRON = 'reverse-chronological'

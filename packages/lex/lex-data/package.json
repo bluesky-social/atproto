@@ -1,9 +1,6 @@
 {
   "name": "@atproto/lex-data",
-  "version": "0.1.2",
-  "engines": {
-    "node": ">=22"
-  },
+  "version": "0.1.7",
   "license": "MIT",
   "description": "Core utilities for AT Lexicons",
   "keywords": [
@@ -18,11 +15,8 @@
     "directory": "packages/lex/lex-data"
   },
   "files": [
-    "./src",
-    "./tsconfig.build.json",
-    "./tsconfig.tests.json",
-    "./tsconfig.json",
     "./dist",
+    "./README.md",
     "./CHANGELOG.md"
   ],
   "sideEffects": false,
@@ -33,18 +27,20 @@
       "default": "./dist/index.js"
     }
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "multiformats": "^13.0.0",
     "tslib": "^2.8.1",
-    "uint8arrays": "^5.0.0",
     "unicode-segmenter": "^0.14.0"
   },
   "devDependencies": {
     "core-js": "^3",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.build.json",
+    "build": "tsc --build tsconfig.build.json",
     "test": "vitest run"
   }
 }

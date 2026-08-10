@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppBskyFeedDefs, AtpAgent, ids } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
 describe('bsky needs-review labels', () => {
   let network: TestNetwork

@@ -1,5 +1,5 @@
-import { Insertable, Selectable, sql } from 'kysely'
-import { $Typed, Cid, getBlobCidString, lexParse } from '@atproto/lex'
+import { type Insertable, type Selectable, sql } from 'kysely'
+import { type $Typed, type Cid, getBlobCidString, lexParse } from '@atproto/lex'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { app } from '../../../../lexicons/index.js'
 import {
@@ -7,12 +7,15 @@ import {
   postUriToThreadgateUri,
   uriToDid,
 } from '../../../../util/uris.js'
-import { RecordWithMedia } from '../../../../views/types.js'
+import type { RecordWithMedia } from '../../../../views/types.js'
 import { parsePostgate } from '../../../../views/util.js'
-import { BackgroundQueue } from '../../background.js'
-import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema.js'
-import { Database } from '../../db/index.js'
-import { Notification } from '../../db/tables/notification.js'
+import type { BackgroundQueue } from '../../background.js'
+import type {
+  DatabaseSchema,
+  DatabaseSchemaType,
+} from '../../db/database-schema.js'
+import type { Database } from '../../db/index.js'
+import type { Notification } from '../../db/tables/notification.js'
 import { countAll, excluded } from '../../db/util.js'
 import {
   getAncestorsAndSelfQb,
@@ -120,6 +123,20 @@ const insertFn = async (
         .where('uri', '=', post.uri)
         .set({ invalidReplyRoot, violatesThreadGate })
         .executeTakeFirst()
+    }
+    // Denormalized OP replies per thread, mirroring the production dataplane.
+    // Includes all OP replies, regardless of where they occur in the tree.
+    if (obj.reply.parent.uri && post.creator === uriToDid(obj.reply.root.uri)) {
+      await db
+        .insertInto('op_thread_reply')
+        .values({
+          rootUri: obj.reply.root.uri,
+          parentUri: obj.reply.parent.uri,
+          uri: post.uri,
+          deletedAt: null,
+        })
+        .onConflict((oc) => oc.doNothing())
+        .execute()
     }
   }
 
@@ -399,6 +416,14 @@ const deleteFn = async (
       .returningAll()
       .executeTakeFirst(),
     db.deleteFrom('feed_item').where('postUri', '=', uriStr).executeTakeFirst(),
+    // Soft delete rather than remove, mirroring the production dataplane: the
+    // OP thread walk can still route through a deleted reply to replies that
+    // outlive it.
+    db
+      .updateTable('op_thread_reply')
+      .where('uri', '=', uriStr)
+      .set({ deletedAt: new Date().toISOString() })
+      .executeTakeFirst(),
   ])
   await db.deleteFrom('quote').where('subject', '=', uriStr).execute()
   const deletedEmbeds: (

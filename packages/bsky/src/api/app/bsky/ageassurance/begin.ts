@@ -5,13 +5,13 @@ import { getAgeAssuranceRegionConfig } from '@atproto/api'
 import {
   InvalidRequestError,
   MethodNotImplementedError,
-  Server,
+  type Server,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 type InputSchema = app.bsky.ageassurance.begin.$InputBody
 import { app } from '../../../../lexicons/index.js'
 import { httpLogger as log } from '../../../../logger.js'
-import { ActorInfo } from '../../../../proto/bsky_pb.js'
+import type { ActorInfo } from '../../../../proto/bsky_pb.js'
 import { AGE_ASSURANCE_CONFIG } from '../../../age-assurance/const.js'
 import {
   KWS_SUPPORTED_LANGUAGES,

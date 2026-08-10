@@ -1,11 +1,21 @@
 import assert from 'node:assert'
-import { type Browser, Handler, type Page, Target, TargetType } from 'puppeteer'
+import {
+  type Browser,
+  type Handler,
+  type Page,
+  type Target,
+  TargetType,
+} from 'puppeteer'
 
 export class PageHelper implements AsyncDisposable {
   constructor(protected readonly page: Page) {}
 
   async goto(url: string | URL) {
     await this.page.goto(url.toString())
+  }
+
+  async reload() {
+    await this.page.reload()
   }
 
   isClosed() {
@@ -85,9 +95,9 @@ export class PageHelper implements AsyncDisposable {
   async typeIn(selector: string, text: string) {
     const elementHandle = await this.getVisibleElement(selector)
     elementHandle.focus()
-    await elementHandle.click({ clickCount: 3 }) // Select all existing text
+    await elementHandle.click({ count: 3 }) // Select all existing text
     await elementHandle.press('Backspace') // Clear the input
-    await elementHandle.type(text)
+    await elementHandle.type(text, { delay: 20 }) // Give the web app time to react to each keystroke
     return elementHandle
   }
 

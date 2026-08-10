@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest'
-import { AddressInfo } from 'ws'
-import { TapChannel, TapHandler } from '../src/channel.js'
-import { TapEvent } from '../src/types.js'
+import { describe, expect, it, vi } from 'vitest'
+import type { AddressInfo } from 'ws'
+import { TapChannel, type TapHandler } from '../src/channel.js'
+import type { TapEvent } from '../src/types.js'
 import { createWebSocketServer } from './_util.js'
 
 const createRecordEvent = (id: number) => ({
@@ -266,6 +266,91 @@ describe('TapChannel', () => {
       expect(receivedEvents[1].id).toBe(2)
       expect(receivedAcks).toContain(1)
       expect(receivedAcks).toContain(2)
+    })
+  })
+
+  describe('ack delivery', () => {
+    it('does not hang when a handler awaits an ack across a dropped connection', async () => {
+      // Both shipped indexers `await opts.ack()` inside onEvent. A handler runs
+      // inside the iteration, and a reconnect only happens when the iteration
+      // advances, so an ack that awaited confirmed delivery would block the very
+      // pull delivery depends on. That deadlock reproduces against the
+      // pre-migration client: it hung past a 15s timeout, and destroy() couldn't
+      // unwind it either.
+      //
+      // So ackEvent resolves once the ack has been sent, or recorded for the next
+      // connection. It can't promise the peer processed it, since `send()`
+      // resolves on hand-off — an ack handed to a socket that then dies is lost,
+      // and Tap's at-least-once redelivery covers that.
+      await using server = await createWebSocketServer()
+      const { port } = server.address() as AddressInfo
+
+      let connections = 0
+      server.on('connection', (socket) => {
+        const isFirst = ++connections === 1
+        socket.on('message', () => socket.close())
+        if (isFirst) {
+          // Deliver, then drop abruptly (1006 — retryable here).
+          socket.send(JSON.stringify(createRecordEvent(7)))
+          socket.terminate()
+        }
+      })
+
+      const handler: TapHandler = {
+        onEvent: async (_evt, opts) => {
+          await opts.ack()
+        },
+        onError: () => {},
+      }
+
+      await using channel = new TapChannel(`ws://localhost:${port}`, handler, {
+        maxReconnectSeconds: 0,
+      })
+
+      const consume = channel.start().catch(() => {})
+      // The load-bearing assertion: the handler's awaited ack resolved, so the
+      // loop kept pulling and reconnected. Before the fix the pull was blocked on
+      // the ack and the ack on the pull.
+      await vi.waitFor(() => expect(connections).toBeGreaterThan(1))
+      await channel.destroy()
+      await consume
+    })
+
+    it('lands an ack recorded while no connection was live', async () => {
+      // The other half: with no sender at ack time, the ack is recorded and
+      // flushed by `onConnect`, which runs off the socket's own event and so
+      // doesn't depend on the iteration advancing.
+      await using server = await createWebSocketServer()
+      const { port } = server.address() as AddressInfo
+
+      const acksByConnection: number[][] = []
+      server.on('connection', (socket) => {
+        const index = acksByConnection.push([]) - 1
+        socket.on('message', (data) => {
+          const msg = JSON.parse(data.toString())
+          if (msg.type === 'ack') {
+            acksByConnection[index].push(msg.id)
+            socket.close()
+          }
+        })
+      })
+
+      const handler: TapHandler = {
+        onEvent: () => {},
+        onError: () => {},
+      }
+      await using channel = new TapChannel(`ws://localhost:${port}`, handler, {
+        maxReconnectSeconds: 0,
+      })
+
+      // Ack before anything connected, so there's nothing to hand off to.
+      await channel.ackEvent(7)
+      const consume = channel.start().catch(() => {})
+      await vi.waitFor(() =>
+        expect(acksByConnection.some((acks) => acks.includes(7))).toBe(true),
+      )
+      await channel.destroy()
+      await consume
     })
   })
 

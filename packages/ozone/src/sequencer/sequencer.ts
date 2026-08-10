@@ -1,19 +1,17 @@
 import EventEmitter from 'node:events'
-import { Selectable } from 'kysely'
-// eslint-disable-next-line import/default
-import pg from 'pg'
+import type { Selectable } from 'kysely'
+import type pg from 'pg'
 type PoolClient = pg.PoolClient
-import type TypedEmitter from 'typed-emitter'
-import { Database } from '../db/index.js'
-import { Label as LabelTable, LabelChannel } from '../db/schema/label.js'
-import { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels.js'
+import type { Database } from '../db/index.js'
+import { type Label as LabelTable, LabelChannel } from '../db/schema/label.js'
+import type { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels.js'
 import { seqLogger as log } from '../logger.js'
-import { ModerationService } from '../mod-service/index.js'
+import type { ModerationService } from '../mod-service/index.js'
 
 export type { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels.js'
 type LabelRow = Selectable<LabelTable>
 
-export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
+export class Sequencer extends EventEmitter<SequencerEvents> {
   db: Database
   destroyed = false
   pollPromise: Promise<void> | undefined
@@ -140,8 +138,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 }
 
 type SequencerEvents = {
-  events: (evts: LabelsEvt[]) => void
-  close: () => void
+  events: [evts: LabelsEvt[]]
+  close: []
 }
 
-export type SequencerEmitter = TypedEmitter.default<SequencerEvents>
+export type SequencerEmitter = EventEmitter<SequencerEvents>

@@ -2,7 +2,7 @@ import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { parseCid } from '@atproto/lex-data'
 import { lexToJson } from '@atproto/lex-json'
 import { l } from '@atproto/lex-schema'
-import { FetchHandler } from './agent.js'
+import type { FetchHandler } from './agent.js'
 import {
   XrpcAuthenticationError,
   XrpcFetchError,
@@ -230,6 +230,107 @@ describe(xrpc, () => {
 
       expect(response.success).toBe(true)
       expect(response.body).toStrictEqual({ unexpected: 'data' })
+    })
+
+    it('applies custom headers', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 'ok' })
+      })
+
+      const response = await xrpc(fetchHandler, testQuery, {
+        headers: {
+          'atproto-proxy': 'did:plc:foo#bar',
+          'atproto-accept-labelers': 'did:plc:labeler1#a,did:plc:labeler2#b',
+          'x-custom-header': 'custom-value',
+        },
+        // "undefined" here won't affect the headers
+        service: undefined,
+        labelers: undefined,
+      })
+
+      expect(response.success).toBe(true)
+      expect(response.body).toEqual({ value: 'ok' })
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [, init] = fetchHandler.mock.calls[0]!
+      const headers = new Headers(init.headers)
+
+      expect(headers.get('x-custom-header')).toBe('custom-value')
+      expect(headers.get('atproto-proxy')).toBe('did:plc:foo#bar')
+      expect(
+        headers
+          .get('atproto-accept-labelers')
+          ?.split(',')
+          .map((s) => s.trim())
+          .sort(),
+      ).toEqual(['did:plc:labeler1#a', 'did:plc:labeler2#b'])
+    })
+
+    it('overrides "atproto-proxy" when "service" is provided', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 'ok' })
+      })
+
+      const response = await xrpc(fetchHandler, testQuery, {
+        headers: {
+          'atproto-proxy': 'did:plc:foo#bar',
+          'atproto-accept-labelers': 'did:plc:labeler1#a,did:plc:labeler2#b',
+          'x-custom-header': 'custom-value',
+        },
+        service: null,
+      })
+
+      expect(response.success).toBe(true)
+      expect(response.body).toEqual({ value: 'ok' })
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [, init] = fetchHandler.mock.calls[0]!
+      const headers = new Headers(init.headers)
+      expect(headers.get('x-custom-header')).toBe('custom-value')
+      expect(headers.get('atproto-proxy')).toBe(null)
+      expect(
+        headers
+          .get('atproto-accept-labelers')
+          ?.split(',')
+          .map((s) => s.trim())
+          .sort(),
+      ).toEqual(['did:plc:labeler1#a', 'did:plc:labeler2#b'])
+    })
+
+    it('merges "atproto-accept-labelers" when "labelers" is provided', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 'ok' })
+      })
+
+      const response = await xrpc(fetchHandler, testQuery, {
+        headers: {
+          'atproto-proxy': 'did:plc:foo#bar',
+          'atproto-accept-labelers': 'did:plc:labeler1#a,did:plc:labeler2#b',
+          'x-custom-header': 'custom-value',
+        },
+        labelers: ['did:plc:labeler3#c'],
+      })
+
+      expect(response.success).toBe(true)
+      expect(response.body).toEqual({ value: 'ok' })
+      expect(fetchHandler).toHaveBeenCalledOnce()
+
+      const [, init] = fetchHandler.mock.calls[0]!
+      const headers = new Headers(init.headers)
+
+      expect(headers.get('x-custom-header')).toBe('custom-value')
+      expect(headers.get('atproto-proxy')).toBe('did:plc:foo#bar')
+      expect(
+        headers
+          .get('atproto-accept-labelers')
+          ?.split(',')
+          .map((s) => s.trim())
+          .sort(),
+      ).toEqual([
+        'did:plc:labeler1#a',
+        'did:plc:labeler2#b',
+        'did:plc:labeler3#c',
+      ])
     })
   })
 

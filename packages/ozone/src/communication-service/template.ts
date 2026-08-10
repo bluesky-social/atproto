@@ -1,7 +1,7 @@
-import { Selectable } from 'kysely'
-import { Database } from '../db/index.js'
-import { CommunicationTemplate } from '../db/schema/communication_template.js'
-import { TemplateView } from '../lexicon/types/tools/ozone/communication/defs.js'
+import type { Selectable } from 'kysely'
+import type { Database } from '../db/index.js'
+import type { CommunicationTemplate } from '../db/schema/communication_template.js'
+import type { TemplateView } from '../lexicon/types/tools/ozone/communication/defs.js'
 
 export type CommunicationTemplateServiceCreator = (
   db: Database,

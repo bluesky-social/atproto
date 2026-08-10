@@ -1,7 +1,7 @@
-import AtpAgent from '@atproto/api'
+import type AtpAgent from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'

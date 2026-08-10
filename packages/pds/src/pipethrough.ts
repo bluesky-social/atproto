@@ -1,18 +1,18 @@
-import { IncomingHttpHeaders, ServerResponse } from 'node:http'
-import { PassThrough, Readable, finished } from 'node:stream'
-import { Request } from 'express'
-import { Agent, Dispatcher, Pool, interceptors } from 'undici'
+import type { IncomingHttpHeaders, ServerResponse } from 'node:http'
+import { PassThrough, type Readable, finished } from 'node:stream'
+import type { Request } from 'express'
+import { Agent, type Dispatcher, Pool, interceptors } from 'undici'
 import {
   decodeStream,
   getServiceEndpoint,
   omit,
   streamToNodeBuffer,
 } from '@atproto/common'
-import { RpcPermissionMatch } from '@atproto/oauth-scopes'
+import type { RpcPermissionMatch } from '@atproto/oauth-scopes'
 import {
-  CatchallHandler,
-  HandlerPipeThroughBuffer,
-  HandlerPipeThroughStream,
+  type CatchallHandler,
+  type HandlerPipeThroughBuffer,
+  type HandlerPipeThroughStream,
   InternalServerError,
   InvalidRequestError,
   ResponseType,
@@ -23,8 +23,8 @@ import {
 import { isUnicastIp, unicastLookup } from '@atproto-labs/fetch-node'
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
 import { isAccessPrivileged } from './auth-scope.js'
-import { ProxyConfig } from './config/config.js'
-import { AppContext } from './context.js'
+import type { ProxyConfig } from './config/config.js'
+import type { AppContext } from './context.js'
 import { chat, com, tools } from './lexicons/index.js'
 import { httpLogger } from './logger.js'
 

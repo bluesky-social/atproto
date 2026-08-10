@@ -1,14 +1,15 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
-  Unknown$TypedObject,
-  ValidationContext,
+  type Unknown$TypedObject,
+  type ValidationContext,
+  type ValidationResult,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
-import { TypedObjectSchema } from './typed-object.js'
-import { TypedRefSchema } from './typed-ref.js'
+import type { TypedObjectSchema } from './typed-object.js'
+import type { TypedRefSchema } from './typed-ref.js'
 
 /**
  * Schema for Lexicon typed unions (unions discriminated by $type).
@@ -29,10 +30,8 @@ import { TypedRefSchema } from './typed-ref.js'
  * ```
  */
 export class TypedUnionSchema<
-  const TValidators extends readonly (
-    | TypedRefSchema
-    | TypedObjectSchema
-  )[] = [],
+  const TValidators extends readonly (TypedRefSchema | TypedObjectSchema)[] =
+    [],
   const TClosed extends boolean = boolean,
 > extends Schema<
   TClosed extends true
@@ -63,11 +62,14 @@ export class TypedUnionSchema<
     return lazyProperty(this, 'validatorsMap', map)
   }
 
-  get $types() {
+  get $types(): readonly unknown[] {
     return Array.from(this.validatorsMap.keys())
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<InferInput<TValidators[number]> | Unknown$TypedObject> {
     if (!isPlainObject(input) || !('$type' in input)) {
       return ctx.issueUnexpectedType(input, '$typed')
     }
@@ -87,7 +89,7 @@ export class TypedUnionSchema<
       return ctx.issueInvalidPropertyType(input, '$type', 'string')
     }
 
-    return ctx.success(input)
+    return ctx.success(input as Unknown$TypedObject)
   }
 }
 
@@ -125,6 +127,6 @@ export class TypedUnionSchema<
 export function typedUnion<
   const R extends readonly TypedRefSchema[],
   const C extends boolean,
->(refs: R, closed: C) {
+>(refs: R, closed: C): TypedUnionSchema<R, C> {
   return new TypedUnionSchema<R, C>(refs, closed)
 }

@@ -1,28 +1,34 @@
-import { MessageDescriptor } from '@lingui/core'
+import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 import {
-  DevicesIcon,
-  GlobeIcon,
-  HouseSimpleIcon,
-  IconProps,
-  QuestionIcon,
-  UserIcon,
-} from '@phosphor-icons/react'
-import {
   Outlet,
-  RegisteredRouter,
-  ToPathOption,
+  type RegisteredRouter,
+  type ToPathOption,
   createRoute,
   useRouter,
 } from '@tanstack/react-router'
-import { FunctionComponent, ReactNode, useEffect, useMemo, useRef } from 'react'
 import {
-  LayoutPage,
-  LayoutPageLink,
-} from '#/components/layouts/layout-page.tsx'
+  CircleQuestionMarkIcon,
+  GlobeIcon,
+  HouseIcon,
+  type LucideIcon,
+  MonitorSmartphoneIcon,
+  UserIcon,
+} from 'lucide-react'
+import {
+  type FunctionComponent,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react'
+import {
+  AccountShell,
+  type AccountShellLink,
+} from '#/components/layouts/account-shell.tsx'
 import { AuthenticationProvider } from '#/contexts/authentication.tsx'
 import { useSessionContext } from '#/contexts/session.tsx'
-import { Explicit } from '#/lib/util.ts'
+import type { Explicit } from '#/lib/util.ts'
 import { RootRoute } from '../../route.tsx'
 import { Page as AccountAboutPage } from './about/page.tsx'
 import { Page as AccountOAuthPage } from './apps/page.tsx'
@@ -32,7 +38,7 @@ import { Page as AccountIndexPage } from './page.tsx'
 
 type SubPage = {
   title: string | MessageDescriptor
-  icon?: FunctionComponent<IconProps>
+  icon?: LucideIcon
   hidden?: boolean
   position?: number
   description?: string | MessageDescriptor
@@ -45,7 +51,7 @@ type SubPages<T extends `/${string}` = `/${string}`> = {
 
 const DEFAULT_PAGES = {
   '/': {
-    icon: HouseSimpleIcon,
+    icon: HouseIcon,
     position: 0,
     title: msg`Home`,
     component: () => <AccountIndexPage />,
@@ -58,7 +64,7 @@ const DEFAULT_PAGES = {
     component: () => <AccountManagePage />,
   },
   '/devices': {
-    icon: DevicesIcon,
+    icon: MonitorSmartphoneIcon,
     position: 20,
     title: msg`Devices`,
     description: msg`Manage your active sessions`,
@@ -72,7 +78,7 @@ const DEFAULT_PAGES = {
     component: () => <AccountOAuthPage />,
   },
   '/about': {
-    icon: QuestionIcon,
+    icon: CircleQuestionMarkIcon,
     position: 50,
     title: msg`About`,
     component: () => <AccountAboutPage />,
@@ -112,7 +118,7 @@ function Page({
   basePath: ToPathOption<RegisteredRouter, '/', undefined>
   subPages: SubPages
 }) {
-  const links = useMemo<readonly LayoutPageLink[]>(() => {
+  const links = useMemo<readonly AccountShellLink[]>(() => {
     return Object.entries(subPages)
       .sort(([ap, a], [bp, b]) => {
         if (a.position != null && b.position != null) {
@@ -121,29 +127,27 @@ function Page({
         }
         return ap.localeCompare(bp)
       })
-      .map(
-        ([subPath, page]): Explicit<LayoutPageLink> => ({
-          to: ((basePath as string) === '/'
-            ? subPath
-            : subPath === '/'
-              ? basePath
-              : `${basePath}${subPath}`) as any,
-          title: page.title,
-          description: page.description,
-          hidden: page.hidden,
-          icon: page.icon,
-        }),
-      )
+      .map(([subPath, page]): Explicit<AccountShellLink> => ({
+        to: ((basePath as string) === '/'
+          ? subPath
+          : subPath === '/'
+            ? basePath
+            : `${basePath}${subPath}`) as any,
+        title: page.title,
+        description: page.description,
+        hidden: page.hidden,
+        icon: page.icon,
+      }))
   }, [subPages, basePath])
 
   return (
-    <LayoutPage
+    <AccountShell
       title={msg`My Atmosphere Account`}
       basePath={basePath}
       links={links}
     >
       <Outlet />
-    </LayoutPage>
+    </AccountShell>
   )
 }
 

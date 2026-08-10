@@ -123,22 +123,31 @@
           },
           "since": {
             "type": "string",
-            "format": "datetime",
-            "description": "Include posts indexed at or after this timestamp."
+            "description": "Include posts indexed at or after this timestamp. Can be a datetime, or just an ISO date (YYYY-MM-DD)."
           },
           "until": {
             "type": "string",
-            "format": "datetime",
-            "description": "Include posts indexed before this timestamp. Defaults to the current time."
+            "description": "Include posts indexed before this timestamp. Defaults to the current time. Can be a datetime, or just an ISO date (YYYY-MM-DD)."
           },
           "allTime": {
             "type": "boolean",
             "description": "Search the full index instead of the recent-post window."
           },
-          "language": {
-            "type": "string",
-            "format": "language",
-            "description": "Include posts whose language matches this language code."
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "language"
+            },
+            "description": "Include posts whose language matches any of these language codes."
+          },
+          "excludeLanguages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "language"
+            },
+            "description": "Exclude posts whose language matches any of these language codes."
           },
           "hasMedia": {
             "type": "boolean",

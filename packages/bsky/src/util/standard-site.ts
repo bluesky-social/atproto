@@ -1,4 +1,4 @@
-import { AtUriString } from '@atproto/syntax'
+import type { AtUriString } from '@atproto/syntax'
 
 export const SITE_STANDARD_NSID_PREFIX = 'site.standard.'
 
@@ -147,8 +147,7 @@ export const validateStandardSiteForUrl = (
       }
     | undefined,
   publication:
-    | { ref: { uri: string }; info: { record: { url: string } } }
-    | undefined,
+    { ref: { uri: string }; info: { record: { url: string } } } | undefined,
   assumedUrl: string,
 ): boolean => {
   const canonicalAssumed = canonicalizeHttpUrl(assumedUrl)

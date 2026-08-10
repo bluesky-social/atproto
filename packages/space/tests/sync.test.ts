@@ -1,14 +1,14 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { encodeCarBlock, encodeCarHeader, readCarStream } from '@atproto/common'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { encode } from '@atproto/lex-cbor'
-import { Cid, cidForCbor } from '@atproto/lex-data'
+import { type Cid, cidForCbor } from '@atproto/lex-data'
 import {
-  CommitCtx,
+  type CommitCtx,
   RepoCommit,
   RepoVerificationError,
-  SerializedRecord,
-  SignedCommit,
+  type SerializedRecord,
+  type SignedCommit,
   serializeRecord,
   serializeRepo,
   verifyCommit,

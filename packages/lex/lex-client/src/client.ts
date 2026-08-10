@@ -1,5 +1,5 @@
-import { LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
-import {
+import type { LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
+import type {
   AtIdentifierString,
   AtUriString,
   CidString,
@@ -12,14 +12,12 @@ import {
   Main,
   NsidString,
   Params,
-  Procedure,
-  Query,
-  RecordSchema,
   Restricted,
-  getMain,
 } from '@atproto/lex-schema'
-import { Agent, AgentOptions, buildAgent } from './agent.js'
-import { XrpcFailure } from './errors.js'
+import { Procedure, Query, RecordSchema, getMain } from '@atproto/lex-schema'
+import type { Agent, AgentOptions } from './agent.js'
+import { buildAgent } from './agent.js'
+import type { XrpcFailure } from './errors.js'
 // @NOTE We could use import { com } from "./lexicons/index.js" here, but some
 // consumers might not know how to properly tree-shake that, so we import only
 // the needed lexicon schemas directly.
@@ -27,36 +25,38 @@ import applyWrites from './lexicons/com/atproto/repo/applyWrites.js'
 import createRecord from './lexicons/com/atproto/repo/createRecord.js'
 import deleteRecord from './lexicons/com/atproto/repo/deleteRecord.js'
 import getRecord from './lexicons/com/atproto/repo/getRecord.js'
-import listRecords from './lexicons/com/atproto/repo/listRecords.js'
+import listRecords, {
+  type Record as ListRecordsRecord,
+} from './lexicons/com/atproto/repo/listRecords.js'
 import putRecord from './lexicons/com/atproto/repo/putRecord.js'
 import uploadBlob from './lexicons/com/atproto/repo/uploadBlob.js'
 import getBlob from './lexicons/com/atproto/sync/getBlob.js'
-import {
+import type {
   XrpcResponse,
   XrpcResponseBody,
   XrpcResponseOptions,
 } from './response.js'
-import { BinaryBodyInit, Service } from './types.js'
+import { type BinaryBodyInit, type Service, isService } from './types.js'
 import {
-  RecordKeyOptions,
-  XrpcRequestHeadersOptions,
+  type RecordKeyOptions,
+  type XrpcRequestHeadersOptions,
   applyDefaults,
-  buildXrpcRequestHeaders,
   getDefaultRecordKey,
   getLiteralRecordKey,
+  mergeHeaders,
 } from './util.js'
 import {
-  WriteOperation,
-  WriteOperationCreateOptions,
-  WriteOperationDeleteOptions,
+  type WriteOperation,
+  type WriteOperationCreateOptions,
+  type WriteOperationDeleteOptions,
   WriteOperationHelper,
-  WriteOperationUpdateOptions,
-  WriteOperationsFactory,
+  type WriteOperationUpdateOptions,
+  type WriteOperationsFactory,
 } from './write-operation-builder.js'
 import {
-  XrpcOptions,
-  XrpcRequestParams,
-  XrpcRequestProcessingOptions,
+  type XrpcOptions,
+  type XrpcRequestParams,
+  type XrpcRequestProcessingOptions,
   xrpc,
   xrpcSafe,
 } from './xrpc.js'
@@ -352,28 +352,21 @@ export type ListOptions = ListRecordsOptions
  * Contains validated records and any invalid records that failed schema validation.
  * @typeParam T - The record schema type
  */
-export type ListOutput<T extends RecordSchema> = InferMethodOutputBody<
-  typeof listRecords,
-  Uint8Array
+export type ListOutput<T extends RecordSchema> = Omit<
+  InferMethodOutputBody<typeof listRecords>,
+  'records'
 > & {
   /** Records that successfully validated against the schema. */
-  records: ListRecord<Infer<T>>[]
-  // @NOTE Because the schema uses "type": "unknown" instead of an open union,
-  // we have to use LexMap instead of Unknown$TypedObject here, which is
-  // unfortunate.
-  /** Records that failed schema validation. */
-  invalid: LexMap[]
+  records: ListRecordItem<Infer<T>>[]
 }
 
 /**
- * A record from a list operation with its value typed to the schema.
- * @typeParam Value - The validated record value type
+ * A discriminated union type representing the result of a record listing
+ * operation.
  */
-export type ListRecord<Value extends LexMap> = {
-  uri: AtUriString
-  cid: CidString
-  value: Value
-}
+export type ListRecordItem<Value extends LexMap> =
+  | { uri: AtUriString; cid: CidString; valid: true; value: Value }
+  | { uri: AtUriString; cid: CidString; valid: false; value: LexMap }
 
 /**
  * The Client class is the primary interface for interacting with AT Protocol
@@ -387,45 +380,57 @@ export type ListRecord<Value extends LexMap> = {
  *
  * const client = new Client(oauthSession)
  *
- * const response = await client.xrpc(app.bsky.feed.getTimeline.main, {
+ * const response = await client.xrpc(app.bsky.feed.getTimeline, {
  *   params: { limit: 50 }
  * })
  * ```
  */
-export class Client implements Agent {
+export class Client {
   static appLabelers: readonly DidString[] = []
 
   /**
    * Configures the Client (or its sub classes) globally.
    */
-  static configure(opts: { appLabelers?: Iterable<DidString> }) {
+  static configure(opts: { appLabelers?: Iterable<DidString> }): void {
     if (opts.appLabelers) this.appLabelers = [...opts.appLabelers]
   }
 
   /** The underlying agent used for making requests. */
   public readonly agent: Agent
 
-  /** Custom headers included in all requests. */
+  /** Default header values to include in all requests made by this client instance. */
   public readonly headers: Headers
 
-  /** Optional service identifier for routing requests. */
-  public readonly service?: Service
-
-  /** Set of labeler DIDs specific to this client instance. */
-  public readonly labelers: Set<DidString>
-
-  public readonly xrpcDefaults: {
-    readonly validateRequest: boolean
-    readonly validateResponse: boolean
-    readonly strictResponseProcessing: boolean
-  }
+  /** Default {@link XrpcOptions} for this client instance. */
+  public readonly xrpcDefaults: Readonly<{
+    service: Service | null
+    labelers: Set<DidString>
+    appLabelers?: null | Iterable<DidString>
+    validateRequest: boolean
+    validateResponse: boolean
+    strictResponseProcessing: boolean
+  }>
 
   constructor(agent: Agent | AgentOptions, options: ClientOptions = {}) {
     this.agent = buildAgent(agent)
-    this.service = options.service
-    this.labelers = new Set(options.labelers)
     this.headers = new Headers(options.headers)
+
+    // @NOTE An "atproto-proxy" header provided through the `headers` option
+    // acts as fallback for the `service` option.
+    const service = this.headers.get('atproto-proxy')?.trim()
+
     this.xrpcDefaults = Object.freeze({
+      service:
+        options.service === undefined && service != null && isService(service)
+          ? service
+          : (options.service ?? null),
+      labelers: new Set(options.labelers),
+      // @NOTE when provided (including `null`), will override the class wide
+      // Client.appLabelers
+      appLabelers:
+        options.appLabelers != null
+          ? new Set(options.appLabelers)
+          : options.appLabelers,
       validateRequest: options.validateRequest ?? false,
       validateResponse: options.validateResponse ?? true,
       strictResponseProcessing: options.strictResponseProcessing ?? true,
@@ -446,6 +451,14 @@ export class Client implements Agent {
   get assertDid(): DidString {
     this.assertAuthenticated()
     return this.did
+  }
+
+  get service(): Service | null {
+    return this.xrpcDefaults.service
+  }
+
+  get labelers(): Set<DidString> {
+    return this.xrpcDefaults.labelers
   }
 
   /**
@@ -469,7 +482,7 @@ export class Client implements Agent {
    * Replaces all labelers with the given set.
    * @param labelers - Iterable of labeler DIDs
    */
-  public setLabelers(labelers: Iterable<DidString> = []) {
+  public setLabelers(labelers: Iterable<DidString> = []): void {
     this.clearLabelers()
     this.addLabelers(labelers)
   }
@@ -478,48 +491,15 @@ export class Client implements Agent {
    * Adds labelers to the current set.
    * @param labelers - Iterable of labeler DIDs to add
    */
-  public addLabelers(labelers: Iterable<DidString>) {
-    for (const labeler of labelers) this.labelers.add(labeler)
+  public addLabelers(labelers: Iterable<DidString>): void {
+    for (const labeler of labelers) this.xrpcDefaults.labelers.add(labeler)
   }
 
   /**
    * Removes all labelers from this client instance.
    */
-  public clearLabelers() {
-    this.labelers.clear()
-  }
-
-  /**
-   * {@link Agent}'s {@link Agent.fetchHandler} implementation, which adds
-   * labelers and service proxying headers. This method allow a {@link Client}
-   * instance to be used directly as an {@link Agent} for another
-   * {@link Client}, enabling composition of headers (labelers, proxying, etc.).
-   *
-   * @param path - The request path
-   * @param init - Request initialization options
-   */
-  public fetchHandler(
-    path: `/${string}`,
-    init: RequestInit,
-  ): Promise<Response> {
-    const headers = buildXrpcRequestHeaders({
-      headers: init.headers,
-      service: this.service,
-      labelers: [
-        ...(this.constructor as typeof Client).appLabelers.map(
-          (l) => `${l};redact` as const,
-        ),
-        ...this.labelers,
-      ],
-    })
-
-    // Incoming headers take precedence
-    for (const [key, value] of this.headers) {
-      if (!headers.has(key)) headers.set(key, value)
-    }
-
-    // @NOTE The agent here could be another Client instance.
-    return this.agent.fetchHandler(path, { ...init, headers })
+  public clearLabelers(): void {
+    this.xrpcDefaults.labelers.clear()
   }
 
   /**
@@ -564,7 +544,7 @@ export class Client implements Agent {
     ns: Main<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
   ): Promise<XrpcResponse<M>> {
-    return xrpc(this, ns, applyDefaults(options, this.xrpcDefaults))
+    return xrpc(this.agent, ns, this.buildXrpcOptions(options))
   }
 
   /**
@@ -577,7 +557,7 @@ export class Client implements Agent {
    *
    * @example
    * ```typescript
-   * const result = await client.xrpcSafe(app.bsky.actor.getProfile.main, {
+   * const result = await client.xrpcSafe(app.bsky.actor.getProfile, {
    *   params: { actor: 'alice.bsky.social' }
    * })
    *
@@ -603,7 +583,49 @@ export class Client implements Agent {
     ns: Main<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
   ): Promise<XrpcResponse<M> | XrpcFailure<M>> {
-    return xrpcSafe(this, ns, applyDefaults(options, this.xrpcDefaults))
+    return xrpcSafe(this.agent, ns, this.buildXrpcOptions(options))
+  }
+
+  protected buildXrpcOptions<M extends Query | Procedure>(
+    options: XrpcOptions<M>,
+  ): XrpcOptions<M> {
+    // Apply the instance-wide defaults for service, labelers, and validation
+    // options.
+    const combined = applyDefaults(options, this.xrpcDefaults)
+
+    // Dynamically apply the class-wide appLabelers if they are not already set
+    // in the combined options.
+    if (combined.appLabelers === undefined) {
+      combined.appLabelers = (this.constructor as typeof Client).appLabelers
+    }
+
+    const optionsHeaders =
+      options.headers != null ? new Headers(options.headers) : null
+
+    // @NOTE we allow the "service" options to fallback to the "atproto-proxy"
+    // header if it is present in the request-specific headers.
+    if (options.service === undefined && optionsHeaders?.has('atproto-proxy')) {
+      const serviceHeader = optionsHeaders.get('atproto-proxy')?.trim()
+      if (serviceHeader != null && isService(serviceHeader)) {
+        combined.service = serviceHeader
+      }
+    }
+
+    // Merge the instance-wide headers with the request-specific headers.
+    // Request-specific headers take precedence. This cannot be done in the
+    // applyDefaults step above because headers require special merging logic.
+    combined.headers = optionsHeaders
+      ? mergeHeaders(this.headers, optionsHeaders)
+      : new Headers(this.headers)
+
+    // @NOTE Since the combined options here always contain a defined
+    // "service" (even if null), any "atproto-proxy" header in either the
+    // instance-wide or request-specific headers will be overridden by the
+    // "service" value. Note that an "atproto-proxy" header provided through
+    // the constructor's `headers` option is used as fallback for the
+    // constructor's `service` option (see constructor), making the two
+    // equivalent.
+    return combined
   }
 
   /**
@@ -625,14 +647,20 @@ export class Client implements Agent {
    * ```
    *
    * @see {@link create} for a higher-level typed alternative
+   *
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
   public async createRecord(
     record: TypedLexMap<NsidString>,
     rkey?: string,
-    options?: CreateRecordOptions,
-  ) {
+    { service = null, labelers = null, ...options }: CreateRecordOptions = {},
+  ): Promise<XrpcResponse<typeof createRecord>> {
     return this.xrpc(createRecord, {
       ...options,
+      service,
+      labelers,
       body: {
         repo: options?.repo ?? this.assertDid,
         collection: record.$type,
@@ -652,14 +680,20 @@ export class Client implements Agent {
    * @param options - Delete options including repo, swapCommit, swapRecord
    *
    * @see {@link delete} for a higher-level typed alternative
+   *
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
   async deleteRecord(
     collection: NsidString,
     rkey: string,
-    options?: DeleteRecordOptions,
-  ) {
+    { service = null, labelers = null, ...options }: DeleteRecordOptions = {},
+  ): Promise<XrpcResponse<typeof deleteRecord>> {
     return this.xrpc(deleteRecord, {
       ...options,
+      service,
+      labelers,
       body: {
         repo: options?.repo ?? this.assertDid,
         collection,
@@ -678,14 +712,20 @@ export class Client implements Agent {
    * @param options - Get options including repo
    *
    * @see {@link get} for a higher-level typed alternative
+   *
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
   public async getRecord(
     collection: NsidString,
     rkey: string,
-    options?: GetRecordOptions,
-  ) {
+    { service = null, labelers = null, ...options }: GetRecordOptions = {},
+  ): Promise<XrpcResponse<typeof getRecord>> {
     return this.xrpc(getRecord, {
       ...options,
+      service,
+      labelers,
       params: {
         repo: options?.repo ?? this.assertDid,
         collection,
@@ -702,14 +742,20 @@ export class Client implements Agent {
    * @param options - Put options including repo, swapCommit, swapRecord, validate
    *
    * @see {@link put} for a higher-level typed alternative
+   *
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
   async putRecord(
     record: TypedLexMap<NsidString>,
     rkey: string,
-    options?: PutRecordOptions,
-  ) {
+    { service = null, labelers = null, ...options }: PutRecordOptions = {},
+  ): Promise<XrpcResponse<typeof putRecord>> {
     return this.xrpc(putRecord, {
       ...options,
+      service,
+      labelers,
       body: {
         repo: options?.repo ?? this.assertDid,
         collection: record.$type,
@@ -729,10 +775,19 @@ export class Client implements Agent {
    * @param options - List options including repo, limit, cursor, reverse
    *
    * @see {@link list} for a higher-level typed alternative
+   *
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
-  async listRecords(nsid: NsidString, options?: ListRecordsOptions) {
+  async listRecords(
+    nsid: NsidString,
+    { service = null, labelers = null, ...options }: ListRecordsOptions = {},
+  ): Promise<XrpcResponse<typeof listRecords>> {
     return this.xrpc(listRecords, {
       ...options,
+      service,
+      labelers,
       params: {
         repo: options?.repo ?? this.assertDid,
         collection: nsid,
@@ -765,13 +820,19 @@ export class Client implements Agent {
    *   console.log(result.uri)
    * }
    * ```
+   *
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
   async applyWrites(
     factory: WriteOperationsFactory,
-    options?: ApplyWritesOptions,
-  ) {
+    { service = null, labelers = null, ...options }: ApplyWritesOptions = {},
+  ): Promise<XrpcResponse<typeof applyWrites>> {
     return this.xrpc(applyWrites, {
       ...options,
+      service,
+      labelers,
       body: {
         repo: options?.repo ?? this.assertDid,
         writes: WriteOperationHelper.build(factory),
@@ -796,9 +857,16 @@ export class Client implements Agent {
    * })
    * console.log(response.body.blob) // Use this ref in records
    * ```
+   *
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
-  async uploadBlob(body: BinaryBodyInit, options?: UploadBlobOptions) {
-    return this.xrpc(uploadBlob, { ...options, body })
+  async uploadBlob(
+    body: BinaryBodyInit,
+    { service = null, labelers = null, ...options }: UploadBlobOptions = {},
+  ): Promise<XrpcResponse<typeof uploadBlob>> {
+    return this.xrpc(uploadBlob, { ...options, service, labelers, body })
   }
 
   /**
@@ -807,10 +875,20 @@ export class Client implements Agent {
    * @param did - The DID of the repository containing the blob
    * @param cid - The CID of the blob
    * @param options - Call options
+   *
+   * @note This method will ignore the `service` and `labelers` instance wide
+   * defaults, and will always use `null` unless explicitly overridden in the
+   * options.
    */
-  async getBlob(did: DidString, cid: CidString, options?: GetBlobOptions) {
+  async getBlob(
+    did: DidString,
+    cid: CidString,
+    { service = null, labelers = null, ...options }: GetBlobOptions = {},
+  ): Promise<XrpcResponse<typeof getBlob>> {
     return this.xrpc(getBlob, {
       ...options,
+      service,
+      labelers,
       params: { did, cid },
     })
   }
@@ -827,17 +905,24 @@ export class Client implements Agent {
    *
    * @example Query
    * ```typescript
-   * const profile = await client.call(app.bsky.actor.getProfile.main, {
+   * const profile = await client.call(app.bsky.actor.getProfile, {
    *   actor: 'alice.bsky.social'
    * })
    * ```
    *
    * @example Procedure
    * ```typescript
-   * const result = await client.call(com.atproto.repo.createRecord.main, {
+   * const result = await client.call(com.atproto.repo.createRecord, {
    *   repo: did,
    *   collection: 'app.bsky.feed.post',
    *   record: { text: 'Hello!' }
+   * })
+   * ```
+   *
+   * @example Action
+   * ```typescript
+   * const result = await client.call(updateProfile, (profile) => {
+   *   profile.displayName = 'Alice'
    * })
    * ```
    */
@@ -913,7 +998,7 @@ export class Client implements Agent {
    *
    * @example Creating a post
    * ```typescript
-   * const result = await client.create(app.bsky.feed.post.main, {
+   * const result = await client.create(app.bsky.feed.post, {
    *   text: 'Hello, world!',
    *   createdAt: new Date().toISOString()
    * })
@@ -922,10 +1007,12 @@ export class Client implements Agent {
    *
    * @example Creating a record with explicit rkey
    * ```typescript
-   * const result = await client.create(app.bsky.actor.profile.main, {
+   * const result = await client.create(app.bsky.actor.profile, {
    *   displayName: 'Alice'
    * }, { rkey: 'self' })
    * ```
+   *
+   * @see {@link createRecord} for a lower-level method that returns the raw response without schema validation
    */
   public async create<const T extends RecordSchema>(
     ns: NonNullable<unknown> extends CreateOptions<T>
@@ -958,6 +1045,8 @@ export class Client implements Agent {
    * @param ns - The record schema definition
    * @param options - Delete options (rkey required for non-literal keys)
    * @returns The delete output
+   *
+   * @see {@link deleteRecord} for a lower-level method that returns the raw response without schema validation
    */
   public async delete<const T extends RecordSchema>(
     ns: NonNullable<unknown> extends DeleteOptions<T>
@@ -989,10 +1078,12 @@ export class Client implements Agent {
    *
    * @example
    * ```typescript
-   * const profile = await client.get(app.bsky.actor.profile.main)
+   * const profile = await client.get(app.bsky.actor.profile)
    * // profile.value is typed as app.bsky.actor.profile.Record
    * console.log(profile.value.displayName)
    * ```
+   *
+   * @see {@link getRecord} for a lower-level method that returns the raw record without schema validation
    */
   public async get<const T extends RecordSchema>(
     ns: T['key'] extends `literal:${string}`
@@ -1023,6 +1114,24 @@ export class Client implements Agent {
    * @param input - The record data
    * @param options - Put options (rkey required for non-literal keys)
    * @returns The put output including URI and CID
+   *
+   * @example Creating a new record
+   * ```typescript
+   * const result = await client.put(app.bsky.feed.post, {
+   *   text: 'Hello, world!',
+   *   createdAt: new Date().toISOString()
+   * })
+   * console.log(result.uri)
+   * ```
+   *
+   * @example Updating an existing record with explicit rkey
+   * ```typescript
+   * const result = await client.put(app.bsky.actor.profile, {
+   *   displayName: 'Alice'
+   * }, { rkey: 'self' })
+   * ```
+   *
+   * @see {@link putRecord} for a lower-level method that returns the raw record without schema validation
    */
   public async put<const T extends RecordSchema>(
     ns: NonNullable<unknown> extends PutOptions<T>
@@ -1053,14 +1162,21 @@ export class Client implements Agent {
    *
    * @param ns - The record schema definition
    * @param options - List options
-   * @returns Records split into valid (matching schema) and invalid arrays
+   * @returns Records validated against the schema, with invalid records included as LexMap
    *
    * @example
    * ```typescript
-   * const result = await client.list(app.bsky.feed.post.main, { limit: 100 })
-   * console.log(`Found ${result.records.length} valid posts`)
-   * console.log(`Found ${result.invalid.length} invalid records`)
+   * const result = await client.list(app.bsky.feed.post, { limit: 100 })
+   * for (const record of result.records) {
+   *   if (record.valid) {
+   *     record.value // Fully typed
+   *   } else {
+   *     record.value // Invalid record, typed as LexMap
+   *   }
+   * }
    * ```
+   *
+   * @see {@link listRecords} for a lower-level method that returns the raw records without schema validation
    */
   async list<const T extends RecordSchema>(
     ns: Main<T>,
@@ -1068,19 +1184,60 @@ export class Client implements Agent {
   ): Promise<ListOutput<T>> {
     const schema = getMain(ns)
     const { body } = await this.listRecords(schema.$type, options)
+    const records = body.records.map(processListRecord, schema)
+    return { ...body, records }
+  }
 
-    const records: ListRecord<Infer<T>>[] = []
-    const invalid: LexMap[] = []
+  /**
+   * Asynchronously iterates over all records in a collection, handling
+   * pagination automatically.
+   *
+   * @param ns - The record schema definition
+   * @param options - List options including limit and cursor
+   * @returns An async generator yielding each record validated against the schema
+   *
+   * @see {@link list} for a method that returns a single page of records
+   * @see {@link listRecords} for a lower-level method that returns raw records without schema validation
+   */
+  async *listAll<const T extends RecordSchema>(
+    ns: Main<T>,
+    { maxRetries = 3, ...options }: ListOptions = {},
+  ): AsyncGenerator<ListRecordItem<Infer<T>>, void, unknown> {
+    const schema = getMain(ns)
 
-    for (const record of body.records) {
-      const parsed = schema.safeValidate(record.value)
-      if (parsed.success) {
-        records.push({ ...record, value: parsed.value })
-      } else {
-        invalid.push(record.value)
+    do {
+      options.signal?.throwIfAborted()
+
+      const { body } = await this.listRecords(schema.$type, {
+        ...options,
+        maxRetries,
+      })
+
+      // We don't use this.list() here so that we can lazily process records as
+      // they come in, rather than mapping and yielding the entire page at once.
+      for (const record of body.records) {
+        yield processListRecord.call(schema, record)
       }
-    }
 
-    return { ...body, records, invalid }
+      // If the server returns the same cursor, we may be in a loop. Stop
+      // iteration.
+      if (body.cursor && body.cursor === options.cursor) {
+        return
+      }
+
+      options.cursor = body.cursor
+    } while (options.cursor)
+  }
+}
+
+function processListRecord<T extends RecordSchema>(
+  this: T,
+  record: ListRecordsRecord,
+): ListRecordItem<Infer<T>> {
+  const result = this.safeValidate(record.value)
+  if (result.success) {
+    return { ...record, valid: true, value: result.value }
+  } else {
+    return { ...record, valid: false }
   }
 }

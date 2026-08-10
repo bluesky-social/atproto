@@ -1,4 +1,4 @@
-import { Generated } from 'kysely'
+import type { Generated } from 'kysely'
 
 export const reportQueueTableName = 'report_queue'
 
@@ -9,6 +9,7 @@ export interface ReportQueue {
   collection: string | null // Collection name (e.g., 'app.bsky.feed.post'), NULL for accounts
   reportTypes: string[] // Array of report reason types (fully qualified NSIDs)
   description: string | null // Optional description of the queue
+  recommendedPolicies: string[] // Policy keys recommended for reports in this queue
   createdBy: string // DID of moderator who created this queue
   createdAt: string
   updatedAt: string

@@ -1,7 +1,7 @@
-import { CarBlock, writeCarStream } from '@atproto/common'
+import { type CarBlock, writeCarStream } from '@atproto/common'
 import { cidForLex, encode } from '@atproto/lex-cbor'
-import { Cid, cidForCbor } from '@atproto/lex-data'
-import { RepoIndex, SignedCommit, SpaceRecord } from '../types.js'
+import { type Cid, cidForCbor } from '@atproto/lex-data'
+import type { RepoIndex, SignedCommit, SpaceRecord } from '../types.js'
 import { formatRecordPath } from '../util.js'
 
 export type SerializedRecord = {

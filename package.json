@@ -5,37 +5,41 @@
   "author": "Bluesky Social PBC <hello@blueskyweb.xyz>",
   "license": "MIT",
   "private": true,
+  "type": "module",
   "engines": {
     "node": ">=22"
   },
+  "packageManager": "pnpm@11.11.0",
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": ">=22",
+      "version": ">=22.12.0",
       "onFail": "error"
     },
     "packageManager": {
       "name": "pnpm",
-      "version": "11.5.2",
+      "version": "11.11.0",
       "onFail": "error"
     }
   },
   "scripts": {
     "lint:fix": "pnpm lint --fix",
-    "lint": "NODE_OPTIONS=--max_old_space_size=4096 eslint . --ext .ts,.js,.tsx,.jsx",
-    "style:fix": "prettier --write .",
-    "style": "prettier --check .",
-    "verify": "pnpm --stream '/^verify:.+$/'",
+    "lint": "eslint .",
+    "style:fix": "prettier --experimental-cli --write .",
+    "style": "prettier --experimental-cli --check .",
+    "verify": "pnpm run --stream --recursive --parallel --include-workspace-root '/^verify:.+$/'",
     "verify:style": "pnpm run style",
     "verify:lint": "pnpm lint",
-    "verify:types": "tsgo --build tsconfig.json",
     "format": "pnpm lint:fix && pnpm style:fix",
-    "precodegen": "pnpm run --recursive --stream --filter '@atproto/lex-cli...' --filter '@atproto/lex...' build --force",
-    "codegen": "pnpm run --sort --recursive --stream --parallel '/^(codegen|codegen:.+)$/'",
-    "build": "pnpm run --sort --recursive --stream build",
+    "codegen": "pnpm run build:tooling --force && pnpm run --parallel --workspace-concurrency Infinity '/^(codegen:.+)$/'",
+    "prebuild": "pnpm run build:tooling --force && pnpm run --parallel --workspace-concurrency Infinity 'prebuild'",
+    "build:tooling": "tsc --build ./packages/lex/lex-builder/tsconfig.build.json ./packages/lex-cli/tsconfig.build.json",
+    "build:ts": "tsc --build tsconfig.json",
+    "build": "pnpm run build:ts",
+    "postbuild": "pnpm run --parallel build:ui",
     "i18n": "pnpm run --parallel i18n:extract",
     "dev": "NODE_ENV=development pnpm run --recursive --parallel --stream '/^(dev|dev:.+)$/'",
-    "dev:ts": "tsgo --build tsconfig.json --preserveWatchOutput --watch",
+    "dev:ts": "tsc --build tsconfig.json --preserveWatchOutput --watch",
     "test": "LOG_ENABLED=false ./packages/dev-infra/with-test-redis-and-db.sh pnpm --recursive --stream test",
     "test:withFlags": "pnpm run test",
     "test:unit": "vitest --run",
@@ -45,32 +49,38 @@
     "version-packages": "changeset version && git add ."
   },
   "devDependencies": {
+    "@atproto/bsky": "workspace:^",
     "@atproto/dev-env": "workspace:^",
-    "@changesets/changelog-github": "^0.5.1",
-    "@changesets/cli": "^2.29.7",
+    "@atproto/pds": "workspace:^",
+    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/cli": "^2.31.0",
+    "@eslint/js": "^9.39.5",
     "@jest/globals": "^30.0.0",
     "@swc/core": "^1.3.42",
     "@swc/jest": "^0.2.24",
+    "@tsconfig/node22": "^22.0.5",
     "@types/jest": "^30.0.0",
-    "@types/node": "^22.0.0",
+    "@types/node": "^22",
     "@typescript-eslint/eslint-plugin": "^8.59.2",
     "@typescript-eslint/parser": "^8.59.2",
-    "@typescript/native-preview": "^7.0.0-beta",
-    "@vitest/coverage-v8": "4.0.16",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "@vitest/coverage-v8": "^4.1.10",
     "dotenv": "^16.0.3",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-import-resolver-typescript": "^3.7.0",
-    "eslint-plugin-import": "^2.31.0",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-import-x": "^4.17.1",
     "eslint-plugin-n": "^17.15.0",
     "eslint-plugin-prettier": "^5.1.3",
+    "globals": "^15.15.0",
     "jest": "^30.0.0",
     "node-gyp": "^9.3.1",
     "pino-pretty": "^9.1.0",
-    "prettier": "^3.2.5",
+    "prettier": "^3.9.6",
     "prettier-config-standard": "^7.0.0",
     "prettier-plugin-tailwindcss": "^0.6.11",
-    "vitest": "^4.0.16"
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "vitest": "^4.1.10"
   },
   "workspace": [
     "packages/*",
@@ -85,6 +95,5 @@
       "packages/oauth/*",
       "packages/internal/*"
     ]
-  },
-  "type": "module"
+  }
 }

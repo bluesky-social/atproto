@@ -1,8 +1,8 @@
-import { AtUriString, DidString } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client/index.js'
+import type { AtUriString, DidString } from '@atproto/syntax'
+import type { DataPlaneClient } from '../data-plane/client/index.js'
 import { app } from '../lexicons/index.js'
-import { FollowInfo } from '../proto/bsky_pb.js'
-import {
+import type { FollowInfo } from '../proto/bsky_pb.js'
+import type {
   BlockRecord,
   FollowRecord,
   ListItemRecord,
@@ -10,7 +10,12 @@ import {
   StarterPackRecord,
   VerificationRecord,
 } from '../views/types.js'
-import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util.js'
+import {
+  HydrationMap,
+  type ItemRef,
+  type RecordInfo,
+  parseRecord,
+} from './util.js'
 
 export type List = RecordInfo<ListRecord>
 export type Lists = HydrationMap<AtUriString, List>
@@ -200,8 +205,7 @@ export class GraphHydrator {
       const block = res.blocks[i]
       blocks.set(pair.a, pair.b, {
         blockUri: (block.blockedBy || block.blocking || undefined) as
-          | AtUriString
-          | undefined,
+          AtUriString | undefined,
         blockListUri: (block.blockedByList ||
           block.blockingByList ||
           undefined) as AtUriString | undefined,
@@ -277,12 +281,14 @@ export class GraphHydrator {
     did: DidString
     cursor?: string
     limit?: number
+    sort?: string
   }): Promise<{ follows: FollowInfo[]; cursor: string }> {
-    const { did, cursor, limit } = input
+    const { did, cursor, limit, sort } = input
     const res = await this.dataplane.getFollows({
       actorDid: did,
       cursor,
       limit,
+      sort,
     })
     return { follows: res.follows, cursor: res.cursor }
   }
@@ -291,12 +297,14 @@ export class GraphHydrator {
     did: DidString
     cursor?: string
     limit?: number
+    sort?: string
   }): Promise<{ followers: FollowInfo[]; cursor: string }> {
-    const { did, cursor, limit } = input
+    const { did, cursor, limit, sort } = input
     const res = await this.dataplane.getFollowers({
       actorDid: did,
       cursor,
       limit,
+      sort,
     })
     return { followers: res.followers, cursor: res.cursor }
   }

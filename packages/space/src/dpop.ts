@@ -1,6 +1,6 @@
 import { EmbeddedJWK, calculateJwkThumbprint, errors, jwtVerify } from 'jose'
 import { randomStr, sha256 } from '@atproto/crypto'
-import { Key } from '@atproto/jwk'
+import type { Key } from '@atproto/jwk'
 import { toBase64 } from '@atproto/lex-data'
 import { CLOCK_SKEW_SEC } from './credential.js'
 import { DpopProofError } from './error.js'

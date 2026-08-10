@@ -1,24 +1,27 @@
-import { Selectable } from 'kysely'
+import type { Selectable } from 'kysely'
 import { MINUTE, SECOND } from '@atproto/common'
 import {
   assertProtectedTagAction,
   getProtectedTags,
 } from '../api/moderation/util.js'
-import { Database } from '../db/index.js'
-import { ScheduledAction } from '../db/schema/scheduled-action.js'
-import {
+import type { Database } from '../db/index.js'
+import type { ScheduledAction } from '../db/schema/scheduled-action.js'
+import type {
   ModEventTakedown,
   ModTool,
 } from '../lexicon/types/tools/ozone/moderation/defs.js'
 import { dbLogger } from '../logger.js'
-import {
+import type {
   ModerationService,
   ModerationServiceCreator,
 } from '../mod-service/index.js'
 import { RepoSubject } from '../mod-service/subject.js'
-import { ModEventType } from '../mod-service/types.js'
-import { ScheduledActionServiceCreator } from '../scheduled-action/service.js'
-import { SettingService, SettingServiceCreator } from '../setting/service.js'
+import type { ModEventType } from '../mod-service/types.js'
+import type { ScheduledActionServiceCreator } from '../scheduled-action/service.js'
+import type {
+  SettingService,
+  SettingServiceCreator,
+} from '../setting/service.js'
 import { retryHttp } from '../util.js'
 
 export class ScheduledActionProcessor {

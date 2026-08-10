@@ -106,6 +106,7 @@ const run = async () => {
     allPdsesArray,
     undefined,
     undefined,
+    undefined,
     {
       did: lexAuthorityDid,
       handle: LEX_AUTHORITY_USER.handle,

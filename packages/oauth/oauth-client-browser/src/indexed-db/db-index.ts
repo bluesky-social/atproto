@@ -1,4 +1,4 @@
-import { ObjectStoreSchema } from './schema.js'
+import type { ObjectStoreSchema } from './schema.js'
 import { promisify } from './util.js'
 
 export class DBIndex<Schema extends ObjectStoreSchema> {

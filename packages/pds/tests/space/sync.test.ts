@@ -4,14 +4,14 @@ import { parseCid } from '@atproto/lex-data'
 import {
   LtHash,
   RepoCommit,
-  SignedCommit,
+  type SignedCommit,
   verifyRepoCarFull,
 } from '@atproto/space'
-import { NsidString, SpaceRefString } from '@atproto/syntax'
+import type { NsidString, SpaceRefString } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { com } from '../../src/lexicons/index.js'
 import {
-  Actor,
+  type Actor,
   SpaceClient,
   TEST_COLLECTION,
   TEST_COLLECTION_ALT,

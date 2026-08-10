@@ -1,5 +1,5 @@
 import express from 'express'
-import { TestNetwork, TestOzone } from '@atproto/dev-env'
+import { TestNetwork, type TestOzone } from '@atproto/dev-env'
 import { handler as errorHandler } from '../src/error.js'
 import { startServer } from './_util.js'
 

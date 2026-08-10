@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { AppContext } from '../context.js'
+import type { AppContext } from '../context.js'
 import * as aaApi from './age-assurance/index.js'
 import * as kwsApi from './kws/index.js'
 

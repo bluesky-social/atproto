@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { Customization } from '../../customization/customization.js'
-import { AuthorizationResultAuthorizePage } from '../../result/authorization-result-authorize-page.js'
-import { SendWebAppOptions, sendWebAppFactory } from './assets.js'
+import type { Customization } from '../../customization/customization.js'
+import type { AuthorizationResultAuthorizePage } from '../../result/authorization-result-authorize-page.js'
+import { type SendWebAppOptions, sendWebAppFactory } from './assets.js'
 
 export function sendAuthorizePageFactory(
   customization: Customization,
@@ -25,12 +25,12 @@ export function sendAuthorizePageFactory(
 
           clientId: data.client.id,
           clientMetadata: data.client.metadata,
-          clientTrusted: data.client.info.isTrusted,
-          clientFirstParty: data.client.info.isFirstParty,
+          clientTrusted: data.client.isTrusted,
+          clientFirstParty: data.client.isFirstParty,
 
           scope: data.parameters.scope,
           uiLocales: data.parameters.ui_locales,
-          loginHint: data.parameters.login_hint,
+          loginHint: data.loginHint,
           promptMode: data.parameters.prompt,
           permissionSets: Object.fromEntries(data.permissionSets),
           spaces: Object.fromEntries(data.spaces),

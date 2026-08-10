@@ -1,9 +1,10 @@
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
-  ValidationContext,
-  Validator,
+  type ValidationContext,
+  type ValidationResult,
+  type Validator,
 } from '../core.js'
 import { memoizedTransformer } from '../util/memoize.js'
 
@@ -32,7 +33,10 @@ export class NullableSchema<const TValidator extends Validator> extends Schema<
     super()
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<InferInput<TValidator> | null> {
     if (input === null) {
       return ctx.success(null)
     }
@@ -67,8 +71,8 @@ export class NullableSchema<const TValidator extends Validator> extends Schema<
  * const maybeString = l.optional(l.nullable(l.string()))
  * ```
  */
-export const nullable = /*#__PURE__*/ memoizedTransformer(function <
-  const TValidator extends Validator,
->(validator: TValidator) {
-  return new NullableSchema<TValidator>(validator)
-})
+export const nullable: <const TValidator extends Validator>(
+  validator: TValidator,
+) => NullableSchema<TValidator> = /*#__PURE__*/ memoizedTransformer(
+  (validator) => new NullableSchema(validator),
+)

@@ -1,12 +1,17 @@
-import { DidString, HandleString, INVALID_HANDLE } from '@atproto/syntax'
+import {
+  type DidString,
+  type HandleString,
+  INVALID_HANDLE,
+} from '@atproto/syntax'
 import {
   AuthRequiredError,
   InvalidRequestError,
-  Server,
+  type Server,
 } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager/account-manager.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { softDeleted } from '../../../../db/util.js'
+import { events } from '../../../../events.js'
 import { com } from '../../../../lexicons/index.js'
 import { didDocForSession } from './util.js'
 
@@ -50,6 +55,11 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const { status, active } = formatAccountStatus(user)
+
+      events.sessionRefreshed({
+        source: com.atproto.server.refreshSession.$lxm,
+        did: user.did,
+      })
 
       return {
         encoding: 'application/json' as const,

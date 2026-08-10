@@ -1,42 +1,42 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import createHttpError from 'http-errors'
 import { z } from 'zod'
-import { Did, didSchema } from '@atproto/did'
+import { type Did, didSchema } from '@atproto/did'
 import { signedJwtSchema } from '@atproto/jwk'
-import {
-  API_ENDPOINT_PREFIX,
+import type {
   ActiveAccountSession,
   ActiveDeviceSession,
   ActiveOAuthSession,
   ApiEndpoints,
   ISODateString,
 } from '@atproto/oauth-provider-api'
+import { API_ENDPOINT_PREFIX } from '@atproto/oauth-provider-api'
 import {
-  OAuthAuthorizationRequestParameters,
-  OAuthRedirectUri,
-  OAuthResponseMode,
+  type OAuthAuthorizationRequestParameters,
+  type OAuthRedirectUri,
+  type OAuthResponseMode,
   oauthRedirectUriSchema,
   oauthResponseModeSchema,
   oauthScopeSchema,
 } from '@atproto/oauth-types'
 import { signInDataSchema } from '../account/sign-in-data.js'
 import { signUpInputSchema } from '../account/sign-up-input.js'
-import { DeviceId, deviceIdSchema } from '../device/device-id.js'
+import { type DeviceId, deviceIdSchema } from '../device/device-id.js'
 import { AuthorizationError } from '../errors/authorization-error.js'
 import {
-  ErrorPayload,
+  type ErrorPayload,
   buildErrorPayload,
   buildErrorStatus,
 } from '../errors/error-parser.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { WWWAuthenticateError } from '../errors/www-authenticate-error.js'
 import {
-  JsonResponse,
-  Middleware,
-  RequestMetadata,
+  type JsonResponse,
+  type Middleware,
+  type RequestMetadata,
   Router,
-  RouterCtx,
-  SubCtx,
+  type RouterCtx,
+  type SubCtx,
   flushStream,
   jsonHandler,
   parseHttpRequest,
@@ -46,13 +46,13 @@ import {
   validateOrigin,
   validateReferrer,
 } from '../lib/http/index.js'
-import { RouteCtx, createRoute } from '../lib/http/route.js'
+import { type RouteCtx, createRoute } from '../lib/http/route.js'
 import { asArray } from '../lib/util/cast.js'
 import { localeSchema } from '../lib/util/locale.js'
 import type { Awaitable } from '../lib/util/type.js'
 import type { OAuthProvider } from '../oauth-provider.js'
-import { RequestUri, requestUriSchema } from '../request/request-uri.js'
-import { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
+import { type RequestUri, requestUriSchema } from '../request/request-uri.js'
+import type { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
 import { tokenIdSchema } from '../token/token-id.js'
 import { emailOtpSchema } from '../types/email-otp.js'
 import { emailSchema } from '../types/email.js'
@@ -61,8 +61,8 @@ import { newPasswordSchema, oldPasswordSchema } from '../types/password.js'
 import { validateCsrfToken } from './assets/csrf.js'
 import {
   ERROR_REDIRECT_KEYS,
-  OAuthRedirectOptions,
-  OAuthRedirectQueryParameter,
+  type OAuthRedirectOptions,
+  type OAuthRedirectQueryParameter,
   SUCCESS_REDIRECT_KEYS,
   buildRedirectMode,
   buildRedirectParams,
@@ -103,10 +103,15 @@ export function createApiMiddleware<
       async handler() {
         const { deviceId, deviceMetadata, input, requestUri } = this
 
+        const clientId = requestUri
+          ? await server.requestManager.peekClientId(requestUri)
+          : undefined
+
         const account = await server.accountManager.createAccount(
           deviceId,
           deviceMetadata,
           input,
+          clientId,
         )
 
         // Remember when not in the context of a request by default
@@ -123,7 +128,7 @@ export function createApiMiddleware<
           : await server.signer.createEphemeralToken({
               sub: account.did,
               deviceId,
-              requestUri: this.requestUri,
+              requestUri,
             })
 
         const json = { account, ephemeralToken }
@@ -505,23 +510,48 @@ export function createApiMiddleware<
           },
         })
 
-        // @TODO: We should ideally filter sessions that are expired (or even
-        // expose the expiration date). This requires a change to the way
-        // TokenInfo are stored (see TokenManager#isTokenExpired and
-        // TokenManager#isTokenInactive).
-        const json = tokenInfos.map(({ id, data }): ActiveOAuthSession => {
-          return {
-            tokenId: id,
+        const json = tokenInfos
+          .filter(({ data }) => {
+            // Remove sessions that are expired, based on the maximum possible
+            // lifetime of a session. The client metadata is needed to determine
+            // the actual session and refresh lifetimes.
 
-            createdAt: data.createdAt.toISOString() as ISODateString,
-            updatedAt: data.updatedAt.toISOString() as ISODateString,
+            const client = clients.get(data.clientId)
 
-            clientId: data.clientId,
-            clientMetadata: clients.get(data.clientId)?.metadata,
+            // We were not able to load the client (see onError callback above).
+            // In this case, we will keep the session in the list, and let the
+            // UI show them as "broken" sessions (based on the absence of the
+            // clientMetadata in ActiveOAuthSession).
+            if (!client) return true
 
-            scope: data.parameters.scope,
-          }
-        })
+            const sessionAge = Date.now() - data.createdAt.getTime()
+            if (sessionAge > client.sessionLifetime) return false
+
+            const refreshAge = Date.now() - data.updatedAt.getTime()
+            if (refreshAge > client.refreshLifetime) return false
+
+            // If the client cannot refresh, then the session is only valid if
+            // it has not yet expired.
+            if (!client.metadata.grant_types.includes('refresh_token')) {
+              return data.expiresAt.getTime() > Date.now()
+            }
+
+            return true
+          })
+          .map(({ id, data }): ActiveOAuthSession => {
+            return {
+              tokenId: id,
+
+              createdAt: data.createdAt.toISOString() as ISODateString,
+              updatedAt: data.updatedAt.toISOString() as ISODateString,
+
+              clientId: data.clientId,
+              clientMetadata: clients.get(data.clientId)?.metadata,
+
+              active: data.expiresAt.getTime() > Date.now(),
+              scope: data.parameters.scope,
+            }
+          })
 
         return { json }
       },
@@ -863,11 +893,11 @@ export function createApiMiddleware<
           : never
       }[keyof ApiEndpoints],
     S extends // A schema that validates the POST input or GET params
-      ApiEndpoints[E] extends { method: 'POST'; input: infer I }
+      (ApiEndpoints[E] extends { method: 'POST'; input: infer I }
         ? z.ZodType<I, z.ZodTypeDef, unknown>
         : ApiEndpoints[E] extends { method: 'GET'; params: infer P }
           ? z.ZodType<P, z.ZodTypeDef, unknown>
-          : void,
+          : void),
   >(options: {
     method: M
     endpoint: E

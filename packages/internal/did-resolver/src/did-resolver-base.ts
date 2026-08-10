@@ -1,14 +1,14 @@
 import { ZodError } from 'zod'
-import { Did, DidError, extractDidMethod } from '@atproto/did'
+import { type Did, DidError, extractDidMethod } from '@atproto/did'
 import { FetchError, FetchResponseError } from '@atproto-labs/fetch'
-import { DidMethod, DidMethods, ResolveDidOptions } from './did-method.js'
-import { DidResolver, ResolvedDocument } from './did-resolver.js'
+import type { DidMethod, DidMethods, ResolveDidOptions } from './did-method.js'
+import type { DidResolver, ResolvedDocument } from './did-resolver.js'
 
 export type { DidMethod, ResolveDidOptions, ResolvedDocument }
 
-export class DidResolverBase<M extends string = string>
-  implements DidResolver<M>
-{
+export class DidResolverBase<
+  M extends string = string,
+> implements DidResolver<M> {
   protected readonly methods: Map<string, DidMethod<M>>
 
   constructor(methods: DidMethods<M>) {

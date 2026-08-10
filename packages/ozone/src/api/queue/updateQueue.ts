@@ -1,6 +1,6 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context.js'
-import { Server } from '../../lexicon/index.js'
+import type { AppContext } from '../../context.js'
+import type { Server } from '../../lexicon/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.queue.updateQueue({
@@ -12,15 +12,17 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError('Must be a moderator to update a queue')
       }
 
-      const { queueId, name, enabled, description } = input.body
+      const { queueId, name, enabled, description, recommendedPolicies } =
+        input.body
 
       if (
         name === undefined &&
         enabled === undefined &&
-        description === undefined
+        description === undefined &&
+        recommendedPolicies === undefined
       ) {
         throw new InvalidRequestError(
-          'At least one of name, enabled, or description must be provided',
+          'At least one queue property must be provided',
         )
       }
 
@@ -38,10 +40,15 @@ export default function (server: Server, ctx: AppContext) {
         name?: string
         enabled?: boolean
         description?: string
+        recommendedPolicies?: string[]
       } = {}
       if (name !== undefined) updates.name = name
       if (enabled !== undefined) updates.enabled = enabled
       if (description !== undefined) updates.description = description
+      if (recommendedPolicies !== undefined) {
+        await queueService.assertRecommendedPolicies(recommendedPolicies)
+        updates.recommendedPolicies = recommendedPolicies
+      }
 
       const queue = await queueService.update(queueId, updates)
 

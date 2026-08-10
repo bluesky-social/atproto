@@ -1,5 +1,169 @@
 # @atproto/sync
 
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies [[`b66870d`](https://github.com/bluesky-social/atproto/commit/b66870d5a1efbcfa0cc07498c7cfcf3f0f243e86), [`b66870d`](https://github.com/bluesky-social/atproto/commit/b66870d5a1efbcfa0cc07498c7cfcf3f0f243e86)]:
+  - @atproto/common@0.7.6
+  - @atproto/repo@0.10.10
+  - @atproto/xrpc-server@0.12.2
+  - @atproto/lex@0.3.5
+
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [[`8b55a4a`](https://github.com/bluesky-social/atproto/commit/8b55a4ab69c24e5038f67c479b3b9953666ea0c2)]:
+  - @atproto/syntax@0.7.4
+  - @atproto/repo@0.10.9
+  - @atproto/lex@0.3.4
+  - @atproto/xrpc-server@0.12.1
+  - @atproto/common@0.7.5
+  - @atproto/identity@0.5.9
+
+## 0.4.0
+
+### Minor Changes
+
+- [#5285](https://github.com/bluesky-social/atproto/pull/5285) [`d12f6ac`](https://github.com/bluesky-social/atproto/commit/d12f6ac6e2cb2590446bf9f2051287bac058c092) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** `FirehoseOptions` now takes an explicit set of connection options (`headers`, `maxReconnectSeconds`, `heartbeatIntervalMs`) rather than arbitrary `ws` `ClientOptions`.
+
+### Patch Changes
+
+- Updated dependencies [[`5a222b0`](https://github.com/bluesky-social/atproto/commit/5a222b05da5f9c0d32d41fb1c4437ea188aa2c32), [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c), [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7), [`d12f6ac`](https://github.com/bluesky-social/atproto/commit/d12f6ac6e2cb2590446bf9f2051287bac058c092)]:
+  - @atproto/xrpc-server@0.12.0
+  - @atproto/lex@0.3.3
+  - @atproto/syntax@0.7.3
+  - @atproto/common@0.7.4
+  - @atproto/repo@0.10.8
+  - @atproto/identity@0.5.8
+
+## 0.3.15
+
+### Patch Changes
+
+- Updated dependencies [[`c8399b6`](https://github.com/bluesky-social/atproto/commit/c8399b6b051377be66f660105b14646a1c2fa460)]:
+  - @atproto/xrpc-server@0.11.13
+  - @atproto/lex@0.3.2
+  - @atproto/common@0.7.3
+  - @atproto/repo@0.10.7
+  - @atproto/identity@0.5.7
+
+## 0.3.14
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc-server@0.11.12
+  - @atproto/lex@0.3.1
+
+## 0.3.13
+
+### Patch Changes
+
+- Updated dependencies [[`3358df6`](https://github.com/bluesky-social/atproto/commit/3358df61caab20c4258ea7673121a03236993d7b)]:
+  - @atproto/xrpc-server@0.11.11
+
+## 0.3.12
+
+### Patch Changes
+
+- Updated dependencies [[`f8267c3`](https://github.com/bluesky-social/atproto/commit/f8267c3ada1645a2472c81c1ba95157466108b6e)]:
+  - @atproto/lex@0.3.0
+  - @atproto/xrpc-server@0.11.10
+
+## 0.3.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.2.3
+
+## 0.3.10
+
+### Patch Changes
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55)]:
+  - @atproto/syntax@0.7.2
+  - @atproto/repo@0.10.6
+  - @atproto/lex@0.2.2
+  - @atproto/xrpc-server@0.11.9
+  - @atproto/common@0.7.2
+  - @atproto/identity@0.5.6
+
+## 0.3.9
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto/xrpc-server@0.11.8
+  - @atproto/identity@0.5.5
+  - @atproto/lex@0.2.1
+  - @atproto/common@0.7.1
+  - @atproto/syntax@0.7.1
+  - @atproto/repo@0.10.5
+
+## 0.3.8
+
+### Patch Changes
+
+- Updated dependencies [[`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37), [`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37), [`d79f6d5`](https://github.com/bluesky-social/atproto/commit/d79f6d59a073c05cc37bd0d1482beeea482b67ed)]:
+  - @atproto/syntax@0.7.0
+  - @atproto/lex@0.2.0
+  - @atproto/common@0.7.0
+  - @atproto/xrpc-server@0.11.7
+  - @atproto/repo@0.10.4
+  - @atproto/identity@0.5.4
+
+## 0.3.7
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build with `noImplicitAny` enabled
+
+- Updated dependencies [[`28a0b58`](https://github.com/bluesky-social/atproto/commit/28a0b588147863eaef948cd2bb8fc0f19d08cda9), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto/syntax@0.6.4
+  - @atproto/identity@0.5.3
+  - @atproto/xrpc-server@0.11.6
+  - @atproto/lex@0.1.7
+  - @atproto/common@0.6.5
+  - @atproto/repo@0.10.3
+
+## 0.3.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.1.6
+  - @atproto/xrpc-server@0.11.5
+
+## 0.3.5
+
+### Patch Changes
+
+- Updated dependencies [[`f2a0efe`](https://github.com/bluesky-social/atproto/commit/f2a0efe11140c8bebe488ac1f737e242d7f23f0b), [`f2a0efe`](https://github.com/bluesky-social/atproto/commit/f2a0efe11140c8bebe488ac1f737e242d7f23f0b)]:
+  - @atproto/xrpc-server@0.11.4
+
+## 0.3.4
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- Updated dependencies [[`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb), [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7), [`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb)]:
+  - @atproto/common@0.6.4
+  - @atproto/identity@0.5.2
+  - @atproto/lex@0.1.5
+  - @atproto/repo@0.10.2
+  - @atproto/syntax@0.6.3
+  - @atproto/xrpc-server@0.11.3
+
 ## 0.3.3
 
 ### Patch Changes

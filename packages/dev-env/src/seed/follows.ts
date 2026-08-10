@@ -1,4 +1,4 @@
-import { SeedClient } from './client.js'
+import type { SeedClient } from './client.js'
 
 export default async (sc: SeedClient) => {
   await sc.createAccount('alice', users.alice)
@@ -54,4 +54,4 @@ const users = {
     handle: 'eve.test',
     password: 'eve-pass',
   },
-}
+} as const

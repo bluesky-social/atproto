@@ -1,5 +1,6 @@
 import { asUint8Array, ifUint8Array } from '@atproto/lex-data'
-import { Schema, ValidationContext } from '../core.js'
+import { Schema, type ValidationContext } from '../core.js'
+import type { ValidationResult } from '../index.js'
 import { memoizedOptions } from '../util/memoize.js'
 
 /**
@@ -32,7 +33,10 @@ export class BytesSchema extends Schema<Uint8Array> {
     super()
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<Uint8Array> {
     // In "parse" mode, coerce different binary formats into Uint8Array
     const bytes =
       ctx.options.mode === 'parse' ? asUint8Array(input) : ifUint8Array(input)
@@ -74,8 +78,5 @@ export class BytesSchema extends Schema<Uint8Array> {
  * const hashSchema = l.bytes({ minLength: 32, maxLength: 32 }) // Exactly 32 bytes
  * ```
  */
-export const bytes = /*#__PURE__*/ memoizedOptions(function (
-  options?: BytesSchemaOptions,
-) {
-  return new BytesSchema(options)
-})
+export const bytes: (options?: BytesSchemaOptions) => BytesSchema =
+  /*#__PURE__*/ memoizedOptions((options) => new BytesSchema(options))

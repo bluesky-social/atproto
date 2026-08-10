@@ -57,4 +57,9 @@
   "js/ts.tsdk.path": "node_modules/typescript/lib",
   "js/ts.experimental.useTsgo": true,
   "markdown.extension.toc.levels": "2..6",
+  "chat.tools.terminal.autoApprove": {
+    "pnpm exec": true,
+    "pnpm run": true,
+    "roast": true,
+  },
 }

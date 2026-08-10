@@ -1,10 +1,9 @@
-import events from 'node:events'
+import events, { setMaxListeners } from 'node:events'
 import http from 'node:http'
 import { connectNodeAdapter } from '@connectrpc/connect-node'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
-import { ServerConfig } from './config.js'
-import { AppContext, AppContextOptions } from './context.js'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
+import type { ServerConfig } from './config.js'
+import { AppContext, type AppContextOptions } from './context.js'
 import { createMuteOpChannel } from './db/schema/mute_op.js'
 import { createNotifOpChannel } from './db/schema/notif_op.js'
 import { createOperationChannel } from './db/schema/operation.js'
@@ -22,7 +21,7 @@ type BsyncServiceState = 'initialized' | 'started' | 'destroyed'
 export class BsyncService {
   public ctx: AppContext
   public server: http.Server
-  private terminator: httpTerminator.HttpTerminator
+  private terminator: HttpTerminator
   private ac: AbortController
   private state: BsyncServiceState = 'initialized'
 
@@ -34,7 +33,7 @@ export class BsyncService {
     this.ctx = opts.ctx
     this.server = opts.server
     this.ac = opts.ac
-    this.terminator = httpTerminator.createHttpTerminator(opts)
+    this.terminator = createHttpTerminator(opts)
   }
 
   static async create(
@@ -42,6 +41,8 @@ export class BsyncService {
     overrides?: Partial<AppContextOptions>,
   ): Promise<BsyncService> {
     const ac = new AbortController()
+    // Prevents unhelpful warnings.
+    setMaxListeners(100, ac.signal)
     const ctx = await AppContext.fromConfig(cfg, ac.signal, overrides)
     const handler = connectNodeAdapter({
       routes: routes(ctx),

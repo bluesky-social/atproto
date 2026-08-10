@@ -1,5 +1,44 @@
 # @atproto-labs/fetch
 
+## 0.3.5
+
+### Patch Changes
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix type definition of `JsonObject` to match record variant from `Json` type
+
+## 0.3.4
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto-labs/pipe@0.2.4
+
+## 0.3.3
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- Updated dependencies [[`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto-labs/pipe@0.2.3
+
+## 0.3.2
+
+### Patch Changes
+
+- [#5148](https://github.com/bluesky-social/atproto/pull/5148) [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix support of NodeJS 24 and before
+
+- [#5148](https://github.com/bluesky-social/atproto/pull/5148) [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor url parsing optimization
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- Updated dependencies [[`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7)]:
+  - @atproto-labs/pipe@0.2.2
+
 ## 0.3.1
 
 ### Patch Changes

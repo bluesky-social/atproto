@@ -1,10 +1,9 @@
 import crypto from 'node:crypto'
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
-import express, { Application, RequestHandler } from 'express'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { type Server, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import express, { type Application, type RequestHandler } from 'express'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import {
   afterAll,
   afterEach,
@@ -15,9 +14,9 @@ import {
   it,
   vi,
 } from 'vitest'
-import { AtpAgent, ids } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import {
+import { type AtpAgent, ids } from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type {
   KwsExternalPayload,
   KwsVerificationQuery,
   KwsWebhookBody,
@@ -97,6 +96,9 @@ describe('age assurance views', () => {
   })
 
   afterEach(async () => {
+    // Drain pending bsync ops before clearing, so a stale op can't land after
+    // the reset.
+    await network.processAll()
     await clearPrivateData(db)
     await clearActorAgeAssurance(db)
   })
@@ -225,6 +227,7 @@ describe('age assurance views', () => {
       externalPayload,
       status,
     })
+    await network.processAll()
     const finalizedState = await getAgeAssurance(actor)
     expect(finalizedState).toStrictEqual({
       status: 'assured',
@@ -264,6 +267,7 @@ describe('age assurance views', () => {
         `${redirectUrl}?actorDid=${encodeURIComponent(actorDid)}&result=success`,
       )
 
+      await network.processAll()
       const state2 = await getAgeAssurance(actorDid)
       expect(state2).toStrictEqual({
         status: 'assured',
@@ -288,6 +292,7 @@ describe('age assurance views', () => {
         `${redirectUrl}?result=unknown`,
       )
 
+      await network.processAll()
       const state = await getAgeAssurance(actorDid)
       expect(state).toStrictEqual({
         status: 'pending',
@@ -323,6 +328,7 @@ describe('age assurance views', () => {
       })
       expect(webhookRes.status).toBe(200)
 
+      await network.processAll()
       const state2 = await getAgeAssurance(actorDid)
       expect(state2).toStrictEqual({
         status: 'assured',
@@ -346,6 +352,7 @@ describe('age assurance views', () => {
       })
       expect(webhookRes.status).toBe(500)
 
+      await network.processAll()
       const state = await getAgeAssurance(actorDid)
       expect(state).toStrictEqual({
         status: 'pending',
@@ -374,7 +381,7 @@ class MockKwsServer {
   private webhookSecret: string
   private app: Application
   private server: Server
-  private terminator: httpTerminator.HttpTerminator
+  private terminator: HttpTerminator
 
   constructor({
     verificationSecret,
@@ -395,7 +402,7 @@ class MockKwsServer {
       .post('/v1/verifications/send-email', sendEmailMock)
 
     this.server = createServer(this.app)
-    this.terminator = httpTerminator.createHttpTerminator({
+    this.terminator = createHttpTerminator({
       server: this.server,
     })
   }

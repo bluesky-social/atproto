@@ -1,11 +1,11 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { getBlobCidString } from '@atproto/lex-data'
-import { JoseKey } from '@atproto/oauth-provider'
+import { JoseKey } from '@atproto/oauth-provider/provider'
 import { spaceHostAud } from '@atproto/space'
-import { SpaceRefString } from '@atproto/syntax'
+import type { SpaceRefString } from '@atproto/syntax'
 import { com } from '../../src/lexicons/index.js'
 import {
-  Actor,
+  type Actor,
   MockClientApp,
   MockService,
   SpaceClient,

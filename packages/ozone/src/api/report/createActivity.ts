@@ -1,8 +1,8 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../context.js'
-import { Server } from '../../lexicon/index.js'
+import type { AppContext } from '../../context.js'
+import type { Server } from '../../lexicon/index.js'
 import {
-  ActivityType,
+  type ActivityType,
   createReportActivity,
   formatActivityView,
 } from '../../report/activity.js'
@@ -24,8 +24,20 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const createdBy = getAuthDid(auth, ctx.cfg.service.did)
-      const { reportId, activity, internalNote, publicNote, isAutomated } =
-        input.body
+      const {
+        reportId,
+        eventId,
+        activity,
+        internalNote,
+        publicNote,
+        isAutomated,
+      } = input.body
+
+      if ((reportId === undefined) === (eventId === undefined)) {
+        throw new InvalidRequestError(
+          'Exactly one of reportId or eventId must be provided',
+        )
+      }
 
       const rawType = activity.$type ?? ''
       const activityType = rawType.startsWith(DEFS_PREFIX)
@@ -41,6 +53,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const row = await createReportActivity(ctx.db, {
         reportId,
+        eventId,
         activityType: activityType as ActivityType,
         internalNote: internalNote ?? undefined,
         publicNote: publicNote ?? undefined,

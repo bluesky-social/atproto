@@ -4,16 +4,15 @@
 // leave at top of file before importing Routes
 import 'express-async-errors'
 
-import events from 'node:events'
-import http from 'node:http'
+import events, { once } from 'node:events'
+import type http from 'node:http'
 import { PlcClientError } from '@did-plc/lib'
 import cors from 'cors'
 import express from 'express'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { DAY, SECOND } from '@atproto/common'
 import {
-  MethodHandler,
+  type MethodHandler,
   ResponseType,
   XRPCError,
   createServer,
@@ -21,17 +20,23 @@ import {
 import apiRoutes from './api/index.js'
 import * as authRoutes from './auth-routes.js'
 import * as basicRoutes from './basic-routes.js'
-import { ServerConfig, ServerSecrets } from './config/index.js'
-import { AppContext, AppContextOptions } from './context.js'
+import {
+  type ServerConfig,
+  type ServerEnvironment,
+  type ServerSecrets,
+  envToCfg,
+  envToSecrets,
+  readEnv,
+} from './config/index.js'
+import { AppContext, type AppContextOptions } from './context.js'
 import * as error from './error.js'
-import { app } from './lexicons.js'
-import { loggerMiddleware } from './logger.js'
+import type { app } from './lexicons.js'
+import { loggerMiddleware, pdsLogger } from './logger.js'
 import { proxyHandler } from './pipethrough.js'
 import { buildRateLimitsConfig } from './rate-limits.js'
 import compression from './util/compression.js'
 import * as wellKnown from './well-known.js'
 
-export * from './lexicons.js'
 export {
   bearerTokenFromReq,
   createPublicKeyObject,
@@ -41,6 +46,7 @@ export * from './config/index.js'
 export { AppContext } from './context.js'
 export { Database } from './db/index.js'
 export { DiskBlobStore } from './disk-blobstore.js'
+export * from './lexicons.js'
 export { httpLogger } from './logger.js'
 export { type CommitDataWithOps, type PreparedWrite } from './repo/index.js'
 export * as repoPrepare from './repo/prepare.js'
@@ -57,17 +63,86 @@ export type SkeletonHandler = MethodHandler<
   app.bsky.feed.getFeedSkeleton.$Output
 >
 
-export class PDS {
+export class PDS implements AsyncDisposable {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
-  private terminator?: httpTerminator.HttpTerminator
-  private dbStatsInterval?: NodeJS.Timeout
-  private sequencerStatsInterval?: NodeJS.Timeout
+  private terminator?: HttpTerminator
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
     this.app = opts.app
+  }
+
+  static async fromEnv(env: ServerEnvironment = readEnv()): Promise<PDS> {
+    const cfg = envToCfg(env)
+    const secrets = envToSecrets(env)
+    return PDS.create(cfg, secrets)
+  }
+
+  /**
+   * Creates and starts a PDS instance, and waits for a termination signal to
+   * stop it.
+   */
+  static async run({
+    env = undefined,
+    signal: inputSignal,
+    signals = ['SIGINT', 'SIGTERM'],
+    onCreated = undefined,
+    onStarted = undefined,
+  }: {
+    env?: ServerEnvironment
+    signal?: AbortSignal
+    signals?: readonly NodeJS.Signals[]
+    /**
+     * Hook that allows attaching additional logic (like adding custom HTTP
+     * routes) before the PDS is started.
+     */
+    onCreated?: (pds: PDS) => void | Promise<void>
+    onStarted?: (pds: PDS) => void | Promise<void>
+  } = {}): Promise<void> {
+    const ac = new AbortController()
+    const { signal } = ac
+    const abort = () => ac.abort()
+
+    // Always abort the internal signal, ensuring proper resource cleanup
+    using _ = { [Symbol.dispose]: abort }
+
+    // Bind the internal signal to the input signal (will automatically remove
+    // the listener when the internal signal is aborted)
+    inputSignal?.throwIfAborted()
+    inputSignal?.addEventListener('abort', abort, { signal })
+
+    // Bind the internal signal to the process signals (will automatically
+    // remove the listener when the internal signal is aborted)
+    for (const sig of signals) {
+      process.on(sig, abort)
+      signal.addEventListener('abort', () => process.off(sig, abort))
+    }
+
+    await using pds = await PDS.fromEnv(env)
+
+    if (signal.aborted) return
+
+    await onCreated?.(pds)
+
+    if (signal.aborted) return
+
+    pdsLogger.info('starting')
+
+    await pds.start()
+
+    if (signal.aborted) return
+
+    await onStarted?.(pds)
+
+    if (signal.aborted) return
+
+    pdsLogger.info('started')
+
+    await once(signal, 'abort')
+
+    pdsLogger.info('stopping')
   }
 
   static async create(
@@ -143,36 +218,16 @@ export class PDS {
     const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
     this.server.keepAliveTimeout = 90_000
-    this.terminator = httpTerminator.createHttpTerminator({ server })
+    this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
     return server
   }
 
   async destroy(): Promise<void> {
-    clearInterval(this.dbStatsInterval)
-    clearInterval(this.sequencerStatsInterval)
-
-    // @TODO Use disposable stack when it becomes available (Node24+)
     try {
       await this.terminator?.terminate()
     } finally {
-      try {
-        await this.ctx.backgroundQueue.destroy()
-      } finally {
-        try {
-          await this.ctx.sequencer.destroy()
-        } finally {
-          try {
-            await this.ctx.accountManager.close()
-          } finally {
-            try {
-              await this.ctx.redisScratch?.quit()
-            } finally {
-              await this.ctx.proxyAgent.destroy()
-            }
-          }
-        }
-      }
+      await this.ctx.destroy()
     }
   }
 

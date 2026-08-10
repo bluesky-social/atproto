@@ -1,9 +1,9 @@
-import { IncomingMessage } from 'node:http'
+import type { IncomingMessage } from 'node:http'
 import { Readable } from 'node:stream'
-import { NextFunction, Request, Response } from 'express'
+import type { NextFunction, Request, Response } from 'express'
 import { l } from '@atproto/lex-schema'
-import { ErrorResult, XRPCError } from './errors.js'
-import { CalcKeyFn, CalcPointsFn, RateLimiterI } from './rate-limiter.js'
+import type { ErrorResult, XRPCError } from './errors.js'
+import type { CalcKeyFn, CalcPointsFn, RateLimiterI } from './rate-limiter.js'
 
 export type Awaitable<T> = T | Promise<T>
 
@@ -97,8 +97,7 @@ export type Input = void | HandlerInput
 export type Output = void | HandlerSuccess | HandlerPipeThrough | ErrorResult
 
 export type AuthVerifier<C, A extends AuthResult = AuthResult> =
-  | ((ctx: C) => Awaitable<A | ErrorResult>)
-  | ((ctx: C) => Awaitable<A>)
+  ((ctx: C) => Awaitable<A | ErrorResult>) | ((ctx: C) => Awaitable<A>)
 
 export type MethodAuthContext<P extends Params = Params> = {
   params: P
@@ -164,8 +163,7 @@ export type RouteRateLimitOpts<C extends HandlerContext = HandlerContext> = {
 }
 
 export type RateLimitOpts<C extends HandlerContext = HandlerContext> =
-  | SharedRateLimitOpts<C>
-  | RouteRateLimitOpts<C>
+  SharedRateLimitOpts<C> | RouteRateLimitOpts<C>
 
 export function isSharedRateLimitOpts<
   C extends HandlerContext = HandlerContext,

@@ -1,18 +1,20 @@
 import {
-  OAuthAuthorizationServerMetadata,
+  type OAuthAuthorizationServerMetadata,
   oauthAuthorizationServerMetadataValidator,
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
 import {
-  Fetch,
+  type Fetch,
   FetchResponseError,
   bindFetch,
   cancelBody,
 } from '@atproto-labs/fetch'
 import {
   CachedGetter,
-  GetCachedOptions,
-  SimpleStore,
+  type GetCachedOptions,
+  type SimpleStore,
+  type StoreErrorHandler,
+  swallowStoreErrors,
 } from '@atproto-labs/simple-store'
 import { contentMime } from './util.js'
 
@@ -25,6 +27,13 @@ export type AuthorizationServerMetadataCache = SimpleStore<
 
 export type OAuthAuthorizationServerMetadataResolverConfig = {
   allowHttpIssuer?: boolean
+
+  /**
+   * Called when the metadata cache throws. The cache is best-effort: failures
+   * are logged (by default) and degrade to a cache miss + refetch, rather than
+   * being propagated.
+   */
+  onCacheError?: StoreErrorHandler<string>
 }
 
 /**
@@ -42,7 +51,10 @@ export class OAuthAuthorizationServerMetadataResolver extends CachedGetter<
     fetch?: Fetch,
     config?: OAuthAuthorizationServerMetadataResolverConfig,
   ) {
-    super(async (issuer, options) => this.fetchMetadata(issuer, options), cache)
+    super(
+      async (issuer, options) => this.fetchMetadata(issuer, options),
+      swallowStoreErrors(cache, config?.onCacheError),
+    )
 
     this.fetch = bindFetch(fetch)
     this.allowHttpIssuer = config?.allowHttpIssuer === true

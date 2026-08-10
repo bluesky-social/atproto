@@ -1,7 +1,7 @@
 import { TID } from '@atproto/common'
 import { SpaceRef } from '@atproto/syntax'
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertSpaceScope } from '../space/util.js'
 

@@ -1,10 +1,10 @@
 import * as plc from '@did-plc/lib'
 import { request } from 'undici'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { IdResolver } from '@atproto/identity'
-import { TestBsky } from './bsky.js'
-import { TestPds } from './pds.js'
-import { DidAndKey } from './types.js'
+import type { IdResolver } from '@atproto/identity'
+import type { TestBsky } from './bsky.js'
+import type { TestPds } from './pds.js'
+import type { DidAndKey } from './types.js'
 
 export const mockNetworkUtilities = (
   pds: TestPds | TestPds[],
@@ -23,6 +23,9 @@ export const mockNetworkUtilities = (
 export const mockResolvers = (
   idResolver: IdResolver,
   pds: TestPds | TestPds[],
+  // handles resolve against the matching pds by default, but may point
+  // elsewhere e.g. an entryway
+  handleResolveUrl?: string,
 ) => {
   const pdses = Array.isArray(pds) ? pds : [pds]
 
@@ -56,7 +59,10 @@ export const mockResolvers = (
       return origResolveHandleDns.call(idResolver.handle, handle)
     }
 
-    const url = new URL(`/.well-known/atproto-did`, match.url)
+    const url = new URL(
+      `/.well-known/atproto-did`,
+      handleResolveUrl ?? match.url,
+    )
     try {
       const res = await request(url, { headers: { host: handle } })
       if (res.statusCode !== 200) {

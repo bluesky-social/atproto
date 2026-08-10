@@ -1,20 +1,20 @@
 import { mapDefined } from '@atproto/common'
-import { DidString } from '@atproto/lex'
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
-import {
+import type { DidString } from '@atproto/lex'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import type {
   HydrateCtxWithViewer,
   Hydrator,
 } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type SkeletonFnInput,
   createPipeline,
   noRules,
 } from '../../../../pipeline.js'
-import { Views } from '../../../../views/index.js'
+import type { Views } from '../../../../views/index.js'
 import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -35,6 +35,12 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
+// Bounds dataplane round trips per request when filling pages. A page can
+// only run short when it contains scoped mutes, so this is only reached by
+// viewers with many consecutive scoped mutes; the client just paginates
+// again from the returned cursor.
+const MAX_PAGE_FILL_FETCHES = 10
+
 const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
@@ -42,15 +48,29 @@ const skeleton = async (
   if (clearlyBadCursor(params.cursor)) {
     return { mutedDids: [] }
   }
-  const { dids, cursor } = await ctx.hydrator.dataplane.getMutes({
-    actorDid: params.hydrateCtx.viewer,
-    cursor: params.cursor,
-    limit: params.limit,
-  })
-  return {
-    mutedDids: dids as DidString[],
-    cursor: cursor || undefined,
+  // only fully muted accounts are enumerated: scoped mutes (only reposts /
+  // only quoteposts) are filtered out. Since scoped entries still consume
+  // cursor range, keep fetching until the page holds at least `limit` full
+  // mutes. Whole dataplane pages are appended, so the response may exceed
+  // `limit`; this keeps the returned cursor a plain dataplane cursor.
+  const mutedDids: DidString[] = []
+  let cursor = params.cursor
+  for (let i = 0; i < MAX_PAGE_FILL_FETCHES; i++) {
+    const res = await ctx.hydrator.dataplane.getMutes({
+      actorDid: params.hydrateCtx.viewer,
+      cursor,
+      limit: params.limit,
+    })
+    const fullMuteDids = res.mutes.length
+      ? res.mutes
+          .filter((mute) => !mute.onlyReposts && !mute.onlyQuoteposts)
+          .map((mute) => mute.did)
+      : res.dids
+    mutedDids.push(...(fullMuteDids as DidString[]))
+    cursor = res.cursor || undefined
+    if (!cursor || mutedDids.length >= params.limit) break
   }
+  return { mutedDids, cursor }
 }
 
 const hydration = async (

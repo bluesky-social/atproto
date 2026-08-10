@@ -1,7 +1,7 @@
-import AtpAgent from '@atproto/api'
+import type AtpAgent from '@atproto/api'
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -26,6 +26,7 @@ describe('ozone-queues', () => {
       reportTypes: string[]
       collection?: string
       description?: string
+      recommendedPolicies?: string[]
     },
     role: 'admin' | 'triage' = 'admin',
   ) => {
@@ -80,6 +81,7 @@ describe('ozone-queues', () => {
       name?: string
       enabled?: boolean
       description?: string
+      recommendedPolicies?: string[]
     },
     role: 'admin' | 'triage' = 'admin',
   ) => {
@@ -138,6 +140,27 @@ describe('ozone-queues', () => {
       expect(data.queue.createdAt).toBeDefined()
       expect(data.queue.updatedAt).toBeDefined()
       expect(data.queue.stats).toBeDefined()
+      expect(data.queue.recommendedPolicies).toEqual([])
+    })
+
+    it('stores valid recommended policies and rejects unknown policies', async () => {
+      const { data } = await createQueue({
+        name: 'CQ: Recommended Policies',
+        subjectTypes: ['account'],
+        reportTypes: ['com.atproto.moderation.defs#reasonOther'],
+        recommendedPolicies: ['policy-one'],
+      })
+      createdIds.push(data.queue.id)
+      expect(data.queue.recommendedPolicies).toEqual(['policy-one'])
+
+      await expect(
+        createQueue({
+          name: 'CQ: Unknown Policy',
+          subjectTypes: ['account'],
+          reportTypes: ['com.atproto.moderation.defs#reasonOther'],
+          recommendedPolicies: ['Not A Policy'],
+        }),
+      ).rejects.toMatchObject({ error: 'InvalidRecommendedPolicies' })
     })
 
     it('creates a queue with description', async () => {
@@ -150,6 +173,62 @@ describe('ozone-queues', () => {
       createdIds.push(data.queue.id)
 
       expect(data.queue.description).toBe('Handles spam account reports')
+    })
+
+    it('creates a queue with conversation subject type', async () => {
+      const { data } = await createQueue({
+        name: 'CQ: Spam Convos',
+        subjectTypes: ['conversation'],
+        reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
+      })
+      createdIds.push(data.queue.id)
+
+      expect(data.queue.subjectTypes).toEqual(['conversation'])
+    })
+
+    it('rejects conflicting queue - overlapping conversation queues', async () => {
+      const { data: q1 } = await createQueue({
+        name: 'CQ: Threat Convos',
+        subjectTypes: ['conversation'],
+        reportTypes: ['tools.ozone.report.defs#reasonViolenceThreats'],
+      })
+      createdIds.push(q1.queue.id)
+
+      await expect(
+        createQueue({
+          name: 'CQ: Threat Convos Duplicate',
+          subjectTypes: ['conversation'],
+          reportTypes: ['tools.ozone.report.defs#reasonViolenceThreats'],
+        }),
+      ).rejects.toMatchObject({ error: 'ConflictingQueue' })
+    })
+
+    it('allows conversation queue alongside account queue with same report type', async () => {
+      const { data: q1 } = await createQueue({
+        name: 'CQ: Misleading Accounts',
+        subjectTypes: ['account'],
+        reportTypes: ['com.atproto.moderation.defs#reasonMisleading'],
+      })
+      createdIds.push(q1.queue.id)
+
+      const { data: q2 } = await createQueue({
+        name: 'CQ: Misleading Convos',
+        subjectTypes: ['conversation'],
+        reportTypes: ['com.atproto.moderation.defs#reasonMisleading'],
+      })
+      createdIds.push(q2.queue.id)
+
+      expect(q2.queue.subjectTypes).toEqual(['conversation'])
+    })
+
+    it('rejects invalid subject types', async () => {
+      await expect(
+        createQueue({
+          name: 'CQ: Invalid Subject Type',
+          subjectTypes: ['convo'],
+          reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
+        }),
+      ).rejects.toMatchObject({ error: 'InvalidSubjectType' })
     })
 
     it('creates a queue with collection filter', async () => {
@@ -192,6 +271,28 @@ describe('ozone-queues', () => {
           reportTypes: ['tools.ozone.report.defs#reasonViolenceThreats'],
         }),
       ).rejects.toMatchObject({ error: 'ConflictingQueue' })
+    })
+
+    it('rejects creating a queue with a duplicate name', async () => {
+      const { data: q1 } = await createQueue({
+        name: 'CQ: Duplicate Name',
+        subjectTypes: ['account'],
+        reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
+      })
+      createdIds.push(q1.queue.id)
+
+      // Distinct criteria (different report type) so only the name collides —
+      // proves the name check fires, not attribute-overlap.
+      await expect(
+        createQueue({
+          name: 'CQ: Duplicate Name',
+          subjectTypes: ['account'],
+          reportTypes: ['tools.ozone.report.defs#reasonViolenceThreats'],
+        }),
+      ).rejects.toMatchObject({
+        error: 'ConflictingQueue',
+        message: 'A queue with that name already exists',
+      })
     })
 
     it('rejects conflicting queue - partial overlap in subject types', async () => {
@@ -352,7 +453,7 @@ describe('ozone-queues', () => {
       // q3 is the only record+post+sexual queue
       const bySubjectType = await listQueues({ subjectType: 'record' })
       expect(
-        bySubjectType.queues.every((q) => q.subjectTypes.includes('record')),
+        bySubjectType.queues.every((q) => q.subjectTypes?.includes('record')),
       ).toBe(true)
       expect(bySubjectType.queues.some((q) => q.id === queueIds[2])).toBe(true)
       expect(bySubjectType.queues.some((q) => q.id === queueIds[0])).toBe(false)
@@ -444,6 +545,21 @@ describe('ozone-queues', () => {
         description: 'Updated description',
       })
       expect(data.queue.description).toBe('Updated description')
+    })
+
+    it('updates recommended policies and rejects unknown policies', async () => {
+      const { data } = await updateQueue({
+        queueId: testQueueId,
+        recommendedPolicies: ['policy-two'],
+      })
+      expect(data.queue.recommendedPolicies).toEqual(['policy-two'])
+
+      await expect(
+        updateQueue({
+          queueId: testQueueId,
+          recommendedPolicies: ['Not A Policy'],
+        }),
+      ).rejects.toMatchObject({ error: 'InvalidRecommendedPolicies' })
     })
 
     it('updates both name and enabled status', async () => {
@@ -564,11 +680,7 @@ describe('ozone-queues', () => {
     const queryLatestReportForSubject = async (
       subjectOrUri: string,
       status:
-        | 'open'
-        | 'closed'
-        | 'escalated'
-        | 'queued'
-        | 'assigned' = 'queued',
+        'open' | 'closed' | 'escalated' | 'queued' | 'assigned' = 'queued',
     ) => {
       const { reports } = await modClient.queryReports({
         status,

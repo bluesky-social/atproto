@@ -1,8 +1,8 @@
 import * as plc from '@did-plc/lib'
 import { check } from '@atproto/common'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { ACCESS_FULL, AuthScope } from '../../../../auth-scope.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -64,8 +64,8 @@ export default function (server: Server, ctx: AppContext) {
             verificationMethods:
               // @TODO: actually validate instead of type casting
               (input.body.verificationMethods as
-                | undefined
-                | Record<string, string>) ?? lastOp.verificationMethods,
+                undefined | Record<string, string>) ??
+              lastOp.verificationMethods,
             services:
               // @TODO: actually validate instead of type casting
               (input.body.services as

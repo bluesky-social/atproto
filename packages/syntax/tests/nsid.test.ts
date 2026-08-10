@@ -1,4 +1,3 @@
-import * as fs from 'node:fs'
 import { describe, expect, it, test } from 'vitest'
 import {
   InvalidNsidError,
@@ -9,6 +8,7 @@ import {
   validateNsid,
   validateNsidRegex,
 } from '../src/index.js'
+import { readInteropFile } from './_utils.ts'
 
 describe('NSID parsing & creation', () => {
   it('parses valid NSIDs', () => {
@@ -157,18 +157,10 @@ describe('NSID validation', () => {
   })
 
   describe('conforms to interop valid NSIDs', () => {
-    test.each(readInteropLines('nsid_syntax_valid.txt'))('%s', expectValid)
+    test.each(readInteropFile(`nsid_syntax_valid.txt`))('%s', expectValid)
   })
 
   describe('conforms to interop invalid NSIDs', () => {
-    test.each(readInteropLines('nsid_syntax_invalid.txt'))('%s', expectInvalid)
+    test.each(readInteropFile(`nsid_syntax_invalid.txt`))('%s', expectInvalid)
   })
 })
-
-function readInteropLines(filename: string): string[] {
-  return fs
-    .readFileSync(`${__dirname}/interop-files/${filename}`)
-    .toString()
-    .split('\n')
-    .filter((line) => line.length > 0 && !line.startsWith('#'))
-}

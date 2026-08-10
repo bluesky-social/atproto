@@ -1,5 +1,9 @@
 import { ModerationDecision } from '../decision.js'
-import { Label, ModerationOpts, ModerationSubjectProfile } from '../types.js'
+import type {
+  Label,
+  ModerationOpts,
+  ModerationSubjectProfile,
+} from '../types.js'
 
 export function decideAccount(
   subject: ModerationSubjectProfile,

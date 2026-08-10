@@ -18,7 +18,7 @@
   },
   "scripts": {
     "test": "vitest run",
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
@@ -32,8 +32,7 @@
   },
   "devDependencies": {
     "@atproto/jwk-jose": "workspace:^",
-    "typescript": "^6.0.3",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "type": "module",
   "exports": {

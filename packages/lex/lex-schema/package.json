@@ -1,9 +1,6 @@
 {
   "name": "@atproto/lex-schema",
-  "version": "0.1.4",
-  "engines": {
-    "node": ">=22"
-  },
+  "version": "0.2.5",
   "license": "MIT",
   "description": "Lexicon schema system for AT Lexicons",
   "keywords": [
@@ -18,11 +15,8 @@
     "directory": "packages/lex/lex-schema"
   },
   "files": [
-    "./src",
-    "./tsconfig.build.json",
-    "./tsconfig.tests.json",
-    "./tsconfig.json",
     "./dist",
+    "./README.md",
     "./CHANGELOG.md"
   ],
   "sideEffects": false,
@@ -33,6 +27,9 @@
       "default": "./dist/index.js"
     }
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@atproto/syntax": "workspace:^",
     "@atproto/lex-data": "workspace:^",
@@ -40,10 +37,10 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
   "scripts": {
-    "build": "tsgo --build tsconfig.build.json",
+    "build": "tsc --build tsconfig.build.json",
     "test": "vitest run"
   }
 }

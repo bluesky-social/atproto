@@ -1,9 +1,15 @@
 {
-  "extends": "../../tsconfig/node.json",
+  // Public entrypoint: binds the shared code to the platform transport via the
+  // `#transport` imports condition (see package.json).
+  "extends": ["../../tsconfig/isomorphic.tsconfig.json"],
+  "include": ["./src/index.ts"],
+  "references": [
+    { "path": "./tsconfig.build-core.json" },
+    { "path": "./tsconfig.build-node.json" },
+    { "path": "./tsconfig.build-browser.json" },
+  ],
   "compilerOptions": {
-    "noImplicitAny": true,
     "rootDir": "./src",
     "outDir": "./dist",
   },
-  "include": ["./src"],
 }

@@ -1,7 +1,7 @@
-import { Did } from '@atproto/did'
-import { Jwks } from '@atproto/jwk'
+import type { Did } from '@atproto/did'
+import type { Jwks } from '@atproto/jwk'
 import type { Account } from '@atproto/oauth-provider-api'
-import {
+import type {
   OAuthAccessToken,
   OAuthAuthorizationDetails,
   OAuthAuthorizationRequestParameters,
@@ -9,7 +9,7 @@ import {
   OAuthTokenResponse,
   OAuthTokenType,
 } from '@atproto/oauth-types'
-import {
+import type {
   DeleteAccountConfirmInput,
   ResetPasswordConfirmInput,
   ResetPasswordRequestInput,
@@ -20,65 +20,56 @@ import {
   VerifyEmailConfirmInput,
   VerifyEmailRequestInput,
 } from './account/account-store.js'
-import { SignInData } from './account/sign-in-data.js'
-import { SignUpInput } from './account/sign-up-input.js'
-import { ClientAuth } from './client/client-auth.js'
-import { ClientId } from './client/client-id.js'
-import { ClientInfo } from './client/client-info.js'
-import { Client } from './client/client.js'
-import { DeviceId } from './device/device-id.js'
-import { DpopProof } from './dpop/dpop-proof.js'
-import { AccessDeniedError } from './errors/access-denied-error.js'
-import { AuthorizationError } from './errors/authorization-error.js'
-import { InvalidCredentialsError } from './errors/invalid-credentials-error.js'
-import { InvalidRequestError } from './errors/invalid-request-error.js'
-import { OAuthError } from './errors/oauth-error.js'
-import {
+import type { SignInData } from './account/sign-in-data.js'
+import type { SignUpInput } from './account/sign-up-input.js'
+import type { ClientAuth } from './client/client-auth.js'
+import type { ClientId } from './client/client-id.js'
+import type { ClientInfo } from './client/client-info.js'
+import type { Client } from './client/client.js'
+import type { DeviceId } from './device/device-id.js'
+import type { DpopProof } from './dpop/dpop-proof.js'
+import type { InvalidRequestError } from './errors/invalid-request-error.js'
+import type {
   HcaptchaClientTokens,
   HcaptchaConfig,
   HcaptchaVerifyResult,
 } from './lib/hcaptcha.js'
-import { RequestMetadata } from './lib/http/request.js'
-import { Awaitable, OmitKey } from './lib/util/type.js'
-import { RequestId } from './request/request-id.js'
-import { AccessTokenPayload } from './signer/access-token-payload.js'
-import { TokenClaims } from './token/token-claims.js'
+import type { RequestMetadata } from './lib/http/request.js'
+import type { Awaitable, OmitKey } from './lib/util/type.js'
+import type { RequestId } from './request/request-id.js'
+import type { AccessTokenPayload } from './signer/access-token-payload.js'
+import type { TokenClaims } from './token/token-claims.js'
 
 // Make sure all types needed to implement the OAuthHooks are exported
-export {
-  AccessDeniedError,
-  type AccessTokenPayload,
-  type Account,
-  AuthorizationError,
-  type Awaitable,
+export type {
+  AccessTokenPayload,
+  Account,
+  Awaitable,
   Client,
-  type ClientAuth,
-  type ClientId,
-  type ClientInfo,
-  type DeviceId,
-  type Did,
-  type DpopProof,
-  type HcaptchaClientTokens,
-  type HcaptchaConfig,
-  type HcaptchaVerifyResult,
-  InvalidCredentialsError,
-  InvalidRequestError,
-  type Jwks,
-  type OAuthAccessToken,
-  type OAuthAuthorizationDetails,
-  type OAuthAuthorizationRequestParameters,
-  type OAuthClientMetadata,
-  OAuthError,
-  type OAuthTokenResponse,
-  type OAuthTokenType,
-  type RequestMetadata,
-  type ResetPasswordConfirmInput,
-  type ResetPasswordRequestInput,
-  type SignInData,
-  type SignUpData,
-  type SignUpInput,
-  type TokenClaims,
-  type UpdateHandleData,
+  ClientAuth,
+  ClientId,
+  ClientInfo,
+  DeviceId,
+  Did,
+  DpopProof,
+  HcaptchaClientTokens,
+  HcaptchaConfig,
+  HcaptchaVerifyResult,
+  Jwks,
+  OAuthAccessToken,
+  OAuthAuthorizationDetails,
+  OAuthAuthorizationRequestParameters,
+  OAuthClientMetadata,
+  OAuthTokenResponse,
+  OAuthTokenType,
+  RequestMetadata,
+  ResetPasswordConfirmInput,
+  ResetPasswordRequestInput,
+  SignInData,
+  SignUpData,
+  SignUpInput,
+  TokenClaims,
+  UpdateHandleData,
 }
 
 export type OAuthHooks = {
@@ -91,7 +82,10 @@ export type OAuthHooks = {
    */
   getClientInfo?: (
     clientId: ClientId,
-    data: { metadata: OAuthClientMetadata; jwks?: Jwks },
+    data: {
+      metadata: OAuthClientMetadata
+      jwks: Jwks | undefined
+    },
   ) => Awaitable<undefined | Partial<ClientInfo>>
 
   /**
@@ -138,6 +132,7 @@ export type OAuthHooks = {
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
     account: Account
+    prevAccount: Account
   }) => Awaitable<void>
 
   /**
@@ -298,6 +293,7 @@ export type OAuthHooks = {
     input: SignUpInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    clientId: ClientId | undefined
   }) => Awaitable<void>
 
   /**
@@ -366,6 +362,7 @@ export type OAuthHooks = {
     account: Account
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    clientId: ClientId | undefined
   }) => Awaitable<void>
 
   /**
@@ -378,7 +375,7 @@ export type OAuthHooks = {
     data: SignInData
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    clientId?: ClientId
+    clientId: ClientId | undefined
   }) => Awaitable<void>
 
   /**
@@ -394,7 +391,7 @@ export type OAuthHooks = {
     account: Account
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    clientId?: ClientId
+    clientId: ClientId | undefined
   }) => Awaitable<void>
 
   /**
@@ -421,7 +418,7 @@ export type OAuthHooks = {
     did: Did | null
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
-    clientId?: ClientId
+    clientId: ClientId | undefined
   }) => Awaitable<void>
 
   /**

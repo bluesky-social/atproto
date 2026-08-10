@@ -1,5 +1,6 @@
-import { LexParseOptions, jsonToLex } from '@atproto/lex-json'
-import {
+import type { LexParseOptions } from '@atproto/lex-json'
+import { jsonToLex } from '@atproto/lex-json'
+import type {
   InferMethodOutputEncoding,
   InferOutput,
   LexValue,
@@ -15,11 +16,8 @@ import {
   XrpcResponseError,
   XrpcResponseValidationError,
 } from './errors.js'
-import {
-  EncodingString,
-  XrpcUnknownResponsePayload,
-  isEncodingString,
-} from './types.js'
+import { isEncodingString } from './types.js'
+import type { EncodingString, XrpcUnknownResponsePayload } from './types.js'
 
 const CONTENT_TYPE_BINARY = 'application/octet-stream'
 const CONTENT_TYPE_JSON = 'application/json'
@@ -43,7 +41,7 @@ type InferBodyType<
   ? InferOutput<TSchema>
   : TEncoding extends `application/json`
     ? LexValue
-    : Uint8Array
+    : Uint8Array<ArrayBuffer>
 
 /**
  * The body type of an XRPC response, inferred from the method's output schema.
@@ -57,7 +55,7 @@ export type XrpcResponseBody<M extends Procedure | Query> =
   M['output'] extends Payload<infer TEncoding, infer TSchema>
     ? TEncoding extends string
       ? InferBodyType<TEncoding, TSchema>
-      : undefined | LexValue | Uint8Array
+      : undefined | LexValue | Uint8Array<ArrayBuffer>
     : never
 
 /**
@@ -76,7 +74,8 @@ export type XrpcResponsePayload<M extends Procedure | Query> =
         }
       : // If the schema does not specify an output encoding, anything could be
         // returned, including no payload at all (undefined).
-        undefined | { body: LexValue | Uint8Array; encoding: string }
+        | undefined
+        | { body: LexValue | Uint8Array<ArrayBuffer>; encoding: string }
     : never
 
 export type XrpcResponseOptions = {
@@ -138,9 +137,9 @@ export type XrpcResponseOptions = {
  * const { cursor, feed } = response.body
  * ```
  */
-export class XrpcResponse<M extends Procedure | Query>
-  implements ResultSuccess<XrpcResponse<M>>
-{
+export class XrpcResponse<M extends Procedure | Query> implements ResultSuccess<
+  XrpcResponse<M>
+> {
   /** @see {@link ResultSuccess.success} */
   readonly success = true as const
 
@@ -160,7 +159,7 @@ export class XrpcResponse<M extends Procedure | Query>
    * Whether the response payload was parsed as {@link LexValue} (`true`) or is
    * in binary form {@link Uint8Array} (`false`).
    */
-  get isParsed() {
+  get isParsed(): boolean {
     return this.method.output.encoding === CONTENT_TYPE_JSON
   }
 

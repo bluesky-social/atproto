@@ -1,7 +1,7 @@
-import { Did } from '@atproto/did'
-import { OAuthScope } from '@atproto/oauth-types'
-import { ClientId } from '../client/client-id.js'
-import { TokenId } from './token-id.js'
+import type { Did } from '@atproto/did'
+import type { OAuthScope } from '@atproto/oauth-types'
+import type { ClientId } from '../client/client-id.js'
+import type { TokenId } from './token-id.js'
 
 /**
  * The access token claims that will be set by the {@link TokenManager} and that

@@ -1,4 +1,11 @@
-import { $type, NsidString, Schema, ValidationContext } from '../core.js'
+import {
+  type $Type,
+  $type,
+  type NsidString,
+  Schema,
+  type ValidationContext,
+  type ValidationResult,
+} from '../core.js'
 
 /**
  * Schema for Lexicon token values.
@@ -28,7 +35,10 @@ export class TokenSchema<
     return this.value
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<TValue> {
     if (input === this.value) {
       return ctx.success(this.value)
     }
@@ -98,6 +108,6 @@ export class TokenSchema<
 export function token<
   const N extends NsidString,
   const H extends string = 'main',
->(nsid: N, hash: H = 'main' as H) {
+>(nsid: N, hash: H = 'main' as H): TokenSchema<$Type<N, H>> {
   return new TokenSchema($type(nsid, hash))
 }

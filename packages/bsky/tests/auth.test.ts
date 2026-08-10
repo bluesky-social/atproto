@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { AtpAgent, ids } from '@atproto/api'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
+import { type AtpAgent, ids } from '@atproto/api'
+import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { type SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import { createServiceJwt } from '@atproto/xrpc-server'
 
 describe('auth', () => {

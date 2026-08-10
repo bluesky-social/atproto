@@ -1,10 +1,10 @@
 import { ScopeMissingError, ScopePermissions } from '@atproto/oauth-scopes'
-import { DidString } from '@atproto/syntax'
+import type { DidString } from '@atproto/syntax'
 import {
   assertSpaceRead,
   assertSpaceScope,
 } from '../src/api/com/atproto/space/util.js'
-import {
+import type {
   AccessOutput,
   OAuthOutput,
   SpaceCredentialOutput,

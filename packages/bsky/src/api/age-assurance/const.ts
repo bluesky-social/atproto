@@ -159,6 +159,26 @@ export const AGE_ASSURANCE_CONFIG = app.bsky.ageassurance.defs.config.$build({
       ],
     },
     {
+      platforms: ['ios', 'android'],
+      countryCode: 'US',
+      regionCode: 'TX',
+      minAccessAge: 18,
+      // On-device age verification is permitted here in addition to the
+      // third-party (KWS) flow, which is always supported and remains as a
+      // fallback for platforms without the native age API (e.g. web) or
+      // insufficient device results.
+      additionalVerificationMethods: ['device'],
+      rules: [
+        app.bsky.ageassurance.defs.configRegionRuleIfAssuredOverAge.$build({
+          age: 18,
+          access: 'full',
+        }),
+        app.bsky.ageassurance.defs.configRegionRuleDefault.$build({
+          access: 'none',
+        }),
+      ],
+    },
+    {
       countryCode: 'BR',
       regionCode: undefined,
       minAccessAge: 13,

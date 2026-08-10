@@ -36,7 +36,11 @@ export abstract class Issue {
    *
    * @returns An object containing the issue code, path, and message
    */
-  toJSON() {
+  toJSON(): {
+    code: string
+    path: readonly PropertyKey[]
+    message: string
+  } {
     return {
       code: this.code,
       path: this.path,
@@ -99,7 +103,7 @@ export class IssueInvalidFormat extends Issue {
     }
   }
 
-  toJSON() {
+  toJSON(): ReturnType<Issue['toJSON']> & { format: string } {
     return {
       ...super.toJSON(),
       format: this.format,
@@ -126,7 +130,7 @@ export class IssueInvalidType extends Issue {
     return `Expected ${oneOf(this.expected.map(stringifyExpectedType))} value type (got ${stringifyValue(this.input)})`
   }
 
-  toJSON() {
+  toJSON(): ReturnType<Issue['toJSON']> & { expected: readonly string[] } {
     return {
       ...super.toJSON(),
       expected: this.expected,
@@ -153,7 +157,7 @@ export class IssueInvalidValue extends Issue {
     return `Expected ${oneOf(this.values.map(stringifyValue))} (got ${stringifyValue(this.input)})`
   }
 
-  toJSON() {
+  toJSON(): ReturnType<Issue['toJSON']> & { values: readonly unknown[] } {
     return {
       ...super.toJSON(),
       values: this.values,
@@ -177,7 +181,7 @@ export class IssueRequiredKey extends Issue {
     return `Missing required key "${String(this.key)}"`
   }
 
-  toJSON() {
+  toJSON(): ReturnType<Issue['toJSON']> & { key: PropertyKey } {
     return {
       ...super.toJSON(),
       key: this.key,
@@ -196,12 +200,7 @@ export class IssueRequiredKey extends Issue {
  * - `'blob'` - Blob size
  */
 export type MeasurableType =
-  | 'array'
-  | 'string'
-  | 'integer'
-  | 'grapheme'
-  | 'bytes'
-  | 'blob'
+  'array' | 'string' | 'integer' | 'grapheme' | 'bytes' | 'blob'
 
 /**
  * Issue for values that exceed a maximum constraint.
@@ -221,7 +220,10 @@ export class IssueTooBig extends Issue {
     return `${this.type} too big (maximum ${this.maximum}, got ${this.actual})`
   }
 
-  toJSON() {
+  toJSON(): ReturnType<Issue['toJSON']> & {
+    type: MeasurableType
+    maximum: number
+  } {
     return {
       ...super.toJSON(),
       type: this.type,
@@ -248,7 +250,10 @@ export class IssueTooSmall extends Issue {
     return `${this.type} too small (minimum ${this.minimum}, got ${this.actual})`
   }
 
-  toJSON() {
+  toJSON(): ReturnType<Issue['toJSON']> & {
+    type: MeasurableType
+    minimum: number
+  } {
     return {
       ...super.toJSON(),
       type: this.type,

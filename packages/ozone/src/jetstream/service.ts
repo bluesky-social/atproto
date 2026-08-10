@@ -1,4 +1,4 @@
-import { WebSocketKeepAlive } from '@atproto/ws-client'
+import { CloseCode, CloseError, websocket } from '@atproto/ws-client'
 
 type JetstreamRecord = Record<string, unknown>
 type OnCreateCallback<T extends JetstreamRecord> = (
@@ -34,8 +34,9 @@ export type CommitBase = {
   rkey: string
   cid: string
 }
-export interface CommitCreateEvent<RecordType extends JetstreamRecord>
-  extends EventBase {
+export interface CommitCreateEvent<
+  RecordType extends JetstreamRecord,
+> extends EventBase {
   kind: 'commit'
   commit: {
     operation: 'create'
@@ -50,9 +51,18 @@ export interface CommitDeleteEvent extends EventBase {
   } & CommitBase
 }
 
+// The abort reason close() uses. Any abort closes the socket politely; a
+// `CloseError` rather than a bare sentinel because the reason picks the close
+// code sent to the peer — a CloseError names its own (1000 here), anything else
+// defaults to 1000 anyway, so this spells the intent out. Its identity is also
+// how start() tells our own shutdown from a real failure.
+const STOPPED = new CloseError(CloseCode.Normal, 'jetstream stopped', true)
+
 export class Jetstream {
-  public ws?: WebSocketKeepAlive
   public url: URL
+  readonly #abort = new AbortController()
+  /** The `start()` run in flight, so `close()` can await its unwind. */
+  #running?: Promise<void>
   /** The current cursor. */
   public cursor?: number
 
@@ -71,37 +81,57 @@ export class Jetstream {
     onCreate?: Record<string, OnCreateCallback<any>>
     onDelete?: Record<string, (e: CommitDeleteEvent) => Promise<void>>
   }) {
-    this.ws = new WebSocketKeepAlive({
-      getUrl: async () => {
+    // Retained so close() resolves only once the stream has unwound, and with it
+    // the connection. Swallows its own outcome: a caller awaiting close() is
+    // asking about shutdown, not about how the stream ended — that's what the
+    // promise start() returns is for.
+    const running = this.#consume(options)
+    this.#running = running.catch(() => {})
+    return running
+  }
+
+  async #consume(options: {
+    onCreate?: Record<string, OnCreateCallback<any>>
+    onDelete?: Record<string, (e: CommitDeleteEvent) => Promise<void>>
+  }) {
+    const ws = websocket(
+      () => {
         if (this.cursor)
           this.url.searchParams.set('cursor', this.cursor.toString())
         return this.url.toString()
       },
-    })
+      { dataMode: 'text', signal: this.#abort.signal },
+    )
 
-    for await (const message of this.ws) {
-      const parsedMessage = JSON.parse(message.toString())
-      if (parsedMessage.kind === 'commit') {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- `record` is used via `typeof record` below
-        const { collection, operation, record } = parsedMessage.commit || {}
+    try {
+      for await (const message of ws) {
+        const parsedMessage = JSON.parse(message)
+        if (parsedMessage.kind === 'commit') {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars -- `record` is used via `typeof record` below
+          const { collection, operation, record } = parsedMessage.commit || {}
 
-        if (operation === 'create') {
-          options.onCreate?.[collection]?.(
-            parsedMessage as CommitCreateEvent<typeof record>,
-          )
-        } else if (operation === 'delete') {
-          options.onDelete?.[collection]?.(parsedMessage as CommitDeleteEvent)
+          if (operation === 'create') {
+            options.onCreate?.[collection]?.(
+              parsedMessage as CommitCreateEvent<typeof record>,
+            )
+          } else if (operation === 'delete') {
+            options.onDelete?.[collection]?.(parsedMessage as CommitDeleteEvent)
+          }
         }
       }
+    } catch (err) {
+      // Our own close() is not a failure; anything else is.
+      if (err !== STOPPED) throw err
     }
   }
 
   /**
-   * Closes the WebSocket connection.
+   * Ends the stream and closes the connection, resolving once it has closed: the
+   * abort tears the socket down, and the stream's own unwind is what tells us
+   * that finished. A close() before start() is an inert no-op.
    */
   async close() {
-    // @TODO This should return a promise that fulfills when the connection is
-    // fully closed.
-    this.ws?.ws?.close()
+    this.#abort.abort(STOPPED)
+    await this.#running
   }
 }

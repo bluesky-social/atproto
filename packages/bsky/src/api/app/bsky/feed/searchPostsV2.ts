@@ -1,21 +1,28 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { mapDefined } from '@atproto/common'
-import { AtUriString } from '@atproto/lex'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
-import { DataPlaneClient } from '../../../../data-plane/index.js'
+import type { AtUriString } from '@atproto/lex'
 import {
-  PostSearchQuery,
+  ForbiddenError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
+import {
+  type DataPlaneClient,
+  asInvalidRequest,
+} from '../../../../data-plane/index.js'
+import {
+  type PostSearchQuery,
   parsePostSearchQuery,
 } from '../../../../data-plane/server/util.js'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline.js'
 import {
@@ -23,7 +30,7 @@ import {
   SearchSortOrder,
 } from '../../../../proto/bsky_pb.js'
 import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
-import { Views } from '../../../../views/index.js'
+import type { Views } from '../../../../views/index.js'
 import { resHeaders, resolveSearchV2Override } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -34,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.feed.searchPostsV2, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const { viewer, isModService, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)
@@ -57,6 +64,15 @@ export default function (server: Server, ctx: AppContext) {
         ) || resolveSearchV2Override(req, ctx.cfg)
       if (!isV2Enabled) {
         throw new InvalidRequestError('Search v2 is not enabled')
+      }
+
+      /*
+       * Matches v1 handling: allow one page of results for unauthenticated
+       * users, but block further pages. This is a temporary measure until
+       * we finalize moderation rules for search v2.
+       */
+      if (!viewer && params.cursor) {
+        throw new ForbiddenError('Request forbidden by administrative rules.')
       }
 
       const results = await searchPostsV2(
@@ -88,49 +104,54 @@ const skeleton = async (
     author: params.authors?.[0],
   })
 
-  const res = await ctx.dataplane.searchPostsV2({
-    params: {
-      query,
-      viewer: params.hydrateCtx.viewer ?? undefined,
-      limit: params.limit,
-      cursor: params.cursor,
-    },
-    sort: postSortToV2(params.sort),
-    filters: {
-      authors: params.authors ?? [],
-      mentions: params.mentions ?? [],
-      domains: params.domains ?? [],
-      urls: params.urls ?? [],
-      embeddedAtUris: params.embeddedAtUris ?? [],
-      hashtags: params.hashtags ?? [],
-    },
-    exclude: {
-      authors: params.excludeAuthors ?? [],
-      mentions: params.excludeMentions ?? [],
-      domains: params.excludeDomains ?? [],
-      urls: params.excludeUrls ?? [],
-      embeddedAtUris: params.excludeEmbeddedAtUris ?? [],
-      hashtags: params.excludeHashtags ?? [],
-    },
-    since: parseTimestamp(params.since),
-    until: parseTimestamp(params.until),
-    allTime: params.allTime,
-    language: params.language,
-    hasMedia: params.hasMedia,
-    hasVideo: params.hasVideo,
-    replyParentUri: params.replyParentUri,
-    threadRootUri: params.threadRootUri,
-    excludeReplies: params.excludeReplies,
-    repliesOnly: params.repliesOnly,
-    following: params.following,
-    queryLanguage: queryLanguageToV2(params.queryLanguage),
-  })
+  // Surface dataplane InvalidArgument errors as a 400 rather than a 500.
+  const res = await ctx.dataplane
+    .searchPostsV2({
+      params: {
+        query,
+        viewer: params.hydrateCtx.viewer ?? undefined,
+        limit: params.limit,
+        cursor: params.cursor,
+      },
+      sort: postSortToV2(params.sort),
+      filters: {
+        authors: params.authors ?? [],
+        mentions: params.mentions ?? [],
+        domains: params.domains ?? [],
+        urls: params.urls ?? [],
+        embeddedAtUris: params.embeddedAtUris ?? [],
+        hashtags: params.hashtags ?? [],
+        languages: params.languages ?? [],
+      },
+      exclude: {
+        authors: params.excludeAuthors ?? [],
+        mentions: params.excludeMentions ?? [],
+        domains: params.excludeDomains ?? [],
+        urls: params.excludeUrls ?? [],
+        embeddedAtUris: params.excludeEmbeddedAtUris ?? [],
+        hashtags: params.excludeHashtags ?? [],
+        languages: params.excludeLanguages ?? [],
+      },
+      since: parseTimestamp(params.since),
+      until: parseTimestamp(params.until),
+      allTime: params.allTime,
+      hasMedia: params.hasMedia,
+      hasVideo: params.hasVideo,
+      replyParentUri: params.replyParentUri,
+      threadRootUri: params.threadRootUri,
+      excludeReplies: params.excludeReplies,
+      repliesOnly: params.repliesOnly,
+      following: params.following,
+      queryLanguage: queryLanguageToV2(params.queryLanguage),
+    })
+    .catch(asInvalidRequest())
   return {
     posts: res.posts.map(({ uri }) => uri as AtUriString),
     cursor: parseString(res.pageInfo?.cursor),
-    hitsTotal: res.pageInfo?.hitsTotal
-      ? Number(res.pageInfo.hitsTotal)
-      : undefined,
+    hitsTotal:
+      res.pageInfo?.hitsTotal != null
+        ? Number(res.pageInfo.hitsTotal)
+        : undefined,
     detectedQueryLanguages: res.detectedQueryLanguages,
     parsedQuery,
   }
@@ -163,7 +184,21 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
 
     if (ctx.views.viewerBlockExists(creator, hydration)) return false
 
-    const tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
+    // Roll the post's own tags together with moderation tags on its author,
+    // so author-level tags are filtered the same way as post-level tags.
+    const author = hydration.actors?.get(creator)
+    const tags = new Set([
+      ...post.tags,
+      ...(author?.accountModerationTags ?? []),
+      ...(author?.profileModerationTags ?? []),
+    ])
+
+    // Tags that are hidden from all search surfaces (Top and Latest),
+    // regardless of curation or author filtering.
+    const alwaysHidden = [...ctx.cfg.searchTagsHideAll].some((t) => tags.has(t))
+    if (alwaysHidden) return false
+
+    const tagged = [...ctx.cfg.searchTagsHide].some((t) => tags.has(t))
 
     if (isCuratedSearch && tagged) return false
     if (!(parsedQuery.author || params.authors?.length) && tagged) return false

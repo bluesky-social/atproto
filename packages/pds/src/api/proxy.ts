@@ -1,5 +1,5 @@
-import { IncomingMessage } from 'node:http'
-import express from 'express'
+import type { IncomingMessage } from 'node:http'
+import type express from 'express'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export function authPassthru(req: IncomingMessage) {

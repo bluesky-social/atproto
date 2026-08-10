@@ -1,7 +1,7 @@
-import { Infer, Main, RecordSchema, getMain } from '@atproto/lex'
-import { AtUriString, NsidString } from '@atproto/syntax'
-import { HandlerOpts, TapHandler } from './channel.js'
-import { IdentityEvent, RecordEvent, TapEvent } from './types.js'
+import { type Infer, type Main, type RecordSchema, getMain } from '@atproto/lex'
+import type { AtUriString, NsidString } from '@atproto/syntax'
+import type { HandlerOpts, TapHandler } from './channel.js'
+import type { IdentityEvent, RecordEvent, TapEvent } from './types.js'
 
 type BaseRecordEvent = Omit<RecordEvent, 'record' | 'action' | 'cid'>
 
@@ -56,13 +56,9 @@ export type IdentityHandler = (
 export type ErrorHandler = (err: Error) => void
 
 export type RecordHandler<R> =
-  | CreateHandler<R>
-  | UpdateHandler<R>
-  | PutHandler<R>
-  | DeleteHandler
+  CreateHandler<R> | UpdateHandler<R> | PutHandler<R> | DeleteHandler
 
 interface RegisteredHandler {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handler: RecordHandler<any>
   schema: RecordSchema
 }

@@ -1,4 +1,4 @@
-import { IdResolver, getHandle } from '@atproto/identity'
+import { type IdResolver, getHandle } from '@atproto/identity'
 import { SpacePermission } from '@atproto/oauth-scopes'
 
 /**

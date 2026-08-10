@@ -1,10 +1,10 @@
-import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
+import { Code, ConnectError, type ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
-import { AppContext } from '../context.js'
-import { Database } from '../db/index.js'
+import type { AppContext } from '../context.js'
+import type { Database } from '../db/index.js'
 import { createMuteOpChannel } from '../db/schema/mute_op.js'
-import { Service } from '../proto/bsync_connect.js'
+import type { Service } from '../proto/bsync_connect.js'
 import {
   AddMuteOperationResponse,
   MuteOperation_Type,
@@ -39,12 +39,14 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
         type: op.type,
         actorDid: op.actorDid,
         subject: op.subject,
+        onlyReposts: op.onlyReposts,
+        onlyQuoteposts: op.onlyQuoteposts,
       },
     })
   },
 })
 
-const createMuteOp = async (db: Database, op: MuteOpInfo) => {
+const createMuteOp = async (db: Database, op: MuteOpInfoValid) => {
   const { ref } = db.db.dynamic
   const { id } = await db.db
     .insertInto('mute_op')
@@ -52,6 +54,8 @@ const createMuteOp = async (db: Database, op: MuteOpInfo) => {
       type: op.type,
       actorDid: op.actorDid,
       subject: op.subject,
+      onlyReposts: op.onlyReposts,
+      onlyQuoteposts: op.onlyQuoteposts,
     })
     .returning('id')
     .executeTakeFirstOrThrow()
@@ -59,7 +63,11 @@ const createMuteOp = async (db: Database, op: MuteOpInfo) => {
   return id
 }
 
-const addMuteItem = async (db: Database, fromId: number, op: MuteOpInfo) => {
+const addMuteItem = async (
+  db: Database,
+  fromId: number,
+  op: MuteOpInfoValid,
+) => {
   const { ref } = db.db.dynamic
   await db.db
     .insertInto('mute_item')
@@ -67,16 +75,20 @@ const addMuteItem = async (db: Database, fromId: number, op: MuteOpInfo) => {
       actorDid: op.actorDid,
       subject: op.subject,
       fromId,
+      onlyReposts: op.onlyReposts,
+      onlyQuoteposts: op.onlyQuoteposts,
     })
     .onConflict((oc) =>
-      oc
-        .constraint('mute_item_pkey')
-        .doUpdateSet({ fromId: sql`${ref('excluded.fromId')}` }),
+      oc.constraint('mute_item_pkey').doUpdateSet({
+        fromId: sql`${ref('excluded.fromId')}`,
+        onlyReposts: sql`${ref('excluded.onlyReposts')}`,
+        onlyQuoteposts: sql`${ref('excluded.onlyQuoteposts')}`,
+      }),
     )
     .execute()
 }
 
-const removeMuteItem = async (db: Database, op: MuteOpInfo) => {
+const removeMuteItem = async (db: Database, op: MuteOpInfoValid) => {
   await db.db
     .deleteFrom('mute_item')
     .where('actorDid', '=', op.actorDid)
@@ -84,7 +96,7 @@ const removeMuteItem = async (db: Database, op: MuteOpInfo) => {
     .execute()
 }
 
-const clearMuteItems = async (db: Database, op: MuteOpInfo) => {
+const clearMuteItems = async (db: Database, op: MuteOpInfoValid) => {
   await db.db
     .deleteFrom('mute_item')
     .where('actorDid', '=', op.actorDid)
@@ -95,6 +107,8 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
   if (!Object.values(MuteOperation_Type).includes(op.type)) {
     throw new ConnectError('bad mute operation type', Code.InvalidArgument)
   }
+  const onlyReposts = op.onlyReposts ?? false
+  const onlyQuoteposts = op.onlyQuoteposts ?? false
   if (op.type === MuteOperation_Type.UNSPECIFIED) {
     throw new ConnectError(
       'unspecified mute operation type',
@@ -118,6 +132,12 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
     if (isValidDid(op.subject)) {
       // all good
     } else if (isValidAtUri(op.subject)) {
+      if (onlyReposts || onlyQuoteposts) {
+        throw new ConnectError(
+          'mute scopes only apply to actor mutes',
+          Code.InvalidArgument,
+        )
+      }
       const uri = new AtUri(op.subject)
       if (
         uri.collection !== 'app.bsky.graph.list' &&
@@ -135,13 +155,15 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
       )
     }
   }
-  return op as MuteOpInfoValid // op.type has been checked
+  return { ...op, onlyReposts, onlyQuoteposts } as MuteOpInfoValid // op.type has been checked
 }
 
 type MuteOpInfo = {
   type: MuteOperation_Type
   actorDid: string
   subject: string
+  onlyReposts?: boolean
+  onlyQuoteposts?: boolean
 }
 
 type MuteOpInfoValid = {
@@ -151,4 +173,6 @@ type MuteOpInfoValid = {
     | MuteOperation_Type.CLEAR
   actorDid: string
   subject: string
+  onlyReposts: boolean
+  onlyQuoteposts: boolean
 }

@@ -1,0 +1,45 @@
+{
+  "name": "@atproto-labs/rolldown-plugin-bundle-manifest",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Library for generating a manifest of bundled files from a Rolldown build",
+  "keywords": [
+    "atproto",
+    "rolldown",
+    "manifest"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/internal/rolldown-plugin-bundle-manifest"
+  },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "mime": "^3.0.0"
+  },
+  "peerDependencies": {
+    "rolldown": "^1.2.1"
+  },
+  "devDependencies": {
+    "rolldown": "^1.2.1"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.json"
+  }
+}

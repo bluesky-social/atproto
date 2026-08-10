@@ -1,4 +1,4 @@
-import { app, chat, com, site } from '../lexicons/index.js'
+import { app, type chat, com, type site } from '../lexicons/index.js'
 
 // app.bsky.actor
 
@@ -80,11 +80,7 @@ export type EmbedView =
 export type MaybePostView = PostView | NotFoundPost | BlockedPost
 
 export type RecordEmbedViewInternal =
-  | PostEmbedView
-  | GeneratorView
-  | ListView
-  | LabelerView
-  | StarterPackViewBasic
+  PostEmbedView | GeneratorView | ListView | LabelerView | StarterPackViewBasic
 
 // app.bsky.feed
 

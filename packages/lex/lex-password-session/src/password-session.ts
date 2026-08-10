@@ -1,13 +1,8 @@
-import {
-  Agent,
-  XrpcFailure,
-  buildAgent,
-  xrpc,
-  xrpcSafe,
-} from '@atproto/lex-client'
+import type { Agent, XrpcFailure } from '@atproto/lex-client'
+import { buildAgent, xrpc, xrpcSafe } from '@atproto/lex-client'
 import { LexAuthFactorError } from './error.js'
 import { com } from './lexicons/index.js'
-import { extractPdsUrl, extractXrpcErrorCode } from './util.js'
+import { extractPdsEndpoint, extractXrpcErrorCode } from './util.js'
 
 /**
  * Represents a failure response when refreshing a session.
@@ -629,7 +624,7 @@ export class PasswordSession implements Agent, AsyncDisposable {
 }
 
 function fetchUrl(sessionData: SessionData, path: string): URL {
-  const pdsUrl = extractPdsUrl(sessionData.didDoc)
+  const pdsUrl = extractPdsEndpoint(sessionData.didDoc)
   return new URL(path, pdsUrl ?? sessionData.service)
 }
 

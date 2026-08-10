@@ -7,8 +7,6 @@
       "required": [
         "id",
         "name",
-        "subjectTypes",
-        "reportTypes",
         "createdBy",
         "createdAt",
         "updatedAt",
@@ -26,10 +24,9 @@
         },
         "subjectTypes": {
           "type": "array",
-          "minLength": 1,
           "items": {
             "type": "string",
-            "knownValues": ["account", "record", "message"]
+            "knownValues": ["account", "record", "message", "conversation"]
           },
           "description": "Subject types this queue accepts."
         },
@@ -43,12 +40,16 @@
           "items": {
             "type": "string"
           },
-          "minLength": 1,
           "description": "Report reason types this queue accepts (fully qualified NSIDs)"
         },
         "description": {
           "type": "string",
           "description": "Optional description of the queue"
+        },
+        "recommendedPolicies": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Policy keys recommended when actioning reports in this queue"
         },
         "createdBy": {
           "type": "string",

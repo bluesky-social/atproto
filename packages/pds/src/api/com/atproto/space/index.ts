@@ -1,5 +1,5 @@
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import applyWrites from './applyWrites.js'
 import createRecord from './createRecord.js'
 import deleteRecord from './deleteRecord.js'

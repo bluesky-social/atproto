@@ -1,10 +1,10 @@
 import { AtpAgent, BSKY_LABELER_DID } from '@atproto/api'
 import {
-  ModeratorClient,
-  RecordRef,
-  SeedClient,
+  type ModeratorClient,
+  type RecordRef,
+  type SeedClient,
   TestNetwork,
-  TestOzone,
+  type TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons.js'

@@ -1,8 +1,8 @@
-import { AtUriString } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client/index.js'
+import type { AtUriString } from '@atproto/syntax'
+import type { DataPlaneClient } from '../data-plane/client/index.js'
 import { site } from '../lexicons/index.js'
 import { hydrationLogger } from '../logger.js'
-import {
+import type {
   GetSiteStandardRecordsByRefResponse,
   GetSiteStandardRecordsByURIResponse,
 } from '../proto/bsky_pb.js'
@@ -10,11 +10,16 @@ import {
   parseSiteStandardRecordKey,
   siteStandardRecordKey,
 } from '../util/standard-site.js'
-import {
+import type {
   SiteStandardDocumentRecord,
   SiteStandardPublicationRecord,
 } from '../views/types.js'
-import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util.js'
+import {
+  HydrationMap,
+  type ItemRef,
+  type RecordInfo,
+  parseRecord,
+} from './util.js'
 
 export type SiteStandardDocument = RecordInfo<SiteStandardDocumentRecord>
 export type SiteStandardPublication = RecordInfo<SiteStandardPublicationRecord>
@@ -76,8 +81,7 @@ const emptySiteStandardRecords = (): SiteStandardRecords => ({
 
 const buildSiteStandardRecordsHydrationMaps = (
   res:
-    | GetSiteStandardRecordsByURIResponse
-    | GetSiteStandardRecordsByRefResponse,
+    GetSiteStandardRecordsByURIResponse | GetSiteStandardRecordsByRefResponse,
   includeTakedowns: boolean,
 ): SiteStandardRecords => {
   const documents: SiteStandardDocuments = new HydrationMap()
@@ -143,8 +147,7 @@ export const getSiteStandardRecordsFromHydrationMapsByRefs = (
   // each side.
   let document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
   let publication:
-    | AssociatedSiteStandardRecord<SiteStandardPublication>
-    | undefined
+    AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
   for (const ref of associatedRefs) {
     const key = siteStandardRecordKey(ref.uri, ref.cid)
     if (!document) {
@@ -232,8 +235,7 @@ export const getSiteStandardRecordsFromHydrationMapsByDocumentUri = (
   }
 
   let publication:
-    | AssociatedSiteStandardRecord<SiteStandardPublication>
-    | undefined
+    AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
   if (document) {
     const site = document.info.record.site
     if (site && site.startsWith('at://')) {

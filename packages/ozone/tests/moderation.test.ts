@@ -1,20 +1,20 @@
 import {
-  AtpAgent,
+  type AtpAgent,
   ChatBskyConvoDefs,
-  ToolsOzoneModerationEmitEvent,
+  type ToolsOzoneModerationEmitEvent,
 } from '@atproto/api'
 import { HOUR } from '@atproto/common'
 import {
-  ImageRef,
-  ModeratorClient,
-  RecordRef,
-  SeedClient,
+  type ImageRef,
+  type ModeratorClient,
+  type RecordRef,
+  type SeedClient,
   TestNetwork,
-  TestOzone,
+  type TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
 import { AtUri } from '@atproto/syntax'
-import { ImageInvalidator } from '../src/image-invalidator.js'
+import type { ImageInvalidator } from '../src/image-invalidator.js'
 import { EventReverser } from '../src/index.js'
 import { ids } from '../src/lexicon/lexicons.js'
 import {
@@ -23,7 +23,7 @@ import {
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 import {
-  ModEventLabel,
+  type ModEventLabel,
   REVIEWCLOSED,
   REVIEWESCALATED,
 } from '../src/lexicon/types/tools/ozone/moderation/defs.js'
@@ -749,7 +749,6 @@ describe('moderation', () => {
       // In the actual app, this will be instantiated and run on server startup
       const reverser = new EventReverser(
         network.ozone.ctx.db,
-        // @ts-expect-error Error due to circular dependency with the dev-env package
         network.ozone.ctx.modService,
       )
       await reverser.findAndRevertDueActions()

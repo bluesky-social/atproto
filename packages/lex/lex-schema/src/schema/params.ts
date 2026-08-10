@@ -1,17 +1,17 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
-  Infer,
-  InferInput,
-  InferOutput,
-  Issue,
+  type InferInput,
+  type InferOutput,
+  type Issue,
   IssueInvalidType,
   IssueInvalidValue,
   LexValidationError,
-  ParseOptions,
+  type ParseOptions,
   Schema,
-  ValidationContext,
-  Validator,
-  WithOptionalProperties,
+  type ValidationContext,
+  type ValidationResult,
+  type Validator,
+  type WithOptionalProperties,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 import { memoizedOptions } from '../util/memoize.js'
@@ -29,18 +29,22 @@ import { WithDefaultSchema } from './with-default.js'
 /**
  * Scalar types allowed in URL parameters: boolean, integer, or string.
  */
-export type ParamScalar = Infer<typeof paramScalarSchema>
-const paramScalarSchema = union([boolean(), integer(), string()])
+export type ParamScalar = string | number | boolean
+const paramScalarSchema: Schema<ParamScalar> = union([
+  boolean(),
+  integer(),
+  string(),
+])
 
 /**
  * A single parameter value: scalar or array of scalars.
  */
-export type Param = Infer<typeof paramSchema>
+export type Param = ParamScalar | boolean[] | number[] | string[]
 
 /**
  * Schema for validating individual parameter values.
  */
-export const paramSchema = union([
+export const paramSchema: Schema<Param> = union([
   paramScalarSchema,
   array(boolean()),
   array(integer()),
@@ -50,12 +54,15 @@ export const paramSchema = union([
 /**
  * Type for a params object with string keys and optional param values.
  */
-export type Params = Infer<typeof paramsSchema>
+export type Params = Record<string, undefined | Param>
 
 /**
  * Schema for validating arbitrary params objects.
  */
-export const paramsSchema = dict(string(), optional(paramSchema))
+export const paramsSchema: Schema<Params> = dict(
+  string(),
+  optional(paramSchema),
+)
 
 export type ParamScalarValidator =
   // @NOTE In order to properly coerce URLSearchParams, we need to distinguish
@@ -81,8 +88,7 @@ type AsArrayParamSchema<TSchema extends Validator> =
   TSchema extends any ? ArraySchema<TSchema> : never
 
 export type ParamValueValidator =
-  | ParamScalarValidator
-  | AsArrayParamSchema<ParamScalarValidator>
+  ParamScalarValidator | AsArrayParamSchema<ParamScalarValidator>
 
 export type ParamValidator =
   | ParamValueValidator
@@ -140,7 +146,10 @@ export class ParamsSchema<
     return lazyProperty(this, 'shapeValidators', map)
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<Record<string, unknown>> {
     if (!isPlainObject(input)) {
       return ctx.issueUnexpectedType(input, 'object')
     }
@@ -347,11 +356,11 @@ function paramPath(key: string, options?: ParseOptions) {
  * const searchParams = paginationParams.toURLSearchParams({ limit: 25 })
  * ```
  */
-export const params = /*#__PURE__*/ memoizedOptions(function params<
-  const TShape extends ParamsShape = NonNullable<unknown>,
->(properties: TShape = {} as TShape) {
-  return new ParamsSchema<TShape>(properties)
-})
+export const params: <const TShape extends ParamsShape = NonNullable<unknown>>(
+  properties?: TShape,
+) => ParamsSchema<TShape> = /*#__PURE__*/ memoizedOptions(
+  (properties = {} as any) => new ParamsSchema(properties),
+)
 
 type UnwrapSchema<S extends Validator> =
   S extends OptionalSchema<infer U>

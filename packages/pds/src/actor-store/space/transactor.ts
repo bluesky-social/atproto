@@ -1,13 +1,17 @@
 import { TID } from '@atproto/common'
 import { encode } from '@atproto/lex-cbor'
-import { Cid, parseCid } from '@atproto/lex-data'
+import { type Cid, parseCid } from '@atproto/lex-data'
 import { WriteOpAction } from '@atproto/repo'
 import { RepoCommit } from '@atproto/space'
-import { SpaceRef, SpaceRefString } from '@atproto/syntax'
+import { SpaceRef, type SpaceRefString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { BadRecordSwapError, PreparedWrite } from '../../repo/types.js'
-import { BlobTransactor } from '../blob/transactor.js'
-import { ActorDb, SimplespaceConfig, SpaceRecordOplog } from '../db/index.js'
+import { BadRecordSwapError, type PreparedWrite } from '../../repo/types.js'
+import type { BlobTransactor } from '../blob/transactor.js'
+import type {
+  ActorDb,
+  SimplespaceConfig,
+  SpaceRecordOplog,
+} from '../db/index.js'
 import { SpaceReader } from './reader.js'
 
 export class SpaceTransactor extends SpaceReader {

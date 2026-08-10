@@ -1,14 +1,10 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, it, test } from 'vitest'
 import { AtUri } from '../src/index.js'
+import { readInteropFile } from './_utils.js'
 
 describe(AtUri, () => {
-  describe('parses valid interop', () => {
-    test.each(
-      readLines(
-        `${__dirname}/../../../interop-test-files/syntax/aturi_syntax_valid.txt`,
-      ),
-    )('%s', (value) => {
+  describe('valid interop', () => {
+    test.each(readInteropFile(`aturi_syntax_valid.txt`))('%s', (value) => {
       expect(() => new AtUri(value)).not.toThrow()
     })
   })
@@ -420,9 +416,3 @@ describe(AtUri, () => {
     expect(() => urip.rkeySafe).toThrow()
   })
 })
-
-function readLines(filePath: string): string[] {
-  return readFileSync(filePath, 'utf-8')
-    .split(/\r?\n/)
-    .filter((line) => !line.startsWith('#') && line.length > 0)
-}

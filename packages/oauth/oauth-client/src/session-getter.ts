@@ -1,20 +1,19 @@
-import { AtprotoDid } from '@atproto/did'
-import { Key } from '@atproto/jwk'
+import type { AtprotoDid } from '@atproto/did'
+import type { Key } from '@atproto/jwk'
 import {
   CachedGetter,
-  GetCachedOptions,
-  GetOptions,
-  SimpleStore,
+  type GetCachedOptions,
+  type SimpleStore,
 } from '@atproto-labs/simple-store'
 import { AuthMethodUnsatisfiableError } from './errors/auth-method-unsatisfiable-error.js'
 import { TokenInvalidError } from './errors/token-invalid-error.js'
 import { TokenRefreshError } from './errors/token-refresh-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
-import { ClientAuthMethod } from './oauth-client-auth.js'
+import type { ClientAuthMethod } from './oauth-client-auth.js'
 import { OAuthResponseError } from './oauth-response-error.js'
-import { TokenSet } from './oauth-server-agent.js'
-import { OAuthServerFactory } from './oauth-server-factory.js'
-import { Runtime } from './runtime.js'
+import type { TokenSet } from './oauth-server-agent.js'
+import type { OAuthServerFactory } from './oauth-server-factory.js'
+import type { Runtime } from './runtime.js'
 import { combineSignals, timeoutSignal } from './util.js'
 
 export type Session = {
@@ -25,9 +24,9 @@ export type Session = {
 
 export type SessionStore = SimpleStore<string, Session>
 
-export type SessionHooks = {
-  onUpdate?: (sub: AtprotoDid, session: Session) => void
-  onDelete?: (
+export type SessionGetterOptions = {
+  onSessionUpdated?: (sub: AtprotoDid, session: Session) => void
+  onSessionDeleted?: (
     sub: AtprotoDid,
     cause: TokenRefreshError | TokenRevokedError | TokenInvalidError | unknown,
   ) => void
@@ -53,11 +52,15 @@ export function isExpectedSessionError(err: unknown) {
  * localStorage/indexedDB, will sync across multiple tabs (for a given sub).
  */
 export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
+  readonly #serverFactory: OAuthServerFactory
+  readonly #runtime: Runtime
+  readonly #options: SessionGetterOptions
+
   constructor(
     sessionStore: SessionStore,
     serverFactory: OAuthServerFactory,
-    private readonly runtime: Runtime,
-    private readonly hooks: SessionHooks = {},
+    runtime: Runtime,
+    options: SessionGetterOptions = {},
   ) {
     super(
       async (sub, { signal }, storedSession) => {
@@ -72,7 +75,7 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
           // make sure an event is dispatched here if this occurs.
           const msg = 'The session was deleted by another process'
           const cause = new TokenRefreshError(sub, msg)
-          await hooks.onDelete?.call(null, sub, cause)
+          await options.onSessionDeleted?.call(null, sub, cause)
           throw cause
         }
 
@@ -95,6 +98,7 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
           tokenSet.iss,
           authMethod,
           dpopKey,
+          { signal },
         )
 
         // Because refresh tokens can only be used once, we must not use the
@@ -185,64 +189,64 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
                 30e3 * Math.random()
           )
         },
-        onStoreError: async (err, sub, { tokenSet, dpopKey, authMethod }) => {
-          // If the token data cannot be stored, let's revoke it
-          try {
-            const server = await serverFactory.fromIssuer(
-              tokenSet.iss,
-              authMethod,
-              dpopKey,
-            )
-            await server.revoke(tokenSet.refresh_token ?? tokenSet.access_token)
-          } catch {
-            // At least we tried...
-          }
-
-          // Attempt to delete the session from the store. Note that this might
-          // fail if the store is not available, which is fine.
-          try {
-            await this.delStored(sub, err)
-          } catch {
-            // Ignore (better to propagate the original storage error)
-          }
-
-          throw err
-        },
         deleteOnError: isExpectedSessionError,
       },
     )
-  }
 
-  override async getStored(
-    sub: AtprotoDid,
-    options?: GetOptions,
-  ): Promise<Session | undefined> {
-    return super.getStored(sub, options)
+    this.#serverFactory = serverFactory
+    this.#runtime = runtime
+    this.#options = options
   }
 
   override async setStored(sub: AtprotoDid, session: Session) {
     // Prevent tampering with the stored value
     if (sub !== session.tokenSet.sub) {
-      throw new TypeError('Token set does not match the expected sub')
+      throw new Error('Token set does not match the expected sub')
     }
-    await super.setStored(sub, session)
-    await this.hooks.onUpdate?.call(null, sub, session)
+
+    try {
+      await super.setStored(sub, session)
+    } catch (err) {
+      // If we fail to persist the session, we assume that we won't be able to
+      // fetch it again. We don't want to leave the session in a "limbo" state,
+      // so we proactively revoke the session and delete it from the store.
+
+      const errors: unknown[] = [err]
+
+      try {
+        const { tokenSet, dpopKey, authMethod } = session
+        const server = await this.#serverFactory.fromIssuer(
+          tokenSet.iss,
+          authMethod,
+          dpopKey,
+        )
+        await server.revoke(tokenSet.refresh_token ?? tokenSet.access_token)
+      } catch (err) {
+        errors.push(err)
+      }
+
+      try {
+        await this.delStored(sub, err)
+      } catch (err) {
+        errors.push(err)
+      }
+
+      throw new AggregateError(errors, `Failed to store session for ${sub}`)
+    }
+
+    await this.#options.onSessionUpdated?.call(null, sub, session)
   }
 
   override async delStored(sub: AtprotoDid, cause?: unknown): Promise<void> {
     await super.delStored(sub, cause)
-    await this.hooks.onDelete?.call(null, sub, cause)
+    await this.#options.onSessionDeleted?.call(null, sub, cause)
   }
 
-  /**
-   * @deprecated Use {@link getSession} instead
-   * @internal (not really deprecated)
-   */
   override async get(
     sub: AtprotoDid,
     options?: GetCachedOptions,
   ): Promise<Session> {
-    const session = await this.runtime.usingLock(
+    const session = await this.#runtime.usingLock(
       `@atproto-oauth-client-${sub}`,
       async () => {
         // Make sure, even if there is no signal in the options, that the

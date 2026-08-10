@@ -1,9 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it, vitest } from 'vitest'
-import { AtpAgent, ids } from '@atproto/api'
+import { type AtpAgent, ids } from '@atproto/api'
 import { cborDecode, cborEncode } from '@atproto/common'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { sequencer } from '@atproto/pds'
-import { DatabaseSchemaType } from '../../src/data-plane/server/db/database-schema.js'
+import type { DidString } from '@atproto/syntax'
+import type { DatabaseSchemaType } from '../../src/data-plane/server/db/database-schema.js'
 import { forSnapshot } from '../_util.js'
 
 type Database = TestNetwork['bsky']['db']
@@ -98,7 +99,7 @@ describe('sync', () => {
 
   async function updateProfile(
     agent: AtpAgent,
-    did: string,
+    did: DidString,
     record: Record<string, unknown>,
   ) {
     return await agent.api.com.atproto.repo.putRecord(

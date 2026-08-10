@@ -70,6 +70,7 @@
             "app.bsky.graph.muteActorList",
             "app.bsky.graph.muteThread",
             "app.bsky.graph.searchStarterPacks",
+            "app.bsky.graph.searchStarterPacksV2",
             "app.bsky.graph.unmuteActor",
             "app.bsky.graph.unmuteActorList",
             "app.bsky.graph.unmuteThread",

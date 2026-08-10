@@ -1,4 +1,4 @@
-import { JoseKey } from '@atproto/oauth-provider'
+import { JoseKey } from '@atproto/oauth-provider/provider'
 import { ClientAttestationVerifier } from '../src/client-attestation-verifier.js'
 
 const CLIENT_ID = 'https://app.example.com/client-metadata.json'

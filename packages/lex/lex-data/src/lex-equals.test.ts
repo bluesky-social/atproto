@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parseCid } from './cid.js'
 import { lexEquals } from './lex-equals.js'
-import { LexValue } from './lex.js'
+import type { LexValue } from './lex.js'
 
 function expectLexEqual(a: LexValue, b: LexValue, expected: boolean) {
   expect(lexEquals(a, b)).toBe(expected)

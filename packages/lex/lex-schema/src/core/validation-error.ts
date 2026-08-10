@@ -1,8 +1,8 @@
-import { LexError } from '@atproto/lex-data'
+import { LexError, type LexErrorData } from '@atproto/lex-data'
 import { arrayAgg } from '../util/array-agg.js'
-import { ResultFailure } from './result.js'
+import type { ResultFailure } from './result.js'
 import {
-  Issue,
+  type Issue,
   IssueInvalidType,
   IssueInvalidValue,
 } from './validation-issue.js'
@@ -67,7 +67,7 @@ export class LexValidationError
   readonly success = false as const
 
   /** @see {ResultFailure.reason} */
-  get reason() {
+  get reason(): this {
     return this
   }
 
@@ -76,7 +76,9 @@ export class LexValidationError
    *
    * @returns An object containing the error details and issues details
    */
-  override toJSON() {
+  override toJSON(): LexErrorData & {
+    issues: ReturnType<Issue['toJSON']>[]
+  } {
     return {
       ...super.toJSON(),
       issues: this.issues.map((issue) => issue.toJSON()),

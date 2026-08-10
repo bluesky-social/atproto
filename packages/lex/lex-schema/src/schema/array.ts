@@ -1,9 +1,10 @@
 import {
-  InferInput,
-  InferOutput,
+  type InferInput,
+  type InferOutput,
   Schema,
-  ValidationContext,
-  Validator,
+  type ValidationContext,
+  type ValidationResult,
+  type Validator,
 } from '../core.js'
 import { memoizedTransformer } from '../util/memoize.js'
 
@@ -45,7 +46,10 @@ export class ArraySchema<const TItem extends Validator> extends Schema<
     super()
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<any[]> {
     if (!Array.isArray(input)) {
       return ctx.issueUnexpectedType(input, 'array')
     }
@@ -123,4 +127,5 @@ function arraySchema<const TValidator extends Validator>(
   return new ArraySchema<TValidator>(items, options)
 }
 
-export const array = /*#__PURE__*/ memoizedTransformer(arraySchema)
+export const array: typeof arraySchema =
+  /*#__PURE__*/ memoizedTransformer(arraySchema)

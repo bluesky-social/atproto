@@ -1,12 +1,14 @@
 import {
-  PropsWithChildren,
+  type PropsWithChildren,
   createContext,
+  use,
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react'
-import { type OAuthSession } from '@atproto/oauth-client-browser'
+import type { OAuthSession } from '@atproto/oauth-client-browser'
 import { useAbortableEffect } from '../lib/use-abortable-effect.js'
 import { initPromise, oauthClient, oauthEvents } from '../oauthClient.js'
 
@@ -20,39 +22,26 @@ export type SignUpFunction = (
 ) => Promise<void>
 export type SignOutFunction = () => Promise<void>
 
-export const OAuthContext = createContext<null | {
-  session: null | OAuthSession
-  isLoading: boolean
-  isSignedIn: boolean
+export type OAuthValue = {
+  /** State saved when we last left this app to complete the oauth flow */
+  state?: string | null
+  session?: OAuthSession
+
   signIn: SignInFunction
   signUp: SignUpFunction
   signOut: SignOutFunction
-}>(null)
+}
 
-export function OAuthProvider({ children }: PropsWithChildren) {
-  const [initialized, setInitialized] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [session, setSession] = useState<null | OAuthSession>(null)
+export const OAuthContext = createContext<null | OAuthValue>(null)
+OAuthContext.displayName = 'OAuthContext'
 
-  useAbortableEffect(
-    (signal) => {
-      setInitialized(false)
-      setSession(null)
+export type OAuthProviderProps = PropsWithChildren
 
-      void initPromise
-        .then(async (result) => {
-          if (signal.aborted) return
+export function OAuthProvider({ children }: OAuthProviderProps) {
+  const initSession = use(initPromise)
 
-          if (result) setSession(result.session)
-        })
-        .finally(() => {
-          if (signal.aborted) return
-
-          setInitialized(true)
-        })
-    },
-    [initPromise],
-  )
+  const state = initSession?.state
+  const [session, setSession] = useState(initSession?.session)
 
   // Keep tabs in sync by listening to the oauth client's events and updating
   // the session state accordingly. The deletion part is needed because the
@@ -67,7 +56,7 @@ export function OAuthProvider({ children }: PropsWithChildren) {
         oauthEvents.addEventListener(
           'deleted',
           (evt) => {
-            if (evt.detail.sub === session.sub) setSession(null)
+            if (evt.detail.sub === session.sub) setSession(undefined)
           },
           { signal },
         )
@@ -109,76 +98,54 @@ export function OAuthProvider({ children }: PropsWithChildren) {
 
   const signIn = useCallback<SignInFunction>(
     async (input, options) => {
-      setLoading(true)
+      const session = await oauthClient
+        .restore(input, true)
+        .catch(async (_err) => oauthClient.signIn(input, options))
 
-      try {
-        const session = await oauthClient
-          .restore(input, true)
-          .catch(async (_err) => oauthClient.signIn(input, options))
-
-        setSession(session)
-      } finally {
-        setLoading(false)
-      }
+      setSession(session)
     },
     [oauthClient],
   )
 
   const signOut = useCallback<SignOutFunction>(async () => {
     if (session) {
-      setSession(null)
-      setLoading(true)
-      try {
-        await session.signOut()
-      } finally {
-        setLoading(false)
-      }
+      setSession(undefined)
+      await session.signOut()
     }
   }, [session])
 
   const signUp = useCallback<SignUpFunction>(
     async (input, options) => {
-      setLoading(true)
-      try {
-        const session = await oauthClient.signIn(input, {
-          ...options,
-          prompt: 'create',
-        })
+      const session = await oauthClient.signIn(input, {
+        ...options,
+        prompt: 'create',
+      })
 
-        setSession(session)
-      } finally {
-        setLoading(false)
-      }
+      setSession(session)
     },
     [oauthClient],
   )
 
-  return (
-    <OAuthContext.Provider
-      value={{
-        session,
+  const value = useMemo<OAuthValue | null>(
+    () => ({ session, state, signIn, signUp, signOut }),
+    [session, state, signIn, signUp, signOut],
+  )
 
-        isLoading: !initialized || loading,
-        isSignedIn: !!session,
+  return <OAuthContext.Provider value={value}>{children}</OAuthContext.Provider>
+}
 
-        signIn,
-        signUp,
-        signOut,
-      }}
-    >
-      {children}
-    </OAuthContext.Provider>
+export function useOAuthContext(hookName = useOAuthContext.name) {
+  const value = useContext(OAuthContext)
+  if (value) return value
+
+  throw new Error(
+    `${hookName} must be used within an ${OAuthContext.displayName}`,
   )
 }
 
-export function useOAuthContext() {
-  const value = useContext(OAuthContext)
-  if (!value) throw new Error('useOAuth must be used within an OAuthProvider')
-  return value
-}
+export function useOAuthSession(hookName = useOAuthSession.name): OAuthSession {
+  const { session } = useOAuthContext(hookName)
+  if (session) return session
 
-export function useOAuthSession(): OAuthSession {
-  const { session } = useOAuthContext()
-  if (!session) throw new Error('User is not logged in')
-  return session
+  throw new Error(`${hookName} must be used within an authenticated context`)
 }

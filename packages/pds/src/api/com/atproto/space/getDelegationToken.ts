@@ -1,7 +1,7 @@
 import { createSpaceToken, spaceHostAud } from '@atproto/space'
-import { Server } from '@atproto/xrpc-server'
+import type { Server } from '@atproto/xrpc-server'
 import { ACCESS_PRIVILEGED } from '../../../../auth-scope.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertSpaceScope, toSpaceRef } from './util.js'
 

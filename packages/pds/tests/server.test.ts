@@ -1,9 +1,10 @@
 import { finished } from 'node:stream/promises'
 import express from 'express'
 import { request } from 'undici'
-import { AtUri, AtpAgent } from '@atproto/api'
+import { AtUri, type AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
-import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { handler as errorHandler } from '../src/error.js'
 import { startServer } from './_util.js'
 import basicSeed from './seeds/basic.js'
@@ -12,7 +13,7 @@ describe('server', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
-  let alice: string
+  let alice: DidString
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({

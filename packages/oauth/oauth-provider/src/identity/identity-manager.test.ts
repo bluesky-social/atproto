@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { IdResolver } from '@atproto/identity'
+import type { IdResolver } from '@atproto/identity'
 import { IdentityManager } from './identity-manager.js'
 
 const DID = 'did:plc:abc123'

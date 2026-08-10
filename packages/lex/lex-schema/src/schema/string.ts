@@ -1,14 +1,15 @@
 import { graphemeLen, ifCid, utf8Len } from '@atproto/lex-data'
 import {
-  InferStringFormat,
-  Restricted,
+  type InferStringFormat,
+  type Restricted,
   Schema,
-  StringFormat,
-  UnknownString,
-  ValidationContext,
+  type StringFormat,
+  type UnknownString,
+  type ValidationContext,
+  type ValidationResult,
   isStringFormat,
 } from '../core.js'
-import { IfAny } from '../util/if-any.js'
+import type { IfAny } from '../util/if-any.js'
 import { memoizedOptions } from '../util/memoize.js'
 import { TokenSchema } from './token.js'
 
@@ -72,7 +73,10 @@ export class StringSchema<
     this.options = options
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<string> {
     const str = coerceToString(input)
     if (str == null) {
       return ctx.issueUnexpectedType(input, 'string')
@@ -173,32 +177,6 @@ export function coerceToString(input: unknown): string | null {
   }
 }
 
-function _string(): StringSchema<NonNullable<unknown>>
-function _string<
-  // Allow calling `string<{ knownValues: [...] }>()` without passing an options
-  // object, since knownValues is only used for typing and has no runtime
-  // effect, so it can be safely omitted at runtime.
-  const TOptions extends {
-    knownValues: StringSchemaOptions['knownValues']
-  } & {
-    [K in Exclude<
-      keyof StringSchemaOptions,
-      'knownValues'
-    >]?: Restricted<`An options argument is required when using the "${K}" option`>
-  },
->(): StringSchema<
-  IfAny<TOptions, any, { knownValues: TOptions['knownValues'] }>
->
-function _string<const TOptions extends StringSchemaOptions>(
-  // If TOptions is explicitly provided (e.g. `string<{ ... }>({ ... })`), we
-  // allow the actual options argument to omit the "knownValues" property since
-  // it's only used for inferring the type and has no runtime effect.
-  options: TOptions | Omit<TOptions, 'knownValues'>,
-): StringSchema<TOptions>
-function _string(options: StringSchemaOptions = {}) {
-  return new StringSchema(options)
-}
-
 /**
  * Creates a string schema with optional format and length constraints.
  *
@@ -226,4 +204,30 @@ function _string(options: StringSchemaOptions = {}) {
  * const handleSchema = l.string({ format: 'handle', minLength: 3, maxLength: 253 })
  * ```
  */
-export const string = /*#__PURE__*/ memoizedOptions(_string)
+export const string: {
+  (): StringSchema<NonNullable<unknown>>
+
+  // Allow calling `string<{ knownValues: [...] }>()` without passing an options
+  // object, since knownValues is only used for typing and has no runtime
+  // effect, so it can be safely omitted at runtime.
+  <
+    const TOptions extends {
+      knownValues: StringSchemaOptions['knownValues']
+    } & {
+      [
+        K in Exclude<keyof StringSchemaOptions, 'knownValues'>
+      ]?: Restricted<`An options argument is required when using the "${K}" option`>
+    },
+  >(): StringSchema<
+    IfAny<TOptions, any, { knownValues: TOptions['knownValues'] }>
+  >
+
+  // If TOptions is explicitly provided (e.g. `string<{ ... }>({ ... })`), we
+  // allow the actual options argument to omit the "knownValues" property since
+  // it's only used for inferring the type and has no runtime effect.
+  <const TOptions extends StringSchemaOptions>(
+    options: TOptions | Omit<TOptions, 'knownValues'>,
+  ): StringSchema<TOptions>
+} = /*#__PURE__*/ memoizedOptions(
+  (options: StringSchemaOptions = {}) => new StringSchema(options),
+)

@@ -1,7 +1,6 @@
-import { RequestListener, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { type RequestListener, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import { createHttpTerminator } from 'http-terminator'
 import { CID } from 'multiformats/cid'
 import { lexToJson } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
@@ -11,9 +10,9 @@ import {
 } from '../src/lexicon/types/app/bsky/embed/record.js'
 import { isView as isEmbedRecordWithMediaView } from '../src/lexicon/types/app/bsky/embed/recordWithMedia.js'
 import {
-  FeedViewPost,
-  PostView,
-  ThreadViewPost,
+  type FeedViewPost,
+  type PostView,
+  type ThreadViewPost,
   isPostView,
   isReasonRepost,
   isThreadViewPost,
@@ -237,6 +236,6 @@ export async function startServer(listener: RequestListener) {
       .once('listening', onListen)
       .once('error', onError)
 
-    const terminator = httpTerminator.createHttpTerminator({ server })
+    const terminator = createHttpTerminator({ server })
   })
 }

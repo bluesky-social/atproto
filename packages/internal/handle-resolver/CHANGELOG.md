@@ -1,5 +1,68 @@
 # @atproto-labs/handle-resolver
 
+## 0.4.8
+
+### Patch Changes
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update vitest dependencies
+
+- Updated dependencies [[`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c)]:
+  - @atproto-labs/simple-store@0.5.1
+  - @atproto-labs/simple-store-memory@0.2.6
+
+## 0.4.7
+
+### Patch Changes
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Errors thrown by the handle cache are now logged (previously they were silently ignored on read) while continuing to degrade to a cache miss and resolution from the underlying resolver. A new `onHandleCacheError` option (on `CachedHandleResolver` and `createHandleResolver`) allows overriding how these errors are handled (e.g. to route them to an application logger).
+
+- Updated dependencies [[`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a)]:
+  - @atproto-labs/simple-store@0.5.0
+  - @atproto-labs/simple-store-memory@0.2.5
+
+## 0.4.6
+
+### Patch Changes
+
+- [#5193](https://github.com/bluesky-social/atproto/pull/5193) [`ce386ee`](https://github.com/bluesky-social/atproto/commit/ce386eed324f813601db57f873fbb3b987492001) Thanks [@Rex0Lux](https://github.com/Rex0Lux)! - Add an `onError` observability option to the handle resolvers. `WellKnownHandleResolver` previously swallowed every non-abort failure and returned `null`, indistinguishable from "no `.well-known/atproto-did` endpoint exists". Passing `onError` when constructing a resolver (including `AtprotoHandleResolver` and `AtprotoHandleResolverNode`) exposes the underlying cause (SSRF blocks, 5xx upstream errors, redirects, network errors, etc.) without changing the `null` return contract. Because it is set on the instance, it also covers resolution performed internally, for example by an OAuth client the resolver is passed to.
+
+## 0.4.5
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto-labs/simple-store-memory@0.2.4
+  - @atproto-labs/simple-store@0.4.4
+  - @atproto/did@0.5.4
+
+## 0.4.4
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build with `noImplicitAny` enabled
+
+- Updated dependencies [[`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto-labs/simple-store-memory@0.2.3
+  - @atproto-labs/simple-store@0.4.3
+  - @atproto/did@0.5.3
+
+## 0.4.3
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- Updated dependencies [[`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7)]:
+  - @atproto/did@0.5.2
+  - @atproto-labs/simple-store@0.4.2
+  - @atproto-labs/simple-store-memory@0.2.2
+
 ## 0.4.2
 
 ### Patch Changes

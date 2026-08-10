@@ -1,5 +1,5 @@
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../context.js'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../context.js'
 import admin from './admin/index.js'
 import identity from './identity/index.js'
 import moderation from './moderation/index.js'

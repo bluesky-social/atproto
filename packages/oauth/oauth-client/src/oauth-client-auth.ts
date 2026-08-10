@@ -1,18 +1,17 @@
-import { Keyset } from '@atproto/jwk'
+import type { Keyset } from '@atproto/jwk'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
-  OAuthAuthorizationServerMetadata,
-  OAuthClientCredentials,
+  type OAuthAuthorizationServerMetadata,
+  type OAuthClientCredentials,
 } from '@atproto/oauth-types'
 import { FALLBACK_ALG } from './constants.js'
 import { AuthMethodUnsatisfiableError } from './errors/auth-method-unsatisfiable-error.js'
-import { Runtime } from './runtime.js'
-import { ClientMetadata } from './types.js'
-import { Awaitable } from './util.js'
+import type { Runtime } from './runtime.js'
+import type { ClientMetadata } from './types.js'
+import type { Awaitable } from './util.js'
 
 export type ClientAuthMethod =
-  | { method: 'none' }
-  | { method: 'private_key_jwt'; kid: string }
+  { method: 'none' } | { method: 'private_key_jwt'; kid: string }
 
 export function negotiateClientAuthMethod(
   serverMetadata: OAuthAuthorizationServerMetadata,

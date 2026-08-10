@@ -1,21 +1,21 @@
 import assert from 'node:assert'
-import { IncomingMessage } from 'node:http'
+import type { IncomingMessage } from 'node:http'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import express, {
-  Application,
-  ErrorRequestHandler,
-  Express,
-  RequestHandler,
+  type Application,
+  type ErrorRequestHandler,
+  type Express,
+  type RequestHandler,
   Router,
 } from 'express'
-import { LexValue } from '@atproto/lex-data'
+import type { LexValue } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
 import {
-  LexXrpcProcedure,
-  LexXrpcQuery,
-  LexXrpcSubscription,
-  LexiconDoc,
+  type LexXrpcProcedure,
+  type LexXrpcQuery,
+  type LexXrpcSubscription,
+  type LexiconDoc,
   Lexicons,
   lexToJson,
 } from '@atproto/lexicon'
@@ -29,11 +29,11 @@ import {
 import log, { LOGGER_NAME } from './logger.js'
 import { HttpRateLimiter } from './rate-limiter-http.js'
 import {
-  CalcKeyFn,
-  CalcPointsFn,
-  RateLimiterErrorHandlerDetails,
-  RateLimiterI,
-  RateLimiterOptions,
+  type CalcKeyFn,
+  type CalcPointsFn,
+  type RateLimiterErrorHandlerDetails,
+  type RateLimiterI,
+  type RateLimiterOptions,
   WrappedRateLimiter,
 } from './rate-limiter.js'
 import {
@@ -43,42 +43,42 @@ import {
   XrpcStreamServer,
 } from './stream/index.js'
 import {
-  Auth,
-  AuthResult,
-  AuthVerifier,
-  CatchallHandler,
-  HandlerContext,
-  Input,
-  LexMethodConfig,
-  LexMethodHandler,
-  LexMethodInput,
-  LexMethodOutput,
-  LexMethodParams,
-  LexSubscriptionConfig,
-  LexSubscriptionHandler,
-  MethodAuthContext,
-  MethodConfig,
-  MethodConfigOrHandler,
-  MethodHandler,
-  Options,
-  Output,
-  Params,
-  RouteOptions,
-  ServerRateLimitDescription,
-  StreamAuthContext,
-  StreamConfig,
-  StreamConfigOrHandler,
-  StreamContext,
+  type Auth,
+  type AuthResult,
+  type AuthVerifier,
+  type CatchallHandler,
+  type HandlerContext,
+  type Input,
+  type LexMethodConfig,
+  type LexMethodHandler,
+  type LexMethodInput,
+  type LexMethodOutput,
+  type LexMethodParams,
+  type LexSubscriptionConfig,
+  type LexSubscriptionHandler,
+  type MethodAuthContext,
+  type MethodConfig,
+  type MethodConfigOrHandler,
+  type MethodHandler,
+  type Options,
+  type Output,
+  type Params,
+  type RouteOptions,
+  type ServerRateLimitDescription,
+  type StreamAuthContext,
+  type StreamConfig,
+  type StreamConfigOrHandler,
+  type StreamContext,
   isHandlerPipeThroughBuffer,
   isHandlerPipeThroughStream,
   isHandlerSuccess,
   isSharedRateLimitOpts,
 } from './types.js'
 import {
-  AuthVerifierInternal,
-  InputVerifierInternal,
-  OutputVerifierInternal,
-  ParamsVerifierInternal,
+  type AuthVerifierInternal,
+  type InputVerifierInternal,
+  type OutputVerifierInternal,
+  type ParamsVerifierInternal,
   asArray,
   createLexiconInputVerifier,
   createLexiconOutputVerifier,
@@ -202,6 +202,13 @@ export class Server {
     schema: M,
     config: LexMethodConfig<M, A>,
   ): void {
+    this.routes.get(`/xrpc/${schema.nsid}`, (req, res, next) => {
+      next(
+        new InvalidRequestError(
+          `Incorrect HTTP method (${req.method}) expected POST`,
+        ),
+      )
+    })
     this.routes.post(
       `/xrpc/${schema.nsid}`,
       this.createHandlerInternal<
@@ -224,6 +231,13 @@ export class Server {
     schema: M,
     config: LexMethodConfig<M, A>,
   ): void {
+    this.routes.post(`/xrpc/${schema.nsid}`, (req, res, next) => {
+      next(
+        new InvalidRequestError(
+          `Incorrect HTTP method (${req.method}) expected GET`,
+        ),
+      )
+    })
     this.routes.get(
       `/xrpc/${schema.nsid}`,
       this.createHandlerInternal<
@@ -673,8 +687,7 @@ export class Server {
     // specific rate limiter (HandlerContext<A, P, I>).
 
     const globalRateLimiter = this.globalRateLimiter as
-      | HttpRateLimiter<HandlerContext<A, P, I>>
-      | undefined
+      HttpRateLimiter<HandlerContext<A, P, I>> | undefined
 
     // No route specific rate limiting configured, use the global rate limiter.
     if (!config.rateLimit) return globalRateLimiter
@@ -690,8 +703,7 @@ export class Server {
     const rateLimiters = asArray(config.rateLimit).map((options, i) => {
       if (isSharedRateLimitOpts(options)) {
         const rateLimiter = this.sharedRateLimiters?.get(options.name) as
-          | RateLimiterI<HandlerContext<A, P, I>>
-          | undefined
+          RateLimiterI<HandlerContext<A, P, I>> | undefined
 
         // The route config references a shared rate limiter that does not
         // exist. This is a configuration error.
@@ -735,18 +747,18 @@ function createErrorMiddleware({
     // (id, timing) and logging configuration (serialization, etc.).
     const logger = isPinoHttpRequest(req) ? req.log : log
 
-    const isInternalError = xrpcError instanceof InternalServerError
-
-    const msgPrefix = isInternalError ? 'unhandled exception' : 'error'
-    const msgSuffix = nsid ? `xrpc method ${nsid}` : `${req.method} ${req.url}`
-    const msg = `${msgPrefix} in ${msgSuffix}`
+    const msgError = xrpcError.error || 'Unknown'
+    const msgLoc = nsid ? `xrpc method ${nsid}` : `${req.method} ${req.url}`
+    const msgDetail = xrpcError.message ? ` (${xrpcError.message})` : ''
+    const msg = `${msgError} error in ${msgLoc}${msgDetail}`
 
     logger.error(
       {
         // @NOTE Computation of error stack is an expensive operation, so
-        // we strip it for expected errors.
+        // we strip it for expected (non-server) errors.
         err:
-          isInternalError || process.env.NODE_ENV === 'development'
+          xrpcError instanceof InternalServerError ||
+          process.env.NODE_ENV === 'development'
             ? err
             : toSimplifiedErrorLike(err),
 

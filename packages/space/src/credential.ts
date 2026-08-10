@@ -1,4 +1,4 @@
-import { Keypair, randomStr, verifySignature } from '@atproto/crypto'
+import { type Keypair, randomStr, verifySignature } from '@atproto/crypto'
 import { fromBase64, toBase64 } from '@atproto/lex-data'
 import { SpaceTokenError } from './error.js'
 

@@ -1,6 +1,6 @@
-import { NsidString } from '../core.js'
-import { ParamsSchema } from './params.js'
-import { Payload } from './payload.js'
+import type { NsidString } from '../core.js'
+import type { ParamsSchema } from './params.js'
+import type { Payload } from './payload.js'
 
 /**
  * Represents a Lexicon procedure (HTTP POST) endpoint definition.
@@ -32,8 +32,7 @@ export class Procedure<
   const TInputPayload extends Payload = Payload,
   const TOutputPayload extends Payload = Payload,
   const TErrors extends undefined | readonly string[] =
-    | undefined
-    | readonly string[],
+    undefined | readonly string[],
 > {
   readonly type = 'procedure' as const
 
@@ -93,6 +92,12 @@ export function procedure<
   const I extends Payload,
   const O extends Payload,
   const E extends undefined | readonly string[] = undefined,
->(nsid: N, parameters: P, input: I, output: O, errors: E = undefined as E) {
+>(
+  nsid: N,
+  parameters: P,
+  input: I,
+  output: O,
+  errors: E = undefined as E,
+): Procedure<N, P, I, O, E> {
   return new Procedure<N, P, I, O, E>(nsid, parameters, input, output, errors)
 }

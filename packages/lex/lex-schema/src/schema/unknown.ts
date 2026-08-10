@@ -1,4 +1,8 @@
-import { Schema, ValidationContext } from '../core.js'
+import {
+  Schema,
+  type ValidationContext,
+  type ValidationResult,
+} from '../core.js'
 import { memoizedOptions } from '../util/memoize.js'
 
 /**
@@ -17,7 +21,10 @@ import { memoizedOptions } from '../util/memoize.js'
 export class UnknownSchema extends Schema<unknown> {
   readonly type = 'unknown' as const
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<unknown> {
     return ctx.success(input)
   }
 }
@@ -42,6 +49,6 @@ export class UnknownSchema extends Schema<unknown> {
  * })
  * ```
  */
-export const unknown = /*#__PURE__*/ memoizedOptions(function () {
-  return new UnknownSchema()
-})
+export const unknown: () => UnknownSchema = /*#__PURE__*/ memoizedOptions(
+  () => new UnknownSchema(),
+)

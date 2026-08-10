@@ -1,22 +1,15 @@
-import { PDS, envToCfg, envToSecrets, httpLogger, readEnv } from '@atproto/pds'
-import pkg from '@atproto/pds/package.json' with { type: 'json' }
+import { PDS } from '@atproto/pds'
 
-const main = async () => {
-  const env = readEnv()
-  env.version ??= pkg.version
-  const cfg = envToCfg(env)
-  const secrets = envToSecrets(env)
-  const pds = await PDS.create(cfg, secrets)
+void PDS.run().catch((err) => {
+  // @NOTE we don't want to let the error propagate to the UnhandledRejection
+  // handler, because that would cause Node to exit, which won't allow telemetry
+  // to flush. Instead, we log the error and set the exit code.
+  console.error('PDS failed to start:', err)
+  process.exitCode = 1
 
-  await pds.start()
-
-  httpLogger.info('pds is running')
-  // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
-  process.on('SIGTERM', async () => {
-    httpLogger.info('pds is stopping')
-    await pds.destroy()
-    httpLogger.info('pds is stopped')
-  })
-}
-
-main()
+  // In case the some resource were not properly cleaned up, we force exit after
+  // a short delay. This is a last resort, and should not be necessary if the
+  // PDS is implemented correctly. The delay is to give the telemetry a chance
+  // to flush.
+  setTimeout(() => process.exit(process.exitCode || 1), 5000).unref()
+})

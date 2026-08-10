@@ -1,19 +1,18 @@
 import { once } from 'node:events'
 import {
-  IncomingHttpHeaders,
-  IncomingMessage,
-  RequestListener,
-  Server as HttpServer,
-  ServerOptions,
-  ServerResponse,
+  type IncomingHttpHeaders,
+  type IncomingMessage,
+  type RequestListener,
+  type Server as HttpServer,
+  type ServerOptions,
+  type ServerResponse,
   createServer as createHttpServer,
 } from 'node:http'
-import { ListenOptions } from 'node:net'
+import type { ListenOptions } from 'node:net'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import type { ReadableStream as NodeReadableStream } from 'node:stream/web'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { createHttpTerminator } from 'http-terminator'
 import { WebSocket as WebSocketPonyfill, WebSocketServer } from 'ws'
 import type { FetchHandler } from './lex-router.js'
 
@@ -403,9 +402,8 @@ function toConnectionInfo(req: IncomingMessage): NodeConnectionInfo {
  */
 export function toRequestListener<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
-  Response extends typeof ServerResponse<
-    InstanceType<Request>
-  > = typeof ServerResponse,
+  Response extends typeof ServerResponse<InstanceType<Request>> =
+    typeof ServerResponse,
 >(fetchHandler: FetchHandler) {
   return ((
     req: InstanceType<Request>,
@@ -434,9 +432,8 @@ export function toRequestListener<
  */
 export type CreateServerOptions<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
-  Response extends typeof ServerResponse<
-    InstanceType<Request>
-  > = typeof ServerResponse,
+  Response extends typeof ServerResponse<InstanceType<Request>> =
+    typeof ServerResponse,
 > = ServerOptions<Request, Response> & {
   /**
    * Timeout in milliseconds for graceful termination.
@@ -477,11 +474,10 @@ export type CreateServerOptions<
  */
 export interface Server<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
-  Response extends typeof ServerResponse<
-    InstanceType<Request>
-  > = typeof ServerResponse,
-> extends HttpServer<Request, Response>,
-    AsyncDisposable {
+  Response extends typeof ServerResponse<InstanceType<Request>> =
+    typeof ServerResponse,
+>
+  extends HttpServer<Request, Response>, AsyncDisposable {
   /**
    * Gracefully terminates the server.
    *
@@ -534,9 +530,8 @@ export interface Server<
  */
 export function createServer<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
-  Response extends typeof ServerResponse<
-    InstanceType<Request>
-  > = typeof ServerResponse,
+  Response extends typeof ServerResponse<InstanceType<Request>> =
+    typeof ServerResponse,
 >(
   handler: FetchHandler | HandlerObject,
   options: CreateServerOptions<Request, Response> = {},
@@ -547,7 +542,7 @@ export function createServer<
   const listener = toRequestListener(fetchHandler)
   const server = createHttpServer(options, listener)
 
-  const terminator = httpTerminator.createHttpTerminator({
+  const terminator = createHttpTerminator({
     server: server as HttpServer,
     gracefulTerminationTimeout: options?.gracefulTerminationTimeout,
   })
@@ -596,9 +591,8 @@ export function createServer<
  */
 export type StartServerOptions<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
-  Response extends typeof ServerResponse<
-    InstanceType<Request>
-  > = typeof ServerResponse,
+  Response extends typeof ServerResponse<InstanceType<Request>> =
+    typeof ServerResponse,
 > = ListenOptions & CreateServerOptions<Request, Response>
 
 /**
@@ -664,9 +658,8 @@ export type StartServerOptions<
  */
 export async function serve<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
-  Response extends typeof ServerResponse<
-    InstanceType<Request>
-  > = typeof ServerResponse,
+  Response extends typeof ServerResponse<InstanceType<Request>> =
+    typeof ServerResponse,
 >(
   handler: FetchHandler | HandlerObject,
   options?: StartServerOptions<Request, Response>,

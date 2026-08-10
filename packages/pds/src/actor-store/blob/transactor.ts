@@ -1,26 +1,26 @@
 import crypto from 'node:crypto'
-import stream from 'node:stream'
-// eslint-disable-next-line import/default, import/no-named-as-default-member
-import fileType from 'file-type'
-const { fromStream: fileTypeFromStream } = fileType
+import type stream from 'node:stream'
+import * as FileTypeModule from 'file-type'
+const FileType = ((m) => m.default ?? m)(FileTypeModule)
+const { fromStream: fileTypeFromStream } = FileType
 import PQueue from 'p-queue'
 import { SECOND, cloneStream, streamSize } from '@atproto/common'
 import {
-  BlobRef,
-  Cid,
-  TypedBlobRef,
+  type BlobRef,
+  type Cid,
+  type TypedBlobRef,
   cidForRawHash,
   getBlobCidString,
   parseCid,
 } from '@atproto/lex-data'
-import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
-import { AtUri, currentDatetimeString } from '@atproto/syntax'
+import { BlobNotFoundError, type BlobStore, WriteOpAction } from '@atproto/repo'
+import { type AtUri, currentDatetimeString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { BackgroundQueue } from '../../background.js'
-import { com } from '../../lexicons/index.js'
+import type { BackgroundQueue } from '../../background.js'
+import type { com } from '../../lexicons/index.js'
 import { blobStoreLogger as log } from '../../logger.js'
-import { PreparedWrite } from '../../repo/types.js'
-import { ActorDb, Blob as BlobTable } from '../db/index.js'
+import type { PreparedWrite } from '../../repo/types.js'
+import type { ActorDb, Blob as BlobTable } from '../db/index.js'
 import { BlobReader } from './reader.js'
 
 export type BlobMetadata = {
@@ -155,7 +155,7 @@ export class BlobTransactor extends BlobReader {
     takedown: com.atproto.admin.defs.StatusAttr,
   ) {
     const takedownRef = takedown.applied
-      ? takedown.ref ?? currentDatetimeString()
+      ? (takedown.ref ?? currentDatetimeString())
       : null
     await this.db.db
       .updateTable('blob')
@@ -415,9 +415,13 @@ async function sha256Stream(toHash: stream.Readable): Promise<Uint8Array> {
 async function mimeTypeFromStream(
   blobStream: stream.Readable,
 ): Promise<string | undefined> {
-  const fileType = await fileTypeFromStream(blobStream)
-  blobStream.destroy()
-  return fileType?.mime
+  try {
+    const fileType = await fileTypeFromStream(blobStream)
+    return fileType?.mime
+  } finally {
+    // @NOTE Should not be needed
+    blobStream.destroy()
+  }
 }
 
 /**

@@ -1,5 +1,5 @@
-import { ReactNode } from 'react'
-import { JSX } from 'react/jsx-runtime'
+import type { ReactNode } from 'react'
+import type { JSX } from 'react/jsx-runtime'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 
 export function CustomizationName(
@@ -16,7 +16,10 @@ export function CustomizationName(
           className="not-prose mr-1 inline-block h-[1em] select-none object-contain align-baseline"
         />
       )}
-      <b>{name}</b>
+      {/* @NOTE Carries its own colour so the operator's name reads the same
+        wherever it lands — muted body copy on the home page, prose on the
+        about page. */}
+      <b className="text-foreground">{name}</b>
     </span>
   )
 }

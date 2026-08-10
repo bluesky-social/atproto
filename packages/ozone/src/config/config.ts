@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
-import { OzoneEnvironment } from './env.js'
+import type { OzoneEnvironment } from './env.js'
 
 // off-config but still from env:
 // logging: LOG_LEVEL, LOG_SYSTEMS, LOG_ENABLED, LOG_DESTINATION
@@ -26,6 +26,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
     materializedViewRefreshIntervalMs: env.dbMaterializedViewRefreshIntervalMs,
+    materializedViewRefreshTimeoutMs: env.dbMaterializedViewRefreshTimeoutMs,
     teamProfileRefreshIntervalMs: env.dbTeamProfileRefreshIntervalMs,
   }
 
@@ -162,6 +163,7 @@ export type DatabaseConfig = {
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
   materializedViewRefreshIntervalMs?: number
+  materializedViewRefreshTimeoutMs?: number
   teamProfileRefreshIntervalMs?: number
 }
 

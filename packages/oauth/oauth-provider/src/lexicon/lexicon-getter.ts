@@ -1,8 +1,8 @@
-import { LexResolver, LexResolverError } from '@atproto/lex-resolver'
-import { Nsid } from '@atproto/oauth-scopes'
+import { type LexResolver, LexResolverError } from '@atproto/lex-resolver'
+import type { Nsid } from '@atproto/oauth-scopes'
 import { CachedGetter } from '@atproto-labs/simple-store'
-import { LEXICON_REFRESH_FREQUENCY } from '../constants.js'
-import { LexiconData, LexiconStore } from './lexicon-store.js'
+import { LEXICON_REFRESH_FREQUENCY } from '../oauth-constants.js'
+import type { LexiconData, LexiconStore } from './lexicon-store.js'
 
 /**
  * This utility class handles the retrieval and caching of lexicon
@@ -34,9 +34,9 @@ export class LexiconGetter extends CachedGetter<Nsid, LexiconData> {
           updatedAt: now,
           // Update the data with fresh data, if available, or keep cached
           // values (if any) otherwise.
-          lastSucceededAt: result ? now : storedData?.lastSucceededAt ?? null,
-          uri: result ? result.uri.toString() : storedData?.uri ?? null,
-          lexicon: result ? result.lexicon : storedData?.lexicon ?? null,
+          lastSucceededAt: result ? now : (storedData?.lastSucceededAt ?? null),
+          uri: result ? result.uri.toString() : (storedData?.uri ?? null),
+          lexicon: result ? result.lexicon : (storedData?.lexicon ?? null),
         }
       },
       {

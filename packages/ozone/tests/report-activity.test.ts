@@ -1,5 +1,5 @@
-import AtpAgent from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import type AtpAgent from '@atproto/api'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons.js'
 import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
@@ -35,7 +35,8 @@ describe('report-activity', () => {
 
   const createActivity = async (
     input: {
-      reportId: number
+      reportId?: number
+      eventId?: number
       activity: { $type: string; [k: string]: unknown }
       internalNote?: string
       publicNote?: string
@@ -379,18 +380,27 @@ describe('report-activity', () => {
       ).rejects.toMatchObject({ error: 'InvalidStateTransition' })
     })
 
-    it('rejects queued → closed', async () => {
+    it('allows queued → closed', async () => {
       const report = await createReport(sc.dids.alice)
       await createActivity({
         reportId: report.id,
         activity: { $type: `${DEFS}#queueActivity` },
       })
-      await expect(
-        createActivity({
-          reportId: report.id,
-          activity: { $type: `${DEFS}#closeActivity` },
-        }),
-      ).rejects.toMatchObject({ error: 'InvalidStateTransition' })
+      const { data } = await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#closeActivity` },
+      })
+
+      expect(data.activity.activity.$type).toBe(`${DEFS}#closeActivity`)
+      if ('previousStatus' in data.activity.activity) {
+        expect(data.activity.activity.previousStatus).toBe('queued')
+      }
+
+      const { data: updated } = await agent.tools.ozone.report.getReport(
+        { id: report.id },
+        { headers: await modHeaders(ids.ToolsOzoneReportGetReport) },
+      )
+      expect(updated.status).toBe('closed')
     })
 
     it('rejects reopenActivity on open report', async () => {
@@ -438,6 +448,71 @@ describe('report-activity', () => {
           internalNote: 'Ghost report',
         }),
       ).rejects.toMatchObject({ error: 'ReportNotFound' })
+    })
+
+    it('rejects input with neither reportId nor eventId', async () => {
+      await expect(
+        createActivity({
+          activity: { $type: `${DEFS}#noteActivity` },
+        }),
+      ).rejects.toMatchObject({ error: 'InvalidRequest' })
+    })
+
+    it('rejects input with both reportId and eventId', async () => {
+      const report = await createReport(sc.dids.alice)
+      await expect(
+        createActivity({
+          reportId: report.id,
+          eventId: report.eventId,
+          activity: { $type: `${DEFS}#noteActivity` },
+        }),
+      ).rejects.toMatchObject({ error: 'InvalidRequest' })
+    })
+  })
+
+  describe('createActivity — eventId targeting', () => {
+    it('closes a report by the id of its report event', async () => {
+      const report = await createReport(sc.dids.alice)
+      const { data } = await createActivity({
+        eventId: report.eventId,
+        activity: { $type: `${DEFS}#closeActivity` },
+        internalNote: 'Auto-closed by rules engine.',
+        isAutomated: true,
+      })
+
+      expect(data.activity.reportId).toBe(report.id)
+      expect(data.activity.activity.$type).toBe(`${DEFS}#closeActivity`)
+      expect(data.activity.internalNote).toBe('Auto-closed by rules engine.')
+      expect(data.activity.isAutomated).toBe(true)
+
+      const { data: updated } = await agent.tools.ozone.report.getReport(
+        { id: report.id },
+        { headers: await modHeaders(ids.ToolsOzoneReportGetReport) },
+      )
+      expect(updated.status).toBe('closed')
+    })
+
+    it('rejects unknown eventId', async () => {
+      await expect(
+        createActivity({
+          eventId: 999999,
+          activity: { $type: `${DEFS}#closeActivity` },
+        }),
+      ).rejects.toMatchObject({ error: 'ReportNotFound' })
+    })
+
+    it('enforces state transitions when targeting by eventId', async () => {
+      const report = await createReport(sc.dids.alice)
+      await createActivity({
+        eventId: report.eventId,
+        activity: { $type: `${DEFS}#closeActivity` },
+      })
+      await expect(
+        createActivity({
+          eventId: report.eventId,
+          activity: { $type: `${DEFS}#closeActivity` },
+        }),
+      ).rejects.toMatchObject({ error: 'AlreadyInTargetState' })
     })
   })
 

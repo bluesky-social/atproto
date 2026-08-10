@@ -1,15 +1,15 @@
 import { wait } from '@atproto/common-web'
 import { encode } from '@atproto/lex-cbor'
 import {
-  Cid,
-  LexValue,
+  type Cid,
+  type LexValue,
   cidForCbor,
   fromBase64,
   parseCid,
   toBase64,
 } from '@atproto/lex-data'
 import {
-  CarBlock,
+  type CarBlock,
   readCarBytes,
   readCarStream,
   writeCarStream,

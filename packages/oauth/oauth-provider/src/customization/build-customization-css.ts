@@ -1,12 +1,12 @@
-import {
-  RgbColor,
-  extractHue,
-  hslToRgb,
-  pickContrastColor,
-} from '../lib/util/color.js'
-import { Branding } from './branding.js'
+import { type RgbColor, pickContrastColor } from '../lib/util/color.js'
+import type { Branding } from './branding.js'
 import { COLOR_NAMES } from './colors.js'
-import { Customization } from './customization.js'
+import type { Customization } from './customization.js'
+
+// Candidates for the primary foreground: whichever of black/white has the
+// higher WCAG 2.1 contrast against the primary colour is used.
+const BLACK: RgbColor = { r: 0, g: 0, b: 0 }
+const WHITE: RgbColor = { r: 255, g: 255, b: 255 }
 
 export function buildCustomizationCss({
   branding,
@@ -17,39 +17,35 @@ export function buildCustomizationCss({
 
 function* buildCustomizationVars(branding?: Branding): Generator<string> {
   if (branding?.colors) {
-    const contrastSaturation = branding.colors.contrastSaturation ?? 30
-    yield `--contrast-sat: ${contrastSaturation.toFixed(2)}%;`
-
-    const contrastLight: RgbColor =
-      branding.colors.light ??
-      // Corresponds to color-contrast-975
-      hslToRgb({
-        h: branding.colors.primaryHue ?? 0,
-        s: contrastSaturation / 100,
-        l: 0.07,
-      })
-    const contrastDark: RgbColor =
-      branding.colors.dark ??
-      // Corresponds to color-contrast-25
-      hslToRgb({
-        h: branding.colors.primaryHue ?? 0,
-        s: contrastSaturation / 100,
-        l: 0.953,
-      })
-
     for (const name of COLOR_NAMES) {
       const value = branding.colors[name]
-      if (!value) continue // Skip missing colors
+      if (value) {
+        yield `--branding-color-${name}: ${value.r} ${value.g} ${value.b};`
+      }
+    }
 
-      const contrast =
-        branding.colors[`${name}Contrast`] ??
-        pickContrastColor(value, contrastLight, contrastDark)
-
-      const hue = branding.colors[`${name}Hue`] ?? extractHue(value)
-
-      yield `--branding-color-${name}: ${value.r} ${value.g} ${value.b};`
-      yield `--branding-color-${name}-contrast: ${contrast.r} ${contrast.g} ${contrast.b};`
-      yield `--branding-color-${name}-hue: ${hue};`
+    // The primary colour gets a contrast pair (--primary-foreground): black or
+    // white, whichever has the higher WCAG contrast against it.
+    const primary = branding.colors.primary
+    if (primary) {
+      const contrast = pickContrastColor(primary, BLACK, WHITE)
+      yield `--branding-color-primary-contrast: ${contrast.r} ${contrast.g} ${contrast.b};`
     }
   }
+
+  if (branding?.background) {
+    const { light, dark } = branding.background
+    if (light) {
+      yield `--branding-background-light-image: url("${escapeCssUrl(light)}");`
+    }
+    if (dark) {
+      yield `--branding-background-dark-image: url("${escapeCssUrl(dark)}");`
+    }
+  }
+}
+
+// The value is a validated URL, so escaping the two characters that could break
+// out of the url("…") literal is enough.
+function escapeCssUrl(url: string): string {
+  return url.replace(/["\\]/g, (char) => `\\${char}`)
 }

@@ -1,12 +1,17 @@
-import { LexMap, UriString, getBlobCidString } from '@atproto/lex'
-import { AtUri, DidString, HandleString, INVALID_HANDLE } from '@atproto/syntax'
+import { type LexMap, type UriString, getBlobCidString } from '@atproto/lex'
+import {
+  AtUri,
+  type DidString,
+  type HandleString,
+  INVALID_HANDLE,
+} from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { AccountManager } from '../account-manager/account-manager.js'
-import { ActorStoreReader } from '../actor-store/actor-store-reader.js'
-import { BskyAppView } from '../bsky-app-view.js'
-import { ImageUrlBuilder } from '../image/image-url-builder.js'
+import type { AccountManager } from '../account-manager/account-manager.js'
+import type { ActorStoreReader } from '../actor-store/actor-store-reader.js'
+import type { BskyAppView } from '../bsky-app-view.js'
+import type { ImageUrlBuilder } from '../image/image-url-builder.js'
 import { app } from '../lexicons/index.js'
-import { LocalRecords, RecordDescript } from './types.js'
+import type { LocalRecords, RecordDescript } from './types.js'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
@@ -140,17 +145,12 @@ export class LocalViewer {
   }
 
   formatImageEmbed(embed: app.bsky.embed.images.Main) {
-    const images = embed.images.map(
-      (img): app.bsky.embed.images.ViewImage => ({
-        thumb: this.getImageUrl('feed_thumbnail', getBlobCidString(img.image)),
-        fullsize: this.getImageUrl(
-          'feed_fullsize',
-          getBlobCidString(img.image),
-        ),
-        aspectRatio: img.aspectRatio,
-        alt: img.alt,
-      }),
-    )
+    const images = embed.images.map((img): app.bsky.embed.images.ViewImage => ({
+      thumb: this.getImageUrl('feed_thumbnail', getBlobCidString(img.image)),
+      fullsize: this.getImageUrl('feed_fullsize', getBlobCidString(img.image)),
+      aspectRatio: img.aspectRatio,
+      alt: img.alt,
+    }))
     return app.bsky.embed.images.view.$build({ images })
   }
 

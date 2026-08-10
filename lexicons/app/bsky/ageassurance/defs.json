@@ -64,6 +64,14 @@
       "description": "The Age Assurance configuration for a specific region.",
       "required": ["countryCode", "minAccessAge", "rules"],
       "properties": {
+        "platforms": {
+          "type": "array",
+          "description": "The platforms this configuration applies to. If omitted, the configuration applies to all platforms.",
+          "items": {
+            "type": "string",
+            "knownValues": ["web", "ios", "android"]
+          }
+        },
         "countryCode": {
           "type": "string",
           "description": "The ISO 3166-1 alpha-2 country code this configuration applies to."
@@ -75,6 +83,14 @@
         "minAccessAge": {
           "type": "integer",
           "description": "The minimum age (as a whole integer) required to use Bluesky in this region."
+        },
+        "additionalVerificationMethods": {
+          "type": "array",
+          "description": "Verification methods permitted in this region in addition to the third-party (KWS) flow, which is always supported. `device` permits using the native on-device age APIs (e.g. Apple Declared Age Range, Google Play Age Signals).",
+          "items": {
+            "type": "string",
+            "knownValues": ["device"]
+          }
         },
         "rules": {
           "type": "array",

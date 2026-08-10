@@ -16,7 +16,22 @@ function parseIpHostname(
   return undefined
 }
 
-export function isUnicastIp(hostname: string): boolean | undefined {
+export function isUnicastIpHostname(hostname: string): boolean | undefined {
   const ip = parseIpHostname(hostname)
   return ip ? ip.range() === 'unicast' : undefined
+}
+
+export type Version = [major: number, minor: number, patch: number]
+export function parseVersion(version?: string): Version | undefined {
+  const match = version?.match(/^(\d+)\.(\d+)\.(\d+)$/)
+  if (!match) return undefined
+  return [Number(match[1]), Number(match[2]), Number(match[3])]
+}
+
+export function compareVersions(a: Version, b: Version): number {
+  for (let i = 0; i < 3; i++) {
+    if (a[i] < b[i]) return -1
+    if (a[i] > b[i]) return 1
+  }
+  return 0
 }

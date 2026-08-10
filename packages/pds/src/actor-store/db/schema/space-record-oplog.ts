@@ -1,4 +1,4 @@
-import { WriteOpAction } from '@atproto/repo'
+import type { WriteOpAction } from '@atproto/repo'
 
 export interface SpaceRecordOplog {
   space: string

@@ -1,17 +1,17 @@
-import { LexiconPermission, LexiconPermissionSet } from '../lib/lexicon.js'
-import { Nsid, isNsid } from '../lib/nsid.js'
+import type { LexiconPermission, LexiconPermissionSet } from '../lib/lexicon.js'
+import { type Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'
 import { LexPermissionSyntax } from '../lib/syntax-lexicon.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
 import {
-  ScopeStringFor,
-  ScopeSyntax,
+  type ScopeStringFor,
+  type ScopeSyntax,
   isScopeStringFor,
   isScopeSyntaxFor,
 } from '../lib/syntax.js'
 import { RepoPermission } from './repo-permission.js'
 import {
-  AtprotoDidRefAbsolute,
+  type AtprotoDidRefAbsolute,
   RpcPermission,
   isAtprotoDidRefAbsolute,
 } from './rpc-permission.js'

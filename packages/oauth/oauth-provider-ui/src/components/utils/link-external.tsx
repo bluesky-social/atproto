@@ -1,6 +1,6 @@
 import { clsx } from 'clsx'
-import { JSX, useMemo } from 'react'
-import { Override } from '#/lib/util.ts'
+import { type JSX, useMemo } from 'react'
+import type { Override } from '#/lib/util.ts'
 
 export type LinkExternalProps = Override<
   JSX.IntrinsicElements['a'],
@@ -41,11 +41,7 @@ export function LinkExternal({
       target={target}
       rel={rel}
       role={role}
-      className={clsx(
-        'after:text-[1em] after:content-[" ↗"]',
-        !href && 'cursor-not-allowed opacity-50',
-        className,
-      )}
+      className={clsx(!href && 'cursor-not-allowed opacity-50', className)}
       aria-disabled={ariaDisabled}
       {...props}
     >

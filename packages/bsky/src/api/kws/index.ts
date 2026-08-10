@@ -1,7 +1,7 @@
 import { Router, raw } from 'express'
-import { AppContext } from '../../context.js'
+import type { AppContext } from '../../context.js'
 import { verificationHandler } from './api.js'
-import { AppContextWithKwsClient } from './types.js'
+import type { AppContextWithKwsClient } from './types.js'
 import { webhookAuth, webhookHandler } from './webhook.js'
 
 export const createRouter = (ctx: AppContext): Router => {

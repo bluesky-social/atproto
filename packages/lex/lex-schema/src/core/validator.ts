@@ -1,14 +1,14 @@
 import type * as Result from './result.js'
 import { LexValidationError } from './validation-error.js'
 import {
-  Issue,
+  type Issue,
   IssueInvalidFormat,
   IssueInvalidType,
   IssueInvalidValue,
   IssueRequiredKey,
   IssueTooBig,
   IssueTooSmall,
-  MeasurableType,
+  type MeasurableType,
 } from './validation-issue.js'
 
 /**
@@ -47,8 +47,7 @@ export type ValidationFailure = LexValidationError
  * ```
  */
 export type ValidationResult<Value = unknown> =
-  | ValidationSuccess<Value>
-  | ValidationFailure
+  ValidationSuccess<Value> | ValidationFailure
 
 /**
  * Extracts the input type that a validator accepts.
@@ -307,7 +306,7 @@ export class ValidationContext {
    * The path represents the location in the data structure being validated,
    * used for constructing meaningful error messages.
    */
-  get path() {
+  get path(): PropertyKey[] {
     return Array.from(this.currentPath)
   }
 
@@ -317,7 +316,7 @@ export class ValidationContext {
    * @param path - Optional path segment(s) to append
    * @returns A new path array with the segment(s) appended
    */
-  concatPath(path?: PropertyKey | readonly PropertyKey[]) {
+  concatPath(path?: PropertyKey | readonly PropertyKey[]): PropertyKey[] {
     if (path == null) return this.path
     return this.currentPath.concat(path)
   }
@@ -457,7 +456,10 @@ export class ValidationContext {
    * @param values - The expected valid values
    * @returns A failed validation result with an invalid value issue
    */
-  issueInvalidValue(input: unknown, values: readonly unknown[]) {
+  issueInvalidValue(
+    input: unknown,
+    values: readonly unknown[],
+  ): ValidationFailure {
     return this.issue(new IssueInvalidValue(this.path, input, values))
   }
 
@@ -468,7 +470,10 @@ export class ValidationContext {
    * @param expected - An array of expected type names
    * @returns A failed validation result with an invalid type issue
    */
-  issueInvalidType(input: unknown, expected: readonly string[]) {
+  issueInvalidType(
+    input: unknown,
+    expected: readonly string[],
+  ): ValidationFailure {
     return this.issue(new IssueInvalidType(this.path, input, expected))
   }
 
@@ -479,7 +484,7 @@ export class ValidationContext {
    * @param expected - The expected type name
    * @returns A failed validation result with an invalid type issue
    */
-  issueUnexpectedType(input: unknown, expected: string) {
+  issueUnexpectedType(input: unknown, expected: string): ValidationFailure {
     return this.issueInvalidType(input, [expected])
   }
 
@@ -490,7 +495,7 @@ export class ValidationContext {
    * @param key - The name of the required key
    * @returns A failed validation result with a required key issue
    */
-  issueRequiredKey(input: object, key: PropertyKey) {
+  issueRequiredKey(input: object, key: PropertyKey): ValidationFailure {
     return this.issue(new IssueRequiredKey(this.path, input, key))
   }
 
@@ -502,7 +507,11 @@ export class ValidationContext {
    * @param msg - Optional additional message describing the format error
    * @returns A failed validation result with an invalid format issue
    */
-  issueInvalidFormat(input: unknown, format: string, msg?: string) {
+  issueInvalidFormat(
+    input: unknown,
+    format: string,
+    msg?: string,
+  ): ValidationFailure {
     return this.issue(new IssueInvalidFormat(this.path, input, format, msg))
   }
 
@@ -520,7 +529,7 @@ export class ValidationContext {
     type: MeasurableType,
     max: number,
     actual: number,
-  ) {
+  ): ValidationFailure {
     return this.issue(new IssueTooBig(this.path, input, max, type, actual))
   }
 
@@ -538,7 +547,7 @@ export class ValidationContext {
     type: MeasurableType,
     min: number,
     actual: number,
-  ) {
+  ): ValidationFailure {
     return this.issue(new IssueTooSmall(this.path, input, min, type, actual))
   }
 
@@ -558,7 +567,7 @@ export class ValidationContext {
     input: I,
     property: keyof I & PropertyKey,
     values: readonly unknown[],
-  ) {
+  ): ValidationFailure {
     const value = input[property]
     const path = this.concatPath(property)
     return this.issue(new IssueInvalidValue(path, value, values))
@@ -580,7 +589,7 @@ export class ValidationContext {
     input: I,
     property: keyof I & PropertyKey,
     expected: string,
-  ) {
+  ): ValidationFailure {
     const value = input[property]
     const path = this.concatPath(property)
     return this.issue(new IssueInvalidType(path, value, [expected]))

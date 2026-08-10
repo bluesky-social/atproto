@@ -110,7 +110,7 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
     - [Using Actions](#using-actions)
     - [Composing Multiple Operations](#composing-multiple-operations)
     - [Higher-Order Actions](#higher-order-actions)
-  - [Creating a Client from Another Client](#creating-a-client-from-another-client)
+  - [Using a Single Client for Multiple Services](#using-a-single-client-for-multiple-services)
   - [Building Library-Style APIs with Actions](#building-library-style-apis-with-actions)
     - [Creating Posts](#creating-posts)
     - [Following Users](#following-users)
@@ -174,7 +174,7 @@ This generates TypeScript files in `./src/lexicons` (by default) with type-safe 
 > To avoid committing generated files, add the output directory to your `.gitignore`:
 >
 > ```bash
-> echo "./src/lexicons" >> .gitignore
+> echo "/src/lexicons" >> .gitignore
 > ```
 
 **4. Use in your code**
@@ -347,9 +347,7 @@ import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 declare const data:
-  | app.bsky.feed.post.Main
-  | app.bsky.feed.like.Main
-  | l.Unknown$TypedObject
+  app.bsky.feed.post.Main | app.bsky.feed.like.Main | l.Unknown$TypedObject
 
 // Discriminate by $type without re-validating
 if (app.bsky.feed.post.$isTypeOf(data)) {
@@ -610,7 +608,7 @@ Both `xrpc()` and `xrpcSafe()` accept `validateRequest`, `validateResponse`, and
 
 The `Client` class provides high-level helpers for common AT Protocol "repo" operations: `create()`, `get()`, `put()`, `delete()`, `list()`, `uploadBlob()`, and more. A `Client` instance is typically useful for making requests in the context of an authenticated user session, as it automatically handles headers and provides default values based on the authenticated user's DID.
 
-A `Client` instance is also useful to encapsulate configuration for a specific service, by specifying the `service` option (for proxying) and `labelers` option (for content labeling). Additionally, a `Client` can be used as an `Agent` for another `Client`, allowing you to compose headers and configuration across multiple services.
+A `Client` instance is also useful to encapsulate configuration for a specific service, by specifying the `service` option (for proxying) and `labelers` option (for content labeling). These act as _defaults_ for the client's requests and can be overridden — or disabled with `null` — on a per-request basis, allowing a single client to talk both to a proxied service (e.g. an AppView) and directly to the user's PDS.
 
 ### Creating a Client
 
@@ -631,9 +629,7 @@ import { Client } from '@atproto/lex'
 import { OAuthClient } from '@atproto/oauth-client-node'
 
 // Setup OAuth client (see @atproto/oauth-client documentation)
-const oauthClient = new OAuthClient({
-  /* ... */
-})
+const oauthClient = new OAuthClient({/* ... */})
 const session = await oauthClient.restore(userDid)
 
 // Create authenticated client
@@ -713,9 +709,7 @@ const profile = await client.call(app.bsky.actor.getProfile, {
 
 // Procedure (POST request)
 const result = await client.call(app.bsky.feed.sendInteractions, {
-  interactions: [
-    /* ... */
-  ],
+  interactions: [/* ... */],
 })
 
 // With options
@@ -1020,6 +1014,30 @@ client.setLabelers(['did:plc:labeler5'])
 client.clearLabelers()
 ```
 
+The client's `labelers` act as a default for its requests. A per-request `labelers` option replaces that default for that request, and `labelers: null` disables the `atproto-accept-labelers` header entirely:
+
+```typescript
+// Uses the client's labelers
+await client.call(app.bsky.actor.getProfile, { actor })
+
+// Uses only 'did:plc:other' for this request
+await client.xrpc(app.bsky.actor.getProfile, {
+  params: { actor },
+  labelers: ['did:plc:other'],
+})
+
+// No atproto-accept-labelers header for this request (except appLabelers,
+// which are applied unless explicitly disabled)
+await client.xrpc(app.bsky.actor.getProfile, {
+  params: { actor },
+  labelers: null,
+})
+```
+
+App-level labelers (`appLabelers`) are always added to the `atproto-accept-labelers` header with the `;redact` param. They default to the static `Client.appLabelers` (set via `Client.configure()`), and can be overridden through the client's or a request's `appLabelers` option (`appLabelers: null` disables them for that client or request).
+
+The same defaulting logic applies to the `service` option (`atproto-proxy` header): a per-request `service` replaces the client's default, and `service: null` disables proxying for that request.
+
 ### Low-Level XRPC
 
 For advanced use cases, use `client.xrpc()` to get the full response (headers, status, body):
@@ -1165,9 +1183,7 @@ The most ergonomic style is to use a namespace import and reference schemas thro
 ```typescript
 import * as com from './lexicons/com.js'
 
-await client.call(com.atproto.repo.getRecord, {
-  /* ... */
-})
+await client.call(com.atproto.repo.getRecord, {/* ... */})
 ```
 
 This style is convenient and reads naturally as it mirrors the NSID of the schema. However, it produces the largest bundles. From the bundler's point of view, `com.atproto.repo.getRecord` is the whole schema namespace (which contains the `main` schema as well as helpers, and any other definitions). The bundler cannot know that `client.call()` only consumes the `main` schema, so it has to keep the rest of the namespace alive in the bundle.
@@ -1179,9 +1195,7 @@ You can mitigate the bundle-size cost by explicitly naming the `main` definition
 ```typescript
 import * as com from './lexicons/com.js'
 
-await client.call(com.atproto.repo.getRecord.main, {
-  /* ... */
-})
+await client.call(com.atproto.repo.getRecord.main, {/* ... */})
 ```
 
 This lets the bundler drop the sibling definitions inside `getRecord` that aren't referenced. The drawback is that it leaks an implementation detail: the `main` segment of the path. In Lexicon, `main` is typically implicit:
@@ -1198,9 +1212,7 @@ You can also import the `main` schema directly from the file that defines it:
 ```typescript
 import { main as getRecord } from './lexicons/com/atproto/repo/getRecord.js'
 
-await client.call(getRecord, {
-  /* ... */
-})
+await client.call(getRecord, {/* ... */})
 ```
 
 This produces equally small bundles as the explicit `.main` reference, but it still surfaces the `main` identifier: you have to know to import `main` and likely rename it.
@@ -1221,12 +1233,8 @@ This means you can write:
 import getRecord from './lexicons/com/atproto/repo/getRecord.js'
 import post from './lexicons/app/bsky/feed/post.js'
 
-await client.call(getRecord, {
-  /* ... */
-})
-await client.create(post, {
-  /* ... */
-})
+await client.call(getRecord, {/* ... */})
+await client.create(post, {/* ... */})
 ```
 
 This is the most bundle-friendly style: the bundler only pulls in the `main` schema, and the import name doesn't have to mention `main` at all. This helps keeping application code aligned with how Lexicons are usually identified.
@@ -1512,76 +1520,56 @@ const enableAdultContent: Action<void, Preference[]> = async (
 await client.call(enableAdultContent)
 ```
 
-### Creating a Client from Another Client
+### Using a Single Client for Multiple Services
 
-You can create a new `Client` instance from an existing client. The new client will share the same underlying configuration (authentication, headers, labelers, service proxy), with the ability to override specific settings.
-
-> [!NOTE]
->
-> When you create a client from another client, the child client inherits the base client's configuration. On every request, the child client merges its own configuration with the base client's current configuration, with the child's settings taking precedence. Changes to the base client's configuration (like `baseClient.setLabelers()`) will be reflected in child client requests, but changes to child clients do not affect the base client.
-
-```typescript
-import { Client } from '@atproto/lex'
-
-// Base client with authentication
-const baseClient = new Client(session)
-
-baseClient.setLabelers(['did:plc:labelerA', 'did:plc:labelerB'])
-baseClient.headers.set('x-app-version', '1.0.0')
-
-// Create a new client with additional configuration that will get merged with
-// baseClient's settings on every request.
-const configuredClient = new Client(baseClient, {
-  labelers: ['did:plc:labelerC'],
-  headers: { 'x-trace-id': 'abc123' },
-})
-```
-
-This pattern is particularly useful when you need to:
-
-- Configure labelers after authentication
-- Add application-specific headers
-- Create multiple clients with different configurations from the same session
-
-**Example: Configuring labelers after sign-in**
+Because the client's `service` and `labelers` options are just _defaults_, a single `Client` instance can be used to talk to multiple services. This is the recommended pattern for SDK-style code: configure the client to talk to an AppView by default, and override `service` on a per-request basis when a request must reach another service — or the user's PDS directly (`service: null`).
 
 ```typescript
 import { Client } from '@atproto/lex'
 import * as app from './lexicons/app.js'
+import * as com from './lexicons/com.js'
 
-async function createBaseClient(session: OAuthSession) {
-  // Create base client
-  const client = new Client(session, {
-    service: 'did:web:api.bsky.app#bsky_appview',
-  })
-
-  // Fetch user preferences
-  const { preferences } = await client.call(app.bsky.actor.getPreferences)
-
-  // Extract labeler preferences
-  const labelerPref = preferences.findLast((p) =>
-    app.bsky.actor.defs.labelersPref.check(p),
-  )
-  const labelers = labelerPref?.labelers.map((l) => l.did) ?? []
-
-  // Configure the client with the user's preferred labelers
-  client.setLabelers(labelers)
-
-  return client
-}
-
-// Usage
-const baseClient = await createBaseClient(session)
-
-// Create a new client with a different service, but reusing the labelers
-// from the base client.
-const otherClient = new Client(baseClient, {
-  service: 'did:web:com.example.other#other_service',
+const client = new Client(session, {
+  // All requests are proxied to the AppView by default
+  service: 'did:web:api.bsky.app#bsky_appview',
 })
 
-// Whenever you update labelers on the base client, the other client will automatically
-// receive the same updates, since they share the same labeler set.
+// Proxied to the AppView (client default)
+const { feed } = await client.call(app.bsky.feed.getTimeline)
+
+// Sent directly to the user's PDS (no atproto-proxy header)
+const { body } = await client.xrpc(com.atproto.repo.getRecord, {
+  service: null,
+  params: {
+    repo: client.assertDid,
+    collection: 'app.bsky.actor.profile',
+    rkey: 'self',
+  },
+})
+
+// Proxied to a different service, just for this request
+await client.xrpc(app.bsky.actor.getProfile, {
+  service: 'did:web:com.example.other#other_service',
+  params: { actor: client.assertDid },
+})
 ```
+
+> [!NOTE]
+>
+> The record helpers (`create()`, `get()`, `put()`, `delete()`, `list()`, `createRecord()`, `getRecord()`, `putRecord()`, `deleteRecord()`, `listRecords()`, `applyWrites()`, `uploadBlob()`, `getBlob()`) always target the user's PDS: they default to `service: null` and `labelers: null`, ignoring the client's instance-wide defaults (unless explicitly overridden in their options).
+
+If you need clients with different configurations sharing the same authentication, create them from the same session (or reuse an existing client's `agent`):
+
+```typescript
+const pdsClient = new Client(session)
+const bskyClient = new Client(pdsClient.agent, {
+  service: 'did:web:api.bsky.app#bsky_appview',
+})
+```
+
+> [!NOTE]
+>
+> In previous version of this library, `Client` implemented the `Agent` interface, and its `fetchHandler` method could be used as the agent of another `Client`. This lead to confusing bugs ([#5110](https://github.com/bluesky-social/atproto/issues/5110)) where the inner agent (client) would set `atproto-proxy` and `atproto-accept-labelers` headers on requests where the outer client explicitly set `service: null` and `labelers: null`. This is no longer the case: a `Client` can no longer be used as the agent of another `Client`. To share authentication between differently-configured clients, build them from the same session.
 
 ### Building Library-Style APIs with Actions
 

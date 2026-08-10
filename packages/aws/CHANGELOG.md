@@ -1,5 +1,116 @@
 # @atproto/aws
 
+## 0.3.12
+
+### Patch Changes
+
+- Updated dependencies [[`b66870d`](https://github.com/bluesky-social/atproto/commit/b66870d5a1efbcfa0cc07498c7cfcf3f0f243e86), [`b66870d`](https://github.com/bluesky-social/atproto/commit/b66870d5a1efbcfa0cc07498c7cfcf3f0f243e86)]:
+  - @atproto/common@0.7.6
+  - @atproto/repo@0.10.10
+
+## 0.3.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.9
+  - @atproto/repo@0.10.9
+  - @atproto/common@0.7.5
+
+## 0.3.10
+
+### Patch Changes
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update vitest dependencies
+
+- [#5294](https://github.com/bluesky-social/atproto/pull/5294) [`5782f19`](https://github.com/bluesky-social/atproto/commit/5782f195e834b5af80e5bcc163c4247893b95e0a) Thanks [@devinivy](https://github.com/devinivy)! - Revert aws sdk upgrade to 3.1073 and @smithy/core pin, restoring the 3.879 sdk with prior request timeout behavior
+
+- Updated dependencies []:
+  - @atproto/common@0.7.4
+  - @atproto/repo@0.10.8
+  - @atproto/common-web@0.5.8
+
+## 0.3.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.7.3
+  - @atproto/repo@0.10.7
+  - @atproto/common-web@0.5.7
+
+## 0.3.8
+
+### Patch Changes
+
+- [#5247](https://github.com/bluesky-social/atproto/pull/5247) [`0af78cf`](https://github.com/bluesky-social/atproto/commit/0af78cf2b15a2b541f0f1889178ae64086d982f3) Thanks [@jcalabro](https://github.com/jcalabro)! - Pin `@smithy/core` to `>=3.29.5` to fix an outbound S3/R2 socket leak. Earlier versions did not destroy the underlying stream's socket when a `getObject` download was aborted mid-transfer (`ChecksumStream` swallowed the premature close), so `S3BlobStore` blob downloads that clients cancelled leaked sockets and file descriptors until the host exhausted TCP memory. `@smithy/core` 3.29.5 (smithy-typescript#2152) destroys the source and removes its listeners on premature closure.
+
+## 0.3.7
+
+### Patch Changes
+
+- [#5233](https://github.com/bluesky-social/atproto/pull/5233) [`692ec0b`](https://github.com/bluesky-social/atproto/commit/692ec0bf7202227f26298ebe98ff25e46b1bd4bc) Thanks [@devinivy](https://github.com/devinivy)! - Upgrade `@aws-sdk/*` dependencies (^3.879.0 to ^3.1073.0). `S3BlobStore` now passes its stall detection timeout (`requestTimeoutMs`) to the request handler's `socketTimeout` option: the upgraded SDK redefined `requestTimeout` from a socket idle timeout to a warn-only total request timer, so stalled S3 connections continue to be reaped and retried as intended.
+
+## 0.3.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.6
+  - @atproto/repo@0.10.6
+  - @atproto/common@0.7.2
+
+## 0.3.5
+
+### Patch Changes
+
+- [#5181](https://github.com/bluesky-social/atproto/pull/5181) [`bd0d2ce`](https://github.com/bluesky-social/atproto/commit/bd0d2cea00e6739cb9efc0f80a808ee76bd7b112) Thanks [@blackmichael](https://github.com/blackmichael)! - `S3BlobStore`: decouple the per-request stall detection timeout (`requestTimeoutMs`, a socket idle timeout) from the total upload budget (`uploadTimeoutMs`). `requestTimeoutMs` now defaults to `min(uploadTimeoutMs, 15s)` (clamped to a minimum of 6s) instead of `uploadTimeoutMs`, so that stalled S3 connections are reaped and retried quickly even when a large upload timeout is configured. The 6s floor keeps the socket idle timeout from applying to blob downloads streamed to slow (client-paced) consumers. Also adds a `connectionTimeoutMs` option (default 5s), and translates stalled-connection `TimeoutError`s into the same "Blob upload timed out" error as upload timeouts.
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto/common-web@0.5.5
+  - @atproto/common@0.7.1
+  - @atproto/crypto@0.5.4
+  - @atproto/repo@0.10.5
+
+## 0.3.4
+
+### Patch Changes
+
+- Updated dependencies [[`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112)]:
+  - @atproto/common@0.7.0
+  - @atproto/common-web@0.5.4
+  - @atproto/repo@0.10.4
+
+## 0.3.3
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build with `noImplicitAny` enabled
+
+- Updated dependencies [[`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto/common-web@0.5.3
+  - @atproto/common@0.6.5
+  - @atproto/crypto@0.5.3
+  - @atproto/repo@0.10.3
+
+## 0.3.2
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- Updated dependencies [[`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb), [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7), [`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb)]:
+  - @atproto/common@0.6.4
+  - @atproto/common-web@0.5.2
+  - @atproto/crypto@0.5.2
+  - @atproto/repo@0.10.2
+
 ## 0.3.1
 
 ### Patch Changes

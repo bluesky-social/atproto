@@ -1,4 +1,4 @@
-import { LexiconRecordKey, NsidString } from '../core.js'
+import type { LexiconRecordKey, NsidString } from '../core.js'
 
 /**
  * Configuration options for a space declaration.
@@ -87,6 +87,6 @@ export function space<
   name: string,
   collections: readonly NsidString[],
   options?: SpaceOptions,
-) {
+): Space<N, K> {
   return new Space<N, K>(nsid, key, name, collections, options)
 }

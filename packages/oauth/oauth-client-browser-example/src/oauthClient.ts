@@ -1,9 +1,10 @@
 import {
   BrowserOAuthClient,
-  OAuthSession,
+  type OAuthSession,
   buildAtprotoLoopbackClientMetadata,
 } from '@atproto/oauth-client-browser'
 import {
+  BSKY_API_DID,
   ENV,
   HANDLE_RESOLVER_URL,
   LOOPBACK_CANONICAL_LOCATION,
@@ -17,8 +18,9 @@ export const clientMetadata = buildAtprotoLoopbackClientMetadata({
     new Set([
       // Always required
       'atproto',
-      // Required by this app to setup labelers
-      'rpc:app.bsky.actor.getPreferences?aud=*',
+      // Permission required by this app
+      `rpc:app.bsky.actor.getProfile?aud=${BSKY_API_DID}#bsky_appview`,
+      `rpc:app.bsky.actor.getPreferences?aud=${BSKY_API_DID}#bsky_appview`,
       // Additional scopes from env
       ...OAUTH_SCOPE.split(' ').filter(Boolean),
     ]),
@@ -49,13 +51,13 @@ export const oauthClient = new BrowserOAuthClient({
   // Since the client is static, let's forward the hooks using a shared event
   // target (oauthEvents) so that they can be consumed by other parts of the
   // app.
-  onDelete: (sub, cause) => {
+  onSessionDeleted: (sub, cause) => {
     console.debug('OAuth session deleted:', sub, cause)
     oauthEvents.dispatchEvent(
       new CustomEvent('deleted', { detail: { sub, cause } }),
     )
   },
-  onUpdate: (sub, session) => {
+  onSessionUpdated: (sub, session) => {
     console.debug('OAuth session refreshed:', sub)
     oauthEvents.dispatchEvent(
       new CustomEvent('updated', { detail: { sub, session } }),

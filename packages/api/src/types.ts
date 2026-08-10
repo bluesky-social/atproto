@@ -1,5 +1,5 @@
-import { AppBskyActorDefs } from './client/index.js'
-import { ModerationPrefs } from './moderation/types.js'
+import type { AppBskyActorDefs } from './client/index.js'
+import type { ModerationPrefs } from './moderation/types.js'
 
 export type UnknownServiceType = string & NonNullable<unknown>
 export type AtprotoServiceType = 'atproto_labeler' | UnknownServiceType
@@ -53,11 +53,7 @@ export function asAtprotoProxy<T extends string>(input: T) {
  * Used by the PersistSessionHandler to indicate what change occurred
  */
 export type AtpSessionEvent =
-  | 'create'
-  | 'create-failed'
-  | 'update'
-  | 'expired'
-  | 'network-error'
+  'create' | 'create-failed' | 'update' | 'expired' | 'network-error'
 
 /**
  * Used by AtpAgent to store active sessions
@@ -155,6 +151,7 @@ export interface BskyPreferences {
     queuedNudges: string[]
     activeProgressGuide: AppBskyActorDefs.BskyAppProgressGuide | undefined
     nuxs: AppBskyActorDefs.Nux[]
+    isBetaUser?: boolean
   }
   postInteractionSettings: AppBskyActorDefs.PostInteractionSettingsPref
   verificationPrefs: AppBskyActorDefs.VerificationPrefs

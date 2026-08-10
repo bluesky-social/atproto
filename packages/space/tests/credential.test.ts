@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
   SPACE_TOKEN_TYPES,
   SpaceTokenError,

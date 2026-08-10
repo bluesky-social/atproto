@@ -1,28 +1,29 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import {
   AtomIcon,
+  BadgeCheckIcon,
   BookOpenIcon,
-  CertificateIcon,
-  ChatCircleDotsIcon,
   CheckIcon,
-  EnvelopeIcon,
   HandIcon,
-  IdentificationBadgeIcon,
+  IdCardIcon,
+  MailIcon,
+  MessageCircleMoreIcon,
   UserIcon,
-  UsersThreeIcon,
-} from '@phosphor-icons/react'
-import { Fragment, HTMLAttributes, ReactNode, useMemo } from 'react'
+  UsersIcon,
+} from 'lucide-react'
+import { Fragment, type HTMLAttributes, type ReactNode, useMemo } from 'react'
 import {
-  AudParam,
+  type AudParam,
   BlobPermission,
-  CollectionParam,
+  type CollectionParam,
   IncludeScope,
-  LxmParam,
+  type LxmParam,
   RepoPermission,
   RpcPermission,
   ScopePermissionsTransition,
   SpacePermission,
 } from '@atproto/oauth-scopes'
+import { Notice } from '#/components/feedback/notice.tsx'
 import type {
   PermissionSet,
   PermissionSets,
@@ -30,9 +31,7 @@ import type {
   SpaceHandles,
   Spaces,
 } from '#/hydration-data.d.ts'
-import { Override } from '#/lib/util'
-import { Checkbox } from '../forms/checkbox.tsx'
-import { Admonition } from './admonition.tsx'
+import type { Override } from '#/lib/util'
 import { DescriptionCard } from './description-card.tsx'
 import { ButterflyIcon } from './icons.tsx'
 import { LangProp } from './lang-string.tsx'
@@ -168,7 +167,7 @@ function IncludeScopePermissions({
         isBskyAppNsid(nsid) ? (
           <ButterflyIcon className="size-6" />
         ) : isBskyChatNsid(nsid) ? (
-          <ChatCircleDotsIcon className="size-6" />
+          <MessageCircleMoreIcon className="size-6" />
         ) : nsid.startsWith('com.atproto.moderation.') ? (
           <HandIcon className="size-6" />
         ) : (
@@ -222,14 +221,14 @@ function IdentityWarning({
 
   if (hasFullIdentityAccess) {
     return (
-      <Admonition role="status">
+      <Notice role="status">
         <Trans>
           The application is asking for full control over your network identity,
           meaning that it could <b>permanently break</b>, or even <b>steal</b>,
           your account. Only grant this permission to applications you really
           trust.
         </Trans>
-      </Admonition>
+      </Notice>
     )
   }
 
@@ -258,7 +257,7 @@ function EmailPermissions({
       <label className={onAllowEmail ? 'cursor-pointer' : undefined}>
         <DescriptionCard
           role="listitem"
-          image={<EnvelopeIcon className="size-6" />}
+          image={<MailIcon className="size-6" />}
           title={t`Email`}
           description={
             allowedAction === 'manage' ? (
@@ -269,8 +268,9 @@ function EmailPermissions({
           }
           append={
             onAllowEmail && (
-              <Checkbox
-                className="m-2"
+              <input
+                type="checkbox"
+                className="border-input accent-primary m-2 size-4 shrink-0 rounded-[4px] border"
                 checked={allowEmail}
                 onChange={(e) => onAllowEmail(e.target.checked)}
               />
@@ -481,7 +481,7 @@ function BlueskyChatPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<ChatCircleDotsIcon className="size-6" />}
+        image={<MessageCircleMoreIcon className="size-6" />}
         title={t`Chat`}
         description={t`Read and send messages`}
       />
@@ -514,7 +514,7 @@ function IdentityPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<IdentificationBadgeIcon className="size-6" />}
+        image={<IdCardIcon className="size-6" />}
         title={t`Identity`}
         description={
           attr === '*' ? (
@@ -545,7 +545,7 @@ function RpcMethodsDetails({
     return (
       <DescriptionCard
         role="listitem"
-        image={<CertificateIcon className="size-6" />}
+        image={<BadgeCheckIcon className="size-6" />}
         title={t({ context: 'OAuthScope', message: 'Authenticate' })}
         description={
           <Trans>
@@ -561,7 +561,7 @@ function RpcMethodsDetails({
     return (
       <DescriptionCard
         role="listitem"
-        image={<CertificateIcon className="size-6" />}
+        image={<BadgeCheckIcon className="size-6" />}
         title={t({ context: 'OAuthScope', message: 'Authenticate' })}
         description={t`Perform actions on your behalf`}
         extra={<RpcMethodsTable className="mt-2" permissions={permissions} />}
@@ -831,7 +831,7 @@ function SpacePermissions({
   return (
     <DescriptionCard
       role="listitem"
-      image={<UsersThreeIcon className="size-6" />}
+      image={<UsersIcon className="size-6" />}
       title={t`Spaces`}
       description={t`Access permissioned spaces`}
       extra={
@@ -967,7 +967,7 @@ function SpaceRow({ row }: { row: SpaceTableRow }) {
       </div>
 
       {row.manage && (
-        <div className="text-text-light text-xs">
+        <div className="text-muted-foreground text-xs">
           <Trans>
             <b>Manage</b> the space: create new spaces, add and remove members.
           </Trans>
@@ -975,13 +975,13 @@ function SpaceRow({ row }: { row: SpaceTableRow }) {
       )}
 
       {!row.read && row.readSelf && (
-        <div className="text-text-light text-xs">
+        <div className="text-muted-foreground text-xs">
           <Trans>Read only your own data.</Trans>
         </div>
       )}
 
       {writeEntries.length === 0 ? (
-        <div className="text-text-light text-xs">
+        <div className="text-muted-foreground text-xs">
           {row.read ? (
             row.manage ? null : (
               <Trans>Read-only access.</Trans>
@@ -1076,7 +1076,7 @@ function SpaceOwner({ did, handle }: { did: string; handle?: string }) {
       </b>
     )
   }
-  return <code className="text-text-light">{did}</code>
+  return <code className="text-muted-foreground">{did}</code>
 }
 
 function SpaceUniversalWarning({
@@ -1094,13 +1094,13 @@ function SpaceUniversalWarning({
   if (!isUniversal) return null
 
   return (
-    <Admonition role="status">
+    <Notice role="status">
       <Trans>
         This application is requesting access to{' '}
         <b>every space on the network</b>. This is a very broad permission. Only
         grant it to applications you deeply trust.
       </Trans>
-    </Admonition>
+    </Notice>
   )
 }
 
@@ -1240,7 +1240,7 @@ function ItemDescription({
   ...attrs
 }: ItemDescriptionProps) {
   return (
-    <em {...attrs} className={`text-text-light ${className}`}>
+    <em {...attrs} className={`text-muted-foreground ${className}`}>
       {children}
     </em>
   )
@@ -1273,7 +1273,7 @@ function Identifier({
   ...attrs
 }: IdentifierProps): ReactNode {
   return (
-    <code {...attrs} className={`text-text-light ${className}`}>
+    <code {...attrs} className={`text-muted-foreground ${className}`}>
       {children}
     </code>
   )

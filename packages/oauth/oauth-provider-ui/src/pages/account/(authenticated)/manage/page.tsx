@@ -1,24 +1,32 @@
 import { Trans } from '@lingui/react/macro'
 import {
-  AtIcon,
-  CaretRightIcon,
-  EnvelopeIcon,
-  Icon,
+  AtSignIcon,
+  ChevronRightIcon,
   LockIcon,
-  ShieldWarningIcon,
+  type LucideIcon,
+  MailIcon,
+  ShieldAlertIcon,
   SnowflakeIcon,
   TrashIcon,
-} from '@phosphor-icons/react'
-import { clsx } from 'clsx'
-import { ReactNode } from 'react'
+} from 'lucide-react'
+import type { ComponentProps, ReactNode } from 'react'
 import { DeactivateAccountDialog } from '#/components/deactivate-account-dialog.tsx'
 import { DeleteAccountDialog } from '#/components/delete-account-dialog.tsx'
-import { Button, ButtonProps } from '#/components/forms/button.tsx'
+import { Notice } from '#/components/feedback/notice.tsx'
 import { ReactivateAccountDialog } from '#/components/reactivate-account-dialog.tsx'
+import { Button } from '#/components/ui/button.tsx'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemGroup,
+  ItemMedia,
+  ItemSeparator,
+  ItemTitle,
+} from '#/components/ui/item.tsx'
 import { UpdateEmailDialog } from '#/components/update-email-dialog.tsx'
 import { UpdateHandleDialog } from '#/components/update-handle-dialog.tsx'
 import { UpdatePasswordDialog } from '#/components/update-password-dialog.tsx'
-import { Admonition } from '#/components/utils/admonition'
 import { Handle } from '#/components/utils/handle.tsx'
 import { VerifyEmailDialog } from '#/components/verify-email-dialog.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
@@ -40,19 +48,27 @@ import {
   useResetPasswordConfirm,
   useResetPasswordRequest,
 } from '#/data/password.ts'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
+import { cn } from '#/lib/utils.ts'
 
 export function Page() {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
       <EmailVerificationRow />
-      <EmailUpdateRow />
-      <hr className="border-none" aria-hidden />
-      <HandleUpdateRow />
-      <PasswordUpdateRow />
-      <hr className="border-none" aria-hidden />
-      <AccountStatusRow />
-      <AccountDeletionRow />
+
+      {/* @NOTE ItemGroup gives the rows role="list" and a consistent gap, and
+        ItemSeparator marks the section breaks. Both were previously faked with
+        a flex wrapper and invisible <hr className="border-none"> spacers, which
+        left the gaps looking arbitrary. */}
+      <ItemGroup>
+        <EmailUpdateRow />
+        <ItemSeparator />
+        <HandleUpdateRow />
+        <PasswordUpdateRow />
+        <ItemSeparator />
+        <AccountStatusRow />
+        <AccountDeletionRow />
+      </ItemGroup>
     </div>
   )
 }
@@ -67,9 +83,9 @@ function EmailVerificationRow() {
   if (!email || emailVerified) return null
 
   return (
-    <Admonition
+    <Notice
       role="info"
-      icon={ShieldWarningIcon}
+      icon={ShieldAlertIcon}
       action={
         <VerifyEmailDialog
           email={email}
@@ -82,14 +98,14 @@ function EmailVerificationRow() {
             await verifyConfirm.mutateAsync({ did, token, email })
           }}
         >
-          <Button size="sm" color="info">
+          <Button size="sm" variant="secondary">
             <Trans context="verify email">Verify now</Trans>
           </Button>
         </VerifyEmailDialog>
       }
     >
       <Trans>Your email address needs to be verified.</Trans>
-    </Admonition>
+    </Notice>
   )
 }
 
@@ -122,16 +138,16 @@ function EmailUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
       }}
       introMessage={
         data.show2FaWarningOnEmailUpdate && (
-          <Admonition role="warning" className="text-sm">
+          <Notice role="warning" className="text-sm">
             <Trans>
               If you update your email address, email 2FA (if enabled) will be
               disabled.
             </Trans>
-          </Admonition>
+          </Notice>
         )
       }
     >
-      <Row {...props} icon={EnvelopeIcon} value={email}>
+      <Row {...props} icon={MailIcon} value={email}>
         <Trans>Email address</Trans>
       </Row>
     </UpdateEmailDialog>
@@ -182,7 +198,7 @@ function AccountStatusRow(props: Omit<RowProps, 'icon' | 'value'>) {
           await reactivate.mutateAsync({ did: account.did })
         }}
       >
-        <Row {...props} icon={SnowflakeIcon} color="primary">
+        <Row {...props} icon={SnowflakeIcon} variant="default">
           <Trans>Reactivate account</Trans>
         </Row>
       </ReactivateAccountDialog>
@@ -195,7 +211,7 @@ function AccountStatusRow(props: Omit<RowProps, 'icon' | 'value'>) {
         await deactivate.mutateAsync({ did: account.did })
       }}
     >
-      <Row {...props} icon={SnowflakeIcon} color="error">
+      <Row {...props} icon={SnowflakeIcon} variant="destructive">
         <Trans>Deactivate account</Trans>
       </Row>
     </DeactivateAccountDialog>
@@ -222,7 +238,7 @@ function AccountDeletionRow(props: Omit<RowProps, 'icon' | 'value'>) {
         await deleteConfirm.mutateAsync({ did, token, password })
       }}
     >
-      <Row {...props} icon={TrashIcon} color="error">
+      <Row {...props} icon={TrashIcon} variant="destructive">
         <Trans>Delete account</Trans>
       </Row>
     </DeleteAccountDialog>
@@ -245,7 +261,7 @@ function HandleUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
         await updateHandle.mutateAsync({ did, handle })
       }}
     >
-      <Row {...props} icon={AtIcon} value={<Handle handle={handle} />}>
+      <Row {...props} icon={AtSignIcon} value={<Handle handle={handle} />}>
         <Trans>Username</Trans>
       </Row>
     </UpdateHandleDialog>
@@ -253,38 +269,62 @@ function HandleUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
 }
 
 type RowProps = Override<
-  ButtonProps,
+  Omit<ComponentProps<typeof Item>, 'render'>,
   {
-    icon: Icon
+    icon: LucideIcon
     value?: ReactNode
+    /** Destructive rows keep the danger signal without a full red fill. */
+    variant?: 'default' | 'destructive'
   }
 >
 
+/**
+ * A tappable settings row, built on the shadcn `item` primitive — the
+ * canonical pattern for this kind of list.
+ *
+ * @NOTE `render={<button/>}` makes the row keyboard focusable, which `Item`'s
+ * default `<div>` is not. `itemVariants` has no destructive variant
+ * (default/outline/muted only), so destructive rows tint the icon and label
+ * rather than filling the row.
+ */
 function Row({
   icon: Icon,
   value,
-
-  // ButtonProps
+  variant = 'default',
   children,
   className,
-  transparent = true,
   ...props
 }: RowProps) {
+  const destructive = variant === 'destructive'
+
   return (
-    <Button
-      shape="padded"
+    <Item
       {...props}
-      transparent={transparent}
-      className={clsx('gap-2', className)}
-    >
-      <Icon aria-hidden className="size-5 shrink-0 grow-0" />
-      <span className="grow-1 truncate text-left font-medium">{children}</span>
-      {value != null && (
-        <span className="hidden min-w-0 flex-1 truncate text-right text-sm sm:inline">
-          {value}
-        </span>
+      render={<button type="button" />}
+      className={cn(
+        'hover:bg-muted w-full text-left',
+        destructive && 'text-destructive hover:bg-destructive/10',
+        className,
       )}
-      <CaretRightIcon aria-hidden className="size-4 shrink-0" />
-    </Button>
+    >
+      <ItemMedia variant="icon">
+        <Icon aria-hidden className={cn(destructive && 'text-destructive')} />
+      </ItemMedia>
+
+      <ItemContent>
+        <ItemTitle>
+          <span>{children}</span>
+        </ItemTitle>
+      </ItemContent>
+
+      <ItemActions>
+        {value != null && (
+          <span className="text-muted-foreground hidden max-w-[16rem] truncate text-sm sm:inline">
+            {value}
+          </span>
+        )}
+        <ChevronRightIcon aria-hidden className="size-4 shrink-0 opacity-60" />
+      </ItemActions>
+    </Item>
   )
 }

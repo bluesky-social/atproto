@@ -1,10 +1,10 @@
 import { moderatePost, moderateProfile } from '../src/index.js'
 import {
   ModerationBehaviorSuiteRunner,
-  ModerationTestSuiteScenario,
-  SuiteConfigurations,
-  SuiteScenarios,
-  SuiteUsers,
+  type ModerationTestSuiteScenario,
+  type SuiteConfigurations,
+  type SuiteScenarios,
+  type SuiteUsers,
 } from './util/moderation-behavior.js'
 
 const USERS: SuiteUsers = {

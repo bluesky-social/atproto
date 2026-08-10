@@ -1,10 +1,10 @@
-import { AtpAgent } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { TestPds } from './pds.js'
+import type { TestPds } from './pds.js'
 import {
-  ServiceMigrationOptions,
+  type ServiceMigrationOptions,
   ServiceProfile,
-  ServiceUserDetails,
+  type ServiceUserDetails,
 } from './service-profile.js'
 
 export class OzoneServiceProfile extends ServiceProfile {

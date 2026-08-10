@@ -1,14 +1,20 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { AtpAgent, ids } from '@atproto/api'
-import { RecordRef, SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
+import { type AtpAgent, ids } from '@atproto/api'
+import {
+  type RecordRef,
+  type SeedClient,
+  TestNetwork,
+  usersSeed,
+} from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 
 describe('thread mutes', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
-  let alice: string
-  let bob: string
+  let alice: DidString
+  let bob: DidString
 
   let rootPost: RecordRef
   let replyPost: RecordRef
@@ -42,6 +48,7 @@ describe('thread mutes', () => {
         ),
       },
     )
+    await network.processAll()
   })
 
   it('notes that threads are muted in viewer state', async () => {
@@ -136,6 +143,7 @@ describe('thread mutes', () => {
         ),
       },
     )
+    await network.processAll()
   })
 
   it('no longer notes that threads are muted in viewer state after unmuting', async () => {

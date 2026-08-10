@@ -1,9 +1,9 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Database } from '../db/index.js'
+import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
-import { ReportView } from '../lexicon/types/tools/ozone/report/defs.js'
-import { QueryParams as QueryActivitiesParams } from '../lexicon/types/tools/ozone/report/queryActivities.js'
-import { Member } from '../lexicon/types/tools/ozone/team/defs.js'
+import type { ReportView } from '../lexicon/types/tools/ozone/report/defs.js'
+import type { QueryParams as QueryActivitiesParams } from '../lexicon/types/tools/ozone/report/queryActivities.js'
+import type { Member } from '../lexicon/types/tools/ozone/team/defs.js'
 import {
   AlreadyInTargetState,
   InvalidStateTransition,
@@ -19,7 +19,10 @@ export type ActivityType =
   | 'noteActivity'
 
 export type CreateActivityParams = {
-  reportId: number
+  /** Exactly one of reportId or eventId must be provided. */
+  reportId?: number
+  /** Resolves the report created from this report moderation event. */
+  eventId?: number
   activityType: ActivityType
   internalNote?: string
   publicNote?: string
@@ -35,6 +38,7 @@ export async function createReportActivity(
 ) {
   const {
     reportId,
+    eventId,
     activityType,
     internalNote,
     publicNote,
@@ -43,19 +47,33 @@ export async function createReportActivity(
     createdBy,
   } = params
 
+  if ((reportId === undefined) === (eventId === undefined)) {
+    throw new InvalidRequestError(
+      'Exactly one of reportId or eventId must be provided',
+    )
+  }
+
   return db.transaction(async (dbTxn) => {
     // Lock the report row for the duration of the transaction to prevent
     // concurrent writes from racing on status validation + update.
+    // Report rows have a unique constraint on eventId, so either lookup
+    // locks at most one row.
     const report = await dbTxn.db
       .selectFrom('report')
       .select(['id', 'status'])
-      .where('id', '=', reportId)
+      .where((eb) =>
+        reportId !== undefined
+          ? eb('id', '=', reportId)
+          : eb('eventId', '=', eventId ?? -1),
+      )
       .forUpdate()
       .executeTakeFirst()
 
     if (!report) {
       throw new InvalidRequestError(
-        `Report ${reportId} not found`,
+        reportId !== undefined
+          ? `Report ${reportId} not found`
+          : `Report for event ${eventId} not found`,
         'ReportNotFound',
       )
     }
@@ -91,14 +109,14 @@ export async function createReportActivity(
       await dbTxn.db
         .updateTable('report')
         .set(updateSet)
-        .where('id', '=', reportId)
+        .where('id', '=', report.id)
         .execute()
     }
 
     const [activity] = await dbTxn.db
       .insertInto('report_activity')
       .values({
-        reportId,
+        reportId: report.id,
         activityType,
         previousStatus: result.activity?.previousStatus ?? null,
         internalNote: internalNote ?? null,

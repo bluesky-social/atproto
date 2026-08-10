@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { SpacePermission } from './space-permission.js'
 
 // Default action list when `action` is omitted (read implies read_self).

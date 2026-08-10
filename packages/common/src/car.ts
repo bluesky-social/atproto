@@ -1,8 +1,7 @@
 import { setImmediate } from 'node:timers/promises'
-// eslint-disable-next-line import/default, import/no-named-as-default-member
 import varint from 'varint'
 import * as cbor from '@atproto/lex-cbor'
-import { Cid, decodeCid, ifCid, isCidForBytes } from '@atproto/lex-data'
+import { type Cid, decodeCid, ifCid, isCidForBytes } from '@atproto/lex-data'
 
 export type CarBlock = {
   cid: Cid

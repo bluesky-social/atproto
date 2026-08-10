@@ -3,14 +3,14 @@ import { InvalidRecordKeyError } from '@atproto/syntax'
 import {
   AuthRequiredError,
   InvalidRequestError,
-  Server,
+  type Server,
 } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { dbLogger } from '../../../../logger.js'
 import {
   BadCommitSwapError,
-  PreparedCreate,
+  type PreparedCreate,
   prepareCreate,
   prepareDelete,
 } from '../../../../repo/index.js'

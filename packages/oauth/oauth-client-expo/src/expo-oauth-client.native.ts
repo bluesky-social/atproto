@@ -1,13 +1,13 @@
 import { openAuthSessionAsync } from 'expo-web-browser'
 import {
-  AuthorizeOptions,
+  type AuthorizeOptions,
   OAuthClient,
-  OAuthSession,
-  RuntimeImplementation,
+  type OAuthSession,
+  type RuntimeImplementation,
 } from '@atproto/oauth-client'
 import { default as NativeModule } from './ExpoAtprotoOAuthClientModule.js'
-import { ExpoOAuthClientInterface } from './expo-oauth-client-interface.js'
-import { ExpoOAuthClientOptions } from './expo-oauth-client-options.js'
+import type { ExpoOAuthClientInterface } from './expo-oauth-client-interface.js'
+import type { ExpoOAuthClientOptions } from './expo-oauth-client-options.js'
 import { ExpoKey } from './utils/expo-key.js'
 import {
   AuthorizationServerMetadataCache,

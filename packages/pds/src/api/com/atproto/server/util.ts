@@ -1,10 +1,10 @@
-import * as plc from '@did-plc/lib'
+import type * as plc from '@did-plc/lib'
 import { getPdsEndpoint, getSigningDidKey } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
-import { DidDocument, IdResolver } from '@atproto/identity'
+import type { DidDocument, IdResolver } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ActorStore } from '../../../../actor-store/actor-store.js'
-import { ServerConfig } from '../../../../config/index.js'
+import type { ActorStore } from '../../../../actor-store/actor-store.js'
+import type { ServerConfig } from '../../../../config/index.js'
 import { httpLogger } from '../../../../logger.js'
 
 // generate an invite code preceded by the hostname

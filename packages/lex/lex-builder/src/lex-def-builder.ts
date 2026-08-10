@@ -1,10 +1,10 @@
 import {
-  JSDocStructure,
-  OptionalKind,
-  SourceFile,
+  type JSDocStructure,
+  type OptionalKind,
+  type SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
-import {
+import type {
   LexiconArray,
   LexiconArrayItems,
   LexiconBlob,
@@ -34,8 +34,8 @@ import {
 import { l } from '@atproto/lex-schema'
 import {
   RefResolver,
-  RefResolverOptions,
-  ResolvedRef,
+  type RefResolverOptions,
+  type ResolvedRef,
   getPublicIdentifiers,
 } from './ref-resolver.js'
 import { asNamespaceExport } from './ts-lang.js'
@@ -79,17 +79,8 @@ export class LexDefBuilder {
     this.refResolver = new RefResolver(doc, file, indexer, options)
   }
 
-  async build() {
-    this.file.addVariableStatement({
-      declarationKind: VariableDeclarationKind.Const,
-      declarations: [
-        { name: '$nsid', initializer: JSON.stringify(this.doc.id) },
-      ],
-    })
-
-    this.file.addExportDeclaration({
-      namedExports: [{ name: '$nsid' }],
-    })
+  async build(): Promise<void> {
+    this.addExportedString('$nsid', JSON.stringify(this.doc.id))
 
     const defs = Object.keys(this.doc.defs)
     if (defs.length) {
@@ -102,6 +93,28 @@ export class LexDefBuilder {
         await this.addDef(hash)
       }
     }
+  }
+
+  private addExportedString(
+    name: string,
+    initializer: string,
+    docs?: OptionalKind<JSDocStructure>,
+  ) {
+    this.file.addVariableStatement({
+      declarationKind: VariableDeclarationKind.Const,
+      docs: docs ? [docs] : undefined,
+      declarations: [{ name, initializer }],
+    })
+
+    this.file.addTypeAlias({
+      name,
+      type: `typeof ${name}`,
+      docs: docs ? [docs] : undefined,
+    })
+
+    this.file.addExportDeclaration({
+      namedExports: [{ name }],
+    })
   }
 
   private addUtils(definitions: Record<string, undefined | string>) {
@@ -293,9 +306,7 @@ export class LexDefBuilder {
       ),
     })
 
-    this.addUtils({
-      $lxm: '$nsid',
-    })
+    this.addExportedString('$lxm', '$nsid')
   }
 
   private async addQuery(hash: string, def: LexiconQuery) {
@@ -319,9 +330,7 @@ export class LexDefBuilder {
       ),
     })
 
-    this.addUtils({
-      $lxm: '$nsid',
-    })
+    this.addExportedString('$lxm', '$nsid')
   }
 
   private async addSubscription(hash: string, def: LexiconSubscription) {
@@ -345,9 +354,7 @@ export class LexDefBuilder {
       ),
     })
 
-    this.addUtils({
-      $lxm: '$nsid',
-    })
+    this.addExportedString('$lxm', '$nsid')
   }
 
   private async addRecord(hash: string, def: LexiconRecord) {
@@ -483,8 +490,8 @@ export class LexDefBuilder {
     }
 
     if (hash === 'main' && objectUtils) {
+      this.addExportedString('$type', '$nsid')
       this.addUtils({
-        $type: `$nsid`,
         $isTypeOf: markPure(`${ref.varName}.isTypeOf.bind(${ref.varName})`),
         $build: markPure(`${ref.varName}.build.bind(${ref.varName})`),
       })

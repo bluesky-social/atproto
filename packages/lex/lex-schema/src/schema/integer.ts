@@ -1,4 +1,5 @@
-import { Schema, ValidationContext } from '../core.js'
+import { Schema, type ValidationContext } from '../core.js'
+import type { ValidationResult } from '../external.js'
 import { memoizedOptions } from '../util/memoize.js'
 
 /**
@@ -31,7 +32,10 @@ export class IntegerSchema extends Schema<number> {
     super()
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<number> {
     if (!isInteger(input)) {
       return ctx.issueUnexpectedType(input, 'integer')
     }
@@ -79,8 +83,5 @@ function isInteger(input: unknown): input is number {
  * const ageSchema = l.integer({ minimum: 0, maximum: 150 })
  * ```
  */
-export const integer = /*#__PURE__*/ memoizedOptions(function (
-  options?: IntegerSchemaOptions,
-) {
-  return new IntegerSchema(options)
-})
+export const integer: (options?: IntegerSchemaOptions) => IntegerSchema =
+  /*#__PURE__*/ memoizedOptions((options) => new IntegerSchema(options))

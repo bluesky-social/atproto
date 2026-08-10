@@ -1,19 +1,19 @@
 import {
-  Keypair,
+  type Keypair,
   hkdfSha256,
   hmacSha256,
   randomBytes,
   verifySignature,
 } from '@atproto/crypto'
-import { Cid, ui8Equals } from '@atproto/lex-data'
+import { type Cid, ui8Equals } from '@atproto/lex-data'
 import { LtHash } from './lthash.js'
 import {
   COMMIT_VERSION,
-  CommitCtx,
-  RecordPath,
-  RepoIndex,
-  RepoOp,
-  SignedCommit,
+  type CommitCtx,
+  type RecordPath,
+  type RepoIndex,
+  type RepoOp,
+  type SignedCommit,
 } from './types.js'
 import { formatSetHashElement } from './util.js'
 

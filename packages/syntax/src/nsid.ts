@@ -1,4 +1,4 @@
-import { Result, failure, success } from './lib/result.js'
+import { type Result, failure, success } from './lib/result.js'
 
 /*
 Grammar:
@@ -75,12 +75,10 @@ export function parseNsid(nsid: string): string[] {
   return result.value
 }
 
-export function isValidNsid<I extends string>(
-  input: I,
-): input is I & NsidString {
+export function isValidNsid<I>(input: I): input is I & NsidString {
   // Since the regex version is more performant for valid NSIDs, we use it when
   // we don't care about error details.
-  return validateNsidRegex(input).success
+  return typeof input === 'string' && validateNsidRegex(input).success
 }
 
 // Human readable constraints on NSID:

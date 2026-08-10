@@ -1,11 +1,12 @@
 import {
-  InferInput,
-  InferOutput,
-  Issue,
+  type InferInput,
+  type InferOutput,
+  type Issue,
   LexValidationError,
   Schema,
-  ValidationContext,
-  Validator,
+  type ValidationContext,
+  type ValidationResult,
+  type Validator,
 } from '../core.js'
 
 /**
@@ -43,7 +44,10 @@ export class UnionSchema<
     super()
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<InferInput<TValidators[number]>> {
     const issues: Issue[] = []
 
     for (const validator of this.validators) {
@@ -84,6 +88,6 @@ export class UnionSchema<
 /*@__NO_SIDE_EFFECTS__*/
 export function union<const TValidators extends UnionSchemaValidators>(
   validators: TValidators,
-) {
+): UnionSchema<TValidators> {
   return new UnionSchema<TValidators>(validators)
 }

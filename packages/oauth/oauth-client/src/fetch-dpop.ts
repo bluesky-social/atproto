@@ -1,14 +1,18 @@
 import { base64url } from 'multiformats/bases/base64'
-import { Key } from '@atproto/jwk'
-import { Fetch, FetchContext, cancelBody, peekJson } from '@atproto-labs/fetch'
-import { SimpleStore } from '@atproto-labs/simple-store'
+import type { Key } from '@atproto/jwk'
+import {
+  type Fetch,
+  type FetchContext,
+  cancelBody,
+  peekJson,
+} from '@atproto-labs/fetch'
+import type { SimpleStore } from '@atproto-labs/simple-store'
 
 // "undefined" in non https environments or environments without crypto
 const subtle = globalThis.crypto?.subtle as SubtleCrypto | undefined
 
 const ReadableStream = globalThis.ReadableStream as
-  | typeof globalThis.ReadableStream
-  | undefined
+  typeof globalThis.ReadableStream | undefined
 
 export type DpopFetchWrapperOptions<C = FetchContext> = {
   key: Key
@@ -212,7 +216,7 @@ async function isUseDpopNonceError(
     if (response.status === 400) {
       try {
         const json = await peekJson(response, 10 * 1024)
-        return typeof json === 'object' && json?.['error'] === 'use_dpop_nonce'
+        return (json as any)?.['error'] === 'use_dpop_nonce'
       } catch {
         // Response too big (to be "use_dpop_nonce" error) or invalid JSON
         return false

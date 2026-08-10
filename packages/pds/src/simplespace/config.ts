@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { SimplespaceConfig } from '../actor-store/db/index.js'
+import type { SimplespaceConfig } from '../actor-store/db/index.js'
 import { com } from '../lexicons/index.js'
 
 const { defs } = com.atproto.simplespace

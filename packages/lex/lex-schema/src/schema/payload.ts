@@ -1,6 +1,6 @@
-import { LexValue } from '@atproto/lex-data'
-import { InferInput, Schema, Validator } from '../core.js'
-import { ObjectSchema, object } from './object.js'
+import type { LexValue } from '@atproto/lex-data'
+import type { InferInput, Schema, Validator } from '../core.js'
+import { type ObjectSchema, object } from './object.js'
 
 export type { LexValue }
 
@@ -167,7 +167,7 @@ export class Payload<
 export function payload<
   const E extends string | undefined = undefined,
   const S extends PayloadSchema<E> = undefined,
->(encoding: E = undefined as E, validator: S = undefined as S) {
+>(encoding: E = undefined as E, validator: S = undefined as S): Payload<E, S> {
   return new Payload<E, S>(encoding, validator)
 }
 

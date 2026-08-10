@@ -1,17 +1,16 @@
 import fs from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import chalk from 'chalk'
 import { ZodError, type ZodFormattedError } from 'zod'
 import { type LexiconDoc, parseLexiconDoc } from '@atproto/lexicon'
-import { type FileDiff, type GeneratedAPI } from './types.js'
+import type { FileDiff, GeneratedAPI } from './types.js'
 
 export function readAllLexicons(paths: string[]): LexiconDoc[] {
-  paths = [...paths].sort() // incoming path order may have come from locale-dependent shell globs
+  paths = Array.from(
+    new Set(paths.flatMap(lexiconFilePaths).map((path) => resolve(path))),
+  ).sort() // incoming path order may have come from locale-dependent shell globs
   const docs: LexiconDoc[] = []
   for (const path of paths) {
-    if (!path.endsWith('.json') || !fs.statSync(path).isFile()) {
-      continue
-    }
     try {
       docs.push(readLexicon(path))
     } catch {
@@ -19,6 +18,23 @@ export function readAllLexicons(paths: string[]): LexiconDoc[] {
     }
   }
   return docs
+}
+
+function lexiconFilePaths(path: string): string[] {
+  if (!fs.existsSync(path)) return []
+
+  const stat = fs.statSync(path)
+  if (stat.isDirectory()) {
+    return fs
+      .readdirSync(path)
+      .flatMap((name) => lexiconFilePaths(join(path, name)))
+  }
+
+  if (path.endsWith('.json') && stat.isFile()) {
+    return [path]
+  }
+
+  return []
 }
 
 export function readLexicon(path: string): LexiconDoc {
@@ -126,7 +142,7 @@ function printZodError(node: ZodFormattedError<any>, path = ''): boolean {
       if (k === '_errors') {
         continue
       }
-      printZodError(node[k], `${path}/${k}`)
+      printZodError((node as any)[k], `${path}/${k}`)
     }
   }
   return false

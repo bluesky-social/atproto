@@ -1,7 +1,7 @@
-import { AtIdentifierString } from '@atproto/syntax'
+import type { AtIdentifierString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ActorAccount } from '../../../../account-manager/helpers/account.js'
-import { AppContext } from '../../../../context.js'
+import type { ActorAccount } from '../../../../account-manager/helpers/account.js'
+import type { AppContext } from '../../../../context.js'
 
 export const assertRepoAvailability = async (
   ctx: AppContext,

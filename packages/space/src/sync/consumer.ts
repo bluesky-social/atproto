@@ -1,13 +1,13 @@
-import { check, readCarStream } from '@atproto/common'
+import { type check, readCarStream } from '@atproto/common'
 import { decode } from '@atproto/lex-cbor'
-import { Cid, LexMap } from '@atproto/lex-data'
+import type { Cid, LexMap } from '@atproto/lex-data'
 import { RepoVerificationError } from '../error.js'
 import { RepoCommit, verifyCommit } from '../repo-commit.js'
 import {
-  CommitCtx,
-  RepoIndex,
-  SignedCommit,
-  SpaceRecord,
+  type CommitCtx,
+  type RepoIndex,
+  type SignedCommit,
+  type SpaceRecord,
   def,
 } from '../types.js'
 import { parseRecordPath } from '../util.js'

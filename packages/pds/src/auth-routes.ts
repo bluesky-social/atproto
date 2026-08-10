@@ -4,23 +4,22 @@ import {
   InvalidRequestError,
   SecondAuthenticationFactorRequiredError,
   UseDpopNonceError,
-  oauthMiddleware,
-  oauthProtectedResourceMetadataSchema,
-} from '@atproto/oauth-provider'
-import { AppContext } from './context.js'
-import { oauthLogger, reqSerializer } from './logger.js'
+} from '@atproto/oauth-provider/errors'
+import { oauthMiddleware } from '@atproto/oauth-provider/middleware'
+import { buildProtectedResourceMetadata } from '@atproto/oauth-provider/utils'
+import type { AppContext } from './context.js'
+import { oauthLogger } from './logger.js'
 
 export const createRouter = ({ oauthProvider, cfg }: AppContext): Router => {
   const router = Router()
 
-  const oauthProtectedResourceMetadata =
-    oauthProtectedResourceMetadataSchema.parse({
-      resource: cfg.service.publicUrl,
-      authorization_servers: [cfg.entryway?.url ?? cfg.service.publicUrl],
-      bearer_methods_supported: ['header'],
-      scopes_supported: [],
-      resource_documentation: 'https://atproto.com',
-    })
+  const oauthProtectedResourceMetadata = buildProtectedResourceMetadata({
+    resource: cfg.service.publicUrl,
+    authorization_servers: [cfg.entryway?.url ?? cfg.service.publicUrl],
+    bearer_methods_supported: ['header'],
+    scopes_supported: [],
+    resource_documentation: 'https://atproto.com',
+  })
 
   if (
     !cfg.service.devMode &&
@@ -41,7 +40,7 @@ export const createRouter = ({ oauthProvider, cfg }: AppContext): Router => {
       oauthMiddleware(oauthProvider, {
         onError: (req, res, err, msg) => {
           if (!ignoreError(err)) {
-            oauthLogger.error({ err, req: reqSerializer(req) }, msg)
+            oauthLogger.error({ err, req }, msg)
           }
         },
       }),

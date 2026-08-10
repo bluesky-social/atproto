@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { RgbColor, parseColor } from '../lib/util/color.js'
+import { type RgbColor, parseColor } from '../lib/util/color.js'
 
 export const rgbColorSchema = z.string().transform((value, ctx): RgbColor => {
   try {

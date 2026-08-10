@@ -1,8 +1,8 @@
-import { LexiconPermissionSet, LexiconSpace } from '@atproto/lex-document'
-import { LexResolver, LexResolverError } from '@atproto/lex-resolver'
-import { IncludeScope, Nsid, SpacePermission } from '@atproto/oauth-scopes'
+import type { LexiconPermissionSet, LexiconSpace } from '@atproto/lex-document'
+import { type LexResolver, LexResolverError } from '@atproto/lex-resolver'
+import { IncludeScope, type Nsid, SpacePermission } from '@atproto/oauth-scopes'
 import { LexiconGetter } from './lexicon-getter.js'
-import { LexiconStore } from './lexicon-store.js'
+import type { LexiconStore } from './lexicon-store.js'
 
 export * from './lexicon-store.js'
 

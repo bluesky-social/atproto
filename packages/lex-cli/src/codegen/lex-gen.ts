@@ -1,14 +1,14 @@
 import { relative as getRelativePath } from 'node:path/posix'
-import { JSDoc, SourceFile, VariableDeclarationKind } from 'ts-morph'
-import {
-  type LexArray,
-  type LexBlob,
-  type LexBytes,
-  type LexCidLink,
-  type LexIpldType,
-  type LexObject,
-  type LexPrimitive,
-  type LexToken,
+import { type JSDoc, type SourceFile, VariableDeclarationKind } from 'ts-morph'
+import type {
+  LexArray,
+  LexBlob,
+  LexBytes,
+  LexCidLink,
+  LexIpldType,
+  LexObject,
+  LexPrimitive,
+  LexToken,
   Lexicons,
 } from '@atproto/lexicon'
 import { toCamelCase, toScreamingSnakeCase, toTitleCase } from './util.js'

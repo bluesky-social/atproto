@@ -1,6 +1,7 @@
-import { Server } from '@atproto/xrpc-server'
+import { type DidString, isDidString } from '@atproto/lex'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { AuthScope, isAccessFull } from '../../../../auth-scope.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   bareDidFromProxyTo,
@@ -13,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
   if (!bskyAppView) return
 
   server.add(app.bsky.actor.getPreferences, {
-    auth: ctx.authVerifier.authorization({
+    auth: ctx.authVerifier.authorizationOrModService({
       additional: [AuthScope.Takendown],
       authorize: (permissions, { req }) => {
         const lxm = app.bsky.actor.getPreferences.$lxm
@@ -21,8 +22,11 @@ export default function (server: Server, ctx: AppContext) {
         permissions.assertRpc({ aud, lxm })
       },
     }),
-    handler: async ({ auth, req }) => {
-      const { did } = auth.credentials
+    handler: async ({ auth, req, params }) => {
+      const isModerator = auth.credentials.type === 'mod_service'
+      const did: DidString = isModerator
+        ? getAccountDidFromParams(params)
+        : auth.credentials.did
 
       // If the request has a proxy header different from the bsky app view,
       // we need to proxy the request to the requested app view.
@@ -30,6 +34,12 @@ export default function (server: Server, ctx: AppContext) {
       const lxm = app.bsky.actor.getPreferences.$lxm
       const aud = computeProxyTo(ctx, req, lxm)
       if (aud !== `${bskyAppView.did}#bsky_appview`) {
+        if (isModerator) {
+          throw new InvalidRequestError(
+            'Moderator requests cannot be proxied to other app views',
+          )
+        }
+
         // Phase 1 of service auth updates: outbound JWT keeps bare-DID aud.
         return pipethrough(ctx, req, {
           iss: did,
@@ -39,13 +49,12 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const hasAccessFull =
-        auth.credentials.type === 'access' &&
-        isAccessFull(auth.credentials.scope)
+        isModerator ||
+        (auth.credentials.type === 'access' &&
+          isAccessFull(auth.credentials.scope))
 
       const preferences = await ctx.actorStore.read(did, (store) => {
-        return store.pref.getPreferences('app.bsky', {
-          hasAccessFull,
-        })
+        return store.pref.getPreferences('app.bsky', { hasAccessFull })
       })
 
       return {
@@ -54,4 +63,10 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+function getAccountDidFromParams(params: Record<string, unknown>): DidString {
+  // @NOTE undocumented parameters used only internally by mod service
+  if (isDidString(params.did)) return params.did
+  throw new InvalidRequestError('Invalid or missing did parameter')
 }

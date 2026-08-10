@@ -1,6 +1,6 @@
-import { UriString } from '@atproto/syntax'
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { UriString } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE

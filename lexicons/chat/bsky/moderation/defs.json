@@ -61,8 +61,8 @@
         "name": {
           "type": "string",
           "description": "The display name of the group conversation.",
-          "maxGraphemes": 128,
-          "maxLength": 1280
+          "maxGraphemes": 50,
+          "maxLength": 500
         }
       }
     }

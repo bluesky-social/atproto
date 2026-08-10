@@ -1,8 +1,8 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { clsx } from 'clsx'
-import { JSX } from 'react'
+import type { JSX } from 'react'
 import { isValidHandle } from '@atproto/syntax'
-import { Override } from '#/lib/util.ts'
+import type { Override } from '#/lib/util.ts'
 
 export function isInvalidHandle(handle: string): boolean {
   return handle === 'handle.invalid' || !isValidHandle(handle)

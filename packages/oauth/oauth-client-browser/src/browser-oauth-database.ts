@@ -1,15 +1,15 @@
-import { DidDocument } from '@atproto/did'
-import { Key } from '@atproto/jwk'
+import type { DidDocument } from '@atproto/did'
+import type { Key } from '@atproto/jwk'
 import { WebcryptoKey } from '@atproto/jwk-webcrypto'
-import { InternalStateData, Session } from '@atproto/oauth-client'
-import {
+import type { InternalStateData, Session } from '@atproto/oauth-client'
+import type {
   OAuthAuthorizationServerMetadata,
   OAuthProtectedResourceMetadata,
 } from '@atproto/oauth-types'
-import { ResolvedHandle } from '@atproto-labs/handle-resolver'
-import { SimpleStore, Value } from '@atproto-labs/simple-store'
-import { DB, DBObjectStore } from './indexed-db/index.js'
-import { TupleUnion } from './util.js'
+import type { ResolvedHandle } from '@atproto-labs/handle-resolver'
+import type { SimpleStore, Value } from '@atproto-labs/simple-store'
+import { DB, type DBObjectStore } from './indexed-db/index.js'
+import type { TupleUnion } from './util.js'
 
 type Item<V> = {
   value: V
@@ -202,8 +202,7 @@ export class BrowserOAuthDatabase {
   }
 
   getAuthorizationServerMetadataCache():
-    | undefined
-    | DatabaseStore<OAuthAuthorizationServerMetadata> {
+    undefined | DatabaseStore<OAuthAuthorizationServerMetadata> {
     return this.createStore('authorizationServerMetadataCache', {
       expiresAt: (_value) => new Date(Date.now() + 60e3),
       encode: (value) => value,
@@ -212,8 +211,7 @@ export class BrowserOAuthDatabase {
   }
 
   getProtectedResourceMetadataCache():
-    | undefined
-    | DatabaseStore<OAuthProtectedResourceMetadata | null> {
+    undefined | DatabaseStore<OAuthProtectedResourceMetadata | null> {
     return this.createStore('protectedResourceMetadataCache', {
       expiresAt: (_value) => new Date(Date.now() + 60e3),
       encode: (value) => value,
@@ -246,6 +244,6 @@ export class BrowserOAuthDatabase {
 
     // Spec recommends not to throw errors in dispose
     const db = await dbPromise.catch(() => null)
-    if (db) await (db[Symbol.asyncDispose] || db[Symbol.dispose]).call(db)
+    if (db) await db[Symbol.asyncDispose]()
   }
 }

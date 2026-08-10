@@ -1,9 +1,8 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { JSX, useMemo, useState } from 'react'
-import { Override } from '#/lib/util.ts'
+import { type JSX, useMemo, useState } from 'react'
+import type { Override } from '#/lib/util.ts'
 import { CodeSnippet } from '../utils/code-snippet.tsx'
 import { LinkExternal } from '../utils/link-external.tsx'
-import { FormField } from './form-field.tsx'
 import { InputRadioGroup } from './input-radio-group.tsx'
 
 enum VerificationMethod {
@@ -113,7 +112,10 @@ Thank you.`
 
   return (
     <div {...props}>
-      <FormField label={t`Verification method`}>
+      <fieldset>
+        <legend className="text-muted-foreground mb-1.5 text-sm font-medium">
+          {t`Verification method`}
+        </legend>
         <InputRadioGroup
           maxColumns={1}
           value={currentInstructions.method}
@@ -126,7 +128,7 @@ Thank you.`
             }),
           )}
         />
-      </FormField>
+      </fieldset>
 
       <p className="my-2">{currentInstructions.message}</p>
 
@@ -139,20 +141,20 @@ Thank you.`
       <p className="my-2 flex flex-row flex-wrap gap-3">
         <LinkExternal
           href={tutorialHref}
-          className="text-blue-600 hover:underline"
+          className="text-foreground hover:underline"
         >
           <Trans>Help</Trans>
         </LinkExternal>
         <LinkExternal
           href={troubleshootHref}
-          className="text-blue-600 hover:underline"
+          className="text-foreground hover:underline"
         >
           <Trans>Troubleshoot</Trans>
         </LinkExternal>
         <LinkExternal
           href={mailtoHref}
           noUtm
-          className="text-blue-600 hover:underline"
+          className="text-foreground hover:underline"
         >
           <Trans>Email these instructions</Trans>
         </LinkExternal>

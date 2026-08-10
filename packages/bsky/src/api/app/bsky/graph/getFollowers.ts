@@ -1,22 +1,22 @@
 import { mapDefined } from '@atproto/common'
-import { AtUriString, DidString } from '@atproto/syntax'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { AtUriString, DidString } from '@atproto/syntax'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import {
-  HydrateCtx,
-  Hydrator,
+  type HydrateCtx,
+  type Hydrator,
   mergeStates,
 } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
-  HydrationFnInput,
-  PresentationFnInput,
-  RulesFnInput,
-  SkeletonFnInput,
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type RulesFnInput,
+  type SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline.js'
 import { uriToDid as didFromUri } from '../../../../util/uris.js'
-import { Views } from '../../../../views/index.js'
+import type { Views } from '../../../../views/index.js'
 import { clearlyBadCursor, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -40,15 +40,40 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const result = await getFollowers({ ...params, hydrateCtx }, ctx)
+      const followers = result.followers
+      let cursor = result.cursor
+      for (
+        let fetches = 1;
+        fetches < MAX_PAGE_FILL_FETCHES &&
+        cursor &&
+        followers.length < params.limit;
+        fetches++
+      ) {
+        const previousCursor = cursor
+        const page = await getFollowers(
+          {
+            ...params,
+            cursor,
+            limit: params.limit - followers.length,
+            hydrateCtx,
+          },
+          ctx,
+        )
+        followers.push(...page.followers)
+        cursor = page.cursor
+        if (cursor === previousCursor) break
+      }
 
       return {
         encoding: 'application/json',
-        body: result,
+        body: { ...result, followers, cursor },
         headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
 }
+
+const MAX_PAGE_FILL_FETCHES = 10
 
 const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
@@ -65,6 +90,7 @@ const skeleton = async (
     did: subjectDid,
     cursor: params.cursor,
     limit: params.limit,
+    sort: params.sort,
   })
   return {
     subjectDid,

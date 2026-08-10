@@ -2,14 +2,14 @@ import { Code, ConnectError } from '@connectrpc/connect'
 import getPort from 'get-port'
 import { wait } from '@atproto/common'
 import {
-  BsyncClient,
+  type BsyncClient,
   BsyncService,
-  Database,
+  type Database,
   authWithApiKey,
   createClient,
   envToCfg,
 } from '../src/index.js'
-import { NotifOperation } from '../src/proto/bsync_pb.js'
+import type { NotifOperation } from '../src/proto/bsync_pb.js'
 
 describe('notifications', () => {
   let bsync: BsyncService

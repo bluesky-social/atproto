@@ -1,8 +1,8 @@
 import { langLogger as log } from '../logger.js'
-import { ModerationService } from '../mod-service/index.js'
-import { ModSubject } from '../mod-service/subject.js'
-import { ModerationSubjectStatusRow } from '../mod-service/types.js'
-import { ContentTagger } from './content-tagger.js'
+import type { ModerationService } from '../mod-service/index.js'
+import type { ModSubject } from '../mod-service/subject.js'
+import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
+import type { ContentTagger } from './content-tagger.js'
 import { EmbedTagger } from './embed-tagger.js'
 import { LanguageTagger } from './language-tagger.js'
 
@@ -27,22 +27,27 @@ export class TagService {
     try {
       const tags = new Set(initialTags)
 
-      await Promise.all(
+      // Collect tagger results and add them in declared tagger order, so that
+      // the resulting tag order does not depend on which tagger resolves first
+      const taggerResults = await Promise.all(
         this.taggers.map(async (tagger) => {
           try {
-            const newTags = await tagger.getTags()
-            for (const newTag of newTags) {
-              tags.add(newTag)
-            }
+            return await tagger.getTags()
           } catch (e) {
             // Don't let one tagger error stop the rest from running
             log.error(
               { subject: this.subject, err: e },
               'Error applying tagger',
             )
+            return []
           }
         }),
       )
+      for (const newTags of taggerResults) {
+        for (const newTag of newTags) {
+          tags.add(newTag)
+        }
+      }
 
       // Ensure that before inserting new tags, we discard any tag that may
       // have been evaluated to be added but is already present in the subject

@@ -1,4 +1,4 @@
-import { GeneratedAlways } from 'kysely'
+import type { GeneratedAlways } from 'kysely'
 
 export const tableName = 'list_item'
 

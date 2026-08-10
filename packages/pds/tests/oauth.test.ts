@@ -1,15 +1,15 @@
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
+import { type Server, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { jest } from '@jest/globals'
 import { type Browser, launch } from 'puppeteer'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { oauthClientAssetsMiddleware } from './_oauth_client_assets_middleware.js'
+import { TestNetwork } from '@atproto/dev-env'
+import { middleware as oauthClientAssetsMiddleware } from '@atproto/oauth-client-browser-example/server'
 import { PageHelper } from './_puppeteer.js'
 
 describe('oauth', () => {
   let browser: Browser
-  let network: TestNetworkNoAppView
+  let network: TestNetwork
   let server: Server
 
   let appUrl: string
@@ -28,7 +28,7 @@ describe('oauth', () => {
       // slowMo: 25,
     })
 
-    network = await TestNetworkNoAppView.create({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'oauth',
     })
 
@@ -46,13 +46,20 @@ describe('oauth', () => {
 
     const { port } = server.address() as AddressInfo
 
-    appUrl = `http://127.0.0.1:${port}?${new URLSearchParams({
+    const appConfig: Record<string, string | undefined> = {
+      bsky_api_did: network.bsky.serverDid,
       plc_directory_url: network.plc.url,
+      pds_operator_url: network.pds.url,
       handle_resolver: network.pds.url,
-      sign_up_url: network.pds.url,
       env: 'test',
       scope: `account:email identity:* repo:*`,
-    })}`
+    }
+
+    appUrl = `http://127.0.0.1:${port}?${new URLSearchParams(
+      Object.entries(appConfig).filter(
+        (e): e is [string, string] => e[1] != null,
+      ),
+    )}`
   })
 
   afterAll(async () => {
@@ -69,7 +76,9 @@ describe('oauth', () => {
 
     await page.assertTitle('OAuth Client Example')
 
-    await page.navigationClick(`Sign up with ${new URL(network.pds.url).host}`)
+    await page.navigationClick(`Login with ${new URL(network.pds.url).host}`)
+
+    await page.clickOnText('Créer un nouveau compte')
 
     await page.assertTitle('Inscription')
 
@@ -125,7 +134,7 @@ describe('oauth', () => {
   })
 
   it('allows resetting the password', async () => {
-    const sendTemplateMock = jest
+    using sendTemplateMock = jest
       .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
       .mockImplementation(async () => {
         // noop
@@ -173,6 +182,54 @@ describe('oauth', () => {
     await page.assertTitle('Mot de passe mis à jour')
 
     await page.ensureTextVisibility('Mot de passe mis à jour !', 'h2')
+  })
+
+  it('restores the reset-password step after a page refresh', async () => {
+    const sendTemplateMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
+      .mockImplementation(async () => {
+        // noop
+      })
+
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(appUrl)
+
+    await page.assertTitle('OAuth Client Example')
+
+    const input = await page.typeInInput('identifier', 'alice.test')
+
+    await page.navigationAction(async () => input.press('Enter'))
+
+    await page.assertTitle('Connexion')
+
+    await page.clickOnText('Oublié ?')
+
+    await page.assertTitle('Mot de passe oublié')
+
+    await page.typeInInput('email', 'alice@test.com')
+
+    await page.clickOnText('Suivant')
+
+    await page.assertTitle('Réinitialiser le mot de passe')
+
+    // Refreshing the page must bring the user back to the "confirm" step
+    // (the reset code was already emailed), not the initial sign-in view.
+    await page.reload()
+
+    await page.assertTitle('Réinitialiser le mot de passe')
+
+    const [params] = sendTemplateMock.mock.lastCall!
+
+    await page.typeInInput('code', params.token)
+
+    // Keep the same password as the previous test so later tests
+    // (which sign in with 'alice-new-pass') are unaffected.
+    await page.typeInInput('password', 'alice-new-pass')
+
+    await page.clickOnText('Suivant')
+
+    await page.assertTitle('Mot de passe mis à jour')
 
     sendTemplateMock.mockRestore()
   })

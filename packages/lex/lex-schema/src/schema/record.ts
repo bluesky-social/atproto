@@ -1,16 +1,17 @@
-import { LexMap } from '@atproto/lex-data'
+import type { LexMap } from '@atproto/lex-data'
 import {
-  $Typed,
+  type $Typed,
   $typed,
-  InferInput,
-  InferOutput,
-  LexiconRecordKey,
-  NsidString,
-  RecordKeyValue,
+  type InferInput,
+  type InferOutput,
+  type LexiconRecordKey,
+  type NsidString,
+  type RecordKeyValue,
   Schema,
-  Unknown$TypedObject,
-  ValidationContext,
-  Validator,
+  type Unknown$TypedObject,
+  type ValidationContext,
+  type ValidationResult,
+  type Validator,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 import { literal } from './literal.js'
@@ -73,7 +74,10 @@ export class RecordSchema<
     this.keySchema = recordKey(key)
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<InferInput<TShape>> {
     const result = ctx.validate(input, this.schema)
 
     if (!result.success) {

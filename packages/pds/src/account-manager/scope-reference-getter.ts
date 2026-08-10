@@ -1,9 +1,14 @@
-import { Redis } from 'ioredis'
+import type { Redis } from 'ioredis'
 import { DAY, backoffMs, retry } from '@atproto/common'
-import { Client, XrpcError } from '@atproto/lex'
-import { InvalidTokenError, OAuthScope } from '@atproto/oauth-provider'
+import { type Client, XrpcError } from '@atproto/lex'
+import { InvalidTokenError } from '@atproto/oauth-provider/errors'
+import type { OAuthScope } from '@atproto/oauth-provider/store'
 import { UpstreamFailureError } from '@atproto/xrpc-server'
-import { CachedGetter, GetterOptions } from '@atproto-labs/simple-store'
+import {
+  CachedGetter,
+  type GetterOptions,
+  swallowStoreErrors,
+} from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { SimpleStoreRedis } from '@atproto-labs/simple-store-redis'
 import { com } from '../lexicons.js'
@@ -36,17 +41,29 @@ export class ScopeReferenceGetter extends CachedGetter<
             err.shouldRetry(),
         })
       },
-      redis
-        ? new SimpleStoreRedis(redis, {
-            // tradeoff between wasted memory usage (by no longer used scopes)
-            // and amount of requests to entryway:
-            ttl: 1 * DAY,
+      // The store (redis or memory) acts as a cache in front of entryway.
+      // A store failure should degrade to a cache miss (and a refetch from
+      // entryway) rather than break token verification, so we swallow the
+      // error and log it instead of propagating it.
+      swallowStoreErrors(
+        redis
+          ? new SimpleStoreRedis(redis, {
+              // tradeoff between wasted memory usage (by no longer used scopes)
+              // and amount of requests to entryway:
+              ttl: 1 * DAY,
 
-            keyPrefix: `auth-scope-${PREFIX}`,
-            encode: identity,
-            decode: identity,
-          })
-        : new SimpleStoreMemory({ max: 1000 }),
+              keyPrefix: `auth-scope-${PREFIX}`,
+              encode: identity,
+              decode: identity,
+            })
+          : new SimpleStoreMemory({ max: 1000 }),
+        (err, operation, key) => {
+          oauthLogger.error(
+            { err, operation, ref: key },
+            'Scope reference cache error',
+          )
+        },
+      ),
     )
   }
 

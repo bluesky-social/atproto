@@ -1,4 +1,4 @@
-import { HtmlValue } from './escapers.js'
+import type { HtmlValue } from './escapers.js'
 import { Html } from './html.js'
 import { html } from './tags.js'
 
@@ -45,8 +45,7 @@ export type LinkAttrs = Attrs & {
   rel: LinkRel
 }
 export type MetaAttrs =
-  | { name: string; content: string }
-  | { 'http-equiv': string; content: string }
+  { name: string; content: string } | { 'http-equiv': string; content: string }
 
 const defaultViewport = html`<meta
   name="viewport"

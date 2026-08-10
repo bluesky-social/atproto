@@ -1,4 +1,8 @@
-import { Schema, ValidationContext } from '../core.js'
+import {
+  Schema,
+  type ValidationContext,
+  type ValidationResult,
+} from '../core.js'
 
 /**
  * Schema for validating strings against a regular expression pattern.
@@ -27,7 +31,10 @@ export class RegexpSchema<
     super()
   }
 
-  validateInContext(input: unknown, ctx: ValidationContext) {
+  validateInContext(
+    input: unknown,
+    ctx: ValidationContext,
+  ): ValidationResult<TValue> {
     if (typeof input !== 'string') {
       return ctx.issueUnexpectedType(input, 'string')
     }

@@ -1,38 +1,45 @@
 import { Trans } from '@lingui/react/macro'
-import { FormField } from '#/components/forms/form-field'
-import { InputToken } from '#/components/forms/input-token.tsx'
-import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
+import { TokenField } from '#/components/forms/fields/token-field.tsx'
+import {
+  FormShell,
+  type FormShellProps,
+} from '#/components/forms/form-shell.tsx'
 
 export type VerifyEmailConfirmData = { token: string }
 
-export type VerifyEmailConfirmFormProps =
-  WrappedSmartFormProps<VerifyEmailConfirmData> & {
-    onResend?: () => void | PromiseLike<void>
-  }
+type Values = { code: string }
+
+export type VerifyEmailConfirmFormProps = Omit<
+  FormShellProps<Values>,
+  'onSubmit'
+> & {
+  onResend?: () => void | PromiseLike<void>
+  handler: (
+    data: VerifyEmailConfirmData,
+    signal: AbortSignal,
+  ) => void | PromiseLike<void>
+}
 
 export function VerifyEmailConfirmForm({
   onResend,
+  handler,
   ...props
 }: VerifyEmailConfirmFormProps) {
   return (
-    <SmartForm
+    <FormShell<Values>
       {...props}
-      validate={({ token }) => {
-        if (token) return { token }
-      }}
-      fields={({ set, values }) => (
-        <FormField label={<Trans>Verification code</Trans>}>
-          <InputToken
-            name="code"
-            enterKeyHint="done"
-            required
-            autoFocus={true}
-            defaultValue={values.token}
-            onToken={(value) => set('token', value ?? undefined)}
-            onResend={onResend}
-          />
-        </FormField>
-      )}
-    />
+      // The API field is `token`; the form field stays `code` so the rendered
+      // input keeps its contracted name.
+      onSubmit={(values, signal) => handler({ token: values.code }, signal)}
+    >
+      <TokenField
+        name="code"
+        label={<Trans>Verification code</Trans>}
+        enterKeyHint="done"
+        required
+        autoFocus
+        onResend={onResend}
+      />
+    </FormShell>
   )
 }

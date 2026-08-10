@@ -1,16 +1,15 @@
-import { Redis } from 'ioredis'
+import type { Redis } from 'ioredis'
 import { createLocalJWKSet, jwtVerify } from 'jose'
 import { HOUR } from '@atproto/common'
+import { jwksPubSchema } from '@atproto/jwk'
 import {
-  Fetch,
-  OAuthClientMetadata,
-  bindFetch,
-  jwksPubSchema,
+  type OAuthClientMetadata,
   oauthClientMetadataSchema,
-} from '@atproto/oauth-provider'
+} from '@atproto/oauth-types'
 import { SPACE_TOKEN_TYPES, parseSpaceToken } from '@atproto/space'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { CachedGetter, GetterOptions } from '@atproto-labs/simple-store'
+import { type Fetch, bindFetch } from '@atproto-labs/fetch'
+import { CachedGetter, type GetterOptions } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { SimpleStoreRedis } from '@atproto-labs/simple-store-redis'
 

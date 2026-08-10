@@ -1,15 +1,15 @@
-import { IdResolver } from '@atproto/identity'
+import type { IdResolver } from '@atproto/identity'
 import { xrpc } from '@atproto/lex'
-import { DidString, SpaceRefString } from '@atproto/syntax'
+import type { DidString, SpaceRefString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ActorStore } from '../actor-store/actor-store.js'
-import { SimplespaceConfig } from '../actor-store/db/index.js'
-import { SpaceConfig } from '../actor-store/space/transactor.js'
+import type { ActorStore } from '../actor-store/actor-store.js'
+import type { SimplespaceConfig } from '../actor-store/db/index.js'
+import type { SpaceConfig } from '../actor-store/space/transactor.js'
 import {
   resolveNotifyTarget,
   toSpaceRef,
 } from '../api/com/atproto/space/util.js'
-import { BackgroundQueue } from '../background.js'
+import type { BackgroundQueue } from '../background.js'
 import { com } from '../lexicons/index.js'
 import { spaceLogger } from '../logger.js'
 import { lexAppAccessToDb, lexPolicyToDb, toLexConfig } from './config.js'

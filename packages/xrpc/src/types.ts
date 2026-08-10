@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ValidationError } from '@atproto/lexicon'
+import type { ValidationError } from '@atproto/lexicon'
 
 export type QueryParams = Record<string, any>
 export type HeadersMap = Record<string, string | undefined>
@@ -150,7 +150,7 @@ export class XRPCError extends Error {
     const status: ResponseType =
       typeof statusCode === 'number'
         ? httpResponseCodeToEnum(statusCode)
-        : fallbackStatus ?? ResponseType.Unknown
+        : (fallbackStatus ?? ResponseType.Unknown)
 
     const message = causeErr?.message ?? String(cause)
 

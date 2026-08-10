@@ -1,12 +1,12 @@
 import { Trans } from '@lingui/react/macro'
-import { ReactNode, useState } from 'react'
-import { SmartForm } from '#/components/forms/smart-form.tsx'
-import { Admonition } from '#/components/utils/admonition.tsx'
-import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
+import { type ReactElement, useState } from 'react'
+import { ConfirmForm } from '#/components/dialogs/confirm-form.tsx'
+import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
+import { Notice } from '#/components/feedback/notice.tsx'
 
 export type ReactivateAccountDialogProps = {
   onConfirm: () => void | PromiseLike<void>
-  children: Exclude<ReactNode, false | null | undefined>
+  children: ReactElement
 }
 
 export function ReactivateAccountDialog({
@@ -17,7 +17,7 @@ export function ReactivateAccountDialog({
   const [submitting, setSubmitting] = useState(false)
 
   return (
-    <DialogSimple
+    <DialogShell
       trigger={children}
       title={<Trans>Reactivate account</Trans>}
       description={
@@ -31,24 +31,22 @@ export function ReactivateAccountDialog({
       onOpenChange={setOpen}
       dismissable={!submitting}
     >
-      <SmartForm
-        submitColor="primary"
+      <ConfirmForm
+        submitVariant="default"
         submitLabel={<Trans>Reactivate</Trans>}
         onCancel={() => setOpen(false)}
         onLoadingChange={setSubmitting}
-        validate={() => ({})}
         handler={async () => {
           await onConfirm()
           setOpen(false)
         }}
-        fields={() => (
-          <Admonition role="note" className="text-sm">
-            <Trans>
-              You can deactivate your account again at any time from this page.
-            </Trans>
-          </Admonition>
-        )}
-      />
-    </DialogSimple>
+      >
+        <Notice role="note" className="text-sm">
+          <Trans>
+            You can deactivate your account again at any time from this page.
+          </Trans>
+        </Notice>
+      </ConfirmForm>
+    </DialogShell>
   )
 }

@@ -1,42 +1,44 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { FormField } from '#/components/forms/form-field'
-import { InputEmailAddress } from '#/components/forms/input-email-address.tsx'
-import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
+import { EmailField } from '#/components/forms/fields/email-field.tsx'
+import {
+  FormShell,
+  type FormShellProps,
+} from '#/components/forms/form-shell.tsx'
 
 export type ResetPasswordRequestData = { email: string }
 
-export type ResetPasswordRequestFormProps =
-  WrappedSmartFormProps<ResetPasswordRequestData> & {
-    emailDefault?: string
-  }
+export type ResetPasswordRequestFormProps = Omit<
+  FormShellProps<ResetPasswordRequestData>,
+  'onSubmit'
+> & {
+  emailDefault?: string
+  handler: (
+    data: ResetPasswordRequestData,
+    signal: AbortSignal,
+  ) => void | PromiseLike<void>
+}
 
 export function ResetPasswordRequestForm({
   emailDefault,
-
-  // SmartFormProps
+  handler,
   ...props
 }: ResetPasswordRequestFormProps) {
   const { t } = useLingui()
 
   return (
-    <SmartForm
+    <FormShell<ResetPasswordRequestData>
       {...props}
-      validate={({ email }) => {
-        if (email) return { email }
-      }}
-      fields={({ values, setterFor }) => (
-        <FormField label={<Trans>Email address</Trans>}>
-          <InputEmailAddress
-            name="email"
-            placeholder={t`Enter your email address`}
-            title={t`Email address`}
-            required
-            autoFocus={true}
-            defaultValue={values.email}
-            onEmail={setterFor('email')}
-          />
-        </FormField>
-      )}
-    />
+      onSubmit={(values, signal) => handler({ email: values.email }, signal)}
+    >
+      <EmailField
+        name="email"
+        required
+        defaultValue={emailDefault ?? ''}
+        label={<Trans>Email address</Trans>}
+        placeholder={t`Enter your email address`}
+        title={t`Email address`}
+        autoFocus
+      />
+    </FormShell>
   )
 }

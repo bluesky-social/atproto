@@ -1,24 +1,24 @@
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
+import { type Server, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
-import { HttpTerminator, createHttpTerminator } from 'http-terminator'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import {
   EXAMPLE_LABELER,
   SeedClient,
-  TestNetworkNoAppView,
-  TestPds,
+  type TestNetworkNoAppView,
+  type TestPds,
 } from '@atproto/dev-env'
-import { Client, DidString } from '@atproto/lex'
-import { LexMap, parseCid } from '@atproto/lex-data'
-import { JoseKey } from '@atproto/oauth-provider'
+import { Client, type DidString } from '@atproto/lex'
+import { type LexMap, parseCid } from '@atproto/lex-data'
+import { JoseKey } from '@atproto/oauth-provider/provider'
 import { RepoCommit, createDpopProof, dpopJktForKey } from '@atproto/space'
 import {
-  NsidString,
-  RecordKeyString,
+  type NsidString,
+  type RecordKeyString,
   SpaceRef,
-  SpaceRefString,
+  type SpaceRefString,
 } from '@atproto/syntax'
 import { ClientAttestationVerifier } from '../src/client-attestation-verifier.js'
 import { com } from '../src/lexicons/index.js'
@@ -449,7 +449,6 @@ export class MockService {
     public url: string,
     public did: DidString,
     public serviceId: string,
-    private responder: () => { status: number; body: unknown },
   ) {
     this.terminator = createHttpTerminator({ server })
   }
@@ -520,7 +519,6 @@ export class MockService {
       url,
       did as DidString,
       opts.serviceId,
-      respond,
     )
     service.calls = calls
     return service

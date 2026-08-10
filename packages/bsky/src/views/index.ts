@@ -1,36 +1,40 @@
 import { HOUR, MINUTE, dedupeStrs, mapDefined } from '@atproto/common'
 import {
-  $Typed,
-  Un$Typed,
-  Unknown$TypedObject,
-  UriString,
+  type $Typed,
+  type Un$Typed,
+  type Unknown$TypedObject,
+  type UriString,
   atUri,
   getBlobCidString,
 } from '@atproto/lex'
 import {
   AtUri,
-  AtUriString,
-  DatetimeString,
-  DidString,
+  type AtUriString,
+  type DatetimeString,
+  type DidString,
   INVALID_HANDLE,
   normalizeDatetimeAlways,
 } from '@atproto/syntax'
-import { Actor, ProfileViewerState } from '../hydration/actor.js'
+import type { Actor, ProfileViewerState } from '../hydration/actor.js'
 import {
-  AssociatedSiteStandardRecord,
-  SiteStandardDocument,
-  SiteStandardPublication,
+  type AssociatedSiteStandardRecord,
+  type SiteStandardDocument,
+  type SiteStandardPublication,
   getSiteStandardRecordsFromHydrationMapsByRefs,
 } from '../hydration/external.js'
-import { FeedItem, Like, Post, Repost } from '../hydration/feed.js'
-import { Follow, Verification } from '../hydration/graph.js'
-import { HydrationState } from '../hydration/hydrator.js'
-import { Label } from '../hydration/label.js'
-import { RecordInfo, parseString } from '../hydration/util.js'
-import { ImageUriBuilder } from '../image/uri.js'
+import type { FeedItem, Like, Post, Repost } from '../hydration/feed.js'
+import type { Follow, Verification } from '../hydration/graph.js'
+import type { HydrationState } from '../hydration/hydrator.js'
+import type { Label } from '../hydration/label.js'
+import {
+  type RecordInfo,
+  getStarterPackUriFromFollow,
+  parseString,
+} from '../hydration/util.js'
+import type { ImageUriBuilder } from '../image/uri.js'
 import { app, site } from '../lexicons/index.js'
 import { viewsLogger } from '../logger.js'
-import { Notification } from '../proto/bsky_pb.js'
+import type { Notification } from '../proto/bsky_pb.js'
 import {
   estimateReadingTimeMinutes,
   validateStandardSiteForUrl,
@@ -43,82 +47,82 @@ import {
   uriToDid as creatorFromUri,
 } from '../util/uris.js'
 import {
-  ThreadItemValueBlocked,
-  ThreadItemValueNoUnauthenticated,
-  ThreadItemValueNotFound,
-  ThreadItemValuePost,
-  ThreadOtherAnchorPostNode,
-  ThreadOtherItemValuePost,
-  ThreadOtherPostNode,
-  ThreadTree,
-  ThreadTreeVisible,
+  type ThreadItemValueBlocked,
+  type ThreadItemValueNoUnauthenticated,
+  type ThreadItemValueNotFound,
+  type ThreadItemValuePost,
+  type ThreadOtherAnchorPostNode,
+  type ThreadOtherItemValuePost,
+  type ThreadOtherPostNode,
+  type ThreadTree,
+  type ThreadTreeVisible,
   sortTrimFlattenThreadTree,
 } from './threads-v2.js'
 import {
-  ActivitySubscription,
-  BlockedPost,
-  BookmarkView,
-  Embed,
-  EmbedView,
-  ExternalEmbed,
-  ExternalEmbedColorRgb,
-  ExternalEmbedSourceThemeView,
-  ExternalEmbedSourceView,
-  ExternalEmbedView,
-  FeedViewPost,
-  FollowRecord,
-  GalleryEmbed,
-  GalleryEmbedView,
-  GalleryImageEmbed,
-  GalleryImageEmbedView,
-  GeneratorView,
-  GetPostThreadV2QueryParams,
-  ImagesEmbed,
-  ImagesEmbedView,
-  KnownFollowers,
-  LabelerRecord,
-  LabelerView,
-  LabelerViewDetailed,
-  LikeRecord,
-  ListItemView,
-  ListView,
-  ListViewBasic,
-  MaybePostView,
-  NotFoundPost,
-  NotificationRecordDeleted,
-  NotificationView,
-  PostEmbedView,
-  PostRecord,
-  PostView,
-  ProfileAssociatedActivitySubscription,
-  ProfileAssociatedChat,
-  ProfileRecord,
-  ProfileView,
-  ProfileViewBasic,
-  ProfileViewDetailed,
-  ProfileViewer,
-  ReasonPin,
-  ReasonRepost,
-  RecordEmbed,
-  RecordEmbedView,
-  RecordEmbedViewInternal,
-  RecordWithMedia,
-  RecordWithMediaView,
-  ReplyRef,
-  RepostRecord,
-  SiteStandardPublicationRecord,
-  StarterPackView,
-  StarterPackViewBasic,
-  StatusView,
-  ThreadItem,
-  ThreadOtherItem,
-  ThreadViewPost,
-  ThreadgateView,
-  VerificationRecord,
-  VerificationState,
-  VerificationView,
-  VideoEmbed,
-  VideoEmbedView,
+  type ActivitySubscription,
+  type BlockedPost,
+  type BookmarkView,
+  type Embed,
+  type EmbedView,
+  type ExternalEmbed,
+  type ExternalEmbedColorRgb,
+  type ExternalEmbedSourceThemeView,
+  type ExternalEmbedSourceView,
+  type ExternalEmbedView,
+  type FeedViewPost,
+  type FollowRecord,
+  type GalleryEmbed,
+  type GalleryEmbedView,
+  type GalleryImageEmbed,
+  type GalleryImageEmbedView,
+  type GeneratorView,
+  type GetPostThreadV2QueryParams,
+  type ImagesEmbed,
+  type ImagesEmbedView,
+  type KnownFollowers,
+  type LabelerRecord,
+  type LabelerView,
+  type LabelerViewDetailed,
+  type LikeRecord,
+  type ListItemView,
+  type ListView,
+  type ListViewBasic,
+  type MaybePostView,
+  type NotFoundPost,
+  type NotificationRecordDeleted,
+  type NotificationView,
+  type PostEmbedView,
+  type PostRecord,
+  type PostView,
+  type ProfileAssociatedActivitySubscription,
+  type ProfileAssociatedChat,
+  type ProfileRecord,
+  type ProfileView,
+  type ProfileViewBasic,
+  type ProfileViewDetailed,
+  type ProfileViewer,
+  type ReasonPin,
+  type ReasonRepost,
+  type RecordEmbed,
+  type RecordEmbedView,
+  type RecordEmbedViewInternal,
+  type RecordWithMedia,
+  type RecordWithMediaView,
+  type ReplyRef,
+  type RepostRecord,
+  type SiteStandardPublicationRecord,
+  type StarterPackView,
+  type StarterPackViewBasic,
+  type StatusView,
+  type ThreadItem,
+  type ThreadOtherItem,
+  type ThreadViewPost,
+  type ThreadgateView,
+  type VerificationRecord,
+  type VerificationState,
+  type VerificationView,
+  type VideoEmbed,
+  type VideoEmbedView,
   isExternalEmbedType,
   isGalleryEmbedType,
   isGalleryImageEmbedType,
@@ -133,7 +137,7 @@ import {
   isSelfLabelsType,
   isVideoEmbedType,
 } from './types.js'
-import { VideoUriBuilder, parsePostgate, parseThreadGate } from './util.js'
+import { type VideoUriBuilder, parsePostgate, parseThreadGate } from './util.js'
 
 const notificationDeletedRecord =
   app.bsky.notification.defs.recordDeleted.$build({})
@@ -213,6 +217,18 @@ export class Views {
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return false
     return !!(viewer.muted || this.mutedByList(viewer, state))
+  }
+
+  viewerRepostMuteExists(did: DidString, state: HydrationState): boolean {
+    const viewer = state.profileViewers?.get(did)
+    if (!viewer) return false
+    return !!viewer.mutedOnlyReposts
+  }
+
+  viewerQuotepostMuteExists(did: DidString, state: HydrationState): boolean {
+    const viewer = state.profileViewers?.get(did)
+    if (!viewer) return false
+    return !!viewer.mutedOnlyQuoteposts
   }
 
   blockingByList(
@@ -452,8 +468,16 @@ export class Views {
     const blockingUri = viewer.blocking || blockingByList
     const block = !!blockedByUri || !!blockingUri
     const mutedByList = this.mutedByList(viewer, state)
+    // scoped mute flags are exclusive with muted: when the account is fully
+    // muted (directly or via a mutelist), suppress them so a scoped direct
+    // mute underneath a list mute doesn't surface both as true.
+    const muted = !!(viewer.muted || mutedByList)
     return {
-      muted: !!(viewer.muted || mutedByList),
+      muted,
+      // when muted is true, these are suppressed to avoid confusion
+      mutedOnlyReposts: !muted && !!viewer.mutedOnlyReposts,
+      // when muted is true, these are suppressed to avoid confusion
+      mutedOnlyQuoteposts: !muted && !!viewer.mutedOnlyQuoteposts,
       mutedByList: mutedByList ? this.listBasic(mutedByList, state) : undefined,
       blockedBy: !!blockedByUri,
       blocking: blockingUri,
@@ -897,8 +921,10 @@ export class Views {
     state: HydrationState,
   ): {
     originatorMuted: boolean
+    originatorRepostMuted: boolean
     originatorBlocked: boolean
     authorMuted: boolean
+    authorQuotepostMuted: boolean
     authorBlocked: boolean
     ancestorAuthorBlocked: boolean
   } {
@@ -915,8 +941,13 @@ export class Views {
       grandparentUri && creatorFromUri(grandparentUri)
     return {
       originatorMuted: this.viewerMuteExists(originatorDid, state),
+      originatorRepostMuted:
+        !!item.repost && this.viewerRepostMuteExists(originatorDid, state),
       originatorBlocked: this.viewerBlockExists(originatorDid, state),
       authorMuted: this.viewerMuteExists(authorDid, state),
+      authorQuotepostMuted:
+        postIsQuotepost(post?.record) &&
+        this.viewerQuotepostMuteExists(authorDid, state),
       authorBlocked: this.viewerBlockExists(authorDid, state),
       ancestorAuthorBlocked:
         (!!parentAuthorDid && this.viewerBlockExists(parentAuthorDid, state)) ||
@@ -1329,7 +1360,13 @@ export class Views {
   // ------------
 
   threadV2(
-    skeleton: { anchor: AtUriString; uris: AtUriString[] },
+    skeleton: {
+      anchor: AtUriString
+      uris: AtUriString[]
+      // The complete OP thread (root first, in chain order), untrimmed by
+      // above/below limits. See GetThreadResponse.op_thread.
+      opThread?: AtUriString[]
+    },
     state: HydrationState,
     {
       above,
@@ -1460,6 +1497,7 @@ export class Views {
       anchorTree,
       {
         opDid,
+        opThreadUris: skeleton.opThread && new Set(skeleton.opThread),
         branchingFactor,
         sort,
         viewer: state.ctx?.viewer ?? null,
@@ -1471,6 +1509,27 @@ export class Views {
         state.ctx.features.Gate.ThreadsReplyRankingExplorationEnable,
       ),
     )
+
+    if (skeleton.opThread) {
+      const indexByUri = new Map(
+        skeleton.opThread.map((uri, i) => [uri, i + 1]),
+      )
+      const postCount = skeleton.opThread.length
+      for (const item of thread) {
+        if (!app.bsky.unspecced.defs.threadItemPost.$isTypeOf(item.value)) {
+          continue
+        }
+        const index = indexByUri.get(item.uri as AtUriString)
+        item.value.opThread = index !== undefined
+        if (index !== undefined) {
+          item.value.opThreadPostIndex = index
+          item.value.opThreadPostCount = postCount
+        } else {
+          delete item.value.opThreadPostIndex
+          delete item.value.opThreadPostCount
+        }
+      }
+    }
 
     return {
       hasOtherReplies,
@@ -2287,8 +2346,7 @@ export class Views {
   }: {
     document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
     publication:
-      | AssociatedSiteStandardRecord<SiteStandardPublication>
-      | undefined
+      AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
     state: HydrationState
     assumedUrl: string
   }): ExternalEmbedView['external'] | undefined {
@@ -2372,9 +2430,9 @@ export class Views {
     // unit, so doc-scoped and publication-scoped labels end up in the same
     // bucket.
     const labels = [
-      ...(document ? state.labels?.getBySubject(document.ref.uri) ?? [] : []),
+      ...(document ? (state.labels?.getBySubject(document.ref.uri) ?? []) : []),
       ...(publication
-        ? state.labels?.getBySubject(publication.ref.uri) ?? []
+        ? (state.labels?.getBySubject(publication.ref.uri) ?? [])
         : []),
     ]
     if (labels.length) overlay.labels = labels
@@ -2690,6 +2748,7 @@ export class Views {
       | Pick<RecordInfo<Required<NotificationRecordDeleted>>, 'cid' | 'record'>
       | undefined
       | null
+    let starterPackUri: AtUriString | undefined
 
     if (uri.collection === app.bsky.feed.post.$type) {
       recordInfo = state.posts?.get(notif.uri as AtUriString)
@@ -2699,6 +2758,9 @@ export class Views {
       recordInfo = state.reposts?.get(notif.uri as AtUriString)
     } else if (uri.collection === app.bsky.graph.follow.$type) {
       recordInfo = state.follows?.get(notif.uri as AtUriString)
+      if (recordInfo) {
+        starterPackUri = getStarterPackUriFromFollow(recordInfo.record)
+      }
     } else if (uri.collection === app.bsky.graph.verification.$type) {
       // When a verification record is removed, the record won't be found,
       // both for the `verified` and `unverified` notifications.
@@ -2735,6 +2797,9 @@ export class Views {
       reason: notif.reason,
       reasonSubject: parseString<AtUriString>(notif.reasonSubject),
       record: recordInfo.record,
+      starterPack: starterPackUri
+        ? this.starterPackBasic(starterPackUri, state)
+        : undefined,
       // @NOTE works with a hack in listNotifications so that when there's no last-seen time,
       // the user's first notification is marked unread, and all previous read. in this case,
       // the last seen time will be equal to the first notification's indexed time.
@@ -2752,6 +2817,20 @@ export class Views {
 
 const getRootUri = (uri: AtUriString, post: Post): AtUriString => {
   return post.record.reply?.root.uri ?? uri
+}
+
+const postIsQuotepost = (record: PostRecord | undefined): boolean => {
+  const embed = record?.embed
+  if (!embed) return false
+  const recordEmbed = isRecordEmbedType(embed)
+    ? embed
+    : isRecordWithMediaType(embed)
+      ? embed.record
+      : undefined
+  if (!recordEmbed) return false
+  return (
+    new AtUri(recordEmbed.record.uri).collection === app.bsky.feed.post.$type
+  )
 }
 
 const externalEmbedSourceTheme = (

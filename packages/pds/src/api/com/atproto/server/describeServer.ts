@@ -1,7 +1,7 @@
-import { UriString } from '@atproto/lex'
-import { DidString } from '@atproto/syntax'
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { UriString } from '@atproto/lex'
+import type { DidString } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -9,6 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     const did = ctx.cfg.service.did as DidString
     const availableUserDomains = ctx.cfg.identity.serviceHandleDomains
     const inviteCodeRequired = ctx.cfg.invites.required
+    const blobUploadLimit = ctx.cfg.service.blobUploadLimit
     const privacyPolicy = ctx.cfg.service.privacyPolicyUrl as UriString
     const termsOfService = ctx.cfg.service.termsOfServiceUrl as UriString
     const contactEmailAddress = ctx.cfg.service.contactEmailAddress
@@ -19,6 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         did,
         availableUserDomains,
         inviteCodeRequired,
+        blobUploadLimit,
         links: { privacyPolicy, termsOfService },
         contact: {
           email: contactEmailAddress,

@@ -1,9 +1,10 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { ReactNode, useEffect, useState } from 'react'
-import { ButtonRequestCode } from '#/components/forms/button-request-code'
-import { Button } from '#/components/forms/button.tsx'
+import { type ReactElement, useEffect, useState } from 'react'
+import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
+import { actionRow } from '#/components/forms/form-shell.tsx'
+import { RequestCodeButton } from '#/components/forms/request-code-button.tsx'
 import { ResetPasswordConfirmForm } from '#/components/reset-password-confirm-form.tsx'
-import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
+import { Button } from '#/components/ui/button.tsx'
 
 export type UpdatePasswordDialogProps = {
   email: string
@@ -14,7 +15,7 @@ export type UpdatePasswordDialogProps = {
     token: string
     password: string
   }) => void | PromiseLike<void>
-  children: Exclude<ReactNode, false | null | undefined>
+  children: ReactElement
 }
 
 enum UpdatePasswordDialogState {
@@ -44,7 +45,7 @@ export function UpdatePasswordDialog({
   const dismissable = !requestPending && !confirmSubmitting
 
   return (
-    <DialogSimple
+    <DialogShell
       trigger={children}
       title={t`Change your password`}
       description={
@@ -57,22 +58,27 @@ export function UpdatePasswordDialog({
       onOpenChange={setOpen}
       dismissable={dismissable}
     >
+      {/* @NOTE Sending the code is the main path; "Already have a code?" is the
+        escape hatch, so it is `ghost` — as `ResetPasswordView` treats the same
+        string. `RequestCodeButton` defaults to `size="sm"` for the inline
+        resend, so the size is restated here to match the button below. */}
       {state === UpdatePasswordDialogState.Request ? (
-        <div className="align-stretch flex flex-col gap-4">
-          <ButtonRequestCode
+        <div className={actionRow}>
+          <RequestCodeButton
             action={async () => {
               await onRequest()
               setState(UpdatePasswordDialogState.Confirm)
             }}
-            loading={requestPending}
             disabled={confirmPending}
-            color="primary"
-            className="w-full"
+            variant="default"
+            size="default"
+            className="w-full sm:w-auto"
           />
 
           <Button
+            variant="ghost"
             onClick={() => setState(UpdatePasswordDialogState.Confirm)}
-            className="w-full"
+            className="w-full sm:w-auto"
           >
             <Trans>Already have a code?</Trans>
           </Button>
@@ -89,6 +95,6 @@ export function UpdatePasswordDialog({
           }}
         />
       )}
-    </DialogSimple>
+    </DialogShell>
   )
 }

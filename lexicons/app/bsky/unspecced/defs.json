@@ -46,6 +46,7 @@
       "properties": {
         "topic": { "type": "string" },
         "displayName": { "type": "string" },
+        "description": { "type": "string" },
         "link": { "type": "string" },
         "startedAt": { "type": "string", "format": "datetime" },
         "postCount": { "type": "integer" },
@@ -73,6 +74,7 @@
       "properties": {
         "topic": { "type": "string" },
         "displayName": { "type": "string" },
+        "description": { "type": "string" },
         "link": { "type": "string" },
         "startedAt": { "type": "string", "format": "datetime" },
         "postCount": { "type": "integer" },
@@ -109,7 +111,15 @@
         },
         "opThread": {
           "type": "boolean",
-          "description": "This post is part of a contiguous thread by the OP from the thread root. Many different OP threads can happen in the same thread."
+          "description": "This post is part of a contiguous thread by the OP from the thread root. Sub-threads by OP deeper in the tree are not considered an OP thread."
+        },
+        "opThreadPostIndex": {
+          "type": "integer",
+          "description": "The 1-indexed position of this post within the contiguous OP thread. Only present when this post is part of the OP thread (see `opThread`)."
+        },
+        "opThreadPostCount": {
+          "type": "integer",
+          "description": "The total number of posts in the contiguous OP thread that this post belongs to. Only present when this post is part of the OP thread (see `opThread`)."
         },
         "hiddenByThreadgate": {
           "type": "boolean",

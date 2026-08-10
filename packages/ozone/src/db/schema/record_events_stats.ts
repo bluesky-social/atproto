@@ -1,10 +1,11 @@
-import { GeneratedAlways, Selectable } from 'kysely'
+import type { GeneratedAlways, Selectable } from 'kysely'
 
 export const tableName = 'record_events_stats'
 
 export type RecordEventsStats = {
   subjectDid: GeneratedAlways<string>
-  subjectUri: GeneratedAlways<string>
+  // at-uri for record subjects, convoId for convo/message subjects
+  subjectKey: GeneratedAlways<string>
   escalateCount: GeneratedAlways<number>
   reportCount: GeneratedAlways<number>
   appealCount: GeneratedAlways<number>

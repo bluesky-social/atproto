@@ -1,7 +1,7 @@
 import './style.css'
 
 import { msg } from '@lingui/core/macro'
-import { ReactNode, StrictMode, useCallback, useState } from 'react'
+import { type ReactNode, StrictMode, useCallback, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ConsentView } from '#/components/consent-view.tsx'
@@ -39,7 +39,11 @@ if (
   url.search = ''
   url.searchParams.set('client_id', authorizeData.clientId)
   url.searchParams.set('request_uri', authorizeData.requestUri)
-  window.history.replaceState(history.state, '', url.pathname + url.search)
+  window.history.replaceState(
+    history.state,
+    '',
+    url.pathname + url.search + url.hash,
+  )
 }
 
 const container = document.getElementById('root')!
@@ -159,7 +163,7 @@ function App() {
   if (redirectUrl) {
     return (
       <RedirectingView
-        title={rejected ? msg`Login canceled` : msg`Login complete`}
+        title={rejected ? msg`Sign-in canceled` : msg`Sign-in complete`}
         redirectUrl={redirectUrl}
         // We don't want the user to be able to click the back button and go
         // back to the consent screen after consenting/rejecting, so we replace

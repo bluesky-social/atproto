@@ -1,6 +1,6 @@
-import { NsidString } from '../core.js'
-import { ParamsSchema } from './params.js'
-import { Payload } from './payload.js'
+import type { NsidString } from '../core.js'
+import type { ParamsSchema } from './params.js'
+import type { Payload } from './payload.js'
 
 /**
  * Represents a Lexicon query (HTTP GET) endpoint definition.
@@ -29,8 +29,7 @@ export class Query<
   const TParameters extends ParamsSchema = ParamsSchema,
   const TOutputPayload extends Payload = Payload,
   const TErrors extends undefined | readonly string[] =
-    | undefined
-    | readonly string[],
+    undefined | readonly string[],
 > {
   readonly type = 'query' as const
 
@@ -81,6 +80,11 @@ export function query<
   const P extends ParamsSchema,
   const O extends Payload,
   const E extends undefined | readonly string[] = undefined,
->(nsid: N, parameters: P, output: O, errors: E = undefined as E) {
+>(
+  nsid: N,
+  parameters: P,
+  output: O,
+  errors: E = undefined as E,
+): Query<N, P, O, E> {
   return new Query<N, P, O, E>(nsid, parameters, output, errors)
 }

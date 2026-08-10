@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsky",
-  "version": "0.0.246",
+  "version": "0.0.272",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [
@@ -13,17 +13,17 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/bsky"
   },
-  "scripts": {
-    "codegen:buf": "buf generate ../bsync/proto && buf generate ./proto",
-    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
-    "prebuild": "pnpm run '/^(codegen:.+)$/'",
-    "build": "tsgo --build tsconfig.build.json",
-    "start": "node --enable-source-maps dist/bin.js",
-    "test": "../dev-infra/with-test-redis-and-db.sh vitest run",
-    "test:log": "tail -50 test.log | pino-pretty",
-    "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh vitest run --update",
-    "migration:create": "ts-node ./bin/migration-create.ts",
-    "buf:gen": ">&2 echo 'DEPRECATED: run `pnpm run codegen:buf` instead ' && pnpm run codegen:buf"
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "engines": {
     "node": ">=22"
@@ -64,11 +64,10 @@
     "murmurhash": "^2.0.1",
     "p-queue": "^8.0.0",
     "pg": "^8.10.0",
-    "pino": "^8.21.0",
-    "pino-http": "^8.2.1",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
     "sharp": "^0.33.5",
     "structured-headers": "^1.0.1",
-    "typed-emitter": "^2.1.0",
     "uint8arrays": "^5.0.0",
     "undici": "^8.5.0",
     "zod": "3.23.8"
@@ -80,18 +79,24 @@
     "@connectrpc/protoc-gen-connect-es": "^1.1.4",
     "@did-plc/server": "^0.0.1",
     "@types/cors": "^2.8.12",
+    "@types/compression": "^1.8.1",
     "@types/express": "^4.17.13",
     "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.15.5",
     "@types/qs": "^6.9.7",
-    "ts-node": "^10.8.2",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.10"
   },
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+  "scripts": {
+    "codegen:buf": "buf generate ../bsync/proto && buf generate ./proto",
+    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
+    "build": "tsc --build tsconfig.build.json",
+    "verify:import": "node --input-type=module -e \"import '@atproto/bsky'\"",
+    "start": "node --enable-source-maps dist/bin.js",
+    "test": "../dev-infra/with-test-redis-and-db.sh vitest run",
+    "test:log": "tail -50 test.log | pino-pretty",
+    "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh vitest run --update",
+    "migration:create": "node ./bin/migration-create.ts",
+    "buf:gen": ">&2 echo 'DEPRECATED: run `pnpm run codegen:buf` instead ' && pnpm run codegen:buf"
   }
 }

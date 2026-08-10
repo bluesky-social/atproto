@@ -1,5 +1,76 @@
 # @atproto/xrpc
 
+## 0.8.10
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.7.11
+
+## 0.8.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.7.10
+
+## 0.8.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.7.9
+
+## 0.8.7
+
+### Patch Changes
+
+- Updated dependencies [[`d3bbeb5`](https://github.com/bluesky-social/atproto/commit/d3bbeb5fe87f8c389c2f18abd2bc055ef916a63a)]:
+  - @atproto/lexicon@0.7.8
+
+## 0.8.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.7.7
+
+## 0.8.5
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto/lexicon@0.7.6
+
+## 0.8.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.7.5
+
+## 0.8.3
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- Updated dependencies [[`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto/lexicon@0.7.4
+
+## 0.8.2
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- Updated dependencies [[`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7)]:
+  - @atproto/lexicon@0.7.3
+
 ## 0.8.1
 
 ### Patch Changes
@@ -304,12 +375,10 @@
     - `XrpcClient` is the base class.
 
   #### Non-breaking changes
-
   - The `com.*` and `app.*` namespaces have been made directly available to every
     `Agent` instances.
 
   #### Deprecations
-
   - The default export of the `@atproto/xrpc` package has been deprecated. Use
     named exports instead.
   - The `Client` and `ServiceClient` classes are now deprecated. They are replaced by a single `XrpcClient` class.

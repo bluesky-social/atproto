@@ -1,5 +1,9 @@
-import { ReadCarOptions, readCarBytes, writeCarStream } from '@atproto/common'
-import { Cid } from '@atproto/lex-data'
+import {
+  type ReadCarOptions,
+  readCarBytes,
+  writeCarStream,
+} from '@atproto/common'
+import type { Cid } from '@atproto/lex-data'
 import { BlockMap } from './block-map.js'
 import { concatBytesAsync } from './util.js'
 

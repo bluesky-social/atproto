@@ -1,18 +1,21 @@
 import { mapDefined } from '@atproto/common'
 import {
-  AtIdentifierString,
-  AtUriString,
-  DatetimeString,
-  DidString,
-  HandleString,
+  type AtIdentifierString,
+  type AtUriString,
+  type DatetimeString,
+  type DidString,
+  type HandleString,
   isDidIdentifier,
   isHandleIdentifier,
   normalizeHandle,
 } from '@atproto/syntax'
-import { DataPlaneClient } from '../data-plane/client/index.js'
+import type { DataPlaneClient } from '../data-plane/client/index.js'
 import { app, chat, com } from '../lexicons/index.js'
-import { ActivitySubscription, VerificationMeta } from '../proto/bsky_pb.js'
-import {
+import type {
+  ActivitySubscription,
+  VerificationMeta,
+} from '../proto/bsky_pb.js'
+import type {
   ChatDeclarationRecord,
   GermDeclarationRecord,
   NotificationDeclarationRecord,
@@ -21,7 +24,7 @@ import {
 } from '../views/types.js'
 import {
   HydrationMap,
-  RecordInfo,
+  type RecordInfo,
   isActivitySubscriptionEnabled,
   parseDate,
   parseRecord,
@@ -54,6 +57,8 @@ export type Actor = {
   status?: RecordInfo<StatusRecord>
   germ?: RecordInfo<GermDeclarationRecord>
   allowActivitySubscriptionsFrom: AllowActivitySubscriptions
+  accountModerationTags: Set<string>
+  profileModerationTags: Set<string>
   /**
    * Debug information for internal development
    */
@@ -94,6 +99,8 @@ export type Statuses = HydrationMap<AtUriString, Status>
 export type ProfileViewerState = {
   did: DidString
   muted?: boolean
+  mutedOnlyReposts?: boolean
+  mutedOnlyQuoteposts?: boolean
   mutedByList?: AtUriString
   blockedBy?: AtUriString
   blocking?: AtUriString
@@ -246,8 +253,7 @@ export class ActorHydrator {
       const verifications = mapDefined(
         Object.entries(actor.verifiedBy) as [DidString, VerificationMeta][],
         ([actorDid, verificationMeta]):
-          | VerificationHydrationState
-          | undefined => {
+          VerificationHydrationState | undefined => {
           if (
             verificationMeta.handle &&
             verificationMeta.rkey &&
@@ -310,6 +316,8 @@ export class ActorHydrator {
         allowActivitySubscriptionsFrom: allowActivitySubscriptionsFrom(
           actor.allowActivitySubscriptionsFrom,
         ),
+        accountModerationTags: new Set(actor.tags),
+        profileModerationTags: new Set(actor.profileTags),
         debug,
       })
     }
@@ -459,6 +467,8 @@ export class ActorHydrator {
       map.set(actor, {
         did,
         muted: rels.muted ?? false,
+        mutedOnlyReposts: rels.mutedOnlyReposts ?? false,
+        mutedOnlyQuoteposts: rels.mutedOnlyQuoteposts ?? false,
         mutedByList: parseString(rels.mutedByList),
         blockedBy: parseString(rels.blockedBy),
         blocking: parseString<AtUriString>(rels.blocking),
@@ -534,8 +544,7 @@ export class ActorHydrator {
         // against potentially missing subscription objects in the response, so
         // we keep that defense in place.
         const subscription = subscriptions[i] as
-          | ActivitySubscription
-          | undefined
+          ActivitySubscription | undefined
 
         const state = {
           post: subscription?.post != null,

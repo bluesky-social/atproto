@@ -2,7 +2,7 @@ import { base32 } from 'multiformats/bases/base32'
 import { CID } from 'multiformats/cid'
 import { create as createDigest } from 'multiformats/hashes/digest'
 import { assert, describe, expect, it } from 'vitest'
-import { Cid } from './cid.js'
+import type { Cid } from './cid.js'
 import { ui8Equals } from './uint8array.js'
 
 export class BytesCid implements Cid {
@@ -18,15 +18,15 @@ export class BytesCid implements Cid {
     }
   }
 
-  get version() {
+  get version(): 0 | 1 {
     return this.bytes[0] as 0 | 1
   }
 
-  get code() {
+  get code(): number {
     return this.bytes[1]
   }
 
-  get multihash() {
+  get multihash(): { code: number; digest: Uint8Array } {
     const code = this.bytes[2]
     const digest = this.bytes.subarray(4)
     return { code, digest }

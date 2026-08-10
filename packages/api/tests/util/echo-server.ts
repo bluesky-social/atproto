@@ -1,7 +1,6 @@
 import { once } from 'node:events'
 import { type Server, createServer } from 'node:http'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { createHttpTerminator } from 'http-terminator'
 
 export type DisposableServer = Server & {
   terminate: () => Promise<void>
@@ -22,7 +21,7 @@ export async function createHeaderEchoServer(port: number = 0) {
 
   server.listen(port)
 
-  const terminator = httpTerminator.createHttpTerminator({ server })
+  const terminator = createHttpTerminator({ server })
   await once(server, 'listening')
 
   Object.defineProperty(server, 'terminate', {

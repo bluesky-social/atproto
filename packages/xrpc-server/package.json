@@ -1,6 +1,6 @@
 {
   "name": "@atproto/xrpc-server",
-  "version": "0.11.2",
+  "version": "0.12.2",
   "license": "MIT",
   "description": "atproto HTTP API (XRPC) server library",
   "keywords": [
@@ -13,12 +13,20 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/xrpc-server"
   },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "engines": {
     "node": ">=22"
-  },
-  "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "build": "tsgo --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
@@ -33,7 +41,7 @@
     "@atproto/xrpc": "workspace:^",
     "express": "^4.17.2",
     "http-errors": "^2.0.0",
-    "mime-types": "^2.1.35",
+    "mime-types": "^3.0.2",
     "rate-limiter-flexible": "^2.4.1",
     "ws": "^8.12.0"
   },
@@ -45,7 +53,7 @@
     "@types/express": "^4.17.13",
     "@types/express-serve-static-core": "^4.17.36",
     "@types/http-errors": "^2.0.4",
-    "@types/mime-types": "^2.1.4",
+    "@types/mime-types": "^3.0.1",
     "@types/ws": "^8.5.4",
     "get-port": "^6.1.2",
     "jest": "^30.0.0",
@@ -53,11 +61,8 @@
     "key-encoder": "^2.0.3",
     "multiformats": "^13.0.0"
   },
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "build": "tsc --build tsconfig.build.json"
   }
 }

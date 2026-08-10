@@ -1,4 +1,4 @@
-import {
+import type {
   StreamRequest,
   StreamResponse,
   UnaryRequest,
@@ -10,8 +10,7 @@ import { callerInterceptor } from './util.js'
 describe('callerInterceptor', () => {
   it('sets x-atlantis-caller header on the request', async () => {
     const fakeRequest = { header: new Headers({ 'x-other': 'value' }) } as
-      | UnaryRequest
-      | StreamRequest
+      UnaryRequest | StreamRequest
     const fakeResponse = {} as UnaryResponse | StreamResponse
     const fakeHandler = vi.fn(async (_req: UnaryRequest | StreamRequest) => {
       return fakeResponse

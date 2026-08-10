@@ -1,5 +1,5 @@
 import { once } from 'node:events'
-import { AddressInfo } from 'node:net'
+import type { AddressInfo } from 'node:net'
 import { finished } from 'node:stream/promises'
 import express from 'express'
 import { request } from 'undici'

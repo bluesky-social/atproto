@@ -1,0 +1,14 @@
+{
+  "extends": [
+    "../../../tsconfig/vitest.tsconfig.json",
+    "../../../tsconfig/isolated.tsconfig.json",
+  ],
+  "include": ["./tests", "./src/**/*.test.ts"],
+  "references": [
+    { "path": "../lex-json/tsconfig.build.json" },
+    { "path": "./tsconfig.build.json" },
+  ],
+  "compilerOptions": {
+    "rootDir": "./",
+  },
+}

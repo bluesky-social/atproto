@@ -1,9 +1,8 @@
 import { once } from 'node:events'
-import * as http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type * as http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { default as express } from 'express'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { Tap } from '../src/client.js'
 
@@ -30,7 +29,7 @@ describe('Tap client', () => {
   })
 
   describe('HTTP methods', () => {
-    let terminator: httpTerminator.HttpTerminator
+    let terminator: HttpTerminator
     let tap: Tap
     let requests: {
       path: string
@@ -101,7 +100,7 @@ describe('Tap client', () => {
       const server = app.listen()
       await once(server, 'listening')
       const { port } = server.address() as AddressInfo
-      terminator = httpTerminator.createHttpTerminator({ server })
+      terminator = createHttpTerminator({ server })
       tap = new Tap(`http://localhost:${port}`, { adminPassword: 'secret' })
     })
 
@@ -166,7 +165,7 @@ describe('Tap client', () => {
   })
 
   describe('HTTP error handling', () => {
-    let terminator: httpTerminator.HttpTerminator
+    let terminator: HttpTerminator
     let tap: Tap
 
     beforeAll(async () => {
@@ -184,7 +183,7 @@ describe('Tap client', () => {
       const server = app.listen(0)
       await once(server, 'listening')
       const { port } = server.address() as AddressInfo
-      terminator = httpTerminator.createHttpTerminator({ server })
+      terminator = createHttpTerminator({ server })
       tap = new Tap(`http://localhost:${port}`)
     })
 

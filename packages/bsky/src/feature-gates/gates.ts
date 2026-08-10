@@ -12,6 +12,7 @@ export enum Gate {
   SuggestedUsersForDiscoverEnable = 'suggested_users:for_discover:enable',
   SuggestedUsersForSeeMoreEnable = 'suggested_users:for_see_more:enable',
   SearchV2Enable = 'search:v2:enable',
+  TrendingTopicsV2 = 'trending_topics_v2',
 
   // temp
   AATest = 'aa-test-appview',

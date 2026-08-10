@@ -1,5 +1,97 @@
 # @atproto/common
 
+## 0.7.6
+
+### Patch Changes
+
+- [#4805](https://github.com/bluesky-social/atproto/pull/4805) [`b66870d`](https://github.com/bluesky-social/atproto/commit/b66870d5a1efbcfa0cc07498c7cfcf3f0f243e86) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export new `createLogger` helper
+
+- [#4805](https://github.com/bluesky-social/atproto/pull/4805) [`b66870d`](https://github.com/bluesky-social/atproto/commit/b66870d5a1efbcfa0cc07498c7cfcf3f0f243e86) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Deprecate `subsystemLogger` in favor of `createLogger`
+
+## 0.7.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.9
+
+## 0.7.4
+
+### Patch Changes
+
+- Updated dependencies [[`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c)]:
+  - @atproto/lex-cbor@0.1.6
+  - @atproto/lex-data@0.1.7
+  - @atproto/common-web@0.5.8
+
+## 0.7.3
+
+### Patch Changes
+
+- Updated dependencies [[`95aa1d6`](https://github.com/bluesky-social/atproto/commit/95aa1d6dfea71316d5f30dd8bd4ed48afac31c81)]:
+  - @atproto/lex-cbor@0.1.5
+  - @atproto/lex-data@0.1.6
+  - @atproto/common-web@0.5.7
+
+## 0.7.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.6
+
+## 0.7.1
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9), [`cc6b901`](https://github.com/bluesky-social/atproto/commit/cc6b901496f607c0b477e48a23c94e6f727396c9)]:
+  - @atproto/lex-cbor@0.1.4
+  - @atproto/lex-data@0.1.5
+  - @atproto/common-web@0.5.5
+
+## 0.7.0
+
+### Minor Changes
+
+- [#5162](https://github.com/bluesky-social/atproto/pull/5162) [`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112) Thanks [@nnabeyang](https://github.com/nnabeyang)! - Language-tag string-format validation now has strict and lenient variants, matching the pattern already used for `at-uri` and `datetime`. `isLanguageString` (and the default `language` string-format verifier) is now strict and rejects BCP 47 tags that violate RFC 5646 §4.1 (e.g. duplicate variant subtags or duplicate extension singletons). Pass `{ strict: false }` to fall back to the lenient (syntax-only) verifier, `isLanguageStringLenient`.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.4
+
+## 0.6.5
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build with `noImplicitAny` enabled
+
+- Updated dependencies [[`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto/lex-cbor@0.1.3
+  - @atproto/lex-data@0.1.4
+  - @atproto/common-web@0.5.3
+
+## 0.6.4
+
+### Patch Changes
+
+- [#5149](https://github.com/bluesky-social/atproto/pull/5149) [`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `LOG_ENABLED` now supports upper case (TRUE) for enabling logging
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- [#5149](https://github.com/bluesky-social/atproto/pull/5149) [`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `pino` logger to version 10
+
+- Updated dependencies [[`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7)]:
+  - @atproto/common-web@0.5.2
+  - @atproto/lex-cbor@0.1.2
+  - @atproto/lex-data@0.1.3
+
 ## 0.6.3
 
 ### Patch Changes

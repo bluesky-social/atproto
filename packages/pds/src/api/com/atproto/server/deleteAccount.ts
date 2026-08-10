@@ -2,11 +2,11 @@ import { MINUTE } from '@atproto/common'
 import {
   AuthRequiredError,
   InvalidRequestError,
-  MethodRateLimit,
-  Server,
+  type MethodRateLimit,
+  type Server,
 } from '@atproto/xrpc-server'
 import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {

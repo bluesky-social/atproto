@@ -1,15 +1,15 @@
 import { DAY } from '@atproto/common'
 import {
-  AtIdentifierString,
-  DatetimeString,
-  DidString,
-  HandleString,
+  type AtIdentifierString,
+  type DatetimeString,
+  type DidString,
+  type HandleString,
   currentDatetimeString,
   isDidIdentifier,
 } from '@atproto/lex'
 import { isErrUniqueViolation, notSoftDeletedClause } from '../../db/index.js'
-import { com } from '../../lexicons/index.js'
-import { AccountDb, ActorEntry } from '../db/index.js'
+import type { com } from '../../lexicons/index.js'
+import type { AccountDb, ActorEntry } from '../db/index.js'
 
 export class UserAlreadyExistsError extends Error {
   name = 'UserAlreadyExistsError'
@@ -285,7 +285,7 @@ export const updateAccountTakedownStatus = async (
   takedown: com.atproto.admin.defs.StatusAttr,
 ) => {
   const takedownRef = takedown.applied
-    ? takedown.ref ?? currentDatetimeString()
+    ? (takedown.ref ?? currentDatetimeString())
     : null
   await db.executeWithRetry(
     db.db.updateTable('actor').set({ takedownRef }).where('did', '=', did),

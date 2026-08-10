@@ -3,8 +3,8 @@
 import { HOUR } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { isAppealReport } from '../api/util.js'
-import { Database } from '../db/index.js'
-import { DatabaseSchema } from '../db/schema/index.js'
+import type { Database } from '../db/index.js'
+import type { DatabaseSchema } from '../db/schema/index.js'
 import { jsonb } from '../db/types.js'
 import {
   REVIEWCLOSED,
@@ -12,7 +12,8 @@ import {
   REVIEWNONE,
   REVIEWOPEN,
 } from '../lexicon/types/tools/ozone/moderation/defs.js'
-import { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
+import { CHAT_CONVO_COLLECTION } from './subject.js'
+import type { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
 
 const getSubjectStatusForModerationEvent = ({
   currentStatus,
@@ -533,7 +534,7 @@ export const getStatusIdentifierFromSubject = (
   const uri = isSubjectString ? new AtUri(subject) : subject
 
   // Handle conversation URIs
-  if (uri.collection === 'chat.bsky.convo') {
+  if (uri.collection === CHAT_CONVO_COLLECTION) {
     return {
       did: uri.host,
       recordPath: '',

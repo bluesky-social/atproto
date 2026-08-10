@@ -1,13 +1,14 @@
-import { LEXICON_REFRESH_FREQUENCY, LexiconData } from '@atproto/oauth-provider'
+import { LEXICON_REFRESH_FREQUENCY } from '@atproto/oauth-provider/constants'
+import type { LexiconData } from '@atproto/oauth-provider/store'
 import { fromDateISO, fromJson, toDateISO, toJson } from '../../db/index.js'
-import { AccountDb } from '../db/index.js'
+import type { AccountDb } from '../db/index.js'
 
 export async function upsert(db: AccountDb, nsid: string, data: LexiconData) {
   // @TODO not annotated as `Omit<Insertable<Lexicon>, 'nsid'>`. Insertable's
   // nullable/non-nullable key partition evaluates `IsNullable<InsertType<…>>`
   // per column, which for the recursive `JsonEncoded<LexiconDocument>` column
-  // overflows the tsgo (TS7) checker's instantiation depth (TS2589). The older
-  // tsc handled it; the `.values()`/`.doUpdateSet()` calls below still
+  // overflows the TS7 checker's instantiation depth (TS2589). TS6's tsc
+  // handled it; the `.values()`/`.doUpdateSet()` calls below still
   // type-check this object against the insert type regardless.
   const updates = {
     ...data,

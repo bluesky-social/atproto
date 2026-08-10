@@ -1,5 +1,5 @@
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import addMember from './addMember.js'
 import createSpace from './createSpace.js'
 import deleteSpace from './deleteSpace.js'

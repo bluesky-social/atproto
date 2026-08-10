@@ -1,29 +1,34 @@
-import { LexValue, isLexScalar, isPlainObject } from '@atproto/lex-data'
+import type { LexValue } from '@atproto/lex-data'
+import { isLexScalar, isPlainObject } from '@atproto/lex-data'
 import { lexStringify } from '@atproto/lex-json'
 import {
-  InferInput,
-  InferPayload,
-  Main,
-  NsidString,
-  Params,
-  Payload,
-  Procedure,
-  Query,
-  Restricted,
-  Subscription,
+  type InferInput,
+  type InferPayload,
+  type Main,
+  type NsidString,
+  type Params,
+  type Payload,
+  type Procedure,
+  type Query,
+  type Restricted,
+  type Subscription,
   getMain,
 } from '@atproto/lex-schema'
-import { Agent, AgentOptions, buildAgent } from './agent.js'
-import { XrpcFailure, XrpcFetchError, asXrpcFailure } from './errors.js'
-import { XrpcResponse, XrpcResponseOptions } from './response.js'
-import { BinaryBodyInit } from './types.js'
+import type { Agent, AgentOptions } from './agent.js'
+import { buildAgent } from './agent.js'
+import type { XrpcFailure } from './errors.js'
+import { XrpcFetchError, XrpcResponseError, asXrpcFailure } from './errors.js'
+import type { XrpcResponseOptions } from './response.js'
+import { XrpcResponse } from './response.js'
+import type { BinaryBodyInit } from './types.js'
+import type { XrpcRequestHeadersOptions } from './util.js'
 import {
-  XrpcRequestHeadersOptions,
   asUint8ArrayArrayBuffer,
   buildXrpcRequestHeaders,
   isAsyncIterable,
   isBlobLike,
   toReadableStream,
+  wait,
 } from './util.js'
 
 /**
@@ -87,7 +92,7 @@ type XrpcRequestPayloadOptions<TPayload> = TPayload extends {
  * ```
  */
 export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
-  XrpcRequestOptions<M> & XrpcResponseOptions
+  XrpcRequestOptions<M> & XrpcResponseOptions & RetryOptions
 
 export type XrpcRequestOptions<
   M extends Procedure | Query = Procedure | Query,
@@ -168,14 +173,13 @@ export async function xrpc<const M extends Query | Procedure>(
  * @typeParam M - The XRPC method type
  */
 export type XrpcResult<M extends Procedure | Query> =
-  | XrpcResponse<M>
-  | XrpcFailure<M>
+  XrpcResponse<M> | XrpcFailure<M>
 
 /**
  * Makes an XRPC request without throwing on failure.
  *
  * Returns a discriminated union that can be checked via the `success` property.
- * This is useful for handling errors without try/catch blocks. This also allow
+ * This is useful for handling errors without try/catch blocks. This also allows
  * failure results to be typed with the method schema, which can provide better
  * type safety when handling errors (e.g. checking for specific error codes).
  *
@@ -213,19 +217,37 @@ export async function xrpcSafe<const M extends Query | Procedure>(
   ns: Main<M>,
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcResult<M>> {
-  options.signal?.throwIfAborted()
   const method: M = getMain(ns)
-  try {
-    const agent = buildAgent(agentOpts)
-    const url = xrpcRequestUrl(method, options)
-    const request = xrpcRequestInit(method, options)
-    const response = await agent.fetchHandler(url, request).catch((err) => {
-      const cause = extractFetchErrorCause(err)
-      throw new XrpcFetchError(method, cause)
-    })
-    return await XrpcResponse.fromFetchResponse<M>(method, response, options)
-  } catch (cause) {
-    return asXrpcFailure(method, cause)
+
+  for (let counter = 1; ; counter++) {
+    options.signal?.throwIfAborted()
+    try {
+      const agent = buildAgent(agentOpts)
+      const url = xrpcRequestUrl(method, options)
+      const request = xrpcRequestInit(method, options)
+      const response = await agent.fetchHandler(url, request).catch((err) => {
+        const cause = extractFetchErrorCause(err)
+        throw new XrpcFetchError(method, cause)
+      })
+      return await XrpcResponse.fromFetchResponse<M>(method, response, options)
+    } catch (cause) {
+      const failure = asXrpcFailure(method, cause)
+
+      // Cannot retry a request with a consumable body
+      if (
+        options.body instanceof ReadableStream ||
+        isAsyncIterable(options.body)
+      ) {
+        return failure
+      }
+
+      const waitTime = getRetryWaitTime(failure, options, counter)
+      if (waitTime == null) {
+        return failure
+      }
+
+      await wait(waitTime, options)
+    }
   }
 }
 
@@ -443,4 +465,98 @@ export function extractFetchErrorCause(err: unknown): unknown {
   // environments like React Native, Deno, Bun, Browser, etc.)
 
   return err
+}
+
+export type RetryOptions = {
+  /**
+   * Function to determine whether a request should be retried after a failure.
+   *
+   * @default `(failure) => failure.shouldRetry()`
+   */
+  retry?: (failure: XrpcFailure, context: { counter: number }) => boolean
+  /**
+   * Maximum number of retries to allow.
+   *
+   * @default 0 (no retries)
+   */
+  maxRetries?: number
+  /**
+   * Max number of milliseconds allow between retries
+   *
+   * @default 30000
+   */
+  maxRetryTimeout?: number
+  /**
+   * Initial number of milliseconds to wait before retrying for the first time.
+   *
+   * @default 500
+   */
+  minRetryTimeout?: number
+  /**
+   * Factor to multiply the timeout factor between retries.
+   *
+   * @default 2
+   */
+  retryTimeoutFactor?: number
+  /**
+   * Automatically infer timeout between retries based on header values (`Retry-After`, `RateLimit-Reset`).
+   *
+   * @default true
+   */
+  retryHeaders?: boolean
+}
+
+function getRetryWaitTime(
+  failure: XrpcFailure,
+  options: RetryOptions,
+  counter: number,
+): number | undefined {
+  const {
+    retry,
+    maxRetries = 0,
+    minRetryTimeout = 500,
+    maxRetryTimeout = 30_000,
+    retryTimeoutFactor = 2,
+    retryHeaders = true,
+  } = options
+
+  if (counter > maxRetries) {
+    return undefined
+  }
+
+  const shouldRetry = retry
+    ? retry(failure, { counter })
+    : failure.shouldRetry()
+
+  if (!shouldRetry) {
+    return undefined
+  }
+
+  const waitTime =
+    retryHeaders && failure instanceof XrpcResponseError
+      ? getWaitTimeFromHeaders(failure.headers)
+      : undefined
+
+  return Math.min(
+    maxRetryTimeout,
+    waitTime ?? minRetryTimeout * retryTimeoutFactor ** (counter - 1),
+  )
+}
+
+function getWaitTimeFromHeaders(headers: Headers): number | undefined {
+  const retryAfterHeader = headers.get('retry-after')
+  if (retryAfterHeader) {
+    const waitTime = /^\s*\d+\s*$/.test(retryAfterHeader)
+      ? // Retry-After is in seconds
+        Number(retryAfterHeader) * 1000
+      : // Retry-After is an http-date
+        new Date(retryAfterHeader).getTime() - Date.now()
+    if (waitTime > 0) return waitTime
+  }
+
+  const resetsAt = headers.get('RateLimit-Reset') // epoch
+  if (resetsAt) {
+    const waitTime = Number(resetsAt) * 1000 - Date.now()
+    if (waitTime > 0) return waitTime
+  }
 }

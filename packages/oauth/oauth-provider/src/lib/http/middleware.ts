@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { invokeOnce } from '../util/function.js'
 import { writeJson } from './response.js'
-import { Handler, Middleware, NextFunction } from './types.js'
+import type { Handler, Middleware, NextFunction } from './types.js'
 
 const isNonNullable = <X>(x: X): x is NonNullable<X> => x != null
 
@@ -114,9 +114,9 @@ function buildFallbackPayload(
     status,
     error: err
       ? expose
-        ? getProp(err, 'code', 'string') ??
+        ? (getProp(err, 'code', 'string') ??
           getProp(err, 'error', 'string') ??
-          'unknown_error'
+          'unknown_error')
         : 'system_error'
       : 'not_found',
     error_description:

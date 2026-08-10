@@ -1,8 +1,8 @@
 import { once } from 'node:events'
-import { ServiceImpl } from '@connectrpc/connect'
-import { AppContext } from '../context.js'
+import type { ServiceImpl } from '@connectrpc/connect'
+import type { AppContext } from '../context.js'
 import { createMuteOpChannel } from '../db/schema/mute_op.js'
-import { Service } from '../proto/bsync_connect.js'
+import type { Service } from '../proto/bsync_connect.js'
 import { ScanMuteOperationsResponse } from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
 import { combineSignals, validCursor } from './util.js'
@@ -58,6 +58,8 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
         type: op.type,
         actorDid: op.actorDid,
         subject: op.subject,
+        onlyReposts: op.onlyReposts,
+        onlyQuoteposts: op.onlyQuoteposts,
       })),
       cursor: lastOp.id.toString(),
     })

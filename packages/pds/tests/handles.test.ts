@@ -1,8 +1,8 @@
 import { jest } from '@jest/globals'
-import { type AtpAgent } from '@atproto/api'
-import { type SeedClient } from '@atproto/dev-env'
-import { AtIdentifierString, DidString } from '@atproto/syntax'
-import { type AppContext } from '../src/index.js'
+import type { AtpAgent } from '@atproto/api'
+import type { SeedClient } from '@atproto/dev-env'
+import type { AtIdentifierString, DidString } from '@atproto/syntax'
+import type { AppContext } from '../src/index.js'
 
 // outside of suite so they can be used in mock
 let alice: DidString
@@ -49,7 +49,6 @@ describe('handles', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'handles',
     })
-    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     idResolver = new IdResolver({ plcUrl: ctx.cfg.identity.plcUrl })
     agent = network.pds.getAgent()

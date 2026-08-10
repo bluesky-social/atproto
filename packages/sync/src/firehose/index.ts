@@ -1,11 +1,10 @@
-import type { ClientOptions } from 'ws'
-import { Deferrable, createDeferrable, wait } from '@atproto/common'
+import { type Deferrable, createDeferrable, wait } from '@atproto/common'
 import {
-  DidDocument,
-  IdResolver,
+  type DidDocument,
+  type IdResolver,
   parseToAtprotoDocument,
 } from '@atproto/identity'
-import { Cid } from '@atproto/lex'
+import type { Cid } from '@atproto/lex'
 import {
   RepoVerificationError,
   cborToLexRecord,
@@ -16,8 +15,8 @@ import {
   verifyProofs,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { Subscription } from '@atproto/xrpc-server'
-import {
+import { type HeadersInit, Subscription } from '@atproto/xrpc-server'
+import type {
   AccountEvt,
   AccountStatus,
   CommitEvt,
@@ -27,10 +26,10 @@ import {
   SyncEvt,
 } from '../events.js'
 import { com } from '../lexicons/index.js'
-import { EventRunner } from '../runner/index.js'
+import type { EventRunner } from '../runner/index.js'
 import { didAndSeqForEvt } from '../util.js'
 
-export type FirehoseOptions = ClientOptions & {
+export type FirehoseOptions = {
   idResolver: IdResolver
 
   handleEvent: (evt: Event) => void | Promise<void>
@@ -41,6 +40,12 @@ export type FirehoseOptions = ClientOptions & {
 
   service?: string
   subscriptionReconnectDelay?: number
+  /** Exponential-backoff ceiling for reconnects, in seconds. */
+  maxReconnectSeconds?: number
+  /** Heartbeat interval; omit to use the default. */
+  heartbeatIntervalMs?: number
+  /** Applied to the connection's upgrade request (Node.js only). */
+  headers?: HeadersInit
 
   unauthenticatedCommits?: boolean
   unauthenticatedHandles?: boolean
@@ -83,10 +88,15 @@ export class Firehose {
         return false
       }
     }
+    // Listed explicitly rather than spread: the old `ClientOptions &` shape let
+    // arbitrary `ws` options through, which Subscription no longer accepts — a
+    // spread would silently drop them.
     this.sub = new Subscription({
-      ...opts,
       service: opts.service ?? 'wss://bsky.network',
       method: com.atproto.sync.subscribeRepos.$lxm,
+      maxReconnectSeconds: opts.maxReconnectSeconds,
+      heartbeatIntervalMs: opts.heartbeatIntervalMs,
+      headers: opts.headers,
       signal: this.abortController.signal,
       getParams: async () => {
         let cursor: number | undefined
@@ -108,7 +118,7 @@ export class Firehose {
     })
   }
 
-  async start() {
+  async start(): Promise<void> {
     try {
       for await (const evt of this.sub) {
         if (this.opts.runner) {
@@ -131,7 +141,7 @@ export class Firehose {
         }
       }
     } catch (err) {
-      if (err && err['name'] === 'AbortError') {
+      if ((err as any)?.name === 'AbortError') {
         this.destoryDefer.resolve()
         return
       }

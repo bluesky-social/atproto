@@ -1,20 +1,22 @@
-import { Timestamp } from '@bufbuild/protobuf'
+import type { Timestamp } from '@bufbuild/protobuf'
 import {
-  AtUriString,
-  Cid,
-  InferInput,
-  InferOutput,
-  LexParseOptions,
-  LexValue,
-  RecordSchema,
-  Schema,
-  TypedLexMap,
-  ValidateOptions,
+  type AtUriString,
+  type Cid,
+  type InferInput,
+  type InferOutput,
+  type LexParseOptions,
+  type LexValue,
+  type RecordSchema,
+  type Schema,
+  type TypedLexMap,
+  type ValidateOptions,
   lexParseJsonBytes,
   parseCidSafe,
 } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
-import { Record as RecordEntry } from '../proto/bsky_pb.js'
+import { app } from '../lexicons/index.js'
+import type { Record as RecordEntry } from '../proto/bsky_pb.js'
+import type { FollowRecord } from '../views/types.js'
 
 const PARSE_OPTIONS: LexParseOptions & ValidateOptions = {
   strict: false,
@@ -197,3 +199,16 @@ export const isActivitySubscriptionEnabled = ({
   post: boolean
   reply: boolean
 }): boolean => post || reply
+export const getStarterPackUriFromFollow = (
+  follow: FollowRecord,
+): AtUriString | undefined => {
+  const viaUri = follow.via?.uri
+  if (!viaUri) return
+  try {
+    const parsed = new AtUri(viaUri)
+    if (parsed.collection !== app.bsky.graph.starterpack.$type) return
+    return viaUri as AtUriString
+  } catch {
+    return
+  }
+}

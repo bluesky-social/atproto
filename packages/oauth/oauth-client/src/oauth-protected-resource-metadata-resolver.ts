@@ -1,17 +1,19 @@
 import {
-  OAuthProtectedResourceMetadata,
+  type OAuthProtectedResourceMetadata,
   oauthProtectedResourceMetadataSchema,
 } from '@atproto/oauth-types'
 import {
-  Fetch,
+  type Fetch,
   FetchResponseError,
   bindFetch,
   cancelBody,
 } from '@atproto-labs/fetch'
 import {
   CachedGetter,
-  GetCachedOptions,
-  SimpleStore,
+  type GetCachedOptions,
+  type SimpleStore,
+  type StoreErrorHandler,
+  swallowStoreErrors,
 } from '@atproto-labs/simple-store'
 import { contentMime } from './util.js'
 
@@ -24,6 +26,13 @@ export type ProtectedResourceMetadataCache = SimpleStore<
 
 export type OAuthProtectedResourceMetadataResolverConfig = {
   allowHttpResource?: boolean
+
+  /**
+   * Called when the metadata cache throws. The cache is best-effort: failures
+   * are logged (by default) and degrade to a cache miss + refetch, rather than
+   * being propagated.
+   */
+  onCacheError?: StoreErrorHandler<string>
 }
 
 /**
@@ -41,7 +50,10 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
     fetch: Fetch = globalThis.fetch,
     config?: OAuthProtectedResourceMetadataResolverConfig,
   ) {
-    super(async (origin, options) => this.fetchMetadata(origin, options), cache)
+    super(
+      async (origin, options) => this.fetchMetadata(origin, options),
+      swallowStoreErrors(cache, config?.onCacheError),
+    )
 
     this.fetch = bindFetch(fetch)
     this.allowHttpResource = config?.allowHttpResource === true

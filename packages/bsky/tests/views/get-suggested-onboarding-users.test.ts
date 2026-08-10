@@ -1,22 +1,22 @@
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
-import express, { Application } from 'express'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { type Server, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import express, { type Application } from 'express'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
-  AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton,
-  AtpAgent,
+  type AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton,
+  type AtpAgent,
   ids,
 } from '@atproto/api'
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork } from '@atproto/dev-env'
+import type { DidString, HandleString } from '@atproto/syntax'
 
 type User = {
   id: string
-  did: string
+  did: DidString
   email: string
-  handle: string
+  handle: HandleString
   password: string
   displayName: string
   description: string
@@ -149,14 +149,14 @@ describe('getSuggestedOnboardingUsers', () => {
 class MockServer {
   app: Application
   server: Server
-  terminator: httpTerminator.HttpTerminator
+  terminator: HttpTerminator
 
   mockedDids = new Map<string, string>()
 
   constructor() {
     this.app = this.createApp()
     this.server = createServer(this.app)
-    this.terminator = httpTerminator.createHttpTerminator({
+    this.terminator = createHttpTerminator({
       server: this.server,
     })
   }

@@ -1,199 +1,78 @@
-import type { ClientOptions } from 'ws'
-import { WebSocket, createWebSocketStream } from 'ws'
-import { SECOND, isErrnoException, wait } from '@atproto/common'
+import { HEADERS_SUPPORTED, createTransport } from '#transport'
+import type { DataMode } from './message-channel.js'
+import {
+  type Awaitable,
+  type WebSocketIterable,
+  type WebSocketOptions,
+  websocketFactory,
+} from './websocket.js'
 
-export class WebSocketKeepAlive {
-  public ws: WebSocket | null = null
-  public initialSetup = true
-  public reconnects: number | null = null
+export type {
+  CloseEventDetail,
+  DataMode,
+  MessageOf,
+} from './message-channel.js'
+// `Sender` is public because `onConnect` hands one to the caller. The rest of
+// the transport contract (`Transport`, `TransportOptions`, `TransportFactory`,
+// `createWebSocket`) stays internal: platform selection happens through the
+// `#transport` imports condition, so a third-party transport has no supported
+// way in anyway, and exporting the interface would commit us to its shape for no
+// consumer that exists. Widening a public API later is easy; narrowing it isn't.
+export type { HeadersInit, Sender } from './transport/transport.js'
+export type {
+  Awaitable,
+  WebSocketIterable,
+  WebSocketOptions,
+} from './websocket.js'
 
-  constructor(
-    public opts: ClientOptions & {
-      getUrl: () => Promise<string>
-      maxReconnectSeconds?: number
-      signal?: AbortSignal
-      heartbeatIntervalMs?: number
-      onReconnect?: () => void
-      onReconnectError?: (
-        error: unknown,
-        n: number,
-        initialSetup: boolean,
-      ) => void
-    },
-  ) {}
+export { CloseCode } from './lib/close-codes.js'
+export {
+  BufferOverflowError,
+  CloseError,
+  DataModeError,
+  HeartbeatTimeoutError,
+  IdleTimeoutError,
+  SocketError,
+  WebSocketClientError,
+} from './lib/errors.js'
+export {
+  FATAL_CLOSE_CODES,
+  defaultShouldReconnect,
+  isReconnectableClose,
+} from './lib/reconnect-policy.js'
 
-  async *[Symbol.asyncIterator](): AsyncGenerator<Uint8Array> {
-    const maxReconnectMs = 1000 * (this.opts.maxReconnectSeconds ?? 64)
-    while (true) {
-      if (this.reconnects !== null) {
-        const duration = this.initialSetup
-          ? Math.min(1000, maxReconnectMs)
-          : backoffMs(this.reconnects++, maxReconnectMs)
-        await wait(duration)
-      }
-      const url = await this.opts.getUrl()
-      this.ws = new WebSocket(url, this.opts)
-      const ac = new AbortController()
-      if (this.opts.signal) {
-        forwardSignal(this.opts.signal, ac)
-      }
-      this.ws.once('open', () => {
-        if (!this.initialSetup && this.opts.onReconnect) {
-          this.opts.onReconnect()
-        }
-        this.initialSetup = false
-        this.reconnects = 0
-        if (this.ws) {
-          this.startHeartbeat(this.ws)
-        }
-      })
-      this.ws.once('close', (code, reason) => {
-        if (code === CloseCode.Abnormal) {
-          // Forward into an error to distinguish from a clean close
-          ac.abort(
-            new AbnormalCloseError(`Abnormal ws close: ${reason.toString()}`),
-          )
-        }
-      })
+/**
+ * Whether the platform WebSocket implementation supports creating WebSockets
+ * with a {@link WebSocketOptions.headers} option. Node does, the browser
+ * doesn't. Creating a WebSocket with headers on a platform that doesn't support
+ * them throws an error.
+ */
+// @NOTE Must be explicitly typed a boolean
+export const HEADERS_SUPPORTED_PLATFORM: boolean = HEADERS_SUPPORTED
 
-      try {
-        const wsStream = createWebSocketStream(this.ws, {
-          signal: ac.signal,
-          readableObjectMode: true, // Ensures frame bytes don't get buffered/combined together
-        })
-        for await (const chunk of wsStream) {
-          yield chunk
-        }
-      } catch (_err) {
-        const err =
-          isErrnoException(_err) && _err.code === 'ABORT_ERR'
-            ? _err.cause
-            : _err
-        if (err instanceof DisconnectError) {
-          // We cleanly end the connection
-          this.ws?.close(err.wsCode)
-          break
-        }
-        this.ws?.close() // No-ops if already closed or closing
-        if (isReconnectable(err)) {
-          this.reconnects ??= 0 // Never reconnect with a null
-          this.opts.onReconnectError?.(err, this.reconnects, this.initialSetup)
-          continue
-        } else {
-          throw err
-        }
-      }
-      break // Other side cleanly ended stream and disconnected
-    }
-  }
+export type NodeWebSocketOptions<M extends DataMode = 'auto'> =
+  WebSocketOptions<M>
+export type BrowserWebSocketOptions<M extends DataMode = 'auto'> = Omit<
+  WebSocketOptions<M>,
+  'headers'
+>
 
-  send(data: string | Buffer): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (!this.ws || this.ws.readyState !== 1 /* OPEN */) {
-        reject(new Error('WebSocket is not connected'))
-        return
-      }
-      this.ws.send(data, (err) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve()
-        }
-      })
-    })
-  }
-
-  isConnected(): boolean {
-    return this.ws !== null && this.ws.readyState === 1
-  }
-
-  startHeartbeat(ws: WebSocket) {
-    let isAlive = true
-    let heartbeatInterval: NodeJS.Timeout | null = null
-
-    const checkAlive = () => {
-      if (!isAlive) {
-        return ws.terminate()
-      }
-      isAlive = false // expect websocket to no longer be alive unless we receive a "pong" within the interval
-      ws.ping()
-    }
-
-    checkAlive()
-    heartbeatInterval = setInterval(
-      checkAlive,
-      this.opts.heartbeatIntervalMs ?? 10 * SECOND,
-    )
-
-    ws.on('pong', () => {
-      isAlive = true
-    })
-    ws.once('close', () => {
-      if (heartbeatInterval) {
-        clearInterval(heartbeatInterval)
-        heartbeatInterval = null
-      }
-    })
-  }
-}
-
-export default WebSocketKeepAlive
-
-class AbnormalCloseError extends Error {
-  code = 'EWSABNORMALCLOSE'
-}
-
-export class DisconnectError extends Error {
-  constructor(
-    public wsCode: CloseCode = CloseCode.Policy,
-    public xrpcCode?: string,
-  ) {
-    super()
-  }
-}
-
-// https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
-export enum CloseCode {
-  Normal = 1000,
-  Abnormal = 1006,
-  Policy = 1008,
-}
-
-function isReconnectable(err: unknown): boolean {
-  // Network errors are reconnectable.
-  // AuthenticationRequired and InvalidRequest XRPCErrors are not reconnectable.
-  // @TODO method-specific XRPCErrors may be reconnectable, need to consider. Receiving
-  // an invalid message is not current reconnectable, but the user can decide to skip them.
-  if (isErrnoException(err) && typeof err.code === 'string') {
-    return networkErrorCodes.includes(err.code)
-  }
-  return false
-}
-
-const networkErrorCodes = [
-  'EWSABNORMALCLOSE',
-  'ECONNRESET',
-  'ECONNREFUSED',
-  'ECONNABORTED',
-  'EPIPE',
-  'ETIMEDOUT',
-  'ECANCELED',
-]
-
-function backoffMs(n: number, maxMs: number) {
-  const baseSec = Math.pow(2, n) // 1, 2, 4, ...
-  const randSec = Math.random() - 0.5 // Random jitter between -.5 and .5 seconds
-  const ms = 1000 * (baseSec + randSec)
-  return Math.min(ms, maxMs)
-}
-
-function forwardSignal(signal: AbortSignal, ac: AbortController) {
-  if (signal.aborted) {
-    return ac.abort(signal.reason)
-  } else {
-    signal.addEventListener('abort', () => ac.abort(signal.reason), {
-      // @ts-ignore https://github.com/DefinitelyTyped/DefinitelyTyped/pull/68625
-      signal: ac.signal,
-    })
-  }
+/**
+ * A function allows building an isomorphic {@link WebSocketIterable}.
+ */
+export function websocket(
+  url: string | URL | (() => Awaitable<string | URL>),
+  options?: WebSocketOptions<'auto'>,
+): WebSocketIterable<'auto'>
+export function websocket<M extends DataMode>(
+  url: string | URL | (() => Awaitable<string | URL>),
+  options: M extends 'auto'
+    ? WebSocketOptions<'auto'>
+    : WebSocketOptions<M> & { dataMode: M },
+): WebSocketIterable<M>
+export function websocket<M extends DataMode>(
+  url: string | URL | (() => Awaitable<string | URL>),
+  options: WebSocketOptions<M> = {},
+): WebSocketIterable<M> {
+  return websocketFactory(url, createTransport, options)
 }

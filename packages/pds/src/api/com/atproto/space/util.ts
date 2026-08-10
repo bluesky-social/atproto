@@ -1,22 +1,32 @@
 import { getPdsEndpoint, getServiceEndpoint } from '@atproto/common'
-import { Keypair } from '@atproto/crypto'
-import { IdResolver } from '@atproto/identity'
+import type { Keypair } from '@atproto/crypto'
+import type { IdResolver } from '@atproto/identity'
 import { xrpc } from '@atproto/lex'
-import { SpacePermissionMatch } from '@atproto/oauth-scopes'
-import { CommitCtx, LtHash, RepoCommit, SignedCommit } from '@atproto/space'
-import { AtUri, DidString, SpaceRef, SpaceRefString } from '@atproto/syntax'
+import type { SpacePermissionMatch } from '@atproto/oauth-scopes'
+import {
+  type CommitCtx,
+  LtHash,
+  RepoCommit,
+  type SignedCommit,
+} from '@atproto/space'
+import {
+  AtUri,
+  type DidString,
+  type SpaceRef,
+  type SpaceRefString,
+} from '@atproto/syntax'
 import {
   InvalidRequestError,
   createServiceAuthHeaders,
 } from '@atproto/xrpc-server'
-import { ActorStore } from '../../../../actor-store/actor-store.js'
-import { SpaceRepo } from '../../../../actor-store/db/index.js'
-import {
+import type { ActorStore } from '../../../../actor-store/actor-store.js'
+import type { SpaceRepo } from '../../../../actor-store/db/index.js'
+import type {
   AccessOutput,
   OAuthOutput,
   SpaceCredentialOutput,
 } from '../../../../auth-output.js'
-import { AppContext } from '../../../../context.js'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { spaceLogger } from '../../../../logger.js'
 

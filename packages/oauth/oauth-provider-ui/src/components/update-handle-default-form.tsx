@@ -1,39 +1,55 @@
-import { HandleString } from '@atproto/syntax'
-import { InputHandleDefault } from '#/components/forms/input-handle-default.tsx'
-import { SmartForm, WrappedSmartFormProps } from '#/components/forms/smart-form'
+import type { HandleString } from '@atproto/syntax'
+import {
+  HandleField,
+  composeHandle,
+} from '#/components/forms/fields/handle-field.tsx'
+import {
+  FormShell,
+  type FormShellProps,
+} from '#/components/forms/form-shell.tsx'
 
 export type UpdateHandleDefaultData = {
   handle: HandleString
 }
 
-export type UpdateHandleDefaultFormProps =
-  WrappedSmartFormProps<UpdateHandleDefaultData> & {
-    domains: string[]
-  }
+type HandleFormValues = { handle: string; domain: string }
+
+export type UpdateHandleDefaultFormProps = Omit<
+  FormShellProps<HandleFormValues>,
+  'onSubmit'
+> & {
+  domains: string[]
+  /** Seeds the field with the account's current handle. */
+  handleDefault?: string
+  handler: (
+    data: UpdateHandleDefaultData,
+    signal: AbortSignal,
+  ) => void | PromiseLike<void>
+}
 
 export function UpdateHandleDefaultForm({
   domains,
+  handleDefault,
+  handler,
   ...props
 }: UpdateHandleDefaultFormProps) {
   return (
-    <SmartForm
+    <FormShell<HandleFormValues>
       {...props}
-      validate={({ handle }) => {
-        if (handle && domains.some((dom) => handle.endsWith(dom))) {
-          return { handle }
-        }
+      // @NOTE The domain check is re-asserted here so submission cannot send a
+      // handle outside the available domains.
+      onSubmit={(values, signal) => {
+        const handle = composeHandle(values) as HandleString
+        if (!domains.some((dom) => handle.endsWith(dom))) return
+        return handler({ handle }, signal)
       }}
-      fields={({ values, set }) => (
-        <InputHandleDefault
-          handle={values.handle}
-          onHandle={(value) => set('handle', value)}
-          domains={domains}
-          name="handle"
-          required
-          autoFocus
-          enterKeyHint="done"
-        />
-      )}
-    />
+    >
+      <HandleField
+        domains={domains}
+        defaultHandle={handleDefault}
+        required
+        autoFocus
+      />
+    </FormShell>
   )
 }

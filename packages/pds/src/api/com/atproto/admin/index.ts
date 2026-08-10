@@ -1,5 +1,5 @@
-import { Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import type { Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import deleteAccount from './deleteAccount.js'
 import disableAccountInvites from './disableAccountInvites.js'
 import disableInviteCodes from './disableInviteCodes.js'

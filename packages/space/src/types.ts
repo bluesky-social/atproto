@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { check } from '@atproto/common'
-import { Cid, LexMap, ifCid } from '@atproto/lex-data'
+import type { check } from '@atproto/common'
+import { type Cid, type LexMap, ifCid } from '@atproto/lex-data'
 
 export type SpaceRecord = LexMap
 

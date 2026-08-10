@@ -1,5 +1,3 @@
-/* eslint-env node  */
-
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from '@atproto/lex-builder'
@@ -26,6 +24,7 @@ Promise.all([
     pretty: true,
     indexFile: true,
     defaultExport: true,
+    importExt: '.js',
   }),
 
   // For tests

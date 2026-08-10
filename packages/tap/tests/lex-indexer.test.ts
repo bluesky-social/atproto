@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { l } from '@atproto/lex'
 import {
-  CreateEvent,
-  DeleteEvent,
+  type CreateEvent,
+  type DeleteEvent,
   LexIndexer,
-  UpdateEvent,
+  type UpdateEvent,
 } from '../src/lex-indexer.js'
-import { IdentityEvent, RecordEvent } from '../src/types.js'
+import type { IdentityEvent, RecordEvent } from '../src/types.js'
 import {
   createIdentityEvent,
   createMockOpts,

@@ -1,6 +1,6 @@
 import {
-  ModeratorClient,
-  SeedClient,
+  type ModeratorClient,
+  type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
@@ -48,6 +48,9 @@ describe('get profiles through ozone', () => {
     await modClient.performTakedown({
       subject: repoSubject(sc.dids.bob),
     })
+
+    // ensure the takedown has been pushed out to the appview
+    await network.processAll()
 
     const profilesAfterFromOzone = await getProfiles([
       sc.dids.bob,

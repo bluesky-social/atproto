@@ -1,7 +1,7 @@
-import * as http from 'node:http'
-import { AddressInfo } from 'node:net'
+import type * as http from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { MINUTE } from '@atproto/common'
-import { LexiconDoc } from '@atproto/lexicon'
+import type { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
 import * as xrpcServer from '../src/index.js'
 import { MemoryRateLimiter } from '../src/index.js'
@@ -237,6 +237,35 @@ describe('Parameters', () => {
       await makeCall()
     }
     await expect(makeCall).rejects.toThrow('Rate Limit Exceeded')
+  })
+
+  it('exposes rate limit headers to browsers (CORS)', async () => {
+    const { port } = s.address() as AddressInfo
+    const url = `http://localhost:${port}/xrpc/io.example.routeLimit?str=cors-headers`
+
+    const okRes = await fetch(url)
+    await okRes.arrayBuffer()
+    expect(okRes.status).toBe(200)
+    expect(okRes.headers.get('ratelimit-limit')).toBe('5')
+    expect(okRes.headers.get('ratelimit-remaining')).toBe('4')
+    expect(okRes.headers.get('ratelimit-reset')).toBeTruthy()
+    expect(okRes.headers.get('ratelimit-policy')).toBe('5;w=300')
+    expect(okRes.headers.get('access-control-expose-headers')).toBe(
+      'RateLimit-Limit, RateLimit-Reset, RateLimit-Remaining, RateLimit-Policy',
+    )
+
+    for (let i = 0; i < 4; i++) {
+      await fetch(url).then((res) => res.arrayBuffer())
+    }
+
+    const limitedRes = await fetch(url)
+    await limitedRes.arrayBuffer()
+    expect(limitedRes.status).toBe(429)
+    expect(limitedRes.headers.get('ratelimit-remaining')).toBe('0')
+    expect(limitedRes.headers.get('retry-after')).toBeTruthy()
+    expect(limitedRes.headers.get('access-control-expose-headers')).toBe(
+      'RateLimit-Limit, RateLimit-Reset, RateLimit-Remaining, RateLimit-Policy, Retry-After',
+    )
   })
 
   it('can reset route rate limits', async () => {

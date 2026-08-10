@@ -1,7 +1,7 @@
 import { app } from '../../lexicons/index.js'
-import { ActorDb } from '../db/index.js'
+import type { ActorDb } from '../db/index.js'
 import {
-  PrefAllowedOptions,
+  type PrefAllowedOptions,
   getAgeFromDatestring,
   prefAllowed,
 } from './util.js'

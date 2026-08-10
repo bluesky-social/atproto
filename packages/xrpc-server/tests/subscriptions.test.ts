@@ -1,16 +1,17 @@
-import * as http from 'node:http'
-import { AddressInfo } from 'node:net'
-import { WebSocket, createWebSocketStream } from 'ws'
+import type * as http from 'node:http'
+import type { AddressInfo } from 'node:net'
+import { WebSocket, WebSocketServer, createWebSocketStream } from 'ws'
 import { wait } from '@atproto/common'
-import { LexiconDoc, Lexicons } from '@atproto/lexicon'
+import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import {
   ErrorFrame,
-  Frame,
+  type Frame,
   MessageFrame,
+  type Server,
+  type StreamContext,
   Subscription,
   byFrame,
 } from '../src/index.js'
-import * as xrpcServer from '../src/index.js'
 import {
   basicAuthHeaders,
   buildAddLexicons,
@@ -113,18 +114,14 @@ const LEXICONS = [
 ] as const satisfies LexiconDoc[]
 
 const handlers = {
-  'io.example.streamOne': async function* ({
-    params,
-  }: xrpcServer.StreamContext) {
+  'io.example.streamOne': async function* ({ params }: StreamContext) {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       await wait(0)
       yield { $type: 'io.example.streamOne#countdownStatus', count: i }
     }
   },
-  'io.example.streamTwo': async function* ({
-    params,
-  }: xrpcServer.StreamContext) {
+  'io.example.streamTwo': async function* ({ params }: StreamContext) {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       await wait(200)
@@ -151,7 +148,7 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
     // definitions
     const lex = new Lexicons(structuredClone(LEXICONS))
 
-    let server: xrpcServer.Server
+    let server: Server
     let s: http.Server
     let port: number
     beforeAll(async () => {
@@ -289,6 +286,91 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
         }
       }
       await expect(drainStream).rejects.toHaveProperty('code', 'ECONNRESET')
+    })
+
+    describe('Subscription liveness', () => {
+      it('a bare abort() closes 1000, not 1006', async () => {
+        // This is how @atproto/sync's Firehose shuts down, and the realm-crossing
+        // instanceof that used to break it only shows up under jest's ESM contexts
+        // — vitest and plain node both passed while this was broken.
+        const wss = new WebSocketServer({ port: 0 })
+        await new Promise((r) => wss.once('listening', r))
+        const { port } = wss.address() as AddressInfo
+        let serverSaw: number | undefined
+        wss.on('connection', (s) => {
+          s.on('close', (c) => {
+            serverSaw = c
+          })
+        })
+        const ac = new AbortController()
+        const sub = new Subscription({
+          service: `ws://localhost:${port}`,
+          method: 'io.example.streamOne',
+          signal: ac.signal,
+          validate: (o) => o,
+        })
+        const consume = (async () => {
+          try {
+            for await (const _ of sub) {
+              /* silent server */
+            }
+          } catch {
+            /* abort */
+          }
+        })()
+        await new Promise((r) => setTimeout(r, 300))
+        ac.abort()
+        await consume
+        for (let i = 0; i < 40 && serverSaw === undefined; i++) {
+          await new Promise((r) => setTimeout(r, 25))
+        }
+        wss.close()
+        expect(serverSaw).toBe(1000)
+      }, 20000)
+
+      it('pings a silent server, so a dead connection is detected', async () => {
+        // The previous client started a heartbeat unconditionally and no caller
+        // ever passed the option, so an opt-in default silently removed
+        // dead-connection detection everywhere: a black-holed TCP connection
+        // parks forever with no error and no reconnect.
+        //
+        // A short interval is passed here to keep the test quick; the wiring it
+        // exercises is the same one that carries the 10s default.
+        const wss = new WebSocketServer({ port: 0 })
+        await new Promise((resolve) => wss.once('listening', resolve))
+        const { port: silentPort } = wss.address() as AddressInfo
+
+        let pings = 0
+        wss.on('connection', (socket) => {
+          socket.on('ping', () => pings++)
+        })
+
+        const ac = new AbortController()
+        const sub = new Subscription({
+          service: `ws://localhost:${silentPort}`,
+          method: 'io.example.streamOne',
+          heartbeatIntervalMs: 40,
+          signal: ac.signal,
+          validate: (obj) => obj,
+        })
+
+        const consume = (async () => {
+          try {
+            for await (const _ of sub) {
+              // The server never sends: this parks until aborted below.
+            }
+          } catch {
+            // The abort surfaces here; not what this test is about.
+          }
+        })()
+
+        await wait(400)
+        ac.abort(new Error('test cleanup'))
+        await consume
+        wss.close()
+
+        expect(pings).toBeGreaterThan(0)
+      })
     })
 
     describe('Subscription consumer', () => {

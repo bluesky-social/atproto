@@ -1,7 +1,7 @@
-import { LexMap } from '@atproto/lex-data'
+import type { LexMap } from '@atproto/lex-data'
 import { cborToLexRecord } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import {
+import type {
   ActorDb,
   SimplespaceConfig,
   Space,

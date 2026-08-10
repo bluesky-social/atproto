@@ -1,5 +1,146 @@
 # @atproto/oauth-client
 
+## 0.8.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc@0.8.10
+
+## 0.8.2
+
+### Patch Changes
+
+- [#5295](https://github.com/bluesky-social/atproto/pull/5295) [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update vitest dependencies
+
+- Updated dependencies [[`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c)]:
+  - @atproto-labs/handle-resolver@0.4.8
+  - @atproto-labs/simple-store@0.5.1
+  - @atproto-labs/identity-resolver@0.4.7
+  - @atproto-labs/did-resolver@0.3.7
+  - @atproto-labs/simple-store-memory@0.2.6
+  - @atproto/xrpc@0.8.9
+
+## 0.8.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc@0.8.8
+
+## 0.8.0
+
+### Minor Changes
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **BREAKING:** Rename `SessionHooks` into `SessionGetterOptions`. `onUpdate` and `onDelete` hooks are now named `onSessionUpdated` and `onSessionDeleted`, respectively.
+
+### Patch Changes
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `SessionGetter`'s private properties are now really private.
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove implicit `any` types in internal utilities (`runtime`, `oauth-response-error`, `fetch-dpop`) so the package type-checks under `noImplicitAny`. No runtime behavior change.
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `AtprotoDid` as part of exported types
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - The `SessionGetter` now propagates the `AbortSignal` when fetching the Authorization Server metadata, allowing it to abort the request earlier.
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Throw an `AggregateError` containing every error that occurred while saving session data from the `SessionGetter` to the `SessionStore`.
+
+- [#5266](https://github.com/bluesky-social/atproto/pull/5266) [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Errors thrown by the metadata caches (authorization server & protected resource) are now logged (previously they were silently ignored on read) while continuing to degrade to a cache miss and a refetch. A new `onCacheError` config option on both metadata resolvers allows overriding how these errors are handled.
+
+- Updated dependencies [[`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a), [`f136380`](https://github.com/bluesky-social/atproto/commit/f136380964a8ea52ef031a9732d3d1f1f1ab0c4a)]:
+  - @atproto-labs/handle-resolver@0.4.7
+  - @atproto-labs/simple-store@0.5.0
+  - @atproto-labs/fetch@0.3.5
+  - @atproto-labs/did-resolver@0.3.6
+  - @atproto-labs/identity-resolver@0.4.6
+  - @atproto-labs/simple-store-memory@0.2.5
+  - @atproto/xrpc@0.8.7
+
+## 0.7.11
+
+### Patch Changes
+
+- Updated dependencies [[`ce386ee`](https://github.com/bluesky-social/atproto/commit/ce386eed324f813601db57f873fbb3b987492001)]:
+  - @atproto-labs/handle-resolver@0.4.6
+  - @atproto-labs/identity-resolver@0.4.5
+
+## 0.7.10
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc@0.8.6
+
+## 0.7.9
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto-labs/simple-store-memory@0.2.4
+  - @atproto-labs/identity-resolver@0.4.4
+  - @atproto-labs/handle-resolver@0.4.5
+  - @atproto-labs/did-resolver@0.3.5
+  - @atproto-labs/simple-store@0.4.4
+  - @atproto/oauth-types@0.7.5
+  - @atproto-labs/fetch@0.3.4
+  - @atproto/jwk@0.7.4
+  - @atproto/xrpc@0.8.5
+  - @atproto/did@0.5.4
+
+## 0.7.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc@0.8.4
+
+## 0.7.7
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- Updated dependencies [[`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto-labs/simple-store-memory@0.2.3
+  - @atproto-labs/identity-resolver@0.4.3
+  - @atproto-labs/handle-resolver@0.4.4
+  - @atproto-labs/did-resolver@0.3.4
+  - @atproto-labs/simple-store@0.4.3
+  - @atproto/oauth-types@0.7.4
+  - @atproto-labs/fetch@0.3.3
+  - @atproto/jwk@0.7.3
+  - @atproto/xrpc@0.8.3
+  - @atproto/did@0.5.3
+
+## 0.7.6
+
+### Patch Changes
+
+- [#5157](https://github.com/bluesky-social/atproto/pull/5157) [`8bcba69`](https://github.com/bluesky-social/atproto/commit/8bcba69cf1f02d09e07b51ce091918312029df63) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor syntax fix in tests
+
+## 0.7.5
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- Updated dependencies [[`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88), [`60e9b83`](https://github.com/bluesky-social/atproto/commit/60e9b8391f212c274b1f21991ee2a3a2d14f2f88), [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7)]:
+  - @atproto-labs/fetch@0.3.2
+  - @atproto/did@0.5.2
+  - @atproto-labs/did-resolver@0.3.3
+  - @atproto-labs/handle-resolver@0.4.3
+  - @atproto-labs/identity-resolver@0.4.2
+  - @atproto-labs/simple-store@0.4.2
+  - @atproto-labs/simple-store-memory@0.2.2
+  - @atproto/jwk@0.7.2
+  - @atproto/oauth-types@0.7.3
+  - @atproto/xrpc@0.8.2
+
 ## 0.7.4
 
 ### Patch Changes

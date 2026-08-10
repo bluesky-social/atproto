@@ -1,5 +1,5 @@
-import { ForbiddenError, Server } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context.js'
+import { ForbiddenError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { prepareDelete, spaceRecordUri } from '../../../../repo/index.js'
 import { assertSpaceScope, fireNotifyWrite } from './util.js'

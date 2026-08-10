@@ -1,32 +1,62 @@
-import { sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
-import { BackgroundQueue, PeriodicBackgroundTask } from '../background.js'
+import { type BackgroundQueue, PeriodicBackgroundTask } from '../background.js'
+import { MATERIALIZED_VIEW_REFRESH_LOCK_ID } from '../db/index.js'
 import { dbLogger } from '../logger.js'
 
-export class MaterializedViewRefresher extends PeriodicBackgroundTask {
-  constructor(backgroundQueue: BackgroundQueue, interval = 30 * MINUTE) {
-    super(backgroundQueue, interval, async ({ db }, signal) => {
-      for (const view of [
-        'account_events_stats',
-        'record_events_stats',
-        'account_record_events_stats',
-        'account_record_status_stats',
-      ]) {
-        if (signal.aborted) break
+const LOCK_TIMEOUT_MS = 1 * MINUTE
 
-        // Kysely does not provide a way to cancel a running query. Because of
-        // this, killing the process during a refresh will cause the process to
-        // wait for the current refresh to finish before exiting. This is not
-        // ideal, but it is the best we can do until Kysely provides a way to
-        // cancel a query.
-        try {
-          await sql`REFRESH MATERIALIZED VIEW CONCURRENTLY ${sql.id(view)}`.execute(
-            db,
-          )
-          dbLogger.info(`refreshed materialized view ${view}`)
-        } catch (err) {
-          dbLogger.error({ err, view }, 'failed to refresh materialized view')
+export class MaterializedViewRefresher extends PeriodicBackgroundTask {
+  constructor(
+    backgroundQueue: BackgroundQueue,
+    interval = 30 * MINUTE,
+    statementTimeoutMs = 10 * MINUTE,
+  ) {
+    super(backgroundQueue, interval, async (db, signal) => {
+      let locked = false
+      // Create single client for the whole refresh cycle
+      const client = await db.pool.connect()
+
+      try {
+        await client.query(`SET statement_timeout = ${statementTimeoutMs}`)
+        await client.query(`SET lock_timeout = ${LOCK_TIMEOUT_MS}`)
+
+        const lockResult = await client.query(
+          'SELECT pg_try_advisory_lock($1) as locked',
+          [MATERIALIZED_VIEW_REFRESH_LOCK_ID],
+        )
+        locked = lockResult.rows[0]?.locked === true
+        if (!locked) {
+          dbLogger.info('lock is held - skipping materialized view refresh')
+          return
         }
+
+        for (const view of [
+          'account_events_stats',
+          'record_events_stats',
+          'account_record_events_stats',
+          'account_record_status_stats',
+        ]) {
+          if (signal.aborted) break
+
+          const startedAt = Date.now()
+          try {
+            await client.query(
+              `REFRESH MATERIALIZED VIEW CONCURRENTLY "${view}"`,
+            )
+            dbLogger.info(
+              { view, durationMs: Date.now() - startedAt },
+              'refreshed materialized view',
+            )
+          } catch (err) {
+            dbLogger.error(
+              { err, view, durationMs: Date.now() - startedAt },
+              'failed to refresh materialized view',
+            )
+          }
+        }
+      } finally {
+        // Clear any session SETS and release its locks
+        client.release(true)
       }
     })
   }

@@ -3,44 +3,28 @@ import { createRequire } from 'node:module'
 import type { HydrationData as UiHydrationData } from '@atproto/oauth-provider-ui/hydration-data'
 import { buildCustomizationCss } from '../../customization/build-customization-css.js'
 import { buildCustomizationData } from '../../customization/build-customization-data.js'
-import { Customization } from '../../customization/customization.js'
-import { CspConfig, mergeCsp } from '../../lib/csp/index.js'
+import type { Customization } from '../../customization/customization.js'
+import { type CspConfig, mergeCsp } from '../../lib/csp/index.js'
 import { declareHydrationData } from '../../lib/html/hydration-data.js'
 import { cssCode, html } from '../../lib/html/index.js'
-import { WriteResponseOptions } from '../../lib/http/response.js'
+import type { WriteResponseOptions } from '../../lib/http/response.js'
 import {
   CrossOriginEmbedderPolicy,
-  SecurityHeadersOptions,
+  type SecurityHeadersOptions,
 } from '../../lib/http/security-headers.js'
 import { mergeDefaults } from '../../lib/util/object.js'
-import { Simplify } from '../../lib/util/type.js'
-import { WriteHtmlOptions, writeHtml } from '../../lib/write-html.js'
+import type { Simplify } from '../../lib/util/type.js'
+import { type WriteHtmlOptions, writeHtml } from '../../lib/write-html.js'
 import { parseAssetsManifest } from './assets-manifest.js'
 import { setupCsrfToken } from './csrf.js'
 
-// If the "ui" and "frontend" packages are ever unified, this can be replaced
-// with a single expression:
-//
-// const { getAssets, assetsMiddleware } = parseAssetsManifest(
-//   require.resolve('@atproto/oauth-provider-ui/bundle-manifest.json'),
-// )
-
 const require = createRequire(import.meta.url)
-const ui = parseAssetsManifest(
+
+export const { getAssets, assetsMiddleware } = parseAssetsManifest(
   require.resolve('@atproto/oauth-provider-ui/bundle-manifest.json'),
 )
 
 type HydrationData = Simplify<UiHydrationData>
-
-function getAssets(entryName: keyof HydrationData) {
-  const assetRef = ui.getAssets(entryName)
-  if (assetRef) return assetRef
-
-  // Fool-proof. Should never happen.
-  throw new Error(`Entry "${entryName}" not found in assets`)
-}
-
-export const assetsMiddleware = ui.assetsMiddleware
 
 const SPA_CSP: CspConfig = {
   // API calls are made to the same origin
@@ -71,7 +55,11 @@ export function sendWebAppFactory<P extends keyof HydrationData>(
   // Pre-computed options:
   const customizationData = buildCustomizationData(customization)
   const customizationCss = cssCode(buildCustomizationCss(customization))
-  const { scripts, styles } = getAssets(page)
+
+  const assets = getAssets(page)
+  if (!assets) throw new Error(`No assets found for page: ${page}`)
+
+  const { scripts, styles } = assets
 
   const csp = mergeCsp(
     SPA_CSP,
@@ -111,7 +99,7 @@ export function sendWebAppFactory<P extends keyof HydrationData>(
     return writeHtml(
       res,
       mergeDefaults<WriteHtmlOptions>(defaults, options, {
-        bodyAttrs: { class: 'text-text-default bg-contrast-0' },
+        bodyAttrs: { class: 'text-foreground bg-background' },
         csp: options?.csp ? mergeCsp(csp, options.csp) : csp,
         coep: options?.coep ?? coep,
         meta: [{ name: 'robots', content: 'noindex' }],

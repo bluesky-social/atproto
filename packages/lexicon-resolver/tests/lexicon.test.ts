@@ -1,8 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
-import { DidString, NSID } from '@atproto/syntax'
 import {
-  AtprotoLexiconResolver,
+  type SeedClient,
+  TestNetworkNoAppView,
+  usersSeed,
+} from '@atproto/dev-env'
+import { type DidString, NSID } from '@atproto/syntax'
+import {
+  type AtprotoLexiconResolver,
   buildLexiconResolver,
   resolveLexiconDidAuthority,
 } from '../src/index.js'

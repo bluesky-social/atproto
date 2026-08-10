@@ -1,5 +1,238 @@
 # @atproto/ozone
 
+## 0.2.26
+
+### Patch Changes
+
+- Updated dependencies [[`b66870d`](https://github.com/bluesky-social/atproto/commit/b66870d5a1efbcfa0cc07498c7cfcf3f0f243e86), [`b66870d`](https://github.com/bluesky-social/atproto/commit/b66870d5a1efbcfa0cc07498c7cfcf3f0f243e86)]:
+  - @atproto/common@0.7.6
+  - @atproto/xrpc-server@0.12.2
+
+## 0.2.25
+
+### Patch Changes
+
+- [#5340](https://github.com/bluesky-social/atproto/pull/5340) [`8145a99`](https://github.com/bluesky-social/atproto/commit/8145a999e03219e846ae4773ec66f0de72939511) Thanks [@43081j](https://github.com/43081j)! - Remove typed-emitter and use built-in strongly typed `EventEmitter`
+
+- [#5293](https://github.com/bluesky-social/atproto/pull/5293) [`675953e`](https://github.com/bluesky-social/atproto/commit/675953e8c0ac5154baf7c5fd0b84aba01559a879) Thanks [@foysalit](https://github.com/foysalit)! - Add recommended policy keys to ozone queue configuration and generated API types
+
+- Updated dependencies [[`8b55a4a`](https://github.com/bluesky-social/atproto/commit/8b55a4ab69c24e5038f67c479b3b9953666ea0c2), [`675953e`](https://github.com/bluesky-social/atproto/commit/675953e8c0ac5154baf7c5fd0b84aba01559a879)]:
+  - @atproto/syntax@0.7.4
+  - @atproto/api@0.20.38
+  - @atproto/lexicon@0.7.11
+  - @atproto/xrpc-server@0.12.1
+  - @atproto/common@0.7.5
+  - @atproto/identity@0.5.9
+  - @atproto/xrpc@0.8.10
+
+## 0.2.24
+
+### Patch Changes
+
+- [#5300](https://github.com/bluesky-social/atproto/pull/5300) [`2cbbb5d`](https://github.com/bluesky-social/atproto/commit/2cbbb5d16ccb1597e0391aa674349f795b404b8b) Thanks [@foysalit](https://github.com/foysalit)! - Fix createReport reporter validation to only consult the reporter's account-level moderation status. Previously a takedown or pending appeal on any of the reporter's records (posts, lists, etc.) could incorrectly block them from submitting reports or appeals.
+
+- [#5285](https://github.com/bluesky-social/atproto/pull/5285) [`d12f6ac`](https://github.com/bluesky-social/atproto/commit/d12f6ac6e2cb2590446bf9f2051287bac058c092) Thanks [@devinivy](https://github.com/devinivy)! - Migrate the internal Jetstream client to `@atproto/ws-client`. `Jetstream.close()` now resolves once the stream has fully stopped rather than returning immediately.
+
+- [#5301](https://github.com/bluesky-social/atproto/pull/5301) [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7) Thanks [@43081j](https://github.com/43081j)! - Switch from destructured default imports to named imports of CommonJS dependencies.
+
+- Updated dependencies [[`5a222b0`](https://github.com/bluesky-social/atproto/commit/5a222b05da5f9c0d32d41fb1c4437ea188aa2c32), [`6a3d607`](https://github.com/bluesky-social/atproto/commit/6a3d6073cb66c527b5b109242049c85c36b9658c), [`ee4a0cf`](https://github.com/bluesky-social/atproto/commit/ee4a0cf0ebb3e078a014bef882720f46aca5cb89), [`29dcbc0`](https://github.com/bluesky-social/atproto/commit/29dcbc091ca72cb9dda7a2cea846f3eb4bfcef6c), [`a8186e7`](https://github.com/bluesky-social/atproto/commit/a8186e7cdb5ea3d8a88c2e9283d742de1bc0bba6), [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7), [`d12f6ac`](https://github.com/bluesky-social/atproto/commit/d12f6ac6e2cb2590446bf9f2051287bac058c092), [`d12f6ac`](https://github.com/bluesky-social/atproto/commit/d12f6ac6e2cb2590446bf9f2051287bac058c092)]:
+  - @atproto/xrpc-server@0.12.0
+  - @atproto/syntax@0.7.3
+  - @atproto/api@0.20.37
+  - @atproto/ws-client@0.2.0
+  - @atproto/common@0.7.4
+  - @atproto/lexicon@0.7.10
+  - @atproto/identity@0.5.8
+  - @atproto/xrpc@0.8.9
+
+## 0.2.23
+
+### Patch Changes
+
+- Updated dependencies [[`c8399b6`](https://github.com/bluesky-social/atproto/commit/c8399b6b051377be66f660105b14646a1c2fa460)]:
+  - @atproto/xrpc-server@0.11.13
+  - @atproto/common@0.7.3
+  - @atproto/ws-client@0.1.8
+  - @atproto/api@0.20.36
+  - @atproto/identity@0.5.7
+  - @atproto/lexicon@0.7.9
+  - @atproto/xrpc@0.8.8
+
+## 0.2.22
+
+### Patch Changes
+
+- [#5253](https://github.com/bluesky-social/atproto/pull/5253) [`de201df`](https://github.com/bluesky-social/atproto/commit/de201dfd8e50a945b085e88c8face3a2e8cefc3c) Thanks [@foysalit](https://github.com/foysalit)! - Add conversation support in ozone account and record stats
+
+- [#5241](https://github.com/bluesky-social/atproto/pull/5241) [`f5de51f`](https://github.com/bluesky-social/atproto/commit/f5de51fb56d33a8be02c4e660b3af276673c615c) Thanks [@foysalit](https://github.com/foysalit)! - Add bulk close report endpoint
+
+- [#5276](https://github.com/bluesky-social/atproto/pull/5276) [`080aedf`](https://github.com/bluesky-social/atproto/commit/080aedf11258ed102a83a7c19dfdbf8dfbdf546d) Thanks [@gcwill70](https://github.com/gcwill70)! - \* Add postgres timeouts to materialized view refresher
+
+- Updated dependencies [[`84781a9`](https://github.com/bluesky-social/atproto/commit/84781a9958357e1f208ff0100cee050c5b42298b), [`ccb57ef`](https://github.com/bluesky-social/atproto/commit/ccb57ef6f015dcdc33fdfdc9c4cf048711acad01), [`d3bbeb5`](https://github.com/bluesky-social/atproto/commit/d3bbeb5fe87f8c389c2f18abd2bc055ef916a63a)]:
+  - @atproto/api@0.20.35
+  - @atproto/lexicon@0.7.8
+  - @atproto/xrpc@0.8.7
+  - @atproto/xrpc-server@0.11.12
+
+## 0.2.21
+
+### Patch Changes
+
+- Updated dependencies [[`102503c`](https://github.com/bluesky-social/atproto/commit/102503c0781e3605ac725adf5c94893870f7d2f7)]:
+  - @atproto/api@0.20.34
+
+## 0.2.20
+
+### Patch Changes
+
+- Updated dependencies [[`5d6dae2`](https://github.com/bluesky-social/atproto/commit/5d6dae261032033eb4c818944208b9342c1d49d4)]:
+  - @atproto/api@0.20.33
+
+## 0.2.19
+
+### Patch Changes
+
+- Updated dependencies [[`e133a65`](https://github.com/bluesky-social/atproto/commit/e133a65cba992e6429d4526dc3e7cfe8bf87426f)]:
+  - @atproto/api@0.20.32
+
+## 0.2.18
+
+### Patch Changes
+
+- Updated dependencies [[`3358df6`](https://github.com/bluesky-social/atproto/commit/3358df61caab20c4258ea7673121a03236993d7b), [`7fab73c`](https://github.com/bluesky-social/atproto/commit/7fab73c931d608730bbad6275184ec60259042aa)]:
+  - @atproto/xrpc-server@0.11.11
+  - @atproto/api@0.20.31
+
+## 0.2.17
+
+### Patch Changes
+
+- Updated dependencies [[`38ee7f0`](https://github.com/bluesky-social/atproto/commit/38ee7f08da0dcfe65202e46f2127b6a39b096e2f)]:
+  - @atproto/api@0.20.30
+  - @atproto/xrpc-server@0.11.10
+
+## 0.2.16
+
+### Patch Changes
+
+- Updated dependencies [[`33f4416`](https://github.com/bluesky-social/atproto/commit/33f441661ffb28bcceef161c9ce381320ff7bb6f)]:
+  - @atproto/api@0.20.29
+
+## 0.2.15
+
+### Patch Changes
+
+- [#5076](https://github.com/bluesky-social/atproto/pull/5076) [`652016a`](https://github.com/bluesky-social/atproto/commit/652016ad57dca26f43b7f79167ecbfcabd5cbd4d) Thanks [@gcwill70](https://github.com/gcwill70)! - Support routing conversation reports to queues: allow the 'conversation' subject type on queue create/list, fix conversation subject typing in report re-routing, and add 'message'/'conversation' subjectType filters to tools.ozone.report.queryReports
+
+- [#5083](https://github.com/bluesky-social/atproto/pull/5083) [`e408d11`](https://github.com/bluesky-social/atproto/commit/e408d11e723e3d232bcbfdb7247301273138cec6) Thanks [@gcwill70](https://github.com/gcwill70)! - add custom queues through moderation_event.modTool.meta.queueId
+
+- [#5237](https://github.com/bluesky-social/atproto/pull/5237) [`349693e`](https://github.com/bluesky-social/atproto/commit/349693e63865a5ba88e56a2b760d9e4ad39fe730) Thanks [@devinivy](https://github.com/devinivy)! - Apply subject status tags in deterministic tagger order
+
+## 0.2.14
+
+### Patch Changes
+
+- Updated dependencies [[`9e1da84`](https://github.com/bluesky-social/atproto/commit/9e1da84cc00a1cc5b453705539a2766403f3ee55)]:
+  - @atproto/syntax@0.7.2
+  - @atproto/api@0.20.28
+  - @atproto/lexicon@0.7.7
+  - @atproto/xrpc-server@0.11.9
+  - @atproto/common@0.7.2
+  - @atproto/identity@0.5.6
+  - @atproto/xrpc@0.8.6
+  - @atproto/ws-client@0.1.7
+
+## 0.2.13
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`729ffaf`](https://github.com/bluesky-social/atproto/commit/729ffaf03a7ff484294dd682e1af349c2073f6d2), [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto/api@0.20.27
+  - @atproto/xrpc-server@0.11.8
+  - @atproto/ws-client@0.1.6
+  - @atproto/identity@0.5.5
+  - @atproto/lexicon@0.7.6
+  - @atproto/common@0.7.1
+  - @atproto/crypto@0.5.4
+  - @atproto/syntax@0.7.1
+  - @atproto/xrpc@0.8.5
+
+## 0.2.12
+
+### Patch Changes
+
+- Updated dependencies [[`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`6b493b7`](https://github.com/bluesky-social/atproto/commit/6b493b77f56b7de47f5eb91d29f726cdc7794e46), [`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112), [`963b944`](https://github.com/bluesky-social/atproto/commit/963b9440190c7e59abc0c05de70ecea9cab6fe37), [`d79f6d5`](https://github.com/bluesky-social/atproto/commit/d79f6d59a073c05cc37bd0d1482beeea482b67ed), [`1497fea`](https://github.com/bluesky-social/atproto/commit/1497fea9c975e46e56fd99914fba2ad96affa934)]:
+  - @atproto/syntax@0.7.0
+  - @atproto/api@0.20.26
+  - @atproto/common@0.7.0
+  - @atproto/xrpc-server@0.11.7
+  - @atproto/lexicon@0.7.5
+  - @atproto/ws-client@0.1.5
+  - @atproto/identity@0.5.4
+  - @atproto/xrpc@0.8.4
+
+## 0.2.11
+
+### Patch Changes
+
+- Updated dependencies [[`f6409db`](https://github.com/bluesky-social/atproto/commit/f6409dbcefdd5565b1ba23c52dc71ec7e791e2e9)]:
+  - @atproto/api@0.20.25
+
+## 0.2.10
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- Updated dependencies [[`28a0b58`](https://github.com/bluesky-social/atproto/commit/28a0b588147863eaef948cd2bb8fc0f19d08cda9), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto/syntax@0.6.4
+  - @atproto/identity@0.5.3
+  - @atproto/xrpc-server@0.11.6
+  - @atproto/ws-client@0.1.4
+  - @atproto/lexicon@0.7.4
+  - @atproto/common@0.6.5
+  - @atproto/crypto@0.5.3
+  - @atproto/xrpc@0.8.3
+  - @atproto/api@0.20.24
+
+## 0.2.9
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/xrpc-server@0.11.5
+
+## 0.2.8
+
+### Patch Changes
+
+- Updated dependencies [[`f2a0efe`](https://github.com/bluesky-social/atproto/commit/f2a0efe11140c8bebe488ac1f737e242d7f23f0b), [`45278fd`](https://github.com/bluesky-social/atproto/commit/45278fd367ee50654ac5d09bd6da1451c8b0cd98), [`f2a0efe`](https://github.com/bluesky-social/atproto/commit/f2a0efe11140c8bebe488ac1f737e242d7f23f0b)]:
+  - @atproto/xrpc-server@0.11.4
+  - @atproto/api@0.20.23
+
+## 0.2.7
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- [#5149](https://github.com/bluesky-social/atproto/pull/5149) [`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `pino` logger to version 10
+
+- Updated dependencies [[`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb), [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7), [`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb)]:
+  - @atproto/common@0.6.4
+  - @atproto/api@0.20.22
+  - @atproto/crypto@0.5.2
+  - @atproto/identity@0.5.2
+  - @atproto/lexicon@0.7.3
+  - @atproto/syntax@0.6.3
+  - @atproto/ws-client@0.1.3
+  - @atproto/xrpc@0.8.2
+  - @atproto/xrpc-server@0.11.3
+
 ## 0.2.6
 
 ### Patch Changes

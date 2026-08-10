@@ -1,7 +1,7 @@
-import { clsx } from 'clsx'
-import { JSX } from 'react'
-import { ButtonCopy } from '#/components/forms/button-copy.tsx'
-import { Override } from '#/lib/util.ts'
+import type { JSX } from 'react'
+import { CopyButton } from '#/components/forms/copy-button.tsx'
+import type { Override } from '#/lib/util.ts'
+import { cn } from '#/lib/utils.ts'
 
 export type CodeSnippetProps = Override<
   JSX.IntrinsicElements['div'],
@@ -16,8 +16,8 @@ export type CodeSnippetProps = Override<
 >
 
 /**
- * A read-only, monospaced display of a value (DNS record, URL, ID, etc.) with
- * an optional label and a copy-to-clipboard button.
+ * A read-only `<code>` display of a value (DNS record, URL, ID, etc.) with an
+ * optional label and a copy-to-clipboard button.
  */
 export function CodeSnippet({
   label,
@@ -27,13 +27,21 @@ export function CodeSnippet({
   ...props
 }: CodeSnippetProps) {
   return (
-    <div {...props} className={clsx('flex flex-col', className)}>
-      {label && <span className="text-text-light text-sm">{label}</span>}
-      <div className="flex items-stretch gap-2">
-        <code className="flex flex-1 items-center break-all rounded-md bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-gray-800">
+    <div {...props} className={cn('flex flex-col gap-1', className)}>
+      {label && (
+        <span className="text-muted-foreground text-xs font-medium">
+          {label}
+        </span>
+      )}
+      <div className="border-input bg-muted/40 flex items-stretch gap-1 rounded-md border">
+        <code className="flex flex-1 items-center break-all px-2.5 py-1.5 font-mono text-sm">
           {children}
         </code>
-        <ButtonCopy value={copyable ? children : undefined} size="sm" />
+        <CopyButton
+          value={copyable ? children : undefined}
+          size="icon-sm"
+          className="my-1 mr-1 self-center"
+        />
       </div>
     </div>
   )

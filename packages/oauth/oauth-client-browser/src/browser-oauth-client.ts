@@ -1,16 +1,16 @@
 import {
-  AuthorizeOptions,
-  ClientMetadata,
-  Fetch,
+  type AuthorizeOptions,
+  type ClientMetadata,
+  type Fetch,
   OAuthCallbackError,
   OAuthClient,
-  OAuthClientOptions,
-  OAuthSession,
-  SessionHooks,
+  type OAuthClientOptions,
+  type OAuthSession,
+  type SessionGetterOptions,
 } from '@atproto/oauth-client'
 import {
-  OAuthClientMetadataInput,
-  OAuthResponseMode,
+  type OAuthClientMetadataInput,
+  type OAuthResponseMode,
   assertOAuthDiscoverableClientId,
   atprotoLoopbackClientMetadata,
   isOAuthClientIdLoopback,
@@ -18,7 +18,7 @@ import {
 import { BrowserOAuthDatabase } from './browser-oauth-database.js'
 import { BrowserRuntimeImplementation } from './browser-runtime-implementation.js'
 import { LoginContinuedInParentWindowError } from './errors.js'
-import { Simplify, buildLoopbackClientId } from './util.js'
+import { type Simplify, buildLoopbackClientId } from './util.js'
 
 export type BrowserOAuthClientOptions = Simplify<
   {
@@ -65,12 +65,13 @@ type PopupChannelData = PopupChannelResultData | PopupChannelAckData
 
 //- State synchronization channel
 
+type SyncChannelEventName = 'onSessionDeleted' | 'onSessionUpdated'
 type SyncChannelMessage = {
-  [K in keyof SessionHooks & string]: {
+  [K in SyncChannelEventName]: {
     name: K
-    args: Parameters<NonNullable<SessionHooks[K]>>
+    args: Parameters<NonNullable<SessionGetterOptions[K]>>
   }
-}[keyof SessionHooks]
+}[SyncChannelEventName]
 
 const syncChannel = new BroadcastChannel(
   `${NAMESPACE}(synchronization-channel:2)`,
@@ -145,26 +146,26 @@ export class BrowserOAuthClient extends OAuthClient implements AsyncDisposable {
       protectedResourceMetadataCache:
         database.getProtectedResourceMetadataCache(),
 
-      onDelete: async (sub, cause) => {
+      onSessionDeleted: async (sub, cause) => {
         if (localStorage.getItem(`${NAMESPACE}(sub)`) === sub) {
           localStorage.removeItem(`${NAMESPACE}(sub)`)
         }
 
         syncChannel.postMessage({
-          name: 'onDelete',
+          name: 'onSessionDeleted',
           args: [sub, cause],
         } satisfies SyncChannelMessage)
 
-        return options.onDelete?.call(null, sub, cause)
+        return options.onSessionDeleted?.call(null, sub, cause)
       },
 
-      onUpdate: async (sub, session) => {
+      onSessionUpdated: async (sub, session) => {
         syncChannel.postMessage({
-          name: 'onUpdate',
+          name: 'onSessionUpdated',
           args: [sub, session],
         } satisfies SyncChannelMessage)
 
-        return options.onUpdate?.call(null, sub, session)
+        return options.onSessionUpdated?.call(null, sub, session)
       },
     })
 
@@ -505,8 +506,8 @@ export class BrowserOAuthClient extends OAuthClient implements AsyncDisposable {
     }
   }
 
-  dispose() {
-    this[Symbol.dispose]()
+  async dispose() {
+    await this[Symbol.asyncDispose]()
   }
 }
 

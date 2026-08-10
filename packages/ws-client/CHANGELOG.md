@@ -1,5 +1,77 @@
 # @atproto/ws-client
 
+## 0.2.0
+
+### Minor Changes
+
+- [#5285](https://github.com/bluesky-social/atproto/pull/5285) [`d12f6ac`](https://github.com/bluesky-social/atproto/commit/d12f6ac6e2cb2590446bf9f2051287bac058c092) Thanks [@devinivy](https://github.com/devinivy)! - **BREAKING:** Replace `WebSocketKeepAlive` with `websocket(url, options?)`, an async iterable that connects, reads messages, reconnects on failure, and yields one continuous stream. It works on Node.js and in the browser with the same API.
+
+  There is no `close()`. A stream ends by breaking out of the loop or aborting a `signal`. Stopping always closes the socket politely, and the abort reason picks the code: `abort(new CloseError(…))` closes with that error's code, anything else closes with `1000`. The reason still reaches the consumer as the iterator's rejection.
+
+  Lifecycle hooks come at two levels: `onOpen()`/`onClose(detail)` fire once per stream, while `onConnect(sender)`/`onDisconnect()` fire per connection. Failures are split between `onReconnect(error, { attempt })`, the only place a retried failure surfaces, and `onError(error)`, which fires when the stream gives up and reports the same error the iterator rejects with. Sending goes through the `sender` handed to `onConnect`; there is no send queue.
+
+  Iteration settles only once the underlying socket has closed, so the end of a `for await` means teardown is finished. On Node.js the close handshake is capped at one second, rather than the 30 seconds `ws` waits by default, so a shutdown can't stall on an unresponsive peer.
+
+  Reconnect decisions are driven by close codes and typed errors that extend `WebSocketClientError`, controllable via `shouldReconnect`. On Node.js a heartbeat is on by default at a 10s interval (`heartbeat: false` disables it); `idleTimeoutMs` is off by default and is the browser's only dead-connection detector.
+
+  `DisconnectError` moves to `@atproto/xrpc-server`, and `@atproto/common` is no longer a dependency.
+
+### Patch Changes
+
+- [#5301](https://github.com/bluesky-social/atproto/pull/5301) [`8c07338`](https://github.com/bluesky-social/atproto/commit/8c07338232aa69427aa65322a555f70e0211d6d7) Thanks [@43081j](https://github.com/43081j)! - Switch from destructured default imports to named imports of CommonJS dependencies.
+
+## 0.1.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.7.3
+
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.7.2
+
+## 0.1.6
+
+### Patch Changes
+
+- [#5197](https://github.com/bluesky-social/atproto/pull/5197) [`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite import statements to be compatible with TypeScript's `verbatimModuleSyntax` config.
+
+- Updated dependencies [[`a0c49d9`](https://github.com/bluesky-social/atproto/commit/a0c49d9e8bc685c5a747a8d3b2775c73c63fdb6f)]:
+  - @atproto/common@0.7.1
+
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [[`d1be0ce`](https://github.com/bluesky-social/atproto/commit/d1be0cead444ef95e64cac5ea5318edbec9d8112)]:
+  - @atproto/common@0.7.0
+
+## 0.1.4
+
+### Patch Changes
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update TypeScript build to rely on references to composite internal projects
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Bundle only necessary files in the NPM tarball, including the `CHANGELOG.md` and `README.md` files (if present).
+
+- [#5099](https://github.com/bluesky-social/atproto/pull/5099) [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Build with `noImplicitAny` enabled
+
+- Updated dependencies [[`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07), [`b43ec31`](https://github.com/bluesky-social/atproto/commit/b43ec31f247f4461725b01226885f88bd430ca07)]:
+  - @atproto/common@0.6.5
+
+## 0.1.3
+
+### Patch Changes
+
+- [#5151](https://github.com/bluesky-social/atproto/pull/5151) [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependencies
+
+- Updated dependencies [[`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb), [`a51c45d`](https://github.com/bluesky-social/atproto/commit/a51c45d38f6bd7b8765f640e564cf921d52162e7), [`f2cf8f7`](https://github.com/bluesky-social/atproto/commit/f2cf8f7fc5f3a10847f2e6d785e5fa2244ee8cfb)]:
+  - @atproto/common@0.6.4
+
 ## 0.1.2
 
 ### Patch Changes

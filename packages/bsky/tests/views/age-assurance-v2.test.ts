@@ -1,10 +1,9 @@
 import crypto from 'node:crypto'
 import { once } from 'node:events'
-import { Server, createServer } from 'node:http'
-import { AddressInfo } from 'node:net'
-import express, { Application, json } from 'express'
-// eslint-disable-next-line import/default
-import httpTerminator from 'http-terminator'
+import { type Server, createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import express, { type Application, json } from 'express'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import {
   afterAll,
   afterEach,
@@ -16,14 +15,14 @@ import {
   vi,
 } from 'vitest'
 import {
-  AppBskyAgeassuranceBegin,
-  AppBskyAgeassuranceDefs,
-  AppBskyAgeassuranceGetState,
-  AtpAgent,
+  type AppBskyAgeassuranceBegin,
+  type AppBskyAgeassuranceDefs,
+  type AppBskyAgeassuranceGetState,
+  type AtpAgent,
   ageAssuranceRuleIDs as ruleIds,
   ids,
 } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import {
   type KWSWebhookAgeVerified,
   serializeKWSAgeVerifiedStatus,
@@ -33,7 +32,7 @@ import {
   serializeKWSExternalPayloadV1,
   serializeKWSExternalPayloadV2,
 } from '../../src/api/age-assurance/kws/external-payload.js'
-import { KwsWebhookBody } from '../../src/api/kws/types.js'
+import type { KwsWebhookBody } from '../../src/api/kws/types.js'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -170,6 +169,9 @@ describe('age assurance v2 views', () => {
 
   afterEach(async () => {
     vi.resetAllMocks()
+    // Drain in-flight bsync ops before resetting state directly, so an op from
+    // a test that doesn't read it back can't leak into the next test.
+    await network.processAll()
     await clearPrivateData(db)
     await clearActorAgeAssurance(db)
   })
@@ -667,7 +669,7 @@ class MockKwsServer {
 
   private app: Application
   private server: Server
-  private terminator: httpTerminator.HttpTerminator
+  private terminator: HttpTerminator
   private bskyUrlBase = ''
 
   constructor({
@@ -694,7 +696,7 @@ class MockKwsServer {
       })
 
     this.server = createServer(this.app)
-    this.terminator = httpTerminator.createHttpTerminator({
+    this.terminator = createHttpTerminator({
       server: this.server,
     })
   }

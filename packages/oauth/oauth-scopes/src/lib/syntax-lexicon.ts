@@ -1,14 +1,14 @@
-import { LexiconPermission } from './lexicon.js'
-import { ScopeSyntax } from './syntax.js'
+import type { LexiconPermission } from './lexicon.js'
+import type { ScopeSyntax } from './syntax.js'
 
 const isArray: (value: unknown) => value is readonly unknown[] = Array.isArray
 
 /**
  * Translates a {@link LexiconPermission} into a {@link ScopeSyntax}.
  */
-export class LexPermissionSyntax<P extends string = string>
-  implements ScopeSyntax<P>
-{
+export class LexPermissionSyntax<
+  P extends string = string,
+> implements ScopeSyntax<P> {
   constructor(readonly lexPermission: LexiconPermission<P>) {}
 
   get prefix() {

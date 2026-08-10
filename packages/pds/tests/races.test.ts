@@ -1,11 +1,11 @@
-import { AtpAgent } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import { wait } from '@atproto/common'
-import { Keypair } from '@atproto/crypto'
+import type { Keypair } from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { readCarWithRoot, verifyRepo } from '@atproto/repo'
-import { DidString } from '@atproto/syntax'
-import { AppContext } from '../src/context.js'
-import { PreparedCreate, prepareCreate } from '../src/repo/index.js'
+import type { DidString } from '@atproto/syntax'
+import type { AppContext } from '../src/context.js'
+import { type PreparedCreate, prepareCreate } from '../src/repo/index.js'
 
 describe('races', () => {
   let network: TestNetworkNoAppView
@@ -18,7 +18,6 @@ describe('races', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'races',
     })
-    // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     agent = network.pds.getAgent()
     await agent.createAccount({

@@ -1,12 +1,12 @@
-import { Accept, isAccept, matchesAnyAccept } from '../lib/mime.js'
+import { type Accept, isAccept, matchesAnyAccept } from '../lib/mime.js'
 import { Parser } from '../lib/parser.js'
-import { ResourcePermission } from '../lib/resource-permission.js'
+import type { ResourcePermission } from '../lib/resource-permission.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
 import {
-  NeArray,
-  NeRoArray,
-  ParamValue,
-  ScopeSyntax,
+  type NeArray,
+  type NeRoArray,
+  type ParamValue,
+  type ScopeSyntax,
   isScopeStringFor,
 } from '../lib/syntax.js'
 
@@ -18,9 +18,10 @@ export type BlobPermissionMatch = {
   mime: string
 }
 
-export class BlobPermission
-  implements ResourcePermission<'blob', BlobPermissionMatch>
-{
+export class BlobPermission implements ResourcePermission<
+  'blob',
+  BlobPermissionMatch
+> {
   constructor(public readonly accept: NeRoArray<Accept>) {}
 
   matches(options: BlobPermissionMatch) {

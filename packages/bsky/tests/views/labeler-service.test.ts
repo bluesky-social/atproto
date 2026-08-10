@@ -3,11 +3,17 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyEmbedRecord,
   AppBskyLabelerDefs,
-  AtpAgent,
+  type AtpAgent,
   ComAtprotoModerationDefs,
   ids,
 } from '@atproto/api'
-import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  RecordRef,
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
+import type { DidString } from '@atproto/syntax'
 import { forSnapshot, stripViewerFromLabeler } from '../_util.js'
 
 describe('labeler service views', () => {
@@ -17,9 +23,9 @@ describe('labeler service views', () => {
   let sc: SeedClient
 
   // account dids, for convenience
-  let alice: string
-  let bob: string
-  let carol: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
 
   let aliceService: RecordRef
 

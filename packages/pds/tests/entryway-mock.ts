@@ -1,15 +1,15 @@
 import { createPrivateKey } from 'node:crypto'
-import * as http from 'node:http'
+import type * as http from 'node:http'
 import * as plcLib from '@did-plc/lib'
-import { HttpTerminator, createHttpTerminator } from 'http-terminator'
+import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import * as jose from 'jose'
 import KeyEncoderModule from 'key-encoder'
 import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import { getVerificationMaterial } from '@atproto/common'
-import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
+import { type Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
-import { DidString, HandleString } from '@atproto/syntax'
+import type { DidString, HandleString } from '@atproto/syntax'
 import {
   AuthRequiredError,
   createServer,
@@ -51,9 +51,9 @@ export class MockEntryway {
   public plcRotationKey: Secp256k1Keypair
   public idResolver: IdResolver
 
-  private server: http.Server
-  private terminator: HttpTerminator
-  private accounts = new Map<string, Account>()
+  protected server: http.Server
+  protected terminator: HttpTerminator
+  protected accounts = new Map<string, Account>()
 
   private constructor(
     server: http.Server,
@@ -304,6 +304,18 @@ export class MockEntryway {
       },
     })
 
+    server.routes.get('/.well-known/atproto-did', (req, res) => {
+      const handle = req.hostname
+      const account = [...accounts.values()].find(
+        (acc) => acc.handle === handle,
+      )
+      if (!account) {
+        res.status(404).send('User not found')
+        return
+      }
+      res.type('text/plain').send(account.did)
+    })
+
     const httpServer = server.listen(opts.port)
     const terminator = createHttpTerminator({ server: httpServer })
 
@@ -315,6 +327,11 @@ export class MockEntryway {
 
   getAccount(did: string): Account | undefined {
     return this.accounts.get(did)
+  }
+
+  // e.g. for representing accounts on other pdses behind the entryway
+  addAccount(account: Account): void {
+    this.accounts.set(account.did, account)
   }
 
   async destroy(): Promise<void> {
