@@ -102,7 +102,8 @@ msgstr "Kontonamn"
 msgid "Account overview"
 msgstr "Kontoöversikt"
 
-#: src/authorization-page.tsx src/data/account.ts
+#: src/authorization-page.tsx
+#: src/data/account.ts
 msgid "Account reactivated"
 msgstr "Konto återaktiverat"
 
@@ -132,7 +133,8 @@ msgstr "Har du redan en kod?"
 msgid "An application on your device"
 msgstr "En applikation på din enhet"
 
-#: src/components/error-view.tsx src/contexts/notifications.tsx
+#: src/components/error-view.tsx
+#: src/contexts/notifications.tsx
 msgid "An error occurred"
 msgstr "Ett fel uppstod"
 
@@ -182,7 +184,8 @@ msgctxt "OAuthScope"
 msgid "Authenticate"
 msgstr "Autentisera"
 
-#: src/components/consent-form.tsx src/components/consent-view.tsx
+#: src/components/consent-form.tsx
+#: src/components/consent-view.tsx
 msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Auktorisera"
@@ -193,7 +196,8 @@ msgctxt "OAuthApp"
 msgid "Authorized on {0}"
 msgstr "Auktoriserades den {0}"
 
-#: src/components/forms/form-card.tsx src/components/forms/wizard-card.tsx
+#: src/components/forms/form-card.tsx
+#: src/components/forms/wizard-card.tsx
 #: src/components/sign-in-picker.tsx
 msgid "Back"
 msgstr "Tillbaka"
@@ -232,8 +236,10 @@ msgid "Call"
 msgstr "Anrop"
 
 #: src/components/authenticate-welcome-view.tsx
-#: src/components/delete-account-dialog.tsx src/components/forms/form-card.tsx
-#: src/components/reactivate-account-view.tsx src/contexts/authentication.tsx
+#: src/components/delete-account-dialog.tsx
+#: src/components/forms/form-card.tsx
+#: src/components/reactivate-account-view.tsx
+#: src/contexts/authentication.tsx
 msgid "Cancel"
 msgstr "Avbryt"
 
@@ -274,7 +280,8 @@ msgstr "Titta i din inkorg efter bekräftelsekoden."
 msgid "Check your inbox for the verification code."
 msgstr "Titta efter verifieringskoden i din inkorg."
 
-#: src/data/email.ts src/data/password.ts
+#: src/data/email.ts
+#: src/data/password.ts
 msgid "Check your inbox."
 msgstr "Titta i din inkorg."
 
@@ -589,8 +596,7 @@ msgstr "Har du problem? <0>Kontakta supporten</0>"
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
 #: src/components/forms/input-handle-custom-instructions.tsx
-msgid ""
-"Hello,\n"
+msgid "Hello,\n"
 "\n"
 "To associate the domain \"{handle}\" with my AT Protocol identity ({did}), one of the following configuration changes is required. Either method is sufficient, only one needs to be applied.\n"
 "\n"
@@ -600,8 +606,7 @@ msgid ""
 "A detailed tutorial can be found here: {tutorialHref}\n"
 "\n"
 "Thank you."
-msgstr ""
-"Hej,\n"
+msgstr "Hej,\n"
 "\n"
 "För att jag ska kunna koppla domänen ”{handle}” till min AT-protokollsidentitet ({did}) måste någon av följande konfigurationsändringar göras. Det räcker med att en av dem genomförs.\n"
 "\n"
@@ -813,7 +818,8 @@ msgctxt "Error"
 msgid "Name"
 msgstr "Namn"
 
-#: src/components/update-email-dialog.tsx src/components/update-email-form.tsx
+#: src/components/update-email-dialog.tsx
+#: src/components/update-email-form.tsx
 msgid "New email address"
 msgstr "Ny e-postadress"
 
@@ -821,7 +827,8 @@ msgstr "Ny e-postadress"
 msgid "New password"
 msgstr "Nytt lösenord"
 
-#: src/components/forms/wizard-card.tsx src/components/reset-password-view.tsx
+#: src/components/forms/wizard-card.tsx
+#: src/components/reset-password-view.tsx
 msgid "Next"
 msgstr "Nästa"
 
@@ -834,7 +841,8 @@ msgid "Only letters, numbers, and hyphens"
 msgstr "Endast bokstäver, siffror och bindestreck"
 
 #: src/components/delete-account-confirm-form.tsx
-#: src/components/forms/input-password.tsx src/components/sign-in-form.tsx
+#: src/components/forms/input-password.tsx
+#: src/components/sign-in-form.tsx
 #: src/components/sign-up-credentials-form.tsx
 #: src/pages/account/(authenticated)/manage/page.tsx
 msgid "Password"
@@ -885,7 +893,8 @@ msgstr "Utföra autentiserade åtgärder gentemot <0>vilken tjänst som helst</0
 msgid "Please authenticate to continue"
 msgstr "Autentisera för att fortsätta"
 
-#: src/data/email.ts src/data/password.ts
+#: src/data/email.ts
+#: src/data/password.ts
 msgid "Please check the email address and try again."
 msgstr "Kontrollera e-postadressen och försök igen."
 
@@ -897,7 +906,8 @@ msgstr "Kontrollera användarnamnet och försök igen."
 msgid "Please check your code and password, then try again."
 msgstr "Kontrollera din kod och ditt lösenord. Försök sedan igen."
 
-#: src/data/email.ts src/data/password.ts
+#: src/data/email.ts
+#: src/data/password.ts
 msgid "Please check your reset code and try again."
 msgstr "Kontrollera din återställningskod och försök igen."
 
@@ -909,7 +919,8 @@ msgstr "Kontrollera din verifieringskod och försök igen."
 msgid "Please enter the security code that was sent to your email address."
 msgstr "Ange den säkerhetskod som har skickats till din e-postadress."
 
-#: src/data/account.ts src/data/email.ts
+#: src/data/account.ts
+#: src/data/email.ts
 msgid "Please try again in a moment."
 msgstr "Försök igen om en stund."
 
@@ -1018,7 +1029,8 @@ msgctxt "AuthenticationPage"
 msgid "Sign in"
 msgstr "Logga in"
 
-#: src/components/authenticate-welcome-view.tsx src/components/sign-in-form.tsx
+#: src/components/authenticate-welcome-view.tsx
+#: src/components/sign-in-form.tsx
 msgctxt "verb"
 msgid "Sign in"
 msgstr "Logga in"
@@ -1045,7 +1057,8 @@ msgctxt "device list"
 msgid "Sign out"
 msgstr "Logga ut"
 
-#: src/components/sign-in-picker.tsx src/components/sign-up-view.tsx
+#: src/components/sign-in-picker.tsx
+#: src/components/sign-up-view.tsx
 msgid "Sign up"
 msgstr "Registrera dig"
 
@@ -1395,7 +1408,8 @@ msgstr "Du kan när som helst inaktivera ditt konto igen från den här sidan."
 msgid "You can now sign in with your new email."
 msgstr "Du kan nu logga in med din nya e-postadress."
 
-#: src/components/reset-password-view.tsx src/data/password.ts
+#: src/components/reset-password-view.tsx
+#: src/data/password.ts
 msgid "You can now sign in with your new password."
 msgstr "Du kan nu logga in med ditt nya lösenord."
 
