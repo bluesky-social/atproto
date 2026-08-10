@@ -153,7 +153,6 @@ msgid "An application on your device"
 msgstr "En applikation på din enhet"
 
 #: src/components/error-view.tsx
-#: src/contexts/notifications.tsx
 #: src/lib/notification-message.ts
 msgid "An error occurred"
 msgstr "Ett fel uppstod"
@@ -220,8 +219,6 @@ msgctxt "OAuthApp"
 msgid "Authorized"
 msgstr ""
 
-#: src/components/forms/form-card.tsx
-#: src/components/forms/wizard-card.tsx
 #: src/components/forms/form-shell.tsx
 #: src/components/forms/sign-up-wizard.tsx
 #: src/components/layouts/account-shell.tsx
@@ -260,7 +257,6 @@ msgstr "Anrop"
 
 #: src/components/authenticate-welcome-view.tsx
 #: src/components/delete-account-dialog.tsx
-#: src/components/forms/form-card.tsx
 #: src/components/forms/form-shell.tsx
 #: src/components/reactivate-account-view.tsx
 #: src/contexts/authentication.tsx
@@ -828,7 +824,6 @@ msgstr "Ny e-postadress"
 msgid "New password"
 msgstr "Nytt lösenord"
 
-#: src/components/forms/wizard-card.tsx
 #: src/components/forms/sign-up-wizard.tsx
 #: src/components/reset-password-view.tsx
 msgid "Next"
@@ -847,7 +842,6 @@ msgid "Only letters, numbers, and hyphens"
 msgstr "Endast bokstäver, siffror och bindestreck"
 
 #: src/components/delete-account-confirm-form.tsx
-#: src/components/forms/input-password.tsx
 #: src/components/forms/fields/password-field.tsx
 #: src/components/sign-in-form.tsx
 #: src/components/sign-up-credentials-form.tsx
