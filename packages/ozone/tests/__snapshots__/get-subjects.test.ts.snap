@@ -104,8 +104,8 @@ Array [
           "subjectBlobCids": Array [],
           "subjectRepoHandle": "alice.test",
           "tags": Array [
-            "report:other",
             "lang:und",
+            "report:other",
           ],
           "takendown": true,
           "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -178,8 +178,8 @@ Array [
       "subjectBlobCids": Array [],
       "subjectRepoHandle": "alice.test",
       "tags": Array [
-        "report:other",
         "lang:und",
+        "report:other",
       ],
       "takendown": true,
       "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -283,8 +283,8 @@ Array [
           "subjectBlobCids": Array [],
           "subjectRepoHandle": "alice.test",
           "tags": Array [
-            "report:spam",
             "lang:en",
+            "report:spam",
           ],
           "takendown": false,
           "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -334,8 +334,8 @@ Array [
             "subjectBlobCids": Array [],
             "subjectRepoHandle": "alice.test",
             "tags": Array [
-              "report:other",
               "lang:und",
+              "report:other",
             ],
             "takendown": true,
             "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -443,8 +443,8 @@ Array [
           "subjectBlobCids": Array [],
           "subjectRepoHandle": "alice.test",
           "tags": Array [
-            "report:other",
             "lang:und",
+            "report:other",
           ],
           "takendown": true,
           "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -516,8 +516,8 @@ Array [
       "subjectBlobCids": Array [],
       "subjectRepoHandle": "alice.test",
       "tags": Array [
-        "report:spam",
         "lang:en",
+        "report:spam",
       ],
       "takendown": false,
       "updatedAt": "1970-01-01T00:00:00.000Z",

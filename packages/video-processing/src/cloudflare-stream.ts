@@ -3,9 +3,27 @@ import type { StreamClient, StreamUploadResult } from './types'
 export type CloudflareStreamConfig = {
   accountId: string
   apiToken: string
-  /** e.g. https://customer-xxx.cloudflarestream.com */
+  /**
+   * Full origin (`https://customer-xxx.cloudflarestream.com`) or bare customer
+   * code (`xxx` / `customer-xxx`).
+   */
   customerSubdomain: string
   fetchImpl?: typeof fetch
+}
+
+/** Normalize Stream customer host config to an HTTPS origin (no trailing slash). */
+export function normalizeCustomerSubdomain(value: string): string {
+  const trimmed = value.trim().replace(/\/+$/, '')
+  if (!trimmed) {
+    throw new Error('customerSubdomain is required')
+  }
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed.replace(/\/+$/, '')
+  }
+  const host = trimmed.startsWith('customer-')
+    ? `${trimmed}.cloudflarestream.com`
+    : `customer-${trimmed}.cloudflarestream.com`
+  return `https://${host}`
 }
 
 /**
@@ -14,14 +32,15 @@ export type CloudflareStreamConfig = {
  */
 export class CloudflareStreamClient implements StreamClient {
   private fetchImpl: typeof fetch
+  private customerOrigin: string
 
   constructor(private cfg: CloudflareStreamConfig) {
     this.fetchImpl = cfg.fetchImpl ?? fetch
+    this.customerOrigin = normalizeCustomerSubdomain(cfg.customerSubdomain)
   }
 
   getPlaybackUrl(uid: string): string {
-    const base = this.cfg.customerSubdomain.replace(/\/+$/, '')
-    return `${base}/${uid}/manifest/video.m3u8`
+    return `${this.customerOrigin}/${uid}/manifest/video.m3u8`
   }
 
   async copyFromUrl(input: {

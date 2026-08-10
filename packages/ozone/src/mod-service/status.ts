@@ -441,7 +441,8 @@ export const adjustModerationSubjectStatus = async (
     if (removedTags?.length) {
       tags = tags.filter((tag) => !removedTags.includes(tag))
     }
-    newStatus.tags = jsonb([...new Set(tags)]) as unknown as string[]
+    // Keep subject tags sorted so parallel tagger / multi-event order is stable.
+    newStatus.tags = jsonb([...new Set(tags)].sort()) as unknown as string[]
     subjectStatus.tags = newStatus.tags
   }
 

@@ -68,8 +68,8 @@ Object {
         ],
         "subjectRepoHandle": "carol.test",
         "tags": Array [
-          "lang:it",
           "embed:image",
+          "lang:it",
         ],
         "takendown": true,
         "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -163,8 +163,8 @@ Object {
             "cids(2)",
           ],
           "tags": Array [
-            "lang:it",
             "embed:image",
+            "lang:it",
           ],
           "takendown": true,
           "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -205,8 +205,8 @@ Object {
             "cids(2)",
           ],
           "tags": Array [
-            "lang:it",
             "embed:image",
+            "lang:it",
           ],
           "takendown": true,
           "updatedAt": "1970-01-01T00:00:00.000Z",

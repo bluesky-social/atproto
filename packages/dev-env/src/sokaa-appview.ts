@@ -7,6 +7,16 @@ import * as sokaa from '@atproto/sokaa-appview'
 import { ADMIN_PASSWORD } from './const'
 import { SokaaAppViewConfig } from './types'
 
+/** Prefer deploy secrets; fall back to the local test constant. */
+export function resolveSokaaAppViewAdminPasswords(
+  env: NodeJS.ProcessEnv = process.env,
+): string[] {
+  const fromEnv = [env.SOKAA_APPVIEW_ADMIN_PASSWORD, env.PDS_ADMIN_PASSWORD]
+    .map((value) => value?.trim())
+    .filter((value): value is string => Boolean(value))
+  return fromEnv.length > 0 ? [...new Set(fromEnv)] : [ADMIN_PASSWORD]
+}
+
 export class TestSokaaAppView {
   constructor(
     public url: string,
@@ -24,7 +34,10 @@ export class TestSokaaAppView {
       : await Secp256k1Keypair.create()
     const plcClient = new PlcClient(cfg.plcUrl)
 
-    const port = cfg.port ?? (await getPort())
+    const envPort = Number.parseInt(process.env.SOKAA_APPVIEW_PORT ?? '', 10)
+    const port =
+      cfg.port ??
+      (Number.isFinite(envPort) && envPort > 0 ? envPort : await getPort())
     const url = `http://127.0.0.1:${port}`
 
     const serverDid = await plcClient.createDid({
@@ -67,7 +80,7 @@ export class TestSokaaAppView {
       alternateAudienceDids: [],
       dataplaneUrl: dataplane.url,
       didPlcUrl: cfg.plcUrl,
-      adminPasswords: [ADMIN_PASSWORD],
+      adminPasswords: resolveSokaaAppViewAdminPasswords(),
       ...(cfg.cdnUrl ? { cdnUrl: cfg.cdnUrl } : {}),
     })
 

@@ -56,7 +56,8 @@ export class TagService {
         await this.moderationService.logEvent({
           event: {
             $type: 'tools.ozone.moderation.defs#modEventTag',
-            add: [...tags],
+            // Sort so parallel taggers don't produce racey insertion order.
+            add: [...tags].sort(),
             remove: [],
           },
           subject: this.subject,

@@ -7,7 +7,7 @@
  *   SOKAA_STREAM_API_TOKEN
  *   SOKAA_STREAM_CUSTOMER_SUBDOMAIN
  *   SOKAA_APPVIEW_ADMIN_PASSWORD
- *   SOKAA_APPVIEW_URL          (e.g. https://appview.example)
+ *   SOKAA_APPVIEW_URL          (e.g. https://pds.sokaa.app — PDS proxies /_sokaa)
  *   SOKAA_SMOKE_DID
  *   SOKAA_SMOKE_VIDEO_CID
  *   SOKAA_SMOKE_SOURCE_URL     (media-gateway URL for a tiny MP4 fixture)

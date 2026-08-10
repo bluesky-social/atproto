@@ -56,8 +56,8 @@ Object {
         "subjectBlobCids": Array [],
         "subjectRepoHandle": "alice.test",
         "tags": Array [
-          "report:misleading",
           "lang:und",
+          "report:misleading",
           "report:spam",
         ],
         "takendown": false,
@@ -124,9 +124,9 @@ Array [
     "event": Object {
       "$type": "tools.ozone.moderation.defs#modEventTag",
       "add": Array [
-        "report:spam",
         "lang:en",
         "lang:i",
+        "report:spam",
       ],
       "remove": Array [],
     },
@@ -187,8 +187,8 @@ Array [
     "event": Object {
       "$type": "tools.ozone.moderation.defs#modEventTag",
       "add": Array [
-        "report:spam",
         "lang:en",
+        "report:spam",
       ],
       "remove": Array [],
     },

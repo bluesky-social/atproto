@@ -23,8 +23,13 @@ Required env (never commit):
 
 - `SOKAA_STREAM_ACCOUNT_ID`
 - `SOKAA_STREAM_API_TOKEN`
-- `SOKAA_STREAM_CUSTOMER_SUBDOMAIN` (e.g. `https://customer-xxx.cloudflarestream.com`)
+- `SOKAA_STREAM_CUSTOMER_SUBDOMAIN` (full origin
+  `https://customer-xxx.cloudflarestream.com`, or bare code `xxx`)
 - `SOKAA_STREAM_WEBHOOK_SECRET`
+- AppView admin Basic auth uses `SOKAA_APPVIEW_ADMIN_PASSWORD` or
+  `PDS_ADMIN_PASSWORD` (dev-env falls back to `admin-pass`)
+- Production ops hit jobs via the PDS public origin:
+  `POST https://<pds>/_sokaa/video/jobs` (proxied to the bundled AppView)
 
 ### Customer subdomain (no videos yet)
 

@@ -1,5 +1,8 @@
 export * from './types'
-export { CloudflareStreamClient } from './cloudflare-stream'
+export {
+  CloudflareStreamClient,
+  normalizeCustomerSubdomain,
+} from './cloudflare-stream'
 export type { CloudflareStreamConfig } from './cloudflare-stream'
 export { HttpReadinessChecker } from './readiness'
 export { StreamUidMismatchError, VideoJobService } from './job-service'

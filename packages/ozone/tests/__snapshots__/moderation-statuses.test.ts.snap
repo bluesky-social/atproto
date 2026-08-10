@@ -40,9 +40,9 @@ Array [
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "bob.test",
     "tags": Array [
-      "report:spam",
       "lang:en",
       "lang:i",
+      "report:spam",
     ],
     "takendown": false,
     "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -84,9 +84,9 @@ Array [
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "bob.test",
     "tags": Array [
-      "report:spam",
       "lang:en",
       "lang:i",
+      "report:spam",
     ],
     "takendown": false,
     "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -134,9 +134,9 @@ Array [
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "bob.test",
     "tags": Array [
-      "report:spam",
       "lang:en",
       "lang:i",
+      "report:spam",
     ],
     "takendown": false,
     "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -178,9 +178,9 @@ Array [
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "bob.test",
     "tags": Array [
-      "report:spam",
       "lang:en",
       "lang:i",
+      "report:spam",
     ],
     "takendown": false,
     "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -223,8 +223,8 @@ Array [
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "alice.test",
     "tags": Array [
-      "report:spam",
       "lang:ha",
+      "report:spam",
     ],
     "takendown": false,
     "updatedAt": "1970-01-01T00:00:00.000Z",
@@ -266,8 +266,8 @@ Array [
     "subjectBlobCids": Array [],
     "subjectRepoHandle": "alice.test",
     "tags": Array [
-      "report:misleading",
       "lang:und",
+      "report:misleading",
     ],
     "takendown": false,
     "updatedAt": "1970-01-01T00:00:00.000Z",

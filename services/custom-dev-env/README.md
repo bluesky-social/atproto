@@ -20,22 +20,24 @@ From `services/custom-dev-env/` you can run `docker compose up --build` directly
 
 Place a `.env` file **next to** `docker-compose.yml` (optional). Docker Compose reads it for variable substitution. See `.env.example`.
 
-| Variable                          | Default                             | Purpose                                                                                                           |
-| --------------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `PDS_HOST_PORT`                   | `3000`                              | Host → container PDS port                                                                                         |
-| `PLC_HOST_PORT`                   | `3001`                              | Host → container PLC port                                                                                         |
-| `PDS_PORT`                        | `3000`                              | PDS listen port **inside** the container                                                                          |
-| `PLC_PORT`                        | `3001`                              | PLC listen port **inside** the container                                                                          |
-| `PDS_HOSTNAME`                    | `localhost`                         | PDS public hostname (no scheme); used for `did:web` and `https://` when not localhost                             |
-| `PDS_DID_PLC_URL`                 | `http://127.0.0.1:<PLC_PORT>`       | URL the PDS uses to reach PLC (keep default in this image)                                                        |
-| `PDS_PUBLIC_URL`                  | (derived)                           | Override client-facing PDS URL in logs / docs                                                                     |
-| `PLC_PUBLIC_URL` / `PLC_HOSTNAME` | (derived)                           | Optional overrides for PLC URL in logs                                                                            |
-| `APPVIEW_ENABLED`                 | (off)                               | Set `true` to start bundled Sokaa AppView (requires `DB_POSTGRES_URL`)                                            |
-| `DB_POSTGRES_URL`                 | —                                   | Postgres URL for AppView indexing                                                                                 |
-| `DB_POSTGRES_SCHEMA`              | `pds_plc`                           | Base name; AppView tables use schema `sokaa_<name>`                                                               |
-| `PLC_DB_URL`                      | —                                   | Postgres URL for PLC (recommended when sharing Postgres with AppView)                                             |
-| `SOKAA_APPVIEW_CDN_URL`           | (internal `http://127.0.0.1:…/cdn`) | Media gateway origin, without `/v1/media`; trailing slashes are removed. Explicit HTTPS is required in production |
-| `SOKAA_APPVIEW_PUBLIC_URL`        | (internal listen URL)               | Optional client-facing AppView base URL                                                                           |
+| Variable                          | Default                               | Purpose                                                                                                           |
+| --------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `PDS_HOST_PORT`                   | `3000`                                | Host → container PDS port                                                                                         |
+| `PLC_HOST_PORT`                   | `3001`                                | Host → container PLC port                                                                                         |
+| `PDS_PORT`                        | `3000`                                | PDS listen port **inside** the container                                                                          |
+| `PLC_PORT`                        | `3001`                                | PLC listen port **inside** the container                                                                          |
+| `PDS_HOSTNAME`                    | `localhost`                           | PDS public hostname (no scheme); used for `did:web` and `https://` when not localhost                             |
+| `PDS_DID_PLC_URL`                 | `http://127.0.0.1:<PLC_PORT>`         | URL the PDS uses to reach PLC (keep default in this image)                                                        |
+| `PDS_PUBLIC_URL`                  | (derived)                             | Override client-facing PDS URL in logs / docs                                                                     |
+| `PLC_PUBLIC_URL` / `PLC_HOSTNAME` | (derived)                             | Optional overrides for PLC URL in logs                                                                            |
+| `APPVIEW_ENABLED`                 | (off)                                 | Set `true` to start bundled Sokaa AppView (requires `DB_POSTGRES_URL`)                                            |
+| `DB_POSTGRES_URL`                 | —                                     | Postgres URL for AppView indexing                                                                                 |
+| `DB_POSTGRES_SCHEMA`              | `pds_plc`                             | Base name; AppView tables use schema `sokaa_<name>`                                                               |
+| `PLC_DB_URL`                      | —                                     | Postgres URL for PLC (recommended when sharing Postgres with AppView)                                             |
+| `SOKAA_APPVIEW_CDN_URL`           | (internal `http://127.0.0.1:…/cdn`)   | Media gateway origin, without `/v1/media`; trailing slashes are removed. Explicit HTTPS is required in production |
+| `SOKAA_APPVIEW_PUBLIC_URL`        | (internal listen URL)                 | Optional client-facing AppView base URL                                                                           |
+| `SOKAA_APPVIEW_PORT`              | (ephemeral)                           | Pin AppView listen port inside the container (optional; PDS proxies `/_sokaa/*` on the PDS port)                  |
+| `SOKAA_APPVIEW_ADMIN_PASSWORD`    | (`PDS_ADMIN_PASSWORD` / `admin-pass`) | AppView admin Basic auth for `/_sokaa/video/*`                                                                    |
 
 The production media gateway serves private R2 objects at
 `https://<gateway>/v1/media/:did/:cid`. Do not put R2 credentials or a public

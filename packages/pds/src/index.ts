@@ -28,6 +28,7 @@ import { createServer } from './lexicon'
 import * as AppBskyFeedGetFeedSkeleton from './lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { loggerMiddleware } from './logger'
 import { proxyHandler } from './pipethrough'
+import * as sokaaAdminProxy from './sokaa-admin-proxy'
 import compression from './util/compression'
 import * as wellKnown from './well-known'
 
@@ -160,6 +161,7 @@ export class PDS {
     app.use(authRoutes.createRouter(ctx)) // Before CORS
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(basicRoutes.createRouter(ctx))
+    app.use('/_sokaa', sokaaAdminProxy.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
     app.use(server.xrpc.router)
     app.use(error.handler)
