@@ -1,6 +1,6 @@
 import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
-import { Link, useParams, useRouterState } from '@tanstack/react-router'
+import { Link, useRouterState } from '@tanstack/react-router'
 import { ChevronRightIcon } from 'lucide-react'
 import { Fragment, type ReactNode } from 'react'
 import type { JSX } from 'react/jsx-runtime'
@@ -19,7 +19,7 @@ import {
 } from '#/components/ui/item.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 
-export function Page(): ReactNode {
+export default function Page() {
   const { account } = useAuthenticatedSession()
 
   return (
@@ -33,28 +33,23 @@ export function Page(): ReactNode {
   )
 }
 
-/**
- * The shell's navigation entries, listed as content — each with the translated
- * `description` its route already declares (see `DEFAULT_PAGES`), which the
- * sidebar does not show.
- */
 function SectionList(): ReactNode {
   const { _ } = useLingui()
   const { pathname } = useRouterState().location
-  const links = useAccountShellLinks()
-
-  // Drop hidden entries and the current page — on the landing page that is the
-  // "Home" entry, which would otherwise link to itself.
-  const entries = links.filter(({ hidden, to }) => !hidden && to !== pathname)
-
-  if (!entries.length) return null
+  const links = useAccountShellLinks().filter(
+    (toOptions) => toOptions.to !== pathname,
+  )
+  if (!links.length) return null
 
   return (
     <ItemGroup className="gap-0">
-      {entries.map(({ to, title, description, icon: Icon }, index) => (
-        <Fragment key={to}>
+      {links.map(({ title, description, Icon, ...toOptions }, index) => (
+        <Fragment key={toOptions.to}>
           {index > 0 && <ItemSeparator />}
-          <Item render={<Link to={to} />} className="hover:bg-muted rounded-lg">
+          <Item
+            render={<Link {...toOptions} />}
+            className="hover:bg-muted rounded-lg"
+          >
             {Icon && (
               <ItemMedia variant="icon">
                 <Icon aria-hidden />
@@ -86,14 +81,15 @@ function SectionList(): ReactNode {
 }
 
 function HostedByParagraph(props: JSX.IntrinsicElements['p']): ReactNode {
-  const { accountId } = useParams({ strict: false }) as { accountId?: string }
+  const { account } = useAuthenticatedSession()
   return (
     <p {...props}>
       <Trans>
         Your Atmosphere account is hosted by <CustomizationName />.
       </Trans>{' '}
       <Link
-        to={`/account/u/${accountId}/about` as never}
+        to="/account/u/$accountId"
+        params={{ accountId: account.handle || account.did }}
         className="text-foreground underline underline-offset-4"
       >
         <Trans>What does this mean?</Trans>

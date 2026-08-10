@@ -4,6 +4,7 @@ import { useLingui } from '@lingui/react'
 import {
   Link,
   type RegisteredRouter,
+  type ToOptions,
   type ToPathOption,
   useRouterState,
 } from '@tanstack/react-router'
@@ -31,12 +32,10 @@ import { LinkTitle } from '#/components/utils/link-title.tsx'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 import { LocaleSelector } from '#/locales/locale-selector.tsx'
 
-export type AccountShellLink = {
-  to: ToPathOption<RegisteredRouter, '/', undefined>
+export type AccountShellLink = ToOptions<RegisteredRouter, '/', undefined> & {
   title: string | MessageDescriptor
-  hidden?: boolean
   description?: string | MessageDescriptor
-  icon?: LucideIcon
+  Icon?: LucideIcon
 }
 
 export type AccountShellProps = {
@@ -93,10 +92,6 @@ export function AccountShell({
   const pageTitle = currentLink?.title
   const pageTitleStr = typeof pageTitle === 'object' ? _(pageTitle) : pageTitle
 
-  const visibleLinks = links.filter(
-    ({ hidden, to }) => !hidden || pathname === to,
-  )
-
   return (
     <AccountShellLinksContext value={links}>
       <SidebarProvider>
@@ -134,18 +129,20 @@ export function AccountShell({
                 {/* @NOTE gap-1 overrides SidebarMenu's gap-0: without it an
                 active row and a hovered row next to it merge into one block. */}
                 <SidebarMenu className="gap-1">
-                  {visibleLinks.map(({ to, title, icon: Icon }) => (
-                    <SidebarMenuItem key={to}>
+                  {links.map(({ title, description, Icon, ...toOptions }) => (
+                    <SidebarMenuItem key={toOptions.to}>
                       <SidebarMenuButton
-                        isActive={pathname === to}
+                        isActive={pathname === toOptions.to}
                         // @NOTE The style bolds the active row; the background
                         // alone is enough to mark the current page.
                         className="data-active:font-normal"
                         tooltip={typeof title === 'object' ? _(title) : title}
                         render={
                           <Link
-                            to={to}
-                            aria-current={pathname === to ? 'page' : undefined}
+                            {...toOptions}
+                            aria-current={
+                              pathname === toOptions.to ? 'page' : undefined
+                            }
                           >
                             {Icon && <Icon aria-hidden />}
                             <span>

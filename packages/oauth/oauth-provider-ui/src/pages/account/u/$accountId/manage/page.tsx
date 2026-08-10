@@ -51,7 +51,7 @@ import {
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
 
-export function Page() {
+export default function Page() {
   return (
     <div className="flex flex-col gap-4">
       <EmailVerificationRow />

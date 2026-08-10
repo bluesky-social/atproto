@@ -8,10 +8,11 @@ import {
   useState,
 } from 'react'
 import { useErrorBoundary } from 'react-error-boundary'
-import type { Account, Session } from '@atproto/oauth-provider-api'
+import type { Account, DidString, Session } from '@atproto/oauth-provider-api'
 import { Api, UnauthorizedError, UnknownRequestUriError } from '#/lib/api.ts'
 import { upsert } from '#/lib/util.ts'
 import { useCurrentLocale } from '#/locales/locale-provider.jsx'
+import { useCustomizationData } from './customization.js'
 import { useNotificationsContext } from './notifications.js'
 
 export type { Session }
@@ -26,12 +27,16 @@ export type SessionContextType = {
   setSession: (session: Pick<Session, 'account'> | null) => void
 
   api: Api
+  canSignUp: boolean
+  canSwitchAccounts: boolean
+  forcedIdentifier: undefined | string
+  leave: undefined | (() => void | Promise<void>)
 }
 
 const SessionContext = createContext<null | SessionContextType>(null)
 SessionContext.displayName = 'SessionContext'
 
-export enum InitialSelectedSession {
+export const enum InitialSelectedSession {
   First,
   Only,
 }
@@ -39,37 +44,49 @@ export enum InitialSelectedSession {
 export type SessionProviderProps = {
   children: ReactNode
   initialSessions: readonly Session[]
-  initialSelected?: string | InitialSelectedSession
+  initialSelected?: DidString | InitialSelectedSession
+  forcedIdentifier?: string
+  leave?: () => void | Promise<void>
 }
 
 export function SessionProvider({
   children,
   initialSessions,
   initialSelected,
+  forcedIdentifier = undefined,
+  leave = undefined,
 }: SessionProviderProps) {
   const locale = useCurrentLocale()
-  const { showBoundary } = useErrorBoundary()
+  const { availableUserDomains } = useCustomizationData()
+  const { showBoundary } = useErrorBoundary<UnknownRequestUriError>()
   const { notifyError } = useNotificationsContext()
-  const [current, setCurrent] = useState(() => {
-    if (initialSelected === InitialSelectedSession.First) {
-      return initialSessions[0]?.account.did ?? null
-    }
-    if (initialSelected === InitialSelectedSession.Only) {
-      return initialSessions.length === 1
-        ? initialSessions[0].account.did
-        : null
-    }
-    if (initialSessions.some((s) => s.account.did === initialSelected)) {
-      return initialSelected
-    }
-    return null
+  const [current, setCurrent] = useState<DidString | null>(() => {
+    const initialSession: Session | undefined = forcedIdentifier
+      ? initialSessions.find(
+          (s) =>
+            s.account.handle === forcedIdentifier ||
+            s.account.did === forcedIdentifier,
+        )
+      : initialSelected === InitialSelectedSession.First
+        ? initialSessions[0]
+        : initialSelected === InitialSelectedSession.Only
+          ? initialSessions.length === 1
+            ? initialSessions[0]
+            : undefined
+          : initialSelected != null
+            ? initialSessions.find((s) => s.account.did === initialSelected)
+            : undefined
+
+    return initialSession ? initialSession.account.did : null
   })
   const [sessions, setSessions] =
     useState<readonly SessionWithToken[]>(initialSessions)
 
   const session = useMemo(() => {
     return current
-      ? (sessions.find((s) => s.account.did === current) ?? null)
+      ? (sessions.find(
+          (s) => s.account.did === current || s.account.handle === current,
+        ) ?? null)
       : null
   }, [sessions, current])
 
@@ -179,9 +196,19 @@ export function SessionProvider({
     notifyError,
   ])
 
+  const hasDomains = !!availableUserDomains?.length
   const value = useMemo(
-    (): SessionContextType => ({ api, sessions, session, setSession }),
-    [api, sessions, session, setSession],
+    (): SessionContextType => ({
+      api,
+      sessions,
+      session,
+      setSession,
+      leave,
+      forcedIdentifier,
+      canSignUp: hasDomains && !forcedIdentifier,
+      canSwitchAccounts: !forcedIdentifier,
+    }),
+    [api, sessions, session, setSession, leave, forcedIdentifier, hasDomains],
   )
 
   return <SessionContext value={value}>{children}</SessionContext>
