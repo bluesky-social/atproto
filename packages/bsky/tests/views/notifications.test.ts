@@ -1414,6 +1414,7 @@ describe('notification views', () => {
         subject: subjectDid,
         activitySubscription: valCreate,
       })
+      await network.processAll()
 
       const { data: updateData } = await put(actorDid, subjectDid, valUpdate)
       expect(updateData).toStrictEqual({

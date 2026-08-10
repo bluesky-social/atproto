@@ -3,7 +3,6 @@ import {
   type ModeratorClient,
   type SeedClient,
   TestNetwork,
-  usersBulkSeed,
 } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons.js'
 import type { OutputSchema as SearchReposOutputSchema } from '../src/lexicon/types/tools/ozone/moderation/searchRepos.js'
@@ -23,7 +22,40 @@ describe('admin repo search view', () => {
     agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
-    await usersBulkSeed(sc)
+    await Promise.all(
+      (
+        [
+          'cara-wiegand69.test',
+          'carlos6.test',
+          'carolina-mcderm77.test',
+          'paula.test',
+          'pedro.test',
+          'penelope.test',
+          'peter.test',
+          'preston.test',
+          'alice.test',
+          'bob.test',
+          'daria.test',
+          'elena.test',
+          'frank.test',
+          'greta.test',
+          'henry.test',
+          'sven70.test',
+          'hilario84.test',
+          'santa-hermann78.test',
+          'dylan61.test',
+          'preston-harris.test',
+          'loyce95.test',
+          'melyna-zboncak.test',
+        ] as const
+      ).map((handle) =>
+        sc.createAccount(handle, {
+          handle,
+          password: 'password',
+          email: `${handle}@bsky.app`,
+        }),
+      ),
+    )
     headers = await network.ozone.modHeaders(
       ids.ToolsOzoneModerationSearchRepos,
     )

@@ -21,8 +21,8 @@ export class MaterializedViewRefresher extends PeriodicBackgroundTask {
         await client.query(`SET lock_timeout = ${LOCK_TIMEOUT_MS}`)
 
         const lockResult = await client.query(
-          'SELECT pg_try_advisory_lock($1) as locked',
-          [MATERIALIZED_VIEW_REFRESH_LOCK_ID],
+          'SELECT pg_try_advisory_lock($1, (SELECT oid::int FROM pg_namespace WHERE nspname = $2)) as locked',
+          [MATERIALIZED_VIEW_REFRESH_LOCK_ID, db.schema ?? 'public'],
         )
         locked = lockResult.rows[0]?.locked === true
         if (!locked) {
@@ -55,8 +55,17 @@ export class MaterializedViewRefresher extends PeriodicBackgroundTask {
           }
         }
       } finally {
-        // Clear any session SETS and release its locks
-        client.release(true)
+        try {
+          if (locked) {
+            await client.query(
+              'SELECT pg_advisory_unlock($1, (SELECT oid::int FROM pg_namespace WHERE nspname = $2))',
+              [MATERIALIZED_VIEW_REFRESH_LOCK_ID, db.schema ?? 'public'],
+            )
+          }
+        } finally {
+          // Clear the session SETs rather than returning them to the pool.
+          client.release(true)
+        }
       }
     })
   }

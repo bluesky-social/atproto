@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import type AtpAgent from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import {
@@ -69,17 +70,26 @@ describe('report reason', () => {
   })
   describe('ModerationServiceProfile', () => {
     it('should validate against updated labeler profile when cache expires', async () => {
+      const cacheTTL = 500
+      const cachePopulatedAt = 1_000_000
       const moderationServiceProfile = new ModerationServiceProfile(
         network.ozone.ctx.cfg,
         network.ozone.ctx.appviewAgent,
-        500,
+        cacheTTL,
       )
 
-      await expect(
-        moderationServiceProfile.validateReasonType(
-          'tools.ozone.report.defs#reasonHarassmentFake',
-        ),
-      ).rejects.toThrow('Invalid reason type')
+      const populateCacheNow = jest
+        .spyOn(Date, 'now')
+        .mockReturnValue(cachePopulatedAt)
+      try {
+        await expect(
+          moderationServiceProfile.validateReasonType(
+            'tools.ozone.report.defs#reasonHarassmentFake',
+          ),
+        ).rejects.toThrow('Invalid reason type')
+      } finally {
+        populateCacheNow.mockRestore()
+      }
 
       // Update labeler profile to add the new reason type
       await pdsAgent.com.atproto.repo.putRecord({
@@ -95,19 +105,31 @@ describe('report reason', () => {
       await network.processAll()
 
       // immediately after the update, the reason type still fails due to cache
-      await expect(
-        moderationServiceProfile.validateReasonType(
-          'tools.ozone.report.defs#reasonHarassmentFake',
-        ),
-      ).rejects.toThrow('Invalid reason type')
+      const cachedNow = jest
+        .spyOn(Date, 'now')
+        .mockReturnValue(cachePopulatedAt)
+      try {
+        await expect(
+          moderationServiceProfile.validateReasonType(
+            'tools.ozone.report.defs#reasonHarassmentFake',
+          ),
+        ).rejects.toThrow('Invalid reason type')
+      } finally {
+        cachedNow.mockRestore()
+      }
 
-      // add some manual delay to ensure cache is expired and try again
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      await expect(
-        moderationServiceProfile.validateReasonType(
-          'tools.ozone.report.defs#reasonHarassmentFake',
-        ),
-      ).resolves.toEqual('tools.ozone.report.defs#reasonHarassmentFake')
+      const expiredNow = jest
+        .spyOn(Date, 'now')
+        .mockReturnValue(cachePopulatedAt + cacheTTL + 1)
+      try {
+        await expect(
+          moderationServiceProfile.validateReasonType(
+            'tools.ozone.report.defs#reasonHarassmentFake',
+          ),
+        ).resolves.toEqual('tools.ozone.report.defs#reasonHarassmentFake')
+      } finally {
+        expiredNow.mockRestore()
+      }
     })
 
     it('should validate mapped reason types', async () => {
@@ -129,8 +151,6 @@ describe('report reason', () => {
         },
       })
       await network.processAll()
-
-      await new Promise((resolve) => setTimeout(resolve, 500))
 
       await expect(
         moderationServiceProfile.validateReasonType(
