@@ -2,10 +2,10 @@ import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import type { Account } from '@atproto/oauth-provider-api'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
+import { AccountIdentifier } from '#/components/identity/account-identifier.tsx'
+import { AuthShell } from '#/components/layouts/auth-shell.tsx'
 import type { PermissionSets } from '#/hydration-data.d.ts'
 import { ConsentForm } from './consent-form.tsx'
-import { LayoutTitle } from './layouts/layout-title.tsx'
-import { AccountIdentifier } from './utils/account-identifier.tsx'
 
 export type ConsentViewProps = {
   clientId: string
@@ -35,7 +35,7 @@ export function ConsentView({
   onBack,
 }: ConsentViewProps) {
   return (
-    <LayoutTitle
+    <AuthShell
       title={msg({ message: 'Authorize', context: 'OAuthConsent' })}
       subtitle={
         <Trans>
@@ -55,6 +55,6 @@ export function ConsentView({
         onConsent={onConsent}
         onReject={onReject}
       />
-    </LayoutTitle>
+    </AuthShell>
   )
 }

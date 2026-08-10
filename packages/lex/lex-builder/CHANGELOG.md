@@ -1,5 +1,19 @@
 # @atproto/lex-builder
 
+## 0.1.12
+
+### Patch Changes
+
+- [#4805](https://github.com/bluesky-social/atproto/pull/4805) [`b66870d`](https://github.com/bluesky-social/atproto/commit/b66870d5a1efbcfa0cc07498c7cfcf3f0f243e86) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow `$nsid`, `$lxm` and `$type` to be used as type as well as value (without requiring the use of "typeof $lxm")
+
+## 0.1.11
+
+### Patch Changes
+
+- Updated dependencies [[`8b55a4a`](https://github.com/bluesky-social/atproto/commit/8b55a4ab69c24e5038f67c479b3b9953666ea0c2)]:
+  - @atproto/lex-schema@0.2.5
+  - @atproto/lex-document@0.1.9
+
 ## 0.1.10
 
 ### Patch Changes

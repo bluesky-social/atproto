@@ -1,5 +1,11 @@
 # @atproto/syntax
 
+## 0.7.4
+
+### Patch Changes
+
+- [#5318](https://github.com/bluesky-social/atproto/pull/5318) [`8b55a4a`](https://github.com/bluesky-social/atproto/commit/8b55a4ab69c24e5038f67c479b3b9953666ea0c2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow `isValidDid`, `isValidHandle`, `isValidNsid`, `isValidRecordKey`, `isValidTid` and `isValidUri` to be called with any (unknown) value
+
 ## 0.7.3
 
 ### Patch Changes

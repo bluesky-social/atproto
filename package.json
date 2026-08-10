@@ -31,8 +31,8 @@
     "verify:style": "pnpm run style",
     "verify:lint": "pnpm lint",
     "format": "pnpm lint:fix && pnpm style:fix",
-    "codegen": "pnpm run build:tooling && pnpm run --parallel --workspace-concurrency Infinity '/^(codegen:.+)$/'",
-    "prebuild": "pnpm run build:tooling && pnpm run --parallel --workspace-concurrency Infinity 'prebuild'",
+    "codegen": "pnpm run build:tooling --force && pnpm run --parallel --workspace-concurrency Infinity '/^(codegen:.+)$/'",
+    "prebuild": "pnpm run build:tooling --force && pnpm run --parallel --workspace-concurrency Infinity 'prebuild'",
     "build:tooling": "tsc --build ./packages/lex/lex-builder/tsconfig.build.json ./packages/lex-cli/tsconfig.build.json",
     "build:ts": "tsc --build tsconfig.json",
     "build": "pnpm run build:ts",
@@ -49,7 +49,9 @@
     "version-packages": "changeset version && git add ."
   },
   "devDependencies": {
+    "@atproto/bsky": "workspace:^",
     "@atproto/dev-env": "workspace:^",
+    "@atproto/pds": "workspace:^",
     "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.31.0",
     "@eslint/js": "^9.39.5",

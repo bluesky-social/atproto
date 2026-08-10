@@ -16,6 +16,7 @@ import {
 } from '@atproto/xrpc-server'
 import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt.js'
 import type { AppContext } from '../../../../context.js'
+import { events } from '../../../../events.js'
 import { baseNormalizeAndValidate } from '../../../../handle/index.js'
 import { com } from '../../../../lexicons/index.js'
 import { safeResolveDidDoc } from './util.js'
@@ -98,6 +99,17 @@ export default function (server: Server, ctx: AppContext) {
                     'Failed to clear reserved keypair',
                   )
                 })
+
+              events.accountCreated({
+                source: com.atproto.server.createAccount.$lxm,
+                did,
+                invited: !!inviteCode,
+                deactivated,
+              })
+              events.sessionCreated({
+                source: com.atproto.server.createAccount.$lxm,
+                did,
+              })
 
               return {
                 encoding: 'application/json' as const,

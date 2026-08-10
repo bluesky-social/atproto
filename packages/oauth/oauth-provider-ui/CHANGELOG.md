@@ -1,5 +1,32 @@
 # @atproto/oauth-provider-ui
 
+## 0.9.0
+
+### Minor Changes
+
+- [#5305](https://github.com/bluesky-social/atproto/pull/5305) [`fca9bd8`](https://github.com/bluesky-social/atproto/commit/fca9bd8fd3384a1f45f9540654edac8db774aecb) Thanks [@bigmoves](https://github.com/bigmoves)! - Rebuild the OAuth provider UI on shadcn/ui (Base UI, `base-nova`). Same flows,
+  steps and copy; the UX patterns are recomposed for shadcn. Forms use the
+  browser's native constraint validation on Base UI (no form library), icons move
+  to Lucide, and toasts to the Base UI toast. Branding colours configured on the
+  provider apply at runtime, with a neutral fallback when none are set.
+
+### Patch Changes
+
+- [#5305](https://github.com/bluesky-social/atproto/pull/5305) [`fca9bd8`](https://github.com/bluesky-social/atproto/commit/fca9bd8fd3384a1f45f9540654edac8db774aecb) Thanks [@bigmoves](https://github.com/bigmoves)! - Add an optional per-scheme background image to the authorization screens via `branding.background`. The provider paints the configured light and dark image behind the auth card (`cover` / `center` over the neutral base), chosen by `prefers-color-scheme`. On the PDS, configure it with `PDS_BACKGROUND_LIGHT_URL` and `PDS_BACKGROUND_DARK_URL`.
+
+- [#5311](https://github.com/bluesky-social/atproto/pull/5311) [`16bfd80`](https://github.com/bluesky-social/atproto/commit/16bfd80750e389b58a634226a24c4ae93a7c95c4) Thanks [@dolciss](https://github.com/dolciss)! - Update Japanese translations
+
+## 0.8.11
+
+### Patch Changes
+
+- [#5310](https://github.com/bluesky-social/atproto/pull/5310) [`2021690`](https://github.com/bluesky-social/atproto/commit/2021690f281bcee7178a040bf9fa6baadff06f82) Thanks [@nilaallj](https://github.com/nilaallj)! - Updated Swedish translations
+
+- [#5296](https://github.com/bluesky-social/atproto/pull/5296) [`aad541b`](https://github.com/bluesky-social/atproto/commit/aad541bb0577cefecdc2af315dd1ad216912b1ad) Thanks [@nilaallj](https://github.com/nilaallj)! - l10n: Plural formatting + string concatenation fixes
+
+- Updated dependencies []:
+  - @atproto/oauth-provider-api@0.7.9
+
 ## 0.8.10
 
 ### Patch Changes

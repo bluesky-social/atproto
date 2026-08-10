@@ -2,37 +2,52 @@ name: Repository CI
 
 on:
   pull_request:
-  # Dispatched by dependabot-changeset.yml after it pushes a changeset commit:
-  # pushes made with GITHUB_TOKEN don't trigger pull_request runs, so checks
-  # for the new head commit have to be created explicitly. Required status
-  # checks match on check-run (job) names, so those dispatched runs only
-  # satisfy the merge gate as long as job names don't depend on the event
-  # type.
-  workflow_dispatch:
+    types: [opened, synchronize, reopened, ready_for_review]
 
-# Read-only: every job here only checks out and builds. Declared explicitly
-# because workflow_dispatch runs would otherwise inherit the repository-default
-# token scopes, which can include write.
 permissions:
   contents: read
 
 concurrency:
-  # head_ref is only set on pull_request runs; ref_name covers the
-  # workflow_dispatch re-runs. Both resolve to the bare branch name (unlike
-  # ref, which is the fully qualified refs/heads/... on dispatch), so a
-  # dispatched re-run cancels the same branch's in-flight PR run and
-  # vice-versa instead of running alongside it.
-  group: '${{ github.workflow }}-${{ github.head_ref || github.ref_name }}'
+  group: '${{ github.workflow }}-${{ github.head_ref }}'
   cancel-in-progress: true
 
 jobs:
+  changeset:
+    name: Changeset
+    runs-on: ubuntu-latest
+    # The dependabot-changeset.yml workflow will trigger a new commit after
+    # Dependabot updates, which will re-trigger this workflow. Other jobs below
+    # depend on this job, and will be skipped too. If Dependabot updates non NPM
+    # dependencies (Dockerfile, GitHub Actions), this workflow should not be
+    # affected (build/verify/test are not using the docker images) and can be
+    # skipped. Note that in case, dependabot-changeset.yml will not trigger a
+    # new commit, so this workflow will not be re-triggered. This is expected.
+    if: >
+      github.event.pull_request.draft == false &&
+      github.event.sender.login != 'dependabot[bot]'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # needed for git diff against base branch
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          cache: pnpm
+          node-version-file: '.nvmrc'
+      - run: pnpm install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+      - run: pnpm changeset status --since=origin/${{ github.base_ref }}
+
   build:
     name: Build
     runs-on: ubuntu-latest
+    # Ensure a changeset is present before we spend time building and testing.
+    needs: changeset
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           cache: pnpm
           node-version-file: '.nvmrc'
@@ -56,7 +71,7 @@ jobs:
       # nothing has changed. Touching the restored files brings their mtime to
       # "now", so the prebuild's `find -newer` check correctly reports no newer
       # lexicons.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         id: lex-cli-cache
         with:
           path: |
@@ -68,10 +83,9 @@ jobs:
 
       - run: pnpm build
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
-          # Preserve the result of codegen and build steps.
-          name: dist
+          name: build-artifacts
           retention-days: 2
           path: |
             packages/*/dist
@@ -85,25 +99,6 @@ jobs:
             packages/api/src/client
             packages/api/src/moderation/const/labels.ts
             packages/ozone/src/lexicon
-
-  changeset:
-    name: Changeset
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # needed for git diff against base branch
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
-        with:
-          cache: pnpm
-          node-version-file: '.nvmrc'
-      - run: pnpm install --frozen-lockfile
-        env:
-          PUPPETEER_SKIP_DOWNLOAD: true
-      # github.base_ref is only set on pull_request events; workflow_dispatch
-      # runs compare against the default branch.
-      - run: pnpm changeset status --since=origin/${{ github.base_ref || 'main' }}
 
   test:
     name: Test
@@ -126,22 +121,22 @@ jobs:
       matrix:
         shard: [1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           cache: pnpm
           node-version: '22.x'
       - run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         name: Cache Puppeteer browser binaries
         with:
           path: ~/.cache/puppeteer
           key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}-${{ runner.arch }}
       - run: pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
-          name: dist
+          name: build-artifacts
           path: packages
       - run: pnpm test:withFlags --maxWorkers=1 --shard=${{ matrix.shard }} --passWithNoTests
 
@@ -150,17 +145,17 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           cache: pnpm
           node-version-file: '.nvmrc'
       - run: pnpm install --frozen-lockfile
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
-          name: dist
+          name: build-artifacts
           path: packages
       - run: pnpm verify

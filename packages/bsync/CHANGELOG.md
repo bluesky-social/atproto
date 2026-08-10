@@ -1,5 +1,24 @@
 # @atproto/bsync
 
+## 0.0.40
+
+### Patch Changes
+
+- Updated dependencies [[`b66870d`](https://github.com/bluesky-social/atproto/commit/b66870d5a1efbcfa0cc07498c7cfcf3f0f243e86), [`b66870d`](https://github.com/bluesky-social/atproto/commit/b66870d5a1efbcfa0cc07498c7cfcf3f0f243e86)]:
+  - @atproto/common@0.7.6
+
+## 0.0.39
+
+### Patch Changes
+
+- [#5340](https://github.com/bluesky-social/atproto/pull/5340) [`8145a99`](https://github.com/bluesky-social/atproto/commit/8145a999e03219e846ae4773ec66f0de72939511) Thanks [@43081j](https://github.com/43081j)! - Remove typed-emitter and use built-in strongly typed `EventEmitter`
+
+- [#5327](https://github.com/bluesky-social/atproto/pull/5327) [`c677bf3`](https://github.com/bluesky-social/atproto/commit/c677bf393d666bd20fc89c7386448f06375aba9c) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Update bsync service image
+
+- Updated dependencies [[`8b55a4a`](https://github.com/bluesky-social/atproto/commit/8b55a4ab69c24e5038f67c479b3b9953666ea0c2)]:
+  - @atproto/syntax@0.7.4
+  - @atproto/common@0.7.5
+
 ## 0.0.38
 
 ### Patch Changes

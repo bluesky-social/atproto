@@ -1,8 +1,9 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { type ReactNode, useEffect, useState } from 'react'
-import { ButtonRequestCode } from '#/components/forms/button-request-code.tsx'
-import { Button } from '#/components/forms/button.tsx'
-import { DialogSimple } from '#/components/utils/dialog-simple.tsx'
+import { type ReactElement, useEffect, useState } from 'react'
+import { DialogShell } from '#/components/dialogs/dialog-shell.tsx'
+import { actionRow } from '#/components/forms/form-shell.tsx'
+import { RequestCodeButton } from '#/components/forms/request-code-button.tsx'
+import { Button } from '#/components/ui/button.tsx'
 import { VerifyEmailConfirmForm } from '#/components/verify-email-confirm-form.tsx'
 
 export type VerifyEmailDialogProps = {
@@ -11,7 +12,7 @@ export type VerifyEmailDialogProps = {
   confirmPending?: boolean
   onRequest: () => void | PromiseLike<void>
   onConfirm: (data: { token: string }) => void | PromiseLike<void>
-  children: Exclude<ReactNode, false | null | undefined>
+  children: ReactElement
 }
 
 enum VerifyEmailDialogState {
@@ -41,7 +42,7 @@ export function VerifyEmailDialog({
   const dismissable = !requestPending && !confirmSubmitting
 
   return (
-    <DialogSimple
+    <DialogShell
       trigger={children}
       title={t`Verify your email`}
       description={
@@ -54,22 +55,27 @@ export function VerifyEmailDialog({
       onOpenChange={setOpen}
       dismissable={dismissable}
     >
+      {/* @NOTE Actions rather than destinations, so these are `Button`s and
+        not an option list: sending the code is the main path, "Already have a
+        code?" the escape hatch. `RequestCodeButton` defaults to `size="sm"` for
+        the inline resend; as a primary dialog action it takes the default. */}
       {state === VerifyEmailDialogState.Request ? (
-        <div className="align-stretch flex flex-col gap-4">
-          <ButtonRequestCode
+        <div className={actionRow}>
+          <RequestCodeButton
             action={async () => {
               await onRequest()
               setState(VerifyEmailDialogState.Confirm)
             }}
-            loading={requestPending}
-            disabled={confirmPending}
-            color="primary"
-            className="w-full"
+            disabled={requestPending || confirmPending}
+            variant="default"
+            size="default"
+            className="w-full sm:w-auto"
           />
 
           <Button
+            variant="ghost"
             onClick={() => setState(VerifyEmailDialogState.Confirm)}
-            className="w-full"
+            className="w-full sm:w-auto"
           >
             <Trans>Already have a code?</Trans>
           </Button>
@@ -85,6 +91,6 @@ export function VerifyEmailDialog({
           onResend={onRequest}
         />
       )}
-    </DialogSimple>
+    </DialogShell>
   )
 }

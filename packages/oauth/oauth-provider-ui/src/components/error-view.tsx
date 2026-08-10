@@ -1,45 +1,53 @@
+import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 import type { ReactNode } from 'react'
+import {
+  ErrorNotice,
+  type ErrorParser,
+} from '#/components/feedback/error-notice.tsx'
+import { AuthShell } from '#/components/layouts/auth-shell.tsx'
 import { apiErrorParser } from '#/lib/api-error-parser.ts'
-import type { Override } from '#/lib/util.ts'
-import { LayoutApp, type LayoutAppProps } from './layouts/layout-app.tsx'
-import { ErrorCard, type ErrorParser } from './utils/error-card.tsx'
 
-export type ErrorViewProps = Override<
-  LayoutAppProps,
-  {
-    error: unknown
-    parser?: ErrorParser
-    retry?: () => void
-    retryLabel?: ReactNode
-  }
->
+export type ErrorViewProps = {
+  error: unknown
+  parser?: ErrorParser
+  retry?: () => void
+  retryLabel?: ReactNode
+  title?: string | MessageDescriptor
+  children?: ReactNode
+}
 
+/**
+ * The error surface for the whole app: the standalone error page, both
+ * `ErrorBoundary` fallbacks, and the router's `errorComponent`.
+ *
+ * @NOTE Framed with `AuthShell`, which every call site renders *instead of* the
+ * tree, never inside it — so the two shells cannot nest and fight over the
+ * `<title>`.
+ *
+ * @NOTE The props are declared explicitly rather than derived from the shell's:
+ * TanStack passes `reset` and `info` to an `errorComponent`, and `AuthShell`
+ * spreads unrecognised props onto a `<div>`, which would put invalid attributes
+ * on the DOM.
+ */
 export function ErrorView({
-  // FallbackProps
   error,
   parser = apiErrorParser,
   retry,
   retryLabel,
-  // LayoutAppProps
   title = msg`An error occurred`,
   children,
-  ...props
 }: ErrorViewProps) {
-  // @TODO improve error page
   return (
-    <LayoutApp title={title} {...props}>
-      <div className="w-[500px] max-w-full">
-        <ErrorCard
-          className="mx-5"
-          error={error}
-          parser={parser}
-          retry={retry}
-          retryLabel={retryLabel}
-        >
-          {children}
-        </ErrorCard>
-      </div>
-    </LayoutApp>
+    <AuthShell title={title}>
+      <ErrorNotice
+        error={error}
+        parser={parser}
+        retry={retry}
+        retryLabel={retryLabel}
+      >
+        {children}
+      </ErrorNotice>
+    </AuthShell>
   )
 }

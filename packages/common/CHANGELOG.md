@@ -1,5 +1,20 @@
 # @atproto/common
 
+## 0.7.6
+
+### Patch Changes
+
+- [#4805](https://github.com/bluesky-social/atproto/pull/4805) [`b66870d`](https://github.com/bluesky-social/atproto/commit/b66870d5a1efbcfa0cc07498c7cfcf3f0f243e86) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export new `createLogger` helper
+
+- [#4805](https://github.com/bluesky-social/atproto/pull/4805) [`b66870d`](https://github.com/bluesky-social/atproto/commit/b66870d5a1efbcfa0cc07498c7cfcf3f0f243e86) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Deprecate `subsystemLogger` in favor of `createLogger`
+
+## 0.7.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.9
+
 ## 0.7.4
 
 ### Patch Changes

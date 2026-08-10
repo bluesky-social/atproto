@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsync",
-  "version": "0.0.38",
+  "version": "0.0.40",
   "license": "MIT",
   "description": "Sychronizing service for app.bsky App View (Bluesky API)",
   "keywords": [
@@ -37,8 +37,7 @@
     "http-terminator": "^3.2.0",
     "kysely": "^0.29.2",
     "pg": "^8.10.0",
-    "pino-http": "^11.0.0",
-    "typed-emitter": "^2.1.0"
+    "pino-http": "^11.0.0"
   },
   "devDependencies": {
     "@bufbuild/buf": "^1.28.1",

@@ -1,156 +1,161 @@
-import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { Link } from '@tanstack/react-router'
+import { MonitorSmartphoneIcon } from 'lucide-react'
 import { useMemo } from 'react'
 import type {
   ActiveAccountSession,
   DidString,
 } from '@atproto/oauth-provider-api'
-import { Button } from '#/components/forms/button'
-import { Admonition, AdmonitionAction } from '#/components/utils/admonition.tsx'
-import { CircularProgress } from '#/components/utils/circular-progress'
+import { Notice, NoticeAction } from '#/components/feedback/notice.tsx'
+import { SessionList } from '#/components/session-list.tsx'
+import { Badge } from '#/components/ui/badge.tsx'
+import { Button } from '#/components/ui/button.tsx'
+import { DateAgo } from '#/components/utils/date-ago'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import {
   useAccountSessionsQuery,
   useRevokeAccountSessionMutation,
 } from '#/data/account-sessions.ts'
 import { useBrowserName } from '#/hooks/use-browser-name'
-import { useDateAgo } from '#/hooks/use-date-ago'
 
 export function Page() {
+  const { t } = useLingui()
   const { account } = useAuthenticatedSession()
   const { data, refetch, isLoading } = useAccountSessionsQuery(account)
 
-  if (!data) {
-    if (isLoading) {
-      return <CircularProgress className="text-primary" size={28} />
-    }
+  const sessions = useMemo(
+    () =>
+      [...(data ?? [])].sort(
+        (a, b) =>
+          new Date(b.deviceMetadata.lastSeenAt).getTime() -
+          new Date(a.deviceMetadata.lastSeenAt).getTime(),
+      ),
+    [data],
+  )
 
+  if (!data && !isLoading) {
     return (
-      <Admonition
+      <Notice
         role="status"
         action={
-          <AdmonitionAction onClick={() => refetch()}>
+          <NoticeAction onClick={() => refetch()}>
             <Trans>Retry</Trans>
-          </AdmonitionAction>
+          </NoticeAction>
         }
       >
         <Trans>Failed to load connected apps</Trans>
-      </Admonition>
+      </Notice>
     )
   }
 
-  return data.length > 0 ? (
-    <div className="space-y-2">
-      <p>
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm">
         <Trans>
           Your account is signed in on the devices listed below. If your account
           was compromised, sign out all devices, change your password, and check
           your connected{' '}
-          <Link to="/account/apps" className="text-blue-600 hover:underline">
+          <Link to="/account/apps" className="text-foreground hover:underline">
             apps
           </Link>
           .
         </Trans>
       </p>
 
-      {data.map((session) => (
-        <AccountSessionCard
-          key={`${account.did}@${session.deviceId}`}
-          did={account.did}
-          session={session}
-        />
-      ))}
+      <SessionList
+        items={sessions}
+        rowKey={(session) => `${account.did}@${session.deviceId}`}
+        searchText={(session) =>
+          [
+            session.deviceMetadata.userAgent,
+            session.deviceMetadata.ipAddress,
+          ].join(' ')
+        }
+        loading={isLoading}
+        filterLabel={t`Filter devices`}
+        emptyIcon={MonitorSmartphoneIcon}
+        empty={
+          <Trans>Looks like you aren't logged in on any other devices.</Trans>
+        }
+        mobileTitle={(session) => <DeviceName session={session} />}
+        columns={[
+          {
+            header: <Trans context="device list">Device</Trans>,
+            cellClassName: 'font-medium',
+            hideOnMobile: true,
+            cell: (session) => <DeviceName session={session} />,
+          },
+          {
+            header: <Trans context="device list">IP address</Trans>,
+            cellClassName: 'font-mono text-xs',
+            cell: (session) => session.deviceMetadata.ipAddress,
+          },
+          {
+            header: <Trans context="device list">Last seen</Trans>,
+            className: 'whitespace-nowrap',
+            cellClassName: 'text-muted-foreground',
+            cell: (session) => <LastSeen session={session} />,
+          },
+        ]}
+        action={(session) => (
+          <SignOutButton did={account.did} session={session} />
+        )}
+      />
     </div>
-  ) : (
-    <p>
-      <Trans>Looks like you aren't logged in on any other devices.</Trans>
-    </p>
   )
 }
 
-/**
- * Returns a fully localised "Last seen …" string.
- * The complete phrase is spelled out in each branch so that translators receive
- * the full sentence as a single translatable unit, enabling correct pluralisation
- * and other grammar related flexibility across all languages.
- */
-function useLastSeenText(date: Date | string): string {
-  const { t } = useLingui()
-  const bucket = useDateAgo(date)
+function DeviceName({ session }: { session: ActiveAccountSession }) {
+  const browserName = useBrowserName(
+    session.deviceMetadata.userAgent || undefined,
+  )
 
-  return useMemo(() => {
-    switch (bucket.type) {
-      case 'seconds':
-        return t({
-          context: 'device list',
-          message: 'Last seen just now',
-        })
-      case 'minutes':
-        return t({
-          context: 'device list',
-          message: `Last seen ${plural(bucket.count, { one: 'a minute', other: '# minutes' })} ago`,
-        })
-      case 'hours':
-        return t({
-          context: 'device list',
-          message: `Last seen ${plural(bucket.count, { one: 'an hour', other: '# hours' })} ago`,
-        })
-      case 'days':
-        return bucket.count === 1
-          ? t({
-              context: 'device list',
-              message: `Last seen yesterday`,
-            })
-          : t({
-              context: 'device list',
-              message: `Last seen ${plural(bucket.count, { one: '# day', other: '# days' })} ago`,
-            })
-    }
-  }, [t, bucket])
+  return (
+    <span className="flex min-w-0 items-center gap-2">
+      <span className="truncate">
+        {browserName || <Trans context="device list">Unknown user agent</Trans>}
+      </span>
+      {/* @NOTE Worth calling out on a long list: it is the one row whose
+        "Sign out" is disabled, and without a marker that reads as a bug. */}
+      {session.isCurrentDevice && (
+        <Badge variant="secondary" className="shrink-0">
+          <Trans context="device list">This device</Trans>
+        </Badge>
+      )}
+    </span>
+  )
 }
 
-function AccountSessionCard({
-  session,
+function LastSeen({ session }: { session: ActiveAccountSession }) {
+  return <DateAgo date={session.deviceMetadata.lastSeenAt} />
+}
+
+function SignOutButton({
   did,
+  session,
 }: {
-  session: ActiveAccountSession
   did: DidString
+  session: ActiveAccountSession
 }) {
   const { t } = useLingui()
   const { mutateAsync, isPending } = useRevokeAccountSessionMutation()
 
-  const { userAgent, lastSeenAt, ipAddress } = session.deviceMetadata
-  const browserName = useBrowserName(userAgent || undefined)
-  const lastSeenText = useLastSeenText(lastSeenAt)
-
   return (
-    <div className="border-contrast-50 dark:border-contrast-100 flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
-      <div className="flex min-w-36 flex-1 flex-col space-x-2 truncate">
-        <p className="truncate font-semibold">
-          {browserName || (
-            <Trans context="device list">Unknown user agent</Trans>
-          )}
-        </p>
-        <p className="font-mono text-xs">{ipAddress}</p>
-        <p className="text-text-light truncate text-xs">{lastSeenText}</p>
-      </div>
-      <Button
-        size="sm"
-        className="min-w-max shrink-0 grow-0"
-        disabled={session.isCurrentDevice}
-        loading={isPending}
-        onClick={(_event) => {
-          void mutateAsync({ did, deviceId: session.deviceId }).catch((err) => {
-            console.warn('Failed to revoke account session', err)
-          })
-        }}
-        title={
-          session.isCurrentDevice ? t`Cannot remove current device` : undefined
-        }
-      >
-        <Trans context="device list">Sign out</Trans>
-      </Button>
-    </div>
+    <Button
+      variant="secondary"
+      size="sm"
+      className="shrink-0"
+      disabled={session.isCurrentDevice || isPending}
+      onClick={() => {
+        void mutateAsync({ did, deviceId: session.deviceId }).catch((err) => {
+          console.warn('Failed to revoke account session', err)
+        })
+      }}
+      title={
+        session.isCurrentDevice ? t`Cannot remove current device` : undefined
+      }
+    >
+      <Trans context="device list">Sign out</Trans>
+    </Button>
   )
 }

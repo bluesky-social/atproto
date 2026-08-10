@@ -99,7 +99,7 @@ export function sendWebAppFactory<P extends keyof HydrationData>(
     return writeHtml(
       res,
       mergeDefaults<WriteHtmlOptions>(defaults, options, {
-        bodyAttrs: { class: 'text-text-default bg-contrast-0' },
+        bodyAttrs: { class: 'text-foreground bg-background' },
         csp: options?.csp ? mergeCsp(csp, options.csp) : csp,
         coep: options?.coep ?? coep,
         meta: [{ name: 'robots', content: 'noindex' }],
