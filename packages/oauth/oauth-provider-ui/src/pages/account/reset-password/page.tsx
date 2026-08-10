@@ -1,17 +1,8 @@
-import { createRoute, useRouter } from '@tanstack/react-router'
-import { ErrorView } from '#/components/error-view'
+import { useRouter } from '@tanstack/react-router'
 import { ResetPasswordView } from '#/components/reset-password-view'
 import { useSessionContext } from '#/contexts/session'
-import { RootRoute } from '../../../route.tsx'
 
-export const Route = createRoute({
-  getParentRoute: () => RootRoute,
-  path: '/account/reset-password',
-  component: Page,
-  errorComponent: ErrorView,
-})
-
-export function Page() {
+export default function Page() {
   const { api } = useSessionContext()
 
   const router = useRouter()

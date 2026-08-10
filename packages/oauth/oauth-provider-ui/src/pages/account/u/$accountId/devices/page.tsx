@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { Link, useParams } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { MonitorSmartphoneIcon } from 'lucide-react'
 import { useMemo } from 'react'
 import type {
@@ -18,9 +18,8 @@ import {
 } from '#/data/account-sessions.ts'
 import { useBrowserName } from '#/hooks/use-browser-name'
 
-export function Page() {
+export default function Page() {
   const { t } = useLingui()
-  const { accountId } = useParams({ strict: false }) as { accountId?: string }
   const { account } = useAuthenticatedSession()
   const { data, refetch, isLoading } = useAccountSessionsQuery(account)
 
@@ -57,7 +56,8 @@ export function Page() {
           was compromised, sign out all devices, change your password, and check
           your connected{' '}
           <Link
-            to={`/account/u/${accountId}/apps` as never}
+            to="/account/u/$accountId/apps"
+            params={{ accountId: account.handle ?? account.did }}
             className="text-foreground hover:underline"
           >
             apps

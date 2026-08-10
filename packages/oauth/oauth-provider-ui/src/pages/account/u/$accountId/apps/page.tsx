@@ -19,7 +19,7 @@ import {
 import { useOAuthClientIdentifier } from '#/hooks/use-oauth-client-identifier.ts'
 import { useOauthClientName } from '#/hooks/use-oauth-client-name.ts'
 
-export function Page() {
+export default function Page() {
   const { t, i18n } = useLingui()
   const { account } = useAuthenticatedSession()
   const { did } = account
