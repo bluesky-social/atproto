@@ -55,8 +55,16 @@ export class MaterializedViewRefresher extends PeriodicBackgroundTask {
           }
         }
       } finally {
-        // Clear any session SETS and release its locks
-        client.release(true)
+        try {
+          if (locked) {
+            await client.query('SELECT pg_advisory_unlock($1)', [
+              MATERIALIZED_VIEW_REFRESH_LOCK_ID,
+            ])
+          }
+        } finally {
+          // Discard the session so its SET values cannot leak into the pool.
+          client.release(true)
+        }
       }
     })
   }
