@@ -35,7 +35,11 @@ export class VideoJobService {
       return existing
     }
     if (existing?.streamUid && existing.state === 'processing') {
-      return existing
+      // Smoke / ops re-submit polls readiness when Stream webhooks are absent.
+      return this.tryMarkReady(
+        existing,
+        this.stream.getPlaybackUrl(existing.streamUid),
+      )
     }
     if (
       existing?.state === 'failed' &&

@@ -65,6 +65,34 @@ describe('VideoJobService', () => {
     expect(stream.copyFromUrl).toHaveBeenCalledTimes(1)
   })
 
+  it('re-submit refreshes readiness without a second Stream copy', async () => {
+    const store = new MemoryStore()
+    const stream = streamClient()
+    const readiness = { isReady: vi.fn(async () => false) }
+    const service = new VideoJobService(store, stream, readiness)
+
+    const first = await service.submit({
+      did,
+      videoCid,
+      sourceUrl: 'https://cdn.example/v1/media/a/b',
+    })
+    expect(first.state).toBe('processing')
+
+    readiness.isReady.mockResolvedValueOnce(true)
+    const second = await service.submit({
+      did,
+      videoCid,
+      sourceUrl: 'https://cdn.example/v1/media/a/b',
+    })
+
+    expect(stream.copyFromUrl).toHaveBeenCalledTimes(1)
+    expect(readiness.isReady).toHaveBeenCalled()
+    expect(second.state).toBe('ready')
+    expect(second.playlistUrl).toBe(
+      'https://stream.example/stream-uid-1/manifest/video.m3u8',
+    )
+  })
+
   it('marks ready only after readiness check passes', async () => {
     const store = new MemoryStore()
     const stream = streamClient({
