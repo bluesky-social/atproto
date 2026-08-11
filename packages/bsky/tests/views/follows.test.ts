@@ -155,6 +155,65 @@ describe('pds follow views', () => {
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
+  it('fills a page after filtering followers', async () => {
+    const subject = await sc.createAccount('page-fill-subject', {
+      handle: 'fill-sub.test',
+      email: 'page-fill-subject@example.com',
+      password: 'hunter2',
+    })
+    const olderVisible = await sc.createAccount('page-fill-visible-older', {
+      handle: 'fill-old.test',
+      email: 'page-fill-visible-older@example.com',
+      password: 'hunter2',
+    })
+    const newerVisible = await sc.createAccount('page-fill-visible-newer', {
+      handle: 'fill-new.test',
+      email: 'page-fill-visible-newer@example.com',
+      password: 'hunter2',
+    })
+    const takenDown = await sc.createAccount('page-fill-taken-down', {
+      handle: 'fill-down.test',
+      email: 'page-fill-taken-down@example.com',
+      password: 'hunter2',
+    })
+    const blocked = await sc.createAccount('page-fill-blocked', {
+      handle: 'fill-block.test',
+      email: 'page-fill-blocked@example.com',
+      password: 'hunter2',
+    })
+
+    await sc.follow(olderVisible.did, subject.did, {
+      createdAt: '2025-01-01T00:00:00.000Z',
+    })
+    await sc.follow(newerVisible.did, subject.did, {
+      createdAt: '2025-01-02T00:00:00.000Z',
+    })
+    await sc.follow(takenDown.did, subject.did, {
+      createdAt: '2025-01-03T00:00:00.000Z',
+    })
+    await sc.follow(blocked.did, subject.did, {
+      createdAt: '2025-01-04T00:00:00.000Z',
+    })
+    await sc.block(subject.did, blocked.did)
+    await network.processAll()
+    await network.bsky.ctx.dataplane.takedownActor({ did: takenDown.did })
+
+    const res = await agent.api.app.bsky.graph.getFollowers(
+      { actor: subject.did, limit: 2 },
+      {
+        headers: await network.serviceHeaders(
+          subject.did,
+          ids.AppBskyGraphGetFollowers,
+        ),
+      },
+    )
+
+    expect(res.data.followers.map((follower) => follower.did)).toEqual([
+      newerVisible.did,
+      olderVisible.did,
+    ])
+  })
+
   it('fetches followers unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.alice },

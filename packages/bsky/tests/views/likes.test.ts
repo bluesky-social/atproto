@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { type AppBskyFeedGetLikes, type AtpAgent, ids } from '@atproto/api'
-import { type SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import {
   constantDate,
@@ -26,7 +26,14 @@ describe('pds like views', () => {
     })
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
-    await likesSeed(sc)
+    await basicSeed(sc)
+    await sc.createAccount('eve', {
+      email: 'eve@test.com',
+      handle: 'eve.test',
+      password: 'eve-pass',
+    })
+    await sc.like(sc.dids.eve, sc.posts[sc.dids.alice][1].ref)
+    await sc.like(sc.dids.carol, sc.replies[sc.dids.bob][0].ref)
     await sc.createAccount('frankie', {
       handle: 'frankie.test',
       email: 'frankie@frankie.com',

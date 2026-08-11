@@ -30,44 +30,64 @@ describe('proxies appview procedures', () => {
   })
 
   it('maintains muted actors.', async () => {
-    // mute actors
-    await agent.api.app.bsky.graph.muteActor(
-      { actor: bob },
-      {
-        headers: sc.getHeaders(alice),
-        encoding: 'application/json',
-      },
-    )
-    await agent.api.app.bsky.graph.muteActor(
-      { actor: carol },
-      {
-        headers: sc.getHeaders(alice),
-        encoding: 'application/json',
-      },
-    )
-    // check
-    const { data: result1 } = await agent.api.app.bsky.graph.getMutes(
-      {},
-      { headers: sc.getHeaders(alice) },
-    )
-    expect(result1.mutes.map((x) => x.handle)).toEqual([
-      'carol.test',
-      'bob.test',
-    ])
-    // unmute actors
-    await agent.api.app.bsky.graph.unmuteActor(
-      { actor: bob },
-      {
-        headers: sc.getHeaders(alice),
-        encoding: 'application/json',
-      },
-    )
-    // check
-    const { data: result2 } = await agent.api.app.bsky.graph.getMutes(
-      {},
-      { headers: sc.getHeaders(alice) },
-    )
-    expect(result2.mutes.map((x) => x.handle)).toEqual(['carol.test'])
+    try {
+      // mute actors
+      await agent.api.app.bsky.graph.muteActor(
+        { actor: bob },
+        {
+          headers: sc.getHeaders(alice),
+          encoding: 'application/json',
+        },
+      )
+      await agent.api.app.bsky.graph.muteActor(
+        { actor: carol },
+        {
+          headers: sc.getHeaders(alice),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+      // check
+      const { data: result1 } = await agent.api.app.bsky.graph.getMutes(
+        {},
+        { headers: sc.getHeaders(alice) },
+      )
+      expect(result1.mutes.map((x) => x.handle).sort()).toEqual([
+        'bob.test',
+        'carol.test',
+      ])
+      // unmute actors
+      await agent.api.app.bsky.graph.unmuteActor(
+        { actor: bob },
+        {
+          headers: sc.getHeaders(alice),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+      // check
+      const { data: result2 } = await agent.api.app.bsky.graph.getMutes(
+        {},
+        { headers: sc.getHeaders(alice) },
+      )
+      expect(result2.mutes.map((x) => x.handle)).toEqual(['carol.test'])
+    } finally {
+      await agent.api.app.bsky.graph.unmuteActor(
+        { actor: bob },
+        {
+          headers: sc.getHeaders(alice),
+          encoding: 'application/json',
+        },
+      )
+      await agent.api.app.bsky.graph.unmuteActor(
+        { actor: carol },
+        {
+          headers: sc.getHeaders(alice),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+    }
   })
 
   it('maintains muted actor lists.', async () => {
@@ -94,45 +114,63 @@ describe('proxies appview procedures', () => {
     )
     await network.processAll()
 
-    // mute lists
-    await agent.api.app.bsky.graph.muteActorList(
-      { list: bobList.uri },
-      {
-        headers: sc.getHeaders(alice),
-        encoding: 'application/json',
-      },
-    )
-    await agent.api.app.bsky.graph.muteActorList(
-      { list: carolList.uri },
-      {
-        headers: sc.getHeaders(alice),
-        encoding: 'application/json',
-      },
-    )
-    await network.processAll()
-    // check
-    const { data: result1 } = await agent.api.app.bsky.graph.getListMutes(
-      {},
-      { headers: sc.getHeaders(alice) },
-    )
-    expect(result1.lists.map((x) => x.uri)).toEqual([
-      carolList.uri,
-      bobList.uri,
-    ])
-    // unmute lists
-    await agent.api.app.bsky.graph.unmuteActorList(
-      { list: bobList.uri },
-      {
-        headers: sc.getHeaders(alice),
-        encoding: 'application/json',
-      },
-    )
-    // check
-    const { data: result2 } = await agent.api.app.bsky.graph.getListMutes(
-      {},
-      { headers: sc.getHeaders(alice) },
-    )
-    expect(result2.lists.map((x) => x.uri)).toEqual([carolList.uri])
+    try {
+      // mute lists
+      await agent.api.app.bsky.graph.muteActorList(
+        { list: bobList.uri },
+        {
+          headers: sc.getHeaders(alice),
+          encoding: 'application/json',
+        },
+      )
+      await agent.api.app.bsky.graph.muteActorList(
+        { list: carolList.uri },
+        {
+          headers: sc.getHeaders(alice),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+      // check
+      const { data: result1 } = await agent.api.app.bsky.graph.getListMutes(
+        {},
+        { headers: sc.getHeaders(alice) },
+      )
+      expect(result1.lists.map((x) => x.uri).sort()).toEqual(
+        [bobList.uri, carolList.uri].sort(),
+      )
+      // unmute lists
+      await agent.api.app.bsky.graph.unmuteActorList(
+        { list: bobList.uri },
+        {
+          headers: sc.getHeaders(alice),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+      // check
+      const { data: result2 } = await agent.api.app.bsky.graph.getListMutes(
+        {},
+        { headers: sc.getHeaders(alice) },
+      )
+      expect(result2.lists.map((x) => x.uri)).toEqual([carolList.uri])
+    } finally {
+      await agent.api.app.bsky.graph.unmuteActorList(
+        { list: bobList.uri },
+        {
+          headers: sc.getHeaders(alice),
+          encoding: 'application/json',
+        },
+      )
+      await agent.api.app.bsky.graph.unmuteActorList(
+        { list: carolList.uri },
+        {
+          headers: sc.getHeaders(alice),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+    }
   })
 
   it('maintains notification last seen state.', async () => {

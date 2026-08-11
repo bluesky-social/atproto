@@ -1,5 +1,27 @@
 # @atproto/oauth-provider-ui
 
+## 0.9.1
+
+### Patch Changes
+
+- [#5334](https://github.com/bluesky-social/atproto/pull/5334) [`b4d71fc`](https://github.com/bluesky-social/atproto/commit/b4d71fc24f1c907daa67460251f2a8dc904359f9) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump react-error-boundary from 5.0.0 to 6.1.2
+
+## 0.9.0
+
+### Minor Changes
+
+- [#5305](https://github.com/bluesky-social/atproto/pull/5305) [`fca9bd8`](https://github.com/bluesky-social/atproto/commit/fca9bd8fd3384a1f45f9540654edac8db774aecb) Thanks [@bigmoves](https://github.com/bigmoves)! - Rebuild the OAuth provider UI on shadcn/ui (Base UI, `base-nova`). Same flows,
+  steps and copy; the UX patterns are recomposed for shadcn. Forms use the
+  browser's native constraint validation on Base UI (no form library), icons move
+  to Lucide, and toasts to the Base UI toast. Branding colours configured on the
+  provider apply at runtime, with a neutral fallback when none are set.
+
+### Patch Changes
+
+- [#5305](https://github.com/bluesky-social/atproto/pull/5305) [`fca9bd8`](https://github.com/bluesky-social/atproto/commit/fca9bd8fd3384a1f45f9540654edac8db774aecb) Thanks [@bigmoves](https://github.com/bigmoves)! - Add an optional per-scheme background image to the authorization screens via `branding.background`. The provider paints the configured light and dark image behind the auth card (`cover` / `center` over the neutral base), chosen by `prefers-color-scheme`. On the PDS, configure it with `PDS_BACKGROUND_LIGHT_URL` and `PDS_BACKGROUND_DARK_URL`.
+
+- [#5311](https://github.com/bluesky-social/atproto/pull/5311) [`16bfd80`](https://github.com/bluesky-social/atproto/commit/16bfd80750e389b58a634226a24c4ae93a7c95c4) Thanks [@dolciss](https://github.com/dolciss)! - Update Japanese translations
+
 ## 0.8.11
 
 ### Patch Changes
