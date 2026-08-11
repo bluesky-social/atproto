@@ -84,4 +84,34 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor: keyset.packFromResult(posts),
     }
   },
+
+  async getRecentFeed(req) {
+    const { cursor } = req
+    const limit = req.limit > 0 ? req.limit : 50
+    const { ref } = db.db.dynamic
+    const keyset = new CreatedAtCidKeyset(
+      ref('post.createdAt'),
+      ref('post.cid'),
+    )
+
+    let builder = db.db
+      .selectFrom('post')
+      .innerJoin('actor', 'actor.did', 'post.creator')
+      .where('actor.upstreamStatus', '=', 'active')
+      .selectAll('post')
+
+    builder = paginate(builder, {
+      limit,
+      cursor,
+      keyset,
+      tryIndex: true,
+    })
+
+    const posts = await builder.execute()
+
+    return {
+      items: posts.map((post) => ({ uri: post.uri, cid: post.cid })),
+      cursor: keyset.packFromResult(posts),
+    }
+  },
 })

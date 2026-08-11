@@ -31,6 +31,27 @@ message GetAuthorFeedResponse {
   string cursor = 2;
 }
 
+message GetRecentFeedRequest {
+  int32 limit = 1;
+  string cursor = 2;
+}
+
+message GetRecentFeedResponse {
+  repeated FeedItem items = 1;
+  string cursor = 2;
+}
+
+message SearchActorsRequest {
+  string term = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message SearchActorsResponse {
+  repeated string dids = 1;
+  string cursor = 2;
+}
+
 message GetActorsRequest {
   repeated string dids = 1;
 }
@@ -104,6 +125,8 @@ service Service {
   rpc Ping(PingRequest) returns (PingResponse);
   rpc GetTimeline(GetTimelineRequest) returns (GetTimelineResponse);
   rpc GetAuthorFeed(GetAuthorFeedRequest) returns (GetAuthorFeedResponse);
+  rpc GetRecentFeed(GetRecentFeedRequest) returns (GetRecentFeedResponse);
+  rpc SearchActors(SearchActorsRequest) returns (SearchActorsResponse);
   rpc GetActors(GetActorsRequest) returns (GetActorsResponse);
   rpc GetPosts(GetPostsRequest) returns (GetPostsResponse);
   rpc GetLikesByActorAndSubjects(GetLikesByActorAndSubjectsRequest)

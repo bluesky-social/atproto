@@ -4,6 +4,7 @@ import feeds from '../../src/data-plane/server/routes/feeds'
 import likes from '../../src/data-plane/server/routes/likes'
 import posts from '../../src/data-plane/server/routes/posts'
 import profile from '../../src/data-plane/server/routes/profile'
+import search from '../../src/data-plane/server/routes/search'
 import { createTestDb } from '../indexing/helpers'
 
 export { createTestDb }
@@ -16,6 +17,7 @@ export const createRouteHandlers = (db: Database) => ({
   ...profile(db),
   ...posts(db),
   ...likes(db),
+  ...search(db),
 })
 
 export async function seedActor(

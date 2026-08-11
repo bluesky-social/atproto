@@ -149,10 +149,12 @@ import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
 import * as AppSokaaActorDefs from './types/app/sokaa/actor/defs.js'
 import * as AppSokaaActorGetProfile from './types/app/sokaa/actor/getProfile.js'
 import * as AppSokaaActorProfile from './types/app/sokaa/actor/profile.js'
+import * as AppSokaaActorSearchActors from './types/app/sokaa/actor/searchActors.js'
 import * as AppSokaaEmbedImages from './types/app/sokaa/embed/images.js'
 import * as AppSokaaEmbedVideo from './types/app/sokaa/embed/video.js'
 import * as AppSokaaFeedDefs from './types/app/sokaa/feed/defs.js'
 import * as AppSokaaFeedGetAuthorFeed from './types/app/sokaa/feed/getAuthorFeed.js'
+import * as AppSokaaFeedGetRecentFeed from './types/app/sokaa/feed/getRecentFeed.js'
 import * as AppSokaaFeedGetTimeline from './types/app/sokaa/feed/getTimeline.js'
 import * as AppSokaaFeedLike from './types/app/sokaa/feed/like.js'
 import * as AppSokaaFeedPost from './types/app/sokaa/feed/post.js'
@@ -473,10 +475,12 @@ export * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
 export * as AppSokaaActorDefs from './types/app/sokaa/actor/defs.js'
 export * as AppSokaaActorGetProfile from './types/app/sokaa/actor/getProfile.js'
 export * as AppSokaaActorProfile from './types/app/sokaa/actor/profile.js'
+export * as AppSokaaActorSearchActors from './types/app/sokaa/actor/searchActors.js'
 export * as AppSokaaEmbedImages from './types/app/sokaa/embed/images.js'
 export * as AppSokaaEmbedVideo from './types/app/sokaa/embed/video.js'
 export * as AppSokaaFeedDefs from './types/app/sokaa/feed/defs.js'
 export * as AppSokaaFeedGetAuthorFeed from './types/app/sokaa/feed/getAuthorFeed.js'
+export * as AppSokaaFeedGetRecentFeed from './types/app/sokaa/feed/getRecentFeed.js'
 export * as AppSokaaFeedGetTimeline from './types/app/sokaa/feed/getTimeline.js'
 export * as AppSokaaFeedLike from './types/app/sokaa/feed/like.js'
 export * as AppSokaaFeedPost from './types/app/sokaa/feed/post.js'
@@ -3538,6 +3542,18 @@ export class AppSokaaActorNS {
       opts,
     )
   }
+
+  searchActors(
+    params?: AppSokaaActorSearchActors.QueryParams,
+    opts?: AppSokaaActorSearchActors.CallOptions,
+  ): Promise<AppSokaaActorSearchActors.Response> {
+    return this._client.call(
+      'app.sokaa.actor.searchActors',
+      params,
+      undefined,
+      opts,
+    )
+  }
 }
 
 export class AppSokaaActorProfileRecord {
@@ -3649,6 +3665,18 @@ export class AppSokaaFeedNS {
   ): Promise<AppSokaaFeedGetAuthorFeed.Response> {
     return this._client.call(
       'app.sokaa.feed.getAuthorFeed',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getRecentFeed(
+    params?: AppSokaaFeedGetRecentFeed.QueryParams,
+    opts?: AppSokaaFeedGetRecentFeed.CallOptions,
+  ): Promise<AppSokaaFeedGetRecentFeed.Response> {
+    return this._client.call(
+      'app.sokaa.feed.getRecentFeed',
       params,
       undefined,
       opts,

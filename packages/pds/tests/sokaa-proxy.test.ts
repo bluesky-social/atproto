@@ -139,6 +139,52 @@ describe('sokaa appview proxy routing', () => {
     expect(verified.lxm).toBe(ids.AppSokaaActorGetProfile)
   })
 
+  it('proxies app.sokaa.actor.searchActors with service JWT', async () => {
+    const path = `/xrpc/app.sokaa.actor.searchActors?q=ali&limit=10`
+    const res = await fetch(`${network.pds.url}${path}`, {
+      headers: sc.getHeaders(alice),
+    })
+    expect(res.status).toBe(200)
+
+    const req = appview.requests.at(-1)
+    assert(req)
+    expect(req.url).toBe(path)
+    assert(req.auth)
+
+    const verified = await verifyJwt(
+      req.auth.replace('Bearer ', ''),
+      appview.did,
+      ids.AppSokaaActorSearchActors,
+      (iss) => network.pds.ctx.idResolver.did.resolveAtprotoKey(iss, true),
+    )
+    expect(verified.aud).toBe(appview.did)
+    expect(verified.iss).toBe(alice)
+    expect(verified.lxm).toBe(ids.AppSokaaActorSearchActors)
+  })
+
+  it('proxies app.sokaa.feed.getRecentFeed with service JWT', async () => {
+    const path = `/xrpc/app.sokaa.feed.getRecentFeed?limit=10`
+    const res = await fetch(`${network.pds.url}${path}`, {
+      headers: sc.getHeaders(alice),
+    })
+    expect(res.status).toBe(200)
+
+    const req = appview.requests.at(-1)
+    assert(req)
+    expect(req.url).toBe(path)
+    assert(req.auth)
+
+    const verified = await verifyJwt(
+      req.auth.replace('Bearer ', ''),
+      appview.did,
+      ids.AppSokaaFeedGetRecentFeed,
+      (iss) => network.pds.ctx.idResolver.did.resolveAtprotoKey(iss, true),
+    )
+    expect(verified.aud).toBe(appview.did)
+    expect(verified.iss).toBe(alice)
+    expect(verified.lxm).toBe(ids.AppSokaaFeedGetRecentFeed)
+  })
+
   it('proxies via atproto-proxy header using configured sokaa appview url', async () => {
     const path = `/xrpc/app.sokaa.feed.getTimeline?limit=5`
     const res = await fetch(`${network.pds.url}${path}`, {

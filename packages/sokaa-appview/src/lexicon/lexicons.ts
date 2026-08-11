@@ -198,6 +198,58 @@ export const schemaDict = {
       },
     },
   },
+  AppSokaaActorSearchActors: {
+    lexicon: 1,
+    id: 'app.sokaa.actor.searchActors',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Find actors whose handle or display name matches a query. Prefix match for MVP. Suspended/taken-down actors are excluded.',
+        parameters: {
+          type: 'params',
+          required: ['q'],
+          properties: {
+            q: {
+              type: 'string',
+              description: 'Search query (handle or display name).',
+              minLength: 1,
+              maxLength: 100,
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 25,
+            },
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor from a previous response.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actors'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              actors: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.sokaa.actor.defs#profileViewBasic',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppSokaaEmbedImages: {
     lexicon: 1,
     id: 'app.sokaa.embed.images',
@@ -513,6 +565,52 @@ export const schemaDict = {
       },
     },
   },
+  AppSokaaFeedGetRecentFeed: {
+    lexicon: 1,
+    id: 'app.sokaa.feed.getRecentFeed',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Global recent posts across the network, newest first. Suspended/taken-down authors and moderated posts are excluded.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              description: 'Maximum number of posts to return.',
+              minimum: 1,
+              maximum: 100,
+              default: 30,
+            },
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor from a previous response.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.sokaa.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppSokaaFeedGetTimeline: {
     lexicon: 1,
     id: 'app.sokaa.feed.getTimeline',
@@ -696,10 +794,12 @@ export const ids = {
   AppSokaaActorDefs: 'app.sokaa.actor.defs',
   AppSokaaActorGetProfile: 'app.sokaa.actor.getProfile',
   AppSokaaActorProfile: 'app.sokaa.actor.profile',
+  AppSokaaActorSearchActors: 'app.sokaa.actor.searchActors',
   AppSokaaEmbedImages: 'app.sokaa.embed.images',
   AppSokaaEmbedVideo: 'app.sokaa.embed.video',
   AppSokaaFeedDefs: 'app.sokaa.feed.defs',
   AppSokaaFeedGetAuthorFeed: 'app.sokaa.feed.getAuthorFeed',
+  AppSokaaFeedGetRecentFeed: 'app.sokaa.feed.getRecentFeed',
   AppSokaaFeedGetTimeline: 'app.sokaa.feed.getTimeline',
   AppSokaaFeedLike: 'app.sokaa.feed.like',
   AppSokaaFeedPost: 'app.sokaa.feed.post',

@@ -32,6 +32,8 @@ describe('getProfile pipeline', () => {
         getLikesByActorAndSubjects: (req) =>
           routes.getLikesByActorAndSubjects!(req),
         getAuthorFeed: (req) => routes.getAuthorFeed!(req),
+        getRecentFeed: (req) => routes.getRecentFeed!(req),
+        searchActors: (req) => routes.searchActors!(req),
         getActorFollowsActors: (req) => routes.getActorFollowsActors!(req),
         ping: async () => ({}),
       },

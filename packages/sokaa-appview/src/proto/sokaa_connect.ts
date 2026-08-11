@@ -14,10 +14,14 @@ import {
   GetLikesByActorAndSubjectsResponse,
   GetPostsRequest,
   GetPostsResponse,
+  GetRecentFeedRequest,
+  GetRecentFeedResponse,
   GetTimelineRequest,
   GetTimelineResponse,
   PingRequest,
   PingResponse,
+  SearchActorsRequest,
+  SearchActorsResponse,
 } from './sokaa_pb'
 import { MethodKind } from '@bufbuild/protobuf'
 
@@ -52,6 +56,24 @@ export const Service = {
       name: 'GetAuthorFeed',
       I: GetAuthorFeedRequest,
       O: GetAuthorFeedResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc sokaa.Service.GetRecentFeed
+     */
+    getRecentFeed: {
+      name: 'GetRecentFeed',
+      I: GetRecentFeedRequest,
+      O: GetRecentFeedResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc sokaa.Service.SearchActors
+     */
+    searchActors: {
+      name: 'SearchActors',
+      I: SearchActorsRequest,
+      O: SearchActorsResponse,
       kind: MethodKind.Unary,
     },
     /**

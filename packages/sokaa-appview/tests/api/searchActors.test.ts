@@ -2,8 +2,7 @@ import {
   hydration,
   presentation,
   skeleton,
-} from '../../src/api/app/sokaa/feed/getTimeline'
-import { ids } from '../../src/data-plane/server/indexing/collections'
+} from '../../src/api/app/sokaa/actor/searchActors'
 import { Hydrator } from '../../src/hydration/hydrator'
 import { Views } from '../../src/views'
 import { CdnUriBuilder } from '../../src/views/uri'
@@ -11,20 +10,14 @@ import {
   createRouteHandlers,
   createTestDb,
   seedActor,
-  seedFollow,
-  seedLike,
-  seedPost,
 } from '../dataplane/helpers'
 
-const alice = 'did:plc:alice'
-const bob = 'did:plc:bob'
-describe('getTimeline pipeline', () => {
-  const schema = 'sokaa_appview_api_timeline'
+describe('searchActors pipeline', () => {
+  const schema = 'sokaa_appview_api_search_actors'
   let database: Awaited<ReturnType<typeof createTestDb>>
   let routes: ReturnType<typeof createRouteHandlers>
   let hydrator: Hydrator
   let views: Views
-  let bobPostUri: string
 
   beforeAll(async () => {
     database = await createTestDb(schema)
@@ -52,23 +45,21 @@ describe('getTimeline pipeline', () => {
       }),
     )
 
-    await seedActor(database, { did: alice, handle: 'alice.test' })
-    await seedActor(database, { did: bob, handle: 'bob.test' })
-    await seedFollow(database, {
-      creator: alice,
-      subjectDid: bob,
-      rkey: 'follow-bob',
+    await seedActor(database, {
+      did: 'did:plc:alice',
+      handle: 'alice.test',
+      displayName: 'Alice Wonder',
     })
-    bobPostUri = await seedPost(database, {
-      did: bob,
-      rkey: 'post-bob',
-      createdAt: '2026-01-03T00:00:00.000Z',
-      caption: 'bob post',
+    await seedActor(database, {
+      did: 'did:plc:bob',
+      handle: 'bob.test',
+      displayName: 'Bob Builder',
     })
-    await seedLike(database, {
-      creator: alice,
-      subjectUri: bobPostUri,
-      rkey: 'like-bob-post',
+    await seedActor(database, {
+      did: 'did:plc:carol',
+      handle: 'carol.test',
+      displayName: 'Carol',
+      upstreamStatus: 'suspended',
     })
   })
 
@@ -77,31 +68,35 @@ describe('getTimeline pipeline', () => {
     await database.close()
   })
 
-  it('hydrates timeline feed with viewer like state', async () => {
-    const hydrateCtx = hydrator.createContext({ viewer: alice })
-    const ctx = {
-      hydrator,
-      views,
-      dataplane: hydrator.dataplane,
-    }
+  it('prefix-matches handle/displayName and excludes suspended actors', async () => {
+    const hydrateCtx = hydrator.createContext({ viewer: 'did:plc:alice' })
+    const ctx = { hydrator, views, dataplane: hydrator.dataplane }
 
     const skel = await skeleton({
       ctx,
-      params: { limit: 10, hydrateCtx: { ...hydrateCtx, viewer: alice } },
+      params: { q: 'bo', limit: 10, hydrateCtx },
     })
-    expect(skel.items.some((item) => item.post.uri === bobPostUri)).toBe(true)
+    expect(skel.dids).toEqual(['did:plc:bob'])
+
+    const byName = await skeleton({
+      ctx,
+      params: { q: 'Alice', limit: 10, hydrateCtx },
+    })
+    expect(byName.dids).toEqual(['did:plc:alice'])
+
+    const suspended = await skeleton({
+      ctx,
+      params: { q: 'carol', limit: 10, hydrateCtx },
+    })
+    expect(suspended.dids).toEqual([])
 
     const state = await hydration({
       ctx,
-      params: { limit: 10, hydrateCtx },
+      params: { q: 'bo', limit: 10, hydrateCtx },
       skeleton: skel,
     })
     const result = presentation({ ctx, skeleton: skel, hydration: state })
-
-    const bobFeedItem = result.feed.find((item) => item.post.uri === bobPostUri)
-    expect(bobFeedItem).toBeDefined()
-    expect(bobFeedItem?.post.author.did).toBe(bob)
-    expect(bobFeedItem?.post.viewer?.like).toContain(ids.AppSokaaFeedLike)
-    expect(bobFeedItem?.post.record.$type).toBe(ids.AppSokaaFeedPost)
+    expect(result.actors).toHaveLength(1)
+    expect(result.actors[0]?.handle).toBe('bob.test')
   })
 })

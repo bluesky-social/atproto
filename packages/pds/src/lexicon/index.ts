@@ -113,7 +113,9 @@ import * as AppBskyVideoGetJobStatus from './types/app/bsky/video/getJobStatus.j
 import * as AppBskyVideoGetUploadLimits from './types/app/bsky/video/getUploadLimits.js'
 import * as AppBskyVideoUploadVideo from './types/app/bsky/video/uploadVideo.js'
 import * as AppSokaaActorGetProfile from './types/app/sokaa/actor/getProfile.js'
+import * as AppSokaaActorSearchActors from './types/app/sokaa/actor/searchActors.js'
 import * as AppSokaaFeedGetAuthorFeed from './types/app/sokaa/feed/getAuthorFeed.js'
+import * as AppSokaaFeedGetRecentFeed from './types/app/sokaa/feed/getRecentFeed.js'
 import * as AppSokaaFeedGetTimeline from './types/app/sokaa/feed/getTimeline.js'
 import * as ChatBskyActorDeleteAccount from './types/chat/bsky/actor/deleteAccount.js'
 import * as ChatBskyActorExportAccountData from './types/chat/bsky/actor/exportAccountData.js'
@@ -1805,6 +1807,18 @@ export class AppSokaaActorNS {
     const nsid = 'app.sokaa.actor.getProfile' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
+
+  searchActors<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppSokaaActorSearchActors.QueryParams,
+      AppSokaaActorSearchActors.HandlerInput,
+      AppSokaaActorSearchActors.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.sokaa.actor.searchActors' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
 }
 
 export class AppSokaaEmbedNS {
@@ -1831,6 +1845,18 @@ export class AppSokaaFeedNS {
     >,
   ) {
     const nsid = 'app.sokaa.feed.getAuthorFeed' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRecentFeed<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppSokaaFeedGetRecentFeed.QueryParams,
+      AppSokaaFeedGetRecentFeed.HandlerInput,
+      AppSokaaFeedGetRecentFeed.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.sokaa.feed.getRecentFeed' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

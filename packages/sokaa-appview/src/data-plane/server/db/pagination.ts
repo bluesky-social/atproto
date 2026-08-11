@@ -119,6 +119,34 @@ export class CreatedAtCidKeyset extends GenericKeyset<
   }
 }
 
+type IndexedAtDidResult = { indexedAt: string; did: string }
+
+/** Keyset over (indexedAt, did) for actor search pagination. */
+export class IndexedAtDidKeyset extends GenericKeyset<
+  IndexedAtDidResult,
+  TimeCidLabeledResult
+> {
+  labelResult(result: IndexedAtDidResult) {
+    return { primary: result.indexedAt, secondary: result.did }
+  }
+  labeledResultToCursor(labeled: TimeCidLabeledResult) {
+    return {
+      primary: new Date(labeled.primary).getTime().toString(),
+      secondary: labeled.secondary,
+    }
+  }
+  cursorToLabeledResult(cursor: KeysetCursor) {
+    const primaryDate = new Date(parseInt(cursor.primary, 10))
+    if (isNaN(primaryDate.getTime())) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    return {
+      primary: primaryDate.toISOString(),
+      secondary: cursor.secondary,
+    }
+  }
+}
+
 export const paginate = <
   QB extends AnyQb,
   K extends GenericKeyset<unknown, KeysetLabeledResult>,

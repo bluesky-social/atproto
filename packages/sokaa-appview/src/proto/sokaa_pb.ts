@@ -301,6 +301,238 @@ export class GetAuthorFeedResponse extends Message<GetAuthorFeedResponse> {
 }
 
 /**
+ * @generated from message sokaa.GetRecentFeedRequest
+ */
+export class GetRecentFeedRequest extends Message<GetRecentFeedRequest> {
+  /**
+   * @generated from field: int32 limit = 1;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetRecentFeedRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'sokaa.GetRecentFeedRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetRecentFeedRequest {
+    return new GetRecentFeedRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetRecentFeedRequest {
+    return new GetRecentFeedRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetRecentFeedRequest {
+    return new GetRecentFeedRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: GetRecentFeedRequest | PlainMessage<GetRecentFeedRequest> | undefined,
+    b: GetRecentFeedRequest | PlainMessage<GetRecentFeedRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(GetRecentFeedRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message sokaa.GetRecentFeedResponse
+ */
+export class GetRecentFeedResponse extends Message<GetRecentFeedResponse> {
+  /**
+   * @generated from field: repeated sokaa.FeedItem items = 1;
+   */
+  items: FeedItem[] = []
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<GetRecentFeedResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'sokaa.GetRecentFeedResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'items', kind: 'message', T: FeedItem, repeated: true },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetRecentFeedResponse {
+    return new GetRecentFeedResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetRecentFeedResponse {
+    return new GetRecentFeedResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetRecentFeedResponse {
+    return new GetRecentFeedResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: GetRecentFeedResponse | PlainMessage<GetRecentFeedResponse> | undefined,
+    b: GetRecentFeedResponse | PlainMessage<GetRecentFeedResponse> | undefined,
+  ): boolean {
+    return proto3.util.equals(GetRecentFeedResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message sokaa.SearchActorsRequest
+ */
+export class SearchActorsRequest extends Message<SearchActorsRequest> {
+  /**
+   * @generated from field: string term = 1;
+   */
+  term = ''
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0
+
+  /**
+   * @generated from field: string cursor = 3;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<SearchActorsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'sokaa.SearchActorsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'term', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SearchActorsRequest {
+    return new SearchActorsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SearchActorsRequest {
+    return new SearchActorsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SearchActorsRequest {
+    return new SearchActorsRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: SearchActorsRequest | PlainMessage<SearchActorsRequest> | undefined,
+    b: SearchActorsRequest | PlainMessage<SearchActorsRequest> | undefined,
+  ): boolean {
+    return proto3.util.equals(SearchActorsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message sokaa.SearchActorsResponse
+ */
+export class SearchActorsResponse extends Message<SearchActorsResponse> {
+  /**
+   * @generated from field: repeated string dids = 1;
+   */
+  dids: string[] = []
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = ''
+
+  constructor(data?: PartialMessage<SearchActorsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'sokaa.SearchActorsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'dids',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+    { no: 2, name: 'cursor', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SearchActorsResponse {
+    return new SearchActorsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SearchActorsResponse {
+    return new SearchActorsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SearchActorsResponse {
+    return new SearchActorsResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a: SearchActorsResponse | PlainMessage<SearchActorsResponse> | undefined,
+    b: SearchActorsResponse | PlainMessage<SearchActorsResponse> | undefined,
+  ): boolean {
+    return proto3.util.equals(SearchActorsResponse, a, b)
+  }
+}
+
+/**
  * @generated from message sokaa.GetActorsRequest
  */
 export class GetActorsRequest extends Message<GetActorsRequest> {

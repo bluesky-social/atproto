@@ -5,6 +5,7 @@ import feeds from './feeds'
 import likes from './likes'
 import posts from './posts'
 import profile from './profile'
+import search from './search'
 
 export default (db: Database) => (router: ConnectRouter) =>
   router.service(Service, {
@@ -12,9 +13,10 @@ export default (db: Database) => (router: ConnectRouter) =>
     ...profile(db),
     ...posts(db),
     ...likes(db),
+    ...search(db),
     async ping() {
       return {}
     },
   })
 
-export { feeds, likes, posts, profile }
+export { feeds, likes, posts, profile, search }
