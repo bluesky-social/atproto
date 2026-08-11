@@ -60,7 +60,7 @@ describe('admin repo search view', () => {
       ids.ToolsOzoneModerationSearchRepos,
     )
     await network.processAll()
-  }, 40_000) // @NOTE seeding can take a while
+  }, 120_000) // @NOTE seeding can take a while
 
   afterAll(async () => {
     await network?.close()

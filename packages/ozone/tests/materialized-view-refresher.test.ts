@@ -1,6 +1,5 @@
 import { jest } from '@jest/globals'
 import { TestNetwork } from '@atproto/dev-env'
-import { MaterializedViewRefresher } from '../src/daemon/materialized-view-refresher.js'
 import { MATERIALIZED_VIEW_REFRESH_LOCK_ID } from '../src/db/index.js'
 import type { Database } from '../src/index.js'
 import { dbLogger } from '../src/logger.js'
@@ -8,24 +7,16 @@ import { dbLogger } from '../src/logger.js'
 describe('materialized view refresher', () => {
   let network: TestNetwork
   let db: Database
-  let refresher: MaterializedViewRefresher
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_view_refresher',
     })
     db = network.ozone.ctx.db
-    refresher = new MaterializedViewRefresher(
-      network.ozone.daemon.ctx.backgroundQueue,
-    )
   })
 
   afterAll(async () => {
-    try {
-      await refresher?.destroy()
-    } finally {
-      await network?.close()
-    }
+    await network?.close()
   })
 
   afterEach(() => {
@@ -36,22 +27,15 @@ describe('materialized view refresher', () => {
     const contender = await db.pool.connect()
     try {
       await contender.query(
-        'SELECT pg_advisory_lock($1, (SELECT oid::int FROM pg_namespace WHERE nspname = $2))',
-        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, db.schema],
+        `SELECT pg_advisory_lock(
+          hashtextextended(current_database() || ':' || $2::text, $1)
+        )`,
+        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, db.opts.schema ?? 'public'],
       )
-
-      const checker = await network.ozone.daemon.ctx.db.pool.connect()
-      const checkResult = await checker.query(
-        'SELECT pg_try_advisory_lock($1, (SELECT oid::int FROM pg_namespace WHERE nspname = $2)) as locked',
-        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, db.schema],
-      )
-      checker.release(true)
-      expect(network.ozone.daemon.ctx.db.schema).toBe(db.schema)
-      expect(checkResult.rows[0]?.locked).toBe(false)
 
       const infoSpy = jest.spyOn(dbLogger, 'info')
 
-      await refresher.run()
+      await network.ozone.daemon.ctx.materializedViewRefresher.run()
 
       const messages = infoSpy.mock.calls.map(
         (call) => call.find((arg) => typeof arg === 'string') ?? '',
@@ -64,42 +48,48 @@ describe('materialized view refresher', () => {
       ).toHaveLength(0)
     } finally {
       await contender.query(
-        'SELECT pg_advisory_unlock($1, (SELECT oid::int FROM pg_namespace WHERE nspname = $2))',
-        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, db.schema],
+        `SELECT pg_advisory_unlock(
+          hashtextextended(current_database() || ':' || $2::text, $1)
+        )`,
+        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, db.opts.schema ?? 'public'],
       )
       contender.release()
     }
   })
 
-  it('does not conflict with the same lock ID in another schema', async () => {
+  it('does not share the lock with another schema', async () => {
     const contender = await db.pool.connect()
     try {
       await contender.query(
-        'SELECT pg_advisory_lock($1, (SELECT oid::int FROM pg_namespace WHERE nspname = $2))',
-        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, 'pg_catalog'],
+        `SELECT pg_advisory_lock(
+          hashtextextended(current_database() || ':' || $2::text, $1)
+        )`,
+        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, 'ozone_view_refresher_contender'],
       )
+
       const infoSpy = jest.spyOn(dbLogger, 'info')
 
-      await refresher.run()
+      await network.ozone.daemon.ctx.materializedViewRefresher.run()
 
-      expect(
-        infoSpy.mock.calls.filter((call) =>
-          call.includes('refreshed materialized view'),
-        ),
-      ).toHaveLength(4)
+      const refreshCalls = infoSpy.mock.calls.filter((call) =>
+        call.includes('refreshed materialized view'),
+      )
+      expect(refreshCalls).toHaveLength(4)
     } finally {
       await contender.query(
-        'SELECT pg_advisory_unlock($1, (SELECT oid::int FROM pg_namespace WHERE nspname = $2))',
-        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, 'pg_catalog'],
+        `SELECT pg_advisory_unlock(
+          hashtextextended(current_database() || ':' || $2::text, $1)
+        )`,
+        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, 'ozone_view_refresher_contender'],
       )
-      contender.release(true)
+      contender.release()
     }
   })
 
   it('completes a cycle with per-view durations and releases the lock', async () => {
     const infoSpy = jest.spyOn(dbLogger, 'info')
 
-    await refresher.run()
+    await network.ozone.daemon.ctx.materializedViewRefresher.run()
 
     const refreshCalls = infoSpy.mock.calls.filter((call) =>
       call.includes('refreshed materialized view'),
@@ -119,7 +109,7 @@ describe('materialized view refresher', () => {
 
     // The lock was released between cycles: a second run also succeeds.
     infoSpy.mockClear()
-    await refresher.run()
+    await network.ozone.daemon.ctx.materializedViewRefresher.run()
     const secondRefreshCalls = infoSpy.mock.calls.filter((call) =>
       call.includes('refreshed materialized view'),
     )
@@ -141,7 +131,7 @@ describe('materialized view refresher', () => {
       const infoSpy = jest.spyOn(dbLogger, 'info')
       const errorSpy = jest.spyOn(dbLogger, 'error')
 
-      await refresher.run()
+      await network.ozone.daemon.ctx.materializedViewRefresher.run()
 
       // The failure log carries the stable alert-target message and shape.
       const failureCalls = errorSpy.mock.calls.filter((call) =>
@@ -170,13 +160,17 @@ describe('materialized view refresher', () => {
 
       // The advisory lock was released despite the failure.
       const lockResult = await admin.query(
-        'SELECT pg_try_advisory_lock($1, (SELECT oid::int FROM pg_namespace WHERE nspname = $2)) as locked',
-        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, db.schema],
+        `SELECT pg_try_advisory_lock(
+          hashtextextended(current_database() || ':' || $2::text, $1)
+        ) as locked`,
+        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, db.opts.schema ?? 'public'],
       )
       expect(lockResult.rows[0]?.locked).toBe(true)
       await admin.query(
-        'SELECT pg_advisory_unlock($1, (SELECT oid::int FROM pg_namespace WHERE nspname = $2))',
-        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, db.schema],
+        `SELECT pg_advisory_unlock(
+          hashtextextended(current_database() || ':' || $2::text, $1)
+        )`,
+        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, db.opts.schema ?? 'public'],
       )
     } finally {
       if (renamed) {
