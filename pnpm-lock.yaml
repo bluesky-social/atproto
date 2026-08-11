@@ -1787,6 +1787,9 @@ importers:
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
+      '@atproto/lex':
+        specifier: workspace:^
+        version: link:../lex/lex
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon

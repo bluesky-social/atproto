@@ -1,6 +1,5 @@
 ---
-'@atproto/api': minor
 '@atproto/ozone': minor
 ---
 
-Add an Ozone endpoint for moderators to export hosted account preferences.
+Allow moderators to retrieve hosted account preferences through Ozone's implementation of `app.bsky.actor.getPreferences`.
