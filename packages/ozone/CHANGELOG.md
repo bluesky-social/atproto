@@ -1,5 +1,20 @@
 # @atproto/ozone
 
+## 0.2.27
+
+### Patch Changes
+
+- [#5368](https://github.com/bluesky-social/atproto/pull/5368) [`ed2317e`](https://github.com/bluesky-social/atproto/commit/ed2317e2ce974d63c24f977cd40579badc1e639f) Thanks [@amckinley](https://github.com/amckinley)! - Keep stats materialization advisory locks on one database session and scope them by database and schema.
+
+- [#5364](https://github.com/bluesky-social/atproto/pull/5364) [`5c31425`](https://github.com/bluesky-social/atproto/commit/5c31425e79c46e435e9d87285461e745247ea818) Thanks [@amckinley](https://github.com/amckinley)! - Release the materialized-view advisory lock before discarding its database session.
+
+- [#5359](https://github.com/bluesky-social/atproto/pull/5359) [`aadb103`](https://github.com/bluesky-social/atproto/commit/aadb10349497d7c6b6ce5641dbbb1fd940dd5b12) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Remove timing races from WebSocket, background indexing, firehose, and Ozone materialized-view tests.
+
+- Updated dependencies [[`b2de0ee`](https://github.com/bluesky-social/atproto/commit/b2de0ee1ccb70fac69be90037751ea30daa37e3f), [`aadb103`](https://github.com/bluesky-social/atproto/commit/aadb10349497d7c6b6ce5641dbbb1fd940dd5b12)]:
+  - @atproto/api@0.20.39
+  - @atproto/ws-client@0.2.1
+  - @atproto/xrpc-server@0.12.3
+
 ## 0.2.26
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-ui
 
+## 0.9.1
+
+### Patch Changes
+
+- [#5334](https://github.com/bluesky-social/atproto/pull/5334) [`b4d71fc`](https://github.com/bluesky-social/atproto/commit/b4d71fc24f1c907daa67460251f2a8dc904359f9) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump react-error-boundary from 5.0.0 to 6.1.2
+
 ## 0.9.0
 
 ### Minor Changes
