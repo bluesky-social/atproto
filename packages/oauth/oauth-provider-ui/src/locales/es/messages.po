@@ -1433,6 +1433,10 @@ msgstr "Tu cuenta"
 msgid "Your account and all associated data have been deleted."
 msgstr ""
 
+#: src/components/update-email-dialog.tsx
+msgid "Your account currently uses <0>{emailCurrent}</0>. Choose a new email address to associate with it."
+msgstr ""
+
 #: src/authorization-page.tsx
 msgid "Your account has been successfully reactivated."
 msgstr ""

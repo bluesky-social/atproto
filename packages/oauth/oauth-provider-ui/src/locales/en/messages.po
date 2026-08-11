@@ -1442,6 +1442,10 @@ msgstr "Your account"
 msgid "Your account and all associated data have been deleted."
 msgstr "Your account and all associated data have been deleted."
 
+#: src/components/update-email-dialog.tsx
+msgid "Your account currently uses <0>{emailCurrent}</0>. Choose a new email address to associate with it."
+msgstr "Your account currently uses <0>{emailCurrent}</0>. Choose a new email address to associate with it."
+
 #: src/authorization-page.tsx
 msgid "Your account has been successfully reactivated."
 msgstr "Your account has been successfully reactivated."

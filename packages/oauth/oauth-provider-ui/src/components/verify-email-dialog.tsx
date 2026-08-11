@@ -48,7 +48,7 @@ export function VerifyEmailDialog({
       description={
         <Trans>
           To verify your email, you'll need to enter a security code sent to{' '}
-          <strong>{email}</strong>.
+          <strong className="break-words">{email}</strong>.
         </Trans>
       }
       open={open}

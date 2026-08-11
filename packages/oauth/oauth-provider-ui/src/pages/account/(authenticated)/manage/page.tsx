@@ -279,8 +279,8 @@ type RowProps = Override<
 >
 
 /**
- * A tappable settings row, built on the shadcn `item` primitive — the
- * canonical pattern for this kind of list.
+ * A settings row, built on the shadcn `item` primitive — the canonical pattern
+ * for this kind of list.
  *
  * @NOTE `render={<button/>}` makes the row keyboard focusable, which `Item`'s
  * default `<div>` is not. `itemVariants` has no destructive variant
@@ -311,18 +311,27 @@ function Row({
         <Icon aria-hidden className={cn(destructive && 'text-destructive')} />
       </ItemMedia>
 
-      <ItemContent>
-        <ItemTitle>
+      {/* @NOTE `min-w-0` is load-bearing: an email address has no break
+        opportunity, so without it the row overflows and `Item`'s wrap drops the
+        chevron onto a line of its own. `shrink-0` keeps the label whole, so the
+        value is what truncates. */}
+      <ItemContent className="min-w-0 flex-row items-center gap-3">
+        <ItemTitle className="shrink-0">
           <span>{children}</span>
         </ItemTitle>
-      </ItemContent>
-
-      <ItemActions>
         {value != null && (
-          <span className="text-muted-foreground hidden max-w-[16rem] truncate text-sm sm:inline">
+          <span
+            // A plain string value is the only one we can put in a tooltip
+            // ourselves; `Handle` carries its own `title`.
+            title={typeof value === 'string' ? value : undefined}
+            className="text-muted-foreground min-w-0 flex-1 truncate text-right text-sm"
+          >
             {value}
           </span>
         )}
+      </ItemContent>
+
+      <ItemActions>
         <ChevronRightIcon aria-hidden className="size-4 shrink-0 opacity-60" />
       </ItemActions>
     </Item>
