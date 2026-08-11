@@ -12,14 +12,8 @@ import { validateNsid, validateNsidRegex } from '../src/nsid.js'
 describe('valid NSIDs', () => {
   benchNsids(true, [
     'com.example.foo',
-    'o'.repeat(63) + '.foo.bar',
-    'com.' + 'o'.repeat(63) + '.foo',
-    'com.example.' + 'o'.repeat(63),
-    'com.' + 'middle.'.repeat(40) + 'foo',
     'com.example.fooBar',
     'net.users.bob.ping',
-    'a.b.c',
-    'm.xn--masekowski-d0b.pl',
     'one.two.three',
     'one.two.three.four-and.FiVe',
     'one.2.three',
@@ -28,14 +22,25 @@ describe('valid NSIDs', () => {
     'cn.8.lex.stuff',
     'test.12345.record',
     'a01.thing.record',
-    'a.0.c',
-    'xn--fiqs8s.xn--fiqa61au8b7zsevnm8ak20mc4a87e.record.two',
-    'a0.b1.c3',
     'com.example.f00',
     'onion.expyuzz4wqqyqhjn.spec.getThing',
-    'onion.g2zyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.lex.deleteThing',
     'org.4chan.lex.getThing',
     'cn.8.lex.stuff',
+  ])
+})
+
+describe('valid outliers', () => {
+  benchNsids(true, [
+    'a.0.c',
+    'a0.b1.c3',
+    'a.b.c',
+    'm.xn--masekowski-d0b.pl',
+    'o'.repeat(63) + '.foo.bar',
+    'com.' + 'o'.repeat(63) + '.foo',
+    'com.example.' + 'o'.repeat(63),
+    'com.' + 'middle.'.repeat(40) + 'foo',
+    'xn--fiqs8s.xn--fiqa61au8b7zsevnm8ak20mc4a87e.record.two',
+    'onion.g2zyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.lex.deleteThing',
     'onion.2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.lex.deleteThing',
     'a.'.repeat(158) + 'a',
   ])
