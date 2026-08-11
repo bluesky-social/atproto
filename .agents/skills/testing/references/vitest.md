@@ -199,24 +199,6 @@ expect(path).toContain('/xrpc/io.example.testQuery')
 
 When calls don't need inspecting, a plain typed function is clearer than a mock: `const fetchHandler: FetchHandler = async () => …`.
 
-### `using` for auto-restored spies
-
-Spies are `Disposable`, so declaring one with `using` calls `mockRestore()` at the end of the enclosing block — no `afterEach`, no `try`/`finally`:
-
-```ts
-it('sends an update email when the address changes', async () => {
-  using sendUpdateEmailMock = vi
-    .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')
-    .mockImplementation(async () => {})
-
-  await client.call(com.atproto.server.requestEmailUpdate)
-
-  expect(sendUpdateEmailMock).toHaveBeenCalledOnce()
-}) // restored here
-```
-
-This generalizes to anything that actually implements `[Symbol.dispose]` / `[Symbol.asyncDispose]` — test servers (`await using server = await startServer(app)`) and `PageHelper` do, and `TestNetwork` does. `TestNetworkNoAppView` does not: it has `close()` only, so clean it up in `afterAll`. Check the type before reaching for `using`.
-
 ### Module mocks
 
 Mocking a node built-in usually needs both the default and the named exports, since callers may use either form ([lexicon-resolver](../../../../packages/lexicon-resolver/tests/lexicon.test.ts) does this for DNS):

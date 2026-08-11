@@ -184,6 +184,7 @@ describe('mute views', () => {
           encoding: 'application/json',
         },
       )
+      await network.processAll()
       const replacedWithFull = await agent.api.app.bsky.actor.getProfile(
         { actor: dan },
         {
@@ -206,6 +207,7 @@ describe('mute views', () => {
           encoding: 'application/json',
         },
       )
+      await network.processAll()
       const profile = await agent.api.app.bsky.actor.getProfile(
         { actor: dan },
         {
@@ -477,6 +479,7 @@ describe('mute views', () => {
         encoding: 'application/json',
       },
     )
+    await network.processAll()
 
     try {
       const profile = await agent.api.app.bsky.actor.getProfile(
