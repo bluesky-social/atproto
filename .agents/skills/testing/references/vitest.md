@@ -46,7 +46,7 @@ Repo-specific conventions and setup. Assumes working knowledge of vitest itself 
 
 A package with a `vite.config.*` must use vitest, configured **inside that existing Vite config**. Vitest reads `vite.config.*` natively, so a separate `vitest.config.ts` would shadow the package's real build setup (plugins, `resolve.alias`, `optimizeDeps`, `conditions`) and the tests would run against a different module graph than the app. Jest isn't an option at all here — it can't consume the Vite plugin pipeline.
 
-Two additions to the Vite config, as in [oauth-provider-ui](../../../../packages/oauth/oauth-provider-ui/vite.config.mjs):
+Two additions to the Vite config, as in [oauth-provider-ui](../../../../packages/oauth/oauth-provider-ui/vite.config.js):
 
 1. `/// <reference types="vitest/config" />` on the **first line** — this types the `test` key, which `defineConfig` from `vite` doesn't know about on its own.
 2. A `test: {}` key in the exported config, kept empty unless an option is genuinely needed.

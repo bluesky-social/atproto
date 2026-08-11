@@ -117,10 +117,9 @@ export default [
   {
     files: [
       '**/vite.config.js',
-      '**/vite.config.mjs',
       'packages/dev-env/bin.js',
       'packages/lex-cli/bin.js',
-      'packages/lex/*/scripts/*.mjs',
+      'packages/lex/*/scripts/*.js',
     ],
     languageOptions: {
       globals: globals.node,
