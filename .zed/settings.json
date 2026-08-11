@@ -13,6 +13,7 @@
     "**/.classpath",
     "**/.settings",
     "**/.claude/worktrees",
+    "../worktrees/atproto/**",
   ],
   "languages": {
     "JavaScript": {

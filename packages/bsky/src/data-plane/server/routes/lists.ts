@@ -20,10 +20,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       keyset,
       tryIndex: true,
     })
-    const lists = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
     return {
-      listUris: lists.map((item) => item.uri),
-      cursor: keyset.packFromResult(lists),
+      listUris: page.items.map((item) => item.uri),
+      cursor: page.cursor,
     }
   },
 
@@ -47,13 +47,13 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       tryIndex: true,
     })
 
-    const listItems = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
     return {
-      listitems: listItems.map((item) => ({
+      listitems: page.items.map((item) => ({
         uri: item.uri,
         did: item.subjectDid,
       })),
-      cursor: keyset.packFromResult(listItems),
+      cursor: page.cursor,
     }
   },
 

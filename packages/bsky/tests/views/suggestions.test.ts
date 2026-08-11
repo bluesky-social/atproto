@@ -64,7 +64,7 @@ describe('pds user search views', () => {
     expect(result.data.actors.length).toBe(0)
   })
 
-  it('paginates', async () => {
+  it('paginates and refills after filtering followed and requesting actors', async () => {
     const result1 = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 2 },
       {
@@ -74,11 +74,13 @@ describe('pds user search views', () => {
         ),
       },
     )
-    expect(result1.data.actors.length).toBe(1)
+    expect(result1.data.actors.length).toBe(2)
     expect(result1.data.actors[0].handle).toEqual('bob.test')
+    expect(result1.data.actors[1].handle).toEqual('dan.test')
+    expect(result1.data.cursor).toBeDefined()
 
-    const result2 = await agent.api.app.bsky.actor.getSuggestions(
-      { limit: 2, cursor: result1.data.cursor },
+    const terminal = await agent.api.app.bsky.actor.getSuggestions(
+      { limit: 3 },
       {
         headers: await network.serviceHeaders(
           sc.dids.carol,
@@ -86,20 +88,20 @@ describe('pds user search views', () => {
         ),
       },
     )
-    expect(result2.data.actors.length).toBe(1)
-    expect(result2.data.actors[0].handle).toEqual('dan.test')
+    expect(terminal.data.actors).toHaveLength(2)
+    expect(terminal.data.cursor).toBeUndefined()
 
-    const result3 = await agent.api.app.bsky.actor.getSuggestions(
-      { limit: 2, cursor: result2.data.cursor },
+    const empty = await agent.api.app.bsky.actor.getSuggestions(
+      { limit: 1 },
       {
         headers: await network.serviceHeaders(
-          sc.dids.carol,
+          sc.dids.alice,
           ids.AppBskyActorGetSuggestions,
         ),
       },
     )
-    expect(result3.data.actors.length).toBe(0)
-    expect(result3.data.cursor).toBeUndefined()
+    expect(empty.data.actors).toEqual([])
+    expect(empty.data.cursor).toBeUndefined()
   })
 
   it('fetches suggestions unauthed', async () => {

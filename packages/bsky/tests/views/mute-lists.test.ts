@@ -354,6 +354,20 @@ describe('bsky views with mutes from mute lists', () => {
   })
 
   it('paginates getListMutes', async () => {
+    const exact = await network.bsky.ctx.dataplane.getMutelistSubscriptions({
+      actorDid: dan,
+      limit: 2,
+    })
+    const nonterminal =
+      await network.bsky.ctx.dataplane.getMutelistSubscriptions({
+        actorDid: dan,
+        limit: 1,
+      })
+    expect(exact.listUris).toHaveLength(2)
+    expect(exact.cursor).toBe('')
+    expect(nonterminal.listUris).toHaveLength(1)
+    expect(nonterminal.cursor).not.toBe('')
+
     const full = await agent.api.app.bsky.graph.getListMutes(
       {},
       {
@@ -382,7 +396,31 @@ describe('bsky views with mutes from mute lists', () => {
       },
     )
     const combined = [...first.data.lists, ...second.data.lists]
+    expect(first.data.lists).toHaveLength(1)
+    expect(first.data.cursor).toBeDefined()
+    expect(second.data.cursor).toBeUndefined()
     expect(combined).toEqual(full.data.lists)
+
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: otherListUri,
+    })
+    try {
+      const filtered = await agent.api.app.bsky.graph.getListMutes(
+        { limit: 1 },
+        {
+          headers: await network.serviceHeaders(
+            dan,
+            ids.AppBskyGraphGetListMutes,
+          ),
+        },
+      )
+      expect(filtered.data.lists.map((list) => list.uri)).toEqual([listUri])
+      expect(filtered.data.cursor).toBeUndefined()
+    } finally {
+      await network.bsky.ctx.dataplane.untakedownRecord({
+        recordUri: otherListUri,
+      })
+    }
   })
 
   it('allows unsubscribing from a mute list', async () => {

@@ -104,6 +104,36 @@ describe('bsky actor likes feed views', () => {
   beforeEach(async () => network.processAll())
   afterAll(async () => network?.close())
 
+  it('getActorLists only returns a cursor when another raw row exists', async () => {
+    const exact = await network.bsky.ctx.dataplane.getActorLists({
+      actorDid: eve,
+      limit: 7,
+    })
+    const nonterminal = await network.bsky.ctx.dataplane.getActorLists({
+      actorDid: eve,
+      limit: 2,
+    })
+    expect(exact.listUris).toHaveLength(7)
+    expect(exact.cursor).toBe('')
+    expect(nonterminal.listUris).toHaveLength(2)
+    expect(nonterminal.cursor).not.toBe('')
+  })
+
+  it('getListMembers only returns a cursor when another raw row exists', async () => {
+    const exact = await network.bsky.ctx.dataplane.getListMembers({
+      listUri: curateList,
+      limit: 3,
+    })
+    const nonterminal = await network.bsky.ctx.dataplane.getListMembers({
+      listUri: curateList,
+      limit: 2,
+    })
+    expect(exact.listitems).toHaveLength(3)
+    expect(exact.cursor).toBe('')
+    expect(nonterminal.listitems).toHaveLength(2)
+    expect(nonterminal.cursor).not.toBe('')
+  })
+
   it('does not include reference lists in getActorLists', async () => {
     const view = await agent.app.bsky.graph.getLists({
       actor: eve,
@@ -168,6 +198,11 @@ describe('bsky actor likes feed views', () => {
       paginatedAll.forEach((res) =>
         expect(res.lists.length).toBeLessThanOrEqual(2),
       )
+      expect(paginatedAll.at(-1)?.cursor).toBeUndefined()
+      if (expected > 2) {
+        expect(paginatedAll[0].lists).toHaveLength(2)
+        expect(paginatedAll[0].cursor).toBeDefined()
+      }
 
       const full = await agent.app.bsky.graph.getLists(
         { actor: eve, purposes },
@@ -200,12 +235,13 @@ describe('bsky actor likes feed views', () => {
     expect(forSnapshot(curView.data.items)).toMatchSnapshot()
 
     const refView = await agent.app.bsky.graph.getList(
-      { list: referenceList },
+      { list: referenceList, limit: 2 },
       {
         headers: await network.serviceHeaders(frankie, ids.AppBskyGraphGetList),
       },
     )
     expect(refView.data.items.length).toBe(2)
+    expect(refView.data.cursor).toBeUndefined()
     expect(forSnapshot(refView.data.items)).toMatchSnapshot()
   })
 
@@ -387,6 +423,11 @@ describe('bsky actor likes feed views', () => {
         paginatedAll.forEach((res) =>
           expect(res.listsWithMembership.length).toBeLessThanOrEqual(2),
         )
+        expect(paginatedAll.at(-1)?.cursor).toBeUndefined()
+        if (expected > 2) {
+          expect(paginatedAll[0].listsWithMembership).toHaveLength(2)
+          expect(paginatedAll[0].cursor).toBeDefined()
+        }
 
         const full = await agent.app.bsky.graph.getListsWithMembership(
           { actor: eve, purposes },

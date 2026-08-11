@@ -297,6 +297,36 @@ describe('feed generation', () => {
     expect(forSnapshot(paginatedAll)).toMatchSnapshot()
   })
 
+  it('getActorFeeds returns a cursor only when more feeds are available', async () => {
+    const exact = await network.bsky.ctx.dataplane.getActorFeeds({
+      actorDid: alice,
+      limit: 10,
+    })
+    expect(exact.uris).toHaveLength(10)
+    expect(exact.cursor).toBe('')
+
+    const over = await network.bsky.ctx.dataplane.getActorFeeds({
+      actorDid: alice,
+      limit: 9,
+    })
+    expect(over.uris).toHaveLength(9)
+    expect(over.cursor).not.toBe('')
+
+    const terminal = await agent.app.bsky.feed.getActorFeeds({
+      actor: alice,
+      limit: 9,
+    })
+    expect(terminal.data.feeds).toHaveLength(9)
+    expect(terminal.data.cursor).toBeUndefined()
+
+    const trimmed = await agent.app.bsky.feed.getActorFeeds({
+      actor: alice,
+      limit: 8,
+    })
+    expect(trimmed.data.feeds).toHaveLength(8)
+    expect(trimmed.data.cursor).toBeDefined()
+  })
+
   it('embeds feed generator records in posts', async () => {
     const res = await pdsAgent.api.app.bsky.feed.post.create(
       { repo: sc.dids.bob },
@@ -588,6 +618,38 @@ describe('feed generation', () => {
       expect(forSnapshot(resEven.data)).toMatchSnapshot()
       expect(resEven.data.feeds.map((fg) => fg.uri)).not.toContain(feedUriPrime) // taken-down
     })
+
+    it('fills the page after filtering and returns a cursor only when more feeds are available', async () => {
+      const exact = await network.bsky.ctx.dataplane.getSuggestedFeeds({
+        limit: 4,
+      })
+      expect(exact.uris).toHaveLength(4)
+      expect(exact.cursor).toBe('')
+
+      const over = await network.bsky.ctx.dataplane.getSuggestedFeeds({
+        limit: 3,
+      })
+      expect(over.uris).toHaveLength(3)
+      expect(over.cursor).not.toBe('')
+
+      await network.bsky.db.db
+        .updateTable('suggested_feed')
+        .set({ order: 0 })
+        .where('uri', '=', feedUriPrime)
+        .execute()
+      const terminal = await agent.app.bsky.feed.getSuggestedFeeds({ limit: 3 })
+      expect(terminal.data.feeds).toHaveLength(3)
+      expect(terminal.data.cursor).toBeUndefined()
+      await network.bsky.db.db
+        .updateTable('suggested_feed')
+        .set({ order: 4 })
+        .where('uri', '=', feedUriPrime)
+        .execute()
+
+      const trimmed = await agent.app.bsky.feed.getSuggestedFeeds({ limit: 2 })
+      expect(trimmed.data.feeds).toHaveLength(2)
+      expect(trimmed.data.cursor).toBeDefined()
+    })
   })
 
   describe('getPopularFeedGenerators', () => {
@@ -657,6 +719,30 @@ describe('feed generation', () => {
         resFull.data.feeds,
       )
     })
+
+    it('uses bounded feed-generator pages and refills filtered suggestions', async () => {
+      await network.bsky.db.db
+        .updateTable('suggested_feed')
+        .set({ order: 0 })
+        .where('uri', '=', feedUriPrime)
+        .execute()
+      const exact = await agent.app.bsky.unspecced.getPopularFeedGenerators({
+        limit: 3,
+      })
+      expect(exact.data.feeds).toHaveLength(3)
+      expect(exact.data.cursor).toBeUndefined()
+      await network.bsky.db.db
+        .updateTable('suggested_feed')
+        .set({ order: 4 })
+        .where('uri', '=', feedUriPrime)
+        .execute()
+
+      const over = await agent.app.bsky.unspecced.getPopularFeedGenerators({
+        limit: 2,
+      })
+      expect(over.data.feeds).toHaveLength(2)
+      expect(over.data.cursor).toBeDefined()
+    })
   })
 
   describe('getFeed', () => {
@@ -719,6 +805,25 @@ describe('feed generation', () => {
         sc.posts[sc.dids.dan][1].ref.uriStr,
       ])
       expect(forSnapshot(paginatedAll)).toMatchSnapshot()
+    })
+
+    it('refills after an empty filtered skeleton segment', async () => {
+      const res = await agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriAll, cursor: '2', limit: 2 },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetFeed,
+            gen.did,
+          ),
+        },
+      )
+
+      expect(res.data.feed.map((item) => item.post.uri)).toEqual([
+        sc.posts[sc.dids.carol][0].ref.uriStr,
+        sc.replies[sc.dids.carol][0].ref.uriStr,
+      ])
+      expect(res.data.cursor).toBe('5')
     })
 
     it('paginates, handling feed not respecting limit.', async () => {
