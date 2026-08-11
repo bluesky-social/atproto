@@ -2,4 +2,4 @@
 '@atproto/bsky': patch
 ---
 
-Add batched canonical OP thread metadata to post hydration. Thread roots carrying more OP replies than the per-root ceiling are omitted rather than numbered from a truncated reply set.
+Add batched canonical OP thread chains to post hydration so AppView can derive position metadata. Thread roots carrying more OP replies than the per-root ceiling are omitted rather than returned as a truncated chain.

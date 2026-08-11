@@ -21,7 +21,7 @@ describe('data plane OP thread metadata', () => {
 
   afterAll(async () => network?.close())
 
-  it('returns aligned canonical metadata only when requested', async () => {
+  it('returns complete canonical threads only when requested', async () => {
     const op = sc.dids.threadop
     const root = await sc.post(op, 'root')
     const first = await sc.reply(op, root.ref, root.ref, 'first')
@@ -53,32 +53,20 @@ describe('data plane OP thread metadata', () => {
     const withoutMetadata = await network.bsky.ctx.dataplane.getPostRecords({
       uris,
     })
-    expect(
-      withoutMetadata.meta.map((item) => [
-        item.opThreadPostIndex,
-        item.opThreadPostCount,
-      ]),
-    ).toEqual(uris.map(() => [undefined, undefined]))
+    expect(withoutMetadata.opThreads).toEqual([])
 
     const withMetadata = await network.bsky.ctx.dataplane.getPostRecords({
       uris,
       includeOpThreadMetadata: true,
     })
     expect(
-      withMetadata.meta.map((item) => [
-        item.opThreadPostIndex,
-        item.opThreadPostCount,
-      ]),
-    ).toEqual([
-      [3, 3],
-      [1, 3],
-      [undefined, undefined],
-      [undefined, undefined],
-      [2, 3],
-      [2, 2],
-      [1, 2],
-      [undefined, undefined],
-    ])
+      Object.fromEntries(
+        withMetadata.opThreads.map((thread) => [thread.rootUri, thread.uris]),
+      ),
+    ).toEqual({
+      [root.ref.uriStr]: [root.ref.uriStr, first.ref.uriStr, second.ref.uriStr],
+      [otherRoot.ref.uriStr]: [otherRoot.ref.uriStr, otherReply.ref.uriStr],
+    })
   })
 
   it('applies the reply-row ceiling consistently', async () => {
@@ -110,15 +98,12 @@ describe('data plane OP thread metadata', () => {
         .execute()
     }
 
-    const getIndices = async () => {
+    const getOpThreads = async () => {
       const res = await network.bsky.ctx.dataplane.getPostRecords({
         uris,
         includeOpThreadMetadata: true,
       })
-      return res.meta.map((item) => [
-        item.opThreadPostIndex,
-        item.opThreadPostCount,
-      ])
+      return res.opThreads.map((thread) => thread.uris)
     }
     const getOpThread = async () => {
       const res = await network.bsky.ctx.dataplane.getThread({
@@ -131,10 +116,7 @@ describe('data plane OP thread metadata', () => {
 
     // One real reply is already indexed, so pad up to exactly the ceiling.
     await padRoot(0, OP_THREAD_REPLY_LIMIT - 1)
-    expect(await getIndices()).toEqual([
-      [1, 2],
-      [2, 2],
-    ])
+    expect(await getOpThreads()).toEqual([[rootUri, first.ref.uriStr]])
     expect(await getOpThread()).toEqual([rootUri, first.ref.uriStr])
 
     // Tombstones count toward the same ceiling as live replies, matching the
@@ -145,10 +127,7 @@ describe('data plane OP thread metadata', () => {
       OP_THREAD_REPLY_LIMIT,
       new Date().toISOString(),
     )
-    expect(await getIndices()).toEqual([
-      [undefined, undefined],
-      [undefined, undefined],
-    ])
+    expect(await getOpThreads()).toEqual([])
     expect(await getOpThread()).toEqual([])
   })
 })

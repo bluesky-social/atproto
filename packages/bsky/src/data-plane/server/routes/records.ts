@@ -7,7 +7,7 @@ import { AtUri } from '@atproto/syntax'
 import { app, chat, com } from '../../../lexicons/index.js'
 import { dataplaneLogger } from '../../../logger.js'
 import type { Service } from '../../../proto/bsky_connect.js'
-import { PostRecordMeta, Record } from '../../../proto/bsky_pb.js'
+import { OpThread, PostRecordMeta, Record } from '../../../proto/bsky_pb.js'
 import type { Database } from '../db/index.js'
 import {
   OP_THREAD_REPLY_LIMIT,
@@ -85,8 +85,12 @@ export const getPostRecords = (db: Database) => {
   return async (req: {
     uris: string[]
     includeOpThreadMetadata?: boolean
-  }): Promise<{ records: Record[]; meta: PostRecordMeta[] }> => {
-    const [{ records }, details, opThreadMetadata] = await Promise.all([
+  }): Promise<{
+    records: Record[]
+    meta: PostRecordMeta[]
+    opThreads: OpThread[]
+  }> => {
+    const [{ records }, details, opThreads] = await Promise.all([
       getBaseRecords(req),
       req.uris.length
         ? db.db
@@ -101,36 +105,26 @@ export const getPostRecords = (db: Database) => {
             ])
             .execute()
         : [],
-      req.includeOpThreadMetadata
-        ? getOpThreadMetadata(db, req.uris)
-        : new Map<string, OpThreadMetadata>(),
+      req.includeOpThreadMetadata ? getOpThreads(db, req.uris) : [],
     ])
     const byKey = keyBy(details, 'uri')
     const meta = req.uris.map((uri) => {
-      const thread = opThreadMetadata.get(uri)
       return new PostRecordMeta({
         violatesThreadGate: !!byKey.get(uri)?.violatesThreadGate,
         violatesEmbeddingRules: !!byKey.get(uri)?.violatesEmbeddingRules,
         hasThreadGate: !!byKey.get(uri)?.hasThreadGate,
         hasPostGate: !!byKey.get(uri)?.hasPostGate,
-        opThreadPostIndex: thread?.index,
-        opThreadPostCount: thread?.count,
       })
     })
-    return { records, meta }
+    return { records, meta, opThreads }
   }
 }
 
-type OpThreadMetadata = {
-  index: number
-  count: number
-}
-
-const getOpThreadMetadata = async (
+const getOpThreads = async (
   db: Database,
   uris: string[],
-): Promise<Map<string, OpThreadMetadata>> => {
-  if (!uris.length) return new Map()
+): Promise<OpThread[]> => {
+  if (!uris.length) return []
 
   const requestedRoots = db.db
     .selectFrom('post')
@@ -172,7 +166,7 @@ const getOpThreadMetadata = async (
     repliesByRoot.set(row.rootUri, replies)
   }
 
-  const metadata = new Map<string, OpThreadMetadata>()
+  const opThreads: OpThread[] = []
   const skippedRoots: string[] = []
   for (const [rootUri, replies] of repliesByRoot) {
     if (replies.length > OP_THREAD_REPLY_LIMIT) {
@@ -183,10 +177,7 @@ const getOpThreadMetadata = async (
     const opThread = resolveCanonicalOpThread(rootUri, replies)
     if (!opThread) continue
 
-    const count = opThread.length
-    for (let i = 0; i < count; i++) {
-      metadata.set(opThread[i], { index: i + 1, count })
-    }
+    opThreads.push(new OpThread({ rootUri, uris: opThread }))
   }
 
   // Volume stats stay at debug so the hydration path pays nothing by default;
@@ -200,13 +191,13 @@ const getOpThreadMetadata = async (
   if (skippedRoots.length) {
     dataplaneLogger.warn(
       { ...stats, skippedRoots },
-      'op thread reply ceiling hit, metadata omitted for these roots',
+      'op thread reply ceiling hit, threads omitted for these roots',
     )
   } else {
-    dataplaneLogger.debug(stats, 'op thread metadata resolved')
+    dataplaneLogger.debug(stats, 'op threads resolved')
   }
 
-  return metadata
+  return opThreads
 }
 
 const compositeTime = (
