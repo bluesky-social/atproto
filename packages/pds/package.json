@@ -113,11 +113,11 @@
   },
   "scripts": {
     "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
-    "codegen:templates": "node ./build.templates.cjs",
+    "codegen:templates": "node ./scripts/build.templates.js",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
     "verify:import": "node --input-type=module -e \"import '@atproto/pds'\"",
-    "dev": "node ./build.templates.cjs --watch",
+    "dev": "node ./scripts/build.templates.js --watch",
     "pretest": "puppeteer browsers install chrome",
     "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",
     "test:sqlite": "NODE_OPTIONS=--experimental-vm-modules jest",

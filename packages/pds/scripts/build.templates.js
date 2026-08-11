@@ -1,7 +1,8 @@
-const { globSync } = require('node:fs')
-const hbsPlugin = require('esbuild-plugin-handlebars')
+import { globSync } from 'node:fs'
+import { build } from 'esbuild'
+import hbsPlugin from 'esbuild-plugin-handlebars'
 
-require('esbuild').build({
+build({
   logLevel: 'info',
   watch: process.argv.includes('--watch'),
   entryPoints: globSync('src/**/*.hbs'),
