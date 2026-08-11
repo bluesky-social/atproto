@@ -5,6 +5,7 @@ import createTemplate from './communication/createTemplate.js'
 import deleteTemplate from './communication/deleteTemplate.js'
 import listTemplates from './communication/listTemplates.js'
 import updateTemplate from './communication/updateTemplate.js'
+import getAccountPreferences from './hosting/getAccountPreferences.js'
 import fetchLabels from './label/fetchLabels.js'
 import queryLabels from './label/queryLabels.js'
 import subscribeLabels from './label/subscribeLabels.js'
@@ -90,6 +91,7 @@ export default function (server: Server, ctx: AppContext) {
   queryLabels(server, ctx)
   subscribeLabels(server, ctx)
   fetchLabels(server, ctx)
+  getAccountPreferences(server, ctx)
   listTemplates(server, ctx)
   createTemplate(server, ctx)
   updateTemplate(server, ctx)
