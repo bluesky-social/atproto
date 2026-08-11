@@ -9,10 +9,7 @@ import { dataplaneLogger } from '../../../logger.js'
 import type { Service } from '../../../proto/bsky_connect.js'
 import { OpThread, PostRecordMeta, Record } from '../../../proto/bsky_pb.js'
 import type { Database } from '../db/index.js'
-import {
-  OP_THREAD_REPLY_LIMIT,
-  resolveCanonicalOpThread,
-} from '../op-thread.js'
+import { resolveCanonicalOpThread } from '../op-thread.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getBlockRecords: getRecords(db, app.bsky.graph.block),
@@ -132,27 +129,18 @@ const getOpThreads = async (
     .select((eb) => eb.fn.coalesce('replyRoot', 'uri').as('rootUri'))
     .distinct()
 
-  // The lateral limit bounds row work independently for each root. Fetch one
-  // past the ceiling so over-limit roots are distinguishable from roots that
-  // land exactly on it.
   const rows = await db.db
-    .selectFrom(requestedRoots.as('requested_root'))
-    .innerJoinLateral(
-      (eb) =>
-        eb
-          .selectFrom('op_thread_reply')
-          .select(['rootUri', 'uri', 'parentUri', 'deletedAt'])
-          .whereRef('rootUri', '=', 'requested_root.rootUri')
-          .orderBy('uri')
-          .limit(OP_THREAD_REPLY_LIMIT + 1)
-          .as('reply'),
-      (join) => join.onTrue(),
+    .selectFrom('op_thread_reply')
+    .innerJoin(
+      requestedRoots.as('requested_root'),
+      'requested_root.rootUri',
+      'op_thread_reply.rootUri',
     )
     .select([
-      'reply.rootUri',
-      'reply.uri',
-      'reply.parentUri',
-      'reply.deletedAt',
+      'op_thread_reply.rootUri',
+      'op_thread_reply.uri',
+      'op_thread_reply.parentUri',
+      'op_thread_reply.deletedAt',
     ])
     .execute()
 
@@ -167,35 +155,17 @@ const getOpThreads = async (
   }
 
   const opThreads: OpThread[] = []
-  const skippedRoots: string[] = []
   for (const [rootUri, replies] of repliesByRoot) {
-    if (replies.length > OP_THREAD_REPLY_LIMIT) {
-      skippedRoots.push(rootUri)
-      continue
-    }
-
     const opThread = resolveCanonicalOpThread(rootUri, replies)
     if (!opThread) continue
 
     opThreads.push(new OpThread({ rootUri, uris: opThread }))
   }
 
-  // Volume stats stay at debug so the hydration path pays nothing by default;
-  // raise the bsky:dp level to size batches during rollout. Hitting the
-  // ceiling is rare and actionable, so that warns.
-  const stats = {
-    uris: uris.length,
-    roots: repliesByRoot.size,
-    rows: rows.length,
-  }
-  if (skippedRoots.length) {
-    dataplaneLogger.warn(
-      { ...stats, skippedRoots },
-      'op thread reply ceiling hit, threads omitted for these roots',
-    )
-  } else {
-    dataplaneLogger.debug(stats, 'op threads resolved')
-  }
+  dataplaneLogger.debug(
+    { uris: uris.length, roots: repliesByRoot.size, rows: rows.length },
+    'op threads resolved',
+  )
 
   return opThreads
 }

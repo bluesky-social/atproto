@@ -7,10 +7,6 @@ export type OpThreadReply = {
   deletedAt: string | null
 }
 
-// Matches the default production dataplane ceiling on OP reply rows fetched
-// per thread root.
-export const OP_THREAD_REPLY_LIMIT = 1000
-
 // Resolves the oldest contiguous line of OP replies from a thread root.
 // A deleted reply keeps its place while replies below it survive. Once
 // nothing survives below it, only a reply written after the deletion may
