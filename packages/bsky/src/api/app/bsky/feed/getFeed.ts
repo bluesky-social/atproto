@@ -32,7 +32,7 @@ import {
   createPipeline,
 } from '../../../../pipeline.js'
 import type { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
-import { BSKY_USER_AGENT, fillPage, resHeaders } from '../../../util.js'
+import { BSKY_USER_AGENT, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeed = createPipeline(
@@ -70,13 +70,9 @@ export default function (server: Server, ctx: AppContext) {
           : req.headers['x-bsky-topics'],
       })
       // @NOTE feed cursors should not be affected by appview swap
-      const result = await fillPage({
-        cursor: params.cursor,
-        limit: params.limit,
-        fetch: ({ cursor, limit }) =>
-          getFeed({ ...params, cursor, limit, hydrateCtx, headers }, ctx),
-        items: (r) => r.feed,
-      })
+      // Do not refill filtered pages. Overfetching from algorithmic feeds can
+      // advance their state and prevent omitted items from appearing later.
+      const result = await getFeed({ ...params, hydrateCtx, headers }, ctx)
       const {
         timerSkele,
         timerHydr,
@@ -322,8 +318,10 @@ const skeletonFromFeedGen = async (
     ...skele,
     resHeaders: contentLang ? { 'content-language': contentLang } : undefined,
     feedItems,
-    // Prevents loops if the custom feed echoes the input cursor back.
-    cursor: cursor === params.cursor ? undefined : cursor,
+    // An empty feed-generator page ends pagination even if it includes a cursor.
+    // Also prevent loops if the custom feed echoes the input cursor back.
+    cursor:
+      feedSkele.length === 0 || cursor === params.cursor ? undefined : cursor,
   }
 }
 

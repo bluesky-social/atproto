@@ -36,6 +36,7 @@ describe('feed generation', () => {
   let feedUriOdd: string // Unsupported by feed gen
   let feedUriBadPaginationLimit: string
   let feedUriBadPaginationCursor: string
+  let feedUriEmptyPageWithCursor: string
   let feedUriPrime: string // Taken-down
   let feedUriPrimeRef: RecordRef
   let feedUriNeedsAuth: string
@@ -66,6 +67,12 @@ describe('feed generation', () => {
       'app.bsky.feed.generator',
       'bad-pagination-cursor',
     )
+    const emptyPageWithCursorUri = AtUri.make(
+      alice,
+      'app.bsky.feed.generator',
+      'empty-page-with-cursor',
+    )
+    feedUriEmptyPageWithCursor = emptyPageWithCursorUri.toString()
     const evenUri = AtUri.make(alice, 'app.bsky.feed.generator', 'even')
     const primeUri = AtUri.make(alice, 'app.bsky.feed.generator', 'prime')
     const needsAuthUri = AtUri.make(
@@ -87,6 +94,9 @@ describe('feed generation', () => {
       ),
       [feedUriBadPaginationCursor.toString()]: feedGenHandler(
         'bad-pagination-cursor',
+      ),
+      [emptyPageWithCursorUri.toString()]: feedGenHandler(
+        'empty-page-with-cursor',
       ),
       [primeUri.toString()]: feedGenHandler('prime'),
       [needsAuthUri.toString()]: feedGenHandler('needs-auth'),
@@ -807,7 +817,7 @@ describe('feed generation', () => {
       expect(forSnapshot(paginatedAll)).toMatchSnapshot()
     })
 
-    it('refills after an empty filtered skeleton segment', async () => {
+    it('does not refill an empty filtered skeleton segment', async () => {
       const res = await agent.api.app.bsky.feed.getFeed(
         { feed: feedUriAll, cursor: '2', limit: 2 },
         {
@@ -821,9 +831,8 @@ describe('feed generation', () => {
 
       expect(res.data.feed.map((item) => item.post.uri)).toEqual([
         sc.posts[sc.dids.carol][0].ref.uriStr,
-        sc.replies[sc.dids.carol][0].ref.uriStr,
       ])
-      expect(res.data.cursor).toBe('5')
+      expect(res.data.cursor).toBe('4')
     })
 
     it('paginates, handling feed not respecting limit.', async () => {
@@ -877,6 +886,34 @@ describe('feed generation', () => {
 
       expect(res.data.cursor).toBeUndefined()
       expect(res.data.feed).toHaveLength(2)
+    })
+
+    it('returns empty cursor when the feed generator returns an empty page', async () => {
+      await pdsAgent.api.app.bsky.feed.generator.create(
+        { repo: alice, rkey: 'empty-page-with-cursor' },
+        {
+          did: gen.did,
+          displayName: 'Empty Page With Cursor',
+          description: 'Returns an empty page with a cursor',
+          createdAt: new Date().toISOString(),
+        },
+        sc.getHeaders(alice),
+      )
+      await network.processAll()
+
+      const res = await agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriEmptyPageWithCursor, limit: 2 },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedGetFeed,
+            gen.did,
+          ),
+        },
+      )
+
+      expect(res.data.feed).toHaveLength(0)
+      expect(res.data.cursor).toBeUndefined()
     })
 
     it('resolves contents of taken-down feed.', async () => {
@@ -972,6 +1009,7 @@ describe('feed generation', () => {
         | 'prime'
         | 'bad-pagination-limit'
         | 'bad-pagination-cursor'
+        | 'empty-page-with-cursor'
         | 'needs-auth'
         | 'accepts-interactions'
         | 'pinned',
@@ -989,6 +1027,15 @@ describe('feed generation', () => {
                 },
               },
             ],
+          } satisfies app.bsky.feed.getFeedSkeleton.$OutputBody,
+        }
+      }
+      if (feedName === 'empty-page-with-cursor') {
+        return {
+          encoding: 'application/json',
+          body: {
+            feed: [],
+            cursor: 'next',
           } satisfies app.bsky.feed.getFeedSkeleton.$OutputBody,
         }
       }
