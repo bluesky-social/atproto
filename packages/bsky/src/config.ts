@@ -69,6 +69,7 @@ export interface ServerConfigValues {
   topicsUrl?: string
   topicsApiKey?: string
   irisUrl?: string
+  irisFeedUris?: Set<string> // `iris:feed:enable` gate to serve via iris instead of seeemore
   cdnUrl?: string
   videoPlaylistUrlPattern?: string
   videoThumbnailUrlPattern?: string
@@ -173,6 +174,7 @@ export class ServerConfig {
     const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
     const topicsApiKey = process.env.BSKY_TOPICS_API_KEY
     const irisUrl = process.env.BSKY_IRIS_URL || undefined
+    const irisFeedUris = new Set(envList(process.env.BSKY_IRIS_FEED_URIS))
     const dataplaneUrls =
       overrides?.dataplaneUrls ?? envList(process.env.BSKY_DATAPLANE_URLS)
     const dataplaneUrlsEtcdKeyPrefix =
@@ -366,6 +368,7 @@ export class ServerConfig {
       topicsUrl,
       topicsApiKey,
       irisUrl,
+      irisFeedUris,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
@@ -554,6 +557,10 @@ export class ServerConfig {
 
   get irisUrl() {
     return this.cfg.irisUrl
+  }
+
+  get irisFeedUris() {
+    return this.cfg.irisFeedUris
   }
 
   get cdnUrl() {
