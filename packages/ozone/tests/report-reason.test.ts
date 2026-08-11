@@ -78,17 +78,13 @@ describe('report reason', () => {
         cacheTTL,
       )
 
-      const populateCacheNow = jest
-        .spyOn(Date, 'now')
-        .mockReturnValue(cachePopulatedAt)
-      try {
+      {
+        using _ = jest.spyOn(Date, 'now').mockReturnValue(cachePopulatedAt)
         await expect(
           moderationServiceProfile.validateReasonType(
             'tools.ozone.report.defs#reasonHarassmentFake',
           ),
         ).rejects.toThrow('Invalid reason type')
-      } finally {
-        populateCacheNow.mockRestore()
       }
 
       // Update labeler profile to add the new reason type
@@ -105,30 +101,25 @@ describe('report reason', () => {
       await network.processAll()
 
       // immediately after the update, the reason type still fails due to cache
-      const cachedNow = jest
-        .spyOn(Date, 'now')
-        .mockReturnValue(cachePopulatedAt)
-      try {
+      {
+        using _ = jest.spyOn(Date, 'now').mockReturnValue(cachePopulatedAt)
         await expect(
           moderationServiceProfile.validateReasonType(
             'tools.ozone.report.defs#reasonHarassmentFake',
           ),
         ).rejects.toThrow('Invalid reason type')
-      } finally {
-        cachedNow.mockRestore()
       }
 
-      const expiredNow = jest
-        .spyOn(Date, 'now')
-        .mockReturnValue(cachePopulatedAt + cacheTTL + 1)
-      try {
+      {
+        using _ = jest
+          .spyOn(Date, 'now')
+          .mockReturnValue(cachePopulatedAt + cacheTTL + 1)
+
         await expect(
           moderationServiceProfile.validateReasonType(
             'tools.ozone.report.defs#reasonHarassmentFake',
           ),
         ).resolves.toEqual('tools.ozone.report.defs#reasonHarassmentFake')
-      } finally {
-        expiredNow.mockRestore()
       }
     })
 
