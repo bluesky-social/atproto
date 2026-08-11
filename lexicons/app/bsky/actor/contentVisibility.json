@@ -12,7 +12,7 @@
         "properties": {
           "hideFromAlgorithmicRecommendations": {
             "type": "boolean",
-            "description": "Whether the account requests that its posts be hidden from algorithmic recommendations. Absence of a record implies false."
+            "description": "Whether the account requests that its posts be hidden from algorithmic recommendations. Consumers must treat a missing record as false."
           }
         }
       }
