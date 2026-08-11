@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import type * as http from 'node:http'
+import { type Server, request } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { Readable } from 'node:stream'
 import { brotliCompressSync, deflateSync, gzipSync } from 'node:zlib'
@@ -93,6 +93,15 @@ const LEXICONS = [
       },
     },
   },
+  {
+    lexicon: 1,
+    id: 'io.example.noInput',
+    defs: {
+      main: {
+        type: 'procedure',
+      },
+    },
+  },
 ] as const satisfies LexiconDoc[]
 
 const handlers = {
@@ -119,11 +128,12 @@ const handlers = {
       body: { cid: cid.toString() },
     }
   },
+  'io.example.noInput': () => undefined,
 }
 
 for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
   describe(buildServer, () => {
-    let s: http.Server
+    let s: Server
     let client: XrpcClient
     let url: string
     beforeAll(async () => {
@@ -159,6 +169,29 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
         message: 'Request encoding (Content-Type) required but not provided',
       })
     })
+
+    test('allows an empty chunked body when no input is expected', async () => {
+      const response = await sendChunkedRequest(
+        `${url}/xrpc/io.example.noInput`,
+      )
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body).toBe('')
+    })
+
+    test('rejects a non-empty chunked body when no input is expected', async () => {
+      const response = await sendChunkedRequest(
+        `${url}/xrpc/io.example.noInput`,
+        'unexpected',
+      )
+
+      expect(response.statusCode).toBe(400)
+      expect(JSON.parse(response.body)).toMatchObject({
+        error: 'InvalidRequest',
+        message: 'A request body was provided when none was expected',
+      })
+    })
+
     test('validates required input properties', async () => {
       await expect(
         client.call('io.example.validationTest', {}, {}),
@@ -569,6 +602,33 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
       })
     })
   })
+}
+
+function sendChunkedRequest(url: string, body?: string) {
+  return new Promise<{ body: string; statusCode: number }>(
+    (resolve, reject) => {
+      const req = request(
+        url,
+        {
+          method: 'POST',
+          headers: { 'transfer-encoding': 'chunked' },
+        },
+        (res) => {
+          res.setEncoding('utf8')
+          let responseBody = ''
+          res.on('data', (chunk) => (responseBody += chunk))
+          res.on('error', reject)
+          res.on('end', () => {
+            resolve({ body: responseBody, statusCode: res.statusCode ?? 0 })
+          })
+        },
+      )
+
+      req.on('error', reject)
+      if (body !== undefined) req.write(body)
+      req.end()
+    },
+  )
 }
 
 const bytesToReadableStream = (bytes: Uint8Array): ReadableStream => {
