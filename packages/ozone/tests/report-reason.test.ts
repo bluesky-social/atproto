@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import type AtpAgent from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import {
@@ -68,11 +69,16 @@ describe('report reason', () => {
     })
   })
   describe('ModerationServiceProfile', () => {
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
     it('should validate against updated labeler profile when cache expires', async () => {
+      const cacheTtl = 5 * 60 * 1000
       const moderationServiceProfile = new ModerationServiceProfile(
         network.ozone.ctx.cfg,
         network.ozone.ctx.appviewAgent,
-        500,
+        cacheTtl,
       )
 
       await expect(
@@ -101,8 +107,8 @@ describe('report reason', () => {
         ),
       ).rejects.toThrow('Invalid reason type')
 
-      // add some manual delay to ensure cache is expired and try again
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      const expiresAt = Date.now() + cacheTtl + 1
+      jest.spyOn(Date, 'now').mockReturnValue(expiresAt)
       await expect(
         moderationServiceProfile.validateReasonType(
           'tools.ozone.report.defs#reasonHarassmentFake',
@@ -129,8 +135,6 @@ describe('report reason', () => {
         },
       })
       await network.processAll()
-
-      await new Promise((resolve) => setTimeout(resolve, 500))
 
       await expect(
         moderationServiceProfile.validateReasonType(
