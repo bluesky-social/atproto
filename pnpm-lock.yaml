@@ -1069,8 +1069,8 @@ importers:
         version: 0.14.0
     devDependencies:
       core-js:
-        specifier: ^3
-        version: 3.45.1
+        specifier: ^3.50.0
+        version: 3.50.0
       vitest:
         specifier: ^4.1.10
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.0(@types/node@22.19.17)(jiti@2.7.0)(terser@5.44.0)(yaml@2.8.1))
@@ -1081,8 +1081,8 @@ importers:
         specifier: workspace:^
         version: link:../lex-schema
       core-js:
-        specifier: ^3
-        version: 3.45.1
+        specifier: ^3.50.0
+        version: 3.50.0
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -1372,8 +1372,8 @@ importers:
         specifier: workspace:^
         version: link:../../xrpc
       core-js:
-        specifier: ^3
-        version: 3.45.1
+        specifier: ^3.50.0
+        version: 3.50.0
       multiformats:
         specifier: ^13.0.0
         version: 13.4.2
@@ -1412,8 +1412,8 @@ importers:
         specifier: workspace:^
         version: link:../oauth-types
       core-js:
-        specifier: ^3
-        version: 3.45.1
+        specifier: ^3.50.0
+        version: 3.50.0
 
   packages/oauth/oauth-client-browser-example:
     dependencies:
@@ -1473,8 +1473,8 @@ importers:
         specifier: workspace:^
         version: link:../oauth-client-browser
       core-js:
-        specifier: ^3
-        version: 3.45.1
+        specifier: ^3.50.0
+        version: 3.50.0
       expo:
         specifier: '*'
         version: 54.0.12(@babel/core@7.29.0)(react-native@0.81.4(@babel/core@7.29.0)(@types/react@19.2.17)(react@19.2.8))(react@19.2.8)
@@ -6773,8 +6773,8 @@ packages:
   core-js-compat@3.45.1:
     resolution: {integrity: sha512-tqTt5T4PzsMIZ430XGviK4vzYSoeNJ6CXODi6c/voxOT6IZqBht5/EKaSNnYiEjjRYxjVz7DQIsOsY0XNi8PIA==}
 
-  core-js@3.45.1:
-    resolution: {integrity: sha512-L4NPsJlCfZsPeXukyzHFlg/i7IIVwHSItR0wg0FLNqYClJ4MQYTYLbC7EkjKYRLZF2iof2MUgN0EGy7MdQFChg==}
+  core-js@3.50.0:
+    resolution: {integrity: sha512-BRWgOLKkFeCgRudR6zrs8p9XJZcE14grzKMMssoYrk6krtuEZ7MTKPIY5RzOnqsEKIR9kst7wNzphttraT+Yqw==}
 
   cors@2.8.5:
     resolution: {integrity: sha512-KIHbLJqu73RGr/hnbrO9uBeixNGuvSQjul/jdFvS/KFSIH1hWVd1ng7zOHx+YrEfInLG7q4n6GHQ9cDtxv/P6g==}
@@ -16714,7 +16714,7 @@ snapshots:
     dependencies:
       browserslist: 4.26.3
 
-  core-js@3.45.1: {}
+  core-js@3.50.0: {}
 
   cors@2.8.5:
     dependencies:

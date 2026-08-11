@@ -36,7 +36,7 @@
     "unicode-segmenter": "^0.14.0"
   },
   "devDependencies": {
-    "core-js": "^3",
+    "core-js": "^3.50.0",
     "vitest": "^4.1.10"
   },
   "scripts": {
