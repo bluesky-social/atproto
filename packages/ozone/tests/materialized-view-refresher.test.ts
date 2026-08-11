@@ -21,8 +21,11 @@ describe('materialized view refresher', () => {
   })
 
   afterAll(async () => {
-    await refresher?.destroy()
-    await network?.close()
+    try {
+      await refresher?.destroy()
+    } finally {
+      await network?.close()
+    }
   })
 
   afterEach(() => {
