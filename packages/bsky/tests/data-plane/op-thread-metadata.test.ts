@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { type SeedClient, TestNetwork } from '@atproto/dev-env'
-import { OP_THREAD_REPLY_LIMIT } from '../../src/data-plane/server/routes/records.js'
+import { OP_THREAD_REPLY_LIMIT } from '../../src/data-plane/server/op-thread.js'
 
 describe('data plane OP thread metadata', () => {
   let network: TestNetwork
@@ -81,7 +81,7 @@ describe('data plane OP thread metadata', () => {
     ])
   })
 
-  it('drops metadata for roots carrying more OP replies than the ceiling', async () => {
+  it('applies the reply-row ceiling consistently', async () => {
     const op = sc.dids.threadop
     const root = await sc.post(op, 'capped root')
     const first = await sc.reply(op, root.ref, root.ref, 'capped first')
@@ -91,15 +91,20 @@ describe('data plane OP thread metadata', () => {
     const uris = [rootUri, first.ref.uriStr]
     // Off-chain filler: every row replies to the root's sibling branch, so it
     // never joins the canonical chain and only inflates the row count.
-    const padRoot = async (from: number, to: number) => {
+    const detachedParent = `${rootUri}-detached`
+    const padRoot = async (
+      from: number,
+      to: number,
+      deletedAt: string | null = null,
+    ) => {
       await network.bsky.db.db
         .insertInto('op_thread_reply')
         .values(
           Array.from({ length: to - from }, (_, i) => ({
             rootUri,
             uri: `${rootUri}-filler-${from + i}`,
-            parentUri: `${rootUri}-detached`,
-            deletedAt: null,
+            parentUri: detachedParent,
+            deletedAt,
           })),
         )
         .execute()
@@ -115,6 +120,14 @@ describe('data plane OP thread metadata', () => {
         item.opThreadPostCount,
       ])
     }
+    const getOpThread = async () => {
+      const res = await network.bsky.ctx.dataplane.getThread({
+        postUri: rootUri,
+        above: 0,
+        below: 0,
+      })
+      return res.opThread
+    }
 
     // One real reply is already indexed, so pad up to exactly the ceiling.
     await padRoot(0, OP_THREAD_REPLY_LIMIT - 1)
@@ -122,13 +135,20 @@ describe('data plane OP thread metadata', () => {
       [1, 2],
       [2, 2],
     ])
+    expect(await getOpThread()).toEqual([rootUri, first.ref.uriStr])
 
-    // One row past it, and the root yields nothing rather than a chain
-    // resolved from a truncated reply set.
-    await padRoot(OP_THREAD_REPLY_LIMIT - 1, OP_THREAD_REPLY_LIMIT)
+    // Tombstones count toward the same ceiling as live replies, matching the
+    // production dataplane. Both routes omit the canonical thread rather than
+    // resolve it from a truncated row set.
+    await padRoot(
+      OP_THREAD_REPLY_LIMIT - 1,
+      OP_THREAD_REPLY_LIMIT,
+      new Date().toISOString(),
+    )
     expect(await getIndices()).toEqual([
       [undefined, undefined],
       [undefined, undefined],
     ])
+    expect(await getOpThread()).toEqual([])
   })
 })

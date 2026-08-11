@@ -7,6 +7,10 @@ export type OpThreadReply = {
   deletedAt: string | null
 }
 
+// Matches the default production dataplane ceiling on OP reply rows fetched
+// per thread root.
+export const OP_THREAD_REPLY_LIMIT = 1000
+
 // Resolves the oldest contiguous line of OP replies from a thread root.
 // A deleted reply keeps its place while replies below it survive. Once
 // nothing survives below it, only a reply written after the deletion may
@@ -32,17 +36,8 @@ export const resolveCanonicalOpThread = (
     replies.sort()
   }
 
-  // Walk the oldest contiguous line of OP replies, mirroring the production
-  // dataplane. A deleted reply keeps its place while replies below it
-  // survive, so numbering stays stable. Once nothing survives below it the
-  // slot is up for grabs, but only a reply the OP wrote after that deletion
-  // may claim it: replies that already existed alongside the deleted one
-  // were never part of this chain and must not be promoted into it
-  // retroactively. The full chain is returned untrimmed by the above/below
-  // limits; the appview derives index/count from it.
-  //
-  // visited tracks the current path, so revisiting a URI means the
-  // denormalized rows describe a cycle rather than a tree.
+  // Track the current path so malformed denormalized rows cannot introduce a
+  // cycle into the result.
   const visited = new Set([rootUri])
   let validOpThread = true
   const resolve = (parentUri: string): string[] => {

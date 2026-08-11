@@ -1,7 +1,10 @@
 import type { ServiceImpl } from '@connectrpc/connect'
 import type { Service } from '../../../proto/bsky_connect.js'
 import type { Database } from '../db/index.js'
-import { resolveCanonicalOpThread } from '../op-thread.js'
+import {
+  OP_THREAD_REPLY_LIMIT,
+  resolveCanonicalOpThread,
+} from '../op-thread.js'
 import { getAncestorsAndSelfQb, getDescendentsQb } from '../util.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
@@ -39,8 +42,13 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectFrom('op_thread_reply')
       .select(['uri', 'parentUri', 'deletedAt'])
       .where('rootUri', '=', rootUri)
+      .orderBy('uri')
+      .limit(OP_THREAD_REPLY_LIMIT + 1)
       .execute()
-    const opThread = resolveCanonicalOpThread(rootUri, opReplies)
+    const opThread =
+      opReplies.length > OP_THREAD_REPLY_LIMIT
+        ? undefined
+        : resolveCanonicalOpThread(rootUri, opReplies)
 
     return {
       uris,

@@ -9,7 +9,10 @@ import { dataplaneLogger } from '../../../logger.js'
 import type { Service } from '../../../proto/bsky_connect.js'
 import { PostRecordMeta, Record } from '../../../proto/bsky_pb.js'
 import type { Database } from '../db/index.js'
-import { resolveCanonicalOpThread } from '../op-thread.js'
+import {
+  OP_THREAD_REPLY_LIMIT,
+  resolveCanonicalOpThread,
+} from '../op-thread.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getBlockRecords: getRecords(db, app.bsky.graph.block),
@@ -123,14 +126,6 @@ type OpThreadMetadata = {
   count: number
 }
 
-// Ceiling on OP replies fetched per thread root. op_thread_reply holds every
-// reply the OP wrote anywhere in their own thread, so a high-engagement thread
-// whose OP answers many commenters can carry far more rows than the canonical
-// chain ever uses. Resolving those on the hydration path is unbounded work, so
-// a root over this ceiling yields no metadata at all rather than metadata
-// derived from a truncated — and therefore wrong — set of replies.
-export const OP_THREAD_REPLY_LIMIT = 1000
-
 const getOpThreadMetadata = async (
   db: Database,
   uris: string[],
@@ -143,34 +138,28 @@ const getOpThreadMetadata = async (
     .select((eb) => eb.fn.coalesce('replyRoot', 'uri').as('rootUri'))
     .distinct()
 
-  const ranked = db.db
-    .selectFrom('op_thread_reply')
-    .innerJoin(
-      requestedRoots.as('requested_root'),
-      'requested_root.rootUri',
-      'op_thread_reply.rootUri',
-    )
-    .select((eb) => [
-      'op_thread_reply.rootUri',
-      'op_thread_reply.uri',
-      'op_thread_reply.parentUri',
-      'op_thread_reply.deletedAt',
-      eb.fn
-        .agg<number>('row_number')
-        .over((ob) =>
-          ob
-            .partitionBy('op_thread_reply.rootUri')
-            .orderBy('op_thread_reply.uri'),
-        )
-        .as('rank'),
-    ])
-
-  // Fetch one row past the ceiling so an over-limit root is distinguishable
-  // from one that lands exactly on it.
+  // The lateral limit bounds row work independently for each root. Fetch one
+  // past the ceiling so over-limit roots are distinguishable from roots that
+  // land exactly on it.
   const rows = await db.db
-    .selectFrom(ranked.as('ranked'))
-    .selectAll()
-    .where('rank', '<=', OP_THREAD_REPLY_LIMIT + 1)
+    .selectFrom(requestedRoots.as('requested_root'))
+    .innerJoinLateral(
+      (eb) =>
+        eb
+          .selectFrom('op_thread_reply')
+          .select(['rootUri', 'uri', 'parentUri', 'deletedAt'])
+          .whereRef('rootUri', '=', 'requested_root.rootUri')
+          .orderBy('uri')
+          .limit(OP_THREAD_REPLY_LIMIT + 1)
+          .as('reply'),
+      (join) => join.onTrue(),
+    )
+    .select([
+      'reply.rootUri',
+      'reply.uri',
+      'reply.parentUri',
+      'reply.deletedAt',
+    ])
     .execute()
 
   const repliesByRoot = new Map<
