@@ -94,8 +94,8 @@ export type PostgateRecord = app.bsky.feed.postgate.Main
 export const isPostgateDisableRuleType =
   app.bsky.feed.postgate.disableRule.$isTypeOf
 
-// Temporary off-Lexicon fields used to expose canonical OP thread numbering
-// on feed items while the public response schema remains unchanged.
+// TODO Temporary off-Lexicon fields used to expose canonical OP thread
+// numbering on feed items while the public response schema remains unchanged.
 export type FeedViewPost = app.bsky.feed.defs.FeedViewPost & {
   opThreadPostIndex?: number
   opThreadPostCount?: number
