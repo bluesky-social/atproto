@@ -2,13 +2,21 @@ import fsSync from 'node:fs'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import type { Duplex, Readable } from 'node:stream'
+import {
+  Duplex,
+  type DuplexOptions,
+  PassThrough,
+  type Readable,
+  Transform,
+  type TransformCallback,
+  type TransformOptions,
+  type Writable,
+} from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import createError, { isHttpError } from 'http-errors'
 import {
   VerifyCidError,
   VerifyCidTransform,
-  cloneStream,
   createDecoders,
   isErrnoException,
 } from '@atproto/common'
@@ -45,6 +53,7 @@ export function createMiddleware(
 
     try {
       const options = ImageUriBuilder.getOptions(path)
+      const outputType = getMime(options.format)
 
       const cacheKey = [options.did, options.cid, options.preset].join('::')
 
@@ -54,7 +63,7 @@ export function createMiddleware(
         const cachedImage = await cache.get(cacheKey)
         res.statusCode = 200
         res.setHeader('x-cache', 'hit')
-        res.setHeader('content-type', getMime(options.format))
+        res.setHeader('content-type', outputType)
         res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
         res.setHeader('content-length', cachedImage.size)
         await pipeline(cachedImage, res)
@@ -84,47 +93,56 @@ export function createMiddleware(
         signal: responseSignal(res),
       }
 
-      await streamBlob(ctx, streamOptions, (upstream, { did, cid, url }) => {
-        // Definitely not an image ? Let's fail right away.
-        if (isImageMime(upstream.headers['content-type']) === false) {
-          throw createError(400, 'Not an image')
-        }
+      await streamBlob(
+        ctx,
+        streamOptions,
+        (upstream, { did, cid, url }): Writable => {
+          // Definitely not an image ? Let's fail right away.
+          if (isImageMime(upstream.headers['content-type']) === false) {
+            throw createError(400, 'Not an image')
+          }
 
-        // Let's transform (decompress, verify CID, upscale), process and respond
+          const streams = [
+            // decompress
+            ...createDecoders(upstream.headers['content-encoding']),
+            // verify
+            new VerifyCidTransform(cid),
+            // upscale
+            createImageUpscaler(options),
+            // format (jpeg/webp)
+            createImageProcessor(options).once('info', (info) => {
+              if (!res.destroyed && !res.headersSent) {
+                res.setHeader('content-length', info.size)
+              }
+            }),
+            // save to cache
+            new Tee((branch) => {
+              void cache.put(cacheKey, branch).catch((err: unknown) => {
+                log.warn(
+                  { err, did, cid: cid.toString(), pds: url.origin },
+                  'failed to cache processed image',
+                )
+              })
+            }),
+            // send downstream
+            res,
+          ]
 
-        const transforms: Duplex[] = [
-          ...createDecoders(upstream.headers['content-encoding']),
-          new VerifyCidTransform(cid),
-          createImageUpscaler(options),
-        ]
-        const processor = createImageProcessor(options)
+          res.statusCode = 200
+          res.setHeader('content-type', outputType)
+          res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
+          res.setHeader('x-cache', 'miss')
 
-        // Cache in the background
-        cache
-          .put(cacheKey, cloneStream(processor))
-          .catch((err) => log.error({ err }, 'failed to cache image'))
+          void pipeline(streams).catch((err: unknown) => {
+            log.warn(
+              { err, did, cid: cid.toString(), pds: url.origin },
+              'blob resolution failed during transmission',
+            )
+          })
 
-        res.statusCode = 200
-        res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
-        res.setHeader('x-cache', 'miss')
-        processor.once('info', ({ size, format }: SharpInfo) => {
-          const type = formatsToMimes.get(format) || 'application/octet-stream'
-
-          // @NOTE sharp does emit this in time to be set as a header
-          res.setHeader('content-length', size)
-          res.setHeader('content-type', type)
-        })
-
-        const streams = [...transforms, processor, res]
-        void pipeline(streams).catch((err: unknown) => {
-          log.warn(
-            { err, did, cid: cid.toString(), pds: url.origin },
-            'blob resolution failed during transmission',
-          )
-        })
-
-        return streams[0]!
-      })
+          return streams[0]!
+        },
+      )
     } catch (err) {
       if (res.headersSent || res.destroyed) {
         res.destroy()
@@ -145,6 +163,61 @@ export function createMiddleware(
         }
       }
     }
+  }
+}
+
+/**
+ * A {@link Transform} that forwards every chunk downstream while mirroring a
+ * copy into a "branch" {@link PassThrough} (exposed through {@link onBranch},
+ * e.g. to be cached). The tee is paced by the slower of its two consumers,
+ * bounding how much data gets buffered. The branch is completed when the source
+ * ends, and torn down if the tee errors or is destroyed early (e.g. the client
+ * disconnected).
+ *
+ * Consuming the branch is best-effort: its failures are swallowed here and must
+ * never break the main stream.
+ */
+class Tee extends Transform {
+  readonly #branch: PassThrough
+
+  constructor(onBranch: (branch: Readable) => void, options?: DuplexOptions) {
+    super(options)
+    this.#branch = new PassThrough({ ...options, autoDestroy: true })
+    // A failing branch (e.g. a cache write error) must never crash the tee.
+    this.#branch.on('error', () => {})
+    onBranch(this.#branch)
+  }
+
+  _transform(chunk: unknown, _enc: BufferEncoding, cb: TransformCallback) {
+    // Forward downstream — cb(null, chunk) honors the response's own
+    // backpressure — while mirroring to the branch. If the branch falls behind,
+    // wait for it before pulling the next chunk so the tee is paced by the
+    // slower of the two consumers.
+    if (!this.#branch.writable || this.#branch.write(chunk)) {
+      cb(null, chunk)
+    } else {
+      const done = () => {
+        this.#branch.off('drain', done)
+        this.#branch.off('close', done)
+        cb(null, chunk)
+      }
+      this.#branch.once('drain', done)
+      this.#branch.once('close', done)
+    }
+  }
+
+  _flush(cb: TransformCallback) {
+    // Source fully consumed: flush and close the branch.
+    this.#branch.end()
+    cb()
+  }
+
+  _destroy(err: Error | null, cb: (err?: Error | null) => void) {
+    // Errored, or destroyed before the source finished (e.g. the client
+    // disconnected): tear the (incomplete) branch down so its consumer rejects
+    // instead of caching a partial blob.
+    if (this.#branch.writable) this.#branch.destroy(err ?? undefined)
+    cb(err)
   }
 }
 
