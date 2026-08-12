@@ -1,3 +1,4 @@
+import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtSignIcon } from 'lucide-react'
 import { type ReactNode, useMemo, useState } from 'react'
@@ -150,7 +151,13 @@ export function HandleField({
           !segment || valid ? 'text-muted-foreground' : 'text-destructive',
         )}
       >
-        {t`Use ${minLength}–${maxLength} letters, numbers or hyphens`}
+        {/* @NOTE The noun agrees with the end of the range, so the plural is
+          driven by `maxLength`. Locales with more than two plural categories
+          need the form even though the count is never one here. */}
+        {t`Use ${minLength}–${plural(maxLength, {
+          one: '# letter, number or hyphen',
+          other: '# letters, numbers or hyphens',
+        })}`}
       </p>
 
       {domains.length > 1 ? (

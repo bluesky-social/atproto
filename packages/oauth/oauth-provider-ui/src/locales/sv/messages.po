@@ -1266,7 +1266,7 @@ msgid "URL"
 msgstr "URL"
 
 #: src/components/forms/fields/handle-field.tsx
-msgid "Use {minLength}–{maxLength} letters, numbers or hyphens"
+msgid "Use {minLength}–{maxLength, plural, one {# letter, number or hyphen} other {# letters, numbers or hyphens}}"
 msgstr ""
 
 #: src/components/update-handle-dialog.tsx
