@@ -1,10 +1,10 @@
 import assert from 'node:assert'
 import crypto from 'node:crypto'
 import type stream from 'node:stream'
-import { Duplex, PassThrough, Readable, pipeline } from 'node:stream'
+import { Duplex, Readable, pipeline } from 'node:stream'
 import { type FileTypeResult, fileTypeFromStream } from 'file-type'
 import PQueue from 'p-queue'
-import { SECOND, Tee } from '@atproto/common'
+import { MaxSizeChecker, SECOND, Tee } from '@atproto/common'
 import {
   type BlobRef,
   type Cid,
@@ -60,7 +60,7 @@ export class BlobTransactor extends BlobReader {
   ): Promise<BlobMetadata> {
     try {
       const hashDuplex = crypto.createHash('sha256')
-      const sizeDuplex = new SizeDuplex()
+      const sizeDuplex = new MaxSizeChecker(Infinity)
       const typeDuplex = new FileTypeDuplex()
 
       // @NOTE a pipeline of duplex streams is used to ensure that backpressure
@@ -92,7 +92,7 @@ export class BlobTransactor extends BlobReader {
 
       return {
         tempKey,
-        size: sizeDuplex.total,
+        size: sizeDuplex.totalSize,
         cid: cidForRawHash(hashDuplex.digest()),
         mimeType,
       }
@@ -380,19 +380,6 @@ class FileTypeDuplex extends Tee {
         () => cb(err),
       )
     })
-  }
-}
-
-class SizeDuplex extends PassThrough {
-  total = 0
-
-  _transform(
-    chunk: Uint8Array,
-    _enc: BufferEncoding,
-    cb: (err?: Error) => void,
-  ) {
-    this.total += Buffer.byteLength(chunk)
-    cb()
   }
 }
 

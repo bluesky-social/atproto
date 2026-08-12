@@ -215,7 +215,8 @@ export class MaxSizeChecker extends Transform {
   totalSize = 0
   constructor(
     public maxSize: number,
-    public createError: () => Error,
+    public createError: () => Error = () =>
+      new Error(`Max size of ${maxSize} bytes exceeded`),
   ) {
     super()
   }
