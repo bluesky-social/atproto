@@ -1,10 +1,9 @@
 import assert from 'node:assert'
-import crypto from 'node:crypto'
 import type stream from 'node:stream'
 import { type Duplex, PassThrough, Readable, pipeline } from 'node:stream'
 import { type FileTypeResult, fileTypeFromStream } from 'file-type'
 import PQueue from 'p-queue'
-import { MaxSizeChecker, SECOND, Tee } from '@atproto/common'
+import { HashPassThrough, MaxSizeChecker, SECOND, Tee } from '@atproto/common'
 import {
   type BlobRef,
   type Cid,
@@ -59,7 +58,7 @@ export class BlobTransactor extends BlobReader {
     fallbackMime: `${string}/${string}` = 'application/octet-stream',
   ): Promise<BlobMetadata> {
     try {
-      const hashDuplex = crypto.createHash('sha256')
+      const hashDuplex = new HashPassThrough('sha256')
       const sizeDuplex = new MaxSizeChecker(Infinity)
       const typeDuplex = new FileTypeDuplex()
 
@@ -92,7 +91,7 @@ export class BlobTransactor extends BlobReader {
       return {
         tempKey,
         size: sizeDuplex.totalSize,
-        cid: cidForRawHash(hashDuplex.digest()),
+        cid: cidForRawHash(hashDuplex.digest),
         mimeType,
       }
     } finally {
@@ -367,10 +366,10 @@ class FileTypeDuplex extends Tee {
     this.result.catch(() => {})
   }
 
-  _flush(cb: stream.TransformCallback) {
-    // propagate the result promise to the flush callback, so that the stream is
+  _final(cb: stream.TransformCallback) {
+    // propagate the result promise to the final callback, so that the stream is
     // not considered finished until the file type has been determined.
-    super._flush((err) => {
+    super._final((err) => {
       this.result.then(
         () => cb(err),
         () => cb(err),

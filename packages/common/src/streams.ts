@@ -1,3 +1,4 @@
+import { type Hash, type HashOptions, createHash } from 'node:crypto'
 import {
   type Duplex,
   PassThrough,
@@ -227,6 +228,33 @@ export class MaxSizeChecker extends Transform {
     } else {
       cb(null, chunk)
     }
+  }
+}
+
+export class HashPassThrough extends Transform {
+  private readonly hash: Hash
+  #digest?: Buffer<ArrayBuffer>
+
+  constructor(algorithm: string, options?: HashOptions) {
+    super()
+    this.hash = createHash(algorithm, options)
+  }
+
+  _transform(chunk: Uint8Array, _enc: BufferEncoding, cb: TransformCallback) {
+    this.hash.update(chunk)
+    cb(null, chunk)
+  }
+
+  _flush(cb: TransformCallback) {
+    const digest = this.hash.digest()
+    this.#digest = digest
+    this.emit('hash', digest)
+    cb()
+  }
+
+  get digest(): Buffer<ArrayBuffer> {
+    if (this.#digest) return this.#digest
+    throw new Error('Hash not yet computed. Wait for the stream to finish.')
   }
 }
 

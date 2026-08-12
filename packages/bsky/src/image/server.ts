@@ -108,6 +108,10 @@ export function createMiddleware(
           // save to cache
           new Tee((branch) => {
             void cache.put(cacheKey, branch).catch((err: unknown) => {
+              // Make sure that the tee is no longer waiting for the branch to
+              // drain (note that the cache implementation should do this
+              // automatically, but we do it here just in case).
+              branch.destroy()
               log.warn(
                 { err, did, cid: cid.toString(), pds: url.origin },
                 'failed to cache processed image',
