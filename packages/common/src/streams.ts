@@ -9,6 +9,9 @@ import {
 } from 'node:stream'
 import { createBrotliDecompress, createGunzip, createInflate } from 'node:zlib'
 
+/**
+ * @deprecated use native stream piping instead.
+ */
 export const forwardStreamErrors = (...streams: Stream[]) => {
   for (let i = 1; i < streams.length; ++i) {
     const prev = streams[i - 1]
