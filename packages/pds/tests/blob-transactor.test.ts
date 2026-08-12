@@ -40,10 +40,7 @@ describe('BlobTransactor', () => {
       { objectMode: false },
     )
 
-    const metadata = await transactor.uploadBlobAndGetMetadata(
-      'application/octet-stream',
-      stream,
-    )
+    const metadata = await transactor.uploadBlobAndGetMetadata(stream)
 
     expect(uploadedSize).toBe(size)
     expect(metadata).toEqual({

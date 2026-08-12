@@ -1,10 +1,10 @@
+import assert from 'node:assert'
 import crypto from 'node:crypto'
 import type stream from 'node:stream'
-import * as FileTypeModule from 'file-type'
-const FileType = ((m) => m.default ?? m)(FileTypeModule)
-const { fromStream: fileTypeFromStream } = FileType
+import { Duplex, PassThrough, Readable, pipeline } from 'node:stream'
+import { type FileTypeResult, fileTypeFromStream } from 'file-type'
 import PQueue from 'p-queue'
-import { SECOND, cloneStream, streamSize } from '@atproto/common'
+import { SECOND, Tee } from '@atproto/common'
 import {
   type BlobRef,
   type Cid,
@@ -55,21 +55,49 @@ export class BlobTransactor extends BlobReader {
   }
 
   async uploadBlobAndGetMetadata(
-    userSuggestedMime: string,
     blobStream: stream.Readable,
+    fallbackMime: `${string}/${string}` = 'application/octet-stream',
   ): Promise<BlobMetadata> {
-    const [tempKey, size, sha256, sniffedMime] = await Promise.all([
-      this.blobstore.putTemp(cloneStream(blobStream)),
-      streamSize(cloneStream(blobStream)),
-      sha256Stream(cloneStream(blobStream)),
-      mimeTypeFromStream(cloneStream(blobStream)),
-    ])
+    try {
+      const hashDuplex = crypto.createHash('sha256')
+      const sizeDuplex = new SizeDuplex()
+      const typeDuplex = new FileTypeDuplex()
 
-    return {
-      tempKey,
-      size,
-      cid: cidForRawHash(sha256),
-      mimeType: sniffedMime || userSuggestedMime,
+      // @NOTE a pipeline of duplex streams is used to ensure that backpressure
+      // is properly propagated to the input stream. using inputStream.pipe()
+      // with several destinations does **not** propagate backpressure, and
+      // **will** high memory consumption (hash and size duplexes consume the
+      // stream faster than the blobstore can process it).
+      const streams = [blobStream, hashDuplex, sizeDuplex, typeDuplex]
+
+      const blobStoreStream = pipeline(streams, (_err) => {
+        // errors will be propagated to the streams, and handled (rethrown) by
+        // the blobStore.
+      }) as Duplex // pipeline() returns the last stream
+
+      // Start the pipeline by reading its output
+      const tempKey = await this.blobstore.putTemp(blobStoreStream)
+
+      // Fool-proof: ensure that the blobstore has fully consumed the stream
+      // before proceeding to calculate the blob's metadata.
+      assert(
+        streams.every((s) => s.readableEnded),
+        'all duplex streams should be fully consumed',
+      )
+
+      const mimeType = await typeDuplex.result.then(
+        (res) => res?.mime || fallbackMime,
+        (_err) => fallbackMime,
+      )
+
+      return {
+        tempKey,
+        size: sizeDuplex.total,
+        cid: cidForRawHash(hashDuplex.digest()),
+        mimeType,
+      }
+    } finally {
+      blobStream.destroy()
     }
   }
 
@@ -320,37 +348,59 @@ export class BlobTransactor extends BlobReader {
   }
 }
 
+// "file-type" does not provide a duplex implementation so we create one here
+class FileTypeDuplex extends Tee {
+  readonly result: Promise<FileTypeResult | undefined>
+
+  constructor() {
+    const branch = new Duplex()
+    super(branch)
+    this.result = fileTypeFromStream(Readable.toWeb(branch))
+    // avoid unhandled rejections (will be awaited in _flush() and _destroy())
+    this.result.catch(() => {})
+  }
+
+  _flush(cb: stream.TransformCallback) {
+    // propagate the result promise to the flush callback, so that the stream is
+    // not considered finished until the file type has been determined.
+    super._flush((err) => {
+      this.result.then(
+        () => cb(err),
+        () => cb(err),
+      )
+    })
+  }
+
+  _destroy(err: Error | null, cb: (err?: Error | null) => void) {
+    // propagate the result promise to the destroy callback, so that the stream
+    // is not considered finished until the file type has been determined.
+    super._destroy(err, (err) => {
+      this.result.then(
+        () => cb(err),
+        () => cb(err),
+      )
+    })
+  }
+}
+
+class SizeDuplex extends PassThrough {
+  total = 0
+
+  _transform(
+    chunk: Uint8Array,
+    _enc: BufferEncoding,
+    cb: (err?: Error) => void,
+  ) {
+    this.total += Buffer.byteLength(chunk)
+    cb()
+  }
+}
+
 export class CidNotFound extends Error {
   cid: Cid
   constructor(cid: Cid) {
     super(`cid not found: ${cid.toString()}`)
     this.cid = cid
-  }
-}
-
-async function sha256Stream(toHash: stream.Readable): Promise<Uint8Array> {
-  const hash = crypto.createHash('sha256')
-  try {
-    for await (const chunk of toHash) {
-      hash.write(chunk)
-    }
-  } catch (err) {
-    hash.end()
-    throw err
-  }
-  hash.end()
-  return hash.read()
-}
-
-async function mimeTypeFromStream(
-  blobStream: stream.Readable,
-): Promise<string | undefined> {
-  try {
-    const fileType = await fileTypeFromStream(blobStream)
-    return fileType?.mime
-  } finally {
-    // @NOTE Draining avoids a Node pipe cleanup bug that can pause other clones.
-    blobStream.resume()
   }
 }
 

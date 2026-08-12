@@ -2,19 +2,11 @@ import fsSync from 'node:fs'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import {
-  Duplex,
-  type DuplexOptions,
-  PassThrough,
-  type Readable,
-  Transform,
-  type TransformCallback,
-  type TransformOptions,
-  type Writable,
-} from 'node:stream'
+import type { Readable, Writable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import createError, { isHttpError } from 'http-errors'
 import {
+  Tee,
   VerifyCidError,
   VerifyCidTransform,
   createDecoders,
@@ -27,7 +19,7 @@ import { type Middleware, responseSignal } from '../util/http.js'
 import log from './logger.js'
 import { createImageProcessor, createImageUpscaler } from './sharp.js'
 import { BadPathError, ImageUriBuilder } from './uri.js'
-import { type Options, type SharpInfo, formatsToMimes } from './util.js'
+import { type Options, formatsToMimes } from './util.js'
 
 export function createMiddleware(
   ctx: AppContext,
@@ -163,61 +155,6 @@ export function createMiddleware(
         }
       }
     }
-  }
-}
-
-/**
- * A {@link Transform} that forwards every chunk downstream while mirroring a
- * copy into a "branch" {@link PassThrough} (exposed through {@link onBranch},
- * e.g. to be cached). The tee is paced by the slower of its two consumers,
- * bounding how much data gets buffered. The branch is completed when the source
- * ends, and torn down if the tee errors or is destroyed early (e.g. the client
- * disconnected).
- *
- * Consuming the branch is best-effort: its failures are swallowed here and must
- * never break the main stream.
- */
-class Tee extends Transform {
-  readonly #branch: PassThrough
-
-  constructor(onBranch: (branch: Readable) => void, options?: DuplexOptions) {
-    super(options)
-    this.#branch = new PassThrough({ ...options, autoDestroy: true })
-    // A failing branch (e.g. a cache write error) must never crash the tee.
-    this.#branch.on('error', () => {})
-    onBranch(this.#branch)
-  }
-
-  _transform(chunk: unknown, _enc: BufferEncoding, cb: TransformCallback) {
-    // Forward downstream — cb(null, chunk) honors the response's own
-    // backpressure — while mirroring to the branch. If the branch falls behind,
-    // wait for it before pulling the next chunk so the tee is paced by the
-    // slower of the two consumers.
-    if (!this.#branch.writable || this.#branch.write(chunk)) {
-      cb(null, chunk)
-    } else {
-      const done = () => {
-        this.#branch.off('drain', done)
-        this.#branch.off('close', done)
-        cb(null, chunk)
-      }
-      this.#branch.once('drain', done)
-      this.#branch.once('close', done)
-    }
-  }
-
-  _flush(cb: TransformCallback) {
-    // Source fully consumed: flush and close the branch.
-    this.#branch.end()
-    cb()
-  }
-
-  _destroy(err: Error | null, cb: (err?: Error | null) => void) {
-    // Errored, or destroyed before the source finished (e.g. the client
-    // disconnected): tear the (incomplete) branch down so its consumer rejects
-    // instead of caching a partial blob.
-    if (this.#branch.writable) this.#branch.destroy(err ?? undefined)
-    cb(err)
   }
 }
 

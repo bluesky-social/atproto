@@ -1,10 +1,11 @@
 import {
-  type Duplex,
+  Duplex,
   PassThrough,
   Readable,
   type Stream,
   Transform,
   type TransformCallback,
+  type Writable,
   pipeline,
 } from 'node:stream'
 import { createBrotliDecompress, createGunzip, createInflate } from 'node:zlib'
@@ -26,11 +27,67 @@ export const forwardStreamErrors = (...streams: Stream[]) => {
  * - It only works if all the stream are setup during the same tick
  * - It does not apply any backpressure to the source stream, which can lead to
  *   memory issues
+ * Use {@link Tee} instead, which is a more robust implementation of the same
+ * concept.
  */
 export const cloneStream = (stream: Readable): Readable => {
   const passthrough = new PassThrough()
   forwardStreamErrors(stream, passthrough)
   return stream.pipe(passthrough)
+}
+
+/**
+ * A {@link Transform} that forwards every chunk downstream while mirroring a
+ * copy into a "branch" {@link Duplex} (exposed through {@link onBranch}, e.g.
+ * to be cached). The tee is paced by the slower of its two consumers, bounding
+ * how much data gets buffered. The branch is completed when the source ends,
+ * and torn down if the tee errors or is destroyed early (e.g. the client
+ * disconnected).
+ *
+ * Consuming the branch is best-effort: its failures are swallowed here and must
+ * never break the main stream.
+ */
+export class Tee extends Transform {
+  readonly branch: Writable
+
+  constructor(branch?: Writable | ((readable: Readable) => void)) {
+    super()
+    if (typeof branch === 'object') {
+      this.branch = branch
+    } else {
+      const duplex = new Duplex({ autoDestroy: true })
+      branch?.(duplex)
+      this.branch = duplex as any
+    }
+  }
+
+  _transform(chunk: unknown, _enc: BufferEncoding, cb: TransformCallback) {
+    // Forward downstream, applying backpressure if either branch is slower.
+    if (!this.branch.writable || this.branch.write(chunk)) {
+      cb(null, chunk)
+    } else {
+      const done = () => {
+        this.branch.off('drain', done)
+        this.branch.off('close', done)
+        cb(null, chunk)
+      }
+      this.branch.once('drain', done)
+      this.branch.once('close', done)
+    }
+  }
+
+  _flush(cb: TransformCallback) {
+    this.branch.end()
+    cb()
+  }
+
+  _destroy(err: Error | null, cb: (err?: Error | null) => void) {
+    if (this.branch.writable) {
+      this.branch.destroy(err ?? new Error('Tee destroyed'))
+    }
+
+    cb(err)
+  }
 }
 
 export const streamSize = async (stream: Readable): Promise<number> => {
