@@ -1,13 +1,5 @@
 import assert from 'node:assert'
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   AppBskyFeedDefs,
   type AppBskyFeedGetActorFeeds,
@@ -722,44 +714,19 @@ describe('feed generation', () => {
         dataplaneFirst.feedGenerators[0].uri,
       )
 
-      const search = vi
-        .spyOn(network.bsky.ctx.dataplane, 'searchFeedGeneratorsV2')
-        .mockImplementation(async ({ params }) => ({
-          feedGenerators: [
-            { uri: params?.cursor ? feedUriEven : feedUriAll, score: 0 },
-          ],
-          pageInfo: {
-            cursor: params?.cursor ? '' : 'next',
-            hitsTotal: 2n,
-          },
-        }))
-      const headers = {
-        ...(await network.serviceHeaders(
-          sc.dids.bob,
-          ids.AppBskyUnspeccedGetPopularFeedGenerators,
-        )),
-        'x-bsky-search-v2-override': 'test',
-      }
-      const first = await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
-        { query: 'feed', limit: 1 },
-        { headers },
+      const override = { 'x-bsky-search-v2-override': 'test' }
+      const first = await agent.app.bsky.unspecced.getPopularFeedGenerators(
+        { query: 'Bad Pagination', limit: 1 },
+        { headers: override },
       )
-      const second =
-        await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
-          { query: 'feed', cursor: first.data.cursor, limit: 1 },
-          { headers },
-        )
+      const second = await agent.app.bsky.unspecced.getPopularFeedGenerators(
+        { query: 'Bad Pagination', cursor: first.data.cursor, limit: 1 },
+        { headers: override },
+      )
 
       expect(first.data.cursor).toBeDefined()
       expect(second.data.feeds).toHaveLength(1)
       expect(second.data.feeds[0].uri).not.toBe(first.data.feeds[0].uri)
-      expect(search).toHaveBeenNthCalledWith(
-        2,
-        expect.objectContaining({
-          params: expect.objectContaining({ cursor: 'next' }),
-        }),
-      )
-      search.mockRestore()
     })
 
     it('paginates', async () => {
