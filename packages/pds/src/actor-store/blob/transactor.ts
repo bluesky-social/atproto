@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import crypto from 'node:crypto'
 import type stream from 'node:stream'
-import { Duplex, Readable, pipeline } from 'node:stream'
+import { type Duplex, PassThrough, Readable, pipeline } from 'node:stream'
 import { type FileTypeResult, fileTypeFromStream } from 'file-type'
 import PQueue from 'p-queue'
 import { MaxSizeChecker, SECOND, Tee } from '@atproto/common'
@@ -78,11 +78,10 @@ export class BlobTransactor extends BlobReader {
       // Start the pipeline by reading its output
       const tempKey = await this.blobstore.putTemp(blobStoreStream)
 
-      // Fool-proof: ensure that the blobstore has fully consumed the stream
-      // before proceeding to calculate the blob's metadata.
+      // Fool-proof against faulty blobstore implementations
       assert(
         streams.every((s) => s.readableEnded),
-        'all duplex streams should be fully consumed',
+        'blobstore did not fully consume the stream',
       )
 
       const mimeType = await typeDuplex.result.then(
@@ -348,12 +347,20 @@ export class BlobTransactor extends BlobReader {
   }
 }
 
+export class CidNotFound extends Error {
+  cid: Cid
+  constructor(cid: Cid) {
+    super(`cid not found: ${cid.toString()}`)
+    this.cid = cid
+  }
+}
+
 // "file-type" does not provide a duplex implementation so we create one here
 class FileTypeDuplex extends Tee {
   readonly result: Promise<FileTypeResult | undefined>
 
   constructor() {
-    const branch = new Duplex()
+    const branch = new PassThrough()
     super(branch)
     this.result = fileTypeFromStream(Readable.toWeb(branch))
     // avoid unhandled rejections (will be awaited in _flush() and _destroy())
@@ -380,14 +387,6 @@ class FileTypeDuplex extends Tee {
         () => cb(err),
       )
     })
-  }
-}
-
-export class CidNotFound extends Error {
-  cid: Cid
-  constructor(cid: Cid) {
-    super(`cid not found: ${cid.toString()}`)
-    this.cid = cid
   }
 }
 

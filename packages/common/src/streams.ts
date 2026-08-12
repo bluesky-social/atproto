@@ -1,5 +1,5 @@
 import {
-  Duplex,
+  type Duplex,
   PassThrough,
   Readable,
   type Stream,
@@ -50,14 +50,14 @@ export const cloneStream = (stream: Readable): Readable => {
 export class Tee extends Transform {
   readonly branch: Writable
 
-  constructor(branch?: Writable | ((readable: Readable) => void)) {
+  constructor(branch: Writable | ((readable: Readable) => void)) {
     super()
     if (typeof branch === 'object') {
       this.branch = branch
     } else {
-      const duplex = new Duplex({ autoDestroy: true })
-      branch?.(duplex)
-      this.branch = duplex as any
+      const duplex = new PassThrough({ autoDestroy: true })
+      branch(duplex)
+      this.branch = duplex
     }
   }
 

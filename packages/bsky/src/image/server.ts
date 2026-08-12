@@ -3,7 +3,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import type { Readable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
+import { pipeline } from 'node:stream'
 import createError, { isHttpError } from 'http-errors'
 import {
   Tee,
@@ -100,6 +100,7 @@ export function createMiddleware(
           createImageUpscaler(options),
           // format (jpeg/webp)
           createImageProcessor(options).once('info', (info) => {
+            // @NOTE sharp does emit this in time to be set as a header
             if (!res.destroyed && !res.headersSent) {
               res.setHeader('content-length', info.size)
             }
@@ -122,11 +123,13 @@ export function createMiddleware(
         res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
         res.setHeader('x-cache', 'miss')
 
-        void pipeline(streams).catch((err: unknown) => {
-          log.warn(
-            { err, did, cid: cid.toString(), pds: url.origin },
-            'blob resolution failed during transmission',
-          )
+        pipeline(streams, (err) => {
+          if (err) {
+            log.warn(
+              { err, did, cid: cid.toString(), pds: url.origin },
+              'blob resolution failed during transmission',
+            )
+          }
         })
 
         return streams[0]!
