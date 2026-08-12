@@ -38,7 +38,7 @@ export const cloneStream = (stream: Readable): Readable => {
 
 /**
  * A {@link Transform} that forwards every chunk downstream while mirroring a
- * copy into a "branch" {@link Duplex} (exposed through {@link onBranch}, e.g.
+ * copy into a "branch" {@link PassThrough} (exposed through {@link onBranch}, e.g.
  * to be cached). The tee is paced by the slower of its two consumers, bounding
  * how much data gets buffered. The branch is completed when the source ends,
  * and torn down if the tee errors or is destroyed early (e.g. the client
@@ -52,12 +52,12 @@ export class Tee extends Transform {
 
   constructor(branch: Writable | ((readable: Readable) => void)) {
     super()
-    if (typeof branch === 'object') {
-      this.branch = branch
+    if (typeof branch === 'function') {
+      const passthrough = new PassThrough({ autoDestroy: true })
+      branch(passthrough)
+      this.branch = passthrough
     } else {
-      const duplex = new PassThrough({ autoDestroy: true })
-      branch(duplex)
-      this.branch = duplex
+      this.branch = branch
     }
   }
 
