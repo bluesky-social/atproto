@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import events from 'node:events'
-import { PassThrough, Readable, Writable } from 'node:stream'
+import { PassThrough, Readable, Writable, pipeline } from 'node:stream'
 import { setTimeout as delay } from 'node:timers/promises'
 import { assert, describe, expect, it } from 'vitest'
 import * as streams from '../src/streams.js'
@@ -528,6 +528,213 @@ describe('streams', () => {
 
       await finished
       expect(Buffer.concat(downstreamChunks).toString()).toBe('abc')
+    })
+  })
+
+  describe(streams.fanOut, () => {
+    // A Writable that records everything written to it, for use as a sink.
+    const collectingSink = () => {
+      const chunks: Buffer[] = []
+      const sink = new Writable({
+        write(chunk, _enc, cb) {
+          chunks.push(Buffer.from(chunk))
+          cb()
+        },
+      })
+      return { sink, chunks }
+    }
+
+    it('mirrors the input into every sink', async () => {
+      const a = collectingSink()
+      const b = collectingSink()
+      const aFinished = events.once(a.sink, 'finish')
+      const bFinished = events.once(b.sink, 'finish')
+
+      const source = Readable.from(
+        ['foo', 'bar', 'baz'].map((s) => Buffer.from(s)),
+      )
+      await events.once(source.pipe(streams.fanOut(a.sink, b.sink)), 'finish')
+      await Promise.all([aFinished, bFinished])
+
+      expect(Buffer.concat(a.chunks).toString()).toBe('foobarbaz')
+      expect(Buffer.concat(b.chunks).toString()).toBe('foobarbaz')
+    })
+
+    it('exposes a sink as a readable stream when given a function', async () => {
+      const main = collectingSink()
+      let branchBytes: Promise<Buffer> | undefined
+      const fan = streams.fanOut(main.sink, (readable) => {
+        branchBytes = streams.streamToNodeBuffer(readable)
+      })
+
+      const source = Readable.from([Buffer.from('hello world')])
+      await events.once(source.pipe(fan), 'finish')
+
+      assert(branchBytes, 'the sink function should have been called')
+      expect(Buffer.concat(main.chunks).toString()).toBe('hello world')
+      expect((await branchBytes).toString()).toBe('hello world')
+    })
+
+    it('keeps feeding the other sinks (and the input) when one dies early', async () => {
+      // The "main" consumer disconnects after the first chunk; the branch must
+      // still receive the whole stream, and the input must be read to the end.
+      const N = 5
+      let produced = 0
+      const source = new Readable({
+        read() {
+          if (produced < N) this.push(Buffer.from([produced++]))
+          else this.push(null)
+        },
+      })
+
+      const mainChunks: Buffer[] = []
+      const main = new Writable({
+        write(chunk, _enc, cb) {
+          mainChunks.push(Buffer.from(chunk))
+          cb()
+          // Simulate a client disconnect right after the first chunk.
+          if (mainChunks.length === 1) main.destroy()
+        },
+      })
+      const branch = collectingSink()
+      const branchFinished = events.once(branch.sink, 'finish')
+
+      await new Promise<void>((resolve, reject) => {
+        pipeline([source, streams.fanOut(main, branch.sink)], (err) =>
+          err ? reject(err) : resolve(),
+        )
+      })
+      await branchFinished
+
+      // The dead main sink got only its first chunk...
+      expect(mainChunks.length).toBe(1)
+      // ...while the branch received the full stream and the source drained.
+      expect(branch.chunks.length).toBe(N)
+      expect(source.readableEnded).toBe(true)
+    })
+
+    it('destroys the input only once every sink has died', async () => {
+      // Both sinks disconnect after their first chunk. With no live consumer
+      // left, the fan-out must fail its writable side, tearing the pipeline
+      // (and thus the source) down — a normal completion would yield no error.
+      const source = new Readable({
+        read() {
+          this.push(Buffer.from('x'))
+        },
+      })
+      // The source is destroyed with the fan-out error; swallow it (pipeline
+      // already handles teardown).
+      source.on('error', () => {})
+
+      const dyingSink = () => {
+        let seen = 0
+        const sink = new Writable({
+          write(_chunk, _enc, cb) {
+            cb()
+            if (++seen === 1) sink.destroy()
+          },
+        })
+        sink.on('error', () => {})
+        return sink
+      }
+
+      const sourceClosed = new Promise<void>((resolve) =>
+        source.once('close', resolve),
+      )
+      const err = await new Promise<Error | null>((resolve) => {
+        pipeline([source, streams.fanOut(dyingSink(), dyingSink())], resolve)
+      })
+      await sourceClosed
+
+      expect(err?.message).toBe('fanOut: all sinks ended')
+      expect(source.destroyed).toBe(true)
+    })
+
+    it('propagates an input failure to every sink', async () => {
+      const a = new PassThrough()
+      const b = new PassThrough()
+      const aError = events.once(a, 'error')
+      const bError = events.once(b, 'error')
+
+      const source = new PassThrough()
+      pipeline([source, streams.fanOut(a, b)], () => {})
+      source.write(Buffer.from('x'))
+
+      const err = new Error('input failed')
+      source.destroy(err)
+
+      // The failure of the writable side is forwarded to both owned sinks.
+      expect(await aError).toEqual([err])
+      expect(await bError).toEqual([err])
+    })
+
+    it('paces the input by the slowest live sink', async () => {
+      // A sink that holds its first write open, exerting backpressure.
+      let releaseFirstWrite: (() => void) | undefined
+      const slowChunks: Buffer[] = []
+      const slow = new Writable({
+        highWaterMark: 1,
+        write(chunk, _enc, cb) {
+          slowChunks.push(Buffer.from(chunk))
+          if (releaseFirstWrite === undefined) releaseFirstWrite = cb
+          else cb()
+        },
+      })
+      const fast = collectingSink()
+
+      const source = Readable.from(['a', 'b', 'c'].map((s) => Buffer.from(s)))
+      const done = new Promise<void>((resolve, reject) => {
+        pipeline([source, streams.fanOut(fast.sink, slow)], (err) =>
+          err ? reject(err) : resolve(),
+        )
+      })
+
+      // While the slow sink is blocked, the input is paced: the fast sink has
+      // not raced ahead to receive every chunk.
+      await delay(20)
+      assert(releaseFirstWrite, 'the slow sink should have received a write')
+      expect(fast.chunks.length).toBeLessThan(3)
+
+      releaseFirstWrite()
+      await done
+
+      expect(Buffer.concat(fast.chunks).toString()).toBe('abc')
+      expect(Buffer.concat(slowChunks).toString()).toBe('abc')
+    })
+
+    it('does not stall when a sink with autoDestroy:false errors mid-write', async () => {
+      // A sink that blocks on its first write (so the fan-out parks waiting for
+      // it to drain) and, being autoDestroy:false, later errors *without* ever
+      // emitting 'close'. The fan-out must recover and finish via the other sink.
+      let failFirstWrite: ((err: Error) => void) | undefined
+      const branch = new Writable({
+        highWaterMark: 1,
+        autoDestroy: false,
+        write(_chunk, _enc, cb) {
+          if (failFirstWrite === undefined) failFirstWrite = cb
+          else cb()
+        },
+      })
+      branch.on('error', () => {})
+      const main = collectingSink()
+
+      const source = Readable.from(['a', 'b', 'c'].map((s) => Buffer.from(s)))
+      const done = new Promise<void>((resolve, reject) => {
+        pipeline([source, streams.fanOut(main.sink, branch)], (err) =>
+          err ? reject(err) : resolve(),
+        )
+      })
+
+      await delay(20)
+      assert(failFirstWrite, 'the branch should have received a first write')
+      // The fast main sink took the first chunk directly, then the fan-out
+      // parked on the blocked branch — so the rest has not flowed through yet.
+      expect(main.chunks.length).toBe(1)
+
+      failFirstWrite(new Error('branch failed'))
+
+      await done
+      expect(Buffer.concat(main.chunks).toString()).toBe('abc')
     })
   })
 

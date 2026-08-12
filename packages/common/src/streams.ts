@@ -6,7 +6,7 @@ import {
   type Stream,
   Transform,
   type TransformCallback,
-  type Writable,
+  Writable,
   pipeline,
 } from 'node:stream'
 import { createBrotliDecompress, createGunzip, createInflate } from 'node:zlib'
@@ -39,7 +39,7 @@ export const cloneStream = (stream: Readable): Readable => {
 
 /**
  * A {@link Transform} that forwards every chunk downstream while mirroring a
- * copy into a "branch" {@link PassThrough} (exposed through {@link onBranch}, e.g.
+ * copy into a "branch" {@link Writable} (exposed through {@link Tee.branch}, e.g.
  * to be cached). The tee is paced by the slower of its two consumers, bounding
  * how much data gets buffered. The branch is completed when the source ends,
  * and torn down if the tee errors or is destroyed early (e.g. the client
@@ -47,6 +47,12 @@ export const cloneStream = (stream: Readable): Readable => {
  *
  * Consuming the branch is best-effort: its failures are swallowed here and must
  * never break the main stream.
+ *
+ * Because the tee is a {@link Transform}, its *main* output is a downstream
+ * pipeline stage — so `pipeline([readable, tee, main])` tears the tee (and the
+ * source) down as soon as `main` fails. If you need the branch to keep going
+ * after the main consumer disappears (or vice-versa), use {@link fanOut}, which
+ * owns both outputs instead of exposing one as a pipeline stage.
  */
 export class Tee extends Transform {
   readonly branch: Writable
@@ -107,6 +113,113 @@ export class Tee extends Transform {
 
     cb(err)
   }
+}
+
+/**
+ * A {@link Writable} that mirrors everything written to it into several
+ * independent "sinks", pacing the input by the slowest sink that is still
+ * alive. Unlike {@link Tee}, the sinks are *owned* by the fan-out rather than
+ * being downstream pipeline stages, which lets the two error domains be kept
+ * apart:
+ *
+ * - An *output* (sink) that errors or ends early is simply dropped; the other
+ *   sinks — and the input — keep going. Its error is swallowed (best-effort),
+ *   exactly like a {@link Tee} branch.
+ * - The *input* (writable side) is only torn down once *every* sink has died,
+ *   or if the input itself fails — in which case the failure is propagated to
+ *   every surviving sink.
+ *
+ * Designed to be the destination of a pipeline:
+ *
+ * ```
+ * pipeline([readable, ...transforms, fanOut(main, branch)])
+ * ```
+ *
+ * If `main` disconnects (e.g. an HTTP response whose client went away), `branch`
+ * still receives the full stream (e.g. to finish populating a cache), and
+ * vice-versa. A sink may also be provided as a function receiving a
+ * {@link Readable} to consume, mirroring {@link Tee}'s constructor.
+ */
+export function fanOut(
+  ...outputs: ReadonlyArray<Writable | ((readable: Readable) => void)>
+): Writable {
+  const sinks = outputs.map((output) => {
+    if (typeof output !== 'function') return output
+    const passthrough = new PassThrough()
+    output(passthrough)
+    return passthrough
+  })
+
+  // Sinks still able to receive data. A sink that errors or closes is dropped
+  // and never written to again; its 'error' is swallowed here so a dead sink can
+  // neither crash the process nor disturb the surviving sinks (other listeners,
+  // e.g. a reader consuming it, still observe the error).
+  const alive = new Set<Writable>(sinks)
+  const drop = (sink: Writable) => alive.delete(sink)
+  for (const sink of sinks) {
+    sink.on('error', () => drop(sink))
+    sink.on('close', () => drop(sink))
+  }
+
+  // Whether the input ended cleanly, so we can distinguish a normal completion
+  // (let the sinks finish the data we handed them) from a teardown (destroy
+  // them).
+  let ended = false
+
+  return new Writable({
+    write(chunk, _enc, cb) {
+      // Write to every live sink, then invoke `cb` once they have all either
+      // accepted the chunk, drained, or died — pacing the input by the slowest
+      // surviving sink.
+      let waiting = 1 // guard so `cb` can't fire before the loop completes
+      const settle = () => {
+        if (--waiting > 0) return
+        // If every sink died while handling this chunk, tear the input down.
+        cb(alive.size === 0 ? new Error('fanOut: all sinks ended') : null)
+      }
+
+      for (const sink of alive) {
+        if (!sink.writable) {
+          drop(sink)
+          continue
+        }
+        if (sink.write(chunk)) continue
+
+        waiting++
+        const done = () => {
+          sink.off('drain', done)
+          sink.off('close', done)
+          sink.off('error', done)
+          settle()
+        }
+        // Resume on 'drain', but also on 'close'/'error' so a sink that dies
+        // mid-write (e.g. one created with autoDestroy:false, which errors
+        // without emitting 'close') never leaves the fan-out stuck.
+        sink.once('drain', done)
+        sink.once('close', done)
+        sink.once('error', done)
+      }
+
+      settle()
+    },
+    final(cb) {
+      ended = true
+      for (const sink of alive) {
+        if (sink.writable) sink.end()
+      }
+      cb()
+    },
+    destroy(err, cb) {
+      // A clean end (`_final` already ran) leaves the sinks to flush what they
+      // were handed; any other teardown propagates to the sinks we own.
+      if (!ended || err) {
+        for (const sink of alive) {
+          if (sink.writable) sink.destroy(err ?? undefined)
+        }
+      }
+      cb(err)
+    },
+  })
 }
 
 export const streamSize = async (stream: Readable): Promise<number> => {

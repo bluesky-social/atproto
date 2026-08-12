@@ -356,14 +356,6 @@ export class BlobTransactor extends BlobReader {
   }
 }
 
-export class CidNotFound extends Error {
-  cid: Cid
-  constructor(cid: Cid) {
-    super(`cid not found: ${cid.toString()}`)
-    this.cid = cid
-  }
-}
-
 // "file-type" does not provide a duplex implementation so we create one here
 class FileTypePassThrough extends Tee {
   readonly result: Promise<FileTypeResult | undefined>

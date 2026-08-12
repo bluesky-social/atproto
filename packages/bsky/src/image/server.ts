@@ -7,16 +7,16 @@ import { pipeline } from 'node:stream'
 import { pipeline as pipelinePromise } from 'node:stream/promises'
 import createError, { isHttpError } from 'http-errors'
 import {
-  Tee,
   VerifyCidError,
   VerifyCidTransform,
   createDecoders,
+  fanOut,
   isErrnoException,
 } from '@atproto/common'
 import { BlobNotFoundError } from '@atproto/repo'
 import { type StreamBlobOptions, streamBlob } from '../api/blob-resolver.js'
 import type { AppContext } from '../context.js'
-import { type Middleware, responseSignal } from '../util/http.js'
+import type { Middleware } from '../util/http.js'
 import log from './logger.js'
 import { createImageProcessor, createImageUpscaler } from './sharp.js'
 import { BadPathError, ImageUriBuilder } from './uri.js'
@@ -83,7 +83,6 @@ export function createMiddleware(
       const streamOptions: StreamBlobOptions = {
         did: options.did,
         cid: options.cid,
-        signal: responseSignal(res),
       }
 
       await streamBlob(ctx, streamOptions, (upstream, { did, cid, url }) => {
@@ -106,14 +105,15 @@ export function createMiddleware(
               res.setHeader('content-length', info.size)
             }
           }),
-          // save to cache
-          new Tee((branch) => {
+          // send downstream and save to cache in parallel. Applies backpressure
+          // based on slowest consumer, avoiding memory pressure.
+          fanOut(res, (branch) => {
             void cache
               .put(cacheKey, branch)
               .finally(() => {
-                // Make sure that the tee is no longer waiting for the branch to
-                // drain (note that the cache implementation should do this
-                // automatically, but we do it here just in case).
+                // Fail-safe: Make sure that the fanOut is no longer waiting for
+                // this branch to drain (note that the cache implementation
+                // should do this automatically).
                 branch.destroy()
               })
               .catch((err: unknown) => {
@@ -123,8 +123,6 @@ export function createMiddleware(
                 )
               })
           }),
-          // send downstream
-          res,
         ]
 
         res.statusCode = 200
