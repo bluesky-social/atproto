@@ -101,7 +101,9 @@ export class Tee extends Transform {
   }
 
   _destroy(err: Error | null, cb: (err?: Error | null) => void) {
-    if (this.branch.writable) {
+    // A failed branch has already torn itself down (or given up); leave it be
+    // rather than emitting a second, spurious error on it.
+    if (!this.#branchFailed && this.branch.writable) {
       this.branch.destroy(err ?? new Error('Tee destroyed'))
     }
 
