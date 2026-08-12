@@ -4,6 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import type { Readable } from 'node:stream'
 import { pipeline } from 'node:stream'
+import { pipeline as pipelinePromise } from 'node:stream/promises'
 import createError, { isHttpError } from 'http-errors'
 import {
   Tee,
@@ -58,7 +59,7 @@ export function createMiddleware(
         res.setHeader('content-type', outputType)
         res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
         res.setHeader('content-length', cachedImage.size)
-        await pipeline(cachedImage, res)
+        await pipelinePromise(cachedImage, res)
         return
       } catch (err) {
         if (!(err instanceof BlobNotFoundError)) {
