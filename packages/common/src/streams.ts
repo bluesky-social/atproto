@@ -63,21 +63,19 @@ export class Tee extends Transform {
     }
 
     // The branch is best-effort: its failures must never break or stall the
-    // main stream. Remember a failure so we stop writing to a dead branch, and
-    // swallow the 'error' so it can't crash the process. Other listeners on the
-    // branch (e.g. a reader consuming it) still observe the error.
-    this.branch.once('error', () => {
+    // main stream.
+    this.branch.on('error', () => {
       this.#branchFailed = true
     })
   }
 
+  get branchWritable() {
+    return !this.#branchFailed && this.branch.writable
+  }
+
   _transform(chunk: unknown, _enc: BufferEncoding, cb: TransformCallback) {
     // Forward downstream, applying backpressure if either branch is slower.
-    if (
-      this.#branchFailed ||
-      !this.branch.writable ||
-      this.branch.write(chunk)
-    ) {
+    if (!this.branchWritable || this.branch.write(chunk)) {
       cb(null, chunk)
     } else {
       const done = () => {
@@ -96,14 +94,14 @@ export class Tee extends Transform {
   }
 
   _flush(cb: TransformCallback) {
-    if (!this.#branchFailed && this.branch.writable) this.branch.end()
+    if (this.branchWritable) this.branch.end()
     cb()
   }
 
   _destroy(err: Error | null, cb: (err?: Error | null) => void) {
     // A failed branch has already torn itself down (or given up); leave it be
     // rather than emitting a second, spurious error on it.
-    if (!this.#branchFailed && this.branch.writable) {
+    if (this.branchWritable) {
       this.branch.destroy(err ?? new Error('Tee destroyed'))
     }
 
