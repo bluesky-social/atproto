@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.actor.contentVisibility",
+  "id": "app.bsky.actor.contentVisibilityDeclaration",
   "defs": {
     "main": {
       "type": "record",
