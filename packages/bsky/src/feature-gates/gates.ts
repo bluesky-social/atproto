@@ -13,7 +13,6 @@ export enum Gate {
   SuggestedUsersForSeeMoreEnable = 'suggested_users:for_see_more:enable',
   SearchV2Enable = 'search:v2:enable',
   IrisFeed = 'iris:feed:enable',
-  TrendingTopicsV2 = 'trending_topics_v2',
   OpThreadMetadataEnable = 'op_thread_metadata:enable',
 
   // temp
