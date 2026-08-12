@@ -50,6 +50,7 @@ export const cloneStream = (stream: Readable): Readable => {
  */
 export class Tee extends Transform {
   readonly branch: Writable
+  #branchFailed = false
 
   constructor(branch: Writable | ((readable: Readable) => void)) {
     super()
@@ -60,25 +61,42 @@ export class Tee extends Transform {
     } else {
       this.branch = branch
     }
+
+    // The branch is best-effort: its failures must never break or stall the
+    // main stream. Remember a failure so we stop writing to a dead branch, and
+    // swallow the 'error' so it can't crash the process. Other listeners on the
+    // branch (e.g. a reader consuming it) still observe the error.
+    this.branch.once('error', () => {
+      this.#branchFailed = true
+    })
   }
 
   _transform(chunk: unknown, _enc: BufferEncoding, cb: TransformCallback) {
     // Forward downstream, applying backpressure if either branch is slower.
-    if (!this.branch.writable || this.branch.write(chunk)) {
+    if (
+      this.#branchFailed ||
+      !this.branch.writable ||
+      this.branch.write(chunk)
+    ) {
       cb(null, chunk)
     } else {
       const done = () => {
         this.branch.off('drain', done)
         this.branch.off('close', done)
+        this.branch.off('error', done)
         cb(null, chunk)
       }
+      // Resume on 'drain' (branch caught up) but also on 'close'/'error' so the
+      // tee is never stuck if the branch dies mid-write — e.g. a branch created
+      // with `autoDestroy: false`, which errors without emitting 'close'.
       this.branch.once('drain', done)
       this.branch.once('close', done)
+      this.branch.once('error', done)
     }
   }
 
   _flush(cb: TransformCallback) {
-    this.branch.end()
+    if (!this.#branchFailed && this.branch.writable) this.branch.end()
     cb()
   }
 

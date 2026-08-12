@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import events from 'node:events'
 import { PassThrough, Readable, Writable } from 'node:stream'
 import { setTimeout as delay } from 'node:timers/promises'
@@ -350,6 +351,81 @@ describe('streams', () => {
       expect(Buffer.concat(branchChunks).toString()).toBe('abc')
     })
 
+    it('paces the source by the slowest consumer, whichever branch it is', async () => {
+      // Two consumers whose speeds vary over time: the bottleneck alternates
+      // between the branch and the downstream every 10 chunks. Backpressure
+      // must always come from whichever is currently slower, so the source is
+      // never read far ahead of that slower consumer.
+      const CHUNK = 16 * 1024 // ~one highWaterMark slot per pipeline buffer
+      const N = 40
+      const SLOW = 15
+      const FAST = 1
+      const slowBranchFirst = (i: number) => Math.floor(i / 10) % 2 === 0
+      const branchDelays = Array.from({ length: N }, (_, i) =>
+        slowBranchFirst(i) ? SLOW : FAST,
+      )
+      const downstreamDelays = Array.from({ length: N }, (_, i) =>
+        slowBranchFirst(i) ? FAST : SLOW,
+      )
+
+      let produced = 0
+      let branchProgress = 0
+      let downstreamProgress = 0
+      // How far the source has been read ahead of the slower of the two
+      // consumers. Bounded by the pipeline's buffers (structural, not timing
+      // dependent); without backpressure it would climb to ~N.
+      let maxLead = 0
+      const recordLead = () => {
+        const slowest = Math.min(branchProgress, downstreamProgress)
+        maxLead = Math.max(maxLead, produced - slowest)
+      }
+
+      const source = new Readable({
+        read() {
+          if (produced < N) {
+            const chunk = Buffer.alloc(CHUNK, produced)
+            produced++
+            recordLead()
+            this.push(chunk)
+          } else {
+            this.push(null)
+          }
+        },
+      })
+
+      const branch = new Writable({
+        highWaterMark: 1,
+        write(_chunk, _enc, cb) {
+          const ms = branchDelays[branchProgress++]
+          recordLead()
+          setTimeout(cb, ms)
+        },
+      })
+
+      const downstream = new Writable({
+        highWaterMark: 1,
+        write(_chunk, _enc, cb) {
+          const ms = downstreamDelays[downstreamProgress++]
+          recordLead()
+          setTimeout(cb, ms)
+        },
+      })
+
+      const tee = new streams.Tee(branch)
+      const finished = events.once(downstream, 'finish')
+      source.pipe(tee).pipe(downstream)
+      await finished
+
+      // Everything flowed through both consumers, in full.
+      expect(branchProgress).toBe(N)
+      expect(downstreamProgress).toBe(N)
+      // The source stayed within a small, buffer-sized lead of the slowest
+      // consumer throughout — i.e. it was consumed as slowly as the slowest,
+      // never racing ahead. Observed lead is ~12; without backpressure it
+      // would approach N (40).
+      expect(maxLead).toBeLessThanOrEqual(16)
+    })
+
     it('tears down the branch when the tee is destroyed early', async () => {
       const branch = new PassThrough()
       // The branch may be torn down with an error; swallow it (best-effort).
@@ -372,6 +448,115 @@ describe('streams', () => {
 
       await branchClosed
       expect(branch.destroyed).toBe(true)
+    })
+
+    it('does not stall when a branch with autoDestroy:false errors mid-write', async () => {
+      // A branch that blocks on its first write (so the tee parks waiting for
+      // it to drain) and, being autoDestroy:false, later errors *without* ever
+      // emitting 'close'. The tee must still recover and finish the stream.
+      let failFirstWrite: ((err: Error) => void) | undefined
+      const branch = new Writable({
+        highWaterMark: 1,
+        autoDestroy: false,
+        write(_chunk, _enc, cb) {
+          if (failFirstWrite === undefined) failFirstWrite = cb
+          else cb()
+        },
+      })
+
+      const tee = new streams.Tee(branch)
+      const downstreamChunks: Buffer[] = []
+      const downstream = new Writable({
+        write(chunk, _enc, cb) {
+          downstreamChunks.push(Buffer.from(chunk))
+          cb()
+        },
+      })
+
+      const source = Readable.from(['a', 'b', 'c'].map((s) => Buffer.from(s)))
+      const finished = events.once(downstream, 'finish')
+      source.pipe(tee).pipe(downstream)
+
+      // The tee is now parked, waiting for the blocked branch to drain, so
+      // nothing has been forwarded downstream yet.
+      await delay(20)
+      assert(failFirstWrite, 'the branch should have received a first write')
+      expect(downstreamChunks.length).toBe(0)
+
+      // The branch errors while the tee waits. With autoDestroy:false it emits
+      // only 'error' (no 'close'); the tee must not hang on it.
+      failFirstWrite(new Error('branch failed'))
+
+      await finished
+      expect(Buffer.concat(downstreamChunks).toString()).toBe('abc')
+    })
+
+    it('does not stall when a branch emits an error while waiting to drain', async () => {
+      // A branch that never completes its first write, keeping the tee parked
+      // waiting to drain. A bare emit('error') (no destroy, no 'close') must
+      // still let the tee finish forwarding the remaining chunks downstream.
+      let firstWriteReceived = false
+      const branch = new Writable({
+        highWaterMark: 1,
+        write() {
+          firstWriteReceived = true
+          // Never call the callback: the branch stays "full" forever.
+        },
+      })
+
+      const tee = new streams.Tee(branch)
+      const downstreamChunks: Buffer[] = []
+      const downstream = new Writable({
+        write(chunk, _enc, cb) {
+          downstreamChunks.push(Buffer.from(chunk))
+          cb()
+        },
+      })
+
+      const source = Readable.from(['a', 'b', 'c'].map((s) => Buffer.from(s)))
+      const finished = events.once(downstream, 'finish')
+      source.pipe(tee).pipe(downstream)
+
+      await delay(20)
+      assert(
+        firstWriteReceived,
+        'the branch should have received a first write',
+      )
+      expect(downstreamChunks.length).toBe(0)
+
+      branch.emit('error', new Error('branch failed'))
+
+      await finished
+      expect(Buffer.concat(downstreamChunks).toString()).toBe('abc')
+    })
+  })
+
+  describe(streams.HashPassThrough, () => {
+    it('passes bytes through unchanged and exposes the digest once finished', async () => {
+      const hashPassThrough = new streams.HashPassThrough('sha256')
+      const hashEvent = events.once(hashPassThrough, 'hash')
+
+      const source = Readable.from(
+        ['foo', 'bar', 'baz'].map((s) => Buffer.from(s)),
+      )
+      const out = await streams.streamToNodeBuffer(source.pipe(hashPassThrough))
+
+      // Bytes are forwarded verbatim.
+      expect(out.toString()).toBe('foobarbaz')
+
+      const expected = createHash('sha256').update('foobarbaz').digest()
+      expect(hashPassThrough.digest.equals(expected)).toBe(true)
+
+      // The digest is also announced through the 'hash' event.
+      const [emitted] = await hashEvent
+      expect((emitted as Buffer).equals(expected)).toBe(true)
+    })
+
+    it('throws when the digest is accessed before the stream finishes', () => {
+      const hashPassThrough = new streams.HashPassThrough('sha256')
+      hashPassThrough.write(Buffer.from('foo'))
+
+      expect(() => hashPassThrough.digest).toThrow('Hash not yet computed')
     })
   })
 })
