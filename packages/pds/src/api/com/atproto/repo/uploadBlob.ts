@@ -27,7 +27,11 @@ export default function (server: Server, ctx: AppContext) {
         requester,
         async (store) => {
           const metadata = await store.repo.blob
-            .uploadBlobAndGetMetadata(input.body, input.encoding)
+            .uploadBlobAndGetMetadata(
+              input.body,
+              input.encoding,
+              ctx.cfg.service.blobUploadLimit,
+            )
             .catch(throwAbortAsUpstreamError)
 
           return store.transact(async (actorTxn) => {

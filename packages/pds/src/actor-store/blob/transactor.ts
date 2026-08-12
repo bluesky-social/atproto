@@ -66,10 +66,11 @@ export class BlobTransactor extends BlobReader {
   async uploadBlobAndGetMetadata(
     blobStream: stream.Readable,
     fallbackMime: `${string}/${string}` = 'application/octet-stream',
+    maxSize = Infinity,
   ): Promise<BlobMetadata> {
     try {
       const hashDuplex = new HashPassThrough('sha256')
-      const sizeDuplex = new MaxSizeChecker(Infinity)
+      const sizeDuplex = new MaxSizeChecker(maxSize)
       const typeDuplex = new FileTypePassThrough()
 
       // @NOTE a pipeline of duplex streams is used to ensure that backpressure
