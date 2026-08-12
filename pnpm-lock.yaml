@@ -2049,6 +2049,9 @@ importers:
       pino-http:
         specifier: ^11.0.0
         version: 11.0.0
+      strtok3:
+        specifier: ^10.3.5
+        version: 10.3.5
       uint8arrays:
         specifier: ^5.0.0
         version: 5.1.1

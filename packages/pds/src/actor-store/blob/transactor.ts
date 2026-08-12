@@ -3,12 +3,16 @@ import type stream from 'node:stream'
 import {
   type Duplex,
   PassThrough,
-  Readable,
   type TransformCallback,
   pipeline,
 } from 'node:stream'
-import { type FileTypeResult, fileTypeFromStream } from 'file-type'
+import {
+  type FileTypeOptions,
+  FileTypeParser,
+  type FileTypeResult,
+} from 'file-type'
 import PQueue from 'p-queue'
+import { fromStream } from 'strtok3'
 import { HashPassThrough, MaxSizeChecker, SECOND, Tee } from '@atproto/common'
 import {
   type BlobRef,
@@ -364,12 +368,21 @@ export class CidNotFound extends Error {
 class FileTypeDuplex extends Tee {
   readonly result: Promise<FileTypeResult | undefined>
 
-  constructor() {
+  constructor(options?: FileTypeOptions) {
     const branch = new PassThrough()
     super(branch)
-    this.result = fileTypeFromStream(Readable.toWeb(branch))
-    // avoid unhandled rejections (will be awaited in _final() and _destroy())
-    this.result.catch(() => {})
+
+    const parser = new FileTypeParser(options)
+
+    // @NOTE file-type does not support NodeJS Readable and recommends wrapping
+    // into a web steam. We use strtok3 to convert the NodeJS Readable into a
+    // tokenizer, bypassing that limitation.
+    this.result = fromStream(branch)
+      .then((tokenizer) => parser.fromTokenizer(tokenizer))
+      // file-type won't destroy() the stream
+      .finally(() => branch.destroy())
+      // avoid unhandled rejections (might be awaited later)
+      .catch(() => undefined)
   }
 
   _final(cb: TransformCallback) {
