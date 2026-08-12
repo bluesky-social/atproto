@@ -73,5 +73,6 @@ export type DelegationTokenOutput = {
     type: 'delegation_token'
     userDid: DidString
     space: SpaceRefString
+    dpopJkt: string
   }
 }

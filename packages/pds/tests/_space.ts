@@ -230,14 +230,14 @@ export class SpaceClient {
   ): Promise<SpaceCredential> {
     const key = opts.key ?? (await JoseKey.generate(['ES256']))
     const token = await this.delegationTokenFor(actor, space)
+    const proof = await this.credentialExchangeProof(key)
     const res = await this.authority.getClient().call(
       com.atproto.space.getSpaceCredential,
       {
         space,
-        dpopJkt: await dpopJktForKey(key),
         clientAttestation: opts.clientAttestation,
       },
-      { headers: { authorization: `Bearer ${token}` } },
+      { headers: { authorization: `Bearer ${token}`, dpop: proof } },
     )
     return new SpaceCredential(res.credential, key)
   }
@@ -272,15 +272,30 @@ export class SpaceClient {
     opts: { clientAttestation?: string } = {},
   ) {
     const key = await JoseKey.generate(['ES256'])
+    const proof = await this.credentialExchangeProof(key)
     return this.authority.getClient().call(
       com.atproto.space.getSpaceCredential,
       {
         space,
-        dpopJkt: await dpopJktForKey(key),
         clientAttestation: opts.clientAttestation,
       },
-      { headers: { authorization: `Bearer ${token}` } },
+      { headers: { authorization: `Bearer ${token}`, dpop: proof } },
     )
+  }
+
+  async credentialExchangeProof(
+    key: JoseKey,
+    authority: TestPds = this.authority,
+    credential?: string,
+  ): Promise<string> {
+    return createDpopProof(key, {
+      htm: 'POST',
+      htu: new URL(
+        `/xrpc/${com.atproto.space.getSpaceCredential.$lxm}`,
+        authority.url,
+      ).toString(),
+      credential,
+    })
   }
 
   /** Read a repo's state directly. No endpoint exposes the raw set hash. */

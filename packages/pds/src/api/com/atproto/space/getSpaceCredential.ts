@@ -8,8 +8,8 @@ export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getSpaceCredential, {
     auth: ctx.authVerifier.delegationTokenAuth,
     handler: async ({ input, auth }) => {
-      const { space, dpopJkt, clientAttestation } = input.body
-      const { userDid, space: tokenSpace } = auth.credentials
+      const { space, clientAttestation } = input.body
+      const { userDid, space: tokenSpace, dpopJkt } = auth.credentials
 
       if (tokenSpace !== space) {
         throw new InvalidRequestError(

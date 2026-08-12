@@ -12,6 +12,8 @@ import {
 const CREDENTIAL = 'eyJ0eXAiOiJhdHByb3RvLXNwYWNlLWNyZWRlbnRpYWwrand0'
 const HTU = 'https://pds.example.com/xrpc/com.atproto.space.getRepo'
 const HTM = 'GET'
+const EXCHANGE_HTU =
+  'https://space.example.com/xrpc/com.atproto.space.getSpaceCredential'
 
 const athFor = async (credential: string): Promise<string> =>
   toBase64(await sha256(credential), 'base64url')
@@ -52,6 +54,29 @@ describe('DPoP proofs', () => {
     expect(verified.htm).toBe(HTM)
     expect(verified.htu).toBe(HTU)
     expect(verified.jti).toBeTruthy()
+  })
+
+  it('derives a key binding from a credential exchange proof without ath', async () => {
+    const proof = await createDpopProof(key, {
+      htm: 'POST',
+      htu: EXCHANGE_HTU,
+    })
+
+    await expect(
+      verifyDpopProof(proof, { htm: 'POST', htu: EXCHANGE_HTU }),
+    ).resolves.toMatchObject({ jkt: await dpopJktForKey(key) })
+  })
+
+  it('refuses ath on a credential exchange proof', async () => {
+    const proof = await createDpopProof(key, {
+      htm: 'POST',
+      htu: EXCHANGE_HTU,
+      credential: CREDENTIAL,
+    })
+
+    await expect(
+      verifyDpopProof(proof, { htm: 'POST', htu: EXCHANGE_HTU }),
+    ).rejects.toThrow(/"ath" must be omitted/)
   })
 
   it('mints a distinct jti per proof, so a verifier can reject replays', async () => {

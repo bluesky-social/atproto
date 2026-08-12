@@ -27,7 +27,8 @@ export type DpopProof = {
 export type CreateDpopProofOpts = {
   htm: string
   htu: string
-  credential: string
+  /** Present when proving possession of a key bound to an access credential. */
+  credential?: string
 }
 
 export const createDpopProof = async (
@@ -50,18 +51,30 @@ export const createDpopProof = async (
       jti: randomStr(16, 'hex'),
       htm: opts.htm,
       htu: normalizeHtu(opts.htu),
-      ath: await hashCredential(opts.credential),
+      ...(opts.credential !== undefined
+        ? { ath: await hashCredential(opts.credential) }
+        : undefined),
       iat: Math.floor(Date.now() / 1000),
     },
   )
 }
 
-export type VerifyDpopProofOpts = {
+type DpopRequest = {
   htm: string
   htu: string
-  credential: string
-  jkt: string
 }
+
+export type VerifyDpopProofOpts = DpopRequest &
+  (
+    | {
+        credential: string
+        jkt: string
+      }
+    | {
+        credential?: undefined
+        jkt?: undefined
+      }
+  )
 
 /** Checks everything but replay; the caller records the returned `jti` itself. */
 export const verifyDpopProof = async (
@@ -101,8 +114,14 @@ export const verifyDpopProof = async (
   if (typeof htu !== 'string' || htu !== normalizeHtu(opts.htu)) {
     throw new DpopProofError('DPoP proof "htu" does not match the request')
   }
-  if (ath !== (await hashCredential(opts.credential))) {
-    throw new DpopProofError('DPoP proof "ath" does not match the credential')
+  if (opts.credential !== undefined) {
+    if (ath !== (await hashCredential(opts.credential))) {
+      throw new DpopProofError('DPoP proof "ath" does not match the credential')
+    }
+  } else if (ath !== undefined) {
+    throw new DpopProofError(
+      'DPoP proof "ath" must be omitted when obtaining a credential',
+    )
   }
 
   // Present because jwtVerify used EmbeddedJWK.
@@ -114,7 +133,7 @@ export const verifyDpopProof = async (
       `could not compute DPoP key thumbprint: ${errMsg(err)}`,
     )
   })
-  if (jkt !== opts.jkt) {
+  if (opts.jkt !== undefined && jkt !== opts.jkt) {
     throw new DpopProofError(
       'DPoP proof is not signed by the key the credential is bound to',
       'DpopKeyMismatch',
@@ -124,7 +143,7 @@ export const verifyDpopProof = async (
   return { jti, jkt, htm, htu }
 }
 
-/** The JWK thumbprint an application passes as `dpopJkt` to get a credential. */
+/** The RFC 7638 thumbprint of a DPoP key. */
 export const dpopJktForKey = async (key: Key): Promise<string> => {
   const jwk = key.bareJwk
   if (!jwk) {

@@ -397,7 +397,7 @@ export class AuthVerifier {
         )
       }
 
-      await this.verifySpaceDpopProof(ctx.req, credential, jkt)
+      await this.verifySpaceDpopProof(ctx.req, { credential, jkt })
 
       return {
         credentials: {
@@ -410,23 +410,23 @@ export class AuthVerifier {
 
   private async verifySpaceDpopProof(
     req: MethodAuthContext['req'],
-    credential: string,
-    jkt: string,
-  ): Promise<void> {
+    binding:
+      | { credential: string; jkt: string }
+      | { credential?: undefined; jkt?: undefined },
+  ): Promise<string> {
     const proof = req.headers['dpop']
     if (typeof proof !== 'string' || !proof) {
       throw new AuthRequiredError(
-        'space credential requires a DPoP proof',
+        'request requires a DPoP proof',
         'MissingDpopProof',
       )
     }
 
     const url = new URL(req.originalUrl || req.url || '/', this._publicUrl)
-    const { jti } = await verifyDpopProof(proof, {
+    const { jti, jkt } = await verifyDpopProof(proof, {
       htm: req.method || 'GET',
       htu: url.toString(),
-      credential,
-      jkt,
+      ...binding,
     }).catch((err) => {
       if (err instanceof DpopProofError) {
         throw new AuthRequiredError(err.message, err.code)
@@ -440,11 +440,14 @@ export class AuthVerifier {
     if (!unique) {
       throw new AuthRequiredError('DPoP proof replayed', 'BadDpopProof')
     }
+
+    return jkt
   }
 
   /**
    * A delegation token, minted by a user's PDS and presented to this service (as
-   * a space authority) in exchange for a space credential.
+   * a space authority) in exchange for a space credential. The accompanying DPoP
+   * proof supplies the key binding for that credential.
    *
    * Addressed to this authority's space host, and checked as such: a token minted
    * for another authority is rejected rather than honoured.
@@ -476,11 +479,14 @@ export class AuthVerifier {
         )
       }
 
+      const dpopJkt = await this.verifySpaceDpopProof(ctx.req, {})
+
       return {
         credentials: {
           type: 'delegation_token',
           userDid: payload.iss,
           space: space.toString(),
+          dpopJkt,
         },
       }
     }

@@ -1,6 +1,12 @@
+import { decodeJwt } from 'jose'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { JoseKey } from '@atproto/oauth-provider/provider'
-import { createDpopProof, createSpaceToken, spaceHostAud } from '@atproto/space'
+import {
+  createDpopProof,
+  createSpaceToken,
+  dpopJktForKey,
+  spaceHostAud,
+} from '@atproto/space'
 import type { NsidString } from '@atproto/syntax'
 import { com } from '../../src/lexicons/index.js'
 import {
@@ -409,6 +415,7 @@ describe('space auth', () => {
     it('are useless at a host that does not govern the space', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
       const token = await sc.delegationTokenFor(carol, space)
+      const key = await JoseKey.generate(['ES256'])
 
       // The same token, presented to bob's PDS instead of alice's. The audience
       // is derived from the token's own `sub`, so it still matches — what stops
@@ -418,10 +425,80 @@ describe('space auth', () => {
       await expect(
         bob.client.call(
           com.atproto.space.getSpaceCredential,
-          { space, dpopJkt: 'any-thumbprint' },
-          { headers: { authorization: `Bearer ${token}` } },
+          { space },
+          {
+            headers: {
+              authorization: `Bearer ${token}`,
+              dpop: await sc.credentialExchangeProof(key, bob.pds),
+            },
+          },
         ),
       ).rejects.toMatchObject({ error: 'SpaceNotFound' })
+    })
+
+    it('requires proof of possession when exchanging a delegation token', async () => {
+      const space = await sc.createSpace(alice, { members: [carol] })
+      const token = await sc.delegationTokenFor(carol, space)
+
+      await expect(
+        alice.client.call(
+          com.atproto.space.getSpaceCredential,
+          { space },
+          { headers: { authorization: `Bearer ${token}` } },
+        ),
+      ).rejects.toMatchObject({ error: 'MissingDpopProof' })
+    })
+
+    it('binds the credential to the key that signed the exchange proof', async () => {
+      const space = await sc.createSpace(alice, { members: [carol] })
+      const token = await sc.delegationTokenFor(carol, space)
+      const key = await JoseKey.generate(['ES256'])
+      const dpop = await sc.credentialExchangeProof(key)
+
+      const { credential } = await alice.client.call(
+        com.atproto.space.getSpaceCredential,
+        { space },
+        { headers: { authorization: `Bearer ${token}`, dpop } },
+      )
+
+      expect(decodeJwt(credential).cnf).toEqual({
+        jkt: await dpopJktForKey(key),
+      })
+    })
+
+    it('refuses ath on a credential exchange proof', async () => {
+      const space = await sc.createSpace(alice, { members: [carol] })
+      const token = await sc.delegationTokenFor(carol, space)
+      const key = await JoseKey.generate(['ES256'])
+
+      await expect(
+        alice.client.call(
+          com.atproto.space.getSpaceCredential,
+          { space },
+          {
+            headers: {
+              authorization: `Bearer ${token}`,
+              dpop: await sc.credentialExchangeProof(key, alice.pds, token),
+            },
+          },
+        ),
+      ).rejects.toThrow(/"ath" must be omitted/)
+    })
+
+    it('refuses a replayed credential exchange proof', async () => {
+      const space = await sc.createSpace(alice, { members: [carol] })
+      const token = await sc.delegationTokenFor(carol, space)
+      const key = await JoseKey.generate(['ES256'])
+      const dpop = await sc.credentialExchangeProof(key)
+      const exchange = () =>
+        alice.client.call(
+          com.atproto.space.getSpaceCredential,
+          { space },
+          { headers: { authorization: `Bearer ${token}`, dpop } },
+        )
+
+      await expect(exchange()).resolves.toBeDefined()
+      await expect(exchange()).rejects.toThrow(/DPoP proof replayed/)
     })
 
     it('are refused when the audience names another authority', async () => {
