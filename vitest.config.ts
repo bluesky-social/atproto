@@ -13,6 +13,7 @@ export default defineConfig({
     },
     projects: [
       'packages/aws',
+      'packages/common',
       'packages/internal/*',
       'packages/lex/*',
       'packages/lexicon-resolver',

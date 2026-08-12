@@ -1,5 +1,7 @@
 import events from 'node:events'
-import { PassThrough, Readable } from 'node:stream'
+import { PassThrough, Readable, Writable } from 'node:stream'
+import { setTimeout as delay } from 'node:timers/promises'
+import { assert, describe, expect, it } from 'vitest'
 import * as streams from '../src/streams.js'
 
 describe('streams', () => {
