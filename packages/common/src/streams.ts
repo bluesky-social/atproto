@@ -18,6 +18,12 @@ export const forwardStreamErrors = (...streams: Stream[]) => {
   }
 }
 
+/**
+ * @deprecated This function has several flaws:
+ * - It only works if all the stream are setup during the same tick
+ * - It does not apply any backpressure to the source stream, which can lead to
+ *   memory issues
+ */
 export const cloneStream = (stream: Readable): Readable => {
   const passthrough = new PassThrough()
   forwardStreamErrors(stream, passthrough)
