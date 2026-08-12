@@ -1,0 +1,70 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.video.uploadPart",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Upload one part. Parts are idempotent and may be retried or re-sent while the session is created. Each expected length is derived from the upload size and part size, and Content-Length must match exactly. ETags are never exposed to clients.",
+      "parameters": {
+        "type": "params",
+        "required": ["jobId", "partNumber"],
+        "properties": {
+          "jobId": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "partNumber": { "type": "integer", "minimum": 1 }
+        }
+      },
+      "input": {
+        "encoding": "application/octet-stream"
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["partNumber", "sizeBytes"],
+          "properties": {
+            "partNumber": { "type": "integer", "minimum": 1 },
+            "sizeBytes": { "type": "integer" }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "UploadNotFound",
+          "description": "The job ID is unknown or aged out of retention; known terminal sessions are never reported as not found."
+        },
+        {
+          "name": "UploadExpired",
+          "description": "The upload session expired before completion."
+        },
+        {
+          "name": "InvalidPartNumber",
+          "description": "The part number is outside the upload's valid part range."
+        },
+        {
+          "name": "PartSizeMismatch",
+          "description": "Content-Length does not exactly match the expected size for this part."
+        },
+        {
+          "name": "UploadNotReady",
+          "description": "A finish is in progress; check getUploadStatus and retry."
+        },
+        {
+          "name": "UploadFailed",
+          "description": "The session is known to have failed; the error carries its failure reason."
+        },
+        {
+          "name": "UploadAborted",
+          "description": "The session is known to have been aborted."
+        },
+        {
+          "name": "UploadAlreadyCompleted",
+          "description": "The session is known to have already completed."
+        },
+        {
+          "name": "ServiceOverloaded",
+          "description": "The service is draining or temporarily at capacity; retry on another worker."
+        }
+      ]
+    }
+  }
+}
