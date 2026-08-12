@@ -24,7 +24,12 @@ import type {
   UpdateHandleInput,
   VerifyHandleAvailabilityInput,
 } from '@atproto/oauth-provider-api'
-import { isHandleUnavailableReason } from '@atproto/oauth-provider-api'
+import {
+  API_ENDPOINT_PREFIX,
+  CSRF_COOKIE_NAME,
+  CSRF_HEADER_NAME,
+  isHandleUnavailableReason,
+} from '@atproto/oauth-provider-api'
 import { readCookie } from './cookies.ts'
 import {
   type Json,
@@ -35,10 +40,6 @@ import {
 } from './json-client.ts'
 
 export type { Options } from './json-client.ts'
-const CSRF_COOKIE_NAME = 'csrf-token'
-const CSRF_HEADER_NAME = 'x-csrf-token'
-
-const API_ENDPOINT_PREFIX = '/@atproto/oauth-provider/~api'
 
 export type ApiOptions = JsonClientOptions<ApiEndpoints> & {
   locale: string
