@@ -262,4 +262,116 @@ describe('streams', () => {
       expect(lastError).toBe(err)
     })
   })
+
+  describe(streams.Tee, () => {
+    // A Writable that records everything written to it, for use as a branch.
+    const collectingBranch = () => {
+      const chunks: Buffer[] = []
+      const branch = new Writable({
+        write(chunk, _enc, cb) {
+          chunks.push(Buffer.from(chunk))
+          cb()
+        },
+      })
+      return { branch, chunks }
+    }
+
+    it('forwards chunks downstream while mirroring them to the branch', async () => {
+      const { branch, chunks } = collectingBranch()
+      const branchFinished = events.once(branch, 'finish')
+
+      const tee = new streams.Tee(branch)
+      const source = Readable.from(
+        ['foo', 'bar', 'baz'].map((s) => Buffer.from(s)),
+      )
+
+      const downstream = await streams.streamToNodeBuffer(source.pipe(tee))
+      await branchFinished
+
+      expect(downstream.toString()).toBe('foobarbaz')
+      expect(Buffer.concat(chunks).toString()).toBe('foobarbaz')
+    })
+
+    it('exposes the branch as a readable stream when given a function', async () => {
+      let branchBytes: Promise<Buffer> | undefined
+      const tee = new streams.Tee((readable) => {
+        branchBytes = streams.streamToNodeBuffer(readable)
+      })
+
+      const source = Readable.from([Buffer.from('hello world')])
+      const downstream = await streams.streamToNodeBuffer(source.pipe(tee))
+
+      assert(branchBytes, 'branch function should have been called')
+      expect(downstream.toString()).toBe('hello world')
+      expect((await branchBytes).toString()).toBe('hello world')
+    })
+
+    it('paces forwarding by the slower branch (applies backpressure)', async () => {
+      // A branch that holds its first write open, keeping itself "full" so it
+      // exerts backpressure on the tee.
+      let releaseFirstWrite: (() => void) | undefined
+      const branchChunks: Buffer[] = []
+      const branch = new Writable({
+        highWaterMark: 1,
+        write(chunk, _enc, cb) {
+          branchChunks.push(Buffer.from(chunk))
+          if (releaseFirstWrite === undefined) {
+            releaseFirstWrite = cb
+          } else {
+            cb()
+          }
+        },
+      })
+
+      const tee = new streams.Tee(branch)
+      const downstreamChunks: Buffer[] = []
+      const downstream = new Writable({
+        write(chunk, _enc, cb) {
+          downstreamChunks.push(Buffer.from(chunk))
+          cb()
+        },
+      })
+
+      const source = Readable.from(['a', 'b', 'c'].map((s) => Buffer.from(s)))
+      const done = events.once(downstream, 'finish')
+      source.pipe(tee).pipe(downstream)
+
+      // Let the pipeline settle while the branch is blocked on its first write.
+      await delay(20)
+      assert(releaseFirstWrite, 'the branch should have received a first write')
+      // The branch is stuck, so nothing has been forwarded downstream yet.
+      expect(downstreamChunks.length).toBe(0)
+
+      // Unblock the branch; everything should now flow through, in order.
+      releaseFirstWrite()
+      await done
+
+      expect(Buffer.concat(downstreamChunks).toString()).toBe('abc')
+      expect(Buffer.concat(branchChunks).toString()).toBe('abc')
+    })
+
+    it('tears down the branch when the tee is destroyed early', async () => {
+      const branch = new PassThrough()
+      // The branch may be torn down with an error; swallow it (best-effort).
+      branch.on('error', () => {})
+      const branchClosed = new Promise<void>((resolve) =>
+        branch.once('close', resolve),
+      )
+
+      const tee = new streams.Tee(branch)
+      // A source that stays open, so the tee is genuinely destroyed mid-stream.
+      const source = new PassThrough()
+      const gotData = events.once(tee, 'data')
+      source.pipe(tee)
+      source.write(Buffer.from('a'))
+
+      // Once a chunk has flowed through, destroy the tee (e.g. the client
+      // disconnected) while the source is still open.
+      await gotData
+      tee.destroy()
+
+      await branchClosed
+      expect(branch.destroyed).toBe(true)
+    })
+  })
 })
