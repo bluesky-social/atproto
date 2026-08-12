@@ -85,56 +85,52 @@ export function createMiddleware(
         signal: responseSignal(res),
       }
 
-      await streamBlob(
-        ctx,
-        streamOptions,
-        (upstream, { did, cid, url }): Writable => {
-          // Definitely not an image ? Let's fail right away.
-          if (isImageMime(upstream.headers['content-type']) === false) {
-            throw createError(400, 'Not an image')
-          }
+      await streamBlob(ctx, streamOptions, (upstream, { did, cid, url }) => {
+        // Definitely not an image ? Let's fail right away.
+        if (isImageMime(upstream.headers['content-type']) === false) {
+          throw createError(400, 'Not an image')
+        }
 
-          const streams = [
-            // decompress
-            ...createDecoders(upstream.headers['content-encoding']),
-            // verify
-            new VerifyCidTransform(cid),
-            // upscale
-            createImageUpscaler(options),
-            // format (jpeg/webp)
-            createImageProcessor(options).once('info', (info) => {
-              if (!res.destroyed && !res.headersSent) {
-                res.setHeader('content-length', info.size)
-              }
-            }),
-            // save to cache
-            new Tee((branch) => {
-              void cache.put(cacheKey, branch).catch((err: unknown) => {
-                log.warn(
-                  { err, did, cid: cid.toString(), pds: url.origin },
-                  'failed to cache processed image',
-                )
-              })
-            }),
-            // send downstream
-            res,
-          ]
+        const streams = [
+          // decompress
+          ...createDecoders(upstream.headers['content-encoding']),
+          // verify
+          new VerifyCidTransform(cid),
+          // upscale
+          createImageUpscaler(options),
+          // format (jpeg/webp)
+          createImageProcessor(options).once('info', (info) => {
+            if (!res.destroyed && !res.headersSent) {
+              res.setHeader('content-length', info.size)
+            }
+          }),
+          // save to cache
+          new Tee((branch) => {
+            void cache.put(cacheKey, branch).catch((err: unknown) => {
+              log.warn(
+                { err, did, cid: cid.toString(), pds: url.origin },
+                'failed to cache processed image',
+              )
+            })
+          }),
+          // send downstream
+          res,
+        ]
 
-          res.statusCode = 200
-          res.setHeader('content-type', outputType)
-          res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
-          res.setHeader('x-cache', 'miss')
+        res.statusCode = 200
+        res.setHeader('content-type', outputType)
+        res.setHeader('cache-control', `public, max-age=31536000`) // 1 year
+        res.setHeader('x-cache', 'miss')
 
-          void pipeline(streams).catch((err: unknown) => {
-            log.warn(
-              { err, did, cid: cid.toString(), pds: url.origin },
-              'blob resolution failed during transmission',
-            )
-          })
+        void pipeline(streams).catch((err: unknown) => {
+          log.warn(
+            { err, did, cid: cid.toString(), pds: url.origin },
+            'blob resolution failed during transmission',
+          )
+        })
 
-          return streams[0]!
-        },
-      )
+        return streams[0]!
+      })
     } catch (err) {
       if (res.headersSent || res.destroyed) {
         res.destroy()
