@@ -70,7 +70,7 @@ export class BlobTransactor extends BlobReader {
     try {
       const hashDuplex = new HashPassThrough('sha256')
       const sizeDuplex = new MaxSizeChecker(Infinity)
-      const typeDuplex = new FileTypeDuplex()
+      const typeDuplex = new FileTypePassThrough()
 
       // @NOTE a pipeline of duplex streams is used to ensure that backpressure
       // is properly propagated to the input stream. using inputStream.pipe()
@@ -365,7 +365,7 @@ export class CidNotFound extends Error {
 }
 
 // "file-type" does not provide a duplex implementation so we create one here
-class FileTypeDuplex extends Tee {
+class FileTypePassThrough extends Tee {
   readonly result: Promise<FileTypeResult | undefined>
 
   constructor(options?: FileTypeOptions) {
@@ -379,7 +379,8 @@ class FileTypeDuplex extends Tee {
     // tokenizer, bypassing that limitation.
     this.result = fromStream(branch)
       .then((tokenizer) => parser.fromTokenizer(tokenizer))
-      // file-type won't destroy() the stream
+      // file-type won't destroy() the stream. We need to destroy to allow
+      // the Tee's main stream to flow freely.
       .finally(() => branch.destroy())
       // avoid unhandled rejections (might be awaited later)
       .catch(() => undefined)
