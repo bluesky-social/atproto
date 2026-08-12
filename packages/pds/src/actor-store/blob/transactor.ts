@@ -1,6 +1,12 @@
 import assert from 'node:assert'
 import type stream from 'node:stream'
-import { type Duplex, PassThrough, Readable, pipeline } from 'node:stream'
+import {
+  type Duplex,
+  PassThrough,
+  Readable,
+  type TransformCallback,
+  pipeline,
+} from 'node:stream'
 import { type FileTypeResult, fileTypeFromStream } from 'file-type'
 import PQueue from 'p-queue'
 import { HashPassThrough, MaxSizeChecker, SECOND, Tee } from '@atproto/common'
@@ -362,11 +368,11 @@ class FileTypeDuplex extends Tee {
     const branch = new PassThrough()
     super(branch)
     this.result = fileTypeFromStream(Readable.toWeb(branch))
-    // avoid unhandled rejections (will be awaited in _flush() and _destroy())
+    // avoid unhandled rejections (will be awaited in _final() and _destroy())
     this.result.catch(() => {})
   }
 
-  _final(cb: stream.TransformCallback) {
+  _final(cb: TransformCallback) {
     // propagate the result promise to the final callback, so that the stream is
     // not considered finished until the file type has been determined.
     super._final((err) => {
