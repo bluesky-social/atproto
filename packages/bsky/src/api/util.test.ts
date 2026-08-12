@@ -69,7 +69,7 @@ describe('fillPage', () => {
 
     await expect(
       fillPage({ cursor: undefined, limit: 1, fetch, items: (r) => r.items }),
-    ).resolves.toEqual({ items: [], cursor: 'a' })
+    ).resolves.toEqual({ items: [], cursor: undefined })
     expect(fetch).toHaveBeenCalledTimes(2)
   })
 })

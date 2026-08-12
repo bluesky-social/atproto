@@ -55,6 +55,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       db,
       req.params?.query ?? '',
       req.params?.limit ?? 25,
+      req.params?.cursor,
     )
     return {
       feedGenerators: uris.map((uri) => ({ uri, score: 0 })),
@@ -71,6 +72,7 @@ const searchFeedGeneratorsImpl = async (
   db: Database,
   query: string,
   limit: number,
+  cursor?: string,
 ) => {
   const { ref } = db.db.dynamic
   const trimmed = query.trim()
@@ -82,7 +84,7 @@ const searchFeedGeneratorsImpl = async (
     ref('feed_generator.createdAt'),
     ref('feed_generator.cid'),
   )
-  builder = paginate(builder, { limit, keyset })
+  builder = paginate(builder, { limit, cursor, keyset })
   const page = keyset.page(await builder.execute(), limit)
   return {
     uris: page.items.map((f) => f.uri),

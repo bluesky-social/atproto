@@ -59,11 +59,13 @@ export default function (server: Server, ctx: AppContext) {
                   params: {
                     query,
                     viewer: viewer ?? undefined,
+                    cursor,
                     limit,
                   },
                 })
                 .catch(asInvalidRequest())
               uris = res.feedGenerators.map(({ uri }) => uri) as AtUriString[]
+              nextCursor = parseString(res.pageInfo?.cursor)
             } else {
               const res = await ctx.dataplane
                 .searchFeedGenerators({ query, limit })

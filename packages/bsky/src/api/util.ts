@@ -65,7 +65,11 @@ export const fillPage = async <
     })) as Awaited<ReturnType<F>>
     items.push(...opts.items(page))
     cursor = page.cursor
-    if (!cursor || cursor === previousCursor) break
+    if (cursor === previousCursor) {
+      cursor = undefined
+      break
+    }
+    if (!cursor) break
   }
   return { ...result, cursor } as Awaited<ReturnType<F>>
 }
