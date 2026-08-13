@@ -136,8 +136,8 @@ export function DeleteAccountDialog({
         description={
           email ? (
             <Trans>
-              Check <strong>{email}</strong> for an email with the confirmation
-              code to enter below:
+              Check <strong className="break-words">{email}</strong> for an
+              email with the confirmation code to enter below:
             </Trans>
           ) : (
             <Trans>
@@ -171,7 +171,7 @@ export function DeleteAccountDialog({
         email ? (
           <Trans>
             For security reasons, we'll need to send a confirmation code to your
-            email address <strong>{email}</strong>.
+            email address <strong className="break-words">{email}</strong>.
           </Trans>
         ) : (
           <Trans>
