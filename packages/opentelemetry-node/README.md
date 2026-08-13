@@ -26,37 +26,29 @@ Load it before any instrumented module — typically through Node's `--import` f
 ```ts
 import { setup } from '@atproto/opentelemetry-node'
 import { ATTR_DEPLOYMENT_ENVIRONMENT_NAME } from '@atproto/opentelemetry-node/conventions'
-import { HttpInstrumentation } from '@opentelemetry/instrumentation-http'
+import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis'
 import pkg from './package.json' with { type: 'json' }
 
-setup({
+setup(() => ({
   name: pkg.name,
   version: pkg.version,
   // Optional: override or extend the default resource attributes.
   defaultResourceAttributes: { [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: 'staging' },
-  getInstrumentations: () => [new HttpInstrumentation()],
-})
+  // Service-specific instrumentations. The instrumentations common to atproto
+  // services are always registered in addition to these.
+  instrumentations: [new IORedisInstrumentation()],
+}))
 ```
 
-The `@atproto/opentelemetry-node/instrumentation` entrypoint exposes
-`withCommonAtprotoInstrumentations()`, which registers the instrumentations common
-to atproto services (HTTP with XRPC-aware span naming, Express, Undici, Pino with
-log correlation, and Node runtime metrics) alongside the service-specific ones:
+`setup()` takes a thunk so nothing is constructed when telemetry is disabled: the
+options — and therefore the instrumentations — are only built once an OTLP endpoint
+is configured.
 
-```ts
-import { setup } from '@atproto/opentelemetry-node'
-import { withCommonAtprotoInstrumentations } from '@atproto/opentelemetry-node/instrumentation'
-import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis'
-import pkg from './package.json' with { type: 'json' }
-
-setup({
-  name: pkg.name,
-  version: pkg.version,
-  getInstrumentations: withCommonAtprotoInstrumentations(() => [
-    new IORedisInstrumentation(),
-  ]),
-})
-```
+The instrumentations common to atproto services (HTTP with XRPC-aware span naming,
+Express, Undici, Pino with log correlation, and Node runtime metrics) are always
+registered alongside the ones you supply. The
+`@atproto/opentelemetry-node/instrumentation` entrypoint exposes
+`getDefaultAtprotoInstrumentations()` if you need that list directly.
 
 The `@atproto/opentelemetry-node/conventions` entrypoint re-exports
 `@opentelemetry/semantic-conventions` plus the atproto XRPC attribute keys
