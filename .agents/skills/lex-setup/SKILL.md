@@ -101,9 +101,9 @@ it. They generate with `--lib @atproto/lex-schema` instead, which is what the
 generated files then import `l` from.
 
 When the flags get unwieldy (long include lists, or two output trees), those
-packages call the builder API directly from a `scripts/lex-build.mjs` and keep
-`"codegen:lex": "node ./scripts/lex-build.mjs"` — see
-[packages/lex/lex-client/scripts/lex-build.mjs](../../../packages/lex/lex-client/scripts/lex-build.mjs).
+packages call the builder API directly from a `scripts/lex-build.js` and keep
+`"codegen:lex": "node ./scripts/lex-build.js"` — see
+[packages/lex/lex-client/scripts/lex-build.js](../../../packages/lex/lex-client/scripts/lex-build.js).
 `build()` from `@atproto/lex-builder` takes the same options in camelCase.
 
 ## `lex build` flags

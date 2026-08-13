@@ -26,9 +26,7 @@ pnpm test
 pnpm run build:ui
 ```
 
-**Run eslint from the repo root, not the package.** `.eslintrc`'s
-`import/resolver` project globs are repo-root-relative, so running it per-package
-produces phantom `import/no-unresolved` errors:
+**Run eslint from the repo root, not the package.**
 
 ```bash
 cd /path/to/atproto

@@ -16,7 +16,6 @@ module.exports = {
   },
   extensionsToTreatAsEsm: ['.ts'],
   transformIgnorePatterns: [],
-  setupFiles: ['<rootDir>/../../test.setup.ts'],
   moduleNameMapper: {
     '^varint$': '<rootDir>/../../jest.varint-shim.cjs',
     '^(\\.\\.?\\/.+)\\.js$': ['$1.ts', '$1.js'],
