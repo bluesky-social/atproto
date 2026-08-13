@@ -94,7 +94,6 @@
     "verify:import": "node --input-type=module -e \"import '@atproto/bsky'\"",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "../dev-infra/with-test-redis-and-db.sh vitest run",
-    "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh vitest run --update",
     "migration:create": "node ./bin/migration-create.ts",
     "buf:gen": ">&2 echo 'DEPRECATED: run `pnpm run codegen:buf` instead ' && pnpm run codegen:buf"
