@@ -127,7 +127,7 @@ export async function queryReports(
       sortField === 'updatedAt' ? 'r.updatedAt' : 'r.createdAt',
       sortDirection,
     )
-    .orderBy('r.id', 'desc')
+    .orderBy('r.id', sortDirection)
 
   const limit = params.limit ?? 50
   if (params.cursor) {
