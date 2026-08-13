@@ -71,7 +71,8 @@ export class JsonClient<Endpoints extends EndpointDefinitions> {
       if (method === 'GET') {
         if (input) {
           for (const [key, value] of Object.entries(input)) {
-            url.searchParams.set(key, value)
+            // Omit optional params rather than sending the string "undefined"
+            if (value !== undefined) url.searchParams.set(key, value)
           }
         }
       }
