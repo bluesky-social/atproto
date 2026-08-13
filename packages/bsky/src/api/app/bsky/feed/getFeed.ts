@@ -70,16 +70,19 @@ export default function (server: Server, ctx: AppContext) {
           : req.headers['x-bsky-topics'],
       })
       // @NOTE feed cursors should not be affected by appview swap
+      // Do not refill filtered pages. Overfetching from algorithmic feeds can
+      // advance their state and prevent omitted items from appearing later.
+      const result = await getFeed({ ...params, hydrateCtx, headers }, ctx)
       const {
         timerSkele,
         timerHydr,
         resHeaders: feedResHeaders,
-        ...result
-      } = await getFeed({ ...params, hydrateCtx, headers }, ctx)
+        ...body
+      } = result
 
       return {
         encoding: 'application/json',
-        body: result,
+        body,
         headers: {
           ...feedResHeaders,
           ...resHeaders({ labelers: hydrateCtx.labelers }),
@@ -315,8 +318,10 @@ const skeletonFromFeedGen = async (
     ...skele,
     resHeaders: contentLang ? { 'content-language': contentLang } : undefined,
     feedItems,
-    // Prevents loops if the custom feed echoes the input cursor back.
-    cursor: cursor === params.cursor ? undefined : cursor,
+    // An empty feed-generator page ends pagination even if it includes a cursor.
+    // Also prevent loops if the custom feed echoes the input cursor back.
+    cursor:
+      feedSkele.length === 0 || cursor === params.cursor ? undefined : cursor,
   }
 }
 

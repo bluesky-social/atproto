@@ -2,7 +2,6 @@
 
 exports[`pds like views > fetches post likes 1`] = `
 {
-  "cursor": "0000000000000__bafycid",
   "likes": [
     {
       "actor": {
@@ -104,7 +103,6 @@ exports[`pds like views > fetches post likes 1`] = `
 
 exports[`pds like views > fetches reply likes 1`] = `
 {
-  "cursor": "0000000000000__bafycid",
   "likes": [
     {
       "actor": {

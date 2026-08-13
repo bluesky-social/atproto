@@ -15,7 +15,7 @@ import {
   createPipeline,
 } from '../../../../pipeline.js'
 import type { Views } from '../../../../views/index.js'
-import { clearlyBadCursor, resHeaders } from '../../../util.js'
+import { clearlyBadCursor, fillPage, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const listActivitySubscriptions = createPipeline(
@@ -34,10 +34,16 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
       })
 
-      const result = await listActivitySubscriptions(
-        { ...params, hydrateCtx },
-        ctx,
-      )
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          listActivitySubscriptions(
+            { ...params, cursor, limit, hydrateCtx },
+            ctx,
+          ),
+        items: (r) => r.subscriptions,
+      })
 
       return {
         encoding: 'application/json',

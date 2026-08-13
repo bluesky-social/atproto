@@ -21,15 +21,15 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       limit,
     })
 
-    const res = await builder.execute()
+    const page = key.page(await builder.execute(), limit)
     return {
-      drafts: res.map((d): PlainMessage<DraftInfo> => ({
+      drafts: page.items.map((d): PlainMessage<DraftInfo> => ({
         key: d.key,
         payload: Buffer.from(d.payload),
         createdAt: Timestamp.fromDate(new Date(d.createdAt)),
         updatedAt: Timestamp.fromDate(new Date(d.updatedAt)),
       })),
-      cursor: key.packFromResult(res),
+      cursor: page.cursor,
     }
   },
 })

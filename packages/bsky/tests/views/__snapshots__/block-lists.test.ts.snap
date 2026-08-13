@@ -339,7 +339,6 @@ exports[`pds views with blocking from block lists > blocks thread reply 1`] = `
 
 exports[`pds views with blocking from block lists > returns a users own list blocks 1`] = `
 {
-  "cursor": "0000000000000__bafycid",
   "lists": [
     {
       "cid": "cids(0)",
@@ -450,7 +449,6 @@ exports[`pds views with blocking from block lists > returns a users own list blo
 
 exports[`pds views with blocking from block lists > returns lists associated with a user 1`] = `
 {
-  "cursor": "0000000000000__bafycid",
   "lists": [
     {
       "cid": "cids(0)",
@@ -560,7 +558,6 @@ exports[`pds views with blocking from block lists > returns lists associated wit
 
 exports[`pds views with blocking from block lists > returns the contents of a list 1`] = `
 {
-  "cursor": "0000000000000__bafycid",
   "items": [
     {
       "subject": {

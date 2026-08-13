@@ -31,7 +31,7 @@ import {
 } from '../../../../proto/bsky_pb.js'
 import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
 import type { Views } from '../../../../views/index.js'
-import { resHeaders, resolveSearchV2Override } from '../../../util.js'
+import { fillPage, resHeaders, resolveSearchV2Override } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPostsV2 = createPipeline(
@@ -75,17 +75,26 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError('Request forbidden by administrative rules.')
       }
 
-      const results = await searchPostsV2(
-        {
-          ...params,
-          // Default to curated 'top' ranking when unset; the backend rejects an
-          // unspecified sort order.
-          sort: params.sort ?? 'top',
-          hydrateCtx,
-          isModService,
-        },
-        ctx,
-      )
+      const results = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        maxRequests: viewer ? undefined : 1,
+        fetch: ({ cursor, limit }) =>
+          searchPostsV2(
+            {
+              ...params,
+              cursor,
+              limit,
+              // Default to curated 'top' ranking when unset; the backend rejects an
+              // unspecified sort order.
+              sort: params.sort ?? 'top',
+              hydrateCtx,
+              isModService,
+            },
+            ctx,
+          ),
+        items: (r) => r.posts,
+      })
       return {
         encoding: 'application/json',
         body: results,
