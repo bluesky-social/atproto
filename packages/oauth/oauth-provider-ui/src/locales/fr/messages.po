@@ -226,10 +226,6 @@ msgstr "Autorisée"
 msgid "Back"
 msgstr "Retour"
 
-#: src/components/forms/fields/handle-field.tsx
-msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
-msgstr "Entre {minLength, plural, zero {0} one {un} other {#}} et {maxLength, plural, one {un caractère} other {# caractères}}"
-
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
 msgstr "Stockage de fichiers"
@@ -693,10 +689,6 @@ msgstr "Si vous mettez à jour votre adresse email, la 2FA par email (si activé
 msgid "If you're trying to change your handle or email, do so before you deactivate."
 msgstr "Si vous souhaitez changer votre pseudo ou votre adresse email, faites-le avant de désactiver votre compte."
 
-#: src/components/forms/fields/handle-field.tsx
-msgid "Invalid"
-msgstr "Invalide"
-
 #: src/components/utils/handle.tsx
 msgid "Invalid Handle"
 msgstr "Pseudo invalide"
@@ -836,10 +828,6 @@ msgstr "Aucun résultat"
 #: src/components/reset-password-view.tsx
 msgid "Okay"
 msgstr "OK"
-
-#: src/components/forms/fields/handle-field.tsx
-msgid "Only letters, numbers, and hyphens"
-msgstr "Uniquement des lettres, des chiffres et des traits d'union"
 
 #: src/components/delete-account-confirm-form.tsx
 #: src/components/forms/fields/password-field.tsx
@@ -1277,6 +1265,10 @@ msgstr "Téléverser des fichiers"
 msgid "URL"
 msgstr "URL"
 
+#: src/components/forms/fields/handle-field.tsx
+msgid "Use {minLength}–{maxLength, plural, one {# letter, number or hyphen} other {# letters, numbers or hyphens}}"
+msgstr "Utilisez {minLength} à {maxLength, plural, one {# lettre, chiffre ou tiret} other {# lettres, chiffres ou tirets}}"
+
 #: src/components/update-handle-dialog.tsx
 msgid "Use a default username"
 msgstr "Utiliser un nom d'utilisateur par défaut"
@@ -1296,10 +1288,6 @@ msgstr "Nom d'utilisateur ou adresse email"
 #: src/data/handle.ts
 msgid "Username updated"
 msgstr "Nom d'utilisateur modifié"
-
-#: src/components/forms/fields/handle-field.tsx
-msgid "Valid"
-msgstr "Valide"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Value"
@@ -1442,6 +1430,10 @@ msgstr "Votre compte"
 msgid "Your account and all associated data have been deleted."
 msgstr "Votre compte et toutes les données associées ont été supprimés."
 
+#: src/components/update-email-dialog.tsx
+msgid "Your account currently uses <0>{emailCurrent}</0>. Choose a new email address to associate with it."
+msgstr "Votre compte utilise actuellement <0>{emailCurrent}</0>. Choisissez une nouvelle adresse email à y associer."
+
 #: src/authorization-page.tsx
 msgid "Your account has been successfully reactivated."
 msgstr "Votre compte a été réactivé avec succès."
@@ -1482,7 +1474,7 @@ msgstr "Votre adresse email a été vérifiée."
 msgid "Your email address needs to be verified."
 msgstr "Votre adresse email doit être vérifiée."
 
-#. placeholder {0}: full ? ( <Handle className="text-foreground" handle={full} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
+#. placeholder {0}: segment ? ( <span className="text-foreground block break-all font-medium"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
 #: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "Votre nom d'utilisateur complet sera : {0}"
@@ -1506,3 +1498,7 @@ msgstr "Votre session a expiré. Veuillez vous reconnecter."
 #: src/data/handle.ts
 msgid "Your username has been updated."
 msgstr "Votre nom d'utilisateur a été mis à jour."
+
+#: src/components/forms/fields/handle-field.tsx
+msgid "yourname"
+msgstr "votrenom"

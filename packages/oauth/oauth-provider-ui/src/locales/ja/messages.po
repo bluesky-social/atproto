@@ -226,10 +226,6 @@ msgstr "承認日"
 msgid "Back"
 msgstr "戻る"
 
-#: src/components/forms/fields/handle-field.tsx
-msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
-msgstr "{minLength, plural, other {#文字}}以上、{maxLength, plural, other {#文字}}以下"
-
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
 msgstr "Blobストレージ"
@@ -693,10 +689,6 @@ msgstr "メールアドレスを更新すると、メールでの2要素認証(�
 msgid "If you're trying to change your handle or email, do so before you deactivate."
 msgstr "ハンドルやメールアドレスを変えるのであれば、無効化の前に変更してください。"
 
-#: src/components/forms/fields/handle-field.tsx
-msgid "Invalid"
-msgstr "無効"
-
 #: src/components/utils/handle.tsx
 msgid "Invalid Handle"
 msgstr "無効なハンドル"
@@ -836,10 +828,6 @@ msgstr "一致なし"
 #: src/components/reset-password-view.tsx
 msgid "Okay"
 msgstr "OK"
-
-#: src/components/forms/fields/handle-field.tsx
-msgid "Only letters, numbers, and hyphens"
-msgstr "英数字とハイフンのみ"
 
 #: src/components/delete-account-confirm-form.tsx
 #: src/components/forms/fields/password-field.tsx
@@ -1277,6 +1265,10 @@ msgstr "ファイルのアップロード"
 msgid "URL"
 msgstr "URL"
 
+#: src/components/forms/fields/handle-field.tsx
+msgid "Use {minLength}–{maxLength, plural, one {# letter, number or hyphen} other {# letters, numbers or hyphens}}"
+msgstr ""
+
 #: src/components/update-handle-dialog.tsx
 msgid "Use a default username"
 msgstr "デフォルトのユーザー名を使用"
@@ -1296,10 +1288,6 @@ msgstr "ユーザー名またはメールアドレス"
 #: src/data/handle.ts
 msgid "Username updated"
 msgstr "ユーザー名更新"
-
-#: src/components/forms/fields/handle-field.tsx
-msgid "Valid"
-msgstr "有効"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Value"
@@ -1442,6 +1430,10 @@ msgstr "あなたのアカウント"
 msgid "Your account and all associated data have been deleted."
 msgstr "あなたのアカウントと関連するすべてのデータが削除されました。"
 
+#: src/components/update-email-dialog.tsx
+msgid "Your account currently uses <0>{emailCurrent}</0>. Choose a new email address to associate with it."
+msgstr ""
+
 #: src/authorization-page.tsx
 msgid "Your account has been successfully reactivated."
 msgstr "あなたのアカウントは再有効化されました。"
@@ -1482,7 +1474,7 @@ msgstr "メールアドレスが確認されました。"
 msgid "Your email address needs to be verified."
 msgstr "メールアドレスを確認する必要があります。"
 
-#. placeholder {0}: full ? ( <Handle className="text-foreground" handle={full} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
+#. placeholder {0}: segment ? ( <span className="text-foreground block break-all font-medium"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
 #: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "あなたのフルユーザー名： {0}"
@@ -1506,3 +1498,7 @@ msgstr "セッションの有効期限が切れました。もう一度サイン
 #: src/data/handle.ts
 msgid "Your username has been updated."
 msgstr "ユーザー名が更新されました。"
+
+#: src/components/forms/fields/handle-field.tsx
+msgid "yourname"
+msgstr ""

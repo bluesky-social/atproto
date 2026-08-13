@@ -2,4 +2,4 @@
 '@atproto/pds': patch
 ---
 
-Update `file-type` dependency
+Fix `rebuild-repo` script
