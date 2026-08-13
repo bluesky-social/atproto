@@ -88,6 +88,8 @@ describe('list feed views', () => {
     paginatedAll.forEach((res) =>
       expect(res.feed.length).toBeLessThanOrEqual(2),
     )
+    expect(paginatedAll[0].cursor).toBeDefined()
+    expect(paginatedAll.at(-1)?.cursor).toBeUndefined()
 
     const full = await agent.api.app.bsky.feed.getListFeed(
       { list: listRef.uriStr },
@@ -101,6 +103,84 @@ describe('list feed views', () => {
 
     expect(full.data.feed.length).toEqual(7)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+
+    const exact = await network.bsky.ctx.dataplane.getListFeed({
+      listUri: listRef.uriStr,
+      limit: 7,
+    })
+    const nonterminal = await network.bsky.ctx.dataplane.getListFeed({
+      listUri: listRef.uriStr,
+      limit: 2,
+    })
+    expect(exact.items).toHaveLength(7)
+    expect(exact.cursor).toBe('')
+    expect(nonterminal.items).toHaveLength(2)
+    expect(nonterminal.cursor).not.toBe('')
+  })
+
+  it('fills a limited list feed after an entirely filtered page', async () => {
+    const member = await sc.createAccount('list-feed-page-fill-member', {
+      handle: 'list-fill.test',
+      email: 'list-feed-page-fill-member@example.com',
+      password: 'hunter2',
+    })
+    const fillList = await sc.createList(alice, 'page fill list', 'curate')
+    await sc.addToList(alice, member.did, fillList)
+    const older = await sc.post(
+      member.did,
+      'older visible list post',
+      undefined,
+      undefined,
+      undefined,
+      { createdAt: '2030-02-01T00:00:00.000Z' },
+    )
+    const newer = await sc.post(
+      member.did,
+      'newer visible list post',
+      undefined,
+      undefined,
+      undefined,
+      { createdAt: '2030-02-02T00:00:00.000Z' },
+    )
+    const filtered1 = await sc.post(
+      member.did,
+      'filtered list post 1',
+      undefined,
+      undefined,
+      undefined,
+      { createdAt: '2030-02-03T00:00:00.000Z' },
+    )
+    const filtered2 = await sc.post(
+      member.did,
+      'filtered list post 2',
+      undefined,
+      undefined,
+      undefined,
+      { createdAt: '2030-02-04T00:00:00.000Z' },
+    )
+    await network.processAll()
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: filtered1.ref.uriStr,
+    })
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: filtered2.ref.uriStr,
+    })
+
+    const { data } = await agent.api.app.bsky.feed.getListFeed(
+      { list: fillList.uriStr, limit: 2 },
+      {
+        headers: await network.serviceHeaders(
+          carol,
+          ids.AppBskyFeedGetListFeed,
+        ),
+      },
+    )
+
+    expect(data.feed.map((item) => item.post.uri)).toEqual([
+      newer.ref.uriStr,
+      older.ref.uriStr,
+    ])
+    expect(data.cursor).toBeUndefined()
   })
 
   it('fetches results unauthed', async () => {

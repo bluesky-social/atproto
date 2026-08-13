@@ -47,14 +47,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       tryIndex: true,
     })
 
-    const followers = await followersReq.execute()
+    const page = keyset.page(await followersReq.execute(), limit)
     return {
-      followers: followers.map((f) => ({
+      followers: page.items.map((f) => ({
         uri: f.uri,
         actorDid: f.creatorDid,
         subjectDid: f.subjectDid,
       })),
-      cursor: keyset.packFromResult(followers),
+      cursor: page.cursor,
     }
   },
   async getFollows(req) {
@@ -82,15 +82,15 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       tryIndex: true,
     })
 
-    const follows = await followsReq.execute()
+    const page = keyset.page(await followsReq.execute(), limit)
 
     return {
-      follows: follows.map((f) => ({
+      follows: page.items.map((f) => ({
         uri: f.uri,
         actorDid: f.creatorDid,
         subjectDid: f.subjectDid,
       })),
-      cursor: keyset.packFromResult(follows),
+      cursor: page.cursor,
     }
   },
 

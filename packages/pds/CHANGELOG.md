@@ -1,5 +1,18 @@
 # @atproto/pds
 
+## 0.5.27
+
+### Patch Changes
+
+- [#5360](https://github.com/bluesky-social/atproto/pull/5360) [`098cdd7`](https://github.com/bluesky-social/atproto/commit/098cdd7dcf11fc0421278dd768f286ee80399e4f) Thanks [@blackmichael](https://github.com/blackmichael)! - Prevent blob uploads from stalling when MIME detection finishes before the other request-stream consumers.
+
+- [#5359](https://github.com/bluesky-social/atproto/pull/5359) [`aadb103`](https://github.com/bluesky-social/atproto/commit/aadb10349497d7c6b6ce5641dbbb1fd940dd5b12) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Remove timing races from WebSocket, background indexing, firehose, and Ozone materialized-view tests.
+
+- Updated dependencies []:
+  - @atproto/oauth-provider@0.22.1
+  - @atproto/xrpc-server@0.12.3
+  - @atproto-labs/xrpc-utils@0.1.16
+
 ## 0.5.26
 
 ### Patch Changes

@@ -15,7 +15,7 @@ import type {
   UpdateHandleInput,
 } from '@atproto/oauth-provider-api'
 import type { OAuthScope } from '@atproto/oauth-types'
-import type { HandleString } from '@atproto/syntax'
+import type { DatetimeString, HandleString } from '@atproto/syntax'
 import type { ClientId } from '../client/client-id.js'
 import type { DeviceData } from '../device/device-data.js'
 import type { DeviceId } from '../device/device-id.js'
@@ -53,7 +53,13 @@ export type VerifyEmailRequestInput = InitiateEmailVerificationInput
 export type VerifyEmailConfirmInput = ConfirmEmailVerificationInput
 export type UpdateHandleData = UpdateHandleInput
 
-export type DeactivateAccountData = DeactivateAccountInput
+/**
+ * @NOTE `deleteAfter` is part of the store contract but is not (yet) exposed
+ * over the API, hence the extension of {@link DeactivateAccountInput}.
+ */
+export type DeactivateAccountData = DeactivateAccountInput & {
+  deleteAfter?: DatetimeString | undefined
+}
 export type ReactivateAccountData = ReactivateAccountInput
 export type DeleteAccountRequestInput = InitiateAccountDeletionInput
 export type DeleteAccountConfirmInput = ConfirmAccountDeletionInput

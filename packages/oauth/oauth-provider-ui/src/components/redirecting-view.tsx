@@ -13,6 +13,7 @@ import {
 import { buttonVariants } from '#/components/ui/button.tsx'
 import { useCountdown } from '#/hooks/use-countdown.ts'
 import type { Override } from '#/lib/util.ts'
+import { cn } from '#/lib/utils.ts'
 
 export type RedirectingViewProps = Override<
   AuthShellProps,
@@ -79,23 +80,30 @@ export function RedirectingView({
 
   return (
     <AuthShell {...props}>
-      <Trans>You are being redirected...</Trans>
+      <div className="flex w-full flex-col gap-4">
+        <p className="text-center">
+          <Trans>You are being redirected...</Trans>
+        </p>
 
-      {showLink && (
-        <a
-          href={url}
-          onClick={onClick}
-          aria-disabled={!canClick}
-          className={buttonVariants({
-            variant: 'default',
-            className: canClick ? undefined : 'pointer-events-none opacity-50',
-          })}
-        >
-          <span className="truncate">
-            <Trans>Click here if nothing happens</Trans>
-          </span>
-        </a>
-      )}
+        {showLink && (
+          <a
+            href={url}
+            onClick={onClick}
+            aria-disabled={!canClick}
+            className={buttonVariants({
+              variant: 'default',
+              className: cn(
+                'w-full',
+                !canClick && 'pointer-events-none opacity-50',
+              ),
+            })}
+          >
+            <span className="truncate">
+              <Trans>Click here if nothing happens</Trans>
+            </span>
+          </a>
+        )}
+      </div>
     </AuthShell>
   )
 }

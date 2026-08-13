@@ -272,6 +272,8 @@ describe('appview bookmarks views', () => {
       paginatedRes.forEach((res) =>
         expect(res.bookmarks.length).toBeLessThanOrEqual(2),
       )
+      expect(paginatedRes[0].cursor).toBeDefined()
+      expect(paginatedRes.at(-1)?.cursor).toBeUndefined()
 
       const full = results([fullRes.data])
       assertPostViews(full)
@@ -295,6 +297,63 @@ describe('appview bookmarks views', () => {
         uri: sc.posts[alice][0].ref.uriStr,
         cid: sc.posts[alice][0].ref.cidStr,
       })
+    })
+
+    it('only returns a dataplane cursor when another bookmark exists', async () => {
+      for (const post of [
+        sc.posts[alice][0],
+        sc.posts[alice][1],
+        sc.posts[bob][0],
+      ]) {
+        await create(alice, post.ref)
+      }
+      await network.processAll()
+
+      const exact = await network.bsky.ctx.dataplane.getActorBookmarks({
+        actorDid: alice,
+        limit: 3,
+      })
+      const nonterminal = await network.bsky.ctx.dataplane.getActorBookmarks({
+        actorDid: alice,
+        limit: 2,
+      })
+
+      expect(exact.bookmarks).toHaveLength(3)
+      expect(exact.cursor).toBe('')
+      expect(nonterminal.bookmarks).toHaveLength(2)
+      expect(nonterminal.cursor).not.toBe('')
+    })
+
+    it('fills a page after unsupported bookmarked records are filtered', async () => {
+      const older = await sc.post(alice, 'older bookmarked post')
+      const newer = await sc.post(alice, 'newer bookmarked post')
+      const filtered1 = await sc.post(alice, 'filtered bookmarked post 1')
+      const filtered2 = await sc.post(alice, 'filtered bookmarked post 2')
+      for (const post of [older, newer, filtered1, filtered2]) {
+        await create(alice, post.ref)
+      }
+      await network.processAll()
+      for (const [post, unsupported] of [
+        [filtered1, sc.follows[alice][bob]],
+        [filtered2, sc.follows[alice][carol]],
+      ] as const) {
+        await db.db
+          .updateTable('bookmark')
+          .set({
+            subjectUri: unsupported.uriStr,
+            subjectCid: unsupported.cidStr,
+          })
+          .where('subjectUri', '=', post.ref.uriStr)
+          .execute()
+      }
+
+      const { data } = await get(alice, 2)
+
+      expect(data.bookmarks.map((bookmark) => bookmark.subject.uri)).toEqual([
+        newer.ref.uriStr,
+        older.ref.uriStr,
+      ])
+      expect(data.cursor).toBeUndefined()
     })
 
     it('shows posts and blocked posts correctly', async () => {

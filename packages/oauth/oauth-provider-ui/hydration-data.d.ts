@@ -1,6 +1,5 @@
 import type {
   Account,
-  ActiveDeviceSession,
   CustomizationData,
   Session,
 } from '@atproto/oauth-provider-api'
@@ -34,7 +33,7 @@ export type ErrorData = {
 export type HydrationData = {
   'account-page': {
     __customizationData: CustomizationData
-    __deviceSessions: readonly ActiveDeviceSession[]
+    __deviceSessions: readonly Session[]
   }
 
   /**

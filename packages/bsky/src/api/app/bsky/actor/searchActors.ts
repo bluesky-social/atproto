@@ -17,7 +17,7 @@ import {
   createPipeline,
 } from '../../../../pipeline.js'
 import type { Views } from '../../../../views/index.js'
-import { resHeaders, resolveSearchV2Override } from '../../../util.js'
+import { fillPage, resHeaders, resolveSearchV2Override } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const searchActors = createPipeline(
@@ -44,14 +44,22 @@ export default function (server: Server, ctx: AppContext) {
           }),
         ),
       })
-      const results = await searchActors(
-        {
-          ...params,
-          hydrateCtx,
-          isV2Override: resolveSearchV2Override(req, ctx.cfg),
-        },
-        ctx,
-      )
+      const results = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          searchActors(
+            {
+              ...params,
+              cursor,
+              limit,
+              hydrateCtx,
+              isV2Override: resolveSearchV2Override(req, ctx.cfg),
+            },
+            ctx,
+          ),
+        items: (r) => r.actors,
+      })
       return {
         encoding: 'application/json',
         body: results,

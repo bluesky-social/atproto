@@ -26,13 +26,13 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       limit,
     })
 
-    const res = await builder.execute()
+    const page = key.page(await builder.execute(), limit)
     return {
-      bookmarks: res.map((b) => ({
+      bookmarks: page.items.map((b) => ({
         key: b.key,
         subject: b.subjectUri,
       })),
-      cursor: key.packFromResult(res),
+      cursor: page.cursor,
     }
   },
 
