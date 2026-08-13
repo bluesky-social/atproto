@@ -34,7 +34,14 @@ import {
 } from './auth-verifier.js'
 import { BackgroundQueue } from './background.js'
 import { BskyAppView } from './bsky-app-view.js'
-import type { ServerConfig, ServerSecrets } from './config/index.js'
+import {
+  type ServerConfig,
+  type ServerEnvironment,
+  type ServerSecrets,
+  envToCfg,
+  envToSecrets,
+  readEnv,
+} from './config/index.js'
 import { Crawlers } from './crawlers.js'
 import { DidSqliteCache } from './did-cache/index.js'
 import { DiskBlobStore } from './disk-blobstore.js'
@@ -129,6 +136,14 @@ export class AppContext implements AsyncDisposable {
     this.oauthProvider = opts.oauthProvider
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
+  }
+
+  static async fromEnv(
+    env: ServerEnvironment = readEnv(),
+  ): Promise<AppContext> {
+    const cfg = envToCfg(env)
+    const secrets = envToSecrets(env)
+    return AppContext.fromConfig(cfg, secrets)
   }
 
   static async fromConfig(
