@@ -11,7 +11,7 @@ describe('BlobTransactor', () => {
     const size = 25 * 1024 * 1024
     const chunkSize = 16 * 1024
     const file = Buffer.alloc(size)
-    file.set([0xff, 0xd8, 0xff])
+    file.set([0xff, 0xd8, 0xff]) // JPEG magic number
 
     let uploadedSize = 0
     const blobstore = {
@@ -40,15 +40,12 @@ describe('BlobTransactor', () => {
       { objectMode: false },
     )
 
-    const metadata = await transactor.uploadBlobAndGetMetadata(
-      'application/octet-stream',
-      stream,
-    )
+    const metadata = await transactor.uploadBlobAndGetMetadata(stream)
 
-    expect(uploadedSize).toBe(size)
+    expect(uploadedSize).toBe(file.byteLength)
     expect(metadata).toEqual({
       tempKey: 'temp-key',
-      size,
+      size: file.byteLength,
       cid: cidForRawHash(crypto.createHash('sha256').update(file).digest()),
       mimeType: 'image/jpeg',
     })
