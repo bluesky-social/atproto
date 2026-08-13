@@ -76,7 +76,7 @@
     "disposable-email-domains-js": "^1.5.0",
     "express": "^4.17.2",
     "express-async-errors": "^3.1.1",
-    "file-type": "^16.5.4",
+    "file-type": "^22.0.1",
     "handlebars": "^4.7.9",
     "http-terminator": "^3.2.0",
     "ioredis": "^5.3.2",
@@ -89,6 +89,7 @@
     "p-queue": "^8.0.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
+    "strtok3": "^10.3.5",
     "uint8arrays": "^5.0.0",
     "undici": "^8.5.0",
     "zod": "^3.23.8"
