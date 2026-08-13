@@ -15,6 +15,7 @@
   },
   "files": [
     "./dist",
+    "example.env",
     "./README.md",
     "./CHANGELOG.md"
   ],
