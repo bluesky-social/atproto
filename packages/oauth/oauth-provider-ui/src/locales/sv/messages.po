@@ -858,10 +858,6 @@ msgstr "Indikator för lösenordsstyrka"
 msgid "Password Updated"
 msgstr "Lösenordet har uppdaterats"
 
-#: src/components/reset-password-view.tsx
-msgid "Password updated!"
-msgstr "Lösenordet har uppdaterats!"
-
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
 msgstr "Lösenord med minst {MIN_PASSWORD_LENGTH, plural, other {# tecken}}"
@@ -1478,10 +1474,6 @@ msgstr "Din e-postadress behöver verifieras."
 #: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "Ditt fullständiga användarnamn blir: {0}"
-
-#: src/components/reset-password-view.tsx
-msgid "Your password has been updated!"
-msgstr "Ditt lösenord har uppdaterats!"
 
 #: src/components/reactivate-account-dialog.tsx
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
