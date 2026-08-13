@@ -94,16 +94,11 @@ export class BlobTransactor extends BlobReader {
         'blobstore did not fully consume the stream',
       )
 
-      const mimeType = await typeDuplex.result.then(
-        (res) => res?.mime || fallbackMime,
-        (_err) => fallbackMime,
-      )
-
       return {
         tempKey,
         size: sizeDuplex.totalSize,
         cid: cidForRawHash(hashDuplex.digest),
-        mimeType,
+        mimeType: typeDuplex.fileTypeResult?.mime || fallbackMime,
       }
     } finally {
       blobStream.destroy()
@@ -359,7 +354,14 @@ export class BlobTransactor extends BlobReader {
 
 // "file-type" does not provide a duplex implementation so we create one here
 class FileTypePassThrough extends Tee {
-  readonly result: Promise<FileTypeResult | undefined>
+  readonly fileTypePromise: Promise<FileTypeResult | undefined>
+
+  #fileTypeResult?: PromiseSettledResult<FileTypeResult | undefined>
+  get fileTypeResult(): FileTypeResult | undefined {
+    const result = this.#fileTypeResult
+    if (result) return result.status === 'fulfilled' ? result.value : undefined
+    throw new Error('FileTypePassThrough result is not yet available')
+  }
 
   constructor(options?: FileTypeOptions) {
     const branch = new PassThrough()
@@ -370,20 +372,28 @@ class FileTypePassThrough extends Tee {
     // @NOTE file-type does not support NodeJS Readable and recommends wrapping
     // into a web steam. We use strtok3 to convert the NodeJS Readable into a
     // tokenizer, bypassing that limitation.
-    this.result = fromStream(branch)
+    this.fileTypePromise = fromStream(branch)
       .then((tokenizer) => parser.fromTokenizer(tokenizer))
       // file-type won't destroy() the stream. We need to destroy to allow
       // the Tee's main stream to flow freely.
       .finally(() => branch.destroy())
-      // avoid unhandled rejections (might be awaited later)
-      .catch(() => undefined)
+
+    // avoids unhandled rejections (might be awaited later)
+    this.fileTypePromise.then(
+      (value) => {
+        this.#fileTypeResult = { status: 'fulfilled', value }
+      },
+      (reason) => {
+        this.#fileTypeResult = { status: 'rejected', reason }
+      },
+    )
   }
 
   _final(cb: TransformCallback) {
     // propagate the result promise to the final callback, so that the stream is
     // not considered finished until the file type has been determined.
     super._final((err) => {
-      this.result.then(
+      this.fileTypePromise.then(
         () => cb(err),
         () => cb(err),
       )
@@ -394,7 +404,7 @@ class FileTypePassThrough extends Tee {
     // propagate the result promise to the destroy callback, so that the stream
     // is not considered finished until the file type has been determined.
     super._destroy(err, (err) => {
-      this.result.then(
+      this.fileTypePromise.then(
         () => cb(err),
         () => cb(err),
       )
