@@ -77,26 +77,29 @@ Prettier (`pnpm run style`) and ESLint (`pnpm run lint`) enforce what can be enf
 
 We use OpenTelemetry for tracing, metrics and logs.
 
-Each service package (`pds`, `ozone`, `bsky`, etc.) should define its own **optional** telemetry setup (e.g. `src/telemetry.ts`, exposed through the `package.json` `exports` field), loaded ahead of the service entry point: `node --import @atproto/<package>/telemetry <service>.js`. Importing the telemetry module initializes the OTEL SDK and registers instrumentations, but does not start the service itself. [packages/pds/src/telemetry.ts](./packages/pds/src/telemetry.ts) is the reference implementation.
+Each service package (`pds`, `ozone`, `bsky`, etc.) should define its own **optional** telemetry setup (e.g. `src/telemetry.ts`, exposed through the `package.json` `exports` field), loaded ahead of the service entry point: `node --import @atproto/<package>/telemetry <service>.js`. Importing the telemetry module initializes the OTEL SDK and registers instrumentations, but does not start the service itself. The generic SDK bootstrap is factored into [`@atproto/opentelemetry-node`](./packages/opentelemetry-node): a service's telemetry module calls its `setup()` helper and supplies only the service-specific parts (its name/version and instrumentation list). [packages/pds/src/telemetry.ts](./packages/pds/src/telemetry.ts) is the reference implementation.
 
-Each telemetry setup should:
+[`@atproto/opentelemetry-node`](./packages/opentelemetry-node)'s `setup()` handles the concerns shared by every service:
 
-- Be based on `@opentelemetry/sdk-node`'s `NodeSDK`: so that it is fully (and automatically) configurable through the standard `OTEL_*` environment variables:
+- Builds on `@opentelemetry/sdk-node`'s `NodeSDK`, so the setup is fully (and automatically) configurable through the standard `OTEL_*` environment variables:
   - [https://opentelemetry.io/docs/languages/sdk-configuration/general/](https://opentelemetry.io/docs/languages/sdk-configuration/general/)
   - [https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/)
-- **Be opt-in through exporter endpoints**, not a bespoke flag. Configuring an OTLP endpoint is what enables the SDK:
+- Is **opt-in through exporter endpoints**, not a bespoke flag. Configuring an OTLP endpoint is what enables the SDK:
   - `OTEL_EXPORTER_OTLP_ENDPOINT` set alone enables traces, metrics and logs.
   - `OTEL_EXPORTER_OTLP_<SIGNAL>_ENDPOINT` overrides the endpoint for one signal; set without the generic endpoint, it enables only that signal.
   - `OTEL_<SIGNAL>_EXPORTER=none` disables a signal, even when other exporter names or a signal endpoint are also configured.
   - `OTEL_SDK_DISABLED` remains a kill switch, per spec.
-  - A signal the operator did not opt into must export **nothing** — don't let `NodeSDK` fall back to its default OTLP pipeline on `http://localhost:4318`.
-- Use `@opentelemetry/auto-instrumentations-node`'s `getResourceDetectors` for resource detection (honours `OTEL_NODE_RESOURCE_DETECTORS` and `OTEL_RESOURCE_ATTRIBUTES`, and includes the `container` detector).
-- **Register only the instrumentations of packages the service actually uses** (e.g. `opentelemetry-plugin-better-sqlite3` for services on `better-sqlite3`) rather than `getNodeAutoInstrumentations()`. Whenever adding a dependency, add the corresponding instrumentation if one exists.
-- **Keep span names and `http.route` low-cardinality.** XRPC request spans (incoming and outgoing) are named after the normalized method NSID (`POST /xrpc/com.atproto.server.createSession`), never the raw URL, and carry an `xrpc.method` attribute.
-- **Decide deliberately how logs reach OTEL**, based on whether the observability stack can ingest the service's full log volume. Either way, keep log correlation (`trace_id`/`span_id` injected into pino records).
+  - A signal the operator did not opt into exports **nothing** — it does not let `NodeSDK` fall back to its default OTLP pipeline on `http://localhost:4318`.
+- Uses `@opentelemetry/auto-instrumentations-node`'s `getResourceDetectors` for resource detection (honours `OTEL_NODE_RESOURCE_DETECTORS` and `OTEL_RESOURCE_ATTRIBUTES`, and includes the `container` detector), and sets default resource attributes (service name, version, `atproto` namespace, and deployment environment) that the service may extend or override through the `defaultResourceAttributes` option.
+- Shuts down gracefully: listens for the process `beforeExit` event and calls `sdk.shutdown()` to flush pending telemetry. This works because services exit by emptying the event loop (below).
+
+Each service's telemetry module supplies what is specific to it — its name and version, and a `getInstrumentations()` returning:
+
+- **Only the instrumentations of packages the service actually uses** (e.g. `opentelemetry-plugin-better-sqlite3` for services on `better-sqlite3`) rather than `getNodeAutoInstrumentations()`. Whenever adding a dependency, add the corresponding instrumentation if one exists.
+- **Low-cardinality span names and `http.route`.** XRPC request spans (incoming and outgoing) are named after the normalized method NSID (`POST /xrpc/com.atproto.server.createSession`), never the raw URL, and carry an `xrpc.method` attribute. The `extractNormalizedLxm` helper exported from `@atproto/opentelemetry-node/util` derives that NSID from a request path.
+- **A deliberate choice of how logs reach OTEL**, based on whether the observability stack can ingest the service's full log volume. Either way, keep log correlation (`trace_id`/`span_id` injected into pino records).
   - **Forward the log stream**: leave the pino instrumentation's log sending enabled, so every pino record is shipped as an OTEL log record. `events.ts` (below) then reaches the OTEL stack through the pino logger alone.
   - **Selective emission**: disable log sending, so only records emitted deliberately through the OTEL Logs API — from `events.ts` — reach the OTEL stack.
-- Shut down gracefully: listen for the process `beforeExit` event and call `sdk.shutdown()` to flush pending telemetry. This works because services exit by emptying the event loop (below).
 
 The service itself should:
 
