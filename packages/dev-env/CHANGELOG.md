@@ -1,5 +1,21 @@
 # @atproto/dev-env
 
+## 0.6.1
+
+### Patch Changes
+
+- [#5379](https://github.com/bluesky-social/atproto/pull/5379) [`6dac4dd`](https://github.com/bluesky-social/atproto/commit/6dac4dd01fa766c069b0eeab9dc55d3ae6297075) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Expose canonical OP thread numbering on feed items.
+
+- Updated dependencies [[`c26b463`](https://github.com/bluesky-social/atproto/commit/c26b463a36124deb14b8d56ad1810eeddaa129cc), [`54edd67`](https://github.com/bluesky-social/atproto/commit/54edd671ebf3fd66ea88822fdb58c2a96e6140e5), [`b31485e`](https://github.com/bluesky-social/atproto/commit/b31485ec5012f543fd60304df9a1684fac4e3dea), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`05305a7`](https://github.com/bluesky-social/atproto/commit/05305a7a18fc830262a23850dd659e8e98db0149), [`68aaad8`](https://github.com/bluesky-social/atproto/commit/68aaad8ce22b3e58e768980ccb5e3556a6d71b23), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`c7f39c5`](https://github.com/bluesky-social/atproto/commit/c7f39c527758ffd5b21b896fac494ecf7e69aa37), [`7f87e4a`](https://github.com/bluesky-social/atproto/commit/7f87e4a761ec6f3e0c25da25d0bc44b198b4bf80), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`6dac4dd`](https://github.com/bluesky-social/atproto/commit/6dac4dd01fa766c069b0eeab9dc55d3ae6297075), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa)]:
+  - @atproto/api@0.20.40
+  - @atproto/bsky@0.0.274
+  - @atproto/pds@0.5.28
+  - @atproto/bsync@0.0.41
+  - @atproto/ozone@0.2.28
+  - @atproto/sync@0.4.4
+  - @atproto/xrpc-server@0.12.4
+  - @atproto/lex@0.3.6
+
 ## 0.6.0
 
 ### Minor Changes

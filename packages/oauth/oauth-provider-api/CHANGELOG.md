@@ -1,5 +1,14 @@
 # @atproto/oauth-provider-api
 
+## 0.8.0
+
+### Minor Changes
+
+- [#5387](https://github.com/bluesky-social/atproto/pull/5387) [`4e18a00`](https://github.com/bluesky-social/atproto/commit/4e18a00b2de97e36b9b00a7fcb8713efd87964d1) Thanks [@bigmoves](https://github.com/bigmoves)! - Remove the `ISODateString` and `ActiveDeviceSession` types, which duplicated
+  `ISODatetimeString` from `@atproto/syntax` and `Session` respectively. Remove
+  the `deleteAfter` property from `DeactivateAccountInput`, which the
+  `/deactivate-account` endpoint never accepted.
+
 ## 0.7.9
 
 ### Patch Changes
