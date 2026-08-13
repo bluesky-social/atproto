@@ -18,6 +18,7 @@ export default defineConfig({
       'packages/lex/*',
       'packages/lexicon-resolver',
       'packages/oauth/*',
+      'packages/opentelemetry-node',
       'packages/syntax',
       'packages/tap',
       'packages/ws-client',
