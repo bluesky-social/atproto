@@ -73,6 +73,151 @@ Prettier (`pnpm run style`) and ESLint (`pnpm run lint`) enforce what can be enf
 
 - Never instantiate a logger inline. Each package declares its loggers as exported constants in its own `src/logger.ts`, built with `subsystemLogger('<package>:<subsystem>')`, and imports them where needed.
 
+## Telemetry
+
+We use OpenTelemetry for tracing, metrics and logs.
+
+Each service package (`pds`, `ozone`, `bsky`, etc.) should define its own **optional** telemetry setup (e.g. `src/telemetry.ts`, exposed through the `package.json` `exports` field), loaded ahead of the service entry point: `node --import @atproto/<package>/telemetry <service>.js`. Importing the telemetry module initializes the OTEL SDK and registers instrumentations, but does not start the service itself. [packages/pds/src/telemetry.ts](./packages/pds/src/telemetry.ts) is the reference implementation.
+
+Each telemetry setup should:
+
+- Be based on `@opentelemetry/sdk-node`'s `NodeSDK`: so that it is fully (and automatically) configurable through the standard `OTEL_*` environment variables:
+  - [https://opentelemetry.io/docs/languages/sdk-configuration/general/](https://opentelemetry.io/docs/languages/sdk-configuration/general/)
+  - [https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/](https://opentelemetry.io/docs/languages/sdk-configuration/otlp-exporter/)
+- **Be opt-in through exporter endpoints**, not a bespoke flag. Configuring an OTLP endpoint is what enables the SDK:
+  - `OTEL_EXPORTER_OTLP_ENDPOINT` set alone enables traces, metrics and logs.
+  - `OTEL_EXPORTER_OTLP_<SIGNAL>_ENDPOINT` overrides the endpoint for one signal; set without the generic endpoint, it enables only that signal.
+  - `OTEL_<SIGNAL>_EXPORTER=none` disables a signal, even when other exporter names or a signal endpoint are also configured.
+  - `OTEL_SDK_DISABLED` remains a kill switch, per spec.
+  - A signal the operator did not opt into must export **nothing** — don't let `NodeSDK` fall back to its default OTLP pipeline on `http://localhost:4318`.
+- Use `@opentelemetry/auto-instrumentations-node`'s `getResourceDetectors` for resource detection (honours `OTEL_NODE_RESOURCE_DETECTORS` and `OTEL_RESOURCE_ATTRIBUTES`, and includes the `container` detector).
+- **Register only the instrumentations of packages the service actually uses** (e.g. `opentelemetry-plugin-better-sqlite3` for services on `better-sqlite3`) rather than `getNodeAutoInstrumentations()`. Whenever adding a dependency, add the corresponding instrumentation if one exists.
+- **Keep span names and `http.route` low-cardinality.** XRPC request spans (incoming and outgoing) are named after the normalized method NSID (`POST /xrpc/com.atproto.server.createSession`), never the raw URL, and carry an `xrpc.method` attribute.
+- **Decide deliberately how logs reach OTEL**, based on whether the observability stack can ingest the service's full log volume. Either way, keep log correlation (`trace_id`/`span_id` injected into pino records).
+  - **Forward the log stream**: leave the pino instrumentation's log sending enabled, so every pino record is shipped as an OTEL log record. `events.ts` (below) then reaches the OTEL stack through the pino logger alone.
+  - **Selective emission**: disable log sending, so only records emitted deliberately through the OTEL Logs API — from `events.ts` — reach the OTEL stack.
+- Shut down gracefully: listen for the process `beforeExit` event and call `sdk.shutdown()` to flush pending telemetry. This works because services exit by emptying the event loop (below).
+
+The service itself should:
+
+- Not run its own metrics endpoint (e.g. a hand-rolled Prometheus server); metrics leave the process only through the SDK's env-configured exporters.
+- **Never read the `OTEL_*` environment variables.** Telemetry configuration belongs entirely to the telemetry script; service code interacts with the telemetry stack only through the `@opentelemetry/api*` packages, primarily via its `events.ts` module.
+- Not use `process.exit()` to terminate the process. Instead, release all resources so the event loop empties and the process exits naturally (`process.exitCode` can be set to indicate the exit code). Killing the process would drop unflushed telemetry.
+- Define an `events.ts` module as the single place where business events are reported, using Meters (`@opentelemetry/api`) and — when the telemetry setup uses selective emission — Logs (`@opentelemetry/api-logs`):
+  - One helper per event, so each event has exactly one call-site shape and the counter, log record and attribute definitions live together instead of drifting across handlers.
+  - The meter (and logger, if any) are named after the package (`metrics.getMeter('@atproto/pds')`).
+  - Counters carry **low-cardinality attributes only**; high-cardinality detail (`did`, `clientId`, …) goes into the log record.
+  - Each event is always written to the package's pino logger, so events reach stdout even when OTEL export is disabled. When the log stream is forwarded, that record is also what reaches the OTEL stack; under selective emission, the helper additionally emits the record through the OTEL Logs API.
+  - Helpers never throw. When no exporter is configured the OTEL calls are no-ops, so emitting events is always safe and essentially free — and log records emitted within an active span are trace-correlated automatically.
+
+Here is an example of service entry point:
+
+```ts
+// src/main.ts
+import { once } from 'node:events'
+
+/**
+ * @note This function frees all its resources and allows the process to exit naturally. It should not call `process.exit()`.
+ */
+export async function main(signal: AbortSignal, config?: ServiceConfig) {
+  // setup service and start server
+  await using server = await startServer(config)
+
+  // Let the server run until the signal is aborted (e.g. SIGINT or SIGTERM)
+  if (!signal.aborted) await once(signal, 'abort')
+
+  // The server's [Symbol.asyncDispose]() method will be called automatically by the `await using` statement, which will clean up resources and allow the process to exit naturally.
+}
+
+// service.ts
+import { main } from './main.js'
+
+// Control the service lifecycle with an AbortController, based on SIGINT and SIGTERM signals (or any other signals you want to handle).
+const ac = new AbortController()
+for (const sig of ['SIGINT', 'SIGTERM'] as const) {
+  const abort = (reason: unknown) => ac.abort(reason)
+  process.on(sig, abort)
+  ac.signal.addEventListener('abort', () => process.off(sig, abort))
+}
+
+// Whenever we get an exit signal, we want to give the service a chance to clean up and exit gracefully. If it doesn't exit within 10 seconds, we force exit with an error code.
+ac.signal.addEventListener('abort', () => {
+  setTimeout(() => {
+    console.error('Process failed to exit gracefully, forcing exit')
+    process.exit(process.exitCode || 1)
+  }, 10_000).unref()
+})
+
+main(ac.signal, {
+  // Optional: provide a way to trigger service exit from within the service itself (e.g. for health checks or other internal conditions).
+  triggerExit: () => ac.abort(new Error('Service exit requested')),
+}).catch((err) => {
+  ac.abort(err)
+  console.error('Error running service:', err)
+  process.exitCode = 1
+})
+```
+
+Here is an example `events.ts` module that exposes utilities to trigger Meters and Logs:
+
+```ts
+// src/events.ts
+import { type Meter, ValueType, metrics } from '@opentelemetry/api'
+import { type Logger, SeverityNumber, logs } from '@opentelemetry/api-logs'
+import { eventsLogger } from './logger.js'
+
+const meter: Meter = metrics.getMeter('@atproto/my-service')
+
+// Only needed under selective emission; with a forwarded log stream the pino
+// record below already reaches the OTEL stack.
+const logger: Logger = logs.getLogger('@atproto/my-service')
+
+const userCreatedCounter = meter.createCounter<{
+  // Use low cardinality attributes for metrics!
+  plan: 'free' | 'premium'
+}>('user.created', {
+  description: 'Number of users created on this service',
+  valueType: ValueType.INT,
+})
+
+export function userCreated(user: UserInfo) {
+  // Counter: low-cardinality attributes only
+  userCreatedCounter.add(1, { plan: user.plan })
+
+  // OTEL log record (selective emission only): full detail, trace-correlated
+  // when inside a span
+  logger.emit({
+    eventName: 'user.created',
+    severityNumber: SeverityNumber.INFO,
+    attributes: { userId: user.id, userPlan: user.plan },
+  })
+
+  // pino: same event on stdout, even when OTEL export is disabled
+  eventsLogger.info({
+    eventName: 'user.created',
+    userId: user.id,
+    userPlan: user.plan,
+  })
+}
+```
+
+Here is how to use the `events.ts` module in your service code:
+
+```ts
+import * as events from './events.js'
+
+export class UserService {
+  async createUser(userInfo: UserInfo) {
+    const user = await this.db.createUser(userInfo)
+
+    // Emit telemetry event!
+    events.userCreated(user)
+
+    return user
+  }
+}
+```
+
 ## Resource disposal
 
 - A class owning a resource (server, subscription, DB handle) implements `async [Symbol.asyncDispose]()`, typically delegating to its existing `destroy()` / `close()`. Consumers then use `await using` instead of `try` / `finally`.
