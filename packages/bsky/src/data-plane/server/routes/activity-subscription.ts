@@ -74,11 +74,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor,
       limit,
     })
-    const res = await builder.execute()
-    const dids = res.map(({ subjectDid }) => subjectDid)
+    const page = key.page(await builder.execute(), limit)
+    const dids = page.items.map(({ subjectDid }) => subjectDid)
     return {
       dids,
-      cursor: key.packFromResult(res),
+      cursor: page.cursor,
     }
   },
 })

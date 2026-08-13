@@ -1,5 +1,21 @@
 # @atproto/bsky
 
+## 0.0.273
+
+### Patch Changes
+
+- [#5356](https://github.com/bluesky-social/atproto/pull/5356) [`aa72025`](https://github.com/bluesky-social/atproto/commit/aa720259cd62362f5ea0a6a8314a42cdc24e6681) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Refill follower pages after filtering blocked, taken-down, or deactivated accounts.
+
+- [#5359](https://github.com/bluesky-social/atproto/pull/5359) [`aadb103`](https://github.com/bluesky-social/atproto/commit/aadb10349497d7c6b6ce5641dbbb1fd940dd5b12) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Remove timing races from WebSocket, background indexing, firehose, and Ozone materialized-view tests.
+
+- [#5351](https://github.com/bluesky-social/atproto/pull/5351) [`063dba4`](https://github.com/bluesky-social/atproto/commit/063dba438f8edab8ccf9650559ba0839f20ca639) Thanks [@amckinley](https://github.com/amckinley)! - Disable blob proxy retries for HTTP 429 responses while retaining the configured retry count for other transient failures.
+
+- Updated dependencies [[`b2de0ee`](https://github.com/bluesky-social/atproto/commit/b2de0ee1ccb70fac69be90037751ea30daa37e3f), [`aadb103`](https://github.com/bluesky-social/atproto/commit/aadb10349497d7c6b6ce5641dbbb1fd940dd5b12)]:
+  - @atproto/api@0.20.39
+  - @atproto/sync@0.4.3
+  - @atproto/xrpc-server@0.12.3
+  - @atproto-labs/xrpc-utils@0.1.16
+
 ## 0.0.272
 
 ### Patch Changes

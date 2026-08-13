@@ -349,8 +349,8 @@ async function mimeTypeFromStream(
     const fileType = await fileTypeFromStream(blobStream)
     return fileType?.mime
   } finally {
-    // @NOTE Should not be needed
-    blobStream.destroy()
+    // @NOTE Draining avoids a Node pipe cleanup bug that can pause other clones.
+    blobStream.resume()
   }
 }
 

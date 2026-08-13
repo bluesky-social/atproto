@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.20.39
+
+### Patch Changes
+
+- [#5373](https://github.com/bluesky-social/atproto/pull/5373) [`b2de0ee`](https://github.com/bluesky-social/atproto/commit/b2de0ee1ccb70fac69be90037751ea30daa37e3f) Thanks [@blackmichael](https://github.com/blackmichael)! - Increase video embed size limits from 100MB to 300MB
+
 ## 0.20.38
 
 ### Patch Changes

@@ -50,16 +50,16 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       keyset,
     })
 
-    const mutes = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
 
     return {
-      dids: mutes.map((m) => m.did),
-      mutes: mutes.map((m) => ({
+      dids: page.items.map((m) => m.did),
+      mutes: page.items.map((m) => ({
         did: m.did,
         onlyReposts: m.onlyReposts,
         onlyQuoteposts: m.onlyQuoteposts,
       })),
-      cursor: keyset.packFromResult(mutes),
+      cursor: page.cursor,
     }
   },
 
@@ -114,11 +114,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor,
       keyset,
     })
-    const lists = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
 
     return {
-      listUris: lists.map((l) => l.uri),
-      cursor: keyset.packFromResult(lists),
+      listUris: page.items.map((l) => l.uri),
+      cursor: page.cursor,
     }
   },
 

@@ -774,7 +774,7 @@ describe('pds views with blocking', () => {
   })
 
   it('returns a list of blocks', async () => {
-    await pdsAgent.api.app.bsky.graph.block.create(
+    const danBlockAlice = await pdsAgent.api.app.bsky.graph.block.create(
       { repo: dan },
       { createdAt: new Date().toISOString(), subject: alice },
       sc.getHeaders(dan),
@@ -788,6 +788,37 @@ describe('pds views with blocking', () => {
     )
     const dids = res.data.blocks.map((block) => block.did).sort()
     expect(dids).toEqual([alice, carol].sort())
+
+    const exact = await network.bsky.ctx.dataplane.getBlocks({
+      actorDid: dan,
+      limit: 2,
+    })
+    const nonterminal = await network.bsky.ctx.dataplane.getBlocks({
+      actorDid: dan,
+      limit: 1,
+    })
+    expect(exact.blockUris).toHaveLength(2)
+    expect(exact.cursor).toBe('')
+    expect(nonterminal.blockUris).toHaveLength(1)
+    expect(nonterminal.cursor).not.toBe('')
+
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: danBlockAlice.uri,
+    })
+    try {
+      const filtered = await agent.api.app.bsky.graph.getBlocks(
+        { limit: 1 },
+        {
+          headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetBlocks),
+        },
+      )
+      expect(filtered.data.blocks.map((block) => block.did)).toEqual([carol])
+      expect(filtered.data.cursor).toBeUndefined()
+    } finally {
+      await network.bsky.ctx.dataplane.untakedownRecord({
+        recordUri: danBlockAlice.uri,
+      })
+    }
   })
 
   it('paginates getBlocks', async () => {
@@ -804,6 +835,9 @@ describe('pds views with blocking', () => {
       { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetBlocks) },
     )
     const combined = [...first.data.blocks, ...second.data.blocks]
+    expect(first.data.blocks).toHaveLength(1)
+    expect(first.data.cursor).toBeDefined()
+    expect(second.data.cursor).toBeUndefined()
     expect(combined).toEqual(full.data.blocks)
   })
 

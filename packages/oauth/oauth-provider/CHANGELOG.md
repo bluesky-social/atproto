@@ -1,5 +1,12 @@
 # @atproto/oauth-provider
 
+## 0.22.1
+
+### Patch Changes
+
+- Updated dependencies [[`b4d71fc`](https://github.com/bluesky-social/atproto/commit/b4d71fc24f1c907daa67460251f2a8dc904359f9)]:
+  - @atproto/oauth-provider-ui@0.9.1
+
 ## 0.22.0
 
 ### Minor Changes

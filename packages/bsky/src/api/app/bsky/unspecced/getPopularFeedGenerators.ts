@@ -7,6 +7,7 @@ import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   clearlyBadCursor,
+  fillPage,
   resHeaders,
   resolveSearchV2Override,
 } from '../../../util.js'
@@ -39,57 +40,62 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      let uris: AtUriString[]
-      let cursor: string | undefined
-
       const isV2Override = resolveSearchV2Override(req, ctx.cfg)
 
       const query = params.query?.trim() ?? ''
-      if (query) {
-        const useV2 =
-          features.checkGate(features.Gate.SearchV2Enable) || isV2Override
-        // Surface dataplane InvalidArgument errors as a 400 rather than a 500.
-        if (useV2) {
-          const res = await ctx.dataplane
-            .searchFeedGeneratorsV2({
-              params: {
-                query,
-                viewer: viewer ?? undefined,
-                limit: params.limit,
-              },
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: async ({ cursor, limit }) => {
+          let uris: AtUriString[]
+          let nextCursor: string | undefined
+          if (query) {
+            const useV2 =
+              features.checkGate(features.Gate.SearchV2Enable) || isV2Override
+            // Surface dataplane InvalidArgument errors as a 400 rather than a 500.
+            if (useV2) {
+              const res = await ctx.dataplane
+                .searchFeedGeneratorsV2({
+                  params: {
+                    query,
+                    viewer: viewer ?? undefined,
+                    cursor,
+                    limit,
+                  },
+                })
+                .catch(asInvalidRequest())
+              uris = res.feedGenerators.map(({ uri }) => uri) as AtUriString[]
+              nextCursor = parseString(res.pageInfo?.cursor)
+            } else {
+              const res = await ctx.dataplane
+                .searchFeedGenerators({ query, limit })
+                .catch(asInvalidRequest())
+              uris = res.uris as AtUriString[]
+            }
+          } else {
+            const res = await ctx.dataplane.getSuggestedFeeds({
+              actorDid: viewer ?? undefined,
+              cursor,
+              limit,
             })
-            .catch(asInvalidRequest())
-          uris = res.feedGenerators.map(({ uri }) => uri) as AtUriString[]
-        } else {
-          const res = await ctx.dataplane
-            .searchFeedGenerators({
-              query,
-              limit: params.limit,
-            })
-            .catch(asInvalidRequest())
-          uris = res.uris as AtUriString[]
-        }
-      } else {
-        const res = await ctx.dataplane.getSuggestedFeeds({
-          actorDid: viewer ?? undefined,
-          limit: params.limit,
-          cursor: params.cursor,
-        })
-        uris = res.uris as AtUriString[]
-        cursor = parseString(res.cursor)
-      }
+            uris = res.uris as AtUriString[]
+            nextCursor = parseString(res.cursor)
+          }
 
-      const hydration = await ctx.hydrator.hydrateFeedGens(uris, hydrateCtx)
-      const feedViews = mapDefined(uris, (uri) =>
-        ctx.views.feedGenerator(uri, hydration),
-      )
+          const hydration = await ctx.hydrator.hydrateFeedGens(uris, hydrateCtx)
+          return {
+            feeds: mapDefined(uris, (uri) =>
+              ctx.views.feedGenerator(uri, hydration),
+            ),
+            cursor: nextCursor,
+          }
+        },
+        items: (r) => r.feeds,
+      })
 
       return {
         encoding: 'application/json',
-        body: {
-          feeds: feedViews,
-          cursor,
-        },
+        body: result,
         headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
