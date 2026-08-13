@@ -4,12 +4,12 @@ import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite
 import { setup } from '@atproto/opentelemetry-node'
 import pkg from '@atproto/pds/package.json' with { type: 'json' }
 
-setup({
+setup(() => ({
   name: pkg.name,
   version: pkg.version,
-  getInstrumentations: () => [
+  instrumentations: [
     new AwsInstrumentation(),
     new IORedisInstrumentation(),
     new BetterSqlite3Instrumentation(),
   ],
-})
+}))

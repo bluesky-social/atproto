@@ -28,7 +28,7 @@ export type SetupOptions = {
    * precedence, so these remain defaults.
    */
   defaultResourceAttributes?: Attributes
-  getInstrumentations: () => Instrumentation[]
+  instrumentations?: Instrumentation[]
 }
 
 // @NOTE Hand-rolled equivalent of "@opentelemetry/auto-instrumentations-node"'s
@@ -45,7 +45,7 @@ export type SetupOptions = {
  * flag: configuring an OTLP endpoint is what enables the SDK.
  * `OTEL_SDK_DISABLED` remains a kill switch, per spec.
  */
-export function setup(options: SetupOptions): void {
+export function setup(getOptions: () => SetupOptions): void {
   const otelDisabled = getBooleanFromEnv('OTEL_SDK_DISABLED')
   const tracesConfigured = isSignalConfigured('TRACES')
   const metricsConfigured = isSignalConfigured('METRICS')
@@ -56,6 +56,8 @@ export function setup(options: SetupOptions): void {
   if (!otelEnabled) return
 
   try {
+    const options = getOptions()
+
     register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
 
     const sdk = new NodeSDK({
@@ -79,7 +81,7 @@ export function setup(options: SetupOptions): void {
       resourceDetectors: getResourceDetectors(),
       instrumentations: [
         ...getDefaultAtprotoInstrumentations(),
-        ...options.getInstrumentations(),
+        ...(options.instrumentations ?? []),
       ],
 
       // @NOTE The gate above enables the SDK as soon as *any* signal is
