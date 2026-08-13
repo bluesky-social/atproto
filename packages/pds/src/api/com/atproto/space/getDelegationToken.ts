@@ -1,6 +1,6 @@
 import { createSpaceToken, spaceHostAud } from '@atproto/space'
 import type { Server } from '@atproto/xrpc-server'
-import { ACCESS_PRIVILEGED } from '../../../../auth-scope.js'
+import { ACCESS_FULL } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { assertSpaceScope, toSpaceRef } from './util.js'
@@ -8,7 +8,7 @@ import { assertSpaceScope, toSpaceRef } from './util.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getDelegationToken, {
     auth: ctx.authVerifier.authorization({
-      scopes: ACCESS_PRIVILEGED,
+      scopes: ACCESS_FULL,
       checkTakedown: true,
       checkDeactivated: true,
       authorize: () => {

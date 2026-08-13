@@ -22,6 +22,7 @@ export const SPACE_TOKEN_TYPES = {
     expiresInSec: 60,
     requireAud: true,
     requireCnf: false,
+    singleUse: true,
   },
   // An authority that publishes a dedicated `#atproto_space` key signs with it
   // and passes that `kid`. Absent one, the space signing key is the account's
@@ -32,6 +33,7 @@ export const SPACE_TOKEN_TYPES = {
     expiresInSec: 7200,
     requireAud: false,
     requireCnf: true,
+    singleUse: false,
   },
   clientAttestation: {
     typ: 'atproto-client-attestation+jwt',
@@ -39,6 +41,7 @@ export const SPACE_TOKEN_TYPES = {
     expiresInSec: 60,
     requireAud: true,
     requireCnf: false,
+    singleUse: true,
   },
 } as const
 
@@ -150,6 +153,12 @@ export const parseSpaceToken = (
   }
   if (spec.requireCnf && !payload.cnf?.jkt) {
     throw new SpaceTokenError('missing token "cnf.jkt"', 'BadJwtCnf')
+  }
+  if (spec.singleUse && (typeof payload.jti !== 'string' || !payload.jti)) {
+    throw new SpaceTokenError(
+      `a ${type} token requires a "jti" to be consumed by`,
+      'BadJwt',
+    )
   }
   if (type === 'clientAttestation' && payload.iss !== payload.sub) {
     throw new SpaceTokenError(

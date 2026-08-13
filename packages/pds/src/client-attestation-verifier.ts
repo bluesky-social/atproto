@@ -2,6 +2,7 @@ import type { Redis } from 'ioredis'
 import { createLocalJWKSet, jwtVerify } from 'jose'
 import { HOUR } from '@atproto/common'
 import { jwksPubSchema } from '@atproto/jwk'
+import type { ReplayManager } from '@atproto/oauth-provider/verifier'
 import {
   type OAuthClientMetadata,
   oauthClientMetadataSchema,
@@ -31,7 +32,11 @@ export class ClientAttestationVerifier {
   private readonly metadata: CachedGetter<string, OAuthClientMetadata>
   private readonly jwks: CachedGetter<string, Jwks>
 
-  constructor(safeFetch: Fetch, redis?: Redis) {
+  constructor(
+    safeFetch: Fetch,
+    private readonly replayManager: ReplayManager,
+    redis?: Redis,
+  ) {
     const fetch = bindFetch(safeFetch)
 
     this.metadata = new CachedGetter<string, OAuthClientMetadata>(
@@ -83,6 +88,20 @@ export class ClientAttestationVerifier {
       typ: SPACE_TOKEN_TYPES.clientAttestation.typ,
       requiredClaims: ['jti', 'exp'],
     }).catch(invalid(`Invalid client attestation for "${clientId}"`))
+
+    // Verify the signature before consuming the jti.
+    const unique = await this.replayManager.uniqueSpaceToken(
+      'attestation',
+      clientId,
+      payload.jti,
+      payload.exp,
+    )
+    if (!unique) {
+      throw new InvalidRequestError(
+        `Client attestation for "${clientId}" has already been used`,
+        'InvalidClientAttestation',
+      )
+    }
 
     return clientId
   }

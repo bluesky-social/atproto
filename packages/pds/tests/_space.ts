@@ -13,6 +13,7 @@ import {
 import { Client, type DidString } from '@atproto/lex'
 import { type LexMap, parseCid } from '@atproto/lex-data'
 import { JoseKey } from '@atproto/oauth-provider/provider'
+import { ReplayManager } from '@atproto/oauth-provider/verifier'
 import { RepoCommit, createDpopProof, dpopJktForKey } from '@atproto/space'
 import {
   type NsidString,
@@ -633,8 +634,18 @@ export class MockClientApp {
     // dev-env exports AppContext from its built dist/, while we construct the
     // verifier from src/ — two identical shapes with separate declarations. Cast
     // at that boundary only; the behaviour under test is the real thing.
-    const replacement = new ClientAttestationVerifier(((input: Request) =>
-      globalThis.fetch(input)) as never) as unknown as typeof original
+    const seen = new Set<string>()
+    const replacement = new ClientAttestationVerifier(
+      ((input: Request) => globalThis.fetch(input)) as never,
+      new ReplayManager({
+        unique: (namespace, nonce) => {
+          const key = `${namespace}:${nonce}`
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        },
+      }),
+    ) as unknown as typeof original
     pds.ctx.clientAttestationVerifier = replacement
     return {
       [Symbol.dispose]: () => {

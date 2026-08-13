@@ -481,6 +481,20 @@ export class AuthVerifier {
 
       const dpopJkt = await this.verifySpaceDpopProof(ctx.req, {})
 
+      // A fresh DPoP proof must not make the delegation token reusable.
+      const unique = await this.oauthVerifier.replayManager.uniqueSpaceToken(
+        'delegation',
+        payload.iss,
+        payload.jti,
+        payload.exp,
+      )
+      if (!unique) {
+        throw new AuthRequiredError(
+          'delegation token has already been used',
+          'JwtReplayed',
+        )
+      }
+
       return {
         credentials: {
           type: 'delegation_token',

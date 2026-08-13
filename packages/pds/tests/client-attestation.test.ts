@@ -1,5 +1,20 @@
 import { JoseKey } from '@atproto/oauth-provider/provider'
+import { ReplayManager } from '@atproto/oauth-provider/verifier'
 import { ClientAttestationVerifier } from '../src/client-attestation-verifier.js'
+
+// Attestations are single-use, so the verifier needs somewhere to remember a
+// consumed `jti`. Per-verifier, which keeps each test's replay state its own.
+const memoryReplayManager = () => {
+  const seen = new Set<string>()
+  return new ReplayManager({
+    unique: (namespace, nonce) => {
+      const key = `${namespace}:${nonce}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    },
+  })
+}
 
 const CLIENT_ID = 'https://app.example.com/client-metadata.json'
 const JWKS_URI = 'https://app.example.com/jwks.json'
@@ -41,12 +56,21 @@ describe('client attestation verification', () => {
         headers: { 'content-type': 'application/json' },
       })
     }
-    return new ClientAttestationVerifier(fetch as never)
+    return new ClientAttestationVerifier(fetch as never, memoryReplayManager())
   }
 
+  // Attestations are single-use, so a distinct `jti` per mint is what makes two
+  // calls in one test two attestations rather than a replay.
+  let nonce = 0
   const attestation = async (
     key: JoseKey,
-    opts?: { iss?: string; sub?: string; aud?: string; expiresInSec?: number },
+    opts?: {
+      iss?: string
+      sub?: string
+      aud?: string
+      expiresInSec?: number
+      jti?: string | null
+    },
   ) => {
     const now = Math.floor(Date.now() / 1000)
     return key.createJwt(
@@ -57,7 +81,9 @@ describe('client attestation verification', () => {
         aud: opts?.aud ?? SPACE_HOST,
         iat: now,
         exp: now + (opts?.expiresInSec ?? 60),
-        jti: 'nonce-1',
+        ...(opts?.jti === null
+          ? undefined
+          : { jti: opts?.jti ?? `nonce-${++nonce}` }),
       },
     )
   }
@@ -83,6 +109,33 @@ describe('client attestation verification', () => {
       SPACE_HOST,
     )
     expect(clientId).toBe(CLIENT_ID)
+  })
+
+  it('refuses a replayed attestation, but not a second fresh one', async () => {
+    // Single-use per the spec. A captured attestation would otherwise let anyone
+    // present as an allow-listed client until it expired, which is exactly the
+    // impersonation `appAccess: #allowList` is meant to stop.
+    const verifier = verifierFor({
+      [CLIENT_ID]: metadata({ jwks: { keys: [clientKey.publicJwk] } }),
+    })
+    const replayed = await attestation(clientKey)
+
+    await expect(verifier.verify(replayed, SPACE_HOST)).resolves.toBe(CLIENT_ID)
+    await expect(verifier.verify(replayed, SPACE_HOST)).rejects.toThrow(
+      /already been used/,
+    )
+    await expect(
+      verifier.verify(await attestation(clientKey), SPACE_HOST),
+    ).resolves.toBe(CLIENT_ID)
+  })
+
+  it('refuses an attestation with no jti to consume', async () => {
+    const verifier = verifierFor({
+      [CLIENT_ID]: metadata({ jwks: { keys: [clientKey.publicJwk] } }),
+    })
+    await expect(
+      verifier.verify(await attestation(clientKey, { jti: null }), SPACE_HOST),
+    ).rejects.toThrow(/jti/)
   })
 
   it('refuses an attestation signed by a key the client does not publish', async () => {

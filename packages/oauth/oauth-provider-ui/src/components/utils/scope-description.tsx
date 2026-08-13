@@ -895,8 +895,15 @@ function SpaceTable({
     const map = new Map<string, SpaceTableRow>()
 
     for (const s of permissions.scopes) {
-      const parsed = SpacePermission.fromString(s)
-      if (!parsed) continue
+      const raw = SpacePermission.fromString(s)
+      if (!raw) continue
+
+      const space = raw.type !== '*' ? spaces?.[raw.type] : undefined
+
+      // Apply space declaration defaults before rendering.
+      const parsed = space?.collections?.length
+        ? raw.withDefaultCollections(space.collections)
+        : raw
 
       const key = `${parsed.type}|${parsed.authority}|${parsed.skey}`
       let row = map.get(key)
@@ -904,7 +911,7 @@ function SpaceTable({
         row = {
           key,
           type: parsed.type,
-          space: parsed.type !== '*' ? spaces?.[parsed.type] : undefined,
+          space,
           authority: parsed.authority,
           ownerHandle:
             parsed.authority !== '*'

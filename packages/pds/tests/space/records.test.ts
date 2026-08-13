@@ -717,5 +717,57 @@ describe('space records', () => {
       )
       expect(res.status).toBeGreaterThanOrEqual(400)
     })
+
+    it('refuses a blob that the authorized space does not reference', async () => {
+      // The credential and the `space` param agree, so the space perimeter is
+      // satisfied — the blob simply belongs to a different space. Without an
+      // association check the account-wide blob store would serve it.
+      const space = await sc.createSpace(alice, {
+        skey: 'blob-unrelated',
+        members: [carol],
+      })
+      const other = await sc.createSpace(alice, {
+        skey: 'blob-unrelated-other',
+        members: [carol],
+      })
+
+      const blob = await upload(alice, new Uint8Array([7, 7, 7]))
+      const blobCid = getBlobCidString(blob)
+      await sc.write(alice, space, {
+        rkey: 'elsewhere',
+        record: { $type: TEST_COLLECTION, text: 'elsewhere', image: blob },
+      })
+
+      const cred = await sc.credentialFor(carol, other)
+      const res = await cred.fetch(
+        `${network.pds.url}/xrpc/com.atproto.space.getBlob?space=${encodeURIComponent(other)}&repo=${alice.did}&cid=${blobCid}`,
+      )
+      expect(res.status).toBe(400)
+      await expect(res.json()).resolves.toMatchObject({
+        error: 'BlobNotFound',
+      })
+    })
+
+    it('serves a blob the authorized space does reference', async () => {
+      const space = await sc.createSpace(alice, {
+        skey: 'blob-referenced',
+        members: [carol],
+      })
+
+      const blob = await upload(alice, new Uint8Array([1, 2, 3]))
+      const blobCid = getBlobCidString(blob)
+      await sc.write(alice, space, {
+        rkey: 'referenced',
+        record: { $type: TEST_COLLECTION, text: 'referenced', image: blob },
+      })
+
+      const cred = await sc.credentialFor(carol, space)
+      const res = await cred.fetch(
+        `${network.pds.url}/xrpc/com.atproto.space.getBlob?space=${encodeURIComponent(space)}&repo=${alice.did}&cid=${blobCid}`,
+      )
+      expect(res.status).toBe(200)
+      const bytes = new Uint8Array(await res.arrayBuffer())
+      expect(bytes).toEqual(new Uint8Array([1, 2, 3]))
+    })
   })
 })

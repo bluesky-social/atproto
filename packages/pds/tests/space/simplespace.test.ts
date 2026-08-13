@@ -405,6 +405,33 @@ describe('simplespace', () => {
       ).rejects.toThrow()
     })
 
+    it('refuses the config to another account on an account credential', async () => {
+      // Dan is a member and is hosted here, but the config is the authority's own
+      // state: an account credential reaches it only for that account's own
+      // spaces. Membership is attested by a space credential, not by an access
+      // token this PDS happens to have issued to someone else.
+      const space = await sc.createSpace(alice, {
+        skey: 'cfg-not-owner',
+        members: [dan],
+      })
+
+      await expect(
+        dan.client.call(
+          com.atproto.simplespace.getSpace,
+          { space },
+          { headers: dan.headers },
+        ),
+      ).rejects.toMatchObject({ error: 'NotSpaceOwner' })
+
+      // ...and the same member reaches it with a space credential.
+      const cred = await sc.credentialFor(dan, space)
+      await expect(
+        cred.clientFor(alice.pds).call(com.atproto.simplespace.getSpace, {
+          space,
+        }),
+      ).resolves.toMatchObject({ uri: space })
+    })
+
     it('refuses to answer for a space this host does not govern', async () => {
       // pds2 hosts no account for alice, so it holds no config to answer from.
       const space = await sc.createSpace(alice, { members: [bob] })

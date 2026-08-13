@@ -117,43 +117,50 @@ describe('space auth', () => {
       expect(own.records).toHaveLength(1)
     })
 
-    it('refuses to mint a delegation token on an app password', async () => {
-      // An app password carries no space grants to bound it by, and a delegation
-      // token buys whole-space read. Records it may still write.
-      const space = await sc.createSpace(alice)
-      const agent = network.pds.getAgent()
-      const { data: created } =
-        await agent.com.atproto.server.createAppPassword(
-          { name: 'space-pass' },
-          { headers: alice.headers, encoding: 'application/json' },
-        )
-      const { data: session } = await agent.com.atproto.server.createSession({
-        identifier: alice.did,
-        password: created.password,
-      })
-      const appPass = SeedClient.getHeaders(session.accessJwt)
+    it.each([false, true])(
+      'refuses to mint a delegation token on an app password (privileged: %s)',
+      async (privileged) => {
+        // An app password carries no space grants to bound it by, and a
+        // delegation token buys whole-space read — including every other
+        // member's repo. Only a full session reaches it. Records it may still
+        // write.
+        const space = await sc.createSpace(alice, {
+          skey: `app-pass-${privileged}`,
+        })
+        const agent = network.pds.getAgent()
+        const { data: created } =
+          await agent.com.atproto.server.createAppPassword(
+            { name: `space-pass-${privileged}`, privileged },
+            { headers: alice.headers, encoding: 'application/json' },
+          )
+        const { data: session } = await agent.com.atproto.server.createSession({
+          identifier: alice.did,
+          password: created.password,
+        })
+        const appPass = SeedClient.getHeaders(session.accessJwt)
 
-      await expect(
-        alice.client.call(
-          com.atproto.space.getDelegationToken,
-          { space },
-          { headers: appPass },
-        ),
-      ).rejects.toThrow()
+        await expect(
+          alice.client.call(
+            com.atproto.space.getDelegationToken,
+            { space },
+            { headers: appPass },
+          ),
+        ).rejects.toThrow()
 
-      await expect(
-        alice.client.call(
-          com.atproto.space.createRecord,
-          {
-            space,
-            repo: alice.did,
-            collection: TEST_COLLECTION,
-            record: record(TEST_COLLECTION, 'from an app password'),
-          },
-          { headers: appPass },
-        ),
-      ).resolves.toBeDefined()
-    })
+        await expect(
+          alice.client.call(
+            com.atproto.space.createRecord,
+            {
+              space,
+              repo: alice.did,
+              collection: TEST_COLLECTION,
+              record: record(TEST_COLLECTION, 'from an app password'),
+            },
+            { headers: appPass },
+          ),
+        ).resolves.toBeDefined()
+      },
+    )
   })
 
   describe('space credentials', () => {
@@ -521,10 +528,30 @@ describe('space auth', () => {
       )
     })
 
-    // Known gap, tracked rather than silently absent. The spec makes a delegation
-    // token single-use, but `jti` is not recorded anywhere, so one can be replayed
-    // freely inside its 60s window. Un-skip once minting tracks jti.
-    it.todo('are single-use — a replayed jti is refused')
+    it('are single-use — a replayed jti is refused', async () => {
+      // A fresh proof each time, so the DPoP replay check is satisfied and the
+      // token's own single-use property is what has to refuse the second
+      // exchange. Otherwise a captured token mints credentials for anyone, each
+      // bound to whatever key the presenter brings.
+      const space = await sc.createSpace(alice, { members: [carol] })
+      const token = await sc.delegationTokenFor(carol, space)
+      const exchange = async () => {
+        const key = await JoseKey.generate(['ES256'])
+        return alice.client.call(
+          com.atproto.space.getSpaceCredential,
+          { space },
+          {
+            headers: {
+              authorization: `Bearer ${token}`,
+              dpop: await sc.credentialExchangeProof(key),
+            },
+          },
+        )
+      }
+
+      await expect(exchange()).resolves.toBeDefined()
+      await expect(exchange()).rejects.toThrow(/already been used/)
+    })
 
     it('are refused for a space other than their subject', async () => {
       const space = await sc.createSpace(alice, {

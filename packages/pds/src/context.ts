@@ -454,11 +454,6 @@ export class AppContext implements AsyncDisposable {
         })
       : undefined
 
-    const clientAttestationVerifier = new ClientAttestationVerifier(
-      safeFetch,
-      redisScratch,
-    )
-
     const simpleSpaceManager = new SimpleSpaceManager(
       actorStore,
       idResolver,
@@ -493,6 +488,12 @@ export class AppContext implements AsyncDisposable {
           return payload
         },
       })
+
+    const clientAttestationVerifier = new ClientAttestationVerifier(
+      safeFetch,
+      oauthVerifier.replayManager,
+      redisScratch,
+    )
 
     const authVerifier = new AuthVerifier(
       accountManager,

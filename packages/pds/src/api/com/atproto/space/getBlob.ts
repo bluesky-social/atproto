@@ -21,6 +21,10 @@ export default function (server: Server, ctx: AppContext) {
 
       const cid = parseCid(params.cid)
       const found = await ctx.actorStore.read(repo, async (store) => {
+        // Do not reveal whether an unreferenced blob exists.
+        if (!(await store.space.isBlobInSpace(space, cid.toString()))) {
+          throw new InvalidRequestError('Blob not found', 'BlobNotFound')
+        }
         try {
           return await store.repo.blob.getBlob(cid)
         } catch (err) {

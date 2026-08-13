@@ -226,6 +226,17 @@ export class SpaceReader {
     return rows.map((row) => row.blobCid)
   }
 
+  async isBlobInSpace(space: string, blobCid: string): Promise<boolean> {
+    const row = await this.db.db
+      .selectFrom('space_record_blob')
+      .innerJoin('space_record', 'space_record.uri', 'recordUri')
+      .select('blobCid')
+      .where('space_record.space', '=', space)
+      .where('blobCid', '=', blobCid)
+      .executeTakeFirst()
+    return !!row
+  }
+
   async isMember(space: string, did: string): Promise<boolean> {
     const row = await this.db.db
       .selectFrom('simplespace_member')

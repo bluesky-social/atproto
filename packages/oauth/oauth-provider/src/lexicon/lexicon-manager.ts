@@ -21,8 +21,18 @@ export class LexiconManager {
   public async getSpacesFromScope(
     scope?: string,
   ): Promise<Map<string, LexiconSpace>> {
-    const nsids = extractSpaceTypeNsids(scope)
-    return this.getSpaces(nsids)
+    const { includeScopes, otherScopes } = parseScope(scope)
+
+    const concreteScopes = includeScopes.length
+      ? Array.from(includeScopes)
+          .flatMap(
+            nsidToPermissionScopes,
+            await this.extractPermissionSets(includeScopes),
+          )
+          .concat(otherScopes)
+      : otherScopes
+
+    return this.getSpaces(extractSpaceTypeNsids(concreteScopes))
   }
 
   /**
@@ -158,10 +168,9 @@ function resolveSpaceSelfAuthority(value: string, userDid: string): string {
     .toString()
 }
 
-function extractSpaceTypeNsids(scope?: string): Set<Nsid> {
+function extractSpaceTypeNsids(scopes: readonly string[]): Set<Nsid> {
   const nsids = new Set<Nsid>()
-  if (!scope) return nsids
-  for (const value of scope.split(' ')) {
+  for (const value of scopes) {
     const parsed = SpacePermission.fromString(value)
     if (!parsed) continue
     if (parsed.type === '*') continue

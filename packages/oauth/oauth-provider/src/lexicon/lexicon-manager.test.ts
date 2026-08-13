@@ -12,6 +12,15 @@ type SpaceDef = {
   collections: string[]
 }
 
+type PermissionSetDef = {
+  type: 'permission-set'
+  title: string
+  detail: string
+  permissions: Array<Record<string, unknown>>
+}
+
+type Doc = SpaceDef | PermissionSetDef
+
 /**
  * A manager over fixed lexicon documents.
  *
@@ -20,7 +29,7 @@ type SpaceDef = {
  * `expandSpaceCollections` logic under test.
  */
 class TestLexiconManager extends LexiconManager {
-  constructor(private docs: Record<string, SpaceDef | undefined>) {
+  constructor(private docs: Record<string, Doc | undefined>) {
     super(null as never, null as never)
     // @ts-expect-error replacing the protected getter with a fixed lookup
     this.lexiconGetter = {
@@ -43,8 +52,51 @@ const space = (collections: string[]): SpaceDef => ({
 const FORUM = 'com.atmoboards.forum'
 const THREAD = 'com.atmoboards.thread'
 const REPLY = 'com.atmoboards.reply'
+const BUNDLE = 'com.atmoboards.bundle'
 
 describe('LexiconManager', () => {
+  describe('getSpacesFromScope', () => {
+    // What the consent screen renders from. It has to cover every space
+    // permission the token will end up carrying, or the screen describes a
+    // narrower grant than the one being authorized.
+    it('resolves a space type named directly', async () => {
+      const manager = new TestLexiconManager({ [FORUM]: space([THREAD]) })
+      const spaces = await manager.getSpacesFromScope(`space:${FORUM}`)
+      expect(spaces.get(FORUM)).toMatchObject({ collections: [THREAD] })
+    })
+
+    it('resolves a space type reached through a permission set', async () => {
+      // `buildTokenScope` expands this include into a space permission and fills
+      // in the declared collections. Without the same expansion here the screen
+      // shows neither the space's name nor the writes it is about to grant.
+      const manager = new TestLexiconManager({
+        [FORUM]: space([THREAD, REPLY]),
+        [BUNDLE]: {
+          type: 'permission-set',
+          title: 'AtmoBoards',
+          detail: 'Read and post in your AtmoBoards forums',
+          permissions: [
+            {
+              type: 'permission',
+              resource: 'space',
+              spaceType: FORUM,
+              authority: '*',
+            },
+          ],
+        },
+      })
+
+      const spaces = await manager.getSpacesFromScope(`include:${BUNDLE}`)
+      expect(spaces.get(FORUM)).toMatchObject({ collections: [THREAD, REPLY] })
+    })
+
+    it('does not resolve a wildcard space type', async () => {
+      const manager = new TestLexiconManager({})
+      const spaces = await manager.getSpacesFromScope('space:*?authority=*')
+      expect(spaces.size).toBe(0)
+    })
+  })
+
   describe('buildTokenScope — space collections', () => {
     it('materializes the declared collections into a bare grant', async () => {
       // A bare `space:<type>` names no collections, so on its own it would confer
