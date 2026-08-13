@@ -20,7 +20,6 @@ COPY ./packages/bsync/proto ./packages/bsync/proto
 # pnpm list --filter 'pds-service...' --depth 0 --json | jq '.[].path' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
-COPY ./packages/bsky ./packages/bsky
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/common ./packages/common
 COPY ./packages/crypto ./packages/crypto
@@ -60,9 +59,9 @@ COPY ./packages/oauth/oauth-provider-ui ./packages/oauth/oauth-provider-ui
 COPY ./packages/oauth/oauth-provider ./packages/oauth/oauth-provider
 COPY ./packages/oauth/oauth-scopes ./packages/oauth/oauth-scopes
 COPY ./packages/oauth/oauth-types ./packages/oauth/oauth-types
+COPY ./packages/opentelemetry-node ./packages/opentelemetry-node
 COPY ./packages/pds ./packages/pds
 COPY ./packages/repo ./packages/repo
-COPY ./packages/sync ./packages/sync
 COPY ./packages/syntax ./packages/syntax
 COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc-server ./packages/xrpc-server
