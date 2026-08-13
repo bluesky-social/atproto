@@ -226,10 +226,6 @@ msgstr ""
 msgid "Back"
 msgstr "Tillbaka"
 
-#: src/components/forms/fields/handle-field.tsx
-msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
-msgstr "Mellan {minLength, plural, other {#}} och {maxLength, plural, other {# tecken}}"
-
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
 msgstr "Blob-lagring"
@@ -693,10 +689,6 @@ msgstr "Om du uppdaterar din e-postadress kommer tvåfaktorsautentisering via e-
 msgid "If you're trying to change your handle or email, do so before you deactivate."
 msgstr "Om du vill ändra ditt användarnamn eller din e-postadress måste du göra det innan du inaktiverar kontot."
 
-#: src/components/forms/fields/handle-field.tsx
-msgid "Invalid"
-msgstr "Ogiltigt"
-
 #: src/components/utils/handle.tsx
 msgid "Invalid Handle"
 msgstr "Ogiltigt användarnamn"
@@ -836,10 +828,6 @@ msgstr ""
 #: src/components/reset-password-view.tsx
 msgid "Okay"
 msgstr "OK"
-
-#: src/components/forms/fields/handle-field.tsx
-msgid "Only letters, numbers, and hyphens"
-msgstr "Endast bokstäver, siffror och bindestreck"
 
 #: src/components/delete-account-confirm-form.tsx
 #: src/components/forms/fields/password-field.tsx
@@ -1277,6 +1265,10 @@ msgstr "Uppladdning av filer"
 msgid "URL"
 msgstr "URL"
 
+#: src/components/forms/fields/handle-field.tsx
+msgid "Use {minLength}–{maxLength, plural, one {# letter, number or hyphen} other {# letters, numbers or hyphens}}"
+msgstr ""
+
 #: src/components/update-handle-dialog.tsx
 msgid "Use a default username"
 msgstr "Använd ett användarnamn med standarddomän"
@@ -1296,10 +1288,6 @@ msgstr "Användarnamn eller e-postadress"
 #: src/data/handle.ts
 msgid "Username updated"
 msgstr "Användarnamn uppdaterat"
-
-#: src/components/forms/fields/handle-field.tsx
-msgid "Valid"
-msgstr "Giltigt"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Value"
@@ -1486,7 +1474,7 @@ msgstr "Din e-postadress har verifierats."
 msgid "Your email address needs to be verified."
 msgstr "Din e-postadress behöver verifieras."
 
-#. placeholder {0}: full ? ( <Handle className="text-foreground" handle={full} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
+#. placeholder {0}: segment ? ( <span className="text-foreground block break-all font-medium"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
 #: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "Ditt fullständiga användarnamn blir: {0}"
@@ -1510,3 +1498,7 @@ msgstr "Din session har gått ut. Logga in igen."
 #: src/data/handle.ts
 msgid "Your username has been updated."
 msgstr "Ditt användarnamn har uppdaterats."
+
+#: src/components/forms/fields/handle-field.tsx
+msgid "yourname"
+msgstr ""
