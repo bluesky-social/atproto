@@ -14,6 +14,7 @@ import {
   ATTR_SERVICE_NAMESPACE,
   ATTR_SERVICE_VERSION,
 } from './conventions.js'
+import { getDefaultAtprotoInstrumentations } from './instrumentation.js'
 
 export type { Attributes, Instrumentation }
 
@@ -76,7 +77,10 @@ export function setup(options: SetupOptions): void {
       // @NOTE Unlike sdk-node's default detectors, these include the
       // "container" detector.
       resourceDetectors: getResourceDetectors(),
-      instrumentations: options.getInstrumentations(),
+      instrumentations: [
+        ...getDefaultAtprotoInstrumentations(),
+        ...options.getInstrumentations(),
+      ],
 
       // @NOTE The gate above enables the SDK as soon as *any* signal is
       // configured, but NodeSDK then defaults every unspecified

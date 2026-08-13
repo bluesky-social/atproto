@@ -30,6 +30,10 @@
       "types": "./dist/conventions.d.ts",
       "default": "./dist/conventions.js"
     },
+    "./instrumentation": {
+      "types": "./dist/instrumentation.d.ts",
+      "default": "./dist/instrumentation.js"
+    },
     "./util": {
       "types": "./dist/util.d.ts",
       "default": "./dist/util.js"
@@ -43,6 +47,11 @@
     "@opentelemetry/auto-instrumentations-node": "^0.77.0",
     "@opentelemetry/core": "^2.9.0",
     "@opentelemetry/instrumentation": "^0.219.0",
+    "@opentelemetry/instrumentation-express": "^0.67.0",
+    "@opentelemetry/instrumentation-http": "^0.219.0",
+    "@opentelemetry/instrumentation-pino": "^0.65.0",
+    "@opentelemetry/instrumentation-runtime-node": "^0.32.0",
+    "@opentelemetry/instrumentation-undici": "^0.29.0",
     "@opentelemetry/resource-detector-container": "^0.8.10",
     "@opentelemetry/sdk-node": "^0.219.0",
     "@opentelemetry/semantic-conventions": "^1.41.1"

@@ -38,6 +38,26 @@ setup({
 })
 ```
 
+The `@atproto/opentelemetry-node/instrumentation` entrypoint exposes
+`withCommonAtprotoInstrumentations()`, which registers the instrumentations common
+to atproto services (HTTP with XRPC-aware span naming, Express, Undici, Pino with
+log correlation, and Node runtime metrics) alongside the service-specific ones:
+
+```ts
+import { setup } from '@atproto/opentelemetry-node'
+import { withCommonAtprotoInstrumentations } from '@atproto/opentelemetry-node/instrumentation'
+import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis'
+import pkg from './package.json' with { type: 'json' }
+
+setup({
+  name: pkg.name,
+  version: pkg.version,
+  getInstrumentations: withCommonAtprotoInstrumentations(() => [
+    new IORedisInstrumentation(),
+  ]),
+})
+```
+
 The `@atproto/opentelemetry-node/conventions` entrypoint re-exports
 `@opentelemetry/semantic-conventions` plus the atproto XRPC attribute keys
 (`ATTR_XRPC_METHOD`, `ATTR_XRPC_PROXIED`, `ATTR_XRPC_PROXY`).

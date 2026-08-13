@@ -1778,6 +1778,21 @@ importers:
       '@opentelemetry/instrumentation':
         specifier: ^0.219.0
         version: 0.219.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/instrumentation-express':
+        specifier: ^0.67.0
+        version: 0.67.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/instrumentation-http':
+        specifier: ^0.219.0
+        version: 0.219.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/instrumentation-pino':
+        specifier: ^0.65.0
+        version: 0.65.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/instrumentation-runtime-node':
+        specifier: ^0.32.0
+        version: 0.32.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/instrumentation-undici':
+        specifier: ^0.29.0
+        version: 0.29.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/resource-detector-container':
         specifier: ^0.8.10
         version: 0.8.12(@opentelemetry/api@1.9.1)
@@ -1984,24 +1999,9 @@ importers:
       '@opentelemetry/instrumentation-aws-sdk':
         specifier: ^0.74.0
         version: 0.74.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/instrumentation-express':
-        specifier: ^0.67.0
-        version: 0.67.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/instrumentation-http':
-        specifier: ^0.219.0
-        version: 0.219.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/instrumentation-ioredis':
         specifier: ^0.67.0
         version: 0.67.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/instrumentation-pino':
-        specifier: ^0.65.0
-        version: 0.65.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/instrumentation-runtime-node':
-        specifier: ^0.32.0
-        version: 0.32.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/instrumentation-undici':
-        specifier: ^0.29.0
-        version: 0.29.0(@opentelemetry/api@1.9.1)
       better-sqlite3:
         specifier: ^12.0.0
         version: 12.9.0
