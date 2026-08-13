@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { Link } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { MonitorSmartphoneIcon } from 'lucide-react'
 import { useMemo } from 'react'
 import type {
@@ -13,40 +13,46 @@ import { Button } from '#/components/ui/button.tsx'
 import { DateAgo } from '#/components/utils/date-ago'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import {
+  accountSessionsQueryOptions,
   useAccountSessionsQuery,
   useRevokeAccountSessionMutation,
 } from '#/data/account-sessions.ts'
 import { useBrowserName } from '#/hooks/use-browser-name'
 
-export default function Page() {
+export const Route = createFileRoute('/account/u/$accountId/devices')({
+  loader: ({ context: { api, queryClient, session } }) =>
+    queryClient.ensureQueryData(
+      accountSessionsQueryOptions(api, { did: session.account.did }),
+    ),
+  component: DevicesPage,
+  errorComponent: ({ reset }) => (
+    <Notice
+      role="status"
+      action={
+        <NoticeAction onClick={reset}>
+          <Trans>Retry</Trans>
+        </NoticeAction>
+      }
+    >
+      <Trans>Failed to load your devices</Trans>
+    </Notice>
+  ),
+})
+
+function DevicesPage() {
   const { t } = useLingui()
   const { account } = useAuthenticatedSession()
-  const { data, refetch, isLoading } = useAccountSessionsQuery(account)
+  const { data } = useAccountSessionsQuery(account)
 
   const sessions = useMemo(
     () =>
-      [...(data ?? [])].sort(
+      [...data].sort(
         (a, b) =>
           new Date(b.deviceMetadata.lastSeenAt).getTime() -
           new Date(a.deviceMetadata.lastSeenAt).getTime(),
       ),
     [data],
   )
-
-  if (!data && !isLoading) {
-    return (
-      <Notice
-        role="status"
-        action={
-          <NoticeAction onClick={() => refetch()}>
-            <Trans>Retry</Trans>
-          </NoticeAction>
-        }
-      >
-        <Trans>Failed to load connected apps</Trans>
-      </Notice>
-    )
-  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -75,7 +81,6 @@ export default function Page() {
             session.deviceMetadata.ipAddress,
           ].join(' ')
         }
-        loading={isLoading}
         filterLabel={t`Filter devices`}
         emptyIcon={MonitorSmartphoneIcon}
         empty={

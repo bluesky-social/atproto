@@ -28,31 +28,31 @@ msgstr "{0, plural, one {1분 전} other {#분 전}}"
 msgid "{0, plural, one {yesterday} other {# days ago}}"
 msgstr "{0, plural, one {어제} other {#일 전}}"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>AT 프로토콜</0> — 개발자를 위한 기술 문서"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Bluesky Social</0> — General information about the network"
 msgstr "<0>Bluesky 소셜</0> — 네트워크에 대한 일반 정보"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Learn more</0><1>Want to learn more about the technology and network behind your Atmosphere account?</1>"
 msgstr "<0>더 알아보기</0><1>내 Atmosphere 계정 뒤편에 사용된 기술 및 네트워크에 대해 더 자세히 알아보고 싶으신가요?</1>"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
 msgstr "<0>이 웹사이트: 계정 제어 센터</0><1>지금 보고 계신 웹사이트는 내 <2>계정 관리 허브</2>입니다. 여기에서 다음을 수행할 수 있습니다.</1><3><4>이메일 주소 및 비밀번호 변경</4><5>개인 데이터 및 보안 설정 관리</5><6>여러 기기(로그인된 브라우저)의 활성 세션 보기 및 관리</6></3><7>이곳은 <8>Bluesky 소셜 앱</8>의 프로필과 같은 앱별 세부 정보와는 별개로 Atmosphere 신원의 기본 사항을 관리하는 곳입니다.</7><9>현재 내 Atmosphere 계정은 Atmosphere 네트워크의 여러 호스팅 제공자 중 하나인 <10/>에서 호스팅됩니다. 내 계정, 식별 정보 또는 데이터를 잃지 않고 언제든지 다른 호스팅 제공자로 전환할 수 있습니다.</9>"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Use it across multiple apps</0><1>Your Atmosphere account works with the <2>Bluesky Social App</2> and any other social apps built on the same network.</1><3>Just like you can use the same email address to sign into different websites, your Atmosphere account lets you sign into different social apps while keeping the same identity, connections, and content.</3><4>When you see options to log in with an Atmosphere account or \"internet handle\" on other apps, you can use your existing account <5><6/></5> instead of creating a new one.</4>"
 msgstr "<0>여러 앱에서 사용하라</0><1>Atmosphere 계정은 <2>Bluesky 소셜 앱</2> 및 동일 네트워크 기반의 다른 소셜 앱과 연동됩니다.</1><3>같은 이메일 주소로 여러 웹사이트에 로그인할 수 있는 것처럼 Atmosphere 계정을 사용하면 동일한 신원, 연결 정보, 콘텐츠를 유지하면서 여러 소셜 앱에 로그인할 수 있습니다.</3><4>다른 앱에서 Atmosphere 계정 또는 ‘인터넷 핸들’로 로그인하는 옵션이 표시되면 새 계정을 만드는 대신 기존 계정을 사용할 수 있습니다.</5><6/></5></4>"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>What is an Atmosphere account?</0><1>An <2>Atmosphere account</2> is your personal identity on the Atmosphere. Think of it as a digital passport that you truly own, not locked to any single app or company.</1>"
 msgstr "<0>Atmosphere 계정이란?</0><1><2>Atmosphere 계정</2>은 Atmosphere에서 사용하는 개인 식별 정보입니다. 특정 앱이나 회사에 종속되지 않고 진정으로 소유할 수 있는 디지털 여권이라고 생각하면 됩니다.</1>"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
 msgstr "<0>무엇이 특별한가</0><1>가장 큰 차이점은 데이터가 특정 앱에 갇히지 않는다는 것입니다. 데이터가 플랫폼에 속하는 기존 소셜 미디어 계정과 달리 Atmosphere 계정을 사용하면 사용자의 신원과 데이터를 진정으로 소유할 수 있습니다.</1><2><3><4>신원을 소유한다</4>: 사용자 이름(핸들)과 영구 ID는 사용자의 소유입니다.</3><5><6>데이터 이동이 가능하다</6>: 게시물, 팔로우, 콘텐츠는 앱 데이터베이스에 갇히지 않고 개인 데이터 저장소에 저장됩니다.</5><7><8>자유롭게 이동할 수 있다</8>: 팔로워, 게시물, 연결을 잃지 않고 호스팅 제공자를 변경할 수 있습니다. 데이터 저장 위치가 중요한 경우 해당 국가의 제공자를 선택할 수도 있습니다.</7><9><10>여러 앱에서 하나의 신원 사용</10>: 동일한 네트워크 기반의 여러 앱에서 동일한 계정을 사용할 수 있습니다.</9></2>"
 
@@ -76,7 +76,7 @@ msgstr ""
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "<0>{domain}</0>(이)가 관리하는 서비스"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "About"
 msgstr "정보"
 
@@ -89,7 +89,7 @@ msgid "Access specific parts of your Bluesky account and read your private prefe
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Account"
 msgstr "계정"
 
@@ -181,16 +181,16 @@ msgstr "모든 메서드"
 msgid "Any service"
 msgstr "모든 서비스"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "App"
 msgstr ""
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Apps"
 msgstr "앱"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr ""
 
@@ -214,7 +214,7 @@ msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "승인"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "Authorized"
 msgstr ""
@@ -223,6 +223,7 @@ msgstr ""
 #: src/components/forms/sign-up-wizard.tsx
 #: src/components/layouts/account-shell.tsx
 #: src/components/sign-in-picker.tsx
+#: src/routes/__root.tsx
 msgid "Back"
 msgstr "뒤로"
 
@@ -259,7 +260,7 @@ msgstr "호출"
 msgid "Cancel"
 msgstr "취소"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Cannot remove current device"
 msgstr "현재 기기를 제거할 수 없습니다"
 
@@ -317,7 +318,7 @@ msgstr "사용자 이름 선택"
 msgid "Click here if nothing happens"
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "Client"
 msgstr ""
@@ -388,7 +389,7 @@ msgid "Data"
 msgstr "데이터"
 
 #: src/components/deactivate-account-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Deactivate account"
 msgstr ""
 
@@ -401,7 +402,7 @@ msgid "Delete"
 msgstr "삭제"
 
 #: src/components/delete-account-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Delete account"
 msgstr ""
 
@@ -418,16 +419,16 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "접근 거부"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Details"
 msgstr "세부 정보"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Device"
 msgstr ""
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Devices"
 msgstr "기기"
 
@@ -455,7 +456,7 @@ msgstr "이메일"
 
 #: src/components/forms/fields/email-field.tsx
 #: src/components/reset-password-request-form.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Email address"
 msgstr "이메일 주소"
 
@@ -540,10 +541,13 @@ msgstr ""
 msgid "Failed to delete account"
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Failed to load connected apps"
 msgstr "연결된 앱을 불러오지 못했습니다"
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Failed to load your devices"
+msgstr ""
 
 #: src/data/account.ts
 msgid "Failed to reactivate account"
@@ -589,11 +593,11 @@ msgstr ""
 msgid "File contents"
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Filter apps"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Filter devices"
 msgstr ""
 
@@ -640,7 +644,7 @@ msgid "Hide"
 msgstr "숨기기"
 
 #: src/components/utils/link-title.tsx
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Home"
 msgstr "홈"
 
@@ -672,7 +676,7 @@ msgstr ""
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr ""
 
@@ -688,12 +692,12 @@ msgstr ""
 msgid "Invite code"
 msgstr "초대 코드"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "IP address"
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "이 계정으로 아직 어떤 앱에도 로그인한 적이 없는 것 같습니다."
 
@@ -706,12 +710,12 @@ msgstr "브라우저에서 쿠키를 허용하지 않는 것 같습니다. 다�
 msgid "just now"
 msgstr "방금 전"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "Last accessed"
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Last seen"
 msgstr ""
@@ -730,7 +734,7 @@ msgstr "비밀번호를 재설정해 봅시다!"
 msgid "Logo"
 msgstr "로고"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "다른 기기에는 로그인되어 있지 않은 것 같습니다."
 
@@ -746,7 +750,7 @@ msgstr ""
 msgid "Make visible"
 msgstr "표시"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Manage applications that have access to your account"
 msgstr "내 계정에 접근 권한이 있는 애플리케이션을 관리합니다"
 
@@ -754,11 +758,11 @@ msgstr "내 계정에 접근 권한이 있는 애플리케이션을 관리합니
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "<1>@핸들</1>을 포함한 내 <0>전체 신원</0> 관리"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Manage your account"
 msgstr ""
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Manage your active sessions"
 msgstr "내 활성 세션을 관리합니다"
 
@@ -785,7 +789,7 @@ msgstr "미입력"
 msgid "Moderate"
 msgstr "보통"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "My Atmosphere Account"
 msgstr ""
 
@@ -820,11 +824,15 @@ msgstr ""
 msgid "Okay"
 msgstr "확인"
 
+#: src/routes/__root.tsx
+msgid "Page not found"
+msgstr ""
+
 #: src/components/delete-account-confirm-form.tsx
 #: src/components/forms/fields/password-field.tsx
 #: src/components/sign-in-form.tsx
 #: src/components/sign-up-credentials-form.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Password"
 msgstr "비밀번호"
 
@@ -922,7 +930,7 @@ msgid "Reactivate"
 msgstr ""
 
 #: src/components/reactivate-account-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Reactivate account"
 msgstr ""
 
@@ -963,8 +971,8 @@ msgid "Reset your password"
 msgstr "비밀번호 재설정"
 
 #: src/components/feedback/error-notice.tsx
-#: src/pages/account/(authenticated)/apps/page.tsx
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Retry"
 msgstr "다시 시도"
 
@@ -1033,7 +1041,7 @@ msgstr ""
 msgid "Sign out"
 msgstr "로그아웃"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Sign out"
 msgstr "로그아웃"
@@ -1145,7 +1153,7 @@ msgstr ""
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr ""
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "이 앱은 내 계정에 대한 접근 권한을 가지고 있습니다. 여러 기기에서 동일한 앱을 사용하는 경우 동일한 앱이 여러 번 나타날 수 있습니다. 접근 권한을 취소하면 다시 로그인할 때까지 앱에서 로그아웃됩니다."
 
@@ -1165,7 +1173,7 @@ msgstr "이 애플리케이션은 사용자 계정에 접근하기 위해 다음
 msgid "This authorization request has been denied. Please try again."
 msgstr "승인 요청이 거부되었습니다. 다시 시도해 주세요."
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "This device"
 msgstr ""
@@ -1227,7 +1235,7 @@ msgstr "승인되지 않음"
 msgid "Unexpected server response"
 msgstr "예상치 못한 서버 응답입니다"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "알 수 없는 사용자 에이전트"
@@ -1268,7 +1276,7 @@ msgstr ""
 msgid "Use a domain name I own"
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
 msgstr ""
 
@@ -1306,7 +1314,7 @@ msgid "Verify and Save"
 msgstr ""
 
 #: src/components/update-email-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgctxt "verify email"
 msgid "Verify now"
 msgstr ""
@@ -1352,15 +1360,15 @@ msgstr "환영합니다"
 msgid "Welcome back!"
 msgstr ""
 
-#: src/pages/account/(authenticated)/page.tsx
+#: src/routes/account/u/$accountId/index.tsx
 msgid "What does this mean?"
 msgstr "이게 무슨 뜻인가요?"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "What is an Atmosphere Account?"
 msgstr "Atmosphere 계정이란?"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Why is this time so recent?"
 msgstr ""
 
@@ -1437,7 +1445,7 @@ msgstr ""
 msgid "Your account is now deactivated."
 msgstr ""
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "아래 나열된 기기에서 계정에 로그인되어 있습니다. 계정이 해킹당한 경우 모든 기기에서 로그아웃하고 비밀번호를 변경한 다음 연결된 <0>앱</0>을 확인하세요."
 
@@ -1445,7 +1453,7 @@ msgstr "아래 나열된 기기에서 계정에 로그인되어 있습니다. �
 msgid "Your account is visible again."
 msgstr ""
 
-#: src/pages/account/(authenticated)/page.tsx
+#: src/routes/account/u/$accountId/index.tsx
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "내 Atmosphere 계정은 <0/>에서 호스팅됩니다."
 
@@ -1461,7 +1469,7 @@ msgstr ""
 msgid "Your email address has been verified."
 msgstr ""
 
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Your email address needs to be verified."
 msgstr ""
 

@@ -1,8 +1,12 @@
-import { useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { SignUpView } from '#/components/sign-up-view.tsx'
 import { useSessionContext } from '#/contexts/session.tsx'
 
-export default function Page() {
+export const Route = createFileRoute('/account/sign-up')({
+  component: SignUpPage,
+})
+
+function SignUpPage() {
   const { api } = useSessionContext()
   const navigate = useNavigate()
   return (

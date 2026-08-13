@@ -1,4 +1,5 @@
 import { Trans } from '@lingui/react/macro'
+import { createFileRoute } from '@tanstack/react-router'
 import {
   AtSignIcon,
   ChevronRightIcon,
@@ -51,7 +52,11 @@ import {
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
 
-export default function Page() {
+export const Route = createFileRoute('/account/u/$accountId/manage')({
+  component: ManagePage,
+})
+
+function ManagePage() {
   return (
     <div className="flex flex-col gap-4">
       <EmailVerificationRow />

@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import { useErrorBoundary } from 'react-error-boundary'
@@ -21,20 +22,51 @@ export type SessionWithToken = Session & {
   ephemeralToken?: string
 }
 
+/**
+ * The parts of the session state that TanStack Router's `beforeLoad` guards
+ * read, on an object whose identity never changes.
+ *
+ * @NOTE The getters are the point. A guard runs outside React — during a
+ * navigation, which is typically dispatched from the very event handler that
+ * just signed the user in — so a value captured at render time would be one
+ * render behind and the guard would reject the account it was sent to.
+ */
+export type SessionStore = {
+  readonly sessions: readonly Session[]
+  readonly session: Session | null
+  readonly canSignUp: boolean
+  readonly canSwitchAccounts: boolean
+}
+
 export type SessionContextType = {
   sessions: readonly Session[]
   session: Session | null
   setSession: (session: Pick<Session, 'account'> | null) => void
 
   api: Api
+  store: SessionStore
   canSignUp: boolean
   canSwitchAccounts: boolean
+  disableRemember: boolean
   forcedIdentifier: undefined | string
   leave: undefined | (() => void | Promise<void>)
 }
 
 const SessionContext = createContext<null | SessionContextType>(null)
 SessionContext.displayName = 'SessionContext'
+
+type SessionState = {
+  sessions: readonly SessionWithToken[]
+  current: DidString | null
+}
+
+function findSession(
+  sessions: readonly SessionWithToken[],
+  current: DidString | null,
+): SessionWithToken | null {
+  if (!current) return null
+  return sessions.find((s) => s.account.did === current) ?? null
+}
 
 export const enum InitialSelectedSession {
   First,
@@ -45,6 +77,7 @@ export type SessionProviderProps = {
   children: ReactNode
   initialSessions: readonly Session[]
   initialSelected?: DidString | InitialSelectedSession
+  disableRemember?: boolean
   forcedIdentifier?: string
   leave?: () => void | Promise<void>
 }
@@ -53,14 +86,15 @@ export function SessionProvider({
   children,
   initialSessions,
   initialSelected,
+  disableRemember = false,
   forcedIdentifier = undefined,
   leave = undefined,
 }: SessionProviderProps) {
   const locale = useCurrentLocale()
   const { availableUserDomains } = useCustomizationData()
-  const { showBoundary } = useErrorBoundary<UnknownRequestUriError>()
+  const { showBoundary } = useErrorBoundary()
   const { notifyError } = useNotificationsContext()
-  const [current, setCurrent] = useState<DidString | null>(() => {
+  const [state, setState] = useState<SessionState>(() => {
     const initialSession: Session | undefined = forcedIdentifier
       ? initialSessions.find(
           (s) =>
@@ -77,28 +111,45 @@ export function SessionProvider({
             ? initialSessions.find((s) => s.account.did === initialSelected)
             : undefined
 
-    return initialSession ? initialSession.account.did : null
+    return {
+      sessions: initialSessions,
+      current: initialSession ? initialSession.account.did : null,
+    }
   })
-  const [sessions, setSessions] =
-    useState<readonly SessionWithToken[]>(initialSessions)
 
-  const session = useMemo(() => {
-    return current
-      ? (sessions.find(
-          (s) => s.account.did === current || s.account.handle === current,
-        ) ?? null)
-      : null
-  }, [sessions, current])
+  // @NOTE The ref is the state the router's guards read; `state` is the same
+  // value, for React. Only ever written from an event handler (through
+  // `update`), never during render.
+  const stateRef = useRef(state)
+
+  const update = useCallback(
+    (fn: (state: SessionState) => SessionState) => {
+      const next = fn(stateRef.current)
+      if (next === stateRef.current) return
+      stateRef.current = next
+      setState(next)
+    },
+    [setState],
+  )
+
+  const { sessions } = state
+  const session = useMemo(
+    () => findSession(state.sessions, state.current),
+    [state],
+  )
 
   const setSession = useCallback(
     (session: { account: Account } | null) => {
-      setCurrent(
-        session && sessions.some((s) => s.account.did === session.account.did)
-          ? session.account.did
-          : null,
-      )
+      update((state) => ({
+        ...state,
+        current:
+          session &&
+          state.sessions.some((s) => s.account.did === session.account.did)
+            ? session.account.did
+            : null,
+      }))
     },
-    [sessions, setCurrent],
+    [update],
   )
 
   const upsertSession = useCallback(
@@ -109,48 +160,42 @@ export function SessionProvider({
       // created the session, and therefore, login is not required.
       loginRequired = false,
     }: { account: Account } & Partial<SessionWithToken>) => {
-      setSessions((sessions) => {
-        return upsert(
-          sessions,
-          {
-            account,
-            ephemeralToken,
-            loginRequired,
-          },
+      update((state) => ({
+        sessions: upsert(
+          state.sessions,
+          { account, ephemeralToken, loginRequired },
           (s) => s.account.did === account.did,
-        )
-      })
-      setCurrent(account.did)
+        ),
+        current: account.did,
+      }))
     },
-    [setCurrent, setSessions],
+    [update],
   )
 
   const upsertAccount = useCallback(
     (account: Account) => {
-      setSessions((sessions) =>
-        sessions.map((s) =>
+      update((state) => ({
+        ...state,
+        sessions: state.sessions.map((s) =>
           s.account.did === account.did ? { ...s, account } : s,
         ),
-      )
+      }))
     },
-    [setSessions],
+    [update],
   )
 
   const removeSession = useCallback(
     (did: string | string[]) => {
-      if (Array.isArray(did)) {
-        setSessions((sessions) =>
-          sessions.filter((s) => !did.includes(s.account.did)),
-        )
-        setCurrent((current) =>
-          current != null && did.includes(current) ? null : current,
-        )
-      } else {
-        setSessions((sessions) => sessions.filter((s) => s.account.did !== did))
-        setCurrent((current) => (current === did ? null : current))
-      }
+      const dids = Array.isArray(did) ? did : [did]
+      update((state) => ({
+        sessions: state.sessions.filter((s) => !dids.includes(s.account.did)),
+        current:
+          state.current != null && dids.includes(state.current)
+            ? null
+            : state.current,
+      }))
     },
-    [setSessions, setCurrent],
+    [update],
   )
 
   const api = useMemo(() => {
@@ -197,18 +242,49 @@ export function SessionProvider({
   ])
 
   const hasDomains = !!availableUserDomains?.length
+  const canSignUp = hasDomains && !forcedIdentifier
+  const canSwitchAccounts = !forcedIdentifier
+
+  const store = useMemo(
+    (): SessionStore => ({
+      get sessions() {
+        return stateRef.current.sessions
+      },
+      get session() {
+        const { sessions, current } = stateRef.current
+        return findSession(sessions, current)
+      },
+      canSignUp,
+      canSwitchAccounts,
+    }),
+    [canSignUp, canSwitchAccounts],
+  )
+
   const value = useMemo(
     (): SessionContextType => ({
       api,
+      store,
       sessions,
       session,
       setSession,
       leave,
+      disableRemember,
       forcedIdentifier,
-      canSignUp: hasDomains && !forcedIdentifier,
-      canSwitchAccounts: !forcedIdentifier,
+      canSignUp,
+      canSwitchAccounts,
     }),
-    [api, sessions, session, setSession, leave, forcedIdentifier, hasDomains],
+    [
+      api,
+      store,
+      sessions,
+      session,
+      setSession,
+      leave,
+      disableRemember,
+      forcedIdentifier,
+      canSignUp,
+      canSwitchAccounts,
+    ],
   )
 
   return <SessionContext value={value}>{children}</SessionContext>

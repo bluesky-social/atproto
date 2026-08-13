@@ -45,6 +45,62 @@ The account page starts signed out. The account rows in the picker are not
 hashes, so navigate by clicking sidebar links rather than setting
 `location.hash`.
 
+Every path under `/account` serves the account page, as it does behind the PDS
+(the `mock-account-paths` plugin in `vite.config.js`), so deep links and
+refreshes work. That is what makes the mock usable for anything to do with URL
+state — `account-page.html` must therefore keep its imports absolute and leave
+the path alone when it is already under `/account/`.
+
+## Routing
+
+**File-based.** `src/routes/` is the route tree, and `src/routeTree.gen.ts` is
+generated from it by `@tanstack/router-plugin` on every dev run and build. The
+generated file is committed; don't edit it, and don't add it to a lint or format
+pass (it is already in `.prettierignore`). `autoCodeSplitting` gives every route
+component its own chunk — no `lazyRouteComponent` by hand.
+
+Naming follows TanStack's conventions: `__root.tsx`, `index.tsx` for a path's
+own page, a `$` prefix for params, `route.tsx` for a directory's layout, and a
+`-` prefix for files that are colocated content rather than routes (the About
+page's localized copies live in `-about/`).
+
+**Guards go in `beforeLoad`, never in render.** `/account` decides where the
+device's sessions belong (welcome / picker / the selected account) and
+`/account/u/$accountId` resolves the account the URL names, each throwing
+`redirect()`. `beforeLoad` returns `{ session }`, so descendants read the
+account from `Route.useRouteContext()` instead of resolving it again. Rendering
+a `<Navigate>` to gate a page reintroduces a render-then-bounce and a window
+where children fetch as the wrong account.
+
+**Router context** carries what the guards and loaders need but can't reach
+through React: `auth` (the session store), `api`, and `queryClient`. It is
+supplied at `<RouterProvider context={…}/>` in `account-page.tsx`.
+
+Two consequences that are easy to get wrong:
+
+- `auth` is `SessionContextType.store`, whose fields are **getters**, not a
+  render snapshot. A guard runs during a navigation that is usually dispatched
+  from the same event handler that just mutated the session, so a captured
+  value would be one render stale and the guard would reject the account it was
+  just sent to.
+- Changing the context does not re-run the guards. `account-page.tsx`
+  invalidates the router when the sessions change, which is what makes signing
+  out move the user with no navigation wired into the action.
+
+Data pages load through the route: `loader` calls
+`queryClient.ensureQueryData(…QueryOptions(api, …))` and the component reads the
+same query with `useSuspenseQuery`, so there is no in-component loading state.
+Failures surface through the route's `errorComponent` (whose `reset` retries).
+
+The third-party consent flow has no router at all — it is a linear wizard and
+keeps `AuthenticationProvider`.
+
+A link's `to` is a path _template_ (`/account/u/$accountId/manage`) — it never
+equals `location.pathname`. Test the current page with `useMatchRoute`
+(`useIsCurrentTarget` in `AccountShell`) and mark active links with
+`activeOptions={{ exact: true }}`; without `exact`, the account home matches
+every page below it.
+
 ## Components
 
 - `components/ui/*` — shadcn primitives, style `base-nova`, on `@base-ui/react`.

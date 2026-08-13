@@ -4,11 +4,34 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { lingui } from '@lingui/vite-plugin'
 import tailwindcss from '@tailwindcss/vite'
+import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import react from '@vitejs/plugin-react-swc'
 import { defineConfig } from 'vite'
 import { bundleManifest } from '@atproto-labs/rolldown-plugin-bundle-manifest'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+
+/**
+ * The account page owns every path under `/account`, as it does when the PDS
+ * serves it. The dev server is a plain multi-page app, so without this a deep
+ * link — or a refresh on one — falls through to the mock index instead of
+ * reaching the router.
+ *
+ * @returns {import('vite').Plugin}
+ */
+const mockAccountPaths = () => ({
+  name: 'mock-account-paths',
+  apply: 'serve',
+  configureServer(server) {
+    server.middlewares.use((req, _res, next) => {
+      const [pathname] = (req.url ?? '').split('?')
+      if (pathname === '/account' || pathname.startsWith('/account/')) {
+        req.url = '/account-page.html'
+      }
+      next()
+    })
+  },
+})
 
 export default defineConfig({
   resolve: {
@@ -18,11 +41,20 @@ export default defineConfig({
     conditions: ['browser', 'import', 'module', 'default'],
   },
   plugins: [
+    // @NOTE Must come before the React plugin: it rewrites the route files
+    // (splitting each `component` into its own chunk) before they are compiled.
+    tanstackRouter({
+      target: 'react',
+      autoCodeSplitting: true,
+      routesDirectory: './src/routes',
+      generatedRouteTree: './src/routeTree.gen.ts',
+    }),
     react({
       plugins: [['@lingui/swc-plugin', {}]],
     }),
     lingui({ cwd: __dirname }),
     tailwindcss(),
+    mockAccountPaths(),
   ],
   build: {
     emptyOutDir: false,

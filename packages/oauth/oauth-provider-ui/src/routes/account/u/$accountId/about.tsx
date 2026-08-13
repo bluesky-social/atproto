@@ -1,13 +1,22 @@
 import { useLingui } from '@lingui/react'
+import { createFileRoute } from '@tanstack/react-router'
 import { type FunctionComponent, Suspense, lazy, useMemo } from 'react'
 
+export const Route = createFileRoute('/account/u/$accountId/about')({
+  component: AboutPage,
+})
+
+// @NOTE `-about/` is prefixed with `-`, which keeps its localized copies out
+// of the route tree — they are content, not routes.
 function importLocalizedPageModule(
   locale: string,
 ): Promise<{ Page: FunctionComponent }> {
-  return import(`./page.${locale}.tsx`).catch((_err) => import('./page.en.tsx'))
+  return import(`./-about/${locale}.tsx`).catch(
+    (_err) => import('./-about/en.tsx'),
+  )
 }
 
-export default function Page() {
+function AboutPage() {
   const { i18n } = useLingui()
   const { locale } = i18n
 
