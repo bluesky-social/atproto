@@ -37,6 +37,9 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
         skipViewerBlocks,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({ viewer, req }),
+        ),
       })
 
       const result = await fillPage({
