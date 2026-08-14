@@ -1,5 +1,46 @@
 # @atproto/bsky
 
+## 0.0.274
+
+### Patch Changes
+
+- [#5365](https://github.com/bluesky-social/atproto/pull/5365) [`54edd67`](https://github.com/bluesky-social/atproto/commit/54edd671ebf3fd66ea88822fdb58c2a96e6140e5) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add batched canonical OP thread chains to post hydration so AppView can derive position metadata.
+
+- [#5375](https://github.com/bluesky-social/atproto/pull/5375) [`b31485e`](https://github.com/bluesky-social/atproto/commit/b31485ec5012f543fd60304df9a1684fac4e3dea) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Fix pagination behavior
+
+- [#5382](https://github.com/bluesky-social/atproto/pull/5382) [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Apply proper backpressure to image processing stream, avoiding memory pressure
+
+- [#5346](https://github.com/bluesky-social/atproto/pull/5346) [`68aaad8`](https://github.com/bluesky-social/atproto/commit/68aaad8ce22b3e58e768980ccb5e3556a6d71b23) Thanks [@cuducos](https://github.com/cuducos)! - Allow allowlisted feeds to be served by iris instead of their registered feed generator, behind the `iris:feed:enable` gate. Configured with `BSKY_IRIS_FEED_URIS`, which defaults to empty — leaving the routing off.
+
+- [#5378](https://github.com/bluesky-social/atproto/pull/5378) [`7f87e4a`](https://github.com/bluesky-social/atproto/commit/7f87e4a761ec6f3e0c25da25d0bc44b198b4bf80) Thanks [@cuducos](https://github.com/cuducos)! - Serve all trending topics traffic from iris and remove the experiment gate
+
+- [#5379](https://github.com/bluesky-social/atproto/pull/5379) [`6dac4dd`](https://github.com/bluesky-social/atproto/commit/6dac4dd01fa766c069b0eeab9dc55d3ae6297075) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Expose canonical OP thread numbering on feed items.
+
+- Updated dependencies [[`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`c26b463`](https://github.com/bluesky-social/atproto/commit/c26b463a36124deb14b8d56ad1810eeddaa129cc), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`05305a7`](https://github.com/bluesky-social/atproto/commit/05305a7a18fc830262a23850dd659e8e98db0149), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa)]:
+  - @atproto/common@0.8.0
+  - @atproto/api@0.20.40
+  - @atproto/repo@0.10.11
+  - @atproto/sync@0.4.4
+  - @atproto/xrpc-server@0.12.4
+  - @atproto-labs/xrpc-utils@0.1.17
+  - @atproto/lex@0.3.6
+
+## 0.0.273
+
+### Patch Changes
+
+- [#5356](https://github.com/bluesky-social/atproto/pull/5356) [`aa72025`](https://github.com/bluesky-social/atproto/commit/aa720259cd62362f5ea0a6a8314a42cdc24e6681) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Refill follower pages after filtering blocked, taken-down, or deactivated accounts.
+
+- [#5359](https://github.com/bluesky-social/atproto/pull/5359) [`aadb103`](https://github.com/bluesky-social/atproto/commit/aadb10349497d7c6b6ce5641dbbb1fd940dd5b12) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Remove timing races from WebSocket, background indexing, firehose, and Ozone materialized-view tests.
+
+- [#5351](https://github.com/bluesky-social/atproto/pull/5351) [`063dba4`](https://github.com/bluesky-social/atproto/commit/063dba438f8edab8ccf9650559ba0839f20ca639) Thanks [@amckinley](https://github.com/amckinley)! - Disable blob proxy retries for HTTP 429 responses while retaining the configured retry count for other transient failures.
+
+- Updated dependencies [[`b2de0ee`](https://github.com/bluesky-social/atproto/commit/b2de0ee1ccb70fac69be90037751ea30daa37e3f), [`aadb103`](https://github.com/bluesky-social/atproto/commit/aadb10349497d7c6b6ce5641dbbb1fd940dd5b12)]:
+  - @atproto/api@0.20.39
+  - @atproto/sync@0.4.3
+  - @atproto/xrpc-server@0.12.3
+  - @atproto-labs/xrpc-utils@0.1.16
+
 ## 0.0.272
 
 ### Patch Changes

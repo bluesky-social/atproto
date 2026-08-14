@@ -380,7 +380,16 @@ describe(createTransport, () => {
   it('keeps an idle connection alive via heartbeat against a real server', async () => {
     // `ws` answers protocol pings automatically (autoPong defaults to true),
     // so a server that never sends anything still keeps the heartbeat happy.
-    await using server = await startServer(() => {})
+    let pingCount = 0
+    let resolveThreePings!: () => void
+    const threePings = new Promise<void>((resolve) => {
+      resolveThreePings = resolve
+    })
+    await using server = await startServer((ws) => {
+      ws.on('ping', () => {
+        if (++pingCount === 3) resolveThreePings()
+      })
+    })
     const controller = new AbortController()
     const onClose = vi.fn()
     const transport = createTransport({
@@ -388,14 +397,13 @@ describe(createTransport, () => {
       url: server.url,
       dataMode: 'auto',
       signal: controller.signal,
-      heartbeat: { intervalMs: 30 },
+      heartbeat: { intervalMs: 100 },
       onOpen: () => {},
       onClose,
     })
     const iterator = transport[Symbol.asyncIterator]()
     const pending = iterator.next()
-    // Outlive several heartbeat intervals without the channel failing.
-    await new Promise((resolve) => setTimeout(resolve, 200))
+    await Promise.race([threePings, pending])
     expect(onClose).not.toHaveBeenCalled()
     controller.abort()
     await pending.catch(() => {})

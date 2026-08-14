@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { ActiveDeviceSession } from '@atproto/oauth-provider-api'
+import type { Session } from '@atproto/oauth-provider-api'
 import {
   type Middleware,
   Router,
@@ -63,12 +63,10 @@ export function createAccountPageMiddleware<
         await server.accountManager.listDeviceAccounts(deviceId)
 
       sendAccountPage(req, res, {
-        deviceSessions: deviceAccounts.map(
-          (deviceAccount): ActiveDeviceSession => ({
-            account: deviceAccount.account,
-            loginRequired: server.checkLoginRequired(deviceAccount),
-          }),
-        ),
+        deviceSessions: deviceAccounts.map((deviceAccount): Session => ({
+          account: deviceAccount.account,
+          loginRequired: server.checkLoginRequired(deviceAccount),
+        })),
       })
     } catch (err) {
       onError?.(

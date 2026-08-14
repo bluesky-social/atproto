@@ -1,5 +1,25 @@
 # @atproto/oauth-provider-ui
 
+## 0.9.2
+
+### Patch Changes
+
+- [#5361](https://github.com/bluesky-social/atproto/pull/5361) [`b47f379`](https://github.com/bluesky-social/atproto/commit/b47f3799adc6ce6fc6435b6009c39044266894b1) Thanks [@bigmoves](https://github.com/bigmoves)! - Center the "You are being redirected..." copy on the post-authorization screen.
+
+- [#5387](https://github.com/bluesky-social/atproto/pull/5387) [`4e18a00`](https://github.com/bluesky-social/atproto/commit/4e18a00b2de97e36b9b00a7fcb8713efd87964d1) Thanks [@bigmoves](https://github.com/bigmoves)! - Internal clean-up of the OAuth provider API surface: the UI now imports the
+  CSRF cookie/header names and the API endpoint prefix from
+  `@atproto/oauth-provider-api` instead of re-declaring them, and optional GET
+  parameters are omitted from the query string rather than sent as the literal
+  string `"undefined"`.
+- Updated dependencies [[`4e18a00`](https://github.com/bluesky-social/atproto/commit/4e18a00b2de97e36b9b00a7fcb8713efd87964d1)]:
+  - @atproto/oauth-provider-api@0.8.0
+
+## 0.9.1
+
+### Patch Changes
+
+- [#5334](https://github.com/bluesky-social/atproto/pull/5334) [`b4d71fc`](https://github.com/bluesky-social/atproto/commit/b4d71fc24f1c907daa67460251f2a8dc904359f9) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump react-error-boundary from 5.0.0 to 6.1.2
+
 ## 0.9.0
 
 ### Minor Changes

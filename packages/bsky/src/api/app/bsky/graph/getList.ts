@@ -19,7 +19,7 @@ import {
 import type { ListItemInfo } from '../../../../proto/bsky_pb.js'
 import { uriToDid as didFromUri } from '../../../../util/uris.js'
 import type { Views } from '../../../../views/index.js'
-import { clearlyBadCursor, resHeaders } from '../../../util.js'
+import { clearlyBadCursor, fillPage, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getList = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -36,7 +36,13 @@ export default function (server: Server, ctx: AppContext) {
         includeTakedowns,
         skipViewerBlocks,
       })
-      const result = await getList({ ...params, hydrateCtx }, ctx)
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          getList({ ...params, cursor, limit, hydrateCtx }, ctx),
+        items: (r) => r.items,
+      })
       return {
         encoding: 'application/json',
         body: result,

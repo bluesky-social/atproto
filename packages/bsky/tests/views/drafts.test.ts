@@ -298,6 +298,8 @@ describe('appview drafts views', () => {
       paginatedRes.forEach((res) =>
         expect(res.drafts.length).toBeLessThanOrEqual(2),
       )
+      expect(paginatedRes[0].cursor).toBeDefined()
+      expect(paginatedRes.at(-1)?.cursor).toBe('')
 
       const full = results([fullRes.data])
       const paginated = results(paginatedRes)
@@ -312,6 +314,19 @@ describe('appview drafts views', () => {
       // Check pagination ordering (most recent first).
       expect(paginated.at(0)?.id).toBe(full.at(0)?.id)
       expect(paginated.at(-1)?.id).toBe(full.at(-1)?.id)
+
+      const exact = await network.bsky.ctx.dataplane.getActorDrafts({
+        actorDid: alice,
+        limit: 7,
+      })
+      const nonterminal = await network.bsky.ctx.dataplane.getActorDrafts({
+        actorDid: alice,
+        limit: 2,
+      })
+      expect(exact.drafts).toHaveLength(7)
+      expect(exact.cursor).toBe('')
+      expect(nonterminal.drafts).toHaveLength(2)
+      expect(nonterminal.cursor).not.toBe('')
     })
   })
 

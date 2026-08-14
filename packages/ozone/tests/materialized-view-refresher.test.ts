@@ -26,9 +26,12 @@ describe('materialized view refresher', () => {
   it('skips the cycle while another session holds the lock', async () => {
     const contender = await db.pool.connect()
     try {
-      await contender.query('SELECT pg_advisory_lock($1)', [
-        MATERIALIZED_VIEW_REFRESH_LOCK_ID,
-      ])
+      await contender.query(
+        `SELECT pg_advisory_lock(
+          hashtextextended(current_database() || ':' || $2::text, $1)
+        )`,
+        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, db.opts.schema ?? 'public'],
+      )
 
       const infoSpy = jest.spyOn(dbLogger, 'info')
 
@@ -44,9 +47,41 @@ describe('materialized view refresher', () => {
         messages.filter((msg) => msg === 'refreshed materialized view'),
       ).toHaveLength(0)
     } finally {
-      await contender.query('SELECT pg_advisory_unlock($1)', [
-        MATERIALIZED_VIEW_REFRESH_LOCK_ID,
-      ])
+      await contender.query(
+        `SELECT pg_advisory_unlock(
+          hashtextextended(current_database() || ':' || $2::text, $1)
+        )`,
+        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, db.opts.schema ?? 'public'],
+      )
+      contender.release()
+    }
+  })
+
+  it('does not share the lock with another schema', async () => {
+    const contender = await db.pool.connect()
+    try {
+      await contender.query(
+        `SELECT pg_advisory_lock(
+          hashtextextended(current_database() || ':' || $2::text, $1)
+        )`,
+        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, 'ozone_view_refresher_contender'],
+      )
+
+      const infoSpy = jest.spyOn(dbLogger, 'info')
+
+      await network.ozone.daemon.ctx.materializedViewRefresher.run()
+
+      const refreshCalls = infoSpy.mock.calls.filter((call) =>
+        call.includes('refreshed materialized view'),
+      )
+      expect(refreshCalls).toHaveLength(4)
+    } finally {
+      await contender.query(
+        `SELECT pg_advisory_unlock(
+          hashtextextended(current_database() || ':' || $2::text, $1)
+        )`,
+        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, 'ozone_view_refresher_contender'],
+      )
       contender.release()
     }
   })
@@ -125,13 +160,18 @@ describe('materialized view refresher', () => {
 
       // The advisory lock was released despite the failure.
       const lockResult = await admin.query(
-        'SELECT pg_try_advisory_lock($1) as locked',
-        [MATERIALIZED_VIEW_REFRESH_LOCK_ID],
+        `SELECT pg_try_advisory_lock(
+          hashtextextended(current_database() || ':' || $2::text, $1)
+        ) as locked`,
+        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, db.opts.schema ?? 'public'],
       )
       expect(lockResult.rows[0]?.locked).toBe(true)
-      await admin.query('SELECT pg_advisory_unlock($1)', [
-        MATERIALIZED_VIEW_REFRESH_LOCK_ID,
-      ])
+      await admin.query(
+        `SELECT pg_advisory_unlock(
+          hashtextextended(current_database() || ':' || $2::text, $1)
+        )`,
+        [MATERIALIZED_VIEW_REFRESH_LOCK_ID, db.opts.schema ?? 'public'],
+      )
     } finally {
       if (renamed) {
         await admin.query(

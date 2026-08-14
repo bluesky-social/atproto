@@ -48,7 +48,7 @@ export function SessionProvider({
   initialSelected,
 }: SessionProviderProps) {
   const locale = useCurrentLocale()
-  const { showBoundary } = useErrorBoundary<UnknownRequestUriError>()
+  const { showBoundary } = useErrorBoundary()
   const { notifyError } = useNotificationsContext()
   const [current, setCurrent] = useState(() => {
     if (initialSelected === InitialSelectedSession.First) {

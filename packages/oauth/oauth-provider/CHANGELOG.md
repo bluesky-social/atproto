@@ -1,5 +1,27 @@
 # @atproto/oauth-provider
 
+## 0.22.2
+
+### Patch Changes
+
+- [#5387](https://github.com/bluesky-social/atproto/pull/5387) [`4e18a00`](https://github.com/bluesky-social/atproto/commit/4e18a00b2de97e36b9b00a7fcb8713efd87964d1) Thanks [@bigmoves](https://github.com/bigmoves)! - Internal clean-up of the OAuth provider API surface: the UI now imports the
+  CSRF cookie/header names and the API endpoint prefix from
+  `@atproto/oauth-provider-api` instead of re-declaring them, and optional GET
+  parameters are omitted from the query string rather than sent as the literal
+  string `"undefined"`.
+- Updated dependencies [[`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`b47f379`](https://github.com/bluesky-social/atproto/commit/b47f3799adc6ce6fc6435b6009c39044266894b1), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`4e18a00`](https://github.com/bluesky-social/atproto/commit/4e18a00b2de97e36b9b00a7fcb8713efd87964d1), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`4e18a00`](https://github.com/bluesky-social/atproto/commit/4e18a00b2de97e36b9b00a7fcb8713efd87964d1)]:
+  - @atproto/common@0.8.0
+  - @atproto/oauth-provider-ui@0.9.2
+  - @atproto/oauth-provider-api@0.8.0
+  - @atproto/lex-resolver@0.2.8
+
+## 0.22.1
+
+### Patch Changes
+
+- Updated dependencies [[`b4d71fc`](https://github.com/bluesky-social/atproto/commit/b4d71fc24f1c907daa67460251f2a8dc904359f9)]:
+  - @atproto/oauth-provider-ui@0.9.1
+
 ## 0.22.0
 
 ### Minor Changes

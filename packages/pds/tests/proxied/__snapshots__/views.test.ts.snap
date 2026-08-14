@@ -346,7 +346,6 @@ exports[`proxies view requests actor.getSuggestions 1`] = `
       },
     },
   ],
-  "cursor": "1:2:3",
 }
 `;
 
@@ -634,7 +633,6 @@ exports[`proxies view requests actor.searchActorTypeahead 1`] = `
 
 exports[`proxies view requests feed.getAuthorFeed 1`] = `
 {
-  "cursor": "0000000000000::bafycid",
   "feed": [
     {
       "post": {
@@ -1034,7 +1032,6 @@ exports[`proxies view requests feed.getFeedGenerators 1`] = `
 
 exports[`proxies view requests feed.getLikes 1`] = `
 {
-  "cursor": "0000000000000::bafycid",
   "likes": [
     {
       "actor": {
@@ -1110,7 +1107,6 @@ exports[`proxies view requests feed.getLikes 1`] = `
 
 exports[`proxies view requests feed.getListFeed 1`] = `
 {
-  "cursor": "0000000000000::bafycid",
   "feed": [
     {
       "post": {
@@ -2166,7 +2162,6 @@ exports[`proxies view requests feed.getPosts 1`] = `
 
 exports[`proxies view requests feed.getRepostedBy 1`] = `
 {
-  "cursor": "0000000000000::bafycid",
   "repostedBy": [
     {
       "associated": {
@@ -2193,7 +2188,6 @@ exports[`proxies view requests feed.getRepostedBy 1`] = `
 
 exports[`proxies view requests feed.getTimeline 1`] = `
 {
-  "cursor": "0000000000000::bafycid",
   "feed": [
     {
       "post": {
@@ -4238,13 +4232,11 @@ exports[`proxies view requests graph.getBlocks 1`] = `
       },
     },
   ],
-  "cursor": "0000000000000::bafycid",
 }
 `;
 
 exports[`proxies view requests graph.getFollowers 1`] = `
 {
-  "cursor": "0000000000000::bafycid",
   "followers": [
     {
       "associated": {
@@ -4335,7 +4327,6 @@ exports[`proxies view requests graph.getFollowers 1`] = `
 
 exports[`proxies view requests graph.getFollows 1`] = `
 {
-  "cursor": "0000000000000::bafycid",
   "follows": [
     {
       "associated": {
@@ -4420,7 +4411,6 @@ exports[`proxies view requests graph.getFollows 1`] = `
 
 exports[`proxies view requests graph.getList 1`] = `
 {
-  "cursor": "0000000000000::bafycid",
   "items": [
     {
       "subject": {
@@ -4524,7 +4514,6 @@ exports[`proxies view requests graph.getList 1`] = `
 
 exports[`proxies view requests graph.getListBlocks 1`] = `
 {
-  "cursor": "0000000000000::bafycid",
   "lists": [
     {
       "cid": "cids(0)",
@@ -4567,7 +4556,6 @@ exports[`proxies view requests graph.getListBlocks 1`] = `
 
 exports[`proxies view requests graph.getLists 1`] = `
 {
-  "cursor": "0000000000000::bafycid",
   "lists": [
     {
       "cid": "cids(0)",

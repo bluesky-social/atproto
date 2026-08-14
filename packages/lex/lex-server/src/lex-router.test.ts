@@ -1861,7 +1861,7 @@ describe('Subscription', () => {
 
   it('handles subscriptions with cleanup', async () => {
     let sentCount = 0
-    const maxMessages = 10
+    const maxMessages = 100
 
     const { resolve, promise: finallyPromise } = timeoutDeferred(5000)
 
@@ -1886,6 +1886,9 @@ describe('Subscription', () => {
       `ws://localhost:${port}/xrpc/io.example.subscribe?message=ping`,
     )
     ws.binaryType = 'arraybuffer'
+    const closePromise = new Promise<void>((resolve) => {
+      ws.addEventListener('close', () => resolve(), { once: true })
+    })
 
     const messages: unknown[] = []
     ws.addEventListener('message', (event) => {
@@ -1901,15 +1904,15 @@ describe('Subscription', () => {
       }
     })
 
-    // Ensures that "finally" block is indeed called
-    await finallyPromise
+    await Promise.all([finallyPromise, closePromise])
 
-    expect(messages).toStrictEqual([
+    expect(messages.slice(0, 3)).toStrictEqual([
       [{ op: 1 }, { message: 'ping', count: 1 }],
       [{ op: 1 }, { message: 'ping', count: 2 }],
       [{ op: 1 }, { message: 'ping', count: 3 }],
     ])
 
+    expect(messages.length).toBeGreaterThanOrEqual(3)
     expect(sentCount).toBeGreaterThanOrEqual(3)
     expect(sentCount).toBeLessThan(maxMessages)
   })

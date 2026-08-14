@@ -226,10 +226,6 @@ msgstr ""
 msgid "Back"
 msgstr "뒤로"
 
-#: src/components/forms/fields/handle-field.tsx
-msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
-msgstr "{minLength, plural, other {#}}~{maxLength, plural, other {#}}자 사이"
-
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
 msgstr "Blob 스토리지"
@@ -684,10 +680,6 @@ msgstr ""
 msgid "If you're trying to change your handle or email, do so before you deactivate."
 msgstr ""
 
-#: src/components/forms/fields/handle-field.tsx
-msgid "Invalid"
-msgstr "사용 불가"
-
 #: src/components/utils/handle.tsx
 msgid "Invalid Handle"
 msgstr ""
@@ -828,10 +820,6 @@ msgstr ""
 msgid "Okay"
 msgstr "확인"
 
-#: src/components/forms/fields/handle-field.tsx
-msgid "Only letters, numbers, and hyphens"
-msgstr "영문자, 숫자, 하이픈만 사용할 수 있습니다"
-
 #: src/components/delete-account-confirm-form.tsx
 #: src/components/forms/fields/password-field.tsx
 #: src/components/sign-in-form.tsx
@@ -860,10 +848,6 @@ msgstr "비밀번호 강도 표시자"
 #: src/components/reset-password-view.tsx
 msgid "Password Updated"
 msgstr "비밀번호 변경됨"
-
-#: src/components/reset-password-view.tsx
-msgid "Password updated!"
-msgstr "비밀번호를 변경했습니다!"
 
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
@@ -1268,6 +1252,10 @@ msgstr "파일 업로드"
 msgid "URL"
 msgstr ""
 
+#: src/components/forms/fields/handle-field.tsx
+msgid "Use {minLength}–{maxLength, plural, one {# letter, number or hyphen} other {# letters, numbers or hyphens}}"
+msgstr ""
+
 #: src/components/update-handle-dialog.tsx
 msgid "Use a default username"
 msgstr ""
@@ -1287,10 +1275,6 @@ msgstr "사용자 이름 또는 이메일 주소"
 #: src/data/handle.ts
 msgid "Username updated"
 msgstr ""
-
-#: src/components/forms/fields/handle-field.tsx
-msgid "Valid"
-msgstr "사용 가능"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Value"
@@ -1433,6 +1417,10 @@ msgstr "내 계정"
 msgid "Your account and all associated data have been deleted."
 msgstr ""
 
+#: src/components/update-email-dialog.tsx
+msgid "Your account currently uses <0>{emailCurrent}</0>. Choose a new email address to associate with it."
+msgstr ""
+
 #: src/authorization-page.tsx
 msgid "Your account has been successfully reactivated."
 msgstr ""
@@ -1473,14 +1461,10 @@ msgstr ""
 msgid "Your email address needs to be verified."
 msgstr ""
 
-#. placeholder {0}: full ? ( <Handle className="text-foreground" handle={full} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
+#. placeholder {0}: segment ? ( <span className="text-foreground block break-all font-medium"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
 #: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "내 전체 사용자 이름: {0}"
-
-#: src/components/reset-password-view.tsx
-msgid "Your password has been updated!"
-msgstr "비밀번호를 변경했습니다!"
 
 #: src/components/reactivate-account-dialog.tsx
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
@@ -1496,4 +1480,8 @@ msgstr "세션이 만료되었습니다. 다시 로그인해 주세요."
 
 #: src/data/handle.ts
 msgid "Your username has been updated."
+msgstr ""
+
+#: src/components/forms/fields/handle-field.tsx
+msgid "yourname"
 msgstr ""

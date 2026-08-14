@@ -16,6 +16,6 @@ module.exports = {
   },
   extensionsToTreatAsEsm: ['.ts'],
   transformIgnorePatterns: [],
-  setupFiles: ['<rootDir>/../../test.setup.ts'],
+  setupFiles: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: { '^(\\.\\.?\\/.+)\\.js$': ['$1.ts', '$1.js'] },
 }

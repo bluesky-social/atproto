@@ -226,10 +226,6 @@ msgstr "Authorized"
 msgid "Back"
 msgstr "Back"
 
-#: src/components/forms/fields/handle-field.tsx
-msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
-msgstr "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
-
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
 msgstr "Blob storage"
@@ -693,10 +689,6 @@ msgstr "If you update your email address, email 2FA (if enabled) will be disable
 msgid "If you're trying to change your handle or email, do so before you deactivate."
 msgstr "If you're trying to change your handle or email, do so before you deactivate."
 
-#: src/components/forms/fields/handle-field.tsx
-msgid "Invalid"
-msgstr "Invalid"
-
 #: src/components/utils/handle.tsx
 msgid "Invalid Handle"
 msgstr "Invalid Handle"
@@ -837,10 +829,6 @@ msgstr "No matches"
 msgid "Okay"
 msgstr "Okay"
 
-#: src/components/forms/fields/handle-field.tsx
-msgid "Only letters, numbers, and hyphens"
-msgstr "Only letters, numbers, and hyphens"
-
 #: src/components/delete-account-confirm-form.tsx
 #: src/components/forms/fields/password-field.tsx
 #: src/components/sign-in-form.tsx
@@ -869,10 +857,6 @@ msgstr "Password strength indicator"
 #: src/components/reset-password-view.tsx
 msgid "Password Updated"
 msgstr "Password Updated"
-
-#: src/components/reset-password-view.tsx
-msgid "Password updated!"
-msgstr "Password updated!"
 
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
@@ -1277,6 +1261,10 @@ msgstr "Upload files"
 msgid "URL"
 msgstr "URL"
 
+#: src/components/forms/fields/handle-field.tsx
+msgid "Use {minLength}–{maxLength, plural, one {# letter, number or hyphen} other {# letters, numbers or hyphens}}"
+msgstr "Use {minLength}–{maxLength, plural, one {# letter, number or hyphen} other {# letters, numbers or hyphens}}"
+
 #: src/components/update-handle-dialog.tsx
 msgid "Use a default username"
 msgstr "Use a default username"
@@ -1296,10 +1284,6 @@ msgstr "Username or email address"
 #: src/data/handle.ts
 msgid "Username updated"
 msgstr "Username updated"
-
-#: src/components/forms/fields/handle-field.tsx
-msgid "Valid"
-msgstr "Valid"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Value"
@@ -1442,6 +1426,10 @@ msgstr "Your account"
 msgid "Your account and all associated data have been deleted."
 msgstr "Your account and all associated data have been deleted."
 
+#: src/components/update-email-dialog.tsx
+msgid "Your account currently uses <0>{emailCurrent}</0>. Choose a new email address to associate with it."
+msgstr "Your account currently uses <0>{emailCurrent}</0>. Choose a new email address to associate with it."
+
 #: src/authorization-page.tsx
 msgid "Your account has been successfully reactivated."
 msgstr "Your account has been successfully reactivated."
@@ -1482,14 +1470,10 @@ msgstr "Your email address has been verified."
 msgid "Your email address needs to be verified."
 msgstr "Your email address needs to be verified."
 
-#. placeholder {0}: full ? ( <Handle className="text-foreground" handle={full} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
+#. placeholder {0}: segment ? ( <span className="text-foreground block break-all font-medium"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
 #: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
-
-#: src/components/reset-password-view.tsx
-msgid "Your password has been updated!"
-msgstr "Your password has been updated!"
 
 #: src/components/reactivate-account-dialog.tsx
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
@@ -1506,3 +1490,7 @@ msgstr "Your session has expired. Please sign in again."
 #: src/data/handle.ts
 msgid "Your username has been updated."
 msgstr "Your username has been updated."
+
+#: src/components/forms/fields/handle-field.tsx
+msgid "yourname"
+msgstr "yourname"

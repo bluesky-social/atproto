@@ -1,0 +1,94 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.video.startUpload",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Start a multipart video upload. The declared size is exact, while optional media properties are advisory and used only for early failure; the authoritative probe runs asynchronously after upload.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["sizeBytes", "mimeType"],
+          "properties": {
+            "sizeBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Exact byte size of the complete upload-ready video file before it is split into parts."
+            },
+            "mimeType": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 255,
+              "description": "Declared MIME type of the video."
+            },
+            "name": {
+              "type": "string",
+              "maxLength": 256,
+              "description": "Optional client-provided file name."
+            },
+            "durationMs": {
+              "type": "integer",
+              "description": "Advisory, non-authoritative duration used only for early failure; the authoritative probe runs asynchronously after upload."
+            },
+            "width": {
+              "type": "integer",
+              "description": "Advisory, non-authoritative width used only for early failure; the authoritative probe runs asynchronously after upload."
+            },
+            "height": {
+              "type": "integer",
+              "description": "Advisory, non-authoritative height used only for early failure; the authoritative probe runs asynchronously after upload."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["jobId", "partSizeBytes", "partCount", "expiresAt"],
+          "properties": {
+            "jobId": { "type": "string", "minLength": 1, "maxLength": 256 },
+            "partSizeBytes": { "type": "integer" },
+            "partCount": { "type": "integer" },
+            "expiresAt": { "type": "string", "format": "datetime" }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "UnsupportedContentType",
+          "description": "The declared MIME type is not supported."
+        },
+        {
+          "name": "VideoTooLarge",
+          "description": "The exact file size exceeds the per-file cap or remaining daily byte allowance."
+        },
+        {
+          "name": "VideoTooLong",
+          "description": "The advisory declared duration exceeds the limit."
+        },
+        {
+          "name": "BadAspectRatio",
+          "description": "The advisory declared dimensions have an unsupported aspect ratio."
+        },
+        {
+          "name": "DailyLimitExceeded",
+          "description": "The daily video or byte allowance, including active reservations, is exhausted."
+        },
+        {
+          "name": "TooManyOpenUploads",
+          "description": "The account has reached its open multipart upload limit."
+        },
+        {
+          "name": "UploadForbidden",
+          "description": "The account is not permitted to upload video."
+        },
+        {
+          "name": "ServiceOverloaded",
+          "description": "The service is draining, at capacity, or temporarily unable to create the multipart upload."
+        }
+      ]
+    }
+  }
+}

@@ -1,6 +1,5 @@
-.git
-
 **/*.log
+**/.gitignore
 **/.DS_Store
 **/Dockerfile
 **/node_modules
@@ -8,6 +7,11 @@
 **/*.tsbuildinfo
 **/tests
 **/*.test.ts
+
+.git
+
+# services dev
+services/*/tsconfig.json
 
 # buf
 packages/bsky/src/proto

@@ -40,12 +40,26 @@ export default [
     files: ['**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}'],
   },
   js.configs.recommended,
-  ...tseslint.configs['flat/recommended'],
+  {
+    rules: {
+      'no-var': 'error',
+      'prefer-const': 'warn',
+      'no-misleading-character-class': 'warn',
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
+    },
+  },
   prettierRecommended,
+  {
+    plugins: { n },
+    rules: {
+      'n/global-require': 'error',
+      'n/no-extraneous-import': 'error',
+      'n/prefer-node-protocol': 'error',
+    },
+  },
   importX.flatConfigs.recommended,
   importX.flatConfigs.typescript,
   {
-    plugins: { n },
     settings: {
       node: { version: '>=22' },
       'import-x/internal-regex': '^@atproto(?:-labs)?/',
@@ -53,13 +67,6 @@ export default [
       'import-x/resolver-next': createTypeScriptImportResolver(),
     },
     rules: {
-      'no-var': 'error',
-      'prefer-const': 'warn',
-      'no-misleading-character-class': 'warn',
-      eqeqeq: ['error', 'always', { null: 'ignore' }],
-      'n/global-require': 'error',
-      'n/no-extraneous-import': 'error',
-      'n/prefer-node-protocol': 'error',
       'import-x/extensions': ['off', 'ignorePackages'],
       'import-x/export': 'off',
       'import-x/namespace': 'off',
@@ -87,6 +94,11 @@ export default [
           ],
         },
       ],
+    },
+  },
+  ...tseslint.configs['flat/recommended'],
+  {
+    rules: {
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -111,25 +123,19 @@ export default [
   {
     files: ['**/*.cjs'],
     languageOptions: {
-      globals: { ...globals.node, ...globals.commonjs },
+      globals: globals.commonjs,
     },
   },
   {
     files: [
       '**/vite.config.js',
-      '**/vite.config.mjs',
       'packages/dev-env/bin.js',
       'packages/lex-cli/bin.js',
-      'packages/lex/*/scripts/*.mjs',
+      'packages/lex/*/scripts/*.js',
+      'packages/pds/scripts/*.js',
     ],
     languageOptions: {
       globals: globals.node,
-    },
-  },
-  {
-    files: ['**/test.setup.ts'],
-    languageOptions: {
-      globals: globals.jest,
     },
   },
   {

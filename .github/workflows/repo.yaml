@@ -26,11 +26,11 @@ jobs:
       github.event.pull_request.draft == false &&
       github.event.sender.login != 'dependabot[bot]'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # needed for git diff against base branch
       - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           cache: pnpm
           node-version-file: '.nvmrc'
@@ -45,9 +45,9 @@ jobs:
     # Ensure a changeset is present before we spend time building and testing.
     needs: changeset
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           cache: pnpm
           node-version-file: '.nvmrc'
@@ -71,7 +71,7 @@ jobs:
       # nothing has changed. Touching the restored files brings their mtime to
       # "now", so the prebuild's `find -newer` check correctly reports no newer
       # lexicons.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         id: lex-cli-cache
         with:
           path: |
@@ -83,7 +83,7 @@ jobs:
 
       - run: pnpm build
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: build-artifacts
           retention-days: 2
@@ -121,20 +121,20 @@ jobs:
       matrix:
         shard: [1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           cache: pnpm
           node-version: '22.x'
       - run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         name: Cache Puppeteer browser binaries
         with:
           path: ~/.cache/puppeteer
           key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}-${{ runner.arch }}
       - run: pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: build-artifacts
           path: packages
@@ -145,16 +145,16 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           cache: pnpm
           node-version-file: '.nvmrc'
       - run: pnpm install --frozen-lockfile
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: build-artifacts
           path: packages

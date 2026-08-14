@@ -1,16 +1,9 @@
 import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { AtSignIcon, CheckIcon, XIcon } from 'lucide-react'
+import { AtSignIcon } from 'lucide-react'
 import { type ReactNode, useMemo, useState } from 'react'
 import { Input } from '#/components/ui/input.tsx'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select.tsx'
-import { Handle } from '#/components/utils/handle.tsx'
+import { RadioGroup, RadioGroupItem } from '#/components/ui/radio-group.tsx'
 import { HANDLE_SEGMENT_PATTERN } from '#/lib/form-patterns.ts'
 import {
   MAX_FULL_LENGTH,
@@ -37,10 +30,17 @@ export type HandleFieldProps = {
  * suffix — so the form's values hold exactly what the user sees in each.
  * Callers join them with `composeHandle`.
  *
+ * The two controls stack rather than share a row. A domain beside the input
+ * has to shrink, clip or wrap depending on how long it happens to be, so the
+ * same field looked different per deployment. Full-width radio rows fit any
+ * domain identically, show every option at once instead of hiding them behind
+ * a listbox, and leave the input the whole line. The preview underneath is
+ * what ties the two back together.
+ *
  * Deliberately not wrapped in a `Field.Root`: a Field binds every control
- * inside it to the field's own name, which would make the Select submit under
+ * inside it to the field's own name, which would make the domain submit under
  * `handle` and clobber the segment. The length and charset rules are shown by
- * `ValidationMessage` below instead of a `Field.Error`.
+ * the hint below instead of a `Field.Error`.
  */
 export function HandleField({
   label,
@@ -72,9 +72,34 @@ export function HandleField({
   const maxLength = domain
     ? Math.min(MAX_LENGTH, MAX_FULL_LENGTH - domain.length)
     : MAX_LENGTH
-  const validLength = segment.length >= minLength && segment.length <= maxLength
-  const validCharset = /^[a-z0-9][a-z0-9-]+[a-z0-9]$/.test(segment)
-  const full = domain && validLength && validCharset ? segment + domain : ''
+  const valid =
+    segment.length >= minLength &&
+    segment.length <= maxLength &&
+    /^[a-z0-9][a-z0-9-]+[a-z0-9]$/.test(segment)
+
+  // Stands in for the segment before anything is typed, so the preview can
+  // show a whole handle from the start rather than a gap or a grey bar.
+  const exampleSegment = t`yourname`
+
+  // @NOTE The conditional below is placeholder {0} of this Trans block, and
+  // the msgid it produces is the one the catalogs already carry. Do not add or
+  // reorder elements inside it.
+  const preview = (
+    <Trans>
+      Your full username will be:{' '}
+      {segment ? (
+        <span className="text-foreground block break-all font-medium">
+          @{segment}
+          {domain}
+        </span>
+      ) : (
+        <span className="block break-all">
+          @{exampleSegment}
+          {domain}
+        </span>
+      )}
+    </Trans>
+  )
 
   return (
     <div className="flex flex-col gap-2">
@@ -87,22 +112,6 @@ export function HandleField({
         </label>
       )}
 
-      <div>
-        <ValidationMessage hasValue={!!segment} valid={validLength}>
-          {t`Between ${plural(minLength, {
-            zero: '0',
-            one: 'one',
-            other: '#',
-          })} and ${plural(maxLength, {
-            one: 'one character',
-            other: '# characters',
-          })}`}
-        </ValidationMessage>
-        <ValidationMessage hasValue={!!segment} valid={validCharset}>
-          <Trans>Only letters, numbers, and hyphens</Trans>
-        </ValidationMessage>
-      </div>
-
       <div className="relative flex items-center">
         <span
           aria-hidden
@@ -114,6 +123,7 @@ export function HandleField({
           id="handle"
           name="handle"
           title={t`Type your username`}
+          placeholder={exampleSegment}
           type="text"
           pattern={HANDLE_SEGMENT_PATTERN}
           minLength={MIN_LENGTH}
@@ -125,54 +135,75 @@ export function HandleField({
           dir="auto"
           autoFocus={autoFocus}
           required={required}
-          className={cn('pl-10', domains.length > 1 && 'pr-40')}
+          aria-describedby="handle-hint"
+          className="pl-10"
           value={segment}
           onChange={(event) => setSegment(event.target.value.toLowerCase())}
         />
-
-        {/* @NOTE Holds the domain itself rather than an index, so
-          `Select.Value` renders it without a mapping function. */}
-        {domains.length > 1 && (
-          <div className="absolute right-1">
-            <Select
-              name="domain"
-              value={domain ?? ''}
-              onValueChange={(value) => setDomain(value as ValidDomain)}
-            >
-              <SelectTrigger size="sm" aria-label={t`Select domain`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {domains.map((d) => (
-                  <SelectItem key={d} value={d}>
-                    {d}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
       </div>
 
-      {domains.length <= 1 && (
-        <input type="hidden" name="domain" value={domain ?? ''} />
-      )}
+      {/* @NOTE One line stating both rules, always rendered, so the row height
+        never changes under the cursor mid-click — only its colour does. */}
+      <p
+        id="handle-hint"
+        className={cn(
+          'text-xs',
+          !segment || valid ? 'text-muted-foreground' : 'text-destructive',
+        )}
+      >
+        {/* @NOTE The noun agrees with the end of the range, so the plural is
+          driven by `maxLength`. Locales with more than two plural categories
+          need the form even though the count is never one here. */}
+        {t`Use ${minLength}–${plural(maxLength, {
+          one: '# letter, number or hyphen',
+          other: '# letters, numbers or hyphens',
+        })}`}
+      </p>
 
-      {/* @NOTE The conditional below is placeholder <0> of this Trans block.
-        Do not add or reorder elements inside it. */}
-      <span className="text-muted-foreground truncate text-sm">
-        <Trans>
-          Your full username will be:{' '}
-          {full ? (
-            <Handle className="text-foreground" handle={full} />
-          ) : (
-            <span
-              aria-hidden
-              className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle"
-            />
-          )}
-        </Trans>
-      </span>
+      {domains.length > 1 ? (
+        <>
+          {/* @NOTE The radio value is the domain itself, so Base UI's own
+            hidden input submits under `domain` with no mapping and no second
+            source of truth. */}
+          <RadioGroup
+            name="domain"
+            value={domain ?? ''}
+            onValueChange={(value) => setDomain(value as ValidDomain)}
+            aria-label={t`Select domain`}
+            className="mt-1 gap-2"
+          >
+            {domains.map((d) => (
+              <label
+                key={d}
+                htmlFor={`domain-${d}`}
+                className={cn(
+                  'flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors',
+                  'has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-2',
+                  d === domain
+                    ? 'border-primary bg-accent/50'
+                    : 'border-input hover:bg-accent/40',
+                )}
+              >
+                <RadioGroupItem id={`domain-${d}`} value={d} />
+                <span className="text-sm font-medium">{d}</span>
+              </label>
+            ))}
+          </RadioGroup>
+
+          <p className="text-muted-foreground mt-1 text-sm">{preview}</p>
+        </>
+      ) : (
+        <>
+          <input type="hidden" name="domain" value={domain ?? ''} />
+
+          {/* @NOTE With no choice to make, the preview is the only thing
+            showing the domain at all, so it gets a surface of its own rather
+            than sitting as one more line of grey copy. */}
+          <p className="bg-muted text-muted-foreground mt-1 rounded-lg px-3 py-2.5 text-sm">
+            {preview}
+          </p>
+        </>
+      )}
     </div>
   )
 }
@@ -183,47 +214,4 @@ export function composeHandle(values: {
   domain?: unknown
 }): string {
   return `${String(values.handle ?? '')}${String(values.domain ?? '')}`
-}
-
-function ValidationMessage({
-  hasValue,
-  valid,
-  children,
-}: {
-  hasValue: boolean
-  valid: boolean
-  children: ReactNode
-}) {
-  const { t } = useLingui()
-  return (
-    <p
-      className={cn(
-        'flex items-center gap-1 text-xs',
-        !hasValue
-          ? 'text-muted-foreground'
-          : valid
-            ? 'text-success'
-            : 'text-destructive',
-      )}
-    >
-      {/* @NOTE The indicator always occupies the same box, including before
-        the user types. Reserving the space keeps the row height constant so
-        the layout cannot shift under the cursor mid-click. */}
-      <span
-        aria-hidden
-        className="inline-flex size-3 items-center justify-center"
-      >
-        {hasValue ? (
-          valid ? (
-            <CheckIcon aria-label={t`Valid`} className="size-3" />
-          ) : (
-            <XIcon aria-label={t`Invalid`} className="size-3" />
-          )
-        ) : (
-          <span className="bg-muted-foreground/40 size-1.5 rounded-full" />
-        )}
-      </span>
-      {children}
-    </p>
-  )
 }

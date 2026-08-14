@@ -1,4 +1,5 @@
 import * as ui8 from 'uint8arrays'
+import { describe, expect, it } from 'vitest'
 import {
   cborDecode,
   cborEncode,

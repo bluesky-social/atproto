@@ -1,5 +1,15 @@
 # @atproto/oauth-client-expo
 
+## 0.2.0
+
+### Minor Changes
+
+- [#5371](https://github.com/bluesky-social/atproto/pull/5371) [`c7f39c5`](https://github.com/bluesky-social/atproto/commit/c7f39c527758ffd5b21b896fac494ecf7e69aa37) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **Breaking**: `core-js`, `expo-web-browser`, `react-native-mmkv` and `react-native-url-polyfill` are now peer dependencies of `@atproto/oauth-client-expo`. You will need to install them in your project if you are using this package.
+
+### Patch Changes
+
+- [#5371](https://github.com/bluesky-social/atproto/pull/5371) [`c7f39c5`](https://github.com/bluesky-social/atproto/commit/c7f39c527758ffd5b21b896fac494ecf7e69aa37) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `react-native-mmkv` to version 4
+
 ## 0.1.12
 
 ### Patch Changes

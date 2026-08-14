@@ -25,7 +25,7 @@ import {
 import { SearchSortOrder } from '../../../../proto/bsky_pb.js'
 import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
 import type { Views } from '../../../../views/index.js'
-import { resHeaders, resolveSearchV2Override } from '../../../util.js'
+import { fillPage, resHeaders, resolveSearchV2Override } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
@@ -52,15 +52,23 @@ export default function (server: Server, ctx: AppContext) {
           }),
         ),
       })
-      const results = await searchPosts(
-        {
-          ...params,
-          hydrateCtx,
-          isModService,
-          isV2Override: resolveSearchV2Override(req, ctx.cfg),
-        },
-        ctx,
-      )
+      const results = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          searchPosts(
+            {
+              ...params,
+              cursor,
+              limit,
+              hydrateCtx,
+              isModService,
+              isV2Override: resolveSearchV2Override(req, ctx.cfg),
+            },
+            ctx,
+          ),
+        items: (r) => r.posts,
+      })
       return {
         encoding: 'application/json',
         body: results,

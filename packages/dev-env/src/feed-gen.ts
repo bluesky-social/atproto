@@ -1,12 +1,12 @@
 import events from 'node:events'
 import type http from 'node:http'
 import * as plc from '@did-plc/lib'
-import getPort from 'get-port'
 import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { type SkeletonHandler, app } from '@atproto/pds'
 import type { AtUriString, DidString } from '@atproto/syntax'
 import { InvalidRequestError, createServer } from '@atproto/xrpc-server'
+import getPort from './get-port.js'
 
 export class TestFeedGen {
   private terminator: HttpTerminator
