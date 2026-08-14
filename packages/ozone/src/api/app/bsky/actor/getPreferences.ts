@@ -1,9 +1,9 @@
 import { type LexValue, isDidString, l } from '@atproto/lex'
 import { XRPCError } from '@atproto/xrpc'
 import { type AuthResult, InvalidRequestError } from '@atproto/xrpc-server'
-import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
-import { ids } from '../../lexicon/lexicons.js'
+import type { AppContext } from '../../../../context.js'
+import type { Server } from '../../../../lexicon/index.js'
+import { ids } from '../../../../lexicon/lexicons.js'
 
 const getPreferences = l.query(
   ids.AppBskyActorGetPreferences,
