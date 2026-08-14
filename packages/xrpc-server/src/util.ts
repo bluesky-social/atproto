@@ -1,5 +1,4 @@
 import assert from 'node:assert'
-import { once } from 'node:events'
 import type { IncomingMessage, OutgoingMessage } from 'node:http'
 import { type Duplex, type Readable, pipeline } from 'node:stream'
 import {
@@ -248,11 +247,7 @@ export function createLexiconInputVerifier<I extends Input = Input>(
   if (def.type === 'query' || !def.input) {
     return async (req) => {
       // @NOTE We allow (and ignore) "empty" bodies
-      if (await hasNonEmptyBody(req)) {
-        throw new InvalidRequestError(
-          `A request body was provided when none was expected`,
-        )
-      }
+      await assertEmptyBody(req)
 
       return undefined as I
     }
@@ -322,12 +317,7 @@ export function createSchemaInputVerifier<M extends l.Procedure | l.Query>(
   if (!input?.encoding) {
     //
     return async (req) => {
-      if (await hasNonEmptyBody(req)) {
-        // @NOTE we *could* also discard the body here instead of throwing an error
-        throw new InvalidRequestError(
-          `A request body was provided when none was expected`,
-        )
-      }
+      await assertEmptyBody(req)
 
       return undefined as LexMethodInput<M>
     }
@@ -534,30 +524,34 @@ function getBodyPresence(req: IncomingMessage): BodyPresence {
   return 'missing'
 }
 
-async function hasNonEmptyBody(req: IncomingMessage): Promise<boolean> {
+async function assertEmptyBody(req: IncomingMessage): Promise<void> {
   const presence = getBodyPresence(req)
-  if (presence !== 'present') return false
-  if (req.headers['transfer-encoding'] == null) return true
-
-  // @NOTE Transfer-Encoding only signals framing; a chunked body may be empty.
-  if (req.readableEnded) return req.readableLength > 0
-
-  const controller = new AbortController()
-  let hasData: boolean
-  try {
-    hasData = await Promise.race([
-      once(req, 'data', { signal: controller.signal }).then(() => true),
-      once(req, 'end', { signal: controller.signal }).then(() => false),
-      once(req, 'aborted', { signal: controller.signal }).then(() => {
-        throw new InvalidRequestError('Request aborted')
-      }),
-    ])
-  } finally {
-    controller.abort()
+  if (presence !== 'present') return
+  if (req.headers['transfer-encoding'] == null) {
+    throw new InvalidRequestError(
+      `A request body was provided when none was expected`,
+    )
   }
 
-  if (hasData) req.resume()
-  return hasData
+  // @NOTE Transfer-Encoding only signals framing; a chunked body may be empty.
+  let hasData = false
+  try {
+    for await (const chunk of req) {
+      if (chunk.length > 0) hasData = true
+    }
+  } catch (cause) {
+    throw new InvalidRequestError(
+      'Failed to process unexpected request body',
+      undefined,
+      { cause },
+    )
+  }
+
+  if (hasData) {
+    throw new InvalidRequestError(
+      `A request body was provided when none was expected`,
+    )
+  }
 }
 
 function createBodyParser(inputEncoding: string, options: RouteOptions) {

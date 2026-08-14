@@ -1,15 +1,16 @@
 import assert from 'node:assert'
-import { type Server, request } from 'node:http'
+import { type IncomingMessage, type Server, request } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { Readable } from 'node:stream'
 import { brotliCompressSync, deflateSync, gzipSync } from 'node:zlib'
 import { jest } from '@jest/globals'
 import { cidForCbor } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
-import type { LexiconDoc } from '@atproto/lexicon'
+import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import { ResponseType, XrpcClient } from '@atproto/xrpc'
 import * as xrpcServer from '../src/index.js'
 import { logger } from '../src/logger.js'
+import { createLexiconInputVerifier } from '../src/util.js'
 import {
   buildAddLexicons,
   buildMethodLexicons,
@@ -130,6 +131,50 @@ const handlers = {
   },
   'io.example.noInput': () => undefined,
 }
+
+function createNoInputVerifier() {
+  const lexicons = new Lexicons(structuredClone(LEXICONS))
+  const def = lexicons.getDef('io.example.noInput')
+  assert(def?.type === 'procedure')
+  return createLexiconInputVerifier('io.example.noInput', def, {}, lexicons)
+}
+
+describe('no-input verifier body draining', () => {
+  test('drains a non-empty chunked body before rejecting it', async () => {
+    const verify = createNoInputVerifier()
+    const req = new Readable({ read() {} }) as IncomingMessage
+    req.headers = { 'transfer-encoding': 'chunked' }
+
+    let settled = false
+    const verification = verify(req as never, undefined as never).finally(
+      () => (settled = true),
+    )
+    req.push('unexpected')
+    await new Promise((resolve) => setImmediate(resolve))
+    expect(settled).toBe(false)
+
+    req.push(null)
+    await expect(verification).rejects.toMatchObject({
+      type: ResponseType.InvalidRequest,
+      message: 'A request body was provided when none was expected',
+    })
+  })
+
+  test('wraps errors while draining an unexpected body', async () => {
+    const verify = createNoInputVerifier()
+    const req = new Readable({ read() {} }) as IncomingMessage
+    req.headers = { 'transfer-encoding': 'chunked' }
+
+    const verification = verify(req as never, undefined as never)
+    req.destroy(new Error('read failed'))
+
+    await expect(verification).rejects.toMatchObject({
+      type: ResponseType.InvalidRequest,
+      message: 'Failed to process unexpected request body',
+      cause: expect.objectContaining({ message: 'read failed' }),
+    })
+  })
+})
 
 for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
   describe(buildServer, () => {
