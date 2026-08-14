@@ -120,15 +120,9 @@ export function ResetPasswordView({
     return (
       <AuthShell
         title={msg`Password Updated`}
-        subtitle={<Trans>Your password has been updated!</Trans>}
+        subtitle={<Trans>You can now sign in with your new password.</Trans>}
       >
         <div className="text-center">
-          <h2 className="pb-2 text-xl font-bold">
-            <Trans>Password updated!</Trans>
-          </h2>
-          <p className="pb-4">
-            <Trans>You can now sign in with your new password.</Trans>
-          </p>
           {onBack && (
             <Button onClick={() => onBack()}>
               <Trans>Okay</Trans>
