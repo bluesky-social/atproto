@@ -430,7 +430,7 @@ export const lexiconDoc = z
     revision: z.number().optional(),
     description: z.string().optional(),
     defs: z.record(z.string(), lexUserType),
-    $type: z.string().optional(),
+    $type: z.literal('com.atproto.lexicon.schema').optional(),
   })
   .refine(
     (doc) => {
