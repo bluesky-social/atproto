@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import * as nodeCrypto from 'node:crypto'
+import { secp256k1 } from '@noble/curves/secp256k1'
 import * as jose from 'jose'
-import KeyEncoderModule from 'key-encoder'
 import * as ui8 from 'uint8arrays'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AtUri, type AtpAgent } from '@atproto/api'
@@ -9,21 +9,21 @@ import { MINUTE } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 
-// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
-const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)
-
-const keyEncoder = new KeyEncoder('secp256k1')
-
 const derivePrivKey = async (
   keypair: crypto.ExportableKeypair,
 ): Promise<nodeCrypto.KeyObject> => {
   const privKeyRaw = await keypair.export()
-  const privKeyEncoded = keyEncoder.encodePrivate(
-    ui8.toString(privKeyRaw, 'hex'),
-    'raw',
-    'pem',
-  )
-  return nodeCrypto.createPrivateKey(privKeyEncoded)
+  const pubKeyRaw = secp256k1.getPublicKey(privKeyRaw, false)
+  return nodeCrypto.createPrivateKey({
+    format: 'jwk',
+    key: {
+      kty: 'EC',
+      crv: 'secp256k1',
+      d: ui8.toString(privKeyRaw, 'base64url'),
+      x: ui8.toString(pubKeyRaw.subarray(1, 33), 'base64url'),
+      y: ui8.toString(pubKeyRaw.subarray(33, 65), 'base64url'),
+    },
+  })
 }
 
 // @NOTE temporary measure, see note on entrywaySession in bsky/src/auth-verifier.ts
