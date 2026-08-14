@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/opentelemetry-node",
+  "name": "@atproto-labs/opentelemetry-node",
   "version": "0.0.0",
   "license": "MIT",
   "description": "OpenTelemetry Node.js bootstrap and XRPC-aware helpers for atproto services",
@@ -13,7 +13,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/bluesky-social/atproto",
-    "directory": "packages/opentelemetry-node"
+    "directory": "packages/internal/opentelemetry-node"
   },
   "files": [
     "./dist",
@@ -33,10 +33,6 @@
     "./instrumentation": {
       "types": "./dist/instrumentation.d.ts",
       "default": "./dist/instrumentation.js"
-    },
-    "./util": {
-      "types": "./dist/util.d.ts",
-      "default": "./dist/util.js"
     }
   },
   "engines": {

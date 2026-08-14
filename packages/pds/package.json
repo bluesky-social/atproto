@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:^",
+    "@atproto-labs/opentelemetry-node": "workspace:^",
     "@atproto-labs/simple-store": "workspace:^",
     "@atproto-labs/simple-store-memory": "workspace:^",
     "@atproto-labs/simple-store-redis": "workspace:^",
@@ -50,7 +51,6 @@
     "@atproto/lex-json": "workspace:^",
     "@atproto/oauth-provider": "workspace:^",
     "@atproto/oauth-scopes": "workspace:^",
-    "@atproto/opentelemetry-node": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",

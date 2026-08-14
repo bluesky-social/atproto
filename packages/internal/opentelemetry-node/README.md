@@ -1,4 +1,4 @@
-# @atproto/opentelemetry-node
+# @atproto-labs/opentelemetry-node
 
 OpenTelemetry bootstrap for atproto Node.js services.
 
@@ -24,8 +24,8 @@ full set:
 Load it before any instrumented module — typically through Node's `--import` flag:
 
 ```ts
-import { setup } from '@atproto/opentelemetry-node'
-import { ATTR_DEPLOYMENT_ENVIRONMENT_NAME } from '@atproto/opentelemetry-node/conventions'
+import { setup } from '@atproto-labs/opentelemetry-node'
+import { ATTR_DEPLOYMENT_ENVIRONMENT_NAME } from '@atproto-labs/opentelemetry-node/conventions'
 import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis'
 import pkg from './package.json' with { type: 'json' }
 
@@ -47,16 +47,12 @@ is configured.
 The instrumentations common to atproto services (HTTP with XRPC-aware span naming,
 Express, Undici, Pino with log correlation, and Node runtime metrics) are always
 registered alongside the ones you supply. The
-`@atproto/opentelemetry-node/instrumentation` entrypoint exposes
+`@atproto-labs/opentelemetry-node/instrumentation` entrypoint exposes
 `getDefaultAtprotoInstrumentations()` if you need that list directly.
 
-The `@atproto/opentelemetry-node/conventions` entrypoint re-exports
+The `@atproto-labs/opentelemetry-node/conventions` entrypoint re-exports
 `@opentelemetry/semantic-conventions` plus the atproto XRPC attribute keys
 (`ATTR_XRPC_METHOD`, `ATTR_XRPC_PROXIED`, `ATTR_XRPC_PROXY`).
-
-`@atproto/opentelemetry-node/util` exposes `extractNormalizedLxm(url)`, which
-extracts a normalized XRPC method NSID from a request path (`/xrpc/<nsid>`), for
-deriving low-cardinality span names and routes.
 
 ## License
 
