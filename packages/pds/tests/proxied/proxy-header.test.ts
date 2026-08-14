@@ -93,6 +93,7 @@ describe('proxy header', () => {
       headers: {
         ...sc.getHeaders(alice),
         'atproto-proxy': `${proxyServer.did}#atproto_test`,
+        'x-bsky-is-beta-user': 'true',
       },
     })
     const req = proxyServer.requests.at(-1)
@@ -107,6 +108,7 @@ describe('proxy header', () => {
     )
     expect(verified.aud).toBe(proxyServer.did)
     expect(verified.iss).toBe(alice)
+    expect(req.isBetaUser).toBe('true')
   })
 
   it('fails on a non-existant did', async () => {
@@ -164,16 +166,19 @@ describe('proxy header', () => {
       headers: {
         ...sc.getHeaders(alice),
         'atproto-proxy': `${proxyServer.did}#atproto_test`,
+        'x-bsky-is-beta-user': 'false',
       },
     })
     await res.arrayBuffer() // drain
     expect(res.status).toBe(501)
+    expect(proxyServer.requests.at(-1)?.isBetaUser).toBe('false')
   })
 })
 
 type ProxyReq = {
   url: string
   auth: string | undefined
+  isBetaUser: string | undefined
 }
 
 class ProxyServer {
@@ -198,14 +203,12 @@ class ProxyServer {
 
     // This is a PDS endpoint which uses a manual pipethrough() in its handler
     app.get('/xrpc/app.bsky.actor.getPreferences', (req, res) => {
+      requests.push(toProxyReq(req))
       res.sendStatus(501)
     })
 
     app.get('*', (req, res) => {
-      requests.push({
-        url: req.url,
-        auth: req.header('authorization'),
-      })
+      requests.push(toProxyReq(req))
       res.sendStatus(200)
     })
 
@@ -238,5 +241,13 @@ class ProxyServer {
 
   async close(): Promise<void> {
     await this.terminator.terminate()
+  }
+}
+
+function toProxyReq(req: express.Request): ProxyReq {
+  return {
+    url: req.url,
+    auth: req.header('authorization'),
+    isBetaUser: req.header('x-bsky-is-beta-user'),
   }
 }
