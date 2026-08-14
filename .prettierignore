@@ -18,9 +18,6 @@ packages/ozone/src/lexicon
 
 # @atproto/lex
 packages/lexicon-resolver/src/lexicons
-
-# TanStack Router
-packages/oauth/oauth-provider-ui/src/routeTree.gen.ts
 packages/lex/*/src/lexicons
 packages/lex/*/tests/lexicons
 packages/oauth/oauth-client-browser-example/src/lexicons
@@ -32,3 +29,4 @@ packages/sync/src/lexicons
 packages/api/src/moderation/const/labels.ts
 packages/oauth/*/src/locales/*/messages.ts
 packages/oauth/oauth-client-expo/android/build
+packages/oauth/oauth-provider-ui/src/routeTree.gen.ts

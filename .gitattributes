@@ -1,2 +1,5 @@
 # i18n
 packages/oauth/oauth-provider-ui/src/locales/**/messages.po linguist-generated=true
+
+# @tanstack/router-plugin
+packages/oauth/oauth-provider-ui/src/routeTree.gen.ts
