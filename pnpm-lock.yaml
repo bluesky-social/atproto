@@ -387,6 +387,9 @@ importers:
       '@atproto-labs/fetch-node':
         specifier: workspace:^
         version: link:../internal/fetch-node
+      '@atproto-labs/opentelemetry-node':
+        specifier: workspace:^
+        version: link:../internal/opentelemetry-node
       '@atproto-labs/xrpc-utils':
         specifier: workspace:^
         version: link:../internal/xrpc-utils
@@ -444,6 +447,9 @@ importers:
       '@noble/curves':
         specifier: ^1.7.0
         version: 1.8.0
+      '@opentelemetry/api':
+        specifier: ^1.9.1
+        version: 1.9.1
       '@types/http-errors':
         specifier: ^2.0.1
         version: 2.0.4
