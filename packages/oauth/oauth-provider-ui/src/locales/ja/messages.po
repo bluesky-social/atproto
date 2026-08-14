@@ -866,10 +866,6 @@ msgstr "パスワード強度表示"
 msgid "Password Updated"
 msgstr "パスワード更新"
 
-#: src/components/reset-password-view.tsx
-msgid "Password updated!"
-msgstr "パスワードが更新されました！"
-
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
 msgstr "パスワードは{MIN_PASSWORD_LENGTH, plural, other {#文字}}以上"
@@ -1486,10 +1482,6 @@ msgstr "メールアドレスを確認する必要があります。"
 #: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "あなたのフルユーザー名： {0}"
-
-#: src/components/reset-password-view.tsx
-msgid "Your password has been updated!"
-msgstr "パスワードが更新されました！"
 
 #: src/components/reactivate-account-dialog.tsx
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."

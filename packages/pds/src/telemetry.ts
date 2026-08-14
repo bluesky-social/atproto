@@ -17,9 +17,16 @@ import { IORedisInstrumentation } from '@opentelemetry/instrumentation-ioredis'
 import { PinoInstrumentation } from '@opentelemetry/instrumentation-pino'
 import { RuntimeNodeInstrumentation } from '@opentelemetry/instrumentation-runtime-node'
 import { UndiciInstrumentation } from '@opentelemetry/instrumentation-undici'
-import { NodeSDK } from '@opentelemetry/sdk-node'
-import { ATTR_HTTP_ROUTE } from '@opentelemetry/semantic-conventions'
+import { NodeSDK, resources } from '@opentelemetry/sdk-node'
+import {
+  ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
+  ATTR_HTTP_ROUTE,
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_NAMESPACE,
+  ATTR_SERVICE_VERSION,
+} from '@opentelemetry/semantic-conventions'
 import { BetterSqlite3Instrumentation } from 'opentelemetry-plugin-better-sqlite3'
+import pkg from '@atproto/pds/package.json' with { type: 'json' }
 
 const ATTR_XRPC_METHOD = 'xrpc.method'
 const ATTR_XRPC_PROXIED = 'xrpc.proxied'
@@ -28,8 +35,8 @@ const ATTR_XRPC_PROXY = 'xrpc.proxy'
 // @NOTE Hand-rolled equivalent of "@opentelemetry/auto-instrumentations-node"'s
 // register script, because that one lacks better-sqlite3 instrumentation and
 // doesn't let us customize the HTTP span naming for XRPC. We use `NodeSDK`
-// rather than `registerInstrumentations` to get exporter setup from the
-// conventional OTEL_* env vars for free.
+// rather than `@opentelemetry/instrumentation`'s `registerInstrumentations` to
+// get exporter setup from the conventional OTEL_* env vars for free.
 
 // @NOTE Telemetry is opt-in via exporter endpoint rather than a non-standard
 // flag: configuring an OTLP endpoint is what enables the SDK. OTEL_SDK_DISABLED
@@ -46,6 +53,20 @@ if (otelEnabled) {
     register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
 
     const sdk = new NodeSDK({
+      // @NOTE Passing "resource" replaces (rather than augments) NodeSDK's
+      // defaultResource(), so merge our defaults on top of it. Detected
+      // resources (including the env detector reading OTEL_RESOURCE_ATTRIBUTES)
+      // are merged in afterwards with higher precedence, so these are defaults
+      // only.
+      resource: resources.defaultResource().merge(
+        resources.resourceFromAttributes({
+          [ATTR_SERVICE_NAME]: pkg.name,
+          [ATTR_SERVICE_NAMESPACE]: 'atproto',
+          [ATTR_SERVICE_VERSION]: pkg.version,
+          [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]:
+            process.env.NODE_ENV || 'production',
+        }),
+      ),
       // @NOTE Unlike sdk-node's default detectors, these include the
       // "container" detector.
       resourceDetectors: getResourceDetectors(),

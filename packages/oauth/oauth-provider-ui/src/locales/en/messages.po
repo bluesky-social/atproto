@@ -866,10 +866,6 @@ msgstr "Password strength indicator"
 msgid "Password Updated"
 msgstr "Password Updated"
 
-#: src/components/reset-password-view.tsx
-msgid "Password updated!"
-msgstr "Password updated!"
-
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
 msgstr "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
@@ -1486,10 +1482,6 @@ msgstr "Your email address needs to be verified."
 #: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
-
-#: src/components/reset-password-view.tsx
-msgid "Your password has been updated!"
-msgstr "Your password has been updated!"
 
 #: src/components/reactivate-account-dialog.tsx
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."

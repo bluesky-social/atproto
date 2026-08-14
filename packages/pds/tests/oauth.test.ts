@@ -181,7 +181,10 @@ describe('oauth', () => {
 
     await page.assertTitle('Mot de passe mis à jour')
 
-    await page.ensureTextVisibility('Mot de passe mis à jour !', 'h2')
+    await page.ensureTextVisibility(
+      'Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.',
+      'p',
+    )
   })
 
   it('restores the reset-password step after a page refresh', async () => {
