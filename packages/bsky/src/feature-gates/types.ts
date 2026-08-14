@@ -8,6 +8,7 @@ export type UserContext = {
   did?: string | null
   deviceId?: string | null
   sessionId?: string | null
+  isBetaUser?: boolean | null
 }
 
 /**
@@ -19,6 +20,7 @@ export type NormalizedUserContext = {
   did?: string
   deviceId: string
   sessionId: string
+  isBetaUser: boolean
 }
 
 /**

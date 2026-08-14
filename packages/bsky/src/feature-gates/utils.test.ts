@@ -7,6 +7,7 @@ describe('normalizeUserContext', () => {
     expect(ctx.did).toBeUndefined()
     expect(ctx.deviceId).toMatch(/^anon-/)
     expect(ctx.sessionId).toMatch(/^anon-/)
+    expect(ctx.isBetaUser).toBe(false)
   })
 
   it('with did', () => {
@@ -32,10 +33,12 @@ describe('normalizeUserContext', () => {
     const ctx = normalizeUserContext({
       deviceId: 'device-456',
       sessionId: 'session-789',
+      isBetaUser: true,
     })
     expect(ctx.did).toBeUndefined()
     expect(ctx.deviceId).toBe('device-456')
     expect(ctx.sessionId).toBe('session-789')
+    expect(ctx.isBetaUser).toBe(true)
   })
 })
 
@@ -57,10 +60,17 @@ describe('mergeUserContexts', () => {
   })
 
   it('base context with did, override with same did', () => {
-    const base = normalizeUserContext({ did: 'did:example:123' })
-    const merged = mergeUserContexts(base, { did: 'did:example:123' })
+    const base = normalizeUserContext({
+      did: 'did:example:123',
+      isBetaUser: true,
+    })
+    const merged = mergeUserContexts(base, {
+      did: 'did:example:123',
+      isBetaUser: false,
+    })
     expect(merged.did).toBe('did:example:123')
     expect(merged.deviceId).toBe('did:example:123')
     expect(merged.sessionId).toBe(base.sessionId)
+    expect(merged.isBetaUser).toBe(false)
   })
 })
