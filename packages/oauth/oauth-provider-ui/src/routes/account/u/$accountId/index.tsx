@@ -1,12 +1,15 @@
 import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
-import { Link, useRouterState } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { ChevronRightIcon } from 'lucide-react'
 import { Fragment, type ReactNode } from 'react'
 import type { JSX } from 'react/jsx-runtime'
 import { CustomizationName } from '#/components/customization-name.tsx'
 import { AccountSummary } from '#/components/identity/account-summary.tsx'
-import { useAccountShellLinks } from '#/components/layouts/account-shell.tsx'
+import {
+  useAccountShellLinks,
+  useIsCurrentTarget,
+} from '#/components/layouts/account-shell.tsx'
 import {
   Item,
   ItemActions,
@@ -19,7 +22,11 @@ import {
 } from '#/components/ui/item.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 
-export function Page(): ReactNode {
+export const Route = createFileRoute('/account/u/$accountId/')({
+  component: AccountHomePage,
+})
+
+function AccountHomePage() {
   const { account } = useAuthenticatedSession()
 
   return (
@@ -35,26 +42,26 @@ export function Page(): ReactNode {
 
 /**
  * The shell's navigation entries, listed as content — each with the translated
- * `description` its route already declares (see `DEFAULT_PAGES`), which the
- * sidebar does not show.
+ * `description` the shell's sidebar does not show.
  */
 function SectionList(): ReactNode {
   const { _ } = useLingui()
-  const { pathname } = useRouterState().location
-  const links = useAccountShellLinks()
+  const isCurrent = useIsCurrentTarget()
 
-  // Drop hidden entries and the current page — on the landing page that is the
-  // "Home" entry, which would otherwise link to itself.
-  const entries = links.filter(({ hidden, to }) => !hidden && to !== pathname)
-
-  if (!entries.length) return null
+  // Drop the current page — on the landing page that is the "Home" entry, which
+  // would otherwise link to itself.
+  const links = useAccountShellLinks().filter((link) => !isCurrent(link))
+  if (!links.length) return null
 
   return (
     <ItemGroup className="gap-0">
-      {entries.map(({ to, title, description, icon: Icon }, index) => (
+      {links.map(({ title, description, Icon, to, params }, index) => (
         <Fragment key={to}>
           {index > 0 && <ItemSeparator />}
-          <Item render={<Link to={to} />} className="hover:bg-muted rounded-lg">
+          <Item
+            render={<Link to={to} params={params} />}
+            className="hover:bg-muted rounded-lg"
+          >
             {Icon && (
               <ItemMedia variant="icon">
                 <Icon aria-hidden />
@@ -86,13 +93,15 @@ function SectionList(): ReactNode {
 }
 
 function HostedByParagraph(props: JSX.IntrinsicElements['p']): ReactNode {
+  const { account } = useAuthenticatedSession()
   return (
     <p {...props}>
       <Trans>
         Your Atmosphere account is hosted by <CustomizationName />.
       </Trans>{' '}
       <Link
-        to="/account/about"
+        to="/account/u/$accountId/about"
+        params={{ accountId: account.handle || account.did }}
         className="text-foreground underline underline-offset-4"
       >
         <Trans>What does this mean?</Trans>

@@ -39,13 +39,16 @@
       }
     </style>
     <script type="module">
+      // @NOTE Absolute: this document is served for every path under
+      // /account, so a relative specifier would resolve against the wrong
+      // directory on a deep link.
       import {
         buildMockFetch,
         accounts,
         customizationData,
         accountDeviceSessions,
         currentDeviceId,
-      } from './src/mock-api.ts'
+      } from '/src/mock-api.ts'
 
       Object.defineProperty(window, 'fetch', {
         writable: true,
@@ -53,7 +56,12 @@
         value: buildMockFetch(),
       })
 
-      history.replaceState(history.state, '', '/account')
+      // Entered through /account-page.html: move to the path the PDS serves,
+      // so the router's real paths behave the same here. A deep link is
+      // already there and must be left alone.
+      if (!location.pathname.startsWith('/account/')) {
+        history.replaceState(history.state, '', '/account')
+      }
 
       window.__customizationData = customizationData
       window.__deviceSessions =
@@ -62,7 +70,7 @@
           loginRequired: s.loginRequired,
         })) ?? []
 
-      await import('./src/account-page.tsx')
+      await import('/src/account-page.tsx')
     </script>
   </body>
 </html>

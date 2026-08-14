@@ -28,31 +28,31 @@ msgstr "{0, plural, one {# minut sedan} other {# minuter sedan}}"
 msgid "{0, plural, one {yesterday} other {# days ago}}"
 msgstr "{0, plural, one {igår} other {# dagar sedan}}"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>AT-protokollet</0> – Teknisk dokumentation för utvecklare"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Bluesky Social</0> — General information about the network"
 msgstr "<0>Bluesky Social</0> – Allmän information om nätverket"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Learn more</0><1>Want to learn more about the technology and network behind your Atmosphere account?</1>"
 msgstr "<0>Läs mer</0><1>Vill du veta mer om tekniken och nätverket bakom ditt Atmosphere-konto?</1>"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
 msgstr "<0>Den här webbplatsen: kontrollcentret för ditt konto</0><1>På webbplatsen du befinner dig på just nu kan du <2>hantera ditt konto</2>. Här kan du bland annat:</1><3><4>Ändra din e-postadress och ditt lösenord</4><5>Hantera dina personuppgifter och säkerhetsinställningar</5><6>Visa och hantera aktiva sessioner för olika enheter (inloggningar från webbläsare)</6></3><7>Här styr du de grundläggande aspekterna av din Atmosphere-identitet, oberoende av appspecifika detaljer som t.ex. din profil i <8>Bluesky-appen</8>.</7><9>Ditt Atmosphere-konto ligger för närvarande hos <10/>, en av många kontoleverantörer i Atmosphere-nätverket. Du kan när som helst byta till en annan leverantör utan att förlora ditt konto, din identitet eller din data.</9>"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Use it across multiple apps</0><1>Your Atmosphere account works with the <2>Bluesky Social App</2> and any other social apps built on the same network.</1><3>Just like you can use the same email address to sign into different websites, your Atmosphere account lets you sign into different social apps while keeping the same identity, connections, and content.</3><4>When you see options to log in with an Atmosphere account or \"internet handle\" on other apps, you can use your existing account <5><6/></5> instead of creating a new one.</4>"
 msgstr "<0>Använd kontot i flera appar</0><1>Ditt Atmosphere-konto fungerar med <2>Bluesky Social-appen</2> och andra sociala appar som bygger på samma nätverk.</1><3>Precis som du kan använda samma e-postadress för att logga in på olika webbplatser, kan du använda ditt Atmosphere-konto för att logga in på olika sociala appar. Samtidigt behåller du samma identitet, kontakter och innehåll.</3><4>När du ser ett alternativ för att logga in med ett Atmosphere-konto (i vissa appar kallat ”internet handle”) kan du använda ditt befintliga konto <5><6/></5> istället för att skapa ett nytt.</4>"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>What is an Atmosphere account?</0><1>An <2>Atmosphere account</2> is your personal identity on the Atmosphere. Think of it as a digital passport that you truly own, not locked to any single app or company.</1>"
 msgstr "<0>Vad är ett Atmosphere-konto?</0><1>Ett <2>Atmosphere-konto</2> är din personliga identitet inom Atmosphere-nätverket. Se det som ett digitalt pass som du själv äger, och som inte är låst till någon enskild app eller företag.</1>"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
 msgstr "<0>Vad som gör det speciellt</0><1>Den viktigaste skillnaden: din data hålls inte inlåst i en och samma app. Med traditionella sociala mediekonton tillhör din data plattformen, men med ett Atmosphere-konto är det du själv som äger din identitet och data:</1><2><3><4>Du äger din identitet</4>: Ditt användarnamn (handle) och permanenta ID tillhör dig</3><5><6>Din data är portabel</6>: Inlägg, följningar och innehåll sparas i ditt personliga datalager, inte i en apps slutna databas</5><7><8>Du är fri att flytta</8>: Byt kontoleverantör utan att förlora dina följare, inlägg eller kontakter. Du kan t.ex. välja en leverantör från ditt land om det spelar roll för dig var din data lagras.</7><9><10>Flera appar, en identitet</10>: Använd samma konto i olika appar som bygger på samma nätverk</9></2>"
 
@@ -76,7 +76,7 @@ msgstr "En andra autentiseringsfaktor krävs ({hint})"
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "En tjänst som kontrolleras av <0>{domain}</0>"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "About"
 msgstr "Om"
 
@@ -89,7 +89,7 @@ msgid "Access specific parts of your Bluesky account and read your private prefe
 msgstr "Komma åt specifika delar av ditt Bluesky-konto och läsa dina privata inställningar"
 
 #: src/components/utils/scope-description.tsx
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Account"
 msgstr "Konto"
 
@@ -179,16 +179,16 @@ msgstr "Vilken metod som helst"
 msgid "Any service"
 msgstr "Vilken tjänst som helst"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "App"
 msgstr "App"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Apps"
 msgstr "Appar"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr "Appar kan utföra aktiviteter på ditt konto i bakgrunden (t.ex. för att titta efter notiser eller synkronisera data) även när du själv inte använder dem aktivt. Det är en normal företeelse och i samband med den uppdateras den berörda tidsangivelsen för ”senaste aktivitet”."
 
@@ -211,11 +211,16 @@ msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Auktorisera"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "Authorized"
 msgstr "Auktoriserad"
 
+#: src/components/forms/form-shell.tsx
+#: src/components/forms/sign-up-wizard.tsx
+#: src/components/layouts/account-shell.tsx
+#: src/components/sign-in-picker.tsx
+#: src/routes/__root.tsx
 #: src/components/forms/form-shell.tsx src/components/forms/sign-up-wizard.tsx
 #: src/components/layouts/account-shell.tsx src/components/sign-in-picker.tsx
 msgid "Back"
@@ -252,7 +257,7 @@ msgstr "Anrop"
 msgid "Cancel"
 msgstr "Avbryt"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Cannot remove current device"
 msgstr "Det går inte att ta bort den enhet som du använder just nu"
 
@@ -309,7 +314,7 @@ msgstr "Välj ett användarnamn"
 msgid "Click here if nothing happens"
 msgstr "Klicka här om ingenting händer"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "Client"
 msgstr "Klient"
@@ -379,7 +384,7 @@ msgid "Data"
 msgstr "Data"
 
 #: src/components/deactivate-account-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Deactivate account"
 msgstr "Inaktivera konto"
 
@@ -392,7 +397,7 @@ msgid "Delete"
 msgstr "Radera"
 
 #: src/components/delete-account-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Delete account"
 msgstr "Radera konto"
 
@@ -409,16 +414,16 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Neka åtkomst"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Details"
 msgstr "Detaljer"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Device"
 msgstr "Enhet"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Devices"
 msgstr "Enheter"
 
@@ -446,7 +451,7 @@ msgstr "E-post"
 
 #: src/components/forms/fields/email-field.tsx
 #: src/components/reset-password-request-form.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Email address"
 msgstr "E-postadress"
 
@@ -531,10 +536,13 @@ msgstr "Det gick inte att inaktivera kontot"
 msgid "Failed to delete account"
 msgstr "Det gick inte att radera kontot"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Failed to load connected apps"
 msgstr "Det gick inte att läsa in anslutna appar"
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Failed to load your devices"
+msgstr ""
 
 #: src/data/account.ts
 msgid "Failed to reactivate account"
@@ -580,11 +588,11 @@ msgstr "Det gick inte att verifiera e-postadressen"
 msgid "File contents"
 msgstr "Filens innehåll"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Filter apps"
 msgstr "Filtrera appar"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Filter devices"
 msgstr "Filtrera enheter"
 
@@ -642,7 +650,7 @@ msgid "Hide"
 msgstr "Dölj"
 
 #: src/components/utils/link-title.tsx
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Home"
 msgstr "Hem"
 
@@ -674,7 +682,7 @@ msgstr "För dig med åtkomst till din domäns webbutrymme (t.ex. via FTP)"
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr "Om du har en egen domän kan du använda den som användarnamn. På så sätt kan du själv verifiera din identitet. <0>Läs mer här.</0>"
 
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr "Om du uppdaterar din e-postadress kommer tvåfaktorsautentisering via e-post att inaktiveras (om det är aktiverat)."
 
@@ -690,12 +698,12 @@ msgstr "Ogiltigt användarnamn"
 msgid "Invite code"
 msgstr "Inbjudningskod"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "IP address"
 msgstr "IP-adress"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "Det verkar som att du inte har loggat in på någon app med det här kontot ännu."
 
@@ -708,12 +716,12 @@ msgstr "Det verkar som att din webbläsare inte accepterar cookies. Klicka på �
 msgid "just now"
 msgstr "nyss"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "Last accessed"
 msgstr "Senaste aktivitet"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Last seen"
 msgstr "Sågs senast"
@@ -732,7 +740,7 @@ msgstr "Låt oss få ditt lösenord återställt!"
 msgid "Logo"
 msgstr "Logga"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Det ser ut som att du inte är inloggad på någon annan enhet."
 
@@ -748,7 +756,7 @@ msgstr "Lägg upp en textfil med nedanstående innehåll på följande URL."
 msgid "Make visible"
 msgstr "Gör synligt"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Manage applications that have access to your account"
 msgstr "Hantera de applikationer som har åtkomst till ditt konto"
 
@@ -756,11 +764,11 @@ msgstr "Hantera de applikationer som har åtkomst till ditt konto"
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "Hantera din <0>fullständiga identitet</0>, inklusive ditt <1>@användarnamn</1>"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Manage your account"
 msgstr "Hantera ditt konto"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Manage your active sessions"
 msgstr "Hantera dina aktiva sessioner"
 
@@ -787,7 +795,7 @@ msgstr "Saknas"
 msgid "Moderate"
 msgstr "Måttligt"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "My Atmosphere Account"
 msgstr "Mitt Atmosphere-konto"
 
@@ -821,8 +829,15 @@ msgstr "Inga träffar"
 msgid "Okay"
 msgstr "OK"
 
+#: src/routes/__root.tsx
+msgid "Page not found"
+msgstr ""
+
 #: src/components/delete-account-confirm-form.tsx
 #: src/components/forms/fields/password-field.tsx
+#: src/components/sign-in-form.tsx
+#: src/components/sign-up-credentials-form.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 #: src/components/sign-in-form.tsx src/components/sign-up-credentials-form.tsx
 #: src/pages/account/(authenticated)/manage/page.tsx
 msgid "Password"
@@ -915,7 +930,7 @@ msgid "Reactivate"
 msgstr "Återaktivera"
 
 #: src/components/reactivate-account-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Reactivate account"
 msgstr "Återaktivera konto"
 
@@ -956,8 +971,8 @@ msgid "Reset your password"
 msgstr "Återställ ditt lösenord"
 
 #: src/components/feedback/error-notice.tsx
-#: src/pages/account/(authenticated)/apps/page.tsx
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Retry"
 msgstr "Försök igen"
 
@@ -1025,7 +1040,7 @@ msgstr "Logga in på ett konto som inte finns i listan"
 msgid "Sign out"
 msgstr "Logga ut"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Logga ut"
@@ -1136,7 +1151,7 @@ msgstr "Användarnamnet är ogiltigt"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "Det finns ingen gräns för hur länge ett konto kan vara inaktiverat. Kom tillbaka när du vill."
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "De här apparna har åtkomst till ditt konto. En app kan visas flera gånger om du använder den på olika enheter. Återkalla åtkomsten för att logga ut dig själv från appen. Därefter kan du ge ny åtkomst genom att logga in igen."
 
@@ -1156,7 +1171,7 @@ msgstr "Den här applikationen begär följande behörigheter (omfång) för att
 msgid "This authorization request has been denied. Please try again."
 msgstr "Denna auktoriseringsbegäran har nekats. Försök igen."
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "This device"
 msgstr "Denna enhet"
@@ -1218,7 +1233,7 @@ msgstr "Behörighet saknas"
 msgid "Unexpected server response"
 msgstr "Oväntat svar från server"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Okänd användaragent"
@@ -1259,7 +1274,7 @@ msgstr "Använd ett användarnamn med standarddomän"
 msgid "Use a domain name I own"
 msgstr "Använd ett domännamn jag äger"
 
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
 msgstr "Användarnamn"
 
@@ -1297,7 +1312,7 @@ msgid "Verify and Save"
 msgstr "Verifiera och spara"
 
 #: src/components/update-email-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgctxt "verify email"
 msgid "Verify now"
 msgstr "Verifiera nu"
@@ -1343,15 +1358,15 @@ msgstr "Välkommen"
 msgid "Welcome back!"
 msgstr "Välkommen tillbaka!"
 
-#: src/pages/account/(authenticated)/page.tsx
+#: src/routes/account/u/$accountId/index.tsx
 msgid "What does this mean?"
 msgstr "Vad innebär det?"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "What is an Atmosphere Account?"
 msgstr "Vad är ett Atmosphere-konto?"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Why is this time so recent?"
 msgstr "Varför är angivelserna så nära i tid?"
 
@@ -1427,7 +1442,7 @@ msgstr "Ditt konto är för närvarande inaktiverat."
 msgid "Your account is now deactivated."
 msgstr "Ditt konto är nu inaktiverat."
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "Ditt konto är inloggat på enheterna i listan nedan. Om säkerheten för ditt konto har äventyrats, logga ut från alla enheter, byt lösenord och kontrollera dina anslutna appar."
 
@@ -1435,7 +1450,7 @@ msgstr "Ditt konto är inloggat på enheterna i listan nedan. Om säkerheten fö
 msgid "Your account is visible again."
 msgstr "Ditt konto är synligt igen."
 
-#: src/pages/account/(authenticated)/page.tsx
+#: src/routes/account/u/$accountId/index.tsx
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "Ditt Atmosphere-konto ligger hos <0/>."
 
@@ -1451,7 +1466,7 @@ msgstr "Din e-postadress har uppdaterats och måste nu verifieras. Ange verifier
 msgid "Your email address has been verified."
 msgstr "Din e-postadress har verifierats."
 
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Your email address needs to be verified."
 msgstr "Din e-postadress behöver verifieras."
 

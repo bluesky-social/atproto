@@ -1,4 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
+import { createFileRoute } from '@tanstack/react-router'
 import { CircleHelpIcon, GlobeIcon } from 'lucide-react'
 import type { ActiveOAuthSession, DidString } from '@atproto/oauth-provider-api'
 import { Notice, NoticeAction } from '#/components/feedback/notice.tsx'
@@ -13,35 +14,41 @@ import {
 import { DateAgo } from '#/components/utils/date-ago'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import {
+  oauthSessionsQueryOptions,
   useOAuthSessionsQuery,
   useRevokeOAuthSessionMutation,
 } from '#/data/oauth-sessions.ts'
 import { useOAuthClientIdentifier } from '#/hooks/use-oauth-client-identifier.ts'
 import { useOauthClientName } from '#/hooks/use-oauth-client-name.ts'
 
-export function Page() {
+export const Route = createFileRoute('/account/u/$accountId/apps')({
+  loader: ({ context: { api, queryClient, session } }) =>
+    queryClient.ensureQueryData(
+      oauthSessionsQueryOptions(api, { did: session.account.did }),
+    ),
+  component: AppsPage,
+  errorComponent: ({ reset }) => (
+    <Notice
+      role="status"
+      action={
+        <NoticeAction onClick={reset}>
+          <Trans>Retry</Trans>
+        </NoticeAction>
+      }
+    >
+      <Trans>Failed to load connected apps</Trans>
+    </Notice>
+  ),
+})
+
+function AppsPage() {
   const { t, i18n } = useLingui()
   const { account } = useAuthenticatedSession()
   const { did } = account
-  const { data, isLoading, refetch } = useOAuthSessionsQuery({ did })
-
-  if (!data && !isLoading) {
-    return (
-      <Notice
-        role="status"
-        action={
-          <NoticeAction onClick={() => refetch()}>
-            <Trans>Retry</Trans>
-          </NoticeAction>
-        }
-      >
-        <Trans>Failed to load connected apps</Trans>
-      </Notice>
-    )
-  }
+  const { data } = useOAuthSessionsQuery({ did })
 
   // @NOTE Most recently used first — the same reasoning as the devices list.
-  const sessions = [...(data ?? [])].sort(
+  const sessions = [...data].sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
   )
 
@@ -61,7 +68,6 @@ export function Page() {
         searchText={(session) =>
           [session.clientId, session.clientMetadata?.client_name].join(' ')
         }
-        loading={isLoading}
         filterLabel={t`Filter apps`}
         emptyIcon={GlobeIcon}
         empty={
