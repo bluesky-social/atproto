@@ -33,31 +33,31 @@ msgstr "{0, plural, one {un minut în urmă} few {# minute în urmă} other {# d
 msgid "{0, plural, one {yesterday} other {# days ago}}"
 msgstr "{0, plural, one {ieri} few {# zile în urmă} other {# de zile în urmă}}"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>Protocol AT</0> — Documentație tehnică pentru dezvoltatori"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Bluesky Social</0> — General information about the network"
 msgstr "<0>Bluesky Social</0> — Informații generale despre rețea"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Learn more</0><1>Want to learn more about the technology and network behind your Atmosphere account?</1>"
 msgstr "<0>Aflați mai multe</0><1>Doriți să aflați mai multe despre tehnologia și rețeaua din spatele contului dvs. pe Atmosferă?</1>"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
 msgstr "<0>Acest site web: centrul de control al contului dvs.</0><1>Site-ul pe care vă aflați acum este <2>hub-ul de gestionare a contului</2> dvs. Aici puteți:</1><3><4>Să vă actualizați adresa de e-mail și parola</4><5>Să vă gestionați datele cu caracter personal și setările de securitate</5><6>Să vizualizați și să gestionați sesiunile active de pe diverse dispozitive (browserele în care sunteți autentificat)</6></3><7>Acesta este locul unde controlați aspectele fundamentale ale identității dvs. pe Atmosferă, independent de orice detalii specifice unei aplicații, precum profilul pe care îl aveți în <8>aplicația de socializare Bluesky</8>.</7><9>Contul dvs. pe Atmosferă este găzduit în prezent de <10/>, unul dintre numeroșii furnizori de găzduire din rețeaua Atmosferă. Puteți trece la un alt furnizor oricând, fără a vă pierde contul, identitatea sau datele.</9>"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Use it across multiple apps</0><1>Your Atmosphere account works with the <2>Bluesky Social App</2> and any other social apps built on the same network.</1><3>Just like you can use the same email address to sign into different websites, your Atmosphere account lets you sign into different social apps while keeping the same identity, connections, and content.</3><4>When you see options to log in with an Atmosphere account or \"internet handle\" on other apps, you can use your existing account <5><6/></5> instead of creating a new one.</4>"
 msgstr "<0>Folosiți-l în mai multe aplicații</0><1>Contul dvs. pe Atmosferă funcționează cu <2>aplicația Bluesky Social</2> și cu orice alte aplicații de socializare construite pe aceeași rețea.</1><3>La fel cum puteți folosi aceeași adresă de e-mail pentru a vă autentifica pe diverse site-uri web, contul dvs pe Atmosferă îți permite să te autentificați în diferite aplicații de socializare, păstrând în același timp aceeași identitate, aceleași conexiuni și același conținut.</3><4>Atunci când întâlniți opțiuni de autentificare cu un cont Atmosferă sau cu un „identificator internet” în alte aplicații, puteți folosi contul existent <5><6/></5> în loc să creați unul nou.</4>"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>What is an Atmosphere account?</0><1>An <2>Atmosphere account</2> is your personal identity on the Atmosphere. Think of it as a digital passport that you truly own, not locked to any single app or company.</1>"
 msgstr "<0>Ce este un cont pe Atmosferă?</0><1>Un <2>cont pe Atmosferă</2> reprezintă identitatea dvs. personală în cadrul Atmosferei. Gândiți-vă la el ca la un pașaport digital care vă aparține cu adevărat și care nu este legat de o singură aplicație sau companie.</1>"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
 msgstr "<0>Ce îl face special</0><1>Diferența cheie: datele dvs. nu sunt captive într-o singură aplicație. Spre deosebire de conturile tradiționale de rețele sociale, unde datele aparțin platformei, cu un cont pe Atmosferă vă dețineți cu adevărat identitatea și datele:</1><2><3><4>Vă dețineți identitatea</4>: Numele de utilizator și ID-ul permanent vă aparțin</3><5><6>Datele dvs. sunt portabile</6>: Postările, urmăririle și conținutul sunt stocate în spațiul dvs. personal de date, nu blocate în baza de date a unei aplicații</5><7><8>Vă puteți muta liber</8>: Schimbați furnizorul de găzduire fără a vă pierde urmăritorii, postările sau conexiunile. Acest lucru vă permite, de asemenea, să alegeți un furnizor din țara dvs., dacă locația de stocare a datelor este importantă pentru dvs.</7><9><10>Aplicații multiple, o singură identitate</10>: Folosiți același cont în diverse aplicații construite pe aceeași rețea</9></2>"
 
@@ -81,7 +81,7 @@ msgstr "Este necesar un al doilea factor de autentificare ({hint})"
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "Un serviciu controlat de <0>{domain}</0>"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "About"
 msgstr "Despre"
 
@@ -94,7 +94,7 @@ msgid "Access specific parts of your Bluesky account and read your private prefe
 msgstr "Accesează părți specifice ale contului dvs. Bluesky și vă citește preferințele private"
 
 #: src/components/utils/scope-description.tsx
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Account"
 msgstr "Cont"
 
@@ -186,16 +186,16 @@ msgstr "Orice metodă"
 msgid "Any service"
 msgstr "Orice serviciu"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "App"
 msgstr "Aplicație"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Apps"
 msgstr "Aplicații"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr "Aplicațiile vă pot accesa contul în fundal (pentru a verifica notificările, a sincroniza datele ș.a.m.d.) chiar și atunci când nu le folosiți în mod activ. Acesta este un comportament normal și va actualiza timpul „ultima accesare”."
 
@@ -219,7 +219,7 @@ msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "Autorizare"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "Authorized"
 msgstr "Autorizat"
@@ -228,6 +228,7 @@ msgstr "Autorizat"
 #: src/components/forms/sign-up-wizard.tsx
 #: src/components/layouts/account-shell.tsx
 #: src/components/sign-in-picker.tsx
+#: src/routes/__root.tsx
 msgid "Back"
 msgstr "Înapoi"
 
@@ -264,7 +265,7 @@ msgstr "Apel"
 msgid "Cancel"
 msgstr "Anulare"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Cannot remove current device"
 msgstr "Nu se poate elimina dispozitivul curent"
 
@@ -322,7 +323,7 @@ msgstr "Alegeți un nume de utilizator"
 msgid "Click here if nothing happens"
 msgstr "Faceți clic aici dacă nu se întâmplă nimic"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "Client"
 msgstr "Client"
@@ -393,7 +394,7 @@ msgid "Data"
 msgstr "Date"
 
 #: src/components/deactivate-account-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Deactivate account"
 msgstr "Dezactivare cont"
 
@@ -406,7 +407,7 @@ msgid "Delete"
 msgstr "Șterge"
 
 #: src/components/delete-account-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Delete account"
 msgstr "Ștergere cont"
 
@@ -423,16 +424,16 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Refuzați accesul"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Details"
 msgstr "Detalii"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Device"
 msgstr "Dispozitiv"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Devices"
 msgstr "Dispozitive"
 
@@ -460,7 +461,7 @@ msgstr "E-mail"
 
 #: src/components/forms/fields/email-field.tsx
 #: src/components/reset-password-request-form.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Email address"
 msgstr "Adresă de e-mail"
 
@@ -545,10 +546,13 @@ msgstr "Dezactivarea contului a eșuat"
 msgid "Failed to delete account"
 msgstr "Ștergerea contului a eșuat"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Failed to load connected apps"
 msgstr "Încărcarea aplicațiilor conectate a eșuat"
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Failed to load your devices"
+msgstr ""
 
 #: src/data/account.ts
 msgid "Failed to reactivate account"
@@ -594,11 +598,11 @@ msgstr "Verificarea e-mailului a eșuat"
 msgid "File contents"
 msgstr "Conținutul fișierului"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Filter apps"
 msgstr "Filtrare aplicații"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Filter devices"
 msgstr "Filtrare dispozitive"
 
@@ -624,17 +628,25 @@ msgstr "Acordați acces la contul dvs. <0/>"
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
 #: src/components/forms/input-handle-custom-instructions.tsx
-msgid "Hello,\n\n"
-"To associate the domain \"{handle}\" with my AT Protocol identity ({did}), one of the following configuration changes is required. Either method is sufficient, only one needs to be applied.\n\n"
-"{0}\n\n"
+msgid "Hello,\n"
+"\n"
+"To associate the domain \"{handle}\" with my AT Protocol identity ({did}), one of the following configuration changes is required. Either method is sufficient, only one needs to be applied.\n"
+"\n"
+"{0}\n"
+"\n"
 "The change can be verified by visiting the following URL: {troubleshootHref}\n"
-"A detailed tutorial can be found here: {tutorialHref}\n\n"
+"A detailed tutorial can be found here: {tutorialHref}\n"
+"\n"
 "Thank you."
-msgstr "Salut,\n\n"
-"Pentru a asocia domeniul „{handle}” cu identitatea protocolului meu AT ({did}), una dintre următoarele modificări de configurare este necesară. Oricare dintre cele două metode este suficientă, trebuie aplicat doar un singur element.\n\n"
-"{0}\n\n"
+msgstr "Salut,\n"
+"\n"
+"Pentru a asocia domeniul „{handle}” cu identitatea protocolului meu AT ({did}), una dintre următoarele modificări de configurare este necesară. Oricare dintre cele două metode este suficientă, trebuie aplicat doar un singur element.\n"
+"\n"
+"{0}\n"
+"\n"
 "Modificarea poate fi verificată accesând următorul URL: {troubleshootHref}\n"
-"Un tutorial detaliat poate fi găsit aici: {tutorialHref}\n\n"
+"Un tutorial detaliat poate fi găsit aici: {tutorialHref}\n"
+"\n"
 "Mulțumim."
 
 #: src/components/forms/input-handle-custom-instructions.tsx
@@ -646,7 +658,7 @@ msgid "Hide"
 msgstr "Ascundere"
 
 #: src/components/utils/link-title.tsx
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Home"
 msgstr "Acasă"
 
@@ -678,7 +690,7 @@ msgstr "Dacă aveți acces la configurația de găzduire web a domeniului dvs (d
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr "Dacă aveți propriul domeniu, îl puteți folosi ca identificator. Acest lucru vă permite să vă verificați identitatea automat. <0>Aflați mai multe aici.</0>."
 
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr "Dacă vă actualizați adresa de e-mail, e-mailul A2F (dacă este activat) va fi dezactivat."
 
@@ -694,12 +706,12 @@ msgstr "Identificator invalid"
 msgid "Invite code"
 msgstr "Cod de invitație"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "IP address"
 msgstr "Adresă IP"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "Se pare că încă nu ați folosit acest cont pentru a vă conecta la nicio aplicație."
 
@@ -712,12 +724,12 @@ msgstr "Se pare că browserul dvs. nu acceptă module cookie. Apăsați „Conti
 msgid "just now"
 msgstr "chiar acum"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "Last accessed"
 msgstr "Ultima accesare"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Last seen"
 msgstr "Văzut ultima dată"
@@ -736,7 +748,7 @@ msgstr "Hai să vă resetăm parola!"
 msgid "Logo"
 msgstr "Logo"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "Se pare că nu sunteți conectat pe niciun alt dispozitiv."
 
@@ -752,7 +764,7 @@ msgstr "Faceți un fișier text cu conținutul de mai jos disponibil la următor
 msgid "Make visible"
 msgstr "Faceți vizibil"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Manage applications that have access to your account"
 msgstr "Gestionați aplicațiile care au acces la contul dvs."
 
@@ -760,11 +772,11 @@ msgstr "Gestionați aplicațiile care au acces la contul dvs."
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "Vă gestionează <0>identitatea completă</0> inclusiv <1>@identificator</1>"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Manage your account"
 msgstr "Gestionați-vă contul"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Manage your active sessions"
 msgstr "Gestionați-vă sesiunile active"
 
@@ -791,7 +803,7 @@ msgstr "Lipsește"
 msgid "Moderate"
 msgstr "Moderată"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "My Atmosphere Account"
 msgstr "Contul meu pe Atmosferă"
 
@@ -826,11 +838,15 @@ msgstr "Nicio potrivire"
 msgid "Okay"
 msgstr "Ok"
 
+#: src/routes/__root.tsx
+msgid "Page not found"
+msgstr ""
+
 #: src/components/delete-account-confirm-form.tsx
 #: src/components/forms/fields/password-field.tsx
 #: src/components/sign-in-form.tsx
 #: src/components/sign-up-credentials-form.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Password"
 msgstr "Parolă"
 
@@ -854,10 +870,6 @@ msgstr "Indicator complexitate parolă"
 #: src/components/reset-password-view.tsx
 msgid "Password Updated"
 msgstr "Parolă actualizată"
-
-#: src/components/reset-password-view.tsx
-msgid "Password updated!"
-msgstr "Parolă actualizată!"
 
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
@@ -928,7 +940,7 @@ msgid "Reactivate"
 msgstr "Reactivare"
 
 #: src/components/reactivate-account-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Reactivate account"
 msgstr "Reactivare cont"
 
@@ -969,8 +981,8 @@ msgid "Reset your password"
 msgstr "Resetați-vă parola"
 
 #: src/components/feedback/error-notice.tsx
-#: src/pages/account/(authenticated)/apps/page.tsx
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Retry"
 msgstr "Încercați din nou"
 
@@ -1039,7 +1051,7 @@ msgstr "Conectați-vă la un cont care nu este listat"
 msgid "Sign out"
 msgstr "Deconectare"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Sign out"
 msgstr "Deconectare"
@@ -1151,7 +1163,7 @@ msgstr "Numele de utilizator este invalid"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "Nu există limită de timp pentru dezactivarea contului, puteți revenii oricând."
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "Aceste aplicații au acces la contul dvs. O aplicație poate apărea de mai multe ori dacă o utilizați pe dispozitive diferite. Puteți revoca accesul pentru a vă deconecta de la aplicație până vă reconectați."
 
@@ -1171,7 +1183,7 @@ msgstr "Această aplicație solicită următoarele permisiuni (scopuri) pentru a
 msgid "This authorization request has been denied. Please try again."
 msgstr "Această cerere de autorizare a fost respinsă. Vă rugăm să încercați din nou."
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "This device"
 msgstr "Acest dispozitiv"
@@ -1233,7 +1245,7 @@ msgstr "Neautorizat"
 msgid "Unexpected server response"
 msgstr "Răspuns neașteptat de la server"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "Agent utilizator necunoscut"
@@ -1274,7 +1286,7 @@ msgstr "Utilizați un nume de utilizator implicit"
 msgid "Use a domain name I own"
 msgstr "Utilizați un nume de domeniu propriu"
 
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
 msgstr "Nume de utilizator"
 
@@ -1312,7 +1324,7 @@ msgid "Verify and Save"
 msgstr "Verificare și salvare"
 
 #: src/components/update-email-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgctxt "verify email"
 msgid "Verify now"
 msgstr "Verificați acum"
@@ -1358,15 +1370,15 @@ msgstr "Bun venit"
 msgid "Welcome back!"
 msgstr "Bine ați revenit!"
 
-#: src/pages/account/(authenticated)/page.tsx
+#: src/routes/account/u/$accountId/index.tsx
 msgid "What does this mean?"
 msgstr "Ce înseamnă acest lucru?"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "What is an Atmosphere Account?"
 msgstr "Ce este un Cont pe Atmosferă?"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Why is this time so recent?"
 msgstr "De ce este această perioadă atât de recentă?"
 
@@ -1443,7 +1455,7 @@ msgstr "Contul dvs. este momentan dezactivat."
 msgid "Your account is now deactivated."
 msgstr "Contul dvs. este acum dezactivat."
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "Contul dvs. este conectat pe dispozitivele enumerate mai jos. Dacă contul dvs. a fost compromis, deconectați toate dispozitivele, schimbați parola și verificați <0>aplicațiile</0>."
 
@@ -1451,7 +1463,7 @@ msgstr "Contul dvs. este conectat pe dispozitivele enumerate mai jos. Dacă cont
 msgid "Your account is visible again."
 msgstr "Contul dvs. este vizibil din nou."
 
-#: src/pages/account/(authenticated)/page.tsx
+#: src/routes/account/u/$accountId/index.tsx
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "Contul dvs. pe Atmosferă este găzduit de <0/>."
 
@@ -1467,7 +1479,7 @@ msgstr "Adresa dvs. de e-mail a fost actualizată cu succes și trebuie verifica
 msgid "Your email address has been verified."
 msgstr "Adresa dvs. de e-mail a fost verificată."
 
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Your email address needs to be verified."
 msgstr "Adresa dvs. de e-mail trebuie verificată."
 
@@ -1475,10 +1487,6 @@ msgstr "Adresa dvs. de e-mail trebuie verificată."
 #: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "Numele dvs. de utilizator complet va fi: {0}"
-
-#: src/components/reset-password-view.tsx
-msgid "Your password has been updated!"
-msgstr "Parola dvs. a fost actualizată!"
 
 #: src/components/reactivate-account-dialog.tsx
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
@@ -1499,4 +1507,3 @@ msgstr "Numele de utilizator a fost actualizat."
 #: src/components/forms/fields/handle-field.tsx
 msgid "yourname"
 msgstr "numele dvs."
-
