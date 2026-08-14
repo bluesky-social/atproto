@@ -1,5 +1,19 @@
 # @atproto/bsky
 
+## 0.0.275
+
+### Patch Changes
+
+- [#5350](https://github.com/bluesky-social/atproto/pull/5350) [`1f3f67c`](https://github.com/bluesky-social/atproto/commit/1f3f67c4b5bac19cc226b24f55d90ffd431d0d72) Thanks [@mary-ext](https://github.com/mary-ext)! - Remove the `maxGraphemes` and `maxLength` constraints from the `alt` field of `app.bsky.embed.video`, matching `app.bsky.embed.images`
+
+- [#5348](https://github.com/bluesky-social/atproto/pull/5348) [`5c3b7c9`](https://github.com/bluesky-social/atproto/commit/5c3b7c9c87efa4d48d41bc55af61f5b1f1e04920) Thanks [@dreyfus92](https://github.com/dreyfus92)! - Remove `key-encoder` dependency (and its `elliptic`/`asn1.js`/`bn.js` transitive tree) in favor of Node's native JWK key import and the already-present `@noble/curves`
+
+- Updated dependencies [[`1f3f67c`](https://github.com/bluesky-social/atproto/commit/1f3f67c4b5bac19cc226b24f55d90ffd431d0d72), [`5c3b7c9`](https://github.com/bluesky-social/atproto/commit/5c3b7c9c87efa4d48d41bc55af61f5b1f1e04920)]:
+  - @atproto/api@0.20.41
+  - @atproto/xrpc-server@0.12.5
+  - @atproto-labs/xrpc-utils@0.1.18
+  - @atproto/sync@0.4.5
+
 ## 0.0.274
 
 ### Patch Changes
