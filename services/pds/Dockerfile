@@ -30,6 +30,7 @@ COPY ./packages/internal/fetch-node ./packages/internal/fetch-node
 COPY ./packages/internal/fetch ./packages/internal/fetch
 COPY ./packages/internal/handle-resolver ./packages/internal/handle-resolver
 COPY ./packages/internal/identity-resolver ./packages/internal/identity-resolver
+COPY ./packages/internal/opentelemetry-node ./packages/internal/opentelemetry-node
 COPY ./packages/internal/pipe ./packages/internal/pipe
 COPY ./packages/internal/rolldown-plugin-bundle-manifest ./packages/internal/rolldown-plugin-bundle-manifest
 COPY ./packages/internal/simple-store-memory ./packages/internal/simple-store-memory
@@ -59,7 +60,6 @@ COPY ./packages/oauth/oauth-provider-ui ./packages/oauth/oauth-provider-ui
 COPY ./packages/oauth/oauth-provider ./packages/oauth/oauth-provider
 COPY ./packages/oauth/oauth-scopes ./packages/oauth/oauth-scopes
 COPY ./packages/oauth/oauth-types ./packages/oauth/oauth-types
-COPY ./packages/opentelemetry-node ./packages/opentelemetry-node
 COPY ./packages/pds ./packages/pds
 COPY ./packages/repo ./packages/repo
 COPY ./packages/syntax ./packages/syntax
