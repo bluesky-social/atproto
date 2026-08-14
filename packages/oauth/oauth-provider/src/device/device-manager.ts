@@ -270,7 +270,9 @@ export class DeviceManager {
       maxAge: value
         ? this.options.cookie.age == null
           ? undefined
-          : this.options.cookie.age / 1000
+          : // "cookie" requires an integer `maxAge`, but `age` (in ms) is not
+            // guaranteed to be a multiple of 1000
+            Math.floor(this.options.cookie.age / 1000)
         : 0,
       httpOnly: true,
       path: '/',

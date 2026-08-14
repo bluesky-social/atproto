@@ -3,9 +3,9 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 // SyntaxError: The requested module '@hapi/accept' does not provide an export named 'languages'
 import * as accept from '@hapi/accept'
 import {
-  type CookieSerializeOptions,
-  parse as parseCookie,
-  serialize as serializeCookie,
+  type SerializeOptions as CookieSerializeOptions,
+  parseCookie,
+  stringifySetCookie,
 } from 'cookie'
 import forwarded from 'forwarded'
 import createHttpError from 'http-errors'
@@ -118,7 +118,11 @@ export function setCookie(
   value: string,
   options?: CookieSerializeOptions,
 ) {
-  appendHeader(res, 'Set-Cookie', serializeCookie(cookieName, value, options))
+  appendHeader(
+    res,
+    'Set-Cookie',
+    stringifySetCookie({ name: cookieName, value, ...options }),
+  )
 }
 
 export function getCookie(
