@@ -11,7 +11,7 @@ export const Route = createFileRoute('/account/')({
   beforeLoad: ({ context: { auth } }) => {
     const { session, sessions, canSignUp, canSwitchAccounts } = auth
 
-    if (session) {
+    if (session && !session.loginRequired) {
       throw redirect({
         to: '/account/u/$accountId',
         params: { accountId: session.account.handle ?? session.account.did },
