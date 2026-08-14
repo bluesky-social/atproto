@@ -23,13 +23,19 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./telemetry": {
+      "types": "./dist/telemetry.d.ts",
+      "default": "./dist/telemetry.js"
+    },
+    "./package.json": "./package.json"
   },
   "engines": {
     "node": ">=22"
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:^",
+    "@atproto-labs/opentelemetry-node": "workspace:^",
     "@atproto-labs/xrpc-utils": "workspace:^",
     "@atproto/api": "workspace:^",
     "@atproto/common": "workspace:^",
@@ -49,6 +55,7 @@
     "@noble/curves": "^1.7.0",
     "@growthbook/growthbook": "^1.6.2",
     "@hapi/address": "^5.1.1",
+    "@opentelemetry/api": "^1.9.1",
     "@types/http-errors": "^2.0.1",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
