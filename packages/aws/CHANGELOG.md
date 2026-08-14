@@ -1,5 +1,11 @@
 # @atproto/aws
 
+## 0.3.14
+
+### Patch Changes
+
+- [#5348](https://github.com/bluesky-social/atproto/pull/5348) [`5c3b7c9`](https://github.com/bluesky-social/atproto/commit/5c3b7c9c87efa4d48d41bc55af61f5b1f1e04920) Thanks [@dreyfus92](https://github.com/dreyfus92)! - Remove `key-encoder` dependency (and its `elliptic`/`asn1.js`/`bn.js` transitive tree) in favor of Node's native JWK key import and the already-present `@noble/curves`
+
 ## 0.3.13
 
 ### Patch Changes
