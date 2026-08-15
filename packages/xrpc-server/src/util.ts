@@ -247,11 +247,7 @@ export function createLexiconInputVerifier<I extends Input = Input>(
   if (def.type === 'query' || !def.input) {
     return async (req) => {
       // @NOTE We allow (and ignore) "empty" bodies
-      if (getBodyPresence(req) === 'present') {
-        throw new InvalidRequestError(
-          `A request body was provided when none was expected`,
-        )
-      }
+      await assertEmptyBody(req)
 
       return undefined as I
     }
@@ -321,12 +317,7 @@ export function createSchemaInputVerifier<M extends l.Procedure | l.Query>(
   if (!input?.encoding) {
     //
     return async (req) => {
-      if (getBodyPresence(req) === 'present') {
-        // @NOTE we *could* also discard the body here instead of throwing an error
-        throw new InvalidRequestError(
-          `A request body was provided when none was expected`,
-        )
-      }
+      await assertEmptyBody(req)
 
       return undefined as LexMethodInput<M>
     }
@@ -531,6 +522,36 @@ function getBodyPresence(req: IncomingMessage): BodyPresence {
   if (req.headers['content-length'] === '0') return 'empty'
   if (req.headers['content-length'] != null) return 'present'
   return 'missing'
+}
+
+async function assertEmptyBody(req: IncomingMessage): Promise<void> {
+  const presence = getBodyPresence(req)
+  if (presence !== 'present') return
+  if (req.headers['transfer-encoding'] == null) {
+    throw new InvalidRequestError(
+      `A request body was provided when none was expected`,
+    )
+  }
+
+  // @NOTE Transfer-Encoding only signals framing; a chunked body may be empty.
+  let hasData = false
+  try {
+    for await (const chunk of req) {
+      if (chunk.length > 0) hasData = true
+    }
+  } catch (cause) {
+    throw new InvalidRequestError(
+      'Failed to process unexpected request body',
+      undefined,
+      { cause },
+    )
+  }
+
+  if (hasData) {
+    throw new InvalidRequestError(
+      `A request body was provided when none was expected`,
+    )
+  }
 }
 
 function createBodyParser(inputEncoding: string, options: RouteOptions) {

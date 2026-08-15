@@ -1,15 +1,16 @@
 import assert from 'node:assert'
-import type * as http from 'node:http'
+import { type IncomingMessage, type Server, request } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { Readable } from 'node:stream'
 import { brotliCompressSync, deflateSync, gzipSync } from 'node:zlib'
 import { jest } from '@jest/globals'
 import { cidForCbor } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
-import type { LexiconDoc } from '@atproto/lexicon'
+import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
 import { ResponseType, XrpcClient } from '@atproto/xrpc'
 import * as xrpcServer from '../src/index.js'
 import { logger } from '../src/logger.js'
+import { createLexiconInputVerifier } from '../src/util.js'
 import {
   buildAddLexicons,
   buildMethodLexicons,
@@ -93,6 +94,15 @@ const LEXICONS = [
       },
     },
   },
+  {
+    lexicon: 1,
+    id: 'io.example.noInput',
+    defs: {
+      main: {
+        type: 'procedure',
+      },
+    },
+  },
 ] as const satisfies LexiconDoc[]
 
 const handlers = {
@@ -119,11 +129,56 @@ const handlers = {
       body: { cid: cid.toString() },
     }
   },
+  'io.example.noInput': () => undefined,
 }
+
+function createNoInputVerifier() {
+  const lexicons = new Lexicons(structuredClone(LEXICONS))
+  const def = lexicons.getDef('io.example.noInput')
+  assert(def?.type === 'procedure')
+  return createLexiconInputVerifier('io.example.noInput', def, {}, lexicons)
+}
+
+describe('no-input verifier body draining', () => {
+  test('drains a non-empty chunked body before rejecting it', async () => {
+    const verify = createNoInputVerifier()
+    const req = new Readable({ read() {} }) as IncomingMessage
+    req.headers = { 'transfer-encoding': 'chunked' }
+
+    let settled = false
+    const verification = verify(req as never, undefined as never).finally(
+      () => (settled = true),
+    )
+    req.push('unexpected')
+    await new Promise((resolve) => setImmediate(resolve))
+    expect(settled).toBe(false)
+
+    req.push(null)
+    await expect(verification).rejects.toMatchObject({
+      type: ResponseType.InvalidRequest,
+      message: 'A request body was provided when none was expected',
+    })
+  })
+
+  test('wraps errors while draining an unexpected body', async () => {
+    const verify = createNoInputVerifier()
+    const req = new Readable({ read() {} }) as IncomingMessage
+    req.headers = { 'transfer-encoding': 'chunked' }
+
+    const verification = verify(req as never, undefined as never)
+    req.destroy(new Error('read failed'))
+
+    await expect(verification).rejects.toMatchObject({
+      type: ResponseType.InvalidRequest,
+      message: 'Failed to process unexpected request body',
+      cause: expect.objectContaining({ message: 'read failed' }),
+    })
+  })
+})
 
 for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
   describe(buildServer, () => {
-    let s: http.Server
+    let s: Server
     let client: XrpcClient
     let url: string
     beforeAll(async () => {
@@ -159,6 +214,29 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
         message: 'Request encoding (Content-Type) required but not provided',
       })
     })
+
+    test('allows an empty chunked body when no input is expected', async () => {
+      const response = await sendChunkedRequest(
+        `${url}/xrpc/io.example.noInput`,
+      )
+
+      expect(response.statusCode).toBe(200)
+      expect(response.body).toBe('')
+    })
+
+    test('rejects a non-empty chunked body when no input is expected', async () => {
+      const response = await sendChunkedRequest(
+        `${url}/xrpc/io.example.noInput`,
+        'unexpected',
+      )
+
+      expect(response.statusCode).toBe(400)
+      expect(JSON.parse(response.body)).toMatchObject({
+        error: 'InvalidRequest',
+        message: 'A request body was provided when none was expected',
+      })
+    })
+
     test('validates required input properties', async () => {
       await expect(
         client.call('io.example.validationTest', {}, {}),
@@ -569,6 +647,33 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
       })
     })
   })
+}
+
+function sendChunkedRequest(url: string, body?: string) {
+  return new Promise<{ body: string; statusCode: number }>(
+    (resolve, reject) => {
+      const req = request(
+        url,
+        {
+          method: 'POST',
+          headers: { 'transfer-encoding': 'chunked' },
+        },
+        (res) => {
+          res.setEncoding('utf8')
+          let responseBody = ''
+          res.on('data', (chunk) => (responseBody += chunk))
+          res.on('error', reject)
+          res.on('end', () => {
+            resolve({ body: responseBody, statusCode: res.statusCode ?? 0 })
+          })
+        },
+      )
+
+      req.on('error', reject)
+      if (body !== undefined) req.write(body)
+      req.end()
+    },
+  )
 }
 
 const bytesToReadableStream = (bytes: Uint8Array): ReadableStream => {
