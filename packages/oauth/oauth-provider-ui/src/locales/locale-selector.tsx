@@ -20,7 +20,7 @@ export function LocaleSelector({ className }: LocaleSelectorProps) {
   return (
     <Select
       value={locale}
-      onValueChange={(value) => setLocale(value as keyof typeof locales)}
+      onValueChange={(value) => value && setLocale(value)}
     >
       <SelectTrigger
         size="sm"
