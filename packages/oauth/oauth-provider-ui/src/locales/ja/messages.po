@@ -1271,7 +1271,7 @@ msgstr "URL"
 
 #: src/components/forms/fields/handle-field.tsx
 msgid "Use {minLength}–{maxLength, plural, one {# letter, number or hyphen} other {# letters, numbers or hyphens}}"
-msgstr ""
+msgstr "{minLength}～{maxLength, plural, other {#文字、英数字またはハイフン}}を使用"
 
 #: src/components/update-handle-dialog.tsx
 msgid "Use a default username"
@@ -1501,4 +1501,4 @@ msgstr "ユーザー名が更新されました。"
 
 #: src/components/forms/fields/handle-field.tsx
 msgid "yourname"
-msgstr ""
+msgstr "あなたの名前"
