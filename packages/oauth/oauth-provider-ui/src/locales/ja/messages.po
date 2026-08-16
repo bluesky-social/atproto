@@ -1436,7 +1436,7 @@ msgstr "あなたのアカウントと関連するすべてのデータが削除
 
 #: src/components/update-email-dialog.tsx
 msgid "Your account currently uses <0>{emailCurrent}</0>. Choose a new email address to associate with it."
-msgstr ""
+msgstr "あなたのアカウントは現在<0>{emailCurrent}</0>を使用しています。関連付ける新しいメールアドレスを選択してください。"
 
 #: src/authorization-page.tsx
 msgid "Your account has been successfully reactivated."
