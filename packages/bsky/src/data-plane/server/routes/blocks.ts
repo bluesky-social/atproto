@@ -48,10 +48,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       keyset,
     })
 
-    const blocks = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
     return {
-      blockUris: blocks.map((b) => b.uri),
-      cursor: keyset.packFromResult(blocks),
+      blockUris: page.items.map((b) => b.uri),
+      cursor: page.cursor,
     }
   },
 
@@ -117,11 +117,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor,
       keyset,
     })
-    const lists = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
 
     return {
-      listUris: lists.map((l) => l.uri),
-      cursor: keyset.packFromResult(lists),
+      listUris: page.items.map((l) => l.uri),
+      cursor: page.cursor,
     }
   },
 })

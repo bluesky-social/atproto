@@ -17,7 +17,7 @@ import { app } from '../../../../lexicons/index.js'
 import { type RulesFnInput, createPipeline } from '../../../../pipeline.js'
 import { uriToDid as creatorFromUri } from '../../../../util/uris.js'
 import type { Views } from '../../../../views/index.js'
-import { clearlyBadCursor, resHeaders } from '../../../util.js'
+import { clearlyBadCursor, fillPage, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getLikes = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -33,7 +33,13 @@ export default function (server: Server, ctx: AppContext) {
         includeTakedowns,
         skipViewerBlocks,
       })
-      const result = await getLikes({ ...params, hydrateCtx }, ctx)
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          getLikes({ ...params, cursor, limit, hydrateCtx }, ctx),
+        items: (r) => r.likes,
+      })
 
       return {
         encoding: 'application/json',

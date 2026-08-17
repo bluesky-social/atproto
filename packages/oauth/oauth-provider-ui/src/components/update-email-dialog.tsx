@@ -48,6 +48,19 @@ export function UpdateEmailDialog({
 
   const dismissable = !submitting
 
+  // @NOTE Naming the current address here is the only place it can be read in
+  // full: the settings row that opens this dialog truncates it, and on a touch
+  // screen there is no hover to reveal the rest.
+  const chooseDescription = emailCurrent ? (
+    <Trans>
+      Your account currently uses{' '}
+      <strong className="break-words">{emailCurrent}</strong>. Choose a new
+      email address to associate with it.
+    </Trans>
+  ) : (
+    <Trans>Choose a new email address to associate with your account.</Trans>
+  )
+
   if (step === Step.Verify && email && onVerifyConfirm) {
     return (
       <DialogShell
@@ -65,7 +78,7 @@ export function UpdateEmailDialog({
           <Trans>
             Your email address has been successfully updated and needs to be
             verified. Please enter the verification code that was sent to{' '}
-            <strong>{email}</strong>.
+            <strong className="break-words">{email}</strong>.
           </Trans>
         }
       >
@@ -91,11 +104,7 @@ export function UpdateEmailDialog({
         onOpenChange={setOpen}
         dismissable={dismissable}
         title={<Trans>Update your email</Trans>}
-        description={
-          <Trans>
-            Choose a new email address to associate with your account.
-          </Trans>
-        }
+        description={chooseDescription}
       >
         <UpdateEmailForm
           emailCurrent={emailCurrent}
@@ -127,11 +136,7 @@ export function UpdateEmailDialog({
       onOpenChange={setOpen}
       dismissable={dismissable}
       title={<Trans>Update your email</Trans>}
-      description={
-        <Trans>
-          Choose a new email address to associate with your account.
-        </Trans>
-      }
+      description={chooseDescription}
     >
       <EmailRequestForm
         emailDefault={email}

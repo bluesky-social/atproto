@@ -1,0 +1,62 @@
+{
+  "name": "@atproto-labs/opentelemetry-node",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "OpenTelemetry Node.js bootstrap and XRPC-aware helpers for atproto services",
+  "keywords": [
+    "atproto",
+    "opentelemetry",
+    "otel",
+    "telemetry"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/internal/opentelemetry-node"
+  },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./conventions": {
+      "types": "./dist/conventions.d.ts",
+      "default": "./dist/conventions.js"
+    },
+    "./instrumentation": {
+      "types": "./dist/instrumentation.d.ts",
+      "default": "./dist/instrumentation.js"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/auto-instrumentations-node": "^0.77.0",
+    "@opentelemetry/core": "^2.9.0",
+    "@opentelemetry/instrumentation": "^0.219.0",
+    "@opentelemetry/instrumentation-express": "^0.67.0",
+    "@opentelemetry/instrumentation-http": "^0.219.0",
+    "@opentelemetry/instrumentation-pino": "^0.65.0",
+    "@opentelemetry/instrumentation-runtime-node": "^0.32.0",
+    "@opentelemetry/instrumentation-undici": "^0.29.0",
+    "@opentelemetry/resource-detector-container": "^0.8.10",
+    "@opentelemetry/sdk-node": "^0.219.0",
+    "@opentelemetry/semantic-conventions": "^1.41.1"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsc --build tsconfig.build.json"
+  }
+}

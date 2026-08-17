@@ -13,6 +13,13 @@ export type WizardRenderProps<TStepData> = {
    */
   current: boolean
 
+  /**
+   * Whether submitting this step completes the wizard, ie. whether `next`
+   * calls `onDone` rather than advancing. A step that carries copy about the
+   * outcome — a consent disclaimer, say — shows it only when this is set.
+   */
+  atLast: boolean
+
   prev?: () => void
   prevLabel: ReactNode
 
@@ -113,6 +120,8 @@ export function SignUpWizard<const T extends readonly any[]>({
   const stepProps: WizardRenderProps<any> = {
     // The current UI only displays the current title & content.
     current: true,
+
+    atLast,
 
     prevLabel: (atFirst && backLabel) || prevLabel || <Trans>Back</Trans>,
     prev: atFirst ? onBack : toPrev,

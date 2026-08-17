@@ -1,5 +1,63 @@
 # @atproto/pds
 
+## 0.5.29
+
+### Patch Changes
+
+- [#5399](https://github.com/bluesky-social/atproto/pull/5399) [`b2d9a77`](https://github.com/bluesky-social/atproto/commit/b2d9a7715e00472b45ef6db2dc07f1e16be5bccd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `example.env` file to the NPM package
+
+- [#5390](https://github.com/bluesky-social/atproto/pull/5390) [`924bb41`](https://github.com/bluesky-social/atproto/commit/924bb410ed9fa4a60d3ed623d8fd40aef310b142) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix `rebuild-repo` script
+
+- [#5397](https://github.com/bluesky-social/atproto/pull/5397) [`aff31c8`](https://github.com/bluesky-social/atproto/commit/aff31c815dd69168f3529e667e8bc6e61272bc63) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Extract the OpenTelemetry Node bootstrap out of the PDS into a new
+  `@atproto-labs/opentelemetry-node` package. It exposes a `setup()` function from
+  its main entrypoint, plus two subpath entrypoints:
+
+  - `@atproto-labs/opentelemetry-node/conventions` re-exports
+    `@opentelemetry/semantic-conventions` alongside the atproto XRPC attribute keys.
+  - `@atproto-labs/opentelemetry-node/instrumentation` exposes
+    `getDefaultAtprotoInstrumentations()`, the instrumentations common to atproto
+    services (which `setup()` registers automatically).
+
+  As part of this move, the shared runtime instrumentation now enables
+  `captureUncaughtException`, so the PDS records uncaught exceptions as OTEL runtime
+  events when telemetry is enabled.
+
+- [#5314](https://github.com/bluesky-social/atproto/pull/5314) [`cded706`](https://github.com/bluesky-social/atproto/commit/cded70638b908c49961faa957892ed76b292c1b5) Thanks [@IdkGoodName](https://github.com/IdkGoodName)! - Fixes `com.atproto.identity.resolveHandle` route throwing `InvalidRequest` instead of `HandleNotFound` error
+
+- [#5396](https://github.com/bluesky-social/atproto/pull/5396) [`066e1b4`](https://github.com/bluesky-social/atproto/commit/066e1b4d669eee5dfaa4f7aefb986bbf722c5629) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add default OTEL resource attributes (name, namespace, version, env name)
+
+- [#5350](https://github.com/bluesky-social/atproto/pull/5350) [`1f3f67c`](https://github.com/bluesky-social/atproto/commit/1f3f67c4b5bac19cc226b24f55d90ffd431d0d72) Thanks [@mary-ext](https://github.com/mary-ext)! - Remove the `maxGraphemes` and `maxLength` constraints from the `alt` field of `app.bsky.embed.video`, matching `app.bsky.embed.images`
+
+- [#5348](https://github.com/bluesky-social/atproto/pull/5348) [`5c3b7c9`](https://github.com/bluesky-social/atproto/commit/5c3b7c9c87efa4d48d41bc55af61f5b1f1e04920) Thanks [@dreyfus92](https://github.com/dreyfus92)! - Remove `key-encoder` dependency (and its `elliptic`/`asn1.js`/`bn.js` transitive tree) in favor of Node's native JWK key import and the already-present `@noble/curves`
+
+- Updated dependencies [[`aff31c8`](https://github.com/bluesky-social/atproto/commit/aff31c815dd69168f3529e667e8bc6e61272bc63), [`5c3b7c9`](https://github.com/bluesky-social/atproto/commit/5c3b7c9c87efa4d48d41bc55af61f5b1f1e04920)]:
+  - @atproto-labs/opentelemetry-node@0.1.0
+  - @atproto/aws@0.3.14
+  - @atproto/xrpc-server@0.12.5
+  - @atproto/oauth-provider@0.22.3
+  - @atproto-labs/xrpc-utils@0.1.18
+
+## 0.5.28
+
+### Patch Changes
+
+- [#5382](https://github.com/bluesky-social/atproto/pull/5382) [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `file-type` dependency
+
+- [#5371](https://github.com/bluesky-social/atproto/pull/5371) [`c7f39c5`](https://github.com/bluesky-social/atproto/commit/c7f39c527758ffd5b21b896fac494ecf7e69aa37) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove "esbuild" dependency
+
+- [#5382](https://github.com/bluesky-social/atproto/pull/5382) [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Propagate back-pressure when uploading blobs (avoiding high memory pressure)
+
+- [#5382](https://github.com/bluesky-social/atproto/pull/5382) [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove unused `CidNotFound` error class
+
+- Updated dependencies [[`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`4e18a00`](https://github.com/bluesky-social/atproto/commit/4e18a00b2de97e36b9b00a7fcb8713efd87964d1)]:
+  - @atproto/common@0.8.0
+  - @atproto/oauth-provider@0.22.2
+  - @atproto/aws@0.3.13
+  - @atproto/repo@0.10.11
+  - @atproto/xrpc-server@0.12.4
+  - @atproto-labs/xrpc-utils@0.1.17
+  - @atproto/lex@0.3.6
+
 ## 0.5.27
 
 ### Patch Changes

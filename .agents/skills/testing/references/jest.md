@@ -43,8 +43,6 @@ Jest globals are ambient via `@types/jest`, but a minority of files import them 
 
 ## Setup files
 
-Every jest package loads the shared root [test.setup.ts](../../../../test.setup.ts), which reads an optional `test.env` via dotenv (that file isn't committed — it's for local overrides). Packages with custom matchers add a `setupFilesAfterEnv` entry pointing at their own `jest.setup.ts`, as [packages/api](../../../../packages/api/jest.setup.ts) does.
-
 Transpilation is `@swc/jest`, not `ts-jest`, with a `moduleNameMapper` that resolves the repo's explicit `.js` import extensions back to `.ts` sources.
 
 ## Running tests

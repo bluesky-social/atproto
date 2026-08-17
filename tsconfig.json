@@ -16,6 +16,7 @@
     { "path": "./packages/internal/fetch-node" },
     { "path": "./packages/internal/handle-resolver" },
     { "path": "./packages/internal/handle-resolver-node" },
+    { "path": "./packages/internal/opentelemetry-node" },
     { "path": "./packages/internal/pipe" },
     { "path": "./packages/internal/rolldown-plugin-bundle-manifest" },
     { "path": "./packages/internal/simple-store" },
@@ -58,5 +59,9 @@
     { "path": "./packages/ws-client" },
     { "path": "./packages/xrpc" },
     { "path": "./packages/xrpc-server" },
+    { "path": "./services/bsky" },
+    { "path": "./services/bsync" },
+    { "path": "./services/ozone" },
+    { "path": "./services/pds" },
   ],
 }

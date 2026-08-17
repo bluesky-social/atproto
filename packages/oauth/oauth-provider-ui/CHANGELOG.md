@@ -1,5 +1,54 @@
 # @atproto/oauth-provider-ui
 
+## 0.10.0
+
+### Minor Changes
+
+- [#5347](https://github.com/bluesky-social/atproto/pull/5347) [`6631add`](https://github.com/bluesky-social/atproto/commit/6631add612d9bfd40413ca4e0a0c170f1eb40fca) Thanks [@bigmoves](https://github.com/bigmoves)! - Account manager: make the selected account and the authentication step part of
+  the router instead of in-component state.
+
+  The account manager now uses real routes for authentication (`/account/sign-in`,
+  `/account/sign-up`) and encodes the active account in the URL
+  (`/account/u/<handle-or-did>/…`). A reload now restores both the current
+  sub-page and the selected account from the URL, so a device with several
+  remembered accounts no longer drops back to the account picker on refresh. This
+  replaces the previous `#step=` URL-fragment state machine (still used by the
+  third-party consent flow) for the account-manager entry.
+
+  Routing is now file-based: `src/routes/` is the route tree and
+  `@tanstack/router-plugin` generates it, code-splitting each page so it is only
+  downloaded when visited. Access checks run in `beforeLoad` and redirect before a
+  page renders, rather than in the page itself, and the devices and apps pages
+  load their data through the route's `loader`.
+
+### Patch Changes
+
+- [#5401](https://github.com/bluesky-social/atproto/pull/5401) [`674e4e8`](https://github.com/bluesky-social/atproto/commit/674e4e8328251f286d50adfd0cae02f8e9127304) Thanks [@nilaallj](https://github.com/nilaallj)! - Update Swedish translations
+
+- [#5366](https://github.com/bluesky-social/atproto/pull/5366) [`f5a0af4`](https://github.com/bluesky-social/atproto/commit/f5a0af4465b469203a2a0804e9611474fde50feb) Thanks [@bigmoves](https://github.com/bigmoves)! - Simplify the sign-up username step. The domain is no longer a listbox nested inside the text input: with several domains available it becomes a list of radio rows under the input, and with only one it becomes a preview of the resulting username. The two validation rows collapse into a single hint, and the terms-of-service disclaimer moves to the final step, which is the step that creates the account.
+
+- [#5400](https://github.com/bluesky-social/atproto/pull/5400) [`5db35fc`](https://github.com/bluesky-social/atproto/commit/5db35fc18a92959d81b89c8984fbcfc0a4b8e843) Thanks [@bigmoves](https://github.com/bigmoves)! - The reset-password confirmation screen no longer says "your password was
+  updated" three times over — as a card title, a subtitle and a heading — before
+  telling the user what to do next.
+
+- [#5394](https://github.com/bluesky-social/atproto/pull/5394) [`7d83e7d`](https://github.com/bluesky-social/atproto/commit/7d83e7d27ecef5f42f5e3d8d86239eb04df106a3) Thanks [@Laszlo19](https://github.com/Laszlo19)! - Add Romanian (`ro`) translations.
+
+- [#5377](https://github.com/bluesky-social/atproto/pull/5377) [`795f2c1`](https://github.com/bluesky-social/atproto/commit/795f2c1f5663c1fd1d03577aae86e7bc5d4e1a23) Thanks [@bigmoves](https://github.com/bigmoves)! - Show the current email address and username on the account management screen at every viewport width. They were previously hidden below the `sm` breakpoint, so on mobile the rows gave no indication of what the setting was currently set to. The update-email dialog now names the address it is replacing, and email addresses quoted in dialog copy wrap instead of overflowing the dialog.
+
+## 0.9.2
+
+### Patch Changes
+
+- [#5361](https://github.com/bluesky-social/atproto/pull/5361) [`b47f379`](https://github.com/bluesky-social/atproto/commit/b47f3799adc6ce6fc6435b6009c39044266894b1) Thanks [@bigmoves](https://github.com/bigmoves)! - Center the "You are being redirected..." copy on the post-authorization screen.
+
+- [#5387](https://github.com/bluesky-social/atproto/pull/5387) [`4e18a00`](https://github.com/bluesky-social/atproto/commit/4e18a00b2de97e36b9b00a7fcb8713efd87964d1) Thanks [@bigmoves](https://github.com/bigmoves)! - Internal clean-up of the OAuth provider API surface: the UI now imports the
+  CSRF cookie/header names and the API endpoint prefix from
+  `@atproto/oauth-provider-api` instead of re-declaring them, and optional GET
+  parameters are omitted from the query string rather than sent as the literal
+  string `"undefined"`.
+- Updated dependencies [[`4e18a00`](https://github.com/bluesky-social/atproto/commit/4e18a00b2de97e36b9b00a7fcb8713efd87964d1)]:
+  - @atproto/oauth-provider-api@0.8.0
+
 ## 0.9.1
 
 ### Patch Changes

@@ -62,7 +62,7 @@
     },
   },
   "file_types": {
-    "JSON": ["**/lexicons/**/*.json", "**/.prettierrc", "**/.eslintrc"],
+    "JSON": ["**/lexicons/**/*.json"],
     "JSONC": [
       "**/tsconfig/*.json",
       "**/tsconfig.*.json",

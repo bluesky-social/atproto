@@ -1,6 +1,5 @@
 import { Trans } from '@lingui/react/macro'
 import type { HandleString } from '@atproto/syntax'
-import { Notice } from '#/components/feedback/notice.tsx'
 import {
   HandleField,
   composeHandle,
@@ -58,12 +57,15 @@ export function SignUpHandleForm({
         autoFocus
       />
 
-      <Notice role="note">
+      {/* @NOTE Plain copy rather than a `Notice`: this is background about a
+        later step, not something to act on now, and an alert surface next to
+        the field it follows read as a warning about what was just typed. */}
+      <p className="text-muted-foreground text-sm">
         <Trans>
           You can change this username to any domain name you control after your
           account is set up.
         </Trans>
-      </Notice>
+      </p>
 
       {children}
     </FormShell>

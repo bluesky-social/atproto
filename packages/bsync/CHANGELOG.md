@@ -1,5 +1,12 @@
 # @atproto/bsync
 
+## 0.0.41
+
+### Patch Changes
+
+- Updated dependencies [[`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa)]:
+  - @atproto/common@0.8.0
+
 ## 0.0.40
 
 ### Patch Changes

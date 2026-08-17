@@ -15,6 +15,7 @@ import {
 } from '../../../../pipeline.js'
 import type { RolodexClient } from '../../../../rolodex.js'
 import type { Views } from '../../../../views/index.js'
+import { fillPage } from '../../../util.js'
 import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -32,7 +33,13 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
       })
 
-      const result = await getMatches({ ...params, hydrateCtx }, ctx)
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          getMatches({ ...params, cursor, limit, hydrateCtx }, ctx),
+        items: (r) => r.matches,
+      })
 
       return {
         encoding: 'application/json',
@@ -91,7 +98,7 @@ const presentation = (input: {
   const matches = mapDefined(skeleton.subjects, (did) =>
     ctx.views.profile(did, hydration),
   )
-  return { matches }
+  return { matches, cursor: skeleton.cursor }
 }
 
 type Context = {

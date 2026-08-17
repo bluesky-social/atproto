@@ -813,6 +813,13 @@ export class Hydrator {
     const posts = await this.feed.getPosts(
       items.map((item) => item.post.uri),
       ctx.includeTakedowns,
+      undefined,
+      undefined,
+      {
+        includeOpThreadMetadata: ctx.features.checkGate(
+          ctx.features.Gate.OpThreadMetadataEnable,
+        ),
+      },
     )
     const rootUris: AtUriString[] = []
     const parentUris: AtUriString[] = []
@@ -841,7 +848,7 @@ export class Hydrator {
     const repostUris = mapDefined(items, (item) => item.repost?.uri)
     const [postState, repostProfileState, reposts] = await Promise.all([
       this.hydratePosts(postAndReplyRefs, ctx, {
-        posts: posts.merge(replies), // avoids refetches of posts
+        posts: replies.merge(posts), // avoids refetches while preserving feed-item metadata
       }),
       this.hydrateProfiles(
         [...repostUris.map(didFromUri), ...replyParentAuthors],

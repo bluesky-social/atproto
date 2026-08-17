@@ -69,6 +69,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     const bsync = await TestBsync.create({
       apiKeys: [bsyncApiKey],
       dbUrl: dbPostgresUrl,
+      dbSchema: `bsync_${dbPostgresSchema}`,
     })
 
     const bsky = await TestBsky.create({

@@ -1,0 +1,1509 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2025-02-27 14:03+0100\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: ro\n"
+"Project-Id-Version: tempp\n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: 2026-08-13 14:13\n"
+"Last-Translator: \n"
+"Language-Team: Romanian\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100>0 && n%100<20)) ? 1 : 2);\n"
+"X-Crowdin-Project: tempp\n"
+"X-Crowdin-Project-ID: 737695\n"
+"X-Crowdin-Language: ro\n"
+"X-Crowdin-File: messages-at.po\n"
+"X-Crowdin-File-ID: 331\n"
+
+#. placeholder {0}: bucket.count
+#: src/components/utils/date-ago.tsx
+msgid "{0, plural, one {# hour ago} other {# hours ago}}"
+msgstr "{0, plural, one {o oră în urmă} few {# ore în urmă} other {# de ore în urmă}}"
+
+#. placeholder {0}: bucket.count
+#: src/components/utils/date-ago.tsx
+msgid "{0, plural, one {# minute ago} other {# minutes ago}}"
+msgstr "{0, plural, one {un minut în urmă} few {# minute în urmă} other {# de minute în urmă}}"
+
+#. placeholder {0}: bucket.count
+#: src/components/utils/date-ago.tsx
+msgid "{0, plural, one {yesterday} other {# days ago}}"
+msgstr "{0, plural, one {ieri} few {# zile în urmă} other {# de zile în urmă}}"
+
+#: src/routes/account/u/$accountId/-about/en.tsx
+msgid "<0>AT Protocol</0> — Technical documentation for developers"
+msgstr "<0>Protocol AT</0> — Documentație tehnică pentru dezvoltatori"
+
+#: src/routes/account/u/$accountId/-about/en.tsx
+msgid "<0>Bluesky Social</0> — General information about the network"
+msgstr "<0>Bluesky Social</0> — Informații generale despre rețea"
+
+#: src/routes/account/u/$accountId/-about/en.tsx
+msgid "<0>Learn more</0><1>Want to learn more about the technology and network behind your Atmosphere account?</1>"
+msgstr "<0>Aflați mai multe</0><1>Doriți să aflați mai multe despre tehnologia și rețeaua din spatele contului dvs. pe Atmosferă?</1>"
+
+#: src/routes/account/u/$accountId/-about/en.tsx
+msgid "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
+msgstr "<0>Acest site web: centrul de control al contului dvs.</0><1>Site-ul pe care vă aflați acum este <2>hub-ul de gestionare a contului</2> dvs. Aici puteți:</1><3><4>Să vă actualizați adresa de e-mail și parola</4><5>Să vă gestionați datele cu caracter personal și setările de securitate</5><6>Să vizualizați și să gestionați sesiunile active de pe diverse dispozitive (browserele în care sunteți autentificat)</6></3><7>Acesta este locul unde controlați aspectele fundamentale ale identității dvs. pe Atmosferă, independent de orice detalii specifice unei aplicații, precum profilul pe care îl aveți în <8>aplicația de socializare Bluesky</8>.</7><9>Contul dvs. pe Atmosferă este găzduit în prezent de <10/>, unul dintre numeroșii furnizori de găzduire din rețeaua Atmosferă. Puteți trece la un alt furnizor oricând, fără a vă pierde contul, identitatea sau datele.</9>"
+
+#: src/routes/account/u/$accountId/-about/en.tsx
+msgid "<0>Use it across multiple apps</0><1>Your Atmosphere account works with the <2>Bluesky Social App</2> and any other social apps built on the same network.</1><3>Just like you can use the same email address to sign into different websites, your Atmosphere account lets you sign into different social apps while keeping the same identity, connections, and content.</3><4>When you see options to log in with an Atmosphere account or \"internet handle\" on other apps, you can use your existing account <5><6/></5> instead of creating a new one.</4>"
+msgstr "<0>Folosiți-l în mai multe aplicații</0><1>Contul dvs. pe Atmosferă funcționează cu <2>aplicația Bluesky Social</2> și cu orice alte aplicații de socializare construite pe aceeași rețea.</1><3>La fel cum puteți folosi aceeași adresă de e-mail pentru a vă autentifica pe diverse site-uri web, contul dvs pe Atmosferă îți permite să te autentificați în diferite aplicații de socializare, păstrând în același timp aceeași identitate, aceleași conexiuni și același conținut.</3><4>Atunci când întâlniți opțiuni de autentificare cu un cont Atmosferă sau cu un „identificator internet” în alte aplicații, puteți folosi contul existent <5><6/></5> în loc să creați unul nou.</4>"
+
+#: src/routes/account/u/$accountId/-about/en.tsx
+msgid "<0>What is an Atmosphere account?</0><1>An <2>Atmosphere account</2> is your personal identity on the Atmosphere. Think of it as a digital passport that you truly own, not locked to any single app or company.</1>"
+msgstr "<0>Ce este un cont pe Atmosferă?</0><1>Un <2>cont pe Atmosferă</2> reprezintă identitatea dvs. personală în cadrul Atmosferei. Gândiți-vă la el ca la un pașaport digital care vă aparține cu adevărat și care nu este legat de o singură aplicație sau companie.</1>"
+
+#: src/routes/account/u/$accountId/-about/en.tsx
+msgid "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
+msgstr "<0>Ce îl face special</0><1>Diferența cheie: datele dvs. nu sunt captive într-o singură aplicație. Spre deosebire de conturile tradiționale de rețele sociale, unde datele aparțin platformei, cu un cont pe Atmosferă vă dețineți cu adevărat identitatea și datele:</1><2><3><4>Vă dețineți identitatea</4>: Numele de utilizator și ID-ul permanent vă aparțin</3><5><6>Datele dvs. sunt portabile</6>: Postările, urmăririle și conținutul sunt stocate în spațiul dvs. personal de date, nu blocate în baza de date a unei aplicații</5><7><8>Vă puteți muta liber</8>: Schimbați furnizorul de găzduire fără a vă pierde urmăritorii, postările sau conexiunile. Acest lucru vă permite, de asemenea, să alegeți un furnizor din țara dvs., dacă locația de stocare a datelor este importantă pentru dvs.</7><9><10>Aplicații multiple, o singură identitate</10>: Folosiți același cont în diverse aplicații construite pe aceeași rețea</9></2>"
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "<your-domain>"
+msgstr "<your-domain>"
+
+#: src/components/sign-in-form.tsx
+msgid "2FA Confirmation"
+msgstr "Confirmare A2F"
+
+#: src/hooks/use-oauth-client-name.ts
+msgid "A local app"
+msgstr "O aplicație locală"
+
+#: src/lib/api.ts
+msgid "A second authentication factor is required ({hint})"
+msgstr "Este necesar un al doilea factor de autentificare ({hint})"
+
+#: src/components/utils/scope-description.tsx
+msgid "A service controlled by <0>{domain}</0>"
+msgstr "Un serviciu controlat de <0>{domain}</0>"
+
+#: src/routes/account/u/$accountId/route.tsx
+msgid "About"
+msgstr "Despre"
+
+#: src/components/utils/scope-description.tsx
+msgid "Access specific parts of your Bluesky account"
+msgstr "Accesează părți specifice ale contului dvs. Bluesky"
+
+#: src/components/utils/scope-description.tsx
+msgid "Access specific parts of your Bluesky account and read your private preferences"
+msgstr "Accesează părți specifice ale contului dvs. Bluesky și vă citește preferințele private"
+
+#: src/components/utils/scope-description.tsx
+#: src/routes/account/u/$accountId/route.tsx
+msgid "Account"
+msgstr "Cont"
+
+#: src/components/identity/account-avatar.tsx
+msgid "Account avatar"
+msgstr "Avatar cont"
+
+#: src/data/account.ts
+msgid "Account deactivated"
+msgstr "Cont dezactivat"
+
+#: src/data/account.ts
+msgid "Account deleted"
+msgstr "Cont șters"
+
+#: src/components/identity/account-identifier.tsx
+msgid "Account identifier"
+msgstr "Identificator cont"
+
+#: src/components/identity/account-name.tsx
+msgid "Account name"
+msgstr "Nume cont"
+
+#: src/components/identity/account-menu.tsx
+msgid "Account overview"
+msgstr "Prezentare generală cont"
+
+#: src/authorization-page.tsx
+#: src/data/account.ts
+msgid "Account reactivated"
+msgstr "Cont reactivat"
+
+#: src/components/identity/account-menu.tsx
+msgid "Account selector"
+msgstr "Selector cont"
+
+#: src/components/utils/handle.tsx
+msgid "Account username"
+msgstr "Nume de utilizator cont"
+
+#: src/components/session-list.tsx
+msgid "Actions"
+msgstr "Acțiuni"
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "Add the following record to your domain's DNS configuration."
+msgstr "Adăugați următoarea înregistrare la configurația DNS a domeniului dvs."
+
+#: src/components/update-handle-custom-form.tsx
+msgid "alice.com"
+msgstr "andreea.ro"
+
+#: src/components/reset-password-view.tsx
+#: src/components/update-password-dialog.tsx
+#: src/components/verify-email-dialog.tsx
+msgid "Already have a code?"
+msgstr "Aveți deja un cod?"
+
+#: src/components/identity/client-name.tsx
+msgid "An application on your device"
+msgstr "O aplicație pe dispozitivul dvs."
+
+#: src/components/error-view.tsx
+#: src/lib/notification-message.ts
+msgid "An error occurred"
+msgstr "A apărut o eroare"
+
+#: src/lib/api.ts
+msgid "An unexpected error occurred. Please try again."
+msgstr "A apărut o eroare neașteptată. Vă rugăm să încercați din nou."
+
+#: src/components/feedback/error-notice.tsx
+msgid "An unknown error occurred"
+msgstr "A apărut o eroare necunoscută"
+
+#: src/components/sign-in-picker.tsx
+msgid "Another account"
+msgstr "Alt cont"
+
+#: src/components/utils/scope-description.tsx
+msgid "Any collection"
+msgstr "Orice colecție"
+
+#: src/components/utils/scope-description.tsx
+msgid "Any method"
+msgstr "Orice metodă"
+
+#: src/components/utils/scope-description.tsx
+msgid "Any service"
+msgstr "Orice serviciu"
+
+#: src/routes/account/u/$accountId/apps.tsx
+msgctxt "OAuthApp"
+msgid "App"
+msgstr "Aplicație"
+
+#: src/routes/account/u/$accountId/route.tsx
+msgid "Apps"
+msgstr "Aplicații"
+
+#: src/routes/account/u/$accountId/apps.tsx
+msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
+msgstr "Aplicațiile vă pot accesa contul în fundal (pentru a verifica notificările, a sincroniza datele ș.a.m.d.) chiar și atunci când nu le folosiți în mod activ. Acesta este un comportament normal și va actualiza timpul „ultima accesare”."
+
+#: src/components/delete-account-dialog.tsx
+msgid "Are you really, really sure?"
+msgstr "Sunteți foarte, foarte sigur?"
+
+#: src/components/authenticate-welcome-view.tsx
+msgctxt "AuthenticationPage"
+msgid "Authenticate"
+msgstr "Autentificare"
+
+#: src/components/utils/scope-description.tsx
+msgctxt "OAuthScope"
+msgid "Authenticate"
+msgstr "Autentificare"
+
+#: src/components/consent-form.tsx
+#: src/components/consent-view.tsx
+msgctxt "OAuthConsent"
+msgid "Authorize"
+msgstr "Autorizare"
+
+#: src/routes/account/u/$accountId/apps.tsx
+msgctxt "OAuthApp"
+msgid "Authorized"
+msgstr "Autorizat"
+
+#: src/components/forms/form-shell.tsx
+#: src/components/forms/sign-up-wizard.tsx
+#: src/components/layouts/account-shell.tsx
+#: src/components/sign-in-picker.tsx
+#: src/routes/__root.tsx
+msgid "Back"
+msgstr "Înapoi"
+
+#: src/components/utils/scope-description.tsx
+msgid "Blob storage"
+msgstr "Stocare Blob"
+
+#: src/components/utils/scope-description.tsx
+msgid "Bluesky App services"
+msgstr "Serviciile aplicației Bluesky"
+
+#: src/components/utils/scope-description.tsx
+msgid "Bluesky Chat services"
+msgstr "Serviciile de conversații Bluesky"
+
+#: src/components/consent-form.tsx
+msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
+msgstr "Făcând clic pe <0>Autorizare</0>, veți acorda acestei aplicații acces la contul dvs., în conformitate cu <1>termenii de serviciu</1> și <2>politica de confidențialitate</2> ale acesteia."
+
+#: src/components/sign-up-disclaimer.tsx
+msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
+msgstr "Prin crearea unui cont sunteți de acord cu <0>Termenii de Serviciu</0> și <1>Politica de Confidențialitate</1> ale acestui serviciu."
+
+#: src/components/utils/scope-description.tsx
+msgctxt "RPC lxm"
+msgid "Call"
+msgstr "Apel"
+
+#: src/components/authenticate-welcome-view.tsx
+#: src/components/delete-account-dialog.tsx
+#: src/components/forms/form-shell.tsx
+#: src/components/reactivate-account-view.tsx
+#: src/contexts/authentication.tsx
+msgid "Cancel"
+msgstr "Anulare"
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Cannot remove current device"
+msgstr "Nu se poate elimina dispozitivul curent"
+
+#: src/components/utils/scope-description.tsx
+msgid "Change your <0>@handle</0>"
+msgstr "Vă schimbă <0>@identificatorul</0>"
+
+#: src/components/update-password-dialog.tsx
+msgid "Change your password"
+msgstr "Modificați-vă parola"
+
+#: src/components/utils/scope-description.tsx
+msgid "Chat"
+msgstr "Conversație"
+
+#: src/components/delete-account-dialog.tsx
+msgid "Check <0>{email}</0> for an email with the confirmation code to enter below:"
+msgstr "Verificați <0>{email}</0> pentru un e-mail cu codul de confirmare pentru a-l introduce mai jos:"
+
+#. placeholder {0}: secondFactorError.hint
+#: src/components/sign-in-form.tsx
+msgid "Check your {0} email for a login code and enter it here."
+msgstr "Verificați e-mailul dvs. {0} pentru un cod de conectare și introduceți-l aici."
+
+#: src/components/delete-account-dialog.tsx
+msgid "Check your email for the confirmation code to enter below:"
+msgstr "Verificați e-mail dvs. pentru un cod de confirmare pentru a-l introduce mai jos:"
+
+#: src/data/account.ts
+msgid "Check your inbox for the confirmation code."
+msgstr "Verificați-vă inbox-ul pentru codul de confirmare."
+
+#: src/data/email.ts
+msgid "Check your inbox for the verification code."
+msgstr "Verificați-vă inbox-ul pentru codul de verificare."
+
+#: src/data/email.ts
+#: src/data/password.ts
+msgid "Check your inbox."
+msgstr "Verificați-vă inbox-ul."
+
+#: src/components/update-handle-dialog.tsx
+msgid "Choose a new default username."
+msgstr "Alegeți un nou nume de utilizator implicit."
+
+#: src/components/update-email-dialog.tsx
+msgid "Choose a new email address to associate with your account."
+msgstr "Alegeți o nouă adresă de e-mail pe care să o asociați contului dvs."
+
+#: src/components/sign-up-view.tsx
+msgid "Choose a username"
+msgstr "Alegeți un nume de utilizator"
+
+#: src/components/redirecting-view.tsx
+msgid "Click here if nothing happens"
+msgstr "Faceți clic aici dacă nu se întâmplă nimic"
+
+#: src/routes/account/u/$accountId/apps.tsx
+msgctxt "OAuthApp"
+msgid "Client"
+msgstr "Client"
+
+#: src/components/oauth-session-details-dialog.tsx
+#: src/components/ui/dialog.tsx
+#: src/components/ui/toast.tsx
+msgid "Close"
+msgstr "Închidere"
+
+#: src/components/feedback/error-details.tsx
+msgctxt "Error"
+msgid "Code"
+msgstr "Cod"
+
+#: src/components/sign-in-form.tsx
+msgctxt "verb"
+msgid "Confirm"
+msgstr "Confirmare"
+
+#: src/components/sign-in-view.tsx
+msgid "Confirm your password to continue"
+msgstr "Confirmați parola pentru a continua"
+
+#: src/components/delete-account-confirm-form.tsx
+#: src/components/sign-in-form.tsx
+msgid "Confirmation code"
+msgstr "Cod de confirmare"
+
+#: src/data/account.ts
+msgid "Confirmation email sent"
+msgstr "E-mailul de confirmare a fost trimis."
+
+#: src/cookie-error-page.tsx
+msgid "Continue"
+msgstr "Continuare"
+
+#: src/cookie-error-page.tsx
+msgid "Cookie Error"
+msgstr "Eroare cookie"
+
+#: src/components/forms/copy-button.tsx
+msgid "Copied"
+msgstr "Copiat"
+
+#: src/components/forms/copy-button.tsx
+msgid "Copy to clipboard"
+msgstr "Copiere în clipboard"
+
+#: src/components/utils/scope-description.tsx
+msgid "Create"
+msgstr "Creează"
+
+#: src/components/authenticate-welcome-view.tsx
+msgid "Create a new account"
+msgstr "Creare cont nou"
+
+#: src/components/utils/scope-description.tsx
+msgid "Create, update, and delete any public data linked to your account"
+msgstr "Creează, actualizează și șterge orice date publice legate de contul dvs."
+
+#: src/lib/api.ts
+msgid "Custom domains are not supported"
+msgstr "Domeniile personalizate nu sunt acceptate."
+
+#: src/components/utils/scope-description.tsx
+msgid "Data"
+msgstr "Date"
+
+#: src/components/deactivate-account-dialog.tsx
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Deactivate account"
+msgstr "Dezactivare cont"
+
+#: src/components/identity/account-avatar.tsx
+msgid "Deactivated account"
+msgstr "Cont dezactivat"
+
+#: src/components/utils/scope-description.tsx
+msgid "Delete"
+msgstr "Șterge"
+
+#: src/components/delete-account-dialog.tsx
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Delete account"
+msgstr "Ștergere cont"
+
+#: src/components/delete-account-dialog.tsx
+msgid "Delete account <0/>"
+msgstr "Ștergeți contul <0/>"
+
+#: src/components/delete-account-confirm-form.tsx
+msgid "Delete my account"
+msgstr "Șterge-mi contul"
+
+#: src/components/consent-form.tsx
+msgctxt "OAuthConsent"
+msgid "Deny access"
+msgstr "Refuzați accesul"
+
+#: src/routes/account/u/$accountId/apps.tsx
+msgid "Details"
+msgstr "Detalii"
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgctxt "device list"
+msgid "Device"
+msgstr "Dispozitiv"
+
+#: src/routes/account/u/$accountId/route.tsx
+msgid "Devices"
+msgstr "Dispozitive"
+
+#: src/components/forms/fields/token-field.tsx
+msgid "Didn't receive a code? <0>Click here to resend.</0>"
+msgstr "Nu ați primit un cod? <0>Faceți clic aici pentru a-l retrimite.</0>"
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "DNS"
+msgstr "DNS"
+
+#: src/components/update-handle-dialog.tsx
+msgid "e.g. <0>alice.com</0>"
+msgstr "e.g. <0>andreea.ro</0>"
+
+#. placeholder {0}: domains[0]
+#: src/components/update-handle-dialog.tsx
+msgid "e.g. <0>alice{0}</0>"
+msgstr "de ex. <0>andreea{0}</0>"
+
+#: src/components/sign-up-credentials-form.tsx
+#: src/components/utils/scope-description.tsx
+msgid "Email"
+msgstr "E-mail"
+
+#: src/components/forms/fields/email-field.tsx
+#: src/components/reset-password-request-form.tsx
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Email address"
+msgstr "Adresă de e-mail"
+
+#: src/components/update-email-dialog.tsx
+msgid "Email address successfully updated"
+msgstr "Adresă de e-mail actualizată cu succes"
+
+#: src/data/email.ts
+msgid "Email change request sent"
+msgstr "Cerere de modificare e-mail trimisă"
+
+#: src/data/email.ts
+msgid "Email change successful"
+msgstr "E-mail modificat cu succes"
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "Email these instructions"
+msgstr "Trimiteți prin e-mail aceste instrucțiuni"
+
+#: src/data/email.ts
+msgid "Email verified"
+msgstr "E-mail verificat"
+
+#: src/components/forms/fields/new-password-field.tsx
+msgid "Enter a password"
+msgstr "Introduceți o parolă"
+
+#: src/components/reset-password-view.tsx
+msgid "Enter the code you received to reset your password."
+msgstr "Introduceți codul primit pentru a vă reseta parola."
+
+#: src/components/update-handle-custom-form.tsx
+msgid "Enter the domain you want to use"
+msgstr "Introduceți domeniul pe care doriți să-l utilizați"
+
+#: src/components/reset-password-view.tsx
+msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
+msgstr "Introduceți e-mailul pe care l-ați folosit pentru a vă crea contul. Vă vom trimite un „cod de resetare” pentru a putea seta o parolă nouă."
+
+#: src/components/reset-password-request-form.tsx
+msgid "Enter your email address"
+msgstr "Introduceți-vă adresa de e-mail"
+
+#: src/components/forms/fields/new-password-field.tsx
+msgid "Enter your new password"
+msgstr "Introduceți noua parolă"
+
+#: src/components/sign-in-view.tsx
+msgid "Enter your password"
+msgstr "Introduceți-vă parola"
+
+#: src/components/sign-in-view.tsx
+msgid "Enter your username and password"
+msgstr "Introduceți-vă numele de utilizator și parola"
+
+#: src/components/deactivate-account-dialog.tsx
+msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
+msgstr "Fiecare aplicație conectată în prezent la contul dvs., precum și orice „parolă de aplicație” pe care ați creat-o, vor fi revocate. Va trebui să vă conectați înapoi când reactivați."
+
+#: src/components/sign-up-credentials-form.tsx
+msgid "example-com-xxxxx-xxxxx"
+msgstr "exemplu-ro-xxxxx-xxxxx"
+
+#: src/components/utils/description-card.tsx
+msgid "Expand details"
+msgstr "Extindere detalii"
+
+#: src/components/feedback/password-strength.tsx
+#: src/components/utils/password-strength-label.tsx
+msgid "Extra"
+msgstr "Extra"
+
+#: src/data/email.ts
+msgid "Failed to change email"
+msgstr "Modificarea adresei de e-mail a eșuat"
+
+#: src/data/account.ts
+msgid "Failed to deactivate account"
+msgstr "Dezactivarea contului a eșuat"
+
+#: src/data/account.ts
+msgid "Failed to delete account"
+msgstr "Ștergerea contului a eșuat"
+
+#: src/routes/account/u/$accountId/apps.tsx
+msgid "Failed to load connected apps"
+msgstr "Încărcarea aplicațiilor conectate a eșuat"
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Failed to load your devices"
+msgstr ""
+
+#: src/data/account.ts
+msgid "Failed to reactivate account"
+msgstr "Reactivarea contului a eșuat"
+
+#: src/data/account-sessions.ts
+msgid "Failed to remove device"
+msgstr "Eliminarea dispozitivului a eșuat."
+
+#: src/data/email.ts
+msgid "Failed to request email change"
+msgstr "Solicitarea modificării adresei de e-mail a eșuat"
+
+#: src/data/password.ts
+msgid "Failed to request password reset"
+msgstr "Solicitarea resetării parolei a eșuat"
+
+#: src/data/password.ts
+msgid "Failed to reset password"
+msgstr "Resetarea parolei a eșuat"
+
+#: src/data/oauth-sessions.ts
+msgid "Failed to revoke access"
+msgstr "Eroare la revocarea accesului"
+
+#: src/data/account.ts
+msgid "Failed to send confirmation email"
+msgstr "Trimiterea email-ului de confirmare a eșuat"
+
+#: src/data/email.ts
+msgid "Failed to send verification email"
+msgstr "Trimiterea e-mailului de verificare a eșuat"
+
+#: src/data/handle.ts
+msgid "Failed to update username"
+msgstr "Actualizarea numelui de utilizator a eșuat"
+
+#: src/data/email.ts
+msgid "Failed to verify email"
+msgstr "Verificarea e-mailului a eșuat"
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "File contents"
+msgstr "Conținutul fișierului"
+
+#: src/routes/account/u/$accountId/apps.tsx
+msgid "Filter apps"
+msgstr "Filtrare aplicații"
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Filter devices"
+msgstr "Filtrare dispozitive"
+
+#: src/components/delete-account-dialog.tsx
+msgid "For security reasons, we'll need to send a confirmation code to your email address <0>{email}</0>."
+msgstr "Din motive de securitate, va trebui să trimitem un cod de confirmare la adresa dvs. de e-mail <0>{email}</0>."
+
+#: src/components/delete-account-dialog.tsx
+msgid "For security reasons, we'll need to send a confirmation code to your email address."
+msgstr "Din motive de securitate, va trebui să trimitem un cod de confirmare la adresa dvs. de e-mail."
+
+#: src/components/reset-password-view.tsx
+msgid "Forgot Password"
+msgstr "Ați uitat parola"
+
+#: src/components/sign-in-form.tsx
+msgid "Forgot?"
+msgstr "Ați uitat parola?"
+
+#: src/components/consent-view.tsx
+msgid "Grant access to your <0/> account"
+msgstr "Acordați acces la contul dvs. <0/>"
+
+#. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "Hello,\n"
+"\n"
+"To associate the domain \"{handle}\" with my AT Protocol identity ({did}), one of the following configuration changes is required. Either method is sufficient, only one needs to be applied.\n"
+"\n"
+"{0}\n"
+"\n"
+"The change can be verified by visiting the following URL: {troubleshootHref}\n"
+"A detailed tutorial can be found here: {tutorialHref}\n"
+"\n"
+"Thank you."
+msgstr "Salut,\n"
+"\n"
+"Pentru a asocia domeniul „{handle}” cu identitatea protocolului meu AT ({did}), una dintre următoarele modificări de configurare este necesară. Oricare dintre cele două metode este suficientă, trebuie aplicat doar un singur element.\n"
+"\n"
+"{0}\n"
+"\n"
+"Modificarea poate fi verificată accesând următorul URL: {troubleshootHref}\n"
+"Un tutorial detaliat poate fi găsit aici: {tutorialHref}\n"
+"\n"
+"Mulțumim."
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "Help"
+msgstr "Ajutor"
+
+#: src/components/forms/fields/password-field.tsx
+msgid "Hide"
+msgstr "Ascundere"
+
+#: src/components/utils/link-title.tsx
+#: src/routes/account/u/$accountId/route.tsx
+msgid "Home"
+msgstr "Acasă"
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "Host"
+msgstr "Gazdă"
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "HTTP"
+msgstr "HTTP"
+
+#: src/components/sign-in-form.tsx
+msgid "Identifier"
+msgstr "Identificator"
+
+#: src/components/utils/scope-description.tsx
+msgid "Identity"
+msgstr "Identitate"
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
+msgstr "Dacă aveți acces la panoul de configurare DNS al domeniului dvs (de ex. prin intermediul registratorului domeniului)"
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "If you have access to your domain's web hosting configuration (e.g. via FTP)"
+msgstr "Dacă aveți acces la configurația de găzduire web a domeniului dvs (de ex. prin FTP)"
+
+#: src/components/update-handle-dialog.tsx
+msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
+msgstr "Dacă aveți propriul domeniu, îl puteți folosi ca identificator. Acest lucru vă permite să vă verificați identitatea automat. <0>Aflați mai multe aici.</0>."
+
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "If you update your email address, email 2FA (if enabled) will be disabled."
+msgstr "Dacă vă actualizați adresa de e-mail, e-mailul A2F (dacă este activat) va fi dezactivat."
+
+#: src/components/deactivate-account-dialog.tsx
+msgid "If you're trying to change your handle or email, do so before you deactivate."
+msgstr "Dacă încercați să vă modificați identificatorul sau adresa de e-mail, faceți acest lucru înainte de a dezactiva."
+
+#: src/components/utils/handle.tsx
+msgid "Invalid Handle"
+msgstr "Identificator invalid"
+
+#: src/components/sign-up-credentials-form.tsx
+msgid "Invite code"
+msgstr "Cod de invitație"
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgctxt "device list"
+msgid "IP address"
+msgstr "Adresă IP"
+
+#: src/routes/account/u/$accountId/apps.tsx
+msgid "It appears that you haven’t used this account to sign in to any apps yet."
+msgstr "Se pare că încă nu ați folosit acest cont pentru a vă conecta la nicio aplicație."
+
+#. placeholder {0}: url.hostname
+#: src/cookie-error-page.tsx
+msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
+msgstr "Se pare că browserul dvs. nu acceptă module cookie. Apăsați „Continuare” pentru a încerca din nou. Dacă eroarea persistă, vă rugăm să vă asigurați că setările de confidențialitate permit modulele cookie pentru site-ul „{0}”."
+
+#: src/components/utils/date-ago.tsx
+msgid "just now"
+msgstr "chiar acum"
+
+#: src/routes/account/u/$accountId/apps.tsx
+msgctxt "OAuthApp"
+msgid "Last accessed"
+msgstr "Ultima accesare"
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgctxt "device list"
+msgid "Last seen"
+msgstr "Văzut ultima dată"
+
+#: src/components/update-email-dialog.tsx
+msgctxt "verify email"
+msgid "Later"
+msgstr "Mai târziu"
+
+#: src/components/reset-password-view.tsx
+msgid "Let's get your password reset!"
+msgstr "Hai să vă resetăm parola!"
+
+#: src/components/layouts/account-shell.tsx
+#: src/components/layouts/auth-shell.tsx
+msgid "Logo"
+msgstr "Logo"
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Looks like you aren't logged in on any other devices."
+msgstr "Se pare că nu sunteți conectat pe niciun alt dispozitiv."
+
+#: src/hooks/use-oauth-client-identifier.ts
+msgid "loopback"
+msgstr "cu reacție în buclă"
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "Make a text file with the contents below available at the following URL."
+msgstr "Faceți un fișier text cu conținutul de mai jos disponibil la următorul URL."
+
+#: src/components/forms/fields/password-field.tsx
+msgid "Make visible"
+msgstr "Faceți vizibil"
+
+#: src/routes/account/u/$accountId/route.tsx
+msgid "Manage applications that have access to your account"
+msgstr "Gestionați aplicațiile care au acces la contul dvs."
+
+#: src/components/utils/scope-description.tsx
+msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
+msgstr "Vă gestionează <0>identitatea completă</0> inclusiv <1>@identificator</1>"
+
+#: src/routes/account/u/$accountId/route.tsx
+msgid "Manage your account"
+msgstr "Gestionați-vă contul"
+
+#: src/routes/account/u/$accountId/route.tsx
+msgid "Manage your active sessions"
+msgstr "Gestionați-vă sesiunile active"
+
+#: src/components/utils/scope-description.tsx
+msgid "Manage your profile, posts, likes and follows"
+msgstr "Vă gestionează profilul, postările, aprecierile și urmăririle"
+
+#: src/components/utils/scope-description.tsx
+msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
+msgstr "Vă gestionează profilul, postările, aprecierile și urmăririle, dar vă și citește preferințele private"
+
+#: src/components/feedback/error-details.tsx
+msgctxt "Error"
+msgid "Message"
+msgstr "Mesaj"
+
+#: src/components/feedback/password-strength.tsx
+#: src/components/utils/password-strength-label.tsx
+msgid "Missing"
+msgstr "Lipsește"
+
+#: src/components/feedback/password-strength.tsx
+#: src/components/utils/password-strength-label.tsx
+msgid "Moderate"
+msgstr "Moderată"
+
+#: src/routes/account/u/$accountId/route.tsx
+msgid "My Atmosphere Account"
+msgstr "Contul meu pe Atmosferă"
+
+#: src/components/feedback/error-details.tsx
+msgctxt "Error"
+msgid "Name"
+msgstr "Nume"
+
+#: src/components/layouts/account-shell.tsx
+msgid "Navigation"
+msgstr "Navigare"
+
+#: src/components/update-email-dialog.tsx
+#: src/components/update-email-form.tsx
+msgid "New email address"
+msgstr "Adresă e-mail nouă"
+
+#: src/components/reset-password-confirm-form.tsx
+msgid "New password"
+msgstr "Parolă nouă"
+
+#: src/components/forms/sign-up-wizard.tsx
+#: src/components/reset-password-view.tsx
+msgid "Next"
+msgstr "Următorul"
+
+#: src/components/session-list.tsx
+msgid "No matches"
+msgstr "Nicio potrivire"
+
+#: src/components/reset-password-view.tsx
+msgid "Okay"
+msgstr "Ok"
+
+#: src/routes/__root.tsx
+msgid "Page not found"
+msgstr ""
+
+#: src/components/delete-account-confirm-form.tsx
+#: src/components/forms/fields/password-field.tsx
+#: src/components/sign-in-form.tsx
+#: src/components/sign-up-credentials-form.tsx
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Password"
+msgstr "Parolă"
+
+#: src/data/password.ts
+msgid "Password reset email sent"
+msgstr "Email-ul pentru resetarea parolei a fost trimit."
+
+#: src/data/password.ts
+msgid "Password reset successful"
+msgstr "Parola a fost resetată cu succes"
+
+#: src/components/feedback/password-strength.tsx
+#: src/components/utils/password-strength-label.tsx
+msgid "Password strength"
+msgstr "Complexitatea parolei"
+
+#: src/components/feedback/password-strength.tsx
+msgid "Password strength indicator"
+msgstr "Indicator complexitate parolă"
+
+#: src/components/reset-password-view.tsx
+msgid "Password Updated"
+msgstr "Parolă actualizată"
+
+#: src/components/forms/fields/new-password-field.tsx
+msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
+msgstr "Parolă cu cel puțin {MIN_PASSWORD_LENGTH, plural, one {} few {# caractere}other {# de caractere}}"
+
+#: src/components/feedback/error-details.tsx
+msgctxt "Error"
+msgid "Payload"
+msgstr "Încărcătură"
+
+#: src/components/utils/scope-description.tsx
+msgid "Perform actions on your behalf"
+msgstr "Efectuează acțiuni în numele dvs."
+
+#: src/components/utils/scope-description.tsx
+msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
+msgstr "Efectuează acțiuni autentificate către <0>orice serviciu</0> în numele dvs."
+
+#: src/components/authenticate-welcome-view.tsx
+msgid "Please authenticate to continue"
+msgstr "Vă rugăm să vă autentificați pentru a continua"
+
+#: src/data/email.ts
+#: src/data/password.ts
+msgid "Please check the email address and try again."
+msgstr "Vă rugăm să verificați adresa de e-mail și să încercați din nou."
+
+#: src/data/handle.ts
+msgid "Please check the username and try again."
+msgstr "Vă rugăm să verificați numele de utilizator și încercați din nou."
+
+#: src/data/account.ts
+msgid "Please check your code and password, then try again."
+msgstr "Vă rugăm să verificați codul și parola, apoi încercați din nou."
+
+#: src/data/email.ts
+#: src/data/password.ts
+msgid "Please check your reset code and try again."
+msgstr "Vă rugăm să verificați codul de resetare și să încercați din nou."
+
+#: src/data/email.ts
+msgid "Please check your verification code and try again."
+msgstr "Vă rugăm să verificați codul de verificare și să încercați din nou."
+
+#: src/components/update-email-form.tsx
+msgid "Please enter the security code that was sent to your email address."
+msgstr "Vă rugăm să introduceți codul de securitate care a fost trimis la adresa dvs. de e-mail."
+
+#: src/data/account.ts
+#: src/data/email.ts
+msgid "Please try again in a moment."
+msgstr "Vă rugăm să încercaţi din nou într-un moment."
+
+#: src/components/forms/request-code-button.tsx
+msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
+msgstr "Așteptați {remainingSeconds, plural, one {o secundă} few {# secunde} other {# de secunde}} înainte de a încerca din nou."
+
+#: src/components/utils/link-title.tsx
+msgid "Privacy Policy"
+msgstr "Politica de Confidențialitate"
+
+#: src/components/utils/scope-description.tsx
+msgid "Publish changes"
+msgstr "Publică modificări"
+
+#: src/components/reactivate-account-dialog.tsx
+msgid "Reactivate"
+msgstr "Reactivare"
+
+#: src/components/reactivate-account-dialog.tsx
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Reactivate account"
+msgstr "Reactivare cont"
+
+#: src/components/utils/scope-description.tsx
+msgid "Read and send messages"
+msgstr "Citește și trimite mesaje"
+
+#: src/components/utils/scope-description.tsx
+msgid "Read and update your account's email address"
+msgstr "Citește și actualizează adresa de e-mail a contului"
+
+#: src/components/utils/scope-description.tsx
+msgid "Read your account's email address"
+msgstr "Citește adresa de e-mail a contului"
+
+#: src/components/utils/scope-description.tsx
+msgid "Read your private preferences"
+msgstr "Citește preferințele private"
+
+#: src/components/sign-in-form.tsx
+msgid "Remember this account on this device"
+msgstr "Rețineți acest cont pe acest dispozitiv"
+
+#: src/components/utils/scope-description.tsx
+msgid "Repository"
+msgstr "Repozitoriu"
+
+#: src/components/reset-password-confirm-form.tsx
+msgid "Reset code"
+msgstr "Resetare cod"
+
+#: src/components/reset-password-view.tsx
+msgid "Reset Password"
+msgstr "Resetare parolă"
+
+#: src/components/sign-in-form.tsx
+msgid "Reset your password"
+msgstr "Resetați-vă parola"
+
+#: src/components/feedback/error-notice.tsx
+#: src/routes/account/u/$accountId/apps.tsx
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Retry"
+msgstr "Încercați din nou"
+
+#: src/components/forms/request-code-button.tsx
+msgid "Retry in {remainingSeconds}s"
+msgstr "Reîncercați în {remainingSeconds}s"
+
+#: src/components/oauth-session-details-dialog.tsx
+msgctxt "OAuthApp"
+msgid "Revoke access"
+msgstr "Revocare acces"
+
+#: src/components/update-email-form.tsx
+msgid "Security code"
+msgstr "Cod de securitate"
+
+#: src/components/update-email-form.tsx
+msgid "Security step required"
+msgstr "Pas de securitate necesar"
+
+#: src/components/identity/account-menu.tsx
+msgid "Select another account"
+msgstr "Selectare alt cont"
+
+#: src/components/forms/fields/handle-field.tsx
+msgid "Select domain"
+msgstr "Selectare domeniu"
+
+#: src/components/sign-in-view.tsx
+msgid "Select from an existing account"
+msgstr "Selectați dintr-un cont existent"
+
+#: src/components/delete-account-dialog.tsx
+msgid "Send email"
+msgstr "Trimitere e-mail"
+
+#: src/components/forms/request-code-button.tsx
+msgid "Send verification code"
+msgstr "Trimitere cod de verificare"
+
+#: src/components/sign-in-view.tsx
+msgctxt "AuthenticationPage"
+msgid "Sign in"
+msgstr "Conectare"
+
+#: src/components/authenticate-welcome-view.tsx
+#: src/components/sign-in-form.tsx
+msgctxt "verb"
+msgid "Sign in"
+msgstr "Conectare"
+
+#. placeholder {0}: session.account.name ?? stringifyHandle(session.account.handle) ?? session.account.did
+#: src/components/sign-in-picker.tsx
+msgid "Sign in as {0}"
+msgstr "Conectați-vă ca {0}"
+
+#: src/components/sign-in-picker.tsx
+msgid "Sign in as..."
+msgstr "Conectați-vă ca..."
+
+#: src/components/sign-in-picker.tsx
+msgid "Sign in to an account that is not listed"
+msgstr "Conectați-vă la un cont care nu este listat"
+
+#: src/components/identity/account-menu.tsx
+msgid "Sign out"
+msgstr "Deconectare"
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgctxt "device list"
+msgid "Sign out"
+msgstr "Deconectare"
+
+#: src/components/sign-in-picker.tsx
+#: src/components/sign-up-view.tsx
+msgid "Sign up"
+msgstr "Înscrieți-vă"
+
+#: src/authorization-page.tsx
+msgid "Sign-in canceled"
+msgstr "Conectare anulată"
+
+#: src/authorization-page.tsx
+msgid "Sign-in complete"
+msgstr "Conectare finalizată"
+
+#: src/components/feedback/error-details.tsx
+msgctxt "Error"
+msgid "Stack"
+msgstr "Stivă"
+
+#: src/components/forms/sign-up-wizard.tsx
+msgid "Step {currentPosition} of {count}"
+msgstr "Pasul {currentPosition} din {count}"
+
+#: src/components/feedback/password-strength.tsx
+#: src/components/utils/password-strength-label.tsx
+msgid "Strong"
+msgstr "Puternică"
+
+#: src/components/forms/form-shell.tsx
+msgid "Submit"
+msgstr "Trimitere"
+
+#: src/data/account-sessions.ts
+msgid "Successfully removed device"
+msgstr "Dispozitiv eliminat cu succes"
+
+#: src/data/oauth-sessions.ts
+msgid "Successfully revoked access"
+msgstr "Acces revocat cu succes"
+
+#: src/components/utils/link-title.tsx
+msgid "Support"
+msgstr "Asistență"
+
+#: src/components/consent-form.tsx
+msgid "Technical details"
+msgstr "Detalii tehnice"
+
+#: src/components/utils/scope-description.tsx
+msgid "Temporarily activate or deactivate your account"
+msgstr "Vă activează sau dezactivează temporar contul"
+
+#: src/components/utils/link-title.tsx
+msgid "Terms of Service"
+msgstr "Termenii de Serviciu"
+
+#: src/components/utils/scope-description.tsx
+msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
+msgstr "Aplicația solicită control deplin asupra identității dvs. în rețea, ceea ce înseamnă că ar putea să vă <0>compromite definitiv</0> sau chiar <1>fura</1> contul. Acordați această permisiune doar aplicațiilor în care aveți deplină încredere."
+
+#: src/components/utils/scope-description.tsx
+msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
+msgstr "Aplicația solicită permisiunile necesare pentru a efectua următoarele acțiuni în numele dvs.:"
+
+#: src/components/utils/scope-description.tsx
+msgid "The application requests the permissions necessary to perform the following actions on your Bluesky account:"
+msgstr "Aplicația solicită permisiunile necesare pentru a efectua următoarele acțiuni în contul dvs. Bluesky:"
+
+#: src/components/utils/scope-description.tsx
+msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
+msgstr "Rețeaua Protocolului AT utilizează un mecanism de autentificare care permite identificarea unică a utilizatorilor în timpul comunicării cu servicii externe. Acesta este utilizat, de obicei, pentru a prelua sau a actualiza date asociate contului dvs., precum mesaje de conversație, fluxuri de conținut sau elemente de moderare. Aplicația solicită permisiunile necesare pentru a efectua următoarele acțiuni autentificate în numele dvs.:"
+
+#: src/lib/api.ts
+msgid "The data you submitted is invalid. Please check the form and try again."
+msgstr "Datele pe care le-ați trimis sunt invalide. Vă rugăm să verificați formularul și să încercați din nou."
+
+#: src/lib/api.ts
+msgid "The domain name is not allowed"
+msgstr "Numele domeniului nu este permis"
+
+#: src/lib/api.ts
+msgid "The invite code is not valid"
+msgstr "Codul de invitație nu este valid"
+
+#: src/lib/api.ts
+msgid "The server encountered an unexpected error. Please try again."
+msgstr "Serverul a întâmpinat o eroare neașteptată. Vă rugăm să încercați din nou."
+
+#: src/lib/api.ts
+msgid "The username contains inappropriate language"
+msgstr "Numele de utilizator conține un limbaj nepotrivit"
+
+#: src/lib/api.ts
+msgid "The username could not be resolved"
+msgstr "Numele de utilizator nu a putut fi rezolvat"
+
+#: src/lib/api.ts
+msgid "The username is already in use"
+msgstr "Numele de utilizator este deja în uz"
+
+#: src/lib/api.ts
+msgid "The username is invalid"
+msgstr "Numele de utilizator este invalid"
+
+#: src/components/deactivate-account-dialog.tsx
+msgid "There is no time limit for account deactivation, come back any time."
+msgstr "Nu există limită de timp pentru dezactivarea contului, puteți revenii oricând."
+
+#: src/routes/account/u/$accountId/apps.tsx
+msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
+msgstr "Aceste aplicații au acces la contul dvs. O aplicație poate apărea de mai multe ori dacă o utilizați pe dispozitive diferite. Puteți revoca accesul pentru a vă deconecta de la aplicație până vă reconectați."
+
+#: src/components/oauth-session-details-dialog.tsx
+msgid "This app can uniquely identify you through your account."
+msgstr "Această aplicație vă poate identifica în mod unic prin intermediul contului."
+
+#: src/components/oauth-session-details-dialog.tsx
+msgid "This app has access to your account with the following permissions:"
+msgstr "Această aplicație are acces la contul dvs. cu următoarele permisiuni:"
+
+#: src/components/consent-form.tsx
+msgid "This application is requesting the following permissions (scopes) to access your account:"
+msgstr "Această aplicație solicită următoarele permisiuni (scopuri) pentru a vă accesa contul:"
+
+#: src/lib/api.ts
+msgid "This authorization request has been denied. Please try again."
+msgstr "Această cerere de autorizare a fost respinsă. Vă rugăm să încercați din nou."
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgctxt "device list"
+msgid "This device"
+msgstr "Acest dispozitiv"
+
+#: src/lib/api.ts
+msgid "This email is already used"
+msgstr "Acest e-mail este deja folosit"
+
+#: src/lib/api.ts
+msgid "This sign-in session has expired"
+msgstr "Această sesiune de conectare a expirat"
+
+#: src/lib/api.ts
+msgid "This username is reserved"
+msgstr "Acest nume de utilizator este rezervat"
+
+#: src/components/delete-account-dialog.tsx
+msgid "This will irreversibly delete your Bluesky account <0/> and all associated data. Note that this will affect any other Atmosphere services you use with this account."
+msgstr "Acest lucru va șterge în mod ireversibil contul dvs. Bluesky <0/> și toate datele asociate. Rețineți că acest lucru va afecta orice alt serviciu Atmosferă pe care îl utilizați cu acest cont."
+
+#: src/components/delete-account-dialog.tsx
+msgid "This will irreversibly delete your Bluesky account and all associated data. Note that this will affect any other Atmosphere services you use with this account."
+msgstr "Acest lucru va șterge în mod ireversibil contul dvs. Bluesky și toate datele asociate. Rețineți că acest lucru va afecta orice alt serviciu Atmosferă pe care îl utilizați cu acest cont."
+
+#: src/components/update-password-dialog.tsx
+msgid "To change your password, you'll need to enter a security code sent to your email."
+msgstr "Pentru a vă schimba parola, trebuie să introduceți un cod de securitate trimis pe e-mail."
+
+#: src/components/verify-email-dialog.tsx
+msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
+msgstr "Pentru a vă verifica adresa de e-mail, va trebui să introduceți un cod de securitate trimis la <0>{email}</0>."
+
+#: src/components/utils/scope-description.tsx
+msgctxt "RPC aud"
+msgid "Towards"
+msgstr "Către"
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "Troubleshoot"
+msgstr "Depanare"
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "Type"
+msgstr "Tip"
+
+#: src/components/update-handle-custom-form.tsx
+msgid "Type your domain"
+msgstr "Introduceți domeniul"
+
+#: src/components/forms/fields/handle-field.tsx
+msgid "Type your username"
+msgstr "Introduceți numele de utilizator"
+
+#: src/contexts/session.tsx
+msgid "Unauthorized"
+msgstr "Neautorizat"
+
+#: src/lib/json-client.ts
+msgid "Unexpected server response"
+msgstr "Răspuns neașteptat de la server"
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgctxt "device list"
+msgid "Unknown user agent"
+msgstr "Agent utilizator necunoscut"
+
+#: src/components/utils/scope-description.tsx
+msgid "Update"
+msgstr "Actualizare"
+
+#: src/components/update-email-dialog.tsx
+msgid "Update your email"
+msgstr "Actualizați-vă e-mailul"
+
+#: src/components/update-handle-dialog.tsx
+msgid "Update your username"
+msgstr "Actualizați-vă numele de utilizator"
+
+#: src/components/update-handle-dialog.tsx
+msgid "Update your username to a domain name you own to self-verify your identity."
+msgstr "Actualizați-vă numele de utilizator la un nume de domeniu pentru a vă verifica identitatea."
+
+#: src/components/utils/scope-description.tsx
+msgid "Upload files"
+msgstr "Încărcare fișiere"
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "URL"
+msgstr "URL"
+
+#: src/components/forms/fields/handle-field.tsx
+msgid "Use {minLength}–{maxLength, plural, one {# letter, number or hyphen} other {# letters, numbers or hyphens}}"
+msgstr "Utilizați {minLength}–{maxLength, plural, one {o literă, număr sau cratimă} few {# litere, numere sau cratime} other {# de litere, numere sau cratime}}"
+
+#: src/components/update-handle-dialog.tsx
+msgid "Use a default username"
+msgstr "Utilizați un nume de utilizator implicit"
+
+#: src/components/update-handle-dialog.tsx
+msgid "Use a domain name I own"
+msgstr "Utilizați un nume de domeniu propriu"
+
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Username"
+msgstr "Nume de utilizator"
+
+#: src/components/sign-in-form.tsx
+msgid "Username or email address"
+msgstr "Nume de utilizator sau adresă de e-mail"
+
+#: src/data/handle.ts
+msgid "Username updated"
+msgstr "Nume utilizator actualizat"
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "Value"
+msgstr "Valoare"
+
+#: src/components/update-email-dialog.tsx
+#: src/components/verify-email-confirm-form.tsx
+msgid "Verification code"
+msgstr "Cod de verificare"
+
+#: src/data/email.ts
+msgid "Verification email sent"
+msgstr "Email de verificare trimis"
+
+#: src/components/forms/input-handle-custom-instructions.tsx
+msgid "Verification method"
+msgstr "Metodă de verificare"
+
+#: src/components/sign-up-hcaptcha-form.tsx
+msgid "Verification successful!"
+msgstr "Verificare reușită!"
+
+#: src/components/update-handle-dialog.tsx
+msgid "Verify and Save"
+msgstr "Verificare și salvare"
+
+#: src/components/update-email-dialog.tsx
+#: src/routes/account/u/$accountId/manage.tsx
+msgctxt "verify email"
+msgid "Verify now"
+msgstr "Verificați acum"
+
+#: src/components/sign-in-form.tsx
+msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
+msgstr "Verificați adresa website-ului înainte de a introduce parola. Conectați-vă numai pe site-urile pe care le recunoașteți și în care aveți încredere."
+
+#: src/components/sign-up-view.tsx
+msgid "Verify you are human"
+msgstr "Verificați că sunteți om"
+
+#: src/components/verify-email-dialog.tsx
+msgid "Verify your email"
+msgstr "Verificați-vă e-mailul"
+
+#: src/components/consent-form.tsx
+msgid "wants to access your <0/> account"
+msgstr "dorește să vă acceseze contul <0/>"
+
+#: src/components/consent-form.tsx
+msgid "wants to uniquely identify you through your <0/> account"
+msgstr "dorește să vă identifice în mod unic prin contul dvs. <0/>"
+
+#: src/components/sign-in-form.tsx
+msgid "Warning"
+msgstr "Avertisment"
+
+#: src/components/sign-up-view.tsx
+msgid "We're so excited to have you join us!"
+msgstr "Suntem atât de încântați să vă avem alături de noi!"
+
+#: src/components/feedback/password-strength.tsx
+#: src/components/utils/password-strength-label.tsx
+msgid "Weak"
+msgstr "Slabă"
+
+#: src/components/authenticate-welcome-view.tsx
+msgid "Welcome"
+msgstr "Bun venit"
+
+#: src/components/reactivate-account-view.tsx
+msgid "Welcome back!"
+msgstr "Bine ați revenit!"
+
+#: src/routes/account/u/$accountId/index.tsx
+msgid "What does this mean?"
+msgstr "Ce înseamnă acest lucru?"
+
+#: src/routes/account/u/$accountId/route.tsx
+msgid "What is an Atmosphere Account?"
+msgstr "Ce este un Cont pe Atmosferă?"
+
+#: src/routes/account/u/$accountId/apps.tsx
+msgid "Why is this time so recent?"
+msgstr "De ce este această perioadă atât de recentă?"
+
+#: src/lib/api.ts
+msgid "Wrong identifier or password"
+msgstr "Identificator sau parolă greșită"
+
+#: src/components/deactivate-account-dialog.tsx
+msgid "Yes, Deactivate"
+msgstr "Da, dezactivare"
+
+#: src/components/delete-account-dialog.tsx
+msgid "Yes, delete my account"
+msgstr "Da, ștergeți-mi contul"
+
+#: src/components/reactivate-account-view.tsx
+msgid "Yes, reactivate my account"
+msgstr "Da, reactivați-mi contul"
+
+#: src/components/redirecting-view.tsx
+msgid "You are being redirected..."
+msgstr "Sunteți în curs de redirecționare..."
+
+#: src/components/delete-account-dialog.tsx
+msgid "You can also temporarily deactivate your account instead. Your profile, posts, feeds, and lists will no longer be visible to other Bluesky users. You can reactivate your account at any time by logging in."
+msgstr "De asemenea, în schimb vă puteți dezactiva temporar contul. Profilul, postările, fluxurile și listele dvs. nu vor mai fi vizibile pentru alți utilizatori Bluesky. Vă puteți reactiva contul în orice moment conectându-vă la cont."
+
+#: src/components/sign-up-handle-form.tsx
+msgid "You can change this username to any domain name you control after your account is set up."
+msgstr "Puteți schimba acest nume de utilizator în orice domeniu pe care îl controlați după ce contul dvs. este configurat."
+
+#: src/components/reactivate-account-dialog.tsx
+msgid "You can deactivate your account again at any time from this page."
+msgstr "Puteți dezactiva contul din nou în orice moment de pe această pagină."
+
+#: src/data/email.ts
+msgid "You can now sign in with your new email."
+msgstr "Acum vă puteți conecta cu noul dvs. e-mail."
+
+#: src/components/reset-password-view.tsx
+#: src/data/password.ts
+msgid "You can now sign in with your new password."
+msgstr "Acum vă puteți conecta cu noua parolă."
+
+#: src/components/reactivate-account-view.tsx
+msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
+msgstr "Ați dezactivat anterior contul <0/>. Vă puteți reactiva contul pentru a putea continua conectarea. Conținutul dvs. (profil, postări, fluxuri, liste ș.a.m.d.) va deveni din nou vizibil pentru ceilalți utilizatori."
+
+#: src/components/reset-password-view.tsx
+msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
+msgstr "Veți primi un e-mail cu un „cod de resetare”. Introduceți codul aici, apoi introduceți noua parolă."
+
+#: src/components/sign-up-view.tsx
+msgid "Your account"
+msgstr "Contul dvs."
+
+#: src/data/account.ts
+msgid "Your account and all associated data have been deleted."
+msgstr "Contul dvs. și toate datele asociate au fost șterse."
+
+#: src/components/update-email-dialog.tsx
+msgid "Your account currently uses <0>{emailCurrent}</0>. Choose a new email address to associate with it."
+msgstr "Contul dvs. utilizează în prezent <0>{emailCurrent}</0>. Alegeți o nouă adresă de e-mail pe care să o asociați cu acesta."
+
+#: src/authorization-page.tsx
+msgid "Your account has been successfully reactivated."
+msgstr "Contul dvs. a fost reactivat cu succes."
+
+#: src/components/reactivate-account-view.tsx
+msgid "Your account is currently deactivated."
+msgstr "Contul dvs. este momentan dezactivat."
+
+#: src/data/account.ts
+msgid "Your account is now deactivated."
+msgstr "Contul dvs. este acum dezactivat."
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
+msgstr "Contul dvs. este conectat pe dispozitivele enumerate mai jos. Dacă contul dvs. a fost compromis, deconectați toate dispozitivele, schimbați parola și verificați <0>aplicațiile</0>."
+
+#: src/data/account.ts
+msgid "Your account is visible again."
+msgstr "Contul dvs. este vizibil din nou."
+
+#: src/routes/account/u/$accountId/index.tsx
+msgid "Your Atmosphere account is hosted by <0/>."
+msgstr "Contul dvs. pe Atmosferă este găzduit de <0/>."
+
+#: src/components/deactivate-account-dialog.tsx
+msgid "Your content (profile, posts, feeds, lists, etc.) will be hidden from the Bluesky app and across the Atmosphere network."
+msgstr "Conținutul dvs. (profil, postări, fluxuri, liste ș.a.m.d.) va fi ascuns de aplicația Bluesky și de rețeaua Atmosferă."
+
+#: src/components/update-email-dialog.tsx
+msgid "Your email address has been successfully updated and needs to be verified. Please enter the verification code that was sent to <0>{email}</0>."
+msgstr "Adresa dvs. de e-mail a fost actualizată cu succes și trebuie verificată. Introduceți codul de verificare care a fost trimis la <0>{email}</0>."
+
+#: src/data/email.ts
+msgid "Your email address has been verified."
+msgstr "Adresa dvs. de e-mail a fost verificată."
+
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Your email address needs to be verified."
+msgstr "Adresa dvs. de e-mail trebuie verificată."
+
+#. placeholder {0}: segment ? ( <span className="text-foreground block break-all font-medium"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
+#: src/components/forms/fields/handle-field.tsx
+msgid "Your full username will be: {0}"
+msgstr "Numele dvs. de utilizator complet va fi: {0}"
+
+#: src/components/reactivate-account-dialog.tsx
+msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
+msgstr "Profilul, postările, fluxurile și listele dvs. vor deveni din nou vizibile în întreaga rețea Atmosferă — inclusiv în aplicația Bluesky și în orice altă aplicație pe Atmosferă pe care o folosiți cu acest cont."
+
+#: src/components/utils/scope-description.tsx
+msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
+msgstr "Repozitoriul dvs. conține toate datele disponibile public în rețeaua Protocolului AT, precum postările, aprecierile și urmăririle de pe Bluesky. De asemenea, acesta include date generate prin intermediul altor aplicații la care v-ați conectat folosind acest cont. Aplicația solicită permisiunile necesare pentru a publica următoarele modificări în repozitoriul dvs.:"
+
+#: src/contexts/session.tsx
+msgid "Your session has expired. Please sign in again."
+msgstr "Sesiunea dvs. a expirat. Vă rugăm să vă conectați din nou."
+
+#: src/data/handle.ts
+msgid "Your username has been updated."
+msgstr "Numele de utilizator a fost actualizat."
+
+#: src/components/forms/fields/handle-field.tsx
+msgid "yourname"
+msgstr "numele dvs."

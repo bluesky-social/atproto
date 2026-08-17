@@ -17,7 +17,7 @@ import {
 } from '../../../../pipeline.js'
 import { uriToDid as didFromUri } from '../../../../util/uris.js'
 import type { Views } from '../../../../views/index.js'
-import { clearlyBadCursor, resHeaders } from '../../../util.js'
+import { clearlyBadCursor, fillPage, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const getFollowers = createPipeline(
@@ -39,41 +39,30 @@ export default function (server: Server, ctx: AppContext) {
         skipViewerBlocks,
       })
 
-      const result = await getFollowers({ ...params, hydrateCtx }, ctx)
-      const followers = result.followers
-      let cursor = result.cursor
-      for (
-        let fetches = 1;
-        fetches < MAX_PAGE_FILL_FETCHES &&
-        cursor &&
-        followers.length < params.limit;
-        fetches++
-      ) {
-        const previousCursor = cursor
-        const page = await getFollowers(
-          {
-            ...params,
-            cursor,
-            limit: params.limit - followers.length,
-            hydrateCtx,
-          },
-          ctx,
-        )
-        followers.push(...page.followers)
-        cursor = page.cursor
-        if (cursor === previousCursor) break
-      }
+      const result = await fillPage({
+        cursor: params.cursor,
+        limit: params.limit,
+        fetch: ({ cursor, limit }) =>
+          getFollowers(
+            {
+              ...params,
+              cursor,
+              limit,
+              hydrateCtx,
+            },
+            ctx,
+          ),
+        items: (r) => r.followers,
+      })
 
       return {
         encoding: 'application/json',
-        body: { ...result, followers, cursor },
+        body: result,
         headers: resHeaders({ labelers: hydrateCtx.labelers }),
       }
     },
   })
 }
-
-const MAX_PAGE_FILL_FETCHES = 10
 
 const skeleton = async (
   input: SkeletonFnInput<Context, Params>,

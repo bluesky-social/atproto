@@ -1,5 +1,24 @@
 # @atproto/ozone
 
+## 0.2.29
+
+### Patch Changes
+
+- [#5350](https://github.com/bluesky-social/atproto/pull/5350) [`1f3f67c`](https://github.com/bluesky-social/atproto/commit/1f3f67c4b5bac19cc226b24f55d90ffd431d0d72) Thanks [@mary-ext](https://github.com/mary-ext)! - Remove the `maxGraphemes` and `maxLength` constraints from the `alt` field of `app.bsky.embed.video`, matching `app.bsky.embed.images`
+
+- Updated dependencies [[`1f3f67c`](https://github.com/bluesky-social/atproto/commit/1f3f67c4b5bac19cc226b24f55d90ffd431d0d72), [`5c3b7c9`](https://github.com/bluesky-social/atproto/commit/5c3b7c9c87efa4d48d41bc55af61f5b1f1e04920)]:
+  - @atproto/api@0.20.41
+  - @atproto/xrpc-server@0.12.5
+
+## 0.2.28
+
+### Patch Changes
+
+- Updated dependencies [[`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`c26b463`](https://github.com/bluesky-social/atproto/commit/c26b463a36124deb14b8d56ad1810eeddaa129cc), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`05305a7`](https://github.com/bluesky-social/atproto/commit/05305a7a18fc830262a23850dd659e8e98db0149), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa)]:
+  - @atproto/common@0.8.0
+  - @atproto/api@0.20.40
+  - @atproto/xrpc-server@0.12.4
+
 ## 0.2.27
 
 ### Patch Changes

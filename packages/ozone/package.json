@@ -1,6 +1,6 @@
 {
   "name": "@atproto/ozone",
-  "version": "0.2.27",
+  "version": "0.2.29",
   "license": "MIT",
   "description": "Backend service for moderating the Bluesky network.",
   "keywords": [
@@ -42,6 +42,7 @@
     "@did-plc/lib": "^0.0.1",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
     "express": "^4.17.2",
     "http-terminator": "^3.2.0",
     "kysely": "^0.29.2",

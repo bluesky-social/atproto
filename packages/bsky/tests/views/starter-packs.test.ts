@@ -99,6 +99,36 @@ describe('starter packs', () => {
     expect(forSnapshot(data.starterPacks)).toMatchSnapshot()
   })
 
+  it('returns a cursor only when more actor starter packs are available', async () => {
+    const exact = await network.bsky.ctx.dataplane.getActorStarterPacks({
+      actorDid: sc.dids.alice,
+      limit: 3,
+    })
+    expect(exact.uris).toHaveLength(3)
+    expect(exact.cursor).toBe('')
+
+    const over = await network.bsky.ctx.dataplane.getActorStarterPacks({
+      actorDid: sc.dids.alice,
+      limit: 2,
+    })
+    expect(over.uris).toHaveLength(2)
+    expect(over.cursor).not.toBe('')
+
+    const terminal = await agent.app.bsky.graph.getActorStarterPacks({
+      actor: sc.dids.alice,
+      limit: 3,
+    })
+    expect(terminal.data.starterPacks).toHaveLength(3)
+    expect(terminal.data.cursor).toBeUndefined()
+
+    const trimmed = await agent.app.bsky.graph.getActorStarterPacks({
+      actor: sc.dids.alice,
+      limit: 2,
+    })
+    expect(trimmed.data.starterPacks).toHaveLength(2)
+    expect(trimmed.data.cursor).toBeDefined()
+  })
+
   it('gets starter pack used on profile detail', async () => {
     const { data: profile } = await agent.api.app.bsky.actor.getProfile({
       actor: sc.dids.newskie1,
@@ -266,6 +296,36 @@ describe('starter packs', () => {
   })
 
   describe('searchStarterPacks', () => {
+    it('returns a cursor only when more starter packs are available', async () => {
+      const exact = await network.bsky.ctx.dataplane.searchStarterPacks({
+        term: 'starter',
+        limit: 4,
+      })
+      expect(exact.uris).toHaveLength(4)
+      expect(exact.cursor).toBe('')
+
+      const over = await network.bsky.ctx.dataplane.searchStarterPacks({
+        term: 'starter',
+        limit: 3,
+      })
+      expect(over.uris).toHaveLength(3)
+      expect(over.cursor).not.toBe('')
+
+      const terminal = await agent.app.bsky.graph.searchStarterPacks({
+        q: 'starter',
+        limit: 4,
+      })
+      expect(terminal.data.starterPacks).toHaveLength(4)
+      expect(terminal.data.cursor).toBeUndefined()
+
+      const trimmed = await agent.app.bsky.graph.searchStarterPacks({
+        q: 'starter',
+        limit: 3,
+      })
+      expect(trimmed.data.starterPacks).toHaveLength(3)
+      expect(trimmed.data.cursor).toBeDefined()
+    })
+
     it('searches starter packs and returns paginated', async () => {
       const { data: page0 } = await agent.app.bsky.graph.searchStarterPacks({
         q: 'starter',
@@ -317,9 +377,53 @@ describe('starter packs', () => {
         expect.objectContaining({ uri: sp4.uriStr }),
       ])
     })
+
+    it('refills through an empty filtered intermediate page', async () => {
+      const { data } = await agent.app.bsky.graph.searchStarterPacks(
+        { q: 'starter', limit: 2 },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.frankie,
+            ids.AppBskyGraphSearchStarterPacks,
+          ),
+        },
+      )
+      expect(data.starterPacks).toMatchObject([
+        expect.objectContaining({ uri: sp4.uriStr }),
+      ])
+      expect(data.cursor).toBeUndefined()
+    })
   })
 
   describe('searchStarterPacksV2', () => {
+    it('returns a cursor only when more starter packs are available', async () => {
+      const exact = await network.bsky.ctx.dataplane.searchStarterPacksV2({
+        params: { query: 'starter', limit: 4 },
+      })
+      expect(exact.starterPacks).toHaveLength(4)
+      expect(exact.pageInfo?.cursor).toBe('')
+
+      const over = await network.bsky.ctx.dataplane.searchStarterPacksV2({
+        params: { query: 'starter', limit: 3 },
+      })
+      expect(over.starterPacks).toHaveLength(3)
+      expect(over.pageInfo?.cursor).not.toBe('')
+
+      const terminal = await agent.app.bsky.graph.searchStarterPacksV2({
+        q: 'starter',
+        limit: 4,
+      })
+      expect(terminal.data.starterPacks).toHaveLength(4)
+      expect(terminal.data.cursor).toBeUndefined()
+
+      const trimmed = await agent.app.bsky.graph.searchStarterPacksV2({
+        q: 'starter',
+        limit: 3,
+      })
+      expect(trimmed.data.starterPacks).toHaveLength(3)
+      expect(trimmed.data.cursor).toBeDefined()
+    })
+
     it('returns fully hydrated starter pack views', async () => {
       const { data } = await agent.app.bsky.graph.searchStarterPacksV2({
         q: 'starter',
@@ -363,6 +467,22 @@ describe('starter packs', () => {
       expect(data.starterPacks).toMatchObject([
         expect.objectContaining({ uri: sp4.uriStr }),
       ])
+    })
+
+    it('refills through an empty filtered intermediate page', async () => {
+      const { data } = await agent.app.bsky.graph.searchStarterPacksV2(
+        { q: 'starter', limit: 2 },
+        {
+          headers: await network.serviceHeaders(
+            sc.dids.frankie,
+            ids.AppBskyGraphSearchStarterPacksV2,
+          ),
+        },
+      )
+      expect(data.starterPacks).toMatchObject([
+        expect.objectContaining({ uri: sp4.uriStr }),
+      ])
+      expect(data.cursor).toBeUndefined()
     })
   })
 
@@ -493,6 +613,26 @@ describe('starter packs', () => {
         a.starterPack.uri > b.starterPack.uri ? 1 : -1,
       )
       expect(sortedPaginated).toEqual(sortedFull)
+    })
+
+    it('returns a cursor only when more actor starter packs are available', async () => {
+      const headers = await network.serviceHeaders(
+        sc.dids.alice,
+        ids.AppBskyGraphGetStarterPacksWithMembership,
+      )
+      const terminal = await agent.app.bsky.graph.getStarterPacksWithMembership(
+        { actor: sc.dids.bob, limit: 3 },
+        { headers },
+      )
+      expect(terminal.data.starterPacksWithMembership).toHaveLength(3)
+      expect(terminal.data.cursor).toBeUndefined()
+
+      const trimmed = await agent.app.bsky.graph.getStarterPacksWithMembership(
+        { actor: sc.dids.bob, limit: 2 },
+        { headers },
+      )
+      expect(trimmed.data.starterPacksWithMembership).toHaveLength(2)
+      expect(trimmed.data.cursor).toBeDefined()
     })
   })
 })

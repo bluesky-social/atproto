@@ -32,6 +32,7 @@ const REFETCH_INTERVAL = 60e3 // 1 minute
  */
 const ANALYTICS_HEADER_DEVICE_ID = 'X-Bsky-Device-Id'
 const ANALYTICS_HEADER_SESSION_ID = 'X-Bsky-Session-Id'
+const BSKY_HEADER_IS_BETA_USER = 'X-Bsky-Is-Beta-User'
 
 export { type ScopedFeatureGatesClient } from './types.js'
 
@@ -225,11 +226,14 @@ export class FeatureGatesClient {
   }): UserContext {
     const deviceId = req.header(ANALYTICS_HEADER_DEVICE_ID)
     const sessionId = req.header(ANALYTICS_HEADER_SESSION_ID)
+    const isBetaUser =
+      req.header(BSKY_HEADER_IS_BETA_USER)?.toLowerCase() === 'true'
 
     return normalizeUserContext({
       did: viewer,
       deviceId,
       sessionId,
+      isBetaUser,
     })
   }
 }

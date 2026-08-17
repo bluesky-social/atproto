@@ -9,7 +9,7 @@ import { AuthShell } from '#/components/layouts/auth-shell.tsx'
 import { apiErrorParser } from '#/lib/api-error-parser.ts'
 
 export type ErrorViewProps = {
-  error: unknown
+  error?: unknown
   parser?: ErrorParser
   retry?: () => void
   retryLabel?: ReactNode
@@ -40,14 +40,16 @@ export function ErrorView({
 }: ErrorViewProps) {
   return (
     <AuthShell title={title}>
-      <ErrorNotice
-        error={error}
-        parser={parser}
-        retry={retry}
-        retryLabel={retryLabel}
-      >
-        {children}
-      </ErrorNotice>
+      {error != null && (
+        <ErrorNotice
+          error={error}
+          parser={parser}
+          retry={retry}
+          retryLabel={retryLabel}
+        />
+      )}
+
+      {children}
     </AuthShell>
   )
 }
