@@ -1,4 +1,4 @@
-import { type LexValue, isDidString, l } from '@atproto/lex'
+import { type LexValue, l } from '@atproto/lex'
 import { XRPCError } from '@atproto/xrpc'
 import { type AuthResult, InvalidRequestError } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
@@ -7,7 +7,7 @@ import { ids } from '../../../../lexicon/lexicons.js'
 
 const getPreferences = l.query(
   ids.AppBskyActorGetPreferences,
-  l.params(),
+  l.params({ did: l.string({ format: 'did' }) }),
   l.jsonPayload({ preferences: l.array(l.lexValue()) }),
 )
 
@@ -17,21 +17,16 @@ export default function (server: Server, ctx: AppContext) {
       ctx.authVerifier.modOrAdminToken(authCtx),
     handler: async ({ params }) => {
       if (!ctx.pdsAgent || !ctx.cfg.pds) {
-        throw new Error('PDS not configured')
-      }
-
-      const did = (params as Record<string, unknown>).did
-      if (!isDidString(did)) {
-        throw new InvalidRequestError('Invalid or missing did parameter')
+        throw new InvalidRequestError('PDS not configured')
       }
 
       // @NOTE `did` is an internal moderator parameter omitted from the public
-      // Lexicon, so the generated client would reject it before sending.
+      // Lexicon, so the generated client rejects it before sending.
       const url = new URL(
         '/xrpc/app.bsky.actor.getPreferences',
         ctx.cfg.pds.url,
       )
-      url.searchParams.set('did', did)
+      url.searchParams.set('did', params.did)
       const auth = await ctx.pdsAuth(ids.AppBskyActorGetPreferences)
       const res = await fetch(url, {
         headers: auth?.headers,
