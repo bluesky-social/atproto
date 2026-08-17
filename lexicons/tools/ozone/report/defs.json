@@ -499,35 +499,35 @@
         },
         "actionedCount": {
           "type": "integer",
-          "description": "Number of closures whose last report action is label, tag, or takedown today."
+          "description": "Number of closures whose last report action is label, tag, or takedown."
         },
         "acknowledgedCount": {
           "type": "integer",
-          "description": "Number of closures whose last report action is not label, tag, or takedown today."
+          "description": "Number of closures whose last report action is not label, tag, or takedown."
         },
         "escalatedCount": {
           "type": "integer",
-          "description": "Number of reports escalated today."
+          "description": "Number of reports escalated."
         },
         "inboundCount": {
           "type": "integer",
-          "description": "Reports received today."
+          "description": "Reports received."
         },
         "labelActionCount": {
           "type": "integer",
-          "description": "Closures whose last report action is a label event today."
+          "description": "Closures whose last report action is a label event."
         },
         "tagActionCount": {
           "type": "integer",
-          "description": "Closures whose last report action is a tag event today."
+          "description": "Closures whose last report action is a tag event."
         },
         "takedownActionCount": {
           "type": "integer",
-          "description": "Closures whose last report action is a takedown event today."
+          "description": "Closures whose last report action is a takedown event."
         },
         "ahtDurationSec": {
           "type": "integer",
-          "description": "Sum of report creation-to-current-close seconds for today's samples."
+          "description": "Sum of report creation-to-close seconds."
         },
         "ahtSampleCount": {
           "type": "integer",
