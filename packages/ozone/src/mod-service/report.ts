@@ -2,9 +2,7 @@ import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
 import type { Report } from '../db/schema/report.js'
-import { jsonb } from '../db/types.js'
 import type { QueryParams } from '../lexicon/types/tools/ozone/report/queryReports.js'
-import { getReportActivityProvenance } from '../report/activity.js'
 import {
   AlreadyInTargetState,
   InvalidStateTransition,
@@ -254,8 +252,6 @@ export type ReportResult = {
   status: string
   createdAt: string
   updatedAt: string
-  assignedTo: string | null
-  assignedAt: string | null
 }
 
 export async function findReportsForSubject(
@@ -396,30 +392,20 @@ export async function closeReportsForSubject(
       .where('id', 'in', updateIds)
       .execute()
 
-    const provenance = await getReportActivityProvenance(dbTxn, updateIds, now)
-
     await dbTxn.db
       .insertInto('report_activity')
       .values(
-        validUpdates.map((u) => {
-          const snapshot = provenance.get(u.id)
-          return {
-            reportId: u.id,
-            activityType: 'closeActivity',
-            previousStatus: u.previousStatus,
-            internalNote: internalNote ?? null,
-            publicNote: null,
-            meta: null,
-            isAutomated,
-            createdBy,
-            createdAt: now,
-            actionEventIds: null,
-            queueId: snapshot?.queueId ?? null,
-            assignmentId: snapshot?.assignmentId ?? null,
-            moderatorDid: snapshot?.moderatorDid ?? null,
-            assignmentStartAt: snapshot?.assignmentStartAt ?? null,
-          }
-        }),
+        validUpdates.map((u) => ({
+          reportId: u.id,
+          activityType: 'closeActivity',
+          previousStatus: u.previousStatus,
+          internalNote: internalNote ?? null,
+          publicNote: null,
+          meta: null,
+          isAutomated,
+          createdBy,
+          createdAt: now,
+        })),
       )
       .execute()
 
@@ -548,9 +534,6 @@ export async function processReportAction(
   // same event type, so a single UPDATE is sufficient.
   const status = validUpdates[0].nextStatus
   const closedAt = status === 'closed' ? now : null
-  // emitEvent passes the surrounding moderation transaction here, so keep the
-  // report update, provenance snapshot, and activity insert on that database
-  // handle instead of attempting a nested transaction.
   await db.db
     .updateTable('report')
     .set({
@@ -563,30 +546,21 @@ export async function processReportAction(
     .where('id', 'in', updateIds)
     .execute()
 
-  const provenance = await getReportActivityProvenance(db, updateIds, now)
-
+  // Bulk INSERT one activity per updated report
   await db.db
     .insertInto('report_activity')
     .values(
-      validUpdates.map((u) => {
-        const snapshot = provenance.get(u.id)
-        return {
-          reportId: u.id,
-          activityType: u.activityType,
-          previousStatus: u.previousStatus,
-          internalNote: null,
-          publicNote: reportAction.note ?? null,
-          meta: null,
-          isAutomated: false,
-          createdBy,
-          createdAt: now,
-          actionEventIds: jsonb([eventId]),
-          queueId: snapshot?.queueId ?? null,
-          assignmentId: snapshot?.assignmentId ?? null,
-          moderatorDid: snapshot?.moderatorDid ?? null,
-          assignmentStartAt: snapshot?.assignmentStartAt ?? null,
-        }
-      }),
+      validUpdates.map((u) => ({
+        reportId: u.id,
+        activityType: u.activityType,
+        previousStatus: u.previousStatus,
+        internalNote: null,
+        publicNote: reportAction.note ?? null,
+        meta: null,
+        isAutomated: false,
+        createdBy,
+        createdAt: now,
+      })),
     )
     .execute()
 

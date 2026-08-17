@@ -499,11 +499,11 @@
         },
         "actionedCount": {
           "type": "integer",
-          "description": "Number of closures linked to a label, tag, or takedown event today."
+          "description": "Number of closures whose last report action is label, tag, or takedown today."
         },
         "acknowledgedCount": {
           "type": "integer",
-          "description": "Number of closures without a linked label, tag, or takedown event today."
+          "description": "Number of closures whose last report action is not label, tag, or takedown today."
         },
         "escalatedCount": {
           "type": "integer",
@@ -515,31 +515,23 @@
         },
         "labelActionCount": {
           "type": "integer",
-          "description": "Closures linked to at least one label event today."
+          "description": "Closures whose last report action is a label event today."
         },
         "tagActionCount": {
           "type": "integer",
-          "description": "Closures linked to at least one tag event today."
+          "description": "Closures whose last report action is a tag event today."
         },
         "takedownActionCount": {
           "type": "integer",
-          "description": "Closures linked to at least one takedown event today."
+          "description": "Closures whose last report action is a takedown event today."
         },
         "ahtDurationSec": {
           "type": "integer",
-          "description": "Sum of report-creation-to-first-close seconds for today's samples."
+          "description": "Sum of report creation-to-current-close seconds for today's samples."
         },
         "ahtSampleCount": {
           "type": "integer",
-          "description": "Number of first-close samples in ahtDurationSec."
-        },
-        "moderatorHandlingDurationSec": {
-          "type": "integer",
-          "description": "Sum of active-assignment-to-first-close seconds for today's samples."
-        },
-        "moderatorHandlingSampleCount": {
-          "type": "integer",
-          "description": "Number of samples in moderatorHandlingDurationSec."
+          "description": "Number of closed-report samples in ahtDurationSec."
         },
         "actionRate": {
           "type": "integer",
@@ -547,11 +539,7 @@
         },
         "avgHandlingTimeSec": {
           "type": "integer",
-          "description": "Average time in seconds from report creation to first close."
-        },
-        "avgModeratorHandlingTimeSec": {
-          "type": "integer",
-          "description": "Average time in seconds from active moderator assignment to first close."
+          "description": "Average time in seconds from report creation to its current close."
         },
         "lastUpdated": {
           "type": "string",
@@ -584,11 +572,11 @@
         },
         "actionedCount": {
           "type": "integer",
-          "description": "Number of closures linked to a label, tag, or takedown event during this day."
+          "description": "Number of closures whose last report action is label, tag, or takedown during this day."
         },
         "acknowledgedCount": {
           "type": "integer",
-          "description": "Number of closures without a linked label, tag, or takedown event during this day."
+          "description": "Number of closures whose last report action is not label, tag, or takedown during this day."
         },
         "escalatedCount": {
           "type": "integer",
@@ -600,31 +588,23 @@
         },
         "labelActionCount": {
           "type": "integer",
-          "description": "Closures linked to at least one label event during this day."
+          "description": "Closures whose last report action is a label event during this day."
         },
         "tagActionCount": {
           "type": "integer",
-          "description": "Closures linked to at least one tag event during this day."
+          "description": "Closures whose last report action is a tag event during this day."
         },
         "takedownActionCount": {
           "type": "integer",
-          "description": "Closures linked to at least one takedown event during this day."
+          "description": "Closures whose last report action is a takedown event during this day."
         },
         "ahtDurationSec": {
           "type": "integer",
-          "description": "Sum of report-creation-to-first-close seconds for this day's samples."
+          "description": "Sum of report creation-to-current-close seconds for this day's samples."
         },
         "ahtSampleCount": {
           "type": "integer",
-          "description": "Number of first-close samples in ahtDurationSec."
-        },
-        "moderatorHandlingDurationSec": {
-          "type": "integer",
-          "description": "Sum of active-assignment-to-first-close seconds for this day's samples."
-        },
-        "moderatorHandlingSampleCount": {
-          "type": "integer",
-          "description": "Number of samples in moderatorHandlingDurationSec."
+          "description": "Number of closed-report samples in ahtDurationSec."
         },
         "actionRate": {
           "type": "integer",
@@ -632,11 +612,7 @@
         },
         "avgHandlingTimeSec": {
           "type": "integer",
-          "description": "Average time in seconds from report creation to first close."
-        },
-        "avgModeratorHandlingTimeSec": {
-          "type": "integer",
-          "description": "Average time in seconds from active moderator assignment to first close."
+          "description": "Average time in seconds from report creation to its current close."
         }
       }
     },

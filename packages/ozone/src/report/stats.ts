@@ -30,11 +30,8 @@ export type ReportStatistics = {
   takedownActionCount: number
   ahtDurationSec: number
   ahtSampleCount: number
-  moderatorHandlingDurationSec: number
-  moderatorHandlingSampleCount: number
   actionRate?: number
   avgHandlingTimeSec?: number
-  avgModeratorHandlingTimeSec?: number
 }
 
 type CountByQueueRow = {
@@ -61,8 +58,6 @@ type LifecycleRow = {
   takedownActionCount: Numeric
   ahtDurationSec: Numeric
   ahtSampleCount: Numeric
-  moderatorHandlingDurationSec: Numeric
-  moderatorHandlingSampleCount: Numeric
 }
 
 type BatchedStats = {
@@ -89,8 +84,6 @@ type UpsertRow = {
   takedownActionCount: number | null
   ahtDurationSec: number | null
   ahtSampleCount: number | null
-  moderatorHandlingDurationSec: number | null
-  moderatorHandlingSampleCount: number | null
   actionRate: number | null
   avgHandlingTimeSec: number | null
   computedAt: string
@@ -367,57 +360,42 @@ export class ReportStatsService {
     ])
 
     const lifecycleResult = await sql<LifecycleRow>`
-      with activity_base as (
+      with close_base as (
         select
-          ra.id,
-          ra."reportId",
-          ra."activityType",
-          ra."createdAt",
-          coalesce(ra."queueId", -1) as "statQueueId",
-          ra."moderatorDid",
-          ra."assignmentStartAt",
+          'close' as "metricType",
+          r."closedAt" as "eventAt",
+          coalesce(r."queueId", -1) as "statQueueId",
+          r."assignedTo" as "moderatorDid",
           r."reportType",
           r."createdAt" as "reportCreatedAt",
-          exists (
-            select 1
-            from jsonb_array_elements_text(coalesce(ra."actionEventIds", '[]'::jsonb)) as linked("eventId")
-            join moderation_event me on me.id = linked."eventId"::integer
-            where me.action in (
-              'tools.ozone.moderation.defs#modEventLabel',
-              'tools.ozone.moderation.defs#modEventTag',
-              'tools.ozone.moderation.defs#modEventTakedown'
-            )
-          ) as enforced,
-          exists (
-            select 1
-            from jsonb_array_elements_text(coalesce(ra."actionEventIds", '[]'::jsonb)) as linked("eventId")
-            join moderation_event me on me.id = linked."eventId"::integer
-            where me.action = 'tools.ozone.moderation.defs#modEventLabel'
-          ) as labeled,
-          exists (
-            select 1
-            from jsonb_array_elements_text(coalesce(ra."actionEventIds", '[]'::jsonb)) as linked("eventId")
-            join moderation_event me on me.id = linked."eventId"::integer
-            where me.action = 'tools.ozone.moderation.defs#modEventTag'
-          ) as tagged,
-          exists (
-            select 1
-            from jsonb_array_elements_text(coalesce(ra."actionEventIds", '[]'::jsonb)) as linked("eventId")
-            join moderation_event me on me.id = linked."eventId"::integer
-            where me.action = 'tools.ozone.moderation.defs#modEventTakedown'
-          ) as taken_down,
-          not exists (
-            select 1
-            from report_activity earlier
-            where earlier."reportId" = ra."reportId"
-              and earlier."activityType" = 'closeActivity'
-              and (earlier."createdAt", earlier.id) < (ra."createdAt", ra.id)
-          ) as first_close
+          me.action as "actionType"
+        from report r
+        left join moderation_event me on me.id = case
+          when jsonb_array_length(coalesce(r."actionEventIds", '[]'::jsonb)) > 0
+          then (r."actionEventIds" ->> (jsonb_array_length(r."actionEventIds") - 1))::integer
+        end
+        where r."closedAt" >= ${dayStart}
+          and r."closedAt" < ${dayEnd}
+      ),
+      escalation_base as (
+        select
+          'escalation' as "metricType",
+          ra."createdAt" as "eventAt",
+          coalesce(r."queueId", -1) as "statQueueId",
+          r."assignedTo" as "moderatorDid",
+          r."reportType",
+          r."createdAt" as "reportCreatedAt",
+          null::text as "actionType"
         from report_activity ra
         join report r on r.id = ra."reportId"
-        where ra."createdAt" >= ${dayStart}
+        where ra."activityType" = 'escalationActivity'
+          and ra."createdAt" >= ${dayStart}
           and ra."createdAt" < ${dayEnd}
-          and ra."activityType" in ('closeActivity', 'escalationActivity')
+      ),
+      lifecycle_base as (
+        select * from close_base
+        union all
+        select * from escalation_base
       )
       select
         case
@@ -429,22 +407,25 @@ export class ReportStatsService {
         case when grouping("statQueueId") = 0 then "statQueueId" end as "queueId",
         case when grouping("reportType") = 0 then "reportType" end as "reportType",
         case when grouping("moderatorDid") = 0 then "moderatorDid" end as "moderatorDid",
-        count(*) filter (where "activityType" = 'closeActivity') as "closedCount",
-        count(*) filter (where "activityType" = 'closeActivity' and enforced) as "actionedCount",
-        count(*) filter (where "activityType" = 'closeActivity' and not enforced) as "acknowledgedCount",
-        count(*) filter (where "activityType" = 'escalationActivity') as "escalatedCount",
-        count(*) filter (where "activityType" = 'closeActivity' and labeled) as "labelActionCount",
-        count(*) filter (where "activityType" = 'closeActivity' and tagged) as "tagActionCount",
-        count(*) filter (where "activityType" = 'closeActivity' and taken_down) as "takedownActionCount",
-        coalesce(sum(greatest(0, extract(epoch from ("createdAt"::timestamp - "reportCreatedAt"::timestamp))))
-          filter (where "activityType" = 'closeActivity' and first_close), 0) as "ahtDurationSec",
-        count(*) filter (where "activityType" = 'closeActivity' and first_close) as "ahtSampleCount",
-        coalesce(sum(greatest(0, extract(epoch from ("createdAt"::timestamp - "assignmentStartAt"::timestamp))))
-          filter (where "activityType" = 'closeActivity' and first_close and "assignmentStartAt" is not null), 0)
-          as "moderatorHandlingDurationSec",
-        count(*) filter (where "activityType" = 'closeActivity' and first_close and "assignmentStartAt" is not null)
-          as "moderatorHandlingSampleCount"
-      from activity_base
+        count(*) filter (where "metricType" = 'close') as "closedCount",
+        count(*) filter (where "metricType" = 'close' and "actionType" in (
+          'tools.ozone.moderation.defs#modEventLabel',
+          'tools.ozone.moderation.defs#modEventTag',
+          'tools.ozone.moderation.defs#modEventTakedown'
+        )) as "actionedCount",
+        count(*) filter (where "metricType" = 'close' and coalesce("actionType", '') not in (
+          'tools.ozone.moderation.defs#modEventLabel',
+          'tools.ozone.moderation.defs#modEventTag',
+          'tools.ozone.moderation.defs#modEventTakedown'
+        )) as "acknowledgedCount",
+        count(*) filter (where "metricType" = 'escalation') as "escalatedCount",
+        count(*) filter (where "metricType" = 'close' and "actionType" = 'tools.ozone.moderation.defs#modEventLabel') as "labelActionCount",
+        count(*) filter (where "metricType" = 'close' and "actionType" = 'tools.ozone.moderation.defs#modEventTag') as "tagActionCount",
+        count(*) filter (where "metricType" = 'close' and "actionType" = 'tools.ozone.moderation.defs#modEventTakedown') as "takedownActionCount",
+        coalesce(sum(greatest(0, extract(epoch from ("eventAt"::timestamp - "reportCreatedAt"::timestamp))))
+          filter (where "metricType" = 'close'), 0) as "ahtDurationSec",
+        count(*) filter (where "metricType" = 'close') as "ahtSampleCount"
+      from lifecycle_base
       group by grouping sets ((), ("statQueueId"), ("reportType"), ("moderatorDid"))
     `.execute(this.db.db)
 
@@ -523,13 +504,6 @@ export class ReportStatsService {
     const actionedCount = num(lifecycle?.actionedCount)
     const ahtDurationSec = Math.round(num(lifecycle?.ahtDurationSec))
     const ahtSampleCount = num(lifecycle?.ahtSampleCount)
-    const moderatorHandlingDurationSec = Math.round(
-      num(lifecycle?.moderatorHandlingDurationSec),
-    )
-    const moderatorHandlingSampleCount = num(
-      lifecycle?.moderatorHandlingSampleCount,
-    )
-
     return {
       inboundCount,
       pendingCount,
@@ -542,8 +516,6 @@ export class ReportStatsService {
       takedownActionCount: num(lifecycle?.takedownActionCount),
       ahtDurationSec,
       ahtSampleCount,
-      moderatorHandlingDurationSec,
-      moderatorHandlingSampleCount,
       actionRate:
         closedCount > 0
           ? Math.round((actionedCount / closedCount) * 100)
@@ -551,12 +523,6 @@ export class ReportStatsService {
       avgHandlingTimeSec:
         ahtSampleCount > 0
           ? Math.round(ahtDurationSec / ahtSampleCount)
-          : undefined,
-      avgModeratorHandlingTimeSec:
-        moderatorHandlingSampleCount > 0
-          ? Math.round(
-              moderatorHandlingDurationSec / moderatorHandlingSampleCount,
-            )
           : undefined,
     }
   }
@@ -586,8 +552,6 @@ export class ReportStatsService {
       takedownActionCount: stats.takedownActionCount,
       ahtDurationSec: stats.ahtDurationSec,
       ahtSampleCount: stats.ahtSampleCount,
-      moderatorHandlingDurationSec: stats.moderatorHandlingDurationSec,
-      moderatorHandlingSampleCount: stats.moderatorHandlingSampleCount,
       actionRate: stats.actionRate ?? null,
       avgHandlingTimeSec: stats.avgHandlingTimeSec ?? null,
       computedAt: new Date().toISOString(),

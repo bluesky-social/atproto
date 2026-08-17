@@ -283,19 +283,8 @@ export function viewLiveStats(
     takedownActionCount: row?.takedownActionCount ?? undefined,
     ahtDurationSec: row?.ahtDurationSec ?? undefined,
     ahtSampleCount: row?.ahtSampleCount ?? undefined,
-    moderatorHandlingDurationSec:
-      row?.moderatorHandlingDurationSec ?? undefined,
-    moderatorHandlingSampleCount:
-      row?.moderatorHandlingSampleCount ?? undefined,
     actionRate: row?.actionRate ?? undefined,
     avgHandlingTimeSec: row?.avgHandlingTimeSec ?? undefined,
-    avgModeratorHandlingTimeSec:
-      row?.moderatorHandlingSampleCount &&
-      row.moderatorHandlingDurationSec != null
-        ? Math.round(
-            row.moderatorHandlingDurationSec / row.moderatorHandlingSampleCount,
-          )
-        : undefined,
     lastUpdated: row?.computedAt,
   }
 }
@@ -317,16 +306,7 @@ export function viewHistoricalStats(
     takedownActionCount: row.takedownActionCount ?? undefined,
     ahtDurationSec: row.ahtDurationSec ?? undefined,
     ahtSampleCount: row.ahtSampleCount ?? undefined,
-    moderatorHandlingDurationSec: row.moderatorHandlingDurationSec ?? undefined,
-    moderatorHandlingSampleCount: row.moderatorHandlingSampleCount ?? undefined,
     actionRate: row.actionRate ?? undefined,
     avgHandlingTimeSec: row.avgHandlingTimeSec ?? undefined,
-    avgModeratorHandlingTimeSec:
-      row.moderatorHandlingSampleCount &&
-      row.moderatorHandlingDurationSec != null
-        ? Math.round(
-            row.moderatorHandlingDurationSec / row.moderatorHandlingSampleCount,
-          )
-        : undefined,
   }
 }

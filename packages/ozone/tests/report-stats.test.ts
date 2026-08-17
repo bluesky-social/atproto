@@ -289,7 +289,7 @@ describe('report-stats', () => {
       const moderatorDid = network.ozone.moderatorAccnt.did
       const db = network.ozone.ctx.db
 
-      // Create reports, assign moderator, backdate assignment, then close
+      // Create reports, assign a moderator, backdate creation, then close.
       const ages = [30, 60, 90]
       for (const ts of ages) {
         await sc.createReport({
@@ -319,16 +319,6 @@ describe('report-stats', () => {
             assignedAt: backdate,
           })
           .where('id', '=', report.id)
-          .execute()
-        await db.db
-          .insertInto('moderator_assignment')
-          .values({
-            did: moderatorDid,
-            reportId: report.id,
-            queueId: null,
-            startAt: backdate,
-            endAt: null,
-          })
           .execute()
         await modClient.emitEvent(
           {
@@ -446,7 +436,7 @@ describe('report-stats', () => {
       expect(stats.escalatedCount).toBeGreaterThanOrEqual(1)
     })
 
-    it('handles first-close AHT within a reason', async () => {
+    it('calculates handling time from creation to the current close', async () => {
       const db = network.ozone.ctx.db
 
       await sc.createReport({
@@ -498,6 +488,40 @@ describe('report-stats', () => {
       expect(stats.acknowledgedCount).toBeGreaterThanOrEqual(1)
       expect(stats.avgHandlingTimeSec).toBeDefined()
       expect(stats.avgHandlingTimeSec).toBeGreaterThanOrEqual(115)
+
+      await db.db
+        .updateTable('report')
+        .set({
+          status: 'open',
+          closedAt: null,
+          updatedAt: new Date().toISOString(),
+        })
+        .where('id', '=', report.id)
+        .execute()
+      await modClient.computeStats()
+      const reopened = await getLiveStats({
+        reportTypes: ['com.atproto.moderation.defs#reasonRude'],
+      })
+      expect(reopened.closedCount).toBe(0)
+      expect(reopened.ahtSampleCount).toBe(0)
+
+      const reclosedAt = new Date().toISOString()
+      await db.db
+        .updateTable('report')
+        .set({
+          status: 'closed',
+          closedAt: reclosedAt,
+          updatedAt: reclosedAt,
+        })
+        .where('id', '=', report.id)
+        .execute()
+      await modClient.computeStats()
+      const reclosed = await getLiveStats({
+        reportTypes: ['com.atproto.moderation.defs#reasonRude'],
+      })
+      expect(reclosed.closedCount).toBe(1)
+      expect(reclosed.ahtSampleCount).toBe(1)
+      expect(reclosed.avgHandlingTimeSec).toBeGreaterThanOrEqual(115)
     })
 
     it('classifies label and takedown closures as actioned', async () => {
@@ -552,14 +576,13 @@ describe('report-stats', () => {
         )
       }
 
-      const activities = await db.db
-        .selectFrom('report_activity')
-        .select(['reportId', 'actionEventIds'])
-        .where('reportId', 'in', reportIds)
-        .where('activityType', '=', 'closeActivity')
+      const reports = await db.db
+        .selectFrom('report')
+        .select(['id', 'actionEventIds'])
+        .where('id', 'in', reportIds)
         .execute()
-      expect(activities).toHaveLength(2)
-      expect(activities.every((row) => row.actionEventIds?.length === 1)).toBe(
+      expect(reports).toHaveLength(2)
+      expect(reports.every((row) => row.actionEventIds?.length === 1)).toBe(
         true,
       )
 
