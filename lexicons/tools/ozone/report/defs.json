@@ -495,7 +495,7 @@
         },
         "closedCount": {
           "type": "integer",
-          "description": "Number of close transitions today."
+          "description": "Number of close transitions."
         },
         "actionedCount": {
           "type": "integer",
