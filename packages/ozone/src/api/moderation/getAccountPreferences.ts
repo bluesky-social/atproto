@@ -1,20 +1,13 @@
-import { type LexValue, l } from '@atproto/lex'
 import { XRPCError } from '@atproto/xrpc'
-import { type AuthResult, InvalidRequestError } from '@atproto/xrpc-server'
-import type { AppContext } from '../../../../context.js'
-import type { Server } from '../../../../lexicon/index.js'
-import { ids } from '../../../../lexicon/lexicons.js'
-
-const getPreferences = l.query(
-  ids.AppBskyActorGetPreferences,
-  l.params({ did: l.string({ format: 'did' }) }),
-  l.jsonPayload({ preferences: l.array(l.lexValue()) }),
-)
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import type { AppContext } from '../../context.js'
+import type { Server } from '../../lexicon/index.js'
+import { ids } from '../../lexicon/lexicons.js'
+import type { OutputSchema } from '../../lexicon/types/tools/ozone/moderation/getAccountPreferences.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.xrpc.add(getPreferences, {
-    auth: async (authCtx): Promise<AuthResult> =>
-      ctx.authVerifier.modOrAdminToken(authCtx),
+  server.tools.ozone.moderation.getAccountPreferences({
+    auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params }) => {
       if (!ctx.pdsAgent || !ctx.cfg.pds) {
         throw new InvalidRequestError('PDS not configured')
@@ -37,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         await res.body?.cancel()
         throw new XRPCError(res.status, undefined, 'Failed to get preferences')
       }
-      const body = (await res.json()) as { preferences: LexValue[] }
+      const body = (await res.json()) as OutputSchema
       return {
         encoding: 'application/json',
         body,
