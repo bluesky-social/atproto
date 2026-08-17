@@ -35,15 +35,15 @@
     "@connectrpc/connect": "^1.1.4",
     "@connectrpc/connect-node": "^1.1.4",
     "http-terminator": "^3.2.0",
-    "kysely": "^0.29.2",
-    "pg": "^8.10.0",
+    "kysely": "^0.29.5",
+    "pg": "^8.23.0",
     "pino-http": "^11.0.0"
   },
   "devDependencies": {
     "@bufbuild/buf": "^1.28.1",
     "@bufbuild/protoc-gen-es": "^1.5.0",
     "@connectrpc/protoc-gen-connect-es": "^1.1.4",
-    "@types/pg": "^8.15.5",
+    "@types/pg": "^8.21.0",
     "get-port": "^5.1.1",
     "jest": "^30.0.0"
   },
