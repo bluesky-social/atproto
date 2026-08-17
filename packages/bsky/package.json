@@ -37,7 +37,6 @@
     "@atproto-labs/fetch-node": "workspace:^",
     "@atproto-labs/opentelemetry-node": "workspace:^",
     "@atproto-labs/xrpc-utils": "workspace:^",
-    "@atproto/api": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/did": "workspace:^",
@@ -80,6 +79,7 @@
     "zod": "3.23.8"
   },
   "devDependencies": {
+    "@atproto/api": "workspace:^",
     "@atproto/pds": "workspace:^",
     "@bufbuild/buf": "^1.28.1",
     "@bufbuild/protoc-gen-es": "^1.5.0",

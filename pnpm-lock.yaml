@@ -393,9 +393,6 @@ importers:
       '@atproto-labs/xrpc-utils':
         specifier: workspace:^
         version: link:../internal/xrpc-utils
-      '@atproto/api':
-        specifier: workspace:^
-        version: link:../api
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
@@ -517,6 +514,9 @@ importers:
         specifier: 3.23.8
         version: 3.23.8
     devDependencies:
+      '@atproto/api':
+        specifier: workspace:^
+        version: link:../api
       '@atproto/pds':
         specifier: workspace:^
         version: link:../pds
