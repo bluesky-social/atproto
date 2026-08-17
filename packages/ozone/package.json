@@ -42,7 +42,6 @@
     "@did-plc/lib": "^0.0.1",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
-    "dotenv": "^17.4.2",
     "express": "^4.17.2",
     "http-terminator": "^3.2.0",
     "kysely": "^0.29.2",
@@ -75,7 +74,6 @@
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",
-    "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
     "migration:create": "node ./bin/migration-create.ts"
   }

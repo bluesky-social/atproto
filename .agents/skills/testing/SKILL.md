@@ -87,6 +87,20 @@ Packages whose tests need docker infra wrap the runner in a dev-infra script —
 
 From the repo root, `pnpm test` runs every package's suite with infra up, and `pnpm test:unit` runs only the projects registered in [vitest.config.ts](../../../vitest.config.ts). That list is not the full set of vitest packages: `bsky` is commented out because it needs infra, and `lexicon-resolver` is simply absent. Run either from its own directory.
 
+## Logs
+
+Every part of the code base uses pino logging, which is disabled by default. Enable it with `LOG_ENABLED=true` and redirect to a file with `LOG_DESTINATION=...`. For example, to run the full test suite and capture logs:
+
+```bash
+LOG_ENABLED=true LOG_DESTINATION=test.log pnpm test ...
+```
+
+Pretty print using:
+
+```bash
+cat test.log | pnpm exec pino-pretty
+```
+
 ## Code style
 
 - Always use `using` for spies, mocks and any object that implements `Disposable` or `AsyncDisposable`.
