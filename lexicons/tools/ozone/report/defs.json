@@ -539,7 +539,7 @@
         },
         "avgHandlingTimeSec": {
           "type": "integer",
-          "description": "Average time in seconds from report creation to its current close."
+          "description": "Average time in seconds from report creation to close."
         },
         "lastUpdated": {
           "type": "string",
@@ -612,7 +612,7 @@
         },
         "avgHandlingTimeSec": {
           "type": "integer",
-          "description": "Average time in seconds from report creation to its current close."
+          "description": "Average time in seconds from report creation to close."
         }
       }
     },
