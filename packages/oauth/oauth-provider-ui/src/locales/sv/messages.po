@@ -406,10 +406,6 @@ msgstr "Radera"
 msgid "Delete account"
 msgstr "Radera konto"
 
-#: src/components/delete-account-dialog.tsx
-msgid "Delete account <0/>"
-msgstr "Radera kontot <0/>"
-
 #: src/components/delete-account-confirm-form.tsx
 msgid "Delete my account"
 msgstr "Radera mitt konto"

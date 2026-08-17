@@ -411,10 +411,6 @@ msgstr "Șterge"
 msgid "Delete account"
 msgstr "Ștergere cont"
 
-#: src/components/delete-account-dialog.tsx
-msgid "Delete account <0/>"
-msgstr "Ștergeți contul <0/>"
-
 #: src/components/delete-account-confirm-form.tsx
 msgid "Delete my account"
 msgstr "Șterge-mi contul"
