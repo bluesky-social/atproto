@@ -19,14 +19,17 @@ export interface ReportStat {
   actionedCount: number | null // Current closures whose last action was enforcement
   escalatedCount: number | null // Reports escalated during this calendar day
   actionRate: number | null // actionedCount / inboundCount * 100
-  avgHandlingTimeSec: number | null // Average time from creation/assignment to close, in seconds
+  avgHandlingTimeSec: number | null // Average time from assignment to close, in seconds
   closedCount: number | null // Current reports with closedAt in this calendar day
   acknowledgedCount: number | null // Current closures without a last enforcement action
   labelActionCount: number | null // Current closures whose last action was label
   tagActionCount: number | null // Current closures whose last action was tag
   takedownActionCount: number | null // Current closures whose last action was takedown
-  ahtDurationSec: number | null // Sum of creation-to-close durations
-  ahtSampleCount: number | null // Closed-report samples in ahtDurationSec
+  ahtDurationSec: number | null // Sum of assignment-to-close durations
+  ahtSampleCount: number | null // Assigned closed-report samples in ahtDurationSec
+  resolutionDurationSec: number | null // Sum of creation-to-close durations
+  resolutionSampleCount: number | null // Closed-report samples in resolutionDurationSec
+  avgResolutionTimeSec: number | null // Average time from creation to close, in seconds
 }
 
 export type PartialDB = {

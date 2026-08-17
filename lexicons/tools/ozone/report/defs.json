@@ -527,11 +527,19 @@
         },
         "ahtDurationSec": {
           "type": "integer",
-          "description": "Sum of report creation-to-close seconds."
+          "description": "Sum of report assignment-to-close seconds."
         },
         "ahtSampleCount": {
           "type": "integer",
-          "description": "Number of closed-report samples in ahtDurationSec."
+          "description": "Number of assigned closed-report samples in ahtDurationSec."
+        },
+        "resolutionDurationSec": {
+          "type": "integer",
+          "description": "Sum of report creation-to-close seconds."
+        },
+        "resolutionSampleCount": {
+          "type": "integer",
+          "description": "Number of closed-report samples in resolutionDurationSec."
         },
         "actionRate": {
           "type": "integer",
@@ -539,7 +547,11 @@
         },
         "avgHandlingTimeSec": {
           "type": "integer",
-          "description": "Average time in seconds from report creation to close."
+          "description": "Average handling time in seconds from report assignment to close."
+        },
+        "avgResolutionTimeSec": {
+          "type": "integer",
+          "description": "Average resolution time in seconds from report creation to close."
         },
         "lastUpdated": {
           "type": "string",
@@ -600,11 +612,19 @@
         },
         "ahtDurationSec": {
           "type": "integer",
-          "description": "Sum of report creation-to-current-close seconds for this day's samples."
+          "description": "Sum of report assignment-to-close seconds for this day's samples."
         },
         "ahtSampleCount": {
           "type": "integer",
-          "description": "Number of closed-report samples in ahtDurationSec."
+          "description": "Number of assigned closed-report samples in ahtDurationSec."
+        },
+        "resolutionDurationSec": {
+          "type": "integer",
+          "description": "Sum of report creation-to-close seconds for this day's samples."
+        },
+        "resolutionSampleCount": {
+          "type": "integer",
+          "description": "Number of closed-report samples in resolutionDurationSec."
         },
         "actionRate": {
           "type": "integer",
@@ -612,7 +632,11 @@
         },
         "avgHandlingTimeSec": {
           "type": "integer",
-          "description": "Average time in seconds from report creation to close."
+          "description": "Average handling time in seconds from report assignment to close."
+        },
+        "avgResolutionTimeSec": {
+          "type": "integer",
+          "description": "Average resolution time in seconds from report creation to close."
         }
       }
     },

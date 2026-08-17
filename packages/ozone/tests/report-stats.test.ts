@@ -235,6 +235,7 @@ describe('report-stats', () => {
       expect(stats.pendingCount).toBe(0)
       expect(stats.inboundCount).toBe(0)
       expect(stats.avgHandlingTimeSec).toBeUndefined()
+      expect(stats.avgResolutionTimeSec).toBeUndefined()
     })
 
     it('computes stats for unqueued reports (queueId = -1)', async () => {
@@ -436,7 +437,7 @@ describe('report-stats', () => {
       expect(stats.escalatedCount).toBeGreaterThanOrEqual(1)
     })
 
-    it('calculates handling time from creation to the current close', async () => {
+    it('calculates handling and resolution time for the current close', async () => {
       const db = network.ozone.ctx.db
 
       await sc.createReport({
@@ -456,11 +457,13 @@ describe('report-stats', () => {
         .executeTakeFirstOrThrow()
 
       const backdate = new Date(Date.now() - 120 * 1000).toISOString()
+      const assignedAt = new Date(Date.now() - 60 * 1000).toISOString()
       await db.db
         .updateTable('report')
         .set({
           createdAt: backdate,
-          updatedAt: backdate,
+          assignedAt,
+          updatedAt: assignedAt,
         })
         .where('id', '=', report.id)
         .execute()
@@ -486,8 +489,9 @@ describe('report-stats', () => {
       })
       expect(stats.closedCount).toBeGreaterThanOrEqual(1)
       expect(stats.acknowledgedCount).toBeGreaterThanOrEqual(1)
-      expect(stats.avgHandlingTimeSec).toBeDefined()
-      expect(stats.avgHandlingTimeSec).toBeGreaterThanOrEqual(115)
+      expect(stats.avgHandlingTimeSec).toBeGreaterThanOrEqual(55)
+      expect(stats.avgHandlingTimeSec).toBeLessThan(115)
+      expect(stats.avgResolutionTimeSec).toBeGreaterThanOrEqual(115)
 
       await db.db
         .updateTable('report')
@@ -504,6 +508,7 @@ describe('report-stats', () => {
       })
       expect(reopened.closedCount).toBe(0)
       expect(reopened.ahtSampleCount).toBe(0)
+      expect(reopened.resolutionSampleCount).toBe(0)
 
       const reclosedAt = new Date().toISOString()
       await db.db
@@ -521,7 +526,10 @@ describe('report-stats', () => {
       })
       expect(reclosed.closedCount).toBe(1)
       expect(reclosed.ahtSampleCount).toBe(1)
-      expect(reclosed.avgHandlingTimeSec).toBeGreaterThanOrEqual(115)
+      expect(reclosed.resolutionSampleCount).toBe(1)
+      expect(reclosed.avgHandlingTimeSec).toBeGreaterThanOrEqual(55)
+      expect(reclosed.avgHandlingTimeSec).toBeLessThan(115)
+      expect(reclosed.avgResolutionTimeSec).toBeGreaterThanOrEqual(115)
     })
 
     it('classifies label and takedown closures as actioned', async () => {

@@ -283,8 +283,11 @@ export function viewLiveStats(
     takedownActionCount: row?.takedownActionCount ?? undefined,
     ahtDurationSec: row?.ahtDurationSec ?? undefined,
     ahtSampleCount: row?.ahtSampleCount ?? undefined,
+    resolutionDurationSec: row?.resolutionDurationSec ?? undefined,
+    resolutionSampleCount: row?.resolutionSampleCount ?? undefined,
     actionRate: row?.actionRate ?? undefined,
     avgHandlingTimeSec: row?.avgHandlingTimeSec ?? undefined,
+    avgResolutionTimeSec: row?.avgResolutionTimeSec ?? undefined,
     lastUpdated: row?.computedAt,
   }
 }
@@ -306,7 +309,10 @@ export function viewHistoricalStats(
     takedownActionCount: row.takedownActionCount ?? undefined,
     ahtDurationSec: row.ahtDurationSec ?? undefined,
     ahtSampleCount: row.ahtSampleCount ?? undefined,
+    resolutionDurationSec: row.resolutionDurationSec ?? undefined,
+    resolutionSampleCount: row.resolutionSampleCount ?? undefined,
     actionRate: row.actionRate ?? undefined,
     avgHandlingTimeSec: row.avgHandlingTimeSec ?? undefined,
+    avgResolutionTimeSec: row.avgResolutionTimeSec ?? undefined,
   }
 }

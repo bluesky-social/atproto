@@ -10,6 +10,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('takedownActionCount', 'integer')
     .addColumn('ahtDurationSec', 'bigint')
     .addColumn('ahtSampleCount', 'integer')
+    .addColumn('resolutionDurationSec', 'bigint')
+    .addColumn('resolutionSampleCount', 'integer')
+    .addColumn('avgResolutionTimeSec', 'integer')
     .execute()
 }
 
@@ -23,5 +26,8 @@ export async function down(db: Kysely<unknown>): Promise<void> {
     .dropColumn('takedownActionCount')
     .dropColumn('ahtDurationSec')
     .dropColumn('ahtSampleCount')
+    .dropColumn('resolutionDurationSec')
+    .dropColumn('resolutionSampleCount')
+    .dropColumn('avgResolutionTimeSec')
     .execute()
 }

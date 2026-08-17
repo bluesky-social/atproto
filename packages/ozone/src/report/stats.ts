@@ -30,8 +30,11 @@ export type ReportStatistics = {
   takedownActionCount: number
   ahtDurationSec: number
   ahtSampleCount: number
+  resolutionDurationSec: number
+  resolutionSampleCount: number
   actionRate?: number
   avgHandlingTimeSec?: number
+  avgResolutionTimeSec?: number
 }
 
 type CountByQueueRow = {
@@ -58,6 +61,8 @@ type LifecycleRow = {
   takedownActionCount: Numeric
   ahtDurationSec: Numeric
   ahtSampleCount: Numeric
+  resolutionDurationSec: Numeric
+  resolutionSampleCount: Numeric
 }
 
 type BatchedStats = {
@@ -84,8 +89,11 @@ type UpsertRow = {
   takedownActionCount: number | null
   ahtDurationSec: number | null
   ahtSampleCount: number | null
+  resolutionDurationSec: number | null
+  resolutionSampleCount: number | null
   actionRate: number | null
   avgHandlingTimeSec: number | null
+  avgResolutionTimeSec: number | null
   computedAt: string
 }
 
@@ -368,6 +376,7 @@ export class ReportStatsService {
           r."assignedTo" as "moderatorDid",
           r."reportType",
           r."createdAt" as "reportCreatedAt",
+          r."assignedAt" as "reportAssignedAt",
           me.action as "actionType"
         from report r
         left join moderation_event me on me.id = case
@@ -385,6 +394,7 @@ export class ReportStatsService {
           r."assignedTo" as "moderatorDid",
           r."reportType",
           r."createdAt" as "reportCreatedAt",
+          null::text as "reportAssignedAt",
           null::text as "actionType"
         from report_activity ra
         join report r on r.id = ra."reportId"
@@ -422,9 +432,14 @@ export class ReportStatsService {
         count(*) filter (where "metricType" = 'close' and "actionType" = 'tools.ozone.moderation.defs#modEventLabel') as "labelActionCount",
         count(*) filter (where "metricType" = 'close' and "actionType" = 'tools.ozone.moderation.defs#modEventTag') as "tagActionCount",
         count(*) filter (where "metricType" = 'close' and "actionType" = 'tools.ozone.moderation.defs#modEventTakedown') as "takedownActionCount",
+        coalesce(sum(greatest(0, extract(epoch from ("eventAt"::timestamp - "reportAssignedAt"::timestamp))))
+          filter (where "metricType" = 'close' and "reportAssignedAt" is not null), 0)
+          as "ahtDurationSec",
+        count(*) filter (where "metricType" = 'close' and "reportAssignedAt" is not null)
+          as "ahtSampleCount",
         coalesce(sum(greatest(0, extract(epoch from ("eventAt"::timestamp - "reportCreatedAt"::timestamp))))
-          filter (where "metricType" = 'close'), 0) as "ahtDurationSec",
-        count(*) filter (where "metricType" = 'close') as "ahtSampleCount"
+          filter (where "metricType" = 'close'), 0) as "resolutionDurationSec",
+        count(*) filter (where "metricType" = 'close') as "resolutionSampleCount"
       from lifecycle_base
       group by grouping sets ((), ("statQueueId"), ("reportType"), ("moderatorDid"))
     `.execute(this.db.db)
@@ -504,6 +519,10 @@ export class ReportStatsService {
     const actionedCount = num(lifecycle?.actionedCount)
     const ahtDurationSec = Math.round(num(lifecycle?.ahtDurationSec))
     const ahtSampleCount = num(lifecycle?.ahtSampleCount)
+    const resolutionDurationSec = Math.round(
+      num(lifecycle?.resolutionDurationSec),
+    )
+    const resolutionSampleCount = num(lifecycle?.resolutionSampleCount)
     return {
       inboundCount,
       pendingCount,
@@ -516,6 +535,8 @@ export class ReportStatsService {
       takedownActionCount: num(lifecycle?.takedownActionCount),
       ahtDurationSec,
       ahtSampleCount,
+      resolutionDurationSec,
+      resolutionSampleCount,
       actionRate:
         closedCount > 0
           ? Math.round((actionedCount / closedCount) * 100)
@@ -523,6 +544,10 @@ export class ReportStatsService {
       avgHandlingTimeSec:
         ahtSampleCount > 0
           ? Math.round(ahtDurationSec / ahtSampleCount)
+          : undefined,
+      avgResolutionTimeSec:
+        resolutionSampleCount > 0
+          ? Math.round(resolutionDurationSec / resolutionSampleCount)
           : undefined,
     }
   }
@@ -552,8 +577,11 @@ export class ReportStatsService {
       takedownActionCount: stats.takedownActionCount,
       ahtDurationSec: stats.ahtDurationSec,
       ahtSampleCount: stats.ahtSampleCount,
+      resolutionDurationSec: stats.resolutionDurationSec,
+      resolutionSampleCount: stats.resolutionSampleCount,
       actionRate: stats.actionRate ?? null,
       avgHandlingTimeSec: stats.avgHandlingTimeSec ?? null,
+      avgResolutionTimeSec: stats.avgResolutionTimeSec ?? null,
       computedAt: new Date().toISOString(),
     }
   }
