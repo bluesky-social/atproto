@@ -6,6 +6,78 @@ import type { ReportStat } from '../db/schema/report_stat.js'
 import { jsonb } from '../db/types.js'
 import { dbLogger } from '../logger.js'
 
+/** Broad report-type groups shared with the Ozone analytics frontend. */
+export const REPORT_TYPE_GROUPS: Record<string, string[]> = {
+  Legacy: [
+    'com.atproto.moderation.defs#reasonSpam',
+    'com.atproto.moderation.defs#reasonViolation',
+    'com.atproto.moderation.defs#reasonMisleading',
+    'com.atproto.moderation.defs#reasonSexual',
+    'com.atproto.moderation.defs#reasonRude',
+    'com.atproto.moderation.defs#reasonOther',
+    'com.atproto.moderation.defs#reasonAppeal',
+  ],
+  Appeal: ['tools.ozone.report.defs#reasonAppeal'],
+  Violence: [
+    'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
+    'tools.ozone.report.defs#reasonViolenceThreats',
+    'tools.ozone.report.defs#reasonViolenceGraphicContent',
+    'tools.ozone.report.defs#reasonViolenceSelfHarm',
+    'tools.ozone.report.defs#reasonViolenceGlorification',
+    'tools.ozone.report.defs#reasonViolenceExtremistContent',
+    'tools.ozone.report.defs#reasonViolenceTrafficking',
+    'tools.ozone.report.defs#reasonViolenceOther',
+  ],
+  Sexual: [
+    'tools.ozone.report.defs#reasonSexualAbuseContent',
+    'tools.ozone.report.defs#reasonSexualNCII',
+    'tools.ozone.report.defs#reasonSexualSextortion',
+    'tools.ozone.report.defs#reasonSexualDeepfake',
+    'tools.ozone.report.defs#reasonSexualAnimal',
+    'tools.ozone.report.defs#reasonSexualUnlabeled',
+    'tools.ozone.report.defs#reasonSexualOther',
+  ],
+  'Child Safety': [
+    'tools.ozone.report.defs#reasonChildSafetyCSAM',
+    'tools.ozone.report.defs#reasonChildSafetyGroom',
+    'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
+    'tools.ozone.report.defs#reasonChildSafetyEndangerment',
+    'tools.ozone.report.defs#reasonChildSafetyHarassment',
+    'tools.ozone.report.defs#reasonChildSafetyPromotion',
+    'tools.ozone.report.defs#reasonChildSafetyOther',
+  ],
+  Harassment: [
+    'tools.ozone.report.defs#reasonHarassmentTroll',
+    'tools.ozone.report.defs#reasonHarassmentTargeted',
+    'tools.ozone.report.defs#reasonHarassmentHateSpeech',
+    'tools.ozone.report.defs#reasonHarassmentDoxxing',
+    'tools.ozone.report.defs#reasonHarassmentOther',
+  ],
+  Misleading: [
+    'tools.ozone.report.defs#reasonMisleadingBot',
+    'tools.ozone.report.defs#reasonMisleadingImpersonation',
+    'tools.ozone.report.defs#reasonMisleadingSpam',
+    'tools.ozone.report.defs#reasonMisleadingScam',
+    'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
+    'tools.ozone.report.defs#reasonMisleadingMisinformation',
+    'tools.ozone.report.defs#reasonMisleadingOther',
+  ],
+  'Rule Violations': [
+    'tools.ozone.report.defs#reasonRuleSiteSecurity',
+    'tools.ozone.report.defs#reasonRuleStolenContent',
+    'tools.ozone.report.defs#reasonRuleProhibitedSales',
+    'tools.ozone.report.defs#reasonRuleBanEvasion',
+    'tools.ozone.report.defs#reasonRuleOther',
+  ],
+  Civic: [
+    'tools.ozone.report.defs#reasonCivicElectoralProcess',
+    'tools.ozone.report.defs#reasonCivicDisclosure',
+    'tools.ozone.report.defs#reasonCivicInterference',
+    'tools.ozone.report.defs#reasonCivicMisinformation',
+    'tools.ozone.report.defs#reasonCivicImpersonation',
+  ],
+}
+
 const REPORT_STAT_LIVE_TTL = 15 * MINUTE
 
 export type ReportStatsServiceCreator = (db: Database) => ReportStatsService
@@ -64,6 +136,11 @@ type LifecycleRow = {
   resolutionDurationSec: Numeric
   resolutionSampleCount: Numeric
 }
+
+type LifecycleMetric = Exclude<
+  keyof LifecycleRow,
+  'groupKind' | 'queueId' | 'reportType' | 'moderatorDid'
+>
 
 type BatchedStats = {
   queueInbound: CountByQueueRow[]
@@ -263,7 +340,7 @@ export class ReportStatsService {
   }
 
   private async enumerateGroups(): Promise<ReportStatGroup[]> {
-    const [queues, members, reportTypes] = await Promise.all([
+    const [queues, members] = await Promise.all([
       this.db.db
         .selectFrom('report_queue')
         .select('id')
@@ -280,12 +357,6 @@ export class ReportStatsService {
           'tools.ozone.team.defs#roleTriage',
         ])
         .execute(),
-      this.db.db
-        .selectFrom('report')
-        .select('reportType')
-        .distinct()
-        .orderBy('reportType')
-        .execute(),
     ])
 
     return [
@@ -301,10 +372,10 @@ export class ReportStatsService {
         moderatorDid: member.did,
         reportTypes: null,
       })),
-      ...reportTypes.map((row) => ({
+      ...Object.values(REPORT_TYPE_GROUPS).map((reportTypes) => ({
         queueId: null,
         moderatorDid: null,
-        reportTypes: [row.reportType],
+        reportTypes,
       })),
     ]
   }
@@ -476,19 +547,23 @@ export class ReportStatsService {
     }
 
     if (group.reportTypes !== null) {
-      const reportType = group.reportTypes[0]
+      const reportTypes = new Set(group.reportTypes)
       return this.resolveStats(
-        num(
-          batched.typeInbound.find((row) => row.reportType === reportType)
-            ?.count,
+        batched.typeInbound.reduce(
+          (total, row) =>
+            total + (reportTypes.has(row.reportType) ? num(row.count) : 0),
+          0,
         ),
-        num(
-          batched.typePending.find((row) => row.reportType === reportType)
-            ?.count,
+        batched.typePending.reduce(
+          (total, row) =>
+            total + (reportTypes.has(row.reportType) ? num(row.count) : 0),
+          0,
         ),
-        batched.lifecycle.find(
+        batched.lifecycle.filter(
           (row) =>
-            row.groupKind === 'reportType' && row.reportType === reportType,
+            row.groupKind === 'reportType' &&
+            row.reportType !== null &&
+            reportTypes.has(row.reportType),
         ),
       )
     }
@@ -513,26 +588,31 @@ export class ReportStatsService {
   private resolveStats(
     inboundCount: number,
     pendingCount: number | undefined,
-    lifecycle: LifecycleRow | undefined,
+    lifecycle: LifecycleRow | LifecycleRow[] | undefined,
   ): ReportStatistics {
-    const closedCount = num(lifecycle?.closedCount)
-    const actionedCount = num(lifecycle?.actionedCount)
-    const ahtDurationSec = Math.round(num(lifecycle?.ahtDurationSec))
-    const ahtSampleCount = num(lifecycle?.ahtSampleCount)
-    const resolutionDurationSec = Math.round(
-      num(lifecycle?.resolutionDurationSec),
-    )
-    const resolutionSampleCount = num(lifecycle?.resolutionSampleCount)
+    const lifecycleRows = lifecycle
+      ? Array.isArray(lifecycle)
+        ? lifecycle
+        : [lifecycle]
+      : []
+    const sum = (key: LifecycleMetric) =>
+      lifecycleRows.reduce((total, row) => total + num(row[key]), 0)
+    const closedCount = sum('closedCount')
+    const actionedCount = sum('actionedCount')
+    const ahtDurationSec = Math.round(sum('ahtDurationSec'))
+    const ahtSampleCount = sum('ahtSampleCount')
+    const resolutionDurationSec = Math.round(sum('resolutionDurationSec'))
+    const resolutionSampleCount = sum('resolutionSampleCount')
     return {
       inboundCount,
       pendingCount,
       closedCount,
       actionedCount,
-      acknowledgedCount: num(lifecycle?.acknowledgedCount),
-      escalatedCount: num(lifecycle?.escalatedCount),
-      labelActionCount: num(lifecycle?.labelActionCount),
-      tagActionCount: num(lifecycle?.tagActionCount),
-      takedownActionCount: num(lifecycle?.takedownActionCount),
+      acknowledgedCount: sum('acknowledgedCount'),
+      escalatedCount: sum('escalatedCount'),
+      labelActionCount: sum('labelActionCount'),
+      tagActionCount: sum('tagActionCount'),
+      takedownActionCount: sum('takedownActionCount'),
       ahtDurationSec,
       ahtSampleCount,
       resolutionDurationSec,

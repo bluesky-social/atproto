@@ -7,9 +7,7 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons.js'
-
-const SPAM_REASON = 'com.atproto.moderation.defs#reasonSpam'
-const THREAT_REASON = 'tools.ozone.report.defs#reasonViolenceThreats'
+import { REPORT_TYPE_GROUPS } from '../src/report/stats.js'
 
 describe('report-stats', () => {
   let network: TestNetwork
@@ -358,12 +356,12 @@ describe('report-stats', () => {
     })
   })
 
-  describe('report reason', () => {
-    it('computes stats for a singular legacy reason', async () => {
+  describe('report type group', () => {
+    it('computes stats for the Legacy group', async () => {
       await modClient.computeStats()
 
       const spamStats = await getLiveStats({
-        reportTypes: [SPAM_REASON],
+        reportTypes: REPORT_TYPE_GROUPS.Legacy,
       })
       const allStats = await getLiveStats()
 
@@ -374,14 +372,14 @@ describe('report-stats', () => {
       )
     })
 
-    it('isolates singular report reasons', async () => {
+    it('isolates report type groups', async () => {
       await modClient.computeStats()
 
       const spamStats = await getLiveStats({
-        reportTypes: [SPAM_REASON],
+        reportTypes: REPORT_TYPE_GROUPS.Legacy,
       })
       const threatStats = await getLiveStats({
-        reportTypes: [THREAT_REASON],
+        reportTypes: REPORT_TYPE_GROUPS.Violence,
       })
 
       expect(spamStats.inboundCount).toBeGreaterThanOrEqual(2)
@@ -432,7 +430,7 @@ describe('report-stats', () => {
       await modClient.computeStats()
 
       const stats = await getLiveStats({
-        reportTypes: [SPAM_REASON],
+        reportTypes: REPORT_TYPE_GROUPS.Legacy,
       })
       expect(stats.escalatedCount).toBeGreaterThanOrEqual(1)
     })
@@ -441,7 +439,7 @@ describe('report-stats', () => {
       const db = network.ozone.ctx.db
 
       await sc.createReport({
-        reasonType: 'com.atproto.moderation.defs#reasonRude',
+        reasonType: 'tools.ozone.report.defs#reasonSexualUnlabeled',
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.alice,
@@ -485,7 +483,7 @@ describe('report-stats', () => {
       await modClient.computeStats()
 
       const stats = await getLiveStats({
-        reportTypes: ['com.atproto.moderation.defs#reasonRude'],
+        reportTypes: REPORT_TYPE_GROUPS.Sexual,
       })
       expect(stats.closedCount).toBeGreaterThanOrEqual(1)
       expect(stats.acknowledgedCount).toBeGreaterThanOrEqual(1)
@@ -504,7 +502,7 @@ describe('report-stats', () => {
         .execute()
       await modClient.computeStats()
       const reopened = await getLiveStats({
-        reportTypes: ['com.atproto.moderation.defs#reasonRude'],
+        reportTypes: REPORT_TYPE_GROUPS.Sexual,
       })
       expect(reopened.closedCount).toBe(0)
       expect(reopened.ahtSampleCount).toBe(0)
@@ -522,7 +520,7 @@ describe('report-stats', () => {
         .execute()
       await modClient.computeStats()
       const reclosed = await getLiveStats({
-        reportTypes: ['com.atproto.moderation.defs#reasonRude'],
+        reportTypes: REPORT_TYPE_GROUPS.Sexual,
       })
       expect(reclosed.closedCount).toBe(1)
       expect(reclosed.ahtSampleCount).toBe(1)
