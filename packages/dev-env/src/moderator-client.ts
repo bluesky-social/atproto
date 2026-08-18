@@ -1,34 +1,45 @@
-import {
-  type $Typed,
-  type AtpAgent,
-  type ChatBskyConvoDefs,
-  type ComAtprotoAdminDefs,
-  type ComAtprotoRepoStrongRef,
-  type ToolsOzoneModerationDefs,
-  type ToolsOzoneModerationEmitEvent as EmitModerationEvent,
-  ToolsOzoneModerationGetReporterStats as _GetReporterStats, // includes types for getReporterStats()
-  type ToolsOzoneModerationQueryEvents as QueryModerationEvents,
-  type ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
-  type ToolsOzoneReportQueryReports as QueryModerationReports,
-  type ToolsOzoneSettingRemoveOptions,
-  type ToolsOzoneSettingUpsertOption,
-} from '@atproto/api'
+import type { Client, DidString, l } from '@atproto/lex'
+import { tools } from './lexicons/index.js'
 import type { TestOzone } from './ozone.js'
 
-type TakeActionInput = EmitModerationEvent.InputSchema
-type QueryStatusesParams = QueryModerationStatuses.QueryParams
-type QueryEventsParams = QueryModerationEvents.QueryParams
-type QueryReportsParams = QueryModerationReports.QueryParams
+type EmitEventInput = tools.ozone.moderation.emitEvent.$InputBody
+// `$Params` is the *parsed* shape, in which defaulted params are required.
+// Callers supply the pre-parse shape, so infer that from the schema instead.
+type QueryStatusesParams = l.InferInput<
+  typeof tools.ozone.moderation.queryStatuses.$params
+>
+type QueryEventsParams = l.InferInput<
+  typeof tools.ozone.moderation.queryEvents.$params
+>
+type QueryReportsParams = l.InferInput<
+  typeof tools.ozone.report.queryReports.$params
+>
 type ModLevel = 'admin' | 'moderator' | 'triage'
 
+/**
+ * `emitEvent` takes an open union that only closes over `repoRef` and
+ * `strongRef`. Anything else — chat convo & message refs, or a subject a test
+ * builds by hand — lands in the `Unknown$Type` branch, which needs a cast. Keep
+ * that cast here rather than at every call site, and narrow once, where the
+ * request is built.
+ */
+type EventSubject =
+  | EmitEventInput['subject']
+  // Both forms are needed: the index signature lets an inline literal carry the
+  // ref's own fields past the excess-property check, and the bare form accepts
+  // a value already typed as `{ $type: string }` by a test helper.
+  | { $type: string; [k: string]: unknown }
+  | { $type: string }
+
 export class ModeratorClient {
-  agent: AtpAgent
+  client: Client
   constructor(public ozone: TestOzone) {
-    this.agent = ozone.getAgent()
+    this.client = ozone.getClient()
   }
 
   async getEvent(id: number, role?: ModLevel) {
-    const result = await this.agent.tools.ozone.moderation.getEvent(
+    return this.client.call(
+      tools.ozone.moderation.getEvent,
       { id },
       {
         headers: await this.ozone.modHeaders(
@@ -37,24 +48,20 @@ export class ModeratorClient {
         ),
       },
     )
-    return result.data
   }
 
   async queryStatuses(input: QueryStatusesParams, role?: ModLevel) {
-    const result = await this.agent.tools.ozone.moderation.queryStatuses(
-      input,
-      {
-        headers: await this.ozone.modHeaders(
-          'tools.ozone.moderation.queryStatuses',
-          role,
-        ),
-      },
-    )
-    return result.data
+    return this.client.call(tools.ozone.moderation.queryStatuses, input, {
+      headers: await this.ozone.modHeaders(
+        'tools.ozone.moderation.queryStatuses',
+        role,
+      ),
+    })
   }
 
-  async getReporterStats(dids: string[]) {
-    const result = await this.agent.tools.ozone.moderation.getReporterStats(
+  async getReporterStats(dids: DidString[]) {
+    return this.client.call(
+      tools.ozone.moderation.getReporterStats,
       { dids },
       {
         headers: await this.ozone.modHeaders(
@@ -63,45 +70,37 @@ export class ModeratorClient {
         ),
       },
     )
-    return result.data
   }
 
   async queryEvents(input: QueryEventsParams, role?: ModLevel) {
-    const result = await this.agent.tools.ozone.moderation.queryEvents(input, {
+    return this.client.call(tools.ozone.moderation.queryEvents, input, {
       headers: await this.ozone.modHeaders(
         'tools.ozone.moderation.queryEvents',
         role,
       ),
     })
-    return result.data
   }
 
   async queryReports(input: QueryReportsParams, role?: ModLevel) {
-    const result = await this.agent.tools.ozone.report.queryReports(input, {
+    return this.client.call(tools.ozone.report.queryReports, input, {
       headers: await this.ozone.modHeaders(
         'tools.ozone.report.queryReports',
         role,
       ),
     })
-    return result.data
   }
 
   async emitEvent(
     opts: {
-      event: TakeActionInput['event']
-      subject:
-        | $Typed<ComAtprotoAdminDefs.RepoRef>
-        | $Typed<ComAtprotoRepoStrongRef.Main>
-        | $Typed<ChatBskyConvoDefs.MessageRef>
-        | $Typed<ChatBskyConvoDefs.ConvoRef>
-        | { $type: string }
-      subjectBlobCids?: TakeActionInput['subjectBlobCids']
+      event: EmitEventInput['event']
+      subject: EventSubject
+      subjectBlobCids?: EmitEventInput['subjectBlobCids']
       reason?: string
-      createdBy?: string
+      createdBy?: DidString
       meta?: unknown
-      modTool?: ToolsOzoneModerationDefs.ModTool
+      modTool?: tools.ozone.moderation.defs.ModTool
       externalId?: string
-      reportAction?: TakeActionInput['reportAction']
+      reportAction?: EmitEventInput['reportAction']
     },
     role?: ModLevel,
   ) {
@@ -114,10 +113,11 @@ export class ModeratorClient {
       externalId,
       reportAction,
     } = opts
-    const result = await this.agent.tools.ozone.moderation.emitEvent(
+    return this.client.call(
+      tools.ozone.moderation.emitEvent,
       {
         event,
-        subject,
+        subject: subject as EmitEventInput['subject'],
         subjectBlobCids,
         createdBy,
         modTool,
@@ -125,23 +125,21 @@ export class ModeratorClient {
         reportAction,
       },
       {
-        encoding: 'application/json',
         headers: await this.ozone.modHeaders(
           'tools.ozone.moderation.emitEvent',
           role,
         ),
       },
     )
-    return result.data
   }
 
   async reverseAction(
     opts: {
       id: number
-      subject: TakeActionInput['subject']
+      subject: EventSubject
       reason?: string
-      createdBy?: string
-      modTool?: ToolsOzoneModerationDefs.ModTool
+      createdBy?: DidString
+      modTool?: tools.ozone.moderation.defs.ModTool
     },
     role?: ModLevel,
   ) {
@@ -151,9 +149,10 @@ export class ModeratorClient {
       createdBy = 'did:example:admin',
       modTool,
     } = opts
-    const result = await this.agent.tools.ozone.moderation.emitEvent(
+    return this.client.call(
+      tools.ozone.moderation.emitEvent,
       {
-        subject,
+        subject: subject as EmitEventInput['subject'],
         event: {
           $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
           comment: reason,
@@ -162,25 +161,18 @@ export class ModeratorClient {
         modTool,
       },
       {
-        encoding: 'application/json',
         headers: await this.ozone.modHeaders(
           'tools.ozone.moderation.emitEvent',
           role,
         ),
       },
     )
-    return result.data
   }
 
   async performTakedown(
     opts: {
-      subject:
-        | $Typed<ComAtprotoAdminDefs.RepoRef>
-        | $Typed<ComAtprotoRepoStrongRef.Main>
-        | $Typed<ChatBskyConvoDefs.MessageRef>
-        | $Typed<ChatBskyConvoDefs.ConvoRef>
-        | { $type: string }
-      subjectBlobCids?: TakeActionInput['subjectBlobCids']
+      subject: EventSubject
+      subjectBlobCids?: EmitEventInput['subjectBlobCids']
       durationInHours?: number
       acknowledgeAccountSubjects?: boolean
       reason?: string
@@ -206,8 +198,8 @@ export class ModeratorClient {
 
   async performReverseTakedown(
     opts: {
-      subject: TakeActionInput['subject']
-      subjectBlobCids?: TakeActionInput['subjectBlobCids']
+      subject: EventSubject
+      subjectBlobCids?: EmitEventInput['subjectBlobCids']
       reason?: string
     },
     role?: ModLevel,
@@ -224,39 +216,27 @@ export class ModeratorClient {
   }
 
   async upsertSettingOption(
-    setting: ToolsOzoneSettingUpsertOption.InputSchema,
-    callerRole: 'admin' | 'moderator' | 'triage' = 'admin',
+    setting: tools.ozone.setting.upsertOption.$InputBody,
+    callerRole: ModLevel = 'admin',
   ) {
-    const { data } = await this.agent.tools.ozone.setting.upsertOption(
-      setting,
-      {
-        encoding: 'application/json',
-        headers: await this.ozone.modHeaders(
-          'tools.ozone.setting.upsertOption',
-          callerRole,
-        ),
-      },
-    )
-
-    return data
+    return this.client.call(tools.ozone.setting.upsertOption, setting, {
+      headers: await this.ozone.modHeaders(
+        'tools.ozone.setting.upsertOption',
+        callerRole,
+      ),
+    })
   }
 
   async removeSettingOptions(
-    params: ToolsOzoneSettingRemoveOptions.InputSchema,
-    callerRole: 'admin' | 'moderator' | 'triage' = 'admin',
+    params: tools.ozone.setting.removeOptions.$InputBody,
+    callerRole: ModLevel = 'admin',
   ) {
-    const { data } = await this.agent.tools.ozone.setting.removeOptions(
-      params,
-      {
-        encoding: 'application/json',
-        headers: await this.ozone.modHeaders(
-          'tools.ozone.setting.removeOptions',
-          callerRole,
-        ),
-      },
-    )
-
-    return data
+    return this.client.call(tools.ozone.setting.removeOptions, params, {
+      headers: await this.ozone.modHeaders(
+        'tools.ozone.setting.removeOptions',
+        callerRole,
+      ),
+    })
   }
 
   async computeStats() {

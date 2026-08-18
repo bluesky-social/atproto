@@ -2,32 +2,36 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { CID } from 'multiformats/cid'
-import type {
-  $Typed,
-  AppBskyActorProfile,
-  AppBskyFeedLike,
-  AppBskyFeedPost,
-  AppBskyFeedRepost,
-  AppBskyGraphBlock,
-  AppBskyGraphFollow,
-  AppBskyGraphList,
-  AppBskyGraphVerification,
-  AppBskyRichtextFacet,
-  AtpAgent,
-  ChatBskyConvoDefs,
-  ComAtprotoAdminDefs,
-  ComAtprotoModerationCreateReport,
-  ComAtprotoRepoStrongRef,
-} from '@atproto/api'
-import type { CidString, Client } from '@atproto/lex'
-import type { BlobRef } from '@atproto/lexicon'
+import type { AtpAgent } from '@atproto/api'
+import {
+  type BlobRef,
+  type CidString,
+  type Client,
+  type EncodingString,
+  type LexMap,
+  currentDatetimeString,
+} from '@atproto/lex'
 import {
   AtUri,
   type AtUriString,
   type DidString,
   type HandleString,
 } from '@atproto/syntax'
+import { app, com } from '../lexicons/index.js'
 import type { TestNetworkNoAppView } from '../network-no-appview.js'
+
+type CreateReportInput = com.atproto.moderation.createReport.$InputBody
+
+/**
+ * `createReport` takes an open union that only closes over `repoRef` and
+ * `strongRef`. Anything else — chat convo & message refs, or a subject a test
+ * builds by hand — lands in the `Unknown$Type` branch, which needs a cast. Keep
+ * that cast here rather than at every call site.
+ */
+type ReportSubject =
+  | CreateReportInput['subject']
+  | { $type: string; [k: string]: unknown }
+  | { $type: string }
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
@@ -175,24 +179,26 @@ export class SeedClient<
       inviteCode?: string
     },
   ): Promise<Account> {
-    const { data: account } =
-      await this.agent.com.atproto.server.createAccount(params)
-    const did = account.did as DidString
+    const account = await this.client.call(
+      com.atproto.server.createAccount,
+      params,
+    )
+    const { did } = account
     this.dids[shortName] = did
-    this.accounts[account.did] = {
-      // @NOTE type case needed until we move test to lex-sdk
-      ...(account as typeof account & { handle: HandleString }),
+    this.accounts[did] = {
+      ...account,
       did,
       email: params.email,
       password: params.password,
     }
-    return this.accounts[account.did]
+    return this.accounts[did]
   }
 
   async updateHandle(by: DidString, handle: HandleString) {
-    await this.agent.com.atproto.identity.updateHandle(
+    await this.client.call(
+      com.atproto.identity.updateHandle,
       { handle },
-      { encoding: 'application/json', headers: this.getHeaders(by) },
+      { headers: this.getHeaders(by) },
     )
   }
 
@@ -202,7 +208,7 @@ export class SeedClient<
     description: string,
     selfLabels?: readonly string[],
     joinedViaStarterPack?: RecordRef,
-    overrides?: Partial<AppBskyActorProfile.Record>,
+    overrides?: Partial<app.bsky.actor.profile.Main>,
   ): Promise<{
     displayName: string
     description: string
@@ -214,16 +220,16 @@ export class SeedClient<
 
     let avatarBlob
     {
-      const res = await this.agent.com.atproto.repo.uploadBlob(AVATAR_IMG, {
+      const res = await this.client.uploadBlob(AVATAR_IMG, {
         encoding: 'image/jpeg',
         headers: this.getHeaders(by),
-      } as any)
-      avatarBlob = res.data.blob
+      })
+      avatarBlob = res.body.blob
     }
 
     {
-      const res = await this.agent.app.bsky.actor.profile.create(
-        { repo: by },
+      const res = await this.client.create(
+        app.bsky.actor.profile,
         {
           displayName,
           description,
@@ -235,10 +241,10 @@ export class SeedClient<
               }
             : undefined,
           joinedViaStarterPack: joinedViaStarterPack?.raw,
-          createdAt: new Date().toISOString(),
+          createdAt: currentDatetimeString(),
           ...overrides,
         },
-        this.getHeaders(by),
+        { repo: by, headers: this.getHeaders(by) },
       )
       this.profiles[by] = {
         displayName,
@@ -252,19 +258,22 @@ export class SeedClient<
   }
 
   async updateProfile(by: DidString, record: Record<string, unknown>) {
-    const res = await this.agent.com.atproto.repo.putRecord(
+    const res = await this.client.call(
+      com.atproto.repo.putRecord,
       {
         repo: by,
         collection: 'app.bsky.actor.profile',
         rkey: 'self',
-        record,
+        // Callers pass partial/hand-built profiles, so this stays untyped and
+        // is checked by the PDS rather than here.
+        record: record as LexMap,
       },
-      { headers: this.getHeaders(by), encoding: 'application/json' },
+      { headers: this.getHeaders(by) },
     )
     this.profiles[by] = {
       ...(this.profiles[by] ?? {}),
       ...record,
-      ref: new RecordRef(res.data.uri, res.data.cid),
+      ref: new RecordRef(res.uri, res.cid),
     }
     return this.profiles[by]
   }
@@ -272,16 +281,16 @@ export class SeedClient<
   async follow(
     from: DidString,
     to: DidString,
-    overrides?: Partial<AppBskyGraphFollow.Record>,
+    overrides?: Partial<app.bsky.graph.follow.Main>,
   ) {
-    const res = await this.agent.app.bsky.graph.follow.create(
-      { repo: from },
+    const res = await this.client.create(
+      app.bsky.graph.follow,
       {
         subject: to,
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         ...overrides,
       },
-      this.getHeaders(from),
+      { repo: from, headers: this.getHeaders(from) },
     )
     this.follows[from] ??= {}
     this.follows[from][to] = new RecordRef(res.uri, res.cid)
@@ -293,26 +302,27 @@ export class SeedClient<
     if (!follow) {
       throw new Error('follow does not exist')
     }
-    await this.agent.app.bsky.graph.follow.delete(
-      { repo: from, rkey: follow.uri.rkey },
-      this.getHeaders(from),
-    )
+    await this.client.delete(app.bsky.graph.follow, {
+      repo: from,
+      rkey: follow.uri.rkey,
+      headers: this.getHeaders(from),
+    })
     delete this.follows[from][to]
   }
 
   async block(
     from: DidString,
     to: DidString,
-    overrides?: Partial<AppBskyGraphBlock.Record>,
+    overrides?: Partial<app.bsky.graph.block.Main>,
   ) {
-    const res = await this.agent.app.bsky.graph.block.create(
-      { repo: from },
+    const res = await this.client.create(
+      app.bsky.graph.block,
       {
         subject: to,
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         ...overrides,
       },
-      this.getHeaders(from),
+      { repo: from, headers: this.getHeaders(from) },
     )
     this.blocks[from] ??= {}
     this.blocks[from][to] = new RecordRef(res.uri, res.cid)
@@ -324,18 +334,18 @@ export class SeedClient<
     if (!block) {
       throw new Error('block does not exist')
     }
-    await this.agent.app.bsky.graph.block.delete(
-      { repo: from, rkey: block.uri.rkey },
-      this.getHeaders(from),
-    )
+    await this.client.delete(app.bsky.graph.block, {
+      repo: from,
+      rkey: block.uri.rkey,
+      headers: this.getHeaders(from),
+    })
     delete this.blocks[from][to]
   }
 
   async mute(from: DidString, to: DidString) {
-    await this.agent.app.bsky.graph.muteActor(
-      {
-        actor: to,
-      },
+    await this.client.call(
+      app.bsky.graph.muteActor,
+      { actor: to },
       { headers: this.getHeaders(from) },
     )
     this.mutes[from] ??= new Set()
@@ -346,13 +356,13 @@ export class SeedClient<
   async post(
     by: DidString,
     text: string,
-    facets?: AppBskyRichtextFacet.Main[],
+    facets?: app.bsky.richtext.facet.Main[],
     images?: ImageRef[],
     quote?: RecordRef,
-    overrides?: Partial<AppBskyFeedPost.Record>,
+    overrides?: Partial<app.bsky.feed.post.Main>,
   ) {
     const imageEmbed = images && {
-      $type: 'app.bsky.embed.images',
+      $type: 'app.bsky.embed.images' as const,
       images,
     }
     const recordEmbed = quote && {
@@ -361,23 +371,23 @@ export class SeedClient<
     const embed =
       imageEmbed && recordEmbed
         ? {
-            $type: 'app.bsky.embed.recordWithMedia',
+            $type: 'app.bsky.embed.recordWithMedia' as const,
             record: recordEmbed,
             media: imageEmbed,
           }
         : recordEmbed
-          ? { $type: 'app.bsky.embed.record', ...recordEmbed }
+          ? { $type: 'app.bsky.embed.record' as const, ...recordEmbed }
           : imageEmbed
-    const res = await this.agent.app.bsky.feed.post.create(
-      { repo: by },
+    const res = await this.client.create(
+      app.bsky.feed.post,
       {
         text: text,
         facets,
         embed,
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         ...overrides,
       },
-      this.getHeaders(by),
+      { repo: by, headers: this.getHeaders(by) },
     )
     this.posts[by] ??= []
     const post = {
@@ -391,41 +401,39 @@ export class SeedClient<
   }
 
   async deletePost(by: DidString, uri: AtUri) {
-    await this.agent.app.bsky.feed.post.delete(
-      {
-        repo: by,
-        rkey: uri.rkey,
-      },
-      this.getHeaders(by),
-    )
+    await this.client.delete(app.bsky.feed.post, {
+      repo: by,
+      rkey: uri.rkey,
+      headers: this.getHeaders(by),
+    })
   }
 
   async uploadFile(
     by: DidString,
     filePath: string,
-    encoding: string,
+    encoding: EncodingString,
   ): Promise<ImageRef> {
     const file = await fs.readFile(filePath)
-    const res = await this.agent.com.atproto.repo.uploadBlob(file, {
+    const res = await this.client.uploadBlob(file, {
       headers: this.getHeaders(by),
       encoding,
-    } as any)
-    return { image: res.data.blob, alt: filePath }
+    })
+    return { image: res.body.blob, alt: filePath }
   }
 
   async like(
     by: DidString,
     subject: RecordRef,
-    overrides?: Partial<AppBskyFeedLike.Record>,
+    overrides?: Partial<app.bsky.feed.like.Main>,
   ) {
-    const res = await this.agent.app.bsky.feed.like.create(
-      { repo: by },
+    const res = await this.client.create(
+      app.bsky.feed.like,
       {
         subject: subject.raw,
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         ...overrides,
       },
-      this.getHeaders(by),
+      { repo: by, headers: this.getHeaders(by) },
     )
     this.likes[by] ??= {}
     this.likes[by][subject.uriStr] = new AtUri(res.uri)
@@ -437,18 +445,18 @@ export class SeedClient<
     root: RecordRef,
     parent: RecordRef,
     text: string,
-    facets?: AppBskyRichtextFacet.Main[],
+    facets?: app.bsky.richtext.facet.Main[],
     images?: ImageRef[],
-    overrides?: Partial<AppBskyFeedPost.Record>,
+    overrides?: Partial<app.bsky.feed.post.Main>,
   ) {
     const embed = images
       ? {
-          $type: 'app.bsky.embed.images',
+          $type: 'app.bsky.embed.images' as const,
           images,
         }
       : undefined
-    const res = await this.agent.app.bsky.feed.post.create(
-      { repo: by },
+    const res = await this.client.create(
+      app.bsky.feed.post,
       {
         text: text,
         reply: {
@@ -457,10 +465,10 @@ export class SeedClient<
         },
         facets,
         embed,
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         ...overrides,
       },
-      this.getHeaders(by),
+      { repo: by, headers: this.getHeaders(by) },
     )
     this.replies[by] ??= []
     const reply = {
@@ -475,16 +483,16 @@ export class SeedClient<
   async repost(
     by: DidString,
     subject: RecordRef,
-    overrides?: Partial<AppBskyFeedRepost.Record>,
+    overrides?: Partial<app.bsky.feed.repost.Main>,
   ) {
-    const res = await this.agent.app.bsky.feed.repost.create(
-      { repo: by },
+    const res = await this.client.create(
+      app.bsky.feed.repost,
       {
         subject: subject.raw,
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         ...overrides,
       },
-      this.getHeaders(by),
+      { repo: by, headers: this.getHeaders(by) },
     )
     this.reposts[by] ??= []
     const repost = new RecordRef(res.uri, res.cid)
@@ -496,10 +504,10 @@ export class SeedClient<
     by: DidString,
     name: string,
     purpose: 'mod' | 'curate' | 'reference',
-    overrides?: Partial<AppBskyGraphList.Record>,
+    overrides?: Partial<app.bsky.graph.list.Main>,
   ) {
-    const res = await this.agent.app.bsky.graph.list.create(
-      { repo: by },
+    const res = await this.client.create(
+      app.bsky.graph.list,
       {
         name,
         purpose:
@@ -508,10 +516,10 @@ export class SeedClient<
             : purpose === 'curate'
               ? 'app.bsky.graph.defs#curatelist'
               : 'app.bsky.graph.defs#referencelist',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         ...(overrides || {}),
       },
-      this.getHeaders(by),
+      { repo: by, headers: this.getHeaders(by) },
     )
     this.lists[by] ??= {}
     const ref = new RecordRef(res.uri, res.cid)
@@ -522,15 +530,15 @@ export class SeedClient<
     return ref
   }
 
-  async createFeedGen(by: DidString, feedDid: string, name: string) {
-    const res = await this.agent.app.bsky.feed.generator.create(
-      { repo: by },
+  async createFeedGen(by: DidString, feedDid: DidString, name: string) {
+    const res = await this.client.create(
+      app.bsky.feed.generator,
       {
         did: feedDid,
         displayName: name,
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
       },
-      this.getHeaders(by),
+      { repo: by, headers: this.getHeaders(by) },
     )
     this.feedgens[by] ??= {}
     const ref = new RecordRef(res.uri, res.cid)
@@ -551,15 +559,15 @@ export class SeedClient<
     for (const did of actors) {
       await this.addToList(by, did, list)
     }
-    const res = await this.agent.app.bsky.graph.starterpack.create(
-      { repo: by },
+    const res = await this.client.create(
+      app.bsky.graph.starterpack,
       {
         name,
         list: list.uriStr,
         feeds: feeds?.map((uri) => ({ uri })),
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
       },
-      this.getHeaders(by),
+      { repo: by, headers: this.getHeaders(by) },
     )
     this.starterpacks[by] ??= {}
     const ref = new RecordRef(res.uri, res.cid)
@@ -573,10 +581,10 @@ export class SeedClient<
   }
 
   async addToList(by: DidString, subject: DidString, list: RecordRef) {
-    const res = await this.agent.app.bsky.graph.listitem.create(
-      { repo: by },
-      { subject, list: list.uriStr, createdAt: new Date().toISOString() },
-      this.getHeaders(by),
+    const res = await this.client.create(
+      app.bsky.graph.listitem,
+      { subject, list: list.uriStr, createdAt: currentDatetimeString() },
+      { repo: by, headers: this.getHeaders(by) },
     )
     const ref = new RecordRef(res.uri, res.cid)
     const found = (this.lists[by] ?? {})[list.uriStr]
@@ -591,43 +599,35 @@ export class SeedClient<
     if (!foundList) return
     const foundItem = foundList.items[subject]
     if (!foundItem) return
-    await this.agent.app.bsky.graph.listitem.delete(
-      { repo: by, rkey: foundItem.uri.rkey },
-      this.getHeaders(by),
-    )
+    await this.client.delete(app.bsky.graph.listitem, {
+      repo: by,
+      rkey: foundItem.uri.rkey,
+      headers: this.getHeaders(by),
+    })
     delete foundList.items[subject]
   }
 
   // override public signature to add support for convos and messages
   async createReport(opts: {
-    reasonType: ComAtprotoModerationCreateReport.InputSchema['reasonType']
-    subject:
-      | $Typed<ComAtprotoAdminDefs.RepoRef>
-      | $Typed<ComAtprotoRepoStrongRef.Main>
-      | $Typed<ChatBskyConvoDefs.MessageRef>
-      | $Typed<ChatBskyConvoDefs.ConvoRef>
-      | { $type: string }
+    reasonType: CreateReportInput['reasonType']
+    subject: ReportSubject
     reason?: string
     reportedBy: DidString
   }): Promise<
-    ComAtprotoModerationCreateReport.OutputSchema & {
-      subject:
-        | $Typed<ComAtprotoAdminDefs.RepoRef>
-        | $Typed<ComAtprotoRepoStrongRef.Main>
-        | $Typed<ChatBskyConvoDefs.MessageRef>
-        | $Typed<ChatBskyConvoDefs.ConvoRef>
-        | { $type: string }
+    com.atproto.moderation.createReport.$OutputBody & {
+      subject: ReportSubject
     }
   > {
     const { reasonType, subject, reason, reportedBy } = opts
-    const result = await this.agent.com.atproto.moderation.createReport(
-      { reasonType, subject, reason },
+    return this.client.call(
+      com.atproto.moderation.createReport,
       {
-        encoding: 'application/json',
-        headers: this.getHeaders(reportedBy),
+        reasonType,
+        subject: subject as CreateReportInput['subject'],
+        reason,
       },
+      { headers: this.getHeaders(reportedBy) },
     )
-    return result.data
   }
 
   async verify(
@@ -635,18 +635,18 @@ export class SeedClient<
     subject: DidString,
     handle: HandleString,
     displayName: string,
-    overrides?: Partial<AppBskyGraphVerification.Record>,
+    overrides?: Partial<app.bsky.graph.verification.Main>,
   ) {
-    const res = await this.agent.app.bsky.graph.verification.create(
-      { repo: by },
+    const res = await this.client.create(
+      app.bsky.graph.verification,
       {
         subject,
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         handle,
         displayName,
         ...overrides,
       },
-      this.getHeaders(by),
+      { repo: by, headers: this.getHeaders(by) },
     )
     this.verifications[by] ??= {}
     this.verifications[by][subject] = new AtUri(res.uri)
@@ -659,10 +659,11 @@ export class SeedClient<
       throw new Error('verification does not exist')
     }
 
-    await this.agent.app.bsky.graph.verification.delete(
-      { repo: by, rkey: verification.rkey },
-      this.getHeaders(by),
-    )
+    await this.client.delete(app.bsky.graph.verification, {
+      repo: by,
+      rkey: verification.rkey,
+      headers: this.getHeaders(by),
+    })
     delete this.verifications[by][subject]
   }
 

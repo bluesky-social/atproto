@@ -1,14 +1,12 @@
 import assert from 'node:assert'
-import type {
-  ToolsOzoneModerationDefs,
-  ToolsOzoneModerationQueryStatuses,
-} from '@atproto/api'
+import type { ToolsOzoneModerationDefs } from '@atproto/api'
 import {
   type ModeratorClient,
   type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { getBlobCidString } from '@atproto/lex'
 import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs.js'
 import {
   REASONMISLEADING,
@@ -137,7 +135,7 @@ describe('moderation-statuses', () => {
     it('returns paginated statuses', async () => {
       // We know there will be exactly 4 statuses in db
       const getPaginatedStatuses = async (
-        params: ToolsOzoneModerationQueryStatuses.QueryParams,
+        params: Parameters<ModeratorClient['queryStatuses']>[0],
       ) => {
         let cursor: string | undefined = ''
         const statuses: ToolsOzoneModerationDefs.SubjectStatusView[] = []
@@ -457,7 +455,7 @@ describe('moderation-statuses', () => {
           uri: post.ref.uriStr,
           cid: post.ref.cidStr,
         },
-        subjectBlobCids: [post.images[0].image.ref.toString()],
+        subjectBlobCids: [getBlobCidString(post.images[0].image)],
         createdBy: sc.dids.alice,
       })
       const result = await modClient.queryStatuses({
@@ -466,7 +464,7 @@ describe('moderation-statuses', () => {
       expect(result.subjectStatuses.length).toBe(1)
       expect(result.subjectStatuses[0]).toMatchObject({
         takendown: true,
-        subjectBlobCids: [post.images[0].image.ref.toString()],
+        subjectBlobCids: [getBlobCidString(post.images[0].image)],
       })
     })
 
@@ -488,7 +486,7 @@ describe('moderation-statuses', () => {
       expect(result.subjectStatuses.length).toBe(1)
       expect(result.subjectStatuses[0]).toMatchObject({
         takendown: false,
-        subjectBlobCids: [post.images[0].image.ref.toString()],
+        subjectBlobCids: [getBlobCidString(post.images[0].image)],
       })
     })
   })

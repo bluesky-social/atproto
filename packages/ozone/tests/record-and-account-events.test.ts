@@ -5,6 +5,12 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import {
+  type AtUriString,
+  type DidString,
+  currentDatetimeString,
+  toDatetimeString,
+} from '@atproto/lex'
 import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs.js'
 import { REASONMISLEADING } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef.js'
@@ -36,7 +42,7 @@ describe('record and account events on moderation subjects', () => {
   })
 
   const getSubjectStatus = async (
-    subject: string,
+    subject: DidString | AtUriString,
   ): Promise<SubjectStatusView | undefined> => {
     const res = await modClient.queryStatuses({
       subject,
@@ -53,7 +59,7 @@ describe('record and account events on moderation subjects', () => {
         {
           event: {
             op,
-            timestamp: new Date().toISOString(),
+            timestamp: currentDatetimeString(),
             $type: 'tools.ozone.moderation.defs#recordEvent',
           },
           subject,
@@ -102,7 +108,7 @@ describe('record and account events on moderation subjects', () => {
           event: {
             status,
             active,
-            timestamp: new Date().toISOString(),
+            timestamp: currentDatetimeString(),
             $type: 'tools.ozone.moderation.defs#accountEvent',
           },
           subject,
@@ -172,14 +178,14 @@ describe('record and account events on moderation subjects', () => {
           hostingStatuses: ['deactivated', 'deleted'],
         }),
         modClient.queryStatuses({
-          hostingDeletedAfter: new Date(
-            Date.now() - 1000 * 60 * 60 * 24,
-          ).toISOString(),
+          hostingDeletedAfter: toDatetimeString(
+            new Date(Date.now() - 1000 * 60 * 60 * 24),
+          ),
         }),
         modClient.queryStatuses({
-          hostingDeletedBefore: new Date(
-            Date.now() - 1000 * 60 * 60 * 24,
-          ).toISOString(),
+          hostingDeletedBefore: toDatetimeString(
+            new Date(Date.now() - 1000 * 60 * 60 * 24),
+          ),
         }),
       ])
 

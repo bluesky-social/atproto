@@ -8,6 +8,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import type { AtUriString, DidString } from '@atproto/lex'
 import {
   REASONMISLEADING,
   REASONSPAM,
@@ -34,7 +35,7 @@ describe('moderation-appeals', () => {
   })
 
   const assertSubjectStatus = async (
-    subject: string,
+    subject: DidString | AtUriString,
     status: string,
     appealed: boolean | undefined,
   ): Promise<ToolsOzoneModerationDefs.SubjectStatusView | undefined> => {

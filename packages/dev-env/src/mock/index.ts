@@ -1,24 +1,32 @@
-import {
-  type AtpAgent,
-  COM_ATPROTO_MODERATION,
-  ToolsOzoneQueueCreateQueue,
-} from '@atproto/api'
 import type { Database } from '@atproto/bsky'
+import {
+  Client,
+  type DatetimeString,
+  type DidString,
+  type HandleString,
+  currentDatetimeString,
+  toDatetimeString,
+} from '@atproto/lex'
+import { PasswordSession } from '@atproto/lex-password-session'
 import { AtUri, type AtUriString } from '@atproto/syntax'
 import { EXAMPLE_LABELER, RecordRef, type TestNetwork } from '../index.js'
+import { app, chat, com, tools } from '../lexicons/index.js'
 import { postTexts, replyTexts } from './data.js'
 import blurHashB64 from './img/blur-hash-avatar-b64.js'
 import labeledImgB64 from './img/labeled-img-b64.js'
+
+const REASON_SPAM = 'com.atproto.moderation.defs#reasonSpam'
+const REASON_OTHER = 'com.atproto.moderation.defs#reasonOther'
 
 // NOTE
 // deterministic date generator
 // we use this to ensure the mock dataset is always the same
 // which is very useful when testing
 // (not everything is currently deterministic but it could be)
-function* dateGen(): Generator<string, never> {
+function* dateGen(): Generator<DatetimeString, never> {
   let start = 1657846031914
   while (true) {
-    yield new Date(start).toISOString()
+    yield toDatetimeString(new Date(start))
     start += 1e3
   }
 }
@@ -34,7 +42,13 @@ export async function generateMockSetup(env: TestNetwork) {
     throw new Error('Not found')
   }
 
-  const users = [
+  const users: {
+    email: string
+    handle: HandleString
+    password: string
+    displayName?: string
+    description?: string
+  }[] = [
     {
       email: 'alice@test.com',
       handle: `alice.test`,
@@ -80,59 +94,48 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   ]
 
-  const userAgents = await Promise.all(
+  const userClients = await Promise.all(
     users.map(async (user) => {
-      const agent: AtpAgent = env.pds.getAgent()
-      await agent.createAccount(user)
-      agent.assertAuthenticated()
+      const session = await PasswordSession.createAccount(user, {
+        service: env.pds.url,
+      })
+      const client: Client = new Client(session)
       if (user.displayName || user.description) {
-        await agent.app.bsky.actor.profile.create(
-          { repo: agent.did },
-          {
-            displayName: user.displayName,
-            description: user.description,
-          },
-        )
+        await client.create(app.bsky.actor.profile, {
+          displayName: user.displayName,
+          description: user.description,
+        })
       }
-      return agent
+      return client
     }),
   )
 
-  const [alice, bob, carla, triage, mod, adminMod, labeler] = userAgents
+  const [alice, bob, carla, triage, mod, adminMod, labeler] = userClients
 
   // Create chat declarations for all users
-  for (const user of userAgents) {
-    await user.chat.bsky.actor.declaration.create(
-      { repo: user.did },
-      { allowIncoming: 'all' },
-    )
+  for (const user of userClients) {
+    await user.create(chat.bsky.actor.declaration, { allowIncoming: 'all' })
   }
 
   // Add moderator roles
-  await env.ozone.addTriageDid(triage.did)
-  await env.ozone.addModeratorDid(mod.did)
-  await env.ozone.addAdminDid(adminMod.did)
+  await env.ozone.addTriageDid(triage.assertDid)
+  await env.ozone.addModeratorDid(mod.assertDid)
+  await env.ozone.addAdminDid(adminMod.assertDid)
 
   // Create report queues
-  const ozoneAgent = env.ozone.getAgent()
+  const ozoneClient = env.ozone.getClient()
   const adminHeaders = async (nsid: string) =>
     env.ozone.modHeaders(nsid, 'admin')
 
-  const createQueue = async (input: {
-    name: string
-    subjectTypes: string[]
-    reportTypes: string[]
-    collection?: string
-  }): Promise<void> => {
-    try {
-      await ozoneAgent.tools.ozone.queue.createQueue(input, {
-        encoding: 'application/json',
-        headers: await adminHeaders('tools.ozone.queue.createQueue'),
-      })
-    } catch (err) {
-      if (!(err instanceof ToolsOzoneQueueCreateQueue.ConflictingQueueError)) {
-        throw err
-      }
+  const createQueue = async (
+    input: tools.ozone.queue.createQueue.$InputBody,
+  ): Promise<void> => {
+    const res = await ozoneClient.xrpcSafe(tools.ozone.queue.createQueue, {
+      body: input,
+      headers: await adminHeaders('tools.ozone.queue.createQueue'),
+    })
+    if (!res.success && res.error !== 'ConflictingQueue') {
+      throw res.reason
     }
   }
 
@@ -140,7 +143,7 @@ export async function generateMockSetup(env: TestNetwork) {
     createQueue({
       name: 'Spammy Accounts',
       subjectTypes: ['account'],
-      reportTypes: [COM_ATPROTO_MODERATION.DefsReasonSpam],
+      reportTypes: [REASON_SPAM],
     }),
     createQueue({
       name: 'Threatening Accounts',
@@ -150,49 +153,43 @@ export async function generateMockSetup(env: TestNetwork) {
     createQueue({
       name: 'Spammy Posts',
       subjectTypes: ['record'],
-      reportTypes: [COM_ATPROTO_MODERATION.DefsReasonSpam],
+      reportTypes: [REASON_SPAM],
       collection: 'app.bsky.feed.post',
     }),
   ])
 
   // Report one user (random)
-  const reporter = picka(userAgents)
-  await reporter.com.atproto.moderation.createReport({
-    reasonType: picka([
-      COM_ATPROTO_MODERATION.DefsReasonSpam,
-      COM_ATPROTO_MODERATION.DefsReasonOther,
-    ]),
+  const reporter = picka(userClients)
+  await reporter.call(com.atproto.moderation.createReport, {
+    reasonType: picka([REASON_SPAM, REASON_OTHER]),
     reason: picka(["Didn't look right to me", undefined, undefined]),
     subject: {
       $type: 'com.atproto.admin.defs#repoRef',
-      did: picka(userAgents).did,
+      did: picka(userClients).assertDid,
     },
   })
 
   // Reports that target queues
-  await alice.com.atproto.moderation.createReport({
-    reasonType: COM_ATPROTO_MODERATION.DefsReasonSpam,
+  await alice.call(com.atproto.moderation.createReport, {
+    reasonType: REASON_SPAM,
     reason: 'This account is spamming',
-    subject: { $type: 'com.atproto.admin.defs#repoRef', did: bob.did },
+    subject: { $type: 'com.atproto.admin.defs#repoRef', did: bob.assertDid },
   })
-  await bob.com.atproto.moderation.createReport({
+  await bob.call(com.atproto.moderation.createReport, {
     reasonType: 'tools.ozone.report.defs#reasonViolenceThreats',
     reason: 'Threatened me',
     subject: {
       $type: 'com.atproto.admin.defs#repoRef',
-      did: carla.did,
+      did: carla.assertDid,
     },
   })
 
   // everybody follows everybody
-  const follow = async (author: AtpAgent, subject: AtpAgent) => {
-    await author.app.bsky.graph.follow.create(
-      { repo: author.assertDid },
-      {
-        subject: subject.assertDid,
-        createdAt: date.next().value,
-      },
-    )
+  const follow = async (author: Client, subject: Client) => {
+    await author.create(app.bsky.graph.follow, {
+      subject: subject.assertDid,
+      createdAt: date.next().value,
+    })
   }
   await follow(alice, bob)
   await follow(alice, carla)
@@ -202,34 +199,25 @@ export async function generateMockSetup(env: TestNetwork) {
   await follow(carla, bob)
 
   // a set of posts and reposts
-  const posts: { uri: string; cid: string }[] = []
+  const posts: { uri: AtUriString; cid: string }[] = []
   for (let i = 0; i < postTexts.length; i++) {
-    const author = picka(userAgents)
-    const post = await author.app.bsky.feed.post.create(
-      { repo: author.did },
-      {
-        text: postTexts[i],
-        createdAt: date.next().value,
-      },
-    )
+    const author = picka(userClients)
+    const post = await author.create(app.bsky.feed.post, {
+      text: postTexts[i],
+      createdAt: date.next().value,
+    })
     posts.push(post)
     if (rand(10) === 0) {
-      const reposter = picka(userAgents)
-      await reposter.app.bsky.feed.repost.create(
-        { repo: reposter.did },
-        {
-          subject: picka(posts),
-          createdAt: date.next().value,
-        },
-      )
+      const reposter = picka(userClients)
+      await reposter.create(app.bsky.feed.repost, {
+        subject: picka(posts),
+        createdAt: date.next().value,
+      })
     }
     if (rand(6) === 0) {
-      const reporter = picka(userAgents)
-      await reporter.com.atproto.moderation.createReport({
-        reasonType: picka([
-          COM_ATPROTO_MODERATION.DefsReasonSpam,
-          COM_ATPROTO_MODERATION.DefsReasonOther,
-        ]),
+      const reporter = picka(userClients)
+      await reporter.call(com.atproto.moderation.createReport, {
+        reasonType: picka([REASON_SPAM, REASON_OTHER]),
         reason: picka(["Didn't look right to me", undefined, undefined]),
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -242,8 +230,8 @@ export async function generateMockSetup(env: TestNetwork) {
 
   // Spam post report
   if (posts.length > 0) {
-    await carla.com.atproto.moderation.createReport({
-      reasonType: COM_ATPROTO_MODERATION.DefsReasonSpam,
+    await carla.call(com.atproto.moderation.createReport, {
+      reasonType: REASON_SPAM,
       reason: 'This post is spam',
       subject: {
         $type: 'com.atproto.repo.strongRef',
@@ -258,33 +246,27 @@ export async function generateMockSetup(env: TestNetwork) {
 
   // make some naughty posts & label them
   const file = Buffer.from(labeledImgB64, 'base64')
-  const uploadedImg = await bob.com.atproto.repo.uploadBlob(file, {
+  const uploadedImg = await bob.uploadBlob(file, {
     encoding: 'image/png',
   })
-  const labeledPost = await bob.app.bsky.feed.post.create(
-    { repo: bob.assertDid },
-    {
-      text: 'naughty post',
-      embed: {
-        $type: 'app.bsky.embed.images',
-        images: [
-          {
-            image: uploadedImg.data.blob,
-            alt: 'naughty naughty',
-          },
-        ],
-      },
-      createdAt: date.next().value,
+  const labeledPost = await bob.create(app.bsky.feed.post, {
+    text: 'naughty post',
+    embed: {
+      $type: 'app.bsky.embed.images',
+      images: [
+        {
+          image: uploadedImg.body.blob,
+          alt: 'naughty naughty',
+        },
+      ],
     },
-  )
+    createdAt: date.next().value,
+  })
 
-  const filteredPost = await bob.app.bsky.feed.post.create(
-    { repo: bob.assertDid },
-    {
-      text: 'really bad post should be deleted',
-      createdAt: date.next().value,
-    },
-  )
+  const filteredPost = await bob.create(app.bsky.feed.post, {
+    text: 'really bad post should be deleted',
+    createdAt: date.next().value,
+  })
 
   await createLabel(env.bsky.db, {
     uri: labeledPost.uri,
@@ -302,7 +284,7 @@ export async function generateMockSetup(env: TestNetwork) {
   for (let i = 0; i < 10; i++) {
     galleryItems.push({
       $type: 'app.bsky.embed.gallery#image',
-      image: uploadedImg.data.blob,
+      image: uploadedImg.body.blob,
       alt: 'naughty ' + (i + 1),
       aspectRatio: {
         $type: 'app.bsky.embed.defs#aspectRatio',
@@ -311,40 +293,38 @@ export async function generateMockSetup(env: TestNetwork) {
       },
     })
   }
-  const galleryPost = await bob.app.bsky.feed.post.create(
-    { repo: bob.assertDid },
-    {
-      text: 'look at my cool pics',
-      embed: {
-        $type: 'app.bsky.embed.gallery',
-        items: galleryItems,
-      },
-      createdAt: date.next().value,
+  const galleryPost = await bob.create(app.bsky.feed.post, {
+    text: 'look at my cool pics',
+    embed: {
+      $type: 'app.bsky.embed.gallery',
+      items: galleryItems,
     },
-  )
+    createdAt: date.next().value,
+  })
   posts.push(galleryPost)
 
   // a set of replies
   for (let i = 0; i < 100; i++) {
     const targetUri = picka(posts).uri
     const urip = new AtUri(targetUri)
-    const target = await alice.app.bsky.feed.post.get({
+    const target = await alice.get(app.bsky.feed.post, {
       repo: urip.host,
       rkey: urip.rkey,
     })
-    const author = picka(userAgents)
+    // `getRecord` only omits the CID when the record is served without one,
+    // which a strong ref can't reference.
+    if (!target.cid) continue
+    const targetRef = { uri: target.uri, cid: target.cid }
+    const author = picka(userClients)
     try {
-      const post = await author.app.bsky.feed.post.create(
-        { repo: author.did },
-        {
-          text: picka(replyTexts),
-          reply: {
-            root: target.value.reply?.root ?? target,
-            parent: target,
-          },
-          createdAt: date.next().value,
+      const post = await author.create(app.bsky.feed.post, {
+        text: picka(replyTexts),
+        reply: {
+          root: target.value.reply?.root ?? targetRef,
+          parent: targetRef,
         },
-      )
+        createdAt: date.next().value,
+      })
 
       posts.push(post)
     } catch (err) {
@@ -355,15 +335,12 @@ export async function generateMockSetup(env: TestNetwork) {
 
   // a set of likes
   for (const post of posts) {
-    for (const user of userAgents) {
+    for (const user of userClients) {
       if (rand(3) === 0) {
-        await user.app.bsky.feed.like.create(
-          { repo: user.did },
-          {
-            subject: post,
-            createdAt: date.next().value,
-          },
-        )
+        await user.create(app.bsky.feed.like, {
+          subject: post,
+          createdAt: date.next().value,
+        })
       }
     }
   }
@@ -388,39 +365,34 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   })
   const avatarImg = Buffer.from(blurHashB64, 'base64')
-  const avatarRes = await alice.com.atproto.repo.uploadBlob(avatarImg, {
+  const avatarRes = await alice.uploadBlob(avatarImg, {
     encoding: 'image/png',
   })
-  const fgAliceRes = await alice.app.bsky.feed.generator.create(
-    { repo: alice.assertDid, rkey: fg1Uri.rkey },
+  const fgAliceRes = await alice.create(
+    app.bsky.feed.generator,
     {
       did: fg1.did,
       displayName: 'alices feed',
       description: 'all my fav stuff',
-      avatar: avatarRes.data.blob,
+      avatar: avatarRes.body.blob,
       createdAt: date.next().value,
     },
+    { rkey: fg1Uri.rkey },
   )
 
-  await alice.app.bsky.feed.post.create(
-    { repo: alice.assertDid },
-    {
-      text: 'check out my algorithm!',
-      embed: {
-        $type: 'app.bsky.embed.record',
-        record: fgAliceRes,
-      },
-      createdAt: date.next().value,
+  await alice.create(app.bsky.feed.post, {
+    text: 'check out my algorithm!',
+    embed: {
+      $type: 'app.bsky.embed.record',
+      record: fgAliceRes,
     },
-  )
+    createdAt: date.next().value,
+  })
   for (const user of [alice, bob, carla]) {
-    await user.app.bsky.feed.like.create(
-      { repo: user.did },
-      {
-        subject: fgAliceRes,
-        createdAt: date.next().value,
-      },
-    )
+    await user.create(app.bsky.feed.like, {
+      subject: fgAliceRes,
+      createdAt: date.next().value,
+    })
   }
 
   const fg2Uri = AtUri.make(
@@ -441,26 +413,24 @@ export async function generateMockSetup(env: TestNetwork) {
       }
     },
   })
-  const fgBobRes = await bob.app.bsky.feed.generator.create(
-    { repo: bob.assertDid, rkey: fg2Uri.rkey },
+  const fgBobRes = await bob.create(
+    app.bsky.feed.generator,
     {
       did: fg2.did,
       displayName: 'Bobby boy hot new algo',
       createdAt: date.next().value,
     },
+    { rkey: fg2Uri.rkey },
   )
 
-  await alice.app.bsky.feed.post.create(
-    { repo: alice.assertDid },
-    {
-      text: `bobs feed is neat too`,
-      embed: {
-        $type: 'app.bsky.embed.record',
-        record: fgBobRes,
-      },
-      createdAt: date.next().value,
+  await alice.create(app.bsky.feed.post, {
+    text: `bobs feed is neat too`,
+    embed: {
+      $type: 'app.bsky.embed.record',
+      record: fgBobRes,
     },
-  )
+    createdAt: date.next().value,
+  })
 
   const fg3Uri = AtUri.make(
     carla.assertDid,
@@ -480,179 +450,162 @@ export async function generateMockSetup(env: TestNetwork) {
       }
     },
   })
-  const fgCarlaRes = await carla.app.bsky.feed.generator.create(
-    { repo: carla.assertDid, rkey: fg3Uri.rkey },
+  const fgCarlaRes = await carla.create(
+    app.bsky.feed.generator,
     {
       did: fg3.did,
       displayName: `Acceptin' Generator`,
       acceptsInteractions: true,
       createdAt: date.next().value,
     },
+    { rkey: fg3Uri.rkey },
   )
 
-  await alice.app.bsky.feed.post.create(
-    { repo: alice.assertDid },
-    {
-      text: `carla accepts interactions on her feed`,
-      embed: {
-        $type: 'app.bsky.embed.record',
-        record: fgCarlaRes,
-      },
-      createdAt: date.next().value,
+  await alice.create(app.bsky.feed.post, {
+    text: `carla accepts interactions on her feed`,
+    embed: {
+      $type: 'app.bsky.embed.record',
+      record: fgCarlaRes,
     },
-  )
+    createdAt: date.next().value,
+  })
 
   // create labeler service
   {
-    await labeler.app.bsky.labeler.service.create(
-      { repo: labeler.did, rkey: 'self' },
-      {
-        policies: {
-          labelValues: [
-            '!hide',
-            'porn',
-            'rude',
-            'spam',
-            'spider',
-            'misinfo',
-            'cool',
-            'curate',
-          ],
-          labelValueDefinitions: [
-            {
-              identifier: 'rude',
-              blurs: 'content',
-              severity: 'alert',
-              defaultSetting: 'warn',
-              adultOnly: true,
-              locales: [
-                {
-                  lang: 'en',
-                  name: 'Rude',
-                  description: 'Just such a jerk, you wouldnt believe it.',
-                },
-              ],
-            },
-            {
-              identifier: 'spam',
-              blurs: 'content',
-              severity: 'inform',
-              defaultSetting: 'hide',
-              locales: [
-                {
-                  lang: 'en',
-                  name: 'Spam',
-                  description:
-                    'Low quality posts that dont add to the conversation.',
-                },
-              ],
-            },
-            {
-              identifier: 'spider',
-              blurs: 'media',
-              severity: 'alert',
-              defaultSetting: 'warn',
-              locales: [
-                {
-                  lang: 'en',
-                  name: 'Spider!',
-                  description: 'Oh no its a spider.',
-                },
-              ],
-            },
-            {
-              identifier: 'cool',
-              blurs: 'none',
-              severity: 'inform',
-              defaultSetting: 'warn',
-              locales: [
-                {
-                  lang: 'en',
-                  name: 'Cool',
-                  description: 'The coolest peeps in the atmosphere.',
-                },
-              ],
-            },
-            {
-              identifier: 'curate',
-              blurs: 'none',
-              severity: 'none',
-              defaultSetting: 'warn',
-              locales: [
-                {
-                  lang: 'en',
-                  name: 'Curation filter',
-                  description: 'We just dont want to see it as much.',
-                },
-              ],
-            },
-          ],
-        },
-        createdAt: date.next().value,
+    await labeler.create(app.bsky.labeler.service, {
+      policies: {
+        labelValues: [
+          '!hide',
+          'porn',
+          'rude',
+          'spam',
+          'spider',
+          'misinfo',
+          'cool',
+          'curate',
+        ],
+        labelValueDefinitions: [
+          {
+            identifier: 'rude',
+            blurs: 'content',
+            severity: 'alert',
+            defaultSetting: 'warn',
+            adultOnly: true,
+            locales: [
+              {
+                lang: 'en',
+                name: 'Rude',
+                description: 'Just such a jerk, you wouldnt believe it.',
+              },
+            ],
+          },
+          {
+            identifier: 'spam',
+            blurs: 'content',
+            severity: 'inform',
+            defaultSetting: 'hide',
+            locales: [
+              {
+                lang: 'en',
+                name: 'Spam',
+                description:
+                  'Low quality posts that dont add to the conversation.',
+              },
+            ],
+          },
+          {
+            identifier: 'spider',
+            blurs: 'media',
+            severity: 'alert',
+            defaultSetting: 'warn',
+            locales: [
+              {
+                lang: 'en',
+                name: 'Spider!',
+                description: 'Oh no its a spider.',
+              },
+            ],
+          },
+          {
+            identifier: 'cool',
+            blurs: 'none',
+            severity: 'inform',
+            defaultSetting: 'warn',
+            locales: [
+              {
+                lang: 'en',
+                name: 'Cool',
+                description: 'The coolest peeps in the atmosphere.',
+              },
+            ],
+          },
+          {
+            identifier: 'curate',
+            blurs: 'none',
+            severity: 'none',
+            defaultSetting: 'warn',
+            locales: [
+              {
+                lang: 'en',
+                name: 'Curation filter',
+                description: 'We just dont want to see it as much.',
+              },
+            ],
+          },
+        ],
       },
-    )
+      createdAt: date.next().value,
+    })
     await createLabel(env.bsky.db, {
       uri: alice.assertDid,
       cid: '',
       val: 'rude',
-      src: labeler.did,
+      src: labeler.assertDid,
     })
     await createLabel(env.bsky.db, {
       uri: `at://${alice.assertDid}/app.bsky.feed.generator/alice-favs`,
       cid: '',
       val: 'cool',
-      src: labeler.did,
+      src: labeler.assertDid,
     })
     await createLabel(env.bsky.db, {
       uri: bob.assertDid,
       cid: '',
       val: 'cool',
-      src: labeler.did,
+      src: labeler.assertDid,
     })
     await createLabel(env.bsky.db, {
       uri: carla.assertDid,
       cid: '',
       val: 'spam',
-      src: labeler.did,
+      src: labeler.assertDid,
     })
   }
 
   // Create lists and add people to the lists
   {
-    const flowerLovers = await alice.app.bsky.graph.list.create(
-      { repo: alice.assertDid },
-      {
-        name: 'Flower Lovers',
-        purpose: 'app.bsky.graph.defs#curatelist',
-        createdAt: new Date().toISOString(),
-        description: 'A list of posts about flowers',
-      },
-    )
-    const labelHaters = await bob.app.bsky.graph.list.create(
-      { repo: bob.assertDid },
-      {
-        name: 'Label Haters',
-        purpose: 'app.bsky.graph.defs#modlist',
-        createdAt: new Date().toISOString(),
-        description: 'A list of people who hate labels',
-      },
-    )
-    await alice.app.bsky.graph.listitem.create(
-      { repo: alice.assertDid },
-      {
-        subject: bob.assertDid,
-        createdAt: new Date().toISOString(),
-        list: new RecordRef(flowerLovers.uri, flowerLovers.cid).uriStr,
-      },
-    )
-    await bob.app.bsky.graph.listitem.create(
-      { repo: bob.assertDid },
-      {
-        subject: alice.assertDid,
-        createdAt: new Date().toISOString(),
-        list: new RecordRef(labelHaters.uri, labelHaters.cid).uriStr,
-      },
-    )
+    const flowerLovers = await alice.create(app.bsky.graph.list, {
+      name: 'Flower Lovers',
+      purpose: 'app.bsky.graph.defs#curatelist',
+      createdAt: currentDatetimeString(),
+      description: 'A list of posts about flowers',
+    })
+    const labelHaters = await bob.create(app.bsky.graph.list, {
+      name: 'Label Haters',
+      purpose: 'app.bsky.graph.defs#modlist',
+      createdAt: currentDatetimeString(),
+      description: 'A list of people who hate labels',
+    })
+    await alice.create(app.bsky.graph.listitem, {
+      subject: bob.assertDid,
+      createdAt: currentDatetimeString(),
+      list: new RecordRef(flowerLovers.uri, flowerLovers.cid).uriStr,
+    })
+    await bob.create(app.bsky.graph.listitem, {
+      subject: alice.assertDid,
+      createdAt: currentDatetimeString(),
+      list: new RecordRef(labelHaters.uri, labelHaters.cid).uriStr,
+    })
   }
 
   await setVerifier(env.bsky.db, alice.assertDid)
@@ -693,7 +646,7 @@ const createLabel = async (
     .execute()
 }
 
-const setVerifier = async (db: Database, did: string) => {
+const setVerifier = async (db: Database, did: DidString) => {
   await db.db
     .updateTable('actor')
     .set({ trustedVerifier: true })

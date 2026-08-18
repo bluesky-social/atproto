@@ -1,10 +1,11 @@
-import type { AtpAgent } from '@atproto/api'
-import type { DidString } from '@atproto/lex'
+import { Client, type DidString, type HandleString } from '@atproto/lex'
+import { PasswordSession } from '@atproto/lex-password-session'
+import { com } from './lexicons/index.js'
 import type { TestPds } from './pds.js'
 
 export type ServiceUserDetails = {
   email: string
-  handle: string
+  handle: HandleString
   password: string
 }
 
@@ -14,61 +15,72 @@ export type ServiceMigrationOptions = {
 }
 
 export class ServiceProfile {
+  protected client: Client
+
   protected constructor(
     protected pds: TestPds,
     /** @note assumes the session is already authenticated */
-    protected agent: AtpAgent,
+    protected session: PasswordSession,
     protected userDetails: ServiceUserDetails,
-  ) {}
+  ) {
+    this.client = new Client(session)
+  }
 
   get did(): DidString {
-    return this.agent.assertDid
+    return this.session.did
   }
 
   async migrateTo(newPds: TestPds, options: ServiceMigrationOptions = {}) {
-    const newAgent = newPds.getAgent()
+    const newPdsClient = newPds.getClient()
 
-    const newPdsDesc = await newAgent.com.atproto.server.describeServer()
-    const serviceAuth = await this.agent.com.atproto.server.getServiceAuth({
-      aud: newPdsDesc.data.did,
-      lxm: 'com.atproto.server.createAccount',
-    })
-
-    const inviteCode = newPds.ctx.cfg.invites.required
-      ? await newAgent.com.atproto.server
-          .createInviteCode(
-            { useCount: 1 },
-            {
-              encoding: 'application/json',
-              headers: newPds.adminAuthHeaders(),
-            },
-          )
-          .then((res) => res.data.code)
-      : undefined
-
-    await newAgent.createAccount(
+    const newPdsDesc = await newPdsClient.call(
+      com.atproto.server.describeServer,
+    )
+    const serviceAuth = await this.client.call(
+      com.atproto.server.getServiceAuth,
       {
-        ...this.userDetails,
-        inviteCode,
-        did: this.did,
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: `Bearer ${serviceAuth.data.token}` },
+        aud: newPdsDesc.did,
+        lxm: 'com.atproto.server.createAccount',
       },
     )
 
-    // The session manager will use the "didDoc" in the result of
-    // "createAccount" in order to setup the pdsUrl. However, since are in the
-    // process of migrating, that didDoc references the old PDS. In order to
-    // avoid calling the old PDS, let's clear the pdsUrl, which will result in
-    // the (new) serviceUrl being used.
-    newAgent.sessionManager.pdsUrl = undefined
+    const inviteCode = newPds.ctx.cfg.invites.required
+      ? await newPdsClient
+          .call(
+            com.atproto.server.createInviteCode,
+            { useCount: 1 },
+            { headers: newPds.adminAuthHeaders() },
+          )
+          .then((res) => res.code)
+      : undefined
 
-    const newDidCredentialsRes =
-      await newAgent.com.atproto.identity.getRecommendedDidCredentials()
+    const { body: sessionData } = await newPdsClient.xrpc(
+      com.atproto.server.createAccount,
+      {
+        body: {
+          ...this.userDetails,
+          inviteCode,
+          did: this.did,
+        },
+        headers: { authorization: `Bearer ${serviceAuth.token}` },
+      },
+    )
 
-    await this.agent.com.atproto.identity.requestPlcOperationSignature()
+    // The "didDoc" returned by "createAccount" still references the old PDS,
+    // since we are in the process of migrating. Dropping it makes the session
+    // address the (new) service URL instead of calling the old PDS.
+    const newSession = new PasswordSession({
+      ...sessionData,
+      didDoc: undefined,
+      service: newPds.url,
+    })
+    const newClient = new Client(newSession)
+
+    const newDidCredentials = await newClient.call(
+      com.atproto.identity.getRecommendedDidCredentials,
+    )
+
+    await this.client.call(com.atproto.identity.requestPlcOperationSignature)
     const { token } = await this.pds.ctx.accountManager.db.db
       .selectFrom('email_token')
       .select('token')
@@ -76,20 +88,21 @@ export class ServiceProfile {
       .where('purpose', '=', 'plc_operation')
       .executeTakeFirstOrThrow()
 
-    const op = { ...newDidCredentialsRes.data, token }
+    const op = { ...newDidCredentials, token }
     Object.assign((op.services ??= {}), options.services)
     Object.assign((op.verificationMethods ??= {}), options.verificationMethods)
 
-    const signedPlcOperation =
-      await this.agent.com.atproto.identity.signPlcOperation(op)
+    const { operation } = await this.client.call(
+      com.atproto.identity.signPlcOperation,
+      op,
+    )
 
-    await newAgent.com.atproto.identity.submitPlcOperation({
-      operation: signedPlcOperation.data.operation,
-    })
+    await newClient.call(com.atproto.identity.submitPlcOperation, { operation })
 
-    await newAgent.com.atproto.server.activateAccount()
+    await newClient.call(com.atproto.server.activateAccount)
 
     this.pds = newPds
-    this.agent = newAgent
+    this.session = newSession
+    this.client = newClient
   }
 }

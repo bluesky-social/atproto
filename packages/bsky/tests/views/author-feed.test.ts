@@ -1,7 +1,6 @@
 import assert from 'node:assert'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
-  AppBskyActorProfile,
   AppBskyEmbedGallery,
   AppBskyEmbedImages,
   AppBskyEmbedRecordWithMedia,
@@ -15,6 +14,7 @@ import {
 } from '@atproto/api'
 import { type SeedClient, TestNetwork, authorFeedSeed } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
+import { app } from '../../src/lexicons/index.js'
 import { uriToDid } from '../../src/util/uris.js'
 import {
   forSnapshot,
@@ -24,12 +24,10 @@ import {
 } from '../_util.js'
 
 const isValidReplyRef = asPredicate(AppBskyFeedPost.validateReplyRef)
-const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)
 
 describe('pds author feed views', () => {
   let network: TestNetwork
   let agent: AtpAgent
-  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   // account dids, for convenience
@@ -44,7 +42,6 @@ describe('pds author feed views', () => {
       dbPostgresSchema: 'bsky_views_author_feed',
     })
     agent = network.bsky.getAgent()
-    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await authorFeedSeed(sc)
     alice = sc.dids.alice
@@ -418,7 +415,7 @@ describe('pds author feed views', () => {
       })
     expect(carolFeedBefore.feed).toHaveLength(0)
 
-    const { data: video } = await pdsAgent.api.com.atproto.repo.uploadBlob(
+    const { body: video } = await sc.client.uploadBlob(
       Buffer.from('notarealvideo'),
       {
         headers: sc.getHeaders(sc.dids.carol),
@@ -474,14 +471,14 @@ describe('pds author feed views', () => {
   })
 
   it('includes gallery posts in posts_with_media', async () => {
-    const { data: blob1 } = await pdsAgent.api.com.atproto.repo.uploadBlob(
+    const { body: blob1 } = await sc.client.uploadBlob(
       Buffer.from('gallery-image-1'),
       {
         headers: sc.getHeaders(sc.dids.dan),
         encoding: 'image/jpeg',
       },
     )
-    const { data: blob2 } = await pdsAgent.api.com.atproto.repo.uploadBlob(
+    const { body: blob2 } = await sc.client.uploadBlob(
       Buffer.from('gallery-image-2'),
       {
         headers: sc.getHeaders(sc.dids.dan),
@@ -602,19 +599,15 @@ describe('pds author feed views', () => {
       const post = await sc.post(alice, 'pinned post')
       await network.processAll()
 
-      const profile = await pdsAgent.com.atproto.repo.getRecord({
+      const profile = await sc.client.get(app.bsky.actor.profile, {
         repo: alice,
-        collection: 'app.bsky.actor.profile',
-        rkey: 'self',
       })
 
-      assert(isValidProfile(profile.data.value))
-
-      const newProfile: AppBskyActorProfile.Record = {
-        ...profile.data.value,
+      const newProfile = {
+        ...profile.value,
         pinnedPost: {
           uri: post.ref.uriStr,
-          cid: post.ref.cid.toString(),
+          cid: post.ref.cidStr,
         },
       }
 
@@ -728,19 +721,15 @@ describe('pds author feed views', () => {
       await sc.post(alice, 'not pinned post')
       await network.processAll()
 
-      const profile = await pdsAgent.com.atproto.repo.getRecord({
+      const profile = await sc.client.get(app.bsky.actor.profile, {
         repo: alice,
-        collection: 'app.bsky.actor.profile',
-        rkey: 'self',
       })
 
-      assert(isValidProfile(profile.data.value))
-
-      const newProfile: AppBskyActorProfile.Record = {
-        ...profile.data.value,
+      const newProfile = {
+        ...profile.value,
         pinnedPost: {
           uri: bobPost.ref.uriStr,
-          cid: bobPost.ref.cid.toString(),
+          cid: bobPost.ref.cidStr,
         },
       }
 

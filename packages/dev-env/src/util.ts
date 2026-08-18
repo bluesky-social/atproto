@@ -2,6 +2,7 @@ import * as plc from '@did-plc/lib'
 import { request } from 'undici'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
+import type { DidString } from '@atproto/lex'
 import type { TestBsky } from './bsky.js'
 import type { TestPds } from './pds.js'
 import type { DidAndKey } from './types.js'
@@ -88,13 +89,13 @@ export const createDidAndKey = async (opts: {
 }): Promise<DidAndKey> => {
   const { plcUrl, handle, pds } = opts
   const key = await Secp256k1Keypair.create({ exportable: true })
-  const did = await new plc.Client(plcUrl).createDid({
+  const did = (await new plc.Client(plcUrl).createDid({
     signingKey: key.did(),
     rotationKeys: [key.did()],
     handle,
     pds,
     signer: key,
-  })
+  })) as DidString
   return {
     key,
     did,

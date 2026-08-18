@@ -1,8 +1,4 @@
-import {
-  type AtpAgent,
-  ChatBskyConvoDefs,
-  type ToolsOzoneModerationEmitEvent,
-} from '@atproto/api'
+import type { AtpAgent, ChatBskyConvoDefs } from '@atproto/api'
 import { HOUR } from '@atproto/common'
 import {
   type ImageRef,
@@ -13,6 +9,7 @@ import {
   type TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
+import { getBlobCidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import type { ImageInvalidator } from '../src/image-invalidator.js'
 import { EventReverser } from '../src/index.js'
@@ -29,6 +26,8 @@ import {
 } from '../src/lexicon/types/tools/ozone/moderation/defs.js'
 import { TAKEDOWN_LABEL } from '../src/mod-service/index.js'
 import { forSnapshot, identity } from './_util.js'
+
+type EmitEventOpts = Parameters<ModeratorClient['emitEvent']>[0]
 
 describe('moderation', () => {
   let network: TestNetwork
@@ -222,23 +221,21 @@ describe('moderation', () => {
       })
 
       // Verify reportA
-      expect(reportA.subject.$type).toBe('chat.bsky.convo.defs#convoRef')
-      expect(ChatBskyConvoDefs.isConvoRef(reportA.subject)).toBe(true)
-      if (ChatBskyConvoDefs.isConvoRef(reportA.subject)) {
-        expect(reportA.subject.convoId).toBe(convoId1)
-        expect(reportA.subject.did).toBe(sc.dids.carol)
-      }
+      expect(reportA.subject).toMatchObject({
+        $type: 'chat.bsky.convo.defs#convoRef',
+        convoId: convoId1,
+        did: sc.dids.carol,
+      })
       expect(reportA.reasonType).toBe(REASONSPAM)
       expect(reportA.reportedBy).toBe(sc.dids.alice)
       expect(reportA.id).toBeGreaterThan(0)
 
       // Verify reportB
-      expect(reportB.subject.$type).toBe('chat.bsky.convo.defs#convoRef')
-      expect(ChatBskyConvoDefs.isConvoRef(reportB.subject)).toBe(true)
-      if (ChatBskyConvoDefs.isConvoRef(reportB.subject)) {
-        expect(reportB.subject.convoId).toBe(convoId2)
-        expect(reportB.subject.did).toBe(sc.dids.carol)
-      }
+      expect(reportB.subject).toMatchObject({
+        $type: 'chat.bsky.convo.defs#convoRef',
+        convoId: convoId2,
+        did: sc.dids.carol,
+      })
       expect(reportB.reasonType).toBe(REASONOTHER)
       expect(reportB.reason).toBe('defamation')
       expect(reportB.reportedBy).toBe(sc.dids.carol)
@@ -350,8 +347,8 @@ describe('moderation', () => {
     it('reverses status when revert event is triggered.', async () => {
       const alicesPostRef = sc.posts[sc.dids.alice][0].ref
       const emitModEvent = async (
-        event: ToolsOzoneModerationEmitEvent.InputSchema['event'],
-        overwrites: Partial<ToolsOzoneModerationEmitEvent.InputSchema> = {},
+        event: EmitEventOpts['event'],
+        overwrites: Partial<EmitEventOpts> = {},
       ) => {
         const baseAction = {
           subject: {
@@ -360,7 +357,7 @@ describe('moderation', () => {
             cid: alicesPostRef.cidStr,
           },
           createdBy: 'did:example:admin',
-        }
+        } satisfies Partial<EmitEventOpts>
         return modClient.emitEvent({
           event,
           ...baseAction,
@@ -802,8 +799,8 @@ describe('moderation', () => {
     })
 
     async function emitLabelEvent(
-      opts: Partial<ToolsOzoneModerationEmitEvent.InputSchema> & {
-        subject: ToolsOzoneModerationEmitEvent.InputSchema['subject']
+      opts: Partial<EmitEventOpts> & {
+        subject: EmitEventOpts['subject']
         createLabelVals: ModEventLabel['createLabelVals']
         negateLabelVals: ModEventLabel['negateLabelVals']
         durationInHours?: ModEventLabel['durationInHours']
@@ -825,8 +822,8 @@ describe('moderation', () => {
     }
 
     async function reverse(
-      opts: Partial<ToolsOzoneModerationEmitEvent.InputSchema> & {
-        subject: ToolsOzoneModerationEmitEvent.InputSchema['subject']
+      opts: Partial<EmitEventOpts> & {
+        subject: EmitEventOpts['subject']
       },
     ) {
       await modClient.emitEvent({
@@ -883,7 +880,7 @@ describe('moderation', () => {
         .getPresetUri(
           'feed_thumbnail',
           sc.dids.carol,
-          blob.image.ref.toString(),
+          getBlobCidString(blob.image),
         )
         .replace(ctx.cfg.publicUrl || '', network.bsky.url)
       // Warm image server cache
@@ -892,7 +889,7 @@ describe('moderation', () => {
       expect(cached.headers.get('x-cache')).toEqual('hit')
       await modClient.performTakedown({
         subject: recordSubject(post.ref),
-        subjectBlobCids: [blob.image.ref.toString()],
+        subjectBlobCids: [getBlobCidString(blob.image)],
       })
       await ozone.processAll()
     })
@@ -903,12 +900,12 @@ describe('moderation', () => {
       })
 
       expect(subjectStatuses[0].subjectBlobCids).toEqual([
-        blob.image.ref.toString(),
+        getBlobCidString(blob.image),
       ])
     })
 
     it('prevents resolution of blob', async () => {
-      const blobPath = `/blob/${sc.dids.carol}/${blob.image.ref.toString()}`
+      const blobPath = `/blob/${sc.dids.carol}/${getBlobCidString(blob.image)}`
       const resolveBlob = await fetch(`${network.bsky.url}${blobPath}`)
       expect(resolveBlob.status).toEqual(404)
       expect(await resolveBlob.json()).toEqual({
@@ -927,7 +924,7 @@ describe('moderation', () => {
     })
 
     it('invalidates the image in the cdn', async () => {
-      const blobCid = blob.image.ref.toString()
+      const blobCid = getBlobCidString(blob.image)
       expect(mockInvalidator.invalidated.length).toBe(1)
       expect(mockInvalidator.invalidated.at(0)?.subject).toBe(blobCid)
       expect(mockInvalidator.invalidated.at(0)?.paths.at(0)).toEqual(
@@ -942,7 +939,7 @@ describe('moderation', () => {
       const res = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
           did: sc.dids.carol,
-          blob: blob.image.ref.toString(),
+          blob: getBlobCidString(blob.image),
         },
         { headers: network.pds.adminAuthHeaders() },
       )
@@ -952,13 +949,13 @@ describe('moderation', () => {
     it('restores blob when action is reversed.', async () => {
       await modClient.performReverseTakedown({
         subject: recordSubject(post.ref),
-        subjectBlobCids: [blob.image.ref.toString()],
+        subjectBlobCids: [getBlobCidString(blob.image)],
       })
 
       await ozone.processAll()
 
       // Can resolve blob
-      const blobPath = `/blob/${sc.dids.carol}/${blob.image.ref.toString()}`
+      const blobPath = `/blob/${sc.dids.carol}/${getBlobCidString(blob.image)}`
       const resolveBlob = await fetch(`${network.bsky.url}${blobPath}`)
       expect(resolveBlob.status).toEqual(200)
 
@@ -973,7 +970,7 @@ describe('moderation', () => {
       const res = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
           did: sc.dids.carol,
-          blob: blob.image.ref.toString(),
+          blob: getBlobCidString(blob.image),
         },
         { headers: network.pds.adminAuthHeaders() },
       )

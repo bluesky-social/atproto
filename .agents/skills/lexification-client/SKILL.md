@@ -363,10 +363,10 @@ See [lex-schema](../lex-schema/SKILL.md) for the full `$`-accessor cheat sheet.
 
 ## Tests
 
-Test migration is partial and lags the source migration. The `pds` and `bsky`
-suites mostly still drive `AtpAgent` from `@atproto/api`, and `dev-env` exposes
-both `getAgent(): AtpAgent` and `getClient(): Client` for exactly that reason.
-`ozone` is entirely un-migrated.
+Test migration is partial and lags the source migration. The `pds`, `bsky`, and
+`ozone` suites mostly still drive `AtpAgent` from `@atproto/api`, so `TestPds`,
+`TestBsky`, and `TestOzone` each expose both `getAgent(): AtpAgent` and
+`getClient(): Client`, and `SeedClient` carries both an `agent` and a `client`.
 
 Default to leaving passing tests alone: during a source migration their value
 is being an unchanged runtime regression check. Two things force a change:
@@ -381,6 +381,52 @@ is being an unchanged runtime regression check. Two things force a change:
 
 Avoid half-migrating a file — a suite mixing `agent.api.…` and `client.call(…)`
 for the same operation is harder to read than either end state.
+
+### Branded types reach the tests first
+
+Migrating a shared `dev-env` helper retypes its signature against the generated
+schemas, so every caller inherits the branded scalars at once — this is where
+most of the fallout from a `dev-env` change lands. The cheap fixes, in order of
+how far they reach:
+
+- Brand at the **source** rather than the call site: `DidAndKey.did` typed
+  `DidString` fixes every test that passes `network.ozone.adminAccnt.did`.
+- `new Date().toISOString()` → `currentDatetimeString()` /
+  `toDatetimeString(d)`; a test helper's `subject: string` param →
+  `DidString | AtUriString`.
+- Derive a test's local types from the helper instead of `@atproto/api`, so they
+  track it automatically: `Parameters<ModeratorClient['emitEvent']>[0]`.
+- `as const` on a fixture object literal, where the widening — not the value —
+  is what broke.
+
+An open union (`emitEvent`'s `subject`) only closes over its declared refs;
+anything else needs an `Unknown$Type` cast. Keep that cast inside the helper,
+not at every call site.
+
+### Blobs don't survive a mixed read/write pair
+
+The legacy `BlobRef` is a **class** carrying `$type: 'blob'` only through its
+`toJSON()`; the lex `BlobRef` is a plain object that carries `$type` as an own
+property. So a blob read through one stack and written through the other
+serializes wrong, and the PDS rejects it at runtime:
+
+```
+XrpcResponseError: Invalid app.bsky.actor.profile record:
+Expected blob value type (got {"ref": ..., "mimeType": ...}) at $.record.avatar
+```
+
+```diff
+- const profile = await pdsAgent.com.atproto.repo.getRecord({ … })   // legacy BlobRef
+- await sc.updateProfile(alice, { ...profile.data.value, pinnedPost })  // lex writer
++ const profile = await sc.client.get(app.bsky.actor.profile, { repo: alice })
++ await sc.updateProfile(alice, { ...profile.value, pinnedPost })
+```
+
+Types catch this wherever the blob flows through a typed field, but **not**
+through a `Record<string, unknown>` / `LexMap` parameter — `SeedClient.updateProfile`
+is the one to check by hand. After migrating a helper that returns or accepts
+blobs, grep its call sites for the ones sourcing a blob from the other stack.
+Read and write through the same client and the problem disappears.
 
 ## Import source summary
 

@@ -19,7 +19,7 @@ export class TestFeedGen {
   constructor(
     public port: number,
     public server: http.Server,
-    public did: string,
+    public did: DidString,
   ) {
     this.terminator = createHttpTerminator({ server })
   }

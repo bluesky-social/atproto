@@ -31,15 +31,17 @@ describe('get profiles through ozone', () => {
 
   it('allows getting profiles by dids for takendown accounts.', async () => {
     const getProfiles = async (actors: string[]) => {
-      const { data } = await modClient.agent.app.bsky.actor.getProfiles(
-        { actors },
-        {
-          headers: await network.ozone.modHeaders(
-            'app.bsky.actor.getProfiles',
-            'admin',
-          ),
-        },
-      )
+      const { data } = await network.ozone
+        .getAgent()
+        .app.bsky.actor.getProfiles(
+          { actors },
+          {
+            headers: await network.ozone.modHeaders(
+              'app.bsky.actor.getProfiles',
+              'admin',
+            ),
+          },
+        )
 
       return data.profiles
     }

@@ -12,6 +12,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { getBlobCidString } from '@atproto/lex'
 
 describe('moderation', () => {
   let network: TestNetwork
@@ -46,7 +47,7 @@ describe('moderation', () => {
     blobSubject = {
       $type: 'com.atproto.admin.defs#repoBlobRef',
       did: sc.dids.carol,
-      cid: blobRef.image.ref.toString(),
+      cid: getBlobCidString(blobRef.image),
     }
   })
 

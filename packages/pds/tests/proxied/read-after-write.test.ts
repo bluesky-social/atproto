@@ -9,8 +9,10 @@ import {
   type AtpAgent,
 } from '@atproto/api'
 import { type RecordRef, type SeedClient, TestNetwork } from '@atproto/dev-env'
+import { currentDatetimeString } from '@atproto/lex'
+import { getBlobCidString } from '@atproto/lex-data'
 import type { DidString } from '@atproto/syntax'
-import type { app } from '../../src/lexicons/index.js'
+import { app } from '../../src/lexicons/index.js'
 import basicSeed from '../seeds/basic.js'
 
 describe('proxy read after write', () => {
@@ -65,7 +67,7 @@ describe('proxy read after write', () => {
         network.pds.ctx.cfg.bskyAppView.cdnUrlPattern,
         'avatar',
         alice,
-        blob.image.ref.toString(),
+        getBlobCidString(blob.image),
       ),
     )
   })
@@ -154,8 +156,8 @@ describe('proxy read after write', () => {
       '../dev-env/assets/key-landscape-small.jpg',
       'image/jpeg',
     )
-    const replyRes1 = await agent.api.app.bsky.feed.post.create(
-      { repo: alice },
+    const replyRes1 = await sc.client.create(
+      app.bsky.feed.post,
       {
         text: 'images test',
         reply: {
@@ -172,12 +174,12 @@ describe('proxy read after write', () => {
             },
           ],
         },
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
       },
-      sc.getHeaders(alice),
+      { repo: alice, headers: sc.getHeaders(alice) },
     )
-    const replyRes2 = await agent.api.app.bsky.feed.post.create(
-      { repo: alice },
+    const replyRes2 = await sc.client.create(
+      app.bsky.feed.post,
       {
         text: 'external test',
         reply: {
@@ -196,9 +198,9 @@ describe('proxy read after write', () => {
             thumb: img.image,
           },
         },
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
       },
-      sc.getHeaders(alice),
+      { repo: alice, headers: sc.getHeaders(alice) },
     )
 
     const res = await agent.api.app.bsky.feed.getPostThread(
@@ -218,7 +220,7 @@ describe('proxy read after write', () => {
         network.pds.ctx.cfg.bskyAppView.cdnUrlPattern,
         'feed_fullsize',
         alice,
-        img.image.ref.toString(),
+        getBlobCidString(img.image),
       ),
     )
     expect(embed.images[0].aspectRatio).toEqual({ height: 2, width: 1 })
@@ -236,14 +238,14 @@ describe('proxy read after write', () => {
         network.pds.ctx.cfg.bskyAppView.cdnUrlPattern,
         'feed_thumbnail',
         alice,
-        img.image.ref.toString(),
+        getBlobCidString(img.image),
       ),
     )
   })
 
   it('handles read after write on threads with record embeds', async () => {
-    const replyRes = await agent.api.app.bsky.feed.post.create(
-      { repo: alice },
+    const replyRes = await sc.client.create(
+      app.bsky.feed.post,
       {
         text: 'blah',
         reply: {
@@ -254,9 +256,9 @@ describe('proxy read after write', () => {
           $type: 'app.bsky.embed.record',
           record: sc.posts[alice][0].ref.raw,
         },
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
       },
-      sc.getHeaders(alice),
+      { repo: alice, headers: sc.getHeaders(alice) },
     )
     const res = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[carol][0].ref.uriStr },
@@ -276,13 +278,13 @@ describe('proxy read after write', () => {
   })
 
   it('handles read after write on getTimeline', async () => {
-    const postRes = await agent.api.app.bsky.feed.post.create(
-      { repo: alice },
+    const postRes = await sc.client.create(
+      app.bsky.feed.post,
       {
         text: 'poast',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
       },
-      sc.getHeaders(alice),
+      { repo: alice, headers: sc.getHeaders(alice) },
     )
     const res = await agent.api.app.bsky.feed.getTimeline(
       {},
