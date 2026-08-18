@@ -48,7 +48,6 @@ jobs:
         env:
           npm_config_tag: alpha
         run: |
-          pnpm changeset status
           pnpm changeset version --snapshot alpha
           pnpm build
           pnpm publish -r --tag alpha --provenance --no-git-checks --access public
