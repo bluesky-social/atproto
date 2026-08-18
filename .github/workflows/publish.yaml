@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+      - permissioned-data-alpha
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   id-token: write
@@ -29,7 +34,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
-      - name: Publish
+      - name: Publish stable releases
+        if: github.ref_name == 'main'
         uses: changesets/action@v1
         id: changesets
         with:
@@ -37,3 +43,12 @@ jobs:
           version: pnpm run version-packages
           commit: 'Version packages'
           title: 'Version packages'
+      - name: Publish alpha snapshots
+        if: github.ref_name == 'permissioned-data-alpha'
+        env:
+          npm_config_tag: alpha
+        run: |
+          pnpm changeset status
+          pnpm changeset version --snapshot alpha
+          pnpm build
+          pnpm publish -r --tag alpha --provenance --no-git-checks --access public
