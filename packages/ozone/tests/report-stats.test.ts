@@ -357,38 +357,42 @@ describe('report-stats', () => {
   })
 
   describe('report type group', () => {
-    it('computes stats for the Legacy group', async () => {
+    it('computes per-group stats for Legacy group', async () => {
       await modClient.computeStats()
 
-      const spamStats = await getLiveStats({
+      const legacyStats = await getLiveStats({
         reportTypes: REPORT_TYPE_GROUPS.Legacy,
       })
       const allStats = await getLiveStats()
 
-      expect(spamStats.inboundCount).toBeGreaterThanOrEqual(2)
+      // Legacy group includes spam, etc. seeded above
+      expect(legacyStats.inboundCount).toBeGreaterThanOrEqual(2)
 
+      // Aggregate should be >= legacy group
       expect(allStats.inboundCount).toBeGreaterThanOrEqual(
-        spamStats.inboundCount!,
+        legacyStats.inboundCount!,
       )
     })
 
-    it('isolates report type groups', async () => {
+    it('only counts matching report types within group', async () => {
       await modClient.computeStats()
 
-      const spamStats = await getLiveStats({
+      const legacyStats = await getLiveStats({
         reportTypes: REPORT_TYPE_GROUPS.Legacy,
       })
-      const threatStats = await getLiveStats({
+      const violenceStats = await getLiveStats({
         reportTypes: REPORT_TYPE_GROUPS.Violence,
       })
 
-      expect(spamStats.inboundCount).toBeGreaterThanOrEqual(2)
-      expect(spamStats.pendingCount).toBeGreaterThanOrEqual(0)
-      expect(threatStats.inboundCount).toBeGreaterThanOrEqual(1)
-      expect(threatStats.pendingCount).toBeGreaterThanOrEqual(1)
+      // Legacy group should include spam + misleading
+      expect(legacyStats.inboundCount).toBeGreaterThanOrEqual(2)
+      expect(legacyStats.pendingCount).toBeGreaterThanOrEqual(0)
+      // Violence group should only include threats
+      expect(violenceStats.inboundCount).toBeGreaterThanOrEqual(1)
+      expect(violenceStats.pendingCount).toBeGreaterThanOrEqual(1)
     })
 
-    it('tracks escalation activities for a reason', async () => {
+    it('tracks escalated counts within group', async () => {
       const db = network.ozone.ctx.db
 
       await sc.createReport({
@@ -433,6 +437,17 @@ describe('report-stats', () => {
         reportTypes: REPORT_TYPE_GROUPS.Legacy,
       })
       expect(stats.escalatedCount).toBeGreaterThanOrEqual(1)
+    })
+
+    it('returns zeroed stats for unused report type group', async () => {
+      await modClient.computeStats()
+
+      // Civic group has no seeded reports: all counts should be 0
+      const stats = await getLiveStats({
+        reportTypes: REPORT_TYPE_GROUPS.Civic,
+      })
+      expect(stats.inboundCount).toBe(0)
+      expect(stats.pendingCount).toBe(0)
     })
 
     it('calculates handling and resolution time for the current close', async () => {

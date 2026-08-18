@@ -6,7 +6,11 @@ import type { ReportStat } from '../db/schema/report_stat.js'
 import { jsonb } from '../db/types.js'
 import { dbLogger } from '../logger.js'
 
-/** Broad report-type groups shared with the Ozone analytics frontend. */
+/**
+ * Grouped report types. Stats are computed per group rather than per individual report type.
+ * Frontend should match for proper stat lookup.
+ * https://github.com/bluesky-social/ozone/blob/main/components/reports/helpers/getType.ts
+ */
 export const REPORT_TYPE_GROUPS: Record<string, string[]> = {
   Legacy: [
     'com.atproto.moderation.defs#reasonSpam',
@@ -142,6 +146,7 @@ type LifecycleMetric = Exclude<
   'groupKind' | 'queueId' | 'reportType' | 'moderatorDid'
 >
 
+// Batched query result types
 type BatchedStats = {
   queueInbound: CountByQueueRow[]
   queuePending: CountByQueueRow[]
@@ -181,6 +186,10 @@ export class ReportStatsService {
     return (db: Database) => new ReportStatsService(db)
   }
 
+  /**
+   * Compute stats for today and finalize yesterday if needed.
+   * Called periodically by the StatsComputer daemon.
+   */
   async materializeAll(opts?: { force?: boolean }): Promise<{
     rowsWritten: number
   }> {
@@ -188,8 +197,10 @@ export class ReportStatsService {
       const start = Date.now()
       const today = toDateString(new Date())
       const yesterday = toDateString(new Date(Date.now() - 24 * 60 * 60 * 1000))
+      // Always compute today's stats
       let rowsWritten = await this.materializeDate(today, opts)
 
+      // Finalize yesterday if its snapshot is missing or stale
       const yesterdayRow = await this.db.db
         .selectFrom('report_stat')
         .select('computedAt')
@@ -220,6 +231,9 @@ export class ReportStatsService {
     }
   }
 
+  /**
+   * Compute stats for a specific date range. Used by the refreshStats endpoint.
+   */
   async refreshDateRange(opts: {
     startDate: string
     endDate: string
@@ -276,6 +290,7 @@ export class ReportStatsService {
     )
   }
 
+  /** Compute and write all groups for a single date. */
   private async materializeDate(
     date: string,
     opts?: { force?: boolean },
@@ -284,6 +299,8 @@ export class ReportStatsService {
     const batched = await this.computeBatchedStats(date)
     const today = toDateString(new Date())
     const isToday = date === today
+
+    // Batch the cache check so we don't issue one SELECT per group.
     const existing = await this.fetchExistingStatsByKey(date)
     const rows: UpsertRow[] = []
 
@@ -291,6 +308,7 @@ export class ReportStatsService {
       try {
         const cached = existing.get(groupKey(group))
         if (!opts?.force && cached) {
+          // Historical dates: never recompute. Today: recompute if stale.
           if (!isToday) continue
           const age = Date.now() - new Date(cached.computedAt).getTime()
           if (age < REPORT_STAT_LIVE_TTL) continue
@@ -319,6 +337,7 @@ export class ReportStatsService {
     return rows.length
   }
 
+  /** Fetch all stat rows for a date, keyed by groupKey for O(1) lookup. */
   private async fetchExistingStatsByKey(
     date: string,
   ): Promise<Map<string, Selectable<ReportStat>>> {
@@ -339,6 +358,7 @@ export class ReportStatsService {
     )
   }
 
+  /** List out the groups to compute stats for. */
   private async enumerateGroups(): Promise<ReportStatGroup[]> {
     const [queues, members] = await Promise.all([
       this.db.db
@@ -360,18 +380,23 @@ export class ReportStatsService {
     ])
 
     return [
+      // aggregate
       { queueId: null, moderatorDid: null, reportTypes: null },
+      // per queue
       ...queues.map((queue) => ({
         queueId: queue.id,
         moderatorDid: null,
         reportTypes: null,
       })),
+      // unqueued
       { queueId: -1, moderatorDid: null, reportTypes: null },
+      // per moderator
       ...members.map((member) => ({
         queueId: null,
         moderatorDid: member.did,
         reportTypes: null,
       })),
+      // per report type group
       ...Object.values(REPORT_TYPE_GROUPS).map((reportTypes) => ({
         queueId: null,
         moderatorDid: null,
@@ -380,6 +405,10 @@ export class ReportStatsService {
     ]
   }
 
+  /**
+   * Run batched GROUP BY queries for a calendar date.
+   * Returns 5 result sets covering all group types.
+   */
   private async computeBatchedStats(date: string): Promise<BatchedStats> {
     const dayStart = `${date}T00:00:00.000Z`
     const dayEnd = `${nextDate(date)}T00:00:00.000Z`
@@ -798,6 +827,10 @@ function num(value: Numeric | undefined): number {
   return value == null ? 0 : Number(value)
 }
 
+/**
+ * Stable key for a stat group. reportTypes arrays are JSON-stringified in
+ * stored order, which matches REPORT_TYPE_GROUPS.
+ */
 function groupKey(group: ReportStatGroup): string {
   return [
     group.queueId ?? 'null',
