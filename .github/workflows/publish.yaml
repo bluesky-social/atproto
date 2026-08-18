@@ -48,6 +48,6 @@ jobs:
         env:
           npm_config_tag: alpha
         run: |
-          pnpm changeset version --snapshot alpha
+          pnpm changeset version --snapshot spaces-alpha
           pnpm build
-          pnpm --filter @atproto/crypto publish --tag alpha --provenance --no-git-checks --access
+          pnpm publish -r --tag alpha --provenance --no-git-checks --access public
