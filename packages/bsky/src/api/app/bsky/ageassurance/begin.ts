@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import { getAgeAssuranceRegionConfig } from '@bsky/sdk/utils'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import {
@@ -22,10 +23,7 @@ import {
   serializeKWSExternalPayloadV2,
 } from '../../../age-assurance/kws/external-payload.js'
 import { createEvent } from '../../../age-assurance/stash.js'
-import {
-  createLocationString,
-  getAgeAssuranceRegionConfig,
-} from '../../../age-assurance/util.js'
+import { createLocationString } from '../../../age-assurance/util.js'
 import { getClientUa } from '../../../kws/util.js'
 
 export default function (server: Server, ctx: AppContext) {

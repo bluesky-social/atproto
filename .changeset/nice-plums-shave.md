@@ -2,4 +2,4 @@
 '@atproto/bsky': patch
 ---
 
-Drop the runtime dependency on `@atproto/api` by porting the age assurance region/rule helpers onto the generated `@atproto/lex` schemas.
+Drop the runtime dependency on `@atproto/api`, sourcing the age assurance region and rule helpers from `@bsky/sdk` instead.
