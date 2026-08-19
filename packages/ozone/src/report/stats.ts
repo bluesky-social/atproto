@@ -123,15 +123,9 @@ type QueueCountRow = {
   queueId: number | null
   count: string
 }
-type TypeCountRow = {
-  reportType: string
-  count: string
-}
-type LifecycleRow = {
-  groupKind: 'aggregate' | 'queue' | 'reportType' | 'moderator'
+type QueueWindowRow = {
   queueId: number | null
-  reportType: string | null
-  moderatorDid: string | null
+  inboundCount: string
   closedCount: string
   actionedCount: string
   acknowledgedCount: string
@@ -139,17 +133,40 @@ type LifecycleRow = {
   labelActionCount: string
   tagActionCount: string
   takedownActionCount: string
-  ahtDurationSec: string
+  ahtDurationSec: string | null
   ahtSampleCount: string
-  resolutionDurationSec: string
+  resolutionDurationSec: string | null
+  resolutionSampleCount: string
+}
+type TypeCountRow = {
+  reportType: string
+  count: string
+}
+type TypeWindowRow = Omit<QueueWindowRow, 'queueId'> & {
+  reportType: string
+}
+type ModeratorWindowRow = Omit<QueueWindowRow, 'queueId'> & {
+  did: string
+}
+type LifecycleWindowRow = {
+  closedCount: string
+  actionedCount: string
+  acknowledgedCount: string
+  escalatedCount: string
+  labelActionCount: string
+  tagActionCount: string
+  takedownActionCount: string
+  ahtDurationSec: string | null
+  ahtSampleCount: string
+  resolutionDurationSec: string | null
   resolutionSampleCount: string
 }
 type BatchedStats = {
-  queueInbound: QueueCountRow[]
   queuePending: QueueCountRow[]
-  typeInbound: TypeCountRow[]
+  queueWindow: QueueWindowRow[]
   typePending: TypeCountRow[]
-  lifecycle: LifecycleRow[]
+  typeWindow: TypeWindowRow[]
+  moderator: ModeratorWindowRow[]
 }
 
 type UpsertRow = {
@@ -385,59 +402,66 @@ export class ReportStatsService {
     const dayStart = `${date}T00:00:00.000Z`
     const dayEnd = `${nextDate(date)}T00:00:00.000Z`
 
-    const [queueInbound, aggregateInbound, queuePending, aggregatePending] =
-      await Promise.all([
-        this.db.db
-          .selectFrom('report')
-          .select([
-            sql<number>`coalesce("queueId", -1)`.as('queueId'),
-            sql<string>`count(*)`.as('count'),
-          ])
-          .where('createdAt', '>=', dayStart)
-          .where('createdAt', '<', dayEnd)
-          .groupBy(sql`coalesce("queueId", -1)`)
-          .execute(),
-        this.db.db
-          .selectFrom('report')
-          .select(sql<string>`count(*)`.as('count'))
-          .where('createdAt', '>=', dayStart)
-          .where('createdAt', '<', dayEnd)
-          .executeTakeFirst(),
-        // Pending count is a snapshot of all non-closed reports at time of computation
-        this.db.db
-          .selectFrom('report')
-          .select([
-            sql<number>`coalesce("queueId", -1)`.as('queueId'),
-            sql<string>`count(*)`.as('count'),
-          ])
-          .where('status', '!=', 'closed')
-          .groupBy(sql`coalesce("queueId", -1)`)
-          .execute(),
-        // Aggregate pending (includes all reports, even un-routed)
-        this.db.db
-          .selectFrom('report')
-          .select(sql<string>`count(*)`.as('count'))
-          .where('status', '!=', 'closed')
-          .executeTakeFirst(),
-      ])
-
-    const [typeInbound, typePending] = await Promise.all([
+    const [queuePending, aggregatePending] = await Promise.all([
+      // Pending count is a snapshot of all non-closed reports at time of computation
       this.db.db
         .selectFrom('report')
-        .select(['reportType', sql<string>`count(*)`.as('count')])
-        .where('createdAt', '>=', dayStart)
-        .where('createdAt', '<', dayEnd)
-        .groupBy('reportType')
-        .execute(),
-      this.db.db
-        .selectFrom('report')
-        .select(['reportType', sql<string>`count(*)`.as('count')])
+        .select([
+          sql<number>`coalesce("queueId", -1)`.as('queueId'),
+          sql<string>`count(*)`.as('count'),
+        ])
         .where('status', '!=', 'closed')
-        .groupBy('reportType')
+        .groupBy(sql`coalesce("queueId", -1)`)
         .execute(),
+      // Aggregate pending (includes all reports, even un-routed)
+      this.db.db
+        .selectFrom('report')
+        .select(sql<string>`count(*)`.as('count'))
+        .where('status', '!=', 'closed')
+        .executeTakeFirst(),
     ])
 
-    const lifecycle = await sql<LifecycleRow>`
+    const inboundByQueue = await this.db.db
+      .selectFrom('report')
+      .select([
+        sql<number>`coalesce("queueId", -1)`.as('queueId'),
+        sql<string>`count(*)`.as('inboundCount'),
+      ])
+      .where('createdAt', '>=', dayStart)
+      .where('createdAt', '<', dayEnd)
+      .groupBy(sql`coalesce("queueId", -1)`)
+      .execute()
+
+    const aggregateInbound = await this.db.db
+      .selectFrom('report')
+      .select(sql<string>`count(*)`.as('inboundCount'))
+      .where('createdAt', '>=', dayStart)
+      .where('createdAt', '<', dayEnd)
+      .executeTakeFirst()
+
+    const typeInbound = await this.db.db
+      .selectFrom('report')
+      .select(['reportType', sql<string>`count(*)`.as('inboundCount')])
+      .where('createdAt', '>=', dayStart)
+      .where('createdAt', '<', dayEnd)
+      .groupBy('reportType')
+      .execute()
+
+    const typePending = await this.db.db
+      .selectFrom('report')
+      .select(['reportType', sql<string>`count(*)`.as('count')])
+      .where('status', '!=', 'closed')
+      .groupBy('reportType')
+      .execute()
+
+    const lifecycle = await sql<
+      LifecycleWindowRow & {
+        groupKind: 'aggregate' | 'queue' | 'reportType' | 'moderator'
+        queueId: number | null
+        reportType: string | null
+        moderatorDid: string | null
+      }
+    >`
       with lifecycle_base as (
         select
           'close' as "metricType",
@@ -498,22 +522,79 @@ export class ReportStatsService {
       group by grouping sets ((), ("statQueueId"), ("reportType"), ("moderatorDid"))
     `.execute(this.db.db)
 
+    const lifecycleFor = (
+      groupKind: 'aggregate' | 'queue' | 'reportType' | 'moderator',
+      predicate: (row: (typeof lifecycle.rows)[number]) => boolean,
+    ): LifecycleWindowRow | undefined =>
+      lifecycle.rows.find(
+        (row) => row.groupKind === groupKind && predicate(row),
+      )
+
+    const queueWindow: QueueWindowRow[] = inboundByQueue.map((row) => ({
+      queueId: row.queueId,
+      inboundCount: row.inboundCount,
+      ...emptyLifecycleWindow(),
+      ...lifecycleFor('queue', (item) => item.queueId === row.queueId),
+    }))
+    for (const row of lifecycle.rows.filter(
+      (item) =>
+        item.groupKind === 'queue' &&
+        !queueWindow.some((window) => window.queueId === item.queueId),
+    )) {
+      queueWindow.push({
+        inboundCount: '0',
+        ...row,
+        queueId: row.queueId,
+      })
+    }
+
+    const typeWindow: TypeWindowRow[] = typeInbound.map((row) => ({
+      reportType: row.reportType,
+      inboundCount: row.inboundCount,
+      ...emptyLifecycleWindow(),
+      ...lifecycleFor(
+        'reportType',
+        (item) => item.reportType === row.reportType,
+      ),
+    }))
+    for (const row of lifecycle.rows.filter(
+      (item) =>
+        item.groupKind === 'reportType' &&
+        item.reportType !== null &&
+        !typeWindow.some((window) => window.reportType === item.reportType),
+    )) {
+      typeWindow.push({
+        inboundCount: '0',
+        ...row,
+        reportType: row.reportType!,
+      })
+    }
+
+    const moderator: ModeratorWindowRow[] = lifecycle.rows
+      .filter(
+        (row) => row.groupKind === 'moderator' && row.moderatorDid !== null,
+      )
+      .map((row) => ({ did: row.moderatorDid!, inboundCount: '0', ...row }))
+
     // Inject aggregate as a synthetic row with queueId=null so resolveQueueStats can find it
     const allQueuePending: QueueCountRow[] = [
       ...queuePending,
       { queueId: null, count: aggregatePending?.count ?? '0' },
     ]
-    const allQueueInbound: QueueCountRow[] = [
-      ...queueInbound,
-      { queueId: null, count: aggregateInbound?.count ?? '0' },
-    ]
+    const aggregateLifecycle = lifecycleFor('aggregate', () => true)
+    queueWindow.push({
+      queueId: null,
+      inboundCount: aggregateInbound?.inboundCount ?? '0',
+      ...emptyLifecycleWindow(),
+      ...aggregateLifecycle,
+    })
 
     return {
-      queueInbound: allQueueInbound,
       queuePending: allQueuePending,
-      typeInbound,
+      queueWindow,
       typePending,
-      lifecycle: lifecycle.rows,
+      typeWindow,
+      moderator,
     }
   }
 
@@ -523,7 +604,7 @@ export class ReportStatsService {
     batched: BatchedStats,
   ): ReportStatistics {
     if (group.moderatorDid) {
-      return this.resolveModeratorStats(group.moderatorDid, batched.lifecycle)
+      return this.resolveModeratorStats(group.moderatorDid, batched.moderator)
     }
     if (group.reportTypes !== null) {
       return this.resolveReportTypeStats(group.reportTypes, batched)
@@ -537,16 +618,11 @@ export class ReportStatsService {
   ): AggregateStatistics | QueueStatistics {
     // queueId=null is the synthetic aggregate row
     const pending = batched.queuePending.find((r) => r.queueId === queueId)
-    const inbound = batched.queueInbound.find((r) => r.queueId === queueId)
-    const lifecycle = batched.lifecycle.find(
-      (r) =>
-        r.groupKind === (queueId === null ? 'aggregate' : 'queue') &&
-        (queueId === null || r.queueId === queueId),
-    )
+    const window = batched.queueWindow.find((r) => r.queueId === queueId)
 
     const pendingCount = num(pending?.count)
-    return this.resolveLifecycleStats(num(inbound?.count), pendingCount, [
-      ...(lifecycle ? [lifecycle] : []),
+    return this.resolveWindowStats(num(window?.inboundCount), pendingCount, [
+      ...(window ? [window] : []),
     ])
   }
 
@@ -559,32 +635,24 @@ export class ReportStatsService {
     const matchingPending = batched.typePending.filter((r) =>
       types.has(r.reportType),
     )
-    const matchingInbound = batched.typeInbound.filter((r) =>
+    const matchingWindow = batched.typeWindow.filter((r) =>
       types.has(r.reportType),
-    )
-    const lifecycle = batched.lifecycle.filter(
-      (r) =>
-        r.groupKind === 'reportType' &&
-        r.reportType !== null &&
-        types.has(r.reportType),
     )
 
     const pendingCount = sumNum(matchingPending, 'count')
-    return this.resolveLifecycleStats(
-      sumNum(matchingInbound, 'count'),
+    return this.resolveWindowStats(
+      sumNum(matchingWindow, 'inboundCount'),
       pendingCount,
-      lifecycle,
+      matchingWindow,
     )
   }
 
   private resolveModeratorStats(
     moderatorDid: string,
-    rows: LifecycleRow[],
+    rows: ModeratorWindowRow[],
   ): ModeratorStatistics {
-    const row = rows.find(
-      (r) => r.groupKind === 'moderator' && r.moderatorDid === moderatorDid,
-    )
-    const { pendingCount: _, ...stats } = this.resolveLifecycleStats(
+    const row = rows.find((r) => r.did === moderatorDid)
+    const { pendingCount: _, ...stats } = this.resolveWindowStats(
       0,
       0,
       row ? [row] : [],
@@ -592,12 +660,12 @@ export class ReportStatsService {
     return stats
   }
 
-  private resolveLifecycleStats(
+  private resolveWindowStats(
     inboundCount: number,
     pendingCount: number,
-    rows: LifecycleRow[],
+    rows: LifecycleWindowRow[],
   ): AggregateStatistics {
-    const sum = (field: keyof LifecycleRow) => sumNum(rows, field)
+    const sum = (field: keyof LifecycleWindowRow) => sumNum(rows, field)
     const closedCount = sum('closedCount')
     const actionedCount = sum('actionedCount')
     const ahtDurationSec = Math.round(sum('ahtDurationSec'))
@@ -857,6 +925,22 @@ function num(val: string | undefined | null): number {
 /** Sum a numeric string field across rows. */
 function sumNum<T>(rows: T[], field: keyof T): number {
   return rows.reduce((sum, r) => sum + Number(r[field] ?? 0), 0)
+}
+
+function emptyLifecycleWindow(): LifecycleWindowRow {
+  return {
+    closedCount: '0',
+    actionedCount: '0',
+    acknowledgedCount: '0',
+    escalatedCount: '0',
+    labelActionCount: '0',
+    tagActionCount: '0',
+    takedownActionCount: '0',
+    ahtDurationSec: '0',
+    ahtSampleCount: '0',
+    resolutionDurationSec: '0',
+    resolutionSampleCount: '0',
+  }
 }
 
 /**
