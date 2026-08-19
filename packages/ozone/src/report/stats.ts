@@ -142,11 +142,35 @@ type TypeCountRow = {
   reportType: string
   count: string
 }
-type TypeWindowRow = Omit<QueueWindowRow, 'queueId'> & {
+type TypeWindowRow = {
   reportType: string
+  inboundCount: string
+  closedCount: string
+  actionedCount: string
+  acknowledgedCount: string
+  escalatedCount: string
+  labelActionCount: string
+  tagActionCount: string
+  takedownActionCount: string
+  ahtDurationSec: string | null
+  ahtSampleCount: string
+  resolutionDurationSec: string | null
+  resolutionSampleCount: string
 }
-type ModeratorWindowRow = Omit<QueueWindowRow, 'queueId'> & {
+type ModeratorWindowRow = {
   did: string
+  inboundCount: string
+  closedCount: string
+  actionedCount: string
+  acknowledgedCount: string
+  escalatedCount: string
+  labelActionCount: string
+  tagActionCount: string
+  takedownActionCount: string
+  ahtDurationSec: string | null
+  ahtSampleCount: string
+  resolutionDurationSec: string | null
+  resolutionSampleCount: string
 }
 type LifecycleWindowRow = {
   closedCount: string
