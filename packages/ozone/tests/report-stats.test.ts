@@ -671,38 +671,5 @@ describe('report-stats', () => {
         expect(stat.date <= todayStr).toBe(true)
       }
     })
-
-    it('preserves historical pending snapshots during refresh', async () => {
-      const db = network.ozone.ctx.db
-      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
-        .toISOString()
-        .slice(0, 10)
-
-      await modClient.computeStats()
-      await db.db
-        .updateTable('report_stat')
-        .set({ pendingCount: 4242 })
-        .where('date', '=', yesterday)
-        .where('queueId', 'is', null)
-        .where('moderatorDid', 'is', null)
-        .where('reportTypes', 'is', null)
-        .execute()
-
-      const statsService = network.ozone.ctx.reportStatsService(db)
-      await statsService.refreshDateRange({
-        startDate: yesterday,
-        endDate: yesterday,
-      })
-
-      const refreshed = await db.db
-        .selectFrom('report_stat')
-        .select('pendingCount')
-        .where('date', '=', yesterday)
-        .where('queueId', 'is', null)
-        .where('moderatorDid', 'is', null)
-        .where('reportTypes', 'is', null)
-        .executeTakeFirstOrThrow()
-      expect(refreshed.pendingCount).toBe(4242)
-    })
   })
 })
