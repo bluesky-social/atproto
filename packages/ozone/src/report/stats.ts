@@ -311,13 +311,15 @@ export class ReportStatsService {
     const isToday = date === today
 
     // Batch the cache check so we don't issue one SELECT per group.
-    const existingByKey = await this.fetchExistingStatsByKey(date)
+    const existingByKey = !opts?.force
+      ? await this.fetchExistingStatsByKey(date)
+      : null
 
     const rows: UpsertRow[] = []
     for (const group of groups) {
       try {
-        const cached = existingByKey.get(groupKey(group))
-        if (!opts?.force) {
+        if (existingByKey) {
+          const cached = existingByKey.get(groupKey(group))
           if (cached) {
             // Historical dates: never recompute. Today: recompute if stale.
             if (!isToday) continue
@@ -326,14 +328,7 @@ export class ReportStatsService {
           }
         }
         const stats = this.resolveGroupStats(group, batched)
-        rows.push(
-          this.buildUpsertRow(
-            date,
-            group,
-            stats,
-            isToday ? undefined : (cached?.pendingCount ?? null),
-          ),
-        )
+        rows.push(this.buildUpsertRow(date, group, stats))
       } catch (err) {
         dbLogger.error(
           { err, group, date },
@@ -731,7 +726,6 @@ export class ReportStatsService {
     date: string,
     group: ReportStatGroup,
     stats: ReportStatistics,
-    pendingOverride?: number | null,
   ): UpsertRow {
     const pendingCount =
       'pendingCount' in stats ? (stats.pendingCount ?? null) : null
@@ -745,8 +739,7 @@ export class ReportStatsService {
       moderatorDid: group.moderatorDid,
       reportTypes: group.reportTypes,
       inboundCount: stats.inboundCount ?? null,
-      pendingCount:
-        pendingOverride !== undefined ? pendingOverride : pendingCount,
+      pendingCount,
       closedCount: stats.closedCount,
       actionedCount: stats.actionedCount ?? null,
       acknowledgedCount: stats.acknowledgedCount,
