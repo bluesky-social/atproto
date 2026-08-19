@@ -164,6 +164,7 @@ export type HydrationState = {
   labelerViewers?: LabelerViewerStates
   labelerAggs?: LabelerAggs
   knownFollowers?: KnownFollowersStates
+  knownLikers?: KnownLikersStates
   activitySubscriptions?: ActivitySubscriptionStates
   bidirectionalBlocks?: BidirectionalBlocks
   verifications?: Verifications
@@ -171,6 +172,16 @@ export type HydrationState = {
   siteStandardDocuments?: SiteStandardDocuments
   siteStandardPublications?: SiteStandardPublications
 }
+
+type KnownLikersState = {
+  count: number
+  likers: DidString[]
+}
+
+export type KnownLikersStates = HydrationMap<
+  AtUriString,
+  KnownLikersState | undefined
+>
 
 export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
 export type PostBlocks = HydrationMap<AtUriString, PostBlock>
@@ -953,6 +964,48 @@ export class Hydrator {
     const threadContexts = await this.feed.getThreadContexts(threadRefs)
 
     return mergeStates(postsState, { threadContexts })
+  }
+
+  async hydrateKnownLikers(
+    subjectUris: AtUriString[],
+    limit: number,
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    if (!ctx.viewer || subjectUris.length === 0) return {}
+
+    // Fail open.
+    try {
+      const { results } = await this.dataplane.getKnownLikers(
+        {
+          actorDid: ctx.viewer,
+          subjectUris,
+          limit,
+        },
+        { signal: AbortSignal.timeout(100) },
+      )
+      const knownLikers: KnownLikersStates = new HydrationMap()
+      const likerDids: DidString[] = []
+      const authorLikerPairs: RelationshipPair[] = []
+      for (const result of results) {
+        const subjectUri = result.subjectUri as AtUriString
+        const dids = result.dids as DidString[]
+        if (result.count > 0) {
+          knownLikers.set(subjectUri, { count: result.count, likers: dids })
+        }
+        likerDids.push(...dids)
+        authorLikerPairs.push(
+          ...dids.map((did): RelationshipPair => [uriToDid(subjectUri), did]),
+        )
+      }
+      const [profileState, bidirectionalBlocks] = await Promise.all([
+        this.hydrateProfilesBasic(dedupeStrs(likerDids), ctx),
+        this.hydrateBidirectionalBlocks(pairsToMap(authorLikerPairs), ctx),
+      ])
+      return mergeStates(profileState, { knownLikers, bidirectionalBlocks })
+    } catch (err) {
+      hydrationLogger.error({ err }, 'Failed to hydrate known likers')
+      return {}
+    }
   }
 
   // app.bsky.feed.defs#generatorView
@@ -1765,6 +1818,7 @@ export const mergeStates = (
     labelerAggs: mergeMaps(stateA.labelerAggs, stateB.labelerAggs),
     labelerViewers: mergeMaps(stateA.labelerViewers, stateB.labelerViewers),
     knownFollowers: mergeMaps(stateA.knownFollowers, stateB.knownFollowers),
+    knownLikers: mergeMaps(stateA.knownLikers, stateB.knownLikers),
     activitySubscriptions: mergeMaps(
       stateA.activitySubscriptions,
       stateB.activitySubscriptions,

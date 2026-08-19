@@ -7,7 +7,11 @@ import {
   type DataPlaneClient,
   isDataplaneError,
 } from '../../../../data-plane/index.js'
-import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import {
+  type HydrateCtx,
+  type Hydrator,
+  mergeStates,
+} from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
 import {
   type HydrationFnInput,
@@ -95,10 +99,19 @@ const hydration = async (
   inputs: HydrationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateThreadPosts(
-    skeleton.uris.map((uri) => ({ uri })),
-    params.hydrateCtx,
-  )
+  const knownLikersLimit = 5
+  const [threadState, knownLikersState] = await Promise.all([
+    ctx.hydrator.hydrateThreadPosts(
+      skeleton.uris.map((uri) => ({ uri })),
+      params.hydrateCtx,
+    ),
+    ctx.hydrator.hydrateKnownLikers(
+      [skeleton.anchor],
+      knownLikersLimit,
+      params.hydrateCtx,
+    ),
+  ])
+  return mergeStates(threadState, knownLikersState)
 }
 
 const presentation = (
