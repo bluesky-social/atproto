@@ -1,11 +1,11 @@
 import { ids } from '@atproto/api'
 import type {
   AtpAgent,
+  ToolsOzoneModerationDefs,
   ToolsOzoneModerationListScheduledActions,
 } from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import type { ModEventTakedown } from '../dist/lexicon/types/tools/ozone/moderation/defs.js'
 import { ProtectedTagSettingKey } from '../src/setting/constants.js'
 
 describe('scheduled action processor', () => {
@@ -229,7 +229,8 @@ describe('scheduled action processor', () => {
       // No email was sent
       expect(modEvents.length).toBe(1)
 
-      const takedownEvent = modEvents[0].event as ModEventTakedown
+      const takedownEvent = modEvents[0]
+        .event as ToolsOzoneModerationDefs.ModEventTakedown
       expect(takedownEvent.comment).toContain('[SCHEDULED_ACTION]')
       expect(takedownEvent.comment).toContain('Detailed takedown test')
       expect(takedownEvent.durationInHours).toBe(24)

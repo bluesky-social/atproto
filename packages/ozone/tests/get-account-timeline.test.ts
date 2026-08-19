@@ -1,4 +1,4 @@
-import { ids } from '@atproto/api'
+import { ComAtprotoModerationDefs, ids } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
 import {
   type ModeratorClient,
@@ -6,7 +6,6 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { REASONSPAM } from '../dist/lexicon/types/com/atproto/moderation/defs.js'
 import { forSnapshot } from './_util.js'
 
 describe('account timeline', () => {
@@ -31,7 +30,7 @@ describe('account timeline', () => {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.alice,
         },
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reportedBy: sc.dids.bob,
       }),
       sc.createReport({
@@ -39,7 +38,7 @@ describe('account timeline', () => {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.alice,
         },
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reportedBy: sc.dids.carol,
       }),
       sc.createReport({
@@ -48,7 +47,7 @@ describe('account timeline', () => {
           uri: sc.posts[sc.dids.alice][0].ref.uriStr,
           cid: sc.posts[sc.dids.alice][0].ref.cidStr,
         },
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reportedBy: sc.dids.bob,
       }),
     ])

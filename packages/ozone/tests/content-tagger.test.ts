@@ -5,7 +5,6 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { REASONMISLEADING } from '../dist/lexicon/types/com/atproto/moderation/defs.js'
 
 describe('moderation subject content tagging', () => {
   let network: TestNetwork
@@ -152,7 +151,7 @@ describe('moderation subject content tagging', () => {
           reportedBy: sc.dids.alice,
         }),
         sc.createReport({
-          reasonType: REASONMISLEADING,
+          reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: sc.dids.carol,
