@@ -3,8 +3,8 @@ import { sql } from 'kysely'
 import { cborEncode, noUndefinedVals } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
+import type { DidString, UriString } from '@atproto/lex'
 import { Client, toDatetimeString } from '@atproto/lex'
-import type { DatetimeString, DidString, UriString } from '@atproto/lex'
 import type { LabelRow } from '../db/schema/label.js'
 import type { DbRef } from '../db/types.js'
 import type { com } from '../lexicons/index.js'
@@ -14,12 +14,12 @@ export type SignedLabel = com.atproto.label.defs.Label & { sig: Uint8Array }
 export const formatLabel = (row: LabelRow): com.atproto.label.defs.Label => {
   return noUndefinedVals({
     ver: 1,
-    src: row.src as DidString,
+    src: row.src,
     uri: row.uri as UriString,
     cid: row.cid === '' ? undefined : row.cid,
     val: row.val,
     neg: row.neg === true ? true : undefined,
-    cts: row.cts as DatetimeString,
+    cts: row.cts,
     exp: row.exp ?? undefined,
     sig: row.sig ? new Uint8Array(row.sig) : undefined,
   } satisfies com.atproto.label.defs.Label) as unknown as com.atproto.label.defs.Label

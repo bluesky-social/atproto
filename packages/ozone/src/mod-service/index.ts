@@ -473,7 +473,7 @@ export class ModerationService {
     subject: ModSubject
     createdBy: DidString
     createdAt?: Date
-    modTool?: tools.ozone.moderation.defs.ModTool
+    modTool?: NonNullable<ModerationEvent['modTool']>
     externalId?: string
   }): Promise<{
     event: ModerationEventRow
@@ -1063,12 +1063,9 @@ export class ModerationService {
     reasonType: com.atproto.moderation.defs.ReasonType
     reason?: string
     subject: ModSubject
-    reportedBy: string
+    reportedBy: DidString
     createdAt?: Date
-    modTool?: {
-      name: string
-      meta?: { [_ in string]: unknown }
-    }
+    modTool?: NonNullable<ModerationEvent['modTool']>
   }): Promise<{
     event: ModerationEventRow
     subjectStatus: ModerationSubjectStatusRow | null
@@ -1088,10 +1085,10 @@ export class ModerationService {
         reportType: reasonType,
         comment: reason,
       },
-      createdBy: reportedBy as DidString,
+      createdBy: reportedBy,
       subject,
       createdAt,
-      modTool: modTool as tools.ozone.moderation.defs.ModTool | undefined,
+      modTool,
     })
   }
 
