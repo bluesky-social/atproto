@@ -1,13 +1,14 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import type { DidString } from '@atproto/lex'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 import { getReportById } from '../../mod-service/report.js'
 import { reassignReportQueue } from '../../report/reassign.js'
 import { buildReportView, hydrateReportInfo } from '../../report/views.js'
 import { getAuthDid, getPdsAccountInfos } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.report.reassignQueue({
+  server.add(tools.ozone.report.reassignQueue, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth, req }) => {
       const createdBy =
@@ -19,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         reportId: input.body.reportId,
         toQueueId: input.body.queueId,
         comment: input.body.comment,
-        createdBy,
+        createdBy: createdBy as DidString,
       })
 
       const report = await getReportById(db, input.body.reportId)

@@ -1,14 +1,13 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
-import { ids } from '../../lexicon/lexicons.js'
+import { chat } from '../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.chat.bsky.moderation.getMessageContext({
+  server.add(chat.bsky.moderation.getMessageContext, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth }) => {
-      if (!ctx.chatAgent) {
-        throw new InvalidRequestError('No chat agent configured')
+      if (!ctx.chatClient) {
+        throw new InvalidRequestError('No chat service configured')
       }
       const maxWindowSize = auth.credentials.isModerator ? 5 : 0
       const before = Math.min(maxWindowSize, params.before)
@@ -28,14 +27,14 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('No report for requested message')
       }
 
-      const res =
-        await ctx.chatAgent.api.chat.bsky.moderation.getMessageContext(
-          { ...params, before, after },
-          await ctx.chatAuth(ids.ChatBskyModerationGetMessageContext),
-        )
+      const body = await ctx.chatClient.call(
+        chat.bsky.moderation.getMessageContext,
+        { ...params, before, after },
+        await ctx.chatAuth(chat.bsky.moderation.getMessageContext.$lxm),
+      )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })

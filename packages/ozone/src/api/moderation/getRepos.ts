@@ -1,9 +1,10 @@
+import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 import { addAccountInfoToRepoViewDetail, getPdsAccountInfos } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.moderation.getRepos({
+  server.add(tools.ozone.moderation.getRepos, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth, req }) => {
       const { dids } = params
@@ -19,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         if (!partialRepo) {
           return {
             did,
-            $type: 'tools.ozone.moderation.defs#repoViewNotFound',
+            $type: 'tools.ozone.moderation.defs#repoViewNotFound' as const,
           }
         }
         return {
@@ -28,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
             accountInfo.get(did) || null,
             auth.credentials.isModerator,
           ),
-          $type: 'tools.ozone.moderation.defs#repoViewDetail',
+          $type: 'tools.ozone.moderation.defs#repoViewDetail' as const,
         }
       })
 

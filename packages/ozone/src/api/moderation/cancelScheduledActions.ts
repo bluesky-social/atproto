@@ -1,11 +1,12 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
+import type { DidString } from '@atproto/lex'
+import { AuthRequiredError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 import { subjectFromInput } from '../../mod-service/subject.js'
 import { ScheduledTakedownTag } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.moderation.cancelScheduledActions({
+  server.add(tools.ozone.moderation.cancelScheduledActions, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
@@ -36,10 +37,10 @@ export default function (server: Server, ctx: AppContext) {
               comment,
             },
             subject: subjectFromInput({
-              did: subject,
+              did: subject as DidString,
               $type: 'com.atproto.admin.defs#repoRef',
             }),
-            createdBy,
+            createdBy: createdBy as DidString,
             createdAt: now,
           })
           await modService.logEvent({
@@ -49,10 +50,10 @@ export default function (server: Server, ctx: AppContext) {
               add: [],
             },
             subject: subjectFromInput({
-              did: subject,
+              did: subject as DidString,
               $type: 'com.atproto.admin.defs#repoRef',
             }),
-            createdBy,
+            createdBy: createdBy as DidString,
             createdAt: now,
           })
         }

@@ -1,3 +1,4 @@
+import { ids } from '@atproto/api'
 import type {
   AtpAgent,
   ToolsOzoneModerationListScheduledActions,
@@ -5,7 +6,6 @@ import type {
 import { HOUR, MINUTE } from '@atproto/common'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import type { ModEventTakedown } from '../dist/lexicon/types/tools/ozone/moderation/defs.js'
-import { ids } from '../src/lexicon/lexicons.js'
 import { ProtectedTagSettingKey } from '../src/setting/constants.js'
 
 describe('scheduled action processor', () => {

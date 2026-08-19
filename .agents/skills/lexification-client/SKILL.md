@@ -363,10 +363,17 @@ See [lex-schema](../lex-schema/SKILL.md) for the full `$`-accessor cheat sheet.
 
 ## Tests
 
-Test migration is partial and lags the source migration. The `pds` and `bsky`
-suites mostly still drive `AtpAgent` from `@atproto/api`, and `dev-env` exposes
-both `getAgent(): AtpAgent` and `getClient(): Client` for exactly that reason.
-`ozone` is entirely un-migrated.
+Test migration is partial and lags the source migration. The `pds`, `bsky` and
+`ozone` suites mostly still drive `AtpAgent` from `@atproto/api`, and `dev-env`
+exposes both `getAgent(): AtpAgent` and `getClient(): Client` for exactly that
+reason.
+
+A suite still on `AtpAgent` hydrates blobs into **legacy `BlobRef` class
+instances**, which only `@atproto/lexicon`'s `lexToJson` knows how to flatten.
+Swapping a test helper to `@atproto/lex`'s `lexToJson` leaves those instances
+untouched and leaks their internal `original` field into snapshots — which reads
+like a wire-format regression in the service under test. Keep the legacy
+converter until the suite itself moves to `Client`.
 
 Default to leaving passing tests alone: during a source migration their value
 is being an unchanged runtime regression check. Two things force a change:

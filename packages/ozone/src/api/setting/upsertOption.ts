@@ -1,15 +1,20 @@
 import assert from 'node:assert'
-import { ToolsOzoneTeamDefs } from '@atproto/api'
-import { AuthRequiredError } from '@atproto/xrpc-server'
+import type { DidString } from '@atproto/lex'
+import { AuthRequiredError, type Server } from '@atproto/xrpc-server'
 import type { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier.js'
 import type { AppContext } from '../../context.js'
 import type { Member } from '../../db/schema/member.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 import type { SettingService } from '../../setting/service.js'
 import { settingValidators } from '../../setting/validators.js'
 
+const ROLEADMIN = tools.ozone.team.defs.roleAdmin.value
+const ROLEMODERATOR = tools.ozone.team.defs.roleModerator.value
+const ROLETRIAGE = tools.ozone.team.defs.roleTriage.value
+const ROLEVERIFIER = tools.ozone.team.defs.roleVerifier.value
+
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.setting.upsertOption({
+  server.add(tools.ozone.setting.upsertOption, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
@@ -27,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
       // if the caller is using moderator auth and storing personal setting
       // use the caller's DID as the owner
       if (scope === 'personal' && access.type === 'moderator') {
-        ownerDid = access.iss
+        ownerDid = access.iss as DidString
       }
 
       const now = new Date()
@@ -97,7 +102,7 @@ export default function (server: Server, ctx: AppContext) {
 
 const getExistingSetting = async (
   settingService: SettingService,
-  did: string,
+  did: DidString,
   key: string,
   scope: string,
 ) => {
@@ -114,12 +119,7 @@ const getExistingSetting = async (
 const getRolesForInstanceOption = (
   access: AdminTokenOutput['credentials'] | ModeratorOutput['credentials'],
 ) => {
-  const fullPermission = [
-    ToolsOzoneTeamDefs.ROLEADMIN,
-    ToolsOzoneTeamDefs.ROLEMODERATOR,
-    ToolsOzoneTeamDefs.ROLETRIAGE,
-    ToolsOzoneTeamDefs.ROLEVERIFIER,
-  ]
+  const fullPermission = [ROLEADMIN, ROLEMODERATOR, ROLETRIAGE, ROLEVERIFIER]
   if (access.type === 'admin_token') {
     return fullPermission
   }
@@ -129,27 +129,27 @@ const getRolesForInstanceOption = (
   }
 
   if (access.isModerator) {
-    return [ToolsOzoneTeamDefs.ROLEMODERATOR, ToolsOzoneTeamDefs.ROLETRIAGE]
+    return [ROLEMODERATOR, ROLETRIAGE]
   }
 
   if (access.isVerifier) {
-    return [ToolsOzoneTeamDefs.ROLEVERIFIER]
+    return [ROLEVERIFIER]
   }
 
-  return [ToolsOzoneTeamDefs.ROLETRIAGE]
+  return [ROLETRIAGE]
 }
 
 const getManagerRole = (role?: string) => {
   let managerRole: Member['role'] | null = null
 
-  if (role === ToolsOzoneTeamDefs.ROLEADMIN) {
-    managerRole = ToolsOzoneTeamDefs.ROLEADMIN
-  } else if (role === ToolsOzoneTeamDefs.ROLEMODERATOR) {
-    managerRole = ToolsOzoneTeamDefs.ROLEMODERATOR
-  } else if (role === ToolsOzoneTeamDefs.ROLETRIAGE) {
-    managerRole = ToolsOzoneTeamDefs.ROLETRIAGE
-  } else if (role === ToolsOzoneTeamDefs.ROLEVERIFIER) {
-    managerRole = ToolsOzoneTeamDefs.ROLEVERIFIER
+  if (role === ROLEADMIN) {
+    managerRole = ROLEADMIN
+  } else if (role === ROLEMODERATOR) {
+    managerRole = ROLEMODERATOR
+  } else if (role === ROLETRIAGE) {
+    managerRole = ROLETRIAGE
+  } else if (role === ROLEVERIFIER) {
+    managerRole = ROLEVERIFIER
   }
 
   return managerRole

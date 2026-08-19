@@ -1,22 +1,22 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
-import { ids } from '../../lexicon/lexicons.js'
+import { chat } from '../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.chat.bsky.moderation.getActorMetadata({
+  server.add(chat.bsky.moderation.getActorMetadata, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params }) => {
-      if (!ctx.chatAgent) {
-        throw new InvalidRequestError('No chat agent configured')
+      if (!ctx.chatClient) {
+        throw new InvalidRequestError('No chat service configured')
       }
-      const res = await ctx.chatAgent.api.chat.bsky.moderation.getActorMetadata(
+      const body = await ctx.chatClient.call(
+        chat.bsky.moderation.getActorMetadata,
         params,
-        await ctx.chatAuth(ids.ChatBskyModerationGetActorMetadata),
+        await ctx.chatAuth(chat.bsky.moderation.getActorMetadata.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })

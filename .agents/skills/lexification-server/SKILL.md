@@ -20,9 +20,10 @@ disable-model-invocation: false
 Moves a package from `@atproto/lex-cli`'s `lex gen-server` output to
 `@atproto/lex` schemas plus `@atproto/xrpc-server` routing.
 
-`packages/pds` and `packages/bsky` are already migrated — **read them before
-inventing a pattern.** `packages/ozone` is the only service left, so it is
-both the likely subject of the task and the reference "before" state.
+Every service in this repo — `packages/pds`, `packages/bsky`, `packages/ozone` —
+is already migrated, so this skill now applies to packages outside the repo, or
+to a stray route chain left behind. **Read the migrated services before
+inventing a pattern.**
 
 ## Which skill applies
 

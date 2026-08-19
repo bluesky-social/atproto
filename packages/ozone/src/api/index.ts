@@ -1,5 +1,5 @@
+import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../context.js'
-import type { Server } from '../lexicon/index.js'
 import getAccountPreferences from './app/bsky/actor/getPreferences.js'
 import chat from './chat/index.js'
 import createTemplate from './communication/createTemplate.js'

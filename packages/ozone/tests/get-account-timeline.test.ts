@@ -1,3 +1,4 @@
+import { ids } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
 import {
   type ModeratorClient,
@@ -6,7 +7,6 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { REASONSPAM } from '../dist/lexicon/types/com/atproto/moderation/defs.js'
-import { ids } from '../src/lexicon/lexicons.js'
 import { forSnapshot } from './_util.js'
 
 describe('account timeline', () => {

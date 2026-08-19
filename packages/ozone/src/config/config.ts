@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
+import type { DidString, UriString } from '@atproto/lex'
 import type { OzoneEnvironment } from './env.js'
 
 // off-config but still from env:
@@ -12,7 +13,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   const serviceCfg: OzoneConfig['service'] = {
     port,
     publicUrl: env.publicUrl,
-    did: env.serverDid,
+    did: env.serverDid as DidString,
     version: env.version,
     devMode: env.devMode,
     serviceRecordCacheTTL: env.serviceRecordCacheTTL ?? 5 * MINUTE, // default 5 mins
@@ -33,8 +34,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   assert(env.appviewUrl, 'appviewUrl is required')
   assert(env.appviewDid, 'appviewDid is required')
   const appviewCfg: OzoneConfig['appview'] = {
-    url: env.appviewUrl,
-    did: env.appviewDid,
+    url: env.appviewUrl as UriString,
+    did: env.appviewDid as DidString,
     pushEvents: !!env.appviewPushEvents,
   }
 
@@ -43,8 +44,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     assert(env.pdsUrl, 'pdsUrl is required')
     assert(env.pdsDid, 'pdsDid is required')
     pdsCfg = {
-      url: env.pdsUrl,
-      did: env.pdsDid,
+      url: env.pdsUrl as UriString,
+      did: env.pdsDid as DidString,
     }
   }
 
@@ -53,8 +54,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     assert(env.chatUrl, 'chatUrl is required when chatDid is provided')
     assert(env.chatDid, 'chatDid is required when chatUrl is provided')
     chatCfg = {
-      url: env.chatUrl,
-      did: env.chatDid,
+      url: env.chatUrl as UriString,
+      did: env.chatDid as DidString,
     }
   }
 
@@ -72,20 +73,20 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   const blobDivertServiceCfg =
     env.blobDivertUrl && env.blobDivertAdminPassword
       ? {
-          url: env.blobDivertUrl,
+          url: env.blobDivertUrl as UriString,
           adminPassword: env.blobDivertAdminPassword,
         }
       : null
   const accessCfg: OzoneConfig['access'] = {
-    admins: env.adminDids,
-    moderators: env.moderatorDids,
-    triage: env.triageDids,
+    admins: env.adminDids as DidString[],
+    moderators: env.moderatorDids as DidString[],
+    triage: env.triageDids as DidString[],
   }
   const verifierCfg: OzoneConfig['verifier'] =
     env.verifierUrl && env.verifierDid && env.verifierPassword
       ? {
-          url: env.verifierUrl,
-          did: env.verifierDid,
+          url: env.verifierUrl as UriString,
+          did: env.verifierDid as DidString,
           password: env.verifierPassword,
           issuersToIndex: env.verifierIssuersToIndex,
         }
@@ -145,14 +146,14 @@ export type StatsConfig = {
 export type ServiceConfig = {
   port: number
   publicUrl: string
-  did: string
+  did: DidString
   version?: string
   devMode?: boolean
   serviceRecordCacheTTL: number // in ms, default 5 mins
 }
 
 export type BlobDivertConfig = {
-  url: string
+  url: UriString
   adminPassword: string
 }
 
@@ -168,19 +169,19 @@ export type DatabaseConfig = {
 }
 
 export type AppviewConfig = {
-  url: string
-  did: string
+  url: UriString
+  did: DidString
   pushEvents: boolean
 }
 
 export type PdsConfig = {
-  url: string
-  did: string
+  url: UriString
+  did: DidString
 }
 
 export type ChatConfig = {
-  url: string
-  did: string
+  url: UriString
+  did: DidString
 }
 
 export type CdnConfig = {
@@ -194,14 +195,14 @@ export type IdentityConfig = {
 }
 
 export type AccessConfig = {
-  admins: string[]
-  moderators: string[]
-  triage: string[]
+  admins: DidString[]
+  moderators: DidString[]
+  triage: DidString[]
 }
 
 export type VerifierConfig = {
-  url: string
-  did: string
+  url: UriString
+  did: DidString
   password: string
   jetstreamUrl?: string
   issuersToIndex?: string[]

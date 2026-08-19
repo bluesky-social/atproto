@@ -1,7 +1,9 @@
 import {
   ComAtprotoModerationDefs,
+  ToolsOzoneModerationDefs,
   type ToolsOzoneReportAssignModerator,
   type ToolsOzoneReportUnassignModerator,
+  ids,
 } from '@atproto/api'
 import {
   type ModeratorClient,
@@ -10,12 +12,6 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { AtUri } from '@atproto/syntax'
-import { ids } from '../src/lexicon/lexicons.js'
-import {
-  REASONMISLEADING,
-  REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs.js'
-import { REVIEWOPEN } from '../src/lexicon/types/tools/ozone/moderation/defs.js'
 
 describe('query-reports', () => {
   let network: TestNetwork
@@ -45,7 +41,10 @@ describe('query-reports', () => {
     // Create various reports
     for (let i = 0; i < 3; i++) {
       await sc.createReport({
-        reasonType: i % 2 ? REASONSPAM : REASONMISLEADING,
+        reasonType:
+          i % 2
+            ? ComAtprotoModerationDefs.REASONSPAM
+            : ComAtprotoModerationDefs.REASONMISLEADING,
         reason: `Report ${i} on bob's account`,
         subject: bobsAccount,
         reportedBy: sc.dids.alice,
@@ -54,7 +53,7 @@ describe('query-reports', () => {
 
     for (let i = 0; i < 2; i++) {
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: `Report ${i} on alice's account`,
         subject: alicesAccount,
         reportedBy: sc.dids.bob,
@@ -62,14 +61,14 @@ describe('query-reports', () => {
     }
 
     await sc.createReport({
-      reasonType: REASONSPAM,
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
       reason: "Report on bob's post",
       subject: bobsPost,
       reportedBy: sc.dids.alice,
     })
 
     await sc.createReport({
-      reasonType: REASONMISLEADING,
+      reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
       reason: "Report on alice's post",
       subject: alicesPost,
       reportedBy: sc.dids.bob,
@@ -208,24 +207,26 @@ describe('query-reports', () => {
     it('filters reports by report type', async () => {
       const spamResponse = await modClient.queryReports({
         status: 'open',
-        reportTypes: [REASONSPAM],
+        reportTypes: [ComAtprotoModerationDefs.REASONSPAM],
       })
 
       // Should return 4 spam reports
       expect(spamResponse.reports.length).toBe(4)
       spamResponse.reports.forEach((report) => {
-        expect(report.reportType).toBe(REASONSPAM)
+        expect(report.reportType).toBe(ComAtprotoModerationDefs.REASONSPAM)
       })
 
       const misleadingResponse = await modClient.queryReports({
         status: 'open',
-        reportTypes: [REASONMISLEADING],
+        reportTypes: [ComAtprotoModerationDefs.REASONMISLEADING],
       })
 
       // Should return 3 misleading reports
       expect(misleadingResponse.reports.length).toBe(3)
       misleadingResponse.reports.forEach((report) => {
-        expect(report.reportType).toBe(REASONMISLEADING)
+        expect(report.reportType).toBe(
+          ComAtprotoModerationDefs.REASONMISLEADING,
+        )
       })
     })
 
@@ -341,13 +342,13 @@ describe('query-reports', () => {
       const response = await modClient.queryReports({
         status: 'open',
         subjectType: 'account',
-        reportTypes: [REASONSPAM],
+        reportTypes: [ComAtprotoModerationDefs.REASONSPAM],
       })
 
       // Should return spam reports on accounts only
       response.reports.forEach((report) => {
         expect(report.subject.type).toBe('account')
-        expect(report.reportType).toBe(REASONSPAM)
+        expect(report.reportType).toBe(ComAtprotoModerationDefs.REASONSPAM)
       })
     })
   })
@@ -358,7 +359,7 @@ describe('query-reports', () => {
 
     beforeAll(async () => {
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'Report on a conversation',
         subject: {
           $type: 'chat.bsky.convo.defs#convoRef',
@@ -368,7 +369,7 @@ describe('query-reports', () => {
         reportedBy: sc.dids.alice,
       })
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'Report on a message',
         subject: {
           $type: 'chat.bsky.convo.defs#messageRef',
@@ -381,7 +382,7 @@ describe('query-reports', () => {
       // Give carol an account-level subject status, distinct from the
       // convo-keyed status rows created by the chat reports above.
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: "Report on carol's account",
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
@@ -459,7 +460,7 @@ describe('query-reports', () => {
       // account's.
       const status = response.reports[0].subject.status
       expect(status).toBeDefined()
-      expect(status?.reviewState).toBe(REVIEWOPEN)
+      expect(status?.reviewState).toBe(ToolsOzoneModerationDefs.REVIEWOPEN)
       expect(status?.subject).toMatchObject({
         $type: 'chat.bsky.convo.defs#convoRef',
         did: sc.dids.carol,

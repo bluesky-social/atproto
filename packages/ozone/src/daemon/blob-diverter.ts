@@ -9,10 +9,10 @@ import {
   getPdsEndpoint,
 } from '@atproto/common'
 import type { IdResolver } from '@atproto/identity'
-import { ResponseType, XRPCError } from '@atproto/xrpc'
+import type { AtUriString, DidString } from '@atproto/lex'
 import type { BlobDivertConfig } from '../config/index.js'
 import type { Database } from '../db/index.js'
-import { retryHttp } from '../util.js'
+import { UpstreamHttpError, retryHttp } from '../util.js'
 
 export class BlobDiverter {
   serviceConfig: BlobDivertConfig
@@ -30,7 +30,7 @@ export class BlobDiverter {
   }
 
   /**
-   * @throws {XRPCError} so that retryHttp can handle retries
+   * @throws {UpstreamHttpError} so that retryHttp can handle retries
    */
   async getBlob(options: GetBlobOptions): Promise<Blob> {
     const blobUrl = getBlobUrl(options)
@@ -46,9 +46,8 @@ export class BlobDiverter {
 
     if (blobResponse.statusCode !== 200) {
       await blobResponse.body.dump()
-      throw new XRPCError(
+      throw new UpstreamHttpError(
         blobResponse.statusCode,
-        undefined,
         `Error downloading blob ${options.cid}`,
       )
     }
@@ -77,7 +76,7 @@ export class BlobDiverter {
   }
 
   /**
-   * @throws {XRPCError} so that retryHttp can handle retries
+   * @throws {UpstreamHttpError} so that retryHttp can handle retries
    */
   async uploadBlob(blob: Blob, report: ReportBlobOptions) {
     const uploadUrl = reportBlobUrl(this.serviceConfig.url, report)
@@ -99,9 +98,8 @@ export class BlobDiverter {
 
     if (result.statusCode !== 200) {
       await result.body.dump()
-      throw new XRPCError(
+      throw new UpstreamHttpError(
         result.statusCode,
-        undefined,
         `Error uploading blob ${report.did}`,
       )
     }
@@ -114,8 +112,8 @@ export class BlobDiverter {
     subjectUri: uri,
     subjectBlobCids,
   }: {
-    subjectDid: string
-    subjectUri: string | null
+    subjectDid: DidString
+    subjectUri: AtUriString | null
     subjectBlobCids: string[]
   }): Promise<void> {
     const didDoc = await this.idResolver.did.resolve(did)
@@ -134,13 +132,9 @@ export class BlobDiverter {
         }),
       ),
     ).catch((err) => {
-      throw new XRPCError(
-        ResponseType.UpstreamFailure,
-        undefined,
-        'Failed to process blobs',
-        undefined,
-        { cause: err },
-      )
+      throw new UpstreamHttpError(502, 'Failed to process blobs', {
+        cause: err,
+      })
     })
   }
 }
@@ -156,7 +150,7 @@ type Blob = {
 
 type GetBlobOptions = {
   pds: string
-  did: string
+  did: DidString
   cid: string
 }
 
@@ -168,8 +162,8 @@ function getBlobUrl({ pds, did, cid }: GetBlobOptions): URL {
 }
 
 type ReportBlobOptions = {
-  did: string
-  uri: string | null
+  did: DidString
+  uri: AtUriString | null
 }
 
 function reportBlobUrl(service: string, { did, uri }: ReportBlobOptions): URL {
@@ -180,7 +174,5 @@ function reportBlobUrl(service: string, { did, uri }: ReportBlobOptions): URL {
 }
 
 function asXrpcClientError(err: unknown, message: string) {
-  return new XRPCError(ResponseType.Unknown, undefined, message, undefined, {
-    cause: err,
-  })
+  return new UpstreamHttpError(undefined, message, { cause: err })
 }

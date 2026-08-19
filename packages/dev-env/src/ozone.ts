@@ -2,6 +2,7 @@ import * as plc from '@did-plc/lib'
 import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import type { DidString } from '@atproto/lex'
 import * as ozone from '@atproto/ozone'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
@@ -113,7 +114,7 @@ export class TestOzone {
     return new ModeratorClient(this)
   }
 
-  async addAdminDid(did: string) {
+  async addAdminDid(did: DidString) {
     await this.ctx.teamService(this.ctx.db).create({
       did,
       disabled: false,
@@ -125,7 +126,7 @@ export class TestOzone {
     this.ctx.cfg.access.admins.push(did)
   }
 
-  async addModeratorDid(did: string) {
+  async addModeratorDid(did: DidString) {
     await this.ctx.teamService(this.ctx.db).create({
       did,
       disabled: false,
@@ -137,7 +138,7 @@ export class TestOzone {
     this.ctx.cfg.access.moderators.push(did)
   }
 
-  async addTriageDid(did: string) {
+  async addTriageDid(did: DidString) {
     await this.ctx.teamService(this.ctx.db).create({
       did,
       disabled: false,

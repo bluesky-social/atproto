@@ -1,13 +1,10 @@
+import { ComAtprotoModerationDefs } from '@atproto/api'
 import {
   type ModeratorClient,
   type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import {
-  REASONAPPEAL,
-  REASONMISLEADING,
-} from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
 describe('reporter status validation', () => {
   let network: TestNetwork
@@ -48,11 +45,13 @@ describe('reporter status validation', () => {
     await expect(
       sc.createReport({
         reportedBy: sc.dids.alice,
-        reasonType: REASONMISLEADING,
+        reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
         reason: 'lies!',
         subject: getCarolPostSubject(),
       }),
-    ).resolves.toMatchObject({ reasonType: REASONMISLEADING })
+    ).resolves.toMatchObject({
+      reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
+    })
   })
 
   it('accepts an appeal while another record has a pending appeal', async () => {
@@ -61,7 +60,7 @@ describe('reporter status validation', () => {
     await expect(
       sc.createReport({
         reportedBy: sc.dids.alice,
-        reasonType: REASONAPPEAL,
+        reasonType: ComAtprotoModerationDefs.REASONAPPEAL,
         reason: 'that takedown was wrong',
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -69,7 +68,9 @@ describe('reporter status validation', () => {
           cid: sc.posts[sc.dids.alice][0].ref.cidStr,
         },
       }),
-    ).resolves.toMatchObject({ reasonType: REASONAPPEAL })
+    ).resolves.toMatchObject({
+      reasonType: ComAtprotoModerationDefs.REASONAPPEAL,
+    })
 
     // A pending appeal on one record must not block appealing another
     await modClient.performTakedown({
@@ -83,7 +84,7 @@ describe('reporter status validation', () => {
     await expect(
       sc.createReport({
         reportedBy: sc.dids.alice,
-        reasonType: REASONAPPEAL,
+        reasonType: ComAtprotoModerationDefs.REASONAPPEAL,
         reason: 'this one too',
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -91,7 +92,9 @@ describe('reporter status validation', () => {
           cid: sc.posts[sc.dids.alice][1].ref.cidStr,
         },
       }),
-    ).resolves.toMatchObject({ reasonType: REASONAPPEAL })
+    ).resolves.toMatchObject({
+      reasonType: ComAtprotoModerationDefs.REASONAPPEAL,
+    })
   })
 
   it('rejects reports from a takendown account', async () => {
@@ -105,7 +108,7 @@ describe('reporter status validation', () => {
     await expect(
       sc.createReport({
         reportedBy: sc.dids.bob,
-        reasonType: REASONMISLEADING,
+        reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
         reason: 'lies!',
         subject: getCarolPostSubject(),
       }),

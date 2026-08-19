@@ -1,10 +1,11 @@
 import { mapDefined } from '@atproto/common'
+import type { DidString } from '@atproto/lex'
+import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
-import { ids } from '../../lexicon/lexicons.js'
+import { app, tools } from '../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.moderation.searchRepos({
+  server.add(tools.ozone.moderation.searchRepos, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params }) => {
       const modService = ctx.modService(ctx.db)
@@ -14,8 +15,9 @@ export default function (server: Server, ctx: AppContext) {
 
       // special case for did searches - do exact match
       if (query?.startsWith('did:')) {
-        const repos = await modService.views.repos([query])
-        const found = repos.get(query)
+        const did = query as DidString
+        const repos = await modService.views.repos([did])
+        const found = repos.get(did)
         return {
           encoding: 'application/json',
           body: {
@@ -24,20 +26,19 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const res = await ctx.appviewAgent.api.app.bsky.actor.searchActors(
+      const body = await ctx.appviewClient.call(
+        app.bsky.actor.searchActors,
         params,
-        await ctx.appviewAuth(ids.AppBskyActorSearchActors),
+        await ctx.appviewAuth(app.bsky.actor.searchActors.$lxm),
       )
       const repoMap = await modService.views.repos(
-        res.data.actors.map((a) => a.did),
+        body.actors.map((a) => a.did),
       )
-      const repos = mapDefined(res.data.actors, (actor) =>
-        repoMap.get(actor.did),
-      )
+      const repos = mapDefined(body.actors, (actor) => repoMap.get(actor.did))
       return {
         encoding: 'application/json',
         body: {
-          cursor: res.data.cursor,
+          cursor: body.cursor,
           repos,
         },
       }

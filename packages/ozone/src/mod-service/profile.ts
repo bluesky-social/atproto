@@ -1,71 +1,102 @@
-import type AtpAgent from '@atproto/api'
-import { AppBskyLabelerDefs } from '@atproto/api'
+import type { Client } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { OzoneConfig } from '../config/index.js'
-import {
-  REASONAPPEAL,
-  REASONMISLEADING,
-  REASONOTHER,
-  REASONRUDE,
-  REASONSEXUAL,
-  REASONSPAM,
-  REASONVIOLATION,
-} from '../lexicon/types/com/atproto/moderation/defs.js'
+import { app, com } from '../lexicons/index.js'
 import { httpLogger } from '../logger.js'
 
 // Reverse mapping from new ozone namespaced reason types to old com.atproto namespaced reason types
 export const NEW_TO_OLD_REASON_MAPPING: Record<string, string> = {
-  'tools.ozone.report.defs#reasonAppeal': REASONAPPEAL,
-  'tools.ozone.report.defs#reasonOther': REASONOTHER,
+  'tools.ozone.report.defs#reasonAppeal':
+    com.atproto.moderation.defs.reasonAppeal.value,
+  'tools.ozone.report.defs#reasonOther':
+    com.atproto.moderation.defs.reasonOther.value,
 
-  'tools.ozone.report.defs#reasonViolenceAnimal': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonViolenceThreats': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonViolenceGraphicContent': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonViolenceGlorification': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonViolenceExtremistContent': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonViolenceTrafficking': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonViolenceOther': REASONVIOLATION,
+  'tools.ozone.report.defs#reasonViolenceAnimal':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonViolenceThreats':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonViolenceGraphicContent':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonViolenceGlorification':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonViolenceExtremistContent':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonViolenceTrafficking':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonViolenceOther':
+    com.atproto.moderation.defs.reasonViolation.value,
 
-  'tools.ozone.report.defs#reasonSexualAbuseContent': REASONSEXUAL,
-  'tools.ozone.report.defs#reasonSexualNCII': REASONSEXUAL,
-  'tools.ozone.report.defs#reasonSexualDeepfake': REASONSEXUAL,
-  'tools.ozone.report.defs#reasonSexualAnimal': REASONSEXUAL,
-  'tools.ozone.report.defs#reasonSexualUnlabeled': REASONSEXUAL,
-  'tools.ozone.report.defs#reasonSexualOther': REASONSEXUAL,
+  'tools.ozone.report.defs#reasonSexualAbuseContent':
+    com.atproto.moderation.defs.reasonSexual.value,
+  'tools.ozone.report.defs#reasonSexualNCII':
+    com.atproto.moderation.defs.reasonSexual.value,
+  'tools.ozone.report.defs#reasonSexualDeepfake':
+    com.atproto.moderation.defs.reasonSexual.value,
+  'tools.ozone.report.defs#reasonSexualAnimal':
+    com.atproto.moderation.defs.reasonSexual.value,
+  'tools.ozone.report.defs#reasonSexualUnlabeled':
+    com.atproto.moderation.defs.reasonSexual.value,
+  'tools.ozone.report.defs#reasonSexualOther':
+    com.atproto.moderation.defs.reasonSexual.value,
 
-  'tools.ozone.report.defs#reasonChildSafetyCSAM': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonChildSafetyGroom': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonChildSafetyPrivacy': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonChildSafetyHarassment': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonChildSafetyOther': REASONVIOLATION,
+  'tools.ozone.report.defs#reasonChildSafetyCSAM':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonChildSafetyGroom':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonChildSafetyPrivacy':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonChildSafetyHarassment':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonChildSafetyOther':
+    com.atproto.moderation.defs.reasonViolation.value,
 
-  'tools.ozone.report.defs#reasonHarassmentTroll': REASONRUDE,
-  'tools.ozone.report.defs#reasonHarassmentTargeted': REASONRUDE,
-  'tools.ozone.report.defs#reasonHarassmentHateSpeech': REASONRUDE,
-  'tools.ozone.report.defs#reasonHarassmentDoxxing': REASONRUDE,
-  'tools.ozone.report.defs#reasonHarassmentOther': REASONRUDE,
+  'tools.ozone.report.defs#reasonHarassmentTroll':
+    com.atproto.moderation.defs.reasonRude.value,
+  'tools.ozone.report.defs#reasonHarassmentTargeted':
+    com.atproto.moderation.defs.reasonRude.value,
+  'tools.ozone.report.defs#reasonHarassmentHateSpeech':
+    com.atproto.moderation.defs.reasonRude.value,
+  'tools.ozone.report.defs#reasonHarassmentDoxxing':
+    com.atproto.moderation.defs.reasonRude.value,
+  'tools.ozone.report.defs#reasonHarassmentOther':
+    com.atproto.moderation.defs.reasonRude.value,
 
-  'tools.ozone.report.defs#reasonMisleadingBot': REASONMISLEADING,
-  'tools.ozone.report.defs#reasonMisleadingImpersonation': REASONMISLEADING,
-  'tools.ozone.report.defs#reasonMisleadingSpam': REASONSPAM,
-  'tools.ozone.report.defs#reasonMisleadingScam': REASONMISLEADING,
-  'tools.ozone.report.defs#reasonMisleadingElections': REASONMISLEADING,
-  'tools.ozone.report.defs#reasonMisleadingOther': REASONMISLEADING,
+  'tools.ozone.report.defs#reasonMisleadingBot':
+    com.atproto.moderation.defs.reasonMisleading.value,
+  'tools.ozone.report.defs#reasonMisleadingImpersonation':
+    com.atproto.moderation.defs.reasonMisleading.value,
+  'tools.ozone.report.defs#reasonMisleadingSpam':
+    com.atproto.moderation.defs.reasonSpam.value,
+  'tools.ozone.report.defs#reasonMisleadingScam':
+    com.atproto.moderation.defs.reasonMisleading.value,
+  'tools.ozone.report.defs#reasonMisleadingElections':
+    com.atproto.moderation.defs.reasonMisleading.value,
+  'tools.ozone.report.defs#reasonMisleadingOther':
+    com.atproto.moderation.defs.reasonMisleading.value,
 
-  'tools.ozone.report.defs#reasonRuleSiteSecurity': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonRuleProhibitedSales': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonRuleBanEvasion': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonRuleOther': REASONVIOLATION,
+  'tools.ozone.report.defs#reasonRuleSiteSecurity':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonRuleProhibitedSales':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonRuleBanEvasion':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonRuleOther':
+    com.atproto.moderation.defs.reasonViolation.value,
 
-  'tools.ozone.report.defs#reasonSelfHarmContent': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonSelfHarmED': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonSelfHarmStunts': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonSelfHarmSubstances': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonSelfHarmOther': REASONVIOLATION,
+  'tools.ozone.report.defs#reasonSelfHarmContent':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonSelfHarmED':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonSelfHarmStunts':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonSelfHarmSubstances':
+    com.atproto.moderation.defs.reasonViolation.value,
+  'tools.ozone.report.defs#reasonSelfHarmOther':
+    com.atproto.moderation.defs.reasonViolation.value,
 }
 
 interface CacheEntry {
-  profile: AppBskyLabelerDefs.LabelerViewDetailed | null
+  profile: app.bsky.labeler.defs.LabelerViewDetailed | null
   timestamp: number
 }
 
@@ -77,7 +108,7 @@ export class ModerationServiceProfile {
 
   constructor(
     private cfg: OzoneConfig,
-    private appviewAgent: AtpAgent,
+    private appviewClient: Client,
     cacheTTL?: number,
   ) {
     this.CACHE_TTL = cacheTTL || cfg.service.serviceRecordCacheTTL
@@ -85,9 +116,9 @@ export class ModerationServiceProfile {
 
   static creator(
     cfg: OzoneConfig,
-    appviewAgent: AtpAgent,
+    appviewClient: Client,
   ): ModerationServiceProfileCreator {
-    return () => new ModerationServiceProfile(cfg, appviewAgent)
+    return () => new ModerationServiceProfile(cfg, appviewClient)
   }
 
   async getProfile() {
@@ -95,14 +126,16 @@ export class ModerationServiceProfile {
 
     if (!this.cache || now - this.cache.timestamp > this.CACHE_TTL) {
       try {
-        const { data } = await this.appviewAgent.app.bsky.labeler.getServices({
-          dids: [this.cfg.service.did],
-          detailed: true,
-        })
+        const body = await this.appviewClient.call(
+          app.bsky.labeler.getServices,
+          { dids: [this.cfg.service.did], detailed: true },
+        )
 
-        if (AppBskyLabelerDefs.isLabelerViewDetailed(data.views?.[0])) {
+        if (
+          app.bsky.labeler.defs.labelerViewDetailed.$isTypeOf(body.views?.[0])
+        ) {
           this.cache = {
-            profile: data.views[0],
+            profile: body.views[0],
             timestamp: now,
           }
         }

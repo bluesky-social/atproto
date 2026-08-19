@@ -1,53 +1,31 @@
 import { sql } from 'kysely'
-import {
-  type AppBskyActorDefs,
-  type AtpAgent,
-  ComAtprotoRepoGetRecord,
-} from '@atproto/api'
 import { chunkArray, dedupeStrs } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
-import { BlobRef } from '@atproto/lexicon'
+import {
+  type AtIdentifierString,
+  type AtUriString,
+  type BlobRef,
+  type Client,
+  type DatetimeString,
+  type DidString,
+  type HandleString,
+  type LexMap,
+  type NsidString,
+  type Un$Typed,
+  currentDatetimeString,
+  getBlobCidString,
+  getBlobMime,
+  getBlobSize,
+  isBlobRef,
+  isDatetimeString,
+  isHandleString,
+  toDatetimeString,
+} from '@atproto/lex'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
 import type { LabelRow } from '../db/schema/label.js'
-import { ids } from '../lexicon/lexicons.js'
-import type { FeedViewPost } from '../lexicon/types/app/bsky/feed/defs.js'
-import type { AccountView } from '../lexicon/types/com/atproto/admin/defs.js'
-import {
-  type Label,
-  validateSelfLabels,
-} from '../lexicon/types/com/atproto/label/defs.js'
-import type { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/moderation/createReport.js'
-import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs.js'
-import {
-  type BlobView,
-  type ModEventView,
-  type ModEventViewDetail,
-  type RecordView,
-  type RecordViewDetail,
-  type RepoView,
-  type SubjectStatusView,
-  isAccountEvent,
-  isAgeAssuranceEvent,
-  isAgeAssuranceOverrideEvent,
-  isIdentityEvent,
-  isModEventAcknowledge,
-  isModEventComment,
-  isModEventEmail,
-  isModEventEscalate,
-  isModEventLabel,
-  isModEventMute,
-  isModEventMuteReporter,
-  isModEventPriorityScore,
-  isModEventReport,
-  isModEventReverseTakedown,
-  isModEventTag,
-  isModEventTakedown,
-  isRecordEvent,
-  isScheduleTakedownEvent,
-} from '../lexicon/types/tools/ozone/moderation/defs.js'
-import { type Un$Typed, asPredicate } from '../lexicon/util.js'
+import { app, com, tools } from '../lexicons/index.js'
 import { dbLogger, httpLogger } from '../logger.js'
 import type { ParsedLabelers } from '../util.js'
 import {
@@ -64,9 +42,9 @@ import type {
   ModerationEventRowWithHandle,
   ModerationSubjectStatusRowWithHandle,
 } from './types.js'
-import { formatLabel, getPdsAgentForRepo, signLabel } from './util.js'
+import { formatLabel, getPdsClientForRepo, signLabel } from './util.js'
 
-const isValidSelfLabels = asPredicate(validateSelfLabels)
+const isValidSelfLabels = com.atproto.label.defs.selfLabels.$matches
 
 const ifString = (val: unknown): string | undefined =>
   typeof val === 'string' ? val : undefined
@@ -74,6 +52,12 @@ const ifBoolean = (val: unknown): boolean | undefined =>
   typeof val === 'boolean' ? val : undefined
 const ifNumber = (val: unknown): number | undefined =>
   typeof val === 'number' ? val : undefined
+// `meta` is a free-form jsonb column, so these narrow to the branded scalar the
+// lexicon field expects rather than a bare string.
+const ifDatetime = (val: unknown): DatetimeString | undefined =>
+  isDatetimeString(val) ? val : undefined
+const ifHandle = (val: unknown): HandleString | undefined =>
+  isHandleString(val) ? val : undefined
 
 export type AuthHeaders = {
   headers: {
@@ -87,26 +71,27 @@ export class ModerationViews {
     private db: Database,
     private signingKey: Keypair,
     private signingKeyId: number,
-    private appviewAgent: AtpAgent,
+    private appviewClient: Client,
     private appviewAuth: (method: string) => Promise<AuthHeaders>,
     public idResolver: IdResolver,
     public devMode?: boolean,
   ) {}
 
-  async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
+  async getAccoutInfosByDid(
+    dids: DidString[],
+  ): Promise<Map<string, com.atproto.admin.defs.AccountView>> {
     if (dids.length === 0) return new Map()
-    const auth = await this.appviewAuth(ids.ComAtprotoAdminGetAccountInfos)
+    const auth = await this.appviewAuth(com.atproto.admin.getAccountInfos.$lxm)
     if (!auth) return new Map()
     try {
-      const res = await this.appviewAgent.com.atproto.admin.getAccountInfos(
-        {
-          dids: dedupeStrs(dids),
-        },
+      const body = await this.appviewClient.call(
+        com.atproto.admin.getAccountInfos,
+        { dids: dedupeStrs(dids) },
         auth,
       )
-      return res.data.infos.reduce((acc, cur) => {
+      return body.infos.reduce((acc, cur) => {
         return acc.set(cur.did, cur)
-      }, new Map<string, AccountView>())
+      }, new Map<string, com.atproto.admin.defs.AccountView>())
     } catch (err) {
       httpLogger.error(
         { err, dids },
@@ -116,7 +101,9 @@ export class ModerationViews {
     }
   }
 
-  async repos(dids: string[]): Promise<Map<string, RepoView>> {
+  async repos(
+    dids: DidString[],
+  ): Promise<Map<string, tools.ozone.moderation.defs.RepoView>> {
     if (dids.length === 0) return new Map()
     const [infos, subjectStatuses] = await Promise.all([
       this.getAccoutInfosByDid(dids),
@@ -129,7 +116,7 @@ export class ModerationViews {
       const status = subjectStatuses.get(did)
       return acc.set(did, {
         // No email or invite info on appview
-        did,
+        did: did as DidString,
         handle: info.handle,
         relatedRecords: info.relatedRecords ?? [],
         indexedAt: info.indexedAt,
@@ -137,16 +124,18 @@ export class ModerationViews {
           subjectStatus: status ? this.formatSubjectStatus(status) : undefined,
         },
       })
-    }, new Map<string, RepoView>())
+    }, new Map<string, tools.ozone.moderation.defs.RepoView>())
   }
 
-  formatEvent(row: ModerationEventRowWithHandle): Un$Typed<ModEventView> {
-    const eventView: Un$Typed<ModEventView> = {
+  formatEvent(
+    row: ModerationEventRowWithHandle,
+  ): Un$Typed<tools.ozone.moderation.defs.ModEventView> {
+    const eventView: Un$Typed<tools.ozone.moderation.defs.ModEventView> = {
       id: row.id,
       event: {
         $type: row.action,
         comment: row.comment ?? undefined,
-      },
+      } as tools.ozone.moderation.defs.ModEventView['event'],
       subject: subjectFromEventRow(row).lex(),
       subjectBlobCids: row.subjectBlobCids ?? [],
       createdBy: row.createdBy,
@@ -157,7 +146,7 @@ export class ModerationViews {
         ? {
             name: row.modTool.name,
             meta: sanitizeUnsafeIntegers(row.modTool.meta) as
-              Record<string, unknown> | undefined,
+              LexMap | undefined,
           }
         : undefined,
     }
@@ -166,16 +155,17 @@ export class ModerationViews {
     const meta = row.meta || {}
 
     if (
-      isModEventMuteReporter(event) ||
-      isModEventTakedown(event) ||
-      isModEventLabel(event) ||
-      isModEventMute(event)
+      tools.ozone.moderation.defs.modEventMuteReporter.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventLabel.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventMute.$isTypeOf(event)
     ) {
       event.durationInHours = row.durationInHours ?? undefined
     }
 
     if (
-      (isModEventTakedown(event) || isModEventAcknowledge(event)) &&
+      (tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
+        tools.ozone.moderation.defs.modEventAcknowledge.$isTypeOf(event)) &&
       meta.acknowledgeAccountSubjects
     ) {
       event.acknowledgeAccountSubjects = ifBoolean(
@@ -183,14 +173,14 @@ export class ModerationViews {
       )!
     }
 
-    if (isModEventPriorityScore(event)) {
+    if (tools.ozone.moderation.defs.modEventPriorityScore.$isTypeOf(event)) {
       event.score = ifNumber(meta?.priorityScore) ?? 0
     }
 
     if (
-      isModEventTakedown(event) ||
-      isModEventEmail(event) ||
-      isModEventReverseTakedown(event)
+      tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventEmail.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventReverseTakedown.$isTypeOf(event)
     ) {
       if (typeof meta.policies === 'string' && meta.policies.length > 0) {
         event.policies = meta.policies.split(',')
@@ -199,12 +189,15 @@ export class ModerationViews {
       event.strikeCount = ifNumber(row.strikeCount)
       event.severityLevel = ifString(row.severityLevel)
 
-      if (isModEventTakedown(event) || isModEventEmail(event)) {
-        event.strikeExpiresAt = ifString(row.strikeExpiresAt)
+      if (
+        tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
+        tools.ozone.moderation.defs.modEventEmail.$isTypeOf(event)
+      ) {
+        event.strikeExpiresAt = ifDatetime(row.strikeExpiresAt)
       }
     }
 
-    if (isModEventTakedown(event)) {
+    if (tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event)) {
       if (
         typeof meta.targetServices === 'string' &&
         meta.targetServices.length > 0
@@ -213,7 +206,7 @@ export class ModerationViews {
       }
     }
 
-    if (isModEventLabel(event)) {
+    if (tools.ozone.moderation.defs.modEventLabel.$isTypeOf(event)) {
       event.createLabelVals = row.createLabelVals?.length
         ? row.createLabelVals.split(' ')
         : []
@@ -221,9 +214,9 @@ export class ModerationViews {
         ? row.negateLabelVals.split(' ')
         : []
     } else if (
-      isModEventAcknowledge(event) ||
-      isModEventTakedown(event) ||
-      isModEventEscalate(event)
+      tools.ozone.moderation.defs.modEventAcknowledge.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventEscalate.$isTypeOf(event)
     ) {
       // This is for legacy data only, for new events, these types of events
       // won't have labels attached:
@@ -239,49 +232,52 @@ export class ModerationViews {
       }
     }
 
-    if (isModEventReport(event)) {
+    if (tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)) {
       event.isReporterMuted = !!meta.isReporterMuted
       event.reportType = ifString(meta.reportType)!
     }
 
-    if (isModEventEmail(event)) {
+    if (tools.ozone.moderation.defs.modEventEmail.$isTypeOf(event)) {
       event.content = ifString(meta.content)!
       event.subjectLine = ifString(meta.subjectLine)!
       event.isDelivered = ifBoolean(meta.isDelivered)
     }
 
-    if (isModEventComment(event) && meta.sticky) {
+    if (
+      tools.ozone.moderation.defs.modEventComment.$isTypeOf(event) &&
+      meta.sticky
+    ) {
       event.sticky = true
     }
 
-    if (isModEventTag(event)) {
+    if (tools.ozone.moderation.defs.modEventTag.$isTypeOf(event)) {
       event.add = row.addedTags || []
       event.remove = row.removedTags || []
     }
 
-    if (isAccountEvent(event)) {
+    if (tools.ozone.moderation.defs.accountEvent.$isTypeOf(event)) {
       event.active = !!meta.active
-      event.timestamp = ifString(meta.timestamp)!
+      event.timestamp = ifDatetime(meta.timestamp)!
       event.status = ifString(meta.status)!
     }
 
-    if (isIdentityEvent(event)) {
-      event.timestamp = ifString(meta.timestamp)!
-      event.handle = ifString(meta.handle)!
-      event.pdsHost = ifString(meta.pdsHost)!
+    if (tools.ozone.moderation.defs.identityEvent.$isTypeOf(event)) {
+      event.timestamp = ifDatetime(meta.timestamp)!
+      event.handle = ifHandle(meta.handle)!
+      event.pdsHost = ifString(meta.pdsHost)! as `${string}:${string}`
       event.tombstone = !!meta.tombstone
     }
 
-    if (isRecordEvent(event)) {
+    if (tools.ozone.moderation.defs.recordEvent.$isTypeOf(event)) {
       event.op = ifString(meta.op)!
       event.cid = ifString(meta.cid)!
-      event.timestamp = ifString(meta.timestamp)!
+      event.timestamp = ifDatetime(meta.timestamp)!
     }
 
-    if (isAgeAssuranceEvent(event)) {
+    if (tools.ozone.moderation.defs.ageAssuranceEvent.$isTypeOf(event)) {
       event.status = ifString(meta.status)!
       event.access = ifString(meta.access)!
-      event.createdAt = ifString(meta.createdAt)!
+      event.createdAt = ifString(meta.createdAt)! as DatetimeString
       event.attemptId = ifString(meta.attemptId)!
       event.initIp = ifString(meta.initIp)
       event.initUa = ifString(meta.initUa)
@@ -289,15 +285,17 @@ export class ModerationViews {
       event.completeUa = ifString(meta.completeUa)
     }
 
-    if (isAgeAssuranceOverrideEvent(event)) {
+    if (
+      tools.ozone.moderation.defs.ageAssuranceOverrideEvent.$isTypeOf(event)
+    ) {
       event.status = ifString(meta.status)!
       event.access = ifString(meta.access)!
     }
 
-    if (isScheduleTakedownEvent(event)) {
-      event.executeAt = ifString(meta.executeAt)
-      event.executeAfter = ifString(meta.executeAfter)
-      event.executeUntil = ifString(meta.executeUntil)
+    if (tools.ozone.moderation.defs.scheduleTakedownEvent.$isTypeOf(event)) {
+      event.executeAt = ifDatetime(meta.executeAt)
+      event.executeAfter = ifDatetime(meta.executeAfter)
+      event.executeUntil = ifDatetime(meta.executeUntil)
     }
 
     return eventView
@@ -305,14 +303,14 @@ export class ModerationViews {
 
   async eventDetail(
     result: ModerationEventRowWithHandle,
-  ): Promise<ModEventViewDetail> {
+  ): Promise<tools.ozone.moderation.defs.ModEventViewDetail> {
     const modSubject = subjectFromEventRow(result)
     const subject = await this.subject(modSubject)
     const eventView = this.formatEvent(result)
     const allBlobs = 'value' in subject ? findBlobRefs(subject.value) : []
     const subjectBlobs = await this.blob(
       allBlobs.filter((blob) =>
-        eventView.subjectBlobCids.includes(blob.ref.toString()),
+        eventView.subjectBlobCids.includes(getBlobCidString(blob)),
       ),
     )
     return {
@@ -323,10 +321,10 @@ export class ModerationViews {
   }
 
   async repoDetails(
-    dids: string[],
+    dids: DidString[],
     labelers?: ParsedLabelers,
-  ): Promise<Map<string, RepoView>> {
-    const results = new Map<string, RepoView>()
+  ): Promise<Map<string, tools.ozone.moderation.defs.RepoView>> {
+    const results = new Map<string, tools.ozone.moderation.defs.RepoView>()
     if (!dids.length) {
       return results
     }
@@ -356,35 +354,30 @@ export class ModerationViews {
   }
 
   async fetchRecord(
-    params: ComAtprotoRepoGetRecord.QueryParams,
+    params: com.atproto.repo.getRecord.$Params,
     appviewAuth: AuthHeaders,
   ) {
-    try {
-      const record = await this.appviewAgent.com.atproto.repo.getRecord(
-        params,
-        appviewAuth,
-      )
-      return record
-    } catch (err) {
-      if (err instanceof ComAtprotoRepoGetRecord.RecordNotFoundError) {
-        // If pds fetch fails, just return null regardless of the error
-        try {
-          const { agent: pdsAgent } = await getPdsAgentForRepo(
-            this.idResolver,
-            params.repo,
-            this.devMode,
-          )
-          if (!pdsAgent) {
-            return null
-          }
+    const res = await this.appviewClient.xrpcSafe(com.atproto.repo.getRecord, {
+      params,
+      ...appviewAuth,
+    })
+    if (res.success) return res.body
+    if (res.error !== 'RecordNotFound') return null
 
-          const record = await pdsAgent.com.atproto.repo.getRecord(params)
-          return record
-        } catch (error) {
-          return null
-        }
+    // Fall back to the repo's PDS. If that fetch fails, return null regardless
+    // of the error.
+    try {
+      const { client: pdsClient } = await getPdsClientForRepo(
+        this.idResolver,
+        params.repo as DidString,
+        this.devMode,
+      )
+      if (!pdsClient) {
+        return null
       }
 
+      return await pdsClient.call(com.atproto.repo.getRecord, params)
+    } catch (error) {
       return null
     }
   }
@@ -392,15 +385,15 @@ export class ModerationViews {
   async fetchRecords(
     subjects: RecordSubject[],
   ): Promise<Map<string, RecordInfo>> {
-    const appviewAuth = await this.appviewAuth(ids.ComAtprotoRepoGetRecord)
+    const appviewAuth = await this.appviewAuth(com.atproto.repo.getRecord.$lxm)
     if (!appviewAuth) return new Map()
 
     const fetched = await Promise.all(
       subjects.map(async (subject) => {
         const uri = new AtUri(subject.uri)
         const params = {
-          repo: uri.hostname,
-          collection: uri.collection,
+          repo: uri.hostname as AtIdentifierString,
+          collection: uri.collection as NsidString,
           rkey: uri.rkey,
           cid: subject.cid,
         }
@@ -409,15 +402,14 @@ export class ModerationViews {
     )
     return fetched.reduce((acc, cur) => {
       if (!cur) return acc
-      const data = cur.data
-      const indexedAt = new Date().toISOString()
-      return acc.set(data.uri, { ...data, cid: data.cid ?? '', indexedAt })
+      const indexedAt = currentDatetimeString()
+      return acc.set(cur.uri, { ...cur, cid: cur.cid ?? '', indexedAt })
     }, new Map<string, RecordInfo>())
   }
 
   async records(subjects: RecordSubject[]) {
     const uris = subjects.map((record) => new AtUri(record.uri))
-    const dids = uris.map((u) => u.hostname)
+    const dids = uris.map((u) => u.hostname as DidString)
 
     const [repos, subjectStatuses, records] = await Promise.all([
       this.repos(dids),
@@ -427,13 +419,16 @@ export class ModerationViews {
 
     const map = new Map<
       string,
-      // Because the result of this function is used to build RecordViewDetail,
+      // Because the result of this function is used to build tools.ozone.moderation.defs.RecordViewDetail,
       // we explicitly type the result without the $type field, so can be used
-      // as both RecordView and RecordViewDetail, without having to cast or
+      // as both tools.ozone.moderation.defs.RecordView and tools.ozone.moderation.defs.RecordViewDetail, without having to cast or
       // override the $type field.
-      RecordView & {
+      tools.ozone.moderation.defs.RecordView & {
         $type?: undefined
-        moderation: { $type?: undefined; subjectStatus?: SubjectStatusView }
+        moderation: {
+          $type?: undefined
+          subjectStatus?: tools.ozone.moderation.defs.SubjectStatusView
+        }
       }
     >()
 
@@ -447,8 +442,8 @@ export class ModerationViews {
       map.set(uri.toString(), {
         uri: uri.toString(),
         cid: record.cid,
-        value: record.value,
-        blobCids: findBlobRefs(record.value).map((blob) => blob.ref.toString()),
+        value: record.value as LexMap,
+        blobCids: findBlobRefs(record.value).map((b) => getBlobCidString(b)),
         indexedAt: record.indexedAt,
         repo,
         moderation: {
@@ -465,8 +460,11 @@ export class ModerationViews {
   async recordDetails(
     subjects: RecordSubject[],
     labelers?: ParsedLabelers,
-  ): Promise<Map<string, RecordViewDetail>> {
-    const results = new Map<string, RecordViewDetail>()
+  ): Promise<Map<string, tools.ozone.moderation.defs.RecordViewDetail>> {
+    const results = new Map<
+      string,
+      tools.ozone.moderation.defs.RecordViewDetail
+    >()
     if (!subjects.length) {
       return results
     }
@@ -515,16 +513,14 @@ export class ModerationViews {
   async getExternalLabels(
     subjects: string[],
     labelers?: ParsedLabelers,
-  ): Promise<Map<string, Label[]>> {
-    const results = new Map<string, Label[]>()
+  ): Promise<Map<string, com.atproto.label.defs.Label[]>> {
+    const results = new Map<string, com.atproto.label.defs.Label[]>()
     if (!labelers?.dids.length && !labelers?.redact.size) return results
     try {
-      const {
-        data: { labels },
-      } = await this.appviewAgent.com.atproto.label.queryLabels({
-        uriPatterns: subjects,
-        sources: labelers.dids,
-      })
+      const { labels } = await this.appviewClient.call(
+        com.atproto.label.queryLabels,
+        { uriPatterns: subjects, sources: labelers.dids },
+      )
       labels.forEach((label) => {
         if (!results.has(label.uri)) {
           results.set(label.uri, [label])
@@ -542,7 +538,9 @@ export class ModerationViews {
     }
   }
 
-  formatReport(report: ModerationEventRowWithHandle): ReportOutput {
+  formatReport(
+    report: ModerationEventRowWithHandle,
+  ): com.atproto.moderation.createReport.$OutputBody {
     return {
       id: report.id,
       createdAt: report.createdAt,
@@ -550,10 +548,12 @@ export class ModerationViews {
       // we are not guarantying that so in whatever case, if we end up with such entries, default to 'other'
       reasonType: report.meta?.reportType
         ? (report.meta?.reportType as string)
-        : REASONOTHER,
+        : com.atproto.moderation.defs.reasonOther.value,
       reason: report.comment ?? undefined,
       reportedBy: report.createdBy,
-      subject: subjectFromEventRow(report).lex() as ReportOutput['subject'],
+      subject: subjectFromEventRow(
+        report,
+      ).lex() as com.atproto.moderation.createReport.$OutputBody['subject'],
     }
   }
   // Partial view for subjects
@@ -561,7 +561,7 @@ export class ModerationViews {
   async subject(subject: ModSubject): Promise<SubjectView> {
     if (subject.isConvo()) {
       return {
-        $type: 'tools.ozone.moderation.defs#convoView',
+        $type: 'tools.ozone.moderation.defs#convoView' as const,
         did: subject.did,
         convoId: subject.convoId,
       }
@@ -571,11 +571,11 @@ export class ModerationViews {
       if (repo) {
         return {
           ...repo,
-          $type: 'tools.ozone.moderation.defs#repoView',
+          $type: 'tools.ozone.moderation.defs#repoView' as const,
         }
       } else {
         return {
-          $type: 'tools.ozone.moderation.defs#repoViewNotFound',
+          $type: 'tools.ozone.moderation.defs#repoViewNotFound' as const,
           did: subject.did,
         }
       }
@@ -586,19 +586,21 @@ export class ModerationViews {
       if (record) {
         return {
           ...record,
-          $type: 'tools.ozone.moderation.defs#recordView',
+          $type: 'tools.ozone.moderation.defs#recordView' as const,
         }
       }
     }
     return {
-      $type: 'tools.ozone.moderation.defs#repoViewNotFound',
+      $type: 'tools.ozone.moderation.defs#repoViewNotFound' as const,
       did: subject.did,
     }
   }
 
   // Partial view for blobs
 
-  async blob(blobs: BlobRef[]): Promise<BlobView[]> {
+  async blob(
+    blobs: BlobRef[],
+  ): Promise<tools.ozone.moderation.defs.BlobView[]> {
     if (!blobs.length) return []
     const { ref } = this.db.db.dynamic
     const modStatusResults = await moderationSubjectStatusQueryBuilder(
@@ -607,7 +609,7 @@ export class ModerationViews {
       .where(
         sql<boolean>`${ref(
           'moderation_subject_status.blobCids',
-        )} @> ${JSON.stringify(blobs.map((blob) => blob.ref.toString()))}`,
+        )} @> ${JSON.stringify(blobs.map(getBlobCidString))}`,
       )
       .executeTakeFirst()
 
@@ -617,17 +619,17 @@ export class ModerationViews {
     )
     // Intentionally missing details field, since we don't have any on appview.
     // We also don't know when the blob was created, so we use a canned creation time.
-    const unknownTime = new Date(0).toISOString()
+    const unknownTime = toDatetimeString(new Date(0))
     return blobs.map((blob) => {
-      const cid = blob.ref.toString()
+      const cid = getBlobCidString(blob)
       const subjectStatus = statusByCid[cid]
         ? this.formatSubjectStatus(statusByCid[cid])
         : undefined
 
       return {
         cid,
-        mimeType: blob.mimeType,
-        size: blob.size,
+        mimeType: getBlobMime(blob),
+        size: getBlobSize(blob) ?? 0,
         createdAt: unknownTime,
         moderation: {
           subjectStatus,
@@ -639,9 +641,9 @@ export class ModerationViews {
   async labels(
     subjects: string[],
     includeNeg?: boolean,
-  ): Promise<Map<string, Label[]>> {
-    const now = new Date().toISOString()
-    const labels = new Map<string, Label[]>()
+  ): Promise<Map<string, com.atproto.label.defs.Label[]>> {
+    const now = currentDatetimeString()
+    const labels = new Map<string, com.atproto.label.defs.Label[]>()
     const res = await this.db.db
       .selectFrom('label')
       .where('label.uri', 'in', subjects)
@@ -725,8 +727,8 @@ export class ModerationViews {
 
   formatSubjectStatus(
     status: ModerationSubjectStatusRowWithHandle,
-  ): SubjectStatusView {
-    const statusView: SubjectStatusView = {
+  ): tools.ozone.moderation.defs.SubjectStatusView {
+    const statusView: tools.ozone.moderation.defs.SubjectStatusView = {
       id: status.id,
       reviewState: status.reviewState,
       createdAt: status.createdAt,
@@ -749,11 +751,11 @@ export class ModerationViews {
       ageAssuranceUpdatedBy: status.ageAssuranceUpdatedBy ?? undefined,
       subject: subjectFromStatusRow(
         status,
-      ).lex() as SubjectStatusView['subject'],
+      ).lex() as tools.ozone.moderation.defs.SubjectStatusView['subject'],
 
       accountStats: {
         // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
-        $type: 'tools.ozone.moderation.defs#accountStats',
+        $type: 'tools.ozone.moderation.defs#accountStats' as const,
 
         // account_events_stats
         reportCount: status.reportCount ?? undefined,
@@ -765,7 +767,7 @@ export class ModerationViews {
 
       recordsStats: {
         // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
-        $type: 'tools.ozone.moderation.defs#recordsStats',
+        $type: 'tools.ozone.moderation.defs#recordsStats' as const,
 
         // account_record_events_stats
         totalReports: status.totalReports ?? undefined,
@@ -783,7 +785,7 @@ export class ModerationViews {
       accountStrike:
         status.strikeCount !== null || status.totalStrikeCount !== null
           ? {
-              $type: 'tools.ozone.moderation.defs#accountStrike',
+              $type: 'tools.ozone.moderation.defs#accountStrike' as const,
               activeStrikeCount: status.strikeCount ?? undefined,
               totalStrikeCount: status.totalStrikeCount ?? undefined,
               firstStrikeAt: status.firstStrikeAt ?? undefined,
@@ -794,14 +796,14 @@ export class ModerationViews {
 
     if (status.recordPath !== '') {
       statusView.hosting = {
-        $type: 'tools.ozone.moderation.defs#recordHosting',
+        $type: 'tools.ozone.moderation.defs#recordHosting' as const,
         updatedAt: status.hostingUpdatedAt ?? undefined,
         deletedAt: status.hostingDeletedAt ?? undefined,
         status: status.hostingStatus ?? 'unknown',
       }
     } else {
       statusView.hosting = {
-        $type: 'tools.ozone.moderation.defs#accountHosting',
+        $type: 'tools.ozone.moderation.defs#accountHosting' as const,
         updatedAt: status.hostingUpdatedAt ?? undefined,
         deletedAt: status.hostingDeletedAt ?? undefined,
         status: status.hostingStatus ?? 'unknown',
@@ -813,26 +815,34 @@ export class ModerationViews {
     return statusView
   }
 
-  async fetchAuthorFeed(actor: string): Promise<FeedViewPost[]> {
-    const auth = await this.appviewAuth(ids.AppBskyFeedGetAuthorFeed)
+  async fetchAuthorFeed(
+    actor: AtIdentifierString,
+  ): Promise<app.bsky.feed.defs.FeedViewPost[]> {
+    const auth = await this.appviewAuth(app.bsky.feed.getAuthorFeed.$lxm)
     if (!auth) return []
-    const {
-      data: { feed },
-    } = await this.appviewAgent.app.bsky.feed.getAuthorFeed({ actor }, auth)
+    const { feed } = await this.appviewClient.call(
+      app.bsky.feed.getAuthorFeed,
+      { actor },
+      auth,
+    )
 
     return feed
   }
 
-  async getProfiles(dids: string[]) {
-    const profiles = new Map<string, AppBskyActorDefs.ProfileViewDetailed>()
+  async getProfiles(dids: DidString[]) {
+    const profiles = new Map<string, app.bsky.actor.defs.ProfileViewDetailed>()
 
-    const auth = await this.appviewAuth(ids.AppBskyActorGetProfiles)
+    const auth = await this.appviewAuth(app.bsky.actor.getProfiles.$lxm)
     if (!auth) return profiles
 
     for (const actors of chunkArray(dids, 25)) {
-      const { data } = await this.appviewAgent.getProfiles({ actors }, auth)
+      const body = await this.appviewClient.call(
+        app.bsky.actor.getProfiles,
+        { actors },
+        auth,
+      )
 
-      data.profiles.forEach((profile) => {
+      body.profiles.forEach((profile) => {
         profiles.set(profile.did, profile)
       })
     }
@@ -841,27 +851,31 @@ export class ModerationViews {
   }
 }
 
-type RecordSubject = { uri: string; cid?: string }
+type RecordSubject = { uri: AtUriString; cid?: string }
 
-type SubjectView = ModEventViewDetail['subject']
+type SubjectView = tools.ozone.moderation.defs.ModEventViewDetail['subject']
 // @TODO tidy
-// type SubjectView = ModEventViewDetail['subject'] & ReportViewDetail['subject']
+// type SubjectView = tools.ozone.moderation.defs.ModEventViewDetail['subject'] & ReportViewDetail['subject']
 
 type RecordInfo = {
-  uri: string
+  uri: AtUriString
   cid: string
   value: Record<string, unknown>
-  indexedAt: string
+  indexedAt: DatetimeString
 }
 
-function formatSubjectId(did: string, recordPath?: string, convoId?: string) {
+function formatSubjectId(
+  did: DidString,
+  recordPath?: string,
+  convoId?: string,
+) {
   if (recordPath) return `at://${did}/${recordPath}`
   if (convoId) return `at://${did}/${CHAT_CONVO_COLLECTION}/${convoId}`
   return did
 }
 
 function findBlobRefs(value: unknown, refs: BlobRef[] = []) {
-  if (value instanceof BlobRef) {
+  if (isBlobRef(value)) {
     refs.push(value)
   } else if (Array.isArray(value)) {
     value.forEach((val) => findBlobRefs(val, refs))
@@ -872,18 +886,18 @@ function findBlobRefs(value: unknown, refs: BlobRef[] = []) {
 }
 
 export function getSelfLabels(details: {
-  uri: string | null
+  uri: AtUriString | null
   cid: string | null
   record: Record<string, unknown> | null
-}): Label[] {
+}): com.atproto.label.defs.Label[] {
   const { uri, cid, record } = details
   if (!uri || !cid || !record) return []
   if (!isValidSelfLabels(record.labels)) return []
-  const src = new AtUri(uri).host // record creator
+  const src = new AtUri(uri).host as DidString // record creator
   const cts =
     typeof record.createdAt === 'string'
       ? normalizeDatetimeAlways(record.createdAt)
-      : new Date(0).toISOString()
+      : toDatetimeString(new Date(0))
   return record.labels.values.map(({ val }) => {
     return { src, uri, cid, val, cts }
   })

@@ -1,8 +1,15 @@
 import { type Expression, type Insertable, sql } from 'kysely'
-import type { AtpAgent, ToolsOzoneModerationDefs } from '@atproto/api'
 import { addHoursToDate, chunkArray } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
+import {
+  type Client,
+  type DatetimeString,
+  type DidString,
+  type UriString,
+  currentDatetimeString,
+  toDatetimeString,
+} from '@atproto/lex'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getReviewState } from '../api/util.js'
@@ -16,36 +23,7 @@ import { LabelChannel } from '../db/schema/label.js'
 import type { ModerationEvent } from '../db/schema/moderation_event.js'
 import { jsonb } from '../db/types.js'
 import type { ImageInvalidator } from '../image-invalidator.js'
-import { ids } from '../lexicon/lexicons.js'
-import type {
-  RepoBlobRef,
-  RepoRef,
-} from '../lexicon/types/com/atproto/admin/defs.js'
-import type { Label } from '../lexicon/types/com/atproto/label/defs.js'
-import type { ReasonType } from '../lexicon/types/com/atproto/moderation/defs.js'
-import type { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef.js'
-import {
-  REVIEWESCALATED,
-  REVIEWOPEN,
-  isAccountEvent,
-  isAgeAssuranceEvent,
-  isAgeAssuranceOverrideEvent,
-  isAgeAssurancePurgeEvent,
-  isIdentityEvent,
-  isModEventAcknowledge,
-  isModEventComment,
-  isModEventEmail,
-  isModEventLabel,
-  isModEventMute,
-  isModEventPriorityScore,
-  isModEventReport,
-  isModEventReverseTakedown,
-  isModEventTag,
-  isModEventTakedown,
-  isRecordEvent,
-  isScheduleTakedownEvent,
-} from '../lexicon/types/tools/ozone/moderation/defs.js'
-import type { QueryParams as QueryStatusParams } from '../lexicon/types/tools/ozone/moderation/queryStatuses.js'
+import { com, tools } from '../lexicons/index.js'
 import { httpLogger as log } from '../logger.js'
 import { LABELER_HEADER_NAME, type ParsedLabelers } from '../util.js'
 import { insertExpiringTags, removeExpiringTags } from './expiring-tags.js'
@@ -76,7 +54,7 @@ import {
   dateFromDbDatetime,
   formatLabel,
   formatLabelRow,
-  getPdsAgentForRepo,
+  getPdsClientForRepo,
   signLabel,
 } from './util.js'
 import { type AuthHeaders, ModerationViews } from './views.js'
@@ -92,7 +70,7 @@ export class ModerationService {
     public backgroundQueue: BackgroundQueue,
     public idResolver: IdResolver,
     public eventPusher: EventPusher,
-    public appviewAgent: AtpAgent,
+    public appviewClient: Client,
     private createAuthHeaders: (
       aud: string,
       method: string,
@@ -108,7 +86,7 @@ export class ModerationService {
     backgroundQueue: BackgroundQueue,
     idResolver: IdResolver,
     eventPusher: EventPusher,
-    appviewAgent: AtpAgent,
+    appviewClient: Client,
     createAuthHeaders: (aud: string, method: string) => Promise<AuthHeaders>,
     strikeServiceCreator: StrikeServiceCreator,
     imgInvalidator?: ImageInvalidator,
@@ -123,7 +101,7 @@ export class ModerationService {
         backgroundQueue,
         idResolver,
         eventPusher,
-        appviewAgent,
+        appviewClient,
         createAuthHeaders,
         strikeService,
         imgInvalidator,
@@ -135,7 +113,7 @@ export class ModerationService {
     this.db,
     this.signingKey,
     this.signingKeyId,
-    this.appviewAgent,
+    this.appviewClient,
     async (method: string, labelers?: ParsedLabelers) => {
       const authHeaders = await this.createAuthHeaders(
         this.cfg.appview.did,
@@ -182,7 +160,7 @@ export class ModerationService {
 
   async getEvents(opts: {
     subject?: string
-    createdBy?: string
+    createdBy?: DidString
     limit: number
     cursor?: string
     includeAllUserRecords: boolean
@@ -190,8 +168,8 @@ export class ModerationService {
     sortDirection?: 'asc' | 'desc'
     hasComment?: boolean
     comment?: string
-    createdAfter?: string
-    createdBefore?: string
+    createdAfter?: DatetimeString
+    createdBefore?: DatetimeString
     addedLabels: string[]
     removedLabels: string[]
     addedTags: string[]
@@ -236,7 +214,9 @@ export class ModerationService {
     if (subject) {
       const isSubjectAtUri = subject.startsWith('at://')
       const subjectAtUri = isSubjectAtUri ? new AtUri(subject) : null
-      const subjectDid = isSubjectAtUri ? new AtUri(subject).hostname : subject
+      const subjectDid = (
+        isSubjectAtUri ? new AtUri(subject).hostname : subject
+      ) as DidString
       const subjectUri = isSubjectAtUri ? subject : null
       // regardless of subjectUri check, we always want to query against subjectDid column since that's indexed
       builder = builder.where('subjectDid', '=', subjectDid)
@@ -431,8 +411,8 @@ export class ModerationService {
   }
 
   async resolveSubjectsForAccount(
-    did: string,
-    createdBy: string,
+    did: DidString,
+    createdBy: DidString,
     accountEvent: ModerationEventRow,
   ) {
     const subjectsToBeResolved = await this.db.db
@@ -441,7 +421,10 @@ export class ModerationService {
       .where((eb) =>
         eb.or([eb('recordPath', '!=', ''), eb('convoId', '!=', '')]),
       )
-      .where('reviewState', 'in', [REVIEWESCALATED, REVIEWOPEN])
+      .where('reviewState', 'in', [
+        tools.ozone.moderation.defs.reviewEscalated.value,
+        tools.ozone.moderation.defs.reviewOpen.value,
+      ])
       .selectAll()
       .execute()
 
@@ -488,9 +471,9 @@ export class ModerationService {
   async logEvent(info: {
     event: ModEventType
     subject: ModSubject
-    createdBy: string
+    createdBy: DidString
     createdAt?: Date
-    modTool?: ToolsOzoneModerationDefs.ModTool
+    modTool?: tools.ozone.moderation.defs.ModTool
     externalId?: string
   }): Promise<{
     event: ModerationEventRow
@@ -507,28 +490,37 @@ export class ModerationService {
     } = info
 
     const createLabelVals =
-      isModEventLabel(event) && event.createLabelVals.length > 0
+      tools.ozone.moderation.defs.modEventLabel.$isTypeOf(event) &&
+      event.createLabelVals.length > 0
         ? event.createLabelVals.join(' ')
         : undefined
     const negateLabelVals =
-      isModEventLabel(event) && event.negateLabelVals.length > 0
+      tools.ozone.moderation.defs.modEventLabel.$isTypeOf(event) &&
+      event.negateLabelVals.length > 0
         ? event.negateLabelVals.join(' ')
         : undefined
 
     const meta: Record<string, string | number | boolean> = {}
 
-    const addedTags = isModEventTag(event) ? jsonb(event.add) : null
-    const removedTags = isModEventTag(event) ? jsonb(event.remove) : null
+    const addedTags = tools.ozone.moderation.defs.modEventTag.$isTypeOf(event)
+      ? jsonb(event.add)
+      : null
+    const removedTags = tools.ozone.moderation.defs.modEventTag.$isTypeOf(event)
+      ? jsonb(event.remove)
+      : null
 
-    if (isModEventReport(event)) {
+    if (tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)) {
       meta.reportType = event.reportType
     }
 
-    if (isModEventComment(event) && event.sticky) {
+    if (
+      tools.ozone.moderation.defs.modEventComment.$isTypeOf(event) &&
+      event.sticky
+    ) {
       meta.sticky = event.sticky
     }
 
-    if (isModEventEmail(event)) {
+    if (tools.ozone.moderation.defs.modEventEmail.$isTypeOf(event)) {
       meta.subjectLine = event.subjectLine
       meta.isDelivered = !!event.isDelivered
       if (event.content) {
@@ -539,30 +531,30 @@ export class ModerationService {
       }
     }
 
-    if (isAccountEvent(event)) {
+    if (tools.ozone.moderation.defs.accountEvent.$isTypeOf(event)) {
       meta.active = event.active
       meta.timestamp = event.timestamp
       if (event.status) meta.status = event.status
     }
 
-    if (isModEventPriorityScore(event)) {
+    if (tools.ozone.moderation.defs.modEventPriorityScore.$isTypeOf(event)) {
       meta.priorityScore = event.score
     }
 
-    if (isIdentityEvent(event)) {
+    if (tools.ozone.moderation.defs.identityEvent.$isTypeOf(event)) {
       meta.timestamp = event.timestamp
       if (event.handle) meta.handle = event.handle
       if (event.pdsHost) meta.pdsHost = event.pdsHost
       if (event.tombstone) meta.tombstone = event.tombstone
     }
 
-    if (isRecordEvent(event)) {
+    if (tools.ozone.moderation.defs.recordEvent.$isTypeOf(event)) {
       meta.timestamp = event.timestamp
       meta.op = event.op
       if (event.cid) meta.cid = event.cid
     }
 
-    if (isAgeAssuranceEvent(event)) {
+    if (tools.ozone.moderation.defs.ageAssuranceEvent.$isTypeOf(event)) {
       meta.status = event.status
       meta.createdAt = event.createdAt
       if (event.attemptId) {
@@ -585,14 +577,16 @@ export class ModerationService {
       }
     }
 
-    if (isAgeAssuranceOverrideEvent(event)) {
+    if (
+      tools.ozone.moderation.defs.ageAssuranceOverrideEvent.$isTypeOf(event)
+    ) {
       meta.status = event.status
       if (event.access) {
         meta.access = event.access
       }
     }
 
-    if (isScheduleTakedownEvent(event)) {
+    if (tools.ozone.moderation.defs.scheduleTakedownEvent.$isTypeOf(event)) {
       if (event.executeAfter) {
         meta.executeAfter = event.executeAfter
       }
@@ -605,22 +599,29 @@ export class ModerationService {
     }
 
     if (
-      (isModEventTakedown(event) || isModEventAcknowledge(event)) &&
+      (tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
+        tools.ozone.moderation.defs.modEventAcknowledge.$isTypeOf(event)) &&
       event.acknowledgeAccountSubjects
     ) {
       meta.acknowledgeAccountSubjects = true
     }
 
-    if (isModEventTakedown(event) && event.policies?.length) {
+    if (
+      tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) &&
+      event.policies?.length
+    ) {
       meta.policies = event.policies.join(',')
     }
 
-    if (isModEventTakedown(event) && event.targetServices?.length) {
+    if (
+      tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) &&
+      event.targetServices?.length
+    ) {
       meta.targetServices = event.targetServices.join(',')
     }
 
     // Keep trace of reports that came in while the reporter was in muted stated
-    if (isModEventReport(event)) {
+    if (tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)) {
       const isReportingMuted = await this.isReportingMutedForSubject(createdBy)
       if (isReportingMuted) {
         meta.isReporterMuted = true
@@ -641,12 +642,12 @@ export class ModerationService {
     // processNewEvent will update the account_strike table with the new strike count
     let severityLevel: string | null = null
     let strikeCount: number | null = null
-    let strikeExpiresAt: string | null = null
+    let strikeExpiresAt: DatetimeString | null = null
 
     if (
-      isModEventTakedown(event) ||
-      isModEventEmail(event) ||
-      isModEventReverseTakedown(event)
+      tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventEmail.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventReverseTakedown.$isTypeOf(event)
     ) {
       // Store severityLevel if provided (for display/tracking)
       if (event.severityLevel) {
@@ -671,7 +672,7 @@ export class ModerationService {
             event.comment) ||
           null,
         action: event.$type as ModerationEvent['action'],
-        createdAt: createdAt.toISOString(),
+        createdAt: toDatetimeString(createdAt),
         createdBy,
         createLabelVals,
         negateLabelVals,
@@ -683,9 +684,10 @@ export class ModerationService {
             : null,
         meta: Object.assign(meta, subjectInfo.meta),
         expiresAt:
-          (isModEventTakedown(event) || isModEventMute(event)) &&
+          (tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
+            tools.ozone.moderation.defs.modEventMute.$isTypeOf(event)) &&
           event.durationInHours
-            ? addHoursToDate(event.durationInHours, createdAt).toISOString()
+            ? toDatetimeString(addHoursToDate(event.durationInHours, createdAt))
             : undefined,
         subjectType: subjectInfo.subjectType,
         subjectDid: subjectInfo.subjectDid,
@@ -710,19 +712,18 @@ export class ModerationService {
     )
 
     // Manage expiring tag rows for temporary tags
-    if (isModEventTag(event)) {
+    if (tools.ozone.moderation.defs.modEventTag.$isTypeOf(event)) {
       if (event.durationInHours && event.add.length > 0) {
-        const expiresAt = addHoursToDate(
-          event.durationInHours,
-          createdAt,
-        ).toISOString()
+        const expiresAt = toDatetimeString(
+          addHoursToDate(event.durationInHours, createdAt),
+        )
         await insertExpiringTags(this.db, {
           eventId: modEvent.id,
           did: subjectInfo.subjectDid,
           recordPath: subjectInfo.subjectUri ?? '',
           convoId: subjectInfo.subjectConvoId ?? '',
           tags: event.add,
-          expiresAt,
+          expiresAt: expiresAt as DatetimeString,
           createdBy,
         })
       }
@@ -736,7 +737,7 @@ export class ModerationService {
       }
     }
 
-    if (isAgeAssurancePurgeEvent(event)) {
+    if (tools.ozone.moderation.defs.ageAssurancePurgeEvent.$isTypeOf(event)) {
       await this.purgeAgeAssuranceEvents(subjectInfo.subjectDid)
     }
 
@@ -756,7 +757,7 @@ export class ModerationService {
     return { event: modEvent, subjectStatus }
   }
 
-  async purgeAgeAssuranceEvents(subjectDid: string) {
+  async purgeAgeAssuranceEvents(subjectDid: DidString) {
     this.db.assertTransaction()
     await this.db.db
       .deleteFrom('moderation_event')
@@ -805,7 +806,7 @@ export class ModerationService {
   }
 
   async getSubjectsDueForReversal(): Promise<ReversalSubject[]> {
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     const subjects = await this.db.db
       .selectFrom('moderation_subject_status')
       .where((eb) =>
@@ -821,13 +822,13 @@ export class ModerationService {
     }))
   }
 
-  async isSubjectSuspended(did: string): Promise<boolean> {
+  async isSubjectSuspended(did: DidString): Promise<boolean> {
     const res = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
       .where('recordPath', '=', '')
       .where('convoId', '=', '')
-      .where('suspendUntil', '>', new Date().toISOString())
+      .where('suspendUntil', '>', currentDatetimeString())
       .select('did')
       .limit(1)
       .executeTakeFirst()
@@ -1059,7 +1060,7 @@ export class ModerationService {
   }
 
   async report(info: {
-    reasonType: ReasonType
+    reasonType: com.atproto.moderation.defs.ReasonType
     reason?: string
     subject: ModSubject
     reportedBy: string
@@ -1087,10 +1088,10 @@ export class ModerationService {
         reportType: reasonType,
         comment: reason,
       },
-      createdBy: reportedBy,
+      createdBy: reportedBy as DidString,
       subject,
       createdAt,
-      modTool,
+      modTool: modTool as tools.ozone.moderation.defs.ModTool | undefined,
     })
   }
 
@@ -1130,7 +1131,7 @@ export class ModerationService {
     minPriorityScore,
     minStrikeCount,
     ageAssuranceState,
-  }: QueryStatusParams): Promise<{
+  }: tools.ozone.moderation.queryStatuses.$Params): Promise<{
     statuses: ModerationSubjectStatusRowWithHandle[]
     cursor?: string
   }> {
@@ -1214,8 +1215,16 @@ export class ModerationService {
 
     if (ignoreSubjects?.length) {
       builder = builder
-        .where('moderation_subject_status.did', 'not in', ignoreSubjects)
-        .where('moderation_subject_status.recordPath', 'not in', ignoreSubjects)
+        .where(
+          'moderation_subject_status.did',
+          'not in',
+          ignoreSubjects as DidString[],
+        )
+        .where(
+          'moderation_subject_status.recordPath',
+          'not in',
+          ignoreSubjects as string[],
+        )
     }
 
     const reviewStateNormalized = getReviewState(reviewState)
@@ -1324,7 +1333,7 @@ export class ModerationService {
           eb(
             'moderation_subject_status.muteUntil',
             '<',
-            new Date().toISOString(),
+            currentDatetimeString(),
           ),
           eb('moderation_subject_status.muteUntil', 'is', null),
         ]),
@@ -1337,12 +1346,12 @@ export class ModerationService {
           eb(
             'moderation_subject_status.muteUntil',
             '>',
-            new Date().toISOString(),
+            currentDatetimeString(),
           ),
           eb(
             'moderation_subject_status.muteReportingUntil',
             '>',
-            new Date().toISOString(),
+            currentDatetimeString(),
           ),
         ]),
       )
@@ -1473,13 +1482,13 @@ export class ModerationService {
 
   // This is used to check if the reporter of an incoming report is muted from reporting
   // so we want to make sure this look up is as fast as possible
-  async isReportingMutedForSubject(did: string) {
+  async isReportingMutedForSubject(did: DidString) {
     const result = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
       .where('recordPath', '=', '')
       .where('convoId', '=', '')
-      .where('muteReportingUntil', '>', new Date().toISOString())
+      .where('muteReportingUntil', '>', currentDatetimeString())
       .select(sql`true`.as('status'))
       .executeTakeFirst()
 
@@ -1487,13 +1496,13 @@ export class ModerationService {
   }
 
   // Check if a subject (the account being reported) has an active mute
-  async isSubjectMuted(did: string) {
+  async isSubjectMuted(did: DidString) {
     const result = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
       .where('recordPath', '=', '')
       .where('convoId', '=', '')
-      .where('muteUntil', '>', new Date().toISOString())
+      .where('muteUntil', '>', currentDatetimeString())
       .select(sql`true`.as('status'))
       .executeTakeFirst()
 
@@ -1501,14 +1510,14 @@ export class ModerationService {
   }
 
   async formatAndCreateLabels(
-    uri: string,
+    uri: UriString,
     cid: string | null,
     labels: { create?: string[]; negate?: string[] },
     durationInHours?: number,
-  ): Promise<Label[]> {
+  ): Promise<com.atproto.label.defs.Label[]> {
     const exp =
       durationInHours !== undefined
-        ? addHoursToDate(durationInHours).toISOString()
+        ? toDatetimeString(addHoursToDate(durationInHours))
         : undefined
     const { create = [], negate = [] } = labels
     const toCreate = create.map((val) => ({
@@ -1517,7 +1526,7 @@ export class ModerationService {
       cid: cid ?? undefined,
       val,
       exp,
-      cts: new Date().toISOString(),
+      cts: currentDatetimeString(),
     }))
     const toNegate = negate.map((val) => ({
       src: this.cfg.service.did,
@@ -1525,13 +1534,15 @@ export class ModerationService {
       cid: cid ?? undefined,
       val,
       neg: true,
-      cts: new Date().toISOString(),
+      cts: currentDatetimeString(),
     }))
     const formatted = [...toCreate, ...toNegate]
     return this.createLabels(formatted)
   }
 
-  async createLabels(labels: Label[]): Promise<Label[]> {
+  async createLabels(
+    labels: com.atproto.label.defs.Label[],
+  ): Promise<com.atproto.label.defs.Label[]> {
     if (labels.length < 1) return []
     const signedLabels = await Promise.all(
       labels.map((l) => signLabel(l, this.signingKey)),
@@ -1560,39 +1571,36 @@ export class ModerationService {
 
   async sendEmail(opts: {
     content: string
-    recipientDid: string
+    recipientDid: DidString
     subject: string
   }) {
     const { subject, content, recipientDid } = opts
-    const { agent: pdsAgent, url } = await getPdsAgentForRepo(
+    const { client: pdsClient, url } = await getPdsClientForRepo(
       this.idResolver,
       recipientDid,
       this.cfg.service.devMode,
     )
-    if (!pdsAgent) {
+    if (!pdsClient) {
       throw new InvalidRequestError('Invalid pds service in DID doc')
     }
-    const { data: serverInfo } =
-      await pdsAgent.com.atproto.server.describeServer()
+    const serverInfo = await pdsClient.call(com.atproto.server.describeServer)
     if (serverInfo.did !== `did:web:${url.hostname}`) {
       // @TODO do bidirectional check once implemented. in the meantime,
       // matching did to hostname we're talking to is pretty good.
       throw new InvalidRequestError('Invalid pds service in DID doc')
     }
-    const { data: delivery } = await pdsAgent.com.atproto.admin.sendEmail(
+    const delivery = await pdsClient.call(
+      com.atproto.admin.sendEmail,
       {
         subject,
         content,
         recipientDid,
         senderDid: this.cfg.service.did,
       },
-      {
-        encoding: 'application/json',
-        ...(await this.createAuthHeaders(
-          serverInfo.did,
-          ids.ComAtprotoAdminSendEmail,
-        )),
-      },
+      await this.createAuthHeaders(
+        serverInfo.did,
+        com.atproto.admin.sendEmail.$lxm,
+      ),
     )
     if (!delivery.sent) {
       throw new InvalidRequestError('Email was accepted but not sent')
@@ -1601,10 +1609,10 @@ export class ModerationService {
 
   async buildModerationQuery(
     subjectType: 'account' | 'record',
-    createdByDids: string[],
+    createdByDids: DidString[] | undefined,
     isActionQuery: boolean,
-  ): Promise<(Partial<ReporterStatsResult> & { did: string })[]> {
-    if (!createdByDids.length) return []
+  ): Promise<(Partial<ReporterStatsResult> & { did: DidString })[]> {
+    if (!createdByDids?.length) return []
 
     const actionTypes = [
       'tools.ozone.moderation.defs#modEventTakedown',
@@ -1714,7 +1722,7 @@ export class ModerationService {
     }
   }
 
-  async getReporterStats(dids: string[]) {
+  async getReporterStats(dids?: DidString[]) {
     const [accountReports, recordReports, accountActions, recordActions] =
       await Promise.all([
         this.buildModerationQuery('account', dids, false),
@@ -1727,7 +1735,7 @@ export class ModerationService {
     const statsMap = new Map<string, ReporterStats>()
 
     // Helper function to ensure a `did` entry exists in the map
-    const ensureDidEntry = (did: string) => {
+    const ensureDidEntry = (did: DidString) => {
       if (!statsMap.has(did)) {
         statsMap.set(did, {
           did,
@@ -1776,7 +1784,7 @@ export class ModerationService {
     return Array.from(statsMap.values())
   }
 
-  async getAccountTimeline(did: string) {
+  async getAccountTimeline(did: DidString) {
     const { ref } = this.db.db.dynamic
     // Without the subquery approach, pg tries to do the sort operation first which can be super expensive when a subjectDid has too many entries
     const result = await this.db.db
@@ -1818,8 +1826,12 @@ export const TAKEDOWN_LABEL = '!takedown'
 export const SUSPEND_LABEL = '!suspend'
 
 export type TakedownSubjects = {
-  did: string
-  subjects: (RepoRef | RepoBlobRef | StrongRef)[]
+  did: DidString
+  subjects: (
+    | com.atproto.admin.defs.RepoRef
+    | com.atproto.admin.defs.RepoBlobRef
+    | com.atproto.repo.strongRef.Main
+  )[]
 }
 
 export type ReversalSubject = {

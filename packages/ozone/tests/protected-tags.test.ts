@@ -53,7 +53,7 @@ describe('protected-tags', () => {
           // @ts-expect-error testing invalid value here
           value: ['test'],
         }),
-      ).rejects.toThrow('Invalid configuration')
+      ).rejects.toThrow('Expected object value type')
       await expect(
         modClient.upsertSettingOption({
           ...basicSetting,

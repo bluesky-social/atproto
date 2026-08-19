@@ -1,3 +1,4 @@
+import type { DidString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ProtectedTagSettingKey } from '../../setting/constants.js'
 import type { SettingService } from '../../setting/service.js'
@@ -10,7 +11,7 @@ export const getProtectedTags = async (
   const protectedTagSetting = await settingService.query({
     keys: [ProtectedTagSettingKey],
     scope: 'instance',
-    did: serviceDid,
+    did: serviceDid as DidString,
     limit: 1,
   })
 

@@ -1,11 +1,12 @@
+import type { DidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 import { addAccountInfoToRepoView, getPdsAccountInfos } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.moderation.getRecord({
+  server.add(tools.ozone.moderation.getRecord, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth, req }) => {
       const db = ctx.db
@@ -13,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const [records, accountInfos] = await Promise.all([
         ctx.modService(db).views.recordDetails([params], labelers),
-        getPdsAccountInfos(ctx, [new AtUri(params.uri).hostname]),
+        getPdsAccountInfos(ctx, [new AtUri(params.uri).hostname as DidString]),
       ])
 
       const record = records.get(params.uri)
