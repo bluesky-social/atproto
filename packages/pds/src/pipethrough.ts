@@ -125,7 +125,6 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'accept-encoding': req.headers['accept-encoding'] || 'identity',
         'accept-language': req.headers['accept-language'],
         'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
-        'x-bsky-is-beta-user': req.headers['x-bsky-is-beta-user'],
         'x-bsky-topics': req.headers['x-bsky-topics'],
 
         'content-type': body && req.headers['content-type'],
@@ -217,7 +216,6 @@ export async function pipethrough(
     headers: {
       'accept-language': req.headers['accept-language'],
       'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
-      'x-bsky-is-beta-user': req.headers['x-bsky-is-beta-user'],
       'x-bsky-topics': req.headers['x-bsky-topics'],
 
       // Because we sometimes need to interpret the response (e.g. during
