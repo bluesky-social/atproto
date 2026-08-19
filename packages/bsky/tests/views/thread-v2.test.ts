@@ -261,8 +261,8 @@ describe('appview thread views v2', () => {
       const anchor = data.thread.find((item) => item.depth === 0)
 
       expect(
-        anchor?.value.post.viewer?.knownLikers?.likers.map(
-          (liker) => liker.did,
+        anchor?.value.post.viewer?.knownLikers?.actors.map(
+          (actor) => actor.did,
         ),
       ).toEqual([seed.users.alice.did])
       expect(anchor?.value.post.viewer?.knownLikers?.count).toBe(1)

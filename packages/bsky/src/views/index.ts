@@ -543,7 +543,22 @@ export class Views {
     )
   }
 
-  private knownSubjects<Key extends 'followers' | 'likers'>(
+  knownLikers(
+    uri: AtUriString,
+    state: HydrationState,
+  ): KnownLikers | undefined {
+    const knownLikers = state.knownLikers?.get(uri)
+    if (!knownLikers) return
+    return this.knownSubjects(
+      new AtUri(uri).did,
+      knownLikers.count,
+      knownLikers.actors,
+      'actors',
+      state,
+    )
+  }
+
+  private knownSubjects<Key extends 'followers' | 'actors'>(
     did: DidString,
     count: number,
     subjectDids: DidString[],
@@ -1091,21 +1106,6 @@ export class Views {
         ? { post: post.debug, author: author.debug }
         : undefined,
     }
-  }
-
-  knownLikers(
-    uri: AtUriString,
-    state: HydrationState,
-  ): KnownLikers | undefined {
-    const knownLikers = state.knownLikers?.get(uri)
-    if (!knownLikers) return
-    return this.knownSubjects(
-      new AtUri(uri).did,
-      knownLikers.count,
-      knownLikers.likers,
-      'likers',
-      state,
-    )
   }
 
   feedViewPost(

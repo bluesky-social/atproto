@@ -63,10 +63,10 @@
     "knownLikers": {
       "type": "object",
       "description": "The post's likers whom you also follow",
-      "required": ["count", "likers"],
+      "required": ["count", "actors"],
       "properties": {
         "count": { "type": "integer" },
-        "likers": {
+        "actors": {
           "type": "array",
           "minLength": 0,
           "maxLength": 5,

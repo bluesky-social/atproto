@@ -1,5 +1,5 @@
 ---
-'@atproto/api': minor
+'@atproto/api': patch
 '@atproto/bsky': patch
 ---
 
