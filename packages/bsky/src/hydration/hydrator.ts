@@ -672,9 +672,14 @@ export class Hydrator {
     // Collect known-liker profiles and author-liker block relationships.
     const knownLikers = await knownLikersPromise
     const knownLikerDids: DidString[] = []
-    knownLikers?.forEach((knownLiker) => {
+    const authorsAndKnownLikersRelationships: RelationshipPair[] = []
+    knownLikers?.forEach((knownLiker, uri) => {
       if (!knownLiker) return
       knownLikerDids.push(...knownLiker.actors)
+      const authorDid = uriToDid(uri)
+      for (const likerDid of knownLiker.actors) {
+        authorsAndKnownLikersRelationships.push([authorDid, likerDid])
+      }
     })
 
     const knownProfileDids = dedupeStrs([
@@ -687,8 +692,11 @@ export class Hydrator {
       postAggs,
       postViewers,
       labels,
-      postBlocks,
-      authorAndKnownLikerBidirectionalBlocks,
+      {
+        postBlocks,
+        additionalRelationshipsBidirectionalBlocks:
+          authorsAndKnownLikersBidirectionalBlocks,
+      },
       profileState,
       listState,
       feedGenState,
@@ -708,8 +716,7 @@ export class Hydrator {
         [...allPostUris, ...siteStandardLabelSubjects],
         ctx.labelers,
       ),
-      this.hydratePostBlocks(posts, ctx),
-      this.hydrateKnownLikersBlock(knownLikers, ctx),
+      this.hydratePostBlocks(posts, ctx, authorsAndKnownLikersRelationships),
       this.hydrateProfiles(knownProfileDids, ctx),
       this.hydrateLists([...nestedListUris, ...threadgateListUris], ctx),
       this.hydrateFeedGens(nestedFeedGenUris, ctx),
@@ -761,7 +768,7 @@ export class Hydrator {
         postViewers,
         postBlocks,
         knownLikers,
-        bidirectionalBlocks: authorAndKnownLikerBidirectionalBlocks,
+        bidirectionalBlocks: authorsAndKnownLikersBidirectionalBlocks,
         labels,
         threadgates,
         postgates,
@@ -775,7 +782,11 @@ export class Hydrator {
   private async hydratePostBlocks(
     posts: Posts,
     ctx: HydrateCtx,
-  ): Promise<PostBlocks> {
+    additionalRelationships: RelationshipPair[] = [],
+  ): Promise<{
+    postBlocks: PostBlocks
+    additionalRelationshipsBidirectionalBlocks: BidirectionalBlocks
+  }> {
     const postBlocks: PostBlocks = new HydrationMap()
     const postBlocksPairs = new Map<AtUriString, PostBlockPairs>()
     const relationships: RelationshipPair[] = []
@@ -807,6 +818,7 @@ export class Hydrator {
         postBlockPairs.embed = pair
       }
     }
+    relationships.push(...additionalRelationships)
     // replace embed/parent/root pairs with block state
     const blocks = await this.hydrateBidirectionalBlocks(
       pairsToMap(relationships),
@@ -819,7 +831,20 @@ export class Hydrator {
         root: !!root && !!isBlocked(blocks, root),
       })
     }
-    return postBlocks
+
+    const additionalRelationshipsBidirectionalBlocks: BidirectionalBlocks =
+      new HydrationMap()
+    for (const [source, targets] of pairsToMap(additionalRelationships)) {
+      const didBlocks = new HydrationMap<DidString, boolean>()
+      for (const target of targets) {
+        didBlocks.set(target, blocks.get(source)?.get(target) ?? false)
+      }
+      additionalRelationshipsBidirectionalBlocks.set(source, didBlocks)
+    }
+    return {
+      postBlocks,
+      additionalRelationshipsBidirectionalBlocks,
+    }
   }
 
   // app.bsky.feed.defs#feedViewPost
@@ -1022,25 +1047,6 @@ export class Hydrator {
       hydrationLogger.error({ err }, 'Failed to hydrate known likers')
       return undefined
     }
-  }
-
-  // checks blocks between post authors and known likers.
-  private async hydrateKnownLikersBlock(
-    knownLikers: KnownLikersStates | undefined,
-    ctx: HydrateCtx,
-  ): Promise<BidirectionalBlocks | undefined> {
-    if (!knownLikers) return
-
-    const relationships: RelationshipPair[] = []
-    knownLikers.forEach((knownLiker, uri) => {
-      if (!knownLiker) return
-      const authorDid = uriToDid(uri)
-      for (const likerDid of knownLiker.actors) {
-        relationships.push([authorDid, likerDid])
-      }
-    })
-    if (!relationships.length) return new HydrationMap()
-    return this.hydrateBidirectionalBlocks(pairsToMap(relationships), ctx)
   }
 
   // app.bsky.feed.defs#generatorView
