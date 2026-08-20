@@ -9,6 +9,7 @@
     { "path": "../identity/tsconfig.build.json" },
     { "path": "../internal/fetch/tsconfig.build.json" },
     { "path": "../internal/fetch-node/tsconfig.build.json" },
+    { "path": "../internal/opentelemetry-node/tsconfig.build.json" },
     { "path": "../internal/simple-store-memory/tsconfig.build.json" },
     { "path": "../internal/simple-store-redis/tsconfig.build.json" },
     { "path": "../internal/simple-store/tsconfig.build.json" },

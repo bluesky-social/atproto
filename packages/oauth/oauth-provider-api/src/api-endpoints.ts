@@ -1,12 +1,11 @@
 import type { SignedJwt } from '@atproto/jwk'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
-import type { DatetimeString, DidString, HandleString } from '@atproto/syntax'
 import type {
-  Account,
-  DeviceMetadata,
-  ISODateString,
-  Session,
-} from './types.js'
+  DidString,
+  HandleString,
+  ISODatetimeString,
+} from '@atproto/syntax'
+import type { Account, DeviceMetadata, Session } from './types.js'
 
 export type { DidString }
 
@@ -268,7 +267,6 @@ export type UpdateHandleOutput = {
 
 export type DeactivateAccountInput = {
   did: DidString
-  deleteAfter?: DatetimeString
 }
 
 export type DeactivateAccountOutput = {
@@ -324,20 +322,6 @@ export type ConsentInput = {
 export type RejectInput = Record<string, never>
 
 /**
- * Represents an account that is currently signed-in to the Authorization
- * Server. If the session was created too long ago, the user may be required to
- * re-authenticate ({@link ActiveDeviceSession.loginRequired}).
- */
-export type ActiveDeviceSession = {
-  account: Account
-
-  /**
-   * The session is too old and the user must re-authenticate.
-   */
-  loginRequired: boolean
-}
-
-/**
  * Represents another device on which an account is currently signed-in.
  */
 export type ActiveAccountSession = {
@@ -353,8 +337,8 @@ export type ActiveAccountSession = {
 export type ActiveOAuthSession = {
   tokenId: string
 
-  createdAt: ISODateString
-  updatedAt: ISODateString
+  createdAt: ISODatetimeString
+  updatedAt: ISODatetimeString
 
   active: boolean
 

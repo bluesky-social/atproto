@@ -499,6 +499,42 @@ describe('notification views', () => {
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
+  it('returns a cursor only when more notifications are available', async () => {
+    const exact = await network.bsky.ctx.dataplane.getNotifications({
+      actorDid: alice,
+      priority: false,
+      limit: 13,
+    })
+    expect(exact.notifications).toHaveLength(13)
+    expect(exact.cursor).toBe('')
+
+    const over = await network.bsky.ctx.dataplane.getNotifications({
+      actorDid: alice,
+      priority: false,
+      limit: 12,
+    })
+    expect(over.notifications).toHaveLength(12)
+    expect(over.cursor).not.toBe('')
+
+    const headers = await network.serviceHeaders(
+      alice,
+      ids.AppBskyNotificationListNotifications,
+    )
+    const terminal = await agent.app.bsky.notification.listNotifications(
+      { priority: false, limit: 13 },
+      { headers },
+    )
+    expect(terminal.data.notifications).toHaveLength(13)
+    expect(terminal.data.cursor).toBeUndefined()
+
+    const trimmed = await agent.app.bsky.notification.listNotifications(
+      { priority: false, limit: 12 },
+      { headers },
+    )
+    expect(trimmed.data.notifications).toHaveLength(12)
+    expect(trimmed.data.cursor).toBeDefined()
+  })
+
   it('fetches notification count with a last-seen', async () => {
     const full = await agent.api.app.bsky.notification.listNotifications(
       {},
@@ -782,6 +818,7 @@ describe('notification views', () => {
     }
 
     const paginatedAll = await paginateAll(paginator)
+    expect(paginatedAll[0].notifications).toHaveLength(2)
     paginatedAll.forEach((res) =>
       expect(res.notifications.length).toBeLessThanOrEqual(2),
     )
@@ -1393,7 +1430,6 @@ describe('notification views', () => {
 
       const { data: listData } = await list(actorDid)
       expect(listData).toEqual({
-        cursor: expect.any(String),
         subscriptions: [
           expect.objectContaining({
             did: subjectDid,
@@ -1414,6 +1450,7 @@ describe('notification views', () => {
         subject: subjectDid,
         activitySubscription: valCreate,
       })
+      await network.processAll()
 
       const { data: updateData } = await put(actorDid, subjectDid, valUpdate)
       expect(updateData).toStrictEqual({
@@ -1424,7 +1461,6 @@ describe('notification views', () => {
 
       const { data: listData } = await list(actorDid)
       expect(listData).toEqual({
-        cursor: expect.any(String),
         subscriptions: [
           expect.objectContaining({
             did: subjectDid,
@@ -1466,6 +1502,31 @@ describe('notification views', () => {
       await put(actorDid, blocked, val) // blocked is removed from the list.
       await network.processAll()
 
+      const exact =
+        await network.bsky.ctx.dataplane.getActivitySubscriptionDids({
+          actorDid,
+          limit: 6,
+        })
+      expect(exact.dids).toHaveLength(6)
+      expect(exact.cursor).toBe('')
+
+      const over = await network.bsky.ctx.dataplane.getActivitySubscriptionDids(
+        {
+          actorDid,
+          limit: 5,
+        },
+      )
+      expect(over.dids).toHaveLength(5)
+      expect(over.cursor).not.toBe('')
+
+      const terminal = await list(actorDid, { limit: 5 })
+      expect(terminal.data.subscriptions).toHaveLength(5)
+      expect(terminal.data.cursor).toBeUndefined()
+
+      const trimmed = await list(actorDid, { limit: 4 })
+      expect(trimmed.data.subscriptions).toHaveLength(4)
+      expect(trimmed.data.cursor).toBeDefined()
+
       const results = (
         results: AppBskyNotificationListActivitySubscriptions.OutputSchema[],
       ) =>
@@ -1481,6 +1542,7 @@ describe('notification views', () => {
       }
 
       const paginatedAll = await paginateAll(paginator)
+      expect(paginatedAll[0].subscriptions).toHaveLength(limit)
       paginatedAll.forEach((res) =>
         expect(res.subscriptions.length).toBeLessThanOrEqual(limit),
       )

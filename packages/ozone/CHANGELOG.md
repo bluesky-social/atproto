@@ -1,5 +1,39 @@
 # @atproto/ozone
 
+## 0.2.29
+
+### Patch Changes
+
+- [#5350](https://github.com/bluesky-social/atproto/pull/5350) [`1f3f67c`](https://github.com/bluesky-social/atproto/commit/1f3f67c4b5bac19cc226b24f55d90ffd431d0d72) Thanks [@mary-ext](https://github.com/mary-ext)! - Remove the `maxGraphemes` and `maxLength` constraints from the `alt` field of `app.bsky.embed.video`, matching `app.bsky.embed.images`
+
+- Updated dependencies [[`1f3f67c`](https://github.com/bluesky-social/atproto/commit/1f3f67c4b5bac19cc226b24f55d90ffd431d0d72), [`5c3b7c9`](https://github.com/bluesky-social/atproto/commit/5c3b7c9c87efa4d48d41bc55af61f5b1f1e04920)]:
+  - @atproto/api@0.20.41
+  - @atproto/xrpc-server@0.12.5
+
+## 0.2.28
+
+### Patch Changes
+
+- Updated dependencies [[`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`c26b463`](https://github.com/bluesky-social/atproto/commit/c26b463a36124deb14b8d56ad1810eeddaa129cc), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`05305a7`](https://github.com/bluesky-social/atproto/commit/05305a7a18fc830262a23850dd659e8e98db0149), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa), [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa)]:
+  - @atproto/common@0.8.0
+  - @atproto/api@0.20.40
+  - @atproto/xrpc-server@0.12.4
+
+## 0.2.27
+
+### Patch Changes
+
+- [#5368](https://github.com/bluesky-social/atproto/pull/5368) [`ed2317e`](https://github.com/bluesky-social/atproto/commit/ed2317e2ce974d63c24f977cd40579badc1e639f) Thanks [@amckinley](https://github.com/amckinley)! - Keep stats materialization advisory locks on one database session and scope them by database and schema.
+
+- [#5364](https://github.com/bluesky-social/atproto/pull/5364) [`5c31425`](https://github.com/bluesky-social/atproto/commit/5c31425e79c46e435e9d87285461e745247ea818) Thanks [@amckinley](https://github.com/amckinley)! - Release the materialized-view advisory lock before discarding its database session.
+
+- [#5359](https://github.com/bluesky-social/atproto/pull/5359) [`aadb103`](https://github.com/bluesky-social/atproto/commit/aadb10349497d7c6b6ce5641dbbb1fd940dd5b12) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Remove timing races from WebSocket, background indexing, firehose, and Ozone materialized-view tests.
+
+- Updated dependencies [[`b2de0ee`](https://github.com/bluesky-social/atproto/commit/b2de0ee1ccb70fac69be90037751ea30daa37e3f), [`aadb103`](https://github.com/bluesky-social/atproto/commit/aadb10349497d7c6b6ce5641dbbb1fd940dd5b12)]:
+  - @atproto/api@0.20.39
+  - @atproto/ws-client@0.2.1
+  - @atproto/xrpc-server@0.12.3
+
 ## 0.2.26
 
 ### Patch Changes

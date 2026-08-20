@@ -5,10 +5,9 @@ import { type Did, didSchema } from '@atproto/did'
 import { signedJwtSchema } from '@atproto/jwk'
 import type {
   ActiveAccountSession,
-  ActiveDeviceSession,
   ActiveOAuthSession,
   ApiEndpoints,
-  ISODateString,
+  Session,
 } from '@atproto/oauth-provider-api'
 import { API_ENDPOINT_PREFIX } from '@atproto/oauth-provider-api'
 import {
@@ -19,6 +18,7 @@ import {
   oauthResponseModeSchema,
   oauthScopeSchema,
 } from '@atproto/oauth-types'
+import type { ISODatetimeString } from '@atproto/syntax'
 import { signInDataSchema } from '../account/sign-in-data.js'
 import { signUpInputSchema } from '../account/sign-up-input.js'
 import { type DeviceId, deviceIdSchema } from '../device/device-id.js'
@@ -477,12 +477,10 @@ export function createApiMiddleware<
           this.deviceId,
         )
 
-        const json = deviceAccounts.map(
-          (deviceAccount): ActiveDeviceSession => ({
-            account: deviceAccount.account,
-            loginRequired: server.checkLoginRequired(deviceAccount),
-          }),
-        )
+        const json = deviceAccounts.map((deviceAccount): Session => ({
+          account: deviceAccount.account,
+          loginRequired: server.checkLoginRequired(deviceAccount),
+        }))
 
         return { json }
       },
@@ -542,8 +540,8 @@ export function createApiMiddleware<
             return {
               tokenId: id,
 
-              createdAt: data.createdAt.toISOString() as ISODateString,
-              updatedAt: data.updatedAt.toISOString() as ISODateString,
+              createdAt: data.createdAt.toISOString() as ISODatetimeString,
+              updatedAt: data.updatedAt.toISOString() as ISODatetimeString,
 
               clientId: data.clientId,
               clientMetadata: clients.get(data.clientId)?.metadata,
@@ -577,7 +575,7 @@ export function createApiMiddleware<
               ipAddress: accountSession.deviceData.ipAddress,
               userAgent: accountSession.deviceData.userAgent,
               lastSeenAt:
-                accountSession.deviceData.lastSeenAt.toISOString() as ISODateString,
+                accountSession.deviceData.lastSeenAt.toISOString() as ISODatetimeString,
             },
 
             isCurrentDevice: accountSession.deviceId === this.deviceId,

@@ -1,5 +1,25 @@
 # @atproto/common
 
+## 0.8.0
+
+### Minor Changes
+
+- [#5382](https://github.com/bluesky-social/atproto/pull/5382) [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `fanOut`, a pipeline-destination counterpart to `Tee` that owns its output sinks: an output that errors or ends early is dropped while the others (and the input) keep flowing, and the input is only torn down once every sink has died. Also harden `Tee` so a branch that dies mid-write (e.g. one created with `autoDestroy: false`, which errors without emitting `close`) can no longer stall the main stream.
+
+### Patch Changes
+
+- [#5382](https://github.com/bluesky-social/atproto/pull/5382) [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Deprecate `forwardStreamErrors`
+
+- [#5382](https://github.com/bluesky-social/atproto/pull/5382) [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Deprecate `cloneStream`
+
+- [#5382](https://github.com/bluesky-social/atproto/pull/5382) [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make `createError` argument of `MaxSizeChecker` optional
+
+- [#5382](https://github.com/bluesky-social/atproto/pull/5382) [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Migrate test runner to vitest
+
+- [#5382](https://github.com/bluesky-social/atproto/pull/5382) [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `Tee` stream utility
+
+- [#5382](https://github.com/bluesky-social/atproto/pull/5382) [`898c469`](https://github.com/bluesky-social/atproto/commit/898c469cf568b941f38f9c3371997a513ac05cfa) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `HashPassThrough` utility
+
 ## 0.7.6
 
 ### Patch Changes

@@ -1,0 +1,27 @@
+export default {
+  trailingComma: 'all',
+  tabWidth: 2,
+  semi: false,
+  singleQuote: true,
+  plugins: ['prettier-plugin-tailwindcss'],
+  overrides: [
+    {
+      files: '*.hbs',
+      options: { singleQuote: false },
+    },
+    {
+      files: ['**/lexicons/**/*.json'],
+      options: { parser: 'json', trailingComma: 'none' },
+    },
+    {
+      files: [
+        '**/tsconfig/*.json',
+        '**/tsconfig.*.json',
+        '**/tsconfig.json',
+        '**/.vscode/*.json',
+        '**/.zed/*.json',
+      ],
+      options: { parser: 'jsonc', trailingComma: 'all' },
+    },
+  ],
+}

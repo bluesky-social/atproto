@@ -1,6 +1,6 @@
 {
   "name": "@atproto/common",
-  "version": "0.7.6",
+  "version": "0.8.0",
   "license": "MIT",
   "description": "Shared web-platform-friendly code for atproto libraries",
   "keywords": [
@@ -36,11 +36,11 @@
     "varint": "^6.0.0"
   },
   "devDependencies": {
-    "jest": "^30.0.0",
-    "uint8arrays": "^5.0.0"
+    "uint8arrays": "^5.0.0",
+    "vitest": "^4.1.10"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test": "vitest run",
     "build": "tsc --build tsconfig.build.json"
   }
 }

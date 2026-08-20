@@ -46,7 +46,7 @@ Repo-specific conventions and setup. Assumes working knowledge of vitest itself 
 
 A package with a `vite.config.*` must use vitest, configured **inside that existing Vite config**. Vitest reads `vite.config.*` natively, so a separate `vitest.config.ts` would shadow the package's real build setup (plugins, `resolve.alias`, `optimizeDeps`, `conditions`) and the tests would run against a different module graph than the app. Jest isn't an option at all here — it can't consume the Vite plugin pipeline.
 
-Two additions to the Vite config, as in [oauth-provider-ui](../../../../packages/oauth/oauth-provider-ui/vite.config.mjs):
+Two additions to the Vite config, as in [oauth-provider-ui](../../../../packages/oauth/oauth-provider-ui/vite.config.js):
 
 1. `/// <reference types="vitest/config" />` on the **first line** — this types the `test` key, which `defineConfig` from `vite` doesn't know about on its own.
 2. A `test: {}` key in the exported config, kept empty unless an option is genuinely needed.
@@ -198,24 +198,6 @@ expect(path).toContain('/xrpc/io.example.testQuery')
 ```
 
 When calls don't need inspecting, a plain typed function is clearer than a mock: `const fetchHandler: FetchHandler = async () => …`.
-
-### `using` for auto-restored spies
-
-Spies are `Disposable`, so declaring one with `using` calls `mockRestore()` at the end of the enclosing block — no `afterEach`, no `try`/`finally`:
-
-```ts
-it('sends an update email when the address changes', async () => {
-  using sendUpdateEmailMock = vi
-    .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')
-    .mockImplementation(async () => {})
-
-  await client.call(com.atproto.server.requestEmailUpdate)
-
-  expect(sendUpdateEmailMock).toHaveBeenCalledOnce()
-}) // restored here
-```
-
-This generalizes to anything that actually implements `[Symbol.dispose]` / `[Symbol.asyncDispose]` — test servers (`await using server = await startServer(app)`) and `PageHelper` do, and `TestNetwork` does. `TestNetworkNoAppView` does not: it has `close()` only, so clean it up in `afterAll`. Check the type before reaching for `using`.
 
 ### Module mocks
 

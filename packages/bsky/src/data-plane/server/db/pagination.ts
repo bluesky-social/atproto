@@ -36,6 +36,19 @@ export abstract class GenericKeyset<R, LR extends KeysetLabeledResult> {
     if (!result) return
     return this.pack(this.labelResult(result))
   }
+  page<Result extends R>(
+    results: Result[],
+    limit: number,
+  ): { items: Result[]; cursor?: string } {
+    const items = results.slice(0, limit)
+    return {
+      items,
+      cursor:
+        results.length > limit && items.length
+          ? this.packFromResult(items[items.length - 1])
+          : undefined,
+    }
+  }
   pack(labeled?: LR): string | undefined {
     if (!labeled) return
     const cursor = this.labeledResultToCursor(labeled)
@@ -94,7 +107,7 @@ export abstract class GenericKeyset<R, LR extends KeysetLabeledResult> {
     const { limit, cursor, direction = 'desc', tryIndex, nullsLast } = opts
     const keysetSql = this.getSql(this.unpack(cursor), direction, tryIndex)
     return qb
-      .$if(!!limit, (q) => q.limit(limit as number))
+      .$if(!!limit, (q) => q.limit((limit as number) + 1))
       .$if(!nullsLast, (q) =>
         q.orderBy(this.primary, direction).orderBy(this.secondary, direction),
       )
@@ -203,6 +216,19 @@ export abstract class GenericSingleKey<R, LR extends SingleKeyLabeledResult> {
     if (!result) return
     return this.pack(this.labelResult(result))
   }
+  page<Result extends R>(
+    results: Result[],
+    limit: number,
+  ): { items: Result[]; cursor?: string } {
+    const items = results.slice(0, limit)
+    return {
+      items,
+      cursor:
+        results.length > limit && items.length
+          ? this.packFromResult(items[items.length - 1])
+          : undefined,
+    }
+  }
   pack(labeled?: LR): string | undefined {
     if (!labeled) return
     const cursor = this.labeledResultToCursor(labeled)
@@ -248,7 +274,7 @@ export abstract class GenericSingleKey<R, LR extends SingleKeyLabeledResult> {
     const { limit, cursor, direction = 'desc', nullsLast } = opts
     const keySql = this.getSql(this.unpack(cursor), direction)
     return qb
-      .$if(!!limit, (q) => q.limit(limit as number))
+      .$if(!!limit, (q) => q.limit((limit as number) + 1))
       .$if(!nullsLast, (q) => q.orderBy(this.primary, direction))
       .$if(!!nullsLast, (q) =>
         q.orderBy(

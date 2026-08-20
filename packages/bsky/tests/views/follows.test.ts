@@ -155,6 +155,36 @@ describe('pds follow views', () => {
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
+  it('getFollowers only returns a cursor when another raw row exists', async () => {
+    const exact = await network.bsky.ctx.dataplane.getFollowers({
+      actorDid: alice,
+      limit: 4,
+    })
+    const nonterminal = await network.bsky.ctx.dataplane.getFollowers({
+      actorDid: alice,
+      limit: 2,
+    })
+    expect(exact.followers).toHaveLength(4)
+    expect(exact.cursor).toBe('')
+    expect(nonterminal.followers).toHaveLength(2)
+    expect(nonterminal.cursor).not.toBe('')
+  })
+
+  it('getFollows only returns a cursor when another raw row exists', async () => {
+    const exact = await network.bsky.ctx.dataplane.getFollows({
+      actorDid: alice,
+      limit: 4,
+    })
+    const nonterminal = await network.bsky.ctx.dataplane.getFollows({
+      actorDid: alice,
+      limit: 2,
+    })
+    expect(exact.follows).toHaveLength(4)
+    expect(exact.cursor).toBe('')
+    expect(nonterminal.follows).toHaveLength(2)
+    expect(nonterminal.cursor).not.toBe('')
+  })
+
   it('fills a page after filtering followers', async () => {
     const subject = await sc.createAccount('page-fill-subject', {
       handle: 'fill-sub.test',
@@ -212,6 +242,67 @@ describe('pds follow views', () => {
       newerVisible.did,
       olderVisible.did,
     ])
+    expect(res.data.cursor).toBeUndefined()
+  })
+
+  it('fills a page after filtering follows', async () => {
+    const subject = await sc.createAccount('follows-fill-subject', {
+      handle: 'follows-fill-sub.test',
+      email: 'follows-fill-subject@example.com',
+      password: 'hunter2',
+    })
+    const olderVisible = await sc.createAccount('follows-fill-visible-older', {
+      handle: 'follows-fill-old.test',
+      email: 'follows-fill-visible-older@example.com',
+      password: 'hunter2',
+    })
+    const newerVisible = await sc.createAccount('follows-fill-visible-newer', {
+      handle: 'follows-fill-new.test',
+      email: 'follows-fill-visible-newer@example.com',
+      password: 'hunter2',
+    })
+    const takenDown = await sc.createAccount('follows-fill-taken-down', {
+      handle: 'follows-fill-down.test',
+      email: 'follows-fill-taken-down@example.com',
+      password: 'hunter2',
+    })
+    const blocked = await sc.createAccount('follows-fill-blocked', {
+      handle: 'follows-fill-block.test',
+      email: 'follows-fill-blocked@example.com',
+      password: 'hunter2',
+    })
+
+    await sc.follow(subject.did, olderVisible.did, {
+      createdAt: '2025-02-01T00:00:00.000Z',
+    })
+    await sc.follow(subject.did, newerVisible.did, {
+      createdAt: '2025-02-02T00:00:00.000Z',
+    })
+    await sc.follow(subject.did, takenDown.did, {
+      createdAt: '2025-02-03T00:00:00.000Z',
+    })
+    await sc.follow(subject.did, blocked.did, {
+      createdAt: '2025-02-04T00:00:00.000Z',
+    })
+    await sc.block(subject.did, blocked.did)
+    await network.processAll()
+    await network.bsky.ctx.dataplane.takedownActor({ did: takenDown.did })
+
+    const res = await agent.api.app.bsky.graph.getFollows(
+      { actor: subject.did, limit: 2 },
+      {
+        headers: await network.serviceHeaders(
+          subject.did,
+          ids.AppBskyGraphGetFollows,
+        ),
+      },
+    )
+
+    expect(res.data.follows.map((follow) => follow.did)).toEqual([
+      newerVisible.did,
+      olderVisible.did,
+    ])
+    expect(res.data.cursor).toBeUndefined()
   })
 
   it('fetches followers unauthed', async () => {

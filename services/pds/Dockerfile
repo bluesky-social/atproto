@@ -20,7 +20,6 @@ COPY ./packages/bsync/proto ./packages/bsync/proto
 # pnpm list --filter 'pds-service...' --depth 0 --json | jq '.[].path' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
-COPY ./packages/bsky ./packages/bsky
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/common ./packages/common
 COPY ./packages/crypto ./packages/crypto
@@ -31,6 +30,7 @@ COPY ./packages/internal/fetch-node ./packages/internal/fetch-node
 COPY ./packages/internal/fetch ./packages/internal/fetch
 COPY ./packages/internal/handle-resolver ./packages/internal/handle-resolver
 COPY ./packages/internal/identity-resolver ./packages/internal/identity-resolver
+COPY ./packages/internal/opentelemetry-node ./packages/internal/opentelemetry-node
 COPY ./packages/internal/pipe ./packages/internal/pipe
 COPY ./packages/internal/rolldown-plugin-bundle-manifest ./packages/internal/rolldown-plugin-bundle-manifest
 COPY ./packages/internal/simple-store-memory ./packages/internal/simple-store-memory
@@ -63,7 +63,6 @@ COPY ./packages/oauth/oauth-types ./packages/oauth/oauth-types
 COPY ./packages/pds ./packages/pds
 COPY ./packages/repo ./packages/repo
 COPY ./packages/space ./packages/space
-COPY ./packages/sync ./packages/sync
 COPY ./packages/syntax ./packages/syntax
 COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc-server ./packages/xrpc-server
