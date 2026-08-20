@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { TID } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { parseCid } from '@atproto/lex-data'
@@ -481,6 +482,20 @@ describe('space sync', () => {
   })
 
   describe('writer set', () => {
+    it('records a co-located writer without resolving its public PDS endpoint', async () => {
+      const space = await sc.createSpace(alice, {
+        policy: com.atproto.simplespace.defs.publicPolicy.build({}),
+      })
+      using resolveDid = jest
+        .spyOn(network.pds.ctx.idResolver.did, 'resolve')
+        .mockRejectedValue(new Error('public endpoint is unreachable'))
+
+      await sc.write(dan, space, { text: 'same PDS' })
+
+      expect(resolveDid).not.toHaveBeenCalled()
+      expect(await sc.writerDids(space)).toEqual([dan.did])
+    })
+
     it('records a writer from notifyWrite, and it is not the member list', async () => {
       const space = await sc.createSpace(alice, { members: [bob] })
 
