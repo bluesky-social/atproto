@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import type { KeyObject } from 'node:crypto'
-import type { Client as PlcClient } from '@did-plc/lib'
+import * as plc from '@did-plc/lib'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
 import { HOUR, wait } from '@atproto/common'
@@ -20,7 +20,12 @@ import {
 } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import type { ActorStore } from '../actor-store/actor-store.js'
-import { assertValidDidDocumentForService } from '../api/com/atproto/server/util.js'
+import {
+  assertCanSignUpdatesForDid,
+  assertNotTombstoned,
+  assertValidDidDocumentForService,
+  serverRotationKeyDid,
+} from '../api/com/atproto/server/util.js'
 import { AuthScope } from '../auth-scope.js'
 import type { ServerConfig } from '../config/config.js'
 import { softDeleted } from '../db/index.js'
@@ -89,7 +94,7 @@ export class AccountManager {
     readonly jwtKey: KeyObject,
     readonly mailer: ServerMailer,
     readonly sequencer: Sequencer,
-    readonly plcClient: PlcClient,
+    readonly plcClient: plc.Client,
     readonly plcRotationKey: Keypair,
   ) {
     this.db = getDb(cfg.db.accountDbLoc, cfg.db.disableWalAutoCheckpoint)
@@ -310,7 +315,9 @@ export class AccountManager {
    * the new handle locally, and emits an identity event.
    *
    * @throws {InvalidRequestError} when the handle is invalid, taken by another
-   * account, or cannot be resolved for non-service domains.
+   * account, cannot be resolved for non-service domains, the did:plc record
+   * is tombstoned, or (when a PLC update is actually needed) the server no
+   * longer controls a current rotation key for the did.
    *
    * @see {@link AccountManager.updateAccountHandle} for behavior when the PLC update fails.
    */
@@ -326,8 +333,18 @@ export class AccountManager {
     )
 
     if (did.startsWith('did:plc:')) {
-      // @TODO We should verify the status before issuing a PLC update.
-      await this.plcClient.updateHandle(did, this.plcRotationKey, handle)
+      const lastOp = await this.plcClient.getLastOp(did)
+      assertNotTombstoned(lastOp)
+      // @NOTE The did:plc record may not need updating if the user already
+      // signed with their own key, or an earlier attempt got this far but
+      // then failed before completing.
+      const currentHandle = plc
+        .normalizeOp(lastOp)
+        .alsoKnownAs.find((aka) => aka.startsWith('at://'))
+      if (currentHandle?.toLowerCase() !== plc.ensureAtprotoPrefix(handle)) {
+        assertCanSignUpdatesForDid(lastOp, serverRotationKeyDid(this))
+        await this.plcClient.updateHandle(did, this.plcRotationKey, handle)
+      }
     } else {
       const resolved = await this.idResolver.did.resolveAtprotoData(did, true)
       if (resolved.handle !== handle) {
