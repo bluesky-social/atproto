@@ -1,5 +1,15 @@
 # @atproto/pds
 
+## 0.5.30
+
+### Patch Changes
+
+- [#5428](https://github.com/bluesky-social/atproto/pull/5428) [`f2c33aa`](https://github.com/bluesky-social/atproto/commit/f2c33aa4a72c95762c2708cf02acbfab7ddd2b5a) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Remove x-bsky-is-beta-user header handling
+
+- Updated dependencies [[`615ac2a`](https://github.com/bluesky-social/atproto/commit/615ac2a8cc72cd475dc4f06f743f2514d8afc6e0)]:
+  - @atproto/xrpc-server@0.12.6
+  - @atproto-labs/xrpc-utils@0.1.19
+
 ## 0.5.29
 
 ### Patch Changes

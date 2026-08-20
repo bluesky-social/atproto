@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.20.42
+
+### Patch Changes
+
+- [#5427](https://github.com/bluesky-social/atproto/pull/5427) [`c400731`](https://github.com/bluesky-social/atproto/commit/c400731969775d220ade8cc55b0892018bdf8514) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add known likers to post viewer state on post thread responses.
+
 ## 0.20.41
 
 ### Patch Changes
