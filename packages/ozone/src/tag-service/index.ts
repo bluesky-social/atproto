@@ -1,3 +1,4 @@
+import type { DidString } from '@atproto/lex'
 import { langLogger as log } from '../logger.js'
 import type { ModerationService } from '../mod-service/index.js'
 import type { ModSubject } from '../mod-service/subject.js'
@@ -12,7 +13,7 @@ export class TagService {
   constructor(
     private subject: ModSubject,
     protected subjectStatus: ModerationSubjectStatusRow | null,
-    private taggerDid: string,
+    private taggerDid: DidString,
     private moderationService: ModerationService,
   ) {
     this.taggers = [

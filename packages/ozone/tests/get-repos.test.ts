@@ -1,3 +1,4 @@
+import { ComAtprotoModerationDefs, ids } from '@atproto/api'
 import type { AtpAgent } from '@atproto/api'
 import {
   type ModeratorClient,
@@ -6,11 +7,6 @@ import {
   type TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
-import {
-  REASONOTHER,
-  REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs.js'
 import { forSnapshot } from './_util.js'
 
 describe('admin get multiple repos', () => {
@@ -56,7 +52,7 @@ describe('admin get multiple repos', () => {
     })
     await sc.createReport({
       reportedBy: sc.dids.bob,
-      reasonType: REASONSPAM,
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
@@ -64,7 +60,7 @@ describe('admin get multiple repos', () => {
     })
     await sc.createReport({
       reportedBy: sc.dids.carol,
-      reasonType: REASONOTHER,
+      reasonType: ComAtprotoModerationDefs.REASONOTHER,
       reason: 'defamation',
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',

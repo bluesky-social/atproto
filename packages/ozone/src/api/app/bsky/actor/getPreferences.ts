@@ -1,22 +1,25 @@
 import { type LexValue, l } from '@atproto/lex'
-import { XRPCError } from '@atproto/xrpc'
-import { type AuthResult, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  type AuthResult,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
-import type { Server } from '../../../../lexicon/index.js'
-import { ids } from '../../../../lexicon/lexicons.js'
+import { app } from '../../../../lexicons/index.js'
+import { UpstreamHttpError } from '../../../../util.js'
 
 const getPreferences = l.query(
-  ids.AppBskyActorGetPreferences,
+  app.bsky.actor.getPreferences.$lxm,
   l.params({ did: l.string({ format: 'did' }) }),
   l.jsonPayload({ preferences: l.array(l.lexValue()) }),
 )
 
 export default function (server: Server, ctx: AppContext) {
-  server.xrpc.add(getPreferences, {
+  server.add(getPreferences, {
     auth: async (authCtx): Promise<AuthResult> =>
       ctx.authVerifier.modOrAdminToken(authCtx),
     handler: async ({ params }) => {
-      if (!ctx.pdsAgent || !ctx.cfg.pds) {
+      if (!ctx.pdsClient || !ctx.cfg.pds) {
         throw new InvalidRequestError('PDS not configured')
       }
 
@@ -27,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         ctx.cfg.pds.url,
       )
       url.searchParams.set('did', params.did)
-      const auth = await ctx.pdsAuth(ids.AppBskyActorGetPreferences)
+      const auth = await ctx.pdsAuth(app.bsky.actor.getPreferences.$lxm)
       const res = await fetch(url, {
         headers: auth?.headers,
         redirect: 'error',
@@ -35,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
       })
       if (!res.ok) {
         await res.body?.cancel()
-        throw new XRPCError(res.status, undefined, 'Failed to get preferences')
+        throw new UpstreamHttpError(res.status, 'Failed to get preferences')
       }
       const body = (await res.json()) as { preferences: LexValue[] }
       return {

@@ -1,3 +1,4 @@
+import { ids } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
 import {
   type ModeratorClient,
@@ -5,7 +6,8 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
+import type { DidString } from '@atproto/lex'
+import { currentDatetimeString } from '@atproto/lex'
 
 const REASON_SPAM = 'com.atproto.moderation.defs#reasonSpam'
 const REASON_THREAT = 'tools.ozone.report.defs#reasonViolenceThreats'
@@ -67,7 +69,7 @@ describe('queue-router', () => {
       .limit(1)
     if (isDid) {
       query = query
-        .where('me.subjectDid', '=', subjectOrUri)
+        .where('me.subjectDid', '=', subjectOrUri as DidString)
         .where('me.subjectUri', 'is', null)
     } else {
       query = query.where('me.subjectUri', '=', subjectOrUri)
@@ -174,7 +176,7 @@ describe('queue-router', () => {
       .orderBy('id', 'desc')
       .limit(1)
       .executeTakeFirstOrThrow()
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     await network.ozone.daemon.ctx.db.db
       .insertInto('report')
       .values({

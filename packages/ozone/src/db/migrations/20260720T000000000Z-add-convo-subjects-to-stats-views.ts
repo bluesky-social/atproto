@@ -1,10 +1,6 @@
 import { type Kysely, sql } from 'kysely'
 import { OZONE_APPEAL_REASON_TYPE } from '../../api/util.js'
-import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs.js'
-import {
-  REVIEWESCALATED,
-  REVIEWOPEN,
-} from '../../lexicon/types/tools/ozone/moderation/defs.js'
+import { com, tools } from '../../lexicons/index.js'
 import type * as modEvent from '../schema/moderation_event.js'
 import type * as modStatus from '../schema/moderation_subject_status.js'
 import type * as recordEventsStats from '../schema/record_events_stats.js'
@@ -72,11 +68,11 @@ export async function up(db: Kysely<any>): Promise<void> {
               'escalateCount',
             ),
           (eb) =>
-            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport' AND ${eb.ref('meta')} ->> 'reportType' NOT IN (${REASONAPPEAL}, ${OZONE_APPEAL_REASON_TYPE}))`.as(
+            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport' AND ${eb.ref('meta')} ->> 'reportType' NOT IN (${com.atproto.moderation.defs.reasonAppeal.value}, ${OZONE_APPEAL_REASON_TYPE}))`.as(
               'reportCount',
             ),
           (eb) =>
-            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport' AND ${eb.ref('meta')} ->> 'reportType' IN (${REASONAPPEAL}, ${OZONE_APPEAL_REASON_TYPE}))`.as(
+            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport' AND ${eb.ref('meta')} ->> 'reportType' IN (${com.atproto.moderation.defs.reasonAppeal.value}, ${OZONE_APPEAL_REASON_TYPE}))`.as(
               'appealCount',
             ),
         ])
@@ -164,11 +160,11 @@ export async function up(db: Kysely<any>): Promise<void> {
         .select([
           sql<number>`COUNT(*)`.as('subjectCount'),
           (eb) =>
-            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('reviewState')} IN (${REVIEWOPEN}, ${REVIEWESCALATED}))`.as(
+            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('reviewState')} IN (${tools.ozone.moderation.defs.reviewOpen.value}, ${tools.ozone.moderation.defs.reviewEscalated.value}))`.as(
               'pendingCount',
             ),
           (eb) =>
-            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('reviewState')} NOT IN (${REVIEWOPEN}, ${REVIEWESCALATED}))`.as(
+            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('reviewState')} NOT IN (${tools.ozone.moderation.defs.reviewOpen.value}, ${tools.ozone.moderation.defs.reviewEscalated.value}))`.as(
               'processedCount',
             ),
           (eb) =>
@@ -251,11 +247,11 @@ export async function down(db: Kysely<any>): Promise<void> {
               'escalateCount',
             ),
           (eb) =>
-            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport' AND ${eb.ref('meta')} ->> 'reportType' NOT IN (${REASONAPPEAL}, ${OZONE_APPEAL_REASON_TYPE}))`.as(
+            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport' AND ${eb.ref('meta')} ->> 'reportType' NOT IN (${com.atproto.moderation.defs.reasonAppeal.value}, ${OZONE_APPEAL_REASON_TYPE}))`.as(
               'reportCount',
             ),
           (eb) =>
-            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport' AND ${eb.ref('meta')} ->> 'reportType' IN (${REASONAPPEAL}, ${OZONE_APPEAL_REASON_TYPE}))`.as(
+            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport' AND ${eb.ref('meta')} ->> 'reportType' IN (${com.atproto.moderation.defs.reasonAppeal.value}, ${OZONE_APPEAL_REASON_TYPE}))`.as(
               'appealCount',
             ),
         ])
@@ -336,11 +332,11 @@ export async function down(db: Kysely<any>): Promise<void> {
         .select([
           sql<number>`COUNT(*)`.as('subjectCount'),
           (eb) =>
-            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('reviewState')} IN (${REVIEWOPEN}, ${REVIEWESCALATED}))`.as(
+            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('reviewState')} IN (${tools.ozone.moderation.defs.reviewOpen.value}, ${tools.ozone.moderation.defs.reviewEscalated.value}))`.as(
               'pendingCount',
             ),
           (eb) =>
-            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('reviewState')} NOT IN (${REVIEWOPEN}, ${REVIEWESCALATED}))`.as(
+            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('reviewState')} NOT IN (${tools.ozone.moderation.defs.reviewOpen.value}, ${tools.ozone.moderation.defs.reviewEscalated.value}))`.as(
               'processedCount',
             ),
           (eb) =>

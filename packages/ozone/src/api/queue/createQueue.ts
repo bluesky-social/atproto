@@ -1,11 +1,16 @@
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import type { DidString } from '@atproto/lex'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 
 const VALID_SUBJECT_TYPES = ['account', 'record', 'message', 'conversation']
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.queue.createQueue({
+  server.add(tools.ozone.queue.createQueue, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
@@ -60,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
         reportTypes,
         description,
         recommendedPolicies,
-        createdBy,
+        createdBy: createdBy as DidString,
       })
 
       return {

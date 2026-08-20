@@ -19,7 +19,6 @@ export default [
 
       // codegen
       'packages/api/src/client/**',
-      'packages/ozone/src/lexicon/**',
 
       // @atproto/lex
       'packages/lexicon-resolver/src/lexicons/**',
@@ -28,6 +27,7 @@ export default [
       'packages/oauth/oauth-client-browser-example/src/lexicons/**',
       'packages/pds/src/lexicons/**',
       'packages/bsky/src/lexicons/**',
+      'packages/ozone/src/lexicons/**',
       'packages/sync/src/lexicons/**',
 
       // others

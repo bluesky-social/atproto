@@ -1,5 +1,7 @@
 import { type Selectable, sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
+import type { DatetimeString, DidString } from '@atproto/lex'
+import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
 import { ComputedAtIdKeyset, paginate } from '../db/pagination.js'
 import type { ReportStat } from '../db/schema/report_stat.js'
@@ -88,7 +90,7 @@ export type ReportStatsServiceCreator = (db: Database) => ReportStatsService
 
 export type ReportStatGroup = {
   queueId: number | null
-  moderatorDid: string | null
+  moderatorDid: DidString | null
   reportTypes: string[] | null
 }
 export type AggregateStatistics = {
@@ -152,7 +154,7 @@ type TypeWindowRow = {
   handlingTimeCount: string
 }
 type ModeratorWindowRow = {
-  did: string
+  did: DidString
   inboundCount: string
   actionedCount: string
   handlingTimeSum: string | null
@@ -169,7 +171,7 @@ type BatchedStats = {
 type UpsertRow = {
   date: string
   queueId: number | null
-  moderatorDid: string | null
+  moderatorDid: DidString | null
   reportTypes: string[] | null
   inboundCount: number | null
   pendingCount: number | null
@@ -177,7 +179,7 @@ type UpsertRow = {
   escalatedCount: number | null
   actionRate: number | null
   avgHandlingTimeSec: number | null
-  computedAt: string
+  computedAt: DatetimeString
 }
 
 export class ReportStatsService {
@@ -313,7 +315,7 @@ export class ReportStatsService {
       map.set(
         groupKey({
           queueId: row.queueId,
-          moderatorDid: row.moderatorDid,
+          moderatorDid: row.moderatorDid as DidString,
           reportTypes: row.reportTypes,
         }),
         row,
@@ -376,8 +378,8 @@ export class ReportStatsService {
    * Returns 5 result sets covering all group types.
    */
   private async computeBatchedStats(date: string): Promise<BatchedStats> {
-    const dayStart = `${date}T00:00:00.000Z`
-    const dayEnd = `${nextDate(date)}T00:00:00.000Z`
+    const dayStart = `${date}T00:00:00.000Z` as DatetimeString
+    const dayEnd = `${nextDate(date)}T00:00:00.000Z` as DatetimeString
 
     const [queuePending, aggregatePending] = await Promise.all([
       // Pending count is a snapshot of all non-closed reports at time of computation
@@ -609,7 +611,7 @@ export class ReportStatsService {
   }
 
   private resolveModeratorStats(
-    moderatorDid: string,
+    moderatorDid: DidString,
     rows: ModeratorWindowRow[],
   ): ModeratorStatistics {
     const row = rows.find((r) => r.did === moderatorDid)
@@ -648,7 +650,7 @@ export class ReportStatsService {
       escalatedCount,
       actionRate,
       avgHandlingTimeSec: stats.avgHandlingTimeSec ?? null,
-      computedAt: new Date().toISOString(),
+      computedAt: currentDatetimeString(),
     }
   }
 
@@ -843,7 +845,7 @@ function groupKey(g: ReportStatGroup): string {
 
 /** Convert a Date to an ISO date string (YYYY-MM-DD). */
 function toDateString(d: Date): string {
-  return d.toISOString().slice(0, 10)
+  return toDatetimeString(d).slice(0, 10)
 }
 
 /** Get the next calendar date string. */

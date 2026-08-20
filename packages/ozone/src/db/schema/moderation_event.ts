@@ -1,4 +1,5 @@
 import type { Generated } from 'kysely'
+import type { DatetimeString, DidString } from '@atproto/lex'
 
 export const eventTableName = 'moderation_event'
 
@@ -32,7 +33,7 @@ export interface ModerationEvent {
     | 'com.atproto.repo.strongRef'
     | 'chat.bsky.convo.defs#messageRef'
     | 'chat.bsky.convo.defs#convoRef'
-  subjectDid: string
+  subjectDid: DidString
   subjectUri: string | null
   subjectCid: string | null
   subjectBlobCids: string[] | null
@@ -41,10 +42,10 @@ export interface ModerationEvent {
   createLabelVals: string | null
   negateLabelVals: string | null
   comment: string | null
-  createdAt: string
-  createdBy: string
+  createdAt: DatetimeString
+  createdBy: DidString
   durationInHours: number | null
-  expiresAt: string | null
+  expiresAt: DatetimeString | null
   meta: Record<string, string | boolean | number> | null
   addedTags: string[] | null
   removedTags: string[] | null
@@ -53,7 +54,7 @@ export interface ModerationEvent {
   externalId: string | null
   severityLevel: string | null
   strikeCount: number | null
-  strikeExpiresAt: string | null
+  strikeExpiresAt: DatetimeString | null
 }
 
 export type PartialDB = {

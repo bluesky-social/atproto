@@ -1,12 +1,12 @@
-import type { ToolsOzoneModerationDefs } from '@atproto/api'
+import type { AtUriString, DidString, Unknown$TypedObject } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
-import type { SubjectView } from '../../lexicon/types/tools/ozone/moderation/defs.js'
+import { tools } from '../../lexicons/index.js'
 import { addAccountInfoToRepoViewDetail, getPdsAccountInfos } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.moderation.getSubjects({
+  server.add(tools.ozone.moderation.getSubjects, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth, req }) => {
       const { subjects } = params
@@ -25,21 +25,24 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const didsArray = Array.from(dids)
+      const didsArray = Array.from(dids) as DidString[]
       const modViews = ctx.modService(db).views
       const [partialRepos, accountInfo, recordInfo, profiles] =
         await Promise.all([
           modViews.repoDetails(didsArray, labelers),
           getPdsAccountInfos(ctx, didsArray),
           modViews.recordDetails(
-            Array.from(uris).map((uri) => ({ uri })),
+            Array.from(uris).map((uri) => ({ uri: uri as AtUriString })),
             labelers,
           ),
           modViews.getProfiles(didsArray),
         ])
 
       const missingSubjects: string[] = []
-      const subjectWithDetails = new Map<string, SubjectView>()
+      const subjectWithDetails = new Map<
+        string,
+        tools.ozone.moderation.defs.SubjectView
+      >()
 
       for (const subject of subjects) {
         const type = subject.startsWith('did:') ? 'account' : 'record'
@@ -63,10 +66,12 @@ export default function (server: Server, ctx: AppContext) {
           type,
           repo,
           record,
-          profile: profile && {
-            $type: 'app.bsky.actor.defs#profileViewDetailed',
-            ...profile,
-          },
+          profile:
+            profile &&
+            ({
+              $type: 'app.bsky.actor.defs#profileViewDetailed',
+              ...profile,
+            } as unknown as Unknown$TypedObject),
           status,
           subject,
         })
@@ -86,7 +91,7 @@ export default function (server: Server, ctx: AppContext) {
           subjectView.status = modViews.formatSubjectStatus(status)
       }
 
-      const allSubjects: ToolsOzoneModerationDefs.SubjectView[] = []
+      const allSubjects: tools.ozone.moderation.defs.SubjectView[] = []
       for (const subject of subjects) {
         const subjectView = subjectWithDetails.get(subject)
         if (subjectView) allSubjects.push(subjectView)

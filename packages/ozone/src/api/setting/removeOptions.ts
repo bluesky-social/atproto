@@ -1,10 +1,11 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
+import type { DidString } from '@atproto/lex'
+import { AuthRequiredError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import type { Member } from '../../db/schema/member.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.setting.removeOptions({
+  server.add(tools.ozone.setting.removeOptions, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
@@ -20,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        did = access.iss
+        did = access.iss as DidString
       }
 
       // When attempting to delete an instance setting using admin_token will allow removing any setting

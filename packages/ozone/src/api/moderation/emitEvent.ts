@@ -1,30 +1,13 @@
+import type { DidString, UriString } from '@atproto/lex'
 import {
   AuthRequiredError,
   ForbiddenError,
   InvalidRequestError,
+  type Server,
 } from '@atproto/xrpc-server'
 import type { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier.js'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
-import { ids } from '../../lexicon/lexicons.js'
-import {
-  type ModEventTag,
-  isAgeAssuranceEvent,
-  isAgeAssuranceOverrideEvent,
-  isAgeAssurancePurgeEvent,
-  isModEventAcknowledge,
-  isModEventDivert,
-  isModEventEmail,
-  isModEventLabel,
-  isModEventMuteReporter,
-  isModEventReport,
-  isModEventReverseTakedown,
-  isModEventTag,
-  isModEventTakedown,
-  isModEventUnmuteReporter,
-  isRevokeAccountCredentialsEvent,
-} from '../../lexicon/types/tools/ozone/moderation/defs.js'
-import type { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent.js'
+import { com, tools } from '../../lexicons/index.js'
 import { httpLogger } from '../../logger.js'
 import { processReportAction } from '../../mod-service/report.js'
 import { subjectFromInput } from '../../mod-service/subject.js'
@@ -41,7 +24,7 @@ const handleModerationEvent = async ({
   auth,
 }: {
   ctx: AppContext
-  input: HandlerInput
+  input: { body: tools.ozone.moderation.emitEvent.$InputBody }
   auth: ModeratorOutput | AdminTokenOutput
 }) => {
   const access = auth.credentials
@@ -53,20 +36,27 @@ const handleModerationEvent = async ({
   const moderationService = ctx.modService(db)
   const settingService = ctx.settingService(db)
   const { event, externalId } = input.body
-  const isAcknowledgeEvent = isModEventAcknowledge(event)
-  const isTakedownEvent = isModEventTakedown(event)
-  const isReverseTakedownEvent = isModEventReverseTakedown(event)
-  const isLabelEvent = isModEventLabel(event)
+  const isAcknowledgeEvent =
+    tools.ozone.moderation.defs.modEventAcknowledge.$isTypeOf(event)
+  const isTakedownEvent =
+    tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event)
+  const isReverseTakedownEvent =
+    tools.ozone.moderation.defs.modEventReverseTakedown.$isTypeOf(event)
+  const isLabelEvent =
+    tools.ozone.moderation.defs.modEventLabel.$isTypeOf(event)
   const subject = subjectFromInput(
     input.body.subject,
     input.body.subjectBlobCids,
   )
 
-  if (isAgeAssuranceEvent(event) && !subject.isRepo()) {
+  if (
+    tools.ozone.moderation.defs.ageAssuranceEvent.$isTypeOf(event) &&
+    !subject.isRepo()
+  ) {
     throw new InvalidRequestError('Invalid subject type')
   }
 
-  if (isAgeAssuranceOverrideEvent(event)) {
+  if (tools.ozone.moderation.defs.ageAssuranceOverrideEvent.$isTypeOf(event)) {
     if (!subject.isRepo()) {
       throw new InvalidRequestError('Invalid subject type')
     }
@@ -77,7 +67,7 @@ const handleModerationEvent = async ({
     }
   }
 
-  if (isAgeAssurancePurgeEvent(event)) {
+  if (tools.ozone.moderation.defs.ageAssurancePurgeEvent.$isTypeOf(event)) {
     if (!subject.isRepo()) {
       throw new InvalidRequestError('Invalid subject type')
     }
@@ -88,7 +78,9 @@ const handleModerationEvent = async ({
     }
   }
 
-  if (isRevokeAccountCredentialsEvent(event)) {
+  if (
+    tools.ozone.moderation.defs.revokeAccountCredentialsEvent.$isTypeOf(event)
+  ) {
     if (!subject.isRepo()) {
       throw new InvalidRequestError('Invalid subject type')
     }
@@ -99,13 +91,14 @@ const handleModerationEvent = async ({
       )
     }
 
-    if (!ctx.pdsAgent) {
+    if (!ctx.pdsClient) {
       throw new InvalidRequestError('PDS not configured')
     }
 
-    await ctx.pdsAgent.com.atproto.temp.revokeAccountCredentials(
+    await ctx.pdsClient.call(
+      com.atproto.temp.revokeAccountCredentials,
       { account: subject.did },
-      await ctx.pdsAuth(ids.ComAtprotoTempRevokeAccountCredentials),
+      await ctx.pdsAuth(com.atproto.temp.revokeAccountCredentials.$lxm),
     )
   }
 
@@ -177,7 +170,10 @@ const handleModerationEvent = async ({
     }
   }
 
-  if (isModEventEmail(event) && event.content) {
+  if (
+    tools.ozone.moderation.defs.modEventEmail.$isTypeOf(event) &&
+    event.content
+  ) {
     // sending email prior to logging the event to avoid a long transaction below
     if (!subject.isRepo()) {
       throw new InvalidRequestError('Email can only be sent to a repo subject')
@@ -199,7 +195,10 @@ const handleModerationEvent = async ({
     }
   }
 
-  if (isModEventDivert(event) && subject.isRecord()) {
+  if (
+    tools.ozone.moderation.defs.modEventDivert.$isTypeOf(event) &&
+    subject.isRecord()
+  ) {
     if (!ctx.blobDiverter) {
       throw new InvalidRequestError(
         'BlobDiverter not configured for this service',
@@ -209,17 +208,18 @@ const handleModerationEvent = async ({
   }
 
   if (
-    (isModEventMuteReporter(event) || isModEventUnmuteReporter(event)) &&
+    (tools.ozone.moderation.defs.modEventMuteReporter.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventUnmuteReporter.$isTypeOf(event)) &&
     !subject.isRepo()
   ) {
     throw new InvalidRequestError('Subject must be a repo when muting reporter')
   }
 
-  if (isModEventTag(event)) {
+  if (tools.ozone.moderation.defs.modEventTag.$isTypeOf(event)) {
     await assertTagAuth(settingService, ctx.cfg.service.did, event, auth)
   }
 
-  if (isModEventReport(event)) {
+  if (tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)) {
     await ctx.moderationServiceProfile().validateReasonType(event.reportType)
   }
 
@@ -259,7 +259,7 @@ const handleModerationEvent = async ({
     const result = await moderationTxn.logEvent({
       event,
       subject,
-      createdBy,
+      createdBy: createdBy as DidString,
       modTool: input.body.modTool,
       externalId,
     })
@@ -275,7 +275,7 @@ const handleModerationEvent = async ({
           subjectUri,
           eventId: result.event.id,
           eventType: event.$type,
-          createdBy,
+          createdBy: createdBy as DidString,
         })
       } catch (err) {
         throw new InvalidRequestError(
@@ -293,7 +293,9 @@ const handleModerationEvent = async ({
       moderationTxn,
     )
 
-    const initialTags = isModEventReport(event)
+    const initialTags = tools.ozone.moderation.defs.modEventReport.$isTypeOf(
+      event,
+    )
       ? [getTagForReport(event.reportType)]
       : undefined
     await tagService.evaluateForSubject(initialTags)
@@ -345,7 +347,7 @@ const handleModerationEvent = async ({
 
     if (isLabelEvent) {
       await moderationTxn.formatAndCreateLabels(
-        result.event.subjectUri ?? result.event.subjectDid,
+        (result.event.subjectUri ?? result.event.subjectDid) as UriString,
         result.event.subjectCid,
         {
           create: result.event.createLabelVals?.length
@@ -366,7 +368,7 @@ const handleModerationEvent = async ({
 }
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.moderation.emitEvent({
+  server.add(tools.ozone.moderation.emitEvent, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       try {
@@ -377,7 +379,9 @@ export default function (server: Server, ctx: AppContext) {
         })
 
         // On divert events, we need to automatically take down the blobs
-        if (isModEventDivert(input.body.event)) {
+        if (
+          tools.ozone.moderation.defs.modEventDivert.$isTypeOf(input.body.event)
+        ) {
           await handleModerationEvent({
             auth,
             ctx,
@@ -415,7 +419,7 @@ export default function (server: Server, ctx: AppContext) {
 const assertTagAuth = async (
   settingService: SettingService,
   serviceDid: string,
-  event: ModEventTag,
+  event: tools.ozone.moderation.defs.ModEventTag,
   auth: ModeratorOutput | AdminTokenOutput,
 ) => {
   // admins can add/remove any tag

@@ -1,9 +1,10 @@
 import type { Generated } from 'kysely'
+import type { DidString } from '@atproto/lex'
 
 export const memberTableName = 'member'
 
 export interface Member {
-  did: string
+  did: DidString
   role:
     | 'tools.ozone.team.defs#roleAdmin'
     | 'tools.ozone.team.defs#roleTriage'

@@ -1,11 +1,13 @@
-import type { AtpAgent } from '@atproto/api'
+import {
+  type AtpAgent,
+  type ToolsOzoneModerationSearchRepos,
+  ids,
+} from '@atproto/api'
 import {
   type ModeratorClient,
   type SeedClient,
   TestNetwork,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
-import type { OutputSchema as SearchReposOutputSchema } from '../src/lexicon/types/tools/ozone/moderation/searchRepos.js'
 import { paginateAll } from './_util.js'
 
 describe('admin repo search view', () => {
@@ -118,7 +120,7 @@ describe('admin repo search view', () => {
   })
 
   it('paginates with term', async () => {
-    const results = (results: SearchReposOutputSchema[]) =>
+    const results = (results: ToolsOzoneModerationSearchRepos.OutputSchema[]) =>
       results.flatMap((res) => res.repos)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.tools.ozone.moderation.searchRepos(
@@ -143,7 +145,7 @@ describe('admin repo search view', () => {
   })
 
   it('paginates without term', async () => {
-    const results = (results: SearchReposOutputSchema[]) =>
+    const results = (results: ToolsOzoneModerationSearchRepos.OutputSchema[]) =>
       results.flatMap((res) => res.repos)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.tools.ozone.moderation.searchRepos(

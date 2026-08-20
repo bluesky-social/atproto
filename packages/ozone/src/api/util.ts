@@ -1,31 +1,16 @@
+import type { DidString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { AdminTokenOutput, ModeratorOutput } from '../auth-verifier.js'
 import type { AppContext } from '../context.js'
 import type { Member } from '../db/schema/member.js'
 import type { ModerationEvent } from '../db/schema/moderation_event.js'
-import { ids } from '../lexicon/lexicons.js'
-import type { AccountView } from '../lexicon/types/com/atproto/admin/defs.js'
-import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs.js'
-import {
-  REVIEWCLOSED,
-  REVIEWESCALATED,
-  REVIEWNONE,
-  REVIEWOPEN,
-  type RepoView,
-  type RepoViewDetail,
-} from '../lexicon/types/tools/ozone/moderation/defs.js'
-import {
-  ROLEADMIN,
-  ROLEMODERATOR,
-  ROLETRIAGE,
-  ROLEVERIFIER,
-} from '../lexicon/types/tools/ozone/team/defs.js'
+import { com, tools } from '../lexicons/index.js'
 import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
 
 export const getAuthDid = (
   auth: ModeratorOutput | AdminTokenOutput,
-  serviceDid: string,
-): string | undefined => {
+  serviceDid: DidString,
+): DidString | undefined => {
   return auth.credentials.type === 'moderator'
     ? auth.credentials.iss
     : auth.credentials.type === 'admin_token'
@@ -35,19 +20,23 @@ export const getAuthDid = (
 
 export const getPdsAccountInfos = async (
   ctx: AppContext,
-  dids: string[],
-): Promise<Map<string, AccountView | null>> => {
-  const results = new Map<string, AccountView | null>()
+  dids: DidString[],
+): Promise<Map<string, com.atproto.admin.defs.AccountView | null>> => {
+  const results = new Map<string, com.atproto.admin.defs.AccountView | null>()
 
-  const agent = ctx.pdsAgent
-  if (!agent || !dids.length) return results
+  const client = ctx.pdsClient
+  if (!client || !dids.length) return results
 
-  const auth = await ctx.pdsAuth(ids.ComAtprotoAdminGetAccountInfos)
+  const auth = await ctx.pdsAuth(com.atproto.admin.getAccountInfos.$lxm)
   if (!auth) return results
 
   try {
-    const res = await agent.com.atproto.admin.getAccountInfos({ dids }, auth)
-    res.data.infos.forEach((info) => {
+    const body = await client.call(
+      com.atproto.admin.getAccountInfos,
+      { dids },
+      auth,
+    )
+    body.infos.forEach((info) => {
       results.set(info.did, info)
     })
     return results
@@ -65,10 +54,12 @@ function un$type<T extends object>(obj: T): Omit<T, '$type'> {
 }
 
 export const addAccountInfoToRepoViewDetail = (
-  repoView: RepoView | RepoViewDetail,
-  accountInfo: AccountView | null,
+  repoView:
+    | tools.ozone.moderation.defs.RepoView
+    | tools.ozone.moderation.defs.RepoViewDetail,
+  accountInfo: com.atproto.admin.defs.AccountView | null,
   includeEmail = false,
-): RepoViewDetail => {
+): tools.ozone.moderation.defs.RepoViewDetail => {
   if (!accountInfo) {
     return un$type({
       ...repoView,
@@ -109,10 +100,10 @@ export const addAccountInfoToRepoViewDetail = (
 }
 
 export const addAccountInfoToRepoView = (
-  repoView: RepoView,
-  accountInfo: AccountView | null,
+  repoView: tools.ozone.moderation.defs.RepoView,
+  accountInfo: com.atproto.admin.defs.AccountView | null,
   includeEmail = false,
-): RepoView => {
+): tools.ozone.moderation.defs.RepoView => {
   if (!accountInfo) return repoView
   return {
     ...repoView,
@@ -134,17 +125,19 @@ export const getEventType = (type: string) => {
 
 export const getReviewState = (reviewState?: string) => {
   if (!reviewState) return undefined
-  if (reviewStates.has(reviewState)) {
+  if (
+    reviewStates.has(reviewState as ModerationSubjectStatusRow['reviewState'])
+  ) {
     return reviewState as ModerationSubjectStatusRow['reviewState']
   }
   throw new InvalidRequestError('Invalid review state')
 }
 
 const reviewStates = new Set([
-  REVIEWCLOSED,
-  REVIEWESCALATED,
-  REVIEWOPEN,
-  REVIEWNONE,
+  tools.ozone.moderation.defs.reviewClosed.value,
+  tools.ozone.moderation.defs.reviewEscalated.value,
+  tools.ozone.moderation.defs.reviewOpen.value,
+  tools.ozone.moderation.defs.reviewNone.value,
 ])
 
 const eventTypes = new Set([
@@ -176,21 +169,24 @@ const eventTypes = new Set([
 ])
 
 export const getMemberRole = (role: string) => {
-  if (memberRoles.has(role)) {
+  if (memberRoles.has(role as Member['role'])) {
     return role as Member['role']
   }
   throw new InvalidRequestError('Invalid member role')
 }
 
 const memberRoles = new Set([
-  ROLEADMIN,
-  ROLEMODERATOR,
-  ROLETRIAGE,
-  ROLEVERIFIER,
+  tools.ozone.team.defs.roleAdmin.value,
+  tools.ozone.team.defs.roleModerator.value,
+  tools.ozone.team.defs.roleTriage.value,
+  tools.ozone.team.defs.roleVerifier.value,
 ])
 
 export const OZONE_APPEAL_REASON_TYPE = 'tools.ozone.report.defs#reasonAppeal'
-const APPEAL_REASON_TYPES = [REASONAPPEAL, OZONE_APPEAL_REASON_TYPE]
+const APPEAL_REASON_TYPES = [
+  com.atproto.moderation.defs.reasonAppeal.value,
+  OZONE_APPEAL_REASON_TYPE,
+]
 export const isAppealReport = (reasonType?: string): boolean => {
   return !!reasonType && APPEAL_REASON_TYPES.includes(reasonType)
 }

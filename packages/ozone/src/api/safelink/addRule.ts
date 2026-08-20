@@ -1,6 +1,6 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
+import { AuthRequiredError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 import {
   getSafelinkAction,
   getSafelinkPattern,
@@ -8,7 +8,7 @@ import {
 } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.safelink.addRule({
+  server.add(tools.ozone.safelink.addRule, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials

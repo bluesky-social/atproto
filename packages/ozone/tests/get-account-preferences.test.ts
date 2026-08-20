@@ -1,5 +1,5 @@
+import { ids } from '@atproto/api'
 import { type SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
 
 describe('account preferences', () => {
   let network: TestNetwork

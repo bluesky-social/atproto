@@ -1,10 +1,12 @@
+import type { DidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 import { addAccountInfoToRepoView, getPdsAccountInfos } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.moderation.getRecords({
+  server.add(tools.ozone.moderation.getRecords, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth, req }) => {
       const db = ctx.db
@@ -17,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
         ),
         getPdsAccountInfos(
           ctx,
-          params.uris.map((uri) => new AtUri(uri).hostname),
+          params.uris.map((uri) => new AtUri(uri).hostname as DidString),
         ),
       ])
 
@@ -26,12 +28,12 @@ export default function (server: Server, ctx: AppContext) {
         if (!record) {
           return {
             uri,
-            $type: 'tools.ozone.moderation.defs#recordViewNotFound',
+            $type: 'tools.ozone.moderation.defs#recordViewNotFound' as const,
           }
         }
 
         return {
-          $type: 'tools.ozone.moderation.defs#recordViewDetail',
+          $type: 'tools.ozone.moderation.defs#recordViewDetail' as const,
           ...record,
           repo: addAccountInfoToRepoView(
             record.repo,

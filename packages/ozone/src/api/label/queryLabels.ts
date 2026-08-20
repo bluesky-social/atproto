@@ -1,9 +1,9 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { com } from '../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.label.queryLabels(async ({ params }) => {
+  server.add(com.atproto.label.queryLabels, async ({ params }) => {
     const { uriPatterns, sources, limit, cursor } = params
     let builder = ctx.db.db.selectFrom('label').selectAll().limit(limit)
     // if includes '*', then we don't need a where clause

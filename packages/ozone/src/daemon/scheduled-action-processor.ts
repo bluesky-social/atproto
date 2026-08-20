@@ -6,10 +6,7 @@ import {
 } from '../api/moderation/util.js'
 import type { Database } from '../db/index.js'
 import type { ScheduledAction } from '../db/schema/scheduled-action.js'
-import type {
-  ModEventTakedown,
-  ModTool,
-} from '../lexicon/types/tools/ozone/moderation/defs.js'
+import type { tools } from '../lexicons/index.js'
 import { dbLogger } from '../logger.js'
 import type {
   ModerationService,
@@ -86,17 +83,18 @@ export class ScheduledActionProcessor {
           subject: '',
           content: '',
         }
-        let modTool: ModTool | undefined
+        let modTool: tools.ozone.moderation.defs.ModTool | undefined
 
         // Create the appropriate moderation action based on the scheduled action type
         switch (action.action) {
           case 'takedown':
             {
-              const eventData = action.eventData as ModEventTakedown & {
-                modTool?: ModTool
-                emailSubject?: string
-                emailContent?: string
-              }
+              const eventData =
+                action.eventData as tools.ozone.moderation.defs.ModEventTakedown & {
+                  modTool?: tools.ozone.moderation.defs.ModTool
+                  emailSubject?: string
+                  emailContent?: string
+                }
               modTool = eventData.modTool
               event = {
                 $type: 'tools.ozone.moderation.defs#modEventTakedown',
@@ -173,7 +171,7 @@ export class ScheduledActionProcessor {
     email: { subject: string; content: string }
     action: Selectable<ScheduledAction>
     event: ModEventType
-    modTool: ModTool | undefined
+    modTool: tools.ozone.moderation.defs.ModTool | undefined
 
     moderationTxn: ModerationService
     settingService: SettingService

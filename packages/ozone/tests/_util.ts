@@ -2,21 +2,13 @@ import { type RequestListener, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { createHttpTerminator } from 'http-terminator'
 import { CID } from 'multiformats/cid'
+import {
+  AppBskyEmbedRecord,
+  AppBskyEmbedRecordWithMedia,
+  AppBskyFeedDefs,
+} from '@atproto/api'
 import { lexToJson } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
-import {
-  isView as isEmbedRecordView,
-  isViewRecord,
-} from '../src/lexicon/types/app/bsky/embed/record.js'
-import { isView as isEmbedRecordWithMediaView } from '../src/lexicon/types/app/bsky/embed/recordWithMedia.js'
-import {
-  type FeedViewPost,
-  type PostView,
-  type ThreadViewPost,
-  isPostView,
-  isReasonRepost,
-  isThreadViewPost,
-} from '../src/lexicon/types/app/bsky/feed/defs.js'
 
 export const identity = <T>(x: T) => x
 
@@ -95,8 +87,8 @@ export const forSnapshot = (obj: unknown) => {
 
 // Feed testing utils
 
-export const getOriginator = (item: FeedViewPost) => {
-  if (isReasonRepost(item.reason)) {
+export const getOriginator = (item: AppBskyFeedDefs.FeedViewPost) => {
+  if (AppBskyFeedDefs.isReasonRepost(item.reason)) {
     return item.reason.by.did
   } else {
     return item.post.author.did
@@ -164,23 +156,25 @@ export const stripViewer = <T extends { viewer?: unknown }>(val: T): T => {
   return val
 }
 
-const extractRecordEmbed = (embed: PostView['embed']) =>
-  isEmbedRecordView(embed)
-    ? isViewRecord(embed.record)
+const extractRecordEmbed = (embed: AppBskyFeedDefs.PostView['embed']) =>
+  AppBskyEmbedRecord.isView(embed)
+    ? AppBskyEmbedRecord.isViewRecord(embed.record)
       ? embed.record
       : undefined
-    : isEmbedRecordWithMediaView(embed)
-      ? isViewRecord(embed.record.record)
+    : AppBskyEmbedRecordWithMedia.isView(embed)
+      ? AppBskyEmbedRecord.isViewRecord(embed.record.record)
         ? embed.record.record
         : undefined
       : undefined
 
 // @NOTE mutates
-export const stripViewerFromPost = (postUnknown: object): PostView => {
-  if ('$type' in postUnknown && !isPostView(postUnknown)) {
+export const stripViewerFromPost = (
+  postUnknown: object,
+): AppBskyFeedDefs.PostView => {
+  if ('$type' in postUnknown && !AppBskyFeedDefs.isPostView(postUnknown)) {
     throw new Error('Expected post view')
   }
-  const post = postUnknown as PostView
+  const post = postUnknown as AppBskyFeedDefs.PostView
   post.author = stripViewer(post.author)
 
   const recordEmbed = extractRecordEmbed(post.embed)
@@ -197,19 +191,19 @@ export const stripViewerFromPost = (postUnknown: object): PostView => {
 }
 
 // @NOTE mutates
-export const stripViewerFromThread = <T extends ThreadViewPost>(
+export const stripViewerFromThread = <T extends AppBskyFeedDefs.ThreadViewPost>(
   thread: T,
 ): Omit<T, 'viewer'> => {
-  if (!isThreadViewPost(thread)) return thread
+  if (!AppBskyFeedDefs.isThreadViewPost(thread)) return thread
   // @ts-expect-error
   delete thread.viewer
   thread.post = stripViewerFromPost(thread.post)
-  if (isThreadViewPost(thread.parent)) {
+  if (AppBskyFeedDefs.isThreadViewPost(thread.parent)) {
     thread.parent = stripViewerFromThread(thread.parent)
   }
   if (thread.replies) {
     thread.replies = thread.replies.map((r) =>
-      isThreadViewPost(r) ? stripViewerFromThread(r) : r,
+      AppBskyFeedDefs.isThreadViewPost(r) ? stripViewerFromThread(r) : r,
     )
   }
   return thread

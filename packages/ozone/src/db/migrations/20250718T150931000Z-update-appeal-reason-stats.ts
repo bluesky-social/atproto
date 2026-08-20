@@ -1,12 +1,12 @@
 import { type Kysely, sql } from 'kysely'
 import { OZONE_APPEAL_REASON_TYPE } from '../../api/util.js'
-import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs.js'
+import { com } from '../../lexicons/index.js'
 import type * as modEvent from '../schema/moderation_event.js'
 import type * as recordEventsStats from '../schema/record_events_stats.js'
 
 export async function up(db: Kysely<any>): Promise<void> {
   // Drop and recreate materialized views to update appeal reason counting
-  // to include both REASONAPPEAL and OZONE_APPEAL_REASON_TYPE
+  // to include both com.atproto.moderation.defs.reasonAppeal.value and OZONE_APPEAL_REASON_TYPE
   // The primary difference between the old and new query is that we were using = and != operators
   // to match against the meta->>'reportType' field and now we use IN and NOT IN
 
@@ -46,12 +46,12 @@ export async function up(db: Kysely<any>): Promise<void> {
           (eb) =>
             sql<number>`COUNT(*) FILTER(
               WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport'
-              AND ${eb.ref('meta')} ->> 'reportType' NOT IN (${REASONAPPEAL}, ${OZONE_APPEAL_REASON_TYPE})
+              AND ${eb.ref('meta')} ->> 'reportType' NOT IN (${com.atproto.moderation.defs.reasonAppeal.value}, ${OZONE_APPEAL_REASON_TYPE})
             )`.as('reportCount'),
           (eb) =>
             sql<number>`COUNT(*) FILTER(
               WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport'
-              AND ${eb.ref('meta')} ->> 'reportType' IN (${REASONAPPEAL}, ${OZONE_APPEAL_REASON_TYPE})
+              AND ${eb.ref('meta')} ->> 'reportType' IN (${com.atproto.moderation.defs.reasonAppeal.value}, ${OZONE_APPEAL_REASON_TYPE})
             )`.as('appealCount'),
         ])
         .groupBy('subjectDid'),
@@ -73,11 +73,11 @@ export async function up(db: Kysely<any>): Promise<void> {
               'escalateCount',
             ),
           (eb) =>
-            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport' AND ${eb.ref('meta')} ->> 'reportType' NOT IN (${REASONAPPEAL}, ${OZONE_APPEAL_REASON_TYPE}))`.as(
+            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport' AND ${eb.ref('meta')} ->> 'reportType' NOT IN (${com.atproto.moderation.defs.reasonAppeal.value}, ${OZONE_APPEAL_REASON_TYPE}))`.as(
               'reportCount',
             ),
           (eb) =>
-            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport' AND ${eb.ref('meta')} ->> 'reportType' IN (${REASONAPPEAL}, ${OZONE_APPEAL_REASON_TYPE}))`.as(
+            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport' AND ${eb.ref('meta')} ->> 'reportType' IN (${com.atproto.moderation.defs.reasonAppeal.value}, ${OZONE_APPEAL_REASON_TYPE}))`.as(
               'appealCount',
             ),
         ])
@@ -197,12 +197,12 @@ export async function down(db: Kysely<any>): Promise<void> {
           (eb) =>
             sql<number>`COUNT(*) FILTER(
               WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport'
-              AND ${eb.ref('meta')} ->> 'reportType' != ${REASONAPPEAL}
+              AND ${eb.ref('meta')} ->> 'reportType' != ${com.atproto.moderation.defs.reasonAppeal.value}
             )`.as('reportCount'),
           (eb) =>
             sql<number>`COUNT(*) FILTER(
               WHERE ${eb.ref('action')} = 'tools.ozone.moderation.defs#modEventReport'
-              AND ${eb.ref('meta')} ->> 'reportType' = ${REASONAPPEAL}
+              AND ${eb.ref('meta')} ->> 'reportType' = ${com.atproto.moderation.defs.reasonAppeal.value}
             )`.as('appealCount'),
         ])
         .groupBy('subjectDid'),

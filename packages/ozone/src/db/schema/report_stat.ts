@@ -1,11 +1,12 @@
 import type { Generated } from 'kysely'
+import type { DatetimeString } from '@atproto/lex'
 
 export const reportStatTableName = 'report_stat'
 
 export interface ReportStat {
   // metadata
   id: Generated<number>
-  computedAt: string // When this snapshot was last computed
+  computedAt: DatetimeString // When this snapshot was last computed
 
   // group
   date: string // ISO date e.g. '2026-04-15' — the calendar day this snapshot covers

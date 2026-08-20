@@ -1,6 +1,6 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 import {
   type ActivityType,
   createReportActivity,
@@ -20,7 +20,7 @@ const VALID_ACTIVITY_TYPES = new Set<ActivityType>([
 const DEFS_PREFIX = 'tools.ozone.report.defs#'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.report.createActivity({
+  server.add(tools.ozone.report.createActivity, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const createdBy = getAuthDid(auth, ctx.cfg.service.did)

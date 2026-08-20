@@ -1,16 +1,8 @@
 import type { Selectable } from 'kysely'
-import type { ToolsOzoneModerationDefs } from '@atproto/api'
+import type { AtUriString, DidString, Unknown$TypedObject } from '@atproto/lex'
 import { addAccountInfoToRepoViewDetail } from '../api/util.js'
 import type { ReportStat } from '../db/schema/report_stat.js'
-import type * as AppBskyActorDefs from '../lexicon/types/app/bsky/actor/defs.js'
-import type { AccountView } from '../lexicon/types/com/atproto/admin/defs.js'
-import type {
-  RecordViewDetail,
-  RepoView,
-} from '../lexicon/types/tools/ozone/moderation/defs.js'
-import type * as ToolsOzoneQueueDefs from '../lexicon/types/tools/ozone/queue/defs.js'
-import type * as ToolsOzoneReportDefs from '../lexicon/types/tools/ozone/report/defs.js'
-import type { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs.js'
+import type { app, com, tools } from '../lexicons/index.js'
 import type { ReportWithEvent } from '../mod-service/report.js'
 import {
   CHAT_CONVO_COLLECTION,
@@ -21,50 +13,54 @@ import type { ParsedLabelers } from '../util.js'
 
 type ReportViews = {
   repoDetails(
-    dids: string[],
+    dids: DidString[],
     labelers?: ParsedLabelers,
-  ): Promise<Map<string, RepoView>>
+  ): Promise<Map<string, tools.ozone.moderation.defs.RepoView>>
   recordDetails(
-    subjects: { uri: string }[],
+    subjects: { uri: AtUriString }[],
     labelers?: ParsedLabelers,
-  ): Promise<Map<string, RecordViewDetail>>
+  ): Promise<Map<string, tools.ozone.moderation.defs.RecordViewDetail>>
   getProfiles(
-    dids: string[],
-  ): Promise<Map<string, AppBskyActorDefs.ProfileViewDetailed>>
+    dids: DidString[],
+  ): Promise<Map<string, app.bsky.actor.defs.ProfileViewDetailed>>
   getSubjectStatus(
     subjects: string[],
   ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>>
   formatSubjectStatus(
     status: ModerationSubjectStatusRowWithHandle,
-  ): ToolsOzoneModerationDefs.SubjectStatusView
+  ): tools.ozone.moderation.defs.SubjectStatusView
 }
 
 export type HydratedReport = {
-  partialRepos: Map<string, RepoView>
-  accountInfo: Map<string, AccountView | null>
-  recordInfo: Map<string, RecordViewDetail>
-  profiles: Map<string, AppBskyActorDefs.ProfileViewDetailed>
-  queues: Map<number, ToolsOzoneQueueDefs.QueueView>
-  memberViews: Map<string, TeamMember>
-  convoStatuses: Map<string, ToolsOzoneModerationDefs.SubjectStatusView>
+  partialRepos: Map<string, tools.ozone.moderation.defs.RepoView>
+  accountInfo: Map<string, com.atproto.admin.defs.AccountView | null>
+  recordInfo: Map<string, tools.ozone.moderation.defs.RecordViewDetail>
+  profiles: Map<string, app.bsky.actor.defs.ProfileViewDetailed>
+  queues: Map<number, tools.ozone.queue.defs.QueueView>
+  memberViews: Map<string, tools.ozone.team.defs.Member>
+  convoStatuses: Map<string, tools.ozone.moderation.defs.SubjectStatusView>
 }
 
 export async function hydrateReportInfo(
   reports: ReportWithEvent[],
   views: ReportViews,
-  getAccountInfos: (dids: string[]) => Promise<Map<string, AccountView | null>>,
+  getAccountInfos: (
+    dids: DidString[],
+  ) => Promise<Map<string, com.atproto.admin.defs.AccountView | null>>,
   getQueues: (
     queueIds: number[],
-  ) => Promise<Map<number, ToolsOzoneQueueDefs.QueueView>>,
-  getTeamMembers: (dids: string[]) => Promise<Map<string, TeamMember>>,
+  ) => Promise<Map<number, tools.ozone.queue.defs.QueueView>>,
+  getTeamMembers: (
+    dids: DidString[],
+  ) => Promise<Map<string, tools.ozone.team.defs.Member>>,
   labelers: ParsedLabelers,
 ): Promise<HydratedReport> {
   // populate data to fetch
-  const dids = new Set<string>()
+  const dids = new Set<DidString>()
   const uris = new Set<string>()
   const convoUris = new Set<string>()
   const queueIds = new Set<number>()
-  const assignmentDids: string[] = []
+  const assignmentDids: DidString[] = []
   for (const report of reports) {
     dids.add(report.subjectDid)
     dids.add(report.reportedBy)
@@ -87,7 +83,7 @@ export async function hydrateReportInfo(
     const rows = await views.getSubjectStatus(Array.from(convoUris))
     const statuses = new Map<
       string,
-      ToolsOzoneModerationDefs.SubjectStatusView
+      tools.ozone.moderation.defs.SubjectStatusView
     >()
     for (const [subject, row] of rows) {
       statuses.set(subject, views.formatSubjectStatus(row))
@@ -106,7 +102,7 @@ export async function hydrateReportInfo(
     views.repoDetails(didsArray, labelers),
     getAccountInfos(didsArray),
     views.recordDetails(
-      Array.from(uris).map((uri) => ({ uri })),
+      Array.from(uris).map((uri) => ({ uri: uri as AtUriString })),
       labelers,
     ),
     views.getProfiles(didsArray),
@@ -130,8 +126,8 @@ export function buildReportView(
   report: ReportWithEvent,
   hydrated: HydratedReport,
   isModerator: boolean,
-  actions?: ToolsOzoneModerationDefs.ModEventView[],
-): ToolsOzoneReportDefs.ReportView {
+  actions?: tools.ozone.moderation.defs.ModEventView[],
+): tools.ozone.report.defs.ReportView {
   const {
     partialRepos,
     accountInfo,
@@ -182,10 +178,10 @@ export function buildReportView(
     repo,
     record,
     profile: profile
-      ? {
-          $type: 'app.bsky.actor.defs#profileViewDetailed' as const,
+      ? ({
+          $type: 'app.bsky.actor.defs#profileViewDetailed',
           ...profile,
-        }
+        } as unknown as Unknown$TypedObject)
       : undefined,
     status: subjectStatus,
   }
@@ -204,14 +200,14 @@ export function buildReportView(
   const reporterProfile = profiles.get(reporterDid)
   const reporterStatus = reporterRepo?.moderation.subjectStatus
   const reporterView = {
-    type: 'account',
+    type: 'account' as const,
     subject: reporterDid,
     repo: reporterRepo,
     profile: reporterProfile
-      ? {
-          $type: 'app.bsky.actor.defs#profileViewDetailed' as const,
+      ? ({
+          $type: 'app.bsky.actor.defs#profileViewDetailed',
           ...reporterProfile,
-        }
+        } as unknown as Unknown$TypedObject)
       : undefined,
     status: reporterStatus,
   }
@@ -232,7 +228,7 @@ export function buildReportView(
     status: report.status,
     subject: subjectView,
     reportType,
-    reportedBy: report.reportedBy,
+    reportedBy: report.reportedBy as DidString,
     reporter: reporterView,
     comment: report.comment ?? undefined,
     createdAt: report.createdAt,
@@ -256,7 +252,7 @@ export function buildReportView(
 
 export function viewQueueStats(
   row?: Selectable<ReportStat>,
-): ToolsOzoneQueueDefs.QueueStats {
+): tools.ozone.queue.defs.QueueStats {
   return {
     pendingCount: row?.pendingCount ?? undefined,
     actionedCount: row?.actionedCount ?? undefined,
@@ -270,7 +266,7 @@ export function viewQueueStats(
 
 export function viewLiveStats(
   row?: Selectable<ReportStat>,
-): ToolsOzoneReportDefs.LiveStats {
+): tools.ozone.report.defs.LiveStats {
   return {
     pendingCount: row?.pendingCount ?? undefined,
     actionedCount: row?.actionedCount ?? undefined,
@@ -284,7 +280,7 @@ export function viewLiveStats(
 
 export function viewHistoricalStats(
   row: Selectable<ReportStat>,
-): ToolsOzoneReportDefs.HistoricalStats {
+): tools.ozone.report.defs.HistoricalStats {
   return {
     date: row.date,
     computedAt: row.computedAt,
