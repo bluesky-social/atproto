@@ -185,6 +185,17 @@ type LifecycleWindowRow = {
   resolutionDurationSec: string | null
   resolutionSampleCount: string
 }
+type GroupedLifecycleRow = LifecycleWindowRow & {
+  groupKind: 'aggregate' | 'queue' | 'reportType' | 'moderator'
+  queueId: number | null
+  reportType: string | null
+  moderatorDid: string | null
+}
+type ClosureStatsRow = Omit<GroupedLifecycleRow, 'escalatedCount'>
+type EscalationStatsRow = Pick<
+  GroupedLifecycleRow,
+  'groupKind' | 'queueId' | 'reportType' | 'moderatorDid' | 'escalatedCount'
+>
 type BatchedStats = {
   queuePending: QueueCountRow[]
   queueWindow: QueueWindowRow[]
@@ -482,74 +493,70 @@ export class ReportStatsService {
         .groupBy('reportType')
         .execute()
 
-    // Closures and escalation events in the UTC day, grouped for each stats view.
-    const lifecycle = () =>
-      sql<
-        LifecycleWindowRow & {
-          groupKind: 'aggregate' | 'queue' | 'reportType' | 'moderator'
-          queueId: number | null
-          reportType: string | null
-          moderatorDid: string | null
-        }
-      >`
-      with lifecycle_base as (
-        select
-          'close' as "metricType",
-          r."closedAt" as "eventAt",
-          coalesce(r."queueId", -1) as "statQueueId",
-          r."assignedTo" as "moderatorDid",
-          r."reportType",
-          r."createdAt" as "reportCreatedAt",
-          r."assignedAt" as "reportAssignedAt",
-          me.action as "actionType"
+    // Reports closed in the UTC day, classified by their last report action.
+    const closureStats = () =>
+      sql<ClosureStatsRow>`
+      with closures as (
+        select r.*, me.action as "actionType"
         from report r
         left join moderation_event me on me.id = case
           when jsonb_array_length(coalesce(r."actionEventIds", '[]'::jsonb)) > 0
           then (r."actionEventIds" ->> (jsonb_array_length(r."actionEventIds") - 1))::integer
         end
         where r."closedAt" >= ${dayStart} and r."closedAt" < ${dayEnd}
-        union all
-        select
-          'escalation', ra."createdAt", coalesce(r."queueId", -1),
-          r."assignedTo", r."reportType", r."createdAt", null, null
-        from report_activity ra
-        join report r on r.id = ra."reportId"
-        where ra."activityType" = 'escalationActivity'
-          and ra."createdAt" >= ${dayStart} and ra."createdAt" < ${dayEnd}
       )
       select
         case
-          when grouping("statQueueId") = 0 then 'queue'
+          when grouping(coalesce("queueId", -1)) = 0 then 'queue'
           when grouping("reportType") = 0 then 'reportType'
-          when grouping("moderatorDid") = 0 then 'moderator'
+          when grouping("assignedTo") = 0 then 'moderator'
           else 'aggregate'
         end as "groupKind",
-        case when grouping("statQueueId") = 0 then "statQueueId" end as "queueId",
+        case when grouping(coalesce("queueId", -1)) = 0 then coalesce("queueId", -1) end as "queueId",
         case when grouping("reportType") = 0 then "reportType" end as "reportType",
-        case when grouping("moderatorDid") = 0 then "moderatorDid" end as "moderatorDid",
-        count(*) filter (where "metricType" = 'close') as "closedCount",
-        count(*) filter (where "metricType" = 'close' and "actionType" in (
+        case when grouping("assignedTo") = 0 then "assignedTo" end as "moderatorDid",
+        count(*) as "closedCount",
+        count(*) filter (where "actionType" in (
           'tools.ozone.moderation.defs#modEventLabel',
           'tools.ozone.moderation.defs#modEventTag',
           'tools.ozone.moderation.defs#modEventTakedown'
         )) as "actionedCount",
-        count(*) filter (where "metricType" = 'close' and coalesce("actionType", '') not in (
+        count(*) filter (where coalesce("actionType", '') not in (
           'tools.ozone.moderation.defs#modEventLabel',
           'tools.ozone.moderation.defs#modEventTag',
           'tools.ozone.moderation.defs#modEventTakedown'
         )) as "acknowledgedCount",
-        count(*) filter (where "metricType" = 'escalation') as "escalatedCount",
-        count(*) filter (where "metricType" = 'close' and "actionType" = 'tools.ozone.moderation.defs#modEventLabel') as "labelActionCount",
-        count(*) filter (where "metricType" = 'close' and "actionType" = 'tools.ozone.moderation.defs#modEventTag') as "tagActionCount",
-        count(*) filter (where "metricType" = 'close' and "actionType" = 'tools.ozone.moderation.defs#modEventTakedown') as "takedownActionCount",
-        coalesce(sum(greatest(0, extract(epoch from ("eventAt"::timestamp - "reportAssignedAt"::timestamp))))
-          filter (where "metricType" = 'close' and "reportAssignedAt" is not null), 0) as "ahtDurationSec",
-        count(*) filter (where "metricType" = 'close' and "reportAssignedAt" is not null) as "ahtSampleCount",
-        coalesce(sum(greatest(0, extract(epoch from ("eventAt"::timestamp - "reportCreatedAt"::timestamp))))
-          filter (where "metricType" = 'close'), 0) as "resolutionDurationSec",
-        count(*) filter (where "metricType" = 'close') as "resolutionSampleCount"
-      from lifecycle_base
-      group by grouping sets ((), ("statQueueId"), ("reportType"), ("moderatorDid"))
+        count(*) filter (where "actionType" = 'tools.ozone.moderation.defs#modEventLabel') as "labelActionCount",
+        count(*) filter (where "actionType" = 'tools.ozone.moderation.defs#modEventTag') as "tagActionCount",
+        count(*) filter (where "actionType" = 'tools.ozone.moderation.defs#modEventTakedown') as "takedownActionCount",
+        coalesce(sum(greatest(0, extract(epoch from ("closedAt"::timestamp - "assignedAt"::timestamp))))
+          filter (where "assignedAt" is not null), 0) as "ahtDurationSec",
+        count(*) filter (where "assignedAt" is not null) as "ahtSampleCount",
+        coalesce(sum(greatest(0, extract(epoch from ("closedAt"::timestamp - "createdAt"::timestamp)))), 0) as "resolutionDurationSec",
+        count(*) as "resolutionSampleCount"
+      from closures
+      group by grouping sets ((), (coalesce("queueId", -1)), ("reportType"), ("assignedTo"))
+    `.execute(this.db.db)
+
+    // Escalation transitions in the UTC day, grouped for each stats view.
+    const escalationStats = () =>
+      sql<EscalationStatsRow>`
+      select
+        case
+          when grouping(coalesce(r."queueId", -1)) = 0 then 'queue'
+          when grouping(r."reportType") = 0 then 'reportType'
+          when grouping(r."assignedTo") = 0 then 'moderator'
+          else 'aggregate'
+        end as "groupKind",
+        case when grouping(coalesce(r."queueId", -1)) = 0 then coalesce(r."queueId", -1) end as "queueId",
+        case when grouping(r."reportType") = 0 then r."reportType" end as "reportType",
+        case when grouping(r."assignedTo") = 0 then r."assignedTo" end as "moderatorDid",
+        count(*) as "escalatedCount"
+      from report_activity ra
+      join report r on r.id = ra."reportId"
+      where ra."activityType" = 'escalationActivity'
+        and ra."createdAt" >= ${dayStart} and ra."createdAt" < ${dayEnd}
+      group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"), (r."assignedTo"))
     `.execute(this.db.db)
 
     // These queries are independent, so execute them in one database round.
@@ -560,7 +567,8 @@ export class ReportStatsService {
       aggregateInboundRow,
       typeInboundRows,
       typePendingRows,
-      lifecycleResult,
+      closureRows,
+      escalationRows,
     ] = await Promise.all([
       queuePending(),
       aggregatePending(),
@@ -568,16 +576,20 @@ export class ReportStatsService {
       aggregateInbound(),
       typeInbound(),
       typePending(),
-      lifecycle(),
+      closureStats(),
+      escalationStats(),
     ])
+
+    const lifecycleRows = mergeLifecycleStats(
+      closureRows.rows,
+      escalationRows.rows,
+    )
 
     const lifecycleFor = (
       groupKind: 'aggregate' | 'queue' | 'reportType' | 'moderator',
-      predicate: (row: (typeof lifecycleResult.rows)[number]) => boolean,
+      predicate: (row: GroupedLifecycleRow) => boolean,
     ): LifecycleWindowRow | undefined =>
-      lifecycleResult.rows.find(
-        (row) => row.groupKind === groupKind && predicate(row),
-      )
+      lifecycleRows.find((row) => row.groupKind === groupKind && predicate(row))
 
     const queueWindow: QueueWindowRow[] = inboundByQueue.map((row) => ({
       queueId: row.queueId,
@@ -585,7 +597,7 @@ export class ReportStatsService {
       ...emptyLifecycleWindow(),
       ...lifecycleFor('queue', (item) => item.queueId === row.queueId),
     }))
-    for (const row of lifecycleResult.rows.filter(
+    for (const row of lifecycleRows.filter(
       (item) =>
         item.groupKind === 'queue' &&
         !queueWindow.some((window) => window.queueId === item.queueId),
@@ -606,7 +618,7 @@ export class ReportStatsService {
         (item) => item.reportType === row.reportType,
       ),
     }))
-    for (const row of lifecycleResult.rows.filter(
+    for (const row of lifecycleRows.filter(
       (item) =>
         item.groupKind === 'reportType' &&
         item.reportType !== null &&
@@ -619,7 +631,7 @@ export class ReportStatsService {
       })
     }
 
-    const moderator: ModeratorWindowRow[] = lifecycleResult.rows
+    const moderator: ModeratorWindowRow[] = lifecycleRows
       .filter(
         (row) => row.groupKind === 'moderator' && row.moderatorDid !== null,
       )
@@ -988,6 +1000,33 @@ function emptyLifecycleWindow(): LifecycleWindowRow {
     resolutionDurationSec: '0',
     resolutionSampleCount: '0',
   }
+}
+
+function mergeLifecycleStats(
+  closures: ClosureStatsRow[],
+  escalations: EscalationStatsRow[],
+): GroupedLifecycleRow[] {
+  const key = (
+    row: Pick<
+      GroupedLifecycleRow,
+      'groupKind' | 'queueId' | 'reportType' | 'moderatorDid'
+    >,
+  ) => [row.groupKind, row.queueId, row.reportType, row.moderatorDid].join('|')
+
+  const rows = new Map<string, GroupedLifecycleRow>()
+  for (const row of closures) {
+    rows.set(key(row), { ...row, escalatedCount: '0' })
+  }
+  for (const row of escalations) {
+    const existing = rows.get(key(row))
+    rows.set(key(row), {
+      ...row,
+      ...emptyLifecycleWindow(),
+      ...existing,
+      escalatedCount: row.escalatedCount,
+    })
+  }
+  return [...rows.values()]
 }
 
 /**
