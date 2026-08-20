@@ -401,7 +401,7 @@ export class ReportStatsService {
       group by grouping sets ((), (r."queueId"), (r."reportType"))
     `.execute(this.db.db)
 
-    // Current stock, grouped in one scan. Pending has no moderator dimension.
+    // Current stock, grouped in one scan. Pending has no moderator group.
     const pendingStats = () =>
       sql<PendingStatsRow>`
       select ${reportGroupColumns}, count(*) as "pendingCount"
@@ -778,9 +778,9 @@ function sumNum<T>(rows: T[], field: keyof T): number {
   return rows.reduce((sum, r) => sum + Number(r[field] ?? 0), 0)
 }
 
-function emptyStats(dimensions: StatGroup): StatsRow {
+function emptyStats(group: StatGroup): StatsRow {
   return {
-    ...dimensions,
+    ...group,
     inboundCount: '0',
     pendingCount: '0',
     closedCount: '0',
@@ -797,11 +797,11 @@ function emptyStats(dimensions: StatGroup): StatsRow {
   }
 }
 
-function statKey(dimensions: StatGroup): string {
+function statKey(group: StatGroup): string {
   return [
-    dimensions.queueId,
-    dimensions.reportType,
-    dimensions.moderatorDid,
+    group.queueId,
+    group.reportType,
+    group.moderatorDid,
   ].join('|')
 }
 
