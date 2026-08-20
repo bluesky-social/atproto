@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
+import { getAgeAssuranceRegionConfig } from '@bsky/sdk/utils'
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
-import { getAgeAssuranceRegionConfig } from '@atproto/api'
 import {
   InvalidRequestError,
   MethodNotImplementedError,
