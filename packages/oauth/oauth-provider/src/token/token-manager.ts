@@ -130,7 +130,7 @@ export class TokenManager {
     const expiresAt = this.createTokenExpiry(client, now)
 
     const scope = await this.lexiconManager
-      .buildTokenScope(parameters.scope!)
+      .buildTokenScope(parameters.scope!, account.did)
       .catch((err) => {
         // Parse expected errors
         if (err instanceof LexResolverError) {
@@ -257,7 +257,10 @@ export class TokenManager {
     // @NOTE since the permission sets are stored in a persistent store,
     // it's fine to propagate a 500 (server_error) here as the values should
     // be retrievable from the store.
-    const scope = await this.lexiconManager.buildTokenScope(parameters.scope!)
+    const scope = await this.lexiconManager.buildTokenScope(
+      parameters.scope!,
+      account.did,
+    )
 
     await this.store.rotateToken(tokenInfo.id, nextTokenId, nextRefreshToken, {
       updatedAt: now,

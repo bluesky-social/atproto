@@ -219,7 +219,4 @@ export type VerifiedRepo = {
   commit: CommitData
 }
 
-export type CarBlock = {
-  cid: Cid
-  bytes: Uint8Array
-}
+export type { CarBlock } from '@atproto/common'

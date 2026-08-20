@@ -1,0 +1,57 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.simplespace.updateSpace",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Update the configuration of a space. The authenticated user must be the space owner. Omitted fields are left unchanged. Requires auth, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref",
+              "description": "Reference to the space to update."
+            },
+            "policy": {
+              "type": "union",
+              "description": "How the authority decides whether to authorize a requesting user. When supplied, replaces the current policy wholesale.",
+              "refs": [
+                "com.atproto.simplespace.defs#publicPolicy",
+                "com.atproto.simplespace.defs#memberListPolicy",
+                "com.atproto.simplespace.defs#managingAppPolicy"
+              ]
+            },
+            "appAccess": {
+              "type": "union",
+              "description": "How the authority decides whether to authorize a requesting app. When supplied, replaces the current policy wholesale.",
+              "refs": [
+                "com.atproto.simplespace.defs#open",
+                "com.atproto.simplespace.defs#allowList"
+              ]
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "NotSpaceOwner"
+        },
+        {
+          "name": "UnsupportedPolicy",
+          "description": "The requested policy is not one the host implements."
+        },
+        {
+          "name": "UnsupportedAppAccess",
+          "description": "The requested appAccess variant is not one the host implements. A host will not store an app access policy it cannot enforce."
+        }
+      ]
+    }
+  }
+}

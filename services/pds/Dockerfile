@@ -62,6 +62,7 @@ COPY ./packages/oauth/oauth-scopes ./packages/oauth/oauth-scopes
 COPY ./packages/oauth/oauth-types ./packages/oauth/oauth-types
 COPY ./packages/pds ./packages/pds
 COPY ./packages/repo ./packages/repo
+COPY ./packages/space ./packages/space
 COPY ./packages/syntax ./packages/syntax
 COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc-server ./packages/xrpc-server

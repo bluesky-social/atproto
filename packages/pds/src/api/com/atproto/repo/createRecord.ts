@@ -10,7 +10,6 @@ import { com } from '../../../../lexicons/index.js'
 import { dbLogger } from '../../../../logger.js'
 import {
   BadCommitSwapError,
-  InvalidRecordError,
   type PreparedCreate,
   prepareCreate,
   prepareDelete,
@@ -80,9 +79,6 @@ export default function (server: Server, ctx: AppContext) {
           validate,
         })
       } catch (err) {
-        if (err instanceof InvalidRecordError) {
-          throw new InvalidRequestError(err.message)
-        }
         if (err instanceof InvalidRecordKeyError) {
           throw new InvalidRequestError(err.message)
         }

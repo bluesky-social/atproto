@@ -1,0 +1,24 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.notifySpaceDeleted",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Notify a syncing service that a space has been deleted, and that it should drop every copy of the space's data it holds. Sent by the space authority to the services registered for the space, best-effort. Authenticated with service auth addressed to the receiving service.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref",
+              "description": "Reference to the deleted space."
+            }
+          }
+        }
+      }
+    }
+  }
+}

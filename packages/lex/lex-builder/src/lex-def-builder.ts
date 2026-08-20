@@ -25,6 +25,7 @@ import type {
   LexiconRecord,
   LexiconRef,
   LexiconRefUnion,
+  LexiconSpace,
   LexiconString,
   LexiconSubscription,
   LexiconToken,
@@ -135,6 +136,8 @@ export class LexDefBuilder {
     switch (def.type) {
       case 'permission-set':
         return this.addPermissionSet(hash, def)
+      case 'space':
+        return this.addSpace(hash, def)
       case 'procedure':
         return this.addProcedure(hash, def)
       case 'query':
@@ -176,6 +179,21 @@ export class LexDefBuilder {
     await this.addSchema(hash, def, {
       schema: markPure(
         `l.permissionSet($nsid, [${permission.join(',')}], ${options})`,
+      ),
+    })
+  }
+
+  private async addSpace(hash: string, def: LexiconSpace) {
+    const options = stringifyOptions(def, [
+      'description',
+      'name:lang',
+    ] satisfies (keyof l.SpaceOptions)[])
+
+    const collections = `[${def.collections.map((c) => JSON.stringify(c)).join(',')}]`
+
+    await this.addSchema(hash, def, {
+      schema: markPure(
+        `l.space($nsid, ${JSON.stringify(def.key)}, ${JSON.stringify(def.name)}, ${collections}, ${options})`,
       ),
     })
   }
@@ -835,6 +853,8 @@ export class LexDefBuilder {
         return 'l.LanguageString'
       case 'record-key':
         return 'l.RecordKeyString'
+      case 'space-ref':
+        return 'l.SpaceRefString'
       default:
         throw new Error(`Unknown string format: ${def.format}`)
     }

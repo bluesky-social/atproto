@@ -990,6 +990,46 @@ describe('Record validation', () => {
     ).toThrow('Record/atUri must be a valid at-uri')
   })
 
+  it('Applies space-ref formatting constraint', () => {
+    lex.assertValidRecord('com.example.spaceRef', {
+      $type: 'com.example.spaceRef',
+      space:
+        'at://did:plc:12345678abcdefghijklmnop/space/com.example.group/default',
+    })
+
+    // Narrower than at-uri: a record URI inside a space is a valid at-uri but
+    // does not name a space, so it must not pass where a space is expected.
+    expect(() =>
+      lex.assertValidRecord('com.example.spaceRef', {
+        $type: 'com.example.spaceRef',
+        space:
+          'at://did:plc:12345678abcdefghijklmnop/space/com.example.group/default/did:plc:12345678abcdefghijklmnoq/com.example.test/self',
+      }),
+    ).toThrow('Record/space must be a valid space ref')
+
+    expect(() =>
+      lex.assertValidRecord('com.example.spaceRef', {
+        $type: 'com.example.spaceRef',
+        space: 'at://did:plc:12345678abcdefghijklmnop/com.example.test/self',
+      }),
+    ).toThrow('Record/space must be a valid space ref')
+
+    // Spaces are keyed on DIDs, so a handle authority is refused.
+    expect(() =>
+      lex.assertValidRecord('com.example.spaceRef', {
+        $type: 'com.example.spaceRef',
+        space: 'at://test.bsky.social/space/com.example.group/default',
+      }),
+    ).toThrow('Record/space must be a valid space ref')
+
+    expect(() =>
+      lex.assertValidRecord('com.example.spaceRef', {
+        $type: 'com.example.spaceRef',
+        space: 'not a space ref',
+      }),
+    ).toThrow('Record/space must be a valid space ref')
+  })
+
   it('Applies did formatting constraint', () => {
     lex.assertValidRecord('com.example.did', {
       $type: 'com.example.did',

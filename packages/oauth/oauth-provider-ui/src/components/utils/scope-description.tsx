@@ -9,6 +9,7 @@ import {
   MailIcon,
   MessageCircleMoreIcon,
   UserIcon,
+  UsersIcon,
 } from 'lucide-react'
 import { Fragment, type HTMLAttributes, type ReactNode, useMemo } from 'react'
 import {
@@ -20,9 +21,16 @@ import {
   RepoPermission,
   RpcPermission,
   ScopePermissionsTransition,
+  SpacePermission,
 } from '@atproto/oauth-scopes'
 import { Notice } from '#/components/feedback/notice.tsx'
-import type { PermissionSet, PermissionSets } from '#/hydration-data.d.ts'
+import type {
+  PermissionSet,
+  PermissionSets,
+  Space,
+  SpaceHandles,
+  Spaces,
+} from '#/hydration-data.d.ts'
 import type { Override } from '#/lib/util'
 import { DescriptionCard } from './description-card.tsx'
 import { ButterflyIcon } from './icons.tsx'
@@ -35,6 +43,8 @@ export type ScopeDescriptionProps = Override<
     clientFirstParty?: boolean
     scope?: string
     permissionSets?: PermissionSets
+    spaces?: Spaces
+    spaceHandles?: SpaceHandles
 
     allowEmail?: boolean
     onAllowEmail?: (allowed: boolean) => void
@@ -44,6 +54,8 @@ export type ScopeDescriptionProps = Override<
 export function ScopeDescription({
   scope,
   permissionSets,
+  spaces,
+  spaceHandles,
   clientTrusted = false,
   clientFirstParty = false,
   allowEmail,
@@ -89,9 +101,17 @@ export function ScopeDescription({
       <IncludedPermissions
         includeScopes={includeScopes}
         permissionSets={permissionSets}
+        spaces={spaces}
+        spaceHandles={spaceHandles}
       />
 
-      <FineGrainedPermissions permissions={permissions} />
+      <FineGrainedPermissions
+        permissions={permissions}
+        spaces={spaces}
+        spaceHandles={spaceHandles}
+      />
+
+      <SpaceUniversalWarning permissions={permissions} />
 
       {(!clientFirstParty || !clientTrusted) && (
         <IdentityWarning permissions={permissions} />
@@ -103,15 +123,21 @@ export function ScopeDescription({
 function IncludedPermissions({
   includeScopes,
   permissionSets,
+  spaces,
+  spaceHandles,
 }: {
   includeScopes: IncludeScope[]
   permissionSets?: PermissionSets
+  spaces?: Spaces
+  spaceHandles?: SpaceHandles
 }): ReactNode {
   return includeScopes.map((includeScope, i) => (
     <IncludeScopePermissions
       key={i}
       includeScope={includeScope}
       permissionSet={permissionSets?.[includeScope.nsid]}
+      spaces={spaces}
+      spaceHandles={spaceHandles}
     />
   ))
 }
@@ -119,9 +145,13 @@ function IncludedPermissions({
 function IncludeScopePermissions({
   includeScope,
   permissionSet,
+  spaces,
+  spaceHandles,
 }: {
   includeScope: IncludeScope
   permissionSet?: PermissionSet
+  spaces?: Spaces
+  spaceHandles?: SpaceHandles
 }) {
   const { nsid } = includeScope
 
@@ -162,6 +192,12 @@ function IncludeScopePermissions({
           <>
             <RpcMethodsTable className="mt-2" permissions={permissions} />
             <RepoTable className="mt-2" permissions={permissions} />
+            <SpaceTable
+              className="mt-2"
+              permissions={permissions}
+              spaces={spaces}
+              spaceHandles={spaceHandles}
+            />
           </>
         ) : null
       }
@@ -316,8 +352,12 @@ function hasOnlyBskyAppSpecificPermissions(
  */
 function FineGrainedPermissions({
   permissions,
+  spaces,
+  spaceHandles,
 }: {
   permissions: ScopePermissionsTransition
+  spaces?: Spaces
+  spaceHandles?: SpaceHandles
 }) {
   const hasOnlyBskySpecific = useMemo(() => {
     return hasOnlyBskyAppSpecificPermissions(permissions)
@@ -329,6 +369,11 @@ function FineGrainedPermissions({
     <>
       <RepoPermissions permissions={permissions} />
       <RpcMethodsDetails permissions={permissions} />
+      <SpacePermissions
+        permissions={permissions}
+        spaces={spaces}
+        spaceHandles={spaceHandles}
+      />
     </>
   )
 }
@@ -763,6 +808,306 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
         )}
       </tbody>
     </table>
+  )
+}
+
+function SpacePermissions({
+  permissions,
+  spaces,
+  spaceHandles,
+}: {
+  permissions: ScopePermissionsTransition
+  spaces?: Spaces
+  spaceHandles?: SpaceHandles
+}) {
+  const { t } = useLingui()
+
+  const hasSpaceScopes = useMemo(() => {
+    return permissions.scopes.some((s) => SpacePermission.fromString(s) != null)
+  }, [permissions])
+
+  if (!hasSpaceScopes) return null
+
+  return (
+    <DescriptionCard
+      role="listitem"
+      image={<UsersIcon className="size-6" />}
+      title={t`Spaces`}
+      description={t`Access permissioned spaces`}
+      extra={
+        <SpaceTable
+          className="mt-2"
+          permissions={permissions}
+          spaces={spaces}
+          spaceHandles={spaceHandles}
+        />
+      }
+    >
+      <Trans>
+        Permissioned spaces (such as group chats, forums, or shared albums) hold
+        data that's only visible to their members. The application requests the
+        following access:
+      </Trans>
+    </DescriptionCard>
+  )
+}
+
+type SpaceWriteCell = {
+  create: boolean
+  update: boolean
+  delete: boolean
+}
+
+type SpaceTableRow = {
+  key: string
+  type: string
+  space?: Space
+  authority: string
+  ownerHandle?: string
+  skey: string
+  read: boolean
+  // `read_self` without `read`: only the user's own data in the space, which
+  // reads differently on the consent screen.
+  readSelf: boolean
+  manage: boolean
+  // Keyed by collection NSID or '*'. Empty means no write targets.
+  writes: Map<string, SpaceWriteCell>
+}
+
+type SpaceTableProps = Override<
+  HTMLAttributes<HTMLTableElement>,
+  {
+    permissions: ScopePermissionsTransition
+    spaces?: Spaces
+    spaceHandles?: SpaceHandles
+    children?: never
+  }
+>
+function SpaceTable({
+  permissions,
+  spaces,
+  spaceHandles,
+  className = '',
+  ...attrs
+}: SpaceTableProps) {
+  const rows = useMemo<SpaceTableRow[]>(() => {
+    // Scopes sharing a (type, authority, skey) tuple merge into one row.
+    const map = new Map<string, SpaceTableRow>()
+
+    for (const s of permissions.scopes) {
+      const raw = SpacePermission.fromString(s)
+      if (!raw) continue
+
+      const space = raw.type !== '*' ? spaces?.[raw.type] : undefined
+
+      // Apply space declaration defaults before rendering.
+      const parsed = space?.collections?.length
+        ? raw.withDefaultCollections(space.collections)
+        : raw
+
+      const key = `${parsed.type}|${parsed.authority}|${parsed.skey}`
+      let row = map.get(key)
+      if (!row) {
+        row = {
+          key,
+          type: parsed.type,
+          space,
+          authority: parsed.authority,
+          ownerHandle:
+            parsed.authority !== '*'
+              ? spaceHandles?.[parsed.authority]
+              : undefined,
+          skey: parsed.skey,
+          read: false,
+          readSelf: false,
+          manage: false,
+          writes: new Map(),
+        }
+        map.set(key, row)
+      }
+
+      if (parsed.action.includes('read')) row.read = true
+      if (parsed.action.includes('read_self')) row.readSelf = true
+      if (parsed.manage.length > 0) row.manage = true
+
+      for (const coll of parsed.collection) {
+        const existing = row.writes.get(coll)
+        const cell: SpaceWriteCell = existing ?? {
+          create: false,
+          update: false,
+          delete: false,
+        }
+        if (parsed.action.includes('create')) cell.create = true
+        if (parsed.action.includes('update')) cell.update = true
+        if (parsed.action.includes('delete')) cell.delete = true
+        row.writes.set(coll, cell)
+      }
+    }
+
+    return Array.from(map.values()).sort((a, b) => a.key.localeCompare(b.key))
+  }, [permissions, spaces, spaceHandles])
+
+  if (!rows.length) return null
+
+  return (
+    <div className={`flex flex-col gap-3 ${className}`} {...attrs}>
+      {rows.map((row) => (
+        <SpaceRow key={row.key} row={row} />
+      ))}
+    </div>
+  )
+}
+
+function SpaceRow({ row }: { row: SpaceTableRow }) {
+  const { t } = useLingui()
+  const writeEntries = useMemo(
+    () =>
+      Array.from(row.writes.entries()).sort(([a], [b]) => a.localeCompare(b)),
+    [row.writes],
+  )
+  const starWrites = row.writes.get('*')
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="text-sm">
+        <SpaceLabel row={row} />
+      </div>
+
+      {row.manage && (
+        <div className="text-muted-foreground text-xs">
+          <Trans>
+            <b>Manage</b> the space: create new spaces, add and remove members.
+          </Trans>
+        </div>
+      )}
+
+      {!row.read && row.readSelf && (
+        <div className="text-muted-foreground text-xs">
+          <Trans>Read only your own data.</Trans>
+        </div>
+      )}
+
+      {writeEntries.length === 0 ? (
+        <div className="text-muted-foreground text-xs">
+          {row.read ? (
+            row.manage ? null : (
+              <Trans>Read-only access.</Trans>
+            )
+          ) : row.readSelf || row.manage ? null : (
+            <Trans>No access.</Trans>
+          )}
+        </div>
+      ) : (
+        <table className="w-full table-auto text-left">
+          <thead>
+            <tr className="text-xs">
+              <th className="font-normal">{t`Data`}</th>
+              <th className="text-center font-normal">{t`Create`}</th>
+              <th className="text-center font-normal">{t`Update`}</th>
+              <th className="text-center font-normal">{t`Delete`}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {writeEntries.map(([coll, actions]) => (
+              <tr key={coll} className="text-xs">
+                <td>
+                  <Collection coll={coll as CollectionParam} />
+                </td>
+                <td className="text-center">
+                  {starWrites?.create || actions.create ? (
+                    <CheckIcon className="inline-block size-3" />
+                  ) : null}
+                </td>
+                <td className="text-center">
+                  {starWrites?.update || actions.update ? (
+                    <CheckIcon className="inline-block size-3" />
+                  ) : null}
+                </td>
+                <td className="text-center">
+                  {starWrites?.delete || actions.delete ? (
+                    <CheckIcon className="inline-block size-3" />
+                  ) : null}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
+}
+
+function SpaceLabel({ row }: { row: SpaceTableRow }) {
+  if (row.type !== '*' && row.authority !== '*') {
+    return (
+      <Trans>
+        <SpaceTypeLabel type={row.type} space={row.space} /> spaces on{' '}
+        <SpaceOwner did={row.authority} handle={row.ownerHandle} />
+      </Trans>
+    )
+  }
+  if (row.type !== '*') {
+    return (
+      <Trans>
+        <SpaceTypeLabel type={row.type} space={row.space} /> spaces
+      </Trans>
+    )
+  }
+  if (row.authority !== '*') {
+    return (
+      <Trans>
+        All spaces on{' '}
+        <SpaceOwner did={row.authority} handle={row.ownerHandle} />
+      </Trans>
+    )
+  }
+  return <Trans>All spaces on the network</Trans>
+}
+
+function SpaceTypeLabel({ type, space }: { type: string; space?: Space }) {
+  if (space) {
+    return (
+      <b>
+        <LangProp object={space} property="name" fallback={type} />
+      </b>
+    )
+  }
+  return <b>{type}</b>
+}
+
+function SpaceOwner({ did, handle }: { did: string; handle?: string }) {
+  if (handle) {
+    return (
+      <b className="text-text" title={did}>
+        {handle}
+      </b>
+    )
+  }
+  return <code className="text-muted-foreground">{did}</code>
+}
+
+function SpaceUniversalWarning({
+  permissions,
+}: {
+  permissions: ScopePermissionsTransition
+}) {
+  const isUniversal = useMemo(() => {
+    return permissions.scopes.some((s) => {
+      const parsed = SpacePermission.fromString(s)
+      return parsed != null && parsed.type === '*' && parsed.authority === '*'
+    })
+  }, [permissions])
+
+  if (!isUniversal) return null
+
+  return (
+    <Notice role="status">
+      <Trans>
+        This application is requesting access to{' '}
+        <b>every space on the network</b>. This is a very broad permission. Only
+        grant it to applications you deeply trust.
+      </Trans>
+    </Notice>
   )
 }
 

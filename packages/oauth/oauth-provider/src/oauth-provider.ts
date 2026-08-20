@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
+import type { IdResolver } from '@atproto/identity'
 import type { Jwks } from '@atproto/jwk'
 import { LexResolver } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
@@ -64,6 +65,7 @@ import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from './errors/invalid-grant-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { LoginRequiredError } from './errors/login-required-error.js'
+import { IdentityManager } from './identity/identity-manager.js'
 import { LexiconManager } from './lexicon/lexicon-manager.js'
 import { type LexiconStore, asLexiconStore } from './lexicon/lexicon-store.js'
 import type { HcaptchaConfig } from './lib/hcaptcha.js'
@@ -177,6 +179,12 @@ type OAuthProviderConfig = {
   lexResolver?: LexResolver
 
   /**
+   * Resolves space-authority DIDs to handles for the consent screen. When
+   * omitted, raw DIDs are rendered.
+   */
+  idResolver?: IdResolver
+
+  /**
    * A custom fetch function that can be used to fetch the client metadata from
    * the internet. By default, the fetch function is a safeFetchWrap() function
    * that protects against SSRF attacks, large responses & known bad domains. If
@@ -254,6 +262,7 @@ export class OAuthProvider extends OAuthVerifier {
   public readonly deviceManager: DeviceManager
   public readonly clientManager: ClientManager
   public readonly lexiconManager: LexiconManager
+  public readonly identityManager?: IdentityManager
   public readonly requestManager: RequestManager
   public readonly tokenManager: TokenManager
 
@@ -269,6 +278,7 @@ export class OAuthProvider extends OAuthVerifier {
     // Services
     safeFetch = safeFetchWrap(),
     lexResolver = new LexResolver({ fetch: safeFetch }),
+    idResolver,
 
     // compound store implementation
     store,
@@ -341,6 +351,9 @@ export class OAuthProvider extends OAuthVerifier {
       clientMetadataCache,
     )
     this.lexiconManager = new LexiconManager(lexiconStore, lexResolver)
+    this.identityManager = idResolver
+      ? new IdentityManager(idResolver)
+      : undefined
     this.requestManager = new RequestManager(
       requestStore,
       this.lexiconManager,
@@ -738,6 +751,22 @@ export class OAuthProvider extends OAuthVerifier {
               cause,
             )
           }),
+        spaces: await this.lexiconManager
+          .getSpacesFromScope(parameters.scope)
+          .catch((cause) => {
+            throw new AuthorizationError(
+              parameters,
+              'Unable to retrieve space declarations',
+              'invalid_scope',
+              cause,
+            )
+          }),
+        // @NOTE a handle is only ever displayed, so failing to resolve one
+        // leaves the consent screen showing the raw DID.
+        spaceHandles:
+          (await this.identityManager?.getSpaceHandlesFromScope(
+            parameters.scope,
+          )) ?? new Map(),
       }
     } catch (err) {
       try {

@@ -424,6 +424,11 @@ function* defRefs(
         yield* defRefs(permission)
       }
       return
+    case 'space':
+      for (const collection of def.collections) {
+        yield collection
+      }
+      return
     case 'permission':
       if (def.resource === 'rpc') {
         if (Array.isArray(def.lxm)) {
@@ -438,6 +443,17 @@ function* defRefs(
           for (const lxm of def.collection) {
             if (typeof lxm === 'string') {
               yield lxm
+            }
+          }
+        }
+      } else if (def.resource === 'space') {
+        if (typeof def.spaceType === 'string') {
+          yield def.spaceType
+        }
+        if (Array.isArray(def.collection)) {
+          for (const collection of def.collection) {
+            if (typeof collection === 'string') {
+              yield collection
             }
           }
         }

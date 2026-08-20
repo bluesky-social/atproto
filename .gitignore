@@ -17,5 +17,7 @@ test.sqlite
 *~
 *.swp
 coverage
+docs/superpowers
+.obsidian
 roast-stderr.md
 .swc

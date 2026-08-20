@@ -52,6 +52,14 @@ export type TestServerParams = {
   bsky: Partial<BskyConfig>
   ozone: Partial<OzoneConfig>
   introspect: Partial<IntrospectConfig>
+  extraPdses: number
+  /**
+   * Create a lexicon-authority account and point every PDS at it, so lexicon
+   * documents (permission sets, `space` declarations) resolve. Opt-in: it costs
+   * an account creation plus a record write per document, which most tests don't
+   * need. `TestNetwork` always does this.
+   */
+  lexiconAuthority: boolean
 }
 
 export type DidAndKey = {

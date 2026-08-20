@@ -1,0 +1,49 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.registerNotify",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Register a service to be notified of writes to any repo in a space. Called on the space host. The registering service is named by its service identifier rather than a bare URL, because notifyWrite is delivered with service auth addressed to that identifier; the delivery endpoint is resolved from the service's DID document. Authenticated with a space credential. Re-registering an existing service replaces its registration and extends the expiry.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "service"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref",
+              "description": "Reference to the space."
+            },
+            "service": {
+              "type": "string",
+              "description": "Service identifier of the subscriber: a DID with an optional service fragment naming the entry in its DID document to deliver to (e.g. 'did:web:syncer.example.com#atproto_space_syncer'). notifyWrite calls are addressed to this identifier."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["expiresAt"],
+          "properties": {
+            "expiresAt": {
+              "type": "string",
+              "format": "datetime",
+              "description": "When the registration expires. May be later than the expiry of the space credential the request was authenticated with; renew before this time to stay subscribed."
+            }
+          }
+        }
+      },
+      "errors": [
+        { "name": "SpaceNotFound" },
+        {
+          "name": "ServiceNotResolvable",
+          "description": "The service identifier could not be resolved to a DID document with a matching service endpoint."
+        }
+      ]
+    }
+  }
+}

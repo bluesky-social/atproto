@@ -1,0 +1,51 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.deleteRecord",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Delete a record from a permissioned space, or ensure it doesn't exist. Succeeds whether or not the record was present. Requires auth, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "repo", "collection", "rkey"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref",
+              "description": "Reference to the space."
+            },
+            "repo": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the repo to delete from (the authenticated member)."
+            },
+            "collection": {
+              "type": "string",
+              "format": "nsid",
+              "description": "The NSID of the record collection."
+            },
+            "rkey": {
+              "type": "string",
+              "format": "record-key",
+              "description": "The Record Key."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        }
+      ]
+    }
+  }
+}

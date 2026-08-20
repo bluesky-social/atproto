@@ -34,6 +34,7 @@ import {
 } from './auth-verifier.js'
 import { BackgroundQueue } from './background.js'
 import { BskyAppView } from './bsky-app-view.js'
+import { ClientAttestationVerifier } from './client-attestation-verifier.js'
 import {
   type ServerConfig,
   type ServerEnvironment,
@@ -57,6 +58,7 @@ import {
 } from './read-after-write/viewer.js'
 import { getRedisClient } from './redis.js'
 import { Sequencer } from './sequencer/index.js'
+import { SimpleSpaceManager } from './simplespace/manager.js'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -79,6 +81,8 @@ export type AppContextOptions = {
   entrywayAdminClient?: Client
   proxyAgent: undici.Dispatcher
   safeFetch: Fetch
+  clientAttestationVerifier: ClientAttestationVerifier
+  simpleSpaceManager: SimpleSpaceManager
   oauthProvider?: OAuthProvider
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
@@ -106,6 +110,8 @@ export class AppContext implements AsyncDisposable {
   public entrywayAdminClient: Client | undefined
   public proxyAgent: undici.Dispatcher
   public safeFetch: Fetch
+  public clientAttestationVerifier: ClientAttestationVerifier
+  public simpleSpaceManager: SimpleSpaceManager
   public authVerifier: AuthVerifier
   public oauthProvider?: OAuthProvider
   public plcRotationKey: crypto.Keypair
@@ -132,6 +138,8 @@ export class AppContext implements AsyncDisposable {
     this.entrywayAdminClient = opts.entrywayAdminClient
     this.proxyAgent = opts.proxyAgent
     this.safeFetch = opts.safeFetch
+    this.clientAttestationVerifier = opts.clientAttestationVerifier
+    this.simpleSpaceManager = opts.simpleSpaceManager
     this.authVerifier = opts.authVerifier
     this.oauthProvider = opts.oauthProvider
     this.plcRotationKey = opts.plcRotationKey
@@ -366,6 +374,7 @@ export class AppContext implements AsyncDisposable {
           hcaptcha: cfg.oauth.provider.hcaptcha,
           branding: cfg.oauth.provider.branding,
           safeFetch,
+          idResolver,
           lexResolver: new LexResolver({
             fetch: safeFetch,
             plcDirectoryUrl: cfg.identity.plcUrl,
@@ -460,6 +469,12 @@ export class AppContext implements AsyncDisposable {
         })
       : undefined
 
+    const simpleSpaceManager = new SimpleSpaceManager(
+      actorStore,
+      idResolver,
+      backgroundQueue,
+    )
+
     const scopeRefGetter = entrywayClient
       ? new ScopeReferenceGetter(entrywayClient, redisScratch)
       : undefined
@@ -488,6 +503,12 @@ export class AppContext implements AsyncDisposable {
           return payload
         },
       })
+
+    const clientAttestationVerifier = new ClientAttestationVerifier(
+      safeFetch,
+      oauthVerifier.replayManager,
+      redisScratch,
+    )
 
     const authVerifier = new AuthVerifier(
       accountManager,
@@ -526,6 +547,8 @@ export class AppContext implements AsyncDisposable {
       entrywayAdminClient,
       proxyAgent,
       safeFetch,
+      clientAttestationVerifier,
+      simpleSpaceManager,
       authVerifier,
       oauthProvider,
       plcRotationKey,

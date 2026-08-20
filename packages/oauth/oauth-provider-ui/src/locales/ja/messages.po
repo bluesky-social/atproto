@@ -28,6 +28,14 @@ msgstr "{0, plural, one {1分前} other {# 分前}}"
 msgid "{0, plural, one {yesterday} other {# days ago}}"
 msgstr "{0, plural, one {昨日} other {# 日前}}"
 
+#: src/components/utils/scope-description.tsx
+msgid "<0/> spaces"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "<0/> spaces on <1/>"
+msgstr ""
+
 #: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>ATプロトコル</0> — 開発者向け技術ドキュメント"
@@ -39,6 +47,10 @@ msgstr "<0>Bluesky ソーシャル</0> — ネットワークに関する一般�
 #: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Learn more</0><1>Want to learn more about the technology and network behind your Atmosphere account?</1>"
 msgstr "<0>詳細を確認</0><1>Atmosphereアカウントの背後にある技術とネットワークについてもっと知りたいですか？</1>"
+
+#: src/components/utils/scope-description.tsx
+msgid "<0>Manage</0> the space: create new spaces, add and remove members."
+msgstr ""
 
 #: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
@@ -79,6 +91,10 @@ msgstr "<0>{domain}</0> によって管理されているサービス"
 #: src/routes/account/u/$accountId/route.tsx
 msgid "About"
 msgstr "アカウントについて"
+
+#: src/components/utils/scope-description.tsx
+msgid "Access permissioned spaces"
+msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgid "Access specific parts of your Bluesky account"
@@ -141,6 +157,14 @@ msgstr "あなたのドメインのDNS設定に次のレコードを追加して
 #: src/components/update-handle-custom-form.tsx
 msgid "alice.com"
 msgstr "alice.com"
+
+#: src/components/utils/scope-description.tsx
+msgid "All spaces on <0/>"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "All spaces on the network"
+msgstr ""
 
 #: src/components/reset-password-view.tsx
 #: src/components/update-password-dialog.tsx
@@ -825,6 +849,10 @@ msgstr "新しいパスワード"
 msgid "Next"
 msgstr "次へ"
 
+#: src/components/utils/scope-description.tsx
+msgid "No access."
+msgstr ""
+
 #: src/components/session-list.tsx
 msgid "No matches"
 msgstr "一致なし"
@@ -882,6 +910,10 @@ msgstr "あなたに代わってアクションを実行する"
 #: src/components/utils/scope-description.tsx
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "あなたに代わって認証されたアクションを <0>任意のサービス</0> が実行する"
+
+#: src/components/utils/scope-description.tsx
+msgid "Permissioned spaces (such as group chats, forums, or shared albums) hold data that's only visible to their members. The application requests the following access:"
+msgstr ""
 
 #: src/components/authenticate-welcome-view.tsx
 msgid "Please authenticate to continue"
@@ -948,12 +980,20 @@ msgid "Read and update your account's email address"
 msgstr "あなたのアカウントのメールアドレスを読み取り、更新する"
 
 #: src/components/utils/scope-description.tsx
+msgid "Read only your own data."
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "Read your account's email address"
 msgstr "あなたのアカウントのメールアドレスを読み取る"
 
 #: src/components/utils/scope-description.tsx
 msgid "Read your private preferences"
 msgstr "あなたのプライベート設定を読み取る"
+
+#: src/components/utils/scope-description.tsx
+msgid "Read-only access."
+msgstr ""
 
 #: src/components/sign-in-form.tsx
 msgid "Remember this account on this device"
@@ -1064,6 +1104,10 @@ msgstr "サインインキャンセル"
 msgid "Sign-in complete"
 msgstr "サインイン完了"
 
+#: src/components/utils/scope-description.tsx
+msgid "Spaces"
+msgstr ""
+
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Stack"
@@ -1169,6 +1213,10 @@ msgstr "このアプリは、あなたのアカウントを通じてあなたを
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app has access to your account with the following permissions:"
 msgstr "このアプリは、あなたのアカウントに次の権限でアクセスできます："
+
+#: src/components/utils/scope-description.tsx
+msgid "This application is requesting access to <0>every space on the network</0>. This is a very broad permission. Only grant it to applications you deeply trust."
+msgstr ""
 
 #: src/components/consent-form.tsx
 msgid "This application is requesting the following permissions (scopes) to access your account:"

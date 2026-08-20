@@ -8,6 +8,14 @@ import type { TestOzone } from './ozone.js'
 import type { TestPds } from './pds.js'
 import type { TestPlc } from './plc.js'
 
+export type LexiconAuthorityIntrospection = {
+  did: string
+  handle: string
+  password: string
+  /** PDS URL hosting the authority account. */
+  pds: string
+}
+
 export class IntrospectServer {
   private terminator: HttpTerminator
   constructor(
@@ -20,35 +28,56 @@ export class IntrospectServer {
   static async start(
     port: number,
     plc: TestPlc,
-    pds: TestPds,
-    bsync: TestBsync,
-    bsky: TestBsky,
-    ozone: TestOzone,
+    pds: TestPds | TestPds[],
+    bsync?: TestBsync,
+    bsky?: TestBsky,
+    ozone?: TestOzone,
+    lexiconAuthority?: LexiconAuthorityIntrospection,
   ) {
+    const pdses = Array.isArray(pds) ? pds : [pds]
     const app = express()
     app.get('/', (_req, res) => {
       res.status(200).send({
         plc: {
           url: plc.url,
         },
+        // For backwards compat the first PDS is exposed at "pds"; all PDSes
+        // (including the first) are exposed at "pdses".
         pds: {
-          url: pds.url,
-          did: pds.ctx.cfg.service.did,
+          url: pdses[0].url,
+          did: pdses[0].ctx.cfg.service.did,
         },
-        bsync: {
-          url: bsync.url,
-        },
-        bsky: {
-          url: bsky.url,
-          did: bsky.ctx.cfg.serverDid,
-        },
-        ozone: {
-          url: ozone.url,
-          did: ozone.ctx.cfg.service.did,
-        },
-        db: {
-          url: ozone.ctx.cfg.db.postgresUrl,
-        },
+        pdses: pdses.map((p) => ({
+          url: p.url,
+          did: p.ctx.cfg.service.did,
+          handleDomains: p.ctx.cfg.identity.serviceHandleDomains,
+        })),
+        bsync: bsync
+          ? {
+              url: bsync.url,
+            }
+          : undefined,
+        bsky: bsky
+          ? {
+              url: bsky.url,
+              did: bsky.ctx.cfg.serverDid,
+            }
+          : undefined,
+        ozone: ozone
+          ? {
+              url: ozone.url,
+              did: ozone.ctx.cfg.service.did,
+            }
+          : undefined,
+        db: ozone
+          ? {
+              url: ozone.ctx.cfg.db.postgresUrl,
+            }
+          : undefined,
+        // Credentials for the dev-env lex authority. Demo apps log in here to
+        // publish lexicon docs (permission sets, space declarations) that the
+        // PDSes will resolve via `lexiconDidAuthority`.
+        lexiconAuthority,
       })
     })
     const server = app.listen(port)
