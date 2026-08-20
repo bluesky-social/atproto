@@ -80,6 +80,7 @@ import {
   type ImagesEmbed,
   type ImagesEmbedView,
   type KnownFollowers,
+  type KnownLikers,
   type LabelerRecord,
   type LabelerView,
   type LabelerViewDetailed,
@@ -533,21 +534,54 @@ export class Views {
   ): KnownFollowers | undefined {
     const knownFollowers = state.knownFollowers?.get(did)
     if (!knownFollowers) return
+    return this.knownSubjects(
+      did,
+      knownFollowers.count,
+      knownFollowers.followers,
+      'followers',
+      state,
+    )
+  }
+
+  knownLikers(
+    uri: AtUriString,
+    state: HydrationState,
+  ): KnownLikers | undefined {
+    const knownLikers = state.knownLikers?.get(uri)
+    if (!knownLikers) return
+    return this.knownSubjects(
+      new AtUri(uri).did,
+      knownLikers.count,
+      knownLikers.actors,
+      'actors',
+      state,
+    )
+  }
+
+  private knownSubjects<Key extends 'followers' | 'actors'>(
+    did: DidString,
+    count: number,
+    subjectDids: DidString[],
+    key: Key,
+    state: HydrationState,
+  ): { count: number } & Record<Key, ProfileViewBasic[]> {
     const blocks = state.bidirectionalBlocks?.get(did)
-    const followers = mapDefined(knownFollowers.followers, (followerDid) => {
-      if (this.viewerBlockExists(followerDid, state)) {
+    const subjects = mapDefined(subjectDids, (subjectDid) => {
+      if (this.viewerBlockExists(subjectDid, state)) {
         return undefined
       }
-      if (blocks?.get(followerDid)) {
+      if (blocks?.get(subjectDid)) {
         return undefined
       }
-      if (this.actorIsNoHosted(followerDid, state)) {
-        // @TODO only needed right now to work around getProfile's { includeTakedowns: true }
+      if (this.actorIsNoHosted(subjectDid, state)) {
         return undefined
       }
-      return this.profileBasic(followerDid, state)
+      return this.profileBasic(subjectDid, state)
     })
-    return { count: knownFollowers.count, followers }
+    return { count, [key]: subjects } as { count: number } & Record<
+      Key,
+      ProfileViewBasic[]
+    >
   }
 
   verification(
@@ -1027,6 +1061,7 @@ export class Views {
     if (!author) return
     const aggs = state.postAggs?.get(uri)
     const viewer = state.postViewers?.get(uri)
+    const knownLikers = this.knownLikers(uri, state)
     const threadgateUri = postUriToThreadgateUri(uri)
     const labels = [
       ...(state.labels?.getBySubject(uri) ?? []),
@@ -1060,6 +1095,7 @@ export class Views {
             replyDisabled: this.userReplyDisabled(uri, state),
             embeddingDisabled: this.userPostEmbeddingDisabled(uri, state),
             pinned: this.viewerPinned(uri, state, authorDid),
+            knownLikers,
           }
         : undefined,
       labels,
@@ -1096,6 +1132,8 @@ export class Views {
       post,
       reason,
       reply,
+      opThreadPostIndex: postInfo?.opThreadPostIndex,
+      opThreadPostCount: postInfo?.opThreadPostCount,
     }
   }
 

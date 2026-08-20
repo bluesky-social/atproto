@@ -48,6 +48,11 @@ export function SignUpView({
     Partial<SignUpCredentialsData & SignUpHandleData & SignUpHcaptchaData>
   >({})
 
+  // @NOTE Only the last step creates the account, so only the last step states
+  // what creating one agrees to. Which step that is depends on whether hCaptcha
+  // is configured, so the wizard decides it (`atLast`) rather than this list.
+  const disclaimer = <SignUpDisclaimer links={links} />
+
   return (
     <AuthShell
       title={msg({ message: 'Sign up' })}
@@ -74,7 +79,7 @@ export function SignUpView({
           // issue with the email address (e.g. already in use).
           {
             titleRender: () => <Trans>Choose a username</Trans>,
-            contentRender: ({ prev, prevLabel, next, nextLabel }) => (
+            contentRender: ({ atLast, prev, prevLabel, next, nextLabel }) => (
               <SignUpHandleForm
                 className="grow"
                 domains={availableUserDomains}
@@ -88,13 +93,13 @@ export function SignUpView({
                   next(data)
                 }}
               >
-                <SignUpDisclaimer links={links} />
+                {atLast && disclaimer}
               </SignUpHandleForm>
             ),
           },
           {
             titleRender: () => <Trans>Your account</Trans>,
-            contentRender: ({ prev, prevLabel, next, nextLabel }) => (
+            contentRender: ({ atLast, prev, prevLabel, next, nextLabel }) => (
               <SignUpCredentialsForm
                 className="grow"
                 onBack={prev}
@@ -105,13 +110,13 @@ export function SignUpView({
                 handler={next}
                 inviteCodeRequired={inviteCodeRequired}
               >
-                <SignUpDisclaimer links={links} />
+                {atLast && disclaimer}
               </SignUpCredentialsForm>
             ),
           },
           hcaptchaSiteKey != null && {
             titleRender: () => <Trans>Verify you are human</Trans>,
-            contentRender: ({ prev, prevLabel, next, nextLabel }) => (
+            contentRender: ({ atLast, prev, prevLabel, next, nextLabel }) => (
               <SignUpHcaptchaForm
                 className="grow"
                 siteKey={hcaptchaSiteKey}
@@ -122,7 +127,7 @@ export function SignUpView({
                 onValues={(val) => setPending((old) => ({ ...old, ...val }))}
                 handler={next}
               >
-                <SignUpDisclaimer links={links} />
+                {atLast && disclaimer}
               </SignUpHcaptchaForm>
             ),
           },

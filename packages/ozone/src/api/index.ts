@@ -1,5 +1,6 @@
 import type { AppContext } from '../context.js'
 import type { Server } from '../lexicon/index.js'
+import getAccountPreferences from './app/bsky/actor/getPreferences.js'
 import chat from './chat/index.js'
 import createTemplate from './communication/createTemplate.js'
 import deleteTemplate from './communication/deleteTemplate.js'
@@ -90,6 +91,7 @@ export default function (server: Server, ctx: AppContext) {
   queryLabels(server, ctx)
   subscribeLabels(server, ctx)
   fetchLabels(server, ctx)
+  getAccountPreferences(server, ctx)
   listTemplates(server, ctx)
   createTemplate(server, ctx)
   updateTemplate(server, ctx)

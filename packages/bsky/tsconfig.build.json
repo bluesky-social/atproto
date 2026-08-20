@@ -9,6 +9,7 @@
     { "path": "../did/tsconfig.build.json" },
     { "path": "../identity/tsconfig.build.json" },
     { "path": "../internal/fetch-node/tsconfig.build.json" },
+    { "path": "../internal/opentelemetry-node/tsconfig.build.json" },
     { "path": "../internal/xrpc-utils/tsconfig.build.json" },
     { "path": "../lex/lex/tsconfig.build.json" },
     { "path": "../repo/tsconfig.build.json" },

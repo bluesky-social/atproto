@@ -1,7 +1,7 @@
 import crypto, { type KeyObject } from 'node:crypto'
+import { secp256k1 } from '@noble/curves/secp256k1'
 import type express from 'express'
 import * as jose from 'jose'
-import KeyEncoderModule from 'key-encoder'
 import * as ui8 from 'uint8arrays'
 import { SECP256K1_JWT_ALG, parseDidKey } from '@atproto/crypto'
 import { type DidString, isDidString } from '@atproto/lex'
@@ -20,9 +20,6 @@ import {
   unpackIdentityKeys,
 } from './data-plane/index.js'
 import type { GetIdentityByDidResponse } from './proto/bsky_pb.js'
-
-// key-encoder is CJS with exports.default; Node ESM interop wraps it as { default: Class }
-const KeyEncoder = ((m) => m.default ?? m)(KeyEncoderModule)
 
 type ReqCtx = {
   req: express.Request
@@ -472,10 +469,24 @@ export const buildBasicAuth = (username: string, password: string): string => {
   )
 }
 
-const keyEncoder = new KeyEncoder('secp256k1')
+const createSecp256k1KeyObject = (
+  publicKey: Uint8Array | string,
+): KeyObject => {
+  // accepts compressed or uncompressed keys; validates the point is on-curve
+  const point = secp256k1.ProjectivePoint.fromHex(publicKey).toRawBytes(false)
+  return crypto.createPublicKey({
+    format: 'jwk',
+    key: {
+      kty: 'EC',
+      crv: 'secp256k1',
+      x: ui8.toString(point.subarray(1, 33), 'base64url'),
+      y: ui8.toString(point.subarray(33, 65), 'base64url'),
+    },
+  })
+}
+
 export const createPublicKeyObject = (publicKeyHex: string): KeyObject => {
-  const key = keyEncoder.encodePublic(publicKeyHex, 'raw', 'pem')
-  return crypto.createPublicKey({ format: 'pem', key })
+  return createSecp256k1KeyObject(publicKeyHex)
 }
 
 const verifySig = (
@@ -483,14 +494,7 @@ const verifySig = (
   data: Uint8Array,
   sig: Uint8Array,
 ) => {
-  const keyEncoder = new KeyEncoder('secp256k1')
-
-  const pemKey = keyEncoder.encodePublic(
-    ui8.toString(publicKey, 'hex'),
-    'raw',
-    'pem',
-  )
-  const key = crypto.createPublicKey({ format: 'pem', key: pemKey })
+  const key = createSecp256k1KeyObject(publicKey)
 
   return crypto.verify(
     'sha256',

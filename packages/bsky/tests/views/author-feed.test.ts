@@ -154,6 +154,8 @@ describe('pds author feed views', () => {
     paginatedAll.forEach((res) =>
       expect(res.feed.length).toBeLessThanOrEqual(2),
     )
+    expect(paginatedAll[0].cursor).toBeDefined()
+    expect(paginatedAll.at(-1)?.cursor).toBeUndefined()
 
     const full = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
@@ -167,6 +169,82 @@ describe('pds author feed views', () => {
 
     expect(full.data.feed.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+
+    const exact = await network.bsky.ctx.dataplane.getAuthorFeed({
+      actorDid: alice,
+      limit: 4,
+    })
+    const nonterminal = await network.bsky.ctx.dataplane.getAuthorFeed({
+      actorDid: alice,
+      limit: 2,
+    })
+    expect(exact.items).toHaveLength(4)
+    expect(exact.cursor).toBe('')
+    expect(nonterminal.items).toHaveLength(2)
+    expect(nonterminal.cursor).not.toBe('')
+  })
+
+  it('fills a limited author feed after an entirely filtered page', async () => {
+    const author = await sc.createAccount('author-feed-page-fill', {
+      handle: 'author-fill.test',
+      email: 'author-feed-page-fill@example.com',
+      password: 'hunter2',
+    })
+    const older = await sc.post(
+      author.did,
+      'older visible author post',
+      undefined,
+      undefined,
+      undefined,
+      { createdAt: '2030-01-01T00:00:00.000Z' },
+    )
+    const newer = await sc.post(
+      author.did,
+      'newer visible author post',
+      undefined,
+      undefined,
+      undefined,
+      { createdAt: '2030-01-02T00:00:00.000Z' },
+    )
+    const filtered1 = await sc.post(
+      author.did,
+      'filtered author post 1',
+      undefined,
+      undefined,
+      undefined,
+      { createdAt: '2030-01-03T00:00:00.000Z' },
+    )
+    const filtered2 = await sc.post(
+      author.did,
+      'filtered author post 2',
+      undefined,
+      undefined,
+      undefined,
+      { createdAt: '2030-01-04T00:00:00.000Z' },
+    )
+    await network.processAll()
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: filtered1.ref.uriStr,
+    })
+    await network.bsky.ctx.dataplane.takedownRecord({
+      recordUri: filtered2.ref.uriStr,
+    })
+
+    const { data } = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: author.did, limit: 2 },
+      {
+        headers: await network.serviceHeaders(
+          dan,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
+    )
+
+    expect(data.feed.map((item) => item.post.uri)).toEqual([
+      newer.ref.uriStr,
+      older.ref.uriStr,
+    ])
+    expect(data.cursor).toBeUndefined()
   })
 
   it('fetches results unauthed.', async () => {

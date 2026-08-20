@@ -42,7 +42,7 @@
     "@atproto/jwk-webcrypto": "workspace:^",
     "@atproto/oauth-client": "workspace:^",
     "@atproto/oauth-types": "workspace:^",
-    "core-js": "^3"
+    "core-js": "^3.50.0"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json"

@@ -20,10 +20,10 @@ import { CtxMigrationProvider } from './migrations/provider.js'
 import type { DatabaseSchema, DatabaseSchemaType } from './schema/index.js'
 import type { PgOptions } from './types.js'
 
-// Stable pg advisory lock IDs used to coordinate daemon work across
-// instances. Centralized here so IDs can never silently collide.
-export const STATS_COMPUTER_LOCK_ID = 7_239_401
-export const MATERIALIZED_VIEW_REFRESH_LOCK_ID = 7_239_402
+export {
+  MATERIALIZED_VIEW_REFRESH_LOCK_ID,
+  STATS_COMPUTER_LOCK_ID,
+} from '../daemon/locks.js'
 
 export class Database {
   pool: PgPool

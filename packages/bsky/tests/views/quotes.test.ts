@@ -75,6 +75,71 @@ describe('pds quote views', () => {
     )
 
     expect(alicePostQuotes2.data.posts.length).toBe(2)
+    expect(alicePostQuotes2.data.cursor).toBeUndefined()
+
+    const exact = await network.bsky.ctx.dataplane.getQuotesBySubjectSorted({
+      subject: { uri: sc.posts[alice][1].ref.uriStr },
+      limit: 5,
+    })
+    const nonterminal =
+      await network.bsky.ctx.dataplane.getQuotesBySubjectSorted({
+        subject: { uri: sc.posts[alice][1].ref.uriStr },
+        limit: 3,
+      })
+    expect(exact.uris).toHaveLength(5)
+    expect(exact.cursor).toBe('')
+    expect(nonterminal.uris).toHaveLength(3)
+    expect(nonterminal.cursor).not.toBe('')
+  })
+
+  it('fills a limited quotes page after an entirely filtered page', async () => {
+    const subject = await sc.post(alice, 'quote page fill subject')
+    const older = await sc.post(
+      bob,
+      'older visible quote',
+      undefined,
+      undefined,
+      subject.ref,
+      { createdAt: '2030-04-01T00:00:00.000Z' },
+    )
+    const newer = await sc.post(
+      carol,
+      'newer visible quote',
+      undefined,
+      undefined,
+      subject.ref,
+      { createdAt: '2030-04-02T00:00:00.000Z' },
+    )
+    await sc.post(
+      sc.dids.dan,
+      'filtered quote 1',
+      undefined,
+      undefined,
+      subject.ref,
+      { createdAt: '2030-04-03T00:00:00.000Z' },
+    )
+    await sc.post(eve, 'filtered quote 2', undefined, undefined, subject.ref, {
+      createdAt: '2030-04-04T00:00:00.000Z',
+    })
+    await sc.block(sc.dids.dan, alice)
+    await sc.block(eve, alice)
+    await network.processAll()
+
+    const { data } = await agent.api.app.bsky.feed.getQuotes(
+      { uri: subject.ref.uriStr, limit: 2 },
+      {
+        headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetQuotes),
+      },
+    )
+
+    expect(data.posts.map((post) => post.uri)).toEqual([
+      newer.ref.uriStr,
+      older.ref.uriStr,
+    ])
+    expect(data.cursor).toBeUndefined()
+
+    await sc.unblock(sc.dids.dan, alice)
+    await sc.unblock(eve, alice)
   })
 
   it('does not return post when quote is deleted', async () => {

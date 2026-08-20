@@ -1,0 +1,13 @@
+{
+  "extends": ["../../tsconfig/node.tsconfig.json"],
+  "include": ["./**/*.ts"],
+  "exclude": ["./node_modules"],
+  "references": [
+    { "path": "../../packages/bsky/tsconfig.build.json" },
+    { "path": "../../packages/crypto/tsconfig.build.json" },
+  ],
+  "compilerOptions": {
+    "rootDir": "./",
+    "noEmit": true,
+  },
+}

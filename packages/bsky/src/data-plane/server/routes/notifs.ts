@@ -58,8 +58,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       limit,
     })
 
-    const notifsRes = await builder.execute()
-    const notifications = notifsRes.map((notif) => ({
+    const page = key.page(await builder.execute(), limit)
+    const notifications = page.items.map((notif) => ({
       recipientDid: actorDid,
       uri: notif.uri,
       reason: notif.reason,
@@ -69,7 +69,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }))
     return {
       notifications,
-      cursor: key.packFromResult(notifsRes),
+      cursor: page.cursor,
     }
   },
 

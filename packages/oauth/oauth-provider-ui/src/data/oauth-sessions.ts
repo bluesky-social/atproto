@@ -1,5 +1,10 @@
 import { msg } from '@lingui/core/macro'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  queryOptions,
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from '@tanstack/react-query'
 import type {
   ActiveOAuthSession,
   OAuthSessionsInput,
@@ -7,15 +12,21 @@ import type {
 } from '@atproto/oauth-provider-api'
 import { useNotificationsContext } from '#/contexts/notifications.tsx'
 import { useApi } from '#/contexts/session.tsx'
+import type { Api } from '#/lib/api.ts'
 
 export const oauthSessionsQueryKey = ({ did }: OAuthSessionsInput) =>
   ['oauth-sessions', did] as const
 
-export function useOAuthSessionsQuery({ did }: OAuthSessionsInput) {
-  const api = useApi()
-  return useQuery<ActiveOAuthSession[]>({
+/**
+ * @NOTE Takes `api` rather than reading it from a hook, so the route's loader
+ * can prime this same query before the page renders.
+ */
+export const oauthSessionsQueryOptions = (
+  api: Api,
+  { did }: OAuthSessionsInput,
+) =>
+  queryOptions<ActiveOAuthSession[]>({
     refetchOnWindowFocus: 'always',
-    // staleTime: 15e3, // 15s
     queryKey: oauthSessionsQueryKey({ did }),
     retry: 0,
     staleTime: 5e3,
@@ -23,6 +34,10 @@ export function useOAuthSessionsQuery({ did }: OAuthSessionsInput) {
       return await api.oauthSessions({ did }, options)
     },
   })
+
+export function useOAuthSessionsQuery(input: OAuthSessionsInput) {
+  const api = useApi()
+  return useSuspenseQuery(oauthSessionsQueryOptions(api, input))
 }
 
 export function useRevokeOAuthSessionMutation() {

@@ -36,6 +36,7 @@ describe('appview search', () => {
       bsky: {
         searchTagsHide: new Set([TAG_HIDE]),
         searchTagsHideAll: new Set([TAG_ALWAYS_HIDE]),
+        searchV2OverrideHeader: 'test',
       },
     })
     agent = network.bsky.getAgent()
@@ -79,6 +80,116 @@ describe('appview search', () => {
 
   beforeEach(async () => network.processAll())
   afterAll(async () => network?.close())
+
+  describe('pagination', () => {
+    it('searchPosts fills the page after filtering and returns a cursor only when more posts are available', async () => {
+      const exact = await network.bsky.ctx.dataplane.searchPosts({
+        term: 'doggo',
+        limit: 3,
+      })
+      expect(exact.uris).toHaveLength(3)
+      expect(exact.cursor).toBe('')
+
+      const over = await network.bsky.ctx.dataplane.searchPosts({
+        term: 'doggo',
+        limit: 2,
+      })
+      expect(over.uris).toHaveLength(2)
+      expect(over.cursor).not.toBe('')
+
+      const terminal = await agent.app.bsky.feed.searchPosts(
+        { q: 'doggo', sort: 'top', limit: 2 },
+        {
+          headers: await network.serviceHeaders(
+            carol,
+            ids.AppBskyFeedSearchPosts,
+          ),
+        },
+      )
+      expect(terminal.data.posts.map((post) => post.uri)).toEqual(
+        nonTaggedResults,
+      )
+      expect(terminal.data.cursor).toBeUndefined()
+
+      const trimmed = await agent.app.bsky.feed.searchPosts(
+        { q: 'doggo', sort: 'top', limit: 2 },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyFeedSearchPosts,
+          ),
+        },
+      )
+      expect(trimmed.data.posts).toHaveLength(2)
+      expect(trimmed.data.cursor).toBeDefined()
+    })
+
+    it('searchPostsV2 bounds pages and limits unauthenticated search to one request', async () => {
+      const exact = await network.bsky.ctx.dataplane.searchPostsV2({
+        params: { query: 'doggo', limit: 3 },
+      })
+      expect(exact.posts).toHaveLength(3)
+      expect(exact.pageInfo?.cursor).toBe('')
+
+      const over = await network.bsky.ctx.dataplane.searchPostsV2({
+        params: { query: 'doggo', limit: 2 },
+      })
+      expect(over.posts).toHaveLength(2)
+      expect(over.pageInfo?.cursor).not.toBe('')
+
+      const override = { 'x-bsky-search-v2-override': 'test' }
+      const unauthenticated = await agent.app.bsky.feed.searchPostsV2(
+        { query: 'doggo', sort: 'top', limit: 2 },
+        { headers: override },
+      )
+      expect(unauthenticated.data.posts).toHaveLength(1)
+      expect(unauthenticated.data.cursor).toBeDefined()
+
+      await expect(
+        agent.app.bsky.feed.searchPostsV2(
+          {
+            query: 'doggo',
+            sort: 'top',
+            limit: 2,
+            cursor: unauthenticated.data.cursor,
+          },
+          { headers: override },
+        ),
+      ).rejects.toThrow('Request forbidden by administrative rules.')
+
+      const terminal = await agent.app.bsky.feed.searchPostsV2(
+        { query: 'doggo', sort: 'top', limit: 2 },
+        {
+          headers: {
+            ...(await network.serviceHeaders(
+              carol,
+              ids.AppBskyFeedSearchPostsV2,
+            )),
+            ...override,
+          },
+        },
+      )
+      expect(terminal.data.posts.map((post) => post.uri)).toEqual(
+        nonTaggedResults,
+      )
+      expect(terminal.data.cursor).toBeUndefined()
+
+      const trimmed = await agent.app.bsky.feed.searchPostsV2(
+        { query: 'doggo', sort: 'top', limit: 2 },
+        {
+          headers: {
+            ...(await network.serviceHeaders(
+              alice,
+              ids.AppBskyFeedSearchPostsV2,
+            )),
+            ...override,
+          },
+        },
+      )
+      expect(trimmed.data.posts).toHaveLength(2)
+      expect(trimmed.data.cursor).toBeDefined()
+    })
+  })
 
   describe(`post search with 'top' sort`, () => {
     type TestCase = {

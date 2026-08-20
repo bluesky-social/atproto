@@ -22,11 +22,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor,
       keyset,
     })
-    const feeds = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
 
     return {
-      uris: feeds.map((f) => f.uri),
-      cursor: keyset.packFromResult(feeds),
+      uris: page.items.map((f) => f.uri),
+      cursor: page.cursor,
     }
   },
 
@@ -35,12 +35,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectFrom('suggested_feed')
       .orderBy('suggested_feed.order', 'asc')
       .$if(!!req.cursor, (q) => q.where('order', '>', parseInt(req.cursor, 10)))
-      .limit(req.limit || 50)
+      .limit((req.limit || 50) + 1)
       .selectAll()
       .execute()
+    const limit = req.limit || 50
+    const items = feeds.slice(0, limit)
     return {
-      uris: feeds.map((f) => f.uri),
-      cursor: feeds.at(-1)?.order.toString(),
+      uris: items.map((f) => f.uri),
+      cursor: feeds.length > limit ? items.at(-1)?.order.toString() : undefined,
     }
   },
 
@@ -53,6 +55,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       db,
       req.params?.query ?? '',
       req.params?.limit ?? 25,
+      req.params?.cursor,
     )
     return {
       feedGenerators: uris.map((uri) => ({ uri, score: 0 })),
@@ -69,6 +72,7 @@ const searchFeedGeneratorsImpl = async (
   db: Database,
   query: string,
   limit: number,
+  cursor?: string,
 ) => {
   const { ref } = db.db.dynamic
   const trimmed = query.trim()
@@ -80,10 +84,10 @@ const searchFeedGeneratorsImpl = async (
     ref('feed_generator.createdAt'),
     ref('feed_generator.cid'),
   )
-  builder = paginate(builder, { limit, keyset })
-  const feeds = await builder.execute()
+  builder = paginate(builder, { limit, cursor, keyset })
+  const page = keyset.page(await builder.execute(), limit)
   return {
-    uris: feeds.map((f) => f.uri),
-    cursor: keyset.packFromResult(feeds),
+    uris: page.items.map((f) => f.uri),
+    cursor: page.cursor,
   }
 }

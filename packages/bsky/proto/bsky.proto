@@ -90,11 +90,25 @@ message GetPostRecordsRequest {
   repeated string uris = 1;
   optional string process_dynamic_tags_for_view = 2;
   optional string viewer_did = 3;
+  // Include complete canonical OP threads used by AppView to derive position
+  // metadata. This is opt-in because resolving them is more expensive than
+  // the normal post record lookup.
+  bool include_op_thread_metadata = 4;
 }
 
 message GetPostRecordsResponse {
   repeated Record records = 1;
   repeated PostRecordMeta meta = 2;
+  // Complete canonical OP threads for roots represented by the requested
+  // posts. AppView derives each post's index and count from these chains.
+  repeated OpThread op_threads = 3;
+}
+
+message OpThread {
+  string root_uri = 1;
+  // The root post followed by its canonical chain of OP replies. Only chains
+  // containing at least one OP reply are returned.
+  repeated string uris = 2;
 }
 
 message GetProfileRecordsRequest {
@@ -318,6 +332,22 @@ message GetLikesBySubjectSortedRequest {
 message GetLikesBySubjectSortedResponse {
   repeated string uris = 1;
   string cursor = 2;
+}
+
+message GetKnownLikersRequest {
+  string actor_did = 1;
+  repeated string subject_uris = 2;
+  int32 limit = 3;
+}
+
+message KnownLikersResult {
+  string subject_uri = 1;
+  int32 count = 2;
+  repeated string dids = 3;
+}
+
+message GetKnownLikersResponse {
+  repeated KnownLikersResult results = 1;
 }
 
 message GetQuotesBySubjectSortedRequest {
@@ -1642,6 +1672,7 @@ service Service {
   // Likes
   rpc GetLikesBySubject(GetLikesBySubjectRequest) returns (GetLikesBySubjectResponse);
   rpc GetLikesBySubjectSorted(GetLikesBySubjectSortedRequest) returns (GetLikesBySubjectSortedResponse);
+  rpc GetKnownLikers(GetKnownLikersRequest) returns (GetKnownLikersResponse);
   rpc GetLikesByActorAndSubjects(GetLikesByActorAndSubjectsRequest) returns (GetLikesByActorAndSubjectsResponse);
   rpc GetActorLikes(GetActorLikesRequest) returns (GetActorLikesResponse);
 
