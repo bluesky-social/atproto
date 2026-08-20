@@ -198,10 +198,15 @@ type EscalationStatsRow = Pick<
   'group' | 'queueId' | 'reportType' | 'moderatorDid' | 'escalatedCount'
 >
 type BatchedStats = {
+  /** Pending reports across queues */
   queuePending: QueueCountRow[]
+  /** Rest of stats across queues */
   queueWindow: QueueWindowRow[]
+  /** Pending reports across report types */
   typePending: TypeCountRow[]
+  /** Rest of stats across report types */
   typeWindow: TypeWindowRow[]
+  /** Stats across moderators */
   moderator: ModeratorWindowRow[]
 }
 
@@ -468,24 +473,15 @@ export class ReportStatsService {
       where ra."activityType" = 'escalationActivity'
         and ra."createdAt" >= ${dayStart} and ra."createdAt" < ${dayEnd}`
 
-    // Cohort queries. This section lists each query by a group and qualifier.
+    // Cohort queries. This section lists each query by a qualifier and group.
+    // Qualifiers are inbound, pending, escalated, and closed reports.
     // Groups are aggregate, queue, report type, and moderator.
-    // Qualifiers are open reports, closed reports, and escalated reports.
-    const pendingByQueue = () =>
+    const inboundAggregate = () =>
       this.db.db
         .selectFrom('report')
-        .select([
-          sql<number>`coalesce("queueId", -1)`.as('queueId'),
-          sql<string>`count(*)`.as('count'),
-        ])
-        .where('status', '!=', 'closed')
-        .groupBy(sql`coalesce("queueId", -1)`)
-        .execute()
-    const pendingAggregate = () =>
-      this.db.db
-        .selectFrom('report')
-        .select(sql<string>`count(*)`.as('count'))
-        .where('status', '!=', 'closed')
+        .select(sql<string>`count(*)`.as('inboundCount'))
+        .where('createdAt', '>=', dayStart)
+        .where('createdAt', '<', dayEnd)
         .executeTakeFirst()
     const inboundByQueue = () =>
       this.db.db
@@ -498,13 +494,6 @@ export class ReportStatsService {
         .where('createdAt', '<', dayEnd)
         .groupBy(sql`coalesce("queueId", -1)`)
         .execute()
-    const inboundAggregate = () =>
-      this.db.db
-        .selectFrom('report')
-        .select(sql<string>`count(*)`.as('inboundCount'))
-        .where('createdAt', '>=', dayStart)
-        .where('createdAt', '<', dayEnd)
-        .executeTakeFirst()
     const inboundByReportType = () =>
       this.db.db
         .selectFrom('report')
@@ -513,6 +502,22 @@ export class ReportStatsService {
         .where('createdAt', '<', dayEnd)
         .groupBy('reportType')
         .execute()
+    const pendingAggregate = () =>
+      this.db.db
+        .selectFrom('report')
+        .select(sql<string>`count(*)`.as('count'))
+        .where('status', '!=', 'closed')
+        .executeTakeFirst()
+    const pendingByQueue = () =>
+      this.db.db
+        .selectFrom('report')
+        .select([
+          sql<number>`coalesce("queueId", -1)`.as('queueId'),
+          sql<string>`count(*)`.as('count'),
+        ])
+        .where('status', '!=', 'closed')
+        .groupBy(sql`coalesce("queueId", -1)`)
+        .execute()
     const pendingByReportType = () =>
       this.db.db
         .selectFrom('report')
@@ -520,6 +525,30 @@ export class ReportStatsService {
         .where('status', '!=', 'closed')
         .groupBy('reportType')
         .execute()
+    const escalationsAggregate = () =>
+      sql<EscalationStatsRow>`
+      select 'aggregate' as "group", null as "queueId",
+        null as "reportType", null as "moderatorDid", count(*) as "escalatedCount"
+      ${escalations}
+    `.execute(this.db.db)
+    const escalationsByQueue = () =>
+      sql<EscalationStatsRow>`
+      select 'queue' as "group", coalesce(r."queueId", -1) as "queueId",
+        null as "reportType", null as "moderatorDid", count(*) as "escalatedCount"
+      ${escalations} group by coalesce(r."queueId", -1)
+    `.execute(this.db.db)
+    const escalationsByReportType = () =>
+      sql<EscalationStatsRow>`
+      select 'reportType' as "group", null as "queueId",
+        r."reportType", null as "moderatorDid", count(*) as "escalatedCount"
+      ${escalations} group by r."reportType"
+    `.execute(this.db.db)
+    const escalationsByModerator = () =>
+      sql<EscalationStatsRow>`
+      select 'moderator' as "group", null as "queueId",
+        null as "reportType", r."assignedTo" as "moderatorDid", count(*) as "escalatedCount"
+      ${escalations} group by r."assignedTo"
+    `.execute(this.db.db)
     const closuresAggregate = () =>
       sql<ClosureStatsRow>`
       with closures as (${closures})
@@ -548,38 +577,14 @@ export class ReportStatsService {
         null as "reportType", "assignedTo" as "moderatorDid", ${closedSelect}
       from closures group by "assignedTo"
     `.execute(this.db.db)
-    const escalationsAggregate = () =>
-      sql<EscalationStatsRow>`
-      select 'aggregate' as "group", null as "queueId",
-        null as "reportType", null as "moderatorDid", count(*) as "escalatedCount"
-      ${escalations}
-    `.execute(this.db.db)
-    const escalationsByQueue = () =>
-      sql<EscalationStatsRow>`
-      select 'queue' as "group", coalesce(r."queueId", -1) as "queueId",
-        null as "reportType", null as "moderatorDid", count(*) as "escalatedCount"
-      ${escalations} group by coalesce(r."queueId", -1)
-    `.execute(this.db.db)
-    const escalationsByReportType = () =>
-      sql<EscalationStatsRow>`
-      select 'reportType' as "group", null as "queueId",
-        r."reportType", null as "moderatorDid", count(*) as "escalatedCount"
-      ${escalations} group by r."reportType"
-    `.execute(this.db.db)
-    const escalationsByModerator = () =>
-      sql<EscalationStatsRow>`
-      select 'moderator' as "group", null as "queueId",
-        null as "reportType", r."assignedTo" as "moderatorDid", count(*) as "escalatedCount"
-      ${escalations} group by r."assignedTo"
-    `.execute(this.db.db)
 
     // These queries are independent, so execute them in one database round.
     const [
-      pendingByQueueRows,
-      pendingAggregateRow,
-      inboundByQueueRows,
       inboundAggregateRow,
+      inboundByQueueRows,
       inboundByReportTypeRows,
+      pendingAggregateRow,
+      pendingByQueueRows,
       pendingByReportTypeRows,
       closuresAggregateRows,
       closuresByQueueRows,
@@ -590,11 +595,11 @@ export class ReportStatsService {
       escalationsByReportTypeRows,
       escalationsByModeratorRows,
     ] = await Promise.all([
-      pendingByQueue(),
-      pendingAggregate(),
-      inboundByQueue(),
       inboundAggregate(),
+      inboundByQueue(),
       inboundByReportType(),
+      pendingAggregate(),
+      pendingByQueue(),
       pendingByReportType(),
       closuresAggregate(),
       closuresByQueue(),
@@ -606,6 +611,7 @@ export class ReportStatsService {
       escalationsByModerator(),
     ])
 
+    // Merge closure and escalation stats into a single lifecycle row per group
     const lifecycleQueries = {
       closures: [
         closuresAggregateRows,
@@ -624,13 +630,13 @@ export class ReportStatsService {
       lifecycleQueries.closures.flatMap((result) => result.rows),
       lifecycleQueries.escalations.flatMap((result) => result.rows),
     )
-
     const lifecycleFor = (
       group: StatGroup,
       predicate: (row: GroupedLifecycleRow) => boolean,
     ): LifecycleWindowRow | undefined =>
       lifecycleRows.find((row) => row.group === group && predicate(row))
 
+    // queue groups
     const queueWindow: QueueWindowRow[] = inboundByQueueRows.map((row) => ({
       queueId: row.queueId,
       inboundCount: row.inboundCount,
@@ -648,35 +654,8 @@ export class ReportStatsService {
         queueId: row.queueId,
       })
     }
-
-    const typeWindow: TypeWindowRow[] = inboundByReportTypeRows.map((row) => ({
-      reportType: row.reportType,
-      inboundCount: row.inboundCount,
-      ...emptyLifecycleWindow(),
-      ...lifecycleFor(
-        'reportType',
-        (item) => item.reportType === row.reportType,
-      ),
-    }))
-    for (const row of lifecycleRows.filter(
-      (item) =>
-        item.group === 'reportType' &&
-        item.reportType !== null &&
-        !typeWindow.some((window) => window.reportType === item.reportType),
-    )) {
-      typeWindow.push({
-        inboundCount: '0',
-        ...row,
-        reportType: row.reportType!,
-      })
-    }
-
-    const moderator: ModeratorWindowRow[] = lifecycleRows
-      .filter((row) => row.group === 'moderator' && row.moderatorDid !== null)
-      .map((row) => ({ did: row.moderatorDid!, inboundCount: '0', ...row }))
-
     // Inject aggregate as a synthetic row with queueId=null so resolveQueueStats can find it
-    const allQueuePending: QueueCountRow[] = [
+    const queuePending: QueueCountRow[] = [
       ...pendingByQueueRows,
       { queueId: null, count: pendingAggregateRow?.count ?? '0' },
     ]
@@ -688,11 +667,43 @@ export class ReportStatsService {
       ...aggregateLifecycle,
     })
 
+    // report type groups
+    const reportTypeWindow: TypeWindowRow[] = inboundByReportTypeRows.map(
+      (row) => ({
+        reportType: row.reportType,
+        inboundCount: row.inboundCount,
+        ...emptyLifecycleWindow(),
+        ...lifecycleFor(
+          'reportType',
+          (item) => item.reportType === row.reportType,
+        ),
+      }),
+    )
+    for (const row of lifecycleRows.filter(
+      (item) =>
+        item.group === 'reportType' &&
+        item.reportType !== null &&
+        !reportTypeWindow.some(
+          (window) => window.reportType === item.reportType,
+        ),
+    )) {
+      reportTypeWindow.push({
+        inboundCount: '0',
+        ...row,
+        reportType: row.reportType!,
+      })
+    }
+
+    // moderator groups
+    const moderator: ModeratorWindowRow[] = lifecycleRows
+      .filter((row) => row.group === 'moderator' && row.moderatorDid !== null)
+      .map((row) => ({ did: row.moderatorDid!, inboundCount: '0', ...row }))
+
     return {
-      queuePending: allQueuePending,
+      queuePending: queuePending,
       queueWindow,
       typePending: pendingByReportTypeRows,
-      typeWindow,
+      typeWindow: reportTypeWindow,
       moderator,
     }
   }
