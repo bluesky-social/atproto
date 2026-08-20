@@ -91,9 +91,9 @@ export type ReportStatGroup = {
   moderatorDid: string | null
   reportTypes: string[] | null
 }
-export type AggregateStatistics = {
+export type ReportStatistics = {
   inboundCount: number
-  pendingCount: number
+  pendingCount?: number
   closedCount: number
   actionedCount: number
   acknowledgedCount: number
@@ -109,14 +109,6 @@ export type AggregateStatistics = {
   avgHandlingTimeSec?: number
   avgResolutionTimeSec?: number
 }
-export type QueueStatistics = AggregateStatistics
-export type ModeratorStatistics = Omit<AggregateStatistics, 'pendingCount'>
-export type ReportTypeStatistics = AggregateStatistics
-export type ReportStatistics =
-  | QueueStatistics
-  | ModeratorStatistics
-  | AggregateStatistics
-  | ReportTypeStatistics
 
 type StatGroup = {
   queueId: number | null
@@ -138,23 +130,17 @@ type StatsRow = StatGroup & {
   resolutionDurationSec: string
   resolutionSampleCount: string
 }
-type InboundStatsRow = StatGroup & Pick<StatsRow, 'inboundCount'>
-type PendingStatsRow = StatGroup & Pick<StatsRow, 'pendingCount'>
-type ClosureStatsRow = StatGroup &
-  Pick<
-    StatsRow,
-    | 'closedCount'
-    | 'actionedCount'
-    | 'acknowledgedCount'
-    | 'labelActionCount'
-    | 'tagActionCount'
-    | 'takedownActionCount'
-    | 'ahtDurationSec'
-    | 'ahtSampleCount'
-    | 'resolutionDurationSec'
-    | 'resolutionSampleCount'
-  >
-type EscalationStatsRow = StatGroup & Pick<StatsRow, 'escalatedCount'>
+type StatsMetric = Exclude<keyof StatsRow, keyof StatGroup>
+type StatsQueryRow<Metric extends StatsMetric> = StatGroup &
+  Pick<StatsRow, Metric>
+type LifecycleMetric = Exclude<
+  StatsMetric,
+  'inboundCount' | 'pendingCount' | 'escalatedCount'
+>
+type InboundStatsRow = StatsQueryRow<'inboundCount'>
+type PendingStatsRow = StatsQueryRow<'pendingCount'>
+type ClosureStatsRow = StatsQueryRow<LifecycleMetric>
+type EscalationStatsRow = StatsQueryRow<'escalatedCount'>
 type BatchedStats = Map<string, StatsRow>
 
 type UpsertRow = {
@@ -534,7 +520,7 @@ export class ReportStatsService {
     return this.resolveRows(row ? [row] : [])
   }
 
-  private resolveRows(rows: StatsRow[]): AggregateStatistics {
+  private resolveRows(rows: StatsRow[]): ReportStatistics {
     const sum = (field: keyof StatsRow) => sumNum(rows, field)
     const inboundCount = sum('inboundCount')
     const pendingCount = sum('pendingCount')
