@@ -6,7 +6,9 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { currentDatetimeString } from '@atproto/lex'
 import type { DidString } from '@atproto/syntax'
+import { app } from '../../src/lexicons/index.js'
 import { forSnapshot } from '../_util.js'
 
 describe('bsky views with mutes from mute lists', () => {
@@ -50,16 +52,16 @@ describe('bsky views with mutes from mute lists', () => {
       'image/jpeg',
     )
     // alice creates mute list with bob & carol that dan uses
-    const list = await pdsAgent.api.app.bsky.graph.list.create(
-      { repo: alice },
+    const list = await sc.client.create(
+      app.bsky.graph.list,
       {
         name: 'alice mutes',
         purpose: 'app.bsky.graph.defs#modlist',
         description: 'big list of mutes',
         avatar: avatar.image,
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
       },
-      sc.getHeaders(alice),
+      { repo: alice, headers: sc.getHeaders(alice) },
     )
     listUri = list.uri
     listCid = list.cid
@@ -69,7 +71,7 @@ describe('bsky views with mutes from mute lists', () => {
         subject: sc.dids.bob,
         list: list.uri,
         reason: 'because',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
       },
       sc.getHeaders(alice),
     )

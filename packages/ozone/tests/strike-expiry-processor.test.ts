@@ -6,6 +6,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { type DidString, toDatetimeString } from '@atproto/lex'
 import { ids } from '../src/lexicon/lexicons.js'
 import { SeverityLevelSettingKey } from '../src/setting/constants.js'
 
@@ -50,7 +51,7 @@ describe('strike expiry processor', () => {
     )
   }
 
-  const getAccountStatus = async (did: string) => {
+  const getAccountStatus = async (did: DidString) => {
     const { subjectStatuses } = await modClient.queryStatuses({ subject: did })
     return subjectStatuses[0]
   }
@@ -85,7 +86,7 @@ describe('strike expiry processor', () => {
     }
 
     // first strike on a post that expires in 2 seconds
-    const expiresAt1 = new Date(Date.now() + 2 * SECOND).toISOString()
+    const expiresAt1 = toDatetimeString(new Date(Date.now() + 2 * SECOND))
     await modClient.emitEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventTakedown',
@@ -98,7 +99,7 @@ describe('strike expiry processor', () => {
     })
 
     // second strike on another post that expires in 3 seconds
-    const expiresAt2 = new Date(Date.now() + 3 * SECOND).toISOString()
+    const expiresAt2 = toDatetimeString(new Date(Date.now() + 3 * SECOND))
     await modClient.emitEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventTakedown',
@@ -154,7 +155,7 @@ describe('strike expiry processor', () => {
     const aliceDid = sc.dids.alice
 
     // strike that expires far in the future
-    const expiresAt = new Date(Date.now() + 1000 * SECOND).toISOString()
+    const expiresAt = toDatetimeString(new Date(Date.now() + 1000 * SECOND))
     await modClient.emitEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventTakedown',
@@ -212,7 +213,7 @@ describe('strike expiry processor', () => {
     const danDid = 'did:plc:dan'
     const eveDid = 'did:plc:eve'
 
-    const expiresAt = new Date(Date.now() + 1 * SECOND).toISOString()
+    const expiresAt = toDatetimeString(new Date(Date.now() + 1 * SECOND))
 
     // strikes to multiple accounts
     await modClient.emitEvent({
@@ -257,7 +258,7 @@ describe('strike expiry processor', () => {
 
   it('updates cursor to track last processed timestamp', async () => {
     const frankDid = 'did:plc:frank'
-    const expiresAt = new Date(Date.now() + 1 * SECOND).toISOString()
+    const expiresAt = toDatetimeString(new Date(Date.now() + 1 * SECOND))
 
     await modClient.emitEvent({
       event: {

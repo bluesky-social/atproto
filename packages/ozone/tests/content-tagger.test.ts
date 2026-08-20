@@ -4,6 +4,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import type { AtUriString, DidString } from '@atproto/lex'
 import { REASONMISLEADING } from '../dist/lexicon/types/com/atproto/moderation/defs.js'
 import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
@@ -26,7 +27,7 @@ describe('moderation subject content tagging', () => {
     await network?.close()
   })
 
-  const getStatus = async (subject: string) => {
+  const getStatus = async (subject: DidString | AtUriString) => {
     const { subjectStatuses } = await modClient.queryStatuses({
       subject,
     })

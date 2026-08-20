@@ -10,6 +10,7 @@ import {
   type SeedClient,
   TestNetworkNoAppView,
 } from '@atproto/dev-env'
+import { getBlobCid, getBlobCidString } from '@atproto/lex-data'
 import { BlobNotFoundError } from '@atproto/repo'
 import basicSeed from './seeds/basic.js'
 
@@ -46,7 +47,7 @@ describe('moderation', () => {
     blobSubject = {
       $type: 'com.atproto.admin.defs#repoBlobRef',
       did: sc.dids.carol,
-      cid: blobRef.image.ref.toString(),
+      cid: getBlobCidString(blobRef.image),
     }
   })
 
@@ -176,7 +177,7 @@ describe('moderation', () => {
     it('removes blob from the store', async () => {
       const tryGetBytes = network.pds.ctx
         .blobstore(blobSubject.did)
-        .getBytes(blobRef.image.ref)
+        .getBytes(getBlobCid(blobRef.image))
       await expect(tryGetBytes).rejects.toThrow(BlobNotFoundError)
     })
 
@@ -199,7 +200,7 @@ describe('moderation', () => {
     it('prevents image blob from being served.', async () => {
       const attempt = agent.api.com.atproto.sync.getBlob({
         did: sc.dids.carol,
-        cid: blobRef.image.ref.toString(),
+        cid: getBlobCidString(blobRef.image),
       })
       await expect(attempt).rejects.toThrow('Blob not found')
     })
@@ -218,12 +219,14 @@ describe('moderation', () => {
 
       // Can post and reference blob
       const post = await sc.post(sc.dids.carol, 'pic', [], [blobRef])
-      expect(post.images[0].image.ref.equals(blobRef.image.ref)).toBeTruthy()
+      expect(getBlobCidString(post.images[0].image)).toEqual(
+        getBlobCidString(blobRef.image),
+      )
 
       // Can fetch through image server
       const res = await agent.api.com.atproto.sync.getBlob({
         did: sc.dids.carol,
-        cid: blobRef.image.ref.toString(),
+        cid: getBlobCidString(blobRef.image),
       })
 
       expect(res.data.byteLength).toBeGreaterThan(9000)
@@ -245,7 +248,7 @@ describe('moderation', () => {
       )
       const blobParams = {
         did: sc.dids.carol,
-        cid: blobRef.image.ref.toString(),
+        cid: getBlobCidString(blobRef.image),
       }
       // public, disallow
       const attempt1 = agent.api.com.atproto.sync.getBlob(blobParams)

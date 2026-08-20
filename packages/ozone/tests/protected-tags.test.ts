@@ -17,7 +17,7 @@ describe('protected-tags', () => {
   const basicSetting = {
     key: ProtectedTagSettingKey,
     scope: 'instance',
-  }
+  } as const
 
   beforeAll(async () => {
     network = await TestNetwork.create({

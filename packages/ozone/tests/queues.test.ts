@@ -5,6 +5,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import type { AtUriString, DidString } from '@atproto/lex'
 import { ids } from '../src/lexicon/lexicons.js'
 
 describe('ozone-queues', () => {
@@ -678,7 +679,7 @@ describe('ozone-queues', () => {
     }
 
     const queryLatestReportForSubject = async (
-      subjectOrUri: string,
+      subjectOrUri: DidString | AtUriString,
       status:
         'open' | 'closed' | 'escalated' | 'queued' | 'assigned' = 'queued',
     ) => {

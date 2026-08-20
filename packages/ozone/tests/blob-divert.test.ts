@@ -7,6 +7,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { getBlobCidString } from '@atproto/lex'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
 import { forSnapshot, identity } from './_util.js'
 
@@ -64,7 +65,7 @@ describe('blob divert', () => {
           comment: 'Diverting for test',
         }),
         createdBy: sc.dids.alice,
-        subjectBlobCids: getImages().map((img) => img.image.ref.toString()),
+        subjectBlobCids: getImages().map((img) => getBlobCidString(img.image)),
       },
       'moderator',
     )

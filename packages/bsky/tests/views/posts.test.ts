@@ -1,21 +1,13 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import {
-  AppBskyEmbedGallery,
-  type AppBskyEmbedRecord,
-  type AppBskyEmbedRecordWithMedia,
-  type AppBskyEmbedVideo,
-  type AppBskyFeedPost,
-  type AtpAgent,
-  type Un$Typed,
-  ids,
-} from '@atproto/api'
+import { AppBskyEmbedGallery, type AtpAgent, ids } from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { currentDatetimeString } from '@atproto/lex'
+import { app } from '../../src/lexicons/index.js'
 import { forSnapshot, stripViewerFromPost } from '../_util.js'
 
 describe('pds posts views', () => {
   let network: TestNetwork
   let agent: AtpAgent
-  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
@@ -23,7 +15,6 @@ describe('pds posts views', () => {
       dbPostgresSchema: 'bsky_views_posts',
     })
     agent = network.bsky.getAgent()
-    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
 
@@ -198,17 +189,16 @@ describe('pds posts views', () => {
   })
 
   it('allows for creating posts with tags', async () => {
-    const post: Un$Typed<AppBskyFeedPost.Record> = {
+    const post: Omit<app.bsky.feed.post.Main, '$type'> = {
       text: 'hello world',
       tags: ['javascript', 'hehe'],
-      createdAt: new Date().toISOString(),
+      createdAt: currentDatetimeString(),
     }
 
-    const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
-      { repo: sc.dids.alice },
-      post,
-      sc.getHeaders(sc.dids.alice),
-    )
+    const { uri } = await sc.client.create(app.bsky.feed.post, post, {
+      repo: sc.dids.alice,
+      headers: sc.getHeaders(sc.dids.alice),
+    })
 
     await network.processAll()
 
@@ -220,26 +210,26 @@ describe('pds posts views', () => {
   })
 
   it('embeds video.', async () => {
-    const { data: video } = await pdsAgent.api.com.atproto.repo.uploadBlob(
+    const { body: video } = await sc.client.uploadBlob(
       Buffer.from('notarealvideo'),
       {
         headers: sc.getHeaders(sc.dids.alice),
         encoding: 'video/mp4',
       },
     )
-    const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
-      { repo: sc.dids.alice },
+    const { uri } = await sc.client.create(
+      app.bsky.feed.post,
       {
         text: 'video',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         embed: {
           $type: 'app.bsky.embed.video',
           video: video.blob,
           alt: 'alt text',
           aspectRatio: { height: 3, width: 4 },
-        } satisfies AppBskyEmbedVideo.Main,
+        },
       },
-      sc.getHeaders(sc.dids.alice),
+      { repo: sc.dids.alice, headers: sc.getHeaders(sc.dids.alice) },
     )
     await network.processAll()
     const { data } = await agent.app.bsky.feed.getPosts({ uris: [uri] })
@@ -248,26 +238,26 @@ describe('pds posts views', () => {
   })
 
   it('embeds video with record.', async () => {
-    const { data: video } = await pdsAgent.api.com.atproto.repo.uploadBlob(
+    const { body: video } = await sc.client.uploadBlob(
       Buffer.from('notarealvideo'),
       {
         headers: sc.getHeaders(sc.dids.alice),
         encoding: 'video/mp4',
       },
     )
-    const embedRecord = await pdsAgent.api.app.bsky.feed.post.create(
-      { repo: sc.dids.alice },
+    const embedRecord = await sc.client.create(
+      app.bsky.feed.post,
       {
         text: 'embedded',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
       },
-      sc.getHeaders(sc.dids.alice),
+      { repo: sc.dids.alice, headers: sc.getHeaders(sc.dids.alice) },
     )
-    const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
-      { repo: sc.dids.alice },
+    const { uri } = await sc.client.create(
+      app.bsky.feed.post,
       {
         text: 'video',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         embed: {
           $type: 'app.bsky.embed.recordWithMedia',
           record: {
@@ -275,16 +265,16 @@ describe('pds posts views', () => {
               uri: embedRecord.uri,
               cid: embedRecord.cid,
             },
-          } satisfies AppBskyEmbedRecord.Main,
+          },
           media: {
             $type: 'app.bsky.embed.video',
             video: video.blob,
             alt: 'alt text',
             aspectRatio: { height: 3, width: 4 },
-          } satisfies AppBskyEmbedVideo.Main,
-        } satisfies AppBskyEmbedRecordWithMedia.Main,
+          },
+        },
       },
-      sc.getHeaders(sc.dids.alice),
+      { repo: sc.dids.alice, headers: sc.getHeaders(sc.dids.alice) },
     )
     await network.processAll()
     const { data } = await agent.app.bsky.feed.getPosts({ uris: [uri] })
@@ -303,11 +293,11 @@ describe('pds posts views', () => {
       '../dev-env/assets/key-portrait-small.jpg',
       'image/jpeg',
     )
-    const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
-      { repo: sc.dids.alice },
+    const { uri } = await sc.client.create(
+      app.bsky.feed.post,
       {
         text: 'gallery',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         embed: {
           $type: 'app.bsky.embed.gallery',
           items: [
@@ -324,9 +314,9 @@ describe('pds posts views', () => {
               aspectRatio: { width: 3, height: 4 },
             },
           ],
-        } satisfies AppBskyEmbedGallery.Main,
+        },
       },
-      sc.getHeaders(sc.dids.alice),
+      { repo: sc.dids.alice, headers: sc.getHeaders(sc.dids.alice) },
     )
     await network.processAll()
     const { data } = await agent.app.bsky.feed.getPosts({ uris: [uri] })
@@ -340,19 +330,19 @@ describe('pds posts views', () => {
       '../dev-env/assets/key-landscape-small.jpg',
       'image/jpeg',
     )
-    const embedRecord = await pdsAgent.api.app.bsky.feed.post.create(
-      { repo: sc.dids.alice },
+    const embedRecord = await sc.client.create(
+      app.bsky.feed.post,
       {
         text: 'embedded',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
       },
-      sc.getHeaders(sc.dids.alice),
+      { repo: sc.dids.alice, headers: sc.getHeaders(sc.dids.alice) },
     )
-    const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
-      { repo: sc.dids.alice },
+    const { uri } = await sc.client.create(
+      app.bsky.feed.post,
       {
         text: 'gallery + record',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         embed: {
           $type: 'app.bsky.embed.recordWithMedia',
           record: {
@@ -360,7 +350,7 @@ describe('pds posts views', () => {
               uri: embedRecord.uri,
               cid: embedRecord.cid,
             },
-          } satisfies AppBskyEmbedRecord.Main,
+          },
           media: {
             $type: 'app.bsky.embed.gallery',
             items: [
@@ -371,10 +361,10 @@ describe('pds posts views', () => {
                 aspectRatio: { width: 4, height: 3 },
               },
             ],
-          } satisfies AppBskyEmbedGallery.Main,
-        } satisfies AppBskyEmbedRecordWithMedia.Main,
+          },
+        },
       },
-      sc.getHeaders(sc.dids.alice),
+      { repo: sc.dids.alice, headers: sc.getHeaders(sc.dids.alice) },
     )
     await network.processAll()
     const { data } = await agent.app.bsky.feed.getPosts({ uris: [uri] })
@@ -388,7 +378,7 @@ describe('pds posts views', () => {
       '../dev-env/assets/key-landscape-small.jpg',
       'image/jpeg',
     )
-    const items: AppBskyEmbedGallery.Main['items'] = Array.from(
+    const items: app.bsky.embed.gallery.Main['items'] = Array.from(
       { length: 11 },
       (_, i) => ({
         $type: 'app.bsky.embed.gallery#image',
@@ -397,17 +387,17 @@ describe('pds posts views', () => {
         aspectRatio: { width: 4, height: 3 },
       }),
     )
-    const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
-      { repo: sc.dids.alice },
+    const { uri } = await sc.client.create(
+      app.bsky.feed.post,
       {
         text: 'oversize gallery',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         embed: {
           $type: 'app.bsky.embed.gallery',
           items,
-        } satisfies AppBskyEmbedGallery.Main,
+        },
       },
-      sc.getHeaders(sc.dids.alice),
+      { repo: sc.dids.alice, headers: sc.getHeaders(sc.dids.alice) },
     )
     await network.processAll()
     const { data } = await agent.app.bsky.feed.getPosts({ uris: [uri] })

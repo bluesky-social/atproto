@@ -28,6 +28,7 @@ export default [
       'packages/oauth/oauth-client-browser-example/src/lexicons/**',
       'packages/pds/src/lexicons/**',
       'packages/bsky/src/lexicons/**',
+      'packages/dev-env/src/lexicons/**',
       'packages/sync/src/lexicons/**',
 
       // others

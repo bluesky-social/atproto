@@ -5,6 +5,7 @@ import {
   TestNetworkNoAppView,
   basicSeed,
 } from '@atproto/dev-env'
+import { getBlobCidString } from '@atproto/lex-data'
 import type { DidString } from '@atproto/syntax'
 
 describe('account deactivation', () => {
@@ -101,7 +102,7 @@ describe('account deactivation', () => {
     await expect(
       agent.com.atproto.sync.getBlob({
         did: alice,
-        cid: aliceAvatar.image.ref.toString(),
+        cid: getBlobCidString(aliceAvatar.image),
       }),
     ).rejects.toThrow(/Repo has been deactivated/)
     const listedRepos = await agent.com.atproto.sync.listRepos()

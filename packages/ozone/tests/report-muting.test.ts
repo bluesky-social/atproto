@@ -8,6 +8,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import type { AtUriString, DidString } from '@atproto/lex'
 import {
   REVIEWNONE,
   REVIEWOPEN,
@@ -33,7 +34,7 @@ describe('report-muting', () => {
   })
 
   const assertSubjectStatus = async (
-    subject: string,
+    subject: DidString | AtUriString,
     status?: string,
   ): Promise<ToolsOzoneModerationDefs.SubjectStatusView | undefined> => {
     const res = await modClient.queryStatuses({

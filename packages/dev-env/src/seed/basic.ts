@@ -1,3 +1,4 @@
+import { type DatetimeString, currentDatetimeString } from '@atproto/lex'
 import type { TestBsky } from '../bsky.js'
 import { EXAMPLE_LABELER } from '../const.js'
 import type { TestNetworkNoAppView } from '../network-no-appview.js'
@@ -15,11 +16,13 @@ export default async function basicSeed(
   const bob = sc.dids.bob
   const carol = sc.dids.carol
   const dan = sc.dids.dan
+  // These two exercise datetime spellings that are valid AT Proto but that
+  // `currentDatetimeString()` never emits, so the brand has to be asserted.
   const createdAtMicroseconds = () => ({
-    createdAt: new Date().toISOString().replace('Z', '000Z'), // microseconds
+    createdAt: currentDatetimeString().replace('Z', '000Z') as DatetimeString, // microseconds
   })
   const createdAtTimezone = () => ({
-    createdAt: new Date().toISOString().replace('Z', '+00:00'), // iso timezone format
+    createdAt: currentDatetimeString().replace('Z', '+00:00') as DatetimeString, // iso timezone format
   })
 
   await sc.follow(alice, bob)

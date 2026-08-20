@@ -1,6 +1,6 @@
-import type { AppBskyFeedPost } from '@atproto/api'
 import type { DatabaseSchema } from '@atproto/bsky'
 import type { DidString, HandleString } from '@atproto/syntax'
+import type { app } from '../lexicons/index.js'
 import type { TestNetworkNoAppView } from '../network-no-appview.js'
 import type { TestNetwork } from '../network.js'
 import type { RecordRef, SeedClient } from './client.js'
@@ -58,7 +58,7 @@ async function createUsers<T extends readonly string[]>(
 
 type ReplyFn = (
   replyAuthor: User,
-  overridesOrCb?: Partial<AppBskyFeedPost.Record> | ReplyCb,
+  overridesOrCb?: Partial<app.bsky.feed.post.Main> | ReplyCb,
   maybeReplyCb?: ReplyCb,
 ) => Promise<void>
 
@@ -81,10 +81,10 @@ const rootReplyFnBuilder = <T extends TestNetworkNoAppView>(
   let index = 0
   return async (
     replyAuthor: User,
-    overridesOrCb?: Partial<AppBskyFeedPost.Record> | ReplyCb,
+    overridesOrCb?: Partial<app.bsky.feed.post.Main> | ReplyCb,
     maybeReplyCb?: ReplyCb,
   ) => {
-    let overrides: Partial<AppBskyFeedPost.Record> | undefined
+    let overrides: Partial<app.bsky.feed.post.Main> | undefined
     let replyCb: ReplyCb | undefined
     if (overridesOrCb && typeof overridesOrCb === 'function') {
       replyCb = overridesOrCb
@@ -118,10 +118,10 @@ const rootReplyFnBuilder = <T extends TestNetworkNoAppView>(
 const createThread = async <T extends TestNetworkNoAppView>(
   sc: SeedClient<T>,
   rootAuthor: User,
-  overridesOrCb?: Partial<AppBskyFeedPost.Record> | ReplyCb,
+  overridesOrCb?: Partial<app.bsky.feed.post.Main> | ReplyCb,
   maybeReplyCb?: ReplyCb,
 ) => {
-  let overrides: Partial<AppBskyFeedPost.Record> | undefined
+  let overrides: Partial<app.bsky.feed.post.Main> | undefined
   let replyCb: ReplyCb | undefined
   if (overridesOrCb && typeof overridesOrCb === 'function') {
     replyCb = overridesOrCb
