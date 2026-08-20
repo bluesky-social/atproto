@@ -110,6 +110,7 @@ export type ReportStatistics = {
   avgResolutionTimeSec?: number
 }
 
+// DB types
 type StatGroup = {
   queueId: number | null
   reportType: string | null
@@ -142,7 +143,6 @@ type PendingStatsRow = StatsQueryRow<'pendingCount'>
 type ClosureStatsRow = StatsQueryRow<LifecycleMetric>
 type EscalationStatsRow = StatsQueryRow<'escalatedCount'>
 type BatchedStats = Map<string, StatsRow>
-
 type UpsertRow = {
   date: string
   queueId: number | null
