@@ -127,7 +127,8 @@ export async function queryReports(
       sortField === 'updatedAt' ? 'r.updatedAt' : 'r.createdAt',
       sortDirection,
     )
-    .orderBy('r.id', 'desc')
+    // Keep the tie-breaker aligned with the primary sort for consistent keyset pagination and index scans.
+    .orderBy('r.id', sortDirection)
 
   const limit = params.limit ?? 50
   if (params.cursor) {
