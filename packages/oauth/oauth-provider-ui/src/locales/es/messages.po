@@ -406,10 +406,6 @@ msgstr "Eliminar"
 msgid "Delete account"
 msgstr ""
 
-#: src/components/delete-account-dialog.tsx
-msgid "Delete account <0/>"
-msgstr ""
-
 #: src/components/delete-account-confirm-form.tsx
 msgid "Delete my account"
 msgstr ""

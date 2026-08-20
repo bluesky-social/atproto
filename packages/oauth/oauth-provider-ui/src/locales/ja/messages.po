@@ -406,10 +406,6 @@ msgstr "削除"
 msgid "Delete account"
 msgstr "アカウントを削除"
 
-#: src/components/delete-account-dialog.tsx
-msgid "Delete account <0/>"
-msgstr "アカウントを削除 <0/>"
-
 #: src/components/delete-account-confirm-form.tsx
 msgid "Delete my account"
 msgstr "アカウントを削除"
