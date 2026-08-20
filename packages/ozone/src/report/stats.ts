@@ -471,7 +471,7 @@ export class ReportStatsService {
     // Cohort queries. This section lists each query by a group and qualifier.
     // Groups are aggregate, queue, report type, and moderator.
     // Qualifiers are open reports, closed reports, and escalated reports.
-    const queuePending = () =>
+    const pendingByQueue = () =>
       this.db.db
         .selectFrom('report')
         .select([
@@ -481,13 +481,13 @@ export class ReportStatsService {
         .where('status', '!=', 'closed')
         .groupBy(sql`coalesce("queueId", -1)`)
         .execute()
-    const aggregatePending = () =>
+    const pendingAggregate = () =>
       this.db.db
         .selectFrom('report')
         .select(sql<string>`count(*)`.as('count'))
         .where('status', '!=', 'closed')
         .executeTakeFirst()
-    const queueInbound = () =>
+    const inboundByQueue = () =>
       this.db.db
         .selectFrom('report')
         .select([
@@ -498,14 +498,14 @@ export class ReportStatsService {
         .where('createdAt', '<', dayEnd)
         .groupBy(sql`coalesce("queueId", -1)`)
         .execute()
-    const aggregateInbound = () =>
+    const inboundAggregate = () =>
       this.db.db
         .selectFrom('report')
         .select(sql<string>`count(*)`.as('inboundCount'))
         .where('createdAt', '>=', dayStart)
         .where('createdAt', '<', dayEnd)
         .executeTakeFirst()
-    const typeInbound = () =>
+    const inboundByReportType = () =>
       this.db.db
         .selectFrom('report')
         .select(['reportType', sql<string>`count(*)`.as('inboundCount')])
@@ -513,7 +513,7 @@ export class ReportStatsService {
         .where('createdAt', '<', dayEnd)
         .groupBy('reportType')
         .execute()
-    const typePending = () =>
+    const pendingByReportType = () =>
       this.db.db
         .selectFrom('report')
         .select(['reportType', sql<string>`count(*)`.as('count')])
@@ -575,12 +575,12 @@ export class ReportStatsService {
 
     // These queries are independent, so execute them in one database round.
     const [
-      queuePendingRows,
-      aggregatePendingRow,
-      inboundByQueue,
-      aggregateInboundRow,
-      typeInboundRows,
-      typePendingRows,
+      pendingByQueueRows,
+      pendingAggregateRow,
+      inboundByQueueRows,
+      inboundAggregateRow,
+      inboundByReportTypeRows,
+      pendingByReportTypeRows,
       closuresAggregateRows,
       closuresByQueueRows,
       closuresByReportTypeRows,
@@ -590,12 +590,12 @@ export class ReportStatsService {
       escalationsByReportTypeRows,
       escalationsByModeratorRows,
     ] = await Promise.all([
-      queuePending(),
-      aggregatePending(),
-      queueInbound(),
-      aggregateInbound(),
-      typeInbound(),
-      typePending(),
+      pendingByQueue(),
+      pendingAggregate(),
+      inboundByQueue(),
+      inboundAggregate(),
+      inboundByReportType(),
+      pendingByReportType(),
       closuresAggregate(),
       closuresByQueue(),
       closuresByReportType(),
@@ -631,7 +631,7 @@ export class ReportStatsService {
     ): LifecycleWindowRow | undefined =>
       lifecycleRows.find((row) => row.group === group && predicate(row))
 
-    const queueWindow: QueueWindowRow[] = inboundByQueue.map((row) => ({
+    const queueWindow: QueueWindowRow[] = inboundByQueueRows.map((row) => ({
       queueId: row.queueId,
       inboundCount: row.inboundCount,
       ...emptyLifecycleWindow(),
@@ -649,7 +649,7 @@ export class ReportStatsService {
       })
     }
 
-    const typeWindow: TypeWindowRow[] = typeInboundRows.map((row) => ({
+    const typeWindow: TypeWindowRow[] = inboundByReportTypeRows.map((row) => ({
       reportType: row.reportType,
       inboundCount: row.inboundCount,
       ...emptyLifecycleWindow(),
@@ -677,13 +677,13 @@ export class ReportStatsService {
 
     // Inject aggregate as a synthetic row with queueId=null so resolveQueueStats can find it
     const allQueuePending: QueueCountRow[] = [
-      ...queuePendingRows,
-      { queueId: null, count: aggregatePendingRow?.count ?? '0' },
+      ...pendingByQueueRows,
+      { queueId: null, count: pendingAggregateRow?.count ?? '0' },
     ]
     const aggregateLifecycle = lifecycleFor('aggregate', () => true)
     queueWindow.push({
       queueId: null,
-      inboundCount: aggregateInboundRow?.inboundCount ?? '0',
+      inboundCount: inboundAggregateRow?.inboundCount ?? '0',
       ...emptyLifecycleWindow(),
       ...aggregateLifecycle,
     })
@@ -691,7 +691,7 @@ export class ReportStatsService {
     return {
       queuePending: allQueuePending,
       queueWindow,
-      typePending: typePendingRows,
+      typePending: pendingByReportTypeRows,
       typeWindow,
       moderator,
     }
