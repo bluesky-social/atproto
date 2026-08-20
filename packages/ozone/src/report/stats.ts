@@ -432,89 +432,8 @@ export class ReportStatsService {
     const dayStart = `${date}T00:00:00.000Z`
     const dayEnd = `${nextDate(date)}T00:00:00.000Z`
 
-    // Current unresolved reports grouped by their current queue. Null queues use -1.
-    const queuePending = () =>
-      this.db.db
-        .selectFrom('report')
-        .select([
-          sql<number>`coalesce("queueId", -1)`.as('queueId'),
-          sql<string>`count(*)`.as('count'),
-        ])
-        .where('status', '!=', 'closed')
-        .groupBy(sql`coalesce("queueId", -1)`)
-        .execute()
-
-    // Current unresolved reports across all queues, including unqueued reports.
-    const aggregatePending = () =>
-      this.db.db
-        .selectFrom('report')
-        .select(sql<string>`count(*)`.as('count'))
-        .where('status', '!=', 'closed')
-        .executeTakeFirst()
-
-    // Reports created in the UTC day, grouped by their current queue.
-    const queueInbound = () =>
-      this.db.db
-        .selectFrom('report')
-        .select([
-          sql<number>`coalesce("queueId", -1)`.as('queueId'),
-          sql<string>`count(*)`.as('inboundCount'),
-        ])
-        .where('createdAt', '>=', dayStart)
-        .where('createdAt', '<', dayEnd)
-        .groupBy(sql`coalesce("queueId", -1)`)
-        .execute()
-
-    // Reports created in the UTC day across all queues and report types.
-    const aggregateInbound = () =>
-      this.db.db
-        .selectFrom('report')
-        .select(sql<string>`count(*)`.as('inboundCount'))
-        .where('createdAt', '>=', dayStart)
-        .where('createdAt', '<', dayEnd)
-        .executeTakeFirst()
-
-    // Reports created in the UTC day, grouped by their report type.
-    const typeInbound = () =>
-      this.db.db
-        .selectFrom('report')
-        .select(['reportType', sql<string>`count(*)`.as('inboundCount')])
-        .where('createdAt', '>=', dayStart)
-        .where('createdAt', '<', dayEnd)
-        .groupBy('reportType')
-        .execute()
-
-    // Current unresolved reports grouped by their report type.
-    const typePending = () =>
-      this.db.db
-        .selectFrom('report')
-        .select(['reportType', sql<string>`count(*)`.as('count')])
-        .where('status', '!=', 'closed')
-        .groupBy('reportType')
-        .execute()
-
-    // Reports closed in the UTC day, classified by their last report action.
-    const closureStats = () =>
-      sql<ClosureStatsRow>`
-      with closures as (
-        select r.*, me.action as "actionType"
-        from report r
-        left join moderation_event me on me.id = case
-          when jsonb_array_length(coalesce(r."actionEventIds", '[]'::jsonb)) > 0
-          then (r."actionEventIds" ->> (jsonb_array_length(r."actionEventIds") - 1))::integer
-        end
-        where r."closedAt" >= ${dayStart} and r."closedAt" < ${dayEnd}
-      )
-      select
-        case
-          when grouping(coalesce("queueId", -1)) = 0 then 'queue'
-          when grouping("reportType") = 0 then 'reportType'
-          when grouping("assignedTo") = 0 then 'moderator'
-          else 'aggregate'
-        end as "groupKind",
-        case when grouping(coalesce("queueId", -1)) = 0 then coalesce("queueId", -1) end as "queueId",
-        case when grouping("reportType") = 0 then "reportType" end as "reportType",
-        case when grouping("assignedTo") = 0 then "assignedTo" end as "moderatorDid",
+    // sql queries to be used later
+    const closedSelect = sql`
         count(*) as "closedCount",
         count(*) filter (where "actionType" in (
           'tools.ozone.moderation.defs#modEventLabel',
@@ -533,30 +452,136 @@ export class ReportStatsService {
           filter (where "assignedAt" is not null), 0) as "ahtDurationSec",
         count(*) filter (where "assignedAt" is not null) as "ahtSampleCount",
         coalesce(sum(greatest(0, extract(epoch from ("closedAt"::timestamp - "createdAt"::timestamp)))), 0) as "resolutionDurationSec",
-        count(*) as "resolutionSampleCount"
-      from closures
-      group by grouping sets ((), (coalesce("queueId", -1)), ("reportType"), ("assignedTo"))
-    `.execute(this.db.db)
-
-    // Escalation transitions in the UTC day, grouped for each stats view.
-    const escalationStats = () =>
-      sql<EscalationStatsRow>`
-      select
-        case
-          when grouping(coalesce(r."queueId", -1)) = 0 then 'queue'
-          when grouping(r."reportType") = 0 then 'reportType'
-          when grouping(r."assignedTo") = 0 then 'moderator'
-          else 'aggregate'
-        end as "groupKind",
-        case when grouping(coalesce(r."queueId", -1)) = 0 then coalesce(r."queueId", -1) end as "queueId",
-        case when grouping(r."reportType") = 0 then r."reportType" end as "reportType",
-        case when grouping(r."assignedTo") = 0 then r."assignedTo" end as "moderatorDid",
-        count(*) as "escalatedCount"
+        count(*) as "resolutionSampleCount"`
+    const closures = sql`
+      select r.*, me.action as "actionType"
+      from report r
+      left join moderation_event me on me.id = case
+        when jsonb_array_length(coalesce(r."actionEventIds", '[]'::jsonb)) > 0
+        then (r."actionEventIds" ->> (jsonb_array_length(r."actionEventIds") - 1))::integer
+      end
+      where r."closedAt" >= ${dayStart} and r."closedAt" < ${dayEnd}`
+    const escalations = sql`
       from report_activity ra
       join report r on r.id = ra."reportId"
       where ra."activityType" = 'escalationActivity'
-        and ra."createdAt" >= ${dayStart} and ra."createdAt" < ${dayEnd}
-      group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"), (r."assignedTo"))
+        and ra."createdAt" >= ${dayStart} and ra."createdAt" < ${dayEnd}`
+
+    // Cohort queries. This section lists each query by status (closed, pending, etc) and group (aggregate, report type, etc)
+    /// Current unresolved reports grouped by their current queue. Null queues use -1.
+    const queuePending = () =>
+      this.db.db
+        .selectFrom('report')
+        .select([
+          sql<number>`coalesce("queueId", -1)`.as('queueId'),
+          sql<string>`count(*)`.as('count'),
+        ])
+        .where('status', '!=', 'closed')
+        .groupBy(sql`coalesce("queueId", -1)`)
+        .execute()
+    /// Current unresolved reports across all queues, including unqueued reports.
+    const aggregatePending = () =>
+      this.db.db
+        .selectFrom('report')
+        .select(sql<string>`count(*)`.as('count'))
+        .where('status', '!=', 'closed')
+        .executeTakeFirst()
+    /// Reports created in the UTC day, grouped by their current queue.
+    const queueInbound = () =>
+      this.db.db
+        .selectFrom('report')
+        .select([
+          sql<number>`coalesce("queueId", -1)`.as('queueId'),
+          sql<string>`count(*)`.as('inboundCount'),
+        ])
+        .where('createdAt', '>=', dayStart)
+        .where('createdAt', '<', dayEnd)
+        .groupBy(sql`coalesce("queueId", -1)`)
+        .execute()
+    /// Reports created in the UTC day across all queues and report types.
+    const aggregateInbound = () =>
+      this.db.db
+        .selectFrom('report')
+        .select(sql<string>`count(*)`.as('inboundCount'))
+        .where('createdAt', '>=', dayStart)
+        .where('createdAt', '<', dayEnd)
+        .executeTakeFirst()
+    /// Reports created in the UTC day, grouped by their report type.
+    const typeInbound = () =>
+      this.db.db
+        .selectFrom('report')
+        .select(['reportType', sql<string>`count(*)`.as('inboundCount')])
+        .where('createdAt', '>=', dayStart)
+        .where('createdAt', '<', dayEnd)
+        .groupBy('reportType')
+        .execute()
+    /// Current unresolved reports grouped by their report type.
+    const typePending = () =>
+      this.db.db
+        .selectFrom('report')
+        .select(['reportType', sql<string>`count(*)`.as('count')])
+        .where('status', '!=', 'closed')
+        .groupBy('reportType')
+        .execute()
+    /// Closure metrics across all reports.
+    const aggregateClosed = () =>
+      sql<ClosureStatsRow>`
+      with closures as (${closures})
+      select 'aggregate' as "groupKind", null as "queueId",
+        null as "reportType", null as "moderatorDid", ${closedSelect}
+      from closures
+    `.execute(this.db.db)
+    /// Closure metrics grouped by queue, including the unqueued -1 group.
+    const queueClosed = () =>
+      sql<ClosureStatsRow>`
+      with closures as (${closures})
+      select 'queue' as "groupKind", coalesce("queueId", -1) as "queueId",
+        null as "reportType", null as "moderatorDid", ${closedSelect}
+      from closures group by coalesce("queueId", -1)
+    `.execute(this.db.db)
+    /// Closure metrics grouped by report type.
+    const typeClosed = () =>
+      sql<ClosureStatsRow>`
+      with closures as (${closures})
+      select 'reportType' as "groupKind", null as "queueId",
+        "reportType", null as "moderatorDid", ${closedSelect}
+      from closures group by "reportType"
+    `.execute(this.db.db)
+    /// Closure metrics grouped by the report's current assigned moderator.
+    const moderatorClosed = () =>
+      sql<ClosureStatsRow>`
+      with closures as (${closures})
+      select 'moderator' as "groupKind", null as "queueId",
+        null as "reportType", "assignedTo" as "moderatorDid", ${closedSelect}
+      from closures group by "assignedTo"
+    `.execute(this.db.db)
+    /// Escalation transitions across all reports.
+    const aggregateEscalated = () =>
+      sql<EscalationStatsRow>`
+      select 'aggregate' as "groupKind", null as "queueId",
+        null as "reportType", null as "moderatorDid", count(*) as "escalatedCount"
+      ${escalations}
+    `.execute(this.db.db)
+    /// Escalation transitions grouped by queue.
+    const queueEscalated = () =>
+      sql<EscalationStatsRow>`
+      select 'queue' as "groupKind", coalesce(r."queueId", -1) as "queueId",
+        null as "reportType", null as "moderatorDid", count(*) as "escalatedCount"
+      ${escalations} group by coalesce(r."queueId", -1)
+    `.execute(this.db.db)
+    /// Escalation transitions grouped by report type.
+    const typeEscalated = () =>
+      sql<EscalationStatsRow>`
+      select 'reportType' as "groupKind", null as "queueId",
+        r."reportType", null as "moderatorDid", count(*) as "escalatedCount"
+      ${escalations} group by r."reportType"
+    `.execute(this.db.db)
+    /// Escalation transitions grouped by the report's current assigned moderator.
+    const moderatorEscalated = () =>
+      sql<EscalationStatsRow>`
+      select 'moderator' as "groupKind", null as "queueId",
+        null as "reportType", r."assignedTo" as "moderatorDid", count(*) as "escalatedCount"
+      ${escalations} group by r."assignedTo"
     `.execute(this.db.db)
 
     // These queries are independent, so execute them in one database round.
@@ -567,8 +592,14 @@ export class ReportStatsService {
       aggregateInboundRow,
       typeInboundRows,
       typePendingRows,
-      closureRows,
-      escalationRows,
+      aggregateClosedRows,
+      queueClosedRows,
+      typeClosedRows,
+      moderatorClosedRows,
+      aggregateEscalatedRows,
+      queueEscalatedRows,
+      typeEscalatedRows,
+      moderatorEscalatedRows,
     ] = await Promise.all([
       queuePending(),
       aggregatePending(),
@@ -576,13 +607,29 @@ export class ReportStatsService {
       aggregateInbound(),
       typeInbound(),
       typePending(),
-      closureStats(),
-      escalationStats(),
+      aggregateClosed(),
+      queueClosed(),
+      typeClosed(),
+      moderatorClosed(),
+      aggregateEscalated(),
+      queueEscalated(),
+      typeEscalated(),
+      moderatorEscalated(),
     ])
 
     const lifecycleRows = mergeLifecycleStats(
-      closureRows.rows,
-      escalationRows.rows,
+      [
+        ...aggregateClosedRows.rows,
+        ...queueClosedRows.rows,
+        ...typeClosedRows.rows,
+        ...moderatorClosedRows.rows,
+      ],
+      [
+        ...aggregateEscalatedRows.rows,
+        ...queueEscalatedRows.rows,
+        ...typeEscalatedRows.rows,
+        ...moderatorEscalatedRows.rows,
+      ],
     )
 
     const lifecycleFor = (
