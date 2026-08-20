@@ -118,14 +118,12 @@ export type ReportStatistics =
   | AggregateStatistics
   | ReportTypeStatistics
 
-type StatGroup = 'aggregate' | 'queue' | 'reportType' | 'moderator'
-type StatDimensions = {
-  group: StatGroup
+type StatGroup = {
   queueId: number | null
   reportType: string | null
   moderatorDid: string | null
 }
-type StatsRow = StatDimensions & {
+type StatsRow = StatGroup & {
   inboundCount: string
   pendingCount: string
   closedCount: string
@@ -140,9 +138,9 @@ type StatsRow = StatDimensions & {
   resolutionDurationSec: string
   resolutionSampleCount: string
 }
-type InboundStatsRow = StatDimensions & Pick<StatsRow, 'inboundCount'>
-type PendingStatsRow = StatDimensions & Pick<StatsRow, 'pendingCount'>
-type ClosureStatsRow = StatDimensions &
+type InboundStatsRow = StatGroup & Pick<StatsRow, 'inboundCount'>
+type PendingStatsRow = StatGroup & Pick<StatsRow, 'pendingCount'>
+type ClosureStatsRow = StatGroup &
   Pick<
     StatsRow,
     | 'closedCount'
@@ -156,7 +154,7 @@ type ClosureStatsRow = StatDimensions &
     | 'resolutionDurationSec'
     | 'resolutionSampleCount'
   >
-type EscalationStatsRow = StatDimensions & Pick<StatsRow, 'escalatedCount'>
+type EscalationStatsRow = StatGroup & Pick<StatsRow, 'escalatedCount'>
 type BatchedStats = Map<string, StatsRow>
 
 type UpsertRow = {
@@ -505,7 +503,6 @@ export class ReportStatsService {
     if (group.moderatorDid) {
       const row = batched.get(
         statKey({
-          group: 'moderator',
           queueId: null,
           reportType: null,
           moderatorDid: group.moderatorDid,
@@ -518,7 +515,6 @@ export class ReportStatsService {
       const rows = group.reportTypes.flatMap((reportType) => {
         const row = batched.get(
           statKey({
-            group: 'reportType',
             queueId: null,
             reportType,
             moderatorDid: null,
@@ -528,10 +524,8 @@ export class ReportStatsService {
       })
       return this.resolveRows(rows)
     }
-    const statGroup: StatGroup = group.queueId === null ? 'aggregate' : 'queue'
     const row = batched.get(
       statKey({
-        group: statGroup,
         queueId: group.queueId,
         reportType: null,
         moderatorDid: null,
@@ -798,7 +792,7 @@ function sumNum<T>(rows: T[], field: keyof T): number {
   return rows.reduce((sum, r) => sum + Number(r[field] ?? 0), 0)
 }
 
-function emptyStats(dimensions: StatDimensions): StatsRow {
+function emptyStats(dimensions: StatGroup): StatsRow {
   return {
     ...dimensions,
     inboundCount: '0',
@@ -817,9 +811,8 @@ function emptyStats(dimensions: StatDimensions): StatsRow {
   }
 }
 
-function statKey(dimensions: StatDimensions): string {
+function statKey(dimensions: StatGroup): string {
   return [
-    dimensions.group,
     dimensions.queueId,
     dimensions.reportType,
     dimensions.moderatorDid,
