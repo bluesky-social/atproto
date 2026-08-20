@@ -40,7 +40,7 @@ const getTimelineMunge: MungeFn<app.bsky.feed.getTimeline.$OutputBody> = async (
   local,
 ) => {
   const feed = await localViewer.formatAndInsertPostsInFeed(
-    [...original.feed],
+    original.feed,
     local.posts,
   )
   return {
