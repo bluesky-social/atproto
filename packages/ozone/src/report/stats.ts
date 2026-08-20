@@ -125,7 +125,7 @@ type StatDimensions = {
   reportType: string | null
   moderatorDid: string | null
 }
-type MetricStatsRow = StatDimensions & {
+type StatsRow = StatDimensions & {
   inboundCount: string
   pendingCount: string
   closedCount: string
@@ -140,11 +140,11 @@ type MetricStatsRow = StatDimensions & {
   resolutionDurationSec: string
   resolutionSampleCount: string
 }
-type InboundStatsRow = StatDimensions & Pick<MetricStatsRow, 'inboundCount'>
-type PendingStatsRow = StatDimensions & Pick<MetricStatsRow, 'pendingCount'>
+type InboundStatsRow = StatDimensions & Pick<StatsRow, 'inboundCount'>
+type PendingStatsRow = StatDimensions & Pick<StatsRow, 'pendingCount'>
 type ClosureStatsRow = StatDimensions &
   Pick<
-    MetricStatsRow,
+    StatsRow,
     | 'closedCount'
     | 'actionedCount'
     | 'acknowledgedCount'
@@ -156,9 +156,8 @@ type ClosureStatsRow = StatDimensions &
     | 'resolutionDurationSec'
     | 'resolutionSampleCount'
   >
-type EscalationStatsRow = StatDimensions &
-  Pick<MetricStatsRow, 'escalatedCount'>
-type BatchedStats = Map<string, MetricStatsRow>
+type EscalationStatsRow = StatDimensions & Pick<StatsRow, 'escalatedCount'>
+type BatchedStats = Map<string, StatsRow>
 
 type UpsertRow = {
   date: string
@@ -490,7 +489,7 @@ export class ReportStatsService {
       escalationStats(),
     ])
 
-    return mergeMetricStats([
+    return mergeStats([
       ...inbound.rows,
       ...pending.rows,
       ...closures.rows,
@@ -541,8 +540,8 @@ export class ReportStatsService {
     return this.resolveRows(row ? [row] : [])
   }
 
-  private resolveRows(rows: MetricStatsRow[]): AggregateStatistics {
-    const sum = (field: keyof MetricStatsRow) => sumNum(rows, field)
+  private resolveRows(rows: StatsRow[]): AggregateStatistics {
+    const sum = (field: keyof StatsRow) => sumNum(rows, field)
     const inboundCount = sum('inboundCount')
     const pendingCount = sum('pendingCount')
     const closedCount = sum('closedCount')
@@ -799,7 +798,7 @@ function sumNum<T>(rows: T[], field: keyof T): number {
   return rows.reduce((sum, r) => sum + Number(r[field] ?? 0), 0)
 }
 
-function emptyMetricStats(dimensions: StatDimensions): MetricStatsRow {
+function emptyStats(dimensions: StatDimensions): StatsRow {
   return {
     ...dimensions,
     inboundCount: '0',
@@ -827,17 +826,17 @@ function statKey(dimensions: StatDimensions): string {
   ].join('|')
 }
 
-function mergeMetricStats(
-  metricRows: Array<
+function mergeStats(
+  statsRows: Array<
     InboundStatsRow | PendingStatsRow | ClosureStatsRow | EscalationStatsRow
   >,
-): Map<string, MetricStatsRow> {
-  const stats = new Map<string, MetricStatsRow>()
-  for (const metric of metricRows) {
-    const key = statKey(metric)
+): Map<string, StatsRow> {
+  const stats = new Map<string, StatsRow>()
+  for (const row of statsRows) {
+    const key = statKey(row)
     stats.set(key, {
-      ...(stats.get(key) ?? emptyMetricStats(metric)),
-      ...metric,
+      ...(stats.get(key) ?? emptyStats(row)),
+      ...row,
     })
   }
   return stats
