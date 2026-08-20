@@ -1,5 +1,17 @@
 # @atproto/ozone
 
+## 0.3.0
+
+### Minor Changes
+
+- [#5376](https://github.com/bluesky-social/atproto/pull/5376) [`760fb12`](https://github.com/bluesky-social/atproto/commit/760fb12a080c87cdfd0dae42ae833bad8bc20886) Thanks [@foysalit](https://github.com/foysalit)! - Allow moderators to retrieve hosted account preferences through Ozone's implementation of `app.bsky.actor.getPreferences`.
+
+### Patch Changes
+
+- Updated dependencies [[`615ac2a`](https://github.com/bluesky-social/atproto/commit/615ac2a8cc72cd475dc4f06f743f2514d8afc6e0), [`c400731`](https://github.com/bluesky-social/atproto/commit/c400731969775d220ade8cc55b0892018bdf8514)]:
+  - @atproto/xrpc-server@0.12.6
+  - @atproto/api@0.20.42
+
 ## 0.2.29
 
 ### Patch Changes

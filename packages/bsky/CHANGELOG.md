@@ -1,5 +1,25 @@
 # @atproto/bsky
 
+## 0.0.276
+
+### Patch Changes
+
+- [#5431](https://github.com/bluesky-social/atproto/pull/5431) [`d6296a1`](https://github.com/bluesky-social/atproto/commit/d6296a1cfdb40a773319cb59061300e4e8e52f26) Thanks [@cuducos](https://github.com/cuducos)! - Route configured staging feeds through Iris staging.
+
+- [#5402](https://github.com/bluesky-social/atproto/pull/5402) [`1307a87`](https://github.com/bluesky-social/atproto/commit/1307a874f656a63d751d80ae4945580ce92ea4f5) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Pass authenticated user context to feature gates on feed requests.
+
+- [#5427](https://github.com/bluesky-social/atproto/pull/5427) [`c400731`](https://github.com/bluesky-social/atproto/commit/c400731969775d220ade8cc55b0892018bdf8514) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add known likers to post viewer state on post thread responses.
+
+- [#5428](https://github.com/bluesky-social/atproto/pull/5428) [`f2c33aa`](https://github.com/bluesky-social/atproto/commit/f2c33aa4a72c95762c2708cf02acbfab7ddd2b5a) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Remove x-bsky-is-beta-user header handling
+
+- [#5410](https://github.com/bluesky-social/atproto/pull/5410) [`02f6e22`](https://github.com/bluesky-social/atproto/commit/02f6e227bbb35da2596c476fdf2711d14036ef0b) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add optional OpenTelemetry setup and instrument AppView's ConnectRPC dataplane client.
+
+- Updated dependencies [[`615ac2a`](https://github.com/bluesky-social/atproto/commit/615ac2a8cc72cd475dc4f06f743f2514d8afc6e0), [`c400731`](https://github.com/bluesky-social/atproto/commit/c400731969775d220ade8cc55b0892018bdf8514)]:
+  - @atproto/xrpc-server@0.12.6
+  - @atproto/api@0.20.42
+  - @atproto-labs/xrpc-utils@0.1.19
+  - @atproto/sync@0.4.6
+
 ## 0.0.275
 
 ### Patch Changes
