@@ -84,7 +84,7 @@ For working with that SDK, invoke the focused skills under [.agents/skills/](.ag
 
 ## Agent files
 
-Agent files — this `CLAUDE.md`, the skills under [.agents/skills/](.agents/skills/), and any package-level equivalents — are part of the codebase and must stay in sync with it.
+Agent files — this `AGENTS.md`, the skills under [.agents/skills/](.agents/skills/), and any package-level equivalents — are part of the codebase and must stay in sync with it.
 
 - **New pattern introduced** → document it in the relevant agent file (package-specific if scoped, global otherwise) so it can be re-applied.
 - **Existing important pattern found undocumented** → add it.
