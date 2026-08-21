@@ -8,7 +8,6 @@ import type { Client } from '../client/client.js'
 import type { DeviceId } from '../device/device-id.js'
 import { InvalidCredentialsError } from '../errors/invalid-credentials-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
-import { SecondAuthenticationFactorRequiredError } from '../errors/second-authentication-factor-required-error.js'
 import { HCaptchaClient, type HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import { callAsync } from '../lib/util/function.js'
 import { constantTime } from '../lib/util/time.js'
@@ -188,14 +187,16 @@ export class AccountManager {
       const account = await callAsync(() =>
         this.store.authenticateAccount(data),
       ).catch(async (err) => {
-        if (err instanceof SecondAuthenticationFactorRequiredError) {
-          throw err
-        }
-
         // Only notify for credential failures (e.g. unknown identifier, wrong
         // password). Server errors and flows that require an additional factor
-        // (e.g. SecondAuthenticationFactorRequiredError) are not "failed
-        // sign-ins" and do not trigger the hook.
+        // are not "failed sign-ins" and do not trigger the hook.
+        //
+        // @NOTE That exclusion rests on the error hierarchy rather than an
+        // explicit guard: `SecondAuthenticationFactorRequiredError` extends
+        // `OAuthError` directly, so it misses this branch and falls through to
+        // the rethrow below. Re-parenting it under `InvalidRequestError` would
+        // silently start reporting second-factor challenges as failed
+        // sign-ins.
         if (err instanceof InvalidRequestError) {
           // Stores that throw the more specific `InvalidCredentialsError`
           // can attach the matched subject identifier to distinguish

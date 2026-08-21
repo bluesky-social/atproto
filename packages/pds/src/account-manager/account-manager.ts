@@ -13,7 +13,6 @@ import {
   isAtIdentifierString,
 } from '@atproto/lex'
 import type { Cid } from '@atproto/lex-data'
-import { SecondAuthenticationFactorRequiredError } from '@atproto/oauth-provider/errors'
 import {
   INVALID_HANDLE,
   asDatetimeString,
@@ -73,6 +72,31 @@ export class InvalidPasswordError extends AuthRequiredError {
     errorMessage = 'Invalid identifier or password',
   ) {
     super(errorMessage)
+  }
+}
+
+/**
+ * Thrown by {@link AccountManager.login} when the credentials were valid but
+ * the account requires a second authentication factor. A one-time code has
+ * already been dispatched by the time this is thrown.
+ *
+ * XRPC-native like every other error this class raises: `AuthFactorTokenRequired`
+ * is the error name `com.atproto.server.createSession` declares, so that path
+ * needs no translation. The OAuth boundary ({@link OAuthStore.authenticateAccount})
+ * converts it to `SecondAuthenticationFactorRequiredError` — which is why
+ * `factor` and `hint` are carried as fields rather than baked into the message.
+ *
+ * @NOTE Subclasses {@link AuthRequiredError}, so any `instanceof` check against
+ * the base class must come *after* this one — see the ordering note in
+ * `OAuthStore.authenticateAccount`.
+ */
+export class AuthFactorRequiredError extends AuthRequiredError {
+  constructor(
+    public readonly factor: 'emailOtp',
+    public readonly hint: string,
+    errorMessage = 'A sign in code has been sent to your email address',
+  ) {
+    super(errorMessage, 'AuthFactorTokenRequired')
   }
 }
 
@@ -656,9 +680,10 @@ export class AccountManager {
           { to: user.email },
         )
 
-        // FIXME:
-        const hint = obfuscateEmail(user.email)
-        throw new SecondAuthenticationFactorRequiredError('emailOtp', hint)
+        throw new AuthFactorRequiredError(
+          'emailOtp',
+          obfuscateEmail(user.email),
+        )
       }
 
       return { user, appPassword, isSoftDeleted }
