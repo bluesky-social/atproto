@@ -250,7 +250,7 @@ export class OAuthStore
   }
 
   async authenticateAccount({
-    locale: _locale,
+    locale,
     username: identifier,
     password,
     emailOtp,
@@ -262,6 +262,7 @@ export class OAuthStore
           identifier,
           password,
           authFactorToken: emailOtp,
+          locale,
         })
 
       if (isSoftDeleted) {
