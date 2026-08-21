@@ -1,5 +1,4 @@
 import { DAY, MINUTE } from '@atproto/common'
-import { SecondAuthenticationFactorRequiredError } from '@atproto/oauth-provider/errors'
 import {
   type DidString,
   type HandleString,
@@ -60,17 +59,11 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        const { user, isSoftDeleted, appPassword } = await ctx.accountManager
-          .login(body)
-          .catch((err) => {
-            if (err instanceof SecondAuthenticationFactorRequiredError) {
-              throw new AuthRequiredError(
-                'A sign in code has been sent to your email address',
-                'AuthFactorTokenRequired',
-              )
-            }
-            throw err
-          })
+        // @NOTE No translation needed for the second-factor challenge: `login()`
+        // throws `AuthFactorRequiredError`, already an `AuthRequiredError`
+        // carrying this method's declared `AuthFactorTokenRequired` error name.
+        const { user, isSoftDeleted, appPassword } =
+          await ctx.accountManager.login(body)
 
         if (!body.allowTakendown && isSoftDeleted) {
           throw new AuthRequiredError(

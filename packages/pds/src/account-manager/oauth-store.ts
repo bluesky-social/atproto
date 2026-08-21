@@ -11,6 +11,7 @@ import {
   HandleUnavailableError,
   InvalidCredentialsError,
   InvalidRequestError,
+  SecondAuthenticationFactorRequiredError,
 } from '@atproto/oauth-provider/errors'
 import type {
   Account,
@@ -66,7 +67,11 @@ import type { ImageUrlBuilder } from '../image/image-url-builder.js'
 import { dbLogger } from '../logger.js'
 import type { ServerMailer } from '../mailer/index.js'
 import type { Sequencer } from '../sequencer/index.js'
-import { type AccountManager, InvalidPasswordError } from './account-manager.js'
+import {
+  type AccountManager,
+  AuthFactorRequiredError,
+  InvalidPasswordError,
+} from './account-manager.js'
 import type * as schemas from './db/schema/index.js'
 import * as accountDeviceHelper from './helpers/account-device.js'
 import { type ActorAccount, UserAlreadyExistsError } from './helpers/account.js'
@@ -269,13 +274,27 @@ export class OAuthStore
 
       return this.buildAccount(user)
     } catch (err) {
-      // `InvalidPasswordError` is a subclass of `XrpcAuthRequiredError`,
-      // so it must be checked first. Surfacing the matched `did` as the
-      // `sub` lets the oauth-provider's `onSignInFailed` hook distinguish
-      // "identifier known, credentials wrong" from "identifier unknown".
-      // TODO: Add SecondFactor here
+      // `InvalidPasswordError` and `AuthFactorRequiredError` are both
+      // subclasses of `XrpcAuthRequiredError`, so both must be checked first —
+      // otherwise the generic branch below rewrites them as bad credentials,
+      // and a 2FA challenge would surface as "invalid credentials" instead of
+      // prompting for the code.
+      //
+      // Surfacing the matched `did` as the `sub` lets the oauth-provider's
+      // `onSignInFailed` hook distinguish "identifier known, credentials wrong"
+      // from "identifier unknown".
       if (err instanceof InvalidPasswordError) {
         throw new InvalidCredentialsError(err.message, err.did, err)
+      }
+      // @NOTE The credentials were valid here — the account simply owes a
+      // second factor, and `login()` has already sent the code. This is the
+      // XRPC → OAuth translation that keeps `AccountManager` OAuth-free.
+      if (err instanceof AuthFactorRequiredError) {
+        throw new SecondAuthenticationFactorRequiredError(
+          err.factor,
+          err.hint,
+          err,
+        )
       }
       if (err instanceof XrpcAuthRequiredError) {
         throw new InvalidCredentialsError(err.message, undefined, err)
