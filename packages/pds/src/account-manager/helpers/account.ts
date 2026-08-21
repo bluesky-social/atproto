@@ -237,6 +237,8 @@ export const updateEmail = async (
         .set({
           email: email.toLowerCase(),
           emailConfirmedAt: null,
+          // TODO: Store unconfirmed emails separately, see note in context.ts:
+          emailAuthFactorAt: null,
         })
         .where('did', '=', did),
     )
@@ -266,27 +268,26 @@ export const updateEmailAuthFactor = async (
   did: string,
   email: string,
   emailAuthFactorAt: DatetimeString | null,
-) => {
+): Promise<boolean> => {
   // when modifying auth factor, ensure it's for the expected email address.
   // when enabling auth factor, also ensure that the email has been confirmed.
-  if (emailAuthFactorAt === null) {
-    await db.executeWithRetry(
-      db.db
-        .updateTable('account')
-        .set({ emailAuthFactorAt })
-        .where('did', '=', did)
-        .where('email', '=', email.toLowerCase()),
-    )
-  } else {
-    await db.executeWithRetry(
-      db.db
-        .updateTable('account')
-        .set({ emailAuthFactorAt })
-        .where('did', '=', did)
-        .where('email', '=', email.toLowerCase())
-        .where('emailConfirmedAt', 'is not', null),
-    )
-  }
+  const query = db.db
+    .updateTable('account')
+    .set({ emailAuthFactorAt })
+    .where('did', '=', did)
+    .where('email', '=', email.toLowerCase())
+
+  // @NOTE These are conditions on the write rather than a preceding read, so
+  // they hold atomically against a concurrent email change. That makes "no rows
+  // matched" meaningful — hence the boolean, so a caller can tell a real update
+  // from a silent miss instead of assuming the change landed.
+  const [res] = await db.executeWithRetry(
+    emailAuthFactorAt === null
+      ? query
+      : query.where('emailConfirmedAt', 'is not', null),
+  )
+
+  return res.numUpdatedRows > 0
 }
 
 export const getAccountAdminStatus = async (
