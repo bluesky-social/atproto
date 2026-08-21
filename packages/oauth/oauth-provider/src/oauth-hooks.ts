@@ -184,25 +184,55 @@ export type OAuthHooks = {
   }) => Awaitable<void>
 
   /**
-   * This hook is called when a user request to modify their email auth factor
-   * (OTP) settings, before the change is actually saved.
+   * This hook is called when a user requests that their email auth factor (OTP)
+   * be enabled, before the change is saved to the account store.
+   *
+   * @NOTE Enabling and disabling get their own hooks rather than sharing one
+   * with a union payload: consumers draw adoption metrics from these, and a
+   * shared hook cannot tell an enable-rate from a disable-rate.
    */
-  onUpdateEmailAuthFactor?: (data: {
-    input: EnableEmailAuthFactorInput | DisableEmailAuthFactorInput
+  onEnableEmailAuthFactor?: (data: {
+    input: EnableEmailAuthFactorInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
     account: Account
   }) => Awaitable<void>
 
   /**
-   * This hook is called when a user has confirmed a change to their email auth
-   * factor setting. For enabling, this happens automatically, for disabling,
-   * you will see two `onUpdateEmailAuthFactor` events, followed by one
-   * `onUpdateEmailAuthFactorConfirmed`. For enabling you will see one of each
-   * of `onUpdateEmailAuthFactor` and `onUpdateEmailAuthFactorConfirmed`
+   * This hook is called once the email auth factor is actually enabled on the
+   * account store. Enabling is single-phase, so this follows exactly one
+   * {@link OAuthHooks.onEnableEmailAuthFactor}.
    */
-  onUpdateEmailAuthFactorConfirmed?: (data: {
-    input: EnableEmailAuthFactorInput | DisableEmailAuthFactorInput
+  onEnabledEmailAuthFactor?: (data: {
+    input: EnableEmailAuthFactorInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user requests that their email auth factor (OTP)
+   * be disabled, before the change is saved to the account store.
+   *
+   * @NOTE Disabling is two-phase — the first request dispatches a confirmation
+   * code and the second supplies it — so a single disable produces *two* of
+   * these, followed by one {@link OAuthHooks.onDisabledEmailAuthFactor}. Count
+   * that one, not this, when measuring how many users turned 2FA off.
+   */
+  onDisableEmailAuthFactor?: (data: {
+    input: DisableEmailAuthFactorInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called once the email auth factor is actually disabled on the
+   * account store — never for the phase that merely dispatches the confirmation
+   * code.
+   */
+  onDisabledEmailAuthFactor?: (data: {
+    input: DisableEmailAuthFactorInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
     account: Account
