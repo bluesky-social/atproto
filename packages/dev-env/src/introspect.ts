@@ -59,4 +59,8 @@ export class IntrospectServer {
   async close() {
     await this.terminator.terminate()
   }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
+  }
 }

@@ -14,6 +14,7 @@ export default defineConfig({
     projects: [
       'packages/aws',
       'packages/common',
+      'packages/dev-env',
       'packages/internal/*',
       'packages/lex/*',
       'packages/lexicon-resolver',
