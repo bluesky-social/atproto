@@ -950,15 +950,19 @@ export class AccountManager {
     })
   }
 
+  /**
+   * @returns whether a row was actually updated. `false` means the account's
+   * email no longer matched, or — when enabling — was no longer confirmed.
+   */
   async updateAccountEmailAuthFactor(opts: {
     did: DidString
     email: string
     emailAuthFactor: boolean
-  }) {
+  }): Promise<boolean> {
     const { did, email, emailAuthFactor } = opts
     const now = new Date()
 
-    await accountHelpers.updateEmailAuthFactor(
+    return accountHelpers.updateEmailAuthFactor(
       this.db,
       did,
       email,
@@ -1006,11 +1010,21 @@ export class AccountManager {
       return account
     }
 
-    await this.updateAccountEmailAuthFactor({
+    const updated = await this.updateAccountEmailAuthFactor({
       did,
       email: account.email,
       emailAuthFactor: true,
     })
+
+    // @NOTE The confirmed-email requirement is enforced in the UPDATE's WHERE
+    // clause, not just by the check above, so a miss here means the address
+    // stopped being confirmed (or changed) between that read and this write.
+    // Nothing was persisted, so don't hand back an account claiming otherwise.
+    if (!updated) {
+      throw new InvalidRequestError(
+        'A confirmed email address is required to enable email-based two-factor authentication',
+      )
+    }
 
     account.emailAuthFactorAt = asDatetimeString(new Date().toISOString())
 
@@ -1071,6 +1085,17 @@ export class AccountManager {
     // Phase two: verify the one-time code, then disable the factor.
     await this.assertValidEmailTokenAndCleanup(did, 'update_email', token)
 
+    // The returned flag is deliberately ignored here, unlike in
+    // `enableEmailAuthFactor`. Disabling only conditions the write on `did` and
+    // `email` matching, so a miss means no row matched either, leaving nothing
+    // worth reporting. A deleted account has no factor left to disable, and a
+    // changed email clears `emailAuthFactorAt` in that same statement (see
+    // `helpers/account.ts`). That second case stops arising once unconfirmed
+    // emails get a column of their own, since `account.email` will no longer
+    // move mid-flow; the conclusion holds either way.
+    //
+    // Enabling is the opposite: a miss there leaves the account in the very
+    // state the caller asked to change, hence the throw.
     await this.updateAccountEmailAuthFactor({
       did,
       email: account.email,

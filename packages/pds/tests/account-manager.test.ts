@@ -296,6 +296,17 @@ describe('account manager', () => {
 
     await page.clickOnText('Adresse email')
 
+    // `context.ts` opts into this warning because updating an email writes it
+    // to the confirmed-email column, so leaving 2FA on can lock the account
+    // out. Asserting it renders keeps the copy and the behaviour it describes
+    // (`helpers/account.ts` clearing `emailAuthFactorAt`) from drifting apart.
+    // TODO: Remove this assertion when unconfirmed emails are stored
+    // separately — updating an email will no longer disable 2FA.
+    await page.ensureTextVisibility(
+      'Si vous mettez à jour votre adresse email, la 2FA par email (si activée) sera désactivée.',
+      'p',
+    )
+
     using sendUpdateEmailMock = jest
       .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')
       .mockImplementation(async () => {
