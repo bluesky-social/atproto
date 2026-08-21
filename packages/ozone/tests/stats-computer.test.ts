@@ -5,6 +5,12 @@ import type { Database } from '../src/db/index.js'
 import { dbLogger } from '../src/logger.js'
 
 describe('stats computer', () => {
+  const statsQuery = {
+    select: jest.fn(() => statsQuery),
+    where: jest.fn(() => statsQuery),
+    executeTakeFirst: jest.fn(async () => ({ computedAt: null })),
+  }
+
   afterEach(() => {
     jest.restoreAllMocks()
   })
@@ -18,8 +24,9 @@ describe('stats computer', () => {
     const db = {
       pool: { connect: jest.fn(async () => ({ query, release })) },
       schema: 'ozone_stats_computer',
+      db: { selectFrom: jest.fn(() => statsQuery) },
     } as unknown as Database
-    const materializeAll = jest.fn(async () => undefined)
+    const materializeAll = jest.fn(async () => ({ rowsWritten: 0 }))
     const computer = new StatsComputer(
       db,
       () => ({ materializeAll }) as never,
@@ -83,8 +90,9 @@ describe('stats computer', () => {
     const db = {
       pool: { connect: jest.fn(async () => ({ query, release })) },
       schema: 'ozone_stats_computer',
+      db: { selectFrom: jest.fn(() => statsQuery) },
     } as unknown as Database
-    const materializeAll = jest.fn(async () => undefined)
+    const materializeAll = jest.fn(async () => ({ rowsWritten: 0 }))
     const computer = new StatsComputer(
       db,
       () => ({ materializeAll }) as never,
@@ -108,10 +116,14 @@ describe('stats computer', () => {
     const db = {
       pool: { connect: jest.fn(async () => ({ query, release })) },
       schema: 'ozone_stats_computer',
+      db: { selectFrom: jest.fn(() => statsQuery) },
     } as unknown as Database
     const computer = new StatsComputer(
       db,
-      () => ({ materializeAll: jest.fn(async () => undefined) }) as never,
+      () =>
+        ({
+          materializeAll: jest.fn(async () => ({ rowsWritten: 0 })),
+        }) as never,
       15,
     )
     const warn = jest.spyOn(dbLogger, 'warn')

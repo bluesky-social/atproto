@@ -273,11 +273,21 @@ export function viewLiveStats(
 ): ToolsOzoneReportDefs.LiveStats {
   return {
     pendingCount: row?.pendingCount ?? undefined,
+    closedCount: row?.closedCount ?? undefined,
     actionedCount: row?.actionedCount ?? undefined,
+    acknowledgedCount: row?.acknowledgedCount ?? undefined,
     escalatedCount: row?.escalatedCount ?? undefined,
     inboundCount: row?.inboundCount ?? undefined,
+    labelActionCount: row?.labelActionCount ?? undefined,
+    tagActionCount: row?.tagActionCount ?? undefined,
+    takedownActionCount: row?.takedownActionCount ?? undefined,
+    ahtDurationSec: row?.ahtDurationSec ?? undefined,
+    ahtSampleCount: row?.ahtSampleCount ?? undefined,
+    resolutionDurationSec: row?.resolutionDurationSec ?? undefined,
+    resolutionSampleCount: row?.resolutionSampleCount ?? undefined,
     actionRate: row?.actionRate ?? undefined,
     avgHandlingTimeSec: row?.avgHandlingTimeSec ?? undefined,
+    avgResolutionTimeSec: row?.avgResolutionTimeSec ?? undefined,
     lastUpdated: row?.computedAt,
   }
 }
@@ -289,10 +299,20 @@ export function viewHistoricalStats(
     date: row.date,
     computedAt: row.computedAt,
     pendingCount: row.pendingCount ?? undefined,
+    closedCount: row.closedCount ?? undefined,
     actionedCount: row.actionedCount ?? undefined,
+    acknowledgedCount: row.acknowledgedCount ?? undefined,
     escalatedCount: row.escalatedCount ?? undefined,
     inboundCount: row.inboundCount ?? undefined,
+    labelActionCount: row.labelActionCount ?? undefined,
+    tagActionCount: row.tagActionCount ?? undefined,
+    takedownActionCount: row.takedownActionCount ?? undefined,
+    ahtDurationSec: row.ahtDurationSec ?? undefined,
+    ahtSampleCount: row.ahtSampleCount ?? undefined,
+    resolutionDurationSec: row.resolutionDurationSec ?? undefined,
+    resolutionSampleCount: row.resolutionSampleCount ?? undefined,
     actionRate: row.actionRate ?? undefined,
     avgHandlingTimeSec: row.avgHandlingTimeSec ?? undefined,
+    avgResolutionTimeSec: row.avgResolutionTimeSec ?? undefined,
   }
 }
