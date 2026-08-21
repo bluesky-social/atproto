@@ -225,6 +225,11 @@ export interface AccountStore {
 
   /**
    * Enables the email auth factor on the account.
+   *
+   * Returns the updated account, or `null` when the factor was already enabled
+   * — an idempotent no-op. Callers use that to skip the "confirmed" hook, so a
+   * repeat request is not counted as a fresh opt-in.
+   *
    * @throws {InvalidRequestError} - To indicate enabling cannot take place due
    * to mismatch of email or email not being verified.
    */
@@ -240,6 +245,11 @@ export interface AccountStore {
    * `{ tokenRequired: false }`. Disabling an already-disabled factor is an
    * idempotent no-op that returns `{ tokenRequired: false }` without
    * dispatching an email.
+   *
+   * `updatedAccount` is `null` in both cases where nothing changed — the
+   * OTP-dispatch phase and the already-disabled no-op — and an `Account` only
+   * once the factor has actually been turned off. Callers pair it with
+   * `tokenRequired` to decide whether to fire the "confirmed" hook.
    *
    * @throws {InvalidRequestError} - To indicate disabling cannot take place due
    * to mismatch of email or email not being verified.
