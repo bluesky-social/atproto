@@ -1,7 +1,9 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { getBlobCidString, parseCid } from '@atproto/lex-data'
+import { LexResolver } from '@atproto/lex-resolver'
 import type { NsidString } from '@atproto/syntax'
 import { com } from '../../src/lexicons/index.js'
+import { PublishedRecordSchemaResolver } from '../../src/repo/index.js'
 import {
   type Actor,
   SpaceClient,
@@ -30,7 +32,23 @@ describe('space records', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'space_records',
       extraPdses: 2,
+      lexiconAuthority: true,
     })
+    const lexiconAuthority = network.lexiconAuthority
+    if (!lexiconAuthority) throw new Error('test Lexicon authority not created')
+    for (const pds of [network.pds, ...network.extraPdses]) {
+      pds.ctx.recordSchemaResolver = new PublishedRecordSchemaResolver(
+        new LexResolver({
+          fetch: pds.ctx.safeFetch,
+          plcDirectoryUrl: pds.ctx.cfg.identity.plcUrl,
+          hooks: {
+            // The fixture has no DNS zone, but everything after this test-only
+            // authority mapping is the production proof-verifying resolver path.
+            onResolveAuthority: () => lexiconAuthority.did,
+          },
+        }),
+      )
+    }
     sc = new SpaceClient(network)
     alice = await sc.createActor('alice', network.pds)
     dan = await sc.createActor('dan', network.pds)
@@ -405,9 +423,8 @@ describe('space records', () => {
     })
 
     it('reports unknown for a collection with no resolvable schema', async () => {
-      // Same as a public write of a third-party collection: the PDS validates
-      // against a hardcoded schema map, so anything outside it is unvalidatable
-      // rather than invalid.
+      // Validation was not demanded, so an unpublished third-party collection
+      // remains unvalidated rather than blocking the write.
       const space = await sc.createSpace(alice)
       const created = await sc.write(alice, space, { text: 'unvalidatable' })
       expect(created.validationStatus).toBe('unknown')
@@ -416,8 +433,65 @@ describe('space records', () => {
     it('refuses an unvalidatable record when validation is demanded', async () => {
       const space = await sc.createSpace(alice)
       await expect(
-        sc.write(alice, space, { text: 'strict', validate: true }),
+        sc.write(alice, space, {
+          collection: TEST_COLLECTION_ALT,
+          text: 'strict',
+          validate: true,
+        }),
       ).rejects.toThrow()
+    })
+
+    it('uses a proof-verified published schema across write methods', async () => {
+      const space = await sc.createSpace(alice)
+
+      await expect(
+        sc.write(alice, space, {
+          rkey: 'resolved-create',
+          text: 'create',
+          validate: true,
+        }),
+      ).resolves.toMatchObject({ validationStatus: 'valid' })
+
+      await expect(
+        sc.put(alice, space, {
+          rkey: 'resolved-put',
+          text: 'put create',
+          validate: true,
+        }),
+      ).resolves.toMatchObject({ validationStatus: 'valid' })
+      await expect(
+        sc.put(alice, space, {
+          rkey: 'resolved-put',
+          text: 'put update',
+          validate: true,
+        }),
+      ).resolves.toMatchObject({ validationStatus: 'valid' })
+
+      const batch = await alice.client.call(
+        com.atproto.space.applyWrites,
+        {
+          space,
+          repo: alice.did,
+          validate: true,
+          writes: [
+            {
+              $type: 'com.atproto.space.applyWrites#create' as const,
+              collection: TEST_COLLECTION,
+              rkey: 'resolved-batch',
+              value: record(TEST_COLLECTION, 'batch'),
+            },
+          ],
+        },
+        { headers: alice.headers },
+      )
+      expect(batch.results?.[0]).toMatchObject({ validationStatus: 'valid' })
+
+      await expect(
+        sc.write(alice, space, {
+          text: 'this text exceeds twenty characters',
+          validate: true,
+        }),
+      ).rejects.toThrow(/Invalid com\.example\.spaceRecord record/)
     })
   })
 

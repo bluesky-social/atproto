@@ -66,15 +66,28 @@ const LEXICONS: readonly LexiconDoc[] = [
       },
     },
   },
+  {
+    lexicon: 1,
+    id: 'com.example.spaceRecord',
+    defs: {
+      main: {
+        type: 'record',
+        key: 'any',
+        record: {
+          type: 'object',
+          required: ['text', 'createdAt'],
+          properties: {
+            text: { type: 'string', maxLength: 20 },
+            createdAt: { type: 'string', format: 'datetime' },
+          },
+        },
+      },
+    },
+  },
   // A `space` declaration. The OAuth provider resolves this at token issuance to
   // expand a bare `space:com.example.group` grant into the space type's declared
   // collections, so a test that grants a bare space scope needs the doc to be
   // resolvable.
-  //
-  // @NOTE this does *not* make space record validation real: the PDS validates
-  // records against a hardcoded schema map (see `repo/prepare.ts`), which has a
-  // TODO for dynamic lexicon resolution. Records in a space collection still
-  // report `validationStatus: 'unknown'`.
   {
     lexicon: 1,
     id: 'com.example.group',

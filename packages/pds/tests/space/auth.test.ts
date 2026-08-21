@@ -1,5 +1,7 @@
+import { jest } from '@jest/globals'
 import { decodeJwt } from 'jose'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { l } from '@atproto/lex'
 import { JoseKey } from '@atproto/oauth-provider/provider'
 import {
   createDpopProof,
@@ -770,6 +772,84 @@ describe('space auth', () => {
           ).rejects.toThrow(/space:/)
         },
       )
+    })
+
+    it('reauthorizes putRecord when existence changes during schema resolution', async () => {
+      const space = await sc.createSpace(alice)
+      const rkey = 'put-race'
+      const schema = l.record(
+        'any',
+        TEST_COLLECTION,
+        l.object({
+          text: l.string({ maxLength: 20 }),
+          createdAt: l.string({ format: 'datetime' }),
+        }),
+      )
+      using resolve = jest
+        .spyOn(network.pds.ctx.recordSchemaResolver, 'resolve')
+        .mockImplementation(async () => {
+          // This nested write succeeds because schema resolution happens before
+          // the outer actor transaction. It also changes create into update.
+          await sc.write(alice, space, {
+            rkey,
+            text: 'won the race',
+            validate: false,
+          })
+          return schema
+        })
+
+      await asOAuth(
+        alice,
+        grant(`collection=${TEST_COLLECTION}&action=create`),
+        async (headers) => {
+          await expect(
+            sc.put(alice, space, {
+              collection: TEST_COLLECTION,
+              rkey,
+              text: 'must not overwrite',
+              validate: true,
+              headers,
+            }),
+          ).rejects.toThrow(/space:/)
+        },
+      )
+      expect(resolve).toHaveBeenCalledTimes(1)
+    })
+
+    it('authorizes every applyWrites operation before resolving schemas', async () => {
+      const space = await sc.createSpace(alice)
+      const allowed = SPACE_TYPE_COLLECTIONS[0]
+      using resolve = jest.spyOn(
+        network.pds.ctx.recordSchemaResolver,
+        'resolve',
+      )
+
+      await asOAuth(
+        alice,
+        grant(`collection=${allowed}&action=create`),
+        async (headers) => {
+          await expect(
+            alice.client.call(
+              com.atproto.space.applyWrites,
+              {
+                space,
+                repo: alice.did,
+                validate: true,
+                writes: [
+                  {
+                    $type: 'com.atproto.space.applyWrites#create',
+                    collection: TEST_COLLECTION,
+                    rkey: 'unauthorized-resolve',
+                    value: record(TEST_COLLECTION),
+                  },
+                ],
+              },
+              { headers },
+            ),
+          ).rejects.toThrow(/space:/)
+        },
+      )
+      expect(resolve).not.toHaveBeenCalled()
     })
 
     it('refuses a space of a type the grant does not name', async () => {

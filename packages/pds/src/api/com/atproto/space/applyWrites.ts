@@ -69,6 +69,27 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Too many writes. Max: ${MAX_WRITES}`)
       }
 
+      // @NOTE Authorize the raw operations before validation can resolve a published
+      // schema over the network. Prepared actions preserve these exact values.
+      for (const write of writes) {
+        let action: 'create' | 'update' | 'delete'
+        if (com.atproto.space.applyWrites.create.isTypeOf(write)) {
+          action = 'create'
+        } else if (com.atproto.space.applyWrites.update.isTypeOf(write)) {
+          action = 'update'
+        } else if (com.atproto.space.applyWrites.delete.isTypeOf(write)) {
+          action = 'delete'
+        } else {
+          throw new InvalidRequestError(
+            `Action not supported: ${write['$type']}`,
+          )
+        }
+        assertSpaceScope(auth, space, {
+          action,
+          collection: write.collection,
+        })
+      }
+
       // @NOTE preserves the order of input.writes, for the response below.
       const prepared: PreparedWrite[] = await Promise.all(
         writes.map((write, i) => {
@@ -77,6 +98,7 @@ export default function (server: Server, ctx: AppContext) {
             space,
             collection: write.collection,
             validate,
+            recordSchemaResolver: ctx.recordSchemaResolver,
             validationPath: ['writes', i, 'value'] as (string | number)[],
           }
           if (com.atproto.space.applyWrites.create.isTypeOf(write)) {
@@ -99,13 +121,6 @@ export default function (server: Server, ctx: AppContext) {
           )
         }),
       )
-
-      for (const write of prepared) {
-        assertSpaceScope(auth, space, {
-          action: write.action,
-          collection: write.uri.collectionSafe,
-        })
-      }
 
       // Null for an empty batch: nothing was written, so there is nothing to notify.
       const commit = await ctx.actorStore.transact(did, (actorTxn) =>
