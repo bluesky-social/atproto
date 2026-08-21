@@ -614,10 +614,15 @@ export class AccountManager {
     identifier,
     password,
     authFactorToken,
+    locale,
   }: {
     identifier: string
     password: string
     authFactorToken?: string | undefined
+    // Only the OAuth sign-in path carries one; `com.atproto.server.createSession`
+    // declares no locale input, so the challenge email falls back to the
+    // default template there.
+    locale?: string | undefined
   }): Promise<{
     // @TODO we should rename this "account" for consistency
     user: ActorAccount
@@ -676,7 +681,7 @@ export class AccountManager {
         const token = await this.createEmailToken(user.did, 'auth_factor')
 
         await this.mailer.sendSignInAuthFactor(
-          { token, handle: user.handle },
+          { token, handle: user.handle, locale },
           { to: user.email },
         )
 

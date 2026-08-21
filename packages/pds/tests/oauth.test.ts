@@ -464,6 +464,14 @@ describe('oauth', () => {
       await page.waitForNetworkIdle()
 
       const [params] = sendSignInAuthFactorMock.mock.lastCall!
+      // `locale` proves the negotiated language reached the mailer: only the
+      // OAuth sign-in path carries one (createSession declares no locale
+      // input), so this is the sole coverage for that wiring.
+      expect(params).toEqual({
+        handle: 'jane.test',
+        locale: 'fr',
+        token: expect.any(String),
+      })
       const token = params.token
 
       // Make sure the 2FA field appears:
@@ -520,6 +528,14 @@ describe('oauth', () => {
       await page.waitForNetworkIdle()
 
       const [params] = sendSignInAuthFactorMock.mock.lastCall!
+      // `locale` proves the negotiated language reached the mailer: only the
+      // OAuth sign-in path carries one (createSession declares no locale
+      // input), so this is the sole coverage for that wiring.
+      expect(params).toEqual({
+        handle: 'jane.test',
+        locale: 'fr',
+        token: expect.any(String),
+      })
       const token = params.token
 
       // Make sure the 2FA field appears:

@@ -479,6 +479,15 @@ describe('auth', () => {
 
       expect(sendMailMock).toHaveBeenCalledTimes(1)
       const [params] = sendSignInAuthFactorMock.mock.lastCall!
+      // @NOTE `locale: undefined` is the contract, not an oversight:
+      // `com.atproto.server.createSession` declares no locale input, so this
+      // path deliberately falls back to the default template. The OAuth path
+      // (covered in oauth.test.ts) is where a real locale arrives.
+      expect(params).toEqual({
+        handle: 'jane.test',
+        locale: undefined,
+        token: expect.any(String),
+      })
       const token = params.token
 
       const session = await createSession({
