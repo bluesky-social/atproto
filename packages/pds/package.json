@@ -50,7 +50,9 @@
     "@atproto/lex": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-document": "workspace:^",
     "@atproto/lex-json": "workspace:^",
+    "@atproto/lex-resolver": "workspace:^",
     "@atproto/jwk": "workspace:^",
     "@atproto/oauth-provider": "workspace:^",
     "@atproto/oauth-scopes": "workspace:^",
@@ -91,7 +93,6 @@
   },
   "devDependencies": {
     "@atproto/api": "workspace:^",
-    "@atproto/lex-document": "workspace:^",
     "@atproto/oauth-client-browser-example": "workspace:^",
     "@did-plc/server": "^0.0.1",
     "@jest/globals": "^30.0.0",

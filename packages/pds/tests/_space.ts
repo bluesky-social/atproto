@@ -24,11 +24,11 @@ import {
 import { ClientAttestationVerifier } from '../src/client-attestation-verifier.js'
 import { com } from '../src/lexicons/index.js'
 
-// Third-party collections, as a space's are in practice. The PDS validates
-// records against a hardcoded schema map (see `repo/prepare.ts`), so anything
-// outside it reports `validationStatus: 'unknown'` — which is also what a
-// third-party collection would do in production.
+// Third-party collections, as a space's are in practice. TEST_COLLECTION is
+// published only by the optional test Lexicon authority; ordinary writes still
+// report `unknown` because dynamic resolution requires `validate: true`.
 export const TEST_COLLECTION = 'com.example.spaceRecord' as NsidString
+// Deliberately unpublished so strict-resolution failure paths remain testable.
 export const TEST_COLLECTION_ALT = 'com.example.spaceNote' as NsidString
 
 // The space type used by default. `com.example.group` is published as a `space`

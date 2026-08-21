@@ -1990,9 +1990,15 @@ importers:
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex/lex-data
+      '@atproto/lex-document':
+        specifier: workspace:^
+        version: link:../lex/lex-document
       '@atproto/lex-json':
         specifier: workspace:^
         version: link:../lex/lex-json
+      '@atproto/lex-resolver':
+        specifier: workspace:^
+        version: link:../lex/lex-resolver
       '@atproto/oauth-provider':
         specifier: workspace:^
         version: link:../oauth/oauth-provider
@@ -2105,9 +2111,6 @@ importers:
       '@atproto/api':
         specifier: workspace:^
         version: link:../api
-      '@atproto/lex-document':
-        specifier: workspace:^
-        version: link:../lex/lex-document
       '@atproto/oauth-client-browser-example':
         specifier: workspace:^
         version: link:../oauth/oauth-client-browser-example

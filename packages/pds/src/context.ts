@@ -9,10 +9,10 @@ import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { Client } from '@atproto/lex'
+import { LexResolver, type LexResolverHooks } from '@atproto/lex-resolver'
 import {
   AccessTokenMode,
   JoseKey,
-  LexResolver,
   OAuthProvider,
 } from '@atproto/oauth-provider/provider'
 import { OAuthVerifier } from '@atproto/oauth-provider/verifier'
@@ -57,6 +57,10 @@ import {
   type LocalViewerCreator,
 } from './read-after-write/viewer.js'
 import { getRedisClient } from './redis.js'
+import {
+  PublishedRecordSchemaResolver,
+  type RecordSchemaResolver,
+} from './repo/record-schema-resolver.js'
 import { Sequencer } from './sequencer/index.js'
 import { SimpleSpaceManager } from './simplespace/manager.js'
 
@@ -85,6 +89,7 @@ export type AppContextOptions = {
   simpleSpaceManager: SimpleSpaceManager
   oauthProvider?: OAuthProvider
   authVerifier: AuthVerifier
+  recordSchemaResolver: RecordSchemaResolver
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
 }
@@ -113,6 +118,7 @@ export class AppContext implements AsyncDisposable {
   public clientAttestationVerifier: ClientAttestationVerifier
   public simpleSpaceManager: SimpleSpaceManager
   public authVerifier: AuthVerifier
+  public recordSchemaResolver: RecordSchemaResolver
   public oauthProvider?: OAuthProvider
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
@@ -141,6 +147,7 @@ export class AppContext implements AsyncDisposable {
     this.clientAttestationVerifier = opts.clientAttestationVerifier
     this.simpleSpaceManager = opts.simpleSpaceManager
     this.authVerifier = opts.authVerifier
+    this.recordSchemaResolver = opts.recordSchemaResolver
     this.oauthProvider = opts.oauthProvider
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
@@ -351,6 +358,56 @@ export class AppContext implements AsyncDisposable {
       },
     })
 
+    const lexResolverHooks: LexResolverHooks = {
+      onResolveAuthorityResult({ nsid, did }) {
+        lexiconResolverLogger.info(
+          { nsid: nsid.toString(), did },
+          'Resolved lexicon DID',
+        )
+      },
+      onResolveAuthorityError({ nsid, err }) {
+        lexiconResolverLogger.error(
+          { nsid: nsid.toString(), err },
+          'Lexicon DID resolution error',
+        )
+      },
+      onFetchResult({ uri, cid }) {
+        lexiconResolverLogger.info(
+          { uri: uri.toString(), cid: cid.toString() },
+          'Fetched lexicon',
+        )
+      },
+      onFetchError({ err, uri }) {
+        lexiconResolverLogger.error(
+          { uri: uri.toString(), err },
+          'Lexicon fetch error',
+        )
+      },
+    }
+    const oauthLexResolver = new LexResolver({
+      fetch: safeFetch,
+      plcDirectoryUrl: cfg.identity.plcUrl,
+      hooks: {
+        ...lexResolverHooks,
+        onResolveAuthority: ({ nsid }) => {
+          lexiconResolverLogger.debug(
+            { nsid: nsid.toString() },
+            'Resolving lexicon DID authority',
+          )
+          // Override the lexicon did resolution to point to a custom PDS
+          return cfg.lexicon.didAuthority
+        },
+      },
+    })
+    const recordLexResolver = new LexResolver({
+      fetch: safeFetch,
+      plcDirectoryUrl: cfg.identity.plcUrl,
+      hooks: lexResolverHooks,
+    })
+    const recordSchemaResolver = new PublishedRecordSchemaResolver(
+      recordLexResolver,
+    )
+
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
           issuer: cfg.oauth.issuer,
@@ -375,44 +432,7 @@ export class AppContext implements AsyncDisposable {
           branding: cfg.oauth.provider.branding,
           safeFetch,
           idResolver,
-          lexResolver: new LexResolver({
-            fetch: safeFetch,
-            plcDirectoryUrl: cfg.identity.plcUrl,
-            hooks: {
-              onResolveAuthority: ({ nsid }) => {
-                lexiconResolverLogger.debug(
-                  { nsid: nsid.toString() },
-                  'Resolving lexicon DID authority',
-                )
-                // Override the lexicon did resolution to point to a custom PDS
-                return cfg.lexicon.didAuthority
-              },
-              onResolveAuthorityResult({ nsid, did }) {
-                lexiconResolverLogger.info(
-                  { nsid: nsid.toString(), did },
-                  'Resolved lexicon DID',
-                )
-              },
-              onResolveAuthorityError({ nsid, err }) {
-                lexiconResolverLogger.error(
-                  { nsid: nsid.toString(), err },
-                  'Lexicon DID resolution error',
-                )
-              },
-              onFetchResult({ uri, cid }) {
-                lexiconResolverLogger.info(
-                  { uri: uri.toString(), cid: cid.toString() },
-                  'Fetched lexicon',
-                )
-              },
-              onFetchError({ err, uri }) {
-                lexiconResolverLogger.error(
-                  { uri: uri.toString(), err },
-                  'Lexicon fetch error',
-                )
-              },
-            },
-          }),
+          lexResolver: oauthLexResolver,
           metadata: {
             protected_resources: [new URL(cfg.oauth.issuer).origin],
           },
@@ -550,6 +570,7 @@ export class AppContext implements AsyncDisposable {
       clientAttestationVerifier,
       simpleSpaceManager,
       authVerifier,
+      recordSchemaResolver,
       oauthProvider,
       plcRotationKey,
       cfg,

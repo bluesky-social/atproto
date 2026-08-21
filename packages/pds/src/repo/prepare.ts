@@ -28,6 +28,7 @@ import {
 } from '@atproto/syntax'
 import { hasExplicitSlur } from '../handle/explicit-slurs.js'
 import { app, chat, com } from '../lexicons/index.js'
+import type { RecordSchemaResolver } from './record-schema-resolver.js'
 import {
   InvalidRecordError,
   type PreparedCreate,
@@ -37,7 +38,8 @@ import {
   type ValidationStatus,
 } from './types.js'
 
-// @TODO replace this with automatically fetched (& built) schemas
+// @NOTE built-in schemas remain static-first for availability and trust; only
+// unknown, explicitly validated collections use a published schema resolver.
 const knownSchemas = new Map<string, RecordSchema>(
   [
     app.bsky.actor.profile.main,
@@ -76,7 +78,6 @@ export const validateRecord = (
     return undefined
   }
 
-  // @TODO add support for lexicon resolution to fetch the schema dynamically
   const schema = knownSchemas.get(record.$type)
   if (!schema) {
     // If validation is explicitly requested, throw if unable to validate
@@ -87,6 +88,49 @@ export const validateRecord = (
     }
   }
 
+  return validateRecordAgainstSchema(record, rkey, schema, opts)
+}
+
+const validateRecordWithResolver = async (
+  record: TypedLexMap,
+  rkey: RecordKeyString,
+  opts: {
+    validate?: boolean
+    validationPath?: (string | number)[]
+    recordSchemaResolver?: RecordSchemaResolver
+  },
+): Promise<undefined | ValidationStatus> => {
+  const knownSchema = knownSchemas.get(record.$type)
+  if (opts.validate !== true || knownSchema) {
+    return validateRecord(record, rkey, opts)
+  }
+
+  if (!opts.recordSchemaResolver) {
+    return validateRecord(record, rkey, opts)
+  }
+
+  let schema: RecordSchema
+  try {
+    schema = await opts.recordSchemaResolver.resolve(record.$type)
+  } catch {
+    throw unableToValidate(record.$type)
+  }
+  if (schema.$type !== record.$type) {
+    throw unableToValidate(record.$type)
+  }
+
+  return validateRecordAgainstSchema(record, rkey, schema, opts)
+}
+
+const unableToValidate = (collection: string) =>
+  new InvalidRecordError(`Unable to validate lexicon type: ${collection}`)
+
+const validateRecordAgainstSchema = (
+  record: TypedLexMap,
+  rkey: RecordKeyString,
+  schema: RecordSchema,
+  opts: { validationPath?: (string | number)[] },
+): ValidationStatus => {
   const rkeyResult = schema.keySchema.safeValidate(rkey)
   if (!rkeyResult.success) {
     throw new InvalidRecordError(
@@ -117,6 +161,7 @@ export const prepareCreate = async (opts: {
   record: LexMap
   validate?: boolean
   validationPath?: (string | number)[]
+  recordSchemaResolver?: RecordSchemaResolver
 }): Promise<PreparedCreate> => {
   const { cid, uri, record, blobs, validationStatus } = await prepareWrite(opts)
 
@@ -140,6 +185,7 @@ export const prepareUpdate = async (opts: {
   record: LexMap
   validate?: boolean
   validationPath?: (string | number)[]
+  recordSchemaResolver?: RecordSchemaResolver
 }): Promise<PreparedUpdate> => {
   const { cid, uri, record, blobs, validationStatus } = await prepareWrite(opts)
 
@@ -163,6 +209,7 @@ export async function prepareWrite(opts: {
   record: LexMap
   validate?: boolean
   validationPath?: (string | number)[]
+  recordSchemaResolver?: RecordSchemaResolver
 }): Promise<{
   record: TypedLexMap
   blobs: TypedBlobRef[]
@@ -200,7 +247,7 @@ export async function prepareWrite(opts: {
     record,
     // @NOTE we validate before enumerating blobs, so that we can provide more
     // accurate validations error (esp. in case of legacy blobs).
-    validationStatus: validateRecord(record, rkey, opts),
+    validationStatus: await validateRecordWithResolver(record, rkey, opts),
     blobs: Array.from(
       enumBlobRefs(record, { strict: false, allowLegacy: true }),
       (blob) => {

@@ -46,6 +46,7 @@ export default function (server: Server, ctx: AppContext) {
         rkey,
         record,
         validate: input.body.validate,
+        recordSchemaResolver: ctx.recordSchemaResolver,
       })
 
       const commit = await ctx.actorStore.transact(did, (actorTxn) =>

@@ -1,11 +1,12 @@
-import { ForbiddenError, type Server } from '@atproto/xrpc-server'
+import { WriteOpAction } from '@atproto/repo'
+import {
+  ForbiddenError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import {
-  prepareCreate,
-  prepareUpdate,
-  spaceRecordUri,
-} from '../../../../repo/index.js'
+import { prepareCreate, spaceRecordUri } from '../../../../repo/index.js'
 import { assertSpaceScope, fireNotifyWrite } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -39,34 +40,29 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError('repo must match authenticated user')
       }
 
-      const { commit, write } = await ctx.actorStore.transact(
-        did,
-        async (actorTxn) => {
-          // Resolve to what this write actually is, so an app granted only `update`
-          // isn't asked for `create` too.
-          const uri = spaceRecordUri(space, did, collection, rkey)
-          const exists = await actorTxn.space.hasRecord(uri.toString())
-          assertSpaceScope(auth, space, {
-            action: exists ? 'update' : 'create',
-            collection,
-          })
-
-          const writeInfo = {
-            did,
-            space,
-            collection,
-            rkey,
-            record,
-            validate: input.body.validate,
-          }
-          const write = exists
-            ? await prepareUpdate(writeInfo)
-            : await prepareCreate(writeInfo)
-
-          const commit = await actorTxn.space.applyWrites(space, [write])
-          return { commit, write }
-        },
+      const uri = spaceRecordUri(space, did, collection, rkey).toString()
+      let exists = await ctx.actorStore.read(did, (actor) =>
+        actor.space.hasRecord(uri),
       )
+      assertSpaceScope(auth, space, {
+        action: exists ? 'update' : 'create',
+        collection,
+      })
+
+      // @NOTE Validation can perform DNS, DID, and repo fetches. Fully prepare
+      // the write before opening the actor transaction, then change only its
+      // action if the record changes while it is being prepared.
+      const preparedCreate = await prepareCreate({
+        did,
+        space,
+        collection,
+        rkey,
+        record,
+        validate: input.body.validate,
+        recordSchemaResolver: ctx.recordSchemaResolver,
+      })
+
+      const { commit, write } = await performPut()
 
       await fireNotifyWrite(ctx, { space, writerDid: did, commit })
 
@@ -78,6 +74,47 @@ export default function (server: Server, ctx: AppContext) {
           validationStatus: write.validationStatus,
         },
       }
+
+      async function applyPut(expectedExists: boolean) {
+        return ctx.actorStore.transact(did, async (actorTxn) => {
+          if ((await actorTxn.space.hasRecord(uri)) !== expectedExists) {
+            throw new PutStateChangedError()
+          }
+
+          const write = expectedExists
+            ? { ...preparedCreate, action: WriteOpAction.Update }
+            : preparedCreate
+          const commit = await actorTxn.space.applyWrites(space, [write])
+          return { commit, write }
+        })
+      }
+
+      async function performPut() {
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          try {
+            return await applyPut(exists)
+          } catch (err) {
+            if (!(err instanceof PutStateChangedError)) throw err
+            if (attempt > 0) {
+              throw new InvalidRequestError(
+                'Record changed while preparing write',
+              )
+            }
+            exists = await ctx.actorStore.read(did, (actor) =>
+              actor.space.hasRecord(uri),
+            )
+            assertSpaceScope(auth, space, {
+              action: exists ? 'update' : 'create',
+              collection,
+            })
+          }
+        }
+        throw new InvalidRequestError('Record changed while preparing write')
+      }
     },
   })
+}
+
+class PutStateChangedError extends Error {
+  name = 'PutStateChangedError'
 }
