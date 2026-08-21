@@ -476,7 +476,7 @@ export class AccountManager {
     input: EnableEmailAuthFactorInput,
     account: Account,
   ): Promise<Account> {
-    await this.hooks.onUpdateEmailAuthFactor?.call(null, {
+    await this.hooks.onEnableEmailAuthFactor?.call(null, {
       deviceId,
       deviceMetadata,
       input,
@@ -490,7 +490,7 @@ export class AccountManager {
       return account
     }
 
-    await this.hooks.onUpdateEmailAuthFactorConfirmed?.call(null, {
+    await this.hooks.onEnabledEmailAuthFactor?.call(null, {
       deviceId,
       deviceMetadata,
       input,
@@ -506,7 +506,7 @@ export class AccountManager {
     input: DisableEmailAuthFactorInput,
     account: Account,
   ): Promise<{ account: Account; tokenRequired: boolean }> {
-    await this.hooks.onUpdateEmailAuthFactor?.call(null, {
+    await this.hooks.onDisableEmailAuthFactor?.call(null, {
       deviceId,
       deviceMetadata,
       input,
@@ -522,7 +522,7 @@ export class AccountManager {
       return { account: account, tokenRequired }
     }
 
-    await this.hooks.onUpdateEmailAuthFactorConfirmed?.call(null, {
+    await this.hooks.onDisabledEmailAuthFactor?.call(null, {
       deviceId,
       deviceMetadata,
       input,
