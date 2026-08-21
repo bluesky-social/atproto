@@ -1,19 +1,35 @@
+import { jest } from '@jest/globals'
 import * as jose from 'jose'
 import { request as undiciRequest } from 'undici'
 import type { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { createRefreshToken } from '../src/account-manager/helpers/auth.js'
-import { MailCatcher } from './_mailcatcher.js'
+import type { AppContext } from '../src/index.js'
 
 describe('auth', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
+
+  let sendMailMock: jest.SpiedFunction<
+    AppContext['mailer']['transporter']['sendMail']
+  >
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'auth',
     })
     agent = network.pds.getAgent()
+
+    // Catch-all: never actually deliver, but keep recording calls. Per-test
+    // spies on the individual mailer methods stay un-stubbed, so the real
+    // template still renders into the call this records.
+    sendMailMock = jest
+      .spyOn(network.pds.ctx.mailer.transporter, 'sendMail')
+      .mockImplementation(async () => {})
+  })
+
+  beforeEach(() => {
+    sendMailMock.mockClear()
   })
 
   afterAll(async () => {
@@ -409,10 +425,7 @@ describe('auth', () => {
 
   describe('when 2FA is enabled', () => {
     let jane
-    let mailCatcher: MailCatcher
     beforeAll(async () => {
-      mailCatcher = new MailCatcher(network.pds.ctx.mailer)
-
       const sc = network.getSeedClient()
 
       jane = await sc.createAccount('jane', {
@@ -439,10 +452,6 @@ describe('auth', () => {
       })
     })
 
-    afterAll(async () => {
-      await mailCatcher.restore()
-    })
-
     it('challenges for a 2FA token on session creation', async () => {
       const sessionPromise = createSession({
         identifier: 'jane.test',
@@ -457,21 +466,21 @@ describe('auth', () => {
     })
 
     it('accepts a 2FA token after challenging on session creation', async () => {
-      const { mail } = await mailCatcher.getMailFrom(
-        createSession({
-          identifier: 'jane.test',
-          password: 'jane-pass',
-        }).catch((err) => {
-          // swallow the auth factor required error, as we are capturing the
-          // token from that error:
-          if (err.error === 'AuthFactorTokenRequired') {
-            return null
-          }
-          throw err
-        }),
+      using sendSignInAuthFactorMock = jest.spyOn(
+        network.pds.ctx.mailer,
+        'sendSignInAuthFactor',
       )
 
-      const token = mailCatcher.getTokenFromMail(mail)
+      // The challenge itself is the thing that dispatches the code, so it is
+      // expected to reject here.
+      await expect(
+        createSession({ identifier: 'jane.test', password: 'jane-pass' }),
+      ).rejects.toMatchObject({ error: 'AuthFactorTokenRequired' })
+
+      expect(sendMailMock).toHaveBeenCalledTimes(1)
+      const [params] = sendSignInAuthFactorMock.mock.lastCall!
+      const token = params.token
+
       const session = await createSession({
         identifier: 'jane.test',
         password: 'jane-pass',
@@ -490,21 +499,17 @@ describe('auth', () => {
       )
     })
     it('rejects an invalid 2FA token after challenging on session creation', async () => {
-      const { mail } = await mailCatcher.getMailFrom(
-        createSession({
-          identifier: 'jane.test',
-          password: 'jane-pass',
-        }).catch((err) => {
-          // swallow the auth factor required error, as we are capturing the
-          // token from that error:
-          if (err.error === 'AuthFactorTokenRequired') {
-            return null
-          }
-          throw err
-        }),
+      using sendSignInAuthFactorMock = jest.spyOn(
+        network.pds.ctx.mailer,
+        'sendSignInAuthFactor',
       )
 
-      const token = mailCatcher.getTokenFromMail(mail)
+      await expect(
+        createSession({ identifier: 'jane.test', password: 'jane-pass' }),
+      ).rejects.toMatchObject({ error: 'AuthFactorTokenRequired' })
+
+      const [params] = sendSignInAuthFactorMock.mock.lastCall!
+      const token = params.token
       expect(token).not.toBe('AAAAA-AAAAA')
 
       // Attempt 1: deliberately invalid authFactorToken
