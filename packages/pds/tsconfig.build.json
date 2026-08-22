@@ -1,6 +1,10 @@
 {
   "extends": ["../../tsconfig/node.tsconfig.json"],
   "include": ["./src"],
+  // Colocated unit tests belong to ./tsconfig.test.json, which supplies the
+  // jest globals. Without this they would also be compiled here — failing on
+  // `describe`/`expect`, and emitting test files into ./dist.
+  "exclude": ["./src/**/*.test.ts"],
   "references": [
     { "path": "../aws/tsconfig.build.json" },
     { "path": "../common/tsconfig.build.json" },
