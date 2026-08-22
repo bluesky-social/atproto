@@ -146,6 +146,24 @@ describe('account manager', () => {
     await page.ensureNotification('Réinitialisation du mot de passe réussie')
   })
 
+  it('shows email 2FA as disabled until the email is verified', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+
+    await page.goto(new URL('/account', network.pds.url))
+
+    await page.assertTitle('Mon compte Atmosphère')
+
+    await page.clickOnText('Compte utilisateur', 'a')
+
+    // The 2FA row's label lives inside a disabled <button> until the email is
+    // verified. Matching the label span and constraining its ancestor proves
+    // the row is present *and* disabled.
+    await page.ensureTextVisibility(
+      'Auth. à deux facteurs (2FA)',
+      'button[disabled] span',
+    )
+  })
+
   it('allows verifying the email address', async () => {
     await using page = await PageHelper.from(browser, { languages })
 
@@ -183,6 +201,68 @@ describe('account manager', () => {
     await page.ensureNotification('Adresse email vérifiée')
   })
 
+  it('allows enabling and disabling email based 2FA', async () => {
+    await using page = await PageHelper.from(browser, { languages })
+    await page.goto(new URL('/account', network.pds.url))
+
+    using sendUpdateEmailMock = jest
+      .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')
+      .mockImplementation(async () => {
+        // noop
+      })
+
+    await page.clickOnText('Compte utilisateur', 'a')
+
+    await page.ensureTextVisibility('Auth. à deux facteurs (2FA)', 'span')
+
+    await page.clickOnText('Auth. à deux facteurs (2FA)')
+
+    await page.ensureTextVisibility(
+      "Activer l'authentification à deux facteurs",
+      'h2',
+    )
+
+    // We need to explicitly click on the enable button in the dialog,
+    // otherwise we end up clicking on the "enable" behind the dialog.
+    await page.clickOnText('Activer', 'div[role=dialog] button')
+
+    await page.waitForNetworkIdle()
+
+    // @NOTE The row reports the current state, not the next action, so it
+    // reads "Activée" once 2FA is on.
+    await page.ensureTextVisibility('Activée', 'span')
+
+    expect(sendUpdateEmailMock).toHaveBeenCalledTimes(0)
+
+    // Disabling 2FA:
+    await page.clickOnText('Auth. à deux facteurs (2FA)')
+    await page.ensureTextVisibility(
+      "Désactiver l'authentification à deux facteurs",
+      'h2',
+    )
+
+    await page.clickOnText('Envoyer un email de vérification', 'button')
+    await page.waitForNetworkIdle()
+
+    expect(sendUpdateEmailMock).toHaveBeenCalledTimes(1)
+    const [params] = sendUpdateEmailMock.mock.lastCall!
+    expect(params).toEqual({
+      locale: 'fr',
+      token: expect.any(String),
+    })
+
+    await page.ensureTextVisibility('Code de vérification', 'label')
+    await page.typeInInput('code', params.token)
+
+    // We need to explicitly click on the disable button in the dialog,
+    // otherwise we end up clicking on the "disable" behind the dialog.
+    await page.clickOnText('Désactiver', 'div[role=dialog] button')
+
+    await page.waitForNetworkIdle()
+
+    await page.ensureTextVisibility('Désactivée', 'span')
+  })
+
   it('allows changing the username', async () => {
     await using page = await PageHelper.from(browser, { languages })
 
@@ -215,6 +295,17 @@ describe('account manager', () => {
     await page.clickOnText('Compte utilisateur', 'a')
 
     await page.clickOnText('Adresse email')
+
+    // `context.ts` opts into this warning because updating an email writes it
+    // to the confirmed-email column, so leaving 2FA on can lock the account
+    // out. Asserting it renders keeps the copy and the behaviour it describes
+    // (`helpers/account.ts` clearing `emailAuthFactorAt`) from drifting apart.
+    // TODO: Remove this assertion when unconfirmed emails are stored
+    // separately — updating an email will no longer disable 2FA.
+    await page.ensureTextVisibility(
+      'Si vous mettez à jour votre adresse email, la 2FA par email (si activée) sera désactivée.',
+      'p',
+    )
 
     using sendUpdateEmailMock = jest
       .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')

@@ -11,6 +11,7 @@ import {
   HandleUnavailableError,
   InvalidCredentialsError,
   InvalidRequestError,
+  SecondAuthenticationFactorRequiredError,
 } from '@atproto/oauth-provider/errors'
 import type {
   Account,
@@ -28,6 +29,8 @@ import type {
   DeviceId,
   DeviceStore,
   Did,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   FoundRequestResult,
   HandleUnavailableReason,
   LexiconData,
@@ -64,7 +67,11 @@ import type { ImageUrlBuilder } from '../image/image-url-builder.js'
 import { dbLogger } from '../logger.js'
 import type { ServerMailer } from '../mailer/index.js'
 import type { Sequencer } from '../sequencer/index.js'
-import { type AccountManager, InvalidPasswordError } from './account-manager.js'
+import {
+  type AccountManager,
+  AuthFactorRequiredError,
+  InvalidPasswordError,
+} from './account-manager.js'
 import type * as schemas from './db/schema/index.js'
 import * as accountDeviceHelper from './helpers/account-device.js'
 import { type ActorAccount, UserAlreadyExistsError } from './helpers/account.js'
@@ -243,21 +250,20 @@ export class OAuthStore
   }
 
   async authenticateAccount({
-    locale: _locale,
+    locale,
     username: identifier,
     password,
-    // Not supported by the PDS (yet?)
-    emailOtp = undefined,
+    emailOtp,
   }: AuthenticateAccountData): Promise<Account> {
     // @TODO (?) Send an email to the user to notify them of the login attempt
     try {
-      // Should never happen
-      if (emailOtp != null) {
-        throw new Error('Email OTP is not supported')
-      }
-
       const { user, appPassword, isSoftDeleted } =
-        await this.accountManager.login({ identifier, password })
+        await this.accountManager.login({
+          identifier,
+          password,
+          authFactorToken: emailOtp,
+          locale,
+        })
 
       if (isSoftDeleted) {
         throw new InvalidRequestError('Account was taken down')
@@ -269,12 +275,27 @@ export class OAuthStore
 
       return this.buildAccount(user)
     } catch (err) {
-      // `InvalidPasswordError` is a subclass of `XrpcAuthRequiredError`,
-      // so it must be checked first. Surfacing the matched `did` as the
-      // `sub` lets the oauth-provider's `onSignInFailed` hook distinguish
-      // "identifier known, credentials wrong" from "identifier unknown".
+      // `InvalidPasswordError` and `AuthFactorRequiredError` are both
+      // subclasses of `XrpcAuthRequiredError`, so both must be checked first —
+      // otherwise the generic branch below rewrites them as bad credentials,
+      // and a 2FA challenge would surface as "invalid credentials" instead of
+      // prompting for the code.
+      //
+      // Surfacing the matched `did` as the `sub` lets the oauth-provider's
+      // `onSignInFailed` hook distinguish "identifier known, credentials wrong"
+      // from "identifier unknown".
       if (err instanceof InvalidPasswordError) {
         throw new InvalidCredentialsError(err.message, err.did, err)
+      }
+      // @NOTE The credentials were valid here — the account simply owes a
+      // second factor, and `login()` has already sent the code. This is the
+      // XRPC → OAuth translation that keeps `AccountManager` OAuth-free.
+      if (err instanceof AuthFactorRequiredError) {
+        throw new SecondAuthenticationFactorRequiredError(
+          err.factor,
+          err.hint,
+          err,
+        )
       }
       if (err instanceof XrpcAuthRequiredError) {
         throw new InvalidCredentialsError(err.message, undefined, err)
@@ -688,6 +709,48 @@ export class OAuthStore
     }
   }
 
+  async enableEmailAuthFactor({
+    did,
+    email,
+  }: EnableEmailAuthFactorInput): Promise<Account> {
+    const account = await this.accountManager.enableEmailAuthFactor({
+      did,
+      email,
+    })
+
+    return await this.buildAccount(account)
+  }
+
+  async disableEmailAuthFactor({
+    did,
+    email,
+    token,
+    locale,
+  }: DisableEmailAuthFactorInput): Promise<{
+    updatedAccount: Account | null
+    tokenRequired: boolean
+  }> {
+    // `tokenRequired: true` signals the OTP was dispatched and the change is
+    // pending confirmation (no token was supplied yet); `false` means the
+    // factor is now disabled (or was already disabled).
+    const { account, tokenRequired } =
+      await this.accountManager.disableEmailAuthFactor({
+        did,
+        email,
+        token,
+        locale,
+      })
+
+    if (!account) {
+      return { updatedAccount: null, tokenRequired }
+    }
+
+    return {
+      updatedAccount: await this.buildAccount(account),
+      tokenRequired,
+    }
+  }
+
   async updateHandle({ did, handle }: UpdateHandleData): Promise<Account> {
     try {
       const account = await this.accountManager.updateHandle(did, handle)
@@ -811,6 +874,7 @@ export class OAuthStore
       pds: this.serviceDid,
       email: row.email || undefined,
       emailVerified: row.email ? row.emailConfirmedAt != null : undefined,
+      emailAuthFactor: row.email ? row.emailAuthFactorAt != null : undefined,
       handle: row.handle || undefined,
       deactivated: row.deactivatedAt != null,
     }
