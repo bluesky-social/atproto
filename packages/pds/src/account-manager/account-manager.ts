@@ -15,7 +15,6 @@ import {
 import type { Cid } from '@atproto/lex-data'
 import {
   INVALID_HANDLE,
-  asDatetimeString,
   currentDatetimeString,
   isValidTld,
 } from '@atproto/syntax'
@@ -45,6 +44,7 @@ import * as accountHelpers from './helpers/account.js'
 import { AccountStatus, type ActorAccount } from './helpers/account.js'
 import * as auth from './helpers/auth.js'
 import * as authorizedClientHelper from './helpers/authorized-client.js'
+import * as emailAuthFactor from './helpers/email-auth-factor.js'
 import * as emailToken from './helpers/email-token.js'
 import * as invite from './helpers/invite.js'
 import * as password from './helpers/password.js'
@@ -951,28 +951,13 @@ export class AccountManager {
     const { did, email } = opts
     await this.db.transaction(async (dbTxn) => {
       await accountHelpers.updateEmail(dbTxn, did, email)
+      // @NOTE In the same transaction as the email write, deliberately: the
+      // new address is unconfirmed, and 2FA against an unconfirmed address can
+      // lock the user out. The account-manager UI warns about this, see
+      // `show2FaWarningOnEmailUpdate` in context.ts.
+      await emailAuthFactor.deleteForDid(dbTxn, did)
       await emailToken.deleteAllEmailTokens(dbTxn, did)
     })
-  }
-
-  /**
-   * @returns whether a row was actually updated. `false` means the account's
-   * email no longer matched, or — when enabling — was no longer confirmed.
-   */
-  async updateAccountEmailAuthFactor(opts: {
-    did: DidString
-    email: string
-    emailAuthFactor: boolean
-  }): Promise<boolean> {
-    const { did, email, emailAuthFactor } = opts
-    const now = new Date()
-
-    return accountHelpers.updateEmailAuthFactor(
-      this.db,
-      did,
-      email,
-      emailAuthFactor ? asDatetimeString(now.toISOString()) : null,
-    )
   }
 
   /**
@@ -1015,23 +1000,23 @@ export class AccountManager {
       return account
     }
 
-    const updated = await this.updateAccountEmailAuthFactor({
+    const emailAuthFactorAt = await emailAuthFactor.enable(
+      this.db,
       did,
-      email: account.email,
-      emailAuthFactor: true,
-    })
+      account.email,
+    )
 
-    // @NOTE The confirmed-email requirement is enforced in the UPDATE's WHERE
-    // clause, not just by the check above, so a miss here means the address
+    // @NOTE The confirmed-email requirement is enforced in the insert's own
+    // SELECT, not just by the check above, so a miss here means the address
     // stopped being confirmed (or changed) between that read and this write.
     // Nothing was persisted, so don't hand back an account claiming otherwise.
-    if (!updated) {
+    if (!emailAuthFactorAt) {
       throw new InvalidRequestError(
         'A confirmed email address is required to enable email-based two-factor authentication',
       )
     }
 
-    account.emailAuthFactorAt = asDatetimeString(new Date().toISOString())
+    account.emailAuthFactorAt = emailAuthFactorAt
 
     return account
   }
@@ -1094,18 +1079,14 @@ export class AccountManager {
     // `enableEmailAuthFactor`. Disabling only conditions the write on `did` and
     // `email` matching, so a miss means no row matched either, leaving nothing
     // worth reporting. A deleted account has no factor left to disable, and a
-    // changed email clears `emailAuthFactorAt` in that same statement (see
-    // `helpers/account.ts`). That second case stops arising once unconfirmed
+    // changed email drops the factor row in the same transaction (see
+    // `updateAccountEmail`). That second case stops arising once unconfirmed
     // emails get a column of their own, since `account.email` will no longer
     // move mid-flow; the conclusion holds either way.
     //
     // Enabling is the opposite: a miss there leaves the account in the very
     // state the caller asked to change, hence the throw.
-    await this.updateAccountEmailAuthFactor({
-      did,
-      email: account.email,
-      emailAuthFactor: false,
-    })
+    await emailAuthFactor.disable(this.db, did, account.email)
 
     account.emailAuthFactorAt = null
 
