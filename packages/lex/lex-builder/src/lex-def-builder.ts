@@ -97,40 +97,43 @@ export class LexDefBuilder {
   private addExportedString(
     name: string,
     initializer: string,
-    docs?: (OptionalKind<JSDocStructure> | string)[],
+    {
+      docs,
+    }: {
+      docs?: (OptionalKind<JSDocStructure> | string)[]
+    } = {},
   ) {
-    // @TODO We could convert the name to a safe identifier here, and export
-    // it as a namespace export, if we ever actually need to support unsafe
-    // identifiers. For now, we just throw an error if the name is not a valid
-    // TypeScript identifier.
-    if (!isSafeLocalIdentifier(name)) {
-      throw new Error(`Identifier ${name} is not a safe TypeScript identifier`)
-    }
-
     if (
-      this.file.getVariableDeclaration(name) ||
-      this.file.getTypeAlias(name) ||
       this.file
         .getExportDeclarations()
         .some((exp) => exp.getNamedExports().some((e) => e.getName() === name))
     ) {
-      throw new Error(`Duplicate identifier ${name}`)
+      throw new Error(`Duplicate export ${name}`)
     }
+
+    const identifier = isSafeLocalIdentifier(name)
+      ? name
+      : this.refResolver.nextSafeDefinitionIdentifier(name)
 
     this.file.addVariableStatement({
       declarationKind: VariableDeclarationKind.Const,
       docs,
-      declarations: [{ name, initializer }],
+      declarations: [{ name: identifier, initializer }],
     })
 
     this.file.addTypeAlias({
-      name,
-      type: `typeof ${name}`,
+      name: identifier,
+      type: `typeof ${identifier}`,
       docs,
     })
 
     this.file.addExportDeclaration({
-      namedExports: [{ name }],
+      namedExports: [
+        {
+          name: identifier,
+          alias: name === identifier ? undefined : asNamespaceExport(name),
+        },
+      ],
     })
   }
 
@@ -404,11 +407,9 @@ export class LexDefBuilder {
 
     const pub = getPublicIdentifiers(hash)
 
-    this.addExportedString(
-      pub.typeName,
-      markPure(`${ref.varName}.value`),
-      compileDocs(def.description),
-    )
+    this.addExportedString(pub.typeName, markPure(`${ref.varName}.value`), {
+      docs: compileDocs(def.description),
+    })
   }
 
   private async addArray(hash: string, def: LexiconArray) {
