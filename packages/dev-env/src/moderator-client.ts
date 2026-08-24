@@ -5,13 +5,13 @@ import type { TestOzone } from './ozone.js'
 type EmitEventInput = tools.ozone.moderation.emitEvent.$InputBody
 // `$Params` is the *parsed* shape, in which defaulted params are required.
 // Callers supply the pre-parse shape, so infer that from the schema instead.
-type QueryStatusesParams = l.InferInput<
+export type QueryStatusesParams = l.InferInput<
   typeof tools.ozone.moderation.queryStatuses.$params
 >
-type QueryEventsParams = l.InferInput<
+export type QueryEventsParams = l.InferInput<
   typeof tools.ozone.moderation.queryEvents.$params
 >
-type QueryReportsParams = l.InferInput<
+export type QueryReportsParams = l.InferInput<
   typeof tools.ozone.report.queryReports.$params
 >
 type ModLevel = 'admin' | 'moderator' | 'triage'

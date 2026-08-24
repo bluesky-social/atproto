@@ -2,6 +2,7 @@ import assert from 'node:assert'
 import type { ToolsOzoneModerationDefs } from '@atproto/api'
 import {
   type ModeratorClient,
+  type QueryStatusesParams,
   type SeedClient,
   TestNetwork,
   basicSeed,
@@ -134,9 +135,7 @@ describe('moderation-statuses', () => {
 
     it('returns paginated statuses', async () => {
       // We know there will be exactly 4 statuses in db
-      const getPaginatedStatuses = async (
-        params: Parameters<ModeratorClient['queryStatuses']>[0],
-      ) => {
+      const getPaginatedStatuses = async (params: QueryStatusesParams) => {
         let cursor: string | undefined = ''
         const statuses: ToolsOzoneModerationDefs.SubjectStatusView[] = []
         let count = 0
