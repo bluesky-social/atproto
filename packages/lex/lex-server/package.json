@@ -52,7 +52,7 @@
     "@atproto/lex": "workspace:^",
     "@atproto/lex-client": "workspace:^",
     "@types/ws": "^8.18.1",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",

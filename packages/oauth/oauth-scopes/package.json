@@ -34,7 +34,7 @@
     "@atproto/syntax": "workspace:^"
   },
   "devDependencies": {
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",

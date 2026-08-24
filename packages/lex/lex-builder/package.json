@@ -39,8 +39,8 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@ts-morph/common": "^0.28.0",
-    "vitest": "^4.1.10"
+    "@ts-morph/common": "^0.29.0",
+    "vitest": "^4.1.11"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
