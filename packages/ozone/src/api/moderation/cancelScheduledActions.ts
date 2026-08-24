@@ -1,4 +1,3 @@
-import type { DidString } from '@atproto/lex'
 import { AuthRequiredError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { tools } from '../../lexicons/index.js'
@@ -37,10 +36,10 @@ export default function (server: Server, ctx: AppContext) {
               comment,
             },
             subject: subjectFromInput({
-              did: subject as DidString,
+              did: subject,
               $type: 'com.atproto.admin.defs#repoRef',
             }),
-            createdBy: createdBy as DidString,
+            createdBy,
             createdAt: now,
           })
           await modService.logEvent({
@@ -50,10 +49,10 @@ export default function (server: Server, ctx: AppContext) {
               add: [],
             },
             subject: subjectFromInput({
-              did: subject as DidString,
+              did: subject,
               $type: 'com.atproto.admin.defs#repoRef',
             }),
-            createdBy: createdBy as DidString,
+            createdBy,
             createdAt: now,
           })
         }

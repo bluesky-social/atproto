@@ -216,7 +216,7 @@ export class ScheduledActionService {
           succeeded.push(did)
         } else {
           failed.push({
-            did: did as DidString,
+            did,
             error: 'No pending scheduled actions found for subject',
             errorCode: 'NoPendingActions',
           })
@@ -224,7 +224,7 @@ export class ScheduledActionService {
       } catch (err) {
         dbLogger.error({ err, subjects }, 'Error cancelling scheduled action')
         failed.push({
-          did: did as DidString,
+          did,
           error: 'Unknown error',
           errorCode: 'DatabaseError',
         })
