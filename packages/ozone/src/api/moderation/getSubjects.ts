@@ -1,8 +1,8 @@
-import type { AtUriString, DidString, Unknown$TypedObject } from '@atproto/lex'
+import type { AtUriString, DidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import { tools } from '../../lexicons/index.js'
+import { app, tools } from '../../lexicons/index.js'
 import { addAccountInfoToRepoViewDetail, getPdsAccountInfos } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -66,12 +66,10 @@ export default function (server: Server, ctx: AppContext) {
           type,
           repo,
           record,
-          profile:
-            profile &&
-            ({
-              $type: 'app.bsky.actor.defs#profileViewDetailed',
-              ...profile,
-            } as unknown as Unknown$TypedObject),
+          // @ts-expect-error (documented as "unknown")
+          profile: profile
+            ? app.bsky.actor.defs.profileViewDetailed.$build(profile)
+            : undefined,
           status,
           subject,
         })
