@@ -40,7 +40,7 @@ export class ServiceProfile {
       com.atproto.server.getServiceAuth,
       {
         aud: newPdsDesc.did,
-        lxm: 'com.atproto.server.createAccount',
+        lxm: com.atproto.server.createAccount.$lxm,
       },
     )
 
