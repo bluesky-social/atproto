@@ -32,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
       // if the caller is using moderator auth and storing personal setting
       // use the caller's DID as the owner
       if (scope === 'personal' && access.type === 'moderator') {
-        ownerDid = access.iss as DidString
+        ownerDid = access.iss
       }
 
       const now = new Date()
