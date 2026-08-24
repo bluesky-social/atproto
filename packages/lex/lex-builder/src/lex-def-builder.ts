@@ -1,3 +1,4 @@
+import type { read } from 'node:fs'
 import {
   type JSDocStructure,
   type OptionalKind,
@@ -37,7 +38,7 @@ import {
   type ResolvedRef,
   getPublicIdentifiers,
 } from './ref-resolver.js'
-import { asNamespaceExport } from './ts-lang.js'
+import { asNamespaceExport, isSafeLocalIdentifier } from './ts-lang.js'
 
 /**
  * Configuration options for the {@link LexDefBuilder} class.
@@ -97,18 +98,33 @@ export class LexDefBuilder {
   private addExportedString(
     name: string,
     initializer: string,
-    docs?: OptionalKind<JSDocStructure>,
+    docs?: (OptionalKind<JSDocStructure> | string)[],
   ) {
+    // @TODO We could convert the name to a safe identifier here, and export
+    // it as a namespace export, if we ever actually need to support unsafe
+    // identifiers. For now, we just throw an error if the name is not a valid
+    // TypeScript identifier.
+    if (!isSafeLocalIdentifier(name)) {
+      throw new Error(`Identifier ${name} is not a valid TypeScript identifier`)
+    }
+
+    if (
+      this.file.getVariableDeclaration(name) ||
+      this.file.getTypeAlias(name)
+    ) {
+      throw new Error(`Duplicate identifier ${name} for definition ${name}`)
+    }
+
     this.file.addVariableStatement({
       declarationKind: VariableDeclarationKind.Const,
-      docs: docs ? [docs] : undefined,
+      docs,
       declarations: [{ name, initializer }],
     })
 
     this.file.addTypeAlias({
       name,
       type: `typeof ${name}`,
-      docs: docs ? [docs] : undefined,
+      docs,
     })
 
     this.file.addExportDeclaration({
@@ -384,7 +400,13 @@ export class LexDefBuilder {
       validationUtils: true,
     })
 
-    this.addExportedString(ref.typeName, markPure(`${ref.varName}.value`))
+    const pub = getPublicIdentifiers(hash)
+
+    this.addExportedString(
+      pub.typeName,
+      markPure(`${ref.varName}.value`),
+      compileDocs(def.description),
+    )
   }
 
   private async addArray(hash: string, def: LexiconArray) {
