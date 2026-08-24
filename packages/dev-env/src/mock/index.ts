@@ -15,9 +15,6 @@ import { postTexts, replyTexts } from './data.js'
 import blurHashB64 from './img/blur-hash-avatar-b64.js'
 import labeledImgB64 from './img/labeled-img-b64.js'
 
-const REASON_SPAM = 'com.atproto.moderation.defs#reasonSpam'
-const REASON_OTHER = 'com.atproto.moderation.defs#reasonOther'
-
 // NOTE
 // deterministic date generator
 // we use this to ensure the mock dataset is always the same
@@ -143,7 +140,7 @@ export async function generateMockSetup(env: TestNetwork) {
     createQueue({
       name: 'Spammy Accounts',
       subjectTypes: ['account'],
-      reportTypes: [REASON_SPAM],
+      reportTypes: [com.atproto.moderation.defs.reasonSpam.$token],
     }),
     createQueue({
       name: 'Threatening Accounts',
@@ -153,7 +150,7 @@ export async function generateMockSetup(env: TestNetwork) {
     createQueue({
       name: 'Spammy Posts',
       subjectTypes: ['record'],
-      reportTypes: [REASON_SPAM],
+      reportTypes: [com.atproto.moderation.defs.reasonSpam.$token],
       collection: 'app.bsky.feed.post',
     }),
   ])
@@ -161,7 +158,10 @@ export async function generateMockSetup(env: TestNetwork) {
   // Report one user (random)
   const reporter = picka(userClients)
   await reporter.call(com.atproto.moderation.createReport, {
-    reasonType: picka([REASON_SPAM, REASON_OTHER]),
+    reasonType: picka([
+      com.atproto.moderation.defs.reasonSpam.$token,
+      com.atproto.moderation.defs.reasonOther.$token,
+    ]),
     reason: picka(["Didn't look right to me", undefined, undefined]),
     subject: {
       $type: 'com.atproto.admin.defs#repoRef',
@@ -171,7 +171,7 @@ export async function generateMockSetup(env: TestNetwork) {
 
   // Reports that target queues
   await alice.call(com.atproto.moderation.createReport, {
-    reasonType: REASON_SPAM,
+    reasonType: com.atproto.moderation.defs.reasonSpam.$token,
     reason: 'This account is spamming',
     subject: { $type: 'com.atproto.admin.defs#repoRef', did: bob.assertDid },
   })
@@ -217,7 +217,10 @@ export async function generateMockSetup(env: TestNetwork) {
     if (rand(6) === 0) {
       const reporter = picka(userClients)
       await reporter.call(com.atproto.moderation.createReport, {
-        reasonType: picka([REASON_SPAM, REASON_OTHER]),
+        reasonType: picka([
+          com.atproto.moderation.defs.reasonSpam.$token,
+          com.atproto.moderation.defs.reasonOther.$token,
+        ]),
         reason: picka(["Didn't look right to me", undefined, undefined]),
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -231,7 +234,7 @@ export async function generateMockSetup(env: TestNetwork) {
   // Spam post report
   if (posts.length > 0) {
     await carla.call(com.atproto.moderation.createReport, {
-      reasonType: REASON_SPAM,
+      reasonType: com.atproto.moderation.defs.reasonSpam.$token,
       reason: 'This post is spam',
       subject: {
         $type: 'com.atproto.repo.strongRef',
