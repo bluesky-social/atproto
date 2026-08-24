@@ -111,7 +111,7 @@ export class LexDefBuilder {
       this.file.getVariableDeclaration(name) ||
       this.file.getTypeAlias(name)
     ) {
-      throw new Error(`Duplicate identifier ${name} for definition ${name}`)
+      throw new Error(`Duplicate identifier ${name}`)
     }
 
     this.file.addVariableStatement({
