@@ -208,14 +208,13 @@ response — prefer it over sprinkling per-call options. See
 
 ## Tokens
 
-A Lexicon `token` def compiles to a schema instance whose constant is `$token`
-(the instance also stringifies to it). Prefer `$token` — it sits with the other
-`$`-prefixed schema constants, and [STYLE_GUIDE.md](../../../STYLE_GUIDE.md)
-prescribes it. The `.value` property resolves to the same string, so older call
-sites using it are correct, just not the house spelling:
+A Lexicon `token` def exports its schema in camelCase and its string value in
+PascalCase. The PascalCase export shares its name with the string literal type:
 
 ```ts
-app.bsky.graph.defs.curatelist.$token // 'app.bsky.graph.defs#curatelist'
+app.bsky.graph.defs.curatelist // TokenSchema
+app.bsky.graph.defs.Curatelist // 'app.bsky.graph.defs#curatelist'
+type Curatelist = app.bsky.graph.defs.Curatelist
 ```
 
 ## Declaring schemas with `l`

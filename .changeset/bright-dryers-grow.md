@@ -1,4 +1,5 @@
 ---
+'@atproto/lex': patch
 '@atproto/lex-builder': patch
 ---
 
