@@ -6,7 +6,10 @@ import { Outbox } from '../../sequencer/outbox.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(
     com.atproto.label.subscribeLabels,
-    async function* ({ params, signal }) {
+    async function* ({
+      params,
+      signal,
+    }): AsyncGenerator<com.atproto.label.subscribeLabels.$Message> {
       const { cursor } = params
       const outbox = new Outbox(ctx.sequencer)
 
@@ -18,10 +21,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       for await (const evt of outbox.events(cursor, signal)) {
-        yield {
-          $type: 'com.atproto.label.subscribeLabels#labels' as const,
-          ...evt,
-        }
+        yield com.atproto.label.subscribeLabels.labels.$build(evt)
       }
     },
   )
