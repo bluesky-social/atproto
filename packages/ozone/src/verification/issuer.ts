@@ -5,11 +5,7 @@ import type {
   DidString,
   HandleString,
 } from '@atproto/lex'
-import {
-  Client,
-  XrpcAuthenticationError,
-  currentDatetimeString,
-} from '@atproto/lex'
+import { Client, currentDatetimeString } from '@atproto/lex'
 import { PasswordSession } from '@atproto/lex-password-session'
 import { AtUri } from '@atproto/syntax'
 import type { VerifierConfig } from '../config/index.js'
@@ -43,22 +39,20 @@ export class VerificationIssuer {
       service: this.verifierConfig.url,
       identifier: this.verifierConfig.did,
       password: this.verifierConfig.password,
+      // PasswordSession refreshes the access token on its own, but it does not
+      // retain the password, so it cannot recover once the refresh token stops
+      // working. Drop the cached client when that happens and let the next
+      // caller log in again.
+      onDeleted: () => {
+        this.client = undefined
+      },
     })
     this.client = new Client(session)
     return this.client
   }
 
   async getClient() {
-    // PasswordSession refreshes the access token on its own, so a fresh login
-    // is only needed once the refresh token itself stops working. Probe the
-    // session and re-authenticate on 401 only — a network blip should not
-    // discard a session that is still valid.
-    if (!this.client) return this.login()
-
-    const res = await this.client.xrpcSafe(com.atproto.server.getSession, {})
-    if (res.success) return this.client
-    if (res.reason instanceof XrpcAuthenticationError) return this.login()
-    throw res.reason
+    return this.client || this.login()
   }
 
   async verify(verifications: VerificationInput[]) {
