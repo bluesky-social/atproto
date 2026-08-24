@@ -61,7 +61,9 @@ type PostView = app.bsky.feed.defs.PostView // type
 
 **Never write NSID string literals.** Use `$type` / `$lxm` / `$token`: the
 schema stays the single source of truth and each constant is one shared string
-instance (see [STYLE_GUIDE.md](../../../STYLE_GUIDE.md#lexicons)).
+instance (see [STYLE_GUIDE.md](../../../STYLE_GUIDE.md#lexicons)). Tokens are
+also available as PascalCase export (e.g., `app.bsky.feed.defs.RequestLess`),
+prefer this over the `$token` notation.
 
 ## Validation methods
 
