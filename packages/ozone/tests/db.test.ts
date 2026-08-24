@@ -50,7 +50,7 @@ describe('db', () => {
           .insertInto('repo_push_event')
           .values({
             eventType: 'pds_takedown',
-            subjectDid: 'x' as DidString,
+            subjectDid: 'did:plc:x',
           })
           .returning('subjectDid')
           .executeTakeFirst()
@@ -60,17 +60,17 @@ describe('db', () => {
         return expect(result).toBeTruthy()
       }
 
-      expect(result.subjectDid).toEqual('x')
+      expect(result.subjectDid).toEqual('did:plc:x')
 
       const row = await db.db
         .selectFrom('repo_push_event')
         .selectAll()
-        .where('subjectDid', '=', 'x' as DidString)
+        .where('subjectDid', '=', 'did:plc:x')
         .executeTakeFirst()
 
       expect(row).toMatchObject({
         eventType: 'pds_takedown',
-        subjectDid: 'x' as DidString,
+        subjectDid: 'did:plc:x',
       })
     })
 
@@ -80,7 +80,7 @@ describe('db', () => {
           .insertInto('repo_push_event')
           .values({
             eventType: 'pds_takedown',
-            subjectDid: 'y' as DidString,
+            subjectDid: 'did:plc:y',
           })
           .returning('subjectDid')
           .executeTakeFirst()
@@ -93,7 +93,7 @@ describe('db', () => {
       const row = await db.db
         .selectFrom('repo_push_event')
         .selectAll()
-        .where('subjectDid', '=', 'y' as DidString)
+        .where('subjectDid', '=', 'did:plc:y')
         .executeTakeFirst()
 
       expect(row).toBeUndefined()
@@ -125,7 +125,7 @@ describe('db', () => {
         leakedTx = dbTxn
         await dbTxn.db
           .insertInto('repo_push_event')
-          .values({ eventType: 'pds_takedown', subjectDid: 'a' as DidString })
+          .values({ eventType: 'pds_takedown', subjectDid: 'did:plc:a' })
           .execute()
         throw new Error('test tx failed')
       })
@@ -133,14 +133,14 @@ describe('db', () => {
 
       const attempt = leakedTx?.db
         .insertInto('repo_push_event')
-        .values({ eventType: 'pds_takedown', subjectDid: 'b' as DidString })
+        .values({ eventType: 'pds_takedown', subjectDid: 'did:plc:b' })
         .execute()
       await expect(attempt).rejects.toThrow('tx already failed')
 
       const res = await db.db
         .selectFrom('repo_push_event')
         .selectAll()
-        .where('subjectDid', 'in', ['a', 'b'] as unknown as DidString[])
+        .where('subjectDid', 'in', ['did:plc:a', 'did:plc:b'])
         .execute()
 
       expect(res.length).toBe(0)
@@ -148,12 +148,12 @@ describe('db', () => {
 
     it('ensures all inflight queries are rolled back', async () => {
       let promise: Promise<unknown> | undefined = undefined
-      const names: string[] = []
+      const names: DidString[] = []
       try {
         await db.transaction(async (dbTxn) => {
           const queries: Promise<unknown>[] = []
           for (let i = 0; i < 20; i++) {
-            const name = `user${i}` as DidString
+            const name: DidString = `did:plc:user${i}`
             const query = dbTxn.db
               .insertInto('repo_push_event')
               .values({
@@ -177,7 +177,7 @@ describe('db', () => {
       const res = await db.db
         .selectFrom('repo_push_event')
         .selectAll()
-        .where('subjectDid', 'in', names as DidString[])
+        .where('subjectDid', 'in', names)
         .execute()
       expect(res.length).toBe(0)
     })
