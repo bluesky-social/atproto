@@ -1,4 +1,3 @@
-import type { read } from 'node:fs'
 import {
   type JSDocStructure,
   type OptionalKind,
