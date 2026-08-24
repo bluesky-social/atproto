@@ -16,7 +16,12 @@
           "lxm": [
             "app.bsky.video.uploadVideo",
             "app.bsky.video.getJobStatus",
-            "app.bsky.video.getUploadLimits"
+            "app.bsky.video.getUploadLimits",
+            "app.bsky.video.startUpload",
+            "app.bsky.video.uploadPart",
+            "app.bsky.video.finishUpload",
+            "app.bsky.video.abortUpload",
+            "app.bsky.video.getUploadStatus"
           ]
         },
         {

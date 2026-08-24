@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { type AppBskyFeedGetLikes, type AtpAgent, ids } from '@atproto/api'
-import { type SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
+import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import {
   constantDate,
@@ -26,7 +26,14 @@ describe('pds like views', () => {
     })
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
-    await likesSeed(sc)
+    await basicSeed(sc)
+    await sc.createAccount('eve', {
+      email: 'eve@test.com',
+      handle: 'eve.test',
+      password: 'eve-pass',
+    })
+    await sc.like(sc.dids.eve, sc.posts[sc.dids.alice][1].ref)
+    await sc.like(sc.dids.carol, sc.replies[sc.dids.bob][0].ref)
     await sc.createAccount('frankie', {
       handle: 'frankie.test',
       email: 'frankie@frankie.com',
@@ -95,6 +102,8 @@ describe('pds like views', () => {
     paginatedAll.forEach((res) =>
       expect(res.likes.length).toBeLessThanOrEqual(2),
     )
+    expect(paginatedAll[0].cursor).toBeDefined()
+    expect(paginatedAll.at(-1)?.cursor).toBeUndefined()
 
     const full = await agent.api.app.bsky.feed.getLikes(
       { uri: sc.posts[alice][1].ref.uriStr },
@@ -103,6 +112,20 @@ describe('pds like views', () => {
 
     expect(full.data.likes.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+
+    const exact = await network.bsky.ctx.dataplane.getLikesBySubjectSorted({
+      subject: { uri: sc.posts[alice][1].ref.uriStr },
+      limit: 4,
+    })
+    const nonterminal =
+      await network.bsky.ctx.dataplane.getLikesBySubjectSorted({
+        subject: { uri: sc.posts[alice][1].ref.uriStr },
+        limit: 2,
+      })
+    expect(exact.uris).toHaveLength(4)
+    expect(exact.cursor).toBe('')
+    expect(nonterminal.uris).toHaveLength(2)
+    expect(nonterminal.cursor).not.toBe('')
   })
 
   it('fetches post likes unauthed', async () => {
@@ -188,5 +211,16 @@ describe('pds like views', () => {
       sc.dids.dan,
       sc.dids.bob,
     ])
+
+    const filled = await agent.app.bsky.feed.getLikes(
+      { uri: sc.posts[alice][1].ref.uriStr, limit: 3 },
+      { headers: await network.serviceHeaders(bob, ids.AppBskyFeedGetLikes) },
+    )
+    expect(filled.data.likes.map((like) => like.actor.did)).toStrictEqual([
+      sc.dids.eve,
+      sc.dids.dan,
+      sc.dids.bob,
+    ])
+    expect(filled.data.cursor).toBeUndefined()
   })
 })

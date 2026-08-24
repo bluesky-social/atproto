@@ -9,9 +9,9 @@
       "properties": {
         "video": {
           "type": "blob",
-          "description": "The mp4 video file. May be up to 100mb, formerly limited to 50mb.",
+          "description": "The mp4 video file. May be up to 300mb, formerly limited to 100mb.",
           "accept": ["video/mp4"],
-          "maxSize": 100000000
+          "maxSize": 300000000
         },
         "captions": {
           "type": "array",
@@ -20,9 +20,7 @@
         },
         "alt": {
           "type": "string",
-          "description": "Alt text description of the video, for accessibility.",
-          "maxGraphemes": 1000,
-          "maxLength": 10000
+          "description": "Alt text description of the video, for accessibility."
         },
         "aspectRatio": {
           "type": "ref",
@@ -58,9 +56,7 @@
         "playlist": { "type": "string", "format": "uri" },
         "thumbnail": { "type": "string", "format": "uri" },
         "alt": {
-          "type": "string",
-          "maxGraphemes": 1000,
-          "maxLength": 10000
+          "type": "string"
         },
         "aspectRatio": {
           "type": "ref",

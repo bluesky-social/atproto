@@ -49,6 +49,7 @@
       "Bash(pnpm run test:*)",
       "Bash(pnpm test:*)",
       "Bash(pnpm verify:*)",
+      "Bash(pnpm vitest *)",
       "Bash(realpath:*)",
       "Bash(rg:*)",
       "Bash(sed:*)",

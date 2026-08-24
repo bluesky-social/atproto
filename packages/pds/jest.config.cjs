@@ -19,7 +19,7 @@ module.exports = {
     'node_modules/.pnpm/(?!(multiformats|uint8arrays))',
   ],
   testTimeout: 60000,
-  setupFiles: ['<rootDir>/../../test.setup.ts'],
+  setupFiles: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     '^\\.\\/templates/(.+\\.js)$': '<rootDir>/dist/mailer/templates/$1',
     '^(\\.\\.?\\/.+)\\.js$': ['$1.ts', '$1.js'],

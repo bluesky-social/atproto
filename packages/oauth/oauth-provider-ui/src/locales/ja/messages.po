@@ -36,15 +36,15 @@ msgstr ""
 msgid "<0/> spaces on <1/>"
 msgstr ""
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>ATプロトコル</0> — 開発者向け技術ドキュメント"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Bluesky Social</0> — General information about the network"
 msgstr "<0>Bluesky ソーシャル</0> — ネットワークに関する一般的な情報"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Learn more</0><1>Want to learn more about the technology and network behind your Atmosphere account?</1>"
 msgstr "<0>詳細を確認</0><1>Atmosphereアカウントの背後にある技術とネットワークについてもっと知りたいですか？</1>"
 
@@ -52,19 +52,19 @@ msgstr "<0>詳細を確認</0><1>Atmosphereアカウントの背後にある技�
 msgid "<0>Manage</0> the space: create new spaces, add and remove members."
 msgstr ""
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
 msgstr "<0>このサイト：あなたのアカウントコントロールセンター</0><1>今あなたがアクセスしているこのウェブサイトは、あなたの <2>アカウント管理センター</2> です。ここでは以下のことができます：</1><3><4>メールアドレスとパスワードの更新</4><5>個人データとセキュリティ設定の管理</5><6>デバイス全体のアクティブセッション（サインインしているブラウザ）の表示と管理</6></3><7>この場所は、<8>Blueskyソーシャルアプリ</8> のプロフィールなどのアプリ固有の設定とは独立して、Atmosphere識別情報の基本的な設定を制御します。</7><9>あなたのAtmosphereアカウントは現在、Atmosphereネットワーク内の多くのホスティングプロバイダーの1つである <10/> にホストされています。アカウント、識別情報、データを失うことなく、いつでも別のものに切り替えることができます。</9>"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Use it across multiple apps</0><1>Your Atmosphere account works with the <2>Bluesky Social App</2> and any other social apps built on the same network.</1><3>Just like you can use the same email address to sign into different websites, your Atmosphere account lets you sign into different social apps while keeping the same identity, connections, and content.</3><4>When you see options to log in with an Atmosphere account or \"internet handle\" on other apps, you can use your existing account <5><6/></5> instead of creating a new one.</4>"
 msgstr "<0>複数のアプリで使用</0><1>あなたのAtmosphereアカウントは、<2>Blueskyソーシャルアプリ</2>や同じATプロトコルネットワーク上に構築された他のソーシャルアプリで機能します。</1><3>同じメールアドレスを使って異なるウェブサイトにサインインできるのと同様に、あなたのAtmosphereアカウントを使えば、同じ識別情報、接続、コンテンツを維持しながら、異なるソーシャルアプリにサインインできます。</3><4>他のアプリでAtmosphereアカウントや「インターネットハンドル」を使用してログインするオプションが表示されたら、新しいアカウントを作成する代わりに既存のアカウント <5><6/></5> を使用できます。</4>"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>What is an Atmosphere account?</0><1>An <2>Atmosphere account</2> is your personal identity on the Atmosphere. Think of it as a digital passport that you truly own, not locked to any single app or company.</1>"
 msgstr "<0>Atmosphereアカウントとは？</0><1><2>Atmosphereアカウント</2>は、Atmosphere上のあなたの個人識別情報です。単一のアプリや会社に縛られない、あなたが真に所有するデジタルパスポートのようなものと考えてください。</1>"
 
-#: src/pages/account/(authenticated)/about/page.tsx
+#: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
 msgstr "<0>何が特別なのか</0><1>主な違い：あなたのデータはどのアプリにも閉じ込められません。従来のソーシャルメディアアカウントとは異なり、Atmosphereアカウントでは、あなたは自分の識別情報とデータを真に所有しています：</1><2><3><4>あなたは自分の識別情報を所有しています</4>：あなたのユーザー名（ハンドル）と永続的なIDはあなたのものです</3><5><6>あなたのデータはポータブルです</6>：投稿、フォロー、コンテンツはアプリのデータベースに閉じ込められることなく、あなたの個人データストレージに保存されます</5><7><8>自由に移動できます</8>：ホスティングプロバイダーを切り替えても、フォロワー、投稿、接続を失うことはありません。これにより、データが保存される場所が重要な場合は、自国のプロバイダーを選択できます。</7><9><10>複数のアプリ、一つの識別情報</10>：同じネットワーク上に構築された異なるアプリで同じアカウントを使用します</9></2>"
 
@@ -88,7 +88,7 @@ msgstr "2番目の認証要素が必要です ({hint})"
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "<0>{domain}</0> によって管理されているサービス"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "About"
 msgstr "アカウントについて"
 
@@ -105,7 +105,7 @@ msgid "Access specific parts of your Bluesky account and read your private prefe
 msgstr "Blueskyアカウントの特定の部分にアクセスし、プライベート設定を読み取ります"
 
 #: src/components/utils/scope-description.tsx
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Account"
 msgstr "アカウント"
 
@@ -205,16 +205,16 @@ msgstr "すべてのメソッド"
 msgid "Any service"
 msgstr "すべてのサービス"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "App"
 msgstr "アプリ"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Apps"
 msgstr "アプリ"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr "アプリは、あなたが積極的に使用していないときでも、バックグラウンドであなたのアカウントにアクセスすることがあります（通知の確認、データの同期など）。これは正常な動作であり、「最終アクセス」時間が更新されます。"
 
@@ -238,7 +238,7 @@ msgctxt "OAuthConsent"
 msgid "Authorize"
 msgstr "承認"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "Authorized"
 msgstr "承認日"
@@ -247,12 +247,9 @@ msgstr "承認日"
 #: src/components/forms/sign-up-wizard.tsx
 #: src/components/layouts/account-shell.tsx
 #: src/components/sign-in-picker.tsx
+#: src/routes/__root.tsx
 msgid "Back"
 msgstr "戻る"
-
-#: src/components/forms/fields/handle-field.tsx
-msgid "Between {minLength, plural, zero {0} one {one} other {#}} and {maxLength, plural, one {one character} other {# characters}}"
-msgstr "{minLength, plural, other {#文字}}以上、{maxLength, plural, other {#文字}}以下"
 
 #: src/components/utils/scope-description.tsx
 msgid "Blob storage"
@@ -287,7 +284,7 @@ msgstr "呼び出し"
 msgid "Cancel"
 msgstr "キャンセル"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Cannot remove current device"
 msgstr "現在のデバイスを削除できません"
 
@@ -345,7 +342,7 @@ msgstr "ユーザー名を選んでください"
 msgid "Click here if nothing happens"
 msgstr "何も起こらない場合はここをクリックしてください"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "Client"
 msgstr "クライアント"
@@ -416,7 +413,7 @@ msgid "Data"
 msgstr "データ"
 
 #: src/components/deactivate-account-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Deactivate account"
 msgstr "アカウントを無効化"
 
@@ -429,7 +426,7 @@ msgid "Delete"
 msgstr "削除"
 
 #: src/components/delete-account-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Delete account"
 msgstr "アカウントを削除"
 
@@ -446,16 +443,16 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "アクセスを拒否"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Details"
 msgstr "詳細"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Device"
 msgstr "デバイス"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Devices"
 msgstr "デバイス"
 
@@ -483,7 +480,7 @@ msgstr "メールアドレス"
 
 #: src/components/forms/fields/email-field.tsx
 #: src/components/reset-password-request-form.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Email address"
 msgstr "メールアドレス"
 
@@ -568,10 +565,13 @@ msgstr "アカウントの無効化に失敗しました"
 msgid "Failed to delete account"
 msgstr "アカウントの削除に失敗しました"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Failed to load connected apps"
 msgstr "接続されたアプリの読み込みに失敗しました"
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Failed to load your devices"
+msgstr ""
 
 #: src/data/account.ts
 msgid "Failed to reactivate account"
@@ -617,11 +617,11 @@ msgstr "メールアドレスの確認に失敗しました"
 msgid "File contents"
 msgstr "ファイルの内容"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Filter apps"
 msgstr "アプリをフィルタ"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Filter devices"
 msgstr "デバイスをフィルタ"
 
@@ -677,7 +677,7 @@ msgid "Hide"
 msgstr "隠す"
 
 #: src/components/utils/link-title.tsx
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Home"
 msgstr "ホーム"
 
@@ -709,17 +709,13 @@ msgstr "あなたのドメインのウェブホスティング設定にアクセ
 msgid "If you have your own domain, you can use that as your handle. This lets you self-verify your identity. <0>Learn more here</0>."
 msgstr "自分のドメインを持っていれば、ハンドルとして利用できます。これによりあなたのアイデンティティを自己証明できます。<0>詳しくはこちら</0>。"
 
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "If you update your email address, email 2FA (if enabled) will be disabled."
 msgstr "メールアドレスを更新すると、メールでの2要素認証(有効にしていた場合)は無効になります。"
 
 #: src/components/deactivate-account-dialog.tsx
 msgid "If you're trying to change your handle or email, do so before you deactivate."
 msgstr "ハンドルやメールアドレスを変えるのであれば、無効化の前に変更してください。"
-
-#: src/components/forms/fields/handle-field.tsx
-msgid "Invalid"
-msgstr "無効"
 
 #: src/components/utils/handle.tsx
 msgid "Invalid Handle"
@@ -729,12 +725,12 @@ msgstr "無効なハンドル"
 msgid "Invite code"
 msgstr "招待コード"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "IP address"
 msgstr "IPアドレス"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "このアカウントをアプリにサインインするためにまだ使用していないようです。"
 
@@ -747,12 +743,12 @@ msgstr "あなたのブラウザがクッキーを受け入れていないよう
 msgid "just now"
 msgstr "たった今"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgctxt "OAuthApp"
 msgid "Last accessed"
 msgstr "最終アクセス"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Last seen"
 msgstr "最終閲覧"
@@ -771,7 +767,7 @@ msgstr "パスワードをリセットしましょう！"
 msgid "Logo"
 msgstr "ロゴ"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Looks like you aren't logged in on any other devices."
 msgstr "他のデバイスでログインしていないようです。"
 
@@ -787,7 +783,7 @@ msgstr "次のURLで以下の内容のテキストファイルを利用できる
 msgid "Make visible"
 msgstr "表示する"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Manage applications that have access to your account"
 msgstr "あなたのアカウントにアクセスできるアプリケーションを管理する"
 
@@ -795,11 +791,11 @@ msgstr "あなたのアカウントにアクセスできるアプリケーショ
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "あなたの <1>@handle</1> を含む <0>すべての識別情報</0> を管理する"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Manage your account"
 msgstr "アカウントを管理"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "Manage your active sessions"
 msgstr "アクティブなセッションを管理"
 
@@ -826,7 +822,7 @@ msgstr "無し"
 msgid "Moderate"
 msgstr "中程度"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "My Atmosphere Account"
 msgstr "私のAtmosphereアカウント"
 
@@ -865,15 +861,15 @@ msgstr "一致なし"
 msgid "Okay"
 msgstr "OK"
 
-#: src/components/forms/fields/handle-field.tsx
-msgid "Only letters, numbers, and hyphens"
-msgstr "英数字とハイフンのみ"
+#: src/routes/__root.tsx
+msgid "Page not found"
+msgstr ""
 
 #: src/components/delete-account-confirm-form.tsx
 #: src/components/forms/fields/password-field.tsx
 #: src/components/sign-in-form.tsx
 #: src/components/sign-up-credentials-form.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Password"
 msgstr "パスワード"
 
@@ -897,10 +893,6 @@ msgstr "パスワード強度表示"
 #: src/components/reset-password-view.tsx
 msgid "Password Updated"
 msgstr "パスワード更新"
-
-#: src/components/reset-password-view.tsx
-msgid "Password updated!"
-msgstr "パスワードが更新されました！"
 
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Password with at least {MIN_PASSWORD_LENGTH, plural, other {# characters}}"
@@ -975,7 +967,7 @@ msgid "Reactivate"
 msgstr "再有効化"
 
 #: src/components/reactivate-account-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Reactivate account"
 msgstr "アカウントを再有効化"
 
@@ -1024,8 +1016,8 @@ msgid "Reset your password"
 msgstr "パスワードをリセット"
 
 #: src/components/feedback/error-notice.tsx
-#: src/pages/account/(authenticated)/apps/page.tsx
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Retry"
 msgstr "再試行"
 
@@ -1094,7 +1086,7 @@ msgstr "リストにないアカウントにサインイン"
 msgid "Sign out"
 msgstr "サインアウト"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Sign out"
 msgstr "サインアウト"
@@ -1210,7 +1202,7 @@ msgstr "ユーザー名が無効です"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "アカウントの無効化に期限はありません。いつでも戻ってこられます。"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
 msgstr "これらのアプリはあなたのアカウントにアクセスできます。異なるデバイスで使用している場合、アプリが複数回表示されることがあります。アクセスを取り消すと、再度サインインするまでアプリがログアウトされます。"
 
@@ -1234,7 +1226,7 @@ msgstr "このアプリケーションは、あなたのアカウントにアク
 msgid "This authorization request has been denied. Please try again."
 msgstr "この承認リクエストは拒否されました。もう一度お試しください。"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "This device"
 msgstr "このデバイス"
@@ -1296,7 +1288,7 @@ msgstr "未承認"
 msgid "Unexpected server response"
 msgstr "予期しないサーバー応答"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgctxt "device list"
 msgid "Unknown user agent"
 msgstr "不明なユーザーエージェント"
@@ -1325,6 +1317,10 @@ msgstr "ファイルのアップロード"
 msgid "URL"
 msgstr "URL"
 
+#: src/components/forms/fields/handle-field.tsx
+msgid "Use {minLength}–{maxLength, plural, one {# letter, number or hyphen} other {# letters, numbers or hyphens}}"
+msgstr ""
+
 #: src/components/update-handle-dialog.tsx
 msgid "Use a default username"
 msgstr "デフォルトのユーザー名を使用"
@@ -1333,7 +1329,7 @@ msgstr "デフォルトのユーザー名を使用"
 msgid "Use a domain name I own"
 msgstr "自分が所有するドメイン名を使用"
 
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
 msgstr "ユーザー名"
 
@@ -1344,10 +1340,6 @@ msgstr "ユーザー名またはメールアドレス"
 #: src/data/handle.ts
 msgid "Username updated"
 msgstr "ユーザー名更新"
-
-#: src/components/forms/fields/handle-field.tsx
-msgid "Valid"
-msgstr "有効"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Value"
@@ -1375,7 +1367,7 @@ msgid "Verify and Save"
 msgstr "確認して保存"
 
 #: src/components/update-email-dialog.tsx
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgctxt "verify email"
 msgid "Verify now"
 msgstr "確認する"
@@ -1421,15 +1413,15 @@ msgstr "ようこそ"
 msgid "Welcome back!"
 msgstr "おかえりなさい！"
 
-#: src/pages/account/(authenticated)/page.tsx
+#: src/routes/account/u/$accountId/index.tsx
 msgid "What does this mean?"
 msgstr "これは何を意味しますか？"
 
-#: src/pages/account/(authenticated)/route.tsx
+#: src/routes/account/u/$accountId/route.tsx
 msgid "What is an Atmosphere Account?"
 msgstr "Atmosphereアカウントとは何ですか？"
 
-#: src/pages/account/(authenticated)/apps/page.tsx
+#: src/routes/account/u/$accountId/apps.tsx
 msgid "Why is this time so recent?"
 msgstr "時間が最近なのは何故ですか？"
 
@@ -1490,6 +1482,10 @@ msgstr "あなたのアカウント"
 msgid "Your account and all associated data have been deleted."
 msgstr "あなたのアカウントと関連するすべてのデータが削除されました。"
 
+#: src/components/update-email-dialog.tsx
+msgid "Your account currently uses <0>{emailCurrent}</0>. Choose a new email address to associate with it."
+msgstr ""
+
 #: src/authorization-page.tsx
 msgid "Your account has been successfully reactivated."
 msgstr "あなたのアカウントは再有効化されました。"
@@ -1502,7 +1498,7 @@ msgstr "アカウントを現在無効化しています。"
 msgid "Your account is now deactivated."
 msgstr "アカウントは現在無効化されています。"
 
-#: src/pages/account/(authenticated)/devices/page.tsx
+#: src/routes/account/u/$accountId/devices.tsx
 msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr "あなたのアカウントは以下にリストされたデバイスでサインインしています。アカウントが侵害された場合は、すべてのデバイスからサインアウトし、パスワードを変更し、接続されている<0>アプリ</0>を確認してください。"
 
@@ -1510,7 +1506,7 @@ msgstr "あなたのアカウントは以下にリストされたデバイスで
 msgid "Your account is visible again."
 msgstr "アカウントが再び表示されます。"
 
-#: src/pages/account/(authenticated)/page.tsx
+#: src/routes/account/u/$accountId/index.tsx
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "あなたのAtmosphereアカウントは <0/> にホストされています。"
 
@@ -1526,18 +1522,14 @@ msgstr "メールアドレスは正常に更新され、確認が必要です。
 msgid "Your email address has been verified."
 msgstr "メールアドレスが確認されました。"
 
-#: src/pages/account/(authenticated)/manage/page.tsx
+#: src/routes/account/u/$accountId/manage.tsx
 msgid "Your email address needs to be verified."
 msgstr "メールアドレスを確認する必要があります。"
 
-#. placeholder {0}: full ? ( <Handle className="text-foreground" handle={full} /> ) : ( <span aria-hidden className="bg-muted-foreground inline-block h-[1em] w-24 rounded-md align-middle" /> )
+#. placeholder {0}: segment ? ( <span className="text-foreground block break-all font-medium"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
 #: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "あなたのフルユーザー名： {0}"
-
-#: src/components/reset-password-view.tsx
-msgid "Your password has been updated!"
-msgstr "パスワードが更新されました！"
 
 #: src/components/reactivate-account-dialog.tsx
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
@@ -1554,3 +1546,7 @@ msgstr "セッションの有効期限が切れました。もう一度サイン
 #: src/data/handle.ts
 msgid "Your username has been updated."
 msgstr "ユーザー名が更新されました。"
+
+#: src/components/forms/fields/handle-field.tsx
+msgid "yourname"
+msgstr ""

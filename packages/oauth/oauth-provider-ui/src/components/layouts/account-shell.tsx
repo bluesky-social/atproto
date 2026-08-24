@@ -1,12 +1,7 @@
 import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
-import {
-  Link,
-  type RegisteredRouter,
-  type ToPathOption,
-  useRouterState,
-} from '@tanstack/react-router'
+import { Link, type LinkProps, useMatchRoute } from '@tanstack/react-router'
 import { ArrowLeftIcon, type LucideIcon } from 'lucide-react'
 import { type ReactNode, createContext, useContext } from 'react'
 import { AccountMenu } from '#/components/identity/account-menu.tsx'
@@ -31,18 +26,18 @@ import { LinkTitle } from '#/components/utils/link-title.tsx'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 import { LocaleSelector } from '#/locales/locale-selector.tsx'
 
-export type AccountShellLink = {
-  to: ToPathOption<RegisteredRouter, '/', undefined>
+export type AccountShellTarget = Pick<LinkProps, 'to' | 'params'>
+
+export type AccountShellLink = AccountShellTarget & {
   title: string | MessageDescriptor
-  hidden?: boolean
   description?: string | MessageDescriptor
-  icon?: LucideIcon
+  Icon?: LucideIcon
 }
 
 export type AccountShellProps = {
   title?: string | MessageDescriptor
   /** The account home, and the target of the mobile back button. */
-  basePath: ToPathOption<RegisteredRouter, '/', undefined>
+  base: AccountShellTarget
   links: ReadonlyArray<AccountShellLink>
   children?: ReactNode
   prepend?: ReactNode
@@ -66,6 +61,17 @@ export function useAccountShellLinks(): readonly AccountShellLink[] {
 }
 
 /**
+ * Tests whether a navigation target is the page currently being shown.
+ *
+ * @NOTE `to` is a path *template* (`/account/u/$accountId/manage`), so it never
+ * equals the resolved pathname — the comparison has to go through the router.
+ */
+export function useIsCurrentTarget(): (target: AccountShellTarget) => boolean {
+  const matchRoute = useMatchRoute()
+  return ({ to, params }) => to != null && matchRoute({ to, params }) !== false
+}
+
+/**
  * Account-manager frame: `SidebarProvider` + `Sidebar` + `SidebarInset`, with
  * `SidebarTrigger` in the inset header — a composition that brings the
  * collapsible rail, the mobile sheet, the keyboard shortcut and the persisted
@@ -78,24 +84,20 @@ export function useAccountShellLinks(): readonly AccountShellLink[] {
 export function AccountShell({
   children,
   title,
-  basePath,
+  base,
   links,
   prepend,
 }: AccountShellProps) {
   const { _ } = useLingui()
-  const { pathname } = useRouterState().location
+  const isCurrent = useIsCurrentTarget()
   const { logo, name, links: footerLinks } = useCustomizationData()
 
-  const atBase = pathname === basePath
+  const atBase = isCurrent(base)
   const titleString = typeof title === 'object' ? _(title) : (title ?? name)
 
-  const currentLink = links.find((link) => link.to === pathname)
+  const currentLink = links.find(isCurrent)
   const pageTitle = currentLink?.title
   const pageTitleStr = typeof pageTitle === 'object' ? _(pageTitle) : pageTitle
-
-  const visibleLinks = links.filter(
-    ({ hidden, to }) => !hidden || pathname === to,
-  )
 
   return (
     <AccountShellLinksContext value={links}>
@@ -134,22 +136,32 @@ export function AccountShell({
                 {/* @NOTE gap-1 overrides SidebarMenu's gap-0: without it an
                 active row and a hovered row next to it merge into one block. */}
                 <SidebarMenu className="gap-1">
-                  {visibleLinks.map(({ to, title, icon: Icon }) => (
-                    <SidebarMenuItem key={to}>
+                  {links.map((link) => (
+                    <SidebarMenuItem key={link.to}>
                       <SidebarMenuButton
-                        isActive={pathname === to}
+                        isActive={link === currentLink}
                         // @NOTE The style bolds the active row; the background
                         // alone is enough to mark the current page.
                         className="data-active:font-normal"
-                        tooltip={typeof title === 'object' ? _(title) : title}
+                        tooltip={
+                          typeof link.title === 'object'
+                            ? _(link.title)
+                            : link.title
+                        }
                         render={
+                          // @NOTE `exact` because the account home is the
+                          // parent route of every other entry: without it,
+                          // Link marks "Home" as the current page throughout.
                           <Link
-                            to={to}
-                            aria-current={pathname === to ? 'page' : undefined}
+                            to={link.to}
+                            params={link.params}
+                            activeOptions={{ exact: true }}
                           >
-                            {Icon && <Icon aria-hidden />}
+                            {link.Icon && <link.Icon aria-hidden />}
                             <span>
-                              {typeof title === 'object' ? _(title) : title}
+                              {typeof link.title === 'object'
+                                ? _(link.title)
+                                : link.title}
                             </span>
                           </Link>
                         }
@@ -203,7 +215,13 @@ export function AccountShell({
                 size="icon"
                 className="-ml-1 md:hidden"
                 aria-label={_(backLabel)}
-                render={<Link to={basePath} />}
+                render={
+                  <Link
+                    to={base.to}
+                    params={base.params}
+                    activeOptions={{ exact: true }}
+                  />
+                }
               >
                 <ArrowLeftIcon />
               </Button>

@@ -22,11 +22,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       keyset,
     })
 
-    const quotes = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
 
     return {
-      uris: quotes.map((q) => q.uri),
-      cursor: keyset.packFromResult(quotes),
+      uris: page.items.map((q) => q.uri),
+      cursor: page.cursor,
     }
   },
 })

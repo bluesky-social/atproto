@@ -8,7 +8,7 @@ import { LexiconAuthorityProfile } from './service-profile-lexicon.js'
 import type { TestServerParams } from './types.js'
 import { mockNetworkUtilities } from './util.js'
 
-export class TestNetworkNoAppView {
+export class TestNetworkNoAppView implements AsyncDisposable {
   feedGens: TestFeedGen[] = []
   constructor(
     public plc: TestPlc,
@@ -81,9 +81,31 @@ export class TestNetworkNoAppView {
   }
 
   async close() {
-    await Promise.all(this.feedGens.map((fg) => fg.close()))
-    await this.pds.close()
-    await Promise.all(this.extraPdses.map((p) => p.close()))
-    await this.plc.close()
+    // @TODO Use disposable stack to implement this
+    const errors = await Promise.allSettled(
+      this.feedGens.map((fg) => fg.close()),
+    ).then((results) =>
+      results.filter((r) => r.status === 'rejected').map((r) => r.reason),
+    )
+
+    const pdsErrors = await Promise.allSettled(
+      [this.pds, ...this.extraPdses].map((pds) => pds.close()),
+    ).then((results) =>
+      results.filter((r) => r.status === 'rejected').map((r) => r.reason),
+    )
+    errors.push(...pdsErrors)
+
+    try {
+      await this.plc.close()
+    } catch (err) {
+      errors.push(err)
+    }
+
+    if (errors.length === 1) throw errors[0]
+    if (errors.length > 1) throw new AggregateError(errors)
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }

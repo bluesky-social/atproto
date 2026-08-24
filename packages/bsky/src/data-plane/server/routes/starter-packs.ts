@@ -22,11 +22,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor,
       keyset,
     })
-    const starterPacks = await builder.execute()
+    const page = keyset.page(await builder.execute(), limit)
 
     return {
-      uris: starterPacks.map((sp) => sp.uri),
-      cursor: keyset.packFromResult(starterPacks),
+      uris: page.items.map((sp) => sp.uri),
+      cursor: page.cursor,
     }
   },
 })

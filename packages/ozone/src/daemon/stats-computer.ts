@@ -1,8 +1,8 @@
-import { sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
-import { type Database, STATS_COMPUTER_LOCK_ID } from '../db/index.js'
+import type { Database } from '../db/index.js'
 import { dbLogger } from '../logger.js'
 import type { ReportStatsServiceCreator } from '../report/stats.js'
+import { STATS_COMPUTER_LOCK_ID } from './locks.js'
 
 /**
  * Background daemon that materializes report statistics on an interval (default is 15 minutes).
@@ -64,26 +64,58 @@ export class StatsComputer {
   }
 
   private async materializeStats() {
-    const lockResult = await sql<{
-      locked: boolean
-    }>`SELECT pg_try_advisory_lock(${STATS_COMPUTER_LOCK_ID}) as locked`.execute(
-      this.db.db,
-    )
-    const acquired = lockResult.rows[0]?.locked === true
-    if (!acquired) {
-      dbLogger.info(
-        'stats materialization skipped, another instance holds lock',
-      )
-      return
-    }
+    let discardClient = false
+    let locked = false
+    const client = await this.db.pool.connect()
+    const lockScope = this.db.schema ?? 'public'
 
     try {
+      const lockResult = await client
+        .query<{ locked: boolean }>(
+          `SELECT pg_try_advisory_lock(
+            hashtextextended(current_database() || ':' || $2::text, $1)
+          ) as locked`,
+          [STATS_COMPUTER_LOCK_ID, lockScope],
+        )
+        .catch((err) => {
+          // The server may have acquired the lock before the query failed.
+          discardClient = true
+          throw err
+        })
+      locked = lockResult.rows[0]?.locked === true
+      if (!locked) {
+        dbLogger.info(
+          'stats materialization skipped, another instance holds lock',
+        )
+        return
+      }
+
       const statsService = this.reportStatsServiceCreator(this.db)
       await statsService.materializeAll()
     } finally {
-      await sql`SELECT pg_advisory_unlock(${STATS_COMPUTER_LOCK_ID})`.execute(
-        this.db.db,
-      )
+      try {
+        if (locked) {
+          const unlockResult = await client.query<{ unlocked: boolean }>(
+            `SELECT pg_advisory_unlock(
+              hashtextextended(current_database() || ':' || $2::text, $1)
+            ) as unlocked`,
+            [STATS_COMPUTER_LOCK_ID, lockScope],
+          )
+          if (unlockResult.rows[0]?.unlocked !== true) {
+            dbLogger.warn('stats materialization lock was not held at release')
+          }
+        }
+      } catch (err) {
+        discardClient = true
+        dbLogger.warn({ err }, 'failed to release stats materialization lock')
+      } finally {
+        if (discardClient) {
+          // Destroy an uncertain session so it cannot leak the lock.
+          client.release(true)
+        } else {
+          client.release()
+        }
+      }
     }
   }
 

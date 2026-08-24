@@ -1,35 +1,24 @@
 import type { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
-  // A space this account holds a repo in, whoever governs it.
   await db.schema
     .createTable('space')
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
-    // Denormalized out of the uri (`at://<authority>/space/<type>/<skey>`) so that
-    // listSpaces can filter on columns rather than pattern-matching the uri.
     .addColumn('authority', 'varchar', (col) => col.notNull())
     .addColumn('type', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('deletedAt', 'varchar')
     .execute()
 
-  // Governance for the spaces this account is the authority for. Separate from `space`
-  // because a member holds a repo in spaces it has no say over, and is never told their
-  // policy — so a row here exists only for a space this account created.
   await db.schema
     .createTable('simplespace_config')
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
-    .addColumn('policy', 'varchar', (col) =>
-      col.notNull().defaultTo('member-list'),
-    )
+    .addColumn('policy', 'varchar', (col) => col.notNull())
     .addColumn('managingApp', 'varchar')
-    .addColumn('appAccessType', 'varchar', (col) =>
-      col.notNull().defaultTo('open'),
-    )
-    .addColumn('appAllowed', 'text', (col) => col.notNull().defaultTo('[]'))
+    .addColumn('appAccessType', 'varchar', (col) => col.notNull())
+    .addColumn('appAllowed', 'text', (col) => col.notNull())
     .execute()
 
-  // Plain host-internal member list (no rev / commit state).
   await db.schema
     .createTable('simplespace_member')
     .addColumn('space', 'varchar', (col) => col.notNull())
@@ -71,13 +60,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addPrimaryKeyConstraint('space_record_blob_pkey', ['blobCid', 'recordUri'])
     .execute()
 
-  // For reachability checks across the whole store, which look up by cid alone.
-  await db.schema
-    .createIndex('space_record_blob_cid_idx')
-    .on('space_record_blob')
-    .column('blobCid')
-    .execute()
-
   // Serves the space_record join in listBlobs and the space-wide delete.
   await db.schema
     .createIndex('space_record_blob_record_idx')
@@ -85,7 +67,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .column('recordUri')
     .execute()
 
-  // Per-repo commit state (LtHash set hash + rev).
   await db.schema
     .createTable('space_repo')
     .addColumn('space', 'varchar', (col) => col.primaryKey())
@@ -93,14 +74,13 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('rev', 'varchar')
     .execute()
 
-  // Append-only record write log for incremental sync.
   await db.schema
     .createTable('space_record_oplog')
     .addColumn('space', 'varchar', (col) => col.notNull())
     .addColumn('rev', 'varchar', (col) => col.notNull())
     .addColumn('idx', 'integer', (col) => col.notNull())
     .addColumn('action', 'varchar', (col) => col.notNull())
-    .addColumn('uri', 'varchar', (col) => col.notNull())
+    .addColumn('uri', 'varchar', (col) => col.notNull()) // used for joins
     .addColumn('collection', 'varchar', (col) => col.notNull())
     .addColumn('rkey', 'varchar', (col) => col.notNull())
     .addColumn('cid', 'varchar')
@@ -108,8 +88,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addPrimaryKeyConstraint('space_record_oplog_pkey', ['space', 'rev', 'idx'])
     .execute()
 
-  // Writer set: accounts that have written to a space, maintained by the
-  // authority from incoming notifyWrite calls. Returned by listRepos.
   await db.schema
     .createTable('space_writer')
     .addColumn('space', 'varchar', (col) => col.notNull())

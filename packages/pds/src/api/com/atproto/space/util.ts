@@ -16,6 +16,7 @@ import {
   type SpaceRefString,
 } from '@atproto/syntax'
 import {
+  ForbiddenError,
   InvalidRequestError,
   createServiceAuthHeaders,
 } from '@atproto/xrpc-server'
@@ -208,6 +209,75 @@ export async function resolveNotifyTarget(
   return { endpoint, headers }
 }
 
+/** Process a write notification when this PDS hosts the space authority. */
+export async function processNotifyWrite(
+  ctx: AppContext,
+  input: com.atproto.space.notifyWrite.$InputBody,
+): Promise<void> {
+  const { space, repo, rev, hash } = input
+  const { spaceDid: ownerDid } = toSpaceRef(space)
+
+  // Only the space owner's PDS has the member list and fan-out state.
+  const account = await ctx.accountManager.getAccount(ownerDid)
+  if (!account) return
+
+  const { existing, config, recipients } = await ctx.actorStore.read(
+    ownerDid,
+    async (store) => ({
+      existing: await store.space.getSpace(space),
+      config: await store.space.getSpaceConfig(space),
+      recipients: await store.space.getCredentialRecipients(space),
+    }),
+  )
+  // Nothing to maintain for an ungoverned or deleted space.
+  if (!config || !existing || existing.deletedAt) return
+
+  // Apply the same user perimeter used when minting credentials. notifyWrite
+  // comes from a PDS rather than an app, so there is no app attestation to check.
+  const authorized = await ctx.simpleSpaceManager.authorizeUser({
+    config,
+    userDid: repo,
+  })
+  if (!authorized) {
+    throw new ForbiddenError('notifyWrite writer is not authorized')
+  }
+
+  await ctx.actorStore.transact(ownerDid, (txn) =>
+    txn.space.recordWriter(space, repo, rev, hash),
+  )
+
+  // Fan-out stays queued so neither a local write nor a remote PDS waits on
+  // downstream syncing services.
+  const lxm = com.atproto.space.notifyWrite.$lxm
+  ctx.backgroundQueue.add(async () => {
+    for (const recipient of recipients) {
+      try {
+        const target = await resolveNotifyTarget(ctx, {
+          iss: ownerDid,
+          service: recipient.serviceDid,
+          lxm,
+        })
+        if (!target) {
+          spaceLogger.warn(
+            { space, service: recipient.serviceDid, lxm },
+            'could not resolve notify recipient',
+          )
+          continue
+        }
+        await xrpc(target.endpoint, com.atproto.space.notifyWrite, {
+          headers: target.headers,
+          body: { space, repo, rev, hash },
+        })
+      } catch (err) {
+        spaceLogger.warn(
+          { err, space, service: recipient.serviceDid, lxm },
+          'notify failed',
+        )
+      }
+    }
+  })
+}
+
 // Notifications are best-effort: sync recovers on a later notification or a sweep.
 // Takes a nullable commit so callers whose write may be a no-op — an already-deleted
 // record, an empty batch — don't each have to guard.
@@ -224,7 +294,19 @@ export async function fireNotifyWrite(
   const { rev, setHash } = commit
   const { spaceDid } = toSpaceRef(space)
   const lxm = com.atproto.space.notifyWrite.$lxm
+  const body = {
+    space,
+    repo: writerDid as DidString,
+    rev,
+    hash: new LtHash(setHash).digest(),
+  }
   try {
+    const owner = await ctx.accountManager.getAccount(spaceDid)
+    if (owner) {
+      await processNotifyWrite(ctx, body)
+      return
+    }
+
     const target = await resolveNotifyTarget(ctx, {
       iss: writerDid,
       service: spaceDid,
@@ -236,12 +318,7 @@ export async function fireNotifyWrite(
     }
     await xrpc(target.endpoint, com.atproto.space.notifyWrite, {
       headers: target.headers,
-      body: {
-        space,
-        repo: writerDid as DidString,
-        rev,
-        hash: new LtHash(setHash).digest(),
-      },
+      body,
     })
   } catch (err) {
     spaceLogger.warn({ err, space, repo: writerDid, lxm }, 'notify failed')

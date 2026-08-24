@@ -1,4 +1,4 @@
-import { createDeferrable, wait } from '@atproto/common'
+import { createDeferrable } from '@atproto/common'
 import {
   type SeedClient,
   TestNetworkNoAppView,
@@ -33,9 +33,8 @@ describe('firehose', () => {
   })
 
   const createAndReadFirehose = async (
-    count: number,
+    isComplete: (events: Event[]) => boolean,
     opts: Partial<FirehoseOptions> = {},
-    addRandomWait = false,
   ): Promise<Event[]> => {
     const defer = createDeferrable()
     const evts: Event[] = []
@@ -43,12 +42,8 @@ describe('firehose', () => {
       idResolver,
       service: network.pds.url.replace('http', 'ws'),
       handleEvent: async (evt) => {
-        if (addRandomWait) {
-          const time = Math.floor(Math.random()) * 20
-          await wait(time)
-        }
         evts.push(evt)
-        if (evts.length >= count) {
+        if (isComplete(evts)) {
           defer.resolve()
         }
       },
@@ -69,8 +64,11 @@ describe('firehose', () => {
   let alice: DidString
 
   it('reads events from firehose', async () => {
-    const evtsPromise = createAndReadFirehose(6)
-    await wait(10) // give the websocket just a second to spin up
+    const startCursor = (await network.pds.ctx.sequencer.curr()) ?? 0
+    const runner = new MemoryRunner({ startCursor })
+    const evtsPromise = createAndReadFirehose((events) => events.length >= 6, {
+      runner,
+    })
     const aliceRes = await sc.createAccount('alice', {
       handle: 'alice.test',
       email: 'alice@test.com',
@@ -128,8 +126,11 @@ describe('firehose', () => {
   })
 
   it('does not naively pass through invalid handle evts', async () => {
-    const evtsPromise = createAndReadFirehose(1)
-    await wait(10) // give the websocket just a second to spin up
+    const startCursor = (await network.pds.ctx.sequencer.curr()) ?? 0
+    const runner = new MemoryRunner({ startCursor })
+    const evtsPromise = createAndReadFirehose((events) => events.length >= 1, {
+      runner,
+    })
     await network.pds.ctx.sequencer.sequenceIdentity(alice, 'bad-handle.test')
     const evts = await evtsPromise
     expect(evts.at(0)).toMatchObject({ handle: 'alice.test' })
@@ -140,7 +141,15 @@ describe('firehose', () => {
     const runner = new MemoryRunner({
       startCursor: currCursor ?? undefined,
     })
-    const evtsPromise = createAndReadFirehose(24, { runner }, true)
+    const userDids = new Set<DidString>()
+    const evtsPromise = createAndReadFirehose(
+      (events) =>
+        userDids.size === 4 &&
+        [...userDids].every(
+          (did) => events.filter((event) => event.did === did).length >= 6,
+        ),
+      { runner },
+    )
     const createAndPost = async (name: string) => {
       const user = await sc.createAccount('name', {
         handle: `${name}.test`,
@@ -148,6 +157,7 @@ describe('firehose', () => {
         password: `${name}-pass`,
       })
       const did = user.did
+      userDids.add(did)
       const post1 = await sc.post(did, 'one')
       const post2 = await sc.post(did, 'two')
       const post3 = await sc.post(did, 'three')
