@@ -38,10 +38,10 @@
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "p-queue": "^8.0.0",
-    "ws": "^8.12.0"
+    "ws": "^8.21.3"
   },
   "devDependencies": {
-    "@types/ws": "^8.5.4",
+    "@types/ws": "^8.18.1",
     "jest": "^30.0.0"
   },
   "scripts": {
