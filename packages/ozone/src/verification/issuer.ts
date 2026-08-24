@@ -26,7 +26,7 @@ export type VerificationIssuerCreator = (
 const HANDLE_INVALID = 'handle.invalid'
 
 export class VerificationIssuer {
-  private client: Client | undefined
+  private clientPromise: Promise<Client> | undefined
   constructor(private verifierConfig: VerifierConfig) {}
 
   static creator() {
@@ -44,15 +44,20 @@ export class VerificationIssuer {
       // working. Drop the cached client when that happens and let the next
       // caller log in again.
       onDeleted: () => {
-        this.client = undefined
+        this.clientPromise = undefined
       },
     })
-    this.client = new Client(session)
-    return this.client
+    return new Client(session)
   }
 
   async getClient() {
-    return this.client || this.login()
+    // Memoized so that concurrent callers share one login instead of each
+    // creating a session, all but one of which would be orphaned.
+    this.clientPromise ??= this.login().catch((err) => {
+      this.clientPromise = undefined
+      throw err
+    })
+    return this.clientPromise
   }
 
   async verify(verifications: VerificationInput[]) {
