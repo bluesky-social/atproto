@@ -267,6 +267,41 @@ export function computeProxyTo(
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
 
+/**
+ * Like {@link computeProxyTo}, for methods this PDS can serve itself: when no
+ * `atproto-proxy` header is present and no default app view is configured, the
+ * request is served locally and the PDS is its own audience.
+ */
+export function computeProxyToOrSelf(
+  ctx: AppContext,
+  req: Request,
+  lxm: string,
+): string {
+  const proxyToHeader = req.header('atproto-proxy')
+  if (proxyToHeader) return proxyToHeader
+
+  const service = defaultService(ctx, lxm)
+  if (service.serviceInfo) {
+    return `${service.serviceInfo.did}#${service.serviceId}`
+  }
+
+  return `${ctx.cfg.service.did}#atproto_pds`
+}
+
+/**
+ * Whether a request should be served by this PDS rather than proxied: either it
+ * carries no `atproto-proxy` header, or the header names the configured app
+ * view.
+ */
+export function isLocalAppViewRequest(ctx: AppContext, req: Request): boolean {
+  const proxyToHeader = req.header('atproto-proxy')
+  if (!proxyToHeader) return true
+  const { bskyAppView } = ctx.cfg
+  return (
+    bskyAppView != null && proxyToHeader === `${bskyAppView.did}#bsky_appview`
+  )
+}
+
 // Bare-DID portion of `proxyTo`, suitable as a service-auth JWT audience
 // (Phase 1 of service auth updates).
 export function bareDidFromProxyTo(proxyTo: string): string {

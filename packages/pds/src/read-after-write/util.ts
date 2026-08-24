@@ -1,9 +1,10 @@
 import type express from 'express'
 import { type LexValue, l } from '@atproto/lex'
 import { lexParse } from '@atproto/lex-json'
-import type {
-  HandlerPipeThrough,
-  HandlerPipeThroughBuffer,
+import {
+  type HandlerPipeThrough,
+  type HandlerPipeThroughBuffer,
+  parseReqNsid,
 } from '@atproto/xrpc-server'
 import type { AppContext } from '../context.js'
 import { readStickyLogger as log } from '../logger.js'
@@ -40,7 +41,9 @@ export const pipethroughReadAfterWrite = async <
   const { req, auth } = reqCtx
   const requester = auth.credentials.did
   const method = l.getMain(ns)
+  const lxm = parseReqNsid(req)
 
+  const appView = await ctx.resolveAppView(req, lxm)
   const streamRes = await pipethrough(ctx, req, { iss: requester })
 
   const rev = streamRes.headers['atproto-repo-rev']
@@ -72,7 +75,7 @@ export const pipethroughReadAfterWrite = async <
 
       const parsedRes = result.value as l.InferMethodOutputBody<M, never>
 
-      const localViewer = ctx.localViewer(store)
+      const localViewer = ctx.localViewer(store, appView)
 
       const data = await munge(localViewer, parsedRes, local, requester)
       return formatMungedResponse(data, getLocalLag(local))

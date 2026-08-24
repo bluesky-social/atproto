@@ -8,8 +8,6 @@ import {
 } from '../../../../read-after-write/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  if (!ctx.bskyAppView) return
-
   server.add(app.bsky.feed.getTimeline, {
     auth: ctx.authVerifier.authorization({
       authorize: (permissions, { req }) => {

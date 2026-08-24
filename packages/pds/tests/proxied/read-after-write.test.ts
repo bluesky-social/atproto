@@ -10,8 +10,10 @@ import {
 } from '@atproto/api'
 import { type RecordRef, type SeedClient, TestNetwork } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
+import { verifyJwt } from '@atproto/xrpc-server'
 import type { app } from '../../src/lexicons/index.js'
 import basicSeed from '../seeds/basic.js'
+import { ProxyServer } from './proxy-server.js'
 
 describe('proxy read after write', () => {
   let network: TestNetwork
@@ -21,10 +23,16 @@ describe('proxy read after write', () => {
   let alice: DidString
   let carol: DidString
 
+  let altAppView: ProxyServer
+
   beforeAll(async () => {
+    altAppView = await ProxyServer.listen('bsky_appview')
     network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_read_after_write',
+      bsky: { alternateAudienceDids: [altAppView.did] },
     })
+    altAppView.options.upstream = network.bsky.url
+    await altAppView.register(network.pds.ctx.plcClient)
     agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc, { addModLabels: network.bsky })
@@ -35,7 +43,10 @@ describe('proxy read after write', () => {
   })
 
   beforeEach(async () => network.processAll())
-  afterAll(async () => network?.close())
+  afterAll(async () => {
+    await altAppView?.close()
+    await network?.close()
+  })
 
   it('handles read after write on profiles', async () => {
     await sc.updateProfile(alice, { displayName: 'blah' })
@@ -273,6 +284,60 @@ describe('proxy read after write', () => {
     const { record } = embed
     assert('uri' in record) // @TODO: assert based in "$type"
     expect(record.uri).toEqual(sc.posts[alice][0].ref.uriStr)
+  })
+
+  it('hydrates record embeds through the app view named by the proxy header', async () => {
+    const replyRes = await agent.api.app.bsky.feed.post.create(
+      { repo: alice },
+      {
+        text: 'blah',
+        reply: {
+          root: sc.posts[sc.dids.dan][0].ref.raw,
+          parent: sc.posts[sc.dids.dan][0].ref.raw,
+        },
+        embed: {
+          $type: 'app.bsky.embed.record',
+          record: sc.posts[alice][1].ref.raw,
+        },
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
+    altAppView.requests.length = 0
+    const res = await agent.api.app.bsky.feed.getPostThread(
+      { uri: sc.posts[sc.dids.dan][0].ref.uriStr },
+      {
+        headers: {
+          ...sc.getHeaders(alice),
+          'atproto-proxy': `${altAppView.did}#bsky_appview`,
+        },
+      },
+    )
+    assert(AppBskyFeedDefs.isThreadViewPost(res.data.thread))
+    assert(res.data.thread.replies, 'replies is undefined')
+    const { replies } = res.data.thread
+    expect(replies.length).toBe(1)
+    assert(AppBskyFeedDefs.isThreadViewPost(replies[0]))
+    expect(replies[0].post.uri).toEqual(replyRes.uri)
+    const embed = replies[0].post.embed
+    assert(AppBskyEmbedRecord.isView(embed))
+    assert('uri' in embed.record)
+    expect(embed.record.uri).toEqual(sc.posts[alice][1].ref.uriStr)
+
+    const paths = altAppView.requests.map((r) => r.url.split('?')[0])
+    expect(paths).toEqual([
+      '/xrpc/app.bsky.feed.getPostThread',
+      '/xrpc/app.bsky.feed.getPosts',
+    ])
+    const getPosts = altAppView.requests[1]
+    assert(getPosts.auth)
+    const verified = await verifyJwt(
+      getPosts.auth.replace('Bearer ', ''),
+      altAppView.did,
+      'app.bsky.feed.getPosts',
+      (iss) => network.pds.ctx.idResolver.did.resolveAtprotoKey(iss, true),
+    )
+    expect(verified.iss).toBe(alice)
   })
 
   it('handles read after write on getTimeline', async () => {

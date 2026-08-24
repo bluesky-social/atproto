@@ -50,7 +50,7 @@ import { ImageUrlBuilder } from './image/image-url-builder.js'
 import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
-import { buildProxyAgent } from './pipethrough.js'
+import { buildProxyAgent, parseProxyInfo } from './pipethrough.js'
 import {
   LocalViewer,
   type LocalViewerCreator,
@@ -537,6 +537,27 @@ export class AppContext implements AsyncDisposable {
   async appviewAuthHeaders(did: string, lxm: string) {
     assert(this.bskyAppView)
     return this.serviceAuthHeaders(did, this.bskyAppView.did, lxm)
+  }
+
+  /**
+   * The app view targeted by a request: the one named by its `atproto-proxy`
+   * header, or the configured default when the header is absent. The
+   * configured instance is reused when the header names it, so its client
+   * (and image CDN settings) are shared.
+   */
+  async resolveAppView(
+    req: express.Request,
+    lxm: string,
+  ): Promise<BskyAppView> {
+    const { did, url } = await parseProxyInfo(this, req, lxm)
+    if (this.bskyAppView && this.bskyAppView.did === did) {
+      return this.bskyAppView
+    }
+    return new BskyAppView({
+      did,
+      url,
+      validateResponse: this.cfg.service.devMode,
+    })
   }
 
   async entrywayAuthHeaders(req: express.Request, did: string, lxm: string) {
