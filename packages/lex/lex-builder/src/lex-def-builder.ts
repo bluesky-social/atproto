@@ -104,12 +104,15 @@ export class LexDefBuilder {
     // identifiers. For now, we just throw an error if the name is not a valid
     // TypeScript identifier.
     if (!isSafeLocalIdentifier(name)) {
-      throw new Error(`Identifier ${name} is not a valid TypeScript identifier`)
+      throw new Error(`Identifier ${name} is not a safe TypeScript identifier`)
     }
 
     if (
       this.file.getVariableDeclaration(name) ||
-      this.file.getTypeAlias(name)
+      this.file.getTypeAlias(name) ||
+      this.file
+        .getExportDeclarations()
+        .some((exp) => exp.getNamedExports().some((e) => e.getName() === name))
     ) {
       throw new Error(`Duplicate identifier ${name}`)
     }
