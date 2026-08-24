@@ -379,11 +379,12 @@ export class LexDefBuilder {
   }
 
   private async addToken(hash: string, def: LexiconToken) {
-    await this.addSchema(hash, def, {
+    const ref = await this.addSchema(hash, def, {
       schema: markPure(`l.token($nsid, ${JSON.stringify(hash)})`),
-      type: JSON.stringify(l.$type(this.doc.id, hash)),
       validationUtils: true,
     })
+
+    this.addExportedString(ref.typeName, markPure(`${ref.varName}.value`))
   }
 
   private async addArray(hash: string, def: LexiconArray) {
