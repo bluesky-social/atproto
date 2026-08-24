@@ -603,13 +603,13 @@ describe('pds author feed views', () => {
         repo: alice,
       })
 
-      const newProfile = {
+      const newProfile = app.bsky.actor.profile.$build({
         ...profile.value,
         pinnedPost: {
           uri: post.ref.uriStr,
           cid: post.ref.cidStr,
         },
-      }
+      })
 
       await sc.updateProfile(alice, newProfile)
 
