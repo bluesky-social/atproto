@@ -334,6 +334,22 @@ message GetLikesBySubjectSortedResponse {
   string cursor = 2;
 }
 
+message GetKnownLikersRequest {
+  string actor_did = 1;
+  repeated string subject_uris = 2;
+  int32 limit = 3;
+}
+
+message KnownLikersResult {
+  string subject_uri = 1;
+  int32 count = 2;
+  repeated string dids = 3;
+}
+
+message GetKnownLikersResponse {
+  repeated KnownLikersResult results = 1;
+}
+
 message GetQuotesBySubjectSortedRequest {
   RecordRef subject = 1;
   int32 limit = 2;
@@ -1656,6 +1672,7 @@ service Service {
   // Likes
   rpc GetLikesBySubject(GetLikesBySubjectRequest) returns (GetLikesBySubjectResponse);
   rpc GetLikesBySubjectSorted(GetLikesBySubjectSortedRequest) returns (GetLikesBySubjectSortedResponse);
+  rpc GetKnownLikers(GetKnownLikersRequest) returns (GetKnownLikersResponse);
   rpc GetLikesByActorAndSubjects(GetLikesByActorAndSubjectsRequest) returns (GetLikesByActorAndSubjectsResponse);
   rpc GetActorLikes(GetActorLikesRequest) returns (GetActorLikesResponse);
 

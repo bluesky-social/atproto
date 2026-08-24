@@ -215,12 +215,25 @@ export const irisUrlForFeed = (
   return irisUrl
 }
 
+/**
+ * Iris staging's endpoint, when it should serve this request in place of the
+ * feed's registered feed generator.
+ */
+export const irisStagingUrlForFeed = (
+  cfg: Pick<ServerConfig, 'irisStagingUrl' | 'irisStagingFeedUris'>,
+  params: { feed: string },
+): string | undefined =>
+  cfg.irisStagingFeedUris?.has(params.feed) ? cfg.irisStagingUrl : undefined
+
 const resolveSkeletonEndpoint = async (
   ctx: Context,
   params: Params,
 ): Promise<string> => {
   const irisUrl = irisUrlForFeed(ctx.cfg, params)
   if (irisUrl) return irisUrl
+
+  const irisStagingUrl = irisStagingUrlForFeed(ctx.cfg, params)
+  if (irisStagingUrl) return irisStagingUrl
 
   const { feed } = params
   const found = await ctx.hydrator.feed.getFeedGens([feed], true)

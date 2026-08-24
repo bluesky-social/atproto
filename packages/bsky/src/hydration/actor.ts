@@ -135,6 +135,16 @@ export type KnownFollowersStates = HydrationMap<
   KnownFollowersState | undefined
 >
 
+type KnownLikersState = {
+  count: number
+  actors: DidString[]
+}
+
+export type KnownLikersStates = HydrationMap<
+  AtUriString,
+  KnownLikersState | undefined
+>
+
 export type ProfileAgg = {
   followers: number
   follows: number
