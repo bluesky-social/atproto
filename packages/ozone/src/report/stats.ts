@@ -4,7 +4,7 @@ import type { DatetimeString, DidString } from '@atproto/lex'
 import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
 import { ComputedAtIdKeyset, paginate } from '../db/pagination.js'
-import type { ReportStat } from '../db/schema/report_stat.js'
+import type { DateString, ReportStat } from '../db/schema/report_stat.js'
 import { jsonb } from '../db/types.js'
 import { dbLogger } from '../logger.js'
 
@@ -169,7 +169,7 @@ type BatchedStats = {
 }
 
 type UpsertRow = {
-  date: string
+  date: DateString
   queueId: number | null
   moderatorDid: DidString | null
   reportTypes: string[] | null
@@ -263,7 +263,7 @@ export class ReportStatsService {
 
   /** Compute and write all groups for a single date. */
   private async materializeDate(
-    date: string,
+    date: DateString,
     opts?: { force?: boolean },
   ): Promise<void> {
     const groups = await this.enumerateGroups()
@@ -303,7 +303,7 @@ export class ReportStatsService {
 
   /** Fetch all stat rows for a date, keyed by groupKey for O(1) lookup. */
   private async fetchExistingStatsByKey(
-    date: string,
+    date: DateString,
   ): Promise<Map<string, Selectable<ReportStat>>> {
     const existing = await this.db.db
       .selectFrom('report_stat')
@@ -315,7 +315,7 @@ export class ReportStatsService {
       map.set(
         groupKey({
           queueId: row.queueId,
-          moderatorDid: row.moderatorDid as DidString,
+          moderatorDid: row.moderatorDid,
           reportTypes: row.reportTypes,
         }),
         row,
@@ -377,9 +377,9 @@ export class ReportStatsService {
    * Run batched GROUP BY queries for a calendar date.
    * Returns 5 result sets covering all group types.
    */
-  private async computeBatchedStats(date: string): Promise<BatchedStats> {
-    const dayStart = `${date}T00:00:00.000Z` as DatetimeString
-    const dayEnd = `${nextDate(date)}T00:00:00.000Z` as DatetimeString
+  private async computeBatchedStats(date: DateString): Promise<BatchedStats> {
+    const dayStart: DatetimeString = `${date}T00:00:00.000Z`
+    const dayEnd: DatetimeString = `${nextDate(date)}T00:00:00.000Z`
 
     const [queuePending, aggregatePending] = await Promise.all([
       // Pending count is a snapshot of all non-closed reports at time of computation
@@ -629,7 +629,7 @@ export class ReportStatsService {
 
   /** Build an upsert row from (date, group, stats). */
   private buildUpsertRow(
-    date: string,
+    date: DateString,
     group: ReportStatGroup,
     stats: ReportStatistics,
   ): UpsertRow {
@@ -705,7 +705,7 @@ export class ReportStatsService {
 
   /** Get a single stat row for a date + group. */
   private async getStatForDate(
-    date: string,
+    date: DateString,
     group: ReportStatGroup,
   ): Promise<Selectable<ReportStat> | undefined> {
     let qb = this.db.db
@@ -844,12 +844,12 @@ function groupKey(g: ReportStatGroup): string {
 }
 
 /** Convert a Date to an ISO date string (YYYY-MM-DD). */
-function toDateString(d: Date): string {
-  return toDatetimeString(d).slice(0, 10)
+function toDateString(d: Date): DateString {
+  return toDatetimeString(d).slice(0, 10) as DateString
 }
 
 /** Get the next calendar date string. */
-function nextDate(dateStr: string): string {
+function nextDate(dateStr: DateString): DateString {
   const d = new Date(`${dateStr}T00:00:00.000Z`)
   d.setUTCDate(d.getUTCDate() + 1)
   return toDateString(d)
