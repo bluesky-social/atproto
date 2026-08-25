@@ -21,6 +21,11 @@ export default function (server: Server, ctx: AppContext) {
       const uris = new Set<AtUriString>()
       const dids = new Set<DidString>()
 
+      for (const { type, subject, did } of parsedSubjects) {
+        dids.add(did)
+        if (type === 'record') uris.add(subject)
+      }
+
       const didsArray = Array.from(dids)
       const modViews = ctx.modService(db).views
       const [partialRepos, accountInfo, recordInfo, profiles] =

@@ -140,7 +140,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   // for the daemon that inserts report rows from moderation_event.
   await sql`CREATE INDEX moderation_event_report_id_idx
     ON moderation_event (id)
-    WHERE action = ${tools.ozone.moderation.defs.modEventReport.$type}`.execute(
+    WHERE action = ${sql.lit(tools.ozone.moderation.defs.modEventReport.$type)}`.execute(
     db,
   )
 
