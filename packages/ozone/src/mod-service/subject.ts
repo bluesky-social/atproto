@@ -74,7 +74,7 @@ export const subjectFromInput = (
 
 export const subjectFromEventRow = (row: ModerationEventRow): ModSubject => {
   if (
-    row.subjectType === 'com.atproto.repo.strongRef' &&
+    row.subjectType === com.atproto.repo.strongRef.$type &&
     row.subjectUri &&
     row.subjectCid
   ) {
@@ -84,14 +84,14 @@ export const subjectFromEventRow = (row: ModerationEventRow): ModSubject => {
       row.subjectBlobCids ?? [],
     )
   } else if (
-    row.subjectType === 'chat.bsky.convo.defs#messageRef' &&
+    row.subjectType === chat.bsky.convo.defs.messageRef.$type &&
     row.subjectMessageId
   ) {
     const convoId =
       typeof row.meta?.['convoId'] === 'string' ? row.meta['convoId'] : ''
     return new MessageSubject(row.subjectDid, convoId, row.subjectMessageId)
   } else if (
-    row.subjectType === 'chat.bsky.convo.defs#convoRef' &&
+    row.subjectType === chat.bsky.convo.defs.convoRef.$type &&
     row.subjectConvoId
   ) {
     return new ConvoSubject(row.subjectDid, row.subjectConvoId)
@@ -171,7 +171,7 @@ export class RepoSubject implements ModSubject {
   }
   info() {
     return {
-      subjectType: 'com.atproto.admin.defs#repoRef' as const,
+      subjectType: com.atproto.admin.defs.repoRef.$type,
       subjectDid: this.did,
       subjectUri: null,
       subjectCid: null,
@@ -182,10 +182,7 @@ export class RepoSubject implements ModSubject {
     }
   }
   lex(): $Typed<com.atproto.admin.defs.RepoRef> {
-    return {
-      $type: 'com.atproto.admin.defs#repoRef',
-      did: this.did,
-    }
+    return com.atproto.admin.defs.repoRef.$build({ did: this.did })
   }
 }
 

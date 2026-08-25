@@ -1,11 +1,12 @@
 import type { Selectable } from 'kysely'
-import type {
-  $Typed,
-  AtUriString,
-  DatetimeString,
-  DidString,
+import {
+  type $Typed,
+  type AtUriString,
+  type DatetimeString,
+  type DidString,
+  asUnknown$TypedObject,
+  currentDatetimeString,
 } from '@atproto/lex'
-import { currentDatetimeString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
 import { CreatedAtUriKeyset, paginate } from '../db/pagination.js'
@@ -150,19 +151,22 @@ export class VerificationService {
         createdAt: verification.createdAt,
         displayName: verification.displayName,
         handle: verification.handle,
+        // @ts-expect-error not part of the schema
         updatedAt: verification.updatedAt || undefined,
         revokedAt: verification.revokedAt || undefined,
         revokedBy: verification.revokedBy || undefined,
         revokeReason: verification.revokeReason || undefined,
         issuerRepo,
         subjectRepo,
-        // @ts-expect-error (open union)
         subjectProfile: subjectProfile
-          ? app.bsky.actor.defs.profileViewDetailed.$build(subjectProfile)
+          ? asUnknown$TypedObject(
+              app.bsky.actor.defs.profileViewDetailed.$build(subjectProfile),
+            )
           : undefined,
-        // @ts-expect-error (open union)
         issuerProfile: issuerProfile
-          ? app.bsky.actor.defs.profileViewDetailed.$build(issuerProfile)
+          ? asUnknown$TypedObject(
+              app.bsky.actor.defs.profileViewDetailed.$build(issuerProfile),
+            )
           : undefined,
       })
     })

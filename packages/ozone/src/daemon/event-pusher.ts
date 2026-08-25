@@ -227,10 +227,9 @@ export class EventPusher {
       if (!evt) return
       const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
       assert(service)
-      const subject = {
-        $type: 'com.atproto.admin.defs#repoRef' as const,
+      const subject = com.atproto.admin.defs.repoRef.$build({
         did: evt.subjectDid,
-      }
+      })
       const succeeded = await this.updateSubjectOnService(
         service,
         subject,
@@ -265,11 +264,10 @@ export class EventPusher {
       if (!evt) return
       const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
       assert(service)
-      const subject = {
-        $type: 'com.atproto.repo.strongRef' as const,
+      const subject = com.atproto.repo.strongRef.$build({
         uri: evt.subjectUri,
         cid: evt.subjectCid,
-      }
+      })
       const succeeded = await this.updateSubjectOnService(
         service,
         subject,
@@ -305,11 +303,10 @@ export class EventPusher {
 
       const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
       assert(service)
-      const subject = {
-        $type: 'com.atproto.admin.defs#repoBlobRef' as const,
+      const subject = com.atproto.admin.defs.repoBlobRef.$build({
         did: evt.subjectDid,
         cid: evt.subjectBlobCid,
-      }
+      })
       const succeeded = await this.updateSubjectOnService(
         service,
         subject,

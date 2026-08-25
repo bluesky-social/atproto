@@ -7,7 +7,7 @@ import {
 } from '@atproto/xrpc-server'
 import type { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier.js'
 import type { AppContext } from '../../context.js'
-import { com, tools } from '../../lexicons/index.js'
+import { app, com, tools } from '../../lexicons/index.js'
 import { httpLogger } from '../../logger.js'
 import { processReportAction } from '../../mod-service/report.js'
 import { subjectFromInput } from '../../mod-service/subject.js'
@@ -113,7 +113,7 @@ const handleModerationEvent = async ({
     // Non admins should not be able to take down feed generators
     if (
       !access.isAdmin &&
-      subject.recordPath?.includes('app.bsky.feed.generator/')
+      subject.recordPath?.includes(`/${app.bsky.feed.generator.$type}/`)
     ) {
       throw new AuthRequiredError(
         'Must be a full admin to take this type of action on feed generators',

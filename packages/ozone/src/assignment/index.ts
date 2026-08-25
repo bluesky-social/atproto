@@ -1,6 +1,6 @@
 import type { Selectable } from 'kysely'
 import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
-import type { DatetimeString, DidString } from '@atproto/lex'
+import type { DatetimeString, DidString, NsidString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { EndAtIdKeyset, paginate } from '../db/pagination.js'
@@ -57,7 +57,7 @@ export interface UnassignReportInput {
 type AssignmentRowWithQueue = Selectable<ModeratorAssignment> & {
   queueName: string | null
   queueSubjectTypes: string[] | null
-  queueCollection: string | null
+  queueCollection: NsidString | null
   queueDescription: string | null
   queueReportTypes: string[] | null
   queueRecommendedPolicies: string[] | null

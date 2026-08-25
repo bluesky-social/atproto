@@ -1,6 +1,11 @@
 import { sql } from 'kysely'
 import { currentDatetimeString } from '@atproto/lex'
-import type { AtUriString, DatetimeString, DidString } from '@atproto/lex'
+import type {
+  AtUriString,
+  DatetimeString,
+  DidString,
+  UriString,
+} from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
 import type { Report } from '../db/schema/report.js'
@@ -15,7 +20,7 @@ import { CHAT_CONVO_COLLECTION, CHAT_MESSAGE_COLLECTION } from './subject.js'
 export type ReportWithEvent = Omit<Report, 'id'> & {
   id: number
   subjectDid: DidString
-  subjectUri: string | null
+  subjectUri: UriString | null
   subjectCid: string | null
   reportedBy: DidString
   comment: string | null

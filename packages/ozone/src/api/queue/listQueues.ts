@@ -1,4 +1,5 @@
-import type { Server } from '@atproto/xrpc-server'
+import { isNsidString } from '@atproto/lex'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { tools } from '../../lexicons/index.js'
 
@@ -14,6 +15,13 @@ export default function (server: Server, ctx: AppContext) {
         collection,
         reportTypes,
       } = params
+
+      if (collection != null && !isNsidString(collection)) {
+        throw new InvalidRequestError(
+          'Invalid collection NSID',
+          'InvalidRequest',
+        )
+      }
 
       const queueService = ctx.queueService(ctx.db)
 

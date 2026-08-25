@@ -87,11 +87,11 @@ export async function up(db: Kysely<any>): Promise<void> {
               'escalateCount',
             ),
           (eb) =>
-            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = ${tools.ozone.moderation.defs.modEventReport.$type} AND ${eb.ref('meta')} ->> 'reportType' != 'com.atproto.moderation.defs#reasonAppeal')`.as(
+            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = ${tools.ozone.moderation.defs.modEventReport.$type} AND ${eb.ref('meta')} ->> 'reportType' != ${com.atproto.moderation.defs.ReasonAppeal})`.as(
               'reportCount',
             ),
           (eb) =>
-            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = ${tools.ozone.moderation.defs.modEventReport.$type} AND ${eb.ref('meta')} ->> 'reportType' = 'com.atproto.moderation.defs#reasonAppeal')`.as(
+            sql<number>`COUNT(*) FILTER (WHERE ${eb.ref('action')} = ${tools.ozone.moderation.defs.modEventReport.$type} AND ${eb.ref('meta')} ->> 'reportType' = ${com.atproto.moderation.defs.ReasonAppeal})`.as(
               'appealCount',
             ),
         ])

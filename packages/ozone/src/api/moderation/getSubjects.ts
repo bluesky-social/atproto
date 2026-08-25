@@ -1,4 +1,8 @@
-import type { AtUriString, DidString } from '@atproto/lex'
+import {
+  type AtUriString,
+  type DidString,
+  asUnknown$TypedObject,
+} from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
@@ -66,9 +70,11 @@ export default function (server: Server, ctx: AppContext) {
           type,
           repo,
           record,
-          // @ts-expect-error (documented as "unknown")
+
           profile: profile
-            ? app.bsky.actor.defs.profileViewDetailed.$build(profile)
+            ? asUnknown$TypedObject(
+                app.bsky.actor.defs.profileViewDetailed.$build(profile),
+              )
             : undefined,
           status,
           subject,

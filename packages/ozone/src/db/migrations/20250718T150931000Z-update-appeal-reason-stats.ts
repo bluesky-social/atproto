@@ -81,7 +81,7 @@ export async function up(db: Kysely<any>): Promise<void> {
               'appealCount',
             ),
         ])
-        .where('subjectType', '=', 'com.atproto.repo.strongRef')
+        .where('subjectType', '=', com.atproto.repo.strongRef.$type)
         .where('subjectUri', 'is not', null)
         .groupBy(['subjectDid', 'subjectUri']),
     )
@@ -231,7 +231,7 @@ export async function down(db: Kysely<any>): Promise<void> {
               'appealCount',
             ),
         ])
-        .where('subjectType', '=', 'com.atproto.repo.strongRef')
+        .where('subjectType', '=', com.atproto.repo.strongRef.$type)
         .where('subjectUri', 'is not', null)
         .groupBy(['subjectDid', 'subjectUri']),
     )

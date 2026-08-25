@@ -100,7 +100,7 @@ export class QueueService {
   }: {
     name: string
     subjectTypes: string[]
-    collection?: string | null
+    collection?: NsidString | null
     reportTypes: string[]
     excludeId?: number
   }): Promise<void> {
@@ -153,7 +153,7 @@ export class QueueService {
   }: {
     name: string
     subjectTypes: string[]
-    collection?: string | null
+    collection?: NsidString | null
     reportTypes: string[]
     description?: string | null
     recommendedPolicies: string[]
@@ -263,7 +263,7 @@ export class QueueService {
     cursor?: string
     enabled?: boolean
     subjectType?: string
-    collection?: string
+    collection?: NsidString
     reportTypes?: string[]
   }): Promise<{ queues: Selectable<ReportQueue>[]; cursor?: string }> {
     const { ref } = this.db.db.dynamic

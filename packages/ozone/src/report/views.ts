@@ -1,8 +1,13 @@
 import type { Selectable } from 'kysely'
-import type { AtUriString, DidString, Unknown$TypedObject } from '@atproto/lex'
+import {
+  type AtUriString,
+  type DidString,
+  type UriString,
+  asUnknown$TypedObject,
+} from '@atproto/lex'
 import { addAccountInfoToRepoViewDetail } from '../api/util.js'
 import type { ReportStat } from '../db/schema/report_stat.js'
-import type { app, com, tools } from '../lexicons/index.js'
+import { app, type com, type tools } from '../lexicons/index.js'
 import type { ReportWithEvent } from '../mod-service/report.js'
 import {
   CHAT_CONVO_COLLECTION,
@@ -158,7 +163,7 @@ export function buildReportView(
   const record = isRecord ? recordInfo.get(report.subjectUri!) : undefined
 
   // subject
-  const subject = isRecord
+  const subject: UriString | DidString = isRecord
     ? report.subjectUri!
     : isMessage
       ? `at://${report.subjectDid}/${CHAT_MESSAGE_COLLECTION}/${report.subjectMessageId}`
@@ -172,19 +177,6 @@ export function buildReportView(
     : isConvo
       ? convoStatuses.get(subject)
       : repo?.moderation.subjectStatus
-  const subjectView = {
-    type: isRecord ? 'record' : isChat ? 'chat' : 'account',
-    subject,
-    repo,
-    record,
-    profile: profile
-      ? ({
-          $type: 'app.bsky.actor.defs#profileViewDetailed',
-          ...profile,
-        } as unknown as Unknown$TypedObject)
-      : undefined,
-    status: subjectStatus,
-  }
 
   // report
   const reportType = report.meta?.reportType as string
@@ -199,18 +191,6 @@ export function buildReportView(
     : undefined
   const reporterProfile = profiles.get(reporterDid)
   const reporterStatus = reporterRepo?.moderation.subjectStatus
-  const reporterView = {
-    type: 'account' as const,
-    subject: reporterDid,
-    repo: reporterRepo,
-    profile: reporterProfile
-      ? ({
-          $type: 'app.bsky.actor.defs#profileViewDetailed',
-          ...reporterProfile,
-        } as unknown as Unknown$TypedObject)
-      : undefined,
-    status: reporterStatus,
-  }
 
   // assignment
   const assignmentView =
@@ -226,10 +206,35 @@ export function buildReportView(
     id: report.id,
     eventId: report.eventId,
     status: report.status,
-    subject: subjectView,
+    subject: {
+      type: isRecord
+        ? ('record' as const)
+        : isChat
+          ? ('chat' as const)
+          : ('account' as const),
+      subject,
+      repo,
+      record,
+      profile: profile
+        ? asUnknown$TypedObject(
+            app.bsky.actor.defs.profileViewDetailed.$build(profile),
+          )
+        : undefined,
+      status: subjectStatus,
+    },
     reportType,
     reportedBy: report.reportedBy as DidString,
-    reporter: reporterView,
+    reporter: {
+      type: 'account' as const,
+      subject: reporterDid,
+      repo: reporterRepo,
+      profile: reporterProfile
+        ? asUnknown$TypedObject(
+            app.bsky.actor.defs.profileViewDetailed.$build(reporterProfile),
+          )
+        : undefined,
+      status: reporterStatus,
+    },
     comment: report.comment ?? undefined,
     createdAt: report.createdAt,
     updatedAt: report.updatedAt,
