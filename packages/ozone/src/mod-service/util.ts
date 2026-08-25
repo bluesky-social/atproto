@@ -3,7 +3,7 @@ import { sql } from 'kysely'
 import { cborEncode, noUndefinedVals } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
-import type { DidString, UriString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex'
 import { Client, toDatetimeString } from '@atproto/lex'
 import type { LabelRow } from '../db/schema/label.js'
 import type { DbRef } from '../db/types.js'
@@ -15,7 +15,7 @@ export const formatLabel = (row: LabelRow): com.atproto.label.defs.Label => {
   return noUndefinedVals({
     ver: 1,
     src: row.src,
-    uri: row.uri as UriString,
+    uri: row.uri,
     cid: row.cid === '' ? undefined : row.cid,
     val: row.val,
     neg: row.neg === true ? true : undefined,

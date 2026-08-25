@@ -1,3 +1,4 @@
+import type { UriString } from '@atproto/lex'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { com } from '../../lexicons/index.js'
@@ -13,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
           uriPatterns.map((pattern) => {
             // if no '*', then we're looking for an exact match
             if (!pattern.includes('*')) {
-              return eb('uri', '=', pattern)
+              return eb('uri', '=', pattern as UriString)
             }
             if (pattern.indexOf('*') < pattern.length - 1) {
               throw new InvalidRequestError(`invalid pattern: ${pattern}`)
@@ -22,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
               .slice(0, -1)
               .replaceAll('%', '') // sanitize search pattern
               .replaceAll('_', '\\_') // escape any underscores
-            return eb('uri', 'like', `${searchPattern}%`)
+            return eb('uri', 'like', `${searchPattern}%` as any)
           }),
         ),
       )

@@ -9,7 +9,7 @@ import { cborEncode } from '@atproto/common'
 import { Secp256k1Keypair, verifySignature } from '@atproto/crypto'
 import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
 import { currentDatetimeString } from '@atproto/lex'
-import type { DidString, UriString } from '@atproto/lex'
+import type { AtUriString, DidString } from '@atproto/lex'
 import { Subscription } from '@atproto/xrpc-server'
 import { ModerationService } from '../src/mod-service/index.js'
 import { getSigningKeyId } from '../src/util.js'
@@ -30,37 +30,37 @@ describe('ozone query labels', () => {
     const toCreate = [
       {
         src: EXAMPLE_LABELER as DidString,
-        uri: 'did:example:blah' as UriString,
+        uri: 'did:example:blah' as DidString,
         val: 'spam',
         cts: currentDatetimeString(),
       },
       {
         src: EXAMPLE_LABELER as DidString,
-        uri: 'did:example:blah' as UriString,
+        uri: 'did:example:blah' as DidString,
         val: 'impersonation',
         cts: currentDatetimeString(),
       },
       {
         src: EXAMPLE_LABELER as DidString,
-        uri: 'at://did:example:blah/app.bsky.feed.post/1234abcde' as UriString,
+        uri: 'at://did:example:blah/app.bsky.feed.post/1234abcde' as AtUriString,
         val: 'spam',
         cts: currentDatetimeString(),
       },
       {
         src: EXAMPLE_LABELER as DidString,
-        uri: 'at://did:example:blah/app.bsky.feed.post/1234abcfg' as UriString,
+        uri: 'at://did:example:blah/app.bsky.feed.post/1234abcfg' as AtUriString,
         val: 'spam',
         cts: currentDatetimeString(),
       },
       {
         src: EXAMPLE_LABELER as DidString,
-        uri: 'at://did:example:blah/app.bsky.actor.profile/self' as UriString,
+        uri: 'at://did:example:blah/app.bsky.actor.profile/self' as AtUriString,
         val: 'spam',
         cts: currentDatetimeString(),
       },
       {
         src: EXAMPLE_LABELER as DidString,
-        uri: 'did:example:thing' as UriString,
+        uri: 'did:example:thing' as DidString,
         val: 'spam',
         cts: currentDatetimeString(),
       },

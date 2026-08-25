@@ -1,8 +1,8 @@
 import { readFromGenerator, wait } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
+import type { DidString } from '@atproto/lex'
 import { currentDatetimeString } from '@atproto/lex'
-import type { DidString, UriString } from '@atproto/lex'
 import type { com } from '../src/lexicons/index.js'
 import type { LabelsEvt, Sequencer } from '../src/sequencer/index.js'
 import { Outbox } from '../src/sequencer/outbox.js'
@@ -58,10 +58,10 @@ describe('sequencer', () => {
   const createLabels = async (count: number) => {
     const labels: com.atproto.label.defs.Label[] = []
     for (let i = 0; i < count; i++) {
-      const did = `did:example:${randomStr(10, 'base32')}`
+      const did: DidString = `did:example:${randomStr(10, 'base32')}`
       const label = {
         src: EXAMPLE_LABELER as DidString,
-        uri: did as UriString,
+        uri: did,
         val: 'spam',
         neg: false,
         cts: currentDatetimeString(),

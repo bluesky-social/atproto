@@ -634,7 +634,7 @@ export class ModerationViews {
   }
 
   async labels(
-    subjects: string[],
+    subjects: UriString[],
     includeNeg?: boolean,
   ): Promise<Map<string, com.atproto.label.defs.Label[]>> {
     const now = currentDatetimeString()

@@ -1,4 +1,4 @@
-import type { DidString, UriString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex'
 import {
   AuthRequiredError,
   ForbiddenError,
@@ -347,8 +347,7 @@ const handleModerationEvent = async ({
 
     if (isLabelEvent) {
       await moderationTxn.formatAndCreateLabels(
-        (result.event.subjectUri as UriString | undefined) ??
-          result.event.subjectDid,
+        result.event.subjectUri ?? result.event.subjectDid,
         result.event.subjectCid,
         {
           create: result.event.createLabelVals?.length

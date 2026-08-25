@@ -16,7 +16,7 @@ import {
   type TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, type UriString } from '@atproto/syntax'
 import type { ImageInvalidator } from '../src/image-invalidator.js'
 import { EventReverser } from '../src/index.js'
 import { TAKEDOWN_LABEL } from '../src/mod-service/index.js'
@@ -43,7 +43,7 @@ describe('moderation', () => {
     cid: ref.cidStr,
   })
 
-  const getLabel = async (uri: string, val: string, neg = false) => {
+  const getLabel = async (uri: UriString, val: string, neg = false) => {
     return ozone.ctx.db.db
       .selectFrom('label')
       .selectAll()

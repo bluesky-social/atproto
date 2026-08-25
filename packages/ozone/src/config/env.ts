@@ -40,7 +40,7 @@ export const readEnv = (): OzoneEnvironment => {
     triageDids: envList('OZONE_TRIAGE_DIDS') as DidString[],
     adminPassword: envStr('OZONE_ADMIN_PASSWORD'),
     signingKeyHex: envStr('OZONE_SIGNING_KEY_HEX'),
-    blobDivertUrl: envStr('OZONE_BLOB_DIVERT_URL'),
+    blobDivertUrl: envStr('OZONE_BLOB_DIVERT_URL') as UriString,
     blobDivertAdminPassword: envStr('OZONE_BLOB_DIVERT_ADMIN_PASSWORD'),
     verifierUrl: envStr('OZONE_VERIFIER_URL') as UriString,
     verifierDid: envStr('OZONE_VERIFIER_DID') as DidString,
@@ -87,7 +87,7 @@ export type OzoneEnvironment = {
   triageDids: DidString[]
   adminPassword?: string
   signingKeyHex?: string
-  blobDivertUrl?: string
+  blobDivertUrl?: UriString
   blobDivertAdminPassword?: string
   verifierUrl?: UriString
   verifierDid?: DidString

@@ -73,7 +73,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   const blobDivertServiceCfg =
     env.blobDivertUrl && env.blobDivertAdminPassword
       ? {
-          url: env.blobDivertUrl as UriString,
+          url: env.blobDivertUrl,
           adminPassword: env.blobDivertAdminPassword,
         }
       : null

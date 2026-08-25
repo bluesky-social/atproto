@@ -1,6 +1,5 @@
 import { AppBskyActorDefs, type AtpAgent, asPredicate } from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import type { UriString } from '@atproto/lex'
 import { forSnapshot } from './_util.js'
 
 const isValidProfile = asPredicate(AppBskyActorDefs.validateProfileViewDetailed)
@@ -38,7 +37,7 @@ describe('verification', () => {
       name: 'verifier',
     })
     network.ozone.ctx.cfg.verifier = {
-      url: network.pds.url as UriString,
+      url: network.pds.url,
       did: sc.dids.alice,
       password,
     }
