@@ -169,8 +169,7 @@ export class QueueService {
         reportTypes: jsonb(reportTypes),
         description: description ?? null,
         recommendedPolicies: jsonb(recommendedPolicies),
-        // createdBy can be 'admin_token'
-        createdBy: createdBy as DidString,
+        createdBy,
         enabled: true,
         createdAt: now,
         updatedAt: now,
@@ -318,6 +317,7 @@ export class QueueService {
       reportTypes: queue.reportTypes,
       description: queue.description ?? undefined,
       recommendedPolicies: queue.recommendedPolicies,
+      // @ts-expect-error - createdBy can be 'admin_token', which is not a valid value (per lexicon definition)
       createdBy: queue.createdBy,
       createdAt: queue.createdAt,
       updatedAt: queue.updatedAt,

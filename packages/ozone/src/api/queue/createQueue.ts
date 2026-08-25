@@ -1,4 +1,3 @@
-import type { DidString } from '@atproto/lex'
 import {
   AuthRequiredError,
   InvalidRequestError,

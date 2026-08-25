@@ -1,4 +1,4 @@
-import type { DidString, UriString } from '@atproto/lex'
+import type { UriString } from '@atproto/lex'
 import {
   AuthRequiredError,
   ForbiddenError,

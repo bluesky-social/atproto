@@ -1,4 +1,3 @@
-import type { DidString } from '@atproto/lex'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { tools } from '../../lexicons/index.js'

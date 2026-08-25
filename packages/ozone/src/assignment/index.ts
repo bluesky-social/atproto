@@ -61,7 +61,7 @@ type AssignmentRowWithQueue = Selectable<ModeratorAssignment> & {
   queueDescription: string | null
   queueReportTypes: string[] | null
   queueRecommendedPolicies: string[] | null
-  queueCreatedBy: DidString | null
+  queueCreatedBy: DidString | 'admin_token' | null
   queueCreatedAt: DatetimeString | null
   queueUpdatedAt: DatetimeString | null
   queueEnabled: boolean | null
