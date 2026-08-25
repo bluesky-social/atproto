@@ -7,15 +7,12 @@ import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
 import type { ReportQueue } from '../db/schema/report_queue.js'
 import { jsonb } from '../db/types.js'
-import type { tools } from '../lexicons/index.js'
+import { com, tools } from '../lexicons/index.js'
 import { handleReportUpdate } from '../report/handle-report-update.js'
 import { ReportStatsService } from '../report/stats.js'
 import { viewQueueStats } from '../report/views.js'
 import { PolicyListSettingKey } from '../setting/constants.js'
 import { SettingService } from '../setting/service.js'
-
-const MOD_EVENT_REPORT_ACTION = 'tools.ozone.moderation.defs#modEventReport'
-const REASON_OTHER = 'com.atproto.moderation.defs#reasonOther'
 
 type SubjectType = 'account' | 'record' | 'message' | 'conversation'
 
@@ -568,7 +565,7 @@ export class QueueService {
         'modTool',
         'createdAt',
       ])
-      .where('action', '=', MOD_EVENT_REPORT_ACTION)
+      .where('action', '=', tools.ozone.moderation.defs.modEventReport.$type)
       .orderBy('id', 'asc')
       .limit(params.limit)
 
@@ -605,7 +602,8 @@ export class QueueService {
       }
 
       const reportType =
-        (event.meta?.reportType as string | undefined) ?? REASON_OTHER
+        (event.meta?.reportType as string | undefined) ??
+        com.atproto.moderation.defs.ReasonOther
 
       const tool = parseModTool(event.modTool)
 

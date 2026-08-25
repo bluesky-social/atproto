@@ -1,4 +1,3 @@
-import type { DidString } from '@atproto/lex'
 import { AuthRequiredError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import type { Member } from '../../db/schema/member.js'
@@ -21,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        did = access.iss as DidString
+        did = access.iss
       }
 
       // When attempting to delete an instance setting using admin_token will allow removing any setting
@@ -30,20 +29,20 @@ export default function (server: Server, ctx: AppContext) {
       // triage can remove settings that are manageable by triage role
       if (scope === 'instance') {
         managerRole = [
-          'tools.ozone.team.defs#roleModerator',
-          'tools.ozone.team.defs#roleTriage',
-          'tools.ozone.team.defs#roleAdmin',
-          'tools.ozone.team.defs#roleVerifier',
+          tools.ozone.team.defs.RoleModerator,
+          tools.ozone.team.defs.RoleTriage,
+          tools.ozone.team.defs.RoleAdmin,
+          tools.ozone.team.defs.RoleVerifier,
         ]
 
         if (access.type !== 'admin_token' && !access.isAdmin) {
           if (access.isModerator) {
             managerRole = [
-              'tools.ozone.team.defs#roleModerator',
-              'tools.ozone.team.defs#roleTriage',
+              tools.ozone.team.defs.RoleModerator,
+              tools.ozone.team.defs.RoleTriage,
             ]
           } else if (access.isTriage) {
-            managerRole = ['tools.ozone.team.defs#roleTriage']
+            managerRole = [tools.ozone.team.defs.RoleTriage]
           }
         }
       }

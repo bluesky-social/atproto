@@ -1,38 +1,39 @@
 import type { Generated } from 'kysely'
-import type { DatetimeString, DidString } from '@atproto/lex'
+import type { $TypeOf, DatetimeString, DidString } from '@atproto/lex'
+import type { chat, com, tools } from '../../lexicons/index.js'
 
 export const eventTableName = 'moderation_event'
 
 export interface ModerationEvent {
   id: Generated<number>
   action:
-    | 'tools.ozone.moderation.defs#modEventTakedown'
-    | 'tools.ozone.moderation.defs#modEventAcknowledge'
-    | 'tools.ozone.moderation.defs#modEventEscalate'
-    | 'tools.ozone.moderation.defs#modEventComment'
-    | 'tools.ozone.moderation.defs#modEventLabel'
-    | 'tools.ozone.moderation.defs#modEventReport'
-    | 'tools.ozone.moderation.defs#modEventMute'
-    | 'tools.ozone.moderation.defs#modEventUnmute'
-    | 'tools.ozone.moderation.defs#modEventMuteReporter'
-    | 'tools.ozone.moderation.defs#modEventUnmuteReporter'
-    | 'tools.ozone.moderation.defs#modEventReverseTakedown'
-    | 'tools.ozone.moderation.defs#modEventEmail'
-    | 'tools.ozone.moderation.defs#modEventResolveAppeal'
-    | 'tools.ozone.moderation.defs#modEventTag'
-    | 'tools.ozone.moderation.defs#accountEvent'
-    | 'tools.ozone.moderation.defs#identityEvent'
-    | 'tools.ozone.moderation.defs#recordEvent'
-    | 'tools.ozone.moderation.defs#modEventPriorityScore'
-    | 'tools.ozone.moderation.defs#ageAssuranceEvent'
-    | 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent'
-    | 'tools.ozone.moderation.defs#ageAssurancePurgeEvent'
-    | 'tools.ozone.moderation.defs#revokeAccountCredentialsEvent'
+    | $TypeOf<tools.ozone.moderation.defs.ModEventTakedown>
+    | $TypeOf<tools.ozone.moderation.defs.ModEventAcknowledge>
+    | $TypeOf<tools.ozone.moderation.defs.ModEventEscalate>
+    | $TypeOf<tools.ozone.moderation.defs.ModEventComment>
+    | $TypeOf<tools.ozone.moderation.defs.ModEventLabel>
+    | $TypeOf<tools.ozone.moderation.defs.ModEventReport>
+    | $TypeOf<tools.ozone.moderation.defs.ModEventMute>
+    | $TypeOf<tools.ozone.moderation.defs.ModEventUnmute>
+    | $TypeOf<tools.ozone.moderation.defs.ModEventMuteReporter>
+    | $TypeOf<tools.ozone.moderation.defs.ModEventUnmuteReporter>
+    | $TypeOf<tools.ozone.moderation.defs.ModEventReverseTakedown>
+    | $TypeOf<tools.ozone.moderation.defs.ModEventEmail>
+    | $TypeOf<tools.ozone.moderation.defs.ModEventResolveAppeal>
+    | $TypeOf<tools.ozone.moderation.defs.ModEventTag>
+    | $TypeOf<tools.ozone.moderation.defs.AccountEvent>
+    | $TypeOf<tools.ozone.moderation.defs.IdentityEvent>
+    | $TypeOf<tools.ozone.moderation.defs.RecordEvent>
+    | $TypeOf<tools.ozone.moderation.defs.ModEventPriorityScore>
+    | $TypeOf<tools.ozone.moderation.defs.AgeAssuranceEvent>
+    | $TypeOf<tools.ozone.moderation.defs.AgeAssuranceOverrideEvent>
+    | $TypeOf<tools.ozone.moderation.defs.AgeAssurancePurgeEvent>
+    | $TypeOf<tools.ozone.moderation.defs.RevokeAccountCredentialsEvent>
   subjectType:
-    | 'com.atproto.admin.defs#repoRef'
-    | 'com.atproto.repo.strongRef'
-    | 'chat.bsky.convo.defs#messageRef'
-    | 'chat.bsky.convo.defs#convoRef'
+    | com.atproto.repo.strongRef.$type
+    | $TypeOf<com.atproto.admin.defs.RepoRef>
+    | $TypeOf<chat.bsky.convo.defs.MessageRef>
+    | $TypeOf<chat.bsky.convo.defs.ConvoRef>
   subjectDid: DidString
   subjectUri: string | null
   subjectCid: string | null

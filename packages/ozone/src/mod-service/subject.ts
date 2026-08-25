@@ -1,4 +1,4 @@
-import type { $Typed, AtUriString, DidString } from '@atproto/lex'
+import type { $TypeOf, $Typed, AtUriString, DidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { chat, com, type tools } from '../lexicons/index.js'
@@ -122,10 +122,10 @@ export const subjectFromStatusRow = (
 
 type SubjectInfo = {
   subjectType:
-    | 'com.atproto.admin.defs#repoRef'
-    | 'com.atproto.repo.strongRef'
-    | 'chat.bsky.convo.defs#messageRef'
-    | 'chat.bsky.convo.defs#convoRef'
+    | com.atproto.repo.strongRef.$type
+    | $TypeOf<com.atproto.admin.defs.RepoRef>
+    | $TypeOf<chat.bsky.convo.defs.MessageRef>
+    | $TypeOf<chat.bsky.convo.defs.ConvoRef>
   subjectDid: DidString
   subjectUri: AtUriString | null
   subjectCid: string | null

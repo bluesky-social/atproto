@@ -340,8 +340,8 @@ export class ModerationService {
     if (ageAssuranceState) {
       builder = builder
         .where('action', 'in', [
-          'tools.ozone.moderation.defs#ageAssuranceEvent',
-          'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+          tools.ozone.moderation.defs.ageAssuranceEvent.$type,
+          tools.ozone.moderation.defs.ageAssuranceOverrideEvent.$type,
         ])
         .where(sql`meta->>'status'`, '=', ageAssuranceState)
     }
@@ -404,7 +404,7 @@ export class ModerationService {
   async getReport(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
       .selectFrom('moderation_event')
-      .where('action', '=', 'tools.ozone.moderation.defs#modEventReport')
+      .where('action', '=', tools.ozone.moderation.defs.modEventReport.$type)
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
@@ -422,8 +422,8 @@ export class ModerationService {
         eb.or([eb('recordPath', '!=', ''), eb('convoId', '!=', '')]),
       )
       .where('reviewState', 'in', [
-        tools.ozone.moderation.defs.reviewEscalated.value,
-        tools.ozone.moderation.defs.reviewOpen.value,
+        tools.ozone.moderation.defs.ReviewEscalated,
+        tools.ozone.moderation.defs.ReviewOpen,
       ])
       .selectAll()
       .execute()
@@ -448,19 +448,17 @@ export class ModerationService {
           // For consistency's sake, when acknowledging appealed subjects, we should first resolve the appeal
           if (subject.appealed) {
             await this.logEvent({
-              event: {
-                $type: 'tools.ozone.moderation.defs#modEventResolveAppeal',
+              event: tools.ozone.moderation.defs.modEventResolveAppeal.$build({
                 comment: `[AUTO_RESOLVE_ON_ACCOUNT_ACTION]: Automatically resolving all appealed content due to account level action | ${accountEventInfo}`,
-              },
+              }),
               ...eventData,
             })
           }
 
           await this.logEvent({
-            event: {
-              $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
+            event: tools.ozone.moderation.defs.modEventAcknowledge.$build({
               comment: `[AUTO_RESOLVE_ON_ACCOUNT_ACTION]: Automatically resolving all reported content due to account level action | ${accountEventInfo}`,
-            },
+            }),
             ...eventData,
           })
         }),
@@ -762,7 +760,7 @@ export class ModerationService {
     await this.db.db
       .deleteFrom('moderation_event')
       .where('subjectDid', '=', subjectDid)
-      .where('action', '=', 'tools.ozone.moderation.defs#ageAssuranceEvent')
+      .where('action', '=', tools.ozone.moderation.defs.ageAssuranceEvent.$type)
       .execute()
   }
 
@@ -789,12 +787,16 @@ export class ModerationService {
     // Means the subject was suspended and needs to be unsuspended
     if (subject.reverseSuspend) {
       builder = builder
-        .where('action', '=', 'tools.ozone.moderation.defs#modEventTakedown')
+        .where(
+          'action',
+          '=',
+          tools.ozone.moderation.defs.modEventTakedown.$type,
+        )
         .where('durationInHours', 'is not', null)
     }
     if (subject.reverseMute) {
       builder = builder
-        .where('action', '=', 'tools.ozone.moderation.defs#modEventMute')
+        .where('action', '=', tools.ozone.moderation.defs.modEventMute.$type)
         .where('durationInHours', 'is not', null)
     }
 
@@ -843,15 +845,16 @@ export class ModerationService {
     subject,
   }: ReversibleModerationEvent): Promise<ModerationEventRow> {
     const isRevertingTakedown =
-      action === 'tools.ozone.moderation.defs#modEventTakedown'
+      action === tools.ozone.moderation.defs.modEventTakedown.$type
     this.db.assertTransaction()
     const { event } = await this.logEvent({
-      event: {
-        $type: isRevertingTakedown
-          ? 'tools.ozone.moderation.defs#modEventReverseTakedown'
-          : 'tools.ozone.moderation.defs#modEventUnmute',
-        comment: comment ?? undefined,
-      },
+      event: isRevertingTakedown
+        ? tools.ozone.moderation.defs.modEventReverseTakedown.$build({
+            comment: comment ?? undefined,
+          })
+        : tools.ozone.moderation.defs.modEventUnmute.$build({
+            comment: comment ?? undefined,
+          }),
       createdAt,
       createdBy,
       subject,
@@ -1080,11 +1083,10 @@ export class ModerationService {
     } = info
 
     return await this.logEvent({
-      event: {
-        $type: 'tools.ozone.moderation.defs#modEventReport',
+      event: tools.ozone.moderation.defs.modEventReport.$build({
         reportType: reasonType,
         comment: reason,
-      },
+      }),
       createdBy: reportedBy,
       subject,
       createdAt,
@@ -1612,8 +1614,8 @@ export class ModerationService {
     if (!createdByDids?.length) return []
 
     const actionTypes = [
-      'tools.ozone.moderation.defs#modEventTakedown',
-      'tools.ozone.moderation.defs#modEventLabel',
+      tools.ozone.moderation.defs.modEventTakedown.$type,
+      tools.ozone.moderation.defs.modEventLabel.$type,
     ] as const
 
     const countAll = () => {
@@ -1624,12 +1626,12 @@ export class ModerationService {
     }
     const countTakedownsDistinctBy = (ref: Expression<unknown>) => {
       return sql<number>`COUNT(DISTINCT ${ref}) FILTER (
-        WHERE actions."action" = 'tools.ozone.moderation.defs#modEventTakedown'
+        WHERE actions."action" = ${tools.ozone.moderation.defs.modEventTakedown.$type}
       )`
     }
     const countLabelsDistinctBy = (ref: Expression<unknown>) => {
       return sql<number>`COUNT(DISTINCT ${ref}) FILTER (
-        WHERE actions."action" = 'tools.ozone.moderation.defs#modEventLabel'
+        WHERE actions."action" = ${tools.ozone.moderation.defs.modEventLabel.$type}
       )`
     }
 
@@ -1638,7 +1640,7 @@ export class ModerationService {
       .where(
         'reports.action',
         '=',
-        'tools.ozone.moderation.defs#modEventReport',
+        tools.ozone.moderation.defs.modEventReport.$type,
       )
       .where(
         'reports.subjectUri',

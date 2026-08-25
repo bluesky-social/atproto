@@ -389,12 +389,11 @@ export default function (server: Server, ctx: AppContext) {
               ...input,
               body: {
                 ...input.body,
-                event: {
+                event: tools.ozone.moderation.defs.modEventTakedown.$build({
                   ...input.body.event,
-                  $type: 'tools.ozone.moderation.defs#modEventTakedown',
                   comment:
                     '[DIVERT_SIDE_EFFECT]: Automatically taking down after divert event',
-                },
+                }),
                 modTool: input.body.modTool,
               },
             },
@@ -448,14 +447,14 @@ const assertTagAuth = async (
         // admins can already do everything so we only check for moderator and triage role config
         if (
           auth.credentials.isModerator &&
-          !configuredRoles.includes('tools.ozone.team.defs#roleModerator')
+          !configuredRoles.includes(tools.ozone.team.defs.RoleModerator)
         ) {
           throw new InvalidRequestError(
             `Can not manage tag ${tag} with moderator role`,
           )
         } else if (
           auth.credentials.isTriage &&
-          !configuredRoles.includes('tools.ozone.team.defs#roleTriage')
+          !configuredRoles.includes(tools.ozone.team.defs.RoleTriage)
         ) {
           throw new InvalidRequestError(
             `Can not manage tag ${tag} with triage role`,

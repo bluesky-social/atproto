@@ -1,5 +1,5 @@
 import type { Selectable } from 'kysely'
-import type { DatetimeString, DidString } from '@atproto/lex'
+import type { $TypeOf, DatetimeString, DidString } from '@atproto/lex'
 import type { ModerationEvent } from '../db/schema/moderation_event.js'
 import type { ModerationSubjectStatus } from '../db/schema/moderation_subject_status.js'
 import type { tools } from '../lexicons/index.js'
@@ -52,7 +52,7 @@ export type ModerationSubjectStatusRowWithHandle =
 export type ModEventType = tools.ozone.moderation.defs.ModEventView['event']
 
 type AccountHostingView = {
-  $type: 'tools.ozone.moderation.defs#accountHosting'
+  $type: $TypeOf<tools.ozone.moderation.defs.AccountHosting>
   status: 'active' | 'takendown' | 'suspended' | 'deleted' | 'deactivated'
   createdAt?: Date
   updatedAt?: Date
@@ -62,7 +62,7 @@ type AccountHostingView = {
 }
 
 type RecordHostingView = {
-  $type: 'tools.ozone.moderation.defs#recordHosting'
+  $type: $TypeOf<tools.ozone.moderation.defs.RecordHosting>
   status: 'active' | 'deleted'
   createdAt?: Date
   updatedAt?: Date

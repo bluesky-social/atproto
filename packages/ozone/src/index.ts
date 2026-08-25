@@ -13,6 +13,7 @@ import type { OzoneConfig, OzoneSecrets } from './config/index.js'
 import { AppContext, type AppContextOptions } from './context.js'
 import type { Member } from './db/schema/member.js'
 import * as error from './error.js'
+import { tools } from './lexicons/index.js'
 import { dbLogger, loggerMiddleware } from './logger.js'
 
 export * from './config/index.js'
@@ -70,19 +71,19 @@ export class OzoneService {
     const members: Array<{ role: Member['role']; did: DidString }> = []
     this.ctx.cfg.access.admins.forEach((did) =>
       members.push({
-        role: 'tools.ozone.team.defs#roleAdmin',
+        role: tools.ozone.team.defs.RoleAdmin,
         did,
       }),
     )
     this.ctx.cfg.access.triage.forEach((did) =>
       members.push({
-        role: 'tools.ozone.team.defs#roleTriage',
+        role: tools.ozone.team.defs.RoleTriage,
         did,
       }),
     )
     this.ctx.cfg.access.moderators.forEach((did) =>
       members.push({
-        role: 'tools.ozone.team.defs#roleModerator',
+        role: tools.ozone.team.defs.RoleModerator,
         did,
       }),
     )

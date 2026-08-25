@@ -117,7 +117,7 @@ export const addAccountInfoToRepoView = (
 }
 
 export const getEventType = (type: string) => {
-  if (eventTypes.has(type)) {
+  if ((eventTypes as Set<string>).has(type)) {
     return type as ModerationEvent['action']
   }
   throw new InvalidRequestError('Invalid event type')
@@ -141,31 +141,31 @@ const reviewStates = new Set([
 ])
 
 const eventTypes = new Set([
-  'tools.ozone.moderation.defs#modEventTakedown',
-  'tools.ozone.moderation.defs#modEventAcknowledge',
-  'tools.ozone.moderation.defs#modEventEscalate',
-  'tools.ozone.moderation.defs#modEventComment',
-  'tools.ozone.moderation.defs#modEventLabel',
-  'tools.ozone.moderation.defs#modEventReport',
-  'tools.ozone.moderation.defs#modEventMute',
-  'tools.ozone.moderation.defs#modEventUnmute',
-  'tools.ozone.moderation.defs#modEventMuteReporter',
-  'tools.ozone.moderation.defs#modEventUnmuteReporter',
-  'tools.ozone.moderation.defs#modEventReverseTakedown',
-  'tools.ozone.moderation.defs#modEventEmail',
-  'tools.ozone.moderation.defs#modEventResolveAppeal',
-  'tools.ozone.moderation.defs#modEventTag',
-  'tools.ozone.moderation.defs#modEventDivert',
-  'tools.ozone.moderation.defs#accountEvent',
-  'tools.ozone.moderation.defs#identityEvent',
-  'tools.ozone.moderation.defs#recordEvent',
-  'tools.ozone.moderation.defs#modEventPriorityScore',
-  'tools.ozone.moderation.defs#ageAssuranceEvent',
-  'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
-  'tools.ozone.moderation.defs#ageAssurancePurgeEvent',
-  'tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
-  'tools.ozone.moderation.defs#scheduleTakedownEvent',
-  'tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
+  tools.ozone.moderation.defs.modEventTakedown.$type,
+  tools.ozone.moderation.defs.modEventAcknowledge.$type,
+  tools.ozone.moderation.defs.modEventEscalate.$type,
+  tools.ozone.moderation.defs.modEventComment.$type,
+  tools.ozone.moderation.defs.modEventLabel.$type,
+  tools.ozone.moderation.defs.modEventReport.$type,
+  tools.ozone.moderation.defs.modEventMute.$type,
+  tools.ozone.moderation.defs.modEventUnmute.$type,
+  tools.ozone.moderation.defs.modEventMuteReporter.$type,
+  tools.ozone.moderation.defs.modEventUnmuteReporter.$type,
+  tools.ozone.moderation.defs.modEventReverseTakedown.$type,
+  tools.ozone.moderation.defs.modEventEmail.$type,
+  tools.ozone.moderation.defs.modEventResolveAppeal.$type,
+  tools.ozone.moderation.defs.modEventTag.$type,
+  tools.ozone.moderation.defs.modEventDivert.$type,
+  tools.ozone.moderation.defs.accountEvent.$type,
+  tools.ozone.moderation.defs.identityEvent.$type,
+  tools.ozone.moderation.defs.recordEvent.$type,
+  tools.ozone.moderation.defs.modEventPriorityScore.$type,
+  tools.ozone.moderation.defs.ageAssuranceEvent.$type,
+  tools.ozone.moderation.defs.ageAssuranceOverrideEvent.$type,
+  tools.ozone.moderation.defs.ageAssurancePurgeEvent.$type,
+  tools.ozone.moderation.defs.revokeAccountCredentialsEvent.$type,
+  tools.ozone.moderation.defs.scheduleTakedownEvent.$type,
+  tools.ozone.moderation.defs.cancelScheduledTakedownEvent.$type,
 ])
 
 export const getMemberRole = (role: string) => {
@@ -176,19 +176,19 @@ export const getMemberRole = (role: string) => {
 }
 
 const memberRoles = new Set([
-  tools.ozone.team.defs.roleAdmin.value,
-  tools.ozone.team.defs.roleModerator.value,
-  tools.ozone.team.defs.roleTriage.value,
-  tools.ozone.team.defs.roleVerifier.value,
+  tools.ozone.team.defs.RoleAdmin,
+  tools.ozone.team.defs.RoleModerator,
+  tools.ozone.team.defs.RoleTriage,
+  tools.ozone.team.defs.RoleVerifier,
 ])
 
-export const OZONE_APPEAL_REASON_TYPE = 'tools.ozone.report.defs#reasonAppeal'
+export const OZONE_APPEAL_REASON_TYPE = tools.ozone.report.defs.ReasonAppeal
 const APPEAL_REASON_TYPES = [
-  com.atproto.moderation.defs.reasonAppeal.value,
+  com.atproto.moderation.defs.ReasonAppeal,
   OZONE_APPEAL_REASON_TYPE,
 ]
 export const isAppealReport = (reasonType?: string): boolean => {
-  return !!reasonType && APPEAL_REASON_TYPES.includes(reasonType)
+  return !!reasonType && (APPEAL_REASON_TYPES as string[]).includes(reasonType)
 }
 
 export const getSafelinkPattern = (pattern: string): SafelinkPatternType => {

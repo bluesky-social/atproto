@@ -1,7 +1,11 @@
 // This may require better organization but for now, just dumping functions here containing DB queries for moderation status
 
 import { HOUR } from '@atproto/common'
-import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
+import {
+  asDatetimeString,
+  currentDatetimeString,
+  toDatetimeString,
+} from '@atproto/lex'
 import type { DatetimeString, DidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { isAppealReport } from '../api/util.js'
@@ -30,24 +34,24 @@ const getSubjectStatusForModerationEvent = ({
     : tools.ozone.moderation.defs.reviewNone.value
 
   switch (action) {
-    case 'tools.ozone.moderation.defs#modEventAcknowledge':
+    case tools.ozone.moderation.defs.modEventAcknowledge.$type:
       return {
         lastReviewedBy: createdBy,
         reviewState: tools.ozone.moderation.defs.reviewClosed.value,
         lastReviewedAt: createdAt,
       }
-    case 'tools.ozone.moderation.defs#modEventReport':
+    case tools.ozone.moderation.defs.modEventReport.$type:
       return {
         reviewState: tools.ozone.moderation.defs.reviewOpen.value,
         lastReportedAt: createdAt,
       }
-    case 'tools.ozone.moderation.defs#modEventEscalate':
+    case tools.ozone.moderation.defs.modEventEscalate.$type:
       return {
         lastReviewedBy: createdBy,
         reviewState: tools.ozone.moderation.defs.reviewEscalated.value,
         lastReviewedAt: createdAt,
       }
-    case 'tools.ozone.moderation.defs#modEventReverseTakedown':
+    case tools.ozone.moderation.defs.modEventReverseTakedown.$type:
       return {
         lastReviewedBy: createdBy,
         reviewState: tools.ozone.moderation.defs.reviewClosed.value,
@@ -55,7 +59,7 @@ const getSubjectStatusForModerationEvent = ({
         suspendUntil: null,
         lastReviewedAt: createdAt,
       }
-    case 'tools.ozone.moderation.defs#modEventUnmuteReporter':
+    case tools.ozone.moderation.defs.modEventUnmuteReporter.$type:
       return {
         lastReviewedBy: createdBy,
         muteReportingUntil: null,
@@ -64,7 +68,7 @@ const getSubjectStatusForModerationEvent = ({
         reviewState: defaultReviewState,
         lastReviewedAt: createdAt,
       }
-    case 'tools.ozone.moderation.defs#modEventUnmute':
+    case tools.ozone.moderation.defs.modEventUnmute.$type:
       return {
         lastReviewedBy: createdBy,
         muteUntil: null,
@@ -73,7 +77,7 @@ const getSubjectStatusForModerationEvent = ({
         reviewState: defaultReviewState,
         lastReviewedAt: createdAt,
       }
-    case 'tools.ozone.moderation.defs#modEventTakedown':
+    case tools.ozone.moderation.defs.modEventTakedown.$type:
       return {
         // If we are doing a takedown, safe to move the item out of appealed state
         ...(currentStatus?.appealed ? { appealed: false } : {}),
@@ -85,7 +89,7 @@ const getSubjectStatusForModerationEvent = ({
           ? toDatetimeString(new Date(Date.now() + durationInHours * HOUR))
           : null,
       }
-    case 'tools.ozone.moderation.defs#modEventMuteReporter':
+    case tools.ozone.moderation.defs.modEventMuteReporter.$type:
       return {
         lastReviewedBy: createdBy,
         lastReviewedAt: createdAt,
@@ -97,7 +101,7 @@ const getSubjectStatusForModerationEvent = ({
         // but if it does happen, default to unnecessary
         reviewState: defaultReviewState,
       }
-    case 'tools.ozone.moderation.defs#modEventMute':
+    case tools.ozone.moderation.defs.modEventMute.$type:
       return {
         lastReviewedBy: createdBy,
         lastReviewedAt: createdAt,
@@ -109,21 +113,21 @@ const getSubjectStatusForModerationEvent = ({
         // but if it does happen, default to unnecessary
         reviewState: defaultReviewState,
       }
-    case 'tools.ozone.moderation.defs#modEventComment':
+    case tools.ozone.moderation.defs.modEventComment.$type:
       return {
         lastReviewedBy: createdBy,
         lastReviewedAt: createdAt,
         reviewState: defaultReviewState,
       }
-    case 'tools.ozone.moderation.defs#modEventTag':
+    case tools.ozone.moderation.defs.modEventTag.$type:
       return { tags: [], reviewState: defaultReviewState }
-    case 'tools.ozone.moderation.defs#modEventResolveAppeal':
+    case tools.ozone.moderation.defs.modEventResolveAppeal.$type:
       return {
         appealed: false,
       }
-    case 'tools.ozone.moderation.defs#ageAssuranceEvent':
-    case 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent':
-    case 'tools.ozone.moderation.defs#ageAssurancePurgeEvent':
+    case tools.ozone.moderation.defs.ageAssuranceEvent.$type:
+    case tools.ozone.moderation.defs.ageAssuranceOverrideEvent.$type:
+    case tools.ozone.moderation.defs.ageAssurancePurgeEvent.$type:
       return {
         reviewState: defaultReviewState,
       }
@@ -132,10 +136,10 @@ const getSubjectStatusForModerationEvent = ({
   }
 }
 
-const hostingEvents = [
-  'tools.ozone.moderation.defs#accountEvent',
-  'tools.ozone.moderation.defs#identityEvent',
-  'tools.ozone.moderation.defs#recordEvent',
+const hostingEvents: string[] = [
+  tools.ozone.moderation.defs.accountEvent.$type,
+  tools.ozone.moderation.defs.identityEvent.$type,
+  tools.ozone.moderation.defs.recordEvent.$type,
 ]
 
 const getSubjectStatusForRecordEvent = ({
@@ -147,27 +151,27 @@ const getSubjectStatusForRecordEvent = ({
 }): Partial<ModerationSubjectStatusRow> => {
   const timestamp =
     typeof event.meta?.timestamp === 'string'
-      ? event.meta?.timestamp
+      ? asDatetimeString(event.meta.timestamp)
       : event.createdAt
 
-  if (event.action === 'tools.ozone.moderation.defs#recordEvent') {
+  if (event.action === tools.ozone.moderation.defs.recordEvent.$type) {
     if (event.meta?.op === 'delete') {
       return {
         hostingStatus: 'deleted',
-        hostingDeletedAt: timestamp as DatetimeString,
+        hostingDeletedAt: timestamp,
       }
     } else if (event.meta?.op === 'update') {
       return {
         hostingStatus: 'active',
-        hostingUpdatedAt: timestamp as DatetimeString,
+        hostingUpdatedAt: timestamp,
       }
     }
     return {}
   }
 
-  if (event.action === 'tools.ozone.moderation.defs#accountEvent') {
+  if (event.action === tools.ozone.moderation.defs.accountEvent.$type) {
     const status: Partial<ModerationSubjectStatusRow> = {
-      hostingUpdatedAt: timestamp as DatetimeString,
+      hostingUpdatedAt: timestamp,
     }
 
     if (event.meta?.status) {
@@ -175,9 +179,9 @@ const getSubjectStatusForRecordEvent = ({
     }
 
     if (event.meta?.status === 'deleted') {
-      status.hostingDeletedAt = timestamp as DatetimeString
+      status.hostingDeletedAt = timestamp
     } else if (event.meta?.status === 'deactivated') {
-      status.hostingDeactivatedAt = timestamp as DatetimeString
+      status.hostingDeactivatedAt = timestamp
     } else {
       // When deactivated accounts are re-activated, we receive the event with just the active flag set to true
       // so we want to make sure that the hostingStatus is not set to an outdated value
@@ -186,21 +190,21 @@ const getSubjectStatusForRecordEvent = ({
         event.meta?.active
       ) {
         status.hostingStatus = 'active'
-        status.hostingReactivatedAt = timestamp as DatetimeString
+        status.hostingReactivatedAt = timestamp
       }
     }
 
     return status
   }
 
-  if (event.action === 'tools.ozone.moderation.defs#identityEvent') {
+  if (event.action === tools.ozone.moderation.defs.identityEvent.$type) {
     const status: Partial<ModerationSubjectStatusRow> = {
-      hostingUpdatedAt: timestamp as DatetimeString,
+      hostingUpdatedAt: timestamp,
     }
 
     if (event.meta?.tombstone) {
       status.hostingStatus = 'tombstoned'
-      status.hostingDeletedAt = timestamp as DatetimeString
+      status.hostingDeletedAt = timestamp
     }
 
     return status
@@ -355,7 +359,7 @@ export const adjustModerationSubjectStatus = async (
   }
 
   const isAppealEvent =
-    action === 'tools.ozone.moderation.defs#modEventReport' &&
+    action === tools.ozone.moderation.defs.modEventReport.$type &&
     meta?.reportType &&
     isAppealReport(`${meta.reportType}`)
 
@@ -403,7 +407,7 @@ export const adjustModerationSubjectStatus = async (
   }
 
   if (
-    action === 'tools.ozone.moderation.defs#modEventPriorityScore' &&
+    action === tools.ozone.moderation.defs.modEventPriorityScore.$type &&
     typeof meta?.priorityScore === 'number'
   ) {
     newStatus.priorityScore = meta?.priorityScore
@@ -411,7 +415,7 @@ export const adjustModerationSubjectStatus = async (
   }
 
   if (
-    action === 'tools.ozone.moderation.defs#modEventReverseTakedown' &&
+    action === tools.ozone.moderation.defs.modEventReverseTakedown.$type &&
     !subjectStatus.takendown
   ) {
     newStatus.takendown = false
@@ -430,7 +434,7 @@ export const adjustModerationSubjectStatus = async (
   }
 
   if (
-    action === 'tools.ozone.moderation.defs#modEventResolveAppeal' &&
+    action === tools.ozone.moderation.defs.modEventResolveAppeal.$type &&
     subjectStatus.appealed
   ) {
     newStatus.appealed = false
@@ -438,14 +442,14 @@ export const adjustModerationSubjectStatus = async (
   }
 
   if (
-    action === 'tools.ozone.moderation.defs#modEventComment' &&
+    action === tools.ozone.moderation.defs.modEventComment.$type &&
     meta?.sticky
   ) {
     newStatus.comment = comment
     subjectStatus.comment = comment
   }
 
-  if (action === 'tools.ozone.moderation.defs#modEventTag') {
+  if (action === tools.ozone.moderation.defs.modEventTag.$type) {
     let tags = currentStatus?.tags || []
     if (addedTags?.length) {
       tags = tags.concat(addedTags)
@@ -457,7 +461,7 @@ export const adjustModerationSubjectStatus = async (
     subjectStatus.tags = newStatus.tags
   }
 
-  if (action === 'tools.ozone.moderation.defs#ageAssuranceEvent') {
+  if (action === tools.ozone.moderation.defs.ageAssuranceEvent.$type) {
     // Only when the last update was made by an admin AND state was set to reset user event can override final state
     if (
       currentStatus?.ageAssuranceUpdatedBy !== 'admin' ||
@@ -472,7 +476,7 @@ export const adjustModerationSubjectStatus = async (
     }
   }
 
-  if (action === 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent') {
+  if (action === tools.ozone.moderation.defs.ageAssuranceOverrideEvent.$type) {
     if (typeof meta?.status === 'string') {
       newStatus.ageAssuranceState = meta.status
       subjectStatus.ageAssuranceState = meta.status
@@ -481,7 +485,7 @@ export const adjustModerationSubjectStatus = async (
     }
   }
 
-  if (action === 'tools.ozone.moderation.defs#ageAssurancePurgeEvent') {
+  if (action === tools.ozone.moderation.defs.ageAssurancePurgeEvent.$type) {
     newStatus.ageAssuranceState = 'unknown'
     subjectStatus.ageAssuranceState = 'unknown'
     newStatus.ageAssuranceUpdatedBy = null

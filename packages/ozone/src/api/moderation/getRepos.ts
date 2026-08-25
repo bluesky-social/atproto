@@ -18,19 +18,17 @@ export default function (server: Server, ctx: AppContext) {
       const repos = dids.map((did) => {
         const partialRepo = partialRepos.get(did)
         if (!partialRepo) {
-          return {
+          return tools.ozone.moderation.defs.repoViewNotFound.$build({
             did,
-            $type: 'tools.ozone.moderation.defs#repoViewNotFound' as const,
-          }
+          })
         }
-        return {
-          ...addAccountInfoToRepoViewDetail(
+        return tools.ozone.moderation.defs.repoViewDetail.$build(
+          addAccountInfoToRepoViewDetail(
             partialRepo,
             accountInfo.get(did) || null,
             auth.credentials.isModerator,
           ),
-          $type: 'tools.ozone.moderation.defs#repoViewDetail' as const,
-        }
+        )
       })
 
       return {

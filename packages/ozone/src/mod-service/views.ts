@@ -560,40 +560,31 @@ export class ModerationViews {
 
   async subject(subject: ModSubject): Promise<SubjectView> {
     if (subject.isConvo()) {
-      return {
-        $type: 'tools.ozone.moderation.defs#convoView' as const,
+      return tools.ozone.moderation.defs.convoView.$build({
         did: subject.did,
         convoId: subject.convoId,
-      }
+      })
     } else if (subject.isRepo()) {
       const repos = await this.repos([subject.did])
       const repo = repos.get(subject.did)
       if (repo) {
-        return {
-          ...repo,
-          $type: 'tools.ozone.moderation.defs#repoView' as const,
-        }
+        return tools.ozone.moderation.defs.repoView.$build(repo)
       } else {
-        return {
-          $type: 'tools.ozone.moderation.defs#repoViewNotFound' as const,
+        return tools.ozone.moderation.defs.repoViewNotFound.$build({
           did: subject.did,
-        }
+        })
       }
     } else if (subject.isRecord()) {
       const uri = subject.uri
       const records = await this.records([{ uri }])
       const record = records.get(uri)
       if (record) {
-        return {
-          ...record,
-          $type: 'tools.ozone.moderation.defs#recordView' as const,
-        }
+        return tools.ozone.moderation.defs.recordView.$build(record)
       }
     }
-    return {
-      $type: 'tools.ozone.moderation.defs#repoViewNotFound' as const,
+    return tools.ozone.moderation.defs.repoViewNotFound.$build({
       did: subject.did,
-    }
+    })
   }
 
   // Partial view for blobs
@@ -753,22 +744,18 @@ export class ModerationViews {
         status,
       ).lex() as tools.ozone.moderation.defs.SubjectStatusView['subject'],
 
-      accountStats: {
-        // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
-        $type: 'tools.ozone.moderation.defs#accountStats' as const,
-
+      // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
+      accountStats: tools.ozone.moderation.defs.accountStats.$build({
         // account_events_stats
         reportCount: status.reportCount ?? undefined,
         appealCount: status.appealCount ?? undefined,
         suspendCount: status.suspendCount ?? undefined,
         takedownCount: status.takedownCount ?? undefined,
         escalateCount: status.escalateCount ?? undefined,
-      },
+      }),
 
-      recordsStats: {
-        // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
-        $type: 'tools.ozone.moderation.defs#recordsStats' as const,
-
+      // Explicitly typing to allow for easy manipulation (e.g. to strip from tests snapshots)
+      recordsStats: tools.ozone.moderation.defs.recordsStats.$build({
         // account_record_events_stats
         totalReports: status.totalReports ?? undefined,
         reportedCount: status.reportedCount ?? undefined,
@@ -780,36 +767,33 @@ export class ModerationViews {
         pendingCount: status.pendingCount ?? undefined,
         processedCount: status.processedCount ?? undefined,
         takendownCount: status.takendownCount ?? undefined,
-      },
+      }),
 
       accountStrike:
         status.strikeCount !== null || status.totalStrikeCount !== null
-          ? {
-              $type: 'tools.ozone.moderation.defs#accountStrike' as const,
+          ? tools.ozone.moderation.defs.accountStrike.$build({
               activeStrikeCount: status.strikeCount ?? undefined,
               totalStrikeCount: status.totalStrikeCount ?? undefined,
               firstStrikeAt: status.firstStrikeAt ?? undefined,
               lastStrikeAt: status.lastStrikeAt ?? undefined,
-            }
+            })
           : undefined,
     }
 
     if (status.recordPath !== '') {
-      statusView.hosting = {
-        $type: 'tools.ozone.moderation.defs#recordHosting' as const,
+      statusView.hosting = tools.ozone.moderation.defs.recordHosting.$build({
         updatedAt: status.hostingUpdatedAt ?? undefined,
         deletedAt: status.hostingDeletedAt ?? undefined,
         status: status.hostingStatus ?? 'unknown',
-      }
+      })
     } else {
-      statusView.hosting = {
-        $type: 'tools.ozone.moderation.defs#accountHosting' as const,
+      statusView.hosting = tools.ozone.moderation.defs.accountHosting.$build({
         updatedAt: status.hostingUpdatedAt ?? undefined,
         deletedAt: status.hostingDeletedAt ?? undefined,
         status: status.hostingStatus ?? 'unknown',
         deactivatedAt: status.hostingDeactivatedAt ?? undefined,
         reactivatedAt: status.hostingReactivatedAt ?? undefined,
-      }
+      })
     }
 
     return statusView

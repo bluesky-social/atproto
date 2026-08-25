@@ -6,7 +6,7 @@ import {
 } from '../api/moderation/util.js'
 import type { Database } from '../db/index.js'
 import type { ScheduledAction } from '../db/schema/scheduled-action.js'
-import type { tools } from '../lexicons/index.js'
+import { tools } from '../lexicons/index.js'
 import { dbLogger } from '../logger.js'
 import type {
   ModerationService,
@@ -96,8 +96,7 @@ export class ScheduledActionProcessor {
                   emailContent?: string
                 }
               modTool = eventData.modTool
-              event = {
-                $type: 'tools.ozone.moderation.defs#modEventTakedown',
+              event = tools.ozone.moderation.defs.modEventTakedown.$build({
                 comment: `[SCHEDULED_ACTION] ${eventData.comment || 'Scheduled takedown executed'}`,
                 durationInHours: eventData.durationInHours,
                 acknowledgeAccountSubjects:
@@ -105,7 +104,7 @@ export class ScheduledActionProcessor {
                 policies: eventData.policies,
                 severityLevel: eventData.severityLevel,
                 strikeCount: eventData.strikeCount,
-              }
+              })
 
               if (eventData.emailSubject && eventData.emailContent) {
                 email.subject = eventData.emailSubject
@@ -238,16 +237,15 @@ export class ScheduledActionProcessor {
         )
       }
       await moderationTxn.logEvent({
-        event: {
+        event: tools.ozone.moderation.defs.modEventEmail.$build({
           content: email.content,
           subjectLine: email.subject,
-          $type: 'tools.ozone.moderation.defs#modEventEmail',
           comment: [
             'Communication attached to scheduled action',
             isDelivered ? '' : 'Email delivery failed',
           ].join('.'),
           isDelivered,
-        },
+        }),
         subject,
         modTool,
         createdBy: action.createdBy,

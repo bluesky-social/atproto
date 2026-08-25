@@ -4,7 +4,7 @@ import type { AtUriString, DatetimeString, DidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
 import type { Report } from '../db/schema/report.js'
-import type { tools } from '../lexicons/index.js'
+import { tools } from '../lexicons/index.js'
 import {
   AlreadyInTargetState,
   InvalidStateTransition,
@@ -30,7 +30,7 @@ function reportQuery(db: Database) {
   return db.db
     .selectFrom('report as r')
     .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
-    .where('me.action', '=', 'tools.ozone.moderation.defs#modEventReport')
+    .where('me.action', '=', tools.ozone.moderation.defs.modEventReport.$type)
 }
 
 export async function queryReports(

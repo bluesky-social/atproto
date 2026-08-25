@@ -4,7 +4,7 @@ import { type Client, type DidString, toDatetimeString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import type { Member } from '../db/schema/member.js'
-import { app, type tools } from '../lexicons/index.js'
+import { app, tools } from '../lexicons/index.js'
 import { httpLogger } from '../logger.js'
 import type { AuthHeaders } from '../mod-service/views.js'
 
@@ -50,10 +50,10 @@ export class TeamService {
     if (roles !== undefined) {
       const knownRoles = roles.filter(
         (r) =>
-          r === 'tools.ozone.team.defs#roleAdmin' ||
-          r === 'tools.ozone.team.defs#roleModerator' ||
-          r === 'tools.ozone.team.defs#roleVerifier' ||
-          r === 'tools.ozone.team.defs#roleTriage',
+          r === tools.ozone.team.defs.RoleAdmin ||
+          r === tools.ozone.team.defs.RoleModerator ||
+          r === tools.ozone.team.defs.RoleVerifier ||
+          r === tools.ozone.team.defs.RoleTriage,
       )
 
       // Optimization: no need to query to know that no values will be returned
@@ -193,13 +193,13 @@ export class TeamService {
   }
 
   getMemberRole(member?: Selectable<Member>) {
-    const isAdmin = member?.role === 'tools.ozone.team.defs#roleAdmin'
+    const isAdmin = member?.role === tools.ozone.team.defs.RoleAdmin
     const isModerator =
-      isAdmin || member?.role === 'tools.ozone.team.defs#roleModerator'
+      isAdmin || member?.role === tools.ozone.team.defs.RoleModerator
     const isTriage =
-      isModerator || member?.role === 'tools.ozone.team.defs#roleTriage'
+      isModerator || member?.role === tools.ozone.team.defs.RoleTriage
     const isVerifier =
-      isAdmin || member?.role === 'tools.ozone.team.defs#roleVerifier'
+      isAdmin || member?.role === tools.ozone.team.defs.RoleVerifier
 
     return {
       isModerator,

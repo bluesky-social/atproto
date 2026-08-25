@@ -1,17 +1,16 @@
 import type { Selectable } from 'kysely'
-import { currentDatetimeString } from '@atproto/lex'
 import type {
   $Typed,
   AtUriString,
   DatetimeString,
   DidString,
-  Unknown$TypedObject,
 } from '@atproto/lex'
+import { currentDatetimeString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
 import { CreatedAtUriKeyset, paginate } from '../db/pagination.js'
 import type { Verification } from '../db/schema/verification.js'
-import type { app, tools } from '../lexicons/index.js'
+import { app, tools } from '../lexicons/index.js'
 
 export type VerificationServiceCreator = (db: Database) => VerificationService
 
@@ -144,8 +143,7 @@ export class VerificationService {
       const subjectRepo = repos.get(verification.subject)
       const subjectProfile = profiles.get(verification.subject)
       const issuerProfile = profiles.get(verification.issuer)
-      return {
-        $type: 'tools.ozone.verification.defs#verificationView' as const,
+      return tools.ozone.verification.defs.verificationView.$build({
         uri: verification.uri,
         issuer: verification.issuer,
         subject: verification.subject,
@@ -158,19 +156,15 @@ export class VerificationService {
         revokeReason: verification.revokeReason || undefined,
         issuerRepo,
         subjectRepo,
+        // @ts-expect-error (open union)
         subjectProfile: subjectProfile
-          ? ({
-              $type: 'app.bsky.actor.defs#profileViewDetailed',
-              ...subjectProfile,
-            } as unknown as Unknown$TypedObject)
+          ? app.bsky.actor.defs.profileViewDetailed.$build(subjectProfile)
           : undefined,
+        // @ts-expect-error (open union)
         issuerProfile: issuerProfile
-          ? ({
-              $type: 'app.bsky.actor.defs#profileViewDetailed',
-              ...issuerProfile,
-            } as unknown as Unknown$TypedObject)
+          ? app.bsky.actor.defs.profileViewDetailed.$build(issuerProfile)
           : undefined,
-      }
+      })
     })
   }
 

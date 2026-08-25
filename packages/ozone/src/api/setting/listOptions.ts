@@ -1,4 +1,3 @@
-import type { DidString } from '@atproto/lex'
 import { AuthRequiredError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { tools } from '../../lexicons/index.js'
@@ -19,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        did = access.iss as DidString
+        did = access.iss
       }
 
       const settingService = ctx.settingService(db)

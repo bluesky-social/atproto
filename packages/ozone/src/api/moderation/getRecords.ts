@@ -26,21 +26,19 @@ export default function (server: Server, ctx: AppContext) {
       const results = params.uris.map((uri) => {
         const record = records.get(uri)
         if (!record) {
-          return {
+          return tools.ozone.moderation.defs.recordViewNotFound.$build({
             uri,
-            $type: 'tools.ozone.moderation.defs#recordViewNotFound' as const,
-          }
+          })
         }
 
-        return {
-          $type: 'tools.ozone.moderation.defs#recordViewDetail' as const,
+        return tools.ozone.moderation.defs.recordViewDetail.$build({
           ...record,
           repo: addAccountInfoToRepoView(
             record.repo,
             accountInfos.get(record.repo.did) || null,
             auth.credentials.isModerator,
           ),
-        }
+        })
       })
 
       return {

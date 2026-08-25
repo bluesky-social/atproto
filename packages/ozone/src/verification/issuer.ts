@@ -10,7 +10,7 @@ import { PasswordSession } from '@atproto/lex-password-session'
 import { AtUri } from '@atproto/syntax'
 import type { VerifierConfig } from '../config/index.js'
 import type { Verification } from '../db/schema/verification.js'
-import { app, com } from '../lexicons/index.js'
+import { app, com, tools } from '../lexicons/index.js'
 
 export type VerificationInput = {
   displayName: string
@@ -62,21 +62,19 @@ export class VerificationIssuer {
 
   async verify(verifications: VerificationInput[]) {
     const grantedVerifications: Selectable<Verification>[] = []
-    const failedVerifications: {
-      $type: 'tools.ozone.verification.grantVerifications#grantError'
-      subject: DidString
-      error: string
-    }[] = []
+    const failedVerifications: tools.ozone.verification.grantVerifications.GrantError[] =
+      []
     const now = currentDatetimeString()
     const client = await this.getClient()
     await Promise.allSettled(
       verifications.map(async ({ displayName, handle, subject, createdAt }) => {
         if (handle.toLowerCase() === HANDLE_INVALID) {
-          failedVerifications.push({
-            $type: 'tools.ozone.verification.grantVerifications#grantError',
-            error: 'Cannot verify with invalid handle',
-            subject,
-          })
+          failedVerifications.push(
+            tools.ozone.verification.grantVerifications.grantError.$build({
+              error: 'Cannot verify with invalid handle',
+              subject,
+            }),
+          )
           return
         }
 
@@ -106,11 +104,12 @@ export class VerificationIssuer {
             revokeReason: null,
           })
         } catch (err) {
-          failedVerifications.push({
-            $type: 'tools.ozone.verification.grantVerifications#grantError',
-            error: (err as Error).message,
-            subject,
-          })
+          failedVerifications.push(
+            tools.ozone.verification.grantVerifications.grantError.$build({
+              error: err instanceof Error ? err.message : String(err),
+              subject,
+            }),
+          )
           return
         }
       }),
@@ -147,7 +146,10 @@ export class VerificationIssuer {
           })
           revokedVerifications.push(uri)
         } catch (err) {
-          failedRevocations.push({ uri, error: (err as Error).message })
+          failedRevocations.push({
+            uri,
+            error: err instanceof Error ? err.message : String(err),
+          })
           return
         }
       }),

@@ -5,7 +5,7 @@ import {
   type Server,
 } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import { tools } from '../../lexicons/index.js'
+import { com, tools } from '../../lexicons/index.js'
 import { subjectFromInput } from '../../mod-service/subject.js'
 import type { ExecutionSchedule } from '../../scheduled-action/types.js'
 import { getScheduledActionType } from '../util.js'
@@ -74,31 +74,29 @@ export default function (server: Server, ctx: AppContext) {
               tools.ozone.moderation.scheduleAction.takedown.$isTypeOf(action)
             ) {
               await modService.logEvent({
-                event: {
-                  $type: 'tools.ozone.moderation.defs#scheduleTakedownEvent',
-                  executeAfter: scheduling.executeAfter,
-                  executeUntil: scheduling.executeUntil,
-                  executeAt: scheduling.executeAt,
-                  comment: action.comment,
-                },
-                subject: subjectFromInput({
-                  did: subject,
-                  $type: 'com.atproto.admin.defs#repoRef',
-                }),
+                event: tools.ozone.moderation.defs.scheduleTakedownEvent.$build(
+                  {
+                    executeAfter: scheduling.executeAfter,
+                    executeUntil: scheduling.executeUntil,
+                    executeAt: scheduling.executeAt,
+                    comment: action.comment,
+                  },
+                ),
+                subject: subjectFromInput(
+                  com.atproto.admin.defs.repoRef.$build({ did: subject }),
+                ),
                 createdBy: actualCreatedBy as DidString,
                 createdAt: now,
                 modTool,
               })
               await modService.logEvent({
-                event: {
-                  $type: 'tools.ozone.moderation.defs#modEventTag',
+                event: tools.ozone.moderation.defs.modEventTag.$build({
                   add: [ScheduledTakedownTag],
                   remove: [],
-                },
-                subject: subjectFromInput({
-                  did: subject,
-                  $type: 'com.atproto.admin.defs#repoRef',
                 }),
+                subject: subjectFromInput(
+                  com.atproto.admin.defs.repoRef.$build({ did: subject }),
+                ),
                 createdBy,
                 createdAt: now,
               })

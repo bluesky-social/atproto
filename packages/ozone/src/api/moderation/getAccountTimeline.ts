@@ -132,9 +132,9 @@ const getAccountHistory = async (ctx: AppContext, did: DidString) => {
 }
 
 const PLC_OPERATION_MAP = {
-  create: 'tools.ozone.moderation.defs#timelineEventPlcCreate',
-  plc_operation: 'tools.ozone.moderation.defs#timelineEventPlcOperation',
-  plc_tombstone: 'tools.ozone.moderation.defs#timelineEventPlcTombstone',
+  create: tools.ozone.moderation.defs.TimelineEventPlcCreate,
+  plc_operation: tools.ozone.moderation.defs.TimelineEventPlcOperation,
+  plc_tombstone: tools.ozone.moderation.defs.TimelineEventPlcTombstone,
 }
 
 const getPlcHistory = async (ctx: AppContext, did: DidString) => {

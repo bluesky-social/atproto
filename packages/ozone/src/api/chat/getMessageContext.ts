@@ -1,6 +1,6 @@
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import { chat } from '../../lexicons/index.js'
+import { chat, tools } from '../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(chat.bsky.moderation.getMessageContext, {
@@ -20,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         .where('subjectMessageId', '=', params.messageId)
         // uses "moderation_event_message_id_idx" index
         .where('subjectMessageId', 'is not', null)
-        .where('action', '=', 'tools.ozone.moderation.defs#modEventReport')
+        .where('action', '=', tools.ozone.moderation.defs.modEventReport.$type)
         .limit(1)
         .executeTakeFirst()
       if (!found) {

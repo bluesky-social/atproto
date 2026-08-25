@@ -1,5 +1,6 @@
 import type { DidString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { tools } from '../../lexicons/index.js'
 import { ProtectedTagSettingKey } from '../../setting/constants.js'
 import type { SettingService } from '../../setting/service.js'
 import type { ProtectedTagSetting } from '../../setting/types.js'
@@ -52,9 +53,7 @@ export const assertProtectedTagAction = ({
     if (protectedTags[tag]['roles']) {
       if (isAdmin) {
         if (
-          protectedTags[tag]['roles'].includes(
-            'tools.ozone.team.defs#roleAdmin',
-          )
+          protectedTags[tag]['roles'].includes(tools.ozone.team.defs.RoleAdmin)
         ) {
           return
         }
@@ -66,7 +65,7 @@ export const assertProtectedTagAction = ({
       if (isModerator) {
         if (
           protectedTags[tag]['roles'].includes(
-            'tools.ozone.team.defs#roleModerator',
+            tools.ozone.team.defs.RoleModerator,
           )
         ) {
           return
@@ -79,9 +78,7 @@ export const assertProtectedTagAction = ({
 
       if (isTriage) {
         if (
-          protectedTags[tag]['roles'].includes(
-            'tools.ozone.team.defs#roleTriage',
-          )
+          protectedTags[tag]['roles'].includes(tools.ozone.team.defs.RoleTriage)
         ) {
           return
         }

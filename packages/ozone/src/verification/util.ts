@@ -4,7 +4,7 @@ import {
   getPdsAccountInfos,
 } from '../api/util.js'
 import type { AppContext } from '../context.js'
-import type { tools } from '../lexicons/index.js'
+import { tools } from '../lexicons/index.js'
 import type { ModerationService } from '../mod-service/index.js'
 import type { ParsedLabelers } from '../util.js'
 
@@ -30,22 +30,18 @@ export const getReposForVerifications = async (
       if (!partialRepo) {
         return [
           did,
-          {
-            did,
-            $type: 'tools.ozone.moderation.defs#repoViewNotFound' as const,
-          },
+          tools.ozone.moderation.defs.repoViewNotFound.$build({ did }),
         ]
       }
       return [
         did,
-        {
-          ...addAccountInfoToRepoViewDetail(
+        tools.ozone.moderation.defs.repoViewDetail.$build(
+          addAccountInfoToRepoViewDetail(
             partialRepo,
             accountInfo.get(did) || null,
             isModerator,
           ),
-          $type: 'tools.ozone.moderation.defs#repoViewDetail' as const,
-        },
+        ),
       ]
     }),
   )
