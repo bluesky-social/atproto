@@ -184,7 +184,8 @@ export function currentDatetimeString(): DatetimeString {
  * @throws InvalidDatetimeError if the input date is not a valid atproto datetime (eg, it is too far in the future or past, or it normalizes to a negative year).
  * @see {@link DatetimeString}
  */
-export function toDatetimeString(date: Date): DatetimeString {
+export function toDatetimeString(input: Date | string): DatetimeString {
+  const date = typeof input === 'string' ? new Date(input) : input
   return asAtprotoDate(date).toISOString()
 }
 
