@@ -15,11 +15,7 @@ export default function (server: Server, ctx: AppContext) {
         .limit(limit)
 
       if (params.since !== undefined) {
-        builder = builder.where(
-          'cts',
-          '>',
-          toDatetimeString(new Date(params.since)),
-        )
+        builder = builder.where('cts', '>', toDatetimeString(params.since))
       }
 
       const labelRes = await builder.execute()

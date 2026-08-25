@@ -614,7 +614,7 @@ export class ModerationViews {
     )
     // Intentionally missing details field, since we don't have any on appview.
     // We also don't know when the blob was created, so we use a canned creation time.
-    const unknownTime = toDatetimeString(new Date(0))
+    const unknownTime = toDatetimeString(0)
     return blobs.map((blob) => {
       const cid = getBlobCidString(blob)
       const subjectStatus = statusByCid[cid]
@@ -885,7 +885,7 @@ export function getSelfLabels(details: {
   const cts =
     typeof record.createdAt === 'string'
       ? normalizeDatetimeAlways(record.createdAt)
-      : toDatetimeString(new Date(0))
+      : toDatetimeString(0)
   return record.labels.values.map(({ val }) => {
     return { src, uri, cid, val, cts }
   })

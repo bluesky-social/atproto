@@ -87,7 +87,7 @@ const getSubjectStatusForModerationEvent = ({
         reviewState: tools.ozone.moderation.defs.reviewClosed.value,
         lastReviewedAt: createdAt,
         suspendUntil: durationInHours
-          ? toDatetimeString(new Date(Date.now() + durationInHours * HOUR))
+          ? toDatetimeString(Date.now() + durationInHours * HOUR)
           : null,
       }
     case tools.ozone.moderation.defs.modEventMuteReporter.$type:
@@ -96,7 +96,7 @@ const getSubjectStatusForModerationEvent = ({
         lastReviewedAt: createdAt,
         // By default, mute for 24hrs
         muteReportingUntil: toDatetimeString(
-          new Date(Date.now() + (durationInHours || 24) * HOUR),
+          Date.now() + (durationInHours || 24) * HOUR,
         ),
         // It's not likely to receive a mute event on a subject that does not already have a status row
         // but if it does happen, default to unnecessary

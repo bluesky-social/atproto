@@ -31,7 +31,7 @@ export class SafelinkRuleService {
       action: event.action,
       reason: event.reason,
       createdBy: event.createdBy,
-      createdAt: toDatetimeString(new Date(event.createdAt)),
+      createdAt: toDatetimeString(event.createdAt),
       comment: event.comment || undefined,
     }
   }

@@ -2,4 +2,4 @@
 '@atproto/syntax': patch
 ---
 
-Allow using `string` value as `toDatetimeString` input
+Allow using `string` and `number` value as `toDatetimeString` input

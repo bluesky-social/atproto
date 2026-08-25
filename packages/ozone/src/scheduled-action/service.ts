@@ -29,21 +29,21 @@ export class ScheduledActionService {
       eventData: action.eventData as LexMap | undefined,
       did: action.did,
       executeAt: action.executeAt
-        ? toDatetimeString(new Date(action.executeAt))
+        ? toDatetimeString(action.executeAt)
         : undefined,
       executeAfter: action.executeAfter
-        ? toDatetimeString(new Date(action.executeAfter))
+        ? toDatetimeString(action.executeAfter)
         : undefined,
       executeUntil: action.executeUntil
-        ? toDatetimeString(new Date(action.executeUntil))
+        ? toDatetimeString(action.executeUntil)
         : undefined,
       randomizeExecution: action.randomizeExecution,
       createdBy: action.createdBy,
-      createdAt: toDatetimeString(new Date(action.createdAt)),
-      updatedAt: toDatetimeString(new Date(action.updatedAt)),
+      createdAt: toDatetimeString(action.createdAt),
+      updatedAt: toDatetimeString(action.updatedAt),
       status: action.status,
       lastExecutedAt: action.lastExecutedAt
-        ? toDatetimeString(new Date(action.lastExecutedAt))
+        ? toDatetimeString(action.lastExecutedAt)
         : undefined,
       lastFailureReason: action.lastFailureReason || undefined,
       executionEventId: action.executionEventId || undefined,

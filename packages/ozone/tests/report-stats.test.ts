@@ -306,7 +306,7 @@ describe('report-stats', () => {
         // Report rows are inserted asynchronously by the queue-router daemon —
         // drain it before looking up the row.
         await network.processAll()
-        const backdate = toDatetimeString(new Date(Date.now() - ts * 1000))
+        const backdate = toDatetimeString(Date.now() - ts * 1000)
         const report = await db.db
           .selectFrom('report')
           .select(['id', 'status'])
@@ -467,7 +467,7 @@ describe('report-stats', () => {
         .orderBy('id', 'desc')
         .executeTakeFirstOrThrow()
 
-      const backdate = toDatetimeString(new Date(Date.now() - 120 * 1000))
+      const backdate = toDatetimeString(Date.now() - 120 * 1000)
       const now = currentDatetimeString()
       await db.db
         .updateTable('report')

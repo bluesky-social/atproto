@@ -102,7 +102,7 @@ describe('expiring tags', () => {
     // Manually expire the tags in the DB
     await network.ozone.ctx.db.db
       .updateTable('expiring_tag')
-      .set({ expiresAt: toDatetimeString(new Date(Date.now() - 1000)) })
+      .set({ expiresAt: toDatetimeString(Date.now() - 1000) })
       .where('did', '=', sc.dids.bob)
       .execute()
 
@@ -192,7 +192,7 @@ describe('expiring tags', () => {
         recordPath: '',
         convoId: '',
         tag: 'skip-tag',
-        expiresAt: toDatetimeString(new Date(Date.now() - 1000)),
+        expiresAt: toDatetimeString(Date.now() - 1000),
         createdBy: sc.dids.alice as DidString,
       })
       .execute()
