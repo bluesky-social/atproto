@@ -1,5 +1,11 @@
 import type { Generated } from 'kysely'
-import type { $TypeOf, DatetimeString, DidString } from '@atproto/lex'
+import type {
+  $TypeOf,
+  CidString,
+  DatetimeString,
+  DidString,
+  UriString,
+} from '@atproto/lex'
 import type { chat, com, tools } from '../../lexicons/index.js'
 
 export const eventTableName = 'moderation_event'
@@ -35,9 +41,9 @@ export interface ModerationEvent {
     | $TypeOf<chat.bsky.convo.defs.MessageRef>
     | $TypeOf<chat.bsky.convo.defs.ConvoRef>
   subjectDid: DidString
-  subjectUri: string | null
-  subjectCid: string | null
-  subjectBlobCids: string[] | null
+  subjectUri: UriString | null
+  subjectCid: CidString | null
+  subjectBlobCids: CidString[] | null
   subjectConvoId: string | null
   subjectMessageId: string | null
   createLabelVals: string | null

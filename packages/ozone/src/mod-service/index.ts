@@ -8,6 +8,7 @@ import {
   type DidString,
   type UriString,
   currentDatetimeString,
+  isDidString,
   toDatetimeString,
 } from '@atproto/lex'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
@@ -211,13 +212,17 @@ export class ModerationService {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
 
-    if (subject) {
-      const isSubjectAtUri = subject.startsWith('at://')
-      const subjectAtUri = isSubjectAtUri ? new AtUri(subject) : null
-      const subjectDid = (
-        isSubjectAtUri ? new AtUri(subject).hostname : subject
-      ) as DidString
-      const subjectUri = isSubjectAtUri ? subject : null
+    const subjectAtUri = subject?.startsWith('at://')
+      ? new AtUri(subject)
+      : null
+    const subjectDid = subjectAtUri
+      ? subjectAtUri.did
+      : isDidString(subject)
+        ? subject
+        : null
+
+    if (subjectDid) {
+      const subjectUri = subjectAtUri ? subjectAtUri.href : null
       // regardless of subjectUri check, we always want to query against subjectDid column since that's indexed
       builder = builder.where('subjectDid', '=', subjectDid)
 
@@ -235,6 +240,11 @@ export class ModerationService {
             .where('subjectConvoId', 'is', null)
         }
       }
+    } else if (subject) {
+      // If subject is provided but not a valid DID or at:// URI, return no
+      // results: equivalent to where did = 'invalid-did' which will never match
+      // any rows.
+      return { cursor: undefined, events: [] }
     } else if (subjectType === 'account') {
       builder = builder
         .where('subjectUri', 'is', null)
@@ -252,7 +262,7 @@ export class ModerationService {
         .where((eb) =>
           eb.or(
             collections.map((collection) =>
-              eb('subjectUri', 'like', `%/${collection}/%`),
+              eb('subjectUri', 'like', `%/${collection}/%` as any),
             ),
           ),
         )
@@ -780,7 +790,7 @@ export class ModerationService {
       builder = builder.where(
         'subjectUri',
         'like',
-        `%${subject.subject.recordPath}%`,
+        `%${subject.subject.recordPath}%` as any,
       )
     }
 

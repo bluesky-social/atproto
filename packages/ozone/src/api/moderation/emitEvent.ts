@@ -347,7 +347,8 @@ const handleModerationEvent = async ({
 
     if (isLabelEvent) {
       await moderationTxn.formatAndCreateLabels(
-        (result.event.subjectUri ?? result.event.subjectDid) as UriString,
+        (result.event.subjectUri as UriString | undefined) ??
+          result.event.subjectDid,
         result.event.subjectCid,
         {
           create: result.event.createLabelVals?.length
