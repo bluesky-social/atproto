@@ -82,11 +82,14 @@ export class DiscriminatedUnionSchema<
 
   readonly variantsMap: Map<unknown, DiscriminatedUnionVariant<TDiscriminator>>
 
-  constructor(
-    readonly discriminator: TDiscriminator,
-    readonly variants: TVariants,
-  ) {
+  readonly discriminator: TDiscriminator
+  readonly variants: TVariants
+
+  constructor(discriminator: TDiscriminator, variants: TVariants) {
     super()
+
+    this.discriminator = discriminator
+    this.variants = variants
 
     // Although we usually try to avoid initialization work in constructors,
     // here it is necessary to ensure that invalid discriminated throw from the

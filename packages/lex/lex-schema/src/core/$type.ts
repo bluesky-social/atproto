@@ -197,3 +197,9 @@ export type Unknown$Type = string & { [unknown$TypeSymbol]: true }
  * ```
  */
 export type Unknown$TypedObject = { $type: Unknown$Type }
+
+export function asUnknown$TypedObject(
+  obj: $Typed<{ [key: string]: unknown }>,
+): Unknown$TypedObject {
+  return obj as Unknown$TypedObject
+}
