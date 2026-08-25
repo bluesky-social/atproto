@@ -259,7 +259,7 @@ const handleModerationEvent = async ({
     const result = await moderationTxn.logEvent({
       event,
       subject,
-      createdBy: createdBy as DidString,
+      createdBy,
       modTool: input.body.modTool,
       externalId,
     })
@@ -275,7 +275,7 @@ const handleModerationEvent = async ({
           subjectUri,
           eventId: result.event.id,
           eventType: event.$type,
-          createdBy: createdBy as DidString,
+          createdBy,
         })
       } catch (err) {
         throw new InvalidRequestError(

@@ -1,6 +1,6 @@
 import { type Selectable, sql } from 'kysely'
-import { currentDatetimeString } from '@atproto/lex'
 import type { DatetimeString, DidString, NsidString } from '@atproto/lex'
+import { currentDatetimeString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
@@ -157,7 +157,7 @@ export class QueueService {
     reportTypes: string[]
     description?: string | null
     recommendedPolicies: string[]
-    createdBy: DidString
+    createdBy: DidString | 'admin_token'
   }): Promise<Selectable<ReportQueue>> {
     const now = currentDatetimeString()
     return await this.db.db
@@ -169,7 +169,8 @@ export class QueueService {
         reportTypes: jsonb(reportTypes),
         description: description ?? null,
         recommendedPolicies: jsonb(recommendedPolicies),
-        createdBy,
+        // createdBy can be 'admin_token'
+        createdBy: createdBy as DidString,
         enabled: true,
         createdAt: now,
         updatedAt: now,

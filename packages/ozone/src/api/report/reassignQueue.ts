@@ -20,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         reportId: input.body.reportId,
         toQueueId: input.body.queueId,
         comment: input.body.comment,
-        createdBy: createdBy as DidString,
+        createdBy,
       })
 
       const report = await getReportById(db, input.body.reportId)

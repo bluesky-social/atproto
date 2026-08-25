@@ -65,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
         reportTypes,
         description,
         recommendedPolicies,
-        createdBy: createdBy as DidString,
+        createdBy,
       })
 
       return {
