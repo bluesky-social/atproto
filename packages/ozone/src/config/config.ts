@@ -13,7 +13,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   const serviceCfg: OzoneConfig['service'] = {
     port,
     publicUrl: env.publicUrl,
-    did: env.serverDid as DidString,
+    did: env.serverDid,
     version: env.version,
     devMode: env.devMode,
     serviceRecordCacheTTL: env.serviceRecordCacheTTL ?? 5 * MINUTE, // default 5 mins
@@ -34,8 +34,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   assert(env.appviewUrl, 'appviewUrl is required')
   assert(env.appviewDid, 'appviewDid is required')
   const appviewCfg: OzoneConfig['appview'] = {
-    url: env.appviewUrl as UriString,
-    did: env.appviewDid as DidString,
+    url: env.appviewUrl,
+    did: env.appviewDid,
     pushEvents: !!env.appviewPushEvents,
   }
 
@@ -44,8 +44,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     assert(env.pdsUrl, 'pdsUrl is required')
     assert(env.pdsDid, 'pdsDid is required')
     pdsCfg = {
-      url: env.pdsUrl as UriString,
-      did: env.pdsDid as DidString,
+      url: env.pdsUrl,
+      did: env.pdsDid,
     }
   }
 
@@ -54,8 +54,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     assert(env.chatUrl, 'chatUrl is required when chatDid is provided')
     assert(env.chatDid, 'chatDid is required when chatUrl is provided')
     chatCfg = {
-      url: env.chatUrl as UriString,
-      did: env.chatDid as DidString,
+      url: env.chatUrl,
+      did: env.chatDid,
     }
   }
 
@@ -78,15 +78,15 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
         }
       : null
   const accessCfg: OzoneConfig['access'] = {
-    admins: env.adminDids as DidString[],
-    moderators: env.moderatorDids as DidString[],
-    triage: env.triageDids as DidString[],
+    admins: env.adminDids,
+    moderators: env.moderatorDids,
+    triage: env.triageDids,
   }
   const verifierCfg: OzoneConfig['verifier'] =
     env.verifierUrl && env.verifierDid && env.verifierPassword
       ? {
-          url: env.verifierUrl as UriString,
-          did: env.verifierDid as DidString,
+          url: env.verifierUrl,
+          did: env.verifierDid,
           password: env.verifierPassword,
           issuersToIndex: env.verifierIssuersToIndex,
         }

@@ -1,5 +1,9 @@
-import type { DidString } from '@atproto/lex'
-import { ForbiddenError, type Server } from '@atproto/xrpc-server'
+import { isDidString } from '@atproto/lex'
+import {
+  ForbiddenError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { tools } from '../../lexicons/index.js'
 import { getAuthDid } from '../util.js'
@@ -21,10 +25,11 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError('Unauthorized')
       }
 
-      const result = await ctx.assignmentService.assignQueue({
-        did: did as DidString,
-        queueId,
-      })
+      if (!isDidString(did)) {
+        throw new InvalidRequestError('Invalid DID format')
+      }
+
+      const result = await ctx.assignmentService.assignQueue({ did, queueId })
 
       return {
         encoding: 'application/json',

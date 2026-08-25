@@ -1,10 +1,10 @@
 import type { Generated } from 'kysely'
 import type {
   $TypeOf,
+  AtUriString,
   CidString,
   DatetimeString,
   DidString,
-  UriString,
 } from '@atproto/lex'
 import type { chat, com, tools } from '../../lexicons/index.js'
 
@@ -41,7 +41,7 @@ export interface ModerationEvent {
     | $TypeOf<chat.bsky.convo.defs.MessageRef>
     | $TypeOf<chat.bsky.convo.defs.ConvoRef>
   subjectDid: DidString
-  subjectUri: UriString | null
+  subjectUri: AtUriString | null
   subjectCid: CidString | null
   subjectBlobCids: CidString[] | null
   subjectConvoId: string | null

@@ -1,5 +1,9 @@
 import { sql } from 'kysely'
-import { currentDatetimeString } from '@atproto/lex'
+import {
+  currentDatetimeString,
+  isDidIdentifier,
+  isDidString,
+} from '@atproto/lex'
 import type {
   AtUriString,
   DatetimeString,
@@ -56,24 +60,26 @@ export async function queryReports(
       const uri = new AtUri(params.subject)
       if (uri.collection === CHAT_MESSAGE_COLLECTION) {
         builder = builder
-          .where('r.did', '=', uri.host as DidString)
+          .where('r.did', '=', uri.did)
           .where('r.subjectMessageId', '=', uri.rkey)
       } else if (uri.collection === CHAT_CONVO_COLLECTION) {
         builder = builder
-          .where('r.did', '=', uri.host as DidString)
+          .where('r.did', '=', uri.did)
           .where('r.subjectConvoId', '=', uri.rkey)
           .where('r.subjectMessageId', 'is', null)
       } else {
         builder = builder
-          .where('r.did', '=', uri.host as DidString)
+          .where('r.did', '=', uri.did)
           .where('r.recordPath', '=', `${uri.collection}/${uri.rkey}`)
       }
-    } else {
+    } else if (isDidString(params.subject)) {
       builder = builder
-        .where('r.did', '=', params.subject as DidString)
+        .where('r.did', '=', params.subject)
         .where('r.recordPath', '=', '')
         .where('r.subjectMessageId', 'is', null)
         .where('r.subjectConvoId', 'is', null)
+    } else {
+      throw new Error('Subject must be a DID or an AT-URI')
     }
   }
 

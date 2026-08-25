@@ -240,14 +240,14 @@ export class TeamService {
   }
 
   async syncMemberProfiles(): Promise<void> {
-    let lastDid: DidString | '' = ''
+    let lastDid: DidString | undefined
     // Max 25 profiles can be fetched at a time so let's pull 25 members at a time from the db and update their profile details
     do {
       const members = await this.db.db
         .selectFrom('member')
         .select(['did'])
         .limit(25)
-        .$if(!!lastDid, (q) => q.where('did', '>', lastDid as DidString))
+        .$if(!!lastDid, (q) => q.where('did', '>', lastDid!))
         .orderBy('did', 'asc')
         .execute()
 
@@ -265,7 +265,7 @@ export class TeamService {
           .execute()
       }
 
-      lastDid = dids.at(-1) || ''
+      lastDid = dids.at(-1)
     } while (lastDid)
   }
 

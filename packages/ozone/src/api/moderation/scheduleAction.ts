@@ -66,7 +66,7 @@ export default function (server: Server, ctx: AppContext) {
               action: actionType,
               eventData,
               did: subject,
-              createdBy: actualCreatedBy as DidString,
+              createdBy: actualCreatedBy,
               ...executionSchedule,
             })
             // log an event in the mod event stream
@@ -85,7 +85,7 @@ export default function (server: Server, ctx: AppContext) {
                 subject: subjectFromInput(
                   com.atproto.admin.defs.repoRef.$build({ did: subject }),
                 ),
-                createdBy: actualCreatedBy as DidString,
+                createdBy: actualCreatedBy,
                 createdAt: now,
                 modTool,
               })

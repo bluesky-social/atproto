@@ -1,4 +1,4 @@
-import type { AtUriString, DidString } from '@atproto/lex'
+import { type AtUriString, type DidString, isDidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
@@ -14,18 +14,17 @@ export default function (server: Server, ctx: AppContext) {
       const { subject, reportTypes, internalNote, isAutomated } = input.body
 
       let subjectDid: DidString
-      let subjectUri: string | null = null
+      let subjectUri: AtUriString | null = null
       if (subject.startsWith('at://')) {
-        let uri: AtUri
         try {
-          uri = new AtUri(subject)
+          const uri = new AtUri(subject)
+          subjectDid = uri.did
+          subjectUri = uri.href
         } catch {
           throw new InvalidRequestError(`Invalid AT-URI: ${subject}`)
         }
-        subjectDid = uri.host as DidString
-        subjectUri = subject
-      } else if (subject.startsWith('did:')) {
-        subjectDid = subject as DidString
+      } else if (isDidString(subject)) {
+        subjectDid = subject
       } else {
         throw new InvalidRequestError('Subject must be a DID or an AT-URI')
       }
@@ -33,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
       const result = await closeReportsForSubject({
         db: ctx.db,
         subjectDid,
-        subjectUri: subjectUri as AtUriString,
+        subjectUri,
         reportTypes,
         internalNote: internalNote ?? undefined,
         isAutomated: isAutomated ?? false,

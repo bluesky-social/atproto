@@ -1,12 +1,12 @@
-import { ids } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
+import { ids } from '@atproto/api'
 import {
   type ModeratorClient,
   type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import type { DidString, UriString } from '@atproto/lex'
+import type { AtUriString, DidString } from '@atproto/lex'
 import { currentDatetimeString, isDidString } from '@atproto/lex'
 
 const REASON_SPAM = 'com.atproto.moderation.defs#reasonSpam'
@@ -59,7 +59,7 @@ describe('queue-router', () => {
   // Returns the most recent report row for a subject directly from the DB.
   // Pass a DID for account subjects or an at:// URI for record subjects.
   const getLatestReportForSubject = async (
-    subjectOrUri: DidString | UriString,
+    subjectOrUri: DidString | AtUriString,
   ) => {
     const db = network.ozone.daemon.ctx.db
     let query = db.db

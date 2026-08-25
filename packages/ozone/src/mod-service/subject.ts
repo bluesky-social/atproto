@@ -197,7 +197,7 @@ export class RecordSubject implements ModSubject {
     public blobCids?: string[],
   ) {
     this.parsedUri = new AtUri(uri)
-    this.did = this.parsedUri.hostname as DidString
+    this.did = this.parsedUri.did
     this.recordPath = `${this.parsedUri.collection}/${this.parsedUri.rkey}`
   }
   isRepo(): this is RepoSubject {

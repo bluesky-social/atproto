@@ -56,8 +56,17 @@ export class VerificationService {
     revokeReason?: string
   }) {
     const now = currentDatetimeString()
+
+    // @NOTE AtUri and AtUri.did will throw if any of the uris are invalid,
+    // which we want to happen before the transaction.
+    const parsedUris = uris.map((uri) => {
+      const atUri = new AtUri(uri)
+      return { did: atUri.did, uri: atUri.href }
+    })
+
     return this.db.transaction(async (tx) => {
-      for (const uri of uris) {
+      for (const { did, uri } of parsedUris) {
+        // @TODO is this "return" statement right???
         return tx.db
           .updateTable('verification')
           .set({
@@ -65,7 +74,7 @@ export class VerificationService {
             updatedAt: now,
             revokedAt: revokedAt || now,
             // Allow setting revokedBy to a moderator/verifier DID and if it isn't set, default to the author of the verification record
-            revokedBy: revokedBy || (new AtUri(uri).host as DidString),
+            revokedBy: revokedBy || did,
           })
           .where('uri', '=', uri)
           .where('revokedAt', 'is', null)

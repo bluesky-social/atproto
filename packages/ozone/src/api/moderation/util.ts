@@ -7,12 +7,12 @@ import type { ProtectedTagSetting } from '../../setting/types.js'
 
 export const getProtectedTags = async (
   settingService: SettingService,
-  serviceDid: string,
+  serviceDid: DidString,
 ) => {
   const protectedTagSetting = await settingService.query({
     keys: [ProtectedTagSettingKey],
     scope: 'instance',
-    did: serviceDid as DidString,
+    did: serviceDid,
     limit: 1,
   })
 

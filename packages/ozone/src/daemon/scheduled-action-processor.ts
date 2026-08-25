@@ -1,5 +1,6 @@
 import type { Selectable } from 'kysely'
 import { MINUTE, SECOND } from '@atproto/common'
+import type { DidString } from '@atproto/lex'
 import {
   assertProtectedTagAction,
   getProtectedTags,
@@ -28,7 +29,7 @@ export class ScheduledActionProcessor {
 
   constructor(
     private db: Database,
-    private serviceDid: string,
+    private serviceDid: DidString,
     private settingService: SettingServiceCreator,
     private modService: ModerationServiceCreator,
     private scheduledActionService: ScheduledActionServiceCreator,

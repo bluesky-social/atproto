@@ -1,4 +1,4 @@
-import type { UriString } from '@atproto/lex'
+import type { DidString, UriString } from '@atproto/lex'
 import {
   AuthRequiredError,
   ForbiddenError,
@@ -418,7 +418,7 @@ export default function (server: Server, ctx: AppContext) {
 
 const assertTagAuth = async (
   settingService: SettingService,
-  serviceDid: string,
+  serviceDid: DidString,
   event: tools.ozone.moderation.defs.ModEventTag,
   auth: ModeratorOutput | AdminTokenOutput,
 ) => {

@@ -1,4 +1,3 @@
-import type { DidString } from '@atproto/lex'
 import { ForbiddenError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { tools } from '../../lexicons/index.js'
@@ -21,8 +20,8 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const result = await ctx.assignmentService.assignReport({
-        did: did as DidString,
-        createdBy: authDid as DidString,
+        did,
+        createdBy: authDid,
         reportId: input.body.reportId,
         queueId: input.body.queueId,
         isPermanent: input.body.isPermanent,

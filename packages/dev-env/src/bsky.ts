@@ -3,7 +3,7 @@ import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import * as bsky from '@atproto/bsky'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { Client } from '@atproto/lex'
+import { Client, type UriString } from '@atproto/lex'
 import type { DidString } from '@atproto/syntax'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
 import getPort from './get-port.js'
@@ -12,14 +12,14 @@ export * from '@atproto/bsky'
 
 export class TestBsky {
   constructor(
-    public url: string,
+    public url: UriString,
     public port: number,
     public db: bsky.Database,
     public server: bsky.BskyAppView,
     public dataplane: bsky.DataPlaneServer,
     public bsyncSub: bsky.BsyncSubscription,
     public sub: bsky.RepoSubscription,
-    public serverDid: string,
+    public serverDid: DidString,
   ) {}
 
   static async create(cfg: BskyConfig): Promise<TestBsky> {
@@ -29,7 +29,7 @@ export class TestBsky {
     const plcClient = new PlcClient(cfg.plcUrl)
 
     const port = cfg.port || (await getPort())
-    const url = `http://localhost:${port}`
+    const url: UriString = `http://localhost:${port}`
     const serverDid = (await plcClient.createDid({
       signingKey: serviceKeypair.did(),
       rotationKeys: [serviceKeypair.did()],

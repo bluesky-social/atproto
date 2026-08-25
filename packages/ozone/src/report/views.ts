@@ -29,7 +29,7 @@ type ReportViews = {
     dids: DidString[],
   ): Promise<Map<string, app.bsky.actor.defs.ProfileViewDetailed>>
   getSubjectStatus(
-    subjects: string[],
+    subjects: (UriString | DidString)[],
   ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>>
   formatSubjectStatus(
     status: ModerationSubjectStatusRowWithHandle,
@@ -63,7 +63,7 @@ export async function hydrateReportInfo(
   // populate data to fetch
   const dids = new Set<DidString>()
   const uris = new Set<string>()
-  const convoUris = new Set<string>()
+  const convoUris = new Set<AtUriString>()
   const queueIds = new Set<number>()
   const assignmentDids: DidString[] = []
   for (const report of reports) {
@@ -223,7 +223,7 @@ export function buildReportView(
       status: subjectStatus,
     },
     reportType,
-    reportedBy: report.reportedBy as DidString,
+    reportedBy: report.reportedBy,
     reporter: {
       type: 'account' as const,
       subject: reporterDid,

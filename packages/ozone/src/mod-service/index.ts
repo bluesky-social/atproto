@@ -1222,18 +1222,22 @@ export class ModerationService {
         )
     }
 
-    if (ignoreSubjects?.length) {
-      builder = builder
-        .where(
-          'moderation_subject_status.did',
-          'not in',
-          ignoreSubjects as DidString[],
-        )
-        .where(
-          'moderation_subject_status.recordPath',
-          'not in',
-          ignoreSubjects as string[],
-        )
+    const ignoredDids = ignoreSubjects?.filter(isDidString)
+    if (ignoredDids?.length) {
+      builder = builder.where(
+        'moderation_subject_status.did',
+        'not in',
+        ignoredDids,
+      )
+    }
+
+    const ignoredRecordPaths = ignoreSubjects?.filter((r) => !isDidString(r))
+    if (ignoredRecordPaths?.length) {
+      builder = builder.where(
+        'moderation_subject_status.recordPath',
+        'not in',
+        ignoredRecordPaths,
+      )
     }
 
     const reviewStateNormalized = getReviewState(reviewState)

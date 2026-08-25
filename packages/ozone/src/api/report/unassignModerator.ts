@@ -1,4 +1,3 @@
-import type { DidString } from '@atproto/lex'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { tools } from '../../lexicons/index.js'
@@ -9,9 +8,10 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const authDid = getAuthDid(auth, ctx.cfg.service.did)
+
       const result = await ctx.assignmentService.unassignReport({
         reportId: input.body.reportId,
-        createdBy: authDid as DidString,
+        createdBy: authDid,
       })
 
       return {

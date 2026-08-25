@@ -13,12 +13,14 @@ import {
   type LexMap,
   type NsidString,
   type Un$Typed,
+  type UriString,
   currentDatetimeString,
   getBlobCidString,
   getBlobMime,
   getBlobSize,
   isBlobRef,
   isDatetimeString,
+  isDidString,
   isHandleString,
   toDatetimeString,
 } from '@atproto/lex'
@@ -116,7 +118,7 @@ export class ModerationViews {
       const status = subjectStatuses.get(did)
       return acc.set(did, {
         // No email or invite info on appview
-        did: did as DidString,
+        did,
         handle: info.handle,
         relatedRecords: info.relatedRecords ?? [],
         indexedAt: info.indexedAt,
@@ -363,13 +365,15 @@ export class ModerationViews {
     })
     if (res.success) return res.body
     if (res.error !== 'RecordNotFound') return null
+    // @NOTE we only support dids (lexicon defines AtIdentifierString)
+    if (!isDidString(params.repo)) return null
 
     // Fall back to the repo's PDS. If that fetch fails, return null regardless
     // of the error.
     try {
       const { client: pdsClient } = await getPdsClientForRepo(
         this.idResolver,
-        params.repo as DidString,
+        params.repo,
         this.devMode,
       )
       if (!pdsClient) {
@@ -409,7 +413,7 @@ export class ModerationViews {
 
   async records(subjects: RecordSubject[]) {
     const uris = subjects.map((record) => new AtUri(record.uri))
-    const dids = uris.map((u) => u.hostname as DidString)
+    const dids = uris.map((u) => u.did)
 
     const [repos, subjectStatuses, records] = await Promise.all([
       this.repos(dids),
@@ -676,7 +680,7 @@ export class ModerationViews {
   }
 
   async getSubjectStatus(
-    subjects: string[],
+    subjects: (UriString | AtUri)[],
   ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>> {
     if (!subjects.length) return new Map()
 
@@ -877,7 +881,7 @@ export function getSelfLabels(details: {
   const { uri, cid, record } = details
   if (!uri || !cid || !record) return []
   if (!isValidSelfLabels(record.labels)) return []
-  const src = new AtUri(uri).host as DidString // record creator
+  const src = new AtUri(uri).did // record creator
   const cts =
     typeof record.createdAt === 'string'
       ? normalizeDatetimeAlways(record.createdAt)

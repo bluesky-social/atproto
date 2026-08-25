@@ -262,7 +262,7 @@ export class TestOzone {
 export const createOzoneDid = async (
   plcUrl: string,
   keypair: Keypair,
-): Promise<string> => {
+): Promise<DidString> => {
   const plcClient = new plc.Client(plcUrl)
   const plcOp = await plc.signOperation(
     {
@@ -284,5 +284,5 @@ export const createOzoneDid = async (
   )
   const did = await plc.didForCreateOp(plcOp)
   await plcClient.sendOperation(did, plcOp)
-  return did
+  return did as DidString
 }

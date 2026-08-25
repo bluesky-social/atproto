@@ -1,7 +1,7 @@
 import type express from 'express'
 import * as ui8 from 'uint8arrays'
 import type { IdResolver } from '@atproto/identity'
-import type { DidString } from '@atproto/lex'
+import { type DidString, isDidString } from '@atproto/lex'
 import {
   AuthRequiredError,
   parseReqNsid,
@@ -131,11 +131,15 @@ export class AuthVerifier {
     const { isAdmin, isModerator, isTriage, isVerifier } =
       this.teamService.getMemberRole(member)
 
+    if (!isDidString(payload.aud)) {
+      throw new AuthRequiredError('audience is not a valid DID', 'BadJwt')
+    }
+
     return {
       credentials: {
         type: 'standard',
         iss,
-        aud: payload.aud as DidString,
+        aud: payload.aud,
         isAdmin,
         isModerator,
         isTriage,

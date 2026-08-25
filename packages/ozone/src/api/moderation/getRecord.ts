@@ -1,4 +1,3 @@
-import type { DidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
@@ -14,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const [records, accountInfos] = await Promise.all([
         ctx.modService(db).views.recordDetails([params], labelers),
-        getPdsAccountInfos(ctx, [new AtUri(params.uri).hostname as DidString]),
+        getPdsAccountInfos(ctx, [new AtUri(params.uri).hostname]),
       ])
 
       const record = records.get(params.uri)

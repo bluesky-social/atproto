@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import type { DidString } from '@atproto/lex'
+import { isDidString } from '@atproto/lex'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { app, tools } from '../../lexicons/index.js'
@@ -15,7 +15,15 @@ export default function (server: Server, ctx: AppContext) {
 
       // special case for did searches - do exact match
       if (query?.startsWith('did:')) {
-        const did = query as DidString
+        if (!isDidString(query)) {
+          // Invalid did format, return empty result
+          return {
+            encoding: 'application/json',
+            body: { repos: [] },
+          }
+        }
+
+        const did = query
         const repos = await modService.views.repos([did])
         const found = repos.get(did)
         return {

@@ -1,12 +1,13 @@
 // This may require better organization but for now, just dumping functions here containing DB queries for moderation status
 
 import { HOUR } from '@atproto/common'
+import type { DatetimeString, DidString, UriString } from '@atproto/lex'
 import {
   asDatetimeString,
   currentDatetimeString,
+  isDidString,
   toDatetimeString,
 } from '@atproto/lex'
-import type { DatetimeString, DidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { isAppealReport } from '../api/util.js'
 import type { Database } from '../db/index.js'
@@ -296,7 +297,7 @@ export const adjustModerationSubjectStatus = async (
 
   // If subjectUri exists, it's not a repoRef so pass along the uri to get identifier back
   const identifier = getStatusIdentifierFromSubject(
-    subjectUri || subjectDid,
+    subjectUri ? subjectUri : subjectDid,
     subjectConvoId,
   )
 
@@ -524,35 +525,34 @@ export const adjustModerationSubjectStatus = async (
  * @note Supports addressing conversations explicitly (via convoId) and implicitly (via properly formed at-uri)
  */
 export const getStatusIdentifierFromSubject = (
-  subject: string | AtUri,
+  subject: UriString | AtUri,
   convoId?: string | null,
 ): { did: DidString; recordPath: string; convoId: string } => {
-  const isSubjectString = typeof subject === 'string'
-  if (isSubjectString && subject.startsWith('did:')) {
+  if (isDidString(subject)) {
     return {
-      did: subject as DidString,
+      did: subject,
       recordPath: '',
       convoId: convoId || '',
     }
   }
 
-  if (isSubjectString && !subject.startsWith('at://')) {
+  if (typeof subject === 'string' && !subject.startsWith('at://')) {
     throw new Error('Subject is neither a did nor an at-uri')
   }
 
-  const uri = isSubjectString ? new AtUri(subject) : subject
+  const uri = typeof subject === 'string' ? new AtUri(subject) : subject
 
   // Handle conversation URIs
   if (uri.collection === CHAT_CONVO_COLLECTION) {
     return {
-      did: uri.host as DidString,
+      did: uri.did,
       recordPath: '',
       convoId: uri.rkey,
     }
   }
 
   return {
-    did: uri.host as DidString,
+    did: uri.did,
     recordPath: `${uri.collection}/${uri.rkey}`,
     convoId: '',
   }
