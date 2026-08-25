@@ -1,15 +1,11 @@
 import { sql } from 'kysely'
-import {
-  currentDatetimeString,
-  isDidIdentifier,
-  isDidString,
-} from '@atproto/lex'
 import type {
   AtUriString,
   DatetimeString,
   DidString,
   UriString,
 } from '@atproto/lex'
+import { currentDatetimeString, isDidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
 import type { Report } from '../db/schema/report.js'
