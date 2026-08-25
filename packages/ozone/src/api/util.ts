@@ -1,4 +1,8 @@
-import type { DidString } from '@atproto/lex'
+import {
+  type AtIdentifierString,
+  type DidString,
+  isDidString,
+} from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { AdminTokenOutput, ModeratorOutput } from '../auth-verifier.js'
 import type { AppContext } from '../context.js'
@@ -20,12 +24,16 @@ export const getAuthDid = (
 
 export const getPdsAccountInfos = async (
   ctx: AppContext,
-  dids: DidString[],
+  identifiers: AtIdentifierString[],
 ): Promise<Map<string, com.atproto.admin.defs.AccountView | null>> => {
   const results = new Map<string, com.atproto.admin.defs.AccountView | null>()
 
   const client = ctx.pdsClient
-  if (!client || !dids.length) return results
+  if (!client) return results
+
+  // We only support dids, but input comes from at-uris, which allow handles.
+  const uniqueDids = new Set(identifiers.filter(isDidString))
+  if (!uniqueDids.size) return results
 
   const auth = await ctx.pdsAuth(com.atproto.admin.getAccountInfos.$lxm)
   if (!auth) return results
@@ -33,7 +41,7 @@ export const getPdsAccountInfos = async (
   try {
     const body = await client.call(
       com.atproto.admin.getAccountInfos,
-      { dids },
+      { dids: Array.from(uniqueDids) },
       auth,
     )
     body.infos.forEach((info) => {

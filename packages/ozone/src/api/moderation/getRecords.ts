@@ -1,4 +1,3 @@
-import type { DidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
@@ -19,16 +18,14 @@ export default function (server: Server, ctx: AppContext) {
         ),
         getPdsAccountInfos(
           ctx,
-          params.uris.map((uri) => new AtUri(uri).hostname as DidString),
+          params.uris.map((uri) => new AtUri(uri).hostname),
         ),
       ])
 
       const results = params.uris.map((uri) => {
         const record = records.get(uri)
         if (!record) {
-          return tools.ozone.moderation.defs.recordViewNotFound.$build({
-            uri,
-          })
+          return tools.ozone.moderation.defs.recordViewNotFound.$build({ uri })
         }
 
         return tools.ozone.moderation.defs.recordViewDetail.$build({
