@@ -15,13 +15,21 @@ import {
   handleReportUpdate,
 } from './handle-report-update.js'
 
+const VALID_ACTIVITY_TYPES = new Set([
+  'queueActivity',
+  'assignmentActivity',
+  'escalationActivity',
+  'closeActivity',
+  'reopenActivity',
+  'noteActivity',
+] as const)
+
 export type ActivityType =
-  | 'queueActivity'
-  | 'assignmentActivity'
-  | 'escalationActivity'
-  | 'closeActivity'
-  | 'reopenActivity'
-  | 'noteActivity'
+  typeof VALID_ACTIVITY_TYPES extends Set<infer T> ? T : never
+
+export function isActivityType(value: unknown): value is ActivityType {
+  return (VALID_ACTIVITY_TYPES as Set<unknown>).has(value)
+}
 
 export type CreateActivityParams = {
   /** Exactly one of reportId or eventId must be provided. */
