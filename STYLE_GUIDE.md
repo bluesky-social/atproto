@@ -61,11 +61,11 @@ Prettier (`pnpm run style`) and ESLint (`pnpm run lint`) enforce what can be enf
 
 - **Never write NSID string literals** in a package that uses `@atproto/lex`. Import the generated schema and use the constant it exposes:
 
-  | Lexicon definition               | Use                                     |
-  | -------------------------------- | --------------------------------------- |
-  | record / typed object            | `app.bsky.feed.post.$type`              |
-  | query / procedure / subscription | `app.bsky.feed.getPosts.$lxm`           |
-  | token                            | `app.bsky.feed.defs.requestLess.$token` |
+  | Lexicon definition               | Use                                                                                     |
+  | -------------------------------- | --------------------------------------------------------------------------------------- |
+  | record / typed object            | `app.bsky.feed.post.$type`                                                              |
+  | query / procedure / subscription | `app.bsky.feed.getPosts.$lxm`                                                           |
+  | token                            | `app.bsky.feed.defs.requestLess.$token` or `app.bsky.feed.defs.RequestLess` (preferred) |
 
   Each constant is emitted once per schema, so every reference shares one string instance instead of duplicating the literal at each call site — and the schema stays the single source of truth.
 
