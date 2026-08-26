@@ -1,5 +1,17 @@
 # @atproto/dev-env
 
+## 0.6.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.3.8
+  - @atproto/xrpc-server@0.12.7
+  - @atproto/bsky@0.0.277
+  - @atproto/ozone@0.3.1
+  - @atproto/pds@0.5.31
+  - @atproto/sync@0.4.7
+
 ## 0.6.3
 
 ### Patch Changes
