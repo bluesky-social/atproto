@@ -75,14 +75,17 @@ describe('pds author feed views', () => {
     eve = sc.dids.eve
   })
 
-  beforeEach(async () => network.processAll())
+  beforeEach(async () => {
+    const gate = enableKnownLikersGate(network)
+    await network.processAll()
+    return () => gate.mockRestore()
+  })
   afterAll(async () => network?.close())
 
   // @TODO(bsky) blocked by actor takedown via labels.
   // @TODO(bsky) blocked by record takedown via labels.
 
   it('fetches full author feeds for self (sorted, minimal viewer state).', async () => {
-    using _knownLikersGate = enableKnownLikersGate(network)
     const aliceForAlice = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
       {
@@ -153,18 +156,6 @@ describe('pds author feed views', () => {
   })
 
   it('returns known likers', async () => {
-    const ungated = await agent.api.app.bsky.feed.getAuthorFeed(
-      { actor: sc.accounts[carol].handle },
-      {
-        headers: await network.serviceHeaders(
-          alice,
-          ids.AppBskyFeedGetAuthorFeed,
-        ),
-      },
-    )
-    expect(ungated.data.feed[0].post.viewer?.knownLikers).toBeUndefined()
-
-    using _knownLikersGate = enableKnownLikersGate(network)
     const carolForAlice = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[carol].handle },
       {

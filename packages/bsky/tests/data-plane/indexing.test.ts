@@ -1,5 +1,13 @@
 import { sql } from 'kysely'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import {
   type AppBskyActorProfile,
   type AppBskyFeedLike,
@@ -22,6 +30,7 @@ import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import type { Database } from '../../src/data-plane/server/db/index.js'
 import type { IndexingService } from '../../src/data-plane/server/indexing/index.js'
+import { Gate } from '../../src/feature-gates/gates.js'
 import { forSnapshot } from '../_util.js'
 
 describe('indexing', () => {
@@ -47,7 +56,11 @@ describe('indexing', () => {
     await network.bsky.sub.stop()
   })
 
-  beforeEach(async () => network.processAll())
+  beforeEach(async () => {
+    const gate = enableKnownLikersGate(network)
+    await network.processAll()
+    return () => gate.mockRestore()
+  })
   afterAll(async () => network?.close())
 
   it('indexes posts.', async () => {
@@ -787,6 +800,20 @@ describe('indexing', () => {
       .execute()
   }
 })
+
+const enableKnownLikersGate = (network: TestNetwork) => {
+  const featureGates = network.bsky.ctx.featureGatesClient
+  const scope = featureGates.scope.bind(featureGates)
+  return vi.spyOn(featureGates, 'scope').mockImplementation((context) => {
+    const scoped = scope(context)
+    return {
+      ...scoped,
+      checkGate: (gate, overrides) =>
+        gate === Gate.KnownLikersFeedEnable ||
+        scoped.checkGate(gate, overrides),
+    }
+  })
+}
 
 async function prepareCreate<TRecord>(opts: {
   did: string

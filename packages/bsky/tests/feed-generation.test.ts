@@ -128,7 +128,11 @@ describe('feed generation', () => {
       .execute()
   })
 
-  beforeEach(async () => network.processAll())
+  beforeEach(async () => {
+    const gate = enableKnownLikersGate(network)
+    await network.processAll()
+    return () => gate.mockRestore()
+  })
   afterAll(async () => network?.close())
   afterAll(async () => gen?.close())
 
@@ -801,7 +805,6 @@ describe('feed generation', () => {
 
   describe('getFeed', () => {
     it('resolves basic feed contents.', async () => {
-      using _knownLikersGate = enableKnownLikersGate(network)
       const feed = await agent.api.app.bsky.feed.getFeed(
         { feed: feedUriEven },
         {

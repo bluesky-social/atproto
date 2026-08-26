@@ -63,14 +63,17 @@ describe('timeline views', () => {
     })
   })
 
-  beforeEach(async () => network.processAll())
+  beforeEach(async () => {
+    const gate = enableKnownLikersGate(network)
+    await network.processAll()
+    return () => gate.mockRestore()
+  })
   afterAll(async () => network?.close())
 
   // @TODO(bsky) blocks posts, reposts, replies by actor takedown via labels
   // @TODO(bsky) blocks posts, reposts, replies by record takedown via labels
 
   it("fetches authenticated user's home feed w/ reverse-chronological algorithm", async () => {
-    using _knownLikersGate = enableKnownLikersGate(network)
     const expectOriginatorFollowedBy =
       (did: string) => (item: AppBskyFeedDefs.FeedViewPost) => {
         const originator = getOriginator(item as any)
