@@ -1,5 +1,17 @@
 # @atproto/lex
 
+## 0.3.7
+
+### Patch Changes
+
+- [#5439](https://github.com/bluesky-social/atproto/pull/5439) [`79d911f`](https://github.com/bluesky-social/atproto/commit/79d911fc2bd7c6d9b1a6810e00e81d964b72a4ab) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Generate "token" as string values (in addition to the type)
+
+- Updated dependencies [[`79d911f`](https://github.com/bluesky-social/atproto/commit/79d911fc2bd7c6d9b1a6810e00e81d964b72a4ab), [`79d911f`](https://github.com/bluesky-social/atproto/commit/79d911fc2bd7c6d9b1a6810e00e81d964b72a4ab)]:
+  - @atproto/lex-builder@0.1.13
+  - @atproto/lex-client@0.3.4
+  - @atproto/lex-installer@0.1.16
+  - @atproto/lex-schema@0.2.6
+
 ## 0.3.6
 
 ### Patch Changes
