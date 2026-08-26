@@ -125,7 +125,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'accept-encoding': req.headers['accept-encoding'] || 'identity',
         'accept-language': req.headers['accept-language'],
         'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
-        ...getXAtprotoHeaders(req.headers),
+        ...getAtprotoPassthroughHeaders(req.headers),
         // @NOTE deprecated; use `x-atproto-bsky-topics`
         'x-bsky-topics': req.headers['x-bsky-topics'],
 
@@ -218,7 +218,7 @@ export async function pipethrough(
     headers: {
       'accept-language': req.headers['accept-language'],
       'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
-      ...getXAtprotoHeaders(req.headers),
+      ...getAtprotoPassthroughHeaders(req.headers),
       // @NOTE deprecated; use `x-atproto-bsky-topics`
       'x-bsky-topics': req.headers['x-bsky-topics'],
 
@@ -255,7 +255,9 @@ export async function pipethrough(
 // Request setup/formatting
 // -------------------
 
-function getXAtprotoHeaders(headers: IncomingHttpHeaders): IncomingHttpHeaders {
+function getAtprotoPassthroughHeaders(
+  headers: IncomingHttpHeaders,
+): IncomingHttpHeaders {
   return Object.fromEntries(
     Object.entries(headers).filter(([name]) =>
       name.toLowerCase().startsWith('x-atproto-'),
