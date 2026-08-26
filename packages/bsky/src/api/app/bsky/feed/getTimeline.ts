@@ -91,7 +91,7 @@ const hydration = async (inputs: {
   const { ctx, params, skeleton } = inputs
   return ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx, {
     knownLikers: {
-      limit: 5,
+      subjectUris: skeleton.items.map((item) => item.post.uri),
     },
   })
 }

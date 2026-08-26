@@ -145,7 +145,7 @@ const hydration = async (inputs: {
   const [feedPostState, profileViewerState] = await Promise.all([
     ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx, {
       knownLikers: {
-        limit: 5,
+        subjectUris: skeleton.items.map((item) => item.post.uri),
       },
     }),
     ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], params.hydrateCtx),

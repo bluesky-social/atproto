@@ -176,7 +176,6 @@ export type HydrationState = {
 
 type HydrateKnownLikersOptions = {
   subjectUris: AtUriString[]
-  limit: number
 }
 
 type HydratePostsOptions = Pick<
@@ -187,7 +186,7 @@ type HydratePostsOptions = Pick<
 }
 
 type HydrateFeedItemsOptions = {
-  knownLikers?: Pick<HydrateKnownLikersOptions, 'limit'>
+  knownLikers?: HydrateKnownLikersOptions
 }
 
 export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
@@ -916,14 +915,7 @@ export class Hydrator {
           posts: replies.merge(posts), // avoids refetches while preserving feed-item metadata
         },
         {
-          knownLikers: options.knownLikers
-            ? {
-                subjectUris: dedupeStrs(
-                  items.map((item) => item.post.uri),
-                ) as AtUriString[],
-                limit: options.knownLikers.limit,
-              }
-            : undefined,
+          knownLikers: options.knownLikers,
         },
       ),
       this.hydrateProfiles(
@@ -1037,7 +1029,7 @@ export class Hydrator {
     options: HydrateKnownLikersOptions,
     ctx: HydrateCtx,
   ): Promise<KnownLikersStates | undefined> {
-    const { subjectUris, limit } = options
+    const { subjectUris } = options
     if (!ctx.viewer || subjectUris.length === 0) return undefined
 
     // Fail open.
@@ -1046,7 +1038,7 @@ export class Hydrator {
         {
           actorDid: ctx.viewer,
           subjectUris,
-          limit,
+          limit: 3,
         },
         { signal: AbortSignal.timeout(100) },
       )

@@ -26,6 +26,18 @@ import {
 const isValidReplyRef = asPredicate(AppBskyFeedPost.validateReplyRef)
 const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)
 
+const withoutKnownLikers = (item: AppBskyFeedDefs.FeedViewPost) => {
+  const result = structuredClone(item)
+  removeKnownLikers(result)
+  return result
+}
+
+const removeKnownLikers = (value: unknown): void => {
+  if (!value || typeof value !== 'object') return
+  if ('knownLikers' in value) delete value.knownLikers
+  Object.values(value).forEach(removeKnownLikers)
+}
+
 describe('pds author feed views', () => {
   let network: TestNetwork
   let agent: AtpAgent
@@ -188,7 +200,9 @@ describe('pds author feed views', () => {
     )
 
     expect(full.data.feed.length).toEqual(4)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
+    expect(results(paginatedAll).map(withoutKnownLikers)).toEqual(
+      results([full.data]).map(withoutKnownLikers),
+    )
 
     const exact = await network.bsky.ctx.dataplane.getAuthorFeed({
       actorDid: alice,

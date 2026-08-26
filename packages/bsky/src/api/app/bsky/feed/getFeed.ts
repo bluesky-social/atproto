@@ -127,7 +127,7 @@ const hydration = async (
     params.hydrateCtx,
     {
       knownLikers: {
-        limit: 5,
+        subjectUris: skeleton.items.map((item) => item.post.uri),
       },
     },
   )
