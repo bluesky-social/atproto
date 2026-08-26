@@ -8,17 +8,15 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standardOptionalOrAdminToken,
     handler: async ({ params }) => {
       const { limit } = params
-      let builder = ctx.db.db
+      const labelRes = await ctx.db.db
         .selectFrom('label')
         .selectAll()
         .orderBy('label.cts', 'asc')
+        .$if(params.since != null, (qb) =>
+          qb.where('label.cts', '>', toDatetimeString(params.since!)),
+        )
         .limit(limit)
-
-      if (params.since !== undefined) {
-        builder = builder.where('cts', '>', toDatetimeString(params.since))
-      }
-
-      const labelRes = await builder.execute()
+        .execute()
 
       const modSrvc = ctx.modService(ctx.db)
       const labels = await Promise.all(

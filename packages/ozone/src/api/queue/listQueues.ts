@@ -16,6 +16,8 @@ export default function (server: Server, ctx: AppContext) {
         reportTypes,
       } = params
 
+      // @TODO The lexicon should define the "collection" property as a NSID
+      // string format (but it doesn't)
       if (collection != null && !isNsidString(collection)) {
         throw new InvalidRequestError(
           'Invalid collection NSID',

@@ -13,6 +13,13 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const { queueId, did } = input.body
+
+      // @TODO The lexicon schema should define the "did" property as a did
+      // string format (but it doesn't)
+      if (!isDidString(did)) {
+        throw new InvalidRequestError('Invalid DID format')
+      }
+
       const authDid = getAuthDid(auth, ctx.cfg.service.did)
 
       // RBAC
@@ -23,10 +30,6 @@ export default function (server: Server, ctx: AppContext) {
       // RuBAC
       if (did !== authDid && !auth.credentials.isAdmin) {
         throw new ForbiddenError('Unauthorized')
-      }
-
-      if (!isDidString(did)) {
-        throw new InvalidRequestError('Invalid DID format')
       }
 
       const result = await ctx.assignmentService.assignQueue({ did, queueId })
