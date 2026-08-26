@@ -130,6 +130,26 @@ describe('pds author feed views', () => {
     expect(forSnapshot(aliceForCarol.data.feed)).toMatchSnapshot()
   })
 
+  it('returns known likers', async () => {
+    const carolForAlice = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: sc.accounts[carol].handle },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
+    )
+    const post = carolForAlice.data.feed.find(
+      (item) => item.post.uri === sc.posts[carol][0].ref.uriStr,
+    )
+
+    expect(
+      post?.post.viewer?.knownLikers?.actors.map((actor) => actor.did),
+    ).toEqual([bob])
+    expect(post?.post.viewer?.knownLikers?.count).toBe(1)
+  })
+
   it('paginates', async () => {
     const results = (results: AppBskyFeedGetAuthorFeed.OutputSchema[]) =>
       results.flatMap((res) => res.feed)

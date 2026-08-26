@@ -807,6 +807,13 @@ describe('feed generation', () => {
         sc.posts[sc.dids.carol][0].ref.uriStr,
         sc.replies[sc.dids.carol][0].ref.uriStr,
       ])
+      const carolPost = feed.data.feed.find(
+        (item) => item.post.uri === sc.posts[sc.dids.carol][0].ref.uriStr,
+      )
+      expect(
+        carolPost?.post.viewer?.knownLikers?.actors.map((actor) => actor.did),
+      ).toEqual([sc.dids.bob])
+      expect(carolPost?.post.viewer?.knownLikers?.count).toBe(1)
       expect(forSnapshot(feed.data.feed)).toMatchSnapshot()
     })
 

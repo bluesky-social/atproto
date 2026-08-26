@@ -82,6 +82,13 @@ describe('timeline views', () => {
 
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
     aliceTL.data.feed.forEach(expectOriginatorFollowedBy(alice))
+    const carolPost = aliceTL.data.feed.find(
+      (item) => item.post.uri === sc.posts[carol][0].ref.uriStr,
+    )
+    expect(
+      carolPost?.post.viewer?.knownLikers?.actors.map((actor) => actor.did),
+    ).toEqual([bob])
+    expect(carolPost?.post.viewer?.knownLikers?.count).toBe(1)
 
     const bobTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: REVERSE_CHRON },

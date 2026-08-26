@@ -89,7 +89,11 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx)
+  return ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx, {
+    knownLikers: {
+      limit: 5,
+    },
+  })
 }
 
 const noBlocksOrMutes = (inputs: {

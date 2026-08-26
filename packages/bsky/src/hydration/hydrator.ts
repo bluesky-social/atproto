@@ -186,6 +186,10 @@ type HydratePostsOptions = Pick<
   knownLikers?: HydrateKnownLikersOptions
 }
 
+type HydrateFeedItemsOptions = {
+  knownLikers?: Pick<HydrateKnownLikersOptions, 'limit'>
+}
+
 export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
 export type PostBlocks = HydrationMap<AtUriString, PostBlock>
 type PostBlockPairs = {
@@ -865,6 +869,7 @@ export class Hydrator {
   async hydrateFeedItems(
     items: FeedItem[],
     ctx: HydrateCtx,
+    options: HydrateFeedItemsOptions = {},
   ): Promise<HydrationState> {
     // get posts, collect reply refs
     const posts = await this.feed.getPosts(
@@ -904,9 +909,23 @@ export class Hydrator {
     // hydrate state for all posts, reposts, authors of reposts + reply parent authors
     const repostUris = mapDefined(items, (item) => item.repost?.uri)
     const [postState, repostProfileState, reposts] = await Promise.all([
-      this.hydratePosts(postAndReplyRefs, ctx, {
-        posts: replies.merge(posts), // avoids refetches while preserving feed-item metadata
-      }),
+      this.hydratePosts(
+        postAndReplyRefs,
+        ctx,
+        {
+          posts: replies.merge(posts), // avoids refetches while preserving feed-item metadata
+        },
+        {
+          knownLikers: options.knownLikers
+            ? {
+                subjectUris: dedupeStrs(
+                  items.map((item) => item.post.uri),
+                ) as AtUriString[],
+                limit: options.knownLikers.limit,
+              }
+            : undefined,
+        },
+      ),
       this.hydrateProfiles(
         [...repostUris.map(didFromUri), ...replyParentAuthors],
         ctx,

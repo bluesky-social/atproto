@@ -125,6 +125,11 @@ const hydration = async (
   const hydration = await ctx.hydrator.hydrateFeedItems(
     skeleton.items,
     params.hydrateCtx,
+    {
+      knownLikers: {
+        limit: 5,
+      },
+    },
   )
   skeleton.timerHydr = timerHydr.stop()
   return hydration

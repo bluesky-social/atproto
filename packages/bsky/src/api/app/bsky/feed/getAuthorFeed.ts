@@ -143,7 +143,11 @@ const hydration = async (inputs: {
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
   const [feedPostState, profileViewerState] = await Promise.all([
-    ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx),
+    ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx, {
+      knownLikers: {
+        limit: 5,
+      },
+    }),
     ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], params.hydrateCtx),
   ])
   return mergeStates(feedPostState, profileViewerState)
