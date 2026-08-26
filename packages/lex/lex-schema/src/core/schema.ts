@@ -1,7 +1,4 @@
-import type {
-  StandardJSONSchemaV1,
-  StandardSchemaV1,
-} from '@standard-schema/spec'
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { lazyProperty } from '../util/lazy-property.js'
 import { StandardSchemaAdapter } from './standard-schema.js'
 import { ValidationContext } from './validator.js'
