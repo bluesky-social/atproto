@@ -186,7 +186,13 @@ type HydratePostsOptions = Pick<
 }
 
 type HydrateFeedItemsOptions = {
-  knownLikers?: HydrateKnownLikersOptions
+  /**
+   * Hydrate known likers for the root post of each feed item, which is the
+   * post itself when it does not reply to anything. Feed items only carry the
+   * post URI, so the roots can only be resolved once the post records are
+   * fetched, which is why this is a flag rather than a list of subjects.
+   */
+  knownLikers?: boolean
 }
 
 export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
@@ -885,6 +891,9 @@ export class Hydrator {
     const rootUris: AtUriString[] = []
     const parentUris: AtUriString[] = []
     const postAndReplyRefs: ItemRef[] = []
+    // The feed renders the root post above the feed item, so known likers are
+    // hydrated for the root rather than for the feed item itself.
+    const knownLikerSubjectUris: AtUriString[] = []
     posts.forEach((post, uri) => {
       if (!post) return
       postAndReplyRefs.push({ uri, cid: post.cid })
@@ -892,6 +901,9 @@ export class Hydrator {
         rootUris.push(post.record.reply.root.uri)
         parentUris.push(post.record.reply.parent.uri)
         postAndReplyRefs.push(post.record.reply.root, post.record.reply.parent)
+        knownLikerSubjectUris.push(post.record.reply.root.uri)
+      } else {
+        knownLikerSubjectUris.push(uri)
       }
     })
     // get replies, collect reply parent authors
@@ -915,7 +927,9 @@ export class Hydrator {
           posts: replies.merge(posts), // avoids refetches while preserving feed-item metadata
         },
         {
-          knownLikers: options.knownLikers,
+          knownLikers: options.knownLikers
+            ? { subjectUris: dedupeStrs(knownLikerSubjectUris) }
+            : undefined,
         },
       ),
       this.hydrateProfiles(
