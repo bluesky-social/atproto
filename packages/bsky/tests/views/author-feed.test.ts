@@ -64,6 +64,16 @@ describe('pds author feed views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_author_feed',
     })
+    vi.spyOn(network.bsky.ctx.featureGatesClient, 'scope').mockImplementation(
+      () => ({
+        Gate,
+        checkGate: (gate) => gate === Gate.KnownLikersFeedEnable,
+        checkGates: (gates) =>
+          new Map(
+            gates.map((gate) => [gate, gate === Gate.KnownLikersFeedEnable]),
+          ),
+      }),
+    )
     agent = network.bsky.getAgent()
     pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
@@ -75,11 +85,7 @@ describe('pds author feed views', () => {
     eve = sc.dids.eve
   })
 
-  beforeEach(async () => {
-    const gate = enableKnownLikersGate(network)
-    await network.processAll()
-    return () => gate.mockRestore()
-  })
+  beforeEach(async () => network.processAll())
   afterAll(async () => network?.close())
 
   // @TODO(bsky) blocked by actor takedown via labels.
@@ -813,20 +819,6 @@ describe('pds author feed views', () => {
     })
   })
 })
-
-const enableKnownLikersGate = (network: TestNetwork) => {
-  const featureGates = network.bsky.ctx.featureGatesClient
-  const scope = featureGates.scope.bind(featureGates)
-  return vi.spyOn(featureGates, 'scope').mockImplementation((context) => {
-    const scoped = scope(context)
-    return {
-      ...scoped,
-      checkGate: (gate, overrides) =>
-        gate === Gate.KnownLikersFeedEnable ||
-        scoped.checkGate(gate, overrides),
-    }
-  })
-}
 
 function isReplyTo(reply: AppBskyFeedPost.ReplyRef, did: string) {
   return uriToDid(reply.root.uri) === did && uriToDid(reply.parent.uri) === did

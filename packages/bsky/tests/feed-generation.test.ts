@@ -59,6 +59,16 @@ describe('feed generation', () => {
       dbPostgresSchema: 'bsky_feed_generation',
       bsky: { searchV2OverrideHeader: 'test' },
     })
+    vi.spyOn(network.bsky.ctx.featureGatesClient, 'scope').mockImplementation(
+      () => ({
+        Gate,
+        checkGate: (gate) => gate === Gate.KnownLikersFeedEnable,
+        checkGates: (gates) =>
+          new Map(
+            gates.map((gate) => [gate, gate === Gate.KnownLikersFeedEnable]),
+          ),
+      }),
+    )
 
     agent = network.bsky.getAgent()
     pdsAgent = network.pds.getAgent()
@@ -128,11 +138,7 @@ describe('feed generation', () => {
       .execute()
   })
 
-  beforeEach(async () => {
-    const gate = enableKnownLikersGate(network)
-    await network.processAll()
-    return () => gate.mockRestore()
-  })
+  beforeEach(async () => network.processAll())
   afterAll(async () => network?.close())
   afterAll(async () => gen?.close())
 
@@ -1161,20 +1167,6 @@ describe('feed generation', () => {
       }
     }
 })
-
-const enableKnownLikersGate = (network: TestNetwork) => {
-  const featureGates = network.bsky.ctx.featureGatesClient
-  const scope = featureGates.scope.bind(featureGates)
-  return vi.spyOn(featureGates, 'scope').mockImplementation((context) => {
-    const scoped = scope(context)
-    return {
-      ...scoped,
-      checkGate: (gate, overrides) =>
-        gate === Gate.KnownLikersFeedEnable ||
-        scoped.checkGate(gate, overrides),
-    }
-  })
-}
 
 const jwtBody = (authHeader?: string): Record<string, unknown> | undefined => {
   if (!authHeader?.startsWith('Bearer')) return undefined

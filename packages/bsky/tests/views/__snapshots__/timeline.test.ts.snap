@@ -153,31 +153,6 @@ exports[`timeline views > blocks posts, reposts, replies by actor takedown 1`] =
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                  "chat": {
-                    "allowIncoming": "none",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "dan.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(4)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 3,
-          },
           "threadMuted": false,
         },
       },
@@ -416,31 +391,6 @@ exports[`timeline views > blocks posts, reposts, replies by actor takedown 1`] =
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                  "chat": {
-                    "allowIncoming": "none",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "dan.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(4)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 3,
-          },
           "threadMuted": false,
         },
       },
@@ -1018,70 +968,6 @@ exports[`timeline views > blocks posts, reposts, replies by record takedown. 1`]
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                  "chat": {
-                    "allowIncoming": "none",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "dan.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(4)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "did": "user(3)",
-                "handle": "carol.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(7)",
-                  "following": "record(6)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
-                "createdAt": "1970-01-01T00:00:00.000Z",
-                "did": "user(4)",
-                "displayName": "bobby",
-                "handle": "bob.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(9)",
-                  "following": "record(8)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 3,
-          },
           "threadMuted": false,
         },
       },
@@ -1359,70 +1245,6 @@ exports[`timeline views > blocks posts, reposts, replies by record takedown. 1`]
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                  "chat": {
-                    "allowIncoming": "none",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "dan.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(4)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "did": "user(3)",
-                "handle": "carol.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(7)",
-                  "following": "record(6)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
-                "createdAt": "1970-01-01T00:00:00.000Z",
-                "did": "user(4)",
-                "displayName": "bobby",
-                "handle": "bob.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(9)",
-                  "following": "record(8)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 3,
-          },
           "threadMuted": false,
         },
       },
@@ -1532,70 +1354,6 @@ exports[`timeline views > blocks posts, reposts, replies by record takedown. 1`]
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                  "chat": {
-                    "allowIncoming": "none",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "dan.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(4)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "did": "user(3)",
-                "handle": "carol.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(7)",
-                  "following": "record(6)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
-                "createdAt": "1970-01-01T00:00:00.000Z",
-                "did": "user(4)",
-                "displayName": "bobby",
-                "handle": "bob.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(9)",
-                  "following": "record(8)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 3,
-          },
           "threadMuted": false,
         },
       },
@@ -1652,70 +1410,6 @@ exports[`timeline views > blocks posts, reposts, replies by record takedown. 1`]
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                  "chat": {
-                    "allowIncoming": "none",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "dan.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(4)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "did": "user(3)",
-                "handle": "carol.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(7)",
-                  "following": "record(6)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
-                "createdAt": "1970-01-01T00:00:00.000Z",
-                "did": "user(4)",
-                "displayName": "bobby",
-                "handle": "bob.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(9)",
-                  "following": "record(8)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 3,
-          },
           "threadMuted": false,
         },
       },
@@ -2504,16 +2198,16 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
               "allowSubscriptions": "followers",
             },
           },
-          "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "did": "user(4)",
+          "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": [],
           "viewer": {
             "blockedBy": false,
-            "followedBy": "record(9)",
-            "following": "record(8)",
+            "followedBy": "record(7)",
+            "following": "record(6)",
             "muted": false,
             "mutedOnlyQuoteposts": false,
             "mutedOnlyReposts": false,
@@ -2526,8 +2220,8 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
           "images": [
             {
               "alt": "../dev-env/assets/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(6)",
-              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(6)",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(6)",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(6)",
             },
           ],
         },
@@ -2643,70 +2337,6 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                  "chat": {
-                    "allowIncoming": "none",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "dan.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(4)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "did": "user(3)",
-                "handle": "carol.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(7)",
-                  "following": "record(6)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
-                "createdAt": "1970-01-01T00:00:00.000Z",
-                "did": "user(4)",
-                "displayName": "bobby",
-                "handle": "bob.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(9)",
-                  "following": "record(8)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 3,
-          },
           "threadMuted": false,
         },
       },
@@ -2793,13 +2423,13 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                   "allowSubscriptions": "followers",
                 },
               },
-              "did": "user(3)",
+              "did": "user(5)",
               "handle": "carol.test",
               "labels": [],
               "viewer": {
                 "blockedBy": false,
-                "followedBy": "record(7)",
-                "following": "record(6)",
+                "followedBy": "record(9)",
+                "following": "record(8)",
                 "muted": false,
                 "mutedOnlyQuoteposts": false,
                 "mutedOnlyReposts": false,
@@ -2811,16 +2441,16 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                   "allowSubscriptions": "followers",
                 },
               },
-              "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
               "createdAt": "1970-01-01T00:00:00.000Z",
-              "did": "user(4)",
+              "did": "user(3)",
               "displayName": "bobby",
               "handle": "bob.test",
               "labels": [],
               "viewer": {
                 "blockedBy": false,
-                "followedBy": "record(9)",
-                "following": "record(8)",
+                "followedBy": "record(7)",
+                "following": "record(6)",
                 "muted": false,
                 "mutedOnlyQuoteposts": false,
                 "mutedOnlyReposts": false,
@@ -2893,13 +2523,13 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                 "allowSubscriptions": "followers",
               },
             },
-            "did": "user(3)",
+            "did": "user(5)",
             "handle": "carol.test",
             "labels": [],
             "viewer": {
               "blockedBy": false,
-              "followedBy": "record(7)",
-              "following": "record(6)",
+              "followedBy": "record(9)",
+              "following": "record(8)",
               "muted": false,
               "mutedOnlyQuoteposts": false,
               "mutedOnlyReposts": false,
@@ -2933,16 +2563,16 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                         "allowSubscriptions": "followers",
                       },
                     },
-                    "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+                    "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
                     "createdAt": "1970-01-01T00:00:00.000Z",
-                    "did": "user(4)",
+                    "did": "user(3)",
                     "displayName": "bobby",
                     "handle": "bob.test",
                     "labels": [],
                     "viewer": {
                       "blockedBy": false,
-                      "followedBy": "record(9)",
-                      "following": "record(8)",
+                      "followedBy": "record(7)",
+                      "following": "record(6)",
                       "muted": false,
                       "mutedOnlyQuoteposts": false,
                       "mutedOnlyReposts": false,
@@ -3082,13 +2712,13 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
             "allowSubscriptions": "followers",
           },
         },
-        "did": "user(3)",
+        "did": "user(5)",
         "handle": "carol.test",
         "labels": [],
         "viewer": {
           "blockedBy": false,
-          "followedBy": "record(7)",
-          "following": "record(6)",
+          "followedBy": "record(9)",
+          "following": "record(8)",
           "muted": false,
           "mutedOnlyQuoteposts": false,
           "mutedOnlyReposts": false,
@@ -3208,16 +2838,16 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
               "allowSubscriptions": "followers",
             },
           },
-          "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "did": "user(4)",
+          "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": [],
           "viewer": {
             "blockedBy": false,
-            "followedBy": "record(9)",
-            "following": "record(8)",
+            "followedBy": "record(7)",
+            "following": "record(6)",
             "muted": false,
             "mutedOnlyQuoteposts": false,
             "mutedOnlyReposts": false,
@@ -3230,8 +2860,8 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
           "images": [
             {
               "alt": "../dev-env/assets/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(6)",
-              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(6)",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(6)",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(6)",
             },
           ],
         },
@@ -3347,70 +2977,6 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                  "chat": {
-                    "allowIncoming": "none",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "dan.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(4)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "did": "user(3)",
-                "handle": "carol.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(7)",
-                  "following": "record(6)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
-                "createdAt": "1970-01-01T00:00:00.000Z",
-                "did": "user(4)",
-                "displayName": "bobby",
-                "handle": "bob.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(9)",
-                  "following": "record(8)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 3,
-          },
           "threadMuted": false,
         },
       },
@@ -3424,13 +2990,13 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
             "allowSubscriptions": "followers",
           },
         },
-        "did": "user(3)",
+        "did": "user(5)",
         "handle": "carol.test",
         "labels": [],
         "viewer": {
           "blockedBy": false,
-          "followedBy": "record(7)",
-          "following": "record(6)",
+          "followedBy": "record(9)",
+          "following": "record(8)",
           "muted": false,
           "mutedOnlyQuoteposts": false,
           "mutedOnlyReposts": false,
@@ -3520,70 +3086,6 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                  "chat": {
-                    "allowIncoming": "none",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "dan.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(4)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "did": "user(3)",
-                "handle": "carol.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(7)",
-                  "following": "record(6)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
-                "createdAt": "1970-01-01T00:00:00.000Z",
-                "did": "user(4)",
-                "displayName": "bobby",
-                "handle": "bob.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(9)",
-                  "following": "record(8)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 3,
-          },
           "threadMuted": false,
         },
       },
@@ -3640,70 +3142,6 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                  "chat": {
-                    "allowIncoming": "none",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "dan.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(4)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "did": "user(3)",
-                "handle": "carol.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(7)",
-                  "following": "record(6)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
-                "createdAt": "1970-01-01T00:00:00.000Z",
-                "did": "user(4)",
-                "displayName": "bobby",
-                "handle": "bob.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(9)",
-                  "following": "record(8)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 3,
-          },
           "threadMuted": false,
         },
       },
@@ -3717,16 +3155,16 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
             "allowSubscriptions": "followers",
           },
         },
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "did": "user(4)",
+        "did": "user(3)",
         "displayName": "bobby",
         "handle": "bob.test",
         "labels": [],
         "viewer": {
           "blockedBy": false,
-          "followedBy": "record(9)",
-          "following": "record(8)",
+          "followedBy": "record(7)",
+          "following": "record(6)",
           "muted": false,
           "mutedOnlyQuoteposts": false,
           "mutedOnlyReposts": false,
@@ -3739,8 +3177,8 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "images": [
           {
             "alt": "../dev-env/assets/key-landscape-small.jpg",
-            "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(6)",
-            "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(6)",
+            "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(6)",
+            "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(6)",
           },
         ],
       },
@@ -3857,70 +3295,6 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                  "chat": {
-                    "allowIncoming": "none",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "dan.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(4)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "did": "user(3)",
-                "handle": "carol.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(7)",
-                  "following": "record(6)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
-                "createdAt": "1970-01-01T00:00:00.000Z",
-                "did": "user(4)",
-                "displayName": "bobby",
-                "handle": "bob.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(9)",
-                  "following": "record(8)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 3,
-          },
           "threadMuted": false,
         },
       },
@@ -3977,70 +3351,6 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                  "chat": {
-                    "allowIncoming": "none",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "dan.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(4)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "did": "user(3)",
-                "handle": "carol.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(7)",
-                  "following": "record(6)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
-                "createdAt": "1970-01-01T00:00:00.000Z",
-                "did": "user(4)",
-                "displayName": "bobby",
-                "handle": "bob.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "followedBy": "record(9)",
-                  "following": "record(8)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 3,
-          },
           "threadMuted": false,
         },
       },
@@ -4120,13 +3430,13 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                       "allowSubscriptions": "followers",
                     },
                   },
-                  "did": "user(3)",
+                  "did": "user(5)",
                   "handle": "carol.test",
                   "labels": [],
                   "viewer": {
                     "blockedBy": false,
-                    "followedBy": "record(7)",
-                    "following": "record(6)",
+                    "followedBy": "record(9)",
+                    "following": "record(8)",
                     "muted": false,
                     "mutedOnlyQuoteposts": false,
                     "mutedOnlyReposts": false,
@@ -4265,13 +3575,13 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                   "allowSubscriptions": "followers",
                 },
               },
-              "did": "user(3)",
+              "did": "user(5)",
               "handle": "carol.test",
               "labels": [],
               "viewer": {
                 "blockedBy": false,
-                "followedBy": "record(7)",
-                "following": "record(6)",
+                "followedBy": "record(9)",
+                "following": "record(8)",
                 "muted": false,
                 "mutedOnlyQuoteposts": false,
                 "mutedOnlyReposts": false,
@@ -4283,16 +3593,16 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                   "allowSubscriptions": "followers",
                 },
               },
-              "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
               "createdAt": "1970-01-01T00:00:00.000Z",
-              "did": "user(4)",
+              "did": "user(3)",
               "displayName": "bobby",
               "handle": "bob.test",
               "labels": [],
               "viewer": {
                 "blockedBy": false,
-                "followedBy": "record(9)",
-                "following": "record(8)",
+                "followedBy": "record(7)",
+                "following": "record(6)",
                 "muted": false,
                 "mutedOnlyQuoteposts": false,
                 "mutedOnlyReposts": false,
@@ -4313,16 +3623,16 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
             "allowSubscriptions": "followers",
           },
         },
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "did": "user(4)",
+        "did": "user(3)",
         "displayName": "bobby",
         "handle": "bob.test",
         "labels": [],
         "viewer": {
           "blockedBy": false,
-          "followedBy": "record(9)",
-          "following": "record(8)",
+          "followedBy": "record(7)",
+          "following": "record(6)",
           "muted": false,
           "mutedOnlyQuoteposts": false,
           "mutedOnlyReposts": false,
@@ -4430,13 +3740,13 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                   "allowSubscriptions": "followers",
                 },
               },
-              "did": "user(3)",
+              "did": "user(5)",
               "handle": "carol.test",
               "labels": [],
               "viewer": {
                 "blockedBy": false,
-                "followedBy": "record(7)",
-                "following": "record(6)",
+                "followedBy": "record(9)",
+                "following": "record(8)",
                 "muted": false,
                 "mutedOnlyQuoteposts": false,
                 "mutedOnlyReposts": false,
@@ -4448,16 +3758,16 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                   "allowSubscriptions": "followers",
                 },
               },
-              "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
               "createdAt": "1970-01-01T00:00:00.000Z",
-              "did": "user(4)",
+              "did": "user(3)",
               "displayName": "bobby",
               "handle": "bob.test",
               "labels": [],
               "viewer": {
                 "blockedBy": false,
-                "followedBy": "record(9)",
-                "following": "record(8)",
+                "followedBy": "record(7)",
+                "following": "record(6)",
                 "muted": false,
                 "mutedOnlyQuoteposts": false,
                 "mutedOnlyReposts": false,
@@ -4504,13 +3814,13 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                 "allowSubscriptions": "followers",
               },
             },
-            "did": "user(3)",
+            "did": "user(5)",
             "handle": "carol.test",
             "labels": [],
             "viewer": {
               "blockedBy": false,
-              "followedBy": "record(7)",
-              "following": "record(6)",
+              "followedBy": "record(9)",
+              "following": "record(8)",
               "muted": false,
               "mutedOnlyQuoteposts": false,
               "mutedOnlyReposts": false,
@@ -4544,16 +3854,16 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                         "allowSubscriptions": "followers",
                       },
                     },
-                    "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+                    "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
                     "createdAt": "1970-01-01T00:00:00.000Z",
-                    "did": "user(4)",
+                    "did": "user(3)",
                     "displayName": "bobby",
                     "handle": "bob.test",
                     "labels": [],
                     "viewer": {
                       "blockedBy": false,
-                      "followedBy": "record(9)",
-                      "following": "record(8)",
+                      "followedBy": "record(7)",
+                      "following": "record(6)",
                       "muted": false,
                       "mutedOnlyQuoteposts": false,
                       "mutedOnlyReposts": false,
@@ -4737,13 +4047,13 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
             "allowSubscriptions": "followers",
           },
         },
-        "did": "user(3)",
+        "did": "user(5)",
         "handle": "carol.test",
         "labels": [],
         "viewer": {
           "blockedBy": false,
-          "followedBy": "record(7)",
-          "following": "record(6)",
+          "followedBy": "record(9)",
+          "following": "record(8)",
           "muted": false,
           "mutedOnlyQuoteposts": false,
           "mutedOnlyReposts": false,
@@ -4777,16 +4087,16 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                   "allowSubscriptions": "followers",
                 },
               },
-              "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
               "createdAt": "1970-01-01T00:00:00.000Z",
-              "did": "user(4)",
+              "did": "user(3)",
               "displayName": "bobby",
               "handle": "bob.test",
               "labels": [],
               "viewer": {
                 "blockedBy": false,
-                "followedBy": "record(9)",
-                "following": "record(8)",
+                "followedBy": "record(7)",
+                "following": "record(6)",
                 "muted": false,
                 "mutedOnlyQuoteposts": false,
                 "mutedOnlyReposts": false,
@@ -4888,16 +4198,16 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                   "allowSubscriptions": "followers",
                 },
               },
-              "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
               "createdAt": "1970-01-01T00:00:00.000Z",
-              "did": "user(4)",
+              "did": "user(3)",
               "displayName": "bobby",
               "handle": "bob.test",
               "labels": [],
               "viewer": {
                 "blockedBy": false,
-                "followedBy": "record(9)",
-                "following": "record(8)",
+                "followedBy": "record(7)",
+                "following": "record(6)",
                 "muted": false,
                 "mutedOnlyQuoteposts": false,
                 "mutedOnlyReposts": false,
@@ -4919,16 +4229,16 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
             "allowSubscriptions": "followers",
           },
         },
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "did": "user(4)",
+        "did": "user(3)",
         "displayName": "bobby",
         "handle": "bob.test",
         "labels": [],
         "viewer": {
           "blockedBy": false,
-          "followedBy": "record(9)",
-          "following": "record(8)",
+          "followedBy": "record(7)",
+          "following": "record(6)",
           "muted": false,
           "mutedOnlyQuoteposts": false,
           "mutedOnlyReposts": false,
@@ -5533,28 +4843,6 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "carol.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(3)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 1,
-          },
           "like": "record(12)",
           "threadMuted": false,
         },
@@ -5666,28 +4954,6 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "carol.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(3)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 1,
-          },
           "like": "record(12)",
           "threadMuted": false,
         },
@@ -5747,28 +5013,6 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "carol.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(3)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 1,
-          },
           "like": "record(12)",
           "threadMuted": false,
         },
@@ -5923,28 +5167,6 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "carol.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(3)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 1,
-          },
           "like": "record(12)",
           "threadMuted": false,
         },
@@ -6004,28 +5226,6 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "did": "user(2)",
-                "handle": "carol.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(3)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 1,
-          },
           "like": "record(12)",
           "threadMuted": false,
         },
@@ -8210,31 +7410,6 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
-                "createdAt": "1970-01-01T00:00:00.000Z",
-                "did": "user(3)",
-                "displayName": "bobby",
-                "handle": "bob.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(8)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 1,
-          },
           "like": "record(7)",
           "repost": "record(6)",
           "threadMuted": false,
@@ -8500,31 +7675,6 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
-                "createdAt": "1970-01-01T00:00:00.000Z",
-                "did": "user(3)",
-                "displayName": "bobby",
-                "handle": "bob.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(8)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 1,
-          },
           "like": "record(7)",
           "repost": "record(6)",
           "threadMuted": false,
@@ -8584,31 +7734,6 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
-          "knownLikers": {
-            "actors": [
-              {
-                "associated": {
-                  "activitySubscription": {
-                    "allowSubscriptions": "followers",
-                  },
-                },
-                "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
-                "createdAt": "1970-01-01T00:00:00.000Z",
-                "did": "user(3)",
-                "displayName": "bobby",
-                "handle": "bob.test",
-                "labels": [],
-                "viewer": {
-                  "blockedBy": false,
-                  "following": "record(8)",
-                  "muted": false,
-                  "mutedOnlyQuoteposts": false,
-                  "mutedOnlyReposts": false,
-                },
-              },
-            ],
-            "count": 1,
-          },
           "like": "record(7)",
           "repost": "record(6)",
           "threadMuted": false,

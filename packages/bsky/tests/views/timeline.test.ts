@@ -41,6 +41,16 @@ describe('timeline views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_home_feed',
     })
+    vi.spyOn(network.bsky.ctx.featureGatesClient, 'scope').mockImplementation(
+      () => ({
+        Gate,
+        checkGate: (gate) => gate === Gate.KnownLikersFeedEnable,
+        checkGates: (gates) =>
+          new Map(
+            gates.map((gate) => [gate, gate === Gate.KnownLikersFeedEnable]),
+          ),
+      }),
+    )
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -63,11 +73,7 @@ describe('timeline views', () => {
     })
   })
 
-  beforeEach(async () => {
-    const gate = enableKnownLikersGate(network)
-    await network.processAll()
-    return () => gate.mockRestore()
-  })
+  beforeEach(async () => network.processAll())
   afterAll(async () => network?.close())
 
   // @TODO(bsky) blocks posts, reposts, replies by actor takedown via labels
@@ -605,20 +611,6 @@ describe('timeline views', () => {
     expect(timeline).toEqual({ feed: [] })
   })
 })
-
-const enableKnownLikersGate = (network: TestNetwork) => {
-  const featureGates = network.bsky.ctx.featureGatesClient
-  const scope = featureGates.scope.bind(featureGates)
-  return vi.spyOn(featureGates, 'scope').mockImplementation((context) => {
-    const scoped = scope(context)
-    return {
-      ...scoped,
-      checkGate: (gate, overrides) =>
-        gate === Gate.KnownLikersFeedEnable ||
-        scoped.checkGate(gate, overrides),
-    }
-  })
-}
 
 const createLabel = async (
   db: Database,

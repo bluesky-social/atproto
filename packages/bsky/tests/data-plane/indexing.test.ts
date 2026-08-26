@@ -44,6 +44,16 @@ describe('indexing', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_indexing',
     })
+    vi.spyOn(network.bsky.ctx.featureGatesClient, 'scope').mockImplementation(
+      () => ({
+        Gate,
+        checkGate: (gate) => gate === Gate.KnownLikersFeedEnable,
+        checkGates: (gates) =>
+          new Map(
+            gates.map((gate) => [gate, gate === Gate.KnownLikersFeedEnable]),
+          ),
+      }),
+    )
     agent = network.bsky.getAgent()
     pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
@@ -56,11 +66,7 @@ describe('indexing', () => {
     await network.bsky.sub.stop()
   })
 
-  beforeEach(async () => {
-    const gate = enableKnownLikersGate(network)
-    await network.processAll()
-    return () => gate.mockRestore()
-  })
+  beforeEach(async () => network.processAll())
   afterAll(async () => network?.close())
 
   it('indexes posts.', async () => {
@@ -800,20 +806,6 @@ describe('indexing', () => {
       .execute()
   }
 })
-
-const enableKnownLikersGate = (network: TestNetwork) => {
-  const featureGates = network.bsky.ctx.featureGatesClient
-  const scope = featureGates.scope.bind(featureGates)
-  return vi.spyOn(featureGates, 'scope').mockImplementation((context) => {
-    const scoped = scope(context)
-    return {
-      ...scoped,
-      checkGate: (gate, overrides) =>
-        gate === Gate.KnownLikersFeedEnable ||
-        scoped.checkGate(gate, overrides),
-    }
-  })
-}
 
 async function prepareCreate<TRecord>(opts: {
   did: string

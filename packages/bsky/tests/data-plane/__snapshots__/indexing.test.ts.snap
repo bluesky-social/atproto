@@ -288,52 +288,6 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
             "viewer": {
               "bookmarked": false,
               "embeddingDisabled": false,
-              "knownLikers": {
-                "actors": [
-                  {
-                    "associated": {
-                      "activitySubscription": {
-                        "allowSubscriptions": "followers",
-                      },
-                      "chat": {
-                        "allowIncoming": "none",
-                      },
-                    },
-                    "did": "user(3)",
-                    "handle": "dan.test",
-                    "labels": [],
-                    "viewer": {
-                      "blockedBy": false,
-                      "following": "record(6)",
-                      "muted": false,
-                      "mutedOnlyQuoteposts": false,
-                      "mutedOnlyReposts": false,
-                    },
-                  },
-                  {
-                    "associated": {
-                      "activitySubscription": {
-                        "allowSubscriptions": "followers",
-                      },
-                    },
-                    "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)",
-                    "createdAt": "1970-01-01T00:00:00.000Z",
-                    "did": "user(1)",
-                    "displayName": "bobby",
-                    "handle": "bob.test",
-                    "labels": [],
-                    "viewer": {
-                      "blockedBy": false,
-                      "followedBy": "record(1)",
-                      "following": "record(0)",
-                      "muted": false,
-                      "mutedOnlyQuoteposts": false,
-                      "mutedOnlyReposts": false,
-                    },
-                  },
-                ],
-                "count": 2,
-              },
               "threadMuted": false,
             },
           },
@@ -377,7 +331,7 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
                 "labels": [],
                 "viewer": {
                   "blockedBy": false,
-                  "following": "record(6)",
+                  "following": "record(8)",
                   "muted": false,
                   "mutedOnlyQuoteposts": false,
                   "mutedOnlyReposts": false,
@@ -464,7 +418,7 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
               "quoteCount": 1,
               "replyCount": 0,
               "repostCount": 1,
-              "uri": "record(8)",
+              "uri": "record(7)",
               "value": {
                 "$type": "app.bsky.feed.post",
                 "createdAt": "1970-01-01T00:00:00.000Z",
@@ -499,7 +453,7 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
               "cid": "cids(6)",
               "cts": "1970-01-01T00:00:00.000Z",
               "src": "did:example:labeler",
-              "uri": "record(7)",
+              "uri": "record(6)",
               "val": "test-label",
             },
           ],
@@ -512,14 +466,14 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
               "$type": "app.bsky.embed.record",
               "record": {
                 "cid": "cids(7)",
-                "uri": "record(8)",
+                "uri": "record(7)",
               },
             },
             "text": "yoohoo label_me",
           },
           "replyCount": 0,
           "repostCount": 0,
-          "uri": "record(7)",
+          "uri": "record(6)",
           "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
@@ -604,7 +558,7 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
                   "labels": [],
                   "viewer": {
                     "blockedBy": false,
-                    "following": "record(6)",
+                    "following": "record(8)",
                     "muted": false,
                     "mutedOnlyQuoteposts": false,
                     "mutedOnlyReposts": false,
@@ -711,7 +665,7 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
         "labels": [],
         "viewer": {
           "blockedBy": false,
-          "following": "record(6)",
+          "following": "record(8)",
           "muted": false,
           "mutedOnlyQuoteposts": false,
           "mutedOnlyReposts": false,
