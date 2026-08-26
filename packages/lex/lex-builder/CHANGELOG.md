@@ -1,5 +1,17 @@
 # @atproto/lex-builder
 
+## 0.1.13
+
+### Patch Changes
+
+- [#5439](https://github.com/bluesky-social/atproto/pull/5439) [`79d911f`](https://github.com/bluesky-social/atproto/commit/79d911fc2bd7c6d9b1a6810e00e81d964b72a4ab) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Generate "token" as string values (in addition to the type)
+
+- [#5439](https://github.com/bluesky-social/atproto/pull/5439) [`79d911f`](https://github.com/bluesky-social/atproto/commit/79d911fc2bd7c6d9b1a6810e00e81d964b72a4ab) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Prevent exporting the same identifier twice when generating an exported string
+
+- Updated dependencies []:
+  - @atproto/lex-schema@0.2.6
+  - @atproto/lex-document@0.1.10
+
 ## 0.1.12
 
 ### Patch Changes
