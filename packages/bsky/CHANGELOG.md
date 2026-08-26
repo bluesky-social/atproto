@@ -1,5 +1,15 @@
 # @atproto/bsky
 
+## 0.0.277
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.3.8
+  - @atproto/xrpc-server@0.12.7
+  - @atproto/sync@0.4.7
+  - @atproto-labs/xrpc-utils@0.1.20
+
 ## 0.0.276
 
 ### Patch Changes
