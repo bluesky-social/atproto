@@ -1052,6 +1052,7 @@ export class Views {
     uri: AtUriString,
     state: HydrationState,
     depth = 0,
+    options: { includeKnownLikers?: boolean } = {},
   ): Un$Typed<PostView> | undefined {
     const post = state.posts?.get(uri)
     if (!post) return
@@ -1061,7 +1062,9 @@ export class Views {
     if (!author) return
     const aggs = state.postAggs?.get(uri)
     const viewer = state.postViewers?.get(uri)
-    const knownLikers = this.knownLikers(uri, state)
+    const knownLikers = options.includeKnownLikers
+      ? this.knownLikers(uri, state)
+      : undefined
     const threadgateUri = postUriToThreadgateUri(uri)
     const labels = [
       ...(state.labels?.getBySubject(uri) ?? []),
@@ -1123,7 +1126,9 @@ export class Views {
       reason = this.reasonRepost(item.repost.uri, repost, state)
       if (!reason) return
     }
-    const post = this.post(item.post.uri, state)
+    const post = this.post(item.post.uri, state, 0, {
+      includeKnownLikers: true,
+    })
     if (!post) return
     const reply = !postInfo?.violatesThreadGate
       ? this.replyRef(item.post.uri, state)
@@ -1421,7 +1426,9 @@ export class Views {
     const { anchor: anchorUri, uris } = skeleton
 
     // Not found.
-    const postView = this.post(anchorUri, state)
+    const postView = this.post(anchorUri, state, 0, {
+      includeKnownLikers: true,
+    })
     const post = state.posts?.get(anchorUri)
     if (!post || !postView) {
       return {

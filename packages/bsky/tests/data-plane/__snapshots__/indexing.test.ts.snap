@@ -477,6 +477,32 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
           "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
+            "knownLikers": {
+              "actors": [
+                {
+                  "associated": {
+                    "activitySubscription": {
+                      "allowSubscriptions": "followers",
+                    },
+                  },
+                  "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)",
+                  "createdAt": "1970-01-01T00:00:00.000Z",
+                  "did": "user(1)",
+                  "displayName": "bobby",
+                  "handle": "bob.test",
+                  "labels": [],
+                  "viewer": {
+                    "blockedBy": false,
+                    "followedBy": "record(1)",
+                    "following": "record(0)",
+                    "muted": false,
+                    "mutedOnlyQuoteposts": false,
+                    "mutedOnlyReposts": false,
+                  },
+                },
+              ],
+              "count": 1,
+            },
             "threadMuted": false,
           },
         },
@@ -516,6 +542,52 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
           "viewer": {
             "bookmarked": false,
             "embeddingDisabled": false,
+            "knownLikers": {
+              "actors": [
+                {
+                  "associated": {
+                    "activitySubscription": {
+                      "allowSubscriptions": "followers",
+                    },
+                    "chat": {
+                      "allowIncoming": "none",
+                    },
+                  },
+                  "did": "user(3)",
+                  "handle": "dan.test",
+                  "labels": [],
+                  "viewer": {
+                    "blockedBy": false,
+                    "following": "record(8)",
+                    "muted": false,
+                    "mutedOnlyQuoteposts": false,
+                    "mutedOnlyReposts": false,
+                  },
+                },
+                {
+                  "associated": {
+                    "activitySubscription": {
+                      "allowSubscriptions": "followers",
+                    },
+                  },
+                  "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)",
+                  "createdAt": "1970-01-01T00:00:00.000Z",
+                  "did": "user(1)",
+                  "displayName": "bobby",
+                  "handle": "bob.test",
+                  "labels": [],
+                  "viewer": {
+                    "blockedBy": false,
+                    "followedBy": "record(1)",
+                    "following": "record(0)",
+                    "muted": false,
+                    "mutedOnlyQuoteposts": false,
+                    "mutedOnlyReposts": false,
+                  },
+                },
+              ],
+              "count": 2,
+            },
             "threadMuted": false,
           },
         },
