@@ -1,5 +1,11 @@
 # @atproto/syntax
 
+## 0.7.5
+
+### Patch Changes
+
+- [#5441](https://github.com/bluesky-social/atproto/pull/5441) [`6af9f14`](https://github.com/bluesky-social/atproto/commit/6af9f141d18c1f41a04828af8256567d5f17a35e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow using `string` value as `toDatetimeString` input
+
 ## 0.7.4
 
 ### Patch Changes

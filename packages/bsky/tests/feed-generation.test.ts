@@ -1,5 +1,13 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import {
   AppBskyFeedDefs,
   type AppBskyFeedGetActorFeeds,
@@ -20,6 +28,7 @@ import {
 import type { SkeletonHandler, app } from '@atproto/pds'
 import type { DidString } from '@atproto/syntax'
 import { AuthRequiredError } from '@atproto/xrpc-server'
+import { Gate } from '../src/feature-gates/gates.js'
 import { forSnapshot, paginateAll } from './_util.js'
 
 describe('feed generation', () => {
@@ -50,6 +59,16 @@ describe('feed generation', () => {
       dbPostgresSchema: 'bsky_feed_generation',
       bsky: { searchV2OverrideHeader: 'test' },
     })
+    vi.spyOn(network.bsky.ctx.featureGatesClient, 'scope').mockImplementation(
+      () => ({
+        Gate,
+        checkGate: (gate) => gate === Gate.KnownLikersFeedEnable,
+        checkGates: (gates) =>
+          new Map(
+            gates.map((gate) => [gate, gate === Gate.KnownLikersFeedEnable]),
+          ),
+      }),
+    )
 
     agent = network.bsky.getAgent()
     pdsAgent = network.pds.getAgent()
@@ -807,6 +826,13 @@ describe('feed generation', () => {
         sc.posts[sc.dids.carol][0].ref.uriStr,
         sc.replies[sc.dids.carol][0].ref.uriStr,
       ])
+      const carolPost = feed.data.feed.find(
+        (item) => item.post.uri === sc.posts[sc.dids.carol][0].ref.uriStr,
+      )
+      expect(
+        carolPost?.post.viewer?.knownLikers?.actors.map((actor) => actor.did),
+      ).toEqual([sc.dids.bob])
+      expect(carolPost?.post.viewer?.knownLikers?.count).toBe(1)
       expect(forSnapshot(feed.data.feed)).toMatchSnapshot()
     })
 

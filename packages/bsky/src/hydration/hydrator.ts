@@ -176,13 +176,16 @@ export type HydrationState = {
 
 type HydrateKnownLikersOptions = {
   subjectUris: AtUriString[]
-  limit: number
 }
 
 type HydratePostsOptions = Pick<
   GetPostsHydrationOptions,
   'processDynamicTagsForView'
 > & {
+  knownLikers?: HydrateKnownLikersOptions
+}
+
+type HydrateFeedItemsOptions = {
   knownLikers?: HydrateKnownLikersOptions
 }
 
@@ -865,6 +868,7 @@ export class Hydrator {
   async hydrateFeedItems(
     items: FeedItem[],
     ctx: HydrateCtx,
+    options: HydrateFeedItemsOptions = {},
   ): Promise<HydrationState> {
     // get posts, collect reply refs
     const posts = await this.feed.getPosts(
@@ -904,9 +908,16 @@ export class Hydrator {
     // hydrate state for all posts, reposts, authors of reposts + reply parent authors
     const repostUris = mapDefined(items, (item) => item.repost?.uri)
     const [postState, repostProfileState, reposts] = await Promise.all([
-      this.hydratePosts(postAndReplyRefs, ctx, {
-        posts: replies.merge(posts), // avoids refetches while preserving feed-item metadata
-      }),
+      this.hydratePosts(
+        postAndReplyRefs,
+        ctx,
+        {
+          posts: replies.merge(posts), // avoids refetches while preserving feed-item metadata
+        },
+        {
+          knownLikers: options.knownLikers,
+        },
+      ),
       this.hydrateProfiles(
         [...repostUris.map(didFromUri), ...replyParentAuthors],
         ctx,
@@ -1018,7 +1029,7 @@ export class Hydrator {
     options: HydrateKnownLikersOptions,
     ctx: HydrateCtx,
   ): Promise<KnownLikersStates | undefined> {
-    const { subjectUris, limit } = options
+    const { subjectUris } = options
     if (!ctx.viewer || subjectUris.length === 0) return undefined
 
     // Fail open.
@@ -1027,7 +1038,7 @@ export class Hydrator {
         {
           actorDid: ctx.viewer,
           subjectUris,
-          limit,
+          limit: 3,
         },
         { signal: AbortSignal.timeout(100) },
       )

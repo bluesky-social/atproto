@@ -9,39 +9,52 @@ import { TimeCidKeyset, paginate } from '../db/pagination.js'
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getKnownLikers(req) {
     const { actorDid, subjectUris, limit } = req
-    const results = await Promise.all(
-      subjectUris.map(async (subjectUri) => {
-        if (limit <= 0) {
-          return { subjectUri, count: 0, dids: [] }
-        }
-        const recentLikes = db.db
-          .selectFrom('like')
-          .where('like.subject', '=', subjectUri)
-          .orderBy('like.sortAt', 'desc')
-          .select(['like.creator', 'like.sortAt'])
-          .limit(500)
-          .as('recentLikes')
-        const knownLikers = await db.db
-          .selectFrom(recentLikes)
-          .innerJoin('follow', (join) =>
-            join
-              .onRef('follow.subjectDid', '=', 'recentLikes.creator')
-              .on('follow.creator', '=', actorDid),
-          )
-          .select([
-            'recentLikes.creator',
-            sql<number>`count(*) over()::int`.as('count'),
-          ])
-          .orderBy('recentLikes.sortAt', 'desc')
-          .limit(limit)
-          .execute()
-        return {
-          subjectUri,
-          count: knownLikers[0]?.count ?? 0,
-          dids: knownLikers.map((like) => like.creator),
-        }
-      }),
-    )
+    const results = subjectUris.map((subjectUri) => ({
+      subjectUri,
+      count: 0,
+      dids: [] as string[],
+    }))
+    if (limit <= 0 || subjectUris.length === 0) return { results }
+
+    const { rows } = await sql<{
+      ordinal: string
+      creator: string
+      count: number
+    }>`
+      with "rankedKnownLikers" as (
+        select
+          subjects.ordinal,
+          "recentLikes".creator,
+          count(*) over (partition by subjects.ordinal)::int as count,
+          row_number() over (
+            partition by subjects.ordinal
+            order by "recentLikes"."sortAt" desc
+          ) as rank
+        from unnest(${subjectUris}::varchar[]) with ordinality
+          as subjects("subjectUri", ordinal)
+        cross join lateral (
+          select "like".creator, "like"."sortAt"
+          from "like"
+          where "like".subject = subjects."subjectUri"
+          order by "like"."sortAt" desc
+          limit 500
+        ) as "recentLikes"
+        inner join follow on
+          follow."subjectDid" = "recentLikes".creator
+          and follow.creator = ${actorDid}
+      )
+      select ordinal, creator, count
+      from "rankedKnownLikers"
+      where rank <= ${limit}
+      order by ordinal, rank
+    `.execute(db.db)
+
+    for (const row of rows) {
+      const result = results[Number(row.ordinal) - 1]
+      assert(result)
+      result.count = row.count
+      result.dids.push(row.creator)
+    }
     return { results }
   },
 

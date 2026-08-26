@@ -1,5 +1,23 @@
 # @atproto/pds
 
+## 0.5.30
+
+### Patch Changes
+
+- [#5428](https://github.com/bluesky-social/atproto/pull/5428) [`f2c33aa`](https://github.com/bluesky-social/atproto/commit/f2c33aa4a72c95762c2708cf02acbfab7ddd2b5a) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Remove x-bsky-is-beta-user header handling
+
+- Updated dependencies [[`79d911f`](https://github.com/bluesky-social/atproto/commit/79d911fc2bd7c6d9b1a6810e00e81d964b72a4ab), [`615ac2a`](https://github.com/bluesky-social/atproto/commit/615ac2a8cc72cd475dc4f06f743f2514d8afc6e0), [`6af9f14`](https://github.com/bluesky-social/atproto/commit/6af9f141d18c1f41a04828af8256567d5f17a35e)]:
+  - @atproto/lex@0.3.7
+  - @atproto/xrpc-server@0.12.6
+  - @atproto/syntax@0.7.5
+  - @atproto-labs/xrpc-utils@0.1.19
+  - @atproto/oauth-provider@0.22.4
+  - @atproto/oauth-scopes@0.5.10
+  - @atproto/repo@0.10.12
+  - @atproto/aws@0.3.15
+  - @atproto/common@0.8.1
+  - @atproto/identity@0.5.10
+
 ## 0.5.29
 
 ### Patch Changes

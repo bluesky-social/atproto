@@ -1,5 +1,17 @@
 # @atproto/api
 
+## 0.20.42
+
+### Patch Changes
+
+- [#5427](https://github.com/bluesky-social/atproto/pull/5427) [`c400731`](https://github.com/bluesky-social/atproto/commit/c400731969775d220ade8cc55b0892018bdf8514) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add known likers to post viewer state on post thread responses.
+
+- Updated dependencies [[`6af9f14`](https://github.com/bluesky-social/atproto/commit/6af9f141d18c1f41a04828af8256567d5f17a35e)]:
+  - @atproto/syntax@0.7.5
+  - @atproto/common-web@0.5.10
+  - @atproto/lexicon@0.7.12
+  - @atproto/xrpc@0.8.11
+
 ## 0.20.41
 
 ### Patch Changes

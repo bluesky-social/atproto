@@ -1,5 +1,18 @@
 # @atproto/xrpc-server
 
+## 0.12.6
+
+### Patch Changes
+
+- [#5381](https://github.com/bluesky-social/atproto/pull/5381) [`615ac2a`](https://github.com/bluesky-social/atproto/commit/615ac2a8cc72cd475dc4f06f743f2514d8afc6e0) Thanks [@AG0708](https://github.com/AG0708)! - Allow requests with empty chunked transfer encoding when a method expects no input.
+
+- Updated dependencies []:
+  - @atproto/lex-client@0.3.4
+  - @atproto/lex-schema@0.2.6
+  - @atproto/lexicon@0.7.12
+  - @atproto/common@0.8.1
+  - @atproto/xrpc@0.8.11
+
 ## 0.12.5
 
 ### Patch Changes
