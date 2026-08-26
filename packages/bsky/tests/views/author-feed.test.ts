@@ -1,5 +1,13 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import {
   AppBskyActorProfile,
   AppBskyEmbedGallery,
@@ -15,6 +23,7 @@ import {
 } from '@atproto/api'
 import { type SeedClient, TestNetwork, authorFeedSeed } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
+import { Gate } from '../../src/feature-gates/gates.js'
 import { uriToDid } from '../../src/util/uris.js'
 import {
   forSnapshot,
@@ -73,6 +82,7 @@ describe('pds author feed views', () => {
   // @TODO(bsky) blocked by record takedown via labels.
 
   it('fetches full author feeds for self (sorted, minimal viewer state).', async () => {
+    using _knownLikersGate = enableKnownLikersGate(network)
     const aliceForAlice = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
       {
@@ -143,6 +153,18 @@ describe('pds author feed views', () => {
   })
 
   it('returns known likers', async () => {
+    const ungated = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: sc.accounts[carol].handle },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
+    )
+    expect(ungated.data.feed[0].post.viewer?.knownLikers).toBeUndefined()
+
+    using _knownLikersGate = enableKnownLikersGate(network)
     const carolForAlice = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[carol].handle },
       {
@@ -800,6 +822,20 @@ describe('pds author feed views', () => {
     })
   })
 })
+
+const enableKnownLikersGate = (network: TestNetwork) => {
+  const featureGates = network.bsky.ctx.featureGatesClient
+  const scope = featureGates.scope.bind(featureGates)
+  return vi.spyOn(featureGates, 'scope').mockImplementation((context) => {
+    const scoped = scope(context)
+    return {
+      ...scoped,
+      checkGate: (gate, overrides) =>
+        gate === Gate.KnownLikersFeedEnable ||
+        scoped.checkGate(gate, overrides),
+    }
+  })
+}
 
 function isReplyTo(reply: AppBskyFeedPost.ReplyRef, did: string) {
   return uriToDid(reply.root.uri) === did && uriToDid(reply.parent.uri) === did

@@ -1,5 +1,13 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import {
   AppBskyFeedDefs,
   type AppBskyFeedGetActorFeeds,
@@ -20,6 +28,7 @@ import {
 import type { SkeletonHandler, app } from '@atproto/pds'
 import type { DidString } from '@atproto/syntax'
 import { AuthRequiredError } from '@atproto/xrpc-server'
+import { Gate } from '../src/feature-gates/gates.js'
 import { forSnapshot, paginateAll } from './_util.js'
 
 describe('feed generation', () => {
@@ -792,6 +801,7 @@ describe('feed generation', () => {
 
   describe('getFeed', () => {
     it('resolves basic feed contents.', async () => {
+      using _knownLikersGate = enableKnownLikersGate(network)
       const feed = await agent.api.app.bsky.feed.getFeed(
         { feed: feedUriEven },
         {
@@ -1148,6 +1158,20 @@ describe('feed generation', () => {
       }
     }
 })
+
+const enableKnownLikersGate = (network: TestNetwork) => {
+  const featureGates = network.bsky.ctx.featureGatesClient
+  const scope = featureGates.scope.bind(featureGates)
+  return vi.spyOn(featureGates, 'scope').mockImplementation((context) => {
+    const scoped = scope(context)
+    return {
+      ...scoped,
+      checkGate: (gate, overrides) =>
+        gate === Gate.KnownLikersFeedEnable ||
+        scoped.checkGate(gate, overrides),
+    }
+  })
+}
 
 const jwtBody = (authHeader?: string): Record<string, unknown> | undefined => {
   if (!authHeader?.startsWith('Bearer')) return undefined

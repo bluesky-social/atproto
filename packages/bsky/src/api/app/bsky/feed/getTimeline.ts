@@ -90,9 +90,13 @@ const hydration = async (inputs: {
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
   return ctx.hydrator.hydrateFeedItems(skeleton.items, params.hydrateCtx, {
-    knownLikers: {
-      subjectUris: skeleton.items.map((item) => item.post.uri),
-    },
+    knownLikers:
+      params.hydrateCtx.viewer &&
+      params.hydrateCtx.features.checkGate(
+        params.hydrateCtx.features.Gate.KnownLikersFeedEnable,
+      )
+        ? { subjectUris: skeleton.items.map((item) => item.post.uri) }
+        : undefined,
   })
 }
 

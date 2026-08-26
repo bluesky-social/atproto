@@ -126,9 +126,13 @@ const hydration = async (
     skeleton.items,
     params.hydrateCtx,
     {
-      knownLikers: {
-        subjectUris: skeleton.items.map((item) => item.post.uri),
-      },
+      knownLikers:
+        params.hydrateCtx.viewer &&
+        params.hydrateCtx.features.checkGate(
+          params.hydrateCtx.features.Gate.KnownLikersFeedEnable,
+        )
+          ? { subjectUris: skeleton.items.map((item) => item.post.uri) }
+          : undefined,
     },
   )
   skeleton.timerHydr = timerHydr.stop()

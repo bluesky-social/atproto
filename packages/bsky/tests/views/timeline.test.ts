@@ -1,5 +1,13 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import {
   type AppBskyFeedDefs,
   type AppBskyFeedGetTimeline,
@@ -12,6 +20,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { Gate } from '../../src/feature-gates/gates.js'
 import type { Database } from '../../src/index.js'
 import { forSnapshot, getOriginator, paginateAll } from '../_util.js'
 
@@ -61,6 +70,7 @@ describe('timeline views', () => {
   // @TODO(bsky) blocks posts, reposts, replies by record takedown via labels
 
   it("fetches authenticated user's home feed w/ reverse-chronological algorithm", async () => {
+    using _knownLikersGate = enableKnownLikersGate(network)
     const expectOriginatorFollowedBy =
       (did: string) => (item: AppBskyFeedDefs.FeedViewPost) => {
         const originator = getOriginator(item as any)
@@ -592,6 +602,20 @@ describe('timeline views', () => {
     expect(timeline).toEqual({ feed: [] })
   })
 })
+
+const enableKnownLikersGate = (network: TestNetwork) => {
+  const featureGates = network.bsky.ctx.featureGatesClient
+  const scope = featureGates.scope.bind(featureGates)
+  return vi.spyOn(featureGates, 'scope').mockImplementation((context) => {
+    const scoped = scope(context)
+    return {
+      ...scoped,
+      checkGate: (gate, overrides) =>
+        gate === Gate.KnownLikersFeedEnable ||
+        scoped.checkGate(gate, overrides),
+    }
+  })
+}
 
 const createLabel = async (
   db: Database,
