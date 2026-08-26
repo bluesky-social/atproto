@@ -286,20 +286,23 @@ export function mergeHeaders(
 }
 
 function getAbortReason(signal: AbortSignal): unknown {
-  return (
-    signal.reason ??
-    (typeof DOMException !== 'undefined'
-      ? new DOMException('Aborted', 'AbortError')
-      : new Error('Aborted'))
-  )
+  if ('reason' in signal) return signal.reason
+  return typeof DOMException !== 'undefined'
+    ? new DOMException('Aborted', 'AbortError')
+    : new Error('Aborted')
 }
 
 /**
- * Throws when a signal is aborted without requiring the optional
- * `AbortSignal.throwIfAborted()` API.
+ * Uses the native `AbortSignal.throwIfAborted()` when available, falling back
+ * for older implementations such as React Native's `abort-controller`.
  */
 export function throwIfAborted(signal?: AbortSignal): void {
-  if (signal?.aborted) throw getAbortReason(signal)
+  if (!signal) return
+  if (typeof signal.throwIfAborted === 'function') {
+    signal.throwIfAborted()
+    return
+  }
+  if (signal.aborted) throw getAbortReason(signal)
 }
 
 export function wait(
