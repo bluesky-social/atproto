@@ -2,4 +2,4 @@
 '@atproto/bsky': patch
 ---
 
-Add a 1.5s connection timeout to requests to iris.
+Add a 1s timeout to requests to iris.
