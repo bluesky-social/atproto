@@ -6,12 +6,12 @@ import cors from 'cors'
 import { Etcd3 } from 'etcd3'
 import express from 'express'
 import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
+import { Agent as UndiciAgent, fetch as undiciFetch } from 'undici'
 import { DAY, SECOND } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { Client } from '@atproto/lex'
 import { createServer } from '@atproto/xrpc-server'
-import { timedFetch } from '@atproto-labs/fetch-node'
 import { createBlobDispatcher } from './api/blob-dispatcher.js'
 import API, {
   blobResolver,
@@ -55,6 +55,26 @@ export * from './data-plane/index.js'
 export { BackgroundQueue } from './data-plane/server/background.js'
 export { Database } from './data-plane/server/db/index.js'
 export { Redis } from './redis.js'
+
+/**
+ * Builds a fetch that bounds the connection phase only. Once connected, the
+ * request is not bounded here.
+ *
+ * Uses undici's own fetch rather than the global one, since the dispatcher must
+ * come from the same undici as the fetch it is passed to, and the undici we
+ * depend on is not the one Node embeds.
+ */
+function connectTimeoutFetch(connectTimeout: number) {
+  const dispatcher = new UndiciAgent({ connectTimeout })
+  return (input: unknown, init: unknown) =>
+    undiciFetch(
+      input as never,
+      {
+        ...(init as object),
+        dispatcher,
+      } as never,
+    ) as Promise<Response>
+}
 
 export class BskyAppView {
   public ctx: AppContext
@@ -136,6 +156,7 @@ export class BskyAppView {
             headers: config.topicsApiKey
               ? { authorization: `Bearer ${config.topicsApiKey}` }
               : undefined,
+            fetch: connectTimeoutFetch(SECOND),
           },
           {
             // Trust internal services to send us well-formed responses
@@ -149,9 +170,7 @@ export class BskyAppView {
       ? new Client(
           {
             service: config.irisUrl,
-            // Bound the whole request: connecting, waiting for the response,
-            // and reading its body.
-            fetch: timedFetch(SECOND),
+            fetch: connectTimeoutFetch(SECOND),
           },
           {
             // Trust internal services to send us well-formed responses
