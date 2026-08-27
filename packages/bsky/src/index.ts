@@ -6,6 +6,7 @@ import cors from 'cors'
 import { Etcd3 } from 'etcd3'
 import express from 'express'
 import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
+import { Agent as UndiciAgent, fetch as undiciFetch } from 'undici'
 import { DAY, SECOND } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -148,6 +149,23 @@ export class BskyAppView {
       ? new Client(
           {
             service: config.irisUrl,
+            // Bound the connection phase only. Once connected, requests to
+            // iris are not bounded here. Uses undici's own fetch rather than
+            // the global one, since the dispatcher must come from the same
+            // undici version as the fetch it is passed to.
+            fetch: (() => {
+              const dispatcher = new UndiciAgent({
+                connectTimeout: 1.5 * SECOND,
+              })
+              return (input, init) =>
+                undiciFetch(
+                  input as never,
+                  {
+                    ...init,
+                    dispatcher,
+                  } as never,
+                ) as Promise<Response>
+            })(),
           },
           {
             // Trust internal services to send us well-formed responses
