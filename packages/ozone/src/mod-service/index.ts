@@ -492,6 +492,8 @@ export class ModerationService {
     createdAt?: Date
     modTool?: ToolsOzoneModerationDefs.ModTool
     externalId?: string
+    additionalMeta?: Record<string, string | number | boolean>
+    requireStrikeUpdate?: boolean
   }): Promise<{
     event: ModerationEventRow
     subjectStatus: ModerationSubjectStatusRow | null
@@ -504,6 +506,8 @@ export class ModerationService {
       externalId,
       createdAt = new Date(),
       modTool,
+      additionalMeta,
+      requireStrikeUpdate = false,
     } = info
 
     const createLabelVals =
@@ -515,7 +519,9 @@ export class ModerationService {
         ? event.negateLabelVals.join(' ')
         : undefined
 
-    const meta: Record<string, string | number | boolean> = {}
+    const meta: Record<string, string | number | boolean> = {
+      ...additionalMeta,
+    }
 
     const addedTags = isModEventTag(event) ? jsonb(event.add) : null
     const removedTags = isModEventTag(event) ? jsonb(event.remove) : null
@@ -636,9 +642,8 @@ export class ModerationService {
 
     const subjectInfo = subject.info()
 
-    // Store severityLevel, strikeCount, and strikeExpiresAt if provided
-    // These values should be calculated by the client based on configuration
-    // processNewEvent will update the account_strike table with the new strike count
+    // Legacy callers provide strike values; applyStrikes callers have them
+    // calculated by Ozone before reaching this storage path.
     let severityLevel: string | null = null
     let strikeCount: number | null = null
     let strikeExpiresAt: string | null = null
@@ -742,6 +747,10 @@ export class ModerationService {
 
     // Updates are only needed if strikeCount is numeric (in some cases even 0)
     if (modEvent.strikeCount !== null) {
+      if (requireStrikeUpdate) {
+        await this.strikeService.updateSubjectStrikeCount(modEvent.subjectDid)
+        return { event: modEvent, subjectStatus }
+      }
       try {
         await this.strikeService.updateSubjectStrikeCount(modEvent.subjectDid)
       } catch (error) {

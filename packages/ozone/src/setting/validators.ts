@@ -5,6 +5,7 @@ import {
   PolicyListSettingKey,
   ProtectedTagSettingKey,
   SeverityLevelSettingKey,
+  StrikeThresholdSettingKey,
 } from './constants.js'
 
 export const settingValidators = new Map<
@@ -326,6 +327,40 @@ export const settingValidators = new Map<
               `First occurrence strike count must be a non-negative integer for severity level ${key}`,
             )
           }
+        }
+      }
+    },
+  ],
+  [
+    StrikeThresholdSettingKey,
+    async (setting: Partial<Selectable<Setting>>) => {
+      if (setting.managerRole !== 'tools.ozone.team.defs#roleAdmin') {
+        throw new InvalidRequestError(
+          'Only admins should be able to manage strike thresholds',
+        )
+      }
+      if (
+        !setting.value ||
+        typeof setting.value !== 'object' ||
+        Array.isArray(setting.value)
+      ) {
+        throw new InvalidRequestError('Invalid value')
+      }
+      for (const [threshold, duration] of Object.entries(setting.value)) {
+        if (!/^[1-9]\d*$/.test(threshold)) {
+          throw new InvalidRequestError(
+            `Strike threshold must be a positive integer: ${threshold}`,
+          )
+        }
+        if (
+          duration !== null &&
+          (typeof duration !== 'number' ||
+            !Number.isInteger(duration) ||
+            duration < 1)
+        ) {
+          throw new InvalidRequestError(
+            `Strike threshold duration must be a positive integer or null: ${threshold}`,
+          )
         }
       }
     },

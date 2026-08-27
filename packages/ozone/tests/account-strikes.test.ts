@@ -6,7 +6,10 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons.js'
-import { SeverityLevelSettingKey } from '../src/setting/constants.js'
+import {
+  SeverityLevelSettingKey,
+  StrikeThresholdSettingKey,
+} from '../src/setting/constants.js'
 import { forSnapshot } from './_util.js'
 
 const strikeConfig = {
@@ -50,6 +53,22 @@ describe('account-strikes', () => {
         ),
       },
     )
+    await agent.tools.ozone.setting.upsertOption(
+      {
+        scope: 'instance',
+        key: StrikeThresholdSettingKey,
+        value: { '3': 72, '6': 168, '9': null },
+        description: 'Account suspension tiers',
+        managerRole: 'tools.ozone.team.defs#roleAdmin',
+      },
+      {
+        encoding: 'application/json',
+        headers: await network.ozone.modHeaders(
+          ids.ToolsOzoneSettingUpsertOption,
+          'admin',
+        ),
+      },
+    )
   }
 
   beforeAll(async () => {
@@ -66,6 +85,58 @@ describe('account-strikes', () => {
 
   afterAll(async () => {
     await network?.close()
+  })
+
+  it('computes strikes and cascades a crossed threshold to the account', async () => {
+    for (const post of sc.posts[sc.dids.bob].slice(0, 2)) {
+      await modClient.emitEvent({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventTakedown',
+          severityLevel: 'sev-2',
+          policies: ['spam-policy'],
+          applyStrikes: true,
+          comment: 'Automated record takedown',
+        },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.ref.uriStr,
+          cid: post.ref.cidStr,
+        },
+      })
+    }
+
+    const statuses = await modClient.queryStatuses({ subject: sc.dids.bob })
+    expect(statuses.subjectStatuses[0].accountStrike?.activeStrikeCount).toBe(4)
+    expect(statuses.subjectStatuses[0].takendown).toBe(true)
+    expect(statuses.subjectStatuses[0].suspendUntil).toBeDefined()
+
+    const events = await modClient.queryEvents({
+      subject: sc.dids.bob,
+      includeAllUserRecords: true,
+    })
+    const cascade = events.events.find(
+      (item) =>
+        item.subject.$type === 'com.atproto.admin.defs#repoRef' &&
+        item.event.$type === 'tools.ozone.moderation.defs#modEventTakedown',
+    )
+    expect(cascade?.event.durationInHours).toBe(72)
+  })
+
+  it('rejects mixed server and client strike calculation', async () => {
+    await expect(
+      modClient.emitEvent({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventTakedown',
+          severityLevel: 'sev-2',
+          policies: ['spam-policy'],
+          applyStrikes: true,
+          strikeCount: 2,
+        },
+        subject: repoSubject(sc.dids.carol),
+      }),
+    ).rejects.toThrow(
+      'applyStrikes cannot be combined with strikeCount or strikeExpiresAt',
+    )
   })
 
   it('tracks strikes and exposes them through queryStatuses and queryEvents', async () => {

@@ -27,7 +27,15 @@ import {
 import type { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent.js'
 import { httpLogger } from '../../logger.js'
 import { processReportAction } from '../../mod-service/report.js'
-import { subjectFromInput } from '../../mod-service/subject.js'
+import { RepoSubject, subjectFromInput } from '../../mod-service/subject.js'
+import type {
+  SeverityLevelConfig,
+  StrikeThresholds,
+} from '../../mod-service/strike.js'
+import {
+  SeverityLevelSettingKey,
+  StrikeThresholdSettingKey,
+} from '../../setting/constants.js'
 import type { SettingService } from '../../setting/service.js'
 import { TagService } from '../../tag-service/index.js'
 import { getTagForReport } from '../../tag-service/util.js'
@@ -55,12 +63,29 @@ const handleModerationEvent = async ({
   const { event, externalId } = input.body
   const isAcknowledgeEvent = isModEventAcknowledge(event)
   const isTakedownEvent = isModEventTakedown(event)
+  const takedownEvent = isTakedownEvent ? event : undefined
   const isReverseTakedownEvent = isModEventReverseTakedown(event)
   const isLabelEvent = isModEventLabel(event)
   const subject = subjectFromInput(
     input.body.subject,
     input.body.subjectBlobCids,
   )
+
+  if (takedownEvent?.applyStrikes) {
+    if (!takedownEvent.severityLevel || !takedownEvent.policies?.length) {
+      throw new InvalidRequestError(
+        'applyStrikes requires severityLevel and policies',
+      )
+    }
+    if (
+      takedownEvent.strikeCount !== undefined ||
+      takedownEvent.strikeExpiresAt !== undefined
+    ) {
+      throw new InvalidRequestError(
+        'applyStrikes cannot be combined with strikeCount or strikeExpiresAt',
+      )
+    }
+  }
 
   if (isAgeAssuranceEvent(event) && !subject.isRepo()) {
     throw new InvalidRequestError('Invalid subject type')
@@ -225,6 +250,10 @@ const handleModerationEvent = async ({
 
   const moderationEvent = await db.transaction(async (dbTxn) => {
     const moderationTxn = ctx.modService(dbTxn)
+    const strikeTxn = ctx.strikeService(dbTxn)
+    let strikeCascade:
+      | { duration: number | null | undefined; needsTakedown: boolean }
+      | undefined
 
     if (externalId) {
       const existingEvent = await moderationTxn.getEventByExternalId(
@@ -256,12 +285,59 @@ const handleModerationEvent = async ({
       }
     }
 
+    if (takedownEvent?.applyStrikes) {
+      await strikeTxn.lockSubject(subject.did)
+      const settings = await ctx.settingService(dbTxn).query({
+        scope: 'instance',
+        did: ctx.cfg.service.did,
+        keys: [SeverityLevelSettingKey, StrikeThresholdSettingKey],
+        limit: 2,
+      })
+      const severityLevels = settings.options.find(
+        (option) => option.key === SeverityLevelSettingKey,
+      )?.value as Record<string, SeverityLevelConfig> | undefined
+      const thresholds = settings.options.find(
+        (option) => option.key === StrikeThresholdSettingKey,
+      )?.value as StrikeThresholds | undefined
+      const severityConfig = severityLevels?.[takedownEvent.severityLevel!]
+      if (!severityConfig) {
+        throw new InvalidRequestError(
+          `Unknown severity level: ${takedownEvent.severityLevel}`,
+        )
+      }
+      if (!thresholds) {
+        throw new InvalidRequestError('Strike thresholds are not configured')
+      }
+
+      const previous = await strikeTxn.getActiveStrikeCount(subject.did)
+      const computed = await strikeTxn.computeStrike({
+        subjectDid: subject.did,
+        policies: takedownEvent.policies!,
+        severityLevel: takedownEvent.severityLevel!,
+        config: severityConfig,
+        createdAt: new Date(),
+      })
+      takedownEvent.strikeCount = computed.strikeCount
+      takedownEvent.strikeExpiresAt = computed.strikeExpiresAt
+      strikeCascade = {
+        duration: computed.needsTakedown
+          ? null
+          : strikeTxn.getCrossedThreshold({
+              previous,
+              current: previous + computed.strikeCount,
+              thresholds,
+            }),
+        needsTakedown: computed.needsTakedown,
+      }
+    }
+
     const result = await moderationTxn.logEvent({
       event,
       subject,
       createdBy,
       modTool: input.body.modTool,
       externalId,
+      requireStrikeUpdate: !!takedownEvent?.applyStrikes,
     })
 
     // Update reports if reportAction was provided
@@ -329,6 +405,72 @@ const handleModerationEvent = async ({
         )
       } else if (isReverseTakedownEvent) {
         await moderationTxn.reverseTakedownRecord(subject)
+      }
+    }
+
+    const shouldCascade =
+      subject.isRecord() &&
+      strikeCascade &&
+      (strikeCascade.needsTakedown || strikeCascade.duration !== undefined)
+    if (shouldCascade) {
+      const cascadeDecision = strikeCascade!
+      const repoSubject = new RepoSubject(subject.did)
+      const accountStatus = await moderationTxn.getStatus(repoSubject)
+      const duration = cascadeDecision.needsTakedown
+        ? null
+        : cascadeDecision.duration!
+      const proposedExpiry =
+        duration === null
+          ? null
+          : new Date(Date.now() + duration * 60 * 60 * 1000).toISOString()
+      const isPermanent =
+        accountStatus?.takendown && !accountStatus.suspendUntil
+      const extendsSuspension =
+        !!accountStatus?.suspendUntil &&
+        (proposedExpiry === null || proposedExpiry > accountStatus.suspendUntil)
+
+      if (!isPermanent && (!accountStatus?.takendown || extendsSuspension)) {
+        if (accountStatus?.takendown) {
+          await moderationTxn.logEvent({
+            event: {
+              $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
+              comment:
+                '[STRIKE_CASCADE]: Replacing an active suspension with a longer strike tier',
+            },
+            subject: repoSubject,
+            createdBy,
+            modTool: input.body.modTool,
+            additionalMeta: {
+              strikeCascade: true,
+              sourceEventId: result.event.id,
+            },
+          })
+          await moderationTxn.reverseTakedownRepo(repoSubject)
+        }
+
+        const cascade = await moderationTxn.logEvent({
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventTakedown',
+            comment: `[STRIKE_CASCADE]: Account action triggered by record event ${result.event.id}`,
+            durationInHours: duration ?? undefined,
+            policies: takedownEvent?.policies,
+            severityLevel: takedownEvent?.severityLevel,
+            targetServices: takedownEvent?.targetServices,
+          },
+          subject: repoSubject,
+          createdBy,
+          modTool: input.body.modTool,
+          additionalMeta: {
+            strikeCascade: true,
+            sourceEventId: result.event.id,
+          },
+        })
+        await moderationTxn.takedownRepo(
+          repoSubject,
+          cascade.event.id,
+          new Set(takedownEvent?.targetServices),
+          duration !== null,
+        )
       }
     }
 
