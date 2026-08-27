@@ -537,11 +537,16 @@ export class Server {
           next(XRPCError.fromError(output))
         }
       } catch (err: unknown) {
-        // A client disconnect aborts the controller: the rejection is expected
-        // and the socket is already closed, so skip the error response/logging.
+        // Once the client has disconnected the socket is closed and no
+        // response is deliverable, so we don't forward the rejection. We key on
+        // the abort flag rather than the error's type on purpose: cancellation
+        // surfaces in different shapes (fetch AbortError, Connect-RPC "canceled"
+        // ConnectError, ...) and matching on one would miss the others. The
+        // error is still logged so a genuine error racing with a disconnect
+        // leaves a trace rather than vanishing.
         if (controller.signal.aborted) {
           log.info(
-            { method: req.method, url: req.url },
+            { method: req.method, url: req.url, err },
             'request aborted after client disconnect',
           )
           return
