@@ -11,6 +11,7 @@ import type { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { Client } from '@atproto/lex'
 import { createServer } from '@atproto/xrpc-server'
+import { timedFetch } from '@atproto-labs/fetch-node'
 import { createBlobDispatcher } from './api/blob-dispatcher.js'
 import API, {
   blobResolver,
@@ -148,6 +149,9 @@ export class BskyAppView {
       ? new Client(
           {
             service: config.irisUrl,
+            // Bound the whole request: connecting, waiting for the response,
+            // and reading its body.
+            fetch: timedFetch(SECOND),
           },
           {
             // Trust internal services to send us well-formed responses
