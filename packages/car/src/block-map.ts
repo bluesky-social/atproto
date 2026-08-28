@@ -3,14 +3,16 @@ import {
   type Cid,
   type LexValue,
   cidForCbor,
-  parseCid,
   ui8Equals,
 } from '@atproto/lex-data'
+import type { CarBlock } from './car-block.js'
 
-export class BlockMap implements Iterable<[cid: Cid, bytes: Uint8Array]> {
-  private map: Map<string, Uint8Array> = new Map()
+export type BlockMapEntry = [cid: Cid, bytes: Uint8Array]
 
-  constructor(entries?: Iterable<readonly [cid: Cid, bytes: Uint8Array]>) {
+export class BlockMap implements Iterable<BlockMapEntry> {
+  private map: Map<string, CarBlock> = new Map()
+
+  constructor(entries?: Iterable<Readonly<BlockMapEntry>>) {
     if (entries) {
       for (const [cid, bytes] of entries) {
         this.set(cid, bytes)
@@ -25,16 +27,16 @@ export class BlockMap implements Iterable<[cid: Cid, bytes: Uint8Array]> {
     return cid
   }
 
-  set(cid: Cid, bytes: Uint8Array): BlockMap {
-    this.map.set(cid.toString(), bytes)
+  set(cid: Cid, bytes: Uint8Array): this {
+    this.map.set(cid.toString(), { cid, bytes })
     return this
   }
 
   get(cid: Cid): Uint8Array | undefined {
-    return this.map.get(cid.toString())
+    return this.map.get(cid.toString())?.bytes
   }
 
-  delete(cid: Cid): BlockMap {
+  delete(cid: Cid): this {
     this.map.delete(cid.toString())
     return this
   }
@@ -43,9 +45,9 @@ export class BlockMap implements Iterable<[cid: Cid, bytes: Uint8Array]> {
     const missing: Cid[] = []
     const blocks = new BlockMap()
     for (const cid of cids) {
-      const got = this.map.get(cid.toString())
-      if (got) {
-        blocks.set(cid, got)
+      const entry = this.map.get(cid.toString())
+      if (entry) {
+        blocks.set(cid, entry.bytes)
       } else {
         missing.push(cid)
       }
@@ -65,17 +67,22 @@ export class BlockMap implements Iterable<[cid: Cid, bytes: Uint8Array]> {
     for (const [cid, bytes] of this) cb(bytes, cid)
   }
 
-  entries(): Entry[] {
-    return Array.from(this, toEntry)
+  entries(): Iterable<CarBlock> {
+    return this.map.values()
   }
 
   cids(): Cid[] {
     return Array.from(this.keys())
   }
 
-  addMap(toAdd: BlockMap): BlockMap {
+  addMany(toAdd: Iterable<Readonly<BlockMapEntry>>): this {
     for (const [cid, bytes] of toAdd) this.set(cid, bytes)
     return this
+  }
+
+  /** @deprecated use {@link addMany} instead */
+  addMap(toAdd: Iterable<Readonly<BlockMapEntry>>): this {
+    return this.addMany(toAdd)
   }
 
   get size(): number {
@@ -103,29 +110,20 @@ export class BlockMap implements Iterable<[cid: Cid, bytes: Uint8Array]> {
   }
 
   *keys(): Generator<Cid, void, unknown> {
-    for (const key of this.map.keys()) {
-      yield parseCid(key)
+    for (const { cid } of this.map.values()) {
+      yield cid
     }
   }
 
   *values(): Generator<Uint8Array, void, unknown> {
-    yield* this.map.values()
+    for (const entry of this.map.values()) {
+      yield entry.bytes
+    }
   }
 
   *[Symbol.iterator](): Generator<[Cid, Uint8Array], void, unknown> {
-    for (const [key, value] of this.map) {
-      yield [parseCid(key), value]
+    for (const { cid, bytes } of this.map.values()) {
+      yield [cid, bytes]
     }
   }
 }
-
-function toEntry([cid, bytes]: readonly [Cid, Uint8Array]): Entry {
-  return { cid, bytes }
-}
-
-type Entry = {
-  cid: Cid
-  bytes: Uint8Array
-}
-
-export default BlockMap

@@ -1,6 +1,5 @@
+import { type BlockMap, readCarWithRoot } from '@atproto/car'
 import type { Cid } from '@atproto/lex-data'
-import type { BlockMap } from '../block-map.js'
-import { readCarWithRoot } from '../car.js'
 import { DataDiff } from '../data-diff.js'
 import { MST } from '../mst/index.js'
 import { ReadableRepo } from '../readable-repo.js'

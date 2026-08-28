@@ -1,10 +1,10 @@
+import { type CarBlock, writeCarStream } from '@atproto/car'
 import type { Cid } from '@atproto/lex-data'
-import { writeCarStream } from '../car.js'
 import { CidSet } from '../cid-set.js'
 import { MissingBlocksError } from '../error.js'
 import { MST } from '../mst/index.js'
 import type { ReadableBlockstore, RepoStorage } from '../storage/index.js'
-import { type CarBlock, type RecordPath, def } from '../types.js'
+import { type RecordPath, def } from '../types.js'
 import * as util from '../util.js'
 
 // Full Repo
@@ -13,7 +13,7 @@ import * as util from '../util.js'
 export const getFullRepo = (
   storage: RepoStorage,
   commitCid: Cid,
-): AsyncIterable<Uint8Array> => {
+): AsyncGenerator<Uint8Array> => {
   return writeCarStream(commitCid, iterateFullRepo(storage, commitCid))
 }
 
@@ -36,7 +36,7 @@ export const getRecords = (
   storage: ReadableBlockstore,
   commitCid: Cid,
   paths: RecordPath[],
-): AsyncIterable<Uint8Array> => {
+): AsyncGenerator<Uint8Array> => {
   return writeCarStream(
     commitCid,
     iterateRecordBlocks(storage, commitCid, paths),

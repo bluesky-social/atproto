@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest'
-import { encodeCarBlock, encodeCarHeader, readCarStream } from '@atproto/common'
+import { encodeCarBlock, encodeCarHeader, readCarStream } from '@atproto/car'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { encode } from '@atproto/lex-cbor'
 import { type Cid, cidForCbor } from '@atproto/lex-data'
@@ -57,15 +57,15 @@ describe('space sync', () => {
 
   it('declares the commit and index as roots, in order', async () => {
     const car = await carFor(records)
-    const { roots, blocks } = await readCarStream([car])
-    expect(roots).toHaveLength(2)
+    await using carReader = await readCarStream([car])
+    expect(carReader.roots).toHaveLength(2)
 
     const seen: Cid[] = []
-    for await (const block of blocks) seen.push(block.cid)
+    for await (const block of carReader.blocks) seen.push(block.cid)
     // Two roots, then one block per record.
     expect(seen).toHaveLength(2 + records.length)
-    expect(seen[0].equals(roots[0])).toBe(true)
-    expect(seen[1].equals(roots[1])).toBe(true)
+    expect(seen[0].equals(carReader.roots[0])).toBe(true)
+    expect(seen[1].equals(carReader.roots[1])).toBe(true)
   })
 
   it('round-trips through verification', async () => {
@@ -205,11 +205,11 @@ describe('space sync', () => {
       const byPath = new Map(
         records.map((r) => [`${r.collection}/${r.rkey}`, r]),
       )
-      const parts = [
+      const parts: Uint8Array[] = [
         encodeCarHeader([commitCid, indexCid]),
         encodeCarBlock({ cid: commitCid, bytes: commitBytes }),
         encodeCarBlock({ cid: indexCid, bytes: indexBytes }),
-        ...Object.keys(index).map((path, i) => {
+        ...Object.keys(index).flatMap((path, i) => {
           const record = byPath.get(path)!
           // Swap in bytes that don't hash to the advertised cid.
           const bytes = i === 0 ? encode({ text: 'tampered' }) : record.bytes

@@ -1,14 +1,10 @@
-import { type CarBlock, writeCarStream } from '@atproto/common'
-import { cidForLex, encode } from '@atproto/lex-cbor'
-import { type Cid, cidForCbor } from '@atproto/lex-data'
+import { type CarBlock, buildCarBlock, writeCarStream } from '@atproto/car'
 import type { RepoIndex, SignedCommit, SpaceRecord } from '../types.js'
 import { formatRecordPath } from '../util.js'
 
-export type SerializedRecord = {
+export type SerializedRecord = CarBlock & {
   collection: string
   rkey: string
-  cid: Cid
-  bytes: Uint8Array
 }
 
 /**
@@ -41,22 +37,19 @@ export async function* serializeRepo(
     index[path] = byPath.get(path)!.cid
   }
 
-  const commitBytes = encode(commit)
-  const indexBytes = encode(index)
-  const [commitRoot, indexRoot] = await Promise.all([
-    cidForCbor(commitBytes),
-    cidForCbor(indexBytes),
+  const [commitBlock, indexBlock] = await Promise.all([
+    buildCarBlock(commit),
+    buildCarBlock(index),
   ])
 
   yield* writeCarStream(
-    [commitRoot, indexRoot],
-    (function* (): Generator<CarBlock> {
-      yield { cid: commitRoot, bytes: commitBytes }
-      yield { cid: indexRoot, bytes: indexBytes }
+    [commitBlock.cid, indexBlock.cid],
+    (function* () {
+      yield commitBlock
+      yield indexBlock
       if (opts.excludeValues) return
       for (const path of paths) {
-        const record = byPath.get(path)!
-        yield { cid: record.cid, bytes: record.bytes }
+        yield byPath.get(path)!
       }
     })(),
   )
@@ -73,10 +66,6 @@ export const serializeRecord = async (
   rkey: string,
   record: SpaceRecord,
 ): Promise<SerializedRecord> => {
-  return {
-    collection,
-    rkey,
-    cid: await cidForLex(record),
-    bytes: encode(record),
-  }
+  const block = await buildCarBlock(record)
+  return { ...block, collection, rkey }
 }

@@ -206,7 +206,7 @@ export class LexDefBuilder {
 
   private async addSpace(hash: string, def: LexiconSpace) {
     const options = stringifyOptions(def, [
-      'description',
+      'name',
       'name:lang',
     ] satisfies (keyof l.SpaceOptions)[])
 

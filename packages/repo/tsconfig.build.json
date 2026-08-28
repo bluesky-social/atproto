@@ -2,6 +2,7 @@
   "extends": ["../../tsconfig/node.tsconfig.json"],
   "include": ["./src"],
   "references": [
+    { "path": "../car/tsconfig.build.json" },
     { "path": "../common-web/tsconfig.build.json" },
     { "path": "../common/tsconfig.build.json" },
     { "path": "../crypto/tsconfig.build.json" },
