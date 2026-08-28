@@ -17,5 +17,13 @@ export function getAtprotoPassthroughHeaders(req: {
     }
   }
 
+  const topics =
+    req.headers['x-atproto-bsky-topics'] ?? req.headers[LEGACY_TOPIC_HEADER]
+  if (topics != null) {
+    headers['x-atproto-bsky-topics'] = Array.isArray(topics)
+      ? topics.join(',')
+      : topics
+  }
+
   return headers
 }
