@@ -627,6 +627,28 @@ importers:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.15.47)(@types/node@22.19.17)(@typescript/typescript6@6.0.2))
 
+  packages/car:
+    dependencies:
+      '@atproto/lex-cbor':
+        specifier: workspace:^
+        version: link:../lex/lex-cbor
+      '@atproto/lex-data':
+        specifier: workspace:^
+        version: link:../lex/lex-data
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
+      varint:
+        specifier: ^6.0.0
+        version: 6.0.0
+    devDependencies:
+      '@types/varint':
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.0(@types/node@22.19.17)(jiti@2.7.0)(terser@5.44.0)(yaml@2.8.1))
+
   packages/common:
     dependencies:
       '@atproto/common-web':
@@ -644,9 +666,6 @@ importers:
       pino:
         specifier: ^10.3.1
         version: 10.3.1
-      varint:
-        specifier: ^6.0.0
-        version: 6.0.0
     devDependencies:
       uint8arrays:
         specifier: ^5.0.0
@@ -2198,6 +2217,9 @@ importers:
 
   packages/repo:
     dependencies:
+      '@atproto/car':
+        specifier: workspace:^
+        version: link:../car
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
@@ -2226,6 +2248,9 @@ importers:
 
   packages/space:
     dependencies:
+      '@atproto/car':
+        specifier: workspace:^
+        version: link:../car
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
@@ -6020,6 +6045,9 @@ packages:
 
   '@types/uuid@9.0.8':
     resolution: {integrity: sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==}
+
+  '@types/varint@6.0.3':
+    resolution: {integrity: sha512-DHukoGWdJ2aYkveZJTB2rN2lp6m7APzVsoJQ7j/qy1fQxyamJTPD5xQzCMoJ2Qtgn0mE3wWeNOpbTyBFvF+dyA==}
 
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
@@ -15751,6 +15779,10 @@ snapshots:
       '@types/node': 22.19.17
 
   '@types/uuid@9.0.8': {}
+
+  '@types/varint@6.0.3':
+    dependencies:
+      '@types/node': 22.19.17
 
   '@types/ws@8.18.1':
     dependencies:

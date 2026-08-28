@@ -1,5 +1,5 @@
+import { BlockMap } from '@atproto/car'
 import type { Cid } from '@atproto/lex-data'
-import { BlockMap } from '../block-map.js'
 import type { CommitData } from '../types.js'
 import { ReadableBlockstore } from './readable-blockstore.js'
 import type { RepoStorage } from './types.js'
@@ -12,11 +12,11 @@ export class MemoryBlockstore
   root: Cid | null = null
   rev: string | null = null
 
-  constructor(blocks?: BlockMap) {
+  constructor(blocks?: Iterable<readonly [cid: Cid, bytes: Uint8Array]>) {
     super()
     this.blocks = new BlockMap()
     if (blocks) {
-      this.blocks.addMap(blocks)
+      this.blocks.addMany(blocks)
     }
   }
 
@@ -41,7 +41,7 @@ export class MemoryBlockstore
   }
 
   async putMany(blocks: BlockMap): Promise<void> {
-    this.blocks.addMap(blocks)
+    this.blocks.addMany(blocks)
   }
 
   async updateRoot(cid: Cid, rev: string): Promise<void> {

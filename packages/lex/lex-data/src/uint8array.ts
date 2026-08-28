@@ -1,3 +1,4 @@
+import { isNodeJSBuffer } from './lib/nodejs-buffer.js'
 import type { Base64Alphabet } from './uint8array-base64.js'
 import { ui8ConcatNode, ui8ConcatPonyfill } from './uint8array-concat.js'
 import {
@@ -108,6 +109,7 @@ export function ifUint8Array(input: unknown): Uint8Array | undefined {
  * Coerces various binary data representations into a Uint8Array.
  *
  * Handles the following input types:
+ * - `Buffer` (Node.js) - Converted to Uint8Array
  * - `Uint8Array` - Returned as-is
  * - `ArrayBufferView` (e.g., DataView, other TypedArrays) - Converted to Uint8Array
  * - `ArrayBuffer` - Wrapped in a Uint8Array
@@ -125,7 +127,14 @@ export function ifUint8Array(input: unknown): Uint8Array | undefined {
  * asUint8Array('string')                   // undefined
  * ```
  */
-export function asUint8Array(input: unknown): Uint8Array | undefined {
+export function asUint8Array(input: unknown): Uint8Array {
+  // In Node.js, if the input is a NodeJSBuffer, we turn it into an actual
+  // Uint8Array to avoid discrepancies between NodeJSBuffer and Uint8Array
+  // regarding some operations (e.g., `slice`, `subarray`, etc.).
+  if (isNodeJSBuffer(input)) {
+    return new Uint8Array(input.buffer, input.byteOffset, input.byteLength)
+  }
+
   if (input instanceof Uint8Array) {
     return input
   }
@@ -142,7 +151,35 @@ export function asUint8Array(input: unknown): Uint8Array | undefined {
     return new Uint8Array(input)
   }
 
-  return undefined
+  if (isArrayLike(input)) {
+    const { length } = input as any
+    const uint8Array = new Uint8Array(length)
+    for (let i = 0; i < length; i++) {
+      const value = input[i] as any
+      if (!(value >= 0 && value <= 255 && Number.isInteger(value))) {
+        throw new TypeError(
+          `Cannot convert array-like value to Uint8Array: element at index ${i} is not a number`,
+        )
+      }
+      uint8Array[i] = value
+    }
+    return uint8Array
+  }
+
+  throw new TypeError(`Cannot convert value to Uint8Array: ${String(input)}`)
+}
+
+function isArrayLike(input: unknown): input is ArrayLike<unknown> {
+  if (input == null || typeof input !== 'object') {
+    return false
+  }
+
+  const { length } = input as any
+  if (!Number.isInteger(length) || length < 0) {
+    return false
+  }
+
+  return true
 }
 
 /**
@@ -194,6 +231,14 @@ export function ui8Equals(a: Uint8Array, b: Uint8Array): boolean {
  * ```
  */
 export const ui8Concat: (
-  array: readonly Uint8Array[],
+  array: Iterable<ArrayLike<number>>,
 ) => Uint8Array<ArrayBuffer> =
   /* v8 ignore next -- @preserve */ ui8ConcatNode ?? ui8ConcatPonyfill
+
+export async function ui8ConcatAsync(
+  iterable: Iterable<ArrayLike<number>> | AsyncIterable<ArrayLike<number>>,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const chunks: ArrayLike<number>[] = []
+  for await (const chunk of iterable) chunks.push(chunk)
+  return ui8Concat(chunks)
+}

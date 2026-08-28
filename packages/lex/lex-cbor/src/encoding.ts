@@ -124,8 +124,10 @@ export const decodeOptions: Readonly<DecodeOptions> =
  * })
  * ```
  */
-export function encode<T extends LexValue = LexValue>(data: T): Uint8Array {
-  return cborgEncode(data, encodeOptions)
+export function encode<T extends LexValue = LexValue>(
+  data: T,
+): Uint8Array<ArrayBuffer> {
+  return cborgEncode(data, encodeOptions) as Uint8Array<ArrayBuffer>
 }
 
 /**

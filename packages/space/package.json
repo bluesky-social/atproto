@@ -21,6 +21,7 @@
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
+    "@atproto/car": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/jwk": "workspace:^",

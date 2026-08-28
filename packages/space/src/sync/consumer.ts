@@ -1,4 +1,5 @@
-import { type check, readCarStream } from '@atproto/common'
+import { readCarStream } from '@atproto/car'
+import type { check } from '@atproto/common'
 import { decode } from '@atproto/lex-cbor'
 import type { Cid, LexMap } from '@atproto/lex-data'
 import { RepoVerificationError } from '../error.js'
@@ -27,7 +28,13 @@ export type VerifiedRecord = {
   record: SpaceRecord
 }
 
-export type VerifiedRepo = {
+/**
+ * @note **IMPORTANT** to avoid resource leaks, the {@link VerifiedRepo} must be
+ * disposed of when done, either by calling its `[Symbol.asyncDispose]()`
+ * method, by using it in a `using` statement, or by consuming at least one of
+ * its `records` (and then `return()`ing the iterator).
+ */
+export type VerifiedRepo = AsyncDisposable & {
   commit: SignedCommit
   index: RepoIndex
   repo: RepoCommit
@@ -47,44 +54,57 @@ export const verifyRepoCar = async (
   car: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
   params: VerifyRepoParams,
 ): Promise<VerifiedRepo> => {
-  // The reader hashes every block against its cid as it streams.
-  const { roots, blocks } = await readCarStream(car)
-  if (roots.length !== 2) {
-    throw new RepoVerificationError(
-      `expected 2 car roots (commit, index), got ${roots.length}`,
-    )
-  }
-  const [commitRoot, indexRoot] = roots
+  const carReader = await readCarStream(car, {
+    // The reader hashes every block against its cid as it streams.
+    skipCidVerification: false,
+  })
+  // Note the try/catch would better be implemented with a DisposableStack, but
+  // that isn't (widely) available yet.
+  try {
+    const { roots, blocks } = carReader
+    if (roots.length !== 2) {
+      throw new RepoVerificationError(
+        `expected 2 car roots (commit, index), got ${roots.length}`,
+      )
+    }
+    const [commitRoot, indexRoot] = roots
 
-  const commitBlock = await blocks.next()
-  if (commitBlock.done || !commitBlock.value.cid.equals(commitRoot)) {
-    throw new RepoVerificationError('expected the commit block to lead the car')
-  }
-  const commit = parseBlock(commitBlock.value.bytes, def.signedCommit)
+    const commitBlock = await blocks.next()
+    if (commitBlock.done || !commitBlock.value.cid.equals(commitRoot)) {
+      throw new RepoVerificationError(
+        'expected the commit block to lead the car',
+      )
+    }
+    const commit = parseBlock(commitBlock.value.bytes, def.signedCommit)
 
-  const ctx: CommitCtx = { ...params, rev: commit.rev }
-  if (!(await verifyCommit(commit, ctx, params.didKey))) {
-    throw new RepoVerificationError('commit failed verification')
-  }
+    const ctx: CommitCtx = { ...params, rev: commit.rev }
+    if (!(await verifyCommit(commit, ctx, params.didKey))) {
+      throw new RepoVerificationError('commit failed verification')
+    }
 
-  const indexBlock = await blocks.next()
-  if (indexBlock.done || !indexBlock.value.cid.equals(indexRoot)) {
-    throw new RepoVerificationError(
-      'expected the index block to follow the commit',
-    )
-  }
-  const index = parseBlock(indexBlock.value.bytes, def.repoIndex)
+    const indexBlock = await blocks.next()
+    if (indexBlock.done || !indexBlock.value.cid.equals(indexRoot)) {
+      throw new RepoVerificationError(
+        'expected the index block to follow the commit',
+      )
+    }
+    const index = parseBlock(indexBlock.value.bytes, def.repoIndex)
 
-  const repo = RepoCommit.fromIndex(index)
-  if (!repo.matches(commit)) {
-    throw new RepoVerificationError('index does not match the commit hash')
-  }
+    const repo = RepoCommit.fromIndex(index)
+    if (!repo.matches(commit)) {
+      throw new RepoVerificationError('index does not match the commit hash')
+    }
 
-  return {
-    commit,
-    index,
-    repo,
-    records: verifyRecords(blocks, index, params.expectValues !== false),
+    return {
+      commit,
+      index,
+      repo,
+      records: verifyRecords(blocks, index, params.expectValues !== false),
+      [Symbol.asyncDispose]: carReader.destroy.bind(carReader),
+    }
+  } catch (err) {
+    await carReader.destroy()
+    throw err
   }
 }
 
@@ -110,7 +130,7 @@ async function* verifyRecords(
   index: RepoIndex,
   expectValues: boolean,
 ): AsyncGenerator<VerifiedRecord> {
-  const paths = Object.keys(index)
+  const paths = Object.keys(index) as `${string}/${string}`[]
   let i = 0
 
   for await (const block of blocks) {
@@ -118,10 +138,12 @@ async function* verifyRecords(
       throw new RepoVerificationError('car has more blocks than index entries')
     }
     const path = paths[i]
-    const cid = index[path]
+    const cid = Object.hasOwn(index, path) ? index[path] : undefined
     i++
 
-    if (!block.cid.equals(cid)) {
+    // @NOTE the car reader already verifies the block's cid against its bytes,
+    // so we only need to check it against the index.
+    if (!cid || !block.cid.equals(cid)) {
       throw new RepoVerificationError(
         `expected block ${cid} at ${path}, got ${block.cid}`,
       )

@@ -1,22 +1,25 @@
 {
-  "name": "@atproto/common",
-  "version": "0.8.1",
+  "name": "@atproto/car",
+  "version": "0.0.0",
   "license": "MIT",
-  "description": "Shared web-platform-friendly code for atproto libraries",
+  "description": "Utilities for reading and writing AT Protocol CAR files",
   "keywords": [
-    "atproto"
+    "atproto",
+    "lexicon",
+    "utilities"
   ],
   "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/bluesky-social/atproto",
-    "directory": "packages/common"
+    "directory": "packages/car"
   },
   "files": [
     "./dist",
     "./README.md",
     "./CHANGELOG.md"
   ],
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -28,18 +31,17 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@atproto/common-web": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-data": "workspace:^",
-    "multiformats": "^13.0.0",
-    "pino": "^10.3.1"
+    "tslib": "^2.8.1",
+    "varint": "^6.0.0"
   },
   "devDependencies": {
-    "uint8arrays": "^5.0.0",
+    "@types/varint": "^6.0.3",
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "test": "vitest run",
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json",
+    "test": "vitest run"
   }
 }

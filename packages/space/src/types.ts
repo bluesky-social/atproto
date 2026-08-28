@@ -47,7 +47,19 @@ const signedCommit = z.object({
 export type SignedCommit = z.infer<typeof signedCommit>
 
 // `{collection}/{rkey}` to the record's cid.
-const repoIndex = z.record(z.string(), cidSchema)
+const repoIndexKey = z.custom<`${string}/${string}`>((value) => {
+  if (typeof value !== 'string') return false
+  // Optimization: search from the end because rkey are typically shorter than
+  // collection names.
+  const slash = value.lastIndexOf('/')
+  return (
+    slash > 0 &&
+    slash < value.length - 1 &&
+    value.lastIndexOf('/', slash - 1) === -1
+  )
+})
+
+const repoIndex = z.record(repoIndexKey, cidSchema)
 export type RepoIndex = z.infer<typeof repoIndex>
 
 export const def = {
