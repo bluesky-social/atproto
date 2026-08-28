@@ -513,6 +513,15 @@ importers:
       undici:
         specifier: ^8.5.0
         version: 8.5.0
+      undici_v6:
+        specifier: npm:undici@^6.x
+        version: undici@6.19.8
+      undici_v7:
+        specifier: npm:undici@^7.x
+        version: undici@7.28.0
+      undici_v8:
+        specifier: npm:undici@^8.x
+        version: undici@8.5.0
       zod:
         specifier: 3.23.8
         version: 3.23.8

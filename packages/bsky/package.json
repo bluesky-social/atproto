@@ -77,6 +77,9 @@
     "structured-headers": "^1.0.1",
     "uint8arrays": "^5.0.0",
     "undici": "^8.5.0",
+    "undici_v6": "npm:undici@^6.x",
+    "undici_v7": "npm:undici@^7.x",
+    "undici_v8": "npm:undici@^8.x",
     "zod": "3.23.8"
   },
   "devDependencies": {
