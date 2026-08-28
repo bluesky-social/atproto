@@ -20,9 +20,7 @@ import {
 export type List = RecordInfo<ListRecord>
 export type Lists = HydrationMap<AtUriString, List>
 
-export type ListItem = RecordInfo<ListItemRecord> & {
-  subjectOptedOut?: true
-}
+export type ListItem = RecordInfo<ListItemRecord>
 export type ListItems = HydrationMap<AtUriString, ListItem>
 
 export type ListViewerState = {

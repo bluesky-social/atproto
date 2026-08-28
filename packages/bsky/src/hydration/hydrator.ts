@@ -153,6 +153,7 @@ export type HydrationState = {
   listMemberships?: ListMembershipStates
   listViewers?: ListViewerStates
   listItems?: ListItems
+  listItemSubjectOptOuts?: HydrationMap<AtUriString, true>
   likes?: Likes
   likeBlocks?: LikeBlocks
   labels?: Labels
@@ -1224,11 +1225,13 @@ export class Hydrator {
     })
     // hydrate sampled list items
     const listItemState = await this.hydrateListItems(listItemUris, ctx)
+    // @NOTE Subject opt-outs come from list membership, not list item records.
+    const listItemSubjectOptOuts = new HydrationMap<AtUriString, true>()
     listsMembers.forEach((members) => {
       members.listitems.forEach((item) => {
-        if (!item.subjectOptedOut) return
-        const hydrated = listItemState.listItems?.get(item.uri as AtUriString)
-        if (hydrated) hydrated.subjectOptedOut = true
+        if (item.subjectOptedOut) {
+          listItemSubjectOptOuts.set(item.uri as AtUriString, true)
+        }
       })
     })
     return mergeManyStates(
@@ -1236,6 +1239,7 @@ export class Hydrator {
       feedGenState,
       listState,
       listItemState,
+      { listItemSubjectOptOuts },
     )
   }
 
@@ -1883,6 +1887,10 @@ export const mergeStates = (
     ),
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
     listItems: mergeMaps(stateA.listItems, stateB.listItems),
+    listItemSubjectOptOuts: mergeMaps(
+      stateA.listItemSubjectOptOuts,
+      stateB.listItemSubjectOptOuts,
+    ),
     likes: mergeMaps(stateA.likes, stateB.likes),
     likeBlocks: mergeMaps(stateA.likeBlocks, stateB.likeBlocks),
     labels: mergeMaps(stateA.labels, stateB.labels),

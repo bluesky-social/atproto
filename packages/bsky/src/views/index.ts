@@ -843,7 +843,7 @@ export class Views {
         uri,
         li.record.subject,
         state,
-        showSubjectOptOuts && li.subjectOptedOut,
+        showSubjectOptOuts && !!state.listItemSubjectOptOuts?.get(uri),
       )
     })
     return {
