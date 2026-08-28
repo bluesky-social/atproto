@@ -1,6 +1,7 @@
 import { type Meter, ValueType, diag, metrics } from '@opentelemetry/api'
 import { type Logger, SeverityNumber, logs } from '@opentelemetry/api-logs'
-import { eventsLogger } from './logger.js'
+import { eventsLogger } from '../logger.js'
+import { isAbortError, isTimeoutError } from './util.js'
 
 const meter: Meter = metrics.getMeter('@atproto/bsky')
 const logger: Logger = logs.getLogger('@atproto/bsky')
@@ -31,7 +32,7 @@ export type HydrationSource =
 class EventReporter {
   #hydrationFailedCounter = meter.createCounter<{
     source: HydrationSource
-    reason: 'timeout' | 'error'
+    reason: 'abort' | 'timeout' | 'error'
   }>('hydration_failed', {
     description:
       'Number of fail-open hydration steps that did not produce a result',
@@ -65,8 +66,11 @@ class EventReporter {
   }
 
   hydrationFailed({ source, err }: { source: HydrationSource; err: unknown }) {
-    const reason =
-      err instanceof Error && err.name === 'TimeoutError' ? 'timeout' : 'error'
+    const reason = isAbortError(err)
+      ? 'abort'
+      : isTimeoutError(err)
+        ? 'timeout'
+        : 'error'
     this.#log('hydration_failed', { source, reason })
     this.#hydrationFailedCounter.add(1, { source, reason })
   }

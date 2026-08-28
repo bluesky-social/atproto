@@ -25,8 +25,8 @@
       "default": "./dist/index.js"
     },
     "./telemetry": {
-      "types": "./dist/telemetry.d.ts",
-      "default": "./dist/telemetry.js"
+      "types": "./dist/telemetry/telemetry.d.ts",
+      "default": "./dist/telemetry/telemetry.js"
     },
     "./package.json": "./package.json"
   },

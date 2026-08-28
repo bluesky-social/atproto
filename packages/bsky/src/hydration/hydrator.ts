@@ -8,7 +8,6 @@ import {
   type UriString,
 } from '@atproto/syntax'
 import type { DataPlaneClient } from '../data-plane/client/index.js'
-import { events } from '../events.js'
 import type {
   FeatureGatesClient,
   ScopedFeatureGatesClient,
@@ -21,6 +20,7 @@ import type {
   Notification,
   RecordRef,
 } from '../proto/bsky_pb.js'
+import { events } from '../telemetry/events.js'
 import {
   SITE_STANDARD_NSID_PREFIX,
   parseSiteStandardRecordKey,

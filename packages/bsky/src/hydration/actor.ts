@@ -10,12 +10,12 @@ import {
   normalizeHandle,
 } from '@atproto/syntax'
 import type { DataPlaneClient } from '../data-plane/client/index.js'
-import { events } from '../events.js'
 import { app, chat, com } from '../lexicons/index.js'
 import type {
   ActivitySubscription,
   VerificationMeta,
 } from '../proto/bsky_pb.js'
+import { events } from '../telemetry/events.js'
 import type {
   ChatDeclarationRecord,
   GermDeclarationRecord,
