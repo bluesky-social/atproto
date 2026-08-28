@@ -20,6 +20,7 @@ import type {
   Notification,
   RecordRef,
 } from '../proto/bsky_pb.js'
+import { events } from '../telemetry/events.js'
 import {
   SITE_STANDARD_NSID_PREFIX,
   parseSiteStandardRecordKey,
@@ -1070,6 +1071,7 @@ export class Hydrator {
       return knownLikers
     } catch (err) {
       hydrationLogger.error({ err }, 'Failed to hydrate known likers')
+      events.hydrationFailed({ source: 'known_likers', err })
       return undefined
     }
   }

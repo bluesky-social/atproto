@@ -450,6 +450,9 @@ importers:
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1
+      '@opentelemetry/api-logs':
+        specifier: ^0.219.0
+        version: 0.219.0
       '@types/http-errors':
         specifier: ^2.0.1
         version: 2.0.4
@@ -16274,7 +16277,7 @@ snapshots:
       '@datadog/pprof': 5.14.1
       '@datadog/wasm-js-rewriter': 5.0.1
       '@opentelemetry/api': 1.9.1
-      '@opentelemetry/api-logs': 0.208.0
+      '@opentelemetry/api-logs': 0.219.0
       oxc-parser: 0.129.0
     transitivePeerDependencies:
       - '@openfeature/server-sdk'
