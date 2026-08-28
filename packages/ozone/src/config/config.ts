@@ -96,6 +96,10 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     reportDurationMs: env.assignmentReportDurationMs ?? 5 * MINUTE,
   }
 
+  const inboxCfg: OzoneConfig['inbox'] = {
+    appealWindowMonths: env.inboxAppealWindowMonths ?? 6,
+  }
+
   const statsCfg: OzoneConfig['stats'] = {
     computerIntervalMinutes: env.statsComputerIntervalMinutes ?? 15,
   }
@@ -112,6 +116,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     access: accessCfg,
     verifier: verifierCfg,
     assignments: assignmentsCfg,
+    inbox: inboxCfg,
     stats: statsCfg,
     jetstreamUrl: env.jetstreamUrl,
   }
@@ -128,6 +133,7 @@ export type OzoneConfig = {
   blobDivert: BlobDivertConfig | null
   access: AccessConfig
   assignments: AssignmentsConfig
+  inbox: InboxConfig
   stats: StatsConfig
   jetstreamUrl?: string
   verifier: VerifierConfig | null
@@ -205,6 +211,17 @@ export type VerifierConfig = {
   password: string
   jetstreamUrl?: string
   issuersToIndex?: string[]
+}
+
+export type InboxConfig = {
+  /**
+   * Calendar months a moderation action stays appealable, counted from the
+   * action. Defaults to 6.
+   *
+   * Configured rather than hardcoded so the window is a policy decision the
+   * deployment owns, and can be changed without shipping code.
+   */
+  appealWindowMonths: number
 }
 
 export type AssignmentsConfig = {

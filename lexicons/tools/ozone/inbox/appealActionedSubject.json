@@ -1,0 +1,66 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.inbox.appealActionedSubject",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Appeal a moderation action affecting the user's account or content. Either actionId or subject is required.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "actionId": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Moderation action being appealed. Either this or subject is required."
+            },
+            "subject": {
+              "type": "union",
+              "refs": [
+                "com.atproto.admin.defs#repoRef",
+                "com.atproto.repo.strongRef"
+              ],
+              "description": "Subject being appealed. Either this or actionId is required."
+            },
+            "reason": {
+              "type": "string",
+              "maxGraphemes": 2000,
+              "maxLength": 20000,
+              "description": "Optional explanation supplied by the user."
+            },
+            "modTool": {
+              "type": "ref",
+              "ref": "com.atproto.moderation.createReport#modTool"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "tools.ozone.inbox.defs#subjectView"
+        }
+      },
+      "errors": [
+        {
+          "name": "InvalidAppealTarget",
+          "description": "Invalid appeal target input."
+        },
+        {
+          "name": "AlreadyAppealed",
+          "description": "An active appeal already exists for this action."
+        },
+        {
+          "name": "NotAppealable",
+          "description": "The target cannot be appealed."
+        },
+        {
+          "name": "AppealWindowExpired",
+          "description": "The appeal window for this action has closed."
+        }
+      ]
+    }
+  }
+}
