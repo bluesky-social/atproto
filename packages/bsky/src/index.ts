@@ -6,7 +6,6 @@ import cors from 'cors'
 import { Etcd3 } from 'etcd3'
 import express from 'express'
 import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
-import { Agent as UndiciAgent, fetch as undiciFetch } from 'undici'
 import { DAY, SECOND } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -45,6 +44,11 @@ import {
   createRolodexClient,
 } from './rolodex.js'
 import { createStashClient } from './stash.js'
+import {
+  type UndiciAgent,
+  createUndiciAgent,
+  dispatcherFetch,
+} from './undici.js'
 import { Views } from './views/index.js'
 import { VideoUriBuilder } from './views/util.js'
 
@@ -56,35 +60,21 @@ export { BackgroundQueue } from './data-plane/server/background.js'
 export { Database } from './data-plane/server/db/index.js'
 export { Redis } from './redis.js'
 
-/**
- * Builds a fetch that bounds the connection phase only. Once connected, the
- * request is not bounded here.
- *
- * Uses undici's own fetch rather than the global one, since the dispatcher must
- * come from the same undici as the fetch it is passed to, and the undici we
- * depend on is not the one Node embeds.
- */
-function connectTimeoutFetch(connectTimeout: number) {
-  const dispatcher = new UndiciAgent({ connectTimeout })
-  return (input: unknown, init: unknown) =>
-    undiciFetch(
-      input as never,
-      {
-        ...(init as object),
-        dispatcher,
-      } as never,
-    ) as Promise<Response>
-}
-
 export class BskyAppView {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
   private terminator?: HttpTerminator
+  private dispatchers: UndiciAgent[]
 
-  constructor(opts: { ctx: AppContext; app: express.Application }) {
+  constructor(opts: {
+    ctx: AppContext
+    app: express.Application
+    dispatchers?: UndiciAgent[]
+  }) {
     this.ctx = opts.ctx
     this.app = opts.app
+    this.dispatchers = opts.dispatchers ?? []
   }
 
   static create(opts: {
@@ -149,6 +139,13 @@ export class BskyAppView {
         )
       : undefined
 
+    // @NOTE These bound the connection phase (TCP + TLS) only; once connected,
+    // the request is not bounded here. They are kept for the lifetime of the
+    // service (pooling connections), and closed on `destroy()`.
+    // An unused agent holds no socket, so they can be built unconditionally.
+    const topicsDispatcher = createUndiciAgent({ connectTimeout: SECOND })
+    const irisDispatcher = createUndiciAgent({ connectTimeout: SECOND })
+
     const topicsClient = config.topicsUrl
       ? new Client(
           {
@@ -156,7 +153,7 @@ export class BskyAppView {
             headers: config.topicsApiKey
               ? { authorization: `Bearer ${config.topicsApiKey}` }
               : undefined,
-            fetch: connectTimeoutFetch(SECOND),
+            fetch: dispatcherFetch(topicsDispatcher),
           },
           {
             // Trust internal services to send us well-formed responses
@@ -170,7 +167,7 @@ export class BskyAppView {
       ? new Client(
           {
             service: config.irisUrl,
-            fetch: connectTimeoutFetch(SECOND),
+            fetch: dispatcherFetch(irisDispatcher),
           },
           {
             // Trust internal services to send us well-formed responses
@@ -310,7 +307,11 @@ export class BskyAppView {
     app.use(error.handler)
     app.use('/external', external.createRouter(ctx))
 
-    return new BskyAppView({ ctx, app })
+    return new BskyAppView({
+      ctx,
+      app,
+      dispatchers: [topicsDispatcher, irisDispatcher],
+    })
   }
 
   async start(): Promise<http.Server> {
@@ -335,7 +336,11 @@ export class BskyAppView {
       try {
         await this.terminator?.terminate()
       } finally {
-        await this.ctx.etcd?.close()
+        try {
+          await this.ctx.etcd?.close()
+        } finally {
+          await Promise.all(this.dispatchers.map((d) => d.close()))
+        }
       }
     }
   }
