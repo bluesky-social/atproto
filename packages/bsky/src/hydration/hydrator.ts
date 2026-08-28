@@ -8,6 +8,7 @@ import {
   type UriString,
 } from '@atproto/syntax'
 import type { DataPlaneClient } from '../data-plane/client/index.js'
+import { events } from '../events.js'
 import type {
   FeatureGatesClient,
   ScopedFeatureGatesClient,
@@ -1070,6 +1071,7 @@ export class Hydrator {
       return knownLikers
     } catch (err) {
       hydrationLogger.error({ err }, 'Failed to hydrate known likers')
+      events.hydrationFailed({ source: 'known_likers', err })
       return undefined
     }
   }

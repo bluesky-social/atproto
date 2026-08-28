@@ -10,6 +10,7 @@ import {
   normalizeHandle,
 } from '@atproto/syntax'
 import type { DataPlaneClient } from '../data-plane/client/index.js'
+import { events } from '../events.js'
 import { app, chat, com } from '../lexicons/index.js'
 import type {
   ActivitySubscription,
@@ -527,8 +528,9 @@ export class ActorHydrator {
             : undefined,
         )
       }
-    } catch {
-      // ignore errors and return empty map
+    } catch (err) {
+      // Fail open.
+      events.hydrationFailed({ source: 'known_followers', err })
     }
 
     return map
@@ -568,8 +570,9 @@ export class ActorHydrator {
           map.set(did, undefined)
         }
       }
-    } catch {
-      // ignore errors and return empty map
+    } catch (err) {
+      // Fail open.
+      events.hydrationFailed({ source: 'activity_subscriptions', err })
     }
 
     return map
