@@ -133,6 +133,8 @@ export type HydrateCtxVals = {
   features: ScopedFeatureGatesClient
 }
 
+export type ListItemSubjectOptOuts = HydrationMap<AtUriString, true>
+
 export type HydrationState = {
   ctx?: HydrateCtx
   actors?: Actors
@@ -153,7 +155,7 @@ export type HydrationState = {
   listMemberships?: ListMembershipStates
   listViewers?: ListViewerStates
   listItems?: ListItems
-  listItemSubjectOptOuts?: HydrationMap<AtUriString, true>
+  listItemSubjectOptOuts?: ListItemSubjectOptOuts
   likes?: Likes
   likeBlocks?: LikeBlocks
   labels?: Labels
@@ -1226,7 +1228,7 @@ export class Hydrator {
     // hydrate sampled list items
     const listItemState = await this.hydrateListItems(listItemUris, ctx)
     // @NOTE Subject opt-outs come from list membership, not list item records.
-    const listItemSubjectOptOuts = new HydrationMap<AtUriString, true>()
+    const listItemSubjectOptOuts: ListItemSubjectOptOuts = new HydrationMap()
     listsMembers.forEach((members) => {
       members.listitems.forEach((item) => {
         if (item.subjectOptedOut) {
