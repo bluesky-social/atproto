@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.add(app.bsky.unspecced.getOnboardingSuggestedStarterPacks, {
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, req }) => {
+    handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
@@ -42,6 +42,7 @@ export default function (server: Server, ctx: AppContext) {
           ...params,
           hydrateCtx,
           headers,
+          signal,
         },
         ctx,
       )
@@ -66,7 +67,7 @@ const skeleton: SkeletonFn<Context, Params, SkeletonState> = async (
   const skeleton = await ctx.topicsClient.call(
     app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton,
     { limit: params.limit, viewer: params.hydrateCtx.viewer ?? undefined },
-    { headers: params.headers },
+    { headers: params.headers, signal: params.signal },
   )
 
   // @TODO Make sure upstream always provides this
@@ -138,6 +139,7 @@ type Context = {
 type Params = app.bsky.unspecced.getOnboardingSuggestedStarterPacks.$Params & {
   hydrateCtx: HydrateCtx
   headers: Record<string, string>
+  signal: AbortSignal
 }
 
 type SkeletonState =

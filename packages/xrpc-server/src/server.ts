@@ -378,6 +378,9 @@ export class Server {
         await this.globalRateLimiter.handle({
           req,
           res,
+          // The rate limiter does not use the signal; supply a non-aborting one
+          // to satisfy the handler context shape.
+          signal: new AbortController().signal,
           auth: undefined,
           params: {},
           input: undefined,
@@ -446,6 +449,21 @@ export class Server {
     validateResOutput: null | OutputVerifierInternal<O>,
   ): RequestHandler {
     return async function (req, res, next) {
+      const controller = new AbortController()
+      // Only queries (GET) are cancelled when the client disconnects.
+      // Procedures may modify state, so a mid-flight abort could leave it
+      // half-applied; let those run to completion.
+      const onClose =
+        req.method === 'GET'
+          ? () => {
+              if (!res.writableFinished) controller.abort()
+            }
+          : undefined
+      if (onClose) {
+        // 'close' won't replay for a late listener; if already closed, abort now.
+        if (res.destroyed) onClose()
+        else res.once('close', onClose)
+      }
       try {
         // parse & validate params
         const params = paramsVerifier(req)
@@ -464,6 +482,7 @@ export class Server {
           auth,
           req,
           res,
+          signal: controller.signal,
           resetRouteRateLimits: async () => routeLimiter?.reset(ctx),
         }
 
@@ -518,6 +537,20 @@ export class Server {
           next(XRPCError.fromError(output))
         }
       } catch (err: unknown) {
+        // Once the client has disconnected the socket is closed and no
+        // response is deliverable, so we don't forward the rejection. We key on
+        // the abort flag rather than the error's type on purpose: cancellation
+        // surfaces in different shapes (fetch AbortError, Connect-RPC "canceled"
+        // ConnectError, ...) and matching on one would miss the others. The
+        // error is still logged so a genuine error racing with a disconnect
+        // leaves a trace rather than vanishing.
+        if (controller.signal.aborted) {
+          log.info(
+            { method: req.method, url: req.url, err },
+            'request aborted after client disconnect',
+          )
+          return
+        }
         // Express will not call the next middleware (errorMiddleware in this case)
         // if the value passed to next is false-y (e.g. null, undefined, 0).
         // Hence we replace it with an InternalServerError.
@@ -526,6 +559,8 @@ export class Server {
         } else {
           next(err)
         }
+      } finally {
+        if (onClose) res.off('close', onClose)
       }
     }
   }
