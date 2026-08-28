@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import type { ServiceImpl } from '@connectrpc/connect'
+import { app } from '../../../lexicons/index.js'
 import type { Service } from '../../../proto/bsky_connect.js'
 import { FeedType } from '../../../proto/bsky_pb.js'
 import type { Database } from '../db/index.js'
@@ -170,12 +171,31 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getListFeed(req) {
     const { listUri, cursor, limit } = req
     const { ref } = db.db.dynamic
+    const list = await db.db
+      .selectFrom('list')
+      .where('uri', '=', listUri)
+      .select('purpose')
+      .executeTakeFirst()
 
     let builder = db.db
       .selectFrom('post')
       .selectAll('post')
       .innerJoin('list_item', 'list_item.subjectDid', 'post.creator')
       .where('list_item.listUri', '=', listUri)
+
+    if (list?.purpose === app.bsky.graph.defs.Referencelist) {
+      builder = builder.where((eb) =>
+        eb.not(
+          eb.exists(
+            eb
+              .selectFrom('reference_list_opt_out')
+              .select('uri')
+              .whereRef('reference_list_opt_out.creator', '=', 'post.creator')
+              .where('reference_list_opt_out.subjectUri', '=', listUri),
+          ),
+        ),
+      )
+    }
 
     const keyset = new TimeCidKeyset(ref('post.sortAt'), ref('post.cid'))
     builder = paginate(builder, {

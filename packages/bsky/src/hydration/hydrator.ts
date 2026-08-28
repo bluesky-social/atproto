@@ -1167,7 +1167,11 @@ export class Hydrator {
       this.hydrateFeedGens(feedUris, ctx),
       this.hydrateLists(listUris, ctx),
       ...listUris.map((uri) =>
-        this.dataplane.getListMembers({ listUri: uri, limit: 50 }),
+        this.dataplane.getListMembers({
+          listUri: uri,
+          limit: 50,
+          viewerDid: ctx.viewer ?? undefined,
+        }),
       ),
     ])
     // collect list info
@@ -1220,6 +1224,13 @@ export class Hydrator {
     })
     // hydrate sampled list items
     const listItemState = await this.hydrateListItems(listItemUris, ctx)
+    listsMembers.forEach((members) => {
+      members.listitems.forEach((item) => {
+        if (!item.subjectOptedOut) return
+        const hydrated = listItemState.listItems?.get(item.uri as AtUriString)
+        if (hydrated) hydrated.subjectOptedOut = true
+      })
+    })
     return mergeManyStates(
       starterPackState,
       feedGenState,

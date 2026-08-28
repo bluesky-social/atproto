@@ -778,6 +778,10 @@ export class Views {
         ? {
             muted: !!listViewer.viewerMuted,
             blocked: listViewer.viewerListBlockUri,
+            referenceListOptOut:
+              list.record.purpose === app.bsky.graph.defs.Referencelist
+                ? listViewer.referenceListOptOutUri
+                : undefined,
           }
         : undefined,
     }
@@ -787,10 +791,11 @@ export class Views {
     uri: AtUriString,
     did: DidString,
     state: HydrationState,
+    subjectOptedOut?: boolean,
   ): Un$Typed<ListItemView> | undefined {
     const subject = this.profile(did, state)
     if (!subject) return
-    return { uri, subject }
+    return { uri, subject, subjectOptedOut: subjectOptedOut || undefined }
   }
 
   starterPackBasic(
@@ -828,12 +833,18 @@ export class Views {
       this.feedGenerator(feed.uri, state),
     )
     const list = this.listBasic(sp.record.list, state)
+    const showSubjectOptOuts =
+      state.ctx?.viewer === creatorFromUri(sp.record.list) &&
+      list?.purpose === app.bsky.graph.defs.Referencelist
     const listItemsSample = mapDefined(agg?.listItemSampleUris ?? [], (uri) => {
       const li = state.listItems?.get(uri)
       if (!li) return
-      const subject = this.profile(li.record.subject, state)
-      if (!subject) return
-      return { uri, subject }
+      return this.listItemView(
+        uri,
+        li.record.subject,
+        state,
+        showSubjectOptOuts && li.subjectOptedOut,
+      )
     })
     return {
       ...basicView,
