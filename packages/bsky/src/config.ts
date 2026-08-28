@@ -107,6 +107,7 @@ export interface ServerConfigValues {
   // http proxy agent
   disableSsrfProtection?: boolean
   proxyAllowHTTP2?: boolean
+  proxyConnectTimeout?: number
   proxyHeadersTimeout?: number
   proxyBodyTimeout?: number
   proxyMaxResponseSize?: number
@@ -278,6 +279,8 @@ export class ServerConfig {
       : debugMode
 
     const proxyAllowHTTP2 = process.env.BSKY_PROXY_ALLOW_HTTP2 === 'true'
+    const proxyConnectTimeout =
+      parseInt(process.env.BSKY_PROXY_CONNECT_TIMEOUT || '', 10) || undefined
     const proxyHeadersTimeout =
       parseInt(process.env.BSKY_PROXY_HEADERS_TIMEOUT || '', 10) || undefined
     const proxyBodyTimeout =
@@ -417,6 +420,7 @@ export class ServerConfig {
       notificationsDelayMs,
       disableSsrfProtection,
       proxyAllowHTTP2,
+      proxyConnectTimeout,
       proxyHeadersTimeout,
       proxyBodyTimeout,
       proxyMaxResponseSize,
@@ -689,6 +693,10 @@ export class ServerConfig {
 
   get proxyAllowHTTP2(): boolean {
     return this.cfg.proxyAllowHTTP2 ?? false
+  }
+
+  get proxyConnectTimeout(): number | undefined {
+    return this.cfg.proxyConnectTimeout
   }
 
   get proxyHeadersTimeout(): number {
