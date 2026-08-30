@@ -11,6 +11,7 @@ import {
 // @NOTE run "pnpm run po:compile" to compile the messages from the PO files
 import { messages as en } from './en/messages.ts'
 import { loadMessages } from './load.ts'
+import { readStoredLocale, writeStoredLocale } from './locale-storage.ts'
 import { type Locale, detectLocale, isLocale, locales } from './locales.ts'
 
 export type LocaleContextValue = {
@@ -46,7 +47,9 @@ export function LocaleProvider({
 
   const [currentLocale, setCurrentLocale] = useState<string>(() => i18n.locale)
   const [desiredLocale, setDesiredLocale] = useState<Locale>(() => {
-    return detectLocale(userLocales)
+    // An explicit choice outranks both the client's `ui_locales` hint and the
+    // browser's languages, or it would not survive a reload of this page.
+    return readStoredLocale() ?? detectLocale(userLocales)
   })
 
   // A boolean that is used to avoid flickering of "en" content during initial
@@ -98,8 +101,13 @@ export function LocaleProvider({
       locale: currentLocale,
       locales,
       setLocale: (locale) => {
-        if (isLocale(locale)) setDesiredLocale(locale)
-        else throw new TypeError(`"${locale}" is not an available locale`)
+        if (!isLocale(locale)) {
+          throw new TypeError(`"${locale}" is not an available locale`)
+        }
+        // Only an explicit choice is persisted, so that a detected locale keeps
+        // following the browser's languages.
+        writeStoredLocale(locale)
+        setDesiredLocale(locale)
       },
     }),
     [locales, currentLocale],

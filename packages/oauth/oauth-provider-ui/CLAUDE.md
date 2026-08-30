@@ -208,6 +208,12 @@ form field is `code` but the API takes `token`.
 - A msgid that disappears and returns loses its translation. After extraction,
   check the _count_ of untranslated entries, not just the msgid diff.
 - Fill in French only; other locales are translated externally.
+- The locale is React state, so anything not persisted is lost on reload.
+  `LocaleProvider` restores an explicit selection from `localStorage`
+  (`locale-storage.ts`) and gives it precedence over the client's `ui_locales`
+  hint and `navigator.languages` — otherwise a reload of the authorization page
+  would undo the choice. A merely _detected_ locale is not stored, so it keeps
+  following the browser.
 
 ## The pds e2e contract
 
