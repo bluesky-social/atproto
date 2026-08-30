@@ -27,8 +27,9 @@ export class TestNetwork extends TestNetworkNoAppView {
     public bsky: TestBsky,
     public ozone: TestOzone,
     public introspect?: IntrospectServer,
+    disposables?: AsyncDisposableStack,
   ) {
-    super(plc, pds)
+    super(plc, pds, disposables)
   }
 
   static async create(
@@ -41,18 +42,23 @@ export class TestNetwork extends TestNetworkNoAppView {
     const dbPostgresSchema =
       params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
-    const plc = await TestPlc.create(params.plc ?? {})
+    await using disposables = new AsyncDisposableStack()
+    await using temporaryDisposables = new AsyncDisposableStack()
+
+    const plc = disposables.use(await TestPlc.create(params.plc ?? {}))
 
     const bskyPort = params.bsky?.port ?? (await getPort())
     const pdsPort = params.pds?.port ?? (await getPort())
     const ozonePort = params.ozone?.port ?? (await getPort())
 
-    const thirdPartyPds = await TestPds.create({
-      didPlcUrl: plc.url,
-      ...params.pds,
-      inviteRequired: false,
-      port: await getPort(),
-    })
+    const thirdPartyPds = temporaryDisposables.use(
+      await TestPds.create({
+        didPlcUrl: plc.url,
+        ...params.pds,
+        inviteRequired: false,
+        port: await getPort(),
+      }),
+    )
 
     const ozoneUrl = `http://localhost:${ozonePort}`
 
@@ -66,63 +72,71 @@ export class TestNetwork extends TestNetworkNoAppView {
       await LexiconAuthorityProfile.create(thirdPartyPds)
 
     const bsyncApiKey = 'bsync-api-key'
-    const bsync = await TestBsync.create({
-      apiKeys: [bsyncApiKey],
-      dbUrl: dbPostgresUrl,
-      dbSchema: `bsync_${dbPostgresSchema}`,
-    })
+    const bsync = disposables.use(
+      await TestBsync.create({
+        apiKeys: [bsyncApiKey],
+        dbUrl: dbPostgresUrl,
+        dbSchema: `bsync_${dbPostgresSchema}`,
+      }),
+    )
 
-    const bsky = await TestBsky.create({
-      port: bskyPort,
-      plcUrl: plc.url,
-      pdsPort,
-      bsyncApiKey,
-      bsyncUrl: bsync.url,
-      rolodexUrl: process.env.BSKY_ROLODEX_URL,
-      rolodexIgnoreBadTls: true,
-      repoProvider: `ws://localhost:${pdsPort}`,
-      dbPostgresSchema: `appview_${dbPostgresSchema}`,
-      dbPostgresUrl,
-      redisHost,
-      modServiceDid: ozoneServiceProfile.did,
-      labelsFromIssuerDids: [ozoneServiceProfile.did, EXAMPLE_LABELER],
-      // Using a static private key results in a static DID, which is useful for e2e tests with the social-app repo.
-      privateKey:
-        '3f916c70dc69e4c5e83877f013325b11ecac31742e6a42f5c4fb240d0703d9d5=',
-      ...params.bsky,
-    })
+    const bsky = disposables.use(
+      await TestBsky.create({
+        port: bskyPort,
+        plcUrl: plc.url,
+        pdsPort,
+        bsyncApiKey,
+        bsyncUrl: bsync.url,
+        rolodexUrl: process.env.BSKY_ROLODEX_URL,
+        rolodexIgnoreBadTls: true,
+        repoProvider: `ws://localhost:${pdsPort}`,
+        dbPostgresSchema: `appview_${dbPostgresSchema}`,
+        dbPostgresUrl,
+        redisHost,
+        modServiceDid: ozoneServiceProfile.did,
+        labelsFromIssuerDids: [ozoneServiceProfile.did, EXAMPLE_LABELER],
+        // Using a static private key results in a static DID, which is useful for e2e tests with the social-app repo.
+        privateKey:
+          '3f916c70dc69e4c5e83877f013325b11ecac31742e6a42f5c4fb240d0703d9d5=',
+        ...params.bsky,
+      }),
+    )
 
-    const pds = await TestPds.create({
-      port: pdsPort,
-      didPlcUrl: plc.url,
-      bskyAppViewUrl: bsky.url,
-      bskyAppViewDid: bsky.ctx.cfg.serverDid,
-      modServiceUrl: ozoneUrl,
-      modServiceDid: ozoneServiceProfile.did,
-      lexiconDidAuthority: lexiconAuthorityProfile.did,
-      ...params.pds,
-    })
+    const pds = disposables.use(
+      await TestPds.create({
+        port: pdsPort,
+        didPlcUrl: plc.url,
+        bskyAppViewUrl: bsky.url,
+        bskyAppViewDid: bsky.ctx.cfg.serverDid,
+        modServiceUrl: ozoneUrl,
+        modServiceDid: ozoneServiceProfile.did,
+        lexiconDidAuthority: lexiconAuthorityProfile.did,
+        ...params.pds,
+      }),
+    )
 
     // mock before any events start flowing from pds so that we don't miss e.g. any handle resolutions.
     mockNetworkUtilities(pds, bsky)
 
-    const ozone = await TestOzone.create({
-      port: ozonePort,
-      plcUrl: plc.url,
-      signingKey: ozoneServiceProfile.key,
-      serverDid: ozoneServiceProfile.did,
-      dbPostgresSchema: `ozone_${dbPostgresSchema || 'db'}`,
-      dbPostgresUrl,
-      appviewUrl: bsky.url,
-      appviewDid: bsky.ctx.cfg.serverDid,
-      appviewPushEvents: true,
-      pdsUrl: pds.url,
-      pdsDid: pds.ctx.cfg.service.did,
-      verifierDid: ozoneServiceProfile.did,
-      verifierUrl: pds.url,
-      verifierPassword: 'temp',
-      ...params.ozone,
-    })
+    const ozone = disposables.use(
+      await TestOzone.create({
+        port: ozonePort,
+        plcUrl: plc.url,
+        signingKey: ozoneServiceProfile.key,
+        serverDid: ozoneServiceProfile.did,
+        dbPostgresSchema: `ozone_${dbPostgresSchema || 'db'}`,
+        dbPostgresUrl,
+        appviewUrl: bsky.url,
+        appviewDid: bsky.ctx.cfg.serverDid,
+        appviewPushEvents: true,
+        pdsUrl: pds.url,
+        pdsDid: pds.ctx.cfg.service.did,
+        verifierDid: ozoneServiceProfile.did,
+        verifierUrl: pds.url,
+        verifierPassword: 'temp',
+        ...params.ozone,
+      }),
+    )
 
     await ozoneServiceProfile.migrateTo(pds)
     await ozoneServiceProfile.createRecords()
@@ -138,7 +152,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     await ozone.processAll()
     await bsky.sub.processAll()
     await bsky.bsyncSub.processAll(await bsync.getStreamHeads())
-    await thirdPartyPds.close()
+    await temporaryDisposables.disposeAsync()
 
     // Weird but if we do this before pds.processAll() somehow appview loses this user and tests in different parts fail because appview doesn't return this user in various contexts anymore
     const ozoneVerifierPassword =
@@ -149,17 +163,27 @@ export class TestNetwork extends TestNetworkNoAppView {
 
     let introspect: IntrospectServer | undefined = undefined
     if (params.introspect?.port) {
-      introspect = await IntrospectServer.start(
-        params.introspect.port,
-        plc,
-        pds,
-        bsync,
-        bsky,
-        ozone,
+      introspect = disposables.use(
+        await IntrospectServer.start(
+          params.introspect.port,
+          plc,
+          pds,
+          bsync,
+          bsky,
+          ozone,
+        ),
       )
     }
 
-    return new TestNetwork(plc, pds, bsync, bsky, ozone, introspect)
+    return new TestNetwork(
+      plc,
+      pds,
+      bsync,
+      bsky,
+      ozone,
+      introspect,
+      disposables.move(),
+    )
   }
 
   async processFullSubscription(timeout = 5000) {
@@ -226,15 +250,19 @@ export class TestNetwork extends TestNetworkNoAppView {
     try {
       await this.processAll()
     } finally {
-      await allFulfilled([
-        ...this.feedGens.map(async (fg) => fg.close()),
-        this.ozone.close(),
-        this.bsky.close(),
-        this.bsync.close(),
-        this.pds.close(),
-        this.plc.close(),
-        this.introspect?.close(),
-      ])
+      if (this.disposables) {
+        await super.close()
+      } else {
+        await allFulfilled([
+          ...this.feedGens.map(async (fg) => fg.close()),
+          this.ozone.close(),
+          this.bsky.close(),
+          this.bsync.close(),
+          this.pds.close(),
+          this.plc.close(),
+          this.introspect?.close(),
+        ])
+      }
     }
   }
 

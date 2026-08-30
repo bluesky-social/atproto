@@ -63,4 +63,8 @@ export class TestBsync {
   async close() {
     await this.service.destroy()
   }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
+  }
 }

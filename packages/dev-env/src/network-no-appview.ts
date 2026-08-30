@@ -1,3 +1,4 @@
+import './polyfill.js'
 import type { SkeletonHandler } from '@atproto/pds'
 import { TestFeedGen } from './feed-gen.js'
 import { TestPds } from './pds.js'
@@ -11,26 +12,31 @@ export class TestNetworkNoAppView implements AsyncDisposable {
   constructor(
     public plc: TestPlc,
     public pds: TestPds,
+    protected readonly disposables?: AsyncDisposableStack,
   ) {}
 
   static async create(
     params: Partial<TestServerParams> = {},
   ): Promise<TestNetworkNoAppView> {
-    const plc = await TestPlc.create(params.plc ?? {})
-    const pds = await TestPds.create({
-      didPlcUrl: plc.url,
-      ...params.pds,
-    })
+    await using disposables = new AsyncDisposableStack()
+    const plc = disposables.use(await TestPlc.create(params.plc ?? {}))
+    const pds = disposables.use(
+      await TestPds.create({
+        didPlcUrl: plc.url,
+        ...params.pds,
+      }),
+    )
 
     mockNetworkUtilities(pds)
 
-    return new TestNetworkNoAppView(plc, pds)
+    return new TestNetworkNoAppView(plc, pds, disposables.move())
   }
 
   async createFeedGen(
     feeds: Record<string, SkeletonHandler>,
   ): Promise<TestFeedGen> {
     const fg = await TestFeedGen.create(this.plc.url, feeds)
+    this.disposables?.use(fg)
     this.feedGens.push(fg)
     return fg
   }
@@ -46,7 +52,12 @@ export class TestNetworkNoAppView implements AsyncDisposable {
   }
 
   async close() {
-    // @TODO Use disposable stack to implement this
+    if (this.disposables) {
+      await this.disposables.disposeAsync()
+      return
+    }
+
+    // Keep direct construction backwards-compatible with the previous cleanup path.
     const errors = await Promise.allSettled(
       this.feedGens.map((fg) => fg.close()),
     ).then((results) =>

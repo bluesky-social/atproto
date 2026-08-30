@@ -17,6 +17,7 @@
     { "path": "../xrpc-server/tsconfig.build.json" },
   ],
   "compilerOptions": {
+    "lib": ["ES2023", "ESNext.Disposable"],
     "rootDir": "./src",
     "outDir": "./dist",
     // @TODO Change to true and fix implicit any errors
