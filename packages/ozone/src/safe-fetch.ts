@@ -1,10 +1,10 @@
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 
-export const createSafeFetch = (responseMaxSize: number) => {
+export const createSafeFetch = () => {
   const safeFetch = safeFetchWrap({
     allowImplicitRedirect: true,
     allowIpHost: false,
-    responseMaxSize,
+    responseMaxSize: Infinity,
     timeout: 30e3,
   })
 

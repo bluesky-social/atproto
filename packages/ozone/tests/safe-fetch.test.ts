@@ -9,7 +9,7 @@ describe('safe fetch', () => {
     'https://[::1]',
     'https://169.254.169.254',
   ])('rejects unsafe target %s', async (target) => {
-    const safeFetch = createSafeFetch(1024)
+    const safeFetch = createSafeFetch()
     await expect(safeFetch(target)).rejects.toThrow()
   })
 
@@ -17,7 +17,7 @@ describe('safe fetch', () => {
     const fetch = jest
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(new Response(null, { status: 200 }))
-    const safeFetch = createSafeFetch(1024)
+    const safeFetch = createSafeFetch()
 
     await safeFetch('https://api.bsky.app')
 

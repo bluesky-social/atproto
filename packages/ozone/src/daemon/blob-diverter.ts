@@ -14,8 +14,7 @@ import type { Database } from '../db/index.js'
 import { createSafeFetch } from '../safe-fetch.js'
 import { retryHttp } from '../util.js'
 
-const MAX_BLOB_SIZE = 100 * 1024 * 1024
-const safeBlobFetch = createSafeFetch(MAX_BLOB_SIZE)
+const safeBlobFetch = createSafeFetch()
 
 export class BlobDiverter {
   serviceConfig: BlobDivertConfig

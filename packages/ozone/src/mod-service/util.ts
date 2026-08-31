@@ -8,8 +8,7 @@ import type { DbRef } from '../db/types.js'
 import type { Label } from '../lexicon/types/com/atproto/label/defs.js'
 import { createSafeFetch } from '../safe-fetch.js'
 
-const MAX_PDS_RESPONSE_SIZE = 10 * 1024 * 1024
-const safePdsFetch = createSafeFetch(MAX_PDS_RESPONSE_SIZE)
+const safePdsFetch = createSafeFetch()
 
 export type SignedLabel = Label & { sig: Uint8Array }
 
