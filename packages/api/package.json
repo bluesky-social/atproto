@@ -44,7 +44,7 @@
     "@atproto/lex-cli": "workspace:^",
     "@jest/globals": "^28.1.3",
     "http-terminator": "^3.2.0",
-    "jest": "^30.0.0",
+    "jest": "^30.5.0",
     "prettier": "^3.9.6"
   },
   "scripts": {

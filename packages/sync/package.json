@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@types/ws": "^8.5.4",
-    "jest": "^30.0.0"
+    "jest": "^30.5.0"
   },
   "scripts": {
     "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.subscribeRepos",
