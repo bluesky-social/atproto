@@ -1,4 +1,4 @@
-import * as prometheus from 'prom-client'
+import type * as prometheus from 'prom-client'
 import type { OzoneConfig, OzoneSecrets } from '../config/index.js'
 import type { AppContextOptions } from '../context.js'
 import { DaemonContext } from './context.js'
