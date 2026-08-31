@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import type { Insertable, Selectable } from 'kysely'
 import { AtpAgent } from '@atproto/api'
 import { SECOND } from '@atproto/common'
@@ -222,7 +221,7 @@ export class EventPusher {
         .executeTakeFirst()
       if (!evt) return
       const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
-      assert(service)
+      if (!service) return
       const subject = {
         $type: 'com.atproto.admin.defs#repoRef',
         did: evt.subjectDid,
@@ -260,7 +259,7 @@ export class EventPusher {
         .executeTakeFirst()
       if (!evt) return
       const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
-      assert(service)
+      if (!service) return
       const subject = {
         $type: 'com.atproto.repo.strongRef',
         uri: evt.subjectUri,
@@ -300,7 +299,7 @@ export class EventPusher {
       if (!evt) return
 
       const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
-      assert(service)
+      if (!service) return
       const subject = {
         $type: 'com.atproto.admin.defs#repoBlobRef',
         did: evt.subjectDid,
