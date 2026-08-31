@@ -22,21 +22,16 @@ if (otlpEndpoint) {
 
   // Imported lazily so that when tracing is disabled the OTel SDK is never
   // loaded at all.
-  const { OTLPTraceExporter } = await import(
-    '@opentelemetry/exporter-trace-otlp-http'
-  )
-  const { ExpressInstrumentation } = await import(
-    '@opentelemetry/instrumentation-express'
-  )
-  const { HttpInstrumentation } = await import(
-    '@opentelemetry/instrumentation-http'
-  )
-  const { PgInstrumentation } = await import(
-    '@opentelemetry/instrumentation-pg'
-  )
-  const { PinoInstrumentation } = await import(
-    '@opentelemetry/instrumentation-pino'
-  )
+  const { OTLPTraceExporter } =
+    await import('@opentelemetry/exporter-trace-otlp-http')
+  const { ExpressInstrumentation } =
+    await import('@opentelemetry/instrumentation-express')
+  const { HttpInstrumentation } =
+    await import('@opentelemetry/instrumentation-http')
+  const { PgInstrumentation } =
+    await import('@opentelemetry/instrumentation-pg')
+  const { PinoInstrumentation } =
+    await import('@opentelemetry/instrumentation-pino')
   const { NodeSDK } = await import('@opentelemetry/sdk-node')
 
   const sdk = new NodeSDK({
