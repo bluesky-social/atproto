@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
-import type { IdResolver } from '@atproto/identity'
 import type { Jwks } from '@atproto/jwk'
 import { LexResolver } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
@@ -24,7 +23,12 @@ import {
   atprotoLoopbackClientMetadata,
   oauthAuthorizationRequestParametersSchema,
 } from '@atproto/oauth-types'
+import { type DidResolver, createDidResolver } from '@atproto-labs/did-resolver'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
+import {
+  AtprotoHandleResolverNode,
+  type HandleResolver,
+} from '@atproto-labs/handle-resolver-node'
 import type { SimpleStore } from '@atproto-labs/simple-store'
 import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { AccessTokenMode } from './access-token/access-token-mode.js'
@@ -123,6 +127,7 @@ export type {
   Customization,
   CustomizationConfig,
   ErrorHandler,
+  HandleResolver,
   HcaptchaConfig,
   LoopbackMetadataGetter,
   MultiLangString,
@@ -130,6 +135,7 @@ export type {
   VerifyTokenPayloadOptions,
 }
 
+export type AtprotoDidResolver = DidResolver<'plc' | 'web'>
 export type ClientJwksCache = SimpleStore<string, Jwks>
 export type ClientMetadataCache = SimpleStore<string, OAuthClientMetadata>
 export type OAuthStore = AccountStore &
@@ -141,6 +147,13 @@ export type OAuthStore = AccountStore &
   TokenStore
 
 type OAuthProviderConfig = {
+  /**
+   * The URL of the PLC directory to use for resolving DIDs. This is used to
+   * resolve did:plc DIDs to their corresponding handles and is only used when
+   * `didResolver` is not provided.
+   */
+  plcDirectoryUrl?: string
+
   /**
    * Maximum age a device/account session can be before requiring
    * re-authentication.
@@ -179,10 +192,14 @@ type OAuthProviderConfig = {
   lexResolver?: LexResolver
 
   /**
-   * Resolves space-authority DIDs to handles for the consent screen. When
-   * omitted, raw DIDs are rendered.
+   * Resolves space-authority DIDs to handles for the consent screen.
    */
-  idResolver?: IdResolver
+  didResolver?: AtprotoDidResolver
+
+  /**
+   * Allows verifying the ownership of handles by resolving them to DIDs.
+   */
+  handleResolver?: HandleResolver
 
   /**
    * A custom fetch function that can be used to fetch the client metadata from
@@ -262,7 +279,7 @@ export class OAuthProvider extends OAuthVerifier {
   public readonly deviceManager: DeviceManager
   public readonly clientManager: ClientManager
   public readonly lexiconManager: LexiconManager
-  public readonly identityManager?: IdentityManager
+  public readonly identityManager: IdentityManager
   public readonly requestManager: RequestManager
   public readonly tokenManager: TokenManager
 
@@ -277,8 +294,19 @@ export class OAuthProvider extends OAuthVerifier {
 
     // Services
     safeFetch = safeFetchWrap(),
-    lexResolver = new LexResolver({ fetch: safeFetch }),
-    idResolver,
+    lexResolver = new LexResolver({
+      fetch: safeFetch,
+      // We let LexResolver create it's own DidResolver instance, so that it can
+      // have a separate cache. This prevents space authority DIDs from causing
+      // lex resolver caches to expire, and vice-versa.
+      didResolver: undefined,
+      didCache: undefined, // Memory cache
+    }),
+    didResolver = createDidResolver({
+      fetch: safeFetch,
+      didCache: undefined, // Memory cache
+    }),
+    handleResolver = new AtprotoHandleResolverNode({ safeFetch }),
 
     // compound store implementation
     store,
@@ -351,9 +379,7 @@ export class OAuthProvider extends OAuthVerifier {
       clientMetadataCache,
     )
     this.lexiconManager = new LexiconManager(lexiconStore, lexResolver)
-    this.identityManager = idResolver
-      ? new IdentityManager(idResolver)
-      : undefined
+    this.identityManager = new IdentityManager(didResolver, handleResolver)
     this.requestManager = new RequestManager(
       requestStore,
       this.lexiconManager,
@@ -763,10 +789,13 @@ export class OAuthProvider extends OAuthVerifier {
           }),
         // @NOTE a handle is only ever displayed, so failing to resolve one
         // leaves the consent screen showing the raw DID.
-        spaceHandles:
-          (await this.identityManager?.getSpaceHandlesFromScope(
-            parameters.scope,
-          )) ?? new Map(),
+        spaceHandles: await this.identityManager.getSpaceHandlesFromScope(
+          parameters.scope,
+          {
+            // @TODO: Should we log here ?
+            onError: (_did, _error) => {},
+          },
+        ),
       }
     } catch (err) {
       try {

@@ -374,7 +374,6 @@ export class AppContext implements AsyncDisposable {
           hcaptcha: cfg.oauth.provider.hcaptcha,
           branding: cfg.oauth.provider.branding,
           safeFetch,
-          idResolver,
           lexResolver: new LexResolver({
             fetch: safeFetch,
             plcDirectoryUrl: cfg.identity.plcUrl,
