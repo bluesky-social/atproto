@@ -8,6 +8,8 @@ import { BlobNotFoundError, type BlobStore } from '@atproto/repo'
 
 export type S3Config = {
   bucket: string
+  /** Optional prefix for S3 keys */
+  keyPrefix?: string
   /**
    * The maximum time any single HTTP request to S3 can remain idle (socket
    * idle timeout), in milliseconds. This acts as a stall detector: a stalled
@@ -56,6 +58,7 @@ export type S3Config = {
 export class S3BlobStore implements BlobStore {
   private client: S3
   private bucket: string
+  private keyPrefix: string
   private uploadTimeoutMs: number
 
   constructor(
@@ -64,6 +67,7 @@ export class S3BlobStore implements BlobStore {
   ) {
     const {
       bucket,
+      keyPrefix,
       uploadTimeoutMs = 10 * SECOND,
       // @NOTE The request timeout acts as a stall detector (socket idle
       // timeout) and should stay short even when uploadTimeoutMs is large,
@@ -78,6 +82,7 @@ export class S3BlobStore implements BlobStore {
       ...rest
     } = cfg
     this.bucket = bucket
+    this.keyPrefix = keyPrefix ?? ''
     this.uploadTimeoutMs = uploadTimeoutMs
     this.client = new S3({
       ...rest,
@@ -135,7 +140,7 @@ export class S3BlobStore implements BlobStore {
       params: {
         Bucket: this.bucket,
         Body: bytes,
-        Key: path,
+        Key: this.keyPrefix + path,
       },
       abortController,
     })
