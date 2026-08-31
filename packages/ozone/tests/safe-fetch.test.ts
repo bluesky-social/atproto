@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import { createSafeFetch } from '../src/safe-fetch.js'
+import { SafeDidResolver, createSafeFetch } from '../src/safe-fetch.js'
 
 describe('safe fetch', () => {
   it.each([
@@ -25,5 +25,22 @@ describe('safe fetch', () => {
     expect(request).toBeInstanceOf(Request)
     expect((request as Request).redirect).toBe('error')
     fetch.mockRestore()
+  })
+
+  it('allows nonstandard HTTPS ports', async () => {
+    const fetch = jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response(null, { status: 200 }))
+    const safeFetch = createSafeFetch()
+
+    await safeFetch('https://api.bsky.app:8443')
+
+    expect(fetch).toHaveBeenCalled()
+    fetch.mockRestore()
+  })
+
+  it('protects did:web resolution', async () => {
+    const resolver = new SafeDidResolver({ timeout: 100 })
+    await expect(resolver.resolve('did:web:127.0.0.1')).rejects.toThrow()
   })
 })

@@ -1,4 +1,4 @@
-import { Readable } from 'node:stream'
+import { Readable, Transform, type TransformCallback } from 'node:stream'
 import { finished, pipeline } from 'node:stream/promises'
 import { CID } from 'multiformats/cid'
 import * as undici from 'undici'
@@ -14,6 +14,8 @@ import type { Database } from '../db/index.js'
 import { createSafeFetch } from '../safe-fetch.js'
 import { retryHttp } from '../util.js'
 
+const BLOB_HEADERS_TIMEOUT = 10e3
+const BLOB_BODY_TIMEOUT = 30e3
 const safeBlobFetch = createSafeFetch()
 
 export class BlobDiverter {
@@ -37,9 +39,20 @@ export class BlobDiverter {
   async getBlob(options: GetBlobOptions): Promise<Blob> {
     const blobUrl = getBlobUrl(options)
 
-    const blobResponse = await safeBlobFetch(blobUrl).catch((err) => {
-      throw asXrpcClientError(err, `Error fetching blob ${options.cid}`)
+    const headersController = new AbortController()
+    const headersTimer = setTimeout(
+      () => headersController.abort(),
+      BLOB_HEADERS_TIMEOUT,
+    )
+    headersTimer.unref()
+
+    const blobResponse = await safeBlobFetch(blobUrl, {
+      signal: headersController.signal,
     })
+      .catch((err) => {
+        throw asXrpcClientError(err, `Error fetching blob ${options.cid}`)
+      })
+      .finally(() => clearTimeout(headersTimer))
 
     if (blobResponse.status !== 200) {
       await blobResponse.body?.cancel()
@@ -58,9 +71,11 @@ export class BlobDiverter {
       const type = blobResponse.headers.get('content-type')
       const verifier = new VerifyCidTransform(CID.parse(options.cid))
 
-      void pipeline([Readable.fromWeb(blobResponse.body), verifier]).catch(
-        (_err) => {},
-      )
+      void pipeline([
+        Readable.fromWeb(blobResponse.body),
+        new BodyTimeoutTransform(BLOB_BODY_TIMEOUT),
+        verifier,
+      ]).catch((_err) => {})
 
       return {
         type: type ?? 'application/octet-stream',
@@ -139,6 +154,51 @@ export class BlobDiverter {
         { cause: err },
       )
     })
+  }
+}
+
+class BodyTimeoutTransform extends Transform {
+  private timer: NodeJS.Timeout | undefined
+
+  constructor(private readonly timeout: number) {
+    super()
+    this.resetTimer()
+  }
+
+  override _transform(
+    chunk: unknown,
+    encoding: BufferEncoding,
+    callback: TransformCallback,
+  ) {
+    this.resetTimer()
+    callback(null, chunk)
+  }
+
+  override _flush(callback: TransformCallback) {
+    this.clearTimer()
+    callback()
+  }
+
+  override _destroy(
+    error: Error | null,
+    callback: (error?: Error | null) => void,
+  ) {
+    this.clearTimer()
+    callback(error)
+  }
+
+  private resetTimer() {
+    this.clearTimer()
+    this.timer = setTimeout(
+      () => this.destroy(new Error('Blob body timeout')),
+      this.timeout,
+    )
+    this.timer.unref()
+  }
+
+  private clearTimer() {
+    if (this.timer) clearTimeout(this.timer)
+    this.timer = undefined
   }
 }
 

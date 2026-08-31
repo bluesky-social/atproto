@@ -34,6 +34,7 @@ import {
   ReportStatsService,
   type ReportStatsServiceCreator,
 } from './report/stats.js'
+import { SafeDidResolver } from './safe-fetch.js'
 import {
   SafelinkRuleService,
   type SafelinkRuleServiceCreator,
@@ -129,6 +130,10 @@ export class AppContext {
       cfg.identity.cacheMaxTTL,
     )
     const idResolver = new IdResolver({
+      plcUrl: cfg.identity.plcUrl,
+      didCache,
+    })
+    idResolver.did = new SafeDidResolver({
       plcUrl: cfg.identity.plcUrl,
       didCache,
     })

@@ -10,6 +10,7 @@ import { ModerationService } from '../mod-service/index.js'
 import { StrikeService } from '../mod-service/strike.js'
 import { QueueService } from '../queue/service.js'
 import { ReportStatsService } from '../report/stats.js'
+import { SafeDidResolver } from '../safe-fetch.js'
 import { ScheduledActionService } from '../scheduled-action/service.js'
 import { SettingService } from '../setting/service.js'
 import { TeamService } from '../team/index.js'
@@ -56,6 +57,9 @@ export class DaemonContext {
     const signingKeyId = await getSigningKeyId(db, signingKey.did())
 
     const idResolver = new IdResolver({
+      plcUrl: cfg.identity.plcUrl,
+    })
+    idResolver.did = new SafeDidResolver({
       plcUrl: cfg.identity.plcUrl,
     })
 
