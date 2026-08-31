@@ -1,13 +1,15 @@
-import type { Insertable, Selectable } from 'kysely'
+import { type Insertable, type Selectable } from 'kysely'
+import PQueue from 'p-queue'
 import { AtpAgent } from '@atproto/api'
-import { SECOND } from '@atproto/common'
+import { retry, SECOND } from '@atproto/common'
+import { ResponseType, XRPCError } from '@atproto/xrpc'
 import type { Database } from '../db/index.js'
 import type { BlobPushEvent } from '../db/schema/blob_push_event.js'
 import type { RepoPushEventType } from '../db/schema/repo_push_event.js'
 import { ids } from '../lexicon/lexicons.js'
 import type { InputSchema } from '../lexicon/types/com/atproto/admin/updateSubjectStatus.js'
 import { dbLogger } from '../logger.js'
-import { retryHttp } from '../util.js'
+import { RETRYABLE_HTTP_STATUS_CODES } from '../util.js'
 
 type EventSubject = InputSchema['subject']
 
@@ -25,10 +27,17 @@ type AuthHeaders = {
 type Service = {
   agent: AtpAgent
   did: string
+  rateLimitedUntil?: number
 }
+
+type PushResult = 'confirmed' | 'failed' | 'deferred'
+
+const PUSH_CONCURRENCY = 10
+const RETRY_INTERVAL = 30 * SECOND
 
 export class EventPusher {
   destroyed = false
+  private pushQueue: PQueue = new PQueue({ concurrency: PUSH_CONCURRENCY })
 
   repoPollState: PollState = {
     promise: Promise.resolve(),
@@ -142,6 +151,7 @@ export class EventPusher {
   }
 
   async pushRepoEvents() {
+    const retryBefore = new Date(Date.now() - RETRY_INTERVAL)
     const toPush = await this.db.db
       .selectFrom('repo_push_event')
       .select('id')
@@ -149,11 +159,20 @@ export class EventPusher {
       .skipLocked()
       .where('confirmedAt', 'is', null)
       .where('attempts', '<', 10)
+      .where((eb) =>
+        eb.or([
+          eb('lastAttempted', 'is', null),
+          eb('lastAttempted', '<=', retryBefore),
+        ]),
+      )
       .execute()
-    await Promise.all(toPush.map((evt) => this.attemptRepoEvent(evt.id)))
+    await this.pushQueue.addAll(
+      toPush.map((evt) => () => this.attemptRepoEvent(evt.id, retryBefore)),
+    )
   }
 
   async pushRecordEvents() {
+    const retryBefore = new Date(Date.now() - RETRY_INTERVAL)
     const toPush = await this.db.db
       .selectFrom('record_push_event')
       .select('id')
@@ -161,11 +180,20 @@ export class EventPusher {
       .skipLocked()
       .where('confirmedAt', 'is', null)
       .where('attempts', '<', 10)
+      .where((eb) =>
+        eb.or([
+          eb('lastAttempted', 'is', null),
+          eb('lastAttempted', '<=', retryBefore),
+        ]),
+      )
       .execute()
-    await Promise.all(toPush.map((evt) => this.attemptRecordEvent(evt.id)))
+    await this.pushQueue.addAll(
+      toPush.map((evt) => () => this.attemptRecordEvent(evt.id, retryBefore)),
+    )
   }
 
   async pushBlobEvents() {
+    const retryBefore = new Date(Date.now() - RETRY_INTERVAL)
     const toPush = await this.db.db
       .selectFrom('blob_push_event')
       .select('id')
@@ -173,43 +201,86 @@ export class EventPusher {
       .skipLocked()
       .where('confirmedAt', 'is', null)
       .where('attempts', '<', 10)
+      .where((eb) =>
+        eb.or([
+          eb('lastAttempted', 'is', null),
+          eb('lastAttempted', '<=', retryBefore),
+        ]),
+      )
       .execute()
-    await Promise.all(toPush.map((evt) => this.attemptBlobEvent(evt.id)))
+    await this.pushQueue.addAll(
+      toPush.map((evt) => () => this.attemptBlobEvent(evt.id, retryBefore)),
+    )
   }
 
   private async updateSubjectOnService(
     service: Service,
     subject: EventSubject,
     takedownRef: string | null,
-  ): Promise<boolean> {
+  ): Promise<PushResult> {
+    if (service.rateLimitedUntil && service.rateLimitedUntil > Date.now()) {
+      return 'deferred'
+    }
     const auth = await this.createAuthHeaders(
       service.did,
       ids.ComAtprotoAdminUpdateSubjectStatus,
     )
     try {
-      await retryHttp(() =>
-        service.agent.com.atproto.admin.updateSubjectStatus(
-          {
-            subject,
-            takedown: {
-              applied: !!takedownRef,
-              ref: takedownRef ?? undefined,
+      await retry(
+        () =>
+          service.agent.com.atproto.admin.updateSubjectStatus(
+            {
+              subject,
+              takedown: {
+                applied: !!takedownRef,
+                ref: takedownRef ?? undefined,
+              },
             },
-          },
-          {
-            ...auth,
-            encoding: 'application/json',
-          },
-        ),
+            {
+              ...auth,
+              encoding: 'application/json',
+            },
+          ),
+        {
+          retryable: (err) =>
+            err instanceof XRPCError &&
+            err.status !== ResponseType.RateLimitExceeded &&
+            (err.status === ResponseType.Unknown ||
+              RETRYABLE_HTTP_STATUS_CODES.has(err.status)),
+        },
       )
-      return true
+      if (service.rateLimitedUntil && service.rateLimitedUntil <= Date.now()) {
+        service.rateLimitedUntil = undefined
+      }
+      return 'confirmed'
     } catch (err) {
+      if (
+        err instanceof XRPCError &&
+        err.status === ResponseType.InvalidRequest &&
+        err.message === 'Could not find account'
+      ) {
+        return 'confirmed'
+      }
+      if (
+        err instanceof XRPCError &&
+        err.status === ResponseType.RateLimitExceeded
+      ) {
+        const resetAt = Number(err.headers?.['ratelimit-reset']) * SECOND
+        service.rateLimitedUntil = Number.isFinite(resetAt)
+          ? Math.max(resetAt, Date.now() + SECOND)
+          : Date.now() + RETRY_INTERVAL
+        dbLogger.warn(
+          { err, rateLimitedUntil: new Date(service.rateLimitedUntil) },
+          'event push rate limited',
+        )
+        return 'deferred'
+      }
       dbLogger.error({ err, subject, takedownRef }, 'failed to push out event')
-      return false
+      return 'failed'
     }
   }
 
-  async attemptRepoEvent(id: number) {
+  async attemptRepoEvent(id: number, retryBefore?: Date) {
     await this.db.transaction(async (dbTxn) => {
       const evt = await dbTxn.db
         .selectFrom('repo_push_event')
@@ -218,6 +289,14 @@ export class EventPusher {
         .skipLocked()
         .where('id', '=', id)
         .where('confirmedAt', 'is', null)
+        .$if(!!retryBefore, (qb) =>
+          qb.where((eb) =>
+            eb.or([
+              eb('lastAttempted', 'is', null),
+              eb('lastAttempted', '<=', retryBefore!),
+            ]),
+          ),
+        )
         .executeTakeFirst()
       if (!evt) return
       const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
@@ -226,15 +305,16 @@ export class EventPusher {
         $type: 'com.atproto.admin.defs#repoRef',
         did: evt.subjectDid,
       }
-      const succeeded = await this.updateSubjectOnService(
+      const result = await this.updateSubjectOnService(
         service,
         subject,
         evt.takedownRef,
       )
+      if (result === 'deferred') return
       await dbTxn.db
         .updateTable('repo_push_event')
         .set(
-          succeeded
+          result === 'confirmed'
             ? { confirmedAt: new Date() }
             : {
                 lastAttempted: new Date(),
@@ -247,7 +327,7 @@ export class EventPusher {
     })
   }
 
-  async attemptRecordEvent(id: number) {
+  async attemptRecordEvent(id: number, retryBefore?: Date) {
     await this.db.transaction(async (dbTxn) => {
       const evt = await dbTxn.db
         .selectFrom('record_push_event')
@@ -256,6 +336,14 @@ export class EventPusher {
         .skipLocked()
         .where('id', '=', id)
         .where('confirmedAt', 'is', null)
+        .$if(!!retryBefore, (qb) =>
+          qb.where((eb) =>
+            eb.or([
+              eb('lastAttempted', 'is', null),
+              eb('lastAttempted', '<=', retryBefore!),
+            ]),
+          ),
+        )
         .executeTakeFirst()
       if (!evt) return
       const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
@@ -265,15 +353,16 @@ export class EventPusher {
         uri: evt.subjectUri,
         cid: evt.subjectCid,
       }
-      const succeeded = await this.updateSubjectOnService(
+      const result = await this.updateSubjectOnService(
         service,
         subject,
         evt.takedownRef,
       )
+      if (result === 'deferred') return
       await dbTxn.db
         .updateTable('record_push_event')
         .set(
-          succeeded
+          result === 'confirmed'
             ? { confirmedAt: new Date() }
             : {
                 lastAttempted: new Date(),
@@ -286,7 +375,7 @@ export class EventPusher {
     })
   }
 
-  async attemptBlobEvent(id: number) {
+  async attemptBlobEvent(id: number, retryBefore?: Date) {
     await this.db.transaction(async (dbTxn) => {
       const evt = await dbTxn.db
         .selectFrom('blob_push_event')
@@ -295,6 +384,14 @@ export class EventPusher {
         .skipLocked()
         .where('id', '=', id)
         .where('confirmedAt', 'is', null)
+        .$if(!!retryBefore, (qb) =>
+          qb.where((eb) =>
+            eb.or([
+              eb('lastAttempted', 'is', null),
+              eb('lastAttempted', '<=', retryBefore!),
+            ]),
+          ),
+        )
         .executeTakeFirst()
       if (!evt) return
 
@@ -305,12 +402,13 @@ export class EventPusher {
         did: evt.subjectDid,
         cid: evt.subjectBlobCid,
       }
-      const succeeded = await this.updateSubjectOnService(
+      const result = await this.updateSubjectOnService(
         service,
         subject,
         evt.takedownRef,
       )
-      await this.markBlobEventAttempt(dbTxn, evt, succeeded)
+      if (result === 'deferred') return
+      await this.markBlobEventAttempt(dbTxn, evt, result === 'confirmed')
     })
   }
 
