@@ -80,7 +80,7 @@
     "@hapi/address": "^5.1.1",
     "@hapi/bourne": "^3.0.0",
     "@hapi/content": "^6.0.0",
-    "cookie": "^0.7.0",
+    "cookie": "^2.0.1",
     "disposable-email-domains-js": "^1.5.0",
     "forwarded": "^0.2.0",
     "http-errors": "^2.0.0",
@@ -90,7 +90,6 @@
   },
   "devDependencies": {
     "@atproto-labs/rolldown-plugin-bundle-manifest": "workspace:^",
-    "@types/cookie": "^0.6.0",
     "@types/forwarded": "0.1.3",
     "@types/http-errors": "^2.0.4",
     "@types/send": "^0.17.4",

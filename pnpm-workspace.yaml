@@ -23,5 +23,9 @@ allowBuilds:
   rolldown: true
 
 overrides:
-  cookie: ^0.7.2
+  # Force express 4's vulnerable transitive cookie to a patched version. Do not
+  # apply repo-wide: @atproto/oauth-provider directly depends on cookie 2.x.
+  # TODO: remove this override once express is upgraded to 5.x (which already
+  # depends on a patched cookie) or dropped entirely (see #5341).
+  express>cookie: ^0.7.2
   opentelemetry-plugin-better-sqlite3>@opentelemetry/core: ^1.30.0
