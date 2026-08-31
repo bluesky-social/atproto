@@ -5,7 +5,6 @@ import {
   type StoreErrorHandler,
   swallowStoreErrors,
 } from '@atproto-labs/simple-store'
-import { DidCacheMemory } from './did-cache-memory.js'
 import type { DidMethod, ResolveDidOptions } from './did-method.js'
 import type { DidResolver, ResolvedDocument } from './did-resolver.js'
 
@@ -31,7 +30,7 @@ export class DidResolverCached<
   protected readonly getter: CachedGetter<Did, DidDocument>
   constructor(
     resolver: DidResolver<M>,
-    cache: DidCache = new DidCacheMemory(),
+    cache: DidCache,
     onDidCacheError?: DidCacheErrorHandler,
   ) {
     this.getter = new CachedGetter<Did, DidDocument>(

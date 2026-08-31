@@ -1,5 +1,9 @@
-import { type IdResolver, getHandle } from '@atproto/identity'
+import type { DidString } from '@atproto/oauth-provider-api'
 import { SpacePermission } from '@atproto/oauth-scopes'
+import { type HandleString, isValidHandle } from '@atproto/syntax'
+import type { DidResolver } from '@atproto-labs/did-resolver'
+import { extractAtprotoData } from '@atproto-labs/did-resolver'
+import type { HandleResolver } from '@atproto-labs/handle-resolver'
 
 /**
  * Resolves the space-authority DIDs named in `space:` scopes to handles, so the
@@ -8,58 +12,80 @@ import { SpacePermission } from '@atproto/oauth-scopes'
  * screen renders the raw DID instead.
  */
 export class IdentityManager {
-  constructor(public readonly idResolver: IdResolver) {}
+  constructor(
+    protected readonly didResolver: DidResolver<'plc' | 'web'>,
+    protected readonly handleResolver: HandleResolver,
+  ) {}
 
   public async getSpaceHandlesFromScope(
     scope?: string,
-  ): Promise<Map<string, string>> {
+    {
+      onError = (did, error) => {
+        throw error
+      },
+    }: {
+      onError?: (did: DidString, error: unknown) => void
+    } = {},
+  ): Promise<Map<DidString, HandleString>> {
+    const map = new Map<DidString, HandleString>()
+
     const dids = extractSpaceDids(scope)
-    if (dids.size === 0) return new Map()
+    if (dids.size === 0) return map
 
-    const entries = await Promise.all(
-      Array.from(dids, async (did) => {
+    // @TODO we don't want to resolve more than a handful of DIDs at once, so we
+    // resolve them sequentially. We should replace this with a
+    // concurrency-limited queue.
+    for (const did of dids) {
+      try {
         const handle = await this.resolveVerifiedHandle(did)
-        return handle ? ([did, handle] as const) : null
-      }),
-    )
+        map.set(did, handle)
+      } catch (error) {
+        onError(did, error)
+      }
+    }
 
-    return new Map(
-      entries.filter((e): e is readonly [string, string] => e !== null),
-    )
+    return map
   }
 
   /**
    * A handle is only trustworthy if it round-trips: the DID doc claims it, and
    * resolving it independently returns the same DID.
    */
-  protected async resolveVerifiedHandle(
-    did: string,
-  ): Promise<string | undefined> {
-    try {
-      const doc = await this.idResolver.did.resolve(did)
-      if (!doc) return undefined
-      const handle = getHandle(doc)
-      if (!handle) return undefined
-
-      const resolvedDid = await this.idResolver.handle.resolve(handle)
-      if (resolvedDid !== did) return undefined
-
-      return handle
-    } catch {
-      return undefined
+  protected async resolveVerifiedHandle(did: DidString): Promise<HandleString> {
+    const doc = await this.didResolver.resolve(did)
+    if (!doc) {
+      throw new Error(`DID not found: ${did}`)
     }
+
+    const { aka } = extractAtprotoData(doc)
+    if (!aka || !isValidHandle(aka)) {
+      throw new Error(`DID document does not claim a valid handle: ${did}`)
+    }
+
+    const resolvedDid = await this.handleResolver.resolve(aka)
+    if (resolvedDid !== did) {
+      throw new Error('Handle does not resolve to the same DID')
+    }
+
+    return aka
   }
 }
 
-function extractSpaceDids(scope?: string): Set<string> {
-  const dids = new Set<string>()
+function extractSpaceDids(scope?: string): Set<DidString> {
+  const dids = new Set<DidString>()
   if (!scope) return dids
+
   for (const value of scope.split(' ')) {
     const parsed = SpacePermission.fromString(value)
+
+    // Invalid scope
     if (!parsed) continue
-    // `*` and `self` name no concrete authority to resolve to a handle.
+
+    // Only include DID authorities
     if (parsed.authority === '*' || parsed.authority === 'self') continue
+
     dids.add(parsed.authority)
   }
+
   return dids
 }

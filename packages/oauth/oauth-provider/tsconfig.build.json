@@ -5,8 +5,10 @@
   "references": [
     { "path": "../../common/tsconfig.build.json" },
     { "path": "../../did/tsconfig.build.json" },
+    { "path": "../../internal/did-resolver/tsconfig.build.json" },
     { "path": "../../internal/fetch-node/tsconfig.build.json" },
     { "path": "../../internal/fetch/tsconfig.build.json" },
+    { "path": "../../internal/handle-resolver-node/tsconfig.build.json" },
     { "path": "../../internal/pipe/tsconfig.build.json" },
     {
       "path": "../../internal/rolldown-plugin-bundle-manifest/tsconfig.build.json",

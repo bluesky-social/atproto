@@ -1615,9 +1615,15 @@ importers:
 
   packages/oauth/oauth-provider:
     dependencies:
+      '@atproto-labs/did-resolver':
+        specifier: workspace:^
+        version: link:../../internal/did-resolver
       '@atproto-labs/fetch-node':
         specifier: workspace:^
         version: link:../../internal/fetch-node
+      '@atproto-labs/handle-resolver-node':
+        specifier: workspace:^
+        version: link:../../internal/handle-resolver-node
       '@atproto-labs/pipe':
         specifier: workspace:^
         version: link:../../internal/pipe
@@ -1633,9 +1639,6 @@ importers:
       '@atproto/did':
         specifier: workspace:^
         version: link:../../did
-      '@atproto/identity':
-        specifier: workspace:^
-        version: link:../../identity
       '@atproto/jwk':
         specifier: workspace:^
         version: link:../jwk

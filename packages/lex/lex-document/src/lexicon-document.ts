@@ -639,11 +639,34 @@ export const lexiconPermissionSetSchema = l.object({
 export type LexiconPermissionSet = l.Infer<typeof lexiconPermissionSetSchema>
 
 /**
+ * Schema for validating Lexicon space key definitions.
+ *
+ * Validates record key type specifications. Valid values are:
+ * - "any": Any valid record key
+ * - "nsid": Namespaced identifier
+ * - "tid": Timestamp identifier
+ * - "literal:<string>": A specific literal string value
+ */
+export const lexiconSpaceKeySchema = l.custom(
+  l.isLexiconRecordKey,
+  'Invalid record key definition (must be "any", "nsid", "tid", or "literal:<string>")',
+)
+
+/**
+ * TypeScript type for valid Lexicon space key values.
+ *
+ * Can be "any", "nsid", "tid", or "literal:<string>".
+ *
+ * @see {@link lexiconSpaceKeySchema} for the schema definition
+ */
+export type LexiconSpaceKey = l.LexiconRecordKey
+
+/**
  * Schema for validating Lexicon space definitions.
  */
 export const lexiconSpaceSchema = l.object({
   type: l.literal('space'),
-  key: lexiconRecordKeySchema,
+  key: lexiconSpaceKeySchema,
   name: l.string({ minLength: 1, maxLength: 64 }),
   'name:lang': l.optional(lexiconLanguageDict),
   collections: l.array(l.string({ format: 'nsid' })),
