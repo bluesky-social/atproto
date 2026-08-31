@@ -1,18 +1,21 @@
-import type { Readable } from 'node:stream'
+import { Readable } from 'node:stream'
 import { finished, pipeline } from 'node:stream/promises'
 import { CID } from 'multiformats/cid'
 import * as undici from 'undici'
 import {
   VerifyCidTransform,
   allFulfilled,
-  createDecoders,
   getPdsEndpoint,
 } from '@atproto/common'
 import type { IdResolver } from '@atproto/identity'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
 import type { BlobDivertConfig } from '../config/index.js'
 import type { Database } from '../db/index.js'
+import { createSafeFetch } from '../safe-fetch.js'
 import { retryHttp } from '../util.js'
+
+const MAX_BLOB_SIZE = 100 * 1024 * 1024
+const safeBlobFetch = createSafeFetch(MAX_BLOB_SIZE)
 
 export class BlobDiverter {
   serviceConfig: BlobDivertConfig
@@ -35,43 +38,38 @@ export class BlobDiverter {
   async getBlob(options: GetBlobOptions): Promise<Blob> {
     const blobUrl = getBlobUrl(options)
 
-    const blobResponse = await undici
-      .request(blobUrl, {
-        headersTimeout: 10e3,
-        bodyTimeout: 30e3,
-      })
-      .catch((err) => {
-        throw asXrpcClientError(err, `Error fetching blob ${options.cid}`)
-      })
+    const blobResponse = await safeBlobFetch(blobUrl).catch((err) => {
+      throw asXrpcClientError(err, `Error fetching blob ${options.cid}`)
+    })
 
-    if (blobResponse.statusCode !== 200) {
-      await blobResponse.body.dump()
+    if (blobResponse.status !== 200) {
+      await blobResponse.body?.cancel()
       throw new XRPCError(
-        blobResponse.statusCode,
+        blobResponse.status,
         undefined,
         `Error downloading blob ${options.cid}`,
       )
     }
 
     try {
-      const type = blobResponse.headers['content-type']
-      const encoding = blobResponse.headers['content-encoding']
+      if (!blobResponse.body) {
+        throw new Error('Blob response has no body')
+      }
 
+      const type = blobResponse.headers.get('content-type')
       const verifier = new VerifyCidTransform(CID.parse(options.cid))
 
-      void pipeline([
-        blobResponse.body,
-        ...createDecoders(encoding),
-        verifier,
-      ]).catch((_err) => {})
+      void pipeline([Readable.fromWeb(blobResponse.body), verifier]).catch(
+        (_err) => {},
+      )
 
       return {
-        type: typeof type === 'string' ? type : 'application/octet-stream',
+        type: type ?? 'application/octet-stream',
         stream: verifier,
       }
     } catch (err) {
       // Typically un-supported content encoding
-      await blobResponse.body.dump()
+      await blobResponse.body?.cancel()
       throw err
     }
   }

@@ -1,4 +1,3 @@
-import net from 'node:net'
 import { sql } from 'kysely'
 import AtpAgent from '@atproto/api'
 import { cborEncode, noUndefinedVals } from '@atproto/common'
@@ -7,6 +6,10 @@ import type { IdResolver } from '@atproto/identity'
 import type { LabelRow } from '../db/schema/label.js'
 import type { DbRef } from '../db/types.js'
 import type { Label } from '../lexicon/types/com/atproto/label/defs.js'
+import { createSafeFetch } from '../safe-fetch.js'
+
+const MAX_PDS_RESPONSE_SIZE = 10 * 1024 * 1024
+const safePdsFetch = createSafeFetch(MAX_PDS_RESPONSE_SIZE)
 
 export type SignedLabel = Label & { sig: Uint8Array }
 
@@ -68,13 +71,6 @@ export const signLabel = async (
   }
 }
 
-export const isSafeUrl = (url: URL) => {
-  if (url.protocol !== 'https:') return false
-  if (!url.hostname || url.hostname === 'localhost') return false
-  if (net.isIP(url.hostname) !== 0) return false
-  return true
-}
-
 export const getPdsAgentForRepo = async (
   idResolver: IdResolver,
   did: string,
@@ -82,11 +78,17 @@ export const getPdsAgentForRepo = async (
 ) => {
   const { pds } = await idResolver.did.resolveAtprotoData(did)
   const url = new URL(pds)
-  if (!devMode && !isSafeUrl(url)) {
+  if (!devMode && url.protocol !== 'https:') {
     return { url, agent: null }
   }
 
-  return { url, agent: new AtpAgent({ service: url }) }
+  return {
+    url,
+    agent: new AtpAgent({
+      service: url,
+      fetch: devMode ? globalThis.fetch : safePdsFetch,
+    }),
+  }
 }
 
 export const dateFromDatetime = (datetime: Date) => {
