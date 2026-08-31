@@ -61,3 +61,4 @@ export * as _20260604T224952774Z from './20260604T224952774Z-post-embed-gallery-
 export * as _20260618T200000000Z from './20260618T200000000Z-add-mute-scope.js'
 export * as _20260729T223157563Z from './20260729T223157563Z-add-op-thread-reply.js'
 export * as _20260819T170000000Z from './20260819T170000000Z-add-like-subject-sort-index.js'
+export * as _20260827T200000000Z from './20260827T200000000Z-reference-list-opt-outs.js'

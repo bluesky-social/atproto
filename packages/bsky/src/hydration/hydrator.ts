@@ -134,6 +134,8 @@ export type HydrateCtxVals = {
   features: ScopedFeatureGatesClient
 }
 
+export type ListItemSubjectOptOuts = HydrationMap<AtUriString, true>
+
 export type HydrationState = {
   ctx?: HydrateCtx
   actors?: Actors
@@ -154,6 +156,7 @@ export type HydrationState = {
   listMemberships?: ListMembershipStates
   listViewers?: ListViewerStates
   listItems?: ListItems
+  listItemSubjectOptOuts?: ListItemSubjectOptOuts
   likes?: Likes
   likeBlocks?: LikeBlocks
   labels?: Labels
@@ -1169,7 +1172,11 @@ export class Hydrator {
       this.hydrateFeedGens(feedUris, ctx),
       this.hydrateLists(listUris, ctx),
       ...listUris.map((uri) =>
-        this.dataplane.getListMembers({ listUri: uri, limit: 50 }),
+        this.dataplane.getListMembers({
+          listUri: uri,
+          limit: 50,
+          viewerDid: ctx.viewer ?? undefined,
+        }),
       ),
     ])
     // collect list info
@@ -1222,11 +1229,21 @@ export class Hydrator {
     })
     // hydrate sampled list items
     const listItemState = await this.hydrateListItems(listItemUris, ctx)
+    // @NOTE Subject opt-outs come from list membership, not list item records.
+    const listItemSubjectOptOuts: ListItemSubjectOptOuts = new HydrationMap()
+    listsMembers.forEach((members) => {
+      members.listitems.forEach((item) => {
+        if (item.subjectOptedOut) {
+          listItemSubjectOptOuts.set(item.uri as AtUriString, true)
+        }
+      })
+    })
     return mergeManyStates(
       starterPackState,
       feedGenState,
       listState,
       listItemState,
+      { listItemSubjectOptOuts },
     )
   }
 
@@ -1874,6 +1891,10 @@ export const mergeStates = (
     ),
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
     listItems: mergeMaps(stateA.listItems, stateB.listItems),
+    listItemSubjectOptOuts: mergeMaps(
+      stateA.listItemSubjectOptOuts,
+      stateB.listItemSubjectOptOuts,
+    ),
     likes: mergeMaps(stateA.likes, stateB.likes),
     likeBlocks: mergeMaps(stateA.likeBlocks, stateB.likeBlocks),
     labels: mergeMaps(stateA.labels, stateB.labels),
