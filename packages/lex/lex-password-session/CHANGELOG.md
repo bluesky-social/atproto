@@ -1,5 +1,22 @@
 # @atproto/lex-password-session
 
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies [[`ec29fcd`](https://github.com/bluesky-social/atproto/commit/ec29fcdb4e0ce098fb1473feebe876a94b1c8e33)]:
+  - @atproto/lex-client@0.3.5
+
+## 0.2.1
+
+### Patch Changes
+
+- [#5446](https://github.com/bluesky-social/atproto/pull/5446) [`19aafb5`](https://github.com/bluesky-social/atproto/commit/19aafb5f512ec23fe040b13417c9479bb9c6b2c1) Thanks [@mozzius](https://github.com/mozzius)! - Support browsers without `URL.canParse` when reading PDS endpoints.
+
+- Updated dependencies []:
+  - @atproto/lex-client@0.3.4
+  - @atproto/lex-schema@0.2.6
+
 ## 0.2.0
 
 ### Minor Changes

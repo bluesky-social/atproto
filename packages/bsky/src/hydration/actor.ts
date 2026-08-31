@@ -15,6 +15,7 @@ import type {
   ActivitySubscription,
   VerificationMeta,
 } from '../proto/bsky_pb.js'
+import { events } from '../telemetry/events.js'
 import type {
   ChatDeclarationRecord,
   GermDeclarationRecord,
@@ -133,6 +134,16 @@ type KnownFollowersState = {
 export type KnownFollowersStates = HydrationMap<
   DidString,
   KnownFollowersState | undefined
+>
+
+type KnownLikersState = {
+  count: number
+  actors: DidString[]
+}
+
+export type KnownLikersStates = HydrationMap<
+  AtUriString,
+  KnownLikersState | undefined
 >
 
 export type ProfileAgg = {
@@ -517,8 +528,9 @@ export class ActorHydrator {
             : undefined,
         )
       }
-    } catch {
-      // ignore errors and return empty map
+    } catch (err) {
+      // Fail open.
+      events.hydrationFailed({ source: 'known_followers', err })
     }
 
     return map
@@ -558,8 +570,9 @@ export class ActorHydrator {
           map.set(did, undefined)
         }
       }
-    } catch {
-      // ignore errors and return empty map
+    } catch (err) {
+      // Fail open.
+      events.hydrationFailed({ source: 'activity_subscriptions', err })
     }
 
     return map

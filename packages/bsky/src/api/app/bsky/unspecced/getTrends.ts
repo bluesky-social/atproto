@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
   const getTrends = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.add(app.bsky.unspecced.getTrends, {
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, req }) => {
+    handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
@@ -36,6 +36,7 @@ export default function (server: Server, ctx: AppContext) {
           ...params,
           hydrateCtx,
           headers,
+          signal,
         },
         ctx,
       )
@@ -63,6 +64,7 @@ const skeleton: SkeletonFn<Context, Params, SkeletonState> = async (input) => {
     },
     {
       headers: params.headers,
+      signal: params.signal,
     },
   )
 
@@ -142,6 +144,7 @@ type Context = {
 type Params = app.bsky.unspecced.getTrendingTopics.$Params & {
   hydrateCtx: HydrateCtx & { viewer: string | null }
   headers: Record<string, string>
+  signal: AbortSignal
 }
 
 type SkeletonState = app.bsky.unspecced.getTrendsSkeleton.$OutputBody

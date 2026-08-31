@@ -20,6 +20,7 @@ import type {
   Notification,
   RecordRef,
 } from '../proto/bsky_pb.js'
+import { events } from '../telemetry/events.js'
 import {
   SITE_STANDARD_NSID_PREFIX,
   parseSiteStandardRecordKey,
@@ -38,6 +39,7 @@ import {
   ActorHydrator,
   type Actors,
   type KnownFollowersStates,
+  type KnownLikersStates,
   type ProfileAggs,
   type ProfileViewerState,
   type ProfileViewerStates,
@@ -164,12 +166,34 @@ export type HydrationState = {
   labelerViewers?: LabelerViewerStates
   labelerAggs?: LabelerAggs
   knownFollowers?: KnownFollowersStates
+  knownLikers?: KnownLikersStates
   activitySubscriptions?: ActivitySubscriptionStates
   bidirectionalBlocks?: BidirectionalBlocks
   verifications?: Verifications
   bookmarks?: Bookmarks
   siteStandardDocuments?: SiteStandardDocuments
   siteStandardPublications?: SiteStandardPublications
+}
+
+type HydrateKnownLikersOptions = {
+  subjectUris: AtUriString[]
+}
+
+type HydratePostsOptions = Pick<
+  GetPostsHydrationOptions,
+  'processDynamicTagsForView'
+> & {
+  knownLikers?: HydrateKnownLikersOptions
+}
+
+type HydrateFeedItemsOptions = {
+  /**
+   * Hydrate known likers for the root post of each feed item, which is the
+   * post itself when it does not reply to anything. Feed items only carry the
+   * post URI, so the roots can only be resolved once the post records are
+   * fetched, which is why this is a flag rather than a list of subjects.
+   */
+  knownLikers?: boolean
 }
 
 export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
@@ -522,9 +546,13 @@ export class Hydrator {
     refs: { uri: AtUriString }[],
     ctx: HydrateCtx,
     state: HydrationState = {},
-    options: Pick<GetPostsHydrationOptions, 'processDynamicTagsForView'> = {},
+    options: HydratePostsOptions = {},
   ): Promise<HydrationState> {
     const uris = refs.map((ref) => ref.uri)
+
+    const knownLikersPromise = options.knownLikers
+      ? this.hydrateKnownLikers(options.knownLikers, ctx)
+      : undefined
 
     state.posts ??= new HydrationMap()
     const addPostsToHydrationState = (posts: Posts) => {
@@ -650,16 +678,35 @@ export class Hydrator {
     // post-author profile fetch below; any DIDs surfaced later by the
     // dataplane are picked up by the top-up after the parallel batch.
     const ssRefDids = siteStandardRefs.map((ref) => uriToDid(ref.uri))
+
+    // Collect known-liker profiles and author-liker block relationships.
+    const knownLikers = await knownLikersPromise
+    const knownLikerDids: DidString[] = []
+    const authorsAndKnownLikersRelationships: RelationshipPair[] = []
+    knownLikers?.forEach((knownLiker, uri) => {
+      if (!knownLiker) return
+      knownLikerDids.push(...knownLiker.actors)
+      const authorDid = uriToDid(uri)
+      for (const likerDid of knownLiker.actors) {
+        authorsAndKnownLikersRelationships.push([authorDid, likerDid])
+      }
+    })
+
     const knownProfileDids = dedupeStrs([
       ...allPostUris.map(didFromUri),
       ...ssRefDids,
+      ...knownLikerDids,
     ])
 
     const [
       postAggs,
       postViewers,
       labels,
-      postBlocks,
+      {
+        postBlocks,
+        additionalRelationshipsBidirectionalBlocks:
+          authorsAndKnownLikersBidirectionalBlocks,
+      },
       profileState,
       listState,
       feedGenState,
@@ -679,7 +726,7 @@ export class Hydrator {
         [...allPostUris, ...siteStandardLabelSubjects],
         ctx.labelers,
       ),
-      this.hydratePostBlocks(posts, ctx),
+      this.hydratePostBlocks(posts, ctx, authorsAndKnownLikersRelationships),
       this.hydrateProfiles(knownProfileDids, ctx),
       this.hydrateLists([...nestedListUris, ...threadgateListUris], ctx),
       this.hydrateFeedGens(nestedFeedGenUris, ctx),
@@ -730,6 +777,8 @@ export class Hydrator {
         postAggs,
         postViewers,
         postBlocks,
+        knownLikers,
+        bidirectionalBlocks: authorsAndKnownLikersBidirectionalBlocks,
         labels,
         threadgates,
         postgates,
@@ -743,7 +792,11 @@ export class Hydrator {
   private async hydratePostBlocks(
     posts: Posts,
     ctx: HydrateCtx,
-  ): Promise<PostBlocks> {
+    additionalRelationships: RelationshipPair[] = [],
+  ): Promise<{
+    postBlocks: PostBlocks
+    additionalRelationshipsBidirectionalBlocks: BidirectionalBlocks
+  }> {
     const postBlocks: PostBlocks = new HydrationMap()
     const postBlocksPairs = new Map<AtUriString, PostBlockPairs>()
     const relationships: RelationshipPair[] = []
@@ -775,6 +828,7 @@ export class Hydrator {
         postBlockPairs.embed = pair
       }
     }
+    relationships.push(...additionalRelationships)
     // replace embed/parent/root pairs with block state
     const blocks = await this.hydrateBidirectionalBlocks(
       pairsToMap(relationships),
@@ -787,7 +841,20 @@ export class Hydrator {
         root: !!root && !!isBlocked(blocks, root),
       })
     }
-    return postBlocks
+
+    const additionalRelationshipsBidirectionalBlocks: BidirectionalBlocks =
+      new HydrationMap()
+    for (const [source, targets] of pairsToMap(additionalRelationships)) {
+      const didBlocks = new HydrationMap<DidString, boolean>()
+      for (const target of targets) {
+        didBlocks.set(target, blocks.get(source)?.get(target) ?? false)
+      }
+      additionalRelationshipsBidirectionalBlocks.set(source, didBlocks)
+    }
+    return {
+      postBlocks,
+      additionalRelationshipsBidirectionalBlocks,
+    }
   }
 
   // app.bsky.feed.defs#feedViewPost
@@ -808,6 +875,7 @@ export class Hydrator {
   async hydrateFeedItems(
     items: FeedItem[],
     ctx: HydrateCtx,
+    options: HydrateFeedItemsOptions = {},
   ): Promise<HydrationState> {
     // get posts, collect reply refs
     const posts = await this.feed.getPosts(
@@ -824,6 +892,9 @@ export class Hydrator {
     const rootUris: AtUriString[] = []
     const parentUris: AtUriString[] = []
     const postAndReplyRefs: ItemRef[] = []
+    // The feed renders the root post above the feed item, so known likers are
+    // hydrated for the root rather than for the feed item itself.
+    const knownLikerSubjectUris: AtUriString[] = []
     posts.forEach((post, uri) => {
       if (!post) return
       postAndReplyRefs.push({ uri, cid: post.cid })
@@ -831,6 +902,9 @@ export class Hydrator {
         rootUris.push(post.record.reply.root.uri)
         parentUris.push(post.record.reply.parent.uri)
         postAndReplyRefs.push(post.record.reply.root, post.record.reply.parent)
+        knownLikerSubjectUris.push(post.record.reply.root.uri)
+      } else {
+        knownLikerSubjectUris.push(uri)
       }
     })
     // get replies, collect reply parent authors
@@ -847,9 +921,18 @@ export class Hydrator {
     // hydrate state for all posts, reposts, authors of reposts + reply parent authors
     const repostUris = mapDefined(items, (item) => item.repost?.uri)
     const [postState, repostProfileState, reposts] = await Promise.all([
-      this.hydratePosts(postAndReplyRefs, ctx, {
-        posts: replies.merge(posts), // avoids refetches while preserving feed-item metadata
-      }),
+      this.hydratePosts(
+        postAndReplyRefs,
+        ctx,
+        {
+          posts: replies.merge(posts), // avoids refetches while preserving feed-item metadata
+        },
+        {
+          knownLikers: options.knownLikers
+            ? { subjectUris: dedupeStrs(knownLikerSubjectUris) }
+            : undefined,
+        },
+      ),
       this.hydrateProfiles(
         [...repostUris.map(didFromUri), ...replyParentAuthors],
         ctx,
@@ -927,6 +1010,7 @@ export class Hydrator {
   async hydrateThreadPosts(
     refs: ItemRef[],
     ctx: HydrateCtx,
+    options: Pick<HydratePostsOptions, 'knownLikers'> = {},
   ): Promise<HydrationState> {
     const postsState = await this.hydratePosts(refs, ctx, undefined, {
       processDynamicTagsForView: ctx.features.checkGate(
@@ -934,6 +1018,7 @@ export class Hydrator {
       )
         ? 'thread'
         : undefined,
+      knownLikers: options.knownLikers,
     })
 
     const threadRefs: ThreadRef[] = []
@@ -953,6 +1038,42 @@ export class Hydrator {
     const threadContexts = await this.feed.getThreadContexts(threadRefs)
 
     return mergeStates(postsState, { threadContexts })
+  }
+
+  private async hydrateKnownLikers(
+    options: HydrateKnownLikersOptions,
+    ctx: HydrateCtx,
+  ): Promise<KnownLikersStates | undefined> {
+    const { subjectUris } = options
+    if (!ctx.viewer || subjectUris.length === 0) return undefined
+
+    // Fail open.
+    try {
+      const { results } = await this.dataplane.getKnownLikers(
+        {
+          actorDid: ctx.viewer,
+          subjectUris,
+          limit: 3,
+        },
+        { signal: AbortSignal.timeout(100) },
+      )
+      const knownLikers: KnownLikersStates = new HydrationMap()
+      for (const result of results) {
+        const subjectUri = result.subjectUri as AtUriString
+        const dids = result.dids as DidString[]
+        if (result.count > 0) {
+          knownLikers.set(subjectUri, {
+            count: result.count,
+            actors: dids,
+          })
+        }
+      }
+      return knownLikers
+    } catch (err) {
+      hydrationLogger.error({ err }, 'Failed to hydrate known likers')
+      events.hydrationFailed({ source: 'known_likers', err })
+      return undefined
+    }
   }
 
   // app.bsky.feed.defs#generatorView
@@ -1765,6 +1886,7 @@ export const mergeStates = (
     labelerAggs: mergeMaps(stateA.labelerAggs, stateB.labelerAggs),
     labelerViewers: mergeMaps(stateA.labelerViewers, stateB.labelerViewers),
     knownFollowers: mergeMaps(stateA.knownFollowers, stateB.knownFollowers),
+    knownLikers: mergeMaps(stateA.knownLikers, stateB.knownLikers),
     activitySubscriptions: mergeMaps(
       stateA.activitySubscriptions,
       stateB.activitySubscriptions,

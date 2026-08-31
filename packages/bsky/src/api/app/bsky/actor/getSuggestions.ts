@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.add(app.bsky.actor.getSuggestions, {
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
+    handler: async ({ params, auth, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
         limit: params.limit,
         fetch: ({ cursor, limit }) =>
           getSuggestions(
-            { ...params, cursor, limit, hydrateCtx, headers },
+            { ...params, cursor, limit, hydrateCtx, headers, signal },
             ctx,
           ),
         items: (r) => r.actors,
@@ -70,6 +70,7 @@ const skeleton = async (input: {
       app.bsky.unspecced.getSuggestionsSkeleton,
       {
         headers: params.headers,
+        signal: params.signal,
         params: {
           relativeToDid: viewer,
           viewer: viewer ?? undefined,
@@ -158,6 +159,7 @@ type Context = {
 type Params = app.bsky.actor.getSuggestions.$Params & {
   hydrateCtx: HydrateCtx
   headers: HeadersMap
+  signal: AbortSignal
 }
 
 type Skeleton = {

@@ -38,7 +38,7 @@ import {
   type ResolvedRef,
   getPublicIdentifiers,
 } from './ref-resolver.js'
-import { asNamespaceExport } from './ts-lang.js'
+import { asNamespaceExport, isSafeLocalIdentifier } from './ts-lang.js'
 
 /**
  * Configuration options for the {@link LexDefBuilder} class.
@@ -98,22 +98,43 @@ export class LexDefBuilder {
   private addExportedString(
     name: string,
     initializer: string,
-    docs?: OptionalKind<JSDocStructure>,
+    {
+      docs,
+    }: {
+      docs?: (OptionalKind<JSDocStructure> | string)[]
+    } = {},
   ) {
+    if (
+      this.file
+        .getExportDeclarations()
+        .some((exp) => exp.getNamedExports().some((e) => e.getName() === name))
+    ) {
+      throw new Error(`Duplicate export ${name}`)
+    }
+
+    const identifier = isSafeLocalIdentifier(name)
+      ? name
+      : this.refResolver.nextSafeDefinitionIdentifier(name)
+
     this.file.addVariableStatement({
       declarationKind: VariableDeclarationKind.Const,
-      docs: docs ? [docs] : undefined,
-      declarations: [{ name, initializer }],
+      docs,
+      declarations: [{ name: identifier, initializer }],
     })
 
     this.file.addTypeAlias({
-      name,
-      type: `typeof ${name}`,
-      docs: docs ? [docs] : undefined,
+      name: identifier,
+      type: `typeof ${identifier}`,
+      docs,
     })
 
     this.file.addExportDeclaration({
-      namedExports: [{ name }],
+      namedExports: [
+        {
+          name: identifier,
+          alias: name === identifier ? undefined : asNamespaceExport(name),
+        },
+      ],
     })
   }
 
@@ -397,10 +418,15 @@ export class LexDefBuilder {
   }
 
   private async addToken(hash: string, def: LexiconToken) {
-    await this.addSchema(hash, def, {
+    const ref = await this.addSchema(hash, def, {
       schema: markPure(`l.token($nsid, ${JSON.stringify(hash)})`),
-      type: JSON.stringify(l.$type(this.doc.id, hash)),
       validationUtils: true,
+    })
+
+    const pub = getPublicIdentifiers(hash)
+
+    this.addExportedString(pub.typeName, markPure(`${ref.varName}.value`), {
+      docs: compileDocs(def.description),
     })
   }
 

@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { DidString } from '@atproto/lex'
 import { Gate } from '../../../../feature-gates/gates.js'
-import { irisUrlForFeed } from './getFeed.js'
+import { irisStagingUrlForFeed, irisUrlForFeed } from './getFeed.js'
 
 const IRIS_URL = 'http://iris.internal.invalid'
+const IRIS_STAGING_URL = 'http://iris-staging.internal.invalid'
 const ALLOWLISTED = 'at://did:plc:feedgen/app.bsky.feed.generator/whats-hot'
 const OTHER_FEED = 'at://did:plc:someone/app.bsky.feed.generator/custom'
 
@@ -86,5 +87,37 @@ describe('irisUrlForFeed', () => {
       irisUrlForFeed(cfg, params)
       expect(checkGate).not.toHaveBeenCalled()
     })
+  })
+})
+
+describe('irisStagingUrlForFeed', () => {
+  const stagingCfg = ({
+    irisStagingConfigured = true,
+    allowlistConfigured = true,
+  } = {}) => ({
+    irisStagingUrl: irisStagingConfigured ? IRIS_STAGING_URL : undefined,
+    irisStagingFeedUris: allowlistConfigured
+      ? new Set([ALLOWLISTED])
+      : undefined,
+  })
+
+  it('routes an allowlisted feed to iris staging', () => {
+    const url = irisStagingUrlForFeed(stagingCfg(), { feed: ALLOWLISTED })
+    expect(url).toBe(IRIS_STAGING_URL)
+  })
+
+  it('does not route a feed that is not allowlisted', () => {
+    const url = irisStagingUrlForFeed(stagingCfg(), { feed: OTHER_FEED })
+    expect(url).toBeUndefined()
+  })
+
+  it('does not route when iris staging is not configured', () => {
+    const cfg = stagingCfg({ irisStagingConfigured: false })
+    expect(irisStagingUrlForFeed(cfg, { feed: ALLOWLISTED })).toBeUndefined()
+  })
+
+  it('does not route when no allowlist is configured', () => {
+    const cfg = stagingCfg({ allowlistConfigured: false })
+    expect(irisStagingUrlForFeed(cfg, { feed: ALLOWLISTED })).toBeUndefined()
   })
 })
