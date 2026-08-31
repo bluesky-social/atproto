@@ -396,6 +396,9 @@ importers:
       '@atproto/api':
         specifier: workspace:^
         version: link:../api
+      '@atproto/bsync':
+        specifier: workspace:^
+        version: link:../bsync
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
@@ -453,6 +456,9 @@ importers:
       '@opentelemetry/api-logs':
         specifier: ^0.219.0
         version: 0.219.0
+      '@opentelemetry/semantic-conventions':
+        specifier: ^1.41.1
+        version: 1.43.0
       '@types/http-errors':
         specifier: ^2.0.1
         version: 2.0.4
@@ -568,6 +574,9 @@ importers:
 
   packages/bsync:
     dependencies:
+      '@atproto-labs/opentelemetry-node':
+        specifier: workspace:^
+        version: link:../internal/opentelemetry-node
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
@@ -583,6 +592,12 @@ importers:
       '@connectrpc/connect-node':
         specifier: ^1.1.4
         version: 1.3.0(@bufbuild/protobuf@1.6.0)(@connectrpc/connect@1.3.0(@bufbuild/protobuf@1.6.0))
+      '@opentelemetry/api':
+        specifier: ^1.9.1
+        version: 1.9.1
+      '@opentelemetry/semantic-conventions':
+        specifier: ^1.41.1
+        version: 1.43.0
       http-terminator:
         specifier: ^3.2.0
         version: 3.2.0
