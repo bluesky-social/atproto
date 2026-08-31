@@ -37,7 +37,7 @@
   "devDependencies": {
     "@atproto/lex-builder": "workspace:^",
     "@atproto/lex-server": "workspace:^",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "scripts": {
     "codegen:lex": "node ./scripts/lex-build.js",

@@ -34,10 +34,10 @@
     "mime": "^3.0.0"
   },
   "peerDependencies": {
-    "rolldown": "^1.2.1"
+    "rolldown": "^1.2.6"
   },
   "devDependencies": {
-    "rolldown": "^1.2.1"
+    "rolldown": "^1.2.6"
   },
   "scripts": {
     "build": "tsc --build tsconfig.json"

@@ -57,7 +57,7 @@
     "@types/mime-types": "^3.0.1",
     "@types/ws": "^8.5.4",
     "get-port": "^6.1.2",
-    "jest": "^30.0.0",
+    "jest": "^30.5.0",
     "jose": "^5.0.1",
     "multiformats": "^13.0.0"
   },
