@@ -1,5 +1,6 @@
 import type { ConnectRouter } from '@connectrpc/connect'
 import { sql } from 'kysely'
+import { ATTR_BSYNC_NAMESPACE } from '@atproto-labs/opentelemetry-node/conventions'
 import type { AppContext } from '../context.js'
 import { Service } from '../proto/bsync_connect.js'
 import { operationAttributes } from '../telemetry/attributes.js'
@@ -33,7 +34,7 @@ export default (ctx: AppContext) => (router: ConnectRouter) => {
       {
         putOperation: operationAttributes,
         deleteOperationsByActorAndNamespace: (req) => ({
-          'bsync.namespace': req.namespace,
+          [ATTR_BSYNC_NAMESPACE]: req.namespace,
         }),
       },
     ),
