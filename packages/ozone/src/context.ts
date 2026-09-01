@@ -34,6 +34,7 @@ import {
   ReportStatsService,
   type ReportStatsServiceCreator,
 } from './report/stats.js'
+import { SafeDidResolver } from './safe-fetch.js'
 import {
   SafelinkRuleService,
   type SafelinkRuleServiceCreator,
@@ -132,6 +133,12 @@ export class AppContext {
       plcUrl: cfg.identity.plcUrl,
       didCache,
     })
+    if (!cfg.service.devMode) {
+      idResolver.did = new SafeDidResolver({
+        plcUrl: cfg.identity.plcUrl,
+        didCache,
+      })
+    }
 
     const createAuthHeaders = (aud: string, lxm: string) =>
       createServiceAuthHeaders({
@@ -146,6 +153,7 @@ export class AppContext {
       ? new BlobDiverter(db, {
           idResolver,
           serviceConfig: cfg.blobDivert,
+          devMode: cfg.service.devMode,
         })
       : undefined
     const eventPusher = new EventPusher(db, createAuthHeaders, {

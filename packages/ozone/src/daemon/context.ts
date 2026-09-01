@@ -11,6 +11,7 @@ import { ModerationService } from '../mod-service/index.js'
 import { StrikeService } from '../mod-service/strike.js'
 import { QueueService } from '../queue/service.js'
 import { ReportStatsService } from '../report/stats.js'
+import { SafeDidResolver } from '../safe-fetch.js'
 import { ScheduledActionService } from '../scheduled-action/service.js'
 import { SettingService } from '../setting/service.js'
 import { TeamService } from '../team/index.js'
@@ -62,6 +63,11 @@ export class DaemonContext {
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
     })
+    if (!cfg.service.devMode) {
+      idResolver.did = new SafeDidResolver({
+        plcUrl: cfg.identity.plcUrl,
+      })
+    }
 
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
     const createAuthHeaders = (aud: string, lxm: string) =>

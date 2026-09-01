@@ -1848,6 +1848,9 @@ importers:
 
   packages/ozone:
     dependencies:
+      '@atproto-labs/fetch-node':
+        specifier: workspace:^
+        version: link:../internal/fetch-node
       '@atproto/api':
         specifier: workspace:^
         version: link:../api
