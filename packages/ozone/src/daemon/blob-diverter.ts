@@ -14,8 +14,8 @@ import type { Database } from '../db/index.js'
 import { createSafeFetch } from '../safe-fetch.js'
 import { retryHttp } from '../util.js'
 
-const BLOB_HEADERS_TIMEOUT = 10e3
-const BLOB_BODY_TIMEOUT = 30e3
+const BLOB_HEADERS_TIMEOUT = 30e3
+const BLOB_BODY_TIMEOUT = 120e3
 const safeBlobFetch = createSafeFetch()
 
 export class BlobDiverter {
