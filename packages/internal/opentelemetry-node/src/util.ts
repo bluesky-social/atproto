@@ -1,3 +1,20 @@
+import { Code } from '@connectrpc/connect'
+
+/**
+ * Renders a Connect status as the snake_case string the
+ * `rpc.response.status_code` attribute expects. Success is spelled out here
+ * because Connect's {@link Code} enum only enumerates errors.
+ *
+ * @note Both the caller and the callee of an RPC label their metrics with this,
+ * so that the two halves of a call can be plotted on the same dimensions.
+ */
+export const statusCodeToString = (code?: Code): string => {
+  if (code === undefined) return 'ok'
+  const name = Code[code]
+  if (name === undefined) return String(code)
+  return name.replace(/(?<=.)[A-Z]/g, (c) => `_${c}`).toLowerCase()
+}
+
 // @NOTE Hand-rolled (rather than using URL/split) because this runs on every
 // instrumented request. Should become obsolete once we have dedicated
 // XrpcClient/XrpcServer instrumentations.

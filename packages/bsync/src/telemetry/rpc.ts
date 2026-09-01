@@ -20,8 +20,9 @@ import {
   METRIC_RPC_SERVER_CALL_DURATION,
   RPC_SYSTEM_NAME_VALUE_CONNECTRPC,
 } from '@opentelemetry/semantic-conventions/incubating'
+import { RPC_CALL_DURATION_BUCKETS } from '@atproto-labs/opentelemetry-node/conventions'
+import { statusCodeToString } from '@atproto-labs/opentelemetry-node/util'
 import type { Service } from '../proto/bsync_connect.js'
-import { RPC_CALL_DURATION_BUCKETS, statusCodeToString } from './rpc-status.js'
 
 type ServiceMethods = Partial<ServiceImpl<typeof Service>>
 

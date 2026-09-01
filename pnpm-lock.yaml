@@ -396,9 +396,6 @@ importers:
       '@atproto/api':
         specifier: workspace:^
         version: link:../api
-      '@atproto/bsync':
-        specifier: workspace:^
-        version: link:../bsync
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
@@ -913,6 +910,9 @@ importers:
 
   packages/internal/opentelemetry-node:
     dependencies:
+      '@connectrpc/connect':
+        specifier: ^1.1.4
+        version: 1.3.0(@bufbuild/protobuf@1.6.0)
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1
