@@ -85,7 +85,6 @@ export class BlobDiverter {
         stream: verifier,
       }
     } catch (err) {
-      // Typically un-supported content encoding
       await blobResponse.body?.cancel()
       throw err
     }
