@@ -21,16 +21,19 @@ const safeBlobFetch = createSafeFetch()
 export class BlobDiverter {
   serviceConfig: BlobDivertConfig
   idResolver: IdResolver
+  private readonly fetch: typeof globalThis.fetch
 
   constructor(
     public db: Database,
     services: {
       idResolver: IdResolver
       serviceConfig: BlobDivertConfig
+      devMode?: boolean
     },
   ) {
     this.serviceConfig = services.serviceConfig
     this.idResolver = services.idResolver
+    this.fetch = services.devMode ? globalThis.fetch : safeBlobFetch
   }
 
   /**
@@ -46,7 +49,7 @@ export class BlobDiverter {
     )
     headersTimer.unref()
 
-    const blobResponse = await safeBlobFetch(blobUrl, {
+    const blobResponse = await this.fetch(blobUrl, {
       signal: headersController.signal,
     })
       .catch((err) => {

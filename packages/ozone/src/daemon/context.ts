@@ -59,9 +59,11 @@ export class DaemonContext {
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
     })
-    idResolver.did = new SafeDidResolver({
-      plcUrl: cfg.identity.plcUrl,
-    })
+    if (!cfg.service.devMode) {
+      idResolver.did = new SafeDidResolver({
+        plcUrl: cfg.identity.plcUrl,
+      })
+    }
 
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
     const createAuthHeaders = (aud: string, lxm: string) =>
