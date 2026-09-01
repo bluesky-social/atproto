@@ -24,7 +24,7 @@ export type CommitCtx = {
 }
 
 const cidSchema = z.unknown().transform((input, ctx): Cid => {
-  const cid = ifCid(input)
+  const cid = ifCid(input, { flavor: 'cbor' })
   if (cid) return cid
 
   ctx.addIssue({

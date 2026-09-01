@@ -57,11 +57,9 @@ async function* iterateRecordBlocks(
   const allCids = cidsForPaths.reduce((acc, cur) => {
     return acc.addSet(new CidSet(cur))
   }, new CidSet())
-  const found = await storage.getBlocks(allCids.toList())
-  if (found.missing.length > 0) {
-    throw new MissingBlocksError('writeRecordsToCarStream', found.missing)
+  const { missing, blocks } = await storage.getBlocks(allCids.toList())
+  if (missing.length > 0) {
+    throw new MissingBlocksError('writeRecordsToCarStream', missing)
   }
-  for (const block of found.blocks.entries()) {
-    yield block
-  }
+  yield* blocks
 }

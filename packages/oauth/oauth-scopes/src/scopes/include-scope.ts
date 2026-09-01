@@ -1,7 +1,10 @@
 import type { LexiconPermission, LexiconPermissionSet } from '../lib/lexicon.js'
 import { type Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'
-import { LexPermissionSyntax } from '../lib/syntax-lexicon.js'
+import {
+  LexPermissionSyntax,
+  LexSpacePermissionSyntax,
+} from '../lib/syntax-lexicon.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
 import {
   type ScopeStringFor,
@@ -77,11 +80,11 @@ export class IncludeScope {
     // their respective ScopeSyntax representations, handling special cases as
     // needed.
 
-    if (isLexPermissionForResource(permission, 'repo')) {
-      return new LexPermissionSyntax(permission)
+    if (isLexPermissionForResource(permission, 'space')) {
+      return new LexSpacePermissionSyntax(permission)
     }
 
-    if (isLexPermissionForResource(permission, 'space')) {
+    if (isLexPermissionForResource(permission, 'repo')) {
       return new LexPermissionSyntax(permission)
     }
 

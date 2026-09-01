@@ -9,8 +9,8 @@ import type { CarBlock } from './car-block.js'
 
 export type BlockMapEntry = [cid: Cid, bytes: Uint8Array]
 
-export class BlockMap implements Iterable<BlockMapEntry> {
-  private map: Map<string, CarBlock> = new Map()
+export class BlockMap implements Iterable<CarBlock> {
+  readonly #map: Map<string, CarBlock> = new Map()
 
   constructor(entries?: Iterable<Readonly<BlockMapEntry>>) {
     if (entries) {
@@ -28,16 +28,16 @@ export class BlockMap implements Iterable<BlockMapEntry> {
   }
 
   set(cid: Cid, bytes: Uint8Array): this {
-    this.map.set(cid.toString(), { cid, bytes })
+    this.#map.set(cid.toString(), { cid, bytes })
     return this
   }
 
   get(cid: Cid): Uint8Array | undefined {
-    return this.map.get(cid.toString())?.bytes
+    return this.#map.get(cid.toString())?.bytes
   }
 
   delete(cid: Cid): this {
-    this.map.delete(cid.toString())
+    this.#map.delete(cid.toString())
     return this
   }
 
@@ -45,7 +45,7 @@ export class BlockMap implements Iterable<BlockMapEntry> {
     const missing: Cid[] = []
     const blocks = new BlockMap()
     for (const cid of cids) {
-      const entry = this.map.get(cid.toString())
+      const entry = this.#map.get(cid.toString())
       if (entry) {
         blocks.set(cid, entry.bytes)
       } else {
@@ -56,37 +56,43 @@ export class BlockMap implements Iterable<BlockMapEntry> {
   }
 
   has(cid: Cid): boolean {
-    return this.map.has(cid.toString())
+    return this.#map.has(cid.toString())
   }
 
   clear(): void {
-    this.map.clear()
+    this.#map.clear()
   }
 
   forEach(cb: (bytes: Uint8Array, cid: Cid) => void): void {
-    for (const [cid, bytes] of this) cb(bytes, cid)
-  }
-
-  entries(): Iterable<CarBlock> {
-    return this.map.values()
+    for (const { cid, bytes } of this) cb(bytes, cid)
   }
 
   cids(): Cid[] {
     return Array.from(this.keys())
   }
 
-  addMany(toAdd: Iterable<Readonly<BlockMapEntry>>): this {
-    for (const [cid, bytes] of toAdd) this.set(cid, bytes)
+  addEntries(entries: Iterable<Readonly<BlockMapEntry>>): this {
+    for (const [cid, bytes] of entries) this.set(cid, bytes)
     return this
   }
 
-  /** @deprecated use {@link addMany} instead */
-  addMap(toAdd: Iterable<Readonly<BlockMapEntry>>): this {
-    return this.addMany(toAdd)
+  addBlocks(blocks: Iterable<Readonly<CarBlock>>): this {
+    for (const { cid, bytes } of blocks) this.set(cid, bytes)
+    return this
+  }
+
+  /** @deprecated use {@link addEntries} instead */
+  addMany(entries: Iterable<Readonly<BlockMapEntry>>): this {
+    return this.addEntries(entries)
+  }
+
+  /** @deprecated use {@link addBlocks} instead */
+  addMap(other: Iterable<Readonly<CarBlock>>): this {
+    return this.addBlocks(other)
   }
 
   get size(): number {
-    return this.map.size
+    return this.#map.size
   }
 
   get byteSize(): number {
@@ -99,7 +105,7 @@ export class BlockMap implements Iterable<BlockMapEntry> {
     if (this.size !== other.size) {
       return false
     }
-    for (const [cid, bytes] of this) {
+    for (const { cid, bytes } of this) {
       const otherBytes = other.get(cid)
       if (!otherBytes) return false
       if (!ui8Equals(bytes, otherBytes)) {
@@ -110,20 +116,28 @@ export class BlockMap implements Iterable<BlockMapEntry> {
   }
 
   *keys(): Generator<Cid, void, unknown> {
-    for (const { cid } of this.map.values()) {
-      yield cid
-    }
+    for (const { cid } of this) yield cid
   }
 
   *values(): Generator<Uint8Array, void, unknown> {
-    for (const entry of this.map.values()) {
-      yield entry.bytes
-    }
+    for (const { bytes } of this) yield bytes
   }
 
-  *[Symbol.iterator](): Generator<[Cid, Uint8Array], void, unknown> {
-    for (const { cid, bytes } of this.map.values()) {
-      yield [cid, bytes]
+  *entries(): Generator<BlockMapEntry, void, unknown> {
+    for (const { cid, bytes } of this) yield [cid, bytes]
+  }
+
+  [Symbol.iterator](): MapIterator<CarBlock> {
+    return this.#map.values()
+  }
+
+  static async from(
+    input: Iterable<Readonly<CarBlock>> | AsyncIterable<Readonly<CarBlock>>,
+  ): Promise<BlockMap> {
+    const blockMap = new BlockMap()
+    for await (const { cid, bytes } of input) {
+      blockMap.set(cid, bytes)
     }
+    return blockMap
   }
 }

@@ -3,7 +3,7 @@ import { SpacePermission } from '@atproto/oauth-scopes'
 import { type HandleString, isValidHandle } from '@atproto/syntax'
 import type { DidResolver } from '@atproto-labs/did-resolver'
 import { extractAtprotoData } from '@atproto-labs/did-resolver'
-import type { HandleResolver } from '@atproto-labs/handle-resolver'
+import type { HandleResolver } from '@atproto-labs/handle-resolver-node'
 
 /**
  * Resolves the space-authority DIDs named in `space:` scopes to handles, so the

@@ -1,8 +1,11 @@
 import type { Cid } from '@atproto/lex-data'
 import type { RecordPath } from './types.js'
 
-export const formatRecordPath = (collection: string, rkey: string): string => {
-  return collection + '/' + rkey
+export function formatRecordPath<
+  TCollection extends string,
+  TRkey extends string,
+>(collection: TCollection, rkey: TRkey): `${TCollection}/${TRkey}` {
+  return `${collection}/${rkey}` as const
 }
 
 export const parseRecordPath = (path: string): RecordPath => {

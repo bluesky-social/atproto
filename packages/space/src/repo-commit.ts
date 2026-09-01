@@ -37,7 +37,7 @@ export class RepoCommit {
   static fromIndex(index: RepoIndex): RepoCommit {
     const commit = new RepoCommit()
     for (const [path, cid] of Object.entries(index)) {
-      commit.setHash.add(`${path}/${cid.toString()}`)
+      if (cid) commit.setHash.add(`${path}/${cid.toString()}`)
     }
     return commit
   }

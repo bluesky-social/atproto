@@ -1,5 +1,6 @@
 import { encode as cborEncode } from '@atproto/lex-cbor'
-import { type Cid, ui8Concat } from '@atproto/lex-data'
+import { type Cid, ui8Concat, ui8ConcatAsync } from '@atproto/lex-data'
+import type { BlockMap } from './block-map.js'
 import type { CarBlock } from './car-block.js'
 import { encodeVarInt } from './lib/varint.js'
 
@@ -25,6 +26,21 @@ export function encodeCarHeader(
 
 export function encodeCarBlock(block: CarBlock): Uint8Array {
   return ui8Concat(writeCarStreamBlock(block))
+}
+
+export async function blocksToCarFile(
+  root: Cid | null,
+  blocks: BlockMap,
+): Promise<Uint8Array> {
+  return ui8ConcatAsync(writeCarStream(root, blocks))
+}
+
+/** @deprecated use {@link writeCarStream} instead */
+export async function* blocksToCarStream(
+  root: Cid | null,
+  blocks: BlockMap,
+): AsyncIterable<Uint8Array, void, unknown> {
+  yield* writeCarStream(root, blocks)
 }
 
 // Internal helpers
