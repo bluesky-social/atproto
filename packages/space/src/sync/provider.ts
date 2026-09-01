@@ -24,7 +24,7 @@ export async function* serializeRepo(
   records: AsyncIterable<SerializedRecord> | Iterable<SerializedRecord>,
   opts: { excludeValues?: boolean } = {},
 ): AsyncIterable<Uint8Array> {
-  const byPath = new Map<string, SerializedRecord>()
+  const byPath = new Map<`${string}/${string}`, SerializedRecord>()
   for await (const record of records) {
     byPath.set(formatRecordPath(record.collection, record.rkey), record)
   }

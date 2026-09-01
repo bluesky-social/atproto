@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { encode } from '@atproto/lex-cbor'
 import { type Cid, type LexValue, cidForCbor } from '@atproto/lex-data'
-import type { CarBlock } from './car-block.js'
-import { readCarStream } from './read.js'
-import { writeCarStream } from './write.js'
+import type { CarBlock } from './car-block.ts'
+import { CarReader } from './car-reader.ts'
+import { writeCarStream } from './write.ts'
 
-describe(readCarStream, () => {
+describe(CarReader, () => {
   it('reads from bytes as well as a stream', async () => {
     const block = await dataToCborBlock({ block: 0 })
     const chunks: Uint8Array[] = []
     for await (const chunk of writeCarStream(block.cid, [block])) {
       chunks.push(chunk)
     }
-    await using reader = await readCarStream(Buffer.concat(chunks))
+    await using reader = await CarReader.from(Buffer.concat(chunks))
     const { roots, blocks } = reader
     expect(roots[0].toString()).toBe(block.cid.toString())
     const seen: CarBlock[] = []
@@ -27,7 +27,7 @@ describe(readCarStream, () => {
       chunks.push(chunk)
     }
     const car = Buffer.concat(chunks)
-    await expect(readCarStream(car.subarray(0, 3))).rejects.toThrow()
+    await expect(CarReader.from(car.subarray(0, 3))).rejects.toThrow()
   })
 
   it('skips CID verification', async () => {
@@ -47,7 +47,7 @@ describe(readCarStream, () => {
         // no-op
       }
     }
-    const badCar = await readCarStream(
+    const badCar = await CarReader.from(
       writeCarStream(block0.cid, blockIter()),
       {
         skipCidVerification: true,

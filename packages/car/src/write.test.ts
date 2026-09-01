@@ -2,7 +2,7 @@ import { setTimeout } from 'node:timers/promises'
 import { describe, expect, it } from 'vitest'
 import { encode } from '@atproto/lex-cbor'
 import { type Cid, type LexValue, cidForCbor } from '@atproto/lex-data'
-import { readCarStream } from './read.js'
+import { CarReader } from './car-reader.js'
 import { writeCarStream } from './write.js'
 
 describe(writeCarStream, () => {
@@ -23,7 +23,7 @@ describe(writeCarStream, () => {
 
   it('writes no roots for null', async () => {
     const block = await dataToCborBlock({ block: 0 })
-    await using reader = await readCarStream(writeCarStream(null, [block]))
+    await using reader = await CarReader.from(writeCarStream(null, [block]))
     expect(reader.roots).toEqual([])
   })
 
@@ -60,7 +60,7 @@ describe(writeCarStream, () => {
         // no-op
       }
     }
-    await using badCar = await readCarStream(
+    await using badCar = await CarReader.from(
       writeCarStream(block0.cid, blockIter()),
     )
     await expect(flush(badCar.blocks)).rejects.toThrow(

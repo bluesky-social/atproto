@@ -758,9 +758,7 @@ export class MST {
       throw new MissingBlocksError('mst leaf', leafData.missing)
     }
 
-    for (const leaf of leafData.blocks.entries()) {
-      yield leaf
-    }
+    yield* leafData.blocks
   }
 
   async cidsForPath(key: string): Promise<Cid[]> {

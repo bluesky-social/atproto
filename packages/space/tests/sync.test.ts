@@ -125,7 +125,9 @@ describe('space sync', () => {
     const cids: Cid[] = []
     for await (const block of blocks) cids.push(block.cid)
     const recordCids = cids.slice(2).map((c) => c.toString())
-    const indexCids = Object.values(index).map((c) => c.toString())
+    const indexCids = Object.values(index)
+      .filter((c) => c != null)
+      .map((c) => c.toString())
     expect(recordCids).toEqual(indexCids)
   })
 
