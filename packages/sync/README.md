@@ -53,7 +53,7 @@ await firehose.destroy()
 
 For more robust indexing pipelines, it's recommended to use the supplied `MemoryRunner` class. This provides an in-memory partitioned queue. As events from a given repo must be processed in order, this allows events to be processed concurrently while still processing events from any given repo serially.
 
-The `MemoryRunner` also tracks an internal cursor based on the last finished consecutive work. This ensures that no events are dropped, although it does mean that some events may occassionally be replayed (if the websocket drops and reconnects) and therefore it's recommended that any indexing logic is idempotent. An optional `setCursor` parameter may be supplied to the `MemoryRunner` which can be used to persistently store the most recently processed cursor.
+The `MemoryRunner` also tracks an internal cursor based on the last finished consecutive work. This ensures that no events are dropped, although it does mean that some events may occasionally be replayed (if the websocket drops and reconnects) and therefore it's recommended that any indexing logic is idempotent. An optional `setCursor` parameter may be supplied to the `MemoryRunner` which can be used to persistently store the most recently processed cursor.
 
 ```ts
 import { Firehose, MemoryRunner } from '@atproto/sync'
