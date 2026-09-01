@@ -1,4 +1,4 @@
-import { Readable, Transform, type TransformCallback } from 'node:stream'
+import { Readable } from 'node:stream'
 import { finished, pipeline } from 'node:stream/promises'
 import { CID } from 'multiformats/cid'
 import * as undici from 'undici'
@@ -11,12 +11,15 @@ import type { IdResolver } from '@atproto/identity'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
 import type { BlobDivertConfig } from '../config/index.js'
 import type { Database } from '../db/index.js'
-import { createSafeFetch } from '../safe-fetch.js'
+import { BodyTimeoutTransform, createSafeFetch } from '../safe-fetch.js'
 import { retryHttp } from '../util.js'
 
 const BLOB_HEADERS_TIMEOUT = 30e3
 const BLOB_BODY_TIMEOUT = 120e3
-const safeBlobFetch = createSafeFetch()
+const BLOB_RESPONSE_MAX_SIZE = 100 * 1024 * 1024
+const safeBlobFetch = createSafeFetch({
+  responseMaxSize: BLOB_RESPONSE_MAX_SIZE,
+})
 
 export class BlobDiverter {
   serviceConfig: BlobDivertConfig
@@ -156,51 +159,6 @@ export class BlobDiverter {
         { cause: err },
       )
     })
-  }
-}
-
-class BodyTimeoutTransform extends Transform {
-  private timer: NodeJS.Timeout | undefined
-
-  constructor(private readonly timeout: number) {
-    super()
-    this.resetTimer()
-  }
-
-  override _transform(
-    chunk: unknown,
-    encoding: BufferEncoding,
-    callback: TransformCallback,
-  ) {
-    this.resetTimer()
-    callback(null, chunk)
-  }
-
-  override _flush(callback: TransformCallback) {
-    this.clearTimer()
-    callback()
-  }
-
-  override _destroy(
-    error: Error | null,
-    callback: (error?: Error | null) => void,
-  ) {
-    this.clearTimer()
-    callback(error)
-  }
-
-  private resetTimer() {
-    this.clearTimer()
-    this.timer = setTimeout(
-      () => this.destroy(new Error('Blob body timeout')),
-      this.timeout,
-    )
-    this.timer.unref()
-  }
-
-  private clearTimer() {
-    if (this.timer) clearTimeout(this.timer)
-    this.timer = undefined
   }
 }
 
