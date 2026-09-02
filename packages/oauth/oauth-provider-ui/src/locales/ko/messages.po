@@ -152,7 +152,6 @@ msgstr "이미 코드가 있나요?"
 msgid "An application on your device"
 msgstr "기기에 설치된 애플리케이션"
 
-#: src/components/error-view.tsx
 #: src/lib/notification-message.ts
 msgid "An error occurred"
 msgstr "오류가 발생했습니다"
@@ -161,6 +160,7 @@ msgstr "오류가 발생했습니다"
 msgid "An unexpected error occurred. Please try again."
 msgstr ""
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 msgid "An unknown error occurred"
 msgstr "알 수 없는 오류가 발생했습니다"
@@ -970,6 +970,7 @@ msgstr "비밀번호 재설정"
 msgid "Reset your password"
 msgstr "비밀번호 재설정"
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 #: src/routes/account/u/$accountId/apps.tsx
 #: src/routes/account/u/$accountId/devices.tsx
@@ -1050,6 +1051,10 @@ msgstr ""
 #: src/authorization-page.tsx
 msgid "Sign-in complete"
 msgstr ""
+
+#: src/components/error-view.tsx
+msgid "Something went wrong"
+msgstr "문제가 발생했습니다"
 
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"

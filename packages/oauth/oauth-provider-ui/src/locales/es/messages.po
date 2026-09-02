@@ -152,7 +152,6 @@ msgstr "¿Ya tienes un código?"
 msgid "An application on your device"
 msgstr "Una aplicación en tu dispositivo"
 
-#: src/components/error-view.tsx
 #: src/lib/notification-message.ts
 msgid "An error occurred"
 msgstr ""
@@ -161,6 +160,7 @@ msgstr ""
 msgid "An unexpected error occurred. Please try again."
 msgstr ""
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 msgid "An unknown error occurred"
 msgstr "Ocurrió un error desconocido"
@@ -970,6 +970,7 @@ msgstr "Restablecer contraseña"
 msgid "Reset your password"
 msgstr "Restablecer tu contraseña"
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 #: src/routes/account/u/$accountId/apps.tsx
 #: src/routes/account/u/$accountId/devices.tsx
@@ -1050,6 +1051,10 @@ msgstr ""
 #: src/authorization-page.tsx
 msgid "Sign-in complete"
 msgstr ""
+
+#: src/components/error-view.tsx
+msgid "Something went wrong"
+msgstr "Algo salió mal"
 
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"

@@ -152,7 +152,6 @@ msgstr "Vous avez déjà un code ?"
 msgid "An application on your device"
 msgstr "Une application sur votre appareil"
 
-#: src/components/error-view.tsx
 #: src/lib/notification-message.ts
 msgid "An error occurred"
 msgstr "Une erreur s'est produite"
@@ -161,6 +160,7 @@ msgstr "Une erreur s'est produite"
 msgid "An unexpected error occurred. Please try again."
 msgstr "Une erreur inattendue s'est produite. Veuillez réessayer."
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 msgid "An unknown error occurred"
 msgstr "Une erreur inconnue s'est produite"
@@ -979,6 +979,7 @@ msgstr "Réinitialiser le mot de passe"
 msgid "Reset your password"
 msgstr "Réinitialisez votre mot de passe"
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 #: src/routes/account/u/$accountId/apps.tsx
 #: src/routes/account/u/$accountId/devices.tsx
@@ -1059,6 +1060,10 @@ msgstr "Connexion annulée"
 #: src/authorization-page.tsx
 msgid "Sign-in complete"
 msgstr "Connexion terminée"
+
+#: src/components/error-view.tsx
+msgid "Something went wrong"
+msgstr "Une erreur s'est produite"
 
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"

@@ -152,7 +152,6 @@ msgstr "コードをすでに持っていますか？"
 msgid "An application on your device"
 msgstr "デバイス上のアプリ"
 
-#: src/components/error-view.tsx
 #: src/lib/notification-message.ts
 msgid "An error occurred"
 msgstr "エラーが発生しました"
@@ -161,6 +160,7 @@ msgstr "エラーが発生しました"
 msgid "An unexpected error occurred. Please try again."
 msgstr "予期しないエラーが発生しました。もう一度お試しください。"
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 msgid "An unknown error occurred"
 msgstr "何らかのエラーが発生しました"
@@ -978,6 +978,7 @@ msgstr "パスワードをリセット"
 msgid "Reset your password"
 msgstr "パスワードをリセット"
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 #: src/routes/account/u/$accountId/apps.tsx
 #: src/routes/account/u/$accountId/devices.tsx
@@ -1058,6 +1059,10 @@ msgstr "サインインキャンセル"
 #: src/authorization-page.tsx
 msgid "Sign-in complete"
 msgstr "サインイン完了"
+
+#: src/components/error-view.tsx
+msgid "Something went wrong"
+msgstr "問題が発生しました"
 
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"

@@ -157,7 +157,6 @@ msgstr "Aveți deja un cod?"
 msgid "An application on your device"
 msgstr "O aplicație pe dispozitivul dvs."
 
-#: src/components/error-view.tsx
 #: src/lib/notification-message.ts
 msgid "An error occurred"
 msgstr "A apărut o eroare"
@@ -166,6 +165,7 @@ msgstr "A apărut o eroare"
 msgid "An unexpected error occurred. Please try again."
 msgstr "A apărut o eroare neașteptată. Vă rugăm să încercați din nou."
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 msgid "An unknown error occurred"
 msgstr "A apărut o eroare necunoscută"
@@ -984,6 +984,7 @@ msgstr "Resetare parolă"
 msgid "Reset your password"
 msgstr "Resetați-vă parola"
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 #: src/routes/account/u/$accountId/apps.tsx
 #: src/routes/account/u/$accountId/devices.tsx
@@ -1064,6 +1065,10 @@ msgstr "Conectare anulată"
 #: src/authorization-page.tsx
 msgid "Sign-in complete"
 msgstr "Conectare finalizată"
+
+#: src/components/error-view.tsx
+msgid "Something went wrong"
+msgstr "Ceva nu a funcționat"
 
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
