@@ -1,5 +1,5 @@
 {
-  "extends": ["../../tsconfig/node.tsconfig.json"],
+  "extends": ["../../tsconfig/isomorphic.tsconfig.json"],
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
   "references": [

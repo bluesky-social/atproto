@@ -1,15 +1,15 @@
 import { readCarStream } from '@atproto/car'
-import type { check } from '@atproto/common'
 import { decode } from '@atproto/lex-cbor'
-import type { Cid, LexMap } from '@atproto/lex-data'
+import { type Cid, isPlainObject } from '@atproto/lex-data'
 import { RepoVerificationError } from '../error.js'
 import { RepoCommit, verifyCommit } from '../repo-commit.js'
 import {
   type CommitCtx,
+  type Def,
   type RepoIndex,
   type SignedCommit,
   type SpaceRecord,
-  def,
+  defs,
 } from '../types.js'
 import { parseRecordPath } from '../util.js'
 
@@ -75,7 +75,7 @@ export const verifyRepoCar = async (
         'expected the commit block to lead the car',
       )
     }
-    const commit = parseBlock(commitBlock.value.bytes, def.signedCommit)
+    const commit = parseBlock(commitBlock.value.bytes, defs.signedCommit)
 
     const ctx: CommitCtx = { ...params, rev: commit.rev }
     if (!(await verifyCommit(commit, ctx, params.didKey))) {
@@ -88,7 +88,7 @@ export const verifyRepoCar = async (
         'expected the index block to follow the commit',
       )
     }
-    const index = parseBlock(indexBlock.value.bytes, def.repoIndex)
+    const index = parseBlock(indexBlock.value.bytes, defs.repoIndex)
 
     const repo = RepoCommit.fromIndex(index)
     if (!repo.matches(commit)) {
@@ -149,7 +149,14 @@ async function* verifyRecords(
       )
     }
     const { collection, rkey } = parseRecordPath(path)
-    yield { collection, rkey, cid, record: decode(block.bytes) as LexMap }
+    const record = decode(block.bytes)
+
+    // Ensure that the encoded record is a plain object (LexMap)
+    if (!isPlainObject(record)) {
+      throw new RepoVerificationError(`invalid record at ${path}`)
+    }
+
+    yield { collection, rkey, cid, record }
   }
 
   const isIndexOnly = !expectValues && i === 0
@@ -160,12 +167,12 @@ async function* verifyRecords(
   }
 }
 
-const parseBlock = <T>(bytes: Uint8Array, def: check.Def<T>): T => {
-  const parsed = def.schema.safeParse(decode(bytes))
-  if (!parsed.success) {
-    throw new RepoVerificationError(
-      `invalid ${def.name}: ${parsed.error.message}`,
-    )
+function parseBlock<T>(bytes: Uint8Array, def: Def<T>): T {
+  try {
+    return def.schema.parse(decode(bytes))
+  } catch (err) {
+    // Could either be a cbor decode error or a zod parse error
+    const message = err instanceof Error ? err.message : String(err)
+    throw new RepoVerificationError(`invalid ${def.name}: ${message}`)
   }
-  return parsed.data
 }

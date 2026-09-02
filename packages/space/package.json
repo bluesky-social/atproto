@@ -22,7 +22,6 @@
   },
   "dependencies": {
     "@atproto/car": "workspace:^",
-    "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/jwk": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",

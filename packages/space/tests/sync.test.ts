@@ -204,7 +204,7 @@ describe('space sync', () => {
         cidForCbor(indexBytes),
       ])
 
-      const byPath = new Map(
+      const byPath = new Map<`${string}/${string}`, (typeof records)[number]>(
         records.map((r) => [`${r.collection}/${r.rkey}`, r]),
       )
       const parts: Uint8Array[] = [
@@ -212,14 +212,14 @@ describe('space sync', () => {
         encodeCarBlock({ cid: commitCid, bytes: commitBytes }),
         encodeCarBlock({ cid: indexCid, bytes: indexBytes }),
         ...Object.keys(index).flatMap((path, i) => {
-          const record = byPath.get(path)!
+          const record = byPath.get(path as `${string}/${string}`)!
           // Swap in bytes that don't hash to the advertised cid.
           const bytes = i === 0 ? encode({ text: 'tampered' }) : record.bytes
           return encodeCarBlock({ cid: record.cid, bytes })
         }),
       ]
 
-      const { records: stream } = await verifyRepoCar([Buffer.concat(parts)], {
+      const { records: stream } = await verifyRepoCar(parts, {
         space: SPACE,
         author: AUTHOR,
         didKey: keypair.did(),
@@ -242,9 +242,10 @@ describe('space sync', () => {
       for (const block of all.slice(0, -1)) kept.push(encodeCarBlock(block))
 
       const { roots } = await readCarStream([full])
-      const truncated = Buffer.concat([encodeCarHeader(roots), ...kept])
 
-      const { records: stream } = await verifyRepoCar([truncated], {
+      const parts = [encodeCarHeader(roots), ...kept]
+
+      const { records: stream } = await verifyRepoCar(parts, {
         space: SPACE,
         author: AUTHOR,
         didKey: keypair.did(),
