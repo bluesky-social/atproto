@@ -91,10 +91,7 @@ export function SignInView({
 
   if (sessions.length === 0) {
     return (
-      <AuthShell
-        title={title}
-        subtitle={<Trans>Enter your username and password</Trans>}
-      >
+      <AuthShell title={title}>
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}
@@ -109,10 +106,7 @@ export function SignInView({
 
   if (showSignInForm) {
     return (
-      <AuthShell
-        title={title}
-        subtitle={<Trans>Enter your username and password</Trans>}
-      >
+      <AuthShell title={title}>
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}

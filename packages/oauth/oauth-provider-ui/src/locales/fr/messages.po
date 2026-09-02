@@ -509,13 +509,10 @@ msgstr "Saisissez votre adresse email"
 msgid "Enter your new password"
 msgstr "Saisissez votre nouveau mot de passe"
 
+#: src/components/sign-in-form.tsx
 #: src/components/sign-in-view.tsx
 msgid "Enter your password"
 msgstr "Saisissez votre mot de passe"
-
-#: src/components/sign-in-view.tsx
-msgid "Enter your username and password"
-msgstr "Saisissez votre nom d'utilisateur et votre mot de passe"
 
 #: src/components/deactivate-account-dialog.tsx
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
@@ -669,10 +666,6 @@ msgstr "Hôte"
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "HTTP"
 msgstr "HTTP"
-
-#: src/components/sign-in-form.tsx
-msgid "Identifier"
-msgstr "Identifiant"
 
 #: src/components/utils/scope-description.tsx
 msgid "Identity"
@@ -1282,6 +1275,7 @@ msgstr "Utiliser un nom d'utilisateur par défaut"
 msgid "Use a domain name I own"
 msgstr "Utiliser un nom de domaine que je possède"
 
+#: src/components/sign-in-form.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
 msgstr "Nom d'utilisateur"
@@ -1501,5 +1495,6 @@ msgid "Your username has been updated."
 msgstr "Votre nom d'utilisateur a été mis à jour."
 
 #: src/components/forms/fields/handle-field.tsx
+#: src/components/sign-in-form.tsx
 msgid "yourname"
 msgstr "votrenom"

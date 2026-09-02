@@ -22,6 +22,13 @@ export type FieldBaseProps = {
   below?: ReactNode
 }
 
+/**
+ * Size for every text control in the auth forms: 44px tall for a comfortable
+ * tap target, and 16px text at every breakpoint — `Input` drops to 14px from
+ * `md` up, and 16px is also what stops iOS zooming into a focused field.
+ */
+export const inputSize = 'h-11 text-base md:text-base'
+
 export type TextFieldProps = Override<
   Omit<JSX.IntrinsicElements['input'], 'form'>,
   FieldBaseProps
@@ -67,7 +74,12 @@ export function TextField({
           {...props}
           name={name}
           render={<Input />}
-          className={cn(icon && 'pl-10', append && 'pr-10', className)}
+          className={cn(
+            inputSize,
+            icon && 'pl-10',
+            append && 'pr-10',
+            className,
+          )}
         />
         {append && (
           <span className="absolute right-1 flex items-center">{append}</span>

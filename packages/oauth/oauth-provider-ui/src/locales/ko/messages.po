@@ -509,13 +509,10 @@ msgstr "이메일 주소 입력"
 msgid "Enter your new password"
 msgstr "새 비밀번호 입력"
 
+#: src/components/sign-in-form.tsx
 #: src/components/sign-in-view.tsx
 msgid "Enter your password"
 msgstr "비밀번호 입력"
-
-#: src/components/sign-in-view.tsx
-msgid "Enter your username and password"
-msgstr "사용자 이름 및 비밀번호 입력"
 
 #: src/components/deactivate-account-dialog.tsx
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
@@ -660,10 +657,6 @@ msgstr ""
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "HTTP"
 msgstr ""
-
-#: src/components/sign-in-form.tsx
-msgid "Identifier"
-msgstr "아이디"
 
 #: src/components/utils/scope-description.tsx
 msgid "Identity"
@@ -1273,6 +1266,7 @@ msgstr ""
 msgid "Use a domain name I own"
 msgstr ""
 
+#: src/components/sign-in-form.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
 msgstr ""
@@ -1492,5 +1486,6 @@ msgid "Your username has been updated."
 msgstr ""
 
 #: src/components/forms/fields/handle-field.tsx
+#: src/components/sign-in-form.tsx
 msgid "yourname"
 msgstr ""

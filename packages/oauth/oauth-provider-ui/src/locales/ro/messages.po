@@ -514,13 +514,10 @@ msgstr "Introduceți-vă adresa de e-mail"
 msgid "Enter your new password"
 msgstr "Introduceți noua parolă"
 
+#: src/components/sign-in-form.tsx
 #: src/components/sign-in-view.tsx
 msgid "Enter your password"
 msgstr "Introduceți-vă parola"
-
-#: src/components/sign-in-view.tsx
-msgid "Enter your username and password"
-msgstr "Introduceți-vă numele de utilizator și parola"
 
 #: src/components/deactivate-account-dialog.tsx
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
@@ -674,10 +671,6 @@ msgstr "Gazdă"
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "HTTP"
 msgstr "HTTP"
-
-#: src/components/sign-in-form.tsx
-msgid "Identifier"
-msgstr "Identificator"
 
 #: src/components/utils/scope-description.tsx
 msgid "Identity"
@@ -1287,6 +1280,7 @@ msgstr "Utilizați un nume de utilizator implicit"
 msgid "Use a domain name I own"
 msgstr "Utilizați un nume de domeniu propriu"
 
+#: src/components/sign-in-form.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
 msgstr "Nume de utilizator"
@@ -1506,5 +1500,6 @@ msgid "Your username has been updated."
 msgstr "Numele de utilizator a fost actualizat."
 
 #: src/components/forms/fields/handle-field.tsx
+#: src/components/sign-in-form.tsx
 msgid "yourname"
 msgstr "numele dvs."

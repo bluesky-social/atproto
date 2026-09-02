@@ -509,13 +509,10 @@ msgstr "メールアドレスを入力してください"
 msgid "Enter your new password"
 msgstr "新しいパスワードを入力してください"
 
+#: src/components/sign-in-form.tsx
 #: src/components/sign-in-view.tsx
 msgid "Enter your password"
 msgstr "パスワードを入力"
-
-#: src/components/sign-in-view.tsx
-msgid "Enter your username and password"
-msgstr "ユーザー名とパスワードを入力してください"
 
 #: src/components/deactivate-account-dialog.tsx
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
@@ -669,10 +666,6 @@ msgstr "ホスト"
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "HTTP"
 msgstr "HTTP"
-
-#: src/components/sign-in-form.tsx
-msgid "Identifier"
-msgstr "識別子"
 
 #: src/components/utils/scope-description.tsx
 msgid "Identity"
@@ -1282,6 +1275,7 @@ msgstr "デフォルトのユーザー名を使用"
 msgid "Use a domain name I own"
 msgstr "自分が所有するドメイン名を使用"
 
+#: src/components/sign-in-form.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
 msgstr "ユーザー名"
@@ -1501,5 +1495,6 @@ msgid "Your username has been updated."
 msgstr "ユーザー名が更新されました。"
 
 #: src/components/forms/fields/handle-field.tsx
+#: src/components/sign-in-form.tsx
 msgid "yourname"
 msgstr ""

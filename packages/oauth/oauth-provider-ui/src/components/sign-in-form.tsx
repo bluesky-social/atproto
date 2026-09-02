@@ -131,7 +131,12 @@ export function SignInForm({
         name="username"
         defaultValue={usernameDefault}
         pattern={SIGN_IN_IDENTIFIER_PATTERN}
-        label={<Trans>Identifier</Trans>}
+        label={<Trans>Username</Trans>}
+        placeholder={
+          domains.length > 0
+            ? `${t`yourname`}${domains[0]}`
+            : t`Username or email address`
+        }
         icon={<AtSignIcon className="size-5" />}
         type="text"
         title={t`Username or email address`}
@@ -166,6 +171,7 @@ export function SignInForm({
       <PasswordField
         name="password"
         label={<Trans>Password</Trans>}
+        placeholder={t`Enter your password`}
         enterKeyHint={secondFactorError ? 'next' : 'done'}
         autoFocus={usernameReadonly}
         required

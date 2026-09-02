@@ -13,6 +13,7 @@ import {
   isValidDomain,
 } from '#/lib/handle.ts'
 import { cn } from '#/lib/utils.ts'
+import { inputSize } from './text-field.tsx'
 
 export type HandleFieldProps = {
   label?: ReactNode
@@ -136,7 +137,7 @@ export function HandleField({
           autoFocus={autoFocus}
           required={required}
           aria-describedby="handle-hint"
-          className="pl-10"
+          className={cn(inputSize, 'pl-10')}
           value={segment}
           onChange={(event) => setSegment(event.target.value.toLowerCase())}
         />
