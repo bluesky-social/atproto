@@ -55,6 +55,7 @@
     "dotenv": "^17.4.2",
     "express": "^4.17.2",
     "http-terminator": "^3.2.0",
+    "import-in-the-middle": "^3.0.1",
     "kysely": "^0.29.2",
     "lande": "^1.0.10",
     "multiformats": "^13.0.0",
