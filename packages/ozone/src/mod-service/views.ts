@@ -69,6 +69,15 @@ export type AuthHeaders = {
 }
 
 export class ModerationViews {
+  private accountInfosByDids = new Map<
+    string,
+    Promise<Map<string, com.atproto.admin.defs.AccountView>>
+  >()
+  private subjectStatusesBySubjects = new Map<
+    string,
+    Promise<Map<string, ModerationSubjectStatusRowWithHandle>>
+  >()
+
   constructor(
     private db: Database,
     private signingKey: Keypair,
@@ -83,12 +92,25 @@ export class ModerationViews {
     dids: DidString[],
   ): Promise<Map<string, com.atproto.admin.defs.AccountView>> {
     if (dids.length === 0) return new Map()
+    const uniqueDids = dedupeStrs(dids).sort()
+    const cacheKey = uniqueDids.join('\0')
+    const cached = this.accountInfosByDids.get(cacheKey)
+    if (cached) return cached
+
+    const request = this.fetchAccountInfosByDid(uniqueDids)
+    this.accountInfosByDids.set(cacheKey, request)
+    return request
+  }
+
+  private async fetchAccountInfosByDid(
+    dids: DidString[],
+  ): Promise<Map<string, com.atproto.admin.defs.AccountView>> {
     const auth = await this.appviewAuth(com.atproto.admin.getAccountInfos.$lxm)
     if (!auth) return new Map()
     try {
       const body = await this.appviewClient.call(
         com.atproto.admin.getAccountInfos,
-        { dids: dedupeStrs(dids) },
+        { dids },
         auth,
       )
       return body.infos.reduce((acc, cur) => {
@@ -482,34 +504,37 @@ export class ModerationViews {
         this.getExternalLabels(subjectUris, labelers),
       ])
 
-    await Promise.all(
-      Array.from(records.entries()).map(async ([uri, record]) => {
-        const selfLabels = getSelfLabels({
-          uri: record.uri,
-          cid: record.cid,
-          record: record.value,
-        })
-
-        const status = subjectStatusesResult.get(uri)
-        const blobs = await this.blob(findBlobRefs(record.value))
-
-        results.set(uri, {
-          ...record,
-          blobs,
-          moderation: {
-            ...record.moderation,
-            subjectStatus: status
-              ? this.formatSubjectStatus(status)
-              : undefined,
-          },
-          labels: [
-            ...(localLabels.get(uri) || []),
-            ...selfLabels,
-            ...(externalLabels.get(uri) || []),
-          ],
-        })
-      }),
+    const blobsByUri = await this.blobs(
+      new Map(
+        Array.from(records, ([uri, record]) => [
+          uri,
+          findBlobRefs(record.value),
+        ]),
+      ),
     )
+
+    for (const [uri, record] of records) {
+      const selfLabels = getSelfLabels({
+        uri: record.uri,
+        cid: record.cid,
+        record: record.value,
+      })
+
+      const status = subjectStatusesResult.get(uri)
+      results.set(uri, {
+        ...record,
+        blobs: blobsByUri.get(uri) ?? [],
+        moderation: {
+          ...record.moderation,
+          subjectStatus: status ? this.formatSubjectStatus(status) : undefined,
+        },
+        labels: [
+          ...(localLabels.get(uri) || []),
+          ...selfLabels,
+          ...(externalLabels.get(uri) || []),
+        ],
+      })
+    }
 
     return results
   }
@@ -596,41 +621,61 @@ export class ModerationViews {
   async blob(
     blobs: BlobRef[],
   ): Promise<tools.ozone.moderation.defs.BlobView[]> {
-    if (!blobs.length) return []
+    return (await this.blobs(new Map([['blobs', blobs]]))).get('blobs') ?? []
+  }
+
+  private async blobs(
+    blobsByKey: Map<string, BlobRef[]>,
+  ): Promise<Map<string, tools.ozone.moderation.defs.BlobView[]>> {
+    const allBlobs = Array.from(blobsByKey.values()).flat()
+    const cids = dedupeStrs(
+      allBlobs.map(getBlobCidString).filter((cid) => cid !== undefined),
+    )
+    if (!cids.length) return new Map()
+
     const { ref } = this.db.db.dynamic
     const modStatusResults = await moderationSubjectStatusQueryBuilder(
       this.db.db,
     )
-      .where(
-        sql<boolean>`${ref(
-          'moderation_subject_status.blobCids',
-        )} @> ${JSON.stringify(blobs.map(getBlobCidString))}`,
+      .where((eb) =>
+        eb.or(
+          cids.map(
+            (cid) =>
+              sql<boolean>`${ref(
+                'moderation_subject_status.blobCids',
+              )} @> ${JSON.stringify([cid])}`,
+          ),
+        ),
       )
-      .executeTakeFirst()
+      .execute()
 
-    const statusByCid = (modStatusResults?.blobCids || [])?.reduce(
-      (acc, cur) => Object.assign(acc, { [cur]: modStatusResults }),
-      {},
-    )
     // Intentionally missing details field, since we don't have any on appview.
     // We also don't know when the blob was created, so we use a canned creation time.
     const unknownTime = toDatetimeString(0)
-    return blobs.map((blob) => {
-      const cid = getBlobCidString(blob)
-      const subjectStatus = statusByCid[cid]
-        ? this.formatSubjectStatus(statusByCid[cid])
-        : undefined
+    return new Map(
+      Array.from(blobsByKey, ([key, blobs]) => {
+        const requestedCids = dedupeStrs(
+          blobs.map(getBlobCidString).filter((cid) => cid !== undefined),
+        )
+        const status = modStatusResults.find((row) =>
+          requestedCids.every((cid) => row.blobCids?.includes(cid)),
+        )
+        const subjectStatus = status
+          ? this.formatSubjectStatus({ ...status, handle: INVALID_HANDLE })
+          : undefined
 
-      return {
-        cid,
-        mimeType: getBlobMime(blob),
-        size: getBlobSize(blob) ?? 0,
-        createdAt: unknownTime,
-        moderation: {
-          subjectStatus,
-        },
-      }
-    })
+        return [
+          key,
+          blobs.map((blob): tools.ozone.moderation.defs.BlobView => ({
+            cid: getBlobCidString(blob),
+            mimeType: getBlobMime(blob),
+            size: getBlobSize(blob) ?? 0,
+            createdAt: unknownTime,
+            moderation: { subjectStatus },
+          })),
+        ]
+      }),
+    )
   }
 
   async labels(
@@ -683,7 +728,21 @@ export class ModerationViews {
     subjects: (UriString | AtUri)[],
   ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>> {
     if (!subjects.length) return new Map()
+    const cacheKey = subjects
+      .map((subject) => subject.toString())
+      .sort()
+      .join('\0')
+    const cached = this.subjectStatusesBySubjects.get(cacheKey)
+    if (cached) return cached
 
+    const request = this.fetchSubjectStatus(subjects)
+    this.subjectStatusesBySubjects.set(cacheKey, request)
+    return request
+  }
+
+  private async fetchSubjectStatus(
+    subjects: (UriString | AtUri)[],
+  ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>> {
     const parsedSubjects = subjects.map((subject) =>
       getStatusIdentifierFromSubject(subject),
     )
@@ -823,16 +882,13 @@ export class ModerationViews {
     const auth = await this.appviewAuth(app.bsky.actor.getProfiles.$lxm)
     if (!auth) return profiles
 
-    for (const actors of chunkArray(dids, 25)) {
-      const body = await this.appviewClient.call(
-        app.bsky.actor.getProfiles,
-        { actors },
-        auth,
-      )
-
-      body.profiles.forEach((profile) => {
-        profiles.set(profile.did, profile)
-      })
+    const bodies = await Promise.all(
+      chunkArray(dids, 25).map((actors) =>
+        this.appviewClient.call(app.bsky.actor.getProfiles, { actors }, auth),
+      ),
+    )
+    for (const body of bodies) {
+      for (const profile of body.profiles) profiles.set(profile.did, profile)
     }
 
     return profiles
