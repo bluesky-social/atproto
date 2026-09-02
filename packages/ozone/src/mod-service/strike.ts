@@ -1,4 +1,16 @@
+import { sql } from 'kysely'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
+
+export type SeverityLevelConfig = {
+  strikeCount?: number
+  firstOccurrenceStrikeCount?: number
+  strikeOnOccurrence?: number
+  needsTakedown?: boolean
+  expiresInDays?: number
+}
+
+export type StrikeThresholds = Record<string, number | null>
 
 export type StrikeServiceCreator = (db: Database) => StrikeService
 
@@ -9,6 +21,115 @@ export class StrikeService {
     return (db: Database) => {
       return new StrikeService(db)
     }
+  }
+
+  async lockSubject(subjectDid: string): Promise<void> {
+    await sql`select pg_advisory_xact_lock(hashtext(${subjectDid}))`.execute(
+      this.db.db,
+    )
+  }
+
+  async getActiveStrikeCount(subjectDid: string): Promise<number> {
+    const now = new Date().toISOString()
+    const result = await this.db.db
+      .selectFrom('moderation_event')
+      .where('subjectDid', '=', subjectDid)
+      .where('strikeCount', 'is not', null)
+      .where((eb) =>
+        eb.or([
+          eb('strikeExpiresAt', 'is', null),
+          eb('strikeExpiresAt', '>', now),
+        ]),
+      )
+      .select((eb) => eb.fn.sum<number>('strikeCount').as('count'))
+      .executeTakeFirst()
+    return Number(result?.count ?? 0)
+  }
+
+  async computeStrike(input: {
+    subjectDid: string
+    policies: string[]
+    severityLevel: string
+    config: SeverityLevelConfig
+    createdAt: Date
+  }): Promise<{
+    strikeCount: number
+    strikeExpiresAt?: string
+    needsTakedown: boolean
+  }> {
+    const { subjectDid, policies, severityLevel, config, createdAt } = input
+    if (
+      !config.needsTakedown &&
+      config.strikeCount === undefined &&
+      config.firstOccurrenceStrikeCount === undefined
+    ) {
+      throw new InvalidRequestError(
+        `Severity level has no strike configuration: ${severityLevel}`,
+      )
+    }
+
+    const prior = await this.db.db
+      .selectFrom('moderation_event')
+      .where('subjectDid', '=', subjectDid)
+      .where('action', 'in', [
+        'tools.ozone.moderation.defs#modEventTakedown',
+        'tools.ozone.moderation.defs#modEventEmail',
+      ])
+      .where(sql<boolean>`meta->>'strikeCascade' is distinct from 'true'`)
+      .where((eb) =>
+        eb.or(
+          policies.map((policy) =>
+            eb(
+              sql<boolean>`${policy} = any(string_to_array(meta->>'policies', ','))`,
+              '=',
+              true,
+            ),
+          ),
+        ),
+      )
+      .select((eb) => eb.fn.countAll<number>().as('count'))
+      .executeTakeFirstOrThrow()
+    const occurrence = Number(prior.count) + 1
+
+    let strikeCount = config.strikeCount ?? 0
+    if (occurrence === 1 && config.firstOccurrenceStrikeCount !== undefined) {
+      strikeCount = config.firstOccurrenceStrikeCount
+    } else if (
+      config.strikeOnOccurrence !== undefined &&
+      occurrence < config.strikeOnOccurrence
+    ) {
+      strikeCount = 0
+    }
+
+    const strikeExpiresAt =
+      config.expiresInDays !== undefined && config.expiresInDays > 0
+        ? new Date(
+            createdAt.getTime() + config.expiresInDays * 24 * 60 * 60 * 1000,
+          ).toISOString()
+        : undefined
+    return {
+      strikeCount: config.needsTakedown ? 0 : strikeCount,
+      strikeExpiresAt,
+      needsTakedown: !!config.needsTakedown,
+    }
+  }
+
+  getCrossedThreshold(input: {
+    previous: number
+    current: number
+    thresholds: StrikeThresholds
+  }): number | null | undefined {
+    const crossed = Object.entries(input.thresholds)
+      .map(([threshold, duration]) => ({
+        threshold: Number(threshold),
+        duration,
+      }))
+      .filter(
+        ({ threshold }) =>
+          input.previous < threshold && threshold <= input.current,
+      )
+      .sort((a, b) => b.threshold - a.threshold)[0]
+    return crossed?.duration
   }
 
   /**

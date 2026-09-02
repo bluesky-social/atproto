@@ -417,6 +417,10 @@
           "type": "string",
           "format": "datetime",
           "description": "When the strike should expire. If not provided, the strike never expires."
+        },
+        "applyStrikes": {
+          "type": "boolean",
+          "description": "If true, Ozone calculates strikes and any account-level cascade from its instance settings."
         }
       }
     },
