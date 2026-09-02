@@ -835,6 +835,10 @@ msgstr "Aucun résultat"
 msgid "Okay"
 msgstr "OK"
 
+#: src/components/sign-in-form.tsx
+msgid "Only enter your password on sites you trust."
+msgstr ""
+
 #: src/routes/__root.tsx
 msgid "Page not found"
 msgstr "Page introuvable"
@@ -1319,10 +1323,6 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr "Vérifier"
 
-#: src/components/sign-in-form.tsx
-msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
-msgstr "Vérifiez l'adresse du site avant de saisir votre mot de passe. N'entrez votre mot de passe que sur des sites que vous reconnaissez et en lesquels vous avez confiance."
-
 #: src/components/sign-up-view.tsx
 msgid "Verify you are human"
 msgstr "Vérifiez que vous êtes humain"
@@ -1338,10 +1338,6 @@ msgstr "veut accéder à votre compte <0/>"
 #: src/components/consent-form.tsx
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "veut vous identifier de manière unique via votre compte <0/>"
-
-#: src/components/sign-in-form.tsx
-msgid "Warning"
-msgstr "Avertissement"
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"

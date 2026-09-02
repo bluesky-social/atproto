@@ -840,6 +840,10 @@ msgstr "Nicio potrivire"
 msgid "Okay"
 msgstr "Ok"
 
+#: src/components/sign-in-form.tsx
+msgid "Only enter your password on sites you trust."
+msgstr ""
+
 #: src/routes/__root.tsx
 msgid "Page not found"
 msgstr ""
@@ -1324,10 +1328,6 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr "Verificați acum"
 
-#: src/components/sign-in-form.tsx
-msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
-msgstr "Verificați adresa website-ului înainte de a introduce parola. Conectați-vă numai pe site-urile pe care le recunoașteți și în care aveți încredere."
-
 #: src/components/sign-up-view.tsx
 msgid "Verify you are human"
 msgstr "Verificați că sunteți om"
@@ -1343,10 +1343,6 @@ msgstr "dorește să vă acceseze contul <0/>"
 #: src/components/consent-form.tsx
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "dorește să vă identifice în mod unic prin contul dvs. <0/>"
-
-#: src/components/sign-in-form.tsx
-msgid "Warning"
-msgstr "Avertisment"
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"

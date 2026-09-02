@@ -826,6 +826,10 @@ msgstr ""
 msgid "Okay"
 msgstr "Aceptar"
 
+#: src/components/sign-in-form.tsx
+msgid "Only enter your password on sites you trust."
+msgstr ""
+
 #: src/routes/__root.tsx
 msgid "Page not found"
 msgstr ""
@@ -1310,10 +1314,6 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr ""
 
-#: src/components/sign-in-form.tsx
-msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
-msgstr ""
-
 #: src/components/sign-up-view.tsx
 msgid "Verify you are human"
 msgstr "Verifica que eres humano"
@@ -1329,10 +1329,6 @@ msgstr "quiere acceder a tu cuenta <0/>"
 #: src/components/consent-form.tsx
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "quiere identificarte de forma única a través de tu cuenta <0/>"
-
-#: src/components/sign-in-form.tsx
-msgid "Warning"
-msgstr "Advertencia"
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"

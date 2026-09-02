@@ -826,6 +826,10 @@ msgstr ""
 msgid "Okay"
 msgstr "확인"
 
+#: src/components/sign-in-form.tsx
+msgid "Only enter your password on sites you trust."
+msgstr ""
+
 #: src/routes/__root.tsx
 msgid "Page not found"
 msgstr ""
@@ -1310,10 +1314,6 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr ""
 
-#: src/components/sign-in-form.tsx
-msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
-msgstr "비밀번호를 입력하기 전에 웹사이트 주소를 확인하세요. 알고 있고 신뢰하는 사이트에서만 로그인하세요."
-
 #: src/components/sign-up-view.tsx
 msgid "Verify you are human"
 msgstr "사람이 맞는지 확인"
@@ -1329,10 +1329,6 @@ msgstr "<0/> 계정에 대한 접근 권한을 요청합니다"
 #: src/components/consent-form.tsx
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "<0/> 계정을 통해 나를 식별하고자 합니다"
-
-#: src/components/sign-in-form.tsx
-msgid "Warning"
-msgstr "경고"
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"

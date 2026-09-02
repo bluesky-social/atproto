@@ -835,6 +835,10 @@ msgstr "No matches"
 msgid "Okay"
 msgstr "Okay"
 
+#: src/components/sign-in-form.tsx
+msgid "Only enter your password on sites you trust."
+msgstr "Only enter your password on sites you trust."
+
 #: src/routes/__root.tsx
 msgid "Page not found"
 msgstr "Page not found"
@@ -1319,10 +1323,6 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr "Verify now"
 
-#: src/components/sign-in-form.tsx
-msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
-msgstr "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
-
 #: src/components/sign-up-view.tsx
 msgid "Verify you are human"
 msgstr "Verify you are human"
@@ -1338,10 +1338,6 @@ msgstr "wants to access your <0/> account"
 #: src/components/consent-form.tsx
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "wants to uniquely identify you through your <0/> account"
-
-#: src/components/sign-in-form.tsx
-msgid "Warning"
-msgstr "Warning"
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"

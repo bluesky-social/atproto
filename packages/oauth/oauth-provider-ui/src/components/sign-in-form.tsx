@@ -1,7 +1,6 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { AtSignIcon } from 'lucide-react'
+import { AtSignIcon, ShieldCheckIcon } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
-import { Notice } from '#/components/feedback/notice.tsx'
 import { CheckboxField } from '#/components/forms/fields/checkbox-field.tsx'
 import { PasswordField } from '#/components/forms/fields/password-field.tsx'
 import { TextField } from '#/components/forms/fields/text-field.tsx'
@@ -196,12 +195,15 @@ export function SignInForm({
         }
       />
 
-      <Notice role="note" title={<Trans>Warning</Trans>}>
-        <Trans>
-          Verify the website address before entering your password. Only sign in
-          on sites you recognize and trust.
-        </Trans>
-      </Notice>
+      {/* @NOTE A quiet line rather than a boxed alert: the phishing reminder
+        should be read once, not compete with the fields. */}
+      <p
+        role="note"
+        className="text-muted-foreground flex items-start gap-2 text-sm leading-snug"
+      >
+        <ShieldCheckIcon aria-hidden className="mt-px size-4 shrink-0" />
+        <Trans>Only enter your password on sites you trust.</Trans>
+      </p>
 
       {!disableRemember && (
         <CheckboxField

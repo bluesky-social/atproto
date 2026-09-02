@@ -835,6 +835,10 @@ msgstr "一致なし"
 msgid "Okay"
 msgstr "OK"
 
+#: src/components/sign-in-form.tsx
+msgid "Only enter your password on sites you trust."
+msgstr ""
+
 #: src/routes/__root.tsx
 msgid "Page not found"
 msgstr ""
@@ -1319,10 +1323,6 @@ msgctxt "verify email"
 msgid "Verify now"
 msgstr "確認する"
 
-#: src/components/sign-in-form.tsx
-msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
-msgstr "パスワードを入力する前に、ウェブサイトのアドレスを確認してください。信頼できるサイトでのみサインインしてください。"
-
 #: src/components/sign-up-view.tsx
 msgid "Verify you are human"
 msgstr "あなたが人間であることを確認"
@@ -1338,10 +1338,6 @@ msgstr "あなたの <0/> アカウントにアクセスしようとしていま
 #: src/components/consent-form.tsx
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "あなたの <0/> アカウントを通じてあなたを一意に識別しようとしています"
-
-#: src/components/sign-in-form.tsx
-msgid "Warning"
-msgstr "警告"
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"
