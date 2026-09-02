@@ -2,7 +2,7 @@ import * as plc from '@did-plc/lib'
 import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import type { DidString } from '@atproto/lex'
+import { Client, type DidString } from '@atproto/lex'
 import * as ozone from '@atproto/ozone'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER } from './const.js'
@@ -104,10 +104,17 @@ export class TestOzone {
     return this.server.ctx
   }
 
+  /** @deprecated use {@link getClient} instead */
   getAgent(): AtpAgent {
     const agent = new AtpAgent({ service: this.url })
     agent.configureLabelers([EXAMPLE_LABELER])
     return agent
+  }
+
+  getClient(): Client {
+    return new Client(this.url, {
+      labelers: [EXAMPLE_LABELER],
+    })
   }
 
   getModClient() {
