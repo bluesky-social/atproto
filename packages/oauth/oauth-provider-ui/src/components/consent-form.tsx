@@ -154,7 +154,7 @@ export function ConsentForm({
                 (scopes) to access your account:
               </Trans>
             </p>
-            <pre className="bg-muted mt-2 overflow-x-auto whitespace-pre-wrap rounded border p-2 text-sm">
+            <pre className="bg-muted mt-2 overflow-x-auto whitespace-pre-wrap break-all rounded border p-2 text-sm">
               {scope}
             </pre>
           </>
