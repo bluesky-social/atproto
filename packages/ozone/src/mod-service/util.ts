@@ -1,4 +1,3 @@
-import * as net from 'node:net'
 import { sql } from 'kysely'
 import { cborEncode, noUndefinedVals } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
