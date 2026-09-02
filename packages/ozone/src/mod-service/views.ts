@@ -661,7 +661,7 @@ export class ModerationViews {
           requestedCids.every((cid) => row.blobCids?.includes(cid)),
         )
         const subjectStatus = status
-          ? this.formatSubjectStatus({ ...status, handle: INVALID_HANDLE })
+          ? this.formatSubjectStatus({ ...status, handle: null })
           : undefined
 
         return [
