@@ -1,5 +1,25 @@
 # @atproto/oauth-provider
 
+## 0.22.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-resolver@0.2.10
+
+## 0.22.4
+
+### Patch Changes
+
+- Updated dependencies [[`6af9f14`](https://github.com/bluesky-social/atproto/commit/6af9f141d18c1f41a04828af8256567d5f17a35e)]:
+  - @atproto/syntax@0.7.5
+  - @atproto/lex-resolver@0.2.9
+  - @atproto/oauth-provider-api@0.8.1
+  - @atproto/oauth-provider-ui@0.10.1
+  - @atproto/oauth-scopes@0.5.10
+  - @atproto/common@0.8.1
+  - @atproto/lex-document@0.1.10
+
 ## 0.22.3
 
 ### Patch Changes

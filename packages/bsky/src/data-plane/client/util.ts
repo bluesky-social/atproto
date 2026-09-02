@@ -1,68 +1,7 @@
-import { performance } from 'node:perf_hooks'
 import { Code, ConnectError, type Interceptor } from '@connectrpc/connect'
-import {
-  type Attributes,
-  SpanKind,
-  SpanStatusCode,
-  type TextMapSetter,
-  ValueType,
-  context,
-  metrics,
-  propagation,
-  trace,
-} from '@opentelemetry/api'
 import * as ui8 from 'uint8arrays'
 import { getDidKeyFromMultibase } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-
-const tracer = trace.getTracer('@atproto/bsky')
-const meter = metrics.getMeter('@atproto/bsky')
-const rpcClientDuration = meter.createHistogram('rpc.client.duration', {
-  description: 'Measures the duration of outbound RPC requests',
-  unit: 'ms',
-  valueType: ValueType.DOUBLE,
-})
-
-const headersSetter: TextMapSetter<Headers> = {
-  set(carrier, key, value) {
-    carrier.set(key, value)
-  },
-}
-
-export const otelInterceptor: Interceptor = (next) => async (req) => {
-  const attributes: Attributes = {
-    'rpc.system': 'grpc',
-    'rpc.service': req.service.typeName,
-    'rpc.method': req.method.name,
-  }
-  const spanName = `${req.service.typeName}/${req.method.name}`
-  const start = performance.now()
-
-  return tracer.startActiveSpan(
-    spanName,
-    { kind: SpanKind.CLIENT, attributes },
-    async (span) => {
-      propagation.inject(context.active(), req.header, headersSetter)
-      let statusCode = 0
-      try {
-        return await next(req)
-      } catch (err) {
-        statusCode = err instanceof ConnectError ? err.code : Code.Unknown
-        span.setStatus({ code: SpanStatusCode.ERROR })
-        span.recordException(err instanceof Error ? err : String(err))
-        throw err
-      } finally {
-        const completedAttributes = {
-          ...attributes,
-          'rpc.grpc.status_code': statusCode,
-        }
-        span.setAttributes(completedAttributes)
-        rpcClientDuration.record(performance.now() - start, completedAttributes)
-        span.end()
-      }
-    },
-  )
-}
 
 export const callerInterceptor =
   (caller: string): Interceptor =>

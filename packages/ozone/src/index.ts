@@ -5,7 +5,9 @@ import compression from 'compression'
 import cors from 'cors'
 import express from 'express'
 import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
+import * as prometheus from 'prom-client'
 import { DAY, SECOND } from '@atproto/common'
+import { extractUrlNsid } from '@atproto/xrpc-server'
 import API, { health, wellKnown } from './api/index.js'
 import type { OzoneConfig, OzoneSecrets } from './config/index.js'
 import { AppContext, type AppContextOptions } from './context.js'
@@ -37,6 +39,10 @@ export class OzoneService {
     cfg: OzoneConfig,
     secrets: OzoneSecrets,
     overrides?: Partial<AppContextOptions>,
+    // Optional Prometheus registry. Its presence is the collection gate: when
+    // omitted (dev-env, tests, self-hosted distros that don't opt in), no
+    // metrics are collected and no per-request timing overhead is incurred.
+    register?: prometheus.Registry,
   ): Promise<OzoneService> {
     const app = express()
     app.set('trust proxy', true)
@@ -56,6 +62,45 @@ export class OzoneService {
     })
 
     server = API(server, ctx)
+
+    if (register) {
+      // Collect standard metrics on the nodejs runtime (GC, event loop, etc).
+      prometheus.collectDefaultMetrics({ prefix: 'ozone_', register })
+
+      // Per-XRPC-method request timing. Labeled by nsid (e.g.
+      // tools.ozone.moderation.emitEvent) so every method is covered without
+      // per-endpoint code. This middleware runs above the xrpc router, so
+      // req.route is not yet populated; we derive the nsid from the URL instead.
+      const xrpcRequestDuration = new prometheus.Histogram({
+        name: 'ozone_xrpc_request_duration_seconds',
+        help: 'XRPC request duration in seconds, by method',
+        labelNames: ['nsid', 'method', 'code'],
+        registers: [register],
+      })
+
+      app.use((req, res, next) => {
+        const nsid = extractUrlNsid(req.originalUrl)
+        // Only record xrpc methods; non-xrpc paths (health, robots, frontend)
+        // are skipped to keep the metric's label cardinality bounded.
+        if (!nsid) return next()
+        // extractUrlNsid only validates path *shape*, not that the method
+        // exists. A caller can hit /xrpc/<well-formed-but-bogus-nsid> (served a
+        // 501), so labeling by the raw nsid lets external traffic mint unbounded
+        // series and grow prom-client's memory without limit. Bucket anything
+        // that isn't a registered query/procedure under a single `unknown` label.
+        const def = server.xrpc.lex.getDef(nsid)
+        const isMethod = def?.type === 'query' || def?.type === 'procedure'
+        const end = xrpcRequestDuration.startTimer()
+        res.on('finish', () => {
+          end({
+            nsid: isMethod ? nsid : 'unknown',
+            method: req.method,
+            code: res.statusCode,
+          })
+        })
+        next()
+      })
+    }
 
     app.use(health.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
@@ -147,6 +192,80 @@ export class OzoneService {
         }
       }
     }
+  }
+}
+
+export type MetricsServiceOpts = {
+  // Optional readiness probe. Should reject/throw when the service cannot serve
+  // traffic (e.g. database unreachable). When omitted, /readyz behaves like
+  // /livez (process-alive only).
+  readinessCheck?: () => Promise<void>
+}
+
+// A separate, pull-based Prometheus metrics server. Kept on its own port and
+// HTTP server so private metrics and ops probes are never exposed on the public
+// ozone server. Only started by an entrypoint when metrics are explicitly
+// opted in. Also serves Kubernetes-style liveness (/livez) and readiness
+// (/readyz) probes.
+export class MetricsService {
+  private terminator?: HttpTerminator
+
+  constructor(public app: express.Application) {}
+
+  static create(
+    register: prometheus.Registry,
+    opts: MetricsServiceOpts = {},
+  ): MetricsService {
+    const app = express()
+
+    app.get('/metrics', async (_req, res) => {
+      // Express 4 does not catch rejections from async handlers, so an
+      // unguarded throw here (e.g. a custom collector failing) would surface as
+      // an unhandledRejection and crash the process. Metrics are a passive
+      // side-channel and must never take down the service.
+      try {
+        const metrics = await register.metrics()
+        res.set('Content-Type', register.contentType)
+        res.end(metrics)
+      } catch {
+        res.status(500).end()
+      }
+    })
+
+    // Liveness: is the process up and the event loop responsive? No external
+    // dependencies, so a transient dependency outage never causes a pod restart.
+    app.get('/livez', (_req, res) => {
+      res.send({ status: 'ok' })
+    })
+
+    // Readiness: can the service handle traffic right now? Runs the optional
+    // readiness check (e.g. a db ping); a failure pulls the pod from the load
+    // balancer without restarting it.
+    app.get('/readyz', async (_req, res) => {
+      if (!opts.readinessCheck) {
+        return res.send({ status: 'ok' })
+      }
+      try {
+        await opts.readinessCheck()
+        res.send({ status: 'ok' })
+      } catch {
+        res.status(503).send({ status: 'not ready' })
+      }
+    })
+
+    return new MetricsService(app)
+  }
+
+  async start(port: number): Promise<http.Server> {
+    const server = this.app.listen(port)
+    server.keepAliveTimeout = 90000
+    this.terminator = createHttpTerminator({ server })
+    await events.once(server, 'listening')
+    return server
+  }
+
+  async destroy(): Promise<void> {
+    await this.terminator?.terminate()
   }
 }
 

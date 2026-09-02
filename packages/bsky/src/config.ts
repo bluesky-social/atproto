@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { noUndefinedVals } from '@atproto/common'
+import { SECOND, noUndefinedVals } from '@atproto/common'
 import { type DidString, isDidString } from '@atproto/lex'
 import { subLogger as log } from './logger.js'
 
@@ -70,6 +70,9 @@ export interface ServerConfigValues {
   topicsApiKey?: string
   irisUrl?: string
   irisFeedUris?: Set<string> // `iris:feed:enable` gate to serve via iris instead of seeemore
+  irisStagingUrl?: string
+  irisStagingFeedUris?: Set<string> // serve via iris staging instead of the registered feed generator
+  feedGenSkeletonTimeout: number
   cdnUrl?: string
   videoPlaylistUrlPattern?: string
   videoThumbnailUrlPattern?: string
@@ -105,6 +108,7 @@ export interface ServerConfigValues {
   // http proxy agent
   disableSsrfProtection?: boolean
   proxyAllowHTTP2?: boolean
+  proxyConnectTimeout?: number
   proxyHeadersTimeout?: number
   proxyBodyTimeout?: number
   proxyMaxResponseSize?: number
@@ -175,6 +179,13 @@ export class ServerConfig {
     const topicsApiKey = process.env.BSKY_TOPICS_API_KEY
     const irisUrl = process.env.BSKY_IRIS_URL || undefined
     const irisFeedUris = new Set(envList(process.env.BSKY_IRIS_FEED_URIS))
+    const irisStagingUrl = process.env.BSKY_IRIS_STAGING_URL || undefined
+    const irisStagingFeedUris = new Set(
+      envList(process.env.BSKY_IRIS_STAGING_FEED_URIS),
+    )
+    const feedGenSkeletonTimeout = process.env.BSKY_FEED_GEN_SKELETON_TIMEOUT
+      ? parseInt(process.env.BSKY_FEED_GEN_SKELETON_TIMEOUT || '', 10)
+      : 5 * SECOND
     const dataplaneUrls =
       overrides?.dataplaneUrls ?? envList(process.env.BSKY_DATAPLANE_URLS)
     const dataplaneUrlsEtcdKeyPrefix =
@@ -272,6 +283,8 @@ export class ServerConfig {
       : debugMode
 
     const proxyAllowHTTP2 = process.env.BSKY_PROXY_ALLOW_HTTP2 === 'true'
+    const proxyConnectTimeout =
+      parseInt(process.env.BSKY_PROXY_CONNECT_TIMEOUT || '', 10) || undefined
     const proxyHeadersTimeout =
       parseInt(process.env.BSKY_PROXY_HEADERS_TIMEOUT || '', 10) || undefined
     const proxyBodyTimeout =
@@ -369,6 +382,9 @@ export class ServerConfig {
       topicsApiKey,
       irisUrl,
       irisFeedUris,
+      irisStagingUrl,
+      irisStagingFeedUris,
+      feedGenSkeletonTimeout,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
@@ -409,6 +425,7 @@ export class ServerConfig {
       notificationsDelayMs,
       disableSsrfProtection,
       proxyAllowHTTP2,
+      proxyConnectTimeout,
       proxyHeadersTimeout,
       proxyBodyTimeout,
       proxyMaxResponseSize,
@@ -563,6 +580,18 @@ export class ServerConfig {
     return this.cfg.irisFeedUris
   }
 
+  get irisStagingUrl() {
+    return this.cfg.irisStagingUrl
+  }
+
+  get irisStagingFeedUris() {
+    return this.cfg.irisStagingFeedUris
+  }
+
+  get feedGenSkeletonTimeout() {
+    return this.cfg.feedGenSkeletonTimeout
+  }
+
   get cdnUrl() {
     return this.cfg.cdnUrl
   }
@@ -673,6 +702,10 @@ export class ServerConfig {
 
   get proxyAllowHTTP2(): boolean {
     return this.cfg.proxyAllowHTTP2 ?? false
+  }
+
+  get proxyConnectTimeout(): number | undefined {
+    return this.cfg.proxyConnectTimeout
   }
 
   get proxyHeadersTimeout(): number {

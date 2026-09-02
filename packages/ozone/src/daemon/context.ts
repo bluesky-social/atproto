@@ -1,3 +1,4 @@
+import type * as prometheus from 'prom-client'
 import { AtpAgent } from '@atproto/api'
 import { allFulfilled } from '@atproto/common'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
@@ -10,6 +11,7 @@ import { ModerationService } from '../mod-service/index.js'
 import { StrikeService } from '../mod-service/strike.js'
 import { QueueService } from '../queue/service.js'
 import { ReportStatsService } from '../report/stats.js'
+import { SafeDidResolver } from '../safe-fetch.js'
 import { ScheduledActionService } from '../scheduled-action/service.js'
 import { SettingService } from '../setting/service.js'
 import { TeamService } from '../team/index.js'
@@ -47,6 +49,9 @@ export class DaemonContext {
     cfg: OzoneConfig,
     secrets: OzoneSecrets,
     overrides?: Partial<DaemonContextOptions>,
+    // Optional Prometheus registry, threaded to instrumented daemon jobs. When
+    // omitted (metrics not opted in), those jobs collect nothing.
+    register?: prometheus.Registry,
   ): Promise<DaemonContext> {
     const db = new Database({
       url: cfg.db.postgresUrl,
@@ -58,6 +63,11 @@ export class DaemonContext {
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
     })
+    if (!cfg.service.devMode) {
+      idResolver.did = new SafeDidResolver({
+        plcUrl: cfg.identity.plcUrl,
+      })
+    }
 
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
     const createAuthHeaders = (aud: string, lxm: string) =>
@@ -119,7 +129,7 @@ export class DaemonContext {
     const strikeExpiryProcessor = new StrikeExpiryProcessor(db, strikeService)
 
     const queueService = QueueService.creator()
-    const queueRouter = new QueueRouter(db, queueService)
+    const queueRouter = new QueueRouter(db, queueService, register)
 
     const reportStatsService = ReportStatsService.creator()
     const statsComputer = new StatsComputer(

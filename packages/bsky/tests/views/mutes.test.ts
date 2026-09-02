@@ -233,9 +233,9 @@ describe('mute views', () => {
       )
       expect(mutes.mutes.some((mute) => mute.did === dan)).toBe(false)
 
-      // pages are filled server-side: dan's scoped mute is the most recent
-      // and occupies the head of the first underlying page, but the page
-      // still comes back with at least `limit` full mutes.
+      // dan's scoped mute is the most recent and occupies the head of the
+      // first underlying page. Filtering it out leaves one mute, which is
+      // already half of the requested limit, so the page is served short.
       const { data: page } = await agent.api.app.bsky.graph.getMutes(
         { limit: 2 },
         {
@@ -245,11 +245,11 @@ describe('mute views', () => {
           ),
         },
       )
-      expect(page.mutes).toHaveLength(2)
+      expect(page.mutes).toHaveLength(1)
       expect(page.mutes.some((mute) => mute.did === dan)).toBe(false)
       expect(page.cursor).toBeDefined()
 
-      const { data: terminalPage } = await agent.api.app.bsky.graph.getMutes(
+      const { data: fullPage } = await agent.api.app.bsky.graph.getMutes(
         { limit: 8 },
         {
           headers: await network.serviceHeaders(
@@ -258,8 +258,20 @@ describe('mute views', () => {
           ),
         },
       )
-      expect(terminalPage.mutes).toHaveLength(8)
-      expect(terminalPage.mutes.some((mute) => mute.did === dan)).toBe(false)
+      expect(fullPage.mutes).toHaveLength(7)
+      expect(fullPage.mutes.some((mute) => mute.did === dan)).toBe(false)
+      expect(fullPage.cursor).toBeDefined()
+
+      const { data: terminalPage } = await agent.api.app.bsky.graph.getMutes(
+        { limit: 8, cursor: fullPage.cursor },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyGraphGetMutes,
+          ),
+        },
+      )
+      expect(terminalPage.mutes).toHaveLength(1)
       expect(terminalPage.cursor).toBeUndefined()
 
       const timeline = await agent.api.app.bsky.feed.getTimeline(

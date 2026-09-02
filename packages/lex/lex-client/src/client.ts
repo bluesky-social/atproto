@@ -44,6 +44,7 @@ import {
   getDefaultRecordKey,
   getLiteralRecordKey,
   mergeHeaders,
+  throwIfAborted,
 } from './util.js'
 import {
   type WriteOperation,
@@ -1206,7 +1207,7 @@ export class Client {
     const schema = getMain(ns)
 
     do {
-      options.signal?.throwIfAborted()
+      throwIfAborted(options.signal)
 
       const { body } = await this.listRecords(schema.$type, {
         ...options,
