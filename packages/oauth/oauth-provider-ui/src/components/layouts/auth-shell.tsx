@@ -123,7 +123,10 @@ export function AuthShell({
                 ))}
               </div>
             ) : null}
-            <LocaleSelector />
+            {/* @NOTE Same height as the action buttons; the trigger sizes
+              itself through a data attribute, so the override carries the
+              same variant. */}
+            <LocaleSelector className="px-3 text-[15px] data-[size=sm]:h-10" />
           </CardFooter>
         </Card>
       </div>
