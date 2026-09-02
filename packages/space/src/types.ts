@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import type { check } from '@atproto/common'
 import { type Cid, type LexMap, ifCid } from '@atproto/lex-data'
 
 export type SpaceRecord = LexMap
@@ -23,7 +22,22 @@ export type CommitCtx = {
   rev: string
 }
 
-const cidSchema = z.unknown().transform((input, ctx): Cid => {
+export type IndexKey<
+  TCollection extends string = string,
+  TRkey extends string = string,
+> = `${TCollection}/${TRkey}`
+
+export const isIndexKey = (value: unknown): value is IndexKey => {
+  if (typeof value !== 'string') return false
+  const slash = value.indexOf('/')
+  return (
+    slash > 0 &&
+    slash < value.length - 1 &&
+    value.indexOf('/', slash + 1) === -1
+  )
+}
+
+export const cidSchema = z.unknown().transform((input, ctx): Cid => {
   const cid = ifCid(input, { flavor: 'cbor' })
   if (cid) return cid
 
@@ -34,41 +48,33 @@ const cidSchema = z.unknown().transform((input, ctx): Cid => {
   return z.NEVER
 })
 
-const bytes = z.instanceof(Uint8Array<ArrayBufferLike>)
+const bytesSchema = z.instanceof(Uint8Array<ArrayBufferLike>)
 
-const signedCommit = z.object({
+const signedCommitSchema = z.object({
   ver: z.literal(COMMIT_VERSION),
-  hash: bytes,
-  ikm: bytes,
-  sig: bytes,
-  mac: bytes,
+  hash: bytesSchema,
+  ikm: bytesSchema,
+  sig: bytesSchema,
+  mac: bytesSchema,
   rev: z.string(),
 })
-export type SignedCommit = z.infer<typeof signedCommit>
+export type SignedCommit = z.infer<typeof signedCommitSchema>
 
-// `{collection}/{rkey}` to the record's cid.
-const repoIndexKey = z.custom<`${string}/${string}`>((value) => {
-  if (typeof value !== 'string') return false
-  // Optimization: search from the end because rkey are typically shorter than
-  // collection names.
-  const slash = value.lastIndexOf('/')
-  return (
-    slash > 0 &&
-    slash < value.length - 1 &&
-    value.lastIndexOf('/', slash - 1) === -1
-  )
-})
-
-const repoIndex = z.record(repoIndexKey, cidSchema)
+const repoIndex = z.record(z.custom<IndexKey>(isIndexKey), cidSchema)
 export type RepoIndex = z.infer<typeof repoIndex>
 
-export const def = {
+export type Def<T> = {
+  name: string
+  schema: { parse: (data: unknown) => T }
+}
+
+export const defs = {
   signedCommit: {
     name: 'signed commit',
-    schema: signedCommit,
-  } as check.Def<SignedCommit>,
+    schema: signedCommitSchema,
+  },
   repoIndex: {
     name: 'repo index',
     schema: repoIndex,
-  } as check.Def<RepoIndex>,
-}
+  },
+} satisfies Record<string, Def<unknown>>

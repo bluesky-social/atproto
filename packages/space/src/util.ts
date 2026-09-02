@@ -1,10 +1,10 @@
 import type { Cid } from '@atproto/lex-data'
-import type { RecordPath } from './types.js'
+import type { IndexKey, RecordPath } from './types.js'
 
 export function formatRecordPath<
   TCollection extends string,
   TRkey extends string,
->(collection: TCollection, rkey: TRkey): `${TCollection}/${TRkey}` {
+>(collection: TCollection, rkey: TRkey): IndexKey<TCollection, TRkey> {
   return `${collection}/${rkey}` as const
 }
 
