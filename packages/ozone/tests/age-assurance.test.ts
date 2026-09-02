@@ -4,6 +4,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { currentDatetimeString } from '@atproto/lex'
 import { forSnapshot } from './_util.js'
 
 describe('age assurance events', () => {
@@ -40,7 +41,7 @@ describe('age assurance events', () => {
       event: {
         $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
         status: 'pending',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         attemptId: 'attempt-123',
         initIp: '123.456.789.012',
         initUa: 'Mozilla/5.0',
@@ -52,7 +53,7 @@ describe('age assurance events', () => {
       event: {
         $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
         status: 'pending',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         attemptId: 'attempt-345',
         initIp: '234.567.890.123',
         initUa: 'Mozilla/5.0',
@@ -64,7 +65,7 @@ describe('age assurance events', () => {
       event: {
         $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
         status: 'assured',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         attemptId: 'attempt-345',
         initIp: '234.567.890.123',
         initUa: 'Mozilla/5.0',
@@ -143,7 +144,7 @@ describe('age assurance events', () => {
       event: {
         $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
         status: 'pending',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         attemptId: 'attempt-dan-1',
       },
     })
@@ -244,7 +245,7 @@ describe('age assurance events', () => {
       event: {
         $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
         status: 'pending',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         attemptId: 'attempt-carol-purge-1',
       },
     })
@@ -291,7 +292,7 @@ describe('age assurance events', () => {
       event: {
         $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
         status: 'pending',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         attemptId: 'attempt-carol-1',
       },
     })
@@ -324,7 +325,7 @@ describe('age assurance events', () => {
       event: {
         $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
         status: 'pending',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         attemptId: 'attempt-carol-2',
       },
     })
@@ -357,7 +358,7 @@ describe('age assurance events', () => {
       event: {
         $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
         status: 'assured',
-        createdAt: new Date().toISOString(),
+        createdAt: currentDatetimeString(),
         attemptId: 'attempt-carol-3',
       },
     })

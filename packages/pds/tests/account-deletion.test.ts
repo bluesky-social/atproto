@@ -7,6 +7,7 @@ import {
   type SeedClient,
   TestNetworkNoAppView,
 } from '@atproto/dev-env'
+import { getBlobCid } from '@atproto/lex-data'
 import { BlobNotFoundError } from '@atproto/repo'
 import type {
   Account,
@@ -182,8 +183,8 @@ describe('account deletion', () => {
 
   it('deletes relevant blobs', async () => {
     const imgs = sc.posts[carol.did][0].images
-    const first = imgs[0].image.ref
-    const second = imgs[1].image.ref
+    const first = getBlobCid(imgs[0].image)
+    const second = getBlobCid(imgs[1].image)
     const blobstore = network.pds.ctx.blobstore(carol.did)
     const attempt1 = blobstore.getBytes(first)
     await expect(attempt1).rejects.toThrow(BlobNotFoundError)
@@ -194,7 +195,7 @@ describe('account deletion', () => {
   it('maintains blobs from other actors', async () => {
     const bobBlobstore = network.pds.ctx.blobstore(sc.dids.bob)
     const [img] = sc.replies[sc.dids.bob][0].images
-    const attempt = bobBlobstore.getBytes(img.image.ref)
+    const attempt = bobBlobstore.getBytes(getBlobCid(img.image))
     await expect(attempt).resolves.toBeDefined()
   })
 

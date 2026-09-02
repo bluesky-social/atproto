@@ -713,9 +713,12 @@ importers:
       '@atproto/lex':
         specifier: workspace:^
         version: link:../lex/lex
-      '@atproto/lexicon':
+      '@atproto/lex-document':
         specifier: workspace:^
-        version: link:../lexicon
+        version: link:../lex/lex-document
+      '@atproto/lex-password-session':
+        specifier: workspace:^
+        version: link:../lex/lex-password-session
       '@atproto/ozone':
         specifier: workspace:^
         version: link:../ozone

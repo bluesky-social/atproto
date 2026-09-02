@@ -7,6 +7,11 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import {
+  currentDatetimeString,
+  getBlobCidString,
+  toDatetimeString,
+} from '@atproto/lex'
 import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs.js'
 import {
   REASONAPPEAL,
@@ -490,8 +495,8 @@ describe('moderation-events', () => {
 
       const events = await modClient.queryEvents({
         createdBy: network.ozone.moderatorAccnt.did,
-        createdAfter: startDate.toISOString(),
-        createdBefore: endDate.toISOString(),
+        createdAfter: toDatetimeString(startDate),
+        createdBefore: toDatetimeString(endDate),
         limit: 25,
         sortDirection: 'desc',
       })
@@ -624,7 +629,7 @@ describe('moderation-events', () => {
         event: {
           $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
           status: 'pending',
-          createdAt: new Date().toISOString(),
+          createdAt: currentDatetimeString(),
           attemptId: 'attempt-1',
         },
         subject: {
@@ -638,7 +643,7 @@ describe('moderation-events', () => {
           event: {
             $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
             status: 'pending',
-            createdAt: new Date().toISOString(),
+            createdAt: currentDatetimeString(),
             attemptId: 'attempt-1',
           },
           subject: {
@@ -666,7 +671,7 @@ describe('moderation-events', () => {
           uri: post.ref.uriStr,
           cid: post.ref.cidStr,
         },
-        subjectBlobCids: [post.images[0].image.ref.toString()],
+        subjectBlobCids: [getBlobCidString(post.images[0].image)],
       })
       const result = await modClient.queryEvents({
         subject: post.ref.uriStr,
@@ -677,7 +682,7 @@ describe('moderation-events', () => {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventTakedown',
         },
-        subjectBlobCids: [post.images[0].image.ref.toString()],
+        subjectBlobCids: [getBlobCidString(post.images[0].image)],
       })
     })
 
@@ -701,7 +706,7 @@ describe('moderation-events', () => {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
         },
-        subjectBlobCids: [post.images[0].image.ref.toString()],
+        subjectBlobCids: [getBlobCidString(post.images[0].image)],
       })
     })
   })

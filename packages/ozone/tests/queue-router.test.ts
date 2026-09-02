@@ -5,6 +5,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import type { AtUriString, DidString } from '@atproto/lex'
 import { ids } from '../src/lexicon/lexicons.js'
 
 const REASON_SPAM = 'com.atproto.moderation.defs#reasonSpam'
@@ -105,7 +106,7 @@ describe('queue-router', () => {
   // Returns the most recent report for a subject using the queryReports API.
   // Pass a DID for account subjects or an at:// URI for record subjects.
   const queryLatestReportForSubject = async (
-    subjectOrUri: string,
+    subjectOrUri: DidString | AtUriString,
     status: 'open' | 'closed' | 'escalated' | 'queued' | 'assigned' = 'queued',
   ) => {
     const { reports } = await modClient.queryReports({

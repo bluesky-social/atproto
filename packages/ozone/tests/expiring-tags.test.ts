@@ -4,6 +4,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import type { DidString } from '@atproto/lex'
 import { EventReverser } from '../src/daemon/event-reverser.js'
 import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
@@ -42,7 +43,7 @@ describe('expiring tags', () => {
       },
     })
 
-  const getSubjectTags = async (did: string): Promise<string[]> => {
+  const getSubjectTags = async (did: DidString): Promise<string[]> => {
     const result = await modClient.queryStatuses({ subject: did })
     return result.subjectStatuses[0]?.tags ?? []
   }

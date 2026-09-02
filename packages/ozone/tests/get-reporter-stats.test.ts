@@ -8,6 +8,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import type { DidString } from '@atproto/lex'
 
 describe('reporter-stats', () => {
   let network: TestNetwork
@@ -32,7 +33,7 @@ describe('reporter-stats', () => {
   })
 
   const getReporterStats = async (
-    did: string,
+    did: DidString,
   ): Promise<ToolsOzoneModerationDefs.ReporterStats | undefined> => {
     const { stats } = await modClient.getReporterStats([did])
     return stats[0]

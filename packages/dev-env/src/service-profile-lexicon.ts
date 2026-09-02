@@ -1,8 +1,10 @@
-import type { LexiconDoc } from '@atproto/lexicon'
+import type { LexiconDocument } from '@atproto/lex-document'
+import { PasswordSession } from '@atproto/lex-password-session'
+import { app, com } from './lexicons/index.js'
 import type { TestPds } from './pds.js'
-import { ServiceProfile } from './service-profile.js'
+import { ServiceProfile, type ServiceUserDetails } from './service-profile.js'
 
-const LEXICONS: readonly LexiconDoc[] = [
+const LEXICONS: readonly LexiconDocument[] = [
   {
     lexicon: 1,
     id: 'com.atproto.moderation.basePermissions',
@@ -71,29 +73,27 @@ const LEXICONS: readonly LexiconDoc[] = [
 export class LexiconAuthorityProfile extends ServiceProfile {
   public static async create(
     pds: TestPds,
-    userDetails = {
+    userDetails: ServiceUserDetails = {
       email: 'lex-authority@test.com',
       handle: 'lex-authority.test',
       password: 'hunter2',
     },
   ) {
-    const agent = pds.getAgent()
-    await agent.createAccount(userDetails)
+    const session = await PasswordSession.createAccount(userDetails, {
+      service: pds.url,
+    })
 
-    return new LexiconAuthorityProfile(pds, agent, userDetails)
+    return new LexiconAuthorityProfile(pds, session, userDetails)
   }
 
   async createRecords() {
-    await this.agent.app.bsky.actor.profile.create(
-      { repo: this.did },
-      {
-        displayName: 'Lexicon Authority',
-        description: `the repo containing all the lexicons that can be resolved in dev`,
-      },
-    )
+    await this.client.create(app.bsky.actor.profile, {
+      displayName: 'Lexicon Authority',
+      description: `the repo containing all the lexicons that can be resolved in dev`,
+    })
 
     for (const doc of LEXICONS) {
-      await this.agent.com.atproto.repo.createRecord({
+      await this.client.call(com.atproto.repo.createRecord, {
         repo: this.did,
         collection: 'com.atproto.lexicon.schema',
         rkey: doc.id,

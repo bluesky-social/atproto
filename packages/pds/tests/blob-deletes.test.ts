@@ -1,5 +1,6 @@
-import type { AtpAgent, BlobRef } from '@atproto/api'
+import type { AtpAgent } from '@atproto/api'
 import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { type BlobRef, getBlobCid, getBlobCidString } from '@atproto/lex-data'
 import type { DidString } from '@atproto/syntax'
 import type { AppContext } from '../src/index.js'
 
@@ -55,7 +56,7 @@ describe('blob deletes', () => {
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(0)
 
-    const hasImg = await ctx.blobstore(alice).hasStored(img.image.ref)
+    const hasImg = await ctx.blobstore(alice).hasStored(getBlobCid(img.image))
     expect(hasImg).toBeFalsy()
   })
 
@@ -76,12 +77,12 @@ describe('blob deletes', () => {
 
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(1)
-    expect(dbBlobs[0].toString()).toEqual(img2.image.ref.toString())
+    expect(dbBlobs[0].toString()).toEqual(getBlobCidString(img2.image))
 
-    const hasImg = await ctx.blobstore(alice).hasStored(img.image.ref)
+    const hasImg = await ctx.blobstore(alice).hasStored(getBlobCid(img.image))
     expect(hasImg).toBeFalsy()
 
-    const hasImg2 = await ctx.blobstore(alice).hasStored(img2.image.ref)
+    const hasImg2 = await ctx.blobstore(alice).hasStored(getBlobCid(img2.image))
     expect(hasImg2).toBeTruthy()
 
     // reset
@@ -106,10 +107,10 @@ describe('blob deletes', () => {
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(2)
 
-    const hasImg = await ctx.blobstore(alice).hasStored(img.image.ref)
+    const hasImg = await ctx.blobstore(alice).hasStored(getBlobCid(img.image))
     expect(hasImg).toBeTruthy()
 
-    const hasImg2 = await ctx.blobstore(alice).hasStored(img2.image.ref)
+    const hasImg2 = await ctx.blobstore(alice).hasStored(getBlobCid(img2.image))
     expect(hasImg2).toBeTruthy()
     await updateProfile(sc, alice)
   })
@@ -157,7 +158,7 @@ describe('blob deletes', () => {
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(1)
 
-    const hasImg = await ctx.blobstore(alice).hasStored(img.image.ref)
+    const hasImg = await ctx.blobstore(alice).hasStored(getBlobCid(img.image))
     expect(hasImg).toBeTruthy()
   })
 
@@ -177,7 +178,9 @@ describe('blob deletes', () => {
     await sc.deletePost(alice, postAlice.ref.uri)
     await network.processAll()
 
-    const hasImg = await ctx.blobstore(alice).hasStored(imgAlice.image.ref)
+    const hasImg = await ctx
+      .blobstore(alice)
+      .hasStored(getBlobCid(imgAlice.image))
     expect(hasImg).toBeFalsy()
   })
 })
@@ -188,16 +191,5 @@ async function updateProfile(
   avatar?: BlobRef,
   banner?: BlobRef,
 ) {
-  return await sc.agent.api.com.atproto.repo.putRecord(
-    {
-      repo: did,
-      collection: 'app.bsky.actor.profile',
-      rkey: 'self',
-      record: {
-        avatar: avatar,
-        banner: banner,
-      },
-    },
-    { encoding: 'application/json', headers: sc.getHeaders(did) },
-  )
+  return await sc.updateProfile(did, { avatar, banner })
 }
