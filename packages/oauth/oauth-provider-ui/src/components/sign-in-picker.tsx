@@ -12,7 +12,7 @@ import {
 } from '#/components/ui/item.tsx'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
-import { AccountCard } from './utils/account-card.tsx'
+import { AccountCard, accountRowClassName } from './utils/account-card.tsx'
 import { stringifyHandle } from './utils/handle.tsx'
 
 export type SignInPickerProps = Override<
@@ -48,10 +48,6 @@ export function SignInPicker({
 
   return (
     <div {...props} className={cn('flex flex-col gap-4', className)}>
-      <p className="text-muted-foreground text-sm font-medium">
-        <Trans>Sign in as...</Trans>
-      </p>
-
       {sessions.map((session) => (
         <AccountCard
           key={session.account.did}
@@ -66,10 +62,10 @@ export function SignInPicker({
         />
       ))}
 
-      {/* @NOTE Built on the same `Item` primitive as `AccountCard` above. The
-        two rows sit side by side and previously repeated the same border,
-        padding, hover and focus utilities by hand, which had already drifted
-        apart between them. */}
+      {/* @NOTE Built on the same `Item` primitive as `AccountCard` above and
+        sharing its row utilities, so the two rows keep the same height,
+        padding and surface. The icon sits in a disc the size of the avatar so
+        the text column lines up with the account rows. */}
       {onOther && (
         <Item
           key="other"
@@ -77,36 +73,48 @@ export function SignInPicker({
           render={<button type="button" />}
           onClick={onOther}
           aria-label={t`Sign in to an account that is not listed`}
-          className="hover:bg-accent hover:text-accent-foreground w-full text-left"
+          className={accountRowClassName}
         >
-          <ItemMedia variant="icon">
-            <AtSignIcon aria-hidden className="size-5" />
+          <ItemMedia className="bg-muted text-muted-foreground size-12 rounded-full">
+            <AtSignIcon aria-hidden className="size-6" />
           </ItemMedia>
-          <ItemContent>
-            <ItemTitle>
-              <span className="text-muted-foreground truncate">
+          <ItemContent className="min-w-0">
+            <ItemTitle className="w-full text-lg leading-tight">
+              <span className="text-muted-foreground block min-w-0 truncate font-medium">
                 <Trans>Another account</Trans>
               </span>
             </ItemTitle>
           </ItemContent>
           <ItemActions>
-            <ChevronRightIcon aria-hidden className="size-4 shrink-0" />
+            <ChevronRightIcon
+              aria-hidden
+              className="text-muted-foreground size-5 shrink-0"
+            />
           </ItemActions>
         </Item>
       )}
 
       {children}
 
-      <div key="actions" className="flex flex-col gap-2">
-        {onBack && (
-          <Button variant="secondary" className="w-full" onClick={onBack}>
-            {backLabel || <Trans>Back</Trans>}
-          </Button>
+      <div key="actions" className="flex flex-col gap-3 pt-2">
+        {onSignUp && (
+          <>
+            <p className="text-muted-foreground text-center text-base">
+              <Trans>Need an account?</Trans>
+            </p>
+            <Button className="h-10 w-full text-base" onClick={onSignUp}>
+              <Trans>Sign up</Trans>
+            </Button>
+          </>
         )}
 
-        {onSignUp && (
-          <Button className="w-full" onClick={onSignUp}>
-            <Trans>Sign up</Trans>
+        {onBack && (
+          <Button
+            variant="secondary"
+            className="h-10 w-full text-base"
+            onClick={onBack}
+          >
+            {backLabel || <Trans>Back</Trans>}
           </Button>
         )}
       </div>

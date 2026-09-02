@@ -40,6 +40,10 @@ export function SignInView({
   const [showSignInForm, setShowSignInForm] = useState(sessions.length === 0)
 
   const title = msg({ message: 'Sign in', context: 'AuthenticationPage' })
+  const pickerTitle = msg({
+    message: 'Continue with an existing account',
+    context: 'AuthenticationPage',
+  })
 
   useEffect(() => {
     // Make sure the "back" action shows the account picker instead of the
@@ -121,10 +125,7 @@ export function SignInView({
   }
 
   return (
-    <AuthShell
-      title={title}
-      subtitle={<Trans>Select from an existing account</Trans>}
-    >
+    <AuthShell title={pickerTitle} documentTitle={title}>
       <SignInPicker
         sessions={sessions}
         onSession={setSession}

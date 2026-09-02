@@ -356,6 +356,11 @@ msgstr "Ett e-postmeddelande för bekräftelse har skickats"
 msgid "Continue"
 msgstr "Fortsätt"
 
+#: src/components/sign-in-view.tsx
+msgctxt "AuthenticationPage"
+msgid "Continue with an existing account"
+msgstr ""
+
 #: src/cookie-error-page.tsx
 msgid "Cookie Error"
 msgstr "Cookie-fel"
@@ -811,6 +816,10 @@ msgstr "Namn"
 msgid "Navigation"
 msgstr "Navigering"
 
+#: src/components/sign-in-picker.tsx
+msgid "Need an account?"
+msgstr ""
+
 #: src/components/update-email-dialog.tsx
 #: src/components/update-email-form.tsx
 msgid "New email address"
@@ -1006,10 +1015,6 @@ msgstr "Välj ett annat konto"
 msgid "Select domain"
 msgstr "Välj domän"
 
-#: src/components/sign-in-view.tsx
-msgid "Select from an existing account"
-msgstr "Välj ett befintligt konto"
-
 #: src/components/delete-account-dialog.tsx
 msgid "Send email"
 msgstr "Skicka e-postmeddelande"
@@ -1033,10 +1038,6 @@ msgstr "Logga in"
 #: src/components/sign-in-picker.tsx
 msgid "Sign in as {0}"
 msgstr "Logga in som {0}"
-
-#: src/components/sign-in-picker.tsx
-msgid "Sign in as..."
-msgstr "Logga in som…"
 
 #: src/components/sign-in-picker.tsx
 msgid "Sign in to an account that is not listed"

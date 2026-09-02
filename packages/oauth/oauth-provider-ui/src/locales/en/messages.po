@@ -356,6 +356,11 @@ msgstr "Confirmation email sent"
 msgid "Continue"
 msgstr "Continue"
 
+#: src/components/sign-in-view.tsx
+msgctxt "AuthenticationPage"
+msgid "Continue with an existing account"
+msgstr "Continue with an existing account"
+
 #: src/cookie-error-page.tsx
 msgid "Cookie Error"
 msgstr "Cookie Error"
@@ -811,6 +816,10 @@ msgstr "Name"
 msgid "Navigation"
 msgstr "Navigation"
 
+#: src/components/sign-in-picker.tsx
+msgid "Need an account?"
+msgstr "Need an account?"
+
 #: src/components/update-email-dialog.tsx
 #: src/components/update-email-form.tsx
 msgid "New email address"
@@ -1006,10 +1015,6 @@ msgstr "Select another account"
 msgid "Select domain"
 msgstr "Select domain"
 
-#: src/components/sign-in-view.tsx
-msgid "Select from an existing account"
-msgstr "Select from an existing account"
-
 #: src/components/delete-account-dialog.tsx
 msgid "Send email"
 msgstr "Send email"
@@ -1033,10 +1038,6 @@ msgstr "Sign in"
 #: src/components/sign-in-picker.tsx
 msgid "Sign in as {0}"
 msgstr "Sign in as {0}"
-
-#: src/components/sign-in-picker.tsx
-msgid "Sign in as..."
-msgstr "Sign in as..."
 
 #: src/components/sign-in-picker.tsx
 msgid "Sign in to an account that is not listed"

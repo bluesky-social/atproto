@@ -1,7 +1,7 @@
 import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
-import type { JSX, ReactNode } from 'react'
+import type { CSSProperties, JSX, ReactNode } from 'react'
 import {
   Card,
   CardContent,
@@ -28,6 +28,13 @@ export type AuthShellProps = Override<
     documentTitle?: string | MessageDescriptor
   }
 >
+
+/**
+ * The card's inner spacing. `Card` sets `--card-spacing` to 1rem through an
+ * arbitrary-property utility; a competing utility would race it in the
+ * stylesheet, so the wider auth spacing is set inline instead.
+ */
+const cardSpacing = { '--card-spacing': '1.5rem' } as CSSProperties
 
 /**
  * The authorize-flow surface.
@@ -67,29 +74,35 @@ export function AuthShell({
         {...props}
         className={cn('flex w-full max-w-sm flex-col', className)}
       >
-        <Card>
+        <Card style={cardSpacing}>
+          {/* @NOTE The logo stands alone when there is one — the service name
+            is carried by its alt text — and only falls back to the name in
+            text when the deployment has no logo. */}
           {(logo || name) && (
-            <div className="px-(--card-spacing) flex items-center justify-center gap-2 pt-2 font-medium">
-              {logo && (
+            <div className="px-(--card-spacing) flex items-center justify-center pt-2">
+              {logo ? (
                 <img
                   src={logo}
                   alt={name || _(msg`Logo`)}
-                  className="size-6 object-contain"
+                  className="size-9 object-contain"
                 />
+              ) : (
+                <span className="text-lg font-semibold">{name}</span>
               )}
-              {name}
             </div>
           )}
 
           {(titleString || subtitle) && (
-            <CardHeader className="text-center">
+            <CardHeader className="gap-2 text-center">
               {titleString && (
-                <CardTitle className="text-xl">{titleString}</CardTitle>
+                <CardTitle className="text-balance text-2xl font-semibold leading-tight">
+                  {titleString}
+                </CardTitle>
               )}
               {/* @NOTE CardDescription renders a <div>, so the subtitle gets
                 its own <p>. */}
               {subtitle && (
-                <CardDescription>
+                <CardDescription className="text-base">
                   <p>{subtitle}</p>
                 </CardDescription>
               )}
@@ -98,10 +111,9 @@ export function AuthShell({
 
           <CardContent>{children}</CardContent>
 
-          <CardFooter className="flex-col justify-center gap-3">
-            <LocaleSelector />
+          <CardFooter className="flex-col justify-center gap-4 border-t-0 bg-transparent">
             {links?.length ? (
-              <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
+              <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[13px]">
                 {links.map((link) => (
                   <LinkAnchor
                     key={link.href}
@@ -111,6 +123,7 @@ export function AuthShell({
                 ))}
               </div>
             ) : null}
+            <LocaleSelector />
           </CardFooter>
         </Card>
       </div>

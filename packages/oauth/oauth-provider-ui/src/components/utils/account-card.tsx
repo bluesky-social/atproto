@@ -24,6 +24,13 @@ export type AccountCardProps = Override<
 >
 
 /**
+ * Row utilities shared with the "Another account" row in `SignInPicker`, so
+ * the two stay the same height, padding and surface.
+ */
+export const accountRowClassName =
+  'bg-muted/30 hover:bg-accent hover:text-accent-foreground w-full gap-4 px-4 py-3 text-left'
+
+/**
  * A selectable account row, built on `Item` — the shadcn primitive for a
  * choice list.
  *
@@ -32,7 +39,12 @@ export type AccountCardProps = Override<
  */
 export function AccountCard({
   account,
-  append = <ChevronRightIcon aria-hidden className="size-4 shrink-0" />,
+  append = (
+    <ChevronRightIcon
+      aria-hidden
+      className="text-muted-foreground size-5 shrink-0"
+    />
+  ),
   className,
   ...props
 }: AccountCardProps) {
@@ -41,22 +53,24 @@ export function AccountCard({
       {...props}
       variant="outline"
       render={<button type="button" />}
-      className={cn(
-        'hover:bg-accent hover:text-accent-foreground w-full text-left',
-        className,
-      )}
+      className={cn(accountRowClassName, className)}
     >
-      <ItemMedia>
-        <AccountAvatar account={account} />
+      {/* @NOTE `ItemMedia` nudges itself to the top when a description is
+        present; the large avatar here reads better vertically centred. */}
+      <ItemMedia className="group-has-data-[slot=item-description]/item:translate-y-0 group-has-data-[slot=item-description]/item:self-center">
+        <AccountAvatar account={account} size="xl" />
       </ItemMedia>
 
-      <ItemContent className="min-w-0">
+      <ItemContent className="min-w-0 gap-0.5">
         {account.name && (
-          <ItemTitle>
-            <AccountName account={account} className="truncate font-medium" />
+          <ItemTitle className="w-full text-lg leading-tight">
+            <AccountName
+              account={account}
+              className="block min-w-0 truncate font-semibold"
+            />
           </ItemTitle>
         )}
-        <ItemDescription>
+        <ItemDescription className="text-base leading-tight">
           <AccountIdentifier account={account} className="block truncate" />
         </ItemDescription>
       </ItemContent>

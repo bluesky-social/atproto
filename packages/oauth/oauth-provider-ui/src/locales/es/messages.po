@@ -356,6 +356,11 @@ msgstr ""
 msgid "Continue"
 msgstr ""
 
+#: src/components/sign-in-view.tsx
+msgctxt "AuthenticationPage"
+msgid "Continue with an existing account"
+msgstr ""
+
 #: src/cookie-error-page.tsx
 msgid "Cookie Error"
 msgstr ""
@@ -802,6 +807,10 @@ msgstr ""
 msgid "Navigation"
 msgstr ""
 
+#: src/components/sign-in-picker.tsx
+msgid "Need an account?"
+msgstr ""
+
 #: src/components/update-email-dialog.tsx
 #: src/components/update-email-form.tsx
 msgid "New email address"
@@ -997,10 +1006,6 @@ msgstr ""
 msgid "Select domain"
 msgstr "Seleccionar dominio"
 
-#: src/components/sign-in-view.tsx
-msgid "Select from an existing account"
-msgstr "Seleccionar desde una cuenta existente"
-
 #: src/components/delete-account-dialog.tsx
 msgid "Send email"
 msgstr ""
@@ -1024,10 +1029,6 @@ msgstr "Iniciar sesión"
 #: src/components/sign-in-picker.tsx
 msgid "Sign in as {0}"
 msgstr "Iniciar sesión como {0}"
-
-#: src/components/sign-in-picker.tsx
-msgid "Sign in as..."
-msgstr "Iniciar sesión como..."
 
 #: src/components/sign-in-picker.tsx
 msgid "Sign in to an account that is not listed"

@@ -361,6 +361,11 @@ msgstr "E-mailul de confirmare a fost trimis."
 msgid "Continue"
 msgstr "Continuare"
 
+#: src/components/sign-in-view.tsx
+msgctxt "AuthenticationPage"
+msgid "Continue with an existing account"
+msgstr ""
+
 #: src/cookie-error-page.tsx
 msgid "Cookie Error"
 msgstr "Eroare cookie"
@@ -816,6 +821,10 @@ msgstr "Nume"
 msgid "Navigation"
 msgstr "Navigare"
 
+#: src/components/sign-in-picker.tsx
+msgid "Need an account?"
+msgstr ""
+
 #: src/components/update-email-dialog.tsx
 #: src/components/update-email-form.tsx
 msgid "New email address"
@@ -1011,10 +1020,6 @@ msgstr "Selectare alt cont"
 msgid "Select domain"
 msgstr "Selectare domeniu"
 
-#: src/components/sign-in-view.tsx
-msgid "Select from an existing account"
-msgstr "Selectați dintr-un cont existent"
-
 #: src/components/delete-account-dialog.tsx
 msgid "Send email"
 msgstr "Trimitere e-mail"
@@ -1038,10 +1043,6 @@ msgstr "Conectare"
 #: src/components/sign-in-picker.tsx
 msgid "Sign in as {0}"
 msgstr "Conectați-vă ca {0}"
-
-#: src/components/sign-in-picker.tsx
-msgid "Sign in as..."
-msgstr "Conectați-vă ca..."
 
 #: src/components/sign-in-picker.tsx
 msgid "Sign in to an account that is not listed"
