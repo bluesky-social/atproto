@@ -67,12 +67,12 @@ export function AuthShell({
         : undefined
 
   return (
-    <div className="auth-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+    <div className="auth-background flex min-h-svh flex-col items-center justify-center gap-6 p-4 sm:p-6 md:p-10">
       {documentTitleString && <title>{documentTitleString}</title>}
 
       <div
         {...props}
-        className={cn('flex w-full max-w-sm flex-col', className)}
+        className={cn('flex w-full max-w-[26rem] flex-col', className)}
       >
         <Card style={cardSpacing}>
           {/* @NOTE The logo stands alone when there is one — the service name
