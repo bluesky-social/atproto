@@ -23,7 +23,7 @@ export const actionRow = [
  * button so the primary action is an easy tap on a phone. Shared with the
  * sign-in picker so every screen's actions read as one set.
  */
-export const actionButton = 'h-9 text-[15px]'
+export const actionButton = 'h-10 text-[15px]'
 
 type SubmitVariant = 'default' | 'destructive' | 'secondary'
 

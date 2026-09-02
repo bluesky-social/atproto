@@ -358,8 +358,10 @@ msgstr "계속"
 
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
-msgid "Continue with an existing account"
-msgstr "기존 계정으로 계속하기"
+msgid "Continue with\n"
+"an existing account"
+msgstr "기존 계정으로\n"
+"계속하기"
 
 #: src/cookie-error-page.tsx
 msgid "Cookie Error"

@@ -40,8 +40,11 @@ export function SignInView({
   const [showSignInForm, setShowSignInForm] = useState(sessions.length === 0)
 
   const title = msg({ message: 'Sign in', context: 'AuthenticationPage' })
+  // @NOTE The newline is part of the message so the heading always breaks
+  // after "with"; translators place their own break. `AuthShell` renders the
+  // title with `whitespace-pre-line`.
   const pickerTitle = msg({
-    message: 'Continue with an existing account',
+    message: 'Continue with\nan existing account',
     context: 'AuthenticationPage',
   })
 

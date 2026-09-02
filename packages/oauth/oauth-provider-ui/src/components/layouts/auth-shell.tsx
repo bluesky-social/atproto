@@ -95,7 +95,7 @@ export function AuthShell({
           {(titleString || subtitle) && (
             <CardHeader className="gap-2 text-center">
               {titleString && (
-                <CardTitle className="text-balance text-2xl font-semibold leading-tight">
+                <CardTitle className="whitespace-pre-line text-balance text-2xl font-semibold leading-tight">
                   {titleString}
                 </CardTitle>
               )}
@@ -111,7 +111,7 @@ export function AuthShell({
 
           <CardContent>{children}</CardContent>
 
-          <CardFooter className="flex-col justify-center gap-4 border-t-0 bg-transparent">
+          <CardFooter className="flex-col justify-center gap-4 border-t-0 bg-transparent pt-2">
             {links?.length ? (
               <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[13px]">
                 {links.map((link) => (

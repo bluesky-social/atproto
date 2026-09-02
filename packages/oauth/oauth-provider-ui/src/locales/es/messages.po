@@ -358,8 +358,10 @@ msgstr ""
 
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
-msgid "Continue with an existing account"
-msgstr "Continuar con una cuenta existente"
+msgid "Continue with\n"
+"an existing account"
+msgstr "Continuar con\n"
+"una cuenta existente"
 
 #: src/cookie-error-page.tsx
 msgid "Cookie Error"
