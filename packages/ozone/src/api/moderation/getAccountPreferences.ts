@@ -5,7 +5,7 @@ import { app, com, tools } from '../../lexicons/index.js'
 import { createSafeFetch } from '../../safe-fetch.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const fetch = ctx.cfg.service.devMode
+  const safeFetch = ctx.cfg.service.devMode
     ? globalThis.fetch
     : createSafeFetch({ timeout: 30_000 })
 
@@ -22,26 +22,25 @@ export default function (server: Server, ctx: AppContext) {
           )
         })
 
-      // Create a safe agent to use with the PDS
-      const pdsAgent = buildAgent({ service: pdsUrl, fetch })
+      // Create a safe agent to use with the user's PDS
+      const pdsSafeAgent = buildAgent({ service: pdsUrl, fetch: safeFetch })
 
       // We need the PDS's DID to generate the correct service auth headers
-      const pdsDescription = await xrpc(
-        pdsAgent,
-        com.atproto.server.describeServer,
-      )
+      const {
+        body: { did: pdsDid },
+      } = await xrpc(pdsSafeAgent, com.atproto.server.describeServer)
 
-      const auth = await ctx.serviceAuthHeaders(
-        pdsDescription.body.did,
+      const pdsCredentials = await ctx.serviceAuthHeaders(
+        pdsDid,
         app.bsky.actor.getPreferences.$lxm,
       )
 
-      return xrpc(pdsAgent, app.bsky.actor.getPreferences, {
+      return xrpc(pdsSafeAgent, app.bsky.actor.getPreferences, {
         // @NOTE `did` is a non-documented param for this endpoint that allows
         // the getPreferences call to return the preferences for a different
         // account than the one associated with the auth token.
         params: { did: userDid },
-        headers: auth.headers,
+        headers: pdsCredentials.headers,
       })
     },
   })

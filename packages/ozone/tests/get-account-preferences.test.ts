@@ -2,6 +2,8 @@ import { type SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import type { Client } from '@atproto/lex'
 import { app, tools } from '../src/lexicons/index.js'
 
+// @TODO In order to properly test this, Ozone and the user should be on
+// different PDS instances.
 describe('account preferences', () => {
   let network: TestNetwork
   let sc: SeedClient
