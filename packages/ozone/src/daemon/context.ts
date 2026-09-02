@@ -84,7 +84,7 @@ export class DaemonContext {
 
     const eventPusher = new EventPusher(db, createAuthHeaders, {
       appview: cfg.appview.pushEvents ? cfg.appview : undefined,
-      pds: cfg.pds ?? undefined,
+      pds: cfg.pds ? { ...cfg.pds, headers: secrets.pdsHeaders } : undefined,
     })
 
     const backgroundQueue = new BackgroundQueue(db, { concurrency: 20 })

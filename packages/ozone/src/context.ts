@@ -117,8 +117,12 @@ export class AppContext {
     // Trust internal services to send us well-formed responses
     const clientOpts = { strictResponseProcessing: false }
     const appviewClient = new Client({ service: cfg.appview.url }, clientOpts)
+    // OZONE_PDS_HEADERS is applied only to the operator-configured PDS.
     const pdsClient = cfg.pds
-      ? new Client({ service: cfg.pds.url }, clientOpts)
+      ? new Client(
+          { service: cfg.pds.url },
+          { ...clientOpts, headers: secrets.pdsHeaders },
+        )
       : undefined
     const chatClient = cfg.chat
       ? new Client({ service: cfg.chat.url }, clientOpts)
@@ -157,7 +161,7 @@ export class AppContext {
       : undefined
     const eventPusher = new EventPusher(db, createAuthHeaders, {
       appview: cfg.appview.pushEvents ? cfg.appview : undefined,
-      pds: cfg.pds ?? undefined,
+      pds: cfg.pds ? { ...cfg.pds, headers: secrets.pdsHeaders } : undefined,
     })
 
     const communicationTemplateService = CommunicationTemplateService.creator()

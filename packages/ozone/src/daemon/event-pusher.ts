@@ -58,6 +58,9 @@ export class EventPusher {
       pds?: {
         url: string
         did: DidString
+        // Applied to every request to this one configured host. Never for a
+        // PDS resolved from a DID document (see getPdsClientForRepo).
+        headers?: Record<string, string>
       }
     },
   ) {
@@ -74,7 +77,10 @@ export class EventPusher {
       this.pds = {
         client: new Client(
           { service: services.pds.url },
-          { strictResponseProcessing: false },
+          {
+            strictResponseProcessing: false,
+            headers: services.pds.headers,
+          },
         ),
         did: services.pds.did,
       }
