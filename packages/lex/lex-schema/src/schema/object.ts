@@ -46,8 +46,11 @@ export class ObjectSchema<
 > {
   readonly type = 'object' as const
 
-  constructor(readonly shape: TShape) {
+  readonly shape: TShape
+
+  constructor(shape: TShape) {
     super()
+    this.shape = shape
   }
 
   get validatorsMap(): Map<string, Validator> {

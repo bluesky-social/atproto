@@ -8,6 +8,8 @@
  * and bulk updates.
  */
 
+import { tools } from '../lexicons/index.js'
+
 // ---------------------------------------------------------------------------
 // Error types — callers decide how to surface these (throw, skip, etc.)
 // ---------------------------------------------------------------------------
@@ -60,29 +62,49 @@ const ACTIVITY_VALID_FROM_STATES: Record<string, string[]> = {
 }
 
 /** Moderation event types → target status (+ activity type) */
-const EVENT_TYPE_MAP: Record<string, { status: string; activityType: string }> =
+const EVENT_TYPE_MAP = new Map<
+  string,
   {
-    'tools.ozone.moderation.defs#modEventAcknowledge': {
+    status: 'escalated' | 'closed'
+    activityType: 'closeActivity' | 'escalationActivity'
+  }
+>([
+  [
+    tools.ozone.moderation.defs.modEventAcknowledge.$type,
+    {
       status: 'closed',
       activityType: 'closeActivity',
     },
-    'tools.ozone.moderation.defs#modEventTakedown': {
+  ],
+  [
+    tools.ozone.moderation.defs.modEventTakedown.$type,
+    {
       status: 'closed',
       activityType: 'closeActivity',
     },
-    'tools.ozone.moderation.defs#modEventLabel': {
+  ],
+  [
+    tools.ozone.moderation.defs.modEventLabel.$type,
+    {
       status: 'closed',
       activityType: 'closeActivity',
     },
-    'tools.ozone.moderation.defs#modEventComment': {
+  ],
+  [
+    tools.ozone.moderation.defs.modEventComment.$type,
+    {
       status: 'closed',
       activityType: 'closeActivity',
     },
-    'tools.ozone.moderation.defs#modEventEscalate': {
+  ],
+  [
+    tools.ozone.moderation.defs.modEventEscalate.$type,
+    {
       status: 'escalated',
       activityType: 'escalationActivity',
     },
-  }
+  ],
+])
 
 // ---------------------------------------------------------------------------
 // Action types — the three ways a report's status can change
@@ -165,7 +187,7 @@ function handleEventAction(
   currentStatus: string,
   eventType: string,
 ): ReportUpdateResult {
-  const mapping = EVENT_TYPE_MAP[eventType]
+  const mapping = EVENT_TYPE_MAP.get(eventType)
   if (!mapping) {
     // Event type doesn't affect report status
     return { nextStatus: null, activity: null }

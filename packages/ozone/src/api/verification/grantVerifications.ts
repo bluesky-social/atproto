@@ -1,12 +1,17 @@
 import type { Selectable } from 'kysely'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import type { DidString } from '@atproto/lex'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import type { Verification } from '../../db/schema/verification.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 import { getReposForVerifications } from '../../verification/util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.verification.grantVerifications({
+  server.add(tools.ozone.verification.grantVerifications, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth, req }) => {
       if (!ctx.cfg.verifier) {
@@ -55,7 +60,7 @@ export default function (server: Server, ctx: AppContext) {
       const verificationEntries =
         await verificationService.create(grantedVerifications)
 
-      const dids = new Set<string>([ctx.cfg.verifier.did])
+      const dids = new Set<DidString>([ctx.cfg.verifier.did])
 
       for (const verification of verificationEntries) {
         createdVerifications.push(verification)

@@ -1,10 +1,11 @@
 import { AtUri } from '@atproto/syntax'
+import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 import { addAccountInfoToRepoView, getPdsAccountInfos } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.moderation.getRecords({
+  server.add(tools.ozone.moderation.getRecords, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth, req }) => {
       const db = ctx.db
@@ -24,21 +25,17 @@ export default function (server: Server, ctx: AppContext) {
       const results = params.uris.map((uri) => {
         const record = records.get(uri)
         if (!record) {
-          return {
-            uri,
-            $type: 'tools.ozone.moderation.defs#recordViewNotFound',
-          }
+          return tools.ozone.moderation.defs.recordViewNotFound.$build({ uri })
         }
 
-        return {
-          $type: 'tools.ozone.moderation.defs#recordViewDetail',
+        return tools.ozone.moderation.defs.recordViewDetail.$build({
           ...record,
           repo: addAccountInfoToRepoView(
             record.repo,
             accountInfos.get(record.repo.did) || null,
             auth.credentials.isModerator,
           ),
-        }
+        })
       })
 
       return {

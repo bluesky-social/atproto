@@ -93,7 +93,7 @@ Agent files — this `AGENTS.md`, the skills under [.agents/skills/](.agents/ski
 
 ## Troubleshooting
 
-- **Stale codegen.** If the build fails due to a generated file in [packages/api](packages/api) or [packages/ozone](packages/ozone) being out of date, run `pnpm run codegen && pnpm run build` from those packages, then re-run the build. This is only needed on these two packages because their `prebuild` step skips codegen as a performance optimization.
+- **Stale codegen.** If the build fails due to a generated file in [packages/api](packages/api) being out of date, run `pnpm run codegen && pnpm run build` from that package, then re-run the build. This is only needed there because its `prebuild` step skips codegen as a performance optimization.
 - **Codegen ran but produced stale output.** Codegen relies on `pnpm build:tooling` to build the `@atproto/lex-cli` and `@atproto/lex-builder` packages first. If you see a codegen failure, run `pnpm build:tooling` from the root, then re-run codegen.
 - **End-to-end test fails with stale infra.** If docker containers persist across test runs, reset them with `cd packages/dev-infra && docker compose down --volumes`.
 - **Nothing else worked.** `make clean` wipes every installed dependency (`node_modules`), build artifact (`dist`, `*.tsbuildinfo`), and prebuild/codegen output across all packages; follow it with `pnpm install && pnpm run build` to restore a clean state.

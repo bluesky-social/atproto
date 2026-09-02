@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
+import type { DidString, UriString } from '@atproto/lex'
 import type { OzoneEnvironment } from './env.js'
 
 // off-config but still from env:
@@ -158,14 +159,14 @@ export type ServiceConfig = {
   // Optional and off by default; set via OZONE_DAEMON_METRICS_PORT.
   daemonMetricsPort?: number
   publicUrl: string
-  did: string
+  did: DidString
   version?: string
   devMode?: boolean
   serviceRecordCacheTTL: number // in ms, default 5 mins
 }
 
 export type BlobDivertConfig = {
-  url: string
+  url: UriString
   adminPassword: string
 }
 
@@ -181,19 +182,19 @@ export type DatabaseConfig = {
 }
 
 export type AppviewConfig = {
-  url: string
-  did: string
+  url: UriString
+  did: DidString
   pushEvents: boolean
 }
 
 export type PdsConfig = {
-  url: string
-  did: string
+  url: UriString
+  did: DidString
 }
 
 export type ChatConfig = {
-  url: string
-  did: string
+  url: UriString
+  did: DidString
 }
 
 export type CdnConfig = {
@@ -207,14 +208,14 @@ export type IdentityConfig = {
 }
 
 export type AccessConfig = {
-  admins: string[]
-  moderators: string[]
-  triage: string[]
+  admins: DidString[]
+  moderators: DidString[]
+  triage: DidString[]
 }
 
 export type VerifierConfig = {
-  url: string
-  did: string
+  url: UriString
+  did: DidString
   password: string
   jetstreamUrl?: string
   issuersToIndex?: string[]
