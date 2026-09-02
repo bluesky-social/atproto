@@ -2,6 +2,7 @@ import { Trans, useLingui } from '@lingui/react/macro'
 import { AtSignIcon, ChevronRightIcon } from 'lucide-react'
 import type { JSX, ReactNode } from 'react'
 import type { Session } from '@atproto/oauth-provider-api'
+import { actionButton } from '#/components/forms/form-shell.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import {
   Item,
@@ -96,13 +97,13 @@ export function SignInPicker({
 
       {children}
 
-      <div key="actions" className="flex flex-col gap-3 pt-2">
+      <div key="actions" className="flex flex-col gap-2 pt-2">
         {onSignUp && (
           <>
-            <p className="text-muted-foreground text-center text-base">
+            <p className="text-muted-foreground pb-1 text-center text-base">
               <Trans>Need an account?</Trans>
             </p>
-            <Button className="h-10 w-full text-base" onClick={onSignUp}>
+            <Button className={cn(actionButton, 'w-full')} onClick={onSignUp}>
               <Trans>Sign up</Trans>
             </Button>
           </>
@@ -111,7 +112,7 @@ export function SignInPicker({
         {onBack && (
           <Button
             variant="secondary"
-            className="h-10 w-full text-base"
+            className={cn(actionButton, 'w-full')}
             onClick={onBack}
           >
             {backLabel || <Trans>Back</Trans>}

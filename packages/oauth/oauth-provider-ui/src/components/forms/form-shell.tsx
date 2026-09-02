@@ -18,6 +18,13 @@ export const actionRow = [
   'sm:flex-row-reverse sm:flex-wrap sm:items-center sm:justify-start',
 ].join(' ')
 
+/**
+ * Size for the buttons in an action row — a touch taller than the stock
+ * button so the primary action is an easy tap on a phone. Shared with the
+ * sign-in picker so every screen's actions read as one set.
+ */
+export const actionButton = 'h-9 text-[15px]'
+
 type SubmitVariant = 'default' | 'destructive' | 'secondary'
 
 export type FormShellProps<TValues extends Record<string, unknown>> = {
@@ -142,6 +149,7 @@ export function FormShell<TValues extends Record<string, unknown>>({
             type="submit"
             variant={submitVariant}
             disabled={disabled || !submittable}
+            className={actionButton}
           >
             {busy && <Loader2Icon className="animate-spin" aria-hidden />}
             {submitLabel}
@@ -149,12 +157,22 @@ export function FormShell<TValues extends Record<string, unknown>>({
         )}
         {actions}
         {onCancel && cancelLabel ? (
-          <Button type="button" variant="secondary" onClick={onCancel}>
+          <Button
+            type="button"
+            variant="secondary"
+            className={actionButton}
+            onClick={onCancel}
+          >
             {cancelLabel}
           </Button>
         ) : null}
         {onBack && backLabel ? (
-          <Button type="button" variant="secondary" onClick={onBack}>
+          <Button
+            type="button"
+            variant="secondary"
+            className={actionButton}
+            onClick={onBack}
+          >
             {backLabel}
           </Button>
         ) : null}
