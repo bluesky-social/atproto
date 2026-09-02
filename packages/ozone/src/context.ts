@@ -29,6 +29,7 @@ import {
   StrikeService,
   type StrikeServiceCreator,
 } from './mod-service/strike.js'
+import { createPdsAgentWithHeaders } from './mod-service/util.js'
 import { QueueService, type QueueServiceCreator } from './queue/service.js'
 import {
   ReportStatsService,
@@ -119,7 +120,7 @@ export class AppContext {
     const signingKeyId = await getSigningKeyId(db, signingKey.did())
     const appviewAgent = new AtpAgent({ service: cfg.appview.url })
     const pdsAgent = cfg.pds
-      ? new AtpAgent({ service: cfg.pds.url })
+      ? createPdsAgentWithHeaders(cfg.pds.url, secrets.pdsHeaders)
       : undefined
     const chatAgent = cfg.chat
       ? new AtpAgent({ service: cfg.chat.url })
@@ -158,7 +159,7 @@ export class AppContext {
       : undefined
     const eventPusher = new EventPusher(db, createAuthHeaders, {
       appview: cfg.appview.pushEvents ? cfg.appview : undefined,
-      pds: cfg.pds ?? undefined,
+      pds: cfg.pds ? { ...cfg.pds, headers: secrets.pdsHeaders } : undefined,
     })
 
     const communicationTemplateService = CommunicationTemplateService.creator()

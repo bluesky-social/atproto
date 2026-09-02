@@ -90,6 +90,17 @@ export const getPdsAgentForRepo = async (
   }
 }
 
+export const createPdsAgentWithHeaders = (
+  service: string,
+  headers?: Record<string, string>,
+): AtpAgent => {
+  const agent = new AtpAgent({ service })
+  for (const [name, value] of Object.entries(headers ?? {})) {
+    agent.setHeader(name, value)
+  }
+  return agent
+}
+
 export const dateFromDatetime = (datetime: Date) => {
   const [date] = datetime.toISOString().split('T')
   return date

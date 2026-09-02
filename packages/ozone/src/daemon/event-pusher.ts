@@ -8,6 +8,7 @@ import type { RepoPushEventType } from '../db/schema/repo_push_event.js'
 import { ids } from '../lexicon/lexicons.js'
 import type { InputSchema } from '../lexicon/types/com/atproto/admin/updateSubjectStatus.js'
 import { dbLogger } from '../logger.js'
+import { createPdsAgentWithHeaders } from '../mod-service/util.js'
 import { retryHttp } from '../util.js'
 
 type EventSubject = InputSchema['subject']
@@ -58,6 +59,7 @@ export class EventPusher {
       pds?: {
         url: string
         did: string
+        headers?: Record<string, string>
       }
     },
   ) {
@@ -69,7 +71,10 @@ export class EventPusher {
     }
     if (services.pds) {
       this.pds = {
-        agent: new AtpAgent({ service: services.pds.url }),
+        agent: createPdsAgentWithHeaders(
+          services.pds.url,
+          services.pds.headers,
+        ),
         did: services.pds.did,
       }
     }
