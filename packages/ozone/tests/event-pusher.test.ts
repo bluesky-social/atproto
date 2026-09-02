@@ -8,7 +8,7 @@ const subject = {
   did: 'did:plc:test',
 }
 
-const updateSubjectStatus = com.atproto.admin.updateSubjectStatus as any
+const updateSubjectStatusMethod = com.atproto.admin.updateSubjectStatus as any
 
 const responseError = (
   status: number,
@@ -17,7 +17,7 @@ const responseError = (
   headers?: HeadersInit,
 ) =>
   new XrpcResponseError(
-    updateSubjectStatus,
+    updateSubjectStatusMethod,
     new Response(null, { status, headers }),
     {
       encoding: 'application/json',
@@ -81,7 +81,7 @@ describe('EventPusher', () => {
     const updateSubjectStatus = jest
       .fn<() => Promise<unknown>>()
       .mockRejectedValueOnce(
-        new XrpcInternalError(updateSubjectStatus, 'Transport failure'),
+        new XrpcInternalError(updateSubjectStatusMethod, 'Transport failure'),
       )
       .mockResolvedValueOnce({})
     pusher.pds!.client.call = updateSubjectStatus as any
