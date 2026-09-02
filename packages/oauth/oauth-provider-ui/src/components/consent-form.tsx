@@ -119,17 +119,23 @@ export function ConsentForm({
         }
         description={
           !scope || scope === 'atproto' ? (
-            <Trans>
-              wants to uniquely identify you through your{' '}
-              <AccountIdentifier account={account} className="font-bold" />{' '}
-              account
-            </Trans>
+            <>
+              <Trans>
+                wants to uniquely identify you through your account:
+              </Trans>
+              <AccountIdentifier
+                account={account}
+                className="text-foreground mt-1 block font-semibold"
+              />
+            </>
           ) : (
-            <Trans>
-              wants to access your{' '}
-              <AccountIdentifier account={account} className="font-bold" />{' '}
-              account
-            </Trans>
+            <>
+              <Trans>wants to access your account:</Trans>
+              <AccountIdentifier
+                account={account}
+                className="text-foreground mt-1 block font-semibold"
+              />
+            </>
           )
         }
         hint={t`Technical details`}

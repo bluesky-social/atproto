@@ -1332,12 +1332,12 @@ msgid "Verify your email"
 msgstr "Verifiera din e-postadress"
 
 #: src/components/consent-form.tsx
-msgid "wants to access your <0/> account"
-msgstr "vill komma åt ditt konto <0/>"
+msgid "wants to access your account:"
+msgstr ""
 
 #: src/components/consent-form.tsx
-msgid "wants to uniquely identify you through your <0/> account"
-msgstr "vill entydigt identifiera dig via ditt konto <0/>"
+msgid "wants to uniquely identify you through your account:"
+msgstr ""
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"
