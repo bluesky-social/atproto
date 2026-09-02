@@ -80,7 +80,7 @@ For working with that SDK, invoke the focused skills under [.agents/skills/](.ag
 
 - Node ≥22 runtime floor; build/dev default to Node 24 (`.nvmrc`). Use `node --enable-source-maps` for production-style runs.
 - TypeScript compilation uses the native TS7 `tsc` (the standard `typescript` package). There is no per-package `typescript` devDependency — it is hoisted at the root. Note TS7 has no stable programmatic API yet; tools needing one must pin TS6.
-- **Every package touched by a change needs a changeset entry.** Add a file under [.changeset/](.changeset/) listing each modified package with an appropriate bump level (pre-v1 breaking changes are `minor` and everything else `patch`, post-v1 `major` for breaking changes, `minor` for new public API, `patch` otherwise). Dependency-only bumps are generated automatically — don't list them by hand.
+- **Every package touched by a change needs a changeset entry.** Add a file under [.changeset/](.changeset/) listing each modified package with an appropriate bump level (pre-v1 breaking changes are `minor` and everything else `patch`, post-v1 `major` for breaking changes, `minor` for new public API, `patch` otherwise). Dependency-only bumps are generated automatically — don't list them by hand. Create that file with `pnpm changeset`.
 
 ## Agent files
 

@@ -1,32 +1,42 @@
-import type { Readable } from 'node:stream'
+import { Readable } from 'node:stream'
 import { finished, pipeline } from 'node:stream/promises'
 import { CID } from 'multiformats/cid'
 import * as undici from 'undici'
 import {
   VerifyCidTransform,
   allFulfilled,
-  createDecoders,
   getPdsEndpoint,
 } from '@atproto/common'
 import type { IdResolver } from '@atproto/identity'
 import type { AtUriString, DidString } from '@atproto/lex'
 import type { BlobDivertConfig } from '../config/index.js'
 import type { Database } from '../db/index.js'
+import { BodyTimeoutTransform, createSafeFetch } from '../safe-fetch.js'
 import { UpstreamHttpError, retryHttp } from '../util.js'
+
+const BLOB_HEADERS_TIMEOUT = 30e3
+const BLOB_BODY_TIMEOUT = 120e3
+const BLOB_RESPONSE_MAX_SIZE = 100 * 1024 * 1024
+const safeBlobFetch = createSafeFetch({
+  responseMaxSize: BLOB_RESPONSE_MAX_SIZE,
+})
 
 export class BlobDiverter {
   serviceConfig: BlobDivertConfig
   idResolver: IdResolver
+  private readonly fetch: typeof globalThis.fetch
 
   constructor(
     public db: Database,
     services: {
       idResolver: IdResolver
       serviceConfig: BlobDivertConfig
+      devMode?: boolean
     },
   ) {
     this.serviceConfig = services.serviceConfig
     this.idResolver = services.idResolver
+    this.fetch = services.devMode ? globalThis.fetch : safeBlobFetch
   }
 
   /**
@@ -35,42 +45,50 @@ export class BlobDiverter {
   async getBlob(options: GetBlobOptions): Promise<Blob> {
     const blobUrl = getBlobUrl(options)
 
-    const blobResponse = await undici
-      .request(blobUrl, {
-        headersTimeout: 10e3,
-        bodyTimeout: 30e3,
-      })
+    const headersController = new AbortController()
+    const headersTimer = setTimeout(
+      () => headersController.abort(),
+      BLOB_HEADERS_TIMEOUT,
+    )
+    headersTimer.unref()
+
+    const blobResponse = await this.fetch(blobUrl, {
+      signal: headersController.signal,
+    })
       .catch((err) => {
         throw asXrpcClientError(err, `Error fetching blob ${options.cid}`)
       })
+      .finally(() => clearTimeout(headersTimer))
 
-    if (blobResponse.statusCode !== 200) {
-      await blobResponse.body.dump()
-      throw new UpstreamHttpError(
-        blobResponse.statusCode,
+    if (blobResponse.status !== 200) {
+      await blobResponse.body?.cancel()
+      throw new XRPCError(
+        blobResponse.status,
+        undefined,
         `Error downloading blob ${options.cid}`,
       )
     }
 
     try {
-      const type = blobResponse.headers['content-type']
-      const encoding = blobResponse.headers['content-encoding']
+      if (!blobResponse.body) {
+        throw new Error('Blob response has no body')
+      }
 
+      const type = blobResponse.headers.get('content-type')
       const verifier = new VerifyCidTransform(CID.parse(options.cid))
 
       void pipeline([
-        blobResponse.body,
-        ...createDecoders(encoding),
+        Readable.fromWeb(blobResponse.body),
+        new BodyTimeoutTransform(BLOB_BODY_TIMEOUT),
         verifier,
       ]).catch((_err) => {})
 
       return {
-        type: typeof type === 'string' ? type : 'application/octet-stream',
+        type: type ?? 'application/octet-stream',
         stream: verifier,
       }
     } catch (err) {
-      // Typically un-supported content encoding
-      await blobResponse.body.dump()
+      await blobResponse.body?.cancel()
       throw err
     }
   }

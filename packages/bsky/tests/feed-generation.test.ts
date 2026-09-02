@@ -342,18 +342,28 @@ describe('feed generation', () => {
     expect(over.uris).toHaveLength(9)
     expect(over.cursor).not.toBe('')
 
-    const terminal = await agent.app.bsky.feed.getActorFeeds({
+    // The taken-down feed is filtered out, leaving 8 of the 9 requested. That
+    // is already half of the limit, so the page is served with a cursor.
+    const short = await agent.app.bsky.feed.getActorFeeds({
       actor: alice,
       limit: 9,
     })
-    expect(terminal.data.feeds).toHaveLength(9)
+    expect(short.data.feeds).toHaveLength(8)
+    expect(short.data.cursor).toBeDefined()
+
+    const terminal = await agent.app.bsky.feed.getActorFeeds({
+      actor: alice,
+      limit: 9,
+      cursor: short.data.cursor,
+    })
+    expect(terminal.data.feeds).toHaveLength(1)
     expect(terminal.data.cursor).toBeUndefined()
 
     const trimmed = await agent.app.bsky.feed.getActorFeeds({
       actor: alice,
       limit: 8,
     })
-    expect(trimmed.data.feeds).toHaveLength(8)
+    expect(trimmed.data.feeds).toHaveLength(7)
     expect(trimmed.data.cursor).toBeDefined()
   })
 
@@ -649,7 +659,7 @@ describe('feed generation', () => {
       expect(resEven.data.feeds.map((fg) => fg.uri)).not.toContain(feedUriPrime) // taken-down
     })
 
-    it('fills the page after filtering and returns a cursor only when more feeds are available', async () => {
+    it('serves a page short of the limit after filtering, and returns a cursor only when more feeds are available', async () => {
       const exact = await network.bsky.ctx.dataplane.getSuggestedFeeds({
         limit: 4,
       })
@@ -662,13 +672,22 @@ describe('feed generation', () => {
       expect(over.uris).toHaveLength(3)
       expect(over.cursor).not.toBe('')
 
+      // Moving the taken-down feed to the head of the results leaves 2 of the
+      // 3 requested, already half of the limit, so the page is served short.
       await network.bsky.db.db
         .updateTable('suggested_feed')
         .set({ order: 0 })
         .where('uri', '=', feedUriPrime)
         .execute()
-      const terminal = await agent.app.bsky.feed.getSuggestedFeeds({ limit: 3 })
-      expect(terminal.data.feeds).toHaveLength(3)
+      const short = await agent.app.bsky.feed.getSuggestedFeeds({ limit: 3 })
+      expect(short.data.feeds).toHaveLength(2)
+      expect(short.data.cursor).toBeDefined()
+
+      const terminal = await agent.app.bsky.feed.getSuggestedFeeds({
+        limit: 3,
+        cursor: short.data.cursor,
+      })
+      expect(terminal.data.feeds).toHaveLength(1)
       expect(terminal.data.cursor).toBeUndefined()
       await network.bsky.db.db
         .updateTable('suggested_feed')
@@ -784,17 +803,26 @@ describe('feed generation', () => {
       )
     })
 
-    it('uses bounded feed-generator pages and refills filtered suggestions', async () => {
+    it('uses bounded feed generator pages and serves filtered suggestions short of the limit', async () => {
+      // Moving the taken-down feed to the head of the results leaves 2 of the
+      // 3 requested, already half of the limit, so the page is served short.
       await network.bsky.db.db
         .updateTable('suggested_feed')
         .set({ order: 0 })
         .where('uri', '=', feedUriPrime)
         .execute()
-      const exact = await agent.app.bsky.unspecced.getPopularFeedGenerators({
+      const short = await agent.app.bsky.unspecced.getPopularFeedGenerators({
         limit: 3,
       })
-      expect(exact.data.feeds).toHaveLength(3)
-      expect(exact.data.cursor).toBeUndefined()
+      expect(short.data.feeds).toHaveLength(2)
+      expect(short.data.cursor).toBeDefined()
+
+      const terminal = await agent.app.bsky.unspecced.getPopularFeedGenerators({
+        limit: 3,
+        cursor: short.data.cursor,
+      })
+      expect(terminal.data.feeds).toHaveLength(1)
+      expect(terminal.data.cursor).toBeUndefined()
       await network.bsky.db.db
         .updateTable('suggested_feed')
         .set({ order: 4 })

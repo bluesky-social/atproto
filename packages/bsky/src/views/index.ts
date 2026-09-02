@@ -778,6 +778,10 @@ export class Views {
         ? {
             muted: !!listViewer.viewerMuted,
             blocked: listViewer.viewerListBlockUri,
+            referenceListOptOut:
+              list.record.purpose === app.bsky.graph.defs.Referencelist
+                ? listViewer.referenceListOptOutUri
+                : undefined,
           }
         : undefined,
     }
@@ -787,10 +791,11 @@ export class Views {
     uri: AtUriString,
     did: DidString,
     state: HydrationState,
+    subjectOptedOut?: boolean,
   ): Un$Typed<ListItemView> | undefined {
     const subject = this.profile(did, state)
     if (!subject) return
-    return { uri, subject }
+    return { uri, subject, subjectOptedOut: subjectOptedOut || undefined }
   }
 
   starterPackBasic(
@@ -828,12 +833,18 @@ export class Views {
       this.feedGenerator(feed.uri, state),
     )
     const list = this.listBasic(sp.record.list, state)
+    const showSubjectOptOuts =
+      state.ctx?.viewer === creatorFromUri(sp.record.list) &&
+      list?.purpose === app.bsky.graph.defs.Referencelist
     const listItemsSample = mapDefined(agg?.listItemSampleUris ?? [], (uri) => {
       const li = state.listItems?.get(uri)
       if (!li) return
-      const subject = this.profile(li.record.subject, state)
-      if (!subject) return
-      return { uri, subject }
+      return this.listItemView(
+        uri,
+        li.record.subject,
+        state,
+        showSubjectOptOuts && !!state.listItemSubjectOptOuts?.get(uri),
+      )
     })
     return {
       ...basicView,
@@ -1126,8 +1137,12 @@ export class Views {
       reason = this.reasonRepost(item.repost.uri, repost, state)
       if (!reason) return
     }
+    // The feed renders the root post above the feed item, so known likers are
+    // presented on the root rather than on the feed item itself. A post that
+    // does not reply to anything is its own root.
+    const isRoot = !state.posts?.get(item.post.uri)?.record.reply
     const post = this.post(item.post.uri, state, 0, {
-      includeKnownLikers: true,
+      includeKnownLikers: isRoot,
     })
     if (!post) return
     const reply = !postInfo?.violatesThreadGate
@@ -1148,8 +1163,15 @@ export class Views {
   ): Un$Typed<ReplyRef> | undefined {
     const postRecord = state.posts?.get(uri)?.record
     if (!postRecord?.reply) return
-    let root = this.maybePost(postRecord.reply.root.uri, state)
-    let parent = this.maybePost(postRecord.reply.parent.uri, state)
+    const rootUri = postRecord.reply.root.uri
+    const parentUri = postRecord.reply.parent.uri
+    // Known likers are only hydrated for the root post. The parent is the root
+    // itself in a direct reply, and clients render that object rather than the
+    // separate root, so it has to be marked too.
+    let root = this.maybePost(rootUri, state, { includeKnownLikers: true })
+    let parent = this.maybePost(parentUri, state, {
+      includeKnownLikers: parentUri === rootUri,
+    })
     if (!state.ctx?.include3pBlocks) {
       const childBlocks = state.postBlocks?.get(uri)
       const parentBlocks = state.postBlocks?.get(parent.uri)
@@ -1187,8 +1209,12 @@ export class Views {
     }
   }
 
-  maybePost(uri: AtUriString, state: HydrationState): $Typed<MaybePostView> {
-    const post = this.post(uri, state)
+  maybePost(
+    uri: AtUriString,
+    state: HydrationState,
+    options: { includeKnownLikers?: boolean } = {},
+  ): $Typed<MaybePostView> {
+    const post = this.post(uri, state, 0, options)
     if (!post) {
       return this.notFoundPost(uri)
     }

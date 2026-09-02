@@ -44,6 +44,11 @@ import {
   createRolodexClient,
 } from './rolodex.js'
 import { createStashClient } from './stash.js'
+import {
+  type UndiciAgent,
+  createUndiciAgent,
+  dispatcherFetch,
+} from './undici.js'
 import { Views } from './views/index.js'
 import { VideoUriBuilder } from './views/util.js'
 
@@ -60,10 +65,16 @@ export class BskyAppView {
   public app: express.Application
   public server?: http.Server
   private terminator?: HttpTerminator
+  private dispatchers: UndiciAgent[]
 
-  constructor(opts: { ctx: AppContext; app: express.Application }) {
+  constructor(opts: {
+    ctx: AppContext
+    app: express.Application
+    dispatchers?: UndiciAgent[]
+  }) {
     this.ctx = opts.ctx
     this.app = opts.app
+    this.dispatchers = opts.dispatchers ?? []
   }
 
   static create(opts: {
@@ -128,6 +139,13 @@ export class BskyAppView {
         )
       : undefined
 
+    // @NOTE These bound the connection phase (TCP + TLS) only; once connected,
+    // the request is not bounded here. They are kept for the lifetime of the
+    // service (pooling connections), and closed on `destroy()`.
+    // An unused agent holds no socket, so they can be built unconditionally.
+    const topicsDispatcher = createUndiciAgent({ connectTimeout: SECOND })
+    const irisDispatcher = createUndiciAgent({ connectTimeout: SECOND })
+
     const topicsClient = config.topicsUrl
       ? new Client(
           {
@@ -135,6 +153,7 @@ export class BskyAppView {
             headers: config.topicsApiKey
               ? { authorization: `Bearer ${config.topicsApiKey}` }
               : undefined,
+            fetch: dispatcherFetch(topicsDispatcher),
           },
           {
             // Trust internal services to send us well-formed responses
@@ -148,6 +167,7 @@ export class BskyAppView {
       ? new Client(
           {
             service: config.irisUrl,
+            fetch: dispatcherFetch(irisDispatcher),
           },
           {
             // Trust internal services to send us well-formed responses
@@ -287,7 +307,11 @@ export class BskyAppView {
     app.use(error.handler)
     app.use('/external', external.createRouter(ctx))
 
-    return new BskyAppView({ ctx, app })
+    return new BskyAppView({
+      ctx,
+      app,
+      dispatchers: [topicsDispatcher, irisDispatcher],
+    })
   }
 
   async start(): Promise<http.Server> {
@@ -312,7 +336,11 @@ export class BskyAppView {
       try {
         await this.terminator?.terminate()
       } finally {
-        await this.ctx.etcd?.close()
+        try {
+          await this.ctx.etcd?.close()
+        } finally {
+          await Promise.all(this.dispatchers.map((d) => d.close()))
+        }
       }
     }
   }

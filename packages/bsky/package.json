@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsky",
-  "version": "0.0.276",
+  "version": "0.0.277",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [
@@ -25,8 +25,8 @@
       "default": "./dist/index.js"
     },
     "./telemetry": {
-      "types": "./dist/telemetry.d.ts",
-      "default": "./dist/telemetry.js"
+      "types": "./dist/telemetry/telemetry.d.ts",
+      "default": "./dist/telemetry/telemetry.js"
     },
     "./package.json": "./package.json"
   },
@@ -56,6 +56,8 @@
     "@growthbook/growthbook": "^1.6.2",
     "@hapi/address": "^5.1.1",
     "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/api-logs": "^0.219.0",
+    "@opentelemetry/semantic-conventions": "^1.41.1",
     "@types/http-errors": "^2.0.1",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
@@ -77,6 +79,9 @@
     "structured-headers": "^1.0.1",
     "uint8arrays": "^5.0.0",
     "undici": "^8.5.0",
+    "undici_v6": "npm:undici@^6.x",
+    "undici_v7": "npm:undici@^7.x",
+    "undici_v8": "npm:undici@^8.x",
     "zod": "3.23.8"
   },
   "devDependencies": {

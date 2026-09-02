@@ -53,7 +53,12 @@
       "required": ["uri", "subject"],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
-        "subject": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" }
+        "subject": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
+        "subjectOptedOut": {
+          "type": "boolean",
+          "const": true,
+          "description": "Set to true when the subject has opted out of appearing in the reference list. Only set when the viewer owns the list."
+        }
       }
     },
     "starterPackView": {
@@ -132,7 +137,12 @@
       "type": "object",
       "properties": {
         "muted": { "type": "boolean" },
-        "blocked": { "type": "string", "format": "at-uri" }
+        "blocked": { "type": "string", "format": "at-uri" },
+        "referenceListOptOut": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "The authenticated viewer's app.bsky.graph.referencelistoptout record URI for this reference list. Only set for reference lists. A client can delete this record to undo the opt-out."
+        }
       }
     },
     "notFoundActor": {

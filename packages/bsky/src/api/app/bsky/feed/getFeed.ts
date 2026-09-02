@@ -51,7 +51,7 @@ export default function (server: Server, ctx: AppContext) {
       },
       skipAudCheck: true,
     }),
-    handler: async ({ params, auth, req }) => {
+    handler: async ({ params, auth, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
@@ -72,7 +72,10 @@ export default function (server: Server, ctx: AppContext) {
       // @NOTE feed cursors should not be affected by appview swap
       // Do not refill filtered pages. Overfetching from algorithmic feeds can
       // advance their state and prevent omitted items from appearing later.
-      const result = await getFeed({ ...params, hydrateCtx, headers }, ctx)
+      const result = await getFeed(
+        { ...params, hydrateCtx, headers, signal },
+        ctx,
+      )
       const {
         timerSkele,
         timerHydr,
@@ -127,12 +130,10 @@ const hydration = async (
     params.hydrateCtx,
     {
       knownLikers:
-        params.hydrateCtx.viewer &&
+        !!params.hydrateCtx.viewer &&
         params.hydrateCtx.features.checkGate(
           params.hydrateCtx.features.Gate.KnownLikersFeedEnable,
-        )
-          ? { subjectUris: skeleton.items.map((item) => item.post.uri) }
-          : undefined,
+        ),
     },
   )
   skeleton.timerHydr = timerHydr.stop()
@@ -184,6 +185,7 @@ type Context = AppContext
 type Params = app.bsky.feed.getFeed.$Params & {
   hydrateCtx: HydrateCtx
   headers: HeadersMap
+  signal: AbortSignal
 }
 
 type Skeleton = {
@@ -285,7 +287,10 @@ const skeletonFromFeedGen = async (
   // @TODO currently passthrough auth headers from pds
   const result = await xrpcSafe(endpoint, app.bsky.feed.getFeedSkeleton, {
     strictResponseProcessing: false,
-    signal: AbortSignal.timeout(10_000),
+    signal: AbortSignal.any([
+      params.signal,
+      AbortSignal.timeout(ctx.cfg.feedGenSkeletonTimeout),
+    ]),
     headers,
     params: {
       feed: params.feed,

@@ -2,6 +2,7 @@ import { Client as PlcClient } from '@did-plc/lib'
 import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import * as bsky from '@atproto/bsky'
+import { SECOND } from '@atproto/common-web'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client, type UriString } from '@atproto/lex'
 import type { DidString } from '@atproto/syntax'
@@ -90,6 +91,7 @@ export class TestBsky {
       visibilityTagRankPrefix: '',
       debugFieldAllowedDids: new Set(),
       draftsLimit: 500,
+      feedGenSkeletonTimeout: 5 * SECOND,
       ...cfg,
       adminPasswords: [ADMIN_PASSWORD],
       etcdHosts: [],

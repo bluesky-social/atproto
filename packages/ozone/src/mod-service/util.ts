@@ -1,4 +1,4 @@
-import net from 'node:net'
+import * as net from 'node:net'
 import { sql } from 'kysely'
 import { cborEncode, noUndefinedVals } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
@@ -8,6 +8,9 @@ import { Client, toDatetimeString } from '@atproto/lex'
 import type { LabelRow } from '../db/schema/label.js'
 import type { DbRef } from '../db/types.js'
 import type { com } from '../lexicons/index.js'
+import { createSafeFetch } from '../safe-fetch.js'
+
+const safePdsFetch = createSafeFetch()
 
 export type SignedLabel = com.atproto.label.defs.Label & { sig: Uint8Array }
 
@@ -83,14 +86,22 @@ export const getPdsClientForRepo = async (
 ) => {
   const { pds } = await idResolver.did.resolveAtprotoData(did)
   const url = new URL(pds)
-  if (!devMode && !isSafeUrl(url)) {
+  if (!devMode && url.protocol !== 'https:') {
     return { url, client: null }
   }
 
-  // Trust internal services to send us well-formed responses
   return {
     url,
-    client: new Client({ service: url }, { strictResponseProcessing: false }),
+    client: new Client(
+      {
+        service: url,
+        fetch: devMode ? globalThis.fetch : safePdsFetch,
+      },
+      {
+        // Trust internal services to send us well-formed responses
+        strictResponseProcessing: false,
+      },
+    ),
   }
 }
 
