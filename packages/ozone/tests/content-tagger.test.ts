@@ -1,11 +1,10 @@
+import { ComAtprotoModerationDefs } from '@atproto/api'
 import {
   type ModeratorClient,
   type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { REASONMISLEADING } from '../dist/lexicon/types/com/atproto/moderation/defs.js'
-import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
 describe('moderation subject content tagging', () => {
   let network: TestNetwork
@@ -40,7 +39,7 @@ describe('moderation subject content tagging', () => {
         const post = await sc.post(sc.dids.carol, text)
         await network.processAll()
         const report = await sc.createReport({
-          reasonType: REASONSPAM,
+          reasonType: ComAtprotoModerationDefs.REASONSPAM,
           subject: {
             $type: 'com.atproto.repo.strongRef',
             uri: post.ref.uriStr,
@@ -77,7 +76,7 @@ describe('moderation subject content tagging', () => {
         })
         await network.processAll()
         const report = await sc.createReport({
-          reasonType: REASONSPAM,
+          reasonType: ComAtprotoModerationDefs.REASONSPAM,
           subject: {
             $type: 'com.atproto.repo.strongRef',
             uri: list.uriStr,
@@ -112,7 +111,7 @@ describe('moderation subject content tagging', () => {
       const postWithImageEmbed = sc.replies[sc.dids.bob][0]
       await Promise.all([
         sc.createReport({
-          reasonType: REASONSPAM,
+          reasonType: ComAtprotoModerationDefs.REASONSPAM,
           subject: {
             $type: 'com.atproto.repo.strongRef',
             uri: postWithImageMediaEmbed.ref.uriStr,
@@ -121,7 +120,7 @@ describe('moderation subject content tagging', () => {
           reportedBy: sc.dids.alice,
         }),
         sc.createReport({
-          reasonType: REASONSPAM,
+          reasonType: ComAtprotoModerationDefs.REASONSPAM,
           subject: {
             $type: 'com.atproto.repo.strongRef',
             uri: postWithImageEmbed.ref.uriStr,
@@ -144,7 +143,7 @@ describe('moderation subject content tagging', () => {
     it('Adds report reason tag', async () => {
       await Promise.all([
         sc.createReport({
-          reasonType: REASONSPAM,
+          reasonType: ComAtprotoModerationDefs.REASONSPAM,
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: sc.dids.carol,
@@ -152,7 +151,7 @@ describe('moderation subject content tagging', () => {
           reportedBy: sc.dids.alice,
         }),
         sc.createReport({
-          reasonType: REASONMISLEADING,
+          reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: sc.dids.carol,

@@ -1,3 +1,4 @@
+import { ids } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
 import {
   type ModeratorClient,
@@ -5,7 +6,6 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
 
 const REASON_SPAM = 'com.atproto.moderation.defs#reasonSpam'
 const REASON_THREAT = 'tools.ozone.report.defs#reasonViolenceThreats'

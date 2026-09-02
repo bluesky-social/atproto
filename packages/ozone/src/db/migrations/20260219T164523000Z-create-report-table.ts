@@ -1,4 +1,5 @@
 import { type Kysely, sql } from 'kysely'
+import { tools } from '../../lexicons/index.js'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   // Report table - bridges report events to action events
@@ -139,7 +140,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   // for the daemon that inserts report rows from moderation_event.
   await sql`CREATE INDEX moderation_event_report_id_idx
     ON moderation_event (id)
-    WHERE action = 'tools.ozone.moderation.defs#modEventReport'`.execute(db)
+    WHERE action = ${sql.lit(tools.ozone.moderation.defs.modEventReport.$type)}`.execute(
+    db,
+  )
 
   // Stats windowed queries: aggregate/typeWindow filter by createdAt range and
   // include both open and closed reports, so they cannot use the partial indexes

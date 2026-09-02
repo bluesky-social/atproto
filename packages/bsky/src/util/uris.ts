@@ -28,7 +28,7 @@ export function postUriToPostgateUri(postUri: string) {
 
 export function uriToDid(uri: string): DidString {
   // @NOTE URIs returned from the dataplane are always in DID form.
-  return new AtUri(uri).hostname as DidString
+  return new AtUri(uri).did
 }
 
 // @TODO temp fix for proliferation of invalid pinned post values

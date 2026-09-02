@@ -1851,9 +1851,6 @@ importers:
       '@atproto-labs/fetch-node':
         specifier: workspace:^
         version: link:../internal/fetch-node
-      '@atproto/api':
-        specifier: workspace:^
-        version: link:../api
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
@@ -1866,18 +1863,15 @@ importers:
       '@atproto/lex':
         specifier: workspace:^
         version: link:../lex/lex
-      '@atproto/lexicon':
+      '@atproto/lex-password-session':
         specifier: workspace:^
-        version: link:../lexicon
+        version: link:../lex/lex-password-session
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
       '@atproto/ws-client':
         specifier: workspace:^
         version: link:../ws-client
-      '@atproto/xrpc':
-        specifier: workspace:^
-        version: link:../xrpc
       '@atproto/xrpc-server':
         specifier: workspace:^
         version: link:../xrpc-server
@@ -1954,9 +1948,12 @@ importers:
         specifier: ^8.12.0
         version: 8.18.0
     devDependencies:
-      '@atproto/lex-cli':
+      '@atproto/api':
         specifier: workspace:^
-        version: link:../lex-cli
+        version: link:../api
+      '@atproto/lexicon':
+        specifier: workspace:^
+        version: link:../lexicon
       '@atproto/pds':
         specifier: workspace:^
         version: link:../pds

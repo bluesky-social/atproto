@@ -25,10 +25,8 @@ import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 ```
 
 This is the server package the services actually use — `@atproto/lex-server` is
-a separate package that no service in this repo consumes. `packages/pds` and
-`packages/bsky` are fully on `server.add()`; `packages/ozone` is still on the
-legacy generated stack (see the
-[lexification-server skill](../lexification-server/SKILL.md)).
+a separate package that no service in this repo consumes. `packages/pds`,
+`packages/bsky` and `packages/ozone` are all fully on `server.add()`.
 
 Watch the casing: `XRPCError` is this package's server-side class, thrown in
 handlers. `XrpcError` is the _client_-side class from `@atproto/lex-client`.

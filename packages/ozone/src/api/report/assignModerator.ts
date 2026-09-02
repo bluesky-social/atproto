@@ -1,10 +1,10 @@
-import { ForbiddenError } from '@atproto/xrpc-server'
+import { ForbiddenError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 import { getAuthDid } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.report.assignModerator({
+  server.add(tools.ozone.report.assignModerator, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const authDid = getAuthDid(auth, ctx.cfg.service.did)
