@@ -44,6 +44,7 @@ COPY ./packages/lex/lex-data ./packages/lex/lex-data
 COPY ./packages/lex/lex-document ./packages/lex/lex-document
 COPY ./packages/lex/lex-installer ./packages/lex/lex-installer
 COPY ./packages/lex/lex-json ./packages/lex/lex-json
+COPY ./packages/lex/lex-password-session ./packages/lex/lex-password-session
 COPY ./packages/lex/lex-resolver ./packages/lex/lex-resolver
 COPY ./packages/lex/lex-schema ./packages/lex/lex-schema
 COPY ./packages/lex/lex ./packages/lex/lex
