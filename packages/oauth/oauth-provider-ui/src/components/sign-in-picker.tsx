@@ -79,7 +79,8 @@ export function SignInPicker({
           {/* @NOTE Bordered like `Avatar`, which draws a hairline ring around
             every account picture, so the disc reads as the same object. */}
           <ItemMedia className="bg-muted text-muted-foreground size-12 rounded-full border">
-            <AtSignIcon aria-hidden className="size-6" />
+            {/* Same box as the avatar fallback's user glyph. */}
+            <AtSignIcon aria-hidden className="m-[10%] size-[80%]" />
           </ItemMedia>
           <ItemContent className="min-w-0">
             <ItemTitle className="w-full text-lg leading-tight">
