@@ -1,6 +1,7 @@
 import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
+import { Trans } from '@lingui/react/macro'
 import type { CSSProperties, JSX, ReactNode } from 'react'
 import {
   Card,
@@ -28,6 +29,26 @@ export type AuthShellProps = Override<
     documentTitle?: string | MessageDescriptor
   }
 >
+
+/**
+ * The footer names the standard links by one word each — "Terms" rather
+ * than "Terms of Service" — keyed on the link's `rel`, so all four fit on one
+ * line at phone width. A link with any other `rel` keeps its own title.
+ */
+function shortLinkLabel(rel: string | undefined): ReactNode {
+  switch (rel) {
+    case 'canonical':
+      return <Trans>Home</Trans>
+    case 'terms-of-service':
+      return <Trans>Terms</Trans>
+    case 'privacy-policy':
+      return <Trans>Privacy</Trans>
+    case 'help':
+      return <Trans>Support</Trans>
+    default:
+      return undefined
+  }
+}
 
 /**
  * The card's inner spacing. `Card` sets `--card-spacing` to 1rem through an
@@ -112,21 +133,23 @@ export function AuthShell({
           <CardContent>{children}</CardContent>
 
           <CardFooter className="flex-col justify-center gap-4 border-t-0 bg-transparent pt-2">
+            {/* @NOTE Same height as the action buttons; the trigger sizes
+              itself through a data attribute, so the override carries the
+              same variant. */}
+            <LocaleSelector className="px-3 text-[15px] data-[size=sm]:h-10" />
             {links?.length ? (
-              <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[13px]">
+              <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-4 gap-y-1 whitespace-nowrap text-base">
                 {links.map((link) => (
                   <LinkAnchor
                     key={link.href}
                     link={link}
                     className="hover:text-foreground rounded-sm transition-colors hover:underline"
-                  />
+                  >
+                    {shortLinkLabel(link.rel)}
+                  </LinkAnchor>
                 ))}
               </div>
             ) : null}
-            {/* @NOTE Same height as the action buttons; the trigger sizes
-              itself through a data attribute, so the override carries the
-              same variant. */}
-            <LocaleSelector className="px-3 text-[15px] data-[size=sm]:h-10" />
           </CardFooter>
         </Card>
       </div>

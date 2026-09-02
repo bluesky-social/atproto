@@ -657,6 +657,7 @@ msgstr "Help"
 msgid "Hide"
 msgstr "Hide"
 
+#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Home"
@@ -931,6 +932,10 @@ msgstr "Please try again in a moment."
 msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
 msgstr "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
 
+#: src/components/layouts/auth-shell.tsx
+msgid "Privacy"
+msgstr "Privacy"
+
 #: src/components/utils/link-title.tsx
 msgid "Privacy Policy"
 msgstr "Privacy Policy"
@@ -1099,6 +1104,7 @@ msgstr "Successfully removed device"
 msgid "Successfully revoked access"
 msgstr "Successfully revoked access"
 
+#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 msgid "Support"
 msgstr "Support"
@@ -1110,6 +1116,10 @@ msgstr "Technical details"
 #: src/components/utils/scope-description.tsx
 msgid "Temporarily activate or deactivate your account"
 msgstr "Temporarily activate or deactivate your account"
+
+#: src/components/layouts/auth-shell.tsx
+msgid "Terms"
+msgstr "Terms"
 
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"

@@ -648,6 +648,7 @@ msgstr ""
 msgid "Hide"
 msgstr "숨기기"
 
+#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Home"
@@ -922,6 +923,10 @@ msgstr ""
 msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
 msgstr "{remainingSeconds, plural, other {#초}} 후에 다시 시도해 주세요."
 
+#: src/components/layouts/auth-shell.tsx
+msgid "Privacy"
+msgstr "개인정보"
+
 #: src/components/utils/link-title.tsx
 msgid "Privacy Policy"
 msgstr "개인정보 처리방침"
@@ -1090,6 +1095,7 @@ msgstr "기기를 제거했습니다"
 msgid "Successfully revoked access"
 msgstr "접근 권한을 취소했습니다"
 
+#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 msgid "Support"
 msgstr "지원"
@@ -1101,6 +1107,10 @@ msgstr "기술 세부 정보"
 #: src/components/utils/scope-description.tsx
 msgid "Temporarily activate or deactivate your account"
 msgstr "계정을 일시적으로 활성화 또는 비활성화합니다"
+
+#: src/components/layouts/auth-shell.tsx
+msgid "Terms"
+msgstr "약관"
 
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"

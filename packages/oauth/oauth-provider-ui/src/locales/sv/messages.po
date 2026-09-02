@@ -657,6 +657,7 @@ msgstr "Hjälp"
 msgid "Hide"
 msgstr "Dölj"
 
+#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Home"
@@ -931,6 +932,10 @@ msgstr "Försök igen om en stund."
 msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
 msgstr "Vänta {remainingSeconds, plural, one {# sekund} other {# sekunder}} innan du försöker igen."
 
+#: src/components/layouts/auth-shell.tsx
+msgid "Privacy"
+msgstr "Integritet"
+
 #: src/components/utils/link-title.tsx
 msgid "Privacy Policy"
 msgstr "Integritetspolicy"
@@ -1099,6 +1104,7 @@ msgstr "Enheten togs bort"
 msgid "Successfully revoked access"
 msgstr "Åtkomsten återkallades"
 
+#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 msgid "Support"
 msgstr "Support"
@@ -1110,6 +1116,10 @@ msgstr "Tekniska detaljer"
 #: src/components/utils/scope-description.tsx
 msgid "Temporarily activate or deactivate your account"
 msgstr "Tillfälligt aktivera eller inaktivera ditt konto"
+
+#: src/components/layouts/auth-shell.tsx
+msgid "Terms"
+msgstr "Villkor"
 
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"

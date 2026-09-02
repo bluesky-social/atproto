@@ -656,6 +656,7 @@ msgstr "ヘルプ"
 msgid "Hide"
 msgstr "隠す"
 
+#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Home"
@@ -930,6 +931,10 @@ msgstr "しばらくしてからもう一度お試しください。"
 msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
 msgstr "{remainingSeconds, plural, other {#秒}}待ってからもう一度やり直してください。"
 
+#: src/components/layouts/auth-shell.tsx
+msgid "Privacy"
+msgstr "プライバシー"
+
 #: src/components/utils/link-title.tsx
 msgid "Privacy Policy"
 msgstr "プライバシーポリシー"
@@ -1098,6 +1103,7 @@ msgstr "デバイスが正常に取り消されました"
 msgid "Successfully revoked access"
 msgstr "アクセスが正常に取り消されました"
 
+#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 msgid "Support"
 msgstr "サポート"
@@ -1109,6 +1115,10 @@ msgstr "技術的な詳細"
 #: src/components/utils/scope-description.tsx
 msgid "Temporarily activate or deactivate your account"
 msgstr "一時的にアカウントを有効化または無効化する"
+
+#: src/components/layouts/auth-shell.tsx
+msgid "Terms"
+msgstr "利用規約"
 
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"
