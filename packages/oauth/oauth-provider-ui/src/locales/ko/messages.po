@@ -325,6 +325,7 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Code"
@@ -616,6 +617,10 @@ msgstr "비밀번호 분실"
 #: src/components/sign-in-form.tsx
 msgid "Forgot?"
 msgstr "분실"
+
+#: src/components/error-view.tsx
+msgid "Go back"
+msgstr "뒤로 가기"
 
 #: src/components/consent-view.tsx
 msgid "Grant access to your account:"
@@ -970,7 +975,6 @@ msgstr "비밀번호 재설정"
 msgid "Reset your password"
 msgstr "비밀번호 재설정"
 
-#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 #: src/routes/account/u/$accountId/apps.tsx
 #: src/routes/account/u/$accountId/devices.tsx
@@ -1219,6 +1223,10 @@ msgstr "대상"
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Troubleshoot"
 msgstr ""
+
+#: src/components/error-view.tsx
+msgid "Try again"
+msgstr "다시 시도"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Type"

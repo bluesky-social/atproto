@@ -325,6 +325,7 @@ msgstr "Klient"
 msgid "Close"
 msgstr "Stäng"
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Code"
@@ -616,6 +617,10 @@ msgstr "Glömt lösenord"
 #: src/components/sign-in-form.tsx
 msgid "Forgot?"
 msgstr "Glömt?"
+
+#: src/components/error-view.tsx
+msgid "Go back"
+msgstr "Gå tillbaka"
 
 #: src/components/consent-view.tsx
 msgid "Grant access to your account:"
@@ -979,7 +984,6 @@ msgstr "Återställ lösenord"
 msgid "Reset your password"
 msgstr "Återställ ditt lösenord"
 
-#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 #: src/routes/account/u/$accountId/apps.tsx
 #: src/routes/account/u/$accountId/devices.tsx
@@ -1228,6 +1232,10 @@ msgstr "Gentemot"
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Troubleshoot"
 msgstr "Felsök"
+
+#: src/components/error-view.tsx
+msgid "Try again"
+msgstr "Försök igen"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Type"

@@ -330,6 +330,7 @@ msgstr "Client"
 msgid "Close"
 msgstr "Închidere"
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Code"
@@ -621,6 +622,10 @@ msgstr "Ați uitat parola"
 #: src/components/sign-in-form.tsx
 msgid "Forgot?"
 msgstr "Ați uitat parola?"
+
+#: src/components/error-view.tsx
+msgid "Go back"
+msgstr "Înapoi"
 
 #: src/components/consent-view.tsx
 msgid "Grant access to your account:"
@@ -984,7 +989,6 @@ msgstr "Resetare parolă"
 msgid "Reset your password"
 msgstr "Resetați-vă parola"
 
-#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 #: src/routes/account/u/$accountId/apps.tsx
 #: src/routes/account/u/$accountId/devices.tsx
@@ -1233,6 +1237,10 @@ msgstr "Către"
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Troubleshoot"
 msgstr "Depanare"
+
+#: src/components/error-view.tsx
+msgid "Try again"
+msgstr "Încercați din nou"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Type"

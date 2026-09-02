@@ -325,6 +325,7 @@ msgstr "Client"
 msgid "Close"
 msgstr "Fermer"
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Code"
@@ -616,6 +617,10 @@ msgstr "Mot de passe oublié"
 #: src/components/sign-in-form.tsx
 msgid "Forgot?"
 msgstr "Oublié ?"
+
+#: src/components/error-view.tsx
+msgid "Go back"
+msgstr "Retour"
 
 #: src/components/consent-view.tsx
 msgid "Grant access to your account:"
@@ -979,7 +984,6 @@ msgstr "Réinitialiser le mot de passe"
 msgid "Reset your password"
 msgstr "Réinitialisez votre mot de passe"
 
-#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 #: src/routes/account/u/$accountId/apps.tsx
 #: src/routes/account/u/$accountId/devices.tsx
@@ -1228,6 +1232,10 @@ msgstr "Auprès de"
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Troubleshoot"
 msgstr "Dépannage"
+
+#: src/components/error-view.tsx
+msgid "Try again"
+msgstr "Réessayer"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Type"

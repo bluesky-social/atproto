@@ -325,6 +325,7 @@ msgstr "Client"
 msgid "Close"
 msgstr "Close"
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Code"
@@ -616,6 +617,10 @@ msgstr "Forgot Password"
 #: src/components/sign-in-form.tsx
 msgid "Forgot?"
 msgstr "Forgot?"
+
+#: src/components/error-view.tsx
+msgid "Go back"
+msgstr "Go back"
 
 #: src/components/consent-view.tsx
 msgid "Grant access to your account:"
@@ -979,7 +984,6 @@ msgstr "Reset Password"
 msgid "Reset your password"
 msgstr "Reset your password"
 
-#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 #: src/routes/account/u/$accountId/apps.tsx
 #: src/routes/account/u/$accountId/devices.tsx
@@ -1228,6 +1232,10 @@ msgstr "Towards"
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Troubleshoot"
 msgstr "Troubleshoot"
+
+#: src/components/error-view.tsx
+msgid "Try again"
+msgstr "Try again"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Type"

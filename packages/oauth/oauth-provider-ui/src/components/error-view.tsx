@@ -2,7 +2,6 @@ import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
-import { CircleAlertIcon } from 'lucide-react'
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { ErrorDetails } from '#/components/feedback/error-details.tsx'
 import type { ErrorParser } from '#/components/feedback/error-notice.tsx'
@@ -26,10 +25,11 @@ export type ErrorViewProps = {
  * The error surface for the whole app: the standalone error page, both
  * `ErrorBoundary` fallbacks, and the router's `errorComponent`.
  *
- * Laid out as a calm full-card state — an alert disc, the heading, the
- * message as plain copy — rather than a boxed alert inside an otherwise
- * empty card. Clicking the message five times toggles the technical details,
- * as `ErrorNotice` does.
+ * Shaped like every other auth screen — heading, one line of copy, a stack
+ * of actions — so an error does not look like a different product. The copy
+ * is the parsed description; the error code, when there is one, sits under
+ * it in small type for support conversations. Clicking the copy five times
+ * toggles the technical details, as `ErrorNotice` does.
  *
  * @NOTE Framed with `AuthShell`, which every call site renders *instead of* the
  * tree, never inside it — so the two shells cannot nest and fight over the
@@ -67,23 +67,29 @@ export function ErrorView({
     setClickCount(0)
   }, [parsed])
 
-  return (
-    <AuthShell title={title}>
-      <div className="flex flex-col items-center gap-5 text-center">
-        <div
-          aria-hidden
-          className="bg-destructive/10 text-destructive flex size-16 items-center justify-center rounded-full"
-        >
-          <CircleAlertIcon className="size-8" />
-        </div>
+  // Without a caller-supplied retry, the page can still be reloaded — the
+  // standalone error page has no app around it to recover into.
+  const canGoBack = typeof window !== 'undefined' && window.history.length > 1
 
-        {parsed && (
-          <p
+  return (
+    <AuthShell
+      title={title}
+      subtitle={
+        parsed && (
+          <span
             role="alert"
-            className="text-muted-foreground text-balance text-base leading-snug"
             onClick={() => setClickCount((c) => c + 1)}
+            className="text-balance"
           >
             {_(parsed.description ?? msg`An unknown error occurred`)}
+          </span>
+        )
+      }
+    >
+      <div className="flex flex-col gap-5">
+        {parsed?.code && !showDetails && (
+          <p className="text-muted-foreground text-center font-mono text-xs">
+            <Trans context="Error">Code</Trans>: {parsed.code}
           </p>
         )}
 
@@ -94,23 +100,28 @@ export function ErrorView({
             message={parsed.message}
             payload={parsed.payload}
             stack={parsed.stack}
-            className="w-full text-left"
+            className="mt-0"
           />
         )}
 
-        {(retry || children) && (
-          <div className="flex w-full flex-col gap-2 pt-1">
-            {retry && (
-              <Button
-                className={cn(actionButton, 'w-full')}
-                onClick={() => retry()}
-              >
-                {retryLabel || <Trans>Retry</Trans>}
-              </Button>
-            )}
-            {children}
-          </div>
-        )}
+        <div className="flex flex-col gap-2">
+          <Button
+            className={cn(actionButton, 'w-full')}
+            onClick={() => (retry ? retry() : window.location.reload())}
+          >
+            {retryLabel || <Trans>Try again</Trans>}
+          </Button>
+          {canGoBack && (
+            <Button
+              variant="secondary"
+              className={cn(actionButton, 'w-full')}
+              onClick={() => window.history.back()}
+            >
+              <Trans>Go back</Trans>
+            </Button>
+          )}
+          {children}
+        </div>
       </div>
     </AuthShell>
   )

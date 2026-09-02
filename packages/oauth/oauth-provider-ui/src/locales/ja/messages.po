@@ -325,6 +325,7 @@ msgstr "クライアント"
 msgid "Close"
 msgstr "閉じる"
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Code"
@@ -615,6 +616,10 @@ msgstr "パスワードを忘れた"
 #: src/components/sign-in-form.tsx
 msgid "Forgot?"
 msgstr "忘れた？"
+
+#: src/components/error-view.tsx
+msgid "Go back"
+msgstr "戻る"
 
 #: src/components/consent-view.tsx
 msgid "Grant access to your account:"
@@ -978,7 +983,6 @@ msgstr "パスワードをリセット"
 msgid "Reset your password"
 msgstr "パスワードをリセット"
 
-#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 #: src/routes/account/u/$accountId/apps.tsx
 #: src/routes/account/u/$accountId/devices.tsx
@@ -1227,6 +1231,10 @@ msgstr "対象"
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Troubleshoot"
 msgstr "トラブルシュート"
+
+#: src/components/error-view.tsx
+msgid "Try again"
+msgstr "もう一度試す"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Type"
