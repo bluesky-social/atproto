@@ -1,6 +1,6 @@
+import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
-import type { ReportView } from '../../lexicon/types/tools/ozone/report/defs.js'
+import { tools } from '../../lexicons/index.js'
 import { getReportsByIds } from '../../mod-service/report.js'
 import {
   formatActivityView,
@@ -10,7 +10,7 @@ import { buildReportView, hydrateReportInfo } from '../../report/views.js'
 import { getPdsAccountInfos } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.report.queryActivities({
+  server.add(tools.ozone.report.queryActivities, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth, req }) => {
       const db = ctx.db
@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
         (dids) => teamService.viewByDids(dids),
         labelers,
       )
-      const reportViews = new Map<number, ReportView>()
+      const reportViews = new Map<number, tools.ozone.report.defs.ReportView>()
       for (const report of reports) {
         reportViews.set(
           report.id,

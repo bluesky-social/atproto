@@ -59,11 +59,13 @@ export class IntersectionSchema<
 > {
   readonly type = 'intersection' as const
 
-  constructor(
-    protected readonly left: Left,
-    protected readonly right: Right,
-  ) {
+  protected readonly left: Left
+  protected readonly right: Right
+
+  constructor(left: Left, right: Right) {
     super()
+    this.left = left
+    this.right = right
   }
 
   validateInContext(

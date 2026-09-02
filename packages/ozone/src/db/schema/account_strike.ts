@@ -1,9 +1,10 @@
+import type { DatetimeString, DidString } from '@atproto/lex'
 export const accountStrikeTableName = 'account_strike'
 
 export interface AccountStrike {
-  did: string // Primary key
-  firstStrikeAt: string | null
-  lastStrikeAt: string | null
+  did: DidString // Primary key
+  firstStrikeAt: DatetimeString | null
+  lastStrikeAt: DatetimeString | null
   activeStrikeCount: number
   totalStrikeCount: number
 }

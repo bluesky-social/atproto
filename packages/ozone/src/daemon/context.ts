@@ -1,8 +1,8 @@
 import type * as prometheus from 'prom-client'
-import { AtpAgent } from '@atproto/api'
 import { allFulfilled } from '@atproto/common'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
+import { Client } from '@atproto/lex'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { BackgroundQueue } from '../background.js'
 import type { OzoneConfig, OzoneSecrets } from '../config/index.js'
@@ -69,7 +69,11 @@ export class DaemonContext {
       })
     }
 
-    const appviewAgent = new AtpAgent({ service: cfg.appview.url })
+    // Trust internal services to send us well-formed responses
+    const appviewClient = new Client(
+      { service: cfg.appview.url },
+      { strictResponseProcessing: false },
+    )
     const createAuthHeaders = (aud: string, lxm: string) =>
       createServiceAuthHeaders({
         iss: `${cfg.service.did}#atproto_labeler`,
@@ -94,13 +98,13 @@ export class DaemonContext {
       backgroundQueue,
       idResolver,
       eventPusher,
-      appviewAgent,
+      appviewClient,
       createAuthHeaders,
       strikeService,
     )
     const scheduledActionService = ScheduledActionService.creator()
     const teamService = TeamService.creator(
-      appviewAgent,
+      appviewClient,
       cfg.appview.did,
       createAuthHeaders,
     )

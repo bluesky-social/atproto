@@ -24,8 +24,11 @@ export class EnumSchema<
 > extends Schema<TValue> {
   readonly type = 'enum' as const
 
-  constructor(readonly values: readonly TValue[]) {
+  readonly values: readonly TValue[]
+
+  constructor(values: readonly TValue[]) {
     super()
+    this.values = values
   }
 
   validateInContext(

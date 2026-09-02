@@ -1,6 +1,8 @@
-import type { ReasonType } from '../lexicon/types/com/atproto/moderation/defs.js'
+import type { com } from '../lexicons/index.js'
 
-export const getTagForReport = (reasonType: ReasonType) => {
+export const getTagForReport = (
+  reasonType: com.atproto.moderation.defs.ReasonType,
+) => {
   const reasonWithoutPrefix = reasonType
     .replace('com.atproto.moderation.defs#reason', '')
     .replace('tools.ozone.report.defs#reason', '')

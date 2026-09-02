@@ -34,14 +34,13 @@
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:^",
-    "@atproto/api": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
-    "@atproto/lexicon": "workspace:^",
+    "@atproto/lex": "workspace:^",
+    "@atproto/lex-password-session": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/ws-client": "workspace:^",
-    "@atproto/xrpc": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.1",
     "@opentelemetry/exporter-trace-otlp-http": "^0.220.0",
@@ -69,7 +68,8 @@
     "ws": "^8.12.0"
   },
   "devDependencies": {
-    "@atproto/lex-cli": "workspace:^",
+    "@atproto/api": "workspace:^",
+    "@atproto/lexicon": "workspace:^",
     "@atproto/pds": "workspace:^",
     "@did-plc/server": "^0.0.1",
     "@jest/globals": "^30.0.0",
@@ -82,8 +82,8 @@
     "jest": "^30.0.0"
   },
   "scripts": {
-    "codegen:lex": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
-    "prebuild": "[ -f ./src/lexicon/index.ts ] && [ -z \"$(find ../../lexicons -newer ./src/lexicon/index.ts -type f -print -quit)\" ] || pnpm run codegen:lex",
+    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",

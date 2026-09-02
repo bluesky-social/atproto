@@ -29,8 +29,11 @@ export type BytesSchemaOptions = {
 export class BytesSchema extends Schema<Uint8Array> {
   readonly type = 'bytes' as const
 
-  constructor(readonly options: BytesSchemaOptions = {}) {
+  readonly options?: BytesSchemaOptions
+
+  constructor(options?: BytesSchemaOptions) {
     super()
+    this.options = options
   }
 
   validateInContext(
@@ -44,12 +47,12 @@ export class BytesSchema extends Schema<Uint8Array> {
       return ctx.issueUnexpectedType(input, 'bytes')
     }
 
-    const { minLength } = this.options
+    const minLength = this.options?.minLength
     if (minLength != null && bytes.length < minLength) {
       return ctx.issueTooSmall(bytes, 'bytes', minLength, bytes.length)
     }
 
-    const { maxLength } = this.options
+    const maxLength = this.options?.maxLength
     if (maxLength != null && bytes.length > maxLength) {
       return ctx.issueTooBig(bytes, 'bytes', maxLength, bytes.length)
     }

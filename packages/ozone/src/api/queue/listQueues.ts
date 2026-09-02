@@ -1,8 +1,10 @@
+import { isNsidString } from '@atproto/lex'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.queue.listQueues({
+  server.add(tools.ozone.queue.listQueues, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params }) => {
       const {
@@ -13,6 +15,15 @@ export default function (server: Server, ctx: AppContext) {
         collection,
         reportTypes,
       } = params
+
+      // @TODO The lexicon should define the "collection" property as a NSID
+      // string format (but it doesn't)
+      if (collection != null && !isNsidString(collection)) {
+        throw new InvalidRequestError(
+          'Invalid collection NSID',
+          'InvalidRequest',
+        )
+      }
 
       const queueService = ctx.queueService(ctx.db)
 
