@@ -27,9 +27,7 @@ describe('EventPusher', () => {
     const pusher = createPusher()
     const updateSubjectStatus = jest
       .fn<() => Promise<never>>()
-      .mockRejectedValue(
-        new XRPCError(400, 'InvalidRequest', 'Could not find account'),
-      )
+      .mockRejectedValue(new XRPCError(400, 'NotFound', 'Repo not found'))
     pusher.pds!.agent.com.atproto.admin.updateSubjectStatus =
       updateSubjectStatus as any
 

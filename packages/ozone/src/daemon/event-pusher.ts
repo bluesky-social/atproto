@@ -257,7 +257,7 @@ export class EventPusher {
       if (
         err instanceof XRPCError &&
         err.status === ResponseType.InvalidRequest &&
-        err.message === 'Could not find account'
+        err.error === 'NotFound'
       ) {
         return 'confirmed'
       }
