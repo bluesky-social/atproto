@@ -53,7 +53,6 @@ export function ConsentView({
         clientTrusted={clientTrusted}
         clientFirstParty={clientFirstParty}
         permissionSets={permissionSets}
-        account={account}
         scope={scope}
         onBack={onBack}
         onConsent={onConsent}

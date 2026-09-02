@@ -1327,12 +1327,12 @@ msgid "Verify your email"
 msgstr ""
 
 #: src/components/consent-form.tsx
-msgid "wants to access your account:"
-msgstr "quiere acceder a tu cuenta:"
+msgid "wants to access your account"
+msgstr "quiere acceder a tu cuenta"
 
 #: src/components/consent-form.tsx
-msgid "wants to uniquely identify you through your account:"
-msgstr "quiere identificarte de forma única a través de tu cuenta:"
+msgid "wants to uniquely identify you through your account"
+msgstr "quiere identificarte de forma única a través de tu cuenta"
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"

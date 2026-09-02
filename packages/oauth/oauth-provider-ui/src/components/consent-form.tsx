@@ -1,9 +1,7 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { type ReactNode, useState } from 'react'
-import type { Account } from '@atproto/oauth-provider-api'
 import { AccountPermission } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
-import { AccountIdentifier } from '#/components/identity/account-identifier.tsx'
 import { ClientAvatar } from '#/components/identity/client-avatar.tsx'
 import { ClientName } from '#/components/identity/client-name.tsx'
 import { Button } from '#/components/ui/button.tsx'
@@ -20,7 +18,6 @@ export type ConsentFormProps = {
   clientFirstParty: boolean
   permissionSets: PermissionSets
 
-  account: Account
   scope?: string
 
   onConsent: (data: { scope?: string }) => void | PromiseLike<void>
@@ -57,7 +54,6 @@ export function ConsentForm({
   clientFirstParty,
   permissionSets,
 
-  account,
   scope,
 
   onConsent,
@@ -119,23 +115,9 @@ export function ConsentForm({
         }
         description={
           !scope || scope === 'atproto' ? (
-            <>
-              <Trans>
-                wants to uniquely identify you through your account:
-              </Trans>
-              <AccountIdentifier
-                account={account}
-                className="text-foreground mt-1 block font-semibold"
-              />
-            </>
+            <Trans>wants to uniquely identify you through your account</Trans>
           ) : (
-            <>
-              <Trans>wants to access your account:</Trans>
-              <AccountIdentifier
-                account={account}
-                className="text-foreground mt-1 block font-semibold"
-              />
-            </>
+            <Trans>wants to access your account</Trans>
           )
         }
         hint={t`Technical details`}

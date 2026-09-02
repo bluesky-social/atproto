@@ -1336,12 +1336,12 @@ msgid "Verify your email"
 msgstr "メールアドレスを確認"
 
 #: src/components/consent-form.tsx
-msgid "wants to access your account:"
-msgstr "は以下のアカウントにアクセスしようとしています："
+msgid "wants to access your account"
+msgstr "はあなたのアカウントにアクセスしようとしています"
 
 #: src/components/consent-form.tsx
-msgid "wants to uniquely identify you through your account:"
-msgstr "は以下のアカウントを通じてあなたを一意に識別しようとしています："
+msgid "wants to uniquely identify you through your account"
+msgstr "はあなたのアカウントを通じてあなたを一意に識別しようとしています"
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"

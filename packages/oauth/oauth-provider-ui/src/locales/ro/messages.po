@@ -1341,12 +1341,12 @@ msgid "Verify your email"
 msgstr "Verificați-vă e-mailul"
 
 #: src/components/consent-form.tsx
-msgid "wants to access your account:"
-msgstr "dorește să vă acceseze contul:"
+msgid "wants to access your account"
+msgstr "dorește să vă acceseze contul"
 
 #: src/components/consent-form.tsx
-msgid "wants to uniquely identify you through your account:"
-msgstr "dorește să vă identifice în mod unic prin contul dvs.:"
+msgid "wants to uniquely identify you through your account"
+msgstr "dorește să vă identifice în mod unic prin contul dvs."
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"
