@@ -28,10 +28,6 @@
       "types": "./dist/telemetry/telemetry.d.ts",
       "default": "./dist/telemetry/telemetry.js"
     },
-    "./telemetry/rpc-status": {
-      "types": "./dist/telemetry/rpc-status.d.ts",
-      "default": "./dist/telemetry/rpc-status.js"
-    },
     "./package.json": {
       "default": "./package.json"
     }

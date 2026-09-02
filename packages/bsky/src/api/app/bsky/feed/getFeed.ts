@@ -287,7 +287,10 @@ const skeletonFromFeedGen = async (
   // @TODO currently passthrough auth headers from pds
   const result = await xrpcSafe(endpoint, app.bsky.feed.getFeedSkeleton, {
     strictResponseProcessing: false,
-    signal: AbortSignal.any([params.signal, AbortSignal.timeout(10_000)]),
+    signal: AbortSignal.any([
+      params.signal,
+      AbortSignal.timeout(ctx.cfg.feedGenSkeletonTimeout),
+    ]),
     headers,
     params: {
       feed: params.feed,

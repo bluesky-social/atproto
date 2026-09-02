@@ -1,11 +1,29 @@
 import { jest } from '@jest/globals'
-import { XRPCError } from '@atproto/xrpc'
+import { XrpcInternalError, XrpcResponseError } from '@atproto/lex'
 import { EventPusher } from '../src/daemon/event-pusher.js'
+import { com } from '../src/lexicons/index.js'
 
 const subject = {
   $type: 'com.atproto.admin.defs#repoRef' as const,
   did: 'did:plc:test',
 }
+
+const updateSubjectStatus = com.atproto.admin.updateSubjectStatus as any
+
+const responseError = (
+  status: number,
+  error: string,
+  message: string,
+  headers?: HeadersInit,
+) =>
+  new XrpcResponseError(
+    updateSubjectStatus,
+    new Response(null, { status, headers }),
+    {
+      encoding: 'application/json',
+      body: { error, message },
+    },
+  )
 
 describe('EventPusher', () => {
   const createPusher = () =>
@@ -23,17 +41,22 @@ describe('EventPusher', () => {
   const updateSubject = (pusher: EventPusher) =>
     (pusher as any).updateSubjectOnService(pusher.pds, subject, 'TAKEDOWN-1')
 
-  it('confirms events when the target account does not exist', async () => {
-    const pusher = createPusher()
-    const updateSubjectStatus = jest
-      .fn<() => Promise<never>>()
-      .mockRejectedValue(new XRPCError(400, 'NotFound', 'Repo not found'))
-    pusher.pds!.agent.com.atproto.admin.updateSubjectStatus =
-      updateSubjectStatus as any
+  it.each([
+    ['NotFound', 'Repo not found'],
+    ['InvalidRequest', 'Could not find account'],
+  ])(
+    'confirms events when the target account does not exist (%s)',
+    async (error, message) => {
+      const pusher = createPusher()
+      const updateSubjectStatus = jest
+        .fn<() => Promise<never>>()
+        .mockRejectedValue(responseError(400, error, message))
+      pusher.pds!.client.call = updateSubjectStatus as any
 
-    await expect(updateSubject(pusher)).resolves.toBe('confirmed')
-    expect(updateSubjectStatus).toHaveBeenCalledTimes(1)
-  })
+      await expect(updateSubject(pusher)).resolves.toBe('confirmed')
+      expect(updateSubjectStatus).toHaveBeenCalledTimes(1)
+    },
+  )
 
   it('defers events until the target service rate limit resets', async () => {
     const pusher = createPusher()
@@ -41,12 +64,11 @@ describe('EventPusher', () => {
     const updateSubjectStatus = jest
       .fn<() => Promise<never>>()
       .mockRejectedValue(
-        new XRPCError(429, 'RateLimitExceeded', 'Rate Limit Exceeded', {
+        responseError(429, 'RateLimitExceeded', 'Rate Limit Exceeded', {
           'ratelimit-reset': String(resetAt),
         }),
       )
-    pusher.pds!.agent.com.atproto.admin.updateSubjectStatus =
-      updateSubjectStatus as any
+    pusher.pds!.client.call = updateSubjectStatus as any
 
     await expect(updateSubject(pusher)).resolves.toBe('deferred')
     await expect(updateSubject(pusher)).resolves.toBe('deferred')
@@ -58,10 +80,11 @@ describe('EventPusher', () => {
     const pusher = createPusher()
     const updateSubjectStatus = jest
       .fn<() => Promise<unknown>>()
-      .mockRejectedValueOnce(new XRPCError(1))
+      .mockRejectedValueOnce(
+        new XrpcInternalError(updateSubjectStatus, 'Transport failure'),
+      )
       .mockResolvedValueOnce({})
-    pusher.pds!.agent.com.atproto.admin.updateSubjectStatus =
-      updateSubjectStatus as any
+    pusher.pds!.client.call = updateSubjectStatus as any
 
     await expect(updateSubject(pusher)).resolves.toBe('confirmed')
     expect(updateSubjectStatus).toHaveBeenCalledTimes(2)
@@ -76,8 +99,7 @@ describe('EventPusher', () => {
         pusher.pds!.rateLimitedUntil = rateLimitedUntil
         return {}
       })
-    pusher.pds!.agent.com.atproto.admin.updateSubjectStatus =
-      updateSubjectStatus as any
+    pusher.pds!.client.call = updateSubjectStatus as any
 
     await expect(updateSubject(pusher)).resolves.toBe('confirmed')
     expect(pusher.pds!.rateLimitedUntil).toBe(rateLimitedUntil)

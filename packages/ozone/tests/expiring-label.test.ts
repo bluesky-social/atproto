@@ -1,3 +1,4 @@
+import { ids } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
 import {
   type ModeratorClient,
@@ -5,7 +6,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
+import type { DatetimeString } from '@atproto/lex'
 
 describe('expiring label', () => {
   let network: TestNetwork
@@ -62,7 +63,7 @@ describe('expiring label', () => {
     // Manually expire the label in db
     await network.ozone.ctx.db.db
       .updateTable('label')
-      .set({ exp: now })
+      .set({ exp: now as DatetimeString })
       .where('uri', '=', sc.dids.carol)
       .execute()
 

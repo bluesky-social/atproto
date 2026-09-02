@@ -38,7 +38,6 @@
     "@atproto-labs/opentelemetry-node": "workspace:^",
     "@atproto-labs/xrpc-utils": "workspace:^",
     "@atproto/api": "workspace:^",
-    "@atproto/bsync": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/did": "workspace:^",

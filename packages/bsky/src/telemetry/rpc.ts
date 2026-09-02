@@ -25,12 +25,8 @@ import {
   METRIC_RPC_CLIENT_CALL_DURATION,
   RPC_SYSTEM_NAME_VALUE_CONNECTRPC,
 } from '@opentelemetry/semantic-conventions/incubating'
-// @NOTE Imported from bsync so that both halves of a call label their status
-// codes identically, and can be plotted on the same dimensions.
-import {
-  RPC_CALL_DURATION_BUCKETS,
-  statusCodeToString,
-} from '@atproto/bsync/telemetry/rpc-status'
+import { RPC_CALL_DURATION_BUCKETS } from '@atproto-labs/opentelemetry-node/conventions'
+import { statusCodeToString } from '@atproto-labs/opentelemetry-node/util'
 
 type RpcRequest = UnaryRequest | StreamRequest
 

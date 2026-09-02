@@ -1,17 +1,20 @@
 import type { Insertable, Selectable } from 'kysely'
 import PQueue from 'p-queue'
-import { AtpAgent } from '@atproto/api'
 import { SECOND, retry } from '@atproto/common'
-import { ResponseType, XRPCError } from '@atproto/xrpc'
+import {
+  Client,
+  type DidString,
+  XrpcFetchError,
+  XrpcInternalError,
+  XrpcResponseError,
+} from '@atproto/lex'
 import type { Database } from '../db/index.js'
 import type { BlobPushEvent } from '../db/schema/blob_push_event.js'
 import type { RepoPushEventType } from '../db/schema/repo_push_event.js'
-import { ids } from '../lexicon/lexicons.js'
-import type { InputSchema } from '../lexicon/types/com/atproto/admin/updateSubjectStatus.js'
+import { com } from '../lexicons/index.js'
 import { dbLogger } from '../logger.js'
-import { RETRYABLE_HTTP_STATUS_CODES } from '../util.js'
 
-type EventSubject = InputSchema['subject']
+type EventSubject = com.atproto.admin.updateSubjectStatus.$InputBody['subject']
 
 type PollState = {
   timer?: NodeJS.Timeout
@@ -25,8 +28,8 @@ type AuthHeaders = {
 }
 
 type Service = {
-  agent: AtpAgent
-  did: string
+  client: Client
+  did: DidString
   rateLimitedUntil?: number
 }
 
@@ -61,23 +64,29 @@ export class EventPusher {
     services: {
       appview?: {
         url: string
-        did: string
+        did: DidString
       }
       pds?: {
         url: string
-        did: string
+        did: DidString
       }
     },
   ) {
     if (services.appview) {
       this.appview = {
-        agent: new AtpAgent({ service: services.appview.url }),
+        client: new Client(
+          { service: services.appview.url },
+          { strictResponseProcessing: false },
+        ),
         did: services.appview.did,
       }
     }
     if (services.pds) {
       this.pds = {
-        agent: new AtpAgent({ service: services.pds.url }),
+        client: new Client(
+          { service: services.pds.url },
+          { strictResponseProcessing: false },
+        ),
         did: services.pds.did,
       }
     }
@@ -223,12 +232,13 @@ export class EventPusher {
     }
     const auth = await this.createAuthHeaders(
       service.did,
-      ids.ComAtprotoAdminUpdateSubjectStatus,
+      com.atproto.admin.updateSubjectStatus.$lxm,
     )
     try {
       await retry(
         () =>
-          service.agent.com.atproto.admin.updateSubjectStatus(
+          service.client.call(
+            com.atproto.admin.updateSubjectStatus,
             {
               subject,
               takedown: {
@@ -236,17 +246,14 @@ export class EventPusher {
                 ref: takedownRef ?? undefined,
               },
             },
-            {
-              ...auth,
-              encoding: 'application/json',
-            },
+            auth,
           ),
         {
           retryable: (err) =>
-            err instanceof XRPCError &&
-            err.status !== ResponseType.RateLimitExceeded &&
-            (err.status === ResponseType.Unknown ||
-              RETRYABLE_HTTP_STATUS_CODES.has(err.status)),
+            err instanceof XrpcResponseError
+              ? err.status !== 429 && err.shouldRetry()
+              : err instanceof XrpcFetchError ||
+                err instanceof XrpcInternalError,
         },
       )
       if (service.rateLimitedUntil && service.rateLimitedUntil <= Date.now()) {
@@ -255,17 +262,16 @@ export class EventPusher {
       return 'confirmed'
     } catch (err) {
       if (
-        err instanceof XRPCError &&
-        err.status === ResponseType.InvalidRequest &&
-        err.error === 'NotFound'
+        err instanceof XrpcResponseError &&
+        err.status === 400 &&
+        (err.error === 'NotFound' ||
+          (err.error === 'InvalidRequest' &&
+            err.message === 'Could not find account'))
       ) {
         return 'confirmed'
       }
-      if (
-        err instanceof XRPCError &&
-        err.status === ResponseType.RateLimitExceeded
-      ) {
-        const resetAt = Number(err.headers?.['ratelimit-reset']) * SECOND
+      if (err instanceof XrpcResponseError && err.status === 429) {
+        const resetAt = Number(err.headers.get('ratelimit-reset')) * SECOND
         service.rateLimitedUntil = Number.isFinite(resetAt)
           ? Math.max(resetAt, Date.now() + SECOND)
           : Date.now() + RETRY_INTERVAL
@@ -301,10 +307,9 @@ export class EventPusher {
       if (!evt) return
       const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
       if (!service) return
-      const subject = {
-        $type: 'com.atproto.admin.defs#repoRef',
+      const subject = com.atproto.admin.defs.repoRef.$build({
         did: evt.subjectDid,
-      }
+      })
       const result = await this.updateSubjectOnService(
         service,
         subject,
@@ -348,11 +353,10 @@ export class EventPusher {
       if (!evt) return
       const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
       if (!service) return
-      const subject = {
-        $type: 'com.atproto.repo.strongRef',
+      const subject = com.atproto.repo.strongRef.$build({
         uri: evt.subjectUri,
         cid: evt.subjectCid,
-      }
+      })
       const result = await this.updateSubjectOnService(
         service,
         subject,
@@ -397,11 +401,10 @@ export class EventPusher {
 
       const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
       if (!service) return
-      const subject = {
-        $type: 'com.atproto.admin.defs#repoBlobRef',
+      const subject = com.atproto.admin.defs.repoBlobRef.$build({
         did: evt.subjectDid,
         cid: evt.subjectBlobCid,
-      }
+      })
       const result = await this.updateSubjectOnService(
         service,
         subject,

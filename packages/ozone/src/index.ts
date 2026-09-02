@@ -7,21 +7,40 @@ import express from 'express'
 import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import * as prometheus from 'prom-client'
 import { DAY, SECOND } from '@atproto/common'
-import { extractUrlNsid } from '@atproto/xrpc-server'
+import {
+  type DidString,
+  Procedure,
+  Query,
+  Subscription,
+  walk,
+} from '@atproto/lex'
+import { createServer, extractUrlNsid } from '@atproto/xrpc-server'
 import API, { health, wellKnown } from './api/index.js'
 import type { OzoneConfig, OzoneSecrets } from './config/index.js'
 import { AppContext, type AppContextOptions } from './context.js'
 import type { Member } from './db/schema/member.js'
 import * as error from './error.js'
-import { createServer } from './lexicon/index.js'
+import * as lexicons from './lexicons/index.js'
+import { tools } from './lexicons/index.js'
 import { dbLogger, loggerMiddleware } from './logger.js'
 
 export * from './config/index.js'
-export { type ImageInvalidator } from './image-invalidator.js'
-export { Database } from './db/index.js'
-export { EventPusher, EventReverser, OzoneDaemon } from './daemon/index.js'
 export { AppContext } from './context.js'
+export { EventPusher, EventReverser, OzoneDaemon } from './daemon/index.js'
+export { Database } from './db/index.js'
+export { type ImageInvalidator } from './image-invalidator.js'
 export { httpLogger } from './logger.js'
+
+const KNOWN_METHODS = new Set<string>(
+  walk(lexicons)
+    .filter(
+      (s) =>
+        s instanceof Procedure ||
+        s instanceof Query ||
+        s instanceof Subscription,
+    )
+    .map((s) => s.nsid),
+)
 
 export class OzoneService {
   public ctx: AppContext
@@ -52,7 +71,7 @@ export class OzoneService {
 
     const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
 
-    let server = createServer({
+    let server = createServer([], {
       validateResponse: false,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
@@ -88,12 +107,10 @@ export class OzoneService {
         // 501), so labeling by the raw nsid lets external traffic mint unbounded
         // series and grow prom-client's memory without limit. Bucket anything
         // that isn't a registered query/procedure under a single `unknown` label.
-        const def = server.xrpc.lex.getDef(nsid)
-        const isMethod = def?.type === 'query' || def?.type === 'procedure'
         const end = xrpcRequestDuration.startTimer()
         res.on('finish', () => {
           end({
-            nsid: isMethod ? nsid : 'unknown',
+            nsid: KNOWN_METHODS.has(nsid) ? nsid : 'unknown',
             method: req.method,
             code: res.statusCode,
           })
@@ -104,29 +121,29 @@ export class OzoneService {
 
     app.use(health.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
-    app.use(server.xrpc.router)
+    app.use(server.router)
     app.use(error.handler)
 
     return new OzoneService({ ctx, app })
   }
 
   async seedInitialMembers() {
-    const members: Array<{ role: Member['role']; did: string }> = []
+    const members: Array<{ role: Member['role']; did: DidString }> = []
     this.ctx.cfg.access.admins.forEach((did) =>
       members.push({
-        role: 'tools.ozone.team.defs#roleAdmin',
+        role: tools.ozone.team.defs.RoleAdmin,
         did,
       }),
     )
     this.ctx.cfg.access.triage.forEach((did) =>
       members.push({
-        role: 'tools.ozone.team.defs#roleTriage',
+        role: tools.ozone.team.defs.RoleTriage,
         did,
       }),
     )
     this.ctx.cfg.access.moderators.forEach((did) =>
       members.push({
-        role: 'tools.ozone.team.defs#roleModerator',
+        role: tools.ozone.team.defs.RoleModerator,
         did,
       }),
     )

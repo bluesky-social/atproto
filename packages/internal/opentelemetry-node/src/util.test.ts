@@ -1,5 +1,25 @@
+import { Code } from '@connectrpc/connect'
 import { describe, expect, test } from 'vitest'
-import { extractNormalizedLxm } from './util.js'
+import { extractNormalizedLxm, statusCodeToString } from './util.js'
+
+describe(statusCodeToString, () => {
+  test('success is spelled out, since Code has no member for it', () => {
+    expect(statusCodeToString(undefined)).toBe('ok')
+  })
+
+  test.each([
+    { code: Code.NotFound, expected: 'not_found' },
+    { code: Code.DeadlineExceeded, expected: 'deadline_exceeded' },
+    { code: Code.ResourceExhausted, expected: 'resource_exhausted' },
+    { code: Code.Unavailable, expected: 'unavailable' },
+  ])('$expected', ({ code, expected }) => {
+    expect(statusCodeToString(code)).toBe(expected)
+  })
+
+  test('unknown numeric code falls back to its digits', () => {
+    expect(statusCodeToString(9999 as Code)).toBe('9999')
+  })
+})
 
 describe(extractNormalizedLxm, () => {
   test.each([
