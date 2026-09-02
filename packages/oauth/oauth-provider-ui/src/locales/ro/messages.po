@@ -244,10 +244,6 @@ msgstr "Serviciile aplicației Bluesky"
 msgid "Bluesky Chat services"
 msgstr "Serviciile de conversații Bluesky"
 
-#: src/components/consent-form.tsx
-msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
-msgstr "Făcând clic pe <0>Autorizare</0>, veți acorda acestei aplicații acces la contul dvs., în conformitate cu <1>termenii de serviciu</1> și <2>politica de confidențialitate</2> ale acesteia."
-
 #: src/components/sign-up-disclaimer.tsx
 msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
 msgstr "Prin crearea unui cont sunteți de acord cu <0>Termenii de Serviciu</0> și <1>Politica de Confidențialitate</1> ale acestui serviciu."
@@ -1082,6 +1078,10 @@ msgstr "Pasul {currentPosition} din {count}"
 #: src/components/utils/password-strength-label.tsx
 msgid "Strong"
 msgstr "Puternică"
+
+#: src/components/consent-form.tsx
+msgid "Subject to the app's <0>terms of service</0> and <1>privacy policy</1>."
+msgstr "Sub rezerva <0>termenilor de utilizare</0> și a <1>politicii de confidențialitate</1> ale aplicației."
 
 #: src/components/forms/form-shell.tsx
 msgid "Submit"

@@ -239,10 +239,6 @@ msgstr "Servicios de la app Bluesky"
 msgid "Bluesky Chat services"
 msgstr "Servicios de chat de Bluesky"
 
-#: src/components/consent-form.tsx
-msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
-msgstr ""
-
 #: src/components/sign-up-disclaimer.tsx
 msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
 msgstr "Al crear una cuenta, aceptas los <0>Términos del servicio</0> y la <1>Política de privacidad</1> de este servicio."
@@ -1068,6 +1064,10 @@ msgstr "Paso {currentPosition} de {count}"
 #: src/components/utils/password-strength-label.tsx
 msgid "Strong"
 msgstr "Fuerte"
+
+#: src/components/consent-form.tsx
+msgid "Subject to the app's <0>terms of service</0> and <1>privacy policy</1>."
+msgstr "Sujeto a los <0>términos del servicio</0> y la <1>política de privacidad</1> de la aplicación."
 
 #: src/components/forms/form-shell.tsx
 msgid "Submit"

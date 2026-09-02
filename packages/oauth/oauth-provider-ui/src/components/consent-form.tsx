@@ -154,14 +154,12 @@ export function ConsentForm({
         }
       />
 
-      <p>
+      {/* @NOTE Kept to one short line: the heading and the button already say
+        what authorizing does, so this exists to carry the two links. Each
+        link is styled only when the client published a URL for it. */}
+      <p className="text-muted-foreground text-sm leading-snug">
         <Trans>
-          By clicking{' '}
-          <b>
-            <Trans context="OAuthConsent">Authorize</Trans>
-          </b>
-          , you will grant this application access to your account in accordance
-          with its{' '}
+          Subject to the app's{' '}
           <a
             role="link"
             href={clientMetadata.tos_uri}
@@ -172,8 +170,8 @@ export function ConsentForm({
             }
           >
             <Trans>terms of service</Trans>
-          </a>
-          {' and '}
+          </a>{' '}
+          and{' '}
           <a
             role="link"
             href={clientMetadata.policy_uri}
