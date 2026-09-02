@@ -76,7 +76,9 @@ export function SignInPicker({
           aria-label={t`Sign in to an account that is not listed`}
           className={accountRowClassName}
         >
-          <ItemMedia className="bg-muted text-muted-foreground size-12 rounded-full">
+          {/* @NOTE Bordered like `Avatar`, which draws a hairline ring around
+            every account picture, so the disc reads as the same object. */}
+          <ItemMedia className="bg-muted text-muted-foreground size-12 rounded-full border">
             <AtSignIcon aria-hidden className="size-6" />
           </ItemMedia>
           <ItemContent className="min-w-0">
