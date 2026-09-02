@@ -625,8 +625,8 @@ msgid "Forgot?"
 msgstr "Ați uitat parola?"
 
 #: src/components/consent-view.tsx
-msgid "Grant access to your <0/> account"
-msgstr "Acordați acces la contul dvs. <0/>"
+msgid "Grant access to your account:"
+msgstr ""
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
 #: src/components/forms/input-handle-custom-instructions.tsx

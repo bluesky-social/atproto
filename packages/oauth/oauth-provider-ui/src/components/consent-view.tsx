@@ -38,9 +38,13 @@ export function ConsentView({
     <AuthShell
       title={msg({ message: 'Authorize', context: 'OAuthConsent' })}
       subtitle={
-        <Trans>
-          Grant access to your <AccountIdentifier account={account} /> account
-        </Trans>
+        <>
+          <Trans>Grant access to your account:</Trans>
+          <AccountIdentifier
+            account={account}
+            className="text-foreground mt-1 block font-medium"
+          />
+        </>
       }
     >
       <ConsentForm

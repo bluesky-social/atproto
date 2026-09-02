@@ -620,8 +620,8 @@ msgid "Forgot?"
 msgstr "분실"
 
 #: src/components/consent-view.tsx
-msgid "Grant access to your <0/> account"
-msgstr "<0/> 계정에 대한 접근 권한을 부여합니다"
+msgid "Grant access to your account:"
+msgstr ""
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
 #: src/components/forms/input-handle-custom-instructions.tsx
