@@ -1,5 +1,42 @@
 # @atproto/bsky
 
+## 0.0.277
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.3.8
+  - @atproto/xrpc-server@0.12.7
+  - @atproto/sync@0.4.7
+  - @atproto-labs/xrpc-utils@0.1.20
+
+## 0.0.276
+
+### Patch Changes
+
+- [#5431](https://github.com/bluesky-social/atproto/pull/5431) [`d6296a1`](https://github.com/bluesky-social/atproto/commit/d6296a1cfdb40a773319cb59061300e4e8e52f26) Thanks [@cuducos](https://github.com/cuducos)! - Route configured staging feeds through Iris staging.
+
+- [#5402](https://github.com/bluesky-social/atproto/pull/5402) [`1307a87`](https://github.com/bluesky-social/atproto/commit/1307a874f656a63d751d80ae4945580ce92ea4f5) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Pass authenticated user context to feature gates on feed requests.
+
+- [#5444](https://github.com/bluesky-social/atproto/pull/5444) [`ea95a97`](https://github.com/bluesky-social/atproto/commit/ea95a97c620ba062b6c2ad531a202ece61316e89) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Serve known likers in timeline, custom feed, and author feed responses.
+
+- [#5427](https://github.com/bluesky-social/atproto/pull/5427) [`c400731`](https://github.com/bluesky-social/atproto/commit/c400731969775d220ade8cc55b0892018bdf8514) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add known likers to post viewer state on post thread responses.
+
+- [#5428](https://github.com/bluesky-social/atproto/pull/5428) [`f2c33aa`](https://github.com/bluesky-social/atproto/commit/f2c33aa4a72c95762c2708cf02acbfab7ddd2b5a) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Remove x-bsky-is-beta-user header handling
+
+- [#5410](https://github.com/bluesky-social/atproto/pull/5410) [`02f6e22`](https://github.com/bluesky-social/atproto/commit/02f6e227bbb35da2596c476fdf2711d14036ef0b) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add optional OpenTelemetry setup and instrument AppView's ConnectRPC dataplane client.
+
+- Updated dependencies [[`79d911f`](https://github.com/bluesky-social/atproto/commit/79d911fc2bd7c6d9b1a6810e00e81d964b72a4ab), [`615ac2a`](https://github.com/bluesky-social/atproto/commit/615ac2a8cc72cd475dc4f06f743f2514d8afc6e0), [`c400731`](https://github.com/bluesky-social/atproto/commit/c400731969775d220ade8cc55b0892018bdf8514), [`6af9f14`](https://github.com/bluesky-social/atproto/commit/6af9f141d18c1f41a04828af8256567d5f17a35e)]:
+  - @atproto/lex@0.3.7
+  - @atproto/xrpc-server@0.12.6
+  - @atproto/api@0.20.42
+  - @atproto/syntax@0.7.5
+  - @atproto/sync@0.4.6
+  - @atproto-labs/xrpc-utils@0.1.19
+  - @atproto/repo@0.10.12
+  - @atproto/common@0.8.1
+  - @atproto/identity@0.5.10
+
 ## 0.0.275
 
 ### Patch Changes

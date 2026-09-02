@@ -31,14 +31,31 @@ export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.notification.listNotifications, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
+      if (params.seenAt) {
+        throw new InvalidRequestError('The seenAt parameter is unsupported')
+      }
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+
+      // @NOTE the viewer's priority setting and last-seen time don't change
+      // across the pages that fillPage() may fetch, so they're read once here
+      // rather than on every page.
+      const priority = params.priority ?? (await getPriority(ctx, viewer))
+      const lastSeenRes = await ctx.hydrator.dataplane.getNotificationSeen({
+        actorDid: viewer,
+        priority,
+      })
+      const lastSeen = lastSeenRes.timestamp?.toDate()
+
       const result = await fillPage({
         cursor: params.cursor,
         limit: params.limit,
         fetch: ({ cursor, limit }) =>
-          listNotifications({ ...params, cursor, limit, hydrateCtx }, ctx),
+          listNotifications(
+            { ...params, cursor, limit, hydrateCtx, priority, lastSeen },
+            ctx,
+          ),
         items: (r) => r.notifications,
       })
       return {
@@ -95,34 +112,24 @@ const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
-  if (params.seenAt) {
-    throw new InvalidRequestError('The seenAt parameter is unsupported')
-  }
-
   const originalCursor = params.cursor
   const delayedCursor = delayCursor(
     originalCursor,
     ctx.cfg.notificationsDelayMs,
   )
   const viewer = params.hydrateCtx.viewer
-  const priority = params.priority ?? (await getPriority(ctx, viewer))
-  const [res, lastSeenRes] = await Promise.all([
-    paginateNotifications({
-      ctx,
-      priority,
-      reasons: params.reasons,
-      cursor: delayedCursor,
-      limit: params.limit,
-      viewer,
-    }),
-    ctx.hydrator.dataplane.getNotificationSeen({
-      actorDid: viewer,
-      priority,
-    }),
-  ])
+  const { priority } = params
+  const res = await paginateNotifications({
+    ctx,
+    priority,
+    reasons: params.reasons,
+    cursor: delayedCursor,
+    limit: params.limit,
+    viewer,
+  })
   // @NOTE for the first page of results if there's no last-seen time, consider top notification unread
   // rather than all notifications. bit of a hack to be more graceful when seen times are out of sync.
-  let lastSeenDate = lastSeenRes.timestamp?.toDate()
+  let lastSeenDate = params.lastSeen
   if (!lastSeenDate && !originalCursor) {
     lastSeenDate = res.notifications.at(0)?.timestamp?.toDate()
   }
@@ -233,8 +240,13 @@ type Context = {
   cfg: ServerConfig
 }
 
-type Params = app.bsky.notification.listNotifications.$Params & {
+type Params = Omit<
+  app.bsky.notification.listNotifications.$Params,
+  'priority'
+> & {
   hydrateCtx: HydrateCtxWithViewer
+  priority: boolean
+  lastSeen?: Date
 }
 
 type SkeletonState = {

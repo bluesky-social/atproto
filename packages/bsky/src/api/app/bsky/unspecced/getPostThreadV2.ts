@@ -98,6 +98,11 @@ const hydration = async (
   return ctx.hydrator.hydrateThreadPosts(
     skeleton.uris.map((uri) => ({ uri })),
     params.hydrateCtx,
+    {
+      knownLikers: {
+        subjectUris: [skeleton.anchor],
+      },
+    },
   )
 }
 

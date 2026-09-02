@@ -33,12 +33,17 @@
     "./instrumentation": {
       "types": "./dist/instrumentation.d.ts",
       "default": "./dist/instrumentation.js"
+    },
+    "./util": {
+      "types": "./dist/util.d.ts",
+      "default": "./dist/util.js"
     }
   },
   "engines": {
     "node": ">=22"
   },
   "dependencies": {
+    "@connectrpc/connect": "^1.1.4",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/auto-instrumentations-node": "^0.77.0",
     "@opentelemetry/core": "^2.9.0",

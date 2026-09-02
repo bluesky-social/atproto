@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.add(app.bsky.graph.getSuggestedFollowsByActor, {
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, req }) => {
+    handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
@@ -58,7 +58,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const { contentLanguage, ...body } = await getSuggestedFollowsByActor(
-        { ...params, hydrateCtx, headers },
+        { ...params, hydrateCtx, headers, signal },
         ctx,
       )
 
@@ -97,6 +97,7 @@ const skeleton = async (
         relativeToDid,
       },
       headers: params.headers,
+      signal: params.signal,
     },
   )
 
@@ -162,6 +163,7 @@ type Context = {
 type Params = app.bsky.graph.getSuggestedFollowsByActor.$Params & {
   hydrateCtx: HydrateCtx
   headers: HeadersMap
+  signal: AbortSignal
 }
 
 type SkeletonState = {

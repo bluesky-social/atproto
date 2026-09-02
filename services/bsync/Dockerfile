@@ -17,6 +17,7 @@ COPY ./tsconfig ./tsconfig
 COPY ./packages/bsync ./packages/bsync
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/common ./packages/common
+COPY ./packages/internal/opentelemetry-node ./packages/internal/opentelemetry-node
 COPY ./packages/lex/lex-cbor ./packages/lex/lex-cbor
 COPY ./packages/lex/lex-data ./packages/lex/lex-data
 COPY ./packages/lex/lex-json ./packages/lex/lex-json
@@ -47,7 +48,7 @@ ENV NODE_ENV=production
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--enable-source-maps", "--import=./tracer.ts", "index.ts"]
+CMD ["node", "--enable-source-maps", "--import=./tracer.ts", "--import=@atproto/bsync/telemetry", "index.ts"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="Bsync"

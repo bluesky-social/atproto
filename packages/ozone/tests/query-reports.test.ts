@@ -316,6 +316,64 @@ describe('query-reports', () => {
       }
     })
 
+    it('paginates reports with identical timestamps in ascending order', async () => {
+      const db = network.ozone.ctx.db.db
+      const reports = await db
+        .selectFrom('report')
+        .select(['id', 'createdAt'])
+        .where('did', '=', sc.dids.bob)
+        .where('recordPath', '=', '')
+        .where('subjectMessageId', 'is', null)
+        .where('subjectConvoId', 'is', null)
+        .orderBy('id', 'asc')
+        .execute()
+      const createdAt = new Date('2026-01-01T00:00:00.000Z').toISOString()
+
+      await db
+        .updateTable('report')
+        .set({ createdAt })
+        .where(
+          'id',
+          'in',
+          reports.map((report) => report.id),
+        )
+        .execute()
+
+      try {
+        const firstPage = await modClient.queryReports({
+          status: 'open',
+          subject: sc.dids.bob,
+          sortField: 'createdAt',
+          sortDirection: 'asc',
+          limit: 2,
+        })
+        const secondPage = await modClient.queryReports({
+          status: 'open',
+          subject: sc.dids.bob,
+          sortField: 'createdAt',
+          sortDirection: 'asc',
+          limit: 2,
+          cursor: firstPage.cursor,
+        })
+
+        expect(
+          [...firstPage.reports, ...secondPage.reports].map(
+            (report) => report.id,
+          ),
+        ).toEqual(reports.map((report) => report.id))
+      } finally {
+        await Promise.all(
+          reports.map((report) =>
+            db
+              .updateTable('report')
+              .set({ createdAt: report.createdAt })
+              .where('id', '=', report.id)
+              .execute(),
+          ),
+        )
+      }
+    })
+
     it('includes subject details in report view', async () => {
       const response = await modClient.queryReports({
         status: 'open',
