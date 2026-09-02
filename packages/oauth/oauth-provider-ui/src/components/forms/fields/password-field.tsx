@@ -49,9 +49,9 @@ export function PasswordField({
             onClick={() => setVisible((prev) => !prev)}
           >
             {visible ? (
-              <EyeIcon aria-hidden className="size-5" />
+              <EyeIcon aria-hidden className="size-4" />
             ) : (
-              <EyeOffIcon aria-hidden className="size-5" />
+              <EyeOffIcon aria-hidden className="size-4" />
             )}
           </Button>
           {append}
