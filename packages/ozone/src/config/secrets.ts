@@ -7,9 +7,9 @@ import type { OzoneEnvironment } from './env.js'
 // credentials, and silently sending none is harder to notice than failing to
 // boot. Values are never included in error messages.
 const parsePdsHeaders = (
-  entries: string[],
+  entries?: string[],
 ): Record<string, string> | undefined => {
-  if (!entries.length) return undefined
+  if (!entries?.length) return undefined
   const headers: Record<string, string> = {}
   for (const entry of entries) {
     const separatorAt = entry.indexOf(':')

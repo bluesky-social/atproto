@@ -91,7 +91,7 @@ export type OzoneEnvironment = {
   triageDids: string[]
   adminPassword?: string
   signingKeyHex?: string
-  pdsHeaders: string[]
+  pdsHeaders?: string[]
   blobDivertUrl?: string
   blobDivertAdminPassword?: string
   verifierUrl?: string
