@@ -7,13 +7,20 @@ import express from 'express'
 import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
 import * as prometheus from 'prom-client'
 import { DAY, SECOND } from '@atproto/common'
-import type { DidString } from '@atproto/lex'
+import {
+  type DidString,
+  Procedure,
+  Query,
+  Subscription,
+  walk,
+} from '@atproto/lex'
 import { createServer, extractUrlNsid } from '@atproto/xrpc-server'
 import API, { health, wellKnown } from './api/index.js'
 import type { OzoneConfig, OzoneSecrets } from './config/index.js'
 import { AppContext, type AppContextOptions } from './context.js'
 import type { Member } from './db/schema/member.js'
 import * as error from './error.js'
+import * as lexicons from './lexicons/index.js'
 import { tools } from './lexicons/index.js'
 import { dbLogger, loggerMiddleware } from './logger.js'
 
@@ -23,6 +30,17 @@ export { EventPusher, EventReverser, OzoneDaemon } from './daemon/index.js'
 export { Database } from './db/index.js'
 export { type ImageInvalidator } from './image-invalidator.js'
 export { httpLogger } from './logger.js'
+
+const KNOWN_METHODS = new Set<string>(
+  walk(lexicons)
+    .filter(
+      (s) =>
+        s instanceof Procedure ||
+        s instanceof Query ||
+        s instanceof Subscription,
+    )
+    .map((s) => s.nsid),
+)
 
 export class OzoneService {
   public ctx: AppContext
@@ -89,12 +107,10 @@ export class OzoneService {
         // 501), so labeling by the raw nsid lets external traffic mint unbounded
         // series and grow prom-client's memory without limit. Bucket anything
         // that isn't a registered query/procedure under a single `unknown` label.
-        const def = server.xrpc.lex.getDef(nsid)
-        const isMethod = def?.type === 'query' || def?.type === 'procedure'
         const end = xrpcRequestDuration.startTimer()
         res.on('finish', () => {
           end({
-            nsid: isMethod ? nsid : 'unknown',
+            nsid: KNOWN_METHODS.has(nsid) ? nsid : 'unknown',
             method: req.method,
             code: res.statusCode,
           })

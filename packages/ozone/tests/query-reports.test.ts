@@ -11,6 +11,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { toDatetimeString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 
 describe('query-reports', () => {
@@ -328,11 +329,12 @@ describe('query-reports', () => {
         .where('subjectConvoId', 'is', null)
         .orderBy('id', 'asc')
         .execute()
-      const createdAt = new Date('2026-01-01T00:00:00.000Z').toISOString()
 
       await db
         .updateTable('report')
-        .set({ createdAt })
+        .set({
+          createdAt: toDatetimeString('2026-01-01T00:00:00.000Z'),
+        })
         .where(
           'id',
           'in',

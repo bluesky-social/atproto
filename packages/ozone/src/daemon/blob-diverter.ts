@@ -62,9 +62,8 @@ export class BlobDiverter {
 
     if (blobResponse.status !== 200) {
       await blobResponse.body?.cancel()
-      throw new XRPCError(
+      throw new UpstreamHttpError(
         blobResponse.status,
-        undefined,
         `Error downloading blob ${options.cid}`,
       )
     }
