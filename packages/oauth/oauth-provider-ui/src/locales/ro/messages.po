@@ -364,7 +364,7 @@ msgstr "Continuare"
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
 msgid "Continue with an existing account"
-msgstr ""
+msgstr "Continuați cu un cont existent"
 
 #: src/cookie-error-page.tsx
 msgid "Cookie Error"
@@ -626,7 +626,7 @@ msgstr "Ați uitat parola?"
 
 #: src/components/consent-view.tsx
 msgid "Grant access to your account:"
-msgstr ""
+msgstr "Acordați acces la contul dvs.:"
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
 #: src/components/forms/input-handle-custom-instructions.tsx
@@ -816,7 +816,7 @@ msgstr "Navigare"
 
 #: src/components/sign-in-picker.tsx
 msgid "Need an account?"
-msgstr ""
+msgstr "Aveți nevoie de un cont?"
 
 #: src/components/update-email-dialog.tsx
 #: src/components/update-email-form.tsx
@@ -842,7 +842,7 @@ msgstr "Ok"
 
 #: src/components/sign-in-form.tsx
 msgid "Only enter your password on sites you trust."
-msgstr ""
+msgstr "Introduceți parola doar pe site-uri în care aveți încredere."
 
 #: src/routes/__root.tsx
 msgid "Page not found"
@@ -1174,6 +1174,10 @@ msgid "This app has access to your account with the following permissions:"
 msgstr "Această aplicație are acces la contul dvs. cu următoarele permisiuni:"
 
 #: src/components/consent-form.tsx
+msgid "This application identifies itself as:"
+msgstr "Această aplicație se identifică drept:"
+
+#: src/components/consent-form.tsx
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "Această aplicație solicită următoarele permisiuni (scopuri) pentru a vă accesa contul:"
 
@@ -1338,11 +1342,11 @@ msgstr "Verificați-vă e-mailul"
 
 #: src/components/consent-form.tsx
 msgid "wants to access your account:"
-msgstr ""
+msgstr "dorește să vă acceseze contul:"
 
 #: src/components/consent-form.tsx
 msgid "wants to uniquely identify you through your account:"
-msgstr ""
+msgstr "dorește să vă identifice în mod unic prin contul dvs.:"
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"

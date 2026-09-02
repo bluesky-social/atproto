@@ -1169,6 +1169,10 @@ msgid "This app has access to your account with the following permissions:"
 msgstr "This app has access to your account with the following permissions:"
 
 #: src/components/consent-form.tsx
+msgid "This application identifies itself as:"
+msgstr "This application identifies itself as:"
+
+#: src/components/consent-form.tsx
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "This application is requesting the following permissions (scopes) to access your account:"
 

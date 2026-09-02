@@ -359,7 +359,7 @@ msgstr "계속"
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
 msgid "Continue with an existing account"
-msgstr ""
+msgstr "기존 계정으로 계속하기"
 
 #: src/cookie-error-page.tsx
 msgid "Cookie Error"
@@ -621,7 +621,7 @@ msgstr "분실"
 
 #: src/components/consent-view.tsx
 msgid "Grant access to your account:"
-msgstr ""
+msgstr "계정에 대한 접근 권한을 부여합니다:"
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
 #: src/components/forms/input-handle-custom-instructions.tsx
@@ -802,7 +802,7 @@ msgstr ""
 
 #: src/components/sign-in-picker.tsx
 msgid "Need an account?"
-msgstr ""
+msgstr "계정이 필요하신가요?"
 
 #: src/components/update-email-dialog.tsx
 #: src/components/update-email-form.tsx
@@ -828,7 +828,7 @@ msgstr "확인"
 
 #: src/components/sign-in-form.tsx
 msgid "Only enter your password on sites you trust."
-msgstr ""
+msgstr "신뢰할 수 있는 사이트에서만 비밀번호를 입력하세요."
 
 #: src/routes/__root.tsx
 msgid "Page not found"
@@ -1160,6 +1160,10 @@ msgid "This app has access to your account with the following permissions:"
 msgstr ""
 
 #: src/components/consent-form.tsx
+msgid "This application identifies itself as:"
+msgstr "이 애플리케이션의 식별자:"
+
+#: src/components/consent-form.tsx
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "이 애플리케이션은 사용자 계정에 접근하기 위해 다음과 같은 권한(범위)을 요청합니다:"
 
@@ -1324,11 +1328,11 @@ msgstr ""
 
 #: src/components/consent-form.tsx
 msgid "wants to access your account:"
-msgstr ""
+msgstr "다음 계정에 대한 접근 권한을 요청합니다:"
 
 #: src/components/consent-form.tsx
 msgid "wants to uniquely identify you through your account:"
-msgstr ""
+msgstr "다음 계정을 통해 나를 식별하고자 합니다:"
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"

@@ -359,7 +359,7 @@ msgstr "Fortsätt"
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
 msgid "Continue with an existing account"
-msgstr ""
+msgstr "Fortsätt med ett befintligt konto"
 
 #: src/cookie-error-page.tsx
 msgid "Cookie Error"
@@ -621,7 +621,7 @@ msgstr "Glömt?"
 
 #: src/components/consent-view.tsx
 msgid "Grant access to your account:"
-msgstr ""
+msgstr "Bevilja åtkomst till ditt konto:"
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
 #: src/components/forms/input-handle-custom-instructions.tsx
@@ -811,7 +811,7 @@ msgstr "Navigering"
 
 #: src/components/sign-in-picker.tsx
 msgid "Need an account?"
-msgstr ""
+msgstr "Behöver du ett konto?"
 
 #: src/components/update-email-dialog.tsx
 #: src/components/update-email-form.tsx
@@ -837,7 +837,7 @@ msgstr "OK"
 
 #: src/components/sign-in-form.tsx
 msgid "Only enter your password on sites you trust."
-msgstr ""
+msgstr "Ange bara ditt lösenord på webbplatser du litar på."
 
 #: src/routes/__root.tsx
 msgid "Page not found"
@@ -1169,6 +1169,10 @@ msgid "This app has access to your account with the following permissions:"
 msgstr "Den här appen har åtkomst till ditt konto med följande behörigheter:"
 
 #: src/components/consent-form.tsx
+msgid "This application identifies itself as:"
+msgstr "Den här applikationen identifierar sig som:"
+
+#: src/components/consent-form.tsx
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "Den här applikationen begär följande behörigheter (omfång) för att få åtkomst till ditt konto:"
 
@@ -1333,11 +1337,11 @@ msgstr "Verifiera din e-postadress"
 
 #: src/components/consent-form.tsx
 msgid "wants to access your account:"
-msgstr ""
+msgstr "vill komma åt ditt konto:"
 
 #: src/components/consent-form.tsx
 msgid "wants to uniquely identify you through your account:"
-msgstr ""
+msgstr "vill entydigt identifiera dig via ditt konto:"
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"

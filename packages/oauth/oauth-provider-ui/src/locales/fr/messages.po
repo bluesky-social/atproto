@@ -359,7 +359,7 @@ msgstr "Continuer"
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
 msgid "Continue with an existing account"
-msgstr ""
+msgstr "Continuer avec un compte existant"
 
 #: src/cookie-error-page.tsx
 msgid "Cookie Error"
@@ -621,7 +621,7 @@ msgstr "Oublié ?"
 
 #: src/components/consent-view.tsx
 msgid "Grant access to your account:"
-msgstr ""
+msgstr "Accorder l'accès à votre compte :"
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
 #: src/components/forms/input-handle-custom-instructions.tsx
@@ -811,7 +811,7 @@ msgstr "Navigation"
 
 #: src/components/sign-in-picker.tsx
 msgid "Need an account?"
-msgstr ""
+msgstr "Besoin d'un compte ?"
 
 #: src/components/update-email-dialog.tsx
 #: src/components/update-email-form.tsx
@@ -837,7 +837,7 @@ msgstr "OK"
 
 #: src/components/sign-in-form.tsx
 msgid "Only enter your password on sites you trust."
-msgstr ""
+msgstr "Ne saisissez votre mot de passe que sur des sites de confiance."
 
 #: src/routes/__root.tsx
 msgid "Page not found"
@@ -1169,6 +1169,10 @@ msgid "This app has access to your account with the following permissions:"
 msgstr "Cette application a accès à votre compte avec les autorisations suivantes :"
 
 #: src/components/consent-form.tsx
+msgid "This application identifies itself as:"
+msgstr "Cette application s'identifie comme :"
+
+#: src/components/consent-form.tsx
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "Cette application demande les autorisations (scopes) suivantes pour accéder à votre compte :"
 
@@ -1333,11 +1337,11 @@ msgstr "Vérifier votre adresse email"
 
 #: src/components/consent-form.tsx
 msgid "wants to access your account:"
-msgstr ""
+msgstr "veut accéder à votre compte :"
 
 #: src/components/consent-form.tsx
 msgid "wants to uniquely identify you through your account:"
-msgstr ""
+msgstr "veut vous identifier de manière unique via votre compte :"
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"

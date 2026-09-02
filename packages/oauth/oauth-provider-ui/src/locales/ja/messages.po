@@ -359,7 +359,7 @@ msgstr "続行"
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
 msgid "Continue with an existing account"
-msgstr ""
+msgstr "既存のアカウントで続行"
 
 #: src/cookie-error-page.tsx
 msgid "Cookie Error"
@@ -621,7 +621,7 @@ msgstr "忘れた？"
 
 #: src/components/consent-view.tsx
 msgid "Grant access to your account:"
-msgstr ""
+msgstr "アカウントへのアクセスを許可："
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
 #: src/components/forms/input-handle-custom-instructions.tsx
@@ -811,7 +811,7 @@ msgstr "ナビゲーション"
 
 #: src/components/sign-in-picker.tsx
 msgid "Need an account?"
-msgstr ""
+msgstr "アカウントをお持ちでないですか？"
 
 #: src/components/update-email-dialog.tsx
 #: src/components/update-email-form.tsx
@@ -837,7 +837,7 @@ msgstr "OK"
 
 #: src/components/sign-in-form.tsx
 msgid "Only enter your password on sites you trust."
-msgstr ""
+msgstr "信頼できるサイトでのみパスワードを入力してください。"
 
 #: src/routes/__root.tsx
 msgid "Page not found"
@@ -1169,6 +1169,10 @@ msgid "This app has access to your account with the following permissions:"
 msgstr "このアプリは、あなたのアカウントに次の権限でアクセスできます："
 
 #: src/components/consent-form.tsx
+msgid "This application identifies itself as:"
+msgstr "このアプリケーションの識別子："
+
+#: src/components/consent-form.tsx
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr "このアプリケーションは、あなたのアカウントにアクセスするために次の権限（スコープ）を要求しています："
 
@@ -1333,11 +1337,11 @@ msgstr "メールアドレスを確認"
 
 #: src/components/consent-form.tsx
 msgid "wants to access your account:"
-msgstr ""
+msgstr "は以下のアカウントにアクセスしようとしています："
 
 #: src/components/consent-form.tsx
 msgid "wants to uniquely identify you through your account:"
-msgstr ""
+msgstr "は以下のアカウントを通じてあなたを一意に識別しようとしています："
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"

@@ -140,9 +140,15 @@ export function ConsentForm({
         }
         hint={t`Technical details`}
       >
+        <p>
+          <Trans>This application identifies itself as:</Trans>
+        </p>
+        <pre className="bg-muted mt-2 overflow-x-auto whitespace-pre-wrap break-all rounded border p-2 text-sm">
+          {clientId}
+        </pre>
         {scope ? (
           <>
-            <p>
+            <p className="mt-4">
               <Trans>
                 This application is requesting the following permissions
                 (scopes) to access your account:

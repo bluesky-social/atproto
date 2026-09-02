@@ -359,7 +359,7 @@ msgstr ""
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
 msgid "Continue with an existing account"
-msgstr ""
+msgstr "Continuar con una cuenta existente"
 
 #: src/cookie-error-page.tsx
 msgid "Cookie Error"
@@ -621,7 +621,7 @@ msgstr "¿Olvidaste?"
 
 #: src/components/consent-view.tsx
 msgid "Grant access to your account:"
-msgstr ""
+msgstr "Conceder acceso a tu cuenta:"
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
 #: src/components/forms/input-handle-custom-instructions.tsx
@@ -802,7 +802,7 @@ msgstr ""
 
 #: src/components/sign-in-picker.tsx
 msgid "Need an account?"
-msgstr ""
+msgstr "¿Necesitas una cuenta?"
 
 #: src/components/update-email-dialog.tsx
 #: src/components/update-email-form.tsx
@@ -828,7 +828,7 @@ msgstr "Aceptar"
 
 #: src/components/sign-in-form.tsx
 msgid "Only enter your password on sites you trust."
-msgstr ""
+msgstr "Introduce tu contraseña solo en sitios de confianza."
 
 #: src/routes/__root.tsx
 msgid "Page not found"
@@ -1160,6 +1160,10 @@ msgid "This app has access to your account with the following permissions:"
 msgstr ""
 
 #: src/components/consent-form.tsx
+msgid "This application identifies itself as:"
+msgstr "Esta aplicación se identifica como:"
+
+#: src/components/consent-form.tsx
 msgid "This application is requesting the following permissions (scopes) to access your account:"
 msgstr ""
 
@@ -1324,11 +1328,11 @@ msgstr ""
 
 #: src/components/consent-form.tsx
 msgid "wants to access your account:"
-msgstr ""
+msgstr "quiere acceder a tu cuenta:"
 
 #: src/components/consent-form.tsx
 msgid "wants to uniquely identify you through your account:"
-msgstr ""
+msgstr "quiere identificarte de forma única a través de tu cuenta:"
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"
