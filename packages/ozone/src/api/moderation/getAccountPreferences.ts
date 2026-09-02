@@ -1,23 +1,47 @@
+import { buildAgent, xrpc } from '@atproto/lex'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import { app, tools } from '../../lexicons/index.js'
+import { app, com, tools } from '../../lexicons/index.js'
+import { createSafeFetch } from '../../safe-fetch.js'
 
 export default function (server: Server, ctx: AppContext) {
+  const fetch = ctx.cfg.service.devMode
+    ? globalThis.fetch
+    : createSafeFetch({ timeout: 30_000 })
+
   server.add(tools.ozone.moderation.getAccountPreferences, {
     auth: ctx.authVerifier.modOrAdminToken,
-    handler: async ({ params }) => {
-      if (!ctx.pdsClient || !ctx.cfg.pds) {
-        throw new InvalidRequestError('PDS not configured')
-      }
+    handler: async ({ params: { did: userDid } }) => {
+      const { pds: pdsUrl } = await ctx.idResolver.did
+        .resolveAtprotoData(userDid)
+        .catch((cause) => {
+          throw new InvalidRequestError(
+            `Failed to resolve DID: ${userDid}`,
+            undefined,
+            { cause },
+          )
+        })
 
-      // @NOTE `did` is an internal moderator parameter omitted from the public
-      // Lexicon, so the generated client rejects it before sending.
+      // Create a safe agent to use with the PDS
+      const pdsAgent = buildAgent({ service: pdsUrl, fetch })
 
-      const auth = await ctx.pdsAuth(app.bsky.actor.getPreferences.$lxm)
-      return ctx.pdsClient.xrpc(app.bsky.actor.getPreferences, {
-        params: { did: params.did },
-        headers: auth?.headers,
-        signal: AbortSignal.timeout(30_000),
+      // We need the PDS's DID to generate the correct service auth headers
+      const pdsDescription = await xrpc(
+        pdsAgent,
+        com.atproto.server.describeServer,
+      )
+
+      const auth = await ctx.serviceAuthHeaders(
+        pdsDescription.body.did,
+        app.bsky.actor.getPreferences.$lxm,
+      )
+
+      return xrpc(pdsAgent, app.bsky.actor.getPreferences, {
+        // @NOTE `did` is a non-documented param for this endpoint that allows
+        // the getPreferences call to return the preferences for a different
+        // account than the one associated with the auth token.
+        params: { did: userDid },
+        headers: auth.headers,
       })
     },
   })
