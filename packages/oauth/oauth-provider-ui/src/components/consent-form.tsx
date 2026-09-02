@@ -7,7 +7,7 @@ import { ClientName } from '#/components/identity/client-name.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
 import type { PermissionSets } from '#/hydration-data.d.ts'
-import { FormShell } from './forms/form-shell.tsx'
+import { FormShell, actionButton } from './forms/form-shell.tsx'
 import { DescriptionCard } from './utils/description-card.tsx'
 import { ScopeDescription } from './utils/scope-description.tsx'
 
@@ -88,6 +88,7 @@ export function ConsentForm({
         <Button
           type="button"
           variant="secondary"
+          className={actionButton}
           disabled={reject.loading}
           onClick={(event) => {
             event.preventDefault()
