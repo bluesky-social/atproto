@@ -485,8 +485,8 @@ msgid "Enter a password"
 msgstr "Saisissez un mot de passe"
 
 #: src/components/reset-password-view.tsx
-msgid "Enter the code you received to reset your password."
-msgstr "Saisissez le code que vous avez reçu pour réinitialiser votre mot de passe."
+msgid "Enter the code you received by email to reset your password."
+msgstr "Saisissez le code reçu par e-mail pour réinitialiser votre mot de passe."
 
 #: src/components/update-handle-custom-form.tsx
 msgid "Enter the domain you want to use"
@@ -1441,10 +1441,6 @@ msgstr "Vous pouvez maintenant vous connecter avec votre nouvelle adresse email.
 #: src/data/password.ts
 msgid "You can now sign in with your new password."
 msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
-
-#: src/components/reset-password-view.tsx
-msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
-msgstr "Vous recevrez un email avec un \"code de réinitialisation\". Saisissez ce code ici puis entrez votre nouveau mot de passe."
 
 #: src/components/sign-up-view.tsx
 msgid "Your account"

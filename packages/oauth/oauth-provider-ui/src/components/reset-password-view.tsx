@@ -93,16 +93,11 @@ export function ResetPasswordView({
       <AuthShell
         title={msg`Reset Password`}
         subtitle={
-          <Trans>Enter the code you received to reset your password.</Trans>
+          <Trans>
+            Enter the code you received by email to reset your password.
+          </Trans>
         }
       >
-        <p className="mb-4">
-          <Trans>
-            You will receive an email with a "reset code". Enter that code here
-            then enter your new password.
-          </Trans>
-        </p>
-
         <ResetPasswordConfirmForm
           email={email}
           submitLabel={<Trans>Next</Trans>}

@@ -490,8 +490,8 @@ msgid "Enter a password"
 msgstr "Introduceți o parolă"
 
 #: src/components/reset-password-view.tsx
-msgid "Enter the code you received to reset your password."
-msgstr "Introduceți codul primit pentru a vă reseta parola."
+msgid "Enter the code you received by email to reset your password."
+msgstr "Introduceți codul primit prin e-mail pentru a vă reseta parola."
 
 #: src/components/update-handle-custom-form.tsx
 msgid "Enter the domain you want to use"
@@ -1446,10 +1446,6 @@ msgstr "Acum vă puteți conecta cu noul dvs. e-mail."
 #: src/data/password.ts
 msgid "You can now sign in with your new password."
 msgstr "Acum vă puteți conecta cu noua parolă."
-
-#: src/components/reset-password-view.tsx
-msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
-msgstr "Veți primi un e-mail cu un „cod de resetare”. Introduceți codul aici, apoi introduceți noua parolă."
 
 #: src/components/sign-up-view.tsx
 msgid "Your account"

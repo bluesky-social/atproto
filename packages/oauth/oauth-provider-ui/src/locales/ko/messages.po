@@ -485,8 +485,8 @@ msgid "Enter a password"
 msgstr "비밀번호 입력"
 
 #: src/components/reset-password-view.tsx
-msgid "Enter the code you received to reset your password."
-msgstr "비밀번호를 재설정하려면 받은 코드를 입력하세요."
+msgid "Enter the code you received by email to reset your password."
+msgstr "이메일로 받은 코드를 입력하여 비밀번호를 재설정하세요."
 
 #: src/components/update-handle-custom-form.tsx
 msgid "Enter the domain you want to use"
@@ -1432,10 +1432,6 @@ msgstr ""
 #: src/data/password.ts
 msgid "You can now sign in with your new password."
 msgstr "이제 새로운 비밀번호로 로그인할 수 있습니다."
-
-#: src/components/reset-password-view.tsx
-msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
-msgstr "‘재설정 코드’가 포함된 이메일을 받게 되면 여기에 해당 코드를 입력한 다음 새 비밀번호를 입력하세요."
 
 #: src/components/sign-up-view.tsx
 msgid "Your account"
