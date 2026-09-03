@@ -480,6 +480,11 @@
       "type": "object",
       "required": ["tags"],
       "properties": {
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "The timestamp when the account owner last updated their interests."
+        },
         "tags": {
           "type": "array",
           "maxLength": 100,

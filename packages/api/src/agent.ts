@@ -1,6 +1,12 @@
 import AwaitLock from 'await-lock'
 import { TID, retry } from '@atproto/common-web'
-import { AtUri, type DidString, ensureValidDidRegex } from '@atproto/syntax'
+import {
+  AtUri,
+  type DidString,
+  currentDatetimeString,
+  ensureValidDidRegex,
+  toDatetimeString,
+} from '@atproto/syntax'
 import {
   type FetchHandler,
   type FetchHandlerOptions,
@@ -648,8 +654,14 @@ export class Agent extends XrpcClient {
         const { $type: _, ...v } = pref
         prefs.threadViewPrefs = { ...prefs.threadViewPrefs, ...v }
       } else if (predicate.isValidInterestsPref(pref)) {
-        const { $type: _, ...v } = pref
-        prefs.interests = { ...prefs.interests, ...v }
+        const { $type: _, updatedAt, ...v } = pref
+        prefs.interests = {
+          ...prefs.interests,
+          ...v,
+          ...(updatedAt !== undefined && {
+            updatedAt: toDatetimeString(updatedAt),
+          }),
+        }
       } else if (predicate.isValidMutedWordsPref(pref)) {
         prefs.moderationPrefs.mutedWords = pref.items
 
@@ -1073,6 +1085,7 @@ export class Agent extends XrpcClient {
           ...existing,
           ...pref,
           $type: 'app.bsky.actor.defs#interestsPref',
+          updatedAt: currentDatetimeString(),
         })
     })
   }
