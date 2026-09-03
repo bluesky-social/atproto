@@ -944,6 +944,10 @@ msgstr ""
 msgid "Reactivate account"
 msgstr ""
 
+#: src/components/reactivate-account-view.tsx
+msgid "Reactivating makes your profile and content visible again."
+msgstr "재활성화하면 프로필과 콘텐츠가 다시 표시됩니다."
+
 #: src/components/utils/scope-description.tsx
 msgid "Read and send messages"
 msgstr "메시지 읽기 및 보내기"
@@ -1428,10 +1432,6 @@ msgstr ""
 #: src/data/password.ts
 msgid "You can now sign in with your new password."
 msgstr "이제 새로운 비밀번호로 로그인할 수 있습니다."
-
-#: src/components/reactivate-account-view.tsx
-msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
-msgstr ""
 
 #: src/components/reset-password-view.tsx
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."

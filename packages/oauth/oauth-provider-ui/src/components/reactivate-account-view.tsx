@@ -2,7 +2,6 @@ import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import type { Account } from '@atproto/oauth-provider-api'
 import { AsyncButton } from '#/components/forms/async-button.tsx'
-import { AccountIdentifier } from '#/components/identity/account-identifier.tsx'
 import { AccountSummary } from '#/components/identity/account-summary.tsx'
 import { AuthShell } from '#/components/layouts/auth-shell.tsx'
 
@@ -27,10 +26,7 @@ export function ReactivateAccountView({
 
         <p className="text-muted-foreground text-center">
           <Trans>
-            You previously deactivated <AccountIdentifier account={account} />.
-            You can reactivate your account to continue logging in. Your content
-            (profile, posts, feeds, lists, etc.) will become visible again to
-            other users.
+            Reactivating makes your profile and content visible again.
           </Trans>
         </p>
 

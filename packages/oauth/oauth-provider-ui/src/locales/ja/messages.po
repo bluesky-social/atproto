@@ -952,6 +952,10 @@ msgstr "再有効化"
 msgid "Reactivate account"
 msgstr "アカウントを再有効化"
 
+#: src/components/reactivate-account-view.tsx
+msgid "Reactivating makes your profile and content visible again."
+msgstr "再有効化すると、プロフィールとコンテンツが再び表示されます。"
+
 #: src/components/utils/scope-description.tsx
 msgid "Read and send messages"
 msgstr "メッセージの読み取りと送信"
@@ -1436,10 +1440,6 @@ msgstr "新しいメールアドレスでサインインできるようになり
 #: src/data/password.ts
 msgid "You can now sign in with your new password."
 msgstr "新しいパスワードでサインインできるようになりました。"
-
-#: src/components/reactivate-account-view.tsx
-msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
-msgstr "以前に <0/> を無効化しました。アカウントを再有効化してログインを続行できます。あなたのコンテンツ（プロフィール、投稿、フィード、リストなど）は、他のユーザーに再び表示されるようになります。"
 
 #: src/components/reset-password-view.tsx
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
