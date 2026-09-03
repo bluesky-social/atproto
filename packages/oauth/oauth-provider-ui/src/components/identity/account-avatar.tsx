@@ -65,7 +65,8 @@ export function AccountAvatar({
         <AvatarBadge
           aria-hidden
           className={cn(
-            'bg-destructive text-white',
+            // Grey, not red: deactivation is a paused state, not a fault.
+            'bg-muted-foreground text-background',
             'bottom-auto right-0 top-0',
             badgeSizeMap[size],
           )}
