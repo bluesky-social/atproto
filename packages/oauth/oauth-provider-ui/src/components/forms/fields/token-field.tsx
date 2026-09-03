@@ -1,5 +1,4 @@
 import { Trans } from '@lingui/react/macro'
-import { TicketIcon } from 'lucide-react'
 import { OTP_CODE_PATTERN } from '#/lib/form-patterns.ts'
 import { RequestCodeButton } from '../request-code-button.tsx'
 import { TextField, type TextFieldProps } from './text-field.tsx'
@@ -24,7 +23,7 @@ export function formatToken(value: string) {
 export function TokenField({
   example = OTP_CODE_EXAMPLE,
   onResend,
-  icon = <TicketIcon className="size-5" />,
+  icon,
   title = example,
   autoFocus = false,
   ...props

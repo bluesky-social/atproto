@@ -222,7 +222,7 @@ export function SignInForm({
             autoFocus
           />
 
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground mt-3 text-sm leading-snug">
             <Trans>
               Check your {secondFactorError.hint} email for a login code and
               enter it here.
