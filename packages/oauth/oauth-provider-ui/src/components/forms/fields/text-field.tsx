@@ -89,7 +89,7 @@ export function TextField({
       {below}
 
       {description && (
-        <Field.Description className="text-muted-foreground text-sm font-normal leading-normal">
+        <Field.Description className="text-muted-foreground mt-1 text-sm font-normal leading-normal">
           {description}
         </Field.Description>
       )}
