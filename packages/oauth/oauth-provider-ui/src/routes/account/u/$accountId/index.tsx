@@ -103,7 +103,7 @@ function HostedByParagraph(props: JSX.IntrinsicElements['p']): ReactNode {
     <p
       {...props}
       // The message's newline only takes effect on phones; from `md` up the
-      // sentence fits on one line and the link follows it.
+      // sentence fits on one line. The link is always its own line.
       className={cn(
         'whitespace-pre-line md:whitespace-normal',
         props.className,
@@ -117,7 +117,7 @@ function HostedByParagraph(props: JSX.IntrinsicElements['p']): ReactNode {
       <Link
         to="/account/u/$accountId/about"
         params={{ accountId: account.handle || account.did }}
-        className="text-foreground mt-1 block underline underline-offset-4 md:ml-1 md:mt-0 md:inline"
+        className="text-foreground mt-1 block underline underline-offset-4"
       >
         <Trans>What does this mean?</Trans>
       </Link>
