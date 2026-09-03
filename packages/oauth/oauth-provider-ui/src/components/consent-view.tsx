@@ -36,6 +36,9 @@ export function ConsentView({
 }: ConsentViewProps) {
   return (
     <AuthShell
+      // @NOTE Two rem wider than the other auth cards: the scope rows carry a
+      // description and a trailing control, and at 26rem the terms line wraps.
+      className="max-w-[28rem]"
       title={msg({ message: 'Authorize', context: 'OAuthConsent' })}
       subtitle={
         <>

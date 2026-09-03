@@ -11,7 +11,8 @@ most one line of copy, the content, an action stack, the footer. Nothing else.
 If a screen needs a paragraph to explain itself, the screen is wrong, not the
 paragraph.
 
-- Card: 26rem cap, 24px inner padding, 16px page gutter on phones.
+- Card: 26rem cap, 24px inner padding, 16px page gutter on phones. The
+  consent card alone is 28rem so its scope rows and terms line fit.
 - Logo stands alone, 36px, no wordmark beside it. The service name is the
   image's alt text.
 - Heading: 24px semibold, balanced. When a break matters, put `\n` in the
@@ -38,7 +39,7 @@ paragraph.
   person just did. "Enter your username and password" under "Sign in" is
   three words of information the fields already carry.
 - Placeholders do the instructing: `yourname.example.com`, `Enter your
-  password`.
+password`.
 - Legal and safety lines are one sentence, muted, 14px: "Only enter your
   password on sites you trust." "Subject to the app's terms of service and
   privacy policy."
