@@ -147,6 +147,14 @@
  * see the provider's build-customization-css.ts) over the neutral muted base,
  * per colour scheme. The card keeps its own opaque surface. */
 
+/* Applied to <html> by AuthShell (not to a page div), so iOS overscroll and
+ * the areas behind the status bar and home indicator show the same surface
+ * instead of a bare bar. The body goes transparent to let it through — that
+ * rule sits outside the layers so it outranks the body's `bg-background`. */
+html.auth-background body {
+  background-color: transparent;
+}
+
 /* auth background: light */
 .auth-background {
   background-color: var(--muted);
@@ -204,6 +212,12 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+
+  /* The root paints the same surface as the body, so nothing outside the
+     body's box (overscroll, safe areas) shows a different colour. */
+  html {
+    background-color: var(--background);
   }
 
   /* @NOTE Tailwind v4's preflight resets buttons to the default arrow. The

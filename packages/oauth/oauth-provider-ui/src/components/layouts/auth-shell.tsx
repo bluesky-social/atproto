@@ -2,7 +2,7 @@ import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
-import type { CSSProperties, JSX, ReactNode } from 'react'
+import { type CSSProperties, type JSX, type ReactNode, useEffect } from 'react'
 import {
   Card,
   CardContent,
@@ -77,6 +77,14 @@ export function AuthShell({
   const { _ } = useLingui()
   const { logo, name, links } = useCustomizationData()
 
+  // The branded background lives on <html> (see `.auth-background` in
+  // style.css) so it also covers overscroll and the safe areas on phones.
+  useEffect(() => {
+    const root = document.documentElement
+    root.classList.add('auth-background')
+    return () => root.classList.remove('auth-background')
+  }, [])
+
   const titleString =
     typeof title === 'string' ? title : title ? _(title) : undefined
 
@@ -88,7 +96,7 @@ export function AuthShell({
         : undefined
 
   return (
-    <div className="auth-background flex min-h-svh flex-col items-center justify-center gap-6 p-4 sm:p-6 md:p-10">
+    <div className="flex min-h-svh flex-col items-center justify-center gap-6 p-4 sm:p-6 md:p-10">
       {documentTitleString && <title>{documentTitleString}</title>}
 
       <div
