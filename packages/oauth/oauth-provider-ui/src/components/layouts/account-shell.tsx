@@ -142,7 +142,9 @@ export function AccountShell({
                         isActive={link === currentLink}
                         // @NOTE The style bolds the active row; the background
                         // alone is enough to mark the current page.
-                        className="data-active:font-normal"
+                        // Taller rows with 16px text: the sidebar is the
+                        // phone's main navigation once it slides in.
+                        className="data-active:font-normal h-10 gap-3 px-3 text-base [&_svg]:size-5"
                         tooltip={
                           typeof link.title === 'object'
                             ? _(link.title)
@@ -181,7 +183,7 @@ export function AccountShell({
                     {footerLinks.map((link) => (
                       <SidebarMenuItem key={link.href}>
                         <SidebarMenuButton
-                          size="sm"
+                          className="h-9 px-3 text-sm"
                           render={
                             <LinkExternal href={link.href} rel={link.rel} />
                           }
