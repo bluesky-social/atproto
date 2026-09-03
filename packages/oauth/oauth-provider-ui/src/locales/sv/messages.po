@@ -157,8 +157,8 @@ msgid "An error occurred"
 msgstr "Ett fel uppstod"
 
 #: src/lib/api.ts
-msgid "An unexpected error occurred. Please try again."
-msgstr "Ett oväntat fel uppstod. Försök igen."
+msgid "An unexpected error occurred."
+msgstr "Ett oväntat fel inträffade."
 
 #: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx

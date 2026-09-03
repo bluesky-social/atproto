@@ -353,7 +353,7 @@ export class OAuthErrorResponse<
       case 'server_error':
         return msg`The server encountered an unexpected error. Please try again.`
       default:
-        return msg`An unexpected error occurred. Please try again.`
+        return msg`An unexpected error occurred.`
     }
   }
 }

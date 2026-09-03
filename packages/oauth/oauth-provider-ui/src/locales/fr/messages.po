@@ -157,8 +157,8 @@ msgid "An error occurred"
 msgstr "Une erreur s'est produite"
 
 #: src/lib/api.ts
-msgid "An unexpected error occurred. Please try again."
-msgstr "Une erreur inattendue s'est produite. Veuillez réessayer."
+msgid "An unexpected error occurred."
+msgstr "Une erreur inattendue s'est produite."
 
 #: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx

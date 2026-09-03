@@ -162,8 +162,8 @@ msgid "An error occurred"
 msgstr "A apărut o eroare"
 
 #: src/lib/api.ts
-msgid "An unexpected error occurred. Please try again."
-msgstr "A apărut o eroare neașteptată. Vă rugăm să încercați din nou."
+msgid "An unexpected error occurred."
+msgstr "A apărut o eroare neașteptată."
 
 #: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
