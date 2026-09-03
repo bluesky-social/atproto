@@ -119,7 +119,7 @@ export function AccountShell({
                     <img
                       src={logo}
                       alt={name || _(msg`Logo`)}
-                      className="size-5! shrink-0 object-contain"
+                      className="h-5! w-auto max-w-24 shrink-0 object-contain"
                     />
                   )}
                   <span className="text-base font-semibold">
@@ -249,7 +249,7 @@ export function AccountShell({
                   <img
                     src={logo}
                     alt={name || _(msg`Logo`)}
-                    className="size-5 shrink-0 object-contain"
+                    className="h-5 w-auto max-w-24 shrink-0 object-contain"
                   />
                 )}
                 {name && (

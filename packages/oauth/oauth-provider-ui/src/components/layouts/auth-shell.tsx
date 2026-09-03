@@ -105,7 +105,7 @@ export function AuthShell({
                 <img
                   src={logo}
                   alt={name || _(msg`Logo`)}
-                  className="size-9 object-contain"
+                  className="h-9 w-auto max-w-32 object-contain"
                 />
               ) : (
                 <span className="text-lg font-semibold">{name}</span>
