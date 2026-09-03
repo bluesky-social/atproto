@@ -41,12 +41,22 @@ export class Space<
   const TNsid extends NsidString = any,
   const TKey extends LexiconRecordKey = LexiconRecordKey,
 > {
+  readonly nsid: TNsid
+  readonly key: TKey
+  readonly collections: readonly NsidString[]
+  readonly options: SpaceOptions
+
   constructor(
-    readonly nsid: TNsid,
-    readonly key: TKey,
-    readonly collections: readonly NsidString[],
-    readonly options: SpaceOptions,
-  ) {}
+    nsid: TNsid,
+    key: TKey,
+    collections: readonly NsidString[],
+    options: SpaceOptions,
+  ) {
+    this.nsid = nsid
+    this.key = key
+    this.collections = collections
+    this.options = options
+  }
 
   get name(): string {
     return this.options.name

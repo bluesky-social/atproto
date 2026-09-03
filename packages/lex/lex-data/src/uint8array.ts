@@ -1,4 +1,5 @@
 import { isNodeJSBuffer } from './lib/nodejs-buffer.js'
+import { isObject } from './object.js'
 import type { Base64Alphabet } from './uint8array-base64.js'
 import { ui8ConcatNode, ui8ConcatPonyfill } from './uint8array-concat.js'
 import {
@@ -170,12 +171,12 @@ export function asUint8Array(input: unknown): Uint8Array {
 }
 
 function isArrayLike(input: unknown): input is ArrayLike<unknown> {
-  if (input == null || typeof input !== 'object') {
+  if (!isObject(input) || !('length' in input)) {
     return false
   }
 
-  const { length } = input as any
-  if (!Number.isInteger(length) || length < 0) {
+  const { length } = input
+  if (!Number.isInteger(length) || (length as number) < 0) {
     return false
   }
 

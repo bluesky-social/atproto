@@ -1,5 +1,5 @@
-import { ensureValidAtIdentifier, isDidIdentifier } from './at-identifier.js'
 import type { AtIdentifierString } from './at-identifier.js'
+import { ensureValidAtIdentifier, isDidIdentifier } from './at-identifier.js'
 import type { AtUriString, SpaceRefString } from './aturi_validation.js'
 import { InvalidAtUriError, SPACE_MARKER } from './aturi_validation.js'
 import type { DidString } from './did.js'
@@ -7,7 +7,7 @@ import { InvalidDidError, ensureValidDid, isValidDid } from './did.js'
 import type { NsidString } from './nsid.js'
 import { ensureValidNsid, isValidNsid } from './nsid.js'
 import type { RecordKeyString } from './recordkey.js'
-import { ensureValidRecordKey } from './recordkey.js'
+import { ensureValidRecordKey, isValidRecordKey } from './recordkey.js'
 
 export * from './aturi_validation.js'
 
@@ -66,12 +66,12 @@ export class AtUri {
   }
 
   static makeSpace(
-    spaceDid: string,
-    spaceType: string,
-    skey: string,
-    authorDid?: string,
-    collection?: string,
-    rkey?: string,
+    spaceDid: DidString,
+    spaceType: NsidString,
+    skey: RecordKeyString,
+    authorDid?: DidString,
+    collection?: NsidString,
+    rkey?: RecordKeyString,
   ) {
     ensureValidDid(spaceDid)
     ensureValidNsid(spaceType)
@@ -91,12 +91,12 @@ export class AtUri {
     return this.parts.isSpace
   }
 
-  get protocol() {
+  get protocol(): `at:` {
     return 'at:'
   }
 
-  get origin() {
-    return `at://${this.host}` as const
+  get origin(): `at://${AtIdentifierString}` {
+    return `at://${this.host}`
   }
 
   /**
@@ -186,18 +186,8 @@ export class AtUri {
     return this.parts.spaceType
   }
 
-  get skey(): string | undefined {
+  get skey(): RecordKeyString | undefined {
     return this.parts.skey
-  }
-
-  /**
-   * The space this URI belongs to, whether it names the space itself or a record
-   * within it. Undefined on a public URI.
-   */
-  spaceRef(): SpaceRef | undefined {
-    const { spaceDid, spaceType, skey } = this.parts
-    if (!spaceDid || !spaceType || !skey) return undefined
-    return new SpaceRef(spaceDid, spaceType, skey)
   }
 
   get href() {
@@ -236,19 +226,25 @@ export class SpaceRef {
   constructor(
     readonly spaceDid: DidString,
     readonly spaceType: NsidString,
-    readonly skey: string,
+    readonly skey: RecordKeyString,
   ) {}
 
-  static parse(ref: string): SpaceRef {
-    const parsed = new AtUri(ref).spaceRef()
-    if (!parsed || parsed.toString() !== ref) {
-      throw new InvalidAtUriError(`Invalid space ref: ${ref}`)
+  static parse(uri: string): SpaceRef {
+    const { spaceDid, spaceType, skey } = new AtUri(uri)
+    if (!spaceDid || !spaceType || !skey) {
+      throw new InvalidAtUriError(`Invalid space ref: ${uri}`)
     }
-    return parsed
+
+    const ref = new SpaceRef(spaceDid, spaceType, skey)
+    if (ref.toString() !== uri) {
+      throw new InvalidAtUriError(`Invalid space ref: ${uri}`)
+    }
+
+    return ref
   }
 
   toString(): SpaceRefString {
-    return `at://${this.spaceDid}/${SPACE_MARKER}/${this.spaceType}/${this.skey}` as SpaceRefString
+    return `at://${this.spaceDid}/${SPACE_MARKER}/${this.spaceType}/${this.skey}`
   }
 }
 
@@ -256,35 +252,42 @@ type AtUriPathParts = {
   isSpace: boolean
   spaceDid?: DidString
   spaceType?: NsidString
-  skey?: string
+  skey?: RecordKeyString
   authorDid?: DidString
-  collection?: string
-  rkey?: string
+  collection?: NsidString
+  rkey?: RecordKeyString
 }
 
 function parsePath(host: string, pathname: string): AtUriPathParts {
   const segments = pathname.split('/').filter(Boolean)
 
   if (segments[0] !== SPACE_MARKER) {
-    const [collection, rkey] = segments
     return {
       isSpace: false,
-      authorDid: isValidDid(host) ? host : undefined,
-      collection,
-      rkey,
+      authorDid: parsePathPart(host, isValidDid),
+      collection: parsePathPart(segments[0], isValidNsid),
+      rkey: parsePathPart(segments[1], isValidRecordKey),
     }
   }
 
-  const [, spaceType, skey, author, collection, rkey] = segments
   return {
     isSpace: true,
-    spaceDid: isValidDid(host) ? host : undefined,
-    spaceType: spaceType && isValidNsid(spaceType) ? spaceType : undefined,
-    skey,
-    authorDid: author && isValidDid(author) ? author : undefined,
-    collection,
-    rkey,
+    spaceDid: parsePathPart(host, isValidDid),
+    spaceType: parsePathPart(segments[1], isValidNsid),
+    skey: parsePathPart(segments[2], isValidRecordKey),
+    authorDid: parsePathPart(segments[3], isValidDid),
+    collection: parsePathPart(segments[4], isValidNsid),
+    rkey: parsePathPart(segments[5], isValidRecordKey),
   }
+}
+
+function parsePathPart<I>(
+  part: string | undefined,
+  validator: (value: unknown) => value is I,
+): I | undefined {
+  return part !== undefined && part !== 'undefined' && validator(part)
+    ? part
+    : undefined
 }
 
 function parse(str: string) {
