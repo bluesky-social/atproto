@@ -100,7 +100,15 @@ function SectionList(): ReactNode {
 function HostedByParagraph(props: JSX.IntrinsicElements['p']): ReactNode {
   const { account } = useAuthenticatedSession()
   return (
-    <p {...props} className={cn('whitespace-pre-line', props.className)}>
+    <p
+      {...props}
+      // The message's newline only takes effect on phones; from `md` up the
+      // sentence fits on one line and the link follows it.
+      className={cn(
+        'whitespace-pre-line md:whitespace-normal',
+        props.className,
+      )}
+    >
       {/* @NOTE The newline is part of the message so the line always breaks
         after "account"; translators place their own break. */}
       <Trans>
@@ -109,7 +117,7 @@ function HostedByParagraph(props: JSX.IntrinsicElements['p']): ReactNode {
       <Link
         to="/account/u/$accountId/about"
         params={{ accountId: account.handle || account.did }}
-        className="text-foreground mt-1 block underline underline-offset-4"
+        className="text-foreground mt-1 block underline underline-offset-4 md:ml-1 md:mt-0 md:inline"
       >
         <Trans>What does this mean?</Trans>
       </Link>
