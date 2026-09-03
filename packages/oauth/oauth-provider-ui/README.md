@@ -3,7 +3,7 @@
 The sign-in, sign-up, consent and account-management screens served by a PDS
 during OAuth. React 19, TanStack Router, Tailwind 4, shadcn on Base UI, Lingui.
 
-This fork carries the pckt.cafe redesign. The reasoning behind it is in
+This fork carries a redesign of these screens. The reasoning behind it is in
 [DesignPrinciples.md](./DesignPrinciples.md); the engineering constraints
 are in [CLAUDE.md](./CLAUDE.md).
 

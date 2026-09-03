@@ -1,6 +1,6 @@
 # Design principles
 
-What the pckt.cafe OAuth redesign settled on, so the next screen matches the
+What this fork's OAuth redesign settled on, so the next screen matches the
 last one without re-deciding anything. Values are the ones in the code; when
 the code and this file disagree, fix one of them.
 
@@ -37,7 +37,7 @@ paragraph.
 - Cut any sentence that restates the heading, the button, or something the
   person just did. "Enter your username and password" under "Sign in" is
   three words of information the fields already carry.
-- Placeholders do the instructing: `yourname.pckt.cafe`, `Enter your
+- Placeholders do the instructing: `yourname.example.com`, `Enter your
   password`.
 - Legal and safety lines are one sentence, muted, 14px: "Only enter your
   password on sites you trust." "Subject to the app's terms of service and
