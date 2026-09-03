@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import { actionButton } from '#/components/forms/form-shell.tsx'
 import {
   AuthShell,
   type AuthShellProps,
@@ -93,6 +94,7 @@ export function RedirectingView({
             className={buttonVariants({
               variant: 'default',
               className: cn(
+                actionButton,
                 'w-full',
                 !canClick && 'pointer-events-none opacity-50',
               ),
