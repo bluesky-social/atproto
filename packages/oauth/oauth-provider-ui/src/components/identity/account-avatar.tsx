@@ -1,5 +1,5 @@
 import { useLingui } from '@lingui/react/macro'
-import { SnowflakeIcon, UserIcon } from 'lucide-react'
+import { MoonIcon, UserIcon } from 'lucide-react'
 import type { JSX } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
@@ -72,7 +72,7 @@ export function AccountAvatar({
           )}
           title={t`Deactivated account`}
         >
-          <SnowflakeIcon />
+          <MoonIcon />
         </AvatarBadge>
       )}
     </div>

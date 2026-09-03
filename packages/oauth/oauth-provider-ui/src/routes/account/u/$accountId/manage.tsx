@@ -6,8 +6,9 @@ import {
   LockIcon,
   type LucideIcon,
   MailIcon,
+  MoonIcon,
   ShieldAlertIcon,
-  SnowflakeIcon,
+  SunIcon,
   TrashIcon,
 } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
@@ -215,7 +216,7 @@ function AccountStatusRow(props: Omit<RowProps, 'icon' | 'value'>) {
           await reactivate.mutateAsync({ did: account.did })
         }}
       >
-        <Row {...props} icon={SnowflakeIcon} variant="default">
+        <Row {...props} icon={SunIcon} variant="default">
           <Trans>Reactivate account</Trans>
         </Row>
       </ReactivateAccountDialog>
@@ -228,7 +229,7 @@ function AccountStatusRow(props: Omit<RowProps, 'icon' | 'value'>) {
         await deactivate.mutateAsync({ did: account.did })
       }}
     >
-      <Row {...props} icon={SnowflakeIcon} variant="destructive">
+      <Row {...props} icon={MoonIcon} variant="destructive">
         <Trans>Deactivate account</Trans>
       </Row>
     </DeactivateAccountDialog>
