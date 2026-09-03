@@ -1478,8 +1478,10 @@ msgid "Your account is visible again."
 msgstr "アカウントが再び表示されます。"
 
 #: src/routes/account/u/$accountId/index.tsx
-msgid "Your Atmosphere account is hosted by <0/>."
-msgstr "あなたのAtmosphereアカウントは <0/> にホストされています。"
+msgid "Your Atmosphere account\n"
+"is hosted by <0/>."
+msgstr "あなたのAtmosphereアカウントは\n"
+"<0/> にホストされています。"
 
 #: src/components/deactivate-account-dialog.tsx
 msgid "Your content (profile, posts, feeds, lists, etc.) will be hidden from the Bluesky app and across the Atmosphere network."

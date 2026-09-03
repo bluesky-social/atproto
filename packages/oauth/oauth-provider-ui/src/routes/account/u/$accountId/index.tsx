@@ -100,9 +100,11 @@ function SectionList(): ReactNode {
 function HostedByParagraph(props: JSX.IntrinsicElements['p']): ReactNode {
   const { account } = useAuthenticatedSession()
   return (
-    <p {...props}>
+    <p {...props} className={cn('whitespace-pre-line', props.className)}>
+      {/* @NOTE The newline is part of the message so the line always breaks
+        after "account"; translators place their own break. */}
       <Trans>
-        Your Atmosphere account is hosted by <CustomizationName />.
+        Your Atmosphere account{'\n'}is hosted by <CustomizationName />.
       </Trans>{' '}
       <Link
         to="/account/u/$accountId/about"
