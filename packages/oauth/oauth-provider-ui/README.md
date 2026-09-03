@@ -9,25 +9,77 @@ are in [CLAUDE.md](./CLAUDE.md).
 
 ## Screens
 
+Captured from the mock dev server at 390×844 (2×). The background
+illustration and the Bluesky branding are the mock's placeholders; a
+deployment supplies its own through the provider's customization options.
+
+### Signing in
+
 <table>
   <tr>
     <td align="center"><img src="./docs/screenshots/picker.webp" width="220" alt="Account picker"><br><sub>Account picker</sub></td>
+    <td align="center"><img src="./docs/screenshots/picker-light.webp" width="220" alt="Account picker, light"><br><sub>Account picker, light</sub></td>
     <td align="center"><img src="./docs/screenshots/sign-in.webp" width="220" alt="Sign in"><br><sub>Sign in</sub></td>
-    <td align="center"><img src="./docs/screenshots/consent.webp" width="220" alt="Consent"><br><sub>Consent</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="./docs/screenshots/sign-up.webp" width="220" alt="Sign up"><br><sub>Sign up</sub></td>
-    <td align="center"><img src="./docs/screenshots/error.webp" width="220" alt="Error page"><br><sub>Error page</sub></td>
-    <td align="center"><img src="./docs/screenshots/account-manage.webp" width="220" alt="Account settings"><br><sub>Account settings</sub></td>
+    <td align="center"><img src="./docs/screenshots/sign-in-confirm.webp" width="220" alt="Confirm password"><br><sub>Confirm password</sub></td>
+    <td align="center"><img src="./docs/screenshots/sign-in-2fa.webp" width="220" alt="2FA code"><br><sub>2FA code</sub></td>
+    <td align="center"><img src="./docs/screenshots/sign-in-error.webp" width="220" alt="Wrong credentials"><br><sub>Wrong credentials</sub></td>
   </tr>
 </table>
 
-<img src="./docs/screenshots/account-home-desktop.webp" width="720" alt="Account home on desktop">
+### Password reset and sign-up
 
-All captures are from the mock dev server at 390×844 (2×) in dark mode, and
-1280×800 for the desktop one. The background illustration and the Bluesky
-branding are the mock's placeholders; a deployment supplies its own through
-the provider's customization options.
+<table>
+  <tr>
+    <td align="center"><img src="./docs/screenshots/forgot-password.webp" width="220" alt="Forgot password"><br><sub>Forgot password</sub></td>
+    <td align="center"><img src="./docs/screenshots/reset-password.webp" width="220" alt="Reset code + new password"><br><sub>Reset code + new password</sub></td>
+    <td align="center"><img src="./docs/screenshots/sign-up.webp" width="220" alt="Sign up, step 1"><br><sub>Sign up, step 1</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="./docs/screenshots/sign-up-2.webp" width="220" alt="Sign up, step 2"><br><sub>Sign up, step 2</sub></td>
+    <td align="center"><img src="./docs/screenshots/sign-up-3.webp" width="220" alt="Sign up, captcha"><br><sub>Sign up, captcha</sub></td>
+    <td align="center"><img src="./docs/screenshots/reactivate.webp" width="220" alt="Deactivated account"><br><sub>Deactivated account</sub></td>
+  </tr>
+</table>
+
+### Consent and redirect
+
+<table>
+  <tr>
+    <td align="center"><img src="./docs/screenshots/consent.webp" width="220" alt="Consent"><br><sub>Consent</sub></td>
+    <td align="center"><img src="./docs/screenshots/consent-details.webp" width="220" alt="Technical details"><br><sub>Technical details</sub></td>
+    <td align="center"><img src="./docs/screenshots/redirecting.webp" width="220" alt="Redirecting"><br><sub>Redirecting</sub></td>
+  </tr>
+</table>
+
+### Errors
+
+<table>
+  <tr>
+    <td align="center"><img src="./docs/screenshots/error.webp" width="220" alt="Error page"><br><sub>Error page</sub></td>
+    <td align="center"><img src="./docs/screenshots/cookie-error.webp" width="220" alt="Cookie error"><br><sub>Cookie error</sub></td>
+  </tr>
+</table>
+
+### Account management
+
+<table>
+  <tr>
+    <td align="center"><img src="./docs/screenshots/account-home.webp" width="220" alt="Home"><br><sub>Home</sub></td>
+    <td align="center"><img src="./docs/screenshots/account-manage.webp" width="220" alt="Settings"><br><sub>Settings</sub></td>
+    <td align="center"><img src="./docs/screenshots/account-devices.webp" width="220" alt="Devices"><br><sub>Devices</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="./docs/screenshots/account-apps.webp" width="220" alt="Apps"><br><sub>Apps</sub></td>
+  </tr>
+</table>
+
+On desktop the same pages sit beside a sidebar, at 1280×800:
+
+<img src="./docs/screenshots/account-home-desktop.webp" width="720" alt="Account home on desktop">
+<img src="./docs/screenshots/account-manage-desktop.webp" width="720" alt="Account settings on desktop">
+<img src="./docs/screenshots/account-apps-desktop.webp" width="720" alt="Connected apps on desktop">
 
 ## Running the mock
 
