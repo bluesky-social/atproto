@@ -80,10 +80,10 @@ password`.
 
 ## Translate as you go
 
-Every string added or changed ships with all six other locales in the same
-commit, in the register that locale already uses (formal in Romanian,
-informal in Spanish). A `\n` or a placeholder in the source is copied into
-each translation by hand. Never leave `msgstr ""` behind.
+Every string added or changed ships with its French translation in the same
+commit, as `CLAUDE.md` requires; the other locales are translated
+externally. A `\n` or a placeholder in the source is copied into the
+translation by hand.
 
 ## Keep the contract
 
