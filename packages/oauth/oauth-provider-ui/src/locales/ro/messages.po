@@ -1351,12 +1351,16 @@ msgstr "Metodă de verificare"
 msgid "Verification successful!"
 msgstr "Verificare reușită!"
 
+#: src/routes/account/u/$accountId/manage.tsx
+msgctxt "verify email"
+msgid "Verify"
+msgstr "Verificați"
+
 #: src/components/update-handle-dialog.tsx
 msgid "Verify and Save"
 msgstr "Verificare și salvare"
 
 #: src/components/update-email-dialog.tsx
-#: src/routes/account/u/$accountId/manage.tsx
 msgctxt "verify email"
 msgid "Verify now"
 msgstr "Verificați acum"

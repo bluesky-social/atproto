@@ -1346,12 +1346,16 @@ msgstr "Verification method"
 msgid "Verification successful!"
 msgstr "Verification successful!"
 
+#: src/routes/account/u/$accountId/manage.tsx
+msgctxt "verify email"
+msgid "Verify"
+msgstr "Verify"
+
 #: src/components/update-handle-dialog.tsx
 msgid "Verify and Save"
 msgstr "Verify and Save"
 
 #: src/components/update-email-dialog.tsx
-#: src/routes/account/u/$accountId/manage.tsx
 msgctxt "verify email"
 msgid "Verify now"
 msgstr "Verify now"

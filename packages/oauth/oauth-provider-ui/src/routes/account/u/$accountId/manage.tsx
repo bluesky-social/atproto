@@ -118,7 +118,7 @@ function EmailVerificationRow() {
           }}
         >
           <Button variant="secondary" className="h-9">
-            <Trans context="verify email">Verify now</Trans>
+            <Trans context="verify email">Verify</Trans>
           </Button>
         </VerifyEmailDialog>
       </ItemActions>

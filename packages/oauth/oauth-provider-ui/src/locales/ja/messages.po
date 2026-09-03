@@ -1345,12 +1345,16 @@ msgstr "確認方法"
 msgid "Verification successful!"
 msgstr "確認成功！"
 
+#: src/routes/account/u/$accountId/manage.tsx
+msgctxt "verify email"
+msgid "Verify"
+msgstr "確認"
+
 #: src/components/update-handle-dialog.tsx
 msgid "Verify and Save"
 msgstr "確認して保存"
 
 #: src/components/update-email-dialog.tsx
-#: src/routes/account/u/$accountId/manage.tsx
 msgctxt "verify email"
 msgid "Verify now"
 msgstr "確認する"
