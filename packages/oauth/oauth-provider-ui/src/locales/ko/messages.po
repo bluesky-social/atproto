@@ -349,10 +349,6 @@ msgstr "인증 코드"
 msgid "Confirmation email sent"
 msgstr ""
 
-#: src/cookie-error-page.tsx
-msgid "Continue"
-msgstr "계속"
-
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
 msgid "Continue with\n"
@@ -361,8 +357,8 @@ msgstr "기존 계정으로\n"
 "계속하기"
 
 #: src/cookie-error-page.tsx
-msgid "Cookie Error"
-msgstr "쿠키 오류"
+msgid "Cookies are blocked"
+msgstr "쿠키가 차단되었습니다"
 
 #: src/components/forms/copy-button.tsx
 msgid "Copied"
@@ -666,6 +662,10 @@ msgstr ""
 msgid "Identity"
 msgstr "신원"
 
+#: src/cookie-error-page.tsx
+msgid "If this keeps happening, allow cookies for {hostname} in your browser's privacy settings."
+msgstr "문제가 계속되면 브라우저 개인정보 설정에서 {hostname}의 쿠키를 허용하세요."
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
 msgstr ""
@@ -702,11 +702,6 @@ msgstr ""
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "이 계정으로 아직 어떤 앱에도 로그인한 적이 없는 것 같습니다."
-
-#. placeholder {0}: url.hostname
-#: src/cookie-error-page.tsx
-msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
-msgstr "브라우저에서 쿠키를 허용하지 않는 것 같습니다. 다시 시도하려면 ‘계속’을 누르세요. 오류가 계속 발생하면 개인정보 설정에서 ‘{0}’ 웹사이트의 쿠키를 허용했는지 확인하세요."
 
 #: src/components/utils/date-ago.tsx
 msgid "just now"
@@ -1065,6 +1060,10 @@ msgstr ""
 msgid "Sign-in complete"
 msgstr ""
 
+#: src/cookie-error-page.tsx
+msgid "Sign-in needs cookies, and your browser isn't accepting them."
+msgstr "로그인에는 쿠키가 필요하지만 브라우저가 쿠키를 허용하지 않습니다."
+
 #: src/components/error-view.tsx
 msgid "Something went wrong"
 msgstr "문제가 발생했습니다"
@@ -1239,6 +1238,7 @@ msgid "Troubleshoot"
 msgstr ""
 
 #: src/components/error-view.tsx
+#: src/cookie-error-page.tsx
 msgid "Try again"
 msgstr "다시 시도"
 

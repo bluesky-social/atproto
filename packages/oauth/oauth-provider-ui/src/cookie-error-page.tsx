@@ -4,7 +4,6 @@ import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Notice } from '#/components/feedback/notice.tsx'
 import { actionButton } from '#/components/forms/form-shell.tsx'
 import { AuthShell } from '#/components/layouts/auth-shell.tsx'
 import { Button } from '#/components/ui/button.tsx'
@@ -33,30 +32,32 @@ createRoot(container).render(
 
 function CookieErrorView() {
   const url = new URL(continueUrl)
+  const hostname = url.hostname
 
+  // Shaped like the error view: heading, one line of copy, a hint, an action.
   return (
-    <AuthShell title={msg`Cookie Error`}>
-      {/* @NOTE The Notice carries no title of its own — the shell's card
-        heading already reads "Cookie Error". */}
-      <form action={url.origin} method="GET" className="flex flex-col gap-4">
+    <AuthShell
+      title={msg`Cookies are blocked`}
+      subtitle={
+        <Trans>
+          Sign-in needs cookies, and your browser isn't accepting them.
+        </Trans>
+      }
+    >
+      <form action={url.origin} method="GET" className="flex flex-col gap-5">
         {Array.from(new Map(url.searchParams)).map(([key, value]) => (
           <input key={key} type="hidden" name={key} value={value} />
         ))}
 
-        {/* @NOTE `role` and `variant` are set apart deliberately: this is
-          still an alert, but the amber treatment is redundant when the card
-          heading already says "Cookie Error". */}
-        <Notice role="alert" variant="info">
+        <p className="text-muted-foreground text-center text-sm leading-snug">
           <Trans>
-            It seems that your browser is not accepting cookies. Press
-            "Continue" to try again. If the error persists, please ensure that
-            your privacy settings allow cookies for the "{url.hostname}"
-            website.
+            If this keeps happening, allow cookies for {hostname} in your
+            browser's privacy settings.
           </Trans>
-        </Notice>
+        </p>
 
         <Button type="submit" className={cn(actionButton, 'w-full')}>
-          <Trans>Continue</Trans>
+          <Trans>Try again</Trans>
         </Button>
       </form>
     </AuthShell>

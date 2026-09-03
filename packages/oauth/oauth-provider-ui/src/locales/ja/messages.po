@@ -349,10 +349,6 @@ msgstr "確認コード"
 msgid "Confirmation email sent"
 msgstr "確認メールが送信されました"
 
-#: src/cookie-error-page.tsx
-msgid "Continue"
-msgstr "続行"
-
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
 msgid "Continue with\n"
@@ -360,8 +356,8 @@ msgid "Continue with\n"
 msgstr "既存のアカウントで続行"
 
 #: src/cookie-error-page.tsx
-msgid "Cookie Error"
-msgstr "Cookie エラー"
+msgid "Cookies are blocked"
+msgstr "Cookieがブロックされています"
 
 #: src/components/forms/copy-button.tsx
 msgid "Copied"
@@ -674,6 +670,10 @@ msgstr "HTTP"
 msgid "Identity"
 msgstr "識別情報"
 
+#: src/cookie-error-page.tsx
+msgid "If this keeps happening, allow cookies for {hostname} in your browser's privacy settings."
+msgstr "問題が続く場合は、ブラウザのプライバシー設定で {hostname} のCookieを許可してください。"
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
 msgstr "あなたのドメインのDNS設定パネルにアクセスできる場合（例：ドメインレジストラ経由）"
@@ -710,11 +710,6 @@ msgstr "IPアドレス"
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "このアカウントをアプリにサインインするためにまだ使用していないようです。"
-
-#. placeholder {0}: url.hostname
-#: src/cookie-error-page.tsx
-msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
-msgstr "あなたのブラウザがクッキーを受け入れていないようです。「続行」を押してもう一度試してください。エラーが続く場合は、プライバシー設定で「{0}」のウェブサイトのクッキーを許可していることを確認してください。"
 
 #: src/components/utils/date-ago.tsx
 msgid "just now"
@@ -1073,6 +1068,10 @@ msgstr "サインインキャンセル"
 msgid "Sign-in complete"
 msgstr "サインイン完了"
 
+#: src/cookie-error-page.tsx
+msgid "Sign-in needs cookies, and your browser isn't accepting them."
+msgstr "サインインにはCookieが必要ですが、ブラウザが受け入れていません。"
+
 #: src/components/error-view.tsx
 msgid "Something went wrong"
 msgstr "問題が発生しました"
@@ -1247,6 +1246,7 @@ msgid "Troubleshoot"
 msgstr "トラブルシュート"
 
 #: src/components/error-view.tsx
+#: src/cookie-error-page.tsx
 msgid "Try again"
 msgstr "もう一度試す"
 

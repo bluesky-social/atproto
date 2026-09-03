@@ -349,10 +349,6 @@ msgstr "Code de confirmation"
 msgid "Confirmation email sent"
 msgstr "Email de confirmation envoyé"
 
-#: src/cookie-error-page.tsx
-msgid "Continue"
-msgstr "Continuer"
-
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
 msgid "Continue with\n"
@@ -361,8 +357,8 @@ msgstr "Continuer avec\n"
 "un compte existant"
 
 #: src/cookie-error-page.tsx
-msgid "Cookie Error"
-msgstr "Erreur de cookies"
+msgid "Cookies are blocked"
+msgstr "Les cookies sont bloqués"
 
 #: src/components/forms/copy-button.tsx
 msgid "Copied"
@@ -675,6 +671,10 @@ msgstr "HTTP"
 msgid "Identity"
 msgstr "Identité"
 
+#: src/cookie-error-page.tsx
+msgid "If this keeps happening, allow cookies for {hostname} in your browser's privacy settings."
+msgstr "Si le problème persiste, autorisez les cookies pour {hostname} dans les paramètres de confidentialité de votre navigateur."
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
 msgstr "Si vous avez accès au panneau de configuration DNS de votre domaine (par exemple via votre registraire de domaine)"
@@ -711,11 +711,6 @@ msgstr "Adresse IP"
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "Il semble que vous n'ayez pas encore utilisé ce compte pour vous connecter à des applications."
-
-#. placeholder {0}: url.hostname
-#: src/cookie-error-page.tsx
-msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
-msgstr "Il semble que votre navigateur n'accepte pas les cookies. Appuyez sur \"Continuer\" pour réessayer. Si l'erreur persiste, veuillez vous assurer que vos paramètres de confidentialité autorisent les cookies pour le site \"{0}\"."
 
 #: src/components/utils/date-ago.tsx
 msgid "just now"
@@ -1074,6 +1069,10 @@ msgstr "Connexion annulée"
 msgid "Sign-in complete"
 msgstr "Connexion terminée"
 
+#: src/cookie-error-page.tsx
+msgid "Sign-in needs cookies, and your browser isn't accepting them."
+msgstr "La connexion nécessite des cookies et votre navigateur ne les accepte pas."
+
 #: src/components/error-view.tsx
 msgid "Something went wrong"
 msgstr "Une erreur s'est produite"
@@ -1248,6 +1247,7 @@ msgid "Troubleshoot"
 msgstr "Dépannage"
 
 #: src/components/error-view.tsx
+#: src/cookie-error-page.tsx
 msgid "Try again"
 msgstr "Réessayer"
 

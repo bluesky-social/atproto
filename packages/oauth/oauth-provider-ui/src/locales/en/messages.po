@@ -349,10 +349,6 @@ msgstr "Confirmation code"
 msgid "Confirmation email sent"
 msgstr "Confirmation email sent"
 
-#: src/cookie-error-page.tsx
-msgid "Continue"
-msgstr "Continue"
-
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
 msgid "Continue with\n"
@@ -361,8 +357,8 @@ msgstr "Continue with\n"
 "an existing account"
 
 #: src/cookie-error-page.tsx
-msgid "Cookie Error"
-msgstr "Cookie Error"
+msgid "Cookies are blocked"
+msgstr "Cookies are blocked"
 
 #: src/components/forms/copy-button.tsx
 msgid "Copied"
@@ -675,6 +671,10 @@ msgstr "HTTP"
 msgid "Identity"
 msgstr "Identity"
 
+#: src/cookie-error-page.tsx
+msgid "If this keeps happening, allow cookies for {hostname} in your browser's privacy settings."
+msgstr "If this keeps happening, allow cookies for {hostname} in your browser's privacy settings."
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
 msgstr "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
@@ -711,11 +711,6 @@ msgstr "IP address"
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "It appears that you haven’t used this account to sign in to any apps yet."
-
-#. placeholder {0}: url.hostname
-#: src/cookie-error-page.tsx
-msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
-msgstr "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
 
 #: src/components/utils/date-ago.tsx
 msgid "just now"
@@ -1074,6 +1069,10 @@ msgstr "Sign-in canceled"
 msgid "Sign-in complete"
 msgstr "Sign-in complete"
 
+#: src/cookie-error-page.tsx
+msgid "Sign-in needs cookies, and your browser isn't accepting them."
+msgstr "Sign-in needs cookies, and your browser isn't accepting them."
+
 #: src/components/error-view.tsx
 msgid "Something went wrong"
 msgstr "Something went wrong"
@@ -1248,6 +1247,7 @@ msgid "Troubleshoot"
 msgstr "Troubleshoot"
 
 #: src/components/error-view.tsx
+#: src/cookie-error-page.tsx
 msgid "Try again"
 msgstr "Try again"
 
