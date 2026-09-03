@@ -1,13 +1,22 @@
 import type { Selectable } from 'kysely'
-import { Agent, AtUri, CredentialSession } from '@atproto/api'
+import type {
+  AtUriString,
+  DatetimeString,
+  DidString,
+  HandleString,
+} from '@atproto/lex'
+import { Client, currentDatetimeString } from '@atproto/lex'
+import { PasswordSession } from '@atproto/lex-password-session'
+import { AtUri } from '@atproto/syntax'
 import type { VerifierConfig } from '../config/index.js'
 import type { Verification } from '../db/schema/verification.js'
+import { app, com, tools } from '../lexicons/index.js'
 
 export type VerificationInput = {
   displayName: string
-  handle: string
-  subject: string
-  createdAt?: string
+  handle: HandleString
+  subject: DidString
+  createdAt?: DatetimeString
 }
 
 export type VerificationIssuerCreator = (
@@ -17,8 +26,7 @@ export type VerificationIssuerCreator = (
 const HANDLE_INVALID = 'handle.invalid'
 
 export class VerificationIssuer {
-  private session = new CredentialSession(new URL(this.verifierConfig.url))
-  private agent = new Agent(this.session)
+  private clientPromise: Promise<Client> | undefined
   constructor(private verifierConfig: VerifierConfig) {}
 
   static creator() {
@@ -26,46 +34,47 @@ export class VerificationIssuer {
       new VerificationIssuer(verifierConfig)
   }
 
-  async getAgent() {
-    if (!this.session.hasSession) {
-      await this.session.login({
-        identifier: this.verifierConfig.did,
-        password: this.verifierConfig.password,
-      })
-    }
+  private async login() {
+    const session = await PasswordSession.login({
+      service: this.verifierConfig.url,
+      identifier: this.verifierConfig.did,
+      password: this.verifierConfig.password,
+      // PasswordSession refreshes the access token on its own, but it does not
+      // retain the password, so it cannot recover once the refresh token stops
+      // working. Drop the cached client when that happens and let the next
+      // caller log in again.
+      onDeleted: () => {
+        this.clientPromise = undefined
+      },
+    })
+    return new Client(session)
+  }
 
-    // Trigger a test request to check if the session is still valid, if not, we will login again
-    try {
-      await this.agent.com.atproto.server.getSession()
-    } catch (err) {
-      if ((err as any).status === 401) {
-        await this.session.login({
-          identifier: this.verifierConfig.did,
-          password: this.verifierConfig.password,
-        })
-      }
-    }
-
-    return this.agent
+  async getClient() {
+    // Memoized so that concurrent callers share one login instead of each
+    // creating a session, all but one of which would be orphaned.
+    this.clientPromise ??= this.login().catch((err) => {
+      this.clientPromise = undefined
+      throw err
+    })
+    return this.clientPromise
   }
 
   async verify(verifications: VerificationInput[]) {
     const grantedVerifications: Selectable<Verification>[] = []
-    const failedVerifications: {
-      $type: 'tools.ozone.verification.grantVerifications#grantError'
-      subject: string
-      error: string
-    }[] = []
-    const now = new Date().toISOString()
-    const agent = await this.getAgent()
+    const failedVerifications: tools.ozone.verification.grantVerifications.GrantError[] =
+      []
+    const now = currentDatetimeString()
+    const client = await this.getClient()
     await Promise.allSettled(
       verifications.map(async ({ displayName, handle, subject, createdAt }) => {
         if (handle.toLowerCase() === HANDLE_INVALID) {
-          failedVerifications.push({
-            $type: 'tools.ozone.verification.grantVerifications#grantError',
-            error: 'Cannot verify with invalid handle',
-            subject,
-          })
+          failedVerifications.push(
+            tools.ozone.verification.grantVerifications.grantError.$build({
+              error: 'Cannot verify with invalid handle',
+              subject,
+            }),
+          )
           return
         }
 
@@ -77,13 +86,14 @@ export class VerificationIssuer {
             handle,
             subject,
           }
-          const {
-            data: { uri, cid },
-          } = await agent.com.atproto.repo.createRecord({
-            repo: this.verifierConfig.did,
-            record: verificationRecord,
-            collection: 'app.bsky.graph.verification',
-          })
+          const { uri, cid } = await client.call(
+            com.atproto.repo.createRecord,
+            {
+              repo: this.verifierConfig.did,
+              record: verificationRecord,
+              collection: app.bsky.graph.verification.$nsid,
+            },
+          )
           grantedVerifications.push({
             ...verificationRecord,
             uri,
@@ -94,11 +104,12 @@ export class VerificationIssuer {
             revokeReason: null,
           })
         } catch (err) {
-          failedVerifications.push({
-            $type: 'tools.ozone.verification.grantVerifications#grantError',
-            error: (err as Error).message,
-            subject,
-          })
+          failedVerifications.push(
+            tools.ozone.verification.grantVerifications.grantError.$build({
+              error: err instanceof Error ? err.message : String(err),
+              subject,
+            }),
+          )
           return
         }
       }),
@@ -107,18 +118,18 @@ export class VerificationIssuer {
     return { grantedVerifications, failedVerifications }
   }
 
-  async revoke({ uris }: { uris: string[] }) {
-    const revokedVerifications: string[] = []
-    const failedRevocations: Array<{ uri: string; error: string }> = []
+  async revoke({ uris }: { uris: AtUriString[] }) {
+    const revokedVerifications: AtUriString[] = []
+    const failedRevocations: Array<{ uri: AtUriString; error: string }> = []
 
-    const agent = await this.getAgent()
+    const client = await this.getClient()
 
     await Promise.allSettled(
       uris.map(async (uri) => {
         try {
           const atUri = new AtUri(uri)
 
-          if (atUri.collection !== 'app.bsky.graph.verification') {
+          if (atUri.collection !== app.bsky.graph.verification.$nsid) {
             throw new Error(`Only verification records can be revoked`)
           }
 
@@ -128,14 +139,17 @@ export class VerificationIssuer {
             )
           }
 
-          await agent.com.atproto.repo.deleteRecord({
+          await client.call(com.atproto.repo.deleteRecord, {
             collection: atUri.collection,
             repo: this.verifierConfig.did,
             rkey: atUri.rkey,
           })
           revokedVerifications.push(uri)
         } catch (err) {
-          failedRevocations.push({ uri, error: (err as Error).message })
+          failedRevocations.push({
+            uri,
+            error: err instanceof Error ? err.message : String(err),
+          })
           return
         }
       }),

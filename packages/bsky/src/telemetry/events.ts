@@ -33,7 +33,7 @@ class EventReporter {
   #hydrationFailedCounter = meter.createCounter<{
     source: HydrationSource
     reason: 'abort' | 'timeout' | 'error'
-  }>('hydration_failed', {
+  }>('hydration.failed', {
     description:
       'Number of fail-open hydration steps that did not produce a result',
     valueType: ValueType.INT,

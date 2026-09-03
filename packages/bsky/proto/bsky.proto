@@ -619,6 +619,7 @@ message GetBlockExistenceResponse {
 message ListItemInfo {
   string uri = 1;
   string did = 2;
+  bool subject_opted_out = 3;
 }
 
 // - Return dids of users in list A
@@ -627,6 +628,7 @@ message GetListMembersRequest {
   string list_uri = 1;
   int32 limit = 2;
   string cursor = 3;
+  string viewer_did = 4;
 }
 
 message GetListMembersResponse {
@@ -667,6 +669,15 @@ message GetActorListsRequest {
 message GetActorListsResponse {
   repeated string list_uris = 1;
   string cursor = 2;
+}
+
+message GetReferencelistoptoutsByActorAndSubjectsRequest {
+  string actor_did = 1;
+  repeated string subject_uris = 2;
+}
+
+message GetReferencelistoptoutsByActorAndSubjectsResponse {
+  repeated string uris = 1;
 }
 
 //
@@ -1704,6 +1715,7 @@ service Service {
   rpc GetListMembers(GetListMembersRequest) returns (GetListMembersResponse);
   rpc GetListMembership(GetListMembershipRequest) returns (GetListMembershipResponse);
   rpc GetListCount(GetListCountRequest) returns (GetListCountResponse);
+  rpc GetReferencelistoptoutsByActorAndSubjects(GetReferencelistoptoutsByActorAndSubjectsRequest) returns (GetReferencelistoptoutsByActorAndSubjectsResponse);
 
   // Mutes
   rpc GetActorMutesActor(GetActorMutesActorRequest) returns (GetActorMutesActorResponse);

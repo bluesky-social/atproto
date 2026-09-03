@@ -63,6 +63,7 @@ const skeleton = async (
     listUri: params.list,
     limit: params.limit,
     cursor: params.cursor,
+    viewerDid: params.hydrateCtx.viewer ?? undefined,
   })
   return {
     listUri: params.list,
@@ -108,12 +109,20 @@ const presentation = (
   const { ctx, skeleton, hydration } = input
   const { listUri, listitems, cursor } = skeleton
   const list = ctx.views.list(listUri, hydration)
-  const items = mapDefined(listitems, ({ uri, did }) =>
-    ctx.views.listItemView(uri as AtUriString, did as DidString, hydration),
-  )
   if (!list) {
     throw new InvalidRequestError('List not found')
   }
+  const showOptOuts =
+    hydration.ctx?.viewer === didFromUri(listUri) &&
+    list.purpose === app.bsky.graph.defs.Referencelist
+  const items = mapDefined(listitems, ({ uri, did, subjectOptedOut }) =>
+    ctx.views.listItemView(
+      uri as AtUriString,
+      did as DidString,
+      hydration,
+      showOptOuts && subjectOptedOut,
+    ),
+  )
   return { list, items, cursor }
 }
 

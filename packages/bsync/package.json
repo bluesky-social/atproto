@@ -23,17 +23,27 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./telemetry": {
+      "types": "./dist/telemetry/telemetry.d.ts",
+      "default": "./dist/telemetry/telemetry.js"
+    },
+    "./package.json": {
+      "default": "./package.json"
     }
   },
   "engines": {
     "node": ">=22"
   },
   "dependencies": {
+    "@atproto-labs/opentelemetry-node": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@bufbuild/protobuf": "^1.5.0",
     "@connectrpc/connect": "^1.1.4",
     "@connectrpc/connect-node": "^1.1.4",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/semantic-conventions": "^1.41.1",
     "http-terminator": "^3.2.0",
     "kysely": "^0.29.2",
     "pg": "^8.10.0",

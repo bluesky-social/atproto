@@ -1,14 +1,17 @@
 import type { Selectable } from 'kysely'
 import {
   type $Typed,
-  type AppBskyActorDefs,
-  AtUri,
-  type ToolsOzoneModerationDefs,
-  type ToolsOzoneVerificationDefs,
-} from '@atproto/api'
+  type AtUriString,
+  type DatetimeString,
+  type DidString,
+  asUnknown$TypedObject,
+  currentDatetimeString,
+} from '@atproto/lex'
+import { AtUri } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
 import { CreatedAtUriKeyset, paginate } from '../db/pagination.js'
 import type { Verification } from '../db/schema/verification.js'
+import { app, tools } from '../lexicons/index.js'
 
 export type VerificationServiceCreator = (db: Database) => VerificationService
 
@@ -47,14 +50,23 @@ export class VerificationService {
     revokedAt,
     revokeReason,
   }: {
-    uris: string[]
-    revokedBy?: string
-    revokedAt?: string
+    uris: AtUriString[]
+    revokedBy?: DidString
+    revokedAt?: DatetimeString
     revokeReason?: string
   }) {
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
+
+    // @NOTE AtUri and AtUri.did will throw if any of the uris are invalid,
+    // which we want to happen before the transaction.
+    const parsedUris = uris.map((uri) => {
+      const atUri = new AtUri(uri)
+      return { did: atUri.did, uri: atUri.href }
+    })
+
     return this.db.transaction(async (tx) => {
-      for (const uri of uris) {
+      for (const { did, uri } of parsedUris) {
+        // @TODO is this "return" statement right???
         return tx.db
           .updateTable('verification')
           .set({
@@ -62,7 +74,7 @@ export class VerificationService {
             updatedAt: now,
             revokedAt: revokedAt || now,
             // Allow setting revokedBy to a moderator/verifier DID and if it isn't set, default to the author of the verification record
-            revokedBy: revokedBy || new AtUri(uri).host,
+            revokedBy: revokedBy || did,
           })
           .where('uri', '=', uri)
           .where('revokedAt', 'is', null)
@@ -83,10 +95,10 @@ export class VerificationService {
   }: {
     sortDirection?: 'asc' | 'desc'
     cursor?: string
-    createdAfter?: string
-    createdBefore?: string
-    issuers?: string[]
-    subjects?: string[]
+    createdAfter?: DatetimeString
+    createdBefore?: DatetimeString
+    issuers?: DidString[]
+    subjects?: DidString[]
     isRevoked?: boolean
     limit?: number
   }) {
@@ -94,7 +106,7 @@ export class VerificationService {
 
     let qb = this.db.db.selectFrom('verification').selectAll()
 
-    if (issuers.length) {
+    if (issuers?.length) {
       qb = qb.where('issuer', 'in', issuers)
     }
 
@@ -102,7 +114,7 @@ export class VerificationService {
       qb = qb.where('revokedAt', isRevoked ? 'is not' : 'is', null)
     }
 
-    if (subjects.length) {
+    if (subjects?.length) {
       qb = qb.where('subject', 'in', subjects)
     }
 
@@ -131,24 +143,24 @@ export class VerificationService {
     verifications: Selectable<Verification>[],
     repos: Map<
       string,
-      | $Typed<ToolsOzoneModerationDefs.RepoViewDetail>
-      | $Typed<ToolsOzoneModerationDefs.RepoViewNotFound>
+      | $Typed<tools.ozone.moderation.defs.RepoViewDetail>
+      | $Typed<tools.ozone.moderation.defs.RepoViewNotFound>
     >,
-    profiles: Map<string, AppBskyActorDefs.ProfileViewDetailed>,
-  ): $Typed<ToolsOzoneVerificationDefs.VerificationView>[] {
+    profiles: Map<string, app.bsky.actor.defs.ProfileViewDetailed>,
+  ): $Typed<tools.ozone.verification.defs.VerificationView>[] {
     return verifications.map((verification) => {
       const issuerRepo = repos.get(verification.issuer)
       const subjectRepo = repos.get(verification.subject)
       const subjectProfile = profiles.get(verification.subject)
       const issuerProfile = profiles.get(verification.issuer)
-      return {
-        $type: 'tools.ozone.verification.defs#verificationView',
+      return tools.ozone.verification.defs.verificationView.$build({
         uri: verification.uri,
         issuer: verification.issuer,
         subject: verification.subject,
         createdAt: verification.createdAt,
         displayName: verification.displayName,
         handle: verification.handle,
+        // @ts-expect-error not part of the schema
         updatedAt: verification.updatedAt || undefined,
         revokedAt: verification.revokedAt || undefined,
         revokedBy: verification.revokedBy || undefined,
@@ -156,18 +168,16 @@ export class VerificationService {
         issuerRepo,
         subjectRepo,
         subjectProfile: subjectProfile
-          ? {
-              $type: 'app.bsky.actor.defs#profileViewDetailed',
-              ...subjectProfile,
-            }
+          ? asUnknown$TypedObject(
+              app.bsky.actor.defs.profileViewDetailed.$build(subjectProfile),
+            )
           : undefined,
         issuerProfile: issuerProfile
-          ? {
-              $type: 'app.bsky.actor.defs#profileViewDetailed',
-              ...issuerProfile,
-            }
+          ? asUnknown$TypedObject(
+              app.bsky.actor.defs.profileViewDetailed.$build(issuerProfile),
+            )
           : undefined,
-      }
+      })
     })
   }
 

@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { noUndefinedVals } from '@atproto/common'
+import { SECOND, noUndefinedVals } from '@atproto/common'
 import { type DidString, isDidString } from '@atproto/lex'
 import { subLogger as log } from './logger.js'
 
@@ -72,6 +72,7 @@ export interface ServerConfigValues {
   irisFeedUris?: Set<string> // `iris:feed:enable` gate to serve via iris instead of seeemore
   irisStagingUrl?: string
   irisStagingFeedUris?: Set<string> // serve via iris staging instead of the registered feed generator
+  feedGenSkeletonTimeout: number
   cdnUrl?: string
   videoPlaylistUrlPattern?: string
   videoThumbnailUrlPattern?: string
@@ -182,6 +183,9 @@ export class ServerConfig {
     const irisStagingFeedUris = new Set(
       envList(process.env.BSKY_IRIS_STAGING_FEED_URIS),
     )
+    const feedGenSkeletonTimeout = process.env.BSKY_FEED_GEN_SKELETON_TIMEOUT
+      ? parseInt(process.env.BSKY_FEED_GEN_SKELETON_TIMEOUT || '', 10)
+      : 5 * SECOND
     const dataplaneUrls =
       overrides?.dataplaneUrls ?? envList(process.env.BSKY_DATAPLANE_URLS)
     const dataplaneUrlsEtcdKeyPrefix =
@@ -380,6 +384,7 @@ export class ServerConfig {
       irisFeedUris,
       irisStagingUrl,
       irisStagingFeedUris,
+      feedGenSkeletonTimeout,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
@@ -581,6 +586,10 @@ export class ServerConfig {
 
   get irisStagingFeedUris() {
     return this.cfg.irisStagingFeedUris
+  }
+
+  get feedGenSkeletonTimeout() {
+    return this.cfg.feedGenSkeletonTimeout
   }
 
   get cdnUrl() {

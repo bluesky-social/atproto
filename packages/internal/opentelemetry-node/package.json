@@ -33,6 +33,10 @@
     "./instrumentation": {
       "types": "./dist/instrumentation.d.ts",
       "default": "./dist/instrumentation.js"
+    },
+    "./util": {
+      "types": "./dist/util.d.ts",
+      "default": "./dist/util.js"
     }
   },
   "engines": {

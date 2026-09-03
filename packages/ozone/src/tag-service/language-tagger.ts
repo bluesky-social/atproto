@@ -1,10 +1,5 @@
 import lande from 'lande'
-import {
-  AppBskyActorProfile,
-  AppBskyFeedGenerator,
-  AppBskyFeedPost,
-  AppBskyGraphList,
-} from '@atproto/api'
+import { app } from '../lexicons/index.js'
 import { langLogger as log } from '../logger.js'
 import { ContentTagger } from './content-tagger.js'
 import { code3ToCode2 } from './language-data.js'
@@ -36,18 +31,18 @@ export class LanguageTagger extends ContentTagger {
   getTextFromRecord(recordValue: Record<string, unknown>): string | undefined {
     let text: string | undefined
 
-    if (AppBskyGraphList.isRecord(recordValue)) {
+    if (app.bsky.graph.list.main.$isTypeOf(recordValue)) {
       text =
         isStringProp(recordValue, 'description') ||
         isStringProp(recordValue, 'name')
     } else if (
-      AppBskyFeedGenerator.isRecord(recordValue) ||
-      AppBskyActorProfile.isRecord(recordValue)
+      app.bsky.feed.generator.main.$isTypeOf(recordValue) ||
+      app.bsky.actor.profile.main.$isTypeOf(recordValue)
     ) {
       text =
         isStringProp(recordValue, 'description') ||
         isStringProp(recordValue, 'displayName')
-    } else if (AppBskyFeedPost.isRecord(recordValue)) {
+    } else if (app.bsky.feed.post.main.$isTypeOf(recordValue)) {
       text = isStringProp(recordValue, 'text')
     }
 

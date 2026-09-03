@@ -1,17 +1,12 @@
+import type { $TypeOf, $Typed, AtUriString, DidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as ChatBskyConvoDefs from '../lexicon/types/chat/bsky/convo/defs.js'
-import {
-  type RepoRef,
-  isRepoRef,
-} from '../lexicon/types/com/atproto/admin/defs.js'
-import type { InputSchema as ReportInput } from '../lexicon/types/com/atproto/moderation/createReport.js'
-import * as ComAtprotoRepoStrongRef from '../lexicon/types/com/atproto/repo/strongRef.js'
-import type { InputSchema as ActionInput } from '../lexicon/types/tools/ozone/moderation/emitEvent.js'
-import { type $Typed, asPredicate } from '../lexicon/util.js'
+import { chat, com, type tools } from '../lexicons/index.js'
 import type { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
 
-type SubjectInput = ReportInput['subject'] | ActionInput['subject']
+type SubjectInput =
+  | com.atproto.moderation.createReport.$InputBody['subject']
+  | tools.ozone.moderation.emitEvent.$InputBody['subject']
 
 // Chat subjects are not records, but are addressed by synthetic at-uris so
 // they can round-trip through string-subject APIs (queryEvents, queryReports,
@@ -19,14 +14,14 @@ type SubjectInput = ReportInput['subject'] | ActionInput['subject']
 export const CHAT_CONVO_COLLECTION = 'chat.bsky.convo'
 export const CHAT_MESSAGE_COLLECTION = 'chat.bsky.convo.message'
 
-type StrongRef = ComAtprotoRepoStrongRef.Main
-const isStrongRef = asPredicate(ComAtprotoRepoStrongRef.validateMain)
+type StrongRef = com.atproto.repo.strongRef.Main
+const isStrongRef = com.atproto.repo.strongRef.main.$matches
 
-type MessageRef = ChatBskyConvoDefs.MessageRef
-const isValidMessageRef = asPredicate(ChatBskyConvoDefs.validateMessageRef)
+type MessageRef = chat.bsky.convo.defs.MessageRef
+const isValidMessageRef = chat.bsky.convo.defs.messageRef.$matches
 
-type ConvoRef = ChatBskyConvoDefs.ConvoRef
-const isValidConvoRef = asPredicate(ChatBskyConvoDefs.validateConvoRef)
+type ConvoRef = chat.bsky.convo.defs.ConvoRef
+const isValidConvoRef = chat.bsky.convo.defs.convoRef.$matches
 
 const isMessageRefWithoutConvoId = (
   subject: unknown,
@@ -44,7 +39,7 @@ export const subjectFromInput = (
   subject: SubjectInput,
   blobs?: string[],
 ): ModSubject => {
-  if (isRepoRef(subject)) {
+  if (com.atproto.admin.defs.repoRef.$isTypeOf(subject)) {
     if (blobs && blobs.length > 0) {
       throw new InvalidRequestError('Blobs do not apply to repo subjects')
     }
@@ -79,24 +74,24 @@ export const subjectFromInput = (
 
 export const subjectFromEventRow = (row: ModerationEventRow): ModSubject => {
   if (
-    row.subjectType === 'com.atproto.repo.strongRef' &&
+    row.subjectType === com.atproto.repo.strongRef.$type &&
     row.subjectUri &&
     row.subjectCid
   ) {
     return new RecordSubject(
-      row.subjectUri,
+      row.subjectUri as AtUriString,
       row.subjectCid,
       row.subjectBlobCids ?? [],
     )
   } else if (
-    row.subjectType === 'chat.bsky.convo.defs#messageRef' &&
+    row.subjectType === chat.bsky.convo.defs.messageRef.$type &&
     row.subjectMessageId
   ) {
     const convoId =
       typeof row.meta?.['convoId'] === 'string' ? row.meta['convoId'] : ''
     return new MessageSubject(row.subjectDid, convoId, row.subjectMessageId)
   } else if (
-    row.subjectType === 'chat.bsky.convo.defs#convoRef' &&
+    row.subjectType === chat.bsky.convo.defs.convoRef.$type &&
     row.subjectConvoId
   ) {
     return new ConvoSubject(row.subjectDid, row.subjectConvoId)
@@ -112,7 +107,11 @@ export const subjectFromStatusRow = (
     // Not too intuitive but the recordpath is basically <collection>/<rkey>
     // which is what the last 2 params of .make() arguments are
     const uri = AtUri.make(row.did, ...row.recordPath.split('/')).toString()
-    return new RecordSubject(uri.toString(), row.recordCid, row.blobCids ?? [])
+    return new RecordSubject(
+      uri.toString() as AtUriString,
+      row.recordCid,
+      row.blobCids ?? [],
+    )
   } else if (row.convoId) {
     // Conversation subject - restore from subject status row
     return new ConvoSubject(row.did, row.convoId)
@@ -123,12 +122,12 @@ export const subjectFromStatusRow = (
 
 type SubjectInfo = {
   subjectType:
-    | 'com.atproto.admin.defs#repoRef'
-    | 'com.atproto.repo.strongRef'
-    | 'chat.bsky.convo.defs#messageRef'
-    | 'chat.bsky.convo.defs#convoRef'
-  subjectDid: string
-  subjectUri: string | null
+    | com.atproto.repo.strongRef.$type
+    | $TypeOf<com.atproto.admin.defs.RepoRef>
+    | $TypeOf<chat.bsky.convo.defs.MessageRef>
+    | $TypeOf<chat.bsky.convo.defs.ConvoRef>
+  subjectDid: DidString
+  subjectUri: AtUriString | null
   subjectCid: string | null
   subjectBlobCids: string[] | null
   subjectMessageId: string | null
@@ -137,7 +136,7 @@ type SubjectInfo = {
 }
 
 export interface ModSubject {
-  did: string
+  did: DidString
   recordPath: string | undefined
   convoId: string | undefined
   blobCids?: string[]
@@ -147,14 +146,17 @@ export interface ModSubject {
   isConvo(): this is ConvoSubject
   info(): SubjectInfo
   lex():
-    $Typed<RepoRef> | $Typed<StrongRef> | $Typed<MessageRef> | $Typed<ConvoRef>
+    | $Typed<com.atproto.admin.defs.RepoRef>
+    | $Typed<StrongRef>
+    | $Typed<MessageRef>
+    | $Typed<ConvoRef>
 }
 
 export class RepoSubject implements ModSubject {
   blobCids = undefined
   recordPath = undefined
   convoId = undefined
-  constructor(public did: string) {}
+  constructor(public did: DidString) {}
   isRepo(): this is RepoSubject {
     return true
   }
@@ -169,7 +171,7 @@ export class RepoSubject implements ModSubject {
   }
   info() {
     return {
-      subjectType: 'com.atproto.admin.defs#repoRef' as const,
+      subjectType: com.atproto.admin.defs.repoRef.$type,
       subjectDid: this.did,
       subjectUri: null,
       subjectCid: null,
@@ -179,26 +181,23 @@ export class RepoSubject implements ModSubject {
       meta: null,
     }
   }
-  lex(): $Typed<RepoRef> {
-    return {
-      $type: 'com.atproto.admin.defs#repoRef',
-      did: this.did,
-    }
+  lex(): $Typed<com.atproto.admin.defs.RepoRef> {
+    return com.atproto.admin.defs.repoRef.$build({ did: this.did })
   }
 }
 
 export class RecordSubject implements ModSubject {
   parsedUri: AtUri
-  did: string
+  did: DidString
   recordPath: string
   convoId = undefined
   constructor(
-    public uri: string,
+    public uri: AtUriString,
     public cid: string,
     public blobCids?: string[],
   ) {
     this.parsedUri = new AtUri(uri)
-    this.did = this.parsedUri.hostname
+    this.did = this.parsedUri.did
     this.recordPath = `${this.parsedUri.collection}/${this.parsedUri.rkey}`
   }
   isRepo(): this is RepoSubject {
@@ -238,7 +237,7 @@ export class MessageSubject implements ModSubject {
   blobCids = undefined
   recordPath = undefined
   constructor(
-    public did: string,
+    public did: DidString,
     public convoId: string,
     public messageId: string,
   ) {}
@@ -280,7 +279,7 @@ export class ConvoSubject implements ModSubject {
   blobCids = undefined
   recordPath = undefined
   constructor(
-    public did: string,
+    public did: DidString,
     public convoId: string,
   ) {}
   isRepo(): this is RepoSubject {
