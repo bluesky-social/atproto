@@ -104,23 +104,28 @@ export function ErrorView({
           />
         )}
 
+        {/* A caller that supplies its own actions replaces the defaults —
+          "Page not found" offers one way back, not a retry. */}
         <div className="flex flex-col gap-2">
-          <Button
-            className={cn(actionButton, 'w-full')}
-            onClick={() => (retry ? retry() : window.location.reload())}
-          >
-            {retryLabel || <Trans>Try again</Trans>}
-          </Button>
-          {canGoBack && (
-            <Button
-              variant="secondary"
-              className={cn(actionButton, 'w-full')}
-              onClick={() => window.history.back()}
-            >
-              <Trans>Go back</Trans>
-            </Button>
+          {children ?? (
+            <>
+              <Button
+                className={cn(actionButton, 'w-full')}
+                onClick={() => (retry ? retry() : window.location.reload())}
+              >
+                {retryLabel || <Trans>Try again</Trans>}
+              </Button>
+              {canGoBack && (
+                <Button
+                  variant="secondary"
+                  className={cn(actionButton, 'w-full')}
+                  onClick={() => window.history.back()}
+                >
+                  <Trans>Go back</Trans>
+                </Button>
+              )}
+            </>
           )}
-          {children}
         </div>
       </div>
     </AuthShell>
