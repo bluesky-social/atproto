@@ -5,10 +5,12 @@ import { Trans } from '@lingui/react/macro'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Notice } from '#/components/feedback/notice.tsx'
+import { actionButton } from '#/components/forms/form-shell.tsx'
 import { AuthShell } from '#/components/layouts/auth-shell.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
 import type { HydrationData } from '#/hydration-data.d.ts'
+import { cn } from '#/lib/utils.ts'
 import { LocaleProvider } from '#/locales/locale-provider.tsx'
 
 const {
@@ -53,7 +55,7 @@ function CookieErrorView() {
           </Trans>
         </Notice>
 
-        <Button type="submit" className="w-full">
+        <Button type="submit" className={cn(actionButton, 'w-full')}>
           <Trans>Continue</Trans>
         </Button>
       </form>

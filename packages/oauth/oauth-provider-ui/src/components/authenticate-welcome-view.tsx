@@ -1,8 +1,10 @@
 import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
+import { actionButton } from '#/components/forms/form-shell.tsx'
 import { AuthShell } from '#/components/layouts/auth-shell.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import { Separator } from '#/components/ui/separator.tsx'
+import { cn } from '#/lib/utils.ts'
 
 export type AuthenticateWelcomeViewParams = {
   onSignIn?: () => void
@@ -32,7 +34,7 @@ export function AuthenticateWelcomeView({
       <div className="flex w-full flex-col gap-3">
         {onSignUp && (
           <Button
-            className="w-full"
+            className={cn(actionButton, 'w-full')}
             variant={onSignIn ? 'default' : 'secondary'}
             onClick={onSignUp}
           >
@@ -42,7 +44,7 @@ export function AuthenticateWelcomeView({
 
         {onSignIn && (
           <Button
-            className="w-full"
+            className={cn(actionButton, 'w-full')}
             variant={onSignUp ? 'secondary' : 'default'}
             onClick={onSignIn}
           >
@@ -54,7 +56,11 @@ export function AuthenticateWelcomeView({
           <>
             <Separator className="my-2" />
 
-            <Button className="w-full" variant="secondary" onClick={onCancel}>
+            <Button
+              className={cn(actionButton, 'w-full')}
+              variant="secondary"
+              onClick={onCancel}
+            >
               <Trans>Cancel</Trans>
             </Button>
           </>
