@@ -1,7 +1,7 @@
 # Design principles
 
-What this fork's OAuth redesign settled on, so the next screen matches the
-last one without re-deciding anything. Values are the ones in the code; when
+What the redesign of these screens settled on, so the next screen matches
+the last one without re-deciding anything. Values are the ones in the code; when
 the code and this file disagree, fix one of them.
 
 ## The card is the product
