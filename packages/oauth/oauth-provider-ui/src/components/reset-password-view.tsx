@@ -3,7 +3,6 @@ import { Trans, useLingui } from '@lingui/react/macro'
 import { useState } from 'react'
 import { AuthShell } from '#/components/layouts/auth-shell.tsx'
 import { Button } from '#/components/ui/button.tsx'
-import { Separator } from '#/components/ui/separator.tsx'
 import { ResetPasswordConfirmForm } from './reset-password-confirm-form.tsx'
 import { ResetPasswordRequestForm } from './reset-password-request-form.tsx'
 
@@ -74,13 +73,17 @@ export function ResetPasswordView({
           onBack={onBack}
         />
 
-        <Separator className="my-5" />
-
-        <div className="text-center">
-          <Button variant="ghost" onClick={() => setView(View.ConfirmReset)}>
+        {/* A plain link under the actions, like "Need an account?" on the
+          picker, rather than a divided-off ghost button. */}
+        <p className="pt-4 text-center">
+          <Button
+            variant="link"
+            className="text-muted-foreground hover:text-foreground h-auto p-0 text-sm font-normal underline underline-offset-4"
+            onClick={() => setView(View.ConfirmReset)}
+          >
             <Trans>Already have a code?</Trans>
           </Button>
-        </div>
+        </p>
       </AuthShell>
     )
   }
