@@ -493,8 +493,8 @@ msgid "Enter the domain you want to use"
 msgstr ""
 
 #: src/components/reset-password-view.tsx
-msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
-msgstr "계정을 만들 때 사용한 이메일을 입력하세요. 새 비밀번호를 설정할 수 있도록 ‘재설정 코드’를 전송합니다."
+msgid "Enter your account's email and we'll send you a reset code."
+msgstr "계정 이메일을 입력하면 재설정 코드를 보내드립니다."
 
 #: src/components/reset-password-request-form.tsx
 msgid "Enter your email address"
@@ -721,10 +721,6 @@ msgstr ""
 msgctxt "verify email"
 msgid "Later"
 msgstr ""
-
-#: src/components/reset-password-view.tsx
-msgid "Let's get your password reset!"
-msgstr "비밀번호를 재설정해 봅시다!"
 
 #: src/components/layouts/account-shell.tsx
 #: src/components/layouts/auth-shell.tsx

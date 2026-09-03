@@ -493,8 +493,8 @@ msgid "Enter the domain you want to use"
 msgstr "Saisissez le domaine que vous souhaitez utiliser"
 
 #: src/components/reset-password-view.tsx
-msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
-msgstr "Saisissez l'email que vous avez utilisé pour créer votre compte. Nous vous enverrons un \"code de réinitialisation\" pour que vous puissiez définir un nouveau mot de passe."
+msgid "Enter your account's email and we'll send you a reset code."
+msgstr "Saisissez l'e-mail de votre compte et nous vous enverrons un code de réinitialisation."
 
 #: src/components/reset-password-request-form.tsx
 msgid "Enter your email address"
@@ -730,10 +730,6 @@ msgstr "Dernière connexion"
 msgctxt "verify email"
 msgid "Later"
 msgstr "Plus tard"
-
-#: src/components/reset-password-view.tsx
-msgid "Let's get your password reset!"
-msgstr "Réinitialisons votre mot de passe !"
 
 #: src/components/layouts/account-shell.tsx
 #: src/components/layouts/auth-shell.tsx

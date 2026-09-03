@@ -498,8 +498,8 @@ msgid "Enter the domain you want to use"
 msgstr "Introduceți domeniul pe care doriți să-l utilizați"
 
 #: src/components/reset-password-view.tsx
-msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
-msgstr "Introduceți e-mailul pe care l-ați folosit pentru a vă crea contul. Vă vom trimite un „cod de resetare” pentru a putea seta o parolă nouă."
+msgid "Enter your account's email and we'll send you a reset code."
+msgstr "Introduceți e-mailul contului și vă vom trimite un cod de resetare."
 
 #: src/components/reset-password-request-form.tsx
 msgid "Enter your email address"
@@ -735,10 +735,6 @@ msgstr "Văzut ultima dată"
 msgctxt "verify email"
 msgid "Later"
 msgstr "Mai târziu"
-
-#: src/components/reset-password-view.tsx
-msgid "Let's get your password reset!"
-msgstr "Hai să vă resetăm parola!"
 
 #: src/components/layouts/account-shell.tsx
 #: src/components/layouts/auth-shell.tsx
