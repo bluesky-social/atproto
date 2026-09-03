@@ -165,12 +165,10 @@ export class LexiconManager {
   }
 }
 
-function resolveSpaceSelfAuthority(value: string, userDid: string): string {
+function resolveSpaceSelfAuthority(value: string, userDid: DidString): string {
   const parsed = SpacePermission.fromString(value)
   if (!parsed?.isSelfAuthority) return value
-  return parsed
-    .withResolvedAuthority(userDid as `did:${string}:${string}`)
-    .toString()
+  return parsed.withResolvedAuthority(userDid).toString()
 }
 
 function extractSpaceTypeNsids(scopes: readonly string[]): Set<NsidString> {

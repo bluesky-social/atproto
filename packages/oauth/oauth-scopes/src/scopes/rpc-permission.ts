@@ -2,7 +2,7 @@ import {
   type AtprotoDidRefAbsolute,
   isAtprotoDidRefAbsolute,
 } from '@atproto/did'
-import { type Nsid, isNsid } from '../lib/nsid.js'
+import { type NsidString, isValidNsid } from '@atproto/syntax'
 import { Parser } from '../lib/parser.js'
 import type { ResourcePermission } from '../lib/resource-permission.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
@@ -14,14 +14,14 @@ import {
 
 export {
   type AtprotoDidRefAbsolute,
-  type Nsid,
+  type NsidString,
   isAtprotoDidRefAbsolute,
-  isNsid,
+  isValidNsid,
 }
 
-export type LxmParam = '*' | Nsid
+export type LxmParam = '*' | NsidString
 export const isLxmParam = (value: unknown): value is LxmParam =>
-  value === '*' || isNsid(value)
+  value === '*' || isValidNsid(value)
 export type AudParam = '*' | AtprotoDidRefAbsolute
 export const isAudParam = (value: unknown): value is AudParam =>
   value === '*' || isAtprotoDidRefAbsolute(value)
@@ -62,7 +62,7 @@ export class RpcPermission implements ResourcePermission<
         normalize: (value) =>
           value.length > 1 && value.includes('*')
             ? (['*'] as const)
-            : ([...new Set(value)].sort() as [Nsid, ...Nsid[]]),
+            : ([...new Set(value)].sort() as [NsidString, ...NsidString[]]),
       },
       aud: {
         multiple: false,
@@ -92,7 +92,7 @@ export class RpcPermission implements ResourcePermission<
   static scopeNeededFor(options: RpcPermissionMatch): string {
     return RpcPermission.parser.format({
       aud: options.aud as AtprotoDidRefAbsolute,
-      lxm: [options.lxm as Nsid],
+      lxm: [options.lxm as NsidString],
     })
   }
 }

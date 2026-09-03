@@ -9,12 +9,7 @@ import {
   RepoCommit,
   type SignedCommit,
 } from '@atproto/space'
-import {
-  AtUri,
-  type DidString,
-  type SpaceRef,
-  type SpaceRefString,
-} from '@atproto/syntax'
+import { type DidString, SpaceRef, type SpaceRefString } from '@atproto/syntax'
 import {
   ForbiddenError,
   InvalidRequestError,
@@ -37,14 +32,15 @@ type SpaceScopeOp = Omit<SpacePermissionMatch, 'type' | 'authority' | 'skey'>
 // Lexicons type a space as a `space-ref`, so schema validation rejects a
 // malformed one before any handler runs. Defensive for other callers.
 export function toSpaceRef(spaceUri: SpaceRefString): SpaceRef {
-  const ref = new AtUri(spaceUri).spaceRef()
-  if (!ref) {
+  try {
+    return SpaceRef.parse(spaceUri)
+  } catch (cause) {
     throw new InvalidRequestError(
       `Not a space uri: ${spaceUri}`,
       'InvalidSpaceUri',
+      { cause },
     )
   }
-  return ref
 }
 
 /**

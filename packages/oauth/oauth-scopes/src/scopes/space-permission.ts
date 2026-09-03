@@ -1,5 +1,5 @@
 import { isValidDid, isValidRecordKey } from '@atproto/syntax'
-import { type Nsid, isNsid } from '../lib/nsid.js'
+import { type NsidString, isValidNsid } from '@atproto/syntax'
 import { Parser } from '../lib/parser.js'
 import type { ResourcePermission } from '../lib/resource-permission.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
@@ -10,6 +10,8 @@ import {
   isScopeStringFor,
 } from '../lib/syntax.js'
 import { knownValuesValidator } from '../lib/util.js'
+
+export { type NsidString, isValidNsid as isNsidString }
 
 export const SPACE_ACTIONS = Object.freeze([
   'read_self',
@@ -37,9 +39,9 @@ export const SPACE_MANAGE_OPS = Object.freeze([
 export type SpaceManageOp = (typeof SPACE_MANAGE_OPS)[number]
 export const isSpaceManageOp = knownValuesValidator(SPACE_MANAGE_OPS)
 
-export type SpaceTypeParam = '*' | Nsid
+export type SpaceTypeParam = '*' | NsidString
 export const isSpaceTypeParam = (value: unknown): value is SpaceTypeParam =>
-  value === '*' || isNsid(value)
+  value === '*' || isValidNsid(value)
 
 type DidString = `did:${string}:${string}`
 const isDidString = (value: unknown): value is DidString =>
@@ -55,10 +57,10 @@ export type SpaceSkeyParam = string
 export const isSpaceSkeyParam = (value: unknown): value is SpaceSkeyParam =>
   typeof value === 'string' && isValidRecordKey(value)
 
-export type SpaceCollectionParam = '*' | Nsid
+export type SpaceCollectionParam = '*' | NsidString
 export const isSpaceCollectionParam = (
   value: unknown,
-): value is SpaceCollectionParam => value === '*' || isNsid(value)
+): value is SpaceCollectionParam => value === '*' || isValidNsid(value)
 
 export type SpacePermissionMatch = {
   type: string
@@ -199,9 +201,9 @@ export class SpacePermission implements ResourcePermission<
         normalize: (value) => {
           if (value.length > 1) {
             if (value.includes('*')) return ['*'] as const
-            return [...new Set(value)].sort() as NeArray<Nsid>
+            return [...new Set(value)].sort() as NeArray<NsidString>
           }
-          return value as ['*' | Nsid]
+          return value as ['*' | NsidString]
         },
       },
       action: {

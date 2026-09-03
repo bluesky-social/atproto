@@ -1,5 +1,5 @@
+import { type NsidString, isValidNsid } from '@atproto/syntax'
 import type { LexiconPermission, LexiconPermissionSet } from '../lib/lexicon.js'
-import { type Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'
 import {
   LexPermissionSyntax,
@@ -20,7 +20,12 @@ import {
 } from './rpc-permission.js'
 import { SpacePermission } from './space-permission.js'
 
-export { type LexiconPermission, type LexiconPermissionSet, type Nsid, isNsid }
+export {
+  type LexiconPermission,
+  type LexiconPermissionSet,
+  type NsidString,
+  isValidNsid as isNsidString,
+}
 
 /**
  * This is used to handle "include:" oauth scope values, used to include
@@ -29,7 +34,7 @@ export { type LexiconPermission, type LexiconPermissionSet, type Nsid, isNsid }
  */
 export class IncludeScope {
   constructor(
-    public readonly nsid: Nsid,
+    public readonly nsid: NsidString,
     public readonly aud: undefined | AtprotoDidRefAbsolute = undefined,
   ) {}
 
@@ -144,7 +149,7 @@ export class IncludeScope {
    * nsid of the lexicon itself (which is the same as the nsid of the `include:`
    * scope).
    */
-  public isParentAuthorityOf(otherNsid: '*' | Nsid) {
+  public isParentAuthorityOf(otherNsid: '*' | NsidString) {
     if (otherNsid === '*') {
       return false
     }
@@ -182,7 +187,7 @@ export class IncludeScope {
       nsid: {
         multiple: false,
         required: true,
-        validate: isNsid,
+        validate: isValidNsid,
       },
       aud: {
         multiple: false,
