@@ -476,6 +476,10 @@ msgstr ""
 msgid "Email change successful"
 msgstr ""
 
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Email not verified"
+msgstr "Correo electrónico sin verificar"
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Email these instructions"
 msgstr ""
@@ -1475,10 +1479,6 @@ msgstr ""
 
 #: src/data/email.ts
 msgid "Your email address has been verified."
-msgstr ""
-
-#: src/routes/account/u/$accountId/manage.tsx
-msgid "Your email address needs to be verified."
 msgstr ""
 
 #. placeholder {0}: segment ? ( <span className="text-foreground block break-all font-medium"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )

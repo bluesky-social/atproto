@@ -476,6 +476,10 @@ msgstr "Begäran om ändring av e-postadress har skickats"
 msgid "Email change successful"
 msgstr "E-postadressen har ändrats"
 
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Email not verified"
+msgstr "E-post inte verifierad"
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Email these instructions"
 msgstr "Skicka dessa instruktioner via e-post"
@@ -1485,10 +1489,6 @@ msgstr "Din e-postadress har uppdaterats och måste nu verifieras. Ange verifier
 #: src/data/email.ts
 msgid "Your email address has been verified."
 msgstr "Din e-postadress har verifierats."
-
-#: src/routes/account/u/$accountId/manage.tsx
-msgid "Your email address needs to be verified."
-msgstr "Din e-postadress behöver verifieras."
 
 #. placeholder {0}: segment ? ( <span className="text-foreground block break-all font-medium"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
 #: src/components/forms/fields/handle-field.tsx

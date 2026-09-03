@@ -101,7 +101,7 @@ function EmailVerificationRow() {
       <ItemContent className="min-w-0">
         <ItemTitle className="w-full text-base leading-snug">
           <span className="block min-w-0 font-medium">
-            <Trans>Your email address needs to be verified.</Trans>
+            <Trans>Email not verified</Trans>
           </span>
         </ItemTitle>
       </ItemContent>

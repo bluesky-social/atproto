@@ -476,6 +476,10 @@ msgstr "Demande de modification d'adresse email envoyée"
 msgid "Email change successful"
 msgstr "Modification de l'adresse email réussie"
 
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Email not verified"
+msgstr "E-mail non vérifié"
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Email these instructions"
 msgstr "Envoyer ces instructions par email"
@@ -1485,10 +1489,6 @@ msgstr "Votre adresse email a été mise à jour avec succès et doit être vér
 #: src/data/email.ts
 msgid "Your email address has been verified."
 msgstr "Votre adresse email a été vérifiée."
-
-#: src/routes/account/u/$accountId/manage.tsx
-msgid "Your email address needs to be verified."
-msgstr "Votre adresse email doit être vérifiée."
 
 #. placeholder {0}: segment ? ( <span className="text-foreground block break-all font-medium"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
 #: src/components/forms/fields/handle-field.tsx

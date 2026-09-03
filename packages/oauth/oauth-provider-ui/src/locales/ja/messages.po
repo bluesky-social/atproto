@@ -475,6 +475,10 @@ msgstr "メールアドレス変更リクエストが送信されました"
 msgid "Email change successful"
 msgstr "メールアドレスの変更に成功しました"
 
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Email not verified"
+msgstr "メールアドレス未確認"
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Email these instructions"
 msgstr "これらの手順をメールで送信"
@@ -1484,10 +1488,6 @@ msgstr "メールアドレスは正常に更新され、確認が必要です。
 #: src/data/email.ts
 msgid "Your email address has been verified."
 msgstr "メールアドレスが確認されました。"
-
-#: src/routes/account/u/$accountId/manage.tsx
-msgid "Your email address needs to be verified."
-msgstr "メールアドレスを確認する必要があります。"
 
 #. placeholder {0}: segment ? ( <span className="text-foreground block break-all font-medium"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
 #: src/components/forms/fields/handle-field.tsx

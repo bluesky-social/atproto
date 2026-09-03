@@ -481,6 +481,10 @@ msgstr "Cerere de modificare e-mail trimisă"
 msgid "Email change successful"
 msgstr "E-mail modificat cu succes"
 
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Email not verified"
+msgstr "E-mail neverificat"
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Email these instructions"
 msgstr "Trimiteți prin e-mail aceste instrucțiuni"
@@ -1490,10 +1494,6 @@ msgstr "Adresa dvs. de e-mail a fost actualizată cu succes și trebuie verifica
 #: src/data/email.ts
 msgid "Your email address has been verified."
 msgstr "Adresa dvs. de e-mail a fost verificată."
-
-#: src/routes/account/u/$accountId/manage.tsx
-msgid "Your email address needs to be verified."
-msgstr "Adresa dvs. de e-mail trebuie verificată."
 
 #. placeholder {0}: segment ? ( <span className="text-foreground block break-all font-medium"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
 #: src/components/forms/fields/handle-field.tsx
