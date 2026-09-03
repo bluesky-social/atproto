@@ -105,11 +105,11 @@ function HostedByParagraph(props: JSX.IntrinsicElements['p']): ReactNode {
         after "account"; translators place their own break. */}
       <Trans>
         Your Atmosphere account{'\n'}is hosted by <CustomizationName />.
-      </Trans>{' '}
+      </Trans>
       <Link
         to="/account/u/$accountId/about"
         params={{ accountId: account.handle || account.did }}
-        className="text-foreground underline underline-offset-4"
+        className="text-foreground mt-1 block underline underline-offset-4"
       >
         <Trans>What does this mean?</Trans>
       </Link>
