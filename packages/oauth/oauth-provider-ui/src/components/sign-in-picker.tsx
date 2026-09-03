@@ -13,7 +13,11 @@ import {
 } from '#/components/ui/item.tsx'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
-import { AccountCard, accountRowClassName } from './utils/account-card.tsx'
+import {
+  AccountCard,
+  accountRowClassName,
+  accountRowDiscClassName,
+} from './utils/account-card.tsx'
 import { stringifyHandle } from './utils/handle.tsx'
 
 export type SignInPickerProps = Override<
@@ -78,7 +82,7 @@ export function SignInPicker({
         >
           {/* @NOTE Bordered like `Avatar`, which draws a hairline ring around
             every account picture, so the disc reads as the same object. */}
-          <ItemMedia className="bg-muted text-muted-foreground size-12 rounded-full border">
+          <ItemMedia className={accountRowDiscClassName}>
             {/* Same box as the avatar fallback's user glyph. */}
             <AtSignIcon aria-hidden className="m-[10%] size-[80%]" />
           </ItemMedia>

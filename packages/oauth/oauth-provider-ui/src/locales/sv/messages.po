@@ -194,6 +194,10 @@ msgstr "Appar"
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr "Appar kan utföra aktiviteter på ditt konto i bakgrunden (t.ex. för att titta efter notiser eller synkronisera data) även när du själv inte använder dem aktivt. Det är en normal företeelse och i samband med den uppdateras den berörda tidsangivelsen för ”senaste aktivitet”."
 
+#: src/routes/account/u/$accountId/apps.tsx
+msgid "Apps that can use your account. Revoke any you no longer use."
+msgstr "Appar som kan använda ditt konto. Återkalla de du inte längre använder."
+
 #: src/components/delete-account-dialog.tsx
 msgid "Are you really, really sure?"
 msgstr "Är du verkligen, verkligen säker?"
@@ -1176,10 +1180,6 @@ msgstr "Användarnamnet är ogiltigt"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "Det finns ingen gräns för hur länge ett konto kan vara inaktiverat. Kom tillbaka när du vill."
 
-#: src/routes/account/u/$accountId/apps.tsx
-msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
-msgstr "De här apparna har åtkomst till ditt konto. En app kan visas flera gånger om du använder den på olika enheter. Återkalla åtkomsten för att logga ut dig själv från appen. Därefter kan du ge ny åtkomst genom att logga in igen."
-
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app can uniquely identify you through your account."
 msgstr "Den här appen kan entydigt identifiera dig via ditt konto."
@@ -1393,6 +1393,10 @@ msgstr "Vad innebär det?"
 msgid "What is an Atmosphere Account?"
 msgstr "Vad är ett Atmosphere-konto?"
 
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Where your account is signed in. Sign out of anything you don't recognize."
+msgstr "Var ditt konto är inloggat. Logga ut från allt du inte känner igen."
+
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Why is this time so recent?"
 msgstr "Varför är angivelserna så nära i tid?"
@@ -1461,10 +1465,6 @@ msgstr "Ditt konto är för närvarande inaktiverat."
 #: src/data/account.ts
 msgid "Your account is now deactivated."
 msgstr "Ditt konto är nu inaktiverat."
-
-#: src/routes/account/u/$accountId/devices.tsx
-msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
-msgstr "Ditt konto är inloggat på enheterna i listan nedan. Om säkerheten för ditt konto har äventyrats, logga ut från alla enheter, byt lösenord och kontrollera dina anslutna appar."
 
 #: src/data/account.ts
 msgid "Your account is visible again."

@@ -194,6 +194,10 @@ msgstr "アプリ"
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr "アプリは、あなたが積極的に使用していないときでも、バックグラウンドであなたのアカウントにアクセスすることがあります（通知の確認、データの同期など）。これは正常な動作であり、「最終アクセス」時間が更新されます。"
 
+#: src/routes/account/u/$accountId/apps.tsx
+msgid "Apps that can use your account. Revoke any you no longer use."
+msgstr "アカウントを使用できるアプリです。使わなくなったものは取り消してください。"
+
 #: src/components/delete-account-dialog.tsx
 msgid "Are you really, really sure?"
 msgstr "本当に、本当によろしいですか？"
@@ -1175,10 +1179,6 @@ msgstr "ユーザー名が無効です"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "アカウントの無効化に期限はありません。いつでも戻ってこられます。"
 
-#: src/routes/account/u/$accountId/apps.tsx
-msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
-msgstr "これらのアプリはあなたのアカウントにアクセスできます。異なるデバイスで使用している場合、アプリが複数回表示されることがあります。アクセスを取り消すと、再度サインインするまでアプリがログアウトされます。"
-
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app can uniquely identify you through your account."
 msgstr "このアプリは、あなたのアカウントを通じてあなたを一意に識別できます。"
@@ -1392,6 +1392,10 @@ msgstr "これは何を意味しますか？"
 msgid "What is an Atmosphere Account?"
 msgstr "Atmosphereアカウントとは何ですか？"
 
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Where your account is signed in. Sign out of anything you don't recognize."
+msgstr "アカウントにサインインしている場所です。心当たりのないものはサインアウトしてください。"
+
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Why is this time so recent?"
 msgstr "時間が最近なのは何故ですか？"
@@ -1460,10 +1464,6 @@ msgstr "アカウントを現在無効化しています。"
 #: src/data/account.ts
 msgid "Your account is now deactivated."
 msgstr "アカウントは現在無効化されています。"
-
-#: src/routes/account/u/$accountId/devices.tsx
-msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
-msgstr "あなたのアカウントは以下にリストされたデバイスでサインインしています。アカウントが侵害された場合は、すべてのデバイスからサインアウトし、パスワードを変更し、接続されている<0>アプリ</0>を確認してください。"
 
 #: src/data/account.ts
 msgid "Your account is visible again."

@@ -194,6 +194,10 @@ msgstr ""
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr ""
 
+#: src/routes/account/u/$accountId/apps.tsx
+msgid "Apps that can use your account. Revoke any you no longer use."
+msgstr "Aplicaciones que pueden usar tu cuenta. Revoca las que ya no uses."
+
 #: src/components/delete-account-dialog.tsx
 msgid "Are you really, really sure?"
 msgstr ""
@@ -1167,10 +1171,6 @@ msgstr ""
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr ""
 
-#: src/routes/account/u/$accountId/apps.tsx
-msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
-msgstr ""
-
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app can uniquely identify you through your account."
 msgstr ""
@@ -1384,6 +1384,10 @@ msgstr ""
 msgid "What is an Atmosphere Account?"
 msgstr ""
 
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Where your account is signed in. Sign out of anything you don't recognize."
+msgstr "Dónde has iniciado sesión. Cierra la sesión en cualquier dispositivo que no reconozcas."
+
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Why is this time so recent?"
 msgstr ""
@@ -1451,10 +1455,6 @@ msgstr ""
 
 #: src/data/account.ts
 msgid "Your account is now deactivated."
-msgstr ""
-
-#: src/routes/account/u/$accountId/devices.tsx
-msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 msgstr ""
 
 #: src/data/account.ts

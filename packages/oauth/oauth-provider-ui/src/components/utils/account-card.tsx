@@ -30,6 +30,14 @@ export type AccountCardProps = Override<
 export const accountRowClassName =
   'bg-muted/30 hover:bg-accent hover:text-accent-foreground w-full gap-4 px-4 py-3 text-left'
 
+/** Keeps a row's media vertically centred when the row has a description. */
+export const accountRowMediaClassName =
+  'group-has-data-[slot=item-description]/item:translate-y-0 group-has-data-[slot=item-description]/item:self-center'
+
+/** A disc the size of the avatar, for rows led by an icon instead of a picture. */
+export const accountRowDiscClassName =
+  'bg-muted text-muted-foreground size-12 rounded-full border'
+
 /**
  * A selectable account row, built on `Item` — the shadcn primitive for a
  * choice list.
@@ -57,7 +65,7 @@ export function AccountCard({
     >
       {/* @NOTE `ItemMedia` nudges itself to the top when a description is
         present; the large avatar here reads better vertically centred. */}
-      <ItemMedia className="group-has-data-[slot=item-description]/item:translate-y-0 group-has-data-[slot=item-description]/item:self-center">
+      <ItemMedia className={accountRowMediaClassName}>
         <AccountAvatar account={account} size="xl" />
       </ItemMedia>
 

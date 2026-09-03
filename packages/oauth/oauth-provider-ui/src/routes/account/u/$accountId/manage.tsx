@@ -20,14 +20,19 @@ import {
   Item,
   ItemActions,
   ItemContent,
+  ItemDescription,
   ItemGroup,
   ItemMedia,
-  ItemSeparator,
   ItemTitle,
 } from '#/components/ui/item.tsx'
 import { UpdateEmailDialog } from '#/components/update-email-dialog.tsx'
 import { UpdateHandleDialog } from '#/components/update-handle-dialog.tsx'
 import { UpdatePasswordDialog } from '#/components/update-password-dialog.tsx'
+import {
+  accountRowClassName,
+  accountRowDiscClassName,
+  accountRowMediaClassName,
+} from '#/components/utils/account-card.tsx'
 import { Handle } from '#/components/utils/handle.tsx'
 import { VerifyEmailDialog } from '#/components/verify-email-dialog.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
@@ -67,10 +72,8 @@ function ManagePage() {
         left the gaps looking arbitrary. */}
       <ItemGroup>
         <EmailUpdateRow />
-        <ItemSeparator />
         <HandleUpdateRow />
         <PasswordUpdateRow />
-        <ItemSeparator />
         <AccountStatusRow />
         <AccountDeletionRow />
       </ItemGroup>
@@ -88,10 +91,21 @@ function EmailVerificationRow() {
   if (!email || emailVerified) return null
 
   return (
-    <Notice
-      role="info"
-      icon={ShieldAlertIcon}
-      action={
+    <Item
+      variant="outline"
+      className={cn(accountRowClassName, 'hover:bg-muted/30')}
+    >
+      <ItemMedia className={cn(accountRowDiscClassName, 'text-warning')}>
+        <ShieldAlertIcon aria-hidden className="size-6" />
+      </ItemMedia>
+      <ItemContent className="min-w-0">
+        <ItemTitle className="w-full text-base leading-snug">
+          <span className="block min-w-0 font-medium">
+            <Trans>Your email address needs to be verified.</Trans>
+          </span>
+        </ItemTitle>
+      </ItemContent>
+      <ItemActions>
         <VerifyEmailDialog
           email={email}
           requestPending={verifyRequest.isPending}
@@ -103,14 +117,12 @@ function EmailVerificationRow() {
             await verifyConfirm.mutateAsync({ did, token, email })
           }}
         >
-          <Button size="sm" variant="secondary">
+          <Button variant="secondary" className="h-9">
             <Trans context="verify email">Verify now</Trans>
           </Button>
         </VerifyEmailDialog>
-      }
-    >
-      <Trans>Your email address needs to be verified.</Trans>
-    </Notice>
+      </ItemActions>
+    </Item>
   )
 }
 
@@ -305,39 +317,52 @@ function Row({
   return (
     <Item
       {...props}
+      variant="outline"
       render={<button type="button" />}
       className={cn(
-        'hover:bg-muted w-full text-left',
+        accountRowClassName,
         destructive && 'text-destructive hover:bg-destructive/10',
         className,
       )}
     >
-      <ItemMedia variant="icon">
-        <Icon aria-hidden className={cn(destructive && 'text-destructive')} />
+      <ItemMedia
+        className={cn(
+          accountRowMediaClassName,
+          accountRowDiscClassName,
+          destructive && 'text-destructive',
+        )}
+      >
+        <Icon aria-hidden className="size-6" />
       </ItemMedia>
 
       {/* @NOTE `min-w-0` is load-bearing: an email address has no break
         opportunity, so without it the row overflows and `Item`'s wrap drops the
-        chevron onto a line of its own. `shrink-0` keeps the label whole, so the
-        value is what truncates. */}
-      <ItemContent className="min-w-0 flex-row items-center gap-3">
-        <ItemTitle className="shrink-0">
-          <span>{children}</span>
+        chevron onto a line of its own. */}
+      <ItemContent className="min-w-0 gap-0.5">
+        <ItemTitle className="w-full text-lg leading-tight">
+          <span className="block min-w-0 truncate font-semibold">
+            {children}
+          </span>
         </ItemTitle>
         {value != null && (
-          <span
-            // A plain string value is the only one we can put in a tooltip
-            // ourselves; `Handle` carries its own `title`.
-            title={typeof value === 'string' ? value : undefined}
-            className="text-muted-foreground min-w-0 flex-1 truncate text-right text-sm"
-          >
-            {value}
-          </span>
+          <ItemDescription className="text-base leading-tight">
+            <span
+              // A plain string value is the only one we can put in a tooltip
+              // ourselves; `Handle` carries its own `title`.
+              title={typeof value === 'string' ? value : undefined}
+              className="block truncate"
+            >
+              {value}
+            </span>
+          </ItemDescription>
         )}
       </ItemContent>
 
       <ItemActions>
-        <ChevronRightIcon aria-hidden className="size-4 shrink-0 opacity-60" />
+        <ChevronRightIcon
+          aria-hidden
+          className="text-muted-foreground size-5 shrink-0"
+        />
       </ItemActions>
     </Item>
   )

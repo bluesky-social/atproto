@@ -199,6 +199,10 @@ msgstr "Aplicații"
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr "Aplicațiile vă pot accesa contul în fundal (pentru a verifica notificările, a sincroniza datele ș.a.m.d.) chiar și atunci când nu le folosiți în mod activ. Acesta este un comportament normal și va actualiza timpul „ultima accesare”."
 
+#: src/routes/account/u/$accountId/apps.tsx
+msgid "Apps that can use your account. Revoke any you no longer use."
+msgstr "Aplicații care pot folosi contul dvs. Revocați-le pe cele pe care nu le mai folosiți."
+
 #: src/components/delete-account-dialog.tsx
 msgid "Are you really, really sure?"
 msgstr "Sunteți foarte, foarte sigur?"
@@ -1181,10 +1185,6 @@ msgstr "Numele de utilizator este invalid"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "Nu există limită de timp pentru dezactivarea contului, puteți revenii oricând."
 
-#: src/routes/account/u/$accountId/apps.tsx
-msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
-msgstr "Aceste aplicații au acces la contul dvs. O aplicație poate apărea de mai multe ori dacă o utilizați pe dispozitive diferite. Puteți revoca accesul pentru a vă deconecta de la aplicație până vă reconectați."
-
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app can uniquely identify you through your account."
 msgstr "Această aplicație vă poate identifica în mod unic prin intermediul contului."
@@ -1398,6 +1398,10 @@ msgstr "Ce înseamnă acest lucru?"
 msgid "What is an Atmosphere Account?"
 msgstr "Ce este un Cont pe Atmosferă?"
 
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Where your account is signed in. Sign out of anything you don't recognize."
+msgstr "Unde este conectat contul dvs. Deconectați orice dispozitiv pe care nu îl recunoașteți."
+
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Why is this time so recent?"
 msgstr "De ce este această perioadă atât de recentă?"
@@ -1466,10 +1470,6 @@ msgstr "Contul dvs. este momentan dezactivat."
 #: src/data/account.ts
 msgid "Your account is now deactivated."
 msgstr "Contul dvs. este acum dezactivat."
-
-#: src/routes/account/u/$accountId/devices.tsx
-msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
-msgstr "Contul dvs. este conectat pe dispozitivele enumerate mai jos. Dacă contul dvs. a fost compromis, deconectați toate dispozitivele, schimbați parola și verificați <0>aplicațiile</0>."
 
 #: src/data/account.ts
 msgid "Your account is visible again."

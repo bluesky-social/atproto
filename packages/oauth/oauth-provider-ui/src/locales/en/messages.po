@@ -194,6 +194,10 @@ msgstr "Apps"
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 
+#: src/routes/account/u/$accountId/apps.tsx
+msgid "Apps that can use your account. Revoke any you no longer use."
+msgstr "Apps that can use your account. Revoke any you no longer use."
+
 #: src/components/delete-account-dialog.tsx
 msgid "Are you really, really sure?"
 msgstr "Are you really, really sure?"
@@ -1176,10 +1180,6 @@ msgstr "The username is invalid"
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr "There is no time limit for account deactivation, come back any time."
 
-#: src/routes/account/u/$accountId/apps.tsx
-msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
-msgstr "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
-
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app can uniquely identify you through your account."
 msgstr "This app can uniquely identify you through your account."
@@ -1393,6 +1393,10 @@ msgstr "What does this mean?"
 msgid "What is an Atmosphere Account?"
 msgstr "What is an Atmosphere Account?"
 
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Where your account is signed in. Sign out of anything you don't recognize."
+msgstr "Where your account is signed in. Sign out of anything you don't recognize."
+
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Why is this time so recent?"
 msgstr "Why is this time so recent?"
@@ -1461,10 +1465,6 @@ msgstr "Your account is currently deactivated."
 #: src/data/account.ts
 msgid "Your account is now deactivated."
 msgstr "Your account is now deactivated."
-
-#: src/routes/account/u/$accountId/devices.tsx
-msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
-msgstr "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
 
 #: src/data/account.ts
 msgid "Your account is visible again."

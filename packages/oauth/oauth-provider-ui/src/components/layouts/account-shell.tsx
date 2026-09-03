@@ -239,7 +239,7 @@ export function AccountShell({
               className="data-vertical:h-4 data-vertical:self-center mr-2"
             />
             {pageTitleStr && (
-              <h2 className="text-base font-medium">{pageTitleStr}</h2>
+              <h2 className="text-lg font-semibold">{pageTitleStr}</h2>
             )}
             {/* @NOTE On desktop the sidebar keeps the brand in view; on mobile
             it is closed, so the header carries it instead. */}
