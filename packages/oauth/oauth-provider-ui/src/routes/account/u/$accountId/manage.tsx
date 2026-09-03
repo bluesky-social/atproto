@@ -96,7 +96,9 @@ function EmailVerificationRow() {
       variant="outline"
       className={cn(accountRowClassName, 'hover:bg-muted/30')}
     >
-      <ItemMedia className={cn(accountRowDiscClassName, 'text-warning')}>
+      {/* No disc — this is a notice, not a destination like the rows below —
+        but the same 48px slot, so the text lines up with theirs. */}
+      <ItemMedia className="text-warning size-12">
         <ShieldAlertIcon aria-hidden className="size-6" />
       </ItemMedia>
       <ItemContent className="min-w-0">
