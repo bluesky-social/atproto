@@ -19,7 +19,7 @@ Change the Scylla write so an older timestamp cannot replace a newer timestamp. 
 
 ### Notification priority
 
-- Mark `priority` as deprecated in the notification seen and unread count protobuf messages, but keep its field number for compatibility.
+- Remove `priority` from the notification seen and unread count protobuf messages and reserve its field number.
 - Stop sending, reading, or writing separate notification read timestamps based on `priority`.
 - Make the TypeScript dataplane use the same timestamp for normal and priority notifications.
 - Leave the unrelated notification priority preference unchanged.
@@ -34,9 +34,9 @@ Change the Scylla write so an older timestamp cannot replace a newer timestamp. 
 
 ### AppView
 
-- First deployment: keep the current direct dataplane calls and add the bsync call.
-- Add a TODO to remove the direct dataplane calls after the bsync path is verified in production.
-- Second deployment: remove the direct dataplane calls and keep only the bsync call.
+- First deployment: keep the direct dataplane call and add the bsync call.
+- Add a TODO to remove the direct dataplane call after the bsync path is verified in production.
+- Second deployment: remove the direct dataplane call and keep only the bsync call.
 - Stop passing `priority` when reading notification timestamps and unread counts.
 - Keep the Courier call unchanged.
 
@@ -49,6 +49,6 @@ Change the Scylla write so an older timestamp cannot replace a newer timestamp. 
 
 1. Deploy the Atlantis change that prevents the timestamp from decreasing.
 2. Deploy the bsync endpoint and configure the dataplane addresses.
-3. Deploy AppView with both the existing direct dataplane calls and the new bsync call.
+3. Deploy AppView with both the existing direct dataplane call and the new bsync call.
 4. Confirm that every configured dataplane receives updates and that an older request cannot decrease the stored timestamp.
-5. Remove the direct dataplane calls from AppView, leaving only the bsync call.
+5. Remove the direct dataplane call from AppView, leaving only the bsync call.

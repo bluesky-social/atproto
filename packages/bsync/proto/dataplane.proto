@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 message UpdateNotificationSeenRequest {
   string actor_did = 1;
   google.protobuf.Timestamp timestamp = 2;
-  bool priority = 3 [deprecated = true];
+  reserved 3; // was "priority", deprecated
 }
 
 message UpdateNotificationSeenResponse {}

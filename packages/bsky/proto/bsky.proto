@@ -930,7 +930,7 @@ message GetNotificationsResponse {
 message UpdateNotificationSeenRequest {
   string actor_did = 1;
   google.protobuf.Timestamp timestamp = 2;
-  bool priority = 3 [deprecated = true];
+  reserved 3; // was "priority", deprecated
 }
 
 message UpdateNotificationSeenResponse {}
@@ -939,7 +939,7 @@ message UpdateNotificationSeenResponse {}
 //     - hydrating read state onto notifications
 message GetNotificationSeenRequest {
   string actor_did = 1;
-  bool priority = 2 [deprecated = true];
+  reserved 2; // was "priority", deprecated
 }
 
 message GetNotificationSeenResponse {
@@ -950,7 +950,7 @@ message GetNotificationSeenResponse {
 //     - `getUnreadCount`
 message GetUnreadNotificationCountRequest {
   string actor_did = 1;
-  bool priority = 2 [deprecated = true];
+  reserved 2; // was "priority", deprecated
 }
 
 message GetUnreadNotificationCountResponse {

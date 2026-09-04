@@ -13,17 +13,11 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const seenAt = new Date(input.body.seenAt)
       const timestamp = Timestamp.fromDate(seenAt)
-      // @TODO remove the direct dataplane calls and bsync error handling after the bsync path is verified in production.
+      // @TODO remove the direct dataplane call and bsync error handling after the bsync path is verified in production.
       await Promise.all([
         ctx.dataplane.updateNotificationSeen({
           actorDid: viewer,
           timestamp,
-          priority: false,
-        }),
-        ctx.dataplane.updateNotificationSeen({
-          actorDid: viewer,
-          timestamp,
-          priority: true,
         }),
         ctx.bsyncClient
           .fanoutNotificationSeen({ actorDid: viewer, timestamp })
