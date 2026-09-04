@@ -1,3 +1,4 @@
+import { lookup as dnsLookup } from 'node:dns'
 import {
   type Interceptor,
   type PromiseClient,
@@ -30,6 +31,8 @@ export function createDataplaneClient(opts: {
     ],
     nodeOptions: {
       rejectUnauthorized: opts.rejectUnauthorized,
+      lookup: (hostname, options, callback) =>
+        dnsLookup(hostname, { ...options, family: 4 }, callback),
     },
   })
   return createPromiseClient(Service, transport)
