@@ -1,10 +1,12 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { parseCid } from '@atproto/lex-data'
+import { type Cid, parseCid } from '@atproto/lex-data'
 import {
   type CommitCtx,
   LTHASH_STATE_BYTES,
+  type RecordPath,
   RepoCommit,
+  type RepoOp,
   type SignedCommit,
   encodeCommitCtx,
   formatSetHashElement,
@@ -42,41 +44,45 @@ describe('RepoCommit', () => {
     })
 
     it('add then remove returns to empty', () => {
-      const repo = new RepoCommit().add('c.a', '1', CID_A)
+      const repo = new RepoCommit().add('n.c.a', '1', CID_A)
       expect(repo.setHash.isEmpty()).toBe(false)
-      repo.remove('c.a', '1', CID_A)
+      repo.remove('n.c.a', '1', CID_A)
       expect(repo.setHash.isEmpty()).toBe(true)
     })
 
     it('is order-independent', () => {
-      const a = new RepoCommit().add('c.a', '1', CID_A).add('c.b', '2', CID_B)
-      const b = new RepoCommit().add('c.b', '2', CID_B).add('c.a', '1', CID_A)
+      const a = new RepoCommit()
+        .add('n.c.a', '1', CID_A)
+        .add('n.c.b', '2', CID_B)
+      const b = new RepoCommit()
+        .add('n.c.b', '2', CID_B)
+        .add('n.c.a', '1', CID_A)
       expect(sameContents(a, b)).toBe(true)
     })
 
     it('distinguishes the same cid at different paths', () => {
-      const a = new RepoCommit().add('c.a', '1', CID_A)
-      const b = new RepoCommit().add('c.a', '2', CID_A)
+      const a = new RepoCommit().add('n.c.a', '1', CID_A)
+      const b = new RepoCommit().add('n.c.a', '2', CID_A)
       expect(sameContents(a, b)).toBe(false)
     })
 
     it('distinguishes different cids at the same path', () => {
-      const a = new RepoCommit().add('c.a', '1', CID_A)
-      const b = new RepoCommit().add('c.a', '1', CID_B)
+      const a = new RepoCommit().add('n.c.a', '1', CID_A)
+      const b = new RepoCommit().add('n.c.a', '1', CID_B)
       expect(sameContents(a, b)).toBe(false)
     })
 
     it('round-trips through persisted state', () => {
-      const repo = new RepoCommit().add('c.a', '1', CID_A)
+      const repo = new RepoCommit().add('n.c.a', '1', CID_A)
       const resumed = RepoCommit.fromState(repo.setHash.state())
       expect(sameContents(resumed, repo)).toBe(true)
       expect(RepoCommit.fromState(null).setHash.isEmpty()).toBe(true)
     })
 
     it('fromRecords matches incremental adds', () => {
-      const records = [
-        { collection: 'c.a', rkey: '1', cid: CID_A },
-        { collection: 'c.b', rkey: '2', cid: CID_B },
+      const records: (RecordPath & { cid: Cid })[] = [
+        { collection: 'n.c.a', rkey: '1', cid: CID_A },
+        { collection: 'n.c.b', rkey: '2', cid: CID_B },
       ]
       const incremental = new RepoCommit()
       for (const r of records) incremental.add(r.collection, r.rkey, r.cid)
@@ -89,43 +95,43 @@ describe('RepoCommit', () => {
   describe('applyOp', () => {
     it('treats a null prev as a create', () => {
       const viaOp = new RepoCommit().applyOp({
-        collection: 'c.a',
+        collection: 'n.c.a',
         rkey: '1',
         cid: CID_A,
         prev: null,
       })
-      expect(sameContents(viaOp, new RepoCommit().add('c.a', '1', CID_A))).toBe(
-        true,
-      )
+      expect(
+        sameContents(viaOp, new RepoCommit().add('n.c.a', '1', CID_A)),
+      ).toBe(true)
     })
 
     it('treats a null cid as a delete', () => {
-      const repo = new RepoCommit().add('c.a', '1', CID_A)
-      repo.applyOp({ collection: 'c.a', rkey: '1', cid: null, prev: CID_A })
+      const repo = new RepoCommit().add('n.c.a', '1', CID_A)
+      repo.applyOp({ collection: 'n.c.a', rkey: '1', cid: null, prev: CID_A })
       expect(repo.setHash.isEmpty()).toBe(true)
     })
 
     it('swaps both cids on an update', () => {
-      const repo = new RepoCommit().add('c.a', '1', CID_A)
-      repo.applyOp({ collection: 'c.a', rkey: '1', cid: CID_B, prev: CID_A })
-      expect(sameContents(repo, new RepoCommit().add('c.a', '1', CID_B))).toBe(
-        true,
-      )
+      const repo = new RepoCommit().add('n.c.a', '1', CID_A)
+      repo.applyOp({ collection: 'n.c.a', rkey: '1', cid: CID_B, prev: CID_A })
+      expect(
+        sameContents(repo, new RepoCommit().add('n.c.a', '1', CID_B)),
+      ).toBe(true)
     })
 
     it('applyOps replays a batch', () => {
       const repo = new RepoCommit().applyOps([
-        { collection: 'c.a', rkey: '1', cid: CID_A, prev: null },
-        { collection: 'c.a', rkey: '1', cid: CID_B, prev: CID_A },
-        { collection: 'c.a', rkey: '1', cid: null, prev: CID_B },
+        { collection: 'n.c.a', rkey: '1', cid: CID_A, prev: null },
+        { collection: 'n.c.a', rkey: '1', cid: CID_B, prev: CID_A },
+        { collection: 'n.c.a', rkey: '1', cid: null, prev: CID_B },
       ])
       expect(repo.setHash.isEmpty()).toBe(true)
     })
 
     it('converges regardless of the order ops are applied', () => {
-      const ops = [
-        { collection: 'c.a', rkey: '1', cid: CID_A, prev: null },
-        { collection: 'c.b', rkey: '2', cid: CID_B, prev: null },
+      const ops: RepoOp[] = [
+        { collection: 'n.c.a', rkey: '1', cid: CID_A, prev: null },
+        { collection: 'n.c.b', rkey: '2', cid: CID_B, prev: null },
       ]
       const forward = new RepoCommit().applyOps(ops)
       const backward = new RepoCommit().applyOps([...ops].reverse())
@@ -232,25 +238,25 @@ describe('RepoCommit', () => {
    */
   describe('formatSetHashElement', () => {
     it('separates the three fields', () => {
-      expect(formatSetHashElement('c.a', '1', CID_A)).toBe(
-        `c.a/1/${CID_A.toString()}`,
+      expect(formatSetHashElement('n.c.a', '1', CID_A)).toBe(
+        `n.c.a/1/${CID_A.toString()}`,
       )
     })
 
     it('stays unambiguous for an rkey containing a slash', () => {
       // Not reachable through a validated write, but it shows the boundaries are
       // fixed by the outer fields rather than by the rkey's shape.
-      const element = formatSetHashElement('c.a', 'b/1', CID_A)
-      expect(element.slice(0, element.indexOf('/'))).toBe('c.a')
+      const element = formatSetHashElement('n.c.a', 'b/1', CID_A)
+      expect(element.slice(0, element.indexOf('/'))).toBe('n.c.a')
       expect(element.slice(element.lastIndexOf('/') + 1)).toBe(CID_A.toString())
     })
 
     it('distinguishes records that differ only in where the rkey starts', () => {
-      expect(formatSetHashElement('c.a', 'b/1', CID_A)).not.toBe(
-        formatSetHashElement('c.a', 'b/2', CID_A),
+      expect(formatSetHashElement('n.c.a', 'b/1', CID_A)).not.toBe(
+        formatSetHashElement('n.c.a', 'b/2', CID_A),
       )
-      expect(new RepoCommit().add('c.a', 'b/1', CID_A).setHash).not.toEqual(
-        new RepoCommit().add('c.a', 'b/2', CID_A).setHash,
+      expect(new RepoCommit().add('n.c.a', 'b/1', CID_A).setHash).not.toEqual(
+        new RepoCommit().add('n.c.a', 'b/2', CID_A).setHash,
       )
     })
   })

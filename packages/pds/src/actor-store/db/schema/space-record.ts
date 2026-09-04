@@ -1,8 +1,10 @@
+import type { AtUriString, NsidString, RecordKeyString } from '@atproto/syntax'
+
 export interface SpaceRecord {
-  uri: string
+  uri: AtUriString
   space: string
-  collection: string
-  rkey: string
+  collection: NsidString
+  rkey: RecordKeyString
   cid: string
   value: Uint8Array
   repoRev: string

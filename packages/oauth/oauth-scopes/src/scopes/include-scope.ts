@@ -1,7 +1,10 @@
+import { type NsidString, isValidNsid } from '@atproto/syntax'
 import type { LexiconPermission, LexiconPermissionSet } from '../lib/lexicon.js'
-import { type Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'
-import { LexPermissionSyntax } from '../lib/syntax-lexicon.js'
+import {
+  LexPermissionSyntax,
+  LexSpacePermissionSyntax,
+} from '../lib/syntax-lexicon.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
 import {
   type ScopeStringFor,
@@ -17,7 +20,12 @@ import {
 } from './rpc-permission.js'
 import { SpacePermission } from './space-permission.js'
 
-export { type LexiconPermission, type LexiconPermissionSet, type Nsid, isNsid }
+export {
+  type LexiconPermission,
+  type LexiconPermissionSet,
+  type NsidString,
+  isValidNsid as isNsidString,
+}
 
 /**
  * This is used to handle "include:" oauth scope values, used to include
@@ -26,7 +34,7 @@ export { type LexiconPermission, type LexiconPermissionSet, type Nsid, isNsid }
  */
 export class IncludeScope {
   constructor(
-    public readonly nsid: Nsid,
+    public readonly nsid: NsidString,
     public readonly aud: undefined | AtprotoDidRefAbsolute = undefined,
   ) {}
 
@@ -77,11 +85,11 @@ export class IncludeScope {
     // their respective ScopeSyntax representations, handling special cases as
     // needed.
 
-    if (isLexPermissionForResource(permission, 'repo')) {
-      return new LexPermissionSyntax(permission)
+    if (isLexPermissionForResource(permission, 'space')) {
+      return new LexSpacePermissionSyntax(permission)
     }
 
-    if (isLexPermissionForResource(permission, 'space')) {
+    if (isLexPermissionForResource(permission, 'repo')) {
       return new LexPermissionSyntax(permission)
     }
 
@@ -141,7 +149,7 @@ export class IncludeScope {
    * nsid of the lexicon itself (which is the same as the nsid of the `include:`
    * scope).
    */
-  public isParentAuthorityOf(otherNsid: '*' | Nsid) {
+  public isParentAuthorityOf(otherNsid: '*' | NsidString) {
     if (otherNsid === '*') {
       return false
     }
@@ -179,7 +187,7 @@ export class IncludeScope {
       nsid: {
         multiple: false,
         required: true,
-        validate: isNsid,
+        validate: isValidNsid,
       },
       aud: {
         multiple: false,

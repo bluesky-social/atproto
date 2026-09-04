@@ -13,6 +13,7 @@ export default defineConfig({
     },
     projects: [
       'packages/aws',
+      'packages/car',
       'packages/common',
       'packages/internal/*',
       'packages/lex/*',

@@ -61,13 +61,14 @@
     "node": ">=22"
   },
   "dependencies": {
+    "@atproto-labs/did-resolver": "workspace:^",
     "@atproto-labs/fetch-node": "workspace:^",
+    "@atproto-labs/handle-resolver-node": "workspace:^",
     "@atproto-labs/pipe": "workspace:^",
     "@atproto-labs/simple-store": "workspace:^",
     "@atproto-labs/simple-store-memory": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/did": "workspace:^",
-    "@atproto/identity": "workspace:^",
     "@atproto/jwk": "workspace:^",
     "@atproto/jwk-jose": "workspace:^",
     "@atproto/lex-document": "workspace:^",

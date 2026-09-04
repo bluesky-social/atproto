@@ -10,40 +10,43 @@ describe('Space', () => {
         'com.atmoboards.reply',
       ] as const
       const options = {
-        description: 'A discussion forum',
+        name: 'AtmoBoards Forum',
         'name:lang': { es: 'Foro AtmoBoards' },
       }
 
-      const sp = space(nsid, 'any', 'AtmoBoards Forum', collections, options)
+      const sp = space(nsid, 'any', collections, options)
 
       expect(sp).toBeInstanceOf(Space)
       expect(sp.nsid).toBe(nsid)
       expect(sp.key).toBe('any')
-      expect(sp.name).toBe('AtmoBoards Forum')
+      expect(sp.options.name).toBe('AtmoBoards Forum')
       expect(sp.collections).toBe(collections)
       expect(sp.options).toBe(options)
     })
 
     it('creates a Space instance with no options', () => {
-      const sp = space('com.example.group', 'tid', 'Example Group', [
-        'com.example.message',
-      ])
+      const sp = space('com.example.group', 'tid', ['com.example.message'], {
+        name: 'Example Group',
+      })
 
       expect(sp).toBeInstanceOf(Space)
       expect(sp.nsid).toBe('com.example.group')
       expect(sp.key).toBe('tid')
       expect(sp.name).toBe('Example Group')
       expect(sp.collections).toEqual(['com.example.message'])
-      expect(sp.options).toEqual({})
     })
 
     it('accepts an empty collections array', () => {
-      const sp = space('com.example.group', 'any', 'Example Group', [])
+      const sp = space('com.example.group', 'any', [], {
+        name: 'Example Group',
+      })
       expect(sp.collections).toEqual([])
     })
 
     it('accepts a literal key type', () => {
-      const sp = space('com.example.group', 'literal:self', 'Example Group', [])
+      const sp = space('com.example.group', 'literal:self', [], {
+        name: 'Example Group',
+      })
       expect(sp.key).toBe('literal:self')
     })
   })

@@ -149,6 +149,22 @@ describe(asUint8Array, () => {
     })
   })
 
+  describe('ArrayLike input', () => {
+    it('converts array-like object to Uint8Array', () => {
+      const input = { 0: 1, 1: 2, 2: 3, length: 3 }
+      const result = asUint8Array(input)
+      expect(result).toBeInstanceOf(Uint8Array)
+      expect(result).toEqual(new Uint8Array([1, 2, 3]))
+    })
+
+    it('converts array-like with zero length to empty Uint8Array', () => {
+      const input = { length: 0 }
+      const result = asUint8Array(input)
+      expect(result).toBeInstanceOf(Uint8Array)
+      expect(result.length).toBe(0)
+    })
+  })
+
   describe('ArrayBuffer input', () => {
     it('converts ArrayBuffer to Uint8Array', () => {
       const buffer = new ArrayBuffer(4)
@@ -163,7 +179,7 @@ describe(asUint8Array, () => {
       const buffer = new ArrayBuffer(0)
       const result = asUint8Array(buffer)
       expect(result).toBeInstanceOf(Uint8Array)
-      expect(result!.length).toBe(0)
+      expect(result.length).toBe(0)
     })
   })
 
@@ -172,7 +188,7 @@ describe(asUint8Array, () => {
       const input = new Int8Array([1, 2, 3, 4])
       const result = asUint8Array(input)
       expect(result).toBeInstanceOf(Uint8Array)
-      expect(result!.length).toBe(4)
+      expect(result.length).toBe(4)
     })
 
     it('converts Int16Array to Uint8Array', () => {
@@ -180,7 +196,7 @@ describe(asUint8Array, () => {
       const result = asUint8Array(input)
       expect(result).toBeInstanceOf(Uint8Array)
       // Int16Array has 2 bytes per element, so 2 elements = 4 bytes
-      expect(result!.length).toBe(4)
+      expect(result.length).toBe(4)
     })
 
     it('converts Int32Array to Uint8Array', () => {
@@ -188,7 +204,7 @@ describe(asUint8Array, () => {
       const result = asUint8Array(input)
       expect(result).toBeInstanceOf(Uint8Array)
       // Int32Array has 4 bytes per element, so 1 element = 4 bytes
-      expect(result!.length).toBe(4)
+      expect(result.length).toBe(4)
     })
 
     it('converts Float32Array to Uint8Array', () => {
@@ -196,7 +212,7 @@ describe(asUint8Array, () => {
       const result = asUint8Array(input)
       expect(result).toBeInstanceOf(Uint8Array)
       // Float32Array has 4 bytes per element
-      expect(result!.length).toBe(4)
+      expect(result.length).toBe(4)
     })
 
     it('converts Float64Array to Uint8Array', () => {
@@ -204,7 +220,7 @@ describe(asUint8Array, () => {
       const result = asUint8Array(input)
       expect(result).toBeInstanceOf(Uint8Array)
       // Float64Array has 8 bytes per element
-      expect(result!.length).toBe(8)
+      expect(result.length).toBe(8)
     })
 
     it('converts DataView to Uint8Array', () => {
@@ -238,59 +254,58 @@ describe(asUint8Array, () => {
       const int16View = new Int16Array(buffer, 2, 2)
       const result = asUint8Array(int16View)
       expect(result).toBeInstanceOf(Uint8Array)
-      expect(result!.length).toBe(4) // 2 Int16 elements = 4 bytes
+      expect(result.length).toBe(4) // 2 Int16 elements = 4 bytes
     })
   })
 
   describe('invalid inputs', () => {
-    it('returns undefined for null', () => {
-      const result = asUint8Array(null)
-      expect(result).toBeUndefined()
+    it('throws for null', () => {
+      expect(() => asUint8Array(null)).toThrow()
     })
 
-    it('returns undefined for undefined', () => {
-      const result = asUint8Array(undefined)
-      expect(result).toBeUndefined()
+    it('throws for undefined', () => {
+      expect(() => asUint8Array(undefined)).toThrow()
     })
 
-    it('returns undefined for string', () => {
-      const result = asUint8Array('hello')
-      expect(result).toBeUndefined()
+    it('throws for string', () => {
+      expect(() => asUint8Array('hello')).toThrow()
     })
 
-    it('returns undefined for number', () => {
-      const result = asUint8Array(42)
-      expect(result).toBeUndefined()
+    it('throws for number', () => {
+      expect(() => asUint8Array(42)).toThrow()
     })
 
-    it('returns undefined for boolean', () => {
-      const result = asUint8Array(true)
-      expect(result).toBeUndefined()
+    it('throws for boolean', () => {
+      expect(() => asUint8Array(true)).toThrow()
     })
 
-    it('returns undefined for plain object', () => {
-      const result = asUint8Array({ foo: 'bar' })
-      expect(result).toBeUndefined()
+    it('throws for plain object', () => {
+      expect(() => asUint8Array({ foo: 'bar' })).toThrow()
     })
 
-    it('returns undefined for array', () => {
-      const result = asUint8Array([1, 2, 3])
-      expect(result).toBeUndefined()
+    it('throws for non number arrays', () => {
+      expect(() => asUint8Array(['z', 2, 3])).toThrow()
     })
 
-    it('returns undefined for function', () => {
-      const result = asUint8Array(() => {})
-      expect(result).toBeUndefined()
+    it('throws for function', () => {
+      expect(() => asUint8Array(() => {})).toThrow()
     })
 
-    it('returns undefined for symbol', () => {
-      const result = asUint8Array(Symbol('test'))
-      expect(result).toBeUndefined()
+    it('throws for symbol', () => {
+      expect(() => asUint8Array(Symbol('test'))).toThrow()
     })
 
-    it('returns undefined for BigInt', () => {
-      const result = asUint8Array(BigInt(42))
-      expect(result).toBeUndefined()
+    it('throws for BigInt', () => {
+      expect(() => asUint8Array(42n)).toThrow()
+    })
+  })
+
+  describe('Node.JS Buffer input', () => {
+    it('converts NodeJs Buffer to Uint8Array when concatenating', () => {
+      const buffer = Buffer.from([1, 2, 3, 4])
+      const result = asUint8Array(buffer)
+      expect(result).toEqual(new Uint8Array([1, 2, 3, 4]))
+      expect(Buffer.isBuffer(result)).toBe(false) // Ensure it's not a Buffer
     })
   })
 })
@@ -499,5 +514,13 @@ describe(ui8Concat, () => {
     const result = ui8Concat([new Uint8Array(0), new Uint8Array(0)])
     expect(result).toBeInstanceOf(Uint8Array)
     expect(result.length).toBe(0)
+  })
+
+  it('does not return a NodeJS Buffer when concatenating in Node.js', () => {
+    const a = new Uint8Array([1, 2])
+    const b = new Uint8Array([3, 4])
+    const result = ui8Concat([a, b])
+    expect(result.constructor.name).toBe('Uint8Array')
+    expect(Buffer.isBuffer(result)).toBe(false)
   })
 })

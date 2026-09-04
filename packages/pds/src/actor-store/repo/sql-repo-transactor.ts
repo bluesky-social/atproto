@@ -45,7 +45,7 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
   }
 
   async putMany(toPut: BlockMap, rev: string): Promise<void> {
-    const blocks: RepoBlock[] = Array.from(toPut, ([cid, bytes]) => ({
+    const blocks: RepoBlock[] = Array.from(toPut, ({ cid, bytes }) => ({
       cid: cid.toString(),
       repoRev: rev,
       size: bytes.length,

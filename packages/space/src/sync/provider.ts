@@ -1,14 +1,21 @@
-import { type CarBlock, writeCarStream } from '@atproto/common'
-import { cidForLex, encode } from '@atproto/lex-cbor'
-import { type Cid, cidForCbor } from '@atproto/lex-data'
-import type { RepoIndex, SignedCommit, SpaceRecord } from '../types.js'
+import {
+  type CarBlock,
+  type CborCid,
+  buildCarBlock,
+  writeCarStream,
+} from '@atproto/car'
+import type { NsidString, RecordKeyString } from '@atproto/syntax'
+import type {
+  IndexKey,
+  RepoIndex,
+  SignedCommit,
+  SpaceRecord,
+} from '../types.js'
 import { formatRecordPath } from '../util.js'
 
-export type SerializedRecord = {
-  collection: string
-  rkey: string
-  cid: Cid
-  bytes: Uint8Array
+export type SerializedRecord = CarBlock<CborCid> & {
+  collection: NsidString
+  rkey: RecordKeyString
 }
 
 /**
@@ -28,7 +35,7 @@ export async function* serializeRepo(
   records: AsyncIterable<SerializedRecord> | Iterable<SerializedRecord>,
   opts: { excludeValues?: boolean } = {},
 ): AsyncIterable<Uint8Array> {
-  const byPath = new Map<string, SerializedRecord>()
+  const byPath = new Map<IndexKey, SerializedRecord>()
   for await (const record of records) {
     byPath.set(formatRecordPath(record.collection, record.rkey), record)
   }
@@ -41,22 +48,19 @@ export async function* serializeRepo(
     index[path] = byPath.get(path)!.cid
   }
 
-  const commitBytes = encode(commit)
-  const indexBytes = encode(index)
-  const [commitRoot, indexRoot] = await Promise.all([
-    cidForCbor(commitBytes),
-    cidForCbor(indexBytes),
+  const [commitBlock, indexBlock] = await Promise.all([
+    buildCarBlock(commit),
+    buildCarBlock(index),
   ])
 
   yield* writeCarStream(
-    [commitRoot, indexRoot],
-    (function* (): Generator<CarBlock> {
-      yield { cid: commitRoot, bytes: commitBytes }
-      yield { cid: indexRoot, bytes: indexBytes }
+    [commitBlock.cid, indexBlock.cid],
+    (function* () {
+      yield commitBlock
+      yield indexBlock
       if (opts.excludeValues) return
       for (const path of paths) {
-        const record = byPath.get(path)!
-        yield { cid: record.cid, bytes: record.bytes }
+        yield byPath.get(path)!
       }
     })(),
   )
@@ -69,14 +73,10 @@ const byCanonicalKey = (a: string, b: string): number => {
 }
 
 export const serializeRecord = async (
-  collection: string,
-  rkey: string,
+  collection: NsidString,
+  rkey: RecordKeyString,
   record: SpaceRecord,
 ): Promise<SerializedRecord> => {
-  return {
-    collection,
-    rkey,
-    cid: await cidForLex(record),
-    bytes: encode(record),
-  }
+  const block = await buildCarBlock(record)
+  return { ...block, collection, rkey }
 }

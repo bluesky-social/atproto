@@ -1,12 +1,12 @@
 import { z } from 'zod'
-import type { check } from '@atproto/common'
 import { type Cid, type LexMap, ifCid } from '@atproto/lex-data'
+import type { NsidString, RecordKeyString } from '@atproto/syntax'
 
 export type SpaceRecord = LexMap
 
 export type RecordPath = {
-  collection: string
-  rkey: string
+  collection: NsidString
+  rkey: RecordKeyString
 }
 
 // A create has no `prev`, a delete no `cid`, an update both.
@@ -23,8 +23,23 @@ export type CommitCtx = {
   rev: string
 }
 
-const cidSchema = z.unknown().transform((input, ctx): Cid => {
-  const cid = ifCid(input)
+export type IndexKey<
+  TCollection extends NsidString = NsidString,
+  TRkey extends RecordKeyString = RecordKeyString,
+> = `${TCollection}/${TRkey}`
+
+export const isIndexKey = (value: unknown): value is IndexKey => {
+  if (typeof value !== 'string') return false
+  const slash = value.indexOf('/')
+  return (
+    slash > 0 &&
+    slash < value.length - 1 &&
+    value.indexOf('/', slash + 1) === -1
+  )
+}
+
+export const cidSchema = z.unknown().transform((input, ctx): Cid => {
+  const cid = ifCid(input, { flavor: 'cbor' })
   if (cid) return cid
 
   ctx.addIssue({
@@ -34,29 +49,33 @@ const cidSchema = z.unknown().transform((input, ctx): Cid => {
   return z.NEVER
 })
 
-const bytes = z.instanceof(Uint8Array<ArrayBufferLike>)
+const bytesSchema = z.instanceof(Uint8Array<ArrayBufferLike>)
 
-const signedCommit = z.object({
+const signedCommitSchema = z.object({
   ver: z.literal(COMMIT_VERSION),
-  hash: bytes,
-  ikm: bytes,
-  sig: bytes,
-  mac: bytes,
+  hash: bytesSchema,
+  ikm: bytesSchema,
+  sig: bytesSchema,
+  mac: bytesSchema,
   rev: z.string(),
 })
-export type SignedCommit = z.infer<typeof signedCommit>
+export type SignedCommit = z.infer<typeof signedCommitSchema>
 
-// `{collection}/{rkey}` to the record's cid.
-const repoIndex = z.record(z.string(), cidSchema)
+const repoIndex = z.record(z.custom<IndexKey>(isIndexKey), cidSchema)
 export type RepoIndex = z.infer<typeof repoIndex>
 
-export const def = {
+export type Def<T> = {
+  name: string
+  schema: { parse: (data: unknown) => T }
+}
+
+export const defs = {
   signedCommit: {
     name: 'signed commit',
-    schema: signedCommit,
-  } as check.Def<SignedCommit>,
+    schema: signedCommitSchema,
+  },
   repoIndex: {
     name: 'repo index',
     schema: repoIndex,
-  } as check.Def<RepoIndex>,
-}
+  },
+} satisfies Record<string, Def<unknown>>

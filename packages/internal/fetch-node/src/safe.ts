@@ -62,7 +62,7 @@ export function safeFetchWrap<C>({
   timeout = 10e3,
   forbiddenDomainNames = DEFAULT_FORBIDDEN_DOMAIN_NAMES as Iterable<string>,
   allowImplicitRedirect = false,
-}: SafeFetchWrapOptions<C> = {}) {
+}: SafeFetchWrapOptions<C> = {}): Fetch<C> {
   return pipe(
     /**
      * Require explicit {@link RequestInit['redirect']} mode
@@ -113,5 +113,5 @@ export function safeFetchWrap<C>({
      * attacker cannot force us to download a large amounts of data.
      */
     fetchMaxSizeProcessor(responseMaxSize),
-  ) satisfies Fetch<unknown>
+  )
 }
