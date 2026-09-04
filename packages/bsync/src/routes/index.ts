@@ -8,6 +8,7 @@ import { withRpcServerTelemetry } from '../telemetry/rpc.js'
 import addMuteOperation from './add-mute-operation.js'
 import addNotifOperation from './add-notif-operation.js'
 import deleteOperations from './delete-operations.js'
+import fanoutNotificationSeen from './fanout-notification-seen.js'
 import putOperation from './put-operation.js'
 import scanMuteOperations from './scan-mute-operations.js'
 import scanNotifOperations from './scan-notif-operations.js'
@@ -25,6 +26,7 @@ export default (ctx: AppContext) => (router: ConnectRouter) => {
         ...putOperation(ctx),
         ...scanOperations(ctx),
         ...deleteOperations(ctx),
+        ...fanoutNotificationSeen(ctx),
         async ping() {
           const { db } = ctx
           await sql`select 1`.execute(db.db)

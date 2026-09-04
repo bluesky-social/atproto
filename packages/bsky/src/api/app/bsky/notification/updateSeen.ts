@@ -4,6 +4,7 @@ const Murmurhash = ((m) => m.default ?? m)(MurmurhashModule)
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
+import { httpLogger } from '../../../../logger.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.notification.updateSeen, {
@@ -11,18 +12,18 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const viewer = auth.credentials.iss
       const seenAt = new Date(input.body.seenAt)
-      // For now we keep separate seen times behind the scenes for priority, but treat them as a single seen time.
+      const timestamp = Timestamp.fromDate(seenAt)
+      // @TODO remove the direct dataplane call and bsync error handling after the bsync path is verified in production.
       await Promise.all([
         ctx.dataplane.updateNotificationSeen({
           actorDid: viewer,
-          timestamp: Timestamp.fromDate(seenAt),
-          priority: false,
+          timestamp,
         }),
-        ctx.dataplane.updateNotificationSeen({
-          actorDid: viewer,
-          timestamp: Timestamp.fromDate(seenAt),
-          priority: true,
-        }),
+        ctx.bsyncClient
+          .fanoutNotificationSeen({ actorDid: viewer, timestamp })
+          .catch((err) => {
+            httpLogger.error({ err }, 'failed to fan out notification seen')
+          }),
         ctx.courierClient?.pushNotifications({
           notifications: [
             {

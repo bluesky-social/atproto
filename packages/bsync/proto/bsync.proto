@@ -3,6 +3,8 @@ syntax = "proto3";
 package bsync;
 option go_package = "./;bsync";
 
+import "google/protobuf/timestamp.proto";
+
 //
 // Sync
 //
@@ -123,6 +125,13 @@ message DeleteOperationsByActorAndNamespaceResponse {
   int32 deleted_count = 1;
 }
 
+message FanoutNotificationSeenRequest {
+  string actor_did = 1;
+  google.protobuf.Timestamp timestamp = 2;
+}
+
+message FanoutNotificationSeenResponse {}
+
 
 // Ping
 message PingRequest {}
@@ -138,6 +147,7 @@ service Service {
   rpc PutOperation(PutOperationRequest) returns (PutOperationResponse);
   rpc ScanOperations(ScanOperationsRequest) returns (ScanOperationsResponse);
   rpc DeleteOperationsByActorAndNamespace(DeleteOperationsByActorAndNamespaceRequest) returns (DeleteOperationsByActorAndNamespaceResponse);
+  rpc FanoutNotificationSeen(FanoutNotificationSeenRequest) returns (FanoutNotificationSeenResponse);
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);
 }
