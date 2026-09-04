@@ -5,6 +5,7 @@ import {
 } from '@connectrpc/connect'
 import { createGrpcTransport } from '@connectrpc/connect-node'
 import { Service } from './proto/dataplane_connect.js'
+import { createRpcClientInterceptor } from './telemetry/rpc.js'
 
 export type DataplaneClient = PromiseClient<typeof Service>
 
@@ -16,7 +17,7 @@ export function createDataplaneClient(opts: {
   const transport = createGrpcTransport({
     baseUrl: opts.baseUrl,
     httpVersion: '2',
-    interceptors: [authWithToken(opts.authToken)],
+    interceptors: [createRpcClientInterceptor(), authWithToken(opts.authToken)],
     nodeOptions: {
       rejectUnauthorized: opts.rejectUnauthorized,
     },
