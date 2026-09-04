@@ -197,4 +197,31 @@ describe('email auth factor', () => {
     expect(session.data.emailAuthFactor).toBe(false)
     expect(session.data.emailConfirmed).toBe(true)
   })
+
+  // Addresses are stored lowercased, so a mixed-case address from the client
+  // has to be normalized before it is compared. Skipping that normalization
+  // does not fail loudly: the request misses the pure-toggle branch and falls
+  // through to a real email change, which clears `emailConfirmedAt` and drops
+  // the factor row.
+  it('matches the account email case-insensitively', async () => {
+    const mixedCase = 'FaYe@TeSt.com'
+    expect(mixedCase.toLowerCase()).toBe(faye.email)
+    expect(mixedCase).not.toBe(faye.email)
+
+    await agent.api.com.atproto.server.updateEmail(
+      { email: mixedCase, emailAuthFactor: true },
+      { headers: sc.getHeaders(faye.did), encoding: 'application/json' },
+    )
+
+    const session = await agent.api.com.atproto.server.getSession(
+      {},
+      { headers: sc.getHeaders(faye.did) },
+    )
+    expect(session.data.emailAuthFactor).toBe(true)
+    // The stored address keeps its original casing and stays confirmed: this
+    // was a toggle, not an email change.
+    expect(session.data.email).toBe(faye.email)
+    expect(session.data.emailConfirmed).toBe(true)
+    expect(sendMailMock).not.toHaveBeenCalled()
+  })
 })
