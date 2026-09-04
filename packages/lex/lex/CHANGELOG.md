@@ -1,5 +1,17 @@
 # @atproto/lex
 
+## 0.3.9
+
+### Patch Changes
+
+- [#5426](https://github.com/bluesky-social/atproto/pull/5426) [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222) Thanks [@bigmoves](https://github.com/bigmoves)! - Add `walk` utility to browse a generated namespace.
+
+- Updated dependencies [[`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222), [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222)]:
+  - @atproto/lex-schema@0.2.7
+  - @atproto/lex-builder@0.1.14
+  - @atproto/lex-client@0.3.6
+  - @atproto/lex-installer@0.1.18
+
 ## 0.3.8
 
 ### Patch Changes
