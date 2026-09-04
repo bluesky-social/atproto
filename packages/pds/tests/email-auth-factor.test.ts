@@ -13,8 +13,8 @@ describe('email auth factor', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  // A dedicated account keeps this block independent of the sequential
-  // confirm/update flow above, which leaves alice's address unconfirmed.
+  // Toggling the factor requires a *confirmed* address, so this suite owns an
+  // account it can confirm in `beforeAll` and then mutate freely.
   let faye: Account
   // Captured token for disabling the email auth factor:
   let disableToken: string
@@ -25,7 +25,7 @@ describe('email auth factor', () => {
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
-      dbPostgresSchema: 'email_confirmation',
+      dbPostgresSchema: 'email_auth_factor',
     })
     ctx = network.pds.ctx
     agent = network.pds.getAgent()
@@ -103,6 +103,30 @@ describe('email auth factor', () => {
     expect(session.data.emailAuthFactor).toBe(true)
   })
 
+  it('rejects the email auth factor change with an invalid token', async () => {
+    // Should never equal exactly this string, since the token is randomly
+    // generated, but verify just in case:
+    expect(disableToken).not.toEqual('AAAAA-AAAAA')
+
+    const attempt = agent.api.com.atproto.server.updateEmail(
+      { email: faye.email, emailAuthFactor: false, token: 'AAAAA-AAAAA' },
+      { headers: sc.getHeaders(faye.did), encoding: 'application/json' },
+    )
+    await expect(attempt).rejects.toThrow(
+      ComAtprotoServerUpdateEmail.InvalidTokenError,
+    )
+
+    const session = await agent.api.com.atproto.server.getSession(
+      {},
+      { headers: sc.getHeaders(faye.did) },
+    )
+
+    // An invalid token should have no side-effects:
+    expect(session.data.emailAuthFactor).toBe(true)
+    expect(session.data.email).toBe(faye.email)
+    expect(session.data.emailConfirmed).toBe(true)
+  })
+
   it('disables the auth factor with a valid token', async () => {
     await agent.api.com.atproto.server.updateEmail(
       { email: faye.email, emailAuthFactor: false, token: disableToken },
@@ -115,6 +139,40 @@ describe('email auth factor', () => {
     )
     expect(session.data.emailAuthFactor).toBe(false)
     // A pure toggle must not disturb the address or its confirmed status.
+    expect(session.data.email).toBe(faye.email)
+    expect(session.data.emailConfirmed).toBe(true)
+  })
+
+  // The social-app asks for the code with `requestEmailUpdate` rather than
+  // making the token-less `updateEmail` call, so a token minted there must be
+  // accepted here. That is the reason both sides share the `update_email` token
+  // type instead of the disable flow having one of its own.
+  it('disables the auth factor with a requestEmailUpdate token', async () => {
+    await agent.api.com.atproto.server.updateEmail(
+      { email: faye.email, emailAuthFactor: true },
+      { headers: sc.getHeaders(faye.did), encoding: 'application/json' },
+    )
+
+    using sendUpdateEmailMock = jest.spyOn(ctx.mailer, 'sendUpdateEmail')
+
+    const res = await agent.api.com.atproto.server.requestEmailUpdate(
+      undefined,
+      { headers: sc.getHeaders(faye.did) },
+    )
+    expect(res.data.tokenRequired).toBe(true)
+    expect(sendUpdateEmailMock).toHaveBeenCalledTimes(1)
+    const [params] = sendUpdateEmailMock.mock.lastCall!
+
+    await agent.api.com.atproto.server.updateEmail(
+      { email: faye.email, emailAuthFactor: false, token: params.token },
+      { headers: sc.getHeaders(faye.did), encoding: 'application/json' },
+    )
+
+    const session = await agent.api.com.atproto.server.getSession(
+      {},
+      { headers: sc.getHeaders(faye.did) },
+    )
+    expect(session.data.emailAuthFactor).toBe(false)
     expect(session.data.email).toBe(faye.email)
     expect(session.data.emailConfirmed).toBe(true)
   })

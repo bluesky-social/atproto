@@ -36,7 +36,11 @@ describe('email auth factor helpers', () => {
 
     for (const { did, handle, email } of [confirmed, unconfirmed]) {
       await account.registerActor(db, { did, handle })
-      await account.registerAccount(db, { did, email, passwordScrypt: 'scrypt' })
+      await account.registerAccount(db, {
+        did,
+        email,
+        passwordScrypt: 'scrypt',
+      })
     }
 
     await account.setEmailConfirmedAt(
