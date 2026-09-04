@@ -212,7 +212,7 @@ export class LexDefBuilder {
 
     await this.addSchema(hash, def, {
       schema: markPure(
-        `l.space($nsid, ${JSON.stringify(def.key)}, ${JSON.stringify(def.name)}, ${JSON.stringify(def.collections)}, ${options})`,
+        `l.space($nsid, ${JSON.stringify(def.key)}, ${JSON.stringify(def.collections)}, ${options})`,
       ),
     })
   }

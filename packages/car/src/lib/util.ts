@@ -1,3 +1,7 @@
+// @NOTE setImmediate does not exist in browser env
+const setImmediate =
+  globalThis.setImmediate ?? ((fn: () => void) => setTimeout(fn, 0))
+
 /**
  * Yield to the event loop every {@link frequency} items in the case the
  * incoming iterable is synchronous, which can end up jamming up the thread

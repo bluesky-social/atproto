@@ -367,6 +367,7 @@ export class AppContext implements AsyncDisposable {
             cfg.service.publicUrl,
             cfg.identity.recoveryDidKey,
           ),
+          plcDirectoryUrl: cfg.identity.plcUrl,
           redis: redisScratch,
           dpopSecret: secrets.dpopSecret,
           inviteCodeRequired: cfg.invites.required,
