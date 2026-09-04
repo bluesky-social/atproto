@@ -1,5 +1,6 @@
 import { encode } from '@atproto/lex-cbor'
 import {
+  type CborCid,
   type Cid,
   type LexValue,
   cidForCbor,
@@ -18,7 +19,7 @@ export type BlockMapEntry<TCid extends Cid = Cid> = [
 export class BlockMap<TCid extends Cid = Cid> implements Iterable<
   CarBlock<TCid>
 > {
-  readonly #map: Map<string, CarBlock<TCid>> = new Map()
+  readonly #map = new Map<string, CarBlock<TCid>>()
 
   constructor(entries?: Iterable<Readonly<BlockMapEntry<TCid>>>) {
     if (entries) {
@@ -28,10 +29,14 @@ export class BlockMap<TCid extends Cid = Cid> implements Iterable<
     }
   }
 
-  async add(value: LexValue): Promise<Cid> {
+  async add(
+    // @NOTE Only allow use of add() when CborCid is assignable to TCid
+    value: CborCid extends TCid ? LexValue : never,
+  ): Promise<CborCid> {
     const bytes = encode(value)
     const cid = await cidForCbor(bytes)
-    // @ts-expect-error see @TODO above
+    // @ts-expect-error see @TODO above. This is made "safe" by the conditional
+    // type on the input value.
     this.set(cid, bytes)
     return cid
   }
