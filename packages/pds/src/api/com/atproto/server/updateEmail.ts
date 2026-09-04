@@ -50,8 +50,9 @@ export default function (server: Server, ctx: AppContext) {
         // flipping the OTP factor on/off. Handle it and return; falling
         // through to updateEmail() would re-set the (unchanged) email and null
         // out emailConfirmedAt, silently un-confirming a confirmed address.
+        // Emails are normalized to lowercase:
         if (
-          user.email === email &&
+          user.email === email.toLowerCase() &&
           user.emailConfirmedAt &&
           emailAuthFactor !== undefined
         ) {
