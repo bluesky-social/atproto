@@ -25,7 +25,6 @@ import {
 } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import { delayCursor } from '../../src/api/app/bsky/notification/listNotifications.js'
-import { FanoutNotificationSeenResponse } from '../../src/proto/bsync_pb.js'
 import { Namespaces } from '../../src/stash.js'
 import { forSnapshot, paginateAll } from '../_util.js'
 
@@ -35,7 +34,7 @@ const clearNotificationSeen = async (db: Database, did: DidString) => {
   const epoch = new Date(0).toISOString()
   await db.db
     .updateTable('actor_state')
-    .set({ lastSeenNotifs: epoch, lastSeenPriorityNotifs: epoch })
+    .set({ lastSeenNotifs: epoch })
     .where('did', '=', did)
     .execute()
 }
@@ -546,9 +545,6 @@ describe('notification views', () => {
   })
 
   it('fetches notification count with a last-seen', async () => {
-    using fanout = vi
-      .spyOn(network.bsky.ctx.bsyncClient, 'fanoutNotificationSeen')
-      .mockResolvedValue(new FanoutNotificationSeenResponse())
     const full = await agent.api.app.bsky.notification.listNotifications(
       {},
       {
@@ -568,9 +564,6 @@ describe('notification views', () => {
         ),
         encoding: 'application/json',
       },
-    )
-    expect(fanout).toHaveBeenCalledWith(
-      expect.objectContaining({ actorDid: alice }),
     )
     const full2 = await agent.api.app.bsky.notification.listNotifications(
       {},
@@ -625,9 +618,6 @@ describe('notification views', () => {
   })
 
   it('fetches notifications with a last-seen', async () => {
-    using _fanout = vi
-      .spyOn(network.bsky.ctx.bsyncClient, 'fanoutNotificationSeen')
-      .mockResolvedValue(new FanoutNotificationSeenResponse())
     const full = await agent.api.app.bsky.notification.listNotifications(
       {},
       {

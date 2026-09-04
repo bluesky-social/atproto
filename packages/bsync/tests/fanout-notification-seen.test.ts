@@ -99,4 +99,19 @@ describe('fanout notification seen', () => {
       new ConnectError('all dataplane updates failed', Code.Unavailable),
     )
   })
+
+  it('succeeds when no dataplanes are configured', async () => {
+    const dataplaneClients = bsync.ctx.dataplaneClients
+    bsync.ctx.dataplaneClients = []
+    try {
+      await expect(
+        client.fanoutNotificationSeen({
+          actorDid: 'did:example:alice',
+          timestamp: Timestamp.now(),
+        }),
+      ).resolves.toBeDefined()
+    } finally {
+      bsync.ctx.dataplaneClients = dataplaneClients
+    }
+  })
 })

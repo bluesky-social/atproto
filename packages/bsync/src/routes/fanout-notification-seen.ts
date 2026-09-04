@@ -1,5 +1,6 @@
 import { Code, ConnectError, type ServiceImpl } from '@connectrpc/connect'
 import type { AppContext } from '../context.js'
+import { httpLogger } from '../logger.js'
 import type { Service } from '../proto/bsync_connect.js'
 import { authWithApiKey } from './auth.js'
 import { isValidDid } from './util.js'
@@ -18,10 +19,8 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
       throw new ConnectError('timestamp is required', Code.InvalidArgument)
     }
     if (ctx.dataplaneClients.length === 0) {
-      throw new ConnectError(
-        'no dataplane clients configured',
-        Code.Unavailable,
-      )
+      httpLogger.warn('no dataplane clients configured')
+      return {}
     }
 
     const results = await Promise.allSettled(
