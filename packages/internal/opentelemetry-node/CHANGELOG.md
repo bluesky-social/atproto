@@ -1,5 +1,15 @@
 # @atproto-labs/opentelemetry-node
 
+## 0.2.0
+
+### Minor Changes
+
+- [#5472](https://github.com/bluesky-social/atproto/pull/5472) [`222f4bc`](https://github.com/bluesky-social/atproto/commit/222f4bc600fb89c75fafee95ef3c837b1721601e) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Move the RPC telemetry constants shared by both halves of a bsync call into `@atproto-labs/opentelemetry-node`: the `bsync.namespace` and `bsync.operation` attribute keys and `RPC_CALL_DURATION_BUCKETS` are now exported from the `/conventions` entrypoint, and `statusCodeToString()` from the new `/util` entrypoint. Previously the AppView imported these from `@atproto/bsync`, which made a whole service package a runtime dependency of another just to agree on a metric label.
+
+### Patch Changes
+
+- [#5475](https://github.com/bluesky-social/atproto/pull/5475) [`46fdec9`](https://github.com/bluesky-social/atproto/commit/46fdec90d4eca8c8d7c8eeb7dc801cf52ffaaed6) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Drop the `@connectrpc/connect` dependency: `statusCodeToString()` now takes a plain `number` and resolves the status name through a hand-rolled map of the Connect `Code` enum values. Importing the library here would load it before it gets instrumented, breaking the instrumentation.
+
 ## 0.1.0
 
 ### Minor Changes
