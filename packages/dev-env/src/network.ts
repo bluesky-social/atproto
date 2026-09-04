@@ -91,6 +91,7 @@ export class TestNetwork extends TestNetworkNoAppView {
         '3f916c70dc69e4c5e83877f013325b11ecac31742e6a42f5c4fb240d0703d9d5=',
       ...params.bsky,
     })
+    bsync.ctx.dataplaneClients = [bsky.ctx.dataplane]
 
     const pds = await TestPds.create({
       port: pdsPort,

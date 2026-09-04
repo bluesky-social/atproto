@@ -946,6 +946,9 @@ importers:
       '@opentelemetry/semantic-conventions':
         specifier: ^1.41.1
         version: 1.43.0
+      import-in-the-middle:
+        specifier: ^3.0.1
+        version: 3.0.1
     devDependencies:
       vitest:
         specifier: ^4.1.10

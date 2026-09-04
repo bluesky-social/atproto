@@ -11,18 +11,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const viewer = auth.credentials.iss
       const seenAt = new Date(input.body.seenAt)
-      // For now we keep separate seen times behind the scenes for priority, but treat them as a single seen time.
+      const timestamp = Timestamp.fromDate(seenAt)
       await Promise.all([
-        ctx.dataplane.updateNotificationSeen({
-          actorDid: viewer,
-          timestamp: Timestamp.fromDate(seenAt),
-          priority: false,
-        }),
-        ctx.dataplane.updateNotificationSeen({
-          actorDid: viewer,
-          timestamp: Timestamp.fromDate(seenAt),
-          priority: true,
-        }),
+        ctx.bsyncClient.fanoutNotificationSeen({ actorDid: viewer, timestamp }),
         ctx.courierClient?.pushNotifications({
           notifications: [
             {

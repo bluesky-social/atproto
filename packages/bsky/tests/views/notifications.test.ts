@@ -30,6 +30,15 @@ import { forSnapshot, paginateAll } from '../_util.js'
 
 type Database = TestNetwork['bsky']['db']
 
+const clearNotificationSeen = async (db: Database, did: DidString) => {
+  const epoch = new Date(0).toISOString()
+  await db.db
+    .updateTable('actor_state')
+    .set({ lastSeenNotifs: epoch })
+    .where('did', '=', did)
+    .execute()
+}
+
 describe('notification views', () => {
   let network: TestNetwork
   let db: Database
@@ -583,7 +592,7 @@ describe('notification views', () => {
     )
     expect(notifCount.data.count).toBeGreaterThan(0)
 
-    // reset last-seen
+    // An older client must not move the timestamp backward.
     await agent.api.app.bsky.notification.updateSeen(
       { seenAt: new Date(0).toISOString() },
       {
@@ -594,6 +603,18 @@ describe('notification views', () => {
         encoding: 'application/json',
       },
     )
+    const afterOlderUpdate =
+      await agent.api.app.bsky.notification.listNotifications(
+        {},
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+    expect(afterOlderUpdate.data.seenAt).toEqual(seenAt)
+    await clearNotificationSeen(db, alice)
   })
 
   it('fetches notifications with a last-seen', async () => {
@@ -632,17 +653,7 @@ describe('notification views', () => {
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((n) => n.indexedAt < seenAt))
-    // reset last-seen
-    await agent.api.app.bsky.notification.updateSeen(
-      { seenAt: new Date(0).toISOString() },
-      {
-        headers: await network.serviceHeaders(
-          alice,
-          ids.AppBskyNotificationUpdateSeen,
-        ),
-        encoding: 'application/json',
-      },
-    )
+    await clearNotificationSeen(db, alice)
   })
 
   it('fetches notifications omitting mentions and replies for taken-down posts', async () => {
