@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { create } from 'node:domain'
 import type { Redis, RedisOptions } from 'ioredis'
 import type { Jwks } from '@atproto/jwk'
 import { LexResolver } from '@atproto/lex-resolver'
@@ -285,6 +286,7 @@ export class OAuthProvider extends OAuthVerifier {
 
   public constructor({
     // OAuthProviderConfig
+    plcDirectoryUrl,
     authenticationMaxAge = AUTHENTICATION_MAX_AGE,
     tokenMaxAge = TOKEN_MAX_AGE,
     accessTokenMode = AccessTokenMode.stateless,
@@ -296,6 +298,7 @@ export class OAuthProvider extends OAuthVerifier {
     safeFetch = safeFetchWrap(),
     lexResolver = new LexResolver({
       fetch: safeFetch,
+      plcDirectoryUrl,
       // We let LexResolver create it's own DidResolver instance, so that it can
       // have a separate cache. This prevents space authority DIDs from causing
       // lex resolver caches to expire, and vice-versa.
@@ -304,6 +307,7 @@ export class OAuthProvider extends OAuthVerifier {
     }),
     didResolver = createDidResolver({
       fetch: safeFetch,
+      plcDirectoryUrl,
       didCache: undefined, // Memory cache
     }),
     handleResolver = new AtprotoHandleResolverNode({ safeFetch }),
