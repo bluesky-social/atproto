@@ -7,12 +7,20 @@ import {
 } from '@atproto/lex-data'
 import type { CarBlock } from './car-block.js'
 
-export type BlockMapEntry = [cid: Cid, bytes: Uint8Array]
+// @TODO replace "Cid" with "CborCid" in the type below, and refactor all
+// dependents to use CborCid instead of Cid for CarBlock.
 
-export class BlockMap implements Iterable<CarBlock> {
-  readonly #map: Map<string, CarBlock> = new Map()
+export type BlockMapEntry<TCid extends Cid = Cid> = [
+  cid: TCid,
+  bytes: Uint8Array,
+]
 
-  constructor(entries?: Iterable<Readonly<BlockMapEntry>>) {
+export class BlockMap<TCid extends Cid = Cid> implements Iterable<
+  CarBlock<TCid>
+> {
+  readonly #map: Map<string, CarBlock<TCid>> = new Map()
+
+  constructor(entries?: Iterable<Readonly<BlockMapEntry<TCid>>>) {
     if (entries) {
       for (const [cid, bytes] of entries) {
         this.set(cid, bytes)
@@ -23,14 +31,18 @@ export class BlockMap implements Iterable<CarBlock> {
   async add(value: LexValue): Promise<Cid> {
     const bytes = encode(value)
     const cid = await cidForCbor(bytes)
+    // @ts-expect-error see @TODO above
     this.set(cid, bytes)
     return cid
   }
 
-  set(cid: Cid, bytes: Uint8Array): this {
+  set(cid: TCid, bytes: Uint8Array): this {
     this.#map.set(cid.toString(), { cid, bytes })
     return this
   }
+
+  // @NOTE Read paths below don't require a strong type for the cid, allowing
+  // for easier interop with older code that uses Cid instead of CborCid.
 
   get(cid: Cid): Uint8Array | undefined {
     return this.#map.get(cid.toString())?.bytes
@@ -41,13 +53,15 @@ export class BlockMap implements Iterable<CarBlock> {
     return this
   }
 
-  getMany(cids: Cid[]): { blocks: BlockMap; missing: Cid[] } {
-    const missing: Cid[] = []
-    const blocks = new BlockMap()
+  getMany<TInputCid extends Cid>(
+    cids: Iterable<TInputCid>,
+  ): { blocks: BlockMap<TCid>; missing: TInputCid[] } {
+    const missing: TInputCid[] = []
+    const blocks = new BlockMap<TCid>()
     for (const cid of cids) {
       const entry = this.#map.get(cid.toString())
       if (entry) {
-        blocks.set(cid, entry.bytes)
+        blocks.set(entry.cid, entry.bytes)
       } else {
         missing.push(cid)
       }
@@ -63,31 +77,32 @@ export class BlockMap implements Iterable<CarBlock> {
     this.#map.clear()
   }
 
-  forEach(cb: (bytes: Uint8Array, cid: Cid) => void): void {
+  /** @deprecated Prefer iterating */
+  forEach(cb: (bytes: Uint8Array, cid: TCid) => void): void {
     for (const { cid, bytes } of this) cb(bytes, cid)
   }
 
-  cids(): Cid[] {
+  cids(): TCid[] {
     return Array.from(this.keys())
   }
 
-  addEntries(entries: Iterable<Readonly<BlockMapEntry>>): this {
+  addEntries(entries: Iterable<Readonly<BlockMapEntry<TCid>>>): this {
     for (const [cid, bytes] of entries) this.set(cid, bytes)
     return this
   }
 
-  addBlocks(blocks: Iterable<Readonly<CarBlock>>): this {
+  addBlocks(blocks: Iterable<Readonly<CarBlock<TCid>>>): this {
     for (const { cid, bytes } of blocks) this.set(cid, bytes)
     return this
   }
 
   /** @deprecated use {@link addEntries} instead */
-  addMany(entries: Iterable<Readonly<BlockMapEntry>>): this {
+  addMany(entries: Iterable<Readonly<BlockMapEntry<TCid>>>): this {
     return this.addEntries(entries)
   }
 
   /** @deprecated use {@link addBlocks} instead */
-  addMap(other: Iterable<Readonly<CarBlock>>): this {
+  addMap(other: Iterable<Readonly<CarBlock<TCid>>>): this {
     return this.addBlocks(other)
   }
 
@@ -115,7 +130,7 @@ export class BlockMap implements Iterable<CarBlock> {
     return true
   }
 
-  *keys(): Generator<Cid, void, unknown> {
+  *keys(): Generator<TCid, void, unknown> {
     for (const { cid } of this) yield cid
   }
 
@@ -123,18 +138,20 @@ export class BlockMap implements Iterable<CarBlock> {
     for (const { bytes } of this) yield bytes
   }
 
-  *entries(): Generator<BlockMapEntry, void, unknown> {
+  *entries(): Generator<BlockMapEntry<TCid>, void, unknown> {
     for (const { cid, bytes } of this) yield [cid, bytes]
   }
 
-  [Symbol.iterator](): MapIterator<CarBlock> {
+  [Symbol.iterator](): MapIterator<CarBlock<TCid>> {
     return this.#map.values()
   }
 
-  static async from(
-    input: Iterable<Readonly<CarBlock>> | AsyncIterable<Readonly<CarBlock>>,
-  ): Promise<BlockMap> {
-    const blockMap = new BlockMap()
+  static async from<TCid extends Cid = Cid>(
+    input:
+      | Iterable<Readonly<CarBlock<TCid>>>
+      | AsyncIterable<Readonly<CarBlock<TCid>>>,
+  ): Promise<BlockMap<TCid>> {
+    const blockMap = new BlockMap<TCid>()
     for await (const { cid, bytes } of input) {
       blockMap.set(cid, bytes)
     }

@@ -1,4 +1,9 @@
-import { type CarBlock, buildCarBlock, writeCarStream } from '@atproto/car'
+import {
+  type CarBlock,
+  type CborCid,
+  buildCarBlock,
+  writeCarStream,
+} from '@atproto/car'
 import type { NsidString, RecordKeyString } from '@atproto/syntax'
 import type {
   IndexKey,
@@ -8,7 +13,7 @@ import type {
 } from '../types.js'
 import { formatRecordPath } from '../util.js'
 
-export type SerializedRecord = CarBlock & {
+export type SerializedRecord = CarBlock<CborCid> & {
   collection: NsidString
   rkey: RecordKeyString
 }

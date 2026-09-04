@@ -1,5 +1,11 @@
 import { decode as cborDecode } from '@atproto/lex-cbor'
-import { type Cid, asCid, decodeCid, isCidForBytes } from '@atproto/lex-data'
+import {
+  type CborCid,
+  type Cid,
+  asCid,
+  decodeCid,
+  isCidForBytes,
+} from '@atproto/lex-data'
 import type { CarBlock } from './car-block.js'
 import { type BytesReader, createBytesReader } from './lib/bytes-reader.js'
 import { eventLoopYieldingGenerator } from './lib/util.js'
@@ -14,15 +20,19 @@ export type ReadCarOptions = {
 }
 
 export class CarReader
-  implements AsyncIterable<CarBlock, void, unknown>, AsyncDisposable
+  implements AsyncIterable<CarBlock<CborCid>, void, unknown>, AsyncDisposable
 {
   private constructor(
-    readonly roots: readonly Cid[],
-    readonly blocks: AsyncGenerator<CarBlock, void, unknown>,
+    readonly roots: readonly CborCid[],
+    readonly blocks: AsyncGenerator<CarBlock<CborCid>, void, unknown>,
     private readonly reader: BytesReader,
   ) {}
 
-  async *[Symbol.asyncIterator](): AsyncGenerator<CarBlock, void, unknown> {
+  async *[Symbol.asyncIterator](): AsyncGenerator<
+    CarBlock<CborCid>,
+    void,
+    unknown
+  > {
     yield* this.blocks
   }
 
@@ -73,7 +83,11 @@ export class CarReader
         ? generator
         : verifyIncomingCarBlocks(generator)
 
-      return new CarReader(roots.map(asCid), blocks, reader)
+      return new CarReader(
+        roots.map((c) => asCid(c, { flavor: 'cbor' })),
+        blocks,
+        reader,
+      )
     } catch (err) {
       await reader.destroy()
       throw err
@@ -83,7 +97,7 @@ export class CarReader
 
 async function* readCarBlocks(
   reader: BytesReader,
-): AsyncGenerator<CarBlock, void, unknown> {
+): AsyncGenerator<CarBlock<CborCid>, void, unknown> {
   try {
     while (!reader.isDone) {
       const block = await reader.readFrame()
@@ -102,9 +116,9 @@ async function* readCarBlocks(
   }
 }
 
-async function* verifyIncomingCarBlocks(
-  car: Iterable<CarBlock> | AsyncIterable<CarBlock>,
-): AsyncGenerator<CarBlock, void, unknown> {
+async function* verifyIncomingCarBlocks<TCid extends Cid>(
+  car: Iterable<CarBlock<TCid>> | AsyncIterable<CarBlock<TCid>>,
+): AsyncGenerator<CarBlock<TCid>, void, unknown> {
   for await (const block of car) {
     if (!(await isCidForBytes(block.cid, block.bytes))) {
       throw new Error(`Not a valid CID for bytes (${block.cid.toString()})`)
