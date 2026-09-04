@@ -229,17 +229,20 @@ export class SpaceRef {
     readonly skey: RecordKeyString,
   ) {}
 
-  static parse(uri: string): SpaceRef {
+  static for(uri: string): SpaceRef {
     const { spaceDid, spaceType, skey } = new AtUri(uri)
     if (!spaceDid || !spaceType || !skey) {
       throw new InvalidAtUriError(`Invalid space ref: ${uri}`)
     }
 
-    const ref = new SpaceRef(spaceDid, spaceType, skey)
-    if (ref.toString() !== uri) {
-      throw new InvalidAtUriError(`Invalid space ref: ${uri}`)
-    }
+    return new SpaceRef(spaceDid, spaceType, skey)
+  }
 
+  static parse(uri: string): SpaceRef {
+    const ref = SpaceRef.for(uri)
+    if (ref.toString() !== uri) {
+      throw new InvalidAtUriError(`Invalid space ref: ${uri} ${ref.toString()}`)
+    }
     return ref
   }
 
@@ -254,7 +257,7 @@ type AtUriPathParts = {
   spaceType?: NsidString
   skey?: RecordKeyString
   authorDid?: DidString
-  collection?: NsidString
+  collection?: string
   rkey?: RecordKeyString
 }
 
@@ -265,8 +268,10 @@ function parsePath(host: string, pathname: string): AtUriPathParts {
     return {
       isSpace: false,
       authorDid: parsePathPart(host, isValidDid),
-      collection: parsePathPart(segments[0], isValidNsid),
-      rkey: parsePathPart(segments[1], isValidRecordKey),
+      // @NOTE Historically, we allowed creation of AT URIs with invalid
+      // collection/rkey values, so we don't validate them here.
+      collection: parsePathPart(segments[0]),
+      rkey: parsePathPart(segments[1]),
     }
   }
 
@@ -281,11 +286,21 @@ function parsePath(host: string, pathname: string): AtUriPathParts {
   }
 }
 
-function parsePathPart<I>(
+function parsePathPart<I extends string, T>(
+  part: I | undefined,
+  validator: (value: unknown) => value is T,
+): (I & T) | undefined
+function parsePathPart<I extends string>(
+  part: I | undefined,
+  validator?: (value: unknown) => boolean,
+): I | undefined
+function parsePathPart(
   part: string | undefined,
-  validator: (value: unknown) => value is I,
-): I | undefined {
-  return part !== undefined && part !== 'undefined' && validator(part)
+  validator?: (value: unknown) => boolean,
+): string | undefined {
+  return part !== undefined &&
+    part !== 'undefined' &&
+    (!validator || validator(part))
     ? part
     : undefined
 }

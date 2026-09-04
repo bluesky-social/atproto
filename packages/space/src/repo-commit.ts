@@ -6,6 +6,7 @@ import {
   verifySignature,
 } from '@atproto/crypto'
 import { type Cid, ui8Equals } from '@atproto/lex-data'
+import type { NsidString, RecordKeyString } from '@atproto/syntax'
 import { LtHash } from './lthash.js'
 import {
   COMMIT_VERSION,
@@ -42,12 +43,12 @@ export class RepoCommit {
     return commit
   }
 
-  add(collection: string, rkey: string, cid: Cid): this {
+  add(collection: NsidString, rkey: RecordKeyString, cid: Cid): this {
     this.setHash.add(formatSetHashElement(collection, rkey, cid))
     return this
   }
 
-  remove(collection: string, rkey: string, cid: Cid): this {
+  remove(collection: NsidString, rkey: RecordKeyString, cid: Cid): this {
     this.setHash.remove(formatSetHashElement(collection, rkey, cid))
     return this
   }

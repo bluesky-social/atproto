@@ -1,11 +1,12 @@
 import { z } from 'zod'
 import { type Cid, type LexMap, ifCid } from '@atproto/lex-data'
+import type { NsidString, RecordKeyString } from '@atproto/syntax'
 
 export type SpaceRecord = LexMap
 
 export type RecordPath = {
-  collection: string
-  rkey: string
+  collection: NsidString
+  rkey: RecordKeyString
 }
 
 // A create has no `prev`, a delete no `cid`, an update both.
@@ -23,8 +24,8 @@ export type CommitCtx = {
 }
 
 export type IndexKey<
-  TCollection extends string = string,
-  TRkey extends string = string,
+  TCollection extends NsidString = NsidString,
+  TRkey extends RecordKeyString = RecordKeyString,
 > = `${TCollection}/${TRkey}`
 
 export const isIndexKey = (value: unknown): value is IndexKey => {

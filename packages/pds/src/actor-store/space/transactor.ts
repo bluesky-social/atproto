@@ -3,7 +3,11 @@ import { encode } from '@atproto/lex-cbor'
 import { type Cid, parseCid } from '@atproto/lex-data'
 import { WriteOpAction } from '@atproto/repo'
 import { RepoCommit } from '@atproto/space'
-import { SpaceRef, type SpaceRefString } from '@atproto/syntax'
+import {
+  type AtUriString,
+  SpaceRef,
+  type SpaceRefString,
+} from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BadRecordSwapError, type PreparedWrite } from '../../repo/types.js'
 import type { BlobTransactor } from '../blob/transactor.js'
@@ -144,7 +148,7 @@ export class SpaceTransactor extends SpaceReader {
 
     for (const write of writes) {
       const uri = write.uri.toString()
-      const { collection, rkey } = write.uri
+      const { collectionSafe: collection, rkey } = write.uri
       // Each write lands before the next is read, so this sees what the batch has built
       // up so far: a batch can create a record and then update it, and a repeated create
       // is rejected rather than counted into the set hash twice.
@@ -218,7 +222,7 @@ export class SpaceTransactor extends SpaceReader {
     return { rev, setHash }
   }
 
-  private async getRecordCid(uri: string): Promise<Cid | null> {
+  private async getRecordCid(uri: AtUriString): Promise<Cid | null> {
     const row = await this.db.db
       .selectFrom('space_record')
       .select('cid')
