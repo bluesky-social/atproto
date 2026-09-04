@@ -390,13 +390,12 @@ describe('custom cases', () => {
     })
 
     // A record uri belongs to a space, so it names one - the tail is dropped.
-    test('a record uri names the space it belongs to', () => {
-      const ref = SpaceRef.parse(
-        'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
-      )
-      expect(ref.toString()).toBe(
-        'at://did:plc:asdf123/space/com.example.group/default',
-      )
+    test('SpaceRef.for turns a record uri into the space it belongs to', () => {
+      expect(
+        SpaceRef.for(
+          'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
+        ).toString(),
+      ).toBe('at://did:plc:asdf123/space/com.example.group/default')
     })
 
     test('SpaceRef.parse accepts only the three-part form', () => {
@@ -408,7 +407,7 @@ describe('custom cases', () => {
       // a record uri is not itself a space ref
       expect(() =>
         SpaceRef.parse(
-          'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc',
+          'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
         ),
       ).toThrow(InvalidAtUriError)
       expect(() =>

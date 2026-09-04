@@ -1,10 +1,16 @@
 import { type CarBlock, buildCarBlock, writeCarStream } from '@atproto/car'
-import type { RepoIndex, SignedCommit, SpaceRecord } from '../types.js'
+import type { NsidString, RecordKeyString } from '@atproto/syntax'
+import type {
+  IndexKey,
+  RepoIndex,
+  SignedCommit,
+  SpaceRecord,
+} from '../types.js'
 import { formatRecordPath } from '../util.js'
 
 export type SerializedRecord = CarBlock & {
-  collection: string
-  rkey: string
+  collection: NsidString
+  rkey: RecordKeyString
 }
 
 /**
@@ -24,7 +30,7 @@ export async function* serializeRepo(
   records: AsyncIterable<SerializedRecord> | Iterable<SerializedRecord>,
   opts: { excludeValues?: boolean } = {},
 ): AsyncIterable<Uint8Array> {
-  const byPath = new Map<`${string}/${string}`, SerializedRecord>()
+  const byPath = new Map<IndexKey, SerializedRecord>()
   for await (const record of records) {
     byPath.set(formatRecordPath(record.collection, record.rkey), record)
   }
@@ -62,8 +68,8 @@ const byCanonicalKey = (a: string, b: string): number => {
 }
 
 export const serializeRecord = async (
-  collection: string,
-  rkey: string,
+  collection: NsidString,
+  rkey: RecordKeyString,
   record: SpaceRecord,
 ): Promise<SerializedRecord> => {
   const block = await buildCarBlock(record)

@@ -10,8 +10,9 @@ export class SpaceTokenError extends Error {
       | 'BadJwtCnf'
       | 'BadJwtSignature'
       | 'JwtExpired' = 'BadJwt',
+    options?: ErrorOptions,
   ) {
-    super(message)
+    super(message, options)
     this.name = 'SpaceTokenError'
   }
 }
@@ -24,15 +25,16 @@ export class DpopProofError extends Error {
       | 'BadDpopProofSignature'
       | 'DpopProofExpired'
       | 'DpopKeyMismatch' = 'BadDpopProof',
+    options?: ErrorOptions,
   ) {
-    super(message)
+    super(message, options)
     this.name = 'DpopProofError'
   }
 }
 
 export class RepoVerificationError extends Error {
-  constructor(message: string) {
-    super(message)
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options)
     this.name = 'RepoVerificationError'
   }
 }

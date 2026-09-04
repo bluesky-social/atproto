@@ -1,11 +1,13 @@
 import { readCarStream } from '@atproto/car'
-import { decode } from '@atproto/lex-cbor'
+import { type LexValue, decode } from '@atproto/lex-cbor'
 import { type Cid, isPlainObject } from '@atproto/lex-data'
+import type { NsidString, RecordKeyString } from '@atproto/syntax'
 import { RepoVerificationError } from '../error.js'
 import { RepoCommit, verifyCommit } from '../repo-commit.js'
 import {
   type CommitCtx,
   type Def,
+  type IndexKey,
   type RepoIndex,
   type SignedCommit,
   type SpaceRecord,
@@ -22,8 +24,8 @@ export type VerifyRepoParams = {
 }
 
 export type VerifiedRecord = {
-  collection: string
-  rkey: string
+  collection: NsidString
+  rkey: RecordKeyString
   cid: Cid
   record: SpaceRecord
 }
@@ -130,7 +132,7 @@ async function* verifyRecords(
   index: RepoIndex,
   expectValues: boolean,
 ): AsyncGenerator<VerifiedRecord> {
-  const paths = Object.keys(index) as `${string}/${string}`[]
+  const paths = Object.keys(index) as IndexKey[]
   let i = 0
 
   for await (const block of blocks) {
@@ -148,8 +150,17 @@ async function* verifyRecords(
         `expected block ${cid} at ${path}, got ${block.cid}`,
       )
     }
+
     const { collection, rkey } = parseRecordPath(path)
-    const record = decode(block.bytes)
+
+    let record: LexValue
+    try {
+      record = decode(block.bytes)
+    } catch (cause) {
+      throw new RepoVerificationError(`invalid record cbor at ${path}`, {
+        cause,
+      })
+    }
 
     // Ensure that the encoded record is a plain object (LexMap)
     if (!isPlainObject(record)) {

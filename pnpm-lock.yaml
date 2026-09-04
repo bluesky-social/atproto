@@ -647,7 +647,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.0(@types/node@22.19.17)(jiti@2.7.0)(terser@5.44.0)(yaml@2.8.1))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.0(@types/node@22.19.17)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/common:
     dependencies:
@@ -2266,6 +2266,9 @@ importers:
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex/lex-data
+      '@atproto/syntax':
+        specifier: workspace:^
+        version: link:../syntax
       '@noble/hashes':
         specifier: ^1.6.1
         version: 1.7.0
@@ -2281,7 +2284,7 @@ importers:
         version: link:../oauth/jwk-jose
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.0(@types/node@22.19.17)(jiti@2.7.0)(terser@5.44.0)(yaml@2.8.1))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.0(@types/node@22.19.17)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/sync:
     dependencies:
