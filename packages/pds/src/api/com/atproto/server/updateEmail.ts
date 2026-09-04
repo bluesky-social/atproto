@@ -66,14 +66,20 @@ export default function (server: Server, ctx: AppContext) {
             // Disabling removes a second factor, so it's gated by an
             // `update_email` OTP: the first call (no token) emails a code and
             // makes no change; the second (with token) verifies and disables.
-            const account = await ctx.accountManager.disableEmailAuthFactor({
-              did,
-              email: user.email,
-              token,
-              locale,
-            })
+            const { account, tokenRequired } =
+              await ctx.accountManager.disableEmailAuthFactor({
+                did,
+                email: user.email,
+                token,
+                locale,
+              })
 
-            if (account === null) {
+            // We receive account === null if the email auth factor is already disabled
+            if (!account) {
+              return
+            }
+
+            if (tokenRequired) {
               throw new InvalidRequestError(
                 'confirmation token required',
                 'TokenRequired',
