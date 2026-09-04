@@ -55,8 +55,8 @@ export function DisableEmailAuthFactorDialog({
       description={
         step === Step.Confirm ? (
           <Trans>
-            To disable your email two-factor authentication, please verify your access to{' '}
-            <strong>{email}</strong>
+            To disable your email two-factor authentication, please verify your
+            access to <strong>{email}</strong>
           </Trans>
         ) : (
           <Trans>
