@@ -6,6 +6,12 @@
 
 @theme inline {
   --space-screen: 100vh;
+
+  /* Phone-sized viewports. Below this the auth screens run edge to edge (see
+   * AuthShell); Tailwind's `sm` (40rem) is too wide for that — a form stretched
+   * to 620px reads as a broken desktop layout, not a mobile one. Dropping the
+   * card *frame* happens at `sm`, one step earlier. */
+  --breakpoint-xs: 30rem;
 }
 
 /* ---------------------------------------------------------------------------
@@ -160,6 +166,18 @@
   /* auth background: dark */
   .auth-background {
     background-image: var(--branding-background-dark-image, none);
+  }
+}
+
+/* Below `sm` the card frame is dropped (see AuthShell), so the page surface
+ * becomes the card surface and the branding image goes with it: with no opaque
+ * card left to sit on, copy over a photo is illegible, and in a 600px OAuth
+ * popup the image only ever showed as slivers down either side anyway.
+ * @NOTE Must stay after the dark rule above: same specificity, later wins. */
+@media (width < 40rem) {
+  .auth-background {
+    background-color: var(--card);
+    background-image: none;
   }
 }
 
