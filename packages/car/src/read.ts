@@ -1,4 +1,4 @@
-import type { CborCid } from '@atproto/lex-data'
+import type { CborCid, Cid } from '@atproto/lex-data'
 import { BlockMap } from './block-map.js'
 import { CarReader, type ReadCarOptions } from './car-reader.js'
 
@@ -43,16 +43,16 @@ export async function readCarStream(
 export async function readCar(
   bytes: Uint8Array | Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
   opts?: ReadCarOptions,
-): Promise<{ roots: readonly CborCid[]; blocks: BlockMap<CborCid> }> {
+): Promise<{ roots: readonly CborCid[]; blocks: BlockMap }> {
   await using reader = await CarReader.from(bytes, opts)
-  const blocks = await BlockMap.from(reader)
+  const blocks = await BlockMap.from<Cid>(reader)
   return { roots: reader.roots, blocks }
 }
 
 export async function readCarWithRoot(
   bytes: Uint8Array,
   opts?: ReadCarOptions,
-): Promise<{ root: CborCid; blocks: BlockMap<CborCid> }> {
+): Promise<{ root: CborCid; blocks: BlockMap }> {
   const { roots, blocks } = await readCar(bytes, opts)
   const { length, 0: root } = roots
   if (length !== 1) {
