@@ -1,7 +1,6 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtSignIcon } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
-import { Notice } from '#/components/feedback/notice.tsx'
 import { CheckboxField } from '#/components/forms/fields/checkbox-field.tsx'
 import { PasswordField } from '#/components/forms/fields/password-field.tsx'
 import { TextField } from '#/components/forms/fields/text-field.tsx'
@@ -131,7 +130,12 @@ export function SignInForm({
         name="username"
         defaultValue={usernameDefault}
         pattern={SIGN_IN_IDENTIFIER_PATTERN}
-        label={<Trans>Identifier</Trans>}
+        label={<Trans>Username</Trans>}
+        placeholder={
+          domains.length > 0
+            ? `${t`yourname`}${domains[0]}`
+            : t`Username or email address`
+        }
         icon={<AtSignIcon className="size-5" />}
         type="text"
         title={t`Username or email address`}
@@ -166,6 +170,7 @@ export function SignInForm({
       <PasswordField
         name="password"
         label={<Trans>Password</Trans>}
+        placeholder={t`Enter your password`}
         enterKeyHint={secondFactorError ? 'next' : 'done'}
         autoFocus={usernameReadonly}
         required
@@ -190,12 +195,11 @@ export function SignInForm({
         }
       />
 
-      <Notice role="note" title={<Trans>Warning</Trans>}>
-        <Trans>
-          Verify the website address before entering your password. Only sign in
-          on sites you recognize and trust.
-        </Trans>
-      </Notice>
+      {/* @NOTE A quiet line rather than a boxed alert: the phishing reminder
+        should be read once, not compete with the fields. */}
+      <p role="note" className="text-muted-foreground text-sm leading-snug">
+        <Trans>Only enter your password on sites you trust.</Trans>
+      </p>
 
       {!disableRemember && (
         <CheckboxField
@@ -218,7 +222,7 @@ export function SignInForm({
             autoFocus
           />
 
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground mt-3 text-sm leading-snug">
             <Trans>
               Check your {secondFactorError.hint} email for a login code and
               enter it here.

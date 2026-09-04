@@ -8,9 +8,11 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { ErrorView } from '#/components/error-view.tsx'
+import { actionButton } from '#/components/forms/form-shell.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import type { SessionStore } from '#/contexts/session.tsx'
 import type { Api } from '#/lib/api.ts'
+import { cn } from '#/lib/utils.ts'
 
 /**
  * Everything a route's `beforeLoad` or `loader` needs, none of which it can
@@ -47,7 +49,11 @@ function NotFoundComponent() {
   const { t } = useLingui()
   return (
     <ErrorView title={msg`Page not found`}>
-      <Button aria-label={t`Back`} render={<Link to="/account" />}>
+      <Button
+        aria-label={t`Back`}
+        className={cn(actionButton, 'w-full')}
+        render={<Link to="/account" />}
+      >
         <Trans>Back</Trans>
       </Button>
     </ErrorView>

@@ -1,10 +1,7 @@
 import { Trans } from '@lingui/react/macro'
 import { type JSX, useMemo } from 'react'
 import { UrlViewer } from '#/components/utils/url-viewer.tsx'
-import {
-  type OAuthClientMetadata,
-  isConventionalOAuthClientId,
-} from '#/lib/oauth-client.ts'
+import type { OAuthClientMetadata } from '#/lib/oauth-client.ts'
 import type { Override } from '#/lib/util.ts'
 
 export type ClientNameProps = Override<
@@ -49,18 +46,16 @@ export function ClientName({
   }
 
   if (url?.protocol === 'https:') {
-    // Only display the url details if the client id does not follow our
-    // convention.
-    const simplifiedView = isConventionalOAuthClientId(clientId)
-
+    // @NOTE Host only. The full client id is shown in the "Technical details"
+    // dialog, so the card can name the app by its domain alone.
     return (
       <UrlViewer
         {...attrs}
         url={url}
-        proto={!simplifiedView}
+        proto={false}
         host={true}
-        path={!simplifiedView}
-        query={!simplifiedView}
+        path={false}
+        query={false}
         hash={false}
       />
     )

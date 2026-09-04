@@ -119,7 +119,7 @@ export function AccountShell({
                     <img
                       src={logo}
                       alt={name || _(msg`Logo`)}
-                      className="size-5! shrink-0 object-contain"
+                      className="h-5! w-auto max-w-24 shrink-0 object-contain"
                     />
                   )}
                   <span className="text-base font-semibold">
@@ -142,7 +142,9 @@ export function AccountShell({
                         isActive={link === currentLink}
                         // @NOTE The style bolds the active row; the background
                         // alone is enough to mark the current page.
-                        className="data-active:font-normal"
+                        // Taller rows with 16px text: the sidebar is the
+                        // phone's main navigation once it slides in.
+                        className="data-active:font-normal h-10 gap-3 px-3 text-base [&_svg]:size-5"
                         tooltip={
                           typeof link.title === 'object'
                             ? _(link.title)
@@ -181,7 +183,7 @@ export function AccountShell({
                     {footerLinks.map((link) => (
                       <SidebarMenuItem key={link.href}>
                         <SidebarMenuButton
-                          size="sm"
+                          className="h-9 px-3 text-sm"
                           render={
                             <LinkExternal href={link.href} rel={link.rel} />
                           }
@@ -239,7 +241,7 @@ export function AccountShell({
               className="data-vertical:h-4 data-vertical:self-center mr-2"
             />
             {pageTitleStr && (
-              <h2 className="text-base font-medium">{pageTitleStr}</h2>
+              <h2 className="text-lg font-semibold">{pageTitleStr}</h2>
             )}
             {/* @NOTE On desktop the sidebar keeps the brand in view; on mobile
             it is closed, so the header carries it instead. */}
@@ -249,7 +251,7 @@ export function AccountShell({
                   <img
                     src={logo}
                     alt={name || _(msg`Logo`)}
-                    className="size-5 shrink-0 object-contain"
+                    className="h-5 w-auto max-w-24 shrink-0 object-contain"
                   />
                 )}
                 {name && (

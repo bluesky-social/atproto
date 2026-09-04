@@ -1,5 +1,5 @@
 import { useLingui } from '@lingui/react/macro'
-import { SnowflakeIcon, UserIcon } from 'lucide-react'
+import { MoonIcon, UserIcon } from 'lucide-react'
 import type { JSX } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
@@ -65,13 +65,14 @@ export function AccountAvatar({
         <AvatarBadge
           aria-hidden
           className={cn(
-            'bg-destructive text-white',
+            // Grey, not red: deactivation is a paused state, not a fault.
+            'bg-muted-foreground text-background',
             'bottom-auto right-0 top-0',
             badgeSizeMap[size],
           )}
           title={t`Deactivated account`}
         >
-          <SnowflakeIcon />
+          <MoonIcon />
         </AvatarBadge>
       )}
     </div>

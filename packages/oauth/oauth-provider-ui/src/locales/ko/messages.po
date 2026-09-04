@@ -152,15 +152,15 @@ msgstr "이미 코드가 있나요?"
 msgid "An application on your device"
 msgstr "기기에 설치된 애플리케이션"
 
-#: src/components/error-view.tsx
 #: src/lib/notification-message.ts
 msgid "An error occurred"
 msgstr "오류가 발생했습니다"
 
 #: src/lib/api.ts
-msgid "An unexpected error occurred. Please try again."
-msgstr ""
+msgid "An unexpected error occurred."
+msgstr "예기치 않은 오류가 발생했습니다."
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
 msgid "An unknown error occurred"
 msgstr "알 수 없는 오류가 발생했습니다"
@@ -193,6 +193,10 @@ msgstr "앱"
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time."
 msgstr ""
+
+#: src/routes/account/u/$accountId/apps.tsx
+msgid "Apps that can use your account. Revoke any you no longer use."
+msgstr "계정을 사용할 수 있는 앱입니다. 더 이상 사용하지 않는 앱은 권한을 해제하세요."
 
 #: src/components/delete-account-dialog.tsx
 msgid "Are you really, really sure?"
@@ -238,10 +242,6 @@ msgstr "Bluesky 앱 서비스"
 #: src/components/utils/scope-description.tsx
 msgid "Bluesky Chat services"
 msgstr "Bluesky 대화 서비스"
-
-#: src/components/consent-form.tsx
-msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
-msgstr "<0>승인</0>을 클릭하면 <1>서비스 이용약관</1> 및 <2>개인정보 처리방침</2>에 따라 이 애플리케이션이 귀하의 계정에 접근할 수 있도록 허용합니다."
 
 #: src/components/sign-up-disclaimer.tsx
 msgid "By creating an account you agree to the <0>Terms of Service</0> and the <1>Privacy Policy</1> of this service."
@@ -329,6 +329,7 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
+#: src/components/error-view.tsx
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Code"
@@ -352,13 +353,16 @@ msgstr "인증 코드"
 msgid "Confirmation email sent"
 msgstr ""
 
-#: src/cookie-error-page.tsx
-msgid "Continue"
-msgstr "계속"
+#: src/components/sign-in-view.tsx
+msgctxt "AuthenticationPage"
+msgid "Continue with\n"
+"an existing account"
+msgstr "기존 계정으로\n"
+"계속하기"
 
 #: src/cookie-error-page.tsx
-msgid "Cookie Error"
-msgstr "쿠키 오류"
+msgid "Cookies are blocked"
+msgstr "쿠키가 차단되었습니다"
 
 #: src/components/forms/copy-button.tsx
 msgid "Copied"
@@ -472,6 +476,10 @@ msgstr ""
 msgid "Email change successful"
 msgstr ""
 
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Email not verified"
+msgstr "이메일 미인증"
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Email these instructions"
 msgstr ""
@@ -485,16 +493,16 @@ msgid "Enter a password"
 msgstr "비밀번호 입력"
 
 #: src/components/reset-password-view.tsx
-msgid "Enter the code you received to reset your password."
-msgstr "비밀번호를 재설정하려면 받은 코드를 입력하세요."
+msgid "Enter the code you received by email to reset your password."
+msgstr "이메일로 받은 코드를 입력하여 비밀번호를 재설정하세요."
 
 #: src/components/update-handle-custom-form.tsx
 msgid "Enter the domain you want to use"
 msgstr ""
 
 #: src/components/reset-password-view.tsx
-msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
-msgstr "계정을 만들 때 사용한 이메일을 입력하세요. 새 비밀번호를 설정할 수 있도록 ‘재설정 코드’를 전송합니다."
+msgid "Enter your account's email and we'll send you a reset code."
+msgstr "계정 이메일을 입력하면 재설정 코드를 보내드립니다."
 
 #: src/components/reset-password-request-form.tsx
 msgid "Enter your email address"
@@ -504,13 +512,10 @@ msgstr "이메일 주소 입력"
 msgid "Enter your new password"
 msgstr "새 비밀번호 입력"
 
+#: src/components/sign-in-form.tsx
 #: src/components/sign-in-view.tsx
 msgid "Enter your password"
 msgstr "비밀번호 입력"
-
-#: src/components/sign-in-view.tsx
-msgid "Enter your username and password"
-msgstr "사용자 이름 및 비밀번호 입력"
 
 #: src/components/deactivate-account-dialog.tsx
 msgid "Every app currently connected to your account, as well as any \"app passwords\" you've created, will be revoked. You'll need to sign back in when you reactivate."
@@ -617,9 +622,13 @@ msgstr "비밀번호 분실"
 msgid "Forgot?"
 msgstr "분실"
 
+#: src/components/error-view.tsx
+msgid "Go back"
+msgstr "뒤로 가기"
+
 #: src/components/consent-view.tsx
-msgid "Grant access to your <0/> account"
-msgstr "<0/> 계정에 대한 접근 권한을 부여합니다"
+msgid "Grant access to your account:"
+msgstr "계정에 대한 접근 권한을 부여합니다:"
 
 #. placeholder {0}: instructionsMethods .map(({ label, message, values }) => { return `${label}: ${message}\n${values.map(({ label, value }) => `${label}: ${value}`).join('\n')}` }) .join(`\n\n`)
 #: src/components/forms/input-handle-custom-instructions.tsx
@@ -643,6 +652,7 @@ msgstr ""
 msgid "Hide"
 msgstr "숨기기"
 
+#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Home"
@@ -656,13 +666,13 @@ msgstr ""
 msgid "HTTP"
 msgstr ""
 
-#: src/components/sign-in-form.tsx
-msgid "Identifier"
-msgstr "아이디"
-
 #: src/components/utils/scope-description.tsx
 msgid "Identity"
 msgstr "신원"
+
+#: src/cookie-error-page.tsx
+msgid "If this keeps happening, allow cookies for {hostname} in your browser's privacy settings."
+msgstr "문제가 계속되면 브라우저 개인정보 설정에서 {hostname}의 쿠키를 허용하세요."
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
@@ -701,11 +711,6 @@ msgstr ""
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "이 계정으로 아직 어떤 앱에도 로그인한 적이 없는 것 같습니다."
 
-#. placeholder {0}: url.hostname
-#: src/cookie-error-page.tsx
-msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
-msgstr "브라우저에서 쿠키를 허용하지 않는 것 같습니다. 다시 시도하려면 ‘계속’을 누르세요. 오류가 계속 발생하면 개인정보 설정에서 ‘{0}’ 웹사이트의 쿠키를 허용했는지 확인하세요."
-
 #: src/components/utils/date-ago.tsx
 msgid "just now"
 msgstr "방금 전"
@@ -724,10 +729,6 @@ msgstr ""
 msgctxt "verify email"
 msgid "Later"
 msgstr ""
-
-#: src/components/reset-password-view.tsx
-msgid "Let's get your password reset!"
-msgstr "비밀번호를 재설정해 봅시다!"
 
 #: src/components/layouts/account-shell.tsx
 #: src/components/layouts/auth-shell.tsx
@@ -802,6 +803,10 @@ msgstr ""
 msgid "Navigation"
 msgstr ""
 
+#: src/components/sign-in-picker.tsx
+msgid "Need an account?"
+msgstr "계정이 필요하신가요?"
+
 #: src/components/update-email-dialog.tsx
 #: src/components/update-email-form.tsx
 msgid "New email address"
@@ -823,6 +828,10 @@ msgstr ""
 #: src/components/reset-password-view.tsx
 msgid "Okay"
 msgstr "확인"
+
+#: src/components/sign-in-form.tsx
+msgid "Only enter your password on sites you trust."
+msgstr "신뢰할 수 있는 사이트에서만 비밀번호를 입력하세요."
 
 #: src/routes/__root.tsx
 msgid "Page not found"
@@ -913,6 +922,10 @@ msgstr ""
 msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
 msgstr "{remainingSeconds, plural, other {#초}} 후에 다시 시도해 주세요."
 
+#: src/components/layouts/auth-shell.tsx
+msgid "Privacy"
+msgstr "개인정보"
+
 #: src/components/utils/link-title.tsx
 msgid "Privacy Policy"
 msgstr "개인정보 처리방침"
@@ -929,6 +942,10 @@ msgstr ""
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Reactivate account"
 msgstr ""
+
+#: src/components/reactivate-account-view.tsx
+msgid "Reactivating makes your profile and content visible again."
+msgstr "재활성화하면 프로필과 콘텐츠가 다시 표시됩니다."
 
 #: src/components/utils/scope-description.tsx
 msgid "Read and send messages"
@@ -997,10 +1014,6 @@ msgstr "다른 계정 선택"
 msgid "Select domain"
 msgstr "도메인 선택"
 
-#: src/components/sign-in-view.tsx
-msgid "Select from an existing account"
-msgstr "기존 계정에서 선택하기"
-
 #: src/components/delete-account-dialog.tsx
 msgid "Send email"
 msgstr ""
@@ -1024,10 +1037,6 @@ msgstr "로그인"
 #: src/components/sign-in-picker.tsx
 msgid "Sign in as {0}"
 msgstr "{0}(으)로 로그인"
-
-#: src/components/sign-in-picker.tsx
-msgid "Sign in as..."
-msgstr "로그인"
 
 #: src/components/sign-in-picker.tsx
 msgid "Sign in to an account that is not listed"
@@ -1055,6 +1064,14 @@ msgstr ""
 msgid "Sign-in complete"
 msgstr ""
 
+#: src/cookie-error-page.tsx
+msgid "Sign-in needs cookies, and your browser isn't accepting them."
+msgstr "로그인에는 쿠키가 필요하지만 브라우저가 쿠키를 허용하지 않습니다."
+
+#: src/components/error-view.tsx
+msgid "Something went wrong"
+msgstr "문제가 발생했습니다"
+
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Stack"
@@ -1069,6 +1086,10 @@ msgstr "{count}단계 중 {currentPosition}단계"
 msgid "Strong"
 msgstr "강력"
 
+#: src/components/consent-form.tsx
+msgid "Subject to the app's <0>terms of service</0> and <1>privacy policy</1>."
+msgstr "앱의 <0>서비스 약관</0> 및 <1>개인정보 처리방침</1>이 적용됩니다."
+
 #: src/components/forms/form-shell.tsx
 msgid "Submit"
 msgstr "제출"
@@ -1081,6 +1102,7 @@ msgstr "기기를 제거했습니다"
 msgid "Successfully revoked access"
 msgstr "접근 권한을 취소했습니다"
 
+#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 msgid "Support"
 msgstr "지원"
@@ -1092,6 +1114,10 @@ msgstr "기술 세부 정보"
 #: src/components/utils/scope-description.tsx
 msgid "Temporarily activate or deactivate your account"
 msgstr "계정을 일시적으로 활성화 또는 비활성화합니다"
+
+#: src/components/layouts/auth-shell.tsx
+msgid "Terms"
+msgstr "약관"
 
 #: src/components/utils/link-title.tsx
 msgid "Terms of Service"
@@ -1149,10 +1175,6 @@ msgstr ""
 msgid "There is no time limit for account deactivation, come back any time."
 msgstr ""
 
-#: src/routes/account/u/$accountId/apps.tsx
-msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
-msgstr "이 앱은 내 계정에 대한 접근 권한을 가지고 있습니다. 여러 기기에서 동일한 앱을 사용하는 경우 동일한 앱이 여러 번 나타날 수 있습니다. 접근 권한을 취소하면 다시 로그인할 때까지 앱에서 로그아웃됩니다."
-
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app can uniquely identify you through your account."
 msgstr ""
@@ -1160,6 +1182,10 @@ msgstr ""
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app has access to your account with the following permissions:"
 msgstr ""
+
+#: src/components/consent-form.tsx
+msgid "This application identifies itself as:"
+msgstr "이 애플리케이션의 식별자:"
 
 #: src/components/consent-form.tsx
 msgid "This application is requesting the following permissions (scopes) to access your account:"
@@ -1210,6 +1236,11 @@ msgstr "대상"
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Troubleshoot"
 msgstr ""
+
+#: src/components/error-view.tsx
+#: src/cookie-error-page.tsx
+msgid "Try again"
+msgstr "다시 시도"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Type"
@@ -1272,6 +1303,7 @@ msgstr ""
 msgid "Use a domain name I own"
 msgstr ""
 
+#: src/components/sign-in-form.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
 msgstr ""
@@ -1305,19 +1337,19 @@ msgstr ""
 msgid "Verification successful!"
 msgstr ""
 
+#: src/routes/account/u/$accountId/manage.tsx
+msgctxt "verify email"
+msgid "Verify"
+msgstr "인증"
+
 #: src/components/update-handle-dialog.tsx
 msgid "Verify and Save"
 msgstr ""
 
 #: src/components/update-email-dialog.tsx
-#: src/routes/account/u/$accountId/manage.tsx
 msgctxt "verify email"
 msgid "Verify now"
 msgstr ""
-
-#: src/components/sign-in-form.tsx
-msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
-msgstr "비밀번호를 입력하기 전에 웹사이트 주소를 확인하세요. 알고 있고 신뢰하는 사이트에서만 로그인하세요."
 
 #: src/components/sign-up-view.tsx
 msgid "Verify you are human"
@@ -1328,16 +1360,12 @@ msgid "Verify your email"
 msgstr ""
 
 #: src/components/consent-form.tsx
-msgid "wants to access your <0/> account"
-msgstr "<0/> 계정에 대한 접근 권한을 요청합니다"
+msgid "wants to access your account"
+msgstr "계정에 대한 접근 권한을 요청합니다"
 
 #: src/components/consent-form.tsx
-msgid "wants to uniquely identify you through your <0/> account"
-msgstr "<0/> 계정을 통해 나를 식별하고자 합니다"
-
-#: src/components/sign-in-form.tsx
-msgid "Warning"
-msgstr "경고"
+msgid "wants to uniquely identify you through your account"
+msgstr "계정을 통해 나를 식별하고자 합니다"
 
 #: src/components/sign-up-view.tsx
 msgid "We're so excited to have you join us!"
@@ -1363,6 +1391,10 @@ msgstr "이게 무슨 뜻인가요?"
 #: src/routes/account/u/$accountId/route.tsx
 msgid "What is an Atmosphere Account?"
 msgstr "Atmosphere 계정이란?"
+
+#: src/routes/account/u/$accountId/devices.tsx
+msgid "Where your account is signed in. Sign out of anything you don't recognize."
+msgstr "계정이 로그인된 위치입니다. 알 수 없는 기기는 로그아웃하세요."
 
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Why is this time so recent?"
@@ -1409,14 +1441,6 @@ msgstr ""
 msgid "You can now sign in with your new password."
 msgstr "이제 새로운 비밀번호로 로그인할 수 있습니다."
 
-#: src/components/reactivate-account-view.tsx
-msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
-msgstr ""
-
-#: src/components/reset-password-view.tsx
-msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
-msgstr "‘재설정 코드’가 포함된 이메일을 받게 되면 여기에 해당 코드를 입력한 다음 새 비밀번호를 입력하세요."
-
 #: src/components/sign-up-view.tsx
 msgid "Your account"
 msgstr "내 계정"
@@ -1441,17 +1465,15 @@ msgstr ""
 msgid "Your account is now deactivated."
 msgstr ""
 
-#: src/routes/account/u/$accountId/devices.tsx
-msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
-msgstr "아래 나열된 기기에서 계정에 로그인되어 있습니다. 계정이 해킹당한 경우 모든 기기에서 로그아웃하고 비밀번호를 변경한 다음 연결된 <0>앱</0>을 확인하세요."
-
 #: src/data/account.ts
 msgid "Your account is visible again."
 msgstr ""
 
 #: src/routes/account/u/$accountId/index.tsx
-msgid "Your Atmosphere account is hosted by <0/>."
-msgstr "내 Atmosphere 계정은 <0/>에서 호스팅됩니다."
+msgid "Your Atmosphere account\n"
+"is hosted by <0/>."
+msgstr "내 Atmosphere 계정은\n"
+"<0/>에서 호스팅됩니다."
 
 #: src/components/deactivate-account-dialog.tsx
 msgid "Your content (profile, posts, feeds, lists, etc.) will be hidden from the Bluesky app and across the Atmosphere network."
@@ -1463,10 +1485,6 @@ msgstr ""
 
 #: src/data/email.ts
 msgid "Your email address has been verified."
-msgstr ""
-
-#: src/routes/account/u/$accountId/manage.tsx
-msgid "Your email address needs to be verified."
 msgstr ""
 
 #. placeholder {0}: segment ? ( <span className="text-foreground block break-all font-medium"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
@@ -1491,5 +1509,6 @@ msgid "Your username has been updated."
 msgstr ""
 
 #: src/components/forms/fields/handle-field.tsx
+#: src/components/sign-in-form.tsx
 msgid "yourname"
 msgstr ""

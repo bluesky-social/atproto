@@ -408,6 +408,17 @@ export function buildMockFetch(origFetch = window.fetch): typeof window.fetch {
         )
         return Response.json({ success: true })
       }
+      // Consent and rejection both answer with the client's redirect URL. The
+      // mock points at a placeholder so the "redirecting" state can be seen;
+      // the page will then try to navigate there.
+      case `POST ${API_ENDPOINT_PREFIX}/consent`:
+        return Response.json({
+          url: 'https://example.com/callback?code=mock-code&state=mock-state',
+        })
+      case `POST ${API_ENDPOINT_PREFIX}/reject`:
+        return Response.json({
+          url: 'https://example.com/callback?error=access_denied&state=mock-state',
+        })
       case `POST ${API_ENDPOINT_PREFIX}/verify-handle-availability`:
         return Response.json({ available: true })
       case `POST ${API_ENDPOINT_PREFIX}/reset-password-request`:
