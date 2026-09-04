@@ -393,9 +393,6 @@ importers:
       '@atproto-labs/xrpc-utils':
         specifier: workspace:^
         version: link:../internal/xrpc-utils
-      '@atproto/api':
-        specifier: workspace:^
-        version: link:../api
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
@@ -423,6 +420,9 @@ importers:
       '@atproto/xrpc-server':
         specifier: workspace:^
         version: link:../xrpc-server
+      '@bsky/sdk':
+        specifier: ^1.0.1
+        version: 1.0.1(@atproto/lex@packages+lex+lex)
       '@bufbuild/protobuf':
         specifier: ^1.5.0
         version: 1.6.0
@@ -532,6 +532,9 @@ importers:
         specifier: 3.23.8
         version: 3.23.8
     devDependencies:
+      '@atproto/api':
+        specifier: workspace:^
+        version: link:../api
       '@atproto/pds':
         specifier: workspace:^
         version: link:../pds
@@ -2447,6 +2450,18 @@ importers:
 
 packages:
 
+  '@atproto-labs/handle-resolver@0.4.8':
+    resolution: {integrity: sha512-38I+j8Efs+cCgW/NX9RFKKu7qv/AF+FqxlKS8sWjXlNZSHQZqPj5cnKVQhSsJCs4ypPB84iKch8w4/STd33bLg==}
+    engines: {node: '>=22'}
+
+  '@atproto-labs/simple-store-memory@0.2.6':
+    resolution: {integrity: sha512-DD1v7MEfYF3BAcEpMTTpzfBLWLoI2HuyBhku2YpjHoqPrRrhCtE1alkxfPHjtjJVIjuU/XNU0cF/wB3+5FiKsA==}
+    engines: {node: '>=22'}
+
+  '@atproto-labs/simple-store@0.5.1':
+    resolution: {integrity: sha512-vfvoDhu6ds6BT3Pqe+d2/LBU1WpDRtt69y6zltlfMCoucPm82m1j50/Wb6xTvv+oZ+2j0JyZVXsmXQ12SWYQJg==}
+    engines: {node: '>=22'}
+
   '@atproto/common@0.1.0':
     resolution: {integrity: sha512-OB5tWE2R19jwiMIs2IjQieH5KTUuMb98XGCn9h3xuu6NanwjlmbCYMv08fMYwIp3UQ6jcq//84cDT3Bu6fJD+A==}
 
@@ -2455,6 +2470,14 @@ packages:
 
   '@atproto/crypto@0.1.0':
     resolution: {integrity: sha512-9xgFEPtsCiJEPt9o3HtJT30IdFTGw5cQRSJVIy5CFhqBA4vDLcdXiRDLCjkzHEVbtNCsHUW6CrlfOgbeLPcmcg==}
+
+  '@atproto/did@0.5.4':
+    resolution: {integrity: sha512-BlnwQ+obL+4ZA71KH/EzZ3TY+cpSxnLiUI85mjBJIQwvDF/oN2sQA18wIj9jpduviIt2b/cMtlJuzHjzBkfXvw==}
+    engines: {node: '>=22'}
+
+  '@atproto/syntax@0.7.4':
+    resolution: {integrity: sha512-EHsEHtasH/DGPljBYecVDjweGMQ5eTu6Ns0GZ5z0qdqpOI8ipBvldWnMIxWkA+5HfZ9Dsu4V1MX0WP7wgL8cuA==}
+    engines: {node: '>=22'}
 
   '@aws-crypto/crc32@5.2.0':
     resolution: {integrity: sha512-nLbCWqQNgUiwwtFsen1AdzAtvuLRsQS8rYgMuxCrdKf9kOssamGLuPwyTY9wyYblNr9+1XM8v6zoDTPPSIeANg==}
@@ -3152,6 +3175,12 @@ packages:
 
   '@borewit/text-codec@0.2.2':
     resolution: {integrity: sha512-DDaRehssg1aNrH4+2hnj1B7vnUGEjU6OIlyRdkMd0aUdIUvKXrJfXsy8LVtXAy7DRvYVluWbMspsRhz2lcW0mQ==}
+
+  '@bsky/sdk@1.0.1':
+    resolution: {integrity: sha512-COhrmIZFsUJ1gj4gvqm2UWkRhTbmXZAL1osTZKgSaFftD4Xy0RRl8S9SRluCxo4/VPw/R3p7NQZ4X3BQFbUjVQ==}
+    engines: {node: '>=22.12.0'}
+    peerDependencies:
+      '@atproto/lex': ^0.3.0
 
   '@bufbuild/buf-darwin-arm64@1.28.1':
     resolution: {integrity: sha512-nAyvwKkcd8qQTExCZo5MtSRhXLK7e3vzKFKHjXfkveRakSUST2HFlFZAHfErZimN4wBrPTN0V0hNRU8PPjkMpQ==}
@@ -10236,6 +10265,10 @@ packages:
     resolution: {integrity: sha512-TNDfeyDIC+oroH44bMbWC+Jn/2qNrfRvDK2EXt1icOXYG5NMqoRyUosADrukfb4D8lJ3S1waaBWSvQro0erdng==}
     hasBin: true
 
+  tlds@1.261.0:
+    resolution: {integrity: sha512-QXqwfEl9ddlGBaRFXIvNKK6OhipSiLXuRuLJX5DErz0o0Q0rYxulWLdFryTkV5PkdZct5iMInwYEGe/eR++1AA==}
+    hasBin: true
+
   tmpl@1.0.5:
     resolution: {integrity: sha512-3f0uOEAQwIqGuWW2MVzYg8fV/QNnc/IpuJNG837rLuczAaLVHslWHZQj4IGiEl5Hs3kkbhwL9Ab7Hrsmuj+Smw==}
 
@@ -10804,6 +10837,20 @@ packages:
 
 snapshots:
 
+  '@atproto-labs/handle-resolver@0.4.8':
+    dependencies:
+      '@atproto-labs/simple-store': 0.5.1
+      '@atproto-labs/simple-store-memory': 0.2.6
+      '@atproto/did': 0.5.4
+      zod: 3.23.8
+
+  '@atproto-labs/simple-store-memory@0.2.6':
+    dependencies:
+      '@atproto-labs/simple-store': 0.5.1
+      lru-cache: 10.2.0
+
+  '@atproto-labs/simple-store@0.5.1': {}
+
   '@atproto/common@0.1.0':
     dependencies:
       '@ipld/dag-cbor': 7.0.3
@@ -10825,6 +10872,15 @@ snapshots:
       multiformats: 9.9.0
       one-webcrypto: 1.0.3
       uint8arrays: 3.0.0
+
+  '@atproto/did@0.5.4':
+    dependencies:
+      zod: 3.23.8
+
+  '@atproto/syntax@0.7.4':
+    dependencies:
+      iso-datestring-validator: 2.2.2
+      tslib: 2.8.1
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -12021,6 +12077,13 @@ snapshots:
   '@bcoe/v8-coverage@1.0.2': {}
 
   '@borewit/text-codec@0.2.2': {}
+
+  '@bsky/sdk@1.0.1(@atproto/lex@packages+lex+lex)':
+    dependencies:
+      '@atproto-labs/handle-resolver': 0.4.8
+      '@atproto/lex': link:packages/lex/lex
+      '@atproto/syntax': 0.7.4
+      tlds: 1.261.0
 
   '@bufbuild/buf-darwin-arm64@1.28.1':
     optional: true
@@ -20548,6 +20611,8 @@ snapshots:
   tinyrainbow@3.1.1: {}
 
   tlds@1.234.0: {}
+
+  tlds@1.261.0: {}
 
   tmpl@1.0.5: {}
 

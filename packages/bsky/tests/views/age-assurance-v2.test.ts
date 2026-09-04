@@ -16,10 +16,8 @@ import {
 } from 'vitest'
 import {
   type AppBskyAgeassuranceBegin,
-  type AppBskyAgeassuranceDefs,
   type AppBskyAgeassuranceGetState,
   type AtpAgent,
-  ageAssuranceRuleIDs as ruleIds,
   ids,
 } from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
@@ -33,28 +31,30 @@ import {
   serializeKWSExternalPayloadV2,
 } from '../../src/api/age-assurance/kws/external-payload.js'
 import type { KwsWebhookBody } from '../../src/api/kws/types.js'
+import type { app } from '../../src/lexicons/index.js'
 
 type Database = TestNetwork['bsky']['db']
 
 const BSKY_REDIRECT_URL = 'http://bsky'
 
-vi.mock('../../dist/api/age-assurance/const.js', () => {
-  const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
+vi.mock('../../dist/api/age-assurance/const.js', async () => {
+  // Imported lazily: `vi.mock` factories are hoisted above the import block.
+  const { app: lexicons } = await import('../../src/lexicons/index.js')
+  const { defs } = lexicons.bsky.ageassurance
+  const AGE_ASSURANCE_CONFIG: app.bsky.ageassurance.defs.Config = {
     regions: [
       {
         countryCode: 'AA',
         regionCode: undefined,
         minAccessAge: 13,
         rules: [
-          {
-            $type: ruleIds.IfAssuredOverAge,
+          defs.configRegionRuleIfAssuredOverAge.$build({
             age: 18,
             access: 'full',
-          },
-          {
-            $type: ruleIds.Default,
+          }),
+          defs.configRegionRuleDefault.$build({
             access: 'safe',
-          },
+          }),
         ],
       },
       {
@@ -62,15 +62,13 @@ vi.mock('../../dist/api/age-assurance/const.js', () => {
         regionCode: undefined,
         minAccessAge: 13,
         rules: [
-          {
-            $type: ruleIds.IfAssuredOverAge,
+          defs.configRegionRuleIfAssuredOverAge.$build({
             age: 18,
             access: 'full',
-          },
-          {
-            $type: ruleIds.Default,
+          }),
+          defs.configRegionRuleDefault.$build({
             access: 'safe',
-          },
+          }),
         ],
       },
     ],

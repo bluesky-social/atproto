@@ -37,7 +37,6 @@
     "@atproto-labs/fetch-node": "workspace:^",
     "@atproto-labs/opentelemetry-node": "workspace:^",
     "@atproto-labs/xrpc-utils": "workspace:^",
-    "@atproto/api": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/did": "workspace:^",
@@ -47,6 +46,7 @@
     "@atproto/sync": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
+    "@bsky/sdk": "^1.0.1",
     "@bufbuild/protobuf": "^1.5.0",
     "@connectrpc/connect": "^1.1.4",
     "@connectrpc/connect-express": "^1.1.4",
@@ -85,6 +85,7 @@
     "zod": "3.23.8"
   },
   "devDependencies": {
+    "@atproto/api": "workspace:^",
     "@atproto/pds": "workspace:^",
     "@bufbuild/buf": "^1.28.1",
     "@bufbuild/protoc-gen-es": "^1.5.0",
