@@ -30,7 +30,7 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
       - name: Publish
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         id: changesets
         with:
           publish: pnpm run publish:ci
