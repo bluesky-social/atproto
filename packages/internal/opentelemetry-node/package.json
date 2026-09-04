@@ -54,7 +54,8 @@
     "@opentelemetry/instrumentation-undici": "^0.29.0",
     "@opentelemetry/resource-detector-container": "^0.8.10",
     "@opentelemetry/sdk-node": "^0.219.0",
-    "@opentelemetry/semantic-conventions": "^1.41.1"
+    "@opentelemetry/semantic-conventions": "^1.41.1",
+    "import-in-the-middle": "^3.0.1"
   },
   "devDependencies": {
     "vitest": "^4.1.10"
