@@ -258,11 +258,16 @@ export async function pipethrough(
 function getAtprotoPassthroughHeaders(
   headers: IncomingHttpHeaders,
 ): IncomingHttpHeaders {
-  return Object.fromEntries(
-    Object.entries(headers).filter(([name]) =>
-      name.toLowerCase().startsWith('x-atproto-'),
-    ),
-  )
+  // @NOTE node lower-cases all incoming header names, so a case-sensitive
+  // prefix check is sufficient here. This runs on the request hot path, so we
+  // build the result imperatively rather than via intermediate arrays.
+  const result: IncomingHttpHeaders = {}
+  for (const name in headers) {
+    if (name.startsWith('x-atproto-')) {
+      result[name] = headers[name]
+    }
+  }
+  return result
 }
 
 export function computeProxyTo(
