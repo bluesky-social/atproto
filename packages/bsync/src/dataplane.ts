@@ -14,10 +14,20 @@ export function createDataplaneClient(opts: {
   authToken: string
   rejectUnauthorized: boolean
 }): DataplaneClient {
+  const endpoint = new URL(opts.baseUrl)
+  const port = Number(
+    endpoint.port || (endpoint.protocol === 'https:' ? 443 : 80),
+  )
   const transport = createGrpcTransport({
     baseUrl: opts.baseUrl,
     httpVersion: '2',
-    interceptors: [createRpcClientInterceptor(), authWithToken(opts.authToken)],
+    interceptors: [
+      createRpcClientInterceptor(() => ({
+        'server.address': endpoint.hostname,
+        'server.port': port,
+      })),
+      authWithToken(opts.authToken),
+    ],
     nodeOptions: {
       rejectUnauthorized: opts.rejectUnauthorized,
     },

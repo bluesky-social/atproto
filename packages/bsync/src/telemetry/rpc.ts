@@ -34,6 +34,7 @@ import type { Service } from '../proto/bsync_connect.js'
 
 type ServiceMethods = Partial<ServiceImpl<typeof Service>>
 type RpcRequest = UnaryRequest | StreamRequest
+type GetClientAttributes = (request: RpcRequest) => Attributes
 
 /**
  * Derives extra attributes from a request. The returned attributes land on both
@@ -71,12 +72,15 @@ const headersSetter: TextMapSetter<Headers> = {
   },
 }
 
-export const createRpcClientInterceptor = (): Interceptor => {
+export const createRpcClientInterceptor = (
+  getAttributes?: GetClientAttributes,
+): Interceptor => {
   return (next) => async (req: RpcRequest) => {
     const method = `${req.service.typeName}/${req.method.name}`
     const attributes: Attributes = {
       [ATTR_RPC_SYSTEM_NAME]: RPC_SYSTEM_NAME_VALUE_CONNECTRPC,
       [ATTR_RPC_METHOD]: method,
+      ...getAttributes?.(req),
     }
     const start = performance.now()
 
