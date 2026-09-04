@@ -298,9 +298,7 @@ function parsePathPart(
   part: string | undefined,
   validator?: (value: unknown) => boolean,
 ): string | undefined {
-  return part !== undefined &&
-    part !== 'undefined' &&
-    (!validator || validator(part))
+  return part !== undefined && (!validator || validator(part))
     ? part
     : undefined
 }

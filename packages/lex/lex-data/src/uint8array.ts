@@ -127,8 +127,9 @@ export function ifUint8Array(input: unknown): Uint8Array | undefined {
  * asUint8Array(new Uint8Array([1, 2]))     // Uint8Array([1, 2])
  * asUint8Array(new ArrayBuffer(4))         // Uint8Array of length 4
  * asUint8Array(new Int16Array([1, 2]))     // Uint8Array view of the buffer
- * asUint8Array('string')                   // undefined
  * asUint8Array([1, 2, 3])                  // Uint8Array([1, 2, 3])
+ *
+ * asUint8Array('string')                   // throws TypeError
  * ```
  */
 export function asUint8Array(input: unknown): Uint8Array {

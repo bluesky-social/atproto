@@ -1,5 +1,4 @@
 import { createHash } from 'node:crypto'
-import { create } from 'node:domain'
 import type { Redis, RedisOptions } from 'ioredis'
 import type { Jwks } from '@atproto/jwk'
 import { LexResolver } from '@atproto/lex-resolver'
