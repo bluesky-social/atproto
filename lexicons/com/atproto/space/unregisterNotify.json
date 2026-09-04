@@ -1,0 +1,29 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.unregisterNotify",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Withdraw a write-notification registration made through registerNotify. Called on the space host. Idempotent: succeeds whether or not a matching registration existed. Registrations also lapse on their own at the expiry returned by registerNotify, so this is for explicit withdrawal rather than cleanup. Authenticated with a space credential.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "service"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref",
+              "description": "Reference to the space."
+            },
+            "service": {
+              "type": "string",
+              "description": "Service identifier of the subscriber to remove, as passed to registerNotify."
+            }
+          }
+        }
+      },
+      "errors": [{ "name": "SpaceNotFound" }]
+    }
+  }
+}

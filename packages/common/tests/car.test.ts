@@ -8,7 +8,12 @@ import {
   parseCid,
   toBase64,
 } from '@atproto/lex-data'
-import { type CarBlock, readCarStream, writeCarStream } from '../src/index.js'
+import {
+  type CarBlock,
+  readCarBytes,
+  readCarStream,
+  writeCarStream,
+} from '../src/index.js'
 import fixtures from './car-file-fixtures.json' with { type: 'json' }
 
 async function dataToCborBlock(data: LexValue): Promise<{
@@ -59,6 +64,68 @@ describe('car', () => {
       }
     })
   }
+
+  it('round-trips multiple roots, in order', async () => {
+    const first = await dataToCborBlock({ root: 'first' })
+    const second = await dataToCborBlock({ root: 'second' })
+    const car = writeCarStream([first.cid, second.cid], [first, second])
+
+    const { roots, blocks } = await readCarStream(car)
+    expect(roots.map((r) => r.toString())).toEqual([
+      first.cid.toString(),
+      second.cid.toString(),
+    ])
+    const seen: CarBlock[] = []
+    for await (const block of blocks) seen.push(block)
+    expect(seen.map((b) => b.cid.toString())).toEqual([
+      first.cid.toString(),
+      second.cid.toString(),
+    ])
+  })
+
+  it('treats a bare cid and a single-element list alike', async () => {
+    const block = await dataToCborBlock({ block: 0 })
+    const chunks: Uint8Array[] = []
+    for await (const chunk of writeCarStream(block.cid, [block])) {
+      chunks.push(chunk)
+    }
+    const bare = Buffer.concat(chunks)
+
+    chunks.length = 0
+    for await (const chunk of writeCarStream([block.cid], [block])) {
+      chunks.push(chunk)
+    }
+    expect(Buffer.concat(chunks)).toEqual(bare)
+  })
+
+  it('writes no roots for null', async () => {
+    const block = await dataToCborBlock({ block: 0 })
+    const { roots } = await readCarStream(writeCarStream(null, [block]))
+    expect(roots).toEqual([])
+  })
+
+  it('reads from bytes as well as a stream', async () => {
+    const block = await dataToCborBlock({ block: 0 })
+    const chunks: Uint8Array[] = []
+    for await (const chunk of writeCarStream(block.cid, [block])) {
+      chunks.push(chunk)
+    }
+    const { roots, blocks } = await readCarBytes(Buffer.concat(chunks))
+    expect(roots[0].toString()).toBe(block.cid.toString())
+    const seen: CarBlock[] = []
+    for await (const b of blocks) seen.push(b)
+    expect(seen).toHaveLength(1)
+  })
+
+  it('rejects a truncated car', async () => {
+    const block = await dataToCborBlock({ block: 0 })
+    const chunks: Uint8Array[] = []
+    for await (const chunk of writeCarStream(block.cid, [block])) {
+      chunks.push(chunk)
+    }
+    const car = Buffer.concat(chunks)
+    await expect(readCarBytes(car.subarray(0, 3))).rejects.toThrow()
+  })
 
   it('writeCar propagates errors', async () => {
     const iterate = async () => {

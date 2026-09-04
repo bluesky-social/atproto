@@ -6,6 +6,7 @@ import { IdentityPermission } from './scopes/identity-permission.js'
 import { IncludeScope } from './scopes/include-scope.js'
 import { RepoPermission } from './scopes/repo-permission.js'
 import { RpcPermission } from './scopes/rpc-permission.js'
+import { SpacePermission } from './scopes/space-permission.js'
 
 export { type ScopeStringFor, isScopeStringFor }
 
@@ -29,6 +30,7 @@ export type AtprotoOauthScope =
   | ScopeStringFor<'include'>
   | ScopeStringFor<'repo'>
   | ScopeStringFor<'rpc'>
+  | ScopeStringFor<'space'>
 
 /**
  * @note This function does not only verify the scope string format (with
@@ -45,7 +47,8 @@ export function isAtprotoOauthScope(value: string): value is AtprotoOauthScope {
     IdentityPermission.fromString(value) != null ||
     IncludeScope.fromString(value) != null ||
     RepoPermission.fromString(value) != null ||
-    RpcPermission.fromString(value) != null
+    RpcPermission.fromString(value) != null ||
+    SpacePermission.fromString(value) != null
   )
 }
 
@@ -70,6 +73,7 @@ export function normalizeAtprotoOauthScopeValue(
     IncludeScope,
     RepoPermission,
     RpcPermission,
+    SpacePermission,
   ]) {
     const parsed = Scope.fromString(value)
     if (parsed) return parsed.toString()

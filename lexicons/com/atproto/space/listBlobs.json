@@ -1,0 +1,59 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.listBlobs",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List the CIDs of blobs referenced by an account's records within a permissioned space, optionally since some revision of that repo. Lets a syncer discover which blobs to fetch via getBlob, and lets an account enumerate the blobs it must carry when migrating a permissioned repo. Scoped to one space: blobs behind permissioned records are never enumerated by com.atproto.sync.listBlobs, which is unauthenticated. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services).",
+      "parameters": {
+        "type": "params",
+        "required": ["space", "repo"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref",
+            "description": "Reference to the space."
+          },
+          "repo": {
+            "type": "string",
+            "format": "did",
+            "description": "The DID of the account whose blobs to list."
+          },
+          "since": {
+            "type": "string",
+            "format": "tid",
+            "description": "Optional revision of the permissioned repo to list blobs since."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 500
+          },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["cids"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "cids": {
+              "type": "array",
+              "items": { "type": "string", "format": "cid" }
+            }
+          }
+        }
+      },
+      "errors": [
+        { "name": "SpaceNotFound" },
+        { "name": "RepoNotFound" },
+        { "name": "RepoTakendown" },
+        { "name": "RepoSuspended" },
+        { "name": "RepoDeactivated" }
+      ]
+    }
+  }
+}

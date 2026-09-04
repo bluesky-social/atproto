@@ -540,6 +540,21 @@ const lexicons: LexiconDoc[] = [
       },
     },
   },
+  {
+    lexicon: 1,
+    id: 'com.example.spaceRef',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            space: { type: 'string', format: 'space-ref' },
+          },
+        },
+      },
+    },
+  },
 ]
 
 export default lexicons

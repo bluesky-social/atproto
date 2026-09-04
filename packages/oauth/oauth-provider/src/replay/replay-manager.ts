@@ -41,6 +41,19 @@ export class ReplayManager {
     )
   }
 
+  async uniqueSpaceToken(
+    kind: string,
+    issuer: string,
+    jti: string,
+    exp?: number,
+  ): Promise<boolean> {
+    const timeFrame =
+      exp == null
+        ? asTimeFrame(CLIENT_ASSERTION_MAX_AGE)
+        : exp * 1000 - Date.now()
+    return this.replayStore.unique(`Space:${kind}@${issuer}`, jti, timeFrame)
+  }
+
   async uniqueCodeChallenge(challenge: string): Promise<boolean> {
     return this.replayStore.unique(
       'CodeChallenge',

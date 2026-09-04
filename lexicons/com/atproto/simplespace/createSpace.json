@@ -1,0 +1,74 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.simplespace.createSpace",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Create a new space managed by the simplespace implementation. The space is anchored on the authenticated user's DID, who becomes the space owner. Requires auth, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["type", "policy", "appAccess"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "format": "nsid",
+              "description": "The NSID of the space type, describing the modality of the space (e.g. app.bsky.group, app.bsky.personal)."
+            },
+            "skey": {
+              "type": "string",
+              "format": "record-key",
+              "description": "The space key. Used to differentiate multiple spaces of the same type under the same owner. Same syntax requirements as a record key. If not provided, one will be auto-generated (TID)."
+            },
+            "policy": {
+              "type": "union",
+              "description": "How the authority decides whether to authorize a requesting user.",
+              "refs": [
+                "com.atproto.simplespace.defs#publicPolicy",
+                "com.atproto.simplespace.defs#memberListPolicy",
+                "com.atproto.simplespace.defs#managingAppPolicy"
+              ]
+            },
+            "appAccess": {
+              "type": "union",
+              "description": "How the authority decides whether to authorize a requesting app.",
+              "refs": [
+                "com.atproto.simplespace.defs#open",
+                "com.atproto.simplespace.defs#allowList"
+              ]
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri"],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "space-ref",
+              "description": "URI of the created space."
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceAlreadyExists",
+          "description": "A space with this owner, type, and skey already exists. A space that was previously deleted may be created again."
+        },
+        {
+          "name": "UnsupportedPolicy",
+          "description": "The requested policy is not one the host implements."
+        },
+        {
+          "name": "UnsupportedAppAccess",
+          "description": "The requested appAccess variant is not one the host implements. A host will not store an app access policy it cannot enforce."
+        }
+      ]
+    }
+  }
+}

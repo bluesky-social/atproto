@@ -35,6 +35,7 @@ export const sessionLogger = createLogger('pds:session', {
     req: reqSerializer,
   },
 })
+export const spaceLogger = createLogger('pds:space')
 export const lexiconResolverLogger = createLogger('pds:lexicon-resolver')
 
 export const loggerMiddleware = pinoHttp({

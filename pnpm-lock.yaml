@@ -644,6 +644,9 @@ importers:
       pino:
         specifier: ^10.3.1
         version: 10.3.1
+      varint:
+        specifier: ^6.0.0
+        version: 6.0.0
     devDependencies:
       uint8arrays:
         specifier: ^5.0.0
@@ -1611,6 +1614,9 @@ importers:
       '@atproto/did':
         specifier: workspace:^
         version: link:../../did
+      '@atproto/identity':
+        specifier: workspace:^
+        version: link:../../identity
       '@atproto/jwk':
         specifier: workspace:^
         version: link:../jwk
@@ -1987,6 +1993,9 @@ importers:
 
   packages/pds:
     dependencies:
+      '@atproto-labs/fetch':
+        specifier: workspace:^
+        version: link:../internal/fetch
       '@atproto-labs/fetch-node':
         specifier: workspace:^
         version: link:../internal/fetch-node
@@ -2020,6 +2029,9 @@ importers:
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
+      '@atproto/jwk':
+        specifier: workspace:^
+        version: link:../oauth/jwk
       '@atproto/lex':
         specifier: workspace:^
         version: link:../lex/lex
@@ -2038,9 +2050,15 @@ importers:
       '@atproto/oauth-scopes':
         specifier: workspace:^
         version: link:../oauth/oauth-scopes
+      '@atproto/oauth-types':
+        specifier: workspace:^
+        version: link:../oauth/oauth-types
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo
+      '@atproto/space':
+        specifier: workspace:^
+        version: link:../space
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
@@ -2201,9 +2219,6 @@ importers:
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
-      varint:
-        specifier: ^6.0.0
-        version: 6.0.0
       zod:
         specifier: ^3.23.8
         version: 3.24.2
@@ -2211,6 +2226,40 @@ importers:
       jest:
         specifier: ^30.0.0
         version: 30.4.2(@types/node@22.19.17)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.15.47)(@types/node@22.19.17)(@typescript/typescript6@6.0.2))
+
+  packages/space:
+    dependencies:
+      '@atproto/common':
+        specifier: workspace:^
+        version: link:../common
+      '@atproto/crypto':
+        specifier: workspace:^
+        version: link:../crypto
+      '@atproto/jwk':
+        specifier: workspace:^
+        version: link:../oauth/jwk
+      '@atproto/lex-cbor':
+        specifier: workspace:^
+        version: link:../lex/lex-cbor
+      '@atproto/lex-data':
+        specifier: workspace:^
+        version: link:../lex/lex-data
+      '@noble/hashes':
+        specifier: ^1.6.1
+        version: 1.7.0
+      jose:
+        specifier: ^5.2.0
+        version: 5.3.0
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
+    devDependencies:
+      '@atproto/jwk-jose':
+        specifier: workspace:^
+        version: link:../oauth/jwk-jose
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.0(@types/node@22.19.17)(jiti@2.7.0)(terser@5.44.0)(yaml@2.8.1))
 
   packages/sync:
     dependencies:

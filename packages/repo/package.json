@@ -35,7 +35,6 @@
     "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-data": "workspace:^",
     "@atproto/syntax": "workspace:^",
-    "varint": "^6.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
