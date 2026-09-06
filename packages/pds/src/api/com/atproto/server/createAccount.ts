@@ -247,9 +247,14 @@ const validateInputsForLocalPds = async (
   }
 
   // check that the handle and email are available
+  //
+  // `actor_handle_lower_idx` and `account_email_lower_idx` enforce handle and
+  // email uniqueness across taken down and deactivated accounts as well, so we
+  // must check for them when surfacing handle availability.
+  const availability = { includeTakenDown: true, includeDeactivated: true }
   const [handleAccnt, emailAcct] = await Promise.all([
-    ctx.accountManager.getAccount(handle),
-    ctx.accountManager.getAccountByEmail(email),
+    ctx.accountManager.getAccount(handle, availability),
+    ctx.accountManager.getAccountByEmail(email, availability),
   ])
   if (handleAccnt) {
     throw new InvalidRequestError(`Handle already taken: ${handle}`)
