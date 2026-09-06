@@ -1,5 +1,5 @@
 import { Agent, type Dispatcher, Pool, interceptors } from 'undici'
-import { isUnicastIp, unicastLookup } from '@atproto-labs/fetch-node'
+import { isUnicastIpHostname, unicastLookup } from '@atproto-labs/fetch-node'
 import type { ServerConfig } from '../config.js'
 import { RETRYABLE_HTTP_STATUS_CODES } from '../util/retry.js'
 
@@ -18,7 +18,7 @@ export function createBlobDispatcher(cfg: ServerConfig): Dispatcher {
           if (protocol !== 'https:') {
             throw new Error(`Forbidden protocol "${protocol}"`)
           }
-          if (isUnicastIp(hostname) === false) {
+          if (isUnicastIpHostname(hostname) === false) {
             throw new Error('Hostname resolved to non-unicast address')
           }
           return new Pool(origin, opts)

@@ -20,7 +20,7 @@ import {
   excludeErrorResult,
   parseReqNsid,
 } from '@atproto/xrpc-server'
-import { isUnicastIp, unicastLookup } from '@atproto-labs/fetch-node'
+import { isUnicastIpHostname, unicastLookup } from '@atproto-labs/fetch-node'
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
 import { isAccessPrivileged } from './auth-scope.js'
 import type { ProxyConfig } from './config/config.js'
@@ -42,7 +42,7 @@ export function buildProxyAgent(cfg: ProxyConfig): Dispatcher {
           if (protocol !== 'https:') {
             throw new Error(`Forbidden protocol "${protocol}"`)
           }
-          if (isUnicastIp(hostname) === false) {
+          if (isUnicastIpHostname(hostname) === false) {
             throw new Error('Hostname resolved to non-unicast address')
           }
           return new Pool(origin, opts)
