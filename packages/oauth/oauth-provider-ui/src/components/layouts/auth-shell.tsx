@@ -60,14 +60,30 @@ export function AuthShell({
         : undefined
 
   return (
-    <div className="auth-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+    <div className="auth-background max-xs:p-0 flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
       {documentTitleString && <title>{documentTitleString}</title>}
 
       <div
         {...props}
-        className={cn('flex w-full max-w-sm flex-col', className)}
+        className={cn(
+          'max-xs:max-w-none max-xs:flex-1 flex w-full max-w-sm flex-col',
+          className,
+        )}
       >
-        <Card>
+        {/* Two separate steps, because they answer different questions.
+            Below `sm` the card frame goes away — no surface, ring or radius —
+            since a viewport barely wider than the card has nothing to frame the
+            card *against*. This is the OAuth popup case: the window is already
+            the dialog.
+            Below `xs` the content additionally runs edge to edge, which only
+            makes sense once the viewport is phone-width; keeping the `max-w-sm`
+            cap in between stops a 600px popup from stretching its inputs to
+            the full window width.
+            @NOTE The two `mt-auto`s (here and on the footer) split the free
+            space evenly, which centres the content in the area above a footer
+            pinned to the bottom of the viewport. The first child is targeted by
+            position because it varies: logo, header or content. */}
+        <Card className="max-xs:flex-1 max-xs:[&>*:first-child]:mt-auto max-xs:[--card-spacing:--spacing(6)] max-sm:rounded-none max-sm:bg-transparent max-sm:ring-0">
           {(logo || name) && (
             <div className="px-(--card-spacing) flex items-center justify-center gap-2 pt-2 font-medium">
               {logo && (
@@ -98,7 +114,7 @@ export function AuthShell({
 
           <CardContent>{children}</CardContent>
 
-          <CardFooter className="flex-col justify-center gap-3">
+          <CardFooter className="max-xs:mt-auto flex-col justify-center gap-3 max-sm:border-t-0 max-sm:bg-transparent">
             <LocaleSelector />
             {links?.length ? (
               <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
