@@ -21,6 +21,18 @@ export const HANDLE_SEGMENT_PATTERN = '[a-z0-9][a-z0-9\\-]+[a-z0-9]'
 export const OTP_CODE_PATTERN = '[A-Z2-7]{5}-[A-Z2-7]{5}'
 
 /**
+ * Normalises free-typed input into the {@link OTP_CODE_PATTERN} shape:
+ * uppercases, drops every character outside the base32 alphabet (spaces,
+ * stray punctuation, a pasted hyphen), inserts the hyphen after the fifth
+ * character, and truncates to ten characters.
+ */
+export function formatOtpCode(value: string): string {
+  const normalized = value.toUpperCase().replaceAll(/[^A-Z2-7]/g, '')
+  if (normalized.length <= 5) return normalized
+  return `${normalized.slice(0, 5)}-${normalized.slice(5, 10)}`
+}
+
+/**
  * Email, handle (with at least one dot), or DID.
  *
  * @NOTE All three alternatives sit inside one group. The regex this replaced
