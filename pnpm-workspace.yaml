@@ -21,6 +21,7 @@ allowBuilds:
   '@datadog/pprof': false
   core-js: false
   rolldown: true
+  '@parcel/watcher': true
 
 overrides:
   cookie: ^0.7.2
