@@ -32,6 +32,7 @@ import {
   createPipeline,
 } from '../../../../pipeline.js'
 import type { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
+import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
 import { BSKY_USER_AGENT, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -65,9 +66,7 @@ export default function (server: Server, ctx: AppContext) {
         'user-agent': BSKY_USER_AGENT,
         authorization: req.headers['authorization'],
         'accept-language': req.headers['accept-language'],
-        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
-          ? req.headers['x-bsky-topics'].join(',')
-          : req.headers['x-bsky-topics'],
+        ...getAtprotoPassthroughHeaders(req),
       })
       // @NOTE feed cursors should not be affected by appview swap
       // Do not refill filtered pages. Overfetching from algorithmic feeds can

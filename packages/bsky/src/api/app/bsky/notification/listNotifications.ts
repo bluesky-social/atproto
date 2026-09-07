@@ -44,7 +44,6 @@ export default function (server: Server, ctx: AppContext) {
       const priority = params.priority ?? (await getPriority(ctx, viewer))
       const lastSeenRes = await ctx.hydrator.dataplane.getNotificationSeen({
         actorDid: viewer,
-        priority,
       })
       const lastSeen = lastSeenRes.timestamp?.toDate()
 

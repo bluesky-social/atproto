@@ -1,5 +1,67 @@
 # @atproto/dev-env
 
+## 0.6.5
+
+### Patch Changes
+
+- [#5426](https://github.com/bluesky-social/atproto/pull/5426) [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222) Thanks [@bigmoves](https://github.com/bigmoves)! - Migrate Ozone onto `@atproto/lex`.
+
+  Ozone was the last package still generating its server stack with
+  `lex gen-server`. It now uses `lex build` like `pds` and `bsky`, and the legacy
+  `src/lexicon` tree is gone:
+
+  - All 95 route registrations moved from `server.<ns>.<method>()` to
+    `server.add(schema, …)` from `@atproto/xrpc-server`.
+  - `AtpAgent` is replaced by `Client`; `CredentialSession` by `PasswordSession`
+    from `@atproto/lex-password-session`.
+  - Kysely schema types, config and auth credentials now carry the branded
+    scalars (`DidString`, `DatetimeString`, `AtUriString`, `UriString`), so
+    route params flow into the database and back out into views without casts.
+
+  `@atproto/api` and `@atproto/lexicon` move to `devDependencies` (the test suites
+  still drive the legacy client), and `@atproto/xrpc` and `@atproto/lex-cli` are
+  dropped entirely.
+
+  Two behaviour changes worth noting, both from validating against the Lexicon
+  schemas rather than the legacy runtime:
+
+  - The AT Proto data model has no floating-point numbers, and the legacy stack
+    accepted them anyway. A non-integer number in an `unknown` field — for
+    example a float stored in a `tools.ozone.setting` value — is now rejected at
+    input validation. Reads are unaffected, since the server is configured with
+    `validateResponse: false`.
+  - A value whose shape contradicts the Lexicon is now rejected by schema
+    validation before a route's own validators run, so the reported error is the
+    schema's (`Expected object value type …`) rather than the application's.
+
+  `BlobDiverter` and the OAuth-preferences proxy previously threw `XRPCError` from
+  `@atproto/xrpc` to signal retryability to `retryHttp`. They now throw
+  `UpstreamHttpError`, which extends `XRPCError` from `@atproto/xrpc-server` so
+  that an error escaping a handler still carries its upstream status and message
+  instead of collapsing into a generic 500.
+
+- [#5426](https://github.com/bluesky-social/atproto/pull/5426) [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222) Thanks [@bigmoves](https://github.com/bigmoves)! - Use stronger types (`UriString`, `DidString`, ...) for service properties
+
+- [#5473](https://github.com/bluesky-social/atproto/pull/5473) [`cae15d9`](https://github.com/bluesky-social/atproto/commit/cae15d9fd007206878d51f990b321a508b3044b7) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add a `BSKY_FEED_GEN_SKELETON_TIMEOUT` option, bounding feed generator skeleton requests. Defaults to 5s, lowered from the previously hardcoded 10s.
+
+- [#5484](https://github.com/bluesky-social/atproto/pull/5484) [`14bd634`](https://github.com/bluesky-social/atproto/commit/14bd63433726fb2acf1b77358710950341f4b949) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Fan out notification read timestamps through bsync and prevent older timestamps from replacing newer ones.
+
+- [#5421](https://github.com/bluesky-social/atproto/pull/5421) [`5c154f9`](https://github.com/bluesky-social/atproto/commit/5c154f9c5173e7823a5353eab92207508a7dea99) Thanks [@foysalit](https://github.com/foysalit)! - Add `getClient()` method on `TestOzone` class
+
+- Updated dependencies [[`a8d3893`](https://github.com/bluesky-social/atproto/commit/a8d38932747a662f2b6f45c1838807efa3341c9e), [`8a4631a`](https://github.com/bluesky-social/atproto/commit/8a4631a47ce6791b3868f06d1c930aa21327748c), [`ffcb7c5`](https://github.com/bluesky-social/atproto/commit/ffcb7c54e4dcedb10eed9175fbc939761462bca6), [`60c4395`](https://github.com/bluesky-social/atproto/commit/60c439595101fbcbe612463e6f23200590c5daaf), [`908cd55`](https://github.com/bluesky-social/atproto/commit/908cd559d57c207ed0a67c8fbbb8be6091dd7534), [`328a4a8`](https://github.com/bluesky-social/atproto/commit/328a4a86a999357eeae12a6da897bf686b4da88e), [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222), [`04dc5ab`](https://github.com/bluesky-social/atproto/commit/04dc5ab09b4439779d254a5478c8ea3a19c44189), [`f0d4877`](https://github.com/bluesky-social/atproto/commit/f0d4877a03dc8ede0d3e9a36d5b72ada63b5d2e0), [`a058557`](https://github.com/bluesky-social/atproto/commit/a0585579f000dc489b5524b02955fdca1de6665c), [`f7fe823`](https://github.com/bluesky-social/atproto/commit/f7fe8237f6cc83da45c1494ca90c94c4b2a65a23), [`9a72c51`](https://github.com/bluesky-social/atproto/commit/9a72c515b1886256f05b1e28d61e5a1caade1d74), [`5c154f9`](https://github.com/bluesky-social/atproto/commit/5c154f9c5173e7823a5353eab92207508a7dea99), [`ff99ec0`](https://github.com/bluesky-social/atproto/commit/ff99ec0a35e3b2b91cb8fb8fef780abb623a1f90), [`cae15d9`](https://github.com/bluesky-social/atproto/commit/cae15d9fd007206878d51f990b321a508b3044b7), [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222), [`14bd634`](https://github.com/bluesky-social/atproto/commit/14bd63433726fb2acf1b77358710950341f4b949), [`80d391a`](https://github.com/bluesky-social/atproto/commit/80d391a2b5762b1c50037303f77f73db345bec1e), [`5c154f9`](https://github.com/bluesky-social/atproto/commit/5c154f9c5173e7823a5353eab92207508a7dea99), [`222f4bc`](https://github.com/bluesky-social/atproto/commit/222f4bc600fb89c75fafee95ef3c837b1721601e), [`59f4a42`](https://github.com/bluesky-social/atproto/commit/59f4a42d20f87fa24ea7b0bd923df9c133a5d2b5), [`db6e2e7`](https://github.com/bluesky-social/atproto/commit/db6e2e70d1168c1a2fcf068ec42eaac6fd1702d5), [`80d391a`](https://github.com/bluesky-social/atproto/commit/80d391a2b5762b1c50037303f77f73db345bec1e), [`715caf1`](https://github.com/bluesky-social/atproto/commit/715caf130a9347b36b9cbdf479ae5d6113e030c6), [`328a4a8`](https://github.com/bluesky-social/atproto/commit/328a4a86a999357eeae12a6da897bf686b4da88e), [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222), [`263eaa3`](https://github.com/bluesky-social/atproto/commit/263eaa3e41d8d7328c5a7376e06b1e398156e9b7), [`7068a65`](https://github.com/bluesky-social/atproto/commit/7068a65638f8d4664083555f402c5a10c47af460), [`0f3ea4b`](https://github.com/bluesky-social/atproto/commit/0f3ea4b86fbb4ec9869d219bae0d4d57ef019427), [`ffcb7c5`](https://github.com/bluesky-social/atproto/commit/ffcb7c54e4dcedb10eed9175fbc939761462bca6)]:
+  - @atproto/ozone@0.4.0
+  - @atproto/xrpc-server@0.13.0
+  - @atproto/bsky@0.0.278
+  - @atproto/api@0.20.43
+  - @atproto/bsync@0.0.43
+  - @atproto/lex@0.3.9
+  - @atproto/pds@0.5.32
+  - @atproto/syntax@0.7.6
+  - @atproto/sync@0.4.8
+  - @atproto/common-web@0.5.11
+  - @atproto/lexicon@0.7.13
+  - @atproto/identity@0.5.11
+
 ## 0.6.4
 
 ### Patch Changes

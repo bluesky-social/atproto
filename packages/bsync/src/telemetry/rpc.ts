@@ -3,13 +3,20 @@ import {
   Code,
   ConnectError,
   type HandlerContext,
+  type Interceptor,
   type ServiceImpl,
+  type StreamRequest,
+  type UnaryRequest,
 } from '@connectrpc/connect'
 import {
   type Attributes,
+  SpanKind,
   SpanStatusCode,
+  type TextMapSetter,
   ValueType,
+  context,
   metrics,
+  propagation,
   trace,
 } from '@opentelemetry/api'
 import { ATTR_ERROR_TYPE } from '@opentelemetry/semantic-conventions'
@@ -17,6 +24,7 @@ import {
   ATTR_RPC_METHOD,
   ATTR_RPC_RESPONSE_STATUS_CODE,
   ATTR_RPC_SYSTEM_NAME,
+  METRIC_RPC_CLIENT_CALL_DURATION,
   METRIC_RPC_SERVER_CALL_DURATION,
   RPC_SYSTEM_NAME_VALUE_CONNECTRPC,
 } from '@opentelemetry/semantic-conventions/incubating'
@@ -25,6 +33,8 @@ import { statusCodeToString } from '@atproto-labs/opentelemetry-node/util'
 import type { Service } from '../proto/bsync_connect.js'
 
 type ServiceMethods = Partial<ServiceImpl<typeof Service>>
+type RpcRequest = UnaryRequest | StreamRequest
+type GetClientAttributes = (request: RpcRequest) => Attributes
 
 /**
  * Derives extra attributes from a request. The returned attributes land on both
@@ -36,6 +46,16 @@ export type GetAttributes<M extends keyof ServiceMethods> = (
 ) => Attributes
 
 const meter = metrics.getMeter('@atproto/bsync')
+const tracer = trace.getTracer('@atproto/bsync')
+const rpcClientDuration = meter.createHistogram(
+  METRIC_RPC_CLIENT_CALL_DURATION,
+  {
+    description: 'Measures the duration of an outgoing Remote Procedure Call',
+    unit: 's',
+    valueType: ValueType.DOUBLE,
+    advice: { explicitBucketBoundaries: RPC_CALL_DURATION_BUCKETS },
+  },
+)
 const rpcServerDuration = meter.createHistogram(
   METRIC_RPC_SERVER_CALL_DURATION,
   {
@@ -45,6 +65,56 @@ const rpcServerDuration = meter.createHistogram(
     advice: { explicitBucketBoundaries: RPC_CALL_DURATION_BUCKETS },
   },
 )
+
+const headersSetter: TextMapSetter<Headers> = {
+  set(carrier, key, value) {
+    carrier.set(key, value)
+  },
+}
+
+export const createRpcClientInterceptor = (
+  getAttributes?: GetClientAttributes,
+): Interceptor => {
+  return (next) => async (req: RpcRequest) => {
+    const method = `${req.service.typeName}/${req.method.name}`
+    const attributes: Attributes = {
+      [ATTR_RPC_SYSTEM_NAME]: RPC_SYSTEM_NAME_VALUE_CONNECTRPC,
+      [ATTR_RPC_METHOD]: method,
+      ...getAttributes?.(req),
+    }
+    const start = performance.now()
+
+    return tracer.startActiveSpan(
+      method,
+      { kind: SpanKind.CLIENT, attributes },
+      async (span) => {
+        propagation.inject(context.active(), req.header, headersSetter)
+        let code: Code | undefined
+        try {
+          return await next(req)
+        } catch (err) {
+          code = err instanceof ConnectError ? err.code : Code.Unknown
+          span.setStatus({ code: SpanStatusCode.ERROR })
+          span.recordException(err instanceof Error ? err : String(err))
+          throw err
+        } finally {
+          const statusCode = statusCodeToString(code)
+          const completedAttributes: Attributes = {
+            ...attributes,
+            [ATTR_RPC_RESPONSE_STATUS_CODE]: statusCode,
+            ...(code !== undefined && { [ATTR_ERROR_TYPE]: statusCode }),
+          }
+          span.setAttributes(completedAttributes)
+          rpcClientDuration.record(
+            (performance.now() - start) / 1000,
+            completedAttributes,
+          )
+          span.end()
+        }
+      },
+    )
+  }
+}
 
 /**
  * Wraps every handler of a service implementation with server-side RPC

@@ -15,6 +15,7 @@ import {
   type SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline.js'
+import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
 import type { Views } from '../../../../views/index.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -41,9 +42,7 @@ export default function (server: Server, ctx: AppContext) {
       })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
-        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
-          ? req.headers['x-bsky-topics'].join(',')
-          : req.headers['x-bsky-topics'],
+        ...getAtprotoPassthroughHeaders(req),
       })
       const result = await getSuggestedUsers(
         {

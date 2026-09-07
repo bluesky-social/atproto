@@ -18,7 +18,21 @@ const otlpEndpoint =
 if (otlpEndpoint) {
   // ESM loader hook, required for instrumentation of ES modules. Registered
   // before the SDK imports below so it is in place for everything after us.
-  register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
+  //
+  // The message channel restricts the hook to the modules that the
+  // instrumentations below actually target. Without it, import-in-the-middle
+  // wraps every ES module, and its export-name analysis drops names reachable
+  // through more than one `export *` path (a legal pattern that resolves to a
+  // single binding under the ESM spec), breaking imports from packages it was
+  // never meant to touch.
+  const { createAddHookMessageChannel } = await import('import-in-the-middle')
+  const { registerOptions, waitForAllMessagesAcknowledged } =
+    createAddHookMessageChannel()
+  register(
+    '@opentelemetry/instrumentation/hook.mjs',
+    import.meta.url,
+    registerOptions,
+  )
 
   // Imported lazily so that when tracing is disabled the OTel SDK is never
   // loaded at all.
@@ -50,6 +64,11 @@ if (otlpEndpoint) {
   })
 
   sdk.start()
+
+  // Wait for the hook thread to acknowledge the modules the instrumentations
+  // registered above, so application imports resolving after us are correctly
+  // wrapped (and only those).
+  await waitForAllMessagesAcknowledged()
 
   // Flush buffered spans before exit. The entrypoints also handle SIGTERM for
   // their own teardown; multiple listeners run independently.

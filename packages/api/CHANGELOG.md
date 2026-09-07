@@ -1,5 +1,21 @@
 # @atproto/api
 
+## 0.20.43
+
+### Patch Changes
+
+- [#5461](https://github.com/bluesky-social/atproto/pull/5461) [`60c4395`](https://github.com/bluesky-social/atproto/commit/60c439595101fbcbe612463e6f23200590c5daaf) Thanks [@blackmichael](https://github.com/blackmichael)! - Add reference-list opt-out records and enforce them in AppView list, list feed, and starter-pack views.
+
+- [#5481](https://github.com/bluesky-social/atproto/pull/5481) [`f0d4877`](https://github.com/bluesky-social/atproto/commit/f0d4877a03dc8ede0d3e9a36d5b72ada63b5d2e0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Set `updatedAt` when updating interests with `setInterestsPref`.
+
+- [#5421](https://github.com/bluesky-social/atproto/pull/5421) [`5c154f9`](https://github.com/bluesky-social/atproto/commit/5c154f9c5173e7823a5353eab92207508a7dea99) Thanks [@foysalit](https://github.com/foysalit)! - Add `tools.ozone.moderation.getAccountPreferences` method
+
+- Updated dependencies [[`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222)]:
+  - @atproto/syntax@0.7.6
+  - @atproto/common-web@0.5.11
+  - @atproto/lexicon@0.7.13
+  - @atproto/xrpc@0.8.12
+
 ## 0.20.42
 
 ### Patch Changes

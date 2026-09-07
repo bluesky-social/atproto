@@ -1379,6 +1379,7 @@ describe('agent', () => {
         },
         interests: {
           tags: ['foo', 'bar'],
+          updatedAt: expect.any(String),
         },
         bskyAppState: {
           activeProgressGuide: undefined,
@@ -1397,6 +1398,21 @@ describe('agent', () => {
           hideAllFeeds: false,
         },
       })
+
+      const firstUpdatedAt = (await agent.getPreferences()).interests.updatedAt
+      expect(firstUpdatedAt).toBeDefined()
+
+      await new Promise((resolve) => setTimeout(resolve, 2))
+      await agent.setInterestsPref({ tags: ['baz'] })
+
+      const updatedInterests = (await agent.getPreferences()).interests
+      expect(updatedInterests).toEqual({
+        tags: ['baz'],
+        updatedAt: expect.any(String),
+      })
+      expect(Date.parse(updatedInterests.updatedAt!)).toBeGreaterThan(
+        Date.parse(firstUpdatedAt!),
+      )
     })
 
     it('resolves duplicates correctly', async () => {
