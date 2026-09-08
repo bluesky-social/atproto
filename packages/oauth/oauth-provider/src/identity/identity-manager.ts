@@ -33,7 +33,6 @@ export class IdentityManager {
     const dids = extractSpaceDids(scope)
     if (dids.size === 0) return map
 
-
     // We don't want to resolve more than a handful of DIDs at once.
     // We can replace this with a concurrency-limited queue in the future.
     for (const batch of chunkArray([...dids], 5)) {
