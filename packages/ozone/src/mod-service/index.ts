@@ -63,6 +63,8 @@ import { type AuthHeaders, ModerationViews } from './views.js'
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
 export class ModerationService {
+  readonly views: ModerationViews
+
   constructor(
     public db: Database,
     public signingKey: Keypair,
@@ -78,7 +80,26 @@ export class ModerationService {
     ) => Promise<AuthHeaders>,
     public strikeService: StrikeService,
     public imgInvalidator?: ImageInvalidator,
-  ) {}
+  ) {
+    this.views = new ModerationViews(
+      db,
+      signingKey,
+      signingKeyId,
+      appviewClient,
+      async (method: string, labelers?: ParsedLabelers) => {
+        const authHeaders = await this.createAuthHeaders(
+          cfg.appview.did,
+          method,
+        )
+        if (labelers?.dids?.length) {
+          authHeaders.headers[LABELER_HEADER_NAME] = labelers.dids.join(', ')
+        }
+        return authHeaders
+      },
+      idResolver,
+      cfg.service.devMode,
+    )
+  }
 
   static creator(
     signingKey: Keypair,
@@ -109,25 +130,6 @@ export class ModerationService {
       )
     }
   }
-
-  views = new ModerationViews(
-    this.db,
-    this.signingKey,
-    this.signingKeyId,
-    this.appviewClient,
-    async (method: string, labelers?: ParsedLabelers) => {
-      const authHeaders = await this.createAuthHeaders(
-        this.cfg.appview.did,
-        method,
-      )
-      if (labelers?.dids?.length) {
-        authHeaders.headers[LABELER_HEADER_NAME] = labelers.dids.join(', ')
-      }
-      return authHeaders
-    },
-    this.idResolver,
-    this.cfg.service.devMode,
-  )
 
   async getEvent(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
