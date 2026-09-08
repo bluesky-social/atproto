@@ -236,7 +236,7 @@ export function AccountShell({
             which with a definite `h-4` pins the line to the top instead. */}
             <Separator
               orientation="vertical"
-              className="data-vertical:h-4 data-vertical:self-center mr-2"
+              className="mr-2 data-vertical:h-4 data-vertical:self-center"
             />
             {pageTitleStr && (
               <h2 className="text-base font-medium">{pageTitleStr}</h2>
@@ -262,7 +262,7 @@ export function AccountShell({
           {prepend}
 
           <main
-            className="mx-auto flex w-full min-w-0 max-w-4xl flex-col gap-4 p-4 md:p-6"
+            className="mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-4 p-4 md:p-6"
             role="main"
           >
             {children}
