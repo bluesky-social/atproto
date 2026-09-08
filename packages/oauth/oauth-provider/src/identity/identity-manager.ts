@@ -1,3 +1,4 @@
+import { chunkArray } from '@atproto/common'
 import type { DidString } from '@atproto/oauth-provider-api'
 import { SpacePermission } from '@atproto/oauth-scopes'
 import { type HandleString, isValidHandle } from '@atproto/syntax'
@@ -32,16 +33,20 @@ export class IdentityManager {
     const dids = extractSpaceDids(scope)
     if (dids.size === 0) return map
 
-    // @TODO we don't want to resolve more than a handful of DIDs at once, so we
-    // resolve them sequentially. We should replace this with a
-    // concurrency-limited queue.
-    for (const did of dids) {
-      try {
-        const handle = await this.resolveVerifiedHandle(did)
-        map.set(did, handle)
-      } catch (error) {
-        onError(did, error)
-      }
+
+    // We don't want to resolve more than a handful of DIDs at once.
+    // We can replace this with a concurrency-limited queue in the future.
+    for (const batch of chunkArray([...dids], 5)) {
+      await Promise.all(
+        batch.map(async (did) => {
+          try {
+            const handle = await this.resolveVerifiedHandle(did)
+            map.set(did, handle)
+          } catch (error) {
+            onError(did, error)
+          }
+        }),
+      )
     }
 
     return map
