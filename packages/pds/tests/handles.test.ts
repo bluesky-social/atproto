@@ -9,7 +9,9 @@ let alice: DidString
 let bob: DidString
 
 jest.unstable_mockModule('node:dns/promises', () => {
+  const dns = jest.requireActual('node:dns/promises')
   return {
+    ...dns,
     resolveTxt: (domain: string) => {
       if (domain === '_atproto.alice.external') {
         return [[`did=${alice}`]]
