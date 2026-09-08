@@ -2,6 +2,7 @@
 
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { linguiMacroSwcPlugin } from '@lingui/swc-plugin/options'
 import { lingui } from '@lingui/vite-plugin'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
@@ -50,7 +51,7 @@ export default defineConfig({
       generatedRouteTree: './src/routeTree.gen.ts',
     }),
     react({
-      plugins: [['@lingui/swc-plugin', {}]],
+      plugins: [linguiMacroSwcPlugin({}, { cwd: __dirname })],
     }),
     lingui({ cwd: __dirname }),
     tailwindcss(),
