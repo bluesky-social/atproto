@@ -6,7 +6,7 @@ import {
 } from '@atproto/car'
 import type { NsidString, RecordKeyString } from '@atproto/syntax'
 import type {
-  IndexKey,
+  RecordPath,
   RepoIndex,
   SignedCommit,
   SpaceRecord,
@@ -35,7 +35,7 @@ export async function* serializeRepo(
   records: AsyncIterable<SerializedRecord> | Iterable<SerializedRecord>,
   opts: { excludeValues?: boolean } = {},
 ): AsyncIterable<Uint8Array> {
-  const byPath = new Map<IndexKey, SerializedRecord>()
+  const byPath = new Map<RecordPath, SerializedRecord>()
   for await (const record of records) {
     byPath.set(formatRecordPath(record.collection, record.rkey), record)
   }

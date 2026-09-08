@@ -7,7 +7,7 @@ import { RepoCommit, verifyCommit } from '../repo-commit.js'
 import {
   type CommitCtx,
   type Def,
-  type IndexKey,
+  type RecordPath,
   type RepoIndex,
   type SignedCommit,
   type SpaceRecord,
@@ -132,7 +132,7 @@ async function* verifyRecords(
   index: RepoIndex,
   expectValues: boolean,
 ): AsyncGenerator<VerifiedRecord> {
-  const paths = Object.keys(index) as IndexKey[]
+  const paths = Object.keys(index) as RecordPath[]
   let i = 0
 
   for await (const block of blocks) {

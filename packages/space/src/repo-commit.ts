@@ -11,7 +11,7 @@ import { LtHash } from './lthash.js'
 import {
   COMMIT_VERSION,
   type CommitCtx,
-  type RecordPath,
+  type RecordPathParts,
   type RepoIndex,
   type RepoOp,
   type SignedCommit,
@@ -26,7 +26,9 @@ export class RepoCommit {
     return new RepoCommit(new LtHash(state))
   }
 
-  static fromRecords(records: Iterable<RecordPath & { cid: Cid }>): RepoCommit {
+  static fromRecords(
+    records: Iterable<RecordPathParts & { cid: Cid }>,
+  ): RepoCommit {
     const commit = new RepoCommit()
     for (const { collection, rkey, cid } of records) {
       commit.add(collection, rkey, cid)

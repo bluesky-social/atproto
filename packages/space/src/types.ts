@@ -4,13 +4,13 @@ import type { NsidString, RecordKeyString } from '@atproto/syntax'
 
 export type SpaceRecord = LexMap
 
-export type RecordPath = {
+export type RecordPathParts = {
   collection: NsidString
   rkey: RecordKeyString
 }
 
 // A create has no `prev`, a delete no `cid`, an update both.
-export type RepoOp = RecordPath & {
+export type RepoOp = RecordPathParts & {
   cid: Cid | null
   prev: Cid | null
 }
@@ -23,12 +23,12 @@ export type CommitCtx = {
   rev: string
 }
 
-export type IndexKey<
+export type RecordPath<
   TCollection extends NsidString = NsidString,
   TRkey extends RecordKeyString = RecordKeyString,
 > = `${TCollection}/${TRkey}`
 
-export const isIndexKey = (value: unknown): value is IndexKey => {
+export const isRecordPath = (value: unknown): value is RecordPath => {
   if (typeof value !== 'string') return false
   const slash = value.indexOf('/')
   return (
@@ -61,7 +61,7 @@ const signedCommitSchema = z.object({
 })
 export type SignedCommit = z.infer<typeof signedCommitSchema>
 
-const repoIndex = z.record(z.custom<IndexKey>(isIndexKey), cidSchema)
+const repoIndex = z.record(z.custom<RecordPath>(isRecordPath), cidSchema)
 export type RepoIndex = z.infer<typeof repoIndex>
 
 export type Def<T> = {

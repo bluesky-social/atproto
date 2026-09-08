@@ -4,7 +4,7 @@ import { type Cid, parseCid } from '@atproto/lex-data'
 import {
   type CommitCtx,
   LTHASH_STATE_BYTES,
-  type RecordPath,
+  type RecordPathParts,
   RepoCommit,
   type RepoOp,
   type SignedCommit,
@@ -80,7 +80,7 @@ describe('RepoCommit', () => {
     })
 
     it('fromRecords matches incremental adds', () => {
-      const records: (RecordPath & { cid: Cid })[] = [
+      const records: (RecordPathParts & { cid: Cid })[] = [
         { collection: 'n.c.a', rkey: '1', cid: CID_A },
         { collection: 'n.c.b', rkey: '2', cid: CID_B },
       ]
