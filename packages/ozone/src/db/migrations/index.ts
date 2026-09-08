@@ -45,3 +45,4 @@ export * as _20260602T120000000Z from './20260602T120000000Z-add-report-activity
 export * as _20260617T210022765Z from './20260617T210022765Z-add-report-isautomated.js'
 export * as _20260720T000000000Z from './20260720T000000000Z-add-convo-subjects-to-stats-views.js'
 export * as _20260731T000000000Z from './20260731T000000000Z-add-recommended-policies-to-report-queue.js'
+export * as _20260828T013624457Z from './20260828T013624457Z-inbox-appeal-indices.js'
