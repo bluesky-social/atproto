@@ -1,5 +1,5 @@
 {
-  "extends": ["../../../tsconfig/node.tsconfig.json"],
+  "extends": ["../../../tsconfig/config.tsconfig.json"],
   "include": ["./*.js", "./*.ts"],
   "references": [
     {
@@ -8,9 +8,5 @@
   ],
   "compilerOptions": {
     "rootDir": ".",
-    "module": "Node18",
-    "noEmit": true,
-    "allowJs": true,
-    "checkJs": true,
   },
 }
