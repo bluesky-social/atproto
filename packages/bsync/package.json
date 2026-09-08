@@ -45,15 +45,15 @@
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/semantic-conventions": "^1.41.1",
     "http-terminator": "^3.2.0",
-    "kysely": "^0.29.2",
-    "pg": "^8.10.0",
+    "kysely": "^0.29.5",
+    "pg": "^8.23.0",
     "pino-http": "^11.0.0"
   },
   "devDependencies": {
     "@bufbuild/buf": "^1.72.0",
     "@bufbuild/protoc-gen-es": "^1.5.0",
     "@connectrpc/protoc-gen-connect-es": "^1.7.0",
-    "@types/pg": "^8.15.5",
+    "@types/pg": "^8.23.1",
     "get-port": "^5.1.1",
     "jest": "^30.5.1"
   },
