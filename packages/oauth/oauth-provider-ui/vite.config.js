@@ -35,6 +35,13 @@ const mockAccountPaths = () => ({
 })
 
 export default defineConfig({
+  // The built assets are served by the OAuth provider under a path prefix
+  // (`/@atproto/oauth-provider/~assets/`), not from the site root. Only the
+  // entry `<script>`/`<link>` URLs are rewritten to that prefix server-side;
+  // the inter-chunk imports and code-split CSS preloads are baked in at build
+  // time. A relative base makes those resolve against the served chunk's own
+  // URL (via `import.meta.url`) instead of the origin root, which would 404.
+  base: './',
   resolve: {
     alias: {
       '#': resolve(__dirname, './src'),

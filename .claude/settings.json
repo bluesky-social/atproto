@@ -63,7 +63,9 @@
       "Bash(whoami)",
       "Bash(whois:*)",
       "WebFetch",
-      "WebSearch"
+      "WebSearch",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_console_messages"
     ],
     "deny": [
       "Bash(sudo *)",
