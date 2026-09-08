@@ -17,7 +17,7 @@ const run = async () => {
   const network = await TestNetwork.create({
     pds: {
       port: 2583,
-      hostname: 'localhost',
+      hostname: process.env.DEV_ENV_PDS_HOSTNAME || 'localhost',
       enableDidDocWithSession: true,
     },
     bsky: {
