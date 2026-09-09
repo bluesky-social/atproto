@@ -55,7 +55,8 @@ export type SpaceOptions = {
   skey?: string
   type?: NsidString
   members?: Actor[]
-  policy?: com.atproto.simplespace.createSpace.$InputBody['policy']
+  readPolicy?: com.atproto.simplespace.createSpace.$InputBody['readPolicy']
+  writePolicy?: com.atproto.simplespace.createSpace.$InputBody['writePolicy']
   appAccess?: com.atproto.simplespace.createSpace.$InputBody['appAccess']
   /** Skip `simplespace.createSpace`, leaving the space ungoverned. */
   ungoverned?: boolean
@@ -131,7 +132,8 @@ export class SpaceClient {
         {
           type,
           skey,
-          policy: opts.policy ?? defs.memberListPolicy.build({}),
+          readPolicy: opts.readPolicy ?? defs.memberListPolicy.build({}),
+          writePolicy: opts.writePolicy ?? defs.memberListPolicy.build({}),
           appAccess: opts.appAccess ?? defs.open.build({}),
         },
         { headers: owner.headers },
@@ -144,15 +146,20 @@ export class SpaceClient {
     }
 
     for (const member of opts.members ?? []) {
-      await this.addMember(owner, uri, member)
+      await this.putMember(owner, uri, member)
     }
     return uri
   }
 
-  async addMember(owner: Actor, space: SpaceRefString, member: Actor) {
+  async putMember(
+    owner: Actor,
+    space: SpaceRefString,
+    member: Actor,
+    access: { read: boolean; write: boolean } = { read: true, write: true },
+  ) {
     return owner.client.call(
-      com.atproto.simplespace.addMember,
-      { space, did: member.did },
+      com.atproto.simplespace.putMember,
+      { space, did: member.did, ...access },
       { headers: owner.headers },
     )
   }
@@ -350,9 +357,7 @@ export class SpaceClient {
 
   /**
    * The writer set, as `listRepos` publishes it. A repo missing from it is a repo
-   * no syncer can discover, so it has to follow the same admission decision that
-   * mints credentials rather than the member list — which they diverge from under
-   * every policy but member-list.
+   * no syncer can discover.
    */
   async expectWriterSet(
     space: SpaceRefString,

@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.simplespace.putMember",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Add a member to a space's host-internal member list or replace their read and write access. Requires auth as the space owner.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "did", "read", "write"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref",
+              "description": "Reference to the space."
+            },
+            "did": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the member."
+            },
+            "read": {
+              "type": "boolean",
+              "description": "Whether the member may read under a member-list read policy."
+            },
+            "write": {
+              "type": "boolean",
+              "description": "Whether the member's writes are tracked under a member-list write policy."
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "NotSpaceOwner"
+        }
+      ]
+    }
+  }
+}

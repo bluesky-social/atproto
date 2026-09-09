@@ -484,7 +484,7 @@ describe('space sync', () => {
   describe('writer set', () => {
     it('records a co-located writer without resolving its public PDS endpoint', async () => {
       const space = await sc.createSpace(alice, {
-        policy: com.atproto.simplespace.defs.publicPolicy.build({}),
+        writePolicy: com.atproto.simplespace.defs.publicPolicy.build({}),
       })
       using resolveDid = jest
         .spyOn(network.pds.ctx.idResolver.did, 'resolve')
@@ -522,9 +522,9 @@ describe('space sync', () => {
       expect(entry.hash).toEqual(new LtHash(state!.setHash!).digest())
     })
 
-    it('records a writer admitted by policy public, who was never a member', async () => {
+    it('records a writer admitted by public write policy, who was never a member', async () => {
       const space = await sc.createSpace(alice, {
-        policy: com.atproto.simplespace.defs.publicPolicy.build({}),
+        writePolicy: com.atproto.simplespace.defs.publicPolicy.build({}),
       })
       await sc.write(bob, space, { text: 'from a non-member' })
 
@@ -532,7 +532,7 @@ describe('space sync', () => {
         () => sc.writerDids(space),
         (dids) => dids.includes(bob.did),
       )
-      await sc.expectWriterSet(space, bob, [bob])
+      await sc.expectWriterSet(space, alice, [bob])
     })
 
     it('records a writer into an allowList space, whose PDS presents no attestation', async () => {
@@ -615,12 +615,26 @@ describe('space sync', () => {
     })
 
     it('rejects one from a non-member', async () => {
-      // iss === repo, but the signer isn't admitted by the space's policy.
+      // iss === repo, but the signer isn't admitted by the write policy.
       const space = await sc.createSpace(alice, { members: [bob] })
       await expect(
         notify(carol, {
           space,
           repo: carol.did,
+          rev: TID.nextStr(),
+          hash: new LtHash().digest(),
+        }),
+      ).rejects.toThrow(/not authorized/)
+    })
+
+    it('rejects a member without write access', async () => {
+      const space = await sc.createSpace(alice)
+      await sc.putMember(alice, space, bob, { read: true, write: false })
+
+      await expect(
+        notify(bob, {
+          space,
+          repo: bob.did,
           rev: TID.nextStr(),
           hash: new LtHash().digest(),
         }),

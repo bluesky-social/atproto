@@ -11,12 +11,16 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ input, auth }) => {
-      const { space, policy, appAccess } = input.body
+      const { space, readPolicy, writePolicy, appAccess } = input.body
 
       assertSpaceScope(auth, space, { manage: 'update' })
       assertSpaceOwner(auth.credentials.did, space)
 
-      await ctx.simpleSpaceManager.updateSpace(space, { policy, appAccess })
+      await ctx.simpleSpaceManager.updateSpace(space, {
+        readPolicy,
+        writePolicy,
+        appAccess,
+      })
     },
   })
 }

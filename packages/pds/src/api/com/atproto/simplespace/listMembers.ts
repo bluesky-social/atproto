@@ -31,6 +31,8 @@ export default function (server: Server, ctx: AppContext) {
           cursor: members.at(-1)?.did,
           members: members.map((member) => ({
             did: member.did as l.DidString,
+            read: !!member.read,
+            write: !!member.write,
           })),
         },
       }

@@ -16,9 +16,18 @@
               "format": "space-ref",
               "description": "Reference to the space to update."
             },
-            "policy": {
+            "readPolicy": {
               "type": "union",
-              "description": "How the authority decides whether to authorize a requesting user. When supplied, replaces the current policy wholesale.",
+              "description": "How the authority decides whether to authorize a user to read the space. When supplied, replaces the current read policy wholesale.",
+              "refs": [
+                "com.atproto.simplespace.defs#publicPolicy",
+                "com.atproto.simplespace.defs#memberListPolicy",
+                "com.atproto.simplespace.defs#managingAppPolicy"
+              ]
+            },
+            "writePolicy": {
+              "type": "union",
+              "description": "How the authority decides whether to track and forward a user's write notifications. When supplied, replaces the current write policy wholesale.",
               "refs": [
                 "com.atproto.simplespace.defs#publicPolicy",
                 "com.atproto.simplespace.defs#memberListPolicy",
@@ -45,7 +54,7 @@
         },
         {
           "name": "UnsupportedPolicy",
-          "description": "The requested policy is not one the host implements."
+          "description": "A requested policy is not one the host implements."
         },
         {
           "name": "UnsupportedAppAccess",
