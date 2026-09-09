@@ -1,11 +1,4 @@
-import { encode } from '@atproto/lex-cbor'
-import {
-  LexError,
-  type LexErrorData,
-  type LexValue,
-  isPlainObject,
-  ui8Concat,
-} from '@atproto/lex-data'
+import { LexError, type LexErrorData, type LexValue } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
 import {
   type DidString,
@@ -25,7 +18,7 @@ import {
   isNsidString,
 } from '@atproto/lex-schema'
 import { LexServerError } from './errors.js'
-import { drainWebsocket } from './lib/drain-websocket.js'
+import { closeSubscription, sendSubscriptionMessage } from './lib/websocket.js'
 
 const XRPC_PATH_PREFIX = '/xrpc/'
 const XRPC_HEALTH_CHECK_PATH = '/xrpc/_health'
@@ -876,13 +869,13 @@ export class LexRouter {
 
               // @TODO add validation of output based on method.output.schema?
 
-              const data = encodeMessageFrame(method, result.value)
-
-              socket.send(data)
-
-              // Apply backpressure by waiting for the buffered data to drain
-              // before generating the next message
-              await drainWebsocket(socket, signal, this.options)
+              await sendSubscriptionMessage(
+                socket,
+                method,
+                result.value,
+                signal,
+                this.options,
+              )
             }
 
             if (socket.readyState === 1) {
@@ -899,15 +892,14 @@ export class LexRouter {
                   ? 1008 // Policy Violation for known LexErrors
                   : 1011 // Internal Error for unexpected errors
 
-              if (isLexError) {
-                socket.send(encodeErrorFrame(error.toJSON()))
-                socket.close(code, error.error)
-              } else {
-                const error = 'InternalServerError'
-                const message = 'An internal error occurred'
-                socket.send(encodeErrorFrame({ error, message }))
-                socket.close(code, error)
-              }
+              const data: LexErrorData = isLexError
+                ? error.toJSON()
+                : {
+                    error: 'InternalServerError',
+                    message: 'An internal error occurred',
+                  }
+
+              closeSubscription(socket, code, data)
             }
 
             if (onSocketError && !isAbortReason(signal, error)) {
@@ -1102,48 +1094,14 @@ async function getQueryInput<M extends Query>(
 }
 
 function onMessage(this: WebSocket, _event: unknown) {
-  const error = 'InvalidRequest'
-  const message = 'XRPC subscriptions do not accept messages'
-  this.send(encodeErrorFrame({ error, message }))
   // 1003 indicates that an endpoint is terminating the connection
   // because it has received a type of data it cannot accept (e.g., an
   // endpoint that understands only text data MAY send this if it
   // receives a binary message).
-  this.close(1003, error)
-}
-
-// Pre-encoded frame header for error frames
-const ERROR_FRAME_HEADER = /*#__PURE__*/ encode({ op: -1 })
-
-function encodeErrorFrame(errorData: LexErrorData): Uint8Array<ArrayBuffer> {
-  return ui8Concat([ERROR_FRAME_HEADER, encode(errorData)])
-}
-
-// Pre-encoded frame header for message frames with unknown type
-const UNKNOWN_MESSAGE_FRAME_HEADER = /*#__PURE__*/ encode({ op: 1 })
-
-function encodeMessageFrame(
-  method: Subscription,
-  value: LexValue,
-): Uint8Array<ArrayBuffer> {
-  if (isPlainObject(value) && typeof value.$type === 'string') {
-    const { $type, ...rest } = value
-    return ui8Concat([
-      encode({
-        op: 1,
-        t:
-          // If $type starts with `nsid#`, strip the NSID prefix
-          $type.charCodeAt(0) !== 0x23 && // '#'
-          $type.charCodeAt(method.nsid.length) === 0x23 && // '#'
-          $type.startsWith(method.nsid)
-            ? $type.slice(method.nsid.length)
-            : $type,
-      }),
-      encode(rest),
-    ])
-  }
-
-  return ui8Concat([UNKNOWN_MESSAGE_FRAME_HEADER, encode(value)])
+  closeSubscription(this, 1003, {
+    error: 'InvalidRequest',
+    message: 'XRPC subscriptions do not accept messages',
+  })
 }
 
 function isAbortReason(signal: AbortSignal, error: unknown): boolean {
