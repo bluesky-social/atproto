@@ -16,6 +16,7 @@ import { lexAppAccessToDb, lexPolicyToDb, toLexConfig } from './config.js'
 
 type LexPolicy = com.atproto.simplespace.createSpace.$InputBody['readPolicy']
 type LexAppAccess = com.atproto.simplespace.createSpace.$InputBody['appAccess']
+type Access = 'read' | 'write'
 
 export class SimpleSpaceManager {
   constructor(
@@ -63,18 +64,21 @@ export class SimpleSpaceManager {
     },
   ): Promise<void> {
     const { spaceDid } = toSpaceRef(space)
-    const read = input.readPolicy && lexPolicyToDb(input.readPolicy)
-    const write = input.writePolicy && lexPolicyToDb(input.writePolicy)
-    const config: Partial<SpaceConfig> = {
-      ...(read && {
-        readPolicy: read.policy,
-        readManagingApp: read.managingApp,
-      }),
-      ...(write && {
-        writePolicy: write.policy,
-        writeManagingApp: write.managingApp,
-      }),
-      ...(input.appAccess && lexAppAccessToDb(input.appAccess)),
+    const config: Partial<SpaceConfig> = {}
+    if (input.readPolicy) {
+      const read = lexPolicyToDb(input.readPolicy)
+      config.readPolicy = read.policy
+      config.readManagingApp = read.managingApp
+    }
+    if (input.writePolicy) {
+      const write = lexPolicyToDb(input.writePolicy)
+      config.writePolicy = write.policy
+      config.writeManagingApp = write.managingApp
+    }
+    if (input.appAccess) {
+      const appAccess = lexAppAccessToDb(input.appAccess)
+      config.appAccessType = appAccess.appAccessType
+      config.appAllowed = appAccess.appAllowed
     }
     await this.actorStore.transact(spaceDid, async (actorTxn) => {
       await actorTxn.space.getActiveSpaceConfig(space)
@@ -112,7 +116,13 @@ export class SimpleSpaceManager {
       }
     }
 
-    if (!(await this.authorizeUser({ ...opts, access: 'read' }))) {
+    const authorized = await this.authorizeUser({
+      config,
+      userDid: opts.userDid,
+      access: 'read',
+      clientId,
+    })
+    if (!authorized) {
       throw new InvalidRequestError(
         'User not authorized for this space',
         'UserNotAuthorized',
@@ -123,7 +133,7 @@ export class SimpleSpaceManager {
   async authorizeUser(opts: {
     config: SimplespaceConfig
     userDid: string
-    access: 'read' | 'write'
+    access: Access
     clientId?: string
   }): Promise<boolean> {
     const { config, userDid, access } = opts
@@ -133,24 +143,26 @@ export class SimpleSpaceManager {
     // able to lock itself out.
     if (userDid === spaceDid) return true
 
-    const policy = access === 'read' ? config.readPolicy : config.writePolicy
-    switch (policy) {
+    const policy = getPolicy(config, access)
+    switch (policy.type) {
       case 'public':
         return true
       case 'member-list': {
         const member = await this.actorStore.read(spaceDid, (store) =>
           store.space.getMember(config.uri, userDid),
         )
-        return !!member?.[access]
+        if (!member) return false
+        if (access === 'read') return !!member.read
+        return !!member.write
       }
       case 'managing-app':
         return this.checkManagingApp({
-          ...opts,
+          config,
           spaceDid,
-          managingApp:
-            access === 'read'
-              ? config.readManagingApp
-              : config.writeManagingApp,
+          userDid,
+          access,
+          managingApp: policy.managingApp,
+          clientId: opts.clientId,
         })
       default:
         return false
@@ -214,7 +226,7 @@ export class SimpleSpaceManager {
     config: SimplespaceConfig
     spaceDid: DidString
     userDid: string
-    access: 'read' | 'write'
+    access: Access
     managingApp: string | null
     clientId?: string
   }): Promise<boolean> {
@@ -258,5 +270,18 @@ export class SimpleSpaceManager {
       )
       return false
     }
+  }
+}
+
+function getPolicy(config: SimplespaceConfig, access: Access) {
+  if (access === 'read') {
+    return {
+      type: config.readPolicy,
+      managingApp: config.readManagingApp,
+    }
+  }
+  return {
+    type: config.writePolicy,
+    managingApp: config.writeManagingApp,
   }
 }

@@ -3,9 +3,9 @@
 export interface SimplespaceConfig {
   uri: string
   readPolicy: string // 'public' | 'member-list' | 'managing-app'
-  readManagingApp: string | null
+  readManagingApp: string | null // set iff readPolicy is 'managing-app'
   writePolicy: string // 'public' | 'member-list' | 'managing-app'
-  writeManagingApp: string | null
+  writeManagingApp: string | null // set iff writePolicy is 'managing-app'
   appAccessType: string // 'open' | 'allowList'
   appAllowed: string // JSON-encoded string[] of allowed client_ids
 }

@@ -21,9 +21,13 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .alterTable('simplespace_config')
     .addColumn('writeManagingApp', 'varchar')
     .execute()
-  await sql`update simplespace_config set readPolicy = policy, readManagingApp = managingApp, writePolicy = policy, writeManagingApp = managingApp`.execute(
-    db,
-  )
+  await sql`
+    update simplespace_config
+    set readPolicy = policy,
+        readManagingApp = managingApp,
+        writePolicy = policy,
+        writeManagingApp = managingApp
+  `.execute(db)
   await db.schema
     .alterTable('simplespace_config')
     .dropColumn('policy')
@@ -57,9 +61,11 @@ export async function down(db: Kysely<unknown>): Promise<void> {
     .alterTable('simplespace_config')
     .addColumn('managingApp', 'varchar')
     .execute()
-  await sql`update simplespace_config set policy = readPolicy, managingApp = readManagingApp`.execute(
-    db,
-  )
+  await sql`
+    update simplespace_config
+    set policy = readPolicy,
+        managingApp = readManagingApp
+  `.execute(db)
   await db.schema
     .alterTable('simplespace_config')
     .dropColumn('readPolicy')
