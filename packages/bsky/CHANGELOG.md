@@ -1,5 +1,24 @@
 # @atproto/bsky
 
+## 0.0.279
+
+### Patch Changes
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump the dev-dependencies group across 1 directory with 30 updates
+
+- Updated dependencies [[`0287dce`](https://github.com/bluesky-social/atproto/commit/0287dcece76c2c2453406cb3b51591ce0f983a98), [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto-labs/opentelemetry-node@0.2.1
+  - @atproto/api@0.20.44
+  - @atproto/crypto@0.5.5
+  - @atproto/did@0.5.5
+  - @atproto/identity@0.5.12
+  - @atproto/repo@0.10.14
+  - @atproto/sync@0.4.9
+  - @atproto/xrpc-server@0.13.1
+  - @atproto/common@0.8.3
+  - @atproto/lex@0.3.10
+  - @atproto-labs/xrpc-utils@0.1.22
+
 ## 0.0.278
 
 ### Patch Changes
