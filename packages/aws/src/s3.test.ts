@@ -233,7 +233,7 @@ describe(S3BlobStore, () => {
       using _handlerMock = vi
         .spyOn(server, 'handler')
         .mockImplementation((req, res) => {
-          req.resume()
+          // req.resume()
           res.writeHead(200, { 'content-length': '6' })
           res.write('foo')
           sleep(2_000).then(() => res.end('bar')) // Idle > requestTimeoutMs

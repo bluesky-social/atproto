@@ -23,15 +23,12 @@ export type ImageInfo = Dimensions & {
 export type Dimensions = { height: number; width: number }
 
 export const formatsToMimes = new Map<keyof FormatEnum, ImageMime>([
-  ['jpg', 'image/jpeg'],
   ['jpeg', 'image/jpeg'],
   ['png', 'image/png'],
   ['gif', 'image/gif'],
   ['svg', 'image/svg+xml'],
-  ['tif', 'image/tiff'],
   ['tiff', 'image/tiff'],
   ['webp', 'image/webp'],
-  ['avif', 'image/avif'],
   ['heif', 'image/heif'],
   ['jp2', 'image/jp2'],
   ['jxl', 'image/jxl'],
