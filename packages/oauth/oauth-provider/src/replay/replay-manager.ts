@@ -42,7 +42,7 @@ export class ReplayManager {
   }
 
   async uniqueSpaceToken(
-    kind: string,
+    kind: 'attestation' | 'delegation',
     issuer: string,
     jti: string,
     exp?: number,

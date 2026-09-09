@@ -29,6 +29,7 @@
     }
   },
   "dependencies": {
+    "@atproto/car": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^",

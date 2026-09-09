@@ -1,6 +1,7 @@
 import type { LexiconPermissionSet, LexiconSpace } from '@atproto/lex-document'
 import { type LexResolver, LexResolverError } from '@atproto/lex-resolver'
-import { IncludeScope, type Nsid, SpacePermission } from '@atproto/oauth-scopes'
+import { IncludeScope, SpacePermission } from '@atproto/oauth-scopes'
+import type { DidString, NsidString } from '@atproto/syntax'
 import { LexiconGetter } from './lexicon-getter.js'
 import type { LexiconStore } from './lexicon-store.js'
 
@@ -20,7 +21,7 @@ export class LexiconManager {
 
   public async getSpacesFromScope(
     scope?: string,
-  ): Promise<Map<string, LexiconSpace>> {
+  ): Promise<Map<NsidString, LexiconSpace>> {
     const { includeScopes, otherScopes } = parseScope(scope)
 
     const concreteScopes = includeScopes.length
@@ -42,7 +43,7 @@ export class LexiconManager {
    */
   public async buildTokenScope(
     scope: string,
-    userDid: string,
+    userDid: DidString,
   ): Promise<string> {
     const { includeScopes, otherScopes } = parseScope(scope)
 
@@ -74,7 +75,7 @@ export class LexiconManager {
   protected async expandSpaceCollections(
     scopes: readonly string[],
   ): Promise<string[]> {
-    const nsids = new Set<Nsid>()
+    const nsids = new Set<NsidString>()
     for (const value of scopes) {
       const parsed = SpacePermission.fromString(value)
       if (parsed && parsed.type !== '*' && !parsed.hasCollections) {
@@ -103,20 +104,22 @@ export class LexiconManager {
     return this.getPermissionSets(nsids)
   }
 
-  protected async getPermissionSets(nsids: Set<Nsid>) {
+  protected async getPermissionSets(nsids: Set<NsidString>) {
     return new Map<string, LexiconPermissionSet>(
       await Promise.all(Array.from(nsids, this.getPermissionSetEntry, this)),
     )
   }
 
   protected async getPermissionSetEntry(
-    nsid: Nsid,
-  ): Promise<[nsid: Nsid, permissionSet: LexiconPermissionSet]> {
+    nsid: NsidString,
+  ): Promise<[nsid: NsidString, permissionSet: LexiconPermissionSet]> {
     const permissionSet = await this.getPermissionSet(nsid)
     return [nsid, permissionSet]
   }
 
-  protected async getPermissionSet(nsid: Nsid): Promise<LexiconPermissionSet> {
+  protected async getPermissionSet(
+    nsid: NsidString,
+  ): Promise<LexiconPermissionSet> {
     const { lexicon } = await this.lexiconGetter.get(nsid)
 
     if (!lexicon) {
@@ -131,20 +134,22 @@ export class LexiconManager {
     return lexicon.defs.main
   }
 
-  protected async getSpaces(nsids: Set<Nsid>) {
-    return new Map<string, LexiconSpace>(
+  protected async getSpaces(
+    nsids: Iterable<NsidString>,
+  ): Promise<Map<NsidString, LexiconSpace>> {
+    return new Map<NsidString, LexiconSpace>(
       await Promise.all(Array.from(nsids, this.getSpaceEntry, this)),
     )
   }
 
   protected async getSpaceEntry(
-    nsid: Nsid,
-  ): Promise<[nsid: Nsid, space: LexiconSpace]> {
+    nsid: NsidString,
+  ): Promise<[nsid: NsidString, space: LexiconSpace]> {
     const space = await this.getSpace(nsid)
     return [nsid, space]
   }
 
-  protected async getSpace(nsid: Nsid): Promise<LexiconSpace> {
+  protected async getSpace(nsid: NsidString): Promise<LexiconSpace> {
     const { lexicon } = await this.lexiconGetter.get(nsid)
 
     if (!lexicon) {
@@ -160,16 +165,14 @@ export class LexiconManager {
   }
 }
 
-function resolveSpaceSelfAuthority(value: string, userDid: string): string {
+function resolveSpaceSelfAuthority(value: string, userDid: DidString): string {
   const parsed = SpacePermission.fromString(value)
   if (!parsed?.isSelfAuthority) return value
-  return parsed
-    .withResolvedAuthority(userDid as `did:${string}:${string}`)
-    .toString()
+  return parsed.withResolvedAuthority(userDid).toString()
 }
 
-function extractSpaceTypeNsids(scopes: readonly string[]): Set<Nsid> {
-  const nsids = new Set<Nsid>()
+function extractSpaceTypeNsids(scopes: readonly string[]): Set<NsidString> {
+  const nsids = new Set<NsidString>()
   for (const value of scopes) {
     const parsed = SpacePermission.fromString(value)
     if (!parsed) continue
@@ -200,11 +203,11 @@ function parseScope(scope?: string) {
   }
 }
 
-function extractNsids(includeScopes: IncludeScope[]): Set<Nsid> {
+function extractNsids(includeScopes: IncludeScope[]): Set<NsidString> {
   return new Set(Array.from(includeScopes, extractNsid))
 }
 
-function extractNsid(nsidScope: IncludeScope): Nsid {
+function extractNsid(nsidScope: IncludeScope): NsidString {
   return nsidScope.nsid
 }
 

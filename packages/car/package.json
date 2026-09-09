@@ -1,0 +1,47 @@
+{
+  "name": "@atproto/car",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Utilities for reading and writing AT Protocol CAR files",
+  "keywords": [
+    "atproto",
+    "lexicon",
+    "utilities"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/car"
+  },
+  "files": [
+    "./dist",
+    "./README.md",
+    "./CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@atproto/lex-cbor": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
+    "tslib": "^2.8.1",
+    "varint": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/varint": "^6.0.3",
+    "vitest": "^4.1.10"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json",
+    "test": "vitest run"
+  }
+}

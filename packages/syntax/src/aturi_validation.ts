@@ -1,7 +1,6 @@
 import { isAtIdentifierString } from './at-identifier.js'
 import type { AtIdentifierString } from './at-identifier.js'
-import type { DidString } from './did.js'
-import { isValidDid } from './did.js'
+import { type DidString, isValidDid } from './did.js'
 import type { Result } from './lib/result.js'
 import { failure, success } from './lib/result.js'
 import type { NsidString } from './nsid.js'

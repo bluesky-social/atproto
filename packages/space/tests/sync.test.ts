@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest'
-import { encodeCarBlock, encodeCarHeader, readCarStream } from '@atproto/common'
+import { encodeCarBlock, encodeCarHeader, readCarStream } from '@atproto/car'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { encode } from '@atproto/lex-cbor'
 import { type Cid, cidForCbor } from '@atproto/lex-data'
@@ -57,15 +57,15 @@ describe('space sync', () => {
 
   it('declares the commit and index as roots, in order', async () => {
     const car = await carFor(records)
-    const { roots, blocks } = await readCarStream([car])
-    expect(roots).toHaveLength(2)
+    await using carReader = await readCarStream([car])
+    expect(carReader.roots).toHaveLength(2)
 
     const seen: Cid[] = []
-    for await (const block of blocks) seen.push(block.cid)
+    for await (const block of carReader.blocks) seen.push(block.cid)
     // Two roots, then one block per record.
     expect(seen).toHaveLength(2 + records.length)
-    expect(seen[0].equals(roots[0])).toBe(true)
-    expect(seen[1].equals(roots[1])).toBe(true)
+    expect(seen[0].equals(carReader.roots[0])).toBe(true)
+    expect(seen[1].equals(carReader.roots[1])).toBe(true)
   })
 
   it('round-trips through verification', async () => {
@@ -125,7 +125,9 @@ describe('space sync', () => {
     const cids: Cid[] = []
     for await (const block of blocks) cids.push(block.cid)
     const recordCids = cids.slice(2).map((c) => c.toString())
-    const indexCids = Object.values(index).map((c) => c.toString())
+    const indexCids = Object.values(index)
+      .filter((c) => c != null)
+      .map((c) => c.toString())
     expect(recordCids).toEqual(indexCids)
   })
 
@@ -202,22 +204,22 @@ describe('space sync', () => {
         cidForCbor(indexBytes),
       ])
 
-      const byPath = new Map(
+      const byPath = new Map<`${string}/${string}`, (typeof records)[number]>(
         records.map((r) => [`${r.collection}/${r.rkey}`, r]),
       )
-      const parts = [
+      const parts: Uint8Array[] = [
         encodeCarHeader([commitCid, indexCid]),
         encodeCarBlock({ cid: commitCid, bytes: commitBytes }),
         encodeCarBlock({ cid: indexCid, bytes: indexBytes }),
-        ...Object.keys(index).map((path, i) => {
-          const record = byPath.get(path)!
+        ...Object.keys(index).flatMap((path, i) => {
+          const record = byPath.get(path as `${string}/${string}`)!
           // Swap in bytes that don't hash to the advertised cid.
           const bytes = i === 0 ? encode({ text: 'tampered' }) : record.bytes
           return encodeCarBlock({ cid: record.cid, bytes })
         }),
       ]
 
-      const { records: stream } = await verifyRepoCar([Buffer.concat(parts)], {
+      const { records: stream } = await verifyRepoCar(parts, {
         space: SPACE,
         author: AUTHOR,
         didKey: keypair.did(),
@@ -240,9 +242,10 @@ describe('space sync', () => {
       for (const block of all.slice(0, -1)) kept.push(encodeCarBlock(block))
 
       const { roots } = await readCarStream([full])
-      const truncated = Buffer.concat([encodeCarHeader(roots), ...kept])
 
-      const { records: stream } = await verifyRepoCar([truncated], {
+      const parts = [encodeCarHeader(roots), ...kept]
+
+      const { records: stream } = await verifyRepoCar(parts, {
         space: SPACE,
         author: AUTHOR,
         didKey: keypair.did(),

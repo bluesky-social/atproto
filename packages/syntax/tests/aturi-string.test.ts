@@ -360,7 +360,6 @@ describe('custom cases', () => {
       expect(uri.spaceDid).toBeUndefined()
       expect(uri.spaceType).toBeUndefined()
       expect(uri.skey).toBeUndefined()
-      expect(uri.spaceRef()).toBeUndefined()
     })
 
     test('a handle authority has no space parts', () => {
@@ -368,23 +367,19 @@ describe('custom cases', () => {
         'at://user.bsky.social/space/com.example.group/default',
       )
       expect(uri.spaceDid).toBeUndefined()
-      expect(uri.spaceRef()).toBeUndefined()
     })
 
     test('a non-nsid space type has no space parts', () => {
       const uri = new AtUri('at://did:plc:asdf123/space/short/default')
       expect(uri.spaceType).toBeUndefined()
-      expect(uri.spaceRef()).toBeUndefined()
     })
   })
 
-  describe('spaceRef', () => {
+  describe(SpaceRef, () => {
     test('one check yields guaranteed parts', () => {
-      const ref = new AtUri(
+      const ref = SpaceRef.parse(
         'at://did:plc:asdf123/space/com.example.group/default',
-      ).spaceRef()
-      if (!ref) throw new Error('expected a space ref')
-
+      )
       expect(ref).toBeInstanceOf(SpaceRef)
       expect(ref.spaceDid).toBe('did:plc:asdf123')
       expect(ref.spaceType).toBe('com.example.group')
@@ -394,14 +389,13 @@ describe('custom cases', () => {
       )
     })
 
-    // A record uri belongs to a space, so it names one — the tail is dropped.
-    test('a record uri names the space it belongs to', () => {
-      const ref = new AtUri(
-        'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
-      ).spaceRef()
-      expect(ref?.toString()).toBe(
-        'at://did:plc:asdf123/space/com.example.group/default',
-      )
+    // A record uri belongs to a space, so it names one - the tail is dropped.
+    test('SpaceRef.for turns a record uri into the space it belongs to', () => {
+      expect(
+        SpaceRef.for(
+          'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
+        ).toString(),
+      ).toBe('at://did:plc:asdf123/space/com.example.group/default')
     })
 
     test('SpaceRef.parse accepts only the three-part form', () => {
@@ -413,7 +407,7 @@ describe('custom cases', () => {
       // a record uri is not itself a space ref
       expect(() =>
         SpaceRef.parse(
-          'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc',
+          'at://did:plc:asdf123/space/com.example.group/default/did:plc:user1/com.atproto.feed.post/abc123',
         ),
       ).toThrow(InvalidAtUriError)
       expect(() =>

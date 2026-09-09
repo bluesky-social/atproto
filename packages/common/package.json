@@ -32,8 +32,7 @@
     "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-data": "workspace:^",
     "multiformats": "^13.0.0",
-    "pino": "^10.3.1",
-    "varint": "^6.0.0"
+    "pino": "^10.3.1"
   },
   "devDependencies": {
     "uint8arrays": "^5.0.0",

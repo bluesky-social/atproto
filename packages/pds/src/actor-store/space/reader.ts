@@ -1,5 +1,6 @@
 import type { LexMap } from '@atproto/lex-data'
 import { cborToLexRecord } from '@atproto/repo'
+import type { AtUriString, NsidString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type {
   ActorDb,
@@ -67,7 +68,7 @@ export class SpaceReader {
   }
 
   async getRecord(
-    uri: string,
+    uri: AtUriString,
     cid?: string | null,
   ): Promise<(Omit<SpaceRecord, 'value'> & { value: LexMap }) | null> {
     let builder = this.db.db
@@ -82,7 +83,7 @@ export class SpaceReader {
     return { ...row, value: cborToLexRecord(row.value) }
   }
 
-  async hasRecord(uri: string): Promise<boolean> {
+  async hasRecord(uri: AtUriString): Promise<boolean> {
     const row = await this.db.db
       .selectFrom('space_record')
       .select('uri')
@@ -97,7 +98,7 @@ export class SpaceReader {
       limit: number
       cursor?: string
       reverse?: boolean
-      collection?: string
+      collection?: NsidString
       excludeValues?: boolean
     },
   ): Promise<(Omit<SpaceRecord, 'value'> & { value?: LexMap })[]> {
@@ -113,7 +114,7 @@ export class SpaceReader {
       builder = builder.where('collection', '=', collection)
     }
     if (cursor) {
-      builder = builder.where('uri', reverse ? '>' : '<', cursor)
+      builder = builder.where('uri', reverse ? '>' : '<', cursor as any)
     }
     const rows = await builder.execute()
     return rows.map((row) => ({
@@ -126,7 +127,7 @@ export class SpaceReader {
     space: string,
     opts: { excludeValues?: boolean } = {},
   ): AsyncGenerator<Omit<SpaceRecord, 'value'> & { value?: Uint8Array }> {
-    let cursor: string | undefined
+    let cursor: AtUriString | undefined
     while (true) {
       let builder = this.db.db
         .selectFrom('space_record')
