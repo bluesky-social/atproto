@@ -70,7 +70,8 @@ describe('simplespace', () => {
           {
             type: TEST_SPACE_TYPE,
             skey: space.split('/').pop()!,
-            policy: defs.memberListPolicy.build({}),
+            readPolicy: defs.memberListPolicy.build({}),
+            writePolicy: defs.memberListPolicy.build({}),
             appAccess: defs.open.build({}),
           },
           { headers: alice.headers },
@@ -85,7 +86,8 @@ describe('simplespace', () => {
           {
             type: TEST_SPACE_TYPE,
             skey: 'not a valid rkey',
-            policy: defs.memberListPolicy.build({}),
+            readPolicy: defs.memberListPolicy.build({}),
+            writePolicy: defs.memberListPolicy.build({}),
             appAccess: defs.open.build({}),
           },
           { headers: alice.headers },
@@ -110,19 +112,22 @@ describe('simplespace', () => {
           { headers: alice.headers },
         ),
       ).rejects.toMatchObject({ error: 'SpaceNotFound' })
-      await expect(sc.addMember(alice, space, bob)).rejects.toMatchObject({
+      await expect(sc.putMember(alice, space, bob)).rejects.toMatchObject({
         error: 'SpaceNotFound',
       })
 
       await sc.createSpace(alice, { skey })
-      await sc.addMember(alice, space, bob)
+      await sc.putMember(alice, space, bob)
 
       const got = await alice.client.call(
         com.atproto.simplespace.getSpace,
         { space },
         { headers: alice.headers },
       )
-      expect(got.policy.$type).toBe(
+      expect(got.readPolicy.$type).toBe(
+        'com.atproto.simplespace.defs#memberListPolicy',
+      )
+      expect(got.writePolicy.$type).toBe(
         'com.atproto.simplespace.defs#memberListPolicy',
       )
 
@@ -139,7 +144,7 @@ describe('simplespace', () => {
   describe('members', () => {
     it('adds and removes members, and the owner is not one of them', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
-      await sc.addMember(alice, space, bob)
+      await sc.putMember(alice, space, bob, { read: true, write: false })
 
       const members = await alice.client.call(
         com.atproto.simplespace.listMembers,
@@ -152,6 +157,10 @@ describe('simplespace', () => {
       expect(dids).not.toContain(alice.did)
       expect(dids).toContain(dan.did)
       expect(dids).toContain(bob.did)
+      expect(members.members.find((m) => m.did === bob.did)).toMatchObject({
+        read: true,
+        write: false,
+      })
 
       await sc.removeMember(alice, space, bob)
       const after = await alice.client.call(
@@ -166,8 +175,8 @@ describe('simplespace', () => {
       const space = await sc.createSpace(alice, { members: [dan] })
       await expect(
         dan.client.call(
-          com.atproto.simplespace.addMember,
-          { space, did: carol.did },
+          com.atproto.simplespace.putMember,
+          { space, did: carol.did, read: true, write: true },
           { headers: dan.headers },
         ),
       ).rejects.toMatchObject({ error: 'NotSpaceOwner' })
@@ -202,10 +211,10 @@ describe('simplespace', () => {
       ).rejects.toMatchObject({ error: 'NotSpaceOwner' })
     })
 
-    it('adding a member twice is idempotent', async () => {
+    it('putMember replaces both access values', async () => {
       const space = await sc.createSpace(alice)
-      await sc.addMember(alice, space, bob)
-      await sc.addMember(alice, space, bob)
+      await sc.putMember(alice, space, bob, { read: true, write: false })
+      await sc.putMember(alice, space, bob, { read: false, write: true })
 
       const members = await alice.client.call(
         com.atproto.simplespace.listMembers,
@@ -213,15 +222,21 @@ describe('simplespace', () => {
         { headers: alice.headers },
       )
       expect(members.members.filter((m) => m.did === bob.did)).toHaveLength(1)
+      expect(members.members[0]).toMatchObject({
+        did: bob.did,
+        read: false,
+        write: true,
+      })
     })
   })
 
   describe('config', () => {
     it('persists what createSpace was given', async () => {
       const space = await sc.createSpace(alice, {
-        policy: defs.managingAppPolicy.build({
+        readPolicy: defs.managingAppPolicy.build({
           managingApp: 'did:web:example.com#forum',
         }),
+        writePolicy: defs.publicPolicy.build({}),
         appAccess: defs.allowList.build({ allowed: ['app:one', 'app:two'] }),
       })
 
@@ -231,9 +246,12 @@ describe('simplespace', () => {
         { headers: alice.headers },
       )
       expect(got.uri).toBe(space)
-      expect(got.policy).toEqual({
+      expect(got.readPolicy).toEqual({
         $type: 'com.atproto.simplespace.defs#managingAppPolicy',
         managingApp: 'did:web:example.com#forum',
+      })
+      expect(got.writePolicy).toEqual({
+        $type: 'com.atproto.simplespace.defs#publicPolicy',
       })
       expect(got.appAccess).toMatchObject({
         $type: 'com.atproto.simplespace.defs#allowList',
@@ -248,7 +266,10 @@ describe('simplespace', () => {
         { space },
         { headers: alice.headers },
       )
-      expect(got.policy).toEqual({
+      expect(got.readPolicy).toEqual({
+        $type: 'com.atproto.simplespace.defs#memberListPolicy',
+      })
+      expect(got.writePolicy).toEqual({
         $type: 'com.atproto.simplespace.defs#memberListPolicy',
       })
       expect(got.appAccess).toMatchObject({
@@ -256,12 +277,22 @@ describe('simplespace', () => {
       })
     })
 
-    it('patches policy and appAccess independently', async () => {
+    it('patches readPolicy, writePolicy, and appAccess independently', async () => {
       const space = await sc.createSpace(alice)
 
       await alice.client.call(
         com.atproto.simplespace.updateSpace,
-        { space, policy: defs.publicPolicy.build({}) },
+        { space, readPolicy: defs.publicPolicy.build({}) },
+        { headers: alice.headers },
+      )
+      await alice.client.call(
+        com.atproto.simplespace.updateSpace,
+        {
+          space,
+          writePolicy: defs.managingAppPolicy.build({
+            managingApp: 'did:web:example.com#forum',
+          }),
+        },
         { headers: alice.headers },
       )
       await alice.client.call(
@@ -276,7 +307,13 @@ describe('simplespace', () => {
         { headers: alice.headers },
       )
       // The second update left the first alone.
-      expect(got.policy.$type).toBe('com.atproto.simplespace.defs#publicPolicy')
+      expect(got.readPolicy.$type).toBe(
+        'com.atproto.simplespace.defs#publicPolicy',
+      )
+      expect(got.writePolicy).toEqual({
+        $type: 'com.atproto.simplespace.defs#managingAppPolicy',
+        managingApp: 'did:web:example.com#forum',
+      })
       expect(got.appAccess).toMatchObject({
         $type: 'com.atproto.simplespace.defs#allowList',
         allowed: ['app:x'],
@@ -285,13 +322,13 @@ describe('simplespace', () => {
 
     it('drops managingApp by switching policy', async () => {
       const space = await sc.createSpace(alice, {
-        policy: defs.managingAppPolicy.build({
+        readPolicy: defs.managingAppPolicy.build({
           managingApp: 'did:web:example.com#forum',
         }),
       })
       await alice.client.call(
         com.atproto.simplespace.updateSpace,
-        { space, policy: defs.memberListPolicy.build({}) },
+        { space, readPolicy: defs.memberListPolicy.build({}) },
         { headers: alice.headers },
       )
       const got = await alice.client.call(
@@ -300,7 +337,7 @@ describe('simplespace', () => {
         { headers: alice.headers },
       )
       // No stale managingApp left hanging off the new policy.
-      expect(got.policy).toEqual({
+      expect(got.readPolicy).toEqual({
         $type: 'com.atproto.simplespace.defs#memberListPolicy',
       })
     })
@@ -310,7 +347,7 @@ describe('simplespace', () => {
       await expect(
         alice.client.call(
           com.atproto.simplespace.updateSpace,
-          { space, policy: defs.publicPolicy.build({}) },
+          { space, readPolicy: defs.publicPolicy.build({}) },
           { headers: bob.headers },
         ),
       ).rejects.toThrow()
@@ -352,7 +389,7 @@ describe('simplespace', () => {
       await expect(
         alice.client.call(
           com.atproto.simplespace.updateSpace,
-          { space, policy: { $type: 'com.example.whatever' } as never },
+          { space, writePolicy: { $type: 'com.example.whatever' } as never },
           { headers: alice.headers },
         ),
       ).rejects.toMatchObject({ error: 'UnsupportedPolicy' })
@@ -365,7 +402,7 @@ describe('simplespace', () => {
           com.atproto.simplespace.updateSpace,
           {
             space,
-            policy: defs.managingAppPolicy.build({
+            readPolicy: defs.managingAppPolicy.build({
               managingApp: 'not-a-did-at-all',
             }),
           },
@@ -382,7 +419,7 @@ describe('simplespace', () => {
         .clientFor(alice.pds)
         .call(com.atproto.simplespace.getSpace, { space })
       expect(got.uri).toBe(space)
-      expect(got.policy.$type).toBe(
+      expect(got.readPolicy.$type).toBe(
         'com.atproto.simplespace.defs#memberListPolicy',
       )
     })
@@ -451,21 +488,16 @@ describe('simplespace', () => {
     })
   })
 
-  /**
-   * Which policy admits whom. This is the decision `getSpaceCredential` makes,
-   * and the same one `notifyWrite` makes when it records a writer — they have to
-   * agree, or the writer set diverges from who can read.
-   */
   describe('credential mint gates', () => {
-    it('mints for a non-member when the policy is public', async () => {
+    it('mints for a non-member when the read policy is public', async () => {
       const space = await sc.createSpace(alice, {
-        policy: defs.publicPolicy.build({}),
+        readPolicy: defs.publicPolicy.build({}),
       })
       const cred = await sc.credentialFor(carol, space)
       expect(cred.credential).toBeDefined()
     })
 
-    it('refuses a non-member under member-list policy', async () => {
+    it('refuses a non-member under member-list read policy', async () => {
       const space = await sc.createSpace(alice)
       const token = await sc.delegationTokenFor(carol, space)
       await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
@@ -473,11 +505,21 @@ describe('simplespace', () => {
       })
     })
 
-    it('always admits the authority, whatever the policy', async () => {
+    it('refuses a member without read access', async () => {
+      const space = await sc.createSpace(alice)
+      await sc.putMember(alice, space, carol, { read: false, write: true })
+
+      const token = await sc.delegationTokenFor(carol, space)
+      await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
+        error: 'UserNotAuthorized',
+      })
+    })
+
+    it('always admits the authority, whatever the read policy', async () => {
       // The authority is the only party who can reconfigure the space, so it must
       // not be able to lock itself out.
       const space = await sc.createSpace(alice, {
-        policy: defs.managingAppPolicy.build({
+        readPolicy: defs.managingAppPolicy.build({
           managingApp: 'did:web:unreachable.invalid#forum',
         }),
       })
@@ -486,10 +528,10 @@ describe('simplespace', () => {
     })
 
     it('refuses when appAccess is an allowList and no attestation is presented', async () => {
-      // policy public so the user passes; appAccess allowList wants an attested
+      // readPolicy public so the user passes; appAccess allowList wants an attested
       // client_id, which a plain exchange doesn't supply.
       const space = await sc.createSpace(alice, {
-        policy: defs.publicPolicy.build({}),
+        readPolicy: defs.publicPolicy.build({}),
         appAccess: defs.allowList.build({
           allowed: ['https://app.example.com/client-metadata.json'],
         }),
@@ -512,7 +554,7 @@ describe('simplespace', () => {
     describe('client attestation', () => {
       const spaceFor = (app: MockClientApp) =>
         sc.createSpace(alice, {
-          policy: defs.publicPolicy.build({}),
+          readPolicy: defs.publicPolicy.build({}),
           appAccess: defs.allowList.build({ allowed: [app.clientId] }),
         })
 
@@ -603,7 +645,10 @@ describe('simplespace', () => {
       // what happens when there isn't one.
       const spaceWith = async (app: MockService | string) =>
         sc.createSpace(alice, {
-          policy: defs.managingAppPolicy.build({
+          readPolicy: defs.managingAppPolicy.build({
+            managingApp: typeof app === 'string' ? app : app.serviceRef,
+          }),
+          writePolicy: defs.managingAppPolicy.build({
             managingApp: typeof app === 'string' ? app : app.serviceRef,
           }),
         })
@@ -621,7 +666,11 @@ describe('simplespace', () => {
         // It was actually consulted, and told who was asking.
         const asked = app.callsTo('com.atproto.simplespace.checkUserAccess')
         expect(asked).toHaveLength(1)
-        expect(asked[0].body).toMatchObject({ space, user: carol.did })
+        expect(asked[0].body).toMatchObject({
+          space,
+          user: carol.did,
+          access: 'read',
+        })
         // Addressed with service auth from the authority, so the app can tell
         // who is asking it.
         expect(asked[0].auth).toMatch(/^Bearer /)
@@ -665,8 +714,6 @@ describe('simplespace', () => {
       })
 
       it('records a writer the managing app admits', async () => {
-        // notifyWrite consults the same gate, so the writer set can't drift from
-        // who may read the space.
         await using app = await MockService.create(network, {
           serviceId: 'atproto_forum',
           respond: () => ({ status: 200, body: { authorized: true } }),
@@ -679,6 +726,9 @@ describe('simplespace', () => {
           (all) => all.includes(bob.did),
         )
         expect(dids).toContain(bob.did)
+        expect(
+          app.callsTo('com.atproto.simplespace.checkUserAccess')[0].body,
+        ).toMatchObject({ space, user: bob.did, access: 'write' })
       })
     })
   })
@@ -914,7 +964,8 @@ describe('simplespace', () => {
       const skey = 'recreate'
       const space = await sc.createSpace(alice, {
         skey,
-        policy: defs.publicPolicy.build({}),
+        readPolicy: defs.publicPolicy.build({}),
+        writePolicy: defs.publicPolicy.build({}),
       })
       await alice.client.call(
         com.atproto.simplespace.deleteSpace,
@@ -925,14 +976,17 @@ describe('simplespace', () => {
       const recreated = await sc.createSpace(alice, { skey })
       expect(recreated).toBe(space)
 
-      // Reset, not revived: the deleted space's `public` policy must not carry
+      // Reset, not revived: the deleted space's public policies must not carry
       // over into the new one.
       const got = await alice.client.call(
         com.atproto.simplespace.getSpace,
         { space },
         { headers: alice.headers },
       )
-      expect(got.policy.$type).toBe(
+      expect(got.readPolicy.$type).toBe(
+        'com.atproto.simplespace.defs#memberListPolicy',
+      )
+      expect(got.writePolicy.$type).toBe(
         'com.atproto.simplespace.defs#memberListPolicy',
       )
 

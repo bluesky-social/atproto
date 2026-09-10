@@ -233,6 +233,7 @@ export async function processNotifyWrite(
   const authorized = await ctx.simpleSpaceManager.authorizeUser({
     config,
     userDid: repo,
+    access: 'write',
   })
   if (!authorized) {
     throw new ForbiddenError('notifyWrite writer is not authorized')

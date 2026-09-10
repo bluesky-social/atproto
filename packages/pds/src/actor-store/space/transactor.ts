@@ -14,6 +14,7 @@ import type { BlobTransactor } from '../blob/transactor.js'
 import type {
   ActorDb,
   SimplespaceConfig,
+  SimplespaceMember,
   SpaceRecordOplog,
 } from '../db/index.js'
 import { SpaceReader } from './reader.js'
@@ -93,11 +94,19 @@ export class SpaceTransactor extends SpaceReader {
     }
   }
 
-  async addMember(space: string, did: string): Promise<void> {
+  async putMember(
+    space: string,
+    did: string,
+    access: { read: boolean; write: boolean },
+  ): Promise<void> {
+    const values: Pick<SimplespaceMember, 'read' | 'write'> = {
+      read: access.read ? 1 : 0,
+      write: access.write ? 1 : 0,
+    }
     await this.db.db
       .insertInto('simplespace_member')
-      .values({ space, did })
-      .onConflict((oc) => oc.doNothing())
+      .values({ space, did, ...values })
+      .onConflict((oc) => oc.columns(['space', 'did']).doUpdateSet(values))
       .execute()
   }
 
