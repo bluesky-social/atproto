@@ -1,29 +1,29 @@
+import { type AtUriString, type DidString, isDidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 import { closeReportsForSubject } from '../../mod-service/report.js'
 import { getAuthDid } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.report.closeReports({
+  server.add(tools.ozone.report.closeReports, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const createdBy = getAuthDid(auth, ctx.cfg.service.did)
       const { subject, reportTypes, internalNote, isAutomated } = input.body
 
-      let subjectDid: string
-      let subjectUri: string | null = null
+      let subjectDid: DidString
+      let subjectUri: AtUriString | null = null
       if (subject.startsWith('at://')) {
-        let uri: AtUri
         try {
-          uri = new AtUri(subject)
+          const uri = new AtUri(subject)
+          subjectDid = uri.did
+          subjectUri = uri.href
         } catch {
           throw new InvalidRequestError(`Invalid AT-URI: ${subject}`)
         }
-        subjectDid = uri.host
-        subjectUri = subject
-      } else if (subject.startsWith('did:')) {
+      } else if (isDidString(subject)) {
         subjectDid = subject
       } else {
         throw new InvalidRequestError('Subject must be a DID or an AT-URI')

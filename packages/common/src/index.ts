@@ -1,6 +1,5 @@
 export * from '@atproto/common-web'
 export * from './buffers.js'
-export * from './car.js'
 export * from './dates.js'
 export * from './env.js'
 export * from './fs.js'

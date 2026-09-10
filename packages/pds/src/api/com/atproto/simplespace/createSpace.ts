@@ -14,14 +14,18 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ input, auth }) => {
       const ownerDid = auth.credentials.did
-      const { type, policy, appAccess } = input.body
+      const { type, readPolicy, writePolicy, appAccess } = input.body
       const skey = input.body.skey ?? TID.nextStr()
 
       const space = new SpaceRef(ownerDid, type, skey).toString()
 
       assertSpaceScope(auth, space, { manage: 'create' })
 
-      await ctx.simpleSpaceManager.createSpace(space, { policy, appAccess })
+      await ctx.simpleSpaceManager.createSpace(space, {
+        readPolicy,
+        writePolicy,
+        appAccess,
+      })
 
       return {
         encoding: 'application/json' as const,

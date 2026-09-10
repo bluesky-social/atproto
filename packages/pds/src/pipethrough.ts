@@ -125,6 +125,8 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'accept-encoding': req.headers['accept-encoding'] || 'identity',
         'accept-language': req.headers['accept-language'],
         'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
+        ...getAtprotoPassthroughHeaders(req.headers),
+        // @NOTE deprecated; use `x-atproto-bsky-topics`
         'x-bsky-topics': req.headers['x-bsky-topics'],
 
         'content-type': body && req.headers['content-type'],
@@ -216,6 +218,8 @@ export async function pipethrough(
     headers: {
       'accept-language': req.headers['accept-language'],
       'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
+      ...getAtprotoPassthroughHeaders(req.headers),
+      // @NOTE deprecated; use `x-atproto-bsky-topics`
       'x-bsky-topics': req.headers['x-bsky-topics'],
 
       // Because we sometimes need to interpret the response (e.g. during
@@ -250,6 +254,21 @@ export async function pipethrough(
 
 // Request setup/formatting
 // -------------------
+
+function getAtprotoPassthroughHeaders(
+  headers: IncomingHttpHeaders,
+): IncomingHttpHeaders {
+  // @NOTE node lower-cases all incoming header names, so a case-sensitive
+  // prefix check is sufficient here. This runs on the request hot path, so we
+  // build the result imperatively rather than via intermediate arrays.
+  const result: IncomingHttpHeaders = {}
+  for (const name in headers) {
+    if (name.startsWith('x-atproto-')) {
+      result[name] = headers[name]
+    }
+  }
+  return result
+}
 
 export function computeProxyTo(
   ctx: AppContext,

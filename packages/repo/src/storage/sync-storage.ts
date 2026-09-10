@@ -1,5 +1,5 @@
+import type { BlockMap } from '@atproto/car'
 import type { Cid } from '@atproto/lex-data'
-import type { BlockMap } from '../block-map.js'
 import { ReadableBlockstore } from './readable-blockstore.js'
 
 export class SyncStorage extends ReadableBlockstore {

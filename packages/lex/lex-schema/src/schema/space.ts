@@ -7,7 +7,7 @@ import type { LexiconRecordKey, NsidString } from '../core.js'
  * @property name:lang - Localized names by language code
  */
 export type SpaceOptions = {
-  description?: string
+  name: string
   'name:lang'?: Record<string, undefined | string>
 }
 
@@ -41,13 +41,26 @@ export class Space<
   const TNsid extends NsidString = any,
   const TKey extends LexiconRecordKey = LexiconRecordKey,
 > {
+  readonly nsid: TNsid
+  readonly key: TKey
+  readonly collections: readonly NsidString[]
+  readonly options: SpaceOptions
+
   constructor(
-    readonly nsid: TNsid,
-    readonly key: TKey,
-    readonly name: string,
-    readonly collections: readonly NsidString[],
-    readonly options: SpaceOptions = {},
-  ) {}
+    nsid: TNsid,
+    key: TKey,
+    collections: readonly NsidString[],
+    options: SpaceOptions,
+  ) {
+    this.nsid = nsid
+    this.key = key
+    this.collections = collections
+    this.options = options
+  }
+
+  get name(): string {
+    return this.options.name
+  }
 }
 
 /**
@@ -84,9 +97,8 @@ export function space<
 >(
   nsid: N,
   key: K,
-  name: string,
   collections: readonly NsidString[],
-  options?: SpaceOptions,
+  options: SpaceOptions,
 ): Space<N, K> {
-  return new Space<N, K>(nsid, key, name, collections, options)
+  return new Space<N, K>(nsid, key, collections, options)
 }

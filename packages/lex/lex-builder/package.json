@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-builder",
-  "version": "0.1.12",
+  "version": "0.1.14",
   "license": "MIT",
   "description": "TypeScript schema builder for AT Lexicons",
   "keywords": [
@@ -39,7 +39,7 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@ts-morph/common": "^0.28.0",
+    "@ts-morph/common": "^0.29.0",
     "vitest": "^4.1.10"
   },
   "scripts": {

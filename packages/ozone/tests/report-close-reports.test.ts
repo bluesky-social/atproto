@@ -1,11 +1,6 @@
+import { ComAtprotoModerationDefs, ids } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
-import {
-  REASONMISLEADING,
-  REASONRUDE,
-  REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
 const DEFS = 'tools.ozone.report.defs'
 
@@ -21,7 +16,7 @@ describe('report-close-reports', () => {
     subject:
       | { $type: 'com.atproto.admin.defs#repoRef'; did: string }
       | { $type: 'com.atproto.repo.strongRef'; uri: string; cid: string },
-    reasonType: string = REASONSPAM,
+    reasonType: string = ComAtprotoModerationDefs.REASONSPAM,
   ) => {
     await sc.createReport({
       reasonType,
@@ -82,11 +77,11 @@ describe('report-close-reports', () => {
   it('closes all open reports on an account subject', async () => {
     await reportSubject(
       { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.alice },
-      REASONSPAM,
+      ComAtprotoModerationDefs.REASONSPAM,
     )
     await reportSubject(
       { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.alice },
-      REASONRUDE,
+      ComAtprotoModerationDefs.REASONRUDE,
     )
 
     const openBefore = await queryReports({
@@ -125,16 +120,16 @@ describe('report-close-reports', () => {
   it('filters by report types', async () => {
     await reportSubject(
       { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.carol },
-      REASONSPAM,
+      ComAtprotoModerationDefs.REASONSPAM,
     )
     await reportSubject(
       { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.carol },
-      REASONMISLEADING,
+      ComAtprotoModerationDefs.REASONMISLEADING,
     )
 
     const { data } = await closeReports({
       subject: sc.dids.carol,
-      reportTypes: [REASONSPAM],
+      reportTypes: [ComAtprotoModerationDefs.REASONSPAM],
     })
     expect(data.closedCount).toBe(1)
 
@@ -143,7 +138,9 @@ describe('report-close-reports', () => {
       subject: sc.dids.carol,
     })
     expect(stillOpen).toHaveLength(1)
-    expect(stillOpen[0].reportType).toBe(REASONMISLEADING)
+    expect(stillOpen[0].reportType).toBe(
+      ComAtprotoModerationDefs.REASONMISLEADING,
+    )
   })
 
   it('scopes to record-level reports when subject is an AT-URI', async () => {
@@ -154,12 +151,12 @@ describe('report-close-reports', () => {
         uri: post.uriStr,
         cid: post.cidStr,
       },
-      REASONSPAM,
+      ComAtprotoModerationDefs.REASONSPAM,
     )
     // account-level report on the same DID should not be touched
     await reportSubject(
       { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.alice },
-      REASONSPAM,
+      ComAtprotoModerationDefs.REASONSPAM,
     )
 
     const { data } = await closeReports({ subject: post.uriStr })
@@ -179,7 +176,7 @@ describe('report-close-reports', () => {
     const messageUri = `at://${sc.dids.dan}/chat.bsky.convo.message/${messageId}`
 
     await sc.createReport({
-      reasonType: REASONSPAM,
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
       subject: {
         $type: 'chat.bsky.convo.defs#messageRef',
         did: sc.dids.dan,
@@ -189,7 +186,7 @@ describe('report-close-reports', () => {
       reportedBy: sc.dids.bob,
     })
     await sc.createReport({
-      reasonType: REASONSPAM,
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
       subject: {
         $type: 'chat.bsky.convo.defs#convoRef',
         did: sc.dids.dan,
@@ -199,7 +196,7 @@ describe('report-close-reports', () => {
     })
     await reportSubject(
       { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.dan },
-      REASONSPAM,
+      ComAtprotoModerationDefs.REASONSPAM,
     )
     await network.processAll()
 
@@ -230,7 +227,7 @@ describe('report-close-reports', () => {
   it('closes queued reports too', async () => {
     await reportSubject(
       { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.dan },
-      REASONSPAM,
+      ComAtprotoModerationDefs.REASONSPAM,
     )
     const [report] = await queryReports({
       status: 'open',

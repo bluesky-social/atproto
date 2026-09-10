@@ -11,6 +11,7 @@ import type {
 import { parseString } from '../../../../hydration/util.js'
 import { app } from '../../../../lexicons/index.js'
 import { createPipeline } from '../../../../pipeline.js'
+import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
 import type { Views } from '../../../../views/index.js'
 import { fillPage, resHeaders } from '../../../util.js'
 
@@ -23,22 +24,20 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.add(app.bsky.actor.getSuggestions, {
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
+    handler: async ({ params, auth, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ viewer, labelers })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
-        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
-          ? req.headers['x-bsky-topics'].join(',')
-          : req.headers['x-bsky-topics'],
+        ...getAtprotoPassthroughHeaders(req),
       })
       const { resHeaders: resultHeaders, ...result } = await fillPage({
         cursor: params.cursor,
         limit: params.limit,
         fetch: ({ cursor, limit }) =>
           getSuggestions(
-            { ...params, cursor, limit, hydrateCtx, headers },
+            { ...params, cursor, limit, hydrateCtx, headers, signal },
             ctx,
           ),
         items: (r) => r.actors,
@@ -70,6 +69,7 @@ const skeleton = async (input: {
       app.bsky.unspecced.getSuggestionsSkeleton,
       {
         headers: params.headers,
+        signal: params.signal,
         params: {
           relativeToDid: viewer,
           viewer: viewer ?? undefined,
@@ -158,6 +158,7 @@ type Context = {
 type Params = app.bsky.actor.getSuggestions.$Params & {
   hydrateCtx: HydrateCtx
   headers: HeadersMap
+  signal: AbortSignal
 }
 
 type Skeleton = {

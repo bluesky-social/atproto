@@ -14,8 +14,9 @@ import { com } from '../lexicons/index.js'
 import { spaceLogger } from '../logger.js'
 import { lexAppAccessToDb, lexPolicyToDb, toLexConfig } from './config.js'
 
-type LexPolicy = com.atproto.simplespace.createSpace.$InputBody['policy']
+type LexPolicy = com.atproto.simplespace.createSpace.$InputBody['readPolicy']
 type LexAppAccess = com.atproto.simplespace.createSpace.$InputBody['appAccess']
+type Access = 'read' | 'write'
 
 export class SimpleSpaceManager {
   constructor(
@@ -26,11 +27,20 @@ export class SimpleSpaceManager {
 
   async createSpace(
     space: SpaceRefString,
-    input: { policy: LexPolicy; appAccess: LexAppAccess },
+    input: {
+      readPolicy: LexPolicy
+      writePolicy: LexPolicy
+      appAccess: LexAppAccess
+    },
   ): Promise<void> {
     const { spaceDid } = toSpaceRef(space)
+    const read = lexPolicyToDb(input.readPolicy)
+    const write = lexPolicyToDb(input.writePolicy)
     const config = {
-      ...lexPolicyToDb(input.policy),
+      readPolicy: read.policy,
+      readManagingApp: read.managingApp,
+      writePolicy: write.policy,
+      writeManagingApp: write.managingApp,
       ...lexAppAccessToDb(input.appAccess),
     }
     await this.actorStore.transact(spaceDid, async (actorTxn) => {
@@ -47,12 +57,28 @@ export class SimpleSpaceManager {
 
   async updateSpace(
     space: SpaceRefString,
-    input: { policy?: LexPolicy; appAccess?: LexAppAccess },
+    input: {
+      readPolicy?: LexPolicy
+      writePolicy?: LexPolicy
+      appAccess?: LexAppAccess
+    },
   ): Promise<void> {
     const { spaceDid } = toSpaceRef(space)
-    const config: Partial<SpaceConfig> = {
-      ...(input.policy && lexPolicyToDb(input.policy)),
-      ...(input.appAccess && lexAppAccessToDb(input.appAccess)),
+    const config: Partial<SpaceConfig> = {}
+    if (input.readPolicy) {
+      const read = lexPolicyToDb(input.readPolicy)
+      config.readPolicy = read.policy
+      config.readManagingApp = read.managingApp
+    }
+    if (input.writePolicy) {
+      const write = lexPolicyToDb(input.writePolicy)
+      config.writePolicy = write.policy
+      config.writeManagingApp = write.managingApp
+    }
+    if (input.appAccess) {
+      const appAccess = lexAppAccessToDb(input.appAccess)
+      config.appAccessType = appAccess.appAccessType
+      config.appAllowed = appAccess.appAllowed
     }
     await this.actorStore.transact(spaceDid, async (actorTxn) => {
       await actorTxn.space.getActiveSpaceConfig(space)
@@ -90,7 +116,13 @@ export class SimpleSpaceManager {
       }
     }
 
-    if (!(await this.authorizeUser(opts))) {
+    const authorized = await this.authorizeUser({
+      config,
+      userDid: opts.userDid,
+      access: 'read',
+      clientId,
+    })
+    if (!authorized) {
       throw new InvalidRequestError(
         'User not authorized for this space',
         'UserNotAuthorized',
@@ -98,29 +130,40 @@ export class SimpleSpaceManager {
     }
   }
 
-  // Whether the space's policy admits this user. Everything but `managing-app` is
-  // answerable from the authority's own state.
   async authorizeUser(opts: {
     config: SimplespaceConfig
     userDid: string
+    access: Access
     clientId?: string
   }): Promise<boolean> {
-    const { config, userDid } = opts
+    const { config, userDid, access } = opts
     const { spaceDid } = toSpaceRef(config.uri as SpaceRefString)
 
     // The authority is the only party who can reconfigure the space, so it must not be
     // able to lock itself out.
     if (userDid === spaceDid) return true
 
-    switch (config.policy) {
+    const policy = getPolicy(config, access)
+    switch (policy.type) {
       case 'public':
         return true
-      case 'member-list':
-        return this.actorStore.read(spaceDid, (store) =>
-          store.space.isMember(config.uri, userDid),
+      case 'member-list': {
+        const member = await this.actorStore.read(spaceDid, (store) =>
+          store.space.getMember(config.uri, userDid),
         )
+        if (!member) return false
+        if (access === 'read') return !!member.read
+        return !!member.write
+      }
       case 'managing-app':
-        return this.checkManagingApp({ ...opts, spaceDid })
+        return this.checkManagingApp({
+          config,
+          spaceDid,
+          userDid,
+          access,
+          managingApp: policy.managingApp,
+          clientId: opts.clientId,
+        })
       default:
         return false
     }
@@ -183,10 +226,11 @@ export class SimpleSpaceManager {
     config: SimplespaceConfig
     spaceDid: DidString
     userDid: string
+    access: Access
+    managingApp: string | null
     clientId?: string
   }): Promise<boolean> {
-    const { config, spaceDid, userDid, clientId } = opts
-    const { managingApp } = config
+    const { config, spaceDid, userDid, access, managingApp, clientId } = opts
     if (!managingApp) return false
 
     const lxm = com.atproto.simplespace.checkUserAccess.$lxm
@@ -211,6 +255,7 @@ export class SimpleSpaceManager {
           params: {
             space: config.uri as SpaceRefString,
             user: userDid as DidString,
+            access,
             clientId,
           },
         },
@@ -225,5 +270,18 @@ export class SimpleSpaceManager {
       )
       return false
     }
+  }
+}
+
+function getPolicy(config: SimplespaceConfig, access: Access) {
+  if (access === 'read') {
+    return {
+      type: config.readPolicy,
+      managingApp: config.readManagingApp,
+    }
+  }
+  return {
+    type: config.writePolicy,
+    managingApp: config.writeManagingApp,
   }
 }

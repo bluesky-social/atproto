@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the members in a space's host-internal member list. Must be called on the space authority's PDS. Requires OAuth with a covering read grant; a space credential is not sufficient, so members hosted elsewhere cannot enumerate the list. This reflects the simplespace member list, not a protocol-level reader set.",
+      "description": "List the members in a space's host-internal member list and their read and write access. Must be called on the space authority's PDS. Requires OAuth with a covering read grant; a space credential is not sufficient, so members hosted elsewhere cannot enumerate the list.",
       "parameters": {
         "type": "params",
         "required": ["space"],
@@ -53,11 +53,17 @@
     },
     "member": {
       "type": "object",
-      "required": ["did"],
+      "required": ["did", "read", "write"],
       "properties": {
         "did": {
           "type": "string",
           "format": "did"
+        },
+        "read": {
+          "type": "boolean"
+        },
+        "write": {
+          "type": "boolean"
         }
       }
     }

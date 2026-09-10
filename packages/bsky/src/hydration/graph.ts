@@ -27,6 +27,7 @@ export type ListViewerState = {
   viewerMuted?: string // @TODO AtUriString ?
   viewerListBlockUri?: AtUriString
   viewerInList?: string // @TODO AtUriString ?
+  referenceListOptOutUri?: AtUriString
 }
 
 export type ListViewerStates = HydrationMap<AtUriString, ListViewerState>
@@ -159,19 +160,26 @@ export class GraphHydrator {
     const map: ListViewerStates = new HydrationMap()
     if (!uris.length) return map
 
-    const mutesAndBlocks = await Promise.all(
-      uris.map((uri) => this.getMutesAndBlocks(uri, viewer)),
-    )
-    const listMemberships = await this.dataplane.getListMembership({
-      actorDid: viewer,
-      listUris: uris,
-    })
+    const [mutesAndBlocks, listMemberships, referenceListOptOuts] =
+      await Promise.all([
+        Promise.all(uris.map((uri) => this.getMutesAndBlocks(uri, viewer))),
+        this.dataplane.getListMembership({
+          actorDid: viewer,
+          listUris: uris,
+        }),
+        this.dataplane.getReferencelistoptoutsByActorAndSubjects({
+          actorDid: viewer,
+          subjectUris: uris,
+        }),
+      ])
     for (let i = 0; i < uris.length; i++) {
       const uri = uris[i]
       map.set(uri, {
         viewerMuted: mutesAndBlocks[i].muted ? uri : undefined,
         viewerListBlockUri: mutesAndBlocks[i].listBlockUri || undefined,
         viewerInList: listMemberships.listitemUris[i],
+        referenceListOptOutUri: (referenceListOptOuts.uris[i] || undefined) as
+          AtUriString | undefined,
       })
     }
 

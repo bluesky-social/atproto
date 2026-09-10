@@ -1,16 +1,17 @@
 import type { Generated, Selectable } from 'kysely'
+import type { DatetimeString, DidString, UriString } from '@atproto/lex'
 
 export const tableName = 'label'
 
 export interface Label {
   id: Generated<number>
-  src: string
-  uri: string
+  src: DidString
+  uri: UriString
   cid: string
   val: string
   neg: boolean
-  cts: string
-  exp: string | null
+  cts: DatetimeString
+  exp: DatetimeString | null
   sig: Buffer | null
   signingKeyId: number | null
 }

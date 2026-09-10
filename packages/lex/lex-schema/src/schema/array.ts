@@ -39,11 +39,13 @@ export class ArraySchema<const TItem extends Validator> extends Schema<
 > {
   readonly type = 'array' as const
 
-  constructor(
-    readonly validator: TItem,
-    readonly options: ArraySchemaOptions = {},
-  ) {
+  readonly validator: TItem
+  readonly options: ArraySchemaOptions
+
+  constructor(validator: TItem, options: ArraySchemaOptions = {}) {
     super()
+    this.validator = validator
+    this.options = options
   }
 
   validateInContext(

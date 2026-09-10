@@ -41,8 +41,19 @@ export function extractPdsEndpoint(didDoc?: LexMap): string | null {
     ifString((service as any)?.id)?.endsWith('#atproto_pds'),
   )
   const pdsEndpoint = ifString((pdsService as any)?.serviceEndpoint)
-  return pdsEndpoint && URL.canParse(pdsEndpoint) ? pdsEndpoint : null
+  return pdsEndpoint && canParseUrl(pdsEndpoint) ? pdsEndpoint : null
 }
+
+const canParseUrl =
+  URL.canParse ??
+  ((url: string) => {
+    try {
+      new URL(url)
+      return true
+    } catch {
+      return false
+    }
+  })
 
 const ifString = <T>(v: T) =>
   (typeof v === 'string' ? v : undefined) as unknown extends T

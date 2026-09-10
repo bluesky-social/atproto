@@ -27,6 +27,7 @@ import {
 } from '@atproto-labs/did-resolver'
 import { LexResolverError } from './lex-resolver-error.js'
 import { com } from './lexicons/index.js'
+import { canParseUrl } from './util.js'
 
 /**
  * Result returned when successfully resolving a lexicon document.
@@ -431,7 +432,7 @@ export class LexResolver {
         )
       })
 
-    if (!key || !pds || !URL.canParse(pds.serviceEndpoint)) {
+    if (!key || !pds || !canParseUrl(pds.serviceEndpoint)) {
       throw new LexResolverError(
         nsid,
         `No atproto PDS service endpoint or signing key found in ${did} DID document`,

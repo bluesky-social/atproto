@@ -1,25 +1,24 @@
 import { type Selectable, sql } from 'kysely'
-import type { ToolsOzoneQueueDefs } from '@atproto/api'
+import type { DatetimeString, DidString, NsidString } from '@atproto/lex'
+import { currentDatetimeString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
 import type { ReportQueue } from '../db/schema/report_queue.js'
 import { jsonb } from '../db/types.js'
+import { com, tools } from '../lexicons/index.js'
 import { handleReportUpdate } from '../report/handle-report-update.js'
 import { ReportStatsService } from '../report/stats.js'
 import { viewQueueStats } from '../report/views.js'
 import { PolicyListSettingKey } from '../setting/constants.js'
 import { SettingService } from '../setting/service.js'
 
-const MOD_EVENT_REPORT_ACTION = 'tools.ozone.moderation.defs#modEventReport'
-const REASON_OTHER = 'com.atproto.moderation.defs#reasonOther'
-
 type SubjectType = 'account' | 'record' | 'message' | 'conversation'
 
 type ResolvedAssignment = {
   queueId: number
-  queuedAt: string | null
+  queuedAt: DatetimeString | null
   status: 'queued' | 'open'
 }
 
@@ -31,7 +30,7 @@ function resolveAssignment(
   collection: string | null,
   reportType: string,
   queues: Selectable<ReportQueue>[],
-  now: string,
+  now: DatetimeString,
   explicitQueueId?: number,
 ): ResolvedAssignment {
   if (explicitQueueId !== undefined) {
@@ -101,7 +100,7 @@ export class QueueService {
   }: {
     name: string
     subjectTypes: string[]
-    collection?: string | null
+    collection?: NsidString | null
     reportTypes: string[]
     excludeId?: number
   }): Promise<void> {
@@ -154,13 +153,13 @@ export class QueueService {
   }: {
     name: string
     subjectTypes: string[]
-    collection?: string | null
+    collection?: NsidString | null
     reportTypes: string[]
     description?: string | null
     recommendedPolicies: string[]
-    createdBy: string
+    createdBy: DidString | 'admin_token'
   }): Promise<Selectable<ReportQueue>> {
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     return await this.db.db
       .insertInto('report_queue')
       .values({
@@ -190,7 +189,7 @@ export class QueueService {
 
   async getViewsByIds(
     ids: number[],
-  ): Promise<Map<number, ToolsOzoneQueueDefs.QueueView>> {
+  ): Promise<Map<number, tools.ozone.queue.defs.QueueView>> {
     if (!ids.length) return new Map()
     const rows = await this.db.db
       .selectFrom('report_queue')
@@ -209,7 +208,7 @@ export class QueueService {
       recommendedPolicies?: string[]
     },
   ): Promise<Selectable<ReportQueue>> {
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     return await this.db.db
       .updateTable('report_queue')
       .set({
@@ -226,7 +225,7 @@ export class QueueService {
   }
 
   async delete(id: number): Promise<void> {
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     await this.db.db
       .updateTable('report_queue')
       .set({ deletedAt: now })
@@ -238,7 +237,7 @@ export class QueueService {
     fromQueueId: number,
     toQueueId?: number,
   ): Promise<number> {
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     const results = await this.db.db
       .updateTable('report')
       .set({
@@ -264,7 +263,7 @@ export class QueueService {
     cursor?: string
     enabled?: boolean
     subjectType?: string
-    collection?: string
+    collection?: NsidString
     reportTypes?: string[]
   }): Promise<{ queues: Selectable<ReportQueue>[]; cursor?: string }> {
     const { ref } = this.db.db.dynamic
@@ -309,20 +308,21 @@ export class QueueService {
     }
   }
 
-  view(queue: Selectable<ReportQueue>): ToolsOzoneQueueDefs.QueueView {
+  view(queue: Selectable<ReportQueue>): tools.ozone.queue.defs.QueueView {
     return {
       id: queue.id,
       name: queue.name,
       subjectTypes: queue.subjectTypes,
-      collection: queue.collection ?? undefined,
+      collection: (queue.collection ?? undefined) as NsidString | undefined,
       reportTypes: queue.reportTypes,
       description: queue.description ?? undefined,
       recommendedPolicies: queue.recommendedPolicies,
+      // @ts-expect-error - createdBy can be 'admin_token', which is not a valid value (per lexicon definition)
       createdBy: queue.createdBy,
       createdAt: queue.createdAt,
       updatedAt: queue.updatedAt,
       enabled: queue.enabled,
-      deletedAt: queue.deletedAt ?? undefined,
+      deletedAt: (queue.deletedAt as DatetimeString | null) ?? undefined,
       stats: {
         pendingCount: 0,
         actionedCount: 0,
@@ -335,7 +335,7 @@ export class QueueService {
 
   async viewsWithStats(
     queues: Selectable<ReportQueue>[],
-  ): Promise<ToolsOzoneQueueDefs.QueueView[]> {
+  ): Promise<tools.ozone.queue.defs.QueueView[]> {
     const statsService = new ReportStatsService(this.db)
     const queueIds = queues.map((q) => q.id)
     const statsMap = await statsService.getLiveStatsForQueues(queueIds)
@@ -355,7 +355,7 @@ export class QueueService {
    */
   async assignReportBatch(
     params: { start: number; end: number; limit: number },
-    opts?: { includeUnmatched?: boolean; serviceDid?: string },
+    opts?: { includeUnmatched?: boolean; serviceDid?: DidString },
   ): Promise<{
     processed: number
     assigned: number
@@ -400,7 +400,7 @@ export class QueueService {
       return { processed: 0, assigned: 0, unmatched: 0, maxId: 0 }
     }
 
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
 
     // Resolve each report's destination in memory — no DB calls in this loop
     type MatchedEntry = {
@@ -566,7 +566,7 @@ export class QueueService {
         'modTool',
         'createdAt',
       ])
-      .where('action', '=', MOD_EVENT_REPORT_ACTION)
+      .where('action', '=', tools.ozone.moderation.defs.modEventReport.$type)
       .orderBy('id', 'asc')
       .limit(params.limit)
 
@@ -580,7 +580,7 @@ export class QueueService {
       return { processed: 0, assigned: 0, unmatched: 0, maxEventId: 0 }
     }
 
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     let maxEventId = 0
     let assigned = 0
     let unmatched = 0
@@ -603,7 +603,8 @@ export class QueueService {
       }
 
       const reportType =
-        (event.meta?.reportType as string | undefined) ?? REASON_OTHER
+        (event.meta?.reportType as string | undefined) ??
+        com.atproto.moderation.defs.ReasonOther
 
       const tool = parseModTool(event.modTool)
 

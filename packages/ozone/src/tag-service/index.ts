@@ -1,3 +1,5 @@
+import type { DidString } from '@atproto/lex'
+import { tools } from '../lexicons/index.js'
 import { langLogger as log } from '../logger.js'
 import type { ModerationService } from '../mod-service/index.js'
 import type { ModSubject } from '../mod-service/subject.js'
@@ -12,7 +14,7 @@ export class TagService {
   constructor(
     private subject: ModSubject,
     protected subjectStatus: ModerationSubjectStatusRow | null,
-    private taggerDid: string,
+    private taggerDid: DidString,
     private moderationService: ModerationService,
   ) {
     this.taggers = [
@@ -59,11 +61,10 @@ export class TagService {
 
       if (tags.size) {
         await this.moderationService.logEvent({
-          event: {
-            $type: 'tools.ozone.moderation.defs#modEventTag',
+          event: tools.ozone.moderation.defs.modEventTag.$build({
             add: [...tags],
             remove: [],
-          },
+          }),
           subject: this.subject,
           createdBy: this.taggerDid,
         })

@@ -47,6 +47,9 @@ export const fillPage = async <
   items: (result: Awaited<ReturnType<F>>) => T[]
 }): Promise<Awaited<ReturnType<F>>> => {
   const maxRequests = opts.maxRequests ?? DEFAULT_FILL_PAGE_MAX_REQUESTS
+  // Refilling is only worth its cost while the page is mostly empty: a page
+  // that already holds half of what was asked for is served as is.
+  const enoughItems = Math.ceil(opts.limit / 2)
   const result = (await opts.fetch({
     cursor: opts.cursor,
     limit: opts.limit,
@@ -55,7 +58,7 @@ export const fillPage = async <
   let cursor = result.cursor
   for (
     let requests = 1;
-    requests < maxRequests && cursor && items.length < opts.limit;
+    requests < maxRequests && cursor && items.length < enoughItems;
     requests++
   ) {
     const previousCursor = cursor

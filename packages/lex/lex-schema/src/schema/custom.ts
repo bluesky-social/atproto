@@ -48,12 +48,19 @@ export type CustomAssertion<TValue> = (
 export class CustomSchema<out TValue = unknown> extends Schema<TValue> {
   readonly type = 'custom' as const
 
+  private readonly assertion: CustomAssertion<TValue>
+  private readonly message: string
+  private readonly path?: PropertyKey | readonly PropertyKey[]
+
   constructor(
-    private readonly assertion: CustomAssertion<TValue>,
-    private readonly message: string,
-    private readonly path?: PropertyKey | readonly PropertyKey[],
+    assertion: CustomAssertion<TValue>,
+    message: string,
+    path?: PropertyKey | readonly PropertyKey[],
   ) {
     super()
+    this.assertion = assertion
+    this.message = message
+    this.path = path
   }
 
   validateInContext(

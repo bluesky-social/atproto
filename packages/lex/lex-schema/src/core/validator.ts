@@ -280,6 +280,8 @@ export class ValidationContext {
     return context.validate(input, validator)
   }
 
+  public readonly options: Required<ValidationOptions>
+
   /**
    * The current path being validated, used for error reporting.
    */
@@ -295,9 +297,10 @@ export class ValidationContext {
    *
    * @param options - The validation options (path and mode are required)
    */
-  constructor(readonly options: Required<ValidationOptions>) {
+  constructor(options: Required<ValidationOptions>) {
     // Create a copy because we will be mutating the array during validation.
     this.currentPath = Array.from(options.path)
+    this.options = options
   }
 
   /**

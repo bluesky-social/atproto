@@ -21,17 +21,8 @@ export class LexPermissionSyntax<
 
   get(key: string) {
     // Ignore reserved keywords
-    if (key === 'type') {
-      // JSON spells the space type as `spaceType`, since `type` is taken by the
-      // permission discriminator. The scope string calls it `type`.
-      if (this.lexPermission.resource === 'space') {
-        if (!Object.hasOwn(this.lexPermission, 'spaceType')) return undefined
-        return this.lexPermission['spaceType']
-      }
-      return undefined
-    }
+    if (key === 'type') return undefined
     if (key === 'resource') return undefined
-    if (key === 'spaceType') return undefined
 
     // Ignore inherited properties (toString(), etc.)
     if (!Object.hasOwn(this.lexPermission, key)) return undefined
@@ -40,10 +31,8 @@ export class LexPermissionSyntax<
   }
 
   *keys() {
-    const isSpace = this.lexPermission.resource === 'space'
     for (const key of Object.keys(this.lexPermission)) {
-      const surfaceKey = isSpace && key === 'spaceType' ? 'type' : key
-      if (this.get(surfaceKey) !== undefined) yield surfaceKey
+      if (this.get(key) !== undefined) yield key
     }
   }
 
@@ -62,5 +51,24 @@ export class LexPermissionSyntax<
 
   toJSON() {
     return this.lexPermission
+  }
+}
+
+/**
+ * Lexicon documents cannot use `type` because it is reserved (and should always
+ * be "resource"). For that reason, it uses `spaceType`. The `space:` scope
+ * syntax, however, uses `type`. This class translates between the two.
+ */
+export class LexSpacePermissionSyntax extends LexPermissionSyntax<'space'> {
+  get(key: string) {
+    if (key === 'type') return this.lexPermission.spaceType
+    if (key === 'spaceType') return undefined
+    return super.get(key)
+  }
+
+  *keys() {
+    for (const key of super.keys()) {
+      yield key === 'spaceType' ? 'type' : key
+    }
   }
 }

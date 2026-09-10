@@ -1,3 +1,4 @@
+import type { DidString } from '@atproto/lex'
 import type { ScheduledActionType } from '../api/util.js'
 
 export type ExecutionSchedule =
@@ -12,6 +13,6 @@ export type ExecutionSchedule =
 export type SchedulingParams = {
   action: ScheduledActionType
   eventData: unknown
-  did: string
-  createdBy: string
+  did: DidString
+  createdBy: DidString
 } & ExecutionSchedule

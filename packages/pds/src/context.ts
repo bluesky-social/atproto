@@ -367,6 +367,7 @@ export class AppContext implements AsyncDisposable {
             cfg.service.publicUrl,
             cfg.identity.recoveryDidKey,
           ),
+          plcDirectoryUrl: cfg.identity.plcUrl,
           redis: redisScratch,
           dpopSecret: secrets.dpopSecret,
           inviteCodeRequired: cfg.invites.required,
@@ -374,7 +375,6 @@ export class AppContext implements AsyncDisposable {
           hcaptcha: cfg.oauth.provider.hcaptcha,
           branding: cfg.oauth.provider.branding,
           safeFetch,
-          idResolver,
           lexResolver: new LexResolver({
             fetch: safeFetch,
             plcDirectoryUrl: cfg.identity.plcUrl,

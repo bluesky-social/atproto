@@ -1,6 +1,6 @@
 {
   "name": "@atproto/repo",
-  "version": "0.10.11",
+  "version": "0.10.13",
   "engines": {
     "node": ">=22"
   },
@@ -29,6 +29,7 @@
     }
   },
   "dependencies": {
+    "@atproto/car": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^",
@@ -38,7 +39,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "jest": "^30.0.0"
+    "jest": "^30.5.1"
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",

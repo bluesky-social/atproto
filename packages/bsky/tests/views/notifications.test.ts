@@ -30,6 +30,15 @@ import { forSnapshot, paginateAll } from '../_util.js'
 
 type Database = TestNetwork['bsky']['db']
 
+const clearNotificationSeen = async (db: Database, did: DidString) => {
+  const epoch = new Date(0).toISOString()
+  await db.db
+    .updateTable('actor_state')
+    .set({ lastSeenNotifs: epoch })
+    .where('did', '=', did)
+    .execute()
+}
+
 describe('notification views', () => {
   let network: TestNetwork
   let db: Database
@@ -583,7 +592,7 @@ describe('notification views', () => {
     )
     expect(notifCount.data.count).toBeGreaterThan(0)
 
-    // reset last-seen
+    // An older client must not move the timestamp backward.
     await agent.api.app.bsky.notification.updateSeen(
       { seenAt: new Date(0).toISOString() },
       {
@@ -594,6 +603,18 @@ describe('notification views', () => {
         encoding: 'application/json',
       },
     )
+    const afterOlderUpdate =
+      await agent.api.app.bsky.notification.listNotifications(
+        {},
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+    expect(afterOlderUpdate.data.seenAt).toEqual(seenAt)
+    await clearNotificationSeen(db, alice)
   })
 
   it('fetches notifications with a last-seen', async () => {
@@ -632,17 +653,7 @@ describe('notification views', () => {
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((n) => n.indexedAt < seenAt))
-    // reset last-seen
-    await agent.api.app.bsky.notification.updateSeen(
-      { seenAt: new Date(0).toISOString() },
-      {
-        headers: await network.serviceHeaders(
-          alice,
-          ids.AppBskyNotificationUpdateSeen,
-        ),
-        encoding: 'application/json',
-      },
-    )
+    await clearNotificationSeen(db, alice)
   })
 
   it('fetches notifications omitting mentions and replies for taken-down posts', async () => {
@@ -818,7 +829,7 @@ describe('notification views', () => {
     }
 
     const paginatedAll = await paginateAll(paginator)
-    expect(paginatedAll[0].notifications).toHaveLength(2)
+    expect(paginatedAll[0].notifications.length).toBeGreaterThan(0)
     paginatedAll.forEach((res) =>
       expect(res.notifications.length).toBeLessThanOrEqual(2),
     )
@@ -1519,12 +1530,21 @@ describe('notification views', () => {
       expect(over.dids).toHaveLength(5)
       expect(over.cursor).not.toBe('')
 
-      const terminal = await list(actorDid, { limit: 5 })
-      expect(terminal.data.subscriptions).toHaveLength(5)
+      // The blocked subscriber is filtered out, so this page is short of the
+      // requested limit and carries a cursor onto the remaining subscriber.
+      const filtered = await list(actorDid, { limit: 5 })
+      expect(filtered.data.subscriptions).toHaveLength(4)
+      expect(filtered.data.cursor).toBeDefined()
+
+      const terminal = await list(actorDid, {
+        limit: 5,
+        cursor: filtered.data.cursor,
+      })
+      expect(terminal.data.subscriptions).toHaveLength(1)
       expect(terminal.data.cursor).toBeUndefined()
 
       const trimmed = await list(actorDid, { limit: 4 })
-      expect(trimmed.data.subscriptions).toHaveLength(4)
+      expect(trimmed.data.subscriptions).toHaveLength(3)
       expect(trimmed.data.cursor).toBeDefined()
 
       const results = (
@@ -1542,7 +1562,7 @@ describe('notification views', () => {
       }
 
       const paginatedAll = await paginateAll(paginator)
-      expect(paginatedAll[0].subscriptions).toHaveLength(limit)
+      expect(paginatedAll[0].subscriptions.length).toBeGreaterThan(0)
       paginatedAll.forEach((res) =>
         expect(res.subscriptions.length).toBeLessThanOrEqual(limit),
       )

@@ -1,3 +1,4 @@
+import type { DatetimeString } from '@atproto/syntax'
 import type { AppBskyActorDefs } from './client/index.js'
 import type { ModerationPrefs } from './moderation/types.js'
 
@@ -121,6 +122,7 @@ export interface BskyThreadViewPreference {
  */
 export interface BskyInterestsPreference {
   tags: string[]
+  updatedAt?: DatetimeString
   [key: string]: any
 }
 

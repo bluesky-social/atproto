@@ -24,11 +24,13 @@ export class RegexpSchema<
 > extends Schema<TValue> {
   readonly type = 'regexp' as const
 
-  constructor(
-    public readonly pattern: RegExp,
-    public readonly message?: string,
-  ) {
+  public readonly pattern: RegExp
+  public readonly message?: string
+
+  constructor(pattern: RegExp, message?: string) {
     super()
+    this.pattern = pattern
+    this.message = message
   }
 
   validateInContext(

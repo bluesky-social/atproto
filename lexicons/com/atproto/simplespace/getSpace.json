@@ -20,16 +20,25 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["uri", "policy", "appAccess"],
+          "required": ["uri", "readPolicy", "writePolicy", "appAccess"],
           "properties": {
             "uri": {
               "type": "string",
               "format": "space-ref",
               "description": "URI of the space."
             },
-            "policy": {
+            "readPolicy": {
               "type": "union",
-              "description": "How the authority decides whether to authorize a requesting user.",
+              "description": "How the authority decides whether to authorize a user to read the space.",
+              "refs": [
+                "com.atproto.simplespace.defs#publicPolicy",
+                "com.atproto.simplespace.defs#memberListPolicy",
+                "com.atproto.simplespace.defs#managingAppPolicy"
+              ]
+            },
+            "writePolicy": {
+              "type": "union",
+              "description": "How the authority decides whether to track and forward a user's write notifications.",
               "refs": [
                 "com.atproto.simplespace.defs#publicPolicy",
                 "com.atproto.simplespace.defs#memberListPolicy",

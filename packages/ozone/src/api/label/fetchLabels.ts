@@ -1,18 +1,20 @@
+import { toDatetimeString } from '@atproto/lex'
+import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { com } from '../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.temp.fetchLabels({
+  server.add(com.atproto.temp.fetchLabels, {
     auth: ctx.authVerifier.standardOptionalOrAdminToken,
     handler: async ({ params }) => {
       const { limit } = params
-      const since =
-        params.since !== undefined ? new Date(params.since).toISOString() : ''
       const labelRes = await ctx.db.db
         .selectFrom('label')
         .selectAll()
         .orderBy('label.cts', 'asc')
-        .where('cts', '>', since)
+        .$if(params.since != null, (qb) =>
+          qb.where('label.cts', '>', toDatetimeString(params.since!)),
+        )
         .limit(limit)
         .execute()
 

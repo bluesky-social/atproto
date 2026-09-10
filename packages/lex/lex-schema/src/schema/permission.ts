@@ -23,10 +23,13 @@ export class Permission<
   const TResource extends string = any,
   const TOptions extends PermissionOptions = any,
 > {
-  constructor(
-    readonly resource: TResource,
-    readonly options: TOptions,
-  ) {}
+  readonly resource: TResource
+  readonly options: TOptions
+
+  constructor(resource: TResource, options: TOptions) {
+    this.resource = resource
+    this.options = options
+  }
 }
 
 /**

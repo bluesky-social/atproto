@@ -1,4 +1,4 @@
-import { type Nsid, isNsid } from '../lib/nsid.js'
+import { type NsidString, isValidNsid } from '@atproto/syntax'
 import { Parser } from '../lib/parser.js'
 import type { ResourcePermission } from '../lib/resource-permission.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
@@ -10,7 +10,7 @@ import {
 } from '../lib/syntax.js'
 import { knownValuesValidator } from '../lib/util.js'
 
-export { type Nsid, isNsid }
+export { type NsidString, isValidNsid as isNsidString }
 
 export const REPO_ACTIONS = Object.freeze([
   'create',
@@ -20,9 +20,9 @@ export const REPO_ACTIONS = Object.freeze([
 export type RepoAction = (typeof REPO_ACTIONS)[number]
 export const isRepoAction = knownValuesValidator(REPO_ACTIONS)
 
-export type CollectionParam = '*' | Nsid
+export type CollectionParam = '*' | NsidString
 export const isCollectionParam = (value: unknown): value is CollectionParam =>
-  value === '*' || isNsid(value)
+  value === '*' || isValidNsid(value)
 
 export type RepoPermissionMatch = {
   collection: string
@@ -34,7 +34,7 @@ export class RepoPermission implements ResourcePermission<
   RepoPermissionMatch
 > {
   constructor(
-    public readonly collection: NeRoArray<'*' | Nsid>,
+    public readonly collection: NeRoArray<'*' | NsidString>,
     public readonly action: NeRoArray<RepoAction>,
   ) {}
 
@@ -60,9 +60,9 @@ export class RepoPermission implements ResourcePermission<
         normalize: (value) => {
           if (value.length > 1) {
             if (value.includes('*')) return ['*'] as const
-            return [...new Set(value)].sort() as NeArray<Nsid>
+            return [...new Set(value)].sort() as NeArray<NsidString>
           }
-          return value as ['*' | Nsid]
+          return value as ['*' | NsidString]
         },
       },
       action: {
@@ -95,7 +95,7 @@ export class RepoPermission implements ResourcePermission<
 
   static scopeNeededFor(options: RepoPermissionMatch): string {
     return RepoPermission.parser.format({
-      collection: [options.collection as '*' | Nsid],
+      collection: [options.collection as '*' | NsidString],
       action: [options.action],
     })
   }

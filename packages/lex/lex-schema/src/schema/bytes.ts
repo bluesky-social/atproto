@@ -1,4 +1,4 @@
-import { asUint8Array, ifUint8Array } from '@atproto/lex-data'
+import { asUint8Array } from '@atproto/lex-data'
 import { Schema, type ValidationContext } from '../core.js'
 import type { ValidationResult } from '../index.js'
 import { memoizedOptions } from '../util/memoize.js'
@@ -29,32 +29,48 @@ export type BytesSchemaOptions = {
 export class BytesSchema extends Schema<Uint8Array> {
   readonly type = 'bytes' as const
 
-  constructor(readonly options: BytesSchemaOptions = {}) {
+  readonly options?: BytesSchemaOptions
+
+  constructor(options?: BytesSchemaOptions) {
     super()
+    this.options = options
   }
 
   validateInContext(
     input: unknown,
     ctx: ValidationContext,
   ): ValidationResult<Uint8Array> {
-    // In "parse" mode, coerce different binary formats into Uint8Array
     const bytes =
-      ctx.options.mode === 'parse' ? asUint8Array(input) : ifUint8Array(input)
+      input instanceof Uint8Array
+        ? // Already an Uint8Array, use it directly
+          input
+        : ctx.options.mode === 'parse' && !Array.isArray(input)
+          ? // In "parse" mode, coerce different binary formats into Uint8Array
+            asUint8ArraySafe(input)
+          : undefined
     if (!bytes) {
       return ctx.issueUnexpectedType(input, 'bytes')
     }
 
-    const { minLength } = this.options
+    const minLength = this.options?.minLength
     if (minLength != null && bytes.length < minLength) {
       return ctx.issueTooSmall(bytes, 'bytes', minLength, bytes.length)
     }
 
-    const { maxLength } = this.options
+    const maxLength = this.options?.maxLength
     if (maxLength != null && bytes.length > maxLength) {
       return ctx.issueTooBig(bytes, 'bytes', maxLength, bytes.length)
     }
 
     return ctx.success(bytes)
+  }
+}
+
+function asUint8ArraySafe(input: unknown): Uint8Array | undefined {
+  try {
+    return asUint8Array(input)
+  } catch {
+    return undefined
   }
 }
 

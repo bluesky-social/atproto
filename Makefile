@@ -63,7 +63,7 @@ clean-build: ## Deletes all build artifacts (dist, tsbuildinfo) in all packages
 
 .PHONY: clean-prebuild
 clean-prebuild: ## Deletes all prebuild artifacts (codegen, lingui, etc.) in all packages
-	for f in packages/*/src/proto packages/*/src/lexicons packages/lex/*/src/lexicons packages/lex/*/tests/lexicons packages/oauth/*/src/lexicons packages/oauth/*/src/locales/*/messages.ts packages/api/src/client packages/api/src/moderation/const/labels.ts packages/ozone/src/lexicon; do rm -r "$$f"; done || true;
+	for f in packages/*/src/proto packages/*/src/lexicons packages/lex/*/src/lexicons packages/lex/*/tests/lexicons packages/oauth/*/src/lexicons packages/oauth/*/src/locales/*/messages.ts packages/api/src/client packages/api/src/moderation/const/labels.ts; do rm -r "$$f"; done || true;
 
 .PHONY: nvm-setup
 nvm-setup: ## Use NVM to install and activate node+pnpm

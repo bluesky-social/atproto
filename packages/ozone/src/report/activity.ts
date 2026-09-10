@@ -1,22 +1,35 @@
+import type {
+  DatetimeString,
+  DidString,
+  LexMap,
+  Unknown$Type,
+} from '@atproto/lex'
+import { currentDatetimeString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
-import type { ReportView } from '../lexicon/types/tools/ozone/report/defs.js'
-import type { QueryParams as QueryActivitiesParams } from '../lexicon/types/tools/ozone/report/queryActivities.js'
-import type { Member } from '../lexicon/types/tools/ozone/team/defs.js'
+import type { tools } from '../lexicons/index.js'
 import {
   AlreadyInTargetState,
   InvalidStateTransition,
   handleReportUpdate,
 } from './handle-report-update.js'
 
+const VALID_ACTIVITY_TYPES = new Set([
+  'queueActivity',
+  'assignmentActivity',
+  'escalationActivity',
+  'closeActivity',
+  'reopenActivity',
+  'noteActivity',
+] as const)
+
 export type ActivityType =
-  | 'queueActivity'
-  | 'assignmentActivity'
-  | 'escalationActivity'
-  | 'closeActivity'
-  | 'reopenActivity'
-  | 'noteActivity'
+  typeof VALID_ACTIVITY_TYPES extends Set<infer T> ? T : never
+
+export function isActivityType(value: unknown): value is ActivityType {
+  return (VALID_ACTIVITY_TYPES as Set<unknown>).has(value)
+}
 
 export type CreateActivityParams = {
   /** Exactly one of reportId or eventId must be provided. */
@@ -29,7 +42,7 @@ export type CreateActivityParams = {
   meta?: Record<string, unknown>
   /** Set true for activities created by automated processes (e.g. queue router). */
   isAutomated?: boolean
-  createdBy: string
+  createdBy: DidString
 }
 
 export async function createReportActivity(
@@ -94,7 +107,7 @@ export async function createReportActivity(
       throw err
     }
 
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
 
     if (result.nextStatus !== null) {
       const updateSet: Record<string, string | null> = {
@@ -141,8 +154,8 @@ export type BulkActivityInsert = {
   publicNote?: string
   meta?: unknown
   isAutomated: boolean
-  createdBy: string
-  createdAt: string
+  createdBy: DidString
+  createdAt: DatetimeString
 }
 
 /**
@@ -213,7 +226,7 @@ export async function listReportActivities(
 
 export async function queryReportActivities(
   db: Database,
-  params: QueryActivitiesParams,
+  params: tools.ozone.report.queryActivities.$Params,
 ) {
   const {
     activityTypes,
@@ -256,12 +269,11 @@ export async function queryReportActivities(
 function buildActivityObject(
   activityType: string,
   previousStatus: string | null,
-): { $type: string; [k: string]: unknown } {
-  const $type = `tools.ozone.report.defs#${activityType}`
-  if (previousStatus !== null) {
-    return { $type, previousStatus }
-  }
-  return { $type }
+): tools.ozone.report.defs.ReportActivityView['activity'] {
+  const $type = `tools.ozone.report.defs#${activityType}` as Unknown$Type
+  return (
+    previousStatus !== null ? { $type, previousStatus } : { $type }
+  ) as tools.ozone.report.defs.ReportActivityView['activity']
 }
 
 export function formatActivityView(
@@ -274,11 +286,11 @@ export function formatActivityView(
     publicNote: string | null
     meta: unknown
     isAutomated: boolean
-    createdBy: string
-    createdAt: string
+    createdBy: DidString
+    createdAt: DatetimeString
   },
-  memberViews?: Map<string, Member>,
-  reportViews?: Map<number, ReportView>,
+  memberViews?: Map<string, tools.ozone.team.defs.Member>,
+  reportViews?: Map<number, tools.ozone.report.defs.ReportView>,
 ) {
   return {
     id: activity.id,
@@ -289,7 +301,7 @@ export function formatActivityView(
     ),
     internalNote: activity.internalNote ?? undefined,
     publicNote: activity.publicNote ?? undefined,
-    meta: (activity.meta as Record<string, unknown>) ?? undefined,
+    meta: (activity.meta as LexMap) ?? undefined,
     isAutomated: activity.isAutomated,
     createdBy: activity.createdBy,
     moderator: memberViews?.get(activity.createdBy),

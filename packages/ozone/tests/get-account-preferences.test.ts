@@ -1,19 +1,25 @@
 import { type SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
+import type { Client } from '@atproto/lex'
+import { app, tools } from '../src/lexicons/index.js'
 
+// @TODO In order to properly test this, Ozone and the user should be on
+// different PDS instances.
 describe('account preferences', () => {
   let network: TestNetwork
   let sc: SeedClient
+  let client: Client
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_account_preferences_test',
     })
     sc = network.getSeedClient()
+    client = network.ozone.getClient()
     await usersSeed(sc)
     // @NOTE TestNetwork migrates Ozone's DID after the PDS has cached it.
     await network.pds.ctx.didCache.clearEntry(network.ozone.ctx.cfg.service.did)
-    await network.pds.getAgent().app.bsky.actor.putPreferences(
+    await network.pds.getClient().call(
+      app.bsky.actor.putPreferences,
       {
         preferences: [
           {
@@ -31,17 +37,17 @@ describe('account preferences', () => {
   })
 
   it('returns preferences from the PDS', async () => {
-    const url = new URL(
-      '/xrpc/app.bsky.actor.getPreferences',
-      network.ozone.url,
+    const data = await client.call(
+      tools.ozone.moderation.getAccountPreferences,
+      { did: sc.dids.alice },
+      {
+        headers: await network.ozone.modHeaders(
+          tools.ozone.moderation.getAccountPreferences.$lxm,
+        ),
+      },
     )
-    url.searchParams.set('did', sc.dids.alice)
-    const res = await fetch(url, {
-      headers: await network.ozone.modHeaders(ids.AppBskyActorGetPreferences),
-    })
 
-    expect(res.status).toBe(200)
-    await expect(res.json()).resolves.toEqual({
+    expect(data).toEqual({
       preferences: [
         {
           $type: 'app.bsky.actor.defs#adultContentPref',

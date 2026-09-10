@@ -135,9 +135,11 @@ export class ParamsSchema<
   }>
 > {
   readonly type = 'params' as const
+  readonly shape: TShape
 
-  constructor(readonly shape: TShape) {
+  constructor(shape: TShape) {
     super()
+    this.shape = shape
   }
 
   get shapeValidators(): Map<string, ParamValidator> {

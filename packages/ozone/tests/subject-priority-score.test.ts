@@ -1,10 +1,10 @@
+import { ComAtprotoModerationDefs } from '@atproto/api'
 import {
   type ModeratorClient,
   type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { REASONSPAM } from '../dist/lexicon/types/com/atproto/moderation/defs.js'
 
 describe('moderation', () => {
   let network: TestNetwork
@@ -20,7 +20,7 @@ describe('moderation', () => {
     await basicSeed(sc)
     await Promise.all([
       sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.bob,
@@ -28,7 +28,7 @@ describe('moderation', () => {
         reportedBy: sc.dids.carol,
       }),
       sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.alice,
@@ -36,7 +36,7 @@ describe('moderation', () => {
         reportedBy: sc.dids.carol,
       }),
       sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: sc.posts[sc.dids.bob][0].ref.uriStr,

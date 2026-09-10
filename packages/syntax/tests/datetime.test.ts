@@ -6,6 +6,7 @@ import {
   isDatetimeStringLenient,
   normalizeDatetime,
   normalizeDatetimeAlways,
+  toDatetimeString,
 } from '../src/index.js'
 import { readInteropFile } from './_utils.ts'
 
@@ -263,5 +264,20 @@ describe(normalizeDatetimeAlways, () => {
     test.each(interopInvalidParse)('%s', (dt) => {
       expect(normalizeDatetimeAlways(dt)).toEqual('1970-01-01T00:00:00.000Z')
     })
+  })
+})
+
+describe(toDatetimeString, () => {
+  describe('Interop valid', () => {
+    test.each(interopValid)('%s', (date) => {
+      const datetimeString = toDatetimeString(date)
+      expect(datetimeString).toBe(normalizeDatetime(date))
+    })
+  })
+
+  it('allows Date input', () => {
+    const date = new Date('2023-01-01T12:34:56Z')
+    const datetimeString = toDatetimeString(date)
+    expect(datetimeString).toBe('2023-01-01T12:34:56.000Z')
   })
 })

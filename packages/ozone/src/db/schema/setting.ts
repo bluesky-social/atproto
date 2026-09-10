@@ -1,4 +1,5 @@
 import type { Generated, GeneratedAlways } from 'kysely'
+import type { DidString } from '@atproto/lex'
 import type { Member } from './member.js'
 
 export const settingTableName = 'setting'
@@ -11,10 +12,10 @@ export interface Setting {
   value: Record<string, unknown>
   managerRole: Member['role'] | null
   description: string | null
-  did: string
+  did: DidString
   scope: SettingScope
-  lastUpdatedBy: string
-  createdBy: string
+  lastUpdatedBy: DidString
+  createdBy: DidString
   createdAt: Generated<Date>
   updatedAt: Generated<Date>
 }

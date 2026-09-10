@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.add(app.bsky.unspecced.getSuggestedUsersForDiscover, {
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, req }) => {
+    handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
@@ -47,6 +47,7 @@ export default function (server: Server, ctx: AppContext) {
           ...params,
           hydrateCtx,
           headers,
+          signal,
         },
         ctx,
       )
@@ -74,6 +75,7 @@ const skeletonFromGetSuggestedUsersSkeleton = async (
     },
     {
       headers: params.headers,
+      signal: params.signal,
     },
   )
 }
@@ -96,6 +98,7 @@ const skeletonFromGetSuggestedUsersForDiscoverSkeleton = async (
     },
     {
       headers: params.headers,
+      signal: params.signal,
     },
   )
 }
@@ -167,6 +170,7 @@ type Context = {
 type Params = app.bsky.unspecced.getSuggestedUsersForDiscover.$Params & {
   hydrateCtx: HydrateCtx & { viewer: string | null }
   headers: Record<string, string>
+  signal: AbortSignal
 }
 
 type SkeletonState = {

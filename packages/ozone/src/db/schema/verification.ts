@@ -1,19 +1,25 @@
 import type { Generated } from 'kysely'
+import type {
+  AtUriString,
+  DatetimeString,
+  DidString,
+  HandleString,
+} from '@atproto/lex'
 
 export const verificationTableName = 'verification'
 
 export interface Verification {
-  uri: string
+  uri: AtUriString
   cid: string
-  issuer: string
-  subject: string
-  handle: string
+  issuer: DidString
+  subject: DidString
+  handle: HandleString
   displayName: string
   revokeReason: string | null
-  revokedBy: string | null
-  revokedAt: string | null
-  createdAt: string
-  updatedAt: Generated<string>
+  revokedBy: DidString | null
+  revokedAt: DatetimeString | null
+  createdAt: DatetimeString
+  updatedAt: Generated<DatetimeString>
 }
 
 export type PartialDB = {

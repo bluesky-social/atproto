@@ -6,11 +6,12 @@ import {
   verifySignature,
 } from '@atproto/crypto'
 import { type Cid, ui8Equals } from '@atproto/lex-data'
+import type { NsidString, RecordKeyString } from '@atproto/syntax'
 import { LtHash } from './lthash.js'
 import {
   COMMIT_VERSION,
   type CommitCtx,
-  type RecordPath,
+  type RecordPathParts,
   type RepoIndex,
   type RepoOp,
   type SignedCommit,
@@ -25,7 +26,9 @@ export class RepoCommit {
     return new RepoCommit(new LtHash(state))
   }
 
-  static fromRecords(records: Iterable<RecordPath & { cid: Cid }>): RepoCommit {
+  static fromRecords(
+    records: Iterable<RecordPathParts & { cid: Cid }>,
+  ): RepoCommit {
     const commit = new RepoCommit()
     for (const { collection, rkey, cid } of records) {
       commit.add(collection, rkey, cid)
@@ -37,17 +40,17 @@ export class RepoCommit {
   static fromIndex(index: RepoIndex): RepoCommit {
     const commit = new RepoCommit()
     for (const [path, cid] of Object.entries(index)) {
-      commit.setHash.add(`${path}/${cid.toString()}`)
+      if (cid) commit.setHash.add(`${path}/${cid.toString()}`)
     }
     return commit
   }
 
-  add(collection: string, rkey: string, cid: Cid): this {
+  add(collection: NsidString, rkey: RecordKeyString, cid: Cid): this {
     this.setHash.add(formatSetHashElement(collection, rkey, cid))
     return this
   }
 
-  remove(collection: string, rkey: string, cid: Cid): this {
+  remove(collection: NsidString, rkey: RecordKeyString, cid: Cid): this {
     this.setHash.remove(formatSetHashElement(collection, rkey, cid))
     return this
   }

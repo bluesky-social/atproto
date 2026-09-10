@@ -1,22 +1,18 @@
-import { lexicons } from '@atproto/api'
+import type { AtUriString, DidString } from '@atproto/lex'
 import { BackgroundQueue } from '../background.js'
 import type { Database } from '../db/index.js'
 import { type CommitCreateEvent, Jetstream } from '../jetstream/service.js'
+import { app } from '../lexicons/index.js'
 import { verificationLogger } from '../logger.js'
 import { VerificationService } from '../verification/service.js'
 
-type VerificationRecord = {
-  subject: string
-  handle: string
-  displayName: string
-  createdAt: string
-}
+type VerificationRecord = app.bsky.graph.verification.Main
 
 export class VerificationListener {
   destroyed = false
   private cursor?: number
   private jetstream: Jetstream | null = null
-  private collection = 'app.bsky.graph.verification'
+  private collection = app.bsky.graph.verification.$nsid
   public backgroundQueue = new BackgroundQueue(this.db, { concurrency: 1 })
   private verificationService = VerificationService.creator()(this.db)
 
@@ -43,8 +39,8 @@ export class VerificationListener {
   }
 
   handleNewVerification(
-    issuer: string,
-    uri: string,
+    issuer: DidString,
+    uri: AtUriString,
     cid: string,
     record: VerificationRecord,
     cursor: number,
@@ -65,7 +61,7 @@ export class VerificationListener {
     })
   }
 
-  handleDeletedVerification(uri: string, cursor: number) {
+  handleDeletedVerification(uri: AtUriString, cursor: number) {
     this.backgroundQueue.add(async () => {
       try {
         await this.verificationService.markRevoked({
@@ -120,14 +116,13 @@ export class VerificationListener {
     await this.jetstream.start({
       onCreate: {
         [this.collection]: async (e: CommitCreateEvent<VerificationRecord>) => {
-          const recordValidity = lexicons.validate(
-            this.collection,
+          const recordValidity = app.bsky.graph.verification.main.$safeParse(
             e.commit.record,
           )
 
           if (!recordValidity.success) {
             verificationLogger.error(
-              recordValidity.error,
+              recordValidity.reason,
               'Invalid verification record in the firehose',
             )
             return
@@ -137,7 +132,7 @@ export class VerificationListener {
           if (hasCapacity) {
             const issuer = e.did
             const { record, rkey, collection, cid } = e.commit
-            const uri = `at://${issuer}/${collection}/${rkey}`
+            const uri = `at://${issuer}/${collection}/${rkey}` as AtUriString
             this.handleNewVerification(issuer, uri, cid, record, e.time_us)
           }
         },

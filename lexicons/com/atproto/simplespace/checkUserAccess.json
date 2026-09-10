@@ -4,10 +4,10 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Ask a space's managing app whether to authorize a requesting user for a space credential. Served by the managingApp (not the PDS), called by the space authority at mint time when policy is 'managing-app'. Authenticated with service auth from the authority.",
+      "description": "Ask a space's managing app whether to authorize a user to read or write. Served by the managingApp (not the PDS), called by the space authority when the corresponding policy is 'managing-app'. Authenticated with service auth from the authority.",
       "parameters": {
         "type": "params",
-        "required": ["space", "user"],
+        "required": ["space", "user", "access"],
         "properties": {
           "space": {
             "type": "string",
@@ -19,9 +19,14 @@
             "format": "did",
             "description": "The DID of the requesting user."
           },
+          "access": {
+            "type": "string",
+            "knownValues": ["read", "write"],
+            "description": "The kind of access being checked."
+          },
           "clientId": {
             "type": "string",
-            "description": "The attested client_id, if a client attestation was presented."
+            "description": "The attested client_id, if a client attestation was presented. Omitted for write checks."
           }
         }
       },

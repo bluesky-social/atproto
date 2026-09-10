@@ -1,5 +1,13 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import {
   type AppBskyFeedDefs,
   type AppBskyFeedGetTimeline,
@@ -12,6 +20,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { Gate } from '../../src/feature-gates/gates.js'
 import type { Database } from '../../src/index.js'
 import { forSnapshot, getOriginator, paginateAll } from '../_util.js'
 
@@ -32,6 +41,16 @@ describe('timeline views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_home_feed',
     })
+    vi.spyOn(network.bsky.ctx.featureGatesClient, 'scope').mockImplementation(
+      () => ({
+        Gate,
+        checkGate: (gate) => gate === Gate.KnownLikersFeedEnable,
+        checkGates: (gates) =>
+          new Map(
+            gates.map((gate) => [gate, gate === Gate.KnownLikersFeedEnable]),
+          ),
+      }),
+    )
     agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -82,6 +101,13 @@ describe('timeline views', () => {
 
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
     aliceTL.data.feed.forEach(expectOriginatorFollowedBy(alice))
+    const carolPost = aliceTL.data.feed.find(
+      (item) => item.post.uri === sc.posts[carol][0].ref.uriStr,
+    )
+    expect(
+      carolPost?.post.viewer?.knownLikers?.actors.map((actor) => actor.did),
+    ).toEqual([bob])
+    expect(carolPost?.post.viewer?.knownLikers?.count).toBe(1)
 
     const bobTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: REVERSE_CHRON },
@@ -115,6 +141,38 @@ describe('timeline views', () => {
 
     expect(forSnapshot(danTL.data.feed)).toMatchSnapshot()
     danTL.data.feed.forEach(expectOriginatorFollowedBy(dan))
+  })
+
+  it('serves known likers on the root post of a reply, not on the reply itself', async () => {
+    const { data } = await agent.api.app.bsky.feed.getTimeline(
+      { algorithm: REVERSE_CHRON, limit: 100 },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetTimeline,
+        ),
+      },
+    )
+
+    // Bob replies directly to alice's post, so the reply's parent is its root.
+    const item = data.feed.find(
+      (item) => item.post.uri === sc.replies[bob][0].ref.uriStr,
+    )
+    assert(item, 'expected bob reply in timeline')
+    assert(item.reply, 'expected reply context')
+
+    const root = item.reply.root as AppBskyFeedDefs.PostView
+    const parent = item.reply.parent as AppBskyFeedDefs.PostView
+    expect(root.uri).toBe(sc.posts[alice][1].ref.uriStr)
+    expect(parent.uri).toBe(root.uri)
+
+    const likers = [bob, carol, dan]
+    expect(root.viewer?.knownLikers?.count).toBe(likers.length)
+    expect(root.viewer?.knownLikers?.actors.map((a) => a.did).sort()).toEqual(
+      [...likers].sort(),
+    )
+    expect(parent.viewer?.knownLikers).toEqual(root.viewer?.knownLikers)
+    expect(item.post.viewer?.knownLikers).toBeUndefined()
   })
 
   it("fetches authenticated user's home feed w/ default algorithm", async () => {

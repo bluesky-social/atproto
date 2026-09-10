@@ -36,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.add(app.bsky.feed.searchPosts, {
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, req }) => {
+    handler: async ({ auth, params, req, signal }) => {
       const { viewer, isModService, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)
 
@@ -62,6 +62,7 @@ export default function (server: Server, ctx: AppContext) {
               cursor,
               limit,
               hydrateCtx,
+              signal,
               isModService,
               isV2Override: resolveSearchV2Override(req, ctx.cfg),
             },
@@ -105,6 +106,7 @@ const skeletonV1 = async (
         url: params.url,
         viewer: params.hydrateCtx.viewer ?? undefined,
       },
+      { signal: params.signal },
     )
     return {
       posts: res.posts.map(({ uri }) => uri as AtUriString),
@@ -272,6 +274,7 @@ type Context = {
 
 type Params = app.bsky.feed.searchPosts.$Params & {
   hydrateCtx: HydrateCtx
+  signal: AbortSignal
   isModService: boolean
   isV2Override: boolean
 }

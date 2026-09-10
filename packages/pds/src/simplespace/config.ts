@@ -5,12 +5,13 @@ import { com } from '../lexicons/index.js'
 const { defs } = com.atproto.simplespace
 
 type LexSpace = com.atproto.simplespace.getSpace.$OutputBody
-type LexPolicy = LexSpace['policy']
+type LexPolicy = LexSpace['readPolicy']
 type LexAppAccess = LexSpace['appAccess']
 
-export function lexPolicyToDb(
-  policy: LexPolicy,
-): Pick<SimplespaceConfig, 'policy' | 'managingApp'> {
+export function lexPolicyToDb(policy: LexPolicy): {
+  policy: string
+  managingApp: string | null
+} {
   if (defs.publicPolicy.$isTypeOf(policy)) {
     return { policy: 'public', managingApp: null }
   }
@@ -54,18 +55,19 @@ export function lexAppAccessToDb(
 export function toLexConfig(config: SimplespaceConfig): LexSpace {
   return {
     uri: config.uri as LexSpace['uri'],
-    policy: policyToLex(config),
+    readPolicy: policyToLex(config.readPolicy, config.readManagingApp),
+    writePolicy: policyToLex(config.writePolicy, config.writeManagingApp),
     appAccess: appAccessToLex(config),
   }
 }
 
-function policyToLex(config: SimplespaceConfig): LexPolicy {
-  switch (config.policy) {
+function policyToLex(policy: string, managingApp: string | null): LexPolicy {
+  switch (policy) {
     case 'public':
       return defs.publicPolicy.build({})
     case 'managing-app':
       return defs.managingAppPolicy.build({
-        managingApp: config.managingApp ?? '',
+        managingApp: managingApp ?? '',
       })
     default:
       return defs.memberListPolicy.build({})

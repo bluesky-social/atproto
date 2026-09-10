@@ -1,10 +1,7 @@
 import { jest } from '@jest/globals'
+import { ComAtprotoModerationDefs } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import {
-  REASONRUDE,
-  REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs.js'
 import { ModerationServiceProfile } from '../src/mod-service/profile.js'
 import { forSnapshot } from './_util.js'
 
@@ -74,7 +71,7 @@ describe('report reason', () => {
       const cachePopulatedAt = 1_000_000
       const moderationServiceProfile = new ModerationServiceProfile(
         network.ozone.ctx.cfg,
-        network.ozone.ctx.appviewAgent,
+        network.ozone.ctx.appviewClient,
         cacheTTL,
       )
 
@@ -126,7 +123,7 @@ describe('report reason', () => {
     it('should validate mapped reason types', async () => {
       const moderationServiceProfile = new ModerationServiceProfile(
         network.ozone.ctx.cfg,
-        network.ozone.ctx.appviewAgent,
+        network.ozone.ctx.appviewClient,
         500,
       )
 
@@ -137,7 +134,10 @@ describe('report reason', () => {
         rkey: 'self',
         record: {
           policies: { labelValues: [] },
-          reasonTypes: [REASONSPAM, REASONRUDE],
+          reasonTypes: [
+            ComAtprotoModerationDefs.REASONSPAM,
+            ComAtprotoModerationDefs.REASONRUDE,
+          ],
           createdAt: new Date().toISOString(),
         },
       })
@@ -151,8 +151,10 @@ describe('report reason', () => {
 
       // directly supported old reason types work
       await expect(
-        moderationServiceProfile.validateReasonType(REASONSPAM),
-      ).resolves.toEqual(REASONSPAM)
+        moderationServiceProfile.validateReasonType(
+          ComAtprotoModerationDefs.REASONSPAM,
+        ),
+      ).resolves.toEqual(ComAtprotoModerationDefs.REASONSPAM)
 
       // new reason types that don't map to supported old reason types are rejected
       await expect(

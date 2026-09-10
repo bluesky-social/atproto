@@ -18,13 +18,23 @@ export type AtprotoHandleResolverNodeOptions = {
 
   /**
    * Fetch function to use for HTTP requests. Allows customizing the request
-   * behavior, e.g. adding headers, setting a timeout, mocking, etc. The
-   * provided fetch function will be wrapped with a safeFetchWrap function that
-   * adds SSRF protection.
+   * behavior, e.g. adding headers, setting a timeout, mocking, etc. This will
+   * be wrapped with {@link safeFetchWrap} to build the {@link safeFetch} when
+   * it is not provided.
    *
    * @default `globalThis.fetch`
    */
   fetch?: Fetch
+
+  /**
+   * Custom fetch function that will be used for HTTP requests. This function,
+   * if provided, *must* be safe to use with user-provided input (URL). If not
+   * provided, a safe fetch function will be created by wrapping the provided {@link fetch}
+   * function (or the default `globalThis.fetch`) with {@link safeFetchWrap}.
+   *
+   * @see {@link safeFetchWrap}
+   */
+  safeFetch?: Fetch
 
   /**
    * Optional observability hook, invoked when handle resolution fails for a
@@ -42,16 +52,17 @@ export class AtprotoHandleResolverNode
 {
   constructor({
     fetch = globalThis.fetch,
+    safeFetch = safeFetchWrap({
+      fetch,
+      timeout: 3000, // 3 seconds
+      ssrfProtection: true,
+      responseMaxSize: 10 * 1024, // DID are max 2048 characters, 10kb for safety
+    }),
     fallbackNameservers,
     onError,
   }: AtprotoHandleResolverNodeOptions = {}) {
     super({
-      fetch: safeFetchWrap({
-        fetch,
-        timeout: 3000, // 3 seconds
-        ssrfProtection: true,
-        responseMaxSize: 10 * 1048, // DID are max 2048 characters, 10kb for safety
-      }),
+      fetch: safeFetch,
       resolveTxt: nodeResolveTxtDefault,
       resolveTxtFallback: fallbackNameservers?.length
         ? nodeResolveTxtFactory(fallbackNameservers)

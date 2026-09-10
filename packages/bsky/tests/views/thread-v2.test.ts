@@ -241,6 +241,32 @@ describe('appview thread views v2', () => {
       ])
       expect(forSnapshot(data)).toMatchSnapshot()
     })
+
+    it('returns known likers on the anchor post', async () => {
+      await sc.follow(seed.users.op.did, seed.users.alice.did)
+      await sc.like(seed.users.alice.did, seed.root.ref)
+      await sc.like(seed.users.bob.did, seed.root.ref)
+      await network.processAll()
+
+      const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
+        { anchor: seed.root.ref.uriStr },
+        {
+          headers: await network.serviceHeaders(
+            seed.users.op.did,
+            ids.AppBskyUnspeccedGetPostThreadV2,
+          ),
+        },
+      )
+      assertPosts(data.thread)
+      const anchor = data.thread.find((item) => item.depth === 0)
+
+      expect(
+        anchor?.value.post.viewer?.knownLikers?.actors.map(
+          (actor) => actor.did,
+        ),
+      ).toEqual([seed.users.alice.did])
+      expect(anchor?.value.post.viewer?.knownLikers?.count).toBe(1)
+    })
   })
 
   describe('long thread', () => {

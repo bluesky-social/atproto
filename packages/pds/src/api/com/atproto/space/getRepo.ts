@@ -69,7 +69,7 @@ async function* readRecords(
     yield {
       collection: record.collection,
       rkey: record.rkey,
-      cid: parseCid(record.cid),
+      cid: parseCid(record.cid, { flavor: 'cbor' }),
       // Absent under excludeValues, where serializeRepo writes the index and no
       // record blocks, so the bytes are never read.
       bytes: record.value ?? new Uint8Array(),

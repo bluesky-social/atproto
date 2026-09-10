@@ -1,5 +1,52 @@
 # @atproto/pds
 
+## 0.5.32
+
+### Patch Changes
+
+- [#5448](https://github.com/bluesky-social/atproto/pull/5448) [`80d391a`](https://github.com/bluesky-social/atproto/commit/80d391a2b5762b1c50037303f77f73db345bec1e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Forward all `x-atproto-*` request headers through PDS service proxies.
+
+- Updated dependencies [[`8a4631a`](https://github.com/bluesky-social/atproto/commit/8a4631a47ce6791b3868f06d1c930aa21327748c), [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222), [`222f4bc`](https://github.com/bluesky-social/atproto/commit/222f4bc600fb89c75fafee95ef3c837b1721601e), [`46fdec9`](https://github.com/bluesky-social/atproto/commit/46fdec90d4eca8c8d7c8eeb7dc801cf52ffaaed6), [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222), [`ffcb7c5`](https://github.com/bluesky-social/atproto/commit/ffcb7c54e4dcedb10eed9175fbc939761462bca6)]:
+  - @atproto/xrpc-server@0.13.0
+  - @atproto/lex@0.3.9
+  - @atproto-labs/opentelemetry-node@0.2.0
+  - @atproto/syntax@0.7.6
+  - @atproto-labs/xrpc-utils@0.1.21
+  - @atproto/oauth-provider@0.22.6
+  - @atproto/oauth-scopes@0.5.11
+  - @atproto/repo@0.10.13
+  - @atproto/aws@0.3.16
+  - @atproto/common@0.8.2
+  - @atproto/identity@0.5.11
+
+## 0.5.31
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.3.8
+  - @atproto/xrpc-server@0.12.7
+  - @atproto/oauth-provider@0.22.5
+  - @atproto-labs/xrpc-utils@0.1.20
+
+## 0.5.30
+
+### Patch Changes
+
+- [#5428](https://github.com/bluesky-social/atproto/pull/5428) [`f2c33aa`](https://github.com/bluesky-social/atproto/commit/f2c33aa4a72c95762c2708cf02acbfab7ddd2b5a) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Remove x-bsky-is-beta-user header handling
+
+- Updated dependencies [[`79d911f`](https://github.com/bluesky-social/atproto/commit/79d911fc2bd7c6d9b1a6810e00e81d964b72a4ab), [`615ac2a`](https://github.com/bluesky-social/atproto/commit/615ac2a8cc72cd475dc4f06f743f2514d8afc6e0), [`6af9f14`](https://github.com/bluesky-social/atproto/commit/6af9f141d18c1f41a04828af8256567d5f17a35e)]:
+  - @atproto/lex@0.3.7
+  - @atproto/xrpc-server@0.12.6
+  - @atproto/syntax@0.7.5
+  - @atproto-labs/xrpc-utils@0.1.19
+  - @atproto/oauth-provider@0.22.4
+  - @atproto/oauth-scopes@0.5.10
+  - @atproto/repo@0.10.12
+  - @atproto/aws@0.3.15
+  - @atproto/common@0.8.1
+  - @atproto/identity@0.5.10
+
 ## 0.5.29
 
 ### Patch Changes

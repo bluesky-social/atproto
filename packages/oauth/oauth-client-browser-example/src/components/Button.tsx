@@ -61,7 +61,7 @@ export function Button({
       className={[
         'relative overflow-hidden',
         'inline-block rounded-md',
-        'focus:outline-none focus:ring-2 focus:ring-offset-2',
+        'focus:ring-2 focus:ring-offset-2 focus:outline-none',
         'transition duration-300 ease-in-out',
         transparent
           ? 'bg-transparent text-purple-600 hover:bg-purple-100 focus:ring-purple-500 dark:text-purple-400 dark:hover:bg-purple-950'

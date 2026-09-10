@@ -110,6 +110,7 @@ export type BlockedPost = app.bsky.feed.defs.BlockedPost
 export type GeneratorView = app.bsky.feed.defs.GeneratorView
 export type NotFoundPost = app.bsky.feed.defs.NotFoundPost
 export type PostView = app.bsky.feed.defs.PostView
+export type KnownLikers = app.bsky.feed.defs.KnownLikers
 export const isPostViewType = app.bsky.feed.defs.postView.$isTypeOf
 
 export type GateRecord = app.bsky.feed.threadgate.Main

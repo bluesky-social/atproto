@@ -7,7 +7,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ResponseType, XRPCError } from '@atproto/xrpc'
+import { UpstreamHttpError } from '../src/util.js'
 import { forSnapshot, identity } from './_util.js'
 
 describe('blob divert', () => {
@@ -40,8 +40,8 @@ describe('blob divert', () => {
       .spyOn(blobDiverter, 'uploadBlob')
       .mockImplementation(async () => {
         if (!succeeds) {
-          // Using an XRPCError to trigger retries
-          throw new XRPCError(ResponseType.Unknown, undefined)
+          // A status-less UpstreamHttpError is what retryHttp always retries
+          throw new UpstreamHttpError(undefined, 'upload failed')
         }
       })
   }

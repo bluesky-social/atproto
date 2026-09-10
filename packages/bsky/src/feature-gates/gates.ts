@@ -14,6 +14,7 @@ export enum Gate {
   SearchV2Enable = 'search:v2:enable',
   IrisFeed = 'iris:feed:enable',
   OpThreadMetadataEnable = 'op_thread_metadata:enable',
+  KnownLikersFeedEnable = 'known_likers:feed:enable',
 
   // temp
   AATest = 'aa-test-appview',

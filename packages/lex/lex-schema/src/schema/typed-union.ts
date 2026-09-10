@@ -43,16 +43,19 @@ export class TypedUnionSchema<
 > {
   readonly type = 'typedUnion' as const
 
-  constructor(
-    protected readonly validators: TValidators,
-    public readonly closed: TClosed,
-  ) {
+  protected readonly validators: TValidators
+  public readonly closed: TClosed
+
+  constructor(validators: TValidators, closed: TClosed) {
     // @NOTE In order to avoid circular dependency issues, we don't access the
     // refs's schema (or $type) here. Instead, we access them lazily when first
     // needed. The biggest issue with this strategy is that we can't throw
     // early if the refs contain multiple refs with the same $type.
 
     super()
+
+    this.validators = validators
+    this.closed = closed
   }
 
   get validatorsMap(): Map<unknown, TValidators[number]> {

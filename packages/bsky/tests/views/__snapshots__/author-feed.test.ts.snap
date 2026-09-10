@@ -111,16 +111,16 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
               "allowSubscriptions": "followers",
             },
           },
-          "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "did": "user(2)",
+          "did": "user(4)",
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": [],
           "viewer": {
             "blockedBy": false,
-            "followedBy": "record(5)",
-            "following": "record(4)",
+            "followedBy": "record(8)",
+            "following": "record(7)",
             "muted": false,
             "mutedOnlyQuoteposts": false,
             "mutedOnlyReposts": false,
@@ -133,8 +133,8 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
           "images": [
             {
               "alt": "../dev-env/assets/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(5)",
-              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(5)",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(5)",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(5)",
             },
           ],
         },
@@ -250,6 +250,70 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
+          "knownLikers": {
+            "actors": [
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                  "chat": {
+                    "allowIncoming": "none",
+                  },
+                },
+                "did": "user(2)",
+                "handle": "dan.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "following": "record(4)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                },
+                "did": "user(3)",
+                "handle": "carol.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "followedBy": "record(6)",
+                  "following": "record(5)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                },
+                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+                "createdAt": "1970-01-01T00:00:00.000Z",
+                "did": "user(4)",
+                "displayName": "bobby",
+                "handle": "bob.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "followedBy": "record(8)",
+                  "following": "record(7)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+            ],
+            "count": 3,
+          },
           "threadMuted": false,
         },
       },
@@ -306,12 +370,12 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
                 "allowIncoming": "none",
               },
             },
-            "did": "user(4)",
+            "did": "user(2)",
             "handle": "dan.test",
             "labels": [],
             "viewer": {
               "blockedBy": false,
-              "following": "record(8)",
+              "following": "record(4)",
               "muted": false,
               "mutedOnlyQuoteposts": false,
               "mutedOnlyReposts": false,
@@ -329,13 +393,13 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
                       "allowSubscriptions": "followers",
                     },
                   },
-                  "did": "user(5)",
+                  "did": "user(3)",
                   "handle": "carol.test",
                   "labels": [],
                   "viewer": {
                     "blockedBy": false,
-                    "followedBy": "record(11)",
-                    "following": "record(10)",
+                    "followedBy": "record(6)",
+                    "following": "record(5)",
                     "muted": false,
                     "mutedOnlyQuoteposts": false,
                     "mutedOnlyReposts": false,
@@ -348,7 +412,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
                 "quoteCount": 1,
                 "replyCount": 0,
                 "repostCount": 0,
-                "uri": "record(9)",
+                "uri": "record(11)",
                 "value": {
                   "$type": "app.bsky.feed.post",
                   "createdAt": "1970-01-01T00:00:00.000Z",
@@ -399,7 +463,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
           "quoteCount": 1,
           "replyCount": 0,
           "repostCount": 1,
-          "uri": "record(7)",
+          "uri": "record(10)",
           "value": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
@@ -407,7 +471,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
               "$type": "app.bsky.embed.record",
               "record": {
                 "cid": "cids(8)",
-                "uri": "record(9)",
+                "uri": "record(11)",
               },
             },
             "facets": [
@@ -434,7 +498,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
           "cid": "cids(6)",
           "cts": "1970-01-01T00:00:00.000Z",
           "src": "did:example:labeler",
-          "uri": "record(6)",
+          "uri": "record(9)",
           "val": "test-label",
         },
       ],
@@ -447,17 +511,61 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
           "$type": "app.bsky.embed.record",
           "record": {
             "cid": "cids(7)",
-            "uri": "record(7)",
+            "uri": "record(10)",
           },
         },
         "text": "yoohoo label_me",
       },
       "replyCount": 0,
       "repostCount": 0,
-      "uri": "record(6)",
+      "uri": "record(9)",
       "viewer": {
         "bookmarked": false,
         "embeddingDisabled": false,
+        "knownLikers": {
+          "actors": [
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "did": "user(3)",
+              "handle": "carol.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(6)",
+                "following": "record(5)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "did": "user(4)",
+              "displayName": "bobby",
+              "handle": "bob.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(8)",
+                "following": "record(7)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+          ],
+          "count": 2,
+        },
         "threadMuted": false,
       },
     },
@@ -515,6 +623,70 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
       "viewer": {
         "bookmarked": false,
         "embeddingDisabled": false,
+        "knownLikers": {
+          "actors": [
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+                "chat": {
+                  "allowIncoming": "none",
+                },
+              },
+              "did": "user(2)",
+              "handle": "dan.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "following": "record(4)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "did": "user(3)",
+              "handle": "carol.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(6)",
+                "following": "record(5)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "did": "user(4)",
+              "displayName": "bobby",
+              "handle": "bob.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(8)",
+                "following": "record(7)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+          ],
+          "count": 3,
+        },
         "threadMuted": false,
       },
     },
@@ -745,6 +917,28 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
+          "knownLikers": {
+            "actors": [
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                },
+                "did": "user(4)",
+                "handle": "carol.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "following": "record(6)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+            ],
+            "count": 1,
+          },
           "like": "record(5)",
           "threadMuted": false,
         },
@@ -804,6 +998,28 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
+          "knownLikers": {
+            "actors": [
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                },
+                "did": "user(4)",
+                "handle": "carol.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "following": "record(6)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+            ],
+            "count": 1,
+          },
           "like": "record(5)",
           "threadMuted": false,
         },
@@ -844,7 +1060,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
       },
       "replyCount": 0,
       "repostCount": 0,
-      "uri": "record(6)",
+      "uri": "record(7)",
       "viewer": {
         "bookmarked": false,
         "embeddingDisabled": false,
@@ -890,7 +1106,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
       },
       "replyCount": 0,
       "repostCount": 0,
-      "uri": "record(7)",
+      "uri": "record(8)",
       "viewer": {
         "bookmarked": false,
         "embeddingDisabled": false,
@@ -1423,6 +1639,47 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
       "viewer": {
         "bookmarked": false,
         "embeddingDisabled": false,
+        "knownLikers": {
+          "actors": [
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(6)/cids(5)",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "did": "user(1)",
+              "displayName": "ali",
+              "handle": "alice.test",
+              "labels": [
+                {
+                  "cid": "cids(9)",
+                  "cts": "1970-01-01T00:00:00.000Z",
+                  "src": "user(1)",
+                  "uri": "record(9)",
+                  "val": "self-label-a",
+                },
+                {
+                  "cid": "cids(9)",
+                  "cts": "1970-01-01T00:00:00.000Z",
+                  "src": "user(1)",
+                  "uri": "record(9)",
+                  "val": "self-label-b",
+                },
+              ],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(8)",
+                "following": "record(7)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+          ],
+          "count": 1,
+        },
         "threadMuted": false,
       },
     },
@@ -1708,6 +1965,31 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
+          "knownLikers": {
+            "actors": [
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                },
+                "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
+                "createdAt": "1970-01-01T00:00:00.000Z",
+                "did": "user(3)",
+                "displayName": "bobby",
+                "handle": "bob.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "following": "record(8)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+            ],
+            "count": 1,
+          },
           "like": "record(7)",
           "repost": "record(6)",
           "threadMuted": false,
@@ -1769,6 +2051,31 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
       "viewer": {
         "bookmarked": false,
         "embeddingDisabled": false,
+        "knownLikers": {
+          "actors": [
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "did": "user(3)",
+              "displayName": "bobby",
+              "handle": "bob.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "following": "record(8)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+          ],
+          "count": 1,
+        },
         "like": "record(7)",
         "repost": "record(6)",
         "threadMuted": false,
@@ -2617,16 +2924,16 @@ exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
               "allowSubscriptions": "followers",
             },
           },
-          "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "did": "user(2)",
+          "did": "user(4)",
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": [],
           "viewer": {
             "blockedBy": false,
-            "followedBy": "record(13)",
-            "following": "record(12)",
+            "followedBy": "record(16)",
+            "following": "record(15)",
             "muted": false,
             "mutedOnlyQuoteposts": false,
             "mutedOnlyReposts": false,
@@ -2639,8 +2946,8 @@ exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
           "images": [
             {
               "alt": "../dev-env/assets/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(13)",
-              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(13)",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(13)",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(13)",
             },
           ],
         },
@@ -2756,6 +3063,70 @@ exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
+          "knownLikers": {
+            "actors": [
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                  "chat": {
+                    "allowIncoming": "none",
+                  },
+                },
+                "did": "user(2)",
+                "handle": "dan.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "following": "record(12)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                },
+                "did": "user(3)",
+                "handle": "carol.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "followedBy": "record(14)",
+                  "following": "record(13)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                },
+                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+                "createdAt": "1970-01-01T00:00:00.000Z",
+                "did": "user(4)",
+                "displayName": "bobby",
+                "handle": "bob.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "followedBy": "record(16)",
+                  "following": "record(15)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+            ],
+            "count": 3,
+          },
           "pinned": false,
           "threadMuted": false,
         },
@@ -2813,12 +3184,12 @@ exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
                 "allowIncoming": "none",
               },
             },
-            "did": "user(4)",
+            "did": "user(2)",
             "handle": "dan.test",
             "labels": [],
             "viewer": {
               "blockedBy": false,
-              "following": "record(16)",
+              "following": "record(12)",
               "muted": false,
               "mutedOnlyQuoteposts": false,
               "mutedOnlyReposts": false,
@@ -2836,13 +3207,13 @@ exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
                       "allowSubscriptions": "followers",
                     },
                   },
-                  "did": "user(5)",
+                  "did": "user(3)",
                   "handle": "carol.test",
                   "labels": [],
                   "viewer": {
                     "blockedBy": false,
-                    "followedBy": "record(19)",
-                    "following": "record(18)",
+                    "followedBy": "record(14)",
+                    "following": "record(13)",
                     "muted": false,
                     "mutedOnlyQuoteposts": false,
                     "mutedOnlyReposts": false,
@@ -2855,7 +3226,7 @@ exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
                 "quoteCount": 1,
                 "replyCount": 0,
                 "repostCount": 0,
-                "uri": "record(17)",
+                "uri": "record(19)",
                 "value": {
                   "$type": "app.bsky.feed.post",
                   "createdAt": "1970-01-01T00:00:00.000Z",
@@ -2906,7 +3277,7 @@ exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
           "quoteCount": 1,
           "replyCount": 0,
           "repostCount": 1,
-          "uri": "record(15)",
+          "uri": "record(18)",
           "value": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
@@ -2914,7 +3285,7 @@ exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
               "$type": "app.bsky.embed.record",
               "record": {
                 "cid": "cids(16)",
-                "uri": "record(17)",
+                "uri": "record(19)",
               },
             },
             "facets": [
@@ -2941,7 +3312,7 @@ exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
           "cid": "cids(14)",
           "cts": "1970-01-01T00:00:00.000Z",
           "src": "did:example:labeler",
-          "uri": "record(14)",
+          "uri": "record(17)",
           "val": "test-label",
         },
       ],
@@ -2954,17 +3325,61 @@ exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
           "$type": "app.bsky.embed.record",
           "record": {
             "cid": "cids(15)",
-            "uri": "record(15)",
+            "uri": "record(18)",
           },
         },
         "text": "yoohoo label_me",
       },
       "replyCount": 0,
       "repostCount": 0,
-      "uri": "record(14)",
+      "uri": "record(17)",
       "viewer": {
         "bookmarked": false,
         "embeddingDisabled": false,
+        "knownLikers": {
+          "actors": [
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "did": "user(3)",
+              "handle": "carol.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(14)",
+                "following": "record(13)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "did": "user(4)",
+              "displayName": "bobby",
+              "handle": "bob.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(16)",
+                "following": "record(15)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+          ],
+          "count": 2,
+        },
         "pinned": false,
         "threadMuted": false,
       },
@@ -3023,6 +3438,70 @@ exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
       "viewer": {
         "bookmarked": false,
         "embeddingDisabled": false,
+        "knownLikers": {
+          "actors": [
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+                "chat": {
+                  "allowIncoming": "none",
+                },
+              },
+              "did": "user(2)",
+              "handle": "dan.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "following": "record(12)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "did": "user(3)",
+              "handle": "carol.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(14)",
+                "following": "record(13)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "did": "user(4)",
+              "displayName": "bobby",
+              "handle": "bob.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(16)",
+                "following": "record(15)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+          ],
+          "count": 3,
+        },
         "pinned": false,
         "threadMuted": false,
       },
@@ -3623,16 +4102,16 @@ exports[`pds author feed views > pins > params.includePins = false 1`] = `
               "allowSubscriptions": "followers",
             },
           },
-          "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "did": "user(2)",
+          "did": "user(4)",
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": [],
           "viewer": {
             "blockedBy": false,
-            "followedBy": "record(12)",
-            "following": "record(11)",
+            "followedBy": "record(15)",
+            "following": "record(14)",
             "muted": false,
             "mutedOnlyQuoteposts": false,
             "mutedOnlyReposts": false,
@@ -3645,8 +4124,8 @@ exports[`pds author feed views > pins > params.includePins = false 1`] = `
           "images": [
             {
               "alt": "../dev-env/assets/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(12)",
-              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(12)",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(12)",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(12)",
             },
           ],
         },
@@ -3762,6 +4241,70 @@ exports[`pds author feed views > pins > params.includePins = false 1`] = `
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
+          "knownLikers": {
+            "actors": [
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                  "chat": {
+                    "allowIncoming": "none",
+                  },
+                },
+                "did": "user(2)",
+                "handle": "dan.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "following": "record(11)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                },
+                "did": "user(3)",
+                "handle": "carol.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "followedBy": "record(13)",
+                  "following": "record(12)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                },
+                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+                "createdAt": "1970-01-01T00:00:00.000Z",
+                "did": "user(4)",
+                "displayName": "bobby",
+                "handle": "bob.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "followedBy": "record(15)",
+                  "following": "record(14)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+            ],
+            "count": 3,
+          },
           "pinned": false,
           "threadMuted": false,
         },
@@ -3819,12 +4362,12 @@ exports[`pds author feed views > pins > params.includePins = false 1`] = `
                 "allowIncoming": "none",
               },
             },
-            "did": "user(4)",
+            "did": "user(2)",
             "handle": "dan.test",
             "labels": [],
             "viewer": {
               "blockedBy": false,
-              "following": "record(15)",
+              "following": "record(11)",
               "muted": false,
               "mutedOnlyQuoteposts": false,
               "mutedOnlyReposts": false,
@@ -3842,13 +4385,13 @@ exports[`pds author feed views > pins > params.includePins = false 1`] = `
                       "allowSubscriptions": "followers",
                     },
                   },
-                  "did": "user(5)",
+                  "did": "user(3)",
                   "handle": "carol.test",
                   "labels": [],
                   "viewer": {
                     "blockedBy": false,
-                    "followedBy": "record(18)",
-                    "following": "record(17)",
+                    "followedBy": "record(13)",
+                    "following": "record(12)",
                     "muted": false,
                     "mutedOnlyQuoteposts": false,
                     "mutedOnlyReposts": false,
@@ -3861,7 +4404,7 @@ exports[`pds author feed views > pins > params.includePins = false 1`] = `
                 "quoteCount": 1,
                 "replyCount": 0,
                 "repostCount": 0,
-                "uri": "record(16)",
+                "uri": "record(18)",
                 "value": {
                   "$type": "app.bsky.feed.post",
                   "createdAt": "1970-01-01T00:00:00.000Z",
@@ -3912,7 +4455,7 @@ exports[`pds author feed views > pins > params.includePins = false 1`] = `
           "quoteCount": 1,
           "replyCount": 0,
           "repostCount": 1,
-          "uri": "record(14)",
+          "uri": "record(17)",
           "value": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
@@ -3920,7 +4463,7 @@ exports[`pds author feed views > pins > params.includePins = false 1`] = `
               "$type": "app.bsky.embed.record",
               "record": {
                 "cid": "cids(15)",
-                "uri": "record(16)",
+                "uri": "record(18)",
               },
             },
             "facets": [
@@ -3947,7 +4490,7 @@ exports[`pds author feed views > pins > params.includePins = false 1`] = `
           "cid": "cids(13)",
           "cts": "1970-01-01T00:00:00.000Z",
           "src": "did:example:labeler",
-          "uri": "record(13)",
+          "uri": "record(16)",
           "val": "test-label",
         },
       ],
@@ -3960,17 +4503,61 @@ exports[`pds author feed views > pins > params.includePins = false 1`] = `
           "$type": "app.bsky.embed.record",
           "record": {
             "cid": "cids(14)",
-            "uri": "record(14)",
+            "uri": "record(17)",
           },
         },
         "text": "yoohoo label_me",
       },
       "replyCount": 0,
       "repostCount": 0,
-      "uri": "record(13)",
+      "uri": "record(16)",
       "viewer": {
         "bookmarked": false,
         "embeddingDisabled": false,
+        "knownLikers": {
+          "actors": [
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "did": "user(3)",
+              "handle": "carol.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(13)",
+                "following": "record(12)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "did": "user(4)",
+              "displayName": "bobby",
+              "handle": "bob.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(15)",
+                "following": "record(14)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+          ],
+          "count": 2,
+        },
         "pinned": false,
         "threadMuted": false,
       },
@@ -4029,6 +4616,70 @@ exports[`pds author feed views > pins > params.includePins = false 1`] = `
       "viewer": {
         "bookmarked": false,
         "embeddingDisabled": false,
+        "knownLikers": {
+          "actors": [
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+                "chat": {
+                  "allowIncoming": "none",
+                },
+              },
+              "did": "user(2)",
+              "handle": "dan.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "following": "record(11)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "did": "user(3)",
+              "handle": "carol.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(13)",
+                "following": "record(12)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "did": "user(4)",
+              "displayName": "bobby",
+              "handle": "bob.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(15)",
+                "following": "record(14)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+          ],
+          "count": 3,
+        },
         "pinned": false,
         "threadMuted": false,
       },
@@ -4637,16 +5288,16 @@ exports[`pds author feed views > pins > params.includePins = true, pin is NOT in
               "allowSubscriptions": "followers",
             },
           },
-          "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "did": "user(2)",
+          "did": "user(4)",
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": [],
           "viewer": {
             "blockedBy": false,
-            "followedBy": "record(9)",
-            "following": "record(8)",
+            "followedBy": "record(12)",
+            "following": "record(11)",
             "muted": false,
             "mutedOnlyQuoteposts": false,
             "mutedOnlyReposts": false,
@@ -4659,8 +5310,8 @@ exports[`pds author feed views > pins > params.includePins = true, pin is NOT in
           "images": [
             {
               "alt": "../dev-env/assets/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(9)",
-              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(9)",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(9)",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(9)",
             },
           ],
         },
@@ -4776,6 +5427,70 @@ exports[`pds author feed views > pins > params.includePins = true, pin is NOT in
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
+          "knownLikers": {
+            "actors": [
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                  "chat": {
+                    "allowIncoming": "none",
+                  },
+                },
+                "did": "user(2)",
+                "handle": "dan.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "following": "record(8)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                },
+                "did": "user(3)",
+                "handle": "carol.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "followedBy": "record(10)",
+                  "following": "record(9)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                },
+                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+                "createdAt": "1970-01-01T00:00:00.000Z",
+                "did": "user(4)",
+                "displayName": "bobby",
+                "handle": "bob.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "followedBy": "record(12)",
+                  "following": "record(11)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+            ],
+            "count": 3,
+          },
           "pinned": false,
           "threadMuted": false,
         },
@@ -4833,12 +5548,12 @@ exports[`pds author feed views > pins > params.includePins = true, pin is NOT in
                 "allowIncoming": "none",
               },
             },
-            "did": "user(4)",
+            "did": "user(2)",
             "handle": "dan.test",
             "labels": [],
             "viewer": {
               "blockedBy": false,
-              "following": "record(12)",
+              "following": "record(8)",
               "muted": false,
               "mutedOnlyQuoteposts": false,
               "mutedOnlyReposts": false,
@@ -4856,13 +5571,13 @@ exports[`pds author feed views > pins > params.includePins = true, pin is NOT in
                       "allowSubscriptions": "followers",
                     },
                   },
-                  "did": "user(5)",
+                  "did": "user(3)",
                   "handle": "carol.test",
                   "labels": [],
                   "viewer": {
                     "blockedBy": false,
-                    "followedBy": "record(15)",
-                    "following": "record(14)",
+                    "followedBy": "record(10)",
+                    "following": "record(9)",
                     "muted": false,
                     "mutedOnlyQuoteposts": false,
                     "mutedOnlyReposts": false,
@@ -4875,7 +5590,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is NOT in
                 "quoteCount": 1,
                 "replyCount": 0,
                 "repostCount": 0,
-                "uri": "record(13)",
+                "uri": "record(15)",
                 "value": {
                   "$type": "app.bsky.feed.post",
                   "createdAt": "1970-01-01T00:00:00.000Z",
@@ -4926,7 +5641,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is NOT in
           "quoteCount": 1,
           "replyCount": 0,
           "repostCount": 1,
-          "uri": "record(11)",
+          "uri": "record(14)",
           "value": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
@@ -4934,7 +5649,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is NOT in
               "$type": "app.bsky.embed.record",
               "record": {
                 "cid": "cids(12)",
-                "uri": "record(13)",
+                "uri": "record(15)",
               },
             },
             "facets": [
@@ -4961,7 +5676,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is NOT in
           "cid": "cids(10)",
           "cts": "1970-01-01T00:00:00.000Z",
           "src": "did:example:labeler",
-          "uri": "record(10)",
+          "uri": "record(13)",
           "val": "test-label",
         },
       ],
@@ -4974,17 +5689,61 @@ exports[`pds author feed views > pins > params.includePins = true, pin is NOT in
           "$type": "app.bsky.embed.record",
           "record": {
             "cid": "cids(11)",
-            "uri": "record(11)",
+            "uri": "record(14)",
           },
         },
         "text": "yoohoo label_me",
       },
       "replyCount": 0,
       "repostCount": 0,
-      "uri": "record(10)",
+      "uri": "record(13)",
       "viewer": {
         "bookmarked": false,
         "embeddingDisabled": false,
+        "knownLikers": {
+          "actors": [
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "did": "user(3)",
+              "handle": "carol.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(10)",
+                "following": "record(9)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "did": "user(4)",
+              "displayName": "bobby",
+              "handle": "bob.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(12)",
+                "following": "record(11)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+          ],
+          "count": 2,
+        },
         "pinned": false,
         "threadMuted": false,
       },
@@ -5043,6 +5802,70 @@ exports[`pds author feed views > pins > params.includePins = true, pin is NOT in
       "viewer": {
         "bookmarked": false,
         "embeddingDisabled": false,
+        "knownLikers": {
+          "actors": [
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+                "chat": {
+                  "allowIncoming": "none",
+                },
+              },
+              "did": "user(2)",
+              "handle": "dan.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "following": "record(8)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "did": "user(3)",
+              "handle": "carol.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(10)",
+                "following": "record(9)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "did": "user(4)",
+              "displayName": "bobby",
+              "handle": "bob.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(12)",
+                "following": "record(11)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+          ],
+          "count": 3,
+        },
         "pinned": false,
         "threadMuted": false,
       },
@@ -5414,16 +6237,16 @@ exports[`pds author feed views > pins > params.includePins = true, pin is in fir
               "allowSubscriptions": "followers",
             },
           },
-          "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "did": "user(2)",
+          "did": "user(4)",
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": [],
           "viewer": {
             "blockedBy": false,
-            "followedBy": "record(8)",
-            "following": "record(7)",
+            "followedBy": "record(11)",
+            "following": "record(10)",
             "muted": false,
             "mutedOnlyQuoteposts": false,
             "mutedOnlyReposts": false,
@@ -5436,8 +6259,8 @@ exports[`pds author feed views > pins > params.includePins = true, pin is in fir
           "images": [
             {
               "alt": "../dev-env/assets/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(8)",
-              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(8)",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(8)",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(8)",
             },
           ],
         },
@@ -5553,6 +6376,70 @@ exports[`pds author feed views > pins > params.includePins = true, pin is in fir
         "viewer": {
           "bookmarked": false,
           "embeddingDisabled": false,
+          "knownLikers": {
+            "actors": [
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                  "chat": {
+                    "allowIncoming": "none",
+                  },
+                },
+                "did": "user(2)",
+                "handle": "dan.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "following": "record(7)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                },
+                "did": "user(3)",
+                "handle": "carol.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "followedBy": "record(9)",
+                  "following": "record(8)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+              {
+                "associated": {
+                  "activitySubscription": {
+                    "allowSubscriptions": "followers",
+                  },
+                },
+                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+                "createdAt": "1970-01-01T00:00:00.000Z",
+                "did": "user(4)",
+                "displayName": "bobby",
+                "handle": "bob.test",
+                "labels": [],
+                "viewer": {
+                  "blockedBy": false,
+                  "followedBy": "record(11)",
+                  "following": "record(10)",
+                  "muted": false,
+                  "mutedOnlyQuoteposts": false,
+                  "mutedOnlyReposts": false,
+                },
+              },
+            ],
+            "count": 3,
+          },
           "pinned": false,
           "threadMuted": false,
         },
@@ -5610,12 +6497,12 @@ exports[`pds author feed views > pins > params.includePins = true, pin is in fir
                 "allowIncoming": "none",
               },
             },
-            "did": "user(4)",
+            "did": "user(2)",
             "handle": "dan.test",
             "labels": [],
             "viewer": {
               "blockedBy": false,
-              "following": "record(11)",
+              "following": "record(7)",
               "muted": false,
               "mutedOnlyQuoteposts": false,
               "mutedOnlyReposts": false,
@@ -5633,13 +6520,13 @@ exports[`pds author feed views > pins > params.includePins = true, pin is in fir
                       "allowSubscriptions": "followers",
                     },
                   },
-                  "did": "user(5)",
+                  "did": "user(3)",
                   "handle": "carol.test",
                   "labels": [],
                   "viewer": {
                     "blockedBy": false,
-                    "followedBy": "record(14)",
-                    "following": "record(13)",
+                    "followedBy": "record(9)",
+                    "following": "record(8)",
                     "muted": false,
                     "mutedOnlyQuoteposts": false,
                     "mutedOnlyReposts": false,
@@ -5652,7 +6539,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is in fir
                 "quoteCount": 1,
                 "replyCount": 0,
                 "repostCount": 0,
-                "uri": "record(12)",
+                "uri": "record(14)",
                 "value": {
                   "$type": "app.bsky.feed.post",
                   "createdAt": "1970-01-01T00:00:00.000Z",
@@ -5703,7 +6590,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is in fir
           "quoteCount": 1,
           "replyCount": 0,
           "repostCount": 1,
-          "uri": "record(10)",
+          "uri": "record(13)",
           "value": {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
@@ -5711,7 +6598,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is in fir
               "$type": "app.bsky.embed.record",
               "record": {
                 "cid": "cids(11)",
-                "uri": "record(12)",
+                "uri": "record(14)",
               },
             },
             "facets": [
@@ -5738,7 +6625,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is in fir
           "cid": "cids(9)",
           "cts": "1970-01-01T00:00:00.000Z",
           "src": "did:example:labeler",
-          "uri": "record(9)",
+          "uri": "record(12)",
           "val": "test-label",
         },
       ],
@@ -5751,17 +6638,61 @@ exports[`pds author feed views > pins > params.includePins = true, pin is in fir
           "$type": "app.bsky.embed.record",
           "record": {
             "cid": "cids(10)",
-            "uri": "record(10)",
+            "uri": "record(13)",
           },
         },
         "text": "yoohoo label_me",
       },
       "replyCount": 0,
       "repostCount": 0,
-      "uri": "record(9)",
+      "uri": "record(12)",
       "viewer": {
         "bookmarked": false,
         "embeddingDisabled": false,
+        "knownLikers": {
+          "actors": [
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "did": "user(3)",
+              "handle": "carol.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(9)",
+                "following": "record(8)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "did": "user(4)",
+              "displayName": "bobby",
+              "handle": "bob.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(11)",
+                "following": "record(10)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+          ],
+          "count": 2,
+        },
         "pinned": false,
         "threadMuted": false,
       },
@@ -5820,6 +6751,70 @@ exports[`pds author feed views > pins > params.includePins = true, pin is in fir
       "viewer": {
         "bookmarked": false,
         "embeddingDisabled": false,
+        "knownLikers": {
+          "actors": [
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+                "chat": {
+                  "allowIncoming": "none",
+                },
+              },
+              "did": "user(2)",
+              "handle": "dan.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "following": "record(7)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "did": "user(3)",
+              "handle": "carol.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(9)",
+                "following": "record(8)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+            {
+              "associated": {
+                "activitySubscription": {
+                  "allowSubscriptions": "followers",
+                },
+              },
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "did": "user(4)",
+              "displayName": "bobby",
+              "handle": "bob.test",
+              "labels": [],
+              "viewer": {
+                "blockedBy": false,
+                "followedBy": "record(11)",
+                "following": "record(10)",
+                "muted": false,
+                "mutedOnlyQuoteposts": false,
+                "mutedOnlyReposts": false,
+              },
+            },
+          ],
+          "count": 3,
+        },
         "pinned": false,
         "threadMuted": false,
       },

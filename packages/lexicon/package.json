@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lexicon",
-  "version": "0.7.11",
+  "version": "0.7.13",
   "license": "MIT",
   "description": "atproto Lexicon schema language library",
   "keywords": [
@@ -35,7 +35,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "jest": "^30.0.0"
+    "jest": "^30.5.1"
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",

@@ -1,8 +1,9 @@
+import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import { type Server, TOOLS_OZONE_TEAM } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.server.getConfig({
+  server.add(tools.ozone.server.getConfig, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ auth }) => {
       return {
@@ -22,10 +23,10 @@ export default function (server: Server, ctx: AppContext) {
           },
           viewer: {
             role: auth.credentials.isAdmin
-              ? TOOLS_OZONE_TEAM.DefsRoleAdmin
+              ? tools.ozone.team.defs.roleAdmin.value
               : auth.credentials.isModerator
-                ? TOOLS_OZONE_TEAM.DefsRoleModerator
-                : TOOLS_OZONE_TEAM.DefsRoleTriage,
+                ? tools.ozone.team.defs.roleModerator.value
+                : tools.ozone.team.defs.roleTriage.value,
           },
           verifierDid: ctx.cfg.verifier?.did || undefined,
         },

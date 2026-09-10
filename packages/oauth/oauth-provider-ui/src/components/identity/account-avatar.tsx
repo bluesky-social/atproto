@@ -66,7 +66,7 @@ export function AccountAvatar({
           aria-hidden
           className={cn(
             'bg-destructive text-white',
-            'bottom-auto right-0 top-0',
+            'top-0 right-0 bottom-auto',
             badgeSizeMap[size],
           )}
           title={t`Deactivated account`}

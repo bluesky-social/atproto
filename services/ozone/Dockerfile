@@ -44,6 +44,7 @@ COPY ./packages/lex/lex-data ./packages/lex/lex-data
 COPY ./packages/lex/lex-document ./packages/lex/lex-document
 COPY ./packages/lex/lex-installer ./packages/lex/lex-installer
 COPY ./packages/lex/lex-json ./packages/lex/lex-json
+COPY ./packages/lex/lex-password-session ./packages/lex/lex-password-session
 COPY ./packages/lex/lex-resolver ./packages/lex/lex-resolver
 COPY ./packages/lex/lex-schema ./packages/lex/lex-schema
 COPY ./packages/lex/lex ./packages/lex/lex
@@ -87,8 +88,14 @@ COPY --from=build /app /app
 WORKDIR /app/services/ozone
 
 EXPOSE 3000
+# Metrics + ops-probe (/metrics, /livez, /readyz) server port. Opt-in and off by
+# default: api.ts uses OZONE_METRICS_PORT, daemon.ts uses OZONE_DAEMON_METRICS_PORT.
+# Documented here for reference; not enabled unless the env var is set.
+EXPOSE 3001
 ENV PORT=3000
 ENV NODE_ENV=production
+ENV OTEL_TRACES_SAMPLER=parentbased_traceidratio
+ENV OTEL_TRACES_SAMPLER_ARG=0.01
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node

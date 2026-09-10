@@ -74,12 +74,26 @@ describe('pds user search views', () => {
         ),
       },
     )
-    expect(result1.data.actors.length).toBe(2)
+    expect(result1.data.actors.length).toBe(1)
     expect(result1.data.actors[0].handle).toEqual('bob.test')
-    expect(result1.data.actors[1].handle).toEqual('dan.test')
     expect(result1.data.cursor).toBeDefined()
 
-    const terminal = await agent.api.app.bsky.actor.getSuggestions(
+    const result2 = await agent.api.app.bsky.actor.getSuggestions(
+      { limit: 2, cursor: result1.data.cursor },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyActorGetSuggestions,
+        ),
+      },
+    )
+    expect(result2.data.actors.length).toBe(1)
+    expect(result2.data.actors[0].handle).toEqual('dan.test')
+
+    // Two of the three requested actors survive filtering, which is already
+    // half of the limit, so the page is served with a cursor even though
+    // following it yields nothing.
+    const short = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 3 },
       {
         headers: await network.serviceHeaders(
@@ -88,7 +102,19 @@ describe('pds user search views', () => {
         ),
       },
     )
-    expect(terminal.data.actors).toHaveLength(2)
+    expect(short.data.actors).toHaveLength(2)
+    expect(short.data.cursor).toBeDefined()
+
+    const terminal = await agent.api.app.bsky.actor.getSuggestions(
+      { limit: 3, cursor: short.data.cursor },
+      {
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyActorGetSuggestions,
+        ),
+      },
+    )
+    expect(terminal.data.actors).toHaveLength(0)
     expect(terminal.data.cursor).toBeUndefined()
 
     const empty = await agent.api.app.bsky.actor.getSuggestions(

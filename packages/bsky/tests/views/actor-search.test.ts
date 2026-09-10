@@ -282,7 +282,7 @@ describe('actor search pagination', () => {
   beforeEach(async () => network.processAll())
   afterAll(async () => network?.close())
 
-  it('fills the page after filtering actors and returns a cursor only when more actors are available', async () => {
+  it('serves a page short of the limit after filtering actors, and returns a cursor only when more actors are available', async () => {
     const full = await network.bsky.ctx.dataplane.searchActors({
       term: '.test',
       limit: 100,
@@ -314,16 +314,18 @@ describe('actor search pagination', () => {
     expect(terminal.data.actors).toHaveLength(full.dids.length)
     expect(terminal.data.cursor).toBeUndefined()
 
+    // Taking down the head actor leaves one of the two requested, which is
+    // already half of the limit, so the page is served as is.
     await network.bsky.ctx.dataplane.takedownActor({ did: full.dids[0] })
-    const refilled = await agent.app.bsky.actor.searchActors(
+    const short = await agent.app.bsky.actor.searchActors(
       { term: '.test', limit: 2 },
       { headers },
     )
-    expect(refilled.data.actors).toHaveLength(2)
-    expect(refilled.data.actors.map((actor) => actor.did)).not.toContain(
+    expect(short.data.actors).toHaveLength(1)
+    expect(short.data.actors.map((actor) => actor.did)).not.toContain(
       full.dids[0],
     )
-    expect(refilled.data.cursor).toBeDefined()
+    expect(short.data.cursor).toBeDefined()
     await network.bsky.ctx.dataplane.untakedownActor({ did: full.dids[0] })
   })
 })

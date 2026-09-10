@@ -1,6 +1,7 @@
 import type { LexiconPermissionSet, LexiconSpace } from '@atproto/lex-document'
-import type { Account, Session } from '@atproto/oauth-provider-api'
+import type { Account, DidString, Session } from '@atproto/oauth-provider-api'
 import type { OAuthAuthorizationRequestParameters } from '@atproto/oauth-types'
+import type { HandleString } from '@atproto/syntax'
 import type { Client } from '../client/client.js'
 import type { RequestUri } from '../request/request-uri.js'
 
@@ -11,7 +12,7 @@ export type AuthorizationResultAuthorizePage = {
   permissionSets: Map<string, LexiconPermissionSet>
   spaces: Map<string, LexiconSpace>
   /** Verified handles keyed by space-authority DID, for `space:` scopes. */
-  spaceHandles: Map<string, string>
+  spaceHandles: Map<DidString, HandleString>
 
   requestUri: RequestUri
   sessions: readonly Session[]
