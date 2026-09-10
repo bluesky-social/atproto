@@ -94,6 +94,8 @@ EXPOSE 3000
 EXPOSE 3001
 ENV PORT=3000
 ENV NODE_ENV=production
+ENV OTEL_TRACES_SAMPLER=parentbased_traceidratio
+ENV OTEL_TRACES_SAMPLER_ARG=0.01
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node

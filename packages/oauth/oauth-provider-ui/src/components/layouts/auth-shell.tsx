@@ -69,7 +69,7 @@ export function AuthShell({
       >
         <Card>
           {(logo || name) && (
-            <div className="px-(--card-spacing) flex items-center justify-center gap-2 pt-2 font-medium">
+            <div className="flex items-center justify-center gap-2 px-(--card-spacing) pt-2 font-medium">
               {logo && (
                 <img
                   src={logo}

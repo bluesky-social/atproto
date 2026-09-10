@@ -107,7 +107,7 @@ export function Notice({
           // there is no title to align them to instead.
           action &&
             !title &&
-            '*:[svg]:row-span-1! *:[svg]:translate-y-0! items-center',
+            'items-center *:[svg]:row-span-1! *:[svg]:translate-y-0!',
           className,
         )}
         {...props}
@@ -119,7 +119,7 @@ export function Notice({
         {title && (
           <h3
             data-slot="alert-title"
-            className="col-start-2 min-h-4 text-base font-semibold leading-snug tracking-tight"
+            className="col-start-2 min-h-4 text-base leading-snug font-semibold tracking-tight"
           >
             {title}
           </h3>

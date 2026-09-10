@@ -34,7 +34,7 @@ export function CodeSnippet({
         </span>
       )}
       <div className="border-input bg-muted/40 flex items-stretch gap-1 rounded-md border">
-        <code className="flex flex-1 items-center break-all px-2.5 py-1.5 font-mono text-sm">
+        <code className="flex flex-1 items-center px-2.5 py-1.5 font-mono text-sm break-all">
           {children}
         </code>
         <CopyButton

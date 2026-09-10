@@ -141,7 +141,7 @@ function LastAccessedHeader() {
             <button
               type="button"
               aria-label={t`Why is this time so recent?`}
-              className="hover:text-foreground focus-visible:ring-ring rounded-full focus-visible:outline-none focus-visible:ring-2"
+              className="hover:text-foreground focus-visible:ring-ring rounded-full focus-visible:ring-2 focus-visible:outline-none"
             />
           }
         >
