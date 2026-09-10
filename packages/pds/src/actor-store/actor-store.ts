@@ -53,8 +53,12 @@ export class ActorStore {
 
     const db = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
 
-    // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode)
     try {
+      // @TODO ONLY FOR USE DURING THE SPACE ALPH
+      // Remove this line before cutting the production build!
+      await getMigrator(db).migrateToLatestOrThrow()
+
+      // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode)
       await retrySqlite(() =>
         db.db.selectFrom('repo_root').selectAll().execute(),
       )
