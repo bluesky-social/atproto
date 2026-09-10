@@ -81,6 +81,7 @@ For working with that SDK, invoke the focused skills under [.agents/skills/](.ag
 - Node ≥22 runtime floor; build/dev default to Node 24 (`.nvmrc`). Use `node --enable-source-maps` for production-style runs.
 - TypeScript compilation uses the native TS7 `tsc` (the standard `typescript` package). There is no per-package `typescript` devDependency — it is hoisted at the root. Note TS7 has no stable programmatic API yet; tools needing one must pin TS6.
 - **Every package touched by a change needs a changeset entry.** Add a file under [.changeset/](.changeset/) listing each modified package with an appropriate bump level (pre-v1 breaking changes are `minor` and everything else `patch`, post-v1 `major` for breaking changes, `minor` for new public API, `patch` otherwise). Dependency-only bumps are generated automatically — don't list them by hand. Create that file with `pnpm changeset`.
+- **Never buffer an unbounded stream from outside the process.** Decoding or buffering a request/response body that did not originate locally requires an explicit size bound on the _decoded_ bytes — a wire-size cap does not bound a compressed payload. Compose `createDecoders` with `MaxSizeChecker` in a `pipeline` (see `packages/xrpc-server/src/util.ts`), rather than passing a decoded stream straight to `streamToNodeBuffer`.
 
 ## Agent files
 
