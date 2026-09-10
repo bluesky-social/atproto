@@ -62,6 +62,7 @@ export class DaemonContext {
 
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
+      fetch: cfg.service.devMode ? globalThis.fetch : undefined,
     })
     if (!cfg.service.devMode) {
       idResolver.did = new SafeDidResolver({

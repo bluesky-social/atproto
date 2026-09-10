@@ -440,6 +440,11 @@ export type DiskBlobstoreConfig = {
 
 export type IdentityConfig = {
   plcUrl: string
+  /**
+   * Bounds each individual identity resolution attempt. Note that
+   * `safeFetch`'s own 10s timeout acts as an upper backstop, so values above
+   * 10s are effectively capped.
+   */
   resolverTimeout: number
   cacheStaleTTL: number
   cacheMaxTTL: number

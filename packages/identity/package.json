@@ -30,6 +30,7 @@
     "node": ">=22"
   },
   "dependencies": {
+    "@atproto-labs/fetch-node": "workspace:^",
     "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^"
   },

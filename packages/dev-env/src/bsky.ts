@@ -65,6 +65,8 @@ export class TestBsky {
       db,
       dataplanePort,
       cfg.plcUrl,
+      // Resolves against an in-process PLC on localhost.
+      globalThis.fetch,
     )
 
     const config = new bsky.ServerConfig({
