@@ -1,7 +1,10 @@
+import { type NsidString, isValidNsid } from '@atproto/syntax'
 import type { LexiconPermission, LexiconPermissionSet } from '../lib/lexicon.js'
-import { type Nsid, isNsid } from '../lib/nsid.js'
 import { Parser } from '../lib/parser.js'
-import { LexPermissionSyntax } from '../lib/syntax-lexicon.js'
+import {
+  LexPermissionSyntax,
+  LexSpacePermissionSyntax,
+} from '../lib/syntax-lexicon.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
 import {
   type ScopeStringFor,
@@ -15,8 +18,14 @@ import {
   RpcPermission,
   isAtprotoDidRefAbsolute,
 } from './rpc-permission.js'
+import { SpacePermission } from './space-permission.js'
 
-export { type LexiconPermission, type LexiconPermissionSet, type Nsid, isNsid }
+export {
+  type LexiconPermission,
+  type LexiconPermissionSet,
+  type NsidString,
+  isValidNsid as isNsidString,
+}
 
 /**
  * This is used to handle "include:" oauth scope values, used to include
@@ -25,7 +34,7 @@ export { type LexiconPermission, type LexiconPermissionSet, type Nsid, isNsid }
  */
 export class IncludeScope {
   constructor(
-    public readonly nsid: Nsid,
+    public readonly nsid: NsidString,
     public readonly aud: undefined | AtprotoDidRefAbsolute = undefined,
   ) {}
 
@@ -35,13 +44,13 @@ export class IncludeScope {
 
   toPermissions(
     permissionSet: LexiconPermissionSet,
-  ): Array<RepoPermission | RpcPermission> {
+  ): Array<RepoPermission | RpcPermission | SpacePermission> {
     return Array.from(this.buildPermissions(permissionSet))
   }
 
   toScopes(
     permissionSet: LexiconPermissionSet,
-  ): Array<ScopeStringFor<'repo' | 'rpc'>> {
+  ): Array<ScopeStringFor<'repo' | 'rpc' | 'space'>> {
     return Array.from(this.buildPermissions(permissionSet), (p) => p.toString())
   }
 
@@ -51,7 +60,11 @@ export class IncludeScope {
    */
   *buildPermissions(
     permissionSet: LexiconPermissionSet,
-  ): Generator<RepoPermission | RpcPermission, void, unknown> {
+  ): Generator<
+    RepoPermission | RpcPermission | SpacePermission,
+    void,
+    unknown
+  > {
     for (const lexPermission of permissionSet.permissions) {
       const syntax = this.parseLexPermission(lexPermission)
       if (!syntax) continue
@@ -67,10 +80,14 @@ export class IncludeScope {
 
   protected parseLexPermission(
     permission: LexiconPermission,
-  ): ScopeSyntax<'repo' | 'rpc'> | null {
+  ): ScopeSyntax<'repo' | 'rpc' | 'space'> | null {
     // This function converts permissions listed in the permission set into
     // their respective ScopeSyntax representations, handling special cases as
     // needed.
+
+    if (isLexPermissionForResource(permission, 'space')) {
+      return new LexSpacePermissionSyntax(permission)
+    }
 
     if (isLexPermissionForResource(permission, 'repo')) {
       return new LexPermissionSyntax(permission)
@@ -108,7 +125,7 @@ export class IncludeScope {
    * and that it only contains "repo:", "rpc:", or "blob:" permissions.
    */
   protected isAllowedPermission(
-    permission: RpcPermission | RepoPermission,
+    permission: RpcPermission | RepoPermission | SpacePermission,
   ): boolean {
     if (permission instanceof RpcPermission) {
       return permission.lxm.every(this.isParentAuthorityOf, this)
@@ -116,6 +133,12 @@ export class IncludeScope {
 
     if (permission instanceof RepoPermission) {
       return permission.collection.every(this.isParentAuthorityOf, this)
+    }
+
+    if (permission instanceof SpacePermission) {
+      // Only the space type is authority-checked; collections may live under a
+      // different authority.
+      return this.isParentAuthorityOf(permission.type)
     }
 
     throw new TypeError(`Unexpected permission ${permission}`)
@@ -126,7 +149,7 @@ export class IncludeScope {
    * nsid of the lexicon itself (which is the same as the nsid of the `include:`
    * scope).
    */
-  public isParentAuthorityOf(otherNsid: '*' | Nsid) {
+  public isParentAuthorityOf(otherNsid: '*' | NsidString) {
     if (otherNsid === '*') {
       return false
     }
@@ -164,7 +187,7 @@ export class IncludeScope {
       nsid: {
         multiple: false,
         required: true,
-        validate: isNsid,
+        validate: isValidNsid,
       },
       aud: {
         multiple: false,
@@ -189,13 +212,16 @@ export class IncludeScope {
 }
 
 function toResourcePermission(
-  syntax: ScopeSyntax<'repo' | 'rpc'>,
-): RepoPermission | RpcPermission | null {
+  syntax: ScopeSyntax<'repo' | 'rpc' | 'space'>,
+): RepoPermission | RpcPermission | SpacePermission | null {
   if (isScopeSyntaxFor(syntax, 'repo')) {
     return RepoPermission.fromSyntax(syntax)
   }
   if (isScopeSyntaxFor(syntax, 'rpc')) {
     return RpcPermission.fromSyntax(syntax)
+  }
+  if (isScopeSyntaxFor(syntax, 'space')) {
+    return SpacePermission.fromSyntax(syntax)
   }
   return null
 }

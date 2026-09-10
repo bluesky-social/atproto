@@ -17,8 +17,8 @@
   "languages": {
     "JavaScript": {
       "language_servers": [
-        "typescript-ls",
-        "!vtsls",
+        "vtsls",
+        "!typescript-ls",
         "!typescript-language-server",
       ],
       // Formatting (prettier) applied through eslint
@@ -29,8 +29,8 @@
     },
     "TypeScript": {
       "language_servers": [
-        "typescript-ls",
-        "!vtsls",
+        "vtsls",
+        "!typescript-ls",
         "!typescript-language-server",
       ],
       // Formatting (prettier) applied through eslint
@@ -41,8 +41,8 @@
     },
     "TSX": {
       "language_servers": [
-        "typescript-ls",
-        "!vtsls",
+        "vtsls",
+        "!typescript-ls",
         "!typescript-language-server",
       ],
       // Formatting (prettier) applied through eslint

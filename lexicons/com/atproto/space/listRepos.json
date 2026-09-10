@@ -1,0 +1,75 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.listRepos",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List the known repos that hold data in a space (the writer set), with each repo's current rev and commit hash. Served by the space host. This is the sync boundary, not an access-control list: it enumerates only writers, never readers. The set is what the authority claims from write notifications and is not itself authoritative; a repo's host is the source of truth.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref",
+            "description": "Reference to the space."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 100,
+            "description": "Maximum number of repos to return."
+          },
+          "cursor": {
+            "type": "string"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["repos"],
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "repos": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#repo"
+              }
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        }
+      ]
+    },
+    "repo": {
+      "type": "object",
+      "required": ["did", "rev", "hash"],
+      "properties": {
+        "did": {
+          "type": "string",
+          "format": "did",
+          "description": "The DID of a repo that holds data in the space."
+        },
+        "rev": {
+          "type": "string",
+          "description": "The repo's current revision (TID), as last reported to the authority. May lag the repo host, which is the source of truth.",
+          "format": "tid"
+        },
+        "hash": {
+          "type": "bytes",
+          "description": "The repo's current commit hash (sha256 of the LtHash state), as last reported to the authority."
+        }
+      }
+    }
+  }
+}

@@ -28,6 +28,14 @@ msgstr ""
 msgid "{0, plural, one {yesterday} other {# days ago}}"
 msgstr ""
 
+#: src/components/utils/scope-description.tsx
+msgid "<0/> spaces"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "<0/> spaces on <1/>"
+msgstr ""
+
 #: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr ""
@@ -38,6 +46,10 @@ msgstr ""
 
 #: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Learn more</0><1>Want to learn more about the technology and network behind your Atmosphere account?</1>"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "<0>Manage</0> the space: create new spaces, add and remove members."
 msgstr ""
 
 #: src/routes/account/u/$accountId/-about/en.tsx
@@ -78,6 +90,10 @@ msgstr "Un servicio controlado por <0>{domain}</0>"
 
 #: src/routes/account/u/$accountId/route.tsx
 msgid "About"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "Access permissioned spaces"
 msgstr ""
 
 #: src/components/utils/scope-description.tsx
@@ -140,6 +156,14 @@ msgstr ""
 
 #: src/components/update-handle-custom-form.tsx
 msgid "alice.com"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "All spaces on <0/>"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "All spaces on the network"
 msgstr ""
 
 #: src/components/reset-password-view.tsx
@@ -816,6 +840,10 @@ msgstr "Nueva contraseña"
 msgid "Next"
 msgstr "Siguiente"
 
+#: src/components/utils/scope-description.tsx
+msgid "No access."
+msgstr ""
+
 #: src/components/session-list.tsx
 msgid "No matches"
 msgstr ""
@@ -873,6 +901,10 @@ msgstr "Realizar acciones en tu nombre"
 #: src/components/utils/scope-description.tsx
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "Realizar acciones autenticadas hacia <0>cualquier servicio</0> en tu nombre"
+
+#: src/components/utils/scope-description.tsx
+msgid "Permissioned spaces (such as group chats, forums, or shared albums) hold data that's only visible to their members. The application requests the following access:"
+msgstr ""
 
 #: src/components/authenticate-welcome-view.tsx
 msgid "Please authenticate to continue"
@@ -939,11 +971,19 @@ msgid "Read and update your account's email address"
 msgstr "Leer y actualizar la dirección de correo electrónico de tu cuenta"
 
 #: src/components/utils/scope-description.tsx
+msgid "Read only your own data."
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "Read your account's email address"
 msgstr "Leer la dirección de correo electrónico de tu cuenta"
 
 #: src/components/utils/scope-description.tsx
 msgid "Read your private preferences"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "Read-only access."
 msgstr ""
 
 #: src/components/sign-in-form.tsx
@@ -1055,6 +1095,10 @@ msgstr ""
 msgid "Sign-in complete"
 msgstr ""
 
+#: src/components/utils/scope-description.tsx
+msgid "Spaces"
+msgstr ""
+
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Stack"
@@ -1159,6 +1203,10 @@ msgstr ""
 
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app has access to your account with the following permissions:"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "This application is requesting access to <0>every space on the network</0>. This is a very broad permission. Only grant it to applications you deeply trust."
 msgstr ""
 
 #: src/components/consent-form.tsx

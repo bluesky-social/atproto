@@ -1,6 +1,6 @@
+import type { BlockMap } from '@atproto/car'
 import type { check } from '@atproto/common-web'
 import type { Cid, LexMap } from '@atproto/lex-data'
-import type { BlockMap } from '../block-map.js'
 import { MissingBlockError } from '../error.js'
 import { parseObjByDef } from '../parse.js'
 import { cborToLexRecord } from '../util.js'

@@ -1,0 +1,79 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.createRecord",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Create a single new record in a permissioned space. Requires auth, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "repo", "collection", "record"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref",
+              "description": "Reference to the space."
+            },
+            "repo": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the repo to write to (the authenticated member)."
+            },
+            "collection": {
+              "type": "string",
+              "format": "nsid",
+              "description": "The NSID of the record collection."
+            },
+            "rkey": {
+              "type": "string",
+              "format": "record-key",
+              "description": "The Record Key.",
+              "maxLength": 512
+            },
+            "validate": {
+              "type": "boolean",
+              "description": "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons."
+            },
+            "record": {
+              "type": "unknown",
+              "description": "The record itself. Must contain a $type field."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri", "cid"],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "at-uri",
+              "description": "URI of the created record."
+            },
+            "cid": {
+              "type": "string",
+              "format": "cid"
+            },
+            "validationStatus": {
+              "type": "string",
+              "knownValues": ["valid", "unknown"]
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "RecordAlreadyExists",
+          "description": "A record already exists at this collection and rkey. Retry with a different rkey, or use putRecord."
+        }
+      ]
+    }
+  }
+}

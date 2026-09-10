@@ -27,7 +27,7 @@ export class NSID {
     return new NSID(input)
   }
 
-  static isValid(nsid: string) {
+  static isValid<I>(nsid: I): nsid is I & NsidString {
     return isValidNsid(nsid)
   }
 
@@ -37,7 +37,7 @@ export class NSID {
       return input
     }
     if (Array.isArray(input)) {
-      return new NSID((input as string[]).join('.'))
+      return new NSID(input.join('.'))
     }
     return new NSID(String(input))
   }

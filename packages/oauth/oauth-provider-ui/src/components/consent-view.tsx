@@ -4,7 +4,11 @@ import type { Account } from '@atproto/oauth-provider-api'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import { AccountIdentifier } from '#/components/identity/account-identifier.tsx'
 import { AuthShell } from '#/components/layouts/auth-shell.tsx'
-import type { PermissionSets } from '#/hydration-data.d.ts'
+import type {
+  PermissionSets,
+  SpaceHandles,
+  Spaces,
+} from '#/hydration-data.d.ts'
 import { ConsentForm } from './consent-form.tsx'
 
 export type ConsentViewProps = {
@@ -13,6 +17,8 @@ export type ConsentViewProps = {
   clientTrusted: boolean
   clientFirstParty: boolean
   permissionSets: PermissionSets
+  spaces: Spaces
+  spaceHandles: SpaceHandles
 
   account: Account
   scope?: string
@@ -28,6 +34,8 @@ export function ConsentView({
   clientTrusted,
   clientFirstParty,
   permissionSets,
+  spaces,
+  spaceHandles,
   account,
   scope,
   onConsent,
@@ -49,6 +57,8 @@ export function ConsentView({
         clientTrusted={clientTrusted}
         clientFirstParty={clientFirstParty}
         permissionSets={permissionSets}
+        spaces={spaces}
+        spaceHandles={spaceHandles}
         account={account}
         scope={scope}
         onBack={onBack}

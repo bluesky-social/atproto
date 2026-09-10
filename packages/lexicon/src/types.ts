@@ -45,6 +45,7 @@ export const lexStringFormat = z.enum([
   'language',
   'tid',
   'record-key',
+  'space-ref',
 ])
 export type LexStringFormat = z.infer<typeof lexStringFormat>
 
@@ -234,6 +235,17 @@ export const lexPermissionSet = z.object({
 
 export type LexPermissionSet = z.infer<typeof lexPermissionSet>
 
+export const lexSpace = z.object({
+  type: z.literal('space'),
+  description: z.string().optional(),
+  key: z.string().optional(),
+  name: z.string().min(1).max(64),
+  'name:lang': lexLang.optional(),
+  collections: z.array(z.string()),
+})
+
+export type LexSpace = z.infer<typeof lexSpace>
+
 // xrpc
 // =
 
@@ -320,6 +332,7 @@ export type LexRecord = z.infer<typeof lexRecord>
 export type LexUserType =
   | LexRecord
   | LexPermissionSet
+  | LexSpace
   | LexXrpcQuery
   | LexXrpcProcedure
   | LexXrpcSubscription
@@ -375,6 +388,8 @@ export const lexUserType = z.unknown().superRefine((val, ctx) => {
         return lexRecord
       case 'permission-set':
         return lexPermissionSet
+      case 'space':
+        return lexSpace
       case 'query':
         return lexXrpcQuery
       case 'procedure':
@@ -407,7 +422,7 @@ export const lexUserType = z.unknown().superRefine((val, ctx) => {
   if (!typeSchema) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: `Invalid type: ${type} must be one of: record, query, procedure, subscription, blob, array, token, object, boolean, integer, string, bytes, cid-link, unknown`,
+      message: `Invalid type: ${type} must be one of: record, permission-set, space, query, procedure, subscription, blob, array, token, object, boolean, integer, string, bytes, cid-link, unknown`,
       fatal: true,
     })
     return z.NEVER
@@ -438,6 +453,7 @@ export const lexiconDoc = z
           defId !== 'main' &&
           (def.type === 'record' ||
             def.type === 'permission-set' ||
+            def.type === 'space' ||
             def.type === 'procedure' ||
             def.type === 'query' ||
             def.type === 'subscription')
@@ -448,7 +464,7 @@ export const lexiconDoc = z
       return true
     },
     {
-      message: `Records, permission sets, procedures, queries, and subscriptions must be the main definition.`,
+      message: `Records, permission sets, spaces, procedures, queries, and subscriptions must be the main definition.`,
     },
   )
 export type LexiconDoc = z.infer<typeof lexiconDoc>

@@ -334,6 +334,8 @@ function string(
         return formats.tid(path, value)
       case 'record-key':
         return formats.recordKey(path, value)
+      case 'space-ref':
+        return formats.spaceRef(path, value)
     }
   }
 

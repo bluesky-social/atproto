@@ -197,6 +197,8 @@ function App() {
             clientTrusted={authorizeData.clientTrusted}
             clientFirstParty={authorizeData.clientFirstParty}
             permissionSets={authorizeData.permissionSets}
+            spaces={authorizeData.spaces}
+            spaceHandles={authorizeData.spaceHandles}
             account={session.account}
             scope={authorizeData.scope}
             onConsent={doConsentAndRedirect}

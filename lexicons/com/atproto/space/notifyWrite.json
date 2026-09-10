@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.notifyWrite",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Notify that a repo in a space has advanced to a new revision. Sent by a repo host to the space host, and forwarded to registered syncers. Best-effort. Authenticated with service auth.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "repo", "rev", "hash"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "space-ref",
+              "description": "Reference to the space."
+            },
+            "repo": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the account whose repo advanced."
+            },
+            "rev": {
+              "type": "string",
+              "description": "The revision of the write.",
+              "format": "tid"
+            },
+            "hash": {
+              "type": "bytes",
+              "description": "The repo's current commit hash (sha256 of the LtHash state) after the write. Lets the space host maintain each repo's hash for listRepos."
+            }
+          }
+        }
+      }
+    }
+  }
+}

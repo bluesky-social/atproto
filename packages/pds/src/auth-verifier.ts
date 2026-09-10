@@ -22,6 +22,16 @@ import {
   ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
 import {
+  DpopProofError,
+  SPACE_TOKEN_TYPES,
+  SpaceTokenError,
+  type SpaceTokenType,
+  spaceHostAud,
+  verifyDpopProof,
+  verifySpaceToken,
+} from '@atproto/space'
+import { SpaceRef } from '@atproto/syntax'
+import {
   AuthRequiredError,
   type Awaitable,
   ForbiddenError,
@@ -38,9 +48,12 @@ import type { ActorAccount } from './account-manager/helpers/account.js'
 import type {
   AccessOutput,
   AdminTokenOutput,
+  DelegationTokenOutput,
   ModServiceOutput,
   OAuthOutput,
   RefreshOutput,
+  ServiceAuthOutput,
+  SpaceCredentialOutput,
   UnauthenticatedOutput,
   UserServiceAuthOutput,
 } from './auth-output.js'
@@ -328,6 +341,216 @@ export class AuthVerifier {
     }
   }
 
+  /**
+   * Service auth for methods whose audience only the handler can derive. It is
+   * the handler's job to check {@link ServiceAuthOutput.aud}.
+   */
+  public serviceAuth: MethodAuthVerifier<ServiceAuthOutput> = async (ctx) => {
+    setAuthHeaders(ctx.res)
+    const nsid = parseReqNsid(ctx.req)
+    const payload = await this.verifyServiceJwt(ctx.req, { audience: null })
+    return {
+      credentials: {
+        type: 'service_auth',
+        iss: payload.iss,
+        aud: payload.aud,
+        lxm: nsid,
+      },
+    }
+  }
+
+  /**
+   * A space credential, presented under the `DPoP` scheme with a proof.
+   *
+   * One credential is reused across every repo host in the space, so it carries no
+   * aud; the DPoP proof names this host instead. Handlers confirm the credential's
+   * space matches theirs.
+   */
+  public spaceCredentialAuth: MethodAuthVerifier<SpaceCredentialOutput> =
+    async (ctx) => {
+      setAuthHeaders(ctx.res)
+
+      const credential = spaceCredentialFromReq(ctx.req)
+      const { payload } = await this.verifySpaceToken(credential, 'credential')
+      const space = parseSpaceSub(payload.sub)
+
+      // Only the space's own authority may issue credentials for it. Without this,
+      // any DID could sign a credential naming someone else's space and have it
+      // verified against its own signing key.
+      if (payload.iss !== space.spaceDid) {
+        throw new AuthRequiredError(
+          'space credential issuer is not the space authority',
+          'BadJwtIss',
+        )
+      }
+
+      // Unreachable unless parseSpaceToken's own check is relaxed, but an unbound
+      // credential must never fall through as a bearer token for the whole space.
+      const jkt = payload.cnf?.jkt
+      if (!jkt) {
+        throw new AuthRequiredError(
+          'space credential is not bound to a key',
+          'BadJwtCnf',
+        )
+      }
+
+      await this.verifySpaceDpopProof(ctx.req, { credential, jkt })
+
+      return {
+        credentials: {
+          type: 'space_credential',
+          iss: space.spaceDid,
+          space: space.toString(),
+        },
+      }
+    }
+
+  private async verifySpaceDpopProof(
+    req: MethodAuthContext['req'],
+    binding:
+      | { credential: string; jkt: string }
+      | { credential?: undefined; jkt?: undefined },
+  ): Promise<string> {
+    const proof = req.headers['dpop']
+    if (typeof proof !== 'string' || !proof) {
+      throw new AuthRequiredError(
+        'request requires a DPoP proof',
+        'MissingDpopProof',
+      )
+    }
+
+    const url = new URL(req.originalUrl || req.url || '/', this._publicUrl)
+    const { jti, jkt } = await verifyDpopProof(proof, {
+      htm: req.method || 'GET',
+      htu: url.toString(),
+      ...binding,
+    }).catch((err) => {
+      if (err instanceof DpopProofError) {
+        throw new AuthRequiredError(err.message, err.code)
+      }
+      throw err
+    })
+
+    // Shared with the OAuth DPoP path, whose retention (minutes) comfortably exceeds
+    // MAX_PROOF_AGE_SEC + CLOCK_SKEW_SEC, so a still-valid proof is still remembered.
+    const unique = await this.oauthVerifier.replayManager.uniqueDpop(jti)
+    if (!unique) {
+      throw new AuthRequiredError('DPoP proof replayed', 'BadDpopProof')
+    }
+
+    return jkt
+  }
+
+  /**
+   * A delegation token, minted by a user's PDS and presented to this service (as
+   * a space authority) in exchange for a space credential. The accompanying DPoP
+   * proof supplies the key binding for that credential.
+   *
+   * Addressed to this authority's space host, and checked as such: a token minted
+   * for another authority is rejected rather than honoured.
+   */
+  public delegationTokenAuth: MethodAuthVerifier<DelegationTokenOutput> =
+    async (ctx) => {
+      setAuthHeaders(ctx.res)
+
+      const token = bearerTokenFromReq(ctx.req)
+      if (!token) {
+        throw new AuthRequiredError('missing delegation token', 'MissingJwt')
+      }
+      const { payload } = await this.verifySpaceToken(token, 'delegation')
+      const space = parseSpaceSub(payload.sub)
+
+      // We answer for many authorities, so there's no one fixed audience: derive it
+      // from `sub` so a token minted for one authority can't be used at another.
+      if (payload.aud !== spaceHostAud(space.spaceDid)) {
+        throw new AuthRequiredError(
+          'delegation token audience does not match the space authority',
+          'BadJwtAudience',
+        )
+      }
+
+      if (!isDidString(payload.iss)) {
+        throw new AuthRequiredError(
+          'delegation token issuer is not a DID',
+          'BadJwtIss',
+        )
+      }
+
+      const dpopJkt = await this.verifySpaceDpopProof(ctx.req, {})
+
+      // A fresh DPoP proof must not make the delegation token reusable.
+      const unique = await this.oauthVerifier.replayManager.uniqueSpaceToken(
+        'delegation',
+        payload.iss,
+        payload.jti,
+        payload.exp,
+      )
+      if (!unique) {
+        throw new AuthRequiredError(
+          'delegation token has already been used',
+          'JwtReplayed',
+        )
+      }
+
+      return {
+        credentials: {
+          type: 'delegation_token',
+          userDid: payload.iss,
+          space: space.toString(),
+          dpopJkt,
+        },
+      }
+    }
+
+  private async verifySpaceToken(jwtStr: string, type: SpaceTokenType) {
+    try {
+      return await verifySpaceToken(type, jwtStr, {
+        getSigningKey: (iss, kid, forceRefresh) =>
+          this.resolveSpaceKey(iss, kid, forceRefresh),
+      })
+    } catch (err) {
+      if (err instanceof AuthRequiredError) throw err
+      if (err instanceof SpaceTokenError) {
+        throw new AuthRequiredError(err.message, err.code)
+      }
+      throw new AuthRequiredError(
+        `Invalid ${type} token: ${err instanceof Error ? err.message : String(err)}`,
+        'BadJwt',
+      )
+    }
+  }
+
+  private async resolveSpaceKey(
+    iss: string,
+    kid: string | undefined,
+    forceRefresh: boolean,
+  ): Promise<string> {
+    if (!kid) {
+      throw new AuthRequiredError('missing token "kid"', 'BadJwt')
+    }
+    const keyId = kid.replace(/^#/, '')
+    if (keyId !== 'atproto' && keyId !== 'atproto_space') {
+      throw new AuthRequiredError(
+        `unsupported space token "kid": ${kid}`,
+        'BadJwt',
+      )
+    }
+
+    const didDoc = await this.idResolver.did.resolve(iss, forceRefresh)
+    if (!didDoc) {
+      throw new AuthRequiredError(`could not resolve DID: ${iss}`, 'BadJwtIss')
+    }
+    const material = getVerificationMaterial(didDoc, keyId)
+    const didKey = material && getDidKeyFromMultibase(material)
+    if (!didKey) {
+      throw new AuthRequiredError(
+        `missing or bad key (#${keyId}) in did doc: ${iss}`,
+        'BadJwtIss',
+      )
+    }
+    return didKey
+  }
+
   public userServiceAuthOptional: MethodAuthVerifier<
     UserServiceAuthOutput | UnauthenticatedOutput
   > = async (ctx) => {
@@ -349,6 +572,22 @@ export class AuthVerifier {
     return async (ctx) => {
       if (isDefinitelyServiceAuth(ctx.req)) {
         return this.userServiceAuth(ctx)
+      } else {
+        return authorizationVerifier(ctx)
+      }
+    }
+  }
+
+  public authorizationOrSpaceCredential<P extends Params>(
+    options: VerifiedOptions &
+      ScopedOptions &
+      ExtraScopedOptions &
+      AuthorizedOptions<P>,
+  ): MethodAuthVerifier<SpaceCredentialOutput | OAuthOutput | AccessOutput, P> {
+    const authorizationVerifier = this.authorization(options)
+    return async (ctx) => {
+      if (isSpaceCredentialAuth(ctx.req)) {
+        return this.spaceCredentialAuth(ctx)
       } else {
         return authorizationVerifier(ctx)
       }
@@ -536,9 +775,10 @@ export class AuthVerifier {
     return { sub, aud, jti, scope: scope as S }
   }
 
+  /** `audience: null` leaves the audience for the caller to check. */
   protected async verifyServiceJwt(
     req: IncomingMessage,
-    opts?: { iss?: string[] },
+    opts?: { iss?: string[]; audience?: null },
   ) {
     const jwtStr = bearerTokenFromReq(req)
     if (!jwtStr) {
@@ -573,6 +813,7 @@ export class AuthVerifier {
       },
     )
     if (
+      opts?.audience !== null &&
       payload.aud !== this.dids.pds &&
       (!this.dids.entryway || payload.aud !== this.dids.entryway)
     ) {
@@ -643,6 +884,44 @@ const isDefinitelyServiceAuth = (req: IncomingMessage): boolean => {
   if (!token) return false
   const payload = jose.decodeJwt(token)
   return payload['lxm'] != null
+}
+
+// Space credentials share the `DPoP` scheme with OAuth access tokens, so they are
+// told apart by an unverified `typ` header. Safe because this only routes: neither
+// token type verifies as the other.
+const isSpaceCredentialAuth = (req: IncomingMessage): boolean => {
+  const token = spaceCredentialTokenFromReq(req)
+  if (!token) return false
+  try {
+    const header = jose.decodeProtectedHeader(token)
+    return header.typ === SPACE_TOKEN_TYPES.credential.typ
+  } catch {
+    return false
+  }
+}
+
+const spaceCredentialTokenFromReq = (req: IncomingMessage): string | null => {
+  const [type, token] = parseAuthorizationHeader(req)
+  return type === AuthType.DPOP ? token : null
+}
+
+const spaceCredentialFromReq = (req: IncomingMessage): string => {
+  const token = spaceCredentialTokenFromReq(req)
+  if (!token) {
+    throw new AuthRequiredError('missing space credential', 'MissingJwt')
+  }
+  return token
+}
+
+const parseSpaceSub = (sub: string): SpaceRef => {
+  try {
+    return SpaceRef.parse(sub)
+  } catch {
+    throw new AuthRequiredError(
+      `space token subject is not a space URI: ${sub}`,
+      'BadJwtSub',
+    )
+  }
 }
 
 const extractAuthType = (req: IncomingMessage): AuthType | null => {

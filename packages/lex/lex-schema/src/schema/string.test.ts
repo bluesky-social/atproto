@@ -380,6 +380,117 @@ describe('StringSchema', () => {
     })
   })
 
+  // Space URIs validate through the at-uri format — they reuse the at:// scheme
+  // with a `space` marker segment.
+  describe('format: at-uri (space URIs)', () => {
+    const schema = string({ format: 'at-uri' })
+
+    it('accepts a space-only URI', () => {
+      const result = schema.safeParse(
+        'at://did:plc:abc123/space/com.example.group/default',
+      )
+      expect(result.success).toBe(true)
+    })
+
+    it('accepts a fully-qualified record URI', () => {
+      const result = schema.safeParse(
+        'at://did:plc:abc123/space/com.example.group/default/did:plc:user1/app.bsky.feed.post/3jzfcijpj2z2a',
+      )
+      expect(result.success).toBe(true)
+    })
+
+    it('rejects a fully-qualified URI with an invalid author DID', () => {
+      const result = schema.safeParse(
+        'at://did:plc:abc123/space/com.example.group/default/notadid/app.bsky.feed.post/3jzfcijpj2z2a',
+      )
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects a fully-qualified URI with an invalid collection NSID', () => {
+      const result = schema.safeParse(
+        'at://did:plc:abc123/space/com.example.group/default/did:plc:user1/short/3jzfcijpj2z2a',
+      )
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects plain strings', () => {
+      const result = schema.safeParse('not a uri')
+      expect(result.success).toBe(false)
+    })
+  })
+
+  /**
+   * Every `com.atproto.space` and `com.atproto.simplespace` method types its
+   * `space` parameter as `space-ref`, so this is the schema-level gate in front of
+   * every space endpoint — a handler never sees a malformed space.
+   *
+   * It is deliberately narrower than `at-uri`: a space ref names a space and
+   * nothing else, so the record-tail form that `at-uri` accepts (asserted above)
+   * has to be refused here. Getting that backwards would let a caller pass a
+   * record URI where a space is expected.
+   */
+  describe('format: space-ref', () => {
+    const schema = string({ format: 'space-ref' })
+
+    it('accepts the three-part space form', () => {
+      const result = schema.safeParse(
+        'at://did:plc:abc123/space/com.example.group/default',
+      )
+      expect(result.success).toBe(true)
+    })
+
+    it('rejects a record URI within a space', () => {
+      // Valid as an `at-uri`, but it names a record rather than a space.
+      const result = schema.safeParse(
+        'at://did:plc:abc123/space/com.example.group/default/did:plc:user1/app.bsky.feed.post/3jzfcijpj2z2a',
+      )
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects a public record URI', () => {
+      const result = schema.safeParse(
+        'at://did:plc:abc123/app.bsky.feed.post/3jzfcijpj2z2a',
+      )
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects a bare space marker with no type or skey', () => {
+      expect(schema.safeParse('at://did:plc:abc123/space').success).toBe(false)
+      expect(
+        schema.safeParse('at://did:plc:abc123/space/com.example.group').success,
+      ).toBe(false)
+    })
+
+    it('rejects a non-NSID space type', () => {
+      const result = schema.safeParse('at://did:plc:abc123/space/short/default')
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects a handle authority', () => {
+      // Spaces are keyed on DIDs, even though a handle is a valid at-uri authority.
+      const result = schema.safeParse(
+        'at://user.bsky.social/space/com.example.group/default',
+      )
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects an skey that is not a valid record key', () => {
+      expect(
+        schema.safeParse('at://did:plc:abc123/space/com.example.group/.')
+          .success,
+      ).toBe(false)
+      expect(
+        schema.safeParse(
+          `at://did:plc:abc123/space/com.example.group/${'x'.repeat(513)}`,
+        ).success,
+      ).toBe(false)
+    })
+
+    it('rejects plain strings', () => {
+      expect(schema.safeParse('not a uri').success).toBe(false)
+    })
+  })
+
   describe('format: did', () => {
     const schema = string({ format: 'did' })
 

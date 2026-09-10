@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.defs",
+  "defs": {
+    "signedCommit": {
+      "type": "object",
+      "description": "A signed commit over the current state of a permissioned repo.",
+      "required": ["ver", "hash", "mac", "ikm", "sig", "rev"],
+      "properties": {
+        "ver": {
+          "type": "integer",
+          "description": "Commit format version, currently 1. Corresponds to the version in the ctx protocol tag (atproto-space-v1)."
+        },
+        "hash": {
+          "type": "bytes",
+          "description": "sha256 digest of the LtHash state (32 bytes)."
+        },
+        "ikm": {
+          "type": "bytes",
+          "description": "Per-signature input keying material (32 random bytes)"
+        },
+        "sig": {
+          "type": "bytes",
+          "description": "Signature over ctx (space, author DID, rev, ikm) by the user's atproto signing key. Does not cover the repo hash."
+        },
+        "mac": {
+          "type": "bytes",
+          "description": "HMAC-SHA256 over hash, keyed by HKDF-SHA256(ikm, info=ctx). Binds the repo hash to this commit's context."
+        },
+        "rev": {
+          "type": "string",
+          "format": "tid",
+          "description": "Commit revision (TID), also bound into ctx."
+        }
+      }
+    }
+  }
+}

@@ -83,5 +83,89 @@
         }
       }
     }
+  },
+  {
+    "name": "space missing name",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.space",
+      "defs": {
+        "main": {
+          "type": "space",
+          "collections": []
+        }
+      }
+    }
+  },
+  {
+    "name": "space missing collections",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.space",
+      "defs": {
+        "main": {
+          "type": "space",
+          "name": "Example Space"
+        }
+      }
+    }
+  },
+  {
+    "name": "space with non-NSID collection",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.space",
+      "defs": {
+        "main": {
+          "type": "space",
+          "name": "Example Space",
+          "collections": ["not-a-valid-nsid"]
+        }
+      }
+    }
+  },
+  {
+    "name": "space as non-main definition",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.space",
+      "defs": {
+        "demo": {
+          "type": "space",
+          "key": "any",
+          "name": "Example Space",
+          "collections": []
+        }
+      }
+    }
+  },
+  {
+    "name": "space missing key",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.space",
+      "defs": {
+        "main": {
+          "type": "space",
+          "name": "Example Space",
+          "collections": []
+        }
+      }
+    }
+  },
+  {
+    "name": "space with invalid key type",
+    "lexicon": {
+      "lexicon": 1,
+      "id": "com.example.space",
+      "defs": {
+        "main": {
+          "type": "space",
+          "key": "bogus",
+          "name": "Example Space",
+          "collections": []
+        }
+      }
+    }
   }
 ]

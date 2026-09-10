@@ -10,7 +10,6 @@ import { com } from '../../../../lexicons/index.js'
 import { dbLogger } from '../../../../logger.js'
 import {
   BadCommitSwapError,
-  InvalidRecordError,
   type PreparedWrite,
   prepareCreate,
   prepareDelete,
@@ -122,47 +121,39 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // @NOTE should preserve order of ts.writes for final use in response
-      let preparedWrites: PreparedWrite[]
-      try {
-        preparedWrites = await Promise.all(
-          writes.map(async (write, i) => {
-            if (com.atproto.repo.applyWrites.create.$isTypeOf(write)) {
-              return prepareCreate({
-                did,
-                collection: write.collection,
-                record: write.value,
-                rkey: write.rkey,
-                validate,
-                validationPath: ['writes', i, 'record'],
-              })
-            } else if (com.atproto.repo.applyWrites.update.$isTypeOf(write)) {
-              return prepareUpdate({
-                did,
-                collection: write.collection,
-                record: write.value,
-                rkey: write.rkey,
-                validate,
-                validationPath: ['writes', i, 'record'],
-              })
-            } else if (com.atproto.repo.applyWrites.delete.$isTypeOf(write)) {
-              return prepareDelete({
-                did,
-                collection: write.collection,
-                rkey: write.rkey,
-              })
-            } else {
-              throw new InvalidRequestError(
-                `Action not supported: ${write['$type']}`,
-              )
-            }
-          }),
-        )
-      } catch (err) {
-        if (err instanceof InvalidRecordError) {
-          throw new InvalidRequestError(err.message)
-        }
-        throw err
-      }
+      const preparedWrites: PreparedWrite[] = await Promise.all(
+        writes.map(async (write, i) => {
+          if (com.atproto.repo.applyWrites.create.$isTypeOf(write)) {
+            return prepareCreate({
+              did,
+              collection: write.collection,
+              record: write.value,
+              rkey: write.rkey,
+              validate,
+              validationPath: ['writes', i, 'record'],
+            })
+          } else if (com.atproto.repo.applyWrites.update.$isTypeOf(write)) {
+            return prepareUpdate({
+              did,
+              collection: write.collection,
+              record: write.value,
+              rkey: write.rkey,
+              validate,
+              validationPath: ['writes', i, 'record'],
+            })
+          } else if (com.atproto.repo.applyWrites.delete.$isTypeOf(write)) {
+            return prepareDelete({
+              did,
+              collection: write.collection,
+              rkey: write.rkey,
+            })
+          } else {
+            throw new InvalidRequestError(
+              `Action not supported: ${write['$type']}`,
+            )
+          }
+        }),
+      )
 
       const swapCommitCid = swapCommit ? parseCid(swapCommit) : undefined
 

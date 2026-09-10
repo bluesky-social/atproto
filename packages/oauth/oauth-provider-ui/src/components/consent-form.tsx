@@ -8,7 +8,11 @@ import { ClientAvatar } from '#/components/identity/client-avatar.tsx'
 import { ClientName } from '#/components/identity/client-name.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
-import type { PermissionSets } from '#/hydration-data.d.ts'
+import type {
+  PermissionSets,
+  SpaceHandles,
+  Spaces,
+} from '#/hydration-data.d.ts'
 import { FormShell } from './forms/form-shell.tsx'
 import { DescriptionCard } from './utils/description-card.tsx'
 import { ScopeDescription } from './utils/scope-description.tsx'
@@ -19,6 +23,8 @@ export type ConsentFormProps = {
   clientTrusted: boolean
   clientFirstParty: boolean
   permissionSets: PermissionSets
+  spaces: Spaces
+  spaceHandles: SpaceHandles
 
   account: Account
   scope?: string
@@ -56,6 +62,8 @@ export function ConsentForm({
   clientTrusted,
   clientFirstParty,
   permissionSets,
+  spaces,
+  spaceHandles,
 
   account,
   scope,
@@ -152,6 +160,8 @@ export function ConsentForm({
       <ScopeDescription
         scope={scope}
         permissionSets={permissionSets}
+        spaces={spaces}
+        spaceHandles={spaceHandles}
         clientTrusted={clientTrusted}
         clientFirstParty={clientFirstParty}
         allowEmail={canUnsetEmail ? allowEmail : true}

@@ -1,0 +1,48 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.simplespace.checkUserAccess",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Ask a space's managing app whether to authorize a user to read or write. Served by the managingApp (not the PDS), called by the space authority when the corresponding policy is 'managing-app'. Authenticated with service auth from the authority.",
+      "parameters": {
+        "type": "params",
+        "required": ["space", "user", "access"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref",
+            "description": "Reference to the space."
+          },
+          "user": {
+            "type": "string",
+            "format": "did",
+            "description": "The DID of the requesting user."
+          },
+          "access": {
+            "type": "string",
+            "knownValues": ["read", "write"],
+            "description": "The kind of access being checked."
+          },
+          "clientId": {
+            "type": "string",
+            "description": "The attested client_id, if a client attestation was presented. Omitted for write checks."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["authorized"],
+          "properties": {
+            "authorized": {
+              "type": "boolean",
+              "description": "Whether the managing app authorizes the request."
+            }
+          }
+        }
+      }
+    }
+  }
+}

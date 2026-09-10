@@ -13,11 +13,13 @@ export default defineConfig({
     },
     projects: [
       'packages/aws',
+      'packages/car',
       'packages/common',
       'packages/internal/*',
       'packages/lex/*',
       'packages/lexicon-resolver',
       'packages/oauth/*',
+      'packages/space',
       'packages/syntax',
       'packages/tap',
       'packages/ws-client',

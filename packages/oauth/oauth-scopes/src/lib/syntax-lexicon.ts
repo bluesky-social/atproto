@@ -53,3 +53,22 @@ export class LexPermissionSyntax<
     return this.lexPermission
   }
 }
+
+/**
+ * Lexicon documents cannot use `type` because it is reserved (and should always
+ * be "resource"). For that reason, it uses `spaceType`. The `space:` scope
+ * syntax, however, uses `type`. This class translates between the two.
+ */
+export class LexSpacePermissionSyntax extends LexPermissionSyntax<'space'> {
+  get(key: string) {
+    if (key === 'type') return this.lexPermission.spaceType
+    if (key === 'spaceType') return undefined
+    return super.get(key)
+  }
+
+  *keys() {
+    for (const key of super.keys()) {
+      yield key === 'spaceType' ? 'type' : key
+    }
+  }
+}

@@ -61,7 +61,9 @@
     "node": ">=22"
   },
   "dependencies": {
+    "@atproto-labs/did-resolver": "workspace:^",
     "@atproto-labs/fetch-node": "workspace:^",
+    "@atproto-labs/handle-resolver-node": "workspace:^",
     "@atproto-labs/pipe": "workspace:^",
     "@atproto-labs/simple-store": "workspace:^",
     "@atproto-labs/simple-store-memory": "workspace:^",

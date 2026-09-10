@@ -33,6 +33,14 @@ msgstr "{0, plural, one {un minut în urmă} few {# minute în urmă} other {# d
 msgid "{0, plural, one {yesterday} other {# days ago}}"
 msgstr "{0, plural, one {ieri} few {# zile în urmă} other {# de zile în urmă}}"
 
+#: src/components/utils/scope-description.tsx
+msgid "<0/> spaces"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "<0/> spaces on <1/>"
+msgstr ""
+
 #: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>AT Protocol</0> — Technical documentation for developers"
 msgstr "<0>Protocol AT</0> — Documentație tehnică pentru dezvoltatori"
@@ -44,6 +52,10 @@ msgstr "<0>Bluesky Social</0> — Informații generale despre rețea"
 #: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>Learn more</0><1>Want to learn more about the technology and network behind your Atmosphere account?</1>"
 msgstr "<0>Aflați mai multe</0><1>Doriți să aflați mai multe despre tehnologia și rețeaua din spatele contului dvs. pe Atmosferă?</1>"
+
+#: src/components/utils/scope-description.tsx
+msgid "<0>Manage</0> the space: create new spaces, add and remove members."
+msgstr ""
 
 #: src/routes/account/u/$accountId/-about/en.tsx
 msgid "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
@@ -84,6 +96,10 @@ msgstr "Un serviciu controlat de <0>{domain}</0>"
 #: src/routes/account/u/$accountId/route.tsx
 msgid "About"
 msgstr "Despre"
+
+#: src/components/utils/scope-description.tsx
+msgid "Access permissioned spaces"
+msgstr ""
 
 #: src/components/utils/scope-description.tsx
 msgid "Access specific parts of your Bluesky account"
@@ -146,6 +162,14 @@ msgstr "Adăugați următoarea înregistrare la configurația DNS a domeniului d
 #: src/components/update-handle-custom-form.tsx
 msgid "alice.com"
 msgstr "andreea.ro"
+
+#: src/components/utils/scope-description.tsx
+msgid "All spaces on <0/>"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
+msgid "All spaces on the network"
+msgstr ""
 
 #: src/components/reset-password-view.tsx
 #: src/components/update-password-dialog.tsx
@@ -830,6 +854,10 @@ msgstr "Parolă nouă"
 msgid "Next"
 msgstr "Următorul"
 
+#: src/components/utils/scope-description.tsx
+msgid "No access."
+msgstr ""
+
 #: src/components/session-list.tsx
 msgid "No matches"
 msgstr "Nicio potrivire"
@@ -887,6 +915,10 @@ msgstr "Efectuează acțiuni în numele dvs."
 #: src/components/utils/scope-description.tsx
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "Efectuează acțiuni autentificate către <0>orice serviciu</0> în numele dvs."
+
+#: src/components/utils/scope-description.tsx
+msgid "Permissioned spaces (such as group chats, forums, or shared albums) hold data that's only visible to their members. The application requests the following access:"
+msgstr ""
 
 #: src/components/authenticate-welcome-view.tsx
 msgid "Please authenticate to continue"
@@ -953,12 +985,20 @@ msgid "Read and update your account's email address"
 msgstr "Citește și actualizează adresa de e-mail a contului"
 
 #: src/components/utils/scope-description.tsx
+msgid "Read only your own data."
+msgstr ""
+
+#: src/components/utils/scope-description.tsx
 msgid "Read your account's email address"
 msgstr "Citește adresa de e-mail a contului"
 
 #: src/components/utils/scope-description.tsx
 msgid "Read your private preferences"
 msgstr "Citește preferințele private"
+
+#: src/components/utils/scope-description.tsx
+msgid "Read-only access."
+msgstr ""
 
 #: src/components/sign-in-form.tsx
 msgid "Remember this account on this device"
@@ -1069,6 +1109,10 @@ msgstr "Conectare anulată"
 msgid "Sign-in complete"
 msgstr "Conectare finalizată"
 
+#: src/components/utils/scope-description.tsx
+msgid "Spaces"
+msgstr ""
+
 #: src/components/feedback/error-details.tsx
 msgctxt "Error"
 msgid "Stack"
@@ -1174,6 +1218,10 @@ msgstr "Această aplicație vă poate identifica în mod unic prin intermediul c
 #: src/components/oauth-session-details-dialog.tsx
 msgid "This app has access to your account with the following permissions:"
 msgstr "Această aplicație are acces la contul dvs. cu următoarele permisiuni:"
+
+#: src/components/utils/scope-description.tsx
+msgid "This application is requesting access to <0>every space on the network</0>. This is a very broad permission. Only grant it to applications you deeply trust."
+msgstr ""
 
 #: src/components/consent-form.tsx
 msgid "This application is requesting the following permissions (scopes) to access your account:"

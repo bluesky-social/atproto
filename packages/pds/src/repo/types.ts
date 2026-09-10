@@ -1,6 +1,7 @@
 import type { Cid, LexMap, TypedBlobRef } from '@atproto/lex-data'
 import type { BlockMap, CommitData, WriteOpAction } from '@atproto/repo'
 import type { AtUri } from '@atproto/syntax'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export type ValidationStatus = 'valid' | 'unknown'
 
@@ -50,7 +51,11 @@ export type SyncEvtData = {
   blocks: BlockMap
 }
 
-export class InvalidRecordError extends Error {}
+export class InvalidRecordError extends InvalidRequestError {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, undefined, options)
+  }
+}
 
 export class BadCommitSwapError extends Error {
   constructor(public cid: Cid) {

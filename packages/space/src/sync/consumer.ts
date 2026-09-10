@@ -1,0 +1,189 @@
+import { readCarStream } from '@atproto/car'
+import { type LexValue, decode } from '@atproto/lex-cbor'
+import { type Cid, isPlainObject } from '@atproto/lex-data'
+import type { NsidString, RecordKeyString } from '@atproto/syntax'
+import { RepoVerificationError } from '../error.js'
+import { RepoCommit, verifyCommit } from '../repo-commit.js'
+import {
+  type CommitCtx,
+  type Def,
+  type RecordPath,
+  type RepoIndex,
+  type SignedCommit,
+  type SpaceRecord,
+  defs,
+} from '../types.js'
+import { parseRecordPath } from '../util.js'
+
+export type VerifyRepoParams = {
+  space: string
+  author: string
+  didKey: string
+  // False for an index-only car, which carries no record blocks. Defaults to true.
+  expectValues?: boolean
+}
+
+export type VerifiedRecord = {
+  collection: NsidString
+  rkey: RecordKeyString
+  cid: Cid
+  record: SpaceRecord
+}
+
+/**
+ * @note **IMPORTANT** to avoid resource leaks, the {@link VerifiedRepo} must be
+ * disposed of when done, either by calling its `[Symbol.asyncDispose]()`
+ * method, by using it in a `using` statement, or by consuming at least one of
+ * its `records` (and then `return()`ing the iterator).
+ */
+export type VerifiedRepo = AsyncDisposable & {
+  commit: SignedCommit
+  index: RepoIndex
+  repo: RepoCommit
+  records: AsyncGenerator<VerifiedRecord>
+}
+
+/**
+ * Verify a serialized repo, streaming out its records.
+ *
+ * The three stages follow the CAR's layout, so nothing needs buffering: the
+ * commit, then the index against the commit's hash (which authenticates every
+ * path/cid pair without reading a record), then each block against its index
+ * entry. That last stage runs as `records` is drained, so it must be consumed to
+ * know the repo was complete — {@link verifyRepoCarFull} does that.
+ */
+export const verifyRepoCar = async (
+  car: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
+  params: VerifyRepoParams,
+): Promise<VerifiedRepo> => {
+  const carReader = await readCarStream(car, {
+    // The reader hashes every block against its cid as it streams.
+    skipCidVerification: false,
+  })
+  // Note the try/catch would better be implemented with a DisposableStack, but
+  // that isn't (widely) available yet.
+  try {
+    const { roots, blocks } = carReader
+    if (roots.length !== 2) {
+      throw new RepoVerificationError(
+        `expected 2 car roots (commit, index), got ${roots.length}`,
+      )
+    }
+    const [commitRoot, indexRoot] = roots
+
+    const commitBlock = await blocks.next()
+    if (commitBlock.done || !commitBlock.value.cid.equals(commitRoot)) {
+      throw new RepoVerificationError(
+        'expected the commit block to lead the car',
+      )
+    }
+    const commit = parseBlock(commitBlock.value.bytes, defs.signedCommit)
+
+    const ctx: CommitCtx = { ...params, rev: commit.rev }
+    if (!(await verifyCommit(commit, ctx, params.didKey))) {
+      throw new RepoVerificationError('commit failed verification')
+    }
+
+    const indexBlock = await blocks.next()
+    if (indexBlock.done || !indexBlock.value.cid.equals(indexRoot)) {
+      throw new RepoVerificationError(
+        'expected the index block to follow the commit',
+      )
+    }
+    const index = parseBlock(indexBlock.value.bytes, defs.repoIndex)
+
+    const repo = RepoCommit.fromIndex(index)
+    if (!repo.matches(commit)) {
+      throw new RepoVerificationError('index does not match the commit hash')
+    }
+
+    return {
+      commit,
+      index,
+      repo,
+      records: verifyRecords(blocks, index, params.expectValues !== false),
+      [Symbol.asyncDispose]: carReader.destroy.bind(carReader),
+    }
+  } catch (err) {
+    await carReader.destroy()
+    throw err
+  }
+}
+
+/**
+ * Verify a serialized repo and collect its records. Prefer {@link verifyRepoCar}
+ * for large repos, where streaming avoids holding every record at once.
+ */
+export const verifyRepoCarFull = async (
+  car: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
+  params: VerifyRepoParams,
+): Promise<Omit<VerifiedRepo, 'records'> & { records: VerifiedRecord[] }> => {
+  const { records, ...rest } = await verifyRepoCar(car, params)
+  const collected: VerifiedRecord[] = []
+  for await (const record of records) {
+    collected.push(record)
+  }
+  return { ...rest, records: collected }
+}
+
+// The car holds one record block per index entry, in the index's order.
+async function* verifyRecords(
+  blocks: AsyncIterable<{ cid: Cid; bytes: Uint8Array }>,
+  index: RepoIndex,
+  expectValues: boolean,
+): AsyncGenerator<VerifiedRecord> {
+  const paths = Object.keys(index) as RecordPath[]
+  let i = 0
+
+  for await (const block of blocks) {
+    if (i >= paths.length) {
+      throw new RepoVerificationError('car has more blocks than index entries')
+    }
+    const path = paths[i]
+    const cid = Object.hasOwn(index, path) ? index[path] : undefined
+    i++
+
+    // @NOTE the car reader already verifies the block's cid against its bytes,
+    // so we only need to check it against the index.
+    if (!cid || !block.cid.equals(cid)) {
+      throw new RepoVerificationError(
+        `expected block ${cid} at ${path}, got ${block.cid}`,
+      )
+    }
+
+    const { collection, rkey } = parseRecordPath(path)
+
+    let record: LexValue
+    try {
+      record = decode(block.bytes)
+    } catch (cause) {
+      throw new RepoVerificationError(`invalid record cbor at ${path}`, {
+        cause,
+      })
+    }
+
+    // Ensure that the encoded record is a plain object (LexMap)
+    if (!isPlainObject(record)) {
+      throw new RepoVerificationError(`invalid record at ${path}`)
+    }
+
+    yield { collection, rkey, cid, record }
+  }
+
+  const isIndexOnly = !expectValues && i === 0
+  if (i < paths.length && !isIndexOnly) {
+    throw new RepoVerificationError(
+      `car is missing ${paths.length - i} record(s) named in the index`,
+    )
+  }
+}
+
+function parseBlock<T>(bytes: Uint8Array, def: Def<T>): T {
+  try {
+    return def.schema.parse(decode(bytes))
+  } catch (err) {
+    // Could either be a cbor decode error or a zod parse error
+    const message = err instanceof Error ? err.message : String(err)
+    throw new RepoVerificationError(`invalid ${def.name}: ${message}`)
+  }
+}

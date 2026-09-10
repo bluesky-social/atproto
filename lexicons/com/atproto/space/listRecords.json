@@ -1,0 +1,108 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.listRecords",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List the records in an account's repo within a permissioned space, optionally filtered by collection. By default each record's value is inlined; set excludeValues for a metadata-only listing (collection, rkey, cid). Used for full-state recovery. Callable with either OAuth (for the authenticated user's own data) or a space credential (for syncing services). Throws RepoNotFound when the account holds no repo in the space; this does not distinguish a member that has never written from a non-member.",
+      "parameters": {
+        "type": "params",
+        "required": ["space", "repo"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "space-ref",
+            "description": "Reference to the space."
+          },
+          "repo": {
+            "type": "string",
+            "format": "did",
+            "description": "The DID of the account whose repo to list."
+          },
+          "collection": {
+            "type": "string",
+            "format": "nsid",
+            "description": "The NSID of the record collection. If omitted, lists records across all collections."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 50,
+            "description": "The number of records to return."
+          },
+          "cursor": {
+            "type": "string"
+          },
+          "reverse": {
+            "type": "boolean",
+            "description": "Flag to reverse the order of the returned records."
+          },
+          "excludeValues": {
+            "type": "boolean",
+            "default": false,
+            "description": "If true, omit inlined record values and return only metadata (collection, rkey, cid)."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["records"],
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "records": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#record"
+              }
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "RepoNotFound"
+        },
+        {
+          "name": "RepoTakendown"
+        },
+        {
+          "name": "RepoSuspended"
+        },
+        {
+          "name": "RepoDeactivated"
+        }
+      ]
+    },
+    "record": {
+      "type": "object",
+      "required": ["collection", "rkey", "cid"],
+      "properties": {
+        "collection": {
+          "type": "string",
+          "format": "nsid"
+        },
+        "rkey": {
+          "type": "string",
+          "format": "record-key"
+        },
+        "cid": {
+          "type": "string",
+          "format": "cid"
+        },
+        "value": {
+          "type": "unknown",
+          "description": "The record's value. Inlined by default; omitted when excludeValues is set."
+        }
+      }
+    }
+  }
+}

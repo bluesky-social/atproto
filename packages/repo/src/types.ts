@@ -1,7 +1,7 @@
 import { z } from 'zod'
+import type { BlockMap } from '@atproto/car'
 import { type Cid, type LexMap, ifCid } from '@atproto/lex-data'
 import type { NsidString, RecordKeyString } from '@atproto/syntax'
-import type { BlockMap } from './block-map.js'
 import type { CidSet } from './cid-set.js'
 
 // Repo nodes
@@ -217,9 +217,4 @@ export type VerifiedDiff = {
 export type VerifiedRepo = {
   creates: RecordCreateDescript[]
   commit: CommitData
-}
-
-export type CarBlock = {
-  cid: Cid
-  bytes: Uint8Array
 }
