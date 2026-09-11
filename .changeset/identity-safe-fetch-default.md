@@ -2,12 +2,10 @@
 '@atproto/identity': patch
 ---
 
-Identity resolution is now SSRF-protected by default. The handle
+Identity resolution now goes through a safe fetch by default. The handle
 `/.well-known/atproto-did` endpoint, `did:plc` and `did:web` all resolve through
-a safe fetch, which refuses private and IP-literal hosts, `http:` URLs, custom
-ports, the reserved documentation domains, and oversized responses. Each attempt
-is also bounded by `timeout` (default 3s), which previously had no effect on the
-handle endpoint.
+it. Each attempt is also bounded by `timeout` (default 3s), which previously had
+no effect on the handle endpoint.
 
 This changes behavior for anyone resolving against localhost or a private
 network — a test suite, a local dev stack, an internal PLC mirror. Those callers

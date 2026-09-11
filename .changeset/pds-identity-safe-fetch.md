@@ -2,4 +2,4 @@
 '@atproto/pds': patch
 ---
 
-Resolve identities through the PDS's existing SSRF-protected `safeFetch`.
+Resolve identities through the PDS's existing `safeFetch`.
