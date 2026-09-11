@@ -1,5 +1,19 @@
 # @atproto/dev-env
 
+## 0.6.7
+
+### Patch Changes
+
+- [#5504](https://github.com/bluesky-social/atproto/pull/5504) [`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d) Thanks [@devinivy](https://github.com/devinivy)! - Keep localhost identity resolution working against `@atproto/identity`'s new
+  safe default.
+- Updated dependencies [[`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d), [`09d0932`](https://github.com/bluesky-social/atproto/commit/09d09322f31947b1f559ca47047bca3da127e301), [`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d), [`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d), [`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d), [`ac0989b`](https://github.com/bluesky-social/atproto/commit/ac0989bf9e16affd4aa919df8609b12f4ee8cd65)]:
+  - @atproto/bsky@0.0.280
+  - @atproto/pds@0.5.34
+  - @atproto/identity@0.5.13
+  - @atproto/ozone@0.4.2
+  - @atproto/sync@0.4.10
+  - @atproto/lex@0.3.11
+
 ## 0.6.6
 
 ### Patch Changes

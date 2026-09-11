@@ -1,5 +1,12 @@
 # @atproto/lex-resolver
 
+## 0.2.13
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.3.9
+
 ## 0.2.12
 
 ### Patch Changes
