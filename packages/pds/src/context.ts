@@ -6,6 +6,7 @@ import * as nodemailer from 'nodemailer'
 import * as ui8 from 'uint8arrays'
 import type * as undici from 'undici'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
+import { streamToBytes } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { Client } from '@atproto/lex'
@@ -16,8 +17,9 @@ import {
   OAuthProvider,
 } from '@atproto/oauth-provider/provider'
 import { OAuthVerifier } from '@atproto/oauth-provider/verifier'
-import type { BlobStore } from '@atproto/repo'
+import { type BlobStore, getRecords } from '@atproto/repo'
 import {
+  InvalidRequestError,
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
@@ -47,6 +49,7 @@ import { DidSqliteCache } from './did-cache/index.js'
 import { DiskBlobStore } from './disk-blobstore.js'
 import { events } from './events.js'
 import { ImageUrlBuilder } from './image/image-url-builder.js'
+import { createLexiconFetch } from './lexicon-fetch.js'
 import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger.js'
 import { ServerMailer } from './mailer/index.js'
 import { ModerationMailer } from './mailer/moderation.js'
@@ -368,7 +371,31 @@ export class AppContext implements AsyncDisposable {
           branding: cfg.oauth.provider.branding,
           safeFetch,
           lexResolver: new LexResolver({
-            fetch: safeFetch,
+            fetch: createLexiconFetch({
+              publicUrl: cfg.service.publicUrl,
+              fetch: safeFetch,
+              getLocalRecord: async ({ did, collection, rkey }) => {
+                const account = await accountManager.getAccount(did)
+                if (!account) {
+                  throw new InvalidRequestError(
+                    'Repo not available',
+                    'RepoNotFound',
+                  )
+                }
+                return actorStore.read(did, async ({ repo: { storage } }) => {
+                  const commit = await storage.getRoot()
+                  if (!commit) {
+                    throw new InvalidRequestError(
+                      'Repo not found',
+                      'RepoNotFound',
+                    )
+                  }
+                  return streamToBytes(
+                    getRecords(storage, commit, [{ collection, rkey }]),
+                  )
+                })
+              },
+            }),
             plcDirectoryUrl: cfg.identity.plcUrl,
             hooks: {
               onResolveAuthority: ({ nsid }) => {
