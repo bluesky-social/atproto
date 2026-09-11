@@ -1,5 +1,28 @@
 # @atproto/identity
 
+## 0.5.13
+
+### Patch Changes
+
+- [#5504](https://github.com/bluesky-social/atproto/pull/5504) [`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d) Thanks [@devinivy](https://github.com/devinivy)! - Identity resolution now goes through a safe fetch by default. The handle
+  `/.well-known/atproto-did` endpoint, `did:plc` and `did:web` all resolve through
+  it. Each attempt is also bounded by `timeout` (default 3s), which previously had
+  no effect on the handle endpoint.
+
+  This changes behavior for anyone resolving against localhost or a private
+  network — a test suite, a local dev stack, an internal PLC mirror. Those callers
+  pass their own `fetch`, which is used as-is and never re-wrapped:
+
+  ```ts
+  new IdResolver({ plcUrl, fetch: globalThis.fetch })
+  ```
+
+  Non-ok DID responses now have their bodies cancelled explicitly, which a timeout
+  helper had been doing implicitly.
+
+- Updated dependencies [[`f88aa58`](https://github.com/bluesky-social/atproto/commit/f88aa5842df9aba9f208a6073272b43ef9bd089d)]:
+  - @atproto-labs/fetch-node@0.4.0
+
 ## 0.5.12
 
 ### Patch Changes

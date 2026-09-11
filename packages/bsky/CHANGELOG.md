@@ -1,5 +1,18 @@
 # @atproto/bsky
 
+## 0.0.280
+
+### Patch Changes
+
+- [#5504](https://github.com/bluesky-social/atproto/pull/5504) [`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d) Thanks [@devinivy](https://github.com/devinivy)! - Honor `BSKY_DISABLE_SSRF_PROTECTION` when the AppView resolves identities. The
+  mock dataplane server used by dev-env takes a `fetch` option for the same
+  purpose.
+- Updated dependencies [[`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d), [`f88aa58`](https://github.com/bluesky-social/atproto/commit/f88aa5842df9aba9f208a6073272b43ef9bd089d)]:
+  - @atproto/identity@0.5.13
+  - @atproto-labs/fetch-node@0.4.0
+  - @atproto/sync@0.4.10
+  - @atproto/lex@0.3.11
+
 ## 0.0.279
 
 ### Patch Changes

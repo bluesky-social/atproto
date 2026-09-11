@@ -1,5 +1,24 @@
 # @atproto/pds
 
+## 0.5.34
+
+### Patch Changes
+
+- [#5501](https://github.com/bluesky-social/atproto/pull/5501) [`09d0932`](https://github.com/bluesky-social/atproto/commit/09d09322f31947b1f559ca47047bca3da127e301) Thanks [@devinivy](https://github.com/devinivy)! - `registerPush`, `unregisterPush` and `createReport` now issue their outbound
+  call through the PDS's default `safeFetch`
+
+- [#5504](https://github.com/bluesky-social/atproto/pull/5504) [`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d) Thanks [@devinivy](https://github.com/devinivy)! - Resolve identities through the PDS's existing `safeFetch`.
+
+- [#5502](https://github.com/bluesky-social/atproto/pull/5502) [`ac0989b`](https://github.com/bluesky-social/atproto/commit/ac0989bf9e16affd4aa919df8609b12f4ee8cd65) Thanks [@devinivy](https://github.com/devinivy)! - Bound the decoded size of the upstream responses that the proxy buffers — error
+  bodies, and the read-after-write path — at `proxy.maxResponseSize`, which
+  previously bounded only the bytes read off the wire. A response that decodes
+  past the bound fails as an upstream error.
+- Updated dependencies [[`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d), [`ac0989b`](https://github.com/bluesky-social/atproto/commit/ac0989bf9e16affd4aa919df8609b12f4ee8cd65), [`f88aa58`](https://github.com/bluesky-social/atproto/commit/f88aa5842df9aba9f208a6073272b43ef9bd089d)]:
+  - @atproto/identity@0.5.13
+  - @atproto/oauth-provider@0.22.8
+  - @atproto-labs/fetch-node@0.4.0
+  - @atproto/lex@0.3.11
+
 ## 0.5.33
 
 ### Patch Changes

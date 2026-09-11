@@ -1,5 +1,18 @@
 # @atproto/oauth-provider
 
+## 0.22.8
+
+### Patch Changes
+
+- [#5502](https://github.com/bluesky-social/atproto/pull/5502) [`ac0989b`](https://github.com/bluesky-social/atproto/commit/ac0989bf9e16affd4aa919df8609b12f4ee8cd65) Thanks [@devinivy](https://github.com/devinivy)! - Bound the request bodies accepted by the OAuth and account-management endpoints
+  at 100 KiB. The bound is on the decoded body, so a compressed request is
+  measured after decompression, and a `content-length` above it is rejected
+  without reading the body. Oversized bodies fail with a 413.
+- Updated dependencies [[`f88aa58`](https://github.com/bluesky-social/atproto/commit/f88aa5842df9aba9f208a6073272b43ef9bd089d)]:
+  - @atproto-labs/fetch-node@0.4.0
+  - @atproto/oauth-provider-ui@0.10.3
+  - @atproto/lex-resolver@0.2.13
+
 ## 0.22.7
 
 ### Patch Changes
