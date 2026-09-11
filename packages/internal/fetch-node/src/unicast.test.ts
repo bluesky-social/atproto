@@ -1,5 +1,9 @@
 import { assert, describe, expect, it, vi } from 'vitest'
-import { unicastFetchWrap, unicastLookup } from './unicast.js'
+import {
+  checkUnicastPolicy,
+  unicastFetchWrap,
+  unicastLookup,
+} from './unicast.js'
 
 vi.mock(import('node:dns'), async (importOriginal) => {
   const dns = await importOriginal()
@@ -20,6 +24,29 @@ vi.mock(import('node:dns'), async (importOriginal) => {
       return dns.lookup(hostname, options, callback)
     }) as typeof dns.lookup,
   }
+})
+
+describe(checkUnicastPolicy, () => {
+  // `unicastLookup` cannot cover these: NodeJS performs no DNS resolution for a
+  // literal-IP host, so the connect-time guard is never invoked for one.
+  it.each([
+    'http://127.0.0.1/',
+    'http://169.254.169.254/latest/meta-data/',
+    'http://10.0.0.1/',
+    'http://[::1]/',
+  ])('rejects the non-unicast literal ip in %s', (href) => {
+    expect(checkUnicastPolicy(new URL(href))).toBe(
+      'Hostname is a non-unicast address',
+    )
+  })
+
+  it('allows a public literal ip', () => {
+    expect(checkUnicastPolicy(new URL('http://1.1.1.1/'))).toBeUndefined()
+  })
+
+  it('defers a domain name to the connect-time lookup', () => {
+    expect(checkUnicastPolicy(new URL('http://example.com/'))).toBeUndefined()
+  })
 })
 
 describe(unicastLookup, () => {

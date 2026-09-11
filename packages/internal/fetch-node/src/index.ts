@@ -1,5 +1,6 @@
 export * from '@atproto-labs/fetch'
 
+export * from './dispatch.js'
 export * from './safe.js'
 export * from './unicast.js'
 
