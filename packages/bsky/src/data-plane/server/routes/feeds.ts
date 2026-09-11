@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import type { ServiceImpl } from '@connectrpc/connect'
+import { Code, ConnectError, type ServiceImpl } from '@connectrpc/connect'
 import { app } from '../../../lexicons/index.js'
 import type { Service } from '../../../proto/bsky_connect.js'
 import { FeedType } from '../../../proto/bsky_pb.js'
@@ -90,13 +90,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async getTimeline(req) {
-    const { actorDid, limit, cursor } = req
+    const { actorDid, limit, cursor, since } = req
     const { ref } = db.db.dynamic
 
     const keyset = new TimeCidKeyset(
       ref('feed_item.sortAt'),
       ref('feed_item.cid'),
     )
+    assertValidSince(keyset, since)
 
     let followQb = db.db
       .selectFrom('feed_item')
@@ -107,6 +108,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     followQb = paginate(followQb, {
       limit,
       cursor,
+      since,
       keyset,
       tryIndex: true,
     })
@@ -119,6 +121,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     selfQb = paginate(selfQb, {
       limit,
       cursor,
+      since,
       keyset,
       tryIndex: true,
     })
@@ -149,27 +152,28 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     const page = keyset.page(feedItems, limit)
     if (page.items.length === 0) {
-      return { items: [], cursor: undefined }
+      return { items: [], cursor: exhaustedCursor(since) }
     }
     const items = page.items.map(feedItemFromRow)
+    const startCursor = keyset.packFromResult(page.items[0])
 
     // The combined results exceeded the requested limit.
     if (page.cursor) {
-      return { items, cursor: page.cursor }
+      return { items, cursor: page.cursor, startCursor }
     }
 
     // Own posts exceeded their separate cap, but the combined results did not exceed the requested limit.
     if (selfHasMore) {
       const lastItem = page.items.at(-1)
       assert(lastItem)
-      return { items, cursor: keyset.packFromResult(lastItem) }
+      return { items, cursor: keyset.packFromResult(lastItem), startCursor }
     }
 
-    return { items, cursor: undefined }
+    return { items, cursor: exhaustedCursor(since), startCursor }
   },
 
   async getListFeed(req) {
-    const { listUri, cursor, limit } = req
+    const { listUri, cursor, since, limit } = req
     const { ref } = db.db.dynamic
     const list = await db.db
       .selectFrom('list')
@@ -198,20 +202,43 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
 
     const keyset = new TimeCidKeyset(ref('post.sortAt'), ref('post.cid'))
+    assertValidSince(keyset, since)
     builder = paginate(builder, {
       limit,
       cursor,
+      since,
       keyset,
       tryIndex: true,
     })
     const page = keyset.page(await builder.execute(), limit)
+    const firstItem = page.items[0]
 
     return {
       items: page.items.map((item) => ({ uri: item.uri, cid: item.cid })),
-      cursor: page.cursor,
+      cursor: page.cursor ?? exhaustedCursor(since),
+      startCursor: firstItem ? keyset.packFromResult(firstItem) : undefined,
     }
   },
 })
+
+/**
+ * A `since`-bounded request never reports exhaustion with an empty cursor: it
+ * echoes `since`, a position the client can keep paginating below.
+ */
+const exhaustedCursor = (since: string) => since || undefined
+
+/**
+ * Rejects a `since` the keyset cannot unpack. Left to `paginate` it would raise
+ * an xrpc error, which a Connect handler reports as an internal error.
+ */
+const assertValidSince = (keyset: TimeCidKeyset, since: string) => {
+  if (!since) return
+  try {
+    keyset.unpack(since)
+  } catch {
+    throw new ConnectError('Malformed since cursor', Code.InvalidArgument)
+  }
+}
 
 // @NOTE does not support additional fields in the protos specific to author feeds
 // and timelines. at the time of writing, hydration/view implementations do not rely on them.
