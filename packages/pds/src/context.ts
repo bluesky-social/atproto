@@ -554,6 +554,26 @@ export class AppContext implements AsyncDisposable {
     return forwardedFor(req, authPassthru(req))
   }
 
+  /**
+   * A {@link Client} for a service URL that was resolved from a DID document,
+   * i.e. a URL the PDS does not control. Routes the request through
+   * {@link safeFetch}, which restricts it to https origins that resolve to
+   * unicast addresses, and caps the response size. Lexicon validation follows
+   * the service's dev mode, as it does for the AppView client.
+   *
+   * Any call built from a DID document's service endpoint must use this.
+   */
+  safeClient(service: string | URL): Client {
+    return new Client(
+      { service, fetch: this.safeFetch },
+      {
+        validateRequest: this.cfg.service.devMode,
+        validateResponse: this.cfg.service.devMode,
+        strictResponseProcessing: this.cfg.service.devMode,
+      },
+    )
+  }
+
   async serviceAuthHeaders(did: string, aud: string, lxm: string) {
     const keypair = await this.actorStore.keypair(did)
     return createServiceAuthHeaders({
