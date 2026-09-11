@@ -46,7 +46,7 @@ describe('moderation', () => {
       policies: ['trolling'],
     })
 
-    // Verify that that the takedown even exposes the policy specified for it
+    // Verify that the takedown even exposes the policy specified for it
     const { events: eventViews } = await modClient.queryEvents({
       subject: sc.dids.bob,
       types: ['tools.ozone.moderation.defs#modEventTakedown'],
