@@ -1,5 +1,13 @@
 # @atproto-labs/xrpc-utils
 
+## 0.1.22
+
+### Patch Changes
+
+- Updated dependencies [[`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/xrpc-server@0.13.1
+  - @atproto/xrpc@0.8.13
+
 ## 0.1.21
 
 ### Patch Changes

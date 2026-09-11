@@ -1,5 +1,16 @@
 # @atproto/lex-resolver
 
+## 0.2.12
+
+### Patch Changes
+
+- [#5447](https://github.com/bluesky-social/atproto/pull/5447) [`7a23156`](https://github.com/bluesky-social/atproto/commit/7a23156efa16433b83f90fd35e155c68b3a0253a) Thanks [@mozzius](https://github.com/mozzius)! - Support runtimes without `URL.canParse` when validating PDS service endpoints.
+
+- Updated dependencies [[`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/crypto@0.5.5
+  - @atproto/repo@0.10.14
+  - @atproto-labs/did-resolver@0.3.8
+
 ## 0.2.11
 
 ### Patch Changes

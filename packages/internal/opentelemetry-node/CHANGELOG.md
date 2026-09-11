@@ -1,5 +1,11 @@
 # @atproto-labs/opentelemetry-node
 
+## 0.2.1
+
+### Patch Changes
+
+- [#5477](https://github.com/bluesky-social/atproto/pull/5477) [`0287dce`](https://github.com/bluesky-social/atproto/commit/0287dcece76c2c2453406cb3b51591ce0f983a98) Thanks [@foysalit](https://github.com/foysalit)! - Align Ozone telemetry with the shared OpenTelemetry bootstrap and add Undici tracing while retaining PostgreSQL instrumentation. Restrict the shared ESM loader hook to instrumented modules.
+
 ## 0.2.0
 
 ### Minor Changes

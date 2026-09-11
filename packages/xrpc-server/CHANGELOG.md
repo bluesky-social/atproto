@@ -1,5 +1,17 @@
 # @atproto/xrpc-server
 
+## 0.13.1
+
+### Patch Changes
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump the dev-dependencies group across 1 directory with 30 updates
+
+- Updated dependencies [[`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/crypto@0.5.5
+  - @atproto/lexicon@0.7.14
+  - @atproto/common@0.8.3
+  - @atproto/xrpc@0.8.13
+
 ## 0.13.0
 
 ### Minor Changes
