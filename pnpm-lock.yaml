@@ -778,6 +778,9 @@ importers:
 
   packages/identity:
     dependencies:
+      '@atproto-labs/fetch-node':
+        specifier: workspace:^
+        version: link:../internal/fetch-node
       '@atproto/common-web':
         specifier: workspace:^
         version: link:../common-web

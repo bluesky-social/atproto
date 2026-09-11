@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals'
-import { SafeDidResolver, createSafeFetch } from '../src/safe-fetch.js'
+import { createSafeFetch } from '../src/safe-fetch.js'
 
 describe('safe fetch', () => {
   it.each([
@@ -37,10 +37,5 @@ describe('safe fetch', () => {
 
     expect(fetch).toHaveBeenCalled()
     fetch.mockRestore()
-  })
-
-  it('protects did:web resolution', async () => {
-    const resolver = new SafeDidResolver({ timeout: 100 })
-    await expect(resolver.resolve('did:web:127.0.0.1')).rejects.toThrow()
   })
 })

@@ -23,7 +23,10 @@ describe('firehose', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'sync_firehose',
     })
-    idResolver = new IdResolver({ plcUrl: network.plc.url })
+    idResolver = new IdResolver({
+      plcUrl: network.plc.url,
+      fetch: globalThis.fetch,
+    })
     mockResolvers(idResolver, network.pds)
     sc = network.getSeedClient()
   })
