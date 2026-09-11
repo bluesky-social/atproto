@@ -61,7 +61,10 @@ export const pipethroughReadAfterWrite = async <
       const local = await store.record.getRecordsSinceRev(rev)
       if (local.count === 0) return streamRes
 
-      const { buffer } = (bufferRes = await asPipeThroughBuffer(streamRes))
+      const { buffer } = (bufferRes = await asPipeThroughBuffer(
+        streamRes,
+        ctx.cfg.proxy.maxResponseSize,
+      ))
 
       const lex = lexParse(buffer.toString('utf8'), { strict: false })
 

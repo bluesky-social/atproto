@@ -1,5 +1,26 @@
 # @atproto/sync
 
+## 0.4.10
+
+### Patch Changes
+
+- Updated dependencies [[`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d)]:
+  - @atproto/identity@0.5.13
+  - @atproto/lex@0.3.11
+
+## 0.4.9
+
+### Patch Changes
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump the dev-dependencies group across 1 directory with 30 updates
+
+- Updated dependencies [[`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/identity@0.5.12
+  - @atproto/repo@0.10.14
+  - @atproto/xrpc-server@0.13.1
+  - @atproto/common@0.8.3
+  - @atproto/lex@0.3.10
+
 ## 0.4.8
 
 ### Patch Changes

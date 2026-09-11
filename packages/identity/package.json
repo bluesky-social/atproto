@@ -1,6 +1,6 @@
 {
   "name": "@atproto/identity",
-  "version": "0.5.11",
+  "version": "0.5.13",
   "license": "MIT",
   "description": "Library for decentralized identities in atproto using DIDs and handles",
   "keywords": [
@@ -30,6 +30,7 @@
     "node": ">=22"
   },
   "dependencies": {
+    "@atproto-labs/fetch-node": "workspace:^",
     "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^"
   },

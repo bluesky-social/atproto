@@ -92,6 +92,7 @@ export class BskyAppView {
     const idResolver = new IdResolver({
       plcUrl: config.didPlcUrl,
       backupNameservers: config.handleResolveNameservers,
+      fetch: config.disableSsrfProtection ? globalThis.fetch : undefined,
     })
 
     const imgUriBuilderUrl =

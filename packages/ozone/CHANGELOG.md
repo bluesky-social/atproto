@@ -1,5 +1,34 @@
 # @atproto/ozone
 
+## 0.4.2
+
+### Patch Changes
+
+- [#5504](https://github.com/bluesky-social/atproto/pull/5504) [`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d) Thanks [@devinivy](https://github.com/devinivy)! - Drop ozone's own `SafeDidResolver` in favor of `@atproto/identity`'s safe
+  resolution, still relaxed by `OZONE_DEV_MODE`.
+- Updated dependencies [[`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d), [`f88aa58`](https://github.com/bluesky-social/atproto/commit/f88aa5842df9aba9f208a6073272b43ef9bd089d)]:
+  - @atproto/identity@0.5.13
+  - @atproto-labs/fetch-node@0.4.0
+  - @atproto/lex@0.3.11
+
+## 0.4.1
+
+### Patch Changes
+
+- [#5477](https://github.com/bluesky-social/atproto/pull/5477) [`0287dce`](https://github.com/bluesky-social/atproto/commit/0287dcece76c2c2453406cb3b51591ce0f983a98) Thanks [@foysalit](https://github.com/foysalit)! - Align Ozone telemetry with the shared OpenTelemetry bootstrap and add Undici tracing while retaining PostgreSQL instrumentation. Restrict the shared ESM loader hook to instrumented modules.
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump the dev-dependencies group across 1 directory with 30 updates
+
+- [#5478](https://github.com/bluesky-social/atproto/pull/5478) [`7277010`](https://github.com/bluesky-social/atproto/commit/727701085829daf8e0440253346b5e70fc3810ad) Thanks [@foysalit](https://github.com/foysalit)! - Improve report query hydration by batching blob moderation lookups, deduplicating repeated status and account requests, and fetching profile chunks concurrently.
+
+- Updated dependencies [[`0287dce`](https://github.com/bluesky-social/atproto/commit/0287dcece76c2c2453406cb3b51591ce0f983a98), [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto-labs/opentelemetry-node@0.2.1
+  - @atproto/crypto@0.5.5
+  - @atproto/identity@0.5.12
+  - @atproto/xrpc-server@0.13.1
+  - @atproto/common@0.8.3
+  - @atproto/lex@0.3.10
+
 ## 0.4.0
 
 ### Minor Changes

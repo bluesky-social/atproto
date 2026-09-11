@@ -188,6 +188,32 @@ export class AppContext implements AsyncDisposable {
 
     const moderationMailer = new ModerationMailer(modMailTransport, cfg)
 
+    /**
+     * A fetch() function that protects against SSRF attacks, large responses &
+     * known bad domains. This function can safely be used to fetch user
+     * provided URLs (unless "disableSsrfProtection" is true, of course).
+     *
+     * @note **DO NOT** wrap `safeFetch` with any logging or other transforms as
+     * this might prevent the use of explicit `redirect: "follow"` init from
+     * working. See {@link safeFetchWrap}.
+     */
+    const safeFetch = safeFetchWrap({
+      allowIpHost: false,
+      allowImplicitRedirect: false,
+      responseMaxSize: cfg.fetch.maxResponseSize,
+      ssrfProtection: !cfg.fetch.disableSsrfProtection,
+
+      fetch: function (input, init) {
+        const method =
+          init?.method ?? (input instanceof Request ? input.method : 'GET')
+        const uri = input instanceof Request ? input.url : String(input)
+
+        fetchLogger.info({ method, uri }, 'fetch')
+
+        return globalThis.fetch.call(this, input, init)
+      },
+    })
+
     const didCache = new DidSqliteCache(
       cfg.db.didCacheDbLoc,
       cfg.identity.cacheStaleTTL,
@@ -201,6 +227,7 @@ export class AppContext implements AsyncDisposable {
       didCache,
       timeout: cfg.identity.resolverTimeout,
       backupNameservers: cfg.identity.handleBackupNameservers,
+      fetch: safeFetch,
     })
     const plcClient = new plc.Client(cfg.identity.plcUrl)
 
@@ -321,32 +348,6 @@ export class AppContext implements AsyncDisposable {
 
     // An agent for performing HTTP requests based on user provided URLs.
     const proxyAgent = buildProxyAgent(cfg.proxy)
-
-    /**
-     * A fetch() function that protects against SSRF attacks, large responses &
-     * known bad domains. This function can safely be used to fetch user
-     * provided URLs (unless "disableSsrfProtection" is true, of course).
-     *
-     * @note **DO NOT** wrap `safeFetch` with any logging or other transforms as
-     * this might prevent the use of explicit `redirect: "follow"` init from
-     * working. See {@link safeFetchWrap}.
-     */
-    const safeFetch = safeFetchWrap({
-      allowIpHost: false,
-      allowImplicitRedirect: false,
-      responseMaxSize: cfg.fetch.maxResponseSize,
-      ssrfProtection: !cfg.fetch.disableSsrfProtection,
-
-      fetch: function (input, init) {
-        const method =
-          init?.method ?? (input instanceof Request ? input.method : 'GET')
-        const uri = input instanceof Request ? input.url : String(input)
-
-        fetchLogger.info({ method, uri }, 'fetch')
-
-        return globalThis.fetch.call(this, input, init)
-      },
-    })
 
     /**
      * Lexicons hosted by this PDS are read straight from the actor store.
@@ -624,6 +625,26 @@ export class AppContext implements AsyncDisposable {
 
   entrywayPassthruHeaders(req: express.Request) {
     return forwardedFor(req, authPassthru(req))
+  }
+
+  /**
+   * A {@link Client} for a service URL that was resolved from a DID document,
+   * i.e. a URL the PDS does not control. Routes the request through
+   * {@link safeFetch}, which restricts it to https origins that resolve to
+   * unicast addresses, and caps the response size. Lexicon validation follows
+   * the service's dev mode, as it does for the AppView client.
+   *
+   * Any call built from a DID document's service endpoint must use this.
+   */
+  safeClient(service: string | URL): Client {
+    return new Client(
+      { service, fetch: this.safeFetch },
+      {
+        validateRequest: this.cfg.service.devMode,
+        validateResponse: this.cfg.service.devMode,
+        strictResponseProcessing: this.cfg.service.devMode,
+      },
+    )
   }
 
   async serviceAuthHeaders(did: string, aud: string, lxm: string) {

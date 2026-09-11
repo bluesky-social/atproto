@@ -1,7 +1,12 @@
 import {
   DEFAULT_FORBIDDEN_DOMAIN_NAMES,
   type Fetch,
+  type ProtocolConfig,
+  type UrlPolicyReason,
   asRequest,
+  checkForbiddenDomainNamePolicy,
+  checkHostHeaderPolicy,
+  checkProtocolPolicy,
   explicitRedirectCheckRequestTransform,
   fetchMaxSizeProcessor,
   forbiddenDomainNameRequestTransform,
@@ -10,9 +15,11 @@ import {
   timedFetch,
 } from '@atproto-labs/fetch'
 import { pipe } from '@atproto-labs/pipe'
-import { type UnicastFetchWrapOptions, unicastFetchWrap } from './unicast.js'
+import { safeDispatchFetchWrap } from './dispatch.js'
+import { checkUnicastPolicy, unicastLookup } from './unicast.js'
 
-export type SafeFetchWrapOptions<C> = UnicastFetchWrapOptions<C> & {
+export type SafeFetchWrapOptions<C> = {
+  fetch?: Fetch<C>
   responseMaxSize?: number
   ssrfProtection?: boolean
   allowCustomPort?: boolean
@@ -36,6 +43,14 @@ export type SafeFetchWrapOptions<C> = UnicastFetchWrapOptions<C> & {
  * with user provided input (URL).
  *
  * @see {@link https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html}
+ *
+ * @note The url policy is enforced twice, deliberately. The request transforms
+ * below apply it to the initial url, where a rejection can carry the caller's
+ * own {@link Request} and can reject schemes (`data:`, `file:`) that never
+ * reach the network. The dispatcher guard applies the same policy to every
+ * request that is actually issued, which is the only way to cover redirect
+ * hops: `fetch()` follows redirects internally, above the dispatcher, so a
+ * transform only ever observes the url it was handed.
  *
  * @note When {@link SafeFetchWrapOptions.allowImplicitRedirect} is `false`
  * (default), then the returned function **must** be called setting the second
@@ -63,6 +78,33 @@ export function safeFetchWrap<C>({
   forbiddenDomainNames = DEFAULT_FORBIDDEN_DOMAIN_NAMES as Iterable<string>,
   allowImplicitRedirect = false,
 }: SafeFetchWrapOptions<C> = {}) {
+  /**
+   * Prevent using http:, file: or data: protocols.
+   */
+  const protocols: ProtocolConfig = {
+    'about:': false,
+    'data:': allowData,
+    'file:': false,
+    'http:': allowHttp && { allowCustomPort },
+    'https:': { allowCustomPort },
+  }
+
+  const forbiddenDomainNameSet = new Set<string>(forbiddenDomainNames)
+
+  /**
+   * The whole url policy, as a single check over a {@link URL}, so that it can
+   * be applied to every redirect hop and not only to the initial url.
+   *
+   * @note {@link checkUnicastPolicy} is applied here (rather than left to the
+   * connect-time DNS guard) because NodeJS does not resolve literal-IP hosts,
+   * so the lookup is never invoked for them.
+   */
+  const checkUrl = (url: URL): UrlPolicyReason | undefined =>
+    checkProtocolPolicy(url, protocols) ??
+    (allowIpHost ? undefined : checkHostHeaderPolicy(url)) ??
+    checkForbiddenDomainNamePolicy(url, forbiddenDomainNameSet) ??
+    (allowPrivateIps ? undefined : checkUnicastPolicy(url))
+
   return pipe(
     /**
      * Require explicit {@link RequestInit['redirect']} mode
@@ -74,16 +116,7 @@ export function safeFetchWrap<C>({
      */
     allowIpHost ? asRequest : requireHostHeaderTransform(),
 
-    /**
-     * Prevent using http:, file: or data: protocols.
-     */
-    protocolCheckRequestTransform({
-      'about:': false,
-      'data:': allowData,
-      'file:': false,
-      'http:': allowHttp && { allowCustomPort },
-      'https:': { allowCustomPort },
-    }),
+    protocolCheckRequestTransform(protocols),
 
     /**
      * Disallow fetching from domains we know are not atproto/OIDC client
@@ -96,6 +129,9 @@ export function safeFetchWrap<C>({
     /**
      * Since we will be fetching from the network based on user provided
      * input, let's mitigate resource exhaustion attacks by setting a timeout.
+     *
+     * @note This budget covers the entire redirect chain, since `fetch()`
+     * follows redirects within this single call.
      */
     timedFetch(
       timeout,
@@ -104,8 +140,16 @@ export function safeFetchWrap<C>({
        * Since we will be fetching from the network based on user provided
        * input, we need to make sure that the request is not vulnerable to SSRF
        * attacks.
+       *
+       * @note The dispatcher is installed even when private IPs are allowed:
+       * relaxing the unicast requirement must not silently disable the
+       * remaining per-hop checks. Only the DNS guard is conditional.
        */
-      allowPrivateIps ? fetch : unicastFetchWrap({ fetch }),
+      safeDispatchFetchWrap({
+        fetch,
+        checkUrl,
+        lookup: allowPrivateIps ? undefined : unicastLookup,
+      }),
     ),
 
     /**

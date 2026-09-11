@@ -51,6 +51,8 @@ Almost every integration test in `pds`, `bsky`, `ozone`, and `lexicon-resolver` 
 
 Tear down with `afterAll(async () => network?.close())` — the prevailing pattern, and the only option for `TestNetworkNoAppView`, which exposes `close()` but no `Symbol.asyncDispose`. Only `TestNetwork` implements it.
 
+A test that resolves identities (handles, `did:plc`, `did:web`) against localhost must construct its resolver with `fetch: globalThis.fetch` — `@atproto/identity`'s default fetch is SSRF-protected and refuses localhost/private-IP targets silently.
+
 Snapshot assertions go through each package's `forSnapshot()` helper in `tests/_util.ts`, which swaps DIDs, CIDs, and timestamps for stable placeholders so snapshots don't churn on every run. Refresh them with `pnpm test:updateSnapshot` (defined in `bsky`, `pds`, `ozone`, `bsync`).
 
 ## TypeScript config for tests

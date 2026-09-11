@@ -1,5 +1,37 @@
 # @atproto/bsky
 
+## 0.0.280
+
+### Patch Changes
+
+- [#5504](https://github.com/bluesky-social/atproto/pull/5504) [`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d) Thanks [@devinivy](https://github.com/devinivy)! - Honor `BSKY_DISABLE_SSRF_PROTECTION` when the AppView resolves identities. The
+  mock dataplane server used by dev-env takes a `fetch` option for the same
+  purpose.
+- Updated dependencies [[`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d), [`f88aa58`](https://github.com/bluesky-social/atproto/commit/f88aa5842df9aba9f208a6073272b43ef9bd089d)]:
+  - @atproto/identity@0.5.13
+  - @atproto-labs/fetch-node@0.4.0
+  - @atproto/sync@0.4.10
+  - @atproto/lex@0.3.11
+
+## 0.0.279
+
+### Patch Changes
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump the dev-dependencies group across 1 directory with 30 updates
+
+- Updated dependencies [[`0287dce`](https://github.com/bluesky-social/atproto/commit/0287dcece76c2c2453406cb3b51591ce0f983a98), [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto-labs/opentelemetry-node@0.2.1
+  - @atproto/api@0.20.44
+  - @atproto/crypto@0.5.5
+  - @atproto/did@0.5.5
+  - @atproto/identity@0.5.12
+  - @atproto/repo@0.10.14
+  - @atproto/sync@0.4.9
+  - @atproto/xrpc-server@0.13.1
+  - @atproto/common@0.8.3
+  - @atproto/lex@0.3.10
+  - @atproto-labs/xrpc-utils@0.1.22
+
 ## 0.0.278
 
 ### Patch Changes

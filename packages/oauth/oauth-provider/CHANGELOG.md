@@ -1,5 +1,33 @@
 # @atproto/oauth-provider
 
+## 0.22.8
+
+### Patch Changes
+
+- [#5502](https://github.com/bluesky-social/atproto/pull/5502) [`ac0989b`](https://github.com/bluesky-social/atproto/commit/ac0989bf9e16affd4aa919df8609b12f4ee8cd65) Thanks [@devinivy](https://github.com/devinivy)! - Bound the request bodies accepted by the OAuth and account-management endpoints
+  at 100 KiB. The bound is on the decoded body, so a compressed request is
+  measured after decompression, and a `content-length` above it is rejected
+  without reading the body. Oversized bodies fail with a 413.
+- Updated dependencies [[`f88aa58`](https://github.com/bluesky-social/atproto/commit/f88aa5842df9aba9f208a6073272b43ef9bd089d)]:
+  - @atproto-labs/fetch-node@0.4.0
+  - @atproto/oauth-provider-ui@0.10.3
+  - @atproto/lex-resolver@0.2.13
+
+## 0.22.7
+
+### Patch Changes
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump the dev-dependencies group across 1 directory with 30 updates
+
+- Updated dependencies [[`7a23156`](https://github.com/bluesky-social/atproto/commit/7a23156efa16433b83f90fd35e155c68b3a0253a), [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36), [`9c35046`](https://github.com/bluesky-social/atproto/commit/9c35046f17ac577fc64f8b5caccb8521d3b2584a), [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/lex-resolver@0.2.12
+  - @atproto/did@0.5.5
+  - @atproto/oauth-provider-ui@0.10.3
+  - @atproto/oauth-provider-api@0.8.3
+  - @atproto/common@0.8.3
+  - @atproto/oauth-scopes@0.5.12
+  - @atproto/oauth-types@0.7.6
+
 ## 0.22.6
 
 ### Patch Changes
