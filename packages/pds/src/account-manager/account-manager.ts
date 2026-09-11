@@ -1039,7 +1039,7 @@ export class AccountManager {
     email: string
     token?: string
     locale?: string
-  }): Promise<{ account: ActorAccount | null; tokenRequired: boolean }> {
+  }): Promise<null | { account: ActorAccount; tokenRequired: boolean }> {
     const { did, email, token, locale } = opts
 
     const account = await this.getAccount(did, {
@@ -1057,7 +1057,7 @@ export class AccountManager {
 
     // Already disabled → idempotent no-op; nothing to confirm, no OTP sent.
     if (!account.emailAuthFactorAt) {
-      return { account: null, tokenRequired: false }
+      return null
     }
 
     // Phase one: no token yet, send a one-time code and signal "pending". MUST

@@ -733,21 +733,20 @@ export class OAuthStore
     // `tokenRequired: true` signals the OTP was dispatched and the change is
     // pending confirmation (no token was supplied yet); `false` means the
     // factor is now disabled (or was already disabled).
-    const { account, tokenRequired } =
-      await this.accountManager.disableEmailAuthFactor({
-        did,
-        email,
-        token,
-        locale,
-      })
+    const result = await this.accountManager.disableEmailAuthFactor({
+      did,
+      email,
+      token,
+      locale,
+    })
 
-    if (!account) {
-      return { updatedAccount: null, tokenRequired }
+    if (!result) {
+      return { updatedAccount: null, tokenRequired: false }
     }
 
     return {
-      updatedAccount: await this.buildAccount(account),
-      tokenRequired,
+      updatedAccount: await this.buildAccount(result.account),
+      tokenRequired: result.tokenRequired,
     }
   }
 

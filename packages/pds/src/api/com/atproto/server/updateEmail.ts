@@ -41,53 +41,59 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        const { token, email, emailAuthFactor } = body
+        const { token, emailAuthFactor } = body
+        const email = body.email.toLowerCase()
         // @TODO get the locale somehow (either by adding a field in the request
         // body, or by using the `Accept-Language` header).
         const locale = undefined
 
-        // Pure auth-factor toggle: the email isn't changing, the caller is only
-        // flipping the OTP factor on/off. Handle it and return; falling
-        // through to updateEmail() would re-set the (unchanged) email and null
-        // out emailConfirmedAt, silently un-confirming a confirmed address.
-        // Emails are normalized to lowercase:
-        if (
-          user.email === email.toLowerCase() &&
-          user.emailConfirmedAt &&
-          emailAuthFactor !== undefined
-        ) {
+        const hasEmailAuthFactor = user.emailConfirmedAt != null
+
+        if (emailAuthFactor != null && emailAuthFactor !== hasEmailAuthFactor) {
           if (emailAuthFactor) {
-            // Enabling only adds protection: immediate, no token required.
-            await ctx.accountManager.enableEmailAuthFactor({
-              did,
-              email: user.email,
-            })
+            // User is trying to enable email OTP
+            if (user.emailConfirmedAt && user.email === email) {
+              // Enabling only adds protection: immediate, no token required.
+              await ctx.accountManager.enableEmailAuthFactor({
+                did,
+                email: user.email,
+              })
+
+              return // no need to continue to email change since email is not being changed
+            } else {
+              // @NOTE updating the user email address has the effect of resetting the
+              // email OTP status, reverting any action we would be performing here.
+              // Instead of silently ignoring a request to enable email OTP while updating
+              // the email, we provide an error message.
+              throw new InvalidRequestError(
+                'Please change and verify your email before enabling OTP',
+              )
+            }
           } else {
-            // Disabling removes a second factor, so it's gated by an
-            // `update_email` OTP: the first call (no token) emails a code and
-            // makes no change; the second (with token) verifies and disables.
-            const { account, tokenRequired } =
-              await ctx.accountManager.disableEmailAuthFactor({
+            // User is trying to disable email OTP
+            if (user.email === email) {
+              // Disabling removes a second factor, so it's gated by an
+              // `update_email` OTP: the first call (no token) emails a code and
+              // makes no change; the second (with token) verifies and disables.
+              const result = await ctx.accountManager.disableEmailAuthFactor({
                 did,
                 email: user.email,
                 token,
                 locale,
               })
 
-            // We receive account === null if the email auth factor is already disabled
-            if (!account) {
-              return
-            }
+              if (result?.tokenRequired) {
+                throw new InvalidRequestError(
+                  'confirmation token required',
+                  'TokenRequired',
+                )
+              }
 
-            if (tokenRequired) {
-              throw new InvalidRequestError(
-                'confirmation token required',
-                'TokenRequired',
-              )
+              return // no need to continue to email change since email is not being changed
+            } else {
+              // No-op: changing email address always disables OTP
             }
           }
-
-          return
         }
 
         try {
