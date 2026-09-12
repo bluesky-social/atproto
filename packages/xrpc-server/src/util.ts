@@ -39,6 +39,8 @@ import {
   handlerSuccess,
 } from './types.js'
 
+export type Overwrite<T, U> = Omit<T, keyof U> & U
+
 export type ParamsVerifierInternal<P extends Params = Params> = (
   req: IncomingMessage | ExpressRequest,
 ) => P
@@ -253,6 +255,12 @@ export function createLexiconInputVerifier<I extends Input = Input>(
     }
   }
 
+  // Do not silently ignore
+  assert(
+    !options.inputProcessingOptions,
+    'inputProcessingOptions is not supported for lexicon based methods. Use server.add() instead.',
+  )
+
   // Lexicon definition expects a request body
 
   const { input } = def
@@ -310,6 +318,10 @@ export function createSchemaInputVerifier<M extends l.Procedure | l.Query>(
 ): InputVerifierInternal<LexMethodInput<M>> {
   const schema = l.getMain(ns)
   const { blobLimit } = options
+  const inputProcessingOptions = Object.freeze({
+    ...options.inputProcessingOptions,
+    strict: options.inputProcessingOptions?.strict ?? false,
+  })
 
   const input: l.Payload | undefined =
     'input' in schema ? schema.input : undefined
@@ -345,8 +357,10 @@ export function createSchemaInputVerifier<M extends l.Procedure | l.Query>(
 
     if (input.schema) {
       try {
-        const lexBody = req.body ? jsonToLex(req.body) : req.body
-        req.body = input.schema.parse(lexBody)
+        const lexBody = req.body
+          ? jsonToLex(req.body, inputProcessingOptions)
+          : req.body
+        req.body = input.schema.parse(lexBody, inputProcessingOptions)
       } catch (cause) {
         throw new InvalidRequestError(
           cause instanceof Error ? cause.message : String(cause),
