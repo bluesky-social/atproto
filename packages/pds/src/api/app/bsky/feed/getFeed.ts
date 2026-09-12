@@ -6,9 +6,6 @@ import { app, com } from '../../../../lexicons/index.js'
 import { computeProxyTo, pipethrough } from '../../../../pipethrough.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const { bskyAppView } = ctx
-  if (!bskyAppView) return
-
   server.add(app.bsky.feed.getFeed, {
     auth: ctx.authVerifier.authorization({
       authorize: (permissions, { req }) => {
@@ -23,7 +20,8 @@ export default function (server: Server, ctx: AppContext) {
 
       const feedUrl = new AtUri(params.feed)
 
-      const data = await bskyAppView.client.call(com.atproto.repo.getRecord, {
+      const appView = await ctx.resolveAppView(req, app.bsky.feed.getFeed.$lxm)
+      const data = await appView.client.call(com.atproto.repo.getRecord, {
         repo: feedUrl.host,
         collection: feedUrl.collectionSafe,
         rkey: feedUrl.rkeySafe,
