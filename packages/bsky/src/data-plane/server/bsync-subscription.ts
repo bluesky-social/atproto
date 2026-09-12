@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { lexParse } from '@atproto/lex'
+import { lexParseJsonBytes } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import {
   type BsyncClient,
@@ -378,8 +378,8 @@ const handleSubjectActivitySubscriptionOperation: HandleOperation = async (
   }
 
   const parsed =
-    lexParse<app.bsky.notification.defs.SubjectActivitySubscription>(
-      Buffer.from(payload).toString('utf8'),
+    lexParseJsonBytes<app.bsky.notification.defs.SubjectActivitySubscription>(
+      payload,
     )
   const {
     subject,
@@ -420,9 +420,8 @@ const handleAgeAssuranceEventOperation: HandleOperation = async (
   const { actorDid, method, payload } = op
   if (method !== Method.CREATE) return
 
-  const parsed = lexParse<app.bsky.unspecced.defs.AgeAssuranceEvent>(
-    Buffer.from(payload).toString('utf8'),
-  )
+  const parsed =
+    lexParseJsonBytes<app.bsky.unspecced.defs.AgeAssuranceEvent>(payload)
   const { status, createdAt } = parsed
 
   const update = {
@@ -444,9 +443,7 @@ const handleAgeAssuranceV2EventOperation: HandleOperation = async (
   const { actorDid, method, payload } = op
   if (method !== Method.CREATE) return
 
-  const parsed = lexParse<app.bsky.ageassurance.defs.Event>(
-    Buffer.from(payload).toString('utf8'),
-  )
+  const parsed = lexParseJsonBytes<app.bsky.ageassurance.defs.Event>(payload)
   const { status, createdAt, access, countryCode, regionCode } = parsed
 
   const update = {
@@ -490,9 +487,7 @@ const handleBookmarkOperation: HandleOperation = async (
   }
 
   if (method === Method.CREATE) {
-    const parsed = lexParse<app.bsky.bookmark.defs.Bookmark>(
-      Buffer.from(payload).toString('utf8'),
-    )
+    const parsed = lexParseJsonBytes<app.bsky.bookmark.defs.Bookmark>(payload)
     const {
       subject: { uri, cid },
     } = parsed
