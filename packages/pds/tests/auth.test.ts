@@ -1,18 +1,35 @@
+import { jest } from '@jest/globals'
 import * as jose from 'jose'
 import { request as undiciRequest } from 'undici'
 import type { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { createRefreshToken } from '../src/account-manager/helpers/auth.js'
+import type { AppContext } from '../src/index.js'
 
 describe('auth', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
+
+  let sendMailMock: jest.SpiedFunction<
+    AppContext['mailer']['transporter']['sendMail']
+  >
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'auth',
     })
     agent = network.pds.getAgent()
+
+    // Catch-all: never actually deliver, but keep recording calls. Per-test
+    // spies on the individual mailer methods stay un-stubbed, so the real
+    // template still renders into the call this records.
+    sendMailMock = jest
+      .spyOn(network.pds.ctx.mailer.transporter, 'sendMail')
+      .mockImplementation(async () => {})
+  })
+
+  beforeEach(() => {
+    sendMailMock.mockClear()
   })
 
   afterAll(async () => {
@@ -62,6 +79,7 @@ describe('auth', () => {
       handle: account.handle,
       email,
       emailConfirmed: false,
+      emailAuthFactor: false,
       active: true,
     })
     // Valid refresh token
@@ -92,6 +110,7 @@ describe('auth', () => {
       handle: session.handle,
       email,
       emailConfirmed: false,
+      emailAuthFactor: false,
       active: true,
     })
     // Valid refresh token
@@ -225,6 +244,7 @@ describe('auth', () => {
       handle: session.handle,
       email,
       emailConfirmed: false,
+      emailAuthFactor: false,
       active: true,
     })
     // Valid refresh token
@@ -400,6 +420,131 @@ describe('auth', () => {
     )
     await expect(refreshSession(account.refreshJwt)).rejects.toMatchObject({
       error: 'AccountTakedown',
+    })
+  })
+
+  describe('when 2FA is enabled', () => {
+    let jane
+    beforeAll(async () => {
+      const sc = network.getSeedClient()
+
+      jane = await sc.createAccount('jane', {
+        email: 'jane@test.com',
+        handle: 'jane.test',
+        password: 'jane-pass',
+      })
+
+      const confirmationToken =
+        await network.pds.ctx.accountManager.createEmailToken(
+          jane.did,
+          'confirm_email',
+        )
+
+      await network.pds.ctx.accountManager.confirmEmail(
+        jane.did,
+        jane.email,
+        confirmationToken,
+      )
+
+      await network.pds.ctx.accountManager.enableEmailAuthFactor({
+        did: jane.did,
+        email: jane.email,
+      })
+    })
+
+    it('challenges for a 2FA token on session creation', async () => {
+      const sessionPromise = createSession({
+        identifier: 'jane.test',
+        password: 'jane-pass',
+      })
+      await expect(sessionPromise).rejects.toThrow(
+        'A sign in code has been sent to your email address',
+      )
+      await expect(sessionPromise).rejects.toMatchObject({
+        error: 'AuthFactorTokenRequired',
+      })
+    })
+
+    it('accepts a 2FA token after challenging on session creation', async () => {
+      using sendSignInAuthFactorMock = jest.spyOn(
+        network.pds.ctx.mailer,
+        'sendSignInAuthFactor',
+      )
+
+      // The challenge itself is the thing that dispatches the code, so it is
+      // expected to reject here.
+      await expect(
+        createSession({ identifier: 'jane.test', password: 'jane-pass' }),
+      ).rejects.toMatchObject({ error: 'AuthFactorTokenRequired' })
+
+      expect(sendMailMock).toHaveBeenCalledTimes(1)
+      const [params] = sendSignInAuthFactorMock.mock.lastCall!
+      // @NOTE `locale: undefined` is the contract, not an oversight:
+      // `com.atproto.server.createSession` declares no locale input, so this
+      // path deliberately falls back to the default template. The OAuth path
+      // (covered in oauth.test.ts) is where a real locale arrives.
+      expect(params).toEqual({
+        handle: 'jane.test',
+        locale: undefined,
+        token: expect.any(String),
+      })
+      const token = params.token
+
+      const session = await createSession({
+        identifier: 'jane.test',
+        password: 'jane-pass',
+        authFactorToken: token,
+      })
+
+      expect(session).toEqual(
+        expect.objectContaining({
+          did: jane.did,
+          handle: jane.handle,
+          email: jane.email,
+          emailConfirmed: true,
+          emailAuthFactor: true,
+          active: true,
+        }),
+      )
+    })
+    it('rejects an invalid 2FA token after challenging on session creation', async () => {
+      using sendSignInAuthFactorMock = jest.spyOn(
+        network.pds.ctx.mailer,
+        'sendSignInAuthFactor',
+      )
+
+      await expect(
+        createSession({ identifier: 'jane.test', password: 'jane-pass' }),
+      ).rejects.toMatchObject({ error: 'AuthFactorTokenRequired' })
+
+      const [params] = sendSignInAuthFactorMock.mock.lastCall!
+      const token = params.token
+      expect(token).not.toBe('AAAAA-AAAAA')
+
+      // Attempt 1: deliberately invalid authFactorToken
+      const sessionPromise = createSession({
+        identifier: 'jane.test',
+        password: 'jane-pass',
+        authFactorToken: 'AAAAA-AAAAA',
+      })
+      await expect(sessionPromise).rejects.toThrow('Token is invalid')
+
+      // Attempt 2: with correct authFactorToken
+      const sessionPromiseWithValidToken = createSession({
+        identifier: 'jane.test',
+        password: 'jane-pass',
+        authFactorToken: token,
+      })
+      await expect(sessionPromiseWithValidToken).resolves.toEqual(
+        expect.objectContaining({
+          did: jane.did,
+          handle: jane.handle,
+          email: jane.email,
+          emailConfirmed: true,
+          emailAuthFactor: true,
+          active: true,
+        }),
+      )
     })
   })
 })

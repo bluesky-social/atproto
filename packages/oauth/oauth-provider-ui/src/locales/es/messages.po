@@ -142,6 +142,7 @@ msgstr ""
 msgid "alice.com"
 msgstr ""
 
+#: src/components/disable-email-auth-factor-dialog.tsx
 #: src/components/reset-password-view.tsx
 #: src/components/update-password-dialog.tsx
 #: src/components/verify-email-dialog.tsx
@@ -436,6 +437,23 @@ msgstr ""
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr ""
 
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "Disable 2FA"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "Disable two-factor authentication"
+msgstr ""
+
+#: src/routes/account/u/$accountId/manage.tsx
+msgctxt "2FA"
+msgid "Disabled"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "Disabling two-factor authentication makes your account less secure."
+msgstr ""
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "DNS"
 msgstr ""
@@ -472,12 +490,33 @@ msgstr ""
 msgid "Email change successful"
 msgstr ""
 
+#: src/data/email.ts
+msgid "Email login verification disabled"
+msgstr ""
+
+#: src/data/email.ts
+msgid "Email login verification enabled"
+msgstr ""
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Email these instructions"
 msgstr ""
 
 #: src/data/email.ts
 msgid "Email verified"
+msgstr ""
+
+#: src/components/enable-email-auth-factor-dialog.tsx
+msgid "Enable"
+msgstr ""
+
+#: src/components/enable-email-auth-factor-dialog.tsx
+msgid "Enable two-factor authentication"
+msgstr ""
+
+#: src/routes/account/u/$accountId/manage.tsx
+msgctxt "2FA"
+msgid "Enabled"
 msgstr ""
 
 #: src/components/forms/fields/new-password-field.tsx
@@ -495,6 +534,10 @@ msgstr ""
 #: src/components/reset-password-view.tsx
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Ingresa el correo electrónico que usaste para crear tu cuenta. Te enviaremos un \"código de restablecimiento\" para que puedas establecer una nueva contraseña."
+
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "Enter the security code we sent to <0>{email}</0> to disable email two-factor authentication."
+msgstr ""
 
 #: src/components/reset-password-request-form.tsx
 msgid "Enter your email address"
@@ -541,6 +584,14 @@ msgstr ""
 msgid "Failed to delete account"
 msgstr ""
 
+#: src/data/email.ts
+msgid "Failed to disable email login verification"
+msgstr ""
+
+#: src/data/email.ts
+msgid "Failed to enable email login verification"
+msgstr ""
+
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Failed to load connected apps"
 msgstr "Error al cargar las aplicaciones conectadas"
@@ -575,6 +626,10 @@ msgstr ""
 
 #: src/data/account.ts
 msgid "Failed to send confirmation email"
+msgstr ""
+
+#: src/data/email.ts
+msgid "Failed to send security code"
 msgstr ""
 
 #: src/data/email.ts
@@ -954,6 +1009,10 @@ msgstr "Recordar esta cuenta en este dispositivo"
 msgid "Repository"
 msgstr "Repositorio"
 
+#: src/components/enable-email-auth-factor-dialog.tsx
+msgid "Require an email code to sign in to your account."
+msgstr ""
+
 #: src/components/reset-password-confirm-form.tsx
 msgid "Reset code"
 msgstr "Código de restablecimiento"
@@ -1003,6 +1062,10 @@ msgstr "Seleccionar desde una cuenta existente"
 
 #: src/components/delete-account-dialog.tsx
 msgid "Send email"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "Send email to verify"
 msgstr ""
 
 #: src/components/forms/request-code-button.tsx
@@ -1198,6 +1261,10 @@ msgstr ""
 msgid "To change your password, you'll need to enter a security code sent to your email."
 msgstr ""
 
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "To disable your email two-factor authentication, please verify your access to <0>{email}</0>"
+msgstr ""
+
 #: src/components/verify-email-dialog.tsx
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 msgstr ""
@@ -1209,6 +1276,10 @@ msgstr "Hacia"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Troubleshoot"
+msgstr ""
+
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Two-factor authentication (2FA)"
 msgstr ""
 
 #: src/components/forms/input-handle-custom-instructions.tsx
@@ -1288,6 +1359,7 @@ msgstr ""
 msgid "Value"
 msgstr ""
 
+#: src/components/disable-email-auth-factor-confirm-form.tsx
 #: src/components/update-email-dialog.tsx
 #: src/components/verify-email-confirm-form.tsx
 msgid "Verification code"
@@ -1307,6 +1379,10 @@ msgstr ""
 
 #: src/components/update-handle-dialog.tsx
 msgid "Verify and Save"
+msgstr ""
+
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Verify email to enable"
 msgstr ""
 
 #: src/components/update-email-dialog.tsx
@@ -1413,6 +1489,10 @@ msgstr "Ahora puedes iniciar sesión con tu nueva contraseña."
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 msgstr ""
 
+#: src/data/email.ts
+msgid "You will no longer be prompted for a code to sign in."
+msgstr ""
+
 #: src/components/reset-password-view.tsx
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "Recibirás un correo electrónico con un \"código de restablecimiento\". Ingresa ese código aquí y luego ingresa tu nueva contraseña."
@@ -1473,6 +1553,10 @@ msgstr ""
 #: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "Tu nombre de usuario completo será: {0}"
+
+#: src/data/email.ts
+msgid "Your next login will require a code that is sent to your email address."
+msgstr ""
 
 #: src/components/reactivate-account-dialog.tsx
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."

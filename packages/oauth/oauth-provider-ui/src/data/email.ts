@@ -3,6 +3,8 @@ import { useMutation } from '@tanstack/react-query'
 import type {
   ConfirmEmailUpdateInput,
   ConfirmEmailVerificationInput,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   InitiateEmailUpdateInput,
   InitiateEmailVerificationInput,
 } from '@atproto/oauth-provider-api'
@@ -96,6 +98,65 @@ export function useVerifyEmailConfirm() {
       notifyError(error, {
         title: msg`Failed to verify email`,
         description: msg`Please check your verification code and try again.`,
+      })
+    },
+  })
+}
+
+export function useEnableEmailAuthFactor() {
+  const api = useApi()
+  const { notify, notifyError } = useNotificationsContext()
+
+  return useMutation({
+    async mutationFn(data: EnableEmailAuthFactorInput) {
+      return api.enableEmailAuthFactor(data)
+    },
+    onSuccess(data, _variables, _context) {
+      // Email-based enable has no confirmation step (`tokenRequired` is always
+      // false); the guard keeps this correct if a future factor adds one.
+      if (!data.tokenRequired) {
+        notify({
+          title: msg`Email login verification enabled`,
+          description: msg`Your next login will require a code that is sent to your email address.`,
+        })
+      }
+    },
+    onError(error, _variables, _context) {
+      notifyError(error, {
+        title: msg`Failed to enable email login verification`,
+        description: msg`Please try again in a moment.`,
+      })
+    },
+  })
+}
+
+export function useDisableEmailAuthFactor() {
+  const api = useApi()
+  const { notify, notifyError } = useNotificationsContext()
+
+  return useMutation({
+    async mutationFn(data: DisableEmailAuthFactorInput) {
+      return api.disableEmailAuthFactor(data)
+    },
+    onSuccess(data, _variables, _context) {
+      // `tokenRequired` is false once the factor is actually off — either the
+      // confirming call with a valid token, or a no-token call that found it
+      // already disabled (e.g. a stale second tab). While an OTP is pending
+      // (`tokenRequired: true`) the dialog advances to the code-entry step and
+      // we stay quiet.
+      if (!data.tokenRequired) {
+        notify({
+          title: msg`Email login verification disabled`,
+          description: msg`You will no longer be prompted for a code to sign in.`,
+        })
+      }
+    },
+    onError(error, variables, _context) {
+      notifyError(error, {
+        title: variables.token
+          ? msg`Failed to disable email login verification`
+          : msg`Failed to send security code`,
+        description: msg`Please try again in a moment.`,
       })
     },
   })

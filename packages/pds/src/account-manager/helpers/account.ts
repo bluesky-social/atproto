@@ -24,6 +24,7 @@ export class UserAlreadyExistsError extends Error {
 export type ActorAccount = ActorEntry & {
   email: string | null
   emailConfirmedAt: string | null
+  emailAuthFactorAt: string | null
   invitesDisabled: 0 | 1 | null
 }
 
@@ -43,26 +44,39 @@ export enum AccountStatus {
 export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
   const { includeTakenDown = false, includeDeactivated = false } = flags ?? {}
   const { ref } = db.db.dynamic
-  return db.db
-    .selectFrom('actor')
-    .leftJoin('account', 'actor.did', 'account.did')
-    .$if(!includeTakenDown, (qb) =>
-      qb.where(notSoftDeletedClause(ref('actor'))),
-    )
-    .$if(!includeDeactivated, (qb) =>
-      qb.where('actor.deactivatedAt', 'is', null),
-    )
-    .select([
-      'actor.did',
-      'actor.handle',
-      'actor.createdAt',
-      'actor.takedownRef',
-      'actor.deactivatedAt',
-      'actor.deleteAfter',
-      'account.email',
-      'account.emailConfirmedAt',
-      'account.invitesDisabled',
-    ])
+  return (
+    db.db
+      .selectFrom('actor')
+      .leftJoin('account', 'actor.did', 'account.did')
+      // @NOTE LEFT, not INNER: a row exists only while the factor is enabled, so
+      // an inner join would drop every account that has 2FA off. The null this
+      // yields is exactly what the old `account.emailAuthFactorAt` column meant.
+      .leftJoin(
+        'account_email_auth_factor',
+        'actor.did',
+        'account_email_auth_factor.did',
+      )
+      .$if(!includeTakenDown, (qb) =>
+        qb.where(notSoftDeletedClause(ref('actor'))),
+      )
+      .$if(!includeDeactivated, (qb) =>
+        qb.where('actor.deactivatedAt', 'is', null),
+      )
+      .select([
+        'actor.did',
+        'actor.handle',
+        'actor.createdAt',
+        'actor.takedownRef',
+        'actor.deactivatedAt',
+        'actor.deleteAfter',
+        'account.email',
+        'account.emailConfirmedAt',
+        // Aliased so `ActorAccount` keeps the shape it had when this lived on
+        // `account`, leaving every consumer untouched.
+        'account_email_auth_factor.emailAuthFactorEnabledAt as emailAuthFactorAt',
+        'account.invitesDisabled',
+      ])
+  )
 }
 
 export const getAccount = async (
@@ -180,6 +194,9 @@ export const deleteAccount = async (
   )
   await db.executeWithRetry(
     db.db.deleteFrom('email_token').where('did', '=', did),
+  )
+  await db.executeWithRetry(
+    db.db.deleteFrom('account_email_auth_factor').where('did', '=', did),
   )
   await db.executeWithRetry(
     db.db.deleteFrom('refresh_token').where('did', '=', did),
