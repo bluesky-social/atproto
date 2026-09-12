@@ -1347,6 +1347,12 @@ importers:
       '@atproto/common-web':
         specifier: workspace:^
         version: link:../common-web
+      '@atproto/lex-data':
+        specifier: workspace:^
+        version: link:../lex/lex-data
+      '@atproto/lex-json':
+        specifier: workspace:^
+        version: link:../lex/lex-json
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
@@ -1754,7 +1760,7 @@ importers:
         version: 6.6.0
       '@lingui/react':
         specifier: ^6.6.0
-        version: 6.6.0(@babel/core@7.29.7)(@babel/types@7.29.0)(babel-plugin-macros@3.1.0)(react@19.2.8)
+        version: 6.6.0(@babel/core@7.29.0)(@babel/types@7.29.0)(babel-plugin-macros@3.1.0)(react@19.2.8)
       '@lingui/swc-plugin':
         specifier: ^6.7.0
         version: 6.7.0(@lingui/core@6.6.0(@babel/core@7.29.0)(@babel/types@7.29.0)(babel-plugin-macros@3.1.0))(@swc/core@1.16.2)
@@ -13658,7 +13664,7 @@ snapshots:
       '@messageformat/parser': 5.1.1
       js-sha256: 0.10.1
 
-  '@lingui/react@6.6.0(@babel/core@7.29.7)(@babel/types@7.29.0)(babel-plugin-macros@3.1.0)(react@19.2.8)':
+  '@lingui/react@6.6.0(@babel/core@7.29.0)(@babel/types@7.29.0)(babel-plugin-macros@3.1.0)(react@19.2.8)':
     dependencies:
       '@lingui/babel-plugin-lingui-macro': 6.6.0(@babel/core@7.29.0)(@babel/types@7.29.0)
       '@lingui/core': 6.6.0(@babel/core@7.29.7)(@babel/types@7.29.0)(babel-plugin-macros@3.1.0)

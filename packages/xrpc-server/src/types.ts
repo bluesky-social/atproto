@@ -1,9 +1,11 @@
 import type { IncomingMessage } from 'node:http'
 import { Readable } from 'node:stream'
 import type { NextFunction, Request, Response } from 'express'
+import type { JsonToLexOptions } from '@atproto/lex-json'
 import { l } from '@atproto/lex-schema'
 import type { ErrorResult, XRPCError } from './errors.js'
 import type { CalcKeyFn, CalcPointsFn, RateLimiterI } from './rate-limiter.js'
+import type { Overwrite } from './util.js'
 
 export type Awaitable<T> = T | Promise<T>
 
@@ -177,6 +179,18 @@ export type RouteOptions = {
   jsonLimit?: number
   textLimit?: number
   paramsParseLoose?: boolean
+  /** @default { strict: false } */
+  inputProcessingOptions?: Overwrite<
+    JsonToLexOptions & l.ParseOptions,
+    {
+      // @NOTE JsonToLexOptions and l.ParseOptions both have a "strict"
+      // property, but with different defaults. In order to avoid confusing
+      // JSDoc, we re-define the "strict" property here with a single default
+      // value.
+      /** @default false */
+      strict?: boolean
+    }
+  >
 }
 
 export type MethodAuth<
