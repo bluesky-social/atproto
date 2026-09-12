@@ -1,0 +1,150 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.feed.defs",
+  "defs": {
+    "generatorView": {
+      "type": "object",
+      "required": ["uri", "cid", "did", "creator", "displayName", "indexedAt"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "did": { "type": "string", "format": "did" },
+        "creator": { "type": "string", "format": "did" },
+        "displayName": {
+          "type": "string",
+          "maxGraphemes": 64,
+          "maxLength": 640
+        },
+        "description": {
+          "type": "string",
+          "maxGraphemes": 300,
+          "maxLength": 3000
+        },
+        "avatar": { "type": "string", "format": "uri" },
+        "likeCount": { "type": "integer", "minimum": 0 },
+        "acceptsInteractions": { "type": "boolean" },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
+        "viewer": { "type": "ref", "ref": "#generatorViewerState" },
+        "contentMode": {
+          "type": "string",
+          "knownValues": [
+            "com.atproto.feed.defs#contentModeUnspecified",
+            "com.atproto.feed.defs#contentModeVideo",
+            "com.atproto.feed.defs#contentModeMedia"
+          ],
+          "maxLength": 300
+        },
+        "indexedAt": { "type": "string", "format": "datetime" }
+      }
+    },
+    "generatorViewerState": {
+      "type": "object",
+      "properties": {
+        "like": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "skeletonFeedItem": {
+      "type": "object",
+      "required": ["record"],
+      "properties": {
+        "record": { "type": "string", "format": "at-uri" },
+        "reason": {
+          "type": "union",
+          "refs": ["#skeletonReasonPin"]
+        },
+        "feedContext": {
+          "type": "string",
+          "description": "Context that will be passed through to client and may be passed to feed generator back alongside interactions.",
+          "maxLength": 2000
+        }
+      }
+    },
+    "skeletonReasonPin": {
+      "type": "object",
+      "description": "This record is pinned to the top of the Feed",
+      "properties": {}
+    },
+    "interaction": {
+      "type": "object",
+      "properties": {
+        "item": { "type": "string", "format": "at-uri" },
+        "event": {
+          "type": "string",
+          "knownValues": [
+            "com.atproto.feed.defs#requestLess",
+            "com.atproto.feed.defs#requestMore",
+            "com.atproto.feed.defs#clickthroughItem",
+            "com.atproto.feed.defs#clickthroughAuthor",
+            "com.atproto.feed.defs#clickthroughEmbed",
+            "com.atproto.feed.defs#interactionSeen",
+            "com.atproto.feed.defs#interactionLike",
+            "com.atproto.feed.defs#interactionReply",
+            "com.atproto.feed.defs#interactionShare"
+          ],
+          "maxLength": 300
+        },
+        "feedContext": {
+          "type": "string",
+          "description": "Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton.",
+          "maxLength": 2000
+        },
+        "reqId": {
+          "type": "string",
+          "description": "Unique identifier per request that may be passed back alongside interactions.",
+          "maxLength": 100
+        }
+      }
+    },
+    "requestLess": {
+      "type": "token",
+      "description": "Request that less content like the given feed item be shown in the feed"
+    },
+    "requestMore": {
+      "type": "token",
+      "description": "Request that more content like the given feed item be shown in the feed"
+    },
+    "clickthroughItem": {
+      "type": "token",
+      "description": "User clicked through to the feed item"
+    },
+    "clickthroughAuthor": {
+      "type": "token",
+      "description": "User clicked through to the author of the feed item"
+    },
+    "clickthroughEmbed": {
+      "type": "token",
+      "description": "User clicked through to the embedded content of the feed item"
+    },
+    "contentModeUnspecified": {
+      "type": "token",
+      "description": "Declares the feed generator returns any types of items."
+    },
+    "contentModeVideo": {
+      "type": "token",
+      "description": "Declares the feed generator returns items containing video embeds."
+    },
+    "contentModeMedia": {
+      "type": "token",
+      "description": "Declares the feed generator returns items containing media (images, videos, audio, etc)."
+    },
+    "interactionSeen": {
+      "type": "token",
+      "description": "Feed item was seen by user"
+    },
+    "interactionLike": {
+      "type": "token",
+      "description": "User liked the feed item"
+    },
+    "interactionReply": {
+      "type": "token",
+      "description": "User replied to the feed item"
+    },
+    "interactionShare": {
+      "type": "token",
+      "description": "User shared the feed item"
+    }
+  }
+}
