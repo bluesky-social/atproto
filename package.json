@@ -45,15 +45,15 @@
     "test:unit": "vitest --run",
     "bench": "vitest bench --run",
     "changeset": "changeset",
-    "publish:ci": "pnpm build && changeset tag && pnpm publish -r --provenance --no-git-checks --access public",
-    "version-packages": "changeset version && git add ."
+    "publish-script": "pnpm build && changeset git-tag && pnpm publish -r --provenance --no-git-checks --access public",
+    "version-script": "changeset version && git add ."
   },
   "devDependencies": {
     "@atproto/bsky": "workspace:^",
     "@atproto/dev-env": "workspace:^",
     "@atproto/pds": "workspace:^",
     "@changesets/changelog-github": "^1.0.1",
-    "@changesets/cli": "^2.31.0",
+    "@changesets/cli": "^3.0.2",
     "@eslint/js": "^9.39.5",
     "@jest/globals": "^30.0.0",
     "@swc/core": "^1.16.2",
