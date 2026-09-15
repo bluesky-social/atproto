@@ -64,6 +64,7 @@ import {
   VerificationService,
   type VerificationServiceCreator,
 } from './verification/service.js'
+import type { VideoInvalidator } from './video-invalidator.js'
 
 export type AppContextOptions = {
   db: Database
@@ -88,6 +89,7 @@ export type AppContextOptions = {
   didCache: DidCache
   idResolver: IdResolver
   imgInvalidator?: ImageInvalidator
+  videoInvalidator?: VideoInvalidator
   backgroundQueue: BackgroundQueue
   sequencer: Sequencer
   assignmentService: AssignmentService
@@ -188,6 +190,7 @@ export class AppContext {
       createAuthHeaders,
       strikeService,
       overrides?.imgInvalidator,
+      overrides?.videoInvalidator,
     )
     const assignmentService = AssignmentService.creator(
       {
