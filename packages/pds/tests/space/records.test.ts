@@ -597,6 +597,31 @@ describe('space records', () => {
       expect(new Uint8Array(await res.arrayBuffer())).toEqual(bytes)
     })
 
+    it('does not serve a space-only blob through public sync', async () => {
+      const space = await sc.createSpace(alice)
+      const blob = await upload(alice, new Uint8Array([5, 4, 3, 2, 1]))
+      const blobCid = getBlobCidString(blob)
+
+      await sc.write(alice, space, {
+        rkey: 'private-blob',
+        record: { $type: TEST_COLLECTION, text: 'private', image: blob },
+      })
+
+      const listed = await alice.client.call(com.atproto.sync.listBlobs, {
+        did: alice.did,
+      })
+      expect(listed.cids).not.toContain(blobCid)
+
+      const params = new URLSearchParams({ did: alice.did, cid: blobCid })
+      const res = await fetch(
+        `${alice.pds.url}/xrpc/${com.atproto.sync.getBlob.$lxm}?${params}`,
+      )
+      expect(res.status).toBe(400)
+      await expect(res.json()).resolves.toMatchObject({
+        error: 'BlobNotFound',
+      })
+    })
+
     it('keeps a blob shared with a public record', async () => {
       const space = await sc.createSpace(alice)
       const blob = await upload(alice, new Uint8Array([7, 7, 7]))
@@ -617,6 +642,10 @@ describe('space records', () => {
         record: { $type: TEST_COLLECTION, text: 'shared', image: blob },
       })
 
+      const params = new URLSearchParams({ did: alice.did, cid: blobCid })
+      const publicUrl = `${alice.pds.url}/xrpc/${com.atproto.sync.getBlob.$lxm}?${params}`
+      expect((await fetch(publicUrl)).status).toBe(200)
+
       // Deleting the public record must not strand the space record's bytes.
       await alice.client.call(
         com.atproto.repo.deleteRecord,
@@ -629,6 +658,7 @@ describe('space records', () => {
       )
       await network.processAll()
       expect(await sc.blobExists(alice, blobCid)).toBe(true)
+      expect((await fetch(publicUrl)).status).toBe(400)
 
       // And the reverse: dropping the space record leaves nothing behind.
       await sc.del(alice, space, { rkey: 'shared' })
