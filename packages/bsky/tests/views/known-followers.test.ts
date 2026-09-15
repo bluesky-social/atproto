@@ -191,18 +191,66 @@ describe('known followers (social proof)', () => {
     expect(sub_3_kf?.followers).toHaveLength(2)
   })
 
-  it('getKnownFollowers: filters blocked followers', async () => {
+  it('getKnownFollowers: filters viewer-blocked followers', async () => {
     const headers = await network.serviceHeaders(
       dids.mix_view,
       ids.AppBskyGraphGetKnownFollowers,
     )
     const page = await agent.api.app.bsky.graph.getKnownFollowers(
-      { actor: dids.mix_sub_1, limit: 2 },
+      { actor: dids.mix_sub_1, limit: 3 },
       { headers },
     )
     const followerDids = page.data.followers.map((f) => f.did)
     expect(followerDids).toContain(dids.mix_res)
     expect(followerDids).not.toContain(dids.mix_fp_block_res)
-    expect(followerDids).not.toContain(dids.mix_sp_block_res)
+    expect(followerDids).toContain(dids.mix_sp_block_res)
+  })
+
+  it('getKnownFollowers: paginates', async () => {
+    await seedClient.createAccount('pagination_sub', {
+      handle: 'pagination-sub.test',
+      email: 'pagination-sub@test.com',
+      password: 'pagination-sub-pass',
+    })
+    await seedClient.createAccount('pagination_view', {
+      handle: 'pagination-view.test',
+      email: 'pagination-view@test.com',
+      password: 'pagination-view-pass',
+    })
+    for (let i = 1; i <= 11; i++) {
+      await seedClient.createAccount(`pagination_res_${i}`, {
+        handle: `pagination-res-${i}.test`,
+        email: `pagination-res-${i}@test.com`,
+        password: `pagination-res-${i}-pass`,
+      })
+      await seedClient.follow(dids[`pagination_res_${i}`], dids.pagination_sub)
+      await seedClient.follow(dids.pagination_view, dids[`pagination_res_${i}`])
+    }
+    await network.processAll()
+
+    const headers = await network.serviceHeaders(
+      dids.pagination_view,
+      ids.AppBskyGraphGetKnownFollowers,
+    )
+    const page1 = await agent.api.app.bsky.graph.getKnownFollowers(
+      { actor: dids.pagination_sub, limit: 10 },
+      { headers },
+    )
+    expect(page1.data.followers).toHaveLength(10)
+    expect(page1.data.cursor).toBeTruthy()
+
+    const page2 = await agent.api.app.bsky.graph.getKnownFollowers(
+      {
+        actor: dids.pagination_sub,
+        limit: 10,
+        cursor: page1.data.cursor,
+      },
+      { headers },
+    )
+    expect(page2.data.followers).toHaveLength(1)
+    expect(page2.data.cursor).toBeUndefined()
+    const page1Dids = page1.data.followers.map((follower) => follower.did)
+    const page2Dids = page2.data.followers.map((follower) => follower.did)
+    expect(page1Dids).not.toContain(page2Dids[0])
   })
 })
