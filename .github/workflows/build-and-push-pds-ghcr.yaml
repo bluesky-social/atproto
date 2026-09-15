@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - msi/pds-otel
+      - permissioned-data-alpha
 
 env:
   REGISTRY: ghcr.io
@@ -44,6 +44,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha,enable=true,priority=100,prefix=pds:,suffix=,format=long
+            type=raw,value=pds-spaces-alpha,enable=${{ github.ref == 'refs/heads/permissioned-data-alpha' }}
 
       - name: Build and push Docker image
         id: build-and-push

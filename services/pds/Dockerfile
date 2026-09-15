@@ -20,6 +20,7 @@ COPY ./packages/bsync/proto ./packages/bsync/proto
 # pnpm list --filter 'pds-service...' --depth 0 --json | jq '.[].path' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
+COPY ./packages/car ./packages/car
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/common ./packages/common
 COPY ./packages/crypto ./packages/crypto
@@ -28,6 +29,7 @@ COPY ./packages/identity ./packages/identity
 COPY ./packages/internal/did-resolver ./packages/internal/did-resolver
 COPY ./packages/internal/fetch-node ./packages/internal/fetch-node
 COPY ./packages/internal/fetch ./packages/internal/fetch
+COPY ./packages/internal/handle-resolver-node ./packages/internal/handle-resolver-node
 COPY ./packages/internal/handle-resolver ./packages/internal/handle-resolver
 COPY ./packages/internal/identity-resolver ./packages/internal/identity-resolver
 COPY ./packages/internal/opentelemetry-node ./packages/internal/opentelemetry-node
