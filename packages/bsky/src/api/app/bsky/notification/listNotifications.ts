@@ -134,7 +134,7 @@ const skeleton = async (
   }
   return {
     notifs: res.notifications,
-    cursor: res.cursor || undefined,
+    cursor: res.cursor,
     priority,
     lastSeenNotifs: lastSeenDate
       ? (lastSeenDate.toISOString() as DatetimeString)

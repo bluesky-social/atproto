@@ -71,7 +71,7 @@ const skeleton = async (
   return {
     subjectDid,
     followUris: follows.map((f) => f.uri as AtUriString),
-    cursor: cursor || undefined,
+    cursor,
   }
 }
 

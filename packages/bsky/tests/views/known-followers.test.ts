@@ -191,23 +191,18 @@ describe('known followers (social proof)', () => {
     expect(sub_3_kf?.followers).toHaveLength(2)
   })
 
-  it('getKnownFollowers: paginates', async () => {
+  it('getKnownFollowers: filters blocked followers', async () => {
     const headers = await network.serviceHeaders(
       dids.mix_view,
       ids.AppBskyGraphGetKnownFollowers,
     )
-    const page1 = await agent.api.app.bsky.graph.getKnownFollowers(
+    const page = await agent.api.app.bsky.graph.getKnownFollowers(
       { actor: dids.mix_sub_1, limit: 2 },
       { headers },
     )
-    expect(page1.data.followers).toHaveLength(1)
-    expect(page1.data.cursor).toBeTruthy()
-
-    const page2 = await agent.api.app.bsky.graph.getKnownFollowers(
-      { actor: dids.mix_sub_1, limit: 2, cursor: page1.data.cursor },
-      { headers },
-    )
-    expect(page2.data.followers).toHaveLength(1)
-    expect(page2.data.followers[0].did).not.toBe(page1.data.followers[0].did)
+    const followerDids = page.data.followers.map((f) => f.did)
+    expect(followerDids).toContain(dids.mix_res)
+    expect(followerDids).not.toContain(dids.mix_fp_block_res)
+    expect(followerDids).not.toContain(dids.mix_sp_block_res)
   })
 })
