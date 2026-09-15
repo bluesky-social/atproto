@@ -78,7 +78,8 @@ describe('ssrf protection on did-resolved service endpoints', () => {
         }
         return x
       })
-    await network.pds.ctx.idResolver.did.resolve(serviceDid, true)
+    const serviceDoc = await network.plc.getClient().getDocument(serviceDid)
+    await network.pds.ctx.idResolver.did.cache?.cacheDid(serviceDid, serviceDoc)
 
     const agent = network.pds.getAgent()
     const headers = sc.getHeaders(sc.dids.reporter)
