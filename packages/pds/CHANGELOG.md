@@ -1,5 +1,11 @@
 # @atproto/pds
 
+## 0.5.35
+
+### Patch Changes
+
+- [#5519](https://github.com/bluesky-social/atproto/pull/5519) [`88f32da`](https://github.com/bluesky-social/atproto/commit/88f32dac103908d1fff0461815afe57b72cb3338) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Fix SSRF endpoint tests to seed updated DID documents without bypassing the behavior under test.
+
 ## 0.5.34
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @atproto/bsky
 
+## 0.0.281
+
+### Patch Changes
+
+- [#5518](https://github.com/bluesky-social/atproto/pull/5518) [`e801c39`](https://github.com/bluesky-social/atproto/commit/e801c39fea8903c6381fd72abd65add426ddcf93) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Migrate known-follower enumeration and sampling to rankedfollows behind feature flags.
+
+- [#5521](https://github.com/bluesky-social/atproto/pull/5521) [`1eafad7`](https://github.com/bluesky-social/atproto/commit/1eafad71c4f5f8ffc2b6c35ad9f704994d1cd3c4) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Fix getKnownFollowers cursor coercion
+
 ## 0.0.280
 
 ### Patch Changes
