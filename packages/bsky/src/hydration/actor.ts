@@ -496,37 +496,55 @@ export class ActorHydrator {
   async getKnownFollowers(
     dids: DidString[],
     viewer: DidString | null,
+    opts?: { sample?: boolean },
   ): Promise<KnownFollowersStates> {
     const map: KnownFollowersStates = new HydrationMap()
     if (!viewer) return map
     if (!dids.length) return map
 
     try {
-      const { results: knownFollowersResults } =
-        await this.dataplane.getFollowsFollowing(
+      if (opts?.sample) {
+        const { results } = await this.dataplane.sampleFollowsFollowing(
+          {
+            actorDid: viewer,
+            targetDids: dids,
+            limit: 5,
+          },
+          { signal: AbortSignal.timeout(100) },
+        )
+        for (let i = 0; i < dids.length; i++) {
+          const result = results[i]
+          const followerDids = result?.dids
+          map.set(
+            dids[i],
+            followerDids && followerDids.length > 0
+              ? {
+                  count: result.totalKnown || followerDids.length,
+                  followers: followerDids as DidString[],
+                }
+              : undefined,
+          )
+        }
+      } else {
+        const { results } = await this.dataplane.getFollowsFollowing(
           {
             actorDid: viewer,
             targetDids: dids,
           },
-          {
-            signal: AbortSignal.timeout(100),
-          },
+          { signal: AbortSignal.timeout(100) },
         )
-
-      for (let i = 0; i < dids.length; i++) {
-        const did = dids[i]
-
-        const result = knownFollowersResults[i]?.dids
-
-        map.set(
-          did,
-          result && result.length > 0
-            ? {
-                count: result.length,
-                followers: result.slice(0, 5) as DidString[],
-              }
-            : undefined,
-        )
+        for (let i = 0; i < dids.length; i++) {
+          const followerDids = results[i]?.dids
+          map.set(
+            dids[i],
+            followerDids && followerDids.length > 0
+              ? {
+                  count: followerDids.length,
+                  followers: followerDids.slice(0, 5) as DidString[],
+                }
+              : undefined,
+          )
+        }
       }
     } catch (err) {
       // Fail open.

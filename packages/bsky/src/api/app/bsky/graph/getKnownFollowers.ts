@@ -60,16 +60,16 @@ const skeleton = async (
   const res = await ctx.hydrator.dataplane.getFollowsFollowing({
     actorDid: params.hydrateCtx.viewer,
     targetDids: [subjectDid],
+    limit: params.limit,
+    cursor: params.cursor,
   })
   const result = res.results.at(0)
-  const knownFollowers = result
-    ? (result.dids.slice(0, params.limit) as DidString[])
-    : []
+  const knownFollowers = result ? (result.dids as DidString[]) : []
 
   return {
     subjectDid,
     knownFollowers,
-    cursor: undefined,
+    cursor: result?.cursor,
   }
 }
 
@@ -104,7 +104,7 @@ const presentation = (
   })
   const subject = ctx.views.profile(skeleton.subjectDid, hydration)!
 
-  return { subject, followers, cursor: undefined }
+  return { subject, followers, cursor: skeleton.cursor }
 }
 
 type Context = {
