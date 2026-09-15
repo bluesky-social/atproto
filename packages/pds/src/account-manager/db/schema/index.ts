@@ -1,4 +1,5 @@
 import type * as accountDevice from './account-device.js'
+import type * as accountEmailAuthFactor from './account-email-auth-factor.js'
 import type * as account from './account.js'
 import type * as actor from './actor.js'
 import type * as appPassword from './app-password.js'
@@ -16,6 +17,7 @@ import type * as usedRefreshToken from './used-refresh-token.js'
 export type DatabaseSchema = actor.PartialDB &
   account.PartialDB &
   accountDevice.PartialDB &
+  accountEmailAuthFactor.PartialDB &
   authorizedClient.PartialDB &
   device.PartialDB &
   oauthRequest.PartialDB &

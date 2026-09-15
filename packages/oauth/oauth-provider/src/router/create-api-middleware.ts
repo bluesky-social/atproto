@@ -355,6 +355,64 @@ export function createApiMiddleware<
   router.use(
     apiRoute({
       method: 'POST',
+      endpoint: '/enable-email-otp',
+      schema: z
+        .object({
+          did: didSchema,
+          email: emailSchema,
+          locale: localeSchema.optional(),
+        })
+        .strict(),
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req, res)
+
+        const updatedAccount =
+          await server.accountManager.enableEmailAuthFactor(
+            this.deviceId,
+            this.deviceMetadata,
+            this.input,
+            account,
+          )
+
+        return { json: { account: updatedAccount, tokenRequired: false } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
+      endpoint: '/disable-email-otp',
+      schema: z
+        .object({
+          did: didSchema,
+          email: emailSchema,
+          token: emailOtpSchema.optional(),
+          locale: localeSchema.optional(),
+        })
+        .strict(),
+      async handler(req, res) {
+        const { account } = await authenticate.call(this, req, res)
+
+        // Two-phase: the first call (no token) dispatches an OTP and reports
+        // `tokenRequired: true` with the account unchanged; the second (with a
+        // valid token) disables the factor and reports `tokenRequired: false`.
+        const { account: updatedAccount, tokenRequired } =
+          await server.accountManager.disableEmailAuthFactor(
+            this.deviceId,
+            this.deviceMetadata,
+            this.input,
+            account,
+          )
+
+        return { json: { account: updatedAccount, tokenRequired } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
       endpoint: '/update-handle',
       schema: z
         .object({
