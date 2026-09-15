@@ -78,7 +78,8 @@ export type AgentConfig = {
   /**
    * The service URL to make requests to. This can be a string, URL, or a
    * function that returns a string or URL. This is useful for dynamic URLs,
-   * such as a service URL that changes based on authentication.
+   * such as a service URL that changes based on authentication. A path on this
+   * URL (e.g. `https://example.com/proxy`) prefixes every request path.
    */
   service: string | URL
 
@@ -183,6 +184,9 @@ export function buildAgent(options: Agent | AgentOptions): Agent {
     throw new TypeError('fetch() is not available in this environment')
   }
 
+  const { origin, pathname } = new URL(service)
+  const base = `${origin}${pathname.replace(/\/*$/, '/')}`
+
   return {
     get did() {
       return did
@@ -195,7 +199,9 @@ export function buildAgent(options: Agent | AgentOptions): Agent {
           : defaultHeaders || init.headers
 
       return fetch(
-        new URL(path, service),
+        // Dropping leading slashes keeps `path` under the service path, and
+        // stops a `//host` path reaching another origin.
+        new URL(path.replace(/^\/+/, ''), base),
         headers !== init.headers ? { ...init, headers } : init,
       )
     },

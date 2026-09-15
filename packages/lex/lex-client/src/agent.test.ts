@@ -100,6 +100,50 @@ describe(buildAgent, () => {
       const agent = buildAgent('https://example.com')
       expect(agent.did).toBeUndefined()
     })
+
+    it.each([
+      [
+        'https://example.com/proxy',
+        'https://example.com/proxy/xrpc/io.example.test',
+      ],
+      [
+        'https://example.com/proxy/',
+        'https://example.com/proxy/xrpc/io.example.test',
+      ],
+      ['https://example.com/', 'https://example.com/xrpc/io.example.test'],
+    ])(
+      'prefixes requests with the service path of %s',
+      async (service, expected) => {
+        const fetchFn = vi.fn<typeof globalThis.fetch>(async () =>
+          Response.json({ ok: true }),
+        )
+        const agent = buildAgent({ service, fetch: fetchFn })
+
+        await agent.fetchHandler('/xrpc/io.example.test', { method: 'GET' })
+
+        expect(String(fetchFn.mock.calls[0][0])).toBe(expected)
+      },
+    )
+
+    it.each([
+      ['/xrpc/io.example.test'],
+      ['xrpc/io.example.test'],
+      ['//xrpc/io.example.test'],
+    ])('resolves %s under the service origin', async (path) => {
+      const fetchFn = vi.fn<typeof globalThis.fetch>(async () =>
+        Response.json({ ok: true }),
+      )
+      const agent = buildAgent({
+        service: 'https://example.com/proxy',
+        fetch: fetchFn,
+      })
+
+      await agent.fetchHandler(path as `/${string}`, { method: 'GET' })
+
+      expect(String(fetchFn.mock.calls[0][0])).toBe(
+        'https://example.com/proxy/xrpc/io.example.test',
+      )
+    })
   })
 
   describe('from URL instance', () => {
