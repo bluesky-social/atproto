@@ -20,12 +20,14 @@ import { AtUri, type UriString } from '@atproto/syntax'
 import type { ImageInvalidator } from '../src/image-invalidator.js'
 import { EventReverser } from '../src/index.js'
 import { TAKEDOWN_LABEL } from '../src/mod-service/index.js'
+import type { VideoInvalidator } from '../src/video-invalidator.js'
 import { forSnapshot, identity } from './_util.js'
 
 describe('moderation', () => {
   let network: TestNetwork
   let ozone: TestOzone
   let mockInvalidator: MockInvalidator
+  let mockVideoInvalidator: MockVideoInvalidator
   let agent: AtpAgent
   let bskyAgent: AtpAgent
   let pdsAgent: AtpAgent
@@ -55,10 +57,12 @@ describe('moderation', () => {
 
   beforeAll(async () => {
     mockInvalidator = new MockInvalidator()
+    mockVideoInvalidator = new MockVideoInvalidator()
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_moderation',
       ozone: {
         imgInvalidator: mockInvalidator,
+        videoInvalidator: mockVideoInvalidator,
         cdnPaths: ['/path1/%s/%s', '/path2/%s/%s'],
       },
     })
@@ -932,6 +936,13 @@ describe('moderation', () => {
       )
     })
 
+    it('invalidates video renditions', async () => {
+      const blobCid = blob.image.ref.toString()
+      expect(mockVideoInvalidator.invalidated).toEqual([
+        { did: sc.dids.carol, cid: blobCid },
+      ])
+    })
+
     it('fans takedown out to pds', async () => {
       const res = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
@@ -981,5 +992,13 @@ class MockInvalidator implements ImageInvalidator {
 
   async invalidate(subject: string, paths: string[]) {
     this.invalidated.push({ subject, paths })
+  }
+}
+
+class MockVideoInvalidator implements VideoInvalidator {
+  invalidated: { did: string; cid: string }[] = []
+
+  async invalidate(did: string, cid: string) {
+    this.invalidated.push({ did, cid })
   }
 }
