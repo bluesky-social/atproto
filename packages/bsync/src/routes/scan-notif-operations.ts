@@ -13,14 +13,16 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     const { db, events } = ctx
     const limit = req.limit || 1000
     const cursor = validCursor(req.cursor)
-    using signal = combinedSignals(ctx.shutdown)
-    const nextNotifOpPromise = once(events, createNotifOpChannel, {
-      signal: combinedSignals(
-        signal,
-        AbortSignal.timeout(ctx.cfg.service.longPollTimeoutMs),
-      ),
-    })
-    nextNotifOpPromise.catch(() => null) // ensure timeout is always handled
+
+    using signal = combinedSignals(
+      ctx.shutdown,
+      AbortSignal.timeout(ctx.cfg.service.longPollTimeoutMs),
+    )
+
+    const nextNotifOpPromise = once(events, createNotifOpChannel, { signal })
+
+    // awaited later
+    void nextNotifOpPromise.catch(() => null)
 
     const nextNotifOpPageQb = db.db
       .selectFrom('notif_op')
@@ -36,7 +38,8 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
       try {
         await nextNotifOpPromise
       } catch (err) {
-        signal.throwIfAborted()
+        if (ctx.shutdown.aborted) throw err
+
         return new ScanNotifOperationsResponse({
           operations: [],
           cursor: req.cursor,

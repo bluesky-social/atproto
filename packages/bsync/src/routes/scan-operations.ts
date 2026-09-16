@@ -13,14 +13,16 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     const { db, events } = ctx
     const limit = req.limit || 1000
     const cursor = validCursor(req.cursor)
-    using signal = combinedSignals(ctx.shutdown)
-    const nextOpPromise = once(events, createOperationChannel, {
-      signal: combinedSignals(
-        signal,
-        AbortSignal.timeout(ctx.cfg.service.longPollTimeoutMs),
-      ),
-    })
-    nextOpPromise.catch(() => null) // ensure timeout is always handled
+
+    using signal = combinedSignals(
+      ctx.shutdown,
+      AbortSignal.timeout(ctx.cfg.service.longPollTimeoutMs),
+    )
+
+    const nextOpPromise = once(events, createOperationChannel, { signal })
+
+    // awaited later
+    void nextOpPromise.catch(() => null)
 
     const nextOpPageQb = db.db
       .selectFrom('operation')
@@ -36,7 +38,8 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
       try {
         await nextOpPromise
       } catch (err) {
-        signal.throwIfAborted()
+        if (ctx.shutdown.aborted) throw err
+
         return new ScanOperationsResponse({
           operations: [],
           cursor: req.cursor,

@@ -13,14 +13,16 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     const { db, events } = ctx
     const limit = req.limit || 1000
     const cursor = validCursor(req.cursor)
-    using signal = combinedSignals(ctx.shutdown)
-    const nextMuteOpPromise = once(events, createMuteOpChannel, {
-      signal: combinedSignals(
-        signal,
-        AbortSignal.timeout(ctx.cfg.service.longPollTimeoutMs),
-      ),
-    })
-    nextMuteOpPromise.catch(() => null) // ensure timeout is always handled
+
+    using signal = combinedSignals(
+      ctx.shutdown,
+      AbortSignal.timeout(ctx.cfg.service.longPollTimeoutMs),
+    )
+
+    const nextMuteOpPromise = once(events, createMuteOpChannel, { signal })
+
+    // awaited later
+    void nextMuteOpPromise.catch(() => null)
 
     const nextMuteOpPageQb = db.db
       .selectFrom('mute_op')
@@ -36,7 +38,8 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
       try {
         await nextMuteOpPromise
       } catch (err) {
-        signal.throwIfAborted()
+        if (ctx.shutdown.aborted) throw err
+
         return new ScanMuteOperationsResponse({
           operations: [],
           cursor: req.cursor,
