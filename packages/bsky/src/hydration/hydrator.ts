@@ -377,6 +377,7 @@ export class Hydrator {
         .getKnownFollowers(opts?.knownFollowersDids ?? dids, ctx.viewer, {
           sample: ctx.features.checkGate(
             ctx.features.Gate.KnownFollowersSamplingEnable,
+            { did: ctx.viewer },
           ),
         })
         .catch((err): KnownFollowersStates => {
