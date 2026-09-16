@@ -22,6 +22,7 @@ describe('VideoInvalidator', () => {
       {
         method: 'POST',
         headers: { 'helper-key': 'secret' },
+        signal: expect.any(AbortSignal),
       },
     )
   })
