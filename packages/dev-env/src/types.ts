@@ -43,6 +43,7 @@ export type OzoneConfig = Partial<ozone.OzoneEnvironment> & {
   migration?: string
   signingKey?: ExportableKeypair
   imgInvalidator?: ozone.ImageInvalidator
+  videoInvalidator?: ozone.VideoInvalidator
 }
 
 export type TestServerParams = {
