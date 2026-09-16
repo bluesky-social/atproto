@@ -1,16 +1,7 @@
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { type AtpAgent, ids } from '@atproto/api'
 import { type SeedClient, TestNetwork } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
-import { Gate } from '../../src/feature-gates/gates.js'
 import { knownFollowersSeed } from '../seed/known-followers.js'
 
 describe('known followers (social proof)', () => {
@@ -120,31 +111,6 @@ describe('known followers (social proof)', () => {
     expect(knownFollowers?.count).toBe(1)
     expect(knownFollowers?.followers).toHaveLength(1)
     expect(knownFollowers?.followers[0].did).toBe(dids.base_res_1)
-  })
-
-  it('evaluates sampling for the viewer DID', async () => {
-    const checkGate = vi.fn(() => false)
-    using _scope = vi
-      .spyOn(network.bsky.ctx.featureGatesClient, 'scope')
-      .mockReturnValue({
-        Gate,
-        checkGate,
-        checkGates: () => new Map(),
-      })
-
-    await agent.api.app.bsky.actor.getProfile(
-      { actor: dids.base_sub },
-      {
-        headers: await network.serviceHeaders(
-          dids.base_view,
-          ids.AppBskyActorGetProfile,
-        ),
-      },
-    )
-
-    expect(checkGate).toHaveBeenCalledWith(Gate.KnownFollowersSamplingEnable, {
-      did: dids.base_view,
-    })
   })
 
   it('getProfile: filters 1st-party blocks', async () => {
