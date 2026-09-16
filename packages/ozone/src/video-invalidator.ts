@@ -17,7 +17,7 @@ export class VideoInvalidator {
       const res = await fetch(url.toString(), {
         method: 'POST',
         headers: { 'helper-key': cfg.helperKey },
-        signal: AbortSignal.timeout(10e3),
+        signal: AbortSignal.timeout(90e3),
       })
       if (!res.ok) {
         throw new Error(`Video invalidation failed with status ${res.status}`)
