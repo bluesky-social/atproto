@@ -2,7 +2,10 @@ import { mapDefined } from '@atproto/common'
 import type { AtUriString, DidString } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
-import type { DataPlaneClient } from '../../../../data-plane/index.js'
+import {
+  type DataPlaneClient,
+  asInvalidRequest,
+} from '../../../../data-plane/index.js'
 import type { FeedItem } from '../../../../hydration/feed.js'
 import {
   type HydrateCtx,
@@ -40,6 +43,10 @@ export default function (server: Server, ctx: AppContext) {
       const result = await fillPage({
         cursor: params.cursor,
         limit: params.limit,
+        // @NOTE the dataplane echoes `since` back as the cursor once the
+        // bounded range is exhausted. Refilling past it would read below the
+        // boundary.
+        terminalCursor: params.since,
         fetch: ({ cursor, limit }) =>
           getListFeed({ ...params, cursor, limit, hydrateCtx }, ctx),
         items: (r) => r.feed,
@@ -62,13 +69,16 @@ export const skeleton = async (inputs: {
 }): Promise<Skeleton> => {
   const { ctx, params } = inputs
   if (clearlyBadCursor(params.cursor)) {
-    return { items: [] }
+    return { items: [], cursor: params.since }
   }
-  const res = await ctx.dataplane.getListFeed({
-    listUri: params.list,
-    limit: params.limit,
-    cursor: params.cursor,
-  })
+  const res = await ctx.dataplane
+    .getListFeed({
+      listUri: params.list,
+      limit: params.limit,
+      cursor: params.cursor,
+      since: params.since,
+    })
+    .catch(asInvalidRequest())
   return {
     items: res.items.map((item) => ({
       post: { uri: item.uri as AtUriString, cid: item.cid || undefined },
@@ -77,6 +87,7 @@ export const skeleton = async (inputs: {
         : undefined,
     })),
     cursor: parseString(res.cursor),
+    startCursor: parseString(res.startCursor),
   }
 }
 
@@ -130,7 +141,11 @@ const presentation = (inputs: {
   const feed = mapDefined(skeleton.items, (item) =>
     ctx.views.feedViewPost(item, hydration),
   )
-  return { feed, cursor: skeleton.cursor }
+  return {
+    feed,
+    cursor: skeleton.cursor,
+    startCursor: skeleton.startCursor,
+  }
 }
 
 const getBlocks = async (input: {
@@ -158,4 +173,5 @@ type Params = app.bsky.feed.getListFeed.$Params & { hydrateCtx: HydrateCtx }
 type Skeleton = {
   items: FeedItem[]
   cursor?: string
+  startCursor?: string
 }
