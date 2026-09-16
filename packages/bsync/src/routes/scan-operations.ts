@@ -5,7 +5,7 @@ import { createOperationChannel } from '../db/schema/operation.js'
 import type { Service } from '../proto/bsync_connect.js'
 import { ScanOperationsResponse } from '../proto/bsync_pb.js'
 import { authWithApiKey } from './auth.js'
-import { combineSignals, validCursor } from './util.js'
+import { combinedSignals, validCursor } from './util.js'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
   async scanOperations(req, handlerCtx) {
@@ -13,9 +13,10 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     const { db, events } = ctx
     const limit = req.limit || 1000
     const cursor = validCursor(req.cursor)
+    using signal = combinedSignals(ctx.shutdown)
     const nextOpPromise = once(events, createOperationChannel, {
-      signal: combineSignals(
-        ctx.shutdown,
+      signal: combinedSignals(
+        signal,
         AbortSignal.timeout(ctx.cfg.service.longPollTimeoutMs),
       ),
     })
@@ -35,7 +36,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
       try {
         await nextOpPromise
       } catch (err) {
-        ctx.shutdown.throwIfAborted()
+        signal.throwIfAborted()
         return new ScanOperationsResponse({
           operations: [],
           cursor: req.cursor,
