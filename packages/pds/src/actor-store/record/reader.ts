@@ -20,7 +20,10 @@ export type RecordDescript = {
 }
 
 export class RecordReader {
-  constructor(public db: ActorDb) {}
+  constructor(
+    public db: ActorDb,
+    public did: string,
+  ) {}
 
   async recordCount(): Promise<number> {
     const res = await this.db.db
@@ -83,31 +86,44 @@ export class RecordReader {
       includeSoftDeleted = false,
     } = opts
 
+    const collectionUri = formatRecordUriKey(this.did, collection, '')
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
       .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
-      .where('record.collection', '=', collection)
+      // @NOTE The URI primary key orders records by rkey within a collection;
+      // DEL sorts after every valid record-key character.
+      .where('record.uri', '>=', collectionUri)
+      .where('record.uri', '<', `${collectionUri}\x7f`)
       .$if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
       )
-      .orderBy('record.rkey', reverse ? 'asc' : 'desc')
+      .orderBy('record.uri', reverse ? 'asc' : 'desc')
       .limit(limit)
       .selectAll()
 
-    // prioritize cursor but fall back to soon-to-be-depcreated rkey start/end
+    // prioritize cursor but fall back to soon-to-be-deprecated rkey start/end
     if (cursor !== undefined) {
+      const cursorUri = formatRecordUriKey(this.did, collection, cursor)
       if (reverse) {
-        builder = builder.where('record.rkey', '>', cursor)
+        builder = builder.where('record.uri', '>', cursorUri)
       } else {
-        builder = builder.where('record.rkey', '<', cursor)
+        builder = builder.where('record.uri', '<', cursorUri)
       }
     } else {
       if (rkeyStart !== undefined) {
-        builder = builder.where('record.rkey', '>', rkeyStart)
+        builder = builder.where(
+          'record.uri',
+          '>',
+          formatRecordUriKey(this.did, collection, rkeyStart),
+        )
       }
       if (rkeyEnd !== undefined) {
-        builder = builder.where('record.rkey', '<', rkeyEnd)
+        builder = builder.where(
+          'record.uri',
+          '<',
+          formatRecordUriKey(this.did, collection, rkeyEnd),
+        )
       }
     }
     const res = await builder.execute()
@@ -322,6 +338,16 @@ export class RecordReader {
 
     return result
   }
+}
+
+function formatRecordUriKey(
+  did: string,
+  collection: string,
+  rkey: string,
+): string {
+  // @NOTE This intentionally avoids atUri(): range bounds and opaque cursors
+  // are not necessarily valid AT URIs.
+  return `at://${did}/${collection}/${rkey}`
 }
 
 // @NOTE in the future this can be replaced with a more generic routine that pulls backlinks based on lex docs.

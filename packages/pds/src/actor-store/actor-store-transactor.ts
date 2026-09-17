@@ -18,7 +18,7 @@ export class ActorStoreTransactor {
   ) {
     const blobstore = resources.blobstore(did)
 
-    this.record = new RecordTransactor(db, blobstore)
+    this.record = new RecordTransactor(db, did, blobstore)
     this.pref = new PreferenceTransactor(db)
     this.repo = new RepoTransactor(
       db,
