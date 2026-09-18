@@ -8,7 +8,6 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "priority": { "type": "boolean" },
           "seenAt": { "type": "string", "format": "datetime" }
         }
       },
