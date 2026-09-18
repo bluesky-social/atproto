@@ -20,6 +20,7 @@ import { uriToDid as didFromUri } from '../../../../util/uris.js'
 import type { Views } from '../../../../views/index.js'
 import { isPostRecordType } from '../../../../views/types.js'
 import { fillPage, resHeaders } from '../../../util.js'
+import { getNotificationPreferences } from './getPreferences.js'
 
 export default function (server: Server, ctx: AppContext) {
   const listNotifications = createPipeline(
@@ -255,9 +256,9 @@ type SkeletonState = {
   cursor?: string
 }
 
-const getPriority = async (ctx: Context, did: DidString) => {
-  const actors = await ctx.hydrator.actor.getActors([did], {
-    skipCacheForDids: [did],
-  })
-  return !!actors.get(did)?.priorityNotifications
+const getPriority = async (ctx: AppContext, did: DidString) => {
+  const preferences = await getNotificationPreferences(ctx, did)
+  return [preferences.reply, preferences.mention, preferences.quote].every(
+    (preference) => preference.include === 'follows',
+  )
 }

@@ -1203,6 +1203,69 @@ describe('notification views', () => {
       await getAndAssert(expectedApi1, expectedDb1)
     })
 
+    it('maps legacy priority onto granular preferences', async () => {
+      const actorDid = sc.dids.carol
+      const headers = await network.serviceHeaders(
+        actorDid,
+        ids.AppBskyNotificationPutPreferencesV2,
+      )
+      await agent.app.bsky.notification.putPreferencesV2(
+        {
+          reply: { include: 'all', list: false, push: false },
+          mention: { include: 'all', list: false, push: true },
+          quote: { include: 'all', list: true, push: false },
+          verified: { list: false, push: false },
+        },
+        { encoding: 'application/json', headers },
+      )
+      await network.processAll()
+
+      await agent.app.bsky.notification.putPreferences(
+        { priority: true },
+        {
+          encoding: 'application/json',
+          headers: await network.serviceHeaders(
+            actorDid,
+            ids.AppBskyNotificationPutPreferences,
+          ),
+        },
+      )
+      await network.processAll()
+
+      const preferences = await agent.app.bsky.notification.getPreferences(
+        {},
+        {
+          headers: await network.serviceHeaders(
+            actorDid,
+            ids.AppBskyNotificationGetPreferences,
+          ),
+        },
+      )
+      expect(preferences.data.preferences).toMatchObject({
+        reply: { include: 'follows', list: false, push: false },
+        mention: { include: 'follows', list: false, push: true },
+        quote: { include: 'follows', list: true, push: false },
+        verified: { list: false, push: false },
+      })
+
+      await agent.app.bsky.notification.putPreferencesV2(
+        { reply: { include: 'all', list: false, push: false } },
+        { encoding: 'application/json', headers },
+      )
+      await network.processAll()
+
+      const notifications = await agent.app.bsky.notification.listNotifications(
+        {},
+        {
+          headers: await network.serviceHeaders(
+            actorDid,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+      expect(notifications.data.priority).toBe(false)
+    })
+
     it('stores the preferences setting the defaults', async () => {
       const actorDid = sc.dids.carol
 

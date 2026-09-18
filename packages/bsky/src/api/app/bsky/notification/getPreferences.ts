@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth }) => {
       const actorDid = auth.credentials.iss
-      const preferences = await computePreferences(ctx, actorDid)
+      const preferences = await getNotificationPreferences(ctx, actorDid)
       return {
         encoding: 'application/json',
         body: {
@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const computePreferences = async (
+export const getNotificationPreferences = async (
   ctx: AppContext,
   actorDid: string,
 ): Promise<Un$Typed<app.bsky.notification.defs.Preferences>> => {
