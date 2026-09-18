@@ -22,7 +22,6 @@
             "maximum": 100,
             "default": 50
           },
-          "priority": { "type": "boolean" },
           "cursor": { "type": "string" },
           "seenAt": { "type": "string", "format": "datetime" }
         }
@@ -38,7 +37,6 @@
               "type": "array",
               "items": { "type": "ref", "ref": "#notification" }
             },
-            "priority": { "type": "boolean" },
             "seenAt": { "type": "string", "format": "datetime" }
           }
         }

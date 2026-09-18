@@ -908,7 +908,7 @@ message GetNotificationsRequest {
   string actor_did = 1;
   int32 limit = 2;
   string cursor = 3;
-  bool priority = 4;
+  reserved 4; // was "priority", deprecated
 }
 
 message Notification {
@@ -917,7 +917,7 @@ message Notification {
   string reason = 3;
   string reason_subject = 4;
   google.protobuf.Timestamp timestamp = 5;
-  bool priority = 6;
+  reserved 6; // was "priority", deprecated
 }
 
 message GetNotificationsResponse {
