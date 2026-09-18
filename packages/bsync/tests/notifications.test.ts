@@ -1,5 +1,6 @@
 import { Code, ConnectError } from '@connectrpc/connect'
 import getPort from 'get-port'
+import { sql } from 'kysely'
 import { wait } from '@atproto/common'
 import {
   type BsyncClient,
@@ -10,6 +11,7 @@ import {
   envToCfg,
 } from '../src/index.js'
 import type { NotifOperation } from '../src/proto/bsync_pb.js'
+import { createNotifOpChannel } from '../src/db/schema/notif_op.js'
 
 describe('notifications', () => {
   let bsync: BsyncService
@@ -42,89 +44,6 @@ describe('notifications', () => {
     await clearNotifs(bsync.ctx.db)
   })
 
-  describe('addNotifOperation', () => {
-    it('adds notif operations to set priority.', async () => {
-      // true + true
-      await client.addNotifOperation({
-        actorDid: 'did:example:a',
-        priority: true,
-      })
-      await client.addNotifOperation({
-        actorDid: 'did:example:a',
-        priority: true,
-      })
-      // true + none
-      await client.addNotifOperation({
-        actorDid: 'did:example:b',
-        priority: true,
-      })
-      await client.addNotifOperation({
-        actorDid: 'did:example:b',
-      })
-      // true + false
-      await client.addNotifOperation({
-        actorDid: 'did:example:c',
-        priority: true,
-      })
-      await client.addNotifOperation({
-        actorDid: 'did:example:c',
-        priority: false,
-      })
-      // false + true
-      await client.addNotifOperation({
-        actorDid: 'did:example:d',
-        priority: false,
-      })
-      await client.addNotifOperation({
-        actorDid: 'did:example:d',
-        priority: true,
-      })
-      expect(await dumpNotifState(bsync.ctx.db)).toEqual({
-        'did:example:a': true,
-        'did:example:b': true,
-        'did:example:c': false,
-        'did:example:d': true,
-      })
-    })
-
-    it('fails on bad inputs', async () => {
-      await expect(
-        client.addNotifOperation({
-          actorDid: 'invalid',
-          priority: true,
-        }),
-      ).rejects.toEqual(
-        new ConnectError('actor_did must be a valid did', Code.InvalidArgument),
-      )
-    })
-
-    it('requires auth', async () => {
-      // unauthed
-      const unauthedClient = createClient({
-        httpVersion: '1.1',
-        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
-      })
-      const tryAddNotifOperation1 = unauthedClient.addNotifOperation({
-        actorDid: 'did:example:a',
-      })
-      await expect(tryAddNotifOperation1).rejects.toEqual(
-        new ConnectError('missing auth', Code.Unauthenticated),
-      )
-      // bad auth
-      const badauthedClient = createClient({
-        httpVersion: '1.1',
-        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
-        interceptors: [authWithApiKey('key-bad')],
-      })
-      const tryAddNotifOperation2 = badauthedClient.addNotifOperation({
-        actorDid: 'did:example:a',
-      })
-      await expect(tryAddNotifOperation2).rejects.toEqual(
-        new ConnectError('invalid api key', Code.Unauthenticated),
-      )
-    })
-  })
-
   describe('scanNotifOperations', () => {
     it('requires auth', async () => {
       // unauthed
@@ -149,13 +68,15 @@ describe('notifications', () => {
     })
 
     it('pages over created notif ops.', async () => {
-      // add 100 notif ops
-      for (let i = 0; i < 100; ++i) {
-        await client.addNotifOperation({
-          actorDid: `did:example:${i}`,
-          priority: i % 2 === 0,
-        })
-      }
+      await bsync.ctx.db.db
+        .insertInto('notif_op')
+        .values(
+          Array.from({ length: 100 }, (_, i) => ({
+            actorDid: `did:example:${i}`,
+            priority: i % 2 === 0,
+          })),
+        )
+        .execute()
 
       let cursor: string | undefined
       const operations: NotifOperation[] = []
@@ -177,13 +98,20 @@ describe('notifications', () => {
     it('supports long-poll, finding an operation.', async () => {
       const scanPromise = client.scanNotifOperations({})
       await wait(100) // would be complete by now if it wasn't long-polling for an item
-      const { operation } = await client.addNotifOperation({
-        actorDid: 'did:example:a',
-      })
+      const { id } = await bsync.ctx.db.db
+        .insertInto('notif_op')
+        .values({ actorDid: 'did:example:a' })
+        .returning('id')
+        .executeTakeFirstOrThrow()
+      const { ref } = bsync.ctx.db.db.dynamic
+      await sql`notify ${ref(createNotifOpChannel)}`.execute(bsync.ctx.db.db)
       const res = await scanPromise
       expect(res.operations.length).toEqual(1)
-      expect(res.operations[0]).toEqual(operation)
-      expect(res.cursor).toEqual(operation?.id)
+      expect(res.operations[0]).toMatchObject({
+        id: String(id),
+        actorDid: 'did:example:a',
+      })
+      expect(res.cursor).toEqual(String(id))
     })
 
     it('supports long-poll, not finding an operation.', async () => {
@@ -193,15 +121,6 @@ describe('notifications', () => {
     })
   })
 })
-
-const dumpNotifState = async (db: Database) => {
-  const items = await db.db.selectFrom('notif_item').selectAll().execute()
-  const result: Record<string, boolean> = {}
-  items.forEach((item) => {
-    result[item.actorDid] = item.priority
-  })
-  return result
-}
 
 const clearNotifs = async (db: Database) => {
   await db.db.deleteFrom('notif_item').execute()
