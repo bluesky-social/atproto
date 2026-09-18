@@ -1326,6 +1326,7 @@ describe('notification views', () => {
           push: false,
           include: 'accepted',
         },
+        injected: true,
       }
       const expected0: AppBskyNotificationDefs.Preferences = {
         // chat is deprecated: input is ignored and the default is always returned.

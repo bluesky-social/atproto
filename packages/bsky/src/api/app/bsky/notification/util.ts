@@ -18,10 +18,44 @@ type DeepPartial<T> = T extends object
     }
   : T
 
+type LexNotificationPreferences =
+  Un$Typed<app.bsky.notification.defs.Preferences>
+
+const notificationPreferenceKeys = Object.keys({
+  chat: true,
+  follow: true,
+  like: true,
+  likeViaRepost: true,
+  mention: true,
+  quote: true,
+  reply: true,
+  repost: true,
+  repostViaRepost: true,
+  starterpackJoined: true,
+  subscribedPost: true,
+  unverified: true,
+  verified: true,
+} satisfies Record<keyof LexNotificationPreferences, true>) as Array<
+  keyof LexNotificationPreferences
+>
+
+export const mergeNotificationPreferences = (
+  current: LexNotificationPreferences,
+  updates: Partial<LexNotificationPreferences>,
+): LexNotificationPreferences => {
+  const preferences = { ...current }
+  for (const key of notificationPreferenceKeys) {
+    if (updates[key] !== undefined) {
+      Object.assign(preferences, { [key]: updates[key] })
+    }
+  }
+  return preferences
+}
+
 export const getNotificationPreferences = async (
   ctx: AppContext,
   actorDid: string,
-): Promise<Un$Typed<app.bsky.notification.defs.Preferences>> => {
+): Promise<LexNotificationPreferences> => {
   let res: GetNotificationPreferencesResponse
   try {
     res = await ctx.dataplane.getNotificationPreferences({
