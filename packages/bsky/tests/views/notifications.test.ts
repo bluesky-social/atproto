@@ -732,6 +732,16 @@ describe('notification views', () => {
   })
 
   it('fetches notifications with default priority', async () => {
+    await agent.api.app.bsky.notification.updateSeen(
+      { seenAt: new Date().toISOString() },
+      {
+        encoding: 'application/json',
+        headers: await network.serviceHeaders(
+          sc.dids.carol,
+          ids.AppBskyNotificationUpdateSeen,
+        ),
+      },
+    )
     await agent.api.app.bsky.notification.putPreferences(
       { priority: true },
       {
