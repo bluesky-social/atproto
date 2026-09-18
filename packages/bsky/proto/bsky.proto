@@ -507,8 +507,7 @@ message GetActorsRequest {
 }
 
 message ActorInfo {
-  reserved 11;
-  reserved "priority_notifications";
+  reserved 11; // was "priority_notifications", deprecated
 
   bool exists = 1;
   string handle = 2;
