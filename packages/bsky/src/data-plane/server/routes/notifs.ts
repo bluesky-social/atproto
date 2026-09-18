@@ -128,7 +128,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .values({
         did: actorDid,
         lastSeenNotifs: timestampIso,
-        priorityNotifs: false,
       })
       .onConflict((oc) =>
         oc.column('did').doUpdateSet({

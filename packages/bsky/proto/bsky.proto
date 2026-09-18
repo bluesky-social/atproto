@@ -507,6 +507,9 @@ message GetActorsRequest {
 }
 
 message ActorInfo {
+  reserved 11;
+  reserved "priority_notifications";
+
   bool exists = 1;
   string handle = 2;
   Record profile = 3;
@@ -517,7 +520,6 @@ message ActorInfo {
   string allow_incoming_chats_from = 8;
   string upstream_status = 9;
   google.protobuf.Timestamp created_at = 10;
-  bool priority_notifications = 11;
   double pagerank = 12;
   bool trusted_verifier = 13;
   map<string, VerificationMeta> verified_by = 14;

@@ -52,7 +52,6 @@ export type Actor = {
   allowGroupChatInvitesFrom?: string
   upstreamStatus?: string
   createdAt?: Date
-  priorityNotifications: boolean
   trustedVerifier?: boolean
   verifications: VerificationHydrationState[]
   status?: RecordInfo<StatusRecord>
@@ -319,7 +318,6 @@ export class ActorHydrator {
         allowGroupChatInvitesFrom: actor.allowGroupChatInvitesFrom || undefined,
         upstreamStatus: actor.upstreamStatus || undefined,
         createdAt: parseDate(actor.createdAt),
-        priorityNotifications: actor.priorityNotifications,
         trustedVerifier: actor.trustedVerifier,
         verifications,
         status: status,
