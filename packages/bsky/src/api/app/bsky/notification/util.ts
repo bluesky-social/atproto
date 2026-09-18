@@ -1,6 +1,11 @@
+import assert from 'node:assert'
+import type { Un$Typed } from '@atproto/lex'
+import { UpstreamFailureError } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import type { app } from '../../../../lexicons/index.js'
 import {
   type FilterableNotificationPreference,
+  type GetNotificationPreferencesResponse,
   NotificationInclude,
   type NotificationPreference,
   type NotificationPreferences,
@@ -12,6 +17,31 @@ type DeepPartial<T> = T extends object
       [P in keyof T]?: DeepPartial<T[P]>
     }
   : T
+
+export const getNotificationPreferences = async (
+  ctx: AppContext,
+  actorDid: string,
+): Promise<Un$Typed<app.bsky.notification.defs.Preferences>> => {
+  let res: GetNotificationPreferencesResponse
+  try {
+    res = await ctx.dataplane.getNotificationPreferences({
+      dids: [actorDid],
+    })
+  } catch (err) {
+    throw new UpstreamFailureError(
+      'cannot get current notification preferences',
+      'NotificationPreferencesFailed',
+      { cause: err },
+    )
+  }
+
+  assert(
+    res.preferences.length === 1,
+    `expected exactly one preferences entry, got ${res.preferences.length}`,
+  )
+
+  return protobufToLex(res.preferences[0])
+}
 
 const ensureChatPreference = (
   p?: DeepPartial<app.bsky.notification.defs.ChatPreference>,

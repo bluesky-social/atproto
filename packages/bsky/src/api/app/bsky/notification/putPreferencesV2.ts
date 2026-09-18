@@ -3,8 +3,7 @@ import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 import { Namespaces } from '../../../../stash.js'
-import { getNotificationPreferences } from './getPreferences.js'
-import { DEFAULT_CHAT_PREFERENCE } from './util.js'
+import { DEFAULT_CHAT_PREFERENCE, getNotificationPreferences } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.notification.putPreferencesV2, {

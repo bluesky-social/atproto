@@ -20,7 +20,7 @@ import { uriToDid as didFromUri } from '../../../../util/uris.js'
 import type { Views } from '../../../../views/index.js'
 import { isPostRecordType } from '../../../../views/types.js'
 import { fillPage, resHeaders } from '../../../util.js'
-import { getNotificationPreferences } from './getPreferences.js'
+import { getNotificationPreferences } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const listNotifications = createPipeline(
