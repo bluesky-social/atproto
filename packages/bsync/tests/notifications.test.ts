@@ -2,6 +2,7 @@ import { Code, ConnectError } from '@connectrpc/connect'
 import getPort from 'get-port'
 import { sql } from 'kysely'
 import { wait } from '@atproto/common'
+import { createNotifOpChannel } from '../src/db/schema/notif_op.js'
 import {
   type BsyncClient,
   BsyncService,
@@ -11,7 +12,6 @@ import {
   envToCfg,
 } from '../src/index.js'
 import type { NotifOperation } from '../src/proto/bsync_pb.js'
-import { createNotifOpChannel } from '../src/db/schema/notif_op.js'
 
 describe('notifications', () => {
   let bsync: BsyncService
