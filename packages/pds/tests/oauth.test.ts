@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { once } from 'node:events'
 import { type Server, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
@@ -5,6 +6,7 @@ import { jest } from '@jest/globals'
 import { type Browser, launch } from 'puppeteer'
 import { TestNetwork } from '@atproto/dev-env'
 import { middleware as oauthClientAssetsMiddleware } from '@atproto/oauth-client-browser-example/server'
+import type { AppContext } from '../src/index.js'
 import { PageHelper } from './_puppeteer.js'
 
 describe('oauth', () => {
@@ -13,6 +15,10 @@ describe('oauth', () => {
   let server: Server
 
   let appUrl: string
+
+  let sendMailMock: jest.SpiedFunction<
+    AppContext['mailer']['transporter']['sendMail']
+  >
 
   // @NOTE We are using another language than "en" as default language to
   // test the language negotiation.
@@ -31,6 +37,13 @@ describe('oauth', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'oauth',
     })
+
+    // Catch-all: never actually deliver, but keep recording calls. Per-test
+    // spies on the individual mailer methods stay un-stubbed, so the real
+    // template still renders into the call this records.
+    sendMailMock = jest
+      .spyOn(network.pds.ctx.mailer.transporter, 'sendMail')
+      .mockImplementation(async () => {})
 
     const sc = network.getSeedClient()
 
@@ -60,6 +73,10 @@ describe('oauth', () => {
         (e): e is [string, string] => e[1] != null,
       ),
     )}`
+  })
+
+  beforeEach(() => {
+    sendMailMock.mockClear()
   })
 
   afterAll(async () => {
@@ -388,5 +405,165 @@ describe('oauth', () => {
     await page.clickOnText('Sign out')
 
     await page.waitForNetworkIdle()
+  })
+
+  describe('with 2FA', () => {
+    let jane
+
+    beforeAll(async () => {
+      const sc = network.getSeedClient()
+
+      jane = await sc.createAccount('jane', {
+        email: 'jane@test.com',
+        handle: 'jane.test',
+        password: 'jane-pass',
+      })
+
+      const confirmationToken =
+        await network.pds.ctx.accountManager.createEmailToken(
+          jane.did,
+          'confirm_email',
+        )
+
+      await network.pds.ctx.accountManager.confirmEmail(
+        jane.did,
+        jane.email,
+        confirmationToken,
+      )
+
+      await network.pds.ctx.accountManager.enableEmailAuthFactor({
+        did: jane.did,
+        email: jane.email,
+      })
+    })
+
+    it('Allows to sign-in through OAuth', async () => {
+      await using page = await PageHelper.from(browser, { languages })
+
+      await page.goto(appUrl)
+
+      await page.assertTitle('OAuth Client Example')
+
+      const input = await page.typeInInput('identifier', 'jane.test')
+
+      await page.navigationAction(async () => input.press('Enter'))
+
+      await page.assertTitle('Connexion')
+
+      await page.typeInInput('password', 'jane-pass')
+
+      // @NOTE Left un-stubbed on purpose: the real method runs, so the
+      // template renders into the (mocked) transport, and the token is read
+      // off the call rather than parsed back out of the email body.
+      using sendSignInAuthFactorMock = jest.spyOn(
+        network.pds.ctx.mailer,
+        'sendSignInAuthFactor',
+      )
+
+      await page.clickOnText('Se connecter')
+      await page.waitForNetworkIdle()
+
+      const [params] = sendSignInAuthFactorMock.mock.lastCall!
+      // `locale` proves the negotiated language reached the mailer: only the
+      // OAuth sign-in path carries one (createSession declares no locale
+      // input), so this is the sole coverage for that wiring.
+      expect(params).toEqual({
+        handle: 'jane.test',
+        locale: 'fr',
+        token: expect.any(String),
+      })
+      const token = params.token
+
+      // Make sure the 2FA field appears:
+      await page.ensureTextVisibility('Confirmation 2FA', 'label')
+      await page.ensureTextVisibility(
+        'Consultez la boîte de réception de j***e@t***m pour y trouver un code de connexion, et saisissez-le ici.',
+        'p',
+      )
+
+      assert(token, "Expected email confirmation token for Jane's login")
+      await page.typeInInput('otp', token)
+
+      await page.clickOnText('Confirmer')
+
+      await page.assertTitle('Autoriser')
+
+      await page.navigationClick('Autoriser')
+
+      await page.assertTitle('OAuth Client Example')
+
+      await page.ensureTextVisibility('Token info', 'h2')
+
+      await page.clickOnAriaLabel('User menu')
+
+      await page.clickOnText('Sign out')
+
+      await page.waitForNetworkIdle()
+    })
+
+    it('Prevents to sign-in through OAuth with invalid OTP', async () => {
+      await using page = await PageHelper.from(browser, { languages })
+
+      await page.goto(appUrl)
+
+      await page.assertTitle('OAuth Client Example')
+
+      const input = await page.typeInInput('identifier', 'jane.test')
+
+      await page.navigationAction(async () => input.press('Enter'))
+
+      await page.assertTitle('Connexion')
+
+      await page.typeInInput('password', 'jane-pass')
+
+      // @NOTE Left un-stubbed on purpose: the real method runs, so the
+      // template renders into the (mocked) transport, and the token is read
+      // off the call rather than parsed back out of the email body.
+      using sendSignInAuthFactorMock = jest.spyOn(
+        network.pds.ctx.mailer,
+        'sendSignInAuthFactor',
+      )
+
+      await page.clickOnText('Se connecter')
+      await page.waitForNetworkIdle()
+
+      const [params] = sendSignInAuthFactorMock.mock.lastCall!
+      // `locale` proves the negotiated language reached the mailer: only the
+      // OAuth sign-in path carries one (createSession declares no locale
+      // input), so this is the sole coverage for that wiring.
+      expect(params).toEqual({
+        handle: 'jane.test',
+        locale: 'fr',
+        token: expect.any(String),
+      })
+      const token = params.token
+
+      // Make sure the 2FA field appears:
+      await page.ensureTextVisibility('Confirmation 2FA', 'label')
+      await page.ensureTextVisibility(
+        'Consultez la boîte de réception de j***e@t***m pour y trouver un code de connexion, et saisissez-le ici.',
+        'p',
+      )
+
+      assert(token, 'Ensure we generated a token')
+      assert(
+        token !== 'AAAAA-AAAAA',
+        "Ensure generated token isn't our test token",
+      )
+      await page.typeInInput('otp', 'AAAAA-AAAAA')
+
+      await page.clickOnText('Confirmer')
+
+      await page.ensureTextVisibility(
+        'Les données que vous avez soumises sont invalides. Veuillez vérifier le formulaire et réessayer.',
+        'p',
+      )
+
+      await page.typeInInput('otp', token)
+
+      await page.clickOnText('Confirmer')
+
+      await page.assertTitle('Autoriser')
+    })
   })
 })

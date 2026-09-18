@@ -147,6 +147,7 @@ msgstr "Adăugați următoarea înregistrare la configurația DNS a domeniului d
 msgid "alice.com"
 msgstr "andreea.ro"
 
+#: src/components/disable-email-auth-factor-dialog.tsx
 #: src/components/reset-password-view.tsx
 #: src/components/update-password-dialog.tsx
 #: src/components/verify-email-dialog.tsx
@@ -441,6 +442,23 @@ msgstr "Dispozitive"
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr "Nu ați primit un cod? <0>Faceți clic aici pentru a-l retrimite.</0>"
 
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "Disable 2FA"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "Disable two-factor authentication"
+msgstr ""
+
+#: src/routes/account/u/$accountId/manage.tsx
+msgctxt "2FA"
+msgid "Disabled"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "Disabling two-factor authentication makes your account less secure."
+msgstr ""
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "DNS"
 msgstr "DNS"
@@ -477,6 +495,14 @@ msgstr "Cerere de modificare e-mail trimisă"
 msgid "Email change successful"
 msgstr "E-mail modificat cu succes"
 
+#: src/data/email.ts
+msgid "Email login verification disabled"
+msgstr ""
+
+#: src/data/email.ts
+msgid "Email login verification enabled"
+msgstr ""
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Email these instructions"
 msgstr "Trimiteți prin e-mail aceste instrucțiuni"
@@ -484,6 +510,19 @@ msgstr "Trimiteți prin e-mail aceste instrucțiuni"
 #: src/data/email.ts
 msgid "Email verified"
 msgstr "E-mail verificat"
+
+#: src/components/enable-email-auth-factor-dialog.tsx
+msgid "Enable"
+msgstr ""
+
+#: src/components/enable-email-auth-factor-dialog.tsx
+msgid "Enable two-factor authentication"
+msgstr ""
+
+#: src/routes/account/u/$accountId/manage.tsx
+msgctxt "2FA"
+msgid "Enabled"
+msgstr ""
 
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Enter a password"
@@ -500,6 +539,10 @@ msgstr "Introduceți domeniul pe care doriți să-l utilizați"
 #: src/components/reset-password-view.tsx
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Introduceți e-mailul pe care l-ați folosit pentru a vă crea contul. Vă vom trimite un „cod de resetare” pentru a putea seta o parolă nouă."
+
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "Enter the security code we sent to <0>{email}</0> to disable email two-factor authentication."
+msgstr ""
 
 #: src/components/reset-password-request-form.tsx
 msgid "Enter your email address"
@@ -546,6 +589,14 @@ msgstr "Dezactivarea contului a eșuat"
 msgid "Failed to delete account"
 msgstr "Ștergerea contului a eșuat"
 
+#: src/data/email.ts
+msgid "Failed to disable email login verification"
+msgstr ""
+
+#: src/data/email.ts
+msgid "Failed to enable email login verification"
+msgstr ""
+
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Failed to load connected apps"
 msgstr "Încărcarea aplicațiilor conectate a eșuat"
@@ -581,6 +632,10 @@ msgstr "Eroare la revocarea accesului"
 #: src/data/account.ts
 msgid "Failed to send confirmation email"
 msgstr "Trimiterea email-ului de confirmare a eșuat"
+
+#: src/data/email.ts
+msgid "Failed to send security code"
+msgstr ""
 
 #: src/data/email.ts
 msgid "Failed to send verification email"
@@ -968,6 +1023,10 @@ msgstr "Rețineți acest cont pe acest dispozitiv"
 msgid "Repository"
 msgstr "Repozitoriu"
 
+#: src/components/enable-email-auth-factor-dialog.tsx
+msgid "Require an email code to sign in to your account."
+msgstr ""
+
 #: src/components/reset-password-confirm-form.tsx
 msgid "Reset code"
 msgstr "Resetare cod"
@@ -1018,6 +1077,10 @@ msgstr "Selectați dintr-un cont existent"
 #: src/components/delete-account-dialog.tsx
 msgid "Send email"
 msgstr "Trimitere e-mail"
+
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "Send email to verify"
+msgstr ""
 
 #: src/components/forms/request-code-button.tsx
 msgid "Send verification code"
@@ -1212,6 +1275,10 @@ msgstr "Acest lucru va șterge în mod ireversibil contul dvs. Bluesky și toate
 msgid "To change your password, you'll need to enter a security code sent to your email."
 msgstr "Pentru a vă schimba parola, trebuie să introduceți un cod de securitate trimis pe e-mail."
 
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "To disable your email two-factor authentication, please verify your access to <0>{email}</0>"
+msgstr ""
+
 #: src/components/verify-email-dialog.tsx
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 msgstr "Pentru a vă verifica adresa de e-mail, va trebui să introduceți un cod de securitate trimis la <0>{email}</0>."
@@ -1224,6 +1291,10 @@ msgstr "Către"
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Troubleshoot"
 msgstr "Depanare"
+
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Two-factor authentication (2FA)"
+msgstr ""
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Type"
@@ -1302,6 +1373,7 @@ msgstr "Nume utilizator actualizat"
 msgid "Value"
 msgstr "Valoare"
 
+#: src/components/disable-email-auth-factor-confirm-form.tsx
 #: src/components/update-email-dialog.tsx
 #: src/components/verify-email-confirm-form.tsx
 msgid "Verification code"
@@ -1322,6 +1394,10 @@ msgstr "Verificare reușită!"
 #: src/components/update-handle-dialog.tsx
 msgid "Verify and Save"
 msgstr "Verificare și salvare"
+
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Verify email to enable"
+msgstr ""
 
 #: src/components/update-email-dialog.tsx
 #: src/routes/account/u/$accountId/manage.tsx
@@ -1427,6 +1503,10 @@ msgstr "Acum vă puteți conecta cu noua parolă."
 msgid "You previously deactivated <0/>. You can reactivate your account to continue logging in. Your content (profile, posts, feeds, lists, etc.) will become visible again to other users."
 msgstr "Ați dezactivat anterior contul <0/>. Vă puteți reactiva contul pentru a putea continua conectarea. Conținutul dvs. (profil, postări, fluxuri, liste ș.a.m.d.) va deveni din nou vizibil pentru ceilalți utilizatori."
 
+#: src/data/email.ts
+msgid "You will no longer be prompted for a code to sign in."
+msgstr ""
+
 #: src/components/reset-password-view.tsx
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "Veți primi un e-mail cu un „cod de resetare”. Introduceți codul aici, apoi introduceți noua parolă."
@@ -1487,6 +1567,10 @@ msgstr "Adresa dvs. de e-mail trebuie verificată."
 #: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "Numele dvs. de utilizator complet va fi: {0}"
+
+#: src/data/email.ts
+msgid "Your next login will require a code that is sent to your email address."
+msgstr ""
 
 #: src/components/reactivate-account-dialog.tsx
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."

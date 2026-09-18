@@ -7,12 +7,15 @@ import {
   type LucideIcon,
   MailIcon,
   ShieldAlertIcon,
+  ShieldCheckIcon,
   SnowflakeIcon,
   TrashIcon,
 } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 import { DeactivateAccountDialog } from '#/components/deactivate-account-dialog.tsx'
 import { DeleteAccountDialog } from '#/components/delete-account-dialog.tsx'
+import { DisableEmailAuthFactorDialog } from '#/components/disable-email-auth-factor-dialog.tsx'
+import { EnableEmailAuthFactorDialog } from '#/components/enable-email-auth-factor-dialog.tsx'
 import { Notice } from '#/components/feedback/notice.tsx'
 import { ReactivateAccountDialog } from '#/components/reactivate-account-dialog.tsx'
 import { Button } from '#/components/ui/button.tsx'
@@ -39,6 +42,8 @@ import {
   useReactivateAccount,
 } from '#/data/account.ts'
 import {
+  useDisableEmailAuthFactor,
+  useEnableEmailAuthFactor,
   useUpdateEmailConfirm,
   useUpdateEmailRequest,
   useVerifyEmailConfirm,
@@ -70,6 +75,7 @@ function ManagePage() {
         <ItemSeparator />
         <HandleUpdateRow />
         <PasswordUpdateRow />
+        <EmailAuthFactorUpdateRow />
         <ItemSeparator />
         <AccountStatusRow />
         <AccountDeletionRow />
@@ -191,6 +197,76 @@ function PasswordUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
   )
 }
 
+function EmailAuthFactorUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
+  const { account } = useAuthenticatedSession()
+  const { did, email, emailVerified, emailAuthFactor } = account
+
+  const enableEmailAuthFactor = useEnableEmailAuthFactor()
+  const disableEmailAuthFactor = useDisableEmailAuthFactor()
+
+  // These endpoints requires an email, so if the user doesn't have one, we can't
+  // let them update their email auth factor. These users should not exist in
+  // normal conditions (may have been created manually by an admin), and are
+  // expected to contact support.
+  if (!email) return null
+
+  if (!emailVerified) {
+    return (
+      <Row
+        {...props}
+        disabled
+        icon={ShieldAlertIcon}
+        value={<Trans>Verify email to enable</Trans>}
+      >
+        <Trans>Two-factor authentication (2FA)</Trans>
+      </Row>
+    )
+  }
+
+  if (!emailAuthFactor) {
+    return (
+      <EnableEmailAuthFactorDialog
+        onConfirm={async () => {
+          await enableEmailAuthFactor.mutateAsync({ email, did })
+        }}
+      >
+        {/* @NOTE `context` pins the msgid to this row: the French renders a
+          past participle agreeing with the feminine "authentification", so a
+          bare "Disabled" reused elsewhere would silently inherit that gender. */}
+        <Row
+          {...props}
+          icon={ShieldAlertIcon}
+          value={<Trans context="2FA">Disabled</Trans>}
+        >
+          <Trans>Two-factor authentication (2FA)</Trans>
+        </Row>
+      </EnableEmailAuthFactorDialog>
+    )
+  }
+
+  return (
+    <DisableEmailAuthFactorDialog
+      email={email}
+      requestPending={disableEmailAuthFactor.isPending}
+      confirmPending={disableEmailAuthFactor.isPending}
+      onRequest={async () => {
+        return disableEmailAuthFactor.mutateAsync({ email, did })
+      }}
+      onConfirm={async ({ token }) => {
+        await disableEmailAuthFactor.mutateAsync({ email, did, token })
+      }}
+    >
+      <Row
+        {...props}
+        icon={ShieldCheckIcon}
+        value={<Trans context="2FA">Enabled</Trans>}
+      >
+        <Trans>Two-factor authentication (2FA)</Trans>
+      </Row>
+    </DisableEmailAuthFactorDialog>
+  )
+}
+
 function AccountStatusRow(props: Omit<RowProps, 'icon' | 'value'>) {
   const { account } = useAuthenticatedSession()
   const deactivate = useDeactivateAccount()
@@ -280,6 +356,8 @@ type RowProps = Override<
     value?: ReactNode
     /** Destructive rows keep the danger signal without a full red fill. */
     variant?: 'default' | 'destructive'
+    /** Renders the row's button disabled, for a setting that isn't reachable */
+    disabled?: boolean
   }
 >
 
@@ -296,6 +374,7 @@ function Row({
   icon: Icon,
   value,
   variant = 'default',
+  disabled = false,
   children,
   className,
   ...props
@@ -305,10 +384,14 @@ function Row({
   return (
     <Item
       {...props}
-      render={<button type="button" />}
+      // @NOTE `disabled` rides on the rendered <button>, not through `Item`'s
+      // own props: `Item` is typed as a <div>, which has no such attribute, so
+      // passing it alongside `icon`/`value` would not typecheck.
+      render={<button type="button" disabled={disabled} />}
       className={cn(
         'hover:bg-muted w-full text-left',
         destructive && 'text-destructive hover:bg-destructive/10',
+        disabled && 'pointer-events-none opacity-60',
         className,
       )}
     >
