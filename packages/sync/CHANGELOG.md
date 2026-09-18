@@ -1,5 +1,12 @@
 # @atproto/sync
 
+## 0.4.11
+
+### Patch Changes
+
+- Updated dependencies [[`30f8149`](https://github.com/bluesky-social/atproto/commit/30f8149e629f9afc3fe41cf66bd8482954d7c052)]:
+  - @atproto/identity@0.5.14
+
 ## 0.4.10
 
 ### Patch Changes

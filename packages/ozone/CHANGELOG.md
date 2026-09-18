@@ -1,5 +1,16 @@
 # @atproto/ozone
 
+## 0.4.3
+
+### Patch Changes
+
+- [#5517](https://github.com/bluesky-social/atproto/pull/5517) [`4dba111`](https://github.com/bluesky-social/atproto/commit/4dba11136a4a04a76dbb678135aacfe944f8d15b) Thanks [@foysalit](https://github.com/foysalit)! - Add a video invalidator for purging transcoded video content after blob takedowns.
+
+- [#5391](https://github.com/bluesky-social/atproto/pull/5391) [`30f8149`](https://github.com/bluesky-social/atproto/commit/30f8149e629f9afc3fe41cf66bd8482954d7c052) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `dotenv` dependency
+
+- Updated dependencies [[`30f8149`](https://github.com/bluesky-social/atproto/commit/30f8149e629f9afc3fe41cf66bd8482954d7c052)]:
+  - @atproto/identity@0.5.14
+
 ## 0.4.2
 
 ### Patch Changes

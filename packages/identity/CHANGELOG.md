@@ -1,5 +1,11 @@
 # @atproto/identity
 
+## 0.5.14
+
+### Patch Changes
+
+- [#5391](https://github.com/bluesky-social/atproto/pull/5391) [`30f8149`](https://github.com/bluesky-social/atproto/commit/30f8149e629f9afc3fe41cf66bd8482954d7c052) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `dotenv` dependency
+
 ## 0.5.13
 
 ### Patch Changes
