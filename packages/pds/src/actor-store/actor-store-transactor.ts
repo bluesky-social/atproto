@@ -1,4 +1,5 @@
 import type { Keypair } from '@atproto/crypto'
+import type { DidString } from '@atproto/lex'
 import type { ActorStoreResources } from './actor-store-resources.js'
 import type { ActorDb } from './db/index.js'
 import { PreferenceTransactor } from './preference/transactor.js'
@@ -11,7 +12,7 @@ export class ActorStoreTransactor {
   public readonly pref: PreferenceTransactor
 
   constructor(
-    public readonly did: string,
+    public readonly did: DidString,
     protected readonly db: ActorDb,
     protected readonly keypair: Keypair,
     protected readonly resources: ActorStoreResources,

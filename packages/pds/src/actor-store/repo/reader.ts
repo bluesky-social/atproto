@@ -1,3 +1,4 @@
+import type { DidString } from '@atproto/lex'
 import type { BlobStore } from '@atproto/repo'
 import type { SyncEvtData } from '../../repo/index.js'
 import { BlobReader } from '../blob/reader.js'
@@ -13,7 +14,7 @@ export class RepoReader {
   constructor(
     public db: ActorDb,
     public blobstore: BlobStore,
-    public did: string,
+    public did: DidString,
   ) {
     this.blob = new BlobReader(db, blobstore)
     this.record = new RecordReader(db, did)

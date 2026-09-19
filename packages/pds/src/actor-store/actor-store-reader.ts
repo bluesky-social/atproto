@@ -1,4 +1,5 @@
 import type { Keypair } from '@atproto/crypto'
+import type { DidString } from '@atproto/lex'
 import type { ActorStoreResources } from './actor-store-resources.js'
 import { ActorStoreTransactor } from './actor-store-transactor.js'
 import type { ActorDb } from './db/index.js'
@@ -12,7 +13,7 @@ export class ActorStoreReader {
   public readonly pref: PreferenceReader
 
   constructor(
-    public readonly did: string,
+    public readonly did: DidString,
     protected readonly db: ActorDb,
     protected readonly resources: ActorStoreResources,
     public readonly keypair: () => Promise<Keypair>,

@@ -1,4 +1,5 @@
 import type * as crypto from '@atproto/crypto'
+import type { DidString } from '@atproto/lex'
 import { type Cid, parseCid } from '@atproto/lex-data'
 import {
   type BlobStore,
@@ -32,7 +33,7 @@ export class RepoTransactor extends RepoReader {
   constructor(
     public db: ActorDb,
     public blobstore: BlobStore,
-    public did: string,
+    public did: DidString,
     public signingKey: crypto.Keypair,
     public backgroundQueue: BackgroundQueue,
     public now: string = new Date().toISOString(),

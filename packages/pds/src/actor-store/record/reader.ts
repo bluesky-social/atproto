@@ -1,10 +1,10 @@
+import type { DidString, NsidString } from '@atproto/lex'
 import { type Cid, type LexMap, parseCid } from '@atproto/lex-data'
 import { CidSet, cborToLexRecord, formatDataKey } from '@atproto/repo'
 import {
   AtUri,
   type AtUriString,
   type DatetimeString,
-  type NsidString,
   ensureValidAtUri,
   ensureValidDid,
 } from '@atproto/syntax'
@@ -22,7 +22,7 @@ export type RecordDescript = {
 export class RecordReader {
   constructor(
     public db: ActorDb,
-    public did: string,
+    public did: DidString,
   ) {}
 
   async recordCount(): Promise<number> {
@@ -68,7 +68,7 @@ export class RecordReader {
   }
 
   async listRecordsForCollection(opts: {
-    collection: string
+    collection: NsidString
     limit: number
     reverse: boolean
     cursor?: string
@@ -341,8 +341,8 @@ export class RecordReader {
 }
 
 function formatRecordUriKey(
-  did: string,
-  collection: string,
+  did: DidString,
+  collection: NsidString,
   rkey: string,
 ): string {
   // @NOTE This intentionally avoids atUri(): range bounds and opaque cursors
