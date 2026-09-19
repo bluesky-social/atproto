@@ -34,7 +34,7 @@ describe('races', () => {
   })
 
   const processCommitWithWait = async (
-    did: string,
+    did: DidString,
     write: PreparedCreate,
     waitMs: number,
   ) => {
