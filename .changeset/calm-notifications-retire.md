@@ -3,4 +3,4 @@
 '@atproto/bsky': patch
 ---
 
-Remove the legacy notification priority fields.
+Deprecate the legacy notification priority fields.
