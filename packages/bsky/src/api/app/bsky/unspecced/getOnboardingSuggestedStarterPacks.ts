@@ -114,6 +114,7 @@ const noBlocks: RulesFn<Context, Params, SkeletonState> = (input) => {
 
   const blocks = hydration.bidirectionalBlocks?.get(viewer)
   const filteredSkeleton: SkeletonState = {
+    ...skeleton,
     starterPacks: skeleton.starterPacks.filter((uri) => {
       try {
         return !blocks?.get(new AtUri(uri).did)
@@ -138,6 +139,7 @@ const presentation: PresentationFn<
     starterPacks: mapDefined(skeleton.starterPacks, (uri) =>
       ctx.views.starterPack(uri, hydration),
     ),
+    recIdStr: skeleton.recIdStr,
   }
 }
 
