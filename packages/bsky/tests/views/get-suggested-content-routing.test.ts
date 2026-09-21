@@ -22,7 +22,8 @@ type Route = {
   name: string
   gate: Gate
   skeletonMethod: string
-  call: (agent: AtpAgent) => Promise<unknown>
+  recIdStr: string
+  call: (agent: AtpAgent) => Promise<string | undefined>
 }
 
 const routes: Route[] = [
@@ -30,21 +31,27 @@ const routes: Route[] = [
     name: 'suggested feeds',
     gate: Gate.SuggestedFeedsV2Enable,
     skeletonMethod: ids.AppBskyUnspeccedGetSuggestedFeedsSkeleton,
-    call: (agent) => agent.app.bsky.unspecced.getSuggestedFeeds(),
+    recIdStr: 'suggested-feeds-rec-id',
+    call: async (agent) =>
+      (await agent.app.bsky.unspecced.getSuggestedFeeds()).data.recIdStr,
   },
   {
     name: 'suggested starter packs',
     gate: Gate.SuggestedStarterPacksV2Enable,
     skeletonMethod: ids.AppBskyUnspeccedGetSuggestedStarterPacksSkeleton,
-    call: (agent) => agent.app.bsky.unspecced.getSuggestedStarterPacks(),
+    recIdStr: 'suggested-starter-packs-rec-id',
+    call: async (agent) =>
+      (await agent.app.bsky.unspecced.getSuggestedStarterPacks()).data.recIdStr,
   },
   {
     name: 'onboarding suggested starter packs',
     gate: Gate.SuggestedStarterPacksOnboardingV2Enable,
     skeletonMethod:
       ids.AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton,
-    call: (agent) =>
-      agent.app.bsky.unspecced.getOnboardingSuggestedStarterPacks(),
+    recIdStr: 'onboarding-suggested-starter-packs-rec-id',
+    call: async (agent) =>
+      (await agent.app.bsky.unspecced.getOnboardingSuggestedStarterPacks()).data
+        .recIdStr,
   },
 ]
 
@@ -97,13 +104,14 @@ describe('suggested content routing', () => {
     async (route) => {
       using _scope = mockGate(route.gate)
 
-      await route.call(agent)
+      const recIdStr = await route.call(agent)
 
       expect(topicsServer.requestCount(route.skeletonMethod)).toBe(0)
       expect(irisServer.requestCount(route.skeletonMethod)).toBe(1)
       expect(irisServer.authorization(route.skeletonMethod)).toBe(
         `Bearer ${IRIS_API_KEY}`,
       )
+      expect(recIdStr).toBe(route.recIdStr)
     },
   )
 
@@ -188,7 +196,7 @@ class MockSuggestedContentServer {
           ids.AppBskyUnspeccedGetSuggestedFeedsSkeleton,
           req.headers.authorization,
         )
-        return res.json({ feeds: [] })
+        return res.json({ feeds: [], recIdStr: 'suggested-feeds-rec-id' })
       },
     )
     app.get(
@@ -198,7 +206,10 @@ class MockSuggestedContentServer {
           ids.AppBskyUnspeccedGetSuggestedStarterPacksSkeleton,
           req.headers.authorization,
         )
-        return res.json({ starterPacks: [] })
+        return res.json({
+          starterPacks: [],
+          recIdStr: 'suggested-starter-packs-rec-id',
+        })
       },
     )
     app.get(
@@ -208,7 +219,10 @@ class MockSuggestedContentServer {
           ids.AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton,
           req.headers.authorization,
         )
-        return res.json({ starterPacks: [] })
+        return res.json({
+          starterPacks: [],
+          recIdStr: 'onboarding-suggested-starter-packs-rec-id',
+        })
       },
     )
     return app

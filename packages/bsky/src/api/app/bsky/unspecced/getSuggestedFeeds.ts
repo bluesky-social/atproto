@@ -94,6 +94,7 @@ const presentation = (
     feeds: mapDefined(skeleton.feeds, (uri) =>
       ctx.views.feedGenerator(uri, hydration),
     ),
+    recIdStr: skeleton.recIdStr,
   }
 }
 
@@ -112,4 +113,5 @@ type Params = app.bsky.unspecced.getSuggestedFeeds.$Params & {
 
 type SkeletonState = {
   feeds: AtUriString[]
+  recIdStr?: string
 }

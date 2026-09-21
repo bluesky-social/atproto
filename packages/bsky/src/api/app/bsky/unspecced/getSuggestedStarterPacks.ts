@@ -120,6 +120,7 @@ const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
 
   const blocks = hydration.bidirectionalBlocks?.get(viewer)
   const filteredSkeleton: SkeletonState = {
+    ...skeleton,
     starterPacks: skeleton.starterPacks.filter((uri) => {
       try {
         return !blocks?.get(new AtUri(uri).did)
@@ -141,6 +142,7 @@ const presentation = (
     starterPacks: mapDefined(skeleton.starterPacks, (uri) =>
       ctx.views.starterPack(uri, hydration),
     ),
+    recIdStr: skeleton.recIdStr,
   }
 }
 
@@ -159,6 +161,7 @@ type Params = app.bsky.unspecced.getSuggestedStarterPacks.$Params & {
 
 type SkeletonState = {
   starterPacks: AtUriString[]
+  recIdStr?: string
 }
 
 function getUniqueDidsFromStarterPacks(
