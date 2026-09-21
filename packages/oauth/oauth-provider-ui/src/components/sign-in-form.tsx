@@ -130,7 +130,7 @@ export function SignInForm({
         name="username"
         defaultValue={usernameDefault}
         pattern={SIGN_IN_IDENTIFIER_PATTERN}
-        label={<Trans>Username</Trans>}
+        label={<Trans>Username or Email</Trans>}
         placeholder={
           domains.length > 0
             ? `${t`yourname`}${domains[0]}`

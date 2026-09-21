@@ -660,7 +660,6 @@ msgstr "ヘルプ"
 msgid "Hide"
 msgstr "隠す"
 
-#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Home"
@@ -930,7 +929,7 @@ msgstr "しばらくしてからもう一度お試しください。"
 msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
 msgstr "{remainingSeconds, plural, other {#秒}}待ってからもう一度やり直してください。"
 
-#: src/components/layouts/auth-shell.tsx
+#: src/components/utils/link-title.tsx
 msgid "Privacy"
 msgstr "プライバシー"
 
@@ -1110,7 +1109,6 @@ msgstr "デバイスが正常に取り消されました"
 msgid "Successfully revoked access"
 msgstr "アクセスが正常に取り消されました"
 
-#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 msgid "Support"
 msgstr "サポート"
@@ -1123,7 +1121,7 @@ msgstr "技術的な詳細"
 msgid "Temporarily activate or deactivate your account"
 msgstr "一時的にアカウントを有効化または無効化する"
 
-#: src/components/layouts/auth-shell.tsx
+#: src/components/utils/link-title.tsx
 msgid "Terms"
 msgstr "利用規約"
 
@@ -1311,10 +1309,13 @@ msgstr "デフォルトのユーザー名を使用"
 msgid "Use a domain name I own"
 msgstr "自分が所有するドメイン名を使用"
 
-#: src/components/sign-in-form.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
 msgstr "ユーザー名"
+
+#: src/components/sign-in-form.tsx
+msgid "Username or Email"
+msgstr ""
 
 #: src/components/sign-in-form.tsx
 msgid "Username or email address"

@@ -652,7 +652,6 @@ msgstr ""
 msgid "Hide"
 msgstr "Ocultar"
 
-#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Home"
@@ -922,7 +921,7 @@ msgstr ""
 msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
 msgstr ""
 
-#: src/components/layouts/auth-shell.tsx
+#: src/components/utils/link-title.tsx
 msgid "Privacy"
 msgstr "Privacidad"
 
@@ -1102,7 +1101,6 @@ msgstr "Dispositivo removido exitosamente"
 msgid "Successfully revoked access"
 msgstr ""
 
-#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 msgid "Support"
 msgstr "Soporte"
@@ -1115,7 +1113,7 @@ msgstr "Detalles técnicos"
 msgid "Temporarily activate or deactivate your account"
 msgstr "Activar o desactivar temporalmente tu cuenta"
 
-#: src/components/layouts/auth-shell.tsx
+#: src/components/utils/link-title.tsx
 msgid "Terms"
 msgstr "Términos"
 
@@ -1303,9 +1301,12 @@ msgstr ""
 msgid "Use a domain name I own"
 msgstr ""
 
-#: src/components/sign-in-form.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
+msgstr ""
+
+#: src/components/sign-in-form.tsx
+msgid "Username or Email"
 msgstr ""
 
 #: src/components/sign-in-form.tsx

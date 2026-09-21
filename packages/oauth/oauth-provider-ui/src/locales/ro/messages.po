@@ -666,7 +666,6 @@ msgstr "Ajutor"
 msgid "Hide"
 msgstr "Ascundere"
 
-#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 #: src/routes/account/u/$accountId/route.tsx
 msgid "Home"
@@ -936,7 +935,7 @@ msgstr "Vă rugăm să încercaţi din nou într-un moment."
 msgid "Please wait {remainingSeconds, plural, one {# second} other {# seconds}} before trying again."
 msgstr "Așteptați {remainingSeconds, plural, one {o secundă} few {# secunde} other {# de secunde}} înainte de a încerca din nou."
 
-#: src/components/layouts/auth-shell.tsx
+#: src/components/utils/link-title.tsx
 msgid "Privacy"
 msgstr "Confidențialitate"
 
@@ -1116,7 +1115,6 @@ msgstr "Dispozitiv eliminat cu succes"
 msgid "Successfully revoked access"
 msgstr "Acces revocat cu succes"
 
-#: src/components/layouts/auth-shell.tsx
 #: src/components/utils/link-title.tsx
 msgid "Support"
 msgstr "Asistență"
@@ -1129,7 +1127,7 @@ msgstr "Detalii tehnice"
 msgid "Temporarily activate or deactivate your account"
 msgstr "Vă activează sau dezactivează temporar contul"
 
-#: src/components/layouts/auth-shell.tsx
+#: src/components/utils/link-title.tsx
 msgid "Terms"
 msgstr "Termeni"
 
@@ -1317,10 +1315,13 @@ msgstr "Utilizați un nume de utilizator implicit"
 msgid "Use a domain name I own"
 msgstr "Utilizați un nume de domeniu propriu"
 
-#: src/components/sign-in-form.tsx
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Username"
 msgstr "Nume de utilizator"
+
+#: src/components/sign-in-form.tsx
+msgid "Username or Email"
+msgstr ""
 
 #: src/components/sign-in-form.tsx
 msgid "Username or email address"
