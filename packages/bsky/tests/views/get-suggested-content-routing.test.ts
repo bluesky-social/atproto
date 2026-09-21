@@ -16,6 +16,8 @@ import { type AtpAgent, ids } from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { Gate } from '../../src/feature-gates/gates.js'
 
+const IRIS_API_KEY = 'test-iris-api-key'
+
 type Route = {
   name: string
   gate: Gate
@@ -62,6 +64,7 @@ describe('suggested content routing', () => {
       bsky: {
         topicsUrl: topicsServer.url,
         irisUrl: irisServer.url,
+        irisApiKey: IRIS_API_KEY,
       },
     })
     agent = network.bsky.getAgent()
@@ -98,6 +101,9 @@ describe('suggested content routing', () => {
 
       expect(topicsServer.requestCount(route.skeletonMethod)).toBe(0)
       expect(irisServer.requestCount(route.skeletonMethod)).toBe(1)
+      expect(irisServer.authorization(route.skeletonMethod)).toBe(
+        `Bearer ${IRIS_API_KEY}`,
+      )
     },
   )
 
@@ -134,6 +140,7 @@ class MockSuggestedContentServer {
   server: Server
   terminator: HttpTerminator
   requests = new Map<string, number>()
+  authorizations = new Map<string, string | undefined>()
 
   constructor() {
     this.app = this.createApp()
@@ -156,10 +163,15 @@ class MockSuggestedContentServer {
 
   reset() {
     this.requests.clear()
+    this.authorizations.clear()
   }
 
   requestCount(method: string) {
     return this.requests.get(method) ?? 0
+  }
+
+  authorization(method: string) {
+    return this.authorizations.get(method)
   }
 
   get url() {
@@ -171,23 +183,30 @@ class MockSuggestedContentServer {
     const app = express()
     app.get(
       `/xrpc/${ids.AppBskyUnspeccedGetSuggestedFeedsSkeleton}`,
-      (_req, res) => {
-        this.record(ids.AppBskyUnspeccedGetSuggestedFeedsSkeleton)
+      (req, res) => {
+        this.record(
+          ids.AppBskyUnspeccedGetSuggestedFeedsSkeleton,
+          req.headers.authorization,
+        )
         return res.json({ feeds: [] })
       },
     )
     app.get(
       `/xrpc/${ids.AppBskyUnspeccedGetSuggestedStarterPacksSkeleton}`,
-      (_req, res) => {
-        this.record(ids.AppBskyUnspeccedGetSuggestedStarterPacksSkeleton)
+      (req, res) => {
+        this.record(
+          ids.AppBskyUnspeccedGetSuggestedStarterPacksSkeleton,
+          req.headers.authorization,
+        )
         return res.json({ starterPacks: [] })
       },
     )
     app.get(
       `/xrpc/${ids.AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton}`,
-      (_req, res) => {
+      (req, res) => {
         this.record(
           ids.AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton,
+          req.headers.authorization,
         )
         return res.json({ starterPacks: [] })
       },
@@ -195,7 +214,8 @@ class MockSuggestedContentServer {
     return app
   }
 
-  private record(method: string) {
+  private record(method: string, authorization: string | undefined) {
     this.requests.set(method, this.requestCount(method) + 1)
+    this.authorizations.set(method, authorization)
   }
 }

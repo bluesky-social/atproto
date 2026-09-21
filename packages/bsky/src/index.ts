@@ -168,6 +168,9 @@ export class BskyAppView {
       ? new Client(
           {
             service: config.irisUrl,
+            headers: config.irisApiKey
+              ? { authorization: `Bearer ${config.irisApiKey}` }
+              : undefined,
             fetch: dispatcherFetch(irisDispatcher),
           },
           {
