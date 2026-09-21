@@ -371,9 +371,12 @@ export class AppContext implements AsyncDisposable {
       // Not hosted here: fall back to the network resolution
       if (!account) return undefined
 
+      // Account deactivated, maybe it was moved somewhere else
+      if (account.deactivatedAt) return undefined
+
       // Mirror what com.atproto.sync.getRecord would answer to an
       // unauthenticated requester
-      if (account.takedownRef || account.deactivatedAt) {
+      if (account.takedownRef) {
         throw new LexResolverError(nsid, `Repo is not available: ${did}`)
       }
 
