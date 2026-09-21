@@ -146,6 +146,8 @@ export type LexResolverHooks = {
     did: Did
     nsid: NSID
     uri: AtUri
+    signal?: AbortSignal
+    noCache?: boolean
   }): Awaitable<void | LexResolverFetchResult>
 
   /**
@@ -428,10 +430,12 @@ export class LexResolver {
         did,
         nsid,
         uri,
+        signal: options?.signal,
+        noCache: options?.noCache,
       })
 
       const { record, cid } =
-        hookResult ?? (await this.fetchNetworkLexicon(uri, options))
+        hookResult ?? (await this.fetchNetworkLexicon(uri, did, nsid, options))
 
       if (!isCborCid(cid)) {
         throw new LexResolverError(
@@ -483,10 +487,10 @@ export class LexResolver {
 
   protected async fetchNetworkLexicon(
     uri: AtUri,
+    did: Did,
+    nsid: NSID,
     options?: ResolveDidOptions,
   ): Promise<LexResolverFetchResult> {
-    const { did, nsid } = parseLexiconUri(uri)
-
     const { pds, key } = await this.didResolver
       .resolve(did, options)
       .then(extractAtprotoData)

@@ -378,11 +378,13 @@ export class AppContext implements AsyncDisposable {
               // server to reach its own public endpoint, which is not
               // guaranteed to work (SSRF protection, missing NAT hairpin,
               // internal reverse proxies, ...).
-              onFetch: async ({ uri, did, nsid }) => {
+              onFetch: async ({ uri, did, nsid, signal }) => {
                 const account = await accountManager.getAccount(did, {
                   includeDeactivated: true,
                   includeTakenDown: true,
                 })
+
+                signal?.throwIfAborted()
 
                 // Mirror what com.atproto.sync.getRecord would answer to an
                 // unauthenticated requester
