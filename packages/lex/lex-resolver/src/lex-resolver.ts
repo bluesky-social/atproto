@@ -317,8 +317,9 @@ export class LexResolver {
     nsidStr: NSID | string,
     options?: ResolveDidOptions,
   ): Promise<LexResolverResult> {
-    const uri = await this.resolve(nsidStr)
-    return this.fetch(uri, options)
+    const nsid = NSID.from(nsidStr)
+    const did = await this.resolve(nsid)
+    return this.fetch(did, nsid, options)
   }
 
   /**
@@ -348,8 +349,7 @@ export class LexResolver {
    * const result = await resolver.fetch(uri)
    * ```
    */
-  async resolve(nsidStr: NSID | string): Promise<AtUri> {
-    const nsid = NSID.from(nsidStr)
+  async resolve(nsid: NSID): Promise<Did> {
     try {
       const hookDid = await this.options.hooks?.onResolveAuthority?.call(null, {
         nsid,
@@ -363,7 +363,7 @@ export class LexResolver {
         source: hookDid ? 'hook' : 'network',
       })
 
-      return AtUri.make(did, 'com.atproto.lexicon.schema', nsid.toString())
+      return did
     } catch (err) {
       await this.options.hooks?.onResolveAuthorityError?.call(null, {
         nsid,
@@ -424,12 +424,11 @@ export class LexResolver {
    * ```
    */
   async fetch(
-    uriStr: AtUri | string,
+    did: Did,
+    nsid: NSID,
     options?: ResolveDidOptions,
   ): Promise<LexResolverResult> {
-    const uri = typeof uriStr === 'string' ? new AtUri(uriStr) : uriStr
-    const { did, nsid } = parseLexiconUri(uri)
-
+    const uri = AtUri.make(did, 'com.atproto.lexicon.schema', nsid.toString())
     try {
       const hookResult = await this.options.hooks?.onFetch?.call(null, {
         did,
@@ -544,21 +543,6 @@ export class LexResolver {
         })
       },
     )
-  }
-}
-
-function parseLexiconUri(uri: AtUri): {
-  did: Did
-  nsid: NSID
-} {
-  // Validate input URI
-  const nsid = NSID.from(uri.rkey)
-  try {
-    const did = uri.host
-    assertDid(did)
-    return { did, nsid }
-  } catch (cause) {
-    throw new LexResolverError(nsid, `URI host is not a DID ${uri}`, { cause })
   }
 }
 
