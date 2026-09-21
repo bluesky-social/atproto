@@ -420,9 +420,9 @@ export class AppContext implements AsyncDisposable {
                 // Override the lexicon did resolution to point to a custom PDS
                 return cfg.lexicon.didAuthority
               },
-              onResolveAuthorityResult({ nsid, did }) {
+              onResolveAuthorityResult({ nsid, did, source }) {
                 lexiconResolverLogger.info(
-                  { nsid: nsid.toString(), did },
+                  { nsid: nsid.toString(), did, source },
                   'Resolved lexicon DID',
                 )
               },
