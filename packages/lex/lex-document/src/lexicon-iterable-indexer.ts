@@ -69,7 +69,9 @@ export class LexiconIterableIndexer implements LexiconIndexer, AsyncDisposable {
    *
    * @see {@link LexiconIndexer.get}
    */
-  async get(id: string): Promise<LexiconDocument> {
+  async get(input: string | { toString(): string }): Promise<LexiconDocument> {
+    const id = String(input)
+
     const cached = this.#lexicons.get(id)
     if (cached) return cached
 
