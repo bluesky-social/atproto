@@ -27,7 +27,11 @@
             "description": "Deprecated: this parameter is ignored."
           },
           "cursor": { "type": "string" },
-          "seenAt": { "type": "string", "format": "datetime" }
+          "seenAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Deprecated: this parameter is unsupported and will cause an error."
+          }
         }
       },
       "output": {
