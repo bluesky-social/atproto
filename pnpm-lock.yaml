@@ -337,7 +337,7 @@ importers:
         version: 3.2.0
       jest:
         specifier: ^30.5.1
-        version: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+        version: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
       prettier:
         specifier: ^3.9.6
         version: 3.9.6
@@ -380,7 +380,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/bsky:
     dependencies:
@@ -567,7 +567,7 @@ importers:
         version: 6.15.1
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/bsync:
     dependencies:
@@ -625,7 +625,7 @@ importers:
         version: 5.1.1
       jest:
         specifier: ^30.5.1
-        version: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+        version: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
 
   packages/common:
     dependencies:
@@ -650,7 +650,7 @@ importers:
         version: 5.1.1
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/common-web:
     dependencies:
@@ -669,7 +669,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^30.5.1
-        version: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+        version: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
 
   packages/crypto:
     dependencies:
@@ -688,7 +688,7 @@ importers:
         version: link:../common
       jest:
         specifier: ^30.5.1
-        version: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+        version: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
 
   packages/dev-env:
     dependencies:
@@ -771,7 +771,7 @@ importers:
         version: 0.2.39(@swc/core@1.16.2)
       jest:
         specifier: ^30.5.1
-        version: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+        version: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
 
   packages/identity:
     dependencies:
@@ -811,7 +811,7 @@ importers:
         version: 6.1.2
       jest:
         specifier: ^30.5.1
-        version: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+        version: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
 
   packages/internal/did-resolver:
     dependencies:
@@ -842,7 +842,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.20.1)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.20.1)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/internal/fetch-node:
     dependencies:
@@ -867,7 +867,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/internal/handle-resolver:
     dependencies:
@@ -886,7 +886,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/internal/handle-resolver-node:
     dependencies:
@@ -953,7 +953,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/internal/pipe: {}
 
@@ -971,7 +971,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/internal/simple-store-memory:
     dependencies:
@@ -1059,7 +1059,7 @@ importers:
         version: 17.0.35
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/lex/lex-builder:
     dependencies:
@@ -1084,7 +1084,7 @@ importers:
         version: 0.29.0
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/lex/lex-cbor:
     dependencies:
@@ -1103,7 +1103,7 @@ importers:
         version: link:../lex-json
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/lex/lex-client:
     dependencies:
@@ -1128,7 +1128,7 @@ importers:
         version: link:../lex-cbor
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/lex/lex-data:
     dependencies:
@@ -1147,7 +1147,7 @@ importers:
         version: 3.50.0
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/lex/lex-document:
     dependencies:
@@ -1166,7 +1166,7 @@ importers:
         version: link:../lex-data
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/lex/lex-installer:
     dependencies:
@@ -1197,7 +1197,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/lex/lex-json:
     dependencies:
@@ -1210,7 +1210,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/lex/lex-password-session:
     dependencies:
@@ -1232,7 +1232,7 @@ importers:
         version: link:../lex-server
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/lex/lex-resolver:
     dependencies:
@@ -1269,7 +1269,7 @@ importers:
         version: link:../lex-builder
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/lex/lex-schema:
     dependencies:
@@ -1288,7 +1288,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/lex/lex-server:
     dependencies:
@@ -1334,7 +1334,7 @@ importers:
         version: 8.18.1
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/lexicon:
     dependencies:
@@ -1353,7 +1353,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^30.5.1
-        version: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+        version: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
 
   packages/lexicon-resolver:
     dependencies:
@@ -1381,7 +1381,7 @@ importers:
         version: link:../lex/lex-cbor
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/oauth/jwk:
     dependencies:
@@ -1457,7 +1457,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/oauth/oauth-client-browser:
     dependencies:
@@ -1689,11 +1689,11 @@ importers:
         specifier: ^2.0.4
         version: 2.0.4
       '@types/send':
-        specifier: ^0.17.4
-        version: 0.17.4
+        specifier: ^1.2.1
+        version: 1.2.1
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/oauth/oauth-provider-api:
     dependencies:
@@ -1833,7 +1833,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/oauth/oauth-types:
     dependencies:
@@ -1966,7 +1966,7 @@ importers:
         version: 8.18.1
       jest:
         specifier: ^30.5.1
-        version: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+        version: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
 
   packages/pds:
     dependencies:
@@ -2153,7 +2153,7 @@ importers:
         version: 6.1.2
       jest:
         specifier: ^30.5.1
-        version: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(typescript@7.0.2))
+        version: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(typescript@7.0.2))
       puppeteer:
         specifier: ^23.11.1
         version: 23.11.1(typescript@7.0.2)
@@ -2190,7 +2190,7 @@ importers:
     devDependencies:
       jest:
         specifier: ^30.5.1
-        version: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+        version: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
 
   packages/sync:
     dependencies:
@@ -2224,7 +2224,7 @@ importers:
         version: 8.5.4
       jest:
         specifier: ^30.5.1
-        version: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+        version: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
 
   packages/syntax:
     dependencies:
@@ -2237,7 +2237,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/tap:
     dependencies:
@@ -2271,7 +2271,7 @@ importers:
         version: 3.2.0
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/ws-client:
     dependencies:
@@ -2287,7 +2287,7 @@ importers:
         version: 3.2.0
       vitest:
         specifier: ^4.0.16
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
 
   packages/xrpc:
     dependencies:
@@ -2378,7 +2378,7 @@ importers:
         version: 6.1.2
       jest:
         specifier: ^30.5.1
-        version: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+        version: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
       jose:
         specifier: ^5.0.1
         version: 5.3.0
@@ -5780,6 +5780,9 @@ packages:
   '@types/node@22.20.1':
     resolution: {integrity: sha512-EANqOCF9QFyra+4pfxUcX9STKJpCLjMbObVzljIJomAWSnuSIEAvyzEU53GaajbXJEgdh0iEcPL+DGvpUd4k1Q==}
 
+  '@types/node@22.20.3':
+    resolution: {integrity: sha512-DZmzkmwHzXrLPAXPyKNDzlIwMMUZCVacoD25ywdy5YTKGbOx/2ld+Q38Im2zJ0vBuZP5Prd3VZutKZyXwkOS8A==}
+
   '@types/nodemailer@6.4.6':
     resolution: {integrity: sha512-pD6fL5GQtUKvD2WnPmg5bC2e8kWCAPDwMPmHe/ohQbW+Dy0EcHgZ2oCSuPlWNqk74LS5BVMig1SymQbFMPPK3w==}
 
@@ -5818,8 +5821,8 @@ packages:
   '@types/send@0.17.1':
     resolution: {integrity: sha512-Cwo8LE/0rnvX7kIIa3QHCkcuF21c05Ayb0ZfxPiv0W8VRiZiNW/WuRupHKpqqGVGf7SUA44QSOUKaEd9lIrd/Q==}
 
-  '@types/send@0.17.4':
-    resolution: {integrity: sha512-x2EM6TJOybec7c52BX0ZspPodMsQUd5L6PRwOunVyVUhXiBSKf3AezDL8Dgvgt5o0UfKNfuA0eMLr2wLT4AiBA==}
+  '@types/send@1.2.1':
+    resolution: {integrity: sha512-arsCikDvlU99zl1g69TcAB3mzZPpxgw0UQnaHeC1Nwb015xp8bknZv5rIfri9xTOcMuaVgvabfIRA7PSZVuZIQ==}
 
   '@types/serve-static@1.15.2':
     resolution: {integrity: sha512-J2LqtvFYCzaj8pVYKw8klQXrLLk7TBZmQ4ShlcdkELFKGwGMfevMLneMMRkMgZxotOD9wg497LpC7O8PcvAmfw==}
@@ -12951,7 +12954,7 @@ snapshots:
   '@jest/console@30.5.1':
     dependencies:
       '@jest/types': 30.5.1
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       chalk: 4.1.2
       jest-message-util: 30.5.1
       jest-util: 30.5.1
@@ -12993,7 +12996,7 @@ snapshots:
       - supports-color
       - ts-node
 
-  '@jest/core@30.5.1(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))':
+  '@jest/core@30.5.1(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))':
     dependencies:
       '@jest/console': 30.5.1
       '@jest/pattern': 30.5.0
@@ -13009,7 +13012,7 @@ snapshots:
       fast-json-stable-stringify: 2.1.0
       graceful-fs: 4.2.11
       jest-changed-files: 30.5.1
-      jest-config: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+      jest-config: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
       jest-haste-map: 30.5.1
       jest-message-util: 30.5.1
       jest-regex-util: 30.5.0
@@ -13029,7 +13032,7 @@ snapshots:
       - supports-color
       - ts-node
 
-  '@jest/core@30.5.1(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(typescript@7.0.2))':
+  '@jest/core@30.5.1(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(typescript@7.0.2))':
     dependencies:
       '@jest/console': 30.5.1
       '@jest/pattern': 30.5.0
@@ -13045,7 +13048,7 @@ snapshots:
       fast-json-stable-stringify: 2.1.0
       graceful-fs: 4.2.11
       jest-changed-files: 30.5.1
-      jest-config: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(typescript@7.0.2))
+      jest-config: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(typescript@7.0.2))
       jest-haste-map: 30.5.1
       jest-message-util: 30.5.1
       jest-regex-util: 30.5.0
@@ -13091,7 +13094,7 @@ snapshots:
     dependencies:
       '@jest/fake-timers': 30.5.1
       '@jest/types': 30.5.1
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       jest-mock: 30.5.1
 
   '@jest/expect-utils@28.1.3':
@@ -13131,7 +13134,7 @@ snapshots:
     dependencies:
       '@jest/types': 28.1.3
       '@sinonjs/fake-timers': 9.1.2
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       jest-message-util: 28.1.3
       jest-mock: 28.1.3
       jest-util: 28.1.3
@@ -13140,7 +13143,7 @@ snapshots:
     dependencies:
       '@jest/types': 30.4.1
       '@sinonjs/fake-timers': 15.4.0
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       jest-message-util: 30.4.1
       jest-mock: 30.4.1
       jest-util: 30.4.1
@@ -13149,7 +13152,7 @@ snapshots:
     dependencies:
       '@jest/types': 30.5.1
       '@sinonjs/fake-timers': 15.4.0
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       jest-message-util: 30.5.1
       jest-mock: 30.5.1
       jest-util: 30.5.1
@@ -13186,12 +13189,12 @@ snapshots:
 
   '@jest/pattern@30.4.0':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       jest-regex-util: 30.4.0
 
   '@jest/pattern@30.5.0':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       jest-regex-util: 30.5.0
 
   '@jest/reporters@30.5.1':
@@ -13202,7 +13205,7 @@ snapshots:
       '@jest/transform': 30.5.1
       '@jest/types': 30.5.1
       '@jridgewell/trace-mapping': 0.3.31
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       chalk: 4.1.2
       collect-v8-coverage: 1.0.3
       exit-x: 0.2.2
@@ -13345,7 +13348,7 @@ snapshots:
       '@jest/schemas': 29.6.3
       '@types/istanbul-lib-coverage': 2.0.4
       '@types/istanbul-reports': 3.0.1
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       '@types/yargs': 17.0.35
       chalk: 4.1.2
 
@@ -15335,7 +15338,7 @@ snapshots:
 
   '@types/bunyan@1.8.11':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
 
   '@types/chai@5.2.3':
     dependencies:
@@ -15349,11 +15352,11 @@ snapshots:
 
   '@types/connect@3.4.35':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
 
   '@types/cookie@0.6.0': {}
 
@@ -15396,7 +15399,7 @@ snapshots:
 
   '@types/graceful-fs@4.1.6':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
 
   '@types/http-errors@2.0.4': {}
 
@@ -15425,7 +15428,7 @@ snapshots:
 
   '@types/memcached@2.2.10':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
 
   '@types/mime-types@3.0.1': {}
 
@@ -15435,7 +15438,7 @@ snapshots:
 
   '@types/mysql@2.15.27':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
 
   '@types/node@22.19.17':
     dependencies:
@@ -15445,13 +15448,17 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
+  '@types/node@22.20.3':
+    dependencies:
+      undici-types: 6.21.0
+
   '@types/nodemailer@6.4.6':
     dependencies:
       '@types/node': 22.19.17
 
   '@types/oracledb@6.5.2':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
 
   '@types/parse-json@4.0.2':
     optional: true
@@ -15462,7 +15469,7 @@ snapshots:
 
   '@types/pg@8.15.6':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       pg-protocol: 1.6.0
       pg-types: 2.2.0
 
@@ -15489,12 +15496,11 @@ snapshots:
   '@types/send@0.17.1':
     dependencies:
       '@types/mime': 1.3.2
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
 
-  '@types/send@0.17.4':
+  '@types/send@1.2.1':
     dependencies:
-      '@types/mime': 1.3.2
-      '@types/node': 22.19.17
+      '@types/node': 22.20.3
 
   '@types/serve-static@1.15.2':
     dependencies:
@@ -15506,7 +15512,7 @@ snapshots:
 
   '@types/tedious@4.0.14':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
 
   '@types/uuid@9.0.8': {}
 
@@ -15526,7 +15532,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
     optional: true
 
   '@typescript-eslint/eslint-plugin@8.69.0(@typescript-eslint/parser@8.69.0(@typescript/typescript6@6.0.2)(eslint@10.9.1(jiti@2.7.0)))(@typescript/typescript6@6.0.2)(eslint@10.9.1(jiti@2.7.0))':
@@ -15885,6 +15891,14 @@ snapshots:
       magic-string: 0.30.21
     optionalDependencies:
       vite: 8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0)
+
+  '@vitest/mocker@4.1.10(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))':
+    dependencies:
+      '@vitest/spy': 4.1.10
+      estree-walker: 3.0.3
+      magic-string: 0.30.21
+    optionalDependencies:
+      vite: 8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0)
 
   '@vitest/pretty-format@4.1.10':
     dependencies:
@@ -16489,7 +16503,7 @@ snapshots:
 
   chrome-launcher@0.15.2:
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       escape-string-regexp: 4.0.0
       is-wsl: 2.2.0
       lighthouse-logger: 1.4.2
@@ -16504,7 +16518,7 @@ snapshots:
 
   chromium-edge-launcher@0.3.0:
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       escape-string-regexp: 4.0.0
       is-wsl: 2.2.0
       lighthouse-logger: 1.4.2
@@ -17915,7 +17929,7 @@ snapshots:
       '@jest/expect': 30.5.1
       '@jest/test-result': 30.5.1
       '@jest/types': 30.5.1
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       chalk: 4.1.2
       co: 4.6.0
       dedent: 1.7.2(babel-plugin-macros@3.1.0)
@@ -17954,15 +17968,15 @@ snapshots:
       - supports-color
       - ts-node
 
-  jest-cli@30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2)):
+  jest-cli@30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2)):
     dependencies:
-      '@jest/core': 30.5.1(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+      '@jest/core': 30.5.1(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
       '@jest/test-result': 30.5.1
       '@jest/types': 30.5.1
       chalk: 4.1.2
       exit-x: 0.2.2
       import-local: 3.2.0
-      jest-config: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+      jest-config: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
       jest-util: 30.5.1
       jest-validate: 30.5.1
       yargs: 17.7.3
@@ -17973,15 +17987,15 @@ snapshots:
       - supports-color
       - ts-node
 
-  jest-cli@30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(typescript@7.0.2)):
+  jest-cli@30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(typescript@7.0.2)):
     dependencies:
-      '@jest/core': 30.5.1(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(typescript@7.0.2))
+      '@jest/core': 30.5.1(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(typescript@7.0.2))
       '@jest/test-result': 30.5.1
       '@jest/types': 30.5.1
       chalk: 4.1.2
       exit-x: 0.2.2
       import-local: 3.2.0
-      jest-config: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(typescript@7.0.2))
+      jest-config: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(typescript@7.0.2))
       jest-util: 30.5.1
       jest-validate: 30.5.1
       yargs: 17.7.3
@@ -18056,7 +18070,7 @@ snapshots:
       - babel-plugin-macros
       - supports-color
 
-  jest-config@30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2)):
+  jest-config@30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2)):
     dependencies:
       '@babel/core': 7.29.7
       '@jest/get-type': 30.5.0
@@ -18083,12 +18097,12 @@ snapshots:
       strip-json-comments: 3.1.1
     optionalDependencies:
       '@types/node': 22.20.1
-      ts-node: 10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2)
+      ts-node: 10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2)
     transitivePeerDependencies:
       - babel-plugin-macros
       - supports-color
 
-  jest-config@30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(typescript@7.0.2)):
+  jest-config@30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(typescript@7.0.2)):
     dependencies:
       '@babel/core': 7.29.7
       '@jest/get-type': 30.5.0
@@ -18115,7 +18129,71 @@ snapshots:
       strip-json-comments: 3.1.1
     optionalDependencies:
       '@types/node': 22.20.1
-      ts-node: 10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(typescript@7.0.2)
+      ts-node: 10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(typescript@7.0.2)
+    transitivePeerDependencies:
+      - babel-plugin-macros
+      - supports-color
+
+  jest-config@30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2)):
+    dependencies:
+      '@babel/core': 7.29.7
+      '@jest/get-type': 30.5.0
+      '@jest/pattern': 30.5.0
+      '@jest/test-sequencer': 30.5.1
+      '@jest/types': 30.5.1
+      babel-jest: 30.5.1(@babel/core@7.29.7)
+      chalk: 4.1.2
+      ci-info: 4.4.0
+      deepmerge: 4.3.1
+      glob: 13.0.6
+      graceful-fs: 4.2.11
+      jest-circus: 30.5.1(babel-plugin-macros@3.1.0)
+      jest-docblock: 30.5.0
+      jest-environment-node: 30.5.1
+      jest-regex-util: 30.5.0
+      jest-resolve: 30.5.1
+      jest-runner: 30.5.1
+      jest-util: 30.5.1
+      jest-validate: 30.5.1
+      parse-json: 5.2.0
+      pretty-format: 30.5.1
+      slash: 3.0.0
+      strip-json-comments: 3.1.1
+    optionalDependencies:
+      '@types/node': 22.20.3
+      ts-node: 10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2)
+    transitivePeerDependencies:
+      - babel-plugin-macros
+      - supports-color
+
+  jest-config@30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(typescript@7.0.2)):
+    dependencies:
+      '@babel/core': 7.29.7
+      '@jest/get-type': 30.5.0
+      '@jest/pattern': 30.5.0
+      '@jest/test-sequencer': 30.5.1
+      '@jest/types': 30.5.1
+      babel-jest: 30.5.1(@babel/core@7.29.7)
+      chalk: 4.1.2
+      ci-info: 4.4.0
+      deepmerge: 4.3.1
+      glob: 13.0.6
+      graceful-fs: 4.2.11
+      jest-circus: 30.5.1(babel-plugin-macros@3.1.0)
+      jest-docblock: 30.5.0
+      jest-environment-node: 30.5.1
+      jest-regex-util: 30.5.0
+      jest-resolve: 30.5.1
+      jest-runner: 30.5.1
+      jest-util: 30.5.1
+      jest-validate: 30.5.1
+      parse-json: 5.2.0
+      pretty-format: 30.5.1
+      slash: 3.0.0
+      strip-json-comments: 3.1.1
+    optionalDependencies:
+      '@types/node': 22.20.3
+      ts-node: 10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(typescript@7.0.2)
     transitivePeerDependencies:
       - babel-plugin-macros
       - supports-color
@@ -18158,7 +18236,7 @@ snapshots:
       '@jest/environment': 30.5.1
       '@jest/fake-timers': 30.5.1
       '@jest/types': 30.5.1
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       jest-mock: 30.5.1
       jest-util: 30.5.1
       jest-validate: 30.5.1
@@ -18171,7 +18249,7 @@ snapshots:
     dependencies:
       '@jest/types': 28.1.3
       '@types/graceful-fs': 4.1.6
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.11
@@ -18186,7 +18264,7 @@ snapshots:
   jest-haste-map@30.4.1:
     dependencies:
       '@jest/types': 30.4.1
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.11
@@ -18202,7 +18280,7 @@ snapshots:
     dependencies:
       '@jest/types': 30.5.1
       '@parcel/watcher': 2.6.0
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       fdir: 6.5.0(picomatch@4.0.7)
@@ -18279,7 +18357,7 @@ snapshots:
   jest-mock@28.1.3:
     dependencies:
       '@jest/types': 28.1.3
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
 
   jest-mock@30.4.1:
     dependencies:
@@ -18291,7 +18369,7 @@ snapshots:
     dependencies:
       '@jest/expect-utils': 30.5.1
       '@jest/types': 30.5.1
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       jest-util: 30.5.1
 
   jest-regex-util@28.0.2: {}
@@ -18325,7 +18403,7 @@ snapshots:
       '@jest/test-result': 30.5.1
       '@jest/transform': 30.5.1
       '@jest/types': 30.5.1
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       chalk: 4.1.2
       emittery: 0.13.1
       exit-x: 0.2.2
@@ -18353,7 +18431,7 @@ snapshots:
       '@jest/test-result': 30.5.1
       '@jest/transform': 30.5.1
       '@jest/types': 30.5.1
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       chalk: 4.1.2
       cjs-module-lexer: 2.2.1
       collect-v8-coverage: 1.0.3
@@ -18455,7 +18533,7 @@ snapshots:
   jest-util@28.1.3:
     dependencies:
       '@jest/types': 28.1.3
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       chalk: 4.1.2
       ci-info: 3.8.0
       graceful-fs: 4.2.11
@@ -18464,7 +18542,7 @@ snapshots:
   jest-util@29.7.0:
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       chalk: 4.1.2
       ci-info: 3.8.0
       graceful-fs: 4.2.11
@@ -18473,7 +18551,7 @@ snapshots:
   jest-util@30.4.1:
     dependencies:
       '@jest/types': 30.4.1
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       chalk: 4.1.2
       ci-info: 4.4.0
       graceful-fs: 4.2.11
@@ -18482,7 +18560,7 @@ snapshots:
   jest-util@30.5.1:
     dependencies:
       '@jest/types': 30.5.1
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       chalk: 4.1.2
       ci-info: 4.4.0
       graceful-fs: 4.2.11
@@ -18510,7 +18588,7 @@ snapshots:
     dependencies:
       '@jest/test-result': 30.5.1
       '@jest/types': 30.5.1
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       emittery: 0.13.1
@@ -18519,20 +18597,20 @@ snapshots:
 
   jest-worker@28.1.3:
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
   jest-worker@29.7.0:
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
   jest-worker@30.4.1:
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       '@ungap/structured-clone': 1.3.0
       jest-util: 30.4.1
       merge-stream: 2.0.0
@@ -18540,7 +18618,7 @@ snapshots:
 
   jest-worker@30.5.1:
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       '@ungap/structured-clone': 1.4.0
       jest-util: 30.5.1
       merge-stream: 2.0.0
@@ -18559,12 +18637,12 @@ snapshots:
       - supports-color
       - ts-node
 
-  jest@30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2)):
+  jest@30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2)):
     dependencies:
-      '@jest/core': 30.5.1(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+      '@jest/core': 30.5.1(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
       '@jest/types': 30.5.1
       import-local: 3.2.0
-      jest-cli: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2))
+      jest-cli: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2))
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
@@ -18572,12 +18650,12 @@ snapshots:
       - supports-color
       - ts-node
 
-  jest@30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(typescript@7.0.2)):
+  jest@30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(typescript@7.0.2)):
     dependencies:
-      '@jest/core': 30.5.1(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(typescript@7.0.2))
+      '@jest/core': 30.5.1(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(typescript@7.0.2))
       '@jest/types': 30.5.1
       import-local: 3.2.0
-      jest-cli: 30.5.1(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(typescript@7.0.2))
+      jest-cli: 30.5.1(@types/node@22.20.3)(babel-plugin-macros@3.1.0)(ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(typescript@7.0.2))
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
@@ -19661,7 +19739,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       long: 5.2.3
 
   protobufjs@7.6.5:
@@ -19675,7 +19753,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.2
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       long: 5.3.2
 
   proxy-addr@2.0.7:
@@ -20522,14 +20600,14 @@ snapshots:
       '@swc/core': 1.16.2
     optional: true
 
-  ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(@typescript/typescript6@6.0.2):
+  ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(@typescript/typescript6@6.0.2):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.9
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       acorn: 8.18.0
       acorn-walk: 8.2.0
       arg: 4.1.3
@@ -20543,14 +20621,14 @@ snapshots:
       '@swc/core': 1.16.2
     optional: true
 
-  ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.1)(typescript@7.0.2):
+  ts-node@10.8.2(@swc/core@1.16.2)(@types/node@22.20.3)(typescript@7.0.2):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.9
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 22.20.1
+      '@types/node': 22.20.3
       acorn: 8.18.0
       acorn-walk: 8.2.0
       arg: 4.1.3
@@ -20804,6 +20882,20 @@ snapshots:
       terser: 5.44.0
       yaml: 2.9.0
 
+  vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0):
+    dependencies:
+      lightningcss: 1.33.0
+      picomatch: 4.0.7
+      postcss: 8.5.28
+      rolldown: 1.2.7
+      tinyglobby: 0.2.17
+    optionalDependencies:
+      '@types/node': 22.20.3
+      fsevents: 2.3.3
+      jiti: 2.7.0
+      terser: 5.44.0
+      yaml: 2.9.0
+
   vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.19.17)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0)):
     dependencies:
       '@vitest/expect': 4.1.10
@@ -20862,10 +20954,10 @@ snapshots:
     transitivePeerDependencies:
       - msw
 
-  vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.20.1)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0)):
+  vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0)):
     dependencies:
       '@vitest/expect': 4.1.10
-      '@vitest/mocker': 4.1.10(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+      '@vitest/mocker': 4.1.10(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
       '@vitest/pretty-format': 4.1.10
       '@vitest/runner': 4.1.10
       '@vitest/snapshot': 4.1.10
@@ -20882,7 +20974,36 @@ snapshots:
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.1.1
-      vite: 8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0)
+      vite: 8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.1
+      '@types/node': 22.19.17
+      '@vitest/coverage-v8': 4.1.10(vitest@4.1.10)
+    transitivePeerDependencies:
+      - msw
+
+  vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.20.1)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0)):
+    dependencies:
+      '@vitest/expect': 4.1.10
+      '@vitest/mocker': 4.1.10(vite@8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))
+      '@vitest/pretty-format': 4.1.10
+      '@vitest/runner': 4.1.10
+      '@vitest/snapshot': 4.1.10
+      '@vitest/spy': 4.1.10
+      '@vitest/utils': 4.1.10
+      es-module-lexer: 2.3.1
+      expect-type: 1.3.0
+      magic-string: 0.30.21
+      obug: 2.1.1
+      pathe: 2.0.3
+      picomatch: 4.0.3
+      std-env: 4.2.0
+      tinybench: 2.9.0
+      tinyexec: 1.0.2
+      tinyglobby: 0.2.15
+      tinyrainbow: 3.1.1
+      vite: 8.2.2(@types/node@22.20.3)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
