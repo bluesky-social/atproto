@@ -1,7 +1,12 @@
 import { resolveTxt } from 'node:dns/promises'
 import * as crypto from '@atproto/crypto'
 import { buildAgent, xrpc } from '@atproto/lex-client'
-import { type Cid, type LexMap, isCborCid } from '@atproto/lex-data'
+import {
+  type CborCid,
+  type Cid,
+  type LexMap,
+  isCborCid,
+} from '@atproto/lex-data'
 import type { LexiconDocument } from '@atproto/lex-document'
 import { lexiconDocumentSchema } from '@atproto/lex-document'
 import {
@@ -13,17 +18,17 @@ import {
 } from '@atproto/repo'
 import type { NsidString } from '@atproto/syntax'
 import { AtUri, NSID } from '@atproto/syntax'
+import {
+  assertDid,
+  createDidResolver,
+  extractAtprotoData,
+} from '@atproto-labs/did-resolver'
 import type {
   AtprotoVerificationMethod,
   CreateDidResolverOptions,
   Did,
   DidResolver,
   ResolveDidOptions,
-} from '@atproto-labs/did-resolver'
-import {
-  assertDid,
-  createDidResolver,
-  extractAtprotoData,
 } from '@atproto-labs/did-resolver'
 import { LexResolverError } from './lex-resolver-error.js'
 import { com } from './lexicons/index.js'
@@ -39,7 +44,7 @@ export type LexResolverResult = {
   /** The AT URI where the lexicon document was found */
   uri: AtUri
   /** Content identifier (CID) of the lexicon record for integrity verification */
-  cid: Cid
+  cid: CborCid
   /** The parsed and validated lexicon document */
   lexicon: LexiconDocument
 }
@@ -159,7 +164,7 @@ export type LexResolverHooks = {
     did: Did
     nsid: NSID
     uri: AtUri
-    cid: Cid
+    cid: CborCid
     lexicon: LexiconDocument
     source: 'hook' | 'network'
   }): Awaitable<void>
@@ -194,7 +199,7 @@ export type LexResolverOptions = CreateDidResolverOptions & {
 }
 
 export { AtUri, NSID }
-export type { Cid, LexiconDocument, ResolveDidOptions }
+export type { CborCid, Cid, LexMap, LexiconDocument, ResolveDidOptions }
 
 /**
  * Resolves Lexicon documents from the AT Protocol network.

@@ -414,6 +414,18 @@ export class AppContext implements AsyncDisposable {
                   record: record.value,
                 }
               },
+              onFetchResult({ uri, cid, source }) {
+                lexiconResolverLogger.info(
+                  { uri: uri.toString(), cid: cid.toString(), source },
+                  'Fetched lexicon',
+                )
+              },
+              onFetchError({ err, uri }) {
+                lexiconResolverLogger.error(
+                  { uri: uri.toString(), err },
+                  'Lexicon fetch error',
+                )
+              },
               onResolveAuthority: ({ nsid }) => {
                 lexiconResolverLogger.debug(
                   { nsid: nsid.toString() },
@@ -432,18 +444,6 @@ export class AppContext implements AsyncDisposable {
                 lexiconResolverLogger.error(
                   { nsid: nsid.toString(), err },
                   'Lexicon DID resolution error',
-                )
-              },
-              onFetchResult({ uri, cid, source }) {
-                lexiconResolverLogger.info(
-                  { uri: uri.toString(), cid: cid.toString(), source },
-                  'Fetched lexicon',
-                )
-              },
-              onFetchError({ err, uri }) {
-                lexiconResolverLogger.error(
-                  { uri: uri.toString(), err },
-                  'Lexicon fetch error',
                 )
               },
             },

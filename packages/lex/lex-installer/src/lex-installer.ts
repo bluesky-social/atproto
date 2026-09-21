@@ -1,7 +1,6 @@
 import { join } from 'node:path'
 import { LexiconDirectoryIndexer } from '@atproto/lex-builder'
-import { cidForLex } from '@atproto/lex-cbor'
-import type { Cid } from '@atproto/lex-data'
+import { type CborCid, cidForLex } from '@atproto/lex-cbor'
 import { lexEquals } from '@atproto/lex-data'
 import type {
   LexiconDocument,
@@ -314,7 +313,7 @@ export class LexInstaller implements AsyncDisposable {
    * @param uri - The AT URI pointing to the lexicon document
    * @returns An object containing the fetched lexicon document and its CID
    */
-  async fetch(uri: AtUri): Promise<{ lexicon: LexiconDocument; cid: Cid }> {
+  async fetch(uri: AtUri): Promise<{ lexicon: LexiconDocument; cid: CborCid }> {
     console.debug(`Fetching lexicon from ${uri}...`)
 
     const { lexicon, cid } = await this.lexiconResolver.fetch(uri, {
