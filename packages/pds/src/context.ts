@@ -418,6 +418,87 @@ export class AppContext implements AsyncDisposable {
     )
     await accountManager.migrateOrThrow()
 
+    // @TODO Use this lexResolver instance to implement validation of records
+    // created with the "validate" option. Before doing so, ensure that 1) a
+    // didCache is provided, and 2) that nsid->lexicon are cached.
+    const lexResolver = new LexResolver({
+      fetch: safeFetch,
+      didCache: undefined, // @TODO provide a dedicated cache
+      plcDirectoryUrl: cfg.identity.plcUrl,
+      hooks: {
+        // @NOTE Lexicons hosted by this PDS are read straight from the
+        // actor store. Fetching them over the network would require this
+        // server to reach its own public endpoint, which is not
+        // guaranteed to work (SSRF protection, missing NAT hairpin,
+        // internal reverse proxies, ...).
+        onFetch: async ({ uri, did, nsid, signal }) => {
+          const account = await accountManager.getAccount(did, {
+            includeDeactivated: true,
+            includeTakenDown: true,
+          })
+
+          signal?.throwIfAborted()
+
+          // Mirror what com.atproto.sync.getRecord would answer to an
+          // unauthenticated requester
+          if (account?.takedownRef) {
+            throw new LexResolverError(nsid, `Repo is not available: ${did}`)
+          }
+
+          // Not hosted here: fall back to the network resolution
+          if (!account || account.deactivatedAt) return undefined
+
+          const record = await actorStore.read(account.did, (store) => {
+            return store.record.getRecord(uri, null)
+          })
+
+          if (!record || record.takedownRef != null) {
+            throw new LexResolverError(
+              nsid,
+              `Lexicon record not found at ${uri}`,
+            )
+          }
+
+          return {
+            cid: parseCid(record.cid),
+            record: record.value,
+          }
+        },
+        onFetchResult({ uri, cid, source }) {
+          lexiconResolverLogger.info(
+            { uri: uri.toString(), cid: cid.toString(), source },
+            'Fetched lexicon',
+          )
+        },
+        onFetchError({ err, uri }) {
+          lexiconResolverLogger.error(
+            { uri: uri.toString(), err },
+            'Lexicon fetch error',
+          )
+        },
+        onResolveAuthority: ({ nsid }) => {
+          lexiconResolverLogger.debug(
+            { nsid: nsid.toString() },
+            'Resolving lexicon DID authority',
+          )
+          // Override the lexicon did resolution to point to a custom PDS
+          return cfg.lexicon.didAuthority
+        },
+        onResolveAuthorityResult({ nsid, did, source }) {
+          lexiconResolverLogger.info(
+            { nsid: nsid.toString(), did, source },
+            'Resolved lexicon DID',
+          )
+        },
+        onResolveAuthorityError({ nsid, err }) {
+          lexiconResolverLogger.error(
+            { nsid: nsid.toString(), err },
+            'Lexicon DID resolution error',
+          )
+        },
+      },
+    })
+
     const localViewer = LocalViewer.creator(
       accountManager,
       imageUrlBuilder,
