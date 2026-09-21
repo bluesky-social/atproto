@@ -47,7 +47,7 @@ pnpm run build
 pnpm run test
 ```
 
-Every package ships a `tsconfig.build.json` (composite, with explicit `references` to its workspace deps), and nearly every package with tests adds a `tsconfig.test.json` for the test sources. The root `tsconfig.json` is a project-graph aggregator only.
+Every package ships a `tsconfig.build.json` (composite, with explicit `references` to its workspace deps), and nearly every package with tests adds a `tsconfig.test.json` for the test sources. A package with root-level config/script files (`vitest.config.ts`, `jest.config.cjs`, `lingui.config.ts`, `bin.js`, …) also adds a `tsconfig.config.json` so those files are type-checked — it extends [tsconfig/config.tsconfig.json](tsconfig/config.tsconfig.json) and `include`s the package's own `./*.{ts,js,cjs,mjs}`. When you add such a file to a package that has none, create `tsconfig.config.json` and reference it from the package `tsconfig.json` (`exclude` any root file that pulls `./src` or `./tests` into the program, e.g. a `jest.setup.ts`). The root `tsconfig.json` is a project-graph aggregator only.
 
 Avoid `pnpm run style:fix` (whole-repo prettier) unless the user explicitly asks for a repo-wide formatting pass.
 

@@ -57,12 +57,13 @@ Snapshot assertions go through each package's `forSnapshot()` helper in `tests/_
 
 ## TypeScript config for tests
 
-Tested packages split their TS config in two, both referenced from the package's `tsconfig.json`:
+Tested packages split their TS config, each part referenced from the package's `tsconfig.json`:
 
 ```json
 {
   "include": [],
   "references": [
+    { "path": "./tsconfig.config.json" },
     { "path": "./tsconfig.build.json" },
     { "path": "./tsconfig.test.json" }
   ]
@@ -71,6 +72,7 @@ Tested packages split their TS config in two, both referenced from the package's
 
 - `tsconfig.build.json` — `./src`, excludes `**/*.test.ts`, emits to `./dist`.
 - `tsconfig.test.json` — test code, extending `tsconfig/vitest.tsconfig.json` or `tsconfig/jest.tsconfig.json`. Both set `noEmit` and `composite: false`; the jest one additionally pulls in `@types/jest`. `include` is `["./tests", "./src/**/*.test.ts"]` in nearly every package, regardless of runner.
+- `tsconfig.config.json` — root-level config/script files (`vitest.config.ts`, `jest.config.cjs`, …) that neither of the above covers, extending [tsconfig/config.tsconfig.json](../../../tsconfig/config.tsconfig.json) with `include: ["./*.ts", "./*.js", "./*.cjs", "./*.mjs"]`. `exclude` any root file that imports `./src` or `./tests` (e.g. a `jest.setup.ts`), or it drags the whole tree into this stricter program. Present whenever the package has such a file — which is nearly all of them.
 
 The build is a TS project graph, so `references` is what makes imports resolve. `./tsconfig.build.json` alone covers anything the package already depends on at build time — which is most workspace imports. Add a further entry only for a package the tests import but `src` doesn't: in practice that means `{ "path": "../dev-env/tsconfig.build.json" }`, and only in the six packages with integration tests (`api`, `bsky`, `lexicon-resolver`, `ozone`, `pds`, `sync`).
 
@@ -88,6 +90,20 @@ pnpm test path/to/file.test.ts   # single file
 Packages whose tests need docker infra wrap the runner in a dev-infra script — `bsky`, `pds`, `ozone`, and `sync` use [with-test-redis-and-db.sh](../../../packages/dev-infra/with-test-redis-and-db.sh); `bsync` uses `with-test-db.sh`. Always go through `pnpm test`; invoking `vitest` or `jest` directly skips the script, so postgres and redis aren't running and the suite dies on connection errors. `pds` also offers `pnpm test:sqlite` for a faster loop that skips the docker infra.
 
 From the repo root, `pnpm test` runs every package's suite with infra up, and `pnpm test:unit` runs only the projects registered in [vitest.config.ts](../../../vitest.config.ts). That list is not the full set of vitest packages: `bsky` is commented out because it needs infra, and `lexicon-resolver` is simply absent. Run either from its own directory.
+
+## Logs
+
+Every part of the code base uses pino logging, which is disabled by default. Enable it with `LOG_ENABLED=true` and redirect to a file with `LOG_DESTINATION=...`. For example, to run the full test suite and capture logs:
+
+```bash
+LOG_ENABLED=true LOG_DESTINATION=test.log pnpm test ...
+```
+
+Pretty print using:
+
+```bash
+cat test.log | pnpm exec pino-pretty
+```
 
 ## Code style
 

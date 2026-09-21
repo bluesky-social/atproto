@@ -18,14 +18,8 @@ import { countAll, notSoftDeletedClause } from '../db/util.js'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getNotifications(req) {
-    const { actorDid, limit, cursor, priority } = req
+    const { actorDid, limit, cursor } = req
     const { ref } = db.db.dynamic
-    const priorityFollowQb = db.db
-      .selectFrom('follow')
-      .select(sql<boolean>`${true}`.as('val'))
-      .where('creator', '=', actorDid)
-      .whereRef('subjectDid', '=', ref('notif.author'))
-      .limit(1)
 
     let builder = db.db
       .selectFrom('notification as notif')
@@ -41,7 +35,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           ),
         ]),
       )
-      .$if(priority, (qb) => qb.where(({ exists }) => exists(priorityFollowQb)))
       .select([
         'notif.author as authorDid',
         'notif.recordUri as uri',
@@ -50,7 +43,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         'notif.reasonSubject as reasonSubject',
         'notif.sortAt as sortAt',
       ])
-      .select(priorityFollowQb.as('priority'))
 
     const key = new IsoSortAtKey(ref('notif.sortAt'))
     builder = key.paginate(builder, {
@@ -65,7 +57,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       reason: notif.reason,
       reasonSubject: notif.reasonSubject ?? undefined,
       timestamp: Timestamp.fromDate(new Date(notif.sortAt)),
-      priority: notif.priority ?? false,
     }))
     return {
       notifications,
@@ -128,7 +119,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .values({
         did: actorDid,
         lastSeenNotifs: timestampIso,
-        priorityNotifs: false,
       })
       .onConflict((oc) =>
         oc.column('did').doUpdateSet({

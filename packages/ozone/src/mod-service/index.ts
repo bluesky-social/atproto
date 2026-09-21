@@ -27,6 +27,7 @@ import type { ImageInvalidator } from '../image-invalidator.js'
 import { com, tools } from '../lexicons/index.js'
 import { httpLogger as log } from '../logger.js'
 import { LABELER_HEADER_NAME, type ParsedLabelers } from '../util.js'
+import type { VideoInvalidator } from '../video-invalidator.js'
 import { insertExpiringTags, removeExpiringTags } from './expiring-tags.js'
 import {
   adjustModerationSubjectStatus,
@@ -80,6 +81,7 @@ export class ModerationService {
     ) => Promise<AuthHeaders>,
     public strikeService: StrikeService,
     public imgInvalidator?: ImageInvalidator,
+    public videoInvalidator?: VideoInvalidator,
   ) {
     this.views = new ModerationViews(
       db,
@@ -112,6 +114,7 @@ export class ModerationService {
     createAuthHeaders: (aud: string, method: string) => Promise<AuthHeaders>,
     strikeServiceCreator: StrikeServiceCreator,
     imgInvalidator?: ImageInvalidator,
+    videoInvalidator?: VideoInvalidator,
   ) {
     return (db: Database) => {
       const strikeService = strikeServiceCreator(db)
@@ -127,6 +130,7 @@ export class ModerationService {
         createAuthHeaders,
         strikeService,
         imgInvalidator,
+        videoInvalidator,
       )
     }
   }
@@ -1031,6 +1035,21 @@ export class ModerationService {
                     ),
                   )
               }),
+            )
+          }
+
+          if (this.videoInvalidator) {
+            await Promise.allSettled(
+              (subject.blobCids ?? []).map((cid) =>
+                this.videoInvalidator
+                  ?.invalidate(subject.did, cid)
+                  .catch((err) =>
+                    log.error(
+                      { err, did: subject.did, cid },
+                      'failed to invalidate video',
+                    ),
+                  ),
+              ),
             )
           }
         })

@@ -517,7 +517,7 @@ message ActorInfo {
   string allow_incoming_chats_from = 8;
   string upstream_status = 9;
   google.protobuf.Timestamp created_at = 10;
-  bool priority_notifications = 11;
+  reserved 11; // was "priority_notifications", deprecated
   double pagerank = 12;
   bool trusted_verifier = 13;
   map<string, VerificationMeta> verified_by = 14;
@@ -908,7 +908,7 @@ message GetNotificationsRequest {
   string actor_did = 1;
   int32 limit = 2;
   string cursor = 3;
-  bool priority = 4;
+  reserved 4; // was "priority", deprecated
 }
 
 message Notification {
@@ -917,7 +917,7 @@ message Notification {
   string reason = 3;
   string reason_subject = 4;
   google.protobuf.Timestamp timestamp = 5;
-  bool priority = 6;
+  reserved 6; // was "priority", deprecated
 }
 
 message GetNotificationsResponse {
@@ -1561,15 +1561,34 @@ message GetActorDraftsResponse {
 message GetFollowsFollowingRequest {
   string actor_did = 1;
   repeated string target_dids = 2;
+  int32 limit = 3;
+  string cursor = 4;
 }
 
 message FollowsFollowing {
   string target_did = 1;
   repeated string dids = 2;
+  string cursor = 3;
 }
 
 message GetFollowsFollowingResponse {
   repeated FollowsFollowing results = 1;
+}
+
+message SampleFollowsFollowingRequest {
+  string actor_did = 1;
+  repeated string target_dids = 2;
+  int32 limit = 3;
+}
+
+message SampledFollowsFollowing {
+  string target_did = 1;
+  repeated string dids = 2;
+  int32 total_known = 3;
+}
+
+message SampleFollowsFollowingResponse {
+  repeated SampledFollowsFollowing results = 1;
 }
 
 message GetSitemapIndexRequest {
@@ -1808,6 +1827,7 @@ service Service {
 
   // Graph
   rpc GetFollowsFollowing(GetFollowsFollowingRequest) returns (GetFollowsFollowingResponse);
+  rpc SampleFollowsFollowing(SampleFollowsFollowingRequest) returns (SampleFollowsFollowingResponse);
 
   // Sitemaps
   rpc GetSitemapIndex(GetSitemapIndexRequest) returns (GetSitemapIndexResponse);

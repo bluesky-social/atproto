@@ -89,6 +89,7 @@ export class TestOzone {
     // api server
     const server = await ozone.OzoneService.create(cfg, secrets, {
       imgInvalidator: config.imgInvalidator,
+      videoInvalidator: config.videoInvalidator,
     })
     await server.start()
 
