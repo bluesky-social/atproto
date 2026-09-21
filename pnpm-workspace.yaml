@@ -26,3 +26,6 @@ allowBuilds:
 overrides:
   cookie: ^0.7.2
   opentelemetry-plugin-better-sqlite3>@opentelemetry/core: ^1.30.0
+  'form-data@>=4.0.0 <4.0.4': '>=4.0.4'
+  'fast-xml-parser@>=5.0.0 <5.3.5': '>=5.3.5'
+  'protobufjs@<7.5.5': '>=7.5.5'
