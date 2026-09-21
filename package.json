@@ -74,7 +74,7 @@
     "globals": "^15.15.0",
     "jest": "^30.5.1",
     "pino-pretty": "^9.1.0",
-    "prettier": "^3.9.6",
+    "prettier": "^3.9.8",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "vitest": "^4.1.10"

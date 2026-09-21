@@ -46,7 +46,7 @@
     "@atproto/lex-schema": "workspace:^",
     "http-terminator": "^3.2.0",
     "tslib": "^2.8.1",
-    "ws": "^8.18.3"
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "@atproto/lex": "workspace:^",
