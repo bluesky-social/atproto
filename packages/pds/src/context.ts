@@ -10,18 +10,15 @@ import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { Client } from '@atproto/lex'
 import { parseCid } from '@atproto/lex-data'
-import { lexiconDocumentSchema } from '@atproto/lex-document'
 import {
   AccessTokenMode,
   JoseKey,
   LexResolver,
   LexResolverError,
-  type LexResolverFetchResult,
   OAuthProvider,
 } from '@atproto/oauth-provider/provider'
 import { OAuthVerifier } from '@atproto/oauth-provider/verifier'
 import type { BlobStore } from '@atproto/repo'
-import { type AtUri, NSID } from '@atproto/syntax'
 import {
   createServiceAuthHeaders,
   createServiceJwt,
@@ -349,67 +346,6 @@ export class AppContext implements AsyncDisposable {
     // An agent for performing HTTP requests based on user provided URLs.
     const proxyAgent = buildProxyAgent(cfg.proxy)
 
-    /**
-     * Lexicons hosted by this PDS are read straight from the actor store.
-     * Fetching them over the network would require this server to reach its
-     * own public endpoint, which is not guaranteed to work (SSRF protection,
-     * missing NAT hairpin, internal reverse proxies, ...).
-     *
-     * @returns `undefined` if the lexicon's authority is not hosted here.
-     */
-    const fetchLocalLexicon = async (
-      uri: AtUri,
-    ): Promise<undefined | LexResolverFetchResult> => {
-      const did = uri.host
-      const nsid = NSID.from(uri.rkey)
-
-      const account = await accountManager.getAccount(did, {
-        includeDeactivated: true,
-        includeTakenDown: true,
-      })
-
-      // Not hosted here: fall back to the network resolution
-      if (!account) return undefined
-
-      // Account deactivated, maybe it was moved somewhere else
-      if (account.deactivatedAt) return undefined
-
-      // Mirror what com.atproto.sync.getRecord would answer to an
-      // unauthenticated requester
-      if (account.takedownRef) {
-        throw new LexResolverError(nsid, `Repo is not available: ${did}`)
-      }
-
-      const record = await actorStore.read(did, (store) =>
-        store.record.getRecord(uri, null),
-      )
-
-      if (!record || record.takedownRef !== null) {
-        throw new LexResolverError(nsid, `Lexicon record not found at ${uri}`)
-      }
-
-      const result = lexiconDocumentSchema.safeParse(record.value)
-      if (!result.success) {
-        throw new LexResolverError(nsid, `Invalid Lexicon document at ${uri}`, {
-          cause: result.reason,
-        })
-      }
-
-      if (result.value.id !== uri.rkey) {
-        throw new LexResolverError(
-          nsid,
-          `Invalid document id "${result.value.id}" at ${uri}`,
-        )
-      }
-
-      lexiconResolverLogger.info(
-        { uri: uri.toString(), cid: record.cid },
-        'Fetched lexicon from local actor store',
-      )
-
-      return { cid: parseCid(record.cid), lexicon: result.value }
-    }
-
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
           issuer: cfg.oauth.issuer,
@@ -437,16 +373,45 @@ export class AppContext implements AsyncDisposable {
             fetch: safeFetch,
             plcDirectoryUrl: cfg.identity.plcUrl,
             hooks: {
-              onFetch: ({ uri }) =>
-                fetchLocalLexicon(uri).catch((err) => {
-                  // @NOTE The resolver's onFetchError hook is not called for
-                  // errors thrown here, so log them explicitly.
-                  lexiconResolverLogger.error(
-                    { uri: uri.toString(), err },
-                    'Local lexicon fetch error',
+              // @NOTE Lexicons hosted by this PDS are read straight from the
+              // actor store. Fetching them over the network would require this
+              // server to reach its own public endpoint, which is not
+              // guaranteed to work (SSRF protection, missing NAT hairpin,
+              // internal reverse proxies, ...).
+              onFetch: async ({ uri, did, nsid }) => {
+                const account = await accountManager.getAccount(did, {
+                  includeDeactivated: true,
+                  includeTakenDown: true,
+                })
+
+                // Mirror what com.atproto.sync.getRecord would answer to an
+                // unauthenticated requester
+                if (account?.takedownRef) {
+                  throw new LexResolverError(
+                    nsid,
+                    `Repo is not available: ${did}`,
                   )
-                  throw err
-                }),
+                }
+
+                // Not hosted here: fall back to the network resolution
+                if (!account || account.deactivatedAt) return undefined
+
+                const record = await actorStore.read(account.did, (store) => {
+                  return store.record.getRecord(uri, null)
+                })
+
+                if (!record || record.takedownRef != null) {
+                  throw new LexResolverError(
+                    nsid,
+                    `Lexicon record not found at ${uri}`,
+                  )
+                }
+
+                return {
+                  cid: parseCid(record.cid),
+                  record: record.value,
+                }
+              },
               onResolveAuthority: ({ nsid }) => {
                 lexiconResolverLogger.debug(
                   { nsid: nsid.toString() },
@@ -467,9 +432,9 @@ export class AppContext implements AsyncDisposable {
                   'Lexicon DID resolution error',
                 )
               },
-              onFetchResult({ uri, cid }) {
+              onFetchResult({ uri, cid, source }) {
                 lexiconResolverLogger.info(
-                  { uri: uri.toString(), cid: cid.toString() },
+                  { uri: uri.toString(), cid: cid.toString(), source },
                   'Fetched lexicon',
                 )
               },
