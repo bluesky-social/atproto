@@ -2,7 +2,7 @@ import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
-import { type CSSProperties, type JSX, type ReactNode, useEffect } from 'react'
+import { type JSX, type ReactNode, useEffect } from 'react'
 import {
   Card,
   CardContent,
@@ -51,13 +51,6 @@ function shortLinkLabel(rel: string | undefined): ReactNode {
 }
 
 /**
- * The card's inner spacing. `Card` sets `--card-spacing` to 1rem through an
- * arbitrary-property utility; a competing utility would race it in the
- * stylesheet, so the wider auth spacing is set inline instead.
- */
-const cardSpacing = { '--card-spacing': '1.5rem' } as CSSProperties
-
-/**
  * The authorize-flow surface.
  *
  * @NOTE This owns the whole page frame: the `<title>`, the locale selector and
@@ -103,7 +96,9 @@ export function AuthShell({
         {...props}
         className={cn('flex w-full max-w-[26rem] flex-col', className)}
       >
-        <Card style={cardSpacing}>
+        {/* @NOTE Wider than the stock card. `cn` is tailwind-merge, so this
+          replaces `Card`'s own `--card-spacing` utility rather than racing it. */}
+        <Card className="[--card-spacing:--spacing(6)]">
           {/* @NOTE The logo stands alone when there is one — the service name
             is carried by its alt text — and only falls back to the name in
             text when the deployment has no logo. */}
