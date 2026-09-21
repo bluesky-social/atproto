@@ -8,6 +8,10 @@
       "parameters": {
         "type": "params",
         "properties": {
+          "priority": {
+            "type": "boolean",
+            "description": "Deprecated: this parameter is ignored."
+          },
           "seenAt": { "type": "string", "format": "datetime" }
         }
       },
