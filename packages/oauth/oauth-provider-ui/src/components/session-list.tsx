@@ -1,14 +1,13 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { type LucideIcon, SearchIcon } from 'lucide-react'
 import { Fragment, type ReactNode, useMemo, useState } from 'react'
-import { inputSize } from '#/components/forms/fields/text-field.tsx'
+import { FieldInput } from '#/components/forms/fields/text-field.tsx'
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
 } from '#/components/ui/empty.tsx'
-import { Input } from '#/components/ui/input.tsx'
 import { Separator } from '#/components/ui/separator.tsx'
 import { Skeleton } from '#/components/ui/skeleton.tsx'
 import {
@@ -115,13 +114,13 @@ export function SessionList<T>({
           aria-hidden
           className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2"
         />
-        <Input
+        <FieldInput
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={filterLabel}
           aria-label={filterLabel}
-          className={cn(inputSize, 'pl-10')}
+          className="pl-10"
         />
       </div>
 

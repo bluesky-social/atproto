@@ -11,17 +11,14 @@ import {
   useIsCurrentTarget,
 } from '#/components/layouts/account-shell.tsx'
 import {
-  Item,
   ItemActions,
   ItemContent,
   ItemDescription,
-  ItemMedia,
   ItemTitle,
 } from '#/components/ui/item.tsx'
 import {
-  accountRowClassName,
-  accountRowDiscClassName,
-  accountRowMediaClassName,
+  AccountRow,
+  AccountRowMedia,
 } from '#/components/utils/account-card.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
 import { cn } from '#/lib/utils.ts'
@@ -60,18 +57,11 @@ function SectionList(): ReactNode {
   return (
     <div className="flex flex-col gap-4">
       {links.map(({ title, description, Icon, to, params }) => (
-        <Item
-          key={to}
-          variant="outline"
-          render={<Link to={to} params={params} />}
-          className={accountRowClassName}
-        >
+        <AccountRow key={to} render={<Link to={to} params={params} />}>
           {Icon && (
-            <ItemMedia
-              className={cn(accountRowMediaClassName, accountRowDiscClassName)}
-            >
+            <AccountRowMedia disc>
               <Icon aria-hidden className="size-6" />
-            </ItemMedia>
+            </AccountRowMedia>
           )}
           <ItemContent className="min-w-0 gap-0.5">
             <ItemTitle className="w-full text-lg leading-tight">
@@ -91,7 +81,7 @@ function SectionList(): ReactNode {
               className="text-muted-foreground size-5 shrink-0"
             />
           </ItemActions>
-        </Item>
+        </AccountRow>
       ))}
     </div>
   )

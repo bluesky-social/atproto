@@ -1,7 +1,6 @@
 import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
-import { Trans } from '@lingui/react/macro'
 import { type JSX, type ReactNode, useEffect } from 'react'
 import {
   Card,
@@ -12,6 +11,7 @@ import {
   CardTitle,
 } from '#/components/ui/card.tsx'
 import { LinkAnchor } from '#/components/utils/link-anchor.tsx'
+import { ShortLinkTitle } from '#/components/utils/link-title.tsx'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
@@ -29,26 +29,6 @@ export type AuthShellProps = Override<
     documentTitle?: string | MessageDescriptor
   }
 >
-
-/**
- * The footer names the standard links by one word each — "Terms" rather
- * than "Terms of Service" — keyed on the link's `rel`, so all four fit on one
- * line at phone width. A link with any other `rel` keeps its own title.
- */
-function shortLinkLabel(rel: string | undefined): ReactNode {
-  switch (rel) {
-    case 'canonical':
-      return <Trans>Home</Trans>
-    case 'terms-of-service':
-      return <Trans>Terms</Trans>
-    case 'privacy-policy':
-      return <Trans>Privacy</Trans>
-    case 'help':
-      return <Trans>Support</Trans>
-    default:
-      return undefined
-  }
-}
 
 /**
  * The authorize-flow surface.
@@ -94,7 +74,7 @@ export function AuthShell({
 
       <div
         {...props}
-        className={cn('flex w-full max-w-[26rem] flex-col', className)}
+        className={cn('max-w-auth-card flex w-full flex-col', className)}
       >
         {/* @NOTE Wider than the stock card. `cn` is tailwind-merge, so this
           replaces `Card`'s own `--card-spacing` utility rather than racing it. */}
@@ -139,7 +119,7 @@ export function AuthShell({
             {/* @NOTE Same height as the action buttons; the trigger sizes
               itself through a data attribute, so the override carries the
               same variant. */}
-            <LocaleSelector className="px-3 text-[15px] data-[size=sm]:h-10" />
+            <LocaleSelector className="text-action px-3 data-[size=sm]:h-10" />
             {links?.length ? (
               <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-4 gap-y-1 whitespace-nowrap text-base">
                 {links.map((link) => (
@@ -148,7 +128,7 @@ export function AuthShell({
                     link={link}
                     className="hover:text-foreground rounded-sm transition-colors hover:underline"
                   >
-                    {shortLinkLabel(link.rel)}
+                    <ShortLinkTitle link={link} />
                   </LinkAnchor>
                 ))}
               </div>

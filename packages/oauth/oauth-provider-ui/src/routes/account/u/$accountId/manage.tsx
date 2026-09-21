@@ -18,7 +18,7 @@ import { Notice } from '#/components/feedback/notice.tsx'
 import { ReactivateAccountDialog } from '#/components/reactivate-account-dialog.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import {
-  Item,
+  type Item,
   ItemActions,
   ItemContent,
   ItemDescription,
@@ -30,9 +30,8 @@ import { UpdateEmailDialog } from '#/components/update-email-dialog.tsx'
 import { UpdateHandleDialog } from '#/components/update-handle-dialog.tsx'
 import { UpdatePasswordDialog } from '#/components/update-password-dialog.tsx'
 import {
-  accountRowClassName,
-  accountRowDiscClassName,
-  accountRowMediaClassName,
+  AccountRow,
+  AccountRowMedia,
 } from '#/components/utils/account-card.tsx'
 import { Handle } from '#/components/utils/handle.tsx'
 import { VerifyEmailDialog } from '#/components/verify-email-dialog.tsx'
@@ -92,10 +91,7 @@ function EmailVerificationRow() {
   if (!email || emailVerified) return null
 
   return (
-    <Item
-      variant="outline"
-      className={cn(accountRowClassName, 'hover:bg-muted/30')}
-    >
+    <AccountRow className="hover:bg-muted/30">
       {/* No disc — this is a notice, not a destination like the rows below —
         but the same 48px slot, so the text lines up with theirs. */}
       <ItemMedia className="text-warning size-12">
@@ -125,7 +121,7 @@ function EmailVerificationRow() {
           </Button>
         </VerifyEmailDialog>
       </ItemActions>
-    </Item>
+    </AccountRow>
   )
 }
 
@@ -318,25 +314,17 @@ function Row({
   const destructive = variant === 'destructive'
 
   return (
-    <Item
+    <AccountRow
       {...props}
-      variant="outline"
       render={<button type="button" />}
       className={cn(
-        accountRowClassName,
         destructive && 'text-destructive hover:bg-destructive/10',
         className,
       )}
     >
-      <ItemMedia
-        className={cn(
-          accountRowMediaClassName,
-          accountRowDiscClassName,
-          destructive && 'text-destructive',
-        )}
-      >
+      <AccountRowMedia disc className={cn(destructive && 'text-destructive')}>
         <Icon aria-hidden className="size-6" />
-      </ItemMedia>
+      </AccountRowMedia>
 
       {/* @NOTE `min-w-0` is load-bearing: an email address has no break
         opportunity, so without it the row overflows and `Item`'s wrap drops the
@@ -367,6 +355,6 @@ function Row({
           className="text-muted-foreground size-5 shrink-0"
         />
       </ItemActions>
-    </Item>
+    </AccountRow>
   )
 }

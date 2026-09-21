@@ -4,10 +4,9 @@ import { AccountPermission } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
 import { ClientAvatar } from '#/components/identity/client-avatar.tsx'
 import { ClientName } from '#/components/identity/client-name.tsx'
-import { Button } from '#/components/ui/button.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
 import type { PermissionSets } from '#/hydration-data.d.ts'
-import { FormShell, actionButton } from './forms/form-shell.tsx'
+import { ActionButton, FormShell } from './forms/form-shell.tsx'
 import { DescriptionCard } from './utils/description-card.tsx'
 import { ScopeDescription } from './utils/scope-description.tsx'
 
@@ -85,10 +84,9 @@ export function ConsentForm({
         })
       }
       actions={
-        <Button
+        <ActionButton
           type="button"
           variant="secondary"
-          className={actionButton}
           disabled={reject.loading}
           onClick={(event) => {
             event.preventDefault()
@@ -96,7 +94,7 @@ export function ConsentForm({
           }}
         >
           <Trans context="OAuthConsent">Deny access</Trans>
-        </Button>
+        </ActionButton>
       }
     >
       <DescriptionCard

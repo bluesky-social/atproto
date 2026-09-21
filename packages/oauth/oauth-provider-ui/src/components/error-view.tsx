@@ -5,12 +5,10 @@ import { Trans } from '@lingui/react/macro'
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { ErrorDetails } from '#/components/feedback/error-details.tsx'
 import type { ErrorParser } from '#/components/feedback/error-notice.tsx'
-import { actionButton } from '#/components/forms/form-shell.tsx'
+import { ActionButton } from '#/components/forms/form-shell.tsx'
 import { AuthShell } from '#/components/layouts/auth-shell.tsx'
-import { Button } from '#/components/ui/button.tsx'
 import { apiErrorParser } from '#/lib/api-error-parser.ts'
 import { type ParsedError, parseError } from '#/lib/error-parser.ts'
-import { cn } from '#/lib/utils.ts'
 
 export type ErrorViewProps = {
   error?: unknown
@@ -109,20 +107,20 @@ export function ErrorView({
         <div className="flex flex-col gap-2">
           {children ?? (
             <>
-              <Button
-                className={cn(actionButton, 'w-full')}
+              <ActionButton
+                className="w-full"
                 onClick={() => (retry ? retry() : window.location.reload())}
               >
                 {retryLabel || <Trans>Try again</Trans>}
-              </Button>
+              </ActionButton>
               {canGoBack && (
-                <Button
+                <ActionButton
                   variant="secondary"
-                  className={cn(actionButton, 'w-full')}
+                  className="w-full"
                   onClick={() => window.history.back()}
                 >
                   <Trans>Go back</Trans>
-                </Button>
+                </ActionButton>
               )}
             </>
           )}

@@ -4,12 +4,10 @@ import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { actionButton } from '#/components/forms/form-shell.tsx'
+import { ActionButton } from '#/components/forms/form-shell.tsx'
 import { AuthShell } from '#/components/layouts/auth-shell.tsx'
-import { Button } from '#/components/ui/button.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
 import type { HydrationData } from '#/hydration-data.d.ts'
-import { cn } from '#/lib/utils.ts'
 import { LocaleProvider } from '#/locales/locale-provider.tsx'
 
 const {
@@ -56,9 +54,9 @@ function CookieErrorView() {
           </Trans>
         </p>
 
-        <Button type="submit" className={cn(actionButton, 'w-full')}>
+        <ActionButton type="submit" className="w-full">
           <Trans>Try again</Trans>
-        </Button>
+        </ActionButton>
       </form>
     </AuthShell>
   )

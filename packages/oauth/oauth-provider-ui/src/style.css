@@ -6,6 +6,12 @@
 
 @theme inline {
   --space-screen: 100vh;
+
+  /* The auth card's width, and the type size of the actions inside it. Both
+   * are shared across the auth screens, so they are tokens rather than
+   * arbitrary values repeated per component. */
+  --container-auth-card: 26rem;
+  --text-action: 0.9375rem;
 }
 
 /* ---------------------------------------------------------------------------

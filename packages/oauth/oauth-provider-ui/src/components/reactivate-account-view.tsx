@@ -1,11 +1,9 @@
 import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import type { Account } from '@atproto/oauth-provider-api'
-import { AsyncButton } from '#/components/forms/async-button.tsx'
-import { actionButton } from '#/components/forms/form-shell.tsx'
+import { ActionButton } from '#/components/forms/form-shell.tsx'
 import { AccountSummary } from '#/components/identity/account-summary.tsx'
 import { AuthShell } from '#/components/layouts/auth-shell.tsx'
-import { cn } from '#/lib/utils.ts'
 
 export type ReactivateAccountViewProps = {
   account: Account
@@ -33,21 +31,18 @@ export function ReactivateAccountView({
         </p>
 
         <div className="flex flex-col gap-3">
-          <AsyncButton
-            className={cn(actionButton, 'w-full')}
-            action={onReactivate}
-          >
+          <ActionButton className="w-full" action={onReactivate}>
             <Trans>Yes, reactivate my account</Trans>
-          </AsyncButton>
+          </ActionButton>
 
           {onCancel && (
-            <AsyncButton
+            <ActionButton
               variant="secondary"
-              className={cn(actionButton, 'w-full')}
+              className="w-full"
               action={onCancel}
             >
               <Trans>Cancel</Trans>
-            </AsyncButton>
+            </ActionButton>
           )}
         </div>
       </div>

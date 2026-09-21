@@ -1,5 +1,5 @@
 import { Field } from '@base-ui/react/field'
-import type { JSX, ReactNode } from 'react'
+import type { ComponentProps, JSX, ReactNode } from 'react'
 import { Input } from '#/components/ui/input.tsx'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
@@ -27,7 +27,18 @@ export type FieldBaseProps = {
  * tap target, and 16px text at every breakpoint — `Input` drops to 14px from
  * `md` up, and 16px is also what stops iOS zooming into a focused field.
  */
-export const inputSize = 'h-11 text-base md:text-base'
+const inputSize = 'h-11 text-base md:text-base'
+
+/**
+ * An `Input` at that size, for the controls that stand outside a `TextField` —
+ * a composite field's own control, or a plain filter box.
+ */
+export function FieldInput({
+  className,
+  ...props
+}: ComponentProps<typeof Input>) {
+  return <Input {...props} className={cn(inputSize, className)} />
+}
 
 export type TextFieldProps = Override<
   Omit<JSX.IntrinsicElements['input'], 'form'>,

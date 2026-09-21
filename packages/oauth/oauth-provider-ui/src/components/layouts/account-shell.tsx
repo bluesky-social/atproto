@@ -22,7 +22,7 @@ import {
   SidebarTrigger,
 } from '#/components/ui/sidebar.tsx'
 import { LinkExternal } from '#/components/utils/link-external.tsx'
-import { LinkTitle } from '#/components/utils/link-title.tsx'
+import { ShortLinkTitle } from '#/components/utils/link-title.tsx'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 import { LocaleSelector } from '#/locales/locale-selector.tsx'
 
@@ -189,7 +189,7 @@ export function AccountShell({
                           }
                         >
                           <span>
-                            <LinkTitle link={link} />
+                            <ShortLinkTitle link={link} />
                           </span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
