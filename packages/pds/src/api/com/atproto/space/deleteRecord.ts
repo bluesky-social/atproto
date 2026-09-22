@@ -2,7 +2,7 @@ import { ForbiddenError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { prepareDelete, spaceRecordUri } from '../../../../repo/index.js'
-import { assertSpaceScope, fireNotifyWrite } from './util.js'
+import { fireNotifyWrite } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.deleteRecord, {
@@ -32,7 +32,10 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError('repo must match authenticated user')
       }
 
-      assertSpaceScope(auth, space, { action: 'delete', collection })
+      auth.credentials.permissions?.assertSpaceRef(space, {
+        action: 'delete',
+        collection,
+      })
 
       const write = prepareDelete({ did, space, collection, rkey })
 

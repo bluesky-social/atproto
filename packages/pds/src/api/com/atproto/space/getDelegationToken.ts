@@ -3,7 +3,7 @@ import type { Server } from '@atproto/xrpc-server'
 import { ACCESS_FULL } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope, toSpaceRef } from './util.js'
+import { toSpaceRef } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.getDelegationToken, {
@@ -12,16 +12,19 @@ export default function (server: Server, ctx: AppContext) {
       checkTakedown: true,
       checkDeactivated: true,
       authorize: () => {
-        // Performed in the handler as it requires the `space` param
+        // Performed in the handler as it requires the parsed `space` param
       },
     }),
     handler: async ({ params, auth }) => {
       const userDid = auth.credentials.did
       const { space } = params
 
-      assertSpaceScope(auth, space, { action: 'read' })
+      const ref = toSpaceRef(space)
 
-      const { spaceDid } = toSpaceRef(space)
+      auth.credentials.permissions?.assertSpaceRef(ref, {
+        action: 'read',
+      })
+
       const keypair = await ctx.actorStore.keypair(userDid)
 
       const token = await createSpaceToken(
@@ -29,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
         {
           iss: userDid,
           sub: space,
-          aud: spaceHostAud(spaceDid),
+          aud: spaceHostAud(ref.spaceDid),
         },
         keypair,
       )

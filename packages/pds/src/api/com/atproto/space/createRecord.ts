@@ -2,7 +2,7 @@ import { ForbiddenError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { prepareCreate } from '../../../../repo/index.js'
-import { assertSpaceScope, fireNotifyWrite } from './util.js'
+import { fireNotifyWrite } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.createRecord, {
@@ -30,14 +30,17 @@ export default function (server: Server, ctx: AppContext) {
     opts: {
       jsonLimit: 1_000_000,
     },
-    handler: async ({ input, auth }) => {
+    handler: async ({ input: { body }, auth }) => {
       const did = auth.credentials.did
-      const { space, repo, collection, rkey, record } = input.body
+      const { space, repo, collection, rkey, record } = body
       if (repo !== did) {
         throw new ForbiddenError('repo must match authenticated user')
       }
 
-      assertSpaceScope(auth, space, { action: 'create', collection })
+      auth.credentials.permissions?.assertSpaceRef(space, {
+        action: 'create',
+        collection,
+      })
 
       const write = await prepareCreate({
         did,
@@ -45,7 +48,7 @@ export default function (server: Server, ctx: AppContext) {
         collection,
         rkey,
         record,
-        validate: input.body.validate,
+        validate: body.validate,
       })
 
       const commit = await ctx.actorStore.transact(did, (actorTxn) =>

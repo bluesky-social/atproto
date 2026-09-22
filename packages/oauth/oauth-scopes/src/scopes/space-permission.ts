@@ -18,8 +18,12 @@ import {
 } from '../lib/syntax.js'
 import { knownValuesValidator } from '../lib/util.js'
 
-export { type NsidString, isValidNsid as isNsidString }
-export { type DidString, isValidDid as isDidString }
+export {
+  type DidString,
+  type NsidString,
+  isValidDid as isDidString,
+  isValidNsid as isNsidString,
+}
 
 // @TODO these should probably be defined in the @atproto/syntax package
 export type SpaceKeyString = RecordKeyString
@@ -70,11 +74,13 @@ export const isSpaceCollectionParam = (
   value: unknown,
 ): value is SpaceCollectionParam => value === '*' || isValidNsid(value)
 
-export type SpacePermissionMatch = {
+export type SpacePermissionMatchReference = {
   type: SpaceTypeParam
   authority: SpaceAuthorityParam
   skey: SpaceKeyParam
-} & (
+}
+
+export type SpacePermissionMatchOperation =
   | {
       action: 'read'
       collection?: never
@@ -95,7 +101,9 @@ export type SpacePermissionMatch = {
       collection?: never
       manage: SpaceManageOp
     }
-)
+
+export type SpacePermissionMatch = SpacePermissionMatchReference &
+  SpacePermissionMatchOperation
 
 export class SpacePermission implements ResourcePermission<
   'space',
@@ -119,8 +127,8 @@ export class SpacePermission implements ResourcePermission<
     }
     if (this.skey !== '*' && this.skey !== target.skey) return false
 
-    if (target.action === undefined) {
-      return this.manage?.includes(target.manage) ?? false
+    if (target.action == null) {
+      return this.manage != null && this.manage.includes(target.manage)
     }
 
     // Reads are collection-independent, and `read` implies `read_self`.
@@ -223,14 +231,14 @@ export class SpacePermission implements ResourcePermission<
             if (value.includes('*')) return ['*'] as const
             return [...new Set(value)].sort() as NeArray<NsidString>
           }
-          return value as [SpaceCollectionParam]
+          return value
         },
       },
       action: {
         multiple: true,
         required: false,
         validate: isSpaceAction,
-        default: SPACE_DEFAULT_ACTIONS as unknown as NeRoArray<SpaceAction>,
+        default: SPACE_DEFAULT_ACTIONS,
         normalize: (value) =>
           SPACE_ACTIONS.filter(includedIn, value) as NeArray<SpaceAction>,
       },
@@ -267,31 +275,29 @@ export class SpacePermission implements ResourcePermission<
   }
 
   static scopeNeededFor(options: SpacePermissionMatch): string {
-    // Omitting `action` would default it to the full record action list, so
-    // pair the verb with `read_self` — the narrowest action expressible — to
-    // avoid suggesting read/write over every record.
-    if ('manage' in options && options.manage != null) {
-      return SpacePermission.parser.format({
-        type: options.type,
-        authority: options.authority,
-        skey: options.skey,
-        collection: [] as unknown as NeRoArray<SpaceCollectionParam>,
-        action: ['read_self'],
-        manage: [options.manage],
-      })
-    }
-
-    return SpacePermission.parser.format({
-      type: options.type,
-      authority: options.authority,
-      skey: options.skey,
-      collection:
-        options.action === 'read' || options.action === 'read_self'
-          ? ([] as unknown as NeRoArray<SpaceCollectionParam>)
-          : [options.collection],
-      action: [options.action],
-      manage: [] as unknown as NeRoArray<SpaceManageOp>,
-    })
+    return SpacePermission.parser.format(
+      // 'manage' is disjoint from 'action'
+      'manage' in options && options.manage != null
+        ? {
+            type: options.type,
+            authority: options.authority,
+            skey: options.skey,
+            collection: undefined,
+            action: ['read_self'], // Use the narrowest action to avoid suggesting broader permissions
+            manage: [options.manage],
+          }
+        : {
+            type: options.type,
+            authority: options.authority,
+            skey: options.skey,
+            collection:
+              options.action === 'read' || options.action === 'read_self'
+                ? undefined
+                : [options.collection],
+            action: [options.action],
+            manage: undefined,
+          },
+    )
   }
 }
 

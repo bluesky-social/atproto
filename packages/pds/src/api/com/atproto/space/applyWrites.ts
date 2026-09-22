@@ -12,7 +12,7 @@ import {
   prepareDelete,
   prepareUpdate,
 } from '../../../../repo/index.js'
-import { assertSpaceScope, fireNotifyWrite } from './util.js'
+import { fireNotifyWrite } from './util.js'
 
 // Matches com.atproto.repo.applyWrites.
 const MAX_WRITES = 200
@@ -101,7 +101,7 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       for (const write of prepared) {
-        assertSpaceScope(auth, space, {
+        auth.credentials.permissions?.assertSpaceRef(space, {
           action: write.action,
           collection: write.uri.collectionSafe,
         })

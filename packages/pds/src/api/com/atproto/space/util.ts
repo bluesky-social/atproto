@@ -2,7 +2,7 @@ import { getPdsEndpoint, getServiceEndpoint } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
 import { xrpc } from '@atproto/lex'
-import type { SpacePermissionMatch } from '@atproto/oauth-scopes'
+import type { SpacePermissionMatchOperation } from '@atproto/oauth-scopes'
 import {
   type CommitCtx,
   LtHash,
@@ -17,17 +17,15 @@ import {
 } from '@atproto/xrpc-server'
 import type { ActorStore } from '../../../../actor-store/actor-store.js'
 import type { SpaceRepo } from '../../../../actor-store/db/index.js'
-import type {
-  AccessOutput,
-  OAuthOutput,
-  SpaceCredentialOutput,
+import {
+  type AccessOutput,
+  type OAuthOutput,
+  type SpaceCredentialOutput,
+  isSpaceCredentialOutput,
 } from '../../../../auth-output.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { spaceLogger } from '../../../../logger.js'
-
-// Everything except the (type, authority, skey) tuple, derived from the space URI.
-type SpaceScopeOp = Omit<SpacePermissionMatch, 'type' | 'authority' | 'skey'>
 
 // Lexicons type a space as a `space-ref`, so schema validation rejects a
 // malformed one before any handler runs. Defensive for other callers.
@@ -66,34 +64,15 @@ export async function assertSpaceHost(
 // A simplespace space is anchored on its authority's own DID, so ownership is a
 // comparison against the space URI.
 export function assertSpaceOwner(
-  callerDid: string,
-  spaceUri: SpaceRefString,
+  auth: AccessOutput | OAuthOutput,
+  space: SpaceRef | SpaceRefString,
+  op: SpacePermissionMatchOperation,
 ): void {
-  const { spaceDid } = toSpaceRef(spaceUri)
-  if (spaceDid !== callerDid) {
+  const ref = typeof space === 'string' ? toSpaceRef(space) : space
+  auth.credentials.permissions?.assertSpaceRef(ref, op)
+  if (ref.spaceDid !== auth.credentials.did) {
     throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
   }
-}
-
-/**
- * Space credentials carry their own space, checked by {@link assertCredentialSpace}.
- * Legacy access tokens (including app passwords) predate granular permissions and
- * carry no space grants at all, so there is nothing to evaluate — they are bounded
- * instead by the handlers, which require the caller to be the repo they name.
- */
-export function assertSpaceScope(
-  auth: AccessOutput | OAuthOutput | SpaceCredentialOutput,
-  spaceUri: SpaceRefString,
-  op: SpaceScopeOp,
-): void {
-  if (auth.credentials.type !== 'oauth') return
-  const { spaceDid, spaceType, skey } = toSpaceRef(spaceUri)
-  auth.credentials.permissions.assertSpace({
-    type: spaceType,
-    authority: spaceDid,
-    skey,
-    ...op,
-  } as SpacePermissionMatch)
 }
 
 /**
@@ -108,7 +87,7 @@ export function assertSpaceRead(
   spaceUri: SpaceRefString,
   repo: string,
 ): void {
-  if (auth.credentials.type === 'space_credential') {
+  if (isSpaceCredentialOutput(auth)) {
     assertCredentialSpace(auth.credentials, spaceUri)
     return
   }
@@ -120,7 +99,9 @@ export function assertSpaceRead(
       'RepoNotFound',
     )
   }
-  assertSpaceScope(auth, spaceUri, { action: 'read_self' })
+  auth.credentials.permissions?.assertSpaceRef(spaceUri, {
+    action: 'read_self',
+  })
 }
 
 // The space analogue of `isUserOrAdmin`: a space credential names a syncer rather

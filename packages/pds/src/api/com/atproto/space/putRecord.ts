@@ -6,7 +6,7 @@ import {
   prepareUpdate,
   spaceRecordUri,
 } from '../../../../repo/index.js'
-import { assertSpaceScope, fireNotifyWrite } from './util.js'
+import { fireNotifyWrite } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.putRecord, {
@@ -46,7 +46,8 @@ export default function (server: Server, ctx: AppContext) {
           // isn't asked for `create` too.
           const uri = spaceRecordUri(space, did, collection, rkey)
           const exists = await actorTxn.space.hasRecord(uri.toString())
-          assertSpaceScope(auth, space, {
+
+          auth.credentials.permissions?.assertSpaceRef(space, {
             action: exists ? 'update' : 'create',
             collection,
           })

@@ -3,7 +3,6 @@ import { SpaceRef } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceScope } from '../space/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.simplespace.createSpace, {
@@ -12,16 +11,24 @@ export default function (server: Server, ctx: AppContext) {
         // Performed in the handler as it requires the request body
       },
     }),
-    handler: async ({ input, auth }) => {
+    handler: async ({ input: { body }, auth }) => {
       const ownerDid = auth.credentials.did
-      const { type, readPolicy, writePolicy, appAccess } = input.body
-      const skey = input.body.skey ?? TID.nextStr()
+      const {
+        type,
+        readPolicy,
+        writePolicy,
+        appAccess,
+        skey = TID.nextStr(),
+      } = body
 
-      const space = new SpaceRef(ownerDid, type, skey).toString()
+      const ref = new SpaceRef(ownerDid, type, skey)
+      const uri = ref.toString()
 
-      assertSpaceScope(auth, space, { manage: 'create' })
+      auth.credentials.permissions?.assertSpaceRef(ref, {
+        manage: 'create',
+      })
 
-      await ctx.simpleSpaceManager.createSpace(space, {
+      await ctx.simpleSpaceManager.createSpace(uri, {
         readPolicy,
         writePolicy,
         appAccess,
@@ -29,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json' as const,
-        body: { uri: space },
+        body: { uri },
       }
     },
   })

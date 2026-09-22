@@ -1,11 +1,8 @@
 import type { Server } from '@atproto/xrpc-server'
+import { isSpaceCredentialOutput } from '../../../../auth-output.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import {
-  assertCredentialSpace,
-  assertSpaceOwner,
-  assertSpaceScope,
-} from '../space/util.js'
+import { assertCredentialSpace, assertSpaceOwner } from '../space/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.simplespace.getSpace, {
@@ -19,11 +16,10 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { space } = params
 
-      if (auth.credentials.type === 'space_credential') {
+      if (isSpaceCredentialOutput(auth)) {
         assertCredentialSpace(auth.credentials, space)
       } else {
-        assertSpaceScope(auth, space, { action: 'read_self' })
-        assertSpaceOwner(auth.credentials.did, space)
+        assertSpaceOwner(auth, space, { action: 'read_self' })
       }
 
       return {
