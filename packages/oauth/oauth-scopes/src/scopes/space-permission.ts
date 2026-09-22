@@ -13,7 +13,7 @@ import {
   type NeArray,
   type NeRoArray,
   type ScopeSyntax,
-  isNeRoArray,
+  isNonEmpty,
   isScopeStringFor,
 } from '../lib/syntax.js'
 import { knownValuesValidator } from '../lib/util.js'
@@ -158,7 +158,7 @@ export class SpacePermission implements ResourcePermission<
     collections: readonly SpaceCollectionParam[],
   ): SpacePermission {
     if (this.hasCollections) return this
-    if (!isNeRoArray(collections)) return this
+    if (!isNonEmpty(collections)) return this
     return new SpacePermission(
       this.type,
       this.authority,

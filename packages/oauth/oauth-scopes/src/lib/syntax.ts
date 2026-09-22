@@ -1,15 +1,18 @@
 export type ParamValue = string | number | boolean
 
 export type NeArray<T> = [T, ...T[]]
-export function isNeArray<T>(value?: T[]): value is NeArray<T> {
-  return value != null && value.length > 0
-}
 
 /**
  * Non-empty readonly array
  */
 export type NeRoArray<T> = readonly [T, ...T[]]
-export function isNeRoArray<T>(value?: readonly T[]): value is NeRoArray<T> {
+
+/**
+ * Checks if an array is non-empty.
+ */
+export function isNonEmpty<T>(value?: T[]): value is NeArray<T>
+export function isNonEmpty<T>(value?: readonly T[]): value is NeRoArray<T>
+export function isNonEmpty(value?: readonly unknown[]): boolean {
   return value != null && value.length > 0
 }
 

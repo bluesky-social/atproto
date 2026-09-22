@@ -13,12 +13,7 @@ export * from './scopes/repo-permission.js'
 export * from './scopes/rpc-permission.js'
 export * from './scopes/space-permission.js'
 
-export {
-  type NeArray,
-  type NeRoArray,
-  isNeArray,
-  isNeRoArray,
-} from './lib/syntax.js'
+export { type NeArray, type NeRoArray, isNonEmpty } from './lib/syntax.js'
 
 // Re-export of legacy types
 export {
