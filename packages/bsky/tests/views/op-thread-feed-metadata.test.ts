@@ -4,12 +4,6 @@ import { type RecordRef, type SeedClient, TestNetwork } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import { Gate } from '../../src/feature-gates/gates.js'
 
-type FeedItemWithOpThreadMetadata = {
-  post: { uri: string }
-  opThreadPostIndex?: number
-  opThreadPostCount?: number
-}
-
 describe('OP thread feed metadata', () => {
   let network: TestNetwork
   let sc: SeedClient<TestNetwork>
@@ -122,10 +116,7 @@ describe('OP thread feed metadata', () => {
       actorLikes,
     })) {
       const byUri = new Map(
-        response.data.feed.map((item) => [
-          item.post.uri,
-          item as FeedItemWithOpThreadMetadata,
-        ]),
+        response.data.feed.map((item) => [item.post.uri, item]),
       )
       expect(
         posts.map((post) => {
