@@ -13,6 +13,7 @@ import {
   type NeArray,
   type NeRoArray,
   type ScopeSyntax,
+  isNeRoArray,
   isScopeStringFor,
 } from '../lib/syntax.js'
 import { knownValuesValidator } from '../lib/util.js'
@@ -104,9 +105,9 @@ export class SpacePermission implements ResourcePermission<
     public readonly type: SpaceTypeParam,
     public readonly authority: SpaceAuthorityParam,
     public readonly skey: SpaceKeyParam,
-    public readonly collection: NeRoArray<SpaceCollectionParam>,
+    public readonly collection: undefined | NeRoArray<SpaceCollectionParam>,
     public readonly action: NeRoArray<SpaceAction>,
-    public readonly manage: NeRoArray<SpaceManageOp>,
+    public readonly manage: undefined | NeRoArray<SpaceManageOp>,
   ) {}
 
   matches(target: SpacePermissionMatch) {
@@ -119,7 +120,7 @@ export class SpacePermission implements ResourcePermission<
     if (this.skey !== '*' && this.skey !== target.skey) return false
 
     if (target.action === undefined) {
-      return this.manage.includes(target.manage)
+      return this.manage?.includes(target.manage) ?? false
     }
 
     // Reads are collection-independent, and `read` implies `read_self`.
@@ -137,6 +138,7 @@ export class SpacePermission implements ResourcePermission<
   }
 
   private collectionAllows(collection: string): boolean {
+    if (this.collection == null) return false
     return (
       this.collection.includes('*') ||
       (this.collection as readonly string[]).includes(collection)
@@ -144,7 +146,7 @@ export class SpacePermission implements ResourcePermission<
   }
 
   get hasCollections(): boolean {
-    return this.collection.length > 0
+    return this.collection != null
   }
 
   /**
@@ -155,12 +157,13 @@ export class SpacePermission implements ResourcePermission<
   withDefaultCollections(
     collections: readonly SpaceCollectionParam[],
   ): SpacePermission {
-    if (this.hasCollections || collections.length === 0) return this
+    if (this.hasCollections) return this
+    if (!isNeRoArray(collections)) return this
     return new SpacePermission(
       this.type,
       this.authority,
       this.skey,
-      collections as NeRoArray<SpaceCollectionParam>,
+      collections,
       this.action,
       this.manage,
     )
@@ -214,8 +217,7 @@ export class SpacePermission implements ResourcePermission<
         multiple: true,
         required: false,
         validate: isSpaceCollectionParam,
-        // Empty means no write targets, not "all collections".
-        default: [] as unknown as NeRoArray<SpaceCollectionParam>,
+        default: undefined, // No collection means no write targets
         normalize: (value) => {
           if (value.length > 1) {
             if (value.includes('*')) return ['*'] as const
@@ -236,7 +238,7 @@ export class SpacePermission implements ResourcePermission<
         multiple: true,
         required: false,
         validate: isSpaceManageOp,
-        default: [] as unknown as NeRoArray<SpaceManageOp>,
+        default: undefined, // No manage operations by default
         normalize: (value) =>
           SPACE_MANAGE_OPS.filter(includedIn, value) as NeArray<SpaceManageOp>,
       },

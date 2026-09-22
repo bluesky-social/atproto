@@ -1,6 +1,6 @@
 import type { LexiconPermissionSet, LexiconSpace } from '@atproto/lex-document'
 import { type LexResolver, LexResolverError } from '@atproto/lex-resolver'
-import { IncludeScope, SpacePermission } from '@atproto/oauth-scopes'
+import { IncludeScope, SpacePermission, isNeArray } from '@atproto/oauth-scopes'
 import type { DidString, NsidString } from '@atproto/syntax'
 import { LexiconGetter } from './lexicon-getter.js'
 import type { LexiconStore } from './lexicon-store.js'
@@ -90,7 +90,7 @@ export class LexiconManager {
       const parsed = SpacePermission.fromString(value)
       if (!parsed || parsed.type === '*' || parsed.hasCollections) return value
       const space = spaces.get(parsed.type)
-      if (!space?.collections?.length) return value
+      if (!isNeArray(space?.collections)) return value
       return parsed.withDefaultCollections(space.collections).toString()
     })
   }

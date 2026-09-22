@@ -1,11 +1,17 @@
 export type ParamValue = string | number | boolean
 
 export type NeArray<T> = [T, ...T[]]
+export function isNeArray<T>(value?: T[]): value is NeArray<T> {
+  return value != null && value.length > 0
+}
 
 /**
  * Non-empty readonly array
  */
 export type NeRoArray<T> = readonly [T, ...T[]]
+export function isNeRoArray<T>(value?: readonly T[]): value is NeRoArray<T> {
+  return value != null && value.length > 0
+}
 
 export type ScopeStringFor<P extends string> =
   P | `${P}:${string}` | `${P}?${string}`

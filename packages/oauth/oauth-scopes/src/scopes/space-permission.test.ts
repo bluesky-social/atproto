@@ -17,9 +17,9 @@ describe('SpacePermission', () => {
         // authority defaults to `self`, not `*`.
         expect(scope!.authority).toBe('self')
         expect(scope!.skey).toBe('*')
-        expect(scope!.collection).toEqual([])
+        expect(scope!.collection).toEqual(undefined)
         expect(scope!.action).toEqual(DEFAULT_ACTIONS)
-        expect(scope!.manage).toEqual([])
+        expect(scope!.manage).toEqual(undefined)
       })
 
       it('parses wildcard type', () => {
@@ -77,9 +77,9 @@ describe('SpacePermission', () => {
         ).toBeNull()
       })
 
-      it('omitted collection means no write targets (empty list)', () => {
+      it('omitted collection means no write targets (undefined)', () => {
         const scope = SpacePermission.fromString('space:com.atmoboards.forum')
-        expect(scope!.collection).toEqual([])
+        expect(scope!.collection).toEqual(undefined)
       })
 
       it('rejects invalid type NSID', () => {
