@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { SpacePermission } from './space-permission.js'
+import {
+  SpacePermission,
+  type SpacePermissionMatch,
+} from './space-permission.js'
 
 // Default action list when `action` is omitted (read implies read_self).
 const DEFAULT_ACTIONS = ['read', 'create', 'update', 'delete'] as const
@@ -197,9 +200,9 @@ describe('SpacePermission', () => {
         ],
         [{ manage: 'delete' } as const],
       ])('round-trips %o without widening the grant', (op) => {
-        const target = {
+        const target: SpacePermissionMatch = {
           type: 'com.atmoboards.forum',
-          authority: 'did:plc:abc' as const,
+          authority: 'did:plc:abc',
           skey: 'default',
           ...op,
         }
@@ -228,7 +231,7 @@ describe('SpacePermission', () => {
       type: 'com.atmoboards.forum',
       authority: 'did:plc:abc',
       skey: 'default',
-    }
+    } as const
 
     // A grant covering any authority — the common case for a forum client that
     // reads spaces hosted by others. `self` is resolved at issuance and tested

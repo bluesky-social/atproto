@@ -163,7 +163,7 @@ describe('assertSpaceScope', () => {
       expect(() =>
         assertSpaceScope(auth, SPACE, {
           action: 'update',
-          collection: 'any.collection',
+          collection: 'any.valid.collection',
         }),
       ).not.toThrow()
     })

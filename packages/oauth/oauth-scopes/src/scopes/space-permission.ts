@@ -1,5 +1,11 @@
-import { isValidDid, isValidRecordKey } from '@atproto/syntax'
-import { type NsidString, isValidNsid } from '@atproto/syntax'
+import {
+  type DidString,
+  type NsidString,
+  type RecordKeyString,
+  isValidDid,
+  isValidNsid,
+  isValidRecordKey,
+} from '@atproto/syntax'
 import { Parser } from '../lib/parser.js'
 import type { ResourcePermission } from '../lib/resource-permission.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
@@ -12,6 +18,11 @@ import {
 import { knownValuesValidator } from '../lib/util.js'
 
 export { type NsidString, isValidNsid as isNsidString }
+export { type DidString, isValidDid as isDidString }
+
+// @TODO these should probably be defined in the @atproto/syntax package
+export type SpaceKeyString = RecordKeyString
+export const isSpaceKeyString = isValidRecordKey
 
 export const SPACE_ACTIONS = Object.freeze([
   'read_self',
@@ -43,19 +54,15 @@ export type SpaceTypeParam = '*' | NsidString
 export const isSpaceTypeParam = (value: unknown): value is SpaceTypeParam =>
   value === '*' || isValidNsid(value)
 
-type DidString = `did:${string}:${string}`
-const isDidString = (value: unknown): value is DidString =>
-  typeof value === 'string' && isValidDid(value)
 export type SpaceAuthorityParam = '*' | 'self' | DidString
 export const isSpaceAuthorityParam = (
   value: unknown,
 ): value is SpaceAuthorityParam =>
-  value === '*' || value === 'self' || isDidString(value)
+  value === '*' || value === 'self' || isValidDid(value)
 
-// A space key has the same syntax as a record key.
-export type SpaceSkeyParam = string
-export const isSpaceSkeyParam = (value: unknown): value is SpaceSkeyParam =>
-  typeof value === 'string' && isValidRecordKey(value)
+export type SpaceKeyParam = '*' | SpaceKeyString
+export const isSpaceKeyParam = (value: unknown): value is SpaceKeyParam =>
+  value === '*' || isSpaceKeyString(value)
 
 export type SpaceCollectionParam = '*' | NsidString
 export const isSpaceCollectionParam = (
@@ -63,18 +70,30 @@ export const isSpaceCollectionParam = (
 ): value is SpaceCollectionParam => value === '*' || isValidNsid(value)
 
 export type SpacePermissionMatch = {
-  type: string
-  authority: string
-  skey: string
+  type: SpaceTypeParam
+  authority: SpaceAuthorityParam
+  skey: SpaceKeyParam
 } & (
-  | { action: 'read'; collection?: never; manage?: never }
-  | { action: 'read_self'; collection?: never; manage?: never }
   | {
-      action: 'create' | 'update' | 'delete'
-      collection: string
+      action: 'read'
+      collection?: never
       manage?: never
     }
-  | { action?: never; collection?: never; manage: SpaceManageOp }
+  | {
+      action: 'read_self'
+      collection?: never
+      manage?: never
+    }
+  | {
+      action: 'create' | 'update' | 'delete'
+      collection: NsidString
+      manage?: never
+    }
+  | {
+      action?: never
+      collection?: never
+      manage: SpaceManageOp
+    }
 )
 
 export class SpacePermission implements ResourcePermission<
@@ -84,7 +103,7 @@ export class SpacePermission implements ResourcePermission<
   constructor(
     public readonly type: SpaceTypeParam,
     public readonly authority: SpaceAuthorityParam,
-    public readonly skey: SpaceSkeyParam | '*',
+    public readonly skey: SpaceKeyParam,
     public readonly collection: NeRoArray<SpaceCollectionParam>,
     public readonly action: NeRoArray<SpaceAction>,
     public readonly manage: NeRoArray<SpaceManageOp>,
@@ -189,8 +208,7 @@ export class SpacePermission implements ResourcePermission<
         multiple: false,
         required: false,
         default: '*' as const,
-        validate: (value): value is SpaceSkeyParam | '*' =>
-          value === '*' || isSpaceSkeyParam(value),
+        validate: isSpaceKeyParam,
       },
       collection: {
         multiple: true,
@@ -203,7 +221,7 @@ export class SpacePermission implements ResourcePermission<
             if (value.includes('*')) return ['*'] as const
             return [...new Set(value)].sort() as NeArray<NsidString>
           }
-          return value as ['*' | NsidString]
+          return value as [SpaceCollectionParam]
         },
       },
       action: {
@@ -211,21 +229,16 @@ export class SpacePermission implements ResourcePermission<
         required: false,
         validate: isSpaceAction,
         default: SPACE_DEFAULT_ACTIONS as unknown as NeRoArray<SpaceAction>,
-        normalize: (value) => {
-          return SPACE_ACTIONS.filter(includedIn, value) as NeArray<SpaceAction>
-        },
+        normalize: (value) =>
+          SPACE_ACTIONS.filter(includedIn, value) as NeArray<SpaceAction>,
       },
       manage: {
         multiple: true,
         required: false,
         validate: isSpaceManageOp,
         default: [] as unknown as NeRoArray<SpaceManageOp>,
-        normalize: (value) => {
-          return SPACE_MANAGE_OPS.filter(
-            includedIn,
-            value,
-          ) as NeArray<SpaceManageOp>
-        },
+        normalize: (value) =>
+          SPACE_MANAGE_OPS.filter(includedIn, value) as NeArray<SpaceManageOp>,
       },
     },
     'type',
@@ -252,31 +265,28 @@ export class SpacePermission implements ResourcePermission<
   }
 
   static scopeNeededFor(options: SpacePermissionMatch): string {
-    const base = {
-      type: options.type as SpaceTypeParam,
-      authority: options.authority as SpaceAuthorityParam,
-      skey: options.skey as SpaceSkeyParam | '*',
-    }
     // Omitting `action` would default it to the full record action list, so
     // pair the verb with `read_self` — the narrowest action expressible — to
     // avoid suggesting read/write over every record.
-    if ('manage' in options && options.manage !== undefined) {
+    if ('manage' in options && options.manage != null) {
       return SpacePermission.parser.format({
-        ...base,
+        type: options.type,
+        authority: options.authority,
+        skey: options.skey,
         collection: [] as unknown as NeRoArray<SpaceCollectionParam>,
         action: ['read_self'],
         manage: [options.manage],
       })
     }
-    const collection = (options.action === 'read' ||
-    options.action === 'read_self'
-      ? []
-      : [
-          options.collection as SpaceCollectionParam,
-        ]) as unknown as NeRoArray<SpaceCollectionParam>
+
     return SpacePermission.parser.format({
-      ...base,
-      collection,
+      type: options.type,
+      authority: options.authority,
+      skey: options.skey,
+      collection:
+        options.action === 'read' || options.action === 'read_self'
+          ? ([] as unknown as NeRoArray<SpaceCollectionParam>)
+          : [options.collection],
       action: [options.action],
       manage: [] as unknown as NeRoArray<SpaceManageOp>,
     })
