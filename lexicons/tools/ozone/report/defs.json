@@ -311,7 +311,7 @@
           "items": {
             "type": "integer"
           },
-          "description": "Array of moderation event IDs representing actions taken on this report (sorted DESC, most recent first)"
+          "description": "Array of moderation event IDs representing actions taken on this report, in append order (most recently linked event last)"
         },
         "actions": {
           "type": "array",

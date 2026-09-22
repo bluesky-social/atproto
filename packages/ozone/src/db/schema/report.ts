@@ -8,7 +8,7 @@ export interface Report {
   eventId: number // References moderation_event.id
   queueId: number | null // NULL = not yet assigned, -1 = no matching queue
   queuedAt: DatetimeString | null
-  actionEventIds: number[] | null // Array of event IDs, sorted DESC [newest, ..., oldest]
+  actionEventIds: number[] | null // Event IDs in append order (most recently linked last)
   actionNote: string | null
   isMuted: boolean
   isAutomated: boolean // Denormalized from moderation_event.modTool.meta.isAutomated
