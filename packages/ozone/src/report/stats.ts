@@ -2,6 +2,7 @@ import { type Selectable, sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
 import type { DatetimeString, DidString } from '@atproto/lex'
 import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { ComputedAtIdKeyset, paginate } from '../db/pagination.js'
 import type { DateString, ReportStat } from '../db/schema/report_stat.js'
@@ -190,8 +191,8 @@ export class ReportStatsService {
   }> {
     try {
       const start = Date.now()
-      const today = toDateString(new Date())
-      const yesterday = toDateString(new Date(Date.now() - 24 * 60 * 60 * 1000))
+      const today = toDateString(new Date(start))
+      const yesterday = toDateString(new Date(start - 24 * 60 * 60 * 1000))
 
       // Always compute today's stats
       let rowsWritten = await this.materializeDate(today, opts)
@@ -202,9 +203,12 @@ export class ReportStatsService {
           .selectFrom('report_stat')
           .select('computedAt')
           .where('date', '=', yesterday)
+          .where('queueId', 'is', null)
+          .where('moderatorDid', 'is', null)
+          .where('reportTypes', 'is', null)
           .orderBy('computedAt', 'desc')
           .executeTakeFirst()
-        const endOfYesterday = new Date(`${yesterday}T23:59:59.999Z`).getTime()
+        const endOfYesterday = new Date(`${today}T00:00:00.000Z`).getTime()
         if (
           !yesterdayRow ||
           new Date(yesterdayRow.computedAt).getTime() < endOfYesterday
@@ -234,12 +238,20 @@ export class ReportStatsService {
   }): Promise<void> {
     const start = new Date(opts.startDate)
     const end = new Date(opts.endDate)
+    const endOfToday = new Date()
+    endOfToday.setUTCHours(23, 59, 59, 999)
+    if (end > endOfToday) {
+      throw new InvalidRequestError(
+        'Cannot refresh statistics for future dates',
+      )
+    }
 
     for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
       const dateStr = toDateString(d)
       if (opts.queueIds?.length) {
         // Recompute only specific queue groups for this date
-        const batched = await this.computeBatchedStats(dateStr)
+        const computedAt = currentDatetimeString()
+        const batched = await this.computeBatchedStats(dateStr, computedAt)
         const rows: UpsertRow[] = []
         for (const queueId of opts.queueIds) {
           const group: ReportStatGroup = {
@@ -248,7 +260,7 @@ export class ReportStatsService {
             reportTypes: null,
           }
           const stats = this.resolveGroupStats(group, batched)
-          rows.push(this.buildUpsertRow(dateStr, group, stats))
+          rows.push(this.buildUpsertRow(dateStr, group, stats, computedAt))
         }
         await this.bulkUpsert(rows)
       } else {
@@ -262,9 +274,12 @@ export class ReportStatsService {
     date: DateString,
     opts?: { force?: boolean },
   ): Promise<number> {
+    // @NOTE Timestamp the start so a computation crossing midnight still needs
+    // historical finalization on the next cycle.
+    const computedAt = currentDatetimeString()
     const groups = await this.enumerateGroups()
-    const batched = await this.computeBatchedStats(date)
-    const today = toDateString(new Date())
+    const batched = await this.computeBatchedStats(date, computedAt)
+    const today = computedAt.slice(0, 10)
     const isToday = date === today
 
     // Batch the cache check so we don't issue one SELECT per group.
@@ -285,7 +300,7 @@ export class ReportStatsService {
           }
         }
         const stats = this.resolveGroupStats(group, batched)
-        rows.push(this.buildUpsertRow(date, group, stats))
+        rows.push(this.buildUpsertRow(date, group, stats, computedAt))
       } catch (err) {
         dbLogger.error(
           { err, group, date },
@@ -374,7 +389,10 @@ export class ReportStatsService {
    * Run batched GROUP BY queries for a calendar date.
    * Merges inbound, pending, closure, and escalation stats for all group types.
    */
-  private async computeBatchedStats(date: DateString): Promise<BatchedStats> {
+  private async computeBatchedStats(
+    date: DateString,
+    computedAt: DatetimeString,
+  ): Promise<BatchedStats> {
     const dayStart: DatetimeString = `${date}T00:00:00.000Z`
     const dayEnd: DatetimeString = `${nextDate(date)}T00:00:00.000Z`
 
@@ -408,12 +426,40 @@ export class ReportStatsService {
       group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"), (r."assignedTo"))
     `.execute(this.db.db)
 
-    // Current stock, grouped in one scan. Pending has no moderator group.
+    // @NOTE Historical backlog includes reports closed after the cutoff, except
+    // those whose first later transition is a reopen (already closed at cutoff).
+    // Scan recent transitions once instead of probing every report's history.
+    // Queue attribution uses current membership, as do the other metrics.
+    const pendingReports =
+      date < computedAt.slice(0, 10)
+        ? sql`
+          with subsequent_transitions as (
+            select distinct on ("reportId") "reportId", "activityType"
+            from report_activity
+            where "createdAt" >= ${dayEnd}
+              and "activityType" in ('closeActivity', 'reopenActivity')
+            order by "reportId", "createdAt", id
+          ), candidates as (
+            select id, "queueId", "reportType" from report
+            where status != 'closed' and "createdAt" < ${dayEnd}
+            union all
+            select id, "queueId", "reportType" from report
+            where status = 'closed' and "closedAt" >= ${dayEnd}
+              and "createdAt" < ${dayEnd}
+          )
+          select r."queueId", r."reportType"
+          from candidates r
+          left join subsequent_transitions t on t."reportId" = r.id
+          where t."activityType" is distinct from 'reopenActivity'
+        `
+        : sql`
+          select "queueId", "reportType" from report where status != 'closed'
+        `
+
     const pendingStats = () =>
       sql<PendingStatsRow>`
       select ${reportGroupColumns}, count(*) as "pendingCount"
-      from report r
-      where r.status != 'closed'
+      from (${pendingReports}) r
       group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"))
     `.execute(this.db.db)
 
@@ -575,6 +621,7 @@ export class ReportStatsService {
     date: DateString,
     group: ReportStatGroup,
     stats: ReportStatistics,
+    computedAt: DatetimeString,
   ): UpsertRow {
     const pendingCount =
       'pendingCount' in stats ? (stats.pendingCount ?? null) : null
@@ -603,7 +650,7 @@ export class ReportStatsService {
       actionRate,
       avgHandlingTimeSec: stats.avgHandlingTimeSec ?? null,
       avgResolutionTimeSec: stats.avgResolutionTimeSec ?? null,
-      computedAt: currentDatetimeString(),
+      computedAt,
     }
   }
 

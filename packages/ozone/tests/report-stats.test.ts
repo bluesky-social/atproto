@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { sql } from 'kysely'
 import { ids } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
@@ -9,8 +10,9 @@ import {
 } from '@atproto/dev-env'
 import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
 import type { DatetimeString, DidString } from '@atproto/lex'
+import type { DateString } from '../src/db/schema/report_stat.js'
 import { com, tools } from '../src/lexicons/index.js'
-import { REPORT_TYPE_GROUPS } from '../src/report/stats.js'
+import { REPORT_TYPE_GROUPS, ReportStatsService } from '../src/report/stats.js'
 
 describe('report-stats', () => {
   let network: TestNetwork
@@ -66,6 +68,18 @@ describe('report-stats', () => {
       ),
     })
     return data
+  }
+
+  const refreshStats = async (
+    input: tools.ozone.report.refreshStats.$InputBody,
+  ) => {
+    await agent.tools.ozone.report.refreshStats(input, {
+      encoding: 'application/json',
+      headers: await network.ozone.modHeaders(
+        ids.ToolsOzoneReportRefreshStats,
+        'admin',
+      ),
+    })
   }
 
   beforeAll(async () => {
@@ -773,6 +787,381 @@ describe('report-stats', () => {
       }
       expect(after.pendingCount).toBe(before.pendingCount)
     })
+  })
+
+  describe('refresh stats', () => {
+    const firstDate = '2001-01-01'
+    const secondDate = '2001-01-02'
+    const beforeWindow = '2000-12-31T12:00:00.000Z'
+    const lastMillisecond = '2001-01-01T23:59:59.999Z'
+    const cutoff = '2001-01-02T00:00:00.000Z'
+    const nextCutoff = '2001-01-03T00:00:00.000Z'
+
+    it.each([
+      ...['open', 'queued', 'assigned', 'escalated'].map((status) => ({
+        name: `old ${status} report`,
+        status,
+        createdAt: beforeWindow,
+        transitions: [] as string[],
+        expected: [1, 1],
+      })),
+      {
+        name: 'created exactly at midnight',
+        createdAt: cutoff,
+        transitions: [],
+        expected: [0, 1],
+      },
+      {
+        name: 'created in the last millisecond',
+        createdAt: lastMillisecond,
+        transitions: [],
+        expected: [1, 1],
+      },
+      {
+        name: 'closed in the last millisecond',
+        transitions: [lastMillisecond],
+        expected: [0, 0],
+      },
+      {
+        name: 'closed exactly at midnight',
+        transitions: [cutoff],
+        expected: [1, 0],
+      },
+      {
+        name: 'closed after both days',
+        transitions: [nextCutoff],
+        expected: [1, 1],
+      },
+      {
+        name: 'closure timestamp without activity history',
+        transitions: [cutoff],
+        skipHistory: true,
+        expected: [1, 0],
+      },
+      {
+        name: 'reopened exactly at midnight',
+        transitions: [beforeWindow, cutoff],
+        expected: [0, 1],
+      },
+      {
+        name: 'reopened before midnight',
+        transitions: [beforeWindow, lastMillisecond],
+        expected: [1, 1],
+      },
+      {
+        name: 'closed, reopened, and closed again',
+        transitions: [beforeWindow, cutoff, nextCutoff],
+        expected: [0, 1],
+      },
+      {
+        name: 'closed after the first day and later reopened',
+        transitions: [cutoff, nextCutoff],
+        expected: [1, 0],
+      },
+      {
+        name: 'close and reopen share a timestamp',
+        transitions: [cutoff, cutoff],
+        expected: [1, 1],
+      },
+      {
+        name: 'reopen and close share a timestamp',
+        transitions: [beforeWindow, cutoff, cutoff],
+        expected: [0, 0],
+      },
+    ])('reconstructs end-of-day backlog: $name', async (fixture) => {
+      const db = network.ozone.ctx.db.db
+      await sc.createReport({
+        reasonType: com.atproto.moderation.defs.ReasonSpam,
+        subject: {
+          $type: com.atproto.admin.defs.repoRef.$type,
+          did: sc.dids.alice as DidString,
+        },
+        reportedBy: sc.dids.bob,
+      })
+      await network.ozone.daemon.ctx.queueRouter.routeReports()
+      const report = await db
+        .selectFrom('report')
+        .select('id')
+        .orderBy('id', 'desc')
+        .executeTakeFirstOrThrow()
+      const closed = fixture.transitions.length % 2 === 1
+      await db
+        .updateTable('report')
+        .set({
+          createdAt: (fixture.createdAt ?? beforeWindow) as DatetimeString,
+          status: closed
+            ? 'closed'
+            : 'status' in fixture
+              ? fixture.status
+              : 'open',
+          closedAt: closed
+            ? (fixture.transitions.at(-1) as DatetimeString)
+            : null,
+        })
+        .where('id', '=', report.id)
+        .execute()
+      await db
+        .deleteFrom('report_activity')
+        .where('reportId', '=', report.id)
+        .execute()
+      const transitions = 'skipHistory' in fixture ? [] : fixture.transitions
+      for (const [index, createdAt] of transitions.entries()) {
+        await db
+          .insertInto('report_activity')
+          .values({
+            reportId: report.id,
+            activityType: index % 2 === 0 ? 'closeActivity' : 'reopenActivity',
+            previousStatus: index % 2 === 0 ? 'open' : 'closed',
+            internalNote: null,
+            publicNote: null,
+            meta: null,
+            isAutomated: false,
+            createdBy: sc.dids.alice as DidString,
+            createdAt: createdAt as DatetimeString,
+          })
+          .execute()
+      }
+
+      try {
+        await refreshStats({ startDate: firstDate, endDate: secondDate })
+        await refreshStats({
+          startDate: firstDate,
+          endDate: secondDate,
+          queueIds: [spamQueueId],
+        })
+        for (const filters of [
+          {},
+          { queueId: spamQueueId },
+          { reportTypes: REPORT_TYPE_GROUPS.Legacy },
+        ]) {
+          const { stats } = await getHistoricalStats({
+            ...filters,
+            startDate: `${firstDate}T00:00:00.000Z`,
+            endDate: `${secondDate}T23:59:59.999Z`,
+          })
+          expect(stats).toHaveLength(2)
+          expect(
+            stats.find((row) => row.date === firstDate)?.pendingCount,
+          ).toBe(fixture.expected[0])
+          expect(
+            stats.find((row) => row.date === secondDate)?.pendingCount,
+          ).toBe(fixture.expected[1])
+        }
+      } finally {
+        await db
+          .deleteFrom('report_activity')
+          .where('reportId', '=', report.id)
+          .execute()
+        await db.deleteFrom('report').where('id', '=', report.id).execute()
+      }
+    })
+
+    it.each([false, true])(
+      'rejects future dates before writing any snapshots (queue filter: %s)',
+      async (queueOnly) => {
+        const db = network.ozone.ctx.db.db
+        const today = currentDatetimeString().slice(0, 10)
+        const tomorrow = toDatetimeString(Date.now() + 86400000).slice(0, 10)
+        const before = await db
+          .selectFrom('report_stat')
+          .selectAll()
+          .orderBy('id')
+          .execute()
+        await expect(
+          refreshStats({
+            startDate: today,
+            endDate: tomorrow,
+            queueIds: queueOnly ? [spamQueueId] : undefined,
+          }),
+        ).rejects.toMatchObject({ status: 400, error: 'InvalidRequest' })
+        expect(
+          await db
+            .selectFrom('report_stat')
+            .selectAll()
+            .orderBy('id')
+            .execute(),
+        ).toEqual(before)
+      },
+    )
+
+    it('refreshes a queue backlog without changing other queues', async () => {
+      await modClient.computeStats()
+      const db = network.ozone.ctx.db.db
+      const today = currentDatetimeString().slice(0, 10) as DateString
+      const expected = await getLiveStats({ queueId: spamQueueId })
+      await db
+        .updateTable('report_stat')
+        .set({ pendingCount: -1, inboundCount: -1 })
+        .where('date', '=', today)
+        .where('queueId', '=', spamQueueId)
+        .execute()
+      const otherQueue = () =>
+        db
+          .selectFrom('report_stat')
+          .selectAll()
+          .where('date', '=', today)
+          .where('queueId', '=', threatQueueId)
+          .executeTakeFirstOrThrow()
+      const before = await otherQueue()
+      await refreshStats({
+        startDate: today,
+        endDate: today,
+        queueIds: [spamQueueId],
+      })
+      const refreshed = await getLiveStats({ queueId: spamQueueId })
+      expect(refreshed.pendingCount).toBe(expected.pendingCount)
+      expect(refreshed.inboundCount).toBe(expected.inboundCount)
+      expect(await otherQueue()).toEqual(before)
+    })
+
+    it.each([false, true])(
+      'backfills an empty day (queue filter: %s)',
+      async (queueOnly) => {
+        const db = network.ozone.ctx.db.db
+        const date = '1999-01-01'
+        await db.deleteFrom('report_stat').where('date', '=', date).execute()
+        await refreshStats({
+          startDate: date,
+          endDate: date,
+          queueIds: queueOnly ? [spamQueueId] : undefined,
+        })
+        const result = await getHistoricalStats({
+          startDate: `${date}T00:00:00.000Z`,
+          endDate: `${date}T23:59:59.999Z`,
+          queueId: queueOnly ? spamQueueId : undefined,
+        })
+        expect(result.stats).toHaveLength(1)
+        expect(result.stats[0]).toMatchObject({
+          pendingCount: 0,
+          inboundCount: 0,
+          closedCount: 0,
+        })
+        const moderatorRows = await db
+          .selectFrom('report_stat')
+          .select('pendingCount')
+          .where('date', '=', date)
+          .where('moderatorDid', 'is not', null)
+          .execute()
+        for (const row of moderatorRows) expect(row.pendingCount).toBeNull()
+      },
+    )
+  })
+
+  describe('daily finalization', () => {
+    it.each([false, true])(
+      'finalizes every group after a queue-only refresh (missing aggregate: %s)',
+      async (missingAggregate) => {
+        await modClient.computeStats()
+        const db = network.ozone.ctx.db.db
+        const yesterday = toDatetimeString(Date.now() - 86400000).slice(
+          0,
+          10,
+        ) as DateString
+        await db
+          .updateTable('report_stat')
+          .set({ pendingCount: -1, computedAt: `${yesterday}T23:59:59.999Z` })
+          .where('date', '=', yesterday)
+          .execute()
+        if (missingAggregate) {
+          await db
+            .deleteFrom('report_stat')
+            .where('date', '=', yesterday)
+            .where('queueId', 'is', null)
+            .where('moderatorDid', 'is', null)
+            .where('reportTypes', 'is', null)
+            .execute()
+        }
+        await refreshStats({
+          startDate: yesterday,
+          endDate: yesterday,
+          queueIds: [spamQueueId],
+        })
+        await network.ozone.ctx
+          .reportStatsService(network.ozone.ctx.db)
+          .materializeAll()
+        const rows = await db
+          .selectFrom('report_stat')
+          .selectAll()
+          .where('date', '=', yesterday)
+          .where('moderatorDid', 'is', null)
+          .execute()
+        expect(
+          rows.some((r) => r.queueId === null && r.reportTypes === null),
+        ).toBe(true)
+        for (const row of rows) {
+          expect(row.pendingCount).toBeGreaterThanOrEqual(0)
+          expect(row.computedAt > `${yesterday}T23:59:59.999Z`).toBe(true)
+        }
+      },
+    )
+
+    it.each([false, true])(
+      'keeps a refresh that crosses midnight eligible for finalization (queue filter: %s)',
+      async (queueOnly) => {
+        const db = network.ozone.ctx.db
+        const service = new ReportStatsService(db)
+        const midnight = new Date(
+          `${currentDatetimeString().slice(0, 10)}T00:00:00.000Z`,
+        ).getTime()
+        const startedAt = toDatetimeString(midnight - 1)
+        const date = startedAt.slice(0, 10) as DateString
+        const computeStats = service['computeBatchedStats'].bind(service)
+        using advanceClock = jest
+          .spyOn(
+            service as unknown as { computeBatchedStats: typeof computeStats },
+            'computeBatchedStats',
+          )
+          .mockImplementationOnce(async (...args) => {
+            const stats = await computeStats(...args)
+            jest.setSystemTime(midnight + 1)
+            return stats
+          })
+        jest.useFakeTimers({
+          now: midnight - 1,
+          doNotFake: [
+            'hrtime',
+            'nextTick',
+            'performance',
+            'queueMicrotask',
+            'setImmediate',
+            'clearImmediate',
+            'setInterval',
+            'clearInterval',
+            'setTimeout',
+            'clearTimeout',
+          ],
+        })
+        try {
+          await service.refreshDateRange({
+            startDate: date,
+            endDate: date,
+            queueIds: queueOnly ? [spamQueueId] : undefined,
+          })
+        } finally {
+          jest.useRealTimers()
+        }
+        expect(advanceClock).toHaveBeenCalled()
+        const row = await db.db
+          .selectFrom('report_stat')
+          .select('computedAt')
+          .where('date', '=', date)
+          .where('queueId', '=', spamQueueId)
+          .executeTakeFirstOrThrow()
+        expect(row.computedAt).toBe(startedAt)
+        if (!queueOnly) {
+          await service.materializeAll()
+          const finalized = await db.db
+            .selectFrom('report_stat')
+            .select('computedAt')
+            .where('date', '=', date)
+            .where('queueId', '=', spamQueueId)
+            .executeTakeFirstOrThrow()
+          expect(
+            new Date(finalized.computedAt).getTime(),
+          ).toBeGreaterThanOrEqual(midnight)
+        }
+      },
+    )
   })
 
   describe('historical stats', () => {
