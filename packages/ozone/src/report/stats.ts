@@ -380,22 +380,22 @@ export class ReportStatsService {
 
     const reportGroupColumns = sql`
       case
-        when grouping(r."queueId") = 0 then 'queue'
+        when grouping(coalesce(r."queueId", -1)) = 0 then 'queue'
         when grouping(r."reportType") = 0 then 'reportType'
         else 'aggregate'
       end as "group",
-      case when grouping(r."queueId") = 0 then coalesce(r."queueId", -1) end as "queueId",
+      case when grouping(coalesce(r."queueId", -1)) = 0 then coalesce(r."queueId", -1) end as "queueId",
       case when grouping(r."reportType") = 0 then r."reportType" end as "reportType",
       null as "moderatorDid"`
 
     const allGroupColumns = sql`
       case
-        when grouping(r."queueId") = 0 then 'queue'
+        when grouping(coalesce(r."queueId", -1)) = 0 then 'queue'
         when grouping(r."reportType") = 0 then 'reportType'
         when grouping(r."assignedTo") = 0 then 'moderator'
         else 'aggregate'
       end as "group",
-      case when grouping(r."queueId") = 0 then coalesce(r."queueId", -1) end as "queueId",
+      case when grouping(coalesce(r."queueId", -1)) = 0 then coalesce(r."queueId", -1) end as "queueId",
       case when grouping(r."reportType") = 0 then r."reportType" end as "reportType",
       case when grouping(r."assignedTo") = 0 then r."assignedTo" end as "moderatorDid"`
 
@@ -405,7 +405,7 @@ export class ReportStatsService {
       select ${allGroupColumns}, count(*) as "inboundCount"
       from report r
       where r."createdAt" >= ${dayStart} and r."createdAt" < ${dayEnd}
-      group by grouping sets ((), (r."queueId"), (r."reportType"), (r."assignedTo"))
+      group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"), (r."assignedTo"))
     `.execute(this.db.db)
 
     // Current stock, grouped in one scan. Pending has no moderator group.
@@ -414,7 +414,7 @@ export class ReportStatsService {
       select ${reportGroupColumns}, count(*) as "pendingCount"
       from report r
       where r.status != 'closed'
-      group by grouping sets ((), (r."queueId"), (r."reportType"))
+      group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"))
     `.execute(this.db.db)
 
     // Current closures in the date window, including outcome and duration parts.
@@ -431,12 +431,12 @@ export class ReportStatsService {
       )
       select
         case
-          when grouping("queueId") = 0 then 'queue'
+          when grouping(coalesce("queueId", -1)) = 0 then 'queue'
           when grouping("reportType") = 0 then 'reportType'
           when grouping("assignedTo") = 0 then 'moderator'
           else 'aggregate'
         end as "group",
-        case when grouping("queueId") = 0 then coalesce("queueId", -1) end as "queueId",
+        case when grouping(coalesce("queueId", -1)) = 0 then coalesce("queueId", -1) end as "queueId",
         case when grouping("reportType") = 0 then "reportType" end as "reportType",
         case when grouping("assignedTo") = 0 then "assignedTo" end as "moderatorDid",
         count(*) as "closedCount",
@@ -459,7 +459,7 @@ export class ReportStatsService {
         coalesce(sum(greatest(0, extract(epoch from ("closedAt"::timestamp - "createdAt"::timestamp)))), 0) as "resolutionDurationSec",
         count(*) as "resolutionSampleCount"
       from closures
-      group by grouping sets ((), ("queueId"), ("reportType"), ("assignedTo"))
+      group by grouping sets ((), (coalesce("queueId", -1)), ("reportType"), ("assignedTo"))
     `.execute(this.db.db)
 
     // Escalation transitions in the date window, grouped in one activity scan.
@@ -470,7 +470,7 @@ export class ReportStatsService {
       join report r on r.id = ra."reportId"
       where ra."activityType" = 'escalationActivity'
         and ra."createdAt" >= ${dayStart} and ra."createdAt" < ${dayEnd}
-      group by grouping sets ((), (r."queueId"), (r."reportType"), (r."assignedTo"))
+      group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"), (r."assignedTo"))
     `.execute(this.db.db)
 
     const [inbound, pending, closures, escalations] = await Promise.all([

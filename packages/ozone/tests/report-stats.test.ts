@@ -623,7 +623,7 @@ describe('report-stats', () => {
     })
   })
 
-  describe('mixed moderator assignments', () => {
+  describe('group aggregation', () => {
     const createReport = async (
       assignedTo?: DidString,
       createdAt = currentDatetimeString(),
@@ -711,6 +711,67 @@ describe('report-stats', () => {
       expect(after.closedCount).toBe(before.closedCount)
       expect(after.escalatedCount).toBe(before.escalatedCount)
       expect(after.pendingCount).toBeUndefined()
+    })
+
+    it('combines null and unmatched queue IDs across all metrics', async () => {
+      const moderatorDid = network.ozone.moderatorAccnt.did
+      await modClient.computeStats()
+      const before = await getLiveStats({ queueId: -1 })
+      const aggregateBefore = await getLiveStats()
+      const reports = [
+        await createReport(moderatorDid),
+        await createReport(moderatorDid),
+      ]
+      await network.ozone.ctx.db.db
+        .updateTable('report')
+        .set({ queueId: null })
+        .where('id', '=', reports[0].id)
+        .execute()
+      await network.ozone.ctx.db.db
+        .updateTable('report')
+        .set({ queueId: -1 })
+        .where('id', '=', reports[1].id)
+        .execute()
+
+      await modClient.computeStats()
+      const pending = await getLiveStats({ queueId: -1 })
+      expect(pending.inboundCount! - before.inboundCount!).toBe(2)
+      expect(pending.pendingCount! - before.pendingCount!).toBe(2)
+
+      for (const report of reports) {
+        for (const event of [
+          { $type: tools.ozone.moderation.defs.modEventEscalate.$type },
+          { $type: tools.ozone.moderation.defs.modEventAcknowledge.$type },
+        ]) {
+          await modClient.emitEvent(
+            {
+              event,
+              subject: {
+                $type: com.atproto.admin.defs.repoRef.$type,
+                did: sc.dids.alice,
+              },
+              reportAction: { ids: [report.id] },
+            },
+            'moderator',
+          )
+        }
+      }
+
+      await modClient.computeStats()
+      const after = await getLiveStats({ queueId: -1 })
+      const aggregateAfter = await getLiveStats()
+      for (const metric of [
+        'inboundCount',
+        'closedCount',
+        'acknowledgedCount',
+        'escalatedCount',
+        'ahtSampleCount',
+        'resolutionSampleCount',
+      ] as const) {
+        expect(after[metric]! - before[metric]!).toBe(2)
+        expect(aggregateAfter[metric]! - aggregateBefore[metric]!).toBe(2)
+      }
+      expect(after.pendingCount).toBe(before.pendingCount)
     })
   })
 
