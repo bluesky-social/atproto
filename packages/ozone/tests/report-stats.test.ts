@@ -418,7 +418,7 @@ describe('report-stats', () => {
 
       await db.db
         .updateTable('report')
-        .set({ status: 'open', updatedAt: new Date().toISOString() })
+        .set({ status: 'open', updatedAt: currentDatetimeString() })
         .where('id', '=', report.id)
         .execute()
 
@@ -474,8 +474,8 @@ describe('report-stats', () => {
         .orderBy('id', 'desc')
         .executeTakeFirstOrThrow()
 
-      const backdate = new Date(Date.now() - 120 * 1000).toISOString()
-      const assignedAt = new Date(Date.now() - 60 * 1000).toISOString()
+      const backdate = toDatetimeString(Date.now() - 120 * 1000)
+      const assignedAt = toDatetimeString(Date.now() - 60 * 1000)
       await db.db
         .updateTable('report')
         .set({
@@ -516,7 +516,7 @@ describe('report-stats', () => {
         .set({
           status: 'open',
           closedAt: null,
-          updatedAt: new Date().toISOString(),
+          updatedAt: currentDatetimeString(),
         })
         .where('id', '=', report.id)
         .execute()
@@ -528,7 +528,7 @@ describe('report-stats', () => {
       expect(reopened.ahtSampleCount).toBe(0)
       expect(reopened.resolutionSampleCount).toBe(0)
 
-      const reclosedAt = new Date().toISOString()
+      const reclosedAt = currentDatetimeString()
       await db.db
         .updateTable('report')
         .set({

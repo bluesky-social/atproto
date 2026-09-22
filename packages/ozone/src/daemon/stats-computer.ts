@@ -1,9 +1,11 @@
+import { sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
+import { currentDatetimeString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
+import type { DateString } from '../db/schema/report_stat.js'
 import { dbLogger } from '../logger.js'
 import type { ReportStatsServiceCreator } from '../report/stats.js'
 import { STATS_COMPUTER_LOCK_ID } from './locks.js'
-import { sql } from 'kysely'
 
 /**
  * Background daemon that materializes report statistics on an interval (default is 15 minutes).
@@ -88,7 +90,7 @@ export class StatsComputer {
 
       const statsService = this.reportStatsServiceCreator(this.db)
       const { rowsWritten } = await statsService.materializeAll()
-      const today = new Date().toISOString().slice(0, 10)
+      const today = currentDatetimeString().slice(0, 10) as DateString
       const latest = await this.db.db
         .selectFrom('report_stat')
         .select(sql<string | null>`max("computedAt")`.as('computedAt'))

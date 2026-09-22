@@ -170,7 +170,7 @@ type UpsertRow = {
   actionRate: number | null
   avgHandlingTimeSec: number | null
   avgResolutionTimeSec: number | null
-  computedAt: string
+  computedAt: DatetimeString
 }
 
 export class ReportStatsService {
@@ -599,7 +599,7 @@ export class ReportStatsService {
       actionRate,
       avgHandlingTimeSec: stats.avgHandlingTimeSec ?? null,
       avgResolutionTimeSec: stats.avgResolutionTimeSec ?? null,
-      computedAt: new Date().toISOString(),
+      computedAt: currentDatetimeString(),
     }
   }
 
@@ -804,11 +804,7 @@ function emptyStats(group: StatGroup): StatsRow {
 }
 
 function statKey(group: StatGroup): string {
-  return [
-    group.queueId,
-    group.reportType,
-    group.moderatorDid,
-  ].join('|')
+  return [group.queueId, group.reportType, group.moderatorDid].join('|')
 }
 
 function mergeStats(
