@@ -1,13 +1,10 @@
+import { ToolsOzoneTeamDefs } from '@atproto/api'
 import {
   type ModeratorClient,
   type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import {
-  ROLEADMIN,
-  ROLEMODERATOR,
-} from '../dist/lexicon/types/tools/ozone/team/defs.js'
 import { ProtectedTagSettingKey } from '../src/setting/constants.js'
 
 describe('protected-tags', () => {
@@ -38,7 +35,7 @@ describe('protected-tags', () => {
       await expect(
         modClient.upsertSettingOption({
           ...basicSetting,
-          managerRole: ROLEMODERATOR,
+          managerRole: ToolsOzoneTeamDefs.ROLEMODERATOR,
           value: {
             vip: {},
           },
@@ -49,43 +46,43 @@ describe('protected-tags', () => {
       await expect(
         modClient.upsertSettingOption({
           ...basicSetting,
-          managerRole: ROLEADMIN,
+          managerRole: ToolsOzoneTeamDefs.ROLEADMIN,
           // @ts-expect-error testing invalid value here
           value: ['test'],
         }),
-      ).rejects.toThrow('Invalid configuration')
+      ).rejects.toThrow('Expected object value type')
       await expect(
         modClient.upsertSettingOption({
           ...basicSetting,
-          managerRole: ROLEADMIN,
+          managerRole: ToolsOzoneTeamDefs.ROLEADMIN,
           value: { vip: 'test' },
         }),
       ).rejects.toThrow('Invalid configuration')
       await expect(
         modClient.upsertSettingOption({
           ...basicSetting,
-          managerRole: ROLEADMIN,
+          managerRole: ToolsOzoneTeamDefs.ROLEADMIN,
           value: { vip: { weirdValue: 1 } },
         }),
       ).rejects.toThrow(/Must define who a list of moderators or a role/gi)
       await expect(
         modClient.upsertSettingOption({
           ...basicSetting,
-          managerRole: ROLEADMIN,
+          managerRole: ToolsOzoneTeamDefs.ROLEADMIN,
           value: { vip: { roles: 'test' } },
         }),
       ).rejects.toThrow(/Roles must be an array of moderator/gi)
       await expect(
         modClient.upsertSettingOption({
           ...basicSetting,
-          managerRole: ROLEADMIN,
+          managerRole: ToolsOzoneTeamDefs.ROLEADMIN,
           value: { vip: { roles: 'test' } },
         }),
       ).rejects.toThrow(/Roles must be an array of moderator/gi)
       await expect(
         modClient.upsertSettingOption({
           ...basicSetting,
-          managerRole: ROLEADMIN,
+          managerRole: ToolsOzoneTeamDefs.ROLEADMIN,
           value: { vip: { moderators: 1 } },
         }),
       ).rejects.toThrow(/Moderators must be an array of moderator/gi)
@@ -101,7 +98,7 @@ describe('protected-tags', () => {
     it('only allows configured roles to add/remove protected tags', async () => {
       await modClient.upsertSettingOption({
         ...basicSetting,
-        managerRole: ROLEADMIN,
+        managerRole: ToolsOzoneTeamDefs.ROLEADMIN,
         value: { vip: { roles: ['tools.ozone.team.defs#roleAdmin'] } },
       })
 
@@ -166,7 +163,7 @@ describe('protected-tags', () => {
     it('only allows configured moderators to add/remove protected tags', async () => {
       await modClient.upsertSettingOption({
         ...basicSetting,
-        managerRole: ROLEADMIN,
+        managerRole: ToolsOzoneTeamDefs.ROLEADMIN,
         value: { vip: { moderators: [network.ozone.adminAccnt.did] } },
       })
 

@@ -26,9 +26,11 @@ export class TokenSchema<
   const TValue extends string = string,
 > extends Schema<TValue> {
   readonly type = 'token' as const
+  readonly value: TValue
 
-  constructor(readonly value: TValue) {
+  constructor(value: TValue) {
     super()
+    this.value = value
   }
 
   get $token(): TValue {

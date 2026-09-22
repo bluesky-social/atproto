@@ -1,4 +1,5 @@
 import { sql } from 'kysely'
+import { ids } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
 import {
   type ModeratorClient,
@@ -6,7 +7,8 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
+import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex'
 import { REPORT_TYPE_GROUPS } from '../src/report/stats.js'
 
 describe('report-stats', () => {
@@ -94,7 +96,7 @@ describe('report-stats', () => {
       reasonType: 'com.atproto.moderation.defs#reasonSpam',
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
-        did: sc.dids.alice,
+        did: sc.dids.alice as DidString,
       },
       reportedBy: sc.dids.bob,
     })
@@ -102,7 +104,7 @@ describe('report-stats', () => {
       reasonType: 'com.atproto.moderation.defs#reasonSpam',
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
-        did: sc.dids.bob,
+        did: sc.dids.bob as DidString,
       },
       reportedBy: sc.dids.alice,
     })
@@ -110,7 +112,7 @@ describe('report-stats', () => {
       reasonType: 'tools.ozone.report.defs#reasonViolenceThreats',
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
-        did: sc.dids.carol,
+        did: sc.dids.carol as DidString,
       },
       reportedBy: sc.dids.alice,
     })
@@ -134,7 +136,7 @@ describe('report-stats', () => {
         reasonType: 'com.atproto.moderation.defs#reasonMisleading',
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.carol,
+          did: sc.dids.carol as DidString,
         },
         reportedBy: sc.dids.bob,
       })
@@ -151,7 +153,7 @@ describe('report-stats', () => {
         reasonType: 'com.atproto.moderation.defs#reasonSpam',
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.alice,
+          did: sc.dids.alice as DidString,
         },
         reportedBy: sc.dids.carol,
       })
@@ -168,7 +170,10 @@ describe('report-stats', () => {
         .executeTakeFirstOrThrow()
       await db.db
         .updateTable('report')
-        .set({ createdAt: oldDate, updatedAt: oldDate })
+        .set({
+          createdAt: oldDate as DatetimeString,
+          updatedAt: oldDate as DatetimeString,
+        })
         .where('id', '=', report.id)
         .execute()
 
@@ -209,7 +214,7 @@ describe('report-stats', () => {
         reasonType: 'com.atproto.moderation.defs#reasonSpam',
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.carol,
+          did: sc.dids.carol as DidString,
         },
         reportedBy: sc.dids.bob,
       })
@@ -250,7 +255,7 @@ describe('report-stats', () => {
         reasonType: 'com.atproto.moderation.defs#reasonMisleading',
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.alice,
+          did: sc.dids.alice as DidString,
         },
         reportedBy: sc.dids.carol,
       })
@@ -295,14 +300,14 @@ describe('report-stats', () => {
           reasonType: 'com.atproto.moderation.defs#reasonOther',
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
-            did: sc.dids.carol,
+            did: sc.dids.carol as DidString,
           },
           reportedBy: sc.dids.bob,
         })
         // Report rows are inserted asynchronously by the queue-router daemon —
         // drain it before looking up the row.
         await network.processAll()
-        const backdate = new Date(Date.now() - ts * 1000).toISOString()
+        const backdate = toDatetimeString(Date.now() - ts * 1000)
         const report = await db.db
           .selectFrom('report')
           .select(['id', 'status'])
@@ -326,7 +331,7 @@ describe('report-stats', () => {
             },
             subject: {
               $type: 'com.atproto.admin.defs#repoRef',
-              did: sc.dids.carol,
+              did: sc.dids.carol as DidString,
             },
             reportAction: { ids: [report.id] },
           },
@@ -399,7 +404,7 @@ describe('report-stats', () => {
         reasonType: 'com.atproto.moderation.defs#reasonSpam',
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.bob,
+          did: sc.dids.bob as DidString,
         },
         reportedBy: sc.dids.carol,
       })
@@ -457,7 +462,7 @@ describe('report-stats', () => {
         reasonType: 'tools.ozone.report.defs#reasonSexualUnlabeled',
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.alice,
+          did: sc.dids.alice as DidString,
         },
         reportedBy: sc.dids.carol,
       })

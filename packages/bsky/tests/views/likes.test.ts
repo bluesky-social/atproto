@@ -212,15 +212,29 @@ describe('pds like views', () => {
       sc.dids.bob,
     ])
 
-    const filled = await agent.app.bsky.feed.getLikes(
+    // Filtering carol out leaves this page short of the requested 3, but it
+    // already holds half of them, so it is served with a cursor for the rest.
+    const short = await agent.app.bsky.feed.getLikes(
       { uri: sc.posts[alice][1].ref.uriStr, limit: 3 },
       { headers: await network.serviceHeaders(bob, ids.AppBskyFeedGetLikes) },
     )
-    expect(filled.data.likes.map((like) => like.actor.did)).toStrictEqual([
+    expect(short.data.likes.map((like) => like.actor.did)).toStrictEqual([
       sc.dids.eve,
       sc.dids.dan,
+    ])
+    expect(short.data.cursor).toBeDefined()
+
+    const rest = await agent.app.bsky.feed.getLikes(
+      {
+        uri: sc.posts[alice][1].ref.uriStr,
+        limit: 3,
+        cursor: short.data.cursor,
+      },
+      { headers: await network.serviceHeaders(bob, ids.AppBskyFeedGetLikes) },
+    )
+    expect(rest.data.likes.map((like) => like.actor.did)).toStrictEqual([
       sc.dids.bob,
     ])
-    expect(filled.data.cursor).toBeUndefined()
+    expect(rest.data.cursor).toBeUndefined()
   })
 })

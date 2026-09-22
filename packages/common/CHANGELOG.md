@@ -1,5 +1,26 @@
 # @atproto/common
 
+## 0.8.3
+
+### Patch Changes
+
+- Updated dependencies [[`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/common-web@0.5.12
+
+## 0.8.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.11
+
+## 0.8.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common-web@0.5.10
+
 ## 0.8.0
 
 ### Minor Changes

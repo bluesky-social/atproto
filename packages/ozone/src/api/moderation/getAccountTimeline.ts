@@ -1,11 +1,11 @@
-import type { ToolsOzoneModerationGetAccountTimeline } from '@atproto/api'
+import type { DidString } from '@atproto/lex'
+import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
-import { ids } from '../../lexicon/lexicons.js'
+import { tools } from '../../lexicons/index.js'
 import { dateFromDatetime } from '../../mod-service/util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.moderation.getAccountTimeline({
+  server.add(tools.ozone.moderation.getAccountTimeline, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params }) => {
       const { did } = params
@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
         ])
       const timelineByDay = new Map<
         string,
-        ToolsOzoneModerationGetAccountTimeline.TimelineItemSummary[]
+        tools.ozone.moderation.getAccountTimeline.TimelineItemSummary[]
       >()
 
       if (modEventHistory.status === 'fulfilled') {
@@ -44,7 +44,7 @@ export default function (server: Server, ctx: AppContext) {
       if (accountHistory.status === 'fulfilled') {
         for (const [rowDay, row] of Object.entries(accountHistory.value)) {
           const day = timelineByDay.get(rowDay)
-          const summaries: ToolsOzoneModerationGetAccountTimeline.TimelineItemSummary[] =
+          const summaries: tools.ozone.moderation.getAccountTimeline.TimelineItemSummary[] =
             []
           for (const [eventType, count] of Object.entries(row)) {
             summaries.push({
@@ -65,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
       if (plcHistory.status === 'fulfilled') {
         for (const [rowDay, row] of Object.entries(plcHistory.value)) {
           const day = timelineByDay.get(rowDay)
-          const summaries: ToolsOzoneModerationGetAccountTimeline.TimelineItemSummary[] =
+          const summaries: tools.ozone.moderation.getAccountTimeline.TimelineItemSummary[] =
             []
           for (const [eventType, count] of Object.entries(row)) {
             summaries.push({
@@ -83,7 +83,8 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const timeline: ToolsOzoneModerationGetAccountTimeline.TimelineItem[] = []
+      const timeline: tools.ozone.moderation.getAccountTimeline.TimelineItem[] =
+        []
 
       for (const [day, summary] of timelineByDay.entries()) {
         timeline.push({ day, summary: summary.flat() })
@@ -97,23 +98,24 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const getAccountHistory = async (ctx: AppContext, did: string) => {
+const getAccountHistory = async (ctx: AppContext, did: DidString) => {
   const events: Record<string, Record<string, number>> = {}
 
-  if (!ctx.pdsAgent) {
+  if (!ctx.pdsClient) {
     return events
   }
 
-  const auth = await ctx.pdsAuth(ids.ToolsOzoneHostingGetAccountHistory)
+  const auth = await ctx.pdsAuth(tools.ozone.hosting.getAccountHistory.$lxm)
   let cursor: string | undefined = undefined
 
   do {
-    const { data } = await ctx.pdsAgent.tools.ozone.hosting.getAccountHistory(
+    const body = await ctx.pdsClient.call(
+      tools.ozone.hosting.getAccountHistory,
       { did, cursor },
       auth,
     )
-    cursor = data.cursor
-    for (const event of data.events) {
+    cursor = body.cursor
+    for (const event of body.events) {
       // This should never happen and the check is here only because typescript screams at us otherwise
       if (!event.$type) {
         continue
@@ -130,12 +132,12 @@ const getAccountHistory = async (ctx: AppContext, did: string) => {
 }
 
 const PLC_OPERATION_MAP = {
-  create: 'tools.ozone.moderation.defs#timelineEventPlcCreate',
-  plc_operation: 'tools.ozone.moderation.defs#timelineEventPlcOperation',
-  plc_tombstone: 'tools.ozone.moderation.defs#timelineEventPlcTombstone',
+  create: tools.ozone.moderation.defs.TimelineEventPlcCreate,
+  plc_operation: tools.ozone.moderation.defs.TimelineEventPlcOperation,
+  plc_tombstone: tools.ozone.moderation.defs.TimelineEventPlcTombstone,
 }
 
-const getPlcHistory = async (ctx: AppContext, did: string) => {
+const getPlcHistory = async (ctx: AppContext, did: DidString) => {
   const events: Record<string, Record<string, number>> = {}
 
   if (!ctx.plcClient) {

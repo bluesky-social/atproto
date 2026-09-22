@@ -95,14 +95,12 @@ const hydration = async (
   inputs: HydrationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton } = inputs
-  const knownLikersLimit = 5
   return ctx.hydrator.hydrateThreadPosts(
     skeleton.uris.map((uri) => ({ uri })),
     params.hydrateCtx,
     {
       knownLikers: {
         subjectUris: [skeleton.anchor],
-        limit: knownLikersLimit,
       },
     },
   )

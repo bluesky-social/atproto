@@ -1,3 +1,4 @@
+import { ids } from '@atproto/api'
 import type { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import {
@@ -8,7 +9,6 @@ import {
   basicSeed,
   createOzoneDid,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
 import { LABELER_HEADER_NAME } from '../src/util.js'
 
 describe('labels from 3p labelers', () => {

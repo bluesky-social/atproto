@@ -15,6 +15,7 @@ import type {
   ActivitySubscription,
   VerificationMeta,
 } from '../proto/bsky_pb.js'
+import { events } from '../telemetry/events.js'
 import type {
   ChatDeclarationRecord,
   GermDeclarationRecord,
@@ -51,7 +52,6 @@ export type Actor = {
   allowGroupChatInvitesFrom?: string
   upstreamStatus?: string
   createdAt?: Date
-  priorityNotifications: boolean
   trustedVerifier?: boolean
   verifications: VerificationHydrationState[]
   status?: RecordInfo<StatusRecord>
@@ -318,7 +318,6 @@ export class ActorHydrator {
         allowGroupChatInvitesFrom: actor.allowGroupChatInvitesFrom || undefined,
         upstreamStatus: actor.upstreamStatus || undefined,
         createdAt: parseDate(actor.createdAt),
-        priorityNotifications: actor.priorityNotifications,
         trustedVerifier: actor.trustedVerifier,
         verifications,
         status: status,
@@ -501,34 +500,30 @@ export class ActorHydrator {
     if (!dids.length) return map
 
     try {
-      const { results: knownFollowersResults } =
-        await this.dataplane.getFollowsFollowing(
-          {
-            actorDid: viewer,
-            targetDids: dids,
-          },
-          {
-            signal: AbortSignal.timeout(100),
-          },
-        )
-
+      const { results } = await this.dataplane.sampleFollowsFollowing(
+        {
+          actorDid: viewer,
+          targetDids: dids,
+          limit: 5,
+        },
+        { signal: AbortSignal.timeout(100) },
+      )
       for (let i = 0; i < dids.length; i++) {
-        const did = dids[i]
-
-        const result = knownFollowersResults[i]?.dids
-
+        const result = results[i]
+        const followerDids = result?.dids
         map.set(
-          did,
-          result && result.length > 0
+          dids[i],
+          followerDids && followerDids.length > 0
             ? {
-                count: result.length,
-                followers: result.slice(0, 5) as DidString[],
+                count: result.totalKnown || followerDids.length,
+                followers: followerDids as DidString[],
               }
             : undefined,
         )
       }
-    } catch {
-      // ignore errors and return empty map
+    } catch (err) {
+      // Fail open.
+      events.hydrationFailed({ source: 'known_followers', err })
     }
 
     return map
@@ -568,8 +563,9 @@ export class ActorHydrator {
           map.set(did, undefined)
         }
       }
-    } catch {
-      // ignore errors and return empty map
+    } catch (err) {
+      // Fail open.
+      events.hydrationFailed({ source: 'activity_subscriptions', err })
     }
 
     return map

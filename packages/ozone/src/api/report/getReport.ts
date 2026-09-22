@@ -1,12 +1,12 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 import { getReportById } from '../../mod-service/report.js'
 import { buildReportView, hydrateReportInfo } from '../../report/views.js'
 import { getPdsAccountInfos } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.report.getReport({
+  server.add(tools.ozone.report.getReport, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth, req }) => {
       const db = ctx.db

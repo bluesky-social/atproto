@@ -82,7 +82,7 @@ describe('appview search', () => {
   afterAll(async () => network?.close())
 
   describe('pagination', () => {
-    it('searchPosts fills the page after filtering and returns a cursor only when more posts are available', async () => {
+    it('searchPosts serves a page short of the limit after filtering, and returns a cursor only when more posts are available', async () => {
       const exact = await network.bsky.ctx.dataplane.searchPosts({
         term: 'doggo',
         limit: 3,
@@ -97,7 +97,9 @@ describe('appview search', () => {
       expect(over.uris).toHaveLength(2)
       expect(over.cursor).not.toBe('')
 
-      const terminal = await agent.app.bsky.feed.searchPosts(
+      // The tagged post sits between the two visible ones, so the first page
+      // holds one of the two requested. That is already half of the limit.
+      const short = await agent.app.bsky.feed.searchPosts(
         { q: 'doggo', sort: 'top', limit: 2 },
         {
           headers: await network.serviceHeaders(
@@ -106,9 +108,23 @@ describe('appview search', () => {
           ),
         },
       )
-      expect(terminal.data.posts.map((post) => post.uri)).toEqual(
-        nonTaggedResults,
+      expect(short.data.posts.map((post) => post.uri)).toEqual([
+        nonTaggedResults[0],
+      ])
+      expect(short.data.cursor).toBeDefined()
+
+      const terminal = await agent.app.bsky.feed.searchPosts(
+        { q: 'doggo', sort: 'top', limit: 2, cursor: short.data.cursor },
+        {
+          headers: await network.serviceHeaders(
+            carol,
+            ids.AppBskyFeedSearchPosts,
+          ),
+        },
       )
+      expect(terminal.data.posts.map((post) => post.uri)).toEqual([
+        nonTaggedResults[1],
+      ])
       expect(terminal.data.cursor).toBeUndefined()
 
       const trimmed = await agent.app.bsky.feed.searchPosts(
@@ -157,7 +173,9 @@ describe('appview search', () => {
         ),
       ).rejects.toThrow('Request forbidden by administrative rules.')
 
-      const terminal = await agent.app.bsky.feed.searchPostsV2(
+      // The tagged post sits between the two visible ones, so the first page
+      // holds one of the two requested. That is already half of the limit.
+      const short = await agent.app.bsky.feed.searchPostsV2(
         { query: 'doggo', sort: 'top', limit: 2 },
         {
           headers: {
@@ -169,9 +187,31 @@ describe('appview search', () => {
           },
         },
       )
-      expect(terminal.data.posts.map((post) => post.uri)).toEqual(
-        nonTaggedResults,
+      expect(short.data.posts.map((post) => post.uri)).toEqual([
+        nonTaggedResults[0],
+      ])
+      expect(short.data.cursor).toBeDefined()
+
+      const terminal = await agent.app.bsky.feed.searchPostsV2(
+        {
+          query: 'doggo',
+          sort: 'top',
+          limit: 2,
+          cursor: short.data.cursor,
+        },
+        {
+          headers: {
+            ...(await network.serviceHeaders(
+              carol,
+              ids.AppBskyFeedSearchPostsV2,
+            )),
+            ...override,
+          },
+        },
       )
+      expect(terminal.data.posts.map((post) => post.uri)).toEqual([
+        nonTaggedResults[1],
+      ])
       expect(terminal.data.cursor).toBeUndefined()
 
       const trimmed = await agent.app.bsky.feed.searchPostsV2(

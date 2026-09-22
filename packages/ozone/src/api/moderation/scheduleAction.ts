@@ -1,14 +1,18 @@
-import { ToolsOzoneModerationScheduleAction } from '@atproto/api'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import type { DidString } from '@atproto/lex'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { com, tools } from '../../lexicons/index.js'
 import { subjectFromInput } from '../../mod-service/subject.js'
 import type { ExecutionSchedule } from '../../scheduled-action/types.js'
 import { getScheduledActionType } from '../util.js'
 import { ScheduledTakedownTag } from './util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.moderation.scheduleAction({
+  server.add(tools.ozone.moderation.scheduleAction, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
@@ -29,8 +33,9 @@ export default function (server: Server, ctx: AppContext) {
         action.$type?.split('#')[1] || '',
       )
 
-      const succeeded: string[] = []
-      const failed: ToolsOzoneModerationScheduleAction.FailedScheduling[] = []
+      const succeeded: DidString[] = []
+      const failed: tools.ozone.moderation.scheduleAction.FailedScheduling[] =
+        []
 
       // Defining alternatively required fields is not supported by lexicons so we need to manually validate here
       if (!scheduling.executeAt && !scheduling.executeAfter) {
@@ -65,33 +70,33 @@ export default function (server: Server, ctx: AppContext) {
               ...executionSchedule,
             })
             // log an event in the mod event stream
-            if (ToolsOzoneModerationScheduleAction.isTakedown(action)) {
+            if (
+              tools.ozone.moderation.scheduleAction.takedown.$isTypeOf(action)
+            ) {
               await modService.logEvent({
-                event: {
-                  $type: 'tools.ozone.moderation.defs#scheduleTakedownEvent',
-                  executeAfter: scheduling.executeAfter,
-                  executeUntil: scheduling.executeUntil,
-                  executeAt: scheduling.executeAt,
-                  comment: action.comment,
-                },
-                subject: subjectFromInput({
-                  did: subject,
-                  $type: 'com.atproto.admin.defs#repoRef',
-                }),
+                event: tools.ozone.moderation.defs.scheduleTakedownEvent.$build(
+                  {
+                    executeAfter: scheduling.executeAfter,
+                    executeUntil: scheduling.executeUntil,
+                    executeAt: scheduling.executeAt,
+                    comment: action.comment,
+                  },
+                ),
+                subject: subjectFromInput(
+                  com.atproto.admin.defs.repoRef.$build({ did: subject }),
+                ),
                 createdBy: actualCreatedBy,
                 createdAt: now,
                 modTool,
               })
               await modService.logEvent({
-                event: {
-                  $type: 'tools.ozone.moderation.defs#modEventTag',
+                event: tools.ozone.moderation.defs.modEventTag.$build({
                   add: [ScheduledTakedownTag],
                   remove: [],
-                },
-                subject: subjectFromInput({
-                  did: subject,
-                  $type: 'com.atproto.admin.defs#repoRef',
                 }),
+                subject: subjectFromInput(
+                  com.atproto.admin.defs.repoRef.$build({ did: subject }),
+                ),
                 createdBy,
                 createdAt: now,
               })

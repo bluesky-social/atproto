@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.add(app.bsky.actor.searchActorsTypeahead, {
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth, req }) => {
+    handler: async ({ params, auth, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
@@ -44,6 +44,7 @@ export default function (server: Server, ctx: AppContext) {
         {
           ...params,
           hydrateCtx,
+          signal,
           isV2Override: resolveSearchV2Override(req, ctx.cfg),
         },
         ctx,
@@ -76,6 +77,7 @@ const skeletonV1 = async (
         limit: params.limit,
         viewer: params.hydrateCtx.viewer ?? undefined,
       },
+      { signal: params.signal },
     )
     return {
       dids: actors.map(({ did }) => did),
@@ -162,6 +164,7 @@ type Context = {
 
 type Params = app.bsky.actor.searchActorsTypeahead.$Params & {
   hydrateCtx: HydrateCtx
+  signal: AbortSignal
   isV2Override: boolean
 }
 

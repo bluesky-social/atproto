@@ -1,7 +1,9 @@
 import { readFromGenerator, wait } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
-import type { Label } from '../src/lexicon/types/com/atproto/label/defs.js'
+import type { DidString } from '@atproto/lex'
+import { currentDatetimeString } from '@atproto/lex'
+import type { com } from '../src/lexicons/index.js'
 import type { LabelsEvt, Sequencer } from '../src/sequencer/index.js'
 import { Outbox } from '../src/sequencer/outbox.js'
 
@@ -53,16 +55,16 @@ describe('sequencer', () => {
     }
   }
 
-  const createLabels = async (count: number): Promise<Label[]> => {
-    const labels: Label[] = []
+  const createLabels = async (count: number) => {
+    const labels: com.atproto.label.defs.Label[] = []
     for (let i = 0; i < count; i++) {
-      const did = `did:example:${randomStr(10, 'base32')}`
+      const did: DidString = `did:example:${randomStr(10, 'base32')}`
       const label = {
-        src: EXAMPLE_LABELER,
+        src: EXAMPLE_LABELER as DidString,
         uri: did,
         val: 'spam',
         neg: false,
-        cts: new Date().toISOString(),
+        cts: currentDatetimeString(),
       }
       await network.ozone.ctx.db.transaction((dbTxn) =>
         network.ozone.ctx.modService(dbTxn).createLabels([label]),
@@ -92,7 +94,7 @@ describe('sequencer', () => {
     const created = await createLabels(count)
     const toNegate = created
       .slice(0, 2)
-      .map((l) => ({ ...l, neg: true, cts: new Date().toISOString() }))
+      .map((l) => ({ ...l, neg: true, cts: currentDatetimeString() }))
     await network.ozone.ctx
       .modService(network.ozone.ctx.db)
       .createLabels(toNegate)

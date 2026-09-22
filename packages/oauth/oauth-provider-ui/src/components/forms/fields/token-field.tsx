@@ -1,6 +1,8 @@
 import { Trans } from '@lingui/react/macro'
 import { TicketIcon } from 'lucide-react'
-import { OTP_CODE_PATTERN } from '#/lib/form-patterns.ts'
+import { useRef } from 'react'
+import { useMergedRefs } from '#/hooks/use-merged-refs.ts'
+import { OTP_CODE_PATTERN, formatOtpCode } from '#/lib/form-patterns.ts'
 import { RequestCodeButton } from '../request-code-button.tsx'
 import { TextField, type TextFieldProps } from './text-field.tsx'
 
@@ -14,24 +16,23 @@ export type TokenFieldProps = Omit<
   onResend?: () => void | PromiseLike<void>
 }
 
-/** Normalises free-typed input into the `XXXXX-XXXXX` OTP shape. */
-export function formatToken(value: string) {
-  const normalized = value.toUpperCase().replaceAll(/[^A-Z2-7]/g, '')
-  if (normalized.length <= 5) return normalized
-  return `${normalized.slice(0, 5)}-${normalized.slice(5, 10)}`
-}
-
 export function TokenField({
   example = OTP_CODE_EXAMPLE,
   onResend,
   icon = <TicketIcon className="size-5" />,
   title = example,
   autoFocus = false,
+  ref,
+  onChange,
   ...props
 }: TokenFieldProps) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const mergedRef = useMergedRefs(inputRef, ref)
+
   return (
     <TextField
       {...props}
+      ref={mergedRef}
       icon={icon}
       type="text"
       autoFocus={autoFocus}
@@ -45,6 +46,28 @@ export function TokenField({
       pattern={OTP_CODE_PATTERN}
       placeholder={example}
       title={title}
+      // @NOTE Runs before Base UI's own change handler (`mergeProps` calls the
+      // outer handler first), so rewriting the element's value here is what
+      // Base UI, a controlled `value`, and `FormShell`'s `onInput` all observe.
+      onChange={(event) => {
+        const input = event.currentTarget
+        const { value, selectionStart, selectionEnd } = input
+
+        const formatted = formatOtpCode(value)
+        if (formatted !== value) {
+          input.value = formatted
+
+          // Keep the caret where it was relative to the characters that
+          // survived formatting, rather than letting it jump to the end.
+          const pos = selectionEnd ?? selectionStart
+          if (pos != null) {
+            const caret = formatOtpCode(value.slice(0, pos)).length
+            input.setSelectionRange(caret, caret)
+          }
+        }
+
+        onChange?.(event)
+      }}
       below={
         onResend && (
           <span className="inline-flex items-center text-xs">
@@ -58,6 +81,9 @@ export function TokenField({
               <RequestCodeButton
                 action={async () => {
                   await onResend()
+                  // Next tick, so the button's disabled state has been applied
+                  // (after the next render) before focus moves to the input.
+                  if (autoFocus) setTimeout(() => inputRef.current?.focus())
                 }}
                 variant="link"
                 size="sm"

@@ -15,7 +15,11 @@ export class StandardSchemaAdapter<
 
   declare readonly types: StandardSchemaV1.Types<TInput, TOutput>
 
-  constructor(private readonly validator: Validator<TInput, TOutput>) {}
+  private readonly validator: Validator<TInput, TOutput>
+
+  constructor(validator: Validator<TInput, TOutput>) {
+    this.validator = validator
+  }
 
   validate(
     value: unknown,

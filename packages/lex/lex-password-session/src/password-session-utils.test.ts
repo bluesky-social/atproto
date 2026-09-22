@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { DidString, HandleString } from '@atproto/lex-schema'
 import { LexServerAuthError } from '@atproto/lex-server'
 import { extractPdsEndpoint } from './util.js'
@@ -184,6 +184,27 @@ describe(extractPdsEndpoint, () => {
     expect(extractPdsEndpoint(validDidDoc('https://pds.example.com'))).toBe(
       'https://pds.example.com',
     )
+  })
+
+  it('supports environments without URL.canParse', async () => {
+    const LegacyURL = class extends URL {}
+    Object.defineProperty(LegacyURL, 'canParse', { value: undefined })
+    vi.stubGlobal('URL', LegacyURL)
+
+    try {
+      vi.resetModules()
+      const legacyModule = await import('./util.js')
+
+      expect(
+        legacyModule.extractPdsEndpoint(validDidDoc('https://pds.example.com')),
+      ).toBe('https://pds.example.com')
+      expect(
+        legacyModule.extractPdsEndpoint(validDidDoc('not-a-url')),
+      ).toBeNull()
+    } finally {
+      vi.unstubAllGlobals()
+      vi.resetModules()
+    }
   })
 
   it('returns null when no service array is present', () => {

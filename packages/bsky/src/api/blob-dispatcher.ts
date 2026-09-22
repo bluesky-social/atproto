@@ -6,6 +6,7 @@ import { RETRYABLE_HTTP_STATUS_CODES } from '../util/retry.js'
 export function createBlobDispatcher(cfg: ServerConfig): Dispatcher {
   const baseDispatcher = new Agent({
     allowH2: cfg.proxyAllowHTTP2, // This is experimental
+    connectTimeout: cfg.proxyConnectTimeout,
     headersTimeout: cfg.proxyHeadersTimeout,
     maxResponseSize: cfg.proxyMaxResponseSize,
     bodyTimeout: cfg.proxyBodyTimeout,

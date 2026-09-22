@@ -27,6 +27,7 @@ import {
   buildXrpcRequestHeaders,
   isAsyncIterable,
   isBlobLike,
+  throwIfAborted,
   toReadableStream,
   wait,
 } from './util.js'
@@ -220,7 +221,7 @@ export async function xrpcSafe<const M extends Query | Procedure>(
   const method: M = getMain(ns)
 
   for (let counter = 1; ; counter++) {
-    options.signal?.throwIfAborted()
+    throwIfAborted(options.signal)
     try {
       const agent = buildAgent(agentOpts)
       const url = xrpcRequestUrl(method, options)

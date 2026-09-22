@@ -1,4 +1,5 @@
 import type { GeneratedAlways } from 'kysely'
+import type { DatetimeString, DidString } from '@atproto/lex'
 
 export const scheduledActionTableName = 'scheduled_action'
 
@@ -6,16 +7,16 @@ export interface ScheduledAction {
   id: GeneratedAlways<number>
   action: string
   eventData: unknown | null
-  did: string
-  executeAt: string | null
-  executeAfter: string | null
-  executeUntil: string | null
+  did: DidString
+  executeAt: DatetimeString | null
+  executeAfter: DatetimeString | null
+  executeUntil: DatetimeString | null
   randomizeExecution: boolean
-  createdBy: string
-  createdAt: string
-  updatedAt: string
+  createdBy: DidString
+  createdAt: DatetimeString
+  updatedAt: DatetimeString
   status: string
-  lastExecutedAt: string | null
+  lastExecutedAt: DatetimeString | null
   lastFailureReason: string | null
   executionEventId: number | null
 }

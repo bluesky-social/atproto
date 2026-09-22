@@ -23,9 +23,11 @@ export class LiteralSchema<
   const TValue extends null | string | number | boolean,
 > extends Schema<TValue> {
   readonly type = 'literal' as const
+  readonly value: TValue
 
-  constructor(readonly value: TValue) {
+  constructor(value: TValue) {
     super()
+    this.value = value
   }
 
   validateInContext(

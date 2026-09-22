@@ -1,11 +1,4 @@
-import {
-  AppBskyEmbedExternal,
-  AppBskyEmbedImages,
-  AppBskyEmbedRecordWithMedia,
-  AppBskyEmbedVideo,
-  AppBskyFeedPost,
-} from '@atproto/api'
-import { ids } from '../lexicon/lexicons.js'
+import { app } from '../lexicons/index.js'
 import { langLogger as log } from '../logger.js'
 import { ContentTagger } from './content-tagger.js'
 
@@ -17,7 +10,7 @@ export class EmbedTagger extends ContentTagger {
       !!this.subjectStatus &&
       !this.tagAlreadyExists() &&
       this.subject.isRecord() &&
-      this.subject.parsedUri.collection === ids.AppBskyFeedPost
+      this.subject.parsedUri.collection === app.bsky.feed.post.$nsid
     )
   }
 
@@ -28,24 +21,30 @@ export class EmbedTagger extends ContentTagger {
         return []
       }
       const tags: string[] = []
-      const result = AppBskyFeedPost.validateRecord(recordValue)
+      const result = app.bsky.feed.post.main.$safeParse(recordValue)
 
       if (result.success) {
-        const embedContent = AppBskyEmbedRecordWithMedia.isMain(
-          result.value.embed,
-        )
-          ? result.value.embed.media
-          : result.value.embed
+        const embed = result.value.embed
+        const embedContent =
+          embed && app.bsky.embed.recordWithMedia.main.$isTypeOf(embed)
+            ? embed.media
+            : embed
 
-        if (AppBskyEmbedImages.isMain(embedContent)) {
+        if (
+          embedContent &&
+          app.bsky.embed.images.main.$isTypeOf(embedContent)
+        ) {
           tags.push(`${this.tagPrefix}image`)
         }
 
-        if (AppBskyEmbedVideo.isMain(embedContent)) {
+        if (embedContent && app.bsky.embed.video.main.$isTypeOf(embedContent)) {
           tags.push(`${this.tagPrefix}video`)
         }
 
-        if (AppBskyEmbedExternal.isMain(embedContent)) {
+        if (
+          embedContent &&
+          app.bsky.embed.external.main.$isTypeOf(embedContent)
+        ) {
           tags.push(`${this.tagPrefix}external`)
         }
       }

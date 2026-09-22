@@ -76,10 +76,9 @@ jobs:
         with:
           path: |
             packages/api/src/client
-            packages/ozone/src/lexicon
           key: lex-cli-${{ hashFiles('lexicons/**/*.json', 'packages/api/package.json', 'packages/ozone/package.json') }}
       - if: steps.lex-cli-cache.outputs.cache-hit == 'true'
-        run: find packages/api/src/client packages/ozone/src/lexicon -exec touch {} +
+        run: find packages/api/src/client -exec touch {} +
 
       - run: pnpm build
 
@@ -98,7 +97,6 @@ jobs:
             packages/oauth/*/src/locales/*/messages.ts
             packages/api/src/client
             packages/api/src/moderation/const/labels.ts
-            packages/ozone/src/lexicon
 
   test:
     name: Test

@@ -1,7 +1,6 @@
+import { TOOLS_OZONE_TEAM, ids } from '@atproto/api'
 import type { AtpAgent } from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { TOOLS_OZONE_TEAM } from '../src/lexicon/index.js'
-import { ids } from '../src/lexicon/lexicons.js'
 
 describe('get-config', () => {
   let network: TestNetwork

@@ -1,6 +1,7 @@
 import type express from 'express'
 import * as ui8 from 'uint8arrays'
 import type { IdResolver } from '@atproto/identity'
+import { type DidString, isDidString } from '@atproto/lex'
 import {
   AuthRequiredError,
   parseReqNsid,
@@ -25,8 +26,8 @@ export type AdminTokenOutput = {
 export type ModeratorOutput = {
   credentials: {
     type: 'moderator'
-    aud: string
-    iss: string
+    aud: DidString
+    iss: DidString
     isAdmin: boolean
     isModerator: boolean
     isTriage: boolean
@@ -37,8 +38,8 @@ export type ModeratorOutput = {
 type StandardOutput = {
   credentials: {
     type: 'standard'
-    aud: string
-    iss: string
+    aud: DidString
+    iss: DidString
     isAdmin: boolean
     isModerator: boolean
     isTriage: boolean
@@ -98,7 +99,7 @@ export class AuthVerifier {
 
   standard = async (reqCtx: ReqCtx): Promise<StandardOutput> => {
     const getSigningKey = async (
-      did: string,
+      did: DidString,
       forceRefresh: boolean,
     ): Promise<string> => {
       const atprotoData = await this.idResolver.did.resolveAtprotoData(
@@ -129,6 +130,10 @@ export class AuthVerifier {
 
     const { isAdmin, isModerator, isTriage, isVerifier } =
       this.teamService.getMemberRole(member)
+
+    if (!isDidString(payload.aud)) {
+      throw new AuthRequiredError('audience is not a valid DID', 'BadJwt')
+    }
 
     return {
       credentials: {

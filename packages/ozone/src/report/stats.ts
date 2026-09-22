@@ -1,10 +1,16 @@
 import { type Selectable, sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
+import type { DatetimeString, DidString } from '@atproto/lex'
+import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
 import { ComputedAtIdKeyset, paginate } from '../db/pagination.js'
-import type { ReportStat } from '../db/schema/report_stat.js'
+import type { DateString, ReportStat } from '../db/schema/report_stat.js'
 import { jsonb } from '../db/types.js'
+import { com, tools } from '../lexicons/index.js'
 import { dbLogger } from '../logger.js'
+
+// @NOTE Note some values here are not part of the lexicon and hard coded for
+// legacy reasons.
 
 /**
  * Grouped report types. Stats are computed per group rather than per individual report type.
@@ -13,65 +19,65 @@ import { dbLogger } from '../logger.js'
  */
 export const REPORT_TYPE_GROUPS: Record<string, string[]> = {
   Legacy: [
-    'com.atproto.moderation.defs#reasonSpam',
-    'com.atproto.moderation.defs#reasonViolation',
-    'com.atproto.moderation.defs#reasonMisleading',
-    'com.atproto.moderation.defs#reasonSexual',
-    'com.atproto.moderation.defs#reasonRude',
-    'com.atproto.moderation.defs#reasonOther',
-    'com.atproto.moderation.defs#reasonAppeal',
+    com.atproto.moderation.defs.ReasonSpam,
+    com.atproto.moderation.defs.ReasonViolation,
+    com.atproto.moderation.defs.ReasonMisleading,
+    com.atproto.moderation.defs.ReasonSexual,
+    com.atproto.moderation.defs.ReasonRude,
+    com.atproto.moderation.defs.ReasonOther,
+    com.atproto.moderation.defs.ReasonAppeal,
   ],
-  Appeal: ['tools.ozone.report.defs#reasonAppeal'],
+  Appeal: [tools.ozone.report.defs.ReasonAppeal],
   Violence: [
     'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
-    'tools.ozone.report.defs#reasonViolenceThreats',
-    'tools.ozone.report.defs#reasonViolenceGraphicContent',
+    tools.ozone.report.defs.ReasonViolenceThreats,
+    tools.ozone.report.defs.ReasonViolenceGraphicContent,
     'tools.ozone.report.defs#reasonViolenceSelfHarm',
-    'tools.ozone.report.defs#reasonViolenceGlorification',
-    'tools.ozone.report.defs#reasonViolenceExtremistContent',
-    'tools.ozone.report.defs#reasonViolenceTrafficking',
-    'tools.ozone.report.defs#reasonViolenceOther',
+    tools.ozone.report.defs.ReasonViolenceGlorification,
+    tools.ozone.report.defs.ReasonViolenceExtremistContent,
+    tools.ozone.report.defs.ReasonViolenceTrafficking,
+    tools.ozone.report.defs.ReasonViolenceOther,
   ],
   Sexual: [
-    'tools.ozone.report.defs#reasonSexualAbuseContent',
+    tools.ozone.report.defs.ReasonSexualAbuseContent,
     'tools.ozone.report.defs#reasonSexualNCII',
     'tools.ozone.report.defs#reasonSexualSextortion',
-    'tools.ozone.report.defs#reasonSexualDeepfake',
-    'tools.ozone.report.defs#reasonSexualAnimal',
-    'tools.ozone.report.defs#reasonSexualUnlabeled',
-    'tools.ozone.report.defs#reasonSexualOther',
+    tools.ozone.report.defs.ReasonSexualDeepfake,
+    tools.ozone.report.defs.ReasonSexualAnimal,
+    tools.ozone.report.defs.ReasonSexualUnlabeled,
+    tools.ozone.report.defs.ReasonSexualOther,
   ],
   'Child Safety': [
     'tools.ozone.report.defs#reasonChildSafetyCSAM',
-    'tools.ozone.report.defs#reasonChildSafetyGroom',
+    tools.ozone.report.defs.ReasonChildSafetyGroom,
     'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
     'tools.ozone.report.defs#reasonChildSafetyEndangerment',
-    'tools.ozone.report.defs#reasonChildSafetyHarassment',
+    tools.ozone.report.defs.ReasonChildSafetyHarassment,
     'tools.ozone.report.defs#reasonChildSafetyPromotion',
-    'tools.ozone.report.defs#reasonChildSafetyOther',
+    tools.ozone.report.defs.ReasonChildSafetyOther,
   ],
   Harassment: [
-    'tools.ozone.report.defs#reasonHarassmentTroll',
-    'tools.ozone.report.defs#reasonHarassmentTargeted',
-    'tools.ozone.report.defs#reasonHarassmentHateSpeech',
-    'tools.ozone.report.defs#reasonHarassmentDoxxing',
-    'tools.ozone.report.defs#reasonHarassmentOther',
+    tools.ozone.report.defs.ReasonHarassmentTroll,
+    tools.ozone.report.defs.ReasonHarassmentTargeted,
+    tools.ozone.report.defs.ReasonHarassmentHateSpeech,
+    tools.ozone.report.defs.ReasonHarassmentDoxxing,
+    tools.ozone.report.defs.ReasonHarassmentOther,
   ],
   Misleading: [
-    'tools.ozone.report.defs#reasonMisleadingBot',
-    'tools.ozone.report.defs#reasonMisleadingImpersonation',
-    'tools.ozone.report.defs#reasonMisleadingSpam',
-    'tools.ozone.report.defs#reasonMisleadingScam',
+    tools.ozone.report.defs.ReasonMisleadingBot,
+    tools.ozone.report.defs.ReasonMisleadingImpersonation,
+    tools.ozone.report.defs.ReasonMisleadingSpam,
+    tools.ozone.report.defs.ReasonMisleadingScam,
     'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
     'tools.ozone.report.defs#reasonMisleadingMisinformation',
-    'tools.ozone.report.defs#reasonMisleadingOther',
+    tools.ozone.report.defs.ReasonMisleadingOther,
   ],
   'Rule Violations': [
-    'tools.ozone.report.defs#reasonRuleSiteSecurity',
+    tools.ozone.report.defs.ReasonRuleSiteSecurity,
     'tools.ozone.report.defs#reasonRuleStolenContent',
-    'tools.ozone.report.defs#reasonRuleProhibitedSales',
-    'tools.ozone.report.defs#reasonRuleBanEvasion',
-    'tools.ozone.report.defs#reasonRuleOther',
+    tools.ozone.report.defs.ReasonRuleProhibitedSales,
+    tools.ozone.report.defs.ReasonRuleBanEvasion,
+    tools.ozone.report.defs.ReasonRuleOther,
   ],
   Civic: [
     'tools.ozone.report.defs#reasonCivicElectoralProcess',
@@ -88,7 +94,7 @@ export type ReportStatsServiceCreator = (db: Database) => ReportStatsService
 
 export type ReportStatGroup = {
   queueId: number | null
-  moderatorDid: string | null
+  moderatorDid: DidString | null
   reportTypes: string[] | null
 }
 export type ReportStatistics = {
@@ -144,9 +150,9 @@ type ClosureStatsRow = StatsQueryRow<LifecycleMetric>
 type EscalationStatsRow = StatsQueryRow<'escalatedCount'>
 type BatchedStats = Map<string, StatsRow>
 type UpsertRow = {
-  date: string
+  date: DateString
   queueId: number | null
-  moderatorDid: string | null
+  moderatorDid: DidString | null
   reportTypes: string[] | null
   inboundCount: number | null
   pendingCount: number | null
@@ -252,7 +258,7 @@ export class ReportStatsService {
 
   /** Compute and write all groups for a single date. */
   private async materializeDate(
-    date: string,
+    date: DateString,
     opts?: { force?: boolean },
   ): Promise<number> {
     const groups = await this.enumerateGroups()
@@ -293,7 +299,7 @@ export class ReportStatsService {
 
   /** Fetch all stat rows for a date, keyed by groupKey for O(1) lookup. */
   private async fetchExistingStatsByKey(
-    date: string,
+    date: DateString,
   ): Promise<Map<string, Selectable<ReportStat>>> {
     const existing = await this.db.db
       .selectFrom('report_stat')
@@ -329,9 +335,9 @@ export class ReportStatsService {
       .select('did')
       .where('disabled', '=', false)
       .where('role', 'in', [
-        'tools.ozone.team.defs#roleAdmin',
-        'tools.ozone.team.defs#roleModerator',
-        'tools.ozone.team.defs#roleTriage',
+        tools.ozone.team.defs.RoleAdmin,
+        tools.ozone.team.defs.RoleModerator,
+        tools.ozone.team.defs.RoleTriage,
       ])
       .execute()
 
@@ -367,9 +373,9 @@ export class ReportStatsService {
    * Run batched GROUP BY queries for a calendar date.
    * Returns 5 result sets covering all group types.
    */
-  private async computeBatchedStats(date: string): Promise<BatchedStats> {
-    const dayStart = `${date}T00:00:00.000Z`
-    const dayEnd = `${nextDate(date)}T00:00:00.000Z`
+  private async computeBatchedStats(date: DateString): Promise<BatchedStats> {
+    const dayStart: DatetimeString = `${date}T00:00:00.000Z`
+    const dayEnd: DatetimeString = `${nextDate(date)}T00:00:00.000Z`
 
     const reportGroupColumns = sql`
       case
@@ -562,7 +568,7 @@ export class ReportStatsService {
 
   /** Build an upsert row from (date, group, stats). */
   private buildUpsertRow(
-    date: string,
+    date: DateString,
     group: ReportStatGroup,
     stats: ReportStatistics,
   ): UpsertRow {
@@ -658,7 +664,7 @@ export class ReportStatsService {
 
   /** Get a single stat row for a date + group. */
   private async getStatForDate(
-    date: string,
+    date: DateString,
     group: ReportStatGroup,
   ): Promise<Selectable<ReportStat> | undefined> {
     let qb = this.db.db
@@ -835,12 +841,12 @@ function groupKey(g: ReportStatGroup): string {
 }
 
 /** Convert a Date to an ISO date string (YYYY-MM-DD). */
-function toDateString(d: Date): string {
-  return d.toISOString().slice(0, 10)
+function toDateString(d: Date): DateString {
+  return toDatetimeString(d).slice(0, 10) as DateString
 }
 
 /** Get the next calendar date string. */
-function nextDate(dateStr: string): string {
+function nextDate(dateStr: DateString): DateString {
   const d = new Date(`${dateStr}T00:00:00.000Z`)
   d.setUTCDate(d.getUTCDate() + 1)
   return toDateString(d)

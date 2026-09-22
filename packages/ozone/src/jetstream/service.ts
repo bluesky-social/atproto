@@ -1,3 +1,4 @@
+import type { DidString } from '@atproto/lex'
 import { CloseCode, CloseError, websocket } from '@atproto/ws-client'
 
 type JetstreamRecord = Record<string, unknown>
@@ -24,7 +25,7 @@ export type JetstreamOptions = {
   cursor?: number
 }
 export type EventBase = {
-  did: string
+  did: DidString
   time_us: number
   // @TODO: Limited to just commit events for now
   kind: 'commit'

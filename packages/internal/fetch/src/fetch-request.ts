@@ -90,39 +90,98 @@ function extractInfo(err: unknown): [statusCode: number, message: string] {
   return [500, err.message]
 }
 
-export function protocolCheckRequestTransform(protocols: {
+export type ProtocolConfig = {
   'about:'?: boolean
   'blob:'?: boolean
   'data:'?: boolean
   'file:'?: boolean
   'http:'?: boolean | { allowCustomPort: boolean }
   'https:'?: boolean | { allowCustomPort: boolean }
-}) {
+}
+
+/**
+ * The url policy checks below return the reason a url is unacceptable, or
+ * `undefined` when it is fine.
+ *
+ * @note They are expressed over a {@link URL} rather than a {@link Request} so
+ * that the same policy can be applied both to the initial url (by the request
+ * transforms below) and to every redirect hop (by
+ * `@atproto-labs/fetch-node`'s dispatcher guard, which only ever sees an
+ * origin). Keep them free of request state, and of path or query state, for
+ * that reason.
+ *
+ * @note They deliberately carry no status code. The appropriate status depends
+ * on how the caller surfaces the failure, so it belongs at the throw site.
+ */
+export type UrlPolicyReason = string
+
+export function checkProtocolPolicy(
+  url: URL,
+  protocols: ProtocolConfig,
+): UrlPolicyReason | undefined {
+  const { protocol, port } = url
+
+  const config: undefined | boolean | { allowCustomPort?: boolean } =
+    Object.hasOwn(protocols, protocol)
+      ? protocols[protocol as keyof ProtocolConfig]
+      : undefined
+
+  if (!config) {
+    return `Forbidden protocol "${protocol}"`
+  } else if (config === true) {
+    return undefined
+  } else if (!config['allowCustomPort'] && port !== '') {
+    return `Custom ${protocol} ports not allowed`
+  }
+
+  return undefined
+}
+
+export function checkHostHeaderPolicy(url: URL): UrlPolicyReason | undefined {
+  const { protocol, hostname } = url
+
+  // "Host" header only makes sense in the context of an HTTP request
+  if (protocol !== 'http:' && protocol !== 'https:') {
+    return `"${protocol}" requests are not allowed`
+  }
+
+  if (!hostname || isIp(hostname)) {
+    return 'Invalid hostname'
+  }
+
+  return undefined
+}
+
+export function checkForbiddenDomainNamePolicy(
+  url: URL,
+  denySet: ReadonlySet<string>,
+): UrlPolicyReason | undefined {
+  const { hostname } = url
+
+  // Full domain name check
+  if (denySet.has(hostname)) {
+    return 'Forbidden hostname'
+  }
+
+  // Sub domain name check
+  let curDot = hostname.indexOf('.')
+  while (curDot !== -1) {
+    const subdomain = hostname.slice(curDot + 1)
+    if (denySet.has(`*.${subdomain}`)) {
+      return 'Forbidden hostname'
+    }
+    curDot = hostname.indexOf('.', curDot + 1)
+  }
+
+  return undefined
+}
+
+export function protocolCheckRequestTransform(protocols: ProtocolConfig) {
   return (input: Request | string | URL, init?: RequestInit) => {
     const request = asRequest(input, init)
 
-    const { protocol, port } = new URL(request.url)
-
-    const config: undefined | boolean | { allowCustomPort?: boolean } =
-      Object.hasOwn(protocols, protocol)
-        ? protocols[protocol as keyof typeof protocols]
-        : undefined
-
-    if (!config) {
-      throw new FetchRequestError(
-        request,
-        400,
-        `Forbidden protocol "${protocol}"`,
-      )
-    } else if (config === true) {
-      // Safe to proceed
-    } else if (!config['allowCustomPort'] && port !== '') {
-      throw new FetchRequestError(
-        request,
-        400,
-        `Custom ${protocol} ports not allowed`,
-      )
-    }
+    const reason = checkProtocolPolicy(new URL(request.url), protocols)
+    if (reason) throw new FetchRequestError(request, 400, reason)
 
     return request
   }
@@ -159,20 +218,8 @@ export function requireHostHeaderTransform() {
 
     const request = asRequest(input, init)
 
-    const { protocol, hostname } = new URL(request.url)
-
-    // "Host" header only makes sense in the context of an HTTP request
-    if (protocol !== 'http:' && protocol !== 'https:') {
-      throw new FetchRequestError(
-        request,
-        400,
-        `"${protocol}" requests are not allowed`,
-      )
-    }
-
-    if (!hostname || isIp(hostname)) {
-      throw new FetchRequestError(request, 400, 'Invalid hostname')
-    }
+    const reason = checkHostHeaderPolicy(new URL(request.url))
+    if (reason) throw new FetchRequestError(request, 400, reason)
 
     return request
   }
@@ -203,22 +250,8 @@ export function forbiddenDomainNameRequestTransform(
   return async (input: Request | string | URL, init?: RequestInit) => {
     const request = asRequest(input, init)
 
-    const { hostname } = new URL(request.url)
-
-    // Full domain name check
-    if (denySet.has(hostname)) {
-      throw new FetchRequestError(request, 403, 'Forbidden hostname')
-    }
-
-    // Sub domain name check
-    let curDot = hostname.indexOf('.')
-    while (curDot !== -1) {
-      const subdomain = hostname.slice(curDot + 1)
-      if (denySet.has(`*.${subdomain}`)) {
-        throw new FetchRequestError(request, 403, 'Forbidden hostname')
-      }
-      curDot = hostname.indexOf('.', curDot + 1)
-    }
+    const reason = checkForbiddenDomainNamePolicy(new URL(request.url), denySet)
+    if (reason) throw new FetchRequestError(request, 403, reason)
 
     return request
   }

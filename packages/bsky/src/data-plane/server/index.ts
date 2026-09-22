@@ -3,7 +3,7 @@ import type http from 'node:http'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
 import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
-import { IdResolver, MemoryCache } from '@atproto/identity'
+import { type Fetch, IdResolver, MemoryCache } from '@atproto/identity'
 import type { Database, DatabaseSchema } from './db/index.js'
 import createRoutes from './routes/index.js'
 
@@ -22,10 +22,15 @@ export class DataPlaneServer {
     this.terminator = createHttpTerminator({ server })
   }
 
-  static async create(db: Database, port: number, plcUrl?: string) {
+  static async create(
+    db: Database,
+    port: number,
+    plcUrl?: string,
+    fetch?: Fetch,
+  ) {
     const app = express()
     const didCache = new MemoryCache()
-    const idResolver = new IdResolver({ plcUrl, didCache })
+    const idResolver = new IdResolver({ plcUrl, didCache, fetch })
     const routes = createRoutes(db, idResolver)
     app.use(expressConnectMiddleware({ routes }))
     const server = app.listen(port)

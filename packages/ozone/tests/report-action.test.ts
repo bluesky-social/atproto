@@ -1,13 +1,10 @@
+import { ComAtprotoModerationDefs } from '@atproto/api'
 import {
   type ModeratorClient,
   type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import {
-  REASONMISLEADING,
-  REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
 describe('report-action', () => {
   let network: TestNetwork
@@ -42,7 +39,7 @@ describe('report-action', () => {
 
       for (let i = 0; i < 3; i++) {
         await sc.createReport({
-          reasonType: REASONSPAM,
+          reasonType: ComAtprotoModerationDefs.REASONSPAM,
           reason: `Spam report ${i}`,
           subject: bobsAccount,
           reportedBy: sc.dids.alice,
@@ -111,13 +108,13 @@ describe('report-action', () => {
       // Create 2 spam and 2 misleading reports
       for (let i = 0; i < 2; i++) {
         await sc.createReport({
-          reasonType: REASONSPAM,
+          reasonType: ComAtprotoModerationDefs.REASONSPAM,
           reason: `Spam ${i}`,
           subject: alicesAccount,
           reportedBy: sc.dids.bob,
         })
         await sc.createReport({
-          reasonType: REASONMISLEADING,
+          reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
           reason: `Misleading ${i}`,
           subject: alicesAccount,
           reportedBy: sc.dids.bob,
@@ -155,12 +152,12 @@ describe('report-action', () => {
       const spamReports = await modClient.queryReports({
         status: 'closed',
         subject: sc.dids.alice,
-        reportTypes: [REASONSPAM],
+        reportTypes: [ComAtprotoModerationDefs.REASONSPAM],
       })
       const misleadingReports = await modClient.queryReports({
         status: 'escalated',
         subject: sc.dids.alice,
-        reportTypes: [REASONMISLEADING],
+        reportTypes: [ComAtprotoModerationDefs.REASONMISLEADING],
       })
 
       // Spam reports should be closed with takedown event ID
@@ -189,19 +186,19 @@ describe('report-action', () => {
 
       // Create 3 reports of different types
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'Spam post',
         subject: carolsPost,
         reportedBy: sc.dids.bob,
       })
       await sc.createReport({
-        reasonType: REASONMISLEADING,
+        reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
         reason: 'Misleading content',
         subject: carolsPost,
         reportedBy: sc.dids.bob,
       })
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'Another spam report',
         subject: carolsPost,
         reportedBy: sc.dids.dan,
@@ -251,14 +248,14 @@ describe('report-action', () => {
       }
 
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'Spam',
         subject: carolsAccount,
         reportedBy: sc.dids.bob,
       })
 
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'Spam',
         subject: dansAccount,
         reportedBy: sc.dids.bob,

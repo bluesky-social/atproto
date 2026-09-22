@@ -1,5 +1,13 @@
 import assert from 'node:assert'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import {
   AppBskyActorProfile,
   AppBskyEmbedGallery,
@@ -15,6 +23,7 @@ import {
 } from '@atproto/api'
 import { type SeedClient, TestNetwork, authorFeedSeed } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
+import { Gate } from '../../src/feature-gates/gates.js'
 import { uriToDid } from '../../src/util/uris.js'
 import {
   forSnapshot,
@@ -25,6 +34,18 @@ import {
 
 const isValidReplyRef = asPredicate(AppBskyFeedPost.validateReplyRef)
 const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)
+
+const withoutKnownLikers = (item: AppBskyFeedDefs.FeedViewPost) => {
+  const result = structuredClone(item)
+  removeKnownLikers(result)
+  return result
+}
+
+const removeKnownLikers = (value: unknown): void => {
+  if (!value || typeof value !== 'object') return
+  if ('knownLikers' in value) delete value.knownLikers
+  Object.values(value).forEach(removeKnownLikers)
+}
 
 describe('pds author feed views', () => {
   let network: TestNetwork
@@ -43,6 +64,16 @@ describe('pds author feed views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_author_feed',
     })
+    vi.spyOn(network.bsky.ctx.featureGatesClient, 'scope').mockImplementation(
+      () => ({
+        Gate,
+        checkGate: (gate) => gate === Gate.KnownLikersFeedEnable,
+        checkGates: (gates) =>
+          new Map(
+            gates.map((gate) => [gate, gate === Gate.KnownLikersFeedEnable]),
+          ),
+      }),
+    )
     agent = network.bsky.getAgent()
     pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
@@ -130,6 +161,26 @@ describe('pds author feed views', () => {
     expect(forSnapshot(aliceForCarol.data.feed)).toMatchSnapshot()
   })
 
+  it('returns known likers', async () => {
+    const carolForAlice = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: sc.accounts[carol].handle },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyFeedGetAuthorFeed,
+        ),
+      },
+    )
+    const post = carolForAlice.data.feed.find(
+      (item) => item.post.uri === sc.posts[carol][0].ref.uriStr,
+    )
+
+    expect(
+      post?.post.viewer?.knownLikers?.actors.map((actor) => actor.did),
+    ).toEqual([bob])
+    expect(post?.post.viewer?.knownLikers?.count).toBe(1)
+  })
+
   it('paginates', async () => {
     const results = (results: AppBskyFeedGetAuthorFeed.OutputSchema[]) =>
       results.flatMap((res) => res.feed)
@@ -168,7 +219,9 @@ describe('pds author feed views', () => {
     )
 
     expect(full.data.feed.length).toEqual(4)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
+    expect(results(paginatedAll).map(withoutKnownLikers)).toEqual(
+      results([full.data]).map(withoutKnownLikers),
+    )
 
     const exact = await network.bsky.ctx.dataplane.getAuthorFeed({
       actorDid: alice,

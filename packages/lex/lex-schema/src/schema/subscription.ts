@@ -51,12 +51,22 @@ export class Subscription<
 > {
   readonly type = 'subscription' as const
 
+  readonly nsid: TNsid
+  readonly parameters: TParameters
+  readonly message: TMessage
+  readonly errors: TErrors
+
   constructor(
-    readonly nsid: TNsid,
-    readonly parameters: TParameters,
-    readonly message: TMessage,
-    readonly errors: TErrors,
-  ) {}
+    nsid: TNsid,
+    parameters: TParameters,
+    message: TMessage,
+    errors: TErrors,
+  ) {
+    this.nsid = nsid
+    this.parameters = parameters
+    this.message = message
+    this.errors = errors
+  }
 }
 
 /**

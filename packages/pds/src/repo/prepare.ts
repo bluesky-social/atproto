@@ -1,5 +1,5 @@
 import { TID } from '@atproto/common'
-import type { RecordSchema } from '@atproto/lex'
+import { RecordSchema, walk } from '@atproto/lex'
 import { encode } from '@atproto/lex-cbor'
 import {
   type Cid,
@@ -25,7 +25,7 @@ import {
   isValidRecordKey,
 } from '@atproto/syntax'
 import { hasExplicitSlur } from '../handle/explicit-slurs.js'
-import { app, chat, com } from '../lexicons/index.js'
+import * as lexicons from '../lexicons/index.js'
 import {
   InvalidRecordError,
   type PreparedCreate,
@@ -35,30 +35,10 @@ import {
   type ValidationStatus,
 } from './types.js'
 
-// @TODO replace this with automatically fetched (& built) schemas
 const knownSchemas = new Map<string, RecordSchema>(
-  [
-    app.bsky.actor.profile.main,
-    app.bsky.actor.status.main,
-    app.bsky.feed.generator.main,
-    app.bsky.feed.like.main,
-    app.bsky.feed.post.main,
-    app.bsky.feed.postgate.main,
-    app.bsky.feed.repost.main,
-    app.bsky.feed.threadgate.main,
-    app.bsky.graph.block.main,
-    app.bsky.graph.follow.main,
-    app.bsky.graph.list.main,
-    app.bsky.graph.listblock.main,
-    app.bsky.graph.listitem.main,
-    app.bsky.graph.starterpack.main,
-    app.bsky.graph.verification.main,
-    app.bsky.labeler.service.main,
-    app.bsky.notification.declaration.main,
-    chat.bsky.actor.declaration.main,
-    com.atproto.lexicon.schema.main,
-    com.germnetwork.declaration.main,
-  ].map((schema: RecordSchema) => [schema.$type, schema]),
+  walk(lexicons)
+    .filter((s) => s instanceof RecordSchema)
+    .map((s) => [s.$type, s]),
 )
 
 const validateRecord = (

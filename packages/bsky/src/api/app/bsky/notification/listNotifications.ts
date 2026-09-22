@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import type { AtUriString, DatetimeString, DidString } from '@atproto/syntax'
+import type { AtUriString, DatetimeString } from '@atproto/syntax'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { ServerConfig } from '../../../../config.js'
 import type { AppContext } from '../../../../context.js'
@@ -31,14 +31,26 @@ export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.notification.listNotifications, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
+      if (params.seenAt) {
+        throw new InvalidRequestError('The seenAt parameter is unsupported')
+      }
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+
+      const lastSeenRes = await ctx.hydrator.dataplane.getNotificationSeen({
+        actorDid: viewer,
+      })
+      const lastSeen = lastSeenRes.timestamp?.toDate()
+
       const result = await fillPage({
         cursor: params.cursor,
         limit: params.limit,
         fetch: ({ cursor, limit }) =>
-          listNotifications({ ...params, cursor, limit, hydrateCtx }, ctx),
+          listNotifications(
+            { ...params, cursor, limit, hydrateCtx, lastSeen },
+            ctx,
+          ),
         items: (r) => r.notifications,
       })
       return {
@@ -52,17 +64,15 @@ export default function (server: Server, ctx: AppContext) {
 
 const paginateNotifications = async (opts: {
   ctx: Context
-  priority: boolean
   reasons?: string[]
   cursor?: string
   limit: number
   viewer: string
 }) => {
-  const { ctx, priority, reasons, limit, viewer } = opts
+  const { ctx, reasons, limit, viewer } = opts
 
   const res = await ctx.hydrator.dataplane.getNotifications({
     actorDid: viewer,
-    priority,
     cursor: opts.cursor,
     limit,
   })
@@ -95,41 +105,28 @@ const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
-  if (params.seenAt) {
-    throw new InvalidRequestError('The seenAt parameter is unsupported')
-  }
-
   const originalCursor = params.cursor
   const delayedCursor = delayCursor(
     originalCursor,
     ctx.cfg.notificationsDelayMs,
   )
   const viewer = params.hydrateCtx.viewer
-  const priority = params.priority ?? (await getPriority(ctx, viewer))
-  const [res, lastSeenRes] = await Promise.all([
-    paginateNotifications({
-      ctx,
-      priority,
-      reasons: params.reasons,
-      cursor: delayedCursor,
-      limit: params.limit,
-      viewer,
-    }),
-    ctx.hydrator.dataplane.getNotificationSeen({
-      actorDid: viewer,
-      priority,
-    }),
-  ])
+  const res = await paginateNotifications({
+    ctx,
+    reasons: params.reasons,
+    cursor: delayedCursor,
+    limit: params.limit,
+    viewer,
+  })
   // @NOTE for the first page of results if there's no last-seen time, consider top notification unread
   // rather than all notifications. bit of a hack to be more graceful when seen times are out of sync.
-  let lastSeenDate = lastSeenRes.timestamp?.toDate()
+  let lastSeenDate = params.lastSeen
   if (!lastSeenDate && !originalCursor) {
     lastSeenDate = res.notifications.at(0)?.timestamp?.toDate()
   }
   return {
     notifs: res.notifications,
-    cursor: res.cursor || undefined,
-    priority,
+    cursor: res.cursor,
     lastSeenNotifs: lastSeenDate
       ? (lastSeenDate.toISOString() as DatetimeString)
       : undefined,
@@ -222,7 +219,6 @@ const presentation = (
   return {
     notifications,
     cursor,
-    priority: skeleton.priority,
     seenAt: skeleton.lastSeenNotifs,
   }
 }
@@ -235,18 +231,11 @@ type Context = {
 
 type Params = app.bsky.notification.listNotifications.$Params & {
   hydrateCtx: HydrateCtxWithViewer
+  lastSeen?: Date
 }
 
 type SkeletonState = {
   notifs: Notification[]
-  priority: boolean
   lastSeenNotifs?: DatetimeString
   cursor?: string
-}
-
-const getPriority = async (ctx: Context, did: DidString) => {
-  const actors = await ctx.hydrator.actor.getActors([did], {
-    skipCacheForDids: [did],
-  })
-  return !!actors.get(did)?.priorityNotifications
 }

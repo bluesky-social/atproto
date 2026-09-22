@@ -103,7 +103,7 @@ export class RefResolver {
   )
 
   #defCounters = new Map<string, number>()
-  private nextSafeDefinitionIdentifier(name: string) {
+  nextSafeDefinitionIdentifier(name: string): string {
     // use camelCase version of the hash as base name
     const nameSafe =
       startsWithLower(name) && isValidJsIdentifier(name)

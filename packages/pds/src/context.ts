@@ -9,10 +9,12 @@ import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { Client } from '@atproto/lex'
+import { parseCid } from '@atproto/lex-data'
 import {
   AccessTokenMode,
   JoseKey,
   LexResolver,
+  LexResolverError,
   OAuthProvider,
 } from '@atproto/oauth-provider/provider'
 import { OAuthVerifier } from '@atproto/oauth-provider/verifier'
@@ -183,6 +185,32 @@ export class AppContext implements AsyncDisposable {
 
     const moderationMailer = new ModerationMailer(modMailTransport, cfg)
 
+    /**
+     * A fetch() function that protects against SSRF attacks, large responses &
+     * known bad domains. This function can safely be used to fetch user
+     * provided URLs (unless "disableSsrfProtection" is true, of course).
+     *
+     * @note **DO NOT** wrap `safeFetch` with any logging or other transforms as
+     * this might prevent the use of explicit `redirect: "follow"` init from
+     * working. See {@link safeFetchWrap}.
+     */
+    const safeFetch = safeFetchWrap({
+      allowIpHost: false,
+      allowImplicitRedirect: false,
+      responseMaxSize: cfg.fetch.maxResponseSize,
+      ssrfProtection: !cfg.fetch.disableSsrfProtection,
+
+      fetch: function (input, init) {
+        const method =
+          init?.method ?? (input instanceof Request ? input.method : 'GET')
+        const uri = input instanceof Request ? input.url : String(input)
+
+        fetchLogger.info({ method, uri }, 'fetch')
+
+        return globalThis.fetch.call(this, input, init)
+      },
+    })
+
     const didCache = new DidSqliteCache(
       cfg.db.didCacheDbLoc,
       cfg.identity.cacheStaleTTL,
@@ -196,6 +224,7 @@ export class AppContext implements AsyncDisposable {
       didCache,
       timeout: cfg.identity.resolverTimeout,
       backupNameservers: cfg.identity.handleBackupNameservers,
+      fetch: safeFetch,
     })
     const plcClient = new plc.Client(cfg.identity.plcUrl)
 
@@ -308,6 +337,87 @@ export class AppContext implements AsyncDisposable {
     )
     await accountManager.migrateOrThrow()
 
+    // @TODO Use this lexResolver instance to implement validation of records
+    // created with the "validate" option. Before doing so, ensure that 1) a
+    // didCache is provided, and 2) that nsid->lexicon are cached.
+    const lexResolver = new LexResolver({
+      fetch: safeFetch,
+      didCache: undefined, // @TODO provide a dedicated cache
+      plcDirectoryUrl: cfg.identity.plcUrl,
+      hooks: {
+        // @NOTE Lexicons hosted by this PDS are read straight from the
+        // actor store. Fetching them over the network would require this
+        // server to reach its own public endpoint, which is not
+        // guaranteed to work (SSRF protection, missing NAT hairpin,
+        // internal reverse proxies, ...).
+        onFetch: async ({ uri, did, nsid, signal }) => {
+          const account = await accountManager.getAccount(did, {
+            includeDeactivated: true,
+            includeTakenDown: true,
+          })
+
+          signal?.throwIfAborted()
+
+          // Mirror what com.atproto.sync.getRecord would answer to an
+          // unauthenticated requester
+          if (account?.takedownRef) {
+            throw new LexResolverError(nsid, `Repo is not available: ${did}`)
+          }
+
+          // Not hosted here: fall back to the network resolution
+          if (!account || account.deactivatedAt) return undefined
+
+          const record = await actorStore.read(account.did, (store) => {
+            return store.record.getRecord(uri, null)
+          })
+
+          if (!record || record.takedownRef != null) {
+            throw new LexResolverError(
+              nsid,
+              `Lexicon record not found at ${uri}`,
+            )
+          }
+
+          return {
+            cid: parseCid(record.cid),
+            record: record.value,
+          }
+        },
+        onFetchResult({ uri, cid, source }) {
+          lexiconResolverLogger.info(
+            { uri: uri.toString(), cid: cid.toString(), source },
+            'Fetched lexicon',
+          )
+        },
+        onFetchError({ err, uri }) {
+          lexiconResolverLogger.error(
+            { uri: uri.toString(), err },
+            'Lexicon fetch error',
+          )
+        },
+        onResolveAuthority: ({ nsid }) => {
+          lexiconResolverLogger.debug(
+            { nsid: nsid.toString() },
+            'Resolving lexicon DID authority',
+          )
+          // Override the lexicon did resolution to point to a custom PDS
+          return cfg.lexicon.didAuthority
+        },
+        onResolveAuthorityResult({ nsid, did, source }) {
+          lexiconResolverLogger.info(
+            { nsid: nsid.toString(), did, source },
+            'Resolved lexicon DID',
+          )
+        },
+        onResolveAuthorityError({ nsid, err }) {
+          lexiconResolverLogger.error(
+            { nsid: nsid.toString(), err },
+            'Lexicon DID resolution error',
+          )
+        },
+      },
+    })
+
     const localViewer = LocalViewer.creator(
       accountManager,
       imageUrlBuilder,
@@ -316,32 +426,6 @@ export class AppContext implements AsyncDisposable {
 
     // An agent for performing HTTP requests based on user provided URLs.
     const proxyAgent = buildProxyAgent(cfg.proxy)
-
-    /**
-     * A fetch() function that protects against SSRF attacks, large responses &
-     * known bad domains. This function can safely be used to fetch user
-     * provided URLs (unless "disableSsrfProtection" is true, of course).
-     *
-     * @note **DO NOT** wrap `safeFetch` with any logging or other transforms as
-     * this might prevent the use of explicit `redirect: "follow"` init from
-     * working. See {@link safeFetchWrap}.
-     */
-    const safeFetch = safeFetchWrap({
-      allowIpHost: false,
-      allowImplicitRedirect: false,
-      responseMaxSize: cfg.fetch.maxResponseSize,
-      ssrfProtection: !cfg.fetch.disableSsrfProtection,
-
-      fetch: function (input, init) {
-        const method =
-          init?.method ?? (input instanceof Request ? input.method : 'GET')
-        const uri = input instanceof Request ? input.url : String(input)
-
-        fetchLogger.info({ method, uri }, 'fetch')
-
-        return globalThis.fetch.call(this, input, init)
-      },
-    })
 
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
@@ -366,44 +450,7 @@ export class AppContext implements AsyncDisposable {
           hcaptcha: cfg.oauth.provider.hcaptcha,
           branding: cfg.oauth.provider.branding,
           safeFetch,
-          lexResolver: new LexResolver({
-            fetch: safeFetch,
-            plcDirectoryUrl: cfg.identity.plcUrl,
-            hooks: {
-              onResolveAuthority: ({ nsid }) => {
-                lexiconResolverLogger.debug(
-                  { nsid: nsid.toString() },
-                  'Resolving lexicon DID authority',
-                )
-                // Override the lexicon did resolution to point to a custom PDS
-                return cfg.lexicon.didAuthority
-              },
-              onResolveAuthorityResult({ nsid, did }) {
-                lexiconResolverLogger.info(
-                  { nsid: nsid.toString(), did },
-                  'Resolved lexicon DID',
-                )
-              },
-              onResolveAuthorityError({ nsid, err }) {
-                lexiconResolverLogger.error(
-                  { nsid: nsid.toString(), err },
-                  'Lexicon DID resolution error',
-                )
-              },
-              onFetchResult({ uri, cid }) {
-                lexiconResolverLogger.info(
-                  { uri: uri.toString(), cid: cid.toString() },
-                  'Fetched lexicon',
-                )
-              },
-              onFetchError({ err, uri }) {
-                lexiconResolverLogger.error(
-                  { uri: uri.toString(), err },
-                  'Lexicon fetch error',
-                )
-              },
-            },
-          }),
+          lexResolver,
           metadata: {
             protected_resources: [new URL(cfg.oauth.issuer).origin],
           },
@@ -551,6 +598,26 @@ export class AppContext implements AsyncDisposable {
 
   entrywayPassthruHeaders(req: express.Request) {
     return forwardedFor(req, authPassthru(req))
+  }
+
+  /**
+   * A {@link Client} for a service URL that was resolved from a DID document,
+   * i.e. a URL the PDS does not control. Routes the request through
+   * {@link safeFetch}, which restricts it to https origins that resolve to
+   * unicast addresses, and caps the response size. Lexicon validation follows
+   * the service's dev mode, as it does for the AppView client.
+   *
+   * Any call built from a DID document's service endpoint must use this.
+   */
+  safeClient(service: string | URL): Client {
+    return new Client(
+      { service, fetch: this.safeFetch },
+      {
+        validateRequest: this.cfg.service.devMode,
+        validateResponse: this.cfg.service.devMode,
+        strictResponseProcessing: this.cfg.service.devMode,
+      },
+    )
   }
 
   async serviceAuthHeaders(did: string, aud: string, lxm: string) {
