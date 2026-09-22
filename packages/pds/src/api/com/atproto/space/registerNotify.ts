@@ -35,9 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         store.space.getActiveSpaceConfig(space),
       )
 
-      const expiresAt = toDatetimeString(
-        new Date(Date.now() + REGISTRATION_TTL_MS),
-      )
+      const expiresAt = toDatetimeString(Date.now() + REGISTRATION_TTL_MS)
 
       await ctx.actorStore.transact(spaceDid, (actorTxn) =>
         actorTxn.space.recordCredentialRecipient({
