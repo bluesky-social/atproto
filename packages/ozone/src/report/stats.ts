@@ -118,6 +118,7 @@ export type ReportStatistics = {
 
 // DB types
 type StatGroup = {
+  group: 'aggregate' | 'queue' | 'reportType' | 'moderator'
   queueId: number | null
   reportType: string | null
   moderatorDid: string | null
@@ -371,7 +372,7 @@ export class ReportStatsService {
 
   /**
    * Run batched GROUP BY queries for a calendar date.
-   * Returns 5 result sets covering all group types.
+   * Merges inbound, pending, closure, and escalation stats for all group types.
    */
   private async computeBatchedStats(date: DateString): Promise<BatchedStats> {
     const dayStart: DatetimeString = `${date}T00:00:00.000Z`
@@ -387,7 +388,7 @@ export class ReportStatsService {
       case when grouping(r."reportType") = 0 then r."reportType" end as "reportType",
       null as "moderatorDid"`
 
-    const lifecycleGroupColumns = sql`
+    const allGroupColumns = sql`
       case
         when grouping(r."queueId") = 0 then 'queue'
         when grouping(r."reportType") = 0 then 'reportType'
@@ -398,13 +399,13 @@ export class ReportStatsService {
       case when grouping(r."reportType") = 0 then r."reportType" end as "reportType",
       case when grouping(r."assignedTo") = 0 then r."assignedTo" end as "moderatorDid"`
 
-    // Creation-date flow, grouped in one scan for aggregate, queue, and type.
+    // Creation-date flow, grouped in one scan for all dimensions.
     const inboundStats = () =>
       sql<InboundStatsRow>`
-      select ${reportGroupColumns}, count(*) as "inboundCount"
+      select ${allGroupColumns}, count(*) as "inboundCount"
       from report r
       where r."createdAt" >= ${dayStart} and r."createdAt" < ${dayEnd}
-      group by grouping sets ((), (r."queueId"), (r."reportType"))
+      group by grouping sets ((), (r."queueId"), (r."reportType"), (r."assignedTo"))
     `.execute(this.db.db)
 
     // Current stock, grouped in one scan. Pending has no moderator group.
@@ -464,7 +465,7 @@ export class ReportStatsService {
     // Escalation transitions in the date window, grouped in one activity scan.
     const escalationStats = () =>
       sql<EscalationStatsRow>`
-      select ${lifecycleGroupColumns}, count(*) as "escalatedCount"
+      select ${allGroupColumns}, count(*) as "escalatedCount"
       from report_activity ra
       join report r on r.id = ra."reportId"
       where ra."activityType" = 'escalationActivity'
@@ -495,6 +496,7 @@ export class ReportStatsService {
     if (group.moderatorDid) {
       const row = batched.get(
         statKey({
+          group: 'moderator',
           queueId: null,
           reportType: null,
           moderatorDid: group.moderatorDid,
@@ -507,6 +509,7 @@ export class ReportStatsService {
       const rows = group.reportTypes.flatMap((reportType) => {
         const row = batched.get(
           statKey({
+            group: 'reportType',
             queueId: null,
             reportType,
             moderatorDid: null,
@@ -518,6 +521,7 @@ export class ReportStatsService {
     }
     const row = batched.get(
       statKey({
+        group: group.queueId === null ? 'aggregate' : 'queue',
         queueId: group.queueId,
         reportType: null,
         moderatorDid: null,
@@ -804,7 +808,12 @@ function emptyStats(group: StatGroup): StatsRow {
 }
 
 function statKey(group: StatGroup): string {
-  return [group.queueId, group.reportType, group.moderatorDid].join('|')
+  return [
+    group.group,
+    group.queueId,
+    group.reportType,
+    group.moderatorDid,
+  ].join('|')
 }
 
 function mergeStats(

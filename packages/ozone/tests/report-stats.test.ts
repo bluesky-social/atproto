@@ -9,6 +9,7 @@ import {
 } from '@atproto/dev-env'
 import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
 import type { DatetimeString, DidString } from '@atproto/lex'
+import { com, tools } from '../src/lexicons/index.js'
 import { REPORT_TYPE_GROUPS } from '../src/report/stats.js'
 
 describe('report-stats', () => {
@@ -619,6 +620,97 @@ describe('report-stats', () => {
       expect(after.acknowledgedCount! - before.acknowledgedCount!).toBe(0)
       expect(after.labelActionCount! - before.labelActionCount!).toBe(1)
       expect(after.takedownActionCount! - before.takedownActionCount!).toBe(1)
+    })
+  })
+
+  describe('mixed moderator assignments', () => {
+    const createReport = async (
+      assignedTo?: DidString,
+      createdAt = currentDatetimeString(),
+    ) => {
+      const event = await sc.createReport({
+        reasonType: com.atproto.moderation.defs.ReasonOther,
+        subject: {
+          $type: com.atproto.admin.defs.repoRef.$type,
+          did: sc.dids.alice,
+        },
+        reportedBy: sc.dids.bob,
+      })
+      await network.processAll()
+      return network.ozone.ctx.db.db
+        .updateTable('report')
+        .set({
+          status: assignedTo ? 'assigned' : 'open',
+          assignedTo: assignedTo ?? null,
+          assignedAt: assignedTo ? createdAt : null,
+          createdAt,
+        })
+        .where('eventId', '=', event.id)
+        .returning('id')
+        .executeTakeFirstOrThrow()
+    }
+
+    it('preserves aggregate lifecycle totals alongside moderator totals', async () => {
+      const moderatorDid = network.ozone.moderatorAccnt.did
+      await modClient.computeStats()
+      const before = await getLiveStats()
+      const moderatorBefore = await getLiveStats({ moderatorDid })
+
+      for (const assignedTo of [moderatorDid, undefined]) {
+        const report = await createReport(assignedTo)
+        for (const event of [
+          { $type: tools.ozone.moderation.defs.modEventEscalate.$type },
+          { $type: tools.ozone.moderation.defs.modEventAcknowledge.$type },
+        ]) {
+          await modClient.emitEvent(
+            {
+              event,
+              subject: {
+                $type: com.atproto.admin.defs.repoRef.$type,
+                did: sc.dids.alice,
+              },
+              reportAction: { ids: [report.id] },
+            },
+            'moderator',
+          )
+        }
+      }
+
+      await modClient.computeStats()
+      const after = await getLiveStats()
+      const moderatorAfter = await getLiveStats({ moderatorDid })
+
+      for (const metric of [
+        'inboundCount',
+        'closedCount',
+        'acknowledgedCount',
+        'escalatedCount',
+        'resolutionSampleCount',
+      ] as const) {
+        expect(after[metric]! - before[metric]!).toBe(2)
+        expect(moderatorAfter[metric]! - moderatorBefore[metric]!).toBe(1)
+      }
+      expect(after.ahtSampleCount! - before.ahtSampleCount!).toBe(1)
+      expect(moderatorAfter.pendingCount).toBeUndefined()
+    })
+
+    it('counts moderator inbound reports without lifecycle activity only in their creation day', async () => {
+      const moderatorDid = network.ozone.triageAccnt.did
+      await modClient.computeStats()
+      const before = await getLiveStats({ moderatorDid })
+
+      await createReport(moderatorDid)
+      await createReport(
+        moderatorDid,
+        toDatetimeString(Date.now() - 24 * 60 * 60 * 1000),
+      )
+      await modClient.computeStats()
+
+      const after = await getLiveStats({ moderatorDid })
+      expect(after.inboundCount! - before.inboundCount!).toBe(1)
+      expect(after.closedCount).toBe(before.closedCount)
+      expect(after.escalatedCount).toBe(before.escalatedCount)
+      expect(after.pendingCount).toBeUndefined()
     })
   })
 
