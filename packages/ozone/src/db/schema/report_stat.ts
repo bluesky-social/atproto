@@ -29,7 +29,7 @@ export interface ReportStat {
 
   // resolved
   actionedCount: number | null // Current closures whose last action was enforcement
-  actionRate: number | null // actionedCount / inboundCount * 100
+  actionRate: number | null // actionedCount / closedCount * 100
   labelActionCount: number | null // Current closures whose last action was label
   tagActionCount: number | null // Current closures whose last action was tag
   takedownActionCount: number | null // Current closures whose last action was takedown
