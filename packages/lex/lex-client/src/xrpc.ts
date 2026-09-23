@@ -96,7 +96,7 @@ type XrpcRequestPayloadOptions<TPayload> = TPayload extends {
 export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
   XrpcRequestOptions<M> & XrpcResponseOptions & XrpcRetryOptions
 
-export type XrpcRequestFetchOptions = {
+export type XrpcRequestInitOptions = {
   /**
    * @note `"manual"` is not supported
    */
@@ -113,12 +113,20 @@ export type XrpcRequestFetchOptions = {
   referrer?: string
   referrerPolicy?: ReferrerPolicy
   signal?: AbortSignal | null
+  /**
+   * Custom HTTP headers to include in the request.
+   *
+   * @note "atproto-proxy" and "atproto-accept-labelers" headers might change
+   * depending on the `service` and `labelers` options, respectively, if they
+   * are provided (which is always the case when using {@link Client.xrpc}).
+   */
+  headers?: HeadersInit
 }
 
 export type XrpcRequestOptions<
   M extends Procedure | Query = Procedure | Query,
 > = XrpcRequestProcessingOptions &
-  XrpcRequestFetchOptions &
+  XrpcRequestInitOptions &
   XrpcRequestHeadersOptions &
   XrpcRequestPayloadOptions<XrpcRequestPayload<M>> &
   XrpcRequestParamsOptions<XrpcRequestParams<M>>
@@ -234,8 +242,9 @@ export async function xrpcSafe<const M extends Query | Procedure>(
   ns: Main<M>,
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcResult<M>> {
+  const method: M = getMain(ns)
   try {
-    const method: M = getMain(ns)
+    // Initialize the request options once (instead of on every retry)
     const agent = buildAgent(agentOpts)
     const path = xrpcRequestPath(method, options)
     const init = xrpcRequestInit(method, options)
@@ -274,8 +283,11 @@ export async function xrpcSafe<const M extends Query | Procedure>(
         await wait(waitTime, options)
       }
     }
+  } catch (cause) {
+    // Error during init
+    return asXrpcFailure(method, cause)
   } finally {
-    // Ensure that the request input body is disposed of when done
+    // Ensure that the options' body is disposed of when done
     await dispose(options.body)
   }
 }
@@ -303,21 +315,21 @@ interface XrpcRequestInit extends RequestInit {
 function xrpcRequestInit<T extends Procedure | Query>(
   schema: T,
   options: XrpcRequestProcessingOptions &
-    XrpcRequestFetchOptions &
+    XrpcRequestInitOptions &
     XrpcRequestHeadersOptions &
     XrpcProcedureInputOptions & { encoding?: string },
 ): XrpcRequestInit {
-  const headers = buildXrpcRequestHeaders(options)
-
-  // Tell the server what type of response we're expecting
-  if (schema.output.encoding) {
-    headers.set('accept', schema.output.encoding)
-  }
+  const headers = buildXrpcRequestHeaders(options.headers, options)
 
   // Caller should not set content-type header
   if (headers.has('content-type')) {
     const contentType = headers.get('content-type')
     throw new TypeError(`Unexpected content-type header (${contentType})`)
+  }
+
+  // Tell the server what type of response we're expecting
+  if (schema.output.encoding) {
+    headers.set('accept', schema.output.encoding)
   }
 
   const req: XrpcRequestInit = {

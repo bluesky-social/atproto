@@ -88,21 +88,11 @@ export function asUint8ArrayArrayBuffer(
 
 export type XrpcRequestHeadersOptions = {
   /**
-   * Additional custom HTTP headers to include in the request.
-   *
-   * @note "atproto-proxy" and "atproto-accept-labelers" headers might change
-   * depending on the `service` and `labelers` options, respectively, if they
-   * are provided (which is always the case when using {@link Client.xrpc}).
-   */
-  headers?: HeadersInit
-
-  /**
    * Labeler DIDs to request labels from for content moderation.
    *
    * When `undefined`, will default to the client instance's default. When
    * `null`, it will cause any existing `atproto-accept-labelers` header
-   * (including one provided through the
-   * {@link XrpcRequestHeadersOptions.headers} option) to be removed.
+   * (including one provided through the headers option) to be removed.
    */
   labelers?: null | Iterable<DidString>
 
@@ -120,11 +110,10 @@ export type XrpcRequestHeadersOptions = {
    * When `undefined`, will default to the client instance's default. When not
    * used against a client instance (e.g., when using the {@link xrpc} helper
    * function), the default is to not alter the `atproto-proxy` header (e.g. if
-   * one is provided in the {@link XrpcRequestHeadersOptions.headers}).
+   * one is provided in the headers).
    *
    * When defined (as either `null` or a string), it will override any
-   * `atproto-proxy` header provided in the
-   * {@link XrpcRequestHeadersOptions.headers} option.
+   * `atproto-proxy` header provided in the headers option.
    */
   service?: null | Service
 }
@@ -139,12 +128,10 @@ export type XrpcRequestHeadersOptions = {
  * @see {@link XrpcRequestHeadersOptions}
  * @returns A new Headers object with AT Protocol headers added
  */
-export function buildXrpcRequestHeaders({
-  service,
-  labelers,
-  appLabelers,
-  headers: headersInit,
-}: XrpcRequestHeadersOptions): Headers {
+export function buildXrpcRequestHeaders(
+  headersInit: HeadersInit | undefined,
+  { service, labelers, appLabelers }: XrpcRequestHeadersOptions,
+): Headers {
   const headers = new Headers(headersInit)
 
   // If provided, the "service" option overrides any existing "atproto-proxy"

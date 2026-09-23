@@ -1,7 +1,7 @@
 import {
   type Agent,
   type AgentConfig,
-  type XrpcRequestFetchOptions,
+  type XrpcRequestInitOptions,
   type XrpcRequestProcessingOptions,
   type XrpcResponseOptions,
   type XrpcRetryOptions,
@@ -19,7 +19,7 @@ import {
 } from './types.js'
 
 export type XrpcOptions = XrpcRetryOptions &
-  XrpcRequestFetchOptions &
+  XrpcRequestInitOptions &
   XrpcRequestProcessingOptions &
   XrpcResponseOptions
 
