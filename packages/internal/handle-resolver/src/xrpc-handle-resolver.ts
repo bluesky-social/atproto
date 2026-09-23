@@ -2,6 +2,7 @@ import {
   type Agent,
   type AgentConfig,
   type RetryOptions,
+  type XrpcRequestFetchOptions,
   type XrpcRequestProcessingOptions,
   type XrpcResponseOptions,
   buildAgent,
@@ -16,36 +17,25 @@ import {
   type ResolvedHandle,
   isResolvedHandle,
 } from './types.js'
-import { pick } from './util.js'
 
-export type XrpcHandleResolverOptions = Pick<AgentConfig, 'fetch' | 'headers'> &
-  RetryOptions &
+export type XrpcOptions = RetryOptions &
+  XrpcRequestFetchOptions &
   XrpcRequestProcessingOptions &
   XrpcResponseOptions
 
+export type XrpcHandleResolverOptions = Pick<AgentConfig, 'fetch' | 'headers'> &
+  XrpcOptions
+
 export class XrpcHandleResolver implements HandleResolver {
   protected readonly agent: Agent
-  protected readonly xrpcOptions: RetryOptions & XrpcResponseOptions
+  protected readonly options: XrpcOptions
 
-  constructor(service: URL | string, options: XrpcHandleResolverOptions = {}) {
-    this.agent = buildAgent({
-      service,
-      fetch: options.fetch,
-      headers: options.headers,
-    })
-    // @NOTE we use "pick" here to prevent overriding critical xrpc options
-    // (like "labelers", "service", etc.)
-    this.xrpcOptions = pick(options, [
-      'retry',
-      'maxRetries',
-      'maxRetryTimeout',
-      'minRetryTimeout',
-      'retryTimeoutFactor',
-      'retryHeaders',
-      'validateRequest',
-      'validateResponse',
-      'strictResponseProcessing',
-    ])
+  constructor(
+    service: URL | string,
+    { fetch, headers, ...options }: XrpcHandleResolverOptions = {},
+  ) {
+    this.agent = buildAgent({ service, fetch, headers })
+    this.options = options
   }
 
   public async resolve(
@@ -53,17 +43,21 @@ export class XrpcHandleResolver implements HandleResolver {
     options?: ResolveHandleOptions,
   ): Promise<ResolvedHandle> {
     const result = await xrpcSafe(this.agent, resolveHandle, {
-      ...this.xrpcOptions,
+      ...this.options,
       params: { handle },
-      cache: options?.noCache ? 'no-cache' : undefined,
-      signal: options?.signal,
-      redirect: 'error',
+      cache: options?.noCache ? 'no-cache' : this.options.cache,
+      signal: options?.signal ?? this.options.signal,
+      redirect: this.options.redirect ?? 'error',
+      // Prevent this.options from setting unwanted xrpc options
+      labelers: undefined,
+      appLabelers: undefined,
+      service: undefined,
     })
 
     if (result.success) {
       const { did } = result.body
       // @ts-expect-error explicitly opting-out of type safety
-      if (this.xrpcOptions.validateResponse === false) return did
+      if (this.options.validateResponse === false) return did
       if (isResolvedHandle(did)) return did
       throw new HandleResolverError(
         `Invalid DID (${did}) returned from resolveHandle method`,
