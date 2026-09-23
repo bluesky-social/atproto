@@ -272,11 +272,8 @@ export async function xrpcSafe<const M extends Query | Procedure>(
         }
 
         // Cannot retry a request with a consumed stream body
-        //
-        // @NOTE We use "!== false" here to avoid retrying in environments that
-        // do not implement the ReadableStream.locked property
-        if (init.body instanceof ReadableStream && init.body.locked !== false) {
-          await init.body.cancel?.()
+        if (init.body instanceof ReadableStream) {
+          await dispose(init.body)
           return failure
         }
 
