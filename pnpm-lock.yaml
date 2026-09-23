@@ -2131,6 +2131,9 @@ importers:
       '@atproto/oauth-client-browser-example':
         specifier: workspace:^
         version: link:../oauth/oauth-client-browser-example
+      '@atproto/oauth-client-node':
+        specifier: workspace:^
+        version: link:../oauth/oauth-client-node
       '@did-plc/server':
         specifier: ^0.0.1
         version: 0.0.1
