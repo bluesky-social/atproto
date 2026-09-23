@@ -145,14 +145,15 @@ describe('appealActionedSubject', () => {
   // literal in a test fails at build time instead of at request time.
   type EmitSubject = Parameters<ModeratorClient['emitEvent']>[0]['subject']
 
-  async function takedown(subject: EmitSubject) {
+  async function takedown(subject: EmitSubject, reportIds?: number[]) {
     return modClient.emitEvent({
       event: { $type: 'tools.ozone.moderation.defs#modEventTakedown' },
       subject,
+      reportAction: reportIds ? { ids: reportIds } : undefined,
     })
   }
 
-  async function label(subject: EmitSubject) {
+  async function label(subject: EmitSubject, reportIds?: number[]) {
     return modClient.emitEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventLabel',
@@ -160,6 +161,7 @@ describe('appealActionedSubject', () => {
         negateLabelVals: [],
       },
       subject,
+      reportAction: reportIds ? { ids: reportIds } : undefined,
     })
   }
 
@@ -193,22 +195,12 @@ describe('appealActionedSubject', () => {
         cursor: sourceReport.id - 1,
         limit: 1,
       })
-    const action = await modClient.emitEvent({
-      event: {
-        $type: 'tools.ozone.moderation.defs#modEventTakedown',
-      },
-      subject,
-    })
     const source = await network.ozone.ctx.db.db
       .selectFrom('report')
       .where('eventId', '=', sourceReport.id)
       .select('id')
       .executeTakeFirstOrThrow()
-    await network.ozone.ctx.db.db
-      .updateTable('report')
-      .where('id', '=', source.id)
-      .set({ actionEventIds: jsonb([action.id]) })
-      .execute()
+    const action = await takedown(subject, [source.id])
 
     const response = await appeal(action.id, sc.dids.bob)
     const report = await latestAppealReport(sc.dids.bob)
@@ -272,17 +264,12 @@ describe('appealActionedSubject', () => {
       },
       subject,
     })
-    const action = await label(subject)
     const source = await network.ozone.ctx.db.db
       .selectFrom('report')
       .where('eventId', '=', sourceReport.id)
       .select(['id', 'queueId'])
       .executeTakeFirstOrThrow()
-    await network.ozone.ctx.db.db
-      .updateTable('report')
-      .where('id', '=', source.id)
-      .set({ actionEventIds: jsonb([action.id]) })
-      .execute()
+    const action = await label(subject, [source.id])
 
     await appealLabel('!warn', subject, account.did)
 
@@ -312,17 +299,12 @@ describe('appealActionedSubject', () => {
     await network.ozone.ctx
       .queueService(network.ozone.ctx.db)
       .insertReportsFromEvents({ cursor: sourceReport.id - 1, limit: 1 })
-    const action = await takedown(subject)
     const source = await network.ozone.ctx.db.db
       .selectFrom('report')
       .where('eventId', '=', sourceReport.id)
       .select(['id', 'queueId'])
       .executeTakeFirstOrThrow()
-    await network.ozone.ctx.db.db
-      .updateTable('report')
-      .where('id', '=', source.id)
-      .set({ actionEventIds: jsonb([action.id]) })
-      .execute()
+    const action = await takedown(subject, [source.id])
 
     await appealTakedown(subject, account.did)
 
