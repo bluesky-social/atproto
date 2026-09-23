@@ -10,6 +10,13 @@ is defined in `Hydrator.createContext`, which is called by every request
 handler. The default scope supplies anonymous `deviceId` and `sessionId`
 identifiers for targeting unauthenticated users.
 
+For `app.bsky.feed.getFeed`, the `iris:feed:enable` cutover only evaluates for
+allowlisted feeds. Guests also need a client-provided `X-Bsky-Device-Id`:
+without it, a generated per-request device ID would change experiment arms
+between pages, so the registered feed generator stays in use. Configure the
+guest GrowthBook rule to hash on `deviceId` (recorded as `stable_id` in the
+event proxy); authenticated assignments continue to use the viewer DID.
+
 Feature gates can be checked via the following methods.
 
 ```typescript

@@ -54,6 +54,7 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ params, auth, req, signal }) => {
       const viewer = auth.credentials.iss
+      const stableId = req.header('X-Bsky-Device-Id')
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
@@ -72,7 +73,7 @@ export default function (server: Server, ctx: AppContext) {
       // Do not refill filtered pages. Overfetching from algorithmic feeds can
       // advance their state and prevent omitted items from appearing later.
       const result = await getFeed(
-        { ...params, hydrateCtx, headers, signal },
+        { ...params, hydrateCtx, headers, signal, stableId },
         ctx,
       )
       const {
@@ -184,6 +185,7 @@ type Context = AppContext
 type Params = app.bsky.feed.getFeed.$Params & {
   hydrateCtx: HydrateCtx
   headers: HeadersMap
+  stableId?: string
   signal: AbortSignal
 }
 
@@ -209,15 +211,19 @@ export const irisUrlForFeed = (
       viewer: HydrateCtx['viewer']
       features: Pick<HydrateCtx['features'], 'Gate' | 'checkGate'>
     }
+    stableId?: string
   },
 ): string | undefined => {
   const { irisUrl } = cfg
   if (!irisUrl) return
   if (!cfg.irisFeedUris?.has(params.feed)) return
-  if (!params.hydrateCtx.viewer) return
+  // @NOTE Without a client-supplied stable ID, a new anonymous device ID is
+  // generated per request and pagination could switch feed backends.
+  if (!params.hydrateCtx.viewer && !params.stableId?.trim()) return
   if (
     !params.hydrateCtx.features.checkGate(
       params.hydrateCtx.features.Gate.IrisFeed,
+      params.hydrateCtx.viewer ? undefined : { deviceId: params.stableId },
     )
   ) {
     return

@@ -14,16 +14,26 @@ const inputs = ({
   irisFeedUris = [ALLOWLISTED],
   feed = ALLOWLISTED,
   viewer = 'did:plc:viewer' as DidString | null,
+  stableId = '',
   gate = true,
 } = {}) => {
-  const checkGate = vi.fn((g: Gate) => (g === Gate.IrisFeed ? gate : false))
+  const checkGate = vi.fn(
+    (g: Gate, overrides?: { deviceId?: string }) =>
+      g === Gate.IrisFeed &&
+      (viewer ? overrides === undefined : overrides?.deviceId === stableId) &&
+      gate,
+  )
   return {
     checkGate,
     cfg: {
       irisUrl: irisConfigured ? IRIS_URL : undefined,
       irisFeedUris: allowlistConfigured ? new Set(irisFeedUris) : undefined,
     },
-    params: { feed, hydrateCtx: { viewer, features: { Gate, checkGate } } },
+    params: {
+      feed,
+      stableId,
+      hydrateCtx: { viewer, features: { Gate, checkGate } },
+    },
   }
 }
 
@@ -53,11 +63,26 @@ describe('irisUrlForFeed', () => {
     expect(irisUrlForFeed(cfg, params)).toBeUndefined()
   })
 
-  // Unauthed viewers have no stable bucket, so they'd flip backends between
-  // pages and send a cursor to the backend that did not mint it.
-  it('does not route unauthed requests', () => {
-    const { cfg, params } = inputs({ viewer: null })
+  it('routes a guest with a stable ID in the same Iris gate', () => {
+    const { cfg, params } = inputs({
+      viewer: null,
+      stableId: 'stable-device-123',
+    })
+    expect(irisUrlForFeed(cfg, params)).toBe(IRIS_URL)
+  })
+
+  it('leaves a stable guest on the registered generator when gated out', () => {
+    const { cfg, params } = inputs({
+      viewer: null,
+      stableId: 'stable-device-123',
+      gate: false,
+    })
     expect(irisUrlForFeed(cfg, params)).toBeUndefined()
+  })
+
+  it('keeps authenticated assignment on the viewer DID', () => {
+    const { cfg, params } = inputs({ stableId: 'device-id' })
+    expect(irisUrlForFeed(cfg, params)).toBe(IRIS_URL)
   })
 
   // Evaluating the gate emits a GrowthBook exposure event. This runs for every
@@ -70,9 +95,18 @@ describe('irisUrlForFeed', () => {
       expect(checkGate).not.toHaveBeenCalled()
     })
 
-    it('for an unauthed request', () => {
+    it('for a guest without a stable ID', () => {
       const { cfg, params, checkGate } = inputs({ viewer: null })
-      irisUrlForFeed(cfg, params)
+      expect(irisUrlForFeed(cfg, params)).toBeUndefined()
+      expect(checkGate).not.toHaveBeenCalled()
+    })
+
+    it('for a guest with an empty stable ID', () => {
+      const { cfg, params, checkGate } = inputs({
+        viewer: null,
+        stableId: '   ',
+      })
+      expect(irisUrlForFeed(cfg, params)).toBeUndefined()
       expect(checkGate).not.toHaveBeenCalled()
     })
 
