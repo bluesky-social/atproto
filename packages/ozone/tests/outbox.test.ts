@@ -14,6 +14,7 @@ import type { LabelsEvt, Sequencer } from '../src/sequencer/sequencer.js'
 function createSequencer() {
   const sequencer = new EventEmitter() as Sequencer
   sequencer.lastSeen = 0
+  sequencer.destroyed = false
   sequencer.requestLabelRange = jest
     .fn<Sequencer['requestLabelRange']>()
     .mockResolvedValue([])
@@ -102,6 +103,71 @@ describe('outbox lifecycle', () => {
     await expect(next).resolves.toMatchObject({ done: true })
     expect(sequencer.listenerCount('events')).toBe(0)
     expect(sequencer.listenerCount('close')).toBe(0)
+  })
+
+  it.each([undefined, 0])(
+    'does not query or subscribe to a destroyed sequencer with cursor %s',
+    async (cursor) => {
+      const sequencer = createSequencer()
+      sequencer.destroyed = true
+      const outbox = new Outbox(sequencer)
+      await expect(outbox.events(cursor).next()).resolves.toMatchObject({
+        done: true,
+      })
+      expect(sequencer.requestLabelRange).not.toHaveBeenCalled()
+      expect(sequencer.listenerCount('events')).toBe(0)
+      expect(sequencer.listenerCount('close')).toBe(0)
+    },
+  )
+
+  it('stops backfill when the sequencer closes during a query', async () => {
+    const sequencer = createSequencer()
+    const query = createDeferrable<LabelsEvt[]>()
+    using request = jest
+      .spyOn(sequencer, 'requestLabelRange')
+      .mockReturnValueOnce(query.complete)
+    const ac = new AbortController()
+    const outbox = new Outbox(sequencer)
+    const stream = outbox.events(0, ac.signal)
+    const next = stream.next()
+    sequencer.destroyed = true
+    sequencer.emit('close')
+    query.resolve([event(1)])
+    try {
+      await expect(next).resolves.toMatchObject({ done: true })
+      expect(request).toHaveBeenCalledTimes(1)
+      expect(sequencer.listenerCount('events')).toBe(0)
+      expect(sequencer.listenerCount('close')).toBe(0)
+      expect(getEventListeners(ac.signal, 'abort')).toHaveLength(0)
+    } finally {
+      await stream.return(undefined)
+    }
+  })
+
+  it('does not start cutover while sequencer shutdown is waiting to close', async () => {
+    const sequencer = createSequencer()
+    const query = createDeferrable<LabelsEvt[]>()
+    using request = jest
+      .spyOn(sequencer, 'requestLabelRange')
+      .mockReturnValueOnce(query.complete)
+    const ac = new AbortController()
+    const outbox = new Outbox(sequencer)
+    const stream = outbox.events(0, ac.signal)
+    const next = stream.next()
+    // @NOTE destroy() marks the sequencer before waiting for its poll to finish.
+    sequencer.destroyed = true
+    query.resolve([])
+    try {
+      await new Promise((resolve) => setImmediate(resolve))
+      expect(request).toHaveBeenCalledTimes(1)
+      await expect(next).resolves.toMatchObject({ done: true })
+      expect(sequencer.listenerCount('events')).toBe(0)
+      expect(sequencer.listenerCount('close')).toBe(0)
+      expect(getEventListeners(ac.signal, 'abort')).toHaveLength(0)
+    } finally {
+      ac.abort()
+      await stream.return(undefined)
+    }
   })
 
   it('does not fetch another backfill page after cancellation', async () => {
@@ -257,3 +323,80 @@ it('disconnects a stalled label socket before its send callback completes', asyn
   }
   expect(sequencer.listenerCount('events')).toBe(0)
 })
+
+it.each(['live', 'backfill'])(
+  'times out a stalled %s send while healthy subscribers remain connected',
+  async (phase) => {
+    const sequencer = createSequencer()
+    sequencer.curr = jest.fn<Sequencer['curr']>().mockResolvedValue(1)
+    const backfill = createDeferrable<LabelsEvt[]>()
+    using request = jest
+      .spyOn(sequencer, 'requestLabelRange')
+      .mockReturnValueOnce(backfill.complete)
+    const server = new Server()
+    subscribeLabels(server, { sequencer } as AppContext)
+    const app = express()
+    app.use(server.router)
+    await using httpServer = app.listen(0)
+    await once(httpServer, 'listening')
+    const { port } = httpServer.address() as AddressInfo
+    const nsid = com.atproto.label.subscribeLabels.$lxm
+    const { wss } = server.subscriptions.get(nsid)!
+    const url = `ws://127.0.0.1:${port}/xrpc/${nsid}`
+    const connected = once(wss, 'connection')
+    const slow = new WebSocket(phase === 'backfill' ? `${url}?cursor=0` : url)
+    await once(slow, 'open')
+    const [socket] = (await connected) as [WebSocket]
+    const healthy = new WebSocket(url)
+    await once(healthy, 'open')
+    const sending = createDeferrable()
+    let pendingSend: ((error?: Error) => void) | undefined
+    using send = jest
+      .spyOn(socket, 'send')
+      .mockImplementation((_data, _opts, cb) => {
+        pendingSend = cb
+        sending.resolve()
+      })
+    jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate'] })
+    try {
+      await jest.advanceTimersByTimeAsync(60_000)
+      expect(slow.readyState).toBe(WebSocket.OPEN)
+      expect(healthy.readyState).toBe(WebSocket.OPEN)
+
+      if (phase === 'backfill') {
+        backfill.resolve([event(1)])
+      } else {
+        const received = once(healthy, 'message')
+        sequencer.emit('events', [event(1)])
+        await received
+      }
+      await sending.complete
+      const disconnected = once(slow, 'close')
+      await jest.advanceTimersByTimeAsync(29_999)
+      expect(slow.readyState).toBe(WebSocket.OPEN)
+      await jest.advanceTimersByTimeAsync(1)
+      await disconnected
+      expect(send).toHaveBeenCalledTimes(1)
+      expect(healthy.readyState).toBe(WebSocket.OPEN)
+      expect(sequencer.listenerCount('events')).toBe(1)
+      expect(request).toHaveBeenCalledTimes(phase === 'backfill' ? 1 : 0)
+
+      const received = once(healthy, 'message')
+      sequencer.emit('events', [event(2)])
+      const [bytes] = await received
+      expect(Frame.fromBytes(bytes).body).toEqual(event(2))
+      await jest.advanceTimersByTimeAsync(60_000)
+      expect(healthy.readyState).toBe(WebSocket.OPEN)
+      expect(jest.getTimerCount()).toBe(0)
+    } finally {
+      pendingSend?.(new Error('socket closed'))
+      jest.useRealTimers()
+      slow.terminate()
+      healthy.terminate()
+      for (const client of wss.clients) client.terminate()
+      await new Promise<void>((resolve) => wss.close(() => resolve()))
+    }
+    expect(sequencer.listenerCount('events')).toBe(0)
+    expect(sequencer.listenerCount('close')).toBe(0)
+  },
+)

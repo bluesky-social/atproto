@@ -38,7 +38,7 @@ export class Outbox {
     backfillCursor?: number,
     signal?: AbortSignal,
   ): AsyncGenerator<LabelsEvt> {
-    if (signal?.aborted) return
+    if (signal?.aborted || this.sequencer.destroyed) return
     let stopped = false
     const stop = (err?: unknown) => {
       if (stopped) return
@@ -93,6 +93,7 @@ export class Outbox {
     }
 
     signal?.addEventListener('abort', onClose, { once: true })
+    this.sequencer.once('close', onClose)
     try {
       if (backfillCursor !== undefined) {
         for await (const evt of this.getBackfill(backfillCursor)) {
@@ -104,9 +105,8 @@ export class Outbox {
       } else {
         this.caughtUp = true
       }
-      if (stopped) return
+      if (stopped || this.sequencer.destroyed) return
       this.sequencer.on('events', addToBuffer)
-      this.sequencer.once('close', onClose)
       void cutover().catch(stop)
 
       for await (const evt of this.outBuffer.events()) {
