@@ -189,6 +189,15 @@ type Params = app.bsky.feed.getFeed.$Params & {
   signal: AbortSignal
 }
 
+type FeedRoutingParams = {
+  feed: Params['feed']
+  hydrateCtx: {
+    viewer: HydrateCtx['viewer']
+    features: Pick<HydrateCtx['features'], 'Gate' | 'checkGate'>
+  }
+  stableId?: string
+}
+
 type Skeleton = {
   items: AlgoResponseItem[]
   reqId?: string
@@ -205,14 +214,7 @@ type Skeleton = {
  */
 export const irisUrlForFeed = (
   cfg: Pick<ServerConfig, 'irisUrl' | 'irisFeedUris'>,
-  params: {
-    feed: string
-    hydrateCtx: {
-      viewer: HydrateCtx['viewer']
-      features: Pick<HydrateCtx['features'], 'Gate' | 'checkGate'>
-    }
-    stableId?: string
-  },
+  params: FeedRoutingParams,
 ): string | undefined => {
   if (params.hydrateCtx.viewer) return
   const { irisUrl } = cfg
@@ -246,7 +248,7 @@ export const irisStagingUrlForFeed = (
 
 export const resolveSkeletonEndpoint = async (
   ctx: Context,
-  params: Params,
+  params: FeedRoutingParams,
 ): Promise<string> => {
   const irisUrl = irisUrlForFeed(ctx.cfg, params)
   if (irisUrl) return irisUrl

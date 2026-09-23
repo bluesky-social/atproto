@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { DidString } from '@atproto/lex'
+import type { AtUriString, DidString } from '@atproto/lex'
 import type { AppContext } from '../../../../context.js'
 import { Gate } from '../../../../feature-gates/gates.js'
 import {
@@ -10,9 +10,11 @@ import {
 
 const IRIS_URL = 'http://iris.internal.invalid'
 const IRIS_STAGING_URL = 'http://iris-staging.internal.invalid'
-const ALLOWLISTED = 'at://did:plc:feedgen/app.bsky.feed.generator/whats-hot'
+const ALLOWLISTED =
+  'at://did:plc:feedgen/app.bsky.feed.generator/whats-hot' as AtUriString
 const REGISTERED_URL = 'https://seeemore.internal.invalid'
-const OTHER_FEED = 'at://did:plc:someone/app.bsky.feed.generator/custom'
+const OTHER_FEED =
+  'at://did:plc:someone/app.bsky.feed.generator/custom' as AtUriString
 
 const inputs = ({
   irisConfigured = true,
@@ -139,12 +141,9 @@ describe('resolveSkeletonEndpoint', () => {
       dataplane: { getIdentityByDid },
     } as unknown as AppContext
 
-    await expect(
-      resolveSkeletonEndpoint(
-        ctx,
-        params as Parameters<typeof resolveSkeletonEndpoint>[1],
-      ),
-    ).resolves.toBe(REGISTERED_URL)
+    await expect(resolveSkeletonEndpoint(ctx, params)).resolves.toBe(
+      REGISTERED_URL,
+    )
     expect(checkGate).toHaveBeenCalledWith(Gate.IrisFeed, {
       deviceId: params.stableId,
     })
