@@ -276,7 +276,7 @@ export async function xrpcSafe<const M extends Query | Procedure>(
         // @NOTE We use "!== false" here to avoid retrying in environments that
         // do not implement the ReadableStream.locked property
         if (init.body instanceof ReadableStream && init.body.locked !== false) {
-          await dispose(init.body)
+          await init.body.cancel?.()
           return failure
         }
 
@@ -284,7 +284,7 @@ export async function xrpcSafe<const M extends Query | Procedure>(
       }
     }
   } catch (cause) {
-    // Error during init
+    // Error during initialization or signal aborted
     return asXrpcFailure(method, cause)
   } finally {
     // Ensure that the options' body is disposed of when done
