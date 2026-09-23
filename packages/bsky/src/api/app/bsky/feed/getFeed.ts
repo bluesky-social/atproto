@@ -214,16 +214,19 @@ export const irisUrlForFeed = (
     stableId?: string
   },
 ): string | undefined => {
+  if (params.hydrateCtx.viewer) return
   const { irisUrl } = cfg
   if (!irisUrl) return
   if (!cfg.irisFeedUris?.has(params.feed)) return
   // @NOTE Without a client-supplied stable ID, a new anonymous device ID is
   // generated per request and pagination could switch feed backends.
-  if (!params.hydrateCtx.viewer && !params.stableId?.trim()) return
+  if (!params.stableId?.trim()) return
   if (
     !params.hydrateCtx.features.checkGate(
       params.hydrateCtx.features.Gate.IrisFeed,
-      params.hydrateCtx.viewer ? undefined : { deviceId: params.stableId },
+      {
+        deviceId: params.stableId,
+      },
     )
   ) {
     return
@@ -241,15 +244,23 @@ export const irisStagingUrlForFeed = (
 ): string | undefined =>
   cfg.irisStagingFeedUris?.has(params.feed) ? cfg.irisStagingUrl : undefined
 
-const resolveSkeletonEndpoint = async (
+export const resolveSkeletonEndpoint = async (
   ctx: Context,
   params: Params,
 ): Promise<string> => {
   const irisUrl = irisUrlForFeed(ctx.cfg, params)
   if (irisUrl) return irisUrl
 
-  const irisStagingUrl = irisStagingUrlForFeed(ctx.cfg, params)
-  if (irisStagingUrl) return irisStagingUrl
+  // A guest on the production Iris allowlist must fall back to the registered
+  // generator, not staging, when the flag is off or the stable ID is absent.
+  if (
+    params.hydrateCtx.viewer ||
+    !ctx.cfg.irisUrl ||
+    !ctx.cfg.irisFeedUris?.has(params.feed)
+  ) {
+    const irisStagingUrl = irisStagingUrlForFeed(ctx.cfg, params)
+    if (irisStagingUrl) return irisStagingUrl
+  }
 
   const { feed } = params
   const found = await ctx.hydrator.feed.getFeedGens([feed], true)

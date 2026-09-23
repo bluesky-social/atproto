@@ -1,11 +1,17 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { DidString } from '@atproto/lex'
+import type { AppContext } from '../../../../context.js'
 import { Gate } from '../../../../feature-gates/gates.js'
-import { irisStagingUrlForFeed, irisUrlForFeed } from './getFeed.js'
+import {
+  irisStagingUrlForFeed,
+  irisUrlForFeed,
+  resolveSkeletonEndpoint,
+} from './getFeed.js'
 
 const IRIS_URL = 'http://iris.internal.invalid'
 const IRIS_STAGING_URL = 'http://iris-staging.internal.invalid'
 const ALLOWLISTED = 'at://did:plc:feedgen/app.bsky.feed.generator/whats-hot'
+const REGISTERED_URL = 'https://seeemore.internal.invalid'
 const OTHER_FEED = 'at://did:plc:someone/app.bsky.feed.generator/custom'
 
 const inputs = ({
@@ -13,15 +19,13 @@ const inputs = ({
   allowlistConfigured = true,
   irisFeedUris = [ALLOWLISTED],
   feed = ALLOWLISTED,
-  viewer = 'did:plc:viewer' as DidString | null,
-  stableId = '',
+  viewer = null as DidString | null,
+  stableId = 'stable-device-123',
   gate = true,
 } = {}) => {
   const checkGate = vi.fn(
     (g: Gate, overrides?: { deviceId?: string }) =>
-      g === Gate.IrisFeed &&
-      (viewer ? overrides === undefined : overrides?.deviceId === stableId) &&
-      gate,
+      g === Gate.IrisFeed && overrides?.deviceId === stableId && gate,
   )
   return {
     checkGate,
@@ -38,7 +42,7 @@ const inputs = ({
 }
 
 describe('irisUrlForFeed', () => {
-  it('routes an allowlisted feed to iris for a gated-in viewer', () => {
+  it('routes an allowlisted feed to iris for a gated-in guest', () => {
     const { cfg, params } = inputs()
     expect(irisUrlForFeed(cfg, params)).toBe(IRIS_URL)
   })
@@ -63,32 +67,18 @@ describe('irisUrlForFeed', () => {
     expect(irisUrlForFeed(cfg, params)).toBeUndefined()
   })
 
-  it('routes a guest with a stable ID in the same Iris gate', () => {
-    const { cfg, params } = inputs({
-      viewer: null,
-      stableId: 'stable-device-123',
-    })
-    expect(irisUrlForFeed(cfg, params)).toBe(IRIS_URL)
-  })
-
-  it('leaves a stable guest on the registered generator when gated out', () => {
-    const { cfg, params } = inputs({
-      viewer: null,
-      stableId: 'stable-device-123',
-      gate: false,
-    })
-    expect(irisUrlForFeed(cfg, params)).toBeUndefined()
-  })
-
-  it('keeps authenticated assignment on the viewer DID', () => {
-    const { cfg, params } = inputs({ stableId: 'device-id' })
-    expect(irisUrlForFeed(cfg, params)).toBe(IRIS_URL)
-  })
-
   // Evaluating the gate emits a GrowthBook exposure event. This runs for every
   // custom feed on the network, so it must not fire for requests that could
   // never be routed to iris.
   describe('does not evaluate the gate', () => {
+    it('for an authenticated viewer, even with a stable ID', () => {
+      const { cfg, params, checkGate } = inputs({
+        viewer: 'did:plc:viewer' as DidString,
+      })
+      expect(irisUrlForFeed(cfg, params)).toBeUndefined()
+      expect(checkGate).not.toHaveBeenCalled()
+    })
+
     it('for a feed that is not allowlisted', () => {
       const { cfg, params, checkGate } = inputs({ feed: OTHER_FEED })
       irisUrlForFeed(cfg, params)
@@ -96,7 +86,7 @@ describe('irisUrlForFeed', () => {
     })
 
     it('for a guest without a stable ID', () => {
-      const { cfg, params, checkGate } = inputs({ viewer: null })
+      const { cfg, params, checkGate } = inputs({ stableId: '' })
       expect(irisUrlForFeed(cfg, params)).toBeUndefined()
       expect(checkGate).not.toHaveBeenCalled()
     })
@@ -120,6 +110,43 @@ describe('irisUrlForFeed', () => {
       const { cfg, params, checkGate } = inputs({ allowlistConfigured: false })
       irisUrlForFeed(cfg, params)
       expect(checkGate).not.toHaveBeenCalled()
+    })
+  })
+})
+
+describe('resolveSkeletonEndpoint', () => {
+  it('uses the registered generator for a gated-out guest even when staging is configured', async () => {
+    const { cfg, params, checkGate } = inputs({ gate: false })
+    const getFeedGens = vi
+      .fn()
+      .mockResolvedValue(
+        new Map([[ALLOWLISTED, { record: { did: 'did:plc:feedgen' } }]]),
+      )
+    const getIdentityByDid = vi.fn().mockResolvedValue({
+      services: new TextEncoder().encode(
+        JSON.stringify({
+          bsky_fg: { Type: 'BskyFeedGenerator', URL: REGISTERED_URL },
+        }),
+      ),
+    })
+    const ctx = {
+      cfg: {
+        ...cfg,
+        irisStagingUrl: IRIS_STAGING_URL,
+        irisStagingFeedUris: new Set([ALLOWLISTED]),
+      },
+      hydrator: { feed: { getFeedGens } },
+      dataplane: { getIdentityByDid },
+    } as unknown as AppContext
+
+    await expect(
+      resolveSkeletonEndpoint(
+        ctx,
+        params as Parameters<typeof resolveSkeletonEndpoint>[1],
+      ),
+    ).resolves.toBe(REGISTERED_URL)
+    expect(checkGate).toHaveBeenCalledWith(Gate.IrisFeed, {
+      deviceId: params.stableId,
     })
   })
 })
