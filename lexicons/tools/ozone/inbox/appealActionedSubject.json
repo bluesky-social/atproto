@@ -4,16 +4,17 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Appeal a moderation action affecting the user's account or content. Either actionId or subject is required.",
+      "description": "Appeal a moderation action affecting the user's account or content. A subject is required unless action is an actionRef.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
           "properties": {
-            "actionId": {
-              "type": "integer",
-              "minimum": 1,
-              "description": "Moderation action being appealed. Either this or subject is required."
+            "action": {
+              "type": "union",
+              "refs": ["#actionRef", "#labelRef", "#takedownRef"],
+              "closed": true,
+              "description": "Moderation action being appealed."
             },
             "subject": {
               "type": "union",
@@ -21,7 +22,7 @@
                 "com.atproto.admin.defs#repoRef",
                 "com.atproto.repo.strongRef"
               ],
-              "description": "Subject being appealed. Either this or actionId is required."
+              "description": "Subject being appealed. Required for labelRef and takedownRef; optional for actionRef."
             },
             "reason": {
               "type": "string",
@@ -61,6 +62,32 @@
           "description": "The appeal window for this action has closed."
         }
       ]
+    },
+    "actionRef": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "ID of the moderation event being appealed."
+        }
+      }
+    },
+    "labelRef": {
+      "type": "object",
+      "required": ["val"],
+      "properties": {
+        "val": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Value of the label being appealed."
+        }
+      }
+    },
+    "takedownRef": {
+      "type": "object",
+      "properties": {}
     }
   }
 }

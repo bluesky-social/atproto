@@ -1,4 +1,5 @@
 import type { Expression, ExpressionBuilder, SqlBool } from 'kysely'
+import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
 import { ForbiddenError } from '@atproto/xrpc-server'
 import type { AppContext } from '../context.js'
@@ -173,6 +174,67 @@ export const reportSubjectFilter = (
   ])
 }
 
+export const eventSubjectFilter = (
+  eb: ExpressionBuilder<DatabaseSchemaType, 'moderation_event'>,
+  subject: ModSubject,
+): Expression<SqlBool> => {
+  const {
+    subjectType,
+    subjectDid,
+    subjectUri,
+    subjectMessageId,
+    subjectConvoId,
+  } = subject.info()
+  if (subject.isMessage()) {
+    return eb.and([
+      eb('subjectDid', '=', subjectDid),
+      eb('subjectMessageId', '=', subjectMessageId),
+      eb('subjectConvoId', '=', subjectConvoId),
+    ])
+  }
+  if (subject.isConvo()) {
+    return eb.and([
+      eb('subjectDid', '=', subjectDid),
+      eb('subjectConvoId', '=', subjectConvoId),
+      eb('subjectMessageId', 'is', null),
+    ])
+  }
+  if (subject.isRecord()) {
+    return eb.and([
+      eb('subjectDid', '=', subjectDid),
+      eb('subjectUri', '=', subjectUri),
+    ])
+  }
+  return eb.and([
+    eb('subjectDid', '=', subjectDid),
+    eb('subjectType', '=', subjectType),
+  ])
+}
+
+export const findAppealedEvent = async (
+  ctx: AppContext,
+  subject: ModSubject,
+  action: { type: 'label'; val: string } | { type: 'takedown' },
+) => {
+  let query = ctx.db.db
+    .selectFrom('moderation_event')
+    .where((eb) => eventSubjectFilter(eb, subject))
+    .where('action', '=', action.type === 'label' ? LABEL : TAKEDOWN)
+
+  if (action.type === 'label') {
+    query = query.where(
+      sql<boolean>`${action.val} = ANY(string_to_array("createLabelVals", ' '))`,
+    )
+  }
+
+  const matches = await query
+    .orderBy('id', 'desc')
+    .limit(2)
+    .selectAll()
+    .execute()
+  return matches.length === 1 ? matches[0] : undefined
+}
+
 /**
  * Label rows are keyed by a single string: the record URI, or the DID for an
  * account.
@@ -211,6 +273,9 @@ export const assertAppealAllowed = async (
   subject: ModSubject,
 ) => {
   dbTxn.assertTransaction()
+  await sql`select pg_advisory_xact_lock(
+    hashtextextended(${subjectKey(subject)}, 0)
+  )`.execute(dbTxn.db)
 
   const existing = await dbTxn.db
     .selectFrom('report')
@@ -248,8 +313,8 @@ export type FileAppealInput = {
  * A linked appeal inherits the queue of the report the appealed action
  * resolved, but only when every candidate agrees - bulk and collateral actions
  * can link one event to reports sitting in different queues, and guessing
- * between them is worse than leaving the appeal for the router. An unlinked
- * appeal falls back to whatever queue is configured to accept appeals.
+ * between them is worse than using normal appeal routing. An unlinked or
+ * ambiguously linked appeal falls back to whatever queue accepts appeals.
  *
  * This is a read of best-effort routing data, so it deliberately runs outside
  * the appeal transaction: holding the subject lock across a queue listing and
@@ -268,16 +333,21 @@ const selectQueue = async (
           .selectFrom('report')
           .where('reportType', '!=', APPEAL_REASON_TYPE)
           .where('actionEventIds', '@>', jsonb([actionId]))
-          .select(['queueId', 'queuedAt'])
+          .select('queueId')
           .execute()
-  const sourceQueues = new Set(
-    sourceReports
-      .map((source) => source.queueId)
-      .filter((queueId): queueId is number => queueId !== null),
-  )
-
+  const sourceQueueIds = sourceReports.map((source) => source.queueId)
+  const allSourcesAssigned =
+    sourceQueueIds.length > 0 &&
+    sourceQueueIds.every(
+      (queueId): queueId is number => queueId !== null && queueId > 0,
+    )
+  const sourceQueues = new Set(sourceQueueIds)
+  const inheritedQueueId =
+    allSourcesAssigned && sourceQueues.size === 1
+      ? (sourceQueueIds[0] as number)
+      : null
   const legacyQueue =
-    actionId === undefined
+    inheritedQueueId === null
       ? findMatchingQueue(
           (await ctx.queueService(ctx.db).list({ limit: 1000, enabled: true }))
             .queues,
@@ -289,12 +359,7 @@ const selectQueue = async (
         )
       : null
 
-  const queueId =
-    actionId === undefined
-      ? (legacyQueue?.id ?? -1)
-      : sourceQueues.size === 1
-        ? [...sourceQueues][0]
-        : -1
+  const queueId = inheritedQueueId ?? legacyQueue?.id ?? -1
 
   // An unrouted report carries no queue timestamp: `queuedAt` records when a
   // report entered a queue, and matches the `queueId: -1` / `status: 'open'`

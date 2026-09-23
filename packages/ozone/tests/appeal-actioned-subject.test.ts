@@ -56,7 +56,15 @@ describe('appealActionedSubject', () => {
   }
 
   async function appeal(actionId: number, did: DidString) {
-    return callAppeal({ actionId }, did)
+    return callAppeal(
+      {
+        action: {
+          $type: 'tools.ozone.inbox.appealActionedSubject#actionRef',
+          id: actionId,
+        },
+      },
+      did,
+    )
   }
 
   async function legacyAppeal(did: DidString) {
@@ -77,6 +85,35 @@ describe('appealActionedSubject', () => {
           uri: ref.uriStr,
           cid: ref.cidStr,
         },
+      },
+      did,
+    )
+  }
+
+  async function appealLabel(
+    val: string,
+    subject: EmitSubject,
+    did: DidString,
+  ) {
+    return callAppeal(
+      {
+        action: {
+          $type: 'tools.ozone.inbox.appealActionedSubject#labelRef',
+          val,
+        },
+        subject,
+      },
+      did,
+    )
+  }
+
+  async function appealTakedown(subject: EmitSubject, did: DidString) {
+    return callAppeal(
+      {
+        action: {
+          $type: 'tools.ozone.inbox.appealActionedSubject#takedownRef',
+        },
+        subject,
       },
       did,
     )
@@ -207,7 +244,143 @@ describe('appealActionedSubject', () => {
     })
   })
 
-  it('creates an unlinked subject appeal when actionId is omitted', async () => {
+  it('routes a labelRef through the report actioned by that label event', async () => {
+    const account = await sc.createAccount('label-ref', {
+      handle: 'label-ref.test',
+      email: 'label-ref@test.com',
+      password: 'label-ref-pass',
+    })
+    const subject = {
+      $type: 'com.atproto.admin.defs#repoRef' as const,
+      did: account.did,
+    }
+    const sourceReport = await modClient.emitEvent({
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventReport',
+        reportType: 'com.atproto.moderation.defs#reasonSpam',
+      },
+      subject,
+    })
+    await network.ozone.ctx
+      .queueService(network.ozone.ctx.db)
+      .insertReportsFromEvents({ cursor: sourceReport.id - 1, limit: 1 })
+    await modClient.emitEvent({
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventLabel',
+        createLabelVals: ['not-warn'],
+        negateLabelVals: [],
+      },
+      subject,
+    })
+    const action = await label(subject)
+    const source = await network.ozone.ctx.db.db
+      .selectFrom('report')
+      .where('eventId', '=', sourceReport.id)
+      .select(['id', 'queueId'])
+      .executeTakeFirstOrThrow()
+    await network.ozone.ctx.db.db
+      .updateTable('report')
+      .where('id', '=', source.id)
+      .set({ actionEventIds: jsonb([action.id]) })
+      .execute()
+
+    await appealLabel('!warn', subject, account.did)
+
+    expect(await latestAppealReport(account.did)).toMatchObject({
+      queueId: source.queueId,
+      actionEventIds: [action.id],
+    })
+  })
+
+  it('routes a takedownRef through the report actioned by the takedown event', async () => {
+    const account = await sc.createAccount('takedown-ref', {
+      handle: 'takedown-ref.test',
+      email: 'takedown-ref@test.com',
+      password: 'takedown-ref-pass',
+    })
+    const subject = {
+      $type: 'com.atproto.admin.defs#repoRef' as const,
+      did: account.did,
+    }
+    const sourceReport = await modClient.emitEvent({
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventReport',
+        reportType: 'com.atproto.moderation.defs#reasonSpam',
+      },
+      subject,
+    })
+    await network.ozone.ctx
+      .queueService(network.ozone.ctx.db)
+      .insertReportsFromEvents({ cursor: sourceReport.id - 1, limit: 1 })
+    const action = await takedown(subject)
+    const source = await network.ozone.ctx.db.db
+      .selectFrom('report')
+      .where('eventId', '=', sourceReport.id)
+      .select(['id', 'queueId'])
+      .executeTakeFirstOrThrow()
+    await network.ozone.ctx.db.db
+      .updateTable('report')
+      .where('id', '=', source.id)
+      .set({ actionEventIds: jsonb([action.id]) })
+      .execute()
+
+    await appealTakedown(subject, account.did)
+
+    expect(await latestAppealReport(account.did)).toMatchObject({
+      queueId: source.queueId,
+      actionEventIds: [action.id],
+    })
+  })
+
+  it('files through fallback routing when a semantic reference has no event', async () => {
+    const account = await sc.createAccount('missing-label-ref', {
+      handle: 'missing-label-ref.test',
+      email: 'missing-label-ref@test.com',
+      password: 'missing-label-ref-pass',
+    })
+    const subject = {
+      $type: 'com.atproto.admin.defs#repoRef' as const,
+      did: account.did,
+    }
+
+    await appealLabel('label-that-was-never-applied', subject, account.did)
+
+    expect(await latestAppealReport(account.did)).toMatchObject({
+      queueId: -1,
+      status: 'open',
+      actionEventIds: null,
+    })
+  })
+
+  it('files through fallback routing when a semantic reference is ambiguous', async () => {
+    const account = await sc.createAccount('ambiguous-ref', {
+      handle: 'ambiguous-ref.test',
+      email: 'ambiguous-ref@test.com',
+      password: 'ambiguous-takedown-ref-pass',
+    })
+    const subject = {
+      $type: 'com.atproto.admin.defs#repoRef' as const,
+      did: account.did,
+    }
+    await takedown(subject)
+    await modClient.emitEvent({
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
+      },
+      subject,
+    })
+    await takedown(subject)
+
+    await appealTakedown(subject, account.did)
+
+    expect(await latestAppealReport(account.did)).toMatchObject({
+      queueId: -1,
+      status: 'open',
+      actionEventIds: null,
+    })
+  })
+
+  it('creates an unlinked subject appeal when action is omitted', async () => {
     const response = await legacyAppeal(sc.dids.carol)
     const report = await latestAppealReport(sc.dids.carol)
 
@@ -450,7 +623,13 @@ describe('appealActionedSubject', () => {
       sc.agent.call(
         'tools.ozone.inbox.appealActionedSubject',
         undefined,
-        { reason: 'Please reconsider this decision', actionId: 1 },
+        {
+          reason: 'Please reconsider this decision',
+          action: {
+            $type: 'tools.ozone.inbox.appealActionedSubject#actionRef',
+            id: 1,
+          },
+        },
         {
           encoding: 'application/json',
           headers: { 'atproto-proxy': proxyHeader },
@@ -478,11 +657,14 @@ describe('appealActionedSubject', () => {
     })
   })
 
-  it('rejects naming both an action and a subject', async () => {
+  it('rejects an actionRef paired with a different subject', async () => {
     await expect(
       callAppeal(
         {
-          actionId: 1,
+          action: {
+            $type: 'tools.ozone.inbox.appealActionedSubject#actionRef',
+            id: 1,
+          },
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: sc.dids.carol,
@@ -490,7 +672,7 @@ describe('appealActionedSubject', () => {
         },
         sc.dids.carol,
       ),
-    ).rejects.toMatchObject({ error: 'InvalidAppealTarget' })
+    ).rejects.toMatchObject({ error: 'NotAppealable' })
   })
 
   it('writes nothing when the appeal is rejected', async () => {
@@ -579,7 +761,7 @@ describe('appealActionedSubject', () => {
     })
   })
 
-  it('never inherits a queue from another appeal report', async () => {
+  it('uses fallback routing instead of inheriting from another appeal', async () => {
     const account = await sc.createAccount('appealsource', {
       handle: 'appealsource.test',
       email: 'appealsource@test.com',
@@ -619,7 +801,7 @@ describe('appealActionedSubject', () => {
     const second = await label(subject)
     await appeal(second.id, account.did)
     expect(await latestAppealReport(account.did)).toMatchObject({
-      queueId: -1,
+      queueId: queue.id,
     })
   })
 
@@ -751,7 +933,17 @@ describe('appealActionedSubject', () => {
   })
   it('rejects a malformed appeal target', async () => {
     // Below the lexicon's minimum.
-    await expect(callAppeal({ actionId: 0 }, sc.dids.alice)).rejects.toThrow()
+    await expect(
+      callAppeal(
+        {
+          action: {
+            $type: 'tools.ozone.inbox.appealActionedSubject#actionRef',
+            id: 0,
+          },
+        },
+        sc.dids.alice,
+      ),
+    ).rejects.toThrow()
     // Not a subject shape the endpoint knows.
     await expect(
       callAppeal(
@@ -968,7 +1160,12 @@ describe('appealActionedSubject', () => {
     const { data } = await sc.agent.call(
       'tools.ozone.inbox.appealActionedSubject',
       undefined,
-      { actionId: action.id },
+      {
+        action: {
+          $type: 'tools.ozone.inbox.appealActionedSubject#actionRef',
+          id: action.id,
+        },
+      },
       {
         encoding: 'application/json',
         headers: {

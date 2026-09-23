@@ -6,11 +6,18 @@ import {
 import type { AppContext } from '../../context.js'
 import {
   fileAppeal,
+  findAppealedEvent,
   isAppealWindowOpen,
   isAppealableEvent,
+  subjectKey,
 } from '../../inbox/appeal.js'
 import { hydrateSubjectView } from '../../inbox/views.js'
 import type { Server } from '../../lexicon/index.js'
+import {
+  isActionRef,
+  isLabelRef,
+  isTakedownRef,
+} from '../../lexicon/types/tools/ozone/inbox/appealActionedSubject.js'
 import { REASONAPPEAL } from '../../lexicon/types/tools/ozone/report/defs.js'
 import {
   subjectFromEventRow,
@@ -21,24 +28,54 @@ export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.inbox.appealActionedSubject({
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
-      const { actionId, subject: subjectInput } = input.body
+      const { action: actionInput, subject: subjectInput } = input.body
       const requester =
         'iss' in auth.credentials ? auth.credentials.iss : ctx.cfg.service.did
 
       // validate input
-      if ((actionId === undefined) === (subjectInput === undefined)) {
+      if (!actionInput && !subjectInput) {
         throw new InvalidRequestError(
-          'Exactly one of actionId or subject is required',
+          'An action or subject is required',
+          'InvalidAppealTarget',
+        )
+      }
+      if (
+        actionInput &&
+        !isActionRef(actionInput) &&
+        !isLabelRef(actionInput) &&
+        !isTakedownRef(actionInput)
+      ) {
+        throw new InvalidRequestError(
+          'Unknown appeal action reference',
+          'InvalidAppealTarget',
+        )
+      }
+      if (
+        actionInput &&
+        !isActionRef(actionInput) &&
+        subjectInput === undefined
+      ) {
+        throw new InvalidRequestError(
+          'A subject is required for this action reference',
           'InvalidAppealTarget',
         )
       }
 
-      // find action
-      const action =
-        actionId === undefined
-          ? undefined
-          : await ctx.modService(ctx.db).getEvent(actionId)
-      if (actionId !== undefined && !action) {
+      const inputSubject = subjectInput
+        ? subjectFromInput(subjectInput)
+        : undefined
+      const action = isActionRef(actionInput)
+        ? await ctx.modService(ctx.db).getEvent(actionInput.id)
+        : actionInput && inputSubject
+          ? await findAppealedEvent(
+              ctx,
+              inputSubject,
+              isLabelRef(actionInput)
+                ? { type: 'label', val: actionInput.val }
+                : { type: 'takedown' },
+            )
+          : undefined
+      if (isActionRef(actionInput) && !action) {
         throw new ForbiddenError(
           'Moderation action is not appealable',
           'NotAppealable',
@@ -70,9 +107,14 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // parse subject and validate
-      const subject = action
-        ? subjectFromEventRow(action)
-        : subjectFromInput(subjectInput!)
+      const subject = action ? subjectFromEventRow(action) : inputSubject!
+      if (
+        inputSubject &&
+        action &&
+        subjectKey(inputSubject) !== subjectKey(subject)
+      ) {
+        throw new ForbiddenError('Target is not appealable', 'NotAppealable')
+      }
       if (requester !== subject.did) {
         throw new ForbiddenError('Target is not appealable', 'NotAppealable')
       }
@@ -82,7 +124,7 @@ export default function (server: Server, ctx: AppContext) {
       await fileAppeal(ctx, {
         requester,
         subject,
-        actionId: input.body.actionId,
+        actionId: action?.id,
         reason: input.body.reason,
         modTool: input.body.modTool,
       })

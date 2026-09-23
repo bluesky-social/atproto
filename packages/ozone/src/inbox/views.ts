@@ -1,8 +1,6 @@
-import type { Expression, ExpressionBuilder, SqlBool } from 'kysely'
 import { sql } from 'kysely'
 import type { InboxConfig } from '../config/config.js'
 import type { Database } from '../db/index.js'
-import type { DatabaseSchemaType } from '../db/schema/index.js'
 import type {
   ActionView,
   EnforcementView,
@@ -25,6 +23,7 @@ import {
   REVERSE_TAKEDOWN,
   REVOKE_CREDENTIALS,
   TAKEDOWN,
+  eventSubjectFilter,
   reportSubjectFilter,
   subjectLabelUri,
   toAppealState,
@@ -58,43 +57,6 @@ type EventTotals = {
   actionCount: number
   firstActionAt: string | null
   latestAppealableAt: string | null
-}
-
-const eventSubjectFilter = (
-  eb: ExpressionBuilder<DatabaseSchemaType, 'moderation_event'>,
-  subject: ModSubject,
-): Expression<SqlBool> => {
-  const {
-    subjectType,
-    subjectDid,
-    subjectUri,
-    subjectMessageId,
-    subjectConvoId,
-  } = subject.info()
-  if (subject.isMessage()) {
-    return eb.and([
-      eb('subjectDid', '=', subjectDid),
-      eb('subjectMessageId', '=', subjectMessageId),
-      eb('subjectConvoId', '=', subjectConvoId),
-    ])
-  }
-  if (subject.isConvo()) {
-    return eb.and([
-      eb('subjectDid', '=', subjectDid),
-      eb('subjectConvoId', '=', subjectConvoId),
-      eb('subjectMessageId', 'is', null),
-    ])
-  }
-  if (subject.isRecord()) {
-    return eb.and([
-      eb('subjectDid', '=', subjectDid),
-      eb('subjectUri', '=', subjectUri),
-    ])
-  }
-  return eb.and([
-    eb('subjectDid', '=', subjectDid),
-    eb('subjectType', '=', subjectType),
-  ])
 }
 
 /**
