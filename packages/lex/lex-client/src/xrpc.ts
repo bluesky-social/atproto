@@ -96,13 +96,6 @@ export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
   XrpcRequestOptions<M> & XrpcResponseOptions & RetryOptions
 
 export type XrpcRequestFetchOptions = {
-  cache?: RequestCache
-
-  /**
-   * AbortSignal to cancel the request.
-   */
-  signal?: AbortSignal
-
   /**
    * @note `"manual"` is not supported
    */
@@ -110,7 +103,15 @@ export type XrpcRequestFetchOptions = {
   // thrown, so that the caller can handle it appropriately. Indeed,
   // "XrpcResponse.fromFetchResponse" will turn any 3xx response into an
   // XrpcInvalidResponseError.
-  redirect?: 'error' | 'follow'
+  redirect?: RequestRedirect & ('error' | 'follow')
+  cache?: RequestCache
+  credentials?: RequestCredentials
+  keepalive?: boolean
+  mode?: RequestMode
+  priority?: RequestPriority
+  referrer?: string
+  referrerPolicy?: ReferrerPolicy
+  signal?: AbortSignal | null
 }
 
 export type XrpcRequestOptions<
@@ -318,8 +319,12 @@ function xrpcRequestInit<T extends Procedure | Query>(
     return {
       duplex: 'half',
       redirect: options.redirect ?? 'follow',
-      referrerPolicy: 'strict-origin-when-cross-origin', // (default)
-      mode: 'cors', // (default)
+      credentials: options.credentials,
+      keepalive: options.keepalive,
+      priority: options.priority,
+      referrer: options.referrer,
+      referrerPolicy: options.referrerPolicy,
+      mode: options.mode,
       signal: options.signal,
       cache: options.cache,
       method: 'POST',
@@ -331,10 +336,15 @@ function xrpcRequestInit<T extends Procedure | Query>(
   // Requests without body
   return {
     duplex: 'half',
-    redirect: 'follow',
-    referrerPolicy: 'strict-origin-when-cross-origin', // (default)
-    mode: 'cors', // (default)
+    redirect: options.redirect ?? 'follow',
+    credentials: options.credentials,
+    keepalive: options.keepalive,
+    priority: options.priority,
+    referrer: options.referrer,
+    referrerPolicy: options.referrerPolicy,
+    mode: options.mode,
     signal: options.signal,
+    cache: options.cache,
     method: 'GET',
     headers,
   }

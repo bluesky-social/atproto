@@ -296,7 +296,7 @@ function getAbortReason(signal: AbortSignal): unknown {
  * Uses the native `AbortSignal.throwIfAborted()` when available, falling back
  * for older implementations such as React Native's `abort-controller`.
  */
-export function throwIfAborted(signal?: AbortSignal): void {
+export function throwIfAborted(signal?: AbortSignal | null): void {
   if (!signal) return
   if (typeof signal.throwIfAborted === 'function') {
     signal.throwIfAborted()
@@ -307,7 +307,7 @@ export function throwIfAborted(signal?: AbortSignal): void {
 
 export function wait(
   ms: number,
-  { signal }: { signal?: AbortSignal } = {},
+  { signal }: { signal?: AbortSignal | null } = {},
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     throwIfAborted(signal)

@@ -52,6 +52,7 @@ export class XrpcHandleResolver implements HandleResolver {
       labelers: undefined,
       appLabelers: undefined,
       service: undefined,
+      // @NOTE 'body' and 'encoding' are ignored for XRPC Queries.
     })
 
     if (result.success) {
