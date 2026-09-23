@@ -234,14 +234,15 @@ export async function xrpcSafe<const M extends Query | Procedure>(
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcResult<M>> {
   const method: M = getMain(ns)
+  const agent = buildAgent(agentOpts)
+  const path = xrpcRequestPath(method, options)
+  const init = xrpcRequestInit(method, options)
 
   for (let counter = 1; ; counter++) {
     throwIfAborted(options.signal)
     try {
-      const agent = buildAgent(agentOpts)
-      const url = xrpcRequestUrl(method, options)
-      const request = xrpcRequestInit(method, options)
-      const response = await agent.fetchHandler(url, request).catch((err) => {
+      const response = await agent.fetchHandler(path, init).catch((err) => {
+        if (err instanceof XrpcFetchError) throw err
         const cause = extractFetchErrorCause(err)
         throw new XrpcFetchError(method, cause)
       })
@@ -250,10 +251,7 @@ export async function xrpcSafe<const M extends Query | Procedure>(
       const failure = asXrpcFailure(method, cause)
 
       // Cannot retry a request with a consumable body
-      if (
-        options.body instanceof ReadableStream ||
-        isAsyncIterable(options.body)
-      ) {
+      if (init.body instanceof ReadableStream || isAsyncIterable(init.body)) {
         return failure
       }
 
@@ -267,7 +265,7 @@ export async function xrpcSafe<const M extends Query | Procedure>(
   }
 }
 
-function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
+function xrpcRequestPath<M extends Procedure | Query | Subscription>(
   method: M,
   options: { params?: Params },
 ): `/xrpc/${NsidString}${'' | `?${string}`}` {
@@ -283,15 +281,17 @@ function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
   return queryString ? (`${path}?${queryString}` as const) : path
 }
 
+interface XrpcRequestInit extends RequestInit {
+  duplex?: 'half'
+}
+
 function xrpcRequestInit<T extends Procedure | Query>(
   schema: T,
   options: XrpcRequestProcessingOptions &
     XrpcRequestFetchOptions &
     XrpcRequestHeadersOptions &
-    XrpcProcedureInputOptions & {
-      encoding?: string
-    },
-): RequestInit & { duplex?: 'half' } {
+    XrpcProcedureInputOptions & { encoding?: string },
+): XrpcRequestInit {
   const headers = buildXrpcRequestHeaders(options)
 
   // Tell the server what type of response we're expecting
@@ -305,8 +305,22 @@ function xrpcRequestInit<T extends Procedure | Query>(
     throw new TypeError(`Unexpected content-type header (${contentType})`)
   }
 
-  // Requests with body
+  const req: XrpcRequestInit = {
+    cache: options.cache,
+    credentials: options.credentials,
+    duplex: 'half',
+    headers,
+    keepalive: options.keepalive,
+    mode: options.mode,
+    priority: options.priority,
+    redirect: options.redirect ?? 'follow',
+    referrer: options.referrer,
+    referrerPolicy: options.referrerPolicy,
+    signal: options.signal,
+  }
+
   if ('input' in schema) {
+    // schema is a Procedure
     const encodingHint = options.encoding
     const input = xrpcProcedureInput(schema, options, encodingHint)
 
@@ -316,38 +330,14 @@ function xrpcRequestInit<T extends Procedure | Query>(
       throw new TypeError(`Unexpected encoding hint (${encodingHint})`)
     }
 
-    return {
-      duplex: 'half',
-      redirect: options.redirect ?? 'follow',
-      credentials: options.credentials,
-      keepalive: options.keepalive,
-      priority: options.priority,
-      referrer: options.referrer,
-      referrerPolicy: options.referrerPolicy,
-      mode: options.mode,
-      signal: options.signal,
-      cache: options.cache,
-      method: 'POST',
-      headers,
-      body: input?.body,
-    }
+    req.method = 'POST'
+    req.body = input?.body
+  } else {
+    // schema is a Query
+    req.method = 'GET'
   }
 
-  // Requests without body
-  return {
-    duplex: 'half',
-    redirect: options.redirect ?? 'follow',
-    credentials: options.credentials,
-    keepalive: options.keepalive,
-    priority: options.priority,
-    referrer: options.referrer,
-    referrerPolicy: options.referrerPolicy,
-    mode: options.mode,
-    signal: options.signal,
-    cache: options.cache,
-    method: 'GET',
-    headers,
-  }
+  return req
 }
 
 type XrpcProcedureInputOptions = {
