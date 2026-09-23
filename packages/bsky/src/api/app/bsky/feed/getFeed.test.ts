@@ -25,9 +25,12 @@ const inputs = ({
   stableId = 'stable-device-123',
   gate = true,
 } = {}) => {
-  const checkGate = vi.fn(
-    (g: Gate, overrides?: { deviceId?: string }) =>
-      g === Gate.IrisFeed && overrides?.deviceId === stableId && gate,
+  const checkGate = vi.fn((g: Gate, overrides?: { deviceId?: string }) =>
+    viewer
+      ? g === Gate.IrisFeed && overrides === undefined && gate
+      : g === Gate.IrisAnonymousFeed &&
+        overrides?.deviceId === stableId &&
+        gate,
   )
   return {
     checkGate,
@@ -49,9 +52,13 @@ describe('irisUrlForFeed', () => {
     expect(irisUrlForFeed(cfg, params)).toBe(IRIS_URL)
   })
 
-  it('does not route when the gate is off', () => {
-    const { cfg, params } = inputs({ gate: false })
-    expect(irisUrlForFeed(cfg, params)).toBeUndefined()
+  it('routes a gated-in signed-in viewer to Iris using IrisFeed', () => {
+    const { cfg, params, checkGate } = inputs({
+      viewer: 'did:plc:viewer' as DidString,
+      stableId: '',
+    })
+    expect(irisUrlForFeed(cfg, params)).toBe(IRIS_URL)
+    expect(checkGate).toHaveBeenCalledWith(Gate.IrisFeed)
   })
 
   it('does not route a feed that is not allowlisted', () => {
@@ -73,14 +80,6 @@ describe('irisUrlForFeed', () => {
   // custom feed on the network, so it must not fire for requests that could
   // never be routed to iris.
   describe('does not evaluate the gate', () => {
-    it('for an authenticated viewer, even with a stable ID', () => {
-      const { cfg, params, checkGate } = inputs({
-        viewer: 'did:plc:viewer' as DidString,
-      })
-      expect(irisUrlForFeed(cfg, params)).toBeUndefined()
-      expect(checkGate).not.toHaveBeenCalled()
-    })
-
     it('for a feed that is not allowlisted', () => {
       const { cfg, params, checkGate } = inputs({ feed: OTHER_FEED })
       irisUrlForFeed(cfg, params)
@@ -117,8 +116,14 @@ describe('irisUrlForFeed', () => {
 })
 
 describe('resolveSkeletonEndpoint', () => {
-  it('uses the registered generator for a gated-out guest even when staging is configured', async () => {
-    const { cfg, params, checkGate } = inputs({ gate: false })
+  it('uses the registered generator for either false gate or a missing ID even when staging is configured', async () => {
+    const guest = inputs({ gate: false })
+    const signedIn = inputs({
+      viewer: 'did:plc:viewer' as DidString,
+      gate: false,
+      stableId: '',
+    })
+    const withoutId = inputs({ stableId: '' })
     const getFeedGens = vi
       .fn()
       .mockResolvedValue(
@@ -133,7 +138,7 @@ describe('resolveSkeletonEndpoint', () => {
     })
     const ctx = {
       cfg: {
-        ...cfg,
+        ...guest.cfg,
         irisStagingUrl: IRIS_STAGING_URL,
         irisStagingFeedUris: new Set([ALLOWLISTED]),
       },
@@ -141,12 +146,20 @@ describe('resolveSkeletonEndpoint', () => {
       dataplane: { getIdentityByDid },
     } as unknown as AppContext
 
-    await expect(resolveSkeletonEndpoint(ctx, params)).resolves.toBe(
+    await expect(resolveSkeletonEndpoint(ctx, guest.params)).resolves.toBe(
       REGISTERED_URL,
     )
-    expect(checkGate).toHaveBeenCalledWith(Gate.IrisFeed, {
-      deviceId: params.stableId,
+    await expect(resolveSkeletonEndpoint(ctx, signedIn.params)).resolves.toBe(
+      REGISTERED_URL,
+    )
+    await expect(resolveSkeletonEndpoint(ctx, withoutId.params)).resolves.toBe(
+      REGISTERED_URL,
+    )
+    expect(guest.checkGate).toHaveBeenCalledWith(Gate.IrisAnonymousFeed, {
+      deviceId: guest.params.stableId,
     })
+    expect(signedIn.checkGate).toHaveBeenCalledWith(Gate.IrisFeed)
+    expect(withoutId.checkGate).not.toHaveBeenCalled()
   })
 })
 

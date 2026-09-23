@@ -216,24 +216,21 @@ export const irisUrlForFeed = (
   cfg: Pick<ServerConfig, 'irisUrl' | 'irisFeedUris'>,
   params: FeedRoutingParams,
 ): string | undefined => {
-  if (params.hydrateCtx.viewer) return
   const { irisUrl } = cfg
   if (!irisUrl) return
   if (!cfg.irisFeedUris?.has(params.feed)) return
+  const { viewer, features } = params.hydrateCtx
+  if (viewer) {
+    return features.checkGate(features.Gate.IrisFeed) ? irisUrl : undefined
+  }
   // @NOTE Without a client-supplied stable ID, a new anonymous device ID is
   // generated per request and pagination could switch feed backends.
   if (!params.stableId?.trim()) return
-  if (
-    !params.hydrateCtx.features.checkGate(
-      params.hydrateCtx.features.Gate.IrisFeed,
-      {
-        deviceId: params.stableId,
-      },
-    )
-  ) {
-    return
-  }
-  return irisUrl
+  return features.checkGate(features.Gate.IrisAnonymousFeed, {
+    deviceId: params.stableId,
+  })
+    ? irisUrl
+    : undefined
 }
 
 /**
@@ -253,13 +250,9 @@ export const resolveSkeletonEndpoint = async (
   const irisUrl = irisUrlForFeed(ctx.cfg, params)
   if (irisUrl) return irisUrl
 
-  // A guest on the production Iris allowlist must fall back to the registered
-  // generator, not staging, when the flag is off or the stable ID is absent.
-  if (
-    params.hydrateCtx.viewer ||
-    !ctx.cfg.irisUrl ||
-    !ctx.cfg.irisFeedUris?.has(params.feed)
-  ) {
+  // A production gate decision takes precedence over staging, including when
+  // the flag is off or an anonymous request has no stable ID.
+  if (!ctx.cfg.irisUrl || !ctx.cfg.irisFeedUris?.has(params.feed)) {
     const irisStagingUrl = irisStagingUrlForFeed(ctx.cfg, params)
     if (irisStagingUrl) return irisStagingUrl
   }

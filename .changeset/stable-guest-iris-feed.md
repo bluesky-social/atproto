@@ -2,4 +2,4 @@
 '@atproto/bsky': patch
 ---
 
-Bucket logged-out Iris feed routing on the client stable device ID.
+Use separate Iris feed gates for signed-in and logged-out viewers, bucketing guests by stable device ID.
