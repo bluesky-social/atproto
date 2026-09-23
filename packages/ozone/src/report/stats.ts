@@ -386,8 +386,14 @@ export class ReportStatsService {
   }
 
   /**
-   * Run batched GROUP BY queries for a calendar date.
-   * Merges inbound, pending, closure, and escalation stats for all group types.
+   * Run batched queries for a calendar date.
+   *
+   * @description
+   * For each cohort, compute relevant groupings.
+   *
+   * Stat cohorts: inbound, pending, closed, escalated
+   *
+   * Stat groups: aggregate, per queue, per report type, and per moderator.
    */
   private async computeBatchedStats(
     date: DateString,
@@ -396,17 +402,8 @@ export class ReportStatsService {
     const dayStart: DatetimeString = `${date}T00:00:00.000Z`
     const dayEnd: DatetimeString = `${nextDate(date)}T00:00:00.000Z`
 
-    const reportGroupColumns = sql`
-      case
-        when grouping(coalesce(r."queueId", -1)) = 0 then 'queue'
-        when grouping(r."reportType") = 0 then 'reportType'
-        else 'aggregate'
-      end as "group",
-      case when grouping(coalesce(r."queueId", -1)) = 0 then coalesce(r."queueId", -1) end as "queueId",
-      case when grouping(r."reportType") = 0 then r."reportType" end as "reportType",
-      null as "moderatorDid"`
-
-    const allGroupColumns = sql`
+    // 1. create report grouping statements
+    const statGroups = sql`
       case
         when grouping(coalesce(r."queueId", -1)) = 0 then 'queue'
         when grouping(r."reportType") = 0 then 'reportType'
@@ -416,20 +413,26 @@ export class ReportStatsService {
       case when grouping(coalesce(r."queueId", -1)) = 0 then coalesce(r."queueId", -1) end as "queueId",
       case when grouping(r."reportType") = 0 then r."reportType" end as "reportType",
       case when grouping(r."assignedTo") = 0 then r."assignedTo" end as "moderatorDid"`
+    const statGroupsExceptModerator = sql`
+      case
+        when grouping(coalesce(r."queueId", -1)) = 0 then 'queue'
+        when grouping(r."reportType") = 0 then 'reportType'
+        else 'aggregate'
+      end as "group",
+      case when grouping(coalesce(r."queueId", -1)) = 0 then coalesce(r."queueId", -1) end as "queueId",
+      case when grouping(r."reportType") = 0 then r."reportType" end as "reportType",
+      null as "moderatorDid"`
 
-    // Creation-date flow, grouped in one scan for all dimensions.
+    // 2. inbound stats
     const inboundStats = () =>
       sql<InboundStatsRow>`
-      select ${allGroupColumns}, count(*) as "inboundCount"
+      select ${statGroups}, count(*) as "inboundCount"
       from report r
       where r."createdAt" >= ${dayStart} and r."createdAt" < ${dayEnd}
       group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"), (r."assignedTo"))
     `.execute(this.db.db)
 
-    // @NOTE Historical backlog includes reports closed after the cutoff, except
-    // those whose first later transition is a reopen (already closed at cutoff).
-    // Scan recent transitions once instead of probing every report's history.
-    // Queue attribution uses current membership, as do the other metrics.
+    // 3. pending stats
     const pendingReports =
       date < computedAt.slice(0, 10)
         ? sql`
@@ -455,63 +458,61 @@ export class ReportStatsService {
         : sql`
           select "queueId", "reportType" from report where status != 'closed'
         `
-
     const pendingStats = () =>
       sql<PendingStatsRow>`
-      select ${reportGroupColumns}, count(*) as "pendingCount"
+      select ${statGroupsExceptModerator}, count(*) as "pendingCount"
       from (${pendingReports}) r
       group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"))
     `.execute(this.db.db)
 
-    // Current closures in the date window, including outcome and duration parts.
+    // 4. closure stats
     const closureStats = () =>
       sql<ClosureStatsRow>`
-      with closures as (
-        select r.*, me.action as "actionType"
+      with closed_reports as (
+        select
+          r."queueId", r."reportType", r."assignedTo",
+          r."createdAt", r."assignedAt", r."closedAt",
+          -- @NOTE The final linked event determines the current closure outcome.
+          (r."actionEventIds" ->> -1)::integer as "actionEventId"
         from report r
-        left join moderation_event me on me.id = case
-          when jsonb_array_length(coalesce(r."actionEventIds", '[]'::jsonb)) > 0
-          then (r."actionEventIds" ->> (jsonb_array_length(r."actionEventIds") - 1))::integer
-        end
         where r."closedAt" >= ${dayStart} and r."closedAt" < ${dayEnd}
+      ), closure_outcomes as (
+        select r.*,
+          case me.action
+            when ${tools.ozone.moderation.defs.modEventLabel.$type} then 'label'
+            when ${tools.ozone.moderation.defs.modEventTag.$type} then 'tag'
+            when ${tools.ozone.moderation.defs.modEventTakedown.$type} then 'takedown'
+            else 'acknowledged'
+          end as outcome
+        from closed_reports r
+        left join moderation_event me on me.id = r."actionEventId"
+      ), closure_durations as (
+        select r.*,
+          case when r."assignedAt" is not null then
+            greatest(0, extract(epoch from (r."closedAt"::timestamp - r."assignedAt"::timestamp)))
+          end as "handlingTimeSec",
+          greatest(0, extract(epoch from (r."closedAt"::timestamp - r."createdAt"::timestamp))) as "resolutionTimeSec"
+        from closure_outcomes r
       )
-      select
-        case
-          when grouping(coalesce("queueId", -1)) = 0 then 'queue'
-          when grouping("reportType") = 0 then 'reportType'
-          when grouping("assignedTo") = 0 then 'moderator'
-          else 'aggregate'
-        end as "group",
-        case when grouping(coalesce("queueId", -1)) = 0 then coalesce("queueId", -1) end as "queueId",
-        case when grouping("reportType") = 0 then "reportType" end as "reportType",
-        case when grouping("assignedTo") = 0 then "assignedTo" end as "moderatorDid",
+      select ${statGroups},
         count(*) as "closedCount",
-        count(*) filter (where "actionType" in (
-          'tools.ozone.moderation.defs#modEventLabel',
-          'tools.ozone.moderation.defs#modEventTag',
-          'tools.ozone.moderation.defs#modEventTakedown'
-        )) as "actionedCount",
-        count(*) filter (where coalesce("actionType", '') not in (
-          'tools.ozone.moderation.defs#modEventLabel',
-          'tools.ozone.moderation.defs#modEventTag',
-          'tools.ozone.moderation.defs#modEventTakedown'
-        )) as "acknowledgedCount",
-        count(*) filter (where "actionType" = 'tools.ozone.moderation.defs#modEventLabel') as "labelActionCount",
-        count(*) filter (where "actionType" = 'tools.ozone.moderation.defs#modEventTag') as "tagActionCount",
-        count(*) filter (where "actionType" = 'tools.ozone.moderation.defs#modEventTakedown') as "takedownActionCount",
-        coalesce(sum(greatest(0, extract(epoch from ("closedAt"::timestamp - "assignedAt"::timestamp))))
-          filter (where "assignedAt" is not null), 0) as "ahtDurationSec",
-        count(*) filter (where "assignedAt" is not null) as "ahtSampleCount",
-        coalesce(sum(greatest(0, extract(epoch from ("closedAt"::timestamp - "createdAt"::timestamp)))), 0) as "resolutionDurationSec",
+        count(*) filter (where r.outcome != 'acknowledged') as "actionedCount",
+        count(*) filter (where r.outcome = 'acknowledged') as "acknowledgedCount",
+        count(*) filter (where r.outcome = 'label') as "labelActionCount",
+        count(*) filter (where r.outcome = 'tag') as "tagActionCount",
+        count(*) filter (where r.outcome = 'takedown') as "takedownActionCount",
+        coalesce(sum(r."handlingTimeSec"), 0) as "ahtDurationSec",
+        count(r."handlingTimeSec") as "ahtSampleCount",
+        coalesce(sum(r."resolutionTimeSec"), 0) as "resolutionDurationSec",
         count(*) as "resolutionSampleCount"
-      from closures
-      group by grouping sets ((), (coalesce("queueId", -1)), ("reportType"), ("assignedTo"))
+      from closure_durations r
+      group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"), (r."assignedTo"))
     `.execute(this.db.db)
 
-    // Escalation transitions in the date window, grouped in one activity scan.
+    // 5. escalation stats
     const escalationStats = () =>
       sql<EscalationStatsRow>`
-      select ${allGroupColumns}, count(*) as "escalatedCount"
+      select ${statGroups}, count(*) as "escalatedCount"
       from report_activity ra
       join report r on r.id = ra."reportId"
       where ra."activityType" = 'escalationActivity'
@@ -519,6 +520,7 @@ export class ReportStatsService {
       group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"), (r."assignedTo"))
     `.execute(this.db.db)
 
+    // 6. execute all
     const [inbound, pending, closures, escalations] = await Promise.all([
       inboundStats(),
       pendingStats(),

@@ -11,6 +11,7 @@ import {
 import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
 import type { DatetimeString, DidString } from '@atproto/lex'
 import type { DateString } from '../src/db/schema/report_stat.js'
+import { jsonb } from '../src/db/types.js'
 import { com, tools } from '../src/lexicons/index.js'
 import { REPORT_TYPE_GROUPS, ReportStatsService } from '../src/report/stats.js'
 
@@ -635,6 +636,107 @@ describe('report-stats', () => {
       expect(after.labelActionCount! - before.labelActionCount!).toBe(1)
       expect(after.takedownActionCount! - before.takedownActionCount!).toBe(1)
     })
+  })
+
+  it('uses the last linked action and preserves missing or zero handling samples', async () => {
+    const db = network.ozone.ctx.db.db
+    const queue = await createQueue({
+      name: 'Stats: Closure Outcomes',
+      subjectTypes: ['account'],
+      reportTypes: [com.atproto.moderation.defs.ReasonOther],
+    })
+    const subject = {
+      $type: com.atproto.admin.defs.repoRef.$type,
+      did: sc.dids.alice,
+    }
+    const event = await sc.createReport({
+      reasonType: com.atproto.moderation.defs.ReasonOther,
+      subject,
+      reportedBy: sc.dids.bob,
+    })
+    await network.processAll()
+    const report = await db
+      .selectFrom('report')
+      .select('id')
+      .where('eventId', '=', event.id)
+      .executeTakeFirstOrThrow()
+
+    const actionIds: number[] = []
+    for (const event of [
+      {
+        $type: tools.ozone.moderation.defs.modEventLabel.$type,
+        createLabelVals: ['spam'],
+        negateLabelVals: [],
+      },
+      {
+        $type: tools.ozone.moderation.defs.modEventTag.$type,
+        add: ['stats-test'],
+        remove: [],
+      },
+      { $type: tools.ozone.moderation.defs.modEventAcknowledge.$type },
+    ]) {
+      await db
+        .updateTable('report')
+        .set({ status: 'open', closedAt: null })
+        .where('id', '=', report.id)
+        .execute()
+      const action = await modClient.emitEvent(
+        { event, subject, reportAction: { ids: [report.id] } },
+        'moderator',
+      )
+      actionIds.push(action.id)
+    }
+    const [labelId, tagId, acknowledgeId] = actionIds
+    const closedAt = currentDatetimeString()
+    const createdAt = toDatetimeString(Date.parse(closedAt) - 120_000)
+
+    for (const fixture of [
+      { ids: null, outcome: 'acknowledged', handlingSec: null },
+      { ids: [], outcome: 'acknowledged', handlingSec: null },
+      { ids: [labelId], outcome: 'label', handlingSec: 60 },
+      { ids: [labelId, tagId], outcome: 'tag', handlingSec: 60 },
+      { ids: [tagId, labelId], outcome: 'label', handlingSec: 0 },
+      {
+        ids: [labelId, acknowledgeId],
+        outcome: 'acknowledged',
+        handlingSec: 60,
+      },
+      { ids: [labelId, -1], outcome: 'acknowledged', handlingSec: null },
+    ]) {
+      await db
+        .updateTable('report')
+        .set({
+          queueId: queue.id,
+          status: 'closed',
+          createdAt,
+          closedAt,
+          actionEventIds: jsonb(fixture.ids),
+          assignedAt:
+            fixture.handlingSec === null
+              ? null
+              : toDatetimeString(
+                  Date.parse(closedAt) +
+                    (fixture.handlingSec === 0 ? 60_000 : -60_000),
+                ),
+        })
+        .where('id', '=', report.id)
+        .execute()
+
+      await modClient.computeStats()
+      const stats = await getLiveStats({ queueId: queue.id })
+      expect(stats).toMatchObject({
+        closedCount: 1,
+        actionedCount: fixture.outcome === 'acknowledged' ? 0 : 1,
+        acknowledgedCount: fixture.outcome === 'acknowledged' ? 1 : 0,
+        labelActionCount: fixture.outcome === 'label' ? 1 : 0,
+        tagActionCount: fixture.outcome === 'tag' ? 1 : 0,
+        takedownActionCount: 0,
+        ahtDurationSec: fixture.handlingSec ?? 0,
+        ahtSampleCount: fixture.handlingSec === null ? 0 : 1,
+        resolutionDurationSec: 120,
+        resolutionSampleCount: 1,
+      })
+    }
   })
 
   describe('group aggregation', () => {
