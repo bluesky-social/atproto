@@ -218,6 +218,7 @@ export function toReadableStreamPonyfill(
   data: AsyncIterable<Uint8Array>,
 ): ReadableStream<Uint8Array> {
   let iterator: AsyncIterator<Uint8Array> | undefined
+  let disposed = false
   return new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {
@@ -226,13 +227,21 @@ export function toReadableStreamPonyfill(
         if (result.done) controller.close()
         else controller.enqueue(result.value)
       } catch (err) {
-        controller.error(err)
         iterator = undefined
+        disposed = true
+        controller.error(err)
       }
     },
     async cancel() {
-      await iterator?.return?.()
-      iterator = undefined
+      if (!disposed) {
+        disposed = true
+        if (iterator) {
+          await iterator.return?.()
+          iterator = undefined
+        } else {
+          await dispose(data)
+        }
+      }
     },
   })
 }
@@ -303,6 +312,25 @@ export function throwIfAborted(signal?: AbortSignal | null): void {
     return
   }
   if (signal.aborted) throw getAbortReason(signal)
+}
+
+export async function dispose(value: unknown): Promise<void> {
+  if (value && typeof value === 'object') {
+    if (value instanceof ReadableStream) {
+      if (!value.locked) await value.cancel?.()
+    } else if (Symbol.asyncDispose in value) {
+      await (value as AsyncDisposable)[Symbol.asyncDispose]()
+    } else if (Symbol.dispose in value) {
+      void (value as Disposable)[Symbol.dispose]()
+    } else if (
+      'return' in value &&
+      typeof value.return === 'function' &&
+      value.return.length === 0
+    ) {
+      // Iterator / AsyncIterator
+      await (value as any).return()
+    }
+  }
 }
 
 export function wait(

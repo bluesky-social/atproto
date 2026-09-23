@@ -25,6 +25,7 @@ import type { XrpcRequestHeadersOptions } from './util.js'
 import {
   asUint8ArrayArrayBuffer,
   buildXrpcRequestHeaders,
+  dispose,
   isAsyncIterable,
   isBlobLike,
   throwIfAborted,
@@ -233,35 +234,49 @@ export async function xrpcSafe<const M extends Query | Procedure>(
   ns: Main<M>,
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcResult<M>> {
-  const method: M = getMain(ns)
-  const agent = buildAgent(agentOpts)
-  const path = xrpcRequestPath(method, options)
-  const init = xrpcRequestInit(method, options)
+  try {
+    const method: M = getMain(ns)
+    const agent = buildAgent(agentOpts)
+    const path = xrpcRequestPath(method, options)
+    const init = xrpcRequestInit(method, options)
 
-  for (let counter = 1; ; counter++) {
-    throwIfAborted(options.signal)
-    try {
-      const response = await agent.fetchHandler(path, init).catch((err) => {
-        if (err instanceof XrpcFetchError) throw err
-        const cause = extractFetchErrorCause(err)
-        throw new XrpcFetchError(method, cause)
-      })
-      return await XrpcResponse.fromFetchResponse<M>(method, response, options)
-    } catch (cause) {
-      const failure = asXrpcFailure(method, cause)
+    for (let counter = 1; ; counter++) {
+      throwIfAborted(options.signal)
+      try {
+        const response = await agent.fetchHandler(path, init).catch((err) => {
+          if (err instanceof XrpcFetchError) throw err
+          const cause = extractFetchErrorCause(err)
+          throw new XrpcFetchError(method, cause)
+        })
+        return await XrpcResponse.fromFetchResponse<M>(
+          method,
+          response,
+          options,
+        )
+      } catch (cause) {
+        const failure = asXrpcFailure(method, cause)
 
-      // Cannot retry a request with a consumable body
-      if (init.body instanceof ReadableStream || isAsyncIterable(init.body)) {
-        return failure
+        const waitTime = getRetryWaitTime(failure, options, counter)
+        if (waitTime == null) {
+          await dispose(init.body)
+          return failure
+        }
+
+        // Cannot retry a request with a consumed stream body
+        //
+        // @NOTE We use "!== false" here to avoid retrying in environments that
+        // do not implement the ReadableStream.locked property
+        if (init.body instanceof ReadableStream && init.body.locked !== false) {
+          await dispose(init.body)
+          return failure
+        }
+
+        await wait(waitTime, options)
       }
-
-      const waitTime = getRetryWaitTime(failure, options, counter)
-      if (waitTime == null) {
-        return failure
-      }
-
-      await wait(waitTime, options)
     }
+  } finally {
+    // Ensure that the request input body is disposed of when done
+    await dispose(options.body)
   }
 }
 
@@ -349,7 +364,7 @@ function xrpcProcedureInput(
   method: Procedure,
   options: XrpcProcedureInputOptions,
   encodingHint?: string,
-): null | { body: BodyInit; encoding: string } {
+): null | { body: BodyInit | null; encoding: string } {
   const { input } = method
   const { body } = options
 
