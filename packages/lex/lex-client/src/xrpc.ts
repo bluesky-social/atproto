@@ -95,19 +95,33 @@ type XrpcRequestPayloadOptions<TPayload> = TPayload extends {
 export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
   XrpcRequestOptions<M> & XrpcResponseOptions & RetryOptions
 
-export type XrpcRequestOptions<
-  M extends Procedure | Query = Procedure | Query,
-> = XrpcRequestProcessingOptions &
-  XrpcRequestHeadersOptions &
-  XrpcRequestPayloadOptions<XrpcRequestPayload<M>> &
-  XrpcRequestParamsOptions<XrpcRequestParams<M>>
+export type XrpcRequestFetchOptions = {
+  cache?: RequestCache
 
-export type XrpcRequestProcessingOptions = {
   /**
    * AbortSignal to cancel the request.
    */
   signal?: AbortSignal
 
+  /**
+   * @note `"manual"` is not supported
+   */
+  // @TODO support for 'manual' would require that a specific error class be
+  // thrown, so that the caller can handle it appropriately. Indeed,
+  // "XrpcResponse.fromFetchResponse" will turn any 3xx response into an
+  // XrpcInvalidResponseError.
+  redirect?: 'error' | 'follow'
+}
+
+export type XrpcRequestOptions<
+  M extends Procedure | Query = Procedure | Query,
+> = XrpcRequestProcessingOptions &
+  XrpcRequestFetchOptions &
+  XrpcRequestHeadersOptions &
+  XrpcRequestPayloadOptions<XrpcRequestPayload<M>> &
+  XrpcRequestParamsOptions<XrpcRequestParams<M>>
+
+export type XrpcRequestProcessingOptions = {
   /**
    * Whether to validate the request against the method's input schema. Enabling
    * this can help catch errors early but may have a performance cost. This
@@ -271,6 +285,7 @@ function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
 function xrpcRequestInit<T extends Procedure | Query>(
   schema: T,
   options: XrpcRequestProcessingOptions &
+    XrpcRequestFetchOptions &
     XrpcRequestHeadersOptions &
     XrpcProcedureInputOptions & {
       encoding?: string
@@ -302,10 +317,11 @@ function xrpcRequestInit<T extends Procedure | Query>(
 
     return {
       duplex: 'half',
-      redirect: 'follow',
+      redirect: options.redirect ?? 'follow',
       referrerPolicy: 'strict-origin-when-cross-origin', // (default)
       mode: 'cors', // (default)
       signal: options.signal,
+      cache: options.cache,
       method: 'POST',
       headers,
       body: input?.body,
