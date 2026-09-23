@@ -93,7 +93,7 @@ type XrpcRequestPayloadOptions<TPayload> = TPayload extends {
  * ```
  */
 export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
-  XrpcRequestOptions<M> & XrpcResponseOptions & RetryOptions
+  XrpcRequestOptions<M> & XrpcResponseOptions & XrpcRetryOptions
 
 export type XrpcRequestFetchOptions = {
   /**
@@ -494,7 +494,7 @@ export function extractFetchErrorCause(err: unknown): unknown {
   return err
 }
 
-export type RetryOptions = {
+export type XrpcRetryOptions = {
   /**
    * Function to determine whether a request should be retried after a failure.
    *
@@ -535,7 +535,7 @@ export type RetryOptions = {
 
 function getRetryWaitTime(
   failure: XrpcFailure,
-  options: RetryOptions,
+  options: XrpcRetryOptions,
   counter: number,
 ): number | undefined {
   const {

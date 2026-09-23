@@ -1,10 +1,10 @@
 import {
   type Agent,
   type AgentConfig,
-  type RetryOptions,
   type XrpcRequestFetchOptions,
   type XrpcRequestProcessingOptions,
   type XrpcResponseOptions,
+  type XrpcRetryOptions,
   buildAgent,
   xrpcSafe,
 } from '@atproto/lex-client'
@@ -18,7 +18,7 @@ import {
   isResolvedHandle,
 } from './types.js'
 
-export type XrpcOptions = RetryOptions &
+export type XrpcOptions = XrpcRetryOptions &
   XrpcRequestFetchOptions &
   XrpcRequestProcessingOptions &
   XrpcResponseOptions
