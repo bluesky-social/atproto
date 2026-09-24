@@ -70,5 +70,6 @@ function isHttpUri(
 }
 
 function isDataUri(uri: string): uri is `data:${string}` {
-  return uri.startsWith('data:')
+  // Basic validation of data URIs
+  return uri.startsWith('data:') && uri.length > 5 && uri.indexOf(',', 5) !== -1
 }
