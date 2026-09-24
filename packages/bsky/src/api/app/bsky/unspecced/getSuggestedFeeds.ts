@@ -21,7 +21,13 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({ viewer, req }),
+        ),
+      })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
         ...getAtprotoPassthroughHeaders(req),
@@ -48,12 +54,18 @@ const skeleton = async (
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
 
-  if (!ctx.topicsClient) {
+  const useIris = params.hydrateCtx.features.checkGate(
+    params.hydrateCtx.features.Gate.SuggestedFeedsV2Enable,
+  )
+  const client = useIris ? ctx.irisClient : ctx.topicsClient
+
+  if (!client) {
     // Use 501 instead of 500 as these are not considered retry-able by clients
-    throw new MethodNotImplementedError('Topics agent not available')
+    const agent = useIris ? 'Iris' : 'Topics'
+    throw new MethodNotImplementedError(`${agent} agent not available`)
   }
 
-  return ctx.topicsClient.call(
+  return client.call(
     app.bsky.unspecced.getSuggestedFeedsSkeleton,
     {
       limit: params.limit,
@@ -82,6 +94,7 @@ const presentation = (
     feeds: mapDefined(skeleton.feeds, (uri) =>
       ctx.views.feedGenerator(uri, hydration),
     ),
+    recIdStr: skeleton.recIdStr,
   }
 }
 
@@ -89,6 +102,7 @@ type Context = {
   hydrator: Hydrator
   views: Views
   topicsClient: Client | undefined
+  irisClient: Client | undefined
 }
 
 type Params = app.bsky.unspecced.getSuggestedFeeds.$Params & {
@@ -99,4 +113,5 @@ type Params = app.bsky.unspecced.getSuggestedFeeds.$Params & {
 
 type SkeletonState = {
   feeds: AtUriString[]
+  recIdStr?: string
 }

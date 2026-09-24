@@ -31,7 +31,13 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({ viewer, req }),
+        ),
+      })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
         ...getAtprotoPassthroughHeaders(req),
@@ -58,12 +64,18 @@ const skeleton = async (
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
 
-  if (!ctx.topicsClient) {
+  const useIris = params.hydrateCtx.features.checkGate(
+    params.hydrateCtx.features.Gate.SuggestedStarterPacksV2Enable,
+  )
+  const client = useIris ? ctx.irisClient : ctx.topicsClient
+
+  if (!client) {
     // Use 501 instead of 500 as these are not considered retry-able by clients
-    throw new MethodNotImplementedError('Topics agent not available')
+    const agent = useIris ? 'Iris' : 'Topics'
+    throw new MethodNotImplementedError(`${agent} agent not available`)
   }
 
-  const skeleton = await ctx.topicsClient.call(
+  const skeleton = await client.call(
     app.bsky.unspecced.getSuggestedStarterPacksSkeleton,
     {
       limit: params.limit,
@@ -108,6 +120,7 @@ const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
 
   const blocks = hydration.bidirectionalBlocks?.get(viewer)
   const filteredSkeleton: SkeletonState = {
+    ...skeleton,
     starterPacks: skeleton.starterPacks.filter((uri) => {
       try {
         return !blocks?.get(new AtUri(uri).did)
@@ -129,6 +142,7 @@ const presentation = (
     starterPacks: mapDefined(skeleton.starterPacks, (uri) =>
       ctx.views.starterPack(uri, hydration),
     ),
+    recIdStr: skeleton.recIdStr,
   }
 }
 
@@ -136,6 +150,7 @@ type Context = {
   hydrator: Hydrator
   views: Views
   topicsClient: Client | undefined
+  irisClient: Client | undefined
 }
 
 type Params = app.bsky.unspecced.getSuggestedStarterPacks.$Params & {
@@ -146,6 +161,7 @@ type Params = app.bsky.unspecced.getSuggestedStarterPacks.$Params & {
 
 type SkeletonState = {
   starterPacks: AtUriString[]
+  recIdStr?: string
 }
 
 function getUniqueDidsFromStarterPacks(
