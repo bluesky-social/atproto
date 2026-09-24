@@ -159,6 +159,7 @@ export const reportSubjectFilter = (
     return eb.and([
       eb('did', '=', subjectDid),
       eb('subjectMessageId', '=', subjectMessageId),
+      eb('subjectConvoId', '=', subjectConvoId),
     ])
   }
   if (subject.isConvo()) {
@@ -337,15 +338,26 @@ const selectQueue = async (
   resolvedActionId: number | undefined,
   action: FileAppealInput['action'],
 ) => {
+  // @NOTE Closed reports retain the source action link. Query each status
+  // separately so the existing active-subject and closed-DID indexes apply.
   const sourceReports =
     resolvedActionId === undefined
       ? []
-      : await ctx.db.db
-          .selectFrom('report')
-          .where('reportType', '!=', APPEAL_REASON_TYPE)
-          .where('actionEventIds', '@>', jsonb([resolvedActionId]))
-          .select('queueId')
-          .execute()
+      : (
+          await Promise.all(
+            [true, false].map((closed) => {
+              let query = ctx.db.db
+                .selectFrom('report')
+                .where((eb) => reportSubjectFilter(eb, subject))
+                .where('reportType', '!=', APPEAL_REASON_TYPE)
+                .where('actionEventIds', '@>', jsonb([resolvedActionId]))
+              query = closed
+                ? query.where(sql<boolean>`status = 'closed'`)
+                : query.where(sql<boolean>`status != 'closed'`)
+              return query.select('queueId').execute()
+            }),
+          )
+        ).flat()
   const sourceQueueIds = sourceReports.map((source) => source.queueId)
   const allSourcesAssigned =
     sourceQueueIds.length > 0 &&

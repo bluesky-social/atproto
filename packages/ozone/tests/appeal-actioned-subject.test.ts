@@ -1125,6 +1125,36 @@ describe('appealActionedSubject', () => {
       actionCount: 1,
     })
   })
+  it('distinguishes appeals for the same message ID in different conversations', async () => {
+    const account = await sc.createAccount('chatcollision', {
+      handle: 'chatcollision.test',
+      email: 'chatcollision@test.com',
+      password: 'chatcollision-pass',
+    })
+    const messageId = 'shared-message-id'
+    const subject = (convoId: string) => ({
+      $type: 'chat.bsky.convo.defs#messageRef',
+      did: account.did,
+      convoId,
+      messageId,
+    })
+
+    await callAppeal({ subject: subject('convo-a') }, account.did)
+    await expect(
+      callAppeal({ subject: subject('convo-b') }, account.did),
+    ).resolves.toBeDefined()
+
+    const reports = await network.ozone.ctx.db.db
+      .selectFrom('report')
+      .where('did', '=', account.did)
+      .where('reportType', '=', APPEAL_REASON_TYPE)
+      .select('subjectConvoId')
+      .execute()
+    expect(reports.map((report) => report.subjectConvoId).sort()).toEqual([
+      'convo-a',
+      'convo-b',
+    ])
+  })
   it('never offers an appeal that submission would refuse', async () => {
     const account = await sc.createAccount('superseded', {
       handle: 'superseded.test',
