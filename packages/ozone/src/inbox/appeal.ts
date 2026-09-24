@@ -368,7 +368,7 @@ const selectQueue = async (
     inheritedQueueId === null && labelQueue === undefined
       ? (await queueService.list({ limit: 1000, enabled: true })).queues
       : []
-  const legacyQueue =
+  const defaultQueue =
     inheritedQueueId === null && labelQueue === undefined
       ? findMatchingQueue(
           queues,
@@ -380,7 +380,7 @@ const selectQueue = async (
         )
       : null
 
-  const queueId = inheritedQueueId ?? labelQueue?.id ?? legacyQueue?.id ?? -1
+  const queueId = inheritedQueueId ?? labelQueue?.id ?? defaultQueue?.id ?? -1
 
   // An unrouted report carries no queue timestamp: `queuedAt` records when a
   // report entered a queue, and matches the `queueId: -1` / `status: 'open'`
