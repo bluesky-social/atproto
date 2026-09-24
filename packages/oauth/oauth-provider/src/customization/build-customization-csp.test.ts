@@ -62,6 +62,23 @@ describe(buildCustomizationCsp, () => {
         buildCustomizationCsp({ branding: { logo: 'ftp://example.com/x' } }),
       ).toThrow('Unsupported URI format')
     })
+
+    it('combines exact origins and the `data:` scheme for multiple image sources', () => {
+      const csp = buildCustomizationCsp({
+        branding: {
+          logo: 'http://localhost:1234/logo.png',
+          background: {
+            dark: 'data:image/png;base64,BBBB',
+            light: 'https://example.com/background.png',
+          },
+        },
+      })
+      expect(extractImgSrc(csp)).toEqual([
+        'http://localhost:1234/logo.png',
+        'data:',
+        'https://example.com/background.png',
+      ])
+    })
   })
 
   describe('hCaptcha', () => {
