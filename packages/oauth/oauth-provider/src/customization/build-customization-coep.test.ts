@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildCustomizationCoep } from './build-customization-coep.js'
 
-const hcaptcha = { siteKey: 'site', secretKey: 'secret', tokenSalt: 'salt' }
-
 describe(buildCustomizationCoep, () => {
   it('returns undefined when hCaptcha is not configured', () => {
     expect(buildCustomizationCoep({})).toBeUndefined()
@@ -11,7 +9,15 @@ describe(buildCustomizationCoep, () => {
     ).toBeUndefined()
   })
 
-  it('disables COEP when hCaptcha is configured (its COEP support is broken)', () => {
-    expect(buildCustomizationCoep({ hcaptcha })).toBeDefined()
+  it('specifies COEP when hCaptcha is configured', () => {
+    expect(
+      buildCustomizationCoep({
+        hcaptcha: {
+          siteKey: 'site',
+          secretKey: 'secret',
+          tokenSalt: 'salt',
+        },
+      }),
+    ).toBeDefined()
   })
 })
