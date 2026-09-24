@@ -13,6 +13,7 @@ import type { AppContext } from '../context.js'
 import type { Database } from '../db/index.js'
 import type { DatabaseSchemaType } from '../db/schema/index.js'
 import { jsonb } from '../db/types.js'
+import { tools } from '../lexicons/index.js'
 import type { AppealView } from '../lexicons/tools/ozone/inbox/defs.js'
 import type { ModSubject } from '../mod-service/subject.js'
 import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
@@ -307,12 +308,10 @@ export type FileAppealInput = {
   requester: DidString
   /** The subject being appealed, already resolved and authorized. */
   subject: ModSubject
-  /** The action being appealed, when the appeal names one. */
-  actionId?: number
-  actionRef?:
-    | { type: 'action'; id: number }
-    | { type: 'label'; val: string }
-    | { type: 'takedown' }
+  /** Resolved moderation event ID, when one could be found. */
+  resolvedActionId?: number
+  /** The action reference supplied by the caller. */
+  action?: tools.ozone.inbox.appealActionedSubject.$InputBody['action']
   /** Optional: an appeal is a request for review, not an argued case. */
   reason?: string
   modTool?: { name: string; meta?: { [_ in string]: unknown } }
@@ -335,16 +334,16 @@ export type FileAppealInput = {
 const selectQueue = async (
   ctx: AppContext,
   subject: ModSubject,
-  actionId: number | undefined,
-  actionRef: FileAppealInput['actionRef'],
+  resolvedActionId: number | undefined,
+  action: FileAppealInput['action'],
 ) => {
   const sourceReports =
-    actionId === undefined
+    resolvedActionId === undefined
       ? []
       : await ctx.db.db
           .selectFrom('report')
           .where('reportType', '!=', APPEAL_REASON_TYPE)
-          .where('actionEventIds', '@>', jsonb([actionId]))
+          .where('actionEventIds', '@>', jsonb([resolvedActionId]))
           .select('queueId')
           .execute()
   const sourceQueueIds = sourceReports.map((source) => source.queueId)
@@ -360,8 +359,10 @@ const selectQueue = async (
       : null
   const queueService = ctx.queueService(ctx.db)
   const labelQueue =
-    inheritedQueueId === null && actionRef?.type === 'label'
-      ? await queueService.getByRecommendedLabel(actionRef.val)
+    inheritedQueueId === null &&
+    action !== undefined &&
+    tools.ozone.inbox.appealActionedSubject.labelRef.$isTypeOf(action)
+      ? await queueService.getByRecommendedLabel(action.val)
       : undefined
   const queues =
     inheritedQueueId === null && labelQueue === undefined
@@ -391,7 +392,7 @@ const selectQueue = async (
 }
 
 /**
- * File an appeal: validate the target, route it, and record it.
+ * File an appeal: validate the subject, route it, and record it.
  *
  * An appeal is an ordinary `reasonAppeal` report, so it inherits the report
  * lifecycle, queue routing, and activity machinery rather than introducing a
@@ -404,13 +405,20 @@ const selectQueue = async (
  */
 export const fileAppeal = async (
   ctx: AppContext,
-  { requester, subject, actionId, actionRef, reason, modTool }: FileAppealInput,
+  {
+    requester,
+    subject,
+    resolvedActionId,
+    action,
+    reason,
+    modTool,
+  }: FileAppealInput,
 ): Promise<{ reportId: number }> => {
   const { queueId, queuedAt } = await selectQueue(
     ctx,
     subject,
-    actionId,
-    actionRef,
+    resolvedActionId,
+    action,
   )
 
   const subjectInfo = subject.info()
@@ -432,13 +440,17 @@ export const fileAppeal = async (
       reasonType: APPEAL_REASON_TYPE,
       reportedBy: requester,
       modTool,
-      eventMeta: actionRef
+      eventMeta: action
         ? {
-            appealActionType: actionRef.type,
-            ...(actionRef.type === 'action'
-              ? { appealActionId: actionRef.id }
-              : actionRef.type === 'label'
-                ? { appealLabel: actionRef.val }
+            appealActionType: action.$type,
+            ...(tools.ozone.inbox.appealActionedSubject.actionRef.$isTypeOf(
+              action,
+            )
+              ? { appealActionId: action.id }
+              : tools.ozone.inbox.appealActionedSubject.labelRef.$isTypeOf(
+                    action,
+                  )
+                ? { appealLabel: action.val }
                 : {}),
           }
         : undefined,
@@ -450,7 +462,8 @@ export const fileAppeal = async (
         eventId: reportEvent.id,
         queueId,
         queuedAt,
-        actionEventIds: actionId === undefined ? null : jsonb([actionId]),
+        actionEventIds:
+          resolvedActionId === undefined ? null : jsonb([resolvedActionId]),
         actionNote: null,
         isMuted:
           !!reportEvent.meta?.isReporterMuted ||

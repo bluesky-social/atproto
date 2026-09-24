@@ -4,11 +4,12 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Appeal a moderation action affecting the user's account or content. A subject is required unless action is an actionRef.",
+      "description": "Appeal a moderation action affecting the user's account or content.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
+          "required": ["subject"],
           "properties": {
             "action": {
               "type": "union",
@@ -22,7 +23,7 @@
                 "com.atproto.admin.defs#repoRef",
                 "com.atproto.repo.strongRef"
               ],
-              "description": "Subject being appealed. Required for labelRef and takedownRef; optional for actionRef."
+              "description": "Subject being appealed."
             },
             "reason": {
               "type": "string",
@@ -46,8 +47,8 @@
       },
       "errors": [
         {
-          "name": "InvalidAppealTarget",
-          "description": "Invalid appeal target input."
+          "name": "InvalidAppealSubject",
+          "description": "Invalid appeal subject input."
         },
         {
           "name": "AlreadyAppealed",
@@ -55,7 +56,7 @@
         },
         {
           "name": "NotAppealable",
-          "description": "The target cannot be appealed."
+          "description": "The subject cannot be appealed."
         },
         {
           "name": "AppealWindowExpired",
@@ -70,7 +71,7 @@
         "id": {
           "type": "integer",
           "minimum": 1,
-          "description": "ID of the moderation event being appealed."
+          "description": "ID of the moderation action being appealed, available via actions in mod inbox."
         }
       }
     },
@@ -81,7 +82,7 @@
         "val": {
           "type": "string",
           "minLength": 1,
-          "description": "Value of the label being appealed."
+          "description": "Label being appealed."
         }
       }
     },

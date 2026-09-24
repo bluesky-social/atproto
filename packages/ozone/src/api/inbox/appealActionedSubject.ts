@@ -24,90 +24,54 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       const { action: actionInput, subject: subjectInput } = input.body
-      type ActionInput = typeof actionInput
-      const isActionRef = (
-        value: ActionInput,
-      ): value is Exclude<ActionInput, undefined> & {
-        $type: 'tools.ozone.inbox.appealActionedSubject#actionRef'
-        id: number
-      } => value?.$type === 'tools.ozone.inbox.appealActionedSubject#actionRef'
-      const isLabelRef = (
-        value: ActionInput,
-      ): value is Exclude<ActionInput, undefined> & {
-        $type: 'tools.ozone.inbox.appealActionedSubject#labelRef'
-        val: string
-      } => value?.$type === 'tools.ozone.inbox.appealActionedSubject#labelRef'
-      const isTakedownRef = (
-        value: ActionInput,
-      ): value is Exclude<ActionInput, undefined> & {
-        $type: 'tools.ozone.inbox.appealActionedSubject#takedownRef'
-      } =>
-        value?.$type === 'tools.ozone.inbox.appealActionedSubject#takedownRef'
-      const requester =
-        'iss' in auth.credentials ? auth.credentials.iss : ctx.cfg.service.did
+      const isActionRef =
+        actionInput !== undefined &&
+        tools.ozone.inbox.appealActionedSubject.actionRef.$isTypeOf(actionInput)
+      const isLabelRef =
+        actionInput !== undefined &&
+        tools.ozone.inbox.appealActionedSubject.labelRef.$isTypeOf(actionInput)
+      const isTakedownRef =
+        actionInput !== undefined &&
+        tools.ozone.inbox.appealActionedSubject.takedownRef.$isTypeOf(
+          actionInput,
+        )
+      const requester = auth.credentials.iss
+      const canAppealForOthers =
+        auth.credentials.isAdmin ||
+        auth.credentials.isModerator ||
+        auth.credentials.isTriage
 
       // validate input
-      if (!actionInput && !subjectInput) {
-        throw new InvalidRequestError(
-          'An action or subject is required',
-          'InvalidAppealTarget',
-        )
-      }
-      if (
-        actionInput &&
-        !isActionRef(actionInput) &&
-        !isLabelRef(actionInput) &&
-        !isTakedownRef(actionInput)
-      ) {
+      if (actionInput && !isActionRef && !isLabelRef && !isTakedownRef) {
         throw new InvalidRequestError(
           'Unknown appeal action reference',
-          'InvalidAppealTarget',
-        )
-      }
-      if (
-        actionInput &&
-        !isActionRef(actionInput) &&
-        subjectInput === undefined
-      ) {
-        throw new InvalidRequestError(
-          'A subject is required for this action reference',
-          'InvalidAppealTarget',
+          'InvalidAppealSubject',
         )
       }
 
-      const inputSubject = subjectInput
-        ? subjectFromInput(
-            subjectInput as Parameters<typeof subjectFromInput>[0],
-          )
-        : undefined
-      const action = isActionRef(actionInput)
+      const inputSubject = subjectFromInput(subjectInput)
+      const action = isActionRef
         ? await ctx.modService(ctx.db).getEvent(actionInput.id)
-        : actionInput && inputSubject
+        : actionInput
           ? await findAppealedEvent(
               ctx,
               inputSubject,
-              isLabelRef(actionInput)
+              isLabelRef
                 ? { type: 'label', val: actionInput.val }
                 : { type: 'takedown' },
             )
           : undefined
-      if (isActionRef(actionInput) && !action && !inputSubject) {
-        throw new ForbiddenError(
-          'Moderation action is not appealable',
-          'NotAppealable',
-        )
-      }
 
       // validate action event
       if (action) {
-        if (requester !== action.subjectDid) {
+        if (!canAppealForOthers && requester !== action.subjectDid) {
           throw new ForbiddenError(
             'Moderation action is not appealable',
             'NotAppealable',
           )
         }
         if (!isAppealableEvent(action.action)) {
-          throw new ForbiddenError('Target is not appealable', 'NotAppealable')
+          throw new ForbiddenError('Subject is not appealable', 'NotAppealable')
         }
         if (
           !isAppealWindowOpen(
@@ -123,33 +87,23 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // parse subject and validate
-      const subject = action ? subjectFromEventRow(action) : inputSubject!
+      const subject = action ? subjectFromEventRow(action) : inputSubject
       if (
         inputSubject &&
         action &&
         subjectKey(inputSubject) !== subjectKey(subject)
       ) {
-        throw new ForbiddenError('Target is not appealable', 'NotAppealable')
+        throw new ForbiddenError('Subject is not appealable', 'NotAppealable')
       }
-      if (requester !== subject.did) {
-        throw new ForbiddenError('Target is not appealable', 'NotAppealable')
+      if (!canAppealForOthers && requester !== subject.did) {
+        throw new ForbiddenError('Subject is not appealable', 'NotAppealable')
       }
-
-      await ctx
-        .moderationServiceProfile()
-        .validateReasonType('tools.ozone.report.defs#reasonAppeal')
 
       await fileAppeal(ctx, {
         requester,
         subject,
-        actionId: action?.id,
-        actionRef: isActionRef(actionInput)
-          ? { type: 'action', id: actionInput.id }
-          : isLabelRef(actionInput)
-            ? { type: 'label', val: actionInput.val }
-            : isTakedownRef(actionInput)
-              ? { type: 'takedown' }
-              : undefined,
+        action: actionInput,
+        resolvedActionId: action?.id,
         reason: input.body.reason,
         modTool: input.body.modTool,
       })
