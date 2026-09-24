@@ -20,16 +20,16 @@ export function buildCustomizationCsp({
   branding,
   hcaptcha,
 }: Customization): CspConfig | undefined {
-  let customizationCsp: CspConfig | undefined = undefined
+  let csp: CspConfig | undefined = undefined
 
-  // Extract customization images
-  {
+  // branding related CSP
+  if (branding) {
     const imgSrc = new Set<CspValue>()
 
     for (const uri of [
-      branding?.logo,
-      branding?.background?.dark,
-      branding?.background?.light,
+      branding.logo,
+      branding.background?.dark,
+      branding.background?.light,
     ]) {
       if (uri != null) {
         if (isHttpUri(uri)) {
@@ -51,16 +51,16 @@ export function buildCustomizationCsp({
     }
 
     if (imgSrc.size > 0) {
-      customizationCsp = mergeCsp(customizationCsp, { 'img-src': imgSrc })
+      csp = mergeCsp(csp, { 'img-src': imgSrc })
     }
   }
 
-  // Merge hCaptcha CSP if used
+  // hCaptcha related CSP
   if (hcaptcha) {
-    customizationCsp = mergeCsp(customizationCsp, HCAPTCHA_CSP)
+    csp = mergeCsp(csp, HCAPTCHA_CSP)
   }
 
-  return customizationCsp
+  return csp
 }
 
 function isHttpUri(
