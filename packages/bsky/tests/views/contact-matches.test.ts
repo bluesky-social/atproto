@@ -36,7 +36,7 @@ describe('contact matches', () => {
   beforeEach(async () => network.processAll())
   afterAll(async () => network?.close())
 
-  it('fills the page after filtering blocked matches and returns a cursor only when more matches are available', async () => {
+  it('serves a page short of the limit after filtering blocked matches, and returns a cursor only when more matches are available', async () => {
     const subjects = [sc.dids.bob, sc.dids.carol, sc.dids.dan, sc.dids.eve]
     const getMatches = vi
       .spyOn(network.bsky.server.ctx.rolodexClient!, 'getMatches')
@@ -54,28 +54,29 @@ describe('contact matches', () => {
       ids.AppBskyContactGetMatches,
     )
 
-    const exact = await agent.app.bsky.contact.getMatches(
+    // Blocked bob heads the first underlying page, leaving two of the three
+    // requested. That is already half of the limit, so the page is served as
+    // is, without a second call to rolodex.
+    const short = await agent.app.bsky.contact.getMatches(
       { limit: 3 },
       { headers },
     )
-    expect(exact.data.matches.map((match) => match.did)).toEqual([
+    expect(short.data.matches.map((match) => match.did)).toEqual([
       sc.dids.carol,
       sc.dids.dan,
-      sc.dids.eve,
     ])
-    expect(exact.data.cursor).toBeUndefined()
-    expect(getMatches).toHaveBeenCalledTimes(2)
+    expect(short.data.cursor).toBe('3')
+    expect(getMatches).toHaveBeenCalledOnce()
 
     getMatches.mockClear()
-    const over = await agent.app.bsky.contact.getMatches(
-      { limit: 2 },
+    const terminal = await agent.app.bsky.contact.getMatches(
+      { limit: 3, cursor: short.data.cursor },
       { headers },
     )
-    expect(over.data.matches.map((match) => match.did)).toEqual([
-      sc.dids.carol,
-      sc.dids.dan,
+    expect(terminal.data.matches.map((match) => match.did)).toEqual([
+      sc.dids.eve,
     ])
-    expect(over.data.cursor).toBe('3')
-    expect(getMatches).toHaveBeenCalledTimes(2)
+    expect(terminal.data.cursor).toBeUndefined()
+    expect(getMatches).toHaveBeenCalledOnce()
   })
 })

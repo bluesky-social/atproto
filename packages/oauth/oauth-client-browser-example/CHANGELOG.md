@@ -1,5 +1,11 @@
 # @atproto/oauth-client-browser-example
 
+## 0.1.8
+
+### Patch Changes
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump the dev-dependencies group across 1 directory with 30 updates
+
 ## 0.1.7
 
 ### Patch Changes

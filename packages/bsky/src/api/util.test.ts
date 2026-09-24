@@ -17,16 +17,41 @@ describe('fillPage', () => {
   it('fills across filtered and empty pages', async () => {
     const fetch = vi
       .fn()
-      .mockResolvedValueOnce({ items: [1], cursor: 'a', metadata: 'first' })
+      .mockResolvedValueOnce({ items: [], cursor: 'a', metadata: 'first' })
       .mockResolvedValueOnce({ items: [], cursor: 'b' })
-      .mockResolvedValueOnce({ items: [2, 3], cursor: 'c' })
+      .mockResolvedValueOnce({ items: [1, 2], cursor: 'c' })
 
     await expect(
       fillPage({ cursor: 'start', limit: 3, fetch, items: (r) => r.items }),
-    ).resolves.toEqual({ items: [1, 2, 3], cursor: 'c', metadata: 'first' })
+    ).resolves.toEqual({ items: [1, 2], cursor: 'c', metadata: 'first' })
     expect(fetch).toHaveBeenNthCalledWith(1, { cursor: 'start', limit: 3 })
-    expect(fetch).toHaveBeenNthCalledWith(2, { cursor: 'a', limit: 2 })
-    expect(fetch).toHaveBeenNthCalledWith(3, { cursor: 'b', limit: 2 })
+    expect(fetch).toHaveBeenNthCalledWith(2, { cursor: 'a', limit: 3 })
+    expect(fetch).toHaveBeenNthCalledWith(3, { cursor: 'b', limit: 3 })
+  })
+
+  it('stops refilling once half of the page is filled', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ items: [1], cursor: 'a' })
+      .mockResolvedValueOnce({ items: [2], cursor: 'b' })
+      .mockResolvedValueOnce({ items: [3], cursor: 'c' })
+
+    await expect(
+      fillPage({ cursor: undefined, limit: 4, fetch, items: (r) => r.items }),
+    ).resolves.toEqual({ items: [1, 2], cursor: 'b' })
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('refills a single item page, since half of it rounds up', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ items: [], cursor: 'a' })
+      .mockResolvedValueOnce({ items: [1], cursor: 'b' })
+
+    await expect(
+      fillPage({ cursor: undefined, limit: 1, fetch, items: (r) => r.items }),
+    ).resolves.toEqual({ items: [1], cursor: 'b' })
+    expect(fetch).toHaveBeenCalledTimes(2)
   })
 
   it('preserves the cursor when the request bound is reached', async () => {

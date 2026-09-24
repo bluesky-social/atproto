@@ -1,8 +1,15 @@
 import { sql } from 'kysely'
+import type {
+  AtUriString,
+  DatetimeString,
+  DidString,
+  UriString,
+} from '@atproto/lex'
+import { currentDatetimeString, isDidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
 import type { Report } from '../db/schema/report.js'
-import type { QueryParams } from '../lexicon/types/tools/ozone/report/queryReports.js'
+import { tools } from '../lexicons/index.js'
 import {
   AlreadyInTargetState,
   InvalidStateTransition,
@@ -12,10 +19,10 @@ import { CHAT_CONVO_COLLECTION, CHAT_MESSAGE_COLLECTION } from './subject.js'
 
 export type ReportWithEvent = Omit<Report, 'id'> & {
   id: number
-  subjectDid: string
-  subjectUri: string | null
+  subjectDid: DidString
+  subjectUri: UriString | null
   subjectCid: string | null
-  reportedBy: string
+  reportedBy: DidString
   comment: string | null
   meta: Record<string, string | boolean | number> | null
 }
@@ -28,12 +35,12 @@ function reportQuery(db: Database) {
   return db.db
     .selectFrom('report as r')
     .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
-    .where('me.action', '=', 'tools.ozone.moderation.defs#modEventReport')
+    .where('me.action', '=', tools.ozone.moderation.defs.modEventReport.$type)
 }
 
 export async function queryReports(
   db: Database,
-  params: QueryParams,
+  params: tools.ozone.report.queryReports.$Params,
 ): Promise<QueryReportsResult> {
   let builder = reportQuery(db)
 
@@ -49,24 +56,26 @@ export async function queryReports(
       const uri = new AtUri(params.subject)
       if (uri.collection === CHAT_MESSAGE_COLLECTION) {
         builder = builder
-          .where('r.did', '=', uri.host)
+          .where('r.did', '=', uri.did)
           .where('r.subjectMessageId', '=', uri.rkey)
       } else if (uri.collection === CHAT_CONVO_COLLECTION) {
         builder = builder
-          .where('r.did', '=', uri.host)
+          .where('r.did', '=', uri.did)
           .where('r.subjectConvoId', '=', uri.rkey)
           .where('r.subjectMessageId', 'is', null)
       } else {
         builder = builder
-          .where('r.did', '=', uri.host)
+          .where('r.did', '=', uri.did)
           .where('r.recordPath', '=', `${uri.collection}/${uri.rkey}`)
       }
-    } else {
+    } else if (isDidString(params.subject)) {
       builder = builder
         .where('r.did', '=', params.subject)
         .where('r.recordPath', '=', '')
         .where('r.subjectMessageId', 'is', null)
         .where('r.subjectConvoId', 'is', null)
+    } else {
+      throw new Error('Subject must be a DID or an AT-URI')
     }
   }
 
@@ -127,7 +136,8 @@ export async function queryReports(
       sortField === 'updatedAt' ? 'r.updatedAt' : 'r.createdAt',
       sortDirection,
     )
-    .orderBy('r.id', 'desc')
+    // Keep the tie-breaker aligned with the primary sort for consistent keyset pagination and index scans.
+    .orderBy('r.id', sortDirection)
 
   const limit = params.limit ?? 50
   if (params.cursor) {
@@ -233,8 +243,8 @@ export async function getLatestReport(
 }
 
 export type FindReportsForSubjectParams = {
-  subjectDid: string
-  subjectUri?: string | null
+  subjectDid: DidString
+  subjectUri?: AtUriString | null
   reportIds?: number[]
   reportTypes?: string[]
   targetAll?: boolean
@@ -245,13 +255,13 @@ export type ReportResult = {
   id: number
   eventId: number
   queueId: number | null
-  queuedAt: string | null
+  queuedAt: DatetimeString | null
   actionEventIds: number[] | null
   actionNote: string | null
   isMuted: boolean
   status: string
-  createdAt: string
-  updatedAt: string
+  createdAt: DatetimeString
+  updatedAt: DatetimeString
 }
 
 export async function findReportsForSubject(
@@ -314,12 +324,12 @@ export async function findReportsForSubject(
 
 export type CloseReportsForSubjectParams = {
   db: Database
-  subjectDid: string
+  subjectDid: DidString
   subjectUri: string | null
   reportTypes?: string[]
   internalNote?: string
   isAutomated: boolean
-  createdBy: string
+  createdBy: DidString
 }
 
 export type CloseReportsResult = {
@@ -349,7 +359,7 @@ export async function closeReportsForSubject(
   return db.transaction(async (dbTxn) => {
     const matchingReports = await findReportsForSubject(dbTxn, {
       subjectDid,
-      subjectUri,
+      subjectUri: subjectUri as AtUriString,
       reportTypes: reportTypes?.length ? reportTypes : undefined,
       targetAll: !reportTypes?.length,
       lockForUpdate: true,
@@ -383,7 +393,7 @@ export async function closeReportsForSubject(
       return { closedCount: 0, reportIds: [] }
     }
 
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     const updateIds = validUpdates.map((u) => u.id)
 
     await dbTxn.db
@@ -421,11 +431,11 @@ export type ProcessReportActionParams = {
     all?: boolean
     note?: string
   }
-  subjectDid: string
+  subjectDid: DidString
   subjectUri: string | null
   eventId: number
   eventType: string
-  createdBy: string
+  createdBy: DidString
 }
 
 /**
@@ -453,7 +463,7 @@ export async function processReportAction(
   // Find reports matching the criteria
   const matchingReports = await findReportsForSubject(db, {
     subjectDid,
-    subjectUri,
+    subjectUri: subjectUri as AtUriString,
     reportIds: reportAction.ids,
     reportTypes: reportAction.types,
     targetAll: reportAction.all,
@@ -526,7 +536,7 @@ export async function processReportAction(
     return 0
   }
 
-  const now = new Date().toISOString()
+  const now = currentDatetimeString()
   const updateIds = validUpdates.map((u) => u.id)
 
   // Bulk UPDATE reports that passed validation

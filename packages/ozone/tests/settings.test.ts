@@ -1,3 +1,4 @@
+import { ids } from '@atproto/api'
 import type {
   ToolsOzoneSettingListOptions,
   ToolsOzoneSettingUpsertOption,
@@ -5,7 +6,6 @@ import type {
 import type AtpAgent from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import type { SettingScope } from '../dist/db/schema/setting.js'
-import { ids } from '../src/lexicon/lexicons.js'
 import { forSnapshot } from './_util.js'
 
 describe('ozone-settings', () => {
@@ -161,7 +161,7 @@ describe('ozone-settings', () => {
       await upsertOption({
         scope: 'instance',
         key: 'tools.ozone.setting.client.queueHash',
-        value: { val: 10.5 },
+        value: { val: 10 },
         description:
           'This determines how each queue is balanced when sorted by oldest first',
         managerRole: 'tools.ozone.team.defs#roleAdmin',

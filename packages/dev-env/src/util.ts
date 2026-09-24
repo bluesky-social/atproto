@@ -2,6 +2,7 @@ import * as plc from '@did-plc/lib'
 import { request } from 'undici'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
+import type { DidString } from '@atproto/lex'
 import type { TestBsky } from './bsky.js'
 import type { TestPds } from './pds.js'
 import type { DidAndKey } from './types.js'
@@ -97,6 +98,6 @@ export const createDidAndKey = async (opts: {
   })
   return {
     key,
-    did,
+    did: did as DidString,
   }
 }

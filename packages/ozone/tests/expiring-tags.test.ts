@@ -1,11 +1,13 @@
+import { ComAtprotoModerationDefs } from '@atproto/api'
 import {
   type ModeratorClient,
   type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import type { DidString } from '@atproto/lex'
+import { toDatetimeString } from '@atproto/lex'
 import { EventReverser } from '../src/daemon/event-reverser.js'
-import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
 describe('expiring tags', () => {
   let network: TestNetwork
@@ -53,7 +55,7 @@ describe('expiring tags', () => {
   it('creates expiring_tag rows when durationInHours is set', async () => {
     // Create a report so the subject exists in moderation_subject_status
     await sc.createReport({
-      reasonType: REASONSPAM,
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
       reason: 'test',
       subject: { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.bob },
       reportedBy: sc.dids.alice,
@@ -100,7 +102,7 @@ describe('expiring tags', () => {
     // Manually expire the tags in the DB
     await network.ozone.ctx.db.db
       .updateTable('expiring_tag')
-      .set({ expiresAt: new Date(Date.now() - 1000).toISOString() })
+      .set({ expiresAt: toDatetimeString(Date.now() - 1000) })
       .where('did', '=', sc.dids.bob)
       .execute()
 
@@ -141,11 +143,11 @@ describe('expiring tags', () => {
 
   it('cleans up expiring_tag rows when tags are manually removed', async () => {
     await sc.createReport({
-      reasonType: REASONSPAM,
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
       reason: 'test',
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
-        did: sc.dids.carol,
+        did: sc.dids.carol as DidString,
       },
       reportedBy: sc.dids.alice,
     })
@@ -186,12 +188,12 @@ describe('expiring tags', () => {
       .insertInto('expiring_tag')
       .values({
         eventId: 0,
-        did: sc.dids.carol,
+        did: sc.dids.carol as DidString,
         recordPath: '',
         convoId: '',
         tag: 'skip-tag',
-        expiresAt: new Date(Date.now() - 1000).toISOString(),
-        createdBy: sc.dids.alice,
+        expiresAt: toDatetimeString(Date.now() - 1000),
+        createdBy: sc.dids.alice as DidString,
       })
       .execute()
 

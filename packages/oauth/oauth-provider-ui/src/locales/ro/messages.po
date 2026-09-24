@@ -1483,7 +1483,7 @@ msgstr "Adresa dvs. de e-mail a fost verificată."
 msgid "Your email address needs to be verified."
 msgstr "Adresa dvs. de e-mail trebuie verificată."
 
-#. placeholder {0}: segment ? ( <span className="text-foreground block break-all font-medium"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
+#. placeholder {0}: segment ? ( <span className="text-foreground block font-medium break-all"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
 #: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "Numele dvs. de utilizator complet va fi: {0}"

@@ -133,6 +133,7 @@
             "app.bsky.graph.list",
             "app.bsky.graph.listblock",
             "app.bsky.graph.listitem",
+            "app.bsky.graph.referencelistoptout",
             "app.bsky.graph.starterpack",
             "app.bsky.notification.declaration"
           ]

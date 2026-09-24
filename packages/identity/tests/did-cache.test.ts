@@ -34,7 +34,7 @@ describe('did cache', () => {
     })
 
     didCache = new MemoryCache()
-    didResolver = new DidResolver({ plcUrl, didCache })
+    didResolver = new DidResolver({ plcUrl, didCache, fetch: globalThis.fetch })
 
     close = async () => {
       await plcServer.destroy()
@@ -65,7 +65,11 @@ describe('did cache', () => {
 
   it('accurately reports stale dids & refreshes the cache', async () => {
     const didCache = new MemoryCache(1)
-    const shortCacheResolver = new DidResolver({ plcUrl, didCache })
+    const shortCacheResolver = new DidResolver({
+      plcUrl,
+      didCache,
+      fetch: globalThis.fetch,
+    })
     const doc = await shortCacheResolver.resolve(did)
 
     // let's mess with the cached doc so we get something different
@@ -89,7 +93,11 @@ describe('did cache', () => {
 
   it('does not return expired dids & refreshes the cache', async () => {
     const didCache = new MemoryCache(0, 1)
-    const shortExpireResolver = new DidResolver({ plcUrl, didCache })
+    const shortExpireResolver = new DidResolver({
+      plcUrl,
+      didCache,
+      fetch: globalThis.fetch,
+    })
     const doc = await shortExpireResolver.resolve(did)
 
     // again, we mess with the cached doc so we get something different

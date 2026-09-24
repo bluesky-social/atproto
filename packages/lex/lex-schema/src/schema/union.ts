@@ -40,8 +40,11 @@ export class UnionSchema<
 > {
   readonly type = 'union' as const
 
-  constructor(protected readonly validators: TValidators) {
+  protected readonly validators: TValidators
+
+  constructor(validators: TValidators) {
     super()
+    this.validators = validators
   }
 
   validateInContext(

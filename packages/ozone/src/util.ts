@@ -1,7 +1,13 @@
 import assert from 'node:assert'
 import { parseList } from 'structured-headers'
 import { createRetryable } from '@atproto/common'
-import { ResponseType, XRPCError } from '@atproto/xrpc'
+import {
+  type DidString,
+  XrpcFetchError,
+  XrpcInternalError,
+  XrpcResponseError,
+} from '@atproto/lex'
+import { ResponseType, XRPCError } from '@atproto/xrpc-server'
 import type { Database } from './db/index.js'
 
 export const getSigningKeyId = async (
@@ -28,16 +34,48 @@ export const RETRYABLE_HTTP_STATUS_CODES = new Set([
   408, 425, 429, 500, 502, 503, 504, 522, 524,
 ])
 
+/**
+ * Raised for plain HTTP failures made outside the XRPC client (e.g. blob
+ * transfers over undici), so {@link retryHttp} can apply the same policy it
+ * applies to XRPC errors. A missing status means the request never completed.
+ */
+export class UpstreamHttpError extends XRPCError {
+  constructor(
+    readonly upstreamStatus: number | undefined,
+    message: string,
+    options?: ErrorOptions,
+  ) {
+    // Extends the xrpc-server error so that, when one of these escapes a
+    // handler, the upstream status and message still reach the caller rather
+    // than collapsing into a generic 500.
+    super(
+      upstreamStatus !== undefined &&
+        upstreamStatus >= 400 &&
+        upstreamStatus < 600
+        ? upstreamStatus
+        : ResponseType.UpstreamFailure,
+      message,
+      undefined,
+      options,
+    )
+  }
+}
+
 export const retryHttp = createRetryable((err: unknown) => {
+  // Covers UpstreamHttpError, whose status-less form maps to UpstreamFailure
+  // (502) and is therefore retryable.
   if (err instanceof XRPCError) {
-    if (err.status === ResponseType.Unknown) return true
+    return RETRYABLE_HTTP_STATUS_CODES.has(err.statusCode)
+  }
+  if (err instanceof XrpcResponseError) {
     return RETRYABLE_HTTP_STATUS_CODES.has(err.status)
   }
-  return false
+  // Network and internal failures — what ResponseType.Unknown used to cover.
+  return err instanceof XrpcFetchError || err instanceof XrpcInternalError
 })
 
 export type ParsedLabelers = {
-  dids: string[]
+  dids: DidString[]
   redact: Set<string>
 }
 
@@ -48,11 +86,11 @@ export const parseLabelerHeader = (
   ignoreDid?: string,
 ): ParsedLabelers | null => {
   if (!header) return null
-  const labelerDids = new Set<string>()
-  const redactDids = new Set<string>()
+  const labelerDids = new Set<DidString>()
+  const redactDids = new Set<DidString>()
   const parsed = parseList(header)
   for (const item of parsed) {
-    const did = item[0].toString()
+    const did = item[0].toString() as DidString
     if (!did) {
       return null
     }
@@ -71,7 +109,7 @@ export const parseLabelerHeader = (
   }
 }
 
-export const defaultLabelerHeader = (dids: string[]): ParsedLabelers => {
+export const defaultLabelerHeader = (dids: DidString[]): ParsedLabelers => {
   return {
     dids,
     redact: new Set(dids),

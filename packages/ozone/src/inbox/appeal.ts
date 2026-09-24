@@ -1,19 +1,26 @@
 import type { Expression, ExpressionBuilder, SqlBool } from 'kysely'
 import { sql } from 'kysely'
+import {
+  type DatetimeString,
+  type DidString,
+  type UriString,
+  currentDatetimeString,
+  toDatetimeString,
+} from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { ForbiddenError } from '@atproto/xrpc-server'
 import type { AppContext } from '../context.js'
 import type { Database } from '../db/index.js'
 import type { DatabaseSchemaType } from '../db/schema/index.js'
 import { jsonb } from '../db/types.js'
-import type { AppealView } from '../lexicon/types/tools/ozone/inbox/defs.js'
-import { REASONAPPEAL as APPEAL_REASON_TYPE } from '../lexicon/types/tools/ozone/report/defs.js'
+import type { AppealView } from '../lexicons/tools/ozone/inbox/defs.js'
 import type { ModSubject } from '../mod-service/subject.js'
 import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
 import { findMatchingQueue } from '../queue/service.js'
 import { TagService } from '../tag-service/index.js'
 import { getTagForReport } from '../tag-service/util.js'
 
+export const APPEAL_REASON_TYPE = 'tools.ozone.report.defs#reasonAppeal'
 export const TAKEDOWN = 'tools.ozone.moderation.defs#modEventTakedown'
 export const REVERSE_TAKEDOWN =
   'tools.ozone.moderation.defs#modEventReverseTakedown'
@@ -31,8 +38,8 @@ export const REVOKE_CREDENTIALS =
 export type AppealReport = {
   id: number
   status: string
-  createdAt: string
-  closedAt: string | null
+  createdAt: DatetimeString
+  closedAt: DatetimeString | null
 }
 
 export type AppealInput = {
@@ -43,7 +50,7 @@ export type AppealInput = {
 
   /** Calendar months an action stays appealable, from `InboxConfig`. */
   windowMonths: number
-  latestAppealableAt: string | null
+  latestAppealableAt: DatetimeString | null
 }
 
 export type AppealState = {
@@ -66,19 +73,19 @@ export const isAppealableEvent = (action: string): boolean =>
   (APPEALABLE_EVENT_ACTIONS as readonly string[]).includes(action)
 
 export const appealWindowEnd = (
-  actionCreatedAt: string,
+  actionCreatedAt: DatetimeString,
   windowMonths: number,
-): string => {
+): DatetimeString => {
   const end = new Date(actionCreatedAt)
   const day = end.getUTCDate()
   end.setUTCMonth(end.getUTCMonth() + windowMonths)
   // Clamp a rollover: 31 Aug + 6 months is 28/29 Feb, not 2/3 Mar.
   if (end.getUTCDate() !== day) end.setUTCDate(0)
-  return end.toISOString()
+  return toDatetimeString(end)
 }
 
 export const isAppealWindowOpen = (
-  actionCreatedAt: string,
+  actionCreatedAt: DatetimeString,
   windowMonths: number,
   now = new Date(),
 ): boolean => new Date(appealWindowEnd(actionCreatedAt, windowMonths)) > now
@@ -239,8 +246,8 @@ export const findAppealedEvent = async (
  * Label rows are keyed by a single string: the record URI, or the DID for an
  * account.
  */
-export const subjectLabelUri = (subject: ModSubject): string =>
-  subject.info().subjectUri ?? subject.did
+export const subjectLabelUri = (subject: ModSubject): UriString =>
+  (subject.info().subjectUri ?? subject.did) as UriString
 
 /**
  * Whether the subject has used up its appeals.
@@ -297,7 +304,7 @@ export const assertAppealAllowed = async (
 
 export type FileAppealInput = {
   /** DID of the authenticated account filing the appeal. */
-  requester: string
+  requester: DidString
   /** The subject being appealed, already resolved and authorized. */
   subject: ModSubject
   /** The action being appealed, when the appeal names one. */
@@ -379,7 +386,7 @@ const selectQueue = async (
   // shape the queue service uses for everything it cannot route.
   return {
     queueId,
-    queuedAt: queueId > 0 ? new Date().toISOString() : null,
+    queuedAt: queueId > 0 ? currentDatetimeString() : null,
   }
 }
 
@@ -449,7 +456,7 @@ export const fileAppeal = async (
           !!reportEvent.meta?.isReporterMuted ||
           !!reportEvent.meta?.isSubjectMuted,
         isAutomated: modTool?.meta?.isAutomated === true,
-        status: queueId > 0 ? 'queued' : 'open',
+        status: queueId > 0 ? ('queued' as const) : ('open' as const),
         reportType: APPEAL_REASON_TYPE,
         did: subjectInfo.subjectDid,
         recordPath,

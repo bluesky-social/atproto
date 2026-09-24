@@ -1,3 +1,4 @@
+import { type DatetimeString, toDatetimeString } from '@atproto/lex'
 import {
   appealWindowEnd,
   isAppealWindowOpen,
@@ -37,7 +38,7 @@ const event = (
   createLabelVals: null,
   negateLabelVals: null,
   comment: null,
-  createdAt: '2026-01-01T00:00:00.000Z',
+  createdAt: toDatetimeString('2026-01-01T00:00:00.000Z'),
   createdBy: 'did:plc:mod',
   durationInHours: null,
   expiresAt: null,
@@ -64,7 +65,7 @@ const status = (
     recordCid: null,
     blobCids: null,
     reviewState: 'tools.ozone.moderation.defs#reviewClosed',
-    createdAt: '2026-01-01T00:00:00.000Z',
+    createdAt: toDatetimeString('2026-01-01T00:00:00.000Z'),
     updatedAt: '2026-01-01T00:00:00.000Z',
     lastReviewedBy: null,
     lastReviewedAt: null,
@@ -87,8 +88,8 @@ const status = (
     ...overrides,
   }) as ModerationSubjectStatusRow
 
-const future = () => new Date(Date.now() + 86_400_000).toISOString()
-const past = () => new Date(Date.now() - 86_400_000).toISOString()
+const future = () => toDatetimeString(Date.now() + 86_400_000)
+const past = () => toDatetimeString(Date.now() - 86_400_000)
 
 describe('inbox appeal window', () => {
   it('adds six calendar months', () => {
@@ -210,7 +211,14 @@ describe('inbox enforcement mapper', () => {
     subject: RepoSubject | RecordSubject,
     row: Partial<ModerationSubjectStatusRow>,
     labels: string[] = [],
-    actions = [{ id: 1, type: 'accountTakedown', createdAt: '', scope: 'app' }],
+    actions = [
+      {
+        id: 1,
+        type: 'accountTakedown',
+        createdAt: toDatetimeString('2026-01-01T00:00:00.000Z'),
+        scope: 'app',
+      },
+    ],
   ) =>
     toEnforcementView({
       subject,
@@ -271,15 +279,15 @@ describe('inbox appeal mapper', () => {
     subject: RepoSubject | RecordSubject,
     args: {
       appealed?: boolean | null
-      lastAppealedAt?: string | null
+      lastAppealedAt?: DatetimeString | null
       report?: {
         id: number
         status: string
-        createdAt: string
-        closedAt: string | null
+        createdAt: DatetimeString
+        closedAt: DatetimeString | null
       } | null
       publicNote?: string | null
-      latestAppealableAt?: string | null
+      latestAppealableAt?: DatetimeString | null
     } = {},
   ) =>
     toAppealState({
@@ -300,13 +308,13 @@ describe('inbox appeal mapper', () => {
   const openReport = {
     id: 7,
     status: 'open',
-    createdAt: '2026-01-02T00:00:00.000Z',
+    createdAt: toDatetimeString('2026-01-02T00:00:00.000Z'),
     closedAt: null,
   }
   const closedReport = {
     ...openReport,
     status: 'closed',
-    closedAt: '2026-01-05T00:00:00.000Z',
+    closedAt: toDatetimeString('2026-01-05T00:00:00.000Z'),
   }
 
   it('offers an appeal when the window is open and none has been filed', () => {
@@ -320,7 +328,7 @@ describe('inbox appeal mapper', () => {
 
   it('expires once the window elapses with no appeal', () => {
     const { view, availableActions } = appeal(ACCOUNT, {
-      latestAppealableAt: '2020-01-01T00:00:00.000Z',
+      latestAppealableAt: toDatetimeString('2020-01-01T00:00:00.000Z'),
     })
     expect(view.state).toBe('expired')
     expect(availableActions).toEqual([])
@@ -337,7 +345,7 @@ describe('inbox appeal mapper', () => {
   it('reads pending off the same flag the submission guard writes', () => {
     const { view, availableActions } = appeal(ACCOUNT, {
       appealed: true,
-      lastAppealedAt: '2026-01-02T00:00:00.000Z',
+      lastAppealedAt: toDatetimeString('2026-01-02T00:00:00.000Z'),
       report: openReport,
     })
     expect(view).toMatchObject({

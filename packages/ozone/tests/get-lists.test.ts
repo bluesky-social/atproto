@@ -1,4 +1,4 @@
-import { AtpAgent, BSKY_LABELER_DID } from '@atproto/api'
+import { AtpAgent, BSKY_LABELER_DID, ids } from '@atproto/api'
 import {
   type ModeratorClient,
   type RecordRef,
@@ -7,7 +7,6 @@ import {
   type TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
 import { TAKEDOWN_LABEL } from '../src/mod-service/index.js'
 
 describe('admin get lists', () => {

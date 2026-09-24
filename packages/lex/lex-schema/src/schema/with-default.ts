@@ -28,11 +28,13 @@ export class WithDefaultSchema<
 > extends Schema<InferInput<TValidator>, InferOutput<TValidator>> {
   readonly type = 'withDefault' as const
 
-  constructor(
-    readonly validator: TValidator,
-    readonly defaultValue: InferInput<TValidator>,
-  ) {
+  readonly validator: TValidator
+  readonly defaultValue: InferInput<TValidator>
+
+  constructor(validator: TValidator, defaultValue: InferInput<TValidator>) {
     super()
+    this.validator = validator
+    this.defaultValue = defaultValue
   }
 
   validateInContext(

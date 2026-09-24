@@ -1478,7 +1478,7 @@ msgstr "Din e-postadress har verifierats."
 msgid "Your email address needs to be verified."
 msgstr "Din e-postadress behöver verifieras."
 
-#. placeholder {0}: segment ? ( <span className="text-foreground block break-all font-medium"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
+#. placeholder {0}: segment ? ( <span className="text-foreground block font-medium break-all"> @{segment} {domain} </span> ) : ( <span className="block break-all"> @{exampleSegment} {domain} </span> )
 #: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "Ditt fullständiga användarnamn blir: {0}"

@@ -2,6 +2,7 @@ import {
   ForbiddenError,
   InternalServerError,
   InvalidRequestError,
+  type Server,
 } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import {
@@ -12,23 +13,36 @@ import {
   subjectKey,
 } from '../../inbox/appeal.js'
 import { hydrateSubjectView } from '../../inbox/views.js'
-import type { Server } from '../../lexicon/index.js'
-import {
-  isActionRef,
-  isLabelRef,
-  isTakedownRef,
-} from '../../lexicon/types/tools/ozone/inbox/appealActionedSubject.js'
-import { REASONAPPEAL } from '../../lexicon/types/tools/ozone/report/defs.js'
+import { tools } from '../../lexicons/index.js'
 import {
   subjectFromEventRow,
   subjectFromInput,
 } from '../../mod-service/subject.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.inbox.appealActionedSubject({
+  server.add(tools.ozone.inbox.appealActionedSubject, {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       const { action: actionInput, subject: subjectInput } = input.body
+      type ActionInput = typeof actionInput
+      const isActionRef = (
+        value: ActionInput,
+      ): value is Exclude<ActionInput, undefined> & {
+        $type: 'tools.ozone.inbox.appealActionedSubject#actionRef'
+        id: number
+      } => value?.$type === 'tools.ozone.inbox.appealActionedSubject#actionRef'
+      const isLabelRef = (
+        value: ActionInput,
+      ): value is Exclude<ActionInput, undefined> & {
+        $type: 'tools.ozone.inbox.appealActionedSubject#labelRef'
+        val: string
+      } => value?.$type === 'tools.ozone.inbox.appealActionedSubject#labelRef'
+      const isTakedownRef = (
+        value: ActionInput,
+      ): value is Exclude<ActionInput, undefined> & {
+        $type: 'tools.ozone.inbox.appealActionedSubject#takedownRef'
+      } =>
+        value?.$type === 'tools.ozone.inbox.appealActionedSubject#takedownRef'
       const requester =
         'iss' in auth.credentials ? auth.credentials.iss : ctx.cfg.service.did
 
@@ -62,7 +76,9 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const inputSubject = subjectInput
-        ? subjectFromInput(subjectInput)
+        ? subjectFromInput(
+            subjectInput as Parameters<typeof subjectFromInput>[0],
+          )
         : undefined
       const action = isActionRef(actionInput)
         ? await ctx.modService(ctx.db).getEvent(actionInput.id)
@@ -119,7 +135,9 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError('Target is not appealable', 'NotAppealable')
       }
 
-      await ctx.moderationServiceProfile().validateReasonType(REASONAPPEAL)
+      await ctx
+        .moderationServiceProfile()
+        .validateReasonType('tools.ozone.report.defs#reasonAppeal')
 
       await fileAppeal(ctx, {
         requester,

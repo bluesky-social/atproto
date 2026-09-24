@@ -12,5 +12,8 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
+    // For some reason, not having this set to true causes the build to fail in
+    // consumer projects that don't have "isolatedDeclarations" set to true.
+    "erasableSyntaxOnly": true,
   },
 }

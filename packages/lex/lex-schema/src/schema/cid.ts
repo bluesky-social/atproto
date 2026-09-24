@@ -39,9 +39,11 @@ export class CidSchema<
   const TOptions extends CidSchemaOptions = { flavor: undefined },
 > extends Schema<InferCheckedCid<TOptions>> {
   readonly type = 'cid' as const
+  readonly options: undefined | TOptions
 
-  constructor(readonly options?: TOptions) {
+  constructor(options?: TOptions) {
     super()
+    this.options = options
   }
 
   validateInContext(

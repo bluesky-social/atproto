@@ -47,7 +47,7 @@ pnpm run build
 pnpm run test
 ```
 
-Every package ships a `tsconfig.build.json` (composite, with explicit `references` to its workspace deps), and nearly every package with tests adds a `tsconfig.test.json` for the test sources. The root `tsconfig.json` is a project-graph aggregator only.
+Every package ships a `tsconfig.build.json` (composite, with explicit `references` to its workspace deps), and nearly every package with tests adds a `tsconfig.test.json` for the test sources. A package with root-level config/script files (`vitest.config.ts`, `jest.config.cjs`, `lingui.config.ts`, `bin.js`, …) also adds a `tsconfig.config.json` so those files are type-checked — it extends [tsconfig/config.tsconfig.json](tsconfig/config.tsconfig.json) and `include`s the package's own `./*.{ts,js,cjs,mjs}`. When you add such a file to a package that has none, create `tsconfig.config.json` and reference it from the package `tsconfig.json` (`exclude` any root file that pulls `./src` or `./tests` into the program, e.g. a `jest.setup.ts`). The root `tsconfig.json` is a project-graph aggregator only.
 
 Avoid `pnpm run style:fix` (whole-repo prettier) unless the user explicitly asks for a repo-wide formatting pass.
 
@@ -69,6 +69,7 @@ For working with that SDK, invoke the focused skills under [.agents/skills/](.ag
 
 - **Lexicons are the contract.** The JSON files in [lexicons/](lexicons/) drive both client types and server route validation. Service packages don't hand-write XRPC method signatures — they import the generated definitions from their `src/lexicons/` directory (gitignored / regenerated).
 - ([packages/pds](packages/pds)) — a single-tenant atproto server: account management, repo storage (kysely-over-sqlite), actor storage (kysely-over-postgres), email, OAuth provider, blob storage. Runtime entry point is [services/pds](services/pds); production code is in `packages/pds/src`.
+  - Outbound requests to a URL resolved from a DID document are untrusted. Make them with `ctx.safeClient(url).xrpc(…)`, never a bare `xrpc(url, …)`, which uses the global fetch and bypasses the https-only/unicast-only checks. (`ctx.proxyAgent` is a separate thing — an undici `Dispatcher` used by pipethrough.)
 - ([packages/bsky](packages/bsky)) — read-side service for `app.bsky.*` queries (timelines, profiles, feed generators, hydration pipeline, GraphQL-like view composition). Talks to PDSes via XRPC and to `bsync` via Connect-RPC (protobuf in `packages/bsky/proto`). Runtime entry point in [services/bsky](services/bsky).
 - ([packages/bsync](packages/bsync)) — internal service for cross-AppView synchronization (mutes, notifications). Connect-RPC interface.
 - ([packages/ozone](packages/ozone)) — moderation service for `tools.ozone.*`.
@@ -80,7 +81,8 @@ For working with that SDK, invoke the focused skills under [.agents/skills/](.ag
 
 - Node ≥22 runtime floor; build/dev default to Node 24 (`.nvmrc`). Use `node --enable-source-maps` for production-style runs.
 - TypeScript compilation uses the native TS7 `tsc` (the standard `typescript` package). There is no per-package `typescript` devDependency — it is hoisted at the root. Note TS7 has no stable programmatic API yet; tools needing one must pin TS6.
-- **Every package touched by a change needs a changeset entry.** Add a file under [.changeset/](.changeset/) listing each modified package with an appropriate bump level (pre-v1 breaking changes are `minor` and everything else `patch`, post-v1 `major` for breaking changes, `minor` for new public API, `patch` otherwise). Dependency-only bumps are generated automatically — don't list them by hand.
+- **Every package touched by a change needs a changeset entry.** Add a file under [.changeset/](.changeset/) listing each modified package with an appropriate bump level (pre-v1 breaking changes are `minor` and everything else `patch`, post-v1 `major` for breaking changes, `minor` for new public API, `patch` otherwise). Dependency-only bumps are generated automatically — don't list them by hand. Create that file with `pnpm changeset`.
+- **Never buffer an unbounded stream from outside the process.** Decoding or buffering a request/response body that did not originate locally requires an explicit size bound on the _decoded_ bytes — a wire-size cap does not bound a compressed payload. Compose `createDecoders` with `MaxSizeChecker` in a `pipeline` (see `packages/xrpc-server/src/util.ts`), rather than passing a decoded stream straight to `streamToNodeBuffer`.
 
 ## Agent files
 
@@ -93,7 +95,7 @@ Agent files — this `AGENTS.md`, the skills under [.agents/skills/](.agents/ski
 
 ## Troubleshooting
 
-- **Stale codegen.** If the build fails due to a generated file in [packages/api](packages/api) or [packages/ozone](packages/ozone) being out of date, run `pnpm run codegen && pnpm run build` from those packages, then re-run the build. This is only needed on these two packages because their `prebuild` step skips codegen as a performance optimization.
+- **Stale codegen.** If the build fails due to a generated file in [packages/api](packages/api) being out of date, run `pnpm run codegen && pnpm run build` from that package, then re-run the build. This is only needed there because its `prebuild` step skips codegen as a performance optimization.
 - **Codegen ran but produced stale output.** Codegen relies on `pnpm build:tooling` to build the `@atproto/lex-cli` and `@atproto/lex-builder` packages first. If you see a codegen failure, run `pnpm build:tooling` from the root, then re-run codegen.
 - **End-to-end test fails with stale infra.** If docker containers persist across test runs, reset them with `cd packages/dev-infra && docker compose down --volumes`.
 - **Nothing else worked.** `make clean` wipes every installed dependency (`node_modules`), build artifact (`dist`, `*.tsbuildinfo`), and prebuild/codegen output across all packages; follow it with `pnpm install && pnpm run build` to restore a clean state.

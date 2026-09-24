@@ -1,4 +1,5 @@
 import type { Generated, GeneratedAlways } from 'kysely'
+import type { DidString } from '@atproto/lex'
 
 export const communicationTemplateTableName = 'communication_template'
 
@@ -11,7 +12,7 @@ export interface CommunicationTemplate {
   disabled: Generated<boolean>
   createdAt: Date
   updatedAt: Date
-  lastUpdatedBy: string
+  lastUpdatedBy: DidString
 }
 
 export type PartialDB = {

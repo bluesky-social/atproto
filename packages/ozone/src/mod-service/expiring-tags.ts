@@ -1,14 +1,16 @@
 import type { Selectable } from 'kysely'
+import type { DatetimeString, DidString } from '@atproto/lex'
+import { currentDatetimeString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
 import type { ExpiringTag } from '../db/schema/expiring_tag.js'
 
 export type ExpiringTagRow = Selectable<ExpiringTag>
 
 export type ExpiringTagGroup = {
-  did: string
+  did: DidString
   recordPath: string
   convoId: string
-  createdBy: string
+  createdBy: DidString
   tags: string[]
   ids: number[]
 }
@@ -17,12 +19,12 @@ export async function insertExpiringTags(
   db: Database,
   params: {
     eventId: number
-    did: string
+    did: DidString
     recordPath: string
     convoId: string
     tags: string[]
-    expiresAt: string
-    createdBy: string
+    expiresAt: DatetimeString
+    createdBy: DidString
   },
 ): Promise<void> {
   await db.db
@@ -44,7 +46,7 @@ export async function insertExpiringTags(
 export async function removeExpiringTags(
   db: Database,
   params: {
-    did: string
+    did: DidString
     recordPath: string
     convoId: string
     tags: string[]
@@ -69,7 +71,7 @@ export async function deleteExpiringTagsByIds(
 export async function getExpiredTags(
   db: Database,
 ): Promise<ExpiringTagGroup[]> {
-  const now = new Date().toISOString()
+  const now = currentDatetimeString()
   const rows = await db.db
     .selectFrom('expiring_tag')
     .where('expiresAt', '<', now)

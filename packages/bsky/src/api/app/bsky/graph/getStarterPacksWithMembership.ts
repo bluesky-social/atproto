@@ -75,7 +75,7 @@ const skeleton = async (
   return {
     actorDid,
     starterPackUris: starterPackUris as AtUriString[],
-    cursor: cursor || undefined,
+    cursor,
   }
 }
 

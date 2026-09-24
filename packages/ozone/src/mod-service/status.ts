@@ -1,17 +1,19 @@
 // This may require better organization but for now, just dumping functions here containing DB queries for moderation status
 
 import { HOUR } from '@atproto/common'
+import type { DatetimeString, DidString, UriString } from '@atproto/lex'
+import {
+  asDatetimeString,
+  currentDatetimeString,
+  isDidString,
+  toDatetimeString,
+} from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { isAppealReport } from '../api/util.js'
 import type { Database } from '../db/index.js'
 import type { DatabaseSchema } from '../db/schema/index.js'
 import { jsonb } from '../db/types.js'
-import {
-  REVIEWCLOSED,
-  REVIEWESCALATED,
-  REVIEWNONE,
-  REVIEWOPEN,
-} from '../lexicon/types/tools/ozone/moderation/defs.js'
+import { tools } from '../lexicons/index.js'
 import { CHAT_CONVO_COLLECTION } from './subject.js'
 import type { ModerationEventRow, ModerationSubjectStatusRow } from './types.js'
 
@@ -24,41 +26,41 @@ const getSubjectStatusForModerationEvent = ({
 }: {
   currentStatus?: ModerationSubjectStatusRow
   action: string
-  createdBy: string
-  createdAt: string
+  createdBy: DidString
+  createdAt: DatetimeString
   durationInHours: number | null
 }): Partial<ModerationSubjectStatusRow> => {
   const defaultReviewState = currentStatus
     ? currentStatus.reviewState
-    : REVIEWNONE
+    : tools.ozone.moderation.defs.reviewNone.value
 
   switch (action) {
-    case 'tools.ozone.moderation.defs#modEventAcknowledge':
+    case tools.ozone.moderation.defs.modEventAcknowledge.$type:
       return {
         lastReviewedBy: createdBy,
-        reviewState: REVIEWCLOSED,
+        reviewState: tools.ozone.moderation.defs.reviewClosed.value,
         lastReviewedAt: createdAt,
       }
-    case 'tools.ozone.moderation.defs#modEventReport':
+    case tools.ozone.moderation.defs.modEventReport.$type:
       return {
-        reviewState: REVIEWOPEN,
+        reviewState: tools.ozone.moderation.defs.reviewOpen.value,
         lastReportedAt: createdAt,
       }
-    case 'tools.ozone.moderation.defs#modEventEscalate':
+    case tools.ozone.moderation.defs.modEventEscalate.$type:
       return {
         lastReviewedBy: createdBy,
-        reviewState: REVIEWESCALATED,
+        reviewState: tools.ozone.moderation.defs.reviewEscalated.value,
         lastReviewedAt: createdAt,
       }
-    case 'tools.ozone.moderation.defs#modEventReverseTakedown':
+    case tools.ozone.moderation.defs.modEventReverseTakedown.$type:
       return {
         lastReviewedBy: createdBy,
-        reviewState: REVIEWCLOSED,
+        reviewState: tools.ozone.moderation.defs.reviewClosed.value,
         takendown: false,
         suspendUntil: null,
         lastReviewedAt: createdAt,
       }
-    case 'tools.ozone.moderation.defs#modEventUnmuteReporter':
+    case tools.ozone.moderation.defs.modEventUnmuteReporter.$type:
       return {
         lastReviewedBy: createdBy,
         muteReportingUntil: null,
@@ -67,7 +69,7 @@ const getSubjectStatusForModerationEvent = ({
         reviewState: defaultReviewState,
         lastReviewedAt: createdAt,
       }
-    case 'tools.ozone.moderation.defs#modEventUnmute':
+    case tools.ozone.moderation.defs.modEventUnmute.$type:
       return {
         lastReviewedBy: createdBy,
         muteUntil: null,
@@ -76,57 +78,57 @@ const getSubjectStatusForModerationEvent = ({
         reviewState: defaultReviewState,
         lastReviewedAt: createdAt,
       }
-    case 'tools.ozone.moderation.defs#modEventTakedown':
+    case tools.ozone.moderation.defs.modEventTakedown.$type:
       return {
         // If we are doing a takedown, safe to move the item out of appealed state
         ...(currentStatus?.appealed ? { appealed: false } : {}),
         takendown: true,
         lastReviewedBy: createdBy,
-        reviewState: REVIEWCLOSED,
+        reviewState: tools.ozone.moderation.defs.reviewClosed.value,
         lastReviewedAt: createdAt,
         suspendUntil: durationInHours
-          ? new Date(Date.now() + durationInHours * HOUR).toISOString()
+          ? toDatetimeString(Date.now() + durationInHours * HOUR)
           : null,
       }
-    case 'tools.ozone.moderation.defs#modEventMuteReporter':
+    case tools.ozone.moderation.defs.modEventMuteReporter.$type:
       return {
         lastReviewedBy: createdBy,
         lastReviewedAt: createdAt,
         // By default, mute for 24hrs
-        muteReportingUntil: new Date(
+        muteReportingUntil: toDatetimeString(
           Date.now() + (durationInHours || 24) * HOUR,
-        ).toISOString(),
+        ),
         // It's not likely to receive a mute event on a subject that does not already have a status row
         // but if it does happen, default to unnecessary
         reviewState: defaultReviewState,
       }
-    case 'tools.ozone.moderation.defs#modEventMute':
+    case tools.ozone.moderation.defs.modEventMute.$type:
       return {
         lastReviewedBy: createdBy,
         lastReviewedAt: createdAt,
         // By default, mute for 24hrs
-        muteUntil: new Date(
-          Date.now() + (durationInHours || 24) * HOUR,
-        ).toISOString(),
+        muteUntil: toDatetimeString(
+          new Date(Date.now() + (durationInHours || 24) * HOUR),
+        ),
         // It's not likely to receive a mute event on a subject that does not already have a status row
         // but if it does happen, default to unnecessary
         reviewState: defaultReviewState,
       }
-    case 'tools.ozone.moderation.defs#modEventComment':
+    case tools.ozone.moderation.defs.modEventComment.$type:
       return {
         lastReviewedBy: createdBy,
         lastReviewedAt: createdAt,
         reviewState: defaultReviewState,
       }
-    case 'tools.ozone.moderation.defs#modEventTag':
+    case tools.ozone.moderation.defs.modEventTag.$type:
       return { tags: [], reviewState: defaultReviewState }
-    case 'tools.ozone.moderation.defs#modEventResolveAppeal':
+    case tools.ozone.moderation.defs.modEventResolveAppeal.$type:
       return {
         appealed: false,
       }
-    case 'tools.ozone.moderation.defs#ageAssuranceEvent':
-    case 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent':
-    case 'tools.ozone.moderation.defs#ageAssurancePurgeEvent':
+    case tools.ozone.moderation.defs.ageAssuranceEvent.$type:
+    case tools.ozone.moderation.defs.ageAssuranceOverrideEvent.$type:
+    case tools.ozone.moderation.defs.ageAssurancePurgeEvent.$type:
       return {
         reviewState: defaultReviewState,
       }
@@ -135,10 +137,10 @@ const getSubjectStatusForModerationEvent = ({
   }
 }
 
-const hostingEvents = [
-  'tools.ozone.moderation.defs#accountEvent',
-  'tools.ozone.moderation.defs#identityEvent',
-  'tools.ozone.moderation.defs#recordEvent',
+const hostingEvents: string[] = [
+  tools.ozone.moderation.defs.accountEvent.$type,
+  tools.ozone.moderation.defs.identityEvent.$type,
+  tools.ozone.moderation.defs.recordEvent.$type,
 ]
 
 const getSubjectStatusForRecordEvent = ({
@@ -150,10 +152,10 @@ const getSubjectStatusForRecordEvent = ({
 }): Partial<ModerationSubjectStatusRow> => {
   const timestamp =
     typeof event.meta?.timestamp === 'string'
-      ? event.meta?.timestamp
+      ? asDatetimeString(event.meta.timestamp)
       : event.createdAt
 
-  if (event.action === 'tools.ozone.moderation.defs#recordEvent') {
+  if (event.action === tools.ozone.moderation.defs.recordEvent.$type) {
     if (event.meta?.op === 'delete') {
       return {
         hostingStatus: 'deleted',
@@ -168,7 +170,7 @@ const getSubjectStatusForRecordEvent = ({
     return {}
   }
 
-  if (event.action === 'tools.ozone.moderation.defs#accountEvent') {
+  if (event.action === tools.ozone.moderation.defs.accountEvent.$type) {
     const status: Partial<ModerationSubjectStatusRow> = {
       hostingUpdatedAt: timestamp,
     }
@@ -196,7 +198,7 @@ const getSubjectStatusForRecordEvent = ({
     return status
   }
 
-  if (event.action === 'tools.ozone.moderation.defs#identityEvent') {
+  if (event.action === tools.ozone.moderation.defs.identityEvent.$type) {
     const status: Partial<ModerationSubjectStatusRow> = {
       hostingUpdatedAt: timestamp,
     }
@@ -295,13 +297,13 @@ export const adjustModerationSubjectStatus = async (
 
   // If subjectUri exists, it's not a repoRef so pass along the uri to get identifier back
   const identifier = getStatusIdentifierFromSubject(
-    subjectUri || subjectDid,
+    subjectUri ? subjectUri : subjectDid,
     subjectConvoId,
   )
 
   db.assertTransaction()
 
-  const now = new Date().toISOString()
+  const now = currentDatetimeString()
   const currentStatus = await db.db
     .selectFrom('moderation_subject_status')
     .where('did', '=', identifier.did)
@@ -328,7 +330,9 @@ export const adjustModerationSubjectStatus = async (
         ...newStatus,
         // newStatus doesn't contain a reviewState or takendown so in case this is a new entry
         // we need to set a default values so that the insert doesn't fail
-        reviewState: currentStatus ? currentStatus.reviewState : REVIEWNONE,
+        reviewState: currentStatus
+          ? currentStatus.reviewState
+          : tools.ozone.moderation.defs.reviewNone.value,
         // @TODO: should we try to update this based on status property of account event?
         // For now we're the only one emitting takedowns so i don't think it makes too much of a difference
         takendown: currentStatus ? currentStatus.takendown : false,
@@ -356,7 +360,7 @@ export const adjustModerationSubjectStatus = async (
   }
 
   const isAppealEvent =
-    action === 'tools.ozone.moderation.defs#modEventReport' &&
+    action === tools.ozone.moderation.defs.modEventReport.$type &&
     meta?.reportType &&
     isAppealReport(`${meta.reportType}`)
 
@@ -369,15 +373,20 @@ export const adjustModerationSubjectStatus = async (
   })
 
   if (
-    currentStatus?.reviewState === REVIEWESCALATED &&
-    subjectStatus.reviewState !== REVIEWCLOSED
+    currentStatus?.reviewState ===
+      tools.ozone.moderation.defs.reviewEscalated.value &&
+    subjectStatus.reviewState !== tools.ozone.moderation.defs.reviewClosed.value
   ) {
     // If the current status is escalated only allow incoming events to move the state to
     // reviewClosed because escalated subjects should never move to any other state
-    subjectStatus.reviewState = REVIEWESCALATED
+    subjectStatus.reviewState =
+      tools.ozone.moderation.defs.reviewEscalated.value
   }
 
-  if (currentStatus && subjectStatus.reviewState === REVIEWNONE) {
+  if (
+    currentStatus &&
+    subjectStatus.reviewState === tools.ozone.moderation.defs.reviewNone.value
+  ) {
     // reviewNone is ONLY allowed when there is no current status
     // If there is a current status, it should not be allowed to move back to reviewNone
     subjectStatus.reviewState = currentStatus.reviewState
@@ -389,7 +398,7 @@ export const adjustModerationSubjectStatus = async (
     // Defaulting reviewState to open for any event may not be the desired behavior.
     // For instance, if a subject never had any event and we just want to leave a comment to keep an eye on it
     // that shouldn't mean we want to review the subject
-    reviewState: REVIEWNONE,
+    reviewState: tools.ozone.moderation.defs.reviewNone.value,
     recordCid: subjectCid || null,
     ageAssuranceState: currentStatus?.ageAssuranceState || 'unknown',
   }
@@ -399,7 +408,7 @@ export const adjustModerationSubjectStatus = async (
   }
 
   if (
-    action === 'tools.ozone.moderation.defs#modEventPriorityScore' &&
+    action === tools.ozone.moderation.defs.modEventPriorityScore.$type &&
     typeof meta?.priorityScore === 'number'
   ) {
     newStatus.priorityScore = meta?.priorityScore
@@ -407,7 +416,7 @@ export const adjustModerationSubjectStatus = async (
   }
 
   if (
-    action === 'tools.ozone.moderation.defs#modEventReverseTakedown' &&
+    action === tools.ozone.moderation.defs.modEventReverseTakedown.$type &&
     !subjectStatus.takendown
   ) {
     newStatus.takendown = false
@@ -420,12 +429,13 @@ export const adjustModerationSubjectStatus = async (
     newStatus.lastAppealedAt = createdAt
     subjectStatus.lastAppealedAt = createdAt
     // Set reviewState to escalated when appeal events are emitted
-    subjectStatus.reviewState = REVIEWESCALATED
-    newStatus.reviewState = REVIEWESCALATED
+    subjectStatus.reviewState =
+      tools.ozone.moderation.defs.reviewEscalated.value
+    newStatus.reviewState = tools.ozone.moderation.defs.reviewEscalated.value
   }
 
   if (
-    action === 'tools.ozone.moderation.defs#modEventResolveAppeal' &&
+    action === tools.ozone.moderation.defs.modEventResolveAppeal.$type &&
     subjectStatus.appealed
   ) {
     newStatus.appealed = false
@@ -433,14 +443,14 @@ export const adjustModerationSubjectStatus = async (
   }
 
   if (
-    action === 'tools.ozone.moderation.defs#modEventComment' &&
+    action === tools.ozone.moderation.defs.modEventComment.$type &&
     meta?.sticky
   ) {
     newStatus.comment = comment
     subjectStatus.comment = comment
   }
 
-  if (action === 'tools.ozone.moderation.defs#modEventTag') {
+  if (action === tools.ozone.moderation.defs.modEventTag.$type) {
     let tags = currentStatus?.tags || []
     if (addedTags?.length) {
       tags = tags.concat(addedTags)
@@ -452,7 +462,7 @@ export const adjustModerationSubjectStatus = async (
     subjectStatus.tags = newStatus.tags
   }
 
-  if (action === 'tools.ozone.moderation.defs#ageAssuranceEvent') {
+  if (action === tools.ozone.moderation.defs.ageAssuranceEvent.$type) {
     // Only when the last update was made by an admin AND state was set to reset user event can override final state
     if (
       currentStatus?.ageAssuranceUpdatedBy !== 'admin' ||
@@ -467,7 +477,7 @@ export const adjustModerationSubjectStatus = async (
     }
   }
 
-  if (action === 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent') {
+  if (action === tools.ozone.moderation.defs.ageAssuranceOverrideEvent.$type) {
     if (typeof meta?.status === 'string') {
       newStatus.ageAssuranceState = meta.status
       subjectStatus.ageAssuranceState = meta.status
@@ -476,7 +486,7 @@ export const adjustModerationSubjectStatus = async (
     }
   }
 
-  if (action === 'tools.ozone.moderation.defs#ageAssurancePurgeEvent') {
+  if (action === tools.ozone.moderation.defs.ageAssurancePurgeEvent.$type) {
     newStatus.ageAssuranceState = 'unknown'
     subjectStatus.ageAssuranceState = 'unknown'
     newStatus.ageAssuranceUpdatedBy = null
@@ -515,11 +525,10 @@ export const adjustModerationSubjectStatus = async (
  * @note Supports addressing conversations explicitly (via convoId) and implicitly (via properly formed at-uri)
  */
 export const getStatusIdentifierFromSubject = (
-  subject: string | AtUri,
+  subject: UriString | AtUri,
   convoId?: string | null,
-): { did: string; recordPath: string; convoId: string } => {
-  const isSubjectString = typeof subject === 'string'
-  if (isSubjectString && subject.startsWith('did:')) {
+): { did: DidString; recordPath: string; convoId: string } => {
+  if (isDidString(subject)) {
     return {
       did: subject,
       recordPath: '',
@@ -527,23 +536,23 @@ export const getStatusIdentifierFromSubject = (
     }
   }
 
-  if (isSubjectString && !subject.startsWith('at://')) {
+  if (typeof subject === 'string' && !subject.startsWith('at://')) {
     throw new Error('Subject is neither a did nor an at-uri')
   }
 
-  const uri = isSubjectString ? new AtUri(subject) : subject
+  const uri = typeof subject === 'string' ? new AtUri(subject) : subject
 
   // Handle conversation URIs
   if (uri.collection === CHAT_CONVO_COLLECTION) {
     return {
-      did: uri.host,
+      did: uri.did,
       recordPath: '',
       convoId: uri.rkey,
     }
   }
 
   return {
-    did: uri.host,
+    did: uri.did,
     recordPath: `${uri.collection}/${uri.rkey}`,
     convoId: '',
   }

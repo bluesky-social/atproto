@@ -1,3 +1,5 @@
+import type { DatetimeString, DidString } from '@atproto/lex'
+import { currentDatetimeString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
 
 export type StrikeServiceCreator = (db: Database) => StrikeService
@@ -14,8 +16,8 @@ export class StrikeService {
   /**
    * Update the strike count in account_strike table
    */
-  async updateSubjectStrikeCount(subjectDid: string): Promise<void> {
-    const now = new Date().toISOString()
+  async updateSubjectStrikeCount(subjectDid: DidString): Promise<void> {
+    const now = currentDatetimeString()
 
     // This should not incur too many rows since we tend to do permanent takedown on relatively low strike count
     // and we have a very specific index to support this query
@@ -74,9 +76,9 @@ export class StrikeService {
    * Used by the strike expiry processor to find accounts that need strike count updates
    */
   async getExpiredStrikeSubjects(
-    afterTimestamp?: string,
-  ): Promise<Array<{ subjectDid: string }>> {
-    const now = new Date().toISOString()
+    afterTimestamp?: DatetimeString,
+  ): Promise<Array<{ subjectDid: DidString }>> {
+    const now = currentDatetimeString()
 
     let query = this.db.db
       .selectFrom('moderation_event')

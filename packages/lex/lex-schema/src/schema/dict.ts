@@ -36,12 +36,13 @@ export class DictSchema<
   Record<InferInput<TKey>, InferOutput<TValue>>
 > {
   readonly type = 'dict' as const
+  readonly keySchema: TKey
+  readonly valueSchema: TValue
 
-  constructor(
-    readonly keySchema: TKey,
-    readonly valueSchema: TValue,
-  ) {
+  constructor(keySchema: TKey, valueSchema: TValue) {
     super()
+    this.keySchema = keySchema
+    this.valueSchema = valueSchema
   }
 
   validateInContext(

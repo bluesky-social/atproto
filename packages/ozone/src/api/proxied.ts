@@ -1,326 +1,349 @@
+import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../context.js'
-import type { Server } from '../lexicon/index.js'
-import { ids } from '../lexicon/lexicons.js'
+import { app, com, tools } from '../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.actor.getProfile({
+  server.add(app.bsky.actor.getProfile, {
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.app.bsky.actor.getProfile(
+      const body = await ctx.appviewClient.call(
+        app.bsky.actor.getProfile,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyActorGetProfile),
+        await ctx.appviewAuth(app.bsky.actor.getProfile.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.app.bsky.actor.getProfiles({
+  server.add(app.bsky.actor.getProfiles, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.app.bsky.actor.getProfiles(
+      const body = await ctx.appviewClient.call(
+        app.bsky.actor.getProfiles,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyActorGetProfiles),
+        await ctx.appviewAuth(app.bsky.actor.getProfiles.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.app.bsky.feed.getAuthorFeed({
+  server.add(app.bsky.feed.getAuthorFeed, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.app.bsky.feed.getAuthorFeed(
+      const body = await ctx.appviewClient.call(
+        app.bsky.feed.getAuthorFeed,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyFeedGetAuthorFeed),
+        await ctx.appviewAuth(app.bsky.feed.getAuthorFeed.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.app.bsky.feed.searchPosts({
+  server.add(app.bsky.feed.searchPosts, {
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.app.bsky.feed.searchPosts(
+      const body = await ctx.appviewClient.call(
+        app.bsky.feed.searchPosts,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyFeedSearchPosts),
+        await ctx.appviewAuth(app.bsky.feed.searchPosts.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.app.bsky.feed.getPostThread({
+  server.add(app.bsky.feed.getPostThread, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.app.bsky.feed.getPostThread(
+      const body = await ctx.appviewClient.call(
+        app.bsky.feed.getPostThread,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyFeedGetPostThread),
+        await ctx.appviewAuth(app.bsky.feed.getPostThread.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.app.bsky.feed.getFeedGenerator({
+  server.add(app.bsky.feed.getFeedGenerator, {
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.app.bsky.feed.getFeedGenerator(
+      const body = await ctx.appviewClient.call(
+        app.bsky.feed.getFeedGenerator,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyFeedGetFeedGenerator),
+        await ctx.appviewAuth(app.bsky.feed.getFeedGenerator.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.app.bsky.graph.getFollows({
+  server.add(app.bsky.graph.getFollows, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.app.bsky.graph.getFollows(
+      const body = await ctx.appviewClient.call(
+        app.bsky.graph.getFollows,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyGraphGetFollows),
+        await ctx.appviewAuth(app.bsky.graph.getFollows.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.app.bsky.graph.getFollowers({
+  server.add(app.bsky.graph.getFollowers, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.app.bsky.graph.getFollowers(
+      const body = await ctx.appviewClient.call(
+        app.bsky.graph.getFollowers,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyGraphGetFollowers),
+        await ctx.appviewAuth(app.bsky.graph.getFollowers.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.app.bsky.graph.getList({
+  server.add(app.bsky.graph.getList, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.app.bsky.graph.getList(
+      const body = await ctx.appviewClient.call(
+        app.bsky.graph.getList,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyGraphGetList),
+        await ctx.appviewAuth(app.bsky.graph.getList.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.app.bsky.graph.getLists({
+  server.add(app.bsky.graph.getLists, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.app.bsky.graph.getLists(
+      const body = await ctx.appviewClient.call(
+        app.bsky.graph.getLists,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyGraphGetLists),
+        await ctx.appviewAuth(app.bsky.graph.getLists.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.com.atproto.admin.searchAccounts({
+  server.add(com.atproto.admin.searchAccounts, {
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      if (!ctx.pdsAgent) {
+      if (!ctx.pdsClient) {
         throw new Error('PDS not configured')
       }
-      const res = await ctx.pdsAgent.com.atproto.admin.searchAccounts(
+      const body = await ctx.pdsClient.call(
+        com.atproto.admin.searchAccounts,
         request.params,
-        await ctx.pdsAuth(ids.ComAtprotoAdminSearchAccounts),
+        await ctx.pdsAuth(com.atproto.admin.searchAccounts.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.com.atproto.temp.revokeAccountCredentials({
+  server.add(com.atproto.temp.revokeAccountCredentials, {
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      if (!ctx.pdsAgent) {
+      if (!ctx.pdsClient) {
         throw new Error('PDS not configured')
       }
-      await ctx.pdsAgent.com.atproto.temp.revokeAccountCredentials(
-        request.input.body,
-        await ctx.pdsAuth(ids.ComAtprotoTempRevokeAccountCredentials),
+      await ctx.pdsClient.call(
+        com.atproto.temp.revokeAccountCredentials,
+        request.input
+          .body as com.atproto.temp.revokeAccountCredentials.$InputBody,
+        await ctx.pdsAuth(com.atproto.temp.revokeAccountCredentials.$lxm),
       )
     },
   })
 
-  server.tools.ozone.hosting.getAccountHistory({
+  server.add(tools.ozone.hosting.getAccountHistory, {
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      if (!ctx.pdsAgent) {
+      if (!ctx.pdsClient) {
         throw new Error('PDS not configured')
       }
-      const res = await ctx.pdsAgent.tools.ozone.hosting.getAccountHistory(
+      const body = await ctx.pdsClient.call(
+        tools.ozone.hosting.getAccountHistory,
         request.params,
-        await ctx.pdsAuth(ids.ToolsOzoneHostingGetAccountHistory),
+        await ctx.pdsAuth(tools.ozone.hosting.getAccountHistory.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.tools.ozone.signature.findRelatedAccounts({
+  server.add(tools.ozone.signature.findRelatedAccounts, {
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      if (!ctx.pdsAgent) {
+      if (!ctx.pdsClient) {
         throw new Error('PDS not configured')
       }
-      const res = await ctx.pdsAgent.tools.ozone.signature.findRelatedAccounts(
+      const body = await ctx.pdsClient.call(
+        tools.ozone.signature.findRelatedAccounts,
         request.params,
-        await ctx.pdsAuth(ids.ToolsOzoneSignatureFindRelatedAccounts),
+        await ctx.pdsAuth(tools.ozone.signature.findRelatedAccounts.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.tools.ozone.signature.searchAccounts({
+  server.add(tools.ozone.signature.searchAccounts, {
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      if (!ctx.pdsAgent) {
+      if (!ctx.pdsClient) {
         throw new Error('PDS not configured')
       }
-      const res = await ctx.pdsAgent.tools.ozone.signature.searchAccounts(
+      const body = await ctx.pdsClient.call(
+        tools.ozone.signature.searchAccounts,
         request.params,
-        await ctx.pdsAuth(ids.ToolsOzoneSignatureSearchAccounts),
+        await ctx.pdsAuth(tools.ozone.signature.searchAccounts.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.tools.ozone.signature.findCorrelation({
+  server.add(tools.ozone.signature.findCorrelation, {
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      if (!ctx.pdsAgent) {
+      if (!ctx.pdsClient) {
         throw new Error('PDS not configured')
       }
-      const res = await ctx.pdsAgent.tools.ozone.signature.findCorrelation(
+      const body = await ctx.pdsClient.call(
+        tools.ozone.signature.findCorrelation,
         request.params,
-        await ctx.pdsAuth(ids.ToolsOzoneSignatureFindCorrelation),
+        await ctx.pdsAuth(tools.ozone.signature.findCorrelation.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.app.bsky.graph.getStarterPack({
+  server.add(app.bsky.graph.getStarterPack, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.api.app.bsky.graph.getStarterPack(
+      const body = await ctx.appviewClient.call(
+        app.bsky.graph.getStarterPack,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyGraphGetStarterPack),
+        await ctx.appviewAuth(app.bsky.graph.getStarterPack.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.app.bsky.graph.getStarterPacks({
+  server.add(app.bsky.graph.getStarterPacks, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.app.bsky.graph.getStarterPacks(
+      const body = await ctx.appviewClient.call(
+        app.bsky.graph.getStarterPacks,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyGraphGetStarterPacks),
+        await ctx.appviewAuth(app.bsky.graph.getStarterPacks.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.app.bsky.graph.getActorStarterPacks({
+  server.add(app.bsky.graph.getActorStarterPacks, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.app.bsky.graph.getActorStarterPacks(
+      const body = await ctx.appviewClient.call(
+        app.bsky.graph.getActorStarterPacks,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyGraphGetActorStarterPacks),
+        await ctx.appviewAuth(app.bsky.graph.getActorStarterPacks.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.app.bsky.feed.getLikes({
+  server.add(app.bsky.feed.getLikes, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.app.bsky.feed.getLikes(
+      const body = await ctx.appviewClient.call(
+        app.bsky.feed.getLikes,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyFeedGetLikes),
+        await ctx.appviewAuth(app.bsky.feed.getLikes.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.app.bsky.feed.getRepostedBy({
+  server.add(app.bsky.feed.getRepostedBy, {
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.app.bsky.feed.getRepostedBy(
+      const body = await ctx.appviewClient.call(
+        app.bsky.feed.getRepostedBy,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyFeedGetRepostedBy),
+        await ctx.appviewAuth(app.bsky.feed.getRepostedBy.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })
 
-  server.app.bsky.actor.searchActorsTypeahead({
+  server.add(app.bsky.actor.searchActorsTypeahead, {
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {
-      const res = await ctx.appviewAgent.app.bsky.actor.searchActorsTypeahead(
+      const body = await ctx.appviewClient.call(
+        app.bsky.actor.searchActorsTypeahead,
         request.params,
-        await ctx.appviewAuth(ids.AppBskyActorSearchActorsTypeahead),
+        await ctx.appviewAuth(app.bsky.actor.searchActorsTypeahead.$lxm),
       )
       return {
         encoding: 'application/json',
-        body: res.data,
+        body,
       }
     },
   })

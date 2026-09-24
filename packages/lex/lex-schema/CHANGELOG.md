@@ -1,5 +1,16 @@
 # @atproto/lex-schema
 
+## 0.2.7
+
+### Patch Changes
+
+- [#5426](https://github.com/bluesky-social/atproto/pull/5426) [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222) Thanks [@bigmoves](https://github.com/bigmoves)! - Add `asUnknown$TypedObject` utility
+
+- [#5426](https://github.com/bluesky-social/atproto/pull/5426) [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222) Thanks [@bigmoves](https://github.com/bigmoves)! - Fix TypeScript errors when schemas are used within a project that does not have "isolatedDeclarations" enabled
+
+- Updated dependencies [[`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222)]:
+  - @atproto/syntax@0.7.6
+
 ## 0.2.6
 
 ### Patch Changes

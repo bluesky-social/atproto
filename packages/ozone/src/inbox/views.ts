@@ -1,12 +1,16 @@
 import { sql } from 'kysely'
+import {
+  type DatetimeString,
+  type DidString,
+  currentDatetimeString,
+} from '@atproto/lex'
 import type { InboxConfig } from '../config/config.js'
 import type { Database } from '../db/index.js'
 import type {
   ActionView,
   EnforcementView,
   SubjectView,
-} from '../lexicon/types/tools/ozone/inbox/defs.js'
-import { REASONAPPEAL } from '../lexicon/types/tools/ozone/report/defs.js'
+} from '../lexicons/tools/ozone/inbox/defs.js'
 import { SUSPEND_LABEL, TAKEDOWN_LABEL } from '../mod-service/index.js'
 import type { ModSubject } from '../mod-service/subject.js'
 import type {
@@ -16,6 +20,7 @@ import type {
 import type { AppealReport } from './appeal.js'
 import {
   APPEALABLE_EVENT_ACTIONS,
+  APPEAL_REASON_TYPE,
   EMAIL,
   LABEL,
   MUTE_REPORTER,
@@ -45,9 +50,9 @@ export type SubjectSnapshot = {
   labels: string[]
   /** Total public actions, exact even when `events` was capped. */
   actionCount: number
-  firstActionAt: string | null
+  firstActionAt: DatetimeString | null
   /** Newest action the user is allowed to appeal, if any. */
-  latestAppealableAt: string | null
+  latestAppealableAt: DatetimeString | null
   appealReport: AppealReport | null
   /** Latest nonempty `publicNote` from the appeal's close activities. */
   appealPublicNote: string | null
@@ -55,8 +60,8 @@ export type SubjectSnapshot = {
 
 type EventTotals = {
   actionCount: number
-  firstActionAt: string | null
-  latestAppealableAt: string | null
+  firstActionAt: DatetimeString | null
+  latestAppealableAt: DatetimeString | null
 }
 
 /**
@@ -88,10 +93,7 @@ export const loadSubject = async (
       .where('uri', '=', subjectLabelUri(subject))
       .where('neg', '=', false)
       .where((eb) =>
-        eb.or([
-          eb('exp', 'is', null),
-          eb('exp', '>', new Date().toISOString()),
-        ]),
+        eb.or([eb('exp', 'is', null), eb('exp', '>', currentDatetimeString())]),
       )
       .select('val')
       .execute(),
@@ -128,7 +130,7 @@ export const loadSubject = async (
 
     db.db
       .selectFrom('report')
-      .where('reportType', '=', REASONAPPEAL)
+      .where('reportType', '=', APPEAL_REASON_TYPE)
       .where((eb) => reportSubjectFilter(eb, subject))
       .orderBy('id', 'desc')
       .select(['id', 'status', 'createdAt', 'closedAt'])
@@ -363,8 +365,10 @@ export const toEnforcementView = ({
   return view
 }
 
-const latest = (...times: (string | null | undefined)[]): string | null => {
-  const known = times.filter((time): time is string => !!time)
+const latest = (
+  ...times: (DatetimeString | null | undefined)[]
+): DatetimeString | null => {
+  const known = times.filter((time): time is DatetimeString => !!time)
   if (!known.length) return null
   return known.reduce((a, b) => (Date.parse(a) >= Date.parse(b) ? a : b))
 }
@@ -411,7 +415,7 @@ export const toSubjectView = ({
   const createdAt =
     snapshot.firstActionAt ??
     snapshot.status?.createdAt ??
-    new Date().toISOString()
+    currentDatetimeString()
   const updatedAt =
     latest(
       actions[0]?.createdAt,
@@ -421,8 +425,8 @@ export const toSubjectView = ({
     ) ?? createdAt
 
   const view: SubjectView = {
-    src: serviceDid,
-    subject: subject.lex(),
+    src: serviceDid as DidString,
+    subject: subject.lex() as SubjectView['subject'],
     enforcement,
     appeal,
     availableActions,
@@ -443,7 +447,7 @@ export const toSubjectView = ({
 export const hydrateSubjectView = async (
   db: Database,
   subject: ModSubject,
-  serviceDid: string,
+  serviceDid: DidString,
   cfg: InboxConfig,
 ): Promise<SubjectView | null> =>
   toSubjectView({

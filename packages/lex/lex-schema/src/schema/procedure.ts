@@ -36,13 +36,25 @@ export class Procedure<
 > {
   readonly type = 'procedure' as const
 
+  readonly nsid: TNsid
+  readonly parameters: TParameters
+  readonly input: TInputPayload
+  readonly output: TOutputPayload
+  readonly errors: TErrors
+
   constructor(
-    readonly nsid: TNsid,
-    readonly parameters: TParameters,
-    readonly input: TInputPayload,
-    readonly output: TOutputPayload,
-    readonly errors: TErrors,
-  ) {}
+    nsid: TNsid,
+    parameters: TParameters,
+    input: TInputPayload,
+    output: TOutputPayload,
+    errors: TErrors,
+  ) {
+    this.nsid = nsid
+    this.parameters = parameters
+    this.input = input
+    this.output = output
+    this.errors = errors
+  }
 }
 
 /**

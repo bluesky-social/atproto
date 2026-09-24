@@ -1,9 +1,16 @@
 import type { IncomingHttpHeaders, ServerResponse } from 'node:http'
-import { PassThrough, type Readable, finished } from 'node:stream'
+import {
+  type Duplex,
+  PassThrough,
+  type Readable,
+  finished,
+  pipeline,
+} from 'node:stream'
 import type { Request } from 'express'
 import { Agent, type Dispatcher, Pool, interceptors } from 'undici'
 import {
-  decodeStream,
+  MaxSizeChecker,
+  createDecoders,
   getServiceEndpoint,
   omit,
   streamToNodeBuffer,
@@ -125,6 +132,8 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'accept-encoding': req.headers['accept-encoding'] || 'identity',
         'accept-language': req.headers['accept-language'],
         'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
+        ...getAtprotoPassthroughHeaders(req.headers),
+        // @NOTE deprecated; use `x-atproto-bsky-topics`
         'x-bsky-topics': req.headers['x-bsky-topics'],
 
         'content-type': body && req.headers['content-type'],
@@ -216,6 +225,8 @@ export async function pipethrough(
     headers: {
       'accept-language': req.headers['accept-language'],
       'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
+      ...getAtprotoPassthroughHeaders(req.headers),
+      // @NOTE deprecated; use `x-atproto-bsky-topics`
       'x-bsky-topics': req.headers['x-bsky-topics'],
 
       // Because we sometimes need to interpret the response (e.g. during
@@ -250,6 +261,21 @@ export async function pipethrough(
 
 // Request setup/formatting
 // -------------------
+
+function getAtprotoPassthroughHeaders(
+  headers: IncomingHttpHeaders,
+): IncomingHttpHeaders {
+  // @NOTE node lower-cases all incoming header names, so a case-sensitive
+  // prefix check is sufficient here. This runs on the request hot path, so we
+  // build the result imperatively rather than via intermediate arrays.
+  const result: IncomingHttpHeaders = {}
+  for (const name in headers) {
+    if (name.startsWith('x-atproto-')) {
+      result[name] = headers[name]
+    }
+  }
+  return result
+}
 
 export function computeProxyTo(
   ctx: AppContext,
@@ -359,7 +385,11 @@ async function pipethroughStream(
         if (upstream.statusCode >= 400) {
           const passThrough = new PassThrough()
 
-          void tryParsingError(upstream.headers, passThrough).then((parsed) => {
+          void tryParsingError(
+            upstream.headers,
+            passThrough,
+            ctx.cfg.proxy.maxResponseSize,
+          ).then((parsed) => {
             const xrpcError = new PipethroughUpstreamError(upstream, parsed, {
               cause: dispatchOptions,
             })
@@ -408,7 +438,11 @@ async function pipethroughRequest(
     .catch(handleUpstreamRequestError.bind(req))
 
   if (upstream.statusCode >= 400) {
-    const parsed = await tryParsingError(upstream.headers, upstream.body)
+    const parsed = await tryParsingError(
+      upstream.headers,
+      upstream.body,
+      ctx.cfg.proxy.maxResponseSize,
+    )
 
     throw new PipethroughUpstreamError(upstream, parsed, {
       cause: dispatchOptions,
@@ -447,6 +481,7 @@ export function isJsonContentType(contentType?: string): boolean | undefined {
 async function tryParsingError(
   headers: IncomingHttpHeaders,
   readable: Readable,
+  maxSize: number,
 ): Promise<{ error?: string; message?: string }> {
   if (isJsonContentType(headers['content-type']) === false) {
     // We don't known how to parse non JSON content types so we can discard the
@@ -477,6 +512,7 @@ async function tryParsingError(
     const buffer = await bufferUpstreamResponse(
       readable,
       headers['content-encoding'],
+      maxSize,
     )
 
     const errInfo: unknown = JSON.parse(buffer.toString('utf8'))
@@ -492,10 +528,27 @@ async function tryParsingError(
 
 async function bufferUpstreamResponse(
   readable: Readable,
-  contentEncoding?: string | string[],
+  contentEncoding: string | string[] | undefined,
+  maxSize: number,
 ): Promise<Buffer> {
   try {
-    return await streamToNodeBuffer(decodeStream(readable, contentEncoding))
+    // @NOTE maxResponseSize bounds the wire stream that undici reads, and
+    // decoding it can yield a much larger buffer, so the decoded stream needs
+    // its own bound. The checker is applied even when there is no
+    // content-encoding, so that an identity-encoded body is bounded too.
+    return await streamToNodeBuffer(
+      pipeline(
+        [
+          readable,
+          ...createDecoders(contentEncoding),
+          new MaxSizeChecker(
+            maxSize,
+            () => new TypeError('upstream response too large'),
+          ),
+        ],
+        () => {},
+      ) as Duplex,
+    )
   } catch (err) {
     if (!readable.destroyed) readable.destroy()
 
@@ -510,11 +563,13 @@ async function bufferUpstreamResponse(
 
 export async function asPipeThroughBuffer(
   input: HandlerPipeThroughStream,
+  maxSize: number,
 ): Promise<HandlerPipeThroughBuffer> {
   return {
     buffer: await bufferUpstreamResponse(
       input.stream,
       input.headers?.['content-encoding'],
+      maxSize,
     ),
     headers: omit(input.headers, ['content-encoding', 'content-length']),
     encoding: input.encoding,

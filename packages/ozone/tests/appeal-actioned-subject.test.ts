@@ -5,12 +5,12 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { toDatetimeString } from '@atproto/lex'
 import type { DidString } from '@atproto/syntax'
 import { jsonb } from '../src/db/types.js'
-import { appealWindowEnd } from '../src/inbox/appeal.js'
+import { APPEAL_REASON_TYPE, appealWindowEnd } from '../src/inbox/appeal.js'
 import { hydrateSubjectView, loadSubject } from '../src/inbox/views.js'
-import { validateSubjectView } from '../src/lexicon/types/tools/ozone/inbox/defs.js'
-import { REASONAPPEAL } from '../src/lexicon/types/tools/ozone/report/defs.js'
+import { tools } from '../src/lexicons/index.js'
 import {
   ConvoSubject,
   MessageSubject,
@@ -124,7 +124,7 @@ describe('appealActionedSubject', () => {
   async function latestAppealReport(did: DidString) {
     return network.ozone.ctx.db.db
       .selectFrom('report')
-      .where('reportType', '=', REASONAPPEAL)
+      .where('reportType', '=', APPEAL_REASON_TYPE)
       .where('did', '=', did)
       .orderBy('id', 'desc')
       .selectAll()
@@ -136,7 +136,7 @@ describe('appealActionedSubject', () => {
     await network.ozone.ctx.db.db
       .updateTable('report')
       .where('id', '=', report.id)
-      .set({ status: 'closed', closedAt: new Date().toISOString() })
+      .set({ status: 'closed', closedAt: toDatetimeString(Date.now()) })
       .execute()
     return report.id
   }
@@ -214,7 +214,7 @@ describe('appealActionedSubject', () => {
     expect(report).toMatchObject({
       queueId: queue.id,
       status: 'queued',
-      reportType: REASONAPPEAL,
+      reportType: APPEAL_REASON_TYPE,
       actionEventIds: [action.id],
       did: sc.dids.bob,
     })
@@ -417,7 +417,7 @@ describe('appealActionedSubject', () => {
       appeal: { state: 'pending' },
     })
     expect(report).toMatchObject({
-      reportType: REASONAPPEAL,
+      reportType: APPEAL_REASON_TYPE,
       actionEventIds: null,
       did: sc.dids.carol,
     })
@@ -524,7 +524,9 @@ describe('appealActionedSubject', () => {
     const action = await takedown(subject)
     const { data } = await appeal(action.id, sc.dids.bob)
 
-    expect(validateSubjectView(data).success).toBe(true)
+    expect(tools.ozone.inbox.defs.subjectView.safeParse(data).success).toBe(
+      true,
+    )
     expect(data).toEqual({
       src: network.ozone.ctx.cfg.service.did,
       subject,
@@ -533,7 +535,7 @@ describe('appealActionedSubject', () => {
         state: 'pending',
         appealedAt: data.appeal.appealedAt,
         appealableUntil: appealWindowEnd(
-          action.createdAt,
+          toDatetimeString(action.createdAt),
           network.ozone.ctx.cfg.inbox.appealWindowMonths,
         ),
       },
@@ -580,7 +582,7 @@ describe('appealActionedSubject', () => {
     })
     expect(data.appeal.appealableUntil).toBe(
       appealWindowEnd(
-        action.createdAt,
+        toDatetimeString(action.createdAt),
         network.ozone.ctx.cfg.inbox.appealWindowMonths,
       ),
     )
@@ -763,7 +765,7 @@ describe('appealActionedSubject', () => {
         [queueA.id, queueB.id].map((queueId) => ({
           eventId: action.id * 1000 + queueId,
           queueId,
-          queuedAt: new Date().toISOString(),
+          queuedAt: toDatetimeString(Date.now()),
           actionEventIds: jsonb([action.id]),
           actionNote: null,
           isMuted: false,
@@ -774,8 +776,8 @@ describe('appealActionedSubject', () => {
           recordPath: '',
           subjectMessageId: null,
           subjectConvoId: null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          createdAt: toDatetimeString(Date.now()),
+          updatedAt: toDatetimeString(Date.now()),
         })),
       )
       .execute()
@@ -807,7 +809,7 @@ describe('appealActionedSubject', () => {
         description: null,
         subjectTypes: ['account'],
         collection: null,
-        reportTypes: [REASONAPPEAL],
+        reportTypes: [APPEAL_REASON_TYPE],
         recommendedPolicies: [],
         createdBy: network.ozone.adminAccnt.did,
       })
@@ -822,7 +824,7 @@ describe('appealActionedSubject', () => {
       .set({
         queueId: queue.id,
         status: 'closed',
-        closedAt: new Date().toISOString(),
+        closedAt: toDatetimeString(Date.now()),
       })
       .execute()
 
@@ -874,17 +876,17 @@ describe('appealActionedSubject', () => {
     const stale = await takedown(subject)
     const fresh = await label(subject)
 
-    const backdate = async (id: number, createdAt: string) =>
+    const backdate = async (id: number, createdAt: number) =>
       network.ozone.ctx.db.db
         .updateTable('moderation_event')
         .where('id', '=', id)
-        .set({ createdAt })
+        .set({ createdAt: toDatetimeString(createdAt) })
         .execute()
 
     const now = Date.now()
     // A day past the window, and a day inside it.
-    await backdate(stale.id, new Date(now - 190 * 86_400_000).toISOString())
-    await backdate(fresh.id, new Date(now - 170 * 86_400_000).toISOString())
+    await backdate(stale.id, now - 190 * 86_400_000)
+    await backdate(fresh.id, now - 170 * 86_400_000)
 
     await expect(appeal(stale.id, account.did)).rejects.toMatchObject({
       error: 'AppealWindowExpired',
@@ -936,7 +938,9 @@ describe('appealActionedSubject', () => {
       network.ozone.ctx.cfg.inbox,
     )
 
-    expect(validateSubjectView(view).success).toBe(true)
+    expect(tools.ozone.inbox.defs.subjectView.safeParse(view).success).toBe(
+      true,
+    )
     expect(view?.appeal).toMatchObject({
       state: 'resolved',
       note: 'We reviewed this again and the takedown stands.',
@@ -996,7 +1000,9 @@ describe('appealActionedSubject', () => {
 
     // The legacy form does not require an action, so the view has an appeal but
     // no history to describe and nothing further to offer.
-    expect(validateSubjectView(data).success).toBe(true)
+    expect(tools.ozone.inbox.defs.subjectView.safeParse(data).success).toBe(
+      true,
+    )
     expect(data.appeal).toEqual({
       state: 'pending',
       appealedAt: data.appeal.appealedAt,
@@ -1203,9 +1209,11 @@ describe('appealActionedSubject', () => {
       },
     )
 
-    expect(validateSubjectView(data).success).toBe(true)
+    expect(tools.ozone.inbox.defs.subjectView.safeParse(data).success).toBe(
+      true,
+    )
     expect(data.appeal).toMatchObject({ state: 'pending' })
     const report = await latestAppealReport(account.did)
-    expect(report).toMatchObject({ reportType: REASONAPPEAL })
+    expect(report).toMatchObject({ reportType: APPEAL_REASON_TYPE })
   })
 })

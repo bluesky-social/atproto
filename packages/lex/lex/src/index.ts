@@ -116,3 +116,5 @@ export {
   lexToJson,
 } from '@atproto/lex-json'
 export * from '@atproto/lex-json'
+
+export * from './walk.js'

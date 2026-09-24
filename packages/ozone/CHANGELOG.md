@@ -1,5 +1,98 @@
 # @atproto/ozone
 
+## 0.4.2
+
+### Patch Changes
+
+- [#5504](https://github.com/bluesky-social/atproto/pull/5504) [`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d) Thanks [@devinivy](https://github.com/devinivy)! - Drop ozone's own `SafeDidResolver` in favor of `@atproto/identity`'s safe
+  resolution, still relaxed by `OZONE_DEV_MODE`.
+- Updated dependencies [[`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d), [`f88aa58`](https://github.com/bluesky-social/atproto/commit/f88aa5842df9aba9f208a6073272b43ef9bd089d)]:
+  - @atproto/identity@0.5.13
+  - @atproto-labs/fetch-node@0.4.0
+  - @atproto/lex@0.3.11
+
+## 0.4.1
+
+### Patch Changes
+
+- [#5477](https://github.com/bluesky-social/atproto/pull/5477) [`0287dce`](https://github.com/bluesky-social/atproto/commit/0287dcece76c2c2453406cb3b51591ce0f983a98) Thanks [@foysalit](https://github.com/foysalit)! - Align Ozone telemetry with the shared OpenTelemetry bootstrap and add Undici tracing while retaining PostgreSQL instrumentation. Restrict the shared ESM loader hook to instrumented modules.
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump the dev-dependencies group across 1 directory with 30 updates
+
+- [#5478](https://github.com/bluesky-social/atproto/pull/5478) [`7277010`](https://github.com/bluesky-social/atproto/commit/727701085829daf8e0440253346b5e70fc3810ad) Thanks [@foysalit](https://github.com/foysalit)! - Improve report query hydration by batching blob moderation lookups, deduplicating repeated status and account requests, and fetching profile chunks concurrently.
+
+- Updated dependencies [[`0287dce`](https://github.com/bluesky-social/atproto/commit/0287dcece76c2c2453406cb3b51591ce0f983a98), [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto-labs/opentelemetry-node@0.2.1
+  - @atproto/crypto@0.5.5
+  - @atproto/identity@0.5.12
+  - @atproto/xrpc-server@0.13.1
+  - @atproto/common@0.8.3
+  - @atproto/lex@0.3.10
+
+## 0.4.0
+
+### Minor Changes
+
+- [#5426](https://github.com/bluesky-social/atproto/pull/5426) [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222) Thanks [@bigmoves](https://github.com/bigmoves)! - Migrate Ozone onto `@atproto/lex`.
+
+  Ozone was the last package still generating its server stack with
+  `lex gen-server`. It now uses `lex build` like `pds` and `bsky`, and the legacy
+  `src/lexicon` tree is gone:
+
+  - All 95 route registrations moved from `server.<ns>.<method>()` to
+    `server.add(schema, …)` from `@atproto/xrpc-server`.
+  - `AtpAgent` is replaced by `Client`; `CredentialSession` by `PasswordSession`
+    from `@atproto/lex-password-session`.
+  - Kysely schema types, config and auth credentials now carry the branded
+    scalars (`DidString`, `DatetimeString`, `AtUriString`, `UriString`), so
+    route params flow into the database and back out into views without casts.
+
+  `@atproto/api` and `@atproto/lexicon` move to `devDependencies` (the test suites
+  still drive the legacy client), and `@atproto/xrpc` and `@atproto/lex-cli` are
+  dropped entirely.
+
+  Two behaviour changes worth noting, both from validating against the Lexicon
+  schemas rather than the legacy runtime:
+
+  - The AT Proto data model has no floating-point numbers, and the legacy stack
+    accepted them anyway. A non-integer number in an `unknown` field — for
+    example a float stored in a `tools.ozone.setting` value — is now rejected at
+    input validation. Reads are unaffected, since the server is configured with
+    `validateResponse: false`.
+  - A value whose shape contradicts the Lexicon is now rejected by schema
+    validation before a route's own validators run, so the reported error is the
+    schema's (`Expected object value type …`) rather than the application's.
+
+  `BlobDiverter` and the OAuth-preferences proxy previously threw `XRPCError` from
+  `@atproto/xrpc` to signal retryability to `retryHttp`. They now throw
+  `UpstreamHttpError`, which extends `XRPCError` from `@atproto/xrpc-server` so
+  that an error escaping a handler still carries its upstream status and message
+  instead of collapsing into a generic 500.
+
+- [#5421](https://github.com/bluesky-social/atproto/pull/5421) [`5c154f9`](https://github.com/bluesky-social/atproto/commit/5c154f9c5173e7823a5353eab92207508a7dea99) Thanks [@foysalit](https://github.com/foysalit)! - Allow moderators to retrieve hosted account preferences through `tools.ozone.moderation.getAccountPreferences`.
+
+### Patch Changes
+
+- [#5479](https://github.com/bluesky-social/atproto/pull/5479) [`a8d3893`](https://github.com/bluesky-social/atproto/commit/a8d38932747a662f2b6f45c1838807efa3341c9e) Thanks [@gcwill70](https://github.com/gcwill70)! - Scope otel down to only trace modules that are instrumented.
+
+- [#5074](https://github.com/bluesky-social/atproto/pull/5074) [`8a4631a`](https://github.com/bluesky-social/atproto/commit/8a4631a47ce6791b3868f06d1c930aa21327748c) Thanks [@foysalit](https://github.com/foysalit)! - Add opt-in prometheus metrics server and opt-in OpenTelemetry tracing (via `@atproto/ozone/tracer`, gated on `OTEL_EXPORTER_OTLP_ENDPOINT`) to ozone; the ozone service image now uses OpenTelemetry instead of dd-trace
+
+- [#5474](https://github.com/bluesky-social/atproto/pull/5474) [`59f4a42`](https://github.com/bluesky-social/atproto/commit/59f4a42d20f87fa24ea7b0bd923df9c133a5d2b5) Thanks [@gcwill70](https://github.com/gcwill70)! - Allow headers to be set when using app-configured PDS instance
+
+- [#5471](https://github.com/bluesky-social/atproto/pull/5471) [`263eaa3`](https://github.com/bluesky-social/atproto/commit/263eaa3e41d8d7328c5a7376e06b1e398156e9b7) Thanks [@foysalit](https://github.com/foysalit)! - Harden takedown event pushing with bounded concurrency, rate-limit-aware retries, and terminal handling for unavailable targets.
+
+- [#5393](https://github.com/bluesky-social/atproto/pull/5393) [`7068a65`](https://github.com/bluesky-social/atproto/commit/7068a65638f8d4664083555f402c5a10c47af460) Thanks [@gcwill70](https://github.com/gcwill70)! - Fix ascending report pagination when multiple reports share a timestamp.
+
+- [#5468](https://github.com/bluesky-social/atproto/pull/5468) [`0f3ea4b`](https://github.com/bluesky-social/atproto/commit/0f3ea4b86fbb4ec9869d219bae0d4d57ef019427) Thanks [@foysalit](https://github.com/foysalit)! - Harden outbound Ozone requests to PDS and did:web endpoints.
+
+- Updated dependencies [[`8a4631a`](https://github.com/bluesky-social/atproto/commit/8a4631a47ce6791b3868f06d1c930aa21327748c), [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222), [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222), [`ffcb7c5`](https://github.com/bluesky-social/atproto/commit/ffcb7c54e4dcedb10eed9175fbc939761462bca6)]:
+  - @atproto/xrpc-server@0.13.0
+  - @atproto/lex@0.3.9
+  - @atproto/syntax@0.7.6
+  - @atproto/lex-password-session@0.2.3
+  - @atproto/common@0.8.2
+  - @atproto/identity@0.5.11
+
 ## 0.3.1
 
 ### Patch Changes
