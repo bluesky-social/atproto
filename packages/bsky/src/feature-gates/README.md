@@ -10,6 +10,16 @@ is defined in `Hydrator.createContext`, which is called by every request
 handler. The default scope supplies anonymous `deviceId` and `sessionId`
 identifiers for targeting unauthenticated users.
 
+For allowlisted `app.bsky.feed.getFeed` requests, signed-in viewers check
+`iris:feed:enable` using their DID. Logged-out viewers with a client-provided
+`X-Bsky-Device-Id` instead check `iris:anonymous_feed:enable`, passing that ID
+as GrowthBook `deviceId` (`stable_id` in the event proxy). Provision the new
+anonymous feature in GrowthBook and hash its rollout on `deviceId`. If the
+selected flag is false or the guest has no stable ID, use the registered feed
+generator even when staging overlaps. A generated per-request anonymous ID
+would change experiment arms between pages, so guests without the header do
+not evaluate the flag.
+
 Feature gates can be checked via the following methods.
 
 ```typescript

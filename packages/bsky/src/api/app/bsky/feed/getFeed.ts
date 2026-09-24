@@ -54,6 +54,7 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ params, auth, req, signal }) => {
       const viewer = auth.credentials.iss
+      const stableId = req.header('X-Bsky-Device-Id')
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
@@ -72,7 +73,7 @@ export default function (server: Server, ctx: AppContext) {
       // Do not refill filtered pages. Overfetching from algorithmic feeds can
       // advance their state and prevent omitted items from appearing later.
       const result = await getFeed(
-        { ...params, hydrateCtx, headers, signal },
+        { ...params, hydrateCtx, headers, signal, stableId },
         ctx,
       )
       const {
@@ -184,7 +185,17 @@ type Context = AppContext
 type Params = app.bsky.feed.getFeed.$Params & {
   hydrateCtx: HydrateCtx
   headers: HeadersMap
+  stableId?: string
   signal: AbortSignal
+}
+
+type FeedRoutingParams = {
+  feed: Params['feed']
+  hydrateCtx: {
+    viewer: HydrateCtx['viewer']
+    features: Pick<HydrateCtx['features'], 'Gate' | 'checkGate'>
+  }
+  stableId?: string
 }
 
 type Skeleton = {
@@ -203,26 +214,23 @@ type Skeleton = {
  */
 export const irisUrlForFeed = (
   cfg: Pick<ServerConfig, 'irisUrl' | 'irisFeedUris'>,
-  params: {
-    feed: string
-    hydrateCtx: {
-      viewer: HydrateCtx['viewer']
-      features: Pick<HydrateCtx['features'], 'Gate' | 'checkGate'>
-    }
-  },
+  params: FeedRoutingParams,
 ): string | undefined => {
   const { irisUrl } = cfg
   if (!irisUrl) return
   if (!cfg.irisFeedUris?.has(params.feed)) return
-  if (!params.hydrateCtx.viewer) return
-  if (
-    !params.hydrateCtx.features.checkGate(
-      params.hydrateCtx.features.Gate.IrisFeed,
-    )
-  ) {
-    return
+  const { viewer, features } = params.hydrateCtx
+  if (viewer) {
+    return features.checkGate(features.Gate.IrisFeed) ? irisUrl : undefined
   }
-  return irisUrl
+  // @NOTE Without a client-supplied stable ID, a new anonymous device ID is
+  // generated per request and pagination could switch feed backends.
+  if (!params.stableId?.trim()) return
+  return features.checkGate(features.Gate.IrisAnonymousFeed, {
+    deviceId: params.stableId,
+  })
+    ? irisUrl
+    : undefined
 }
 
 /**
@@ -235,15 +243,19 @@ export const irisStagingUrlForFeed = (
 ): string | undefined =>
   cfg.irisStagingFeedUris?.has(params.feed) ? cfg.irisStagingUrl : undefined
 
-const resolveSkeletonEndpoint = async (
+export const resolveSkeletonEndpoint = async (
   ctx: Context,
-  params: Params,
+  params: FeedRoutingParams,
 ): Promise<string> => {
   const irisUrl = irisUrlForFeed(ctx.cfg, params)
   if (irisUrl) return irisUrl
 
-  const irisStagingUrl = irisStagingUrlForFeed(ctx.cfg, params)
-  if (irisStagingUrl) return irisStagingUrl
+  // A production gate decision takes precedence over staging, including when
+  // the flag is off or an anonymous request has no stable ID.
+  if (!ctx.cfg.irisUrl || !ctx.cfg.irisFeedUris?.has(params.feed)) {
+    const irisStagingUrl = irisStagingUrlForFeed(ctx.cfg, params)
+    if (irisStagingUrl) return irisStagingUrl
+  }
 
   const { feed } = params
   const found = await ctx.hydrator.feed.getFeedGens([feed], true)
