@@ -2,13 +2,6 @@ import { describe, expect, it } from 'vitest'
 import type { CspConfig, CspValue } from '../lib/csp/index.js'
 import { buildCustomizationCsp } from './build-customization-csp.js'
 
-const hcaptcha = { siteKey: 'site', secretKey: 'secret', tokenSalt: 'salt' }
-
-// `img-src` may be a Set or an array depending on the merge path; normalize.
-const imgSrc = (csp: CspConfig | undefined): CspValue[] => [
-  ...((csp?.['img-src'] ?? []) as Iterable<CspValue>),
-]
-
 describe(buildCustomizationCsp, () => {
   it('returns undefined when nothing relevant is configured', () => {
     expect(buildCustomizationCsp({})).toBeUndefined()
@@ -21,12 +14,12 @@ describe(buildCustomizationCsp, () => {
       const csp = buildCustomizationCsp({
         branding: { logo: 'https://example.com/logo.png' },
       })
-      expect(imgSrc(csp)).toEqual(['https://example.com/logo.png'])
+      expect(extractImgSrc(csp)).toEqual(['https://example.com/logo.png'])
 
       const httpCsp = buildCustomizationCsp({
         branding: { logo: 'http://localhost:1234/logo.png' },
       })
-      expect(imgSrc(httpCsp)).toEqual(['http://localhost:1234/logo.png'])
+      expect(extractImgSrc(httpCsp)).toEqual(['http://localhost:1234/logo.png'])
     })
 
     it('allow-lists the `data:` scheme (not a hash) for data uri images', () => {
@@ -35,7 +28,7 @@ describe(buildCustomizationCsp, () => {
       const csp = buildCustomizationCsp({
         branding: { logo: 'data:image/png;base64,AAAA' },
       })
-      expect(imgSrc(csp)).toEqual(['data:'])
+      expect(extractImgSrc(csp)).toEqual(['data:'])
     })
 
     it('emits `data:` only once regardless of how many data uris are used', () => {
@@ -48,7 +41,7 @@ describe(buildCustomizationCsp, () => {
           },
         },
       })
-      expect(imgSrc(csp)).toEqual(['data:'])
+      expect(extractImgSrc(csp)).toEqual(['data:'])
     })
 
     it('combines exact origins and the `data:` scheme when both are used', () => {
@@ -58,10 +51,10 @@ describe(buildCustomizationCsp, () => {
           background: { light: 'data:image/png;base64,AAAA' },
         },
       })
-      expect(imgSrc(csp)).toEqual(
+      expect(extractImgSrc(csp)).toEqual(
         expect.arrayContaining(['https://example.com/logo.png', 'data:']),
       )
-      expect(imgSrc(csp)).toHaveLength(2)
+      expect(extractImgSrc(csp)).toHaveLength(2)
     })
 
     it('throws on unsupported uri schemes', () => {
@@ -73,21 +66,27 @@ describe(buildCustomizationCsp, () => {
 
   describe('hCaptcha', () => {
     it('adds the hCaptcha sources when configured', () => {
-      const csp = buildCustomizationCsp({ hcaptcha })
+      const csp = buildCustomizationCsp({
+        hcaptcha: { siteKey: 'site', secretKey: 'secret', tokenSalt: 'salt' },
+      })
       expect(csp?.['script-src']).toContain('https://hcaptcha.com')
       expect(csp?.['frame-src']).toContain('https://*.hcaptcha.com')
       expect(csp?.['style-src']).toContain('https://hcaptcha.com')
       expect(csp?.['connect-src']).toContain('https://*.hcaptcha.com')
-      expect(imgSrc(csp)).toEqual([])
+      expect(extractImgSrc(csp)).toEqual([])
     })
 
     it('combines with branding images', () => {
       const csp = buildCustomizationCsp({
-        hcaptcha,
+        hcaptcha: { siteKey: 'site', secretKey: 'secret', tokenSalt: 'salt' },
         branding: { logo: 'data:image/png;base64,AAAA' },
       })
-      expect(imgSrc(csp)).toEqual(['data:'])
+      expect(extractImgSrc(csp)).toEqual(['data:'])
       expect(csp?.['script-src']).toContain('https://hcaptcha.com')
     })
   })
 })
+
+function extractImgSrc(csp: CspConfig | undefined): CspValue[] {
+  return [...(csp?.['img-src'] ?? [])]
+}
