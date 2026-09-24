@@ -96,7 +96,7 @@ describe('moderation-appeals', () => {
         ToolsOzoneModerationDefs.REVIEWESCALATED,
         true,
       )
-      expect(status?.tags).not.toContain('report:appeal')
+      expect(status?.tags).toContain('report:appeal')
       // @ts-expect-error unspecced ?
       expect(status?.appealedAt).not.toBeNull()
 
@@ -127,7 +127,7 @@ describe('moderation-appeals', () => {
         ToolsOzoneModerationDefs.REVIEWESCALATED,
         true,
       )
-      expect(carolStatus?.tags).not.toContain('report:appeal')
+      expect(carolStatus?.tags).toContain('report:appeal')
     })
     it('allows multiple appeals and updates last appealed timestamp', async () => {
       // Resolve appeal with acknowledge
