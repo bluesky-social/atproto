@@ -302,6 +302,10 @@ export type FileAppealInput = {
   subject: ModSubject
   /** The action being appealed, when the appeal names one. */
   actionId?: number
+  actionRef?:
+    | { type: 'action'; id: number }
+    | { type: 'label'; val: string }
+    | { type: 'takedown' }
   /** Optional: an appeal is a request for review, not an argued case. */
   reason?: string
   modTool?: { name: string; meta?: { [_ in string]: unknown } }
@@ -325,6 +329,7 @@ const selectQueue = async (
   ctx: AppContext,
   subject: ModSubject,
   actionId: number | undefined,
+  actionRef: FileAppealInput['actionRef'],
 ) => {
   const sourceReports =
     actionId === undefined
@@ -346,11 +351,19 @@ const selectQueue = async (
     allSourcesAssigned && sourceQueues.size === 1
       ? (sourceQueueIds[0] as number)
       : null
+  const queueService = ctx.queueService(ctx.db)
+  const labelQueue =
+    inheritedQueueId === null && actionRef?.type === 'label'
+      ? await queueService.getByRecommendedLabel(actionRef.val)
+      : undefined
+  const queues =
+    inheritedQueueId === null && labelQueue === undefined
+      ? (await queueService.list({ limit: 1000, enabled: true })).queues
+      : []
   const legacyQueue =
-    inheritedQueueId === null
+    inheritedQueueId === null && labelQueue === undefined
       ? findMatchingQueue(
-          (await ctx.queueService(ctx.db).list({ limit: 1000, enabled: true }))
-            .queues,
+          queues,
           subject.isRecord() ? 'record' : 'account',
           subject.info().subjectUri
             ? new AtUri(subject.info().subjectUri!).collection
@@ -359,7 +372,7 @@ const selectQueue = async (
         )
       : null
 
-  const queueId = inheritedQueueId ?? legacyQueue?.id ?? -1
+  const queueId = inheritedQueueId ?? labelQueue?.id ?? legacyQueue?.id ?? -1
 
   // An unrouted report carries no queue timestamp: `queuedAt` records when a
   // report entered a queue, and matches the `queueId: -1` / `status: 'open'`
@@ -384,9 +397,14 @@ const selectQueue = async (
  */
 export const fileAppeal = async (
   ctx: AppContext,
-  { requester, subject, actionId, reason, modTool }: FileAppealInput,
+  { requester, subject, actionId, actionRef, reason, modTool }: FileAppealInput,
 ): Promise<{ reportId: number }> => {
-  const { queueId, queuedAt } = await selectQueue(ctx, subject, actionId)
+  const { queueId, queuedAt } = await selectQueue(
+    ctx,
+    subject,
+    actionId,
+    actionRef,
+  )
 
   const subjectInfo = subject.info()
   const recordPath = subjectInfo.subjectUri
@@ -407,6 +425,16 @@ export const fileAppeal = async (
       reasonType: APPEAL_REASON_TYPE,
       reportedBy: requester,
       modTool,
+      eventMeta: actionRef
+        ? {
+            appealActionType: actionRef.type,
+            ...(actionRef.type === 'action'
+              ? { appealActionId: actionRef.id }
+              : actionRef.type === 'label'
+                ? { appealLabel: actionRef.val }
+                : {}),
+          }
+        : undefined,
     })
     const now = reportEvent.createdAt
     const inserted = await dbTxn.db

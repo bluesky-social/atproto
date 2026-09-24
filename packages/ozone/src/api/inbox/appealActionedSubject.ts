@@ -75,7 +75,7 @@ export default function (server: Server, ctx: AppContext) {
                 : { type: 'takedown' },
             )
           : undefined
-      if (isActionRef(actionInput) && !action) {
+      if (isActionRef(actionInput) && !action && !inputSubject) {
         throw new ForbiddenError(
           'Moderation action is not appealable',
           'NotAppealable',
@@ -125,6 +125,13 @@ export default function (server: Server, ctx: AppContext) {
         requester,
         subject,
         actionId: action?.id,
+        actionRef: isActionRef(actionInput)
+          ? { type: 'action', id: actionInput.id }
+          : isLabelRef(actionInput)
+            ? { type: 'label', val: actionInput.val }
+            : isTakedownRef(actionInput)
+              ? { type: 'takedown' }
+              : undefined,
         reason: input.body.reason,
         modTool: input.body.modTool,
       })

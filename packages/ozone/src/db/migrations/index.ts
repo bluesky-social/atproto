@@ -46,3 +46,4 @@ export * as _20260617T210022765Z from './20260617T210022765Z-add-report-isautoma
 export * as _20260720T000000000Z from './20260720T000000000Z-add-convo-subjects-to-stats-views.js'
 export * as _20260731T000000000Z from './20260731T000000000Z-add-recommended-policies-to-report-queue.js'
 export * as _20260828T013624457Z from './20260828T013624457Z-inbox-appeal-indices.js'
+export * as _20260924T000000000Z from './20260924T000000000Z-add-recommended-labels-to-report-queue.js'

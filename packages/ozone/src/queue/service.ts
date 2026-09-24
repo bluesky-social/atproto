@@ -69,6 +69,13 @@ export class QueueService {
     return (db: Database) => new QueueService(db)
   }
 
+  async lockRecommendedLabels(): Promise<void> {
+    this.db.assertTransaction()
+    await sql`select pg_advisory_xact_lock(
+      hashtextextended('report_queue_recommended_labels', 0)
+    )`.execute(this.db.db)
+  }
+
   async assertRecommendedPolicies(
     recommendedPolicies: string[],
   ): Promise<void> {
@@ -97,12 +104,14 @@ export class QueueService {
     subjectTypes,
     collection,
     reportTypes,
+    recommendedLabels = [],
     excludeId,
   }: {
     name: string
     subjectTypes: string[]
     collection?: string | null
     reportTypes: string[]
+    recommendedLabels?: string[]
     excludeId?: number
   }): Promise<void> {
     // It's not ideal to load all rows and perform in memory checks in case we end up with a LOT of queues
@@ -122,6 +131,16 @@ export class QueueService {
       if (existing.name === name) {
         throw new InvalidRequestError(
           'A queue with that name already exists',
+          'ConflictingQueue',
+        )
+      }
+
+      const conflictingLabels = recommendedLabels.filter((label) =>
+        existing.recommendedLabels.includes(label),
+      )
+      if (conflictingLabels.length) {
+        throw new InvalidRequestError(
+          `Recommended labels already belong to queue ${existing.name}: ${conflictingLabels.join(', ')}`,
           'ConflictingQueue',
         )
       }
@@ -150,6 +169,7 @@ export class QueueService {
     reportTypes,
     description,
     recommendedPolicies,
+    recommendedLabels = [],
     createdBy,
   }: {
     name: string
@@ -158,6 +178,7 @@ export class QueueService {
     reportTypes: string[]
     description?: string | null
     recommendedPolicies: string[]
+    recommendedLabels?: string[]
     createdBy: string
   }): Promise<Selectable<ReportQueue>> {
     const now = new Date().toISOString()
@@ -170,6 +191,7 @@ export class QueueService {
         reportTypes: jsonb(reportTypes),
         description: description ?? null,
         recommendedPolicies: jsonb(recommendedPolicies),
+        recommendedLabels: jsonb(recommendedLabels),
         createdBy,
         enabled: true,
         createdAt: now,
@@ -186,6 +208,20 @@ export class QueueService {
       .where('id', '=', id)
       .where('deletedAt', 'is', null)
       .executeTakeFirst()
+  }
+
+  async getByRecommendedLabel(
+    label: string,
+  ): Promise<Selectable<ReportQueue> | undefined> {
+    const matches = await this.db.db
+      .selectFrom('report_queue')
+      .selectAll()
+      .where('enabled', '=', true)
+      .where('deletedAt', 'is', null)
+      .where(sql<boolean>`"recommendedLabels" @> ${jsonb([label])}`)
+      .limit(2)
+      .execute()
+    return matches.length === 1 ? matches[0] : undefined
   }
 
   async getViewsByIds(
@@ -207,6 +243,7 @@ export class QueueService {
       enabled?: boolean
       description?: string
       recommendedPolicies?: string[]
+      recommendedLabels?: string[]
     },
   ): Promise<Selectable<ReportQueue>> {
     const now = new Date().toISOString()
@@ -218,6 +255,10 @@ export class QueueService {
           updates.recommendedPolicies === undefined
             ? undefined
             : jsonb(updates.recommendedPolicies),
+        recommendedLabels:
+          updates.recommendedLabels === undefined
+            ? undefined
+            : jsonb(updates.recommendedLabels),
         updatedAt: now,
       })
       .where('id', '=', id)
@@ -318,6 +359,7 @@ export class QueueService {
       reportTypes: queue.reportTypes,
       description: queue.description ?? undefined,
       recommendedPolicies: queue.recommendedPolicies,
+      recommendedLabels: queue.recommendedLabels,
       createdBy: queue.createdBy,
       createdAt: queue.createdAt,
       updatedAt: queue.updatedAt,

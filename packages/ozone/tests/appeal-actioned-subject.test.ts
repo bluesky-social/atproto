@@ -314,7 +314,7 @@ describe('appealActionedSubject', () => {
     })
   })
 
-  it('files through fallback routing when a semantic reference has no event', async () => {
+  it('routes a missing label event through the configured label mapping', async () => {
     const account = await sc.createAccount('missing-label-ref', {
       handle: 'missing-label-ref.test',
       email: 'missing-label-ref@test.com',
@@ -324,12 +324,58 @@ describe('appealActionedSubject', () => {
       $type: 'com.atproto.admin.defs#repoRef' as const,
       did: account.did,
     }
+    const queue = await network.ozone.ctx
+      .queueService(network.ozone.ctx.db)
+      .create({
+        name: 'Missing label fallback queue',
+        subjectTypes: [],
+        reportTypes: [],
+        recommendedPolicies: [],
+        recommendedLabels: ['label-that-was-never-applied'],
+        createdBy: network.ozone.adminAccnt.did,
+      })
 
     await appealLabel('label-that-was-never-applied', subject, account.did)
 
+    const report = await latestAppealReport(account.did)
+    expect(report).toMatchObject({
+      queueId: queue.id,
+      status: 'queued',
+      actionEventIds: null,
+    })
+    const event = await network.ozone.ctx.db.db
+      .selectFrom('moderation_event')
+      .where('id', '=', report.eventId)
+      .select('meta')
+      .executeTakeFirstOrThrow()
+    expect(event.meta).toMatchObject({
+      appealActionType: 'label',
+      appealLabel: 'label-that-was-never-applied',
+    })
+  })
+
+  it('files an actionRef through fallback when its event cannot be found', async () => {
+    const account = await sc.createAccount('missing-action-ref', {
+      handle: 'missing-action-ref.test',
+      email: 'missing-action-ref@test.com',
+      password: 'missing-action-ref-pass',
+    })
+
+    await callAppeal(
+      {
+        action: {
+          $type: 'tools.ozone.inbox.appealActionedSubject#actionRef',
+          id: 999_999,
+        },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: account.did,
+        },
+      },
+      account.did,
+    )
+
     expect(await latestAppealReport(account.did)).toMatchObject({
-      queueId: -1,
-      status: 'open',
       actionEventIds: null,
     })
   })
