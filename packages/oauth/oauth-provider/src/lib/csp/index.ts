@@ -96,8 +96,6 @@ export function combineCsp(a: CspConfig, b: CspConfig): CspConfig {
           if (set.has('http:')) set.delete(value)
         } else if (value.startsWith('https://')) {
           if (set.has('https:')) set.delete(value)
-        } else if (value.startsWith('data:') && value.length > 5) {
-          if (set.has('data:')) set.delete(value)
         }
       }
       if (set.size > 1 && set.has(NONE)) set.delete(NONE)
