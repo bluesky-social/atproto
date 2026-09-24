@@ -1,4 +1,4 @@
-import { type CspConfig, type CspValue, mergeCsp } from '../lib/csp/index.js'
+import type { CspConfig } from '../lib/csp/index.js'
 import type { Customization } from './customization.js'
 
 /**
@@ -16,16 +16,12 @@ const HCAPTCHA_CSP: CspConfig = {
  * configuration, based on the ways customization settings are used in the
  * @atproto/oauth-provider-ui web app.
  */
-export function buildCustomizationCsp({
+export function* buildCustomizationCsp({
   branding,
   hcaptcha,
-}: Customization): CspConfig | undefined {
-  let csp: CspConfig | undefined = undefined
-
+}: Customization): Generator<CspConfig, void, unknown> {
   // branding related CSP
   if (branding) {
-    const imgSrc = new Set<CspValue>()
-
     for (const uri of [
       branding.logo,
       branding.background?.dark,
@@ -33,7 +29,7 @@ export function buildCustomizationCsp({
     ]) {
       if (uri != null) {
         if (isHttpUri(uri)) {
-          imgSrc.add(uri)
+          yield { 'img-src': [uri] }
         } else if (isDataUri(uri)) {
           // CSP hash sources (e.g. `sha256-<hash>`) do not authorize image
           // fetches: they only apply to inline scripts/styles (and external
@@ -43,24 +39,18 @@ export function buildCustomizationCsp({
           // So the only way to allow a `data:` image is the `data:` scheme
           // source, which we add here exclusively when the customization
           // actually references a `data:` uri.
-          imgSrc.add('data:')
+          yield { 'img-src': ['data:'] }
         } else {
           throw new Error(`Unsupported URI format: ${uri}`)
         }
       }
     }
-
-    if (imgSrc.size > 0) {
-      csp = mergeCsp(csp, { 'img-src': imgSrc })
-    }
   }
 
   // hCaptcha related CSP
   if (hcaptcha) {
-    csp = mergeCsp(csp, HCAPTCHA_CSP)
+    yield HCAPTCHA_CSP
   }
-
-  return csp
 }
 
 function isHttpUri(

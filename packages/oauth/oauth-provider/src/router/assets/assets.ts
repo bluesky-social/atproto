@@ -76,7 +76,7 @@ export function sendWebAppFactory<P extends keyof HydrationData>(
   // headers.
   const coep = customizationCoep ?? CrossOriginEmbedderPolicy.credentialless
 
-  const csp = mergeCsp(SPA_CSP, AVATAR_CSP, customizationCsp)
+  const csp = mergeCsp(SPA_CSP, AVATAR_CSP, ...customizationCsp)
 
   return async function sendWebApp(
     req: IncomingMessage,

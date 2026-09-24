@@ -65,6 +65,7 @@ export function buildCsp(config: CspConfig): string {
 export function mergeCsp<C extends (CspConfig | null | undefined)[]>(
   ...configs: C
 ) {
+  if (!configs.length) return {} as CombinedTuple<C>
   return configs.filter((v) => v != null).reduce(combineCsp) as CombinedTuple<C>
 }
 
@@ -100,8 +101,9 @@ export function combineCsp(a: CspConfig, b: CspConfig): CspConfig {
       }
       if (set.size > 1 && set.has(NONE)) set.delete(NONE)
       result[name] = [...set]
-    } else if (a[name] || b[name]) {
-      result[name] = a[name] || b[name]
+    } else {
+      const value = a[name] || b[name]
+      if (value) result[name] = [...value]
     }
   }
 
