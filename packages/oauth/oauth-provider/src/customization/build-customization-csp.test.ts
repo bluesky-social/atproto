@@ -59,6 +59,7 @@ describe(buildCustomizationCsp, () => {
 
     it('throws on unsupported uri schemes', () => {
       expect(() =>
+        // @ts-expect-error Unsupported URI scheme
         buildCustomizationCsp({ branding: { logo: 'ftp://example.com/x' } }),
       ).toThrow('Unsupported URI format')
     })

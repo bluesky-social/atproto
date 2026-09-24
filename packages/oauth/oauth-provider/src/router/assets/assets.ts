@@ -35,11 +35,13 @@ const SPA_CSP: CspConfig = {
   'frame-ancestors': ["'none'"],
 }
 
-// Allow loading of avatars
+// Allow loading of avatars and (trusted) OAuth client images
 const AVATAR_CSP: CspConfig = {
   // @TODO Find a way to make this narrower (e.g. by proxying avatars through
   // our own domain and using "'self'" here, or by using the customization data
-  // to allow-list specific origins), or by only allowing "data:" uris
+  // to allow-list specific origins), or by only allowing "data:" uris. Note
+  // that the current https: value also prevents avatars and client images from
+  // working in dev (which we also may want to find a solution to).
   'img-src': ['https:'],
 }
 
