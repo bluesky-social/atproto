@@ -24,13 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       for await (const evt of outbox.events(cursor, signal)) {
-        const sendDeadline = setTimeout(() => req.socket.destroy(), 30_000)
-        sendDeadline.unref()
-        try {
-          yield com.atproto.label.subscribeLabels.labels.$build(evt)
-        } finally {
-          clearTimeout(sendDeadline)
-        }
+        yield com.atproto.label.subscribeLabels.labels.$build(evt)
       }
     },
   )
