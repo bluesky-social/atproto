@@ -40,6 +40,9 @@ export class Outbox {
   ): AsyncGenerator<LabelsEvt> {
     if (signal?.aborted || this.sequencer.destroyed) return
     let stopped = false
+
+    // 1. create lifecycle events
+    // (stop, overflow, adding events, cutover)
     const stop = (err?: unknown) => {
       if (stopped) return
       stopped = true
@@ -76,7 +79,6 @@ export class Outbox {
         this.cutoverBuffer.push(...evts)
       }
     }
-
     const cutover = async () => {
       if (backfillCursor !== undefined) {
         const cutoverEvts = await this.sequencer.requestLabelRange({
@@ -92,9 +94,13 @@ export class Outbox {
       }
     }
 
+    // 2. wire up close events
     signal?.addEventListener('abort', onClose, { once: true })
     this.sequencer.once('close', onClose)
+
+    // 3. backfill and tail
     try {
+      // backfill if needed
       if (backfillCursor !== undefined) {
         for await (const evt of this.getBackfill(backfillCursor)) {
           if (stopped) return
@@ -106,9 +112,14 @@ export class Outbox {
         this.caughtUp = true
       }
       if (stopped || this.sequencer.destroyed) return
+
+      // ingest from sequencer
       this.sequencer.on('events', addToBuffer)
+
+      // initiate cutover
       void cutover().catch(stop)
 
+      // live tail remaining events
       for await (const evt of this.outBuffer.events()) {
         if (evt.seq > this.lastSeen) {
           this.lastSeen = evt.seq
