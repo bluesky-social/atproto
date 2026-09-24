@@ -317,13 +317,14 @@ export class AppContext implements AsyncDisposable {
     })
 
     const plcRotationKey =
-      secrets.plcRotationKey.provider === 'kms'
+      overrides?.plcRotationKey ??
+      (secrets.plcRotationKey.provider === 'kms'
         ? await KmsKeypair.load({
             keyId: secrets.plcRotationKey.keyId,
           })
         : await crypto.Secp256k1Keypair.import(
             secrets.plcRotationKey.privateKeyHex,
-          )
+          ))
 
     const accountManager = new AccountManager(
       cfg,

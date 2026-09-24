@@ -5,7 +5,13 @@ import * as ui8 from 'uint8arrays'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { Client, type UriString } from '@atproto/lex'
-import { type AppContext, PDS, createSecretKeyObject } from '@atproto/pds'
+import {
+  type AppContext,
+  PDS,
+  createSecretKeyObject,
+  envToCfg,
+  envToSecrets,
+} from '@atproto/pds'
 import { ADMIN_PASSWORD, EXAMPLE_LABELER, JWT_SECRET } from './const.js'
 import getPort from './get-port.js'
 import type { PdsConfig } from './types.js'
@@ -17,7 +23,10 @@ export class TestPds {
     public server: PDS,
   ) {}
 
-  static async create(config: PdsConfig): Promise<TestPds> {
+  static async create(
+    config: PdsConfig,
+    overrides?: Parameters<typeof PDS.create>[2],
+  ): Promise<TestPds> {
     const plcRotationKey = await Secp256k1Keypair.create({ exportable: true })
     const plcRotationPriv = ui8.toString(await plcRotationKey.export(), 'hex')
     const recoveryKey = (await Secp256k1Keypair.create()).did()
@@ -29,7 +38,7 @@ export class TestPds {
     const dataDirectory = path.join(os.tmpdir(), randomStr(8, 'base32'))
     await fs.mkdir(dataDirectory, { recursive: true })
 
-    const server = await PDS.fromEnv({
+    const env = {
       devMode: true,
       port,
       dataDirectory: dataDirectory,
@@ -61,7 +70,8 @@ export class TestPds {
       privacyPolicyUrl: 'https://bsky.social/about/support/privacy-policy',
       supportUrl: 'https://blueskyweb.zendesk.com/hc/en-us',
       ...config,
-    })
+    }
+    const server = await PDS.create(envToCfg(env), envToSecrets(env), overrides)
 
     await server.start()
 
