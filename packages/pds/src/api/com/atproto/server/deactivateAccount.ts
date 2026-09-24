@@ -20,16 +20,13 @@ export default function (server: Server, ctx: AppContext) {
       // in the case of entryway, the full flow is deactivateAccount (PDS) -> deactivateAccount (Entryway) -> updateSubjectStatus(PDS)
       handler: async ({ input: { body }, auth, req }) => {
         // DPoP bound credentials cannot be forwarded as-is, so OAuth callers
-        // are authenticated towards the entryway using service auth instead.
-        // Mimics what updateHandle does
-        const { headers } =
-          auth.credentials.type === 'oauth'
-            ? await ctx.entrywayAuthHeaders(
-                req,
-                auth.credentials.did,
-                com.atproto.server.deactivateAccount.$lxm,
-              )
-            : ctx.entrywayPassthruHeaders(req)
+        // are authenticated towards the entryway using entryway auth instead.
+        const { headers } = await ctx.entrywayAuthHeaders(
+          req,
+          auth.credentials.did,
+          com.atproto.server.deactivateAccount.$lxm,
+        )
+
         await entrywayClient.xrpc(com.atproto.server.deactivateAccount, {
           headers,
           body,
@@ -41,8 +38,10 @@ export default function (server: Server, ctx: AppContext) {
       auth,
       handler: async ({ input: { body }, auth }) => {
         await ctx.accountManager.deactivateAccount(auth.credentials.did, {
-          // Revoke credentials for OAuth deactivations since you cannot log into
-          // the account via OAuth if it has been deactivated
+          // For legacy reasons we check if it's an oauth credential before passing
+          // deleteCredentials since it did not before.
+          // @TODO Investiage why the deleteCredentials was not passed previously and
+          // address it in a different line of work
           deleteCredentials: auth.credentials.type === 'oauth',
           deleteAfter: body.deleteAfter ?? null,
         })

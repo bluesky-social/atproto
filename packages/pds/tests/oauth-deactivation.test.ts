@@ -71,12 +71,9 @@ describe('account deactivation over OAuth', () => {
 
     await page.goto(authorizeUrl)
 
-    // A fresh device has to sign in first. A device that already holds a
-    // session jumps straight to the consent screen.
-    if ((await page.title()) === 'Connexion') {
-      await page.typeInInput('password', 'alice-pass')
-      await page.clickOnText('Se connecter')
-    }
+    await page.assertTitle('Connexion')
+    await page.typeInInput('password', 'alice-pass')
+    await page.clickOnText('Se connecter')
 
     await page.assertTitle('Autoriser')
 
