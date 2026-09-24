@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import type { CombinedTuple, Simplify } from '../util/type.js'
 
 export type CspValue =
@@ -90,6 +91,15 @@ export function combineCsp(a: CspConfig, b: CspConfig): CspConfig {
     if (a[name] && b[name]) {
       const set = new Set(a[name])
       if (b[name]) for (const value of b[name]) set.add(value)
+      // Remove URL values if the protocol is already present in the set
+      for (const value of set) {
+        if (value.startsWith('http://') || value.startsWith('https://')) {
+          const protocol = new URL(value).protocol as 'http:' | 'https:'
+          if (set.has(protocol)) set.delete(value)
+        } else if (value.startsWith('data:') && value.length > 5) {
+          if (set.has('data:')) set.delete(value)
+        }
+      }
       if (set.size > 1 && set.has(NONE)) set.delete(NONE)
       result[name] = [...set]
     } else if (a[name] || b[name]) {
@@ -98,4 +108,23 @@ export function combineCsp(a: CspConfig, b: CspConfig): CspConfig {
   }
 
   return result
+}
+
+export function dataUriToSha256(uri: `data:${string}`): CspValue {
+  const { 0: header, 1: data, length: partsCount } = uri.split(',')
+  if (partsCount !== 2) throw new Error('Invalid data URI')
+  const headerParams = header.split(';')
+  const encoding: 'base64' | 'url' = headerParams.includes('base64')
+    ? 'base64'
+    : 'url'
+  const bytes =
+    encoding === 'base64'
+      ? Buffer.from(data, 'base64')
+      : Buffer.from(decodeURIComponent(data), 'utf-8')
+  return bytesToSha256(bytes)
+}
+
+export function bytesToSha256(bytes: Buffer): CspValue {
+  const hash = createHash('sha256').update(bytes).digest('base64')
+  return `'sha256-${hash}'`
 }
