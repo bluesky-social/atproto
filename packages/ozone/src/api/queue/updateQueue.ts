@@ -39,7 +39,6 @@ export default function (server: Server, ctx: AppContext) {
 
       const queue = await ctx.db.transaction(async (dbTxn) => {
         const queueService = ctx.queueService(dbTxn)
-        await queueService.lockRecommendedLabels()
         const existing = await queueService.getById(queueId)
         if (!existing) {
           throw new InvalidRequestError(

@@ -8,7 +8,7 @@ import {
   toDatetimeString,
 } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
-import { ForbiddenError } from '@atproto/xrpc-server'
+import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
 import type { AppContext } from '../context.js'
 import type { Database } from '../db/index.js'
 import type { DatabaseSchemaType } from '../db/schema/index.js'
@@ -18,8 +18,6 @@ import type { AppealView } from '../lexicons/tools/ozone/inbox/defs.js'
 import type { ModSubject } from '../mod-service/subject.js'
 import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
 import { findMatchingQueue } from '../queue/service.js'
-import { TagService } from '../tag-service/index.js'
-import { getTagForReport } from '../tag-service/util.js'
 
 export const APPEAL_REASON_TYPE = 'tools.ozone.report.defs#reasonAppeal'
 export const TAKEDOWN = 'tools.ozone.moderation.defs#modEventTakedown'
@@ -139,7 +137,8 @@ export const toAppealState = ({
  */
 export const subjectKey = (subject: ModSubject): string => {
   const { subjectDid, subjectMessageId, subjectConvoId } = subject.info()
-  if (subject.isMessage()) return `message:${subjectDid}:${subjectMessageId}`
+  if (subject.isMessage())
+    return `message:${subjectDid}:${subjectConvoId}:${subjectMessageId}`
   if (subject.isConvo()) return `convo:${subjectDid}:${subjectConvoId}`
   if (subject.isRecord()) return `record:${subjectDid}:${subject.recordPath}`
   return `account:${subjectDid}`
@@ -244,6 +243,28 @@ export const findAppealedEvent = async (
   return matches.length === 1 ? matches[0] : undefined
 }
 
+export const resolveAppealAction = async (
+  ctx: AppContext,
+  subject: ModSubject,
+  action: tools.ozone.inbox.appealActionedSubject.$InputBody['action'],
+) => {
+  if (!action) return undefined
+  const reference = tools.ozone.inbox.appealActionedSubject
+  if (reference.actionRef.$isTypeOf(action)) {
+    return ctx.modService(ctx.db).getEvent(action.id)
+  }
+  if (reference.labelRef.$isTypeOf(action)) {
+    return findAppealedEvent(ctx, subject, { type: 'label', val: action.val })
+  }
+  if (reference.takedownRef.$isTypeOf(action)) {
+    return findAppealedEvent(ctx, subject, { type: 'takedown' })
+  }
+  throw new InvalidRequestError(
+    'Unknown appeal action reference',
+    'InvalidAppealSubject',
+  )
+}
+
 /**
  * Label rows are keyed by a single string: the record URI, or the DID for an
  * account.
@@ -271,6 +292,20 @@ export const appealsExhausted = (
   return subject.isRepo() ? report.status !== 'closed' : true
 }
 
+export const findLatestAppealReport = async (
+  db: Database,
+  subject: ModSubject,
+): Promise<AppealReport | null> => {
+  const report = await db.db
+    .selectFrom('report')
+    .where('reportType', '=', APPEAL_REASON_TYPE)
+    .where((eb) => reportSubjectFilter(eb, subject))
+    .orderBy('id', 'desc')
+    .select(['id', 'status', 'createdAt', 'closedAt'])
+    .executeTakeFirst()
+  return report ?? null
+}
+
 /**
  * Reject an appeal the subject is no longer entitled to.
  *
@@ -286,15 +321,9 @@ export const assertAppealAllowed = async (
     hashtextextended(${subjectKey(subject)}, 0)
   )`.execute(dbTxn.db)
 
-  const existing = await dbTxn.db
-    .selectFrom('report')
-    .where('reportType', '=', APPEAL_REASON_TYPE)
-    .where((eb) => reportSubjectFilter(eb, subject))
-    .orderBy('id', 'desc')
-    .select(['id', 'status', 'createdAt', 'closedAt'])
-    .executeTakeFirst()
+  const existing = await findLatestAppealReport(dbTxn, subject)
 
-  if (appealsExhausted(subject, existing ?? null)) {
+  if (appealsExhausted(subject, existing)) {
     throw new ForbiddenError(
       subject.isRepo()
         ? 'Awaiting decision on previous appeal'
@@ -318,6 +347,48 @@ export type FileAppealInput = {
   modTool?: { name: string; meta?: { [_ in string]: unknown } }
 }
 
+const buildAppealEventMeta = (
+  action: FileAppealInput['action'],
+): Record<string, string | number | boolean> | undefined => {
+  if (!action) return undefined
+  const meta: Record<string, string | number | boolean> = {
+    appealActionType: action.$type,
+  }
+  const reference = tools.ozone.inbox.appealActionedSubject
+  if (reference.actionRef.$isTypeOf(action)) {
+    meta.appealActionId = action.id
+  } else if (reference.labelRef.$isTypeOf(action)) {
+    meta.appealLabel = action.val
+  }
+  return meta
+}
+
+const findSourceQueueIds = async (
+  db: Database,
+  subject: ModSubject,
+  actionId: number,
+): Promise<(number | null)[]> => {
+  // @NOTE Closed reports retain the source action link. Query each status
+  // separately so the existing active-subject and closed-DID indexes apply.
+  const query = db.db
+    .selectFrom('report')
+    .where((eb) => reportSubjectFilter(eb, subject))
+    .where('reportType', '!=', APPEAL_REASON_TYPE)
+    .where('actionEventIds', '@>', jsonb([actionId]))
+
+  const [active, closed] = await Promise.all([
+    query
+      .where(sql<boolean>`status != 'closed'`)
+      .select('queueId')
+      .execute(),
+    query
+      .where(sql<boolean>`status = 'closed'`)
+      .select('queueId')
+      .execute(),
+  ])
+  return [...active, ...closed].map((report) => report.queueId)
+}
+
 /**
  * Pick the queue an appeal should land in.
  *
@@ -338,61 +409,40 @@ const selectQueue = async (
   resolvedActionId: number | undefined,
   action: FileAppealInput['action'],
 ) => {
-  // @NOTE Closed reports retain the source action link. Query each status
-  // separately so the existing active-subject and closed-DID indexes apply.
-  const sourceReports =
+  const sourceQueueIds =
     resolvedActionId === undefined
       ? []
-      : (
-          await Promise.all(
-            [true, false].map((closed) => {
-              let query = ctx.db.db
-                .selectFrom('report')
-                .where((eb) => reportSubjectFilter(eb, subject))
-                .where('reportType', '!=', APPEAL_REASON_TYPE)
-                .where('actionEventIds', '@>', jsonb([resolvedActionId]))
-              query = closed
-                ? query.where(sql<boolean>`status = 'closed'`)
-                : query.where(sql<boolean>`status != 'closed'`)
-              return query.select('queueId').execute()
-            }),
-          )
-        ).flat()
-  const sourceQueueIds = sourceReports.map((source) => source.queueId)
+      : await findSourceQueueIds(ctx.db, subject, resolvedActionId)
   const allSourcesAssigned =
     sourceQueueIds.length > 0 &&
     sourceQueueIds.every(
       (queueId): queueId is number => queueId !== null && queueId > 0,
     )
   const sourceQueues = new Set(sourceQueueIds)
-  const inheritedQueueId =
+  let queueId: number | null =
     allSourcesAssigned && sourceQueues.size === 1
       ? (sourceQueueIds[0] as number)
       : null
   const queueService = ctx.queueService(ctx.db)
-  const labelQueue =
-    inheritedQueueId === null &&
-    action !== undefined &&
+  if (
+    queueId === null &&
+    action &&
     tools.ozone.inbox.appealActionedSubject.labelRef.$isTypeOf(action)
-      ? await queueService.getByRecommendedLabel(action.val)
-      : undefined
-  const queues =
-    inheritedQueueId === null && labelQueue === undefined
-      ? (await queueService.list({ limit: 1000, enabled: true })).queues
-      : []
-  const defaultQueue =
-    inheritedQueueId === null && labelQueue === undefined
-      ? findMatchingQueue(
-          queues,
-          subject.isRecord() ? 'record' : 'account',
-          subject.info().subjectUri
-            ? new AtUri(subject.info().subjectUri!).collection
-            : null,
-          APPEAL_REASON_TYPE,
-        )
-      : null
-
-  const queueId = inheritedQueueId ?? labelQueue?.id ?? defaultQueue?.id ?? -1
+  ) {
+    queueId = (await queueService.getByRecommendedLabel(action.val))?.id ?? null
+  }
+  if (queueId === null) {
+    const { queues } = await queueService.list({ limit: 1000, enabled: true })
+    const subjectUri = subject.info().subjectUri
+    const collection = subjectUri ? new AtUri(subjectUri).collection : null
+    queueId =
+      findMatchingQueue(
+        queues,
+        subject.isRecord() ? 'record' : 'account',
+        collection,
+        APPEAL_REASON_TYPE,
+      )?.id ?? -1
+  }
 
   // An unrouted report carries no queue timestamp: `queuedAt` records when a
   // report entered a queue, and matches the `queueId: -1` / `status: 'open'`
@@ -412,7 +462,7 @@ const selectQueue = async (
  * first entry is the action being challenged.
  *
  * Everything that must be atomic - the eligibility guard, the report event,
- * the report row, and the tag - shares one transaction. Everything that need
+ * and the report row - shares one transaction. Everything that needs
  * not be, is already done by the time it opens.
  */
 export const fileAppeal = async (
@@ -433,76 +483,27 @@ export const fileAppeal = async (
     action,
   )
 
-  const subjectInfo = subject.info()
-  const recordPath = subjectInfo.subjectUri
-    ? (() => {
-        const uri = new AtUri(subjectInfo.subjectUri)
-        return `${uri.collection}/${uri.rkey}`
-      })()
-    : ''
-
   const reportId = await ctx.db.transaction(async (dbTxn) => {
     await assertAppealAllowed(dbTxn, subject)
 
     // create event and report row
     const moderationTxn = ctx.modService(dbTxn)
-    const { event: reportEvent, subjectStatus } = await moderationTxn.report({
+    const { event: reportEvent } = await moderationTxn.report({
       reason,
       subject,
       reasonType: APPEAL_REASON_TYPE,
       reportedBy: requester,
       modTool,
-      eventMeta: action
-        ? {
-            appealActionType: action.$type,
-            ...(tools.ozone.inbox.appealActionedSubject.actionRef.$isTypeOf(
-              action,
-            )
-              ? { appealActionId: action.id }
-              : tools.ozone.inbox.appealActionedSubject.labelRef.$isTypeOf(
-                    action,
-                  )
-                ? { appealLabel: action.val }
-                : {}),
-          }
-        : undefined,
+      eventMeta: buildAppealEventMeta(action),
     })
-    const now = reportEvent.createdAt
-    const inserted = await dbTxn.db
-      .insertInto('report')
-      .values({
-        eventId: reportEvent.id,
-        queueId,
-        queuedAt,
-        actionEventIds:
-          resolvedActionId === undefined ? null : jsonb([resolvedActionId]),
-        actionNote: null,
-        isMuted:
-          !!reportEvent.meta?.isReporterMuted ||
-          !!reportEvent.meta?.isSubjectMuted,
-        isAutomated: modTool?.meta?.isAutomated === true,
-        status: queueId > 0 ? ('queued' as const) : ('open' as const),
-        reportType: APPEAL_REASON_TYPE,
-        did: subjectInfo.subjectDid,
-        recordPath,
-        subjectMessageId: subjectInfo.subjectMessageId,
-        subjectConvoId: subjectInfo.subjectConvoId,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .returning('id')
-      .executeTakeFirstOrThrow()
-
-    // apply appeal tag
-    const tagService = new TagService(
-      subject,
-      subjectStatus,
-      ctx.cfg.service.did,
-      moderationTxn,
-    )
-    await tagService.evaluateForSubject([getTagForReport(APPEAL_REASON_TYPE)])
-
-    return inserted.id
+    return ctx.queueService(dbTxn).insertReportFromEvent({
+      event: reportEvent,
+      reportType: APPEAL_REASON_TYPE,
+      queueId,
+      queuedAt,
+      actionEventIds:
+        resolvedActionId === undefined ? null : [resolvedActionId],
+    })
   })
 
   return { reportId }

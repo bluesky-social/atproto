@@ -1,15 +1,14 @@
 import {
   ForbiddenError,
   InternalServerError,
-  InvalidRequestError,
   type Server,
 } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import {
   fileAppeal,
-  findAppealedEvent,
   isAppealWindowOpen,
   isAppealableEvent,
+  resolveAppealAction,
   subjectKey,
 } from '../../inbox/appeal.js'
 import { hydrateSubjectView } from '../../inbox/views.js'
@@ -24,43 +23,14 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       const { action: actionInput, subject: subjectInput } = input.body
-      const isActionRef =
-        actionInput !== undefined &&
-        tools.ozone.inbox.appealActionedSubject.actionRef.$isTypeOf(actionInput)
-      const isLabelRef =
-        actionInput !== undefined &&
-        tools.ozone.inbox.appealActionedSubject.labelRef.$isTypeOf(actionInput)
-      const isTakedownRef =
-        actionInput !== undefined &&
-        tools.ozone.inbox.appealActionedSubject.takedownRef.$isTypeOf(
-          actionInput,
-        )
       const requester = auth.credentials.iss
       const canAppealForOthers =
         auth.credentials.isAdmin ||
         auth.credentials.isModerator ||
         auth.credentials.isTriage
 
-      // validate input
-      if (actionInput && !isActionRef && !isLabelRef && !isTakedownRef) {
-        throw new InvalidRequestError(
-          'Unknown appeal action reference',
-          'InvalidAppealSubject',
-        )
-      }
-
       const inputSubject = subjectFromInput(subjectInput)
-      const action = isActionRef
-        ? await ctx.modService(ctx.db).getEvent(actionInput.id)
-        : actionInput
-          ? await findAppealedEvent(
-              ctx,
-              inputSubject,
-              isLabelRef
-                ? { type: 'label', val: actionInput.val }
-                : { type: 'takedown' },
-            )
-          : undefined
+      const action = await resolveAppealAction(ctx, inputSubject, actionInput)
 
       // validate action event
       if (action) {

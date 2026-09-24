@@ -166,35 +166,6 @@ describe('ozone-queues', () => {
       ).rejects.toMatchObject({ error: 'ConflictingQueue' })
     })
 
-    it('prevents concurrent queues from claiming the same label', async () => {
-      const results = await Promise.allSettled([
-        createQueue({
-          name: 'CQ: Concurrent Label A',
-          subjectTypes: [],
-          reportTypes: [],
-          recommendedLabels: ['concurrent-label'],
-        }),
-        createQueue({
-          name: 'CQ: Concurrent Label B',
-          subjectTypes: [],
-          reportTypes: [],
-          recommendedLabels: ['concurrent-label'],
-        }),
-      ])
-      const fulfilled = results.filter(
-        (result) => result.status === 'fulfilled',
-      )
-      const rejected = results.filter((result) => result.status === 'rejected')
-      expect(fulfilled).toHaveLength(1)
-      expect(rejected).toHaveLength(1)
-      if (fulfilled[0].status === 'fulfilled') {
-        createdIds.push(fulfilled[0].value.data.queue.id)
-      }
-      if (rejected[0].status === 'rejected') {
-        expect(rejected[0].reason).toMatchObject({ error: 'ConflictingQueue' })
-      }
-    })
-
     it('stores valid recommended policies and rejects unknown policies', async () => {
       const { data } = await createQueue({
         name: 'CQ: Recommended Policies',

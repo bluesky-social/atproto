@@ -232,6 +232,10 @@ describe('appealActionedSubject', () => {
       actionEventIds: [action.id],
       did: sc.dids.bob,
     })
+    const status = await network.ozone.ctx
+      .modService(network.ozone.ctx.db)
+      .getStatus(new RecordSubject(subject.uri, subject.cid))
+    expect(status?.tags).not.toContain('report:appeal')
   })
 
   it('does not reveal actions belonging to another user', async () => {
@@ -1133,11 +1137,25 @@ describe('appealActionedSubject', () => {
     })
     const messageId = 'shared-message-id'
     const subject = (convoId: string) => ({
-      $type: 'chat.bsky.convo.defs#messageRef',
+      $type: 'chat.bsky.convo.defs#messageRef' as const,
       did: account.did,
       convoId,
       messageId,
     })
+
+    const action = await takedown(subject('convo-a'))
+    await expect(
+      callAppeal(
+        {
+          action: {
+            $type: 'tools.ozone.inbox.appealActionedSubject#actionRef',
+            id: action.id,
+          },
+          subject: subject('convo-b'),
+        },
+        account.did,
+      ),
+    ).rejects.toMatchObject({ error: 'NotAppealable' })
 
     await callAppeal({ subject: subject('convo-a') }, account.did)
     await expect(

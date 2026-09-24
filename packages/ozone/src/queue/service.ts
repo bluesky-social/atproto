@@ -8,6 +8,7 @@ import { TimeIdKeyset, paginate } from '../db/pagination.js'
 import type { ReportQueue } from '../db/schema/report_queue.js'
 import { jsonb } from '../db/types.js'
 import { com, tools } from '../lexicons/index.js'
+import type { ModerationEventRow } from '../mod-service/types.js'
 import { handleReportUpdate } from '../report/handle-report-update.js'
 import { ReportStatsService } from '../report/stats.js'
 import { viewQueueStats } from '../report/views.js'
@@ -20,6 +21,62 @@ type ResolvedAssignment = {
   queueId: number
   queuedAt: DatetimeString | null
   status: 'queued' | 'open'
+}
+
+type ReportEvent = Pick<
+  ModerationEventRow,
+  | 'id'
+  | 'subjectDid'
+  | 'subjectUri'
+  | 'subjectMessageId'
+  | 'subjectConvoId'
+  | 'meta'
+  | 'modTool'
+>
+
+function subjectTypeFromEvent(event: ReportEvent): SubjectType {
+  if (event.subjectMessageId) return 'message'
+  if (event.subjectConvoId) return 'conversation'
+  if (event.subjectUri) return 'record'
+  return 'account'
+}
+
+function reportRowFromEvent({
+  event,
+  reportType,
+  assignment,
+  createdAt,
+  actionEventIds = null,
+}: {
+  event: ReportEvent
+  reportType: string
+  assignment: ResolvedAssignment
+  createdAt: DatetimeString
+  actionEventIds?: number[] | null
+}) {
+  let recordPath = ''
+  if (event.subjectUri) {
+    const uri = new AtUri(event.subjectUri)
+    recordPath = `${uri.collection}/${uri.rkey}`
+  }
+
+  return {
+    eventId: event.id,
+    queueId: assignment.queueId,
+    queuedAt: assignment.queuedAt,
+    actionEventIds: actionEventIds === null ? null : jsonb(actionEventIds),
+    actionNote: null,
+    isMuted: !!event.meta?.isReporterMuted || !!event.meta?.isSubjectMuted,
+    isAutomated: parseModTool(event.modTool).isAutomated,
+    status: assignment.status,
+    reportType,
+    did: event.subjectDid,
+    recordPath,
+    subjectMessageId: event.subjectMessageId,
+    subjectConvoId: event.subjectConvoId,
+    createdAt,
+    updatedAt: createdAt,
+  }
 }
 
 /**
@@ -68,11 +125,40 @@ export class QueueService {
     return (db: Database) => new QueueService(db)
   }
 
-  async lockRecommendedLabels(): Promise<void> {
+  /** Insert an immediately routed report in the caller's transaction. */
+  async insertReportFromEvent({
+    event,
+    reportType,
+    queueId,
+    queuedAt,
+    actionEventIds,
+  }: {
+    event: ModerationEventRow
+    reportType: string
+    queueId: number
+    queuedAt: DatetimeString | null
+    actionEventIds?: number[] | null
+  }): Promise<number> {
     this.db.assertTransaction()
-    await sql`select pg_advisory_xact_lock(
-      hashtextextended('report_queue_recommended_labels', 0)
-    )`.execute(this.db.db)
+    const assignment: ResolvedAssignment = {
+      queueId,
+      queuedAt,
+      status: queueId > 0 ? 'queued' : 'open',
+    }
+    const inserted = await this.db.db
+      .insertInto('report')
+      .values(
+        reportRowFromEvent({
+          event,
+          reportType,
+          assignment,
+          createdAt: event.createdAt,
+          actionEventIds,
+        }),
+      )
+      .returning('id')
+      .executeTakeFirstOrThrow()
+    return inserted.id
   }
 
   async assertRecommendedPolicies(
@@ -628,20 +714,12 @@ export class QueueService {
     let unmatched = 0
 
     const rows = events.map((event) => {
-      const subjectType: SubjectType = event.subjectMessageId
-        ? 'message'
-        : event.subjectConvoId
-          ? 'conversation'
-          : event.subjectUri
-            ? 'record'
-            : 'account'
+      const subjectType = subjectTypeFromEvent(event)
 
       let collection: string | null = null
-      let recordPath = ''
       if (event.subjectUri) {
         const uri = new AtUri(event.subjectUri)
         collection = uri.collection
-        recordPath = `${uri.collection}/${uri.rkey}`
       }
 
       const reportType =
@@ -663,26 +741,12 @@ export class QueueService {
       else assigned++
       if (event.id > maxEventId) maxEventId = event.id
 
-      const isMuted =
-        !!event.meta?.isReporterMuted || !!event.meta?.isSubjectMuted
-
-      return {
-        eventId: event.id,
-        queueId: assignment.queueId,
-        queuedAt: assignment.queuedAt,
-        actionEventIds: null,
-        actionNote: null,
-        isMuted,
-        isAutomated: tool.isAutomated,
-        status: assignment.status,
+      return reportRowFromEvent({
+        event,
         reportType,
-        did: event.subjectDid,
-        recordPath,
-        subjectMessageId: event.subjectMessageId,
-        subjectConvoId: event.subjectConvoId,
+        assignment,
         createdAt: now,
-        updatedAt: now,
-      }
+      })
     })
 
     // ON CONFLICT (eventId) DO NOTHING covers any race where a report row

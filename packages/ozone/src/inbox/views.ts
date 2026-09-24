@@ -20,7 +20,6 @@ import type {
 import type { AppealReport } from './appeal.js'
 import {
   APPEALABLE_EVENT_ACTIONS,
-  APPEAL_REASON_TYPE,
   EMAIL,
   LABEL,
   MUTE_REPORTER,
@@ -29,7 +28,7 @@ import {
   REVOKE_CREDENTIALS,
   TAKEDOWN,
   eventSubjectFilter,
-  reportSubjectFilter,
+  findLatestAppealReport,
   subjectLabelUri,
   toAppealState,
 } from './appeal.js'
@@ -128,13 +127,7 @@ export const loadSubject = async (
       ])
       .executeTakeFirstOrThrow() as Promise<EventTotals>,
 
-    db.db
-      .selectFrom('report')
-      .where('reportType', '=', APPEAL_REASON_TYPE)
-      .where((eb) => reportSubjectFilter(eb, subject))
-      .orderBy('id', 'desc')
-      .select(['id', 'status', 'createdAt', 'closedAt'])
-      .executeTakeFirst(),
+    findLatestAppealReport(db, subject),
   ])
 
   const publicNote = appealReport

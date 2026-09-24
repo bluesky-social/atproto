@@ -15,7 +15,7 @@ import type { SettingService } from '../../setting/service.js'
 import { TagService } from '../../tag-service/index.js'
 import { getTagForReport } from '../../tag-service/util.js'
 import { retryHttp } from '../../util.js'
-import { getEventType } from '../util.js'
+import { getEventType, isAppealReport } from '../util.js'
 import { assertProtectedTagAction, getProtectedTags } from './util.js'
 
 const handleModerationEvent = async ({
@@ -286,19 +286,20 @@ const handleModerationEvent = async ({
       }
     }
 
-    const tagService = new TagService(
-      subject,
-      result.subjectStatus,
-      ctx.cfg.service.did,
-      moderationTxn,
-    )
-
-    const initialTags = tools.ozone.moderation.defs.modEventReport.$isTypeOf(
-      event,
-    )
-      ? [getTagForReport(event.reportType)]
-      : undefined
-    await tagService.evaluateForSubject(initialTags)
+    const isReportEvent =
+      tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)
+    if (!isReportEvent || !isAppealReport(event.reportType)) {
+      const tagService = new TagService(
+        subject,
+        result.subjectStatus,
+        ctx.cfg.service.did,
+        moderationTxn,
+      )
+      const initialTags = isReportEvent
+        ? [getTagForReport(event.reportType)]
+        : undefined
+      await tagService.evaluateForSubject(initialTags)
+    }
 
     if (subject.isRepo()) {
       if (isTakedownEvent) {

@@ -38,13 +38,15 @@ export default function (server: Server, ctx: AppContext) {
             modTool,
           })
 
-        const tagService = new TagService(
-          subject,
-          subjectStatus,
-          ctx.cfg.service.did,
-          moderationTxn,
-        )
-        await tagService.evaluateForSubject([getTagForReport(reasonType)])
+        if (!isAppealReport(reasonType)) {
+          const tagService = new TagService(
+            subject,
+            subjectStatus,
+            ctx.cfg.service.did,
+            moderationTxn,
+          )
+          await tagService.evaluateForSubject([getTagForReport(reasonType)])
+        }
 
         return reportEvent
       })
