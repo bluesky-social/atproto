@@ -1,9 +1,4 @@
-import {
-  type CspConfig,
-  type CspValue,
-  dataUriToSha256,
-  mergeCsp,
-} from '../lib/csp/index.js'
+import { type CspConfig, type CspValue, mergeCsp } from '../lib/csp/index.js'
 import type { Customization } from './customization.js'
 
 /**
@@ -16,6 +11,11 @@ const HCAPTCHA_CSP: CspConfig = {
   'connect-src': ['https://hcaptcha.com', 'https://*.hcaptcha.com'],
 }
 
+/**
+ * Transforms the customization settings into a Content Security Policy (CSP)
+ * configuration, based on the ways customization settings are used in the
+ * @atproto/oauth-provider-ui web app.
+ */
 export function buildCustomizationCsp({
   branding,
   hcaptcha,
@@ -35,7 +35,15 @@ export function buildCustomizationCsp({
         if (isHttpUri(uri)) {
           imgSrc.add(uri)
         } else if (isDataUri(uri)) {
-          imgSrc.add(dataUriToSha256(uri))
+          // CSP hash sources (e.g. `sha256-<hash>`) do not authorize image
+          // fetches: they only apply to inline scripts/styles (and external
+          // scripts carrying integrity metadata), never to an `img-src` URL
+          // match. See the "Sources" note in:
+          // https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/img-src
+          // So the only way to allow a `data:` image is the `data:` scheme
+          // source, which we add here exclusively when the customization
+          // actually references a `data:` uri.
+          imgSrc.add('data:')
         } else {
           throw new Error(`Unsupported URI format: ${uri}`)
         }

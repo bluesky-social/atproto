@@ -2,4 +2,4 @@
 "@atproto/oauth-provider": patch
 ---
 
-Make CSP narrower by replacing the `data: https:` directive needed for customization images with either an exact uri or `'sha256-<hash>'` directive
+Narrow the CSP `img-src` directive for customization images: the `data:` scheme source is now emitted only when a customization image is actually configured as a `data:` uri, and http(s) customization images contribute their own origin.
