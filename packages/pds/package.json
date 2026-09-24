@@ -89,6 +89,7 @@
   "devDependencies": {
     "@atproto/api": "workspace:^",
     "@atproto/oauth-client-browser-example": "workspace:^",
+    "@atproto/oauth-client-node": "workspace:^",
     "@did-plc/server": "^0.0.1",
     "@jest/globals": "^30.0.0",
     "@types/cors": "^2.8.12",
