@@ -29,7 +29,7 @@ Updated: 2026-09-25. This file is the handoff record for work across agent sessi
 - [ ] Inspect existing `report` and `moderation_event` indexes and query plans. Existing relevant indexes are documented below, and no `moderation_event` index was added; production-scale plan evidence remains unavailable in the local fixture.
 - [x] Add route/integration tests for account isolation, pagination, missing resources, action attribution, report privacy, read state, and response shape. Four focused suites passed: 76 tests total.
 - [x] Build, typecheck, run focused tests, format/lint changed files, add a changeset for each touched package. Focused Ozone/PDS builds, test typecheck, formatting, lint, 76 focused tests, root `pnpm run build --force`, and root `pnpm run verify` passed. Changeset `.changeset/blue-carpets-fetch.md` covers Ozone/API minor and PDS patch.
-- [ ] Commit, push, create PR based on `ozone/mod-inbox/appeal`, and record URL here.
+- [x] Committed and pushed; draft PR [#5550](https://github.com/bluesky-social/atproto/pull/5550) targets `ozone/mod-inbox/appeal`.
 
 ## PR 2 checklist
 
@@ -39,6 +39,19 @@ Updated: 2026-09-25. This file is the handoff record for work across agent sessi
 - [ ] Verify cursor semantics, unread count/seen consistency, preference defaults, and concurrency in tests.
 - [ ] Build, run tests, format/lint, add changeset, commit, push, and create PR based on PR 1's branch.
 - [ ] Record both PR URLs and final verification results here.
+
+## PR status
+
+- PR 1: [#5550](https://github.com/bluesky-social/atproto/pull/5550) (draft), head `ozone/mod-inbox/read`, base `ozone/mod-inbox/appeal`.
+- PR 2: pending; branch must start at PR 1's latest commit.
+
+## PR 2 implementation decisions
+
+- Use the spec's watermark rule (`createdAt <= seenAt`) for notification read state; do not persist per-notification `isRead` despite the contradictory storage sketch.
+- Keep public notification report IDs equal to `moderation_event.id`, matching `listReports`.
+- Align `standingRef` values with the actual standing lexicon (`good`, `warning`, `atRisk`), not the conflicting example (`limited`, `suspended`).
+- Add `inApp` to the public `getCapabilities.channels` vocabulary so an instance without Courier can truthfully advertise the inbox. Include `push` only when push delivery is configured.
+- Implement in-app notification persistence and transactional hooks with unique source keys. Courier delivery is described as unscoped in the source spec; decide its transport/outbox scope after the in-app API and event hooks are concrete.
 
 ## Decisions and constraints
 
