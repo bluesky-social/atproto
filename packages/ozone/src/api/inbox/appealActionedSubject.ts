@@ -11,6 +11,7 @@ import {
   resolveAppealAction,
   subjectKey,
 } from '../../inbox/appeal.js'
+import { getSeenAt } from '../../inbox/seen.js'
 import { hydrateSubjectView } from '../../inbox/views.js'
 import { tools } from '../../lexicons/index.js'
 import {
@@ -83,11 +84,13 @@ export default function (server: Server, ctx: AppContext) {
       // that was just filed, and treat a missing snapshot as a bug rather than
       // papering over it - the subject provably has moderation history, since
       // the write above just added to it.
+      const seenAt = await getSeenAt(ctx.db, subject.did, 'subjects')
       const view = await hydrateSubjectView(
         ctx.db,
         subject,
         ctx.cfg.service.did,
         ctx.cfg.inbox,
+        seenAt,
       )
       if (!view) {
         throw new InternalServerError(

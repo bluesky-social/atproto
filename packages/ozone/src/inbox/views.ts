@@ -32,6 +32,7 @@ import {
   subjectLabelUri,
   toAppealState,
 } from './appeal.js'
+import { isRead } from './seen.js'
 
 /**
  * Newest events mapped into the action history. The totals query supplies the
@@ -160,6 +161,7 @@ export type SubjectViewInput = {
   serviceDid: string
   cfg: InboxConfig
   snapshot: SubjectSnapshot
+  seenAt?: DatetimeString | null
 }
 
 export type EnforcementViewInput = {
@@ -384,6 +386,7 @@ export const toSubjectView = ({
   serviceDid,
   snapshot,
   cfg,
+  seenAt = null,
 }: SubjectViewInput): SubjectView | null => {
   if (!snapshot.status && !snapshot.actionCount) return null
 
@@ -423,6 +426,7 @@ export const toSubjectView = ({
     enforcement,
     appeal,
     availableActions,
+    isRead: isRead(updatedAt, seenAt),
     createdAt,
     updatedAt,
   }
@@ -442,10 +446,12 @@ export const hydrateSubjectView = async (
   subject: ModSubject,
   serviceDid: DidString,
   cfg: InboxConfig,
+  seenAt?: DatetimeString | null,
 ): Promise<SubjectView | null> =>
   toSubjectView({
     subject,
     serviceDid,
     cfg,
+    seenAt,
     snapshot: await loadSubject(db, subject),
   })
