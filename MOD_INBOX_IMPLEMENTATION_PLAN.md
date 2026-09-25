@@ -36,25 +36,36 @@ Updated: 2026-09-25. This file is the handoff record for work across agent sessi
 
 ## PR 2 checklist
 
-- [ ] Add notification lexicons and storage/schema/migration only as required by the spec.
-- [ ] Define notification production triggers and recipient model; make writes atomic with the triggering event where needed and idempotent under retries.
-- [ ] Implement list, preferences read/write, unread count, and seen watermark routes, scoped to the authenticated DID.
-- [ ] Verify cursor semantics, unread count/seen consistency, preference defaults, and concurrency in tests.
-- [ ] Build, run tests, format/lint, add changeset, commit, push, and create PR based on PR 1's branch.
-- [ ] Record both PR URLs and final verification results here.
+- [x] Add notification lexicons and an Ozone-owned notification/preference table; index only the new notification table.
+- [x] Define notification production triggers and recipient model; write inside report/event transactions with unique source keys. Standing changes on strike expiry use a per-subject transaction.
+- [x] Implement list, preferences read/write, unread count, and seen watermark routes, scoped to the authenticated DID.
+- [x] Verify cursor semantics, unread count/seen consistency, preference defaults, and concurrency in tests. Both focused suites pass (13 tests total).
+- [x] Build, run tests, format/lint, add changeset, commit, push, and create PR based on PR 1's branch.
+- [x] Record both PR URLs and final verification results here.
 
 ## PR status
 
 - PR 1: [#5550](https://github.com/bluesky-social/atproto/pull/5550) (draft), head `ozone/mod-inbox/read`, base `ozone/mod-inbox/appeal`.
-- PR 2: pending; branch must start at PR 1's latest commit.
+- PR 2: [#5551](https://github.com/bluesky-social/atproto/pull/5551) (draft), head `ozone/mod-inbox/notifications`, base `ozone/mod-inbox/read`; initial implementation commit `bf91b7d34`.
+
+## PR 2 progress and remaining review
+
+- Implemented notification writes at individual report activity, both bulk report paths, public moderation actions, standing changes from moderation events (including record strikes), and strike expiry. The producer suite passed 8 tests; the route suite passed 5 tests.
+- Public capabilities advertise `inApp`. The new preference is stored for future Courier use. Ozone has no Courier transport configured in this branch; push delivery and the durable outbox remain unimplemented because the source spec explicitly leaves their infrastructure undesigned. Do not advertise `push` until that infrastructure exists.
+- The spec prose says `appealResolved` carries its `publicNote` as a body, but its notification lexicon contains no body field. Added an optional `notification.body` for public notes and tested appeal resolution and report-note payloads. This is an additive contract choice requiring review.
+- `updateSeen` serializes writes per DID with a transaction advisory lock, applies the greatest requested/existing watermark to all requested sections, and returns that actual applied timestamp. A concurrent and future-clamp test passes.
+- Verification: root `pnpm codegen`, `pnpm run build --force`, and `pnpm run verify` passed; Ozone test typecheck and 13 focused tests passed. Four existing regression suites passed 20 tests. No index was added to `moderation_event` or another existing heavy table.
+- The implementation and both stacked PRs are published. Remaining review topics are the deliberately unimplemented Courier delivery/outbox and the first PR's exact standing-transition timestamp limitation.
 
 ## PR 2 implementation decisions
 
 - Use the spec's watermark rule (`createdAt <= seenAt`) for notification read state; do not persist per-notification `isRead` despite the contradictory storage sketch.
-- Keep public notification report IDs equal to `moderation_event.id`, matching `listReports`.
+- Keep notification report IDs equal to `report.id`, matching `listReports`, `getReport`, and Ozone's `/reports/[id]` route.
 - Align `standingRef` values with the actual standing lexicon (`good`, `warning`, `atRisk`), not the conflicting example (`limited`, `suspended`).
 - Add `inApp` to the public `getCapabilities.channels` vocabulary so an instance without Courier can truthfully advertise the inbox. Include `push` only when push delivery is configured.
 - Implement in-app notification persistence and transactional hooks with unique source keys. Courier delivery is described as unscoped in the source spec; decide its transport/outbox scope after the in-app API and event hooks are concrete.
+- Add `notification.body` as an optional public-note payload. Keep `publicNote` out of notifications when absent; never expose `internalNote`.
+- Apply concurrent `updateSeen` calls under a per-DID advisory lock and return the monotonic watermark actually stored in each requested section.
 
 ## Decisions and constraints
 

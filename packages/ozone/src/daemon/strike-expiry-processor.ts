@@ -1,6 +1,8 @@
 import { HOUR } from '@atproto/common'
 import { type DatetimeString, toDatetimeString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
+import { createInboxNotification } from '../inbox/notifications.js'
+import { getInboxStanding } from '../inbox/standing.js'
 import { dbLogger } from '../logger.js'
 import type { StrikeServiceCreator } from '../mod-service/strike.js'
 import { getJobCursor, initJobCursor, updateJobCursor } from './job-cursor.js'
@@ -72,11 +74,28 @@ export class StrikeExpiryProcessor {
       'processing subjects with expired strikes',
     )
 
-    await Promise.all(
-      affectedSubjects.map(({ subjectDid }) => {
-        return strikeService.updateSubjectStrikeCount(subjectDid)
-      }),
-    )
+    for (const { subjectDid } of affectedSubjects) {
+      await this.db.transaction(async (txn) => {
+        const before = await getInboxStanding(txn, subjectDid)
+        await this.strikeServiceCreator(txn).updateSubjectStrikeCount(
+          subjectDid,
+        )
+        const standing = await getInboxStanding(txn, subjectDid)
+        if (standing !== before) {
+          await createInboxNotification(txn, {
+            recipientDid: subjectDid,
+            reason: 'standingChanged',
+            target: {
+              $type: 'tools.ozone.inbox.defs#standingRef',
+              standing,
+              previousStanding: before,
+            },
+            sourceKey: `strike-expiry:${subjectDid}:${now.toISOString()}`,
+            createdAt: toDatetimeString(now),
+          })
+        }
+      })
+    }
 
     await this.updateCursor(toDatetimeString(now))
 

@@ -8,9 +8,14 @@ import updateTemplate from './communication/updateTemplate.js'
 import appealActionedSubject from './inbox/appealActionedSubject.js'
 import getAccountStatus from './inbox/getAccountStatus.js'
 import getActionedSubject from './inbox/getActionedSubject.js'
+import getNotificationPreferences from './inbox/getNotificationPreferences.js'
 import getInboxReport from './inbox/getReport.js'
+import getUnreadCount from './inbox/getUnreadCount.js'
 import listActionedSubjects from './inbox/listActionedSubjects.js'
+import listNotifications from './inbox/listNotifications.js'
 import listReports from './inbox/listReports.js'
+import putNotificationPreferences from './inbox/putNotificationPreferences.js'
+import updateSeen from './inbox/updateSeen.js'
 import fetchLabels from './label/fetchLabels.js'
 import queryLabels from './label/queryLabels.js'
 import subscribeLabels from './label/subscribeLabels.js'
@@ -59,6 +64,7 @@ import querySafelinkEvents from './safelink/queryEvents.js'
 import querySafelinkRules from './safelink/queryRules.js'
 import removeSafelinkRule from './safelink/removeRule.js'
 import updateSafelinkRule from './safelink/updateRule.js'
+import getCapabilities from './server/getCapabilities.js'
 import getConfig from './server/getConfig.js'
 import setAddValues from './set/addValues.js'
 import deleteSet from './set/deleteSet.js'
@@ -85,10 +91,15 @@ export default function (server: Server, ctx: AppContext) {
   createReport(server, ctx)
   appealActionedSubject(server, ctx)
   getAccountStatus(server, ctx)
+  getNotificationPreferences(server, ctx)
+  getUnreadCount(server, ctx)
   getActionedSubject(server, ctx)
   getInboxReport(server, ctx)
   listActionedSubjects(server, ctx)
   listReports(server, ctx)
+  listNotifications(server, ctx)
+  putNotificationPreferences(server, ctx)
+  updateSeen(server, ctx)
   emitEvent(server, ctx)
   searchRepos(server, ctx)
   adminGetRecord(server, ctx)
@@ -114,6 +125,7 @@ export default function (server: Server, ctx: AppContext) {
   deleteMember(server, ctx)
   chat(server, ctx)
   proxied(server, ctx)
+  getCapabilities(server, ctx)
   getConfig(server, ctx)
   createQueue(server, ctx)
   listQueues(server, ctx)
