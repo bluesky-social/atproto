@@ -31,6 +31,10 @@
             "app.bsky.contact.removeData",
             "app.bsky.contact.startPhoneVerification",
             "app.bsky.contact.verifyPhone",
+            "app.bsky.draft.createDraft",
+            "app.bsky.draft.deleteDraft",
+            "app.bsky.draft.getDrafts",
+            "app.bsky.draft.updateDraft",
             "app.bsky.feed.describeFeedGenerator",
             "app.bsky.feed.getActorFeeds",
             "app.bsky.feed.getActorLikes",
@@ -93,9 +97,13 @@
             "app.bsky.unspecced.getPostThreadV2",
             "app.bsky.unspecced.getSuggestedFeeds",
             "app.bsky.unspecced.getSuggestedFeedsSkeleton",
+            "app.bsky.unspecced.getSuggestedOnboardingUsers",
             "app.bsky.unspecced.getSuggestedStarterPacks",
             "app.bsky.unspecced.getSuggestedStarterPacksSkeleton",
             "app.bsky.unspecced.getSuggestedUsers",
+            "app.bsky.unspecced.getSuggestedUsersForDiscover",
+            "app.bsky.unspecced.getSuggestedUsersForExplore",
+            "app.bsky.unspecced.getSuggestedUsersForSeeMore",
             "app.bsky.unspecced.getSuggestedUsersSkeleton",
             "app.bsky.unspecced.getSuggestionsSkeleton",
             "app.bsky.unspecced.getTaggedSuggestions",
@@ -121,6 +129,7 @@
           "resource": "repo",
           "action": ["create", "update", "delete"],
           "collection": [
+            "app.bsky.actor.contentVisibilityDeclaration",
             "app.bsky.actor.profile",
             "app.bsky.actor.status",
             "app.bsky.feed.like",
@@ -135,6 +144,7 @@
             "app.bsky.graph.listitem",
             "app.bsky.graph.referencelistoptout",
             "app.bsky.graph.starterpack",
+            "app.bsky.graph.verification",
             "app.bsky.notification.declaration"
           ]
         }
