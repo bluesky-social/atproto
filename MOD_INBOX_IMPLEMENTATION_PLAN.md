@@ -40,13 +40,13 @@ Updated: 2026-09-25. This file is the handoff record for work across agent sessi
 - [x] Define notification production triggers and recipient model; write inside report/event transactions with unique source keys. Standing changes on strike expiry use a per-subject transaction.
 - [x] Implement list, preferences read/write, unread count, and seen watermark routes, scoped to the authenticated DID.
 - [x] Verify cursor semantics, unread count/seen consistency, preference defaults, and concurrency in tests. Both focused suites pass (13 tests total).
-- [ ] Build, run tests, format/lint, add changeset, commit, push, and create PR based on PR 1's branch. Build/verification and changeset are complete; publication remains.
-- [ ] Record both PR URLs and final verification results here.
+- [x] Build, run tests, format/lint, add changeset, commit, push, and create PR based on PR 1's branch.
+- [x] Record both PR URLs and final verification results here.
 
 ## PR status
 
 - PR 1: [#5550](https://github.com/bluesky-social/atproto/pull/5550) (draft), head `ozone/mod-inbox/read`, base `ozone/mod-inbox/appeal`.
-- PR 2: pending; branch must start at PR 1's latest commit.
+- PR 2: [#5551](https://github.com/bluesky-social/atproto/pull/5551) (draft), head `ozone/mod-inbox/notifications`, base `ozone/mod-inbox/read`; initial implementation commit `bf91b7d34`.
 
 ## PR 2 progress and remaining review
 
@@ -55,7 +55,7 @@ Updated: 2026-09-25. This file is the handoff record for work across agent sessi
 - The spec prose says `appealResolved` carries its `publicNote` as a body, but its notification lexicon contains no body field. Added an optional `notification.body` for public notes and tested appeal resolution and report-note payloads. This is an additive contract choice requiring review.
 - `updateSeen` serializes writes per DID with a transaction advisory lock, applies the greatest requested/existing watermark to all requested sections, and returns that actual applied timestamp. A concurrent and future-clamp test passes.
 - Verification: root `pnpm codegen`, `pnpm run build --force`, and `pnpm run verify` passed; Ozone test typecheck and 13 focused tests passed. Four existing regression suites passed 20 tests. No index was added to `moderation_event` or another existing heavy table.
-- Remaining: review final diff, commit, push, and draft stacked PR.
+- The implementation and both stacked PRs are published. Remaining review topics are the deliberately unimplemented Courier delivery/outbox and the first PR's exact standing-transition timestamp limitation.
 
 ## PR 2 implementation decisions
 
