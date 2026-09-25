@@ -1,5 +1,25 @@
 # @atproto/dev-env
 
+## 0.6.8
+
+### Patch Changes
+
+- [#5517](https://github.com/bluesky-social/atproto/pull/5517) [`4dba111`](https://github.com/bluesky-social/atproto/commit/4dba11136a4a04a76dbb678135aacfe944f8d15b) Thanks [@foysalit](https://github.com/foysalit)! - Add a video invalidator for purging transcoded video content after blob takedowns.
+
+- [#5510](https://github.com/bluesky-social/atproto/pull/5510) [`78b0162`](https://github.com/bluesky-social/atproto/commit/78b0162cf38090bb9bffeb6c9dbd5218fefb46e3) Thanks [@danielroe](https://github.com/danielroe)! - Write the test port allocator's owner file atomically so a concurrent sweep cannot delete it while it is still empty.
+
+- [#5391](https://github.com/bluesky-social/atproto/pull/5391) [`30f8149`](https://github.com/bluesky-social/atproto/commit/30f8149e629f9afc3fe41cf66bd8482954d7c052) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `dotenv` dependency
+- Updated dependencies [[`7870a59`](https://github.com/bluesky-social/atproto/commit/7870a59c0b0aa5955ba3b663f9e095350f50e194), [`4dba111`](https://github.com/bluesky-social/atproto/commit/4dba11136a4a04a76dbb678135aacfe944f8d15b), [`f210723`](https://github.com/bluesky-social/atproto/commit/f21072353415b4362c90f1dd013f014d6cdadca5), [`421111e`](https://github.com/bluesky-social/atproto/commit/421111e98031d2f8780cc37887d66c5f6659cda8), [`d442d03`](https://github.com/bluesky-social/atproto/commit/d442d037d33d68061df6b44d4269b5ee7309c66f), [`e801c39`](https://github.com/bluesky-social/atproto/commit/e801c39fea8903c6381fd72abd65add426ddcf93), [`2480187`](https://github.com/bluesky-social/atproto/commit/2480187c9554ff161227480dd6c0bcaf5e7e3921), [`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f), [`1eafad7`](https://github.com/bluesky-social/atproto/commit/1eafad71c4f5f8ffc2b6c35ad9f704994d1cd3c4), [`2e583a4`](https://github.com/bluesky-social/atproto/commit/2e583a4ed26659923b2a1effd952fce937f0feeb), [`1884e15`](https://github.com/bluesky-social/atproto/commit/1884e1589f3507c4316f46174f151b3eff3c4b63), [`f86aaa6`](https://github.com/bluesky-social/atproto/commit/f86aaa615b4372c1634011337e42247690d77c5a), [`88f32da`](https://github.com/bluesky-social/atproto/commit/88f32dac103908d1fff0461815afe57b72cb3338), [`d3ceb6b`](https://github.com/bluesky-social/atproto/commit/d3ceb6bbcad0f1a5c9b8daa2c81a4b4259c96e1d), [`9c76c34`](https://github.com/bluesky-social/atproto/commit/9c76c3422ed0c5369871633d2c4ed67a2f61ae33), [`3e58d0b`](https://github.com/bluesky-social/atproto/commit/3e58d0bafdb873b86df25ebf2cf941e256dcf697), [`30f8149`](https://github.com/bluesky-social/atproto/commit/30f8149e629f9afc3fe41cf66bd8482954d7c052)]:
+  - @atproto/pds@0.5.35
+  - @atproto/ozone@0.4.3
+  - @atproto/api@0.21.0
+  - @atproto/bsky@0.0.281
+  - @atproto/xrpc-server@0.13.2
+  - @atproto/bsync@0.1.0
+  - @atproto/identity@0.5.14
+  - @atproto/sync@0.4.11
+  - @atproto/lex@0.3.12
+
 ## 0.6.7
 
 ### Patch Changes

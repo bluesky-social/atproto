@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-ui
 
+## 0.10.4
+
+### Patch Changes
+
+- [#5482](https://github.com/bluesky-social/atproto/pull/5482) [`1f639d9`](https://github.com/bluesky-social/atproto/commit/1f639d97498981eea3553b9a20a8538437af9658) Thanks [@abcbrookie](https://github.com/abcbrookie)! - Tighter auth and account screens: one shared button and input size, less copy, error pages shaped like the other auth cards.
+
 ## 0.10.3
 
 ### Patch Changes
