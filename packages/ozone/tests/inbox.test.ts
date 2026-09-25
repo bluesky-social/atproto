@@ -447,7 +447,7 @@ describe('inbox subject view', () => {
     const view = compose({ status: status({ appealed: true }) })
     expect(view).not.toHaveProperty('latestAction')
     expect(view).not.toHaveProperty('actionCount')
-    expect(view).not.toHaveProperty('isRead')
+    expect(view?.isRead).toBe(false)
   })
 
   it('lets a later appeal move updatedAt past the newest action', () => {

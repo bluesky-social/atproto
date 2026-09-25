@@ -5,7 +5,14 @@
     "subjectView": {
       "type": "object",
       "description": "A subject belonging to the viewer that has moderation actions against it.",
-      "required": ["src", "subject", "enforcement", "createdAt", "updatedAt"],
+      "required": [
+        "src",
+        "subject",
+        "enforcement",
+        "isRead",
+        "createdAt",
+        "updatedAt"
+      ],
       "properties": {
         "src": {
           "type": "string",
@@ -48,6 +55,9 @@
         "updatedAt": {
           "type": "string",
           "format": "datetime"
+        },
+        "isRead": {
+          "type": "boolean"
         }
       }
     },
@@ -159,6 +169,95 @@
             "type": "string"
           },
           "description": "Policies that were applied in this action."
+        }
+      }
+    },
+    "subjectViewDetail": {
+      "type": "object",
+      "description": "A subject with its full action history. Same shape as #subjectView, with latestAction/actionCount replaced by the complete actions list, plus an aggregate report summary.",
+      "required": [
+        "src",
+        "subject",
+        "enforcement",
+        "isRead",
+        "actions",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "src": {
+          "type": "string",
+          "format": "did"
+        },
+        "isRead": {
+          "type": "boolean"
+        },
+        "subject": {
+          "type": "union",
+          "refs": [
+            "com.atproto.admin.defs#repoRef",
+            "com.atproto.repo.strongRef"
+          ]
+        },
+        "enforcement": {
+          "type": "ref",
+          "ref": "#enforcementView"
+        },
+        "appeal": {
+          "type": "ref",
+          "ref": "#appealView"
+        },
+        "availableActions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "knownValues": ["appeal"]
+          }
+        },
+        "actions": {
+          "type": "array",
+          "description": "Full action history, most recent first.",
+          "items": {
+            "type": "ref",
+            "ref": "#actionView"
+          }
+        },
+        "reports": {
+          "type": "ref",
+          "ref": "#reportsSummary",
+          "description": "Omitted when the subject has never been reported, e.g. proactive enforcement."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
+    },
+    "reportsSummary": {
+      "type": "object",
+      "description": "Aggregate view of reports filed against this subject. Deliberately carries no report IDs, no count, and no reporter identities.",
+      "required": ["reasonTypes", "firstReportedOn", "lastReportedOn"],
+      "properties": {
+        "reasonTypes": {
+          "type": "array",
+          "description": "Distinct reason types reported, deduplicated and unordered. Excludes reasonAppeal.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "firstReportedOn": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Day of the earliest report, truncated to midnight UTC. Render as a date; the time component is not meaningful."
+        },
+        "lastReportedOn": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Day of the most recent report, truncated to midnight UTC. Render as a date; the time component is not meaningful."
         }
       }
     }

@@ -290,6 +290,21 @@ describe('appealActionedSubject', () => {
       expect(await latestAppealReport(sc.dids.alice)).toMatchObject({
         actionEventIds: [action.id],
       })
+      const appealReport = await latestAppealReport(sc.dids.alice)
+      const appealEvent = await network.ozone.ctx.db.db
+        .selectFrom('moderation_event')
+        .where('id', '=', appealReport!.eventId)
+        .select(['createdBy', 'meta'])
+        .executeTakeFirstOrThrow()
+      expect(appealEvent.createdBy).toBe(sc.dids.alice)
+      expect(appealEvent.meta).toMatchObject({
+        appealSubmittedBy:
+          role === 'admin'
+            ? network.ozone.adminAccnt.did
+            : role === 'moderator'
+              ? network.ozone.moderatorAccnt.did
+              : network.ozone.triageAccnt.did,
+      })
     },
   )
 
@@ -547,6 +562,7 @@ describe('appealActionedSubject', () => {
     )
     expect(data).toEqual({
       src: network.ozone.ctx.cfg.service.did,
+      isRead: false,
       subject,
       enforcement: { state: 'takendown', scope: 'network' },
       appeal: {
@@ -568,10 +584,9 @@ describe('appealActionedSubject', () => {
       createdAt: action.createdAt,
       updatedAt: data.updatedAt,
     })
-    // The appeal report ID stays server-side, and read state waits on a
-    // watermark Ozone does not store yet.
+    // The appeal report ID stays server-side; no read watermark has been set.
     expect(data).not.toHaveProperty('reportId')
-    expect(data).not.toHaveProperty('isRead')
+    expect(data.isRead).toBe(false)
   })
 
   it('derives a suspension, its expiry, and the six-month appeal window', async () => {
