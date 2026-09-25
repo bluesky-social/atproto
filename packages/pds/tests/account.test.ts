@@ -308,6 +308,41 @@ describe('account', () => {
     ).rejects.toThrow('Handle already taken: bob.test')
   })
 
+  it('disallows the email and handle of a deactivated account', async () => {
+    const email = 'dan@test.com'
+    const handle = 'dan.test'
+    const password = 'test123'
+    const { data: account } = await agent.api.com.atproto.server.createAccount({
+      email,
+      handle,
+      password,
+    })
+
+    await agent.api.com.atproto.server.deactivateAccount(
+      {},
+      {
+        encoding: 'application/json',
+        headers: { authorization: `Bearer ${account.accessJwt}` },
+      },
+    )
+
+    await expect(
+      agent.api.com.atproto.server.createAccount({
+        email: 'erin@test.com',
+        handle,
+        password,
+      }),
+    ).rejects.toThrow(`Handle already taken: ${handle}`)
+
+    await expect(
+      agent.api.com.atproto.server.createAccount({
+        email,
+        handle: 'erin.test',
+        password,
+      }),
+    ).rejects.toThrow(`Email already taken: ${email}`)
+  })
+
   it('validates input through lexicon schema', async () => {
     for (const invalidHandle of [
       'did:john',

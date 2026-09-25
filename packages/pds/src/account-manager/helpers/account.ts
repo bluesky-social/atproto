@@ -140,7 +140,9 @@ export const registerActor = async (
       .returning('did'),
   )
   if (!registered) {
-    throw new UserAlreadyExistsError()
+    throw new UserAlreadyExistsError(
+      'Handle is already in use, please choose a different handle.',
+    )
   }
 }
 
