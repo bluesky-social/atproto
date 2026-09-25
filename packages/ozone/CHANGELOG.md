@@ -1,5 +1,17 @@
 # @atproto/ozone
 
+## 0.4.4
+
+### Patch Changes
+
+- [#5362](https://github.com/bluesky-social/atproto/pull/5362) [`7a85798`](https://github.com/bluesky-social/atproto/commit/7a857989751ae31518509d69ab7194a922064f3d) Thanks [@gcwill70](https://github.com/gcwill70)! - Add report lifecycle outcome, action breakdown, handling-time, and resolution-time statistics.
+  
+  Keep aggregate totals separate from unassigned-moderator groups, restore moderator inbound counts.
+  
+  Index report closure timestamps for daily statistics and combine null and unmatched queue IDs into a single unqueued group.
+  
+  Reconstruct historical pending counts at the end of each UTC day from report closure and reopen history. Current-day counts remain live; queue breakdowns use current queue membership.
+
 ## 0.4.3
 
 ### Patch Changes
