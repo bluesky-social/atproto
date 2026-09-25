@@ -334,8 +334,10 @@ export const assertAppealAllowed = async (
 }
 
 export type FileAppealInput = {
-  /** DID of the authenticated account filing the appeal. */
+  /** DID of the affected account, shown as the appeal reporter. */
   requester: DidString
+  /** Moderator filing on the affected account's behalf, when applicable. */
+  submittedBy?: DidString
   /** The subject being appealed, already resolved and authorized. */
   subject: ModSubject
   /** Resolved moderation event ID, when one could be found. */
@@ -469,6 +471,7 @@ export const fileAppeal = async (
   ctx: AppContext,
   {
     requester,
+    submittedBy,
     subject,
     resolvedActionId,
     action,
@@ -494,7 +497,10 @@ export const fileAppeal = async (
       reasonType: APPEAL_REASON_TYPE,
       reportedBy: requester,
       modTool,
-      eventMeta: buildAppealEventMeta(action),
+      eventMeta: {
+        ...buildAppealEventMeta(action),
+        ...(submittedBy ? { appealSubmittedBy: submittedBy } : {}),
+      },
     })
     return ctx.queueService(dbTxn).insertReportFromEvent({
       event: reportEvent,

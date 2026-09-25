@@ -290,6 +290,21 @@ describe('appealActionedSubject', () => {
       expect(await latestAppealReport(sc.dids.alice)).toMatchObject({
         actionEventIds: [action.id],
       })
+      const appealReport = await latestAppealReport(sc.dids.alice)
+      const appealEvent = await network.ozone.ctx.db.db
+        .selectFrom('moderation_event')
+        .where('id', '=', appealReport!.eventId)
+        .select(['createdBy', 'meta'])
+        .executeTakeFirstOrThrow()
+      expect(appealEvent.createdBy).toBe(sc.dids.alice)
+      expect(appealEvent.meta).toMatchObject({
+        appealSubmittedBy:
+          role === 'admin'
+            ? network.ozone.adminAccnt.did
+            : role === 'moderator'
+              ? network.ozone.moderatorAccnt.did
+              : network.ozone.triageAccnt.did,
+      })
     },
   )
 

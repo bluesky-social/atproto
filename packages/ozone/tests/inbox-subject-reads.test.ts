@@ -166,6 +166,26 @@ describe('viewer inbox subject reads', () => {
       { subject: sc.dids.alice },
     )
     expect(own.subject).toMatchObject({ did: sc.dids.alice })
+    const preview = await fetch(
+      `${network.ozone.url}/xrpc/tools.ozone.inbox.getActionedSubject?did=${encodeURIComponent(sc.dids.alice)}&subject=${encodeURIComponent(sc.dids.alice)}`,
+      {
+        headers: await network.ozone.modHeaders(
+          'tools.ozone.inbox.getActionedSubject',
+        ),
+      },
+    )
+    expect(preview.status).toBe(200)
+    expect((await preview.json()).subject).toMatchObject({ did: sc.dids.alice })
+    const forbidden = await sc.agent.fetchHandler(
+      `/xrpc/tools.ozone.inbox.getActionedSubject?did=${encodeURIComponent(sc.dids.alice)}&subject=${encodeURIComponent(sc.dids.alice)}`,
+      {
+        headers: {
+          ...sc.getHeaders(sc.dids.bob),
+          'atproto-proxy': `${network.ozone.ctx.cfg.service.did}#atproto_labeler`,
+        },
+      },
+    )
+    expect(forbidden.status).toBe(403)
     await expect(
       call(sc.dids.bob, 'tools.ozone.inbox.getActionedSubject', {
         subject: sc.dids.alice,
