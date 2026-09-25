@@ -30,8 +30,8 @@ const REFETCH_INTERVAL = 60e3 // 1 minute
 /**
  * These need to match what the client sends
  */
-const ANALYTICS_HEADER_DEVICE_ID = 'X-Bsky-Device-Id'
-const ANALYTICS_HEADER_SESSION_ID = 'X-Bsky-Session-Id'
+const ANALYTICS_HEADER_DEVICE_ID = 'x-atproto-device-id'
+const ANALYTICS_HEADER_SESSION_ID = 'x-atproto-session-id'
 
 export { type ScopedFeatureGatesClient } from './types.js'
 
