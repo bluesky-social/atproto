@@ -2,10 +2,11 @@ import type { ThisParameterOverride } from './util.js'
 
 export type FetchContext = void | null | typeof globalThis
 
-export type FetchBound = (
-  input: string | URL | Request,
-  init?: RequestInit,
-) => Promise<Response>
+// @NOTE Although the "globalThis.fetch" implementation **does** care about the
+// "this" context, "lib.dom" and "@types/node" both omit the "this" parameter in
+// their type definitions. This allows us to use "typeof globalThis.fetch" which
+// makes dependents of this package get a type that match their environment.
+export type FetchBound = typeof globalThis.fetch
 
 // NOT using "typeof globalThis.fetch" here because "globalThis.fetch" does not
 // have a "this" parameter, while runtimes do ensure that "fetch" is called with

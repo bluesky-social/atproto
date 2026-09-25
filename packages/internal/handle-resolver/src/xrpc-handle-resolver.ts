@@ -1,5 +1,16 @@
-import { z } from 'zod'
+import {
+  type Agent,
+  type AgentConfig,
+  type XrpcRequestInitOptions,
+  type XrpcRequestProcessingOptions,
+  type XrpcResponseOptions,
+  type XrpcRetryOptions,
+  buildAgent,
+  xrpcSafe,
+} from '@atproto/lex-client'
+import type { HandleString } from '@atproto/lex-schema'
 import { HandleResolverError } from './handle-resolver-error.js'
+import { main as resolveHandle } from './lexicons/com/atproto/identity/resolveHandle.defs.js'
 import {
   type HandleResolver,
   type ResolveHandleOptions,
@@ -7,86 +18,63 @@ import {
   isResolvedHandle,
 } from './types.js'
 
-export const xrpcErrorSchema = z.object({
-  error: z.string(),
-  message: z.string().optional(),
-})
+export type XrpcOptions = XrpcRetryOptions &
+  XrpcRequestInitOptions &
+  XrpcRequestProcessingOptions &
+  XrpcResponseOptions
 
-export type XrpcHandleResolverOptions = {
-  /**
-   * Fetch function to use for HTTP requests. Allows customizing the request
-   * behavior, e.g. adding headers, setting a timeout, mocking, etc.
-   *
-   * @default globalThis.fetch
-   */
-  fetch?: typeof globalThis.fetch
-}
+export type XrpcHandleResolverOptions = Pick<AgentConfig, 'fetch' | 'headers'> &
+  XrpcOptions
 
 export class XrpcHandleResolver implements HandleResolver {
-  /**
-   * URL of the atproto lexicon server. This is the base URL where the
-   * `com.atproto.identity.resolveHandle` XRPC method is located.
-   */
-  protected readonly serviceUrl: URL
-  protected readonly fetch: typeof globalThis.fetch
+  protected readonly agent: Agent
+  protected readonly options: XrpcOptions
 
-  constructor(service: URL | string, options?: XrpcHandleResolverOptions) {
-    this.serviceUrl = new URL(service)
-    this.fetch = options?.fetch ?? globalThis.fetch
+  constructor(
+    service: URL | string,
+    { fetch, headers, ...options }: XrpcHandleResolverOptions = {},
+  ) {
+    this.agent = buildAgent({ service, fetch, headers })
+    this.options = options
   }
 
   public async resolve(
-    handle: string,
+    handle: HandleString,
     options?: ResolveHandleOptions,
   ): Promise<ResolvedHandle> {
-    const url = new URL(
-      '/xrpc/com.atproto.identity.resolveHandle',
-      this.serviceUrl,
-    )
-    url.searchParams.set('handle', handle)
-
-    const response = await this.fetch.call(null, url, {
-      cache: options?.noCache ? 'no-cache' : undefined,
-      signal: options?.signal,
-      redirect: 'error',
+    const result = await xrpcSafe(this.agent, resolveHandle, {
+      ...this.options,
+      params: { handle },
+      cache: options?.noCache ? 'no-cache' : this.options.cache,
+      signal: options?.signal ?? this.options.signal,
+      redirect: this.options.redirect ?? 'error',
+      // Prevent this.options from setting unwanted xrpc options
+      labelers: undefined,
+      appLabelers: undefined,
+      service: undefined,
+      // @NOTE 'body' and 'encoding' are ignored for XRPC Queries.
     })
-    const payload = await response.json()
 
-    // The response should either be
-    // - 400 Bad Request with { error: 'InvalidRequest', message: 'Unable to resolve handle' }
-    // - 200 OK with { did: NonNullable<ResolvedHandle> }
-    // Any other response is considered unexpected behavior an should throw an error.
-
-    if (response.status === 400) {
-      const { error, data } = xrpcErrorSchema.safeParse(payload)
-      if (error) {
-        throw new HandleResolverError(
-          `Invalid response from resolveHandle method: ${error.message}`,
-          { cause: error },
-        )
-      }
-      if (
-        data.error === 'InvalidRequest' &&
-        data.message === 'Unable to resolve handle'
-      ) {
-        return null
-      }
-    }
-
-    if (!response.ok) {
+    if (result.success) {
+      const { did } = result.body
+      // @ts-expect-error explicitly opting-out of type safety
+      if (this.options.validateResponse === false) return did
+      if (isResolvedHandle(did)) return did
       throw new HandleResolverError(
-        'Invalid status code from resolveHandle method',
+        `Invalid DID (${did}) returned from resolveHandle method`,
       )
     }
 
-    const value: unknown = payload?.did
-
-    if (!isResolvedHandle(value)) {
-      throw new HandleResolverError(
-        'Invalid DID returned from resolveHandle method',
-      )
+    if (
+      result.error === 'InvalidRequest' &&
+      result.message === 'Unable to resolve handle'
+    ) {
+      return null
     }
 
-    return value
+    throw new HandleResolverError(
+      `Unexpected error (${result.error}) from com.atproto.identity.resolveHandle method`,
+      { cause: result },
+    )
   }
 }
