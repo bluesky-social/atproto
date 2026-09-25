@@ -31,6 +31,8 @@ Updated: 2026-09-25. This file is the handoff record for work across agent sessi
 - [x] Build, typecheck, run focused tests, format/lint changed files, add a changeset for each touched package. Focused Ozone/PDS builds, test typecheck, formatting, lint, 76 focused tests, root `pnpm run build --force`, and root `pnpm run verify` passed. Changeset `.changeset/blue-carpets-fetch.md` covers Ozone/API minor and PDS patch.
 - [x] Committed and pushed; draft PR [#5550](https://github.com/bluesky-social/atproto/pull/5550) targets `ozone/mod-inbox/appeal`.
 - [x] Added moderator-only optional `did` preview parameters to `listReports` and `listActionedSubjects` for the Ozone UI. Omitted/self DID keeps viewer behavior; cross-account reads require an active moderator, triage, or admin bearer credential. Eleven focused tests across three suites pass.
+- [x] Extended `getReport` and `getActionedSubject` with the same moderator-only `did` preview parameter so Ozone can expand rows. Cross-account reads still require an active moderator, triage, or admin credential; report IDs and subjects remain scoped to the selected DID.
+- [x] Moderator-submitted appeals now attribute the appeal report to the affected user's DID and retain the acting moderator's DID in event metadata. The Ozone UI can invoke this on the user's behalf from an eligible actioned subject.
 
 ## PR 2 checklist
 
@@ -67,7 +69,8 @@ Updated: 2026-09-25. This file is the handoff record for work across agent sessi
 9. The list-reports lexicon is extended to include chat message/conversation refs because the spec promises all submitted reports and the detail lexicon includes those refs. Public report IDs are `moderation_event.id` (`report.eventId`), consistently across list and detail.
 10. The PDS catchall proxy admits `AuthScope.Takendown` only for `tools.ozone.inbox.*`, allowing taken-down users to reach these viewer routes through the mandatory `atproto-proxy` header.
 11. New `closeActivity` rows from report-linked moderation actions carry `meta.actionEventId`. The viewer read path uses this to attribute `resolution.actionTaken` to the current close. Legacy rows without that link use a narrow creation-time correlation; an old linked action is never used merely because it remains in `actionEventIds`.
-12. For Ozone UI moderator preview, only the two list endpoints accept optional `did`. The standard verifier still authenticates the caller and checks disabled team membership. A different DID requires moderator, triage, or admin role; all list and read-watermark queries use the selected DID. This is read-only and does not grant cross-account access to other inbox methods.
+12. For Ozone UI moderator preview, both list endpoints and their matching detail endpoints accept optional `did`. The standard verifier still authenticates the caller and checks disabled team membership. A different DID requires moderator, triage, or admin role; all list, detail, and read-watermark queries use the selected DID. Other inbox methods remain issuer-scoped.
+13. An appeal filed by a moderator on behalf of a user is represented as the affected user's appeal report, with the moderator's DID recorded in `appealSubmittedBy` event metadata for attribution. This lets the user's inbox show the pending appeal without exposing the moderator identity in the public view.
 
 ## Open questions requiring source verification
 
@@ -76,7 +79,7 @@ Updated: 2026-09-25. This file is the handoff record for work across agent sessi
 - `getActionedSubject` promises full action history while the base view loader caps events at 50. Add an uncapped detail path with a safe bound or pagination decision.
 - `getAccountStatus.updatedAt` is defined as the last derived standing change, but no standing transition log exists. Decide whether to add one or derive a defensible timestamp from strike/enforcement state.
 - Notification persistence/delivery is explicitly unscoped in the spec. Decide Courier integration and outbox schema in PR 2; in-app API requirements are concrete.
-- Moderator preview is authorized for `listReports` and `listActionedSubjects` only, as described in decision 12. Other inbox methods remain issuer-scoped. Revisit their access only if a UI need arises.
+- Moderator preview is authorized for list and detail reads, as described in decision 12. Other inbox methods remain issuer-scoped.
 
 ## Evidence and access notes
 
