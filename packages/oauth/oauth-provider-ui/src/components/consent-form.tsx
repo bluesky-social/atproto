@@ -124,7 +124,7 @@ export function ConsentForm({
         <p>
           <Trans>This application identifies itself as:</Trans>
         </p>
-        <pre className="bg-muted mt-2 overflow-x-auto whitespace-pre-wrap break-all rounded border p-2 text-sm">
+        <pre className="bg-muted mt-2 overflow-x-auto rounded border p-2 text-sm break-all whitespace-pre-wrap">
           {clientId}
         </pre>
         {scope ? (
@@ -135,7 +135,7 @@ export function ConsentForm({
                 (scopes) to access your account:
               </Trans>
             </p>
-            <pre className="bg-muted mt-2 overflow-x-auto whitespace-pre-wrap break-all rounded border p-2 text-sm">
+            <pre className="bg-muted mt-2 overflow-x-auto rounded border p-2 text-sm break-all whitespace-pre-wrap">
               {scope}
             </pre>
           </>

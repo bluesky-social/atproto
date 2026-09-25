@@ -83,7 +83,7 @@ export function AuthShell({
             is carried by its alt text — and only falls back to the name in
             text when the deployment has no logo. */}
           {(logo || name) && (
-            <div className="px-(--card-spacing) flex items-center justify-center pt-2">
+            <div className="flex items-center justify-center px-(--card-spacing) pt-2">
               {logo ? (
                 <img
                   src={logo}
@@ -99,7 +99,7 @@ export function AuthShell({
           {(titleString || subtitle) && (
             <CardHeader className="gap-2 text-center">
               {titleString && (
-                <CardTitle className="whitespace-pre-line text-balance text-2xl font-semibold leading-tight">
+                <CardTitle className="text-2xl leading-tight font-semibold text-balance whitespace-pre-line">
                   {titleString}
                 </CardTitle>
               )}
@@ -121,7 +121,7 @@ export function AuthShell({
               same variant. */}
             <LocaleSelector className="text-action px-3 data-[size=sm]:h-10" />
             {links?.length ? (
-              <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-4 gap-y-1 whitespace-nowrap text-base">
+              <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-base whitespace-nowrap">
                 {links.map((link) => (
                   <LinkAnchor
                     key={link.href}

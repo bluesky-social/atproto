@@ -85,7 +85,10 @@ export class MockEntryway {
 
     const plcClient = new plcLib.Client(opts.plcUrl)
     const pdsAgent = new AtpAgent({ service: opts.pdsUrl })
-    const idResolver = new IdResolver({ plcUrl: opts.plcUrl })
+    const idResolver = new IdResolver({
+      plcUrl: opts.plcUrl,
+      fetch: globalThis.fetch,
+    })
 
     const accounts = new Map<string, Account>()
 

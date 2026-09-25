@@ -30,6 +30,15 @@ import { forSnapshot, paginateAll } from '../_util.js'
 
 type Database = TestNetwork['bsky']['db']
 
+const clearNotificationSeen = async (db: Database, did: DidString) => {
+  const epoch = new Date(0).toISOString()
+  await db.db
+    .updateTable('actor_state')
+    .set({ lastSeenNotifs: epoch })
+    .where('did', '=', did)
+    .execute()
+}
+
 describe('notification views', () => {
   let network: TestNetwork
   let db: Database
@@ -502,7 +511,6 @@ describe('notification views', () => {
   it('returns a cursor only when more notifications are available', async () => {
     const exact = await network.bsky.ctx.dataplane.getNotifications({
       actorDid: alice,
-      priority: false,
       limit: 13,
     })
     expect(exact.notifications).toHaveLength(13)
@@ -510,7 +518,6 @@ describe('notification views', () => {
 
     const over = await network.bsky.ctx.dataplane.getNotifications({
       actorDid: alice,
-      priority: false,
       limit: 12,
     })
     expect(over.notifications).toHaveLength(12)
@@ -521,14 +528,14 @@ describe('notification views', () => {
       ids.AppBskyNotificationListNotifications,
     )
     const terminal = await agent.app.bsky.notification.listNotifications(
-      { priority: false, limit: 13 },
+      { limit: 13 },
       { headers },
     )
     expect(terminal.data.notifications).toHaveLength(13)
     expect(terminal.data.cursor).toBeUndefined()
 
     const trimmed = await agent.app.bsky.notification.listNotifications(
-      { priority: false, limit: 12 },
+      { limit: 12 },
       { headers },
     )
     expect(trimmed.data.notifications).toHaveLength(12)
@@ -583,7 +590,7 @@ describe('notification views', () => {
     )
     expect(notifCount.data.count).toBeGreaterThan(0)
 
-    // reset last-seen
+    // An older client must not move the timestamp backward.
     await agent.api.app.bsky.notification.updateSeen(
       { seenAt: new Date(0).toISOString() },
       {
@@ -594,6 +601,18 @@ describe('notification views', () => {
         encoding: 'application/json',
       },
     )
+    const afterOlderUpdate =
+      await agent.api.app.bsky.notification.listNotifications(
+        {},
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyNotificationListNotifications,
+          ),
+        },
+      )
+    expect(afterOlderUpdate.data.seenAt).toEqual(seenAt)
+    await clearNotificationSeen(db, alice)
   })
 
   it('fetches notifications with a last-seen', async () => {
@@ -632,17 +651,7 @@ describe('notification views', () => {
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((n) => n.indexedAt < seenAt))
-    // reset last-seen
-    await agent.api.app.bsky.notification.updateSeen(
-      { seenAt: new Date(0).toISOString() },
-      {
-        headers: await network.serviceHeaders(
-          alice,
-          ids.AppBskyNotificationUpdateSeen,
-        ),
-        encoding: 'application/json',
-      },
-    )
+    await clearNotificationSeen(db, alice)
   })
 
   it('fetches notifications omitting mentions and replies for taken-down posts', async () => {
@@ -690,84 +699,9 @@ describe('notification views', () => {
     )
   })
 
-  it('fetches notifications with explicit priority', async () => {
-    const priority = await agent.api.app.bsky.notification.listNotifications(
-      { priority: true },
-      {
-        headers: await network.serviceHeaders(
-          sc.dids.carol,
-          ids.AppBskyNotificationListNotifications,
-        ),
-      },
-    )
-    // only notifs from follow (alice)
-    expect(
-      priority.data.notifications.every(
-        (notif) =>
-          !([sc.dids.bob, sc.dids.dan] as string[]).includes(notif.author.did),
-      ),
-    ).toBe(true)
-    expect(forSnapshot(priority.data)).toMatchSnapshot()
-    const noPriority = await agent.api.app.bsky.notification.listNotifications(
-      { priority: false },
-      {
-        headers: await network.serviceHeaders(
-          sc.dids.carol,
-          ids.AppBskyNotificationListNotifications,
-        ),
-      },
-    )
-    expect(forSnapshot(noPriority.data)).toMatchSnapshot()
-  })
-
-  it('fetches notifications with default priority', async () => {
-    await agent.api.app.bsky.notification.putPreferences(
-      { priority: true },
-      {
-        encoding: 'application/json',
-        headers: await network.serviceHeaders(
-          sc.dids.carol,
-          ids.AppBskyNotificationPutPreferences,
-        ),
-      },
-    )
-    await network.processAll()
-    const notifs = await agent.api.app.bsky.notification.listNotifications(
-      {},
-      {
-        headers: await network.serviceHeaders(
-          sc.dids.carol,
-          ids.AppBskyNotificationListNotifications,
-        ),
-      },
-    )
-    // only notifs from follow (alice)
-    expect(
-      notifs.data.notifications.every(
-        (notif) =>
-          !([sc.dids.bob, sc.dids.dan] as string[]).includes(notif.author.did),
-      ),
-    ).toBe(true)
-    expect(forSnapshot(notifs.data)).toMatchSnapshot()
-    await agent.api.app.bsky.notification.putPreferences(
-      { priority: false },
-      {
-        encoding: 'application/json',
-        headers: await network.serviceHeaders(
-          sc.dids.carol,
-          ids.AppBskyNotificationPutPreferences,
-        ),
-      },
-    )
-    await network.processAll()
-  })
-
   it('filters notifications by reason', async () => {
     const res = await agent.app.bsky.notification.listNotifications(
       {
-        // Pin priority so the snapshot doesn't race with the viewer's stored
-        // priority preference, which neighbouring tests mutate.
-        priority: false,
         reasons: ['mention'],
       },
       {
@@ -784,9 +718,6 @@ describe('notification views', () => {
   it('filters notifications by multiple reasons', async () => {
     const res = await agent.app.bsky.notification.listNotifications(
       {
-        // Pin priority so the snapshot doesn't race with the viewer's stored
-        // priority preference, which neighbouring tests mutate.
-        priority: false,
         reasons: ['mention', 'reply'],
       },
       {
@@ -1192,6 +1123,52 @@ describe('notification views', () => {
       await getAndAssert(expectedApi1, expectedDb1)
     })
 
+    it('maps legacy priority onto granular preferences', async () => {
+      const actorDid = sc.dids.carol
+      const headers = await network.serviceHeaders(
+        actorDid,
+        ids.AppBskyNotificationPutPreferencesV2,
+      )
+      await agent.app.bsky.notification.putPreferencesV2(
+        {
+          reply: { include: 'all', list: false, push: false },
+          mention: { include: 'all', list: false, push: true },
+          quote: { include: 'all', list: true, push: false },
+          verified: { list: false, push: false },
+        },
+        { encoding: 'application/json', headers },
+      )
+      await network.processAll()
+
+      await agent.app.bsky.notification.putPreferences(
+        { priority: true },
+        {
+          encoding: 'application/json',
+          headers: await network.serviceHeaders(
+            actorDid,
+            ids.AppBskyNotificationPutPreferences,
+          ),
+        },
+      )
+      await network.processAll()
+
+      const preferences = await agent.app.bsky.notification.getPreferences(
+        {},
+        {
+          headers: await network.serviceHeaders(
+            actorDid,
+            ids.AppBskyNotificationGetPreferences,
+          ),
+        },
+      )
+      expect(preferences.data.preferences).toMatchObject({
+        reply: { include: 'follows', list: false, push: false },
+        mention: { include: 'follows', list: false, push: true },
+        quote: { include: 'follows', list: true, push: false },
+        verified: { list: false, push: false },
+      })
+    })
+
     it('stores the preferences setting the defaults', async () => {
       const actorDid = sc.dids.carol
 
@@ -1242,6 +1219,7 @@ describe('notification views', () => {
           push: false,
           include: 'accepted',
         },
+        injected: true,
       }
       const expected0: AppBskyNotificationDefs.Preferences = {
         // chat is deprecated: input is ignored and the default is always returned.

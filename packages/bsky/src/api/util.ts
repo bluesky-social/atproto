@@ -55,7 +55,7 @@ export const fillPage = async <
     limit: opts.limit,
   })) as Awaited<ReturnType<F>>
   const items = opts.items(result)
-  let cursor = result.cursor
+  let cursor = result.cursor || undefined
   for (
     let requests = 1;
     requests < maxRequests && cursor && items.length < enoughItems;
@@ -67,7 +67,7 @@ export const fillPage = async <
       limit: opts.limit - items.length,
     })) as Awaited<ReturnType<F>>
     items.push(...opts.items(page))
-    cursor = page.cursor
+    cursor = page.cursor || undefined
     if (cursor === previousCursor) {
       cursor = undefined
       break

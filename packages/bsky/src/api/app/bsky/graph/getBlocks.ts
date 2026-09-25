@@ -63,7 +63,7 @@ const skeleton = async (
   )
   return {
     blockedDids,
-    cursor: cursor || undefined,
+    cursor,
   }
 }
 

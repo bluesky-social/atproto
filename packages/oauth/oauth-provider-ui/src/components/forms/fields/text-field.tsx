@@ -65,7 +65,7 @@ export function TextField({
     <Field.Root name={name} className="flex flex-col gap-2">
       {label && (
         <div className="flex items-center gap-2">
-          <Field.Label className="flex w-fit items-center gap-2 text-sm font-medium leading-snug">
+          <Field.Label className="flex w-fit items-center gap-2 text-sm leading-snug font-medium">
             {label}
           </Field.Label>
           {labelAction && <div className="ml-auto">{labelAction}</div>}
@@ -100,7 +100,7 @@ export function TextField({
       {below}
 
       {description && (
-        <Field.Description className="text-muted-foreground mt-1 text-sm font-normal leading-normal">
+        <Field.Description className="text-muted-foreground mt-1 text-sm leading-normal font-normal">
           {description}
         </Field.Description>
       )}

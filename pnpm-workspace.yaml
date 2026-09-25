@@ -21,7 +21,18 @@ allowBuilds:
   '@datadog/pprof': false
   core-js: false
   rolldown: true
+  '@parcel/watcher': true
 
 overrides:
   cookie: ^0.7.2
   opentelemetry-plugin-better-sqlite3>@opentelemetry/core: ^1.30.0
+  # https://github.com/advisories/GHSA-fjxv-7rqg-78g4
+  'form-data@<2.5.4': '>=2.5.4'
+  'form-data@>=3.0.0 <3.0.4': '>=3.0.4'
+  'form-data@>=4.0.0 <4.0.4': '>=4.0.4'
+  # https://github.com/advisories/GHSA-m7jm-9gc2-mpf2
+  'fast-xml-parser@>=5.0.0 <5.3.5': '>=5.3.5'
+  'fast-xml-parser@>=4.1.3 <4.5.4': '>=4.5.4'
+  # https://github.com/advisories/GHSA-xq3m-2v4x-88gg
+  'protobufjs@<7.5.5': '>=7.5.5'
+  'protobufjs@>=8.0.0 <8.0.1': '>=8.0.1'

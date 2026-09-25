@@ -68,7 +68,7 @@ const skeleton = async (
   return {
     listUri: params.list,
     listitems,
-    cursor: cursor || undefined,
+    cursor,
   }
 }
 

@@ -67,7 +67,7 @@ export function AccountAvatar({
           className={cn(
             // Grey, not red: deactivation is a paused state, not a fault.
             'bg-muted-foreground text-background',
-            'bottom-auto right-0 top-0',
+            'top-0 right-0 bottom-auto',
             badgeSizeMap[size],
           )}
           title={t`Deactivated account`}

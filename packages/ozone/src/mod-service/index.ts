@@ -27,6 +27,7 @@ import type { ImageInvalidator } from '../image-invalidator.js'
 import { com, tools } from '../lexicons/index.js'
 import { httpLogger as log } from '../logger.js'
 import { LABELER_HEADER_NAME, type ParsedLabelers } from '../util.js'
+import type { VideoInvalidator } from '../video-invalidator.js'
 import { insertExpiringTags, removeExpiringTags } from './expiring-tags.js'
 import {
   adjustModerationSubjectStatus,
@@ -63,6 +64,8 @@ import { type AuthHeaders, ModerationViews } from './views.js'
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
 export class ModerationService {
+  readonly views: ModerationViews
+
   constructor(
     public db: Database,
     public signingKey: Keypair,
@@ -78,7 +81,27 @@ export class ModerationService {
     ) => Promise<AuthHeaders>,
     public strikeService: StrikeService,
     public imgInvalidator?: ImageInvalidator,
-  ) {}
+    public videoInvalidator?: VideoInvalidator,
+  ) {
+    this.views = new ModerationViews(
+      db,
+      signingKey,
+      signingKeyId,
+      appviewClient,
+      async (method: string, labelers?: ParsedLabelers) => {
+        const authHeaders = await this.createAuthHeaders(
+          cfg.appview.did,
+          method,
+        )
+        if (labelers?.dids?.length) {
+          authHeaders.headers[LABELER_HEADER_NAME] = labelers.dids.join(', ')
+        }
+        return authHeaders
+      },
+      idResolver,
+      cfg.service.devMode,
+    )
+  }
 
   static creator(
     signingKey: Keypair,
@@ -91,6 +114,7 @@ export class ModerationService {
     createAuthHeaders: (aud: string, method: string) => Promise<AuthHeaders>,
     strikeServiceCreator: StrikeServiceCreator,
     imgInvalidator?: ImageInvalidator,
+    videoInvalidator?: VideoInvalidator,
   ) {
     return (db: Database) => {
       const strikeService = strikeServiceCreator(db)
@@ -106,28 +130,10 @@ export class ModerationService {
         createAuthHeaders,
         strikeService,
         imgInvalidator,
+        videoInvalidator,
       )
     }
   }
-
-  views = new ModerationViews(
-    this.db,
-    this.signingKey,
-    this.signingKeyId,
-    this.appviewClient,
-    async (method: string, labelers?: ParsedLabelers) => {
-      const authHeaders = await this.createAuthHeaders(
-        this.cfg.appview.did,
-        method,
-      )
-      if (labelers?.dids?.length) {
-        authHeaders.headers[LABELER_HEADER_NAME] = labelers.dids.join(', ')
-      }
-      return authHeaders
-    },
-    this.idResolver,
-    this.cfg.service.devMode,
-  )
 
   async getEvent(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
@@ -1029,6 +1035,21 @@ export class ModerationService {
                     ),
                   )
               }),
+            )
+          }
+
+          if (this.videoInvalidator) {
+            await Promise.allSettled(
+              (subject.blobCids ?? []).map((cid) =>
+                this.videoInvalidator
+                  ?.invalidate(subject.did, cid)
+                  .catch((err) =>
+                    log.error(
+                      { err, did: subject.did, cid },
+                      'failed to invalidate video',
+                    ),
+                  ),
+              ),
             )
           }
         })

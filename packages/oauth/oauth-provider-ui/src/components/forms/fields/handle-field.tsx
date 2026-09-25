@@ -88,7 +88,7 @@ export function HandleField({
     <Trans>
       Your full username will be:{' '}
       {segment ? (
-        <span className="text-foreground block break-all font-medium">
+        <span className="text-foreground block font-medium break-all">
           @{segment}
           {domain}
         </span>
@@ -106,7 +106,7 @@ export function HandleField({
       {label && (
         <label
           htmlFor="handle"
-          className="flex w-fit items-center gap-2 text-sm font-medium leading-snug"
+          className="flex w-fit items-center gap-2 text-sm leading-snug font-medium"
         >
           {label}
         </label>

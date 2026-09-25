@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import type { AtUriString, DatetimeString, DidString } from '@atproto/syntax'
+import type { AtUriString, DatetimeString } from '@atproto/syntax'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { ServerConfig } from '../../../../config.js'
 import type { AppContext } from '../../../../context.js'
@@ -38,13 +38,8 @@ export default function (server: Server, ctx: AppContext) {
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
 
-      // @NOTE the viewer's priority setting and last-seen time don't change
-      // across the pages that fillPage() may fetch, so they're read once here
-      // rather than on every page.
-      const priority = params.priority ?? (await getPriority(ctx, viewer))
       const lastSeenRes = await ctx.hydrator.dataplane.getNotificationSeen({
         actorDid: viewer,
-        priority,
       })
       const lastSeen = lastSeenRes.timestamp?.toDate()
 
@@ -53,7 +48,7 @@ export default function (server: Server, ctx: AppContext) {
         limit: params.limit,
         fetch: ({ cursor, limit }) =>
           listNotifications(
-            { ...params, cursor, limit, hydrateCtx, priority, lastSeen },
+            { ...params, cursor, limit, hydrateCtx, lastSeen },
             ctx,
           ),
         items: (r) => r.notifications,
@@ -69,17 +64,15 @@ export default function (server: Server, ctx: AppContext) {
 
 const paginateNotifications = async (opts: {
   ctx: Context
-  priority: boolean
   reasons?: string[]
   cursor?: string
   limit: number
   viewer: string
 }) => {
-  const { ctx, priority, reasons, limit, viewer } = opts
+  const { ctx, reasons, limit, viewer } = opts
 
   const res = await ctx.hydrator.dataplane.getNotifications({
     actorDid: viewer,
-    priority,
     cursor: opts.cursor,
     limit,
   })
@@ -118,10 +111,8 @@ const skeleton = async (
     ctx.cfg.notificationsDelayMs,
   )
   const viewer = params.hydrateCtx.viewer
-  const { priority } = params
   const res = await paginateNotifications({
     ctx,
-    priority,
     reasons: params.reasons,
     cursor: delayedCursor,
     limit: params.limit,
@@ -135,8 +126,7 @@ const skeleton = async (
   }
   return {
     notifs: res.notifications,
-    cursor: res.cursor || undefined,
-    priority,
+    cursor: res.cursor,
     lastSeenNotifs: lastSeenDate
       ? (lastSeenDate.toISOString() as DatetimeString)
       : undefined,
@@ -229,7 +219,6 @@ const presentation = (
   return {
     notifications,
     cursor,
-    priority: skeleton.priority,
     seenAt: skeleton.lastSeenNotifs,
   }
 }
@@ -240,25 +229,13 @@ type Context = {
   cfg: ServerConfig
 }
 
-type Params = Omit<
-  app.bsky.notification.listNotifications.$Params,
-  'priority'
-> & {
+type Params = app.bsky.notification.listNotifications.$Params & {
   hydrateCtx: HydrateCtxWithViewer
-  priority: boolean
   lastSeen?: Date
 }
 
 type SkeletonState = {
   notifs: Notification[]
-  priority: boolean
   lastSeenNotifs?: DatetimeString
   cursor?: string
-}
-
-const getPriority = async (ctx: Context, did: DidString) => {
-  const actors = await ctx.hydrator.actor.getActors([did], {
-    skipCacheForDids: [did],
-  })
-  return !!actors.get(did)?.priorityNotifications
 }
