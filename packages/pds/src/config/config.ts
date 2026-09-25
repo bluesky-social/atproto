@@ -246,6 +246,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         bypassIps: env.rateLimitBypassIps?.map((ipOrCidr) =>
           ipOrCidr.split('/')[0]?.trim(),
         ),
+        repoUploadBlobRateLimitDuration: env.rateLimitRepoUploadBlobTimeDuration ? env.rateLimitRepoUploadBlobTimeDuration : DAY,
+        repoUploadBlobRateLimitPoints: env.rateLimitRepoUploadBlobPoints ? env.rateLimitRepoUploadBlobPoints : 1000,
       }
     : { enabled: false }
 
@@ -528,6 +530,8 @@ export type RateLimitsConfig =
       enabled: true
       bypassKey?: string
       bypassIps?: string[]
+      repoUploadBlobRateLimitDuration: number
+      repoUploadBlobRateLimitPoints: number
     }
   | { enabled: false }
 
