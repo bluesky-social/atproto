@@ -14,6 +14,7 @@ import {
   InvalidStateTransition,
   handleReportUpdate,
 } from './handle-report-update.js'
+import { notifyReportActivities } from './notifications.js'
 
 const VALID_ACTIVITY_TYPES = new Set([
   'queueActivity',
@@ -141,6 +142,16 @@ export async function createReportActivity(
       })
       .returningAll()
       .execute()
+
+    await notifyReportActivities(dbTxn, [
+      {
+        reportId: report.id,
+        activityId: activity.id,
+        activityType,
+        publicNote,
+        createdAt: now,
+      },
+    ])
 
     return activity
   })

@@ -7,6 +7,10 @@ import {
 } from '@atproto/xrpc-server'
 import type { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier.js'
 import type { AppContext } from '../../context.js'
+import { REVERSE_TAKEDOWN } from '../../inbox/appeal.js'
+import { createInboxNotification } from '../../inbox/notifications.js'
+import { getInboxStanding } from '../../inbox/standing.js'
+import { publicActionType } from '../../inbox/views.js'
 import { app, com, tools } from '../../lexicons/index.js'
 import { httpLogger } from '../../logger.js'
 import { processReportAction } from '../../mod-service/report.js'
@@ -225,6 +229,8 @@ const handleModerationEvent = async ({
 
   const moderationEvent = await db.transaction(async (dbTxn) => {
     const moderationTxn = ctx.modService(dbTxn)
+    // Record-level enforcement can add account strikes too.
+    const previousStanding = await getInboxStanding(dbTxn, subject.did)
 
     if (externalId) {
       const existingEvent = await moderationTxn.getEventByExternalId(
@@ -359,6 +365,52 @@ const handleModerationEvent = async ({
         },
         result.event.durationInHours ?? undefined,
       )
+    }
+
+    const actionType =
+      result.event.action === REVERSE_TAKEDOWN
+        ? subject.isRepo()
+          ? 'accountRestored'
+          : 'contentRestored'
+        : publicActionType(result.event)
+    if (actionType && (subject.isRepo() || subject.isRecord())) {
+      const targetSubject = subject.isRecord()
+        ? {
+            $type: 'com.atproto.repo.strongRef' as const,
+            uri: subject.uri,
+            cid: subject.cid,
+          }
+        : { $type: 'com.atproto.admin.defs#repoRef' as const, did: subject.did }
+      await createInboxNotification(dbTxn, {
+        recipientDid: subject.did,
+        reason:
+          result.event.action === REVERSE_TAKEDOWN
+            ? 'actionReversed'
+            : 'actionTaken',
+        target: {
+          $type: 'tools.ozone.inbox.defs#subjectRef',
+          subject: targetSubject,
+          actionType,
+          actionId: result.event.id,
+        },
+        sourceKey: `moderation-event:${result.event.id}:action`,
+        createdAt: result.event.createdAt,
+      })
+    }
+
+    const standing = await getInboxStanding(dbTxn, subject.did)
+    if (standing !== previousStanding) {
+      await createInboxNotification(dbTxn, {
+        recipientDid: subject.did,
+        reason: 'standingChanged',
+        target: {
+          $type: 'tools.ozone.inbox.defs#standingRef',
+          standing,
+          previousStanding,
+        },
+        sourceKey: `moderation-event:${result.event.id}:standing`,
+        createdAt: result.event.createdAt,
+      })
     }
 
     return result.event
