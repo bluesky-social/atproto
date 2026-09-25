@@ -81,7 +81,7 @@
         },
         "id": {
           "type": "integer",
-          "description": "Public report ID (moderation event ID)."
+          "description": "Report ID (report table ID), used by getReport and Ozone's report detail page."
         },
         "isRead": {
           "type": "boolean"
