@@ -2,7 +2,7 @@ import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { ChevronRightIcon } from 'lucide-react'
-import { Fragment, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import type { JSX } from 'react/jsx-runtime'
 import { CustomizationName } from '#/components/customization-name.tsx'
 import { AccountSummary } from '#/components/identity/account-summary.tsx'
@@ -11,16 +11,17 @@ import {
   useIsCurrentTarget,
 } from '#/components/layouts/account-shell.tsx'
 import {
-  Item,
   ItemActions,
   ItemContent,
   ItemDescription,
-  ItemGroup,
-  ItemMedia,
-  ItemSeparator,
   ItemTitle,
 } from '#/components/ui/item.tsx'
+import {
+  AccountRow,
+  AccountRowMedia,
+} from '#/components/utils/account-card.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
+import { cn } from '#/lib/utils.ts'
 
 export const Route = createFileRoute('/account/u/$accountId/')({
   component: AccountHomePage,
@@ -54,55 +55,59 @@ function SectionList(): ReactNode {
   if (!links.length) return null
 
   return (
-    <ItemGroup className="gap-0">
-      {links.map(({ title, description, Icon, to, params }, index) => (
-        <Fragment key={to}>
-          {index > 0 && <ItemSeparator />}
-          <Item
-            render={<Link to={to} params={params} />}
-            className="hover:bg-muted rounded-lg"
-          >
-            {Icon && (
-              <ItemMedia variant="icon">
-                <Icon aria-hidden />
-              </ItemMedia>
+    <div className="flex flex-col gap-4">
+      {links.map(({ title, description, Icon, to, params }) => (
+        <AccountRow key={to} render={<Link to={to} params={params} />}>
+          {Icon && (
+            <AccountRowMedia disc>
+              <Icon aria-hidden className="size-6" />
+            </AccountRowMedia>
+          )}
+          <ItemContent className="min-w-0 gap-0.5">
+            <ItemTitle className="w-full text-lg leading-tight">
+              <span className="block min-w-0 truncate font-semibold">
+                {typeof title === 'object' ? _(title) : title}
+              </span>
+            </ItemTitle>
+            {description && (
+              <ItemDescription className="text-base leading-tight">
+                {typeof description === 'object' ? _(description) : description}
+              </ItemDescription>
             )}
-            <ItemContent>
-              <ItemTitle>
-                <span>{typeof title === 'object' ? _(title) : title}</span>
-              </ItemTitle>
-              {description && (
-                <ItemDescription>
-                  {typeof description === 'object'
-                    ? _(description)
-                    : description}
-                </ItemDescription>
-              )}
-            </ItemContent>
-            <ItemActions>
-              <ChevronRightIcon
-                aria-hidden
-                className="size-4 shrink-0 opacity-60"
-              />
-            </ItemActions>
-          </Item>
-        </Fragment>
+          </ItemContent>
+          <ItemActions>
+            <ChevronRightIcon
+              aria-hidden
+              className="text-muted-foreground size-5 shrink-0"
+            />
+          </ItemActions>
+        </AccountRow>
       ))}
-    </ItemGroup>
+    </div>
   )
 }
 
 function HostedByParagraph(props: JSX.IntrinsicElements['p']): ReactNode {
   const { account } = useAuthenticatedSession()
   return (
-    <p {...props}>
+    <p
+      {...props}
+      // The message's newline only takes effect on phones; from `md` up the
+      // sentence fits on one line. The link is always its own line.
+      className={cn(
+        'whitespace-pre-line md:whitespace-normal',
+        props.className,
+      )}
+    >
+      {/* @NOTE The newline is part of the message so the line always breaks
+        after "account"; translators place their own break. */}
       <Trans>
-        Your Atmosphere account is hosted by <CustomizationName />.
-      </Trans>{' '}
+        Your Atmosphere account{'\n'}is hosted by <CustomizationName />.
+      </Trans>
       <Link
         to="/account/u/$accountId/about"
         params={{ accountId: account.handle || account.did }}
-        className="text-foreground underline underline-offset-4"
+        className="text-foreground mt-1 block underline underline-offset-4"
       >
         <Trans>What does this mean?</Trans>
       </Link>

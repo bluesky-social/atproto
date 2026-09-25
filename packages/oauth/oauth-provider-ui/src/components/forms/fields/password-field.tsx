@@ -1,5 +1,5 @@
 import { useLingui } from '@lingui/react/macro'
-import { EyeIcon, EyeOffIcon, KeyIcon } from 'lucide-react'
+import { EyeIcon, EyeOffIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '#/components/ui/button.tsx'
 import { TextField, type TextFieldProps } from './text-field.tsx'
@@ -15,7 +15,7 @@ export type PasswordFieldProps = Omit<
 export function PasswordField({
   autoHide = true,
   autoComplete = 'current-password',
-  icon = <KeyIcon className="size-5" />,
+  icon,
   append,
   onBlur,
   ...props
@@ -49,9 +49,9 @@ export function PasswordField({
             onClick={() => setVisible((prev) => !prev)}
           >
             {visible ? (
-              <EyeIcon aria-hidden className="size-5" />
+              <EyeIcon aria-hidden className="size-4" />
             ) : (
-              <EyeOffIcon aria-hidden className="size-5" />
+              <EyeOffIcon aria-hidden className="size-4" />
             )}
           </Button>
           {append}

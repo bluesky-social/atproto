@@ -250,8 +250,10 @@ describe('oauth', () => {
 
     await page.typeInInput('password', 'alice-new-pass')
 
-    // Make sure the warning is visible
-    await page.ensureTextVisibility('Avertissement', 'h3')
+    // Make sure the phishing reminder is visible
+    await page.ensureTextVisibility(
+      'Ne saisissez votre mot de passe que sur des sites de confiance.',
+    )
 
     await page.clickOn(
       'label::-p-text(Se souvenir de ce compte sur cet appareil)',
@@ -363,13 +365,14 @@ describe('oauth', () => {
 
     await page.navigationClick(`Login with ${new URL(network.pds.url).host}`)
 
-    await page.ensureTextVisibility('Se connecter en tant que...')
+    // The picker heading carries a line break; match its first line
+    await page.ensureTextVisibility('Continuer avec', 'div')
 
     await page.clickOnText('alice.test', 'span')
 
     await page.assertTitle('Heureux de vous revoir!')
 
-    await page.ensureTextVisibility('Vous avez précédemment désactivé')
+    await page.ensureTextVisibility('Votre compte est actuellement désactivé.')
 
     await page.clickOnText('Oui, réactiver mon compte')
 
