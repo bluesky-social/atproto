@@ -20,6 +20,8 @@ import type {
   DeleteAccountConfirmInput,
   DeleteAccountRequestInput,
   DeviceAccount,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   HandleString,
   ResetPasswordConfirmInput,
   ResetPasswordRequestInput,
@@ -187,8 +189,14 @@ export class AccountManager {
       ).catch(async (err) => {
         // Only notify for credential failures (e.g. unknown identifier, wrong
         // password). Server errors and flows that require an additional factor
-        // (e.g. SecondAuthenticationFactorRequiredError) are not "failed
-        // sign-ins" and do not trigger the hook.
+        // are not "failed sign-ins" and do not trigger the hook.
+        //
+        // @NOTE That exclusion rests on the error hierarchy rather than an
+        // explicit guard: `SecondAuthenticationFactorRequiredError` extends
+        // `OAuthError` directly, so it misses this branch and falls through to
+        // the rethrow below. Re-parenting it under `InvalidRequestError` would
+        // silently start reporting second-factor challenges as failed
+        // sign-ins.
         if (err instanceof InvalidRequestError) {
           // Stores that throw the more specific `InvalidCredentialsError`
           // can attach the matched subject identifier to distinguish
@@ -458,6 +466,66 @@ export class AccountManager {
       account: updatedAccount,
       input,
     })
+
+    return updatedAccount
+  }
+
+  public async enableEmailAuthFactor(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    input: EnableEmailAuthFactorInput,
+    account: Account,
+  ): Promise<Account> {
+    // Already enabled
+    if (account.emailAuthFactor) return account
+
+    await this.hooks.onEnableEmailAuthFactor?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account,
+    })
+
+    const updatedAccount = await this.store.enableEmailAuthFactor(input)
+
+    if (updatedAccount.emailAuthFactor !== account.emailAuthFactor) {
+      await this.hooks.onEnabledEmailAuthFactor?.call(null, {
+        deviceId,
+        deviceMetadata,
+        input,
+        account: updatedAccount,
+      })
+    }
+
+    return updatedAccount
+  }
+
+  public async disableEmailAuthFactor(
+    deviceId: DeviceId,
+    deviceMetadata: RequestMetadata,
+    input: DisableEmailAuthFactorInput,
+    account: Account,
+  ): Promise<Account> {
+    // Already disabled
+    if (!account.emailAuthFactor) return account
+
+    await this.hooks.onDisableEmailAuthFactor?.call(null, {
+      deviceId,
+      deviceMetadata,
+      input,
+      account,
+    })
+
+    const updatedAccount = await this.store.disableEmailAuthFactor(input)
+
+    if (updatedAccount.emailAuthFactor !== account.emailAuthFactor) {
+      await this.hooks.onDisabledEmailAuthFactor?.call(null, {
+        deviceId,
+        deviceMetadata,
+        input,
+        account: updatedAccount,
+      })
+    }
 
     return updatedAccount
   }

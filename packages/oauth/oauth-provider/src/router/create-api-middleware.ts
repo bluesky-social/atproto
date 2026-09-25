@@ -355,6 +355,61 @@ export function createApiMiddleware<
   router.use(
     apiRoute({
       method: 'POST',
+      endpoint: '/enable-email-otp',
+      schema: z
+        .object({
+          did: didSchema,
+          locale: localeSchema.optional(),
+        })
+        .strict(),
+      async handler(req, res) {
+        let { account } = await authenticate.call(this, req, res)
+
+        account = await server.accountManager.enableEmailAuthFactor(
+          this.deviceId,
+          this.deviceMetadata,
+          this.input,
+          account,
+        )
+
+        return { json: { account } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
+      endpoint: '/disable-email-otp',
+      schema: z
+        .object({
+          did: didSchema,
+          token: emailOtpSchema.optional(),
+          locale: localeSchema.optional(),
+        })
+        .strict(),
+      async handler(req, res) {
+        let { account } = await authenticate.call(this, req, res)
+
+        // @NOTE Phase 1 (no token provided) will cause an
+        // SecondAuthenticationFactorRequiredError to be thrown, prompting the
+        // client to provide the required token. Phase 2 (with a valid token)
+        // will then disable the factor.
+        account = await server.accountManager.disableEmailAuthFactor(
+          this.deviceId,
+          this.deviceMetadata,
+          this.input,
+          account,
+        )
+
+        return { json: { account } }
+      },
+    }),
+  )
+
+  router.use(
+    apiRoute({
+      method: 'POST',
       endpoint: '/update-handle',
       schema: z
         .object({

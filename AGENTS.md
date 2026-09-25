@@ -95,6 +95,7 @@ Agent files — this `AGENTS.md`, the skills under [.agents/skills/](.agents/ski
 
 ## Troubleshooting
 
+- **Integration tests run stale service code.** `@atproto/dev-env` loads services through their package exports from `dist`. After changing service code, run `pnpm run build` inside that service package before rerunning its integration tests.
 - **Stale codegen.** If the build fails due to a generated file in [packages/api](packages/api) being out of date, run `pnpm run codegen && pnpm run build` from that package, then re-run the build. This is only needed there because its `prebuild` step skips codegen as a performance optimization.
 - **Codegen ran but produced stale output.** Codegen relies on `pnpm build:tooling` to build the `@atproto/lex-cli` and `@atproto/lex-builder` packages first. If you see a codegen failure, run `pnpm build:tooling` from the root, then re-run codegen.
 - **End-to-end test fails with stale infra.** If docker containers persist across test runs, reset them with `cd packages/dev-infra && docker compose down --volumes`.

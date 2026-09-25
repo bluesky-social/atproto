@@ -9,6 +9,8 @@ import type {
   ConfirmResetPasswordInput,
   DeactivateAccountInput,
   DidString,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   HandleUnavailableReason,
   InitiateAccountDeletionInput,
   InitiateEmailUpdateInput,
@@ -199,6 +201,32 @@ export class Api extends JsonClient<ApiEndpoints> {
       'POST',
       '/verify-email-confirm',
       { did, token, email },
+      options,
+    )
+  }
+
+  async enableEmailAuthFactor(
+    {
+      did,
+      locale = this.locale,
+    }: WithOptionalLocale<EnableEmailAuthFactorInput>,
+    options?: Options,
+  ) {
+    return this.fetch('POST', '/enable-email-otp', { did, locale }, options)
+  }
+
+  async disableEmailAuthFactor(
+    {
+      did,
+      token,
+      locale = this.locale,
+    }: WithOptionalLocale<DisableEmailAuthFactorInput>,
+    options?: Options,
+  ) {
+    return this.fetch(
+      'POST',
+      '/disable-email-otp',
+      { did, token, locale },
       options,
     )
   }
