@@ -63,7 +63,7 @@ const skeleton = async (
     : res.dids
   return {
     mutedDids: mutedDids as DidString[],
-    cursor: res.cursor || undefined,
+    cursor: res.cursor,
   }
 }
 

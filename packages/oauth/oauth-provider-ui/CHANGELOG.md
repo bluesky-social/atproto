@@ -1,5 +1,29 @@
 # @atproto/oauth-provider-ui
 
+## 0.10.4
+
+### Patch Changes
+
+- [#5482](https://github.com/bluesky-social/atproto/pull/5482) [`1f639d9`](https://github.com/bluesky-social/atproto/commit/1f639d97498981eea3553b9a20a8538437af9658) Thanks [@abcbrookie](https://github.com/abcbrookie)! - Tighter auth and account screens: one shared button and input size, less copy, error pages shaped like the other auth cards.
+
+## 0.10.3
+
+### Patch Changes
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump the dev-dependencies group across 1 directory with 30 updates
+
+- [#5463](https://github.com/bluesky-social/atproto/pull/5463) [`9c35046`](https://github.com/bluesky-social/atproto/commit/9c35046f17ac577fc64f8b5caccb8521d3b2584a) Thanks [@bigmoves](https://github.com/bigmoves)! - Restore live normalization of the one-time code input (uppercase, strip characters outside the base32 alphabet, insert the hyphen) and refocus the input after requesting a new code.
+
+- Updated dependencies [[`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/oauth-provider-api@0.8.3
+
+## 0.10.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-provider-api@0.8.2
+
 ## 0.10.1
 
 ### Patch Changes

@@ -34,7 +34,6 @@ import {
   ReportStatsService,
   type ReportStatsServiceCreator,
 } from './report/stats.js'
-import { SafeDidResolver } from './safe-fetch.js'
 import {
   SafelinkRuleService,
   type SafelinkRuleServiceCreator,
@@ -65,6 +64,7 @@ import {
   VerificationService,
   type VerificationServiceCreator,
 } from './verification/service.js'
+import type { VideoInvalidator } from './video-invalidator.js'
 
 export type AppContextOptions = {
   db: Database
@@ -89,6 +89,7 @@ export type AppContextOptions = {
   didCache: DidCache
   idResolver: IdResolver
   imgInvalidator?: ImageInvalidator
+  videoInvalidator?: VideoInvalidator
   backgroundQueue: BackgroundQueue
   sequencer: Sequencer
   assignmentService: AssignmentService
@@ -135,13 +136,8 @@ export class AppContext {
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
       didCache,
+      fetch: cfg.service.devMode ? globalThis.fetch : undefined,
     })
-    if (!cfg.service.devMode) {
-      idResolver.did = new SafeDidResolver({
-        plcUrl: cfg.identity.plcUrl,
-        didCache,
-      })
-    }
 
     const createAuthHeaders = (aud: string, lxm: string) =>
       createServiceAuthHeaders({
@@ -194,6 +190,7 @@ export class AppContext {
       createAuthHeaders,
       strikeService,
       overrides?.imgInvalidator,
+      overrides?.videoInvalidator,
     )
     const assignmentService = AssignmentService.creator(
       {

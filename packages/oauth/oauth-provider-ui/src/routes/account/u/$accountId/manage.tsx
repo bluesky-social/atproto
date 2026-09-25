@@ -6,9 +6,10 @@ import {
   LockIcon,
   type LucideIcon,
   MailIcon,
+  MoonIcon,
   ShieldAlertIcon,
   ShieldCheckIcon,
-  SnowflakeIcon,
+  SunIcon,
   TrashIcon,
 } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
@@ -20,17 +21,21 @@ import { Notice } from '#/components/feedback/notice.tsx'
 import { ReactivateAccountDialog } from '#/components/reactivate-account-dialog.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import {
-  Item,
+  type Item,
   ItemActions,
   ItemContent,
+  ItemDescription,
   ItemGroup,
   ItemMedia,
-  ItemSeparator,
   ItemTitle,
 } from '#/components/ui/item.tsx'
 import { UpdateEmailDialog } from '#/components/update-email-dialog.tsx'
 import { UpdateHandleDialog } from '#/components/update-handle-dialog.tsx'
 import { UpdatePasswordDialog } from '#/components/update-password-dialog.tsx'
+import {
+  AccountRow,
+  AccountRowMedia,
+} from '#/components/utils/account-card.tsx'
 import { Handle } from '#/components/utils/handle.tsx'
 import { VerifyEmailDialog } from '#/components/verify-email-dialog.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
@@ -72,11 +77,9 @@ function ManagePage() {
         left the gaps looking arbitrary. */}
       <ItemGroup>
         <EmailUpdateRow />
-        <ItemSeparator />
         <HandleUpdateRow />
         <PasswordUpdateRow />
         <EmailAuthFactorUpdateRow />
-        <ItemSeparator />
         <AccountStatusRow />
         <AccountDeletionRow />
       </ItemGroup>
@@ -94,10 +97,20 @@ function EmailVerificationRow() {
   if (!email || emailVerified) return null
 
   return (
-    <Notice
-      role="info"
-      icon={ShieldAlertIcon}
-      action={
+    <AccountRow className="hover:bg-muted/30">
+      {/* No disc — this is a notice, not a destination like the rows below —
+        but the same 48px slot, so the text lines up with theirs. */}
+      <ItemMedia className="text-warning size-12">
+        <ShieldAlertIcon aria-hidden className="size-6" />
+      </ItemMedia>
+      <ItemContent className="min-w-0">
+        <ItemTitle className="w-full text-base leading-snug">
+          <span className="block min-w-0 font-medium">
+            <Trans>Email not verified</Trans>
+          </span>
+        </ItemTitle>
+      </ItemContent>
+      <ItemActions>
         <VerifyEmailDialog
           email={email}
           requestPending={verifyRequest.isPending}
@@ -109,14 +122,12 @@ function EmailVerificationRow() {
             await verifyConfirm.mutateAsync({ did, token, email })
           }}
         >
-          <Button size="sm" variant="secondary">
-            <Trans context="verify email">Verify now</Trans>
+          <Button variant="secondary" className="h-9">
+            <Trans context="verify email">Verify</Trans>
           </Button>
         </VerifyEmailDialog>
-      }
-    >
-      <Trans>Your email address needs to be verified.</Trans>
-    </Notice>
+      </ItemActions>
+    </AccountRow>
   )
 }
 
@@ -279,7 +290,7 @@ function AccountStatusRow(props: Omit<RowProps, 'icon' | 'value'>) {
           await reactivate.mutateAsync({ did: account.did })
         }}
       >
-        <Row {...props} icon={SnowflakeIcon} variant="default">
+        <Row {...props} icon={SunIcon} variant="default">
           <Trans>Reactivate account</Trans>
         </Row>
       </ReactivateAccountDialog>
@@ -292,7 +303,7 @@ function AccountStatusRow(props: Omit<RowProps, 'icon' | 'value'>) {
         await deactivate.mutateAsync({ did: account.did })
       }}
     >
-      <Row {...props} icon={SnowflakeIcon} variant="destructive">
+      <Row {...props} icon={MoonIcon} variant="destructive">
         <Trans>Deactivate account</Trans>
       </Row>
     </DeactivateAccountDialog>
@@ -382,46 +393,51 @@ function Row({
   const destructive = variant === 'destructive'
 
   return (
-    <Item
+    <AccountRow
       {...props}
       // @NOTE `disabled` rides on the rendered <button>, not through `Item`'s
       // own props: `Item` is typed as a <div>, which has no such attribute, so
       // passing it alongside `icon`/`value` would not typecheck.
       render={<button type="button" disabled={disabled} />}
       className={cn(
-        'hover:bg-muted w-full text-left',
         destructive && 'text-destructive hover:bg-destructive/10',
         disabled && 'pointer-events-none opacity-60',
         className,
       )}
     >
-      <ItemMedia variant="icon">
-        <Icon aria-hidden className={cn(destructive && 'text-destructive')} />
-      </ItemMedia>
+      <AccountRowMedia disc className={cn(destructive && 'text-destructive')}>
+        <Icon aria-hidden className="size-6" />
+      </AccountRowMedia>
 
       {/* @NOTE `min-w-0` is load-bearing: an email address has no break
         opportunity, so without it the row overflows and `Item`'s wrap drops the
-        chevron onto a line of its own. `shrink-0` keeps the label whole, so the
-        value is what truncates. */}
-      <ItemContent className="min-w-0 flex-row items-center gap-3">
-        <ItemTitle className="shrink-0">
-          <span>{children}</span>
+        chevron onto a line of its own. */}
+      <ItemContent className="min-w-0 gap-0.5">
+        <ItemTitle className="w-full text-lg leading-tight">
+          <span className="block min-w-0 truncate font-semibold">
+            {children}
+          </span>
         </ItemTitle>
         {value != null && (
-          <span
-            // A plain string value is the only one we can put in a tooltip
-            // ourselves; `Handle` carries its own `title`.
-            title={typeof value === 'string' ? value : undefined}
-            className="text-muted-foreground min-w-0 flex-1 truncate text-right text-sm"
-          >
-            {value}
-          </span>
+          <ItemDescription className="text-base leading-tight">
+            <span
+              // A plain string value is the only one we can put in a tooltip
+              // ourselves; `Handle` carries its own `title`.
+              title={typeof value === 'string' ? value : undefined}
+              className="block truncate"
+            >
+              {value}
+            </span>
+          </ItemDescription>
         )}
       </ItemContent>
 
       <ItemActions>
-        <ChevronRightIcon aria-hidden className="size-4 shrink-0 opacity-60" />
+        <ChevronRightIcon
+          aria-hidden
+          className="text-muted-foreground size-5 shrink-0"
+        />
       </ItemActions>
-    </Item>
+    </AccountRow>
   )
 }

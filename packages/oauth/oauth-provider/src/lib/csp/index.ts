@@ -65,6 +65,7 @@ export function buildCsp(config: CspConfig): string {
 export function mergeCsp<C extends (CspConfig | null | undefined)[]>(
   ...configs: C
 ) {
+  if (!configs.length) return {} as CombinedTuple<C>
   return configs.filter((v) => v != null).reduce(combineCsp) as CombinedTuple<C>
 }
 
@@ -90,10 +91,19 @@ export function combineCsp(a: CspConfig, b: CspConfig): CspConfig {
     if (a[name] && b[name]) {
       const set = new Set(a[name])
       if (b[name]) for (const value of b[name]) set.add(value)
+      // Remove URL values if the protocol is already present in the set
+      for (const value of set) {
+        if (value.startsWith('http://')) {
+          if (set.has('http:')) set.delete(value)
+        } else if (value.startsWith('https://')) {
+          if (set.has('https:')) set.delete(value)
+        }
+      }
       if (set.size > 1 && set.has(NONE)) set.delete(NONE)
       result[name] = [...set]
-    } else if (a[name] || b[name]) {
-      result[name] = a[name] || b[name]
+    } else {
+      const value = a[name] || b[name]
+      if (value) result[name] = [...value]
     }
   }
 

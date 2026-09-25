@@ -7,11 +7,14 @@ export default function (server: Server, ctx: AppContext) {
   server.add(
     com.atproto.label.subscribeLabels,
     async function* ({
+      req,
       params,
       signal,
     }): AsyncGenerator<com.atproto.label.subscribeLabels.$Message> {
       const { cursor } = params
-      const outbox = new Outbox(ctx.sequencer)
+      const outbox = new Outbox(ctx.sequencer, {
+        onOverflow: () => req.socket.destroy(),
+      })
 
       if (cursor !== undefined) {
         const curr = await ctx.sequencer.curr()

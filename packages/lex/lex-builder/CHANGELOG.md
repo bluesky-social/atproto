@@ -1,5 +1,26 @@
 # @atproto/lex-builder
 
+## 0.1.16
+
+### Patch Changes
+
+- Updated dependencies [[`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f)]:
+  - @atproto/lex-document@0.1.12
+
+## 0.1.15
+
+### Patch Changes
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump the dev-dependencies group across 1 directory with 30 updates
+
+## 0.1.14
+
+### Patch Changes
+
+- Updated dependencies [[`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222), [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222)]:
+  - @atproto/lex-schema@0.2.7
+  - @atproto/lex-document@0.1.11
+
 ## 0.1.13
 
 ### Patch Changes

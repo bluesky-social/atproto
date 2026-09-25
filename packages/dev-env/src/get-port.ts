@@ -5,6 +5,7 @@ import {
   mkdir,
   readFile,
   readdir,
+  rename,
   unlink,
   writeFile,
 } from 'node:fs/promises'
@@ -19,7 +20,9 @@ const lockDir = join(
   `atproto-dev-env-ports-${process.getuid?.() ?? 'unknown'}`,
 )
 const claimedPorts = new Set<string>()
-const ownerPath = join(lockDir, `.owner-${process.pid}-${randomUUID()}`)
+const ownerId = `${process.pid}-${randomUUID()}`
+const ownerPath = join(lockDir, `.owner-${ownerId}`)
+const pendingOwnerPath = join(lockDir, `.pending-${ownerId}`)
 
 let initialize: Promise<void> | undefined
 
@@ -112,7 +115,8 @@ export const sweepStaleReservations = async (
 
 const initializeLockDir = async () => {
   await mkdir(lockDir, { recursive: true })
-  await writeFile(ownerPath, String(process.pid), { flag: 'wx' })
+  await writeFile(pendingOwnerPath, String(process.pid), { flag: 'wx' })
+  await rename(pendingOwnerPath, ownerPath)
 
   const releaseSweepLock = await acquireSweepLock(lockDir, ownerPath)
   if (!releaseSweepLock) return

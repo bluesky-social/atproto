@@ -38,16 +38,16 @@ export function CheckboxField({
           disabled={disabled}
           className={cn(
             'border-input accent-primary size-4 shrink-0 rounded-[4px] border',
-            'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2',
+            'focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none',
             'disabled:cursor-not-allowed disabled:opacity-50',
           )}
         />
         <div className="grid gap-1 leading-none">
-          <label htmlFor={name} className="text-sm font-normal leading-snug">
+          <label htmlFor={name} className="text-sm leading-snug font-normal">
             {label}
           </label>
           {description && (
-            <p className="text-muted-foreground text-sm font-normal leading-normal">
+            <p className="text-muted-foreground text-sm leading-normal font-normal">
               {description}
             </p>
           )}

@@ -64,7 +64,8 @@ describe('account manager', () => {
     await page.waitForNetworkIdle()
 
     await page.ensureTextVisibility('bob.test', 'span')
-    await page.ensureTextVisibility('Votre compte Atmosphère est hébergé chez')
+    // The sentence carries a line break after "Atmosphère"; match its tail
+    await page.ensureTextVisibility('est hébergé chez')
 
     await page.assertTitle('Mon compte Atmosphère')
   })
@@ -173,7 +174,7 @@ describe('account manager', () => {
 
     await page.clickOnText('Compte utilisateur', 'a')
 
-    await page.ensureTextVisibility('Votre adresse email doit être vérifiée.')
+    await page.ensureTextVisibility('E-mail non vérifié', 'span')
 
     await page.clickOnText('Vérifier')
 
@@ -335,7 +336,7 @@ describe('account manager', () => {
     await page.ensureNotification("Modification de l'adresse email réussie")
 
     // The email needs to be verified again
-    await page.ensureTextVisibility('Votre adresse email doit être vérifiée.')
+    await page.ensureTextVisibility('E-mail non vérifié', 'span')
   })
 
   it('allows signing out & signing back in', async () => {
@@ -392,7 +393,7 @@ describe('account manager', () => {
     await page.ensureNotification("Modification de l'adresse email réussie")
 
     // The email needs to be verified again
-    await page.ensureTextVisibility('Votre adresse email doit être vérifiée.')
+    await page.ensureTextVisibility('E-mail non vérifié', 'span')
   })
 
   it('rejects racial slurs when changing username', async () => {

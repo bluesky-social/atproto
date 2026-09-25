@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.5.31",
+  "version": "0.5.35",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -49,6 +49,7 @@
     "@atproto/lex": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-document": "workspace:^",
     "@atproto/lex-json": "workspace:^",
     "@atproto/oauth-provider": "workspace:^",
     "@atproto/oauth-scopes": "workspace:^",
@@ -87,18 +88,17 @@
   },
   "devDependencies": {
     "@atproto/api": "workspace:^",
-    "@atproto/lex-document": "workspace:^",
     "@atproto/oauth-client-browser-example": "workspace:^",
+    "@atproto/oauth-client-node": "workspace:^",
     "@did-plc/server": "^0.0.1",
     "@jest/globals": "^30.0.0",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/express-serve-static-core": "^4.17.36",
     "@types/nodemailer": "^6.4.6",
-    "@types/qs": "^6.9.7",
-    "dotenv": "^17.4.2",
+    "@types/qs": "^6.15.1",
     "get-port": "^6.1.2",
-    "jest": "^30.0.0",
+    "jest": "^30.5.1",
     "puppeteer": "^23.11.1",
     "ws": "^8.12.0"
   },
@@ -113,7 +113,6 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest",
     "test:sqlite": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:sqlite-only": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns /tests/proxied/*",
-    "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest --updateSnapshot",
     "migration:create": "node ./bin/migration-create.ts"
   }

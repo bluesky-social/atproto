@@ -13,7 +13,6 @@ import {
   Method,
   type MuteOperation,
   MuteOperation_Type,
-  type NotifOperation,
   type Operation,
 } from '../../proto/bsync_pb.js'
 import { Namespaces } from '../../stash.js'
@@ -23,7 +22,6 @@ import { countAll, excluded } from './db/util.js'
 export type BsyncCursors = {
   op?: string
   mute?: string
-  notif?: string
 }
 
 export class BsyncSubscription {
@@ -56,7 +54,6 @@ export class BsyncSubscription {
     if (this.ac) return
     this.ac = new AbortController()
     this.scanMuteOperations()
-    this.scanNotifOperations()
     this.scanOperations()
   }
 
@@ -82,8 +79,7 @@ export class BsyncSubscription {
   private isCaughtUp(targets: BsyncCursors) {
     return (
       gteCursor(this.cursors.op, targets.op) &&
-      gteCursor(this.cursors.mute, targets.mute) &&
-      gteCursor(this.cursors.notif, targets.notif)
+      gteCursor(this.cursors.mute, targets.mute)
     )
   }
 
@@ -232,39 +228,6 @@ export class BsyncSubscription {
         await this.db.db
           .deleteFrom('list_mute')
           .where('mutedByDid', '=', actorDid)
-          .execute()
-      }
-    }
-  }
-
-  private scanNotifOperations() {
-    this.startScanning(async (cursor, signal) => {
-      const res = await this.bsyncClient.scanNotifOperations(
-        { cursor },
-        { signal },
-      )
-
-      await this.processNotifOperations(res.operations)
-      this.cursors.notif = res.cursor
-
-      return res.cursor
-    })
-  }
-
-  private async processNotifOperations(operations: NotifOperation[]) {
-    for (const op of operations) {
-      const { actorDid, priority } = op
-      if (priority !== undefined) {
-        await this.db.db
-          .insertInto('actor_state')
-          .values({
-            did: actorDid,
-            priorityNotifs: priority,
-            lastSeenNotifs: new Date().toISOString(),
-          })
-          .onConflict((oc) =>
-            oc.column('did').doUpdateSet({ priorityNotifs: priority }),
-          )
           .execute()
       }
     }

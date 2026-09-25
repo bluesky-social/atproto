@@ -8,6 +8,7 @@ import {
   Database,
   MetricsService,
   OzoneService,
+  VideoInvalidator,
   envToCfg,
   envToSecrets,
   httpLogger,
@@ -49,6 +50,16 @@ const main = async () => {
       ? new MultiImageInvalidator(imgInvalidators)
       : imgInvalidators[0]
 
+  const videoInvalidationUrl = process.env.OZONE_VIDEO_INVALIDATION_URL
+  const videoInvalidationKey = process.env.OZONE_VIDEO_INVALIDATION_KEY
+  const videoInvalidator =
+    videoInvalidationUrl && videoInvalidationKey
+      ? new VideoInvalidator({
+          url: videoInvalidationUrl,
+          helperKey: videoInvalidationKey,
+        })
+      : undefined
+
   const migrate = process.env.OZONE_DB_MIGRATE === '1'
   if (migrate) {
     const db = new Database({
@@ -68,7 +79,7 @@ const main = async () => {
   const ozone = await OzoneService.create(
     cfg,
     secrets,
-    { imgInvalidator },
+    { imgInvalidator, videoInvalidator },
     register,
   )
 

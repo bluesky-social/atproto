@@ -8,7 +8,7 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { ErrorView } from '#/components/error-view.tsx'
-import { Button } from '#/components/ui/button.tsx'
+import { ActionButton } from '#/components/forms/form-shell.tsx'
 import type { SessionStore } from '#/contexts/session.tsx'
 import type { Api } from '#/lib/api.ts'
 
@@ -47,9 +47,13 @@ function NotFoundComponent() {
   const { t } = useLingui()
   return (
     <ErrorView title={msg`Page not found`}>
-      <Button aria-label={t`Back`} render={<Link to="/account" />}>
+      <ActionButton
+        aria-label={t`Back`}
+        className="w-full"
+        render={<Link to="/account" />}
+      >
         <Trans>Back</Trans>
-      </Button>
+      </ActionButton>
     </ErrorView>
   )
 }

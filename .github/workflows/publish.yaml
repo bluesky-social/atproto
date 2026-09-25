@@ -30,10 +30,10 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
       - name: Publish
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         id: changesets
         with:
-          publish: pnpm run publish:ci
-          version: pnpm run version-packages
-          commit: 'Version packages'
-          title: 'Version packages'
+          publish-script: pnpm run publish-script
+          version-script: pnpm run version-script
+          commit-message: 'Version packages'
+          pr-title: 'Version packages'

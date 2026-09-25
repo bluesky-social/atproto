@@ -1,5 +1,43 @@
 # @atproto/lexicon-resolver
 
+## 0.4.22
+
+### Patch Changes
+
+- Updated dependencies [[`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f), [`30f8149`](https://github.com/bluesky-social/atproto/commit/30f8149e629f9afc3fe41cf66bd8482954d7c052)]:
+  - @atproto/lex-document@0.1.12
+  - @atproto/identity@0.5.14
+  - @atproto/lex@0.3.12
+
+## 0.4.21
+
+### Patch Changes
+
+- Updated dependencies [[`1ff43e6`](https://github.com/bluesky-social/atproto/commit/1ff43e6e592b1c3ac44e9cd5585370063035a90d), [`f88aa58`](https://github.com/bluesky-social/atproto/commit/f88aa5842df9aba9f208a6073272b43ef9bd089d)]:
+  - @atproto/identity@0.5.13
+  - @atproto-labs/fetch-node@0.4.0
+  - @atproto/lex@0.3.11
+
+## 0.4.20
+
+### Patch Changes
+
+- Updated dependencies [[`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/identity@0.5.12
+  - @atproto/repo@0.10.14
+  - @atproto/lex@0.3.10
+
+## 0.4.19
+
+### Patch Changes
+
+- Updated dependencies [[`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222), [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222)]:
+  - @atproto/lex@0.3.9
+  - @atproto/syntax@0.7.6
+  - @atproto/lex-document@0.1.11
+  - @atproto/repo@0.10.13
+  - @atproto/identity@0.5.11
+
 ## 0.4.18
 
 ### Patch Changes

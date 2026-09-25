@@ -40,7 +40,7 @@ Repo-specific conventions and setup. Assumes working knowledge of vitest itself 
 
    Extend `include` for other test-only sources: benchmarks (`./src/**/*.bench.ts`, as [lex-json](../../../../packages/lex/lex-json/tsconfig.test.json) does) or ambient declarations (`./src/core-js.d.ts`, as [lex-document](../../../../packages/lex/lex-document/tsconfig.test.json) does).
 
-5. Make sure the package's `tsconfig.json` references both `./tsconfig.build.json` and `./tsconfig.test.json`.
+5. Make sure the package's `tsconfig.json` references `./tsconfig.build.json`, `./tsconfig.test.json`, and — so the new `vitest.config.ts` gets type-checked — `./tsconfig.config.json`. If the package has no `tsconfig.config.json` yet, create one extending [tsconfig/config.tsconfig.json](../../../../tsconfig/config.tsconfig.json) with `include: ["./*.ts", "./*.js", "./*.cjs", "./*.mjs"]` (adjust the `../../` depth for nested packages). See the SKILL's [TypeScript config](../SKILL.md#typescript-config-for-tests) section.
 
 ## Vite-based packages
 

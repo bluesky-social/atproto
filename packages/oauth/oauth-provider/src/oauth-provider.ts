@@ -107,7 +107,7 @@ export { Keyset } from '@atproto/jwk'
 export type * from '@atproto/jwk-jose'
 export { JoseKey } from '@atproto/jwk-jose'
 export type * from '@atproto/lex-resolver'
-export { LexResolver } from '@atproto/lex-resolver'
+export { LexResolver, LexResolverError } from '@atproto/lex-resolver'
 
 export { AccessTokenMode }
 export type {

@@ -1,5 +1,5 @@
 import { Field } from '@base-ui/react/field'
-import type { JSX, ReactNode } from 'react'
+import type { ComponentProps, JSX, ReactNode } from 'react'
 import { Input } from '#/components/ui/input.tsx'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
@@ -20,6 +20,24 @@ export type FieldBaseProps = {
   append?: ReactNode
   /** Extra content rendered under the input (e.g. a strength meter). */
   below?: ReactNode
+}
+
+/**
+ * Size for every text control in the auth forms: 44px tall for a comfortable
+ * tap target, and 16px text at every breakpoint — `Input` drops to 14px from
+ * `md` up, and 16px is also what stops iOS zooming into a focused field.
+ */
+const inputSize = 'h-11 text-base md:text-base'
+
+/**
+ * An `Input` at that size, for the controls that stand outside a `TextField` —
+ * a composite field's own control, or a plain filter box.
+ */
+export function FieldInput({
+  className,
+  ...props
+}: ComponentProps<typeof Input>) {
+  return <Input {...props} className={cn(inputSize, className)} />
 }
 
 export type TextFieldProps = Override<
@@ -47,7 +65,7 @@ export function TextField({
     <Field.Root name={name} className="flex flex-col gap-2">
       {label && (
         <div className="flex items-center gap-2">
-          <Field.Label className="flex w-fit items-center gap-2 text-sm font-medium leading-snug">
+          <Field.Label className="flex w-fit items-center gap-2 text-sm leading-snug font-medium">
             {label}
           </Field.Label>
           {labelAction && <div className="ml-auto">{labelAction}</div>}
@@ -67,7 +85,12 @@ export function TextField({
           {...props}
           name={name}
           render={<Input />}
-          className={cn(icon && 'pl-10', append && 'pr-10', className)}
+          className={cn(
+            inputSize,
+            icon && 'pl-10',
+            append && 'pr-10',
+            className,
+          )}
         />
         {append && (
           <span className="absolute right-1 flex items-center">{append}</span>
@@ -77,7 +100,7 @@ export function TextField({
       {below}
 
       {description && (
-        <Field.Description className="text-muted-foreground text-sm font-normal leading-normal">
+        <Field.Description className="text-muted-foreground mt-1 text-sm leading-normal font-normal">
           {description}
         </Field.Description>
       )}

@@ -2,7 +2,6 @@ import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { AtSignIcon } from 'lucide-react'
 import { type ReactNode, useMemo, useState } from 'react'
-import { Input } from '#/components/ui/input.tsx'
 import { RadioGroup, RadioGroupItem } from '#/components/ui/radio-group.tsx'
 import { HANDLE_SEGMENT_PATTERN } from '#/lib/form-patterns.ts'
 import {
@@ -13,6 +12,7 @@ import {
   isValidDomain,
 } from '#/lib/handle.ts'
 import { cn } from '#/lib/utils.ts'
+import { FieldInput } from './text-field.tsx'
 
 export type HandleFieldProps = {
   label?: ReactNode
@@ -88,7 +88,7 @@ export function HandleField({
     <Trans>
       Your full username will be:{' '}
       {segment ? (
-        <span className="text-foreground block break-all font-medium">
+        <span className="text-foreground block font-medium break-all">
           @{segment}
           {domain}
         </span>
@@ -106,7 +106,7 @@ export function HandleField({
       {label && (
         <label
           htmlFor="handle"
-          className="flex w-fit items-center gap-2 text-sm font-medium leading-snug"
+          className="flex w-fit items-center gap-2 text-sm leading-snug font-medium"
         >
           {label}
         </label>
@@ -119,7 +119,7 @@ export function HandleField({
         >
           <AtSignIcon className="size-5" />
         </span>
-        <Input
+        <FieldInput
           id="handle"
           name="handle"
           title={t`Type your username`}

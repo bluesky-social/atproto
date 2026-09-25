@@ -1,15 +1,12 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { type ReactNode, useState } from 'react'
-import type { Account } from '@atproto/oauth-provider-api'
 import { AccountPermission } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
-import { AccountIdentifier } from '#/components/identity/account-identifier.tsx'
 import { ClientAvatar } from '#/components/identity/client-avatar.tsx'
 import { ClientName } from '#/components/identity/client-name.tsx'
-import { Button } from '#/components/ui/button.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
 import type { PermissionSets } from '#/hydration-data.d.ts'
-import { FormShell } from './forms/form-shell.tsx'
+import { ActionButton, FormShell } from './forms/form-shell.tsx'
 import { DescriptionCard } from './utils/description-card.tsx'
 import { ScopeDescription } from './utils/scope-description.tsx'
 
@@ -20,7 +17,6 @@ export type ConsentFormProps = {
   clientFirstParty: boolean
   permissionSets: PermissionSets
 
-  account: Account
   scope?: string
 
   onConsent: (data: { scope?: string }) => void | PromiseLike<void>
@@ -57,7 +53,6 @@ export function ConsentForm({
   clientFirstParty,
   permissionSets,
 
-  account,
   scope,
 
   onConsent,
@@ -89,7 +84,7 @@ export function ConsentForm({
         })
       }
       actions={
-        <Button
+        <ActionButton
           type="button"
           variant="secondary"
           disabled={reject.loading}
@@ -99,7 +94,7 @@ export function ConsentForm({
           }}
         >
           <Trans context="OAuthConsent">Deny access</Trans>
-        </Button>
+        </ActionButton>
       }
     >
       <DescriptionCard
@@ -119,30 +114,28 @@ export function ConsentForm({
         }
         description={
           !scope || scope === 'atproto' ? (
-            <Trans>
-              wants to uniquely identify you through your{' '}
-              <AccountIdentifier account={account} className="font-bold" />{' '}
-              account
-            </Trans>
+            <Trans>wants to uniquely identify you through your account</Trans>
           ) : (
-            <Trans>
-              wants to access your{' '}
-              <AccountIdentifier account={account} className="font-bold" />{' '}
-              account
-            </Trans>
+            <Trans>wants to access your account</Trans>
           )
         }
         hint={t`Technical details`}
       >
+        <p>
+          <Trans>This application identifies itself as:</Trans>
+        </p>
+        <pre className="bg-muted mt-2 overflow-x-auto rounded border p-2 text-sm break-all whitespace-pre-wrap">
+          {clientId}
+        </pre>
         {scope ? (
           <>
-            <p>
+            <p className="mt-4">
               <Trans>
                 This application is requesting the following permissions
                 (scopes) to access your account:
               </Trans>
             </p>
-            <pre className="bg-muted mt-2 overflow-x-auto whitespace-pre-wrap rounded border p-2 text-sm">
+            <pre className="bg-muted mt-2 overflow-x-auto rounded border p-2 text-sm break-all whitespace-pre-wrap">
               {scope}
             </pre>
           </>
@@ -160,14 +153,12 @@ export function ConsentForm({
         }
       />
 
-      <p>
+      {/* @NOTE Kept to one short line: the heading and the button already say
+        what authorizing does, so this exists to carry the two links. Each
+        link is styled only when the client published a URL for it. */}
+      <p className="text-muted-foreground text-sm leading-snug">
         <Trans>
-          By clicking{' '}
-          <b>
-            <Trans context="OAuthConsent">Authorize</Trans>
-          </b>
-          , you will grant this application access to your account in accordance
-          with its{' '}
+          Subject to the app's{' '}
           <a
             role="link"
             href={clientMetadata.tos_uri}
@@ -178,8 +169,8 @@ export function ConsentForm({
             }
           >
             <Trans>terms of service</Trans>
-          </a>
-          {' and '}
+          </a>{' '}
+          and{' '}
           <a
             role="link"
             href={clientMetadata.policy_uri}
