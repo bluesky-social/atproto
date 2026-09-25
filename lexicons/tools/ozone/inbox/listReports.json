@@ -8,6 +8,11 @@
       "parameters": {
         "type": "params",
         "properties": {
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "Account to preview. Defaults to the authenticated account; another account requires an active moderator, triage, or admin credential."
+          },
           "filter": {
             "type": "string",
             "default": "all",
