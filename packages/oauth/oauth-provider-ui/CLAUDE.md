@@ -250,6 +250,26 @@ the `.auth-background` rule in `src/style.css` paints that image over the neutra
 the plain `muted` surface it always was. The card keeps its own opaque surface so
 copy stays legible over any background.
 
+`AuthShell` narrows to the page in two independent steps, so there are three
+layouts, not two:
+
+- **Below `sm` (40rem)** the card _frame_ goes — surface, ring, radius, and the
+  footer's fill and top border. `.auth-background` follows it, dropping the
+  branding image and painting `card` instead of `muted`: with no opaque card
+  left, copy over a photo is illegible. Content stays capped at `max-w-sm`. This
+  is the OAuth popup case — `oauth-client-browser` opens `width=600,height=600`
+  by default, so the window is already the dialog and a card inside it is a card
+  inside a card, with the background image reduced to slivers down either side.
+- **Below `xs` (30rem)** the content additionally runs edge to edge: page
+  padding off, width cap off, card spacing up to 24px. The footer is pinned to
+  the bottom of the viewport while the content stays centred in the space above
+  it — both come from `mt-auto`, one on the card's first child and one on the
+  footer.
+
+Keep these two steps separate. Collapsing them to a single `sm` breakpoint
+stretches a 600px popup's inputs to the full window width; collapsing them to a
+single `xs` one puts the card back in the popup.
+
 The mock pages inject the same variables a branded deployment would, so
 `pnpm dev:ui` demonstrates branding without a PDS.
 
