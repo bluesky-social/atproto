@@ -55,7 +55,7 @@ describe('inbox notification producers', () => {
       'reportReopened',
       'reportResolved',
     ])
-    expect(notifications[0].target).toMatchObject({ reportId: event.id })
+    expect(notifications[0].target).toMatchObject({ reportId: report.id })
     expect(notifications.find((n) => n.reason === 'reportNote')?.body).toBe(
       'Reviewed',
     )
@@ -77,6 +77,11 @@ describe('inbox notification producers', () => {
     })
     await network.processAll()
     const db = network.ozone.ctx.db
+    const report = await db.db
+      .selectFrom('report')
+      .where('eventId', '=', event.id)
+      .select('id')
+      .executeTakeFirstOrThrow()
     await closeReportsForSubject({
       db,
       subjectDid: sc.dids.carol,
@@ -92,7 +97,7 @@ describe('inbox notification producers', () => {
       .execute()
     expect(
       rows.some(
-        (row) => 'reportId' in row.target && row.target.reportId === event.id,
+        (row) => 'reportId' in row.target && row.target.reportId === report.id,
       ),
     ).toBe(true)
   })
@@ -152,7 +157,7 @@ describe('inbox notification producers', () => {
       expect.arrayContaining([
         expect.objectContaining({
           reason: 'reportResolved',
-          target: expect.objectContaining({ reportId: event.id }),
+          target: expect.objectContaining({ reportId: report.id }),
         }),
         expect.objectContaining({
           reason: 'reportNote',

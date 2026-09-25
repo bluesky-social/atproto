@@ -308,6 +308,7 @@
     },
     "reportRef": {
       "type": "object",
+      "description": "Reference to a report by its report table ID, as used by getReport and Ozone's report detail page.",
       "required": ["reportId"],
       "properties": {
         "reportId": {

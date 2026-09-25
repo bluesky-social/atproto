@@ -60,7 +60,7 @@ Updated: 2026-09-25. This file is the handoff record for work across agent sessi
 ## PR 2 implementation decisions
 
 - Use the spec's watermark rule (`createdAt <= seenAt`) for notification read state; do not persist per-notification `isRead` despite the contradictory storage sketch.
-- Keep public notification report IDs equal to `moderation_event.id`, matching `listReports`.
+- Keep notification report IDs equal to `report.id`, matching `listReports`, `getReport`, and Ozone's `/reports/[id]` route.
 - Align `standingRef` values with the actual standing lexicon (`good`, `warning`, `atRisk`), not the conflicting example (`limited`, `suspended`).
 - Add `inApp` to the public `getCapabilities.channels` vocabulary so an instance without Courier can truthfully advertise the inbox. Include `push` only when push delivery is configured.
 - Implement in-app notification persistence and transactional hooks with unique source keys. Courier delivery is described as unscoped in the source spec; decide its transport/outbox scope after the in-app API and event hooks are concrete.

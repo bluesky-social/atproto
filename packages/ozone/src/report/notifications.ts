@@ -28,7 +28,6 @@ export async function notifyReportActivities(
     )
     .select([
       'r.id as reportId',
-      'r.eventId',
       'r.reportType',
       'r.status',
       'e.createdBy',
@@ -58,7 +57,7 @@ export async function notifyReportActivities(
       ? { $type: 'tools.ozone.inbox.defs#subjectRef', subject }
       : {
           $type: 'tools.ozone.inbox.defs#reportRef',
-          reportId: report.eventId,
+          reportId: report.reportId,
           subject,
           status: report.status === 'closed' ? 'resolved' : 'pending',
         }
