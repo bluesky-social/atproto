@@ -10,6 +10,7 @@ import type {
 } from '@atproto/oauth-provider-api'
 import { useNotificationsContext } from '#/contexts/notifications.tsx'
 import { useApi } from '#/contexts/session.tsx'
+import { SecondAuthenticationFactorRequiredError } from '#/lib/api'
 
 export function useUpdateEmailRequest() {
   const api = useApi()
@@ -111,15 +112,11 @@ export function useEnableEmailAuthFactor() {
     async mutationFn(data: EnableEmailAuthFactorInput) {
       return api.enableEmailAuthFactor(data)
     },
-    onSuccess(data, _variables, _context) {
-      // Email-based enable has no confirmation step (`tokenRequired` is always
-      // false); the guard keeps this correct if a future factor adds one.
-      if (!data.tokenRequired) {
-        notify({
-          title: msg`Email login verification enabled`,
-          description: msg`Your next login will require a code that is sent to your email address.`,
-        })
-      }
+    onSuccess(_data, _variables, _context) {
+      notify({
+        title: msg`Email login verification enabled`,
+        description: msg`Your next login will require a code that is sent to your email address.`,
+      })
     },
     onError(error, _variables, _context) {
       notifyError(error, {
@@ -138,20 +135,17 @@ export function useDisableEmailAuthFactor() {
     async mutationFn(data: DisableEmailAuthFactorInput) {
       return api.disableEmailAuthFactor(data)
     },
-    onSuccess(data, _variables, _context) {
-      // `tokenRequired` is false once the factor is actually off — either the
-      // confirming call with a valid token, or a no-token call that found it
-      // already disabled (e.g. a stale second tab). While an OTP is pending
-      // (`tokenRequired: true`) the dialog advances to the code-entry step and
-      // we stay quiet.
-      if (!data.tokenRequired) {
-        notify({
-          title: msg`Email login verification disabled`,
-          description: msg`You will no longer be prompted for a code to sign in.`,
-        })
-      }
+    onSuccess(_data, _variables, _context) {
+      notify({
+        title: msg`Email login verification disabled`,
+        description: msg`You will no longer be prompted for a code to sign in.`,
+      })
     },
     onError(error, variables, _context) {
+      // The UI will change to a second-factor prompt if required. No need to
+      // also show an error notification.
+      if (error instanceof SecondAuthenticationFactorRequiredError) return
+
       notifyError(error, {
         title: variables.token
           ? msg`Failed to disable email login verification`

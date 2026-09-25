@@ -226,20 +226,20 @@ export interface AccountStore {
   /**
    * Enables the email auth factor on the account.
    *
-   * Returns the updated account, or `null` when the factor was already enabled
-   * — an idempotent no-op. Callers use that to skip the "confirmed" hook, so a
-   * repeat request is not counted as a fresh opt-in.
+   * @returns the updated account, or `null` when the factor was already enabled
+   * (no-op).
+   *
+   * @note when `null` is returned (no-op), the "confirmed" hook is skipped, so
+   *  a repeat request is not counted as a fresh opt-in.
    *
    * @throws {InvalidRequestError} - To indicate enabling cannot take place due
    * to mismatch of email or email not being verified.
    */
-  enableEmailAuthFactor(
-    data: EnableEmailAuthFactorInput,
-  ): Awaitable<Account | null>
+  enableEmailAuthFactor(data: EnableEmailAuthFactorInput): Awaitable<Account>
 
   /**
    * Two-phase disable flow. When `token` is undefined and the factor is still
-   * enabled, an email-based OTP is dispatched and `{ tokenRequired: true }` is
+   * enabled, an email-based OTP isÒ dispatched and `{ tokenRequired: true }` is
    * returned (the account is unchanged, nothing has been disabled yet). Calling
    * again with a valid `token` disables the factor and returns
    * `{ tokenRequired: false }`. Disabling an already-disabled factor is an
@@ -253,10 +253,10 @@ export interface AccountStore {
    *
    * @throws {InvalidRequestError} - To indicate disabling cannot take place due
    * to mismatch of email or email not being verified.
+   * @throws {SecondAuthenticationFactorRequiredError} - To indicate that a
+   * second authentication factor is required to complete the action.
    */
-  disableEmailAuthFactor(
-    data: DisableEmailAuthFactorInput,
-  ): Awaitable<{ updatedAccount: Account | null; tokenRequired: boolean }>
+  disableEmailAuthFactor(data: DisableEmailAuthFactorInput): Awaitable<Account>
 
   /**
    * @throws {HandleUnavailableError} - To indicate that the handle is already taken

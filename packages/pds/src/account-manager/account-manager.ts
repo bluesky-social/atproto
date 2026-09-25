@@ -54,6 +54,11 @@ import * as token from './helpers/token.js'
 
 export { AccountStatus, formatAccountStatus } from './helpers/account.js'
 
+export type UpdateAccountEmailOptions = {
+  sendConfirmationEmail?: boolean
+  locale?: string
+}
+
 /**
  * Thrown by {@link AccountManager.login} when the identifier resolved to a
  * known account but the supplied credentials (account password / app
@@ -893,14 +898,10 @@ export class AccountManager {
     return { tokenRequired: !!token }
   }
 
-  /**
-   * @throws UserAlreadyExistsError if the new email is already in use by another account
-   */
-  async updateEmail(
+  async checkUpdateEmail(
     did: DidString,
     email: string,
     token?: string,
-    opts?: { locale?: string; sendConfirmationEmail?: boolean },
   ): Promise<ActorAccount> {
     if (!isEmailValid(email) || isDisposableEmail(email)) {
       throw new InvalidRequestError(
@@ -914,41 +915,50 @@ export class AccountManager {
     })
 
     if (!account) {
-      throw new InvalidRequestError('account not found')
+      throw new InvalidRequestError(
+        `Could not find user info for account: ${did}`,
+      )
     }
 
     const tokenRequired = !!account.emailConfirmedAt
 
-    // require a token if account email is confirmed
-    if (!token && tokenRequired) {
+    if (token) {
+      await this.assertValidEmailToken(did, 'update_email', token)
+    } else if (tokenRequired) {
+      // require a token if account email is confirmed
       throw new InvalidRequestError(
         'confirmation token required',
         'TokenRequired',
       )
     }
 
-    if (token) {
-      await this.assertValidEmailToken(did, 'update_email', token)
-    }
+    return account
+  }
 
-    await this.updateAccountEmail({ did, email })
+  /**
+   * @throws UserAlreadyExistsError if the new email is already in use by another account
+   */
+  async updateEmail(
+    did: DidString,
+    email: string,
+    token?: string,
+    opts?: UpdateAccountEmailOptions,
+  ): Promise<ActorAccount> {
+    const account = await this.checkUpdateEmail(did, email, token)
+
+    await this.updateAccountEmail(did, email, opts)
 
     account.email = email
     account.emailConfirmedAt = null
 
-    // Proactively send a confirmation email so that the user can confirm the
-    // new email immediately.
-    if (opts?.sendConfirmationEmail) {
-      const token = await this.createEmailToken(did, 'confirm_email')
-      const locale = opts.locale
-      await this.mailer.sendConfirmEmail({ token, locale }, { to: email })
-    }
-
     return account
   }
 
-  async updateAccountEmail(opts: { did: DidString; email: string }) {
-    const { did, email } = opts
+  async updateAccountEmail(
+    did: DidString,
+    email: string,
+    opts?: UpdateAccountEmailOptions,
+  ) {
     await this.db.transaction(async (dbTxn) => {
       await accountHelpers.updateEmail(dbTxn, did, email)
       // @NOTE In the same transaction as the email write, deliberately: the
@@ -958,6 +968,14 @@ export class AccountManager {
       await emailAuthFactor.deleteForDid(dbTxn, did)
       await emailToken.deleteAllEmailTokens(dbTxn, did)
     })
+
+    // Proactively send a confirmation email so that the user can confirm the
+    // new email immediately.
+    if (opts?.sendConfirmationEmail) {
+      const token = await this.createEmailToken(did, 'confirm_email')
+      const { locale } = opts
+      await this.mailer.sendConfirmEmail({ token, locale }, { to: email })
+    }
   }
 
   /**
@@ -970,11 +988,8 @@ export class AccountManager {
    *
    * @throws InvalidRequestError if the account has no confirmed, matching email
    */
-  async enableEmailAuthFactor(opts: {
-    did: DidString
-    email: string
-  }): Promise<ActorAccount> {
-    const { did, email } = opts
+  async enableEmailAuthFactor(opts: { did: DidString }): Promise<ActorAccount> {
+    const { did } = opts
 
     const account = await this.getAccount(did, {
       includeDeactivated: true,
@@ -985,40 +1000,33 @@ export class AccountManager {
       throw new InvalidRequestError('account not found')
     }
 
-    if (
-      !account.email ||
-      account.email !== email ||
-      !account.emailConfirmedAt
-    ) {
-      throw new InvalidRequestError(
-        'A confirmed email address is required to enable email-based two-factor authentication',
-      )
-    }
-
     // Already enabled → nothing to change (idempotent).
     if (account.emailAuthFactorAt) {
       return account
     }
 
-    const emailAuthFactorAt = await emailAuthFactor.enable(
-      this.db,
-      did,
-      account.email,
-    )
-
-    // @NOTE The confirmed-email requirement is enforced in the insert's own
-    // SELECT, not just by the check above, so a miss here means the address
-    // stopped being confirmed (or changed) between that read and this write.
-    // Nothing was persisted, so don't hand back an account claiming otherwise.
-    if (!emailAuthFactorAt) {
-      throw new InvalidRequestError(
-        'A confirmed email address is required to enable email-based two-factor authentication',
+    // Email confirmed → attempt to enable email-based 2FA.
+    if (account.email && account.emailConfirmedAt) {
+      const emailAuthFactorAt = await emailAuthFactor.enable(
+        this.db,
+        did,
+        account.email,
       )
+
+      // @NOTE The confirmed-email requirement is enforced in the insert's own
+      // SELECT, so a miss here means the address stopped being confirmed (or
+      // changed) between that read and this write. Nothing was persisted, so
+      // don't hand back an account claiming otherwise.
+      if (emailAuthFactorAt) {
+        account.emailAuthFactorAt = emailAuthFactorAt
+
+        return account
+      }
     }
 
-    account.emailAuthFactorAt = emailAuthFactorAt
-
-    return account
+    throw new InvalidRequestError(
+      'A confirmed email address is required to enable email-based two-factor authentication',
+    )
   }
 
   /**
@@ -1028,19 +1036,17 @@ export class AccountManager {
    * second call (with a valid `token`) actually disables it. Disabling an
    * already-disabled factor is an idempotent no-op.
    *
-   * @returns the (possibly updated) account together with `tokenRequired`:
-   * `true` while an OTP is pending confirmation, `false` once the factor is
-   * disabled or was already disabled
    * @throws InvalidRequestError if the account has no matching email, or the
    * token is invalid
+   * @throws InvalidRequestError with `TokenRequired` error code if a
+   * confirmation token is required but not provided
    */
   async disableEmailAuthFactor(opts: {
     did: DidString
-    email: string
     token?: string
     locale?: string
-  }): Promise<null | { account: ActorAccount; tokenRequired: boolean }> {
-    const { did, email, token, locale } = opts
+  }): Promise<ActorAccount> {
+    const { did, token, locale } = opts
 
     const account = await this.getAccount(did, {
       includeDeactivated: true,
@@ -1051,13 +1057,14 @@ export class AccountManager {
       throw new InvalidRequestError('account not found')
     }
 
-    if (!account.email || account.email !== email) {
-      throw new InvalidRequestError('Email address does not match the account')
-    }
-
     // Already disabled → idempotent no-op; nothing to confirm, no OTP sent.
     if (!account.emailAuthFactorAt) {
-      return null
+      return account
+    }
+
+    // Fool-proof: account in invalid state
+    if (!account.email) {
+      throw new Error('account has no email address')
     }
 
     // Phase one: no token yet, send a one-time code and signal "pending". MUST
@@ -1069,7 +1076,11 @@ export class AccountManager {
         { token: otp, locale: locale },
         { to: account.email },
       )
-      return { account: account, tokenRequired: true }
+
+      throw new InvalidRequestError(
+        'confirmation token required',
+        'TokenRequired',
+      )
     }
 
     // Phase two: verify the one-time code, then disable the factor.
@@ -1090,7 +1101,7 @@ export class AccountManager {
 
     account.emailAuthFactorAt = null
 
-    return { account, tokenRequired: false }
+    return account
   }
 
   async resetPassword(opts: { password: string; token: string }) {

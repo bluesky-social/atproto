@@ -184,12 +184,8 @@ export type OAuthHooks = {
   }) => Awaitable<void>
 
   /**
-   * This hook is called when a user requests that their email auth factor (OTP)
-   * be enabled, before the change is saved to the account store.
-   *
-   * @NOTE Enabling and disabling get their own hooks rather than sharing one
-   * with a union payload: consumers draw adoption metrics from these, and a
-   * shared hook cannot tell an enable-rate from a disable-rate.
+   * This hook is called whenever a user is trying to enable their email auth
+   * factor (OTP), before the change is saved to the account store.
    */
   onEnableEmailAuthFactor?: (data: {
     input: EnableEmailAuthFactorInput
@@ -199,9 +195,10 @@ export type OAuthHooks = {
   }) => Awaitable<void>
 
   /**
-   * This hook is called once the email auth factor is actually enabled on the
-   * account store. Enabling is single-phase, so this follows exactly one
-   * {@link OAuthHooks.onEnableEmailAuthFactor}.
+   * This hook is called only after the email auth factor was actually enabled
+   * on the account store. This follows
+   * {@link OAuthHooks.onEnableEmailAuthFactor} and is triggered only if the
+   * change succeeded and actually occurred.
    */
   onEnabledEmailAuthFactor?: (data: {
     input: EnableEmailAuthFactorInput
@@ -214,10 +211,16 @@ export type OAuthHooks = {
    * This hook is called when a user requests that their email auth factor (OTP)
    * be disabled, before the change is saved to the account store.
    *
-   * @NOTE Disabling is two-phase — the first request dispatches a confirmation
-   * code and the second supplies it — so a single disable produces *two* of
-   * these, followed by one {@link OAuthHooks.onDisabledEmailAuthFactor}. Count
-   * that one, not this, when measuring how many users turned 2FA off.
+   * @note Disabling is two-phase:
+   * - First no {@link DisableEmailAuthFactorInput.token} is provided and the
+   * store implementation is expected to trigger an email confirmation. When
+   * that happens, {@link OAuthHooks.onDisabledEmailAuthFactor} will not be
+   * called during the processing of the first HTTP request.
+   * - In the second request, which follows the email confirmation, the
+   * {@link DisableEmailAuthFactorInput.token} is provided and the store
+   * implementation is expected to actually disable the email auth factor. At
+   * this point, {@link OAuthHooks.onDisabledEmailAuthFactor} will be called
+   * after the store has successfully processed the request.
    */
   onDisableEmailAuthFactor?: (data: {
     input: DisableEmailAuthFactorInput
@@ -227,9 +230,10 @@ export type OAuthHooks = {
   }) => Awaitable<void>
 
   /**
-   * This hook is called once the email auth factor is actually disabled on the
-   * account store — never for the phase that merely dispatches the confirmation
-   * code.
+   * This hook is called only after the email auth factor was actually disabled
+   * on the account store. This follows
+   * {@link OAuthHooks.onDisableEmailAuthFactor} and is triggered only if the
+   * change succeeded and actually occurred.
    */
   onDisabledEmailAuthFactor?: (data: {
     input: DisableEmailAuthFactorInput

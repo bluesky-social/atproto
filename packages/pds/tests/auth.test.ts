@@ -448,7 +448,6 @@ describe('auth', () => {
 
       await network.pds.ctx.accountManager.enableEmailAuthFactor({
         did: jane.did,
-        email: jane.email,
       })
     })
 

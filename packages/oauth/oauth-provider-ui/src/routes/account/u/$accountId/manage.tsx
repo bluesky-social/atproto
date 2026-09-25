@@ -59,6 +59,7 @@ import {
   useResetPasswordConfirm,
   useResetPasswordRequest,
 } from '#/data/password.ts'
+import { SecondAuthenticationFactorRequiredError } from '#/lib/api'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
 
@@ -210,7 +211,7 @@ function PasswordUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
 
 function EmailAuthFactorUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
   const { account } = useAuthenticatedSession()
-  const { did, email, emailVerified, emailAuthFactor } = account
+  const { did, email } = account
 
   const enableEmailAuthFactor = useEnableEmailAuthFactor()
   const disableEmailAuthFactor = useDisableEmailAuthFactor()
@@ -221,7 +222,43 @@ function EmailAuthFactorUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
   // expected to contact support.
   if (!email) return null
 
-  if (!emailVerified) {
+  if (account.emailAuthFactor) {
+    return (
+      <DisableEmailAuthFactorDialog
+        email={email}
+        requestPending={disableEmailAuthFactor.isPending}
+        confirmPending={disableEmailAuthFactor.isPending}
+        onRequest={async () => {
+          try {
+            await disableEmailAuthFactor.mutateAsync({ did })
+          } catch (err) {
+            if (err instanceof SecondAuthenticationFactorRequiredError) {
+              return { tokenRequired: true }
+            } else {
+              throw err
+            }
+          }
+        }}
+        onConfirm={async ({ token }) => {
+          await disableEmailAuthFactor.mutateAsync({ did, token })
+          // @NOTE an SecondAuthenticationFactorRequiredError thrown here would
+          // indicate that the user needs to provide another authentication
+          // factor to complete the action, while already on the confirmation
+          // screen.
+        }}
+      >
+        <Row
+          {...props}
+          icon={ShieldCheckIcon}
+          value={<Trans context="2FA">Enabled</Trans>}
+        >
+          <Trans>Two-factor authentication (2FA)</Trans>
+        </Row>
+      </DisableEmailAuthFactorDialog>
+    )
+  }
+
+  if (!account.emailVerified) {
     return (
       <Row
         {...props}
@@ -234,47 +271,20 @@ function EmailAuthFactorUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
     )
   }
 
-  if (!emailAuthFactor) {
-    return (
-      <EnableEmailAuthFactorDialog
-        onConfirm={async () => {
-          await enableEmailAuthFactor.mutateAsync({ email, did })
-        }}
-      >
-        {/* @NOTE `context` pins the msgid to this row: the French renders a
-          past participle agreeing with the feminine "authentification", so a
-          bare "Disabled" reused elsewhere would silently inherit that gender. */}
-        <Row
-          {...props}
-          icon={ShieldAlertIcon}
-          value={<Trans context="2FA">Disabled</Trans>}
-        >
-          <Trans>Two-factor authentication (2FA)</Trans>
-        </Row>
-      </EnableEmailAuthFactorDialog>
-    )
-  }
-
   return (
-    <DisableEmailAuthFactorDialog
-      email={email}
-      requestPending={disableEmailAuthFactor.isPending}
-      confirmPending={disableEmailAuthFactor.isPending}
-      onRequest={async () => {
-        return disableEmailAuthFactor.mutateAsync({ email, did })
-      }}
-      onConfirm={async ({ token }) => {
-        await disableEmailAuthFactor.mutateAsync({ email, did, token })
+    <EnableEmailAuthFactorDialog
+      onConfirm={async () => {
+        await enableEmailAuthFactor.mutateAsync({ did })
       }}
     >
       <Row
         {...props}
-        icon={ShieldCheckIcon}
-        value={<Trans context="2FA">Enabled</Trans>}
+        icon={ShieldAlertIcon}
+        value={<Trans context="2FA">Disabled</Trans>}
       >
         <Trans>Two-factor authentication (2FA)</Trans>
       </Row>
-    </DisableEmailAuthFactorDialog>
+    </EnableEmailAuthFactorDialog>
   )
 }
 
@@ -395,9 +405,6 @@ function Row({
   return (
     <AccountRow
       {...props}
-      // @NOTE `disabled` rides on the rendered <button>, not through `Item`'s
-      // own props: `Item` is typed as a <div>, which has no such attribute, so
-      // passing it alongside `icon`/`value` would not typecheck.
       render={<button type="button" disabled={disabled} />}
       className={cn(
         destructive && 'text-destructive hover:bg-destructive/10',

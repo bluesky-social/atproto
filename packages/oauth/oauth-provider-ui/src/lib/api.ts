@@ -208,24 +208,17 @@ export class Api extends JsonClient<ApiEndpoints> {
   async enableEmailAuthFactor(
     {
       did,
-      email,
       locale = this.locale,
     }: WithOptionalLocale<EnableEmailAuthFactorInput>,
     options?: Options,
   ) {
-    return this.fetch(
-      'POST',
-      '/enable-email-otp',
-      { did, email, locale },
-      options,
-    )
+    return this.fetch('POST', '/enable-email-otp', { did, locale }, options)
   }
 
   async disableEmailAuthFactor(
     {
       did,
       token,
-      email,
       locale = this.locale,
     }: WithOptionalLocale<DisableEmailAuthFactorInput>,
     options?: Options,
@@ -233,7 +226,7 @@ export class Api extends JsonClient<ApiEndpoints> {
     return this.fetch(
       'POST',
       '/disable-email-otp',
-      { did, email, token, locale },
+      { did, token, locale },
       options,
     )
   }

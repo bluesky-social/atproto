@@ -44,7 +44,7 @@ export function DisableEmailAuthFactorDialog({
   // left to confirm, so close instead.
   const request = async () => {
     const result = await onRequest()
-    if (result && result.tokenRequired === true) setStep(Step.EnterCode)
+    if (result?.tokenRequired === true) setStep(Step.EnterCode)
     else setOpen(false)
   }
 

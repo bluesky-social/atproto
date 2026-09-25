@@ -476,6 +476,9 @@ export class AccountManager {
     input: EnableEmailAuthFactorInput,
     account: Account,
   ): Promise<Account> {
+    // Already enabled
+    if (account.emailAuthFactor) return account
+
     await this.hooks.onEnableEmailAuthFactor?.call(null, {
       deviceId,
       deviceMetadata,
@@ -485,17 +488,14 @@ export class AccountManager {
 
     const updatedAccount = await this.store.enableEmailAuthFactor(input)
 
-    // Bypass the analytics if no update actually occurred:
-    if (!updatedAccount) {
-      return account
+    if (updatedAccount.emailAuthFactor !== account.emailAuthFactor) {
+      await this.hooks.onEnabledEmailAuthFactor?.call(null, {
+        deviceId,
+        deviceMetadata,
+        input,
+        account: updatedAccount,
+      })
     }
-
-    await this.hooks.onEnabledEmailAuthFactor?.call(null, {
-      deviceId,
-      deviceMetadata,
-      input,
-      account: updatedAccount,
-    })
 
     return updatedAccount
   }
@@ -505,7 +505,10 @@ export class AccountManager {
     deviceMetadata: RequestMetadata,
     input: DisableEmailAuthFactorInput,
     account: Account,
-  ): Promise<{ account: Account; tokenRequired: boolean }> {
+  ): Promise<Account> {
+    // Already disabled
+    if (!account.emailAuthFactor) return account
+
     await this.hooks.onDisableEmailAuthFactor?.call(null, {
       deviceId,
       deviceMetadata,
@@ -513,23 +516,18 @@ export class AccountManager {
       account,
     })
 
-    const { updatedAccount, tokenRequired } =
-      await this.store.disableEmailAuthFactor(input)
+    const updatedAccount = await this.store.disableEmailAuthFactor(input)
 
-    // Once email auth factor is actually disabled, fire the "confirmed" hook.
-    // If there is a token required or no modification, don't fire the confirmed hook:
-    if (tokenRequired || !updatedAccount) {
-      return { account: account, tokenRequired }
+    if (updatedAccount.emailAuthFactor !== account.emailAuthFactor) {
+      await this.hooks.onDisabledEmailAuthFactor?.call(null, {
+        deviceId,
+        deviceMetadata,
+        input,
+        account: updatedAccount,
+      })
     }
 
-    await this.hooks.onDisabledEmailAuthFactor?.call(null, {
-      deviceId,
-      deviceMetadata,
-      input,
-      account: updatedAccount,
-    })
-
-    return { account: updatedAccount, tokenRequired }
+    return updatedAccount
   }
 
   public async updateHandle(

@@ -276,15 +276,11 @@ export class OAuthStore
       return this.buildAccount(user)
     } catch (err) {
       // `InvalidPasswordError` and `AuthFactorRequiredError` are both
-      // subclasses of `XrpcAuthRequiredError`, so both must be checked first —
-      // otherwise the generic branch below rewrites them as bad credentials,
-      // and a 2FA challenge would surface as "invalid credentials" instead of
-      // prompting for the code.
-      //
-      // Surfacing the matched `did` as the `sub` lets the oauth-provider's
-      // `onSignInFailed` hook distinguish "identifier known, credentials wrong"
-      // from "identifier unknown".
+      // subclasses of `XrpcAuthRequiredError`, so both must be checked first.
       if (err instanceof InvalidPasswordError) {
+        // Surfacing the matched `did` as the `sub` lets the oauth-provider's
+        // `onSignInFailed` hook distinguish "identifier known, credentials wrong"
+        // from "identifier unknown".
         throw new InvalidCredentialsError(err.message, err.did, err)
       }
       // @NOTE The credentials were valid here — the account simply owes a
@@ -711,43 +707,45 @@ export class OAuthStore
 
   async enableEmailAuthFactor({
     did,
-    email,
   }: EnableEmailAuthFactorInput): Promise<Account> {
-    const account = await this.accountManager.enableEmailAuthFactor({
-      did,
-      email,
-    })
+    try {
+      const account = await this.accountManager.enableEmailAuthFactor({ did })
 
-    return await this.buildAccount(account)
+      return this.buildAccount(account)
+    } catch (err) {
+      if (err instanceof XrpcInvalidRequestError) {
+        throw new InvalidRequestError(err.message, err)
+      }
+
+      throw err
+    }
   }
 
   async disableEmailAuthFactor({
     did,
-    email,
     token,
     locale,
-  }: DisableEmailAuthFactorInput): Promise<{
-    updatedAccount: Account | null
-    tokenRequired: boolean
-  }> {
-    // `tokenRequired: true` signals the OTP was dispatched and the change is
-    // pending confirmation (no token was supplied yet); `false` means the
-    // factor is now disabled (or was already disabled).
-    const result = await this.accountManager.disableEmailAuthFactor({
-      did,
-      email,
-      token,
-      locale,
-    })
+  }: DisableEmailAuthFactorInput): Promise<Account> {
+    const account = await this.accountManager
+      .disableEmailAuthFactor({ did, token, locale })
+      .catch((err) => {
+        if (err instanceof XrpcInvalidRequestError) {
+          if (err.error === 'TokenRequired') {
+            throw new SecondAuthenticationFactorRequiredError(
+              'emailOtp',
+              '***',
+              err.message,
+            )
+          }
 
-    if (!result) {
-      return { updatedAccount: null, tokenRequired: false }
-    }
+          throw new InvalidRequestError(err.message, err)
+        }
 
-    return {
-      updatedAccount: await this.buildAccount(result.account),
-      tokenRequired: result.tokenRequired,
-    }
+        // Unexpected error (should not happen)
+        throw err
+      })
+
+    return this.buildAccount(account)
   }
 
   async updateHandle({ did, handle }: UpdateHandleData): Promise<Account> {

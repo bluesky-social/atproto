@@ -31,11 +31,11 @@ export default function (server: Server, ctx: AppContext) {
       auth,
       handler: async ({ auth, input: { body } }) => {
         const did = auth.credentials.did
-        const user = await ctx.accountManager.getAccount(did, {
+        const account = await ctx.accountManager.getAccount(did, {
           includeDeactivated: true,
           includeTakenDown: true,
         })
-        if (!user) {
+        if (!account) {
           throw new InvalidRequestError(
             `Could not find user info for account: ${did}`,
           )
@@ -47,17 +47,14 @@ export default function (server: Server, ctx: AppContext) {
         // body, or by using the `Accept-Language` header).
         const locale = undefined
 
-        const hasEmailAuthFactor = user.emailConfirmedAt != null
+        const hasEmailAuthFactor = account.emailConfirmedAt != null
 
         if (emailAuthFactor != null && emailAuthFactor !== hasEmailAuthFactor) {
           if (emailAuthFactor) {
             // User is trying to enable email OTP
-            if (user.emailConfirmedAt && user.email === email) {
+            if (account.emailConfirmedAt && account.email === email) {
               // Enabling only adds protection: immediate, no token required.
-              await ctx.accountManager.enableEmailAuthFactor({
-                did,
-                email: user.email,
-              })
+              await ctx.accountManager.enableEmailAuthFactor({ did })
 
               return // no need to continue to email change since email is not being changed
             } else {
@@ -71,23 +68,15 @@ export default function (server: Server, ctx: AppContext) {
             }
           } else {
             // User is trying to disable email OTP
-            if (user.email === email) {
+            if (account.email === email) {
               // Disabling removes a second factor, so it's gated by an
               // `update_email` OTP: the first call (no token) emails a code and
               // makes no change; the second (with token) verifies and disables.
-              const result = await ctx.accountManager.disableEmailAuthFactor({
+              await ctx.accountManager.disableEmailAuthFactor({
                 did,
-                email: user.email,
                 token,
                 locale,
               })
-
-              if (result?.tokenRequired) {
-                throw new InvalidRequestError(
-                  'confirmation token required',
-                  'TokenRequired',
-                )
-              }
 
               return // no need to continue to email change since email is not being changed
             } else {
@@ -97,6 +86,8 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         try {
+          // @NOTE The update was already checked (by `checkUpdateEmail`), so we
+          // can safely proceed with updating the account email.
           await ctx.accountManager.updateEmail(did, email, token, { locale })
         } catch (cause) {
           if (cause instanceof UserAlreadyExistsError) {

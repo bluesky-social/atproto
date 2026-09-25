@@ -111,12 +111,12 @@ export type ApiEndpoints = {
   '/enable-email-otp': {
     method: 'POST'
     input: EnableEmailAuthFactorInput
-    output: EmailAuthFactorOutput
+    output: EnableEmailAuthFactorOutput
   }
   '/disable-email-otp': {
     method: 'POST'
     input: DisableEmailAuthFactorInput
-    output: EmailAuthFactorOutput
+    output: DisableEmailAuthFactorOutput
   }
   '/update-handle': {
     method: 'POST'
@@ -264,20 +264,21 @@ export type ConfirmEmailVerificationOutput = {
 
 export type EnableEmailAuthFactorInput = {
   did: DidString
-  email: string
   locale?: string
 }
 
 export type DisableEmailAuthFactorInput = {
   did: DidString
-  email: string
   token?: string
   locale?: string
 }
 
-export type EmailAuthFactorOutput = {
+export type EnableEmailAuthFactorOutput = {
   account: Account
-  tokenRequired: boolean
+}
+
+export type DisableEmailAuthFactorOutput = {
+  account: Account
 }
 
 export type VerifyHandleAvailabilityInput = {
