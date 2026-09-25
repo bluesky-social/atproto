@@ -6,19 +6,18 @@ import { app } from '../../../../lexicons/index.js'
 import {
   bareDidFromProxyTo,
   computeProxyTo,
+  computeProxyToOrSelf,
+  isLocalAppViewRequest,
   pipethrough,
 } from '../../../../pipethrough.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const { bskyAppView } = ctx
-  if (!bskyAppView) return
-
   server.add(app.bsky.actor.getPreferences, {
     auth: ctx.authVerifier.authorizationOrModService({
       additional: [AuthScope.Takendown],
       authorize: (permissions, { req }) => {
         const lxm = app.bsky.actor.getPreferences.$lxm
-        const aud = computeProxyTo(ctx, req, lxm)
+        const aud = computeProxyToOrSelf(ctx, req, lxm)
         permissions.assertRpc({ aud, lxm })
       },
     }),
@@ -31,9 +30,9 @@ export default function (server: Server, ctx: AppContext) {
       // If the request has a proxy header different from the bsky app view,
       // we need to proxy the request to the requested app view.
       // @TODO This behavior should not be implemented as part of the XRPC framework
-      const lxm = app.bsky.actor.getPreferences.$lxm
-      const aud = computeProxyTo(ctx, req, lxm)
-      if (aud !== `${bskyAppView.did}#bsky_appview`) {
+      if (!isLocalAppViewRequest(ctx, req)) {
+        const lxm = app.bsky.actor.getPreferences.$lxm
+        const aud = computeProxyTo(ctx, req, lxm)
         if (isModerator) {
           throw new InvalidRequestError(
             'Moderator requests cannot be proxied to other app views',

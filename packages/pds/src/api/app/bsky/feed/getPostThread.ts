@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { isHandleString, type l } from '@atproto/lex'
 import { AtUri, type AtUriString } from '@atproto/syntax'
 import type { Server } from '@atproto/xrpc-server'
@@ -18,8 +17,6 @@ import {
 } from '../../../../read-after-write/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  if (!ctx.bskyAppView) return
-
   server.add(app.bsky.feed.getPostThread, {
     auth: ctx.authVerifier.authorization({
       authorize: (permissions, { req }) => {
@@ -46,7 +43,7 @@ export default function (server: Server, ctx: AppContext) {
           err instanceof PipethroughUpstreamError &&
           err.error === 'NotFound'
         ) {
-          const { auth, params } = reqCtx
+          const { auth, params, req } = reqCtx
           const requester = auth.credentials.did
 
           const rev = err.headers?.['atproto-repo-rev']
@@ -64,10 +61,13 @@ export default function (server: Server, ctx: AppContext) {
           }
           if (uri.hostname !== requester) throw err
 
+          const appView = await ctx.resolveAppView(
+            req,
+            app.bsky.feed.getPostThread.$lxm,
+          )
           const local = await ctx.actorStore.read(requester, (store) => {
-            const localViewer = ctx.localViewer(store)
+            const localViewer = ctx.localViewer(store, appView)
             return readAfterWriteNotFound(
-              ctx,
               localViewer,
               params,
               requester,
@@ -182,7 +182,6 @@ const threadPostView = async (
 // ---------------------
 
 const readAfterWriteNotFound = async (
-  ctx: AppContext,
   localViewer: LocalViewer,
   params: app.bsky.feed.getPostThread.$Params,
   requester: string,
@@ -207,13 +206,12 @@ const readAfterWriteNotFound = async (
   )
   thread = await addPostsToThread(localViewer, thread, rest)
   const highestParent = getHighestParent(thread)
-  if (highestParent) {
+  if (highestParent && localViewer.bskyAppView) {
     try {
-      assert(ctx.bskyAppView)
-      const parentsRes = await ctx.bskyAppView.client.call(
+      const parentsRes = await localViewer.bskyAppView.client.call(
         app.bsky.feed.getPostThread,
         { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
-        await ctx.appviewAuthHeaders(
+        await localViewer.serviceAuthHeaders(
           requester,
           app.bsky.feed.getPostThread.$lxm,
         ),

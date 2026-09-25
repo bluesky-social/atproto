@@ -3,12 +3,14 @@ import { type SeedClient, TestNetwork } from '@atproto/dev-env'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { forSnapshot } from '../_util.js'
 import basicSeed from '../seeds/basic.js'
+import { ProxyServer } from './proxy-server.js'
 
 describe('feedgen proxy view', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
   let feedUri: AtUri
+  let altAppView: ProxyServer
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -48,9 +50,17 @@ describe('feedgen proxy view', () => {
       sc.getHeaders(sc.dids.alice),
     )
     await network.processAll()
+
+    altAppView = await ProxyServer.create(
+      network.pds.ctx.plcClient,
+      network.pds.ctx.plcRotationKey,
+      'bsky_appview',
+      { upstream: network.bsky.url },
+    )
   })
 
   afterAll(async () => {
+    await altAppView?.close()
     await network?.close()
   })
 
@@ -62,5 +72,28 @@ describe('feedgen proxy view', () => {
       },
     )
     expect(forSnapshot(feed)).toMatchSnapshot()
+  })
+
+  it('resolves the feed generator through the app view named by the proxy header', async () => {
+    const { data: expected } = await agent.api.app.bsky.feed.getFeed(
+      { feed: feedUri.toString() },
+      { headers: { ...sc.getHeaders(sc.dids.alice) } },
+    )
+    const { data: feed } = await agent.api.app.bsky.feed.getFeed(
+      { feed: feedUri.toString() },
+      {
+        headers: {
+          ...sc.getHeaders(sc.dids.alice),
+          'atproto-proxy': `${altAppView.did}#bsky_appview`,
+        },
+      },
+    )
+    expect(feed).toEqual(expected)
+
+    const paths = altAppView.requests.map((r) => r.url.split('?')[0])
+    expect(paths).toEqual([
+      '/xrpc/com.atproto.repo.getRecord',
+      '/xrpc/app.bsky.feed.getFeed',
+    ])
   })
 })

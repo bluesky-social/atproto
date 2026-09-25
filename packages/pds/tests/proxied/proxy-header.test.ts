@@ -1,11 +1,4 @@
 import assert from 'node:assert'
-import { once } from 'node:events'
-import type http from 'node:http'
-import type { AddressInfo } from 'node:net'
-import * as plc from '@did-plc/lib'
-import express from 'express'
-import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
-import type { Keypair } from '@atproto/crypto'
 import {
   type SeedClient,
   TestNetworkNoAppView,
@@ -14,6 +7,7 @@ import {
 import type { DidString } from '@atproto/syntax'
 import { verifyJwt } from '@atproto/xrpc-server'
 import { parseProxyHeader } from '../../src/pipethrough.js'
+import { ProxyServer } from './proxy-server.js'
 
 describe('proxy header', () => {
   let network: TestNetworkNoAppView
@@ -170,73 +164,3 @@ describe('proxy header', () => {
     expect(res.status).toBe(501)
   })
 })
-
-type ProxyReq = {
-  url: string
-  auth: string | undefined
-}
-
-class ProxyServer {
-  private terminator: HttpTerminator
-
-  constructor(
-    server: http.Server,
-    public url: string,
-    public did: string,
-    public requests: ProxyReq[],
-  ) {
-    this.terminator = createHttpTerminator({ server })
-  }
-
-  static async create(
-    plcClient: plc.Client,
-    keypair: Keypair,
-    serviceId: string,
-  ): Promise<ProxyServer> {
-    const requests: ProxyReq[] = []
-    const app = express()
-
-    // This is a PDS endpoint which uses a manual pipethrough() in its handler
-    app.get('/xrpc/app.bsky.actor.getPreferences', (req, res) => {
-      res.sendStatus(501)
-    })
-
-    app.get('*', (req, res) => {
-      requests.push({
-        url: req.url,
-        auth: req.header('authorization'),
-      })
-      res.sendStatus(200)
-    })
-
-    const server = app.listen(0)
-    await once(server, 'listening')
-
-    const { port } = server.address() as AddressInfo
-
-    const url = `http://localhost:${port}`
-    const plcOp = await plc.signOperation(
-      {
-        type: 'plc_operation',
-        rotationKeys: [keypair.did()],
-        alsoKnownAs: [],
-        verificationMethods: {},
-        services: {
-          [serviceId]: {
-            type: 'TestAtprotoService',
-            endpoint: url,
-          },
-        },
-        prev: null,
-      },
-      keypair,
-    )
-    const did = await plc.didForCreateOp(plcOp)
-    await plcClient.sendOperation(did, plcOp)
-    return new ProxyServer(server, url, did, requests)
-  }
-
-  async close(): Promise<void> {
-    await this.terminator.terminate()
-  }
-}
