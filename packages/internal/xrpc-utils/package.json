@@ -33,7 +33,6 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@atproto/xrpc": "workspace:^",
     "@atproto/xrpc-server": "workspace:^"
   },
   "scripts": {
