@@ -25,7 +25,12 @@
             "maximum": 100,
             "default": 50
           },
-          "cursor": { "type": "string" }
+          "cursor": { "type": "string" },
+          "sort": {
+            "type": "string",
+            "knownValues": ["latest", "top"],
+            "description": "Ordering of results. 'latest' (default when unset) is newest first; 'top' orders quotes by their like count."
+          }
         }
       },
       "output": {
