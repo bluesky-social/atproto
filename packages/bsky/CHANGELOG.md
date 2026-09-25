@@ -1,5 +1,32 @@
 # @atproto/bsky
 
+## 0.0.281
+
+### Patch Changes
+
+- [#5531](https://github.com/bluesky-social/atproto/pull/5531) [`f210723`](https://github.com/bluesky-social/atproto/commit/f21072353415b4362c90f1dd013f014d6cdadca5) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Deprecate the legacy notification priority fields.
+
+- [#5529](https://github.com/bluesky-social/atproto/pull/5529) [`421111e`](https://github.com/bluesky-social/atproto/commit/421111e98031d2f8780cc37887d66c5f6659cda8) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Map legacy priority notification preferences onto granular preferences and remove the old priority state.
+
+- [#5522](https://github.com/bluesky-social/atproto/pull/5522) [`d442d03`](https://github.com/bluesky-social/atproto/commit/d442d037d33d68061df6b44d4269b5ee7309c66f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Fix known-followers sampling rollout evaluation to use the viewer DID.
+
+- [#5518](https://github.com/bluesky-social/atproto/pull/5518) [`e801c39`](https://github.com/bluesky-social/atproto/commit/e801c39fea8903c6381fd72abd65add426ddcf93) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Migrate known-follower enumeration and sampling to rankedfollows behind feature flags.
+
+- [#5521](https://github.com/bluesky-social/atproto/pull/5521) [`1eafad7`](https://github.com/bluesky-social/atproto/commit/1eafad71c4f5f8ffc2b6c35ad9f704994d1cd3c4) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Fix getKnownFollowers cursor coercion
+
+- [#5530](https://github.com/bluesky-social/atproto/pull/5530) [`f86aaa6`](https://github.com/bluesky-social/atproto/commit/f86aaa615b4372c1634011337e42247690d77c5a) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Remove the obsolete AddNotifOperation RPC.
+
+- [#5523](https://github.com/bluesky-social/atproto/pull/5523) [`d3ceb6b`](https://github.com/bluesky-social/atproto/commit/d3ceb6bbcad0f1a5c9b8daa2c81a4b4259c96e1d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Use sampled known followers for all profile hydration.
+
+- [#5538](https://github.com/bluesky-social/atproto/pull/5538) [`9c76c34`](https://github.com/bluesky-social/atproto/commit/9c76c3422ed0c5369871633d2c4ed67a2f61ae33) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Deprecate the unsupported `seenAt` notification parameter.
+- Updated dependencies [[`f210723`](https://github.com/bluesky-social/atproto/commit/f21072353415b4362c90f1dd013f014d6cdadca5), [`2480187`](https://github.com/bluesky-social/atproto/commit/2480187c9554ff161227480dd6c0bcaf5e7e3921), [`9c76c34`](https://github.com/bluesky-social/atproto/commit/9c76c3422ed0c5369871633d2c4ed67a2f61ae33), [`30f8149`](https://github.com/bluesky-social/atproto/commit/30f8149e629f9afc3fe41cf66bd8482954d7c052)]:
+  - @atproto/api@0.21.0
+  - @atproto/xrpc-server@0.13.2
+  - @atproto/identity@0.5.14
+  - @atproto-labs/xrpc-utils@0.1.23
+  - @atproto/sync@0.4.11
+  - @atproto/lex@0.3.12
+
 ## 0.0.280
 
 ### Patch Changes
