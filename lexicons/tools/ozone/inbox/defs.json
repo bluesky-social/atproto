@@ -260,6 +260,104 @@
           "description": "Day of the most recent report, truncated to midnight UTC. Render as a date; the time component is not meaningful."
         }
       }
+    },
+    "notification": {
+      "type": "object",
+      "required": ["id", "reason", "target", "isRead", "createdAt"],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "reason": {
+          "type": "string",
+          "knownValues": [
+            "reportResolved",
+            "reportReopened",
+            "reportNote",
+            "actionTaken",
+            "actionReversed",
+            "appealResolved",
+            "standingChanged"
+          ]
+        },
+        "target": {
+          "type": "union",
+          "refs": ["#reportRef", "#subjectRef", "#standingRef"]
+        },
+        "isRead": {
+          "type": "boolean"
+        },
+        "body": {
+          "type": "string",
+          "description": "Public note supplied with this notification, when present."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
+    },
+    "notificationPreferences": {
+      "type": "object",
+      "required": ["push"],
+      "properties": {
+        "push": {
+          "type": "boolean"
+        }
+      }
+    },
+    "reportRef": {
+      "type": "object",
+      "required": ["reportId"],
+      "properties": {
+        "reportId": {
+          "type": "integer"
+        },
+        "subject": {
+          "type": "union",
+          "refs": [
+            "com.atproto.admin.defs#repoRef",
+            "com.atproto.repo.strongRef"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "knownValues": ["pending", "resolved"]
+        }
+      }
+    },
+    "subjectRef": {
+      "type": "object",
+      "required": ["subject"],
+      "properties": {
+        "subject": {
+          "type": "union",
+          "refs": [
+            "com.atproto.admin.defs#repoRef",
+            "com.atproto.repo.strongRef"
+          ]
+        },
+        "actionType": {
+          "type": "string"
+        },
+        "actionId": {
+          "type": "integer"
+        }
+      }
+    },
+    "standingRef": {
+      "type": "object",
+      "required": ["standing"],
+      "properties": {
+        "standing": {
+          "type": "string",
+          "knownValues": ["good", "warning", "atRisk"]
+        },
+        "previousStanding": {
+          "type": "string",
+          "knownValues": ["good", "warning", "atRisk"]
+        }
+      }
     }
   }
 }
