@@ -1,5 +1,19 @@
 # @atproto/api
 
+## 0.21.1
+
+### Patch Changes
+
+- [#5540](https://github.com/bluesky-social/atproto/pull/5540) [`4c725e6`](https://github.com/bluesky-social/atproto/commit/4c725e670ae67adf0711d08b53108be054e9dcf3) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add canonical OP thread numbering to feed response types.
+
+- [#5362](https://github.com/bluesky-social/atproto/pull/5362) [`7a85798`](https://github.com/bluesky-social/atproto/commit/7a857989751ae31518509d69ab7194a922064f3d) Thanks [@gcwill70](https://github.com/gcwill70)! - Add report lifecycle outcome, action breakdown, handling-time, and resolution-time statistics.
+  
+  Keep aggregate totals separate from unassigned-moderator groups, restore moderator inbound counts.
+  
+  Index report closure timestamps for daily statistics and combine null and unmatched queue IDs into a single unqueued group.
+  
+  Reconstruct historical pending counts at the end of each UTC day from report closure and reopen history. Current-day counts remain live; queue breakdowns use current queue membership.
+
 ## 0.21.0
 
 ### Minor Changes
