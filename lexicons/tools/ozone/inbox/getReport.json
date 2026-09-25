@@ -9,6 +9,11 @@
         "type": "params",
         "required": ["id"],
         "properties": {
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "Reporter to preview. Defaults to the authenticated account; another account requires an active moderator, triage, or admin credential."
+          },
           "id": {
             "type": "integer",
             "description": "Public report ID (moderation event ID)."

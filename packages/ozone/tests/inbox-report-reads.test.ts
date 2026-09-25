@@ -76,6 +76,24 @@ describe('viewer inbox reports', () => {
         id: carolReport.id,
       }),
     ).rejects.toMatchObject({ error: 'NotFound' })
+    const preview = await fetch(
+      `${network.ozone.url}/xrpc/tools.ozone.inbox.getReport?did=${encodeURIComponent(sc.dids.bob)}&id=${bobReport.id}`,
+      {
+        headers: await network.ozone.modHeaders('tools.ozone.inbox.getReport'),
+      },
+    )
+    expect(preview.status).toBe(200)
+    expect((await preview.json()).report.id).toBe(bobReport.id)
+    const forbidden = await sc.agent.fetchHandler(
+      `/xrpc/tools.ozone.inbox.getReport?did=${encodeURIComponent(sc.dids.bob)}&id=${bobReport.id}`,
+      {
+        headers: {
+          ...sc.getHeaders(sc.dids.carol),
+          'atproto-proxy': proxyHeader,
+        },
+      },
+    )
+    expect(forbidden.status).toBe(403)
   })
 
   it('pages by a stable cursor and derives unread state from the section watermark', async () => {

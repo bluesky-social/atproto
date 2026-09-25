@@ -71,7 +71,8 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       await fileAppeal(ctx, {
-        requester,
+        requester: subject.did,
+        submittedBy: requester !== subject.did ? requester : undefined,
         subject,
         action: actionInput,
         resolvedActionId: action?.id,

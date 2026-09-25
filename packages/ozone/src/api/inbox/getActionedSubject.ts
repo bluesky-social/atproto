@@ -1,4 +1,8 @@
-import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import {
+  ForbiddenError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { getSeenAt } from '../../inbox/seen.js'
 import {
@@ -11,7 +15,17 @@ export default function (server: Server, ctx: AppContext) {
   server.add(tools.ozone.inbox.getActionedSubject, {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, params }) => {
-      const did = auth.credentials.iss
+      const did = params.did ?? auth.credentials.iss
+      if (
+        did !== auth.credentials.iss &&
+        !(
+          auth.credentials.isModerator ||
+          auth.credentials.isTriage ||
+          auth.credentials.isAdmin
+        )
+      ) {
+        throw new ForbiddenError('Unauthorized')
+      }
       const subject = await findActionedSubject(ctx.db, did, params.subject)
       if (!subject)
         throw new InvalidRequestError('Subject not found', 'NotFound')
