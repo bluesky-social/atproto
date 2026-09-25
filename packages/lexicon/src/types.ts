@@ -224,7 +224,6 @@ export type LexPermission = z.infer<typeof lexPermission>
 
 export const lexPermissionSet = z.object({
   type: z.literal('permission-set'),
-  description: z.string().optional(),
   title: z.string().optional(),
   'title:lang': lexLang.optional(),
   detail: z.string().optional(),
