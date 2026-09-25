@@ -496,6 +496,14 @@ describe('account manager', () => {
     // The row should now offer re-activation
     await page.ensureTextVisibility('Réactiver le compte', 'span')
 
+    // @NOTE Deactivation raises a success toast. Its viewport is fixed to the
+    // bottom of the screen and each toast captures pointer events, so it
+    // overlays the settings rows beneath it — clicking "Réactiver le compte"
+    // through it lands on the toast, not the row. Dismiss it (and wait for its
+    // exit animation to finish) before interacting with the row.
+    await page.clickOn('[data-slot="toast-close"]')
+    await page.waitForHidden('[data-slot="toast"]')
+
     await page.clickOnText('Réactiver le compte')
 
     // @NOTE The dialog's submit label ("Réactiver") is a substring of the

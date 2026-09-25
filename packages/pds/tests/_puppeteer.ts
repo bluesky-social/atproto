@@ -105,6 +105,10 @@ export class PageHelper implements AsyncDisposable {
     return this.typeIn(`input[name=${JSON.stringify(name)}]`, text)
   }
 
+  async waitForHidden(selector: string, timeout = 5_000) {
+    await this.page.waitForSelector(selector, { hidden: true, timeout })
+  }
+
   async ensureTextVisibility(text: string, tag = 'p', timeout = 5_000) {
     await this.page.waitForSelector(
       `${tag}::-p-text(${JSON.stringify(text)})`,
