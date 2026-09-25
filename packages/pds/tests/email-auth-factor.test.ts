@@ -79,6 +79,60 @@ describe('email auth factor', () => {
     expect(sendMailMock).not.toHaveBeenCalled()
   })
 
+  it('no-ops when the auth factor is already enabled', async () => {
+    await agent.api.com.atproto.server.updateEmail(
+      { email: faye.email, emailAuthFactor: true },
+      { headers: sc.getHeaders(faye.did), encoding: 'application/json' },
+    )
+
+    const session = await agent.api.com.atproto.server.getSession(
+      {},
+      { headers: sc.getHeaders(faye.did) },
+    )
+    expect(session.data.emailAuthFactor).toBe(true)
+    expect(session.data.email).toBe(faye.email)
+    expect(session.data.emailConfirmed).toBe(true)
+    expect(sendMailMock).not.toHaveBeenCalled()
+  })
+
+  it('does not request a factor change when emailAuthFactor is omitted', async () => {
+    const attempt = agent.api.com.atproto.server.updateEmail(
+      { email: faye.email },
+      { headers: sc.getHeaders(faye.did), encoding: 'application/json' },
+    )
+    await expect(attempt).rejects.toThrow(
+      ComAtprotoServerUpdateEmail.TokenRequiredError,
+    )
+
+    const session = await agent.api.com.atproto.server.getSession(
+      {},
+      { headers: sc.getHeaders(faye.did) },
+    )
+    expect(session.data.emailAuthFactor).toBe(true)
+    expect(session.data.email).toBe(faye.email)
+    expect(session.data.emailConfirmed).toBe(true)
+    expect(sendMailMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects enabling the auth factor while changing email even if already enabled', async () => {
+    const attempt = agent.api.com.atproto.server.updateEmail(
+      { email: 'new-faye@test.com', emailAuthFactor: true },
+      { headers: sc.getHeaders(faye.did), encoding: 'application/json' },
+    )
+    await expect(attempt).rejects.toThrow(
+      'Please change and verify your email before enabling OTP',
+    )
+
+    const session = await agent.api.com.atproto.server.getSession(
+      {},
+      { headers: sc.getHeaders(faye.did) },
+    )
+    expect(session.data.emailAuthFactor).toBe(true)
+    expect(session.data.email).toBe(faye.email)
+    expect(session.data.emailConfirmed).toBe(true)
+    expect(sendMailMock).not.toHaveBeenCalled()
+  })
+
   it('requires a confirmation token to disable the auth factor', async () => {
     using sendUpdateEmailMock = jest.spyOn(ctx.mailer, 'sendUpdateEmail')
 

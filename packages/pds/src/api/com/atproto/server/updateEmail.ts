@@ -41,16 +41,16 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        const { token, emailAuthFactor } = body
+        const { token } = body
         const email = body.email.toLowerCase()
         // @TODO get the locale somehow (either by adding a field in the request
         // body, or by using the `Accept-Language` header).
         const locale = undefined
 
-        const hasEmailAuthFactor = account.emailConfirmedAt != null
-
-        if (emailAuthFactor != null && emailAuthFactor !== hasEmailAuthFactor) {
-          if (emailAuthFactor) {
+        // @NOTE Handle explicit toggles even when the factor already matches:
+        // updating the email would clear its confirmation and disable 2FA.
+        if (body.emailAuthFactor != null) {
+          if (body.emailAuthFactor) {
             // User is trying to enable email OTP
             if (account.emailConfirmedAt && account.email === email) {
               // Enabling only adds protection: immediate, no token required.
@@ -86,8 +86,6 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         try {
-          // @NOTE The update was already checked (by `checkUpdateEmail`), so we
-          // can safely proceed with updating the account email.
           await ctx.accountManager.updateEmail(did, email, token, { locale })
         } catch (cause) {
           if (cause instanceof UserAlreadyExistsError) {
