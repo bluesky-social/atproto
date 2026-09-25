@@ -29,9 +29,16 @@ describe('moderator inbox preview', () => {
       subject: { ...subject, did: sc.dids.bob },
       reportedBy: sc.dids.dan,
     })
-    aliceReportId = aliceReport.id
-    danReportId = danReport.id
     await network.processAll()
+    const reports = await network.ozone.ctx.db.db
+      .selectFrom('report')
+      .where('eventId', 'in', [aliceReport.id, danReport.id])
+      .select(['id', 'eventId'])
+      .execute()
+    aliceReportId = reports.find(
+      (report) => report.eventId === aliceReport.id,
+    )!.id
+    danReportId = reports.find((report) => report.eventId === danReport.id)!.id
 
     const mod = network.ozone.getModClient()
     for (const did of [sc.dids.alice, sc.dids.dan]) {

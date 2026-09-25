@@ -28,14 +28,14 @@ function reportQuery(db: Database, reporter: DidString) {
     ])
 }
 
-/** Load one public report by its moderation event ID and its owner. */
+/** Load one public report by its report ID and its owner. */
 export async function findInboxReport(
   db: Database,
   reporter: DidString,
-  eventId: number,
+  reportId: number,
 ) {
   return reportQuery(db, reporter)
-    .where('me.id', '=', eventId)
+    .where('r.id', '=', reportId)
     .executeTakeFirst()
 }
 
@@ -65,14 +65,14 @@ export async function queryInboxReports(
     const [, sortValue, id] = match
     query = query.where(
       direction === 'desc'
-        ? sql<boolean>`(${sql.ref(sortColumn)}, me.id) < (${sortValue}, ${Number(id)})`
-        : sql<boolean>`(${sql.ref(sortColumn)}, me.id) > (${sortValue}, ${Number(id)})`,
+        ? sql<boolean>`(${sql.ref(sortColumn)}, r.id) < (${sortValue}, ${Number(id)})`
+        : sql<boolean>`(${sql.ref(sortColumn)}, r.id) > (${sortValue}, ${Number(id)})`,
     )
   }
 
   const rows = await query
     .orderBy(sortColumn, direction)
-    .orderBy('me.id', direction)
+    .orderBy('r.id', direction)
     .limit(limit + 1)
     .execute()
   const hasMore = rows.length > limit
@@ -82,7 +82,7 @@ export async function queryInboxReports(
     rows: page,
     cursor:
       hasMore && last
-        ? `${field === 'createdAt' ? last.reportCreatedAt : last.reportUpdatedAt}::${last.id}`
+        ? `${field === 'createdAt' ? last.reportCreatedAt : last.reportUpdatedAt}::${last.internalReportId}`
         : undefined,
   }
 }
@@ -147,7 +147,7 @@ export function toReportListView(
   const action = latestReportAction(row, actions)
   const view: tools.ozone.inbox.listReports.ReportView = {
     src: serviceDid,
-    id: row.id,
+    id: row.internalReportId,
     isRead: isRead(row.reportUpdatedAt, seenAt),
     reasonType: row.reportReasonType,
     subject: subjectFromEventRow(

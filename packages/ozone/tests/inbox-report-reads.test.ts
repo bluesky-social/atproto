@@ -33,7 +33,16 @@ describe('viewer inbox reports', () => {
     })
   }
 
-  it("lists only the viewer's reports and uses event IDs for detail links", async () => {
+  async function reportIdForEvent(eventId: number) {
+    const row = await network.ozone.ctx.db.db
+      .selectFrom('report')
+      .where('eventId', '=', eventId)
+      .select('id')
+      .executeTakeFirstOrThrow()
+    return row.id
+  }
+
+  it("lists only the viewer's reports and uses report IDs for detail links", async () => {
     const bobReport = await sc.createReport({
       reasonType: ComAtprotoModerationDefs.REASONSPAM,
       reason: 'Repeated scam links',
@@ -46,26 +55,24 @@ describe('viewer inbox reports', () => {
       reportedBy: sc.dids.carol,
     })
     await network.processAll()
+    const bobId = await reportIdForEvent(bobReport.id)
+    const carolId = await reportIdForEvent(carolReport.id)
 
     const { data: page } = await call(
       sc.dids.bob,
       'tools.ozone.inbox.listReports',
     )
-    expect(page.reports.map((r: { id: number }) => r.id)).toContain(
-      bobReport.id,
-    )
-    expect(page.reports.map((r: { id: number }) => r.id)).not.toContain(
-      carolReport.id,
-    )
+    expect(page.reports.map((r: { id: number }) => r.id)).toContain(bobId)
+    expect(page.reports.map((r: { id: number }) => r.id)).not.toContain(carolId)
     const { data: detail } = await call(
       sc.dids.bob,
       'tools.ozone.inbox.getReport',
       {
-        id: bobReport.id,
+        id: bobId,
       },
     )
     expect(detail.report).toMatchObject({
-      id: bobReport.id,
+      id: bobId,
       reasonType: ComAtprotoModerationDefs.REASONSPAM,
       reason: 'Repeated scam links',
       status: 'pending',
@@ -73,19 +80,19 @@ describe('viewer inbox reports', () => {
     expect(detail.resolution).toBeUndefined()
     await expect(
       call(sc.dids.bob, 'tools.ozone.inbox.getReport', {
-        id: carolReport.id,
+        id: carolId,
       }),
     ).rejects.toMatchObject({ error: 'NotFound' })
     const preview = await fetch(
-      `${network.ozone.url}/xrpc/tools.ozone.inbox.getReport?did=${encodeURIComponent(sc.dids.bob)}&id=${bobReport.id}`,
+      `${network.ozone.url}/xrpc/tools.ozone.inbox.getReport?did=${encodeURIComponent(sc.dids.bob)}&id=${bobId}`,
       {
         headers: await network.ozone.modHeaders('tools.ozone.inbox.getReport'),
       },
     )
     expect(preview.status).toBe(200)
-    expect((await preview.json()).report.id).toBe(bobReport.id)
+    expect((await preview.json()).report.id).toBe(bobId)
     const forbidden = await sc.agent.fetchHandler(
-      `/xrpc/tools.ozone.inbox.getReport?did=${encodeURIComponent(sc.dids.bob)}&id=${bobReport.id}`,
+      `/xrpc/tools.ozone.inbox.getReport?did=${encodeURIComponent(sc.dids.bob)}&id=${bobId}`,
       {
         headers: {
           ...sc.getHeaders(sc.dids.carol),
@@ -108,6 +115,10 @@ describe('viewer inbox reports', () => {
       reportedBy: sc.dids.bob,
     })
     await network.processAll()
+    const ids = [
+      await reportIdForEvent(first.id),
+      await reportIdForEvent(second.id),
+    ]
 
     const { data: page1 } = await call(
       sc.dids.bob,
@@ -129,7 +140,7 @@ describe('viewer inbox reports', () => {
     expect(page1.reports).toHaveLength(1)
     expect(page2.reports).toHaveLength(1)
     expect(page1.reports[0].id).not.toBe(page2.reports[0].id)
-    expect([first.id, second.id]).toContain(page1.reports[0].id)
+    expect(ids).toContain(page1.reports[0].id)
 
     await network.ozone.ctx.db.db
       .insertInto('inbox_seen')
@@ -183,7 +194,7 @@ describe('viewer inbox reports', () => {
     await network.processAll()
 
     const { data } = await call(sc.dids.bob, 'tools.ozone.inbox.getReport', {
-      id: report.id,
+      id: row.id,
     })
     expect(data.report.status).toBe('resolved')
     expect(data.resolution).toMatchObject({
@@ -221,7 +232,7 @@ describe('viewer inbox reports', () => {
     const { data: later } = await call(
       sc.dids.bob,
       'tools.ozone.inbox.getReport',
-      { id: report.id },
+      { id: row.id },
     )
     expect(later.resolution.outcome).toBe('other')
     expect(later.resolution.actionTaken).toBeUndefined()
