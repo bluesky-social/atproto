@@ -144,7 +144,7 @@ export function AccountShell({
                         // alone is enough to mark the current page.
                         // Taller rows with 16px text: the sidebar is the
                         // phone's main navigation once it slides in.
-                        className="data-active:font-normal h-10 gap-3 px-3 text-base [&_svg]:size-5"
+                        className="h-10 gap-3 px-3 text-base data-active:font-normal [&_svg]:size-5"
                         tooltip={
                           typeof link.title === 'object'
                             ? _(link.title)
