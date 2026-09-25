@@ -41,7 +41,7 @@ export function Handle({
     <span
       {...props}
       className={clsx(
-        { 'whitespace-nowrap': !isInvalid },
+        'break-words',
         // @NOTE We use pseudo elements here so that selecting the handle text
         // (or checking in tests) ignores the "⚠"/"@" prefix, which are only
         // meant to be visual indicators for the handle. We use pseudo element
