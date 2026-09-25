@@ -7,7 +7,7 @@ Updated: 2026-09-25. This file is the handoff record for work across agent sessi
 - Base: [atproto PR #5459](https://github.com/bluesky-social/atproto/pull/5459), branch `ozone/mod-inbox/appeal`.
 - PR 1: `tools.ozone.inbox.getAccountStatus`, `listReports`, `getReport`, `listActionedSubjects`, `getActionedSubject`, with tests. Target base: `ozone/mod-inbox/appeal`.
 - PR 2: `tools.ozone.inbox.listNotifications`, `getNotificationPreferences`, `putNotificationPreferences`, `getUnreadCount`, `updateSeen`, with tests. Target base: PR 1's branch.
-- Source contract: [Linear mod inbox tech spec](https://linear.app/blueskyweb/document/mod-inbox-tech-spec-0c36ca149153). The direct URL currently serves only the Linear JavaScript shell to this environment. Verify the document body before treating inferred API shapes as final.
+- Source contract: [Linear mod inbox tech spec](https://linear.app/blueskyweb/document/mod-inbox-tech-spec-0c36ca149153), provided locally as `/Users/foysal/Projects/bluesky/mod-inbox-spec.md` (1,813 lines). The direct URL serves only the Linear JavaScript shell here; use the local copy.
 
 ## Current state
 
@@ -16,18 +16,19 @@ Updated: 2026-09-25. This file is the handoff record for work across agent sessi
 - [x] Confirmed the base PR provides `appealActionedSubject`, inbox `defs`, subject hydration, and appeal tests.
 - [x] Created branch `ozone/mod-inbox/read` from the base PR branch and committed the plan.
 - [x] Inspected the existing `report` and `moderation_event` indexes. No new large-table index has been proposed.
-- [ ] Obtain the Linear spec body or equivalent authoritative endpoint schemas. A reachable document URL alone is insufficient.
-- [ ] Record exact request/response shapes, authorization rules, pagination, privacy rules, and notification semantics below.
+- [x] Obtain the spec body: the user supplied `mod-inbox-spec.md` at the workspace root.
+- [x] Read the exact request/response shapes and authorization, pagination, privacy, and notification sections of the local spec. Contract inconsistencies are recorded below.
 
 ## PR 1 checklist
 
-- [ ] Add lexicons for five read methods and any shared definitions; run root `pnpm codegen`.
-- [ ] Implement authenticated Ozone routes under `packages/ozone/src/api/inbox`, register them in `src/api/index.ts`.
-- [ ] Reuse existing subject/appeal view builders. Scope every read to the authenticated DID; avoid exposing moderator notes, reporter identities, or private event metadata.
-- [ ] Use stable keyset pagination and deterministic tie breaking for lists. Recheck cursor filtering and visibility at page boundaries.
-- [ ] Inspect existing `report` and `moderation_event` indexes and query plans. Add an index on the large `moderation_event` table only if a real hot path cannot use an existing one, and document the plan evidence.
-- [ ] Add meaningful route/integration tests for account isolation, pagination, missing resources, event/report visibility, and response shape.
-- [ ] Build, typecheck, run focused tests, format/lint changed files, add a changeset for each touched package.
+- [x] Add lexicons for five read methods and shared definitions; ran root `pnpm codegen` and built `@atproto/api`.
+- [x] Add per-DID, per-section read watermarks in this PR because `listReports`, `listActionedSubjects`, and `getActionedSubject` require `isRead` and the first two have unread filtering. PR 2's `updateSeen` will write them.
+- [x] Implement authenticated Ozone routes under `packages/ozone/src/api/inbox`, register them in `src/api/index.ts`; subject routes delegated to `codex-bsky` and under review.
+- [x] Reuse existing subject/appeal view builders. Scope every read to the authenticated DID; avoid exposing moderator notes, reporter identities, or private event metadata.
+- [x] Use keyset pagination with deterministic tie breaking for both lists; cursor and ownership cases covered by focused tests.
+- [ ] Inspect existing `report` and `moderation_event` indexes and query plans. Existing relevant indexes are documented below, and no `moderation_event` index was added; production-scale plan evidence remains unavailable in the local fixture.
+- [x] Add route/integration tests for account isolation, pagination, missing resources, action attribution, report privacy, read state, and response shape. Four focused suites passed: 76 tests total.
+- [x] Build, typecheck, run focused tests, format/lint changed files, add a changeset for each touched package. Focused Ozone/PDS builds, test typecheck, formatting, lint, 76 focused tests, root `pnpm run build --force`, and root `pnpm run verify` passed. Changeset `.changeset/blue-carpets-fetch.md` covers Ozone/API minor and PDS patch.
 - [ ] Commit, push, create PR based on `ozone/mod-inbox/appeal`, and record URL here.
 
 ## PR 2 checklist
@@ -48,20 +49,23 @@ Updated: 2026-09-25. This file is the handoff record for work across agent sessi
 5. Existing `moderation_event_account_reports_idx` and `moderation_event_record_reports_idx` cover reporter-first lookups for report events; `idx_report_event` joins those events to report rows. Existing `moderation_event_subject_did_idx` and subject/action partial indexes cover subject-first lookups. The `report` table has separate active/closed DID indexes and the base PR adds an appeal-subject index. Verify query plans with representative row counts before adding an index.
 6. The moderator-facing `tools.ozone.report.getReport/queryReports` view contains private moderation fields and is unsuitable as a caller-facing inbox response. Build an explicitly public report view from permitted columns.
 7. The base PR's `hydrateSubjectView` performs multiple DB reads per subject; a list route must bound page size and avoid unbounded per-row hydration. Batch loading is preferable if the spec requires large pages.
+8. Use the fully specified account standing lexicon (`good`, `warning`, `atRisk`) despite the conflicting JSON example (`good`, `limited`, `suspended`). For an untouched account, use a stable epoch `updatedAt`; a future standing-transition ledger is needed for exact transition times, especially strike expiry.
+9. The list-reports lexicon is extended to include chat message/conversation refs because the spec promises all submitted reports and the detail lexicon includes those refs. Public report IDs are `moderation_event.id` (`report.eventId`), consistently across list and detail.
+10. The PDS catchall proxy admits `AuthScope.Takendown` only for `tools.ozone.inbox.*`, allowing taken-down users to reach these viewer routes through the mandatory `atproto-proxy` header.
+11. New `closeActivity` rows from report-linked moderation actions carry `meta.actionEventId`. The viewer read path uses this to attribute `resolution.actionTaken` to the current close. Legacy rows without that link use a narrow creation-time correlation; an old linked action is never used merely because it remains in `actionEventIds`.
 
 ## Open questions requiring source verification
 
-- What are the exact lexicon properties and public view types for each method? No schemas for these ten methods exist on the base branch.
-- Does `getAccountStatus` return only account enforcement, a summary of reports/actions, or account standing from other services?
-- Which report types and subjects are visible to a reporter, and what public note/reason fields may be exposed?
-- Are actioned subjects limited to the caller's account and records, or do chat/conversation subjects also appear?
-- Which events create notifications, how are duplicates handled, and are preferences per category or global?
-- Is `updateSeen` a timestamp watermark or a per-notification operation? What consistency is expected for `getUnreadCount`?
+- The spec's account status example says `good`/`limited`/`suspended`, but its lexicon and derivation table say `good`/`warning`/`atRisk`. Treat the lexicon and derivation table as authoritative unless corrected.
+- The list-reports chat union and public report ID choices are resolved in decisions 9 above. Verify notifications use the same public ID in PR 2.
+- `getActionedSubject` promises full action history while the base view loader caps events at 50. Add an uncapped detail path with a safe bound or pagination decision.
+- `getAccountStatus.updatedAt` is defined as the last derived standing change, but no standing transition log exists. Decide whether to add one or derive a defensible timestamp from strike/enforcement state.
+- Notification persistence/delivery is explicitly unscoped in the spec. Decide Courier integration and outbox schema in PR 2; in-app API requirements are concrete.
 - Should self-service inbox routes allow moderator/admin credentials to query another DID, as `appealActionedSubject` does for submissions, or should every read use the token issuer only?
 
 ## Evidence and access notes
 
-- `curl` to the Linear URL returned HTTP 200 with a generic `<title>Linear</title>` shell and `<div id=root>`; no document body was embedded. No Linear connector or token is available in this session. An asynchronous request for the text/export has been sent.
+- `curl` to the Linear URL returned HTTP 200 with a generic `<title>Linear</title>` shell and `<div id=root>`; no document body was embedded. The user supplied the complete local Markdown spec after an asynchronous request.
 - The workspace contains no occurrences of the ten requested `tools.ozone.inbox.*` method IDs, so there is no local source of their intended schemas.
 - The base PR comments do not provide the missing endpoint contracts.
 

@@ -547,6 +547,7 @@ describe('appealActionedSubject', () => {
     )
     expect(data).toEqual({
       src: network.ozone.ctx.cfg.service.did,
+      isRead: false,
       subject,
       enforcement: { state: 'takendown', scope: 'network' },
       appeal: {
@@ -568,10 +569,9 @@ describe('appealActionedSubject', () => {
       createdAt: action.createdAt,
       updatedAt: data.updatedAt,
     })
-    // The appeal report ID stays server-side, and read state waits on a
-    // watermark Ozone does not store yet.
+    // The appeal report ID stays server-side; no read watermark has been set.
     expect(data).not.toHaveProperty('reportId')
-    expect(data).not.toHaveProperty('isRead')
+    expect(data.isRead).toBe(false)
   })
 
   it('derives a suspension, its expiry, and the six-month appeal window', async () => {

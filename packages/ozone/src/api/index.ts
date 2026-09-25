@@ -6,6 +6,11 @@ import deleteTemplate from './communication/deleteTemplate.js'
 import listTemplates from './communication/listTemplates.js'
 import updateTemplate from './communication/updateTemplate.js'
 import appealActionedSubject from './inbox/appealActionedSubject.js'
+import getAccountStatus from './inbox/getAccountStatus.js'
+import getActionedSubject from './inbox/getActionedSubject.js'
+import getInboxReport from './inbox/getReport.js'
+import listActionedSubjects from './inbox/listActionedSubjects.js'
+import listReports from './inbox/listReports.js'
 import fetchLabels from './label/fetchLabels.js'
 import queryLabels from './label/queryLabels.js'
 import subscribeLabels from './label/subscribeLabels.js'
@@ -79,6 +84,11 @@ export * as wellKnown from './well-known.js'
 export default function (server: Server, ctx: AppContext) {
   createReport(server, ctx)
   appealActionedSubject(server, ctx)
+  getAccountStatus(server, ctx)
+  getActionedSubject(server, ctx)
+  getInboxReport(server, ctx)
+  listActionedSubjects(server, ctx)
+  listReports(server, ctx)
   emitEvent(server, ctx)
   searchRepos(server, ctx)
   adminGetRecord(server, ctx)
