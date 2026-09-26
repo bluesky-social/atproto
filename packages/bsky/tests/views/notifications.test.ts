@@ -654,6 +654,45 @@ describe('notification views', () => {
     await clearNotificationSeen(db, alice)
   })
 
+  it('does not accept a seenAt in the future', async () => {
+    const future = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    await agent.api.app.bsky.notification.updateSeen(
+      { seenAt: future },
+      {
+        headers: await network.serviceHeaders(
+          han,
+          ids.AppBskyNotificationUpdateSeen,
+        ),
+        encoding: 'application/json',
+      },
+    )
+
+    await sc.follow(greg, han)
+    await network.processAll()
+
+    const notifRes = await agent.api.app.bsky.notification.listNotifications(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          han,
+          ids.AppBskyNotificationListNotifications,
+        ),
+      },
+    )
+    expect(notifRes.data.notifications.map((n) => n.isRead)).toEqual([false])
+
+    const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
+      {},
+      {
+        headers: await network.serviceHeaders(
+          han,
+          ids.AppBskyNotificationGetUnreadCount,
+        ),
+      },
+    )
+    expect(notifCount.data.count).toBe(1)
+  })
+
   it('fetches notifications omitting mentions and replies for taken-down posts', async () => {
     const postRef1 = sc.replies[sc.dids.carol][0].ref // Reply
     const postRef2 = sc.posts[sc.dids.dan][1].ref // Mention

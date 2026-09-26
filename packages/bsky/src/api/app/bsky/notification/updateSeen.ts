@@ -10,7 +10,11 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       const viewer = auth.credentials.iss
-      const seenAt = new Date(input.body.seenAt)
+      // @NOTE a future seenAt would mark new notifications as read until that
+      // time, and the stored value never moves back.
+      const seenAt = new Date(
+        Math.min(new Date(input.body.seenAt).getTime(), Date.now()),
+      )
       const timestamp = Timestamp.fromDate(seenAt)
       await Promise.all([
         ctx.bsyncClient.fanoutNotificationSeen({ actorDid: viewer, timestamp }),
