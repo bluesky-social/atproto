@@ -1090,11 +1090,13 @@ message GetTimelineRequest {
   bool exclude_replies = 4;
   bool exclude_reposts = 5;
   bool exclude_quotes = 6;
+  string since = 7;
 }
 
 message GetTimelineResponse {
   repeated TimelineFeedItem items = 1;
   string cursor = 2;
+  string start_cursor = 3;
 }
 
 message TimelineFeedItem {
@@ -1117,11 +1119,13 @@ message GetListFeedRequest {
   bool exclude_replies = 4;
   bool exclude_reposts = 5;
   bool exclude_quotes = 6;
+  string since = 7;
 }
 
 message GetListFeedResponse {
   repeated TimelineFeedItem items = 1;
   string cursor = 2;
+  string start_cursor = 3;
 }
 
 //

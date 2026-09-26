@@ -1966,6 +1966,7 @@ exports[`proxies view requests feed.getListFeed 1`] = `
       },
     },
   ],
+  "startCursor": "0000000000000::bafycid",
 }
 `;
 
@@ -4186,6 +4187,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
       },
     },
   ],
+  "startCursor": "0000000000000::bafycid",
 }
 `;
 

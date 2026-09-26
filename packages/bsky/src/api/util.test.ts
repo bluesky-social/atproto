@@ -97,4 +97,69 @@ describe('fillPage', () => {
     ).resolves.toEqual({ items: [], cursor: undefined })
     expect(fetch).toHaveBeenCalledTimes(2)
   })
+
+  it('keeps the start cursor of the first page across refills', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ items: [], cursor: 'a', startCursor: 'newest' })
+      .mockResolvedValueOnce({ items: [1, 2], cursor: 'b', startCursor: 'old' })
+
+    await expect(
+      fillPage({ cursor: undefined, limit: 2, fetch, items: (r) => r.items }),
+    ).resolves.toEqual({ items: [1, 2], cursor: 'b', startCursor: 'newest' })
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('serves a short page rather than refilling past the terminal cursor', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ items: [1], cursor: 'since', startCursor: 'n' })
+
+    await expect(
+      fillPage({
+        cursor: undefined,
+        limit: 4,
+        terminalCursor: 'since',
+        fetch,
+        items: (r) => r.items,
+      }),
+    ).resolves.toEqual({ items: [1], cursor: 'since', startCursor: 'n' })
+    expect(fetch).toHaveBeenCalledOnce()
+  })
+
+  it('preserves a terminal cursor reached while refilling', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ items: [], cursor: 'a' })
+      .mockResolvedValueOnce({ items: [], cursor: 'since' })
+
+    await expect(
+      fillPage({
+        cursor: undefined,
+        limit: 2,
+        terminalCursor: 'since',
+        fetch,
+        items: (r) => r.items,
+      }),
+    ).resolves.toEqual({ items: [], cursor: 'since' })
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('refills normally when no terminal cursor is reached', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ items: [], cursor: 'a' })
+      .mockResolvedValueOnce({ items: [1], cursor: 'b' })
+
+    await expect(
+      fillPage({
+        cursor: undefined,
+        limit: 1,
+        terminalCursor: 'since',
+        fetch,
+        items: (r) => r.items,
+      }),
+    ).resolves.toEqual({ items: [1], cursor: 'b' })
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
 })
