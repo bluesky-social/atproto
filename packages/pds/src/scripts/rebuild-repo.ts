@@ -115,5 +115,5 @@ const promptContinue = async (): Promise<boolean> => {
     output: process.stdout,
   })
   const answer = await rl.question('Continue? y/n ')
-  return answer === ''
+  return answer === '' || answer === 'y'
 }
