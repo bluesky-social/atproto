@@ -71,6 +71,8 @@ export function buildProxyAgent(cfg: ProxyConfig): Dispatcher {
 }
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
+  const { version } = ctx.cfg.service
+
   const performAuth = ctx.authVerifier.authorization<RpcPermissionMatch>({
     authorize: (permissions, { params }) => permissions.assertRpc(params),
   })
@@ -129,6 +131,8 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       }
 
       const headers: IncomingHttpHeaders = {
+        'user-agent': `bsky-pds/${version}`,
+
         'accept-encoding': req.headers['accept-encoding'] || 'identity',
         'accept-language': req.headers['accept-language'],
         'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
