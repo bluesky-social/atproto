@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.resource.identity",
+  "defs": {
+    "main": {
+      "type": "auth-resource",
+      "description": "Grants access to an account's atproto identity.",
+      "parameters": {
+        "type": "params",
+        "required": [],
+        "properties": {
+          "updateHandle": {
+            "type": "boolean",
+            "default": false
+          },
+          "recommendedCredentials": {
+            "type": "boolean",
+            "default": false
+          },
+          "plcOperation": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    }
+  }
+}
