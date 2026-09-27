@@ -70,6 +70,16 @@ const indexTs = (
       { name: 'FetchHandler', isTypeOnly: true },
       { name: 'FetchHandlerOptions', isTypeOnly: true },
     ])
+
+    file
+      .addImportDeclaration({ moduleSpecifier: '@atproto/api' })
+      .addNamedImports([
+        { name: 'ComAtprotoRepoCreateRecord' },
+        { name: 'ComAtprotoRepoDeleteRecord' },
+        { name: 'ComAtprotoRepoGetRecord' },
+        { name: 'ComAtprotoRepoListRecords' },
+      ])
+
     //= import {schemas} from './lexicons.js'
     file
       .addImportDeclaration({ moduleSpecifier: './lexicons.js' })
