@@ -8,7 +8,11 @@ import type { ModeratorAssignment } from '../db/schema/moderator_assignment.js'
 import type { ReportQueue } from '../db/schema/report_queue.js'
 import type { tools } from '../lexicons/index.js'
 import type { QueueService, QueueServiceCreator } from '../queue/service.js'
-import { createReportActivity } from '../report/activity.js'
+import {
+  bulkInsertReportActivities,
+  createReportActivity,
+} from '../report/activity.js'
+import { handleReportUpdate } from '../report/handle-report-update.js'
 import type { TeamService, TeamServiceCreator } from '../team/index.js'
 
 export interface AssignmentServiceOpts {
@@ -538,87 +542,89 @@ export class AssignmentService {
 
     await this.checkReport(reportId)
 
-    const { result, reportStatus } = await this.db.transaction(
-      async (dbTxn) => {
-        const existing = await dbTxn.db
-          .selectFrom('moderator_assignment')
-          .selectAll()
-          .where('reportId', '=', reportId)
-          .where((eb) =>
-            eb.or([
-              eb('endAt', '>', toDatetimeString(now)),
-              eb('endAt', 'is', null),
-            ]),
-          )
-          .executeTakeFirst()
+    const result = await this.db.transaction(async (dbTxn) => {
+      const existing = await dbTxn.db
+        .selectFrom('moderator_assignment')
+        .selectAll()
+        .where('reportId', '=', reportId)
+        .where((eb) =>
+          eb.or([
+            eb('endAt', '>', toDatetimeString(now)),
+            eb('endAt', 'is', null),
+          ]),
+        )
+        .forUpdate()
+        .executeTakeFirst()
 
-        if (!existing) {
-          throw new InvalidRequestError(
-            'Report is not assigned',
-            'InvalidAssignment',
-          )
-        }
-
-        const updated = await dbTxn.db
-          .updateTable('moderator_assignment')
-          .set({ endAt: toDatetimeString(now) })
-          .where('id', '=', existing.id)
-          .returningAll()
-          .executeTakeFirstOrThrow()
-
-        // Capture status before any update so we can decide on the next status.
-        const reportRow = await dbTxn.db
-          .selectFrom('report')
-          .select('status')
-          .where('id', '=', reportId)
-          .forUpdate()
-          .executeTakeFirstOrThrow()
-
-        // If the report had moved to 'assigned' and the assignment was not tied
-        // to a queue, send it back to 'open' so it isn't stuck in 'assigned'
-        // after the moderator releases it. The 'queued' transition (when there
-        // is a queueId) is handled below via createReportActivity.
-        const updateSet: Record<string, string | null> = {
-          assignedTo: null,
-          assignedAt: null,
-        }
-        if (reportRow.status === 'assigned' && existing.queueId === null) {
-          updateSet.status = 'open'
-          updateSet.updatedAt = toDatetimeString(now)
-        }
-        await dbTxn.db
-          .updateTable('report')
-          .set(updateSet)
-          .where('id', '=', reportId)
-          .execute()
-
-        return { result: updated, reportStatus: reportRow.status }
-      },
-    )
-
-    // If unassigning from a queued report (status moved to 'assigned' on
-    // permanent assign) before any other status change, send it back to
-    // 'queued' so other moderators can pick it up.
-    if (reportStatus === 'assigned' && result.queueId !== null) {
-      try {
-        await createReportActivity(this.db, {
-          reportId,
-          activityType: 'queueActivity',
-          isAutomated: false,
-          createdBy: createdBy ?? result.did,
-        })
-      } catch (err) {
-        if (
-          err instanceof InvalidRequestError &&
-          (err.customErrorName === 'AlreadyInTargetState' ||
-            err.customErrorName === 'InvalidStateTransition')
-        ) {
-          // no-op — status changed concurrently; leave it alone
-        } else {
-          throw err
-        }
+      // @NOTE an assignment may have ended while this request waited for its lock.
+      if (
+        !existing ||
+        (existing.endAt !== null &&
+          new Date(existing.endAt).getTime() <= Date.now())
+      ) {
+        throw new InvalidRequestError(
+          'Report is not assigned',
+          'InvalidAssignment',
+        )
       }
-    }
+
+      const endedAt = currentDatetimeString()
+      const updated = await dbTxn.db
+        .updateTable('moderator_assignment')
+        .set({ endAt: endedAt })
+        .where('id', '=', existing.id)
+        .returningAll()
+        .executeTakeFirstOrThrow()
+
+      const report = await dbTxn.db
+        .selectFrom('report')
+        .select('status')
+        .where('id', '=', reportId)
+        .forUpdate()
+        .executeTakeFirstOrThrow()
+
+      const requeue =
+        report.status === 'assigned' && existing.queueId !== null
+          ? handleReportUpdate(report.status, {
+              type: 'activity',
+              activityType: 'queueActivity',
+            })
+          : undefined
+      const updateSet: Record<string, string | null> = {
+        assignedTo: null,
+        assignedAt: null,
+      }
+      if (report.status === 'assigned') {
+        updateSet.status = requeue?.nextStatus ?? 'open'
+        updateSet.updatedAt = endedAt
+      }
+      await dbTxn.db
+        .updateTable('report')
+        .set(updateSet)
+        .where('id', '=', reportId)
+        .execute()
+
+      const activityFields = {
+        reportId,
+        isAutomated: false,
+        createdBy: createdBy ?? existing.did,
+        createdAt: endedAt,
+      }
+      await bulkInsertReportActivities(dbTxn, [
+        ...(requeue?.activity
+          ? [{ ...activityFields, ...requeue.activity }]
+          : []),
+        {
+          ...activityFields,
+          activityType: 'noteActivity',
+          previousStatus: null,
+          internalNote: `Report unassigned from ${existing.did}.`,
+          meta: { unassignedFrom: existing.did },
+        },
+      ])
+
+      return updated
+    })
 
     return this.hydrateReportAssignment(result.id)
   }
