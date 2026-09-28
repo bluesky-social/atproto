@@ -86,7 +86,7 @@
   },
   "devDependencies": {
     "@atproto/pds": "workspace:^",
-    "@bufbuild/buf": "^1.72.0",
+    "@bufbuild/buf": "^1.73.0",
     "@bufbuild/protoc-gen-es": "^1.5.0",
     "@connectrpc/protoc-gen-connect-es": "^1.7.0",
     "@did-plc/server": "^0.0.1",
