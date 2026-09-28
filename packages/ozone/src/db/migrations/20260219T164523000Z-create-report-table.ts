@@ -14,8 +14,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('queueId', 'integer') // NULL = not yet assigned, -1 = no matching queue
     .addColumn('queuedAt', 'varchar')
 
-    // Action linkage (sorted DESC, most recent first)
-    .addColumn('actionEventIds', 'jsonb') // Array of event IDs: [newest_id, ..., oldest_id]
+    // Action linkage
+    .addColumn('actionEventIds', 'jsonb') // Event IDs in append order (most recently linked last)
 
     // Reporter communication
     .addColumn('actionNote', 'text')
