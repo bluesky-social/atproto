@@ -354,6 +354,7 @@ message GetQuotesBySubjectSortedRequest {
   RecordRef subject = 1;
   int32 limit = 2;
   string cursor = 3;
+  string sort = 4;
 }
 
 message GetQuotesBySubjectSortedResponse {
