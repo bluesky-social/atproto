@@ -142,6 +142,7 @@ msgstr ""
 msgid "alice.com"
 msgstr ""
 
+#: src/components/disable-email-auth-factor-dialog.tsx
 #: src/components/reset-password-view.tsx
 #: src/components/update-password-dialog.tsx
 #: src/components/verify-email-dialog.tsx
@@ -440,6 +441,23 @@ msgstr "기기"
 msgid "Didn't receive a code? <0>Click here to resend.</0>"
 msgstr ""
 
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "Disable 2FA"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "Disable two-factor authentication"
+msgstr ""
+
+#: src/routes/account/u/$accountId/manage.tsx
+msgctxt "2FA"
+msgid "Disabled"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "Disabling two-factor authentication makes your account less secure."
+msgstr ""
+
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "DNS"
 msgstr ""
@@ -476,6 +494,14 @@ msgstr ""
 msgid "Email change successful"
 msgstr ""
 
+#: src/data/email.ts
+msgid "Email login verification disabled"
+msgstr ""
+
+#: src/data/email.ts
+msgid "Email login verification enabled"
+msgstr ""
+
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Email not verified"
 msgstr "이메일 미인증"
@@ -488,6 +514,19 @@ msgstr ""
 msgid "Email verified"
 msgstr ""
 
+#: src/components/enable-email-auth-factor-dialog.tsx
+msgid "Enable"
+msgstr ""
+
+#: src/components/enable-email-auth-factor-dialog.tsx
+msgid "Enable two-factor authentication"
+msgstr ""
+
+#: src/routes/account/u/$accountId/manage.tsx
+msgctxt "2FA"
+msgid "Enabled"
+msgstr ""
+
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Enter a password"
 msgstr "비밀번호 입력"
@@ -498,6 +537,10 @@ msgstr "이메일로 받은 코드를 입력하여 비밀번호를 재설정하�
 
 #: src/components/update-handle-custom-form.tsx
 msgid "Enter the domain you want to use"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "Enter the security code we sent to <0>{email}</0> to disable email two-factor authentication."
 msgstr ""
 
 #: src/components/reset-password-view.tsx
@@ -546,6 +589,14 @@ msgstr ""
 msgid "Failed to delete account"
 msgstr ""
 
+#: src/data/email.ts
+msgid "Failed to disable email login verification"
+msgstr ""
+
+#: src/data/email.ts
+msgid "Failed to enable email login verification"
+msgstr ""
+
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Failed to load connected apps"
 msgstr "연결된 앱을 불러오지 못했습니다"
@@ -580,6 +631,10 @@ msgstr "접근 권한을 취소하지 못했습니다"
 
 #: src/data/account.ts
 msgid "Failed to send confirmation email"
+msgstr ""
+
+#: src/data/email.ts
+msgid "Failed to send security code"
 msgstr ""
 
 #: src/data/email.ts
@@ -970,6 +1025,10 @@ msgstr "이 기기에서 이 계정 기억하기"
 msgid "Repository"
 msgstr "저장소"
 
+#: src/components/enable-email-auth-factor-dialog.tsx
+msgid "Require an email code to sign in to your account."
+msgstr ""
+
 #: src/components/reset-password-confirm-form.tsx
 msgid "Reset code"
 msgstr "재설정 코드"
@@ -1015,6 +1074,10 @@ msgstr "도메인 선택"
 
 #: src/components/delete-account-dialog.tsx
 msgid "Send email"
+msgstr ""
+
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "Send email to verify"
 msgstr ""
 
 #: src/components/forms/request-code-button.tsx
@@ -1222,6 +1285,10 @@ msgstr ""
 msgid "To change your password, you'll need to enter a security code sent to your email."
 msgstr ""
 
+#: src/components/disable-email-auth-factor-dialog.tsx
+msgid "To disable your email two-factor authentication, please verify your access to <0>{email}</0>"
+msgstr ""
+
 #: src/components/verify-email-dialog.tsx
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
 msgstr ""
@@ -1239,6 +1306,10 @@ msgstr ""
 #: src/cookie-error-page.tsx
 msgid "Try again"
 msgstr "다시 시도"
+
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Two-factor authentication (2FA)"
+msgstr ""
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Type"
@@ -1321,6 +1392,7 @@ msgstr ""
 msgid "Value"
 msgstr ""
 
+#: src/components/disable-email-auth-factor-confirm-form.tsx
 #: src/components/update-email-dialog.tsx
 #: src/components/verify-email-confirm-form.tsx
 msgid "Verification code"
@@ -1345,6 +1417,10 @@ msgstr "인증"
 
 #: src/components/update-handle-dialog.tsx
 msgid "Verify and Save"
+msgstr ""
+
+#: src/routes/account/u/$accountId/manage.tsx
+msgid "Verify email to enable"
 msgstr ""
 
 #: src/components/update-email-dialog.tsx
@@ -1442,6 +1518,10 @@ msgstr ""
 msgid "You can now sign in with your new password."
 msgstr "이제 새로운 비밀번호로 로그인할 수 있습니다."
 
+#: src/data/email.ts
+msgid "You will no longer be prompted for a code to sign in."
+msgstr ""
+
 #: src/components/sign-up-view.tsx
 msgid "Your account"
 msgstr "내 계정"
@@ -1492,6 +1572,10 @@ msgstr ""
 #: src/components/forms/fields/handle-field.tsx
 msgid "Your full username will be: {0}"
 msgstr "내 전체 사용자 이름: {0}"
+
+#: src/data/email.ts
+msgid "Your next login will require a code that is sent to your email address."
+msgstr ""
 
 #: src/components/reactivate-account-dialog.tsx
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."

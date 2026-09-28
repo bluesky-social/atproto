@@ -108,6 +108,16 @@ export type ApiEndpoints = {
     input: ConfirmEmailVerificationInput
     output: ConfirmEmailVerificationOutput
   }
+  '/enable-email-otp': {
+    method: 'POST'
+    input: EnableEmailAuthFactorInput
+    output: EnableEmailAuthFactorOutput
+  }
+  '/disable-email-otp': {
+    method: 'POST'
+    input: DisableEmailAuthFactorInput
+    output: DisableEmailAuthFactorOutput
+  }
   '/update-handle': {
     method: 'POST'
     input: UpdateHandleInput
@@ -249,6 +259,25 @@ export type ConfirmEmailVerificationInput = {
 }
 
 export type ConfirmEmailVerificationOutput = {
+  account: Account
+}
+
+export type EnableEmailAuthFactorInput = {
+  did: DidString
+  locale?: string
+}
+
+export type DisableEmailAuthFactorInput = {
+  did: DidString
+  token?: string
+  locale?: string
+}
+
+export type EnableEmailAuthFactorOutput = {
+  account: Account
+}
+
+export type DisableEmailAuthFactorOutput = {
   account: Account
 }
 

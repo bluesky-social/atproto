@@ -220,6 +220,8 @@ export function SignInForm({
             enterKeyHint="done"
             required
             autoFocus
+            // @TODO If we ever support "totp", adapt the check here:
+            data-1p-ignore={secondFactorError.type === 'emailOtp'}
           />
 
           <p className="text-muted-foreground mt-3 text-sm leading-snug">

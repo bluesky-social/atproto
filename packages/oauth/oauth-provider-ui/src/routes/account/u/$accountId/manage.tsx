@@ -8,12 +8,15 @@ import {
   MailIcon,
   MoonIcon,
   ShieldAlertIcon,
+  ShieldCheckIcon,
   SunIcon,
   TrashIcon,
 } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 import { DeactivateAccountDialog } from '#/components/deactivate-account-dialog.tsx'
 import { DeleteAccountDialog } from '#/components/delete-account-dialog.tsx'
+import { DisableEmailAuthFactorDialog } from '#/components/disable-email-auth-factor-dialog.tsx'
+import { EnableEmailAuthFactorDialog } from '#/components/enable-email-auth-factor-dialog.tsx'
 import { Notice } from '#/components/feedback/notice.tsx'
 import { ReactivateAccountDialog } from '#/components/reactivate-account-dialog.tsx'
 import { Button } from '#/components/ui/button.tsx'
@@ -44,6 +47,8 @@ import {
   useReactivateAccount,
 } from '#/data/account.ts'
 import {
+  useDisableEmailAuthFactor,
+  useEnableEmailAuthFactor,
   useUpdateEmailConfirm,
   useUpdateEmailRequest,
   useVerifyEmailConfirm,
@@ -54,6 +59,7 @@ import {
   useResetPasswordConfirm,
   useResetPasswordRequest,
 } from '#/data/password.ts'
+import { SecondAuthenticationFactorRequiredError } from '#/lib/api'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
 
@@ -74,6 +80,7 @@ function ManagePage() {
         <EmailUpdateRow />
         <HandleUpdateRow />
         <PasswordUpdateRow />
+        <EmailAuthFactorUpdateRow />
         <AccountStatusRow />
         <AccountDeletionRow />
       </ItemGroup>
@@ -202,6 +209,85 @@ function PasswordUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
   )
 }
 
+function EmailAuthFactorUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
+  const { account } = useAuthenticatedSession()
+  const { did, email } = account
+
+  const enableEmailAuthFactor = useEnableEmailAuthFactor()
+  const disableEmailAuthFactor = useDisableEmailAuthFactor()
+
+  // These endpoints requires an email, so if the user doesn't have one, we can't
+  // let them update their email auth factor. These users should not exist in
+  // normal conditions (may have been created manually by an admin), and are
+  // expected to contact support.
+  if (!email) return null
+
+  if (account.emailAuthFactor) {
+    return (
+      <DisableEmailAuthFactorDialog
+        email={email}
+        requestPending={disableEmailAuthFactor.isPending}
+        confirmPending={disableEmailAuthFactor.isPending}
+        onRequest={async () => {
+          try {
+            await disableEmailAuthFactor.mutateAsync({ did })
+          } catch (err) {
+            if (err instanceof SecondAuthenticationFactorRequiredError) {
+              return { tokenRequired: true }
+            } else {
+              throw err
+            }
+          }
+        }}
+        onConfirm={async ({ token }) => {
+          await disableEmailAuthFactor.mutateAsync({ did, token })
+          // @NOTE an SecondAuthenticationFactorRequiredError thrown here would
+          // indicate that the user needs to provide another authentication
+          // factor to complete the action, while already on the confirmation
+          // screen.
+        }}
+      >
+        <Row
+          {...props}
+          icon={ShieldCheckIcon}
+          value={<Trans context="2FA">Enabled</Trans>}
+        >
+          <Trans>Two-factor authentication (2FA)</Trans>
+        </Row>
+      </DisableEmailAuthFactorDialog>
+    )
+  }
+
+  if (!account.emailVerified) {
+    return (
+      <Row
+        {...props}
+        disabled
+        icon={ShieldAlertIcon}
+        value={<Trans>Verify email to enable</Trans>}
+      >
+        <Trans>Two-factor authentication (2FA)</Trans>
+      </Row>
+    )
+  }
+
+  return (
+    <EnableEmailAuthFactorDialog
+      onConfirm={async () => {
+        await enableEmailAuthFactor.mutateAsync({ did })
+      }}
+    >
+      <Row
+        {...props}
+        icon={ShieldAlertIcon}
+        value={<Trans context="2FA">Disabled</Trans>}
+      >
+        <Trans>Two-factor authentication (2FA)</Trans>
+      </Row>
+    </EnableEmailAuthFactorDialog>
+  )
+}
+
 function AccountStatusRow(props: Omit<RowProps, 'icon' | 'value'>) {
   const { account } = useAuthenticatedSession()
   const deactivate = useDeactivateAccount()
@@ -291,6 +377,8 @@ type RowProps = Override<
     value?: ReactNode
     /** Destructive rows keep the danger signal without a full red fill. */
     variant?: 'default' | 'destructive'
+    /** Renders the row's button disabled, for a setting that isn't reachable */
+    disabled?: boolean
   }
 >
 
@@ -307,6 +395,7 @@ function Row({
   icon: Icon,
   value,
   variant = 'default',
+  disabled = false,
   children,
   className,
   ...props
@@ -316,9 +405,10 @@ function Row({
   return (
     <AccountRow
       {...props}
-      render={<button type="button" />}
+      render={<button type="button" disabled={disabled} />}
       className={cn(
         destructive && 'text-destructive hover:bg-destructive/10',
+        disabled && 'pointer-events-none opacity-60',
         className,
       )}
     >
