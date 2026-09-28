@@ -29,7 +29,7 @@ import {
 } from '@atproto/xrpc-server'
 import { isUnicastIp, unicastLookup } from '@atproto-labs/fetch-node'
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
-import { isAccessPrivileged } from './auth-scope.js'
+import { AuthScope, isAccessPrivileged } from './auth-scope.js'
 import type { ProxyConfig } from './config/config.js'
 import type { AppContext } from './context.js'
 import { chat, com, tools } from './lexicons/index.js'
@@ -74,6 +74,10 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const performAuth = ctx.authVerifier.authorization<RpcPermissionMatch>({
     authorize: (permissions, { params }) => permissions.assertRpc(params),
   })
+  const performAppealAuth = ctx.authVerifier.authorization<RpcPermissionMatch>({
+    additional: [AuthScope.Takendown],
+    authorize: (permissions, { params }) => permissions.assertRpc(params),
+  })
 
   return async (req, res, next) => {
     // /!\ Hot path
@@ -112,7 +116,11 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       const scopeAud = `${did}#${serviceId}`
       const tokenAud = did
 
-      const authResult = await performAuth({
+      const authResult = await (
+        lxm === tools.ozone.inbox.appealActionedSubject.$lxm
+          ? performAppealAuth
+          : performAuth
+      )({
         req,
         res,
         params: { lxm, aud: scopeAud },
@@ -692,6 +700,7 @@ const defaultService = (
   serviceInfo: { url: string; did: string } | null
 } => {
   switch (nsid) {
+    case tools.ozone.inbox.appealActionedSubject.$lxm:
     case tools.ozone.communication.createTemplate.$lxm:
     case tools.ozone.communication.deleteTemplate.$lxm:
     case tools.ozone.communication.listTemplates.$lxm:

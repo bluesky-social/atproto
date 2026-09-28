@@ -11,6 +11,7 @@ export interface ReportQueue {
   reportTypes: string[] // Array of report reason types (fully qualified NSIDs)
   description: string | null // Optional description of the queue
   recommendedPolicies: string[] // Policy keys recommended for reports in this queue
+  recommendedLabels: string[] // Label values recommended for this queue and used for appeal routing
   createdBy: DidString | 'admin_token' // DID of moderator who created this queue
   createdAt: DatetimeString
   updatedAt: DatetimeString

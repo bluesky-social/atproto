@@ -8,6 +8,7 @@ import { TimeIdKeyset, paginate } from '../db/pagination.js'
 import type { ReportQueue } from '../db/schema/report_queue.js'
 import { jsonb } from '../db/types.js'
 import { com, tools } from '../lexicons/index.js'
+import type { ModerationEventRow } from '../mod-service/types.js'
 import { handleReportUpdate } from '../report/handle-report-update.js'
 import { ReportStatsService } from '../report/stats.js'
 import { viewQueueStats } from '../report/views.js'
@@ -20,6 +21,62 @@ type ResolvedAssignment = {
   queueId: number
   queuedAt: DatetimeString | null
   status: 'queued' | 'open'
+}
+
+type ReportEvent = Pick<
+  ModerationEventRow,
+  | 'id'
+  | 'subjectDid'
+  | 'subjectUri'
+  | 'subjectMessageId'
+  | 'subjectConvoId'
+  | 'meta'
+  | 'modTool'
+>
+
+function subjectTypeFromEvent(event: ReportEvent): SubjectType {
+  if (event.subjectMessageId) return 'message'
+  if (event.subjectConvoId) return 'conversation'
+  if (event.subjectUri) return 'record'
+  return 'account'
+}
+
+function reportRowFromEvent({
+  event,
+  reportType,
+  assignment,
+  createdAt,
+  actionEventIds = null,
+}: {
+  event: ReportEvent
+  reportType: string
+  assignment: ResolvedAssignment
+  createdAt: DatetimeString
+  actionEventIds?: number[] | null
+}) {
+  let recordPath = ''
+  if (event.subjectUri) {
+    const uri = new AtUri(event.subjectUri)
+    recordPath = `${uri.collection}/${uri.rkey}`
+  }
+
+  return {
+    eventId: event.id,
+    queueId: assignment.queueId,
+    queuedAt: assignment.queuedAt,
+    actionEventIds: actionEventIds === null ? null : jsonb(actionEventIds),
+    actionNote: null,
+    isMuted: !!event.meta?.isReporterMuted || !!event.meta?.isSubjectMuted,
+    isAutomated: parseModTool(event.modTool).isAutomated,
+    status: assignment.status,
+    reportType,
+    did: event.subjectDid,
+    recordPath,
+    subjectMessageId: event.subjectMessageId,
+    subjectConvoId: event.subjectConvoId,
+    createdAt,
+    updatedAt: createdAt,
+  }
 }
 
 /**
@@ -68,6 +125,42 @@ export class QueueService {
     return (db: Database) => new QueueService(db)
   }
 
+  /** Insert an immediately routed report in the caller's transaction. */
+  async insertReportFromEvent({
+    event,
+    reportType,
+    queueId,
+    queuedAt,
+    actionEventIds,
+  }: {
+    event: ModerationEventRow
+    reportType: string
+    queueId: number
+    queuedAt: DatetimeString | null
+    actionEventIds?: number[] | null
+  }): Promise<number> {
+    this.db.assertTransaction()
+    const assignment: ResolvedAssignment = {
+      queueId,
+      queuedAt,
+      status: queueId > 0 ? 'queued' : 'open',
+    }
+    const inserted = await this.db.db
+      .insertInto('report')
+      .values(
+        reportRowFromEvent({
+          event,
+          reportType,
+          assignment,
+          createdAt: event.createdAt,
+          actionEventIds,
+        }),
+      )
+      .returning('id')
+      .executeTakeFirstOrThrow()
+    return inserted.id
+  }
+
   async assertRecommendedPolicies(
     recommendedPolicies: string[],
   ): Promise<void> {
@@ -96,12 +189,14 @@ export class QueueService {
     subjectTypes,
     collection,
     reportTypes,
+    recommendedLabels = [],
     excludeId,
   }: {
     name: string
     subjectTypes: string[]
     collection?: NsidString | null
     reportTypes: string[]
+    recommendedLabels?: string[]
     excludeId?: number
   }): Promise<void> {
     // It's not ideal to load all rows and perform in memory checks in case we end up with a LOT of queues
@@ -121,6 +216,16 @@ export class QueueService {
       if (existing.name === name) {
         throw new InvalidRequestError(
           'A queue with that name already exists',
+          'ConflictingQueue',
+        )
+      }
+
+      const conflictingLabels = recommendedLabels.filter((label) =>
+        existing.recommendedLabels.includes(label),
+      )
+      if (conflictingLabels.length) {
+        throw new InvalidRequestError(
+          `Recommended labels already belong to queue ${existing.name}: ${conflictingLabels.join(', ')}`,
           'ConflictingQueue',
         )
       }
@@ -149,6 +254,7 @@ export class QueueService {
     reportTypes,
     description,
     recommendedPolicies,
+    recommendedLabels = [],
     createdBy,
   }: {
     name: string
@@ -157,6 +263,7 @@ export class QueueService {
     reportTypes: string[]
     description?: string | null
     recommendedPolicies: string[]
+    recommendedLabels?: string[]
     createdBy: DidString | 'admin_token'
   }): Promise<Selectable<ReportQueue>> {
     const now = currentDatetimeString()
@@ -169,6 +276,7 @@ export class QueueService {
         reportTypes: jsonb(reportTypes),
         description: description ?? null,
         recommendedPolicies: jsonb(recommendedPolicies),
+        recommendedLabels: jsonb(recommendedLabels),
         createdBy,
         enabled: true,
         createdAt: now,
@@ -185,6 +293,20 @@ export class QueueService {
       .where('id', '=', id)
       .where('deletedAt', 'is', null)
       .executeTakeFirst()
+  }
+
+  async getByRecommendedLabel(
+    label: string,
+  ): Promise<Selectable<ReportQueue> | undefined> {
+    const matches = await this.db.db
+      .selectFrom('report_queue')
+      .selectAll()
+      .where('enabled', '=', true)
+      .where('deletedAt', 'is', null)
+      .where(sql<boolean>`"recommendedLabels" @> ${jsonb([label])}`)
+      .limit(2)
+      .execute()
+    return matches.length === 1 ? matches[0] : undefined
   }
 
   async getViewsByIds(
@@ -206,6 +328,7 @@ export class QueueService {
       enabled?: boolean
       description?: string
       recommendedPolicies?: string[]
+      recommendedLabels?: string[]
     },
   ): Promise<Selectable<ReportQueue>> {
     const now = currentDatetimeString()
@@ -217,6 +340,10 @@ export class QueueService {
           updates.recommendedPolicies === undefined
             ? undefined
             : jsonb(updates.recommendedPolicies),
+        recommendedLabels:
+          updates.recommendedLabels === undefined
+            ? undefined
+            : jsonb(updates.recommendedLabels),
         updatedAt: now,
       })
       .where('id', '=', id)
@@ -317,6 +444,7 @@ export class QueueService {
       reportTypes: queue.reportTypes,
       description: queue.description ?? undefined,
       recommendedPolicies: queue.recommendedPolicies,
+      recommendedLabels: queue.recommendedLabels,
       // @ts-expect-error - createdBy can be 'admin_token', which is not a valid value (per lexicon definition)
       createdBy: queue.createdBy,
       createdAt: queue.createdAt,
@@ -586,20 +714,12 @@ export class QueueService {
     let unmatched = 0
 
     const rows = events.map((event) => {
-      const subjectType: SubjectType = event.subjectMessageId
-        ? 'message'
-        : event.subjectConvoId
-          ? 'conversation'
-          : event.subjectUri
-            ? 'record'
-            : 'account'
+      const subjectType = subjectTypeFromEvent(event)
 
       let collection: string | null = null
-      let recordPath = ''
       if (event.subjectUri) {
         const uri = new AtUri(event.subjectUri)
         collection = uri.collection
-        recordPath = `${uri.collection}/${uri.rkey}`
       }
 
       const reportType =
@@ -621,26 +741,12 @@ export class QueueService {
       else assigned++
       if (event.id > maxEventId) maxEventId = event.id
 
-      const isMuted =
-        !!event.meta?.isReporterMuted || !!event.meta?.isSubjectMuted
-
-      return {
-        eventId: event.id,
-        queueId: assignment.queueId,
-        queuedAt: assignment.queuedAt,
-        actionEventIds: null,
-        actionNote: null,
-        isMuted,
-        isAutomated: tool.isAutomated,
-        status: assignment.status,
+      return reportRowFromEvent({
+        event,
         reportType,
-        did: event.subjectDid,
-        recordPath,
-        subjectMessageId: event.subjectMessageId,
-        subjectConvoId: event.subjectConvoId,
+        assignment,
         createdAt: now,
-        updatedAt: now,
-      }
+      })
     })
 
     // ON CONFLICT (eventId) DO NOTHING covers any race where a report row
