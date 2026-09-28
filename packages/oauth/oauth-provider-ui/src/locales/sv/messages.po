@@ -159,7 +159,7 @@ msgstr "Ett fel uppstod"
 
 #: src/lib/api.ts
 msgid "An unexpected error occurred."
-msgstr "Ett oväntat fel inträffade."
+msgstr "Ett oväntat fel uppstod."
 
 #: src/components/error-view.tsx
 #: src/components/feedback/error-notice.tsx
@@ -352,7 +352,7 @@ msgstr "Bekräftelsekod"
 
 #: src/data/account.ts
 msgid "Confirmation email sent"
-msgstr "Ett e-postmeddelande för bekräftelse har skickats"
+msgstr "Bekräftelsemejlet skickades"
 
 #: src/components/sign-in-view.tsx
 msgctxt "AuthenticationPage"
@@ -443,20 +443,20 @@ msgstr "Har du inte fått någon kod? <0>Klicka här för att skicka en ny.</0>"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "Disable 2FA"
-msgstr ""
+msgstr "Inaktivera 2FA"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "Disable two-factor authentication"
-msgstr ""
+msgstr "Inaktivera tvåfaktorsautentisering"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgctxt "2FA"
 msgid "Disabled"
-msgstr ""
+msgstr "Inaktiverad"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "Disabling two-factor authentication makes your account less secure."
-msgstr ""
+msgstr "Om du inaktiverar tvåfaktorsautentisering blir ditt konto mindre säkert."
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "DNS"
@@ -496,15 +496,15 @@ msgstr "E-postadressen har ändrats"
 
 #: src/data/email.ts
 msgid "Email login verification disabled"
-msgstr ""
+msgstr "Inloggningsverifiering via e-post har inaktiverats"
 
 #: src/data/email.ts
 msgid "Email login verification enabled"
-msgstr ""
+msgstr "Inloggningsverifiering via e-post har aktiverats"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Email not verified"
-msgstr "E-post inte verifierad"
+msgstr "E-postadressen är inte verifierad"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Email these instructions"
@@ -516,16 +516,16 @@ msgstr "E-postadressen har verifierats"
 
 #: src/components/enable-email-auth-factor-dialog.tsx
 msgid "Enable"
-msgstr ""
+msgstr "Aktivera"
 
 #: src/components/enable-email-auth-factor-dialog.tsx
 msgid "Enable two-factor authentication"
-msgstr ""
+msgstr "Aktivera tvåfaktorsautentisering"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgctxt "2FA"
 msgid "Enabled"
-msgstr ""
+msgstr "Aktiverad"
 
 #: src/components/forms/fields/new-password-field.tsx
 msgid "Enter a password"
@@ -541,7 +541,7 @@ msgstr "Ange den domän du vill använda"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "Enter the security code we sent to <0>{email}</0> to disable email two-factor authentication."
-msgstr ""
+msgstr "Ange säkerhetskoden vi har skickat till <0>{email}</0> för att inaktivera tvåfaktorsautentisering via e-post."
 
 #: src/components/reset-password-view.tsx
 msgid "Enter your account's email and we'll send you a reset code."
@@ -591,11 +591,11 @@ msgstr "Det gick inte att radera kontot"
 
 #: src/data/email.ts
 msgid "Failed to disable email login verification"
-msgstr ""
+msgstr "Det gick inte att inaktivera 2FA-inloggning via e-post"
 
 #: src/data/email.ts
 msgid "Failed to enable email login verification"
-msgstr ""
+msgstr "Det gick inte att aktivera 2FA-inloggning via e-post"
 
 #: src/routes/account/u/$accountId/apps.tsx
 msgid "Failed to load connected apps"
@@ -603,7 +603,7 @@ msgstr "Det gick inte att läsa in anslutna appar"
 
 #: src/routes/account/u/$accountId/devices.tsx
 msgid "Failed to load your devices"
-msgstr ""
+msgstr "Det gick inte att läsa in dina enheter"
 
 #: src/data/account.ts
 msgid "Failed to reactivate account"
@@ -635,7 +635,7 @@ msgstr "Det gick inte att skicka bekräftelsemejlet"
 
 #: src/data/email.ts
 msgid "Failed to send security code"
-msgstr ""
+msgstr "Det gick inte att skicka säkerhetskoden"
 
 #: src/data/email.ts
 msgid "Failed to send verification email"
@@ -735,7 +735,7 @@ msgstr "Identitet"
 
 #: src/cookie-error-page.tsx
 msgid "If this keeps happening, allow cookies for {hostname} in your browser's privacy settings."
-msgstr "Om det fortsätter, tillåt cookies för {hostname} i webbläsarens sekretessinställningar."
+msgstr "Om det här fortsätter hända, tillåt cookies för {hostname} i webbläsarens integritetsinställningar."
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "If you have access to your domain's DNS configuration panel (e.g. via your domain registrar)"
@@ -898,7 +898,7 @@ msgstr "Ange bara ditt lösenord på webbplatser du litar på."
 
 #: src/routes/__root.tsx
 msgid "Page not found"
-msgstr ""
+msgstr "Sidan hittades inte"
 
 #: src/components/delete-account-confirm-form.tsx
 #: src/components/forms/fields/password-field.tsx
@@ -910,7 +910,7 @@ msgstr "Lösenord"
 
 #: src/data/password.ts
 msgid "Password reset email sent"
-msgstr "E-postmeddelande för återställning av lösenord har skickats"
+msgstr "Återställningsmejlet skickades"
 
 #: src/data/password.ts
 msgid "Password reset successful"
@@ -1036,7 +1036,7 @@ msgstr "Dataarkiv"
 
 #: src/components/enable-email-auth-factor-dialog.tsx
 msgid "Require an email code to sign in to your account."
-msgstr ""
+msgstr "Kräv en kod som skickas via e-post för att logga in på ditt konto."
 
 #: src/components/reset-password-confirm-form.tsx
 msgid "Reset code"
@@ -1083,11 +1083,11 @@ msgstr "Välj domän"
 
 #: src/components/delete-account-dialog.tsx
 msgid "Send email"
-msgstr "Skicka e-postmeddelande"
+msgstr "Skicka mejl"
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "Send email to verify"
-msgstr ""
+msgstr "Skicka verifieringsmejl"
 
 #: src/components/forms/request-code-button.tsx
 msgid "Send verification code"
@@ -1137,7 +1137,7 @@ msgstr "Inloggningen är klar"
 
 #: src/cookie-error-page.tsx
 msgid "Sign-in needs cookies, and your browser isn't accepting them."
-msgstr "Inloggning kräver cookies och din webbläsare accepterar dem inte."
+msgstr "Inloggning kräver cookies, men din webbläsare tillåter dem inte."
 
 #: src/components/error-view.tsx
 msgid "Something went wrong"
@@ -1296,7 +1296,7 @@ msgstr "För att byta lösenord behöver du ange den säkerhetskod som har skick
 
 #: src/components/disable-email-auth-factor-dialog.tsx
 msgid "To disable your email two-factor authentication, please verify your access to <0>{email}</0>"
-msgstr ""
+msgstr "Verifiera att du har åtkomst till <0>{email}</0> för att inaktivera tvåfaktorsautentisering via e-post."
 
 #: src/components/verify-email-dialog.tsx
 msgid "To verify your email, you'll need to enter a security code sent to <0>{email}</0>."
@@ -1318,7 +1318,7 @@ msgstr "Försök igen"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Two-factor authentication (2FA)"
-msgstr ""
+msgstr "Tvåfaktorsautentisering (2FA)"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Type"
@@ -1387,7 +1387,7 @@ msgstr "Användarnamn"
 
 #: src/components/sign-in-form.tsx
 msgid "Username or Email"
-msgstr ""
+msgstr "Användarnamn eller e-postadress"
 
 #: src/components/sign-in-form.tsx
 msgid "Username or email address"
@@ -1409,7 +1409,7 @@ msgstr "Verifieringskod"
 
 #: src/data/email.ts
 msgid "Verification email sent"
-msgstr "Ett e-postmeddelande för verifiering har skickats"
+msgstr "Verifieringsmejlet skickades"
 
 #: src/components/forms/input-handle-custom-instructions.tsx
 msgid "Verification method"
@@ -1430,7 +1430,7 @@ msgstr "Verifiera och spara"
 
 #: src/routes/account/u/$accountId/manage.tsx
 msgid "Verify email to enable"
-msgstr ""
+msgstr "Verifiera din e-postadress för att aktivera"
 
 #: src/components/update-email-dialog.tsx
 msgctxt "verify email"
@@ -1529,7 +1529,7 @@ msgstr "Du kan nu logga in med ditt nya lösenord."
 
 #: src/data/email.ts
 msgid "You will no longer be prompted for a code to sign in."
-msgstr ""
+msgstr "Du kommer inte längre att bli ombedd att ange en kod för att logga in."
 
 #: src/components/sign-up-view.tsx
 msgid "Your account"
@@ -1584,7 +1584,7 @@ msgstr "Ditt fullständiga användarnamn blir: {0}"
 
 #: src/data/email.ts
 msgid "Your next login will require a code that is sent to your email address."
-msgstr ""
+msgstr "Nästa gång du loggar in kommer du behöva en kod som skickas till din e-postadress."
 
 #: src/components/reactivate-account-dialog.tsx
 msgid "Your profile, posts, feeds, and lists will become visible again across the Atmosphere network — that includes the Bluesky app and any other Atmosphere app you use with this account."
