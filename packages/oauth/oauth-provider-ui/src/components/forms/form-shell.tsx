@@ -1,8 +1,18 @@
 import { Form } from '@base-ui/react/form'
 import { Trans } from '@lingui/react/macro'
 import { Loader2Icon } from 'lucide-react'
-import { type MouseEventHandler, type ReactNode, type Ref, useRef } from 'react'
+import {
+  type ComponentProps,
+  type MouseEventHandler,
+  type ReactNode,
+  type Ref,
+  useRef,
+} from 'react'
 import { ErrorNotice } from '#/components/feedback/error-notice.tsx'
+import {
+  AsyncButton,
+  type AsyncButtonProps,
+} from '#/components/forms/async-button.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import { useAsyncAction } from '#/hooks/use-async-action.ts'
 import { apiErrorParser } from '#/lib/api-error-parser.ts'
@@ -17,6 +27,33 @@ export const actionRow = [
   'flex flex-col items-stretch gap-2',
   'sm:flex-row-reverse sm:flex-wrap sm:items-center sm:justify-start',
 ].join(' ')
+
+export type ActionButtonProps = ComponentProps<typeof Button> & {
+  /**
+   * Runs the action on click, disabling the button and showing a spinner while
+   * it is in flight — see `AsyncButton`.
+   */
+  action?: AsyncButtonProps['action']
+}
+
+/**
+ * A button sized for an action row — a touch taller than the stock button so
+ * the primary action is an easy tap on a phone. Shared with the sign-in picker
+ * so every screen's actions read as one set.
+ */
+export function ActionButton({
+  action,
+  className,
+  ...props
+}: ActionButtonProps) {
+  const classes = cn('text-action h-10', className)
+
+  return action ? (
+    <AsyncButton {...props} action={action} className={classes} />
+  ) : (
+    <Button {...props} className={classes} />
+  )
+}
 
 type SubmitVariant = 'default' | 'destructive' | 'secondary'
 
@@ -138,25 +175,25 @@ export function FormShell<TValues extends Record<string, unknown>>({
 
       <div key="actions" className={actionRow}>
         {submitLabel && (
-          <Button
+          <ActionButton
             type="submit"
             variant={submitVariant}
             disabled={disabled || !submittable}
           >
             {busy && <Loader2Icon className="animate-spin" aria-hidden />}
             {submitLabel}
-          </Button>
+          </ActionButton>
         )}
         {actions}
         {onCancel && cancelLabel ? (
-          <Button type="button" variant="secondary" onClick={onCancel}>
+          <ActionButton type="button" variant="secondary" onClick={onCancel}>
             {cancelLabel}
-          </Button>
+          </ActionButton>
         ) : null}
         {onBack && backLabel ? (
-          <Button type="button" variant="secondary" onClick={onBack}>
+          <ActionButton type="button" variant="secondary" onClick={onBack}>
             {backLabel}
-          </Button>
+          </ActionButton>
         ) : null}
       </div>
     </Form>

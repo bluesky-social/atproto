@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Recompute report statistics for a date range. Useful for backfilling after failures or data corrections.",
+      "description": "Recompute report statistics for a date range.",
       "input": {
         "encoding": "application/json",
         "schema": {

@@ -40,6 +40,13 @@ export function SignInView({
   const [showSignInForm, setShowSignInForm] = useState(sessions.length === 0)
 
   const title = msg({ message: 'Sign in', context: 'AuthenticationPage' })
+  // @NOTE The newline is part of the message so the heading always breaks
+  // after "with"; translators place their own break. `AuthShell` renders the
+  // title with `whitespace-pre-line`.
+  const pickerTitle = msg({
+    message: 'Continue with\nan existing account',
+    context: 'AuthenticationPage',
+  })
 
   useEffect(() => {
     // Make sure the "back" action shows the account picker instead of the
@@ -87,10 +94,7 @@ export function SignInView({
 
   if (sessions.length === 0) {
     return (
-      <AuthShell
-        title={title}
-        subtitle={<Trans>Enter your username and password</Trans>}
-      >
+      <AuthShell title={title}>
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}
@@ -105,10 +109,7 @@ export function SignInView({
 
   if (showSignInForm) {
     return (
-      <AuthShell
-        title={title}
-        subtitle={<Trans>Enter your username and password</Trans>}
-      >
+      <AuthShell title={title}>
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}
@@ -121,10 +122,7 @@ export function SignInView({
   }
 
   return (
-    <AuthShell
-      title={title}
-      subtitle={<Trans>Select from an existing account</Trans>}
-    >
+    <AuthShell title={pickerTitle} documentTitle={title}>
       <SignInPicker
         sessions={sessions}
         onSession={setSession}

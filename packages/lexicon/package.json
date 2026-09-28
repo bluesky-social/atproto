@@ -35,7 +35,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "jest": "^30.5.1"
+    "jest": "^30.5.2"
   },
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",

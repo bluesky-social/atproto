@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@swc/jest": "^0.2.39",
-    "jest": "^30.5.1"
+    "jest": "^30.5.2"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",

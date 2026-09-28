@@ -1,5 +1,11 @@
 # @atproto/xrpc-server
 
+## 0.13.2
+
+### Patch Changes
+
+- [#5553](https://github.com/bluesky-social/atproto/pull/5553) [`2480187`](https://github.com/bluesky-social/atproto/commit/2480187c9554ff161227480dd6c0bcaf5e7e3921) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `console.error` debug statement
+
 ## 0.13.1
 
 ### Patch Changes

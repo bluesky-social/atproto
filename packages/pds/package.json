@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.5.34",
+  "version": "0.5.35",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -89,6 +89,7 @@
   "devDependencies": {
     "@atproto/api": "workspace:^",
     "@atproto/oauth-client-browser-example": "workspace:^",
+    "@atproto/oauth-client-node": "workspace:^",
     "@did-plc/server": "^0.0.1",
     "@jest/globals": "^30.0.0",
     "@types/cors": "^2.8.12",
@@ -97,7 +98,7 @@
     "@types/nodemailer": "^6.4.6",
     "@types/qs": "^6.15.1",
     "get-port": "^6.1.2",
-    "jest": "^30.5.1",
+    "jest": "^30.5.2",
     "puppeteer": "^23.11.1",
     "ws": "^8.12.0"
   },

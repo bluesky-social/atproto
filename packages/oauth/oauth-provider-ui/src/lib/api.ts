@@ -9,6 +9,8 @@ import type {
   ConfirmResetPasswordInput,
   DeactivateAccountInput,
   DidString,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   HandleUnavailableReason,
   InitiateAccountDeletionInput,
   InitiateEmailUpdateInput,
@@ -203,6 +205,32 @@ export class Api extends JsonClient<ApiEndpoints> {
     )
   }
 
+  async enableEmailAuthFactor(
+    {
+      did,
+      locale = this.locale,
+    }: WithOptionalLocale<EnableEmailAuthFactorInput>,
+    options?: Options,
+  ) {
+    return this.fetch('POST', '/enable-email-otp', { did, locale }, options)
+  }
+
+  async disableEmailAuthFactor(
+    {
+      did,
+      token,
+      locale = this.locale,
+    }: WithOptionalLocale<DisableEmailAuthFactorInput>,
+    options?: Options,
+  ) {
+    return this.fetch(
+      'POST',
+      '/disable-email-otp',
+      { did, token, locale },
+      options,
+    )
+  }
+
   async updateHandle({ did, handle }: UpdateHandleInput, options?: Options) {
     return this.fetch('POST', '/update-handle', { did, handle }, options)
   }
@@ -353,7 +381,7 @@ export class OAuthErrorResponse<
       case 'server_error':
         return msg`The server encountered an unexpected error. Please try again.`
       default:
-        return msg`An unexpected error occurred. Please try again.`
+        return msg`An unexpected error occurred.`
     }
   }
 }
