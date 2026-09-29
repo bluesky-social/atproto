@@ -1,5 +1,26 @@
 # @atproto/bsky
 
+## 0.0.282
+
+### Patch Changes
+
+- [#5540](https://github.com/bluesky-social/atproto/pull/5540) [`4c725e6`](https://github.com/bluesky-social/atproto/commit/4c725e670ae67adf0711d08b53108be054e9dcf3) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add canonical OP thread numbering to feed response types.
+
+- [#5556](https://github.com/bluesky-social/atproto/pull/5556) [`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67) Thanks [@dependabot](https://github.com/apps/dependabot)! - build(deps-dev): bump the dev-dependencies group across 1 directory with 25 updates
+
+- [#5552](https://github.com/bluesky-social/atproto/pull/5552) [`b3d7c33`](https://github.com/bluesky-social/atproto/commit/b3d7c3391e50e4ae9e1b1cbfc9d561c8693507e7) Thanks [@haileyok](https://github.com/haileyok)! - Add sort parameter to getQuotes
+- Updated dependencies [[`4c725e6`](https://github.com/bluesky-social/atproto/commit/4c725e670ae67adf0711d08b53108be054e9dcf3), [`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67), [`7a85798`](https://github.com/bluesky-social/atproto/commit/7a857989751ae31518509d69ab7194a922064f3d), [`b3d7c33`](https://github.com/bluesky-social/atproto/commit/b3d7c3391e50e4ae9e1b1cbfc9d561c8693507e7), [`136e214`](https://github.com/bluesky-social/atproto/commit/136e2145b893773a94e9620df37be5215cdb57a3)]:
+  - @atproto/api@0.22.0
+  - @atproto/crypto@0.5.6
+  - @atproto/did@0.5.6
+  - @atproto/identity@0.5.15
+  - @atproto/repo@0.10.15
+  - @atproto/sync@0.4.12
+  - @atproto/xrpc-server@0.13.3
+  - @atproto/common@0.8.4
+  - @atproto-labs/xrpc-utils@0.1.24
+  - @atproto/lex@0.3.13
+
 ## 0.0.281
 
 ### Patch Changes

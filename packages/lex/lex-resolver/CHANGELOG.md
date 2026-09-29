@@ -1,5 +1,14 @@
 # @atproto/lex-resolver
 
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [[`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67)]:
+  - @atproto/crypto@0.5.6
+  - @atproto/repo@0.10.15
+  - @atproto-labs/did-resolver@0.3.10
+
 ## 0.3.0
 
 ### Minor Changes

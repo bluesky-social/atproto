@@ -1,5 +1,26 @@
 # @atproto/dev-env
 
+## 0.6.9
+
+### Patch Changes
+
+- [#5562](https://github.com/bluesky-social/atproto/pull/5562) [`f632a35`](https://github.com/bluesky-social/atproto/commit/f632a35e8641644022bf430c6e3b34b1382cab55) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove the need to provide a `plcRotationKey` secret when and override is provided
+
+- [#5562](https://github.com/bluesky-social/atproto/pull/5562) [`f632a35`](https://github.com/bluesky-social/atproto/commit/f632a35e8641644022bf430c6e3b34b1382cab55) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `TestPds.create` accepts optional `PDS.create` overrides as a second argument.
+- Updated dependencies [[`4c725e6`](https://github.com/bluesky-social/atproto/commit/4c725e670ae67adf0711d08b53108be054e9dcf3), [`f632a35`](https://github.com/bluesky-social/atproto/commit/f632a35e8641644022bf430c6e3b34b1382cab55), [`af8c350`](https://github.com/bluesky-social/atproto/commit/af8c3501cd32e82cf8128683445656aa6708608d), [`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67), [`f632a35`](https://github.com/bluesky-social/atproto/commit/f632a35e8641644022bf430c6e3b34b1382cab55), [`af8c350`](https://github.com/bluesky-social/atproto/commit/af8c3501cd32e82cf8128683445656aa6708608d), [`f5f0aab`](https://github.com/bluesky-social/atproto/commit/f5f0aab4cf3046de3dddd9251a07003d29e3c0be), [`b3d7c33`](https://github.com/bluesky-social/atproto/commit/b3d7c3391e50e4ae9e1b1cbfc9d561c8693507e7), [`136e214`](https://github.com/bluesky-social/atproto/commit/136e2145b893773a94e9620df37be5215cdb57a3), [`7a85798`](https://github.com/bluesky-social/atproto/commit/7a857989751ae31518509d69ab7194a922064f3d), [`f5f0aab`](https://github.com/bluesky-social/atproto/commit/f5f0aab4cf3046de3dddd9251a07003d29e3c0be), [`f632a35`](https://github.com/bluesky-social/atproto/commit/f632a35e8641644022bf430c6e3b34b1382cab55), [`b3d7c33`](https://github.com/bluesky-social/atproto/commit/b3d7c3391e50e4ae9e1b1cbfc9d561c8693507e7), [`136e214`](https://github.com/bluesky-social/atproto/commit/136e2145b893773a94e9620df37be5215cdb57a3)]:
+  - @atproto/api@0.22.0
+  - @atproto/bsky@0.0.282
+  - @atproto/pds@0.5.36
+  - @atproto/bsync@0.1.1
+  - @atproto/common-web@0.5.13
+  - @atproto/crypto@0.5.6
+  - @atproto/identity@0.5.15
+  - @atproto/lexicon@0.7.15
+  - @atproto/ozone@0.5.0
+  - @atproto/sync@0.4.12
+  - @atproto/xrpc-server@0.13.3
+  - @atproto/lex@0.3.13
+
 ## 0.6.8
 
 ### Patch Changes
