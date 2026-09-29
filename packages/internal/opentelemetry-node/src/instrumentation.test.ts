@@ -1,13 +1,13 @@
 import type * as Http from 'node:http'
 import { createRequire } from 'node:module'
 import type { AddressInfo } from 'node:net'
-import { context, trace } from '@opentelemetry/api'
+import { SpanKind, context, trace } from '@opentelemetry/api'
 import { RPCType, getRPCMetadata } from '@opentelemetry/core'
 import type { Instrumentation } from '@opentelemetry/instrumentation'
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http'
-import { metrics, node } from '@opentelemetry/sdk-node'
+import { metrics, node, tracing } from '@opentelemetry/sdk-node'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
-import { ATTR_HTTP_ROUTE } from './conventions.js'
+import { ATTR_HTTP_ROUTE, ATTR_XRPC_METHOD } from './conventions.js'
 import {
   UNKNOWN_XRPC_ROUTE,
   getDefaultAtprotoInstrumentations,
@@ -18,9 +18,12 @@ class TestMetricReader extends metrics.MetricReader {
   protected async onShutdown() {}
 }
 
-describe('http server metric route', () => {
+describe('http server instrumentation', () => {
   const reader = new TestMetricReader()
-  const tracerProvider = new node.NodeTracerProvider()
+  const spanExporter = new tracing.InMemorySpanExporter()
+  const tracerProvider = new node.NodeTracerProvider({
+    spanProcessors: [new tracing.SimpleSpanProcessor(spanExporter)],
+  })
   let instrumentations: Instrumentation[]
   let server: Http.Server
   let origin: string
@@ -30,7 +33,7 @@ describe('http server metric route', () => {
     // "http.server.request.duration" metrics
     process.env.OTEL_SEMCONV_STABILITY_OPT_IN = 'http/dup'
 
-    // Registers the context manager that carries rpcMetadata
+    // Also registers the context manager that carries rpcMetadata
     tracerProvider.register()
 
     instrumentations = getDefaultAtprotoInstrumentations({
@@ -45,9 +48,11 @@ describe('http server metric route', () => {
     // The instrumentation patches "node:http" as it gets required, so it must
     // be loaded after enabling it.
     const http: typeof Http = createRequire(import.meta.url)('node:http')
-    server = http.createServer((_req, res) => {
-      // Mimic the express instrumentation, which clobbers the route with
-      // whatever layer it entered last ("/" for catchall middlewares).
+    server = http.createServer((req, res) => {
+      // Mimic express, which gives requests a "path" getter...
+      Object.defineProperty(req, 'path', { get: () => req.url?.split('?')[0] })
+      // ...and its instrumentation, which clobbers the route with whatever
+      // layer it entered last ("/" for catchall middlewares).
       const rpcMetadata = getRPCMetadata(context.active())
       if (rpcMetadata?.type === RPCType.HTTP) rpcMetadata.route = '/'
       res.end('ok')
@@ -66,7 +71,7 @@ describe('http server metric route', () => {
     delete process.env.OTEL_SEMCONV_STABILITY_OPT_IN
   })
 
-  test('known methods get their own route, other NSIDs share one', async () => {
+  beforeAll(async () => {
     for (const path of [
       '/xrpc/com.example.knownMethod',
       '/xrpc/com.example.knownMethod?foo=bar',
@@ -79,7 +84,26 @@ describe('http server metric route', () => {
     }
     // Let the "close" listeners run
     await new Promise((resolve) => setTimeout(resolve, 10))
+  })
 
+  test('spans are named after the requested NSID', () => {
+    const spans = spanExporter
+      .getFinishedSpans()
+      .filter((s) => s.kind === SpanKind.SERVER)
+      .map((s) => [s.name, s.attributes[ATTR_XRPC_METHOD]])
+      .sort()
+    expect(spans).toEqual([
+      // Only XRPC spans get renamed
+      ['GET /', undefined],
+      ['GET /xrpc/com.example.knownMethod', 'com.example.knownMethod'],
+      ['GET /xrpc/com.example.knownMethod', 'com.example.knownMethod'],
+      ['GET /xrpc/com.example.madeUp1', 'com.example.madeUp1'],
+      ['GET /xrpc/com.example.madeUp2', 'com.example.madeUp2'],
+      ['GET /xrpc/com.example.otherMethod', 'com.example.otherMethod'],
+    ])
+  })
+
+  test('metric routes are known methods, or a shared one', async () => {
     const { resourceMetrics } = await reader.collect()
     const routesOf = (name: string) =>
       resourceMetrics.scopeMetrics

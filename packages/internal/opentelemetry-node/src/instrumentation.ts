@@ -1,4 +1,4 @@
-import type { ServerResponse } from 'node:http'
+import type { ClientRequest, IncomingMessage, ServerResponse } from 'node:http'
 import { context } from '@opentelemetry/api'
 import { RPCType, getRPCMetadata } from '@opentelemetry/core'
 import type { Instrumentation } from '@opentelemetry/instrumentation'
@@ -68,21 +68,23 @@ export function getDefaultAtprotoInstrumentations(
       // layer). On finish, the http instrumentation copies rpcMetadata.route
       // into "http.route" and renames the span from it, clobbering anything a
       // requestHook set. This hook runs after that, so it wins.
-      applyCustomAttributesOnSpan: (span, request) => {
-        const { url, method, proxy } =
-          'path' in request
-            ? // ClientRequest
-              {
-                url: request.path,
-                method: request.method,
-                proxy: request.getHeader('atproto-proxy'),
-              }
-            : // IncomingMessage
-              {
-                url: request.url ?? '/',
-                method: request.method ?? 'GET',
-                proxy: request.headers['atproto-proxy'],
-              }
+      applyCustomAttributesOnSpan: (span, request, response) => {
+        // @NOTE Tells incoming from outgoing requests by the response, since
+        // express gives incoming requests a "path" getter, which makes them
+        // look like a ClientRequest.
+        const { url, method, proxy } = isServerResponse(response)
+          ? // IncomingMessage
+            {
+              url: (request as IncomingMessage).url ?? '/',
+              method: request.method ?? 'GET',
+              proxy: (request as IncomingMessage).headers['atproto-proxy'],
+            }
+          : // ClientRequest
+            {
+              url: (request as ClientRequest).path,
+              method: request.method,
+              proxy: (request as ClientRequest).getHeader('atproto-proxy'),
+            }
 
         const lxm =
           method === 'GET' || method === 'POST'
