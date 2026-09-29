@@ -202,13 +202,15 @@ export class HCaptchaClient {
     handle: string,
     userAgent?: string,
   ): Promise<HcaptchaClientTokens> {
-    const [hashedIp, hashedHandle, hashedUserAgent] = await Promise.all([
-      this.hashToken(remoteip),
-      this.hashToken(handle),
-      userAgent ? this.hashToken(userAgent) : Promise.resolve(undefined),
-    ])
-
-    return { hashedIp, hashedHandle, hashedUserAgent }
+    // @NOTE We are **not** using Promise.all here because libuv's thread pool
+    // might get saturated, leading to performance degradation. Instead, we
+    // await each hash sequentially, ensuring that every HTTP request only uses
+    // one thread at a time.
+    return {
+      hashedIp: await this.hashToken(remoteip),
+      hashedHandle: await this.hashToken(handle),
+      hashedUserAgent: userAgent ? await this.hashToken(userAgent) : undefined,
+    }
   }
 
   protected async hashToken(value: string): Promise<string> {
