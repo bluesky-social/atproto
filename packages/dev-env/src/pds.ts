@@ -28,26 +28,20 @@ export class TestPds {
   ) {}
 
   static async create(
-    config: PdsConfig,
+    env: PdsConfig,
     overrides?: Partial<AppContextOptions>,
   ): Promise<TestPds> {
-    const plcRotationKey = await Secp256k1Keypair.create({ exportable: true })
-    const plcRotationPriv = ui8.toString(await plcRotationKey.export(), 'hex')
     const recoveryKey = (await Secp256k1Keypair.create()).did()
 
-    const port = config.port || (await getPort())
+    const port = env.port || (await getPort())
     const url: UriString = `http://localhost:${port}`
-
-    const blobstoreLoc = path.join(os.tmpdir(), randomStr(8, 'base32'))
-    const dataDirectory = path.join(os.tmpdir(), randomStr(8, 'base32'))
-    await fs.mkdir(dataDirectory, { recursive: true })
 
     const server = await PDS.fromEnv(
       {
         devMode: true,
         port,
-        dataDirectory: dataDirectory,
-        blobstoreDiskLocation: blobstoreLoc,
+        dataDirectory: await mkTmpdir(),
+        blobstoreDiskLocation: await mkTmpdir(),
         recoveryDidKey: recoveryKey,
         adminPassword: ADMIN_PASSWORD,
         jwtSecret: JWT_SECRET,
@@ -59,7 +53,9 @@ export class TestPds {
         bskyAppViewCdnUrlPattern: 'http://cdn.appview.com/%s/%s/%s',
         modServiceUrl: 'https://moderator.invalid',
         modServiceDid: 'did:example:invalid',
-        plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
+        plcRotationKeyK256PrivateKeyHex: overrides?.plcRotationKey
+          ? undefined // @NOTE the plcRotationKey might not be exportable
+          : await createRotationKey(),
         inviteRequired: false,
         disableSsrfProtection: true,
         serviceName: 'Development PDS',
@@ -74,7 +70,7 @@ export class TestPds {
         termsOfServiceUrl: 'https://bsky.social/about/support/tos',
         privacyPolicyUrl: 'https://bsky.social/about/support/privacy-policy',
         supportUrl: 'https://blueskyweb.zendesk.com/hc/en-us',
-        ...config,
+        ...env,
       },
       overrides,
     )
@@ -131,4 +127,16 @@ export class TestPds {
   async [Symbol.asyncDispose]() {
     await this.close()
   }
+}
+
+async function createRotationKey(): Promise<string> {
+  const plcRotationKey = await Secp256k1Keypair.create({ exportable: true })
+  const plcRotationPriv = await plcRotationKey.export()
+  return Buffer.from(plcRotationPriv).toString('hex')
+}
+
+async function mkTmpdir(): Promise<string> {
+  const location = path.join(os.tmpdir(), randomStr(8, 'base32'))
+  await fs.mkdir(location, { recursive: true })
+  return location
 }
