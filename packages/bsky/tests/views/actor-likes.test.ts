@@ -112,7 +112,7 @@ describe('bsky actor likes feed views', () => {
     const {
       data: { feed },
     } = await agent.api.app.bsky.feed.getActorLikes(
-      { actor: sc.accounts[bob].handle, limit: 2 },
+      { actor: sc.accounts[bob].handle, limit: 3 },
       {
         headers: await network.serviceHeaders(
           bob,

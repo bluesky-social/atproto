@@ -1,9 +1,10 @@
-import type { $Typed, ToolsOzoneModerationDefs } from '@atproto/api'
+import type { $Typed, DidString } from '@atproto/lex'
 import {
   addAccountInfoToRepoViewDetail,
   getPdsAccountInfos,
 } from '../api/util.js'
 import type { AppContext } from '../context.js'
+import { tools } from '../lexicons/index.js'
 import type { ModerationService } from '../mod-service/index.js'
 import type { ParsedLabelers } from '../util.js'
 
@@ -11,7 +12,7 @@ export const getReposForVerifications = async (
   ctx: AppContext,
   labelers: ParsedLabelers,
   modService: ModerationService,
-  dids: string[],
+  dids: DidString[],
   isModerator: boolean,
 ) => {
   const [partialRepos, accountInfo] = await Promise.all([
@@ -21,30 +22,26 @@ export const getReposForVerifications = async (
 
   const repos = new Map<
     string,
-    | $Typed<ToolsOzoneModerationDefs.RepoViewDetail>
-    | $Typed<ToolsOzoneModerationDefs.RepoViewNotFound>
+    | $Typed<tools.ozone.moderation.defs.RepoViewDetail>
+    | $Typed<tools.ozone.moderation.defs.RepoViewNotFound>
   >(
     dids.map((did) => {
       const partialRepo = partialRepos.get(did)
       if (!partialRepo) {
         return [
           did,
-          {
-            did,
-            $type: 'tools.ozone.moderation.defs#repoViewNotFound',
-          },
+          tools.ozone.moderation.defs.repoViewNotFound.$build({ did }),
         ]
       }
       return [
         did,
-        {
-          ...addAccountInfoToRepoViewDetail(
+        tools.ozone.moderation.defs.repoViewDetail.$build(
+          addAccountInfoToRepoViewDetail(
             partialRepo,
             accountInfo.get(did) || null,
             isModerator,
           ),
-          $type: 'tools.ozone.moderation.defs#repoViewDetail',
-        },
+        ),
       ]
     }),
   )

@@ -1,6 +1,10 @@
 {
   "extends": ["../../tsconfig/node.tsconfig.json"],
   "include": ["./src"],
+  // Colocated unit tests belong to ./tsconfig.test.json, which supplies the
+  // jest globals. Without this they would also be compiled here — failing on
+  // `describe`/`expect`, and emitting test files into ./dist.
+  "exclude": ["./src/**/*.test.ts"],
   "references": [
     { "path": "../aws/tsconfig.build.json" },
     { "path": "../common/tsconfig.build.json" },
@@ -15,6 +19,7 @@
     { "path": "../internal/xrpc-utils/tsconfig.build.json" },
     { "path": "../lex/lex-cbor/tsconfig.build.json" },
     { "path": "../lex/lex-data/tsconfig.build.json" },
+    { "path": "../lex/lex-document/tsconfig.build.json" },
     { "path": "../lex/lex-json/tsconfig.build.json" },
     { "path": "../lex/lex/tsconfig.build.json" },
     { "path": "../oauth/oauth-provider/tsconfig.build.json" },

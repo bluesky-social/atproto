@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.add(app.bsky.actor.searchActors, {
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, req }) => {
+    handler: async ({ auth, params, req, signal }) => {
       const { viewer, includeTakedowns, skipViewerBlocks } =
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
@@ -54,6 +54,7 @@ export default function (server: Server, ctx: AppContext) {
               cursor,
               limit,
               hydrateCtx,
+              signal,
               isV2Override: resolveSearchV2Override(req, ctx.cfg),
             },
             ctx,
@@ -88,6 +89,7 @@ const skeletonV1 = async (
         limit: params.limit,
         viewer: params.hydrateCtx.viewer ?? undefined,
       },
+      { signal: params.signal },
     )
     return {
       dids: res.actors.map(({ did }) => did as DidString),
@@ -175,6 +177,7 @@ type Context = {
 
 type Params = app.bsky.actor.searchActors.$Params & {
   hydrateCtx: HydrateCtx
+  signal: AbortSignal
   isV2Override: boolean
 }
 

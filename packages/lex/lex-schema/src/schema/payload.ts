@@ -93,13 +93,16 @@ export class Payload<
   const TEncoding extends string | undefined = string | undefined,
   const TSchema extends PayloadSchema<TEncoding> = PayloadSchema<TEncoding>,
 > {
-  constructor(
-    readonly encoding: TEncoding,
-    readonly schema: TSchema,
-  ) {
+  readonly encoding: TEncoding
+  readonly schema: TSchema
+
+  constructor(encoding: TEncoding, schema: TSchema) {
     if (encoding === undefined && schema !== undefined) {
       throw new TypeError('schema cannot be defined when encoding is undefined')
     }
+
+    this.encoding = encoding
+    this.schema = schema
   }
 
   /**

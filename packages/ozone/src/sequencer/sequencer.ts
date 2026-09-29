@@ -4,11 +4,11 @@ import type pg from 'pg'
 type PoolClient = pg.PoolClient
 import type { Database } from '../db/index.js'
 import { type Label as LabelTable, LabelChannel } from '../db/schema/label.js'
-import type { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels.js'
+import type { com } from '../lexicons/index.js'
 import { seqLogger as log } from '../logger.js'
 import type { ModerationService } from '../mod-service/index.js'
 
-export type { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels.js'
+export type LabelsEvt = com.atproto.label.subscribeLabels.Labels
 type LabelRow = Selectable<LabelTable>
 
 export class Sequencer extends EventEmitter<SequencerEvents> {

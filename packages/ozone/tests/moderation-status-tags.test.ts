@@ -1,12 +1,11 @@
 import assert from 'node:assert'
-import { ComAtprotoAdminDefs } from '@atproto/api'
+import { ComAtprotoAdminDefs, ComAtprotoModerationDefs } from '@atproto/api'
 import {
   type ModeratorClient,
   type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
 describe('moderation-status-tags', () => {
   let network: TestNetwork
@@ -34,7 +33,7 @@ describe('moderation-status-tags', () => {
         did: sc.dids.bob,
       }
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'X',
         subject: bobsAccount,
         reportedBy: sc.dids.alice,

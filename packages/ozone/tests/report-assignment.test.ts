@@ -1,13 +1,12 @@
-import type AtpAgent from '@atproto/api'
+import { ComAtprotoModerationDefs, ids } from '@atproto/api'
 import type {
   ToolsOzoneReportAssignModerator,
   ToolsOzoneReportGetAssignments,
   ToolsOzoneReportListActivities,
   ToolsOzoneReportUnassignModerator,
 } from '@atproto/api'
-import { ComAtprotoModerationDefs } from '@atproto/api'
+import type AtpAgent from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
 
 describe('report-assignment', () => {
   let network: TestNetwork

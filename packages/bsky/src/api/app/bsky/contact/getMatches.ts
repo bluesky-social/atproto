@@ -64,7 +64,7 @@ const skeleton = async (
   return {
     actor,
     subjects: subjects as DidString[],
-    cursor: cursor || undefined,
+    cursor,
   }
 }
 

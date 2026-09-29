@@ -63,15 +63,18 @@ export class RecordSchema<
 > {
   readonly type = 'record' as const
 
-  keySchema: RecordKeySchema<TKey>
+  readonly key: TKey
+  readonly $type: TType
+  readonly schema: TShape
 
-  constructor(
-    readonly key: TKey,
-    readonly $type: TType,
-    readonly schema: TShape,
-  ) {
+  readonly keySchema: RecordKeySchema<TKey>
+
+  constructor(key: TKey, $type: TType, schema: TShape) {
     super()
-    this.keySchema = recordKey(key)
+    this.key = key
+    this.$type = $type
+    this.schema = schema
+    this.keySchema = recordKey(key) // Validates "key"
   }
 
   validateInContext(

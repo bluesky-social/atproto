@@ -1,9 +1,11 @@
 import type { Selectable } from 'kysely'
+import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
+import type { DidString, LexMap } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { ScheduledActionStatus, ScheduledActionType } from '../api/util.js'
 import type { Database } from '../db/index.js'
 import type { ScheduledAction } from '../db/schema/scheduled-action.js'
-import type { ScheduledActionView } from '../lexicon/types/tools/ozone/moderation/defs.js'
+import type { tools } from '../lexicons/index.js'
 import { dbLogger } from '../logger.js'
 import type { SchedulingParams } from './types.js'
 
@@ -20,28 +22,28 @@ export class ScheduledActionService {
 
   formatScheduledAction(
     action: Selectable<ScheduledAction>,
-  ): ScheduledActionView {
+  ): tools.ozone.moderation.defs.ScheduledActionView {
     return {
       id: action.id,
       action: action.action,
-      eventData: action.eventData as { [x: string]: unknown } | undefined,
+      eventData: action.eventData as LexMap | undefined,
       did: action.did,
       executeAt: action.executeAt
-        ? new Date(action.executeAt).toISOString()
+        ? toDatetimeString(action.executeAt)
         : undefined,
       executeAfter: action.executeAfter
-        ? new Date(action.executeAfter).toISOString()
+        ? toDatetimeString(action.executeAfter)
         : undefined,
       executeUntil: action.executeUntil
-        ? new Date(action.executeUntil).toISOString()
+        ? toDatetimeString(action.executeUntil)
         : undefined,
       randomizeExecution: action.randomizeExecution,
       createdBy: action.createdBy,
-      createdAt: new Date(action.createdAt).toISOString(),
-      updatedAt: new Date(action.updatedAt).toISOString(),
+      createdAt: toDatetimeString(action.createdAt),
+      updatedAt: toDatetimeString(action.updatedAt),
       status: action.status,
       lastExecutedAt: action.lastExecutedAt
-        ? new Date(action.lastExecutedAt).toISOString()
+        ? toDatetimeString(action.lastExecutedAt)
         : undefined,
       lastFailureReason: action.lastFailureReason || undefined,
       executionEventId: action.executionEventId || undefined,
@@ -75,7 +77,7 @@ export class ScheduledActionService {
       )
     }
 
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     const randomizeExecution =
       !('executeAt' in schedulingParams) && 'executeAfter' in schedulingParams
 
@@ -87,12 +89,15 @@ export class ScheduledActionService {
         did,
         executeAt: randomizeExecution
           ? null
-          : schedulingParams.executeAt?.toISOString(),
+          : schedulingParams.executeAt &&
+            toDatetimeString(schedulingParams.executeAt),
         executeAfter: randomizeExecution
-          ? schedulingParams.executeAfter?.toISOString()
+          ? schedulingParams.executeAfter &&
+            toDatetimeString(schedulingParams.executeAfter)
           : null,
         executeUntil: randomizeExecution
-          ? schedulingParams.executeUntil?.toISOString()
+          ? schedulingParams.executeUntil &&
+            toDatetimeString(schedulingParams.executeUntil)
           : null,
         randomizeExecution,
         createdBy,
@@ -107,7 +112,7 @@ export class ScheduledActionService {
   }
 
   async getPendingActionForSubject(
-    did: string,
+    did: DidString,
     action: ScheduledActionType,
   ): Promise<Selectable<ScheduledAction> | null> {
     const scheduledAction = await this.db.db
@@ -134,7 +139,7 @@ export class ScheduledActionService {
     limit?: number
     startTime?: Date
     endTime?: Date
-    subjects?: string[]
+    subjects?: DidString[]
     statuses: ScheduledActionStatus[]
     direction?: 'asc' | 'desc'
   }): Promise<{
@@ -153,8 +158,8 @@ export class ScheduledActionService {
     if (startTime) {
       query = query.where((eb) =>
         eb.or([
-          eb('executeAt', '>=', startTime.toISOString()),
-          eb('executeAfter', '>=', startTime.toISOString()),
+          eb('executeAt', '>=', toDatetimeString(startTime)),
+          eb('executeAfter', '>=', toDatetimeString(startTime)),
         ]),
       )
     }
@@ -162,11 +167,11 @@ export class ScheduledActionService {
     if (endTime) {
       query = query.where((eb) =>
         eb.or([
-          eb('executeAt', '<=', endTime.toISOString()),
-          eb('executeUntil', '<=', endTime.toISOString()),
+          eb('executeAt', '<=', toDatetimeString(endTime)),
+          eb('executeUntil', '<=', toDatetimeString(endTime)),
           eb.and([
             eb('executeUntil', 'is', null),
-            eb('executeAfter', '<=', endTime.toISOString()),
+            eb('executeAfter', '<=', toDatetimeString(endTime)),
           ]),
         ]),
       )
@@ -188,12 +193,12 @@ export class ScheduledActionService {
     }
   }
 
-  async cancelScheduledActions(subjects: string[]): Promise<{
-    succeeded: string[]
-    failed: { did: string; error: string; errorCode?: string }[]
+  async cancelScheduledActions(subjects: DidString[]): Promise<{
+    succeeded: DidString[]
+    failed: { did: DidString; error: string; errorCode?: string }[]
   }> {
-    const succeeded: string[] = []
-    const failed: { did: string; error: string; errorCode?: string }[] = []
+    const succeeded: DidString[] = []
+    const failed: { did: DidString; error: string; errorCode?: string }[] = []
 
     for (const did of subjects) {
       try {
@@ -201,7 +206,7 @@ export class ScheduledActionService {
           .updateTable('scheduled_action')
           .set({
             status: 'cancelled',
-            updatedAt: new Date().toISOString(),
+            updatedAt: currentDatetimeString(),
           })
           .where('did', '=', did)
           .where('status', '=', 'pending')
@@ -238,8 +243,8 @@ export class ScheduledActionService {
       .where('status', '=', 'pending')
       .where((eb) =>
         eb.or([
-          eb('executeAfter', '<=', now.toISOString()),
-          eb('executeAt', '<=', now.toISOString()),
+          eb('executeAfter', '<=', toDatetimeString(now)),
+          eb('executeAt', '<=', toDatetimeString(now)),
         ]),
       )
       .execute()
@@ -249,7 +254,7 @@ export class ScheduledActionService {
     actionId: number,
     executionEventId: number,
   ): Promise<void> {
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     await this.db.db
       .updateTable('scheduled_action')
       .set({
@@ -266,7 +271,7 @@ export class ScheduledActionService {
     actionId: number,
     failureReason: string,
   ): Promise<void> {
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     await this.db.db
       .updateTable('scheduled_action')
       .set({

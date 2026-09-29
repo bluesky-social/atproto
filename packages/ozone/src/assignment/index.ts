@@ -1,12 +1,12 @@
 import type { Selectable } from 'kysely'
-import type { ToolsOzoneQueueDefs } from '@atproto/api'
+import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
+import type { DatetimeString, DidString, NsidString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { EndAtIdKeyset, paginate } from '../db/pagination.js'
 import type { ModeratorAssignment } from '../db/schema/moderator_assignment.js'
 import type { ReportQueue } from '../db/schema/report_queue.js'
-import type * as ToolsOzoneReportDefs from '../lexicon/types/tools/ozone/report/defs.js'
-import type { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs.js'
+import type { tools } from '../lexicons/index.js'
 import type { QueueService, QueueServiceCreator } from '../queue/service.js'
 import { createReportActivity } from '../report/activity.js'
 import type { TeamService, TeamServiceCreator } from '../team/index.js'
@@ -20,16 +20,16 @@ export interface AssignmentServiceOpts {
 export interface GetQueueAssignmentsInput {
   onlyActive?: boolean
   queueIds?: number[]
-  dids?: string[]
+  dids?: DidString[]
   limit?: number
   cursor?: string
 }
 export interface AssignQueueInput {
-  did: string
+  did: DidString
   queueId: number
 }
 export interface UnassignQueueInput {
-  did: string
+  did: DidString
   queueId: number
 }
 
@@ -38,32 +38,33 @@ export interface GetReportAssignmentsInput {
   onlyActive?: boolean
   reportIds?: number[]
   queueIds?: number[]
-  dids?: string[]
+  dids?: DidString[]
   limit?: number
   cursor?: string
 }
 export interface AssignReportInput {
-  did: string
+  did: DidString
   reportId: number
   queueId?: number | null
   isPermanent?: boolean
-  createdBy?: string
+  createdBy?: DidString
 }
 export interface UnassignReportInput {
   reportId: number
-  createdBy?: string
+  createdBy?: DidString
 }
 
 type AssignmentRowWithQueue = Selectable<ModeratorAssignment> & {
   queueName: string | null
   queueSubjectTypes: string[] | null
-  queueCollection: string | null
+  queueCollection: NsidString | null
   queueDescription: string | null
   queueReportTypes: string[] | null
   queueRecommendedPolicies: string[] | null
-  queueCreatedBy: string | null
-  queueCreatedAt: string | null
-  queueUpdatedAt: string | null
+  queueRecommendedLabels: string[] | null
+  queueCreatedBy: DidString | 'admin_token' | null
+  queueCreatedAt: DatetimeString | null
+  queueUpdatedAt: DatetimeString | null
   queueEnabled: boolean | null
   queueDeletedAt: string | null
 }
@@ -93,13 +94,13 @@ export class AssignmentService {
   }
 
   private async fetchMemberViews(
-    dids: string[],
-  ): Promise<Map<string, TeamMember>> {
+    dids: DidString[],
+  ): Promise<Map<string, tools.ozone.team.defs.Member>> {
     return this.teamService.viewByDids(dids)
   }
 
   async getQueueAssignments(input: GetQueueAssignmentsInput): Promise<{
-    assignments: ToolsOzoneQueueDefs.AssignmentView[]
+    assignments: tools.ozone.queue.defs.AssignmentView[]
     cursor?: string
   }> {
     const { onlyActive, queueIds, dids, limit, cursor } = input
@@ -120,6 +121,7 @@ export class AssignmentService {
         'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
         'report_queue.recommendedPolicies as queueRecommendedPolicies',
+        'report_queue.recommendedLabels as queueRecommendedLabels',
         'report_queue.createdBy as queueCreatedBy',
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
@@ -130,7 +132,7 @@ export class AssignmentService {
       .where('queueId', 'is not', null)
 
     if (onlyActive) {
-      const now = new Date().toISOString()
+      const now = currentDatetimeString()
       query = query.where((eb) =>
         eb.or([eb('endAt', 'is', null), eb('endAt', '>', now)]),
       )
@@ -170,7 +172,7 @@ export class AssignmentService {
   }
 
   async getReportAssignments(input: GetReportAssignmentsInput): Promise<{
-    assignments: ToolsOzoneReportDefs.AssignmentView[]
+    assignments: tools.ozone.report.defs.AssignmentView[]
     cursor?: string
   }> {
     const { onlyActive, reportIds, queueIds, dids, limit, cursor } = input
@@ -191,6 +193,7 @@ export class AssignmentService {
         'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
         'report_queue.recommendedPolicies as queueRecommendedPolicies',
+        'report_queue.recommendedLabels as queueRecommendedLabels',
         'report_queue.createdBy as queueCreatedBy',
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
@@ -200,7 +203,7 @@ export class AssignmentService {
       .where('reportId', 'is not', null)
 
     if (onlyActive) {
-      const now = new Date().toISOString()
+      const now = currentDatetimeString()
       query = query.where((eb) =>
         eb.or([eb('endAt', '>', now), eb('endAt', 'is', null)]),
       )
@@ -244,7 +247,7 @@ export class AssignmentService {
 
   async assignQueue(
     input: AssignQueueInput,
-  ): Promise<ToolsOzoneQueueDefs.AssignmentView> {
+  ): Promise<tools.ozone.queue.defs.AssignmentView> {
     const { did, queueId } = input
     const now = new Date()
 
@@ -270,7 +273,10 @@ export class AssignmentService {
         .where('queueId', '=', queueId)
         .where('reportId', 'is', null)
         .where((eb) =>
-          eb.or([eb('endAt', 'is', null), eb('endAt', '>', now.toISOString())]),
+          eb.or([
+            eb('endAt', 'is', null),
+            eb('endAt', '>', toDatetimeString(now)),
+          ]),
         )
         .executeTakeFirst()
       if (existing) {
@@ -290,7 +296,7 @@ export class AssignmentService {
         .values({
           did,
           queueId,
-          startAt: now.toISOString(),
+          startAt: toDatetimeString(now),
           endAt: null,
         })
         .returningAll()
@@ -317,6 +323,7 @@ export class AssignmentService {
         'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
         'report_queue.recommendedPolicies as queueRecommendedPolicies',
+        'report_queue.recommendedLabels as queueRecommendedLabels',
         'report_queue.createdBy as queueCreatedBy',
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
@@ -341,7 +348,10 @@ export class AssignmentService {
       .where('queueId', '=', queueId)
       .where('reportId', 'is', null)
       .where((eb) =>
-        eb.or([eb('endAt', 'is', null), eb('endAt', '>', now.toISOString())]),
+        eb.or([
+          eb('endAt', 'is', null),
+          eb('endAt', '>', toDatetimeString(now)),
+        ]),
       )
       .executeTakeFirst()
 
@@ -354,14 +364,14 @@ export class AssignmentService {
 
     await this.db.db
       .updateTable('moderator_assignment')
-      .set({ endAt: now.toISOString() })
+      .set({ endAt: toDatetimeString(now) })
       .where('id', '=', existing.id)
       .execute()
   }
 
   async assignReport(
     input: AssignReportInput,
-  ): Promise<ToolsOzoneReportDefs.AssignmentView> {
+  ): Promise<tools.ozone.report.defs.AssignmentView> {
     const { did, reportId, queueId, isPermanent = false } = input
     const now = new Date()
 
@@ -404,7 +414,7 @@ export class AssignmentService {
             .selectFrom('moderator_assignment')
             .selectAll()
             .where('reportId', '=', reportId)
-            .where('endAt', '>', now.toISOString())
+            .where('endAt', '>', toDatetimeString(now))
             .executeTakeFirst()
 
           if (activeExisting) {
@@ -426,7 +436,7 @@ export class AssignmentService {
                 did,
                 reportId,
                 queueId: queueId,
-                startAt: now.toISOString(),
+                startAt: toDatetimeString(now),
                 endAt: null,
               })
               .returningAll()
@@ -437,7 +447,7 @@ export class AssignmentService {
         // Sync denormalized assignment fields on report table
         await dbTxn.db
           .updateTable('report')
-          .set({ assignedTo: did, assignedAt: now.toISOString() })
+          .set({ assignedTo: did, assignedAt: toDatetimeString(now) })
           .where('id', '=', reportId)
           .execute()
 
@@ -450,7 +460,10 @@ export class AssignmentService {
         .selectAll()
         .where('reportId', '=', reportId)
         .where((eb) =>
-          eb.or([eb('endAt', '>', now.toISOString()), eb('endAt', 'is', null)]),
+          eb.or([
+            eb('endAt', '>', toDatetimeString(now)),
+            eb('endAt', 'is', null),
+          ]),
         )
         .executeTakeFirst()
 
@@ -465,7 +478,9 @@ export class AssignmentService {
         const newEndAt =
           existing.endAt === null
             ? null
-            : new Date(now.getTime() + this.opts.reportDurationMs).toISOString()
+            : toDatetimeString(
+                new Date(now.getTime() + this.opts.reportDurationMs),
+              )
         return dbTxn.db
           .updateTable('moderator_assignment')
           .set({
@@ -477,16 +492,16 @@ export class AssignmentService {
           .executeTakeFirstOrThrow()
       }
 
-      const endAt = new Date(
-        now.getTime() + this.opts.reportDurationMs,
-      ).toISOString()
+      const endAt = toDatetimeString(
+        new Date(now.getTime() + this.opts.reportDurationMs),
+      )
       return dbTxn.db
         .insertInto('moderator_assignment')
         .values({
           did,
           reportId,
           queueId: queueId,
-          startAt: now.toISOString(),
+          startAt: toDatetimeString(now),
           endAt,
         })
         .returningAll()
@@ -521,7 +536,7 @@ export class AssignmentService {
 
   async unassignReport(
     input: UnassignReportInput,
-  ): Promise<ToolsOzoneReportDefs.AssignmentView> {
+  ): Promise<tools.ozone.report.defs.AssignmentView> {
     const { reportId, createdBy } = input
     const now = new Date()
 
@@ -535,7 +550,7 @@ export class AssignmentService {
           .where('reportId', '=', reportId)
           .where((eb) =>
             eb.or([
-              eb('endAt', '>', now.toISOString()),
+              eb('endAt', '>', toDatetimeString(now)),
               eb('endAt', 'is', null),
             ]),
           )
@@ -550,7 +565,7 @@ export class AssignmentService {
 
         const updated = await dbTxn.db
           .updateTable('moderator_assignment')
-          .set({ endAt: now.toISOString() })
+          .set({ endAt: toDatetimeString(now) })
           .where('id', '=', existing.id)
           .returningAll()
           .executeTakeFirstOrThrow()
@@ -573,7 +588,7 @@ export class AssignmentService {
         }
         if (reportRow.status === 'assigned' && existing.queueId === null) {
           updateSet.status = 'open'
-          updateSet.updatedAt = now.toISOString()
+          updateSet.updatedAt = toDatetimeString(now)
         }
         await dbTxn.db
           .updateTable('report')
@@ -638,7 +653,7 @@ export class AssignmentService {
 
   private async hydrateReportAssignment(
     assignmentId: number,
-  ): Promise<ToolsOzoneReportDefs.AssignmentView> {
+  ): Promise<tools.ozone.report.defs.AssignmentView> {
     const row = await this.db.db
       .selectFrom('moderator_assignment')
       .leftJoin(
@@ -654,6 +669,7 @@ export class AssignmentService {
         'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
         'report_queue.recommendedPolicies as queueRecommendedPolicies',
+        'report_queue.recommendedLabels as queueRecommendedLabels',
         'report_queue.createdBy as queueCreatedBy',
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
@@ -681,10 +697,11 @@ export class AssignmentService {
       collection: row.queueCollection,
       reportTypes: row.queueReportTypes ?? [],
       recommendedPolicies: row.queueRecommendedPolicies ?? [],
+      recommendedLabels: row.queueRecommendedLabels ?? [],
       description: row.queueDescription ?? null,
-      createdBy: row.queueCreatedBy ?? '',
-      createdAt: row.queueCreatedAt ?? '',
-      updatedAt: row.queueUpdatedAt ?? '',
+      createdBy: row.queueCreatedBy!,
+      createdAt: row.queueCreatedAt!,
+      updatedAt: row.queueUpdatedAt!,
       enabled: row.queueEnabled ?? false,
       deletedAt: row.queueDeletedAt,
     }
@@ -692,8 +709,8 @@ export class AssignmentService {
 
   viewQueueAssignment(
     row: AssignmentRowWithQueue,
-    member?: TeamMember,
-  ): ToolsOzoneQueueDefs.AssignmentView {
+    member?: tools.ozone.team.defs.Member,
+  ): tools.ozone.queue.defs.AssignmentView {
     const queueService = this.queueService
 
     const queue = this.queueFromJoined(row)
@@ -714,8 +731,8 @@ export class AssignmentService {
 
   viewReportAssignment(
     row: AssignmentRowWithQueue,
-    member?: TeamMember,
-  ): ToolsOzoneReportDefs.AssignmentView {
+    member?: tools.ozone.team.defs.Member,
+  ): tools.ozone.report.defs.AssignmentView {
     const queueService = this.queueService
 
     const queue = this.queueFromJoined(row)

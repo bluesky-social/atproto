@@ -6,11 +6,11 @@ import {
   useRef,
   useState,
 } from 'react'
+import { ActionButton } from '#/components/forms/form-shell.tsx'
 import {
   AuthShell,
   type AuthShellProps,
 } from '#/components/layouts/auth-shell.tsx'
-import { buttonVariants } from '#/components/ui/button.tsx'
 import { useCountdown } from '#/hooks/use-countdown.ts'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
@@ -86,22 +86,18 @@ export function RedirectingView({
         </p>
 
         {showLink && (
-          <a
-            href={url}
-            onClick={onClick}
+          <ActionButton
+            render={<a href={url} onClick={onClick} />}
             aria-disabled={!canClick}
-            className={buttonVariants({
-              variant: 'default',
-              className: cn(
-                'w-full',
-                !canClick && 'pointer-events-none opacity-50',
-              ),
-            })}
+            className={cn(
+              'w-full',
+              !canClick && 'pointer-events-none opacity-50',
+            )}
           >
             <span className="truncate">
               <Trans>Click here if nothing happens</Trans>
             </span>
-          </a>
+          </ActionButton>
         )}
       </div>
     </AuthShell>

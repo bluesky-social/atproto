@@ -264,6 +264,24 @@ function renderPost(p: app.bsky.feed.post.Main) {
 }
 ```
 
+Token definitions also export their string value in PascalCase, using the same
+name as their string literal type. The token's camelCase export remains the
+runtime schema:
+
+```typescript
+import * as app from './lexicons/app.js'
+
+const requestLess = app.bsky.feed.defs.RequestLess
+// 'app.bsky.feed.defs#requestLess'
+
+type RequestLess = app.bsky.feed.defs.RequestLess
+
+app.bsky.feed.defs.requestLess // TokenSchema
+app.bsky.feed.defs.requestLess.$validate('foo') // throws
+app.bsky.feed.defs.requestLess.$safeValidate('foo') // ValidationFailure
+app.bsky.feed.defs.requestLess.$token === requestLess // true
+```
+
 ### Building data
 
 It is recommended to use the generated builders to create data that conforms to the schema. TypeScript ensures that all required fields are present at compile time.

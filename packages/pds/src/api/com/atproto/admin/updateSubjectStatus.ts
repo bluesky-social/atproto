@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
           await ctx.accountManager.takedownAccount(subject.did, takedown)
         } else if (com.atproto.repo.strongRef.$isTypeOf(subject)) {
           const uri = new AtUri(subject.uri)
-          await ctx.actorStore.transact(uri.hostname, async (store) => {
+          await ctx.actorStore.transact(uri.did, async (store) => {
             await store.record.updateRecordTakedownStatus(uri, takedown)
           })
         } else if (com.atproto.admin.defs.repoBlobRef.$isTypeOf(subject)) {

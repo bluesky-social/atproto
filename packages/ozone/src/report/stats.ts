@@ -1,10 +1,17 @@
 import { type Selectable, sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
+import type { DatetimeString, DidString } from '@atproto/lex'
+import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { ComputedAtIdKeyset, paginate } from '../db/pagination.js'
-import type { ReportStat } from '../db/schema/report_stat.js'
+import type { DateString, ReportStat } from '../db/schema/report_stat.js'
 import { jsonb } from '../db/types.js'
+import { com, tools } from '../lexicons/index.js'
 import { dbLogger } from '../logger.js'
+
+// @NOTE Note some values here are not part of the lexicon and hard coded for
+// legacy reasons.
 
 /**
  * Grouped report types. Stats are computed per group rather than per individual report type.
@@ -13,65 +20,65 @@ import { dbLogger } from '../logger.js'
  */
 export const REPORT_TYPE_GROUPS: Record<string, string[]> = {
   Legacy: [
-    'com.atproto.moderation.defs#reasonSpam',
-    'com.atproto.moderation.defs#reasonViolation',
-    'com.atproto.moderation.defs#reasonMisleading',
-    'com.atproto.moderation.defs#reasonSexual',
-    'com.atproto.moderation.defs#reasonRude',
-    'com.atproto.moderation.defs#reasonOther',
-    'com.atproto.moderation.defs#reasonAppeal',
+    com.atproto.moderation.defs.ReasonSpam,
+    com.atproto.moderation.defs.ReasonViolation,
+    com.atproto.moderation.defs.ReasonMisleading,
+    com.atproto.moderation.defs.ReasonSexual,
+    com.atproto.moderation.defs.ReasonRude,
+    com.atproto.moderation.defs.ReasonOther,
+    com.atproto.moderation.defs.ReasonAppeal,
   ],
-  Appeal: ['tools.ozone.report.defs#reasonAppeal'],
+  Appeal: [tools.ozone.report.defs.ReasonAppeal],
   Violence: [
     'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
-    'tools.ozone.report.defs#reasonViolenceThreats',
-    'tools.ozone.report.defs#reasonViolenceGraphicContent',
+    tools.ozone.report.defs.ReasonViolenceThreats,
+    tools.ozone.report.defs.ReasonViolenceGraphicContent,
     'tools.ozone.report.defs#reasonViolenceSelfHarm',
-    'tools.ozone.report.defs#reasonViolenceGlorification',
-    'tools.ozone.report.defs#reasonViolenceExtremistContent',
-    'tools.ozone.report.defs#reasonViolenceTrafficking',
-    'tools.ozone.report.defs#reasonViolenceOther',
+    tools.ozone.report.defs.ReasonViolenceGlorification,
+    tools.ozone.report.defs.ReasonViolenceExtremistContent,
+    tools.ozone.report.defs.ReasonViolenceTrafficking,
+    tools.ozone.report.defs.ReasonViolenceOther,
   ],
   Sexual: [
-    'tools.ozone.report.defs#reasonSexualAbuseContent',
+    tools.ozone.report.defs.ReasonSexualAbuseContent,
     'tools.ozone.report.defs#reasonSexualNCII',
     'tools.ozone.report.defs#reasonSexualSextortion',
-    'tools.ozone.report.defs#reasonSexualDeepfake',
-    'tools.ozone.report.defs#reasonSexualAnimal',
-    'tools.ozone.report.defs#reasonSexualUnlabeled',
-    'tools.ozone.report.defs#reasonSexualOther',
+    tools.ozone.report.defs.ReasonSexualDeepfake,
+    tools.ozone.report.defs.ReasonSexualAnimal,
+    tools.ozone.report.defs.ReasonSexualUnlabeled,
+    tools.ozone.report.defs.ReasonSexualOther,
   ],
   'Child Safety': [
     'tools.ozone.report.defs#reasonChildSafetyCSAM',
-    'tools.ozone.report.defs#reasonChildSafetyGroom',
+    tools.ozone.report.defs.ReasonChildSafetyGroom,
     'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
     'tools.ozone.report.defs#reasonChildSafetyEndangerment',
-    'tools.ozone.report.defs#reasonChildSafetyHarassment',
+    tools.ozone.report.defs.ReasonChildSafetyHarassment,
     'tools.ozone.report.defs#reasonChildSafetyPromotion',
-    'tools.ozone.report.defs#reasonChildSafetyOther',
+    tools.ozone.report.defs.ReasonChildSafetyOther,
   ],
   Harassment: [
-    'tools.ozone.report.defs#reasonHarassmentTroll',
-    'tools.ozone.report.defs#reasonHarassmentTargeted',
-    'tools.ozone.report.defs#reasonHarassmentHateSpeech',
-    'tools.ozone.report.defs#reasonHarassmentDoxxing',
-    'tools.ozone.report.defs#reasonHarassmentOther',
+    tools.ozone.report.defs.ReasonHarassmentTroll,
+    tools.ozone.report.defs.ReasonHarassmentTargeted,
+    tools.ozone.report.defs.ReasonHarassmentHateSpeech,
+    tools.ozone.report.defs.ReasonHarassmentDoxxing,
+    tools.ozone.report.defs.ReasonHarassmentOther,
   ],
   Misleading: [
-    'tools.ozone.report.defs#reasonMisleadingBot',
-    'tools.ozone.report.defs#reasonMisleadingImpersonation',
-    'tools.ozone.report.defs#reasonMisleadingSpam',
-    'tools.ozone.report.defs#reasonMisleadingScam',
+    tools.ozone.report.defs.ReasonMisleadingBot,
+    tools.ozone.report.defs.ReasonMisleadingImpersonation,
+    tools.ozone.report.defs.ReasonMisleadingSpam,
+    tools.ozone.report.defs.ReasonMisleadingScam,
     'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
     'tools.ozone.report.defs#reasonMisleadingMisinformation',
-    'tools.ozone.report.defs#reasonMisleadingOther',
+    tools.ozone.report.defs.ReasonMisleadingOther,
   ],
   'Rule Violations': [
-    'tools.ozone.report.defs#reasonRuleSiteSecurity',
+    tools.ozone.report.defs.ReasonRuleSiteSecurity,
     'tools.ozone.report.defs#reasonRuleStolenContent',
-    'tools.ozone.report.defs#reasonRuleProhibitedSales',
-    'tools.ozone.report.defs#reasonRuleBanEvasion',
-    'tools.ozone.report.defs#reasonRuleOther',
+    tools.ozone.report.defs.ReasonRuleProhibitedSales,
+    tools.ozone.report.defs.ReasonRuleBanEvasion,
+    tools.ozone.report.defs.ReasonRuleOther,
   ],
   Civic: [
     'tools.ozone.report.defs#reasonCivicElectoralProcess',
@@ -88,96 +95,84 @@ export type ReportStatsServiceCreator = (db: Database) => ReportStatsService
 
 export type ReportStatGroup = {
   queueId: number | null
-  moderatorDid: string | null
+  moderatorDid: DidString | null
   reportTypes: string[] | null
 }
-export type AggregateStatistics = {
+export type ReportStatistics = {
   inboundCount: number
-  pendingCount: number
+  pendingCount?: number
+  closedCount: number
   actionedCount: number
+  acknowledgedCount: number
   escalatedCount: number
-  actionRate: number
+  labelActionCount: number
+  tagActionCount: number
+  takedownActionCount: number
+  ahtDurationSec: number
+  ahtSampleCount: number
+  resolutionDurationSec: number
+  resolutionSampleCount: number
+  actionRate?: number
   avgHandlingTimeSec?: number
-}
-export type QueueStatistics = {
-  inboundCount: number
-  pendingCount: number
-  actionedCount: number
-  escalatedCount: number
-  actionRate: number
-  avgHandlingTimeSec?: number
-}
-export type ModeratorStatistics = {
-  inboundCount: number
-  actionedCount: number
-  avgHandlingTimeSec?: number
-}
-export type ReportTypeStatistics = {
-  inboundCount: number
-  pendingCount: number
-  actionedCount: number
-  escalatedCount: number
-  actionRate: number
-  avgHandlingTimeSec?: number
-}
-export type ReportStatistics =
-  | QueueStatistics
-  | ModeratorStatistics
-  | AggregateStatistics
-  | ReportTypeStatistics
-
-// Batched query result types
-type QueueCountRow = {
-  queueId: number | null
-  count: string
-}
-type QueueWindowRow = {
-  queueId: number | null
-  inboundCount: string
-  actionedCount: string
-  escalatedCount: string
-  handlingTimeSum: string | null
-  handlingTimeCount: string
-}
-type TypeCountRow = {
-  reportType: string
-  count: string
-}
-type TypeWindowRow = {
-  reportType: string
-  inboundCount: string
-  actionedCount: string
-  escalatedCount: string
-  handlingTimeSum: string | null
-  handlingTimeCount: string
-}
-type ModeratorWindowRow = {
-  did: string
-  inboundCount: string
-  actionedCount: string
-  handlingTimeSum: string | null
-  handlingTimeCount: string
-}
-type BatchedStats = {
-  queuePending: QueueCountRow[]
-  queueWindow: QueueWindowRow[]
-  typePending: TypeCountRow[]
-  typeWindow: TypeWindowRow[]
-  moderator: ModeratorWindowRow[]
+  avgResolutionTimeSec?: number
 }
 
-type UpsertRow = {
-  date: string
+// DB types
+type StatGroup = {
+  group: 'aggregate' | 'queue' | 'reportType' | 'moderator'
   queueId: number | null
+  reportType: string | null
   moderatorDid: string | null
+}
+type StatsRow = StatGroup & {
+  inboundCount: string
+  pendingCount: string
+  closedCount: string
+  actionedCount: string
+  acknowledgedCount: string
+  escalatedCount: string
+  labelActionCount: string
+  tagActionCount: string
+  takedownActionCount: string
+  ahtDurationSec: string
+  ahtSampleCount: string
+  resolutionDurationSec: string
+  resolutionSampleCount: string
+}
+type StatsMetric = Exclude<keyof StatsRow, keyof StatGroup>
+type StatsQueryRow<Metric extends StatsMetric> = StatGroup &
+  Pick<StatsRow, Metric>
+type LifecycleMetric = Exclude<
+  StatsMetric,
+  'inboundCount' | 'pendingCount' | 'escalatedCount'
+>
+type InboundStatsRow = StatsQueryRow<'inboundCount'>
+type PendingStatsRow = StatsQueryRow<'pendingCount'>
+type ClosureStatsRow = StatsQueryRow<LifecycleMetric>
+type EscalationStatsRow = StatsQueryRow<'escalatedCount'>
+type BatchedStats = Map<string, StatsRow>
+type UpsertRow = {
+  date: DateString
+  queueId: number | null
+  moderatorDid: DidString | null
   reportTypes: string[] | null
   inboundCount: number | null
   pendingCount: number | null
+  closedCount: number | null
   actionedCount: number | null
+  acknowledgedCount: number | null
   escalatedCount: number | null
+  labelActionCount: number | null
+  tagActionCount: number | null
+  takedownActionCount: number | null
+  ahtDurationSec: number | null
+  ahtSampleCount: number | null
+  resolutionDurationSec: number | null
+  resolutionSampleCount: number | null
   actionRate: number | null
   avgHandlingTimeSec: number | null
-  computedAt: string
+  avgResolutionTimeSec: number | null
+  computedAt: DatetimeString
 }
 
 export class ReportStatsService {
@@ -191,14 +186,16 @@ export class ReportStatsService {
    * Compute stats for today and finalize yesterday if needed.
    * Called periodically by the StatsComputer daemon.
    */
-  async materializeAll(opts?: { force?: boolean }): Promise<void> {
+  async materializeAll(opts?: { force?: boolean }): Promise<{
+    rowsWritten: number
+  }> {
     try {
       const start = Date.now()
-      const today = toDateString(new Date())
-      const yesterday = toDateString(new Date(Date.now() - 24 * 60 * 60 * 1000))
+      const today = toDateString(new Date(start))
+      const yesterday = toDateString(new Date(start - 24 * 60 * 60 * 1000))
 
       // Always compute today's stats
-      await this.materializeDate(today, opts)
+      let rowsWritten = await this.materializeDate(today, opts)
 
       // Finalize yesterday if its snapshot is missing or stale
       if (!opts?.force) {
@@ -206,23 +203,28 @@ export class ReportStatsService {
           .selectFrom('report_stat')
           .select('computedAt')
           .where('date', '=', yesterday)
+          .where('queueId', 'is', null)
+          .where('moderatorDid', 'is', null)
+          .where('reportTypes', 'is', null)
           .orderBy('computedAt', 'desc')
           .executeTakeFirst()
-        const endOfYesterday = new Date(`${yesterday}T23:59:59.999Z`).getTime()
+        const endOfYesterday = new Date(`${today}T00:00:00.000Z`).getTime()
         if (
           !yesterdayRow ||
           new Date(yesterdayRow.computedAt).getTime() < endOfYesterday
         ) {
-          await this.materializeDate(yesterday, { force: true })
+          rowsWritten += await this.materializeDate(yesterday, { force: true })
         }
       } else {
-        await this.materializeDate(yesterday, { force: true })
+        rowsWritten += await this.materializeDate(yesterday, { force: true })
       }
 
       const duration = Date.now() - start
       dbLogger.info({ duration }, 'report stats materialization completed')
+      return { rowsWritten }
     } catch (err) {
       dbLogger.error({ err }, 'report stats materialization errored')
+      throw err
     }
   }
 
@@ -236,12 +238,20 @@ export class ReportStatsService {
   }): Promise<void> {
     const start = new Date(opts.startDate)
     const end = new Date(opts.endDate)
+    const endOfToday = new Date()
+    endOfToday.setUTCHours(23, 59, 59, 999)
+    if (end > endOfToday) {
+      throw new InvalidRequestError(
+        'Cannot refresh statistics for future dates',
+      )
+    }
 
     for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
       const dateStr = toDateString(d)
       if (opts.queueIds?.length) {
         // Recompute only specific queue groups for this date
-        const batched = await this.computeBatchedStats(dateStr)
+        const computedAt = currentDatetimeString()
+        const batched = await this.computeBatchedStats(dateStr, computedAt)
         const rows: UpsertRow[] = []
         for (const queueId of opts.queueIds) {
           const group: ReportStatGroup = {
@@ -250,7 +260,7 @@ export class ReportStatsService {
             reportTypes: null,
           }
           const stats = this.resolveGroupStats(group, batched)
-          rows.push(this.buildUpsertRow(dateStr, group, stats))
+          rows.push(this.buildUpsertRow(dateStr, group, stats, computedAt))
         }
         await this.bulkUpsert(rows)
       } else {
@@ -261,12 +271,15 @@ export class ReportStatsService {
 
   /** Compute and write all groups for a single date. */
   private async materializeDate(
-    date: string,
+    date: DateString,
     opts?: { force?: boolean },
-  ): Promise<void> {
+  ): Promise<number> {
+    // @NOTE Timestamp the start so a computation crossing midnight still needs
+    // historical finalization on the next cycle.
+    const computedAt = currentDatetimeString()
     const groups = await this.enumerateGroups()
-    const batched = await this.computeBatchedStats(date)
-    const today = toDateString(new Date())
+    const batched = await this.computeBatchedStats(date, computedAt)
+    const today = computedAt.slice(0, 10)
     const isToday = date === today
 
     // Batch the cache check so we don't issue one SELECT per group.
@@ -287,7 +300,7 @@ export class ReportStatsService {
           }
         }
         const stats = this.resolveGroupStats(group, batched)
-        rows.push(this.buildUpsertRow(date, group, stats))
+        rows.push(this.buildUpsertRow(date, group, stats, computedAt))
       } catch (err) {
         dbLogger.error(
           { err, group, date },
@@ -297,11 +310,12 @@ export class ReportStatsService {
     }
 
     await this.bulkUpsert(rows)
+    return rows.length
   }
 
   /** Fetch all stat rows for a date, keyed by groupKey for O(1) lookup. */
   private async fetchExistingStatsByKey(
-    date: string,
+    date: DateString,
   ): Promise<Map<string, Selectable<ReportStat>>> {
     const existing = await this.db.db
       .selectFrom('report_stat')
@@ -337,9 +351,9 @@ export class ReportStatsService {
       .select('did')
       .where('disabled', '=', false)
       .where('role', 'in', [
-        'tools.ozone.team.defs#roleAdmin',
-        'tools.ozone.team.defs#roleModerator',
-        'tools.ozone.team.defs#roleTriage',
+        tools.ozone.team.defs.RoleAdmin,
+        tools.ozone.team.defs.RoleModerator,
+        tools.ozone.team.defs.RoleTriage,
       ])
       .execute()
 
@@ -372,155 +386,154 @@ export class ReportStatsService {
   }
 
   /**
-   * Run batched GROUP BY queries for a calendar date.
-   * Returns 5 result sets covering all group types.
+   * Run batched queries for a calendar date.
+   *
+   * @description
+   * For each cohort, compute relevant groupings.
+   *
+   * Stat cohorts: inbound, pending, closed, escalated
+   *
+   * Stat groups: aggregate, per queue, per report type, and per moderator.
    */
-  private async computeBatchedStats(date: string): Promise<BatchedStats> {
-    const dayStart = `${date}T00:00:00.000Z`
-    const dayEnd = `${nextDate(date)}T00:00:00.000Z`
+  private async computeBatchedStats(
+    date: DateString,
+    computedAt: DatetimeString,
+  ): Promise<BatchedStats> {
+    const dayStart: DatetimeString = `${date}T00:00:00.000Z`
+    const dayEnd: DatetimeString = `${nextDate(date)}T00:00:00.000Z`
 
-    const [queuePending, aggregatePending] = await Promise.all([
-      // Pending count is a snapshot of all non-closed reports at time of computation
-      this.db.db
-        .selectFrom('report')
-        .select(['queueId', sql<string>`count(*)`.as('count')])
-        .where('status', '!=', 'closed')
-        .where('queueId', 'is not', null)
-        .groupBy('queueId')
-        .execute(),
-      // Aggregate pending (includes all reports, even un-routed)
-      this.db.db
-        .selectFrom('report')
-        .select(sql<string>`count(*)`.as('count'))
-        .where('status', '!=', 'closed')
-        .executeTakeFirst(),
+    // 1. create report grouping statements
+    const statGroups = sql`
+      case
+        when grouping(coalesce(r."queueId", -1)) = 0 then 'queue'
+        when grouping(r."reportType") = 0 then 'reportType'
+        when grouping(r."assignedTo") = 0 then 'moderator'
+        else 'aggregate'
+      end as "group",
+      case when grouping(coalesce(r."queueId", -1)) = 0 then coalesce(r."queueId", -1) end as "queueId",
+      case when grouping(r."reportType") = 0 then r."reportType" end as "reportType",
+      case when grouping(r."assignedTo") = 0 then r."assignedTo" end as "moderatorDid"`
+    const statGroupsExceptModerator = sql`
+      case
+        when grouping(coalesce(r."queueId", -1)) = 0 then 'queue'
+        when grouping(r."reportType") = 0 then 'reportType'
+        else 'aggregate'
+      end as "group",
+      case when grouping(coalesce(r."queueId", -1)) = 0 then coalesce(r."queueId", -1) end as "queueId",
+      case when grouping(r."reportType") = 0 then r."reportType" end as "reportType",
+      null as "moderatorDid"`
+
+    // 2. inbound stats
+    const inboundStats = () =>
+      sql<InboundStatsRow>`
+      select ${statGroups}, count(*) as "inboundCount"
+      from report r
+      where r."createdAt" >= ${dayStart} and r."createdAt" < ${dayEnd}
+      group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"), (r."assignedTo"))
+    `.execute(this.db.db)
+
+    // 3. pending stats
+    const pendingReports =
+      date < computedAt.slice(0, 10)
+        ? sql`
+          with subsequent_transitions as (
+            select distinct on ("reportId") "reportId", "activityType"
+            from report_activity
+            where "createdAt" >= ${dayEnd}
+              and "activityType" in ('closeActivity', 'reopenActivity')
+            order by "reportId", "createdAt", id
+          ), candidates as (
+            select id, "queueId", "reportType" from report
+            where status != 'closed' and "createdAt" < ${dayEnd}
+            union all
+            select id, "queueId", "reportType" from report
+            where status = 'closed' and "closedAt" >= ${dayEnd}
+              and "createdAt" < ${dayEnd}
+          )
+          select r."queueId", r."reportType"
+          from candidates r
+          left join subsequent_transitions t on t."reportId" = r.id
+          where t."activityType" is distinct from 'reopenActivity'
+        `
+        : sql`
+          select "queueId", "reportType" from report where status != 'closed'
+        `
+    const pendingStats = () =>
+      sql<PendingStatsRow>`
+      select ${statGroupsExceptModerator}, count(*) as "pendingCount"
+      from (${pendingReports}) r
+      group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"))
+    `.execute(this.db.db)
+
+    // 4. closure stats
+    const closureStats = () =>
+      sql<ClosureStatsRow>`
+      with closed_reports as (
+        select
+          r."queueId", r."reportType", r."assignedTo",
+          r."createdAt", r."assignedAt", r."closedAt",
+          -- @NOTE The final linked event determines the current closure outcome.
+          (r."actionEventIds" ->> -1)::integer as "actionEventId"
+        from report r
+        where r."closedAt" >= ${dayStart} and r."closedAt" < ${dayEnd}
+      ), closure_outcomes as (
+        select r.*,
+          case me.action
+            when ${tools.ozone.moderation.defs.modEventLabel.$type} then 'label'
+            when ${tools.ozone.moderation.defs.modEventTag.$type} then 'tag'
+            when ${tools.ozone.moderation.defs.modEventTakedown.$type} then 'takedown'
+            else 'acknowledged'
+          end as outcome
+        from closed_reports r
+        left join moderation_event me on me.id = r."actionEventId"
+      ), closure_durations as (
+        select r.*,
+          case when r."assignedAt" is not null then
+            greatest(0, extract(epoch from (r."closedAt"::timestamp - r."assignedAt"::timestamp)))
+          end as "handlingTimeSec",
+          greatest(0, extract(epoch from (r."closedAt"::timestamp - r."createdAt"::timestamp))) as "resolutionTimeSec"
+        from closure_outcomes r
+      )
+      select ${statGroups},
+        count(*) as "closedCount",
+        count(*) filter (where r.outcome != 'acknowledged') as "actionedCount",
+        count(*) filter (where r.outcome = 'acknowledged') as "acknowledgedCount",
+        count(*) filter (where r.outcome = 'label') as "labelActionCount",
+        count(*) filter (where r.outcome = 'tag') as "tagActionCount",
+        count(*) filter (where r.outcome = 'takedown') as "takedownActionCount",
+        coalesce(sum(r."handlingTimeSec"), 0) as "ahtDurationSec",
+        count(r."handlingTimeSec") as "ahtSampleCount",
+        coalesce(sum(r."resolutionTimeSec"), 0) as "resolutionDurationSec",
+        count(*) as "resolutionSampleCount"
+      from closure_durations r
+      group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"), (r."assignedTo"))
+    `.execute(this.db.db)
+
+    // 5. escalation stats
+    const escalationStats = () =>
+      sql<EscalationStatsRow>`
+      select ${statGroups}, count(*) as "escalatedCount"
+      from report_activity ra
+      join report r on r.id = ra."reportId"
+      where ra."activityType" = 'escalationActivity'
+        and ra."createdAt" >= ${dayStart} and ra."createdAt" < ${dayEnd}
+      group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"), (r."assignedTo"))
+    `.execute(this.db.db)
+
+    // 6. execute all
+    const [inbound, pending, closures, escalations] = await Promise.all([
+      inboundStats(),
+      pendingStats(),
+      closureStats(),
+      escalationStats(),
     ])
 
-    const queueWindow = await this.db.db
-      .selectFrom('report')
-      .select([
-        'queueId',
-        sql<string>`count(*)`.as('inboundCount'),
-        sql<string>`count(*) filter (where "status" = 'closed' and "closedAt" >= ${dayStart} and "closedAt" < ${dayEnd})`.as(
-          'actionedCount',
-        ),
-        sql<string>`count(*) filter (where "status" = 'escalated')`.as(
-          'escalatedCount',
-        ),
-        sql<string>`sum(extract(epoch from ("closedAt"::timestamp - "createdAt"::timestamp))) filter (where "status" = 'closed' and "closedAt" is not null and "closedAt" >= ${dayStart} and "closedAt" < ${dayEnd})`.as(
-          'handlingTimeSum',
-        ),
-        sql<string>`count(*) filter (where "status" = 'closed' and "closedAt" is not null and "closedAt" >= ${dayStart} and "closedAt" < ${dayEnd})`.as(
-          'handlingTimeCount',
-        ),
-      ])
-      .where('createdAt', '>=', dayStart)
-      .where('createdAt', '<', dayEnd)
-      .where('queueId', 'is not', null)
-      .groupBy('queueId')
-      .execute()
-
-    // Aggregate windowed (includes all reports)
-    const aggregateWindow = await this.db.db
-      .selectFrom('report')
-      .select([
-        sql<string>`count(*)`.as('inboundCount'),
-        sql<string>`count(*) filter (where "status" = 'closed' and "closedAt" >= ${dayStart} and "closedAt" < ${dayEnd})`.as(
-          'actionedCount',
-        ),
-        sql<string>`count(*) filter (where "status" = 'escalated')`.as(
-          'escalatedCount',
-        ),
-        sql<string>`sum(extract(epoch from ("closedAt"::timestamp - "createdAt"::timestamp))) filter (where "status" = 'closed' and "closedAt" is not null and "closedAt" >= ${dayStart} and "closedAt" < ${dayEnd})`.as(
-          'handlingTimeSum',
-        ),
-        sql<string>`count(*) filter (where "status" = 'closed' and "closedAt" is not null and "closedAt" >= ${dayStart} and "closedAt" < ${dayEnd})`.as(
-          'handlingTimeCount',
-        ),
-      ])
-      .where('createdAt', '>=', dayStart)
-      .where('createdAt', '<', dayEnd)
-      .executeTakeFirst()
-
-    const typePending = await this.db.db
-      .selectFrom('report')
-      .select(['reportType', sql<string>`count(*)`.as('count')])
-      .where('status', '!=', 'closed')
-      .groupBy('reportType')
-      .execute()
-
-    const typeWindow = await this.db.db
-      .selectFrom('report')
-      .select([
-        'reportType',
-        sql<string>`count(*)`.as('inboundCount'),
-        sql<string>`count(*) filter (where "status" = 'closed' and "closedAt" >= ${dayStart} and "closedAt" < ${dayEnd})`.as(
-          'actionedCount',
-        ),
-        sql<string>`count(*) filter (where "status" = 'escalated')`.as(
-          'escalatedCount',
-        ),
-        sql<string>`sum(extract(epoch from ("closedAt"::timestamp - "createdAt"::timestamp))) filter (where "status" = 'closed' and "closedAt" is not null and "closedAt" >= ${dayStart} and "closedAt" < ${dayEnd})`.as(
-          'handlingTimeSum',
-        ),
-        sql<string>`count(*) filter (where "status" = 'closed' and "closedAt" is not null and "closedAt" >= ${dayStart} and "closedAt" < ${dayEnd})`.as(
-          'handlingTimeCount',
-        ),
-      ])
-      .where('createdAt', '>=', dayStart)
-      .where('createdAt', '<', dayEnd)
-      .groupBy('reportType')
-      .execute()
-
-    const moderator = await this.db.db
-      .selectFrom('report as r')
-      .innerJoin('moderator_assignment as ma', (join) =>
-        join.onRef('ma.reportId', '=', 'r.id').on('ma.endAt', 'is', null),
-      )
-      .select([
-        'ma.did',
-        sql<string>`count(*)`.as('inboundCount'),
-        sql<string>`count(*) filter (where r."status" = 'closed')`.as(
-          'actionedCount',
-        ),
-        sql<string>`sum(extract(epoch from (r."closedAt"::timestamp - ma."startAt"::timestamp))) filter (where r."status" = 'closed' and r."closedAt" is not null)`.as(
-          'handlingTimeSum',
-        ),
-        sql<string>`count(*) filter (where r."status" = 'closed' and r."closedAt" is not null)`.as(
-          'handlingTimeCount',
-        ),
-      ])
-      .where('r.createdAt', '>=', dayStart)
-      .where('r.createdAt', '<', dayEnd)
-      .groupBy('ma.did')
-      .execute()
-
-    // Inject aggregate as a synthetic row with queueId=null so resolveQueueStats can find it
-    const allQueuePending: QueueCountRow[] = [
-      ...queuePending,
-      { queueId: null, count: aggregatePending?.count ?? '0' },
-    ]
-    const allQueueWindow: QueueWindowRow[] = aggregateWindow
-      ? [
-          ...queueWindow,
-          {
-            queueId: null,
-            inboundCount: aggregateWindow.inboundCount,
-            actionedCount: aggregateWindow.actionedCount,
-            escalatedCount: aggregateWindow.escalatedCount,
-            handlingTimeSum: aggregateWindow.handlingTimeSum,
-            handlingTimeCount: aggregateWindow.handlingTimeCount,
-          },
-        ]
-      : queueWindow
-
-    return {
-      queuePending: allQueuePending,
-      queueWindow: allQueueWindow,
-      typePending,
-      typeWindow,
-      moderator,
-    }
+    return mergeStats([
+      ...inbound.rows,
+      ...pending.rows,
+      ...closures.rows,
+      ...escalations.rows,
+    ])
   }
 
   /** Resolve a single group's stats from batched query results (pure in-memory). */
@@ -529,107 +542,88 @@ export class ReportStatsService {
     batched: BatchedStats,
   ): ReportStatistics {
     if (group.moderatorDid) {
-      return this.resolveModeratorStats(group.moderatorDid, batched.moderator)
+      const row = batched.get(
+        statKey({
+          group: 'moderator',
+          queueId: null,
+          reportType: null,
+          moderatorDid: group.moderatorDid,
+        }),
+      )
+      const { pendingCount: _, ...stats } = this.resolveRows(row ? [row] : [])
+      return stats
     }
     if (group.reportTypes !== null) {
-      return this.resolveReportTypeStats(group.reportTypes, batched)
+      const rows = group.reportTypes.flatMap((reportType) => {
+        const row = batched.get(
+          statKey({
+            group: 'reportType',
+            queueId: null,
+            reportType,
+            moderatorDid: null,
+          }),
+        )
+        return row ? [row] : []
+      })
+      return this.resolveRows(rows)
     }
-    return this.resolveQueueStats(group.queueId, batched)
+    const row = batched.get(
+      statKey({
+        group: group.queueId === null ? 'aggregate' : 'queue',
+        queueId: group.queueId,
+        reportType: null,
+        moderatorDid: null,
+      }),
+    )
+    return this.resolveRows(row ? [row] : [])
   }
 
-  private resolveQueueStats(
-    queueId: number | null,
-    batched: BatchedStats,
-  ): AggregateStatistics | QueueStatistics {
-    // queueId=null is the synthetic aggregate row
-    const pending = batched.queuePending.find((r) => r.queueId === queueId)
-    const window = batched.queueWindow.find((r) => r.queueId === queueId)
-
-    const pendingCount = num(pending?.count)
-    const inboundCount = num(window?.inboundCount)
-    const actionedCount = num(window?.actionedCount)
-    const escalatedCount = num(window?.escalatedCount)
-    const handlingTimeSum = Number(window?.handlingTimeSum ?? 0)
-    const handlingTimeCount = num(window?.handlingTimeCount)
-    const actionRate =
-      inboundCount > 0 ? Math.round((actionedCount / inboundCount) * 100) : 0
-    const avgHandlingTimeSec =
-      handlingTimeCount > 0
-        ? Math.round(handlingTimeSum / handlingTimeCount)
-        : undefined
+  private resolveRows(rows: StatsRow[]): ReportStatistics {
+    const sum = (field: keyof StatsRow) => sumNum(rows, field)
+    const inboundCount = sum('inboundCount')
+    const pendingCount = sum('pendingCount')
+    const closedCount = sum('closedCount')
+    const actionedCount = sum('actionedCount')
+    const ahtDurationSec = Math.round(sum('ahtDurationSec'))
+    const ahtSampleCount = sum('ahtSampleCount')
+    const resolutionDurationSec = Math.round(sum('resolutionDurationSec'))
+    const resolutionSampleCount = sum('resolutionSampleCount')
 
     return {
       inboundCount,
       pendingCount,
+      closedCount,
       actionedCount,
-      escalatedCount,
-      actionRate,
-      avgHandlingTimeSec,
+      acknowledgedCount: sum('acknowledgedCount'),
+      escalatedCount: sum('escalatedCount'),
+      labelActionCount: sum('labelActionCount'),
+      tagActionCount: sum('tagActionCount'),
+      takedownActionCount: sum('takedownActionCount'),
+      ahtDurationSec,
+      ahtSampleCount,
+      resolutionDurationSec,
+      resolutionSampleCount,
+      actionRate:
+        closedCount > 0
+          ? Math.round((actionedCount / closedCount) * 100)
+          : undefined,
+      avgHandlingTimeSec:
+        ahtSampleCount > 0
+          ? Math.round(ahtDurationSec / ahtSampleCount)
+          : undefined,
+      avgResolutionTimeSec:
+        resolutionSampleCount > 0
+          ? Math.round(resolutionDurationSec / resolutionSampleCount)
+          : undefined,
     }
-  }
-
-  private resolveReportTypeStats(
-    reportTypes: string[],
-    batched: BatchedStats,
-  ): ReportTypeStatistics {
-    const types = new Set(reportTypes)
-
-    const matchingPending = batched.typePending.filter((r) =>
-      types.has(r.reportType),
-    )
-    const matchingWindow = batched.typeWindow.filter((r) =>
-      types.has(r.reportType),
-    )
-
-    const pendingCount = sumNum(matchingPending, 'count')
-    const inboundCount = sumNum(matchingWindow, 'inboundCount')
-    const actionedCount = sumNum(matchingWindow, 'actionedCount')
-    const escalatedCount = sumNum(matchingWindow, 'escalatedCount')
-    const handlingTimeSum = matchingWindow.reduce(
-      (sum, r) => sum + Number(r.handlingTimeSum ?? 0),
-      0,
-    )
-    const handlingTimeCount = sumNum(matchingWindow, 'handlingTimeCount')
-
-    const actionRate =
-      inboundCount > 0 ? Math.round((actionedCount / inboundCount) * 100) : 0
-    const avgHandlingTimeSec =
-      handlingTimeCount > 0
-        ? Math.round(handlingTimeSum / handlingTimeCount)
-        : undefined
-
-    return {
-      inboundCount,
-      pendingCount,
-      actionedCount,
-      escalatedCount,
-      actionRate,
-      avgHandlingTimeSec,
-    }
-  }
-
-  private resolveModeratorStats(
-    moderatorDid: string,
-    rows: ModeratorWindowRow[],
-  ): ModeratorStatistics {
-    const row = rows.find((r) => r.did === moderatorDid)
-
-    const inboundCount = num(row?.inboundCount)
-    const actionedCount = num(row?.actionedCount)
-    const handlingTimeCount = num(row?.handlingTimeCount)
-    const avgHandlingTimeSec =
-      handlingTimeCount > 0 && row?.handlingTimeSum
-        ? Math.round(Number(row.handlingTimeSum) / handlingTimeCount)
-        : undefined
-
-    return { inboundCount, actionedCount, avgHandlingTimeSec }
   }
 
   /** Build an upsert row from (date, group, stats). */
   private buildUpsertRow(
-    date: string,
+    date: DateString,
     group: ReportStatGroup,
     stats: ReportStatistics,
+    computedAt: DatetimeString,
   ): UpsertRow {
     const pendingCount =
       'pendingCount' in stats ? (stats.pendingCount ?? null) : null
@@ -644,11 +638,21 @@ export class ReportStatsService {
       reportTypes: group.reportTypes,
       inboundCount: stats.inboundCount ?? null,
       pendingCount,
+      closedCount: stats.closedCount,
       actionedCount: stats.actionedCount ?? null,
+      acknowledgedCount: stats.acknowledgedCount,
       escalatedCount,
+      labelActionCount: stats.labelActionCount,
+      tagActionCount: stats.tagActionCount,
+      takedownActionCount: stats.takedownActionCount,
+      ahtDurationSec: stats.ahtDurationSec,
+      ahtSampleCount: stats.ahtSampleCount,
+      resolutionDurationSec: stats.resolutionDurationSec,
+      resolutionSampleCount: stats.resolutionSampleCount,
       actionRate,
       avgHandlingTimeSec: stats.avgHandlingTimeSec ?? null,
-      computedAt: new Date().toISOString(),
+      avgResolutionTimeSec: stats.avgResolutionTimeSec ?? null,
+      computedAt,
     }
   }
 
@@ -688,10 +692,20 @@ export class ReportStatsService {
             reportTypes: r.reportTypes !== null ? jsonb(r.reportTypes) : null,
             inboundCount: r.inboundCount,
             pendingCount: r.pendingCount,
+            closedCount: r.closedCount,
             actionedCount: r.actionedCount,
+            acknowledgedCount: r.acknowledgedCount,
             escalatedCount: r.escalatedCount,
+            labelActionCount: r.labelActionCount,
+            tagActionCount: r.tagActionCount,
+            takedownActionCount: r.takedownActionCount,
+            ahtDurationSec: r.ahtDurationSec,
+            ahtSampleCount: r.ahtSampleCount,
+            resolutionDurationSec: r.resolutionDurationSec,
+            resolutionSampleCount: r.resolutionSampleCount,
             actionRate: r.actionRate,
             avgHandlingTimeSec: r.avgHandlingTimeSec,
+            avgResolutionTimeSec: r.avgResolutionTimeSec,
             computedAt: r.computedAt,
           })
           .execute()
@@ -703,7 +717,7 @@ export class ReportStatsService {
 
   /** Get a single stat row for a date + group. */
   private async getStatForDate(
-    date: string,
+    date: DateString,
     group: ReportStatGroup,
   ): Promise<Selectable<ReportStat> | undefined> {
     let qb = this.db.db
@@ -818,14 +832,53 @@ export class ReportStatsService {
 
 // ─── Helpers ───
 
-/** Parse a pg bigint string to number, defaulting to 0. */
-function num(val: string | undefined | null): number {
-  return val ? Number(val) : 0
-}
-
 /** Sum a numeric string field across rows. */
 function sumNum<T>(rows: T[], field: keyof T): number {
   return rows.reduce((sum, r) => sum + Number(r[field] ?? 0), 0)
+}
+
+function emptyStats(group: StatGroup): StatsRow {
+  return {
+    ...group,
+    inboundCount: '0',
+    pendingCount: '0',
+    closedCount: '0',
+    actionedCount: '0',
+    acknowledgedCount: '0',
+    escalatedCount: '0',
+    labelActionCount: '0',
+    tagActionCount: '0',
+    takedownActionCount: '0',
+    ahtDurationSec: '0',
+    ahtSampleCount: '0',
+    resolutionDurationSec: '0',
+    resolutionSampleCount: '0',
+  }
+}
+
+function statKey(group: StatGroup): string {
+  return [
+    group.group,
+    group.queueId,
+    group.reportType,
+    group.moderatorDid,
+  ].join('|')
+}
+
+function mergeStats(
+  statsRows: Array<
+    InboundStatsRow | PendingStatsRow | ClosureStatsRow | EscalationStatsRow
+  >,
+): Map<string, StatsRow> {
+  const stats = new Map<string, StatsRow>()
+  for (const row of statsRows) {
+    const key = statKey(row)
+    stats.set(key, {
+      ...(stats.get(key) ?? emptyStats(row)),
+      ...row,
+    })
+  }
+  return stats
 }
 
 /**
@@ -842,12 +895,12 @@ function groupKey(g: ReportStatGroup): string {
 }
 
 /** Convert a Date to an ISO date string (YYYY-MM-DD). */
-function toDateString(d: Date): string {
-  return d.toISOString().slice(0, 10)
+function toDateString(d: Date): DateString {
+  return toDatetimeString(d).slice(0, 10) as DateString
 }
 
 /** Get the next calendar date string. */
-function nextDate(dateStr: string): string {
+function nextDate(dateStr: DateString): DateString {
   const d = new Date(`${dateStr}T00:00:00.000Z`)
   d.setUTCDate(d.getUTCDate() + 1)
   return toDateString(d)

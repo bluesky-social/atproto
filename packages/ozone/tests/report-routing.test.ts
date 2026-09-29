@@ -1,11 +1,13 @@
 import type AtpAgent from '@atproto/api'
+import { ids } from '@atproto/api'
 import {
   type ModeratorClient,
   type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
+import type { AtUriString, DidString } from '@atproto/lex'
+import { currentDatetimeString, isDidString } from '@atproto/lex'
 
 const REASON_SPAM = 'com.atproto.moderation.defs#reasonSpam'
 const REASON_THREAT = 'tools.ozone.report.defs#reasonViolenceThreats'
@@ -56,16 +58,17 @@ describe('queue-router', () => {
 
   // Returns the most recent report row for a subject directly from the DB.
   // Pass a DID for account subjects or an at:// URI for record subjects.
-  const getLatestReportForSubject = async (subjectOrUri: string) => {
+  const getLatestReportForSubject = async (
+    subjectOrUri: DidString | AtUriString,
+  ) => {
     const db = network.ozone.daemon.ctx.db
-    const isDid = subjectOrUri.startsWith('did:')
     let query = db.db
       .selectFrom('report as r')
       .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
       .select(['r.id', 'r.queueId', 'r.queuedAt', 'r.status'])
       .orderBy('r.id', 'desc')
       .limit(1)
-    if (isDid) {
+    if (isDidString(subjectOrUri)) {
       query = query
         .where('me.subjectDid', '=', subjectOrUri)
         .where('me.subjectUri', 'is', null)
@@ -174,7 +177,7 @@ describe('queue-router', () => {
       .orderBy('id', 'desc')
       .limit(1)
       .executeTakeFirstOrThrow()
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     await network.ozone.daemon.ctx.db.db
       .insertInto('report')
       .values({

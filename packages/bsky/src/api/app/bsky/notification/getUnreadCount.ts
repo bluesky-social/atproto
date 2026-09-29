@@ -39,10 +39,8 @@ const skeleton = async (
   if (params.seenAt) {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
-  const priority = params.priority ?? (await getPriority(ctx, params.viewer))
   const res = await ctx.hydrator.dataplane.getUnreadNotificationCount({
     actorDid: params.viewer,
-    priority,
   })
   return {
     count: res.count,
@@ -73,11 +71,4 @@ type Params = app.bsky.notification.getUnreadCount.$Params & {
 
 type SkeletonState = {
   count: number
-}
-
-const getPriority = async (ctx: Context, did: DidString) => {
-  const actors = await ctx.hydrator.actor.getActors([did], {
-    skipCacheForDids: [did],
-  })
-  return !!actors.get(did)?.priorityNotifications
 }

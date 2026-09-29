@@ -1,8 +1,9 @@
 import type { NotNull, Selectable } from 'kysely'
+import { toDatetimeString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
 import type { SetDetail } from '../db/schema/ozone_set.js'
-import type { SetView } from '../lexicon/types/tools/ozone/set/defs.js'
+import type { tools } from '../lexicons/index.js'
 
 export type SetServiceCreator = (db: Database) => SetService
 
@@ -218,13 +219,15 @@ export class SetService {
     })
   }
 
-  view(set: Selectable<SetDetail> & { setSize: number }): SetView {
+  view(
+    set: Selectable<SetDetail> & { setSize: number },
+  ): tools.ozone.set.defs.SetView {
     return {
       name: set.name,
       description: set.description || undefined,
       setSize: set.setSize,
-      createdAt: set.createdAt.toISOString(),
-      updatedAt: set.updatedAt.toISOString(),
+      createdAt: toDatetimeString(set.createdAt),
+      updatedAt: toDatetimeString(set.updatedAt),
     }
   }
 }

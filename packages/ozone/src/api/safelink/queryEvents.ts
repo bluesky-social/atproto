@@ -1,9 +1,10 @@
+import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 import { getSafelinkPattern } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.safelink.queryEvents({
+  server.add(tools.ozone.safelink.queryEvents, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input }) => {
       const db = ctx.db

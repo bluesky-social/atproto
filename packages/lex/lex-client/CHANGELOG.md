@@ -1,5 +1,25 @@
 # @atproto/lex-client
 
+## 0.3.6
+
+### Patch Changes
+
+- Updated dependencies [[`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222), [`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222)]:
+  - @atproto/lex-schema@0.2.7
+
+## 0.3.5
+
+### Patch Changes
+
+- [#5449](https://github.com/bluesky-social/atproto/pull/5449) [`ec29fcd`](https://github.com/bluesky-social/atproto/commit/ec29fcdb4e0ce098fb1473feebe876a94b1c8e33) Thanks [@mozzius](https://github.com/mozzius)! - Avoid requiring `AbortSignal.throwIfAborted()` for compatibility with React Native.
+
+## 0.3.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-schema@0.2.6
+
 ## 0.3.3
 
 ### Patch Changes

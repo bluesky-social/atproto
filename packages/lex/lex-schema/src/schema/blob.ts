@@ -55,9 +55,11 @@ export class BlobSchema<
   const TOptions extends BlobSchemaOptions = NonNullable<unknown>,
 > extends Schema<BlobRef> {
   readonly type = 'blob' as const
+  readonly options?: TOptions
 
-  constructor(readonly options?: TOptions) {
+  constructor(options?: TOptions) {
     super()
+    this.options = options
   }
 
   validateInContext(

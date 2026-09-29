@@ -1,4 +1,6 @@
 import { type DynamicModule, type SqlBool, sql } from 'kysely'
+import type { AtUriString, DatetimeString } from '@atproto/lex'
+import { toDatetimeString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { AnyQb, DbRef } from './types.js'
 
@@ -82,8 +84,8 @@ export abstract class GenericKeyset<R, LR extends LabeledResult> {
 }
 
 type StatusKeysetParam = {
-  lastReviewedAt: string | null
-  lastReportedAt: string | null
+  lastReviewedAt: DatetimeString | null
+  lastReportedAt: DatetimeString | null
   id: number
 }
 
@@ -167,15 +169,15 @@ export class TimeIdKeyset extends GenericKeyset<TimeIdKeysetParam, Cursor> {
       throw new InvalidRequestError('Malformed cursor')
     }
     return {
-      primary: primaryDate.toISOString(),
+      primary: toDatetimeString(primaryDate),
       secondary: cursor.secondary,
     }
   }
 }
 
 type CreatedAtUriKeysetParam = {
-  createdAt: string
-  uri: string
+  createdAt: DatetimeString
+  uri: AtUriString
 }
 
 export class CreatedAtUriKeyset extends GenericKeyset<
@@ -198,7 +200,7 @@ export class CreatedAtUriKeyset extends GenericKeyset<
       throw new InvalidRequestError('Malformed cursor')
     }
     return {
-      primary: primaryDate.toISOString(),
+      primary: toDatetimeString(primaryDate),
       secondary: cursor.secondary,
     }
   }
@@ -206,7 +208,7 @@ export class CreatedAtUriKeyset extends GenericKeyset<
 
 type EndAtIdKeysetParam = {
   id: number
-  endAt: string | null
+  endAt: DatetimeString | null
 }
 
 // Special value used here to represent a "permanent" endAt (i.e. a record that should be sorted as if it has an endAt infinitely far in the future).
@@ -233,7 +235,7 @@ export class EndAtIdKeyset extends GenericKeyset<EndAtIdKeysetParam, Cursor> {
       throw new InvalidRequestError('Malformed cursor')
     }
     return {
-      primary: primaryDate.toISOString(),
+      primary: toDatetimeString(primaryDate),
       secondary: cursor.secondary,
     }
   }
@@ -283,7 +285,7 @@ export class ComputedAtIdKeyset extends GenericKeyset<
       throw new InvalidRequestError('Malformed cursor')
     }
     return {
-      primary: primaryDate.toISOString(),
+      primary: toDatetimeString(primaryDate),
       secondary: cursor.secondary,
     }
   }

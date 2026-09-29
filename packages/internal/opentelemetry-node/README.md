@@ -51,8 +51,17 @@ registered alongside the ones you supply. The
 `getDefaultAtprotoInstrumentations()` if you need that list directly.
 
 The `@atproto-labs/opentelemetry-node/conventions` entrypoint re-exports
-`@opentelemetry/semantic-conventions` plus the atproto XRPC attribute keys
-(`ATTR_XRPC_METHOD`, `ATTR_XRPC_PROXIED`, `ATTR_XRPC_PROXY`).
+`@opentelemetry/semantic-conventions` plus the atproto-specific constants: the
+XRPC attribute keys (`ATTR_XRPC_METHOD`, `ATTR_XRPC_PROXIED`,
+`ATTR_XRPC_PROXY`), the bsync stash attribute keys (`ATTR_BSYNC_NAMESPACE`,
+`ATTR_BSYNC_OPERATION`), and `RPC_CALL_DURATION_BUCKETS`. The
+`@atproto-labs/opentelemetry-node/util` entrypoint exposes
+`statusCodeToString()`, which renders a Connect status as the snake_case string
+`rpc.response.status_code` expects.
+
+Both sides of an RPC need to agree on these, so they live here rather than in
+either service — otherwise the caller and the callee end up depending on each
+other just to label a metric.
 
 ## License
 

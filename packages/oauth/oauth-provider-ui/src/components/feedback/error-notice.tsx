@@ -1,20 +1,22 @@
 import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
 import { Trans } from '@lingui/react/macro'
-import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import { CircleAlertIcon } from 'lucide-react'
+import { type JSX, type ReactNode, useEffect, useMemo, useState } from 'react'
+import { Button } from '#/components/ui/button.tsx'
 import {
   type ErrorParser,
   type ParsedError,
   parseError,
 } from '#/lib/error-parser.ts'
 import type { Override } from '#/lib/util.ts'
+import { cn } from '#/lib/utils.ts'
 import { ErrorDetails } from './error-details.tsx'
-import { Notice, NoticeAction, type NoticeProps } from './notice.tsx'
 
 export type { ErrorParser, ParsedError }
 
 export type ErrorNoticeProps = Override<
-  Omit<NoticeProps, 'role' | 'append' | 'action'>,
+  JSX.IntrinsicElements['div'],
   {
     error: unknown
     retry?: () => void
@@ -23,13 +25,20 @@ export type ErrorNoticeProps = Override<
   }
 >
 
+/**
+ * An inline error under a form: one line in the error colour with a small
+ * icon, the same shape as the quiet helper lines around it, rather than a
+ * filled and bordered box. Clicking it five times toggles the technical
+ * details.
+ */
 export function ErrorNotice({
   error,
   retry,
   retryLabel,
   parser,
 
-  // Notice
+  // div
+  className,
   children,
   onClick,
   ...props
@@ -54,37 +63,47 @@ export function ErrorNotice({
   }, [parsed])
 
   return (
-    <Notice
+    <div
       {...props}
       role="alert"
+      className={cn(
+        // Same 16px icon and 12px gap as the checkbox row, so the copy shares
+        // a left edge with the other lines under the fields.
+        'text-destructive flex items-start gap-3 text-sm leading-snug',
+        className,
+      )}
       onClick={(event) => {
         onClick?.(event)
         if (!event.defaultPrevented) setClickCount((c) => c + 1)
       }}
-      append={
-        <>
-          {children}
-          {showDetails && (
-            <ErrorDetails
-              name={parsed.name}
-              code={parsed.code}
-              message={parsed.message}
-              payload={parsed.payload}
-              stack={parsed.stack}
-            />
-          )}
-        </>
-      }
-      action={
-        retry != null && (
-          <NoticeAction onClick={() => retry()}>
-            {retryLabel || <Trans>Retry</Trans>}
-          </NoticeAction>
-        )
-      }
     >
-      {_(parsed.description ?? msg`An unknown error occurred`)}
-    </Notice>
+      <CircleAlertIcon aria-hidden className="mt-px size-4 shrink-0" />
+
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <p>{_(parsed.description ?? msg`An unknown error occurred`)}</p>
+
+        {children}
+
+        {showDetails && (
+          <ErrorDetails
+            name={parsed.name}
+            code={parsed.code}
+            message={parsed.message}
+            payload={parsed.payload}
+            stack={parsed.stack}
+            className="text-foreground mt-0"
+          />
+        )}
+
+        {retry != null && (
+          <div>
+            <Button variant="secondary" size="sm" onClick={() => retry()}>
+              {retryLabel || <Trans>Retry</Trans>}
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 

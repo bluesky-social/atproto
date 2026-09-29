@@ -33,6 +33,7 @@ import type * as profileAgg from './tables/profile-agg.js'
 import type * as profile from './tables/profile.js'
 import type * as quote from './tables/quote.js'
 import type * as record from './tables/record.js'
+import type * as referenceListOptOut from './tables/reference-list-opt-out.js'
 import type * as repost from './tables/repost.js'
 import type * as starterPack from './tables/starter-pack.js'
 import type * as subscription from './tables/subscription.js'
@@ -69,6 +70,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   actorState.PartialDB &
   actorSync.PartialDB &
   record.PartialDB &
+  referenceListOptOut.PartialDB &
   notification.PartialDB &
   notificationPushToken.PartialDB &
   didCache.PartialDB &

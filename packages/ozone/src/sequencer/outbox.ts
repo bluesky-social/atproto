@@ -1,13 +1,15 @@
-import { AsyncBuffer, AsyncBufferFullError } from '@atproto/common'
+import { AsyncBuffer } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { LabelsEvt, Sequencer } from './sequencer.js'
 
 export type OutboxOpts = {
   maxBufferSize: number
+  onOverflow?: () => void
 }
 
 export class Outbox {
   private caughtUp = false
+  private readonly maxBufferSize: number
   lastSeen = -1
 
   cutoverBuffer: LabelsEvt[]
@@ -15,9 +17,10 @@ export class Outbox {
 
   constructor(
     public sequencer: Sequencer,
-    opts: Partial<OutboxOpts> = {},
+    private readonly opts: Partial<OutboxOpts> = {},
   ) {
     const { maxBufferSize = 500 } = opts
+    this.maxBufferSize = maxBufferSize
     this.cutoverBuffer = []
     this.outBuffer = new AsyncBuffer<LabelsEvt>(maxBufferSize)
   }
@@ -35,71 +38,96 @@ export class Outbox {
     backfillCursor?: number,
     signal?: AbortSignal,
   ): AsyncGenerator<LabelsEvt> {
-    // catch up as much as we can
-    if (backfillCursor !== undefined) {
-      for await (const evt of this.getBackfill(backfillCursor)) {
-        if (signal?.aborted) return
-        this.lastSeen = evt.seq
-        yield evt
+    if (signal?.aborted || this.sequencer.destroyed) return
+    let stopped = false
+
+    // 1. create lifecycle events
+    // (stop, overflow, adding events, cutover)
+    const stop = (err?: unknown) => {
+      if (stopped) return
+      stopped = true
+      this.sequencer.off('events', addToBuffer)
+      this.sequencer.off('close', onClose)
+      signal?.removeEventListener('abort', onClose)
+      this.cutoverBuffer = []
+      this.outBuffer.curr.length = 0
+      if (err !== undefined) {
+        this.outBuffer.throw(err)
+      } else {
+        this.outBuffer.close()
       }
-    } else {
-      // if not backfill, we don't need to cutover, just start streaming
-      this.caughtUp = true
     }
-
-    // streams updates from sequencer, but buffers them for cutover as it makes a last request
-
-    const addToBuffer = (evts) => {
-      if (this.caughtUp) {
+    const onClose = () => stop()
+    const overflow = () => {
+      stop(
+        new InvalidRequestError('Stream consumer too slow', 'ConsumerTooSlow'),
+      )
+      // @NOTE The consumer may be suspended in a socket write, so it cannot
+      // deliver the error or release this connection itself.
+      this.opts.onOverflow?.()
+    }
+    const addToBuffer = (evts: LabelsEvt[]) => {
+      if (stopped) return
+      const size = this.caughtUp
+        ? this.outBuffer.size
+        : this.cutoverBuffer.length
+      if (size + evts.length > this.maxBufferSize) {
+        overflow()
+      } else if (this.caughtUp) {
         this.outBuffer.pushMany(evts)
       } else {
-        this.cutoverBuffer = [...this.cutoverBuffer, ...evts]
+        this.cutoverBuffer.push(...evts)
       }
     }
-
-    if (!signal?.aborted) {
-      this.sequencer.on('events', addToBuffer)
-    }
-    signal?.addEventListener('abort', () =>
-      this.sequencer.off('events', addToBuffer),
-    )
-
     const cutover = async () => {
-      // only need to perform cutover if we've been backfilling
       if (backfillCursor !== undefined) {
         const cutoverEvts = await this.sequencer.requestLabelRange({
           earliestId: this.lastSeen > -1 ? this.lastSeen : backfillCursor,
+          limit: this.maxBufferSize + 1,
         })
-        this.outBuffer.pushMany(cutoverEvts)
-        // dont worry about dupes, we ensure order on yield
-        this.outBuffer.pushMany(this.cutoverBuffer)
+        if (stopped) return
+        const last = cutoverEvts.at(-1)?.seq ?? this.lastSeen
+        const buffered = this.cutoverBuffer.filter((evt) => evt.seq > last)
         this.caughtUp = true
         this.cutoverBuffer = []
+        addToBuffer([...cutoverEvts, ...buffered])
+      }
+    }
+
+    // 2. wire up close events
+    signal?.addEventListener('abort', onClose, { once: true })
+    this.sequencer.once('close', onClose)
+
+    // 3. backfill and tail
+    try {
+      // backfill if needed
+      if (backfillCursor !== undefined) {
+        for await (const evt of this.getBackfill(backfillCursor)) {
+          if (stopped) return
+          this.lastSeen = evt.seq
+          yield evt
+          if (stopped) return
+        }
       } else {
         this.caughtUp = true
       }
-    }
-    cutover()
+      if (stopped || this.sequencer.destroyed) return
 
-    while (true) {
-      try {
-        for await (const evt of this.outBuffer.events()) {
-          if (signal?.aborted) return
-          if (evt.seq > this.lastSeen) {
-            this.lastSeen = evt.seq
-            yield evt
-          }
-        }
-      } catch (err) {
-        if (err instanceof AsyncBufferFullError) {
-          throw new InvalidRequestError(
-            'Stream consumer too slow',
-            'ConsumerTooSlow',
-          )
-        } else {
-          throw err
+      // ingest from sequencer
+      this.sequencer.on('events', addToBuffer)
+
+      // initiate cutover
+      void cutover().catch(stop)
+
+      // live tail remaining events
+      for await (const evt of this.outBuffer.events()) {
+        if (evt.seq > this.lastSeen) {
+          this.lastSeen = evt.seq
+          yield evt
         }
       }
+    } finally {
+      stop()
     }
   }
 

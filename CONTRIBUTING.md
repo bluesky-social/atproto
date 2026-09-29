@@ -86,7 +86,7 @@ Beyond style, two things are worth calling out up front: don't change tooling or
 
 - Every package your change touches needs a changeset entry under [.changeset/](./.changeset/) — `minor` for breaking changes or new public API, `patch` otherwise. Dependency-only bumps are generated for you; don't list them by hand.
 
-- If your change introduces, alters, or removes a documented pattern, update [CLAUDE.md](./CLAUDE.md) and the skills under `.agents/skills/` in the same PR. Agent files are part of the codebase and must stay in sync with it.
+- If your change introduces, alters, or removes a documented pattern, update [AGENTS.md](./AGENTS.md) and the skills under `.agents/skills/` in the same PR. Agent files are part of the codebase and must stay in sync with it.
 
 ## LLM-assisted contributions
 
@@ -94,6 +94,6 @@ Contributions written with the help of an LLM or coding agent are welcome, under
 
 **Disclose it.** Say so in the pull request description, and name the tooling you used. We are not going to reject a PR for being agent-assisted, but reviewers calibrate differently depending on how code was produced, and discovering it after the fact costs trust.
 
-**Follow [CLAUDE.md](./CLAUDE.md), whatever agent you use.** That file is named for one tool but it is simply this repository's set of directives. If your agent reads a different configuration file, mirror the relevant rules into it, or feed `CLAUDE.md` in as context. A PR that violates these conventions gets the same treatment whether a person or a model wrote it.
+**Follow [AGENTS.md](./AGENTS.md), whatever agent you use.** It contains this repository's agent directives. If your agent reads a different configuration file, mirror the relevant rules into it, or feed `AGENTS.md` in as context. A PR that violates these conventions gets the same treatment whether a person or a model wrote it.
 
 **Own every line.** You are the author of the patch, not a courier for your agent's output. Before you open the PR, read the whole diff and make sure you can explain why each change is there, that it does what the description claims, and that it doesn't drag in unrelated edits, invented APIs, or unnecessary dependencies. Expect review questions and be able to answer them yourself. "The model generated it" is not an answer, and unreviewed agent output — plausible-looking code that nobody has actually vetted — costs us more time than it saves.

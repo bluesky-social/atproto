@@ -379,19 +379,30 @@ describe('starter packs', () => {
     })
 
     it('refills through an empty filtered intermediate page', async () => {
-      const { data } = await agent.app.bsky.graph.searchStarterPacks(
-        { q: 'starter', limit: 2 },
-        {
-          headers: await network.serviceHeaders(
-            sc.dids.frankie,
-            ids.AppBskyGraphSearchStarterPacks,
-          ),
-        },
+      const headers = await network.serviceHeaders(
+        sc.dids.frankie,
+        ids.AppBskyGraphSearchStarterPacks,
       )
-      expect(data.starterPacks).toMatchObject([
+
+      // Only sp4 survives the creator block, and it is already half of the
+      // requested limit, so the page is served with a cursor.
+      const short = await agent.app.bsky.graph.searchStarterPacks(
+        { q: 'starter', limit: 2 },
+        { headers },
+      )
+      expect(short.data.starterPacks).toMatchObject([
         expect.objectContaining({ uri: sp4.uriStr }),
       ])
-      expect(data.cursor).toBeUndefined()
+      expect(short.data.cursor).toBeDefined()
+
+      // The remaining starter packs are all filtered out, so refilling walks
+      // every following page and returns nothing.
+      const terminal = await agent.app.bsky.graph.searchStarterPacks(
+        { q: 'starter', limit: 2, cursor: short.data.cursor },
+        { headers },
+      )
+      expect(terminal.data.starterPacks).toEqual([])
+      expect(terminal.data.cursor).toBeUndefined()
     })
   })
 
@@ -470,19 +481,30 @@ describe('starter packs', () => {
     })
 
     it('refills through an empty filtered intermediate page', async () => {
-      const { data } = await agent.app.bsky.graph.searchStarterPacksV2(
-        { q: 'starter', limit: 2 },
-        {
-          headers: await network.serviceHeaders(
-            sc.dids.frankie,
-            ids.AppBskyGraphSearchStarterPacksV2,
-          ),
-        },
+      const headers = await network.serviceHeaders(
+        sc.dids.frankie,
+        ids.AppBskyGraphSearchStarterPacksV2,
       )
-      expect(data.starterPacks).toMatchObject([
+
+      // Only sp4 survives the creator block, and it is already half of the
+      // requested limit, so the page is served with a cursor.
+      const short = await agent.app.bsky.graph.searchStarterPacksV2(
+        { q: 'starter', limit: 2 },
+        { headers },
+      )
+      expect(short.data.starterPacks).toMatchObject([
         expect.objectContaining({ uri: sp4.uriStr }),
       ])
-      expect(data.cursor).toBeUndefined()
+      expect(short.data.cursor).toBeDefined()
+
+      // The remaining starter packs are all filtered out, so refilling walks
+      // every following page and returns nothing.
+      const terminal = await agent.app.bsky.graph.searchStarterPacksV2(
+        { q: 'starter', limit: 2, cursor: short.data.cursor },
+        { headers },
+      )
+      expect(terminal.data.starterPacks).toEqual([])
+      expect(terminal.data.cursor).toBeUndefined()
     })
   })
 

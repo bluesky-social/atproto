@@ -1,3 +1,4 @@
+import { ids } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
 import { SECOND } from '@atproto/common'
 import {
@@ -6,7 +7,6 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
 import { SeverityLevelSettingKey } from '../src/setting/constants.js'
 
 const strikeConfig = {

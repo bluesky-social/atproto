@@ -1,26 +1,82 @@
 import { type Selectable, sql } from 'kysely'
-import type { ToolsOzoneQueueDefs } from '@atproto/api'
+import type { DatetimeString, DidString, NsidString } from '@atproto/lex'
+import { currentDatetimeString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
 import type { ReportQueue } from '../db/schema/report_queue.js'
 import { jsonb } from '../db/types.js'
+import { com, tools } from '../lexicons/index.js'
+import type { ModerationEventRow } from '../mod-service/types.js'
 import { handleReportUpdate } from '../report/handle-report-update.js'
 import { ReportStatsService } from '../report/stats.js'
 import { viewQueueStats } from '../report/views.js'
 import { PolicyListSettingKey } from '../setting/constants.js'
 import { SettingService } from '../setting/service.js'
 
-const MOD_EVENT_REPORT_ACTION = 'tools.ozone.moderation.defs#modEventReport'
-const REASON_OTHER = 'com.atproto.moderation.defs#reasonOther'
-
 type SubjectType = 'account' | 'record' | 'message' | 'conversation'
 
 type ResolvedAssignment = {
   queueId: number
-  queuedAt: string | null
+  queuedAt: DatetimeString | null
   status: 'queued' | 'open'
+}
+
+type ReportEvent = Pick<
+  ModerationEventRow,
+  | 'id'
+  | 'subjectDid'
+  | 'subjectUri'
+  | 'subjectMessageId'
+  | 'subjectConvoId'
+  | 'meta'
+  | 'modTool'
+>
+
+function subjectTypeFromEvent(event: ReportEvent): SubjectType {
+  if (event.subjectMessageId) return 'message'
+  if (event.subjectConvoId) return 'conversation'
+  if (event.subjectUri) return 'record'
+  return 'account'
+}
+
+function reportRowFromEvent({
+  event,
+  reportType,
+  assignment,
+  createdAt,
+  actionEventIds = null,
+}: {
+  event: ReportEvent
+  reportType: string
+  assignment: ResolvedAssignment
+  createdAt: DatetimeString
+  actionEventIds?: number[] | null
+}) {
+  let recordPath = ''
+  if (event.subjectUri) {
+    const uri = new AtUri(event.subjectUri)
+    recordPath = `${uri.collection}/${uri.rkey}`
+  }
+
+  return {
+    eventId: event.id,
+    queueId: assignment.queueId,
+    queuedAt: assignment.queuedAt,
+    actionEventIds: actionEventIds === null ? null : jsonb(actionEventIds),
+    actionNote: null,
+    isMuted: !!event.meta?.isReporterMuted || !!event.meta?.isSubjectMuted,
+    isAutomated: parseModTool(event.modTool).isAutomated,
+    status: assignment.status,
+    reportType,
+    did: event.subjectDid,
+    recordPath,
+    subjectMessageId: event.subjectMessageId,
+    subjectConvoId: event.subjectConvoId,
+    createdAt,
+    updatedAt: createdAt,
+  }
 }
 
 /**
@@ -31,7 +87,7 @@ function resolveAssignment(
   collection: string | null,
   reportType: string,
   queues: Selectable<ReportQueue>[],
-  now: string,
+  now: DatetimeString,
   explicitQueueId?: number,
 ): ResolvedAssignment {
   if (explicitQueueId !== undefined) {
@@ -69,6 +125,42 @@ export class QueueService {
     return (db: Database) => new QueueService(db)
   }
 
+  /** Insert an immediately routed report in the caller's transaction. */
+  async insertReportFromEvent({
+    event,
+    reportType,
+    queueId,
+    queuedAt,
+    actionEventIds,
+  }: {
+    event: ModerationEventRow
+    reportType: string
+    queueId: number
+    queuedAt: DatetimeString | null
+    actionEventIds?: number[] | null
+  }): Promise<number> {
+    this.db.assertTransaction()
+    const assignment: ResolvedAssignment = {
+      queueId,
+      queuedAt,
+      status: queueId > 0 ? 'queued' : 'open',
+    }
+    const inserted = await this.db.db
+      .insertInto('report')
+      .values(
+        reportRowFromEvent({
+          event,
+          reportType,
+          assignment,
+          createdAt: event.createdAt,
+          actionEventIds,
+        }),
+      )
+      .returning('id')
+      .executeTakeFirstOrThrow()
+    return inserted.id
+  }
+
   async assertRecommendedPolicies(
     recommendedPolicies: string[],
   ): Promise<void> {
@@ -97,12 +189,14 @@ export class QueueService {
     subjectTypes,
     collection,
     reportTypes,
+    recommendedLabels = [],
     excludeId,
   }: {
     name: string
     subjectTypes: string[]
-    collection?: string | null
+    collection?: NsidString | null
     reportTypes: string[]
+    recommendedLabels?: string[]
     excludeId?: number
   }): Promise<void> {
     // It's not ideal to load all rows and perform in memory checks in case we end up with a LOT of queues
@@ -122,6 +216,16 @@ export class QueueService {
       if (existing.name === name) {
         throw new InvalidRequestError(
           'A queue with that name already exists',
+          'ConflictingQueue',
+        )
+      }
+
+      const conflictingLabels = recommendedLabels.filter((label) =>
+        existing.recommendedLabels.includes(label),
+      )
+      if (conflictingLabels.length) {
+        throw new InvalidRequestError(
+          `Recommended labels already belong to queue ${existing.name}: ${conflictingLabels.join(', ')}`,
           'ConflictingQueue',
         )
       }
@@ -150,17 +254,19 @@ export class QueueService {
     reportTypes,
     description,
     recommendedPolicies,
+    recommendedLabels = [],
     createdBy,
   }: {
     name: string
     subjectTypes: string[]
-    collection?: string | null
+    collection?: NsidString | null
     reportTypes: string[]
     description?: string | null
     recommendedPolicies: string[]
-    createdBy: string
+    recommendedLabels?: string[]
+    createdBy: DidString | 'admin_token'
   }): Promise<Selectable<ReportQueue>> {
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     return await this.db.db
       .insertInto('report_queue')
       .values({
@@ -170,6 +276,7 @@ export class QueueService {
         reportTypes: jsonb(reportTypes),
         description: description ?? null,
         recommendedPolicies: jsonb(recommendedPolicies),
+        recommendedLabels: jsonb(recommendedLabels),
         createdBy,
         enabled: true,
         createdAt: now,
@@ -188,9 +295,23 @@ export class QueueService {
       .executeTakeFirst()
   }
 
+  async getByRecommendedLabel(
+    label: string,
+  ): Promise<Selectable<ReportQueue> | undefined> {
+    const matches = await this.db.db
+      .selectFrom('report_queue')
+      .selectAll()
+      .where('enabled', '=', true)
+      .where('deletedAt', 'is', null)
+      .where(sql<boolean>`"recommendedLabels" @> ${jsonb([label])}`)
+      .limit(2)
+      .execute()
+    return matches.length === 1 ? matches[0] : undefined
+  }
+
   async getViewsByIds(
     ids: number[],
-  ): Promise<Map<number, ToolsOzoneQueueDefs.QueueView>> {
+  ): Promise<Map<number, tools.ozone.queue.defs.QueueView>> {
     if (!ids.length) return new Map()
     const rows = await this.db.db
       .selectFrom('report_queue')
@@ -207,9 +328,10 @@ export class QueueService {
       enabled?: boolean
       description?: string
       recommendedPolicies?: string[]
+      recommendedLabels?: string[]
     },
   ): Promise<Selectable<ReportQueue>> {
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     return await this.db.db
       .updateTable('report_queue')
       .set({
@@ -218,6 +340,10 @@ export class QueueService {
           updates.recommendedPolicies === undefined
             ? undefined
             : jsonb(updates.recommendedPolicies),
+        recommendedLabels:
+          updates.recommendedLabels === undefined
+            ? undefined
+            : jsonb(updates.recommendedLabels),
         updatedAt: now,
       })
       .where('id', '=', id)
@@ -226,7 +352,7 @@ export class QueueService {
   }
 
   async delete(id: number): Promise<void> {
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     await this.db.db
       .updateTable('report_queue')
       .set({ deletedAt: now })
@@ -238,7 +364,7 @@ export class QueueService {
     fromQueueId: number,
     toQueueId?: number,
   ): Promise<number> {
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     const results = await this.db.db
       .updateTable('report')
       .set({
@@ -264,7 +390,7 @@ export class QueueService {
     cursor?: string
     enabled?: boolean
     subjectType?: string
-    collection?: string
+    collection?: NsidString
     reportTypes?: string[]
   }): Promise<{ queues: Selectable<ReportQueue>[]; cursor?: string }> {
     const { ref } = this.db.db.dynamic
@@ -309,20 +435,22 @@ export class QueueService {
     }
   }
 
-  view(queue: Selectable<ReportQueue>): ToolsOzoneQueueDefs.QueueView {
+  view(queue: Selectable<ReportQueue>): tools.ozone.queue.defs.QueueView {
     return {
       id: queue.id,
       name: queue.name,
       subjectTypes: queue.subjectTypes,
-      collection: queue.collection ?? undefined,
+      collection: (queue.collection ?? undefined) as NsidString | undefined,
       reportTypes: queue.reportTypes,
       description: queue.description ?? undefined,
       recommendedPolicies: queue.recommendedPolicies,
+      recommendedLabels: queue.recommendedLabels,
+      // @ts-expect-error - createdBy can be 'admin_token', which is not a valid value (per lexicon definition)
       createdBy: queue.createdBy,
       createdAt: queue.createdAt,
       updatedAt: queue.updatedAt,
       enabled: queue.enabled,
-      deletedAt: queue.deletedAt ?? undefined,
+      deletedAt: (queue.deletedAt as DatetimeString | null) ?? undefined,
       stats: {
         pendingCount: 0,
         actionedCount: 0,
@@ -335,7 +463,7 @@ export class QueueService {
 
   async viewsWithStats(
     queues: Selectable<ReportQueue>[],
-  ): Promise<ToolsOzoneQueueDefs.QueueView[]> {
+  ): Promise<tools.ozone.queue.defs.QueueView[]> {
     const statsService = new ReportStatsService(this.db)
     const queueIds = queues.map((q) => q.id)
     const statsMap = await statsService.getLiveStatsForQueues(queueIds)
@@ -355,7 +483,7 @@ export class QueueService {
    */
   async assignReportBatch(
     params: { start: number; end: number; limit: number },
-    opts?: { includeUnmatched?: boolean; serviceDid?: string },
+    opts?: { includeUnmatched?: boolean; serviceDid?: DidString },
   ): Promise<{
     processed: number
     assigned: number
@@ -400,7 +528,7 @@ export class QueueService {
       return { processed: 0, assigned: 0, unmatched: 0, maxId: 0 }
     }
 
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
 
     // Resolve each report's destination in memory — no DB calls in this loop
     type MatchedEntry = {
@@ -566,7 +694,7 @@ export class QueueService {
         'modTool',
         'createdAt',
       ])
-      .where('action', '=', MOD_EVENT_REPORT_ACTION)
+      .where('action', '=', tools.ozone.moderation.defs.modEventReport.$type)
       .orderBy('id', 'asc')
       .limit(params.limit)
 
@@ -580,30 +708,23 @@ export class QueueService {
       return { processed: 0, assigned: 0, unmatched: 0, maxEventId: 0 }
     }
 
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     let maxEventId = 0
     let assigned = 0
     let unmatched = 0
 
     const rows = events.map((event) => {
-      const subjectType: SubjectType = event.subjectMessageId
-        ? 'message'
-        : event.subjectConvoId
-          ? 'conversation'
-          : event.subjectUri
-            ? 'record'
-            : 'account'
+      const subjectType = subjectTypeFromEvent(event)
 
       let collection: string | null = null
-      let recordPath = ''
       if (event.subjectUri) {
         const uri = new AtUri(event.subjectUri)
         collection = uri.collection
-        recordPath = `${uri.collection}/${uri.rkey}`
       }
 
       const reportType =
-        (event.meta?.reportType as string | undefined) ?? REASON_OTHER
+        (event.meta?.reportType as string | undefined) ??
+        com.atproto.moderation.defs.ReasonOther
 
       const tool = parseModTool(event.modTool)
 
@@ -620,26 +741,12 @@ export class QueueService {
       else assigned++
       if (event.id > maxEventId) maxEventId = event.id
 
-      const isMuted =
-        !!event.meta?.isReporterMuted || !!event.meta?.isSubjectMuted
-
-      return {
-        eventId: event.id,
-        queueId: assignment.queueId,
-        queuedAt: assignment.queuedAt,
-        actionEventIds: null,
-        actionNote: null,
-        isMuted,
-        isAutomated: tool.isAutomated,
-        status: assignment.status,
+      return reportRowFromEvent({
+        event,
         reportType,
-        did: event.subjectDid,
-        recordPath,
-        subjectMessageId: event.subjectMessageId,
-        subjectConvoId: event.subjectConvoId,
+        assignment,
         createdAt: now,
-        updatedAt: now,
-      }
+      })
     })
 
     // ON CONFLICT (eventId) DO NOTHING covers any race where a report row

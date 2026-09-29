@@ -1,4 +1,3 @@
-import './env.js'
 import { generateMockSetup } from './mock/index.js'
 import { TestNetwork } from './network.js'
 import { mockMailer } from './util.js'

@@ -1,5 +1,6 @@
 import type { Selectable } from 'kysely'
-import type { ToolsOzoneSafelinkDefs } from '@atproto/api'
+import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
+import type { DidString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type {
   SafelinkActionType,
@@ -8,6 +9,7 @@ import type {
 } from '../api/util.js'
 import type { Database } from '../db/index.js'
 import type { SafelinkEvent, SafelinkRule } from '../db/schema/safelink.js'
+import type { tools } from '../lexicons/index.js'
 
 export type SafelinkRuleServiceCreator = (db: Database) => SafelinkRuleService
 
@@ -18,7 +20,9 @@ export class SafelinkRuleService {
     return (db: Database) => new SafelinkRuleService(db)
   }
 
-  formatEvent(event: Selectable<SafelinkEvent>): ToolsOzoneSafelinkDefs.Event {
+  formatEvent(
+    event: Selectable<SafelinkEvent>,
+  ): tools.ozone.safelink.defs.Event {
     return {
       id: event.id,
       eventType: event.eventType,
@@ -27,7 +31,7 @@ export class SafelinkRuleService {
       action: event.action,
       reason: event.reason,
       createdBy: event.createdBy,
-      createdAt: new Date(event.createdAt).toISOString(),
+      createdAt: toDatetimeString(event.createdAt),
       comment: event.comment || undefined,
     }
   }
@@ -44,7 +48,7 @@ export class SafelinkRuleService {
     pattern: SafelinkPatternType
     action: SafelinkActionType
     reason: SafelinkReasonType
-    createdBy: string
+    createdBy: DidString
     comment?: string
   }): Promise<Selectable<SafelinkEvent>> {
     const existingRule = await this.getActiveRule(url, pattern)
@@ -55,7 +59,7 @@ export class SafelinkRuleService {
       )
     }
 
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     const rule = {
       url,
       pattern,
@@ -97,7 +101,7 @@ export class SafelinkRuleService {
     pattern: SafelinkPatternType
     action: SafelinkActionType
     reason: SafelinkReasonType
-    createdBy: string
+    createdBy: DidString
     comment?: string
   }): Promise<Selectable<SafelinkEvent>> {
     const existingRule = await this.getActiveRule(url, pattern)
@@ -108,7 +112,7 @@ export class SafelinkRuleService {
       )
     }
 
-    const now = new Date().toISOString()
+    const now = currentDatetimeString()
     const rule = {
       action,
       reason,
@@ -148,7 +152,7 @@ export class SafelinkRuleService {
   }: {
     url: string
     pattern: SafelinkPatternType
-    createdBy: string
+    createdBy: DidString
     comment?: string
   }): Promise<Selectable<SafelinkEvent>> {
     const existingRule = await this.getActiveRule(url, pattern)
@@ -170,7 +174,7 @@ export class SafelinkRuleService {
           reason: existingRule.reason,
           createdBy,
           comment: comment || null,
-          createdAt: new Date().toISOString(),
+          createdAt: currentDatetimeString(),
         })
         .returningAll()
         .executeTakeFirstOrThrow()
@@ -216,7 +220,7 @@ export class SafelinkRuleService {
     patternType?: SafelinkPatternType
     actions?: SafelinkActionType[]
     reason?: SafelinkReasonType
-    createdBy?: string
+    createdBy?: DidString
     direction?: 'asc' | 'desc'
   } = {}): Promise<{
     rules: Selectable<SafelinkRule>[]

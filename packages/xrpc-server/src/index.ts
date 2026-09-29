@@ -7,6 +7,7 @@ export * from './types.js'
 
 export {
   ServerTimer,
+  extractUrlNsid,
   parseReqEncoding,
   parseReqNsid,
   serverTimingHeader,

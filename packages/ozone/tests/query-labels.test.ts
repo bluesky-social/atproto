@@ -1,14 +1,16 @@
-import type { AtpAgent } from '@atproto/api'
+import {
+  type AtpAgent,
+  type ComAtprotoLabelDefs,
+  ComAtprotoLabelSubscribeLabels,
+  ids,
+  lexicons,
+} from '@atproto/api'
 import { cborEncode } from '@atproto/common'
 import { Secp256k1Keypair, verifySignature } from '@atproto/crypto'
 import { EXAMPLE_LABELER, TestNetwork } from '@atproto/dev-env'
+import { currentDatetimeString } from '@atproto/lex'
+import type { AtUriString, DidString } from '@atproto/lex'
 import { Subscription } from '@atproto/xrpc-server'
-import { ids, lexicons } from '../src/lexicon/lexicons.js'
-import type { Label } from '../src/lexicon/types/com/atproto/label/defs.js'
-import {
-  type OutputSchema as LabelMessage,
-  isLabels,
-} from '../src/lexicon/types/com/atproto/label/subscribeLabels.js'
 import { ModerationService } from '../src/mod-service/index.js'
 import { getSigningKeyId } from '../src/util.js'
 
@@ -16,7 +18,7 @@ describe('ozone query labels', () => {
   let network: TestNetwork
   let agent: AtpAgent
 
-  let labels: Label[]
+  let labels: ComAtprotoLabelDefs.Label[]
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -27,40 +29,40 @@ describe('ozone query labels', () => {
 
     const toCreate = [
       {
-        src: EXAMPLE_LABELER,
-        uri: 'did:example:blah',
+        src: EXAMPLE_LABELER as DidString,
+        uri: 'did:example:blah' as DidString,
         val: 'spam',
-        cts: new Date().toISOString(),
+        cts: currentDatetimeString(),
       },
       {
-        src: EXAMPLE_LABELER,
-        uri: 'did:example:blah',
+        src: EXAMPLE_LABELER as DidString,
+        uri: 'did:example:blah' as DidString,
         val: 'impersonation',
-        cts: new Date().toISOString(),
+        cts: currentDatetimeString(),
       },
       {
-        src: EXAMPLE_LABELER,
-        uri: 'at://did:example:blah/app.bsky.feed.post/1234abcde',
+        src: EXAMPLE_LABELER as DidString,
+        uri: 'at://did:example:blah/app.bsky.feed.post/1234abcde' as AtUriString,
         val: 'spam',
-        cts: new Date().toISOString(),
+        cts: currentDatetimeString(),
       },
       {
-        src: EXAMPLE_LABELER,
-        uri: 'at://did:example:blah/app.bsky.feed.post/1234abcfg',
+        src: EXAMPLE_LABELER as DidString,
+        uri: 'at://did:example:blah/app.bsky.feed.post/1234abcfg' as AtUriString,
         val: 'spam',
-        cts: new Date().toISOString(),
+        cts: currentDatetimeString(),
       },
       {
-        src: EXAMPLE_LABELER,
-        uri: 'at://did:example:blah/app.bsky.actor.profile/self',
+        src: EXAMPLE_LABELER as DidString,
+        uri: 'at://did:example:blah/app.bsky.actor.profile/self' as AtUriString,
         val: 'spam',
-        cts: new Date().toISOString(),
+        cts: currentDatetimeString(),
       },
       {
-        src: EXAMPLE_LABELER,
-        uri: 'did:example:thing',
+        src: EXAMPLE_LABELER as DidString,
+        uri: 'did:example:thing' as DidString,
         val: 'spam',
-        cts: new Date().toISOString(),
+        cts: currentDatetimeString(),
       },
     ]
 
@@ -161,7 +163,7 @@ describe('ozone query labels', () => {
         ctx.idResolver,
         // @ts-ignore
         modSrvc.eventPusher,
-        modSrvc.appviewAgent,
+        modSrvc.appviewClient,
         ctx.serviceAuthHeaders,
         ctx.strikeService,
       ),
@@ -218,17 +220,17 @@ describe('ozone query labels', () => {
           return { cursor: 0 }
         },
         validate(obj) {
-          return lexicons.assertValidXrpcMessage<LabelMessage>(
+          return lexicons.assertValidXrpcMessage<ComAtprotoLabelSubscribeLabels.Labels>(
             ids.ComAtprotoLabelSubscribeLabels,
             obj,
           )
         },
       })
-      const streamedLabels: Label[] = []
+      const streamedLabels: ComAtprotoLabelDefs.Label[] = []
       try {
         for await (const message of sub) {
           resetDoneTimer()
-          if (isLabels(message)) {
+          if (ComAtprotoLabelSubscribeLabels.isLabels(message)) {
             for (const label of message.labels) {
               // sigs are currently parsed as a Buffer which is a Uint8Array under the hood, but fails our equality test so we cast to Uint8Array
               streamedLabels.push({

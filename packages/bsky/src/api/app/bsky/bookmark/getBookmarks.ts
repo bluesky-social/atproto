@@ -64,7 +64,7 @@ const skeleton = async (
   return {
     actorDid,
     bookmarkInfos: bookmarks,
-    cursor: cursor || undefined,
+    cursor,
   }
 }
 

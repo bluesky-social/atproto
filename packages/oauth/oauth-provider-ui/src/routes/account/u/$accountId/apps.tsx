@@ -54,11 +54,9 @@ function AppsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm">
+      <p className="text-muted-foreground text-base leading-snug">
         <Trans>
-          These apps have access to your account. An app may appear multiple
-          times if you use it on different devices. You can revoke access to log
-          out the app until you sign in again.
+          Apps that can use your account. Revoke any you no longer use.
         </Trans>
       </p>
 
@@ -141,7 +139,7 @@ function LastAccessedHeader() {
             <button
               type="button"
               aria-label={t`Why is this time so recent?`}
-              className="hover:text-foreground focus-visible:ring-ring rounded-full focus-visible:outline-none focus-visible:ring-2"
+              className="hover:text-foreground focus-visible:ring-ring rounded-full focus-visible:ring-2 focus-visible:outline-none"
             />
           }
         >

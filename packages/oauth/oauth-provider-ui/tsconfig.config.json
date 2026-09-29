@@ -1,0 +1,12 @@
+{
+  "extends": ["../../../tsconfig/config.tsconfig.json"],
+  "include": ["./*.js", "./*.ts"],
+  "references": [
+    {
+      "path": "../../internal/rolldown-plugin-bundle-manifest/tsconfig.build.json",
+    },
+  ],
+  "compilerOptions": {
+    "rootDir": ".",
+  },
+}

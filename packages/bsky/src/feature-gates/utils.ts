@@ -38,7 +38,6 @@ export function normalizeUserContext(
     did,
     deviceId,
     sessionId,
-    isBetaUser: userContext.isBetaUser ?? false,
   }
 }
 
@@ -93,7 +92,6 @@ export function mergeUserContexts(
     did,
     deviceId,
     sessionId,
-    isBetaUser: overrides?.isBetaUser ?? base.isBetaUser,
   }
 }
 
@@ -114,7 +112,6 @@ export function extractUserContextFromGrowthbookUserContext(
     did: userContext.attributes?.did,
     deviceId: userContext.attributes?.deviceId,
     sessionId: userContext.attributes?.sessionId,
-    isBetaUser: userContext.attributes?.isBetaUser,
   })
 }
 

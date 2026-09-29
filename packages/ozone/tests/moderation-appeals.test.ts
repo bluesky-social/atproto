@@ -8,11 +8,6 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import {
-  REASONMISLEADING,
-  REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs.js'
-import { REVIEWESCALATED } from '../src/lexicon/types/tools/ozone/moderation/defs.js'
 
 describe('moderation-appeals', () => {
   let network: TestNetwork
@@ -67,7 +62,7 @@ describe('moderation-appeals', () => {
       await modClient.emitEvent({
         event: {
           $type: 'tools.ozone.moderation.defs#modEventReport',
-          reportType: REASONMISLEADING,
+          reportType: ComAtprotoModerationDefs.REASONMISLEADING,
         },
         subject: getBobsPostSubject(),
       })
@@ -97,14 +92,18 @@ describe('moderation-appeals', () => {
       })
 
       // Verify that appeal status changed when appeal report was emitted by moderator
-      const status = await assertBobsPostStatus(REVIEWESCALATED, true)
+      const status = await assertBobsPostStatus(
+        ToolsOzoneModerationDefs.REVIEWESCALATED,
+        true,
+      )
+      expect(status?.tags).toContain('report:appeal')
       // @ts-expect-error unspecced ?
       expect(status?.appealedAt).not.toBeNull()
 
       // Create a report as normal user for carol's post
       await sc.createReport({
         reportedBy: sc.dids.alice,
-        reasonType: REASONMISLEADING,
+        reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
         reason: 'lies!',
         subject: getCarolPostSubject(),
       })
@@ -123,11 +122,12 @@ describe('moderation-appeals', () => {
         subject: getCarolPostSubject(),
       })
       // Verify that the appeal status on carol's post is true
-      await assertSubjectStatus(
+      const carolStatus = await assertSubjectStatus(
         getCarolPostSubject().uri,
-        REVIEWESCALATED,
+        ToolsOzoneModerationDefs.REVIEWESCALATED,
         true,
       )
+      expect(carolStatus?.tags).toContain('report:appeal')
     })
     it('allows multiple appeals and updates last appealed timestamp', async () => {
       // Resolve appeal with acknowledge
@@ -138,7 +138,10 @@ describe('moderation-appeals', () => {
         subject: getBobsPostSubject(),
       })
 
-      const previousStatus = await assertBobsPostStatus(REVIEWESCALATED, false)
+      const previousStatus = await assertBobsPostStatus(
+        ToolsOzoneModerationDefs.REVIEWESCALATED,
+        false,
+      )
 
       await modClient.emitEvent({
         event: {
@@ -149,7 +152,10 @@ describe('moderation-appeals', () => {
       })
 
       // Verify that even after the appeal event by bob for his post, the appeal status is true again with new timestamp
-      const newStatus = await assertBobsPostStatus(REVIEWESCALATED, true)
+      const newStatus = await assertBobsPostStatus(
+        ToolsOzoneModerationDefs.REVIEWESCALATED,
+        true,
+      )
       expect(
         new Date(`${previousStatus?.lastAppealedAt}`).getTime(),
       ).toBeLessThan(new Date(`${newStatus?.lastAppealedAt}`).getTime())
@@ -167,7 +173,7 @@ describe('moderation-appeals', () => {
       await modClient.emitEvent({
         event: {
           $type: 'tools.ozone.moderation.defs#modEventReport',
-          reportType: REASONMISLEADING,
+          reportType: ComAtprotoModerationDefs.REASONMISLEADING,
         },
         subject: getAlicesPostSubject(),
       })
@@ -191,7 +197,7 @@ describe('moderation-appeals', () => {
 
       await assertSubjectStatus(
         getAlicesPostSubject().uri,
-        REVIEWESCALATED,
+        ToolsOzoneModerationDefs.REVIEWESCALATED,
         true,
       )
 
@@ -199,15 +205,15 @@ describe('moderation-appeals', () => {
       await modClient.emitEvent({
         event: {
           $type: 'tools.ozone.moderation.defs#modEventReport',
-          reportType: REASONSPAM,
+          reportType: ComAtprotoModerationDefs.REASONSPAM,
         },
         subject: getAlicesPostSubject(),
       })
 
-      // Assert that the status is still REVIEWESCALATED, as report events are meant to do
+      // Assert that the status is still ToolsOzoneModerationDefs.REVIEWESCALATED, as report events are meant to do
       await assertSubjectStatus(
         getAlicesPostSubject().uri,
-        REVIEWESCALATED,
+        ToolsOzoneModerationDefs.REVIEWESCALATED,
         true,
       )
 
@@ -221,7 +227,7 @@ describe('moderation-appeals', () => {
 
       await assertSubjectStatus(
         getAlicesPostSubject().uri,
-        REVIEWESCALATED,
+        ToolsOzoneModerationDefs.REVIEWESCALATED,
         true,
       )
 

@@ -1,6 +1,11 @@
+import assert from 'node:assert'
+import type { Un$Typed } from '@atproto/lex'
+import { UpstreamFailureError } from '@atproto/xrpc-server'
+import type { AppContext } from '../../../../context.js'
 import type { app } from '../../../../lexicons/index.js'
 import {
   type FilterableNotificationPreference,
+  type GetNotificationPreferencesResponse,
   NotificationInclude,
   type NotificationPreference,
   type NotificationPreferences,
@@ -12,6 +17,65 @@ type DeepPartial<T> = T extends object
       [P in keyof T]?: DeepPartial<T[P]>
     }
   : T
+
+type LexNotificationPreferences =
+  Un$Typed<app.bsky.notification.defs.Preferences>
+
+const notificationPreferenceKeys = Object.keys({
+  chat: true,
+  follow: true,
+  like: true,
+  likeViaRepost: true,
+  mention: true,
+  quote: true,
+  reply: true,
+  repost: true,
+  repostViaRepost: true,
+  starterpackJoined: true,
+  subscribedPost: true,
+  unverified: true,
+  verified: true,
+} satisfies Record<keyof LexNotificationPreferences, true>) as Array<
+  keyof LexNotificationPreferences
+>
+
+export const mergeNotificationPreferences = (
+  current: LexNotificationPreferences,
+  updates: Partial<LexNotificationPreferences>,
+): LexNotificationPreferences => {
+  const preferences = { ...current }
+  for (const key of notificationPreferenceKeys) {
+    if (updates[key] !== undefined) {
+      Object.assign(preferences, { [key]: updates[key] })
+    }
+  }
+  return preferences
+}
+
+export const getNotificationPreferences = async (
+  ctx: AppContext,
+  actorDid: string,
+): Promise<LexNotificationPreferences> => {
+  let res: GetNotificationPreferencesResponse
+  try {
+    res = await ctx.dataplane.getNotificationPreferences({
+      dids: [actorDid],
+    })
+  } catch (err) {
+    throw new UpstreamFailureError(
+      'cannot get current notification preferences',
+      'NotificationPreferencesFailed',
+      { cause: err },
+    )
+  }
+
+  assert(
+    res.preferences.length === 1,
+    `expected exactly one preferences entry, got ${res.preferences.length}`,
+  )
+
+  return protobufToLex(res.preferences[0])
+}
 
 const ensureChatPreference = (
   p?: DeepPartial<app.bsky.notification.defs.ChatPreference>,

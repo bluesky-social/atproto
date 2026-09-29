@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package bsky;
+
+import "google/protobuf/timestamp.proto";
+
+message UpdateNotificationSeenRequest {
+  string actor_did = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  reserved 3; // was "priority", deprecated
+}
+
+message UpdateNotificationSeenResponse {}
+
+service Service {
+  rpc UpdateNotificationSeen(UpdateNotificationSeenRequest) returns (UpdateNotificationSeenResponse);
+}

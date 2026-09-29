@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
+import type { DidString, UriString } from '@atproto/lex'
 import type { OzoneEnvironment } from './env.js'
 
 // off-config but still from env:
@@ -11,6 +12,12 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   assert(env.serverDid, 'serverDid is required')
   const serviceCfg: OzoneConfig['service'] = {
     port,
+    // Intentionally has no default: metrics are opt-in. When unset, the metrics
+    // server is never started (off by default for 3p labelers/self-hosters).
+    metricsPort: env.metricsPort,
+    // Separate opt-in metrics port for the daemon process (runs in its own
+    // container, so it needs its own scrape target). No default for the same reason.
+    daemonMetricsPort: env.daemonMetricsPort,
     publicUrl: env.publicUrl,
     did: env.serverDid,
     version: env.version,
@@ -96,6 +103,10 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     reportDurationMs: env.assignmentReportDurationMs ?? 5 * MINUTE,
   }
 
+  const inboxCfg: OzoneConfig['inbox'] = {
+    appealWindowMonths: env.inboxAppealWindowMonths ?? 6,
+  }
+
   const statsCfg: OzoneConfig['stats'] = {
     computerIntervalMinutes: env.statsComputerIntervalMinutes ?? 15,
   }
@@ -112,6 +123,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     access: accessCfg,
     verifier: verifierCfg,
     assignments: assignmentsCfg,
+    inbox: inboxCfg,
     stats: statsCfg,
     jetstreamUrl: env.jetstreamUrl,
   }
@@ -128,6 +140,7 @@ export type OzoneConfig = {
   blobDivert: BlobDivertConfig | null
   access: AccessConfig
   assignments: AssignmentsConfig
+  inbox: InboxConfig
   stats: StatsConfig
   jetstreamUrl?: string
   verifier: VerifierConfig | null
@@ -144,15 +157,22 @@ export type StatsConfig = {
 
 export type ServiceConfig = {
   port: number
+  // Port for the separate, pull-based Prometheus /metrics server. Optional and
+  // off by default: when undefined, no metrics server is started and no metrics
+  // are collected. Bluesky's first-party deploy sets OZONE_METRICS_PORT to opt in.
+  metricsPort?: number
+  // Metrics port for the daemon process (separate container/scrape target).
+  // Optional and off by default; set via OZONE_DAEMON_METRICS_PORT.
+  daemonMetricsPort?: number
   publicUrl: string
-  did: string
+  did: DidString
   version?: string
   devMode?: boolean
   serviceRecordCacheTTL: number // in ms, default 5 mins
 }
 
 export type BlobDivertConfig = {
-  url: string
+  url: UriString
   adminPassword: string
 }
 
@@ -168,19 +188,19 @@ export type DatabaseConfig = {
 }
 
 export type AppviewConfig = {
-  url: string
-  did: string
+  url: UriString
+  did: DidString
   pushEvents: boolean
 }
 
 export type PdsConfig = {
-  url: string
-  did: string
+  url: UriString
+  did: DidString
 }
 
 export type ChatConfig = {
-  url: string
-  did: string
+  url: UriString
+  did: DidString
 }
 
 export type CdnConfig = {
@@ -194,17 +214,28 @@ export type IdentityConfig = {
 }
 
 export type AccessConfig = {
-  admins: string[]
-  moderators: string[]
-  triage: string[]
+  admins: DidString[]
+  moderators: DidString[]
+  triage: DidString[]
 }
 
 export type VerifierConfig = {
-  url: string
-  did: string
+  url: UriString
+  did: DidString
   password: string
   jetstreamUrl?: string
   issuersToIndex?: string[]
+}
+
+export type InboxConfig = {
+  /**
+   * Calendar months a moderation action stays appealable, counted from the
+   * action. Defaults to 6.
+   *
+   * Configured rather than hardcoded so the window is a policy decision the
+   * deployment owns, and can be changed without shipping code.
+   */
+  appealWindowMonths: number
 }
 
 export type AssignmentsConfig = {

@@ -84,7 +84,7 @@ export abstract class Schema<out TInput = unknown, out TOutput = TInput>
    */
   declare readonly ['__lex']: SchemaInternals<TInput, TOutput>
 
-  get '~standard'(): StandardSchemaV1.Props<TInput, TOutput> {
+  get '~standard'(): StandardSchemaAdapter<TInput, TOutput> {
     // Lazily create, and cache, the Standard Schema adapter for this schema
     // instance.
     return lazyProperty(this, '~standard', new StandardSchemaAdapter(this))

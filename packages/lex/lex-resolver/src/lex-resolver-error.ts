@@ -100,10 +100,15 @@ export class LexResolverError extends LexError {
    * )
    * ```
    */
-  static from(nsid: NSID | string, description?: string) {
+  static from(
+    nsid: NSID | string,
+    description?: string,
+    options?: ErrorOptions,
+  ) {
     return new LexResolverError(
       typeof nsid === 'string' ? NSID.from(nsid) : nsid,
       description,
+      options,
     )
   }
 }

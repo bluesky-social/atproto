@@ -1,3 +1,4 @@
+import { ComAtprotoModerationDefs, ids } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
 import {
   type ModeratorClient,
@@ -5,8 +6,6 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
-import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
 describe('ozone-get-report', () => {
   let network: TestNetwork
@@ -35,7 +34,7 @@ describe('ozone-get-report', () => {
   it('returns a single report by id', async () => {
     // Create a report on Alice's account
     await sc.createReport({
-      reasonType: REASONSPAM,
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
@@ -69,7 +68,7 @@ describe('ozone-get-report', () => {
     const convoId = 'get-report-convo-1'
     const convoUri = `at://${sc.dids.carol}/chat.bsky.convo/${convoId}`
     await sc.createReport({
-      reasonType: REASONSPAM,
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
       subject: {
         $type: 'chat.bsky.convo.defs#convoRef',
         did: sc.dids.carol,
@@ -101,7 +100,7 @@ describe('ozone-get-report', () => {
     const messageId = 'get-report-message-1'
     const messageUri = `at://${sc.dids.carol}/chat.bsky.convo.message/${messageId}`
     await sc.createReport({
-      reasonType: REASONSPAM,
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
       subject: {
         $type: 'chat.bsky.convo.defs#messageRef',
         did: sc.dids.carol,
@@ -136,7 +135,7 @@ describe('ozone-get-report', () => {
     }
 
     await sc.createReport({
-      reasonType: REASONSPAM,
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
       subject: bobsAccount,
       reportedBy: sc.dids.alice,
     })
@@ -174,7 +173,7 @@ describe('ozone-get-report', () => {
 
   it('omits actions when the report has not been actioned', async () => {
     await sc.createReport({
-      reasonType: REASONSPAM,
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.carol,

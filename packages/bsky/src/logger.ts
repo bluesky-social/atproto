@@ -23,6 +23,8 @@ export const viewsLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:views')
 export const httpLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky')
+export const eventsLogger: ReturnType<typeof subsystemLogger> =
+  subsystemLogger('bsky:events')
 
 export const loggerMiddleware = pinoHttp({
   logger: httpLogger,

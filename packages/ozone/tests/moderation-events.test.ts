@@ -1,19 +1,17 @@
 import assert from 'node:assert'
 import EventEmitter, { once } from 'node:events'
-import { ToolsOzoneModerationDefs } from '@atproto/api'
+import {
+  ComAtprotoAdminDefs,
+  ComAtprotoModerationDefs,
+  ComAtprotoRepoStrongRef,
+  ToolsOzoneModerationDefs,
+} from '@atproto/api'
 import {
   type ModeratorClient,
   type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs.js'
-import {
-  REASONAPPEAL,
-  REASONMISLEADING,
-  REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs.js'
-import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef.js'
 import { forSnapshot } from './_util.js'
 
 describe('moderation-events', () => {
@@ -43,14 +41,17 @@ describe('moderation-events', () => {
 
     for (let i = 0; i < 4; i++) {
       await sc.createReport({
-        reasonType: i % 2 ? REASONSPAM : REASONMISLEADING,
+        reasonType:
+          i % 2
+            ? ComAtprotoModerationDefs.REASONSPAM
+            : ComAtprotoModerationDefs.REASONMISLEADING,
         reason: 'X',
         //   Report bob's account by alice and vice versa
         subject: i % 2 ? bobsAccount : alicesAccount,
         reportedBy: i % 2 ? sc.dids.alice : sc.dids.bob,
       })
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'X',
         //   Report bob's post by alice and vice versa
         subject: i % 2 ? bobsPost : alicesPost,
@@ -200,10 +201,13 @@ describe('moderation-events', () => {
     it('returns report events matching reportType filters', async () => {
       const [spamEvents, misleadingEvents] = await Promise.all([
         modClient.queryEvents({
-          reportTypes: [REASONSPAM],
+          reportTypes: [ComAtprotoModerationDefs.REASONSPAM],
         }),
         modClient.queryEvents({
-          reportTypes: [REASONMISLEADING, REASONAPPEAL],
+          reportTypes: [
+            ComAtprotoModerationDefs.REASONMISLEADING,
+            ComAtprotoModerationDefs.REASONAPPEAL,
+          ],
         }),
       ])
 
@@ -213,7 +217,9 @@ describe('moderation-events', () => {
         expect(event.event.$type).toEqual(
           'tools.ozone.moderation.defs#modEventReport',
         )
-        expect((event.event as any).reportType).toEqual(REASONSPAM)
+        expect((event.event as any).reportType).toEqual(
+          ComAtprotoModerationDefs.REASONSPAM,
+        )
       })
 
       // Verify all misleading events have one of the correct report types
@@ -222,9 +228,10 @@ describe('moderation-events', () => {
         expect(event.event.$type).toEqual(
           'tools.ozone.moderation.defs#modEventReport',
         )
-        expect([REASONMISLEADING, REASONAPPEAL]).toContain(
-          (event.event as any).reportType,
-        )
+        expect([
+          ComAtprotoModerationDefs.REASONMISLEADING,
+          ComAtprotoModerationDefs.REASONAPPEAL,
+        ]).toContain((event.event as any).reportType)
       })
     })
 
@@ -249,7 +256,7 @@ describe('moderation-events', () => {
 
     it('returns events matching multiple keywords in comment', async () => {
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'november rain',
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
@@ -258,7 +265,7 @@ describe('moderation-events', () => {
         reportedBy: sc.dids.bob,
       })
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'rainy days feel lazy',
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
@@ -393,7 +400,7 @@ describe('moderation-events', () => {
         [],
       )
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'X',
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -431,13 +438,21 @@ describe('moderation-events', () => {
       ])
 
       expect(onlyStarterPackReports.events.length).toEqual(1)
-      assert(isStrongRef(onlyStarterPackReports.events[0].subject))
+      assert(
+        ComAtprotoRepoStrongRef.isMain(
+          onlyStarterPackReports.events[0].subject,
+        ),
+      )
       expect(onlyStarterPackReports.events[0].subject.uri).toContain(
         'app.bsky.graph.starterpack',
       )
 
       expect(onlyAlicesStarterPackReports.events.length).toEqual(1)
-      assert(isStrongRef(onlyAlicesStarterPackReports.events[0].subject))
+      assert(
+        ComAtprotoRepoStrongRef.isMain(
+          onlyAlicesStarterPackReports.events[0].subject,
+        ),
+      )
       expect(onlyAlicesStarterPackReports.events[0].subject.uri).toContain(
         sp.uriStr,
       )
@@ -464,20 +479,24 @@ describe('moderation-events', () => {
         ])
 
       assert(
-        onlyAccountReports.events.every((e) => !isStrongRef(e.subject)),
+        onlyAccountReports.events.every(
+          (e) => !ComAtprotoRepoStrongRef.isMain(e.subject),
+        ),
         'only account reports are returned, no event has a uri',
       )
 
       assert(
         onlyRecordReports.events.every(
-          (e) => isStrongRef(e.subject) && e.subject.uri,
+          (e) => ComAtprotoRepoStrongRef.isMain(e.subject) && e.subject.uri,
         ),
         'only record reports are returned, all events have a uri',
       )
 
       assert(
         onlyReportsOnBobsAccount.events.every(
-          (e) => isRepoRef(e.subject) && e.subject.did === sc.dids.bob,
+          (e) =>
+            ComAtprotoAdminDefs.isRepoRef(e.subject) &&
+            e.subject.did === sc.dids.bob,
         ),
         "only bob's account reports are returned, no events have a URI even though the subjectType is record",
       )
@@ -525,7 +544,7 @@ describe('moderation-events', () => {
 
       // create reports
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'spam in convo 1',
         subject: {
           $type: 'chat.bsky.convo.defs#convoRef',
@@ -535,7 +554,7 @@ describe('moderation-events', () => {
         reportedBy: sc.dids.alice,
       })
       await sc.createReport({
-        reasonType: REASONMISLEADING,
+        reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
         reason: 'misleading in convo 1',
         subject: {
           $type: 'chat.bsky.convo.defs#convoRef',
@@ -545,7 +564,7 @@ describe('moderation-events', () => {
         reportedBy: sc.dids.bob,
       })
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'spam in convo 2',
         subject: {
           $type: 'chat.bsky.convo.defs#convoRef',

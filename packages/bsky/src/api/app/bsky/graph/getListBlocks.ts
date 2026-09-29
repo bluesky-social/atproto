@@ -59,7 +59,7 @@ const skeleton = async (
       cursor: params.cursor,
       limit: params.limit,
     })
-  return { listUris: listUris as AtUriString[], cursor: cursor || undefined }
+  return { listUris: listUris as AtUriString[], cursor }
 }
 
 const hydration = async (

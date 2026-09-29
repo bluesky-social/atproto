@@ -1,9 +1,13 @@
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.verification.revokeVerifications({
+  server.add(tools.ozone.verification.revokeVerifications, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       if (!ctx.cfg.verifier) {

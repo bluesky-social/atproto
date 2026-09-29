@@ -50,7 +50,10 @@ describe('handles', () => {
       dbPostgresSchema: 'handles',
     })
     ctx = network.pds.ctx
-    idResolver = new IdResolver({ plcUrl: ctx.cfg.identity.plcUrl })
+    idResolver = new IdResolver({
+      plcUrl: ctx.cfg.identity.plcUrl,
+      fetch: globalThis.fetch,
+    })
     agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)

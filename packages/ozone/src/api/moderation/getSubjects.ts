@@ -1,28 +1,29 @@
-import type { ToolsOzoneModerationDefs } from '@atproto/api'
+import {
+  type AtUriString,
+  type DidString,
+  asUnknown$TypedObject,
+  isDidString,
+} from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
-import type { SubjectView } from '../../lexicon/types/tools/ozone/moderation/defs.js'
+import { app, tools } from '../../lexicons/index.js'
 import { addAccountInfoToRepoViewDetail, getPdsAccountInfos } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.moderation.getSubjects({
+  server.add(tools.ozone.moderation.getSubjects, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth, req }) => {
-      const { subjects } = params
+      const parsedSubjects = params.subjects.map(parseSubject)
+
       const db = ctx.db
       const labelers = ctx.reqLabelers(req)
-      const uris = new Set<string>()
-      const dids = new Set<string>()
+      const uris = new Set<AtUriString>()
+      const dids = new Set<DidString>()
 
-      for (const subject of subjects) {
-        if (subject.startsWith('did:')) {
-          dids.add(subject)
-        }
-        if (subject.startsWith('at://')) {
-          uris.add(subject)
-          dids.add(new AtUri(subject).host)
-        }
+      for (const { type, subject, did } of parsedSubjects) {
+        dids.add(did)
+        if (type === 'record') uris.add(subject)
       }
 
       const didsArray = Array.from(dids)
@@ -38,12 +39,13 @@ export default function (server: Server, ctx: AppContext) {
           modViews.getProfiles(didsArray),
         ])
 
-      const missingSubjects: string[] = []
-      const subjectWithDetails = new Map<string, SubjectView>()
+      const missingSubjects: (AtUriString | DidString)[] = []
+      const subjectWithDetails = new Map<
+        string,
+        tools.ozone.moderation.defs.SubjectView
+      >()
 
-      for (const subject of subjects) {
-        const type = subject.startsWith('did:') ? 'account' : 'record'
-        const did = type === 'account' ? subject : new AtUri(subject).host
+      for (const { type, subject, did } of parsedSubjects) {
         const partialRepo = partialRepos.get(did)
         const repo = partialRepo
           ? addAccountInfoToRepoViewDetail(
@@ -63,10 +65,12 @@ export default function (server: Server, ctx: AppContext) {
           type,
           repo,
           record,
-          profile: profile && {
-            $type: 'app.bsky.actor.defs#profileViewDetailed',
-            ...profile,
-          },
+
+          profile: profile
+            ? asUnknown$TypedObject(
+                app.bsky.actor.defs.profileViewDetailed.$build(profile),
+              )
+            : undefined,
           status,
           subject,
         })
@@ -86,8 +90,8 @@ export default function (server: Server, ctx: AppContext) {
           subjectView.status = modViews.formatSubjectStatus(status)
       }
 
-      const allSubjects: ToolsOzoneModerationDefs.SubjectView[] = []
-      for (const subject of subjects) {
+      const allSubjects: tools.ozone.moderation.defs.SubjectView[] = []
+      for (const { subject } of parsedSubjects) {
         const subjectView = subjectWithDetails.get(subject)
         if (subjectView) allSubjects.push(subjectView)
       }
@@ -98,4 +102,32 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+function parseSubject(subject: string) {
+  try {
+    if (isDidString(subject)) {
+      return {
+        type: 'account' as const,
+        subject,
+        did: subject,
+      }
+    } else {
+      const uri = new AtUri(subject)
+      if (uri.href !== subject) {
+        throw new InvalidRequestError(`Invalid subject: ${subject}`)
+      }
+      return {
+        type: 'record' as const,
+        subject: uri.href,
+        did: uri.did,
+      }
+    }
+  } catch (cause) {
+    if (cause instanceof InvalidRequestError) throw cause
+    // Convert AtUri parsing errors into InvalidRequestError
+    throw new InvalidRequestError(`Invalid subject: ${subject}`, undefined, {
+      cause,
+    })
+  }
 }

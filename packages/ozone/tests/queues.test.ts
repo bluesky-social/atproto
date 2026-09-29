@@ -1,3 +1,4 @@
+import { ids } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
 import {
   type ModeratorClient,
@@ -5,7 +6,6 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
 
 describe('ozone-queues', () => {
   let network: TestNetwork
@@ -27,6 +27,7 @@ describe('ozone-queues', () => {
       collection?: string
       description?: string
       recommendedPolicies?: string[]
+      recommendedLabels?: string[]
     },
     role: 'admin' | 'triage' = 'admin',
   ) => {
@@ -82,6 +83,7 @@ describe('ozone-queues', () => {
       enabled?: boolean
       description?: string
       recommendedPolicies?: string[]
+      recommendedLabels?: string[]
     },
     role: 'admin' | 'triage' = 'admin',
   ) => {
@@ -141,6 +143,27 @@ describe('ozone-queues', () => {
       expect(data.queue.updatedAt).toBeDefined()
       expect(data.queue.stats).toBeDefined()
       expect(data.queue.recommendedPolicies).toEqual([])
+      expect(data.queue.recommendedLabels).toEqual([])
+    })
+
+    it('stores recommended labels and rejects labels mapped to another queue', async () => {
+      const { data } = await createQueue({
+        name: 'CQ: Label Mapping',
+        subjectTypes: [],
+        reportTypes: [],
+        recommendedLabels: ['spam-label', 'scam-label'],
+      })
+      createdIds.push(data.queue.id)
+      expect(data.queue.recommendedLabels).toEqual(['spam-label', 'scam-label'])
+
+      await expect(
+        createQueue({
+          name: 'CQ: Conflicting Label Mapping',
+          subjectTypes: [],
+          reportTypes: [],
+          recommendedLabels: ['spam-label'],
+        }),
+      ).rejects.toMatchObject({ error: 'ConflictingQueue' })
     })
 
     it('stores valid recommended policies and rejects unknown policies', async () => {
@@ -560,6 +583,28 @@ describe('ozone-queues', () => {
           recommendedPolicies: ['Not A Policy'],
         }),
       ).rejects.toMatchObject({ error: 'InvalidRecommendedPolicies' })
+    })
+
+    it('updates recommended labels and rejects a conflicting mapping', async () => {
+      const { data: other } = await createQueue({
+        name: 'UQ: Other Label Queue',
+        subjectTypes: [],
+        reportTypes: [],
+        recommendedLabels: ['other-label'],
+      })
+      const { data } = await updateQueue({
+        queueId: testQueueId,
+        recommendedLabels: ['test-label'],
+      })
+      expect(data.queue.recommendedLabels).toEqual(['test-label'])
+
+      await expect(
+        updateQueue({
+          queueId: testQueueId,
+          recommendedLabels: ['other-label'],
+        }),
+      ).rejects.toMatchObject({ error: 'ConflictingQueue' })
+      await deleteQueue(other.queue.id)
     })
 
     it('updates both name and enabled status', async () => {

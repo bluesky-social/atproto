@@ -1,7 +1,6 @@
+import { ComAtprotoModerationDefs, ids } from '@atproto/api'
 import type AtpAgent from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons.js'
-import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs.js'
 
 const DEFS = 'tools.ozone.report.defs'
 
@@ -15,7 +14,7 @@ describe('report-activity', () => {
 
   const createReport = async (subjectDid: string) => {
     await sc.createReport({
-      reasonType: REASONSPAM,
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: subjectDid,

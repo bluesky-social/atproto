@@ -1,24 +1,17 @@
 import assert from 'node:assert'
-import type {
+import {
+  ComAtprotoAdminDefs,
+  ComAtprotoModerationDefs,
+  ComAtprotoRepoStrongRef,
   ToolsOzoneModerationDefs,
-  ToolsOzoneModerationQueryStatuses,
 } from '@atproto/api'
+import type { ToolsOzoneModerationQueryStatuses } from '@atproto/api'
 import {
   type ModeratorClient,
   type SeedClient,
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs.js'
-import {
-  REASONMISLEADING,
-  REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs.js'
-import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef.js'
-import {
-  REVIEWNONE,
-  REVIEWOPEN,
-} from '../src/lexicon/types/tools/ozone/moderation/defs.js'
 import { forSnapshot } from './_util.js'
 
 describe('moderation-statuses', () => {
@@ -48,14 +41,17 @@ describe('moderation-statuses', () => {
 
     for (let i = 0; i < 4; i++) {
       await sc.createReport({
-        reasonType: i % 2 ? REASONSPAM : REASONMISLEADING,
+        reasonType:
+          i % 2
+            ? ComAtprotoModerationDefs.REASONSPAM
+            : ComAtprotoModerationDefs.REASONMISLEADING,
         reason: 'X',
         //   Report bob's account by alice and vice versa
         subject: i % 2 ? bobsAccount : carlasAccount,
         reportedBy: i % 2 ? sc.dids.alice : sc.dids.bob,
       })
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'X',
         //   Report bob's post by alice and vice versa
         subject: i % 2 ? bobsPost : alicesPost,
@@ -188,7 +184,7 @@ describe('moderation-statuses', () => {
         [],
       )
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'X',
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -222,13 +218,19 @@ describe('moderation-statuses', () => {
       ])
 
       expect(onlyStarterPackStatuses.subjectStatuses.length).toEqual(1)
-      assert(isStrongRef(onlyStarterPackStatuses.subjectStatuses[0].subject))
+      assert(
+        ComAtprotoRepoStrongRef.isMain(
+          onlyStarterPackStatuses.subjectStatuses[0].subject,
+        ),
+      )
       expect(onlyStarterPackStatuses.subjectStatuses[0].subject.uri).toContain(
         'app.bsky.graph.starterpack',
       )
       expect(onlyAlicesStarterPackStatuses.subjectStatuses.length).toEqual(1)
       assert(
-        isStrongRef(onlyAlicesStarterPackStatuses.subjectStatuses[0].subject),
+        ComAtprotoRepoStrongRef.isMain(
+          onlyAlicesStarterPackStatuses.subjectStatuses[0].subject,
+        ),
       )
       expect(
         onlyAlicesStarterPackStatuses.subjectStatuses[0].subject.uri,
@@ -257,21 +259,23 @@ describe('moderation-statuses', () => {
 
       assert(
         onlyAccountStatuses.subjectStatuses.every(
-          (e) => !isStrongRef(e.subject),
+          (e) => !ComAtprotoRepoStrongRef.isMain(e.subject),
         ),
         'only account statuses are returned, no event has a uri',
       )
 
       assert(
         onlyRecordStatuses.subjectStatuses.every(
-          (e) => isStrongRef(e.subject) && e.subject.uri,
+          (e) => ComAtprotoRepoStrongRef.isMain(e.subject) && e.subject.uri,
         ),
         'only record statuses are returned, all events have a uri',
       )
 
       assert(
         onlyStatusesOnBobsAccount.subjectStatuses.every(
-          (e) => isRepoRef(e.subject) && e.subject.did === sc.dids.bob,
+          (e) =>
+            ComAtprotoAdminDefs.isRepoRef(e.subject) &&
+            e.subject.did === sc.dids.bob,
         ),
         "only bob's account statuses are returned, no events have a URI even though the subjectType is record",
       )
@@ -283,7 +287,7 @@ describe('moderation-statuses', () => {
 
       // Create reports for conversation 1
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'spam in convo 1',
         subject: {
           $type: 'chat.bsky.convo.defs#convoRef',
@@ -295,7 +299,7 @@ describe('moderation-statuses', () => {
 
       // Create another report for conversation 1
       await sc.createReport({
-        reasonType: REASONMISLEADING,
+        reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
         reason: 'misleading in convo 1',
         subject: {
           $type: 'chat.bsky.convo.defs#convoRef',
@@ -307,7 +311,7 @@ describe('moderation-statuses', () => {
 
       // Create report for conversation 2
       await sc.createReport({
-        reasonType: REASONSPAM,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
         reason: 'spam in convo 2',
         subject: {
           $type: 'chat.bsky.convo.defs#convoRef',
@@ -338,7 +342,9 @@ describe('moderation-statuses', () => {
       expect(convo1Statuses.subjectStatuses[0].subject.$type).toEqual(
         'chat.bsky.convo.defs#convoRef',
       )
-      expect(convo1Statuses.subjectStatuses[0].reviewState).toEqual(REVIEWOPEN)
+      expect(convo1Statuses.subjectStatuses[0].reviewState).toEqual(
+        ToolsOzoneModerationDefs.REVIEWOPEN,
+      )
 
       // Verify conversation 2 has exactly 1 status
       expect(convo2Statuses.subjectStatuses.length).toEqual(1)
@@ -428,19 +434,23 @@ describe('moderation-statuses', () => {
         createdBy: sc.dids.alice,
       })
       const alicesPostStatusAfterTag = await getAlicesPostStatus()
-      expect(alicesPostStatusAfterTag.reviewState).toEqual(REVIEWNONE)
+      expect(alicesPostStatusAfterTag.reviewState).toEqual(
+        ToolsOzoneModerationDefs.REVIEWNONE,
+      )
 
       await modClient.emitEvent({
         subject: alicesPost,
         event: {
           $type: 'tools.ozone.moderation.defs#modEventReport',
-          reportType: REASONMISLEADING,
+          reportType: ComAtprotoModerationDefs.REASONMISLEADING,
           comment: 'X',
         },
         createdBy: sc.dids.alice,
       })
       const alicesPostStatusAfterReport = await getAlicesPostStatus()
-      expect(alicesPostStatusAfterReport.reviewState).toEqual(REVIEWOPEN)
+      expect(alicesPostStatusAfterReport.reviewState).toEqual(
+        ToolsOzoneModerationDefs.REVIEWOPEN,
+      )
     })
   })
 

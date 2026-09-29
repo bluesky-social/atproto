@@ -1,7 +1,7 @@
 import type { MessageDescriptor } from '@lingui/core'
 import { msg } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react'
-import type { JSX, ReactNode } from 'react'
+import { type JSX, type ReactNode, useEffect } from 'react'
 import {
   Card,
   CardContent,
@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from '#/components/ui/card.tsx'
 import { LinkAnchor } from '#/components/utils/link-anchor.tsx'
+import { ShortLinkTitle } from '#/components/utils/link-title.tsx'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
@@ -49,6 +50,14 @@ export function AuthShell({
   const { _ } = useLingui()
   const { logo, name, links } = useCustomizationData()
 
+  // The branded background lives on <html> (see `.auth-background` in
+  // style.css) so it also covers overscroll and the safe areas on phones.
+  useEffect(() => {
+    const root = document.documentElement
+    root.classList.add('auth-background')
+    return () => root.classList.remove('auth-background')
+  }, [])
+
   const titleString =
     typeof title === 'string' ? title : title ? _(title) : undefined
 
@@ -60,36 +69,44 @@ export function AuthShell({
         : undefined
 
   return (
-    <div className="auth-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+    <div className="flex min-h-svh flex-col items-center justify-center gap-6 p-4 sm:p-6 md:p-10">
       {documentTitleString && <title>{documentTitleString}</title>}
 
       <div
         {...props}
-        className={cn('flex w-full max-w-sm flex-col', className)}
+        className={cn('max-w-auth-card flex w-full flex-col', className)}
       >
-        <Card>
+        {/* @NOTE Wider than the stock card. `cn` is tailwind-merge, so this
+          replaces `Card`'s own `--card-spacing` utility rather than racing it. */}
+        <Card className="[--card-spacing:--spacing(6)]">
+          {/* @NOTE The logo stands alone when there is one — the service name
+            is carried by its alt text — and only falls back to the name in
+            text when the deployment has no logo. */}
           {(logo || name) && (
-            <div className="px-(--card-spacing) flex items-center justify-center gap-2 pt-2 font-medium">
-              {logo && (
+            <div className="flex items-center justify-center px-(--card-spacing) pt-2">
+              {logo ? (
                 <img
                   src={logo}
                   alt={name || _(msg`Logo`)}
-                  className="size-6 object-contain"
+                  className="h-9 w-auto max-w-32 object-contain"
                 />
+              ) : (
+                <span className="text-lg font-semibold">{name}</span>
               )}
-              {name}
             </div>
           )}
 
           {(titleString || subtitle) && (
-            <CardHeader className="text-center">
+            <CardHeader className="gap-2 text-center">
               {titleString && (
-                <CardTitle className="text-xl">{titleString}</CardTitle>
+                <CardTitle className="text-2xl leading-tight font-semibold text-balance whitespace-pre-line">
+                  {titleString}
+                </CardTitle>
               )}
               {/* @NOTE CardDescription renders a <div>, so the subtitle gets
                 its own <p>. */}
               {subtitle && (
-                <CardDescription>
+                <CardDescription className="text-base">
                   <p>{subtitle}</p>
                 </CardDescription>
               )}
@@ -98,16 +115,21 @@ export function AuthShell({
 
           <CardContent>{children}</CardContent>
 
-          <CardFooter className="flex-col justify-center gap-3">
-            <LocaleSelector />
+          <CardFooter className="flex-col justify-center gap-4 border-t-0 bg-transparent pt-2">
+            {/* @NOTE Same height as the action buttons; the trigger sizes
+              itself through a data attribute, so the override carries the
+              same variant. */}
+            <LocaleSelector className="text-action px-3 data-[size=sm]:h-10" />
             {links?.length ? (
-              <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
+              <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-base whitespace-nowrap">
                 {links.map((link) => (
                   <LinkAnchor
                     key={link.href}
                     link={link}
                     className="hover:text-foreground rounded-sm transition-colors hover:underline"
-                  />
+                  >
+                    <ShortLinkTitle link={link} />
+                  </LinkAnchor>
                 ))}
               </div>
             ) : null}

@@ -1,15 +1,17 @@
+import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../context.js'
-import type { Server } from '../lexicon/index.js'
 import chat from './chat/index.js'
 import createTemplate from './communication/createTemplate.js'
 import deleteTemplate from './communication/deleteTemplate.js'
 import listTemplates from './communication/listTemplates.js'
 import updateTemplate from './communication/updateTemplate.js'
+import appealActionedSubject from './inbox/appealActionedSubject.js'
 import fetchLabels from './label/fetchLabels.js'
 import queryLabels from './label/queryLabels.js'
 import subscribeLabels from './label/subscribeLabels.js'
 import cancelScheduledActions from './moderation/cancelScheduledActions.js'
 import emitEvent from './moderation/emitEvent.js'
+import getAccountPreferences from './moderation/getAccountPreferences.js'
 import getAccountTimeline from './moderation/getAccountTimeline.js'
 import getEvent from './moderation/getEvent.js'
 import adminGetRecord from './moderation/getRecord.js'
@@ -76,6 +78,7 @@ export * as wellKnown from './well-known.js'
 
 export default function (server: Server, ctx: AppContext) {
   createReport(server, ctx)
+  appealActionedSubject(server, ctx)
   emitEvent(server, ctx)
   searchRepos(server, ctx)
   adminGetRecord(server, ctx)
@@ -90,6 +93,7 @@ export default function (server: Server, ctx: AppContext) {
   queryLabels(server, ctx)
   subscribeLabels(server, ctx)
   fetchLabels(server, ctx)
+  getAccountPreferences(server, ctx)
   listTemplates(server, ctx)
   createTemplate(server, ctx)
   updateTemplate(server, ctx)

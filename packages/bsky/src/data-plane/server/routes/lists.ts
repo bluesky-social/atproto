@@ -1,5 +1,6 @@
 import type { ServiceImpl } from '@connectrpc/connect'
 import { keyBy } from '@atproto/common'
+import { app } from '../../../lexicons/index.js'
 import type { Service } from '../../../proto/bsky_connect.js'
 import type { Database } from '../db/index.js'
 import { TimeCidKeyset, paginate } from '../db/pagination.js'
@@ -28,12 +29,37 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async getListMembers(req) {
-    const { listUri, cursor, limit } = req
+    const { listUri, cursor, limit, viewerDid } = req
     const { ref } = db.db.dynamic
+    const list = await db.db
+      .selectFrom('list')
+      .where('uri', '=', listUri)
+      .select(['creator', 'purpose'])
+      .executeTakeFirst()
+    const isReferenceList = list?.purpose === app.bsky.graph.defs.Referencelist
+    const isOwner = isReferenceList && list.creator === viewerDid
     let builder = db.db
       .selectFrom('list_item')
       .where('listUri', '=', listUri)
       .selectAll()
+
+    if (isReferenceList && !isOwner) {
+      builder = builder.where((eb) =>
+        eb.not(
+          eb.exists(
+            eb
+              .selectFrom('reference_list_opt_out')
+              .select('uri')
+              .whereRef(
+                'reference_list_opt_out.creator',
+                '=',
+                'list_item.subjectDid',
+              )
+              .where('reference_list_opt_out.subjectUri', '=', listUri),
+          ),
+        ),
+      )
+    }
 
     const keyset = new TimeCidKeyset(
       ref('list_item.sortAt'),
@@ -48,10 +74,25 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     })
 
     const page = keyset.page(await builder.execute(), limit)
+    const optedOut = new Set<string>()
+    if (isOwner && page.items.length > 0) {
+      const rows = await db.db
+        .selectFrom('reference_list_opt_out')
+        .where(
+          'creator',
+          'in',
+          page.items.map((item) => item.subjectDid),
+        )
+        .where('subjectUri', '=', listUri)
+        .select('creator')
+        .execute()
+      rows.forEach((row) => optedOut.add(row.creator))
+    }
     return {
       listitems: page.items.map((item) => ({
         uri: item.uri,
         did: item.subjectDid,
+        subjectOptedOut: optedOut.has(item.subjectDid),
       })),
       cursor: page.cursor,
     }
@@ -84,5 +125,23 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     return {
       count: res?.count,
     }
+  },
+
+  async getReferencelistoptoutsByActorAndSubjects(req) {
+    const { actorDid, subjectUris } = req
+    if (subjectUris.length === 0) return { uris: [] }
+    const rows = await db.db
+      .selectFrom('reference_list_opt_out')
+      .innerJoin('list', 'list.uri', 'reference_list_opt_out.subjectUri')
+      .where('reference_list_opt_out.creator', '=', actorDid)
+      .where('reference_list_opt_out.subjectUri', 'in', subjectUris)
+      .where('list.purpose', '=', app.bsky.graph.defs.Referencelist)
+      .select([
+        'reference_list_opt_out.subjectUri as subjectUri',
+        'reference_list_opt_out.uri as uri',
+      ])
+      .execute()
+    const bySubject = keyBy(rows, 'subjectUri')
+    return { uris: subjectUris.map((uri) => bySubject.get(uri)?.uri ?? '') }
   },
 })

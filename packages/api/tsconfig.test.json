@@ -1,6 +1,6 @@
 {
   "extends": ["../../tsconfig/jest.tsconfig.json"],
-  "include": ["./tests", "./src/**/*.test.ts"],
+  "include": ["./tests", "./src/**/*.test.ts", "./jest.setup.ts"],
   "references": [
     { "path": "../dev-env/tsconfig.build.json" },
     { "path": "./tsconfig.build.json" },

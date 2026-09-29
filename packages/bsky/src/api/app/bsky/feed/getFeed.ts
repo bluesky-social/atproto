@@ -32,6 +32,7 @@ import {
   createPipeline,
 } from '../../../../pipeline.js'
 import type { GetIdentityByDidResponse } from '../../../../proto/bsky_pb.js'
+import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
 import { BSKY_USER_AGENT, resHeaders } from '../../../util.js'
 
 export default function (server: Server, ctx: AppContext) {
@@ -51,7 +52,7 @@ export default function (server: Server, ctx: AppContext) {
       },
       skipAudCheck: true,
     }),
-    handler: async ({ params, auth, req }) => {
+    handler: async ({ params, auth, req, signal }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
@@ -65,14 +66,15 @@ export default function (server: Server, ctx: AppContext) {
         'user-agent': BSKY_USER_AGENT,
         authorization: req.headers['authorization'],
         'accept-language': req.headers['accept-language'],
-        'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
-          ? req.headers['x-bsky-topics'].join(',')
-          : req.headers['x-bsky-topics'],
+        ...getAtprotoPassthroughHeaders(req),
       })
       // @NOTE feed cursors should not be affected by appview swap
       // Do not refill filtered pages. Overfetching from algorithmic feeds can
       // advance their state and prevent omitted items from appearing later.
-      const result = await getFeed({ ...params, hydrateCtx, headers }, ctx)
+      const result = await getFeed(
+        { ...params, hydrateCtx, headers, signal },
+        ctx,
+      )
       const {
         timerSkele,
         timerHydr,
@@ -125,6 +127,13 @@ const hydration = async (
   const hydration = await ctx.hydrator.hydrateFeedItems(
     skeleton.items,
     params.hydrateCtx,
+    {
+      knownLikers:
+        !!params.hydrateCtx.viewer &&
+        params.hydrateCtx.features.checkGate(
+          params.hydrateCtx.features.Gate.KnownLikersFeedEnable,
+        ),
+    },
   )
   skeleton.timerHydr = timerHydr.stop()
   return hydration
@@ -175,6 +184,7 @@ type Context = AppContext
 type Params = app.bsky.feed.getFeed.$Params & {
   hydrateCtx: HydrateCtx
   headers: HeadersMap
+  signal: AbortSignal
 }
 
 type Skeleton = {
@@ -215,12 +225,25 @@ export const irisUrlForFeed = (
   return irisUrl
 }
 
+/**
+ * Iris staging's endpoint, when it should serve this request in place of the
+ * feed's registered feed generator.
+ */
+export const irisStagingUrlForFeed = (
+  cfg: Pick<ServerConfig, 'irisStagingUrl' | 'irisStagingFeedUris'>,
+  params: { feed: string },
+): string | undefined =>
+  cfg.irisStagingFeedUris?.has(params.feed) ? cfg.irisStagingUrl : undefined
+
 const resolveSkeletonEndpoint = async (
   ctx: Context,
   params: Params,
 ): Promise<string> => {
   const irisUrl = irisUrlForFeed(ctx.cfg, params)
   if (irisUrl) return irisUrl
+
+  const irisStagingUrl = irisStagingUrlForFeed(ctx.cfg, params)
+  if (irisStagingUrl) return irisStagingUrl
 
   const { feed } = params
   const found = await ctx.hydrator.feed.getFeedGens([feed], true)
@@ -263,7 +286,10 @@ const skeletonFromFeedGen = async (
   // @TODO currently passthrough auth headers from pds
   const result = await xrpcSafe(endpoint, app.bsky.feed.getFeedSkeleton, {
     strictResponseProcessing: false,
-    signal: AbortSignal.timeout(10_000),
+    signal: AbortSignal.any([
+      params.signal,
+      AbortSignal.timeout(ctx.cfg.feedGenSkeletonTimeout),
+    ]),
     headers,
     params: {
       feed: params.feed,

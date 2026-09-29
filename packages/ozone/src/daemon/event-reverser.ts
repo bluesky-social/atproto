@@ -1,5 +1,6 @@
 import { MINUTE } from '@atproto/common'
 import type { Database } from '../db/index.js'
+import { tools } from '../lexicons/index.js'
 import { dbLogger } from '../logger.js'
 import {
   deleteExpiringTagsByIds,
@@ -102,13 +103,12 @@ export class EventReverser {
           const subject = subjectFromStatusRow(status)
           const moderationTxn = this.modService(dbTxn)
           await moderationTxn.logEvent({
-            event: {
-              $type: 'tools.ozone.moderation.defs#modEventTag',
+            event: tools.ozone.moderation.defs.modEventTag.$build({
               add: [],
               remove: tagsToRemove,
               comment:
                 '[SCHEDULED_REVERSAL] Reverting temporary tags as originally scheduled',
-            },
+            }),
             createdBy: group.createdBy,
             subject,
             createdAt: new Date(),

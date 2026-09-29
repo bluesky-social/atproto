@@ -197,3 +197,18 @@ export type Unknown$Type = string & { [unknown$TypeSymbol]: true }
  * ```
  */
 export type Unknown$TypedObject = { $type: Unknown$Type }
+
+/**
+ * Utility function that allows casting a `$Typed` object to an
+ * `Unknown$TypedObject`. The Unknown$TypedObject type uses the Unknown$Type
+ * branded string for the `$type` property, which is useful in open unions
+ * schemas to be able to discriminate between known and unknown objects.
+ * However, using a branded type means that it is not possible to assign a known
+ * `$Typed` object to an `Unknown$TypedObject` type. This function allows for
+ * that conversion.
+ */
+export function asUnknown$TypedObject<O extends { readonly $type: string }>(
+  obj: O,
+): Unknown$TypedObject & O {
+  return obj as Unknown$TypedObject & O
+}

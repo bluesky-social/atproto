@@ -1,4 +1,5 @@
 import { HOUR } from '@atproto/common'
+import { type DatetimeString, toDatetimeString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
 import { dbLogger } from '../logger.js'
 import type { StrikeServiceCreator } from '../mod-service/strike.js'
@@ -44,8 +45,8 @@ export class StrikeExpiryProcessor {
     await initJobCursor(this.db, JOB_NAME)
   }
 
-  async getCursor(): Promise<string | null> {
-    return getJobCursor(this.db, JOB_NAME)
+  async getCursor(): Promise<DatetimeString | null> {
+    return (await getJobCursor(this.db, JOB_NAME)) as DatetimeString | null
   }
 
   async updateCursor(cursor: string): Promise<void> {
@@ -62,7 +63,7 @@ export class StrikeExpiryProcessor {
 
     if (!affectedSubjects.length) {
       dbLogger.info('no expired strikes to process')
-      await this.updateCursor(now.toISOString())
+      await this.updateCursor(toDatetimeString(now))
       return
     }
 
@@ -77,7 +78,7 @@ export class StrikeExpiryProcessor {
       }),
     )
 
-    await this.updateCursor(now.toISOString())
+    await this.updateCursor(toDatetimeString(now))
 
     dbLogger.info(
       { processed: affectedSubjects.length },

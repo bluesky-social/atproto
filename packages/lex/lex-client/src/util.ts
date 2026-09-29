@@ -285,12 +285,32 @@ export function mergeHeaders(
   return result
 }
 
+function getAbortReason(signal: AbortSignal): unknown {
+  if ('reason' in signal) return signal.reason
+  return typeof DOMException !== 'undefined'
+    ? new DOMException('Aborted', 'AbortError')
+    : new Error('Aborted')
+}
+
+/**
+ * Uses the native `AbortSignal.throwIfAborted()` when available, falling back
+ * for older implementations such as React Native's `abort-controller`.
+ */
+export function throwIfAborted(signal?: AbortSignal): void {
+  if (!signal) return
+  if (typeof signal.throwIfAborted === 'function') {
+    signal.throwIfAborted()
+    return
+  }
+  if (signal.aborted) throw getAbortReason(signal)
+}
+
 export function wait(
   ms: number,
   { signal }: { signal?: AbortSignal } = {},
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    signal?.throwIfAborted()
+    throwIfAborted(signal)
 
     const cleanup = () => {
       clearTimeout(timeout)
@@ -304,14 +324,8 @@ export function wait(
 
     const onAbort = () => {
       cleanup()
-      reject(
-        // @NOTE the signal exists, and the reason should be set at this point.
-        signal?.reason ??
-          // React Native does not have DOMException
-          (typeof DOMException !== 'undefined'
-            ? new DOMException('Aborted', 'AbortError')
-            : new Error('Aborted')),
-      )
+      // @NOTE the signal exists because this listener came from it.
+      reject(getAbortReason(signal!))
     }
 
     signal?.addEventListener('abort', onAbort)

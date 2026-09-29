@@ -1,5 +1,30 @@
 # @atproto/lexicon
 
+## 0.7.14
+
+### Patch Changes
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Bump the dev-dependencies group across 1 directory with 30 updates
+
+- Updated dependencies [[`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36)]:
+  - @atproto/common-web@0.5.12
+
+## 0.7.13
+
+### Patch Changes
+
+- Updated dependencies [[`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222)]:
+  - @atproto/syntax@0.7.6
+  - @atproto/common-web@0.5.11
+
+## 0.7.12
+
+### Patch Changes
+
+- Updated dependencies [[`6af9f14`](https://github.com/bluesky-social/atproto/commit/6af9f141d18c1f41a04828af8256567d5f17a35e)]:
+  - @atproto/syntax@0.7.5
+  - @atproto/common-web@0.5.10
+
 ## 0.7.11
 
 ### Patch Changes

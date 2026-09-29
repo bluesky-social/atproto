@@ -8,6 +8,7 @@ import {
 } from '@opentelemetry/core'
 import type { Instrumentation } from '@opentelemetry/instrumentation'
 import { NodeSDK, resources } from '@opentelemetry/sdk-node'
+import { createAddHookMessageChannel } from 'import-in-the-middle'
 import {
   ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
   ATTR_SERVICE_NAME,
@@ -45,7 +46,7 @@ export type SetupOptions = {
  * flag: configuring an OTLP endpoint is what enables the SDK.
  * `OTEL_SDK_DISABLED` remains a kill switch, per spec.
  */
-export function setup(getOptions: () => SetupOptions): void {
+export async function setup(getOptions: () => SetupOptions): Promise<void> {
   const otelDisabled = getBooleanFromEnv('OTEL_SDK_DISABLED')
   const tracesConfigured = isSignalConfigured('TRACES')
   const metricsConfigured = isSignalConfigured('METRICS')
@@ -58,7 +59,16 @@ export function setup(getOptions: () => SetupOptions): void {
   try {
     const options = getOptions()
 
-    register('@opentelemetry/instrumentation/hook.mjs', import.meta.url)
+    // Restrict import-in-the-middle to modules targeted by the configured
+    // instrumentations. Wrapping every ESM module can alter legal `export *`
+    // graphs in unrelated packages.
+    const { registerOptions, waitForAllMessagesAcknowledged } =
+      createAddHookMessageChannel()
+    register(
+      '@opentelemetry/instrumentation/hook.mjs',
+      import.meta.url,
+      registerOptions,
+    )
 
     const sdk = new NodeSDK({
       // @NOTE Passing "resource" replaces (rather than augments) NodeSDK's
@@ -97,6 +107,10 @@ export function setup(getOptions: () => SetupOptions): void {
     })
 
     sdk.start()
+
+    // Ensure the loader hook has received its instrumentation registrations
+    // before application imports begin resolving.
+    await waitForAllMessagesAcknowledged()
 
     // @NOTE On SIGINT/SIGTERM the service releases its resources without calling
     // process.exit(), so the event loop empties and Node emits "beforeExit"

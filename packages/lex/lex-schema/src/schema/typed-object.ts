@@ -51,11 +51,13 @@ export class TypedObjectSchema<
 > {
   readonly type = 'typedObject' as const
 
-  constructor(
-    readonly $type: TType,
-    readonly schema: TShape,
-  ) {
+  readonly $type: TType
+  readonly schema: TShape
+
+  constructor($type: TType, schema: TShape) {
     super()
+    this.$type = $type
+    this.schema = schema
   }
 
   validateInContext(

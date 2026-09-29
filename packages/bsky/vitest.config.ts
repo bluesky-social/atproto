@@ -5,9 +5,5 @@ export default defineProject({
     testTimeout: 60000,
     hookTimeout: 40000, // seeding can take a while
     exclude: ['dist/**', 'node_modules/**'],
-    env: {
-      LOG_ENABLED: 'true',
-      LOG_DESTINATION: 'test.log',
-    },
   },
 })

@@ -1,5 +1,7 @@
+import { toDatetimeString } from '@atproto/lex'
+import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
-import type { Server } from '../../lexicon/index.js'
+import { tools } from '../../lexicons/index.js'
 import {
   getSafelinkAction,
   getSafelinkPattern,
@@ -7,7 +9,7 @@ import {
 } from '../util.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.safelink.queryRules({
+  server.add(tools.ozone.safelink.queryRules, {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input }) => {
       const db = ctx.db
@@ -47,8 +49,8 @@ export default function (server: Server, ctx: AppContext) {
             action: rule.action,
             reason: rule.reason,
             createdBy: rule.createdBy,
-            createdAt: new Date(rule.createdAt).toISOString(),
-            updatedAt: new Date(rule.updatedAt).toISOString(),
+            createdAt: toDatetimeString(rule.createdAt),
+            updatedAt: toDatetimeString(rule.updatedAt),
             comment: rule.comment || undefined,
           })),
         },

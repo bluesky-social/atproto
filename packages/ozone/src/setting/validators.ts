@@ -1,6 +1,7 @@
 import type { Selectable } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Setting } from '../db/schema/setting.js'
+import { tools } from '../lexicons/index.js'
 import {
   PolicyListSettingKey,
   ProtectedTagSettingKey,
@@ -29,7 +30,7 @@ export const settingValidators = new Map<
      * }
      */
     async (setting: Partial<Selectable<Setting>>) => {
-      if (setting.managerRole !== 'tools.ozone.team.defs#roleAdmin') {
+      if (setting.managerRole !== tools.ozone.team.defs.RoleAdmin) {
         throw new InvalidRequestError(
           'Only admins should be able to configure protected tags',
         )
@@ -135,7 +136,7 @@ export const settingValidators = new Map<
      * }
      */
     async (setting: Partial<Selectable<Setting>>) => {
-      if (setting.managerRole !== 'tools.ozone.team.defs#roleAdmin') {
+      if (setting.managerRole !== tools.ozone.team.defs.RoleAdmin) {
         throw new InvalidRequestError(
           'Only admins should be able to manage policy list',
         )
@@ -255,7 +256,7 @@ export const settingValidators = new Map<
      * }
      */
     async (setting: Partial<Selectable<Setting>>) => {
-      if (setting.managerRole !== 'tools.ozone.team.defs#roleAdmin') {
+      if (setting.managerRole !== tools.ozone.team.defs.RoleAdmin) {
         throw new InvalidRequestError(
           'Only admins should be able to manage severity levels',
         )

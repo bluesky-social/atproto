@@ -4,6 +4,7 @@ import path from 'node:path'
 import { fileExists, readIfExists, rmIfExists } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import type { ExportableKeypair, Keypair } from '@atproto/crypto'
+import type { DidString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { ActorStoreConfig } from '../config/index.js'
 import { retrySqlite } from '../db/index.js'
@@ -66,7 +67,10 @@ export class ActorStore {
     return db
   }
 
-  async read<T>(did: string, fn: (fn: ActorStoreReader) => T | PromiseLike<T>) {
+  async read<T>(
+    did: DidString,
+    fn: (fn: ActorStoreReader) => T | PromiseLike<T>,
+  ) {
     const db = await this.openDb(did)
     try {
       const getKeypair = () => this.keypair(did)
@@ -77,7 +81,7 @@ export class ActorStore {
   }
 
   async transact<T>(
-    did: string,
+    did: DidString,
     fn: (fn: ActorStoreTransactor) => T | PromiseLike<T>,
   ) {
     const keypair = await this.keypair(did)
@@ -92,7 +96,7 @@ export class ActorStore {
   }
 
   async writeNoTransaction<T>(
-    did: string,
+    did: DidString,
     fn: (fn: ActorStoreWriter) => T | PromiseLike<T>,
   ) {
     const keypair = await this.keypair(did)
@@ -125,7 +129,7 @@ export class ActorStore {
     }
   }
 
-  async destroy(did: string) {
+  async destroy(did: DidString) {
     const blobstore = this.resources.blobstore(did)
     if (blobstore instanceof DiskBlobStore) {
       await blobstore.deleteAll()

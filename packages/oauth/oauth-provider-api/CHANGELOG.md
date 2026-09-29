@@ -1,5 +1,28 @@
 # @atproto/oauth-provider-api
 
+## 0.8.3
+
+### Patch Changes
+
+- [#5488](https://github.com/bluesky-social/atproto/pull/5488) [`fe4087e`](https://github.com/bluesky-social/atproto/commit/fe4087ecb7a7cc53c7081c9f97d49121e5251c36) Thanks [@dependabot](https://github.com/apps/dependabot)! - Export `ASSETS_ENDPOINT_PREFIX` constant
+
+- Updated dependencies []:
+  - @atproto/oauth-types@0.7.6
+
+## 0.8.2
+
+### Patch Changes
+
+- Updated dependencies [[`ed0b7d3`](https://github.com/bluesky-social/atproto/commit/ed0b7d38811bb24952a3f1da988b02e39934d222)]:
+  - @atproto/syntax@0.7.6
+
+## 0.8.1
+
+### Patch Changes
+
+- Updated dependencies [[`6af9f14`](https://github.com/bluesky-social/atproto/commit/6af9f141d18c1f41a04828af8256567d5f17a35e)]:
+  - @atproto/syntax@0.7.5
+
 ## 0.8.0
 
 ### Minor Changes

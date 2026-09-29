@@ -1,5 +1,5 @@
 import type express from 'express'
-import { type LexValue, l } from '@atproto/lex'
+import { type DidString, type LexValue, l } from '@atproto/lex'
 import { lexParse } from '@atproto/lex-json'
 import type {
   HandlerPipeThrough,
@@ -38,7 +38,7 @@ export const pipethroughReadAfterWrite = async <
   HandlerResponse<l.InferMethodOutputBody<M>> | HandlerPipeThrough
 > => {
   const { req, auth } = reqCtx
-  const requester = auth.credentials.did
+  const requester = auth.credentials.did as DidString
   const method = l.getMain(ns)
 
   const streamRes = await pipethrough(ctx, req, { iss: requester })
@@ -61,7 +61,10 @@ export const pipethroughReadAfterWrite = async <
       const local = await store.record.getRecordsSinceRev(rev)
       if (local.count === 0) return streamRes
 
-      const { buffer } = (bufferRes = await asPipeThroughBuffer(streamRes))
+      const { buffer } = (bufferRes = await asPipeThroughBuffer(
+        streamRes,
+        ctx.cfg.proxy.maxResponseSize,
+      ))
 
       const lex = lexParse(buffer.toString('utf8'), { strict: false })
 

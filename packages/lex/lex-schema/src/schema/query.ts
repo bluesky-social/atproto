@@ -33,12 +33,22 @@ export class Query<
 > {
   readonly type = 'query' as const
 
+  readonly nsid: TNsid
+  readonly parameters: TParameters
+  readonly output: TOutputPayload
+  readonly errors: TErrors
+
   constructor(
-    readonly nsid: TNsid,
-    readonly parameters: TParameters,
-    readonly output: TOutputPayload,
-    readonly errors: TErrors,
-  ) {}
+    nsid: TNsid,
+    parameters: TParameters,
+    output: TOutputPayload,
+    errors: TErrors,
+  ) {
+    this.nsid = nsid
+    this.parameters = parameters
+    this.output = output
+    this.errors = errors
+  }
 }
 
 /**
