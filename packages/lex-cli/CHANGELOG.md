@@ -1,5 +1,12 @@
 # @atproto/lex-cli
 
+## 0.10.14
+
+### Patch Changes
+
+- Updated dependencies [[`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67)]:
+  - @atproto/lexicon@0.7.15
+
 ## 0.10.13
 
 ### Patch Changes
