@@ -49,8 +49,9 @@ export function ClientName({
   }
 
   if (url?.protocol === 'https:') {
-    // Only display the url details if the client id does not follow our
-    // convention.
+    // @NOTE Only display the url details if the client id does not follow our
+    // convention. One host can serve any number of clients, so naming an
+    // unconventional one by its host alone would make them indistinguishable.
     const simplifiedView = isConventionalOAuthClientId(clientId)
 
     return (

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/ozone",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "license": "MIT",
   "description": "Backend service for moderating the Bluesky network.",
   "keywords": [
@@ -78,7 +78,7 @@
     "@types/pg": "^8.15.5",
     "@types/qs": "^6.15.1",
     "@types/ws": "^8.18.1",
-    "jest": "^30.5.1"
+    "jest": "^30.5.2"
   },
   "scripts": {
     "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",

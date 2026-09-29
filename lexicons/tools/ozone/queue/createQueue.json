@@ -44,6 +44,11 @@
               "type": "array",
               "items": { "type": "string" },
               "description": "Policy keys to recommend when actioning reports in this queue"
+            },
+            "recommendedLabels": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Labels to recommend for this queue and use as fallback appeal routing mappings"
             }
           }
         }

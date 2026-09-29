@@ -1,5 +1,4 @@
 import { Trans } from '@lingui/react/macro'
-import { TicketIcon } from 'lucide-react'
 import { useRef } from 'react'
 import { useMergedRefs } from '#/hooks/use-merged-refs.ts'
 import { OTP_CODE_PATTERN, formatOtpCode } from '#/lib/form-patterns.ts'
@@ -19,7 +18,7 @@ export type TokenFieldProps = Omit<
 export function TokenField({
   example = OTP_CODE_EXAMPLE,
   onResend,
-  icon = <TicketIcon className="size-5" />,
+  icon,
   title = example,
   autoFocus = false,
   ref,

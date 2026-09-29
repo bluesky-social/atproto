@@ -6,28 +6,36 @@ import {
   LockIcon,
   type LucideIcon,
   MailIcon,
+  MoonIcon,
   ShieldAlertIcon,
-  SnowflakeIcon,
+  ShieldCheckIcon,
+  SunIcon,
   TrashIcon,
 } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 import { DeactivateAccountDialog } from '#/components/deactivate-account-dialog.tsx'
 import { DeleteAccountDialog } from '#/components/delete-account-dialog.tsx'
+import { DisableEmailAuthFactorDialog } from '#/components/disable-email-auth-factor-dialog.tsx'
+import { EnableEmailAuthFactorDialog } from '#/components/enable-email-auth-factor-dialog.tsx'
 import { Notice } from '#/components/feedback/notice.tsx'
 import { ReactivateAccountDialog } from '#/components/reactivate-account-dialog.tsx'
 import { Button } from '#/components/ui/button.tsx'
 import {
-  Item,
+  type Item,
   ItemActions,
   ItemContent,
+  ItemDescription,
   ItemGroup,
   ItemMedia,
-  ItemSeparator,
   ItemTitle,
 } from '#/components/ui/item.tsx'
 import { UpdateEmailDialog } from '#/components/update-email-dialog.tsx'
 import { UpdateHandleDialog } from '#/components/update-handle-dialog.tsx'
 import { UpdatePasswordDialog } from '#/components/update-password-dialog.tsx'
+import {
+  AccountRow,
+  AccountRowMedia,
+} from '#/components/utils/account-card.tsx'
 import { Handle } from '#/components/utils/handle.tsx'
 import { VerifyEmailDialog } from '#/components/verify-email-dialog.tsx'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
@@ -39,6 +47,8 @@ import {
   useReactivateAccount,
 } from '#/data/account.ts'
 import {
+  useDisableEmailAuthFactor,
+  useEnableEmailAuthFactor,
   useUpdateEmailConfirm,
   useUpdateEmailRequest,
   useVerifyEmailConfirm,
@@ -49,6 +59,7 @@ import {
   useResetPasswordConfirm,
   useResetPasswordRequest,
 } from '#/data/password.ts'
+import { SecondAuthenticationFactorRequiredError } from '#/lib/api'
 import type { Override } from '#/lib/util.ts'
 import { cn } from '#/lib/utils.ts'
 
@@ -67,10 +78,9 @@ function ManagePage() {
         left the gaps looking arbitrary. */}
       <ItemGroup>
         <EmailUpdateRow />
-        <ItemSeparator />
         <HandleUpdateRow />
         <PasswordUpdateRow />
-        <ItemSeparator />
+        <EmailAuthFactorUpdateRow />
         <AccountStatusRow />
         <AccountDeletionRow />
       </ItemGroup>
@@ -88,10 +98,20 @@ function EmailVerificationRow() {
   if (!email || emailVerified) return null
 
   return (
-    <Notice
-      role="info"
-      icon={ShieldAlertIcon}
-      action={
+    <AccountRow className="hover:bg-muted/30">
+      {/* No disc — this is a notice, not a destination like the rows below —
+        but the same 48px slot, so the text lines up with theirs. */}
+      <ItemMedia className="text-warning size-12">
+        <ShieldAlertIcon aria-hidden className="size-6" />
+      </ItemMedia>
+      <ItemContent className="min-w-0">
+        <ItemTitle className="w-full text-base leading-snug">
+          <span className="block min-w-0 font-medium">
+            <Trans>Email not verified</Trans>
+          </span>
+        </ItemTitle>
+      </ItemContent>
+      <ItemActions>
         <VerifyEmailDialog
           email={email}
           requestPending={verifyRequest.isPending}
@@ -103,14 +123,12 @@ function EmailVerificationRow() {
             await verifyConfirm.mutateAsync({ did, token, email })
           }}
         >
-          <Button size="sm" variant="secondary">
-            <Trans context="verify email">Verify now</Trans>
+          <Button variant="secondary" className="h-9">
+            <Trans context="verify email">Verify</Trans>
           </Button>
         </VerifyEmailDialog>
-      }
-    >
-      <Trans>Your email address needs to be verified.</Trans>
-    </Notice>
+      </ItemActions>
+    </AccountRow>
   )
 }
 
@@ -191,6 +209,85 @@ function PasswordUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
   )
 }
 
+function EmailAuthFactorUpdateRow(props: Omit<RowProps, 'icon' | 'value'>) {
+  const { account } = useAuthenticatedSession()
+  const { did, email } = account
+
+  const enableEmailAuthFactor = useEnableEmailAuthFactor()
+  const disableEmailAuthFactor = useDisableEmailAuthFactor()
+
+  // These endpoints requires an email, so if the user doesn't have one, we can't
+  // let them update their email auth factor. These users should not exist in
+  // normal conditions (may have been created manually by an admin), and are
+  // expected to contact support.
+  if (!email) return null
+
+  if (account.emailAuthFactor) {
+    return (
+      <DisableEmailAuthFactorDialog
+        email={email}
+        requestPending={disableEmailAuthFactor.isPending}
+        confirmPending={disableEmailAuthFactor.isPending}
+        onRequest={async () => {
+          try {
+            await disableEmailAuthFactor.mutateAsync({ did })
+          } catch (err) {
+            if (err instanceof SecondAuthenticationFactorRequiredError) {
+              return { tokenRequired: true }
+            } else {
+              throw err
+            }
+          }
+        }}
+        onConfirm={async ({ token }) => {
+          await disableEmailAuthFactor.mutateAsync({ did, token })
+          // @NOTE an SecondAuthenticationFactorRequiredError thrown here would
+          // indicate that the user needs to provide another authentication
+          // factor to complete the action, while already on the confirmation
+          // screen.
+        }}
+      >
+        <Row
+          {...props}
+          icon={ShieldCheckIcon}
+          value={<Trans context="2FA">Enabled</Trans>}
+        >
+          <Trans>Two-factor authentication (2FA)</Trans>
+        </Row>
+      </DisableEmailAuthFactorDialog>
+    )
+  }
+
+  if (!account.emailVerified) {
+    return (
+      <Row
+        {...props}
+        disabled
+        icon={ShieldAlertIcon}
+        value={<Trans>Verify email to enable</Trans>}
+      >
+        <Trans>Two-factor authentication (2FA)</Trans>
+      </Row>
+    )
+  }
+
+  return (
+    <EnableEmailAuthFactorDialog
+      onConfirm={async () => {
+        await enableEmailAuthFactor.mutateAsync({ did })
+      }}
+    >
+      <Row
+        {...props}
+        icon={ShieldAlertIcon}
+        value={<Trans context="2FA">Disabled</Trans>}
+      >
+        <Trans>Two-factor authentication (2FA)</Trans>
+      </Row>
+    </EnableEmailAuthFactorDialog>
+  )
+}
+
 function AccountStatusRow(props: Omit<RowProps, 'icon' | 'value'>) {
   const { account } = useAuthenticatedSession()
   const deactivate = useDeactivateAccount()
@@ -203,7 +300,7 @@ function AccountStatusRow(props: Omit<RowProps, 'icon' | 'value'>) {
           await reactivate.mutateAsync({ did: account.did })
         }}
       >
-        <Row {...props} icon={SnowflakeIcon} variant="default">
+        <Row {...props} icon={SunIcon} variant="default">
           <Trans>Reactivate account</Trans>
         </Row>
       </ReactivateAccountDialog>
@@ -216,7 +313,7 @@ function AccountStatusRow(props: Omit<RowProps, 'icon' | 'value'>) {
         await deactivate.mutateAsync({ did: account.did })
       }}
     >
-      <Row {...props} icon={SnowflakeIcon} variant="destructive">
+      <Row {...props} icon={MoonIcon} variant="destructive">
         <Trans>Deactivate account</Trans>
       </Row>
     </DeactivateAccountDialog>
@@ -280,6 +377,8 @@ type RowProps = Override<
     value?: ReactNode
     /** Destructive rows keep the danger signal without a full red fill. */
     variant?: 'default' | 'destructive'
+    /** Renders the row's button disabled, for a setting that isn't reachable */
+    disabled?: boolean
   }
 >
 
@@ -296,6 +395,7 @@ function Row({
   icon: Icon,
   value,
   variant = 'default',
+  disabled = false,
   children,
   className,
   ...props
@@ -303,42 +403,48 @@ function Row({
   const destructive = variant === 'destructive'
 
   return (
-    <Item
+    <AccountRow
       {...props}
-      render={<button type="button" />}
+      render={<button type="button" disabled={disabled} />}
       className={cn(
-        'hover:bg-muted w-full text-left',
         destructive && 'text-destructive hover:bg-destructive/10',
+        disabled && 'pointer-events-none opacity-60',
         className,
       )}
     >
-      <ItemMedia variant="icon">
-        <Icon aria-hidden className={cn(destructive && 'text-destructive')} />
-      </ItemMedia>
+      <AccountRowMedia disc className={cn(destructive && 'text-destructive')}>
+        <Icon aria-hidden className="size-6" />
+      </AccountRowMedia>
 
       {/* @NOTE `min-w-0` is load-bearing: an email address has no break
         opportunity, so without it the row overflows and `Item`'s wrap drops the
-        chevron onto a line of its own. `shrink-0` keeps the label whole, so the
-        value is what truncates. */}
-      <ItemContent className="min-w-0 flex-row items-center gap-3">
-        <ItemTitle className="shrink-0">
-          <span>{children}</span>
+        chevron onto a line of its own. */}
+      <ItemContent className="min-w-0 gap-0.5">
+        <ItemTitle className="w-full text-lg leading-tight">
+          <span className="block min-w-0 truncate font-semibold">
+            {children}
+          </span>
         </ItemTitle>
         {value != null && (
-          <span
-            // A plain string value is the only one we can put in a tooltip
-            // ourselves; `Handle` carries its own `title`.
-            title={typeof value === 'string' ? value : undefined}
-            className="text-muted-foreground min-w-0 flex-1 truncate text-right text-sm"
-          >
-            {value}
-          </span>
+          <ItemDescription className="text-base leading-tight">
+            <span
+              // A plain string value is the only one we can put in a tooltip
+              // ourselves; `Handle` carries its own `title`.
+              title={typeof value === 'string' ? value : undefined}
+              className="block truncate"
+            >
+              {value}
+            </span>
+          </ItemDescription>
         )}
       </ItemContent>
 
       <ItemActions>
-        <ChevronRightIcon aria-hidden className="size-4 shrink-0 opacity-60" />
+        <ChevronRightIcon
+          aria-hidden
+          className="text-muted-foreground size-5 shrink-0"
+        />
       </ItemActions>
-    </Item>
+    </AccountRow>
   )
 }

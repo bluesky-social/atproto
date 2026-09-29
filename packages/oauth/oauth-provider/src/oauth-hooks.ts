@@ -11,6 +11,8 @@ import type {
 } from '@atproto/oauth-types'
 import type {
   DeleteAccountConfirmInput,
+  DisableEmailAuthFactorInput,
+  EnableEmailAuthFactorInput,
   ResetPasswordConfirmInput,
   ResetPasswordRequestInput,
   SignUpData,
@@ -176,6 +178,65 @@ export type OAuthHooks = {
    */
   onVerifyEmailConfirmed?: (data: {
     input: VerifyEmailConfirmInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called whenever a user is trying to enable their email auth
+   * factor (OTP), before the change is saved to the account store.
+   */
+  onEnableEmailAuthFactor?: (data: {
+    input: EnableEmailAuthFactorInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called only after the email auth factor was actually enabled
+   * on the account store. This follows
+   * {@link OAuthHooks.onEnableEmailAuthFactor} and is triggered only if the
+   * change succeeded and actually occurred.
+   */
+  onEnabledEmailAuthFactor?: (data: {
+    input: EnableEmailAuthFactorInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called when a user requests that their email auth factor (OTP)
+   * be disabled, before the change is saved to the account store.
+   *
+   * @note Disabling is two-phase:
+   * - First no {@link DisableEmailAuthFactorInput.token} is provided and the
+   * store implementation is expected to trigger an email confirmation. When
+   * that happens, {@link OAuthHooks.onDisabledEmailAuthFactor} will not be
+   * called during the processing of the first HTTP request.
+   * - In the second request, which follows the email confirmation, the
+   * {@link DisableEmailAuthFactorInput.token} is provided and the store
+   * implementation is expected to actually disable the email auth factor. At
+   * this point, {@link OAuthHooks.onDisabledEmailAuthFactor} will be called
+   * after the store has successfully processed the request.
+   */
+  onDisableEmailAuthFactor?: (data: {
+    input: DisableEmailAuthFactorInput
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+    account: Account
+  }) => Awaitable<void>
+
+  /**
+   * This hook is called only after the email auth factor was actually disabled
+   * on the account store. This follows
+   * {@link OAuthHooks.onDisableEmailAuthFactor} and is triggered only if the
+   * change succeeded and actually occurred.
+   */
+  onDisabledEmailAuthFactor?: (data: {
+    input: DisableEmailAuthFactorInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
     account: Account

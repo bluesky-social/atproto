@@ -4,6 +4,7 @@
   "references": [
     { "path": "../api/tsconfig.build.json" },
     { "path": "../dev-env/tsconfig.build.json" },
+    { "path": "../oauth/oauth-client-node/tsconfig.build.json" },
     { "path": "./tsconfig.build.json" },
   ],
   "compilerOptions": {

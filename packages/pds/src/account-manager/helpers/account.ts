@@ -24,6 +24,7 @@ export class UserAlreadyExistsError extends Error {
 export type ActorAccount = ActorEntry & {
   email: string | null
   emailConfirmedAt: string | null
+  emailAuthFactorAt: string | null
   invitesDisabled: 0 | 1 | null
 }
 
@@ -46,6 +47,11 @@ export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
   return db.db
     .selectFrom('actor')
     .leftJoin('account', 'actor.did', 'account.did')
+    .leftJoin(
+      'account_email_auth_factor',
+      'actor.did',
+      'account_email_auth_factor.did',
+    )
     .$if(!includeTakenDown, (qb) =>
       qb.where(notSoftDeletedClause(ref('actor'))),
     )
@@ -62,6 +68,7 @@ export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
       'account.email',
       'account.emailConfirmedAt',
       'account.invitesDisabled',
+      'account_email_auth_factor.emailAuthFactorEnabledAt as emailAuthFactorAt',
     ])
 }
 
@@ -180,6 +187,9 @@ export const deleteAccount = async (
   )
   await db.executeWithRetry(
     db.db.deleteFrom('email_token').where('did', '=', did),
+  )
+  await db.executeWithRetry(
+    db.db.deleteFrom('account_email_auth_factor').where('did', '=', did),
   )
   await db.executeWithRetry(
     db.db.deleteFrom('refresh_token').where('did', '=', did),

@@ -1,5 +1,12 @@
 # @atproto/lex-builder
 
+## 0.1.16
+
+### Patch Changes
+
+- Updated dependencies [[`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f)]:
+  - @atproto/lex-document@0.1.12
+
 ## 0.1.15
 
 ### Patch Changes

@@ -51,6 +51,11 @@
           "items": { "type": "string" },
           "description": "Policy keys recommended when actioning reports in this queue"
         },
+        "recommendedLabels": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Labels recommended for this queue and used as a fallback when routing label appeals"
+        },
         "createdBy": {
           "type": "string",
           "format": "did",

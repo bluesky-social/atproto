@@ -52,6 +52,7 @@ export const readEnv = (): OzoneEnvironment => {
     jetstreamUrl: envStr('OZONE_JETSTREAM_URL'),
     assignmentQueueDurationMs: envInt('OZONE_ASSIGNMENT_QUEUE_DURATION_MS'),
     assignmentReportDurationMs: envInt('OZONE_ASSIGNMENT_REPORT_DURATION_MS'),
+    inboxAppealWindowMonths: envInt('OZONE_INBOX_APPEAL_WINDOW_MONTHS'),
     statsComputerIntervalMinutes: envInt(
       'OZONE_STATS_COMPUTER_INTERVAL_MINUTES',
     ),
@@ -60,6 +61,7 @@ export const readEnv = (): OzoneEnvironment => {
 
 export type OzoneEnvironment = {
   nodeEnv?: string
+  inboxAppealWindowMonths?: number
   devMode?: boolean
   version?: string
   port?: number

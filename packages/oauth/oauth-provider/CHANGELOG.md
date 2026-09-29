@@ -1,5 +1,21 @@
 # @atproto/oauth-provider
 
+## 0.22.9
+
+### Patch Changes
+
+- [#5547](https://github.com/bluesky-social/atproto/pull/5547) [`80bcda7`](https://github.com/bluesky-social/atproto/commit/80bcda748b435ecfecc18158921f4a84de2b4247) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Narrow the CSP `img-src` directive for customization images: the `data:` scheme source is now emitted only when a customization image is actually configured as a `data:` uri, and http(s) customization images contribute their own origin.
+
+- [#5536](https://github.com/bluesky-social/atproto/pull/5536) [`7f6785b`](https://github.com/bluesky-social/atproto/commit/7f6785bd4c48438e621c9b96265a52f14d64ce3c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove unused dev dependency `@types/send`
+
+- [#5499](https://github.com/bluesky-social/atproto/pull/5499) [`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f) Thanks [@fatfingers23](https://github.com/fatfingers23)! - Resolve permission set lexicons hosted on the PDS itself from the local actor store instead of fetching them over the network. Re-export `LexResolverError` from `@atproto/oauth-provider`.
+
+- [#5547](https://github.com/bluesky-social/atproto/pull/5547) [`80bcda7`](https://github.com/bluesky-social/atproto/commit/80bcda748b435ecfecc18158921f4a84de2b4247) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for http: customization assets in development
+- Updated dependencies [[`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f), [`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f), [`1f639d9`](https://github.com/bluesky-social/atproto/commit/1f639d97498981eea3553b9a20a8538437af9658), [`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f), [`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f), [`210907c`](https://github.com/bluesky-social/atproto/commit/210907c801d281c6b83c92bf94c888b2dc3d531f)]:
+  - @atproto/lex-resolver@0.3.0
+  - @atproto/oauth-provider-ui@0.10.4
+  - @atproto/lex-document@0.1.12
+
 ## 0.22.8
 
 ### Patch Changes

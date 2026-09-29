@@ -13,6 +13,7 @@ export type Account = {
   locale?: string
   email?: string
   emailVerified?: boolean
+  emailAuthFactor?: boolean
   name?: string
   handle?: HandleString
   picture?: string
