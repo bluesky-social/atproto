@@ -30,7 +30,7 @@ export const SPACE_TOKEN_TYPES = {
   credential: {
     typ: 'atproto-space-credential+jwt',
     kid: '#atproto',
-    expiresInSec: 7200,
+    expiresInSec: 600,
     requireAud: false,
     requireCnf: true,
     singleUse: false,
@@ -70,6 +70,7 @@ export type SpaceToken = {
 }
 
 export const CLOCK_SKEW_SEC = 5
+export const SPACE_CREDENTIAL_MAX_AGE_SEC = 3600
 
 export type CreateSpaceTokenOpts = {
   iss: string
@@ -92,6 +93,15 @@ export const createSpaceToken = async (
   if (spec.requireCnf && !opts.dpopJkt) {
     throw new SpaceTokenError(`a ${type} token requires a "dpopJkt"`)
   }
+  const expiresInSec = opts.expiresInSec ?? spec.expiresInSec
+  if (
+    type === 'credential' &&
+    (!Number.isFinite(expiresInSec) ||
+      expiresInSec <= 0 ||
+      expiresInSec > SPACE_CREDENTIAL_MAX_AGE_SEC)
+  ) {
+    throw new SpaceTokenError('invalid space credential lifetime')
+  }
 
   const iat = Math.floor(Date.now() / 1000)
   const header: SpaceTokenHeader = { alg: keypair.jwtAlg, typ: spec.typ }
@@ -104,7 +114,7 @@ export const createSpaceToken = async (
     ...(opts.aud ? { aud: opts.aud } : undefined),
     ...(opts.dpopJkt ? { cnf: { jkt: opts.dpopJkt } } : undefined),
     iat,
-    exp: iat + (opts.expiresInSec ?? spec.expiresInSec),
+    exp: iat + expiresInSec,
     jti: randomStr(16, 'hex'),
   }
 
@@ -145,7 +155,7 @@ export const parseSpaceToken = (
   if (!payload.sub) {
     throw new SpaceTokenError('missing token "sub"', 'BadJwtSub')
   }
-  if (typeof payload.exp !== 'number') {
+  if (!Number.isFinite(payload.exp)) {
     throw new SpaceTokenError('missing token "exp"', 'BadJwt')
   }
   if (spec.requireAud && !payload.aud) {
@@ -154,11 +164,16 @@ export const parseSpaceToken = (
   if (spec.requireCnf && !payload.cnf?.jkt) {
     throw new SpaceTokenError('missing token "cnf.jkt"', 'BadJwtCnf')
   }
-  if (spec.singleUse && (typeof payload.jti !== 'string' || !payload.jti)) {
-    throw new SpaceTokenError(
-      `a ${type} token requires a "jti" to be consumed by`,
-      'BadJwt',
-    )
+  if (typeof payload.jti !== 'string' || !payload.jti) {
+    throw new SpaceTokenError(`a ${type} token requires a "jti"`, 'BadJwt')
+  }
+  if (
+    type === 'credential' &&
+    (!Number.isFinite(payload.iat) ||
+      payload.exp <= payload.iat ||
+      payload.exp - payload.iat > SPACE_CREDENTIAL_MAX_AGE_SEC)
+  ) {
+    throw new SpaceTokenError('invalid space credential lifetime', 'BadJwt')
   }
   if (type === 'clientAttestation' && payload.iss !== payload.sub) {
     throw new SpaceTokenError(
@@ -194,6 +209,9 @@ export const verifySpaceToken = async (
   const { header, payload, signingInput, sig } = parseSpaceToken(type, jwt)
 
   const now = Math.floor(Date.now() / 1000)
+  if (type === 'credential' && payload.iat > now + CLOCK_SKEW_SEC) {
+    throw new SpaceTokenError('space credential issued in the future', 'BadJwt')
+  }
   if (now - CLOCK_SKEW_SEC >= payload.exp) {
     throw new SpaceTokenError('token expired', 'JwtExpired')
   }
