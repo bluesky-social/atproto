@@ -218,10 +218,20 @@ export class HCaptchaClient {
       // @NOTE This used to be implemented as sha256("<salt><value>"), which
       // resulted in a 32-byte derived key, hence the length parameter 32 in
       // scrypt.
-      scrypt(value, this.config.tokenSalt, 32, (err, derivedKey) => {
-        if (err) reject(err)
-        else resolve(derivedKey.toString('base64'))
-      })
+      scrypt(
+        value,
+        this.config.tokenSalt,
+        32,
+        {
+          // @NOTE we use a small cost to reduce CPU usage during hashing. Since
+          // we are not hashing passwords, a lower cost is acceptable.
+          cost: 1024, // defaults to 16384 (must be power of 2)
+        },
+        (err, derivedKey) => {
+          if (err) reject(err)
+          else resolve(derivedKey.toString('base64'))
+        },
+      )
     })
   }
 }
