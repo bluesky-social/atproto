@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { scrypt } from 'node:crypto'
 import { z } from 'zod'
 import {
   type Fetch,
@@ -197,23 +197,30 @@ export class HCaptchaClient {
     }
   }
 
-  public buildClientTokens(
+  public async buildClientTokens(
     remoteip: string,
     handle: string,
     userAgent?: string,
-  ): HcaptchaClientTokens {
-    return {
-      hashedIp: this.hashToken(remoteip),
-      hashedHandle: this.hashToken(handle),
-      hashedUserAgent: userAgent ? this.hashToken(userAgent) : undefined,
-    }
+  ): Promise<HcaptchaClientTokens> {
+    const [hashedIp, hashedHandle, hashedUserAgent] = await Promise.all([
+      this.hashToken(remoteip),
+      this.hashToken(handle),
+      userAgent ? this.hashToken(userAgent) : Promise.resolve(undefined),
+    ])
+
+    return { hashedIp, hashedHandle, hashedUserAgent }
   }
 
-  protected hashToken(value: string) {
-    const hash = createHash('sha256')
-    hash.update(this.config.tokenSalt)
-    hash.update(value)
-    return hash.digest().toString('base64')
+  protected async hashToken(value: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      // @NOTE This used to be implemented as sha256("<salt><value>"), which
+      // resulted in a 32-byte derived key, hence the length parameter 32 in
+      // scrypt.
+      scrypt(value, this.config.tokenSalt, 32, (err, derivedKey) => {
+        if (err) reject(err)
+        else resolve(derivedKey.toString('base64'))
+      })
+    })
   }
 }
 
