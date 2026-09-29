@@ -44,6 +44,28 @@ setup(() => ({
 options — and therefore the instrumentations — are only built once an OTLP endpoint
 is configured.
 
+### XRPC routes on metrics
+
+Pass the XRPC methods the service may answer (including the ones it proxies) as
+`xrpcMethods`, typically the method ids from its lexicon codegen:
+
+```ts
+import { ids } from './lexicon/lexicons.js'
+
+setup(() => ({
+  name: pkg.name,
+  version: pkg.version,
+  xrpcMethods: Object.values(ids),
+}))
+```
+
+This sets the `http.route` attribute of the HTTP server duration metric to
+`/xrpc/<nsid>` for these methods, and to `/xrpc/{unknown}` for any other NSID.
+Without it, the route recorded on metrics is whatever the Express
+instrumentation last saw, which for catchall handlers (e.g. proxying) is `/` or
+nothing at all. The list is what keeps the attribute low-cardinality: any client
+can make up an NSID. Span names aren't affected.
+
 The instrumentations common to atproto services (HTTP with XRPC-aware span naming,
 Express, Undici, Pino with log correlation, and Node runtime metrics) are always
 registered alongside the ones you supply. The
