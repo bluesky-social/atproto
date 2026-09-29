@@ -142,10 +142,11 @@ export class AppContext implements AsyncDisposable {
 
   static async fromEnv(
     env: ServerEnvironment = readEnv(),
+    overrides?: Partial<AppContextOptions>,
   ): Promise<AppContext> {
     const cfg = envToCfg(env)
     const secrets = envToSecrets(env)
-    return AppContext.fromConfig(cfg, secrets)
+    return AppContext.fromConfig(cfg, secrets, overrides)
   }
 
   static async fromConfig(
@@ -322,13 +323,20 @@ export class AppContext implements AsyncDisposable {
     })
 
     const plcRotationKey =
-      secrets.plcRotationKey.provider === 'kms'
+      overrides?.plcRotationKey ??
+      (secrets.plcRotationKey?.provider === 'kms'
         ? await KmsKeypair.load({
             keyId: secrets.plcRotationKey.keyId,
           })
-        : await crypto.Secp256k1Keypair.import(
-            secrets.plcRotationKey.privateKeyHex,
-          )
+        : secrets.plcRotationKey?.provider === 'memory'
+          ? await crypto.Secp256k1Keypair.import(
+              secrets.plcRotationKey.privateKeyHex,
+            )
+          : undefined)
+
+    if (!plcRotationKey) {
+      throw new Error('Must configure plc rotation key')
+    }
 
     const accountManager = new AccountManager(
       cfg,

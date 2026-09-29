@@ -38,12 +38,13 @@ import compression from './util/compression.js'
 import * as wellKnown from './well-known.js'
 
 export {
+  type KeyObject,
   bearerTokenFromReq,
   createPublicKeyObject,
   createSecretKeyObject,
 } from './auth-verifier.js'
 export * from './config/index.js'
-export { AppContext } from './context.js'
+export { AppContext, type AppContextOptions } from './context.js'
 export { Database } from './db/index.js'
 export { DiskBlobStore } from './disk-blobstore.js'
 export * from './lexicons.js'
@@ -74,10 +75,13 @@ export class PDS implements AsyncDisposable {
     this.app = opts.app
   }
 
-  static async fromEnv(env: ServerEnvironment = readEnv()): Promise<PDS> {
+  static async fromEnv(
+    env: ServerEnvironment = readEnv(),
+    overrides?: Partial<AppContextOptions>,
+  ): Promise<PDS> {
     const cfg = envToCfg(env)
     const secrets = envToSecrets(env)
-    return PDS.create(cfg, secrets)
+    return PDS.create(cfg, secrets, overrides)
   }
 
   /**
