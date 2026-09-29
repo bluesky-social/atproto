@@ -91,7 +91,7 @@ For working with that SDK, invoke the focused skills under [.agents/skills/](.ag
 
 Agent files — this `AGENTS.md`, the skills under [.agents/skills/](.agents/skills/), and any package-level equivalents — are part of the codebase and must stay in sync with it.
 
-- Keep working plans, handoffs, review reports, query-plan captures, and other session scratch files in the gitignored root `.local/` directory or outside the repository. Never commit them. Before committing, inspect the staged file list for working documents; put only durable project guidance in tracked documentation.
+- Keep working plans, handoffs, review reports, query-plan captures, and other session scratch files outside the repository, such as in the workspace directory containing the checkout. Do not add repository ignore rules for them. Never commit them. Before committing, inspect the staged file list for working documents; put only durable project guidance in tracked documentation.
 
 - **New pattern introduced** → document it in the relevant agent file (package-specific if scoped, global otherwise) so it can be re-applied.
 - **Existing important pattern found undocumented** → add it.

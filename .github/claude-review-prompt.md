@@ -49,8 +49,8 @@ Where this repo differs from a typical TypeScript service:
   removes a documented pattern, CLAUDE.md / STYLE_GUIDE.md / the skills
   under `.agents/skills/` should be updated in the same PR.
 - Flag committed working plans, session handoffs, review reports, and other
-  scratch documents. These belong in the gitignored root `.local/` directory
-  or outside the repository; tracked docs should contain durable guidance.
+  scratch documents. These belong outside the repository and do not need
+  repository ignore rules; tracked docs should contain durable guidance.
 - Documentation and comments must describe the current state of the code.
   A doc or comment the PR leaves behind describing the old behavior — a
   stale JSDoc, a comment referring to a deleted symbol, a "previously…" /
