@@ -3,10 +3,12 @@ import type { ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { keyBy } from '@atproto/common'
 import { lexParse } from '@atproto/lex'
+import { NOTIFICATION_REASON } from '../../../api/app/bsky/notification/constants.js'
 import type { app } from '../../../lexicons/index.js'
 import type { Service } from '../../../proto/bsky_connect.js'
 import {
   FilterableNotificationPreference,
+  NotificationFeed,
   NotificationInclude,
   NotificationPreference,
   NotificationPreferences,
@@ -54,12 +56,93 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const notifications = page.items.map((notif) => ({
       recipientDid: actorDid,
       uri: notif.uri,
-      reason: notif.reason,
+      reason:
+        notif.reason === NOTIFICATION_REASON.FOLLOW_BACK
+          ? NOTIFICATION_REASON.FOLLOW
+          : notif.reason,
       reasonSubject: notif.reasonSubject ?? undefined,
       timestamp: Timestamp.fromDate(new Date(notif.sortAt)),
     }))
     return {
       notifications,
+      cursor: page.cursor,
+    }
+  },
+
+  async getNotificationsV2(req) {
+    const { actorDid, feed, limit, cursor } = req
+    const { ref } = db.db.dynamic
+
+    let builder = db.db
+      .selectFrom('notification as notif')
+      .where('notif.did', '=', actorDid)
+      .where((eb) =>
+        eb.or([
+          eb('reasonSubject', 'is', null),
+          eb.exists(
+            db.db
+              .selectFrom('record as subject')
+              .selectAll()
+              .whereRef('subject.uri', '=', ref('notif.reasonSubject')),
+          ),
+        ]),
+      )
+      .select([
+        'notif.author as authorDid',
+        'notif.recordUri as uri',
+        'notif.recordCid as cid',
+        'notif.reason as reason',
+        'notif.reasonSubject as reasonSubject',
+        'notif.sortAt as sortAt',
+      ])
+
+    switch (feed) {
+      case NotificationFeed.ALL:
+        break
+      case NotificationFeed.PEOPLE_I_FOLLOW:
+        builder = builder.where((eb) =>
+          eb.exists(
+            db.db
+              .selectFrom('follow')
+              .select('follow.uri')
+              .where('follow.creator', '=', actorDid)
+              .whereRef('follow.subjectDid', '=', ref('notif.author')),
+          ),
+        )
+        break
+      case NotificationFeed.CONVERSATIONS:
+        builder = builder.where('notif.reason', 'in', [
+          NOTIFICATION_REASON.REPLY,
+          NOTIFICATION_REASON.QUOTE,
+          NOTIFICATION_REASON.MENTION,
+        ])
+        break
+      case NotificationFeed.FOLLOWERS:
+        builder = builder.where('notif.reason', 'in', [
+          NOTIFICATION_REASON.FOLLOW,
+          NOTIFICATION_REASON.FOLLOW_BACK,
+        ])
+        break
+      case NotificationFeed.ACTIVITY:
+        builder = builder.where(
+          'notif.reason',
+          '=',
+          NOTIFICATION_REASON.SUBSCRIBED_POST,
+        )
+        break
+    }
+
+    const key = new IsoSortAtKey(ref('notif.sortAt'))
+    builder = key.paginate(builder, { cursor, limit })
+    const page = key.page(await builder.execute(), limit)
+    return {
+      notifications: page.items.map((notif) => ({
+        recipientDid: actorDid,
+        uri: notif.uri,
+        reason: notif.reason,
+        reasonSubject: notif.reasonSubject ?? undefined,
+        timestamp: Timestamp.fromDate(new Date(notif.sortAt)),
+      })),
       cursor: page.cursor,
     }
   },

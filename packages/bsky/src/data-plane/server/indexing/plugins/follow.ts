@@ -1,6 +1,7 @@
 import type { Selectable } from 'kysely'
 import type { Cid } from '@atproto/lex'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
+import { NOTIFICATION_REASON } from '../../../../api/app/bsky/notification/constants.js'
 import { app } from '../../../../lexicons/index.js'
 import type { BackgroundQueue } from '../../background.js'
 import type {
@@ -11,7 +12,9 @@ import type { Database } from '../../db/index.js'
 import { countAll, excluded } from '../../db/util.js'
 import { RecordProcessor } from '../processor.js'
 
-type IndexedFollow = Selectable<DatabaseSchemaType['follow']>
+type IndexedFollow = Selectable<DatabaseSchemaType['follow']> & {
+  isFollowBack?: boolean
+}
 
 const insertFn = async (
   db: DatabaseSchema,
@@ -33,7 +36,15 @@ const insertFn = async (
     .onConflict((oc) => oc.doNothing())
     .returningAll()
     .executeTakeFirst()
-  return inserted || null
+  if (!inserted) return null
+
+  const followedBack = await db
+    .selectFrom('follow')
+    .select('uri')
+    .where('creator', '=', inserted.subjectDid)
+    .where('subjectDid', '=', inserted.creator)
+    .executeTakeFirst()
+  return { ...inserted, isFollowBack: !!followedBack }
 }
 
 const findDuplicate = async (
@@ -57,7 +68,9 @@ const notifsForInsert = (obj: IndexedFollow) => {
       author: obj.creator,
       recordUri: obj.uri,
       recordCid: obj.cid,
-      reason: 'follow' as const,
+      reason: obj.isFollowBack
+        ? NOTIFICATION_REASON.FOLLOW_BACK
+        : NOTIFICATION_REASON.FOLLOW,
       reasonSubject: null,
       sortAt: obj.sortAt,
     },

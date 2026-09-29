@@ -65,6 +65,7 @@ import unmuteActor from './app/bsky/graph/unmuteActor.js'
 import unmuteActorList from './app/bsky/graph/unmuteActorList.js'
 import unmuteThread from './app/bsky/graph/unmuteThread.js'
 import getLabelerServices from './app/bsky/labeler/getServices.js'
+import getGroupedNotifications from './app/bsky/notification/getGroupedNotifications.js'
 import getPreferences from './app/bsky/notification/getPreferences.js'
 import getUnreadCount from './app/bsky/notification/getUnreadCount.js'
 import listActivitySubscriptions from './app/bsky/notification/listActivitySubscriptions.js'
@@ -191,6 +192,7 @@ export default function (server: Server, ctx: AppContext) {
   getUnreadCount(server, ctx)
   listActivitySubscriptions(server, ctx)
   listNotifications(server, ctx)
+  getGroupedNotifications(server, ctx)
   putActivitySubscription(server, ctx)
   updateSeen(server, ctx)
   putPreferences(server, ctx)

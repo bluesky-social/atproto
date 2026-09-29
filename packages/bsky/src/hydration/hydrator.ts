@@ -7,6 +7,7 @@ import {
   type DidString,
   type UriString,
 } from '@atproto/syntax'
+import { NOTIFICATION_REASON } from '../api/app/bsky/notification/constants.js'
 import type { DataPlaneClient } from '../data-plane/client/index.js'
 import type {
   FeatureGatesClient,
@@ -1327,7 +1328,7 @@ export class Hydrator {
     ])
     const viewerRootPostUris = new Set<AtUriString>()
     for (const notif of notifs) {
-      if (notif.reason === 'reply') {
+      if (notif.reason === NOTIFICATION_REASON.REPLY) {
         const post = posts.get(notif.uri as AtUriString)
         if (post) {
           const rootUri = post.record.reply?.root.uri
