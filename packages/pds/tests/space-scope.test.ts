@@ -27,9 +27,10 @@ const accessAuth = (): AccessOutput => ({
   },
 })
 
-const credentialAuth = (): SpaceCredentialOutput => ({
+const credentialAuth = (audience: DidString): SpaceCredentialOutput => ({
   credentials: {
     type: 'space_credential',
+    audience,
     iss: 'did:plc:owner',
     space: SPACE,
   },
@@ -81,7 +82,7 @@ describe('assertSpaceRead', () => {
   })
 
   it('a space credential reads any repo in its own space', () => {
-    const auth = credentialAuth()
+    const auth = credentialAuth(OTHER_DID)
     expect(() => assertSpaceRead(auth, SPACE, OTHER_DID)).not.toThrow()
     expect(() =>
       assertSpaceRead(

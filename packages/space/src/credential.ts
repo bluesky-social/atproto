@@ -1,5 +1,6 @@
 import { type Keypair, randomStr, verifySignature } from '@atproto/crypto'
 import { fromBase64, toBase64 } from '@atproto/lex-data'
+import { type DidString, isValidDid } from '@atproto/syntax'
 import { SpaceTokenError } from './error.js'
 
 /**
@@ -11,10 +12,7 @@ import { SpaceTokenError } from './error.js'
 export const spaceHostAud = (spaceDid: string): string =>
   `${spaceDid}#atproto_space_host`
 
-// The three token classes share a wire shape and differ only in who signs them,
-// who they're addressed to, and how long they live — hence data, not three impls.
-// A credential is multi-use across repo hosts, so it carries no aud; it is bound
-// to the holder's DPoP key instead (see dpop.ts).
+// @NOTE credentials carry no audience; HTTP message signatures bind each use to an audience DID.
 export const SPACE_TOKEN_TYPES = {
   delegation: {
     typ: 'atproto-space-delegation+jwt',
@@ -55,7 +53,7 @@ export type SpaceTokenPayload = {
   iat: number
   exp: number
   jti: string
-  cnf?: { jkt: string }
+  cnf?: { kid: DidString }
 }
 
 export type SpaceTokenHeader = {
@@ -75,7 +73,7 @@ export type CreateSpaceTokenOpts = {
   iss: string
   sub: string
   aud?: string
-  dpopJkt?: string
+  keyId?: DidString
   expiresInSec?: number
   kid?: string
 }
@@ -89,8 +87,8 @@ export const createSpaceToken = async (
   if (spec.requireAud && !opts.aud) {
     throw new SpaceTokenError(`a ${type} token requires an "aud"`)
   }
-  if (spec.requireCnf && !opts.dpopJkt) {
-    throw new SpaceTokenError(`a ${type} token requires a "dpopJkt"`)
+  if (spec.requireCnf && !opts.keyId) {
+    throw new SpaceTokenError(`a ${type} token requires a "keyId"`)
   }
 
   const iat = Math.floor(Date.now() / 1000)
@@ -102,7 +100,7 @@ export const createSpaceToken = async (
     iss: opts.iss,
     sub: opts.sub,
     ...(opts.aud ? { aud: opts.aud } : undefined),
-    ...(opts.dpopJkt ? { cnf: { jkt: opts.dpopJkt } } : undefined),
+    ...(opts.keyId ? { cnf: { kid: opts.keyId } } : undefined),
     iat,
     exp: iat + (opts.expiresInSec ?? spec.expiresInSec),
     jti: randomStr(16, 'hex'),
@@ -151,8 +149,8 @@ export const parseSpaceToken = (
   if (spec.requireAud && !payload.aud) {
     throw new SpaceTokenError('missing token "aud"', 'BadJwtAudience')
   }
-  if (spec.requireCnf && !payload.cnf?.jkt) {
-    throw new SpaceTokenError('missing token "cnf.jkt"', 'BadJwtCnf')
+  if (spec.requireCnf && !isValidDid(payload.cnf?.kid)) {
+    throw new SpaceTokenError('missing token "cnf.kid"', 'BadJwtCnf')
   }
   if (spec.singleUse && (typeof payload.jti !== 'string' || !payload.jti)) {
     throw new SpaceTokenError(

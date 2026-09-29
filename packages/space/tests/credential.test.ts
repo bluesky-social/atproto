@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest'
-import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { type Keypair, P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import type { DidString } from '@atproto/syntax'
 import {
   SPACE_TOKEN_TYPES,
   SpaceTokenError,
@@ -13,7 +14,7 @@ const USER = 'did:example:alice'
 const AUTHORITY = 'did:example:space'
 const SPACE_HOST = `${AUTHORITY}#atproto_space_host`
 const CLIENT_ID = 'https://app.example.com/client-metadata.json'
-const DPOP_JKT = '0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I'
+const KEY_ID = (await P256Keypair.create()).did() as DidString
 
 /** Swap a token's `typ` header, leaving its payload and signature alone. */
 const retypeToken = (jwt: string, typ: string): string => {
@@ -115,7 +116,7 @@ describe('space tokens', () => {
     const create = (opts?: { expiresInSec?: number; kid?: string }) =>
       createSpaceToken(
         'credential',
-        { iss: AUTHORITY, sub: SPACE, dpopJkt: DPOP_JKT, ...opts },
+        { iss: AUTHORITY, sub: SPACE, keyId: KEY_ID, ...opts },
         authorityKey,
       )
 
@@ -132,21 +133,21 @@ describe('space tokens', () => {
       expect(payload.exp - payload.iat).toBe(7200)
     })
 
-    it('is bound to the requested DPoP key', async () => {
+    it('is bound to the requested signing key', async () => {
       const { payload } = await verifySpaceToken('credential', await create(), {
         getSigningKey: getKey(authorityKey),
       })
-      expect(payload.cnf?.jkt).toBe(DPOP_JKT)
+      expect(payload.cnf?.kid).toBe(KEY_ID)
     })
 
-    it('requires a dpopJkt at mint time', async () => {
+    it('requires a keyId at mint time', async () => {
       await expect(
         createSpaceToken(
           'credential',
           { iss: AUTHORITY, sub: SPACE },
           authorityKey,
         ),
-      ).rejects.toThrow(/requires a "dpopJkt"/)
+      ).rejects.toThrow(/requires a "keyId"/)
     })
 
     it('is rejected when it carries no binding', async () => {
@@ -157,7 +158,7 @@ describe('space tokens', () => {
       )
       const forgedTyp = retypeToken(unbound, SPACE_TOKEN_TYPES.credential.typ)
       expect(() => parseSpaceToken('credential', forgedTyp)).toThrow(
-        /missing token "cnf.jkt"/,
+        /missing token "cnf.kid"/,
       )
     })
 
@@ -182,7 +183,7 @@ describe('space tokens', () => {
       const rotatedKey = await Secp256k1Keypair.create()
       const jwt = await createSpaceToken(
         'credential',
-        { iss: AUTHORITY, sub: SPACE, dpopJkt: DPOP_JKT },
+        { iss: AUTHORITY, sub: SPACE, keyId: KEY_ID },
         rotatedKey,
       )
       // First resolution returns the stale key, the retry the rotated one.
@@ -213,7 +214,7 @@ describe('space tokens', () => {
       const otherKey = await Secp256k1Keypair.create()
       const jwt = await createSpaceToken(
         'credential',
-        { iss: AUTHORITY, sub: SPACE, dpopJkt: DPOP_JKT },
+        { iss: AUTHORITY, sub: SPACE, keyId: KEY_ID },
         otherKey,
       )
       const getSigningKey = vi.fn(() => authorityKey.did())
