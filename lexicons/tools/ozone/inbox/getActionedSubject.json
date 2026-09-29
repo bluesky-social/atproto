@@ -18,6 +18,17 @@
             "type": "string",
             "format": "uri",
             "description": "DID or AT-URI of the subject to retrieve."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50,
+            "description": "Maximum number of actions to return."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Opaque cursor for the next page of this subject's action history."
           }
         }
       },

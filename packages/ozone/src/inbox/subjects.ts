@@ -11,50 +11,33 @@ import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { InboxConfig } from '../config/config.js'
 import type { Database } from '../db/index.js'
-import type { tools } from '../lexicons/index.js'
+import { com, type tools } from '../lexicons/index.js'
 import {
   type ModSubject,
   RepoSubject,
   subjectFromStatusRow,
 } from '../mod-service/subject.js'
-import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
 import {
+  APPEALABLE_EVENT_ACTIONS,
   APPEAL_REASON_TYPE,
   PUBLIC_EVENT_ACTIONS,
   REVERSE_TAKEDOWN,
-  eventSubjectFilter,
   reportSubjectFilter,
 } from './appeal.js'
-import { loadSubject, toActionViews, toSubjectView } from './views.js'
+import { queryActionHistory } from './history.js'
+import {
+  type PublicStatusRow,
+  loadSubject,
+  publicStatusSelection,
+  toSubjectView,
+} from './views.js'
 
-// The list is anchored on the status table's DID index. A status alone does
-// not mean an action was taken: reports also create status rows.
-const actionMatch = sql<boolean>`e."subjectDid" = s.did AND (
-  (s."recordPath" = '' AND e."subjectType" = 'com.atproto.admin.defs#repoRef')
-  OR (s."recordPath" <> '' AND e."subjectUri" =
-    'at://' || s.did || '/' || s."recordPath")
-)`
-const publicActions = sql.join(
-  PUBLIC_EVENT_ACTIONS.map((action) => sql`${action}`),
-)
-const firstAction = sql<DatetimeString>`(
-  SELECT min(e."createdAt") FROM moderation_event e
-  WHERE ${actionMatch} AND e.action IN (${publicActions})
-    AND e.action <> ${REVERSE_TAKEDOWN}
-)`
-const lastAction = sql<DatetimeString>`(
-  SELECT max(e."createdAt") FROM moderation_event e
-  WHERE ${actionMatch} AND e.action IN (${publicActions})
-)`
-const lastAppeal = sql<DatetimeString>`(
-  SELECT greatest(r."createdAt", r."closedAt") FROM report r
-  WHERE r.did = s.did AND r."recordPath" = s."recordPath"
-    AND r."subjectMessageId" IS NULL AND r."subjectConvoId" IS NULL
-    AND r."reportType" = ${APPEAL_REASON_TYPE}
-  ORDER BY r.id DESC LIMIT 1
-)`
-const createdSort = sql<DatetimeString>`coalesce(${firstAction}, s."createdAt")`
-const updatedSort = sql<DatetimeString>`greatest(s."updatedAt", ${lastAction}, ${lastAppeal})`
+export type ActionedSubjectRow = PublicStatusRow & {
+  actionCount: number
+  firstActionAt: DatetimeString
+  lastActionAt: DatetimeString
+  latestAppealableAt: DatetimeString | null
+}
 
 export function parseSubjectCursor(cursor: string): {
   sortValue: DatetimeString
@@ -78,22 +61,75 @@ export async function queryActionedSubjects(
   db: Database,
   did: DidString,
   params: Partial<tools.ozone.inbox.listActionedSubjects.$Params>,
-): Promise<{ rows: ModerationSubjectStatusRow[]; cursor?: string }> {
+): Promise<{ rows: ActionedSubjectRow[]; cursor?: string }> {
   const field = params.sortField ?? 'updatedAt'
   const direction = params.sortDirection ?? 'desc'
   const limit = params.limit ?? 50
-  const sort = field === 'createdAt' ? createdSort : updatedSort
+  const sort =
+    field === 'createdAt'
+      ? sql<DatetimeString>`a."firstActionAt"`
+      : sql<DatetimeString>`greatest(s."updatedAt", a."lastActionAt", r."createdAt", r."closedAt")`
+  // @NOTE Aggregate the DID's history once, rather than rescanning it for
+  // every status row before LIMIT. Exact history-derived sorting needs all
+  // of this DID's public actions, but never another account's events.
   let query = db.db
+    .with(
+      (cte) => cte('inbox_actions').materialized(),
+      (qb) =>
+        qb
+          .selectFrom('moderation_event')
+          .where('subjectDid', '=', did)
+          .where('subjectType', 'in', [
+            com.atproto.admin.defs.repoRef.$type,
+            com.atproto.repo.strongRef.$type,
+          ])
+          .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
+          .select([
+            sql<string>`coalesce("subjectUri", "subjectDid")`.as('subject'),
+            sql<number>`count(*) FILTER (WHERE action <> ${REVERSE_TAKEDOWN})::int`.as(
+              'actionCount',
+            ),
+            sql<DatetimeString>`min("createdAt") FILTER (WHERE action <> ${REVERSE_TAKEDOWN})`.as(
+              'firstActionAt',
+            ),
+            sql<DatetimeString>`max("createdAt")`.as('lastActionAt'),
+            sql<DatetimeString | null>`max("createdAt") FILTER (WHERE action IN (${sql.join(APPEALABLE_EVENT_ACTIONS)}))`.as(
+              'latestAppealableAt',
+            ),
+          ])
+          .groupBy(sql`coalesce("subjectUri", "subjectDid")`),
+    )
+    .with('inbox_appeals', (qb) =>
+      qb
+        .selectFrom('report')
+        .where('did', '=', did)
+        .where('reportType', '=', APPEAL_REASON_TYPE)
+        .where('subjectMessageId', 'is', null)
+        .where('subjectConvoId', 'is', null)
+        .distinctOn('recordPath')
+        .select(['recordPath', 'createdAt', 'closedAt'])
+        .orderBy('recordPath')
+        .orderBy('id', 'desc'),
+    )
     .selectFrom('moderation_subject_status as s')
+    .innerJoin('inbox_actions as a', (join) =>
+      join.on(
+        'a.subject',
+        '=',
+        sql<string>`CASE WHEN s."recordPath" = '' THEN s.did ELSE 'at://' || s.did || '/' || s."recordPath" END`,
+      ),
+    )
+    .leftJoin('inbox_appeals as r', 'r.recordPath', 's.recordPath')
     .where('s.did', '=', did)
     .where('s.convoId', '=', '')
-    .where(
-      sql<boolean>`EXISTS (
-      SELECT 1 FROM moderation_event e WHERE ${actionMatch}
-      AND e.action IN (${publicActions}) AND e.action <> ${REVERSE_TAKEDOWN}
-    )`,
-    )
-    .selectAll('s')
+    .where('a.actionCount', '>', 0)
+    .select(publicStatusSelection.map((column) => `s.${column}` as const))
+    .select([
+      'a.actionCount',
+      'a.firstActionAt',
+      'a.lastActionAt',
+      'a.latestAppealableAt',
+    ])
     .select(sort.as('sortValue'))
 
   if (params.cursor) {
@@ -139,34 +175,36 @@ export async function findActionedSubject(
     .where('did', '=', did)
     .where('recordPath', '=', recordPath)
     .where('convoId', '=', '')
-    .selectAll()
+    .select(['did', 'recordPath', 'recordCid', 'blobCids', 'convoId'])
     .executeTakeFirst()
   if (!status) return null
   return recordPath ? subjectFromStatusRow(status) : new RepoSubject(did)
 }
 
-/** Full public detail, including all actions and a reporter-safe summary. */
+/** Public detail with a page of actions and a reporter-safe summary. */
 export async function getActionedSubjectDetail(
   db: Database,
   subject: ModSubject,
   serviceDid: DidString,
   cfg: InboxConfig,
   seenAt: DatetimeString | null,
+  params: { limit?: number; cursor?: string } = {},
 ): Promise<tools.ozone.inbox.getActionedSubject.$OutputBody | null> {
+  const before = params.cursor ? parseSubjectCursor(params.cursor) : undefined
   const snapshot = await loadSubject(db, subject)
   if (!snapshot.actionCount) return null
-  const events = await db.db
-    .selectFrom('moderation_event')
-    .where((eb) => eventSubjectFilter(eb, subject))
-    .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
-    .selectAll()
-    .execute()
+  const history = await queryActionHistory(
+    db,
+    subject,
+    params.limit ?? 50,
+    before,
+  )
   const view = toSubjectView({
     subject,
     serviceDid,
     cfg,
     seenAt,
-    snapshot: { ...snapshot, events },
+    snapshot,
   })
   if (!view) return null
   const {
@@ -177,13 +215,24 @@ export async function getActionedSubjectDetail(
   } = view
   const detail: tools.ozone.inbox.getActionedSubject.$OutputBody = {
     ...base,
-    actions: toActionViews(events),
+    actions: history.actions,
+    cursor: history.cursor,
   }
 
-  const reports = await db.db
+  const reportRows = db.db
     .selectFrom('report')
     .where((eb) => reportSubjectFilter(eb, subject))
     .where('reportType', '!=', APPEAL_REASON_TYPE)
+    .select(['reportType', 'createdAt'])
+  // @NOTE The subject indexes are partial by status. Keep each branch's
+  // predicate explicit so both active and closed history use those indexes.
+  const reports = await db.db
+    .selectFrom(
+      reportRows
+        .where(sql<boolean>`status != 'closed'`)
+        .unionAll(reportRows.where(sql<boolean>`status = 'closed'`))
+        .as('reports'),
+    )
     .select([
       sql<string[]>`array_agg(DISTINCT "reportType")`.as('reasonTypes'),
       sql<DatetimeString | null>`min("createdAt")`.as('firstReportedAt'),

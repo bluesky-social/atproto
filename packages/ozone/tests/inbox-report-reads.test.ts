@@ -7,6 +7,7 @@ import {
 } from '@atproto/dev-env'
 import { toDatetimeString } from '@atproto/lex'
 import type { DidString } from '@atproto/syntax'
+import { reportForEvent } from './_inbox.js'
 
 describe('viewer inbox reports', () => {
   let network: TestNetwork
@@ -34,12 +35,7 @@ describe('viewer inbox reports', () => {
   }
 
   async function reportIdForEvent(eventId: number) {
-    const row = await network.ozone.ctx.db.db
-      .selectFrom('report')
-      .where('eventId', '=', eventId)
-      .select('id')
-      .executeTakeFirstOrThrow()
-    return row.id
+    return (await reportForEvent(modClient, eventId)).id
   }
 
   it("lists only the viewer's reports and uses report IDs for detail links", async () => {
@@ -165,9 +161,14 @@ describe('viewer inbox reports', () => {
     expect(all.reports.every((r: { isRead: boolean }) => r.isRead)).toBe(true)
   })
 
-  it('rejects malformed report cursors', async () => {
+  it.each([
+    'bogus',
+    '2026-99-99T00:00:00.000Z::1',
+    'not-a-date::1',
+    '2026-09-29T00:00:00.000Z::9007199254740992',
+  ])('rejects malformed report cursor %s', async (cursor) => {
     await expect(
-      call(sc.dids.bob, 'tools.ozone.inbox.listReports', { cursor: 'bogus' }),
+      call(sc.dids.bob, 'tools.ozone.inbox.listReports', { cursor }),
     ).rejects.toMatchObject({ error: 'InvalidRequest' })
   })
 
@@ -178,11 +179,7 @@ describe('viewer inbox reports', () => {
       reportedBy: sc.dids.bob,
     })
     await network.processAll()
-    const row = await network.ozone.ctx.db.db
-      .selectFrom('report')
-      .where('eventId', '=', report.id)
-      .select('id')
-      .executeTakeFirstOrThrow()
+    const row = await reportForEvent(modClient, report.id)
     await modClient.emitEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventTakedown',
@@ -209,26 +206,21 @@ describe('viewer inbox reports', () => {
     )
     expect(standing.standing).toBe('atRisk')
 
-    const laterClose = toDatetimeString(Date.now() + 60_000)
-    await network.ozone.ctx.db.db
-      .updateTable('report')
-      .where('id', '=', row.id)
-      .set({ status: 'closed', closedAt: laterClose, updatedAt: laterClose })
-      .execute()
-    await network.ozone.ctx.db.db
-      .insertInto('report_activity')
-      .values({
-        reportId: row.id,
-        activityType: 'closeActivity',
-        previousStatus: 'open',
-        internalNote: null,
-        publicNote: null,
-        meta: null,
-        isAutomated: false,
-        createdBy: network.ozone.ctx.cfg.service.did,
-        createdAt: laterClose,
-      })
-      .execute()
+    const agent = network.ozone.getAgent()
+    const headers = await network.ozone.modHeaders(
+      'tools.ozone.report.createActivity',
+      'admin',
+    )
+    for (const type of ['reopenActivity', 'closeActivity']) {
+      await agent.tools.ozone.report.createActivity(
+        {
+          reportId: row.id,
+          activity: { $type: `tools.ozone.report.defs#${type}` },
+          internalNote: 'PRIVATE CLOSURE NOTE',
+        },
+        { headers, encoding: 'application/json' },
+      )
+    }
     const { data: later } = await call(
       sc.dids.bob,
       'tools.ozone.inbox.getReport',
@@ -236,6 +228,7 @@ describe('viewer inbox reports', () => {
     )
     expect(later.resolution.outcome).toBe('other')
     expect(later.resolution.actionTaken).toBeUndefined()
+    expect(JSON.stringify(later)).not.toContain('PRIVATE CLOSURE NOTE')
   })
 
   it('derives account standing from strikes and active enforcement', async () => {

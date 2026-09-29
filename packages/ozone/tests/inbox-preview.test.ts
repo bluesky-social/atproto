@@ -1,6 +1,7 @@
 import { ComAtprotoModerationDefs } from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { type DidString, toDatetimeString } from '@atproto/lex'
+import { reportForEvent } from './_inbox.js'
 
 describe('moderator inbox preview', () => {
   let network: TestNetwork
@@ -30,17 +31,10 @@ describe('moderator inbox preview', () => {
       reportedBy: sc.dids.dan,
     })
     await network.processAll()
-    const reports = await network.ozone.ctx.db.db
-      .selectFrom('report')
-      .where('eventId', 'in', [aliceReport.id, danReport.id])
-      .select(['id', 'eventId'])
-      .execute()
-    aliceReportId = reports.find(
-      (report) => report.eventId === aliceReport.id,
-    )!.id
-    danReportId = reports.find((report) => report.eventId === danReport.id)!.id
-
     const mod = network.ozone.getModClient()
+    aliceReportId = (await reportForEvent(mod, aliceReport.id)).id
+    danReportId = (await reportForEvent(mod, danReport.id)).id
+
     for (const did of [sc.dids.alice, sc.dids.dan]) {
       await mod.emitEvent({
         event: {
@@ -155,11 +149,15 @@ describe('moderator inbox preview', () => {
       ).rejects.toMatchObject({ error: 'Forbidden' })
     }
 
-    await network.ozone.ctx.db.db
-      .updateTable('member')
-      .where('did', '=', sc.dids.bob)
-      .set({ disabled: true })
-      .execute()
+    await network.ozone.getAgent().tools.ozone.team.updateMember(
+      { did: sc.dids.bob, disabled: true },
+      {
+        headers: await network.ozone.modHeaders(
+          'tools.ozone.team.updateMember',
+          'admin',
+        ),
+      },
+    )
     for (const method of [
       'tools.ozone.inbox.listReports',
       'tools.ozone.inbox.listActionedSubjects',

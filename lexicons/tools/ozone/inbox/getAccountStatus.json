@@ -23,7 +23,7 @@
             "updatedAt": {
               "type": "string",
               "format": "datetime",
-              "description": "Time at which the account's derived standing most recently changed."
+              "description": "Newest account-status update or strike timestamp used to derive this standing, or the Unix epoch when neither exists. This is not a standing-transition timestamp; expiry can change standing without changing this value."
             },
             "expiresAt": {
               "type": "string",

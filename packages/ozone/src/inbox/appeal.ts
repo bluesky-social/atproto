@@ -43,7 +43,7 @@ export type AppealReport = {
 
 export type AppealInput = {
   subject: ModSubject
-  status: ModerationSubjectStatusRow | null
+  status: Pick<ModerationSubjectStatusRow, 'appealed' | 'lastAppealedAt'> | null
   report: AppealReport | null
   publicNote: string | null
 

@@ -36,6 +36,7 @@ export default function (server: Server, ctx: AppContext) {
         ctx.cfg.service.did,
         ctx.cfg.inbox,
         seenAt,
+        params,
       )
       if (!detail)
         throw new InvalidRequestError('Subject not found', 'NotFound')

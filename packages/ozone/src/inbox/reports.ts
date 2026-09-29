@@ -1,13 +1,17 @@
 import { sql } from 'kysely'
 import type { DatetimeString, DidString } from '@atproto/lex'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { tools } from '../lexicons/index.js'
 import { subjectFromEventRow } from '../mod-service/subject.js'
-import type { ModerationEventRow } from '../mod-service/types.js'
 import { APPEAL_REASON_TYPE, REVERSE_TAKEDOWN } from './appeal.js'
 import { isRead } from './seen.js'
-import { publicActionType, toActionViews } from './views.js'
+import { parseSubjectCursor } from './subjects.js'
+import {
+  type PublicEventRow,
+  publicActionType,
+  publicEventSelection,
+  toActionViews,
+} from './views.js'
 
 function reportQuery(db: Database, reporter: DidString) {
   return db.db
@@ -16,7 +20,21 @@ function reportQuery(db: Database, reporter: DidString) {
     .where('me.createdBy', '=', reporter)
     .where('me.action', '=', tools.ozone.moderation.defs.modEventReport.$type)
     .where('r.reportType', '!=', APPEAL_REASON_TYPE)
-    .selectAll('me')
+    .select([
+      'me.subjectType',
+      'me.subjectDid',
+      'me.subjectUri',
+      'me.subjectCid',
+      'me.subjectBlobCids',
+      'me.subjectMessageId',
+      'me.subjectConvoId',
+      'me.comment',
+    ])
+    .select(
+      sql<
+        PublicEventRow['meta']
+      >`jsonb_build_object('convoId', me.meta->'convoId')`.as('meta'),
+    )
     .select([
       'r.id as internalReportId',
       'r.status as reportStatus',
@@ -24,7 +42,6 @@ function reportQuery(db: Database, reporter: DidString) {
       'r.createdAt as reportCreatedAt',
       'r.updatedAt as reportUpdatedAt',
       'r.closedAt as reportClosedAt',
-      'r.actionEventIds',
     ])
 }
 
@@ -58,11 +75,7 @@ export async function queryInboxReports(
     query = query.where('r.updatedAt', '>', seenAt)
   }
   if (params.cursor) {
-    const match = /^(.*)::([1-9]\d*)$/.exec(params.cursor)
-    if (!match || !Number.isSafeInteger(Number(match[2]))) {
-      throw new InvalidRequestError('Invalid cursor')
-    }
-    const [, sortValue, id] = match
+    const { sortValue, id } = parseSubjectCursor(params.cursor)
     query = query.where(
       direction === 'desc'
         ? sql<boolean>`(${sql.ref(sortColumn)}, r.id) < (${sortValue}, ${Number(id)})`
@@ -70,7 +83,14 @@ export async function queryInboxReports(
     )
   }
 
-  const rows = await query
+  const pageIds = query
+    .clearSelect()
+    .select('r.id')
+    .orderBy(sortColumn, direction)
+    .orderBy('r.id', direction)
+    .limit(limit + 1)
+  const rows = await reportQuery(db, reporter)
+    .where('r.id', 'in', pageIds)
     .orderBy(sortColumn, direction)
     .orderBy('r.id', direction)
     .limit(limit + 1)
@@ -92,7 +112,7 @@ export type InboxReportRow = NonNullable<
 >
 
 export type ReportActions = {
-  events: Map<number, ModerationEventRow>
+  events: Map<number, PublicEventRow>
   closingEventIds: Map<number, number>
 }
 
@@ -100,38 +120,43 @@ export async function loadReportActions(
   db: Database,
   rows: InboxReportRow[],
 ): Promise<ReportActions> {
-  const ids = [...new Set(rows.flatMap((row) => row.actionEventIds ?? []))]
   const closedReportIds = rows
     .filter((row) => row.reportStatus === 'closed')
     .map((row) => row.internalReportId)
-  const [events, activities] = await Promise.all([
-    ids.length
-      ? db.db
-          .selectFrom('moderation_event')
-          .where('id', 'in', ids)
-          .selectAll()
-          .execute()
-      : Promise.resolve([]),
-    closedReportIds.length
-      ? db.db
-          .selectFrom('report_activity')
-          .where('reportId', 'in', closedReportIds)
-          .where('activityType', '=', 'closeActivity')
-          .select(['reportId', 'meta'])
-          .orderBy('createdAt', 'desc')
-          .orderBy('id', 'desc')
-          .execute()
-      : Promise.resolve([]),
-  ])
+  const activities = closedReportIds.length
+    ? await db.db
+        .selectFrom('report as r')
+        .where('r.id', 'in', closedReportIds)
+        .innerJoinLateral(
+          (eb) =>
+            eb
+              .selectFrom('report_activity')
+              .whereRef('reportId', '=', 'r.id')
+              .where('activityType', '=', 'closeActivity')
+              .select('meta')
+              .orderBy('createdAt', 'desc')
+              .orderBy('id', 'desc')
+              .limit(1)
+              .as('closure'),
+          (join) => join.onTrue(),
+        )
+        .select(['r.id as reportId', 'closure.meta'])
+        .execute()
+    : []
   const closingEventIds = new Map<number, number>()
-  const seenClosures = new Set<number>()
   for (const activity of activities) {
-    if (seenClosures.has(activity.reportId)) continue
-    seenClosures.add(activity.reportId)
     const id = (activity.meta as { actionEventId?: unknown } | null)
       ?.actionEventId
     if (typeof id === 'number') closingEventIds.set(activity.reportId, id)
   }
+  const ids = [...new Set(closingEventIds.values())]
+  const events = ids.length
+    ? await db.db
+        .selectFrom('moderation_event')
+        .where('id', 'in', ids)
+        .select(publicEventSelection)
+        .execute()
+    : []
   return {
     events: new Map(events.map((event) => [event.id, event])),
     closingEventIds,
@@ -216,21 +241,7 @@ function latestReportAction(row: InboxReportRow, actions: ReportActions) {
 
 function findClosingEvent(row: InboxReportRow, actions: ReportActions) {
   const id = actions.closingEventIds.get(row.internalReportId)
-  if (id !== undefined) return actions.events.get(id) ?? null
-
-  // @NOTE Old reports lack the activity link. Only attribute an event when it
-  // occurred in the same brief window as closure; stale linked events are not
-  // evidence that a later bulk close took that action.
-  const closedAt = row.reportClosedAt
-  if (!closedAt) return null
-  return (
-    (row.actionEventIds ?? [])
-      .map((eventId) => actions.events.get(eventId))
-      .filter((event): event is ModerationEventRow => !!event)
-      .sort((a, b) => b.id - a.id)
-      .find((event) => {
-        const delta = Date.parse(closedAt) - Date.parse(event.createdAt)
-        return delta >= 0 && delta <= 10_000
-      }) ?? null
-  )
+  // @NOTE A nearby action is not evidence of what closed a report. Legacy
+  // or manual closures without an explicit link have an unknown outcome.
+  return id === undefined ? null : (actions.events.get(id) ?? null)
 }

@@ -174,7 +174,7 @@
     },
     "subjectViewDetail": {
       "type": "object",
-      "description": "A subject with its full action history. Same shape as #subjectView, with latestAction/actionCount replaced by the complete actions list, plus an aggregate report summary.",
+      "description": "A subject with a page of its action history and an aggregate report summary. Follow cursor to retrieve older actions; enforcement and appeal describe the current subject state on every page.",
       "required": [
         "src",
         "subject",
@@ -216,11 +216,16 @@
         },
         "actions": {
           "type": "array",
-          "description": "Full action history, most recent first.",
+          "description": "A page of action history, most recent first. Reversal timestamps include changes outside this page.",
+          "maxLength": 100,
           "items": {
             "type": "ref",
             "ref": "#actionView"
           }
+        },
+        "cursor": {
+          "type": "string",
+          "description": "Cursor for the next page of action history. Omitted when no older actions remain."
         },
         "reports": {
           "type": "ref",

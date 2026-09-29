@@ -42,15 +42,66 @@ import { isRead } from './seen.js'
  */
 const EVENT_WINDOW = 50
 
+export type PublicEventRow = Pick<
+  ModerationEventRow,
+  | 'id'
+  | 'action'
+  | 'subjectType'
+  | 'subjectUri'
+  | 'createdAt'
+  | 'expiresAt'
+  | 'durationInHours'
+  | 'createLabelVals'
+  | 'negateLabelVals'
+  | 'meta'
+>
+
+export const publicEventSelection = [
+  'id',
+  'action',
+  'subjectType',
+  'subjectUri',
+  'createdAt',
+  'expiresAt',
+  'durationInHours',
+  'createLabelVals',
+  'negateLabelVals',
+  sql<
+    PublicEventRow['meta']
+  >`jsonb_build_object('targetServices', meta->'targetServices', 'policies', meta->'policies')`.as(
+    'meta',
+  ),
+] as const
+
+export const publicStatusSelection = [
+  'id',
+  'did',
+  'recordPath',
+  'convoId',
+  'recordCid',
+  'blobCids',
+  'takendown',
+  'suspendUntil',
+  'appealed',
+  'lastAppealedAt',
+  'createdAt',
+  'updatedAt',
+] as const
+export type PublicStatusRow = Pick<
+  ModerationSubjectStatusRow,
+  (typeof publicStatusSelection)[number]
+>
+
 /** Everything one `subjectView` needs, as loaded from the database. */
 export type SubjectSnapshot = {
-  status: ModerationSubjectStatusRow | null
-  events: ModerationEventRow[]
+  status: PublicStatusRow | null
+  events: PublicEventRow[]
   /** Active, non-negated, unexpired label values on the subject. */
   labels: string[]
   /** Total public actions, exact even when `events` was capped. */
   actionCount: number
   firstActionAt: DatetimeString | null
+  lastActionAt?: DatetimeString | null
   /** Newest action the user is allowed to appeal, if any. */
   latestAppealableAt: DatetimeString | null
   appealReport: AppealReport | null
@@ -85,7 +136,7 @@ export const loadSubject = async (
       .where('did', '=', subject.did)
       .where('recordPath', '=', subject.recordPath ?? '')
       .where('convoId', '=', subject.convoId ?? '')
-      .selectAll()
+      .select(publicStatusSelection)
       .executeTakeFirst(),
 
     db.db
@@ -104,7 +155,7 @@ export const loadSubject = async (
       .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
       .orderBy('id', 'desc')
       .limit(EVENT_WINDOW)
-      .selectAll()
+      .select(publicEventSelection)
       .execute(),
 
     db.db
@@ -166,7 +217,7 @@ export type SubjectViewInput = {
 
 export type EnforcementViewInput = {
   subject: ModSubject
-  status: ModerationSubjectStatusRow | null
+  status: Pick<ModerationSubjectStatusRow, 'takendown' | 'suspendUntil'> | null
   /** Active, non-negated, unexpired label values on the subject. */
   labels: string[]
   /** Public action history, newest first, used only for the takedown's scope. */
@@ -180,7 +231,7 @@ const splitVals = (vals: string | null): string[] =>
 const withoutTakedownLabels = (vals: string[]): string[] =>
   vals.filter((val) => val !== TAKEDOWN_LABEL && val !== SUSPEND_LABEL)
 
-const splitMeta = (row: ModerationEventRow, key: string): string[] => {
+const splitMeta = (row: PublicEventRow, key: string): string[] => {
   const raw = row.meta?.[key]
   return typeof raw === 'string' && raw.length ? raw.split(',') : []
 }
@@ -190,17 +241,17 @@ const splitMeta = (row: ModerationEventRow, key: string): string[] => {
  * An appview-only takedown is visible in the app but leaves the record hosted,
  * which is what `app` means here.
  */
-const takedownScope = (row: ModerationEventRow): ActionView['scope'] => {
+const takedownScope = (row: PublicEventRow): ActionView['scope'] => {
   const services = splitMeta(row, 'targetServices')
   if (!services.length) return 'network'
   return services.includes('pds') ? 'network' : 'app'
 }
 
-const isAccountSubject = (row: ModerationEventRow): boolean =>
+const isAccountSubject = (row: PublicEventRow): boolean =>
   row.subjectType === 'com.atproto.admin.defs#repoRef'
 
 /** Public action type for one event, or null when it is not an entry. */
-export const publicActionType = (row: ModerationEventRow): string | null => {
+export const publicActionType = (row: PublicEventRow): string | null => {
   switch (row.action) {
     case TAKEDOWN:
       if (!isAccountSubject(row)) return 'contentRemoved'
@@ -220,7 +271,7 @@ export const publicActionType = (row: ModerationEventRow): string | null => {
   }
 }
 
-const toActionView = (row: ModerationEventRow): ActionView | null => {
+export const toActionView = (row: PublicEventRow): ActionView | null => {
   const type = publicActionType(row)
   if (!type) return null
 
@@ -261,7 +312,7 @@ const toActionView = (row: ModerationEventRow): ActionView | null => {
  * "removed, then restored" as one action with an end date rather than as two
  * unrelated events.
  */
-export const toActionViews = (rows: ModerationEventRow[]): ActionView[] => {
+export const toActionViews = (rows: PublicEventRow[]): ActionView[] => {
   // Oldest first, so a reversal always meets the action it undoes.
   const ordered = [...rows].sort(
     (a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id - b.id,
@@ -377,9 +428,8 @@ const latest = (
  * never been actioned and has no status row - which is not a subject the
  * inbox has anything to say about.
  *
- * `isRead` is deliberately absent: it is a comparison against a per-section
- * read watermark, and Ozone has nowhere to store one yet. Sending a value now
- * would mean inventing the watermark.
+ * `isRead` compares the public update timestamp with the subject-section
+ * watermark. A missing watermark means unread.
  */
 export const toSubjectView = ({
   subject,
@@ -415,6 +465,7 @@ export const toSubjectView = ({
   const updatedAt =
     latest(
       actions[0]?.createdAt,
+      snapshot.lastActionAt,
       appeal.appealedAt,
       appeal.resolvedAt,
       snapshot.status?.updatedAt,

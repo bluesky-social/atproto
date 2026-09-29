@@ -55,6 +55,8 @@ Run the formatter/linter once the work is complete: when about to commit, or whe
 
 ## Tests
 
+For Ozone integration tests, verify state through existing endpoints (for example, `queryEvents` for appeal events and `queryReports` for report state). Use direct database access only for fixtures that cannot be created through an API, or for tests specifically exercising database behavior.
+
 Before writing or extending any test, invoke the `testing` skill ([.agents/skills/testing/SKILL.md](.agents/skills/testing/SKILL.md)). It covers runner selection (vitest vs jest), file layout, and tsconfig setup. For browser-driven UI tests, or for demoing/debugging the OAuth flows or the Account Manager interface, invoke the `playwright` skill ([.agents/skills/playwright/SKILL.md](.agents/skills/playwright/SKILL.md)) instead.
 
 ## Codegen
@@ -73,6 +75,7 @@ For working with that SDK, invoke the focused skills under [.agents/skills/](.ag
 - ([packages/bsky](packages/bsky)) — read-side service for `app.bsky.*` queries (timelines, profiles, feed generators, hydration pipeline, GraphQL-like view composition). Talks to PDSes via XRPC and to `bsync` via Connect-RPC (protobuf in `packages/bsky/proto`). Runtime entry point in [services/bsky](services/bsky).
 - ([packages/bsync](packages/bsync)) — internal service for cross-AppView synchronization (mutes, notifications). Connect-RPC interface.
 - ([packages/ozone](packages/ozone)) — moderation service for `tools.ozone.*`.
+  - Design viewer queries for hundreds of millions of moderation events and tens of millions of reports. Batch hydration, bound returned rows, and check query plans against existing indexes before proposing new ones. Keep viewer projections explicit and test ownership and private-field isolation through the API.
 - ([packages/dev-env](packages/dev-env)) — boots a full PDS + AppView + bsync + plc + ozone constellation in-process for tests and the `make run-dev-env` REPL. Most integration tests in `pds`/`bsky`/`ozone` use it as a fixture builder.
 
 ## Conventions
@@ -87,6 +90,8 @@ For working with that SDK, invoke the focused skills under [.agents/skills/](.ag
 ## Agent files
 
 Agent files — this `AGENTS.md`, the skills under [.agents/skills/](.agents/skills/), and any package-level equivalents — are part of the codebase and must stay in sync with it.
+
+- Keep working plans, handoffs, review reports, query-plan captures, and other session scratch files in the gitignored root `.local/` directory or outside the repository. Never commit them. Before committing, inspect the staged file list for working documents; put only durable project guidance in tracked documentation.
 
 - **New pattern introduced** → document it in the relevant agent file (package-specific if scoped, global otherwise) so it can be re-applied.
 - **Existing important pattern found undocumented** → add it.

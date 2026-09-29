@@ -1,10 +1,9 @@
 import { ForbiddenError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { getSeenAt } from '../../inbox/seen.js'
+import { hydrateSubjectViews } from '../../inbox/subject-batch.js'
 import { queryActionedSubjects } from '../../inbox/subjects.js'
-import { hydrateSubjectView } from '../../inbox/views.js'
 import { tools } from '../../lexicons/index.js'
-import { subjectFromStatusRow } from '../../mod-service/subject.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(tools.ozone.inbox.listActionedSubjects, {
@@ -25,20 +24,17 @@ export default function (server: Server, ctx: AppContext) {
         getSeenAt(ctx.db, did, 'subjects'),
         queryActionedSubjects(ctx.db, did, params),
       ])
-      const subjects = await Promise.all(
-        rows.map((row) =>
-          hydrateSubjectView(
-            ctx.db,
-            subjectFromStatusRow(row),
-            ctx.cfg.service.did,
-            ctx.cfg.inbox,
-            seenAt,
-          ),
-        ),
+      const subjects = await hydrateSubjectViews(
+        ctx.db,
+        did,
+        rows,
+        ctx.cfg.service.did,
+        ctx.cfg.inbox,
+        seenAt,
       )
       return {
         encoding: 'application/json',
-        body: { cursor, subjects: subjects.filter((view) => view !== null) },
+        body: { cursor, subjects },
       }
     },
   })

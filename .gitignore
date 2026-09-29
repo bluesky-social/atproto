@@ -19,3 +19,7 @@ test.sqlite
 coverage
 roast-stderr.md
 .swc
+
+# Local working notes and agent scratch files
+/.local/
+/MOD_INBOX_IMPLEMENTATION_PLAN.md
