@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import { currentDatetimeString } from '@atproto/lex'
+import { currentDatetimeString, toDatetimeString } from '@atproto/lex'
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { inboxSection } from '../../inbox/notifications.js'
@@ -10,41 +10,54 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       const now = currentDatetimeString()
-      const seenAt =
-        input.body.seenAt && input.body.seenAt < now ? input.body.seenAt : now
+      const requestedAt = input.body.seenAt
+        ? toDatetimeString(new Date(input.body.seenAt))
+        : now
+      const seenAt = requestedAt < now ? requestedAt : now
       const sections = [...new Set(input.body.sections.map(inboxSection))]
       const applied = await ctx.db.transaction(async (txn) => {
-        // One lock per viewer makes the returned value match every section
-        // even when two updateSeen calls race or request different sections.
+        // @NOTE Serialize overlapping section updates, including inserts,
+        // so requests listing sections in different orders cannot deadlock.
         await sql`select pg_advisory_xact_lock(hashtext(${auth.credentials.iss}))`.execute(
           txn.db,
         )
         const existing = await txn.db
           .selectFrom('inbox_seen')
-          .select('seenAt')
+          .select(['section', 'seenAt'])
           .where('did', '=', auth.credentials.iss)
           .where('section', 'in', sections)
           .execute()
-        const appliedAt = existing.reduce(
-          (max, row) => (row.seenAt > max ? row.seenAt : max),
-          seenAt,
+        // @NOTE Normalize legacy rows with the same date rules as new inputs.
+        const previous = new Map(
+          existing.map((row) => [
+            row.section,
+            toDatetimeString(new Date(row.seenAt)),
+          ]),
         )
-        await txn.db
+        const rows = await txn.db
           .insertInto('inbox_seen')
           .values(
-            sections.map((section) => ({
-              did: auth.credentials.iss,
-              section,
-              seenAt: appliedAt,
-            })),
+            sections.map((section) => {
+              const oldSeenAt = previous.get(section)
+              return {
+                did: auth.credentials.iss,
+                section,
+                seenAt: oldSeenAt && oldSeenAt > seenAt ? oldSeenAt : seenAt,
+              }
+            }),
           )
           .onConflict((oc) =>
             oc.columns(['did', 'section']).doUpdateSet({
-              seenAt: sql`greatest(inbox_seen."seenAt", excluded."seenAt")`,
+              seenAt: sql`excluded."seenAt"`,
             }),
           )
+          .returning('seenAt')
           .execute()
-        return appliedAt
+        // @NOTE Only the earliest watermark is shared by every section.
+        return rows.reduce(
+          (min, row) => (row.seenAt < min ? row.seenAt : min),
+          rows[0].seenAt,
+        )
       })
       return { encoding: 'application/json', body: { seenAt: applied } }
     },

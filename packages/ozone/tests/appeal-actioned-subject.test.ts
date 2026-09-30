@@ -799,15 +799,20 @@ describe('appealActionedSubject', () => {
     })
     await appeal(action.id, account.did)
 
-    const countEvents = async () =>
-      modClient.queryEvents({ subject: account.did, limit: 100 })
+    const eventIds = async () => {
+      const { events } = await modClient.queryEvents({
+        subject: account.did,
+        limit: 100,
+      })
+      return events.map((event) => event.id)
+    }
 
-    const before = await countEvents()
+    const before = await eventIds()
     await expect(appeal(action.id, account.did)).rejects.toMatchObject({
       error: 'AlreadyAppealed',
     })
     // The rejected attempt must not leave a stray report event behind.
-    expect(await countEvents()).toEqual(before)
+    expect(await eventIds()).toEqual(before)
   })
 
   it('leaves the appeal unassigned when the source reports disagree', async () => {

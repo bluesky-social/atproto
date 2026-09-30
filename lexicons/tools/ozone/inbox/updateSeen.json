@@ -20,7 +20,8 @@
             },
             "seenAt": {
               "type": "string",
-              "format": "datetime"
+              "format": "datetime",
+              "description": "Mark each requested section read up to this instant. Defaults to server time and is clamped to server time when in the future. Newer existing watermarks are preserved independently for each section."
             }
           }
         }
@@ -33,7 +34,8 @@
           "properties": {
             "seenAt": {
               "type": "string",
-              "format": "datetime"
+              "format": "datetime",
+              "description": "The earliest resulting watermark across the requested sections, in UTC. Every requested section is read through this instant; individual sections may already have newer watermarks."
             }
           }
         }
