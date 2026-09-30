@@ -1,6 +1,7 @@
 import type { Insertable, Selectable } from 'kysely'
 import type { Cid } from '@atproto/lex'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
+import { NOTIFICATION_REASON } from '../../../../api/app/bsky/notification/constants.js'
 import { app } from '../../../../lexicons/index.js'
 import type { BackgroundQueue } from '../../background.js'
 import type {
@@ -70,7 +71,7 @@ const notifsForInsert = (obj: IndexedLike) => {
       author: obj.creator,
       recordUri: obj.uri,
       recordCid: obj.cid,
-      reason: 'like' as const,
+      reason: NOTIFICATION_REASON.LIKE,
       reasonSubject: subjectUri.toString(),
       sortAt: obj.sortAt,
     },
@@ -88,7 +89,7 @@ const notifsForInsert = (obj: IndexedLike) => {
           author: obj.creator,
           recordUri: obj.uri,
           recordCid: obj.cid,
-          reason: 'like-via-repost' as const,
+          reason: NOTIFICATION_REASON.LIKE_VIA_REPOST,
           reasonSubject: viaUri.toString(),
           sortAt: obj.sortAt,
         },

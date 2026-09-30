@@ -7,6 +7,8 @@ import {
   type DidString,
   type UriString,
 } from '@atproto/syntax'
+import { NOTIFICATION_REASON } from '../api/app/bsky/notification/constants.js'
+import type { RawNotification } from '../api/app/bsky/notification/grouping/grouping.js'
 import type { DataPlaneClient } from '../data-plane/client/index.js'
 import type {
   FeatureGatesClient,
@@ -1327,7 +1329,7 @@ export class Hydrator {
     ])
     const viewerRootPostUris = new Set<AtUriString>()
     for (const notif of notifs) {
-      if (notif.reason === 'reply') {
+      if (notif.reason === NOTIFICATION_REASON.REPLY) {
         const post = posts.get(notif.uri as AtUriString)
         if (post) {
           const rootUri = post.record.reply?.root.uri
@@ -1360,6 +1362,95 @@ export class Hydrator {
       threadgates,
       ctx,
     })
+  }
+
+  async hydrateGroupedNotifications(
+    notifs: RawNotification[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    if (!notifs.length) return { ctx }
+    const notificationUris = dedupeStrs(notifs.map((notif) => notif.uri))
+
+    const collections = urisByCollection(notificationUris)
+    const notificationPostUris = collections.get(app.bsky.feed.post.$type) ?? []
+    const likeUris = collections.get(app.bsky.feed.like.$type) ?? []
+    const followUris = collections.get(app.bsky.graph.follow.$type) ?? []
+    const repostUris = new Set(collections.get(app.bsky.feed.repost.$type))
+    const postUris = new Set(notificationPostUris)
+    const feedGenUris = new Set<AtUriString>()
+    const starterPackUris = new Set<AtUriString>()
+
+    for (const notif of notifs) {
+      switch (notif.reason) {
+        case NOTIFICATION_REASON.LIKE_VIA_REPOST:
+        case NOTIFICATION_REASON.REPOST_VIA_REPOST:
+          repostUris.add(notif.reasonSubject)
+          break
+        case NOTIFICATION_REASON.LIKE: {
+          const subjectUri = notif.reasonSubject
+          if (
+            new AtUri(subjectUri).collection === app.bsky.feed.generator.$type
+          ) {
+            feedGenUris.add(subjectUri)
+          } else {
+            postUris.add(subjectUri)
+          }
+          break
+        }
+        case NOTIFICATION_REASON.REPOST:
+          postUris.add(notif.reasonSubject)
+          break
+        case NOTIFICATION_REASON.STARTERPACK_JOINED:
+          starterPackUris.add(notif.reasonSubject)
+          break
+      }
+    }
+    const [posts, likes, reposts, follows, labels, profileState] =
+      await Promise.all([
+        this.feed.getPosts(notificationPostUris, ctx.includeTakedowns),
+        this.feed.getLikes(likeUris, ctx.includeTakedowns),
+        this.feed.getReposts([...repostUris], ctx.includeTakedowns),
+        this.graph.getFollows(followUris, ctx.includeTakedowns),
+        this.label.getLabelsForSubjects(
+          // Fetch labels for likes and follows here; hydrateProfilesDetailed fetches profile labels, and hydratePosts fetches post labels later.
+          [...likeUris, ...followUris],
+          ctx.labelers,
+        ),
+        this.hydrateProfilesDetailed(
+          dedupeStrs(notificationUris.map(didFromUri)),
+          ctx,
+        ),
+      ])
+
+    reposts.forEach((repost) => {
+      if (repost) postUris.add(repost.record.subject.uri)
+    })
+    posts.forEach((post) => {
+      const parentUri = post?.record.reply?.parent.uri
+      if (parentUri) postUris.add(parentUri)
+    })
+    follows.forEach((follow) => {
+      const starterPackUri =
+        follow && getStarterPackUriFromFollow(follow.record)
+      if (starterPackUri) starterPackUris.add(starterPackUri)
+    })
+
+    const [postState, feedGenState, starterPackState] = await Promise.all([
+      this.hydratePosts(
+        [...postUris].map((uri) => ({ uri })),
+        ctx,
+        { posts },
+      ),
+      this.hydrateFeedGens([...feedGenUris], ctx),
+      this.hydrateStarterPacks([...starterPackUris], ctx),
+    ])
+    return mergeManyStates(
+      profileState,
+      postState,
+      feedGenState,
+      starterPackState,
+      { likes, reposts, follows, labels, ctx },
+    )
   }
 
   async hydrateBookmarks(

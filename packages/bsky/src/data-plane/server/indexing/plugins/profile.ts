@@ -1,5 +1,6 @@
 import { type Cid, getBlobCidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
+import { NOTIFICATION_REASON } from '../../../../api/app/bsky/notification/constants.js'
 import { app } from '../../../../lexicons/index.js'
 import type { BackgroundQueue } from '../../background.js'
 import type {
@@ -52,7 +53,7 @@ const notifsForInsert = (obj: IndexedProfile) => {
       author: obj.creator,
       recordUri: obj.uri,
       recordCid: obj.cid,
-      reason: 'starterpack-joined' as const,
+      reason: NOTIFICATION_REASON.STARTERPACK_JOINED,
       reasonSubject: obj.joinedViaStarterPackUri,
       sortAt: obj.indexedAt,
     },

@@ -13,6 +13,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { NOTIFICATION_REASON } from '../../src/api/app/bsky/notification/constants.js'
 import { forSnapshot, paginateAll } from '../_util.js'
 
 const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)
@@ -182,7 +183,7 @@ describe('starter packs', () => {
     )
     expect(notifications).toHaveLength(3)
     notifications.forEach((notif) => {
-      expect(notif.reason).toBe('starterpack-joined')
+      expect(notif.reason).toBe(NOTIFICATION_REASON.STARTERPACK_JOINED)
       expect(notif.reasonSubject).toBe(sp1.uriStr)
       expect(notif.uri).toMatch(/\/app\.bsky\.actor\.profile\/self$/)
       assert(isValidProfile(notif.record), 'record is not profile')
@@ -208,7 +209,7 @@ describe('starter packs', () => {
     const {
       data: { notifications },
     } = await agent.api.app.bsky.notification.listNotifications(
-      { reasons: ['follow'] },
+      { reasons: [NOTIFICATION_REASON.FOLLOW] },
       {
         headers: await network.serviceHeaders(
           sc.dids.bob,
