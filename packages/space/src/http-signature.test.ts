@@ -33,7 +33,7 @@ describe('space HTTP message signatures', () => {
       authorization: AUTHORIZATION,
       audience: AUDIENCE,
     })
-    const input = `("authorization" "atproto-space-audience");keyid="${keyId}";alg="ecdsa-p256-sha256"`
+    const input = '("authorization" "atproto-space-audience")'
     expect(signatureInput).toBe(input)
     const base = `"authorization": ${AUTHORIZATION}\n"atproto-space-audience": ${AUDIENCE}\n"@signature-params": ${input}`
     const bytes = parseDidKey(keyId).keyBytes
@@ -67,6 +67,9 @@ describe('space HTTP message signatures', () => {
     const headers = await createSpaceSigHeaders(key, {
       authorization: 'Bearer delegation',
     })
+    expect(headers['signature-input']).toBe(
+      `atproto-space=("authorization");keyid="${keyId}"`,
+    )
     expect(headers['atproto-space-audience']).toBeUndefined()
     await expect(verifySpaceSignature(headers)).resolves.toBe(keyId)
     await expect(verifySpaceSignature(headers, keyId)).rejects.toThrow(
@@ -93,7 +96,20 @@ describe('space HTTP message signatures', () => {
     await expect(verifySpaceSignature(headers, keyId)).resolves.toBe(keyId)
   })
 
-  it('accepts either parameter order and other signature labels', async () => {
+  it('accepts delegation signatures with an optional alg', async () => {
+    const input = `("authorization");keyid="${keyId}";alg="ecdsa-p256-sha256"`
+    const base = `"authorization": Bearer delegation\n"@signature-params": ${input}`
+    const sig = await key.sign(new TextEncoder().encode(base))
+    await expect(
+      verifySpaceSignature({
+        authorization: 'Bearer delegation',
+        'signature-input': `atproto-space=${input}`,
+        signature: `atproto-space=:${toBase64(sig)}:`,
+      }),
+    ).resolves.toBe(keyId)
+  })
+
+  it('accepts optional credential parameters and other signature labels', async () => {
     const input = `("authorization" "atproto-space-audience");alg="ecdsa-p256-sha256";keyid="${keyId}"`
     const base = `"authorization": ${AUTHORIZATION}\n"atproto-space-audience": ${AUDIENCE}\n"@signature-params": ${input}`
     const sig = await key.sign(new TextEncoder().encode(base))
@@ -167,9 +183,31 @@ describe('space HTTP message signatures', () => {
       audience: AUDIENCE,
     })
     await expect(verifySpaceSignature(headers, keyId)).rejects.toThrow(
-      /key the credential is bound to/,
+      /invalid HTTP message signature/,
     )
   })
+
+  it('rejects an optional keyid that differs from the credential key', async () => {
+    const other = await P256Keypair.create()
+    const headers = await signedHeaders()
+    headers['signature-input'] += `;keyid="${other.did()}"`
+    await expect(verifySpaceSignature(headers, keyId)).rejects.toThrow(
+      /keyid does not match the credential key/,
+    )
+  })
+
+  test.each(['', ';keyid', ';keyid=123', ';keyid="not-a-key"'])(
+    'rejects a missing or invalid delegation keyid: %s',
+    async (params) => {
+      const headers = await createSpaceSigHeaders(key, {
+        authorization: 'Bearer delegation',
+      })
+      headers['signature-input'] = `atproto-space=("authorization")${params}`
+      await expect(verifySpaceSignature(headers)).rejects.toThrow(
+        SpaceSignatureError,
+      )
+    },
+  )
 
   test.each([
     ['missing authorization', '("atproto-space-audience")'],
@@ -189,8 +227,7 @@ describe('space HTTP message signatures', () => {
     ['malformed input', 'not-a-list'],
   ])('rejects %s', async (_name, components) => {
     const headers = await signedHeaders()
-    headers['signature-input'] =
-      `atproto-space=${components};keyid="${keyId}";alg="ecdsa-p256-sha256"`
+    headers['signature-input'] = `atproto-space=${components}`
     await expect(verifySpaceSignature(headers, keyId)).rejects.toThrow(
       /must cover exactly|missing or malformed/,
     )
@@ -202,29 +239,42 @@ describe('space HTTP message signatures', () => {
     )
   })
 
-  it('rejects additional signature parameters', async () => {
+  it('rejects changed signature parameters', async () => {
     const headers = await signedHeaders()
-    headers['signature-input'] += ';created=1738368000'
+    headers['signature-input'] += ';alg="ecdsa-p256-sha256"'
     await expect(verifySpaceSignature(headers, keyId)).rejects.toThrow(
-      /only keyid and alg/,
+      /invalid HTTP message signature/,
     )
   })
 
-  it('rejects other algorithms and key types', async () => {
-    const headers = await signedHeaders()
-    headers['signature-input'] = headers['signature-input'].replace(
-      'ecdsa-p256-sha256',
-      'ecdsa-p384-sha384',
-    )
-    await expect(verifySpaceSignature(headers, keyId)).rejects.toThrow(
-      /algorithm/,
-    )
+  test.each([undefined, AUDIENCE])(
+    'rejects other algorithms with audience %s',
+    async (audience) => {
+      const headers = await createSpaceSigHeaders(key, {
+        authorization: AUTHORIZATION,
+        audience,
+      })
+      headers['signature-input'] += ';alg="ecdsa-p384-sha384"'
+      await expect(
+        verifySpaceSignature(
+          headers,
+          audience === undefined ? undefined : keyId,
+        ),
+      ).rejects.toThrow(/algorithm/)
+    },
+  )
+
+  it('rejects other key types', async () => {
     const other = await Secp256k1Keypair.create()
     await expect(
       createSpaceSigHeaders(other, { authorization: AUTHORIZATION }),
     ).rejects.toThrow(/P-256/)
+    const headers = await signedHeaders()
+    await expect(
+      verifySpaceSignature(headers, other.did() as DidString),
+    ).rejects.toThrow(/P-256/)
     headers['signature-input'] =
-      `atproto-space=("authorization");keyid="${other.did()}";alg="ecdsa-p256-sha256"`
+      `atproto-space=("authorization");keyid="${other.did()}"`
     await expect(verifySpaceSignature(headers)).rejects.toThrow(/P-256/)
   })
 

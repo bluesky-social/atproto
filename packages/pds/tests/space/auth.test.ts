@@ -293,7 +293,7 @@ describe('space auth', () => {
             space,
             repo: alice.did,
           }),
-        ).rejects.toThrow(/not signed by the key the credential is bound to/)
+        ).rejects.toThrow(/invalid HTTP message signature/)
       })
 
       it.each(['remote', 'co-located'])(

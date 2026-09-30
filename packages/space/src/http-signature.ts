@@ -35,11 +35,10 @@ export async function createSpaceSig(
     throw new SpaceSignatureError('signature key must be a P-256 did:key')
   }
 
-  const coveredHeaders =
+  const signatureInput =
     audience === undefined
-      ? '("authorization")'
+      ? `("authorization");keyid="${keyId}"`
       : '("authorization" "atproto-space-audience")'
-  const signatureInput = `${coveredHeaders};keyid="${keyId}";alg="${SIGNATURE_ALG}"`
   return {
     signatureInput,
     signature: await key.sign(
@@ -103,26 +102,25 @@ export async function verifySpaceSignature(
         `signature must cover exactly ${expectedHeaders}, in order`,
       )
     }
-    if (params.size !== 2) {
-      throw new SpaceSignatureError(
-        'signature requires only keyid and alg parameters',
-      )
-    }
-    if (params.get('alg') !== SIGNATURE_ALG) {
+    if (params.has('alg') && params.get('alg') !== SIGNATURE_ALG) {
       throw new SpaceSignatureError(
         `signature algorithm must be ${SIGNATURE_ALG}`,
       )
     }
-    const signingKey = params.get('keyid')
+    const signingKey = keyId ?? params.get('keyid')
     if (typeof signingKey !== 'string') {
       throw new SpaceSignatureError('signature key must be a P-256 did:key')
     }
     if (parseDidKey(signingKey).jwtAlg !== 'ES256') {
       throw new SpaceSignatureError('signature key must be a P-256 did:key')
     }
-    if (keyId !== undefined && signingKey !== keyId) {
+    if (
+      keyId !== undefined &&
+      params.has('keyid') &&
+      params.get('keyid') !== keyId
+    ) {
       throw new SpaceSignatureError(
-        'signature is not signed by the key the credential is bound to',
+        'signature keyid does not match the credential key',
       )
     }
 
