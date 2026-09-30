@@ -251,6 +251,18 @@ export function irisUrlForTrendingFeed(
   return irisUrl
 }
 
+/**
+ * Seeemore's local endpoint for feeds registered to its generator DID.
+ */
+export function seeemoreUrlForFeed(
+  cfg: Pick<ServerConfig, 'seeemoreUrl' | 'seeemoreServiceDid'>,
+  params: { feedDid: DidString },
+): string | undefined {
+  if (cfg.seeemoreUrl && params.feedDid === cfg.seeemoreServiceDid) {
+    return cfg.seeemoreUrl
+  }
+}
+
 const resolveSkeletonEndpoint = async (
   ctx: Context,
   params: Params,
@@ -270,6 +282,9 @@ const resolveSkeletonEndpoint = async (
 
   const trendingIrisUrl = irisUrlForTrendingFeed(ctx.cfg, { feed, feedDid })
   if (trendingIrisUrl) return trendingIrisUrl
+
+  const seeemoreUrl = seeemoreUrlForFeed(ctx.cfg, { feedDid })
+  if (seeemoreUrl) return seeemoreUrl
 
   let identity: GetIdentityByDidResponse
   try {

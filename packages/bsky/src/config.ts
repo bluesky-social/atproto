@@ -73,6 +73,8 @@ export interface ServerConfigValues {
   irisUrl?: string
   irisServiceDid?: DidString
   trendingFeedDid?: DidString
+  seeemoreUrl?: string
+  seeemoreServiceDid?: DidString
   irisFeedUris?: Set<string> // `iris:feed:enable` gate to serve via iris instead of seeemore
   irisStagingUrl?: string
   irisStagingFeedUris?: Set<string> // serve via iris staging instead of the registered feed generator
@@ -187,6 +189,10 @@ export class ServerConfig {
     assert(irisServiceDid == null || isDidString(irisServiceDid))
     const trendingFeedDid = process.env.BSKY_TRENDING_FEED_DID || undefined
     assert(trendingFeedDid == null || isDidString(trendingFeedDid))
+    const seeemoreUrl = process.env.BSKY_SEEEMORE_URL || undefined
+    const seeemoreServiceDid =
+      process.env.BSKY_SEEEMORE_SERVICE_DID || undefined
+    assert(seeemoreServiceDid == null || isDidString(seeemoreServiceDid))
     const irisFeedUris = new Set(envList(process.env.BSKY_IRIS_FEED_URIS))
     const irisStagingUrl = process.env.BSKY_IRIS_STAGING_URL || undefined
     const irisStagingFeedUris = new Set(
@@ -396,6 +402,8 @@ export class ServerConfig {
       irisUrl,
       irisServiceDid,
       trendingFeedDid,
+      seeemoreUrl,
+      seeemoreServiceDid,
       irisFeedUris,
       irisStagingUrl,
       irisStagingFeedUris,
@@ -598,6 +606,14 @@ export class ServerConfig {
 
   get trendingFeedDid() {
     return this.cfg.trendingFeedDid
+  }
+
+  get seeemoreUrl() {
+    return this.cfg.seeemoreUrl
+  }
+
+  get seeemoreServiceDid() {
+    return this.cfg.seeemoreServiceDid
   }
 
   get irisFeedUris() {

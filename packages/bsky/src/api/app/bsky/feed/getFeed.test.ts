@@ -5,16 +5,19 @@ import {
   irisStagingUrlForFeed,
   irisUrlForFeed,
   irisUrlForTrendingFeed,
+  seeemoreUrlForFeed,
 } from './getFeed.js'
 
 const IRIS_URL = 'http://iris.internal.invalid'
 const IRIS_STAGING_URL = 'http://iris-staging.internal.invalid'
+const SEEEMORE_URL = 'http://seeemore.internal.invalid'
 const ALLOWLISTED = 'at://did:plc:feedgen/app.bsky.feed.generator/whats-hot'
 const OTHER_FEED = 'at://did:plc:someone/app.bsky.feed.generator/custom'
 const TRENDING_FEED_DID: DidString = 'did:plc:aaaaaaaaaaaaaaaaaaaaaaaa'
 const TRENDING_FEED = `at://${TRENDING_FEED_DID}/app.bsky.feed.generator/topic`
 const IRIS_SERVICE_DID: DidString = 'did:web:iris.invalid'
 const OTHER_SERVICE_DID: DidString = 'did:web:feedgen.invalid'
+const SEEEMORE_SERVICE_DID: DidString = 'did:web:discover.bsky.app'
 
 const inputs = ({
   irisConfigured = true,
@@ -183,5 +186,43 @@ describe(irisUrlForTrendingFeed, () => {
       { feed: TRENDING_FEED, feedDid: IRIS_SERVICE_DID },
     )
     expect(url).toBeUndefined()
+  })
+})
+
+describe(seeemoreUrlForFeed, () => {
+  const cfg = {
+    seeemoreUrl: SEEEMORE_URL,
+    seeemoreServiceDid: SEEEMORE_SERVICE_DID,
+  }
+
+  it('routes feeds registered to seeemore to its local endpoint', () => {
+    expect(seeemoreUrlForFeed(cfg, { feedDid: SEEEMORE_SERVICE_DID })).toBe(
+      SEEEMORE_URL,
+    )
+  })
+
+  it('preserves the registered endpoint for feeds hosted elsewhere', () => {
+    expect(
+      seeemoreUrlForFeed(cfg, { feedDid: OTHER_SERVICE_DID }),
+    ).toBeUndefined()
+  })
+
+  it('falls back to DID resolution unless both settings are configured', () => {
+    expect(
+      seeemoreUrlForFeed(
+        { ...cfg, seeemoreUrl: undefined },
+        {
+          feedDid: SEEEMORE_SERVICE_DID,
+        },
+      ),
+    ).toBeUndefined()
+    expect(
+      seeemoreUrlForFeed(
+        { ...cfg, seeemoreServiceDid: undefined },
+        {
+          feedDid: SEEEMORE_SERVICE_DID,
+        },
+      ),
+    ).toBeUndefined()
   })
 })
