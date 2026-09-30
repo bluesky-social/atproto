@@ -39,6 +39,7 @@ import {
   compareNotificationGroupsNewestFirst,
   isNotificationRead,
 } from './grouping/shared.js'
+import { buildSpotlight } from './grouping/spotlight.js'
 import {
   delayCursor,
   shouldFilterForNeedsReview,
@@ -50,11 +51,11 @@ const MIN_RAW_LIMIT = 300
 const MAX_RAW_ITEMS = 3000
 const MAX_READS = 3
 
-export function getNextRawLimit(
+export const getNextRawLimit = (
   itemsFetched: number,
   groupsBuilt: number,
   groupsNeeded: number,
-): number {
+): number => {
   // How many raw items we still can fetch until hit the max.
   const remainingItems = MAX_RAW_ITEMS - itemsFetched
   if (remainingItems <= 0) return 0
@@ -188,7 +189,7 @@ const skeleton = async (
 
     const groupingFoundUnconsumedNotification =
       groupingResult.cursor !== undefined
-    const dataplaneHasMoreNotifications = response.cursor !== undefined
+    const dataplaneHasMoreNotifications = !!response.cursor
     const shouldContinueBuildingPage =
       !groupingFoundUnconsumedNotification && dataplaneHasMoreNotifications
     if (!shouldContinueBuildingPage) break
@@ -198,7 +199,7 @@ const skeleton = async (
     if (rawLimit === 0) break
   }
 
-  return { groups, cursor: nextCursor }
+  return buildSpotlight(items, groups, nextCursor, params.limit, seenAt)
 }
 
 const hydration = async (
@@ -383,6 +384,9 @@ const presentation = (
     ) {
       recordUris.add(kind.post)
       for (const item of kind.items) profileDids.add(item.actor)
+    } else if (defs.multiPostLikeGroup.$isTypeOf(kind)) {
+      profileDids.add(kind.actor)
+      for (const item of kind.items) recordUris.add(item.post)
     } else if (defs.generatorLikeGroup.$isTypeOf(kind)) {
       recordUris.add(kind.generator)
       for (const item of kind.items) profileDids.add(item.actor)

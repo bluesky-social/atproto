@@ -4,13 +4,17 @@ import {
   type Notification,
   NotificationFeed,
 } from '../../../../../proto/bsky_pb.js'
-import { NOTIFICATION_REASON, type NotificationReason } from '../constants.js'
+import {
+  type AppviewNotificationReason,
+  type DataplaneNotificationReason,
+  NOTIFICATION_REASON,
+} from '../constants.js'
 import { buildAlgoGravityGroups } from './algoGravity.js'
 import { buildAlgoLookbackGroups } from './algoLookback.js'
 
 // Notification reasons that require reasonSubject to be non-empty.
 // It should be the AT-URI of a record belonging to the notification recipient
-type NotificationReasonWithSubject =
+type DataplaneNotificationReasonWithSubject =
   | typeof NOTIFICATION_REASON.LIKE
   | typeof NOTIFICATION_REASON.REPOST
   | typeof NOTIFICATION_REASON.LIKE_VIA_REPOST
@@ -28,11 +32,14 @@ export type RawNotification = {
   indexedAt: DatetimeString
 } & (
   | {
-      reason: NotificationReasonWithSubject
+      reason: DataplaneNotificationReasonWithSubject
       reasonSubject: AtUriString
     }
   | {
-      reason: Exclude<NotificationReason, NotificationReasonWithSubject>
+      reason: Exclude<
+        DataplaneNotificationReason,
+        DataplaneNotificationReasonWithSubject
+      >
       reasonSubject: undefined
     }
 )
@@ -50,7 +57,7 @@ export type NotificationItem = {
 // plus their count and timestamps, before Views builds the lexicon response.
 export type NotificationGroup = {
   id: string
-  kind: NotificationReason
+  kind: AppviewNotificationReason
   groupingKey: string
   actorDids: DidString[]
   itemCount: number
@@ -58,6 +65,11 @@ export type NotificationGroup = {
   firstIndexedAt: DatetimeString
   isRead: boolean
   items: NotificationItem[]
+}
+
+export type GroupingResult = {
+  groups: NotificationGroup[]
+  cursor?: string
 }
 
 export function parseRawNotification(
@@ -109,7 +121,7 @@ export const buildGroups = (
   seenAt: number | undefined,
   algorithm: NotificationsV2Algorithm,
   feed = NotificationFeed.ALL,
-): { groups: NotificationGroup[]; cursor?: string } => {
+): GroupingResult => {
   switch (algorithm) {
     case 'algoLookback':
       return buildAlgoLookbackGroups(items, limit, utcOffset, seenAt, feed)

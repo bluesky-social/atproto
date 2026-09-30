@@ -1,6 +1,10 @@
 import { HOUR, MINUTE, SECOND } from '@atproto/common'
 import { NotificationFeed } from '../../../../../proto/bsky_pb.js'
-import type { NotificationGroup, NotificationItem } from './grouping.js'
+import type {
+  GroupingResult,
+  NotificationGroup,
+  NotificationItem,
+} from './grouping.js'
 import {
   MAX_GROUP_SIZE,
   canGroupNotification,
@@ -50,7 +54,7 @@ export const buildAlgoGravityGroups = (
   utcOffset: number,
   seenAt?: number,
   feed = NotificationFeed.ALL,
-): { groups: NotificationGroup[]; cursor?: string } => {
+): GroupingResult => {
   const now = Date.now()
   const zones = PARAMS.zones
   const currentDay = localDay(now, utcOffset)

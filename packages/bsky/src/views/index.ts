@@ -15,7 +15,10 @@ import {
   INVALID_HANDLE,
   normalizeDatetimeAlways,
 } from '@atproto/syntax'
-import { NOTIFICATION_REASON } from '../api/app/bsky/notification/constants.js'
+import {
+  APPVIEW_NOTIFICATION_REASON,
+  NOTIFICATION_REASON,
+} from '../api/app/bsky/notification/constants.js'
 import type {
   NotificationGroup,
   NotificationItem,
@@ -2917,6 +2920,16 @@ export class Views {
       case NOTIFICATION_REASON.LIKE: {
         const subjectUri = notif.reasonSubject
         if (
+          group.kind === APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE &&
+          group.items.length > 1
+        ) {
+          kind = defs.multiPostLikeGroup.$build({
+            actor: newestItem.actorDid,
+            items: group.items.map((item) => ({
+              post: item.raw.reasonSubject!,
+            })),
+          })
+        } else if (
           new AtUri(subjectUri).collection === app.bsky.feed.generator.$type
         ) {
           kind = defs.generatorLikeGroup.$build({

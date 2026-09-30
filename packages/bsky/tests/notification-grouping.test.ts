@@ -1,9 +1,17 @@
+import { createHash } from 'node:crypto'
 import { Timestamp } from '@bufbuild/protobuf'
-import { describe, expect, it, vi } from 'vitest'
-import type { AtUriString, DidString } from '@atproto/lex'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { type SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import {
+  type AtUriString,
+  type DatetimeString,
+  type DidString,
+  toDatetimeString,
+} from '@atproto/lex'
+import {
+  APPVIEW_NOTIFICATION_REASON,
+  type DataplaneNotificationReason,
   NOTIFICATION_REASON,
-  type NotificationReason,
 } from '../src/api/app/bsky/notification/constants.js'
 import { getNextRawLimit } from '../src/api/app/bsky/notification/getGroupedNotifications.js'
 import {
@@ -11,6 +19,7 @@ import {
   buildGroups,
   parseRawNotification,
 } from '../src/api/app/bsky/notification/grouping/grouping.js'
+import { buildSpotlight } from '../src/api/app/bsky/notification/grouping/spotlight.js'
 import { app } from '../src/lexicons/index.js'
 import { Notification, NotificationFeed } from '../src/proto/bsky_pb.js'
 
@@ -23,7 +32,7 @@ const minutesAgo = (minutes: number) =>
 const item = (
   id: string,
   indexedAt: string,
-  kind: NotificationReason = NOTIFICATION_REASON.LIKE,
+  kind: DataplaneNotificationReason = NOTIFICATION_REASON.LIKE,
   {
     actor = id,
     subject = post('main'),
@@ -426,6 +435,789 @@ describe('notification grouping', () => {
     expect(result.groups.map(({ isRead }) => isRead)).toEqual([false, true])
   })
 })
+
+const postLikes = (pairs: [actor: string, subject: string][]) =>
+  pairs.map(([actor, subject], index) =>
+    item(
+      `${actor}-${subject}`,
+      toDatetimeString(new Date(Date.parse(NOW) - index)),
+      NOTIFICATION_REASON.LIKE,
+      { actor, subject: post(subject) },
+    ),
+  )
+
+const expectPage = (
+  page: ReturnType<typeof buildSpotlight>,
+  items: NotificationItem[],
+  expectedGroups: string[][],
+  cursor?: string,
+) => {
+  const ids = page.groups.flatMap((group) => group.items.map(({ id }) => id))
+  expect(page.groups.map((group) => group.items.map(({ id }) => id))).toEqual(
+    expectedGroups,
+  )
+  expect(new Set(ids).size).toBe(ids.length)
+  expect(ids.toSorted()).toEqual(
+    items
+      .slice(0, ids.length)
+      .map(({ id }) => id)
+      .sort(),
+  )
+  expect(page.cursor).toBe(cursor)
+}
+
+describe.each(['algoGravity', 'algoLookback'] as const)(
+  '%s spotlight',
+  (algorithm) => {
+    const buildPage = (
+      items: NotificationItem[],
+      limit: number,
+      { cursor, seenAt }: { cursor?: string; seenAt?: number } = {},
+    ) => {
+      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
+      const ordinary = buildGroups(items, limit, 0, seenAt, algorithm)
+      if (cursor !== undefined) ordinary.cursor = cursor
+      const originals = structuredClone({ items, ordinary })
+      const page = buildSpotlight(
+        items,
+        ordinary.groups,
+        ordinary.cursor,
+        limit,
+        seenAt,
+      )
+      expect({ items, ordinary }).toEqual(originals)
+      expect(page.groups.length).toBeLessThanOrEqual(limit)
+      return { ordinary, page }
+    }
+
+    it('leaves an empty page untouched', () => {
+      const { ordinary, page } = buildPage([], 1)
+      expect(page.groups).toBe(ordinary.groups)
+      expectPage(page, [], [])
+    })
+
+    it('fits without trimming and updates ordinary and spotlight metadata', () => {
+      const items = postLikes([
+        ['alice', 'poem'],
+        ['bob', 'poem'],
+        ['alice', 'song'],
+        ['carol', 'song'],
+        ['alice', 'photo'],
+        ['dan', 'photo'],
+        ['alice', 'story'],
+        ['eve', 'story'],
+      ])
+      const { page } = buildPage(items, 5, { seenAt: Date.parse(NOW) })
+
+      expectPage(page, items, [
+        ['alice-poem', 'alice-song', 'alice-photo', 'alice-story'],
+        ['bob-poem'],
+        ['carol-song'],
+        ['dan-photo'],
+        ['eve-story'],
+      ])
+      expect(page.groups.map(({ kind }) => kind)).toEqual([
+        APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
+        'like',
+        'like',
+        'like',
+        'like',
+      ])
+      expect(page.groups[0]).toEqual({
+        id: 'alice-poem',
+        kind: APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
+        groupingKey: 'did:plc:alice',
+        items: [items[0], items[2], items[4], items[6]],
+        actorDids: Array(4).fill('did:plc:alice'),
+        itemCount: 4,
+        indexedAt: items[0]!.raw.indexedAt,
+        firstIndexedAt: items[6]!.raw.indexedAt,
+        isRead: false,
+      })
+      expect(
+        page.groups.slice(1).map((group) => ({
+          id: group.id,
+          actorDids: group.actorDids,
+          count: group.itemCount,
+          indexedAt: group.indexedAt,
+          firstIndexedAt: group.firstIndexedAt,
+          isRead: group.isRead,
+        })),
+      ).toEqual(
+        [1, 3, 5, 7].map((index) => ({
+          id: items[index]!.id,
+          actorDids: [items[index]!.actorDid],
+          count: 1,
+          indexedAt: items[index]!.raw.indexedAt,
+          firstIndexedAt: items[index]!.raw.indexedAt,
+          isRead: true,
+        })),
+      )
+    })
+
+    it('discards emptied ordinary groups and preserves the ordinary cursor', () => {
+      const items = postLikes([
+        ['alice', 'poem'],
+        ['alice', 'song'],
+        ['alice', 'photo'],
+        ['alice', 'story'],
+      ])
+      const cursor = minutesAgo(1)
+      const { page } = buildPage(items, 4, { cursor })
+
+      expectPage(
+        page,
+        items,
+        [['alice-poem', 'alice-song', 'alice-photo', 'alice-story']],
+        cursor,
+      )
+      expect(page.groups[0]?.kind).toBe(
+        APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
+      )
+    })
+
+    it('trims a continuous prefix across interleaved groups and resumes without gaps', () => {
+      const items = postLikes([
+        ['alice', 'poem'],
+        ['bob', 'poem'],
+        ['alice', 'song'],
+        ['carol', 'song'],
+        ['alice', 'photo'],
+        ['dan', 'photo'],
+        ['alice', 'story'],
+        ['eve', 'story'],
+        ['frank', 'poem'],
+        ['grace', 'song'],
+        ['han', 'photo'],
+        ['ivy', 'story'],
+      ])
+      const { page } = buildPage(items, 4)
+
+      expectPage(
+        page,
+        items,
+        [
+          ['alice-poem', 'alice-song', 'alice-photo', 'alice-story'],
+          ['bob-poem'],
+          ['carol-song'],
+          ['dan-photo'],
+        ],
+        items[6]!.raw.indexedAt,
+      )
+
+      const remaining = items.filter(
+        (item) => Date.parse(item.raw.indexedAt) < Date.parse(page.cursor!),
+      )
+      const { page: nextPage } = buildPage(remaining, 4)
+      expectPage(nextPage, remaining, [
+        ['eve-story', 'ivy-story'],
+        ['frank-poem'],
+        ['grace-song'],
+        ['han-photo'],
+      ])
+      const returned = [...page.groups, ...nextPage.groups].flatMap((group) =>
+        group.items.map(({ id }) => id),
+      )
+      expect(returned.toSorted()).toEqual(items.map(({ id }) => id).sort())
+    })
+
+    it('falls back when trimming removes the fourth qualifying like', () => {
+      const items = postLikes([
+        ['alice', 'poem'],
+        ['bob', 'poem'],
+        ['alice', 'song'],
+        ['carol', 'song'],
+        ['alice', 'photo'],
+        ['dan', 'photo'],
+        ['eve', 'story'],
+        ['alice', 'story'],
+      ])
+      const cursor = minutesAgo(1)
+      const { ordinary, page } = buildPage(items, 4, { cursor })
+
+      expect(page.groups).toBe(ordinary.groups)
+      expectPage(
+        page,
+        items,
+        [
+          ['alice-poem', 'bob-poem'],
+          ['alice-song', 'carol-song'],
+          ['alice-photo', 'dan-photo'],
+          ['eve-story', 'alice-story'],
+        ],
+        cursor,
+      )
+    })
+
+    it('falls back when the entire spotlight would be the extra group', () => {
+      const items = postLikes([
+        ['bob', 'poem'],
+        ['carol', 'song'],
+        ['dan', 'photo'],
+        ['eve', 'story'],
+        ['alice', 'poem'],
+        ['alice', 'song'],
+        ['alice', 'photo'],
+        ['alice', 'story'],
+      ])
+      const { ordinary, page } = buildPage(items, 4)
+
+      expect(page.groups).toBe(ordinary.groups)
+      expectPage(page, items, [
+        ['bob-poem', 'alice-poem'],
+        ['carol-song', 'alice-song'],
+        ['dan-photo', 'alice-photo'],
+        ['eve-story', 'alice-story'],
+      ])
+    })
+
+    it('falls back without trying the new top liker after trimming', () => {
+      const items = postLikes([
+        ['alice', 'poem'],
+        ['bob', 'poem'],
+        ['bob', 'song'],
+        ['alice', 'song'],
+        ['bob', 'photo'],
+        ['alice', 'photo'],
+        ['bob', 'story'],
+        ['alice', 'story'],
+        ['bob', 'drawing'],
+        ['carol', 'video'],
+        ['alice', 'drawing'],
+        ['alice', 'video'],
+      ])
+      const cursor = minutesAgo(1)
+      const { ordinary, page } = buildPage(items, 6, { cursor })
+
+      expect(page.groups).toBe(ordinary.groups)
+      expectPage(
+        page,
+        items,
+        [
+          ['alice-poem', 'bob-poem'],
+          ['bob-song', 'alice-song'],
+          ['bob-photo', 'alice-photo'],
+          ['bob-story', 'alice-story'],
+          ['bob-drawing', 'alice-drawing'],
+          ['carol-video', 'alice-video'],
+        ],
+        cursor,
+      )
+    })
+
+    it('breaks tied top counts by the newest like, choosing only one actor', () => {
+      const items = postLikes([
+        ['bob', 'poem'],
+        ['alice', 'song'],
+        ['alice', 'poem'],
+        ['alice', 'photo'],
+        ['alice', 'story'],
+        ['bob', 'song'],
+        ['bob', 'photo'],
+        ['bob', 'story'],
+      ])
+      const { page } = buildPage(items, 5)
+
+      expectPage(page, items, [
+        ['bob-poem', 'bob-song', 'bob-photo', 'bob-story'],
+        ['alice-song'],
+        ['alice-poem'],
+        ['alice-photo'],
+        ['alice-story'],
+      ])
+      expect(
+        page.groups
+          .filter(
+            (group) =>
+              group.kind === APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
+          )
+          .map((group) => group.groupingKey),
+      ).toEqual(['did:plc:bob'])
+    })
+
+    it('falls back if trimming creates a tie won by another actor’s newer like', () => {
+      const items = postLikes([
+        ['bob', 'poem'],
+        ['alice', 'poem'],
+        ['bob', 'song'],
+        ['alice', 'song'],
+        ['bob', 'photo'],
+        ['alice', 'photo'],
+        ['bob', 'story'],
+        ['alice', 'story'],
+        ['carol', 'video'],
+        ['alice', 'video'],
+      ])
+      const { ordinary, page } = buildPage(items, 5)
+
+      expect(page.groups).toBe(ordinary.groups)
+      expectPage(page, items, [
+        ['bob-poem', 'alice-poem'],
+        ['bob-song', 'alice-song'],
+        ['bob-photo', 'alice-photo'],
+        ['bob-story', 'alice-story'],
+        ['carol-video', 'alice-video'],
+      ])
+    })
+
+    it.each([
+      { count: 200, likes: 3, eligible: false },
+      { count: 200, likes: 4, eligible: true },
+      { count: 201, likes: 4, eligible: false },
+      { count: 201, likes: 7, eligible: false },
+      { count: 201, likes: 8, eligible: true },
+      { count: 500, likes: 7, eligible: false },
+      { count: 500, likes: 8, eligible: true },
+      { count: 501, likes: 8, eligible: false },
+    ])(
+      '$count notifications and $likes distinct posts: eligible=$eligible',
+      ({ count, likes, eligible }) => {
+        const subjects = Array.from(
+          { length: likes },
+          (_, index) => `post-${index}`,
+        )
+        const items = postLikes([
+          ...subjects.map((subject): [string, string] => ['alice', subject]),
+          ...Array.from(
+            { length: count - likes },
+            (_, index): [string, string] => [
+              `other-${index}`,
+              subjects[index % likes]!,
+            ],
+          ),
+        ])
+        const { ordinary, page } = buildPage(items, likes + 1)
+        const expectedGroups = subjects.map((subject, postIndex) => [
+          ...(!eligible ? [`alice-${subject}`] : []),
+          ...Array.from({ length: count - likes }, (_, index) => index)
+            .filter((index) => index % likes === postIndex)
+            .map((index) => `other-${index}-${subject}`),
+        ])
+        if (eligible)
+          expectedGroups.unshift(subjects.map((subject) => `alice-${subject}`))
+
+        expectPage(page, items, expectedGroups)
+        if (eligible)
+          expect(page.groups[0]?.kind).toBe(
+            APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
+          )
+        else expect(page.groups).toBe(ordinary.groups)
+      },
+    )
+
+    it('keeps eight qualifying posts when a 201-notification page trims to 200', () => {
+      const subjects = Array.from({ length: 8 }, (_, index) => `post-${index}`)
+      const items = postLikes([
+        ...subjects.map((subject): [string, string] => ['alice', subject]),
+        ...Array.from({ length: 192 }, (_, index): [string, string] => [
+          `other-${index}`,
+          subjects[index % 7]!,
+        ]),
+        ['bob', 'post-7'],
+      ])
+      const { page } = buildPage(items, 8)
+
+      expectPage(
+        page,
+        items,
+        [
+          subjects.map((subject) => `alice-${subject}`),
+          ...subjects.slice(0, 7).map((subject, postIndex) =>
+            Array.from({ length: 192 }, (_, index) => index)
+              .filter((index) => index % 7 === postIndex)
+              .map((index) => `other-${index}-${subject}`),
+          ),
+        ],
+        items[199]!.raw.indexedAt,
+      )
+      expect(page.groups[0]?.itemCount).toBe(8)
+      expect(page.groups[0]?.kind).toBe(
+        APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
+      )
+    })
+
+    it('does not lower the eight-post threshold after trimming below 201 notifications', () => {
+      const subjects = Array.from({ length: 8 }, (_, index) => `post-${index}`)
+      const items = postLikes([
+        ...subjects
+          .slice(0, 7)
+          .map((subject): [string, string] => ['alice', subject]),
+        ...Array.from({ length: 192 }, (_, index): [string, string] => [
+          `other-${index}`,
+          subjects[index % 7]!,
+        ]),
+        ['bob', 'post-7'],
+        ['alice', 'post-7'],
+      ])
+      const { ordinary, page } = buildPage(items, 8)
+
+      expect(page.groups).toBe(ordinary.groups)
+      expectPage(page, items, [
+        ...subjects.slice(0, 7).map((subject, postIndex) => [
+          `alice-${subject}`,
+          ...Array.from({ length: 192 }, (_, index) => index)
+            .filter((index) => index % 7 === postIndex)
+            .map((index) => `other-${index}-${subject}`),
+        ]),
+        ['bob-post-7', 'alice-post-7'],
+      ])
+    })
+
+    it('ignores fetched notifications outside the ordinary page for volume and top actor', () => {
+      const items = postLikes([
+        ['alice', 'poem'],
+        ['alice', 'song'],
+        ['alice', 'photo'],
+        ['alice', 'story'],
+        ...Array.from({ length: 600 }, (_, index): [string, string] => [
+          'bob',
+          `older-${index}`,
+        ]),
+      ])
+      const { page } = buildPage(items, 4)
+
+      expectPage(
+        page,
+        items,
+        [['alice-poem', 'alice-song', 'alice-photo', 'alice-story']],
+        items[3]!.raw.indexedAt,
+      )
+      expect(page.groups[0]?.kind).toBe(
+        APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
+      )
+    })
+
+    it('includes non-like notifications in the page-volume threshold', () => {
+      const items = [
+        ...postLikes([
+          ['alice', 'poem'],
+          ['alice', 'song'],
+          ['alice', 'photo'],
+          ['alice', 'story'],
+        ]),
+        ...Array.from({ length: 197 }, (_, index) =>
+          item(
+            `follow-${index}`,
+            minutesAgo(1 + index / 1000),
+            NOTIFICATION_REASON.FOLLOW,
+          ),
+        ),
+      ]
+      const { ordinary, page } = buildPage(items, 5)
+
+      expect(page.groups).toBe(ordinary.groups)
+      expectPage(page, items, [
+        ['alice-poem'],
+        ['alice-song'],
+        ['alice-photo'],
+        ['alice-story'],
+        Array.from({ length: 197 }, (_, index) => `follow-${index}`),
+      ])
+    })
+
+    it.each([NOTIFICATION_REASON.LIKE, NOTIFICATION_REASON.LIKE_VIA_REPOST])(
+      'excludes non-post %s notifications from eligibility',
+      (reason) => {
+        const items = [
+          ...postLikes([
+            ['alice', 'poem'],
+            ['alice', 'song'],
+            ['alice', 'photo'],
+          ]),
+          item('non-post', minutesAgo(1), reason, {
+            actor: 'alice',
+            subject: `at://did:plc:viewer/${
+              reason === NOTIFICATION_REASON.LIKE
+                ? app.bsky.feed.generator.$type
+                : app.bsky.feed.repost.$type
+            }/subject`,
+          }),
+        ]
+        const { ordinary, page } = buildPage(items, 4)
+
+        expect(page.groups).toBe(ordinary.groups)
+        expectPage(page, items, [
+          ['alice-poem'],
+          ['alice-song'],
+          ['alice-photo'],
+          ['non-post'],
+        ])
+      },
+    )
+
+    it('keeps likes beyond the 200-item spotlight cap in ordinary groups', () => {
+      const items = postLikes(
+        Array.from({ length: 201 }, (_, index) => ['alice', `post-${index}`]),
+      )
+      const { page } = buildPage(items, 201)
+
+      expectPage(page, items, [
+        Array.from({ length: 200 }, (_, index) => `alice-post-${index}`),
+        ['alice-post-200'],
+      ])
+      expect(
+        page.groups.map(({ kind, itemCount }) => [kind, itemCount]),
+      ).toEqual([
+        [APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE, 200],
+        ['like', 1],
+      ])
+    })
+  },
+)
+
+describe.each(['algoGravity', 'algoLookback'] as const)(
+  '%s spotlight endpoint',
+  (algorithm) => {
+    let network: TestNetwork
+    let sc: SeedClient
+    let fixtureIndex = 0
+    const defs = app.bsky.notification.getGroupedNotifications
+
+    beforeAll(async () => {
+      network = await TestNetwork.create({
+        dbPostgresSchema: `bsky_spotlight_${algorithm.toLowerCase()}`,
+        bsky: { notificationsV2Algorithm: algorithm },
+      })
+      sc = network.getSeedClient()
+      await usersSeed(sc)
+    })
+
+    afterAll(async () => network?.close())
+
+    const seedSpotlight = async () => {
+      const name = `spotlight-${fixtureIndex++}`
+      const { did: recipient } = await sc.createAccount(name, {
+        email: `${name}@test.com`,
+        handle: `${name}.test`,
+        password: 'spotlight-pass',
+      })
+      const records: {
+        post: Awaited<ReturnType<SeedClient['post']>>
+        like: AtUriString
+        indexedAt: DatetimeString
+        id: string
+      }[] = []
+      for (let index = 0; index < 4; index++) {
+        const post = await sc.post(recipient, `Post ${index}`)
+        const like = (
+          await sc.like(sc.dids.bob, post.ref)
+        ).toString() as AtUriString
+        const indexedAt = Timestamp.fromDate(
+          new Date(Date.parse(NOW) - index * 1000),
+        ).toJson() as DatetimeString
+        records.push({
+          post,
+          like,
+          indexedAt,
+          id: createHash('sha256')
+            .update(`${indexedAt}\0${like}`)
+            .digest('base64url'),
+        })
+      }
+      await network.processAll()
+      for (const { like, indexedAt } of records) {
+        await network.bsky.db.db
+          .updateTable('notification')
+          .set({ sortAt: toDatetimeString(new Date(indexedAt)) })
+          .where('recordUri', '=', like)
+          .where('did', '=', recipient)
+          .execute()
+      }
+      await network.bsky.ctx.dataplane.updateNotificationSeen({
+        actorDid: recipient,
+        timestamp: Timestamp.fromJson(records[1]!.indexedAt),
+      })
+      const headers = await network.serviceHeaders(recipient, defs.$lxm)
+      return { recipient, records, headers }
+    }
+
+    it.each([4, 3, 2, 1, 0])(
+      'renders %i surviving likes with exact metadata and related views after rules filtering',
+      async (remaining) => {
+        const { records, headers } = await seedSpotlight()
+        for (const { like } of records.slice(0, 4 - remaining)) {
+          await network.bsky.ctx.dataplane.takedownRecord({ recordUri: like })
+        }
+        using reads = vi.spyOn(
+          network.bsky.ctx.hydrator.dataplane,
+          'getNotificationsV2',
+        )
+        using hydration = vi.spyOn(
+          network.bsky.ctx.hydrator,
+          'hydrateGroupedNotifications',
+        )
+        const response = await network.bsky
+          .getClient()
+          .call(defs, { limit: 4 }, { headers })
+        const kept = records.slice(4 - remaining)
+        const newest = kept[0]
+
+        expect(reads).toHaveBeenCalledTimes(1)
+        expect((await reads.mock.results[0]!.value).cursor).toBe('')
+        expect(hydration).toHaveBeenCalledTimes(1)
+        expect(hydration.mock.calls[0]![0].map(({ uri }) => uri)).toEqual(
+          records.map(({ like }) => like),
+        )
+        expect(response.groups).toEqual(
+          newest
+            ? [
+                defs.group.$build({
+                  id: newest.id,
+                  indexedAt: newest.indexedAt,
+                  isRead: remaining < 3,
+                  count: remaining,
+                  kind:
+                    remaining === 1
+                      ? defs.likeGroup.$build({
+                          post: newest.post.ref.uriStr,
+                          items: [{ actor: sc.dids.bob }],
+                        })
+                      : defs.multiPostLikeGroup.$build({
+                          actor: sc.dids.bob,
+                          items: kept.map(({ post }) => ({
+                            post: post.ref.uriStr,
+                          })),
+                        }),
+                }),
+              ]
+            : [],
+        )
+        expect(response.seenAt).toBe(records[1]!.indexedAt)
+        expect(response.cursor).toBeUndefined()
+        expect(Object.keys(response.relatedProfileViews ?? {})).toEqual(
+          remaining ? [sc.dids.bob] : [],
+        )
+        expect(Object.keys(response.relatedRecordViews ?? {})).toEqual(
+          kept.map(({ post }) => post.ref.uriStr),
+        )
+        for (const view of Object.values(response.relatedProfileViews ?? {})) {
+          expect(app.bsky.actor.defs.profileViewDetailed.$matches(view)).toBe(
+            true,
+          )
+        }
+        for (const view of Object.values(response.relatedRecordViews ?? {})) {
+          expect(app.bsky.feed.defs.postView.$matches(view)).toBe(true)
+        }
+      },
+    )
+
+    it('builds the spotlight from all fetched pages and hydrates once', async () => {
+      const { records, headers } = await seedSpotlight()
+      const dataplane = network.bsky.ctx.hydrator.dataplane
+      const getNotifications = dataplane.getNotificationsV2.bind(dataplane)
+      using reads = vi
+        .spyOn(dataplane, 'getNotificationsV2')
+        .mockImplementation((request, ...args) =>
+          getNotifications({ ...request, limit: 2 }, ...args),
+        )
+      using hydration = vi.spyOn(
+        network.bsky.ctx.hydrator,
+        'hydrateGroupedNotifications',
+      )
+
+      const response = await network.bsky
+        .getClient()
+        .call(defs, { limit: 4 }, { headers })
+
+      expect(reads).toHaveBeenCalledTimes(2)
+      expect(Date.parse(reads.mock.calls[1]![0].cursor!)).toBe(
+        Date.parse(records[1]!.indexedAt),
+      )
+      expect(hydration).toHaveBeenCalledTimes(1)
+      expect(response.groups.map(({ kind }) => kind)).toEqual([
+        defs.multiPostLikeGroup.$build({
+          actor: sc.dids.bob,
+          items: records.map(({ post }) => ({ post: post.ref.uriStr })),
+        }),
+      ])
+      expect(response.cursor).toBeUndefined()
+    })
+
+    it('paginates after trimming and sorts again when rules remove the spotlight’s newest like', async () => {
+      const { recipient, records, headers } = await seedSpotlight()
+      const otherLikes: { uri: AtUriString; indexedAt: DatetimeString }[] = []
+      for (const { post, indexedAt } of records) {
+        otherLikes.push({
+          uri: (await sc.like(sc.dids.carol, post.ref)).toString(),
+          indexedAt: toDatetimeString(new Date(Date.parse(indexedAt) - 500)),
+        })
+      }
+      await network.processAll()
+      for (const { uri, indexedAt } of otherLikes) {
+        await network.bsky.db.db
+          .updateTable('notification')
+          .set({ sortAt: indexedAt })
+          .where('recordUri', '=', uri)
+          .where('did', '=', recipient)
+          .execute()
+      }
+      await network.bsky.ctx.dataplane.takedownRecord({
+        recordUri: records[0]!.like,
+      })
+      using reads = vi.spyOn(
+        network.bsky.ctx.hydrator.dataplane,
+        'getNotificationsV2',
+      )
+      const client = network.bsky.getClient()
+
+      const first = await client.call(defs, { limit: 4 }, { headers })
+
+      expect(reads).toHaveBeenCalledTimes(1)
+      expect(first.groups.map(({ kind }) => kind)).toEqual([
+        defs.likeGroup.$build({
+          post: records[0]!.post.ref.uriStr,
+          items: [{ actor: sc.dids.carol }],
+        }),
+        defs.multiPostLikeGroup.$build({
+          actor: sc.dids.bob,
+          items: records
+            .slice(1)
+            .map(({ post }) => ({ post: post.ref.uriStr })),
+        }),
+        defs.likeGroup.$build({
+          post: records[1]!.post.ref.uriStr,
+          items: [{ actor: sc.dids.carol }],
+        }),
+        defs.likeGroup.$build({
+          post: records[2]!.post.ref.uriStr,
+          items: [{ actor: sc.dids.carol }],
+        }),
+      ])
+      expect(first.groups[1]?.id).toBe(records[1]!.id)
+      expect(first.groups[1]?.indexedAt).toBe(records[1]!.indexedAt)
+      expect(first.groups[1]?.count).toBe(3)
+      expect(first.cursor).toBe(records[3]!.indexedAt)
+      expect(Object.keys(first.relatedProfileViews ?? {})).toEqual([
+        sc.dids.carol,
+        sc.dids.bob,
+      ])
+      expect(Object.keys(first.relatedRecordViews ?? {})).toEqual(
+        records.map(({ post }) => post.ref.uriStr),
+      )
+
+      const second = await client.call(
+        defs,
+        { limit: 4, cursor: first.cursor },
+        { headers },
+      )
+
+      expect(reads).toHaveBeenCalledTimes(2)
+      expect(second.groups.map(({ kind }) => kind)).toEqual([
+        defs.likeGroup.$build({
+          post: records[3]!.post.ref.uriStr,
+          items: [{ actor: sc.dids.carol }],
+        }),
+      ])
+      expect(second.cursor).toBeUndefined()
+      expect(Object.keys(second.relatedProfileViews ?? {})).toEqual([
+        sc.dids.carol,
+      ])
+      expect(Object.keys(second.relatedRecordViews ?? {})).toEqual([
+        records[3]!.post.ref.uriStr,
+      ])
+    })
+  },
+)
 
 describe('adaptive raw notification fetch limit', () => {
   it.each([

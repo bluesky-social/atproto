@@ -16,8 +16,17 @@ export const NOTIFICATION_REASON = {
   VERIFIED: 'verified',
 } as const
 
-export type NotificationReason =
+export type DataplaneNotificationReason =
   (typeof NOTIFICATION_REASON)[keyof typeof NOTIFICATION_REASON]
+
+export const APPVIEW_NOTIFICATION_REASON = {
+  ...NOTIFICATION_REASON,
+  MULTI_POST_LIKE: 'multi-post-like',
+} as const
+
+export type AppviewNotificationReason =
+  | DataplaneNotificationReason
+  | typeof APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE
 
 // Not a real notification the users see, but used to mark as read across user devices.
 export const MARK_READ_GENERIC = 'mark-read-generic'
