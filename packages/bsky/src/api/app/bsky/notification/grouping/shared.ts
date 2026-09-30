@@ -1,8 +1,14 @@
 import { DAY, MINUTE } from '@atproto/common'
 import { NotificationFeed } from '../../../../../proto/bsky_pb.js'
 import { NOTIFICATION_REASON, type NotificationReason } from '../constants.js'
+import type { NotificationGroup } from './grouping.js'
 
 export const MAX_GROUP_SIZE = 200
+
+export const compareNotificationGroupsNewestFirst = (
+  left: NotificationGroup,
+  right: NotificationGroup,
+): number => Date.parse(right.indexedAt) - Date.parse(left.indexedAt)
 
 const GROUPABLE_KINDS = new Set<NotificationReason>([
   NOTIFICATION_REASON.FOLLOW,

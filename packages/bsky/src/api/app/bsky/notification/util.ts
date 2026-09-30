@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import type { Un$Typed } from '@atproto/lex'
-import type { AtUriString } from '@atproto/syntax'
+import type { AtUriString, DidString } from '@atproto/syntax'
 import { UpstreamFailureError } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import type { HydrationState } from '../../../../hydration/hydrator.js'
@@ -45,7 +45,7 @@ export const shouldFilterReplyByThreadgate = (
 export const shouldFilterHiddenThreadTag = (
   reason: string,
   uri: AtUriString,
-  did: string,
+  did: DidString,
   hydration: HydrationState,
   hiddenTags: ReadonlySet<string>,
 ): boolean => {
@@ -70,7 +70,7 @@ export const shouldFilterHiddenThreadTag = (
 
 export const shouldFilterForNeedsReview = (
   reason: string,
-  did: string,
+  did: DidString,
   uri: AtUriString,
   hydration: HydrationState,
   views: Views,

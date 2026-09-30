@@ -1,3 +1,4 @@
+// As they come from the dataplane.
 export const NOTIFICATION_REASON = {
   CONTACT_MATCH: 'contact-match',
   FOLLOW: 'follow',
@@ -13,10 +14,10 @@ export const NOTIFICATION_REASON = {
   SUBSCRIBED_POST: 'subscribed-post',
   UNVERIFIED: 'unverified',
   VERIFIED: 'verified',
-
-  // Not a real notification the users see, but used to mark as read across user devices.
-  MARK_READ_GENERIC: 'mark-read-generic',
 } as const
 
 export type NotificationReason =
   (typeof NOTIFICATION_REASON)[keyof typeof NOTIFICATION_REASON]
+
+// Not a real notification the users see, but used to mark as read across user devices.
+export const MARK_READ_GENERIC = 'mark-read-generic'

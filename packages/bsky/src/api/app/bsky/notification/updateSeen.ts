@@ -4,7 +4,7 @@ const Murmurhash = ((m) => m.default ?? m)(MurmurhashModule)
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
-import { NOTIFICATION_REASON } from './constants.js'
+import { MARK_READ_GENERIC } from './constants.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.notification.updateSeen, {
@@ -22,10 +22,10 @@ export default function (server: Server, ctx: AppContext) {
               clientControlled: true,
               recipientDid: viewer,
               alwaysDeliver: false,
-              collapseKey: NOTIFICATION_REASON.MARK_READ_GENERIC,
+              collapseKey: MARK_READ_GENERIC,
               timestamp: Timestamp.fromDate(new Date()),
               additional: Struct.fromJson({
-                reason: NOTIFICATION_REASON.MARK_READ_GENERIC,
+                reason: MARK_READ_GENERIC,
               }),
             },
           ],
@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
 
 function getNotifId(viewer: string, seenAt: Date) {
   const key = [
-    NOTIFICATION_REASON.MARK_READ_GENERIC,
+    MARK_READ_GENERIC,
     viewer,
     seenAt.getTime().toString(),
   ].join('::')

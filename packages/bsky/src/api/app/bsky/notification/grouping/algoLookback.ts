@@ -1,9 +1,6 @@
 import { HOUR, MINUTE } from '@atproto/common'
 import { NotificationFeed } from '../../../../../proto/bsky_pb.js'
-import type {
-  NotificationGroup,
-  NotificationGroupingEvent,
-} from './grouping.js'
+import type { NotificationGroup, NotificationItem } from './grouping.js'
 import {
   MAX_GROUP_SIZE,
   canGroupNotification,
@@ -11,14 +8,27 @@ import {
   localDay,
 } from './shared.js'
 
-const ZONES = [
-  { maxAgeMs: HOUR, lookbackMs: 30 * MINUTE },
-  { maxAgeMs: 12 * HOUR, lookbackMs: HOUR },
-  { maxAgeMs: 24 * HOUR, lookbackMs: 4 * HOUR },
-  { maxAgeMs: null, lookbackMs: 8 * HOUR },
-]
+type Zone = {
+  ageMs: number | null
+  lookbackMs: number
+}
+
+type Params = {
+  zones: Zone[]
+}
+
+const PARAMS: Params = {
+  zones: [
+    // @NOTE: Keep in ascending ageMs, null last.
+    { ageMs: HOUR, lookbackMs: 30 * MINUTE },
+    { ageMs: 12 * HOUR, lookbackMs: HOUR },
+    { ageMs: 24 * HOUR, lookbackMs: 4 * HOUR },
+    { ageMs: null, lookbackMs: 8 * HOUR },
+  ],
+}
+
 export const buildAlgoLookbackGroups = (
-  events: NotificationGroupingEvent[],
+  items: NotificationItem[],
   limit: number,
   utcOffset: number,
   seenAt?: number,
@@ -27,57 +37,57 @@ export const buildAlgoLookbackGroups = (
   const groups: NotificationGroup[] = []
   const activeGroups = new Map<string, NotificationGroup>()
 
-  for (const [eventIndex, event] of events.entries()) {
-    const day = localDay(Date.parse(event.indexedAt), utcOffset)
-    const canGroup = canGroupNotification(event.kind, feed)
+  for (const [itemIndex, item] of items.entries()) {
+    const day = localDay(Date.parse(item.raw.indexedAt), utcOffset)
+    const canGroup = canGroupNotification(item.raw.reason, feed)
     const key = JSON.stringify([
-      event.kind,
-      event.subject,
+      item.raw.reason,
+      item.groupingKey,
       day,
-      canGroup ? undefined : event.id,
+      canGroup ? undefined : item.id,
     ])
     const active = activeGroups.get(key)
     const age = active
       ? Math.max(0, Date.now() - Date.parse(active.indexedAt))
       : 0
     const zone = active
-      ? (ZONES.find(
-          ({ maxAgeMs }, index) =>
+      ? (PARAMS.zones.find(
+          ({ ageMs: maxAgeMs }, index) =>
             maxAgeMs === null ||
             (index === 0 ? age < maxAgeMs : age <= maxAgeMs),
-        ) ?? ZONES.at(-1)!)
+        ) ?? PARAMS.zones.at(-1)!)
       : undefined
     const gap = active
-      ? Date.parse(active.indexedAt) - Date.parse(event.indexedAt)
+      ? Date.parse(active.indexedAt) - Date.parse(item.raw.indexedAt)
       : Number.POSITIVE_INFINITY
 
     if (
       active &&
-      active.eventCount < MAX_GROUP_SIZE &&
+      active.itemCount < MAX_GROUP_SIZE &&
       zone &&
       gap <= zone.lookbackMs
     ) {
-      active.actorDids.push(event.actorDid)
-      active.eventCount++
-      active.firstIndexedAt = event.indexedAt
-      active.items.push(event)
+      active.actorDids.push(item.actorDid)
+      active.itemCount++
+      active.firstIndexedAt = item.raw.indexedAt
+      active.items.push(item)
       continue
     }
 
     if (groups.length >= limit) {
-      return { groups, cursor: events[eventIndex - 1]?.indexedAt }
+      return { groups, cursor: items[itemIndex - 1]?.raw.indexedAt }
     }
 
     const group: NotificationGroup = {
-      id: event.id,
-      kind: event.kind,
-      subject: event.subject,
-      actorDids: [event.actorDid],
-      eventCount: 1,
-      indexedAt: event.indexedAt,
-      firstIndexedAt: event.indexedAt,
-      isRead: isNotificationRead(event.indexedAt, seenAt),
-      items: [event],
+      id: item.id,
+      kind: item.raw.reason,
+      groupingKey: item.groupingKey,
+      actorDids: [item.actorDid],
+      itemCount: 1,
+      indexedAt: item.raw.indexedAt,
+      firstIndexedAt: item.raw.indexedAt,
+      isRead: isNotificationRead(item.raw.indexedAt, seenAt),
+      items: [item],
     }
     groups.push(group)
     activeGroups.set(key, group)

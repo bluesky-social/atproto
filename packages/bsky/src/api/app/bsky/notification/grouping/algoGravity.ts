@@ -1,240 +1,257 @@
 import { HOUR, MINUTE, SECOND } from '@atproto/common'
 import { NotificationFeed } from '../../../../../proto/bsky_pb.js'
-import type {
-  NotificationGroup,
-  NotificationGroupingEvent,
-} from './grouping.js'
+import type { NotificationGroup, NotificationItem } from './grouping.js'
 import {
   MAX_GROUP_SIZE,
   canGroupNotification,
+  compareNotificationGroupsNewestFirst,
   isNotificationRead,
   localDay,
 } from './shared.js'
 
-const DEFAULT_PARAMS = {
-  gravityZones: [
-    { maxAgeMs: 30 * MINUTE, gravity: 3, attractionDecaySpan: 30 * MINUTE },
-    { maxAgeMs: HOUR, gravity: 2.2, attractionDecaySpan: HOUR },
-    {
-      maxAgeMs: 8 * HOUR,
-      gravity: 1,
-      attractionDecaySpan: 12 * HOUR,
-    },
-    { maxAgeMs: null, gravity: 0.5, attractionDecaySpan: 24 * HOUR },
+type Zone = {
+  ageMs: number | null
+  gravity: number
+  attractionSpanMs: number
+}
+
+type Params = {
+  zones: Zone[]
+  attractionCoefficient: number
+  notificationWeight: number
+}
+
+const PARAMS: Params = {
+  zones: [
+    // @NOTE: Keep in ascending ageMs, null last.
+    { ageMs: 30 * MINUTE, gravity: 3, attractionSpanMs: 30 * MINUTE },
+    { ageMs: HOUR, gravity: 2.2, attractionSpanMs: HOUR },
+    { ageMs: 8 * HOUR, gravity: 1, attractionSpanMs: 12 * HOUR },
+    { ageMs: null, gravity: 0.5, attractionSpanMs: 24 * HOUR },
   ],
   attractionCoefficient: 0.9,
   notificationWeight: 0.005,
 }
-type Segment = {
-  events: NotificationGroupingEvent[]
+
+// A notification group while Gravity is building it: holds its notifications and
+// the measurements used to decide whether to split it or accept more notifications.
+type CandidateGroup = {
+  items: NotificationItem[]
   occupiedSeconds: number
-  gravity: number
-  attractionDecaySpan: number
+  zone: Zone
   weakestAttraction: number
   weakestBindingIndexes: number[]
   closed: boolean
 }
 
 export const buildAlgoGravityGroups = (
-  events: NotificationGroupingEvent[],
+  items: NotificationItem[],
   limit: number,
   utcOffset: number,
   seenAt?: number,
   feed = NotificationFeed.ALL,
 ): { groups: NotificationGroup[]; cursor?: string } => {
   const now = Date.now()
-  const zones = [...DEFAULT_PARAMS.gravityZones].sort(
-    (left, right) =>
-      (left.maxAgeMs ?? Number.POSITIVE_INFINITY) -
-      (right.maxAgeMs ?? Number.POSITIVE_INFINITY),
-  )
+  const zones = PARAMS.zones
   const currentDay = localDay(now, utcOffset)
-  const eventOrder = new Map(events.map((event, index) => [event, index]))
-  const chains = new Map<string, Segment[]>()
+  const chains = new Map<string, CandidateGroup[]>()
   let groupCount = 0
 
-  for (const [eventIndex, event] of events.entries()) {
+  for (const [itemIndex, item] of items.entries()) {
     const dayBucket =
-      localDay(Date.parse(event.indexedAt), utcOffset) === currentDay
+      localDay(Date.parse(item.raw.indexedAt), utcOffset) === currentDay
         ? 'current'
         : 'older'
-    const canGroup = canGroupNotification(event.kind, feed)
+    const canGroup = canGroupNotification(item.raw.reason, feed)
     const key = JSON.stringify([
-      event.kind,
-      event.subject,
+      item.raw.reason,
+      item.groupingKey,
       dayBucket,
-      canGroup ? undefined : event.id,
+      canGroup ? undefined : item.id,
     ])
-    const segments = chains.get(key) ?? []
-    const active = segments.at(-1)
-    let nextSegments: Segment[]
+    const candidateGroups = chains.get(key) ?? []
+    const active = candidateGroups.at(-1)
+    let nextCandidateGroups: CandidateGroup[]
 
     if (!active || active.closed) {
-      nextSegments = [...segments, createSegment([event], now, zones)]
+      nextCandidateGroups = [
+        ...candidateGroups,
+        createCandidateGroup([item], now, zones),
+      ]
     } else {
-      const extended = appendEvent(
-        active,
-        event,
-        DEFAULT_PARAMS.attractionCoefficient,
-      )
-      const stableSegments = splitUntilStable(
+      const extended = appendItem(active, item, PARAMS.attractionCoefficient)
+      const stableCandidateGroups = splitUntilStable(
         extended,
-        DEFAULT_PARAMS.notificationWeight,
-        DEFAULT_PARAMS.attractionCoefficient,
+        PARAMS.notificationWeight,
+        PARAMS.attractionCoefficient,
         now,
         zones,
-      ).map((segment) =>
-        segment.events.length === MAX_GROUP_SIZE
-          ? { ...segment, closed: true }
-          : segment,
+      ).map((candidateGroup) =>
+        candidateGroup.items.length === MAX_GROUP_SIZE
+          ? { ...candidateGroup, closed: true }
+          : candidateGroup,
       )
-      nextSegments = [...segments.slice(0, -1), ...stableSegments]
+      nextCandidateGroups = [
+        ...candidateGroups.slice(0, -1),
+        ...stableCandidateGroups,
+      ]
     }
 
-    const nextGroupCount = groupCount - segments.length + nextSegments.length
+    const nextGroupCount =
+      groupCount - candidateGroups.length + nextCandidateGroups.length
     if (nextGroupCount > limit) {
       return {
-        groups: toGroups(chains, eventOrder, seenAt),
-        cursor: events[eventIndex - 1]?.indexedAt,
+        groups: toGroups(chains, seenAt),
+        cursor: items[itemIndex - 1]?.raw.indexedAt,
       }
     }
 
-    chains.set(key, nextSegments)
+    chains.set(key, nextCandidateGroups)
     groupCount = nextGroupCount
   }
 
   return {
-    groups: toGroups(chains, eventOrder, seenAt),
+    groups: toGroups(chains, seenAt),
   }
 }
 
 const splitUntilStable = (
-  segment: Segment,
+  candidateGroup: CandidateGroup,
   notificationWeight: number,
   attractionCoefficient: number,
   now: number,
-  zones: typeof DEFAULT_PARAMS.gravityZones,
-): Segment[] => {
+  zones: Zone[],
+): CandidateGroup[] => {
   if (
-    segment.events.length < 2 ||
-    segment.occupiedSeconds * notificationWeight * segment.gravity <=
-      segment.weakestAttraction
+    candidateGroup.items.length < 2 ||
+    candidateGroup.occupiedSeconds *
+      notificationWeight *
+      candidateGroup.zone.gravity <=
+      candidateGroup.weakestAttraction
   ) {
-    return [segment]
+    return [candidateGroup]
   }
 
+  // Resolve equal weakest bindings by cutting nearest the segment midpoint.
   const splitIndex = midpointIndex(
-    segment.weakestBindingIndexes,
-    segment.events.length,
+    candidateGroup.weakestBindingIndexes,
+    candidateGroup.items.length,
   )
-  const newer = createSegment(
-    segment.events.slice(0, splitIndex + 1),
+  const newer = createCandidateGroup(
+    candidateGroup.items.slice(0, splitIndex + 1),
     now,
     zones,
     attractionCoefficient,
   )
-  const older = createSegment(
-    segment.events.slice(splitIndex + 1),
+  const older = createCandidateGroup(
+    candidateGroup.items.slice(splitIndex + 1),
     now,
     zones,
     attractionCoefficient,
   )
-  const newerSegments = splitUntilStable(
+  const newerCandidateGroups = splitUntilStable(
     newer,
     notificationWeight,
     attractionCoefficient,
     now,
     zones,
   ).map((part) => ({ ...part, closed: true }))
-  const olderSegments = splitUntilStable(
+  const olderCandidateGroups = splitUntilStable(
     older,
     notificationWeight,
     attractionCoefficient,
     now,
     zones,
   )
-  return [...newerSegments, ...olderSegments]
+  return [...newerCandidateGroups, ...olderCandidateGroups]
 }
 
-const createSegment = (
-  events: NotificationGroupingEvent[],
+const createCandidateGroup = (
+  items: NotificationItem[],
   now: number,
-  zones: typeof DEFAULT_PARAMS.gravityZones,
-  attractionCoefficient = DEFAULT_PARAMS.attractionCoefficient,
-): Segment => {
-  const newest = events[0]!
-  const age = Math.max(0, now - Date.parse(newest.indexedAt))
-  const zone =
-    zones.find(({ maxAgeMs }) => maxAgeMs === null || age <= maxAgeMs) ??
-    zones.at(-1)!
-  const segment: Segment = {
-    events,
+  zones: Zone[],
+  attractionCoefficient = PARAMS.attractionCoefficient,
+): CandidateGroup => {
+  const newest = items[0]!
+  const age = Math.max(0, now - Date.parse(newest.raw.indexedAt))
+  const zone = zones.find(
+    ({ ageMs: maxAgeMs }) => maxAgeMs === null || age <= maxAgeMs,
+  )!
+  const candidateGroup: CandidateGroup = {
+    items,
     occupiedSeconds: new Set(
-      events.map(({ indexedAt }) => Math.floor(Date.parse(indexedAt) / SECOND)),
+      items.map(({ raw }) => Math.floor(Date.parse(raw.indexedAt) / SECOND)),
     ).size,
-    gravity: zone.gravity,
-    attractionDecaySpan: zone.attractionDecaySpan,
+    zone,
     weakestAttraction: Number.POSITIVE_INFINITY,
     weakestBindingIndexes: [],
     closed: false,
   }
 
-  for (let index = 0; index < events.length - 1; index++) {
+  for (let index = 0; index < items.length - 1; index++) {
     const gap =
-      Date.parse(events[index]!.indexedAt) -
-      Date.parse(events[index + 1]!.indexedAt)
+      Date.parse(items[index]!.raw.indexedAt) -
+      Date.parse(items[index + 1]!.raw.indexedAt)
     addBindingAttraction(
-      segment,
+      candidateGroup,
       index,
-      linearAttraction(gap, attractionCoefficient, segment.attractionDecaySpan),
+      linearAttraction(
+        gap,
+        attractionCoefficient,
+        candidateGroup.zone.attractionSpanMs,
+      ),
     )
   }
 
-  return segment
+  return candidateGroup
 }
 
-const appendEvent = (
-  segment: Segment,
-  event: NotificationGroupingEvent,
+const appendItem = (
+  candidateGroup: CandidateGroup,
+  item: NotificationItem,
   attractionCoefficient: number,
-): Segment => {
-  const newestBindingIndex = segment.events.length - 1
-  const previousTime = Date.parse(segment.events.at(-1)!.indexedAt)
-  const eventTime = Date.parse(event.indexedAt)
-  const gap = previousTime - eventTime
-  const extended: Segment = {
-    ...segment,
-    events: [...segment.events, event],
+): CandidateGroup => {
+  const newestBindingIndex = candidateGroup.items.length - 1
+  const previousTime = Date.parse(candidateGroup.items.at(-1)!.raw.indexedAt)
+  const itemTime = Date.parse(item.raw.indexedAt)
+  const gap = previousTime - itemTime
+  const extended: CandidateGroup = {
+    ...candidateGroup,
+    items: [...candidateGroup.items, item],
     occupiedSeconds:
-      segment.occupiedSeconds +
+      candidateGroup.occupiedSeconds +
       Number(
-        Math.floor(previousTime / SECOND) !== Math.floor(eventTime / SECOND),
+        Math.floor(previousTime / SECOND) !== Math.floor(itemTime / SECOND),
       ),
-    weakestBindingIndexes: [...segment.weakestBindingIndexes],
+    weakestBindingIndexes: [...candidateGroup.weakestBindingIndexes],
   }
   addBindingAttraction(
     extended,
     newestBindingIndex,
-    linearAttraction(gap, attractionCoefficient, segment.attractionDecaySpan),
+    linearAttraction(
+      gap,
+      attractionCoefficient,
+      candidateGroup.zone.attractionSpanMs,
+    ),
   )
   return extended
 }
 
 const addBindingAttraction = (
-  segment: Segment,
+  candidateGroup: CandidateGroup,
   index: number,
   attraction: number,
 ) => {
-  if (attraction < segment.weakestAttraction) {
-    segment.weakestAttraction = attraction
-    segment.weakestBindingIndexes = [index]
-  } else if (attraction === segment.weakestAttraction) {
-    segment.weakestBindingIndexes.push(index)
+  if (attraction < candidateGroup.weakestAttraction) {
+    candidateGroup.weakestAttraction = attraction
+    candidateGroup.weakestBindingIndexes = [index]
+  } else if (attraction === candidateGroup.weakestAttraction) {
+    candidateGroup.weakestBindingIndexes.push(index)
   }
 }
 
-const midpointIndex = (indexes: number[], eventCount: number): number => {
-  const midpoint = (eventCount - 2) / 2
+const midpointIndex = (indexes: number[], itemCount: number): number => {
+  const midpoint = (itemCount - 2) / 2
   return indexes.reduce((best, index) =>
     Math.abs(index - midpoint) < Math.abs(best - midpoint) ? index : best,
   )
@@ -243,34 +260,29 @@ const midpointIndex = (indexes: number[], eventCount: number): number => {
 const linearAttraction = (
   gapMs: number,
   attractionCoefficient: number,
-  attractionDecaySpan: number,
+  attractionSpanMs: number,
 ) =>
-  attractionCoefficient *
-  Math.max(0, 1 - Math.max(0, gapMs) / attractionDecaySpan)
+  attractionCoefficient * Math.max(0, 1 - Math.max(0, gapMs) / attractionSpanMs)
 
 const toGroups = (
-  chains: Map<string, Segment[]>,
-  eventOrder: Map<NotificationGroupingEvent, number>,
+  chains: Map<string, CandidateGroup[]>,
   seenAt: number | undefined,
 ): NotificationGroup[] =>
   [...chains.values()]
-    .flatMap((segments) => segments)
-    .sort(
-      (left, right) =>
-        eventOrder.get(left.events[0]!)! - eventOrder.get(right.events[0]!)!,
-    )
-    .map((segment) => {
-      const newest = segment.events[0]!
-      const oldest = segment.events.at(-1)!
+    .flatMap((candidateGroups) => candidateGroups)
+    .map((candidateGroup) => {
+      const newest = candidateGroup.items[0]!
+      const oldest = candidateGroup.items.at(-1)!
       return {
         id: newest.id,
-        kind: newest.kind,
-        subject: newest.subject,
-        actorDids: segment.events.map(({ actorDid }) => actorDid),
-        eventCount: segment.events.length,
-        indexedAt: newest.indexedAt,
-        firstIndexedAt: oldest.indexedAt,
-        isRead: isNotificationRead(newest.indexedAt, seenAt),
-        items: segment.events,
+        kind: newest.raw.reason,
+        groupingKey: newest.groupingKey,
+        actorDids: candidateGroup.items.map(({ actorDid }) => actorDid),
+        itemCount: candidateGroup.items.length,
+        indexedAt: newest.raw.indexedAt,
+        firstIndexedAt: oldest.raw.indexedAt,
+        isRead: isNotificationRead(newest.raw.indexedAt, seenAt),
+        items: candidateGroup.items,
       }
     })
+    .sort(compareNotificationGroupsNewestFirst)
