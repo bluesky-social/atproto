@@ -1,11 +1,12 @@
 import { createHash } from 'node:crypto'
 import { Timestamp } from '@bufbuild/protobuf'
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, assert, beforeAll, describe, expect, it, vi } from 'vitest'
 import { type SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import {
   type AtUriString,
   type DatetimeString,
   type DidString,
+  asStringFormat,
   toDatetimeString,
 } from '@atproto/lex'
 import {
@@ -15,13 +16,20 @@ import {
 } from '../src/api/app/bsky/notification/constants.js'
 import { getNextRawLimit } from '../src/api/app/bsky/notification/getGroupedNotifications.js'
 import {
+  type NotificationGroup,
   type NotificationItem,
   buildGroups,
   parseRawNotification,
 } from '../src/api/app/bsky/notification/grouping/grouping.js'
 import { buildSpotlight } from '../src/api/app/bsky/notification/grouping/spotlight.js'
+import type { HydrationState } from '../src/hydration/hydrator.js'
+import { HydrationMap } from '../src/hydration/util.js'
 import { app } from '../src/lexicons/index.js'
-import { Notification, NotificationFeed } from '../src/proto/bsky_pb.js'
+import {
+  GetNotificationsV2Response,
+  Notification,
+  NotificationFeed,
+} from '../src/proto/bsky_pb.js'
 
 const NOW = '2026-09-21T12:00:00.000Z'
 const post = (name: string) =>
@@ -984,7 +992,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
 
     afterAll(async () => network?.close())
 
-    const seedSpotlight = async () => {
+    const seedSpotlight = async (count = 4) => {
       const name = `spotlight-${fixtureIndex++}`
       const { did: recipient } = await sc.createAccount(name, {
         email: `${name}@test.com`,
@@ -997,7 +1005,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         indexedAt: DatetimeString
         id: string
       }[] = []
-      for (let index = 0; index < 4; index++) {
+      for (let index = 0; index < count; index++) {
         const post = await sc.post(recipient, `Post ${index}`)
         const like = (
           await sc.like(sc.dids.bob, post.ref)
@@ -1030,6 +1038,302 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       const headers = await network.serviceHeaders(recipient, defs.$lxm)
       return { recipient, records, headers }
     }
+
+    const cappedPost = post('capped')
+    const cappedGenerator: AtUriString = `at://did:plc:viewer/${app.bsky.feed.generator.$type}/capped`
+    const cappedRepost: AtUriString = `at://did:plc:viewer/${app.bsky.feed.repost.$type}/capped`
+    const allActors = Array.from({ length: 8 }, (_, index) => ({
+      actor: `did:plc:cap-actor-${index}` as DidString,
+    }))
+
+    it.each([
+      {
+        name: 'like',
+        kind: NOTIFICATION_REASON.LIKE,
+        subject: cappedPost,
+        expectedKind: defs.likeGroup.$build({
+          post: cappedPost,
+          items: allActors,
+        }),
+      },
+      {
+        name: 'repost',
+        kind: NOTIFICATION_REASON.REPOST,
+        subject: cappedPost,
+        expectedKind: defs.repostGroup.$build({
+          post: cappedPost,
+          items: allActors,
+        }),
+      },
+      {
+        name: 'like via repost',
+        kind: NOTIFICATION_REASON.LIKE_VIA_REPOST,
+        subject: cappedRepost,
+        expectedKind: defs.likeViaRepostGroup.$build({
+          post: cappedPost,
+          viaRepost: cappedRepost,
+          items: allActors,
+        }),
+      },
+      {
+        name: 'repost via repost',
+        kind: NOTIFICATION_REASON.REPOST_VIA_REPOST,
+        subject: cappedRepost,
+        expectedKind: defs.repostViaRepostGroup.$build({
+          post: cappedPost,
+          viaRepost: cappedRepost,
+          items: allActors,
+        }),
+      },
+      {
+        name: 'follow',
+        kind: NOTIFICATION_REASON.FOLLOW,
+        subject: cappedPost,
+        expectedKind: defs.followGroup.$build({ items: allActors }),
+      },
+      {
+        name: 'subscribed post',
+        kind: NOTIFICATION_REASON.SUBSCRIBED_POST,
+        subject: cappedPost,
+        expectedKind: defs.subscribedPostGroup.$build({
+          items: Array.from({ length: 8 }, (_, index) => ({
+            actor: 'did:plc:cap-actor-0',
+            post: `at://did:plc:cap-actor-0/${app.bsky.feed.post.$type}/cap-${index}`,
+          })),
+        }),
+      },
+      {
+        name: 'generator like',
+        kind: NOTIFICATION_REASON.LIKE,
+        subject: cappedGenerator,
+        expectedKind: defs.generatorLikeGroup.$build({
+          generator: cappedGenerator,
+          items: allActors,
+        }),
+      },
+      {
+        name: 'multi-post like',
+        kind: APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
+        subject: cappedPost,
+        expectedKind: defs.multiPostLikeGroup.$build({
+          actor: 'did:plc:cap-actor-0',
+          items: Array.from({ length: 8 }, (_, index) => ({
+            post: post(`cap-${index}`),
+          })),
+        }),
+      },
+    ])(
+      'returns all items for $name while preserving the full count',
+      ({ kind, subject, expectedKind }) => {
+        const sameActor =
+          kind === APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE ||
+          kind === NOTIFICATION_REASON.SUBSCRIBED_POST
+        const items = Array.from({ length: 8 }, (_, index) =>
+          item(
+            `cap-${index}`,
+            minutesAgo(index),
+            kind === APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE
+              ? NOTIFICATION_REASON.LIKE
+              : kind,
+            {
+              actor: `cap-actor-${sameActor ? 0 : index}`,
+              subject:
+                kind === APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE
+                  ? post(`cap-${index}`)
+                  : subject,
+            },
+          ),
+        )
+        const group: NotificationGroup = {
+          id: items[0]!.id,
+          kind,
+          groupingKey: sameActor ? items[0]!.actorDid : items[0]!.groupingKey,
+          actorDids: items.map((item) => item.actorDid),
+          itemCount: 8,
+          indexedAt: items[0]!.raw.indexedAt,
+          firstIndexedAt: items[7]!.raw.indexedAt,
+          isRead: false,
+          items,
+        }
+        const original = structuredClone(group)
+        const cid = asStringFormat(
+          'bafyreidad6nyekfa4a67yfb573ptxiv6s7kyxyg2ra6qbbemcruadvtuim',
+          'cid',
+        )
+        const state: HydrationState = {
+          reposts: new HydrationMap([
+            [
+              cappedRepost,
+              {
+                record: app.bsky.feed.repost.$build({
+                  subject: { uri: cappedPost, cid },
+                  createdAt: items[0]!.raw.indexedAt,
+                }),
+                cid,
+                indexedAt: new Date(NOW),
+                sortedAt: new Date(NOW),
+                takedownRef: undefined,
+              },
+            ],
+          ]),
+        }
+
+        const view = network.bsky.ctx.views.notificationGroup(group, state)
+
+        assert(view && 'items' in view.kind)
+        expect(view.count).toBe(8)
+        expect(view.kind.items).toHaveLength(8)
+        expect(view).toEqual(
+          defs.group.$build({
+            id: 'cap-0',
+            indexedAt: items[0]!.raw.indexedAt,
+            isRead: false,
+            count: 8,
+            kind: expectedKind,
+          }),
+        )
+        expect(group).toEqual(original)
+      },
+    )
+
+    it('returns all eight follows with related profiles for only the first five', async () => {
+      const follows: {
+        actor: DidString
+        uri: AtUriString
+        indexedAt: DatetimeString
+      }[] = []
+      for (let index = 0; index < 8; index++) {
+        const name = `cap-follower-${index}`
+        const { did } = await sc.createAccount(name, {
+          email: `${name}@test.com`,
+          handle: `${name}.test`,
+          password: 'cap-follower-pass',
+        })
+        const follow = await sc.follow(did, sc.dids.alice)
+        follows.push({
+          actor: did,
+          uri: follow.uriStr,
+          indexedAt: toDatetimeString(new Date(minutesAgo(index))),
+        })
+      }
+      await network.processAll()
+      for (const { uri, indexedAt } of follows) {
+        await network.bsky.db.db
+          .updateTable('notification')
+          .set({ sortAt: indexedAt })
+          .where('recordUri', '=', uri)
+          .where('did', '=', sc.dids.alice)
+          .execute()
+      }
+      const headers = await network.serviceHeaders(sc.dids.alice, defs.$lxm)
+
+      const response = await network.bsky
+        .getClient()
+        .call(defs, { limit: 1 }, { headers })
+
+      expect(response.groups).toHaveLength(1)
+      const group = response.groups[0]!
+      assert(defs.followGroup.$isTypeOf(group.kind))
+      expect(group.count).toBe(8)
+      expect(group.kind.items).toHaveLength(8)
+      expect(group.kind.items).toEqual(follows.map(({ actor }) => ({ actor })))
+      expect(Object.keys(response.relatedProfileViews ?? {})).toEqual(
+        follows.slice(0, 5).map(({ actor }) => actor),
+      )
+      expect(response.relatedRecordViews).toEqual({})
+      expect(response.cursor).toBeUndefined()
+    })
+
+    it.each([undefined, 0, 6])(
+      'returns all spotlight items with five related records when like %s is removed',
+      async (removedIndex) => {
+        const { records, headers } = await seedSpotlight(8)
+        if (removedIndex !== undefined) {
+          await network.bsky.ctx.dataplane.takedownRecord({
+            recordUri: records[removedIndex]!.like,
+          })
+        }
+
+        const response = await network.bsky
+          .getClient()
+          .call(defs, { limit: 8 }, { headers })
+
+        expect(response.groups).toHaveLength(1)
+        const group = response.groups[0]!
+        assert(defs.multiPostLikeGroup.$isTypeOf(group.kind))
+        const remaining = records.filter((_, index) => index !== removedIndex)
+        expect(group.count).toBe(removedIndex === undefined ? 8 : 7)
+        expect(group.kind.items).toHaveLength(
+          removedIndex === undefined ? 8 : 7,
+        )
+        expect(group.kind.items).toEqual(
+          remaining.map(({ post }) => ({ post: post.ref.uriStr })),
+        )
+        expect(group.id).toBe(remaining[0]!.id)
+        expect(group.indexedAt).toBe(remaining[0]!.indexedAt)
+        expect(Object.keys(response.relatedRecordViews ?? {})).toEqual(
+          remaining.slice(0, 5).map(({ post }) => post.ref.uriStr),
+        )
+        expect(Object.keys(response.relatedProfileViews ?? {})).toEqual([
+          sc.dids.bob,
+        ])
+        expect(response.cursor).toBeUndefined()
+      },
+    )
+
+    it('returns all subscribed posts with related views for only the first five of each group', async () => {
+      const authors = [sc.dids.bob, sc.dids.dan]
+      const postGroups = await Promise.all(
+        authors.map(async (actor) => {
+          const posts: Awaited<ReturnType<SeedClient['post']>>[] = []
+          for (let index = 0; index < 8; index++) {
+            posts.push(await sc.post(actor, `Subscribed post ${index}`))
+          }
+          return { actor, posts }
+        }),
+      )
+      await network.processAll()
+      // The test dataplane doesn't generate subscribed-post notifications.
+      using notifications = vi
+        .spyOn(network.bsky.ctx.hydrator.dataplane, 'getNotificationsV2')
+        .mockResolvedValue(
+          new GetNotificationsV2Response({
+            notifications: postGroups
+              .flatMap(({ posts }) => posts)
+              .map(
+                ({ ref }, index) =>
+                  new Notification({
+                    recipientDid: sc.dids.carol,
+                    uri: ref.uriStr,
+                    reason: NOTIFICATION_REASON.SUBSCRIBED_POST,
+                    timestamp: Timestamp.fromJson(minutesAgo(index)),
+                  }),
+              ),
+          }),
+        )
+      const headers = await network.serviceHeaders(sc.dids.carol, defs.$lxm)
+
+      const response = await network.bsky
+        .getClient()
+        .call(defs, { limit: 2 }, { headers })
+
+      expect(notifications).toHaveBeenCalledTimes(1)
+      expect(response.groups.map(({ count }) => count)).toEqual([8, 8])
+      expect(response.groups.map(({ kind }) => kind)).toEqual(
+        postGroups.map(({ actor, posts }) =>
+          defs.subscribedPostGroup.$build({
+            items: posts.map(({ ref }) => ({ actor, post: ref.uriStr })),
+          }),
+        ),
+      )
+      expect(Object.keys(response.relatedRecordViews ?? {})).toEqual(
+        postGroups.flatMap(({ posts }) =>
+          posts.slice(0, 5).map(({ ref }) => ref.uriStr),
+        ),
+      )
+      expect(Object.keys(response.relatedProfileViews ?? {})).toEqual(authors)
+      expect(response.cursor).toBeUndefined()
+    })
 
     it.each([4, 3, 2, 1, 0])(
       'renders %i surviving likes with exact metadata and related views after rules filtering',

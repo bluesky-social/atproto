@@ -50,6 +50,7 @@ import {
 const MIN_RAW_LIMIT = 300
 const MAX_RAW_ITEMS = 3000
 const MAX_READS = 3
+const MAX_GROUP_ITEMS_WITH_RELATED_VIEWS = 5
 
 export const getNextRawLimit = (
   itemsFetched: number,
@@ -383,20 +384,26 @@ const presentation = (
       defs.repostViaRepostGroup.$isTypeOf(kind)
     ) {
       recordUris.add(kind.post)
-      for (const item of kind.items) profileDids.add(item.actor)
+      for (const item of truncateRelatedViewsItems(kind.items)) {
+        profileDids.add(item.actor)
+      }
     } else if (defs.multiPostLikeGroup.$isTypeOf(kind)) {
       profileDids.add(kind.actor)
-      for (const item of kind.items) recordUris.add(item.post)
+      for (const item of truncateRelatedViewsItems(kind.items)) {
+        recordUris.add(item.post)
+      }
     } else if (defs.generatorLikeGroup.$isTypeOf(kind)) {
       recordUris.add(kind.generator)
-      for (const item of kind.items) profileDids.add(item.actor)
+      for (const item of truncateRelatedViewsItems(kind.items)) {
+        profileDids.add(item.actor)
+      }
     } else if (defs.followGroup.$isTypeOf(kind)) {
-      for (const item of kind.items) {
+      for (const item of truncateRelatedViewsItems(kind.items)) {
         profileDids.add(item.actor)
         if (item.starterPack) recordUris.add(item.starterPack)
       }
     } else if (defs.subscribedPostGroup.$isTypeOf(kind)) {
-      for (const item of kind.items) {
+      for (const item of truncateRelatedViewsItems(kind.items)) {
         profileDids.add(item.actor)
         recordUris.add(item.post)
       }
@@ -452,6 +459,10 @@ const presentation = (
     seenAt: params.seenAt,
   }
 }
+
+const truncateRelatedViewsItems = <T extends unknown[]>(
+  items: T,
+): T[number][] => items.slice(0, MAX_GROUP_ITEMS_WITH_RELATED_VIEWS)
 
 const normalizeFeed = (feed: string): NotificationFeed => {
   switch (feed) {
