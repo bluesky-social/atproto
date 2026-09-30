@@ -36,11 +36,9 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 function getNotifId(viewer: string, seenAt: Date) {
-  const key = [
-    MARK_READ_GENERIC,
-    viewer,
-    seenAt.getTime().toString(),
-  ].join('::')
+  const key = [MARK_READ_GENERIC, viewer, seenAt.getTime().toString()].join(
+    '::',
+  )
 
   return Murmurhash.v3(key).toString(16)
 }
