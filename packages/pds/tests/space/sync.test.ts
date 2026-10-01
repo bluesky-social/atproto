@@ -1,18 +1,24 @@
 import { jest } from '@jest/globals'
-import { TID } from '@atproto/common'
+import { sql } from 'kysely'
+import { MINUTE, TID } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { parseCid } from '@atproto/lex-data'
 import {
   LtHash,
   RepoCommit,
   type SignedCommit,
+  spaceHostAud,
   verifyRepoCarFull,
 } from '@atproto/space'
 import type { NsidString, SpaceRefString } from '@atproto/syntax'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import { getDb, getMigrator } from '../../src/actor-store/db/index.js'
+import { resolveServiceEndpoint } from '../../src/api/com/atproto/space/util.js'
 import { com } from '../../src/lexicons/index.js'
+import { SpaceNotifications } from '../../src/space-notifications.js'
 import {
   type Actor,
+  MockService,
   SpaceClient,
   TEST_COLLECTION,
   TEST_COLLECTION_ALT,
@@ -499,7 +505,7 @@ describe('space sync', () => {
     it('records a writer from notifyWrite, and it is not the member list', async () => {
       const space = await sc.createSpace(alice, { members: [bob] })
 
-      // Bob writes on pds2; his PDS fires a best-effort notifyWrite at the
+      // Bob writes on pds2; his PDS delivers notifyWrite at the
       // authority, which records him in the writer set.
       await sc.write(bob, space, { text: 'writer set entry' })
 
@@ -518,7 +524,7 @@ describe('space sync', () => {
       // And it carries where each writer is up to, so a syncer knows what to pull.
       const entry = repos.repos.find((r) => r.did === bob.did)!
       const state = await sc.repoState(bob, space)
-      expect(entry.rev).toBe(state!.rev)
+      expect(entry.repoRev).toBe(state!.rev)
       expect(entry.hash).toEqual(new LtHash(state!.setHash!).digest())
     })
 
@@ -555,13 +561,262 @@ describe('space sync', () => {
     })
   })
 
+  it('migrates existing writer state', async () => {
+    const space = await sc.createSpace(alice, { members: [bob, dan] })
+    await sc.write(bob, space)
+    await sc.write(dan, space)
+    const bobState = (await sc.repoState(bob, space))!
+    const db = getDb(':memory:')
+    try {
+      const migrator = getMigrator(db)
+      await migrator.migrateToOrThrow('003')
+      await sql`
+        insert into space (uri, authority, type, createdAt, deletedAt)
+        values (${space}, ${alice.did}, 'com.example.group', '2026-01-01T00:00:00Z', null)
+      `.execute(db.db)
+      await sql`
+        insert into space_repo (space, rev, setHash)
+        values (${space}, ${bobState.rev}, ${bobState.setHash})
+      `.execute(db.db)
+      for (const actor of [bob, dan]) {
+        await sql`
+          insert into space_writer (space, did, rev, hash)
+          values (${space}, ${actor.did}, ${bobState.rev}, ${new LtHash().digest()})
+        `.execute(db.db)
+      }
+
+      await migrator.migrateToLatestOrThrow()
+      const writers = await db.db
+        .selectFrom('space_writer')
+        .selectAll()
+        .orderBy('spaceRev')
+        .execute()
+      expect(writers).toHaveLength(2)
+      expect(writers.map((writer) => writer.repoRev)).toEqual([
+        bobState.rev,
+        bobState.rev,
+      ])
+      expect(writers.map((writer) => writer.spaceRev)).toEqual([
+        bobState.rev,
+        bobState.rev,
+      ])
+      const repo = await db.db
+        .selectFrom('space_repo')
+        .selectAll()
+        .executeTakeFirstOrThrow()
+      expect(repo.rev).toBe(bobState.rev)
+      await migrator.migrateToOrThrow('003')
+      await migrator.migrateToLatestOrThrow()
+    } finally {
+      db.close()
+    }
+  })
+
+  describe('space catch-up', () => {
+    it('recovers missed notifications with a space checkpoint', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+        respond: () => ({ status: 503, body: {} }),
+      })
+      const space = await sc.createSpace(alice, { members: [bob, dan, carol] })
+      const cred = await sc.credentialFor(carol, space)
+      const client = cred.clientFor(alice.pds)
+      await client.call(com.atproto.space.registerNotify, {
+        space,
+        service: syncer.serviceRef,
+      })
+      const empty = await client.call(com.atproto.space.listRepos, { space })
+      expect(empty.repos).toEqual([])
+
+      await sc.write(bob, space)
+      const initial = await client.call(com.atproto.space.listRepos, { space })
+      const cursor = initial.cursor
+      expect(cursor).toBe(initial.repos.at(-1)!.spaceRev)
+      await sc.write(dan, space)
+      await sc.write(bob, space)
+      await alice.pds.ctx.backgroundQueue.processAll()
+
+      const first = await client.call(com.atproto.space.listRepos, {
+        space,
+        cursor,
+        limit: 1,
+      })
+      expect(first.repos.map((r) => r.did)).toEqual([dan.did])
+
+      // @NOTE A repo already returned can move forward while the caller paginates.
+      await sc.write(dan, space)
+      const second = await client.call(com.atproto.space.listRepos, {
+        space,
+        cursor: first.cursor,
+        limit: 1,
+      })
+      expect(second.repos.map((r) => r.did)).toEqual([bob.did])
+      const last = await client.call(com.atproto.space.listRepos, {
+        space,
+        cursor: second.cursor,
+        limit: 1,
+      })
+      expect(last.repos.map((r) => r.did)).toEqual([dan.did])
+      const nextCursor = last.cursor
+      expect(nextCursor).toBe(last.repos.at(-1)!.spaceRev)
+      const caughtUp = await client.call(com.atproto.space.listRepos, {
+        space,
+        cursor: nextCursor,
+      })
+      expect(caughtUp.repos).toEqual([])
+      expect(caughtUp.cursor).toBeUndefined()
+    })
+
+    it('resumes after an empty page using the last processed repo revision', async () => {
+      const space = await sc.createSpace(alice, { members: [bob] })
+      await sc.write(bob, space)
+      const cred = await sc.credentialFor(alice, space)
+      const client = cred.clientFor(alice.pds)
+      const initial = await client.call(com.atproto.space.listRepos, { space })
+      let cursor = initial.cursor!
+      const empty = await client.call(com.atproto.space.listRepos, {
+        space,
+        cursor,
+      })
+      expect(empty.repos).toEqual([])
+      expect(empty.cursor).toBeUndefined()
+      cursor = empty.cursor ?? cursor
+
+      await sc.write(bob, space)
+      const catchUp = await client.call(com.atproto.space.listRepos, {
+        space,
+        cursor,
+      })
+      expect(catchUp.repos.map((r) => r.did)).toEqual([bob.did])
+      expect(catchUp.repos[0].spaceRev > cursor).toBe(true)
+    })
+
+    it('accepts arbitrary string listRepos cursors', async () => {
+      const space = await sc.createSpace(alice)
+      await sc.write(alice, space)
+      const cred = await sc.credentialFor(alice, space)
+      const client = cred.clientFor(alice.pds)
+      const before = await client.call(com.atproto.space.listRepos, {
+        space,
+        cursor: '0',
+      })
+      expect(before.repos.map((repo) => repo.did)).toEqual([alice.did])
+      const after = await client.call(com.atproto.space.listRepos, {
+        space,
+        cursor: 'not-a-tid',
+      })
+      expect(after.repos).toEqual([])
+      expect(after.cursor).toBeUndefined()
+    })
+
+    it('chains forwarded notifications across local and remote writers', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      const space = await sc.createSpace(alice, { members: [bob, dan, carol] })
+      const cred = await sc.credentialFor(carol, space)
+      const client = cred.clientFor(alice.pds)
+      await client.call(com.atproto.space.registerNotify, {
+        space,
+        service: syncer.serviceRef,
+      })
+      await sc.write(alice, space)
+      await Promise.all([sc.write(bob, space), sc.write(dan, space)])
+      await alice.pds.ctx.backgroundQueue.processAll()
+      const notifications = syncer
+        .callsTo(com.atproto.space.notifyWrite.$lxm)
+        .map((call) => call.body as com.atproto.space.notifyWrite.$InputBody)
+        .sort((a, b) => a.spaceRev!.localeCompare(b.spaceRev!))
+      expect(notifications).toHaveLength(3)
+      expect(notifications[0].prevSpaceRev).toBeUndefined()
+      expect(notifications[1].prevSpaceRev).toBe(notifications[0].spaceRev)
+      expect(notifications[2].prevSpaceRev).toBe(notifications[1].spaceRev)
+      const listed = await client.call(com.atproto.space.listRepos, { space })
+      expect(listed.repos.at(-1)?.spaceRev).toBe(notifications[2].spaceRev)
+      expect(new Set(listed.repos.map((r) => r.spaceRev)).size).toBe(3)
+    })
+
+    it('resolves a dedicated space host and falls back only when it is absent', async () => {
+      await using host = await MockService.create(network, {
+        serviceId: 'atproto_space_host',
+      })
+      const resolver = bob.pds.ctx.idResolver
+      expect(await resolveServiceEndpoint(resolver, host.serviceRef)).toBe(
+        host.url,
+      )
+      expect(
+        await resolveServiceEndpoint(resolver, spaceHostAud(alice.did)),
+      ).toBe(alice.pds.url)
+      const doc = await resolver.did.resolve(alice.did)
+      using _resolve = jest.spyOn(resolver.did, 'resolve').mockResolvedValue({
+        ...doc!,
+        service: [
+          ...doc!.service!,
+          {
+            id: '#atproto_space_host',
+            type: 'AtprotoSpaceHost',
+            serviceEndpoint: 'invalid',
+          },
+        ],
+      })
+      expect(
+        await resolveServiceEndpoint(resolver, spaceHostAud(alice.did)),
+      ).toBeUndefined()
+    })
+
+    it('retries the latest state after delivery failure and worker restart', async () => {
+      const space = await sc.createSpace(alice, { members: [bob] })
+      {
+        using resolve = jest
+          .spyOn(bob.pds.ctx.idResolver.did, 'resolve')
+          .mockRejectedValue(new Error('space host unavailable'))
+        await sc.write(bob, space)
+        await sc.write(bob, space)
+        expect(resolve).toHaveBeenCalled()
+        expect(await sc.writerDids(space)).toEqual([])
+      }
+      const state = (await sc.repoState(bob, space))!
+      const db = bob.pds.ctx.accountManager.db.db
+      expect(
+        await db.selectFrom('space_notification_retry').selectAll().execute(),
+      ).toEqual([
+        expect.objectContaining({ repo: bob.did, space, repoRev: state.rev }),
+      ])
+      await bob.pds.ctx.spaceNotifications.destroy()
+      await db
+        .updateTable('space_notification_retry')
+        .set({ retryAt: 0 })
+        .execute()
+      const restarted = new SpaceNotifications(bob.pds.ctx)
+      bob.pds.ctx.spaceNotifications = restarted
+      restarted.start()
+      await restarted.retryPending()
+      expect(
+        await db.selectFrom('space_notification_retry').selectAll().execute(),
+      ).toEqual([])
+      const cred = await sc.credentialFor(bob, space)
+      const listed = await cred
+        .clientFor(alice.pds)
+        .call(com.atproto.space.listRepos, { space })
+      expect(listed.repos).toHaveLength(1)
+      expect(listed.repos[0].repoRev).toBe(state.rev)
+      expect(listed.repos[0].hash).toEqual(new LtHash(state.setHash!).digest())
+      await restarted.retryPending()
+      expect(
+        await cred
+          .clientFor(alice.pds)
+          .call(com.atproto.space.listRepos, { space }),
+      ).toEqual(listed)
+    })
+  })
+
   describe('notifyWrite', () => {
     const notify = async (
       signer: Actor,
       body: {
         space: SpaceRefString
         repo: string
-        rev: string
+        repoRev: string
         hash: Uint8Array
       },
       opts: { aud?: string } = {},
@@ -569,7 +824,7 @@ describe('space sync', () => {
       const keypair = await signer.pds.ctx.actorStore.keypair(signer.did)
       const { headers } = await createServiceAuthHeaders({
         iss: signer.did,
-        aud: opts.aud ?? alice.did,
+        aud: opts.aud ?? spaceHostAud(alice.did),
         lxm: com.atproto.space.notifyWrite.$lxm,
         keypair,
       })
@@ -577,6 +832,85 @@ describe('space sync', () => {
         headers,
       })
     }
+
+    it('ignores duplicate and older revisions without forwarding them', async () => {
+      await using syncer = await MockService.create(network, {
+        serviceId: 'atproto_space_syncer',
+      })
+      const space = await sc.createSpace(alice, { members: [bob] })
+      const cred = await sc.credentialFor(alice, space)
+      const client = cred.clientFor(alice.pds)
+      await client.call(com.atproto.space.registerNotify, {
+        space,
+        service: syncer.serviceRef,
+      })
+      await sc.write(bob, space)
+      const older = (await sc.repoState(bob, space))!.rev!
+      await sc.write(bob, space)
+      await alice.pds.ctx.backgroundQueue.processAll()
+      const before = await client.call(com.atproto.space.listRepos, { space })
+      const calls = syncer.callsTo(com.atproto.space.notifyWrite.$lxm).length
+      for (const repoRev of [older, before.repos[0].repoRev]) {
+        await notify(bob, {
+          space,
+          repo: bob.did,
+          repoRev,
+          hash: new Uint8Array(32),
+        })
+      }
+      await alice.pds.ctx.backgroundQueue.processAll()
+      expect(await client.call(com.atproto.space.listRepos, { space })).toEqual(
+        before,
+      )
+      expect(syncer.callsTo(com.atproto.space.notifyWrite.$lxm)).toHaveLength(
+        calls,
+      )
+    })
+
+    it('keeps the newest repo revision when notifications race', async () => {
+      const space = await sc.createSpace(alice, { members: [bob] })
+      const older = TID.nextStr()
+      const newer = TID.nextStr(older)
+      const hash = new LtHash().digest()
+      await Promise.all([
+        notify(bob, { space, repo: bob.did, repoRev: newer, hash }),
+        notify(bob, {
+          space,
+          repo: bob.did,
+          repoRev: older,
+          hash: new Uint8Array(32),
+        }),
+      ])
+      const cred = await sc.credentialFor(alice, space)
+      const listed = await cred
+        .clientFor(alice.pds)
+        .call(com.atproto.space.listRepos, { space })
+      expect(listed.repos).toHaveLength(1)
+      expect(listed.repos[0]).toMatchObject({ repoRev: newer, hash })
+    })
+
+    it('rejects future revisions while allowing a small clock skew', async () => {
+      const space = await sc.createSpace(alice, { members: [bob] })
+      await expect(
+        notify(bob, {
+          space,
+          repo: bob.did,
+          repoRev: TID.fromTime(
+            (Date.now() + 10 * MINUTE) * 1000,
+            0,
+          ).toString(),
+          hash: new LtHash().digest(),
+        }),
+      ).rejects.toMatchObject({ error: 'FutureRev' })
+      expect(await sc.writerDids(space)).toEqual([])
+      await notify(bob, {
+        space,
+        repo: bob.did,
+        repoRev: TID.fromTime((Date.now() + MINUTE) * 1000, 0).toString(),
+        hash: new LtHash().digest(),
+      })
+      expect(await sc.writerDids(space)).toEqual([bob.did])
+    })
 
     it('rejects one that spoofs the writer', async () => {
       // Bob signs but claims carol wrote. The authority refuses on iss ≠ repo,
@@ -586,7 +920,7 @@ describe('space sync', () => {
         notify(bob, {
           space,
           repo: carol.did,
-          rev: TID.nextStr(),
+          repoRev: TID.nextStr(),
           hash: new LtHash().digest(),
         }),
       ).rejects.toThrow(/iss does not match claimed writer/)
@@ -606,7 +940,7 @@ describe('space sync', () => {
           {
             space,
             repo: bob.did,
-            rev: state!.rev!,
+            repoRev: state!.rev!,
             hash: new LtHash(state!.setHash!).digest(),
           },
           { aud: carol.did },
@@ -621,7 +955,7 @@ describe('space sync', () => {
         notify(carol, {
           space,
           repo: carol.did,
-          rev: TID.nextStr(),
+          repoRev: TID.nextStr(),
           hash: new LtHash().digest(),
         }),
       ).rejects.toThrow(/not authorized/)
@@ -635,14 +969,14 @@ describe('space sync', () => {
         notify(bob, {
           space,
           repo: bob.did,
-          rev: TID.nextStr(),
+          repoRev: TID.nextStr(),
           hash: new LtHash().digest(),
         }),
       ).rejects.toThrow(/not authorized/)
     })
 
-    it('rejects a rev that is not a TID before any auth check', async () => {
-      // `rev` is typed as a tid, so a malformed one never reaches the handler.
+    it('rejects a repoRev that is not a TID before any auth check', async () => {
+      // `repoRev` is typed as a tid, so a malformed one never reaches the handler.
       // Worth pinning: an adversarial test that passes a junk rev would be
       // rejected here and never exercise the check it means to.
       const space = await sc.createSpace(alice, { members: [bob] })
@@ -650,7 +984,7 @@ describe('space sync', () => {
         notify(bob, {
           space,
           repo: bob.did,
-          rev: 'not-a-tid',
+          repoRev: 'not-a-tid',
           hash: new LtHash().digest(),
         }),
       ).rejects.toThrow(/Invalid TID/)

@@ -5,7 +5,7 @@ import * as mig004 from './004-oauth.js'
 import * as mig005 from './005-oauth-account-management.js'
 import * as mig006 from './006-oauth-permission-sets.js'
 import * as mig007 from './007-lexicon-failures-index.js'
-import * as mig008 from './008-revoked-space-credential.js'
+import * as mig008 from './008-spaces.js'
 
 export default {
   '001': mig001,

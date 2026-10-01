@@ -118,22 +118,43 @@ export class SpaceTransactor extends SpaceReader {
       .execute()
   }
 
-  // Record (or advance) a writer in the space's writer set, from a notifyWrite the
-  // authority received. The writer set is what listRepos enumerates as the sync
-  // boundary.
+  /** Record a newer repo state and advance the space sequence atomically. */
   async recordWriter(
     space: string,
     did: string,
-    rev: string,
+    repoRev: string,
     hash: Uint8Array,
-  ): Promise<void> {
+  ): Promise<{ spaceRev: string; prevSpaceRev?: string } | undefined> {
+    this.db.assertTransaction()
+    const current = await this.getSpace(space)
+    if (!current || current.deletedAt) {
+      throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+    }
+    const writer = await this.db.db
+      .selectFrom('space_writer')
+      .select('repoRev')
+      .where('space', '=', space)
+      .where('did', '=', did)
+      .executeTakeFirst()
+    if (writer && writer.repoRev >= repoRev) return
+
+    const latest = await this.db.db
+      .selectFrom('space_writer')
+      .select('spaceRev')
+      .where('space', '=', space)
+      .orderBy('spaceRev', 'desc')
+      .limit(1)
+      .executeTakeFirst()
+    const prevSpaceRev = latest?.spaceRev
+    const spaceRev = TID.nextStr(prevSpaceRev)
     await this.db.db
       .insertInto('space_writer')
-      .values({ space, did, rev, hash })
+      .values({ space, did, repoRev, hash, spaceRev })
       .onConflict((oc) =>
-        oc.columns(['space', 'did']).doUpdateSet({ rev, hash }),
+        oc.columns(['space', 'did']).doUpdateSet({ repoRev, hash, spaceRev }),
       )
       .execute()
+    return { spaceRev, prevSpaceRev }
   }
 
   /**
@@ -151,7 +172,7 @@ export class SpaceTransactor extends SpaceReader {
 
     const state = await this.getRepoState(space)
     const repo = RepoCommit.fromState(state?.setHash)
-    const rev = TID.nextStr()
+    const rev = TID.nextStr(state?.rev ?? undefined)
 
     const ops: SpaceRecordOplog[] = []
 

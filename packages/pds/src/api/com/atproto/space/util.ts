@@ -1,14 +1,14 @@
-import { getPdsEndpoint, getServiceEndpoint } from '@atproto/common'
+import {
+  MINUTE,
+  TID,
+  getPdsEndpoint,
+  getServiceEndpoint,
+} from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
 import { xrpc } from '@atproto/lex'
 import type { SpacePermissionMatchOperation } from '@atproto/oauth-scopes'
-import {
-  type CommitCtx,
-  LtHash,
-  RepoCommit,
-  type SignedCommit,
-} from '@atproto/space'
+import { type CommitCtx, RepoCommit, type SignedCommit } from '@atproto/space'
 import { type DidString, SpaceRef, type SpaceRefString } from '@atproto/syntax'
 import {
   AuthRequiredError,
@@ -168,6 +168,14 @@ export async function resolveServiceEndpoint(
     return null
   })
   if (!didDoc) return undefined
+  if (fragment === 'atproto_space_host') {
+    const dedicated = didDoc.service?.some(
+      (entry) => entry.id === '#atproto_space_host' || entry.id === service,
+    )
+    return dedicated
+      ? getServiceEndpoint(didDoc, { id: '#atproto_space_host' })
+      : getPdsEndpoint(didDoc)
+  }
   return fragment
     ? getServiceEndpoint(didDoc, { id: `#${fragment}` })
     : getPdsEndpoint(didDoc)
@@ -199,12 +207,13 @@ export async function processNotifyWrite(
   ctx: AppContext,
   input: com.atproto.space.notifyWrite.$InputBody,
 ): Promise<void> {
-  const { space, repo, rev, hash } = input
+  const { space, repo, repoRev, hash } = input
   const { spaceDid: ownerDid } = toSpaceRef(space)
 
-  // Only the space owner's PDS has the member list and fan-out state.
-  const account = await ctx.accountManager.getAccount(ownerDid)
-  if (!account) return
+  await assertSpaceHost(ctx, space)
+  if (TID.fromStr(repoRev).timestamp() > (Date.now() + 5 * MINUTE) * 1000) {
+    throw new InvalidRequestError('Repo revision is in the future', 'FutureRev')
+  }
 
   const { existing, config, recipients } = await ctx.actorStore.read(
     ownerDid,
@@ -214,8 +223,9 @@ export async function processNotifyWrite(
       recipients: await store.space.getCredentialRecipients(space),
     }),
   )
-  // Nothing to maintain for an ungoverned or deleted space.
-  if (!config || !existing || existing.deletedAt) return
+  if (!config || !existing || existing.deletedAt) {
+    throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+  }
 
   // Apply the same user perimeter used when minting credentials. notifyWrite
   // comes from a PDS rather than an app, so there is no app attestation to check.
@@ -228,14 +238,15 @@ export async function processNotifyWrite(
     throw new ForbiddenError('notifyWrite writer is not authorized')
   }
 
-  await ctx.actorStore.transact(ownerDid, (txn) =>
-    txn.space.recordWriter(space, repo, rev, hash),
+  const sequence = await ctx.actorStore.transact(ownerDid, (txn) =>
+    txn.space.recordWriter(space, repo, repoRev, hash),
   )
+  if (!sequence) return
 
   // Fan-out stays queued so neither a local write nor a remote PDS waits on
   // downstream syncing services.
   const lxm = com.atproto.space.notifyWrite.$lxm
-  ctx.backgroundQueue.add(async () => {
+  ctx.backgroundQueue.add(async (_ctx, signal) => {
     for (const recipient of recipients) {
       try {
         const target = await resolveNotifyTarget(ctx, {
@@ -252,7 +263,8 @@ export async function processNotifyWrite(
         }
         await xrpc(target.endpoint, com.atproto.space.notifyWrite, {
           headers: target.headers,
-          body: { space, repo, rev, hash },
+          body: { space, repo, repoRev, hash, ...sequence },
+          signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]),
         })
       } catch (err) {
         spaceLogger.warn(
@@ -264,9 +276,7 @@ export async function processNotifyWrite(
   })
 }
 
-// Notifications are best-effort: sync recovers on a later notification or a sweep.
-// Takes a nullable commit so callers whose write may be a no-op — an already-deleted
-// record, an empty batch — don't each have to guard.
+/** Send immediately after the repo commit, persisting failures for retry. */
 export async function fireNotifyWrite(
   ctx: AppContext,
   opts: {
@@ -277,36 +287,5 @@ export async function fireNotifyWrite(
 ): Promise<void> {
   const { space, writerDid, commit } = opts
   if (!commit) return
-  const { rev, setHash } = commit
-  const { spaceDid } = toSpaceRef(space)
-  const lxm = com.atproto.space.notifyWrite.$lxm
-  const body = {
-    space,
-    repo: writerDid as DidString,
-    rev,
-    hash: new LtHash(setHash).digest(),
-  }
-  try {
-    const owner = await ctx.accountManager.getAccount(spaceDid)
-    if (owner) {
-      await processNotifyWrite(ctx, body)
-      return
-    }
-
-    const target = await resolveNotifyTarget(ctx, {
-      iss: writerDid,
-      service: spaceDid,
-      lxm,
-    })
-    if (!target) {
-      spaceLogger.warn({ space, lxm }, 'could not resolve space host')
-      return
-    }
-    await xrpc(target.endpoint, com.atproto.space.notifyWrite, {
-      headers: target.headers,
-      body,
-    })
-  } catch (err) {
-    spaceLogger.warn({ err, space, repo: writerDid, lxm }, 'notify failed')
-  }
+  await ctx.spaceNotifications.notify(space, writerDid as DidString, commit)
 }

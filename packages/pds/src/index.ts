@@ -220,6 +220,7 @@ export class PDS implements AsyncDisposable {
     this.server.keepAliveTimeout = 90_000
     this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
+    this.ctx.spaceNotifications.start()
     return server
   }
 

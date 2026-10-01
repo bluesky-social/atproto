@@ -9,29 +9,21 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.spaceCredentialAuth,
     handler: async ({ params, auth }) => {
       const { space, limit, cursor } = params
-
       assertCredentialSpace(auth.credentials, space)
-
       const spaceDid = await assertSpaceHost(ctx, space)
-
-      // The writer set: accounts that have written to the space, maintained by
-      // the authority from incoming notifyWrite calls. This is the sync
-      // boundary — it enumerates writers, not readers.
       const writers = await ctx.actorStore.read(spaceDid, async (store) => {
-        // Throws unless this host is the space's authority: the writer set is the
-        // authority's to maintain and to answer for.
         await store.space.getActiveSpaceConfig(space)
         return store.space.listWriters(space, { limit, cursor })
       })
-
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: {
-          cursor: writers.length < limit ? undefined : writers.at(-1)?.did,
+          cursor: writers.at(-1)?.spaceRev,
           repos: writers.map((writer) => ({
             did: writer.did as l.DidString,
-            rev: writer.rev,
+            repoRev: writer.repoRev,
             hash: writer.hash,
+            spaceRev: writer.spaceRev,
           })),
         },
       }

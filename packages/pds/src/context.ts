@@ -59,6 +59,7 @@ import {
 import { getRedisClient } from './redis.js'
 import { Sequencer } from './sequencer/index.js'
 import { SimpleSpaceManager } from './simplespace/manager.js'
+import { SpaceNotifications } from './space-notifications.js'
 
 export type AppContextOptions = {
   actorStore: ActorStore
@@ -111,6 +112,7 @@ export class AppContext implements AsyncDisposable {
   public proxyAgent: undici.Dispatcher
   public safeFetch: Fetch
   public clientAttestationVerifier: ClientAttestationVerifier
+  public spaceNotifications: SpaceNotifications
   public simpleSpaceManager: SimpleSpaceManager
   public authVerifier: AuthVerifier
   public oauthProvider?: OAuthProvider
@@ -144,6 +146,7 @@ export class AppContext implements AsyncDisposable {
     this.oauthProvider = opts.oauthProvider
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
+    this.spaceNotifications = new SpaceNotifications(this)
   }
 
   static async fromEnv(
@@ -597,6 +600,7 @@ export class AppContext implements AsyncDisposable {
   }
 
   async destroy(): Promise<void> {
+    await this.spaceNotifications.destroy()
     try {
       await this.backgroundQueue.destroy()
     } finally {
