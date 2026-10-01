@@ -18,8 +18,7 @@ const DEFAULT_PRAGMAS = {
   // strict: 'ON', // @TODO strictness should live on table defs instead
 }
 
-export class Database<Schema> {
-  destroyed = false
+export class Database<Schema> implements AsyncDisposable {
   commitHooks: CommitHook[] = []
 
   constructor(public db: Kysely<Schema>) {}
@@ -107,12 +106,20 @@ export class Database<Schema> {
     assert(!this.isTransaction, 'Cannot be in a transaction')
   }
 
-  close(): void {
-    if (this.destroyed) return
-    this.db
+  get destroyed(): boolean {
+    return this.#destroyPromise !== undefined
+  }
+
+  #destroyPromise?: Promise<void>
+
+  async close(): Promise<void> {
+    return (this.#destroyPromise ??= this.db
       .destroy()
-      .then(() => (this.destroyed = true))
-      .catch((err) => dbLogger.error({ err }, 'error closing db'))
+      .catch((err) => dbLogger.error({ err }, 'error closing db')))
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }
 

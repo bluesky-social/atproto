@@ -4,7 +4,11 @@ import { Upload } from '@aws-sdk/lib-storage'
 import type { CID } from 'multiformats/cid'
 import { SECOND, aggregateErrors, chunkArray } from '@atproto/common-web'
 import { randomStr } from '@atproto/crypto'
-import { BlobNotFoundError, type BlobStore } from '@atproto/repo'
+import {
+  BlobNotFoundError,
+  type BlobStore,
+  type BlobStoreCreator,
+} from '@atproto/repo'
 
 export type S3Config = {
   bucket: string
@@ -100,9 +104,10 @@ function createS3Client(cfg: S3Config): S3 {
 }
 
 export class S3BlobStore implements BlobStore {
-  private client: S3
-  private bucket: string
-  private uploadTimeoutMs: number
+  private readonly clientOwned: boolean
+  private readonly client: S3
+  private readonly bucket: string
+  private readonly uploadTimeoutMs: number
 
   /**
    * @param client Shared by every store returned from
@@ -112,22 +117,30 @@ export class S3BlobStore implements BlobStore {
   constructor(
     public did: string,
     cfg: S3Config,
-    client: S3 = createS3Client(cfg),
+    client?: S3,
   ) {
     this.bucket = cfg.bucket
     this.uploadTimeoutMs = cfg.uploadTimeoutMs ?? DEFAULT_UPLOAD_TIMEOUT_MS
-    this.client = client
+    this.client = client ?? createS3Client(cfg)
+    this.clientOwned = client === undefined
   }
 
-  static creator(cfg: S3Config) {
+  static creator(cfg: S3Config): BlobStoreCreator {
     // @NOTE A store is created for every actor store access. A client per
     // store would open a fresh TLS connection to S3 for every blob request and
     // leave it idle in an unreachable pool, exhausting ephemeral ports under
     // load.
     const client = createS3Client(cfg)
-    return (did: string) => {
+    const creator = (did: string): BlobStore => {
       return new S3BlobStore(did, cfg, client)
     }
+    // The S3BlobStore instances won't own the client, the BlobStoreCreator
+    // does. In order to properly clean up the client, we attach an async
+    // dispose method to the creator itself.
+    Object.defineProperty(creator, Symbol.asyncDispose, {
+      value: async () => client.destroy(),
+    })
+    return creator as BlobStoreCreator
   }
 
   private genKey() {
@@ -342,6 +355,16 @@ export class S3BlobStore implements BlobStore {
 
       throw err
     }
+  }
+
+  /**
+   * Destroy underlying resources, like sockets. It's usually not necessary to
+   * do this. However in Node.js, it's best to explicitly shut down the client's
+   * agent when it is no longer needed. Otherwise, sockets might stay open for
+   * quite a long time before the server terminates them.
+   */
+  async [Symbol.asyncDispose]() {
+    if (this.clientOwned) this.client.destroy()
   }
 }
 

@@ -11,7 +11,11 @@ import {
 } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import type { Cid } from '@atproto/lex-data'
-import { BlobNotFoundError, type BlobStore } from '@atproto/repo'
+import {
+  BlobNotFoundError,
+  type BlobStore,
+  type BlobStoreCreator,
+} from '@atproto/repo'
 import { blobStoreLogger as log } from './logger.js'
 
 export class DiskBlobStore implements BlobStore {
@@ -26,12 +30,18 @@ export class DiskBlobStore implements BlobStore {
     location: string,
     tmpLocation?: string,
     quarantineLocation?: string,
-  ) {
-    return (did: string) => {
+  ): BlobStoreCreator {
+    const creator = (did: string): BlobStore => {
       const tmp = tmpLocation || path.join(location, 'tempt')
       const quarantine = quarantineLocation || path.join(location, 'quarantine')
       return new DiskBlobStore(did, location, tmp, quarantine)
     }
+    Object.defineProperty(creator, Symbol.asyncDispose, {
+      value: async () => {
+        // No-op for now
+      },
+    })
+    return creator as BlobStoreCreator
   }
 
   private async ensureDir() {
@@ -161,6 +171,10 @@ export class DiskBlobStore implements BlobStore {
     await rmIfExists(path.join(this.location, this.did), true)
     await rmIfExists(path.join(this.tmpLocation, this.did), true)
     await rmIfExists(path.join(this.quarantineLocation, this.did), true)
+  }
+
+  async [Symbol.asyncDispose]() {
+    // No resources to clean up for the disk blob store.
   }
 }
 
