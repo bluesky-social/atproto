@@ -31,14 +31,14 @@ export class DiskBlobStore implements BlobStore {
     tmpLocation?: string,
     quarantineLocation?: string,
   ): BlobStoreCreator {
+    const tmp = tmpLocation || path.join(location, 'tempt')
+    const quarantine = quarantineLocation || path.join(location, 'quarantine')
     const creator = (did: string): BlobStore => {
-      const tmp = tmpLocation || path.join(location, 'tempt')
-      const quarantine = quarantineLocation || path.join(location, 'quarantine')
       return new DiskBlobStore(did, location, tmp, quarantine)
     }
     Object.defineProperty(creator, Symbol.asyncDispose, {
       value: async () => {
-        // No-op for now
+        // no-op
       },
     })
     return creator as BlobStoreCreator

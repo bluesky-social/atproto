@@ -115,6 +115,9 @@ export class Database<Schema> implements AsyncDisposable {
   async close(): Promise<void> {
     return (this.#destroyPromise ??= this.db
       .destroy()
+      // @TODO a failed close might indicate that the data was not persisted and
+      // should not be silently ignored! It is like this for historical reasons
+      // and should be handled more robustly in the future.
       .catch((err) => dbLogger.error({ err }, 'error closing db')))
   }
 
