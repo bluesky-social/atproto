@@ -1,10 +1,15 @@
 import assert from 'node:assert'
 import type { DidString } from '@atproto/lex'
-import { AuthRequiredError, type Server } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
 import type { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier.js'
 import type { AppContext } from '../../context.js'
 import type { Member } from '../../db/schema/member.js'
 import { tools } from '../../lexicons/index.js'
+import { isReportPrioritySetting } from '../../setting/constants.js'
 import type { SettingService } from '../../setting/service.js'
 import { settingValidators } from '../../setting/validators.js'
 
@@ -27,6 +32,18 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError(
           'Must use moderator auth to create or update a personal setting',
         )
+      }
+
+      if (isReportPrioritySetting(key)) {
+        if (scope !== 'instance')
+          throw new InvalidRequestError(
+            'Report priority settings must have instance scope',
+          )
+        if (access.type !== 'admin_token' && !access.isAdmin) {
+          throw new AuthRequiredError(
+            'Only admins can manage report priorities',
+          )
+        }
       }
 
       // if the caller is using moderator auth and storing personal setting
@@ -76,7 +93,7 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         if (settingValidators.has(key)) {
-          await settingValidators.get(key)?.(option)
+          await settingValidators.get(key)?.(option, settingService)
         }
 
         await settingService.upsert(option)
