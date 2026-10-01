@@ -1196,13 +1196,13 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       },
     )
 
-    it('returns all eight follows with related profiles for only the first five', async () => {
+    it('returns all twelve follows with related profiles for only the first ten', async () => {
       const follows: {
         actor: DidString
         uri: AtUriString
         indexedAt: DatetimeString
       }[] = []
-      for (let index = 0; index < 8; index++) {
+      for (let index = 0; index < 12; index++) {
         const name = `cap-follower-${index}`
         const { did } = await sc.createAccount(name, {
           email: `${name}@test.com`,
@@ -1234,20 +1234,22 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expect(response.groups).toHaveLength(1)
       const group = response.groups[0]!
       assert(defs.followGroup.$isTypeOf(group.kind))
-      expect(group.count).toBe(8)
-      expect(group.kind.items).toHaveLength(8)
+      expect(group.count).toBe(12)
+      expect(group.kind.items).toHaveLength(12)
       expect(group.kind.items).toEqual(follows.map(({ actor }) => ({ actor })))
-      expect(Object.keys(response.relatedProfileViews ?? {})).toEqual(
-        follows.slice(0, 5).map(({ actor }) => actor),
+      expect(response.relatedViews).toMatchObject(
+        follows.slice(0, 10).map(({ actor }) => ({
+          $type: app.bsky.actor.defs.profileViewDetailed.$type,
+          did: actor,
+        })),
       )
-      expect(response.relatedRecordViews).toEqual({})
       expect(response.cursor).toBeUndefined()
     })
 
-    it.each([undefined, 0, 6])(
-      'returns all spotlight items with five related records when like %s is removed',
+    it.each([undefined, 0, 11])(
+      'returns all spotlight items with ten related records when like %s is removed',
       async (removedIndex) => {
-        const { records, headers } = await seedSpotlight(8)
+        const { records, headers } = await seedSpotlight(12)
         if (removedIndex !== undefined) {
           await network.bsky.ctx.dataplane.takedownRecord({
             recordUri: records[removedIndex]!.like,
@@ -1256,37 +1258,41 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
 
         const response = await network.bsky
           .getClient()
-          .call(defs, { limit: 8 }, { headers })
+          .call(defs, { limit: 12 }, { headers })
 
         expect(response.groups).toHaveLength(1)
         const group = response.groups[0]!
         assert(defs.multiPostLikeGroup.$isTypeOf(group.kind))
         const remaining = records.filter((_, index) => index !== removedIndex)
-        expect(group.count).toBe(removedIndex === undefined ? 8 : 7)
+        expect(group.count).toBe(removedIndex === undefined ? 12 : 11)
         expect(group.kind.items).toHaveLength(
-          removedIndex === undefined ? 8 : 7,
+          removedIndex === undefined ? 12 : 11,
         )
         expect(group.kind.items).toEqual(
           remaining.map(({ post }) => ({ post: post.ref.uriStr })),
         )
         expect(group.id).toBe(remaining[0]!.id)
         expect(group.indexedAt).toBe(remaining[0]!.indexedAt)
-        expect(Object.keys(response.relatedRecordViews ?? {})).toEqual(
-          remaining.slice(0, 5).map(({ post }) => post.ref.uriStr),
-        )
-        expect(Object.keys(response.relatedProfileViews ?? {})).toEqual([
-          sc.dids.bob,
+        expect(response.relatedViews).toMatchObject([
+          {
+            $type: app.bsky.actor.defs.profileViewDetailed.$type,
+            did: sc.dids.bob,
+          },
+          ...remaining.slice(0, 10).map(({ post }) => ({
+            $type: app.bsky.feed.defs.postView.$type,
+            uri: post.ref.uriStr,
+          })),
         ])
         expect(response.cursor).toBeUndefined()
       },
     )
 
-    it('returns all subscribed posts with related views for only the first five of each group', async () => {
+    it('returns all subscribed posts with related views for only the first ten of each group', async () => {
       const authors = [sc.dids.bob, sc.dids.dan]
       const postGroups = await Promise.all(
         authors.map(async (actor) => {
           const posts: Awaited<ReturnType<SeedClient['post']>>[] = []
-          for (let index = 0; index < 8; index++) {
+          for (let index = 0; index < 12; index++) {
             posts.push(await sc.post(actor, `Subscribed post ${index}`))
           }
           return { actor, posts }
@@ -1318,7 +1324,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         .call(defs, { limit: 2 }, { headers })
 
       expect(notifications).toHaveBeenCalledTimes(1)
-      expect(response.groups.map(({ count }) => count)).toEqual([8, 8])
+      expect(response.groups.map(({ count }) => count)).toEqual([12, 12])
       expect(response.groups.map(({ kind }) => kind)).toEqual(
         postGroups.map(({ actor, posts }) =>
           defs.subscribedPostGroup.$build({
@@ -1326,12 +1332,18 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
           }),
         ),
       )
-      expect(Object.keys(response.relatedRecordViews ?? {})).toEqual(
-        postGroups.flatMap(({ posts }) =>
-          posts.slice(0, 5).map(({ ref }) => ref.uriStr),
+      expect(response.relatedViews).toMatchObject([
+        ...authors.map((did) => ({
+          $type: app.bsky.actor.defs.profileViewDetailed.$type,
+          did,
+        })),
+        ...postGroups.flatMap(({ posts }) =>
+          posts.slice(0, 10).map(({ ref }) => ({
+            $type: app.bsky.feed.defs.postView.$type,
+            uri: ref.uriStr,
+          })),
         ),
-      )
-      expect(Object.keys(response.relatedProfileViews ?? {})).toEqual(authors)
+      ])
       expect(response.cursor).toBeUndefined()
     })
 
@@ -1388,20 +1400,133 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         )
         expect(response.seenAt).toBe(records[1]!.indexedAt)
         expect(response.cursor).toBeUndefined()
-        expect(Object.keys(response.relatedProfileViews ?? {})).toEqual(
-          remaining ? [sc.dids.bob] : [],
-        )
-        expect(Object.keys(response.relatedRecordViews ?? {})).toEqual(
-          kept.map(({ post }) => post.ref.uriStr),
-        )
-        for (const view of Object.values(response.relatedProfileViews ?? {})) {
-          expect(app.bsky.actor.defs.profileViewDetailed.$matches(view)).toBe(
-            true,
+        expect(response.relatedViews).toMatchObject([
+          ...(remaining
+            ? [
+                {
+                  $type: app.bsky.actor.defs.profileViewDetailed.$type,
+                  did: sc.dids.bob,
+                },
+              ]
+            : []),
+          ...kept.map(({ post }) => ({
+            $type: app.bsky.feed.defs.postView.$type,
+            uri: post.ref.uriStr,
+          })),
+        ])
+        for (const view of response.relatedViews ?? []) {
+          expect(
+            app.bsky.actor.defs.profileViewDetailed.$matches(view) ||
+              app.bsky.feed.defs.postView.$matches(view),
+          ).toBe(true)
+        }
+      },
+    )
+
+    it('deduplicates profiles and records across mixed notification groups', async () => {
+      const { recipient, records, headers } = await seedSpotlight(2)
+      const generator = await sc.createFeedGen(
+        recipient,
+        'did:web:example.com',
+        'Related feed',
+      )
+      const starterPack = await sc.createStarterPack(
+        recipient,
+        'Related starter pack',
+        [recipient],
+      )
+      await sc.like(sc.dids.bob, generator)
+      await sc.follow(sc.dids.bob, recipient, { via: starterPack.raw })
+      await sc.follow(sc.dids.carol, recipient, { via: starterPack.raw })
+      await network.processAll()
+
+      const response = await network.bsky
+        .getClient()
+        .call(defs, { limit: 30 }, { headers })
+
+      expect(response.groups).toHaveLength(4)
+      const expectedViews = [
+        ...[sc.dids.bob, sc.dids.carol].map((did) => ({
+          $type: app.bsky.actor.defs.profileViewDetailed.$type,
+          did,
+        })),
+        ...records.map(({ post }) => ({
+          $type: app.bsky.feed.defs.postView.$type,
+          uri: post.ref.uriStr,
+        })),
+        {
+          $type: app.bsky.feed.defs.generatorView.$type,
+          uri: generator.uriStr,
+        },
+        {
+          $type: app.bsky.graph.defs.starterPackView.$type,
+          uri: starterPack.uriStr,
+        },
+      ]
+      expect(response.relatedViews).toHaveLength(expectedViews.length)
+      expect(response.relatedViews).toEqual(
+        expect.arrayContaining(
+          expectedViews.map((view) => expect.objectContaining(view)),
+        ),
+      )
+    })
+
+    it.each(['not found', 'blocked'] as const)(
+      'includes a typed placeholder for a %s reply parent',
+      async (status) => {
+        const { recipient, records, headers } = await seedSpotlight(2)
+        const root = records[0]!.post.ref
+        const parent = await sc.reply(sc.dids.carol, root, root, 'Parent')
+        const reply = await sc.reply(sc.dids.bob, root, parent.ref, 'Reply')
+        if (status === 'blocked') {
+          await sc.block(recipient, sc.dids.carol)
+        }
+        await network.processAll()
+        if (status === 'not found') {
+          await network.bsky.ctx.dataplane.takedownRecord({
+            recordUri: parent.ref.uriStr,
+          })
+        }
+        using notifications = vi
+          .spyOn(network.bsky.ctx.hydrator.dataplane, 'getNotificationsV2')
+          .mockResolvedValue(
+            new GetNotificationsV2Response({
+              notifications: [
+                new Notification({
+                  recipientDid: recipient,
+                  uri: reply.ref.uriStr,
+                  reason: NOTIFICATION_REASON.REPLY,
+                  reasonSubject: parent.ref.uriStr,
+                  timestamp: Timestamp.fromJson(NOW),
+                }),
+              ],
+            }),
           )
-        }
-        for (const view of Object.values(response.relatedRecordViews ?? {})) {
-          expect(app.bsky.feed.defs.postView.$matches(view)).toBe(true)
-        }
+
+        const response = await network.bsky
+          .getClient()
+          .call(defs, { limit: 1 }, { headers })
+
+        expect(notifications).toHaveBeenCalledTimes(1)
+        expect(response.groups.map(({ kind }) => kind)).toEqual([
+          defs.replyNotification.$build({
+            post: reply.ref.uriStr,
+            parent: parent.ref.uriStr,
+          }),
+        ])
+        expect(response.relatedViews).toMatchObject([
+          { $type: app.bsky.feed.defs.postView.$type, uri: reply.ref.uriStr },
+          status === 'not found'
+            ? app.bsky.feed.defs.notFoundPost.$build({
+                uri: parent.ref.uriStr,
+                notFound: true,
+              })
+            : app.bsky.feed.defs.blockedPost.$build({
+                uri: parent.ref.uriStr,
+                blocked: true,
+                author: { did: sc.dids.carol },
+              }),
+        ])
       },
     )
 
@@ -1491,13 +1616,16 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expect(first.groups[1]?.indexedAt).toBe(records[1]!.indexedAt)
       expect(first.groups[1]?.count).toBe(3)
       expect(first.cursor).toBe(records[3]!.indexedAt)
-      expect(Object.keys(first.relatedProfileViews ?? {})).toEqual([
-        sc.dids.carol,
-        sc.dids.bob,
+      expect(first.relatedViews).toMatchObject([
+        ...[sc.dids.carol, sc.dids.bob].map((did) => ({
+          $type: app.bsky.actor.defs.profileViewDetailed.$type,
+          did,
+        })),
+        ...records.map(({ post }) => ({
+          $type: app.bsky.feed.defs.postView.$type,
+          uri: post.ref.uriStr,
+        })),
       ])
-      expect(Object.keys(first.relatedRecordViews ?? {})).toEqual(
-        records.map(({ post }) => post.ref.uriStr),
-      )
 
       const second = await client.call(
         defs,
@@ -1513,11 +1641,15 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         }),
       ])
       expect(second.cursor).toBeUndefined()
-      expect(Object.keys(second.relatedProfileViews ?? {})).toEqual([
-        sc.dids.carol,
-      ])
-      expect(Object.keys(second.relatedRecordViews ?? {})).toEqual([
-        records[3]!.post.ref.uriStr,
+      expect(second.relatedViews).toMatchObject([
+        {
+          $type: app.bsky.actor.defs.profileViewDetailed.$type,
+          did: sc.dids.carol,
+        },
+        {
+          $type: app.bsky.feed.defs.postView.$type,
+          uri: records[3]!.post.ref.uriStr,
+        },
       ])
     })
   },
