@@ -1,5 +1,6 @@
-import { ForbiddenError, type Server } from '@atproto/xrpc-server'
+import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
+import { inboxViewerDid } from '../../inbox/access.js'
 import {
   loadReportActions,
   queryInboxReports,
@@ -12,17 +13,7 @@ export default function (server: Server, ctx: AppContext) {
   server.add(tools.ozone.inbox.listReports, {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, params }) => {
-      const did = params.did ?? auth.credentials.iss
-      if (
-        did !== auth.credentials.iss &&
-        !(
-          auth.credentials.isModerator ||
-          auth.credentials.isTriage ||
-          auth.credentials.isAdmin
-        )
-      ) {
-        throw new ForbiddenError('Unauthorized')
-      }
+      const did = inboxViewerDid(auth, params.did)
       const seenAt = await getSeenAt(ctx.db, did, 'reports')
       const { rows, cursor } = await queryInboxReports(
         ctx.db,

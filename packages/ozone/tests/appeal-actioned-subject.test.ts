@@ -799,15 +799,20 @@ describe('appealActionedSubject', () => {
     })
     await appeal(action.id, account.did)
 
-    const countEvents = async () =>
-      modClient.queryEvents({ subject: account.did, limit: 100 })
+    const eventIds = async () => {
+      const { events } = await modClient.queryEvents({
+        subject: account.did,
+        limit: 100,
+      })
+      return events.map((event) => event.id)
+    }
 
-    const before = await countEvents()
+    const before = await eventIds()
     await expect(appeal(action.id, account.did)).rejects.toMatchObject({
       error: 'AlreadyAppealed',
     })
     // The rejected attempt must not leave a stray report event behind.
-    expect(await countEvents()).toEqual(before)
+    expect(await eventIds()).toEqual(before)
   })
 
   it('leaves the appeal unassigned when the source reports disagree', async () => {
@@ -972,7 +977,7 @@ describe('appealActionedSubject', () => {
     await expect(appeal(fresh.id, account.did)).resolves.toBeDefined()
   })
 
-  it('shows a resolved appeal with its public note and never the internal one', async () => {
+  it('shows a resolved appeal without exposing moderator note text', async () => {
     const account = await sc.createAccount('resolved', {
       handle: 'resolved.test',
       email: 'resolved@test.com',
@@ -1016,10 +1021,13 @@ describe('appealActionedSubject', () => {
     )
     expect(view?.appeal).toMatchObject({
       state: 'resolved',
-      note: 'We reviewed this again and the takedown stands.',
     })
     expect(view?.appeal?.resolvedAt).toBeDefined()
+    expect(view?.appeal).not.toHaveProperty('note')
     const serialized = JSON.stringify(view)
+    expect(serialized).not.toContain(
+      'We reviewed this again and the takedown stands.',
+    )
     expect(serialized).not.toContain('MODERATOR-ONLY-RATIONALE')
     expect(serialized).not.toContain('MODERATOR-ONLY-COMMENT')
   })

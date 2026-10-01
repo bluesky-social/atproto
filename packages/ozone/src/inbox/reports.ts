@@ -66,7 +66,32 @@ export async function queryInboxReports(
   const direction = params.sortDirection ?? 'desc'
   const limit = params.limit ?? 50
   const sortColumn = field === 'createdAt' ? 'r.createdAt' : 'r.updatedAt'
-  let query = reportQuery(db, reporter)
+  const source = db.db
+    .selectFrom('moderation_event')
+    .where('createdBy', '=', reporter)
+    .where('action', '=', tools.ozone.moderation.defs.modEventReport.$type)
+    .select('id')
+  // @NOTE Explicit URI predicates use the existing partial reporter indexes.
+  // The lateral LIMIT keeps report lookups anchored to those event IDs.
+  // Sorting still reads the reporter's history, without materializing its IDs.
+  let query = db.db
+    .selectFrom(
+      source
+        .where('subjectUri', 'is', null)
+        .unionAll(source.where('subjectUri', 'is not', null))
+        .as('me'),
+    )
+    .innerJoinLateral(
+      (eb) =>
+        eb
+          .selectFrom('report')
+          .whereRef('eventId', '=', 'me.id')
+          .select(['id', 'status', 'reportType', 'createdAt', 'updatedAt'])
+          .limit(1)
+          .as('r'),
+      (join) => join.onTrue(),
+    )
+    .where('r.reportType', '!=', APPEAL_REASON_TYPE)
   if (params.filter === 'pending')
     query = query.where('r.status', '!=', 'closed')
   if (params.filter === 'resolved')
@@ -84,7 +109,6 @@ export async function queryInboxReports(
   }
 
   const pageIds = query
-    .clearSelect()
     .select('r.id')
     .orderBy(sortColumn, direction)
     .orderBy('r.id', direction)

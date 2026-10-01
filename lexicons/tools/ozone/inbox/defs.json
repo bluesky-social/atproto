@@ -117,10 +117,6 @@
           "format": "datetime",
           "description": "When the appeal's report was closed."
         },
-        "note": {
-          "type": "string",
-          "description": "Moderator explanation, from the publicNote on the closing activity. Absent if none was written."
-        },
         "appealableUntil": {
           "type": "string",
           "format": "datetime"

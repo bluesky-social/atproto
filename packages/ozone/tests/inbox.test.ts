@@ -286,7 +286,6 @@ describe('inbox appeal mapper', () => {
         createdAt: DatetimeString
         closedAt: DatetimeString | null
       } | null
-      publicNote?: string | null
       latestAppealableAt?: DatetimeString | null
     } = {},
   ) =>
@@ -297,7 +296,6 @@ describe('inbox appeal mapper', () => {
         lastAppealedAt: args.lastAppealedAt ?? null,
       }),
       report: args.report ?? null,
-      publicNote: args.publicNote ?? null,
       windowMonths: 6,
       latestAppealableAt:
         args.latestAppealableAt === undefined
@@ -355,16 +353,14 @@ describe('inbox appeal mapper', () => {
     expect(availableActions).toEqual([])
   })
 
-  it('resolves with the close date and the public note', () => {
+  it('resolves with the close date', () => {
     const { view } = appeal(ACCOUNT, {
       appealed: false,
       report: closedReport,
-      publicNote: 'We reviewed this again and the post still violates policy.',
     })
     expect(view).toMatchObject({
       state: 'resolved',
       resolvedAt: closedReport.closedAt,
-      note: 'We reviewed this again and the post still violates policy.',
     })
   })
 
@@ -401,7 +397,6 @@ describe('inbox subject view', () => {
     firstActionAt: null,
     latestAppealableAt: null,
     appealReport: null,
-    appealPublicNote: null,
     ...overrides,
   })
 

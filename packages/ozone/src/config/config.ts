@@ -2,6 +2,10 @@ import assert from 'node:assert'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
 import type { DidString, UriString } from '@atproto/lex'
 import type { OzoneEnvironment } from './env.js'
+import {
+  type StrikeSuspensionConfig,
+  parseStrikeSuspensionConfig,
+} from './strike-suspension.js'
 
 // off-config but still from env:
 // logging: LOG_LEVEL, LOG_SYSTEMS, LOG_ENABLED, LOG_DESTINATION
@@ -124,6 +128,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     verifier: verifierCfg,
     assignments: assignmentsCfg,
     inbox: inboxCfg,
+    strikeSuspension: parseStrikeSuspensionConfig(env.strikeSuspensionConfig),
     stats: statsCfg,
     jetstreamUrl: env.jetstreamUrl,
   }
@@ -140,6 +145,7 @@ export type OzoneConfig = {
   blobDivert: BlobDivertConfig | null
   access: AccessConfig
   assignments: AssignmentsConfig
+  strikeSuspension: StrikeSuspensionConfig
   inbox: InboxConfig
   stats: StatsConfig
   jetstreamUrl?: string
