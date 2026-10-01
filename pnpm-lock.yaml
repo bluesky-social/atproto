@@ -2245,9 +2245,6 @@ importers:
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
-      '@atproto/jwk':
-        specifier: workspace:^
-        version: link:../oauth/jwk
       '@atproto/lex-cbor':
         specifier: workspace:^
         version: link:../lex/lex-cbor
@@ -2260,16 +2257,13 @@ importers:
       '@noble/hashes':
         specifier: ^1.6.1
         version: 1.7.0
-      jose:
-        specifier: ^5.2.0
-        version: 5.3.0
+      structured-headers:
+        specifier: ^1.0.1
+        version: 1.0.1
       zod:
         specifier: ^3.23.8
         version: 3.23.8
     devDependencies:
-      '@atproto/jwk-jose':
-        specifier: workspace:^
-        version: link:../oauth/jwk-jose
       vitest:
         specifier: ^4.1.10
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.20.1)(@vitest/coverage-v8@4.1.10)(vite@8.2.2(@types/node@22.20.1)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.0))

@@ -64,6 +64,7 @@ export type ServiceAuthOutput = {
 export type SpaceCredentialOutput = {
   credentials: {
     type: 'space_credential'
+    audience: DidString
     iss: DidString
     space: SpaceRefString
   }
@@ -74,7 +75,7 @@ export type DelegationTokenOutput = {
     type: 'delegation_token'
     userDid: DidString
     space: SpaceRefString
-    dpopJkt: string
+    keyId: DidString
   }
 }
 

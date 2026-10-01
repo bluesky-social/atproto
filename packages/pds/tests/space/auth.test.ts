@@ -1,12 +1,12 @@
+import { request } from 'node:http'
 import { jest } from '@jest/globals'
 import { decodeJwt } from 'jose'
 import { HOUR } from '@atproto/common'
+import { P256Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { JoseKey } from '@atproto/oauth-provider/provider'
 import {
-  createDpopProof,
+  createSpaceSigHeaders,
   createSpaceToken,
-  dpopJktForKey,
   spaceHostAud,
 } from '@atproto/space'
 import type { NsidString, SpaceRefString } from '@atproto/syntax'
@@ -194,7 +194,7 @@ describe('space auth', () => {
       expect(rec.value).toMatchObject({ text: 'for the record' })
     })
 
-    describe('DPoP binding', () => {
+    describe('HTTP message signature binding', () => {
       it('refuses a credential presented as a bearer token', async () => {
         const space = await sc.createSpace(alice, { members: [carol] })
         await sc.write(alice, space, { text: 'bound' })
@@ -216,7 +216,7 @@ describe('space auth', () => {
         ).resolves.toBeDefined()
       })
 
-      it('refuses a credential without a proof', async () => {
+      it('refuses a credential without a signature', async () => {
         const space = await sc.createSpace(alice, { members: [carol] })
         const cred = await sc.credentialFor(carol, space)
 
@@ -224,17 +224,75 @@ describe('space auth', () => {
           alice.client.call(
             com.atproto.space.getLatestCommit,
             { space, repo: alice.did },
-            { headers: { authorization: `DPoP ${cred.credential}` } },
+            { headers: { authorization: `Atproto-Space ${cred.credential}` } },
           ),
-        ).rejects.toThrow(/requires a DPoP proof/)
+        ).rejects.toMatchObject({ error: 'BadSpaceSignature' })
       })
+
+      it.each([
+        { name: 'authorization', extra: undefined, expectedStatus: 401 },
+        {
+          name: 'atproto-space-audience',
+          extra: undefined,
+          expectedStatus: 401,
+        },
+        {
+          name: 'signature-input',
+          extra: 'other=("authorization");keyid="other"',
+          expectedStatus: 200,
+        },
+        { name: 'signature', extra: 'other=:YWJj:', expectedStatus: 200 },
+      ])(
+        'responds $expectedStatus to repeated $name fields',
+        async ({ name, extra, expectedStatus }) => {
+          const space = await sc.createSpace(alice)
+          await sc.write(alice, space)
+          const cred = await sc.credentialFor(alice, space)
+          const headers = await createSpaceSigHeaders(cred.key, {
+            authorization: `Atproto-Space ${cred.credential}`,
+            audience: alice.did,
+          })
+          const url = new URL(
+            `/xrpc/${com.atproto.space.getLatestCommit.$lxm}`,
+            alice.pds.url,
+          )
+          url.search = new URLSearchParams({
+            space,
+            repo: alice.did,
+          }).toString()
+          const status = await new Promise<number | undefined>(
+            (resolve, reject) => {
+              const req = request(
+                url,
+                {
+                  headers: [
+                    'host',
+                    url.host,
+                    ...Object.entries(headers).flat(),
+                    name,
+                    extra ?? headers[name],
+                  ],
+                },
+                (res) => {
+                  res.resume()
+                  res.on('end', () => resolve(res.statusCode))
+                  res.on('error', reject)
+                },
+              )
+              req.on('error', reject)
+              req.end()
+            },
+          )
+          expect(status).toBe(expectedStatus)
+        },
+      )
 
       it('refuses a credential presented with a key of the holder own', async () => {
         const space = await sc.createSpace(alice, { members: [carol] })
         await sc.write(alice, space, { text: 'not yours to read' })
 
         const cred = await sc.credentialFor(carol, space)
-        const attacker = await JoseKey.generate(['ES256'])
+        const attacker = await P256Keypair.create()
         const rebound = new SpaceCredential(cred.credential, attacker)
 
         await expect(
@@ -242,72 +300,88 @@ describe('space auth', () => {
             space,
             repo: alice.did,
           }),
-        ).rejects.toThrow(/not signed by the key the credential is bound to/)
+        ).rejects.toThrow(/invalid HTTP message signature/)
       })
 
-      it('refuses a proof addressed to another host', async () => {
-        const space = await sc.createSpace(alice, { members: [bob, carol] })
-        await sc.write(alice, space, { text: 'authority repo' })
+      it.each(['remote', 'co-located'])(
+        'refuses a signature addressed to another repo owner (%s)',
+        async (location) => {
+          const other = location === 'remote' ? bob : dan
+          const space = await sc.createSpace(alice, { members: [other, carol] })
+          await sc.write(alice, space)
+          const cred = await sc.credentialFor(carol, space)
+          const headers = await createSpaceSigHeaders(cred.key, {
+            authorization: `Atproto-Space ${cred.credential}`,
+            audience: other.did,
+          })
 
-        const cred = await sc.credentialFor(carol, space)
-        const forBob = await createDpopProof(cred.key, {
-          htm: 'GET',
-          htu: `${bob.pds.url}/xrpc/${com.atproto.space.getLatestCommit.$lxm}`,
-          credential: cred.credential,
-        })
+          await expect(
+            alice.client.call(
+              com.atproto.space.getLatestCommit,
+              { space, repo: alice.did },
+              { headers },
+            ),
+          ).rejects.toMatchObject({ error: 'BadSpaceAudience' })
+        },
+      )
 
-        const res = await fetch(
-          `${alice.pds.url}/xrpc/${com.atproto.space.getLatestCommit.$lxm}?space=${encodeURIComponent(space)}&repo=${alice.did}`,
-          {
-            headers: {
-              authorization: `DPoP ${cred.credential}`,
-              dpop: forBob,
-            },
-          },
-        )
-        expect(res.status).toBe(401)
-        expect(await res.json()).toMatchObject({
-          error: 'BadDpopProof',
-          message: expect.stringContaining('does not match the request'),
+      it('requires the space authority as audience for space-host requests', async () => {
+        const space = await sc.createSpace(alice, { members: [bob] })
+        const cred = await sc.credentialFor(bob, space)
+        const headers = await createSpaceSigHeaders(cred.key, {
+          authorization: `Atproto-Space ${cred.credential}`,
+          audience: bob.did,
         })
+        await expect(
+          alice.client.call(
+            com.atproto.space.listRepos,
+            { space },
+            { headers },
+          ),
+        ).rejects.toMatchObject({ error: 'BadSpaceAudience' })
+        await expect(
+          alice.client.call(
+            com.atproto.simplespace.getSpace,
+            { space },
+            { headers },
+          ),
+        ).rejects.toMatchObject({ error: 'BadSpaceAudience' })
       })
 
-      it('refuses a replayed proof, but not a second fresh one', async () => {
-        // The trailing fresh-proof request is the control: without it the 401 only
-        // shows the second request failed, not that the reused `jti` failed it.
+      it('reuses a signature for the same audience across requests', async () => {
         const space = await sc.createSpace(alice, { members: [carol] })
-        await sc.write(alice, space, { text: 'replay target' })
-
+        await sc.write(alice, space)
         const cred = await sc.credentialFor(carol, space)
-        const url = `${alice.pds.url}/xrpc/${com.atproto.space.getLatestCommit.$lxm}?space=${encodeURIComponent(space)}&repo=${alice.did}`
-        const requestWith = (proof: string) =>
-          fetch(url, {
-            headers: {
-              authorization: `DPoP ${cred.credential}`,
-              dpop: proof,
-            },
-          })
-        const freshProof = () =>
-          createDpopProof(cred.key, {
-            htm: 'GET',
-            htu: url,
-            credential: cred.credential,
-          })
-
-        const proof = await freshProof()
-        expect((await requestWith(proof)).status).toBe(200)
-
-        const replayed = await requestWith(proof)
-        expect(replayed.status).toBe(401)
-        expect(await replayed.json()).toMatchObject({
-          error: 'BadDpopProof',
-          message: expect.stringContaining('replayed'),
+        const headers = await createSpaceSigHeaders(cred.key, {
+          authorization: `Atproto-Space ${cred.credential}`,
+          audience: alice.did,
         })
-
-        expect((await requestWith(await freshProof())).status).toBe(200)
+        for (let i = 0; i < 2; i++) {
+          await expect(
+            alice.client.call(
+              com.atproto.space.getLatestCommit,
+              { space, repo: alice.did },
+              { headers },
+            ),
+          ).resolves.toBeDefined()
+        }
+        await expect(
+          alice.client.call(
+            com.atproto.space.listRecords,
+            { space, repo: alice.did },
+            { headers },
+          ),
+        ).resolves.toBeDefined()
+        await expect(
+          alice.client.call(
+            com.atproto.space.registerNotify,
+            { space, service: alice.did },
+            { headers },
+          ),
+        ).resolves.toBeDefined()
       })
 
-      it('reuses one credential across many hosts, each with its own proof', async () => {
+      it('reuses one credential across many hosts, each with its own audience signature', async () => {
         const space = await sc.createSpace(alice, { members: [bob, carol] })
         await sc.write(alice, space, { text: 'on the authority' })
         await sc.write(bob, space, { text: 'on pds2' })
@@ -366,10 +440,10 @@ describe('space auth', () => {
       ).toBeDefined()
 
       const carolKeypair = await carol.pds.ctx.actorStore.keypair(carol.did)
-      const forged = await sc.forgedCredential((dpopJkt) =>
+      const forged = await sc.forgedCredential((keyId) =>
         createSpaceToken(
           'credential',
-          { iss: carol.did, sub: space, dpopJkt },
+          { iss: carol.did, sub: space, keyId },
           carolKeypair,
         ),
       )
@@ -394,10 +468,10 @@ describe('space auth', () => {
       // does not publish — so it cannot pass by falling back to #atproto.
       const space = await sc.createSpace(alice)
       const aliceKeypair = await network.pds.ctx.actorStore.keypair(alice.did)
-      const mismatched = await sc.forgedCredential((dpopJkt) =>
+      const mismatched = await sc.forgedCredential((keyId) =>
         createSpaceToken(
           'credential',
-          { iss: alice.did, sub: space, kid: '#atproto_space', dpopJkt },
+          { iss: alice.did, sub: space, kid: '#atproto_space', keyId },
           aliceKeypair,
         ),
       )
@@ -621,7 +695,7 @@ describe('space auth', () => {
     it('are useless at a host that does not govern the space', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
       const token = await sc.delegationTokenFor(carol, space)
-      const key = await JoseKey.generate(['ES256'])
+      const key = await P256Keypair.create()
 
       // The same token, presented to bob's PDS instead of alice's. The audience
       // is derived from the token's own `sub`, so it still matches — what stops
@@ -633,10 +707,9 @@ describe('space auth', () => {
           com.atproto.space.getSpaceCredential,
           { space },
           {
-            headers: {
+            headers: await createSpaceSigHeaders(key, {
               authorization: `Bearer ${token}`,
-              dpop: await sc.credentialExchangeProof(key, bob.pds),
-            },
+            }),
           },
         ),
       ).rejects.toMatchObject({ error: 'SpaceNotFound' })
@@ -652,59 +725,60 @@ describe('space auth', () => {
           { space },
           { headers: { authorization: `Bearer ${token}` } },
         ),
-      ).rejects.toMatchObject({ error: 'MissingDpopProof' })
+      ).rejects.toMatchObject({ error: 'BadSpaceSignature' })
     })
 
-    it('binds the credential to the key that signed the exchange proof', async () => {
+    it('binds the credential to the key that signed the exchange', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
       const token = await sc.delegationTokenFor(carol, space)
-      const key = await JoseKey.generate(['ES256'])
-      const dpop = await sc.credentialExchangeProof(key)
+      const key = await P256Keypair.create()
+      const headers = await createSpaceSigHeaders(key, {
+        authorization: `Bearer ${token}`,
+      })
 
       const { credential } = await alice.client.call(
         com.atproto.space.getSpaceCredential,
         { space },
-        { headers: { authorization: `Bearer ${token}`, dpop } },
+        { headers },
       )
 
       expect(decodeJwt(credential).cnf).toEqual({
-        jkt: await dpopJktForKey(key),
+        kid: key.did(),
       })
     })
 
-    it('refuses ath on a credential exchange proof', async () => {
+    it('binds the exchange signature to the delegation token', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
       const token = await sc.delegationTokenFor(carol, space)
-      const key = await JoseKey.generate(['ES256'])
-
+      const otherToken = await sc.delegationTokenFor(carol, space)
+      const key = await P256Keypair.create()
+      const headers = await createSpaceSigHeaders(key, {
+        authorization: `Bearer ${token}`,
+      })
       await expect(
         alice.client.call(
           com.atproto.space.getSpaceCredential,
           { space },
-          {
-            headers: {
-              authorization: `Bearer ${token}`,
-              dpop: await sc.credentialExchangeProof(key, alice.pds, token),
-            },
-          },
+          { headers: { ...headers, authorization: `Bearer ${otherToken}` } },
         ),
-      ).rejects.toThrow(/"ath" must be omitted/)
+      ).rejects.toMatchObject({ error: 'BadSpaceSignature' })
     })
 
-    it('refuses a replayed credential exchange proof', async () => {
+    it('refuses a replayed credential exchange', async () => {
       const space = await sc.createSpace(alice, { members: [carol] })
       const token = await sc.delegationTokenFor(carol, space)
-      const key = await JoseKey.generate(['ES256'])
-      const dpop = await sc.credentialExchangeProof(key)
+      const key = await P256Keypair.create()
+      const headers = await createSpaceSigHeaders(key, {
+        authorization: `Bearer ${token}`,
+      })
       const exchange = () =>
         alice.client.call(
           com.atproto.space.getSpaceCredential,
           { space },
-          { headers: { authorization: `Bearer ${token}`, dpop } },
+          { headers },
         )
-
       await expect(exchange()).resolves.toBeDefined()
-      await expect(exchange()).rejects.toThrow(/DPoP proof replayed/)
+      await expect(exchange()).rejects.toMatchObject({ error: 'JwtReplayed' })
     })
 
     it('are refused when the audience names another authority', async () => {
@@ -728,22 +802,17 @@ describe('space auth', () => {
     })
 
     it('are single-use — a replayed jti is refused', async () => {
-      // A fresh proof each time, so the DPoP replay check is satisfied and the
-      // token's own single-use property is what has to refuse the second
-      // exchange. Otherwise a captured token mints credentials for anyone, each
-      // bound to whatever key the presenter brings.
       const space = await sc.createSpace(alice, { members: [carol] })
       const token = await sc.delegationTokenFor(carol, space)
       const exchange = async () => {
-        const key = await JoseKey.generate(['ES256'])
+        const key = await P256Keypair.create()
         return alice.client.call(
           com.atproto.space.getSpaceCredential,
           { space },
           {
-            headers: {
+            headers: await createSpaceSigHeaders(key, {
               authorization: `Bearer ${token}`,
-              dpop: await sc.credentialExchangeProof(key),
-            },
+            }),
           },
         )
       }

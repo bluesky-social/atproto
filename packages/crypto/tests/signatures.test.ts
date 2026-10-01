@@ -12,6 +12,7 @@ import {
   multibaseToBytes,
   parseDidKey,
   sha256,
+  verifySignature,
 } from '../src/index.js'
 import { P256Keypair } from '../src/p256/keypair.js'
 import * as p256 from '../src/p256/operations.js'
@@ -137,6 +138,19 @@ describe('signatures', () => {
       } else {
         throw new Error('Unsupported test vector')
       }
+    }
+  })
+
+  it('requires compact encoding while allowing high-s signatures', async () => {
+    for (const vector of vectors) {
+      const message = uint8arrays.fromString(vector.messageBase64, 'base64')
+      const signature = uint8arrays.fromString(vector.signatureBase64, 'base64')
+      await expect(
+        verifySignature(vector.publicKeyDid, message, signature, {
+          format: 'compact',
+          allowMalleableSig: true,
+        }),
+      ).resolves.toBe(vector.validSignature || vector.tags.includes('high-s'))
     }
   })
 })

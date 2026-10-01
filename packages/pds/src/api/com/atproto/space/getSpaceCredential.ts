@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.delegationTokenAuth,
     handler: async ({ input, auth }) => {
       const { space, clientAttestation } = input.body
-      const { userDid, space: tokenSpace, dpopJkt } = auth.credentials
+      const { userDid, space: tokenSpace, keyId } = auth.credentials
 
       if (tokenSpace !== space) {
         throw new InvalidRequestError(
@@ -49,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
       const keypair = await ctx.actorStore.keypair(spaceDid)
       const credential = await createSpaceToken(
         'credential',
-        { iss: spaceDid, sub: space, dpopJkt },
+        { iss: spaceDid, sub: space, keyId },
         keypair,
       )
 

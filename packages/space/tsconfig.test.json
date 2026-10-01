@@ -4,8 +4,5 @@
   "compilerOptions": {
     "rootDir": "./",
   },
-  "references": [
-    { "path": "./tsconfig.build.json" },
-    { "path": "../oauth/jwk-jose/tsconfig.build.json" },
-  ],
+  "references": [{ "path": "./tsconfig.build.json" }],
 }
