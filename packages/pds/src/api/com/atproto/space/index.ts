@@ -14,6 +14,7 @@ import listRecords from './listRecords.js'
 import listRepoOps from './listRepoOps.js'
 import listRepos from './listRepos.js'
 import listSpaces from './listSpaces.js'
+import notifyCredentialRevoked from './notifyCredentialRevoked.js'
 import notifyWrite from './notifyWrite.js'
 import putRecord from './putRecord.js'
 import registerNotify from './registerNotify.js'
@@ -34,6 +35,7 @@ export default function (server: Server, ctx: AppContext) {
   listRepoOps(server, ctx)
   listRepos(server, ctx)
   listSpaces(server, ctx)
+  notifyCredentialRevoked(server, ctx)
   notifyWrite(server, ctx)
   putRecord(server, ctx)
   registerNotify(server, ctx)

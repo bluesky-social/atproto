@@ -11,6 +11,7 @@ import type { SpacePermissionMatchOperation } from '@atproto/oauth-scopes'
 import { type CommitCtx, RepoCommit, type SignedCommit } from '@atproto/space'
 import { type DidString, SpaceRef, type SpaceRefString } from '@atproto/syntax'
 import {
+  AuthRequiredError,
   ForbiddenError,
   InvalidRequestError,
   createServiceAuthHeaders,
@@ -88,7 +89,7 @@ export function assertSpaceRead(
   repo: string,
 ): void {
   if (isSpaceCredentialOutput(auth)) {
-    assertCredentialSpace(auth.credentials, spaceUri)
+    assertCredentialSpace(auth.credentials, spaceUri, repo)
     return
   }
   if (auth.credentials.did !== repo) {
@@ -117,7 +118,14 @@ export function isSpaceSelfRead(
 export function assertCredentialSpace(
   credentials: SpaceCredentialOutput['credentials'],
   spaceUri: SpaceRefString,
+  audience: string = toSpaceRef(spaceUri).spaceDid,
 ): void {
+  if (credentials.audience !== audience) {
+    throw new AuthRequiredError(
+      'space audience does not match the request',
+      'BadSpaceAudience',
+    )
+  }
   if (credentials.space !== spaceUri) {
     throw new InvalidRequestError(
       'Credential is not scoped to this space',

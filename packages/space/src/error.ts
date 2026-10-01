@@ -17,19 +17,9 @@ export class SpaceTokenError extends Error {
   }
 }
 
-export class DpopProofError extends Error {
-  constructor(
-    message: string,
-    public readonly code:
-      | 'BadDpopProof'
-      | 'BadDpopProofSignature'
-      | 'DpopProofExpired'
-      | 'DpopKeyMismatch' = 'BadDpopProof',
-    options?: ErrorOptions,
-  ) {
-    super(message, options)
-    this.name = 'DpopProofError'
-  }
+export class SpaceSignatureError extends Error {
+  name = 'SpaceSignatureError'
+  readonly code = 'BadSpaceSignature'
 }
 
 export class RepoVerificationError extends Error {
