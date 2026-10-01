@@ -33,10 +33,11 @@ import {
 } from '../src/proto/bsky_pb.js'
 
 const NOW = '2026-09-21T12:00:00.000Z'
+const now = Date.parse(NOW)
 const post = (name: string) =>
   `at://did:plc:viewer/${app.bsky.feed.post.$type}/${name}` as AtUriString
 const minutesAgo = (minutes: number) =>
-  new Date(Date.parse(NOW) - minutes * 60_000).toISOString()
+  new Date(now - minutes * 60_000).toISOString()
 
 const item = (
   id: string,
@@ -95,7 +96,6 @@ describe('notification grouping', () => {
   it.each(['algoGravity', 'algoLookback'] as const)(
     '%s groups interleaved likes by post and orders the groups by their newest like',
     (algorithm) => {
-      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
       const poem = post('poem')
       const song = post('song')
       const items = [
@@ -117,7 +117,7 @@ describe('notification grouping', () => {
         }),
       ]
 
-      const result = buildGroups(items, 2, undefined, algorithm)
+      const result = buildGroups(items, 2, now, undefined, algorithm)
 
       expect(
         result.groups.map(({ items }) => items.map(({ id }) => id)),
@@ -136,7 +136,6 @@ describe('notification grouping', () => {
   it.each(['algoGravity', 'algoLookback'] as const)(
     '%s keeps filling existing groups after reaching the page limit, then leaves the first new group for the next page',
     (algorithm) => {
-      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
       const poem = post('poem')
       const song = post('song')
       const photo = post('photo')
@@ -161,7 +160,7 @@ describe('notification grouping', () => {
         }),
       ]
 
-      const firstPage = buildGroups(items, 2, undefined, algorithm)
+      const firstPage = buildGroups(items, 2, now, undefined, algorithm)
 
       expect(
         firstPage.groups.map(({ items }) => items.map(({ id }) => id)),
@@ -171,7 +170,13 @@ describe('notification grouping', () => {
       ])
       expect(firstPage.cursor).toBe(items[3]!.raw.indexedAt)
 
-      const secondPage = buildGroups(items.slice(4), 2, undefined, algorithm)
+      const secondPage = buildGroups(
+        items.slice(4),
+        2,
+        now,
+        undefined,
+        algorithm,
+      )
       expect(
         secondPage.groups.map(({ items }) => items.map(({ id }) => id)),
       ).toEqual([['photo-1'], ['poem-3']])
@@ -180,7 +185,6 @@ describe('notification grouping', () => {
   )
 
   it('Gravity keeps the older group open after a weak connection splits off newer likes', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
     const items = [
       item('newer-1', minutesAgo(0)),
       item('newer-2', minutesAgo(1)),
@@ -188,7 +192,7 @@ describe('notification grouping', () => {
       item('older-2', minutesAgo(61)),
     ]
 
-    const result = buildGroups(items, 2, undefined, 'algoGravity')
+    const result = buildGroups(items, 2, now, undefined, 'algoGravity')
 
     expect(result.groups.map(({ items }) => items.map(({ id }) => id))).toEqual(
       [
@@ -199,14 +203,13 @@ describe('notification grouping', () => {
   })
 
   it('Gravity uses the older group’s zone after a split, allowing likes 35 minutes apart to stay together', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
     const items = [
       item('newest', minutesAgo(0)),
       item('hour-old', minutesAgo(60)),
       item('older-like', minutesAgo(95)),
     ]
 
-    const result = buildGroups(items, 2, undefined, 'algoGravity')
+    const result = buildGroups(items, 2, now, undefined, 'algoGravity')
 
     expect(result.groups.map(({ items }) => items.map(({ id }) => id))).toEqual(
       [['newest'], ['hour-old', 'older-like']],
@@ -214,14 +217,13 @@ describe('notification grouping', () => {
   })
 
   it('Gravity stops before a like that would split a group beyond the page limit', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
     const items = [
       item('newer-1', minutesAgo(0)),
       item('newer-2', minutesAgo(1)),
       item('older', minutesAgo(60)),
     ]
 
-    const result = buildGroups(items, 1, undefined, 'algoGravity')
+    const result = buildGroups(items, 1, now, undefined, 'algoGravity')
 
     expect(result.groups[0]?.items.map(({ id }) => id)).toEqual([
       'newer-1',
@@ -231,16 +233,12 @@ describe('notification grouping', () => {
   })
 
   it('Gravity splits equally weak connections at the middle-most one', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
     const gapMs = 27 * 60_000 + 40_000
     const items = Array.from({ length: 5 }, (_, index) =>
-      item(
-        `like-${index}`,
-        new Date(Date.parse(NOW) - index * gapMs).toISOString(),
-      ),
+      item(`like-${index}`, new Date(now - index * gapMs).toISOString()),
     )
 
-    const result = buildGroups(items, 2, undefined, 'algoGravity')
+    const result = buildGroups(items, 2, now, undefined, 'algoGravity')
 
     expect(result.groups.map(({ items }) => items.map(({ id }) => id))).toEqual(
       [
@@ -251,23 +249,21 @@ describe('notification grouping', () => {
   })
 
   it('Lookback groups likes exactly at its 30-minute boundary; Gravity splits them', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
     const items = [item('newest', minutesAgo(1)), item('older', minutesAgo(31))]
 
     expect(
-      buildGroups(items, 2, undefined, 'algoLookback').groups.map(
+      buildGroups(items, 2, now, undefined, 'algoLookback').groups.map(
         ({ itemCount }) => itemCount,
       ),
     ).toEqual([2])
     expect(
-      buildGroups(items, 2, undefined, 'algoGravity').groups.map(
+      buildGroups(items, 2, now, undefined, 'algoGravity').groups.map(
         ({ itemCount }) => itemCount,
       ),
     ).toEqual([1, 1])
   })
 
   it('Lookback expands its grouping window when the newest like becomes one hour old', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
     const justUnderAnHour = [
       item('newer', '2026-09-21T11:00:00.001Z'),
       item('older', '2026-09-21T10:15:00.001Z'),
@@ -278,12 +274,16 @@ describe('notification grouping', () => {
     ]
 
     expect(
-      buildGroups(justUnderAnHour, 2, undefined, 'algoLookback').groups.map(
-        ({ items }) => items.map(({ id }) => id),
-      ),
+      buildGroups(
+        justUnderAnHour,
+        2,
+        now,
+        undefined,
+        'algoLookback',
+      ).groups.map(({ items }) => items.map(({ id }) => id)),
     ).toEqual([['newer'], ['older']])
     expect(
-      buildGroups(exactlyAnHour, 2, undefined, 'algoLookback').groups.map(
+      buildGroups(exactlyAnHour, 2, now, undefined, 'algoLookback').groups.map(
         ({ items }) => items.map(({ id }) => id),
       ),
     ).toEqual([['newer', 'older']])
@@ -292,19 +292,24 @@ describe('notification grouping', () => {
   it.each(['algoGravity', 'algoLookback'] as const)(
     '%s starts a new group at the 200-like cap without losing the next like',
     (algorithm) => {
-      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
       const start = Date.parse(minutesAgo(1))
       const items = Array.from({ length: 201 }, (_, index) =>
         item(`like-${index}`, new Date(start - index).toISOString()),
       )
 
-      const firstPage = buildGroups(items, 1, undefined, algorithm)
+      const firstPage = buildGroups(items, 1, now, undefined, algorithm)
       expect(firstPage.groups[0]?.items.map(({ id }) => id)).toEqual(
         items.slice(0, 200).map(({ id }) => id),
       )
       expect(firstPage.cursor).toBe(items[199]!.raw.indexedAt)
 
-      const secondPage = buildGroups(items.slice(200), 1, undefined, algorithm)
+      const secondPage = buildGroups(
+        items.slice(200),
+        1,
+        now,
+        undefined,
+        algorithm,
+      )
       expect(secondPage.groups[0]?.items.map(({ id }) => id)).toEqual([
         'like-200',
       ])
@@ -314,17 +319,15 @@ describe('notification grouping', () => {
   it.each(['algoGravity', 'algoLookback'] as const)(
     '%s groups recent likes across midnight',
     (algorithm) => {
-      using _clock = vi
-        .spyOn(Date, 'now')
-        .mockReturnValue(Date.parse('2026-09-21T00:05:00.000Z'))
+      const now = Date.parse('2026-09-21T00:05:00.000Z')
       const items = [
         item('today', '2026-09-21T00:04:00.000Z'),
         item('yesterday', '2026-09-20T23:59:00.000Z'),
       ]
 
       expect(
-        buildGroups(items, 2, undefined, algorithm).groups.map(({ items }) =>
-          items.map(({ id }) => id),
+        buildGroups(items, 2, now, undefined, algorithm).groups.map(
+          ({ items }) => items.map(({ id }) => id),
         ),
       ).toEqual([['today', 'yesterday']])
     },
@@ -333,7 +336,6 @@ describe('notification grouping', () => {
   it.each(['algoGravity', 'algoLookback'] as const)(
     '%s groups older likes across days',
     (algorithm) => {
-      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
       const items = [
         item('today', '2026-09-21T11:00:00.000Z'),
         item('yesterday', '2026-09-20T00:30:00.000Z'),
@@ -341,8 +343,8 @@ describe('notification grouping', () => {
       ]
 
       expect(
-        buildGroups(items, 3, undefined, algorithm).groups.map(({ items }) =>
-          items.map(({ id }) => id),
+        buildGroups(items, 3, now, undefined, algorithm).groups.map(
+          ({ items }) => items.map(({ id }) => id),
         ),
       ).toEqual([['today'], ['yesterday', 'older']])
     },
@@ -351,7 +353,6 @@ describe('notification grouping', () => {
   it.each(['algoGravity', 'algoLookback'] as const)(
     '%s groups nearby likes on either side of 24 hours old',
     (algorithm) => {
-      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
       const items = [
         item('recent', '2026-09-20T12:00:00.001Z'),
         item('day-old', '2026-09-20T12:00:00.000Z'),
@@ -359,7 +360,7 @@ describe('notification grouping', () => {
         item('oldest', '2026-09-20T11:59:59.998Z'),
       ]
 
-      const result = buildGroups(items, 1, undefined, algorithm)
+      const result = buildGroups(items, 1, now, undefined, algorithm)
       expect(
         result.groups.map(({ items }) => items.map(({ id }) => id)),
       ).toEqual([['recent', 'day-old', 'older', 'oldest']])
@@ -370,7 +371,6 @@ describe('notification grouping', () => {
   it.each(['algoGravity', 'algoLookback'] as const)(
     '%s shows followers separately in the followers feed but groups them in all',
     (algorithm) => {
-      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
       const items = [
         item('alice-follow', minutesAgo(0), NOTIFICATION_REASON.FOLLOW, {
           actor: 'alice',
@@ -381,14 +381,15 @@ describe('notification grouping', () => {
       ]
 
       expect(
-        buildGroups(items, 2, undefined, algorithm).groups.map(({ items }) =>
-          items.map(({ id }) => id),
+        buildGroups(items, 2, now, undefined, algorithm).groups.map(
+          ({ items }) => items.map(({ id }) => id),
         ),
       ).toEqual([['alice-follow', 'bob-follow']])
       expect(
         buildGroups(
           items,
           2,
+          now,
           undefined,
           algorithm,
           NotificationFeed.FOLLOWERS,
@@ -400,7 +401,6 @@ describe('notification grouping', () => {
   it.each(['algoGravity', 'algoLookback'] as const)(
     '%s shows subscribed posts separately in activity but groups posts by the same actor in all',
     (algorithm) => {
-      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
       const items = [
         item(
           'alice-post-1',
@@ -421,14 +421,15 @@ describe('notification grouping', () => {
       ]
 
       expect(
-        buildGroups(items, 2, undefined, algorithm).groups.map(({ items }) =>
-          items.map(({ id }) => id),
+        buildGroups(items, 2, now, undefined, algorithm).groups.map(
+          ({ items }) => items.map(({ id }) => id),
         ),
       ).toEqual([['alice-post-1', 'alice-post-2']])
       expect(
         buildGroups(
           items,
           2,
+          now,
           undefined,
           algorithm,
           NotificationFeed.ACTIVITY,
@@ -438,12 +439,11 @@ describe('notification grouping', () => {
   )
 
   it('marks only items strictly older than the seen timestamp as read', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
     const items = [
       item('newest', minutesAgo(0), NOTIFICATION_REASON.MENTION),
       item('older', minutesAgo(60), NOTIFICATION_REASON.REPLY),
     ]
-    const result = buildGroups(items, 2, Date.parse(NOW), 'algoGravity')
+    const result = buildGroups(items, 2, now, now, 'algoGravity')
 
     expect(result.groups.map(({ isRead }) => isRead)).toEqual([false, true])
   })
@@ -453,7 +453,7 @@ const postLikes = (pairs: [actor: string, subject: string][]) =>
   pairs.map(([actor, subject], index) =>
     item(
       `${actor}-${subject}`,
-      toDatetimeString(new Date(Date.parse(NOW) - index)),
+      toDatetimeString(new Date(now - index)),
       NOTIFICATION_REASON.LIKE,
       { actor, subject: post(subject) },
     ),
@@ -487,8 +487,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       limit: number,
       { cursor, seenAt }: { cursor?: string; seenAt?: number } = {},
     ) => {
-      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
-      const ordinary = buildGroups(items, limit, seenAt, algorithm)
+      const ordinary = buildGroups(items, limit, now, seenAt, algorithm)
       if (cursor !== undefined) ordinary.cursor = cursor
       const originals = structuredClone({ items, ordinary })
       const page = buildSpotlight(
@@ -537,7 +536,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         ['alice', 'story'],
         ['eve', 'story'],
       ])
-      const { page } = buildPage(items, 5, { seenAt: Date.parse(NOW) })
+      const { page } = buildPage(items, 5, { seenAt: now })
 
       expectPage(page, items, [
         ['alice-poem', 'alice-song', 'alice-photo', 'alice-story'],
@@ -1033,7 +1032,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
           await sc.like(sc.dids.bob, post.ref)
         ).toString() as AtUriString
         const indexedAt = Timestamp.fromDate(
-          new Date(Date.parse(NOW) - index * 1000),
+          new Date(now - index * 1000),
         ).toJson() as DatetimeString
         records.push({
           post,

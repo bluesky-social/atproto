@@ -121,6 +121,7 @@ const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { ctx, params } = input
+  const now = Date.now()
   const feed = normalizeFeed(params.feed)
   const seenAt = params.seenAt ? Date.parse(params.seenAt) : undefined
   const delayedCursor = delayCursor(undefined, ctx.cfg.notificationsDelayMs)
@@ -174,6 +175,7 @@ const skeleton = async (
     const groupingResult = buildGroups(
       items,
       params.limit,
+      now,
       seenAt,
       ctx.cfg.notificationsV2Algorithm,
       feed,

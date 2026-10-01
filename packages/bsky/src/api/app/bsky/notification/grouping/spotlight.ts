@@ -129,6 +129,7 @@ const selectMultiPostLikeSpotlight = (
     groupingKey: actorDid,
     items: likesByTopLiker.slice(0, MAX_GROUP_SIZE),
     isEligibleAfterTrimming: (spotlightItems, retainedItems) =>
+      // Check if after trimming it still satisfies the requirements.
       spotlightItems.length >= requiredPosts &&
       getLikeNotificationsByTopLiker(retainedItems)[0]?.actorDid === actorDid,
   }

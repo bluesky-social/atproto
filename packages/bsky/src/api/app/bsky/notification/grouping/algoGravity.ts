@@ -50,10 +50,10 @@ type CandidateGroup = {
 export const buildAlgoGravityGroups = (
   items: NotificationItem[],
   limit: number,
+  now: number,
   seenAt?: number,
   feed = NotificationFeed.ALL,
 ): GroupingResult => {
-  const now = Date.now()
   const zones = PARAMS.zones
   const chains = new Map<string, CandidateGroup[]>()
   let groupCount = 0

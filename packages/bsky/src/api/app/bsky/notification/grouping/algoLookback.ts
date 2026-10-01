@@ -33,10 +33,10 @@ const PARAMS: Params = {
 export const buildAlgoLookbackGroups = (
   items: NotificationItem[],
   limit: number,
+  now: number,
   seenAt?: number,
   feed = NotificationFeed.ALL,
 ): GroupingResult => {
-  const now = Date.now()
   const groups: NotificationGroup[] = []
   const activeGroups = new Map<string, NotificationGroup>()
 
