@@ -9,9 +9,9 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["type", "readPolicy", "writePolicy", "appAccess"],
+          "required": ["spaceType", "readPolicy", "writePolicy", "appAccess"],
           "properties": {
-            "type": {
+            "spaceType": {
               "type": "string",
               "format": "nsid",
               "description": "The NSID of the space type, describing the modality of the space (e.g. app.bsky.group, app.bsky.personal)."

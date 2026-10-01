@@ -53,7 +53,7 @@ export type Actor = {
 export type SpaceOptions = {
   /** Defaults to a slug derived from the current test's name. */
   skey?: string
-  type?: NsidString
+  spaceType?: NsidString
   members?: Actor[]
   readPolicy?: com.atproto.simplespace.createSpace.$InputBody['readPolicy']
   writePolicy?: com.atproto.simplespace.createSpace.$InputBody['writePolicy']
@@ -122,15 +122,15 @@ export class SpaceClient {
     opts: SpaceOptions = {},
   ): Promise<SpaceRefString> {
     const skey = opts.skey ?? currentTestSkey()
-    const type = opts.type ?? TEST_SPACE_TYPE
+    const spaceType = opts.spaceType ?? TEST_SPACE_TYPE
 
-    const uri = `at://${owner.did}/space/${type}/${skey}` as SpaceRefString
+    const uri = `at://${owner.did}/space/${spaceType}/${skey}` as SpaceRefString
 
     if (!opts.ungoverned) {
       const res = await owner.client.call(
         com.atproto.simplespace.createSpace,
         {
-          type,
+          spaceType,
           skey,
           readPolicy: opts.readPolicy ?? defs.memberListPolicy.build({}),
           writePolicy: opts.writePolicy ?? defs.memberListPolicy.build({}),

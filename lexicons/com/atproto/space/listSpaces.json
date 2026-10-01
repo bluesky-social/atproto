@@ -8,10 +8,10 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "type": {
+          "spaceType": {
             "type": "string",
             "format": "nsid",
-            "description": "Filter to spaces of this type."
+            "description": "Filter to spaces of this space type."
           },
           "did": {
             "type": "string",

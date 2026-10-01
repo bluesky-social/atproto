@@ -1042,7 +1042,7 @@ describe('space auth', () => {
 
     it('refuses a space of a type the grant does not name', async () => {
       const space = await sc.createSpace(alice, {
-        type: 'com.example.otherGroup' as NsidString,
+        spaceType: 'com.example.otherGroup' as NsidString,
       })
 
       await asOAuth(
@@ -1109,6 +1109,7 @@ describe('space auth', () => {
     })
 
     it('requires a wildcard grant to list spaces unfiltered', async () => {
+      const space = await sc.createSpace(alice)
       // listSpaces has no one space to check against, so the filters are the
       // target: an unfiltered listing is a request to see everything.
       await asOAuth(alice, grant('action=read_self'), async (headers) => {
@@ -1119,10 +1120,21 @@ describe('space auth', () => {
         // Narrowed to what the grant covers, it is allowed.
         const listed = await alice.client.call(
           com.atproto.space.listSpaces,
-          { type: TEST_SPACE_TYPE, did: alice.did },
+          { spaceType: TEST_SPACE_TYPE, did: alice.did },
           { headers },
         )
-        expect(listed.spaces).toBeDefined()
+        expect(listed.spaces.map((s) => s.uri)).toContain(space)
+
+        await expect(
+          alice.client.call(
+            com.atproto.space.listSpaces,
+            {
+              spaceType: 'com.example.otherGroup' as NsidString,
+              did: alice.did,
+            },
+            { headers },
+          ),
+        ).rejects.toThrow(/space:/)
       })
     })
 

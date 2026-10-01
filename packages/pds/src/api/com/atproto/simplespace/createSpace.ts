@@ -14,14 +14,14 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input: { body }, auth }) => {
       const ownerDid = auth.credentials.did
       const {
-        type,
+        spaceType,
         readPolicy,
         writePolicy,
         appAccess,
         skey = TID.nextStr(),
       } = body
 
-      const ref = new SpaceRef(ownerDid, type, skey)
+      const ref = new SpaceRef(ownerDid, spaceType, skey)
       const uri = ref.toString()
 
       auth.credentials.permissions?.assertSpaceRef(ref, {
