@@ -51,53 +51,82 @@ export type S3Config = {
    * enough to accommodate slow clients uploading large blobs.
    */
   uploadTimeoutMs?: number
+  /**
+   * The maximum number of concurrent connections to S3 per client. Blob
+   * downloads are streamed at the pace of the downstream consumer, so a finite
+   * cap lets slow consumers hold every connection and queue all other blob
+   * reads and writes behind them.
+   *
+   * Defaults to `Infinity`.
+   */
+  maxSockets?: number
 } & Omit<S3ClientConfig, 'apiVersion' | 'requestHandler'>
+
+const DEFAULT_UPLOAD_TIMEOUT_MS = 10 * SECOND
+
+function createS3Client(cfg: S3Config): S3 {
+  const {
+    bucket,
+    uploadTimeoutMs = DEFAULT_UPLOAD_TIMEOUT_MS,
+    // @NOTE The request timeout acts as a stall detector (socket idle
+    // timeout) and should stay short even when uploadTimeoutMs is large,
+    // so that stalled S3 connections are reaped and retried quickly. The 6s
+    // floor keeps the idle timeout from applying to streamed (client-paced)
+    // blob downloads (see S3Config.requestTimeoutMs).
+    requestTimeoutMs = Math.max(
+      Math.min(uploadTimeoutMs, 15 * SECOND),
+      6 * SECOND,
+    ),
+    connectionTimeoutMs = 5 * SECOND,
+    maxSockets = Infinity,
+    ...rest
+  } = cfg
+  return new S3({
+    ...rest,
+    apiVersion: '2006-03-01',
+    // Ensures that all requests timeout under "requestTimeoutMs".
+    //
+    // @NOTE This will also apply to the upload of each individual blob
+    // chunk when using Upload from @aws-sdk/lib-storage. This is fine
+    // because chunks are buffered in memory before being sent, meaning that
+    // requests to S3 are not client-paced.
+    requestHandler: {
+      requestTimeout: requestTimeoutMs,
+      connectionTimeout: connectionTimeoutMs,
+      httpAgent: { maxSockets },
+      httpsAgent: { maxSockets },
+    },
+  })
+}
 
 export class S3BlobStore implements BlobStore {
   private client: S3
   private bucket: string
   private uploadTimeoutMs: number
 
+  /**
+   * @param client Shared by every store returned from
+   * {@link S3BlobStore.creator}, so that they reuse one connection pool.
+   * Defaults to a new client built from `cfg`.
+   */
   constructor(
     public did: string,
     cfg: S3Config,
+    client: S3 = createS3Client(cfg),
   ) {
-    const {
-      bucket,
-      uploadTimeoutMs = 10 * SECOND,
-      // @NOTE The request timeout acts as a stall detector (socket idle
-      // timeout) and should stay short even when uploadTimeoutMs is large,
-      // so that stalled S3 connections are reaped and retried quickly. The 6s
-      // floor keeps the idle timeout from applying to streamed (client-paced)
-      // blob downloads (see S3Config.requestTimeoutMs).
-      requestTimeoutMs = Math.max(
-        Math.min(uploadTimeoutMs, 15 * SECOND),
-        6 * SECOND,
-      ),
-      connectionTimeoutMs = 5 * SECOND,
-      ...rest
-    } = cfg
-    this.bucket = bucket
-    this.uploadTimeoutMs = uploadTimeoutMs
-    this.client = new S3({
-      ...rest,
-      apiVersion: '2006-03-01',
-      // Ensures that all requests timeout under "requestTimeoutMs".
-      //
-      // @NOTE This will also apply to the upload of each individual blob
-      // chunk when using Upload from @aws-sdk/lib-storage. This is fine
-      // because chunks are buffered in memory before being sent, meaning that
-      // requests to S3 are not client-paced.
-      requestHandler: {
-        requestTimeout: requestTimeoutMs,
-        connectionTimeout: connectionTimeoutMs,
-      },
-    })
+    this.bucket = cfg.bucket
+    this.uploadTimeoutMs = cfg.uploadTimeoutMs ?? DEFAULT_UPLOAD_TIMEOUT_MS
+    this.client = client
   }
 
   static creator(cfg: S3Config) {
+    // @NOTE A store is created for every actor store access. A client per
+    // store would open a fresh TLS connection to S3 for every blob request and
+    // leave it idle in an unreachable pool, exhausting ephemeral ports under
+    // load.
+    const client = createS3Client(cfg)
     return (did: string) => {
-      return new S3BlobStore(did, cfg)
+      return new S3BlobStore(did, cfg, client)
     }
   }
 
