@@ -22,10 +22,12 @@ For npm consumers, check alpha snapshots before implementing protocol changes yo
 
 The [publishing workflow](https://github.com/bluesky-social/atproto/blob/permissioned-data-alpha/.github/workflows/publish.yaml) runs on pushes to permissioned-data-alpha. It runs `pnpm changeset version --snapshot spaces-alpha`, builds, and publishes recursively with `--tag alpha`. Published snapshot versions have the form `0.0.0-spaces-alpha-<timestamp>`. The consumer dist-tag is `alpha`, not `spaces-alpha` or `latest`. These are publishing details; consuming projects do not need to run that workflow or publish anything.
 
+The October 1 release is published as `0.0.0-spaces-alpha-20261001173819`, verified for `@atproto/space`, `@atproto/api`, `@atproto/lex`, and `@atproto/pds`. Use this release as the compatibility target. The `alpha` tag can move to later releases; do not automatically downgrade an already-compatible newer dependency.
+
 - Identify existing direct dependencies involved in the project's Spaces functionality, including any already using these snapshots. Check each relevant package's `alpha` version and declared dependencies. Not every @atproto or @atproto-labs package necessarily has an alpha release or needs upgrading.
-- Resolve the current tag when doing the migration, then pin the resolved version and update the lockfile using the project's package manager. For example, **only if this project already uses @atproto/space**, inspect it with `npm view @atproto/space@alpha version dependencies --json`, then use `npm install --save-exact @atproto/space@<resolved-version>` or `pnpm add --save-exact @atproto/space@<resolved-version>`. Preserve dependency placement and workspace ownership. Do not convert this monorepo's own `workspace:` references to registry dependencies.
+- Inspect and pin the published release version, then update the lockfile using the project's package manager. For example, **only if this project already uses @atproto/space and needs this upgrade**, inspect it with `npm view @atproto/space@0.0.0-spaces-alpha-20261001173819 version dependencies --json`, then use `npm install --save-exact @atproto/space@0.0.0-spaces-alpha-20261001173819` or `pnpm add --save-exact @atproto/space@0.0.0-spaces-alpha-20261001173819`. Preserve dependency placement and workspace ownership. Do not convert this monorepo's own `workspace:` references to registry dependencies.
 - Prefer compatible snapshots from the intended publication for related direct dependencies. Let the package manager resolve their declared transitive dependencies; inspect relevant conflicts or duplicate versions instead of forcing every package to the same version or adding transitive packages as direct dependencies.
-- Verify that the resolved publication contains the changes needed by this project. An `alpha` tag alone is not proof: at review time, the checked tags still pointed to `0.0.0-spaces-alpha-20260915165437`, which predates this release. Do not hard-code that old version as the upgrade target. If the new publication is unavailable, report that specific blocker and complete independent edits; do not invent a version, claim the old snapshot is current, or start reimplementing the SDK.
+- Verify availability for each additional affected package before selecting a version. If a needed package cannot be resolved through the project's registry, report that specific blocker and complete independent edits; do not invent a version or start reimplementing the SDK. If selecting a later alpha release, check its migration notes for additional changes rather than assuming this prompt covers them.
 - Use available library helpers for behavior the library owns. Regenerate this project's bindings only if it maintains generated schemas; updating an SDK does not imply copying upstream schemas or running upstream codegen in every app. Fix affected call sites and verify the app's existing flow.
 
 Non-npm projects can skip that step and update only their own affected implementation, schemas, or equivalent dependencies.
@@ -38,9 +40,9 @@ Sources: consult the diffs and final files for the applicable sections. Small de
 - https://github.com/bluesky-social/atproto/pull/5561 — request-field renames
 - https://github.com/bluesky-social/proposals/pull/113
 - https://github.com/bluesky-social/proposals/pull/116
-- https://github.com/bluesky-social/proposals/pull/109 — revocation; also inspect the final simplespace section
+- https://github.com/bluesky-social/proposals/pull/109 — credential lifetime/revocation
 
-The implementation PRs target the permissioned-data branch. This prompt includes the linked release-intended changes even where a PR is still open. The remaining open PRs were reviewed at atproto#5574: 681067f7407889a710fd8aa162eb29b34108988c and proposals#109: 579e2d96b63f394e58b327d0240adeb6b7aebf15. The other linked PRs were merged at review time. Use these snapshots if the PRs have subsequently changed. For exact wire shapes, use the implementation Lexicons and handlers; the proposals explain the semantics. Reconcile the changes together: older examples in individual PRs can still show superseded authentication, expiry, or revision names.
+All seven PRs are merged. The implementation changes landed on permissioned-data and were included in the published alpha snapshot. For a fixed reference, use the [combined implementation at 679724ad62eb9a02f7f40429c3c4fdd65d3e4c79](https://github.com/bluesky-social/atproto/tree/679724ad62eb9a02f7f40429c3c4fdd65d3e4c79) and the [combined proposal at 0c9c2e88ba385809fc9ecba92f362389d9338e16](https://github.com/bluesky-social/proposals/blob/0c9c2e88ba385809fc9ecba92f362389d9338e16/0016-permissioned-data/README.md). For exact wire shapes, use the merged implementation Lexicons and handlers; the proposal explains the semantics. Reconcile the changes together: older examples in individual PRs can still show superseded authentication, expiry, or revision names.
 
 1. Replace Spaces DPoP binding with HTTP Message Signatures.
 
@@ -117,7 +119,7 @@ For syncers using notifications, register/unregister on the space host for the w
 
 The exact catch-up API is com.atproto.space.listRepos({ space, cursor?, limit? }):
 
-- cursor is an exclusive space-revision checkpoint. There is no separate since parameter.
+- cursor is an exclusive space-revision checkpoint. There is no separate since parameter. Its Lexicon type is a plain string, with no `format: tid`; the merged implementation accepts arbitrary string cursors. Preserve this wire type rather than adding strict TID validation. For normal pagination/resumption, pass the returned cursor or a previously processed spaceRev unchanged.
 - Each entry is { did, repoRev, hash, spaceRev }, ordered by ascending spaceRev.
 - A nonempty page returns cursor = its final entry's spaceRev, even for a short page. Continue until an empty page; that page omits cursor.
 - Preserve the previous checkpoint when an empty page omits cursor. There is no top-level spaceRev response field.
@@ -131,7 +133,9 @@ For repo-host delivery, persist retryable failures, coalesce to the latest state
 
 Use spaceType instead of type in the com.atproto.space.listSpaces query filter and the com.atproto.simplespace.createSpace request body. Update callers, generated bindings, filtering, and authorization checks. This is a scoped wire-field rename, not a global rename of internal type fields or OAuth permission syntax.
 
-5. Align simplespace read/write permissions where applicable.
+5. Catch up on the previous simplespace release only if needed.
+
+The read/write policy split, putMember, and per-member read/write flags shipped in the previous alpha release ([implementation](https://github.com/bluesky-social/atproto/pull/5496), [proposal](https://github.com/bluesky-social/proposals/pull/105)). Skip this section if the project already supports them. The October 1 createSpace field rename is covered separately in section 4.
 
 Update existing management callers, models, schemas, or handlers. Only projects acting as a managing app need to implement checkUserAccess, and only hosts enforce the policies. Do not add space-management features to a project that does not offer them.
 
