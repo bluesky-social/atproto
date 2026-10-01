@@ -293,6 +293,15 @@
           "maximum": 2147483647,
           "description": "Target resolution duration in minutes."
         },
+        "resolutionTimeSec": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Time from report creation to its last closure."
+        },
+        "priorityTargetMet": {
+          "type": "boolean",
+          "description": "Whether the current closure occurred within the report's snapshotted target."
+        },
         "reportedBy": {
           "type": "string",
           "format": "did",

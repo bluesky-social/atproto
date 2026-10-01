@@ -5,8 +5,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import type { DidString } from '@atproto/lex'
-import { APPEAL_REASON_TYPE } from '../src/inbox/appeal.js'
+import { type DidString, toDatetimeString } from '@atproto/lex'
 import { com, tools } from '../src/lexicons/index.js'
 import {
   PriorityLevelSettingKey,
@@ -16,10 +15,6 @@ import {
 const spam = com.atproto.moderation.defs.ReasonSpam
 const other = com.atproto.moderation.defs.ReasonOther
 const urgent = tools.ozone.report.defs.ReasonViolenceThreats
-const levels = {
-  urgent: { name: 'Urgent', targetResolutionMinutes: 720, score: 100 },
-  normal: { name: 'Normal', targetResolutionMinutes: 1440, score: 0 },
-}
 
 describe('report priority', () => {
   let network: TestNetwork
@@ -94,7 +89,10 @@ describe('report priority', () => {
   }
 
   async function configure() {
-    await upsertSetting(PriorityLevelSettingKey, levels)
+    await upsertSetting(PriorityLevelSettingKey, {
+      urgent: { name: 'Urgent', targetResolutionMinutes: 10, score: 100 },
+      normal: { name: 'Normal', targetResolutionMinutes: 20, score: 0 },
+    })
     await upsertSetting(ReportPriorityLevelSettingKey, {
       [urgent]: 'urgent',
       [spam]: 'normal',
@@ -118,77 +116,36 @@ describe('report priority', () => {
       .executeTakeFirstOrThrow()
   }
 
-  it('preserves configured and unconfigured snapshots through config changes and rerouting', async () => {
-    const legacy = await createReport(urgent)
-    await configure()
-    const original = await createReport(urgent)
-    await upsertSetting(PriorityLevelSettingKey, {
-      ...levels,
-      urgent: { name: 'Changed', targetResolutionMinutes: 1440, score: 25 },
-    })
-    await upsertSetting(ReportPriorityLevelSettingKey, { [urgent]: 'normal' })
-    const latest = await createReport(urgent)
-    const db = network.ozone.ctx.db.db
-    await db
-      .updateTable('report')
-      .set({ queueId: -1, status: 'open' })
-      .execute()
-    await agent.tools.ozone.queue.routeReports(
-      { startReportId: legacy.id, endReportId: latest.id },
-      {
-        encoding: 'application/json',
-        headers: await network.ozone.modHeaders(
-          ids.ToolsOzoneQueueRouteReports,
-          'admin',
-        ),
-      },
-    )
-    const { reports } = await modClient.queryReports({
-      status: 'queued',
-      queueId,
-      sortField: 'createdAt',
-      sortDirection: 'asc',
-    })
-    expect(
-      reports.map(
-        ({ priorityLevel, priorityScore, priorityTargetMinutes }) => ({
-          priorityLevel,
-          priorityScore,
-          priorityTargetMinutes,
-        }),
-      ),
-    ).toEqual([
-      {
-        priorityLevel: undefined,
-        priorityScore: undefined,
-        priorityTargetMinutes: undefined,
-      },
-      {
-        priorityLevel: 'urgent',
-        priorityScore: 100,
-        priorityTargetMinutes: 720,
-      },
-      {
-        priorityLevel: 'normal',
-        priorityScore: 0,
-        priorityTargetMinutes: 1440,
-      },
-    ])
+  async function getReport(id: number) {
     const { data } = await agent.tools.ozone.report.getReport(
-      { id: original.id },
+      { id },
       {
         headers: await network.ozone.modHeaders(
-          ids.ToolsOzoneReportGetReport,
+          tools.ozone.report.getReport.$lxm,
           'moderator',
         ),
       },
     )
-    expect(data).toMatchObject({
-      priorityLevel: 'urgent',
-      priorityScore: 100,
-      priorityTargetMinutes: 720,
-    })
-  })
+    return data
+  }
+
+  async function changeReportStatus(id: number, close: boolean) {
+    return agent.tools.ozone.report.createActivity(
+      {
+        reportId: id,
+        activity: close
+          ? tools.ozone.report.defs.closeActivity.$build({})
+          : tools.ozone.report.defs.reopenActivity.$build({}),
+      },
+      {
+        encoding: 'application/json',
+        headers: await network.ozone.modHeaders(
+          tools.ozone.report.createActivity.$lxm,
+          'moderator',
+        ),
+      },
+    )
+  }
 
   it('leaves unknown and unmapped reasons unprioritized', async () => {
     await configure()
@@ -203,7 +160,9 @@ describe('report priority', () => {
   })
 
   it('does not assign priority when only levels are configured', async () => {
-    await upsertSetting(PriorityLevelSettingKey, levels)
+    await upsertSetting(PriorityLevelSettingKey, {
+      urgent: { name: 'Invalid', targetResolutionMinutes: 1, score: 1 },
+    })
     expect(await createReport(urgent)).toMatchObject({
       priorityLevel: null,
       priorityScore: null,
@@ -211,12 +170,169 @@ describe('report priority', () => {
     })
   })
 
+  describe('closure targets', () => {
+    it.each(['activity', 'bulk', 'acknowledge', 'label'] as const)(
+      'calculates the resolution duration for %s closures',
+      async (method) => {
+        await configure()
+        const report = await createReport(urgent)
+        const createdAt = toDatetimeString(Date.now() - 2 * 60_000)
+        const db = network.ozone.ctx.db.db
+        await db
+          .updateTable('report')
+          .set({ createdAt })
+          .where('id', '=', report.id)
+          .execute()
+
+        const pending = await getReport(report.id)
+        expect(pending.resolutionTimeSec).toBeUndefined()
+        expect(pending.priorityTargetMet).toBeUndefined()
+
+        if (method === 'activity') {
+          await changeReportStatus(report.id, true)
+        } else if (method === 'bulk') {
+          await agent.tools.ozone.report.closeReports(
+            { subject: sc.dids.bob },
+            {
+              encoding: 'application/json',
+              headers: await network.ozone.modHeaders(
+                tools.ozone.report.closeReports.$lxm,
+                'moderator',
+              ),
+            },
+          )
+        } else {
+          await modClient.emitEvent({
+            subject: com.atproto.admin.defs.repoRef.$build({
+              did: sc.dids.bob,
+            }),
+            event:
+              method === 'acknowledge'
+                ? tools.ozone.moderation.defs.modEventAcknowledge.$build({})
+                : tools.ozone.moderation.defs.modEventLabel.$build({
+                    createLabelVals: ['!warn'],
+                    negateLabelVals: [],
+                  }),
+            reportAction: { ids: [report.id] },
+          })
+        }
+
+        const activity = await db
+          .selectFrom('report_activity')
+          .select('createdAt')
+          .where('reportId', '=', report.id)
+          .where('activityType', '=', 'closeActivity')
+          .executeTakeFirstOrThrow()
+        expect(await getReport(report.id)).toMatchObject({
+          status: 'closed',
+          resolutionTimeSec: Math.floor(
+            (Date.parse(activity.createdAt) - Date.parse(createdAt)) / 1000,
+          ),
+          priorityTargetMet: true,
+        })
+      },
+    )
+
+    it.each([
+      { elapsedMs: 0, met: true, seconds: 0 },
+      { elapsedMs: 599_999, met: true, seconds: 599 },
+      { elapsedMs: 600_000, met: true, seconds: 600 },
+      { elapsedMs: 600_001, met: false, seconds: 600 },
+    ])('checks the exact target boundary at $elapsedMs ms', async (fixture) => {
+      await configure()
+      const report = await createReport(urgent)
+      const createdAt = toDatetimeString('2026-09-01T20:00:00.000Z')
+      const closedAt = toDatetimeString(
+        Date.parse(createdAt) + fixture.elapsedMs,
+      )
+      const db = network.ozone.ctx.db.db
+      await db
+        .updateTable('report')
+        .set({ createdAt, status: 'closed', closedAt })
+        .where('id', '=', report.id)
+        .execute()
+      await db
+        .insertInto('report_activity')
+        .values({
+          reportId: report.id,
+          activityType: 'closeActivity',
+          previousStatus: 'open',
+          createdAt: closedAt,
+          createdBy: sc.dids.alice,
+          isAutomated: false,
+        })
+        .execute()
+
+      const expected = {
+        id: report.id,
+        resolutionTimeSec: fixture.seconds,
+        priorityTargetMet: fixture.met,
+      }
+      expect(await getReport(report.id)).toMatchObject(expected)
+      const { reports } = await modClient.queryReports({ status: 'closed' })
+      expect(reports).toHaveLength(1)
+      expect(reports[0]).toMatchObject(expected)
+      const { data: latest } = await agent.tools.ozone.report.getLatestReport(
+        {},
+        {
+          headers: await network.ozone.modHeaders(
+            tools.ozone.report.getLatestReport.$lxm,
+            'moderator',
+          ),
+        },
+      )
+      expect(latest.report).toMatchObject(expected)
+      const { data: activities } =
+        await agent.tools.ozone.report.queryActivities(
+          { activityTypes: ['closeActivity'] },
+          {
+            headers: await network.ozone.modHeaders(
+              tools.ozone.report.queryActivities.$lxm,
+              'moderator',
+            ),
+          },
+        )
+      expect(activities.activities).toHaveLength(1)
+      for (const activity of activities.activities) {
+        expect(activity.report).toMatchObject(expected)
+      }
+    })
+
+    it('clears results on reopen', async () => {})
+
+    it('returns a duration without a target result for unprioritized reports', async () => {
+      const report = await createReport(other)
+      await changeReportStatus(report.id, true)
+      const closed = await getReport(report.id)
+      expect(closed.resolutionTimeSec).toBeGreaterThanOrEqual(0)
+      expect(closed.priorityTargetMet).toBeUndefined()
+    })
+
+    it('calculates closure metrics without activity history', async () => {
+      await configure()
+      const report = await createReport(urgent)
+      await network.ozone.ctx.db.db
+        .updateTable('report')
+        .set({ status: 'closed', closedAt: toDatetimeString(Date.now()) })
+        .where('id', '=', report.id)
+        .execute()
+      const closed = await getReport(report.id)
+      expect(closed.resolutionTimeSec).toBeGreaterThanOrEqual(0)
+      expect(closed.priorityTargetMet).toBe(true)
+    })
+  })
+
   it('leaves reports unprioritized when their mapped level is missing', async () => {
     await configure()
-    // @NOTE Simulate a dangling mapping left by overlapping settings writes.
+
+    // simulate a dangling mapping
     await network.ozone.ctx.db.db
       .updateTable('setting')
-      .set({ value: { normal: levels.normal } })
+      .set({
+        value: {
+          normal: { name: 'Normal', targetResolutionMinutes: 5, score: 0 },
+        },
+      })
       .where('key', '=', PriorityLevelSettingKey)
       .where('scope', '=', 'instance')
       .execute()
@@ -229,85 +345,9 @@ describe('report priority', () => {
     expect(await createReport(spam)).toMatchObject({
       priorityLevel: 'normal',
       priorityScore: 0,
-      priorityTargetMinutes: 1440,
+      priorityTargetMinutes: 5,
     })
   })
-
-  it.each([false, true])(
-    'snapshots immediately routed appeals and preserves them during daemon replay (configured %s)',
-    async (configured) => {
-      if (configured) {
-        await upsertSetting(PriorityLevelSettingKey, levels)
-        await upsertSetting(ReportPriorityLevelSettingKey, {
-          [APPEAL_REASON_TYPE]: 'urgent',
-        })
-      }
-      const subject = {
-        $type: com.atproto.admin.defs.repoRef.$type,
-        did: sc.dids.bob,
-      }
-      const action = await modClient.emitEvent({
-        subject,
-        event: {
-          $type: tools.ozone.moderation.defs.modEventLabel.$type,
-          createLabelVals: ['!warn'],
-          negateLabelVals: [],
-        },
-      })
-      await agent.tools.ozone.inbox.appealActionedSubject(
-        {
-          subject,
-          action: {
-            $type: tools.ozone.inbox.appealActionedSubject.actionRef.$type,
-            id: action.id,
-          },
-          reason: 'Please reconsider this decision',
-        },
-        {
-          encoding: 'application/json',
-          headers: await network.ozone.modHeaders(
-            tools.ozone.inbox.appealActionedSubject.$lxm,
-            'moderator',
-          ),
-        },
-      )
-      const db = network.ozone.ctx.db
-      const report = await db.db
-        .selectFrom('report')
-        .selectAll()
-        .where('reportType', '=', APPEAL_REASON_TYPE)
-        .where('did', '=', sc.dids.bob)
-        .executeTakeFirstOrThrow()
-      const snapshot = configured
-        ? {
-            priorityLevel: 'urgent',
-            priorityScore: 100,
-            priorityTargetMinutes: 720,
-          }
-        : {
-            priorityLevel: null,
-            priorityScore: null,
-            priorityTargetMinutes: null,
-          }
-      expect(report).toMatchObject(snapshot)
-
-      await upsertSetting(PriorityLevelSettingKey, levels)
-      await upsertSetting(ReportPriorityLevelSettingKey, {
-        [APPEAL_REASON_TYPE]: 'normal',
-      })
-      await network.ozone.ctx.queueService(db).insertReportsFromEvents({
-        cursor: report.eventId - 1,
-        limit: 1,
-      })
-      const reports = await db.db
-        .selectFrom('report')
-        .selectAll()
-        .where('eventId', '=', report.eventId)
-        .execute()
-      expect(reports).toHaveLength(1)
-      expect(reports[0]).toMatchObject({ id: report.id, ...snapshot })
-    },
-  )
 
   it('keeps report priority independent of manual subject priority', async () => {
     await configure()

@@ -202,6 +202,14 @@ export function buildReportView(
         }
       : undefined
 
+  const resolutionTimeMs = report.closedAt
+    ? Date.parse(report.closedAt) - Date.parse(report.createdAt)
+    : undefined
+  const hasResolutionTime =
+    resolutionTimeMs !== undefined &&
+    Number.isFinite(resolutionTimeMs) &&
+    resolutionTimeMs >= 0
+
   return {
     id: report.id,
     eventId: report.eventId,
@@ -226,6 +234,13 @@ export function buildReportView(
     priorityLevel: report.priorityLevel ?? undefined,
     priorityScore: report.priorityScore ?? undefined,
     priorityTargetMinutes: report.priorityTargetMinutes ?? undefined,
+    resolutionTimeSec: hasResolutionTime
+      ? Math.floor(resolutionTimeMs / 1000)
+      : undefined,
+    priorityTargetMet:
+      hasResolutionTime && report.priorityTargetMinutes !== null
+        ? resolutionTimeMs <= report.priorityTargetMinutes * 60_000
+        : undefined,
     reportedBy: report.reportedBy,
     reporter: {
       type: 'account' as const,
