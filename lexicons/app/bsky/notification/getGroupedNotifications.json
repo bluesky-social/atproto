@@ -21,13 +21,6 @@
             ],
             "default": "all"
           },
-          "utcOffset": {
-            "type": "integer",
-            "description": "Offset from UTC in minutes, positive east, used to determine local day boundaries when grouping. Groups never span the current day boundary. Defaults to UTC.",
-            "minimum": -720,
-            "maximum": 840,
-            "default": 0
-          },
           "limit": {
             "type": "integer",
             "description": "Maximum number of groups to return.",
@@ -47,7 +40,7 @@
             "cursor": { "type": "string", "maxLength": 1024 },
             "groups": {
               "type": "array",
-              "description": "Notification groups or individual notifications, newest first. Clients should ignore kinds they do not recognize. Grouping behavior depends on the kind and selected feed.",
+              "description": "Notification groups or individual notifications, newest first. Clients should ignore kinds they do not recognize. Grouping behavior depends on the kind and selected feed. Groups never span the cutoff 24 hours before the request: notifications at or after that cutoff are grouped separately from older notifications.",
               "items": {
                 "type": "ref",
                 "ref": "#group"

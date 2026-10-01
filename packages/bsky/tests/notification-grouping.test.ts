@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { Timestamp } from '@bufbuild/protobuf'
 import { afterAll, assert, beforeAll, describe, expect, it, vi } from 'vitest'
+import { DAY } from '@atproto/common'
 import { type SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import {
   type AtUriString,
@@ -116,7 +117,7 @@ describe('notification grouping', () => {
         }),
       ]
 
-      const result = buildGroups(items, 2, 0, undefined, algorithm)
+      const result = buildGroups(items, 2, undefined, algorithm)
 
       expect(
         result.groups.map(({ items }) => items.map(({ id }) => id)),
@@ -160,7 +161,7 @@ describe('notification grouping', () => {
         }),
       ]
 
-      const firstPage = buildGroups(items, 2, 0, undefined, algorithm)
+      const firstPage = buildGroups(items, 2, undefined, algorithm)
 
       expect(
         firstPage.groups.map(({ items }) => items.map(({ id }) => id)),
@@ -170,7 +171,7 @@ describe('notification grouping', () => {
       ])
       expect(firstPage.cursor).toBe(items[3]!.raw.indexedAt)
 
-      const secondPage = buildGroups(items.slice(4), 2, 0, undefined, algorithm)
+      const secondPage = buildGroups(items.slice(4), 2, undefined, algorithm)
       expect(
         secondPage.groups.map(({ items }) => items.map(({ id }) => id)),
       ).toEqual([['photo-1'], ['poem-3']])
@@ -187,7 +188,7 @@ describe('notification grouping', () => {
       item('older-2', minutesAgo(61)),
     ]
 
-    const result = buildGroups(items, 2, 0, undefined, 'algoGravity')
+    const result = buildGroups(items, 2, undefined, 'algoGravity')
 
     expect(result.groups.map(({ items }) => items.map(({ id }) => id))).toEqual(
       [
@@ -205,7 +206,7 @@ describe('notification grouping', () => {
       item('older-like', minutesAgo(95)),
     ]
 
-    const result = buildGroups(items, 2, 0, undefined, 'algoGravity')
+    const result = buildGroups(items, 2, undefined, 'algoGravity')
 
     expect(result.groups.map(({ items }) => items.map(({ id }) => id))).toEqual(
       [['newest'], ['hour-old', 'older-like']],
@@ -220,7 +221,7 @@ describe('notification grouping', () => {
       item('older', minutesAgo(60)),
     ]
 
-    const result = buildGroups(items, 1, 0, undefined, 'algoGravity')
+    const result = buildGroups(items, 1, undefined, 'algoGravity')
 
     expect(result.groups[0]?.items.map(({ id }) => id)).toEqual([
       'newer-1',
@@ -239,7 +240,7 @@ describe('notification grouping', () => {
       ),
     )
 
-    const result = buildGroups(items, 2, 0, undefined, 'algoGravity')
+    const result = buildGroups(items, 2, undefined, 'algoGravity')
 
     expect(result.groups.map(({ items }) => items.map(({ id }) => id))).toEqual(
       [
@@ -254,12 +255,12 @@ describe('notification grouping', () => {
     const items = [item('newest', minutesAgo(1)), item('older', minutesAgo(31))]
 
     expect(
-      buildGroups(items, 2, 0, undefined, 'algoLookback').groups.map(
+      buildGroups(items, 2, undefined, 'algoLookback').groups.map(
         ({ itemCount }) => itemCount,
       ),
     ).toEqual([2])
     expect(
-      buildGroups(items, 2, 0, undefined, 'algoGravity').groups.map(
+      buildGroups(items, 2, undefined, 'algoGravity').groups.map(
         ({ itemCount }) => itemCount,
       ),
     ).toEqual([1, 1])
@@ -277,12 +278,12 @@ describe('notification grouping', () => {
     ]
 
     expect(
-      buildGroups(justUnderAnHour, 2, 0, undefined, 'algoLookback').groups.map(
+      buildGroups(justUnderAnHour, 2, undefined, 'algoLookback').groups.map(
         ({ items }) => items.map(({ id }) => id),
       ),
     ).toEqual([['newer'], ['older']])
     expect(
-      buildGroups(exactlyAnHour, 2, 0, undefined, 'algoLookback').groups.map(
+      buildGroups(exactlyAnHour, 2, undefined, 'algoLookback').groups.map(
         ({ items }) => items.map(({ id }) => id),
       ),
     ).toEqual([['newer', 'older']])
@@ -297,19 +298,13 @@ describe('notification grouping', () => {
         item(`like-${index}`, new Date(start - index).toISOString()),
       )
 
-      const firstPage = buildGroups(items, 1, 0, undefined, algorithm)
+      const firstPage = buildGroups(items, 1, undefined, algorithm)
       expect(firstPage.groups[0]?.items.map(({ id }) => id)).toEqual(
         items.slice(0, 200).map(({ id }) => id),
       )
       expect(firstPage.cursor).toBe(items[199]!.raw.indexedAt)
 
-      const secondPage = buildGroups(
-        items.slice(200),
-        1,
-        0,
-        undefined,
-        algorithm,
-      )
+      const secondPage = buildGroups(items.slice(200), 1, undefined, algorithm)
       expect(secondPage.groups[0]?.items.map(({ id }) => id)).toEqual([
         'like-200',
       ])
@@ -317,7 +312,7 @@ describe('notification grouping', () => {
   )
 
   it.each(['algoGravity', 'algoLookback'] as const)(
-    '%s keeps recent likes separate across local midnight but groups them with a shifted UTC offset',
+    '%s groups recent likes across midnight',
     (algorithm) => {
       using _clock = vi
         .spyOn(Date, 'now')
@@ -328,37 +323,55 @@ describe('notification grouping', () => {
       ]
 
       expect(
-        buildGroups(items, 2, 0, undefined, algorithm).groups.map(({ items }) =>
+        buildGroups(items, 2, undefined, algorithm).groups.map(({ items }) =>
           items.map(({ id }) => id),
-        ),
-      ).toEqual([['today'], ['yesterday']])
-      expect(
-        buildGroups(items, 2, -60, undefined, algorithm).groups.map(
-          ({ items }) => items.map(({ id }) => id),
         ),
       ).toEqual([['today', 'yesterday']])
     },
   )
 
-  it('Gravity groups older likes across days while Lookback keeps the days separate', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
-    const items = [
-      item('today', '2026-09-21T11:00:00.000Z'),
-      item('yesterday', '2026-09-20T00:30:00.000Z'),
-      item('older', '2026-09-19T23:30:00.000Z'),
-    ]
+  it.each(['algoGravity', 'algoLookback'] as const)(
+    '%s groups older likes across days',
+    (algorithm) => {
+      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
+      const items = [
+        item('today', '2026-09-21T11:00:00.000Z'),
+        item('yesterday', '2026-09-20T00:30:00.000Z'),
+        item('older', '2026-09-19T23:30:00.000Z'),
+      ]
 
-    expect(
-      buildGroups(items, 3, 0, undefined, 'algoGravity').groups.map(
-        ({ items }) => items.map(({ id }) => id),
-      ),
-    ).toEqual([['today'], ['yesterday', 'older']])
-    expect(
-      buildGroups(items, 3, 0, undefined, 'algoLookback').groups.map(
-        ({ items }) => items.map(({ id }) => id),
-      ),
-    ).toEqual([['today'], ['yesterday'], ['older']])
-  })
+      expect(
+        buildGroups(items, 3, undefined, algorithm).groups.map(({ items }) =>
+          items.map(({ id }) => id),
+        ),
+      ).toEqual([['today'], ['yesterday', 'older']])
+    },
+  )
+
+  it.each(['algoGravity', 'algoLookback'] as const)(
+    '%s separates likes at the rolling 24-hour cutoff and paginates without losing items',
+    (algorithm) => {
+      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
+      const items = [
+        item('recent', '2026-09-20T12:00:00.001Z'),
+        item('at-cutoff', '2026-09-20T12:00:00.000Z'),
+        item('older', '2026-09-20T11:59:59.999Z'),
+        item('oldest', '2026-09-20T11:59:59.998Z'),
+      ]
+
+      const first = buildGroups(items, 1, undefined, algorithm)
+      expect(
+        first.groups.map(({ items }) => items.map(({ id }) => id)),
+      ).toEqual([['recent', 'at-cutoff']])
+      expect(first.cursor).toBe(items[1]!.raw.indexedAt)
+
+      const second = buildGroups(items.slice(2), 1, undefined, algorithm)
+      expect(
+        second.groups.map(({ items }) => items.map(({ id }) => id)),
+      ).toEqual([['older', 'oldest']])
+      expect(second.cursor).toBeUndefined()
+    },
+  )
 
   it.each(['algoGravity', 'algoLookback'] as const)(
     '%s shows followers separately in the followers feed but groups them in all',
@@ -374,7 +387,7 @@ describe('notification grouping', () => {
       ]
 
       expect(
-        buildGroups(items, 2, 0, undefined, algorithm).groups.map(({ items }) =>
+        buildGroups(items, 2, undefined, algorithm).groups.map(({ items }) =>
           items.map(({ id }) => id),
         ),
       ).toEqual([['alice-follow', 'bob-follow']])
@@ -382,7 +395,6 @@ describe('notification grouping', () => {
         buildGroups(
           items,
           2,
-          0,
           undefined,
           algorithm,
           NotificationFeed.FOLLOWERS,
@@ -415,7 +427,7 @@ describe('notification grouping', () => {
       ]
 
       expect(
-        buildGroups(items, 2, 0, undefined, algorithm).groups.map(({ items }) =>
+        buildGroups(items, 2, undefined, algorithm).groups.map(({ items }) =>
           items.map(({ id }) => id),
         ),
       ).toEqual([['alice-post-1', 'alice-post-2']])
@@ -423,7 +435,6 @@ describe('notification grouping', () => {
         buildGroups(
           items,
           2,
-          0,
           undefined,
           algorithm,
           NotificationFeed.ACTIVITY,
@@ -438,7 +449,7 @@ describe('notification grouping', () => {
       item('newest', minutesAgo(0), NOTIFICATION_REASON.MENTION),
       item('older', minutesAgo(60), NOTIFICATION_REASON.REPLY),
     ]
-    const result = buildGroups(items, 2, 0, Date.parse(NOW), 'algoGravity')
+    const result = buildGroups(items, 2, Date.parse(NOW), 'algoGravity')
 
     expect(result.groups.map(({ isRead }) => isRead)).toEqual([false, true])
   })
@@ -483,7 +494,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       { cursor, seenAt }: { cursor?: string; seenAt?: number } = {},
     ) => {
       using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
-      const ordinary = buildGroups(items, limit, 0, seenAt, algorithm)
+      const ordinary = buildGroups(items, limit, seenAt, algorithm)
       if (cursor !== undefined) ordinary.cursor = cursor
       const originals = structuredClone({ items, ordinary })
       const page = buildSpotlight(
@@ -503,6 +514,57 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expect(page.groups).toBe(ordinary.groups)
       expectPage(page, [], [])
     })
+
+    it.each([
+      { recent: 2, older: 2, expected: undefined },
+      { recent: 4, older: 4, expected: 'recent' },
+      { recent: 4, older: 3, expected: 'recent' },
+      { recent: 3, older: 4, expected: 'older' },
+    ])(
+      'selects $expected spotlight with $recent recent and $older older likes without crossing the cutoff',
+      ({ recent, older, expected }) => {
+        const items = Array.from({ length: recent + older }, (_, index) =>
+          item(
+            `like-${index}`,
+            minutesAgo(index < recent ? index : 24 * 60 + index),
+            NOTIFICATION_REASON.LIKE,
+            { actor: 'alice', subject: post(`post-${index}`) },
+          ),
+        )
+        const { page } = buildPage(items, items.length)
+        const spotlightItems =
+          expected === 'recent'
+            ? items.slice(0, recent)
+            : expected === 'older'
+              ? items.slice(recent)
+              : []
+        const expectedGroups = items
+          .filter((item) => !spotlightItems.includes(item))
+          .map((item) => [item])
+        if (spotlightItems.length) expectedGroups.push(spotlightItems)
+        expectedGroups.sort(
+          (left, right) =>
+            Date.parse(right[0]!.raw.indexedAt) -
+            Date.parse(left[0]!.raw.indexedAt),
+        )
+
+        expectPage(
+          page,
+          items,
+          expectedGroups.map((group) => group.map(({ id }) => id)),
+        )
+        expect(
+          page.groups
+            .filter(
+              ({ kind }) =>
+                kind === APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
+            )
+            .map(({ items }) => items.map(({ id }) => id)),
+        ).toEqual(
+          spotlightItems.length ? [spotlightItems.map(({ id }) => id)] : [],
+        )
+      },
+    )
 
     it('fits without trimming and updates ordinary and spotlight metadata', () => {
       const items = postLikes([
@@ -1529,6 +1591,51 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         ])
       },
     )
+
+    it('keeps the request-time cutoff fixed across raw pages and spotlight grouping', async () => {
+      const { recipient, records, headers } = await seedSpotlight()
+      const now = Date.now()
+      const notifications = records.map(
+        ({ like, post }, index) =>
+          new Notification({
+            recipientDid: recipient,
+            uri: like,
+            reason: NOTIFICATION_REASON.LIKE,
+            reasonSubject: post.ref.uriStr,
+            timestamp: Timestamp.fromDate(new Date(now - DAY + 1 - index)),
+          }),
+      )
+      using clock = vi.spyOn(Date, 'now').mockReturnValue(now)
+      using reads = vi
+        .spyOn(network.bsky.ctx.hydrator.dataplane, 'getNotificationsV2')
+        .mockImplementationOnce(async () => {
+          clock.mockReturnValue(now + 60_000)
+          return new GetNotificationsV2Response({
+            notifications: notifications.slice(0, 2),
+            cursor: toDatetimeString(new Date(now - DAY)),
+          })
+        })
+        .mockResolvedValueOnce(
+          new GetNotificationsV2Response({
+            notifications: notifications.slice(2),
+          }),
+        )
+
+      const response = await network.bsky
+        .getClient()
+        .call(defs, { limit: 4 }, { headers })
+
+      expect(reads).toHaveBeenCalledTimes(2)
+      expect(response.groups.map(({ kind }) => kind)).toEqual(
+        records.map(({ post }) =>
+          defs.likeGroup.$build({
+            post: post.ref.uriStr,
+            items: [{ actor: sc.dids.bob }],
+          }),
+        ),
+      )
+      expect(response.cursor).toBeUndefined()
+    })
 
     it('builds the spotlight from all fetched pages and hydrates once', async () => {
       const { records, headers } = await seedSpotlight()

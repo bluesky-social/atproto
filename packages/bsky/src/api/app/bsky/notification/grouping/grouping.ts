@@ -117,16 +117,16 @@ export function parseRawNotification(
 export const buildGroups = (
   items: NotificationItem[],
   limit: number,
-  utcOffset: number,
   seenAt: number | undefined,
   algorithm: NotificationsV2Algorithm,
   feed = NotificationFeed.ALL,
+  now = Date.now(),
 ): GroupingResult => {
   switch (algorithm) {
     case 'algoLookback':
-      return buildAlgoLookbackGroups(items, limit, utcOffset, seenAt, feed)
+      return buildAlgoLookbackGroups(items, limit, seenAt, feed, now)
     case 'algoGravity':
     default:
-      return buildAlgoGravityGroups(items, limit, utcOffset, seenAt, feed)
+      return buildAlgoGravityGroups(items, limit, seenAt, feed, now)
   }
 }

@@ -9,7 +9,7 @@ import {
   MAX_GROUP_SIZE,
   canGroupNotification,
   isNotificationRead,
-  localDay,
+  isRecentNotification,
 } from './shared.js'
 
 type Zone = {
@@ -34,26 +34,23 @@ const PARAMS: Params = {
 export const buildAlgoLookbackGroups = (
   items: NotificationItem[],
   limit: number,
-  utcOffset: number,
   seenAt?: number,
   feed = NotificationFeed.ALL,
+  now = Date.now(),
 ): GroupingResult => {
   const groups: NotificationGroup[] = []
   const activeGroups = new Map<string, NotificationGroup>()
 
   for (const [itemIndex, item] of items.entries()) {
-    const day = localDay(Date.parse(item.raw.indexedAt), utcOffset)
     const canGroup = canGroupNotification(item.raw.reason, feed)
     const key = JSON.stringify([
       item.raw.reason,
       item.groupingKey,
-      day,
+      isRecentNotification(item.raw.indexedAt, now),
       canGroup ? undefined : item.id,
     ])
     const active = activeGroups.get(key)
-    const age = active
-      ? Math.max(0, Date.now() - Date.parse(active.indexedAt))
-      : 0
+    const age = active ? Math.max(0, now - Date.parse(active.indexedAt)) : 0
     const zone = active
       ? (PARAMS.zones.find(
           ({ ageMs: maxAgeMs }, index) =>
