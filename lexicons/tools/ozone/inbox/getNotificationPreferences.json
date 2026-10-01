@@ -6,7 +6,13 @@
       "type": "query",
       "parameters": {
         "type": "params",
-        "properties": {}
+        "properties": {
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "Account to preview. Only Ozone staff can read another account; this does not change its read state."
+          }
+        }
       },
       "output": {
         "encoding": "application/json",

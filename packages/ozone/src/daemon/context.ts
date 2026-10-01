@@ -125,7 +125,11 @@ export class DaemonContext {
       scheduledActionService,
     )
 
-    const strikeExpiryProcessor = new StrikeExpiryProcessor(db, strikeService)
+    const strikeExpiryProcessor = new StrikeExpiryProcessor(
+      db,
+      strikeService,
+      cfg.strikeSuspension,
+    )
 
     const queueService = QueueService.creator()
     const queueRouter = new QueueRouter(db, queueService, register)

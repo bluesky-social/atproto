@@ -17,15 +17,14 @@ import type {
   ModerationEventRow,
   ModerationSubjectStatusRow,
 } from '../mod-service/types.js'
+import { publicActionType } from './action.js'
 import type { AppealReport } from './appeal.js'
 import {
   APPEALABLE_EVENT_ACTIONS,
   EMAIL,
   LABEL,
-  MUTE_REPORTER,
   PUBLIC_EVENT_ACTIONS,
   REVERSE_TAKEDOWN,
-  REVOKE_CREDENTIALS,
   TAKEDOWN,
   eventSubjectFilter,
   findLatestAppealReport,
@@ -33,6 +32,7 @@ import {
   toAppealState,
 } from './appeal.js'
 import { isRead } from './seen.js'
+export { publicActionType } from './action.js'
 
 /**
  * Newest events mapped into the action history. The totals query supplies the
@@ -105,8 +105,6 @@ export type SubjectSnapshot = {
   /** Newest action the user is allowed to appeal, if any. */
   latestAppealableAt: DatetimeString | null
   appealReport: AppealReport | null
-  /** Latest nonempty `publicNote` from the appeal's close activities. */
-  appealPublicNote: string | null
 }
 
 type EventTotals = {
@@ -182,18 +180,6 @@ export const loadSubject = async (
     findLatestAppealReport(db, subject),
   ])
 
-  const publicNote = appealReport
-    ? await db.db
-        .selectFrom('report_activity')
-        .where('reportId', '=', appealReport.id)
-        .where('activityType', '=', 'closeActivity')
-        .where('publicNote', 'is not', null)
-        .where(sql<boolean>`length(trim("publicNote")) > 0`)
-        .orderBy('id', 'desc')
-        .select('publicNote')
-        .executeTakeFirst()
-    : undefined
-
   return {
     status: status ?? null,
     events,
@@ -202,7 +188,6 @@ export const loadSubject = async (
     firstActionAt: totals.firstActionAt,
     latestAppealableAt: totals.latestAppealableAt,
     appealReport: appealReport ?? null,
-    appealPublicNote: publicNote?.publicNote ?? null,
   }
 }
 
@@ -245,30 +230,6 @@ const takedownScope = (row: PublicEventRow): ActionView['scope'] => {
   const services = splitMeta(row, 'targetServices')
   if (!services.length) return 'network'
   return services.includes('pds') ? 'network' : 'app'
-}
-
-const isAccountSubject = (row: PublicEventRow): boolean =>
-  row.subjectType === 'com.atproto.admin.defs#repoRef'
-
-/** Public action type for one event, or null when it is not an entry. */
-export const publicActionType = (row: PublicEventRow): string | null => {
-  switch (row.action) {
-    case TAKEDOWN:
-      if (!isAccountSubject(row)) return 'contentRemoved'
-      return row.durationInHours ? 'accountSuspended' : 'accountTakedown'
-    case LABEL:
-      return splitVals(row.createLabelVals).length
-        ? 'labelApplied'
-        : 'labelRemoved'
-    case EMAIL:
-      return 'communicationSent'
-    case MUTE_REPORTER:
-      return 'reportingRestricted'
-    case REVOKE_CREDENTIALS:
-      return 'credentialsRevoked'
-    default:
-      return null
-  }
 }
 
 export const toActionView = (row: PublicEventRow): ActionView | null => {
@@ -451,7 +412,6 @@ export const toSubjectView = ({
     subject,
     status: snapshot.status,
     report: snapshot.appealReport,
-    publicNote: snapshot.appealPublicNote,
     latestAppealableAt: snapshot.latestAppealableAt,
     windowMonths: cfg.appealWindowMonths,
   })

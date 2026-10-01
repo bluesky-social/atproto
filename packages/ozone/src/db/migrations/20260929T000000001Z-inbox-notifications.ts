@@ -8,7 +8,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('reason', 'varchar', (col) => col.notNull())
     .addColumn('section', 'varchar', (col) => col.notNull())
     .addColumn('target', 'jsonb', (col) => col.notNull())
-    .addColumn('body', 'text')
     .addColumn('sourceKey', 'varchar', (col) => col.notNull().unique())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .execute()

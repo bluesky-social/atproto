@@ -977,7 +977,7 @@ describe('appealActionedSubject', () => {
     await expect(appeal(fresh.id, account.did)).resolves.toBeDefined()
   })
 
-  it('shows a resolved appeal with its public note and never the internal one', async () => {
+  it('shows a resolved appeal without exposing moderator note text', async () => {
     const account = await sc.createAccount('resolved', {
       handle: 'resolved.test',
       email: 'resolved@test.com',
@@ -1021,10 +1021,13 @@ describe('appealActionedSubject', () => {
     )
     expect(view?.appeal).toMatchObject({
       state: 'resolved',
-      note: 'We reviewed this again and the takedown stands.',
     })
     expect(view?.appeal?.resolvedAt).toBeDefined()
+    expect(view?.appeal).not.toHaveProperty('note')
     const serialized = JSON.stringify(view)
+    expect(serialized).not.toContain(
+      'We reviewed this again and the takedown stands.',
+    )
     expect(serialized).not.toContain('MODERATOR-ONLY-RATIONALE')
     expect(serialized).not.toContain('MODERATOR-ONLY-COMMENT')
   })

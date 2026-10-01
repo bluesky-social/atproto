@@ -78,23 +78,6 @@ export async function hydrateSubjectViews(
       .orderBy('id', 'desc')
       .execute(),
   ])
-  const notes = appeals.length
-    ? await db.db
-        .selectFrom('report_activity')
-        .where(
-          'reportId',
-          'in',
-          appeals.map((r) => r.id),
-        )
-        .where('activityType', '=', 'closeActivity')
-        .where('publicNote', 'is not', null)
-        .where(sql<boolean>`length(trim("publicNote")) > 0`)
-        .distinctOn('reportId')
-        .select(['reportId', 'publicNote'])
-        .orderBy('reportId')
-        .orderBy('id', 'desc')
-        .execute()
-    : []
   return rows.flatMap((row, i) => {
     const subject = subjects[i]
     const appealReport =
@@ -115,9 +98,6 @@ export async function hydrateSubjectViews(
         lastActionAt: row.lastActionAt,
         latestAppealableAt: row.latestAppealableAt,
         appealReport,
-        appealPublicNote:
-          notes.find((note) => note.reportId === appealReport?.id)
-            ?.publicNote ?? null,
       },
     })
     return view ? [view] : []

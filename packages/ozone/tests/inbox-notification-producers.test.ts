@@ -1,8 +1,14 @@
 import { ComAtprotoModerationDefs } from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { type DidString, toDatetimeString } from '@atproto/lex'
+import { parseStrikeSuspensionConfig } from '../src/config/strike-suspension.js'
 import { APPEAL_REASON_TYPE } from '../src/inbox/appeal.js'
-import { closeReportsForSubject } from '../src/mod-service/report.js'
-import { createReportActivity } from '../src/report/activity.js'
+import { RepoSubject } from '../src/mod-service/subject.js'
+import {
+  inboxHeaders,
+  reportForEvent,
+  withNotificationInsertFailure,
+} from './_inbox.js'
 
 describe('inbox notification producers', () => {
   let network: TestNetwork
@@ -10,217 +16,224 @@ describe('inbox notification producers', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'ozone_inbox_notification_producers_body',
+      dbPostgresSchema: 'ozone_inbox_notification_producers_review',
     })
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
+    Object.assign(
+      network.ozone.ctx.cfg.strikeSuspension,
+      parseStrikeSuspensionConfig('4:72,8:168,12:336,16:Infinity'),
+    )
   })
   afterAll(async () => network?.close())
 
-  it('writes report transitions and public notes atomically for the reporter', async () => {
+  function repo(did: DidString) {
+    return { $type: 'com.atproto.admin.defs#repoRef' as const, did }
+  }
+
+  async function notifications(did: DidString, reasons?: string[]) {
+    const { data } = await sc.agent.tools.ozone.inbox.listNotifications(
+      { reasons },
+      { headers: inboxHeaders(network, sc, did) },
+    )
+    return data.notifications
+  }
+
+  async function createReport(
+    subjectDid: DidString,
+    reportedBy: DidString,
+    reasonType = ComAtprotoModerationDefs.REASONSPAM,
+  ) {
     const event = await sc.createReport({
-      reasonType: ComAtprotoModerationDefs.REASONSPAM,
-      subject: { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.alice },
-      reportedBy: sc.dids.bob,
+      reasonType,
+      subject: repo(subjectDid),
+      reportedBy,
     })
     await network.processAll()
-    const db = network.ozone.ctx.db
-    const report = await db.db
-      .selectFrom('report')
-      .select('id')
-      .where('eventId', '=', event.id)
-      .executeTakeFirstOrThrow()
+    return reportForEvent(network.ozone.getModClient(), event.id)
+  }
 
-    await createReportActivity(db, {
-      reportId: report.id,
-      activityType: 'closeActivity',
-      publicNote: 'Reviewed',
-      createdBy: sc.dids.alice,
-    })
-    await createReportActivity(db, {
-      reportId: report.id,
-      activityType: 'reopenActivity',
-      createdBy: sc.dids.alice,
-    })
+  async function activity(
+    reportId: number,
+    activityType: 'closeActivity' | 'reopenActivity' | 'noteActivity',
+    publicNote?: string,
+  ) {
+    const method = 'tools.ozone.report.createActivity'
+    return network.ozone.getAgent().tools.ozone.report.createActivity(
+      {
+        reportId,
+        activity: { $type: `tools.ozone.report.defs#${activityType}` },
+        publicNote,
+        internalNote: 'Moderator-only context',
+      },
+      { headers: await network.ozone.modHeaders(method) },
+    )
+  }
 
-    const notifications = await db.db
-      .selectFrom('inbox_notification')
-      .where('recipientDid', '=', sc.dids.bob)
-      .where('sourceKey', 'like', 'report-activity:%')
-      .select(['reason', 'target', 'body'])
-      .execute()
-    expect(notifications.map((n) => n.reason).sort()).toEqual([
-      'reportNote',
+  it('notifies the reporter about transitions and excludes all moderator note text', async () => {
+    const report = await createReport(sc.dids.alice, sc.dids.bob)
+    await activity(report.id, 'closeActivity', 'Reviewed')
+    await activity(report.id, 'reopenActivity')
+    await activity(report.id, 'noteActivity', 'Public text must stay private')
+    const rows = (await notifications(sc.dids.bob)).filter(
+      (row) => 'reportId' in row.target && row.target.reportId === report.id,
+    )
+    expect(rows.map((row) => row.reason).sort()).toEqual([
       'reportReopened',
       'reportResolved',
     ])
-    expect(notifications[0].target).toMatchObject({ reportId: report.id })
-    expect(notifications.find((n) => n.reason === 'reportNote')?.body).toBe(
-      'Reviewed',
+    expect(JSON.stringify(rows)).not.toMatch(
+      /Reviewed|Moderator-only|Public text/,
     )
+    expect(rows.every((row) => !('body' in row))).toBe(true)
     expect(
-      await db.db
-        .selectFrom('inbox_notification')
-        .where('recipientDid', '=', sc.dids.alice)
-        .where('section', '=', 'reports')
-        .select('id')
-        .execute(),
+      await notifications(sc.dids.alice, ['reportResolved', 'reportReopened']),
     ).toHaveLength(0)
   })
 
   it('notifies reporters when a subject is closed in bulk', async () => {
-    const event = await sc.createReport({
-      reasonType: ComAtprotoModerationDefs.REASONSPAM,
-      subject: { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.carol },
-      reportedBy: sc.dids.bob,
-    })
-    await network.processAll()
-    const db = network.ozone.ctx.db
-    const report = await db.db
-      .selectFrom('report')
-      .where('eventId', '=', event.id)
-      .select('id')
-      .executeTakeFirstOrThrow()
-    await closeReportsForSubject({
-      db,
-      subjectDid: sc.dids.carol,
-      subjectUri: null,
-      isAutomated: false,
-      createdBy: sc.dids.alice,
-    })
-    const rows = await db.db
-      .selectFrom('inbox_notification')
-      .where('recipientDid', '=', sc.dids.bob)
-      .where('reason', '=', 'reportResolved')
-      .select('target')
-      .execute()
+    const reports = await Promise.all([
+      createReport(sc.dids.carol, sc.dids.bob),
+      createReport(sc.dids.carol, sc.dids.dan),
+    ])
+    const { data } = await network.ozone
+      .getAgent()
+      .tools.ozone.report.closeReports(
+        { subject: sc.dids.carol },
+        {
+          headers: await network.ozone.modHeaders(
+            'tools.ozone.report.closeReports',
+          ),
+        },
+      )
+    expect(data.reportIds).toEqual(
+      expect.arrayContaining(reports.map((report) => report.id)),
+    )
+    for (const [index, did] of [sc.dids.bob, sc.dids.dan].entries()) {
+      expect(await notifications(did, ['reportResolved'])).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            target: expect.objectContaining({ reportId: reports[index].id }),
+          }),
+        ]),
+      )
+    }
+  })
+
+  it('notifies appeal resolution in the subject section without note text', async () => {
+    const report = await createReport(
+      sc.dids.alice,
+      sc.dids.alice,
+      APPEAL_REASON_TYPE,
+    )
+    await activity(report.id, 'closeActivity', 'Appeal accepted')
+    expect(await notifications(sc.dids.alice, ['appealResolved'])).toEqual([
+      expect.objectContaining({
+        target: expect.objectContaining({
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.alice,
+          },
+        }),
+      }),
+    ])
     expect(
-      rows.some(
-        (row) => 'reportId' in row.target && row.target.reportId === report.id,
-      ),
-    ).toBe(true)
+      JSON.stringify(await notifications(sc.dids.alice, ['appealResolved'])),
+    ).not.toContain('Appeal accepted')
   })
 
-  it('carries the public appeal resolution note to the subject section', async () => {
-    const event = await sc.createReport({
-      reasonType: APPEAL_REASON_TYPE,
-      subject: { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.alice },
-      reportedBy: sc.dids.alice,
-    })
-    await network.processAll()
-    const db = network.ozone.ctx.db
-    await createReportActivity(db, {
-      eventId: event.id,
-      activityType: 'closeActivity',
-      publicNote: 'Appeal accepted',
-      createdBy: sc.dids.bob,
-    })
-    const row = await db.db
-      .selectFrom('inbox_notification')
-      .where('recipientDid', '=', sc.dids.alice)
-      .where('reason', '=', 'appealResolved')
-      .select(['section', 'target', 'body'])
-      .executeTakeFirstOrThrow()
-    expect(row).toMatchObject({
-      section: 'subjects',
-      body: 'Appeal accepted',
-      target: { subject: { did: sc.dids.alice } },
-    })
-  })
-
-  it('notifies report authors when a moderation event closes a report', async () => {
-    const event = await sc.createReport({
-      reasonType: ComAtprotoModerationDefs.REASONSPAM,
-      subject: { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.carol },
-      reportedBy: sc.dids.bob,
-    })
-    await network.processAll()
-    const db = network.ozone.ctx.db
-    const report = await db.db
-      .selectFrom('report')
-      .where('eventId', '=', event.id)
-      .select('id')
-      .executeTakeFirstOrThrow()
+  it('notifies report authors when an event closes a report', async () => {
+    const report = await createReport(sc.dids.carol, sc.dids.bob)
     await network.ozone.getModClient().emitEvent({
       event: { $type: 'tools.ozone.moderation.defs#modEventComment' },
-      subject: { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.carol },
+      subject: repo(sc.dids.carol),
       reportAction: { ids: [report.id], note: 'We investigated this report' },
     })
-    const rows = await db.db
-      .selectFrom('inbox_notification')
-      .where('recipientDid', '=', sc.dids.bob)
-      .where('section', '=', 'reports')
-      .select(['reason', 'target', 'body'])
-      .execute()
-    expect(rows).toEqual(
+    expect(await notifications(sc.dids.bob, ['reportResolved'])).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          reason: 'reportResolved',
           target: expect.objectContaining({ reportId: report.id }),
-        }),
-        expect.objectContaining({
-          reason: 'reportNote',
-          body: 'We investigated this report',
         }),
       ]),
     )
+    expect(JSON.stringify(await notifications(sc.dids.bob))).not.toContain(
+      'We investigated this report',
+    )
   })
 
-  it('notifies only the moderated account about public actions', async () => {
+  it('notifies only the moderated account about actions and label reversals', async () => {
     const mod = network.ozone.getModClient()
-    await mod.emitEvent({
+    const event = await mod.emitEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventLabel',
         createLabelVals: ['spam'],
         negateLabelVals: [],
       },
-      subject: { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.alice },
+      subject: repo(sc.dids.alice),
     })
-    const db = network.ozone.ctx.db
-    const row = await db.db
-      .selectFrom('inbox_notification')
-      .where('recipientDid', '=', sc.dids.alice)
-      .where('reason', '=', 'actionTaken')
-      .select(['section', 'target'])
-      .executeTakeFirstOrThrow()
-    expect(row.section).toBe('subjects')
-    expect(row.target).toMatchObject({ actionType: 'labelApplied' })
+    const reversal = await mod.emitEvent({
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventLabel',
+        createLabelVals: [],
+        negateLabelVals: ['spam'],
+      },
+      subject: repo(sc.dids.alice),
+    })
+    expect(
+      await notifications(sc.dids.alice, ['actionTaken', 'actionReversed']),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          reason: 'actionTaken',
+          target: expect.objectContaining({
+            actionId: event.id,
+            actionType: 'labelApplied',
+          }),
+        }),
+        expect.objectContaining({
+          reason: 'actionReversed',
+          target: expect.objectContaining({
+            actionId: reversal.id,
+            actionType: 'labelRemoved',
+          }),
+        }),
+      ]),
+    )
+    expect(
+      (await notifications(sc.dids.bob)).some(
+        (row) => 'actionId' in row.target && row.target.actionId === event.id,
+      ),
+    ).toBe(false)
   })
 
-  it('tracks standing changes on account takedown and reversal without strikes', async () => {
+  it('tracks standing on account takedown and reversal without strikes', async () => {
     const mod = network.ozone.getModClient()
-    const subject = {
-      $type: 'com.atproto.admin.defs#repoRef' as const,
-      did: sc.dids.carol,
-    }
     await mod.emitEvent({
       event: { $type: 'tools.ozone.moderation.defs#modEventTakedown' },
-      subject,
+      subject: repo(sc.dids.carol),
     })
     await mod.emitEvent({
       event: { $type: 'tools.ozone.moderation.defs#modEventReverseTakedown' },
-      subject,
+      subject: repo(sc.dids.carol),
     })
-    const rows = await network.ozone.ctx.db.db
-      .selectFrom('inbox_notification')
-      .where('recipientDid', '=', sc.dids.carol)
-      .where('reason', '=', 'standingChanged')
-      .select('target')
-      .orderBy('id', 'asc')
-      .execute()
-    expect(rows.map((row) => row.target)).toMatchObject([
+    expect(
+      (await notifications(sc.dids.carol, ['standingChanged']))
+        .map((row) => row.target)
+        .reverse(),
+    ).toMatchObject([
       { standing: 'atRisk', previousStanding: 'good' },
       { standing: 'good', previousStanding: 'atRisk' },
     ])
   })
 
-  it('tracks standing thresholds crossed by strikes on records', async () => {
-    const mod = network.ozone.getModClient()
+  it('uses the second and third configured strike thresholds and agrees with account status', async () => {
     const did = sc.dids.bob
-    for (const [index, strikeCount] of [8, 4].entries()) {
+    await sc.post(did, 'Third strike fixture')
+    await network.processAll()
+    for (const [index, strikeCount] of [4, 4, 4].entries()) {
       const post = sc.posts[did][index].ref
-      await mod.emitEvent({
+      await network.ozone.getModClient().emitEvent({
         event: {
           $type: 'tools.ozone.moderation.defs#modEventTakedown',
           strikeCount,
@@ -231,34 +244,30 @@ describe('inbox notification producers', () => {
           cid: post.cidStr,
         },
       })
+      const { data } = await sc.agent.tools.ozone.inbox.getAccountStatus(
+        {},
+        { headers: inboxHeaders(network, sc, did) },
+      )
+      expect(data.standing).toBe(['good', 'warning', 'atRisk'][index])
     }
-    const strike = await network.ozone.ctx.db.db
-      .selectFrom('account_strike')
-      .where('did', '=', did)
-      .select('activeStrikeCount')
-      .executeTakeFirst()
-    expect(strike?.activeStrikeCount).toBe(12)
-    const rows = await network.ozone.ctx.db.db
-      .selectFrom('inbox_notification')
-      .where('recipientDid', '=', did)
-      .where('reason', '=', 'standingChanged')
-      .select('target')
-      .orderBy('id', 'asc')
-      .execute()
-    expect(rows.map((row) => row.target)).toMatchObject([
+    expect(
+      (await notifications(did, ['standingChanged']))
+        .map((row) => row.target)
+        .reverse(),
+    ).toMatchObject([
       { standing: 'warning', previousStanding: 'good' },
       { standing: 'atRisk', previousStanding: 'warning' },
     ])
   })
 
-  it('notifies when expiring strikes improve account standing', async () => {
+  it('notifies when expiring strikes improve standing', async () => {
     const did = sc.dids.carol
     const post = sc.posts[did][0].ref
     await network.ozone.getModClient().emitEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventTakedown',
         strikeCount: 8,
-        strikeExpiresAt: new Date(Date.now() + 1_000).toISOString(),
+        strikeExpiresAt: toDatetimeString(Date.now() + 1000),
       },
       subject: {
         $type: 'com.atproto.repo.strongRef',
@@ -266,18 +275,99 @@ describe('inbox notification producers', () => {
         cid: post.cidStr,
       },
     })
-    await new Promise((resolve) => setTimeout(resolve, 1_100))
+    await new Promise((resolve) => setTimeout(resolve, 1100))
     await network.ozone.daemon.ctx.strikeExpiryProcessor.processExpiredStrikes()
-    const rows = await network.ozone.ctx.db.db
-      .selectFrom('inbox_notification')
-      .where('recipientDid', '=', did)
-      .where('reason', '=', 'standingChanged')
-      .select('target')
-      .orderBy('id', 'desc')
-      .execute()
+    expect(
+      (await notifications(did, ['standingChanged']))[0].target,
+    ).toMatchObject({ standing: 'good', previousStanding: 'warning' })
+  })
+
+  it('notifies about automatic reversals through the common moderation service', async () => {
+    const subject = repo(sc.dids.dan)
+    await network.ozone.getModClient().emitEvent({
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventTakedown',
+        durationInHours: 1,
+      },
+      subject,
+    })
+    // @NOTE Daemon execution has no public endpoint. The reversal itself uses the common service.
+    await network.ozone.daemon.ctx.eventReverser.revertState({
+      subject: new RepoSubject(sc.dids.dan),
+      reverseSuspend: true,
+      reverseMute: false,
+    })
+    expect(await notifications(sc.dids.dan, ['actionReversed'])).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          target: expect.objectContaining({ actionType: 'accountRestored' }),
+        }),
+      ]),
+    )
+  })
+
+  it('serializes concurrent record strikes into one standing transition', async () => {
+    const did = sc.dids.dan
+    await Promise.all(
+      sc.posts[did].slice(0, 2).map(({ ref }) =>
+        network.ozone.getModClient().emitEvent({
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventTakedown',
+            strikeCount: 4,
+          },
+          subject: {
+            $type: 'com.atproto.repo.strongRef',
+            uri: ref.uriStr,
+            cid: ref.cidStr,
+          },
+        }),
+      ),
+    )
+    const rows = (await notifications(did, ['standingChanged'])).filter(
+      (row) => 'standing' in row.target && row.target.standing === 'warning',
+    )
+    expect(rows).toHaveLength(1)
     expect(rows[0].target).toMatchObject({
-      standing: 'good',
-      previousStanding: 'warning',
+      standing: 'warning',
+      previousStanding: 'good',
+    })
+    const { data } = await sc.agent.tools.ozone.inbox.getAccountStatus(
+      {},
+      { headers: inboxHeaders(network, sc, did) },
+    )
+    expect(data.standing).toBe('warning')
+  })
+
+  it('commits moderation events even when notification SQL fails', async () => {
+    await withNotificationInsertFailure(network.ozone.ctx.db, async () => {
+      const event = await network.ozone.getModClient().emitEvent({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventLabel',
+          createLabelVals: ['spam'],
+          negateLabelVals: [],
+        },
+        subject: repo(sc.dids.dan),
+      })
+      const { events } = await network.ozone
+        .getModClient()
+        .queryEvents({ subject: sc.dids.dan })
+      expect(events.some((row) => row.id === event.id)).toBe(true)
+      expect(
+        (await notifications(sc.dids.dan)).some(
+          (row) => 'actionId' in row.target && row.target.actionId === event.id,
+        ),
+      ).toBe(false)
+    })
+  })
+
+  it('commits report closure even when notification SQL fails', async () => {
+    const report = await createReport(sc.dids.dan, sc.dids.bob)
+    await withNotificationInsertFailure(network.ozone.ctx.db, async () => {
+      await activity(report.id, 'closeActivity')
+      expect(
+        (await reportForEvent(network.ozone.getModClient(), report.eventId))
+          .status,
+      ).toBe('closed')
     })
   })
 })

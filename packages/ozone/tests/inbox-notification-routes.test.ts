@@ -1,15 +1,12 @@
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { type DidString, toDatetimeString } from '@atproto/lex'
-import {
-  createInboxNotification,
-  listInboxNotifications,
-} from '../src/inbox/notifications.js'
+import { createInboxNotification } from '../src/inbox/notifications.js'
 import { tools } from '../src/lexicons/index.js'
+import { inboxHeaders, resetInbox } from './_inbox.js'
 
 describe('viewer notification routes', () => {
   let network: TestNetwork
   let sc: SeedClient
-  let proxyHeader: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -17,23 +14,20 @@ describe('viewer notification routes', () => {
     })
     sc = network.getSeedClient()
     await basicSeed(sc)
-    await network.ozone.ctx.db.db.deleteFrom('inbox_notification').execute()
-    await network.ozone.ctx.db.db
-      .deleteFrom('inbox_notification_preference')
-      .execute()
-    await network.ozone.ctx.db.db.deleteFrom('inbox_seen').execute()
-    proxyHeader = `${network.ozone.ctx.cfg.service.did}#atproto_labeler`
+    await resetInbox(network.ozone.ctx.db)
+    await network.ozone.addModeratorDid(sc.dids.alice)
+    await network.ozone.addTriageDid(sc.dids.dan)
   })
   afterAll(async () => network?.close())
 
   function query(did: DidString, method: string, params: object = {}) {
     return sc.agent.call(method, params, undefined, {
-      headers: { ...sc.getHeaders(did), 'atproto-proxy': proxyHeader },
+      headers: inboxHeaders(network, sc, did),
     })
   }
   function procedure(did: DidString, method: string, input: object) {
     return sc.agent.call(method, {}, input, {
-      headers: { ...sc.getHeaders(did), 'atproto-proxy': proxyHeader },
+      headers: inboxHeaders(network, sc, did),
     })
   }
 
@@ -63,24 +57,6 @@ describe('viewer notification routes', () => {
       sourceKey: 'test:notification:carol',
     })
 
-    const directRows = await db.db
-      .selectFrom('inbox_notification')
-      .selectAll()
-      .execute()
-    expect(directRows).toHaveLength(3)
-    expect(directRows.map((r) => r.recipientDid)).toEqual([
-      sc.dids.bob,
-      sc.dids.bob,
-      sc.dids.carol,
-    ])
-    expect(
-      (
-        await listInboxNotifications(db, sc.dids.bob, {
-          unreadOnly: false,
-          limit: 50,
-        })
-      ).notifications,
-    ).toHaveLength(2)
     const { data: page1 } = await query(
       sc.dids.bob,
       'tools.ozone.inbox.listNotifications',
@@ -237,13 +213,85 @@ describe('viewer notification routes', () => {
     )
     expect(Date.parse(first.data.seenAt)).toBeLessThan(Date.parse(future))
     expect(repeat.data.seenAt).toBe(newer)
-    const rows = await network.ozone.ctx.db.db
-      .selectFrom('inbox_seen')
-      .where('did', '=', sc.dids.carol)
-      .where('section', 'in', ['reports', 'subjects'])
-      .select(['section', 'seenAt'])
-      .execute()
-    expect(rows).toHaveLength(2)
-    expect(rows.every((row) => row.seenAt === newer)).toBe(true)
+    for (const section of ['reports', 'subjects']) {
+      const response = await procedure(
+        sc.dids.carol,
+        'tools.ozone.inbox.updateSeen',
+        { sections: [section], seenAt: past },
+      )
+      expect(response.data.seenAt).toBe(newer)
+    }
+  })
+
+  it('allows staff to preview recipient data without changing read state or preferences', async () => {
+    await createInboxNotification(network.ozone.ctx.db, {
+      recipientDid: sc.dids.carol,
+      reason: 'actionTaken',
+      target: tools.ozone.inbox.defs.subjectRef.$build({
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.carol,
+        },
+      }),
+      sourceKey: 'preview:carol',
+    })
+    await procedure(
+      sc.dids.carol,
+      'tools.ozone.inbox.putNotificationPreferences',
+      { push: false },
+    )
+    const methods = [
+      'tools.ozone.inbox.listNotifications',
+      'tools.ozone.inbox.getUnreadCount',
+      'tools.ozone.inbox.getNotificationPreferences',
+      'tools.ozone.inbox.getAccountStatus',
+    ]
+    const expected = await Promise.all(
+      methods.map((method) => query(sc.dids.carol, method)),
+    )
+    for (const viewer of [sc.dids.alice, sc.dids.dan]) {
+      for (const [index, method] of methods.entries()) {
+        const preview = await query(viewer, method, { did: sc.dids.carol })
+        expect(preview.data).toEqual(expected[index].data)
+      }
+    }
+    for (const [index, method] of methods.entries()) {
+      expect((await query(sc.dids.carol, method)).data).toEqual(
+        expected[index].data,
+      )
+      expect(
+        (await query(sc.dids.carol, method, { did: sc.dids.carol })).data,
+      ).toEqual(expected[index].data)
+      await expect(
+        query(sc.dids.bob, method, { did: sc.dids.carol }),
+      ).rejects.toMatchObject({ error: 'Forbidden' })
+    }
+  })
+
+  it('never applies writes to a preview DID supplied by staff', async () => {
+    const before = await query(
+      sc.dids.carol,
+      'tools.ozone.inbox.listNotifications',
+    )
+    await procedure(sc.dids.alice, 'tools.ozone.inbox.updateSeen', {
+      sections: ['subjects'],
+      did: sc.dids.carol,
+    })
+    await procedure(
+      sc.dids.alice,
+      'tools.ozone.inbox.putNotificationPreferences',
+      { push: true, did: sc.dids.carol },
+    )
+    expect(
+      (await query(sc.dids.carol, 'tools.ozone.inbox.listNotifications')).data,
+    ).toEqual(before.data)
+    expect(
+      (
+        await query(
+          sc.dids.carol,
+          'tools.ozone.inbox.getNotificationPreferences',
+        )
+      ).data.preferences.push,
+    ).toBe(false)
   })
 })

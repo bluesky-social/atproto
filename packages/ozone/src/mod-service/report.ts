@@ -587,7 +587,7 @@ export async function processReportAction(
         createdAt: now,
       })),
     )
-    .returning(['id', 'reportId', 'activityType', 'publicNote', 'createdAt'])
+    .returning(['id', 'reportId', 'activityType', 'createdAt'])
     .execute()
 
   await notifyReportActivities(
@@ -596,7 +596,6 @@ export async function processReportAction(
       reportId: activity.reportId,
       activityId: activity.id,
       activityType: activity.activityType,
-      publicNote: activity.publicNote,
       createdAt: activity.createdAt,
     })),
   )

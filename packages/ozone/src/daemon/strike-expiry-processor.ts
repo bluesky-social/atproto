@@ -1,8 +1,8 @@
 import { HOUR } from '@atproto/common'
 import { type DatetimeString, toDatetimeString } from '@atproto/lex'
+import type { StrikeSuspensionConfig } from '../config/strike-suspension.js'
 import type { Database } from '../db/index.js'
-import { createInboxNotification } from '../inbox/notifications.js'
-import { getInboxStanding } from '../inbox/standing.js'
+import { InboxNotificationService } from '../inbox/producers.js'
 import { dbLogger } from '../logger.js'
 import type { StrikeServiceCreator } from '../mod-service/strike.js'
 import { getJobCursor, initJobCursor, updateJobCursor } from './job-cursor.js'
@@ -17,6 +17,7 @@ export class StrikeExpiryProcessor {
   constructor(
     private db: Database,
     private strikeServiceCreator: StrikeServiceCreator,
+    private strikeSuspension: StrikeSuspensionConfig = {},
   ) {}
 
   start() {
@@ -76,24 +77,20 @@ export class StrikeExpiryProcessor {
 
     for (const { subjectDid } of affectedSubjects) {
       await this.db.transaction(async (txn) => {
-        const before = await getInboxStanding(txn, subjectDid)
+        const notifications = new InboxNotificationService(
+          txn,
+          this.strikeSuspension,
+        )
+        const before = await notifications.captureStanding(subjectDid)
         await this.strikeServiceCreator(txn).updateSubjectStrikeCount(
           subjectDid,
         )
-        const standing = await getInboxStanding(txn, subjectDid)
-        if (standing !== before) {
-          await createInboxNotification(txn, {
-            recipientDid: subjectDid,
-            reason: 'standingChanged',
-            target: {
-              $type: 'tools.ozone.inbox.defs#standingRef',
-              standing,
-              previousStanding: before,
-            },
-            sourceKey: `strike-expiry:${subjectDid}:${now.toISOString()}`,
-            createdAt: toDatetimeString(now),
-          })
-        }
+        await notifications.notifyStandingChange(
+          subjectDid,
+          before,
+          `strike-expiry:${subjectDid}:${now.toISOString()}`,
+          toDatetimeString(now),
+        )
       })
     }
 

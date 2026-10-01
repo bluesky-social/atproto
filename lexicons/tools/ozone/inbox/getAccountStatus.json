@@ -32,6 +32,16 @@
             }
           }
         }
+      },
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "Account to preview. Only Ozone staff can read another account; this does not change its read state."
+          }
+        }
       }
     }
   }

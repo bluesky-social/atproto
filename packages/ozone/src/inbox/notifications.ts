@@ -9,6 +9,8 @@ import type { Database } from '../db/index.js'
 import type { InboxNotification } from '../db/schema/inbox_notification.js'
 import type { InboxSeen } from '../db/schema/inbox_seen.js'
 import type { tools } from '../lexicons/index.js'
+import { getSeenAt } from './seen.js'
+import { parseSubjectCursor } from './subjects.js'
 
 export function inboxSection(value: string): InboxSeen['section'] {
   if (value === 'reports' || value === 'subjects' || value === 'accountStatus')
@@ -19,45 +21,46 @@ export function inboxSection(value: string): InboxSeen['section'] {
 export const notificationSection = {
   reportResolved: 'reports',
   reportReopened: 'reports',
-  reportNote: 'reports',
   actionTaken: 'subjects',
   actionReversed: 'subjects',
   appealResolved: 'subjects',
   standingChanged: 'accountStatus',
 } as const satisfies Record<InboxNotification['reason'], InboxSeen['section']>
 
+export type NotificationInput = {
+  recipientDid: DidString
+  reason: InboxNotification['reason']
+  target: InboxNotification['target']
+  sourceKey: string
+  createdAt?: DatetimeString
+}
+
+/** Batch inserts in the source transaction, with bounded SQL parameter counts. */
+export async function createInboxNotifications(
+  db: Database,
+  notifications: NotificationInput[],
+): Promise<void> {
+  for (let offset = 0; offset < notifications.length; offset += 500) {
+    await db.db
+      .insertInto('inbox_notification')
+      .values(
+        notifications.slice(offset, offset + 500).map((notification) => ({
+          ...notification,
+          section: notificationSection[notification.reason],
+          createdAt: notification.createdAt ?? currentDatetimeString(),
+        })),
+      )
+      .onConflict((oc) => oc.column('sourceKey').doNothing())
+      .execute()
+  }
+}
+
 /** Pass the same Database wrapper used by the triggering transaction. */
 export async function createInboxNotification(
   db: Database,
-  {
-    recipientDid,
-    reason,
-    target,
-    body,
-    sourceKey,
-    createdAt = currentDatetimeString(),
-  }: {
-    recipientDid: DidString
-    reason: InboxNotification['reason']
-    target: InboxNotification['target']
-    body?: string | null
-    sourceKey: string
-    createdAt?: DatetimeString
-  },
+  notification: NotificationInput,
 ): Promise<void> {
-  await db.db
-    .insertInto('inbox_notification')
-    .values({
-      recipientDid,
-      reason,
-      target,
-      body: body ?? null,
-      sourceKey,
-      section: notificationSection[reason],
-      createdAt,
-    })
-    .onConflict((oc) => oc.column('sourceKey').doNothing())
-    .execute()
+  await createInboxNotifications(db, [notification])
 }
 
 export async function listInboxNotifications(
@@ -78,48 +81,64 @@ export async function listInboxNotifications(
       'n.id',
       'n.reason',
       'n.target',
-      'n.body',
       'n.section',
       'n.createdAt',
       's.seenAt',
     ])
-  if (params.section)
-    query = query.where('n.section', '=', inboxSection(params.section))
+  const sections: InboxSeen['section'][] = params.section
+    ? [inboxSection(params.section)]
+    : ['reports', 'subjects', 'accountStatus']
+  if (params.section) query = query.where('n.section', '=', sections[0])
   if (params.reasons?.length)
     query = query.where('n.reason', 'in', params.reasons)
-  if (params.unreadOnly) {
-    query = query.where((eb) =>
-      eb.or([
-        eb('s.seenAt', 'is', null),
-        eb('n.createdAt', '>', eb.ref('s.seenAt')),
-      ]),
-    )
-  }
   if (params.cursor) {
-    const match = /^(.*)::([1-9]\d*)$/.exec(params.cursor)
-    if (
-      !match ||
-      !Number.isSafeInteger(Number(match[2])) ||
-      Number.isNaN(Date.parse(match[1]))
-    ) {
-      throw new InvalidRequestError('Invalid cursor')
-    }
+    const { sortValue, id } = parseSubjectCursor(params.cursor)
     query = query.where(
-      sql<boolean>`(n."createdAt", n.id) < (${match[1]}, ${Number(match[2])})`,
+      sql<boolean>`(n."createdAt", n.id) < (${sortValue}, ${id})`,
     )
   }
-  const rows = await query
-    .orderBy('n.createdAt', 'desc')
-    .orderBy('n.id', 'desc')
-    .limit(limit + 1)
-    .execute()
+  const ordered = (builder: typeof query) =>
+    builder
+      .orderBy('n.createdAt', 'desc')
+      .orderBy('n.id', 'desc')
+      .limit(limit + 1)
+  let rows: Awaited<ReturnType<typeof query.execute>>
+  if (params.unreadOnly) {
+    const watermarks = await Promise.all(
+      sections.map((section) => getSeenAt(db, did, section)),
+    )
+    const branches = sections.map((section, index) => {
+      let branch = query.where('n.section', '=', section)
+      const seenAt = watermarks[index]
+      if (seenAt) branch = branch.where('n.createdAt', '>', seenAt)
+      // @NOTE Recheck the joined watermark if it advanced between statements.
+      branch = branch.where((eb) =>
+        eb.or([
+          eb('s.seenAt', 'is', null),
+          eb('n.createdAt', '>', eb.ref('s.seenAt')),
+        ]),
+      )
+      return db.db.selectFrom(ordered(branch).as('unread')).selectAll()
+    })
+    // @NOTE Each branch seeks its section index and contributes at most one page.
+    let unread = branches[0]
+    for (const branch of branches.slice(1)) unread = unread.unionAll(branch)
+    rows = await db.db
+      .selectFrom(unread.as('notifications'))
+      .selectAll()
+      .orderBy('createdAt', 'desc')
+      .orderBy('id', 'desc')
+      .limit(limit + 1)
+      .execute()
+  } else {
+    rows = await ordered(query).execute()
+  }
   const page = rows.slice(0, limit)
   return {
     notifications: page.map((row) => ({
       id: row.id,
       reason: row.reason,
       target: row.target,
-      ...(row.body ? { body: row.body } : {}),
       isRead: row.seenAt !== null && row.createdAt <= row.seenAt,
       createdAt: row.createdAt,
     })),
@@ -133,23 +152,20 @@ export async function listInboxNotifications(
 export async function countUnreadNotifications(
   db: Database,
   did: DidString,
-  section?: InboxSeen['section'],
+  section: InboxSeen['section'],
 ): Promise<number> {
+  const seenAt = await getSeenAt(db, did, section)
   let query = db.db
     .selectFrom('inbox_notification as n')
-    .leftJoin('inbox_seen as s', (join) =>
-      join
-        .onRef('s.did', '=', 'n.recipientDid')
-        .onRef('s.section', '=', 'n.section'),
-    )
     .where('n.recipientDid', '=', did)
-    .where((eb) =>
-      eb.or([
-        eb('s.seenAt', 'is', null),
-        eb('n.createdAt', '>', eb.ref('s.seenAt')),
-      ]),
-    )
-    .select((eb) => eb.fn.count<number>('n.id').as('count'))
-  if (section) query = query.where('n.section', '=', section)
-  return (await query.executeTakeFirstOrThrow()).count
+    .where('n.section', '=', section)
+  if (seenAt) query = query.where('n.createdAt', '>', seenAt)
+  if (section === 'accountStatus') {
+    return (await query.select('n.id').limit(1).executeTakeFirst()) ? 1 : 0
+  }
+  return (
+    await query
+      .select((eb) => eb.fn.count<number>('n.id').as('count'))
+      .executeTakeFirstOrThrow()
+  ).count
 }

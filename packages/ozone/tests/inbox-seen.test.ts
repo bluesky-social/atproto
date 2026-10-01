@@ -2,6 +2,7 @@ import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { asDatetimeString, toDatetimeString } from '@atproto/lex'
 import { createInboxNotification } from '../src/inbox/notifications.js'
 import { com, tools } from '../src/lexicons/index.js'
+import { resetInbox, seedSeenAt } from './_inbox.js'
 
 describe('inbox read watermarks', () => {
   let network: TestNetwork
@@ -15,8 +16,7 @@ describe('inbox read watermarks', () => {
   afterAll(async () => network?.close())
 
   beforeEach(async () => {
-    await network.ozone.ctx.db.db.deleteFrom('inbox_notification').execute()
-    await network.ozone.ctx.db.db.deleteFrom('inbox_seen').execute()
+    await resetInbox(network.ozone.ctx.db)
   })
 
   function headers() {
@@ -155,14 +155,12 @@ describe('inbox read watermarks', () => {
     'normalizes an existing watermark %s when updating it',
     async (existing, requested, expected) => {
       // @NOTE Fixture for rows written before updateSeen normalized timestamps.
-      await network.ozone.ctx.db.db
-        .insertInto('inbox_seen')
-        .values({
-          did: sc.dids.alice,
-          section: 'subjects',
-          seenAt: asDatetimeString(existing),
-        })
-        .execute()
+      await seedSeenAt(
+        network.ozone.ctx.db,
+        sc.dids.alice,
+        'subjects',
+        asDatetimeString(existing),
+      )
       await addNotification('subjects', `2026-01-01T${expected}Z`)
       await addNotification('subjects', '2026-01-01T15:00:00.000Z')
       const { data } = await updateSeen(

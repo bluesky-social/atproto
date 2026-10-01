@@ -1,5 +1,6 @@
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
+import { inboxViewerDid } from '../../inbox/access.js'
 import {
   countUnreadNotifications,
   inboxSection,
@@ -10,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
   server.add(tools.ozone.inbox.getUnreadCount, {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, params }) => {
-      const did = auth.credentials.iss
+      const did = inboxViewerDid(auth, params.did)
       if (params.section) {
         const section = inboxSection(params.section)
         const count = await countUnreadNotifications(ctx.db, did, section)

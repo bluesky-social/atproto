@@ -45,7 +45,6 @@ export type AppealInput = {
   subject: ModSubject
   status: Pick<ModerationSubjectStatusRow, 'appealed' | 'lastAppealedAt'> | null
   report: AppealReport | null
-  publicNote: string | null
 
   /** Calendar months an action stays appealable, from `InboxConfig`. */
   windowMonths: number
@@ -96,7 +95,6 @@ export const toAppealState = ({
   subject,
   status,
   report,
-  publicNote,
   latestAppealableAt,
   windowMonths,
 }: AppealInput): AppealState => {
@@ -121,7 +119,6 @@ export const toAppealState = ({
     view.appealedAt = status?.lastAppealedAt ?? report.createdAt
     if (report.closedAt) view.resolvedAt = report.closedAt
   }
-  if (state === 'resolved' && publicNote) view.note = publicNote
   if (appealableUntil) view.appealableUntil = appealableUntil
 
   const availableActions =

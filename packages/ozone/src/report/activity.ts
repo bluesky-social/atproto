@@ -148,7 +148,6 @@ export async function createReportActivity(
         reportId: report.id,
         activityId: activity.id,
         activityType,
-        publicNote,
         createdAt: now,
       },
     ])

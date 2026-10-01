@@ -7,6 +7,7 @@ import {
 } from '@atproto/dev-env'
 import { toDatetimeString } from '@atproto/lex'
 import type { DidString } from '@atproto/syntax'
+import { parseStrikeSuspensionConfig } from '../src/config/strike-suspension.js'
 import { reportForEvent } from './_inbox.js'
 
 describe('viewer inbox reports', () => {
@@ -231,43 +232,54 @@ describe('viewer inbox reports', () => {
     expect(JSON.stringify(later)).not.toContain('PRIVATE CLOSURE NOTE')
   })
 
-  it('derives account standing from strikes and active enforcement', async () => {
-    const did = sc.dids.alice
-    const getStanding = async () => {
-      const { data } = await call(did, 'tools.ozone.inbox.getAccountStatus')
-      return data
-    }
+  it('derives standing from configured strike thresholds and active enforcement through the API', async () => {
+    Object.assign(
+      network.ozone.ctx.cfg.strikeSuspension,
+      parseStrikeSuspensionConfig('3:24,6:72,9:168,15:Infinity'),
+    )
+    const { did } = await sc.createAccount('standing', {
+      handle: 'standing.test',
+      email: 'standing@test.com',
+      password: 'standing-pass',
+    })
+    for (let index = 0; index < 3; index++)
+      await sc.post(did, `Standing fixture ${index}`)
+    await network.processAll()
+    const getStanding = async () =>
+      (await call(did, 'tools.ozone.inbox.getAccountStatus')).data
     expect((await getStanding()).standing).toBe('good')
-    await network.ozone.ctx.db.db
-      .insertInto('account_strike')
-      .values({
-        did,
-        activeStrikeCount: 8,
-        totalStrikeCount: 8,
-        firstStrikeAt: toDatetimeString(Date.now()),
-        lastStrikeAt: toDatetimeString(Date.now()),
+    for (const [index, expected] of ['good', 'warning', 'atRisk'].entries()) {
+      const { ref } = sc.posts[did][index]
+      await modClient.emitEvent({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventTakedown',
+          strikeCount: 3,
+        },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: ref.uriStr,
+          cid: ref.cidStr,
+        },
       })
-      .execute()
-    expect((await getStanding()).standing).toBe('warning')
-    await network.ozone.ctx.db.db
-      .updateTable('account_strike')
-      .where('did', '=', did)
-      .set({ activeStrikeCount: 12, totalStrikeCount: 12 })
-      .execute()
-    expect((await getStanding()).standing).toBe('atRisk')
-
-    await network.ozone.ctx.db.db
-      .updateTable('account_strike')
-      .where('did', '=', did)
-      .set({ activeStrikeCount: 0 })
-      .execute()
-    await network.ozone.ctx.db.db
-      .updateTable('moderation_subject_status')
-      .where('did', '=', did)
-      .where('recordPath', '=', '')
-      .where('convoId', '=', '')
-      .set({ takendown: true })
-      .execute()
+      expect((await getStanding()).standing).toBe(expected)
+    }
+    const { ref } = sc.posts[did][2]
+    await modClient.emitEvent({
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
+        strikeCount: -9,
+      },
+      subject: {
+        $type: 'com.atproto.repo.strongRef',
+        uri: ref.uriStr,
+        cid: ref.cidStr,
+      },
+    })
+    expect((await getStanding()).standing).toBe('good')
+    await modClient.emitEvent({
+      event: { $type: 'tools.ozone.moderation.defs#modEventTakedown' },
+      subject: { $type: 'com.atproto.admin.defs#repoRef', did },
+    })
     expect((await getStanding()).standing).toBe('atRisk')
   })
 })

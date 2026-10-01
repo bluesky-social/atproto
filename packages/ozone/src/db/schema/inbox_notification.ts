@@ -11,7 +11,6 @@ export interface InboxNotification {
   reason: tools.ozone.inbox.defs.Notification['reason']
   section: InboxSeen['section']
   target: tools.ozone.inbox.defs.Notification['target']
-  body: string | null
   sourceKey: string
   createdAt: DatetimeString
 }
