@@ -69,7 +69,12 @@ For requests using a space credential, send:
 
 Cover exactly those two components, in that order. For repo operations, the audience is the repo owner's DID, including when multiple accounts share a PDS. For space-host operations, it is the space authority's bare DID. Derive and validate this audience from the requested operation; do not substitute the hostname, PDS service DID, or #atproto_space_host service identifier.
 
-Use RFC 9421 signature-base construction, including the final "@signature-params" line and canonical structured-field serialization. For the minimal credential example, the signed UTF-8 bytes are the following lines joined by LF, with no trailing LF:
+Use RFC 9421 signature-base construction, including the final "@signature-params" line and canonical structured-field serialization. For fetching a credential, the signed UTF-8 bytes are the following lines joined by LF, with no trailing LF:
+
+    "authorization": Bearer <delegation-token>
+    "@signature-params": ("authorization");keyid="<P-256 did:key>"
+
+And for requests with a space credential:
 
     "authorization": Atproto-Space <space-credential>
     "atproto-space-audience": <audience DID>
