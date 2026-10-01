@@ -23,7 +23,6 @@
           },
           "cursor": {
             "type": "string",
-            "format": "tid",
             "description": "Return repos updated after this space revision (exclusive). Use a previous response's cursor or a previously processed spaceRev."
           }
         }
@@ -44,7 +43,6 @@
             },
             "cursor": {
               "type": "string",
-              "format": "tid",
               "description": "Pass this cursor on the next request. Omitted when no repos are returned."
             }
           }
