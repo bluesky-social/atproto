@@ -223,6 +223,9 @@ export function buildReportView(
       status: subjectStatus,
     },
     reportType,
+    priorityLevel: report.priorityLevel ?? undefined,
+    priorityScore: report.priorityScore ?? undefined,
+    priorityTargetMinutes: report.priorityTargetMinutes ?? undefined,
     reportedBy: report.reportedBy,
     reporter: {
       type: 'account' as const,

@@ -13,7 +13,9 @@ import { handleReportUpdate } from '../report/handle-report-update.js'
 import { ReportStatsService } from '../report/stats.js'
 import { viewQueueStats } from '../report/views.js'
 import { PolicyListSettingKey } from '../setting/constants.js'
+import { resolveReportPriorities } from '../setting/report.js'
 import { SettingService } from '../setting/service.js'
+import type { ResolvedReportPriority } from '../setting/types.js'
 
 type SubjectType = 'account' | 'record' | 'message' | 'conversation'
 
@@ -45,12 +47,14 @@ function reportRowFromEvent({
   event,
   reportType,
   assignment,
+  priority,
   createdAt,
   actionEventIds = null,
 }: {
   event: ReportEvent
   reportType: string
   assignment: ResolvedAssignment
+  priority: ResolvedReportPriority | undefined
   createdAt: DatetimeString
   actionEventIds?: number[] | null
 }) {
@@ -70,6 +74,9 @@ function reportRowFromEvent({
     isAutomated: parseModTool(event.modTool).isAutomated,
     status: assignment.status,
     reportType,
+    priorityLevel: priority?.level ?? null,
+    priorityScore: priority?.score ?? null,
+    priorityTargetMinutes: priority?.targetResolutionMinutes ?? null,
     did: event.subjectDid,
     recordPath,
     subjectMessageId: event.subjectMessageId,
@@ -140,6 +147,7 @@ export class QueueService {
     actionEventIds?: number[] | null
   }): Promise<number> {
     this.db.assertTransaction()
+    const priorities = await resolveReportPriorities(this.db, [reportType])
     const assignment: ResolvedAssignment = {
       queueId,
       queuedAt,
@@ -152,6 +160,7 @@ export class QueueService {
           event,
           reportType,
           assignment,
+          priority: priorities.get(reportType),
           createdAt: event.createdAt,
           actionEventIds,
         }),
@@ -713,6 +722,13 @@ export class QueueService {
     let assigned = 0
     let unmatched = 0
 
+    const reportTypes = events.map(
+      (event) =>
+        (event.meta?.reportType as string | undefined) ??
+        com.atproto.moderation.defs.ReasonOther,
+    )
+    const priorities = await resolveReportPriorities(this.db, reportTypes)
+
     const rows = events.map((event) => {
       const subjectType = subjectTypeFromEvent(event)
 
@@ -725,6 +741,7 @@ export class QueueService {
       const reportType =
         (event.meta?.reportType as string | undefined) ??
         com.atproto.moderation.defs.ReasonOther
+      const priority = priorities.get(reportType)
 
       const tool = parseModTool(event.modTool)
 
@@ -745,6 +762,7 @@ export class QueueService {
         event,
         reportType,
         assignment,
+        priority,
         createdAt: now,
       })
     })
