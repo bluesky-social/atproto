@@ -11,14 +11,14 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const { type, did: authority, limit, cursor } = params
+      const { spaceType, did: authority, limit, cursor } = params
 
       // No one space to check against, so the filters are the target: an
       // unfiltered listing needs a wildcard grant. Lists only the caller's own
       // spaces, so `read_self` is the grant that fits; `read` satisfies it too.
       if (auth.credentials.type === 'oauth') {
         auth.credentials.permissions.assertSpace({
-          type: type ?? '*',
+          type: spaceType ?? '*',
           authority: authority ?? '*',
           skey: '*',
           action: 'read_self',
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const spaces = await ctx.actorStore.read(auth.credentials.did, (store) =>
-        store.space.listSpaces({ limit, cursor, type, authority }),
+        store.space.listSpaces({ limit, cursor, type: spaceType, authority }),
       )
 
       return {

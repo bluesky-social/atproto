@@ -1,3 +1,4 @@
+import { spaceHostAud } from '@atproto/space'
 import { ForbiddenError, type Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
@@ -7,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.space.notifyWrite, {
     auth: ctx.authVerifier.serviceAuth,
     handler: async ({ input, auth }) => {
-      const { space, repo, rev, hash } = input.body
+      const { space, repo, repoRev, hash } = input.body
 
       const { spaceDid: ownerDid } = toSpaceRef(space)
 
@@ -21,13 +22,16 @@ export default function (server: Server, ctx: AppContext) {
 
       // Not checked during auth: a PDS answers for many authorities, so the
       // audience is only knowable from the space the body names.
-      if (auth.credentials.aud !== ownerDid) {
+      if (
+        auth.credentials.aud !== ownerDid &&
+        auth.credentials.aud !== spaceHostAud(ownerDid)
+      ) {
         throw new ForbiddenError(
           'notifyWrite aud does not match the space authority',
         )
       }
 
-      await processNotifyWrite(ctx, { space, repo, rev, hash })
+      await processNotifyWrite(ctx, { space, repo, repoRev, hash })
     },
   })
 }

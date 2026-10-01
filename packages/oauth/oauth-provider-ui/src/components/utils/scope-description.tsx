@@ -928,19 +928,21 @@ function SpaceTable({
 
       if (parsed.action.includes('read')) row.read = true
       if (parsed.action.includes('read_self')) row.readSelf = true
-      if (parsed.manage.length > 0) row.manage = true
+      if (parsed.manage != null) row.manage = true
 
-      for (const coll of parsed.collection) {
-        const existing = row.writes.get(coll)
-        const cell: SpaceWriteCell = existing ?? {
-          create: false,
-          update: false,
-          delete: false,
+      if (parsed.collection) {
+        for (const coll of parsed.collection) {
+          const existing = row.writes.get(coll)
+          const cell: SpaceWriteCell = existing ?? {
+            create: false,
+            update: false,
+            delete: false,
+          }
+          if (parsed.action.includes('create')) cell.create = true
+          if (parsed.action.includes('update')) cell.update = true
+          if (parsed.action.includes('delete')) cell.delete = true
+          row.writes.set(coll, cell)
         }
-        if (parsed.action.includes('create')) cell.create = true
-        if (parsed.action.includes('update')) cell.update = true
-        if (parsed.action.includes('delete')) cell.delete = true
-        row.writes.set(coll, cell)
       }
     }
 

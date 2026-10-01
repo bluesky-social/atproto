@@ -7,6 +7,15 @@ export type NeArray<T> = [T, ...T[]]
  */
 export type NeRoArray<T> = readonly [T, ...T[]]
 
+/**
+ * Checks if an array is non-empty.
+ */
+export function isNonEmpty<T>(value?: T[]): value is NeArray<T>
+export function isNonEmpty<T>(value?: readonly T[]): value is NeRoArray<T>
+export function isNonEmpty(value?: readonly unknown[]): boolean {
+  return value != null && value.length > 0
+}
+
 export type ScopeStringFor<P extends string> =
   P | `${P}:${string}` | `${P}?${string}`
 

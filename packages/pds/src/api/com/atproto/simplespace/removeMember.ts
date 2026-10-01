@@ -1,7 +1,7 @@
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
-import { assertSpaceOwner, assertSpaceScope } from '../space/util.js'
+import { assertSpaceOwner } from '../space/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.simplespace.removeMember, {
@@ -10,12 +10,11 @@ export default function (server: Server, ctx: AppContext) {
         // Performed in the handler as it requires the request body
       },
     }),
-    handler: async ({ input, auth }) => {
+    handler: async ({ input: { body }, auth }) => {
       const ownerDid = auth.credentials.did
-      const { space, did: memberDid } = input.body
+      const { space, did: memberDid } = body
 
-      assertSpaceScope(auth, space, { manage: 'update' })
-      assertSpaceOwner(ownerDid, space)
+      assertSpaceOwner(auth, space, { manage: 'update' })
 
       await ctx.actorStore.transact(ownerDid, async (actorTxn) => {
         await actorTxn.space.getActiveSpaceConfig(space)

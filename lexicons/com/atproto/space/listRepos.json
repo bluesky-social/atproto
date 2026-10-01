@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List the known repos that hold data in a space (the writer set), with each repo's current rev and commit hash. Served by the space host. This is the sync boundary, not an access-control list: it enumerates only writers, never readers. The set is what the authority claims from write notifications and is not itself authoritative; a repo's host is the source of truth.",
+      "description": "List the known repos that hold data in a space (the writer set), with each repo's current repoRev and commit hash. Served by the space host. This is the sync boundary, not an access-control list: it enumerates only writers, never readers. The set is what the authority claims from write notifications and is not itself authoritative; a repo's host is the source of truth.",
       "parameters": {
         "type": "params",
         "required": ["space"],
@@ -22,7 +22,8 @@
             "description": "Maximum number of repos to return."
           },
           "cursor": {
-            "type": "string"
+            "type": "string",
+            "description": "Return repos updated after this space revision (exclusive). Use a previous response's cursor or a previously processed spaceRev."
           }
         }
       },
@@ -32,15 +33,17 @@
           "type": "object",
           "required": ["repos"],
           "properties": {
-            "cursor": {
-              "type": "string"
-            },
             "repos": {
               "type": "array",
               "items": {
                 "type": "ref",
                 "ref": "#repo"
-              }
+              },
+              "description": "Returned in ascending spaceRev order. A repo may reappear if updated while paginating."
+            },
+            "cursor": {
+              "type": "string",
+              "description": "Pass this cursor on the next request. Omitted when no repos are returned."
             }
           }
         }
@@ -53,14 +56,14 @@
     },
     "repo": {
       "type": "object",
-      "required": ["did", "rev", "hash"],
+      "required": ["did", "repoRev", "hash", "spaceRev"],
       "properties": {
         "did": {
           "type": "string",
           "format": "did",
           "description": "The DID of a repo that holds data in the space."
         },
-        "rev": {
+        "repoRev": {
           "type": "string",
           "description": "The repo's current revision (TID), as last reported to the authority. May lag the repo host, which is the source of truth.",
           "format": "tid"
@@ -68,6 +71,11 @@
         "hash": {
           "type": "bytes",
           "description": "The repo's current commit hash (sha256 of the LtHash state), as last reported to the authority."
+        },
+        "spaceRev": {
+          "type": "string",
+          "format": "tid",
+          "description": "The space revision at which this repo was last updated."
         }
       }
     }

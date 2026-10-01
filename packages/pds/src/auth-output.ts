@@ -24,6 +24,7 @@ export type AccessOutput<S extends AuthScope = AuthScope> = {
     type: 'access'
     did: DidString
     scope: S
+    permissions?: undefined
   }
 }
 
@@ -63,6 +64,7 @@ export type ServiceAuthOutput = {
 export type SpaceCredentialOutput = {
   credentials: {
     type: 'space_credential'
+    audience: DidString
     iss: DidString
     space: SpaceRefString
   }
@@ -73,6 +75,14 @@ export type DelegationTokenOutput = {
     type: 'delegation_token'
     userDid: DidString
     space: SpaceRefString
-    dpopJkt: string
+    keyId: DidString
   }
+}
+
+export function isSpaceCredentialOutput<
+  T extends { credentials: { type: string } },
+>(
+  output: T,
+): output is Extract<T, { credentials: { type: 'space_credential' } }> {
+  return output.credentials.type === 'space_credential'
 }

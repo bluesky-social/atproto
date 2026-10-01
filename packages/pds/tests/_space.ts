@@ -3,7 +3,7 @@ import { type Server, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
 import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
   EXAMPLE_LABELER,
   SeedClient,
@@ -14,7 +14,7 @@ import { Client, type DidString } from '@atproto/lex'
 import { type LexMap, parseCid } from '@atproto/lex-data'
 import { JoseKey } from '@atproto/oauth-provider/provider'
 import { ReplayManager } from '@atproto/oauth-provider/verifier'
-import { RepoCommit, createDpopProof, dpopJktForKey } from '@atproto/space'
+import { RepoCommit, createSpaceSigHeaders } from '@atproto/space'
 import {
   type NsidString,
   type RecordKeyString,
@@ -53,7 +53,7 @@ export type Actor = {
 export type SpaceOptions = {
   /** Defaults to a slug derived from the current test's name. */
   skey?: string
-  type?: NsidString
+  spaceType?: NsidString
   members?: Actor[]
   readPolicy?: com.atproto.simplespace.createSpace.$InputBody['readPolicy']
   writePolicy?: com.atproto.simplespace.createSpace.$InputBody['writePolicy']
@@ -122,15 +122,15 @@ export class SpaceClient {
     opts: SpaceOptions = {},
   ): Promise<SpaceRefString> {
     const skey = opts.skey ?? currentTestSkey()
-    const type = opts.type ?? TEST_SPACE_TYPE
+    const spaceType = opts.spaceType ?? TEST_SPACE_TYPE
 
-    const uri = `at://${owner.did}/space/${type}/${skey}` as SpaceRefString
+    const uri = `at://${owner.did}/space/${spaceType}/${skey}` as SpaceRefString
 
     if (!opts.ungoverned) {
       const res = await owner.client.call(
         com.atproto.simplespace.createSpace,
         {
-          type,
+          spaceType,
           skey,
           readPolicy: opts.readPolicy ?? defs.memberListPolicy.build({}),
           writePolicy: opts.writePolicy ?? defs.memberListPolicy.build({}),
@@ -234,18 +234,21 @@ export class SpaceClient {
   async credentialFor(
     actor: Actor,
     space: SpaceRefString,
-    opts: { clientAttestation?: string; key?: JoseKey } = {},
+    opts: { clientAttestation?: string; key?: P256Keypair } = {},
   ): Promise<SpaceCredential> {
-    const key = opts.key ?? (await JoseKey.generate(['ES256']))
+    const key = opts.key ?? (await P256Keypair.create())
     const token = await this.delegationTokenFor(actor, space)
-    const proof = await this.credentialExchangeProof(key)
     const res = await this.authority.getClient().call(
       com.atproto.space.getSpaceCredential,
       {
         space,
         clientAttestation: opts.clientAttestation,
       },
-      { headers: { authorization: `Bearer ${token}`, dpop: proof } },
+      {
+        headers: await createSpaceSigHeaders(key, {
+          authorization: `Bearer ${token}`,
+        }),
+      },
     )
     return new SpaceCredential(res.credential, key)
   }
@@ -262,15 +265,12 @@ export class SpaceClient {
     return res.token
   }
 
-  /**
-   * Hand-mint a credential the authority would never issue. Its proof is valid, so a
-   * rejection comes from what the test set out to exercise, not a missing proof.
-   */
+  /** Mint a credential with invalid claims and a valid key binding. */
   async forgedCredential(
-    sign: (dpopJkt: string) => Promise<string>,
+    sign: (keyId: DidString) => Promise<string>,
   ): Promise<SpaceCredential> {
-    const key = await JoseKey.generate(['ES256'])
-    return new SpaceCredential(await sign(await dpopJktForKey(key)), key)
+    const key = await P256Keypair.create()
+    return new SpaceCredential(await sign(key.did() as DidString), key)
   }
 
   /** The exchange on its own, for tests about minting rather than about reading. */
@@ -279,31 +279,19 @@ export class SpaceClient {
     token: string,
     opts: { clientAttestation?: string } = {},
   ) {
-    const key = await JoseKey.generate(['ES256'])
-    const proof = await this.credentialExchangeProof(key)
+    const key = await P256Keypair.create()
     return this.authority.getClient().call(
       com.atproto.space.getSpaceCredential,
       {
         space,
         clientAttestation: opts.clientAttestation,
       },
-      { headers: { authorization: `Bearer ${token}`, dpop: proof } },
+      {
+        headers: await createSpaceSigHeaders(key, {
+          authorization: `Bearer ${token}`,
+        }),
+      },
     )
-  }
-
-  async credentialExchangeProof(
-    key: JoseKey,
-    authority: TestPds = this.authority,
-    credential?: string,
-  ): Promise<string> {
-    return createDpopProof(key, {
-      htm: 'POST',
-      htu: new URL(
-        `/xrpc/${com.atproto.space.getSpaceCredential.$lxm}`,
-        authority.url,
-      ).toString(),
-      credential,
-    })
   }
 
   /** Read a repo's state directly. No endpoint exposes the raw set hash. */
@@ -408,18 +396,11 @@ export class SpaceClient {
   }
 }
 
-/**
- * A space credential together with the key it is bound to. Mints a proof per request,
- * so it can't be reduced to a reusable header bag the way an access token can.
- *
- * The credential carries no holder identity — the requesting user's DID is spent at
- * mint time and is not in the token. Name these clients for the role (`asSyncer`),
- * never for the user, or a test reads as an identity assertion this path can't make.
- */
+/** A space credential and its signing key, with audience DIDs derived from requests. */
 export class SpaceCredential {
   constructor(
     public credential: string,
-    public key: JoseKey,
+    public key: P256Keypair,
   ) {}
 
   clientFor(pds: TestPds): Client {
@@ -434,15 +415,18 @@ export class SpaceCredential {
     init?: RequestInit,
   ): Promise<Response> => {
     const request = new Request(input, init)
-    request.headers.set('authorization', `DPoP ${this.credential}`)
-    request.headers.set(
-      'dpop',
-      await createDpopProof(this.key, {
-        htm: request.method,
-        htu: request.url,
-        credential: this.credential,
-      }),
-    )
+    const params =
+      request.method === 'GET'
+        ? Object.fromEntries(new URL(request.url).searchParams)
+        : await request.clone().json()
+    const audience = params.repo ?? SpaceRef.parse(params.space).spaceDid
+    const headers = await createSpaceSigHeaders(this.key, {
+      authorization: `Atproto-Space ${this.credential}`,
+      audience,
+    })
+    for (const [name, value] of Object.entries(headers)) {
+      request.headers.set(name, value)
+    }
     return globalThis.fetch(request)
   }
 }

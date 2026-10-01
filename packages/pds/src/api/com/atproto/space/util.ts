@@ -1,33 +1,32 @@
-import { getPdsEndpoint, getServiceEndpoint } from '@atproto/common'
+import {
+  MINUTE,
+  TID,
+  getPdsEndpoint,
+  getServiceEndpoint,
+} from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
 import { xrpc } from '@atproto/lex'
-import type { SpacePermissionMatch } from '@atproto/oauth-scopes'
-import {
-  type CommitCtx,
-  LtHash,
-  RepoCommit,
-  type SignedCommit,
-} from '@atproto/space'
+import type { SpacePermissionMatchOperation } from '@atproto/oauth-scopes'
+import { type CommitCtx, RepoCommit, type SignedCommit } from '@atproto/space'
 import { type DidString, SpaceRef, type SpaceRefString } from '@atproto/syntax'
 import {
+  AuthRequiredError,
   ForbiddenError,
   InvalidRequestError,
   createServiceAuthHeaders,
 } from '@atproto/xrpc-server'
 import type { ActorStore } from '../../../../actor-store/actor-store.js'
 import type { SpaceRepo } from '../../../../actor-store/db/index.js'
-import type {
-  AccessOutput,
-  OAuthOutput,
-  SpaceCredentialOutput,
+import {
+  type AccessOutput,
+  type OAuthOutput,
+  type SpaceCredentialOutput,
+  isSpaceCredentialOutput,
 } from '../../../../auth-output.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
 import { spaceLogger } from '../../../../logger.js'
-
-// Everything except the (type, authority, skey) tuple, derived from the space URI.
-type SpaceScopeOp = Omit<SpacePermissionMatch, 'type' | 'authority' | 'skey'>
 
 // Lexicons type a space as a `space-ref`, so schema validation rejects a
 // malformed one before any handler runs. Defensive for other callers.
@@ -66,34 +65,15 @@ export async function assertSpaceHost(
 // A simplespace space is anchored on its authority's own DID, so ownership is a
 // comparison against the space URI.
 export function assertSpaceOwner(
-  callerDid: string,
-  spaceUri: SpaceRefString,
+  auth: AccessOutput | OAuthOutput,
+  space: SpaceRef | SpaceRefString,
+  op: SpacePermissionMatchOperation,
 ): void {
-  const { spaceDid } = toSpaceRef(spaceUri)
-  if (spaceDid !== callerDid) {
+  const ref = typeof space === 'string' ? toSpaceRef(space) : space
+  auth.credentials.permissions?.assertSpaceRef(ref, op)
+  if (ref.spaceDid !== auth.credentials.did) {
     throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
   }
-}
-
-/**
- * Space credentials carry their own space, checked by {@link assertCredentialSpace}.
- * Legacy access tokens (including app passwords) predate granular permissions and
- * carry no space grants at all, so there is nothing to evaluate — they are bounded
- * instead by the handlers, which require the caller to be the repo they name.
- */
-export function assertSpaceScope(
-  auth: AccessOutput | OAuthOutput | SpaceCredentialOutput,
-  spaceUri: SpaceRefString,
-  op: SpaceScopeOp,
-): void {
-  if (auth.credentials.type !== 'oauth') return
-  const { spaceDid, spaceType, skey } = toSpaceRef(spaceUri)
-  auth.credentials.permissions.assertSpace({
-    type: spaceType,
-    authority: spaceDid,
-    skey,
-    ...op,
-  } as SpacePermissionMatch)
 }
 
 /**
@@ -108,8 +88,8 @@ export function assertSpaceRead(
   spaceUri: SpaceRefString,
   repo: string,
 ): void {
-  if (auth.credentials.type === 'space_credential') {
-    assertCredentialSpace(auth.credentials, spaceUri)
+  if (isSpaceCredentialOutput(auth)) {
+    assertCredentialSpace(auth.credentials, spaceUri, repo)
     return
   }
   if (auth.credentials.did !== repo) {
@@ -120,7 +100,9 @@ export function assertSpaceRead(
       'RepoNotFound',
     )
   }
-  assertSpaceScope(auth, spaceUri, { action: 'read_self' })
+  auth.credentials.permissions?.assertSpaceRef(spaceUri, {
+    action: 'read_self',
+  })
 }
 
 // The space analogue of `isUserOrAdmin`: a space credential names a syncer rather
@@ -136,7 +118,14 @@ export function isSpaceSelfRead(
 export function assertCredentialSpace(
   credentials: SpaceCredentialOutput['credentials'],
   spaceUri: SpaceRefString,
+  audience: string = toSpaceRef(spaceUri).spaceDid,
 ): void {
+  if (credentials.audience !== audience) {
+    throw new AuthRequiredError(
+      'space audience does not match the request',
+      'BadSpaceAudience',
+    )
+  }
   if (credentials.space !== spaceUri) {
     throw new InvalidRequestError(
       'Credential is not scoped to this space',
@@ -179,6 +168,14 @@ export async function resolveServiceEndpoint(
     return null
   })
   if (!didDoc) return undefined
+  if (fragment === 'atproto_space_host') {
+    const dedicated = didDoc.service?.some(
+      (entry) => entry.id === '#atproto_space_host' || entry.id === service,
+    )
+    return dedicated
+      ? getServiceEndpoint(didDoc, { id: '#atproto_space_host' })
+      : getPdsEndpoint(didDoc)
+  }
   return fragment
     ? getServiceEndpoint(didDoc, { id: `#${fragment}` })
     : getPdsEndpoint(didDoc)
@@ -210,12 +207,13 @@ export async function processNotifyWrite(
   ctx: AppContext,
   input: com.atproto.space.notifyWrite.$InputBody,
 ): Promise<void> {
-  const { space, repo, rev, hash } = input
+  const { space, repo, repoRev, hash } = input
   const { spaceDid: ownerDid } = toSpaceRef(space)
 
-  // Only the space owner's PDS has the member list and fan-out state.
-  const account = await ctx.accountManager.getAccount(ownerDid)
-  if (!account) return
+  await assertSpaceHost(ctx, space)
+  if (TID.fromStr(repoRev).timestamp() > (Date.now() + 5 * MINUTE) * 1000) {
+    throw new InvalidRequestError('Repo revision is in the future', 'FutureRev')
+  }
 
   const { existing, config, recipients } = await ctx.actorStore.read(
     ownerDid,
@@ -225,8 +223,9 @@ export async function processNotifyWrite(
       recipients: await store.space.getCredentialRecipients(space),
     }),
   )
-  // Nothing to maintain for an ungoverned or deleted space.
-  if (!config || !existing || existing.deletedAt) return
+  if (!config || !existing || existing.deletedAt) {
+    throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+  }
 
   // Apply the same user perimeter used when minting credentials. notifyWrite
   // comes from a PDS rather than an app, so there is no app attestation to check.
@@ -239,14 +238,15 @@ export async function processNotifyWrite(
     throw new ForbiddenError('notifyWrite writer is not authorized')
   }
 
-  await ctx.actorStore.transact(ownerDid, (txn) =>
-    txn.space.recordWriter(space, repo, rev, hash),
+  const sequence = await ctx.actorStore.transact(ownerDid, (txn) =>
+    txn.space.recordWriter(space, repo, repoRev, hash),
   )
+  if (!sequence) return
 
   // Fan-out stays queued so neither a local write nor a remote PDS waits on
   // downstream syncing services.
   const lxm = com.atproto.space.notifyWrite.$lxm
-  ctx.backgroundQueue.add(async () => {
+  ctx.backgroundQueue.add(async (_ctx, signal) => {
     for (const recipient of recipients) {
       try {
         const target = await resolveNotifyTarget(ctx, {
@@ -263,7 +263,8 @@ export async function processNotifyWrite(
         }
         await xrpc(target.endpoint, com.atproto.space.notifyWrite, {
           headers: target.headers,
-          body: { space, repo, rev, hash },
+          body: { space, repo, repoRev, hash, ...sequence },
+          signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]),
         })
       } catch (err) {
         spaceLogger.warn(
@@ -275,9 +276,7 @@ export async function processNotifyWrite(
   })
 }
 
-// Notifications are best-effort: sync recovers on a later notification or a sweep.
-// Takes a nullable commit so callers whose write may be a no-op — an already-deleted
-// record, an empty batch — don't each have to guard.
+/** Send immediately after the repo commit, persisting failures for retry. */
 export async function fireNotifyWrite(
   ctx: AppContext,
   opts: {
@@ -288,36 +287,5 @@ export async function fireNotifyWrite(
 ): Promise<void> {
   const { space, writerDid, commit } = opts
   if (!commit) return
-  const { rev, setHash } = commit
-  const { spaceDid } = toSpaceRef(space)
-  const lxm = com.atproto.space.notifyWrite.$lxm
-  const body = {
-    space,
-    repo: writerDid as DidString,
-    rev,
-    hash: new LtHash(setHash).digest(),
-  }
-  try {
-    const owner = await ctx.accountManager.getAccount(spaceDid)
-    if (owner) {
-      await processNotifyWrite(ctx, body)
-      return
-    }
-
-    const target = await resolveNotifyTarget(ctx, {
-      iss: writerDid,
-      service: spaceDid,
-      lxm,
-    })
-    if (!target) {
-      spaceLogger.warn({ space, lxm }, 'could not resolve space host')
-      return
-    }
-    await xrpc(target.endpoint, com.atproto.space.notifyWrite, {
-      headers: target.headers,
-      body,
-    })
-  } catch (err) {
-    spaceLogger.warn({ err, space, repo: writerDid, lxm }, 'notify failed')
-  }
+  await ctx.spaceNotifications.notify(space, writerDid as DidString, commit)
 }
