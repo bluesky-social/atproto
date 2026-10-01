@@ -396,6 +396,17 @@ export class AuthVerifier {
 
       await this.verifySpaceDpopProof(ctx.req, { credential, jkt })
 
+      const revoked = await this.accountManager.isSpaceCredentialRevoked(
+        space.toString(),
+        payload.jti,
+      )
+      if (revoked) {
+        throw new AuthRequiredError(
+          'space credential has been revoked',
+          'CredentialRevoked',
+        )
+      }
+
       return {
         credentials: {
           type: 'space_credential',
