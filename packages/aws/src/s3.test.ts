@@ -21,6 +21,7 @@ type RequestHandler = (
  */
 class FakeS3Server {
   server: http.Server
+  connectionCount = 0
   private sockets = new Set<Socket>()
 
   constructor() {
@@ -28,6 +29,7 @@ class FakeS3Server {
       this.handler(req, res)
     })
     this.server.on('connection', (socket) => {
+      this.connectionCount++
       this.sockets.add(socket)
       socket.on('close', () => this.sockets.delete(socket))
     })
@@ -81,19 +83,21 @@ describe(S3BlobStore, () => {
     await server.close()
   })
 
-  const createBlobStore = (cfg: {
+  const createConfig = (cfg: {
     uploadTimeoutMs?: number
     requestTimeoutMs?: number
     maxAttempts?: number
-  }) => {
-    return new S3BlobStore('did:example:alice', {
-      bucket: 'test-bucket',
-      region: 'us-east-1',
-      endpoint,
-      forcePathStyle: true,
-      credentials: { accessKeyId: 'key', secretAccessKey: 'secret' },
-      ...cfg,
-    })
+  }) => ({
+    bucket: 'test-bucket',
+    region: 'us-east-1',
+    endpoint,
+    forcePathStyle: true,
+    credentials: { accessKeyId: 'key', secretAccessKey: 'secret' },
+    ...cfg,
+  })
+
+  const createBlobStore = (cfg: Parameters<typeof createConfig>[0]) => {
+    return new S3BlobStore('did:example:alice', createConfig(cfg))
   }
 
   it('reaps stalled requests at requestTimeoutMs and succeeds on retry', async () => {
@@ -245,6 +249,54 @@ describe(S3BlobStore, () => {
       })
 
       await expect(store.getBytes(testCid)).rejects.toThrow()
+    })
+  })
+
+  describe('connection reuse', () => {
+    it('shares one connection pool across stores from creator()', async () => {
+      using _handlerMock = vi
+        .spyOn(server, 'handler')
+        .mockImplementation((req, res) => {
+          req.resume()
+          res.writeHead(200, { 'content-length': '3' }).end('foo')
+        })
+
+      const creator = S3BlobStore.creator(createConfig({}))
+      for (let i = 0; i < 10; i++) {
+        await creator(`did:example:user${i}`).getBytes(testCid)
+      }
+
+      expect(server.connectionCount).toBe(1)
+    })
+
+    it('does not cap concurrent connections', async () => {
+      // Hold every response open until all requests have reached the server.
+      // A capped pool (the SDK defaults to 50 sockets) would queue the excess
+      // requests and never get there.
+      const concurrency = 64
+      let release!: () => void
+      const released = new Promise<void>((resolve) => {
+        release = resolve
+      })
+      let received = 0
+      using _handlerMock = vi
+        .spyOn(server, 'handler')
+        .mockImplementation((req, res) => {
+          req.resume()
+          res.writeHead(200, { 'content-length': '3' })
+          res.write('f')
+          if (++received === concurrency) release()
+          released.then(() => res.end('oo'))
+        })
+
+      const creator = S3BlobStore.creator(createConfig({}))
+      const downloads = Array.from({ length: concurrency }, (_, i) =>
+        creator(`did:example:user${i}`).getBytes(testCid),
+      )
+
+      await released
+      await expect(Promise.all(downloads)).resolves.toHaveLength(concurrency)
+      expect(server.connectionCount).toBe(concurrency)
     })
   })
 })
