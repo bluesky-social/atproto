@@ -691,18 +691,22 @@ describe('space sync', () => {
       expect(catchUp.repos[0].spaceRev > cursor).toBe(true)
     })
 
-    it('rejects malformed listRepos cursors', async () => {
+    it('accepts arbitrary string listRepos cursors', async () => {
       const space = await sc.createSpace(alice)
+      await sc.write(alice, space)
       const cred = await sc.credentialFor(alice, space)
-      const params = com.atproto.space.listRepos.$params.toURLSearchParams({
+      const client = cred.clientFor(alice.pds)
+      const before = await client.call(com.atproto.space.listRepos, {
         space,
+        cursor: '0',
       })
-      params.set('cursor', 'not-a-tid')
-      const response = await cred.fetch(
-        `${alice.pds.url}/xrpc/${com.atproto.space.listRepos.$lxm}?${params}`,
-      )
-      expect(response.status).toBe(400)
-      expect(await response.json()).toMatchObject({ error: 'InvalidRequest' })
+      expect(before.repos.map((repo) => repo.did)).toEqual([alice.did])
+      const after = await client.call(com.atproto.space.listRepos, {
+        space,
+        cursor: 'not-a-tid',
+      })
+      expect(after.repos).toEqual([])
+      expect(after.cursor).toBeUndefined()
     })
 
     it('chains forwarded notifications across local and remote writers', async () => {
