@@ -1,4 +1,5 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
+import type { NsidString } from '@atproto/lex'
 import { getBlobCidString } from '@atproto/lex-data'
 import { JoseKey } from '@atproto/oauth-provider/provider'
 import { spaceHostAud } from '@atproto/space'
@@ -68,7 +69,7 @@ describe('simplespace', () => {
         alice.client.call(
           com.atproto.simplespace.createSpace,
           {
-            type: TEST_SPACE_TYPE,
+            spaceType: TEST_SPACE_TYPE,
             skey: space.split('/').pop()!,
             readPolicy: defs.memberListPolicy.build({}),
             writePolicy: defs.memberListPolicy.build({}),
@@ -84,7 +85,7 @@ describe('simplespace', () => {
         alice.client.call(
           com.atproto.simplespace.createSpace,
           {
-            type: TEST_SPACE_TYPE,
+            spaceType: TEST_SPACE_TYPE,
             skey: 'not a valid rkey',
             readPolicy: defs.memberListPolicy.build({}),
             writePolicy: defs.memberListPolicy.build({}),
@@ -93,6 +94,27 @@ describe('simplespace', () => {
           { headers: alice.headers },
         ),
       ).rejects.toThrow(/record key/i)
+    })
+
+    it('filters spaces by spaceType', async () => {
+      const space = await sc.createSpace(alice)
+      const otherType = 'com.example.otherGroup' as NsidString
+      const other = await sc.createSpace(alice, { spaceType: otherType })
+
+      const listed = await alice.client.call(
+        com.atproto.space.listSpaces,
+        { spaceType: TEST_SPACE_TYPE },
+        { headers: alice.headers },
+      )
+      expect(listed.spaces.map((s) => s.uri)).toContain(space)
+      expect(listed.spaces.map((s) => s.uri)).not.toContain(other)
+
+      const otherListed = await alice.client.call(
+        com.atproto.space.listSpaces,
+        { spaceType: otherType },
+        { headers: alice.headers },
+      )
+      expect(otherListed.spaces.map((s) => s.uri)).toEqual([other])
     })
 
     it('governs a space written to before createSpace', async () => {
