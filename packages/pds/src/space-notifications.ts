@@ -1,8 +1,15 @@
 import { randomUUID } from 'node:crypto'
 import { DAY, HOUR, MINUTE, SECOND, allFulfilled } from '@atproto/common'
-import { type DidString, type SpaceRefString, xrpc } from '@atproto/lex'
+import {
+  type DidString,
+  RETRYABLE_HTTP_STATUS_CODES,
+  type SpaceRefString,
+  XrpcError,
+  xrpc,
+} from '@atproto/lex'
 import { LtHash, spaceHostAud } from '@atproto/space'
 import { SpaceRef } from '@atproto/syntax'
+import { XRPCError } from '@atproto/xrpc-server'
 import type { SpaceNotificationRetry } from './account-manager/db/index.js'
 import {
   processNotifyWrite,
@@ -13,9 +20,10 @@ import { com } from './lexicons/index.js'
 import { spaceLogger } from './logger.js'
 
 /**
- * Sends notifications immediately; failures are coalesced in the account-manager DB
- * and retried with backoff for up to 24 hours. An expiring lease selects one retry
- * worker across processes, allowing takeover if that worker stops.
+ * Sends notifications immediately; retryable failures are coalesced in the
+ * account-manager DB. Each newer revision resets the backoff and 24-hour window.
+ * An expiring lease selects one retry worker across processes, allowing takeover
+ * if that worker stops.
  */
 export class SpaceNotifications implements AsyncDisposable {
   private readonly owner = randomUUID()
@@ -36,7 +44,7 @@ export class SpaceNotifications implements AsyncDisposable {
     void this.retryPending()
   }
 
-  /** Send immediately, persisting any failure for the retry worker. */
+  /** Send immediately, persisting retryable failures for the retry worker. */
   async notify(
     space: SpaceRefString,
     repo: DidString,
@@ -52,19 +60,31 @@ export class SpaceNotifications implements AsyncDisposable {
       await this.deliver(body)
       await this.clearRetry(body)
     } catch (err) {
+      if (!isRetryableError(err)) {
+        await this.clearRetry(body)
+        spaceLogger.warn(
+          { err, space, repo },
+          'space notification will not be retried',
+        )
+        return
+      }
+      const schedule = {
+        attempts: 1,
+        retryAt: nextRetryAt(1),
+        expiresAt: Date.now() + DAY,
+      }
       await this.db.executeWithRetry(
         this.db.db
           .insertInto('space_notification_retry')
-          .values({
-            ...body,
-            attempts: 1,
-            retryAt: nextRetryAt(1),
-            expiresAt: Date.now() + DAY,
-          })
+          .values({ ...body, ...schedule })
           .onConflict((oc) =>
             oc
               .columns(['repo', 'space'])
-              .doUpdateSet({ repoRev: body.repoRev, hash: body.hash })
+              .doUpdateSet({
+                repoRev: body.repoRev,
+                hash: body.hash,
+                ...schedule,
+              })
               .where('space_notification_retry.repoRev', '<', body.repoRev),
           ),
       )
@@ -137,6 +157,14 @@ export class SpaceNotifications implements AsyncDisposable {
       await this.deliver({ space, repo, repoRev, hash })
       await this.clearRetry(retry)
     } catch (err) {
+      if (!isRetryableError(err)) {
+        await this.clearRetry(retry)
+        spaceLogger.warn(
+          { err, space, repo },
+          'space notification will not be retried',
+        )
+        return
+      }
       await this.reschedule(retry)
       spaceLogger.warn({ err, space, repo }, 'space notification retry failed')
     }
@@ -153,6 +181,7 @@ export class SpaceNotifications implements AsyncDisposable {
         })
         .where('repo', '=', retry.repo)
         .where('space', '=', retry.space)
+        .where('repoRev', '=', retry.repoRev)
         .where('attempts', '=', retry.attempts)
         .where('expiresAt', '=', retry.expiresAt),
     )
@@ -235,6 +264,15 @@ export class SpaceNotifications implements AsyncDisposable {
   async [Symbol.asyncDispose](): Promise<void> {
     await this.destroy()
   }
+}
+
+function isRetryableError(err: unknown): boolean {
+  if (err instanceof XrpcError) return err.shouldRetry()
+  if (err instanceof XRPCError) {
+    return RETRYABLE_HTTP_STATUS_CODES.has(err.statusCode)
+  }
+  // @NOTE Resolution and local storage failures can precede an XRPC request.
+  return true
 }
 
 function nextRetryAt(attempts: number): number {
