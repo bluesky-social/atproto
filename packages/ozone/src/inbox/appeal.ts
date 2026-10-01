@@ -298,6 +298,7 @@ export const findLatestAppealReport = async (
     .where('reportType', '=', APPEAL_REASON_TYPE)
     .where((eb) => reportSubjectFilter(eb, subject))
     .orderBy('id', 'desc')
+    .limit(1)
     .select(['id', 'status', 'createdAt', 'closedAt'])
     .executeTakeFirst()
   return report ?? null
