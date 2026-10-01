@@ -50,7 +50,7 @@ import {
 const MIN_RAW_LIMIT = 300
 const MAX_RAW_ITEMS = 3000
 const MAX_READS = 3
-const MAX_GROUP_ITEMS_WITH_RELATED_VIEWS = 5
+const MAX_GROUP_ITEMS_WITH_RELATED_VIEWS = 10
 
 export const getNextRawLimit = (
   itemsFetched: number,
@@ -121,6 +121,7 @@ const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { ctx, params } = input
+  const now = Date.now()
   const feed = normalizeFeed(params.feed)
   const seenAt = params.seenAt ? Date.parse(params.seenAt) : undefined
   const delayedCursor = delayCursor(undefined, ctx.cfg.notificationsDelayMs)
@@ -174,7 +175,7 @@ const skeleton = async (
     const groupingResult = buildGroups(
       items,
       params.limit,
-      params.utcOffset,
+      now,
       seenAt,
       ctx.cfg.notificationsV2Algorithm,
       feed,
@@ -430,31 +431,29 @@ const presentation = (
   }
   return {
     groups,
-    relatedProfileViews: Object.fromEntries(
-      mapDefined([...profileDids], (did) => {
+    relatedViews: [
+      ...mapDefined([...profileDids], (did) => {
         const view = ctx.views.profileDetailed(did, hydration)
         if (!view) return
-        return [did, app.bsky.actor.defs.profileViewDetailed.$build(view)]
+        return app.bsky.actor.defs.profileViewDetailed.$build(view)
       }),
-    ),
-    relatedRecordViews: Object.fromEntries(
-      mapDefined([...recordUris], (uri) => {
+      ...mapDefined([...recordUris], (uri) => {
         const collection = new AtUri(uri).collection
         if (collection === app.bsky.feed.post.$type) {
           const view = ctx.views.maybePost(uri, hydration)
           if (!view) return
-          return [uri, view]
+          return view
         } else if (collection === app.bsky.graph.starterpack.$type) {
           const view = ctx.views.starterPack(uri, hydration)
           if (!view) return
-          return [uri, app.bsky.graph.defs.starterPackView.$build(view)]
+          return app.bsky.graph.defs.starterPackView.$build(view)
         } else if (collection === app.bsky.feed.generator.$type) {
           const view = ctx.views.feedGenerator(uri, hydration)
           if (!view) return
-          return [uri, app.bsky.feed.defs.generatorView.$build(view)]
+          return app.bsky.feed.defs.generatorView.$build(view)
         }
       }),
-    ),
+    ],
     cursor: skeleton.cursor,
     seenAt: params.seenAt,
   }

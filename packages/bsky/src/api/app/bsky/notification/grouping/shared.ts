@@ -1,4 +1,3 @@
-import { DAY, MINUTE } from '@atproto/common'
 import { NotificationFeed } from '../../../../../proto/bsky_pb.js'
 import {
   type DataplaneNotificationReason,
@@ -34,9 +33,6 @@ export const canGroupNotification = (
     (kind === NOTIFICATION_REASON.SUBSCRIBED_POST &&
       feed === NotificationFeed.ACTIVITY)
   )
-
-export const localDay = (timestamp: number, utcOffset: number) =>
-  Math.floor((timestamp + utcOffset * MINUTE) / DAY)
 
 export const isNotificationRead = (
   indexedAt: string,

@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { Timestamp } from '@bufbuild/protobuf'
 import { afterAll, assert, beforeAll, describe, expect, it, vi } from 'vitest'
+import { DAY } from '@atproto/common'
 import { type SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import {
   type AtUriString,
@@ -32,10 +33,11 @@ import {
 } from '../src/proto/bsky_pb.js'
 
 const NOW = '2026-09-21T12:00:00.000Z'
+const now = Date.parse(NOW)
 const post = (name: string) =>
   `at://did:plc:viewer/${app.bsky.feed.post.$type}/${name}` as AtUriString
 const minutesAgo = (minutes: number) =>
-  new Date(Date.parse(NOW) - minutes * 60_000).toISOString()
+  new Date(now - minutes * 60_000).toISOString()
 
 const item = (
   id: string,
@@ -94,7 +96,6 @@ describe('notification grouping', () => {
   it.each(['algoGravity', 'algoLookback'] as const)(
     '%s groups interleaved likes by post and orders the groups by their newest like',
     (algorithm) => {
-      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
       const poem = post('poem')
       const song = post('song')
       const items = [
@@ -116,7 +117,7 @@ describe('notification grouping', () => {
         }),
       ]
 
-      const result = buildGroups(items, 2, 0, undefined, algorithm)
+      const result = buildGroups(items, 2, now, undefined, algorithm)
 
       expect(
         result.groups.map(({ items }) => items.map(({ id }) => id)),
@@ -135,7 +136,6 @@ describe('notification grouping', () => {
   it.each(['algoGravity', 'algoLookback'] as const)(
     '%s keeps filling existing groups after reaching the page limit, then leaves the first new group for the next page',
     (algorithm) => {
-      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
       const poem = post('poem')
       const song = post('song')
       const photo = post('photo')
@@ -160,7 +160,7 @@ describe('notification grouping', () => {
         }),
       ]
 
-      const firstPage = buildGroups(items, 2, 0, undefined, algorithm)
+      const firstPage = buildGroups(items, 2, now, undefined, algorithm)
 
       expect(
         firstPage.groups.map(({ items }) => items.map(({ id }) => id)),
@@ -170,7 +170,13 @@ describe('notification grouping', () => {
       ])
       expect(firstPage.cursor).toBe(items[3]!.raw.indexedAt)
 
-      const secondPage = buildGroups(items.slice(4), 2, 0, undefined, algorithm)
+      const secondPage = buildGroups(
+        items.slice(4),
+        2,
+        now,
+        undefined,
+        algorithm,
+      )
       expect(
         secondPage.groups.map(({ items }) => items.map(({ id }) => id)),
       ).toEqual([['photo-1'], ['poem-3']])
@@ -179,7 +185,6 @@ describe('notification grouping', () => {
   )
 
   it('Gravity keeps the older group open after a weak connection splits off newer likes', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
     const items = [
       item('newer-1', minutesAgo(0)),
       item('newer-2', minutesAgo(1)),
@@ -187,7 +192,7 @@ describe('notification grouping', () => {
       item('older-2', minutesAgo(61)),
     ]
 
-    const result = buildGroups(items, 2, 0, undefined, 'algoGravity')
+    const result = buildGroups(items, 2, now, undefined, 'algoGravity')
 
     expect(result.groups.map(({ items }) => items.map(({ id }) => id))).toEqual(
       [
@@ -198,14 +203,13 @@ describe('notification grouping', () => {
   })
 
   it('Gravity uses the older group’s zone after a split, allowing likes 35 minutes apart to stay together', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
     const items = [
       item('newest', minutesAgo(0)),
       item('hour-old', minutesAgo(60)),
       item('older-like', minutesAgo(95)),
     ]
 
-    const result = buildGroups(items, 2, 0, undefined, 'algoGravity')
+    const result = buildGroups(items, 2, now, undefined, 'algoGravity')
 
     expect(result.groups.map(({ items }) => items.map(({ id }) => id))).toEqual(
       [['newest'], ['hour-old', 'older-like']],
@@ -213,14 +217,13 @@ describe('notification grouping', () => {
   })
 
   it('Gravity stops before a like that would split a group beyond the page limit', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
     const items = [
       item('newer-1', minutesAgo(0)),
       item('newer-2', minutesAgo(1)),
       item('older', minutesAgo(60)),
     ]
 
-    const result = buildGroups(items, 1, 0, undefined, 'algoGravity')
+    const result = buildGroups(items, 1, now, undefined, 'algoGravity')
 
     expect(result.groups[0]?.items.map(({ id }) => id)).toEqual([
       'newer-1',
@@ -230,16 +233,12 @@ describe('notification grouping', () => {
   })
 
   it('Gravity splits equally weak connections at the middle-most one', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
     const gapMs = 27 * 60_000 + 40_000
     const items = Array.from({ length: 5 }, (_, index) =>
-      item(
-        `like-${index}`,
-        new Date(Date.parse(NOW) - index * gapMs).toISOString(),
-      ),
+      item(`like-${index}`, new Date(now - index * gapMs).toISOString()),
     )
 
-    const result = buildGroups(items, 2, 0, undefined, 'algoGravity')
+    const result = buildGroups(items, 2, now, undefined, 'algoGravity')
 
     expect(result.groups.map(({ items }) => items.map(({ id }) => id))).toEqual(
       [
@@ -250,23 +249,21 @@ describe('notification grouping', () => {
   })
 
   it('Lookback groups likes exactly at its 30-minute boundary; Gravity splits them', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
     const items = [item('newest', minutesAgo(1)), item('older', minutesAgo(31))]
 
     expect(
-      buildGroups(items, 2, 0, undefined, 'algoLookback').groups.map(
+      buildGroups(items, 2, now, undefined, 'algoLookback').groups.map(
         ({ itemCount }) => itemCount,
       ),
     ).toEqual([2])
     expect(
-      buildGroups(items, 2, 0, undefined, 'algoGravity').groups.map(
+      buildGroups(items, 2, now, undefined, 'algoGravity').groups.map(
         ({ itemCount }) => itemCount,
       ),
     ).toEqual([1, 1])
   })
 
   it('Lookback expands its grouping window when the newest like becomes one hour old', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
     const justUnderAnHour = [
       item('newer', '2026-09-21T11:00:00.001Z'),
       item('older', '2026-09-21T10:15:00.001Z'),
@@ -277,12 +274,16 @@ describe('notification grouping', () => {
     ]
 
     expect(
-      buildGroups(justUnderAnHour, 2, 0, undefined, 'algoLookback').groups.map(
-        ({ items }) => items.map(({ id }) => id),
-      ),
+      buildGroups(
+        justUnderAnHour,
+        2,
+        now,
+        undefined,
+        'algoLookback',
+      ).groups.map(({ items }) => items.map(({ id }) => id)),
     ).toEqual([['newer'], ['older']])
     expect(
-      buildGroups(exactlyAnHour, 2, 0, undefined, 'algoLookback').groups.map(
+      buildGroups(exactlyAnHour, 2, now, undefined, 'algoLookback').groups.map(
         ({ items }) => items.map(({ id }) => id),
       ),
     ).toEqual([['newer', 'older']])
@@ -291,13 +292,12 @@ describe('notification grouping', () => {
   it.each(['algoGravity', 'algoLookback'] as const)(
     '%s starts a new group at the 200-like cap without losing the next like',
     (algorithm) => {
-      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
       const start = Date.parse(minutesAgo(1))
       const items = Array.from({ length: 201 }, (_, index) =>
         item(`like-${index}`, new Date(start - index).toISOString()),
       )
 
-      const firstPage = buildGroups(items, 1, 0, undefined, algorithm)
+      const firstPage = buildGroups(items, 1, now, undefined, algorithm)
       expect(firstPage.groups[0]?.items.map(({ id }) => id)).toEqual(
         items.slice(0, 200).map(({ id }) => id),
       )
@@ -306,7 +306,7 @@ describe('notification grouping', () => {
       const secondPage = buildGroups(
         items.slice(200),
         1,
-        0,
+        now,
         undefined,
         algorithm,
       )
@@ -317,53 +317,60 @@ describe('notification grouping', () => {
   )
 
   it.each(['algoGravity', 'algoLookback'] as const)(
-    '%s keeps recent likes separate across local midnight but groups them with a shifted UTC offset',
+    '%s groups recent likes across midnight',
     (algorithm) => {
-      using _clock = vi
-        .spyOn(Date, 'now')
-        .mockReturnValue(Date.parse('2026-09-21T00:05:00.000Z'))
+      const now = Date.parse('2026-09-21T00:05:00.000Z')
       const items = [
         item('today', '2026-09-21T00:04:00.000Z'),
         item('yesterday', '2026-09-20T23:59:00.000Z'),
       ]
 
       expect(
-        buildGroups(items, 2, 0, undefined, algorithm).groups.map(({ items }) =>
-          items.map(({ id }) => id),
-        ),
-      ).toEqual([['today'], ['yesterday']])
-      expect(
-        buildGroups(items, 2, -60, undefined, algorithm).groups.map(
+        buildGroups(items, 2, now, undefined, algorithm).groups.map(
           ({ items }) => items.map(({ id }) => id),
         ),
       ).toEqual([['today', 'yesterday']])
     },
   )
 
-  it('Gravity groups older likes across days while Lookback keeps the days separate', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
-    const items = [
-      item('today', '2026-09-21T11:00:00.000Z'),
-      item('yesterday', '2026-09-20T00:30:00.000Z'),
-      item('older', '2026-09-19T23:30:00.000Z'),
-    ]
+  it.each(['algoGravity', 'algoLookback'] as const)(
+    '%s groups older likes across days',
+    (algorithm) => {
+      const items = [
+        item('today', '2026-09-21T11:00:00.000Z'),
+        item('yesterday', '2026-09-20T00:30:00.000Z'),
+        item('older', '2026-09-19T23:30:00.000Z'),
+      ]
 
-    expect(
-      buildGroups(items, 3, 0, undefined, 'algoGravity').groups.map(
-        ({ items }) => items.map(({ id }) => id),
-      ),
-    ).toEqual([['today'], ['yesterday', 'older']])
-    expect(
-      buildGroups(items, 3, 0, undefined, 'algoLookback').groups.map(
-        ({ items }) => items.map(({ id }) => id),
-      ),
-    ).toEqual([['today'], ['yesterday'], ['older']])
-  })
+      expect(
+        buildGroups(items, 3, now, undefined, algorithm).groups.map(
+          ({ items }) => items.map(({ id }) => id),
+        ),
+      ).toEqual([['today'], ['yesterday', 'older']])
+    },
+  )
+
+  it.each(['algoGravity', 'algoLookback'] as const)(
+    '%s groups nearby likes on either side of 24 hours old',
+    (algorithm) => {
+      const items = [
+        item('recent', '2026-09-20T12:00:00.001Z'),
+        item('day-old', '2026-09-20T12:00:00.000Z'),
+        item('older', '2026-09-20T11:59:59.999Z'),
+        item('oldest', '2026-09-20T11:59:59.998Z'),
+      ]
+
+      const result = buildGroups(items, 1, now, undefined, algorithm)
+      expect(
+        result.groups.map(({ items }) => items.map(({ id }) => id)),
+      ).toEqual([['recent', 'day-old', 'older', 'oldest']])
+      expect(result.cursor).toBeUndefined()
+    },
+  )
 
   it.each(['algoGravity', 'algoLookback'] as const)(
     '%s shows followers separately in the followers feed but groups them in all',
     (algorithm) => {
-      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
       const items = [
         item('alice-follow', minutesAgo(0), NOTIFICATION_REASON.FOLLOW, {
           actor: 'alice',
@@ -374,15 +381,15 @@ describe('notification grouping', () => {
       ]
 
       expect(
-        buildGroups(items, 2, 0, undefined, algorithm).groups.map(({ items }) =>
-          items.map(({ id }) => id),
+        buildGroups(items, 2, now, undefined, algorithm).groups.map(
+          ({ items }) => items.map(({ id }) => id),
         ),
       ).toEqual([['alice-follow', 'bob-follow']])
       expect(
         buildGroups(
           items,
           2,
-          0,
+          now,
           undefined,
           algorithm,
           NotificationFeed.FOLLOWERS,
@@ -394,7 +401,6 @@ describe('notification grouping', () => {
   it.each(['algoGravity', 'algoLookback'] as const)(
     '%s shows subscribed posts separately in activity but groups posts by the same actor in all',
     (algorithm) => {
-      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
       const items = [
         item(
           'alice-post-1',
@@ -415,15 +421,15 @@ describe('notification grouping', () => {
       ]
 
       expect(
-        buildGroups(items, 2, 0, undefined, algorithm).groups.map(({ items }) =>
-          items.map(({ id }) => id),
+        buildGroups(items, 2, now, undefined, algorithm).groups.map(
+          ({ items }) => items.map(({ id }) => id),
         ),
       ).toEqual([['alice-post-1', 'alice-post-2']])
       expect(
         buildGroups(
           items,
           2,
-          0,
+          now,
           undefined,
           algorithm,
           NotificationFeed.ACTIVITY,
@@ -433,12 +439,11 @@ describe('notification grouping', () => {
   )
 
   it('marks only items strictly older than the seen timestamp as read', () => {
-    using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
     const items = [
       item('newest', minutesAgo(0), NOTIFICATION_REASON.MENTION),
       item('older', minutesAgo(60), NOTIFICATION_REASON.REPLY),
     ]
-    const result = buildGroups(items, 2, 0, Date.parse(NOW), 'algoGravity')
+    const result = buildGroups(items, 2, now, now, 'algoGravity')
 
     expect(result.groups.map(({ isRead }) => isRead)).toEqual([false, true])
   })
@@ -448,7 +453,7 @@ const postLikes = (pairs: [actor: string, subject: string][]) =>
   pairs.map(([actor, subject], index) =>
     item(
       `${actor}-${subject}`,
-      toDatetimeString(new Date(Date.parse(NOW) - index)),
+      toDatetimeString(new Date(now - index)),
       NOTIFICATION_REASON.LIKE,
       { actor, subject: post(subject) },
     ),
@@ -482,8 +487,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       limit: number,
       { cursor, seenAt }: { cursor?: string; seenAt?: number } = {},
     ) => {
-      using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
-      const ordinary = buildGroups(items, limit, 0, seenAt, algorithm)
+      const ordinary = buildGroups(items, limit, now, seenAt, algorithm)
       if (cursor !== undefined) ordinary.cursor = cursor
       const originals = structuredClone({ items, ordinary })
       const page = buildSpotlight(
@@ -504,6 +508,23 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expectPage(page, [], [])
     })
 
+    it('combines recent and older likes into one spotlight across days', () => {
+      const items = Array.from({ length: 4 }, (_, index) =>
+        item(
+          `like-${index}`,
+          minutesAgo(index < 2 ? index : 24 * 60 + index),
+          NOTIFICATION_REASON.LIKE,
+          { actor: 'alice', subject: post(`post-${index}`) },
+        ),
+      )
+      const { page } = buildPage(items, items.length)
+
+      expectPage(page, items, [['like-0', 'like-1', 'like-2', 'like-3']])
+      expect(page.groups[0]?.kind).toBe(
+        APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
+      )
+    })
+
     it('fits without trimming and updates ordinary and spotlight metadata', () => {
       const items = postLikes([
         ['alice', 'poem'],
@@ -515,7 +536,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         ['alice', 'story'],
         ['eve', 'story'],
       ])
-      const { page } = buildPage(items, 5, { seenAt: Date.parse(NOW) })
+      const { page } = buildPage(items, 5, { seenAt: now })
 
       expectPage(page, items, [
         ['alice-poem', 'alice-song', 'alice-photo', 'alice-story'],
@@ -1011,7 +1032,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
           await sc.like(sc.dids.bob, post.ref)
         ).toString() as AtUriString
         const indexedAt = Timestamp.fromDate(
-          new Date(Date.parse(NOW) - index * 1000),
+          new Date(now - index * 1000),
         ).toJson() as DatetimeString
         records.push({
           post,
@@ -1196,13 +1217,13 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       },
     )
 
-    it('returns all eight follows with related profiles for only the first five', async () => {
+    it('returns all twelve follows with related profiles for only the first ten', async () => {
       const follows: {
         actor: DidString
         uri: AtUriString
         indexedAt: DatetimeString
       }[] = []
-      for (let index = 0; index < 8; index++) {
+      for (let index = 0; index < 12; index++) {
         const name = `cap-follower-${index}`
         const { did } = await sc.createAccount(name, {
           email: `${name}@test.com`,
@@ -1234,20 +1255,22 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expect(response.groups).toHaveLength(1)
       const group = response.groups[0]!
       assert(defs.followGroup.$isTypeOf(group.kind))
-      expect(group.count).toBe(8)
-      expect(group.kind.items).toHaveLength(8)
+      expect(group.count).toBe(12)
+      expect(group.kind.items).toHaveLength(12)
       expect(group.kind.items).toEqual(follows.map(({ actor }) => ({ actor })))
-      expect(Object.keys(response.relatedProfileViews ?? {})).toEqual(
-        follows.slice(0, 5).map(({ actor }) => actor),
+      expect(response.relatedViews).toMatchObject(
+        follows.slice(0, 10).map(({ actor }) => ({
+          $type: app.bsky.actor.defs.profileViewDetailed.$type,
+          did: actor,
+        })),
       )
-      expect(response.relatedRecordViews).toEqual({})
       expect(response.cursor).toBeUndefined()
     })
 
-    it.each([undefined, 0, 6])(
-      'returns all spotlight items with five related records when like %s is removed',
+    it.each([undefined, 0, 11])(
+      'returns all spotlight items with ten related records when like %s is removed',
       async (removedIndex) => {
-        const { records, headers } = await seedSpotlight(8)
+        const { records, headers } = await seedSpotlight(12)
         if (removedIndex !== undefined) {
           await network.bsky.ctx.dataplane.takedownRecord({
             recordUri: records[removedIndex]!.like,
@@ -1256,37 +1279,41 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
 
         const response = await network.bsky
           .getClient()
-          .call(defs, { limit: 8 }, { headers })
+          .call(defs, { limit: 12 }, { headers })
 
         expect(response.groups).toHaveLength(1)
         const group = response.groups[0]!
         assert(defs.multiPostLikeGroup.$isTypeOf(group.kind))
         const remaining = records.filter((_, index) => index !== removedIndex)
-        expect(group.count).toBe(removedIndex === undefined ? 8 : 7)
+        expect(group.count).toBe(removedIndex === undefined ? 12 : 11)
         expect(group.kind.items).toHaveLength(
-          removedIndex === undefined ? 8 : 7,
+          removedIndex === undefined ? 12 : 11,
         )
         expect(group.kind.items).toEqual(
           remaining.map(({ post }) => ({ post: post.ref.uriStr })),
         )
         expect(group.id).toBe(remaining[0]!.id)
         expect(group.indexedAt).toBe(remaining[0]!.indexedAt)
-        expect(Object.keys(response.relatedRecordViews ?? {})).toEqual(
-          remaining.slice(0, 5).map(({ post }) => post.ref.uriStr),
-        )
-        expect(Object.keys(response.relatedProfileViews ?? {})).toEqual([
-          sc.dids.bob,
+        expect(response.relatedViews).toMatchObject([
+          {
+            $type: app.bsky.actor.defs.profileViewDetailed.$type,
+            did: sc.dids.bob,
+          },
+          ...remaining.slice(0, 10).map(({ post }) => ({
+            $type: app.bsky.feed.defs.postView.$type,
+            uri: post.ref.uriStr,
+          })),
         ])
         expect(response.cursor).toBeUndefined()
       },
     )
 
-    it('returns all subscribed posts with related views for only the first five of each group', async () => {
+    it('returns all subscribed posts with related views for only the first ten of each group', async () => {
       const authors = [sc.dids.bob, sc.dids.dan]
       const postGroups = await Promise.all(
         authors.map(async (actor) => {
           const posts: Awaited<ReturnType<SeedClient['post']>>[] = []
-          for (let index = 0; index < 8; index++) {
+          for (let index = 0; index < 12; index++) {
             posts.push(await sc.post(actor, `Subscribed post ${index}`))
           }
           return { actor, posts }
@@ -1318,7 +1345,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         .call(defs, { limit: 2 }, { headers })
 
       expect(notifications).toHaveBeenCalledTimes(1)
-      expect(response.groups.map(({ count }) => count)).toEqual([8, 8])
+      expect(response.groups.map(({ count }) => count)).toEqual([12, 12])
       expect(response.groups.map(({ kind }) => kind)).toEqual(
         postGroups.map(({ actor, posts }) =>
           defs.subscribedPostGroup.$build({
@@ -1326,12 +1353,18 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
           }),
         ),
       )
-      expect(Object.keys(response.relatedRecordViews ?? {})).toEqual(
-        postGroups.flatMap(({ posts }) =>
-          posts.slice(0, 5).map(({ ref }) => ref.uriStr),
+      expect(response.relatedViews).toMatchObject([
+        ...authors.map((did) => ({
+          $type: app.bsky.actor.defs.profileViewDetailed.$type,
+          did,
+        })),
+        ...postGroups.flatMap(({ posts }) =>
+          posts.slice(0, 10).map(({ ref }) => ({
+            $type: app.bsky.feed.defs.postView.$type,
+            uri: ref.uriStr,
+          })),
         ),
-      )
-      expect(Object.keys(response.relatedProfileViews ?? {})).toEqual(authors)
+      ])
       expect(response.cursor).toBeUndefined()
     })
 
@@ -1388,22 +1421,176 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         )
         expect(response.seenAt).toBe(records[1]!.indexedAt)
         expect(response.cursor).toBeUndefined()
-        expect(Object.keys(response.relatedProfileViews ?? {})).toEqual(
-          remaining ? [sc.dids.bob] : [],
-        )
-        expect(Object.keys(response.relatedRecordViews ?? {})).toEqual(
-          kept.map(({ post }) => post.ref.uriStr),
-        )
-        for (const view of Object.values(response.relatedProfileViews ?? {})) {
-          expect(app.bsky.actor.defs.profileViewDetailed.$matches(view)).toBe(
-            true,
-          )
-        }
-        for (const view of Object.values(response.relatedRecordViews ?? {})) {
-          expect(app.bsky.feed.defs.postView.$matches(view)).toBe(true)
+        expect(response.relatedViews).toMatchObject([
+          ...(remaining
+            ? [
+                {
+                  $type: app.bsky.actor.defs.profileViewDetailed.$type,
+                  did: sc.dids.bob,
+                },
+              ]
+            : []),
+          ...kept.map(({ post }) => ({
+            $type: app.bsky.feed.defs.postView.$type,
+            uri: post.ref.uriStr,
+          })),
+        ])
+        for (const view of response.relatedViews ?? []) {
+          expect(
+            app.bsky.actor.defs.profileViewDetailed.$matches(view) ||
+              app.bsky.feed.defs.postView.$matches(view),
+          ).toBe(true)
         }
       },
     )
+
+    it('deduplicates profiles and records across mixed notification groups', async () => {
+      const { recipient, records, headers } = await seedSpotlight(2)
+      const generator = await sc.createFeedGen(
+        recipient,
+        'did:web:example.com',
+        'Related feed',
+      )
+      const starterPack = await sc.createStarterPack(
+        recipient,
+        'Related starter pack',
+        [recipient],
+      )
+      await sc.like(sc.dids.bob, generator)
+      await sc.follow(sc.dids.bob, recipient, { via: starterPack.raw })
+      await sc.follow(sc.dids.carol, recipient, { via: starterPack.raw })
+      await network.processAll()
+
+      const response = await network.bsky
+        .getClient()
+        .call(defs, { limit: 30 }, { headers })
+
+      expect(response.groups).toHaveLength(4)
+      const expectedViews = [
+        ...[sc.dids.bob, sc.dids.carol].map((did) => ({
+          $type: app.bsky.actor.defs.profileViewDetailed.$type,
+          did,
+        })),
+        ...records.map(({ post }) => ({
+          $type: app.bsky.feed.defs.postView.$type,
+          uri: post.ref.uriStr,
+        })),
+        {
+          $type: app.bsky.feed.defs.generatorView.$type,
+          uri: generator.uriStr,
+        },
+        {
+          $type: app.bsky.graph.defs.starterPackView.$type,
+          uri: starterPack.uriStr,
+        },
+      ]
+      expect(response.relatedViews).toHaveLength(expectedViews.length)
+      expect(response.relatedViews).toEqual(
+        expect.arrayContaining(
+          expectedViews.map((view) => expect.objectContaining(view)),
+        ),
+      )
+    })
+
+    it.each(['not found', 'blocked'] as const)(
+      'includes a typed placeholder for a %s reply parent',
+      async (status) => {
+        const { recipient, records, headers } = await seedSpotlight(2)
+        const root = records[0]!.post.ref
+        const parent = await sc.reply(sc.dids.carol, root, root, 'Parent')
+        const reply = await sc.reply(sc.dids.bob, root, parent.ref, 'Reply')
+        if (status === 'blocked') {
+          await sc.block(recipient, sc.dids.carol)
+        }
+        await network.processAll()
+        if (status === 'not found') {
+          await network.bsky.ctx.dataplane.takedownRecord({
+            recordUri: parent.ref.uriStr,
+          })
+        }
+        using notifications = vi
+          .spyOn(network.bsky.ctx.hydrator.dataplane, 'getNotificationsV2')
+          .mockResolvedValue(
+            new GetNotificationsV2Response({
+              notifications: [
+                new Notification({
+                  recipientDid: recipient,
+                  uri: reply.ref.uriStr,
+                  reason: NOTIFICATION_REASON.REPLY,
+                  reasonSubject: parent.ref.uriStr,
+                  timestamp: Timestamp.fromJson(NOW),
+                }),
+              ],
+            }),
+          )
+
+        const response = await network.bsky
+          .getClient()
+          .call(defs, { limit: 1 }, { headers })
+
+        expect(notifications).toHaveBeenCalledTimes(1)
+        expect(response.groups.map(({ kind }) => kind)).toEqual([
+          defs.replyNotification.$build({
+            post: reply.ref.uriStr,
+            parent: parent.ref.uriStr,
+          }),
+        ])
+        expect(response.relatedViews).toMatchObject([
+          { $type: app.bsky.feed.defs.postView.$type, uri: reply.ref.uriStr },
+          status === 'not found'
+            ? app.bsky.feed.defs.notFoundPost.$build({
+                uri: parent.ref.uriStr,
+                notFound: true,
+              })
+            : app.bsky.feed.defs.blockedPost.$build({
+                uri: parent.ref.uriStr,
+                blocked: true,
+                author: { did: sc.dids.carol },
+              }),
+        ])
+      },
+    )
+
+    it('builds a spotlight across days from multiple raw pages', async () => {
+      const { recipient, records, headers } = await seedSpotlight()
+      const now = Date.now()
+      const notifications = records.map(
+        ({ like, post }, index) =>
+          new Notification({
+            recipientDid: recipient,
+            uri: like,
+            reason: NOTIFICATION_REASON.LIKE,
+            reasonSubject: post.ref.uriStr,
+            timestamp: Timestamp.fromDate(new Date(now - index * DAY)),
+          }),
+      )
+      using reads = vi
+        .spyOn(network.bsky.ctx.hydrator.dataplane, 'getNotificationsV2')
+        .mockResolvedValueOnce(
+          new GetNotificationsV2Response({
+            notifications: notifications.slice(0, 2),
+            cursor: toDatetimeString(new Date(now - DAY)),
+          }),
+        )
+        .mockResolvedValueOnce(
+          new GetNotificationsV2Response({
+            notifications: notifications.slice(2),
+          }),
+        )
+
+      const response = await network.bsky
+        .getClient()
+        .call(defs, { limit: 4 }, { headers })
+
+      expect(reads).toHaveBeenCalledTimes(2)
+      expect(response.groups.map(({ kind }) => kind)).toEqual([
+        defs.multiPostLikeGroup.$build({
+          actor: sc.dids.bob,
+          items: records.map(({ post }) => ({ post: post.ref.uriStr })),
+        }),
+      ])
+      expect(response.cursor).toBeUndefined()
+    })
 
     it('builds the spotlight from all fetched pages and hydrates once', async () => {
       const { records, headers } = await seedSpotlight()
@@ -1491,13 +1678,16 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expect(first.groups[1]?.indexedAt).toBe(records[1]!.indexedAt)
       expect(first.groups[1]?.count).toBe(3)
       expect(first.cursor).toBe(records[3]!.indexedAt)
-      expect(Object.keys(first.relatedProfileViews ?? {})).toEqual([
-        sc.dids.carol,
-        sc.dids.bob,
+      expect(first.relatedViews).toMatchObject([
+        ...[sc.dids.carol, sc.dids.bob].map((did) => ({
+          $type: app.bsky.actor.defs.profileViewDetailed.$type,
+          did,
+        })),
+        ...records.map(({ post }) => ({
+          $type: app.bsky.feed.defs.postView.$type,
+          uri: post.ref.uriStr,
+        })),
       ])
-      expect(Object.keys(first.relatedRecordViews ?? {})).toEqual(
-        records.map(({ post }) => post.ref.uriStr),
-      )
 
       const second = await client.call(
         defs,
@@ -1513,11 +1703,15 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         }),
       ])
       expect(second.cursor).toBeUndefined()
-      expect(Object.keys(second.relatedProfileViews ?? {})).toEqual([
-        sc.dids.carol,
-      ])
-      expect(Object.keys(second.relatedRecordViews ?? {})).toEqual([
-        records[3]!.post.ref.uriStr,
+      expect(second.relatedViews).toMatchObject([
+        {
+          $type: app.bsky.actor.defs.profileViewDetailed.$type,
+          did: sc.dids.carol,
+        },
+        {
+          $type: app.bsky.feed.defs.postView.$type,
+          uri: records[3]!.post.ref.uriStr,
+        },
       ])
     })
   },
