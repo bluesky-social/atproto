@@ -383,6 +383,17 @@ export class AuthVerifier {
       }
       await this.verifySpaceSignature(ctx.req, payload.cnf!.kid)
 
+      const revoked = await this.accountManager.isSpaceCredentialRevoked(
+        space.toString(),
+        payload.jti,
+      )
+      if (revoked) {
+        throw new AuthRequiredError(
+          'space credential has been revoked',
+          'CredentialRevoked',
+        )
+      }
+
       return {
         credentials: {
           type: 'space_credential',

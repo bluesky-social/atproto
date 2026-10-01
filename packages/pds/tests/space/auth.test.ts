@@ -1,5 +1,7 @@
 import { request } from 'node:http'
+import { jest } from '@jest/globals'
 import { decodeJwt } from 'jose'
+import { HOUR } from '@atproto/common'
 import { P256Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import {
@@ -7,7 +9,10 @@ import {
   createSpaceToken,
   spaceHostAud,
 } from '@atproto/space'
-import type { NsidString } from '@atproto/syntax'
+import type { NsidString, SpaceRefString } from '@atproto/syntax'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import { getDb } from '../../src/account-manager/db/index.js'
+import { isSpaceCredentialRevoked } from '../../src/account-manager/helpers/revoked-space-credential.js'
 import { com } from '../../src/lexicons/index.js'
 import {
   type Actor,
@@ -170,6 +175,8 @@ describe('space auth', () => {
 
       // Read on pds2 with a credential minted on pds1: neither is the authority.
       const cred = await sc.credentialFor(carol, space)
+      const claims = decodeJwt(cred.credential)
+      expect(claims.exp! - claims.iat!).toBe(600)
       const asSyncer = cred.clientFor(bob.pds)
       const list = await asSyncer.call(com.atproto.space.listRecords, {
         space,
@@ -489,6 +496,198 @@ describe('space auth', () => {
       await expect(sc.mintCredential(space, token)).rejects.toMatchObject({
         error: 'UserNotAuthorized',
       })
+    })
+  })
+
+  describe('credential revocation', () => {
+    async function revoke(
+      signer: Actor,
+      space: SpaceRefString,
+      credentials: string[],
+      opts: { aud?: string; lxm?: string } = {},
+    ) {
+      const keypair = await signer.pds.ctx.actorStore.keypair(signer.did)
+      const { headers } = await createServiceAuthHeaders({
+        iss: signer.did,
+        aud: opts.aud ?? bob.did,
+        lxm: opts.lxm ?? com.atproto.space.notifyCredentialRevoked.$lxm,
+        keypair,
+      })
+      return bob.client.call(
+        com.atproto.space.notifyCredentialRevoked,
+        { space, credentials },
+        { headers },
+      )
+    }
+
+    it('revokes a batch idempotently on a remote repo host', async () => {
+      const space = await sc.createSpace(alice, { members: [bob, carol] })
+      await sc.write(alice, space)
+      await sc.write(bob, space)
+      const first = await sc.credentialFor(carol, space)
+      const second = await sc.credentialFor(carol, space)
+      const untouched = await sc.credentialFor(carol, space)
+      const credentials = [first, second].map(
+        (cred) => decodeJwt(cred.credential).jti!,
+      )
+
+      await expect(
+        first.clientFor(bob.pds).call(com.atproto.space.listRecords, {
+          space,
+          repo: bob.did,
+        }),
+      ).resolves.toMatchObject({ records: [expect.anything()] })
+
+      await revoke(alice, space, credentials)
+      await revoke(alice, space, [credentials[0], ...credentials])
+
+      for (const cred of [first, second]) {
+        await expect(
+          cred.clientFor(bob.pds).call(com.atproto.space.listRecords, {
+            space,
+            repo: bob.did,
+          }),
+        ).rejects.toMatchObject({ error: 'CredentialRevoked' })
+      }
+      await expect(
+        untouched.clientFor(bob.pds).call(com.atproto.space.listRecords, {
+          space,
+          repo: bob.did,
+        }),
+      ).resolves.toBeDefined()
+      await expect(
+        first.clientFor(alice.pds).call(com.atproto.space.listRecords, {
+          space,
+          repo: alice.did,
+        }),
+      ).resolves.toBeDefined()
+      await expect(
+        bob.client.call(
+          com.atproto.space.listRecords,
+          {
+            space,
+            repo: bob.did,
+          },
+          { headers: bob.headers },
+        ),
+      ).resolves.toBeDefined()
+
+      const rows = await bob.pds.ctx.accountManager.db.db
+        .selectFrom('revoked_space_credential')
+        .selectAll()
+        .where('space', '=', space)
+        .execute()
+      expect(rows).toHaveLength(2)
+    })
+
+    it('requires service auth from the authority addressed to a local repo and method', async () => {
+      const space = await sc.createSpace(alice, { members: [bob] })
+      const cred = await sc.credentialFor(bob, space)
+      const credentials = [decodeJwt(cred.credential).jti!]
+
+      await expect(revoke(bob, space, credentials)).rejects.toThrow(
+        /not the space authority/,
+      )
+      await expect(
+        revoke(alice, space, credentials, {
+          aud: alice.did,
+        }),
+      ).rejects.toThrow(/audience does not match/)
+      await expect(
+        revoke(alice, space, credentials, {
+          aud: bob.pds.ctx.cfg.service.did,
+        }),
+      ).rejects.toThrow(/audience does not match/)
+      await expect(
+        revoke(alice, space, credentials, {
+          lxm: com.atproto.space.notifyWrite.$lxm,
+        }),
+      ).rejects.toThrow()
+      await expect(
+        bob.client.call(
+          com.atproto.space.notifyCredentialRevoked,
+          {
+            space,
+            credentials,
+          },
+          { headers: alice.headers },
+        ),
+      ).rejects.toThrow()
+      expect(
+        await bob.pds.ctx.accountManager.isSpaceCredentialRevoked(
+          space,
+          credentials[0],
+        ),
+      ).toBe(false)
+    })
+
+    it('scopes revocations to the space', async () => {
+      const space = await sc.createSpace(alice, { members: [bob] })
+      const other = await sc.createSpace(alice, {
+        skey: 'other-revocation-space',
+      })
+      await sc.write(bob, space)
+      const cred = await sc.credentialFor(bob, space)
+      await revoke(alice, other, [decodeJwt(cred.credential).jti!])
+      await expect(
+        cred.clientFor(bob.pds).call(com.atproto.space.listRecords, {
+          space,
+          repo: bob.did,
+        }),
+      ).resolves.toBeDefined()
+    })
+
+    it('persists revocations for an hour including clock skew, and prunes expired entries', async () => {
+      const space = await sc.createSpace(alice)
+      await revoke(alice, space, ['retained'])
+      await bob.pds.ctx.backgroundQueue.processAll()
+      const db = getDb(bob.pds.ctx.cfg.db.accountDbLoc)
+      try {
+        expect(await isSpaceCredentialRevoked(db, space, 'retained')).toBe(true)
+        const now = Date.now()
+        using clock = jest.spyOn(Date, 'now')
+        clock.mockReturnValue(now + HOUR + 5_000)
+        expect(await isSpaceCredentialRevoked(db, space, 'retained')).toBe(true)
+        clock.mockReturnValue(now + HOUR + 11_000)
+        expect(await isSpaceCredentialRevoked(db, space, 'retained')).toBe(
+          false,
+        )
+        await bob.pds.ctx.accountManager.addRevokedSpaceCredentials(space, [
+          'new',
+        ])
+        const beforeCleanup = await db.db
+          .selectFrom('revoked_space_credential')
+          .select('jti')
+          .where('space', '=', space)
+          .execute()
+        expect(beforeCleanup).toHaveLength(2)
+        await bob.pds.ctx.accountManager.deleteExpiredRevokedSpaceCredentials()
+        const rows = await db.db
+          .selectFrom('revoked_space_credential')
+          .select('jti')
+          .where('space', '=', space)
+          .execute()
+        expect(rows).toEqual([{ jti: 'new' }])
+      } finally {
+        await db.db.destroy()
+      }
+    })
+
+    it('keeps the revocation when background cleanup fails', async () => {
+      const space = await sc.createSpace(alice)
+      const { accountManager, backgroundQueue } = bob.pds.ctx
+      await backgroundQueue.processAll()
+      using cleanup = jest
+        .spyOn(accountManager, 'deleteExpiredRevokedSpaceCredentials')
+        .mockRejectedValueOnce(new Error('cleanup failed'))
+
+      await revoke(alice, space, ['retained'])
+      await backgroundQueue.processAll()
+
+      expect(cleanup).toHaveBeenCalledTimes(1)
+      expect(
+        await accountManager.isSpaceCredentialRevoked(space, 'retained'),
+      ).toBe(true)
     })
   })
 
