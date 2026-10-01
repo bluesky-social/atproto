@@ -1,5 +1,3 @@
-import { DAY } from '@atproto/common'
-import type { DatetimeString } from '@atproto/lex'
 import { NotificationFeed } from '../../../../../proto/bsky_pb.js'
 import {
   type DataplaneNotificationReason,
@@ -35,13 +33,6 @@ export const canGroupNotification = (
     (kind === NOTIFICATION_REASON.SUBSCRIBED_POST &&
       feed === NotificationFeed.ACTIVITY)
   )
-
-export function isRecentNotification(
-  indexedAt: DatetimeString,
-  now: number,
-): boolean {
-  return Date.parse(indexedAt) >= now - DAY
-}
 
 export const isNotificationRead = (
   indexedAt: string,

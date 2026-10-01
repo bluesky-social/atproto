@@ -121,7 +121,6 @@ const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { ctx, params } = input
-  const now = Date.now()
   const feed = normalizeFeed(params.feed)
   const seenAt = params.seenAt ? Date.parse(params.seenAt) : undefined
   const delayedCursor = delayCursor(undefined, ctx.cfg.notificationsDelayMs)
@@ -178,7 +177,6 @@ const skeleton = async (
       seenAt,
       ctx.cfg.notificationsV2Algorithm,
       feed,
-      now,
     )
     groups = groupingResult.groups
 
@@ -201,7 +199,7 @@ const skeleton = async (
     if (rawLimit === 0) break
   }
 
-  return buildSpotlight(items, groups, nextCursor, params.limit, seenAt, now)
+  return buildSpotlight(items, groups, nextCursor, params.limit, seenAt)
 }
 
 const hydration = async (

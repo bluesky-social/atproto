@@ -40,7 +40,7 @@
             "cursor": { "type": "string", "maxLength": 1024 },
             "groups": {
               "type": "array",
-              "description": "Notification groups or individual notifications, newest first. Clients should ignore kinds they do not recognize. Grouping behavior depends on the kind and selected feed. Groups never span the cutoff 24 hours before the request: notifications at or after that cutoff are grouped separately from older notifications.",
+              "description": "Notification groups or individual notifications, newest first. Clients should ignore kinds they do not recognize. Grouping behavior depends on the kind and selected feed.",
               "items": {
                 "type": "ref",
                 "ref": "#group"

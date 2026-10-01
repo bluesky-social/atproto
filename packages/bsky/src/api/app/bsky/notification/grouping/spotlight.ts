@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import type { DidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { app } from '../../../../../lexicons/index.js'
 import {
@@ -14,7 +15,6 @@ import {
   MAX_GROUP_SIZE,
   compareNotificationGroupsNewestFirst,
   isNotificationRead,
-  isRecentNotification,
 } from './shared.js'
 
 const MULTI_POST_LIKE_RANGES = [
@@ -38,7 +38,6 @@ export const buildSpotlight = (
   cursor: string | undefined,
   limit: number,
   seenAt: number | undefined,
-  now = Date.now(),
 ): GroupingResult => {
   const noSpotlightPage = { groups, cursor }
   const itemCount = groups.reduce(
@@ -50,7 +49,7 @@ export const buildSpotlight = (
   // items contains all fetched notifications, but grouping may stop before consuming them all;
   // itemCount counts notifications included in the ordinary groups, and pageItems contains the notifications on the page.
   const pageItems = items.slice(0, itemCount)
-  const spotlight = selectMultiPostLikeSpotlight(pageItems, now)
+  const spotlight = selectMultiPostLikeSpotlight(pageItems)
   if (!spotlight) return noSpotlightPage
 
   const selectedItems = new Set(spotlight.items)
@@ -114,7 +113,6 @@ export const buildSpotlight = (
 
 const selectMultiPostLikeSpotlight = (
   items: NotificationItem[],
-  now: number,
 ): SpotlightCandidate | undefined => {
   const range = MULTI_POST_LIKE_RANGES.find(
     ({ maxItems }) => items.length <= maxItems,
@@ -123,30 +121,23 @@ const selectMultiPostLikeSpotlight = (
 
   // Eligibility uses the ordinary page's volume, including after trimming.
   const { requiredPosts } = range
-  const likesByTopLiker = getLikeNotificationsByTopLiker(items, now)
+  const likesByTopLiker = getLikeNotificationsByTopLiker(items)
   if (likesByTopLiker.length < requiredPosts) return
   const actorDid = likesByTopLiker[0]!.actorDid
-  const recent = isRecentNotification(likesByTopLiker[0]!.raw.indexedAt, now)
   return {
     kind: APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
     groupingKey: actorDid,
     items: likesByTopLiker.slice(0, MAX_GROUP_SIZE),
-    isEligibleAfterTrimming: (spotlightItems, retainedItems) => {
-      const topLiker = getLikeNotificationsByTopLiker(retainedItems, now)[0]
-      return (
-        spotlightItems.length >= requiredPosts &&
-        topLiker?.actorDid === actorDid &&
-        isRecentNotification(topLiker.raw.indexedAt, now) === recent
-      )
-    },
+    isEligibleAfterTrimming: (spotlightItems, retainedItems) =>
+      spotlightItems.length >= requiredPosts &&
+      getLikeNotificationsByTopLiker(retainedItems)[0]?.actorDid === actorDid,
   }
 }
 
 const getLikeNotificationsByTopLiker = (
   items: NotificationItem[],
-  now: number,
 ): NotificationItem[] => {
-  const likesByActor = new Map<string, NotificationItem[]>()
+  const likesByActor = new Map<DidString, NotificationItem[]>()
   for (const item of items) {
     if (
       item.raw.reason !== NOTIFICATION_REASON.LIKE ||
@@ -154,13 +145,9 @@ const getLikeNotificationsByTopLiker = (
     ) {
       continue
     }
-    const key = JSON.stringify([
-      item.actorDid,
-      isRecentNotification(item.raw.indexedAt, now),
-    ])
-    const likes = likesByActor.get(key)
+    const likes = likesByActor.get(item.actorDid)
     if (likes) likes.push(item)
-    else likesByActor.set(key, [item])
+    else likesByActor.set(item.actorDid, [item])
   }
 
   // Each actor likes a post once; insertion order breaks ties by newest like.

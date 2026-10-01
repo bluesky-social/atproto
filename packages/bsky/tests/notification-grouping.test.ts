@@ -349,27 +349,21 @@ describe('notification grouping', () => {
   )
 
   it.each(['algoGravity', 'algoLookback'] as const)(
-    '%s separates likes at the rolling 24-hour cutoff and paginates without losing items',
+    '%s groups nearby likes on either side of 24 hours old',
     (algorithm) => {
       using _clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(NOW))
       const items = [
         item('recent', '2026-09-20T12:00:00.001Z'),
-        item('at-cutoff', '2026-09-20T12:00:00.000Z'),
+        item('day-old', '2026-09-20T12:00:00.000Z'),
         item('older', '2026-09-20T11:59:59.999Z'),
         item('oldest', '2026-09-20T11:59:59.998Z'),
       ]
 
-      const first = buildGroups(items, 1, undefined, algorithm)
+      const result = buildGroups(items, 1, undefined, algorithm)
       expect(
-        first.groups.map(({ items }) => items.map(({ id }) => id)),
-      ).toEqual([['recent', 'at-cutoff']])
-      expect(first.cursor).toBe(items[1]!.raw.indexedAt)
-
-      const second = buildGroups(items.slice(2), 1, undefined, algorithm)
-      expect(
-        second.groups.map(({ items }) => items.map(({ id }) => id)),
-      ).toEqual([['older', 'oldest']])
-      expect(second.cursor).toBeUndefined()
+        result.groups.map(({ items }) => items.map(({ id }) => id)),
+      ).toEqual([['recent', 'day-old', 'older', 'oldest']])
+      expect(result.cursor).toBeUndefined()
     },
   )
 
@@ -515,56 +509,22 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expectPage(page, [], [])
     })
 
-    it.each([
-      { recent: 2, older: 2, expected: undefined },
-      { recent: 4, older: 4, expected: 'recent' },
-      { recent: 4, older: 3, expected: 'recent' },
-      { recent: 3, older: 4, expected: 'older' },
-    ])(
-      'selects $expected spotlight with $recent recent and $older older likes without crossing the cutoff',
-      ({ recent, older, expected }) => {
-        const items = Array.from({ length: recent + older }, (_, index) =>
-          item(
-            `like-${index}`,
-            minutesAgo(index < recent ? index : 24 * 60 + index),
-            NOTIFICATION_REASON.LIKE,
-            { actor: 'alice', subject: post(`post-${index}`) },
-          ),
-        )
-        const { page } = buildPage(items, items.length)
-        const spotlightItems =
-          expected === 'recent'
-            ? items.slice(0, recent)
-            : expected === 'older'
-              ? items.slice(recent)
-              : []
-        const expectedGroups = items
-          .filter((item) => !spotlightItems.includes(item))
-          .map((item) => [item])
-        if (spotlightItems.length) expectedGroups.push(spotlightItems)
-        expectedGroups.sort(
-          (left, right) =>
-            Date.parse(right[0]!.raw.indexedAt) -
-            Date.parse(left[0]!.raw.indexedAt),
-        )
+    it('combines recent and older likes into one spotlight across days', () => {
+      const items = Array.from({ length: 4 }, (_, index) =>
+        item(
+          `like-${index}`,
+          minutesAgo(index < 2 ? index : 24 * 60 + index),
+          NOTIFICATION_REASON.LIKE,
+          { actor: 'alice', subject: post(`post-${index}`) },
+        ),
+      )
+      const { page } = buildPage(items, items.length)
 
-        expectPage(
-          page,
-          items,
-          expectedGroups.map((group) => group.map(({ id }) => id)),
-        )
-        expect(
-          page.groups
-            .filter(
-              ({ kind }) =>
-                kind === APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
-            )
-            .map(({ items }) => items.map(({ id }) => id)),
-        ).toEqual(
-          spotlightItems.length ? [spotlightItems.map(({ id }) => id)] : [],
-        )
-      },
-    )
+      expectPage(page, items, [['like-0', 'like-1', 'like-2', 'like-3']])
+      expect(page.groups[0]?.kind).toBe(
+        APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
+      )
+    })
 
     it('fits without trimming and updates ordinary and spotlight metadata', () => {
       const items = postLikes([
@@ -1592,7 +1552,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       },
     )
 
-    it('keeps the request-time cutoff fixed across raw pages and spotlight grouping', async () => {
+    it('builds a spotlight across days from multiple raw pages', async () => {
       const { recipient, records, headers } = await seedSpotlight()
       const now = Date.now()
       const notifications = records.map(
@@ -1602,19 +1562,17 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
             uri: like,
             reason: NOTIFICATION_REASON.LIKE,
             reasonSubject: post.ref.uriStr,
-            timestamp: Timestamp.fromDate(new Date(now - DAY + 1 - index)),
+            timestamp: Timestamp.fromDate(new Date(now - index * DAY)),
           }),
       )
-      using clock = vi.spyOn(Date, 'now').mockReturnValue(now)
       using reads = vi
         .spyOn(network.bsky.ctx.hydrator.dataplane, 'getNotificationsV2')
-        .mockImplementationOnce(async () => {
-          clock.mockReturnValue(now + 60_000)
-          return new GetNotificationsV2Response({
+        .mockResolvedValueOnce(
+          new GetNotificationsV2Response({
             notifications: notifications.slice(0, 2),
             cursor: toDatetimeString(new Date(now - DAY)),
-          })
-        })
+          }),
+        )
         .mockResolvedValueOnce(
           new GetNotificationsV2Response({
             notifications: notifications.slice(2),
@@ -1626,14 +1584,12 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         .call(defs, { limit: 4 }, { headers })
 
       expect(reads).toHaveBeenCalledTimes(2)
-      expect(response.groups.map(({ kind }) => kind)).toEqual(
-        records.map(({ post }) =>
-          defs.likeGroup.$build({
-            post: post.ref.uriStr,
-            items: [{ actor: sc.dids.bob }],
-          }),
-        ),
-      )
+      expect(response.groups.map(({ kind }) => kind)).toEqual([
+        defs.multiPostLikeGroup.$build({
+          actor: sc.dids.bob,
+          items: records.map(({ post }) => ({ post: post.ref.uriStr })),
+        }),
+      ])
       expect(response.cursor).toBeUndefined()
     })
 

@@ -10,7 +10,6 @@ import {
   canGroupNotification,
   compareNotificationGroupsNewestFirst,
   isNotificationRead,
-  isRecentNotification,
 } from './shared.js'
 
 type Zone = {
@@ -53,8 +52,8 @@ export const buildAlgoGravityGroups = (
   limit: number,
   seenAt?: number,
   feed = NotificationFeed.ALL,
-  now = Date.now(),
 ): GroupingResult => {
+  const now = Date.now()
   const zones = PARAMS.zones
   const chains = new Map<string, CandidateGroup[]>()
   let groupCount = 0
@@ -64,7 +63,6 @@ export const buildAlgoGravityGroups = (
     const key = JSON.stringify([
       item.raw.reason,
       item.groupingKey,
-      isRecentNotification(item.raw.indexedAt, now),
       canGroup ? undefined : item.id,
     ])
     const candidateGroups = chains.get(key) ?? []

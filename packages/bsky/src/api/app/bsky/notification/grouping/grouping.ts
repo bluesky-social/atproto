@@ -120,13 +120,12 @@ export const buildGroups = (
   seenAt: number | undefined,
   algorithm: NotificationsV2Algorithm,
   feed = NotificationFeed.ALL,
-  now = Date.now(),
 ): GroupingResult => {
   switch (algorithm) {
     case 'algoLookback':
-      return buildAlgoLookbackGroups(items, limit, seenAt, feed, now)
+      return buildAlgoLookbackGroups(items, limit, seenAt, feed)
     case 'algoGravity':
     default:
-      return buildAlgoGravityGroups(items, limit, seenAt, feed, now)
+      return buildAlgoGravityGroups(items, limit, seenAt, feed)
   }
 }
