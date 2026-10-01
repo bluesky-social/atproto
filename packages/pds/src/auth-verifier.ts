@@ -22,12 +22,11 @@ import {
   ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
 import {
-  DpopProofError,
-  SPACE_TOKEN_TYPES,
+  SpaceSignatureError,
   SpaceTokenError,
   type SpaceTokenType,
   spaceHostAud,
-  verifyDpopProof,
+  verifySpaceSignature,
   verifySpaceToken,
 } from '@atproto/space'
 import { SpaceRef } from '@atproto/syntax'
@@ -359,13 +358,7 @@ export class AuthVerifier {
     }
   }
 
-  /**
-   * A space credential, presented under the `DPoP` scheme with a proof.
-   *
-   * One credential is reused across every repo host in the space, so it carries no
-   * aud; the DPoP proof names this host instead. Handlers confirm the credential's
-   * space matches theirs.
-   */
+  /** Verify the credential and signature; handlers check the space and audience DID. */
   public spaceCredentialAuth: MethodAuthVerifier<SpaceCredentialOutput> =
     async (ctx) => {
       setAuthHeaders(ctx.res)
@@ -374,9 +367,6 @@ export class AuthVerifier {
       const { payload } = await this.verifySpaceToken(credential, 'credential')
       const space = parseSpaceSub(payload.sub)
 
-      // Only the space's own authority may issue credentials for it. Without this,
-      // any DID could sign a credential naming someone else's space and have it
-      // verified against its own signing key.
       if (payload.iss !== space.spaceDid) {
         throw new AuthRequiredError(
           'space credential issuer is not the space authority',
@@ -384,71 +374,62 @@ export class AuthVerifier {
         )
       }
 
-      // Unreachable unless parseSpaceToken's own check is relaxed, but an unbound
-      // credential must never fall through as a bearer token for the whole space.
-      const jkt = payload.cnf?.jkt
-      if (!jkt) {
+      const audience = ctx.req.headers['atproto-space-audience']
+      if (!isDidString(audience)) {
         throw new AuthRequiredError(
-          'space credential is not bound to a key',
-          'BadJwtCnf',
+          'missing or invalid space audience DID',
+          'BadSpaceSignature',
         )
       }
+      await this.verifySpaceSignature(ctx.req, payload.cnf!.kid)
 
-      await this.verifySpaceDpopProof(ctx.req, { credential, jkt })
+      const revoked = await this.accountManager.isSpaceCredentialRevoked(
+        space.toString(),
+        payload.jti,
+      )
+      if (revoked) {
+        throw new AuthRequiredError(
+          'space credential has been revoked',
+          'CredentialRevoked',
+        )
+      }
 
       return {
         credentials: {
           type: 'space_credential',
           iss: space.spaceDid,
+          audience,
           space: space.toString(),
         },
       }
     }
 
-  private async verifySpaceDpopProof(
+  private async verifySpaceSignature(
     req: MethodAuthContext['req'],
-    binding:
-      | { credential: string; jkt: string }
-      | { credential?: undefined; jkt?: undefined },
-  ): Promise<string> {
-    const proof = req.headers['dpop']
-    if (typeof proof !== 'string' || !proof) {
-      throw new AuthRequiredError(
-        'request requires a DPoP proof',
-        'MissingDpopProof',
-      )
+    keyId?: DidString,
+  ): Promise<DidString> {
+    const singleHeaders = keyId
+      ? ['authorization', 'atproto-space-audience']
+      : ['authorization']
+    for (const name of singleHeaders) {
+      if (req.headersDistinct[name]?.length !== 1) {
+        throw new AuthRequiredError(
+          `request requires exactly one "${name}" field`,
+          'BadSpaceSignature',
+        )
+      }
     }
-
-    const url = new URL(req.originalUrl || req.url || '/', this._publicUrl)
-    const { jti, jkt } = await verifyDpopProof(proof, {
-      htm: req.method || 'GET',
-      htu: url.toString(),
-      ...binding,
-    }).catch((err) => {
-      if (err instanceof DpopProofError) {
+    try {
+      return await verifySpaceSignature(req.headers, keyId)
+    } catch (err) {
+      if (err instanceof SpaceSignatureError) {
         throw new AuthRequiredError(err.message, err.code)
       }
       throw err
-    })
-
-    // Shared with the OAuth DPoP path, whose retention (minutes) comfortably exceeds
-    // MAX_PROOF_AGE_SEC + CLOCK_SKEW_SEC, so a still-valid proof is still remembered.
-    const unique = await this.oauthVerifier.replayManager.uniqueDpop(jti)
-    if (!unique) {
-      throw new AuthRequiredError('DPoP proof replayed', 'BadDpopProof')
     }
-
-    return jkt
   }
 
-  /**
-   * A delegation token, minted by a user's PDS and presented to this service (as
-   * a space authority) in exchange for a space credential. The accompanying DPoP
-   * proof supplies the key binding for that credential.
-   *
-   * Addressed to this authority's space host, and checked as such: a token minted
-   * for another authority is rejected rather than honoured.
-   */
+  /** Verify a delegation token and the signature supplying its credential key binding. */
   public delegationTokenAuth: MethodAuthVerifier<DelegationTokenOutput> =
     async (ctx) => {
       setAuthHeaders(ctx.res)
@@ -476,9 +457,8 @@ export class AuthVerifier {
         )
       }
 
-      const dpopJkt = await this.verifySpaceDpopProof(ctx.req, {})
+      const keyId = await this.verifySpaceSignature(ctx.req)
 
-      // A fresh DPoP proof must not make the delegation token reusable.
       const unique = await this.oauthVerifier.replayManager.uniqueSpaceToken(
         'delegation',
         payload.iss,
@@ -497,7 +477,7 @@ export class AuthVerifier {
           type: 'delegation_token',
           userDid: payload.iss,
           space: space.toString(),
-          dpopJkt,
+          keyId,
         },
       }
     }
@@ -846,6 +826,7 @@ enum AuthType {
   BASIC = 'Basic',
   BEARER = 'Bearer',
   DPOP = 'DPoP',
+  'ATPROTO-SPACE' = 'Atproto-Space',
 }
 
 const parseAuthorizationHeader = (
@@ -886,23 +867,13 @@ const isDefinitelyServiceAuth = (req: IncomingMessage): boolean => {
   return payload['lxm'] != null
 }
 
-// Space credentials share the `DPoP` scheme with OAuth access tokens, so they are
-// told apart by an unverified `typ` header. Safe because this only routes: neither
-// token type verifies as the other.
 const isSpaceCredentialAuth = (req: IncomingMessage): boolean => {
-  const token = spaceCredentialTokenFromReq(req)
-  if (!token) return false
-  try {
-    const header = jose.decodeProtectedHeader(token)
-    return header.typ === SPACE_TOKEN_TYPES.credential.typ
-  } catch {
-    return false
-  }
+  return extractAuthType(req) === AuthType['ATPROTO-SPACE']
 }
 
 const spaceCredentialTokenFromReq = (req: IncomingMessage): string | null => {
   const [type, token] = parseAuthorizationHeader(req)
-  return type === AuthType.DPOP ? token : null
+  return type === AuthType['ATPROTO-SPACE'] ? token : null
 }
 
 const spaceCredentialFromReq = (req: IncomingMessage): string => {
