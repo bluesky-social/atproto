@@ -73,6 +73,7 @@ For working with that SDK, invoke the focused skills under [.agents/skills/](.ag
 - ([packages/bsky](packages/bsky)) — read-side service for `app.bsky.*` queries (timelines, profiles, feed generators, hydration pipeline, GraphQL-like view composition). Talks to PDSes via XRPC and to `bsync` via Connect-RPC (protobuf in `packages/bsky/proto`). Runtime entry point in [services/bsky](services/bsky).
 - ([packages/bsync](packages/bsync)) — internal service for cross-AppView synchronization (mutes, notifications). Connect-RPC interface.
 - ([packages/ozone](packages/ozone)) — moderation service for `tools.ozone.*`.
+  - Large report-table backfills use bounded primary-key batches and a local lock timeout. Rehearse the full transaction because transactional DDL locks remain held until commit.
 - ([packages/dev-env](packages/dev-env)) — boots a full PDS + AppView + bsync + plc + ozone constellation in-process for tests and the `make run-dev-env` REPL. Most integration tests in `pds`/`bsky`/`ozone` use it as a fixture builder.
 
 ## Conventions

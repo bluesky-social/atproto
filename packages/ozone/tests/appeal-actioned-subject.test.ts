@@ -231,7 +231,14 @@ describe('appealActionedSubject', () => {
       reportType: APPEAL_REASON_TYPE,
       actionEventIds: [action.id],
       did: sc.dids.bob,
+      reporterDid: sc.dids.bob,
     })
+    const appealEvent = await network.ozone.ctx.db.db
+      .selectFrom('moderation_event')
+      .where('id', '=', report.eventId)
+      .select('createdBy')
+      .executeTakeFirstOrThrow()
+    expect(report.reporterDid).toBe(appealEvent.createdBy)
     const status = await network.ozone.ctx
       .modService(network.ozone.ctx.db)
       .getStatus(new RecordSubject(subject.uri, subject.cid))

@@ -26,6 +26,7 @@ type ResolvedAssignment = {
 type ReportEvent = Pick<
   ModerationEventRow,
   | 'id'
+  | 'createdBy'
   | 'subjectDid'
   | 'subjectUri'
   | 'subjectMessageId'
@@ -62,6 +63,7 @@ function reportRowFromEvent({
 
   return {
     eventId: event.id,
+    reporterDid: event.createdBy,
     queueId: assignment.queueId,
     queuedAt: assignment.queuedAt,
     actionEventIds: actionEventIds === null ? null : jsonb(actionEventIds),
@@ -686,6 +688,7 @@ export class QueueService {
       .selectFrom('moderation_event')
       .select([
         'id',
+        'createdBy',
         'subjectDid',
         'subjectUri',
         'subjectMessageId',
@@ -755,7 +758,12 @@ export class QueueService {
     await this.db.db
       .insertInto('report')
       .values(rows)
-      .onConflict((oc) => oc.column('eventId').doNothing())
+      .onConflict((oc) =>
+        oc
+          .column('eventId')
+          .doUpdateSet({ reporterDid: sql`excluded."reporterDid"` })
+          .where('report.reporterDid', 'is', null),
+      )
       .execute()
 
     // Activity rows are intentionally not emitted: a freshly-inserted report
