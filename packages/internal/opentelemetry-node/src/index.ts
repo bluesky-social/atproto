@@ -15,11 +15,14 @@ import {
   ATTR_SERVICE_NAMESPACE,
   ATTR_SERVICE_VERSION,
 } from './conventions.js'
-import { getDefaultAtprotoInstrumentations } from './instrumentation.js'
+import {
+  type DefaultAtprotoInstrumentationsOptions,
+  getDefaultAtprotoInstrumentations,
+} from './instrumentation.js'
 
 export type { Attributes, Instrumentation }
 
-export type SetupOptions = {
+export type SetupOptions = DefaultAtprotoInstrumentationsOptions & {
   name: string
   version: string
   /**
@@ -90,7 +93,7 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
       // "container" detector.
       resourceDetectors: getResourceDetectors(),
       instrumentations: [
-        ...getDefaultAtprotoInstrumentations(),
+        ...getDefaultAtprotoInstrumentations(options),
         ...(options.instrumentations ?? []),
       ],
 
