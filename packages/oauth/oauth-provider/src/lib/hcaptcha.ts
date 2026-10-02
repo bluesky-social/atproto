@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { scrypt } from 'node:crypto'
 import { z } from 'zod'
 import {
   type Fetch,
@@ -197,23 +197,42 @@ export class HCaptchaClient {
     }
   }
 
-  public buildClientTokens(
+  public async buildClientTokens(
     remoteip: string,
     handle: string,
     userAgent?: string,
-  ): HcaptchaClientTokens {
+  ): Promise<HcaptchaClientTokens> {
+    // @NOTE We are **not** using Promise.all here because libuv's thread pool
+    // might get saturated, leading to performance degradation. Instead, we
+    // await each hash sequentially, ensuring that every HTTP request only uses
+    // one thread at a time.
     return {
-      hashedIp: this.hashToken(remoteip),
-      hashedHandle: this.hashToken(handle),
-      hashedUserAgent: userAgent ? this.hashToken(userAgent) : undefined,
+      hashedIp: await this.hashToken(remoteip),
+      hashedHandle: await this.hashToken(handle),
+      hashedUserAgent: userAgent ? await this.hashToken(userAgent) : undefined,
     }
   }
 
-  protected hashToken(value: string) {
-    const hash = createHash('sha256')
-    hash.update(this.config.tokenSalt)
-    hash.update(value)
-    return hash.digest().toString('base64')
+  protected async hashToken(value: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      // @NOTE This used to be implemented as sha256("<salt><value>"), which
+      // resulted in a 32-byte derived key, hence the length parameter 32 in
+      // scrypt.
+      scrypt(
+        value,
+        this.config.tokenSalt,
+        32,
+        {
+          // @NOTE we use a small cost to reduce CPU usage during hashing. Since
+          // we are not hashing passwords, a lower cost is acceptable.
+          cost: 1024, // defaults to 16384 (must be power of 2)
+        },
+        (err, derivedKey) => {
+          if (err) reject(err)
+          else resolve(derivedKey.toString('base64'))
+        },
+      )
+    })
   }
 }
 
