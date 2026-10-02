@@ -1,5 +1,24 @@
 # @atproto/dev-env
 
+## 0.6.10
+
+### Patch Changes
+
+- [#5572](https://github.com/bluesky-social/atproto/pull/5572) [`0ecd50b`](https://github.com/bluesky-social/atproto/commit/0ecd50b23dffce229ce671d1fac95dd647d06d10) Thanks [@foysalit](https://github.com/foysalit)! - Seed Alice and Bob with adult birthdates and full age assurance in the local development environment.
+- Updated dependencies [[`cd736b3`](https://github.com/bluesky-social/atproto/commit/cd736b3dbbec957cf4eaa7e67fa5b8be8f8ae04e), [`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd), [`61c915a`](https://github.com/bluesky-social/atproto/commit/61c915a4b7304720496975a07f2f35d38a23bcd4), [`3cd9fa6`](https://github.com/bluesky-social/atproto/commit/3cd9fa6013efad3ab57704ae804952be097e5d26), [`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e), [`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3), [`a6561d5`](https://github.com/bluesky-social/atproto/commit/a6561d54227756876a0901e4a87675df17972d32), [`9ce8595`](https://github.com/bluesky-social/atproto/commit/9ce85957ce98c4b8a4ab6b51e0c24c4cd213d464)]:
+  - @atproto/api@0.23.0
+  - @atproto/bsky@0.1.0
+  - @atproto/ozone@0.5.1
+  - @atproto/pds@0.5.37
+  - @atproto/crypto@0.5.7
+  - @atproto/lexicon@0.7.16
+  - @atproto/sync@0.4.13
+  - @atproto/identity@0.5.16
+  - @atproto/xrpc-server@0.13.4
+  - @atproto/bsync@0.1.2
+  - @atproto/common-web@0.5.14
+  - @atproto/lex@0.3.14
+
 ## 0.6.9
 
 ### Patch Changes

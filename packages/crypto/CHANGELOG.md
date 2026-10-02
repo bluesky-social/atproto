@@ -1,5 +1,11 @@
 # @atproto/crypto
 
+## 0.5.7
+
+### Patch Changes
+
+- [#5583](https://github.com/bluesky-social/atproto/pull/5583) [`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd) Thanks [@haileyok](https://github.com/haileyok)! - Reject base58btc-encoded public keys longer than 128 characters before decoding them.
+
 ## 0.5.6
 
 ### Patch Changes
