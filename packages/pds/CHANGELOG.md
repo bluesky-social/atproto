@@ -1,5 +1,30 @@
 # @atproto/pds
 
+## 0.5.37
+
+### Patch Changes
+
+- [#5493](https://github.com/bluesky-social/atproto/pull/5493) [`cd736b3`](https://github.com/bluesky-social/atproto/commit/cd736b3dbbec957cf4eaa7e67fa5b8be8f8ae04e) Thanks [@mozzius](https://github.com/mozzius)! - Add `since` and `startCursor` to `getTimeline` and `getListFeed`, for reading everything strictly newer than a previously returned position.
+
+- [#5576](https://github.com/bluesky-social/atproto/pull/5576) [`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve resource management of actor store
+
+- [#5584](https://github.com/bluesky-social/atproto/pull/5584) [`a6561d5`](https://github.com/bluesky-social/atproto/commit/a6561d54227756876a0901e4a87675df17972d32) Thanks [@haileyok](https://github.com/haileyok)! - Reject MSTs that reference the same node more than once. Full-tree traversals and diffs now throw `VisitedCidError` instead of re-walking shared subtrees, bounding their cost by the number of unique blocks. `com.atproto.repo.importRepo` returns `InvalidRequest` for such repos.
+- Updated dependencies [[`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e), [`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd), [`cea6f5c`](https://github.com/bluesky-social/atproto/commit/cea6f5c4a034860c35eda03dbde207f5bdb9387f), [`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e), [`0593d81`](https://github.com/bluesky-social/atproto/commit/0593d818bc2b7f8a40c9d0fe036bf39c7a4eecda), [`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3), [`a6561d5`](https://github.com/bluesky-social/atproto/commit/a6561d54227756876a0901e4a87675df17972d32), [`52e51de`](https://github.com/bluesky-social/atproto/commit/52e51de0fc7b27173fe7ecc2c7b47ec476a8c1bf)]:
+  - @atproto/repo@0.11.0
+  - @atproto/crypto@0.5.7
+  - @atproto/oauth-provider@0.23.1
+  - @atproto/aws@0.3.19
+  - @atproto-labs/opentelemetry-node@0.3.0
+  - @atproto/lex-data@0.1.8
+  - @atproto/identity@0.5.16
+  - @atproto/xrpc-server@0.13.4
+  - @atproto/common@0.8.5
+  - @atproto/lex@0.3.14
+  - @atproto/lex-cbor@0.1.7
+  - @atproto/lex-document@0.1.13
+  - @atproto/lex-json@0.1.7
+  - @atproto-labs/xrpc-utils@0.1.25
+
 ## 0.5.36
 
 ### Patch Changes

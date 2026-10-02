@@ -1,5 +1,34 @@
 # @atproto/bsky
 
+## 0.1.0
+
+### Minor Changes
+
+- [#5568](https://github.com/bluesky-social/atproto/pull/5568) [`61c915a`](https://github.com/bluesky-social/atproto/commit/61c915a4b7304720496975a07f2f35d38a23bcd4) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add `app.bsky.notification.getGroupedNotifications`.
+
+- [#5577](https://github.com/bluesky-social/atproto/pull/5577) [`3cd9fa6`](https://github.com/bluesky-social/atproto/commit/3cd9fa6013efad3ab57704ae804952be097e5d26) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Return grouped notification related views as a typed union array and include views for the first ten items per group.
+  
+  Remove the `utcOffset` parameter and allow notifications to group across day boundaries.
+  
+  Use one endpoint-supplied timestamp for grouping throughout each request.
+
+### Patch Changes
+
+- [#5493](https://github.com/bluesky-social/atproto/pull/5493) [`cd736b3`](https://github.com/bluesky-social/atproto/commit/cd736b3dbbec957cf4eaa7e67fa5b8be8f8ae04e) Thanks [@mozzius](https://github.com/mozzius)! - Add `since` and `startCursor` to `getTimeline` and `getListFeed`, for reading everything strictly newer than a previously returned position.
+
+- [#5571](https://github.com/bluesky-social/atproto/pull/5571) [`9ce8595`](https://github.com/bluesky-social/atproto/commit/9ce85957ce98c4b8a4ab6b51e0c24c4cd213d464) Thanks [@cuducos](https://github.com/cuducos)! - Route configured trending feeds through AppView's local Iris endpoint.
+- Updated dependencies [[`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e), [`cd736b3`](https://github.com/bluesky-social/atproto/commit/cd736b3dbbec957cf4eaa7e67fa5b8be8f8ae04e), [`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd), [`61c915a`](https://github.com/bluesky-social/atproto/commit/61c915a4b7304720496975a07f2f35d38a23bcd4), [`0593d81`](https://github.com/bluesky-social/atproto/commit/0593d818bc2b7f8a40c9d0fe036bf39c7a4eecda), [`a6561d5`](https://github.com/bluesky-social/atproto/commit/a6561d54227756876a0901e4a87675df17972d32)]:
+  - @atproto/repo@0.11.0
+  - @atproto/api@0.23.0
+  - @atproto/crypto@0.5.7
+  - @atproto-labs/opentelemetry-node@0.3.0
+  - @atproto/sync@0.4.13
+  - @atproto/identity@0.5.16
+  - @atproto/xrpc-server@0.13.4
+  - @atproto/common@0.8.5
+  - @atproto/lex@0.3.14
+  - @atproto-labs/xrpc-utils@0.1.25
+
 ## 0.0.282
 
 ### Patch Changes
