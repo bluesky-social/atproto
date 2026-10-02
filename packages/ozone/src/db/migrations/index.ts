@@ -48,3 +48,4 @@ export * as _20260731T000000000Z from './20260731T000000000Z-add-recommended-pol
 export * as _20260810T000000000Z from './20260810T000000000Z-add-report-stats-components.js'
 export * as _20260922T153505234Z from './20260922T153505234Z-add-report-closed-at-index.js'
 export * as _20260928T000000000Z from './20260928T000000000Z-inbox-appeal.js'
+export * as _20261001T000000000Z from './20261001T000000000Z-add-report-priority.js'
