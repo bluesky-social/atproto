@@ -54,7 +54,7 @@ correctly for these methods in the metrics.
 // @NOTE **do not** import runtime code here (like `ids` from
 // `@atproto/lex-cli`'s `./lexicon/lexicons.js`) as telemetry setup must run
 // before any instrumented module. Importing from the `@atproto/lex` manifest
-// (JSON) is fines.
+// (JSON) is fine.
 
 import { setup } from '@atproto-labs/opentelemetry-node'
 import pkg from './package.json' with { type: 'json' }
@@ -67,7 +67,7 @@ setup(() => ({
     // @NOTE we only care about methods, which, by convention, have a verb
     // followed by a capitalized noun (e.g., `getFeed`). Reducing the list
     // helps keep the attribute low-cardinality.
-    .filter(v => /^[a-z]+[A-Z]/.test(v)))
+    .filter((v) => /[A-Z]/.test(v)),
 }))
 ```
 
