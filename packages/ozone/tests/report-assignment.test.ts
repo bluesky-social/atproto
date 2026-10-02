@@ -496,24 +496,25 @@ describe('report-assignment', () => {
         const before = Date.now()
         const assignment = await unassignReport({ reportId }, 'admin')
         const { activities } = await listActivities({ reportId })
-        const notes = activities.filter(
+        const unassignments = activities.filter(
           (a) =>
-            a.activity.$type === tools.ozone.report.defs.noteActivity.$type,
+            a.activity.$type ===
+            tools.ozone.report.defs.unassignmentActivity.$type,
         )
-        expect(notes).toHaveLength(1)
-        expect(notes[0]).toMatchObject({
+        expect(unassignments).toHaveLength(1)
+        expect(unassignments[0]).toMatchObject({
           createdBy: network.ozone.adminAccnt.did,
           isAutomated: false,
           internalNote: `Report unassigned from ${network.ozone.moderatorAccnt.did}.`,
           meta: { unassignedFrom: network.ozone.moderatorAccnt.did },
           createdAt: assignment.endAt,
         })
-        expect(new Date(notes[0].createdAt).getTime()).toBeGreaterThanOrEqual(
-          before,
-        )
-        expect(new Date(notes[0].createdAt).getTime()).toBeLessThanOrEqual(
-          Date.now(),
-        )
+        expect(
+          new Date(unassignments[0].createdAt).getTime(),
+        ).toBeGreaterThanOrEqual(before)
+        expect(
+          new Date(unassignments[0].createdAt).getTime(),
+        ).toBeLessThanOrEqual(Date.now())
         const report = await network.ozone.ctx.db.db
           .selectFrom('report')
           .select(['status', 'assignedTo', 'assignedAt'])
@@ -538,12 +539,86 @@ describe('report-assignment', () => {
       expect(activities).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            activity: { $type: tools.ozone.report.defs.noteActivity.$type },
+            activity: {
+              $type: tools.ozone.report.defs.unassignmentActivity.$type,
+            },
             createdBy: network.ozone.moderatorAccnt.did,
             meta: { unassignedFrom: network.ozone.moderatorAccnt.did },
           }),
         ]),
       )
+    })
+
+    it('can query unassignments separately from notes and other activities', async () => {
+      const reportId = await createReport()
+      await assignReport({ reportId, isPermanent: true })
+      await agent.tools.ozone.report.createActivity(
+        {
+          reportId,
+          activity: { $type: tools.ozone.report.defs.noteActivity.$type },
+          internalNote: 'Assignment reviewed.',
+        },
+        {
+          encoding: 'application/json',
+          headers: await network.ozone.modHeaders(
+            ids.ToolsOzoneReportCreateActivity,
+            'admin',
+          ),
+        },
+      )
+      const assignment = await unassignReport({ reportId })
+      const { data } = await agent.tools.ozone.report.queryActivities(
+        { activityTypes: ['unassignmentActivity'] },
+        {
+          headers: await network.ozone.modHeaders(
+            ids.ToolsOzoneReportQueryActivities,
+            'admin',
+          ),
+        },
+      )
+      expect(data.activities.length).toBeGreaterThan(0)
+      expect(
+        data.activities.every((a) =>
+          tools.ozone.report.defs.unassignmentActivity.$matches(a.activity),
+        ),
+      ).toBe(true)
+      expect(data.activities.filter((a) => a.reportId === reportId)).toEqual([
+        expect.objectContaining({
+          activity: {
+            $type: tools.ozone.report.defs.unassignmentActivity.$type,
+          },
+          internalNote: `Report unassigned from ${network.ozone.moderatorAccnt.did}.`,
+          meta: { unassignedFrom: network.ozone.moderatorAccnt.did },
+          createdAt: assignment.endAt,
+        }),
+      ])
+    })
+
+    it('rejects creating unassignment activity without unassigning the moderator', async () => {
+      const reportId = await createReport()
+      await assignReport({ reportId, isPermanent: true })
+      const before = await listActivities({ reportId })
+      await expect(
+        agent.tools.ozone.report.createActivity(
+          {
+            reportId,
+            activity: {
+              $type: tools.ozone.report.defs.unassignmentActivity.$type,
+            },
+          },
+          {
+            encoding: 'application/json',
+            headers: await network.ozone.modHeaders(
+              ids.ToolsOzoneReportCreateActivity,
+              'admin',
+            ),
+          },
+        ),
+      ).rejects.toMatchObject({ error: 'InvalidActivityType' })
+      expect(await listActivities({ reportId })).toEqual(before)
+      const { assignments } = await getAssignments({ reportIds: [reportId] })
+      expect(assignments).toHaveLength(1)
+      expect(assignments[0].endAt).toBeUndefined()
     })
 
     it('does not record another activity when unassignment is retried', async () => {
@@ -570,7 +645,8 @@ describe('report-assignment', () => {
       expect(
         activities.filter(
           (a) =>
-            a.activity.$type === tools.ozone.report.defs.noteActivity.$type,
+            a.activity.$type ===
+            tools.ozone.report.defs.unassignmentActivity.$type,
         ),
       ).toHaveLength(1)
     })
@@ -589,8 +665,8 @@ describe('report-assignment', () => {
         await db.schema
           .alterTable('report_activity')
           .addCheckConstraint(
-            'reject_unassignment_note',
-            sql`"reportId" <> ${sql.lit(reportId)} or "activityType" <> 'noteActivity'`,
+            'reject_unassignment_activity',
+            sql`"reportId" <> ${sql.lit(reportId)} or "activityType" <> 'unassignmentActivity'`,
           )
           .execute()
         try {
@@ -612,7 +688,7 @@ describe('report-assignment', () => {
         } finally {
           await db.schema
             .alterTable('report_activity')
-            .dropConstraint('reject_unassignment_note')
+            .dropConstraint('reject_unassignment_activity')
             .execute()
         }
       },

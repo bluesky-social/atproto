@@ -616,7 +616,7 @@ export class AssignmentService {
           : []),
         {
           ...activityFields,
-          activityType: 'noteActivity',
+          activityType: 'unassignmentActivity',
           previousStatus: null,
           internalNote: `Report unassigned from ${existing.did}.`,
           meta: { unassignedFrom: existing.did },
