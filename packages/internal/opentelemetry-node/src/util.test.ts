@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { extractNormalizedLxm, statusCodeToString } from './util.js'
+import { extractUrlXrpcMethodName, statusCodeToString } from './util.js'
 
 describe(statusCodeToString, () => {
   test('success is spelled out, since the Code enum has no member for it', () => {
@@ -32,7 +32,7 @@ describe(statusCodeToString, () => {
   })
 })
 
-describe(extractNormalizedLxm, () => {
+describe(extractUrlXrpcMethodName, () => {
   test.each([
     {
       note: 'simple method',
@@ -65,7 +65,7 @@ describe(extractNormalizedLxm, () => {
       lxm: 'a.b.c',
     },
   ])('$note', ({ url, lxm }) => {
-    expect(extractNormalizedLxm(url)).toBe(lxm)
+    expect(extractUrlXrpcMethodName(url)).toBe(lxm)
   })
 
   test.each([
@@ -82,6 +82,6 @@ describe(extractNormalizedLxm, () => {
     { note: 'no dot in method', url: '/xrpc/foobar' },
     { note: 'trailing dot', url: '/xrpc/com.example.' },
   ])('$note → undefined', ({ url }) => {
-    expect(extractNormalizedLxm(url)).toBeUndefined()
+    expect(extractUrlXrpcMethodName(url)).toBeUndefined()
   })
 })

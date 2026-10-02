@@ -4,7 +4,6 @@ import type { AddressInfo } from 'node:net'
 import { SpanKind, context, trace } from '@opentelemetry/api'
 import { RPCType, getRPCMetadata } from '@opentelemetry/core'
 import type { Instrumentation } from '@opentelemetry/instrumentation'
-import { HttpInstrumentation } from '@opentelemetry/instrumentation-http'
 import { metrics, node, tracing } from '@opentelemetry/sdk-node'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import { ATTR_HTTP_ROUTE, ATTR_XRPC_METHOD } from './conventions.js'
@@ -121,19 +120,5 @@ describe('http server instrumentation', () => {
     ]
     expect(routesOf('http.server.request.duration')).toEqual(expected)
     expect(routesOf('http.server.duration')).toEqual(expected)
-  })
-})
-
-describe('without xrpcMethods', () => {
-  test('the metric route is left to the express instrumentation', () => {
-    const instrumentations = getDefaultAtprotoInstrumentations()
-    try {
-      const http = instrumentations.find(
-        (i) => i instanceof HttpInstrumentation,
-      )!
-      expect(http.getConfig().responseHook).toBeUndefined()
-    } finally {
-      for (const instrumentation of instrumentations) instrumentation.disable()
-    }
   })
 })

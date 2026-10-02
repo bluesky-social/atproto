@@ -16,7 +16,7 @@ import {
   ATTR_XRPC_PROXIED,
   ATTR_XRPC_PROXY,
 } from './conventions.js'
-import { extractNormalizedLxm } from './util.js'
+import { extractUrlXrpcMethodName } from './util.js'
 
 /**
  * The "http.route" reported on metrics for XRPC requests to a method that isn't
@@ -24,6 +24,8 @@ import { extractNormalizedLxm } from './util.js'
  * appear in an NSID, so this can't collide with a real method.
  */
 export const UNKNOWN_XRPC_ROUTE = '/xrpc/{unknown}'
+
+const XRPC_HTTP_METHODS = new Set(['GET', 'POST', 'OPTIONS', 'HEAD'])
 
 export type AtprotoInstrumentationOptions = {
   /**
@@ -50,7 +52,17 @@ export type AtprotoInstrumentationOptions = {
 export function getDefaultAtprotoInstrumentations(
   options?: AtprotoInstrumentationOptions,
 ): Instrumentation[] {
-  const getXrpcMetricRoute = buildXrpcMetricRouteGetter(options?.xrpcMethods)
+  const lxmToRoute = options?.xrpcMethods
+    ? new Map<string, `/xrpc/${string}`>(
+        // @NOTE Instead of using a Set, we pre-compute the route name so that
+        // we don't need to compute them on every request later.
+        Array.from(options?.xrpcMethods, (input) => {
+          // We first normalize the path to extract the local XRPC method (lxm)
+          const lxm = extractUrlXrpcMethodName(`/xrpc/${input}`)
+          if (lxm) return [lxm, `/xrpc/${lxm}`] as const
+        }).filter((e) => e != null),
+      )
+    : undefined
 
   return [
     // @NOTE Not using getNodeAutoInstrumentations: it pulls in many
@@ -68,41 +80,32 @@ export function getDefaultAtprotoInstrumentations(
       // layer). On finish, the http instrumentation copies rpcMetadata.route
       // into "http.route" and renames the span from it, clobbering anything a
       // requestHook set. This hook runs after that, so it wins.
-      applyCustomAttributesOnSpan: (span, request, response) => {
-        // @NOTE Tells incoming from outgoing requests by the response, since
-        // express gives incoming requests a "path" getter, which makes them
-        // look like a ClientRequest.
-        const { url, method, proxy } = isServerResponse(response)
-          ? // IncomingMessage
-            {
-              url: (request as IncomingMessage).url ?? '/',
-              method: request.method ?? 'GET',
-              proxy: (request as IncomingMessage).headers['atproto-proxy'],
-            }
-          : // ClientRequest
-            {
-              url: (request as ClientRequest).path,
-              method: request.method,
-              proxy: (request as ClientRequest).getHeader('atproto-proxy'),
-            }
+      applyCustomAttributesOnSpan: (span, request, _response) => {
+        const method = request.method ?? 'GET'
+        if (!XRPC_HTTP_METHODS.has(method)) return
 
-        const lxm =
-          method === 'GET' || method === 'POST'
-            ? extractNormalizedLxm(url)
-            : undefined
+        const client = isClientRequest(request)
 
-        // Normalized route for XRPC, raw path otherwise
-        const route = lxm ? `/xrpc/${lxm}` : url.split('?')[0]
+        const url = client ? request.path : request.url
+        if (!url || url === '/') return
+
+        const lxm = extractUrlXrpcMethodName(url)
+        if (!lxm) return
+
+        // @NOTE low-cardinality does not matter here. We do want to normalize
+        // the route for consistency across spans.
+        const route = lxmToRoute?.get(lxm) ?? `/xrpc/${lxm}`
+        const proxy = client
+          ? request.getHeader('atproto-proxy')
+          : request.headers['atproto-proxy']
+
+        span.updateName(`${method} /xrpc/${lxm}`)
         span.setAttribute(ATTR_HTTP_ROUTE, route)
+        span.setAttribute(ATTR_XRPC_METHOD, lxm)
+        span.setAttribute(ATTR_XRPC_PROXIED, !!proxy)
 
-        if (lxm) {
-          span.updateName(`${method} /xrpc/${lxm}`)
-          span.setAttribute(ATTR_XRPC_METHOD, lxm)
-          span.setAttribute(ATTR_XRPC_PROXIED, !!proxy)
-
-          if (proxy) {
-            span.setAttribute(ATTR_XRPC_PROXY, proxy)
-          }
+        if (proxy) {
+          span.setAttribute(ATTR_XRPC_PROXY, proxy)
         }
       },
       // Sets the (low-cardinality) XRPC route recorded on the server metric.
@@ -114,36 +117,33 @@ export function getDefaultAtprotoInstrumentations(
       // must be set on close rather than here. The http instrumentation adds
       // its own "close" listener right after calling this hook, so ours runs
       // first.
-      responseHook: getXrpcMetricRoute
-        ? (_span, response) => {
-            if (!isServerResponse(response)) return
+      responseHook: (_span, response) => {
+        if (!isServerResponse(response)) return
 
-            const { method, url } = response.req
-            const lxm =
-              method === 'GET' || method === 'POST'
-                ? extractNormalizedLxm(url)
-                : undefined
-            if (!lxm) return
+        const rpcMetadata = getRPCMetadata(context.active())
+        if (!rpcMetadata || rpcMetadata.type !== RPCType.HTTP) return
 
-            const rpcMetadata = getRPCMetadata(context.active())
-            if (rpcMetadata?.type !== RPCType.HTTP) return
+        const { method, url } = response.req
+        if (!method || !XRPC_HTTP_METHODS.has(method)) return
 
-            const route = getXrpcMetricRoute(lxm)
-            response.once('close', () => {
-              rpcMetadata.route = route
-            })
-          }
-        : undefined,
+        const lxm = extractUrlXrpcMethodName(url)
+        if (!lxm) return // Not an XRPC request
+
+        response.once('close', () => {
+          const route = lxmToRoute?.get(lxm) ?? UNKNOWN_XRPC_ROUTE
+          rpcMetadata.route = route
+        })
+      },
     }),
     new ExpressInstrumentation({
       ignoreLayersType: [ExpressLayerType.MIDDLEWARE],
     }),
     new UndiciInstrumentation({
       requestHook: (span, request) => {
-        const lxm = extractNormalizedLxm(request.path)
-        if (lxm) {
-          span.setAttribute(ATTR_XRPC_METHOD, lxm)
-        }
+        const lxm = extractUrlXrpcMethodName(request.path)
+        if (!lxm) return // Not an XRPC request
+
+        span.setAttribute(ATTR_XRPC_METHOD, lxm)
       },
     }),
     // @NOTE Keep log correlation (trace_id/span_id injected into pino records)
@@ -155,23 +155,17 @@ export function getDefaultAtprotoInstrumentations(
   ]
 }
 
-function buildXrpcMetricRouteGetter(
-  xrpcMethods?: Iterable<string>,
-): ((lxm: string) => string) | undefined {
-  if (!xrpcMethods) return undefined
-
-  // Normalized the same way as incoming requests, so that lookups match
-  const knownLxms = new Set<string>()
-  for (const nsid of xrpcMethods) {
-    const lxm = extractNormalizedLxm(`/xrpc/${nsid}`)
-    if (lxm) knownLxms.add(lxm)
-  }
-
-  return (lxm) => (knownLxms.has(lxm) ? `/xrpc/${lxm}` : UNKNOWN_XRPC_ROUTE)
-}
-
 // @NOTE Duck-typed rather than using instanceof, to avoid importing "node:http"
 // from here (it must not be loaded before being instrumented).
 function isServerResponse(response: object): response is ServerResponse {
   return 'req' in response && 'writeHead' in response
+}
+
+function isClientRequest(
+  request: IncomingMessage | ClientRequest,
+): request is ClientRequest {
+  // @NOTE Tells incoming from outgoing requests by the response, since express
+  // gives incoming requests a "path" getter, which makes them look like a
+  // ClientRequest.
+  return 'path' in request && typeof request.getHeader === 'function'
 }
