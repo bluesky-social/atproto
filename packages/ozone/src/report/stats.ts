@@ -101,6 +101,9 @@ export type ReportStatGroup = {
 export type ReportStatistics = {
   inboundCount: number
   pendingCount?: number
+  closureTargetOverdueCount?: number
+  closureTargetMetCount: number
+  closureTargetMissedCount: number
   closedCount: number
   actionedCount: number
   acknowledgedCount: number
@@ -127,6 +130,9 @@ type StatGroup = {
 type StatsRow = StatGroup & {
   inboundCount: string
   pendingCount: string
+  closureTargetOverdueCount: string
+  closureTargetMetCount: string
+  closureTargetMissedCount: string
   closedCount: string
   actionedCount: string
   acknowledgedCount: string
@@ -144,10 +150,15 @@ type StatsQueryRow<Metric extends StatsMetric> = StatGroup &
   Pick<StatsRow, Metric>
 type LifecycleMetric = Exclude<
   StatsMetric,
-  'inboundCount' | 'pendingCount' | 'escalatedCount'
+  | 'inboundCount'
+  | 'pendingCount'
+  | 'closureTargetOverdueCount'
+  | 'escalatedCount'
 >
 type InboundStatsRow = StatsQueryRow<'inboundCount'>
-type PendingStatsRow = StatsQueryRow<'pendingCount'>
+type PendingStatsRow = StatsQueryRow<
+  'pendingCount' | 'closureTargetOverdueCount'
+>
 type ClosureStatsRow = StatsQueryRow<LifecycleMetric>
 type EscalationStatsRow = StatsQueryRow<'escalatedCount'>
 type BatchedStats = Map<string, StatsRow>
@@ -158,6 +169,9 @@ type UpsertRow = {
   reportTypes: string[] | null
   inboundCount: number | null
   pendingCount: number | null
+  closureTargetOverdueCount: number | null
+  closureTargetMetCount: number | null
+  closureTargetMissedCount: number | null
   closedCount: number | null
   actionedCount: number | null
   acknowledgedCount: number | null
@@ -433,8 +447,10 @@ export class ReportStatsService {
     `.execute(this.db.db)
 
     // 3. pending stats
+    const computedAtDate = computedAt.slice(0, 10)
+    const pendingAsOf = date < computedAtDate ? dayEnd : computedAt
     const pendingReports =
-      date < computedAt.slice(0, 10)
+      date < computedAtDate
         ? sql`
           with subsequent_transitions as (
             select distinct on ("reportId") "reportId", "activityType"
@@ -443,24 +459,30 @@ export class ReportStatsService {
               and "activityType" in ('closeActivity', 'reopenActivity')
             order by "reportId", "createdAt", id
           ), candidates as (
-            select id, "queueId", "reportType" from report
+            select id, "queueId", "reportType", "createdAt", "priorityTargetMinutes" from report
             where status != 'closed' and "createdAt" < ${dayEnd}
             union all
-            select id, "queueId", "reportType" from report
+            select id, "queueId", "reportType", "createdAt", "priorityTargetMinutes" from report
             where status = 'closed' and "closedAt" >= ${dayEnd}
               and "createdAt" < ${dayEnd}
           )
-          select r."queueId", r."reportType"
+          select r."queueId", r."reportType", r."createdAt", r."priorityTargetMinutes"
           from candidates r
           left join subsequent_transitions t on t."reportId" = r.id
           where t."activityType" is distinct from 'reopenActivity'
         `
         : sql`
-          select "queueId", "reportType" from report where status != 'closed'
+          select "queueId", "reportType", "createdAt", "priorityTargetMinutes"
+          from report where status != 'closed'
         `
     const pendingStats = () =>
       sql<PendingStatsRow>`
-      select ${statGroupsExceptModerator}, count(*) as "pendingCount"
+      select ${statGroupsExceptModerator}, count(*) as "pendingCount",
+        count(*) filter (
+          where r."priorityTargetMinutes" > 0
+            and extract(epoch from (${pendingAsOf}::timestamptz - r."createdAt"::timestamptz))
+              > r."priorityTargetMinutes"::bigint * 60
+        ) as "closureTargetOverdueCount"
       from (${pendingReports}) r
       group by grouping sets ((), (coalesce(r."queueId", -1)), (r."reportType"))
     `.execute(this.db.db)
@@ -471,7 +493,7 @@ export class ReportStatsService {
       with closed_reports as (
         select
           r."queueId", r."reportType", r."assignedTo",
-          r."createdAt", r."assignedAt", r."closedAt",
+          r."createdAt", r."assignedAt", r."closedAt", r."priorityTargetMinutes",
           -- @NOTE The final linked event determines the current closure outcome.
           (r."actionEventIds" ->> -1)::integer as "actionEventId"
         from report r
@@ -491,11 +513,18 @@ export class ReportStatsService {
           case when r."assignedAt" is not null then
             greatest(0, extract(epoch from (r."closedAt"::timestamp - r."assignedAt"::timestamp)))
           end as "handlingTimeSec",
-          greatest(0, extract(epoch from (r."closedAt"::timestamp - r."createdAt"::timestamp))) as "resolutionTimeSec"
+          greatest(0, extract(epoch from (r."closedAt"::timestamp - r."createdAt"::timestamp))) as "resolutionTimeSec",
+          case when r."priorityTargetMinutes" > 0
+            and r."closedAt"::timestamptz >= r."createdAt"::timestamptz
+          then extract(epoch from (r."closedAt"::timestamptz - r."createdAt"::timestamptz))
+            <= r."priorityTargetMinutes"::bigint * 60
+          end as "closureTargetMet"
         from closure_outcomes r
       )
       select ${statGroups},
         count(*) as "closedCount",
+        count(*) filter (where r."closureTargetMet") as "closureTargetMetCount",
+        count(*) filter (where not r."closureTargetMet") as "closureTargetMissedCount",
         count(*) filter (where r.outcome != 'acknowledged') as "actionedCount",
         count(*) filter (where r.outcome = 'acknowledged') as "acknowledgedCount",
         count(*) filter (where r.outcome = 'label') as "labelActionCount",
@@ -550,7 +579,12 @@ export class ReportStatsService {
           moderatorDid: group.moderatorDid,
         }),
       )
-      const { pendingCount: _, ...stats } = this.resolveRows(row ? [row] : [])
+      const {
+        // remove stats that arent relevant for moderator group
+        pendingCount: _omit1,
+        closureTargetOverdueCount: _omit2,
+        ...stats
+      } = this.resolveRows(row ? [row] : [])
       return stats
     }
     if (group.reportTypes !== null) {
@@ -593,6 +627,9 @@ export class ReportStatsService {
       inboundCount,
       pendingCount,
       closedCount,
+      closureTargetOverdueCount: sum('closureTargetOverdueCount'),
+      closureTargetMetCount: sum('closureTargetMetCount'),
+      closureTargetMissedCount: sum('closureTargetMissedCount'),
       actionedCount,
       acknowledgedCount: sum('acknowledgedCount'),
       escalatedCount: sum('escalatedCount'),
@@ -639,6 +676,9 @@ export class ReportStatsService {
       inboundCount: stats.inboundCount ?? null,
       pendingCount,
       closedCount: stats.closedCount,
+      closureTargetOverdueCount: stats.closureTargetOverdueCount ?? null,
+      closureTargetMetCount: stats.closureTargetMetCount,
+      closureTargetMissedCount: stats.closureTargetMissedCount,
       actionedCount: stats.actionedCount ?? null,
       acknowledgedCount: stats.acknowledgedCount,
       escalatedCount,
@@ -692,6 +732,9 @@ export class ReportStatsService {
             reportTypes: r.reportTypes !== null ? jsonb(r.reportTypes) : null,
             inboundCount: r.inboundCount,
             pendingCount: r.pendingCount,
+            closureTargetOverdueCount: r.closureTargetOverdueCount,
+            closureTargetMetCount: r.closureTargetMetCount,
+            closureTargetMissedCount: r.closureTargetMissedCount,
             closedCount: r.closedCount,
             actionedCount: r.actionedCount,
             acknowledgedCount: r.acknowledgedCount,
@@ -842,6 +885,9 @@ function emptyStats(group: StatGroup): StatsRow {
     ...group,
     inboundCount: '0',
     pendingCount: '0',
+    closureTargetOverdueCount: '0',
+    closureTargetMetCount: '0',
+    closureTargetMissedCount: '0',
     closedCount: '0',
     actionedCount: '0',
     acknowledgedCount: '0',
