@@ -20,6 +20,8 @@ export default function (server: Server, ctx: AppContext) {
       await assertRepoAvailability(ctx, did, isUserOrAdmin(auth, did))
 
       // must open up the db outside of store interface so that we can close the file handle after finished streaming
+      // @TODO *not* using "await using" so that we can manually control when the DB
+      // is closed. This should be implemented using an AsyncDisposableStack.
       const actorDb = await ctx.actorStore.openDb(did)
 
       let carStream: stream.Readable
@@ -33,10 +35,10 @@ export default function (server: Server, ctx: AppContext) {
         const carIter = repo.getRecords(storage, commit, [{ collection, rkey }])
         carStream = byteIterableToStream(carIter)
       } catch (err) {
-        actorDb.close()
+        await actorDb.close()
         throw err
       }
-      const closeDb = () => actorDb.close()
+      const closeDb = () => void actorDb.close()
       carStream.on('error', closeDb)
       carStream.on('close', closeDb)
 

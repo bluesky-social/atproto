@@ -15,6 +15,14 @@ import {
   INVALID_HANDLE,
   normalizeDatetimeAlways,
 } from '@atproto/syntax'
+import {
+  APPVIEW_NOTIFICATION_REASON,
+  NOTIFICATION_REASON,
+} from '../api/app/bsky/notification/constants.js'
+import type {
+  NotificationGroup,
+  NotificationItem,
+} from '../api/app/bsky/notification/grouping/grouping.js'
 import type { Actor, ProfileViewerState } from '../hydration/actor.js'
 import {
   type AssociatedSiteStandardRecord,
@@ -2878,6 +2886,145 @@ export class Views {
       indexedAt: notif.timestamp.toDate().toISOString() as DatetimeString,
       labels: [...labels, ...selfLabels],
     }
+  }
+
+  notificationGroup(
+    group: NotificationGroup,
+    state: HydrationState,
+  ): app.bsky.notification.getGroupedNotifications.Group | undefined {
+    const newestItem = group.items[0]
+    if (!newestItem) return
+    const notif = newestItem.raw
+
+    const defs = app.bsky.notification.getGroupedNotifications
+    const followItem = (item: NotificationItem) => {
+      const notif = item.raw
+      const followRecord = state.follows?.get(notif.uri)?.record
+      const starterPackUri =
+        followRecord && getStarterPackUriFromFollow(followRecord)
+      return {
+        actor: item.actorDid,
+        starterPack:
+          starterPackUri &&
+          state.starterPacks?.get(starterPackUri) &&
+          state.actors?.get(creatorFromUri(starterPackUri))
+            ? starterPackUri
+            : undefined,
+      }
+    }
+    const actorItems = group.items.map((item) => ({ actor: item.actorDid }))
+    const uri = notif.uri
+    let kind: app.bsky.notification.getGroupedNotifications.Group['kind']
+
+    switch (notif.reason) {
+      case NOTIFICATION_REASON.LIKE: {
+        const subjectUri = notif.reasonSubject
+        if (
+          group.kind === APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE &&
+          group.items.length > 1
+        ) {
+          kind = defs.multiPostLikeGroup.$build({
+            actor: newestItem.actorDid,
+            items: group.items.map((item) => ({
+              post: item.raw.reasonSubject!,
+            })),
+          })
+        } else if (
+          new AtUri(subjectUri).collection === app.bsky.feed.generator.$type
+        ) {
+          kind = defs.generatorLikeGroup.$build({
+            generator: subjectUri,
+            items: actorItems,
+          })
+        } else {
+          kind = defs.likeGroup.$build({ post: subjectUri, items: actorItems })
+        }
+        break
+      }
+      case NOTIFICATION_REASON.REPOST:
+        kind = defs.repostGroup.$build({
+          post: notif.reasonSubject,
+          items: actorItems,
+        })
+        break
+      case NOTIFICATION_REASON.LIKE_VIA_REPOST:
+      case NOTIFICATION_REASON.REPOST_VIA_REPOST: {
+        const subjectUri = notif.reasonSubject
+        const originalPostUri =
+          state.reposts?.get(subjectUri)?.record.subject.uri
+        if (!originalPostUri) return
+        const fields = {
+          post: originalPostUri,
+          viaRepost: subjectUri,
+          items: actorItems,
+        }
+        kind =
+          notif.reason === NOTIFICATION_REASON.LIKE_VIA_REPOST
+            ? defs.likeViaRepostGroup.$build(fields)
+            : defs.repostViaRepostGroup.$build(fields)
+        break
+      }
+      case NOTIFICATION_REASON.FOLLOW:
+        kind = defs.followGroup.$build({ items: group.items.map(followItem) })
+        break
+      case NOTIFICATION_REASON.FOLLOW_BACK:
+        kind = defs.followBackNotification.$build(followItem(newestItem))
+        break
+      case NOTIFICATION_REASON.SUBSCRIBED_POST:
+        kind = defs.subscribedPostGroup.$build({
+          items: group.items.map((item) => ({
+            actor: item.actorDid,
+            post: item.raw.uri,
+          })),
+        })
+        break
+      case NOTIFICATION_REASON.REPLY:
+      case NOTIFICATION_REASON.QUOTE:
+      case NOTIFICATION_REASON.MENTION: {
+        const parentUri = state.posts?.get(uri)?.record.reply?.parent.uri
+        const fields = { post: uri, parent: parentUri }
+        if (notif.reason === NOTIFICATION_REASON.REPLY) {
+          if (!parentUri) return
+          kind = defs.replyNotification.$build({ ...fields, parent: parentUri })
+        } else {
+          kind =
+            notif.reason === NOTIFICATION_REASON.QUOTE
+              ? defs.quoteNotification.$build(fields)
+              : defs.mentionNotification.$build(fields)
+        }
+        break
+      }
+      case NOTIFICATION_REASON.VERIFIED:
+        kind = defs.verifiedNotification.$build({
+          actor: newestItem.actorDid,
+        })
+        break
+      case NOTIFICATION_REASON.UNVERIFIED:
+        kind = defs.unverifiedNotification.$build({
+          actor: newestItem.actorDid,
+        })
+        break
+      case NOTIFICATION_REASON.STARTERPACK_JOINED:
+        kind = defs.starterPackJoinedNotification.$build({
+          actor: newestItem.actorDid,
+          starterPack: notif.reasonSubject,
+        })
+        break
+      case NOTIFICATION_REASON.CONTACT_MATCH:
+        kind = defs.contactMatchNotification.$build({
+          actor: newestItem.actorDid,
+        })
+        break
+      default:
+        return
+    }
+    return defs.group.$build({
+      id: group.id,
+      isRead: group.isRead,
+      indexedAt: group.indexedAt,
+      count: group.itemCount,
+      kind,
+    })
   }
 
   indexedAt({ sortedAt, indexedAt }: { sortedAt: Date; indexedAt: Date }) {

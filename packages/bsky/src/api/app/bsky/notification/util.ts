@@ -1,7 +1,9 @@
 import assert from 'node:assert'
 import type { Un$Typed } from '@atproto/lex'
+import type { AtUriString, DidString } from '@atproto/syntax'
 import { UpstreamFailureError } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
+import type { HydrationState } from '../../../../hydration/hydrator.js'
 import type { app } from '../../../../lexicons/index.js'
 import {
   type FilterableNotificationPreference,
@@ -11,6 +13,90 @@ import {
   type NotificationPreferences,
 } from '../../../../proto/bsky_pb.js'
 import { AppPlatform } from '../../../../proto/courier_pb.js'
+import { uriToDid } from '../../../../util/uris.js'
+import type { Views } from '../../../../views/index.js'
+import { isPostRecordType } from '../../../../views/types.js'
+import { NOTIFICATION_REASON } from './constants.js'
+
+export const shouldFilterReplyByThreadgate = (
+  reason: string,
+  uri: AtUriString,
+  viewer: string,
+  hydration: HydrationState,
+  views: Views,
+): boolean => {
+  if (reason !== NOTIFICATION_REASON.REPLY) return false
+
+  const post = hydration.posts?.get(uri)
+  if (!post) return false
+
+  // Filter out hidden replies only if the viewer owns
+  // the threadgate and they hid the reply.
+  const rootUri = isPostRecordType(post.record)
+    ? post.record.reply?.root.uri
+    : undefined
+  return Boolean(
+    rootUri &&
+    uriToDid(rootUri) === viewer &&
+    views.replyIsHiddenByThreadgate(uri, rootUri, hydration),
+  )
+}
+
+export const shouldFilterHiddenThreadTag = (
+  reason: string,
+  uri: AtUriString,
+  did: DidString,
+  hydration: HydrationState,
+  hiddenTags: ReadonlySet<string>,
+): boolean => {
+  if (
+    reason !== NOTIFICATION_REASON.REPLY &&
+    reason !== NOTIFICATION_REASON.QUOTE &&
+    reason !== NOTIFICATION_REASON.MENTION
+  ) {
+    return false
+  }
+
+  const post = hydration.posts?.get(uri)
+  if (!post || hydration.profileViewers?.get(did)?.following) return false
+
+  // Filter out notifications from users that have thread hide tags and are from people they
+  // are not following.
+  for (const tag of post.tags) {
+    if (hiddenTags.has(tag)) return true
+  }
+  return false
+}
+
+export const shouldFilterForNeedsReview = (
+  reason: string,
+  did: DidString,
+  uri: AtUriString,
+  hydration: HydrationState,
+  views: Views,
+): boolean => {
+  // Filter out notifications from users that need review unless moots.
+  const applies =
+    reason === NOTIFICATION_REASON.REPLY ||
+    reason === NOTIFICATION_REASON.QUOTE ||
+    reason === NOTIFICATION_REASON.MENTION ||
+    reason === NOTIFICATION_REASON.LIKE ||
+    reason === NOTIFICATION_REASON.FOLLOW ||
+    reason === NOTIFICATION_REASON.FOLLOW_BACK
+  return applies && !views.viewerSeesNeedsReview({ did, uri }, hydration)
+}
+
+/** Applies the configured delay to the notification cursor timestamp. */
+export const delayCursor = (
+  cursorStr: string | undefined,
+  delayMs: number,
+): string => {
+  const nowMinusDelay = Date.now() - delayMs
+  if (cursorStr === undefined) return new Date(nowMinusDelay).toISOString()
+  const cursor = new Date(cursorStr).getTime()
+  if (isNaN(cursor)) return cursorStr
+  return new Date(Math.min(cursor, nowMinusDelay)).toISOString()
+}
 
 type DeepPartial<T> = T extends object
   ? {

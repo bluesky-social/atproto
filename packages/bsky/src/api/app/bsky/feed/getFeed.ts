@@ -1,9 +1,11 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
 import {
+  type DidString,
   XrpcInvalidResponseError,
   XrpcResponseError,
   xrpcSafe,
 } from '@atproto/lex'
+import { AtUri } from '@atproto/syntax'
 import {
   type Headers as HeadersMap,
   InvalidRequestError,
@@ -235,6 +237,20 @@ export const irisStagingUrlForFeed = (
 ): string | undefined =>
   cfg.irisStagingFeedUris?.has(params.feed) ? cfg.irisStagingUrl : undefined
 
+/**
+ * Iris' local endpoint for configured trending feeds registered to Iris.
+ */
+export function irisUrlForTrendingFeed(
+  cfg: Pick<ServerConfig, 'irisUrl' | 'irisServiceDid' | 'trendingFeedDid'>,
+  params: { feed: string; feedDid: DidString },
+): string | undefined {
+  const { irisUrl, irisServiceDid, trendingFeedDid } = cfg
+  if (!irisUrl || !irisServiceDid || !trendingFeedDid) return
+  if (params.feedDid !== irisServiceDid) return
+  if (new AtUri(params.feed).host !== trendingFeedDid) return
+  return irisUrl
+}
+
 const resolveSkeletonEndpoint = async (
   ctx: Context,
   params: Params,
@@ -251,6 +267,9 @@ const resolveSkeletonEndpoint = async (
   if (!feedDid) {
     throw new InvalidRequestError('could not find feed')
   }
+
+  const trendingIrisUrl = irisUrlForTrendingFeed(ctx.cfg, { feed, feedDid })
+  if (trendingIrisUrl) return trendingIrisUrl
 
   let identity: GetIdentityByDidResponse
   try {
