@@ -46,16 +46,28 @@ is configured.
 
 ### XRPC routes on metrics
 
-Pass the XRPC methods the service may answer (including the ones it proxies) as
-`xrpcMethods`, typically the method ids from its lexicon codegen:
+Pass the known XRPC methods the service may answer (including the ones it
+proxies) as `xrpcMethods`. This allows to set the `http.route` attribute
+correctly for these methods in the metrics.
 
 ```ts
-import { ids } from './lexicon/lexicons.js'
+// @NOTE **do not** import runtime code here (like `ids` from
+// `@atproto/lex-cli`'s `./lexicon/lexicons.js`) as telemetry setup must run
+// before any instrumented module. Importing from the `@atproto/lex` manifest
+// (JSON) is fines.
+
+import { setup } from '@atproto-labs/opentelemetry-node'
+import pkg from './package.json' with { type: 'json' }
+import lex from './lexicons.json' with { type: 'json' }
 
 setup(() => ({
   name: pkg.name,
   version: pkg.version,
-  xrpcMethods: Object.values(ids),
+  xrpcMethods: lex.lexicons
+    // @NOTE we only care about methods, which, by convention, have a verb
+    // followed by a capitalized noun (e.g., `getFeed`). Reducing the list
+    // helps keep the attribute low-cardinality.
+    .filter(v => /^[a-z]+[A-Z]/.test(v)))
 }))
 ```
 
