@@ -20,22 +20,20 @@ import { extractUrlXrpcMethodName } from './util.js'
 
 /**
  * The "http.route" reported on metrics for XRPC requests to a method that isn't
- * listed in {@link AtprotoInstrumentationOptions.xrpcMethods}. Braces can't
- * appear in an NSID, so this can't collide with a real method.
+ * listed in {@link DefaultAtprotoInstrumentationsOptions.xrpcMethods}. Braces
+ * can't appear in an NSID, so this can't collide with a real method.
  */
 export const UNKNOWN_XRPC_ROUTE = '/xrpc/{unknown}'
 
 const XRPC_HTTP_METHODS = new Set(['GET', 'POST', 'OPTIONS', 'HEAD'])
 
-export type AtprotoInstrumentationOptions = {
+export type DefaultAtprotoInstrumentationsOptions = {
   /**
    * The XRPC methods (NSIDs) this service may serve, including any it proxies.
    *
-   * When set, the "http.route" attribute of the `http.server.request.duration`
-   * metric is "/xrpc/<nsid>" for these methods, and {@link UNKNOWN_XRPC_ROUTE}
-   * for any other NSID. When unset, metrics get whatever route the express
-   * instrumentation last saw, which for catchall handlers (proxying, etc.) is
-   * usually "/" or nothing at all.
+   * Values provided here will be used to set the "http.route" attribute for
+   * XRPC requests. XRPC request not listed here will have their "http.route"
+   * attribute set to {@link UNKNOWN_XRPC_ROUTE}.
    *
    * @note This only affects metrics, whose attributes must stay low-cardinality
    * since any client can make up an NSID. Spans keep being named after the
@@ -50,7 +48,7 @@ export type AtprotoInstrumentationOptions = {
  * naming and attributes.
  */
 export function getDefaultAtprotoInstrumentations(
-  options?: AtprotoInstrumentationOptions,
+  options?: DefaultAtprotoInstrumentationsOptions,
 ): Instrumentation[] {
   const lxmToRoute = options?.xrpcMethods
     ? new Map<string, `/xrpc/${string}`>(

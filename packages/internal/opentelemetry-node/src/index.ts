@@ -16,13 +16,13 @@ import {
   ATTR_SERVICE_VERSION,
 } from './conventions.js'
 import {
-  type AtprotoInstrumentationOptions,
+  type DefaultAtprotoInstrumentationsOptions,
   getDefaultAtprotoInstrumentations,
 } from './instrumentation.js'
 
 export type { Attributes, Instrumentation }
 
-export type SetupOptions = {
+export type SetupOptions = DefaultAtprotoInstrumentationsOptions & {
   name: string
   version: string
   /**
@@ -33,7 +33,7 @@ export type SetupOptions = {
    */
   defaultResourceAttributes?: Attributes
   instrumentations?: Instrumentation[]
-} & AtprotoInstrumentationOptions
+}
 
 // @NOTE Hand-rolled equivalent of "@opentelemetry/auto-instrumentations-node"'s
 // register script, because that one lacks better-sqlite3 instrumentation and
@@ -93,9 +93,7 @@ export async function setup(getOptions: () => SetupOptions): Promise<void> {
       // "container" detector.
       resourceDetectors: getResourceDetectors(),
       instrumentations: [
-        ...getDefaultAtprotoInstrumentations({
-          xrpcMethods: options.xrpcMethods,
-        }),
+        ...getDefaultAtprotoInstrumentations(options),
         ...(options.instrumentations ?? []),
       ],
 

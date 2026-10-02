@@ -73,9 +73,7 @@ setup(() => ({
 
 This sets the `http.route` attribute of the HTTP server duration metric to
 `/xrpc/<nsid>` for these methods, and to `/xrpc/{unknown}` for any other NSID.
-Without it, the route recorded on metrics is whatever the Express
-instrumentation last saw, which for catchall handlers (e.g. proxying) is `/` or
-nothing at all. The list is what keeps the attribute low-cardinality: any client
+The list is what keeps the attribute low-cardinality: any client
 can make up an NSID. Span names aren't affected.
 
 The instrumentations common to atproto services (HTTP with XRPC-aware span naming,
