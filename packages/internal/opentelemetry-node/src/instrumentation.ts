@@ -162,8 +162,7 @@ function isServerResponse(response: object): response is ServerResponse {
 function isClientRequest(
   request: IncomingMessage | ClientRequest,
 ): request is ClientRequest {
-  // @NOTE Tells incoming from outgoing requests by the response, since express
-  // gives incoming requests a "path" getter, which makes them look like a
-  // ClientRequest.
+  // @NOTE express gives incoming requests a "path" getter, which makes them
+  // look like a ClientRequest. This check helps differentiate them.
   return 'path' in request && typeof request.getHeader === 'function'
 }
