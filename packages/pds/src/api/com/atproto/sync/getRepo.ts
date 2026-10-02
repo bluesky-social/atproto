@@ -56,12 +56,14 @@ export const getCarStream = async (
   did: string,
   since?: string,
 ): Promise<stream.Readable> => {
+  // @TODO *not* using "await using" so that we can manually control when the DB
+  // is closed. This should be implemented using an AsyncDisposableStack.
   const actorDb = await ctx.actorStore.openDb(did)
   try {
     const storage = new SqlRepoReader(actorDb)
     const carIter = await storage.getCarStream(since)
     const carStream = byteIterableToStream(carIter)
-    const closeDb = () => actorDb.close()
+    const closeDb = () => void actorDb.close()
     carStream.on('error', closeDb)
     carStream.on('close', closeDb)
     return carStream
