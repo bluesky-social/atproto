@@ -259,6 +259,12 @@ export class ModerationViews {
     if (tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)) {
       event.isReporterMuted = !!meta.isReporterMuted
       event.reportType = ifString(meta.reportType)!
+      event.appealSubmittedBy = isDidString(meta.appealSubmittedBy)
+        ? meta.appealSubmittedBy
+        : undefined
+      event.appealActionType = ifString(meta.appealActionType)
+      event.appealActionId = ifNumber(meta.appealActionId)
+      event.appealLabel = ifString(meta.appealLabel)
     }
 
     if (tools.ozone.moderation.defs.modEventEmail.$isTypeOf(event)) {

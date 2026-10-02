@@ -9,15 +9,15 @@ import { toDatetimeString } from '@atproto/lex'
 import type { DidString } from '@atproto/syntax'
 import { jsonb } from '../src/db/types.js'
 import { APPEAL_REASON_TYPE, appealWindowEnd } from '../src/inbox/appeal.js'
-import { hydrateSubjectView, loadSubject } from '../src/inbox/views.js'
+import { loadSubject } from '../src/inbox/views.js'
 import { tools } from '../src/lexicons/index.js'
 import {
   ConvoSubject,
   MessageSubject,
   RecordSubject,
   RepoSubject,
-  subjectFromEventRow,
 } from '../src/mod-service/subject.js'
+import { reportForEvent } from './_inbox.js'
 
 describe('appealActionedSubject', () => {
   let network: TestNetwork
@@ -33,6 +33,32 @@ describe('appealActionedSubject', () => {
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
     ozoneAgent = network.ozone.getAgent()
+    // @NOTE Queues survive the fixture's ordinary row cleanup. Remove this
+    // suite's old queues through the API so repeated local runs stay isolated.
+    for (;;) {
+      const { data } = await ozoneAgent.tools.ozone.queue.listQueues(
+        { limit: 100 },
+        {
+          headers: await network.ozone.modHeaders(
+            'tools.ozone.queue.listQueues',
+            'admin',
+          ),
+        },
+      )
+      if (!data.queues.length) break
+      for (const queue of data.queues) {
+        await ozoneAgent.tools.ozone.queue.deleteQueue(
+          { queueId: queue.id },
+          {
+            headers: await network.ozone.modHeaders(
+              'tools.ozone.queue.deleteQueue',
+              'admin',
+            ),
+            encoding: 'application/json',
+          },
+        )
+      }
+    }
     // tools.ozone.inbox.* has no default route in the PDS, so every call from a
     // regular user has to name the labeler explicitly.
     proxyHeader = `${network.ozone.ctx.cfg.service.did}#atproto_labeler`
@@ -56,13 +82,36 @@ describe('appealActionedSubject', () => {
     )
   }
 
+  async function getAccountView(did: DidString) {
+    const { data } = await sc.agent.call(
+      'tools.ozone.inbox.listActionedSubjects',
+      {},
+      undefined,
+      {
+        headers: { ...sc.getHeaders(did), 'atproto-proxy': proxyHeader },
+      },
+    )
+    const view = data.subjects.find(
+      (view: { subject: { did?: string } }) => view.subject.did === did,
+    )
+    if (!view) throw new Error('No account view returned')
+    return view
+  }
+
   async function appeal(actionId: number, did: DidString) {
-    const event = await network.ozone.ctx
-      .modService(network.ozone.ctx.db)
-      .getEvent(actionId)
-    const subject = event
-      ? subjectFromEventRow(event).lex()
-      : { $type: 'com.atproto.admin.defs#repoRef' as const, did }
+    let event:
+      | Awaited<ReturnType<ModeratorClient['queryEvents']>>['events'][number]
+      | undefined
+    let cursor: string | undefined
+    do {
+      const page = await modClient.queryEvents({ limit: 100, cursor })
+      event = page.events.find((event) => event.id === actionId)
+      cursor = page.cursor
+    } while (!event && cursor)
+    const subject = event?.subject ?? {
+      $type: 'com.atproto.admin.defs#repoRef' as const,
+      did,
+    }
     return callAppeal(
       {
         action: {
@@ -130,22 +179,33 @@ describe('appealActionedSubject', () => {
   // The response deliberately withholds the appeal report ID, so tests that
   // need the underlying row look it up the way a moderator surface would.
   async function latestAppealReport(did: DidString) {
-    return network.ozone.ctx.db.db
-      .selectFrom('report')
-      .where('reportType', '=', APPEAL_REASON_TYPE)
-      .where('did', '=', did)
-      .orderBy('id', 'desc')
-      .selectAll()
-      .executeTakeFirstOrThrow()
+    const { events } = await modClient.queryEvents({
+      subject: did,
+      includeAllUserRecords: true,
+      types: [tools.ozone.moderation.defs.modEventReport.$type],
+      limit: 100,
+      reportTypes: [APPEAL_REASON_TYPE],
+    })
+    const appealEvent = events[0]
+    if (!appealEvent) throw new Error('No appeal event returned')
+    return { ...(await reportForEvent(modClient, appealEvent.id)), did }
   }
 
   async function closeLatestAppeal(did: DidString) {
     const report = await latestAppealReport(did)
-    await network.ozone.ctx.db.db
-      .updateTable('report')
-      .where('id', '=', report.id)
-      .set({ status: 'closed', closedAt: toDatetimeString(Date.now()) })
-      .execute()
+    await ozoneAgent.tools.ozone.report.createActivity(
+      {
+        reportId: report.id,
+        activity: { $type: 'tools.ozone.report.defs#closeActivity' },
+      },
+      {
+        headers: await network.ozone.modHeaders(
+          'tools.ozone.report.createActivity',
+          'admin',
+        ),
+        encoding: 'application/json',
+      },
+    )
     return report.id
   }
 
@@ -209,11 +269,7 @@ describe('appealActionedSubject', () => {
         cursor: sourceReport.id - 1,
         limit: 1,
       })
-    const source = await network.ozone.ctx.db.db
-      .selectFrom('report')
-      .where('eventId', '=', sourceReport.id)
-      .select('id')
-      .executeTakeFirstOrThrow()
+    const source = await reportForEvent(modClient, sourceReport.id)
     const action = await takedown(subject, [source.id])
 
     const response = await appeal(action.id, sc.dids.bob)
@@ -232,10 +288,11 @@ describe('appealActionedSubject', () => {
       actionEventIds: [action.id],
       did: sc.dids.bob,
     })
-    const status = await network.ozone.ctx
-      .modService(network.ozone.ctx.db)
-      .getStatus(new RecordSubject(subject.uri, subject.cid))
-    expect(status?.tags).not.toContain('report:appeal')
+    const { subjectStatuses } = await modClient.queryStatuses({
+      subject: subject.uri,
+    })
+    expect(subjectStatuses).toHaveLength(1)
+    expect(subjectStatuses[0].tags).not.toContain('report:appeal')
   })
 
   it('does not reveal actions belonging to another user', async () => {
@@ -290,6 +347,23 @@ describe('appealActionedSubject', () => {
       expect(await latestAppealReport(sc.dids.alice)).toMatchObject({
         actionEventIds: [action.id],
       })
+      const appealReport = await latestAppealReport(sc.dids.alice)
+      const { events } = await modClient.queryEvents({
+        subject: subject.uri,
+        types: [tools.ozone.moderation.defs.modEventReport.$type],
+      })
+      const appealEvent = events.find(
+        (event) => event.id === appealReport.eventId,
+      )!
+      expect(appealEvent.createdBy).toBe(sc.dids.alice)
+      expect(appealEvent.event).toMatchObject({
+        appealSubmittedBy:
+          role === 'admin'
+            ? network.ozone.adminAccnt.did
+            : role === 'moderator'
+              ? network.ozone.moderatorAccnt.did
+              : network.ozone.triageAccnt.did,
+      })
     },
   )
 
@@ -313,11 +387,7 @@ describe('appealActionedSubject', () => {
       },
       subject,
     })
-    const source = await network.ozone.ctx.db.db
-      .selectFrom('report')
-      .where('eventId', '=', sourceReport.id)
-      .select(['id', 'queueId'])
-      .executeTakeFirstOrThrow()
+    const source = await reportForEvent(modClient, sourceReport.id)
     const action = await label(subject, [source.id])
 
     await appealLabel('!warn', subject, sc.dids.alice)
@@ -340,11 +410,7 @@ describe('appealActionedSubject', () => {
     await network.ozone.ctx
       .queueService(network.ozone.ctx.db)
       .insertReportsFromEvents({ cursor: sourceReport.id - 1, limit: 1 })
-    const source = await network.ozone.ctx.db.db
-      .selectFrom('report')
-      .where('eventId', '=', sourceReport.id)
-      .select(['id', 'queueId'])
-      .executeTakeFirstOrThrow()
+    const source = await reportForEvent(modClient, sourceReport.id)
     const action = await takedown(subject, [source.id])
 
     await appealTakedown(subject, sc.dids.alice)
@@ -376,12 +442,12 @@ describe('appealActionedSubject', () => {
       status: 'queued',
       actionEventIds: null,
     })
-    const event = await network.ozone.ctx.db.db
-      .selectFrom('moderation_event')
-      .where('id', '=', report.eventId)
-      .select('meta')
-      .executeTakeFirstOrThrow()
-    expect(event.meta).toMatchObject({
+    const { events } = await modClient.queryEvents({
+      subject: subject.uri,
+      types: [tools.ozone.moderation.defs.modEventReport.$type],
+    })
+    const event = events.find((event) => event.id === report.eventId)!
+    expect(event.event).toMatchObject({
       appealActionType: 'tools.ozone.inbox.appealActionedSubject#labelRef',
       appealLabel: 'label-that-was-never-applied',
     })
@@ -547,6 +613,7 @@ describe('appealActionedSubject', () => {
     )
     expect(data).toEqual({
       src: network.ozone.ctx.cfg.service.did,
+      isRead: false,
       subject,
       enforcement: { state: 'takendown', scope: 'network' },
       appeal: {
@@ -568,10 +635,9 @@ describe('appealActionedSubject', () => {
       createdAt: action.createdAt,
       updatedAt: data.updatedAt,
     })
-    // The appeal report ID stays server-side, and read state waits on a
-    // watermark Ozone does not store yet.
+    // The appeal report ID stays server-side; no read watermark has been set.
     expect(data).not.toHaveProperty('reportId')
-    expect(data).not.toHaveProperty('isRead')
+    expect(data.isRead).toBe(false)
   })
 
   it('derives a suspension, its expiry, and the six-month appeal window', async () => {
@@ -733,19 +799,20 @@ describe('appealActionedSubject', () => {
     })
     await appeal(action.id, account.did)
 
-    const countEvents = async () =>
-      network.ozone.ctx.db.db
-        .selectFrom('moderation_event')
-        .where('subjectDid', '=', account.did)
-        .select((eb) => eb.fn.countAll<string>().as('count'))
-        .executeTakeFirstOrThrow()
+    const eventIds = async () => {
+      const { events } = await modClient.queryEvents({
+        subject: account.did,
+        limit: 100,
+      })
+      return events.map((event) => event.id)
+    }
 
-    const before = await countEvents()
+    const before = await eventIds()
     await expect(appeal(action.id, account.did)).rejects.toMatchObject({
       error: 'AlreadyAppealed',
     })
     // The rejected attempt must not leave a stray report event behind.
-    expect(await countEvents()).toEqual(before)
+    expect(await eventIds()).toEqual(before)
   })
 
   it('leaves the appeal unassigned when the source reports disagree', async () => {
@@ -802,9 +869,9 @@ describe('appealActionedSubject', () => {
     const report = await latestAppealReport(account.did)
     expect(report).toMatchObject({
       queueId: -1,
-      queuedAt: null,
       status: 'open',
     })
+    expect(report.queuedAt).toBeUndefined()
   })
 
   it('uses fallback routing instead of inheriting from another appeal', async () => {
@@ -910,7 +977,7 @@ describe('appealActionedSubject', () => {
     await expect(appeal(fresh.id, account.did)).resolves.toBeDefined()
   })
 
-  it('shows a resolved appeal with its public note and never the internal one', async () => {
+  it('shows a resolved appeal without exposing moderator note text', async () => {
     const account = await sc.createAccount('resolved', {
       handle: 'resolved.test',
       email: 'resolved@test.com',
@@ -947,37 +1014,38 @@ describe('appealActionedSubject', () => {
       subject,
     })
 
-    const view = await hydrateSubjectView(
-      network.ozone.ctx.db,
-      new RepoSubject(account.did),
-      network.ozone.ctx.cfg.service.did,
-      network.ozone.ctx.cfg.inbox,
-    )
+    const view = await getAccountView(account.did)
 
     expect(tools.ozone.inbox.defs.subjectView.safeParse(view).success).toBe(
       true,
     )
     expect(view?.appeal).toMatchObject({
       state: 'resolved',
-      note: 'We reviewed this again and the takedown stands.',
     })
     expect(view?.appeal?.resolvedAt).toBeDefined()
+    expect(view?.appeal).not.toHaveProperty('note')
     const serialized = JSON.stringify(view)
+    expect(serialized).not.toContain(
+      'We reviewed this again and the takedown stands.',
+    )
     expect(serialized).not.toContain('MODERATOR-ONLY-RATIONALE')
     expect(serialized).not.toContain('MODERATOR-ONLY-COMMENT')
   })
 
   it('returns nothing for a subject with no moderation history', async () => {
-    const view = await hydrateSubjectView(
-      network.ozone.ctx.db,
-      new RecordSubject(
-        `at://${sc.dids.dan}/app.bsky.feed.post/never-actioned`,
-        'bafyreiunknown',
+    await expect(
+      sc.agent.call(
+        'tools.ozone.inbox.getActionedSubject',
+        { subject: `at://${sc.dids.dan}/app.bsky.feed.post/never-actioned` },
+        undefined,
+        {
+          headers: {
+            ...sc.getHeaders(sc.dids.dan),
+            'atproto-proxy': proxyHeader,
+          },
+        },
       ),
-      network.ozone.ctx.cfg.service.did,
-      network.ozone.ctx.cfg.inbox,
-    )
-    expect(view).toBeNull()
+    ).rejects.toMatchObject({ error: 'NotFound' })
   })
   it('rejects a malformed appeal subject or action reference', async () => {
     // Below the lexicon's minimum.
@@ -1162,16 +1230,19 @@ describe('appealActionedSubject', () => {
       callAppeal({ subject: subject('convo-b') }, account.did),
     ).resolves.toBeDefined()
 
-    const reports = await network.ozone.ctx.db.db
-      .selectFrom('report')
-      .where('did', '=', account.did)
-      .where('reportType', '=', APPEAL_REASON_TYPE)
-      .select('subjectConvoId')
-      .execute()
-    expect(reports.map((report) => report.subjectConvoId).sort()).toEqual([
-      'convo-a',
-      'convo-b',
-    ])
+    const { events } = await modClient.queryEvents({
+      subject: account.did,
+      includeAllUserRecords: true,
+      types: [tools.ozone.moderation.defs.modEventReport.$type],
+      reportTypes: [APPEAL_REASON_TYPE],
+    })
+    expect(events.map((event) => event.subject)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ convoId: 'convo-a' }),
+        expect.objectContaining({ convoId: 'convo-b' }),
+      ]),
+    )
+    expect(events).toHaveLength(2)
   })
   it('never offers an appeal that submission would refuse', async () => {
     const account = await sc.createAccount('superseded', {
@@ -1189,12 +1260,7 @@ describe('appealActionedSubject', () => {
     // A takedown clears `appealed` without anyone working the appeal, so its
     // report is still open in a queue. The subject reads as superseded.
     await takedown(subject)
-    const view = await hydrateSubjectView(
-      network.ozone.ctx.db,
-      new RepoSubject(account.did),
-      network.ozone.ctx.cfg.service.did,
-      network.ozone.ctx.cfg.inbox,
-    )
+    const view = await getAccountView(account.did)
     expect(view?.appeal?.state).toBe('superseded')
 
     // The open appeal still blocks a new one, so the view must not advertise
@@ -1229,12 +1295,7 @@ describe('appealActionedSubject', () => {
       error: 'NotAppealable',
     })
 
-    const view = await hydrateSubjectView(
-      network.ozone.ctx.db,
-      new RepoSubject(account.did),
-      network.ozone.ctx.cfg.service.did,
-      network.ozone.ctx.cfg.inbox,
-    )
+    const view = await getAccountView(account.did)
     // Still part of the history the user can see...
     expect(view?.latestAction).toMatchObject({ type: 'communicationSent' })
     expect(view?.actionCount).toBe(1)

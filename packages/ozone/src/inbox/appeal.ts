@@ -43,9 +43,8 @@ export type AppealReport = {
 
 export type AppealInput = {
   subject: ModSubject
-  status: ModerationSubjectStatusRow | null
+  status: Pick<ModerationSubjectStatusRow, 'appealed' | 'lastAppealedAt'> | null
   report: AppealReport | null
-  publicNote: string | null
 
   /** Calendar months an action stays appealable, from `InboxConfig`. */
   windowMonths: number
@@ -96,7 +95,6 @@ export const toAppealState = ({
   subject,
   status,
   report,
-  publicNote,
   latestAppealableAt,
   windowMonths,
 }: AppealInput): AppealState => {
@@ -121,7 +119,6 @@ export const toAppealState = ({
     view.appealedAt = status?.lastAppealedAt ?? report.createdAt
     if (report.closedAt) view.resolvedAt = report.closedAt
   }
-  if (state === 'resolved' && publicNote) view.note = publicNote
   if (appealableUntil) view.appealableUntil = appealableUntil
 
   const availableActions =
@@ -301,6 +298,7 @@ export const findLatestAppealReport = async (
     .where('reportType', '=', APPEAL_REASON_TYPE)
     .where((eb) => reportSubjectFilter(eb, subject))
     .orderBy('id', 'desc')
+    .limit(1)
     .select(['id', 'status', 'createdAt', 'closedAt'])
     .executeTakeFirst()
   return report ?? null
@@ -334,8 +332,10 @@ export const assertAppealAllowed = async (
 }
 
 export type FileAppealInput = {
-  /** DID of the authenticated account filing the appeal. */
+  /** DID of the affected account, shown as the appeal reporter. */
   requester: DidString
+  /** Moderator filing on the affected account's behalf, when applicable. */
+  submittedBy?: DidString
   /** The subject being appealed, already resolved and authorized. */
   subject: ModSubject
   /** Resolved moderation event ID, when one could be found. */
@@ -469,6 +469,7 @@ export const fileAppeal = async (
   ctx: AppContext,
   {
     requester,
+    submittedBy,
     subject,
     resolvedActionId,
     action,
@@ -494,7 +495,10 @@ export const fileAppeal = async (
       reasonType: APPEAL_REASON_TYPE,
       reportedBy: requester,
       modTool,
-      eventMeta: buildAppealEventMeta(action),
+      eventMeta: {
+        ...buildAppealEventMeta(action),
+        ...(submittedBy ? { appealSubmittedBy: submittedBy } : {}),
+      },
     })
     return ctx.queueService(dbTxn).insertReportFromEvent({
       event: reportEvent,

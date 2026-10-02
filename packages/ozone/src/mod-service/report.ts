@@ -566,7 +566,10 @@ export async function processReportAction(
         previousStatus: u.previousStatus,
         internalNote: null,
         publicNote: reportAction.note ?? null,
-        meta: null,
+        meta:
+          u.activityType === 'closeActivity'
+            ? { actionEventId: eventId }
+            : null,
         isAutomated: false,
         createdBy,
         createdAt: now,
