@@ -377,6 +377,11 @@
         }
       }
     },
+    "unassignmentActivity": {
+      "type": "object",
+      "description": "Activity recording a moderator being unassigned from a report.",
+      "properties": {}
+    },
     "escalationActivity": {
       "type": "object",
       "description": "Activity recording a report being escalated.",
@@ -440,6 +445,7 @@
           "refs": [
             "#queueActivity",
             "#assignmentActivity",
+            "#unassignmentActivity",
             "#escalationActivity",
             "#closeActivity",
             "#reopenActivity",
