@@ -129,6 +129,23 @@ describe('report priority', () => {
     return data
   }
 
+  async function routeReports(
+    startReportId: number,
+    endReportId = startReportId,
+  ) {
+    const { data } = await agent.tools.ozone.queue.routeReports(
+      { startReportId, endReportId },
+      {
+        encoding: 'application/json',
+        headers: await network.ozone.modHeaders(
+          tools.ozone.queue.routeReports.$lxm,
+          'admin',
+        ),
+      },
+    )
+    return data
+  }
+
   async function changeReportStatus(id: number, close: boolean) {
     return agent.tools.ozone.report.createActivity(
       {
@@ -167,6 +184,169 @@ describe('report priority', () => {
       priorityLevel: null,
       priorityScore: null,
       priorityTargetMinutes: null,
+    })
+  })
+
+  describe('manual routing', () => {
+    it('refreshes each reason from current settings while preserving creation time and existing escalation', async () => {
+      await configure()
+      const first = await createReport(urgent)
+      const second = await createReport(spam)
+      const third = await createReport(spam)
+      const db = network.ozone.ctx.db.db
+      await db
+        .updateTable('report')
+        .set({ queueId: null, queuedAt: null, status: 'open' })
+        .where('id', 'in', [first.id, third.id])
+        .execute()
+      await db
+        .updateTable('report')
+        .set({ queueId: -1, queuedAt: null, status: 'escalated' })
+        .where('id', '=', second.id)
+        .execute()
+      await upsertSetting(PriorityLevelSettingKey, {
+        urgent: { name: 'Urgent', targetResolutionMinutes: 12, score: 90 },
+        normal: { name: 'Normal', targetResolutionMinutes: 30, score: 40 },
+      })
+      await upsertSetting(ReportPriorityLevelSettingKey, {
+        [urgent]: 'normal',
+        [spam]: 'urgent',
+      })
+
+      expect(await routeReports(first.id, third.id)).toEqual({
+        assigned: 3,
+        unmatched: 0,
+      })
+      expect(await getReport(first.id)).toMatchObject({
+        priorityLevel: 'normal',
+        priorityScore: 40,
+        priorityTargetMinutes: 30,
+        createdAt: first.createdAt,
+        status: 'queued',
+        queue: { id: queueId },
+      })
+      expect(await getReport(second.id)).toMatchObject({
+        priorityLevel: 'urgent',
+        priorityScore: 90,
+        priorityTargetMinutes: 12,
+        createdAt: second.createdAt,
+        status: 'escalated',
+        queue: { id: queueId },
+      })
+      expect(await getReport(third.id)).toMatchObject({
+        priorityLevel: 'urgent',
+        priorityScore: 90,
+        priorityTargetMinutes: 12,
+        createdAt: third.createdAt,
+        status: 'queued',
+        queue: { id: queueId },
+      })
+    })
+
+    it.each(['removed mapping', 'missing level'])(
+      'clears a saved priority with a %s',
+      async (scenario) => {
+        await configure()
+        const report = await createReport(urgent)
+        const db = network.ozone.ctx.db.db
+        await db
+          .updateTable('report')
+          .set({ queueId: null, queuedAt: null, status: 'open' })
+          .where('id', '=', report.id)
+          .execute()
+        if (scenario === 'removed mapping') {
+          await upsertSetting(ReportPriorityLevelSettingKey, {})
+        } else {
+          await db
+            .updateTable('setting')
+            .set({ value: {} })
+            .where('key', '=', PriorityLevelSettingKey)
+            .where('scope', '=', 'instance')
+            .execute()
+        }
+
+        expect(await routeReports(report.id)).toEqual({
+          assigned: 1,
+          unmatched: 0,
+        })
+        const updated = await db
+          .selectFrom('report')
+          .selectAll()
+          .where('id', '=', report.id)
+          .executeTakeFirstOrThrow()
+        expect(updated).toMatchObject({
+          priorityLevel: null,
+          priorityScore: null,
+          priorityTargetMinutes: null,
+          queueId,
+        })
+      },
+    )
+
+    it('prioritizes legacy reports that remain unmatched', async () => {
+      const reason = com.atproto.moderation.defs.ReasonMisleading
+      const report = await createReport(reason)
+      expect(report.queueId).toBe(-1)
+      expect(report.priorityLevel).toBeNull()
+      await configure()
+      await upsertSetting(ReportPriorityLevelSettingKey, { [reason]: 'urgent' })
+
+      expect(await routeReports(report.id)).toEqual({
+        assigned: 0,
+        unmatched: 1,
+      })
+      expect(await getReport(report.id)).toMatchObject({
+        priorityLevel: 'urgent',
+        priorityScore: 100,
+        priorityTargetMinutes: 10,
+        status: 'open',
+        createdAt: report.createdAt,
+      })
+      const updated = await network.ozone.ctx.db.db
+        .selectFrom('report')
+        .select('queueId')
+        .where('id', '=', report.id)
+        .executeTakeFirstOrThrow()
+      expect(updated.queueId).toBe(-1)
+    })
+
+    it('skips queued, closed, and out-of-range reports', async () => {
+      await configure()
+      const outside = await createReport(urgent)
+      const queued = await createReport(urgent)
+      const closed = await createReport(urgent)
+      const candidate = await createReport(urgent)
+      const db = network.ozone.ctx.db.db
+      await db
+        .updateTable('report')
+        .set({ queueId: null, queuedAt: null, status: 'open' })
+        .where('id', 'in', [outside.id, candidate.id])
+        .execute()
+      await changeReportStatus(closed.id, true)
+      await db
+        .updateTable('report')
+        .set({ queueId: -1 })
+        .where('id', '=', closed.id)
+        .execute()
+      await upsertSetting(ReportPriorityLevelSettingKey, { [urgent]: 'normal' })
+
+      expect(await routeReports(queued.id, candidate.id)).toEqual({
+        assigned: 1,
+        unmatched: 0,
+      })
+      expect(await getReport(candidate.id)).toMatchObject({
+        priorityLevel: 'normal',
+        priorityScore: 0,
+        priorityTargetMinutes: 20,
+      })
+      for (const skipped of [outside, queued, closed]) {
+        expect(await getReport(skipped.id)).toMatchObject({
+          priorityLevel: 'urgent',
+          priorityScore: 100,
+          priorityTargetMinutes: 10,
+        })
+      }
+      expect((await getReport(closed.id)).status).toBe('closed')
     })
   })
 

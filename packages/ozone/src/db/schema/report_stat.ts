@@ -45,6 +45,14 @@ export interface ReportStat {
   resolutionDurationSec: number | null // Sum of creation-to-close durations
   resolutionSampleCount: number | null // Closed-report samples in resolutionDurationSec
   avgResolutionTimeSec: number | null // Average time from creation to close, in seconds
+
+  // closure target
+  /** Current closures within the closure target, inclusive. */
+  closureTargetMetCount: number | null
+  /** Current closures exceeding the closure target. */
+  closureTargetMissedCount: number | null
+  /** Pending reports past their closure target. */
+  closureTargetOverdueCount: number | null
 }
 
 export type PartialDB = {

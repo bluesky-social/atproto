@@ -276,7 +276,22 @@ export function buildReportView(
 export function viewQueueStats(
   row?: Selectable<ReportStat>,
 ): tools.ozone.queue.defs.QueueStats {
+  const closureTargetMetCount = row?.closureTargetMetCount ?? undefined
+  const closureTargetMissedCount = row?.closureTargetMissedCount ?? undefined
+  const sampleCount =
+    closureTargetMetCount !== undefined &&
+    closureTargetMissedCount !== undefined
+      ? closureTargetMetCount + closureTargetMissedCount
+      : 0
+
   return {
+    closureTargetMetCount,
+    closureTargetMissedCount,
+    closureTargetOverdueCount: row?.closureTargetOverdueCount ?? undefined,
+    closureTargetMetRate:
+      sampleCount > 0 && closureTargetMetCount !== undefined
+        ? Math.round((closureTargetMetCount / sampleCount) * 100)
+        : undefined,
     pendingCount: row?.pendingCount ?? undefined,
     actionedCount: row?.actionedCount ?? undefined,
     escalatedCount: row?.escalatedCount ?? undefined,
@@ -290,7 +305,22 @@ export function viewQueueStats(
 export function viewLiveStats(
   row?: Selectable<ReportStat>,
 ): tools.ozone.report.defs.LiveStats {
+  const closureTargetMetCount = row?.closureTargetMetCount ?? undefined
+  const closureTargetMissedCount = row?.closureTargetMissedCount ?? undefined
+  const sampleCount =
+    closureTargetMetCount !== undefined &&
+    closureTargetMissedCount !== undefined
+      ? closureTargetMetCount + closureTargetMissedCount
+      : 0
+
   return {
+    closureTargetMetCount,
+    closureTargetMissedCount,
+    closureTargetOverdueCount: row?.closureTargetOverdueCount ?? undefined,
+    closureTargetMetRate:
+      sampleCount > 0 && closureTargetMetCount !== undefined
+        ? Math.round((closureTargetMetCount / sampleCount) * 100)
+        : undefined,
     pendingCount: row?.pendingCount ?? undefined,
     closedCount: row?.closedCount ?? undefined,
     actionedCount: row?.actionedCount ?? undefined,
@@ -314,7 +344,22 @@ export function viewLiveStats(
 export function viewHistoricalStats(
   row: Selectable<ReportStat>,
 ): tools.ozone.report.defs.HistoricalStats {
+  const closureTargetMetCount = row.closureTargetMetCount ?? undefined
+  const closureTargetMissedCount = row.closureTargetMissedCount ?? undefined
+  const sampleCount =
+    closureTargetMetCount !== undefined &&
+    closureTargetMissedCount !== undefined
+      ? closureTargetMetCount + closureTargetMissedCount
+      : 0
+
   return {
+    closureTargetMetCount,
+    closureTargetMissedCount,
+    closureTargetOverdueCount: row.closureTargetOverdueCount ?? undefined,
+    closureTargetMetRate:
+      sampleCount > 0 && closureTargetMetCount !== undefined
+        ? Math.round((closureTargetMetCount / sampleCount) * 100)
+        : undefined,
     date: row.date,
     computedAt: row.computedAt,
     pendingCount: row.pendingCount ?? undefined,

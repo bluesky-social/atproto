@@ -485,7 +485,7 @@ export class QueueService {
   }
 
   /**
-   * Re-route a range of existing reports against the current queue config.
+   * Re-route unassigned reports and refresh their priority from current settings.
    * Used by the manual `tools.ozone.queue.routeReports` endpoint to pick up
    * reports after queues are created or modified. New reports are inserted
    * by the daemon via `insertReportsFromEvents`, not here.
@@ -537,6 +537,22 @@ export class QueueService {
       return { processed: 0, assigned: 0, unmatched: 0, maxId: 0 }
     }
 
+    const priorities = await resolveReportPriorities(
+      this.db,
+      reports.map((report) => report.reportType),
+    )
+    const prioritiesByType = jsonb(Object.fromEntries(priorities))
+    const priorityUpdates = {
+      priorityLevel: sql<
+        string | null
+      >`${prioritiesByType} -> "reportType" ->> 'level'`,
+      priorityScore: sql<
+        number | null
+      >`(${prioritiesByType} -> "reportType" ->> 'score')::integer`,
+      priorityTargetMinutes: sql<
+        number | null
+      >`(${prioritiesByType} -> "reportType" ->> 'targetResolutionMinutes')::integer`,
+    }
     const now = currentDatetimeString()
 
     // Resolve each report's destination in memory — no DB calls in this loop
@@ -610,14 +626,20 @@ export class QueueService {
       if (withTransition.length) {
         await this.db.db
           .updateTable('report')
-          .set({ queueId, queuedAt: now, status: 'queued', updatedAt: now })
+          .set({
+            ...priorityUpdates,
+            queueId,
+            queuedAt: now,
+            status: 'queued',
+            updatedAt: now,
+          })
           .where('id', 'in', withTransition)
           .execute()
       }
       if (withoutTransition.length) {
         await this.db.db
           .updateTable('report')
-          .set({ queueId, queuedAt: now, updatedAt: now })
+          .set({ ...priorityUpdates, queueId, queuedAt: now, updatedAt: now })
           .where('id', 'in', withoutTransition)
           .execute()
       }
@@ -627,7 +649,12 @@ export class QueueService {
     if (unmatchedIds.length) {
       await this.db.db
         .updateTable('report')
-        .set({ queueId: -1, queuedAt: null, updatedAt: now })
+        .set({
+          ...priorityUpdates,
+          queueId: -1,
+          queuedAt: null,
+          updatedAt: now,
+        })
         .where('id', 'in', unmatchedIds)
         .execute()
     }

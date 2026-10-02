@@ -518,6 +518,27 @@
           "type": "integer",
           "description": "Number of reports currently not closed."
         },
+        "closureTargetOverdueCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Pending reports past their closure target."
+        },
+        "closureTargetMetCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reports whose closure meets their closure target."
+        },
+        "closureTargetMissedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reports whose closure exceeds their closure target."
+        },
+        "closureTargetMetRate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percent of reports meeting their closure target."
+        },
         "closedCount": {
           "type": "integer",
           "description": "Number of close transitions."
@@ -602,6 +623,27 @@
         "pendingCount": {
           "type": "integer",
           "description": "Number of reports not closed at time of computation."
+        },
+        "closureTargetOverdueCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Pending reports past their closure target."
+        },
+        "closureTargetMetCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reports whose closure meets their closure target."
+        },
+        "closureTargetMissedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reports whose closure exceeds their closure target."
+        },
+        "closureTargetMetRate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percent of reports meeting their closure target."
         },
         "closedCount": {
           "type": "integer",
