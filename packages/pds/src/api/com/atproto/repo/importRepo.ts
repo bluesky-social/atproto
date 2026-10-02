@@ -2,6 +2,7 @@ import { TID } from '@atproto/common'
 import { type LexMap, enumBlobRefs } from '@atproto/lex-data'
 import {
   BlockMap,
+  VisitedCidError,
   WriteOpAction,
   getAndParseRecord,
   readCarStream,
@@ -58,7 +59,16 @@ export default function (server: Server, ctx: AppContext) {
           undefined,
           undefined,
           { ensureLeaves: false },
-        )
+        ).catch((cause) => {
+          if (cause instanceof VisitedCidError) {
+            throw new InvalidRequestError(
+              `invalid MST: node referenced more than once: ${cause.cid}`,
+              undefined,
+              { cause },
+            )
+          }
+          throw cause
+        })
         diff.commit.rev = rev
         await store.repo.storage.applyCommit(diff.commit, currRepo === null)
 
