@@ -1,9 +1,12 @@
 import * as plc from '@did-plc/lib'
-import { check } from '@atproto/common'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { ACCESS_FULL, AuthScope } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import {
+  assertCanSignUpdatesForDid,
+  serverRotationKeyDid,
+} from '../server/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   const { entrywayClient } = ctx
@@ -50,10 +53,14 @@ export default function (server: Server, ctx: AppContext) {
           token,
         )
 
-        const lastOp = await ctx.plcClient.getLastOp(did)
-        if (check.is(lastOp, plc.def.tombstone)) {
-          throw new InvalidRequestError('Did is tombstoned')
+        if (!did.startsWith('did:plc:')) {
+          throw new InvalidRequestError(
+            'Cannot sign a PLC operation for a non-plc DID',
+          )
         }
+        const lastOp = await ctx.plcClient.getLastOp(did)
+        assertCanSignUpdatesForDid(lastOp, serverRotationKeyDid(ctx))
+
         const operation = await plc.createUpdateOp(
           lastOp,
           ctx.plcRotationKey,
