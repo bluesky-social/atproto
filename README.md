@@ -28,7 +28,6 @@ The Bluesky Social application encompasses a set of schemas and APIs built in th
 **TypeScript Services:** each has its implementation in `packages/<name>` and a thin runtime wrapper in `services/<name>`.
 
 - `pds`: "Personal Data Server", hosting repo content for atproto accounts. See [bluesky-social/pds](https://github.com/bluesky-social/pds) for directions on self-hosting.
-- `bsky`: AppView implementation of the `app.bsky.*` API endpoints. Running on main network at `api.bsky.app`.
 - `bsync`: Internal synchronization service used by the AppView for cross-service state such as mutes and notifications.
 - `ozone`: Moderation service implementing the `tools.ozone.*` API.
 
