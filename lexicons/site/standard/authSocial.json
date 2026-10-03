@@ -1,0 +1,21 @@
+{
+  "lexicon": 1,
+  "id": "site.standard.authSocial",
+  "defs": {
+    "main": {
+      "type": "permission-set",
+      "title": "Standard.site",
+      "detail": "Manage your publication subscriptions and document recommendations.",
+      "permissions": [
+        {
+          "type": "permission",
+          "resource": "repo",
+          "collection": [
+            "site.standard.graph.subscription",
+            "site.standard.graph.recommend"
+          ]
+        }
+      ]
+    }
+  }
+}
