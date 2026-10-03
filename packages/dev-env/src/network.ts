@@ -50,6 +50,8 @@ export class TestNetwork extends TestNetworkNoAppView {
     const thirdPartyPds = await TestPds.create({
       didPlcUrl: plc.url,
       ...params.pds,
+      // The migration source is internal and must not advertise the main PDS hostname.
+      hostname: 'localhost',
       inviteRequired: false,
       port: await getPort(),
     })
