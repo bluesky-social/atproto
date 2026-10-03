@@ -1,5 +1,10 @@
 import { FetchRequestError } from './fetch-request.js'
-import { type Fetch, type FetchContext, toRequestTransformer } from './fetch.js'
+import {
+  type Fetch,
+  type FetchBound,
+  type FetchContext,
+  toRequestTransformer,
+} from './fetch.js'
 import { TransformedResponse } from './transformed-response.js'
 import { padLines, stringifyMessage } from './util.js'
 
@@ -139,7 +144,7 @@ export const timedFetch = <C = FetchContext>(
 export function bindFetch<C = FetchContext>(
   fetch: Fetch<C> = globalThis.fetch,
   context: C = globalThis as C,
-) {
+): FetchBound {
   return toRequestTransformer(async (request) => {
     try {
       return await fetch.call(context, request)

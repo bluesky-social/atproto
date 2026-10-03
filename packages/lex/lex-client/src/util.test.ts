@@ -151,42 +151,47 @@ describe(isAsyncIterable, () => {
 
 describe(buildXrpcRequestHeaders, () => {
   it('returns empty headers when no options are set', () => {
-    const headers = buildXrpcRequestHeaders({})
+    const headers = buildXrpcRequestHeaders(undefined, {})
     expect([...headers.entries()]).toEqual([])
   })
 
   it('sets atproto-proxy header from service option', () => {
-    const headers = buildXrpcRequestHeaders({
+    const headers = buildXrpcRequestHeaders(undefined, {
       service: 'did:plc:1234#atproto_labeler',
     })
     expect(headers.get('atproto-proxy')).toBe('did:plc:1234#atproto_labeler')
   })
 
   it('overrides atproto-proxy header if service option is set', () => {
-    const headers = buildXrpcRequestHeaders({
-      headers: { 'atproto-proxy': 'did:plc:existing#service' },
-      service: 'did:plc:new#service',
-    })
+    const headers = buildXrpcRequestHeaders(
+      { 'atproto-proxy': 'did:plc:existing#service' },
+      {
+        service: 'did:plc:new#service',
+      },
+    )
     expect(headers.get('atproto-proxy')).toBe('did:plc:new#service')
   })
 
   it('leaves atproto-proxy header if service option is not set', () => {
-    const headers = buildXrpcRequestHeaders({
-      headers: { 'atproto-proxy': 'did:plc:existing#service' },
-    })
+    const headers = buildXrpcRequestHeaders(
+      { 'atproto-proxy': 'did:plc:existing#service' },
+      {},
+    )
     expect(headers.has('atproto-proxy')).toBe(true)
   })
 
   it('strips atproto-proxy header if service option is null', () => {
-    const headers = buildXrpcRequestHeaders({
-      headers: { 'atproto-proxy': 'did:plc:existing#service' },
-      service: null,
-    })
+    const headers = buildXrpcRequestHeaders(
+      { 'atproto-proxy': 'did:plc:existing#service' },
+      {
+        service: null,
+      },
+    )
     expect(headers.has('atproto-proxy')).toBe(false)
   })
 
   it('sets atproto-accept-labelers from labelers option', () => {
-    const headers = buildXrpcRequestHeaders({
+    const headers = buildXrpcRequestHeaders(undefined, {
       labelers: ['did:plc:labeler1', 'did:plc:labeler2'] as const,
     })
     expect(headers.get('atproto-accept-labelers')).toBe(
@@ -195,45 +200,51 @@ describe(buildXrpcRequestHeaders, () => {
   })
 
   it('strips atproto-accept-labelers header if labelers option is null', () => {
-    const headers = buildXrpcRequestHeaders({
-      headers: { 'atproto-accept-labelers': 'did:plc:existing' },
-      labelers: null,
-    })
+    const headers = buildXrpcRequestHeaders(
+      { 'atproto-accept-labelers': 'did:plc:existing' },
+      {
+        labelers: null,
+      },
+    )
     expect(headers.get('atproto-accept-labelers')).toBe(null)
   })
 
   it('leaves atproto-accept-labelers header if labelers option is not set', () => {
-    const headers = buildXrpcRequestHeaders({
-      headers: { 'atproto-accept-labelers': 'did:plc:existing' },
-    })
+    const headers = buildXrpcRequestHeaders(
+      { 'atproto-accept-labelers': 'did:plc:existing' },
+      {},
+    )
     expect(headers.get('atproto-accept-labelers')).toBe('did:plc:existing')
   })
 
   it('merges atproto-accept-labelers header if labelers option is an empty array', () => {
-    const headers = buildXrpcRequestHeaders({
-      headers: { 'atproto-accept-labelers': 'did:plc:foo' },
-      labelers: ['did:plc:bar'] as const,
-    })
+    const headers = buildXrpcRequestHeaders(
+      { 'atproto-accept-labelers': 'did:plc:foo' },
+      {
+        labelers: ['did:plc:bar'] as const,
+      },
+    )
     expect(headers.get('atproto-accept-labelers')).toBe(
       'did:plc:bar, did:plc:foo',
     )
   })
 
   it('passes through base headers', () => {
-    const headers = buildXrpcRequestHeaders({
-      headers: { Authorization: 'Bearer token123' },
-    })
+    const headers = buildXrpcRequestHeaders(
+      { Authorization: 'Bearer token123' },
+      {},
+    )
     expect(headers.get('Authorization')).toBe('Bearer token123')
   })
 
   it('accepts Headers instance as base headers', () => {
     const base = new Headers({ 'X-Custom': 'value' })
-    const headers = buildXrpcRequestHeaders({ headers: base })
+    const headers = buildXrpcRequestHeaders(base, {})
     expect(headers.get('X-Custom')).toBe('value')
   })
 
   it('does not set the atproto-accept-labelers header if labelers option is an empty array', () => {
-    const headers = buildXrpcRequestHeaders({ labelers: [] })
+    const headers = buildXrpcRequestHeaders(undefined, { labelers: [] })
     expect(headers.has('atproto-accept-labelers')).toBe(false)
   })
 })

@@ -33,16 +33,20 @@
     "node": ">=22"
   },
   "dependencies": {
+    "@atproto/lex-client": "workspace:^",
+    "@atproto/lex-schema": "workspace:^",
     "@atproto-labs/simple-store": "workspace:^",
     "@atproto-labs/simple-store-memory": "workspace:^",
-    "@atproto/did": "workspace:^",
-    "zod": "^3.23.8"
+    "@atproto/did": "workspace:^"
   },
   "devDependencies": {
+    "@atproto/lex": "workspace:^",
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "test": "vitest run",
-    "build": "tsc --build tsconfig.build.json"
+    "codegen:lex": "lex build --clear --indexFile --lib @atproto/lex-schema --lexicons ../../../lexicons --out ./src/lexicons --include com.atproto.identity.resolveHandle",
+    "prebuild": "pnpm run '/^(codegen:.+)$/'",
+    "build": "tsc --build tsconfig.build.json",
+    "test": "vitest run"
   }
 }

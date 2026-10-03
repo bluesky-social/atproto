@@ -88,21 +88,11 @@ export function asUint8ArrayArrayBuffer(
 
 export type XrpcRequestHeadersOptions = {
   /**
-   * Additional custom HTTP headers to include in the request.
-   *
-   * @note "atproto-proxy" and "atproto-accept-labelers" headers might change
-   * depending on the `service` and `labelers` options, respectively, if they
-   * are provided (which is always the case when using {@link Client.xrpc}).
-   */
-  headers?: HeadersInit
-
-  /**
    * Labeler DIDs to request labels from for content moderation.
    *
    * When `undefined`, will default to the client instance's default. When
    * `null`, it will cause any existing `atproto-accept-labelers` header
-   * (including one provided through the
-   * {@link XrpcRequestHeadersOptions.headers} option) to be removed.
+   * (including one provided through the headers option) to be removed.
    */
   labelers?: null | Iterable<DidString>
 
@@ -120,11 +110,10 @@ export type XrpcRequestHeadersOptions = {
    * When `undefined`, will default to the client instance's default. When not
    * used against a client instance (e.g., when using the {@link xrpc} helper
    * function), the default is to not alter the `atproto-proxy` header (e.g. if
-   * one is provided in the {@link XrpcRequestHeadersOptions.headers}).
+   * one is provided in the headers).
    *
    * When defined (as either `null` or a string), it will override any
-   * `atproto-proxy` header provided in the
-   * {@link XrpcRequestHeadersOptions.headers} option.
+   * `atproto-proxy` header provided in the headers option.
    */
   service?: null | Service
 }
@@ -139,12 +128,10 @@ export type XrpcRequestHeadersOptions = {
  * @see {@link XrpcRequestHeadersOptions}
  * @returns A new Headers object with AT Protocol headers added
  */
-export function buildXrpcRequestHeaders({
-  service,
-  labelers,
-  appLabelers,
-  headers: headersInit,
-}: XrpcRequestHeadersOptions): Headers {
+export function buildXrpcRequestHeaders(
+  headersInit: HeadersInit | undefined,
+  { service, labelers, appLabelers }: XrpcRequestHeadersOptions,
+): Headers {
   const headers = new Headers(headersInit)
 
   // If provided, the "service" option overrides any existing "atproto-proxy"
@@ -218,6 +205,7 @@ export function toReadableStreamPonyfill(
   data: AsyncIterable<Uint8Array>,
 ): ReadableStream<Uint8Array> {
   let iterator: AsyncIterator<Uint8Array> | undefined
+  let disposed = false
   return new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {
@@ -226,13 +214,21 @@ export function toReadableStreamPonyfill(
         if (result.done) controller.close()
         else controller.enqueue(result.value)
       } catch (err) {
-        controller.error(err)
         iterator = undefined
+        disposed = true
+        controller.error(err)
       }
     },
     async cancel() {
-      await iterator?.return?.()
-      iterator = undefined
+      if (!disposed) {
+        disposed = true
+        if (iterator) {
+          await iterator.return?.()
+          iterator = undefined
+        } else {
+          await dispose(data)
+        }
+      }
     },
   })
 }
@@ -296,7 +292,7 @@ function getAbortReason(signal: AbortSignal): unknown {
  * Uses the native `AbortSignal.throwIfAborted()` when available, falling back
  * for older implementations such as React Native's `abort-controller`.
  */
-export function throwIfAborted(signal?: AbortSignal): void {
+export function throwIfAborted(signal?: AbortSignal | null): void {
   if (!signal) return
   if (typeof signal.throwIfAborted === 'function') {
     signal.throwIfAborted()
@@ -305,9 +301,28 @@ export function throwIfAborted(signal?: AbortSignal): void {
   if (signal.aborted) throw getAbortReason(signal)
 }
 
+export async function dispose(value: unknown): Promise<void> {
+  if (value && typeof value === 'object') {
+    if (value instanceof ReadableStream) {
+      if (!value.locked) await value.cancel?.()
+    } else if (Symbol.asyncDispose in value) {
+      await (value as AsyncDisposable)[Symbol.asyncDispose]()
+    } else if (Symbol.dispose in value) {
+      void (value as Disposable)[Symbol.dispose]()
+    } else if (
+      'return' in value &&
+      typeof value.return === 'function' &&
+      value.return.length === 0
+    ) {
+      // Iterator / AsyncIterator
+      await (value as any).return()
+    }
+  }
+}
+
 export function wait(
   ms: number,
-  { signal }: { signal?: AbortSignal } = {},
+  { signal }: { signal?: AbortSignal | null } = {},
 ): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     throwIfAborted(signal)

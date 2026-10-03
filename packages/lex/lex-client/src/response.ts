@@ -16,8 +16,8 @@ import {
   XrpcResponseError,
   XrpcResponseValidationError,
 } from './errors.js'
-import { isEncodingString } from './types.js'
 import type { EncodingString, XrpcUnknownResponsePayload } from './types.js'
+import { isEncodingString } from './types.js'
 
 const CONTENT_TYPE_BINARY = 'application/octet-stream'
 const CONTENT_TYPE_JSON = 'application/json'

@@ -25,6 +25,7 @@ import type { XrpcRequestHeadersOptions } from './util.js'
 import {
   asUint8ArrayArrayBuffer,
   buildXrpcRequestHeaders,
+  dispose,
   isAsyncIterable,
   isBlobLike,
   throwIfAborted,
@@ -93,21 +94,44 @@ type XrpcRequestPayloadOptions<TPayload> = TPayload extends {
  * ```
  */
 export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
-  XrpcRequestOptions<M> & XrpcResponseOptions & RetryOptions
+  XrpcRequestOptions<M> & XrpcResponseOptions & XrpcRetryOptions
+
+export type XrpcRequestInitOptions = {
+  /**
+   * @note `"manual"` is not supported
+   */
+  // @TODO support for 'manual' would require that a specific error class be
+  // thrown, so that the caller can handle it appropriately. Indeed,
+  // "XrpcResponse.fromFetchResponse" will turn any 3xx response into an
+  // XrpcInvalidResponseError.
+  redirect?: RequestRedirect & ('error' | 'follow')
+  cache?: RequestCache
+  credentials?: RequestCredentials
+  keepalive?: boolean
+  mode?: RequestMode
+  priority?: RequestPriority
+  referrer?: string
+  referrerPolicy?: ReferrerPolicy
+  signal?: AbortSignal | null
+  /**
+   * Custom HTTP headers to include in the request.
+   *
+   * @note "atproto-proxy" and "atproto-accept-labelers" headers might change
+   * depending on the `service` and `labelers` options, respectively, if they
+   * are provided (which is always the case when using {@link Client.xrpc}).
+   */
+  headers?: HeadersInit
+}
 
 export type XrpcRequestOptions<
   M extends Procedure | Query = Procedure | Query,
 > = XrpcRequestProcessingOptions &
+  XrpcRequestInitOptions &
   XrpcRequestHeadersOptions &
   XrpcRequestPayloadOptions<XrpcRequestPayload<M>> &
   XrpcRequestParamsOptions<XrpcRequestParams<M>>
 
 export type XrpcRequestProcessingOptions = {
-  /**
-   * AbortSignal to cancel the request.
-   */
-  signal?: AbortSignal
-
   /**
    * Whether to validate the request against the method's input schema. Enabling
    * this can help catch errors early but may have a performance cost. This
@@ -219,40 +243,53 @@ export async function xrpcSafe<const M extends Query | Procedure>(
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcResult<M>> {
   const method: M = getMain(ns)
+  try {
+    // Initialize the request options once (instead of on every retry)
+    const agent = buildAgent(agentOpts)
+    const path = xrpcRequestPath(method, options)
+    const init = xrpcRequestInit(method, options)
 
-  for (let counter = 1; ; counter++) {
-    throwIfAborted(options.signal)
-    try {
-      const agent = buildAgent(agentOpts)
-      const url = xrpcRequestUrl(method, options)
-      const request = xrpcRequestInit(method, options)
-      const response = await agent.fetchHandler(url, request).catch((err) => {
-        const cause = extractFetchErrorCause(err)
-        throw new XrpcFetchError(method, cause)
-      })
-      return await XrpcResponse.fromFetchResponse<M>(method, response, options)
-    } catch (cause) {
-      const failure = asXrpcFailure(method, cause)
+    for (let counter = 1; ; counter++) {
+      throwIfAborted(options.signal)
+      try {
+        const response = await agent.fetchHandler(path, init).catch((err) => {
+          if (err instanceof XrpcFetchError) throw err
+          const cause = extractFetchErrorCause(err)
+          throw new XrpcFetchError(method, cause)
+        })
+        return await XrpcResponse.fromFetchResponse<M>(
+          method,
+          response,
+          options,
+        )
+      } catch (cause) {
+        const failure = asXrpcFailure(method, cause)
 
-      // Cannot retry a request with a consumable body
-      if (
-        options.body instanceof ReadableStream ||
-        isAsyncIterable(options.body)
-      ) {
-        return failure
+        const waitTime = getRetryWaitTime(failure, options, counter)
+        if (waitTime == null) {
+          await dispose(init.body)
+          return failure
+        }
+
+        // Cannot retry a request with a consumed stream body
+        if (init.body instanceof ReadableStream) {
+          await dispose(init.body)
+          return failure
+        }
+
+        await wait(waitTime, options)
       }
-
-      const waitTime = getRetryWaitTime(failure, options, counter)
-      if (waitTime == null) {
-        return failure
-      }
-
-      await wait(waitTime, options)
     }
+  } catch (cause) {
+    // Error during initialization or signal aborted
+    return asXrpcFailure(method, cause)
+  } finally {
+    // Ensure that the options' body is disposed of when done
+    await dispose(options.body)
   }
 }
 
-function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
+function xrpcRequestPath<M extends Procedure | Query | Subscription>(
   method: M,
   options: { params?: Params },
 ): `/xrpc/${NsidString}${'' | `?${string}`}` {
@@ -268,20 +305,18 @@ function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
   return queryString ? (`${path}?${queryString}` as const) : path
 }
 
+interface XrpcRequestInit extends RequestInit {
+  duplex?: 'half'
+}
+
 function xrpcRequestInit<T extends Procedure | Query>(
   schema: T,
   options: XrpcRequestProcessingOptions &
+    XrpcRequestInitOptions &
     XrpcRequestHeadersOptions &
-    XrpcProcedureInputOptions & {
-      encoding?: string
-    },
-): RequestInit & { duplex?: 'half' } {
-  const headers = buildXrpcRequestHeaders(options)
-
-  // Tell the server what type of response we're expecting
-  if (schema.output.encoding) {
-    headers.set('accept', schema.output.encoding)
-  }
+    XrpcProcedureInputOptions & { encoding?: string },
+): XrpcRequestInit {
+  const headers = buildXrpcRequestHeaders(options.headers, options)
 
   // Caller should not set content-type header
   if (headers.has('content-type')) {
@@ -289,8 +324,27 @@ function xrpcRequestInit<T extends Procedure | Query>(
     throw new TypeError(`Unexpected content-type header (${contentType})`)
   }
 
-  // Requests with body
+  // Tell the server what type of response we're expecting
+  if (schema.output.encoding) {
+    headers.set('accept', schema.output.encoding)
+  }
+
+  const req: XrpcRequestInit = {
+    cache: options.cache,
+    credentials: options.credentials,
+    duplex: 'half',
+    headers,
+    keepalive: options.keepalive,
+    mode: options.mode,
+    priority: options.priority,
+    redirect: options.redirect ?? 'follow',
+    referrer: options.referrer,
+    referrerPolicy: options.referrerPolicy,
+    signal: options.signal,
+  }
+
   if ('input' in schema) {
+    // schema is a Procedure
     const encodingHint = options.encoding
     const input = xrpcProcedureInput(schema, options, encodingHint)
 
@@ -300,28 +354,14 @@ function xrpcRequestInit<T extends Procedure | Query>(
       throw new TypeError(`Unexpected encoding hint (${encodingHint})`)
     }
 
-    return {
-      duplex: 'half',
-      redirect: 'follow',
-      referrerPolicy: 'strict-origin-when-cross-origin', // (default)
-      mode: 'cors', // (default)
-      signal: options.signal,
-      method: 'POST',
-      headers,
-      body: input?.body,
-    }
+    req.method = 'POST'
+    req.body = input?.body
+  } else {
+    // schema is a Query
+    req.method = 'GET'
   }
 
-  // Requests without body
-  return {
-    duplex: 'half',
-    redirect: 'follow',
-    referrerPolicy: 'strict-origin-when-cross-origin', // (default)
-    mode: 'cors', // (default)
-    signal: options.signal,
-    method: 'GET',
-    headers,
-  }
+  return req
 }
 
 type XrpcProcedureInputOptions = {
@@ -333,7 +373,7 @@ function xrpcProcedureInput(
   method: Procedure,
   options: XrpcProcedureInputOptions,
   encodingHint?: string,
-): null | { body: BodyInit; encoding: string } {
+): null | { body: BodyInit | null; encoding: string } {
   const { input } = method
   const { body } = options
 
@@ -468,7 +508,7 @@ export function extractFetchErrorCause(err: unknown): unknown {
   return err
 }
 
-export type RetryOptions = {
+export type XrpcRetryOptions = {
   /**
    * Function to determine whether a request should be retried after a failure.
    *
@@ -509,7 +549,7 @@ export type RetryOptions = {
 
 function getRetryWaitTime(
   failure: XrpcFailure,
-  options: RetryOptions,
+  options: XrpcRetryOptions,
   counter: number,
 ): number | undefined {
   const {

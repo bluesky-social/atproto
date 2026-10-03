@@ -117,7 +117,9 @@ export {
  */
 export type ClientOptions = XrpcRequestHeadersOptions &
   Pick<XrpcRequestProcessingOptions, 'validateRequest'> &
-  XrpcResponseOptions
+  XrpcResponseOptions & {
+    headers?: HeadersInit
+  }
 
 export type ActionOptions = {
   /** AbortSignal to cancel the request. */
