@@ -1,0 +1,22 @@
+{
+  "lexicon": 1,
+  "id": "com.germnetwork.authManageDeclaration",
+  "defs": {
+    "main": {
+      "type": "permission-set",
+      "title": "Manage your Germ DM",
+      "detail": "Allows linking your Atmosphere account with Germ DM and controlling who can message you.",
+      "permissions": [
+        {
+          "type": "permission",
+          "resource": "repo",
+          "action": ["create", "update", "delete"],
+          "collection": [
+            "com.germnetwork.declaration",
+            "com.germnetwork.keypackage"
+          ]
+        }
+      ]
+    }
+  }
+}
