@@ -16,7 +16,7 @@ The Bluesky Social application encompasses a set of schemas and APIs built in th
 
 ## What is in here?
 
-**Lexicons:** for the `com.atproto.*` and `tools.ozone.*` namespaces are currently maintained in this repo under the `./lexicons/` directory. These are JSON files in the [Lexicon schema definition language](https://atproto.com/specs/lexicon), similar to JSON Schema or OpenAPI. Lexicons for the `app.bsky.*` and `chat.bsky.*` are now maintained in the [bluesky-social/bsky](https://github.com/bluesky-social/bsky) Github repository, and the copies here may be out of date.
+**Lexicons:** for the `com.atproto.*` and `tools.ozone.*` namespaces are currently maintained in this repo under the `./lexicons/` directory. These are JSON files in the [Lexicon schema definition language](https://atproto.com/specs/lexicon), similar to JSON Schema or OpenAPI. Lexicons for the `app.bsky.*` and `chat.bsky.*` namespaces are now maintained in the [bluesky-social/bsky](https://github.com/bluesky-social/bsky) and [bluesky-social/chat](https://github.com/bluesky-social/chat) Github repositories, and the copies here may be out of date.
 
 **TypeScript Packages:** everything under [`./packages/`](./packages/) is published to npm under the `@atproto/*` scope (except for the shared utilities in [`./packages/internal/`](./packages/internal/), which use the `@atproto-labs/*` scope). Each package has its own README; [`packages/README.md`](./packages/README.md) lists them all. The short version, if you're new here:
 
@@ -28,12 +28,13 @@ The Bluesky Social application encompasses a set of schemas and APIs built in th
 **TypeScript Services:** each has its implementation in `packages/<name>` and a thin runtime wrapper in `services/<name>`.
 
 - `pds`: "Personal Data Server", hosting repo content for atproto accounts. See [bluesky-social/pds](https://github.com/bluesky-social/pds) for directions on self-hosting.
+- `bsky`: AppView implementation of the `app.bsky.*` API endpoints, including a PostgreSQL dataplane implementation for testing. Note that the production `https://api.bsky.app` service uses a different dataplane which is not open source.
 - `bsync`: Internal synchronization service used by the AppView for cross-service state such as mutes and notifications.
 - `ozone`: Moderation service implementing the `tools.ozone.*` API.
 
 ## What is not in here?
 
-The source code for the Bluesky Social client app (for web and mobile) can be found at [bluesky-social/social-app](https://github.com/bluesky-social/social-app). Typescript SDK packages under the `@bsky/` namespace are maintained at [bluesky-social/bsky](https://github.com/bluesky-social/bsky).
+The source code for the Bluesky Social client app (for web and mobile) can be found at [bluesky-social/social-app](https://github.com/bluesky-social/social-app). TypeScript SDK packages under the `@bsky/` namespace are maintained at [bluesky-social/bsky](https://github.com/bluesky-social/bsky).
 
 Go programming language source code is in [bluesky-social/indigo](https://github.com/bluesky-social/indigo), including the BGS implementation.
 
