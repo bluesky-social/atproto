@@ -2,7 +2,7 @@
 
 Welcome friends!
 
-This repository contains Bluesky's reference implementation of AT Protocol, and of the `app.bsky` microblogging application service backend.
+This repository contains Bluesky's reference implementation of AT Protocol.
 
 ## About AT Protocol
 
@@ -16,7 +16,7 @@ The Bluesky Social application encompasses a set of schemas and APIs built in th
 
 ## What is in here?
 
-**Lexicons:** for both the `com.atproto.*` and `app.bsky.*` are canonically versioned in this repo, for now, under `./lexicons/`. These are JSON files in the [Lexicon schema definition language](https://atproto.com/specs/lexicon), similar to JSON Schema or OpenAPI.
+**Lexicons:** for the `com.atproto.*` and `tools.ozone.*` namespaces are currently maintained in this repo under the `./lexicons/` directory. These are JSON files in the [Lexicon schema definition language](https://atproto.com/specs/lexicon), similar to JSON Schema or OpenAPI. Lexicons for the `app.bsky.*` and `chat.bsky.*` are now maintained in the [bluesky-social/bsky](https://github.com/bluesky-social/bsky) Github repository, and the copies here may be out of date.
 
 **TypeScript Packages:** everything under [`./packages/`](./packages/) is published to npm under the `@atproto/*` scope (except for the shared utilities in [`./packages/internal/`](./packages/internal/), which use the `@atproto-labs/*` scope). Each package has its own README; [`packages/README.md`](./packages/README.md) lists them all. The short version, if you're new here:
 
@@ -34,7 +34,7 @@ The Bluesky Social application encompasses a set of schemas and APIs built in th
 
 ## What is not in here?
 
-The source code for the Bluesky Social client app (for web and mobile) can be found at [bluesky-social/social-app](https://github.com/bluesky-social/social-app).
+The source code for the Bluesky Social client app (for web and mobile) can be found at [bluesky-social/social-app](https://github.com/bluesky-social/social-app). Typescript SDK packages under the `@bsky/` namespace are maintained at [bluesky-social/bsky](https://github.com/bluesky-social/bsky).
 
 Go programming language source code is in [bluesky-social/indigo](https://github.com/bluesky-social/indigo), including the BGS implementation.
 
