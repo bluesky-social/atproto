@@ -195,7 +195,9 @@ export class ServerConfig {
     assert(irisStagingServiceDid == null || isDidString(irisStagingServiceDid))
     const trendingFeedDid = process.env.BSKY_TRENDING_FEED_DID || undefined
     assert(trendingFeedDid == null || isDidString(trendingFeedDid))
-    const bskyFeedgenDids = new Set(envList(process.env.BSKY_FEEDGEN_DIDS))
+    const bskyFeedgenDids = new Set(
+      envList(process.env.BSKY_FEEDGEN_DIDS).filter(isDidString),
+    )
     const irisFeedUris = new Set(envList(process.env.BSKY_IRIS_FEED_URIS))
     const irisStagingUrl = process.env.BSKY_IRIS_STAGING_URL || undefined
     const irisStagingFeedUris = new Set(
