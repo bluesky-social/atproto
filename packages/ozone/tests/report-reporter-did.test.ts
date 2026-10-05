@@ -6,6 +6,10 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { currentDatetimeString } from '@atproto/lex'
+import {
+  REPORT_REPORTER_DID_BACKFILL_JOB,
+  ReportReporterDidBackfiller,
+} from '../src/daemon/report-reporter-did-backfiller.js'
 import type { Database } from '../src/db/index.js'
 import {
   down,
@@ -23,6 +27,7 @@ describe('report reporter DID migration', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_report_reporter_did',
     })
+    await network.ozone.daemon.ctx.reportReporterDidBackfiller.destroy()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
     db = network.ozone.ctx.db
@@ -34,7 +39,7 @@ describe('report reporter DID migration', () => {
     await network?.close()
   })
 
-  it('backfills only valid source authors and rolls back with its transaction', async () => {
+  it('adds a nullable column and backfills in resumable batches', async () => {
     const userReports = await Promise.all([
       sc.createReport({
         reasonType: 'com.atproto.moderation.defs#reasonSpam',
@@ -119,6 +124,12 @@ describe('report reporter DID migration', () => {
       ])
       .execute()
 
+    await db.db
+      .updateTable('job_cursor')
+      .set({ cursor: null })
+      .where('job', '=', REPORT_REPORTER_DID_BACKFILL_JOB)
+      .execute()
+
     await expect(
       db.transaction(async (tx) => {
         await up(tx.db as unknown as Kysely<unknown>)
@@ -137,6 +148,63 @@ describe('report reporter DID migration', () => {
     expect(rolledBackColumn.rows[0]?.exists).toBe(false)
 
     await db.transaction(async (tx) => up(tx.db as unknown as Kysely<unknown>))
+
+    const reporterDidColumn = await sql<{ isNullable: string }>`
+      SELECT is_nullable AS "isNullable"
+      FROM information_schema.columns
+      WHERE table_schema = current_schema()
+        AND table_name = 'report'
+        AND column_name = 'reporterDid'
+    `.execute(db.db)
+    expect(reporterDidColumn.rows[0]?.isNullable).toBe('YES')
+    const unfilledReports = await db.db
+      .selectFrom('report')
+      .select('reporterDid')
+      .where('eventId', 'in', [
+        ...validIds,
+        invalidSourceEvent.id,
+        missingSourceEventId,
+      ])
+      .execute()
+    expect(
+      unfilledReports.every(({ reporterDid }) => reporterDid === null),
+    ).toBe(true)
+
+    const firstWorker = new ReportReporterDidBackfiller(db, 2)
+    const competingWorker = new ReportReporterDidBackfiller(db, 2)
+    await firstWorker.initializeCursor()
+    await competingWorker.initializeCursor()
+    const [firstBatch, competingBatch] = await Promise.all([
+      firstWorker.processBatch(),
+      competingWorker.processBatch(),
+    ])
+    expect(firstBatch.scannedRows).toBe(2)
+    expect(competingBatch.scannedRows).toBe(2)
+    expect(firstBatch.lastId).not.toBe(competingBatch.lastId)
+
+    // A fresh worker resumes from the committed cursors left by both workers.
+    const resumedWorker = new ReportReporterDidBackfiller(db, 2)
+    const remaining = await resumedWorker.processAll()
+    expect(
+      firstBatch.updatedRows +
+        competingBatch.updatedRows +
+        remaining.updatedRows,
+    ).toBe(sourceEvents.length)
+    expect(
+      firstBatch.missingSourceRows +
+        competingBatch.missingSourceRows +
+        remaining.missingSourceRows,
+    ).toBe(1)
+    expect(
+      firstBatch.invalidSourceRows +
+        competingBatch.invalidSourceRows +
+        remaining.invalidSourceRows,
+    ).toBe(1)
+    expect(
+      firstBatch.scannedRows +
+        competingBatch.scannedRows +
+        remaining.scannedRows,
+    ).toBe(sourceEvents.length + 2)
 
     const authors = await db.db
       .selectFrom('moderation_event')
