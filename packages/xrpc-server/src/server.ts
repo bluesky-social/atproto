@@ -71,6 +71,7 @@ import {
   type StreamContext,
   isHandlerPipeThroughBuffer,
   isHandlerPipeThroughStream,
+  isHandlerRedirect,
   isHandlerSuccess,
   isSharedRateLimitOpts,
 } from './types.js'
@@ -495,6 +496,11 @@ export class Server {
         if (!output) {
           validateResOutput?.(output)
           res.status(200)
+          res.end()
+        } else if (isHandlerRedirect(output)) {
+          setHeaders(res, output.headers)
+          res.status(output.status)
+          res.setHeader('Location', output.location)
           res.end()
         } else if (isHandlerPipeThroughStream(output)) {
           setHeaders(res, output.headers)
