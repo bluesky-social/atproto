@@ -287,14 +287,19 @@ describe('appealActionedSubject', () => {
       reportType: APPEAL_REASON_TYPE,
       actionEventIds: [action.id],
       did: sc.dids.bob,
-      reporterDid: sc.dids.bob,
     })
+    const storedReport = await network.ozone.ctx.db.db
+      .selectFrom('report')
+      .where('id', '=', report.id)
+      .select(['eventId', 'reporterDid'])
+      .executeTakeFirstOrThrow()
+    expect(storedReport.reporterDid).toBe(sc.dids.bob)
     const appealEvent = await network.ozone.ctx.db.db
       .selectFrom('moderation_event')
-      .where('id', '=', report.eventId)
+      .where('id', '=', storedReport.eventId)
       .select('createdBy')
       .executeTakeFirstOrThrow()
-    expect(report.reporterDid).toBe(appealEvent.createdBy)
+    expect(storedReport.reporterDid).toBe(appealEvent.createdBy)
     const { subjectStatuses } = await modClient.queryStatuses({
       subject: subject.uri,
     })
@@ -669,7 +674,13 @@ describe('appealActionedSubject', () => {
     expect(data.enforcement.expiresAt).toBeDefined()
     expect(data.latestAction).toMatchObject({
       type: 'contentRemoved',
-      policies: ['spam-automation'],
+      policies: [
+        {
+          key: 'spam-automation',
+          displayName: 'spam-automation',
+          link: network.ozone.ctx.cfg.inbox.policyDefaultUrl,
+        },
+      ],
     })
     expect(data.appeal.appealableUntil).toBe(
       appealWindowEnd(
