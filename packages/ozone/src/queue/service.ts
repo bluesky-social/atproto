@@ -666,8 +666,8 @@ export class QueueService {
   /**
    * Read newly-created modEventReport rows from `moderation_event` and
    * insert corresponding `report` rows with `queueId` already resolved.
-   * Used by the queue-router daemon. Idempotent via `ON CONFLICT (eventId)
-   * DO NOTHING` — safe to re-run on the same range.
+   * Used by the queue-router daemon. On conflict, a null reporter DID is
+   * repaired from the source event while existing report state is preserved.
    *
    * Even when no queues are configured, report rows are still inserted with
    * `queueId = -1` so the invariant "every modEventReport has a `report` row"
