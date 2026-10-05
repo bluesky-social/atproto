@@ -377,6 +377,22 @@
         }
       }
     },
+    "unassignmentActivity": {
+      "type": "object",
+      "description": "Activity recording a moderator being unassigned from a report.",
+      "properties": {
+        "previousStatus": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+          "description": "The report's status immediately before the moderator was unassigned. May be absent on older activities."
+        },
+        "nextStatus": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+          "description": "The report's status immediately after the moderator was unassigned. May equal previousStatus if unassignment did not change the report's status, or be absent on older activities."
+        }
+      }
+    },
     "escalationActivity": {
       "type": "object",
       "description": "Activity recording a report being escalated.",
@@ -440,6 +456,7 @@
           "refs": [
             "#queueActivity",
             "#assignmentActivity",
+            "#unassignmentActivity",
             "#escalationActivity",
             "#closeActivity",
             "#reopenActivity",
