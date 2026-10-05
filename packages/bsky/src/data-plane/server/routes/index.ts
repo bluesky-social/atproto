@@ -3,6 +3,7 @@ import type { IdResolver } from '@atproto/identity'
 import { Service } from '../../../proto/bsky_connect.js'
 import type { Database } from '../db/index.js'
 import activitySubscription from './activity-subscription.js'
+import { atmosphere } from './atmosphere.js'
 import blocks from './blocks.js'
 import bookmarks from './bookmarks.js'
 import drafts from './drafts.js'
@@ -34,6 +35,7 @@ export default (db: Database, idResolver: IdResolver) =>
   (router: ConnectRouter) =>
     router.service(Service, {
       ...activitySubscription(db),
+      ...atmosphere(),
       ...blocks(db),
       ...bookmarks(db),
       ...drafts(db),
