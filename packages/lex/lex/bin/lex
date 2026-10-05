@@ -119,38 +119,45 @@ yargs(hideBin(process.argv))
     ['install [nsid..]', 'i [nsid..]'],
     'Fetch and install lexicon documents',
     (yargs) => {
-      return yargs.strict().options({
-        manifest: {
+      return yargs
+        .strict()
+        .positional('nsid', {
           type: 'string',
-          default: './lexicons.json',
-          describe: 'path to lexicons.json manifest file',
-        },
-        save: {
-          alias: 's',
-          type: 'boolean',
-          default: true,
           describe:
-            'Updates lexicons.json with installed lexicons (use --no-save to disable)',
-        },
-        update: {
-          type: 'boolean',
-          default: false,
-          describe:
-            'update all installed lexicons to their latest versions by re-resolving and re-installing them',
-        },
-        ci: {
-          type: 'boolean',
-          default: false,
-          describe:
-            'error if the installed lexicons do not match the CIDs in the lexicons.json manifest',
-        },
-        lexicons: {
-          type: 'string',
-          demandOption: true,
-          default: './lexicons',
-          describe: 'directory containing lexicon JSON files',
-        },
-      })
+            'lexicon to install: an NSID, an at:// URI, or a local file (a `file://` URI or any path containing a slash, resolved from the cwd)',
+        })
+        .options({
+          manifest: {
+            type: 'string',
+            default: './lexicons.json',
+            describe: 'path to lexicons.json manifest file',
+          },
+          save: {
+            alias: 's',
+            type: 'boolean',
+            default: true,
+            describe:
+              'Updates lexicons.json with installed lexicons (use --no-save to disable)',
+          },
+          update: {
+            type: 'boolean',
+            default: false,
+            describe:
+              'update all installed lexicons to their latest versions by re-resolving and re-installing them',
+          },
+          ci: {
+            type: 'boolean',
+            default: false,
+            describe:
+              'error if the installed lexicons do not match the CIDs in the lexicons.json manifest',
+          },
+          lexicons: {
+            type: 'string',
+            demandOption: true,
+            default: './lexicons',
+            describe: 'directory containing lexicon JSON files',
+          },
+        })
     },
     async (argv) => {
       const { install } = await import('@atproto/lex-installer')

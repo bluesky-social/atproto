@@ -190,11 +190,20 @@ const profile = await xrpc('https://api.bsky.app', app.bsky.actor.getProfile, {
 
 ## Lexicon Schemas
 
-The `lex install` command fetches Lexicon schemas from the Atmosphere network and manages them locally (in the `lexicons/` directory by default). It also updates the `lexicons.json` manifest file to track installed Lexicons and their versions.
+The `lex install` command resolves Lexicon schemas and manages them locally (in the `lexicons/` directory by default). It also updates the `lexicons.json` manifest file to track installed Lexicons and their versions.
+
+Each positional argument is one of:
+
+- an **NSID** (`app.bsky.feed.post`) — resolved via the `resolvers` in `lexicons.json` (if any), then the network;
+- an **`at://` URI** — fetched from that specific repo;
+- a **local file** — any argument that is a `file://` URI or contains a slash (`./app.bsky.feed.post.json`, `file://../shared/my.json`) is read from disk, relative to the cwd.
 
 ```bash
 # Install Lexicons and update lexicons.json (default behavior)
 lex install app.bsky.feed.post
+
+# Install from a local file (symlinked into the lexicons/ directory)
+lex install ./schemas/app.bsky.feed.post.json
 
 # Install all Lexicons from lexicons.json manifest
 lex install
@@ -216,6 +225,27 @@ Options:
 - `--update` - Update all installed lexicons to their latest versions by re-resolving and re-installing them
 - `--ci` - Error if the installed lexicons do not match the CIDs in the lexicons.json manifest
 - `--lexicons <dir>` - Directory containing lexicon JSON files (default: `./lexicons`)
+
+### Local resolution (`resolvers`)
+
+Beyond the network, `lexicons.json` can declare an ordered `resolvers` array of local override
+strategies, consulted (in order, first match wins) for every dependency before the network
+fallback. This lets a package vendor Lexicons from a local directory. Local-file resolutions are
+**symlinked** into the `lexicons/` directory (not copied) and locked with a `file://` URI relative
+to the manifest.
+
+```jsonc
+{
+  "version": 1,
+  "lexicons": ["com.example.foo"],
+  "resolvers": [
+    { "type": "directory", "path": "../../lexicons" }, // path relative to lexicons.json; optional include/exclude NSID globs
+  ],
+  "resolutions": {/* ...file:// or at:// locks... */},
+}
+```
+
+See the [`@atproto/lex-installer` README](https://github.com/bluesky-social/atproto/blob/main/packages/lex/lex-installer/README.md) for the full resolution order and the planned `repo` resolver.
 
 ## TypeScript Schemas
 

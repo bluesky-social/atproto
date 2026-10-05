@@ -1,5 +1,5 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname } from 'node:path'
+import { mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { dirname, relative, resolve } from 'node:path'
 
 /**
  * Reads and parses a JSON file from the filesystem.
@@ -81,6 +81,38 @@ export async function writeJsonFile(
     mode: 0o644,
     flag: 'w', // override
   })
+}
+
+/**
+ * Installs a lexicon file by creating a symbolic link at `destPath` pointing to
+ * `sourcePath`, rather than copying its contents.
+ *
+ * The symlink is written as a path relative to the destination directory so the
+ * output tree stays portable (e.g. survives being moved alongside its source).
+ * Parent directories are created as needed, and any existing file at the
+ * destination is replaced.
+ *
+ * If, after resolving both paths to absolute form, the destination equals the
+ * source, the file is left untouched (no symlink is created) — this covers the
+ * case where the lexicon is installed into the directory it already lives in.
+ *
+ * @param destPath - Where the symlink should be created
+ * @param sourcePath - The file the symlink should point to
+ */
+export async function symlinkLexicon(
+  destPath: string,
+  sourcePath: string,
+): Promise<void> {
+  const dest = resolve(destPath)
+  const source = resolve(sourcePath)
+
+  // Same path: leave the file in place.
+  if (dest === source) return
+
+  await mkdir(dirname(dest), { recursive: true })
+  // Replace any existing file/symlink so re-installs are idempotent.
+  await rm(dest, { force: true })
+  await symlink(relative(dirname(dest), source), dest)
 }
 
 /**

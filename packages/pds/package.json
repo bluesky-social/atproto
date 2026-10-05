@@ -103,7 +103,8 @@
     "ws": "^8.12.0"
   },
   "scripts": {
-    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
+    "codegen:lex": "lex install --ci --no-save --lexicons ./lexicons && lex build --clear --indexFile --lexicons ./lexicons",
+    "lex:install": "lex install --lexicons ./lexicons",
     "codegen:templates": "node ./scripts/build.templates.js",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",

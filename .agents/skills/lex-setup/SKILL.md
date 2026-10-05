@@ -19,9 +19,12 @@ Two commands do everything:
 
 - **`lex build`** — compiles Lexicon JSON into a TypeScript schema tree. Every
   package that uses `@atproto/lex` runs this.
-- **`lex install`** — fetches Lexicon JSON from the Atmosphere network into
-  `./lexicons/` plus a `lexicons.json` manifest. **No package in this monorepo
-  uses it** (see [Network-installed schemas](#network-installed-schemas-outside-this-repo)).
+- **`lex install`** — resolves Lexicon JSON into `./lexicons/` plus a
+  `lexicons.json` manifest, from the network and/or local `resolvers`. Most
+  packages here point `lex build` straight at [lexicons/](../../../lexicons/)
+  and skip it; [packages/pds](../../../packages/pds/package.json) uses it to
+  vendor the canonical set via symlinks (see
+  [Vendoring the canonical lexicons](#vendoring-the-canonical-lexicons-in-repo)).
 
 Both ship in the `lex` bin of `@atproto/lex`. Add `@atproto/lex` as a
 dependency — it re-exports `@atproto/lex-client`, `-schema`, `-data`, and
@@ -30,11 +33,14 @@ _not_ re-exported; depend on it directly if the package encodes/decodes CBOR.
 
 ## Wiring a package in this monorepo
 
-[lexicons/](../../../lexicons/) at the repo root is the canonical source. There
-is no manifest, no `lex install`, and no `postinstall` hook anywhere here —
-schemas are committed source, so there is nothing to fetch or verify.
+[lexicons/](../../../lexicons/) at the repo root is the canonical source. Most
+packages compile it directly — no manifest, no `lex install`, no `postinstall`
+hook — because the schemas are committed source, so there is nothing to fetch or
+verify. (One exception: [packages/pds](../../../packages/pds/package.json)
+vendors the set through `lex install` + symlinks — see
+[Vendoring the canonical lexicons](#vendoring-the-canonical-lexicons-in-repo).)
 
-Copy the shape every consuming package already uses
+Copy the shape most consuming packages already use
 ([packages/bsky](../../../packages/bsky/package.json),
 [packages/pds](../../../packages/pds/package.json),
 [packages/sync](../../../packages/sync/package.json)):
@@ -209,9 +215,49 @@ and the recorded CIDs are what makes `--ci` meaningful. The upstream-recommended
 wiring adds `"postinstall": "lex install --ci"` to catch drift on every install
 and `"update-lexicons": "lex install --update"` as the deliberate refresh.
 
-Don't introduce this in this monorepo: a second copy of schemas that already
-live in [lexicons/](../../../lexicons/) would silently diverge from the
-canonical ones.
+Don't commit a second **copy** of schemas that already live in
+[lexicons/](../../../lexicons/) — it would silently diverge. In-repo, vendor by
+**symlink** instead (next section), which can't drift.
+
+## Vendoring the canonical lexicons (in-repo)
+
+A package can consume [lexicons/](../../../lexicons/) through `lex install`
+instead of pointing `lex build` at it directly, so its lexicon set is an
+explicit, CID-locked contract. The manifest's `resolvers` array resolves each
+NSID from a local directory; local-file resolutions are **symlinked** into
+`./lexicons/` (not copied) and locked with a `file://` URI relative to the
+manifest, so they can't diverge from the canonical files.
+[packages/pds](../../../packages/pds/package.json) is the reference:
+
+```jsonc
+// lexicons.json (committed) — roots + resolvers + CID locks
+{
+  "version": 1,
+  "lexicons": ["app.bsky.feed.post", "…every vendored NSID…"],
+  "resolvers": [{ "type": "directory", "path": "../../lexicons" }],
+  "resolutions": {
+    "app.bsky.feed.post": {
+      "uri": "file://../../lexicons/app/bsky/feed/post.json",
+      "cid": "…",
+    },
+  },
+}
+```
+
+```jsonc
+// package.json — install (creating symlinks + verifying the lock) before build
+"codegen:lex": "lex install --ci --no-save --lexicons ./lexicons && lex build --clear --indexFile --lexicons ./lexicons",
+"lex:install": "lex install --lexicons ./lexicons", // regenerate the manifest after adding/removing a lexicon
+```
+
+Gitignore the symlinked `/lexicons` tree (a build artifact) but **commit
+`lexicons.json`** (the contract). Generate/refresh the manifest with
+`pnpm run lex:install`; `--ci` then fails the build if `/lexicons` drifts from
+the locked CIDs. Tradeoff: the `lexicons` roots list is explicit, so adding a
+new canonical schema requires re-running `lex:install` to include it — unlike a
+plain `lex build --lexicons ../../lexicons`, which picks up every file
+implicitly. `resolvers` are priority-ordered with the network as the implicit
+last fallback; a `{ "type": "repo", … }` resolver is planned but not yet built.
 
 ## Removing legacy `@atproto/lex-cli` codegen
 

@@ -1,8 +1,5 @@
-import { isEnoentError, readJsonFile } from './fs.js'
 import type { LexInstallerOptions } from './lex-installer.js'
 import { LexInstaller } from './lex-installer.js'
-import type { LexiconsManifest } from './lexicons-manifest.js'
-import { lexiconsManifestSchema } from './lexicons-manifest.js'
 
 /**
  * Options for the {@link install} function.
@@ -96,25 +93,13 @@ export type LexInstallOptions = LexInstallerOptions & {
  * ```
  */
 export async function install(options: LexInstallOptions) {
-  const manifest: LexiconsManifest | undefined = await readJsonFile(
-    options.manifest,
-  ).then(
-    (json) => lexiconsManifestSchema.parse(json),
-    (cause: unknown) => {
-      if (isEnoentError(cause)) return undefined
-      throw new Error('Failed to read lexicons manifest', { cause })
-    },
-  )
-
-  const additions = new Set(options.add)
-
   // Perform the installation using the existing manifest as "hint"
-  await using installer = new LexInstaller(options)
+  await using installer = await LexInstaller.load(options)
 
-  await installer.install({ additions, manifest })
+  await installer.install({ additions: options.add })
 
   // Verify lockfile
-  if (options.ci && (!manifest || !installer.equals(manifest))) {
+  if (options.ci && !installer.isUnmodified()) {
     throw new Error('Lexicons manifest is out of date')
   }
 
