@@ -1,7 +1,11 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
+import { createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { gzipSync } from 'node:zlib'
+import { jest } from '@jest/globals'
 import * as uint8arrays from 'uint8arrays'
+import { S3BlobStore } from '@atproto/aws'
 import { randomBytes } from '@atproto/crypto'
 import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import type { Client, DidString } from '@atproto/lex'
@@ -13,7 +17,7 @@ import {
 import type { ActorDb } from '../src/actor-store/db/index.js'
 import type { DiskBlobStore } from '../src/disk-blobstore.js'
 import type { AppContext } from '../src/index.js'
-import { app } from '../src/lexicons/index.js'
+import { app, com } from '../src/lexicons/index.js'
 import { users } from './seeds/users.js'
 
 describe('file uploads', () => {
@@ -131,6 +135,114 @@ describe('file uploads', () => {
     )
     expect(headers.get('x-content-type-options')).toEqual('nosniff')
     expect(uint8arrays.equals(smallFile, body)).toBeTruthy()
+  })
+
+  describe('S3 downloads', () => {
+    it('redirects to a presigned URL and clients can follow it', async () => {
+      const requests: string[] = []
+      await using s3 = createServer((req, res) => {
+        requests.push(req.method as string)
+        const url = new URL(req.url as string, 'http://localhost')
+        expect(decodeURIComponent(url.pathname)).toBe(
+          `/blobs/blocks/${alice}/${smallBlob.ref}`,
+        )
+        if (req.method === 'HEAD') {
+          res.writeHead(200).end()
+        } else {
+          expect(url.searchParams.get('X-Amz-Signature')).toBeTruthy()
+          res
+            .writeHead(200, {
+              'content-type': url.searchParams.get(
+                'response-content-type',
+              ) as string,
+              'content-disposition': url.searchParams.get(
+                'response-content-disposition',
+              ) as string,
+            })
+            .end(smallFile)
+        }
+      }).listen(0, '127.0.0.1')
+      await new Promise<void>((resolve) => s3.once('listening', resolve))
+      const { port } = s3.address() as AddressInfo
+      await using creator = S3BlobStore.creator({
+        bucket: 'blobs',
+        endpoint: `http://127.0.0.1:${port}`,
+        region: 'auto',
+        forcePathStyle: true,
+        credentials: { accessKeyId: 'key', secretAccessKey: 'secret' },
+      })
+      using _blobstore = jest
+        .spyOn(ctx.actorStore.resources, 'blobstore')
+        .mockImplementation(creator)
+
+      const url = new URL(
+        `/xrpc/${com.atproto.sync.getBlob.$lxm}`,
+        network.pds.url,
+      )
+      url.searchParams.set('did', alice)
+      url.searchParams.set('cid', smallBlob.ref.toString())
+      const redirect = await fetch(url, { redirect: 'manual' })
+      expect(redirect.status).toBe(307)
+      expect(redirect.headers.get('cache-control')).toBe('no-store')
+      expect(redirect.headers.get('content-length')).not.toBe(
+        String(smallFile.length),
+      )
+      expect(await redirect.text()).toBe('')
+      expect(requests).toEqual(['HEAD'])
+      const location = redirect.headers.get('location')
+      assert(location)
+      expect(new URL(location).searchParams.get('X-Amz-Expires')).toBe('60')
+
+      const { body, headers } = await client.getBlob(
+        alice,
+        smallBlob.ref.toString(),
+      )
+      expect(uint8arrays.equals(smallFile, body)).toBeTruthy()
+      expect(headers.get('content-type')).toBe('image/jpeg')
+      expect(headers.get('content-disposition')).toBe(
+        `attachment; filename="${smallBlob.ref}"`,
+      )
+      expect(requests).toEqual(['HEAD', 'HEAD', 'GET'])
+    })
+
+    it('checks blob metadata before asking S3 for a URL', async () => {
+      const getDownloadUrl = jest.fn<S3BlobStore['getDownloadUrl']>()
+      using _blobstore = jest
+        .spyOn(ctx.actorStore.resources, 'blobstore')
+        .mockImplementation((did) =>
+          Object.assign(ctx.blobstore(did), { getDownloadUrl }),
+        )
+      await expect(
+        client.getBlob(bob, smallBlob.ref.toString()),
+      ).rejects.toThrow('Blob not found')
+      expect(getDownloadUrl).not.toHaveBeenCalled()
+    })
+
+    it('does not issue a URL for a taken-down blob', async () => {
+      const getDownloadUrl = jest.fn<S3BlobStore['getDownloadUrl']>()
+      using _blobstore = jest
+        .spyOn(ctx.actorStore.resources, 'blobstore')
+        .mockImplementation((did) =>
+          Object.assign(ctx.blobstore(did), { getDownloadUrl }),
+        )
+      await aliceDb.db
+        .updateTable('blob')
+        .set({ takedownRef: 'test' })
+        .where('cid', '=', smallBlob.ref.toString())
+        .execute()
+      try {
+        await expect(
+          client.getBlob(alice, smallBlob.ref.toString()),
+        ).rejects.toThrow('Blob not found')
+        expect(getDownloadUrl).not.toHaveBeenCalled()
+      } finally {
+        await aliceDb.db
+          .updateTable('blob')
+          .set({ takedownRef: null })
+          .where('cid', '=', smallBlob.ref.toString())
+          .execute()
+      }
+    })
   })
 
   let largeBlob: TypedBlobRef

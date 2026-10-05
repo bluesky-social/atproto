@@ -48,6 +48,16 @@ export class BlobReader {
     return { ...metadata, stream }
   }
 
+  /** Returns a download URL after checking blob availability, if supported. */
+  async getDownloadUrl(cid: Cid): Promise<string | undefined> {
+    if (!this.blobstore.getDownloadUrl) return undefined
+    const { mimeType } = await this.getBlobMetadata(cid)
+    return this.blobstore.getDownloadUrl(
+      cid,
+      mimeType || 'application/octet-stream',
+    )
+  }
+
   async listBlobs(opts: {
     since?: string
     cursor?: string
