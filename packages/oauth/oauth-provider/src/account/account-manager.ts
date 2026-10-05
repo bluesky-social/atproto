@@ -69,7 +69,7 @@ export class AccountManager {
       throw new InvalidRequestError('hCaptcha token is required')
     }
 
-    const tokens = this.hcaptchaClient.buildClientTokens(
+    const tokens = await this.hcaptchaClient.buildClientTokens(
       deviceMetadata.ipAddress,
       input.handle,
       deviceMetadata.userAgent,

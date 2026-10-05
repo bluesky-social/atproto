@@ -1,12 +1,20 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { DidString } from '@atproto/lex'
 import { Gate } from '../../../../feature-gates/gates.js'
-import { irisStagingUrlForFeed, irisUrlForFeed } from './getFeed.js'
+import {
+  irisStagingUrlForFeed,
+  irisUrlForFeed,
+  irisUrlForTrendingFeed,
+} from './getFeed.js'
 
 const IRIS_URL = 'http://iris.internal.invalid'
 const IRIS_STAGING_URL = 'http://iris-staging.internal.invalid'
 const ALLOWLISTED = 'at://did:plc:feedgen/app.bsky.feed.generator/whats-hot'
 const OTHER_FEED = 'at://did:plc:someone/app.bsky.feed.generator/custom'
+const TRENDING_FEED_DID: DidString = 'did:plc:aaaaaaaaaaaaaaaaaaaaaaaa'
+const TRENDING_FEED = `at://${TRENDING_FEED_DID}/app.bsky.feed.generator/topic`
+const IRIS_SERVICE_DID: DidString = 'did:web:iris.invalid'
+const OTHER_SERVICE_DID: DidString = 'did:web:feedgen.invalid'
 
 const inputs = ({
   irisConfigured = true,
@@ -119,5 +127,61 @@ describe('irisStagingUrlForFeed', () => {
   it('does not route when no allowlist is configured', () => {
     const cfg = stagingCfg({ allowlistConfigured: false })
     expect(irisStagingUrlForFeed(cfg, { feed: ALLOWLISTED })).toBeUndefined()
+  })
+})
+
+describe(irisUrlForTrendingFeed, () => {
+  const cfg = {
+    irisUrl: IRIS_URL,
+    irisServiceDid: IRIS_SERVICE_DID,
+    trendingFeedDid: TRENDING_FEED_DID,
+  }
+
+  it('routes a configured trending feed registered to Iris', () => {
+    const url = irisUrlForTrendingFeed(cfg, {
+      feed: TRENDING_FEED,
+      feedDid: IRIS_SERVICE_DID,
+    })
+    expect(url).toBe(IRIS_URL)
+  })
+
+  it('does not route a feed published by another account', () => {
+    const url = irisUrlForTrendingFeed(cfg, {
+      feed: OTHER_FEED,
+      feedDid: IRIS_SERVICE_DID,
+    })
+    expect(url).toBeUndefined()
+  })
+
+  it('does not route a feed registered to another service', () => {
+    const url = irisUrlForTrendingFeed(cfg, {
+      feed: TRENDING_FEED,
+      feedDid: OTHER_SERVICE_DID,
+    })
+    expect(url).toBeUndefined()
+  })
+
+  it('does not route when Iris is not configured', () => {
+    const url = irisUrlForTrendingFeed(
+      { ...cfg, irisUrl: undefined },
+      { feed: TRENDING_FEED, feedDid: IRIS_SERVICE_DID },
+    )
+    expect(url).toBeUndefined()
+  })
+
+  it('does not route when the Iris service DID is not configured', () => {
+    const url = irisUrlForTrendingFeed(
+      { ...cfg, irisServiceDid: undefined },
+      { feed: TRENDING_FEED, feedDid: IRIS_SERVICE_DID },
+    )
+    expect(url).toBeUndefined()
+  })
+
+  it('does not route when the trending feed DID is not configured', () => {
+    const url = irisUrlForTrendingFeed(
+      { ...cfg, trendingFeedDid: undefined },
+      { feed: TRENDING_FEED, feedDid: IRIS_SERVICE_DID },
+    )
+    expect(url).toBeUndefined()
   })
 })

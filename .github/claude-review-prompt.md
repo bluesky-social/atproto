@@ -41,7 +41,11 @@ Where this repo differs from a typical TypeScript service:
 - Repo/MST code (packages/repo) underpins content addressing and
   signatures; silent data corruption there is the worst failure mode in
   the codebase. Be suspicious of changes to hashing, CBOR encoding, or
-  block storage ordering.
+  block storage ordering. Any new or changed MST traversal that can visit more
+  than one child of a node (full-tree walk, diff, block collection) without
+  calling `MST.markVisited` on each node it enters (with a fresh `CidSet` per
+  traversal) is a blocking finding; single-path lookups are exempt. See
+  packages/repo/AGENTS.md.
 - XRPC endpoints in pds/bsky/ozone are internet-facing. New endpoints or
   loosened input validation deserve a look at rate limits, payload size
   bounds, and unbounded-fan-out queries (hydration joins, cursors).

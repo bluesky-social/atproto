@@ -1,5 +1,55 @@
 # @atproto/bsky
 
+## 0.1.0
+
+### Minor Changes
+
+- [#5568](https://github.com/bluesky-social/atproto/pull/5568) [`61c915a`](https://github.com/bluesky-social/atproto/commit/61c915a4b7304720496975a07f2f35d38a23bcd4) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add `app.bsky.notification.getGroupedNotifications`.
+
+- [#5577](https://github.com/bluesky-social/atproto/pull/5577) [`3cd9fa6`](https://github.com/bluesky-social/atproto/commit/3cd9fa6013efad3ab57704ae804952be097e5d26) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Return grouped notification related views as a typed union array and include views for the first ten items per group.
+  
+  Remove the `utcOffset` parameter and allow notifications to group across day boundaries.
+  
+  Use one endpoint-supplied timestamp for grouping throughout each request.
+
+### Patch Changes
+
+- [#5493](https://github.com/bluesky-social/atproto/pull/5493) [`cd736b3`](https://github.com/bluesky-social/atproto/commit/cd736b3dbbec957cf4eaa7e67fa5b8be8f8ae04e) Thanks [@mozzius](https://github.com/mozzius)! - Add `since` and `startCursor` to `getTimeline` and `getListFeed`, for reading everything strictly newer than a previously returned position.
+
+- [#5571](https://github.com/bluesky-social/atproto/pull/5571) [`9ce8595`](https://github.com/bluesky-social/atproto/commit/9ce85957ce98c4b8a4ab6b51e0c24c4cd213d464) Thanks [@cuducos](https://github.com/cuducos)! - Route configured trending feeds through AppView's local Iris endpoint.
+- Updated dependencies [[`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e), [`cd736b3`](https://github.com/bluesky-social/atproto/commit/cd736b3dbbec957cf4eaa7e67fa5b8be8f8ae04e), [`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd), [`61c915a`](https://github.com/bluesky-social/atproto/commit/61c915a4b7304720496975a07f2f35d38a23bcd4), [`0593d81`](https://github.com/bluesky-social/atproto/commit/0593d818bc2b7f8a40c9d0fe036bf39c7a4eecda), [`a6561d5`](https://github.com/bluesky-social/atproto/commit/a6561d54227756876a0901e4a87675df17972d32)]:
+  - @atproto/repo@0.11.0
+  - @atproto/api@0.23.0
+  - @atproto/crypto@0.5.7
+  - @atproto-labs/opentelemetry-node@0.3.0
+  - @atproto/sync@0.4.13
+  - @atproto/identity@0.5.16
+  - @atproto/xrpc-server@0.13.4
+  - @atproto/common@0.8.5
+  - @atproto/lex@0.3.14
+  - @atproto-labs/xrpc-utils@0.1.25
+
+## 0.0.282
+
+### Patch Changes
+
+- [#5540](https://github.com/bluesky-social/atproto/pull/5540) [`4c725e6`](https://github.com/bluesky-social/atproto/commit/4c725e670ae67adf0711d08b53108be054e9dcf3) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add canonical OP thread numbering to feed response types.
+
+- [#5556](https://github.com/bluesky-social/atproto/pull/5556) [`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67) Thanks [@dependabot](https://github.com/apps/dependabot)! - build(deps-dev): bump the dev-dependencies group across 1 directory with 25 updates
+
+- [#5552](https://github.com/bluesky-social/atproto/pull/5552) [`b3d7c33`](https://github.com/bluesky-social/atproto/commit/b3d7c3391e50e4ae9e1b1cbfc9d561c8693507e7) Thanks [@haileyok](https://github.com/haileyok)! - Add sort parameter to getQuotes
+- Updated dependencies [[`4c725e6`](https://github.com/bluesky-social/atproto/commit/4c725e670ae67adf0711d08b53108be054e9dcf3), [`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67), [`7a85798`](https://github.com/bluesky-social/atproto/commit/7a857989751ae31518509d69ab7194a922064f3d), [`b3d7c33`](https://github.com/bluesky-social/atproto/commit/b3d7c3391e50e4ae9e1b1cbfc9d561c8693507e7), [`136e214`](https://github.com/bluesky-social/atproto/commit/136e2145b893773a94e9620df37be5215cdb57a3)]:
+  - @atproto/api@0.22.0
+  - @atproto/crypto@0.5.6
+  - @atproto/did@0.5.6
+  - @atproto/identity@0.5.15
+  - @atproto/repo@0.10.15
+  - @atproto/sync@0.4.12
+  - @atproto/xrpc-server@0.13.3
+  - @atproto/common@0.8.4
+  - @atproto-labs/xrpc-utils@0.1.24
+  - @atproto/lex@0.3.13
+
 ## 0.0.281
 
 ### Patch Changes

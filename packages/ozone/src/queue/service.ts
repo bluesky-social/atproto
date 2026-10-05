@@ -26,6 +26,7 @@ type ResolvedAssignment = {
 type ReportEvent = Pick<
   ModerationEventRow,
   | 'id'
+  | 'createdBy'
   | 'subjectDid'
   | 'subjectUri'
   | 'subjectMessageId'
@@ -62,6 +63,7 @@ function reportRowFromEvent({
 
   return {
     eventId: event.id,
+    reporterDid: event.createdBy,
     queueId: assignment.queueId,
     queuedAt: assignment.queuedAt,
     actionEventIds: actionEventIds === null ? null : jsonb(actionEventIds),
@@ -664,8 +666,8 @@ export class QueueService {
   /**
    * Read newly-created modEventReport rows from `moderation_event` and
    * insert corresponding `report` rows with `queueId` already resolved.
-   * Used by the queue-router daemon. Idempotent via `ON CONFLICT (eventId)
-   * DO NOTHING` — safe to re-run on the same range.
+   * Used by the queue-router daemon. On conflict, a null reporter DID is
+   * repaired from the source event while existing report state is preserved.
    *
    * Even when no queues are configured, report rows are still inserted with
    * `queueId = -1` so the invariant "every modEventReport has a `report` row"
@@ -686,6 +688,7 @@ export class QueueService {
       .selectFrom('moderation_event')
       .select([
         'id',
+        'createdBy',
         'subjectDid',
         'subjectUri',
         'subjectMessageId',
@@ -749,13 +752,17 @@ export class QueueService {
       })
     })
 
-    // ON CONFLICT (eventId) DO NOTHING covers any race where a report row
-    // already exists for the event (e.g. transitional code paths or retries
-    // after a crash mid-batch).
+    // On conflict, repair a missing reporter DID without changing the report's
+    // queue assignment or status.
     await this.db.db
       .insertInto('report')
       .values(rows)
-      .onConflict((oc) => oc.column('eventId').doNothing())
+      .onConflict((oc) =>
+        oc
+          .column('eventId')
+          .doUpdateSet({ reporterDid: sql`excluded."reporterDid"` })
+          .where('report.reporterDid', 'is', null),
+      )
       .execute()
 
     // Activity rows are intentionally not emitted: a freshly-inserted report

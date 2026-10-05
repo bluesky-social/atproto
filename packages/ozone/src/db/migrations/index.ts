@@ -49,3 +49,4 @@ export * as _20260810T000000000Z from './20260810T000000000Z-add-report-stats-co
 export * as _20260922T153505234Z from './20260922T153505234Z-add-report-closed-at-index.js'
 export * as _20260928T000000000Z from './20260928T000000000Z-inbox-appeal.js'
 export * as _20260929T000000000Z from './20260929T000000000Z-inbox-seen.js'
+export * as _20261002T000000000Z from './20261002T000000000Z-add-report-reporter-did.js'

@@ -8,6 +8,8 @@ type LiveNowConfig = {
   domains: string[]
 }[]
 
+export type NotificationsV2Algorithm = 'algoGravity' | 'algoLookback'
+
 export interface KwsConfig {
   apiKey: string
   apiOrigin: string
@@ -69,6 +71,8 @@ export interface ServerConfigValues {
   topicsUrl?: string
   topicsApiKey?: string
   irisUrl?: string
+  irisServiceDid?: DidString
+  trendingFeedDid?: DidString
   irisFeedUris?: Set<string> // `iris:feed:enable` gate to serve via iris instead of seeemore
   irisStagingUrl?: string
   irisStagingFeedUris?: Set<string> // serve via iris staging instead of the registered feed generator
@@ -102,6 +106,7 @@ export interface ServerConfigValues {
   visibilityTagRankPrefix: string
   // notifications
   notificationsDelayMs?: number
+  notificationsV2Algorithm?: NotificationsV2Algorithm
   // client config
   clientCheckEmailConfirmed?: boolean
   topicsEnabled?: boolean
@@ -178,6 +183,10 @@ export class ServerConfig {
     const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
     const topicsApiKey = process.env.BSKY_TOPICS_API_KEY
     const irisUrl = process.env.BSKY_IRIS_URL || undefined
+    const irisServiceDid = process.env.BSKY_IRIS_SERVICE_DID || undefined
+    assert(irisServiceDid == null || isDidString(irisServiceDid))
+    const trendingFeedDid = process.env.BSKY_TRENDING_FEED_DID || undefined
+    assert(trendingFeedDid == null || isDidString(trendingFeedDid))
     const irisFeedUris = new Set(envList(process.env.BSKY_IRIS_FEED_URIS))
     const irisStagingUrl = process.env.BSKY_IRIS_STAGING_URL || undefined
     const irisStagingFeedUris = new Set(
@@ -277,6 +286,10 @@ export class ServerConfig {
     const notificationsDelayMs = process.env.BSKY_NOTIFICATIONS_DELAY_MS
       ? parseInt(process.env.BSKY_NOTIFICATIONS_DELAY_MS || '', 10)
       : 0
+    const notificationsV2Algorithm =
+      process.env.BSKY_NOTIFICATIONS_V2_ALGORITHM === 'algoLookback'
+        ? 'algoLookback'
+        : 'algoGravity'
 
     const disableSsrfProtection = process.env.BSKY_DISABLE_SSRF_PROTECTION
       ? process.env.BSKY_DISABLE_SSRF_PROTECTION === 'true'
@@ -381,6 +394,8 @@ export class ServerConfig {
       topicsUrl,
       topicsApiKey,
       irisUrl,
+      irisServiceDid,
+      trendingFeedDid,
       irisFeedUris,
       irisStagingUrl,
       irisStagingFeedUris,
@@ -423,6 +438,7 @@ export class ServerConfig {
       visibilityTagHide,
       visibilityTagRankPrefix,
       notificationsDelayMs,
+      notificationsV2Algorithm,
       disableSsrfProtection,
       proxyAllowHTTP2,
       proxyConnectTimeout,
@@ -576,6 +592,14 @@ export class ServerConfig {
     return this.cfg.irisUrl
   }
 
+  get irisServiceDid() {
+    return this.cfg.irisServiceDid
+  }
+
+  get trendingFeedDid() {
+    return this.cfg.trendingFeedDid
+  }
+
   get irisFeedUris() {
     return this.cfg.irisFeedUris
   }
@@ -694,6 +718,10 @@ export class ServerConfig {
 
   get notificationsDelayMs() {
     return this.cfg.notificationsDelayMs ?? 0
+  }
+
+  get notificationsV2Algorithm(): NotificationsV2Algorithm {
+    return this.cfg.notificationsV2Algorithm ?? 'algoGravity'
   }
 
   get disableSsrfProtection(): boolean {

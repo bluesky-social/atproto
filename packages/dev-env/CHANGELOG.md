@@ -1,5 +1,45 @@
 # @atproto/dev-env
 
+## 0.6.10
+
+### Patch Changes
+
+- [#5572](https://github.com/bluesky-social/atproto/pull/5572) [`0ecd50b`](https://github.com/bluesky-social/atproto/commit/0ecd50b23dffce229ce671d1fac95dd647d06d10) Thanks [@foysalit](https://github.com/foysalit)! - Seed Alice and Bob with adult birthdates and full age assurance in the local development environment.
+- Updated dependencies [[`cd736b3`](https://github.com/bluesky-social/atproto/commit/cd736b3dbbec957cf4eaa7e67fa5b8be8f8ae04e), [`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd), [`61c915a`](https://github.com/bluesky-social/atproto/commit/61c915a4b7304720496975a07f2f35d38a23bcd4), [`3cd9fa6`](https://github.com/bluesky-social/atproto/commit/3cd9fa6013efad3ab57704ae804952be097e5d26), [`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e), [`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3), [`a6561d5`](https://github.com/bluesky-social/atproto/commit/a6561d54227756876a0901e4a87675df17972d32), [`9ce8595`](https://github.com/bluesky-social/atproto/commit/9ce85957ce98c4b8a4ab6b51e0c24c4cd213d464)]:
+  - @atproto/api@0.23.0
+  - @atproto/bsky@0.1.0
+  - @atproto/ozone@0.5.1
+  - @atproto/pds@0.5.37
+  - @atproto/crypto@0.5.7
+  - @atproto/lexicon@0.7.16
+  - @atproto/sync@0.4.13
+  - @atproto/identity@0.5.16
+  - @atproto/xrpc-server@0.13.4
+  - @atproto/bsync@0.1.2
+  - @atproto/common-web@0.5.14
+  - @atproto/lex@0.3.14
+
+## 0.6.9
+
+### Patch Changes
+
+- [#5562](https://github.com/bluesky-social/atproto/pull/5562) [`f632a35`](https://github.com/bluesky-social/atproto/commit/f632a35e8641644022bf430c6e3b34b1382cab55) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove the need to provide a `plcRotationKey` secret when and override is provided
+
+- [#5562](https://github.com/bluesky-social/atproto/pull/5562) [`f632a35`](https://github.com/bluesky-social/atproto/commit/f632a35e8641644022bf430c6e3b34b1382cab55) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `TestPds.create` accepts optional `PDS.create` overrides as a second argument.
+- Updated dependencies [[`4c725e6`](https://github.com/bluesky-social/atproto/commit/4c725e670ae67adf0711d08b53108be054e9dcf3), [`f632a35`](https://github.com/bluesky-social/atproto/commit/f632a35e8641644022bf430c6e3b34b1382cab55), [`af8c350`](https://github.com/bluesky-social/atproto/commit/af8c3501cd32e82cf8128683445656aa6708608d), [`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67), [`f632a35`](https://github.com/bluesky-social/atproto/commit/f632a35e8641644022bf430c6e3b34b1382cab55), [`af8c350`](https://github.com/bluesky-social/atproto/commit/af8c3501cd32e82cf8128683445656aa6708608d), [`f5f0aab`](https://github.com/bluesky-social/atproto/commit/f5f0aab4cf3046de3dddd9251a07003d29e3c0be), [`b3d7c33`](https://github.com/bluesky-social/atproto/commit/b3d7c3391e50e4ae9e1b1cbfc9d561c8693507e7), [`136e214`](https://github.com/bluesky-social/atproto/commit/136e2145b893773a94e9620df37be5215cdb57a3), [`7a85798`](https://github.com/bluesky-social/atproto/commit/7a857989751ae31518509d69ab7194a922064f3d), [`f5f0aab`](https://github.com/bluesky-social/atproto/commit/f5f0aab4cf3046de3dddd9251a07003d29e3c0be), [`f632a35`](https://github.com/bluesky-social/atproto/commit/f632a35e8641644022bf430c6e3b34b1382cab55), [`b3d7c33`](https://github.com/bluesky-social/atproto/commit/b3d7c3391e50e4ae9e1b1cbfc9d561c8693507e7), [`136e214`](https://github.com/bluesky-social/atproto/commit/136e2145b893773a94e9620df37be5215cdb57a3)]:
+  - @atproto/api@0.22.0
+  - @atproto/bsky@0.0.282
+  - @atproto/pds@0.5.36
+  - @atproto/bsync@0.1.1
+  - @atproto/common-web@0.5.13
+  - @atproto/crypto@0.5.6
+  - @atproto/identity@0.5.15
+  - @atproto/lexicon@0.7.15
+  - @atproto/ozone@0.5.0
+  - @atproto/sync@0.4.12
+  - @atproto/xrpc-server@0.13.3
+  - @atproto/lex@0.3.13
+
 ## 0.6.8
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # @atproto/oauth-provider-ui
 
+## 0.10.5
+
+### Patch Changes
+
+- [#5556](https://github.com/bluesky-social/atproto/pull/5556) [`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67) Thanks [@dependabot](https://github.com/apps/dependabot)! - build(deps-dev): bump the dev-dependencies group across 1 directory with 25 updates
+
+- [#5559](https://github.com/bluesky-social/atproto/pull/5559) [`3988a49`](https://github.com/bluesky-social/atproto/commit/3988a49b4b67c35c1f5e4f07f7753244031d78e5) Thanks [@nilaallj](https://github.com/nilaallj)! - Swedish translations for email 2FA + tighter UI
+
+- [#5207](https://github.com/bluesky-social/atproto/pull/5207) [`f5f0aab`](https://github.com/bluesky-social/atproto/commit/f5f0aab4cf3046de3dddd9251a07003d29e3c0be) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Add email-based authentication factor (2FA) for account sign-in
+- Updated dependencies [[`f5f0aab`](https://github.com/bluesky-social/atproto/commit/f5f0aab4cf3046de3dddd9251a07003d29e3c0be)]:
+  - @atproto/oauth-provider-api@0.9.0
+
 ## 0.10.4
 
 ### Patch Changes

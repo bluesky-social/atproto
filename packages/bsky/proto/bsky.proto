@@ -905,13 +905,6 @@ message GetNotificationPreferencesResponse {
 // - list recent notifications for a user
 //     - notifications should include a uri for the record that caused the notif & a “reason” for the notification (reply, like, quotepost, etc)
 //     - this should include both read & unread notifs
-message GetNotificationsRequest {
-  string actor_did = 1;
-  int32 limit = 2;
-  string cursor = 3;
-  reserved 4; // was "priority", deprecated
-}
-
 message Notification {
   string recipient_did = 1;
   string uri = 2;
@@ -921,7 +914,35 @@ message Notification {
   reserved 6; // was "priority", deprecated
 }
 
+message GetNotificationsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+  reserved 4; // was "priority", deprecated
+}
+
 message GetNotificationsResponse {
+  repeated Notification notifications = 1;
+  string cursor = 2;
+}
+
+enum NotificationFeed {
+  NOTIFICATION_FEED_UNSPECIFIED = 0;
+  NOTIFICATION_FEED_ALL = 1;
+  NOTIFICATION_FEED_PEOPLE_I_FOLLOW = 2;
+  NOTIFICATION_FEED_CONVERSATIONS = 3;
+  NOTIFICATION_FEED_FOLLOWERS = 4;
+  NOTIFICATION_FEED_ACTIVITY = 5;
+}
+
+message GetNotificationsV2Request {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+  NotificationFeed feed = 4;
+}
+
+message GetNotificationsV2Response {
   repeated Notification notifications = 1;
   string cursor = 2;
 }
@@ -1091,11 +1112,13 @@ message GetTimelineRequest {
   bool exclude_replies = 4;
   bool exclude_reposts = 5;
   bool exclude_quotes = 6;
+  string since = 7;
 }
 
 message GetTimelineResponse {
   repeated TimelineFeedItem items = 1;
   string cursor = 2;
+  string start_cursor = 3;
 }
 
 message TimelineFeedItem {
@@ -1118,11 +1141,13 @@ message GetListFeedRequest {
   bool exclude_replies = 4;
   bool exclude_reposts = 5;
   bool exclude_quotes = 6;
+  string since = 7;
 }
 
 message GetListFeedResponse {
   repeated TimelineFeedItem items = 1;
   string cursor = 2;
+  string start_cursor = 3;
 }
 
 //
@@ -1761,6 +1786,7 @@ service Service {
   // Notifications
   rpc GetNotificationPreferences(GetNotificationPreferencesRequest) returns (GetNotificationPreferencesResponse);
   rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
+  rpc GetNotificationsV2(GetNotificationsV2Request) returns (GetNotificationsV2Response);
   rpc GetNotificationSeen(GetNotificationSeenRequest) returns (GetNotificationSeenResponse);
   rpc GetUnreadNotificationCount(GetUnreadNotificationCountRequest) returns (GetUnreadNotificationCountResponse);
   rpc GetActivitySubscriptionDids(GetActivitySubscriptionDidsRequest) returns (GetActivitySubscriptionDidsResponse);

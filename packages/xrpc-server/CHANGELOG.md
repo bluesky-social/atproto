@@ -1,5 +1,31 @@
 # @atproto/xrpc-server
 
+## 0.13.4
+
+### Patch Changes
+
+- Updated dependencies [[`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd), [`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3)]:
+  - @atproto/crypto@0.5.7
+  - @atproto/lex-data@0.1.8
+  - @atproto/lexicon@0.7.16
+  - @atproto/common@0.8.5
+  - @atproto/lex-cbor@0.1.7
+  - @atproto/lex-client@0.3.7
+  - @atproto/lex-json@0.1.7
+  - @atproto/lex-schema@0.2.8
+  - @atproto/xrpc@0.8.15
+
+## 0.13.3
+
+### Patch Changes
+
+- [#5556](https://github.com/bluesky-social/atproto/pull/5556) [`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67) Thanks [@dependabot](https://github.com/apps/dependabot)! - build(deps-dev): bump the dev-dependencies group across 1 directory with 25 updates
+- Updated dependencies [[`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67)]:
+  - @atproto/crypto@0.5.6
+  - @atproto/lexicon@0.7.15
+  - @atproto/common@0.8.4
+  - @atproto/xrpc@0.8.14
+
 ## 0.13.2
 
 ### Patch Changes

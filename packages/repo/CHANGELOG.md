@@ -1,5 +1,31 @@
 # @atproto/repo
 
+## 0.11.0
+
+### Minor Changes
+
+- [#5576](https://github.com/bluesky-social/atproto/pull/5576) [`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - The `BlobStore` interface now extends `AsyncDisposable`, requiring explicit resource management.
+
+### Patch Changes
+
+- [#5584](https://github.com/bluesky-social/atproto/pull/5584) [`a6561d5`](https://github.com/bluesky-social/atproto/commit/a6561d54227756876a0901e4a87675df17972d32) Thanks [@haileyok](https://github.com/haileyok)! - Reject MSTs that reference the same node more than once. Full-tree traversals and diffs now throw `VisitedCidError` instead of re-walking shared subtrees, bounding their cost by the number of unique blocks. `com.atproto.repo.importRepo` returns `InvalidRequest` for such repos.
+- Updated dependencies [[`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd), [`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3)]:
+  - @atproto/crypto@0.5.7
+  - @atproto/lex-data@0.1.8
+  - @atproto/common@0.8.5
+  - @atproto/common-web@0.5.14
+  - @atproto/lex-cbor@0.1.7
+
+## 0.10.15
+
+### Patch Changes
+
+- [#5556](https://github.com/bluesky-social/atproto/pull/5556) [`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67) Thanks [@dependabot](https://github.com/apps/dependabot)! - build(deps-dev): bump the dev-dependencies group across 1 directory with 25 updates
+- Updated dependencies [[`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67)]:
+  - @atproto/common-web@0.5.13
+  - @atproto/crypto@0.5.6
+  - @atproto/common@0.8.4
+
 ## 0.10.14
 
 ### Patch Changes

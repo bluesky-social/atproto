@@ -8,7 +8,7 @@ import { currentDatetimeString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import type { Database } from '../db/index.js'
 import { TimeIdKeyset, paginate } from '../db/pagination.js'
-import type { tools } from '../lexicons/index.js'
+import { tools } from '../lexicons/index.js'
 import {
   AlreadyInTargetState,
   InvalidStateTransition,
@@ -269,8 +269,22 @@ export async function queryReportActivities(
 function buildActivityObject(
   activityType: string,
   previousStatus: string | null,
+  meta: unknown,
 ): tools.ozone.report.defs.ReportActivityView['activity'] {
   const $type = `tools.ozone.report.defs#${activityType}` as Unknown$Type
+  if (activityType === 'unassignmentActivity') {
+    return {
+      $type: tools.ozone.report.defs.unassignmentActivity.$type,
+      previousStatus: previousStatus ?? undefined,
+      nextStatus:
+        meta !== null &&
+        typeof meta === 'object' &&
+        'nextStatus' in meta &&
+        typeof meta.nextStatus === 'string'
+          ? meta.nextStatus
+          : undefined,
+    }
+  }
   return (
     previousStatus !== null ? { $type, previousStatus } : { $type }
   ) as tools.ozone.report.defs.ReportActivityView['activity']
@@ -298,6 +312,7 @@ export function formatActivityView(
     activity: buildActivityObject(
       activity.activityType,
       activity.previousStatus,
+      activity.meta,
     ),
     internalNote: activity.internalNote ?? undefined,
     publicNote: activity.publicNote ?? undefined,

@@ -1,5 +1,32 @@
 # @atproto/oauth-provider
 
+## 0.23.1
+
+### Patch Changes
+
+- [#5564](https://github.com/bluesky-social/atproto/pull/5564) [`cea6f5c`](https://github.com/bluesky-social/atproto/commit/cea6f5c4a034860c35eda03dbde207f5bdb9387f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Hash PII data using `scrypt` instead of easily revertable `sha256`.
+- Updated dependencies []:
+  - @atproto/lex-resolver@0.3.2
+  - @atproto/common@0.8.5
+  - @atproto/lex-document@0.1.13
+
+## 0.23.0
+
+### Minor Changes
+
+- [#5207](https://github.com/bluesky-social/atproto/pull/5207) [`f5f0aab`](https://github.com/bluesky-social/atproto/commit/f5f0aab4cf3046de3dddd9251a07003d29e3c0be) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Add email-based authentication factor (2FA) for account sign-in
+
+### Patch Changes
+
+- Updated dependencies [[`5019f55`](https://github.com/bluesky-social/atproto/commit/5019f5537317ee75ad4527db212bc27c3085fe67), [`3988a49`](https://github.com/bluesky-social/atproto/commit/3988a49b4b67c35c1f5e4f07f7753244031d78e5), [`f5f0aab`](https://github.com/bluesky-social/atproto/commit/f5f0aab4cf3046de3dddd9251a07003d29e3c0be)]:
+  - @atproto/did@0.5.6
+  - @atproto/oauth-provider-ui@0.10.5
+  - @atproto/oauth-provider-api@0.9.0
+  - @atproto/common@0.8.4
+  - @atproto/lex-resolver@0.3.1
+  - @atproto/oauth-scopes@0.5.13
+  - @atproto/oauth-types@0.7.7
+
 ## 0.22.9
 
 ### Patch Changes
