@@ -752,9 +752,8 @@ export class QueueService {
       })
     })
 
-    // ON CONFLICT (eventId) DO NOTHING covers any race where a report row
-    // already exists for the event (e.g. transitional code paths or retries
-    // after a crash mid-batch).
+    // On conflict, repair a missing reporter DID without changing the report's
+    // queue assignment or status.
     await this.db.db
       .insertInto('report')
       .values(rows)
