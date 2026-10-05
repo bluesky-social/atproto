@@ -68,13 +68,13 @@ export default function (server: Server, ctx: AppContext) {
         'user-agent': BSKY_USER_AGENT,
         authorization: req.headers['authorization'],
         'accept-language': req.headers['accept-language'],
-        ...getAtprotoPassthroughHeaders(req),
       })
+      const passthroughHeaders = getAtprotoPassthroughHeaders(req)
       // @NOTE feed cursors should not be affected by appview swap
       // Do not refill filtered pages. Overfetching from algorithmic feeds can
       // advance their state and prevent omitted items from appearing later.
       const result = await getFeed(
-        { ...params, hydrateCtx, headers, signal },
+        { ...params, hydrateCtx, headers, passthroughHeaders, signal },
         ctx,
       )
       const {
@@ -186,6 +186,7 @@ type Context = AppContext
 type Params = app.bsky.feed.getFeed.$Params & {
   hydrateCtx: HydrateCtx
   headers: HeadersMap
+  passthroughHeaders: HeadersMap
   signal: AbortSignal
 }
 
@@ -254,22 +255,28 @@ export function irisUrlForTrendingFeed(
 const resolveSkeletonEndpoint = async (
   ctx: Context,
   params: Params,
-): Promise<string> => {
+): Promise<{ endpoint: string; feedDid?: DidString }> => {
+  const { feed } = params
   const irisUrl = irisUrlForFeed(ctx.cfg, params)
-  if (irisUrl) return irisUrl
+  if (irisUrl) {
+    return { endpoint: irisUrl, feedDid: await getFeedGenDid(ctx, feed) }
+  }
 
   const irisStagingUrl = irisStagingUrlForFeed(ctx.cfg, params)
-  if (irisStagingUrl) return irisStagingUrl
+  if (irisStagingUrl) {
+    return {
+      endpoint: irisStagingUrl,
+      feedDid: await getFeedGenDid(ctx, feed),
+    }
+  }
 
-  const { feed } = params
-  const found = await ctx.hydrator.feed.getFeedGens([feed], true)
-  const feedDid = found.get(feed)?.record.did
+  const feedDid = await getFeedGenDid(ctx, feed)
   if (!feedDid) {
     throw new InvalidRequestError('could not find feed')
   }
 
   const trendingIrisUrl = irisUrlForTrendingFeed(ctx.cfg, { feed, feedDid })
-  if (trendingIrisUrl) return trendingIrisUrl
+  if (trendingIrisUrl) return { endpoint: trendingIrisUrl, feedDid }
 
   let identity: GetIdentityByDidResponse
   try {
@@ -292,15 +299,29 @@ const resolveSkeletonEndpoint = async (
     )
   }
 
-  return fgEndpoint
+  return { endpoint: fgEndpoint, feedDid }
+}
+
+async function getFeedGenDid(
+  ctx: Context,
+  feed: Params['feed'],
+): Promise<DidString | undefined> {
+  const found = await ctx.hydrator.feed.getFeedGens([feed], true)
+  return found.get(feed)?.record.did
 }
 
 const skeletonFromFeedGen = async (
   ctx: Context,
   params: Params,
 ): Promise<AlgoResponse> => {
-  const { headers } = params
-  const endpoint = await resolveSkeletonEndpoint(ctx, params)
+  const { headers, passthroughHeaders } = params
+  const { endpoint, feedDid } = await resolveSkeletonEndpoint(ctx, params)
+  const requestHeaders = noUndefinedVals({
+    ...headers,
+    ...(feedDid && ctx.cfg.bskyFeedgenDids.has(feedDid)
+      ? passthroughHeaders
+      : {}),
+  })
 
   // @TODO currently passthrough auth headers from pds
   const result = await xrpcSafe(endpoint, app.bsky.feed.getFeedSkeleton, {
@@ -309,7 +330,7 @@ const skeletonFromFeedGen = async (
       params.signal,
       AbortSignal.timeout(ctx.cfg.feedGenSkeletonTimeout),
     ]),
-    headers,
+    headers: requestHeaders,
     params: {
       feed: params.feed,
       // The feedgen is not guaranteed to honor the limit, but we try it.
