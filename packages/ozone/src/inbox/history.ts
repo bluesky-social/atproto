@@ -1,5 +1,6 @@
 import { sql } from 'kysely'
 import type { DatetimeString } from '@atproto/lex'
+import { DEFAULT_INBOX_POLICY_URL } from '../config/config.js'
 import type { Database } from '../db/index.js'
 import type { ModSubject } from '../mod-service/subject.js'
 import {
@@ -9,6 +10,7 @@ import {
   TAKEDOWN,
   eventSubjectFilter,
 } from './appeal.js'
+import type { PolicyList } from './policies.js'
 import {
   type PublicEventRow,
   publicEventSelection,
@@ -21,6 +23,8 @@ export async function queryActionHistory(
   subject: ModSubject,
   limit: number,
   before?: { sortValue: DatetimeString; id: number },
+  policyList: PolicyList = {},
+  defaultPolicyUrl?: string,
 ) {
   const events = db.db
     .selectFrom('moderation_event')
@@ -78,7 +82,11 @@ export async function queryActionHistory(
   const last = page.at(-1)
   return {
     actions: page.flatMap((row) => {
-      const view = toActionView(row)
+      const view = toActionView(
+        row,
+        policyList,
+        defaultPolicyUrl ?? DEFAULT_INBOX_POLICY_URL,
+      )
       if (!view) return []
       if (row.reversedAt) view.reversedAt = row.reversedAt
       return [view]

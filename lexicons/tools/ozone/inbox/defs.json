@@ -162,10 +162,20 @@
         "policies": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "ref",
+            "ref": "#policyView"
           },
-          "description": "Policies that were applied in this action."
+          "description": "Policies applied by a takedown action."
         }
+      }
+    },
+    "policyView": {
+      "type": "object",
+      "required": ["key", "displayName", "link"],
+      "properties": {
+        "key": { "type": "string" },
+        "displayName": { "type": "string" },
+        "link": { "type": "string", "format": "uri" }
       }
     },
     "subjectViewDetail": {

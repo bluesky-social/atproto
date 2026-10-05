@@ -9,6 +9,7 @@ import {
 } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { DEFAULT_INBOX_POLICY_URL } from '../config/config.js'
 import type { InboxConfig } from '../config/config.js'
 import type { Database } from '../db/index.js'
 import { com, type tools } from '../lexicons/index.js'
@@ -25,6 +26,7 @@ import {
   reportSubjectFilter,
 } from './appeal.js'
 import { queryActionHistory } from './history.js'
+import { loadPolicyList } from './policies.js'
 import {
   type PublicStatusRow,
   loadSubject,
@@ -191,13 +193,18 @@ export async function getActionedSubjectDetail(
   params: { limit?: number; cursor?: string } = {},
 ): Promise<tools.ozone.inbox.getActionedSubject.$OutputBody | null> {
   const before = params.cursor ? parseSubjectCursor(params.cursor) : undefined
-  const snapshot = await loadSubject(db, subject)
+  const [snapshot, policyList] = await Promise.all([
+    loadSubject(db, subject),
+    loadPolicyList(db, serviceDid),
+  ])
   if (!snapshot.actionCount) return null
   const history = await queryActionHistory(
     db,
     subject,
     params.limit ?? 50,
     before,
+    policyList,
+    cfg.policyDefaultUrl ?? DEFAULT_INBOX_POLICY_URL,
   )
   const view = toSubjectView({
     subject,
@@ -205,6 +212,7 @@ export async function getActionedSubjectDetail(
     cfg,
     seenAt,
     snapshot,
+    policyList,
   })
   if (!view) return null
   const {

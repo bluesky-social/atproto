@@ -109,6 +109,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
 
   const inboxCfg: OzoneConfig['inbox'] = {
     appealWindowMonths: env.inboxAppealWindowMonths ?? 6,
+    policyDefaultUrl: env.inboxPolicyDefaultUrl ?? DEFAULT_INBOX_POLICY_URL,
   }
 
   const statsCfg: OzoneConfig['stats'] = {
@@ -242,7 +243,12 @@ export type InboxConfig = {
    * deployment owns, and can be changed without shipping code.
    */
   appealWindowMonths: number
+  /** Fallback link for takedown policy keys missing from the policy list. */
+  policyDefaultUrl?: string
 }
+
+export const DEFAULT_INBOX_POLICY_URL =
+  'https://bsky.social/about/support/community-guidelines'
 
 export type AssignmentsConfig = {
   queueDurationMs: number

@@ -4,7 +4,7 @@ import {
   type DidString,
   currentDatetimeString,
 } from '@atproto/lex'
-import type { InboxConfig } from '../config/config.js'
+import { DEFAULT_INBOX_POLICY_URL, type InboxConfig } from '../config/config.js'
 import type { Database } from '../db/index.js'
 import type {
   ActionView,
@@ -21,7 +21,6 @@ import { publicActionType } from './action.js'
 import type { AppealReport } from './appeal.js'
 import {
   APPEALABLE_EVENT_ACTIONS,
-  EMAIL,
   LABEL,
   PUBLIC_EVENT_ACTIONS,
   REVERSE_TAKEDOWN,
@@ -31,6 +30,11 @@ import {
   subjectLabelUri,
   toAppealState,
 } from './appeal.js'
+import {
+  type PolicyList,
+  loadPolicyList,
+  toActionPolicies,
+} from './policies.js'
 import { isRead } from './seen.js'
 export { publicActionType } from './action.js'
 
@@ -197,6 +201,7 @@ export type SubjectViewInput = {
   serviceDid: string
   cfg: InboxConfig
   snapshot: SubjectSnapshot
+  policyList?: PolicyList
   seenAt?: DatetimeString | null
 }
 
@@ -232,7 +237,11 @@ const takedownScope = (row: PublicEventRow): ActionView['scope'] => {
   return services.includes('pds') ? 'network' : 'app'
 }
 
-export const toActionView = (row: PublicEventRow): ActionView | null => {
+export const toActionView = (
+  row: PublicEventRow,
+  policyList: PolicyList = {},
+  defaultPolicyUrl = DEFAULT_INBOX_POLICY_URL,
+): ActionView | null => {
   const type = publicActionType(row)
   if (!type) return null
 
@@ -245,12 +254,10 @@ export const toActionView = (row: PublicEventRow): ActionView | null => {
 
   if (row.action === TAKEDOWN) {
     view.scope = takedownScope(row)
-    const policies = splitMeta(row, 'policies')
-    if (policies.length) view.policies = policies
-  }
-  if (row.action === EMAIL) {
-    const policies = splitMeta(row, 'policies')
-    if (policies.length) view.policies = policies
+    const keys = splitMeta(row, 'policies')
+    if (keys.length) {
+      view.policies = toActionPolicies(keys, policyList, defaultPolicyUrl)
+    }
   }
   if (row.action === LABEL) {
     view.scope = 'app'
@@ -273,7 +280,11 @@ export const toActionView = (row: PublicEventRow): ActionView | null => {
  * "removed, then restored" as one action with an end date rather than as two
  * unrelated events.
  */
-export const toActionViews = (rows: PublicEventRow[]): ActionView[] => {
+export const toActionViews = (
+  rows: PublicEventRow[],
+  policyList: PolicyList = {},
+  defaultPolicyUrl = DEFAULT_INBOX_POLICY_URL,
+): ActionView[] => {
   // Oldest first, so a reversal always meets the action it undoes.
   const ordered = [...rows].sort(
     (a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id - b.id,
@@ -290,7 +301,7 @@ export const toActionViews = (rows: PublicEventRow[]): ActionView[] => {
       continue
     }
 
-    const view = toActionView(row)
+    const view = toActionView(row, policyList, defaultPolicyUrl)
     if (!view) continue
     actions.push(view)
 
@@ -397,11 +408,16 @@ export const toSubjectView = ({
   serviceDid,
   snapshot,
   cfg,
+  policyList = {},
   seenAt = null,
 }: SubjectViewInput): SubjectView | null => {
   if (!snapshot.status && !snapshot.actionCount) return null
 
-  const actions = toActionViews(snapshot.events)
+  const actions = toActionViews(
+    snapshot.events,
+    policyList,
+    cfg.policyDefaultUrl ?? DEFAULT_INBOX_POLICY_URL,
+  )
   const enforcement = toEnforcementView({
     subject,
     status: snapshot.status,
@@ -458,11 +474,17 @@ export const hydrateSubjectView = async (
   serviceDid: DidString,
   cfg: InboxConfig,
   seenAt?: DatetimeString | null,
-): Promise<SubjectView | null> =>
-  toSubjectView({
+): Promise<SubjectView | null> => {
+  const [snapshot, policyList] = await Promise.all([
+    loadSubject(db, subject),
+    loadPolicyList(db, serviceDid),
+  ])
+  return toSubjectView({
     subject,
     serviceDid,
     cfg,
     seenAt,
-    snapshot: await loadSubject(db, subject),
+    snapshot,
+    policyList,
   })
+}

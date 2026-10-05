@@ -13,6 +13,7 @@ import {
   PUBLIC_EVENT_ACTIONS,
   subjectLabelUri,
 } from './appeal.js'
+import { loadPolicyList } from './policies.js'
 import type { ActionedSubjectRow } from './subjects.js'
 import { publicEventSelection, toSubjectView } from './views.js'
 
@@ -29,7 +30,7 @@ export async function hydrateSubjectViews(
   const subjects = rows.map(subjectFromStatusRow)
   const uris = subjects.map(subjectLabelUri)
   const paths = rows.map((row) => row.recordPath)
-  const [labels, events, appeals] = await Promise.all([
+  const [labels, events, appeals, policyList] = await Promise.all([
     db.db
       .selectFrom('label')
       .where('uri', 'in', uris)
@@ -77,6 +78,7 @@ export async function hydrateSubjectViews(
       .orderBy('recordPath')
       .orderBy('id', 'desc')
       .execute(),
+    loadPolicyList(db, serviceDid),
   ])
   return rows.flatMap((row, i) => {
     const subject = subjects[i]
@@ -87,6 +89,7 @@ export async function hydrateSubjectViews(
       serviceDid,
       cfg,
       seenAt,
+      policyList,
       snapshot: {
         status: row,
         events: events.filter((event) => (event.subjectUri ?? did) === uris[i]),
