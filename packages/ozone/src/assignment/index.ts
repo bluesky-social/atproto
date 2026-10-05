@@ -617,9 +617,12 @@ export class AssignmentService {
         {
           ...activityFields,
           activityType: 'unassignmentActivity',
-          previousStatus: null,
+          previousStatus: report.status,
           internalNote: `Report unassigned from ${existing.did}.`,
-          meta: { unassignedFrom: existing.did },
+          meta: {
+            unassignedFrom: existing.did,
+            nextStatus: updateSet.status ?? report.status,
+          },
         },
       ])
 

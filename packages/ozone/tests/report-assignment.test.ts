@@ -503,6 +503,10 @@ describe('report-assignment', () => {
         )
         expect(unassignments).toHaveLength(1)
         expect(unassignments[0]).toMatchObject({
+          activity: {
+            previousStatus: status,
+            nextStatus: expectedStatus,
+          },
           createdBy: network.ozone.adminAccnt.did,
           isAutomated: false,
           internalNote: `Report unassigned from ${network.ozone.moderatorAccnt.did}.`,
@@ -539,11 +543,13 @@ describe('report-assignment', () => {
       expect(activities).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            activity: {
+            activity: expect.objectContaining({
               $type: tools.ozone.report.defs.unassignmentActivity.$type,
-            },
+            }),
             createdBy: network.ozone.moderatorAccnt.did,
-            meta: { unassignedFrom: network.ozone.moderatorAccnt.did },
+            meta: expect.objectContaining({
+              unassignedFrom: network.ozone.moderatorAccnt.did,
+            }),
           }),
         ]),
       )
@@ -586,12 +592,73 @@ describe('report-assignment', () => {
         expect.objectContaining({
           activity: {
             $type: tools.ozone.report.defs.unassignmentActivity.$type,
+            previousStatus: 'assigned',
+            nextStatus: 'open',
           },
           internalNote: `Report unassigned from ${network.ozone.moderatorAccnt.did}.`,
-          meta: { unassignedFrom: network.ozone.moderatorAccnt.did },
+          meta: {
+            unassignedFrom: network.ozone.moderatorAccnt.did,
+            nextStatus: 'open',
+          },
           createdAt: assignment.endAt,
         }),
       ])
+    })
+
+    it('preserves the transition when the report later changes status', async () => {
+      const reportId = await createReport()
+      await assignReport({ reportId, isPermanent: true })
+      await unassignReport({ reportId })
+      await agent.tools.ozone.report.createActivity(
+        {
+          reportId,
+          activity: { $type: tools.ozone.report.defs.escalationActivity.$type },
+        },
+        {
+          encoding: 'application/json',
+          headers: await network.ozone.modHeaders(
+            ids.ToolsOzoneReportCreateActivity,
+            'admin',
+          ),
+        },
+      )
+      const { activities } = await listActivities({ reportId })
+      const unassignment = activities.find((a) =>
+        tools.ozone.report.defs.unassignmentActivity.$matches(a.activity),
+      )
+      expect(unassignment?.activity).toEqual({
+        $type: tools.ozone.report.defs.unassignmentActivity.$type,
+        previousStatus: 'assigned',
+        nextStatus: 'open',
+      })
+    })
+
+    it('can read older unassignment activities without status fields', async () => {
+      const reportId = await createReport()
+      await assignReport({ reportId, isPermanent: true })
+      await unassignReport({ reportId })
+      await network.ozone.ctx.db.db
+        .updateTable('report_activity')
+        .set({
+          previousStatus: null,
+          meta: { unassignedFrom: network.ozone.moderatorAccnt.did },
+        })
+        .where('reportId', '=', reportId)
+        .where('activityType', '=', 'unassignmentActivity')
+        .execute()
+      const { activities } = await listActivities({ reportId })
+      const unassignment = activities.find((a) =>
+        tools.ozone.report.defs.unassignmentActivity.$matches(a.activity),
+      )
+      expect(unassignment).toMatchObject({
+        activity: {
+          $type: tools.ozone.report.defs.unassignmentActivity.$type,
+        },
+        internalNote: `Report unassigned from ${network.ozone.moderatorAccnt.did}.`,
+        meta: { unassignedFrom: network.ozone.moderatorAccnt.did },
+      })
+      expect(unassignment?.activity).not.toHaveProperty('previousStatus')
+      expect(unassignment?.activity).not.toHaveProperty('nextStatus')
     })
 
     it('rejects creating unassignment activity without unassigning the moderator', async () => {
