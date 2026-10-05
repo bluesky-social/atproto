@@ -1,5 +1,13 @@
 # @atproto/ozone
 
+## 0.5.2
+
+### Patch Changes
+
+- [#5585](https://github.com/bluesky-social/atproto/pull/5585) [`a257997`](https://github.com/bluesky-social/atproto/commit/a25799716c061e84586687b2c533eaedbd09c05f) Thanks [@foysalit](https://github.com/foysalit)! - Store the original reporter DID on Ozone report rows.
+
+- [#5558](https://github.com/bluesky-social/atproto/pull/5558) [`38e2dc8`](https://github.com/bluesky-social/atproto/commit/38e2dc8eea64d4077155cf5bbdb84965d5c6dbf6) Thanks [@gcwill70](https://github.com/gcwill70)! - Record report unassignment activity atomically with assignment and status updates.
+
 ## 0.5.1
 
 ### Patch Changes

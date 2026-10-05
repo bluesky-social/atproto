@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.23.1
+
+### Patch Changes
+
+- [#5558](https://github.com/bluesky-social/atproto/pull/5558) [`38e2dc8`](https://github.com/bluesky-social/atproto/commit/38e2dc8eea64d4077155cf5bbdb84965d5c6dbf6) Thanks [@gcwill70](https://github.com/gcwill70)! - Record report unassignment activity atomically with assignment and status updates.
+
 ## 0.23.0
 
 ### Minor Changes
