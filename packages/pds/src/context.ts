@@ -463,6 +463,7 @@ export class AppContext implements AsyncDisposable {
           availableUserDomains: cfg.identity.serviceHandleDomains,
           hcaptcha: cfg.oauth.provider.hcaptcha,
           branding: cfg.oauth.provider.branding,
+          fedcm: cfg.oauth.provider.fedcm,
           // @NOTE Not operator-configurable on purpose: changing the email
           // address unconditionally clears `emailAuthFactorAt` (see
           // `account-manager/helpers/account.ts`), so the warning describes
