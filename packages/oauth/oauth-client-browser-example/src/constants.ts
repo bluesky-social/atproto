@@ -67,6 +67,8 @@ export const OAUTH_SCOPE_DEFAULT: string =
 export const OAUTH_SCOPE: string =
   searchParams.get('scope') ?? OAUTH_SCOPE_DEFAULT
 export const FEDCM_PROVIDER_URLS = searchParams.getAll('fedcm_provider')
+export const FEDCM_MODE =
+  searchParams.get('fedcm_mode') === 'active' ? 'active' : 'passive'
 
 const canonicalSearchParams = new URLSearchParams({
   ...(ENV !== ENV_DEFAULT && { env: ENV }),
@@ -86,6 +88,7 @@ const canonicalSearchParams = new URLSearchParams({
     bsky_api_did: BSKY_API_DID,
   }),
   ...(OAUTH_SCOPE !== OAUTH_SCOPE_DEFAULT && { scope: OAUTH_SCOPE }),
+  ...(FEDCM_MODE !== 'passive' && { fedcm_mode: FEDCM_MODE }),
 })
 for (const providerUrl of FEDCM_PROVIDER_URLS) {
   canonicalSearchParams.append('fedcm_provider', providerUrl)

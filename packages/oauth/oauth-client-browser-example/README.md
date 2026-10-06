@@ -28,6 +28,13 @@ from another provider leaves the handle-entry flow available.
 The ordinary OAuth client may retry a PAR POST after a DPoP nonce challenge;
 this still creates one pushed authorization request for the selected account.
 
+To use explicit active FedCM instead, add `fedcm_mode=active` to the URL. The
+page shows a **Choose an account** button and opens FedCM only from that genuine
+user click, preserving the browser's transient user activation. Active mode
+requires exactly one `fedcm_provider`; multiple configured providers show an
+error and cannot start a request. The selected DID still goes through the same
+validation and account-first OAuth flow, with no PAR sent before selection.
+
 Provider URLs are explicit configuration, not decentralized IdP discovery.
 FedCM tokens in this prototype are DID hints, not identity credentials or OAuth
 access tokens. Do not use them to authenticate a relying-party session.
@@ -56,3 +63,5 @@ out one account versus the last remembered accounts, cancellation during PAR,
 and rejection of a differing OAuth subject.
 It also exercises Chrome's sign-in window when browser login status outlives
 the provider session, including remembered login and popup closure.
+Active-mode cases check click-triggered selection, retry after dismissal or
+cancellation, and rejection of multiple configured providers.

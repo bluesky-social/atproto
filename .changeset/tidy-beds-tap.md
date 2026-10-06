@@ -5,4 +5,4 @@
 "@atproto/pds": patch
 ---
 
-Add opt-in account-first FedCM selection, followed by ordinary AT Protocol OAuth, with a passive multi-provider browser example.
+Add opt-in account-first FedCM selection, followed by ordinary AT Protocol OAuth, with passive multi-provider and active single-provider browser examples.
