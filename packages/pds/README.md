@@ -30,8 +30,9 @@ matches the relying party. For the local browser example, enable
 permits validated loopback client metadata and checks the relying party's origin
 against its loopback redirect URI. HTTPS is still required for the provider.
 
-Remembered first-party sessions issue dedicated Secure, HttpOnly, SameSite=None
-cookies scoped to `/oauth/fedcm`. FedCM reads never create or rotate sessions;
+Remembered first-party sessions issue dedicated `fedcm-dev-id` and `fedcm-ses-id`
+cookies with Secure, HttpOnly, SameSite=None, and Path=/oauth/fedcm.
+FedCM reads never create or rotate sessions;
 expired, revoked, deactivated, or taken-down accounts are excluded. First-party
 account and OAuth pages update the browser's login status. The FedCM sign-in
 window defaults to remembering the account and closes after a persisted login

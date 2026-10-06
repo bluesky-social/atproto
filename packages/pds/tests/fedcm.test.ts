@@ -243,7 +243,7 @@ browserDescribe('account-first FedCM in Chrome 141+', () => {
     await page.waitForNetworkIdle()
     const probe = requests.find((r) => r.path === '/oauth/fedcm/cookie-probe')
     expect(probe).toBeDefined()
-    expect(probe?.cookie ?? '').not.toContain('__Secure-atproto-fedcm-session=')
+    expect(probe?.cookie ?? '').not.toContain('fedcm-ses-id=')
     const cdp = await page.cdp()
     const shown = nextDialog(cdp)
     await page.goto(appUrl)
@@ -259,7 +259,7 @@ browserDescribe('account-first FedCM in Chrome 141+', () => {
     expect(parRequests()).toHaveLength(0)
     expect(
       requests.find((r) => r.path === '/oauth/fedcm/accounts')?.cookie,
-    ).toContain('__Secure-atproto-fedcm-session=')
+    ).toContain('fedcm-ses-id=')
     await cdp.send('FedCm.dismissDialog', {
       dialogId: dialog.dialogId,
       triggerCooldown: false,
