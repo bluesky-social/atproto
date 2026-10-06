@@ -438,6 +438,54 @@ export type ProcessReportActionParams = {
   createdBy: DidString
 }
 
+async function processEmailReportAction(
+  db: Database,
+  reportAction: ProcessReportActionParams['reportAction'],
+  subjectDid: DidString,
+  eventId: number,
+): Promise<number> {
+  if (
+    !reportAction.ids?.length ||
+    reportAction.types?.length ||
+    reportAction.all
+  ) {
+    throw new Error('Email events must target specific report IDs')
+  }
+
+  const reportIds = [...new Set(reportAction.ids)]
+  const matchingReports = await reportQuery(db)
+    .where('r.did', '=', subjectDid)
+    .where('r.id', 'in', reportIds)
+    .select('r.id')
+    .execute()
+
+  const foundIds = new Set(matchingReports.map((report) => report.id))
+  if (!foundIds.size) {
+    throw new Error(
+      'No matching reports found for the specified report IDs on this subject',
+    )
+  }
+
+  const missingIds = reportIds.filter((id) => !foundIds.has(id))
+  if (missingIds.length) {
+    throw new Error(
+      `Report IDs ${missingIds.join(', ')} do not exist or do not belong to this subject`,
+    )
+  }
+
+  // Email events are supplemental report history; they must not reopen or
+  // otherwise change the status of reports that were already actioned.
+  await db.db
+    .updateTable('report')
+    .set({
+      actionEventIds: sql`COALESCE("actionEventIds", '[]'::jsonb) || ${JSON.stringify(eventId)}::jsonb`,
+    })
+    .where('id', 'in', reportIds)
+    .execute()
+
+  return matchingReports.length
+}
+
 /**
  * Validates and processes a report action by:
  * 1. Finding matching reports based on targeting criteria
@@ -459,6 +507,10 @@ export async function processReportAction(
     eventType,
     createdBy,
   } = params
+
+  if (eventType === tools.ozone.moderation.defs.modEventEmail.$type) {
+    return processEmailReportAction(db, reportAction, subjectDid, eventId)
+  }
 
   // Find reports matching the criteria
   const matchingReports = await findReportsForSubject(db, {
