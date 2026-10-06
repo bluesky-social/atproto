@@ -81,7 +81,7 @@ describe('createFedcmMiddleware', () => {
       accounts: [
         {
           id: account.did,
-          username: account.handle,
+          username: `@${account.handle}`,
           name: account.name,
         },
       ],

@@ -89,7 +89,7 @@ export function createFedcmMiddleware<
       return {
         accounts: accounts.map(({ account }) => ({
           id: account.did,
-          username: account.handle ?? account.did,
+          username: account.handle ? `@${account.handle}` : account.did,
           ...(account.name ? { name: account.name } : {}),
           ...(account.picture ? { picture: account.picture } : {}),
         })),
