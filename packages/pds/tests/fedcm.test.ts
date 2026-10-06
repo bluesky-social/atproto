@@ -294,6 +294,140 @@ browserDescribe('account-first FedCM in Chrome 141+', () => {
     await page.ensureTextVisibility('Login with the Atmosphere', 'h2')
   })
 
+  it('active mode waits for a click, permits retry after dismissal, and starts OAuth after selection', async () => {
+    requests.length = 0
+    await using page = new FedcmPage(await browser.newPage())
+    const cdp = await page.cdp()
+    const activeUrl = new URL(appUrl)
+    activeUrl.searchParams.set('fedcm_mode', 'active')
+    activeUrl.searchParams.delete('fedcm_provider')
+    activeUrl.searchParams.append('fedcm_provider', configUrl)
+
+    await page.goto(activeUrl.href)
+    await page.ensureTextVisibility('Choose an account', 'button')
+    expect(
+      requests.filter((r) => r.path === '/oauth/fedcm/accounts'),
+    ).toHaveLength(0)
+    expect(parRequests()).toHaveLength(0)
+
+    const shown = nextDialog(cdp)
+    await page.clickOnText('Choose an account')
+    const dismissed = await shown
+    expect(dismissed.dialogType).toBe('AccountChooser')
+    expect(dismissed.accounts).toHaveLength(3)
+    expect(dismissed.accounts.every((a) => a.idpConfigUrl === configUrl)).toBe(
+      true,
+    )
+    await cdp.send('FedCm.dismissDialog', {
+      dialogId: dismissed.dialogId,
+      triggerCooldown: false,
+    })
+    await page.page.waitForSelector(
+      'button:not([disabled])::-p-text(Choose an account)',
+      { visible: true },
+    )
+    expect(parRequests()).toHaveLength(0)
+
+    const retried = nextDialog(cdp)
+    await page.clickOnText('Choose an account')
+    const dialog = await retried
+    expect(dialog.dialogType).toBe('AccountChooser')
+    expect(parRequests()).toHaveLength(0)
+    await cdp.send('FedCm.selectAccount', {
+      dialogId: dialog.dialogId,
+      accountIndex: dialog.accounts.findIndex((a) => a.accountId === dids[0]),
+    })
+    await page.ensureTextVisibility('Authorize', 'button')
+    expect(parRequests().filter((r) => r.status === 201)).toHaveLength(1)
+    await page.navigationClick('Authorize')
+    await page.ensureTextVisibility('Token info', 'h2')
+    expect(new URL(page.page.url()).searchParams.get('fedcm_mode')).toBe(
+      'active',
+    )
+
+    await page.clickOnAriaLabel('User menu')
+    await page.clickOnText('Sign out')
+    await page.ensureTextVisibility('Login with the Atmosphere', 'h2')
+    await page.waitForNetworkIdle()
+  })
+
+  it('rejects active mode with multiple providers before requesting FedCM', async () => {
+    requests.length = 0
+    await using page = new FedcmPage(await browser.newPage())
+    const activeUrl = new URL(appUrl)
+    activeUrl.searchParams.set('fedcm_mode', 'active')
+
+    await page.goto(activeUrl.href)
+    await page.ensureTextVisibility(
+      'Active FedCM requires exactly one provider.',
+      'p',
+    )
+    expect(
+      requests.filter((r) => r.path === '/oauth/fedcm/accounts'),
+    ).toHaveLength(0)
+    expect(parRequests()).toHaveLength(0)
+    await page.ensureTextVisibility('Login with the Atmosphere', 'h2')
+  })
+
+  it('permits active retry while a canceled PAR is still waiting for its response', async () => {
+    requests.length = 0
+    await using page = new FedcmPage(await browser.newPage())
+    const cdp = await page.cdp()
+    await cdp.send('Network.enable')
+    await cdp.send('Fetch.enable', {
+      patterns: [{ urlPattern: '*/oauth/par', requestStage: 'Response' }],
+    })
+    const activeUrl = new URL(appUrl)
+    activeUrl.searchParams.set('fedcm_mode', 'active')
+    activeUrl.searchParams.delete('fedcm_provider')
+    activeUrl.searchParams.append('fedcm_provider', configUrl)
+    await page.goto(activeUrl.href)
+
+    const shown = nextDialog(cdp)
+    await page.clickOnText('Choose an account')
+    const dialog = await shown
+    const firstResponse = nextParResponse(cdp)
+    await cdp.send('FedCm.selectAccount', {
+      dialogId: dialog.dialogId,
+      accountIndex: dialog.accounts.findIndex((a) => a.accountId === dids[0]),
+    })
+    const first = await firstResponse
+    const input = await page.typeInInput('identifier', 'missing.test')
+    await input.press('Enter')
+    await page.page.waitForFunction(() =>
+      Boolean(
+        document
+          .querySelector('input[name="identifier"]')
+          ?.getAttribute('title'),
+      ),
+    )
+
+    const retryShown = nextDialog(cdp)
+    await page.clickOnText('Choose an account')
+    const retry = await retryShown
+    const secondResponse = nextParResponse(cdp)
+    await cdp.send('FedCm.selectAccount', {
+      dialogId: retry.dialogId,
+      accountIndex: retry.accounts.findIndex((a) => a.accountId === dids[1]),
+    })
+    const second = await secondResponse
+    const completed = new Promise<void>((resolve) => {
+      cdp.on('Network.loadingFinished', function finished(event) {
+        if (event.requestId === first.networkId) {
+          cdp.off('Network.loadingFinished', finished)
+          resolve()
+        }
+      })
+    })
+    await cdp.send('Fetch.continueRequest', { requestId: first.requestId })
+    await completed
+    expect(requests.filter((r) => r.path === '/oauth/authorize')).toHaveLength(
+      0,
+    )
+    await cdp.send('Fetch.continueRequest', { requestId: second.requestId })
+    await page.ensureTextVisibility('Authorize', 'button')
+  })
+
   it('cancels a FedCM handoff whose PAR response arrives after manual sign-in starts', async () => {
     requests.length = 0
     await using page = new FedcmPage(await browser.newPage())

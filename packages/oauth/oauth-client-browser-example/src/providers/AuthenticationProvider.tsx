@@ -10,9 +10,13 @@ import type { DidString } from '@atproto/lex'
 import type { OAuthSession } from '@atproto/oauth-client-browser'
 import { AtmosphereSignInForm } from '../components/AtmosphereSignInForm.tsx'
 import { Layout } from '../components/Layout.tsx'
-import { FEDCM_PROVIDER_URLS, PDS_OPERATOR_URL } from '../constants.ts'
+import {
+  FEDCM_MODE,
+  FEDCM_PROVIDER_URLS,
+  PDS_OPERATOR_URL,
+} from '../constants.ts'
 import { createFedcmAppState } from '../lib/fedcm.ts'
-import { useFedcmAutoSignIn } from '../lib/use-fedcm-auto-sign-in.ts'
+import { useFedcmSignIn } from '../lib/use-fedcm-sign-in.ts'
 import { oauthClient } from '../oauthClient.ts'
 import { useOAuthContext } from './OAuthProvider.tsx'
 
@@ -68,29 +72,39 @@ async function fedcmSignInRedirect(
 export function AuthenticationProvider({ children }: { children?: ReactNode }) {
   const { session, signIn, signUp, signOut, fedcmDidMismatch } =
     useOAuthContext(AuthenticationProvider.name)
-  const fedcmRedirectStarted = useRef(false)
+  const fedcmRedirectSignal = useRef<AbortSignal | undefined>(undefined)
 
   const continueWithFedcmAccount = useCallback(
     (did: DidString, signal: AbortSignal) => {
-      if (fedcmRedirectStarted.current) return
+      if (fedcmRedirectSignal.current && !fedcmRedirectSignal.current.aborted) {
+        return
+      }
       signal.throwIfAborted()
-      fedcmRedirectStarted.current = true
+      fedcmRedirectSignal.current = signal
 
       // @NOTE FedCM supplies the OAuth hint only; app state binds the callback
       // to that DID before the example accepts the resulting session.
-      void fedcmSignInRedirect(did, signal).catch((err) => {
-        fedcmRedirectStarted.current = false
+      return fedcmSignInRedirect(did, signal).catch((err) => {
+        if (fedcmRedirectSignal.current === signal) {
+          fedcmRedirectSignal.current = undefined
+        }
         if (!signal.aborted) {
-          console.error('FedCM OAuth redirect failed:', err)
+          throw err
         }
       })
     },
     [],
   )
 
-  const cancelFedcm = useFedcmAutoSignIn(
-    session || fedcmDidMismatch ? [] : FEDCM_PROVIDER_URLS,
+  const {
+    cancel: cancelFedcm,
+    error: fedcmError,
+    pending: fedcmPending,
+    requestActiveSelection,
+  } = useFedcmSignIn(
+    session ? [] : FEDCM_PROVIDER_URLS,
     continueWithFedcmAccount,
+    FEDCM_MODE === 'passive' && !fedcmDidMismatch,
   )
 
   const signInAfterFedcm = useCallback(
@@ -122,6 +136,19 @@ export function AuthenticationProvider({ children }: { children?: ReactNode }) {
             pdsOperatorUrl={PDS_OPERATOR_URL}
             signIn={signInAfterFedcm}
             signUp={signUpAfterFedcm}
+            fedcmSignIn={
+              FEDCM_MODE === 'active' && FEDCM_PROVIDER_URLS.length === 1
+                ? requestActiveSelection
+                : undefined
+            }
+            fedcmPending={fedcmPending}
+            fedcmError={
+              FEDCM_MODE === 'active' && FEDCM_PROVIDER_URLS.length > 1
+                ? 'Active FedCM requires exactly one provider.'
+                : FEDCM_MODE === 'active' && fedcmError
+                  ? String(fedcmError)
+                  : undefined
+            }
           />
           {fedcmDidMismatch && (
             <p

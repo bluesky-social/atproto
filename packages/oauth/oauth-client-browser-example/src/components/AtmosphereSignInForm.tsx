@@ -15,6 +15,9 @@ export type AtmosphereSignInFormProps = JSX.IntrinsicElements['div'] & {
   signIn: (input: string) => Promise<void>
   signUp: (input: string) => Promise<void>
   pdsOperatorUrl?: string
+  fedcmSignIn?: () => void
+  fedcmPending?: boolean
+  fedcmError?: string
 }
 
 /**
@@ -25,6 +28,9 @@ export function AtmosphereSignInForm({
   signIn,
   signUp,
   pdsOperatorUrl,
+  fedcmSignIn,
+  fedcmPending = false,
+  fedcmError,
   autoFocus = true,
   placeholder,
 
@@ -59,6 +65,21 @@ export function AtmosphereSignInForm({
       <h2 className="text-center text-2xl font-medium">
         Login with the Atmosphere
       </h2>
+      {fedcmError && (
+        <p className="text-red-700 dark:text-red-300" role="alert">
+          {fedcmError}
+        </p>
+      )}
+      {fedcmSignIn && (
+        <Button
+          type="button"
+          loading={fedcmPending}
+          onClick={fedcmSignIn}
+          size="large"
+        >
+          Choose an account
+        </Button>
+      )}
       <p>Enter your handle to continue</p>
       <form
         className={`${className || ''} w-full`}
