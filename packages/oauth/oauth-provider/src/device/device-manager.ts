@@ -79,8 +79,8 @@ type CookieValue = {
 }
 
 // @NOTE FedCM sends only SameSite=None cookies; ordinary cookies stay Lax/Strict.
-const FEDCM_DEVICE_COOKIE = '__Secure-atproto-fedcm-device'
-const FEDCM_SESSION_COOKIE = '__Secure-atproto-fedcm-session'
+const FEDCM_DEVICE_COOKIE = 'fedcm-dev-id'
+const FEDCM_SESSION_COOKIE = 'fedcm-ses-id'
 const FEDCM_COOKIE_PATH = '/oauth/fedcm'
 
 function cookieHashName(name: string) {

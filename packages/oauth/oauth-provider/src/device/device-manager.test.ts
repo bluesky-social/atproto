@@ -9,8 +9,8 @@ import { sessionIdSchema } from './session-id.js'
 const deviceId = deviceIdSchema.parse(`dev-${'d'.repeat(32)}`)
 const sessionId = sessionIdSchema.parse(`ses-${'s'.repeat(32)}`)
 const staleSessionId = sessionIdSchema.parse(`ses-${'x'.repeat(32)}`)
-const fedcmDeviceCookie = '__Secure-atproto-fedcm-device'
-const fedcmSessionCookie = '__Secure-atproto-fedcm-session'
+const fedcmDeviceCookie = 'fedcm-dev-id'
+const fedcmSessionCookie = 'fedcm-ses-id'
 const userAgent = 'test browser'
 const ipAddress = '127.0.0.1'
 
