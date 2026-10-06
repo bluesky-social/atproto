@@ -32,6 +32,7 @@ import {
 } from './assets/send-redirect.js'
 import { parseRedirectUrl } from './create-api-middleware.js'
 import type { MiddlewareOptions } from './middleware-options.js'
+import { setFedcmLoginStatus } from './set-fedcm-login-status.js'
 
 export function createAuthorizationPageMiddleware<
   Ctx extends object | void = void,
@@ -194,6 +195,7 @@ export function createAuthorizationPageMiddleware<
 
       // Normal authorization flow
       const device = await server.deviceManager.load(req, res)
+      await setFedcmLoginStatus(server, device.deviceId, res)
 
       const result = await server.authorize(query, device)
 
