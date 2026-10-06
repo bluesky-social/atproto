@@ -32,6 +32,16 @@
               "ref": "app.bsky.embed.external#view",
               "description": "Hydrated view of the embed. Present only when the resolved records back the requested URL and supply enough information to populate the required `viewExternal` fields. Omitted alongside the rest of the response when no records resolved or validation failed."
             },
+            "data": {
+              "type": "union",
+              "refs": [
+                "app.bsky.embed.external#viewArticle",
+                "app.bsky.embed.external#viewArticlePublication",
+                "app.bsky.embed.external#viewGallery",
+                "app.bsky.embed.external#viewLivestream"
+              ],
+              "description": "Preferred to #view. Hydrated data of the embed. Present only when the resolved records back the requested URL and supply enough information to populate the required fields. Omitted alongside the rest of the response when no records resolved or validation failed."
+            },
             "associatedRefs": {
               "type": "array",
               "items": {
