@@ -24,7 +24,6 @@ import records from './records.js'
 import relationships from './relationships.js'
 import reposts from './reposts.js'
 import search from './search.js'
-import siteStandard from './site-standard.js'
 import sitemap from './sitemap.js'
 import starterPacks from './starter-packs.js'
 import suggestions from './suggestions.js'
@@ -57,7 +56,6 @@ export default (db: Database, idResolver: IdResolver) =>
       ...reposts(db),
       ...search(db),
       ...sitemap(),
-      ...siteStandard(db),
       ...suggestions(db),
       ...sync(db),
       ...threads(db),
