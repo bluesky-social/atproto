@@ -26,6 +26,10 @@ export function readEnv() {
 
     // OAuth
     trustedOAuthClients: envList('PDS_OAUTH_TRUSTED_CLIENTS'),
+    oauthFedcmEnabled: envBool('PDS_OAUTH_FEDCM_ENABLED'),
+    oauthFedcmAllowLoopbackClients: envBool(
+      'PDS_OAUTH_FEDCM_ALLOW_LOOPBACK_CLIENTS',
+    ),
 
     // branding
     primaryColor: envStr('PDS_PRIMARY_COLOR'),
