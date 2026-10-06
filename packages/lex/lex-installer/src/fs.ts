@@ -43,7 +43,8 @@ export async function readJsonFile(path: string): Promise<unknown> {
  * The function:
  * - Creates parent directories if they don't exist
  * - Formats JSON with 2-space indentation
- * - Overwrites existing files
+ * - Replaces any existing entry at the path (including a symlink) with a new
+ *   regular file, rather than following it
  * - Sets file permissions to 0o644 (rw-r--r--)
  *
  * @param path - Absolute or relative path for the output file
@@ -73,6 +74,10 @@ export async function writeJsonFile(
   data: unknown,
 ): Promise<void> {
   await mkdir(dirname(path), { recursive: true })
+  // Replace any existing entry rather than writing through it. A local install
+  // leaves a symlink into the source tree at a lexicon's output path; writing
+  // with flag 'w' would follow that symlink and overwrite the canonical source.
+  await rm(path, { force: true })
   // Trailing newline so the written file is POSIX-friendly and does not thrash against
   // formatters/linters that enforce final newlines (e.g. the tooling in issue #5232).
   const contents = JSON.stringify(data, null, 2) + '\n'

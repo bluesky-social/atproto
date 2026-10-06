@@ -84,6 +84,22 @@ describe('lexiconsManifestSchema', () => {
       }),
     ).toThrow()
   })
+
+  it('rejects a non-URL lock uri as a clean failure (not a raw throw)', () => {
+    // `garbage` is neither an at-uri nor parseable by `new URL`. The file-uri
+    // branch must fail validation, not let the `new URL` TypeError escape.
+    const result = lexiconsManifestSchema.safeParse({
+      version: 1,
+      lexicons: ['com.example.foo'],
+      resolutions: {
+        'com.example.foo': {
+          uri: 'garbage',
+          cid: 'bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku',
+        },
+      },
+    })
+    expect(result.success).toBe(false)
+  })
 })
 
 describe('normalizeLexiconsManifest', () => {

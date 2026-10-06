@@ -108,3 +108,23 @@ export async function install(options: LexInstallOptions) {
     await installer.save()
   }
 }
+
+export type LexUpdateOptions = LexInstallerOptions & {
+  /**
+   * Array of lexicons to add to the installation. Can be NSID strings (e.g.,
+   * 'com.example.myLexicon'), AT URIs (e.g.,
+   * 'at://did:plc:xyz/com.example.myLexicon'), local file URLs (e.g.,
+   * 'file://./local/path/to/myLexicon.json') or local file paths (e.g.,
+   * './local/path/to/myLexicon.json').
+   */
+  add?: string[]
+}
+
+export async function update(options: LexInstallOptions) {
+  // Perform the installation with the update flag enabled
+  await using installer = await LexInstaller.load(options)
+
+  await installer.update()
+
+  await installer.save()
+}

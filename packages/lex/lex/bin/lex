@@ -135,6 +135,7 @@ yargs(hideBin(process.argv))
           save: {
             alias: 's',
             type: 'boolean',
+            conflicts: ['ci'],
             default: true,
             describe:
               'Updates lexicons.json with installed lexicons (use --no-save to disable)',
@@ -142,6 +143,7 @@ yargs(hideBin(process.argv))
           update: {
             type: 'boolean',
             default: false,
+            deprecated: 'use the "update" command instead',
             describe:
               'update all installed lexicons to their latest versions by re-resolving and re-installing them',
           },

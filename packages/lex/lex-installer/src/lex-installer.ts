@@ -1,4 +1,5 @@
 import { dirname, join, relative, resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { LexiconDirectoryIndexer } from '@atproto/lex-builder'
 import { cidForLex } from '@atproto/lex-cbor'
 import { lexEquals } from '@atproto/lex-data'
@@ -29,7 +30,11 @@ import {
   symlinkLexicon,
   writeJsonFile,
 } from './fs.js'
-import type { LexiconsManifest } from './lexicons-manifest.js'
+import type {
+  FileUriString,
+  LexiconsManifest,
+  Resolution,
+} from './lexicons-manifest.js'
 import {
   fileUriStringSchema,
   lexiconsManifestSchema,
@@ -47,6 +52,26 @@ const EMPTY_MANIFEST: LexiconsManifest = {
   version: 1,
   lexicons: [],
   resolutions: {},
+}
+
+/**
+ * Resolves a positional `install` argument that denotes a local file into a
+ * filesystem path. Supports a plain path, the project's nonstandard relative
+ * `file://` shorthand (`file://./x`, `file://../x`), and genuine RFC 8089 file
+ * URLs (percent-decoded, absolute `file:///x`, …) via `fileURLToPath`.
+ */
+function fileArgToPath(addition: string): string {
+  if (!addition.startsWith(FILE_URI_PREFIX)) return addition
+  if (
+    // Absolute
+    addition.startsWith('file:///') ||
+    // Relative file URL
+    addition.startsWith('file://./') ||
+    addition.startsWith('file://../')
+  ) {
+    return addition.slice(FILE_URI_PREFIX.length)
+  }
+  return fileURLToPath(addition)
 }
 
 /**
@@ -76,20 +101,11 @@ export type LexInstallerOptions = LexResolverOptions & {
    * Path to the manifest file that tracks installed lexicons and their resolutions.
    */
   manifest: string
-
-  /**
-   * When `true`, forces re-fetching of lexicons from the network even if they
-   * already exist locally. Useful for updating to newer versions.
-   * @default false
-   */
-  update?: boolean
 }
 
 export type { LexResolverResult }
 export type InstallResult = {
   lexicon: LexiconDocument
-  /** The AT URI the lexicon was fetched from; absent for local-file installs. */
-  uri?: AtUri
 }
 
 /**
@@ -98,9 +114,9 @@ export type InstallResult = {
  */
 type RootSource =
   /** Resolve from the given AT URI (network). */
-  | { kind: 'uri'; uri: AtUri }
+  | { kind: 'at-uri'; uri: AtUri }
   /** Install (symlink) from an already-read local file. */
-  | { kind: 'resolved'; source: ResolvedLexicon }
+  | { kind: 'file'; source: ResolvedLexicon<FileUriString> }
   /** Resolve from the NSID: local resolvers first, then network. */
   | null
 
@@ -164,16 +180,16 @@ export class LexInstaller implements AsyncDisposable {
   protected readonly lexiconResolver: LexResolver
   protected readonly indexer: LexiconDirectoryIndexer
   protected readonly documents = new NsidMap<LexiconDocument>()
-  protected readonly manifest: LexiconsManifest
-  protected readonly originalManifest: LexiconsManifest
+  protected readonly workingManifest: LexiconsManifest
+  protected readonly originalManifest: LexiconsManifest | undefined
   protected readonly resolvers: readonly LexiconResolver[]
 
   constructor(
     protected readonly options: LexInstallerOptions,
     manifest?: LexiconsManifest,
   ) {
-    this.manifest = structuredClone(manifest ?? EMPTY_MANIFEST)
-    this.originalManifest = structuredClone(manifest ?? EMPTY_MANIFEST)
+    this.workingManifest = structuredClone(manifest ?? EMPTY_MANIFEST)
+    this.originalManifest = manifest ? structuredClone(manifest) : undefined
     this.lexiconResolver = new LexResolver(options)
     this.indexer = new LexiconDirectoryIndexer({
       lexicons: options.lexicons,
@@ -186,18 +202,23 @@ export class LexInstaller implements AsyncDisposable {
   }
 
   /**
-   * Compares the current manifest state with another manifest for equality.
+   * Whether installation left the manifest equivalent to the one loaded from
+   * disk. Both are normalized before comparison so entry ordering is irrelevant.
+   * Used by `--ci` to detect drift.
    *
-   * Both manifests are normalized before comparison to ensure consistent
-   * ordering of entries. Useful for detecting changes during CI verification.
+   * Returns `false` when no manifest file existed to begin with: a missing
+   * lockfile is drift to report, not an unchanged state.
    *
-   * @param manifest - The manifest to compare against
-   * @returns `true` if the manifests are equivalent, `false` otherwise
+   * @returns `true` if a baseline manifest existed and still matches the current
+   *   state, `false` otherwise
    */
   isUnmodified(): boolean {
-    return lexEquals(
-      normalizeLexiconsManifest(this.originalManifest),
-      normalizeLexiconsManifest(this.manifest),
+    return (
+      this.originalManifest !== undefined &&
+      lexEquals(
+        normalizeLexiconsManifest(this.originalManifest),
+        normalizeLexiconsManifest(this.workingManifest),
+      )
     )
   }
 
@@ -209,26 +230,14 @@ export class LexInstaller implements AsyncDisposable {
    * lexicons to ensure complete dependency trees.
    *
    * @param options - Installation options
-   * @param options.additions - Iterable of lexicon identifiers to add.
-   *   Can be NSID strings or AT URIs.
-   * @param options.manifest - Existing manifest to use as a baseline.
-   *   Previously resolved URIs are preserved unless explicitly overridden.
+   * @param options.additions - Iterable of lexicon identifiers to add. Can be
+   *   NSID strings, AT URIs, or local file paths / `file://` URIs.
    *
    * @example
    * Install new lexicons:
    * ```typescript
    * await installer.install({
    *   additions: ['app.bsky.feed.post', 'app.bsky.actor.profile'],
-   * })
-   * ```
-   *
-   * @example
-   * Install with existing manifest as hint:
-   * ```typescript
-   * const existingManifest = await readJsonFile('./lexicons.manifest.json')
-   * await installer.install({
-   *   additions: ['com.example.newLexicon'],
-   *   manifest: existingManifest,
    * })
    * ```
    *
@@ -244,10 +253,13 @@ export class LexInstaller implements AsyncDisposable {
    */
   async install({
     additions,
+    update = false,
   }: {
     additions?: Iterable<string>
+    update?: boolean
   } = {}): Promise<void> {
     const roots = new NsidMap<RootSource>()
+    const useResolutions = !update
 
     // First, process explicit additions
     for (const addition of new Set(additions)) {
@@ -262,13 +274,14 @@ export class LexInstaller implements AsyncDisposable {
     }
 
     // Next, restore previously existing manifest entries
-    for (const lexicon of this.manifest.lexicons) {
+    for (const lexicon of this.workingManifest.lexicons) {
       const nsid = NSID.from(lexicon)
 
       // Skip entries already added explicitly
       if (!roots.has(nsid)) {
-        const resolution = this.manifest.resolutions[lexicon]
-        const source = await this.restoreSource(resolution)
+        const source = useResolutions
+          ? await this.restoreResolution(nsid)
+          : null
 
         roots.set(nsid, source)
         console.debug(
@@ -297,9 +310,9 @@ export class LexInstaller implements AsyncDisposable {
         Array.from(this.getMissingIds(), async (nsid) => {
           console.debug(`Resolving dependency lexicon: ${nsid}`)
 
-          const nsidStr = nsid.toString() as NsidString
-          const resolution = this.manifest?.resolutions[nsidStr]
-          const source = await this.restoreSource(resolution)
+          const source = useResolutions
+            ? await this.restoreResolution(nsid)
+            : null
           const result = await this.installFromSource(nsid, source)
           installed.add(result.lexicon.id)
         }),
@@ -309,18 +322,47 @@ export class LexInstaller implements AsyncDisposable {
     // Add newly installed root lexicons to the manifest if they are not already
     // present
     for (const id of installedRootIds) {
-      if (!this.manifest.lexicons.includes(id)) {
-        this.manifest.lexicons.push(id)
+      if (!this.workingManifest.lexicons.includes(id)) {
+        this.workingManifest.lexicons.push(id)
       }
     }
 
     // Finally, clear resolutions for lexicons that were not referenced
-    for (const id of Object.keys(this.manifest.resolutions) as NsidString[]) {
+    for (const id of Object.keys(
+      this.workingManifest.resolutions,
+    ) as NsidString[]) {
       if (!installed.has(id)) {
         console.debug(`Removing resolution for unused lexicon: ${id}`)
-        delete this.manifest.resolutions[id]
+        delete this.workingManifest.resolutions[id]
       }
     }
+  }
+
+  public update() {
+    return this.install({ update: true })
+  }
+
+  protected getResolution(id: NsidString | NSID): Resolution | null {
+    const nsid = NSID.from(id).toString()
+    const resolution = Object.hasOwn(this.workingManifest.resolutions, nsid)
+      ? (this.workingManifest.resolutions[nsid] ?? null)
+      : null
+    return resolution
+  }
+
+  protected addDocument(
+    nsid: NSID,
+    lexicon: LexiconDocument,
+    resolution: Resolution,
+  ): void {
+    if (nsid.toString() !== lexicon.id) {
+      throw new Error(
+        `NSID mismatch: expected ${nsid.toString()}, got ${lexicon.id}`,
+      )
+    }
+
+    this.documents.set(nsid, lexicon)
+    this.workingManifest.resolutions[lexicon.id] = resolution
   }
 
   /** Directory containing the manifest, used to resolve `file://` lock URIs. */
@@ -334,53 +376,59 @@ export class LexInstaller implements AsyncDisposable {
   ): Promise<{ nsid: NSID; source: RootSource }> {
     if (addition.startsWith(AT_URI_PREFIX)) {
       const uri = new AtUri(addition)
-      return { nsid: NSID.from(uri.rkey), source: { kind: 'uri', uri } }
+      return {
+        nsid: NSID.from(uri.rkey),
+        source: { kind: 'at-uri', uri },
+      }
     }
 
     // Treat the argument as a local file path whenever it is a `file://` URI or
     // contains a slash. File paths are resolved relative to the CWD.
     if (addition.startsWith(FILE_URI_PREFIX) || addition.includes('/')) {
-      const relPath = addition.startsWith(FILE_URI_PREFIX)
-        ? addition.slice(FILE_URI_PREFIX.length)
-        : addition
+      const relPath = fileArgToPath(addition)
       const source = await readLexiconFile(resolve(process.cwd(), relPath))
       return {
         nsid: NSID.from(source.lexicon.id),
-        source: { kind: 'resolved', source },
+        source: { kind: 'file', source },
       }
     }
 
-    return { nsid: NSID.from(addition), source: null }
+    return {
+      nsid: NSID.from(addition),
+      source: null,
+    }
   }
 
   /**
    * Resolves a locked resolution entry into a {@link RootSource}. Under
    * `--update`, pins are ignored so the resolver chain (and network) re-runs.
    */
-  protected async restoreSource(
-    resolution: { uri: string; cid: string } | undefined,
-  ): Promise<RootSource> {
-    if (this.options.update || !resolution) return null
+  protected async restoreResolution(nsid: NSID): Promise<RootSource> {
+    const resolution = this.getResolution(nsid)
+    if (!resolution) return null
 
     const { uri } = resolution
     if (uri.startsWith(FILE_URI_PREFIX)) {
       const path = resolve(this.manifestDir, uri.slice(FILE_URI_PREFIX.length))
-      return { kind: 'resolved', source: await readLexiconFile(path) }
+      const source = await readLexiconFile(path)
+      return { kind: 'file', source }
     }
-    return { kind: 'uri', uri: new AtUri(uri) }
+
+    return { kind: 'at-uri', uri: new AtUri(uri) }
   }
 
   protected installFromSource(
     nsid: NSID,
     source: RootSource,
+    update?: boolean,
   ): Promise<InstallResult> {
     switch (source?.kind) {
-      case 'uri':
-        return this.installFromUri(source.uri)
-      case 'resolved':
+      case 'file':
         return this.installFromResolved(nsid, source.source)
+      case 'at-uri':
+        return this.installFromUri(source.uri, update)
       default:
-        return this.installFromNsid(nsid)
+        return this.installFromNsid(nsid, update)
     }
   }
 
@@ -398,7 +446,10 @@ export class LexInstaller implements AsyncDisposable {
     return missing
   }
 
-  protected async installFromNsid(nsid: NSID): Promise<InstallResult> {
+  protected async installFromNsid(
+    nsid: NSID,
+    update?: boolean,
+  ): Promise<InstallResult> {
     // Local override resolvers take precedence over the network fallback.
     for (const resolver of this.resolvers) {
       const resolved = await resolver.resolve(nsid)
@@ -406,7 +457,7 @@ export class LexInstaller implements AsyncDisposable {
     }
 
     const did = await this.lexiconResolver.resolve(nsid)
-    return this.installFromDid(did, nsid)
+    return this.installFromDid(did, nsid, update)
   }
 
   protected async installFromResolved(
@@ -417,45 +468,49 @@ export class LexInstaller implements AsyncDisposable {
       return this.installFromUri(new AtUri(resolved.uri))
     } else if (fileUriStringSchema.matches(resolved.uri)) {
       const { lexicon, cid, uri } = resolved
-      if (lexicon.id !== nsid.toString()) {
-        throw new Error(
-          `NSID mismatch: expected ${nsid.toString()}, got ${lexicon.id}`,
-        )
+
+      const path = resolve(uri.slice(FILE_URI_PREFIX.length))
+      const lexicons = resolve(this.options.lexicons)
+      // Link the lexicon file into the lexicons directory if it's not already
+      // there.
+      if (!path.startsWith(lexicons)) {
+        const destPath = `${join(lexicons, ...lexicon.id.split('.'))}.json`
+        await symlinkLexicon(destPath, path)
       }
 
-      const path = uri.slice(FILE_URI_PREFIX.length)
-      const destPath = `${join(this.options.lexicons, ...lexicon.id.split('.'))}.json`
-      await symlinkLexicon(destPath, path)
-
-      this.documents.set(nsid, lexicon)
-      this.manifest.resolutions[lexicon.id] = {
+      this.addDocument(nsid, lexicon, {
         cid: cid.toString(),
         uri: `${FILE_URI_PREFIX}${relative(this.manifestDir, path).split(sep).join('/')}`,
-      }
+      })
 
       return { lexicon }
     } else {
-      throw new Error(`Unsupported URI scheme: ${resolved.uri}`)
+      // Should never happen
+      throw new Error(`Unsupported URI: ${resolved.uri}`)
     }
   }
 
   /**
    * @throws if the uri is not a valid AT URI pointing to a lexicon document.
    */
-  protected async installFromUri(uri: AtUri): Promise<InstallResult> {
+  protected async installFromUri(
+    uri: AtUri,
+    update?: boolean,
+  ): Promise<InstallResult> {
     if (uri.collection !== 'com.atproto.lexicon.schema') {
       throw new Error(`Invalid lexicon document uri: ${uri.toString()}`)
     }
     const did = uri.did
     const nsid = NSID.from(uri.rkey)
-    return this.installFromDid(did, nsid)
+    return this.installFromDid(did, nsid, update)
   }
 
   protected async installFromDid(
     did: DidString,
     nsid: NSID,
+    update?: boolean,
   ): Promise<InstallResult> {
-    const { lexicon, cid } = this.options.update
+    const { lexicon, cid } = update
       ? await this.fetch(did, nsid)
       : await this.indexer
           .get(nsid)
@@ -469,21 +524,14 @@ export class LexInstaller implements AsyncDisposable {
             throw err
           })
 
-    if (lexicon.id !== nsid.toString()) {
-      throw new Error(
-        `NSID mismatch: expected ${nsid.toString()}, got ${lexicon.id}`,
-      )
-    }
-
     const uri = AtUri.make(did, 'com.atproto.lexicon.schema', nsid.toString())
 
-    this.documents.set(nsid, lexicon)
-    this.manifest.resolutions[lexicon.id] = {
+    this.addDocument(nsid, lexicon, {
       cid: cid.toString(),
       uri: uri.toString(),
-    }
+    })
 
-    return { lexicon, uri }
+    return { lexicon }
   }
 
   /**
@@ -502,7 +550,7 @@ export class LexInstaller implements AsyncDisposable {
     console.debug(`Fetching lexicon ${nsid} from repo ${did}...`)
 
     const result = await this.lexiconResolver.fetch(did, nsid, {
-      noCache: this.options.update,
+      noCache: true,
     })
 
     const { lexicon } = result
@@ -521,16 +569,16 @@ export class LexInstaller implements AsyncDisposable {
   async save(): Promise<void> {
     await writeJsonFile(
       this.options.manifest,
-      normalizeLexiconsManifest(this.manifest),
+      normalizeLexiconsManifest(this.workingManifest),
     )
   }
 }
 
 function describeSource(source: RootSource): string {
   switch (source?.kind) {
-    case 'uri':
+    case 'at-uri':
       return source.uri.toString()
-    case 'resolved':
+    case 'file':
       return source.source.uri
     default:
       return 'from NSID'

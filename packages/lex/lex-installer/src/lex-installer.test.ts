@@ -1,6 +1,7 @@
 import { lstat, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { lexiconDocumentSchema } from '@atproto/lex-document'
 import type { LexResolverHooks } from '@atproto/lex-resolver'
@@ -39,7 +40,7 @@ class TestInstaller extends LexInstaller {
   }
 
   get resolutions() {
-    return this.manifest.resolutions
+    return this.workingManifest.resolutions
   }
 
   protected override async installFromDid(
@@ -55,7 +56,10 @@ class TestInstaller extends LexInstaller {
     })
     this.documents.set(nsid, lexicon)
     const uri = AtUri.make('did:plc:fake', 'com.atproto.lexicon.schema', id)
-    this.manifest.resolutions[id] = { uri: uri.toString(), cid: 'bafnetwork' }
+    this.workingManifest.resolutions[id] = {
+      uri: uri.toString(),
+      cid: 'bafnetwork',
+    }
     return { lexicon, uri }
   }
 }
@@ -135,6 +139,39 @@ describe('LexInstaller', () => {
       const { nsid, source } = await installer.parse(`file://${path}`)
       expect(nsid.toString()).toBe('com.example.foo')
       expect(source).toMatchObject({ kind: 'resolved' })
+    })
+
+    it('percent-decodes an RFC 8089 file:// URI back to the real path', async () => {
+      // A genuine file URL (e.g. from `pathToFileURL`) percent-encodes special
+      // characters; the installer must decode them, not read the literal path.
+      const spaced = join(dir, 'with space')
+      const path = await writeLexicon(spaced, 'com.example.foo')
+      const href = pathToFileURL(path).href
+      // Sanity: the space is actually encoded, so a naive slice would ENOENT.
+      expect(href).toContain('%20')
+
+      await using installer = makeInstaller()
+      const { nsid, source } = await installer.parse(href)
+      expect(nsid.toString()).toBe('com.example.foo')
+      expect(source).toMatchObject({ kind: 'resolved' })
+    })
+  })
+
+  describe('isUnmodified', () => {
+    it('returns false when constructed without a baseline manifest', async () => {
+      await using installer = makeInstaller()
+      expect(installer.isUnmodified()).toBe(false)
+    })
+
+    it('returns true after a no-op install when a baseline manifest was given', async () => {
+      const manifest: LexiconsManifest = {
+        version: 1,
+        lexicons: [],
+        resolutions: {},
+      }
+      await using installer = makeInstaller({}, manifest)
+      await installer.install({ additions: [] })
+      expect(installer.isUnmodified()).toBe(true)
     })
   })
 

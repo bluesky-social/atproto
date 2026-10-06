@@ -4,6 +4,7 @@ import {
   readFile,
   readlink,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -49,6 +50,28 @@ describe('writeJsonFile', () => {
     }
     await writeJsonFile(path, data)
     expect(await readJsonFile(path)).toEqual(data)
+  })
+
+  it('replaces a symlink with a regular file, leaving the target untouched', async () => {
+    // A local install leaves a symlink into the source tree at a lexicon's
+    // output path. Writing through it (flag 'w' follows symlinks) would clobber
+    // the canonical source; writeJsonFile must unlink first.
+    const source = join(dir, 'canonical.json')
+    const sourceContents = JSON.stringify({ canonical: true })
+    await writeFile(source, sourceContents)
+    const dest = join(dir, 'out.json')
+    await symlink(source, dest)
+    expect((await lstat(dest)).isSymbolicLink()).toBe(true)
+
+    await writeJsonFile(dest, { written: true })
+
+    // dest is now a plain file holding the new content...
+    const destStat = await lstat(dest)
+    expect(destStat.isSymbolicLink()).toBe(false)
+    expect(destStat.isFile()).toBe(true)
+    expect(await readJsonFile(dest)).toEqual({ written: true })
+    // ...and the symlink's target was not followed/overwritten.
+    expect(await readFile(source, 'utf8')).toBe(sourceContents)
   })
 })
 

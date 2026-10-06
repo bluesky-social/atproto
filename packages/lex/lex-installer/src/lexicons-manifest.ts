@@ -2,8 +2,14 @@ import { l } from '@atproto/lex-schema'
 
 export const fileUriStringSchema = l.custom(
   (val): val is `file://${string}` => {
-    const url = typeof val === 'string' ? new URL(val) : null
-    return url?.protocol === 'file:'
+    if (typeof val !== 'string') return false
+    try {
+      // `new URL` throws on a malformed string; a corrupt manifest value must
+      // surface as a clean validation issue, not a raw TypeError.
+      return new URL(val).protocol === 'file:'
+    } catch {
+      return false
+    }
   },
   "Expected a file URI starting with 'file://'",
 )
