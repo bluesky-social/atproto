@@ -55,7 +55,7 @@ export class PageHelper implements AsyncDisposable {
         }
       }
 
-      browser.once('targetcreated', targetcreated)
+      browser.on('targetcreated', targetcreated)
     })
 
     await run()
@@ -191,7 +191,7 @@ export class PageHelper implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose]() {
-    return this.page.close()
+    if (!this.page.isClosed()) await this.page.close()
   }
 
   static async from(
