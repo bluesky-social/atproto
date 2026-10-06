@@ -45,6 +45,9 @@ import {
 } from './actor.js'
 import {
   ExternalHydrator,
+  type ExternalRecordBacklinkCounts,
+  type ExternalRecordBacklinks,
+  type ExternalRecords,
   type SiteStandardDocuments,
   type SiteStandardPublications,
   parseGenericRecordKey,
@@ -174,6 +177,10 @@ export type HydrationState = {
   bidirectionalBlocks?: BidirectionalBlocks
   verifications?: Verifications
   bookmarks?: Bookmarks
+  externalRecords?: ExternalRecords
+  /** Available backlink source URIs per target, potentially from a partial page. */
+  externalRecordBacklinks?: ExternalRecordBacklinks
+  externalRecordBacklinkCounts?: ExternalRecordBacklinkCounts
   siteStandardDocuments?: SiteStandardDocuments
   siteStandardPublications?: SiteStandardPublications
 }
@@ -2000,6 +2007,15 @@ export const mergeStates = (
     ),
     verifications: mergeMaps(stateA.verifications, stateB.verifications),
     bookmarks: mergeNestedMaps(stateA.bookmarks, stateB.bookmarks),
+    externalRecords: mergeMaps(stateA.externalRecords, stateB.externalRecords),
+    externalRecordBacklinks: mergeMaps(
+      stateA.externalRecordBacklinks,
+      stateB.externalRecordBacklinks,
+    ),
+    externalRecordBacklinkCounts: mergeMaps(
+      stateA.externalRecordBacklinkCounts,
+      stateB.externalRecordBacklinkCounts,
+    ),
     siteStandardDocuments: mergeMaps(
       stateA.siteStandardDocuments,
       stateB.siteStandardDocuments,

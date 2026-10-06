@@ -29,10 +29,11 @@ import {
 } from './util.js'
 
 /** Generic record bodies are decoded, but not validated against a Lexicon. */
-export type GenericRecord = RecordInfo<TypedLexMap>
-export type GenericRecords = HydrationMap<AtUriString, GenericRecord>
+export type ExternalRecord = RecordInfo<TypedLexMap>
+export type ExternalRecords = HydrationMap<AtUriString, ExternalRecord>
 /** Keyed by `genericRecordKey(uri, cid)` to retain multiple versions of a URI. */
-export type GenericRecordsByRef = HydrationMap<string, GenericRecord>
+export type ExternalRecordsByRef = HydrationMap<string, ExternalRecord>
+export type ExternalRecordBacklinks = HydrationMap<AtUriString, AtUriString[]>
 
 export type AtmosphereActivityItem = {
   uri: AtUriString
@@ -49,7 +50,7 @@ export type AtmosphereBacklinks = {
   cursor?: string
 }
 
-export type AtmosphereBacklinkCounts = HydrationMap<
+export type ExternalRecordBacklinkCounts = HydrationMap<
   AtUriString,
   Partial<Record<NsidString, number>>
 >
@@ -115,8 +116,8 @@ export class ExternalHydrator {
   async getRecordsByRef(
     refs: Required<ItemRef>[],
     includeTakedowns = false,
-  ): Promise<GenericRecordsByRef> {
-    const map: GenericRecordsByRef = new HydrationMap()
+  ): Promise<ExternalRecordsByRef> {
+    const map: ExternalRecordsByRef = new HydrationMap()
     if (!refs.length) return map
 
     const res = await this.dataplane.getRecordsByRef({ refs })
@@ -134,8 +135,8 @@ export class ExternalHydrator {
   async getRecordsByURI(
     uris: AtUriString[],
     includeTakedowns = false,
-  ): Promise<GenericRecords> {
-    const map: GenericRecords = new HydrationMap()
+  ): Promise<ExternalRecords> {
+    const map: ExternalRecords = new HydrationMap()
     if (!uris.length) return map
 
     const res = await this.dataplane.getRecordsByURI({ uris })
@@ -170,8 +171,8 @@ export class ExternalHydrator {
   async getAtmosphereBacklinkCounts(
     targetUris: AtUriString[],
     collection?: NsidString,
-  ): Promise<AtmosphereBacklinkCounts> {
-    const map: AtmosphereBacklinkCounts = new HydrationMap()
+  ): Promise<ExternalRecordBacklinkCounts> {
+    const map: ExternalRecordBacklinkCounts = new HydrationMap()
     if (!targetUris.length) return map
 
     const res = await this.dataplane.getAtmosphereBacklinkCounts({
@@ -308,7 +309,7 @@ export class ExternalHydrator {
 function parseGenericRecord(
   result: RecordLookupResult | undefined,
   includeTakedowns: boolean,
-): GenericRecord | undefined {
+): ExternalRecord | undefined {
   if (
     result?.status !== RecordLookupStatus.FOUND &&
     !(includeTakedowns && result?.status === RecordLookupStatus.TAKEN_DOWN)
@@ -372,7 +373,7 @@ const publicationUriFromSite = (value: string): AtUriString | undefined => {
  */
 const matchRecordInfo = <TSchema extends RecordSchema>(
   schema: TSchema,
-  info: GenericRecord | null | undefined,
+  info: ExternalRecord | null | undefined,
 ): RecordInfo<InferInput<TSchema>> | null =>
   info && schema.$matches(info.record, { strict: false })
     ? { ...info, record: info.record }
@@ -386,7 +387,7 @@ const setSiteStandardRecord = (
   out: SiteStandardRecords,
   uri: string,
   key: string,
-  info: GenericRecord | null | undefined,
+  info: ExternalRecord | null | undefined,
 ) => {
   switch (siteStandardKind(uri)) {
     case 'documents':

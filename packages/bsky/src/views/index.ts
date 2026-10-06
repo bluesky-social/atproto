@@ -54,6 +54,7 @@ import {
   uriToDid,
   uriToDid as creatorFromUri,
 } from '../util/uris.js'
+import { externalRecordView as externalRecordViewBase } from './external.js'
 import {
   type ThreadItemValueBlocked,
   type ThreadItemValueNoUnauthenticated,
@@ -77,6 +78,7 @@ import {
   type ExternalEmbedSourceThemeView,
   type ExternalEmbedSourceView,
   type ExternalEmbedView,
+  type ExternalRecordView,
   type FeedViewPost,
   type FollowRecord,
   type GalleryEmbed,
@@ -2316,6 +2318,15 @@ export class Views {
       alt: item.alt,
       aspectRatio: item.aspectRatio,
     })
+  }
+
+  /** Build a supported record modality from generic record and backlink hydration. */
+  externalRecordView(
+    uri: AtUriString,
+    state: HydrationState,
+    now = Date.now(),
+  ): $Typed<ExternalRecordView> | undefined {
+    return externalRecordViewBase(this, uri, state, now)
   }
 
   externalEmbed(
