@@ -707,3 +707,231 @@ describe(ExternalHydrator, () => {
     },
   )
 })
+
+describe('ExternalHydrator site.standard lookups', () => {
+  const dataplane = createPromiseClient(
+    Service,
+    createRouterTransport(() => {}),
+  )
+  const hydrator = new ExternalHydrator(dataplane)
+
+  const doc = site.standard.document.$build({
+    site: pubUri,
+    path: '/post',
+    title: 'Document',
+    publishedAt: '2026-10-01T00:00:00.000Z',
+  })
+  const pub = site.standard.publication.$build({
+    url: 'https://example.com',
+    name: 'Publication',
+  })
+  const found = (uri: AtUriString, cid: string, body: object) => ({
+    ref: { uri, cid },
+    status: RecordLookupStatus.FOUND,
+    record: { cid, record: Buffer.from(lexStringify(body)) },
+  })
+  const notFound = (uri: AtUriString) => ({
+    ref: { uri },
+    status: RecordLookupStatus.NOT_FOUND,
+  })
+  const key = genericRecordKey
+
+  describe('getSiteStandardRecordsByURI', () => {
+    it('short-circuits when no URIs are site.standard records', async () => {
+      using byURI = vi.spyOn(dataplane, 'getRecordsByURI')
+      const res = await hydrator.getSiteStandardRecordsByURI([
+        'at://did:plc:a/app.bsky.feed.post/1' as AtUriString,
+      ])
+      expect(res.documents.size).toBe(0)
+      expect(res.publications.size).toBe(0)
+      expect(byURI).not.toHaveBeenCalled()
+    })
+
+    it('fetches the publications referenced by documents in a second call', async () => {
+      using byURI = vi
+        .spyOn(dataplane, 'getRecordsByURI')
+        .mockResolvedValueOnce(
+          new GetRecordsByURIResponse({
+            results: [found(docUri, docCid, doc)],
+          }),
+        )
+        .mockResolvedValueOnce(
+          new GetRecordsByURIResponse({
+            results: [found(pubUri, pubCid, pub)],
+          }),
+        )
+
+      const res = await hydrator.getSiteStandardRecordsByURI([docUri])
+      expect(byURI).toHaveBeenCalledTimes(2)
+      expect(byURI).toHaveBeenNthCalledWith(1, { uris: [docUri] })
+      expect(byURI).toHaveBeenNthCalledWith(2, { uris: [pubUri] })
+      expect(res.documents.get(key(docUri, docCid))?.record).toEqual(doc)
+      expect(res.publications.get(key(pubUri, pubCid))?.record).toEqual(pub)
+    })
+
+    it('skips the second call when the publication was requested directly', async () => {
+      using byURI = vi.spyOn(dataplane, 'getRecordsByURI').mockResolvedValue(
+        new GetRecordsByURIResponse({
+          results: [found(docUri, docCid, doc), found(pubUri, pubCid, pub)],
+        }),
+      )
+      const res = await hydrator.getSiteStandardRecordsByURI([docUri, pubUri])
+      expect(byURI).toHaveBeenCalledOnce()
+      expect(res.documents.size).toBe(1)
+      expect(res.publications.size).toBe(1)
+    })
+
+    it('skips the second call for loose documents with a web-URL site', async () => {
+      const loose = { ...doc, site: 'https://example.com' }
+      using byURI = vi.spyOn(dataplane, 'getRecordsByURI').mockResolvedValue(
+        new GetRecordsByURIResponse({
+          results: [found(docUri, docCid, loose)],
+        }),
+      )
+      const res = await hydrator.getSiteStandardRecordsByURI([docUri])
+      expect(byURI).toHaveBeenCalledOnce()
+      expect(res.documents.size).toBe(1)
+      expect(res.publications.size).toBe(0)
+    })
+
+    it('dedupes publication URIs shared by several documents', async () => {
+      const docUri2 = `at://${docDid}/site.standard.document/def` as AtUriString
+      using byURI = vi
+        .spyOn(dataplane, 'getRecordsByURI')
+        .mockResolvedValueOnce(
+          new GetRecordsByURIResponse({
+            results: [
+              found(docUri, docCid, doc),
+              found(docUri2, 'bafydoc2', doc),
+            ],
+          }),
+        )
+        .mockResolvedValueOnce(
+          new GetRecordsByURIResponse({
+            results: [found(pubUri, pubCid, pub)],
+          }),
+        )
+      await hydrator.getSiteStandardRecordsByURI([docUri, docUri2])
+      expect(byURI).toHaveBeenNthCalledWith(2, { uris: [pubUri] })
+    })
+
+    it('does not fetch a publication for a taken-down document', async () => {
+      using byURI = vi.spyOn(dataplane, 'getRecordsByURI').mockResolvedValue(
+        new GetRecordsByURIResponse({
+          results: [
+            {
+              ref: { uri: docUri },
+              status: RecordLookupStatus.TAKEN_DOWN,
+              record: {
+                ...found(docUri, docCid, doc).record,
+                takenDown: true,
+              },
+            },
+          ],
+        }),
+      )
+      const res = await hydrator.getSiteStandardRecordsByURI([docUri])
+      expect(byURI).toHaveBeenCalledOnce()
+      expect(res.documents.size).toBe(0)
+    })
+
+    it('ignores a document whose site points at a non-publication AT-URI', async () => {
+      const bad = { ...doc, site: 'at://did:plc:a/app.bsky.feed.post/1' }
+      using byURI = vi.spyOn(dataplane, 'getRecordsByURI').mockResolvedValue(
+        new GetRecordsByURIResponse({
+          results: [found(docUri, docCid, bad)],
+        }),
+      )
+      await hydrator.getSiteStandardRecordsByURI([docUri])
+      expect(byURI).toHaveBeenCalledOnce()
+    })
+
+    it('omits unavailable records and nulls records failing Lexicon validation', async () => {
+      using _ = vi.spyOn(dataplane, 'getRecordsByURI').mockResolvedValue(
+        new GetRecordsByURIResponse({
+          results: [
+            found(docUri, docCid, { ...doc, title: 42 }),
+            notFound(pubUri),
+          ],
+        }),
+      )
+      const res = await hydrator.getSiteStandardRecordsByURI([docUri, pubUri])
+      // Unavailable records have no CID to key on.
+      expect([...res.documents.values()]).toEqual([null])
+      expect(res.publications.size).toBe(0)
+    })
+
+    it('propagates a failure of the publication lookup', async () => {
+      const error = new Error('dataplane unavailable')
+      using _ = vi
+        .spyOn(dataplane, 'getRecordsByURI')
+        .mockResolvedValueOnce(
+          new GetRecordsByURIResponse({
+            results: [found(docUri, docCid, doc)],
+          }),
+        )
+        .mockRejectedValueOnce(error)
+      await expect(
+        hydrator.getSiteStandardRecordsByURI([docUri]),
+      ).rejects.toThrow(error)
+    })
+  })
+
+  describe('getSiteStandardRecordsByRef', () => {
+    it('short-circuits when no refs are site.standard records with a cid', async () => {
+      using byRef = vi.spyOn(dataplane, 'getRecordsByRef')
+      const res = await hydrator.getSiteStandardRecordsByRef([
+        { uri: 'at://did:plc:a/app.bsky.feed.post/1' as AtUriString, cid: 'x' },
+        { uri: docUri },
+      ])
+      expect(res.documents.size).toBe(0)
+      expect(byRef).not.toHaveBeenCalled()
+    })
+
+    it('hydrates exact versions into the matching maps', async () => {
+      const refs: ItemRef[] = [
+        { uri: docUri, cid: docCid },
+        { uri: pubUri, cid: pubCid },
+      ]
+      using byRef = vi.spyOn(dataplane, 'getRecordsByRef').mockResolvedValue(
+        new GetRecordsByRefResponse({
+          results: [found(docUri, docCid, doc), found(pubUri, pubCid, pub)],
+        }),
+      )
+      const res = await hydrator.getSiteStandardRecordsByRef(refs)
+      expect(byRef).toHaveBeenCalledExactlyOnceWith({ refs })
+      expect(res.documents.get(key(docUri, docCid))?.record).toEqual(doc)
+      expect(res.publications.get(key(pubUri, pubCid))?.record).toEqual(pub)
+    })
+
+    it('does not fetch a document-referenced publication that was not pinned', async () => {
+      using byRef = vi.spyOn(dataplane, 'getRecordsByRef').mockResolvedValue(
+        new GetRecordsByRefResponse({
+          results: [found(docUri, docCid, doc)],
+        }),
+      )
+      const res = await hydrator.getSiteStandardRecordsByRef([
+        { uri: docUri, cid: docCid },
+      ])
+      expect(byRef).toHaveBeenCalledOnce()
+      expect(res.publications.size).toBe(0)
+    })
+
+    it('records missing and invalid versions as null', async () => {
+      using _ = vi.spyOn(dataplane, 'getRecordsByRef').mockResolvedValue(
+        new GetRecordsByRefResponse({
+          results: [
+            notFound(docUri),
+            found(pubUri, pubCid, { ...pub, name: 42 }),
+          ],
+        }),
+      )
+      const res = await hydrator.getSiteStandardRecordsByRef([
+        { uri: docUri, cid: docCid },
+        { uri: pubUri, cid: pubCid },
+      ])
+      expect(res.documents.get(key(docUri, docCid))).toBeNull()
+      expect(res.publications.get(key(pubUri, pubCid))).toBeNull()
+    })
+  })
+})

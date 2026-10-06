@@ -1,17 +1,18 @@
 import {
   type AtUriString,
   type DidString,
+  type InferInput,
   type NsidString,
+  type RecordSchema,
   type TypedLexMap,
   isTypedLexMap,
   lexParseJsonBytes,
 } from '@atproto/lex'
+import { parseAtUriString } from '@atproto/syntax'
 import type { DataPlaneClient } from '../data-plane/client/index.js'
 import { site } from '../lexicons/index.js'
 import { hydrationLogger } from '../logger.js'
 import {
-  type GetSiteStandardRecordsByRefResponse,
-  type GetSiteStandardRecordsByURIResponse,
   type RecordLookupResult,
   RecordLookupStatus,
 } from '../proto/bsky_pb.js'
@@ -24,7 +25,6 @@ import {
   type ItemRef,
   type RecordInfo,
   parseDate,
-  parseRecord,
   safeTakedownRef,
 } from './util.js'
 
@@ -236,26 +236,72 @@ export class ExternalHydrator {
     return { backlinks, truncated: res.truncated }
   }
 
+  /**
+   * Fetch exact `site.standard.{document,publication}` versions. Does NOT
+   * resolve a document's publication; callers must pin it explicitly.
+   */
   async getSiteStandardRecordsByRef(
     refs: ItemRef[],
     includeTakedowns = false,
   ): Promise<SiteStandardRecords> {
-    if (!refs.length) return emptySiteStandardRecords()
+    const ssRefs = refs.filter(
+      (ref): ref is Required<ItemRef> =>
+        !!ref.cid && siteStandardKind(ref.uri) !== undefined,
+    )
+    const out = emptySiteStandardRecords()
+    if (!ssRefs.length) return out
 
-    const res = await this.dataplane.getSiteStandardRecordsByRef({
-      refs: refs.map(({ uri, cid }) => ({ uri, cid: cid ?? '' })),
-    })
-    return buildSiteStandardRecordsHydrationMaps(res, includeTakedowns)
+    const records = await this.getRecordsByRef(ssRefs, includeTakedowns)
+    for (const [key, info] of records) {
+      setSiteStandardRecord(out, parseGenericRecordKey(key).uri, key, info)
+    }
+    return out
   }
 
+  /**
+   * Fetch the latest `site.standard.{document,publication}` versions. The
+   * generic record lookup does not follow references, so publications named
+   * by the `site` field of the hydrated documents are fetched in a second
+   * call.
+   */
   async getSiteStandardRecordsByURI(
     uris: AtUriString[],
     includeTakedowns = false,
   ): Promise<SiteStandardRecords> {
-    if (!uris.length) return emptySiteStandardRecords()
+    const requested = [...new Set(uris.filter((u) => siteStandardKind(u)))]
+    const out = emptySiteStandardRecords()
+    if (!requested.length) return out
 
-    const res = await this.dataplane.getSiteStandardRecordsByURI({ uris })
-    return buildSiteStandardRecordsHydrationMaps(res, includeTakedowns)
+    await this.addSiteStandardRecordsByURI(out, requested, includeTakedowns)
+
+    // Publications referenced by documents but not already requested.
+    const requestedSet = new Set<string>(requested)
+    const pubUris = new Set<AtUriString>()
+    for (const doc of out.documents.values()) {
+      const pubUri = doc && publicationUriFromSite(doc.record.site)
+      if (pubUri && !requestedSet.has(pubUri)) pubUris.add(pubUri)
+    }
+    if (pubUris.size) {
+      await this.addSiteStandardRecordsByURI(
+        out,
+        [...pubUris],
+        includeTakedowns,
+      )
+    }
+    return out
+  }
+
+  private async addSiteStandardRecordsByURI(
+    out: SiteStandardRecords,
+    uris: AtUriString[],
+    includeTakedowns: boolean,
+  ) {
+    const records = await this.getRecordsByURI(uris, includeTakedowns)
+    for (const [uri, info] of records) {
+      // Unavailable records have no CID to key on, so they are left out.
+      if (!info) continue
+      setSiteStandardRecord(out, uri, genericRecordKey(uri, info.cid), info)
+    }
   }
 }
 
@@ -295,30 +341,64 @@ const emptySiteStandardRecords = (): SiteStandardRecords => ({
   publications: new HydrationMap(),
 })
 
-const buildSiteStandardRecordsHydrationMaps = (
-  res:
-    GetSiteStandardRecordsByURIResponse | GetSiteStandardRecordsByRefResponse,
-  includeTakedowns: boolean,
-): SiteStandardRecords => {
-  const documents: SiteStandardDocuments = new HydrationMap()
-  for (const { ref, record } of res.documents) {
-    if (!ref?.uri || !ref.cid || !record) continue
-    documents.set(
-      genericRecordKey(ref.uri as AtUriString, ref.cid),
-      parseRecord(site.standard.document.main, record, includeTakedowns) ??
-        null,
-    )
+const siteStandardKind = (
+  uri: string,
+): keyof SiteStandardRecords | undefined => {
+  const parsed = parseAtUriString(uri)
+  if (!parsed.success) return undefined
+  switch (parsed.value.collection) {
+    case site.standard.document.$type:
+      return 'documents'
+    case site.standard.publication.$type:
+      return 'publications'
+    default:
+      return undefined
   }
-  const publications: SiteStandardPublications = new HydrationMap()
-  for (const { ref, record } of res.publications) {
-    if (!ref?.uri || !ref.cid || !record) continue
-    publications.set(
-      genericRecordKey(ref.uri as AtUriString, ref.cid),
-      parseRecord(site.standard.publication.main, record, includeTakedowns) ??
-        null,
-    )
+}
+
+/** The AT-URI of the publication a document's `site` field points at. */
+const publicationUriFromSite = (value: string): AtUriString | undefined => {
+  const parsed = parseAtUriString(value)
+  return parsed.success &&
+    parsed.value.collection === site.standard.publication.$type
+    ? (value as AtUriString)
+    : undefined
+}
+
+/**
+ * Generic record bodies are unvalidated, so check them against the Lexicon
+ * before exposing typed fields. Parse mode is not used, to preserve the
+ * stored record as-is.
+ */
+const matchRecordInfo = <TSchema extends RecordSchema>(
+  schema: TSchema,
+  info: GenericRecord | null | undefined,
+): RecordInfo<InferInput<TSchema>> | null =>
+  info && schema.$matches(info.record, { strict: false })
+    ? { ...info, record: info.record }
+    : null
+
+/**
+ * Store a generic record in the map matching its collection. Records failing
+ * Lexicon validation are stored as null.
+ */
+const setSiteStandardRecord = (
+  out: SiteStandardRecords,
+  uri: string,
+  key: string,
+  info: GenericRecord | null | undefined,
+) => {
+  switch (siteStandardKind(uri)) {
+    case 'documents':
+      out.documents.set(key, matchRecordInfo(site.standard.document.main, info))
+      break
+    case 'publications':
+      out.publications.set(
+        key,
+        matchRecordInfo(site.standard.publication.main, info),
+      )
+      break
   }
-  return { documents, publications }
 }
 
 /**
