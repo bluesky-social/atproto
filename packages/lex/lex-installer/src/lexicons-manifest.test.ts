@@ -74,12 +74,22 @@ describe('lexiconsManifestSchema', () => {
     expect(lexiconsManifestSchema.parse(manifest)).toEqual(manifest)
   })
 
+  it('parses a `repo` resolver', () => {
+    const manifest = {
+      version: 1 as const,
+      lexicons: [],
+      resolvers: [{ type: 'repo' as const, repo: 'did:plc:foobar' }],
+      resolutions: {},
+    }
+    expect(lexiconsManifestSchema.parse(manifest)).toEqual(manifest)
+  })
+
   it('rejects an unknown resolver type', () => {
     expect(() =>
       lexiconsManifestSchema.parse({
         version: 1,
         lexicons: [],
-        resolvers: [{ type: 'repo', path: 'x' }],
+        resolvers: [{ type: 'bogus', path: 'x' }],
         resolutions: {},
       }),
     ).toThrow()
@@ -113,11 +123,11 @@ describe('normalizeLexiconsManifest', () => {
       ],
       resolutions: {
         'com.example.b': {
-          uri: 'file://b.json',
+          uri: 'file://./b.json',
           cid: 'bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku',
         },
         'com.example.a': {
-          uri: 'file://a.json',
+          uri: 'file://./a.json',
           cid: 'bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku',
         },
       },
@@ -129,10 +139,11 @@ describe('normalizeLexiconsManifest', () => {
       'com.example.b',
     ])
     // Priority order is significant — not sorted.
-    expect(normalized.resolvers?.map((r) => r.path)).toEqual([
-      './second',
-      './first',
-    ])
+    expect(
+      normalized.resolvers?.map((r) =>
+        r.type === 'directory' ? r.path : null,
+      ),
+    ).toEqual(['./second', './first'])
   })
 
   it('omits the `resolvers` key entirely when absent or empty', () => {

@@ -1,14 +1,15 @@
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { isAbsolute, join } from 'node:path'
+import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { buildFilter } from '@atproto/lex-builder'
 import { NSID } from '@atproto/syntax'
 import { writeJsonFile } from './fs.js'
+import { readLexiconDocument } from './lexicon-document.js'
+import type { CreateResolversOptions } from './resolvers.js'
 import {
   DirectoryResolver,
-  createResolvers,
-  readLexiconFile,
+  FilteredResolver,
+  createResolver,
 } from './resolvers.js'
 
 /** Writes a minimal (ref-free) lexicon document at its NSID-derived path. */
@@ -26,7 +27,7 @@ async function writeLexicon(
   return path
 }
 
-describe('readLexiconFile', () => {
+describe('readLexiconDocument', () => {
   let dir: string
   beforeEach(async () => {
     dir = await mkdtemp(join(tmpdir(), 'lex-installer-resolvers-'))
@@ -35,14 +36,17 @@ describe('readLexiconFile', () => {
     await rm(dir, { recursive: true, force: true })
   })
 
-  it('reads, parses, and computes an absolute path + cid', async () => {
+  it('reads and parses a lexicon document', async () => {
     const path = await writeLexicon(dir, 'com.example.foo')
-    const resolved = await readLexiconFile(path)
+    const lexicon = await readLexiconDocument(path)
 
-    expect(resolved.lexicon.id).toBe('com.example.foo')
-    expect(resolved.uri.startsWith('file://')).toBe(true)
-    expect(isAbsolute(resolved.uri.slice('file://'.length))).toBe(true)
-    expect(resolved.cid.toString()).toMatch(/^baf/)
+    expect(lexicon?.id).toBe('com.example.foo')
+  })
+
+  it('returns null on a missing file (ENOENT)', async () => {
+    expect(
+      await readLexiconDocument(join(dir, 'does-not-exist.json')),
+    ).toBeNull()
   })
 })
 
@@ -57,48 +61,58 @@ describe('DirectoryResolver', () => {
 
   it('resolves an NSID from its directory layout', async () => {
     await writeLexicon(tmpDir, 'com.example.foo')
-    const resolver = new DirectoryResolver(tmpDir, buildFilter({}))
+    const resolver = new DirectoryResolver(tmpDir)
 
     const resolved = await resolver.resolve(NSID.from('com.example.foo'))
     expect(resolved?.lexicon.id).toBe('com.example.foo')
+    expect(String(resolved?.uri).startsWith('file://')).toBe(true)
   })
 
   it('returns null on a miss (ENOENT)', async () => {
-    const resolver = new DirectoryResolver(tmpDir, buildFilter({}))
+    const resolver = new DirectoryResolver(tmpDir)
     expect(await resolver.resolve(NSID.from('com.example.missing'))).toBeNull()
   })
 
-  it('returns null when the file declares a different id', async () => {
+  it('returns the file content as-is; id validation happens at install time', async () => {
+    // The resolver maps NSID → path and returns whatever document lives there.
+    // The expected-vs-declared id check is enforced downstream (addDocument).
     await writeLexicon(tmpDir, 'com.example.bar', 'com.example.other')
-    const resolver = new DirectoryResolver(tmpDir, buildFilter({}))
-    expect(await resolver.resolve(NSID.from('com.example.bar'))).toBeNull()
+    const resolver = new DirectoryResolver(tmpDir)
+    const resolved = await resolver.resolve(NSID.from('com.example.bar'))
+    expect(resolved?.lexicon.id).toBe('com.example.other')
   })
 
-  it('honors an include filter', async () => {
+  it('honors an include filter (via FilteredResolver)', async () => {
     await writeLexicon(tmpDir, 'com.example.foo')
     await writeLexicon(tmpDir, 'com.example.bar')
-    const resolver = new DirectoryResolver(
-      tmpDir,
-      buildFilter({ include: ['com.example.foo'] }),
-    )
+    const resolver = FilteredResolver.for(new DirectoryResolver(tmpDir), {
+      include: ['com.example.foo'],
+    })
 
     expect(await resolver.resolve(NSID.from('com.example.foo'))).not.toBeNull()
     // Present on disk, but excluded by the filter.
     expect(await resolver.resolve(NSID.from('com.example.bar'))).toBeNull()
   })
 
-  it('honors an exclude filter', async () => {
+  it('honors an exclude filter (via FilteredResolver)', async () => {
     await writeLexicon(tmpDir, 'com.example.bar')
-    const resolver = new DirectoryResolver(
-      tmpDir,
-      buildFilter({ exclude: ['com.example.bar'] }),
-    )
+    const resolver = FilteredResolver.for(new DirectoryResolver(tmpDir), {
+      exclude: ['com.example.bar'],
+    })
     expect(await resolver.resolve(NSID.from('com.example.bar'))).toBeNull()
+  })
+
+  it('returns the bare resolver when no include/exclude is given', () => {
+    const inner = new DirectoryResolver(tmpDir)
+    expect(FilteredResolver.for(inner)).toBe(inner)
   })
 })
 
-describe('createResolvers', () => {
+describe('createResolver', () => {
   let dir: string
+  function options(): CreateResolversOptions {
+    return { manifest: join(dir, 'lexicons.json') }
+  }
   beforeEach(async () => {
     dir = await mkdtemp(join(tmpdir(), 'lex-installer-resolvers-'))
   })
@@ -106,28 +120,20 @@ describe('createResolvers', () => {
     await rm(dir, { recursive: true, force: true })
   })
 
-  it('returns an empty list for undefined/empty config', () => {
-    expect(createResolvers(undefined, dir)).toEqual([])
-    expect(createResolvers([], dir)).toEqual([])
-  })
+  it('builds a directory resolver whose path is relative to the manifest dir', async () => {
+    await writeLexicon(join(dir, 'nested'), 'com.example.foo')
 
-  it('builds a DirectoryResolver whose path is relative to baseDir', async () => {
-    const sub = join(dir, 'nested')
-    await writeLexicon(sub, 'com.example.foo')
+    const resolver = createResolver(options(), [
+      { type: 'directory', path: './nested' },
+    ])
 
-    const [resolver] = createResolvers(
-      [{ type: 'directory', path: './nested' }],
-      dir,
-    )
-    expect(resolver).toBeInstanceOf(DirectoryResolver)
-
-    const resolved = await resolver!.resolve(NSID.from('com.example.foo'))
+    const resolved = await resolver.resolve(NSID.from('com.example.foo'))
     expect(resolved?.lexicon.id).toBe('com.example.foo')
   })
 
   it('throws on an unsupported resolver type', () => {
-    expect(() => createResolvers([{ type: 'repo' } as never], dir)).toThrow(
-      /Unsupported lexicon resolver type: repo/,
-    )
+    expect(() =>
+      createResolver(options(), [{ type: 'bogus' } as never]),
+    ).toThrow(/Unsupported lexicon resolver type: bogus/)
   })
 })

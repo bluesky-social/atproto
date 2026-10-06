@@ -146,11 +146,7 @@ export class RepoResolver implements LexiconResolver {
     )
 
     const lexicon = lexiconDocumentSchema.parse(res.body.value)
-    const uri = AtUri.make(
-      client.assertDid,
-      'com.atproto.lexicon.schema',
-      nsid.toString(),
-    )
+    const uri = AtUri.make(client.assertDid, 'com.atproto.lexicon.schema', nsid)
 
     return { uri, lexicon }
   }
