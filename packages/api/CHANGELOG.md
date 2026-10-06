@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.23.2
+
+### Patch Changes
+
+- [#5539](https://github.com/bluesky-social/atproto/pull/5539) [`3312992`](https://github.com/bluesky-social/atproto/commit/3312992fe2cb7ebc009fe4b1f4cc6bc7518b19db) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Pass suggested feed and starter pack recommendation IDs through AppView responses.
+
 ## 0.23.1
 
 ### Patch Changes
