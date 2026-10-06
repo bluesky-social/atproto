@@ -1,3 +1,4 @@
+import { MINUTE } from '@atproto/common'
 import {
   type $Typed,
   type AtUriString,
@@ -16,6 +17,8 @@ import { estimateReadingTimeMinutes } from '../util/standard-site.js'
 import { uriToDid } from '../util/uris.js'
 import type { Views } from './index.js'
 import type { ExternalRecordView, Label, ProfileViewBasic } from './types.js'
+
+export const LIVESTREAM_HEARTBEAT_WINDOW_MS = 2 * MINUTE
 
 /** Build a modality view from validated, available records in hydration state. */
 export function externalRecordView(
@@ -137,11 +140,10 @@ export function externalRecordView(
   }
 
   if (place.stream.livestream.$matches(record)) {
-    const timeout = record.idleTimeoutSeconds
-    const lastSeen = Date.parse(record.lastSeenAt ?? record.createdAt)
-    // @NOTE Only an explicit positive timeout expires a stream automatically.
-    const expired =
-      timeout !== undefined && timeout > 0 && now >= lastSeen + timeout * 1000
+    const lastSeen = record.lastSeenAt ? Date.parse(record.lastSeenAt) : NaN
+    // @NOTE The window applies on both sides of now to tolerate clock skew, so
+    // a future heartbeat counts as live for at most twice the window.
+    const fresh = Math.abs(now - lastSeen) < LIVESTREAM_HEARTBEAT_WINDOW_MS
     return app.bsky.embed.external.viewLivestream.$build({
       ...commonFields(views, [uri], state),
       uri: httpUri(record.canonicalUrl) ?? httpUri(record.url) ?? uri,
@@ -155,7 +157,7 @@ export function externalRecordView(
             getBlobCidString(record.thumb),
           )
         : undefined,
-      active: !record.endedAt && !expired,
+      active: !record.endedAt && fresh,
       startedAt: record.createdAt,
       endedAt: record.endedAt,
     })

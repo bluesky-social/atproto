@@ -1,8 +1,10 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { createPromiseClient, createRouterTransport } from '@connectrpc/connect'
 import { assert, describe, expect, it, test, vi } from 'vitest'
+import { DAY, MINUTE, SECOND } from '@atproto/common'
 import {
   type AtUriString,
+  type DatetimeString,
   type DidString,
   type TypedLexMap,
   asDatetimeString,
@@ -28,6 +30,7 @@ import { ImageUriBuilder } from '../image/uri.js'
 import { app, com, place, site, social } from '../lexicons/index.js'
 import { Service } from '../proto/bsky_connect.js'
 import { ActorInfo, GetActorsResponse } from '../proto/bsky_pb.js'
+import { LIVESTREAM_HEARTBEAT_WINDOW_MS } from './external.js'
 import { Views } from './index.js'
 import type { Label } from './types.js'
 import { VideoUriBuilder } from './util.js'
@@ -416,62 +419,113 @@ describe('record modality views', () => {
     expect(view.items).toEqual([])
   })
 
-  test.each([
-    { note: 'no timeout', timeout: undefined, now: 60000, active: true },
-    {
-      note: 'explicitly disabled timeout',
-      timeout: 0,
-      now: 60000,
-      active: true,
-    },
-    { note: 'before timeout', timeout: 60, now: 59999, active: true },
-    { note: 'at timeout', timeout: 60, now: 60000, active: false },
-    {
-      note: 'heartbeat extends timeout',
-      timeout: 60,
-      lastSeenAt: '2026-01-01T00:01:00.000Z',
-      now: 61000,
-      active: true,
-    },
-    {
-      note: 'ended streams stay ended',
-      timeout: 0,
-      endedAt: '2026-01-01T00:00:30.000Z',
-      now: 60000,
-      active: false,
-    },
-  ])('$note', ({ timeout, lastSeenAt, endedAt, now, active }) => {
-    const state = createState()
-    addRecord(
-      state,
-      streamUri,
-      place.stream.livestream.$build({
-        title: 'A stream',
-        createdAt,
-        lastSeenAt: lastSeenAt ? asDatetimeString(lastSeenAt) : undefined,
-        endedAt: endedAt ? asDatetimeString(endedAt) : undefined,
-        idleTimeoutSeconds: timeout,
-        canonicalUrl: 'https://stream.example.com/canonical',
-        url: 'https://station.example.com/replication',
-        thumb: blob,
-      }),
-    )
-    const view = views.externalRecordView(
-      streamUri,
-      state,
-      Date.parse(createdAt) + now,
-    )
-    assert(view && app.bsky.embed.external.viewLivestream.$isTypeOf(view))
-    assertValid(view)
-    expect(view).toMatchObject({
-      uri: 'https://stream.example.com/canonical',
-      active,
-      createdAt,
-      startedAt: createdAt,
-      description: '',
-      image: `https://cdn.example.com/img/feed_thumbnail/plain/${did}/${blob.ref}`,
+  describe('livestream activity', () => {
+    const now = Date.parse('2026-01-01T01:00:00.000Z')
+    const window = LIVESTREAM_HEARTBEAT_WINDOW_MS
+
+    function seenAgo(ms: number) {
+      return asDatetimeString(new Date(now - ms).toISOString())
+    }
+
+    function streamView(fields: Partial<place.stream.livestream.Main>) {
+      const state = createState()
+      addRecord(
+        state,
+        streamUri,
+        place.stream.livestream.$build({
+          title: 'A stream',
+          createdAt,
+          canonicalUrl: 'https://stream.example.com/canonical',
+          url: 'https://station.example.com/replication',
+          thumb: blob,
+          ...fields,
+        }),
+      )
+      const before = lexStringify(state.externalRecords.get(streamUri)!.record)
+      const view = views.externalRecordView(streamUri, state, now)
+      expect(lexStringify(state.externalRecords.get(streamUri)!.record)).toBe(
+        before,
+      )
+      return view
+    }
+
+    function activity(fields: Partial<place.stream.livestream.Main>) {
+      const view = streamView(fields)
+      assert(view && app.bsky.embed.external.viewLivestream.$isTypeOf(view))
+      assertValid(view)
+      return view.active
+    }
+
+    test.each([
+      { note: 'a recent heartbeat', ago: SECOND, active: true },
+      { note: 'just inside the window', ago: window - 1, active: true },
+      { note: 'exactly the window', ago: window, active: false },
+      { note: 'just outside the window', ago: window + 1, active: false },
+      { note: 'a stale heartbeat', ago: 10 * MINUTE, active: false },
+      { note: 'a slightly future heartbeat', ago: -SECOND, active: true },
+      {
+        note: 'a future heartbeat just inside the window',
+        ago: -(window - 1),
+        active: true,
+      },
+      {
+        note: 'a future heartbeat exactly the window ahead',
+        ago: -window,
+        active: false,
+      },
+      { note: 'a far-future heartbeat', ago: -DAY, active: false },
+    ])('treats $note as active: $active', ({ ago, active }) => {
+      expect(activity({ lastSeenAt: seenAgo(ago) })).toBe(active)
     })
-    expect(view.endedAt).toBe(endedAt)
+
+    test.each([undefined, 0, 1, 1_000_000_000])(
+      'ignores a record idleTimeoutSeconds of %s',
+      (idleTimeoutSeconds) => {
+        expect(
+          activity({ lastSeenAt: seenAgo(10 * MINUTE), idleTimeoutSeconds }),
+        ).toBe(false)
+        expect(
+          activity({ lastSeenAt: seenAgo(MINUTE), idleTimeoutSeconds }),
+        ).toBe(true)
+      },
+    )
+
+    it('uses a two-minute window', () => {
+      expect(window).toBe(2 * MINUTE)
+    })
+
+    it('treats an explicit endedAt as ended despite a fresh heartbeat', () => {
+      const endedAt = seenAgo(30 * SECOND)
+      const view = streamView({
+        lastSeenAt: seenAgo(SECOND),
+        endedAt,
+      })
+      assert(view && app.bsky.embed.external.viewLivestream.$isTypeOf(view))
+      assertValid(view)
+      expect(view).toMatchObject({
+        uri: 'https://stream.example.com/canonical',
+        active: false,
+        createdAt,
+        startedAt: createdAt,
+        endedAt,
+        description: '',
+        image: `https://cdn.example.com/img/feed_thumbnail/plain/${did}/${blob.ref}`,
+      })
+    })
+
+    it('does not fall back to a recent createdAt without a heartbeat', () => {
+      const view = streamView({ createdAt: seenAgo(SECOND) })
+      assert(view && app.bsky.embed.external.viewLivestream.$isTypeOf(view))
+      assertValid(view)
+      expect(view.active).toBe(false)
+      expect(view.endedAt).toBeUndefined()
+    })
+
+    it('rejects a record with an invalid lastSeenAt', () => {
+      expect(
+        streamView({ lastSeenAt: 'not a date' as DatetimeString }),
+      ).toBeUndefined()
+    })
   })
 
   test.each([
@@ -863,8 +917,7 @@ describe('record modality views', () => {
       {
         note: 'livestream lastSeenAt',
         uri: streamUri,
-        add: (state: HydrationState) =>
-          addStream(state, { lastSeenAt: naive, idleTimeoutSeconds: 60 }),
+        add: (state: HydrationState) => addStream(state, { lastSeenAt: naive }),
       },
     ])('rejects a timezone-less $note', ({ uri, add }) => {
       const state = createState()
