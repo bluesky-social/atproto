@@ -9,6 +9,7 @@ import { SignInPicker } from './sign-in-picker.tsx'
 
 export type SignInViewProps = {
   disableRemember?: boolean
+  rememberDefault?: boolean
   sessions: readonly Session[]
   session: Session | null
   setSession: (session: Session | null) => void
@@ -23,6 +24,7 @@ export type SignInViewProps = {
 
 export function SignInView({
   disableRemember,
+  rememberDefault = false,
   forcedIdentifier,
   sessions,
   session,
@@ -87,6 +89,7 @@ export function SignInView({
           backLabel={backLabel}
           usernameDefault={forcedIdentifier}
           usernameReadonly={true}
+          rememberDefault={rememberDefault}
         />
       </AuthShell>
     )
@@ -102,6 +105,7 @@ export function SignInView({
           onForgotPassword={onForgotPassword}
           onBack={onBack}
           backLabel={backLabel}
+          rememberDefault={rememberDefault}
         />
       </AuthShell>
     )
@@ -116,6 +120,7 @@ export function SignInView({
           onSignIn={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={() => setShowSignInForm(false)}
+          rememberDefault={rememberDefault}
         />
       </AuthShell>
     )
