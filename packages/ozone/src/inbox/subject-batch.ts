@@ -74,7 +74,14 @@ export async function hydrateSubjectViews(
       .where('subjectConvoId', 'is', null)
       .where('reportType', '=', APPEAL_REASON_TYPE)
       .distinctOn('recordPath')
-      .select(['id', 'recordPath', 'status', 'createdAt', 'closedAt'])
+      .select([
+        'id',
+        'recordPath',
+        'status',
+        'createdAt',
+        'updatedAt',
+        'closedAt',
+      ])
       .orderBy('recordPath')
       .orderBy('id', 'desc')
       .execute(),

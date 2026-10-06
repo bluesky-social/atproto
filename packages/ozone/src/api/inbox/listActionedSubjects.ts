@@ -11,10 +11,13 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, params }) => {
       const did = inboxViewerDid(auth, params.did)
-      const [seenAt, { rows, cursor }] = await Promise.all([
-        getSeenAt(ctx.db, did, 'subjects'),
-        queryActionedSubjects(ctx.db, did, params),
-      ])
+      const seenAt = await getSeenAt(ctx.db, did, 'subjects')
+      const { rows, cursor } = await queryActionedSubjects(
+        ctx.db,
+        did,
+        params,
+        seenAt,
+      )
       const subjects = await hydrateSubjectViews(
         ctx.db,
         did,

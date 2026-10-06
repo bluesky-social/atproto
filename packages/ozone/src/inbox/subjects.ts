@@ -63,14 +63,15 @@ export async function queryActionedSubjects(
   db: Database,
   did: DidString,
   params: Partial<tools.ozone.inbox.listActionedSubjects.$Params>,
+  seenAt: DatetimeString | null = null,
 ): Promise<{ rows: ActionedSubjectRow[]; cursor?: string }> {
   const field = params.sortField ?? 'updatedAt'
   const direction = params.sortDirection ?? 'desc'
   const limit = params.limit ?? 50
+  // @NOTE Match toSubjectView's public timestamp, including appeal activity.
+  const updatedAt = sql<DatetimeString>`greatest(s."updatedAt", a."lastActionAt", r."updatedAt", CASE WHEN r."recordPath" IS NOT NULL THEN coalesce(s."lastAppealedAt", r."createdAt") END, CASE WHEN r.status = 'closed' THEN r."closedAt" END)`
   const sort =
-    field === 'createdAt'
-      ? sql<DatetimeString>`a."firstActionAt"`
-      : sql<DatetimeString>`greatest(s."updatedAt", a."lastActionAt", r."createdAt", r."closedAt")`
+    field === 'createdAt' ? sql<DatetimeString>`a."firstActionAt"` : updatedAt
   // @NOTE Aggregate the DID's history once, rather than rescanning it for
   // every status row before LIMIT. Exact history-derived sorting needs all
   // of this DID's public actions, but never another account's events.
@@ -109,7 +110,7 @@ export async function queryActionedSubjects(
         .where('subjectMessageId', 'is', null)
         .where('subjectConvoId', 'is', null)
         .distinctOn('recordPath')
-        .select(['recordPath', 'createdAt', 'closedAt'])
+        .select(['recordPath', 'status', 'createdAt', 'updatedAt', 'closedAt'])
         .orderBy('recordPath')
         .orderBy('id', 'desc'),
     )
@@ -134,6 +135,13 @@ export async function queryActionedSubjects(
     ])
     .select(sort.as('sortValue'))
 
+  if (params.filter === 'pending')
+    query = query.where('r.status', '!=', 'closed')
+  if (params.filter === 'resolved')
+    query = query.where('r.status', '=', 'closed')
+  if (params.filter === 'unread' && seenAt) {
+    query = query.where(updatedAt, '>', seenAt)
+  }
   if (params.cursor) {
     const { sortValue, id } = parseSubjectCursor(params.cursor)
     query = query.where(

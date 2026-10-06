@@ -284,6 +284,7 @@ describe('inbox appeal mapper', () => {
         id: number
         status: string
         createdAt: DatetimeString
+        updatedAt: DatetimeString
         closedAt: DatetimeString | null
       } | null
       latestAppealableAt?: DatetimeString | null
@@ -307,6 +308,7 @@ describe('inbox appeal mapper', () => {
     id: 7,
     status: 'open',
     createdAt: toDatetimeString('2026-01-02T00:00:00.000Z'),
+    updatedAt: toDatetimeString('2026-01-02T00:00:00.000Z'),
     closedAt: null,
   }
   const closedReport = {
@@ -340,7 +342,7 @@ describe('inbox appeal mapper', () => {
     expect(availableActions).toEqual([])
   })
 
-  it('reads pending off the same flag the submission guard writes', () => {
+  it('reads pending from the same report state as the submission guard', () => {
     const { view, availableActions } = appeal(ACCOUNT, {
       appealed: true,
       lastAppealedAt: toDatetimeString('2026-01-02T00:00:00.000Z'),
@@ -353,9 +355,9 @@ describe('inbox appeal mapper', () => {
     expect(availableActions).toEqual([])
   })
 
-  it('resolves with the close date', () => {
+  it('resolves with the close date even when the appeal flag is stale', () => {
     const { view } = appeal(ACCOUNT, {
-      appealed: false,
+      appealed: true,
       report: closedReport,
     })
     expect(view).toMatchObject({
@@ -364,12 +366,18 @@ describe('inbox appeal mapper', () => {
     })
   })
 
-  it('supersedes an appeal cleared without ever being closed', () => {
-    const { view } = appeal(ACCOUNT, { appealed: false, report: openReport })
-    expect(view.state).toBe('superseded')
-    expect(view).not.toHaveProperty('resolvedAt')
-    expect(view).not.toHaveProperty('note')
-  })
+  it.each(['open', 'queued', 'assigned', 'escalated'])(
+    'keeps a %s appeal pending even when the appeal flag is cleared',
+    (reportStatus) => {
+      const { view } = appeal(ACCOUNT, {
+        appealed: false,
+        report: { ...openReport, status: reportStatus },
+      })
+      expect(view.state).toBe('pending')
+      expect(view).not.toHaveProperty('resolvedAt')
+      expect(view).not.toHaveProperty('note')
+    },
+  )
 
   it('gives an account another appeal after the last one closes', () => {
     expect(
@@ -458,6 +466,7 @@ describe('inbox subject view', () => {
         id: 1,
         status: 'open',
         createdAt: '2026-02-01T00:00:00.000Z',
+        updatedAt: '2026-02-01T00:00:00.000Z',
         closedAt: null,
       },
     })

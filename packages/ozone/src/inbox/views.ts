@@ -442,6 +442,7 @@ export const toSubjectView = ({
     latest(
       actions[0]?.createdAt,
       snapshot.lastActionAt,
+      snapshot.appealReport?.updatedAt,
       appeal.appealedAt,
       appeal.resolvedAt,
       snapshot.status?.updatedAt,

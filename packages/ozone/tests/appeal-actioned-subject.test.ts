@@ -1275,11 +1275,10 @@ describe('appealActionedSubject', () => {
     const action = await label(subject)
     await appeal(action.id, account.did)
 
-    // A takedown clears `appealed` without anyone working the appeal, so its
-    // report is still open in a queue. The subject reads as superseded.
+    // A takedown clears `appealed`, but the open appeal remains in its queue.
     await takedown(subject)
     const view = await getAccountView(account.did)
-    expect(view?.appeal?.state).toBe('superseded')
+    expect(view?.appeal?.state).toBe('pending')
 
     // The open appeal still blocks a new one, so the view must not advertise
     // an appeal the endpoint is going to reject.
