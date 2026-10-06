@@ -15,10 +15,6 @@ import {
   type RecordLookupResult,
   RecordLookupStatus,
 } from '../proto/bsky_pb.js'
-import {
-  parseSiteStandardRecordKey,
-  siteStandardRecordKey,
-} from '../util/standard-site.js'
 import type {
   SiteStandardDocumentRecord,
   SiteStandardPublicationRecord,
@@ -63,16 +59,33 @@ export type AtmosphereBacklinksByActor = {
   truncated: boolean
 }
 
-/** Address an exact version in a generic record hydration map. */
+/**
+ * Composes a stable map key from an `(uri, cid)` pair. A single hydration
+ * batch can pull more than one version of the same record URI (different
+ * posts pinning different cids), so the composite is needed for O(1)
+ * version-exact lookups.
+ */
 export function genericRecordKey(uri: AtUriString, cid: string): string {
   return `${uri}@${cid}`
+}
+
+/** Recover the URI and CID from a composite hydration key. */
+export function parseGenericRecordKey(key: string): {
+  uri: AtUriString
+  cid: string
+} {
+  const at = key.lastIndexOf('@')
+  return {
+    uri: key.slice(0, at) as AtUriString,
+    cid: key.slice(at + 1),
+  }
 }
 
 export type SiteStandardDocument = RecordInfo<SiteStandardDocumentRecord>
 export type SiteStandardPublication = RecordInfo<SiteStandardPublicationRecord>
 
 /**
- * Keyed by `${uri}@${cid}` — see `siteStandardRecordKey`. A single hydration
+ * Keyed by `${uri}@${cid}` — see `genericRecordKey`. A single hydration
  * batch can pull more than one version of the same URI (different posts
  * pinning different cids), so the composite key is needed for O(1)
  * version-exact lookups.
@@ -291,7 +304,7 @@ const buildSiteStandardRecordsHydrationMaps = (
   for (const { ref, record } of res.documents) {
     if (!ref?.uri || !ref.cid || !record) continue
     documents.set(
-      siteStandardRecordKey(ref.uri, ref.cid),
+      genericRecordKey(ref.uri as AtUriString, ref.cid),
       parseRecord(site.standard.document.main, record, includeTakedowns) ??
         null,
     )
@@ -300,7 +313,7 @@ const buildSiteStandardRecordsHydrationMaps = (
   for (const { ref, record } of res.publications) {
     if (!ref?.uri || !ref.cid || !record) continue
     publications.set(
-      siteStandardRecordKey(ref.uri, ref.cid),
+      genericRecordKey(ref.uri as AtUriString, ref.cid),
       parseRecord(site.standard.publication.main, record, includeTakedowns) ??
         null,
     )
@@ -352,7 +365,7 @@ export const getSiteStandardRecordsFromHydrationMapsByRefs = (
   let publication:
     AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
   for (const ref of associatedRefs) {
-    const key = siteStandardRecordKey(ref.uri, ref.cid)
+    const key = genericRecordKey(ref.uri, ref.cid)
     if (!document) {
       const hit = documents?.get(key)
       if (hit) document = { ref, info: hit }
@@ -433,7 +446,7 @@ export const getSiteStandardRecordsFromHydrationMapsByDocumentUri = (
   let document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
   for (const [key, info] of documents ?? []) {
     if (!info) continue
-    document = { ref: parseSiteStandardRecordKey(key), info }
+    document = { ref: parseGenericRecordKey(key), info }
     break
   }
 
@@ -445,7 +458,7 @@ export const getSiteStandardRecordsFromHydrationMapsByDocumentUri = (
       // Doc declared an at-uri publication; we need it.
       for (const [key, info] of publications ?? []) {
         if (!info) continue
-        const ref = parseSiteStandardRecordKey(key)
+        const ref = parseGenericRecordKey(key)
         if (ref.uri === site) {
           publication = { ref, info }
           break
@@ -464,7 +477,7 @@ export const getSiteStandardRecordsFromHydrationMapsByDocumentUri = (
     // Publication-only flow: no doc, take the first hydrated publication.
     for (const [key, info] of publications ?? []) {
       if (!info) continue
-      publication = { ref: parseSiteStandardRecordKey(key), info }
+      publication = { ref: parseGenericRecordKey(key), info }
       break
     }
   }

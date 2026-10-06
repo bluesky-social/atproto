@@ -1,7 +1,7 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { createPromiseClient, createRouterTransport } from '@connectrpc/connect'
 import { describe, expect, it, test, vi } from 'vitest'
-import { lexStringify, parseCid } from '@atproto/lex'
+import { type AtUriString, lexStringify, parseCid } from '@atproto/lex'
 import { site } from '../lexicons/index.js'
 import { Service } from '../proto/bsky_connect.js'
 import {
@@ -14,7 +14,6 @@ import {
   Record as RecordEntry,
   RecordLookupStatus,
 } from '../proto/bsky_pb.js'
-import { siteStandardRecordKey } from '../util/standard-site.js'
 import {
   ExternalHydrator,
   type SiteStandardDocument,
@@ -24,6 +23,7 @@ import {
   genericRecordKey,
   getSiteStandardRecordsFromHydrationMapsByDocumentUri,
   getSiteStandardRecordsFromHydrationMapsByRefs,
+  parseGenericRecordKey,
 } from './external.js'
 import { HydrationMap, type ItemRef } from './util.js'
 
@@ -64,28 +64,44 @@ const makePubInfo = (
   }) as unknown as SiteStandardPublication
 
 const makeDocuments = (
-  entries: [uri: string, cid: string, info: SiteStandardDocument | null][] = [],
+  entries: [
+    uri: AtUriString,
+    cid: string,
+    info: SiteStandardDocument | null,
+  ][] = [],
 ): SiteStandardDocuments => {
   const map: SiteStandardDocuments = new HydrationMap()
   for (const [uri, cid, info] of entries) {
-    map.set(siteStandardRecordKey(uri, cid), info)
+    map.set(genericRecordKey(uri, cid), info)
   }
   return map
 }
 
 const makePublications = (
   entries: [
-    uri: string,
+    uri: AtUriString,
     cid: string,
     info: SiteStandardPublication | null,
   ][] = [],
 ): SiteStandardPublications => {
   const map: SiteStandardPublications = new HydrationMap()
   for (const [uri, cid, info] of entries) {
-    map.set(siteStandardRecordKey(uri, cid), info)
+    map.set(genericRecordKey(uri, cid), info)
   }
   return map
 }
+
+describe(parseGenericRecordKey, () => {
+  test.each([
+    docUri,
+    `at://${docDid}/${site.standard.document.$type}/a@b`,
+  ] as const)('round-trips %s', (uri) => {
+    expect(parseGenericRecordKey(genericRecordKey(uri, docCid))).toEqual({
+      uri,
+      cid: docCid,
+    })
+  })
+})
 
 describe(getSiteStandardRecordsFromHydrationMapsByRefs, () => {
   it('returns both slots when refs resolve and doc.site matches the publication', () => {
