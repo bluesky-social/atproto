@@ -125,8 +125,7 @@ yargs(hideBin(process.argv))
         .strict()
         .positional('nsid', {
           type: 'string',
-          describe:
-            'lexicon to install: an NSID, an at:// URI, or a local file (a `file://` URI or any path containing a slash, resolved from the cwd)',
+          describe: 'NSID of the lexicon to install',
         })
         .options({
           manifest: {

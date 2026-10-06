@@ -47,7 +47,7 @@ deps: ## Installs dependent libs using 'pnpm install'
 	pnpm install --frozen-lockfile
 
 .PHONY: clean
-clean: clean-deps clean-build clean-prebuild
+clean: clean-deps clean-gen
 
 .PHONY: clean-gen
 clean-gen: clean-build clean-prebuild
@@ -63,7 +63,15 @@ clean-build: ## Deletes all build artifacts (dist, tsbuildinfo) in all packages
 
 .PHONY: clean-prebuild
 clean-prebuild: ## Deletes all prebuild artifacts (codegen, lingui, etc.) in all packages
-	for f in packages/*/src/proto packages/*/src/lexicons packages/lex/*/src/lexicons packages/lex/*/tests/lexicons packages/oauth/*/src/lexicons packages/oauth/*/src/locales/*/messages.ts packages/api/src/client packages/api/src/moderation/const/labels.ts; do rm -r "$$f"; done || true;
+	rm -rf packages/*/src/proto;
+	rm -rf packages/*/src/lexicons;
+	rm -rf packages/lex/*/src/lexicons;
+	rm -rf packages/lex/*/tests/lexicons;
+	rm -rf packages/oauth/*/src/lexicons;
+	rm -rf packages/oauth/*/src/locales/*/messages.ts;
+	rm -rf packages/api/src/client;
+	rm -rf packages/api/src/moderation/const/labels.ts;
+	rm -rf packages/api/pds/lexicons;
 
 .PHONY: nvm-setup
 nvm-setup: ## Use NVM to install and activate node+pnpm
