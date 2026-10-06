@@ -66,6 +66,30 @@ export const OAUTH_SCOPE_DEFAULT: string =
         ].join(' ')
 export const OAUTH_SCOPE: string =
   searchParams.get('scope') ?? OAUTH_SCOPE_DEFAULT
+export const FEDCM_PROVIDER_URLS = searchParams.getAll('fedcm_provider')
+
+const canonicalSearchParams = new URLSearchParams({
+  ...(ENV !== ENV_DEFAULT && { env: ENV }),
+  ...(PLC_DIRECTORY_URL !== PLC_DIRECTORY_URL_DEFAULT && {
+    plc_directory_url: PLC_DIRECTORY_URL,
+  }),
+  ...(HANDLE_RESOLVER_URL !== HANDLE_RESOLVER_URL_DEFAULT && {
+    handle_resolver: HANDLE_RESOLVER_URL,
+  }),
+  ...(PDS_OPERATOR_URL !== PDS_OPERATOR_URL_DEFAULT && {
+    pds_operator_url: PDS_OPERATOR_URL,
+  }),
+  ...(BSKY_API_URL !== BSKY_API_URL_DEFAULT && {
+    bsky_api_url: BSKY_API_URL,
+  }),
+  ...(BSKY_API_DID !== BSKY_API_DID_DEFAULT && {
+    bsky_api_did: BSKY_API_DID,
+  }),
+  ...(OAUTH_SCOPE !== OAUTH_SCOPE_DEFAULT && { scope: OAUTH_SCOPE }),
+})
+for (const providerUrl of FEDCM_PROVIDER_URLS) {
+  canonicalSearchParams.append('fedcm_provider', providerUrl)
+}
 
 // This app is dynamically configured via query parameters. The canonical URL is
 // always 127.0.0.1 with the relevant params set.
@@ -74,24 +98,6 @@ export const LOOPBACK_CANONICAL_LOCATION = Object.assign(
   {
     protocol: 'http:',
     hostname: '127.0.0.1',
-    search: new URLSearchParams({
-      ...(ENV !== ENV_DEFAULT && { env: ENV }),
-      ...(PLC_DIRECTORY_URL !== PLC_DIRECTORY_URL_DEFAULT && {
-        plc_directory_url: PLC_DIRECTORY_URL,
-      }),
-      ...(HANDLE_RESOLVER_URL !== HANDLE_RESOLVER_URL_DEFAULT && {
-        handle_resolver: HANDLE_RESOLVER_URL,
-      }),
-      ...(PDS_OPERATOR_URL !== PDS_OPERATOR_URL_DEFAULT && {
-        pds_operator_url: PDS_OPERATOR_URL,
-      }),
-      ...(BSKY_API_URL !== BSKY_API_URL_DEFAULT && {
-        bsky_api_url: BSKY_API_URL,
-      }),
-      ...(BSKY_API_DID !== BSKY_API_DID_DEFAULT && {
-        bsky_api_did: BSKY_API_DID,
-      }),
-      ...(OAUTH_SCOPE !== OAUTH_SCOPE_DEFAULT && { scope: OAUTH_SCOPE }),
-    }).toString(),
+    search: canonicalSearchParams.toString(),
   },
 ).href as `http://127.0.0.1/${string}`
