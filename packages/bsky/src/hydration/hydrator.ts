@@ -887,9 +887,7 @@ export class Hydrator {
       undefined,
       undefined,
       {
-        includeOpThreadMetadata: ctx.features.checkGate(
-          ctx.features.Gate.OpThreadMetadataEnable,
-        ),
+        includeOpThreadMetadata: true,
       },
     )
     const rootUris: AtUriString[] = []

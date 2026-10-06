@@ -1,8 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { ids } from '@atproto/api'
 import { type RecordRef, type SeedClient, TestNetwork } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
-import { Gate } from '../../src/feature-gates/gates.js'
 
 describe('OP thread feed metadata', () => {
   let network: TestNetwork
@@ -44,24 +43,7 @@ describe('OP thread feed metadata', () => {
 
   afterAll(async () => network?.close())
 
-  it('exposes canonical numbering on DID-targeted feed requests', async () => {
-    using scope = vi
-      .spyOn(network.bsky.ctx.featureGatesClient, 'scope')
-      .mockImplementation((userContext) => {
-        const enabled = userContext.did === viewer
-        return {
-          Gate,
-          checkGate: (gate) => enabled && gate === Gate.OpThreadMetadataEnable,
-          checkGates: (gates) =>
-            new Map(
-              gates.map((gate) => [
-                gate,
-                enabled && gate === Gate.OpThreadMetadataEnable,
-              ]),
-            ),
-        }
-      })
-
+  it('exposes canonical numbering on feed requests', async () => {
     const agent = network.bsky.getAgent()
     const [authorFeed, timeline, listFeed, actorLikes] = await Promise.all([
       agent.api.app.bsky.feed.getAuthorFeed(
@@ -102,13 +84,6 @@ describe('OP thread feed metadata', () => {
       ),
     ])
 
-    expect(scope.mock.calls.map(([context]) => context.did)).toEqual([
-      viewer,
-      viewer,
-      viewer,
-      viewer,
-    ])
-
     for (const [name, response] of Object.entries({
       authorFeed,
       timeline,
@@ -130,6 +105,5 @@ describe('OP thread feed metadata', () => {
         [3, 3],
       ])
     }
-    expect(scope).toHaveBeenCalledTimes(4)
   })
 })
