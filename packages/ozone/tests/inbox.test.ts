@@ -1,4 +1,5 @@
 import { type DatetimeString, toDatetimeString } from '@atproto/lex'
+import { DEFAULT_INBOX_POLICY_URL } from '../src/config/config.js'
 import {
   appealWindowEnd,
   isAppealWindowOpen,
@@ -10,6 +11,7 @@ import {
   toEnforcementView,
   toSubjectView,
 } from '../src/inbox/views.ts'
+import { tools } from '../src/lexicons/index.js'
 import { RecordSubject, RepoSubject } from '../src/mod-service/subject.ts'
 import type {
   ModerationEventRow,
@@ -183,7 +185,7 @@ describe('inbox action mapper', () => {
     })
   })
 
-  it('maps emails and their policies, and drops internal event types', () => {
+  it('maps emails without takedown policies, and drops internal event types', () => {
     const actions = toActionViews([
       event({
         action: 'tools.ozone.moderation.defs#modEventEmail',
@@ -196,9 +198,41 @@ describe('inbox action mapper', () => {
     expect(actions).toHaveLength(1)
     expect(actions[0]).toMatchObject({
       type: 'communicationSent',
-      policies: ['spam-automation', 'impersonation'],
     })
+    expect(actions[0]).not.toHaveProperty('policies')
+    expect(tools.ozone.inbox.defs.actionView.$matches(actions[0])).toBe(true)
   })
+
+  it.each([undefined, 'https://example.com/community-guidelines'])(
+    'maps structured takedown policies with fallback URL %s',
+    (defaultPolicyUrl) => {
+      const actions = toActionViews(
+        [event({ meta: { policies: 'spam-automation,impersonation' } })],
+        {
+          'spam-automation': {
+            name: 'Spam and automation',
+            url: 'https://example.com/policies/spam',
+          },
+        },
+        defaultPolicyUrl,
+      )
+
+      expect(actions).toHaveLength(1)
+      expect(actions[0].policies).toEqual([
+        {
+          key: 'spam-automation',
+          displayName: 'Spam and automation',
+          link: 'https://example.com/policies/spam',
+        },
+        {
+          key: 'impersonation',
+          displayName: 'impersonation',
+          link: defaultPolicyUrl ?? DEFAULT_INBOX_POLICY_URL,
+        },
+      ])
+      expect(tools.ozone.inbox.defs.actionView.$matches(actions[0])).toBe(true)
+    },
+  )
 
   it('never exposes moderator comments', () => {
     const actions = toActionViews([event({ comment: 'internal reasoning' })])
