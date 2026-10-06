@@ -10,6 +10,8 @@
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
+const DEFAULT_LEXICONS_DIR = './lexicons'
+
 // @TODO lex-builder and lex-installer should both
 // - Define their own CLI commands and options
 // - Expose a "bin" entrypoint so they can be called independently
@@ -25,7 +27,7 @@ yargs(hideBin(process.argv))
         lexicons: {
           type: 'string',
           demandOption: true,
-          default: './lexicons',
+          default: DEFAULT_LEXICONS_DIR,
           describe: 'directory containing lexicon JSON files',
         },
         out: {
@@ -135,7 +137,6 @@ yargs(hideBin(process.argv))
           save: {
             alias: 's',
             type: 'boolean',
-            conflicts: ['ci'],
             default: true,
             describe:
               'Updates lexicons.json with installed lexicons (use --no-save to disable)',
@@ -156,7 +157,7 @@ yargs(hideBin(process.argv))
           lexicons: {
             type: 'string',
             demandOption: true,
-            default: './lexicons',
+            default: DEFAULT_LEXICONS_DIR,
             describe: 'directory containing lexicon JSON files',
           },
         })
@@ -168,6 +169,33 @@ yargs(hideBin(process.argv))
         save: argv.save,
         ci: argv.ci,
         update: argv.update,
+        lexicons: argv.lexicons,
+        manifest: argv.manifest,
+      })
+      debugger
+    },
+  )
+  .command(
+    'update',
+    'Update all installed lexicons to their latest versions',
+    (yargs) => {
+      return yargs.strict().options({
+        manifest: {
+          type: 'string',
+          default: './lexicons.json',
+          describe: 'path to lexicons.json manifest file',
+        },
+        lexicons: {
+          type: 'string',
+          demandOption: true,
+          default: DEFAULT_LEXICONS_DIR,
+          describe: 'directory containing lexicon JSON files',
+        },
+      })
+    },
+    async (argv) => {
+      const { update } = await import('@atproto/lex-installer')
+      await update({
         lexicons: argv.lexicons,
         manifest: argv.manifest,
       })

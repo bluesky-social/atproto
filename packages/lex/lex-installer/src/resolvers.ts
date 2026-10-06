@@ -1,28 +1,39 @@
-import { join, resolve } from 'node:path'
-import type { Filter } from '@atproto/lex-builder'
+import { dirname, join, resolve } from 'node:path'
+import type { BuildFilterOptions, Filter } from '@atproto/lex-builder'
 import { buildFilter } from '@atproto/lex-builder'
-import { cidForLex } from '@atproto/lex-cbor'
+import type { AgentConfig } from '@atproto/lex-client'
+import { Client } from '@atproto/lex-client'
 import type { LexiconDocument } from '@atproto/lex-document'
 import { lexiconDocumentSchema } from '@atproto/lex-document'
-import type { AtUriString, NSID } from '@atproto/syntax'
-import { isEnoentError, readJsonFile } from './fs.js'
-import type {
-  FileUriString,
-  LexiconResolverConfig,
-} from './lexicons-manifest.js'
-
-/** The CID type produced by {@link cidForLex}. */
-export type Cid = Awaited<ReturnType<typeof cidForLex>>
+import {
+  AtUri,
+  LexResolver,
+  type LexResolverOptions,
+} from '@atproto/lex-resolver'
+import {
+  type AtIdentifierString,
+  type AtUriString,
+  type DidString,
+  type NSID,
+  isHandleIdentifier,
+} from '@atproto/syntax'
+import { createDidResolver, extractPdsUrl } from '@atproto-labs/did-resolver'
+import type { CreateDidResolverOptions } from '@atproto-labs/did-resolver'
+import type { HandleResolver } from '@atproto-labs/handle-resolver'
+import {
+  AtprotoHandleResolverNode,
+  type AtprotoHandleResolverNodeOptions,
+} from '@atproto-labs/handle-resolver-node'
+import type { FileUriString } from './fs.js'
+import { readLexiconDocument } from './lexicon-document.js'
+import type { LexiconResolverConfig } from './lexicons-manifest.js'
 
 /**
  * A lexicon document resolved from a local file, along with the information
  * needed to install (symlink) and lock it.
  */
-export type ResolvedLexicon<
-  TUri extends AtUriString | FileUriString = AtUriString | FileUriString,
-> = {
-  uri: TUri
-  cid: Cid
+export type ResolvedLexicon = {
+  uri: AtUri | AtUriString | FileUriString
   lexicon: LexiconDocument
 }
 
@@ -40,14 +51,26 @@ export interface LexiconResolver {
   resolve(nsid: NSID): Promise<ResolvedLexicon | null>
 }
 
-abstract class BaseResolver implements LexiconResolver {
-  constructor(protected readonly filter: Filter) {}
-
-  async resolve(nsid: NSID): Promise<ResolvedLexicon | null> {
-    return this.filter(nsid.toString()) ? this.doResolve(nsid) : null
+export class FilteredResolver implements LexiconResolver {
+  protected readonly filter: Filter
+  constructor(
+    protected readonly resolver: LexiconResolver,
+    options: BuildFilterOptions,
+  ) {
+    this.filter = buildFilter(options)
   }
 
-  protected abstract doResolve(nsid: NSID): Promise<ResolvedLexicon | null>
+  async resolve(nsid: NSID): Promise<ResolvedLexicon | null> {
+    return this.filter(nsid.toString()) ? this.resolver.resolve(nsid) : null
+  }
+
+  static for(
+    resolver: LexiconResolver,
+    options?: BuildFilterOptions,
+  ): LexiconResolver {
+    if (options?.include == null && options?.exclude == null) return resolver
+    return new FilteredResolver(resolver, options)
+  }
 }
 
 /**
@@ -57,69 +80,128 @@ abstract class BaseResolver implements LexiconResolver {
  * An optional {@link Filter} gates which NSIDs this resolver answers for,
  * mirroring the include/exclude semantics of {@link buildFilter}.
  */
-export class DirectoryResolver extends BaseResolver implements LexiconResolver {
-  constructor(
-    protected readonly directory: string,
-    filter: Filter,
-  ) {
-    super(filter)
-  }
+export class DirectoryResolver implements LexiconResolver {
+  constructor(protected readonly directory: string) {}
 
-  protected async doResolve(nsid: NSID): Promise<ResolvedLexicon | null> {
-    const id = nsid.toString()
+  async resolve(nsid: NSID): Promise<ResolvedLexicon | null> {
+    // @NOTE this assumes that the directory is structured according to NSID
+    // segments. We could expand this to use a more flexible mapping in the
+    // future (e.g. by searching the directory for matching files).
+    const path = resolve(`${join(this.directory, ...nsid.segments)}.json`)
 
-    const path = `${join(this.directory, ...id.split('.'))}.json`
-    const resolved = await readLexiconFile(path).catch((err) => {
-      if (isEnoentError(err)) return null
-      throw err
-    })
-    if (!resolved) return null
+    const lexicon = await readLexiconDocument(path)
+    if (lexicon) return { uri: `file://${path}`, lexicon }
 
-    // Defensive: a file at the NSID-derived path must actually declare that
-    // NSID. If not, skip it and let the next resolver / network handle it.
-    if (resolved.lexicon.id !== id) return null
-
-    return resolved
+    // File not found
+    return null
   }
 }
 
-/**
- * Reads and parses a lexicon document from disk, computing its CID.
- *
- * @param path - Path to the JSON lexicon file
- */
-export async function readLexiconFile(
-  path: string,
-): Promise<ResolvedLexicon<FileUriString>> {
-  path = resolve(path) // Make the path absolute
-  const json = await readJsonFile(path)
-  const lexicon = lexiconDocumentSchema.parse(json)
-  const cid = await cidForLex(lexicon)
-  return { uri: `file://${path}`, cid, lexicon }
+type BuildClientOptions = BuildClientFromDidOptions &
+  AtprotoHandleResolverNodeOptions & {
+    handleResolver?: HandleResolver
+  }
+
+async function buildClient(
+  repo: AtIdentifierString,
+  options: BuildClientOptions,
+) {
+  if (isHandleIdentifier(repo)) {
+    const handleResolver =
+      options?.handleResolver ?? new AtprotoHandleResolverNode(options)
+    const did = await handleResolver.resolve(repo)
+    if (did) return buildClientFromDid(did, options)
+    throw new Error(`Unable to resolve DID for handle: ${repo}`)
+  }
+  return buildClientFromDid(repo, options)
 }
+
+export type BuildClientFromDidOptions = CreateDidResolverOptions &
+  Omit<AgentConfig, 'did' | 'service'>
+
+async function buildClientFromDid(
+  did: DidString,
+  options: BuildClientOptions,
+): Promise<Client> {
+  const didResolver = createDidResolver(options)
+  const document = await didResolver.resolve(did)
+  const service = extractPdsUrl(document)
+  return new Client({ service, did, fetch: options?.fetch })
+}
+
+export class RepoResolver implements LexiconResolver {
+  constructor(protected readonly buildClient: () => Client | Promise<Client>) {}
+
+  #clientPromise: Promise<Client> | undefined
+  protected async initClient(): Promise<Client> {
+    return (this.#clientPromise ??= Promise.resolve().then(this.buildClient))
+  }
+
+  async resolve(nsid: NSID): Promise<ResolvedLexicon | null> {
+    const client = await this.initClient()
+
+    const res = await client.getRecord(
+      'com.atproto.lexicon.schema',
+      nsid.toString(),
+    )
+
+    const lexicon = lexiconDocumentSchema.parse(res.body.value)
+    const uri = AtUri.make(
+      client.assertDid,
+      'com.atproto.lexicon.schema',
+      nsid.toString(),
+    )
+
+    return { uri, lexicon }
+  }
+}
+
+export type CreateResolversOptions = LexResolverOptions &
+  BuildClientOptions & {
+    manifest: string
+  }
 
 /**
  * Builds the ordered list of local resolvers declared in the manifest's
  * `resolvers` array. Paths are resolved relative to `manifestDir` (the directory
  * containing the manifest file).
  */
-export function createResolvers(
-  configs: readonly LexiconResolverConfig[] | undefined,
-  manifestDir: string,
-): LexiconResolver[] {
-  if (!configs?.length) return []
-  return configs.map((config) => {
-    const filter = buildFilter({
-      include: config.include,
-      exclude: config.exclude,
-    })
-    switch (config.type) {
-      case 'directory':
-        return new DirectoryResolver(resolve(manifestDir, config.path), filter)
-      default:
-        throw new Error(
-          `Unsupported lexicon resolver type: ${(config as { type: string }).type}`,
-        )
-    }
+export function createResolver(
+  options: CreateResolversOptions,
+  configs: Iterable<LexiconResolverConfig> = [],
+): LexiconResolver {
+  const lexResolver = new LexResolver(options)
+  const resolvers = Array.from(configs, (config): LexiconResolver => {
+    const resolver = buildCustomResolver(options, config)
+    return FilteredResolver.for(resolver, config)
   })
+  return {
+    async resolve(nsid) {
+      for (const resolver of resolvers) {
+        const result = await resolver.resolve(nsid)
+        if (result) return result
+      }
+      return lexResolver.get(nsid)
+    },
+  }
+}
+
+function buildCustomResolver(
+  options: CreateResolversOptions,
+  config: LexiconResolverConfig,
+): LexiconResolver {
+  switch (config.type) {
+    case 'directory':
+      return new DirectoryResolver(
+        resolve(dirname(options.manifest), config.path),
+      )
+    case 'repo':
+      return new RepoResolver(async () => {
+        return buildClient(config.repo, options)
+      })
+    default:
+      throw new Error(
+        `Unsupported lexicon resolver type: ${(config as { type: string }).type}`,
+      )
+  }
 }

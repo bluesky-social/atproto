@@ -9,7 +9,7 @@ import { LexInstaller } from './lex-installer.js'
  *
  * @example
  * ```typescript
- * const options: LexInstallOptions = {
+ * const options: InstallOptions = {
  *   lexicons: './lexicons',
  *   manifest: './lexicons.manifest.json',
  *   add: ['com.example.myLexicon', 'at://did:plc:xyz/com.example.otherLexicon'],
@@ -18,18 +18,17 @@ import { LexInstaller } from './lex-installer.js'
  * }
  * ```
  */
-export type LexInstallOptions = LexInstallerOptions & {
+export type InstallOptions = LexInstallerOptions & {
   /**
-   * Array of lexicons to add to the installation. Can be NSID strings
-   * (e.g., 'com.example.myLexicon') or AT URIs
-   * (e.g., 'at://did:plc:xyz/com.example.myLexicon').
+   * Array of lexicons NSID strings (e.g., 'com.example.myLexicon') to add to
+   * the installation.
    */
   add?: string[]
 
   /**
    * Whether to save the updated manifest after installation.
    * When `true`, the manifest file will be written with any new lexicons.
-   * @default false
+   * @default true
    */
   save?: boolean
 
@@ -92,37 +91,35 @@ export type LexInstallOptions = LexInstallerOptions & {
  * })
  * ```
  */
-export async function install(options: LexInstallOptions) {
+export async function install({
+  ci = false,
+  save = true,
+  add: additions,
+  ...options
+}: InstallOptions) {
   // Perform the installation using the existing manifest as "hint"
-  await using installer = await LexInstaller.load(options)
+  const installer = await LexInstaller.load(options)
 
-  await installer.install({ additions: options.add })
+  await installer.install({ additions })
 
   // Verify lockfile
-  if (options.ci && !installer.isUnmodified()) {
+  if (ci && installer.requiresSave()) {
     throw new Error('Lexicons manifest is out of date')
   }
 
   // Save changes if requested
-  if (options.save) {
+  if (save !== false) {
     await installer.save()
   }
 }
 
-export type LexUpdateOptions = LexInstallerOptions & {
-  /**
-   * Array of lexicons to add to the installation. Can be NSID strings (e.g.,
-   * 'com.example.myLexicon'), AT URIs (e.g.,
-   * 'at://did:plc:xyz/com.example.myLexicon'), local file URLs (e.g.,
-   * 'file://./local/path/to/myLexicon.json') or local file paths (e.g.,
-   * './local/path/to/myLexicon.json').
-   */
-  add?: string[]
+export type UpdateOptions = LexInstallerOptions & {
+  //
 }
 
-export async function update(options: LexInstallOptions) {
+export async function update(options: UpdateOptions) {
   // Perform the installation with the update flag enabled
-  await using installer = await LexInstaller.load(options)
+  const installer = await LexInstaller.load(options)
 
   await installer.update()
 

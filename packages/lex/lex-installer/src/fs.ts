@@ -1,5 +1,60 @@
 import { mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
-import { dirname, relative, resolve } from 'node:path'
+import { dirname, relative, resolve, sep } from 'node:path'
+
+const FILE_URI_PREFIX = 'file://'
+
+export type FileUriString<TPath extends string = string> =
+  `${typeof FILE_URI_PREFIX}${TPath}`
+
+export function isFileUriString(val: unknown): val is FileUriString {
+  if (typeof val !== 'string') return false
+  if (!val.startsWith(FILE_URI_PREFIX)) return false
+  try {
+    // `new URL` throws on a malformed string; a corrupt manifest value must
+    // surface as a clean validation issue, not a raw TypeError.
+    return new URL(val).protocol === 'file:'
+  } catch {
+    return false
+  }
+}
+
+export function isAbsoluteFileUriString(
+  val: unknown,
+): val is FileUriString<`/${string}`> {
+  return isFileUriString(val) && val.startsWith(`${FILE_URI_PREFIX}/`)
+}
+
+export function isRelativeFileUriString(
+  val: unknown,
+): val is FileUriString<`./${string}` | `../${string}`> {
+  return (
+    isFileUriString(val) &&
+    (val.startsWith(`${FILE_URI_PREFIX}./`) ||
+      val.startsWith(`${FILE_URI_PREFIX}../`))
+  )
+}
+
+export function toFileUri<TPath extends string>(
+  path: TPath,
+): FileUriString<TPath> {
+  return `${FILE_URI_PREFIX}${path}`
+}
+
+export function fromFileUri(uri: FileUriString): string {
+  return uri.slice(FILE_URI_PREFIX.length)
+}
+
+function isRelativePath(path: string): path is `./${string}` | `../${string}` {
+  return path.startsWith('./') || path.startsWith('../')
+}
+
+export function toRelativeFileUri(
+  from: string,
+  to: string,
+): FileUriString<`./${string}` | `../${string}`> {
+  const path = relative(from, to).split(sep).join('/')
+  return toFileUri(isRelativePath(path) ? path : `./${path}`)
+}
 
 /**
  * Reads and parses a JSON file from the filesystem.
@@ -158,4 +213,9 @@ export async function symlinkLexicon(
  */
 export function isEnoentError(err: unknown): boolean {
   return err instanceof Error && 'code' in err && err.code === 'ENOENT'
+}
+
+export function enoentToNull(err: unknown): null | never {
+  if (isEnoentError(err)) return null
+  throw err
 }

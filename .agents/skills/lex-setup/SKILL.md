@@ -246,8 +246,8 @@ manifest, so they can't diverge from the canonical files.
 
 ```jsonc
 // package.json — install (creating symlinks + verifying the lock) before build
-"codegen:lex": "lex install --ci --no-save --lexicons ./lexicons && lex build --clear --indexFile --lexicons ./lexicons",
-"lex:install": "lex install --lexicons ./lexicons", // regenerate the manifest after adding/removing a lexicon
+"codegen:lex": "lex install --ci && lex build --clear --indexFile",
+"lex:install": "lex install", // regenerate the manifest after adding/removing a lexicon
 ```
 
 Gitignore the symlinked `/lexicons` tree (a build artifact) but **commit

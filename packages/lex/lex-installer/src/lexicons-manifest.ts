@@ -1,20 +1,5 @@
 import { l } from '@atproto/lex-schema'
-
-export const fileUriStringSchema = l.custom(
-  (val): val is `file://${string}` => {
-    if (typeof val !== 'string') return false
-    try {
-      // `new URL` throws on a malformed string; a corrupt manifest value must
-      // surface as a clean validation issue, not a raw TypeError.
-      return new URL(val).protocol === 'file:'
-    } catch {
-      return false
-    }
-  },
-  "Expected a file URI starting with 'file://'",
-)
-
-export type FileUriString = l.Infer<typeof fileUriStringSchema>
+import { isRelativeFileUriString } from './fs.js'
 
 export const directoryResolverSchema = l.object({
   /** Resolve lexicons from a local directory laid out by NSID. */
@@ -33,6 +18,20 @@ export const directoryResolverSchema = l.object({
   exclude: l.optional(l.array(l.string())),
 })
 
+export const repoResolverSchema = l.object({
+  /** Resolve lexicons from a specific repository (DID). */
+  type: l.literal('repo'),
+  /** Repository DID from which to resolve lexicons. */
+  repo: l.string({ format: 'at-identifier' }),
+  /**
+   * NSID glob patterns to restrict this resolver to (defaults to all). Patterns
+   * support `*` as a wildcard (e.g. `app.bsky.*`).
+   */
+  include: l.optional(l.array(l.string())),
+  /** NSID glob patterns this resolver must never answer for (supports `*`). */
+  exclude: l.optional(l.array(l.string())),
+})
+
 /**
  * A local override strategy for resolving dependency lexicons. Resolvers are
  * ordered by priority (first match wins); the network is always the implicit
@@ -40,9 +39,7 @@ export const directoryResolverSchema = l.object({
  */
 export const lexiconResolverConfigSchema = l.discriminatedUnion('type', [
   directoryResolverSchema,
-  // @TODO Add a `{ type: 'repo', ... }` resolver that resolves lexicons from
-  // one or more specific repositories (DIDs) instead of the default DNS-based
-  // discovery.
+  repoResolverSchema,
 ])
 
 /** A single entry of the manifest's `resolvers` array. */
@@ -53,7 +50,10 @@ export const resolutionSchema = l.object({
    * Where the lexicon was resolved from: an `at://` URI (network) or a
    * `file://` URI (local file, relative to this manifest).
    */
-  uri: l.union([l.string({ format: 'at-uri' }), fileUriStringSchema]),
+  uri: l.union([
+    l.string({ format: 'at-uri' }),
+    l.custom(isRelativeFileUriString, 'Expected a relative file:// URI'),
+  ]),
   /** Content identifier (CID) of the lexicon document */
   cid: l.string({ format: 'cid' }),
 })
@@ -85,6 +85,12 @@ export const lexiconsManifestSchema = l.object({
  */
 export type LexiconsManifest = l.Infer<typeof lexiconsManifestSchema>
 
+export const EMPTY_MANIFEST: LexiconsManifest = {
+  version: 1,
+  lexicons: [],
+  resolutions: {},
+}
+
 /**
  * Normalizes a lexicons manifest for consistent storage and comparison.
  *
@@ -101,21 +107,24 @@ export type LexiconsManifest = l.Infer<typeof lexiconsManifestSchema>
  * @returns A new normalized manifest object
  */
 export function normalizeLexiconsManifest(
-  manifest: LexiconsManifest,
+  manifest: LexiconsManifest = EMPTY_MANIFEST,
 ): LexiconsManifest {
-  const normalized: LexiconsManifest = {
+  // @NOTE `resolvers` is priority-ordered (order matters). We do can ignore any
+  // resolvers that have an empty `include` array, as they would have no effect.
+  const resolvers = manifest.resolvers?.filter(
+    (c) => c.include == null || c.include.length > 0,
+  )
+
+  return lexiconsManifestSchema.parse({
     version: manifest.version,
-    lexicons: [...manifest.lexicons].sort(),
-    // `resolvers` is priority-ordered, so it is preserved as-is (not sorted).
-    ...(manifest.resolvers?.length ? { resolvers: manifest.resolvers } : {}),
+    ...(resolvers?.length ? { resolvers: structuredClone(resolvers) } : {}),
+    lexicons: manifest.lexicons.toSorted(),
     resolutions: Object.fromEntries(
       Object.entries(manifest.resolutions)
         .sort(compareObjectEntriesFn)
         .map(([k, { uri, cid }]) => [k, { uri, cid }]),
     ),
-  }
-  // For good measure:
-  return lexiconsManifestSchema.parse(normalized)
+  })
 }
 
 function compareObjectEntriesFn(

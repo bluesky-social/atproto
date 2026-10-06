@@ -1,5 +1,9 @@
 import { relative } from 'node:path'
 
+export function negate(fn: (arg: string) => boolean): (arg: string) => boolean {
+  return (arg: string) => !fn(arg)
+}
+
 export function memoize<T extends (arg: string) => NonNullable<unknown> | null>(
   fn: T,
 ): T {
