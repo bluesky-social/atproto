@@ -77,7 +77,7 @@ export interface ServerConfigValues {
   trendingFeedDid?: DidString
   bskyFeedgenDids: Set<string>
   irisApiKey?: string
-  irisFeedUris?: Set<string> // `iris:feed:enable` gate to serve via iris instead of seeemore
+  irisFeedUris?: Set<string> // allowlist iris may serve instead of seeemore; whats-hot is gated by `iris:feed:enable`, other feeds by their per-rkey `iris:feed:<rkey>:enable` gate
   irisStagingUrl?: string
   irisStagingFeedUris?: Set<string> // serve via iris staging instead of the registered feed generator
   feedGenSkeletonTimeout: number
