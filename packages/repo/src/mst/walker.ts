@@ -1,3 +1,4 @@
+import { CidSet } from '../cid-set.js'
 import type { MST, NodeEntry } from './mst.js'
 
 type WalkerStatusDone = {
@@ -16,6 +17,8 @@ type WalkerStatus = WalkerStatusDone | WalkerStatusProgress
 export class MstWalker {
   stack: WalkerStatus[] = []
   status: WalkerStatus
+  // Nodes entered during this walk; repeated references are not valid MSTs.
+  private seen = new CidSet()
 
   constructor(public root: MST) {
     this.status = {
@@ -75,6 +78,7 @@ export class MstWalker {
       if (!this.status.curr.isTree()) {
         throw new Error('The root of the tree cannot be a leaf')
       }
+      this.status.curr.markVisited(this.seen)
       const next = await this.status.curr.atIndex(0)
       if (!next) {
         this.status = { done: true }
@@ -91,6 +95,7 @@ export class MstWalker {
     if (!this.status.curr.isTree()) {
       throw new Error('No tree at pointer, cannot step into')
     }
+    this.status.curr.markVisited(this.seen)
 
     const next = await this.status.curr.atIndex(0)
     if (!next) {

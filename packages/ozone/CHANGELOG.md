@@ -1,5 +1,27 @@
 # @atproto/ozone
 
+## 0.5.2
+
+### Patch Changes
+
+- [#5585](https://github.com/bluesky-social/atproto/pull/5585) [`a257997`](https://github.com/bluesky-social/atproto/commit/a25799716c061e84586687b2c533eaedbd09c05f) Thanks [@foysalit](https://github.com/foysalit)! - Store the original reporter DID on Ozone report rows.
+
+- [#5558](https://github.com/bluesky-social/atproto/pull/5558) [`38e2dc8`](https://github.com/bluesky-social/atproto/commit/38e2dc8eea64d4077155cf5bbdb84965d5c6dbf6) Thanks [@gcwill70](https://github.com/gcwill70)! - Record report unassignment activity atomically with assignment and status updates.
+
+## 0.5.1
+
+### Patch Changes
+
+- [#5493](https://github.com/bluesky-social/atproto/pull/5493) [`cd736b3`](https://github.com/bluesky-social/atproto/commit/cd736b3dbbec957cf4eaa7e67fa5b8be8f8ae04e) Thanks [@mozzius](https://github.com/mozzius)! - Add `since` and `startCursor` to `getTimeline` and `getListFeed`, for reading everything strictly newer than a previously returned position.
+- Updated dependencies [[`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd), [`0593d81`](https://github.com/bluesky-social/atproto/commit/0593d818bc2b7f8a40c9d0fe036bf39c7a4eecda)]:
+  - @atproto/crypto@0.5.7
+  - @atproto-labs/opentelemetry-node@0.3.0
+  - @atproto/identity@0.5.16
+  - @atproto/xrpc-server@0.13.4
+  - @atproto/common@0.8.5
+  - @atproto/lex@0.3.14
+  - @atproto/lex-password-session@0.2.4
+
 ## 0.5.0
 
 ### Minor Changes

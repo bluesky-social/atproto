@@ -1,5 +1,15 @@
 # @atproto/lexicon-resolver
 
+## 0.4.24
+
+### Patch Changes
+
+- Updated dependencies [[`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e), [`a6561d5`](https://github.com/bluesky-social/atproto/commit/a6561d54227756876a0901e4a87675df17972d32)]:
+  - @atproto/repo@0.11.0
+  - @atproto/identity@0.5.16
+  - @atproto/lex@0.3.14
+  - @atproto/lex-document@0.1.13
+
 ## 0.4.23
 
 ### Patch Changes

@@ -1,15 +1,20 @@
-import type { AtUriString } from '@atproto/syntax'
+import {
+  type AtUriString,
+  type DidString,
+  type NsidString,
+  type TypedLexMap,
+  isTypedLexMap,
+  lexParseJsonBytes,
+} from '@atproto/lex'
 import type { DataPlaneClient } from '../data-plane/client/index.js'
 import { site } from '../lexicons/index.js'
 import { hydrationLogger } from '../logger.js'
-import type {
-  GetSiteStandardRecordsByRefResponse,
-  GetSiteStandardRecordsByURIResponse,
-} from '../proto/bsky_pb.js'
 import {
-  parseSiteStandardRecordKey,
-  siteStandardRecordKey,
-} from '../util/standard-site.js'
+  type GetSiteStandardRecordsByRefResponse,
+  type GetSiteStandardRecordsByURIResponse,
+  type RecordLookupResult,
+  RecordLookupStatus,
+} from '../proto/bsky_pb.js'
 import type {
   SiteStandardDocumentRecord,
   SiteStandardPublicationRecord,
@@ -18,14 +23,69 @@ import {
   HydrationMap,
   type ItemRef,
   type RecordInfo,
+  parseDate,
   parseRecord,
+  safeTakedownRef,
 } from './util.js'
+
+/** Generic record bodies are decoded, but not validated against a Lexicon. */
+export type GenericRecord = RecordInfo<TypedLexMap>
+export type GenericRecords = HydrationMap<AtUriString, GenericRecord>
+/** Keyed by `genericRecordKey(uri, cid)` to retain multiple versions of a URI. */
+export type GenericRecordsByRef = HydrationMap<string, GenericRecord>
+
+export type AtmosphereActivityItem = {
+  uri: AtUriString
+  sortedAt: Date
+}
+
+export type AtmosphereTimeline = {
+  items: AtmosphereActivityItem[]
+  cursor?: string
+}
+
+export type AtmosphereBacklinks = {
+  backlinks: AtmosphereActivityItem[]
+  cursor?: string
+}
+
+export type AtmosphereBacklinkCounts = HydrationMap<
+  AtUriString,
+  Partial<Record<NsidString, number>>
+>
+
+export type AtmosphereBacklinksByActor = {
+  backlinks: HydrationMap<AtUriString, AtUriString[]>
+  truncated: boolean
+}
+
+/**
+ * Composes a stable map key from an `(uri, cid)` pair. A single hydration
+ * batch can pull more than one version of the same record URI (different
+ * posts pinning different cids), so the composite is needed for O(1)
+ * version-exact lookups.
+ */
+export function genericRecordKey(uri: AtUriString, cid: string): string {
+  return `${uri}@${cid}`
+}
+
+/** Recover the URI and CID from a composite hydration key. */
+export function parseGenericRecordKey(key: string): {
+  uri: AtUriString
+  cid: string
+} {
+  const at = key.lastIndexOf('@')
+  return {
+    uri: key.slice(0, at) as AtUriString,
+    cid: key.slice(at + 1),
+  }
+}
 
 export type SiteStandardDocument = RecordInfo<SiteStandardDocumentRecord>
 export type SiteStandardPublication = RecordInfo<SiteStandardPublicationRecord>
 
 /**
- * Keyed by `${uri}@${cid}` — see `siteStandardRecordKey`. A single hydration
+ * Keyed by `${uri}@${cid}` — see `genericRecordKey`. A single hydration
  * batch can pull more than one version of the same URI (different posts
  * pinning different cids), so the composite key is needed for O(1)
  * version-exact lookups.
@@ -51,6 +111,131 @@ export type AssociatedSiteStandardRecord<T> = {
 export class ExternalHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
+  /** Fetch exact record versions; unavailable records are represented by null. */
+  async getRecordsByRef(
+    refs: Required<ItemRef>[],
+    includeTakedowns = false,
+  ): Promise<GenericRecordsByRef> {
+    const map: GenericRecordsByRef = new HydrationMap()
+    if (!refs.length) return map
+
+    const res = await this.dataplane.getRecordsByRef({ refs })
+    for (let i = 0; i < refs.length; i++) {
+      const { uri, cid } = refs[i]
+      map.set(
+        genericRecordKey(uri, cid),
+        parseGenericRecord(res.results[i], includeTakedowns) ?? null,
+      )
+    }
+    return map
+  }
+
+  /** Fetch the latest indexed versions without collection-specific validation. */
+  async getRecordsByURI(
+    uris: AtUriString[],
+    includeTakedowns = false,
+  ): Promise<GenericRecords> {
+    const map: GenericRecords = new HydrationMap()
+    if (!uris.length) return map
+
+    const res = await this.dataplane.getRecordsByURI({ uris })
+    for (let i = 0; i < uris.length; i++) {
+      map.set(
+        uris[i],
+        parseGenericRecord(res.results[i], includeTakedowns) ?? null,
+      )
+    }
+    return map
+  }
+
+  /** Fetch a page of activity refs for subsequent generic record hydration. */
+  async getAtmosphereTimeline(
+    viewerDid: DidString,
+    opts: { limit?: number; cursor?: string } = {},
+  ): Promise<AtmosphereTimeline> {
+    const res = await this.dataplane.getAtmosphereTimeline({
+      viewerDid,
+      ...opts,
+    })
+    return {
+      items: res.items.map((item) => ({
+        uri: item.uri as AtUriString,
+        sortedAt: parseDate(item.sortedAt) ?? new Date(0),
+      })),
+      cursor: res.cursor || undefined,
+    }
+  }
+
+  /** Fetch source-record counts, optionally restricted to one collection. */
+  async getAtmosphereBacklinkCounts(
+    targetUris: AtUriString[],
+    collection?: NsidString,
+  ): Promise<AtmosphereBacklinkCounts> {
+    const map: AtmosphereBacklinkCounts = new HydrationMap()
+    if (!targetUris.length) return map
+
+    const res = await this.dataplane.getAtmosphereBacklinkCounts({
+      targetUris,
+      collection,
+    })
+    for (const result of res.results) {
+      map.set(
+        result.targetUri as AtUriString,
+        Object.fromEntries(
+          Object.entries(result.counts).map(([nsid, count]) => [
+            nsid,
+            Number(count),
+          ]),
+        ),
+      )
+    }
+    return map
+  }
+
+  /** Fetch a page of source records linking to a target. */
+  async getAtmosphereBacklinks(
+    targetUri: AtUriString,
+    collection: NsidString,
+    opts: { limit?: number; cursor?: string } = {},
+  ): Promise<AtmosphereBacklinks> {
+    const res = await this.dataplane.getAtmosphereBacklinks({
+      targetUri,
+      collection,
+      ...opts,
+    })
+    return {
+      backlinks: res.backlinks.map((backlink) => ({
+        uri: backlink.uri as AtUriString,
+        sortedAt: parseDate(backlink.sortedAt) ?? new Date(0),
+      })),
+      cursor: res.cursor || undefined,
+    }
+  }
+
+  /** Fetch an actor's links per target, retaining the batch truncation flag. */
+  async getAtmosphereBacklinksByActor(
+    targetUris: AtUriString[],
+    actorDid: DidString,
+    collection: NsidString,
+  ): Promise<AtmosphereBacklinksByActor> {
+    const backlinks: AtmosphereBacklinksByActor['backlinks'] =
+      new HydrationMap()
+    if (!targetUris.length) return { backlinks, truncated: false }
+
+    const res = await this.dataplane.getAtmosphereBacklinksByActor({
+      targetUris,
+      actorDid,
+      collection,
+    })
+    for (const result of res.results) {
+      backlinks.set(
+        result.targetUri as AtUriString,
+        result.uris as AtUriString[],
+      )
+    }
+    return { backlinks, truncated: res.truncated }
+  }
+
   async getSiteStandardRecordsByRef(
     refs: ItemRef[],
     includeTakedowns = false,
@@ -74,6 +259,37 @@ export class ExternalHydrator {
   }
 }
 
+function parseGenericRecord(
+  result: RecordLookupResult | undefined,
+  includeTakedowns: boolean,
+): GenericRecord | undefined {
+  if (
+    result?.status !== RecordLookupStatus.FOUND &&
+    !(includeTakedowns && result?.status === RecordLookupStatus.TAKEN_DOWN)
+  ) {
+    return undefined
+  }
+  const entry = result.record
+  if (!entry?.cid || !entry.record.byteLength) return undefined
+  if (!includeTakedowns && entry.takenDown) return undefined
+
+  let record: ReturnType<typeof lexParseJsonBytes>
+  try {
+    record = lexParseJsonBytes(entry.record, { strict: false })
+  } catch {
+    return undefined
+  }
+  if (!isTypedLexMap(record)) return undefined
+
+  return {
+    record,
+    cid: entry.cid,
+    sortedAt: parseDate(entry.sortedAt) ?? new Date(0),
+    indexedAt: parseDate(entry.indexedAt) ?? new Date(0),
+    takedownRef: safeTakedownRef(entry),
+  }
+}
+
 const emptySiteStandardRecords = (): SiteStandardRecords => ({
   documents: new HydrationMap(),
   publications: new HydrationMap(),
@@ -88,7 +304,7 @@ const buildSiteStandardRecordsHydrationMaps = (
   for (const { ref, record } of res.documents) {
     if (!ref?.uri || !ref.cid || !record) continue
     documents.set(
-      siteStandardRecordKey(ref.uri, ref.cid),
+      genericRecordKey(ref.uri as AtUriString, ref.cid),
       parseRecord(site.standard.document.main, record, includeTakedowns) ??
         null,
     )
@@ -97,7 +313,7 @@ const buildSiteStandardRecordsHydrationMaps = (
   for (const { ref, record } of res.publications) {
     if (!ref?.uri || !ref.cid || !record) continue
     publications.set(
-      siteStandardRecordKey(ref.uri, ref.cid),
+      genericRecordKey(ref.uri as AtUriString, ref.cid),
       parseRecord(site.standard.publication.main, record, includeTakedowns) ??
         null,
     )
@@ -149,7 +365,7 @@ export const getSiteStandardRecordsFromHydrationMapsByRefs = (
   let publication:
     AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
   for (const ref of associatedRefs) {
-    const key = siteStandardRecordKey(ref.uri, ref.cid)
+    const key = genericRecordKey(ref.uri, ref.cid)
     if (!document) {
       const hit = documents?.get(key)
       if (hit) document = { ref, info: hit }
@@ -230,7 +446,7 @@ export const getSiteStandardRecordsFromHydrationMapsByDocumentUri = (
   let document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
   for (const [key, info] of documents ?? []) {
     if (!info) continue
-    document = { ref: parseSiteStandardRecordKey(key), info }
+    document = { ref: parseGenericRecordKey(key), info }
     break
   }
 
@@ -242,7 +458,7 @@ export const getSiteStandardRecordsFromHydrationMapsByDocumentUri = (
       // Doc declared an at-uri publication; we need it.
       for (const [key, info] of publications ?? []) {
         if (!info) continue
-        const ref = parseSiteStandardRecordKey(key)
+        const ref = parseGenericRecordKey(key)
         if (ref.uri === site) {
           publication = { ref, info }
           break
@@ -261,7 +477,7 @@ export const getSiteStandardRecordsFromHydrationMapsByDocumentUri = (
     // Publication-only flow: no doc, take the first hydrated publication.
     for (const [key, info] of publications ?? []) {
       if (!info) continue
-      publication = { ref: parseSiteStandardRecordKey(key), info }
+      publication = { ref: parseGenericRecordKey(key), info }
       break
     }
   }

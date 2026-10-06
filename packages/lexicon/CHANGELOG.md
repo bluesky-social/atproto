@@ -1,5 +1,13 @@
 # @atproto/lexicon
 
+## 0.7.16
+
+### Patch Changes
+
+- [#5582](https://github.com/bluesky-social/atproto/pull/5582) [`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3) Thanks [@haileyok](https://github.com/haileyok)! - Reject CID strings longer than 128 characters before decoding them.
+- Updated dependencies []:
+  - @atproto/common-web@0.5.14
+
 ## 0.7.15
 
 ### Patch Changes
