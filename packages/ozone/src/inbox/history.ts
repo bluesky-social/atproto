@@ -25,11 +25,13 @@ export async function queryActionHistory(
   before?: { sortValue: DatetimeString; id: number },
   policyList: PolicyList = {},
   defaultPolicyUrl?: string,
+  startAt?: DatetimeString,
 ) {
   const events = db.db
     .selectFrom('moderation_event')
     .where((eb) => eventSubjectFilter(eb, subject))
     .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
+    .$if(startAt !== undefined, (qb) => qb.where('createdAt', '>=', startAt!))
     .select(publicEventSelection)
   // @NOTE Pairing happens before pagination. Window functions keep the
   // subject's history in PostgreSQL; at most limit + 1 rows leave the DB.

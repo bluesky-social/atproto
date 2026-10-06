@@ -1,6 +1,12 @@
 import assert from 'node:assert'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
-import type { DidString, UriString } from '@atproto/lex'
+import {
+  type DatetimeString,
+  type DidString,
+  type UriString,
+  isDatetimeString,
+  toDatetimeString,
+} from '@atproto/lex'
 import type { OzoneEnvironment } from './env.js'
 import {
   type StrikeSuspensionConfig,
@@ -110,6 +116,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   const inboxCfg: OzoneConfig['inbox'] = {
     appealWindowMonths: env.inboxAppealWindowMonths ?? 6,
     policyDefaultUrl: env.inboxPolicyDefaultUrl ?? DEFAULT_INBOX_POLICY_URL,
+    startAt: parseInboxStartAt(env.inboxStartAt),
   }
 
   const statsCfg: OzoneConfig['stats'] = {
@@ -235,6 +242,8 @@ export type VerifierConfig = {
 }
 
 export type InboxConfig = {
+  /** Inclusive creation-time cutoff for inbox history; unset exposes all history. */
+  startAt?: DatetimeString
   /**
    * Calendar months a moderation action stays appealable, counted from the
    * action. Defaults to 6.
@@ -249,6 +258,22 @@ export type InboxConfig = {
 
 export const DEFAULT_INBOX_POLICY_URL =
   'https://bsky.social/about/support/community-guidelines'
+
+function parseInboxStartAt(
+  value: string | undefined,
+): DatetimeString | undefined {
+  if (value === undefined) return undefined
+  assert(
+    isDatetimeString(value),
+    'OZONE_INBOX_START_AT must be an ISO 8601 timestamp with a timezone',
+  )
+  const normalized = toDatetimeString(new Date(value))
+  assert(
+    /^\d{4}-/.test(normalized),
+    'OZONE_INBOX_START_AT must use a four-digit UTC year',
+  )
+  return normalized
+}
 
 export type AssignmentsConfig = {
   queueDurationMs: number

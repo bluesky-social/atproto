@@ -127,6 +127,7 @@ type EventTotals = {
 export const loadSubject = async (
   db: Database,
   subject: ModSubject,
+  startAt?: DatetimeString,
 ): Promise<SubjectSnapshot> => {
   const appealable = sql.join(
     APPEALABLE_EVENT_ACTIONS.map((action) => sql.lit(action)),
@@ -155,6 +156,7 @@ export const loadSubject = async (
       .selectFrom('moderation_event')
       .where((eb) => eventSubjectFilter(eb, subject))
       .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
+      .$if(startAt !== undefined, (qb) => qb.where('createdAt', '>=', startAt!))
       .orderBy('id', 'desc')
       .limit(EVENT_WINDOW)
       .select(publicEventSelection)
@@ -164,6 +166,7 @@ export const loadSubject = async (
       .selectFrom('moderation_event')
       .where((eb) => eventSubjectFilter(eb, subject))
       .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
+      .$if(startAt !== undefined, (qb) => qb.where('createdAt', '>=', startAt!))
       .select([
         sql<number>`count(*) FILTER (WHERE action <> ${REVERSE_TAKEDOWN})::int`.as(
           'actionCount',
@@ -411,6 +414,7 @@ export const toSubjectView = ({
   policyList = {},
   seenAt = null,
 }: SubjectViewInput): SubjectView | null => {
+  if (cfg.startAt && !snapshot.actionCount) return null
   if (!snapshot.status && !snapshot.actionCount) return null
 
   const actions = toActionViews(
@@ -424,10 +428,22 @@ export const toSubjectView = ({
     labels: snapshot.labels,
     actions,
   })
+  const publicAppeal =
+    snapshot.appealReport &&
+    (!cfg.startAt || snapshot.appealReport.createdAt >= cfg.startAt)
+      ? snapshot.appealReport
+      : null
   const { view: appeal, availableActions } = toAppealState({
     subject,
-    status: snapshot.status,
-    report: snapshot.appealReport,
+    status:
+      snapshot.status &&
+      cfg.startAt &&
+      snapshot.status.lastAppealedAt &&
+      snapshot.status.lastAppealedAt < cfg.startAt
+        ? { ...snapshot.status, lastAppealedAt: null }
+        : snapshot.status,
+    report: publicAppeal,
+    eligibilityReport: snapshot.appealReport,
     latestAppealableAt: snapshot.latestAppealableAt,
     windowMonths: cfg.appealWindowMonths,
   })
@@ -442,7 +458,7 @@ export const toSubjectView = ({
     latest(
       actions[0]?.createdAt,
       snapshot.lastActionAt,
-      snapshot.appealReport?.updatedAt,
+      publicAppeal?.updatedAt,
       appeal.appealedAt,
       appeal.resolvedAt,
       snapshot.status?.updatedAt,
@@ -477,7 +493,7 @@ export const hydrateSubjectView = async (
   seenAt?: DatetimeString | null,
 ): Promise<SubjectView | null> => {
   const [snapshot, policyList] = await Promise.all([
-    loadSubject(db, subject),
+    loadSubject(db, subject, cfg.startAt),
     loadPolicyList(db, serviceDid),
   ])
   return toSubjectView({

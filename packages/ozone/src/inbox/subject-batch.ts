@@ -55,6 +55,9 @@ export async function hydrateSubjectViews(
             sql<boolean>`coalesce("subjectUri", "subjectDid") IN (${sql.join(uris)})`,
           )
           .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
+          .$if(cfg.startAt !== undefined, (qb) =>
+            qb.where('createdAt', '>=', cfg.startAt!),
+          )
           .select(publicEventSelection)
           .select(
             sql<number>`row_number() over (partition by "subjectType", "subjectUri" order by id desc)`.as(

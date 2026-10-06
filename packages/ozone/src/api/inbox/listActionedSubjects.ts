@@ -17,6 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         did,
         params,
         seenAt,
+        ctx.cfg.inbox.startAt,
       )
       const subjects = await hydrateSubjectViews(
         ctx.db,

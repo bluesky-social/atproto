@@ -64,6 +64,7 @@ export async function queryActionedSubjects(
   did: DidString,
   params: Partial<tools.ozone.inbox.listActionedSubjects.$Params>,
   seenAt: DatetimeString | null = null,
+  startAt?: DatetimeString,
 ): Promise<{ rows: ActionedSubjectRow[]; cursor?: string }> {
   const field = params.sortField ?? 'updatedAt'
   const direction = params.sortDirection ?? 'desc'
@@ -87,6 +88,9 @@ export async function queryActionedSubjects(
             com.atproto.repo.strongRef.$type,
           ])
           .where('action', 'in', [...PUBLIC_EVENT_ACTIONS])
+          .$if(startAt !== undefined, (qb) =>
+            qb.where('createdAt', '>=', startAt!),
+          )
           .select([
             sql<string>`coalesce("subjectUri", "subjectDid")`.as('subject'),
             sql<number>`count(*) FILTER (WHERE action <> ${REVERSE_TAKEDOWN})::int`.as(
@@ -122,7 +126,11 @@ export async function queryActionedSubjects(
         sql<string>`CASE WHEN s."recordPath" = '' THEN s.did ELSE 'at://' || s.did || '/' || s."recordPath" END`,
       ),
     )
-    .leftJoin('inbox_appeals as r', 'r.recordPath', 's.recordPath')
+    .leftJoin('inbox_appeals as r', (join) =>
+      join
+        .onRef('r.recordPath', '=', 's.recordPath')
+        .$call((jb) => (startAt ? jb.on('r.createdAt', '>=', startAt) : jb)),
+    )
     .where('s.did', '=', did)
     .where('s.convoId', '=', '')
     .where('a.actionCount', '>', 0)
@@ -202,7 +210,7 @@ export async function getActionedSubjectDetail(
 ): Promise<tools.ozone.inbox.getActionedSubject.$OutputBody | null> {
   const before = params.cursor ? parseSubjectCursor(params.cursor) : undefined
   const [snapshot, policyList] = await Promise.all([
-    loadSubject(db, subject),
+    loadSubject(db, subject, cfg.startAt),
     loadPolicyList(db, serviceDid),
   ])
   if (!snapshot.actionCount) return null
@@ -213,6 +221,7 @@ export async function getActionedSubjectDetail(
     before,
     policyList,
     cfg.policyDefaultUrl ?? DEFAULT_INBOX_POLICY_URL,
+    cfg.startAt,
   )
   const view = toSubjectView({
     subject,
@@ -239,6 +248,9 @@ export async function getActionedSubjectDetail(
     .selectFrom('report')
     .where((eb) => reportSubjectFilter(eb, subject))
     .where('reportType', '!=', APPEAL_REASON_TYPE)
+    .$if(cfg.startAt !== undefined, (qb) =>
+      qb.where('createdAt', '>=', cfg.startAt!),
+    )
     .select(['reportType', 'createdAt'])
   // @NOTE The subject indexes are partial by status. Keep each branch's
   // predicate explicit so both active and closed history use those indexes.

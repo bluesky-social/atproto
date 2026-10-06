@@ -46,6 +46,8 @@ export type AppealInput = {
   subject: ModSubject
   status: Pick<ModerationSubjectStatusRow, 'appealed' | 'lastAppealedAt'> | null
   report: AppealReport | null
+  /** Eligibility retains older appeals even when their history is hidden. */
+  eligibilityReport?: AppealReport | null
 
   /** Calendar months an action stays appealable, from `InboxConfig`. */
   windowMonths: number
@@ -96,6 +98,7 @@ export const toAppealState = ({
   subject,
   status,
   report,
+  eligibilityReport = report,
   latestAppealableAt,
   windowMonths,
 }: AppealInput): AppealState => {
@@ -122,7 +125,9 @@ export const toAppealState = ({
   if (appealableUntil) view.appealableUntil = appealableUntil
 
   const availableActions =
-    windowOpen && !appealsExhausted(subject, report) ? ['appeal'] : []
+    windowOpen && !appealsExhausted(subject, eligibilityReport)
+      ? ['appeal']
+      : []
 
   return { view, availableActions }
 }
@@ -208,6 +213,7 @@ export const eventSubjectFilter = (
     return eb.and([
       eb('subjectDid', '=', subjectDid),
       eb('subjectUri', '=', subjectUri),
+      eb('subjectType', '=', subjectType),
     ])
   }
   return eb.and([
@@ -225,6 +231,9 @@ export const findAppealedEvent = async (
     .selectFrom('moderation_event')
     .where((eb) => eventSubjectFilter(eb, subject))
     .where('action', '=', action.type === 'label' ? LABEL : TAKEDOWN)
+    .$if(ctx.cfg.inbox.startAt !== undefined, (qb) =>
+      qb.where('createdAt', '>=', ctx.cfg.inbox.startAt!),
+    )
 
   if (action.type === 'label') {
     query = query.where(

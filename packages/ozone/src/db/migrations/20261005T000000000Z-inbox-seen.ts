@@ -23,9 +23,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   `.execute(db)
   // @NOTE Cover the public-action aggregation without fetching private events.
   await sql`
-    CREATE INDEX IF NOT EXISTS idx_moderation_event_inbox_public
-    ON moderation_event ("subjectDid")
-    INCLUDE ("subjectUri", action, "createdAt")
+    CREATE INDEX IF NOT EXISTS idx_moderation_event_inbox_public_created
+    ON moderation_event ("subjectDid", "createdAt" DESC, id DESC)
+    INCLUDE ("subjectUri", action)
     WHERE "subjectType" IN (
       'com.atproto.admin.defs#repoRef', 'com.atproto.repo.strongRef'
     ) AND action IN (
@@ -41,7 +41,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema
-    .dropIndex('idx_moderation_event_inbox_public')
+    .dropIndex('idx_moderation_event_inbox_public_created')
     .ifExists()
     .execute()
   await db.schema.dropIndex('idx_report_reporter_created').ifExists().execute()

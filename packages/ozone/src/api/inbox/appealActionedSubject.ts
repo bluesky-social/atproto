@@ -12,7 +12,7 @@ import {
   subjectKey,
 } from '../../inbox/appeal.js'
 import { getSeenAt } from '../../inbox/seen.js'
-import { hydrateSubjectView } from '../../inbox/views.js'
+import { hydrateSubjectView, loadSubject } from '../../inbox/views.js'
 import { tools } from '../../lexicons/index.js'
 import {
   subjectFromEventRow,
@@ -32,6 +32,16 @@ export default function (server: Server, ctx: AppContext) {
 
       const inputSubject = subjectFromInput(subjectInput)
       const action = await resolveAppealAction(ctx, inputSubject, actionInput)
+      if (
+        ctx.cfg.inbox.startAt &&
+        ((actionInput && !action) ||
+          (action && action.createdAt < ctx.cfg.inbox.startAt))
+      ) {
+        throw new ForbiddenError(
+          'Moderation action is not visible in the inbox',
+          'NotAppealable',
+        )
+      }
 
       // validate action event
       if (action) {
@@ -68,6 +78,15 @@ export default function (server: Server, ctx: AppContext) {
       }
       if (!canAppealForOthers && requester !== subject.did) {
         throw new ForbiddenError('Subject is not appealable', 'NotAppealable')
+      }
+      if (
+        ctx.cfg.inbox.startAt &&
+        !(await loadSubject(ctx.db, subject, ctx.cfg.inbox.startAt)).actionCount
+      ) {
+        throw new ForbiddenError(
+          'Subject is not visible in the inbox',
+          'NotAppealable',
+        )
       }
 
       await fileAppeal(ctx, {

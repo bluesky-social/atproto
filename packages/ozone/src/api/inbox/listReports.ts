@@ -20,8 +20,13 @@ export default function (server: Server, ctx: AppContext) {
         did,
         params,
         seenAt,
+        ctx.cfg.inbox.startAt,
       )
-      const events = await loadReportActions(ctx.db, rows)
+      const events = await loadReportActions(
+        ctx.db,
+        rows,
+        ctx.cfg.inbox.startAt,
+      )
       return {
         encoding: 'application/json',
         body: {

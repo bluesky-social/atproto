@@ -13,9 +13,18 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, params }) => {
       const did = inboxViewerDid(auth, params.did)
-      const row = await findInboxReport(ctx.db, did, params.id)
+      const row = await findInboxReport(
+        ctx.db,
+        did,
+        params.id,
+        ctx.cfg.inbox.startAt,
+      )
       if (!row) throw new InvalidRequestError('Report not found', 'NotFound')
-      const events = await loadReportActions(ctx.db, [row])
+      const events = await loadReportActions(
+        ctx.db,
+        [row],
+        ctx.cfg.inbox.startAt,
+      )
       return {
         encoding: 'application/json',
         body: toReportDetail(row, ctx.cfg.service.did, events),

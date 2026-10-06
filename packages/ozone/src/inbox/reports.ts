@@ -13,36 +13,39 @@ import {
   toActionViews,
 } from './views.js'
 
-function reportQuery(db: Database, reporter: DidString) {
+const reportSelection = [
+  'me.subjectType',
+  'me.subjectDid',
+  'me.subjectUri',
+  'me.subjectCid',
+  'me.subjectBlobCids',
+  'me.subjectMessageId',
+  'me.subjectConvoId',
+  'me.comment',
+  sql<
+    PublicEventRow['meta']
+  >`jsonb_build_object('convoId', me.meta->'convoId')`.as('meta'),
+  'r.id as internalReportId',
+  'r.status as reportStatus',
+  'r.reportType as reportReasonType',
+  'r.createdAt as reportCreatedAt',
+  'r.updatedAt as reportUpdatedAt',
+  'r.closedAt as reportClosedAt',
+] as const
+
+function reportQuery(
+  db: Database,
+  reporter: DidString,
+  startAt?: DatetimeString,
+) {
   return db.db
     .selectFrom('moderation_event as me')
     .innerJoin('report as r', 'r.eventId', 'me.id')
     .where('me.createdBy', '=', reporter)
     .where('me.action', '=', tools.ozone.moderation.defs.modEventReport.$type)
     .where('r.reportType', '!=', APPEAL_REASON_TYPE)
-    .select([
-      'me.subjectType',
-      'me.subjectDid',
-      'me.subjectUri',
-      'me.subjectCid',
-      'me.subjectBlobCids',
-      'me.subjectMessageId',
-      'me.subjectConvoId',
-      'me.comment',
-    ])
-    .select(
-      sql<
-        PublicEventRow['meta']
-      >`jsonb_build_object('convoId', me.meta->'convoId')`.as('meta'),
-    )
-    .select([
-      'r.id as internalReportId',
-      'r.status as reportStatus',
-      'r.reportType as reportReasonType',
-      'r.createdAt as reportCreatedAt',
-      'r.updatedAt as reportUpdatedAt',
-      'r.closedAt as reportClosedAt',
-    ])
+    .$if(startAt !== undefined, (qb) => qb.where('r.createdAt', '>=', startAt!))
+    .select(reportSelection)
 }
 
 /** Load one public report by its report ID and its owner. */
@@ -50,8 +53,9 @@ export async function findInboxReport(
   db: Database,
   reporter: DidString,
   reportId: number,
+  startAt?: DatetimeString,
 ) {
-  return reportQuery(db, reporter)
+  return reportQuery(db, reporter, startAt)
     .where('r.id', '=', reportId)
     .executeTakeFirst()
 }
@@ -61,37 +65,35 @@ export async function queryInboxReports(
   reporter: DidString,
   params: tools.ozone.inbox.listReports.$Params,
   seenAt: DatetimeString | null,
+  startAt?: DatetimeString,
 ) {
   const field = params.sortField ?? 'updatedAt'
   const direction = params.sortDirection ?? 'desc'
   const limit = params.limit ?? 50
   const sortColumn = field === 'createdAt' ? 'r.createdAt' : 'r.updatedAt'
-  const source = db.db
-    .selectFrom('moderation_event')
-    .where('createdBy', '=', reporter)
-    .where('action', '=', tools.ozone.moderation.defs.modEventReport.$type)
-    .select('id')
-  // @NOTE Explicit URI predicates use the existing partial reporter indexes.
-  // The lateral LIMIT keeps report lookups anchored to those event IDs.
-  // Sorting still reads the reporter's history, without materializing its IDs.
+  // @NOTE Seek the reporter/time index first. The lateral primary-key check
+  // rejects corrupt ownership/source rows before LIMIT without scanning events.
   let query = db.db
-    .selectFrom(
-      source
-        .where('subjectUri', 'is', null)
-        .unionAll(source.where('subjectUri', 'is not', null))
-        .as('me'),
-    )
+    .selectFrom('report as r')
     .innerJoinLateral(
       (eb) =>
         eb
-          .selectFrom('report')
-          .whereRef('eventId', '=', 'me.id')
-          .select(['id', 'status', 'reportType', 'createdAt', 'updatedAt'])
+          .selectFrom('moderation_event')
+          .whereRef('id', '=', 'r.eventId')
+          .where('createdBy', '=', reporter)
+          .where(
+            'action',
+            '=',
+            tools.ozone.moderation.defs.modEventReport.$type,
+          )
+          .select('id')
           .limit(1)
-          .as('r'),
+          .as('source'),
       (join) => join.onTrue(),
     )
+    .where('r.reporterDid', '=', reporter)
     .where('r.reportType', '!=', APPEAL_REASON_TYPE)
+    .$if(startAt !== undefined, (qb) => qb.where('r.createdAt', '>=', startAt!))
   if (params.filter === 'pending')
     query = query.where('r.status', '!=', 'closed')
   if (params.filter === 'resolved')
@@ -108,13 +110,28 @@ export async function queryInboxReports(
     )
   }
 
-  const pageIds = query
-    .select('r.id')
+  const candidates = query
+    .select([
+      'r.id',
+      'r.eventId',
+      'r.status',
+      'r.reportType',
+      'r.createdAt',
+      'r.updatedAt',
+      'r.closedAt',
+    ])
     .orderBy(sortColumn, direction)
     .orderBy('r.id', direction)
     .limit(limit + 1)
-  const rows = await reportQuery(db, reporter)
-    .where('r.id', 'in', pageIds)
+  // @NOTE One statement/snapshot; only the bounded page loads public source data.
+  const rows = await db.db
+    .with(
+      (cte) => cte('inbox_report_page').materialized(),
+      () => candidates,
+    )
+    .selectFrom('inbox_report_page as r')
+    .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
+    .select(reportSelection)
     .orderBy(sortColumn, direction)
     .orderBy('r.id', direction)
     .limit(limit + 1)
@@ -143,6 +160,7 @@ export type ReportActions = {
 export async function loadReportActions(
   db: Database,
   rows: InboxReportRow[],
+  startAt?: DatetimeString,
 ): Promise<ReportActions> {
   const closedReportIds = rows
     .filter((row) => row.reportStatus === 'closed')
@@ -178,6 +196,9 @@ export async function loadReportActions(
     ? await db.db
         .selectFrom('moderation_event')
         .where('id', 'in', ids)
+        .$if(startAt !== undefined, (qb) =>
+          qb.where('createdAt', '>=', startAt!),
+        )
         .select(publicEventSelection)
         .execute()
     : []
