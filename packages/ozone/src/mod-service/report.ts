@@ -449,10 +449,12 @@ async function processEmailReportAction(
     reportAction.types?.length ||
     reportAction.all
   ) {
-    throw new Error('Email events must target specific report IDs')
+    return 0
   }
 
   const reportIds = [...new Set(reportAction.ids)]
+  // Email events target a repo DID even when the associated report is
+  // record-level; the explicit report IDs disambiguate reports on that repo.
   const matchingReports = await reportQuery(db)
     .where('r.did', '=', subjectDid)
     .where('r.id', 'in', reportIds)
@@ -492,6 +494,9 @@ async function processEmailReportAction(
  * 2. Validating that specified report IDs exist and belong to the subject
  * 3. Bulk-updating reports with the action event ID, note, and status
  * 4. Bulk-inserting a report_activity row for each updated report
+ *
+ * Email events only associate explicit report IDs and do not change report
+ * status or create report activities.
  *
  * @throws InvalidRequestError if validation fails
  */
