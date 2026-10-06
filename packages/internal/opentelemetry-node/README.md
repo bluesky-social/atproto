@@ -48,7 +48,8 @@ is configured.
 
 Pass the known XRPC methods the service may answer (including the ones it
 proxies) as `xrpcMethods`. This allows to set the `http.route` attribute
-correctly for these methods in the metrics.
+correctly for these methods in the metrics. When `xrpcMethods` is omitted, the
+`http.route` of the metrics is left as set by the Express instrumentation.
 
 ```ts
 // @NOTE **do not** import runtime code here (like `ids` from
