@@ -446,6 +446,8 @@ browserDescribe('account-first FedCM in Chrome 141+', () => {
     )
     const popupPage = await popupTarget.page()
     assert(popupPage)
+    await popup.typeInInput('username', 'alice.test')
+    await popup.typeInInput('password', 'alice-pass')
     const closed = new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(
         () => reject(new Error('FedCM sign-in window did not close')),
@@ -457,8 +459,6 @@ browserDescribe('account-first FedCM in Chrome 141+', () => {
       })
     })
     void closed.catch(() => {})
-    await popup.typeInInput('username', 'alice.test')
-    await popup.typeInInput('password', 'alice-pass')
     await popup.clickOnText('Sign in')
     const chooser = await refreshed
     expect(chooser.dialogType).toBe('AccountChooser')
