@@ -1,5 +1,11 @@
 # @atproto/bsky
 
+## 0.1.3
+
+### Patch Changes
+
+- [#5598](https://github.com/bluesky-social/atproto/pull/5598) [`6570e75`](https://github.com/bluesky-social/atproto/commit/6570e750752eeabc8d81f9571d1dff378921e42c) Thanks [@blackmichael](https://github.com/blackmichael)! - Hydrate site.standard records through the generic record dataplane RPCs, resolving document publications with a second lookup, and remove the site.standard-specific dataplane RPCs.
+
 ## 0.1.2
 
 ### Patch Changes
