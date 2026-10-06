@@ -15,6 +15,9 @@ export enum Gate {
   IrisFeed = 'iris:feed:enable',
   OpThreadMetadataEnable = 'op_thread_metadata:enable',
   KnownLikersFeedEnable = 'known_likers:feed:enable',
+  SuggestedFeedsV2Enable = 'suggested_feeds_v2:enable',
+  SuggestedStarterPacksV2Enable = 'suggested_starter_packs_v2:enable',
+  SuggestedStarterPacksOnboardingV2Enable = 'suggested_starter_packs_onboarding_v2:enable',
 
   // temp
   AATest = 'aa-test-appview',
