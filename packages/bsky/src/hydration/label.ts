@@ -21,6 +21,8 @@ export type { Label }
 
 export type SubjectLabels = {
   isImpersonation: boolean
+  /** Bluesky's mod service hid this profile's links (profile links beta). */
+  hidesProfileLinks: boolean
   isTakendown: boolean
   needsReview: boolean
   labels: HydrationMap<`${string}::${string}`, Label> // src + val -> label
@@ -96,6 +98,7 @@ export class LabelHydrator {
       if (!entry) {
         entry = {
           isImpersonation: false,
+          hidesProfileLinks: false,
           isTakendown: false,
           needsReview: false,
           labels: new HydrationMap(),
@@ -129,6 +132,13 @@ export class LabelHydrator {
         labelers.redact.has(label.src)
       ) {
         entry.isImpersonation = true
+      }
+      if (
+        label.val === HIDE_PROFILE_LINKS_LABEL &&
+        !label.neg &&
+        labelers.redact.has(label.src)
+      ) {
+        entry.hidesProfileLinks = true
       }
     }
 
@@ -208,5 +218,6 @@ function labelerDidToUri<T extends DidString>(did: T) {
 }
 
 const IMPERSONATION_LABEL = 'impersonation'
+const HIDE_PROFILE_LINKS_LABEL = 'hide-links'
 const TAKEDOWN_LABELS = ['!takedown', '!suspend']
 const NEEDS_REVIEW_LABEL = 'needs-review'

@@ -55,6 +55,10 @@ import {
   uriToDid as creatorFromUri,
 } from '../util/uris.js'
 import {
+  type BetaProfileLinksView,
+  getBetaProfileLinks,
+} from './profile-links.js'
+import {
   type ThreadItemValueBlocked,
   type ThreadItemValueNoUnauthenticated,
   type ThreadItemValueNotFound,
@@ -356,8 +360,28 @@ export class Views {
         ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
         : undefined,
       pinnedPost: safePinnedPost(actor.profile?.pinnedPost),
+      ...this.profileBetaLinks(did, state),
     }
   }
+
+  profileBetaLinks(
+    did: DidString,
+    state: HydrationState,
+  ): BetaProfileLinksView | undefined {
+    const profile = state.actors?.get(did)?.profile
+    if (!profile) return
+    const profileUri = atUri(did, app.bsky.actor.profile)
+    if (
+      state.labels?.get(did)?.hidesProfileLinks ||
+      state.labels?.get(profileUri)?.hidesProfileLinks
+    ) {
+      return
+    }
+    return getBetaProfileLinks(profile, (cid) =>
+      this.imgUriBuilder.getPresetUri('avatar', did, cid),
+    )
+  }
+
   profile(
     did: DidString,
     state: HydrationState,
