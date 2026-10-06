@@ -108,7 +108,35 @@ const skeletonFromTopics = async (
   )
 }
 
+const skeletonFromIris = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
+  const { params, ctx } = input
+  if (!ctx.irisClient) {
+    throw new MethodNotImplementedError('Iris agent not available')
+  }
+
+  return ctx.irisClient.call(
+    app.bsky.unspecced.getSuggestedUsersSkeleton,
+    {
+      limit: params.limit,
+      category: params.category,
+      viewer: params.hydrateCtx.viewer ?? undefined,
+    },
+    {
+      headers: params.headers,
+      signal: params.signal,
+    },
+  )
+}
+
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+  const useIris = input.params.hydrateCtx.features.checkGate(
+    input.params.hydrateCtx.features.Gate.SuggestedUsersIrisEnable,
+  )
+  if (useIris) {
+    return skeletonFromIris(input)
+  }
   const useDiscover = input.params.hydrateCtx.features.checkGate(
     input.params.hydrateCtx.features.Gate.SuggestedUsersDiscoverEnable,
   )
@@ -170,6 +198,7 @@ type Context = {
   views: Views
   topicsClient: Client | undefined
   suggestionsClient: Client | undefined
+  irisClient: Client | undefined
 }
 
 type Params = app.bsky.unspecced.getSuggestedUsers.$Params & {

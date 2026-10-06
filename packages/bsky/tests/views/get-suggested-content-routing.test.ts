@@ -21,37 +21,139 @@ const IRIS_API_KEY = 'test-iris-api-key'
 type Route = {
   name: string
   gate: Gate
+  // The legacy backend when the gate is off: Topics for feeds/starter packs,
+  // seeemore (suggestionsUrl) for user suggestions. The dedicated user
+  // skeletons fall back to the base getSuggestedUsersSkeleton on seeemore.
+  legacy: 'topics' | 'suggestions'
+  legacyMethod?: string
+  // NSID of the app-facing endpoint, for service-auth headers.
+  lxm?: string
   skeletonMethod: string
   recIdStr: string
-  call: (agent: AtpAgent) => Promise<string | undefined>
+  // getSuggestions falls back to the dataplane and getSuggestedFollowsByActor
+  // returns an empty list when the gated client is missing; the rest 501.
+  onIrisUnavailable: 'throws' | 'fallback' | 'empty'
+  call: (
+    agent: AtpAgent,
+    headers?: Record<string, string>,
+  ) => Promise<string | undefined>
 }
 
 const routes: Route[] = [
   {
     name: 'suggested feeds',
     gate: Gate.SuggestedFeedsV2Enable,
+    legacy: 'topics',
     skeletonMethod: ids.AppBskyUnspeccedGetSuggestedFeedsSkeleton,
     recIdStr: 'suggested-feeds-rec-id',
+    onIrisUnavailable: 'throws',
     call: async (agent) =>
       (await agent.app.bsky.unspecced.getSuggestedFeeds()).data.recIdStr,
   },
   {
     name: 'suggested starter packs',
     gate: Gate.SuggestedStarterPacksV2Enable,
+    legacy: 'topics',
     skeletonMethod: ids.AppBskyUnspeccedGetSuggestedStarterPacksSkeleton,
     recIdStr: 'suggested-starter-packs-rec-id',
+    onIrisUnavailable: 'throws',
     call: async (agent) =>
       (await agent.app.bsky.unspecced.getSuggestedStarterPacks()).data.recIdStr,
   },
   {
     name: 'onboarding suggested starter packs',
     gate: Gate.SuggestedStarterPacksOnboardingV2Enable,
+    legacy: 'topics',
     skeletonMethod:
       ids.AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton,
     recIdStr: 'onboarding-suggested-starter-packs-rec-id',
+    onIrisUnavailable: 'throws',
     call: async (agent) =>
       (await agent.app.bsky.unspecced.getOnboardingSuggestedStarterPacks()).data
         .recIdStr,
+  },
+  {
+    name: 'suggested users',
+    gate: Gate.SuggestedUsersIrisEnable,
+    legacy: 'topics',
+    skeletonMethod: ids.AppBskyUnspeccedGetSuggestedUsersSkeleton,
+    recIdStr: 'suggested-users-rec-id',
+    onIrisUnavailable: 'throws',
+    call: async (agent) =>
+      (await agent.app.bsky.unspecced.getSuggestedUsers()).data.recIdStr,
+  },
+  {
+    name: 'suggested users for discover',
+    gate: Gate.SuggestedUsersIrisEnable,
+    legacy: 'suggestions',
+    legacyMethod: ids.AppBskyUnspeccedGetSuggestedUsersSkeleton,
+    skeletonMethod: ids.AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton,
+    recIdStr: 'suggested-users-discover-rec-id',
+    onIrisUnavailable: 'throws',
+    call: async (agent) =>
+      (await agent.app.bsky.unspecced.getSuggestedUsersForDiscover()).data
+        .recIdStr,
+  },
+  {
+    name: 'suggested users for explore',
+    gate: Gate.SuggestedUsersIrisEnable,
+    legacy: 'suggestions',
+    legacyMethod: ids.AppBskyUnspeccedGetSuggestedUsersSkeleton,
+    skeletonMethod: ids.AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton,
+    recIdStr: 'suggested-users-explore-rec-id',
+    onIrisUnavailable: 'throws',
+    call: async (agent) =>
+      (await agent.app.bsky.unspecced.getSuggestedUsersForExplore()).data
+        .recIdStr,
+  },
+  {
+    name: 'suggested users for see more',
+    gate: Gate.SuggestedUsersIrisEnable,
+    legacy: 'suggestions',
+    legacyMethod: ids.AppBskyUnspeccedGetSuggestedUsersSkeleton,
+    skeletonMethod: ids.AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton,
+    recIdStr: 'suggested-users-seemore-rec-id',
+    onIrisUnavailable: 'throws',
+    call: async (agent) =>
+      (await agent.app.bsky.unspecced.getSuggestedUsersForSeeMore()).data
+        .recIdStr,
+  },
+  {
+    name: 'onboarding suggested users',
+    gate: Gate.SuggestedUsersIrisEnable,
+    legacy: 'suggestions',
+    skeletonMethod: ids.AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton,
+    recIdStr: 'onboarding-users-rec-id',
+    onIrisUnavailable: 'throws',
+    call: async (agent) =>
+      (await agent.app.bsky.unspecced.getSuggestedOnboardingUsers()).data
+        .recIdStr,
+  },
+  {
+    name: 'actor suggestions',
+    gate: Gate.SuggestedUsersIrisEnable,
+    legacy: 'suggestions',
+    lxm: ids.AppBskyActorGetSuggestions,
+    skeletonMethod: ids.AppBskyUnspeccedGetSuggestionsSkeleton,
+    recIdStr: 'suggestions-rec-id',
+    onIrisUnavailable: 'fallback',
+    call: async (agent, headers) =>
+      (await agent.app.bsky.actor.getSuggestions({}, { headers })).data
+        .recIdStr,
+  },
+  {
+    name: 'suggested follows by actor',
+    gate: Gate.SuggestedUsersIrisEnable,
+    legacy: 'suggestions',
+    skeletonMethod: ids.AppBskyUnspeccedGetSuggestionsSkeleton,
+    recIdStr: 'suggestions-rec-id',
+    onIrisUnavailable: 'empty',
+    call: async (agent) =>
+      (
+        await agent.app.bsky.graph.getSuggestedFollowsByActor({
+          actor: 'alice.test',
+        })
+      ).data.recIdStr,
   },
 ]
 
@@ -59,42 +161,76 @@ describe('suggested content routing', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let topicsServer: MockSuggestedContentServer
+  let suggestionsServer: MockSuggestedContentServer
   let irisServer: MockSuggestedContentServer
+  let aliceDid: string
 
   beforeAll(async () => {
     topicsServer = new MockSuggestedContentServer()
+    suggestionsServer = new MockSuggestedContentServer()
     irisServer = new MockSuggestedContentServer()
-    await Promise.all([topicsServer.listen(), irisServer.listen()])
+    await Promise.all([
+      topicsServer.listen(),
+      suggestionsServer.listen(),
+      irisServer.listen(),
+    ])
 
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_suggested_content_routing',
       bsky: {
         topicsUrl: topicsServer.url,
+        suggestionsUrl: suggestionsServer.url,
         irisUrl: irisServer.url,
         irisApiKey: IRIS_API_KEY,
       },
     })
     agent = network.bsky.getAgent()
+
+    // getSuggestions only calls the skeleton service for an authed viewer, and
+    // getSuggestedFollowsByActor needs a resolvable actor.
+    const sc = network.getSeedClient()
+    await sc.createAccount('alice', {
+      handle: 'alice.test',
+      email: 'alice@test.com',
+      password: 'alice-pass',
+    })
+    await network.processAll()
+    aliceDid = sc.dids.alice
   })
 
   beforeEach(() => {
     topicsServer.reset()
+    suggestionsServer.reset()
     irisServer.reset()
   })
 
   afterAll(async () => {
     await network?.close()
-    await Promise.all([topicsServer?.stop(), irisServer?.stop()])
+    await Promise.all([
+      topicsServer?.stop(),
+      suggestionsServer?.stop(),
+      irisServer?.stop(),
+    ])
   })
 
+  const legacyServer = (route: Route) =>
+    route.legacy === 'topics' ? topicsServer : suggestionsServer
+
+  const headers = async (route: Route) =>
+    route.lxm ? await network.serviceHeaders(aliceDid, route.lxm) : undefined
+
   it.each(routes)(
-    '$name calls Topics when its gate is disabled',
+    '$name calls the legacy backend when its gate is disabled',
     async (route) => {
       using _scope = mockGate()
 
-      await route.call(agent)
+      await route.call(agent, await headers(route))
 
-      expect(topicsServer.requestCount(route.skeletonMethod)).toBe(1)
+      expect(
+        legacyServer(route).requestCount(
+          route.legacyMethod ?? route.skeletonMethod,
+        ),
+      ).toBe(1)
       expect(irisServer.requestCount(route.skeletonMethod)).toBe(0)
     },
   )
@@ -104,9 +240,13 @@ describe('suggested content routing', () => {
     async (route) => {
       using _scope = mockGate(route.gate)
 
-      const recIdStr = await route.call(agent)
+      const recIdStr = await route.call(agent, await headers(route))
 
-      expect(topicsServer.requestCount(route.skeletonMethod)).toBe(0)
+      expect(
+        legacyServer(route).requestCount(
+          route.legacyMethod ?? route.skeletonMethod,
+        ),
+      ).toBe(0)
       expect(irisServer.requestCount(route.skeletonMethod)).toBe(1)
       expect(irisServer.authorization(route.skeletonMethod)).toBe(
         `Bearer ${IRIS_API_KEY}`,
@@ -116,17 +256,23 @@ describe('suggested content routing', () => {
   )
 
   it.each(routes)(
-    '$name fails when Iris is selected but unavailable',
+    '$name handles Iris being selected but unavailable',
     async (route) => {
       using _scope = mockGate(route.gate)
       using _irisClient = vi
         .spyOn(network.bsky.ctx, 'irisClient', 'get')
         .mockReturnValue(undefined)
 
-      await expect(route.call(agent)).rejects.toThrow(
-        'Iris agent not available',
-      )
-      expect(topicsServer.requestCount(route.skeletonMethod)).toBe(0)
+      if (route.onIrisUnavailable === 'throws') {
+        await expect(route.call(agent, await headers(route))).rejects.toThrow(
+          'Iris agent not available',
+        )
+      } else {
+        // getSuggestions falls back to the dataplane; getSuggestedFollowsByActor
+        // returns an empty list.
+        await route.call(agent, await headers(route))
+      }
+      expect(legacyServer(route).requestCount(route.skeletonMethod)).toBe(0)
       expect(irisServer.requestCount(route.skeletonMethod)).toBe(0)
     },
   )
@@ -225,6 +371,38 @@ class MockSuggestedContentServer {
         })
       },
     )
+    const userSuggestionRoutes: [string, Record<string, unknown>][] = [
+      [
+        ids.AppBskyUnspeccedGetSuggestedUsersSkeleton,
+        { dids: [], recIdStr: 'suggested-users-rec-id' },
+      ],
+      [
+        ids.AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton,
+        { dids: [], recIdStr: 'suggested-users-discover-rec-id' },
+      ],
+      [
+        ids.AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton,
+        { dids: [], recIdStr: 'suggested-users-explore-rec-id' },
+      ],
+      [
+        ids.AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton,
+        { dids: [], recIdStr: 'suggested-users-seemore-rec-id' },
+      ],
+      [
+        ids.AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton,
+        { dids: [], recIdStr: 'onboarding-users-rec-id' },
+      ],
+      [
+        ids.AppBskyUnspeccedGetSuggestionsSkeleton,
+        { actors: [], recIdStr: 'suggestions-rec-id' },
+      ],
+    ]
+    for (const [method, body] of userSuggestionRoutes) {
+      app.get(`/xrpc/${method}`, (req, res) => {
+        this.record(method, req.headers.authorization)
+        return res.json(body)
+      })
+    }
     return app
   }
 

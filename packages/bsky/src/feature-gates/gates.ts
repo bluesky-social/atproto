@@ -11,6 +11,7 @@ export enum Gate {
   SuggestedUsersForExploreEnable = 'suggested_users:for_explore:enable',
   SuggestedUsersForDiscoverEnable = 'suggested_users:for_discover:enable',
   SuggestedUsersForSeeMoreEnable = 'suggested_users:for_see_more:enable',
+  SuggestedUsersIrisEnable = 'suggested_users:iris:enable',
   SearchV2Enable = 'search:v2:enable',
   IrisFeed = 'iris:feed:enable',
   IrisFeedWithFriendsEnable = 'iris:feed:with-friends:enable',
