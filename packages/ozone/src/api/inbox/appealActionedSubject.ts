@@ -12,6 +12,7 @@ import {
   subjectKey,
 } from '../../inbox/appeal.js'
 import { getSeenAt } from '../../inbox/seen.js'
+import { inboxHasStarted } from '../../inbox/start.js'
 import { hydrateSubjectView, loadSubject } from '../../inbox/views.js'
 import { tools } from '../../lexicons/index.js'
 import {
@@ -23,6 +24,12 @@ export default function (server: Server, ctx: AppContext) {
   server.add(tools.ozone.inbox.appealActionedSubject, {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
+      if (!inboxHasStarted(ctx.cfg.inbox.startAt)) {
+        throw new ForbiddenError(
+          'The moderation inbox has not started',
+          'NotAppealable',
+        )
+      }
       const { action: actionInput, subject: subjectInput } = input.body
       const requester = auth.credentials.iss
       const canAppealForOthers =

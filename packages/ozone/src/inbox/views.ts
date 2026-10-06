@@ -36,6 +36,7 @@ import {
   toActionPolicies,
 } from './policies.js'
 import { isRead } from './seen.js'
+import { inboxHasStarted } from './start.js'
 export { publicActionType } from './action.js'
 
 /**
@@ -129,6 +130,16 @@ export const loadSubject = async (
   subject: ModSubject,
   startAt?: DatetimeString,
 ): Promise<SubjectSnapshot> => {
+  if (!inboxHasStarted(startAt))
+    return {
+      status: null,
+      events: [],
+      labels: [],
+      actionCount: 0,
+      firstActionAt: null,
+      latestAppealableAt: null,
+      appealReport: null,
+    }
   const appealable = sql.join(
     APPEALABLE_EVENT_ACTIONS.map((action) => sql.lit(action)),
   )
@@ -414,6 +425,7 @@ export const toSubjectView = ({
   policyList = {},
   seenAt = null,
 }: SubjectViewInput): SubjectView | null => {
+  if (!inboxHasStarted(cfg.startAt)) return null
   if (cfg.startAt && !snapshot.actionCount) return null
   if (!snapshot.status && !snapshot.actionCount) return null
 

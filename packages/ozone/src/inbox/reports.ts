@@ -5,6 +5,7 @@ import { tools } from '../lexicons/index.js'
 import { subjectFromEventRow } from '../mod-service/subject.js'
 import { APPEAL_REASON_TYPE, REVERSE_TAKEDOWN } from './appeal.js'
 import { isRead } from './seen.js'
+import { inboxHasStarted } from './start.js'
 import { parseSubjectCursor } from './subjects.js'
 import {
   type PublicEventRow,
@@ -55,6 +56,7 @@ export async function findInboxReport(
   reportId: number,
   startAt?: DatetimeString,
 ) {
+  if (!inboxHasStarted(startAt)) return undefined
   return reportQuery(db, reporter, startAt)
     .where('r.id', '=', reportId)
     .executeTakeFirst()
@@ -67,6 +69,7 @@ export async function queryInboxReports(
   seenAt: DatetimeString | null,
   startAt?: DatetimeString,
 ) {
+  if (!inboxHasStarted(startAt)) return { rows: [], cursor: undefined }
   const field = params.sortField ?? 'updatedAt'
   const direction = params.sortDirection ?? 'desc'
   const limit = params.limit ?? 50

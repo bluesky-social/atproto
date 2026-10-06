@@ -11,6 +11,7 @@ import {
   eventSubjectFilter,
 } from './appeal.js'
 import type { PolicyList } from './policies.js'
+import { inboxHasStarted } from './start.js'
 import {
   type PublicEventRow,
   publicEventSelection,
@@ -27,6 +28,7 @@ export async function queryActionHistory(
   defaultPolicyUrl?: string,
   startAt?: DatetimeString,
 ) {
+  if (!inboxHasStarted(startAt)) return { actions: [], cursor: undefined }
   const events = db.db
     .selectFrom('moderation_event')
     .where((eb) => eventSubjectFilter(eb, subject))

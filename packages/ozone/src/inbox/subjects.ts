@@ -27,6 +27,7 @@ import {
 } from './appeal.js'
 import { queryActionHistory } from './history.js'
 import { loadPolicyList } from './policies.js'
+import { inboxHasStarted } from './start.js'
 import {
   type PublicStatusRow,
   loadSubject,
@@ -66,6 +67,7 @@ export async function queryActionedSubjects(
   seenAt: DatetimeString | null = null,
   startAt?: DatetimeString,
 ): Promise<{ rows: ActionedSubjectRow[]; cursor?: string }> {
+  if (!inboxHasStarted(startAt)) return { rows: [] }
   const field = params.sortField ?? 'updatedAt'
   const direction = params.sortDirection ?? 'desc'
   const limit = params.limit ?? 50
