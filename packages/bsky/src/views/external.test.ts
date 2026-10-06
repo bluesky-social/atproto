@@ -7,6 +7,7 @@ import {
   type TypedLexMap,
   asDatetimeString,
   atUri,
+  lexStringify,
   parseCid,
 } from '@atproto/lex'
 import type { ScopedFeatureGatesClient } from '../feature-gates/index.js'
@@ -812,6 +813,191 @@ describe('record modality views', () => {
         expect(view.likeCount).toBe(7)
       },
     )
+  })
+
+  describe('strict source record validation', () => {
+    const naive = '2026-01-01T00:00:00'
+
+    function addStream(state: HydrationState, fields: object = {}) {
+      addRecord(state, streamUri, {
+        ...place.stream.livestream.$build({ title: 'A stream', createdAt }),
+        ...fields,
+      })
+    }
+
+    test.each([
+      {
+        note: 'article publishedAt',
+        uri: docUri,
+        add: (state: HydrationState) => {
+          addArticle(state, 'https://example.com/blog')
+          state.externalRecords!.get(docUri)!.record.publishedAt = naive
+        },
+      },
+      {
+        note: 'article updatedAt',
+        uri: docUri,
+        add: (state: HydrationState) => {
+          addArticle(state, 'https://example.com/blog')
+          state.externalRecords!.get(docUri)!.record.updatedAt = naive
+        },
+      },
+      {
+        note: 'gallery createdAt',
+        uri: galleryUri,
+        add: (state: HydrationState) => {
+          addGallery(state)
+          state.externalRecords!.get(galleryUri)!.record.createdAt = naive
+        },
+      },
+      {
+        note: 'livestream createdAt',
+        uri: streamUri,
+        add: (state: HydrationState) => addStream(state, { createdAt: naive }),
+      },
+      {
+        note: 'livestream endedAt',
+        uri: streamUri,
+        add: (state: HydrationState) => addStream(state, { endedAt: naive }),
+      },
+      {
+        note: 'livestream lastSeenAt',
+        uri: streamUri,
+        add: (state: HydrationState) =>
+          addStream(state, { lastSeenAt: naive, idleTimeoutSeconds: 60 }),
+      },
+    ])('rejects a timezone-less $note', ({ uri, add }) => {
+      const state = createState()
+      add(state)
+      const before = lexStringify(state.externalRecords.get(uri)!.record)
+      expect(views.externalRecordView(uri, state)).toBeUndefined()
+      expect(lexStringify(state.externalRecords.get(uri)!.record)).toBe(before)
+    })
+
+    it('rejects an article whose publisher fails strict blob validation', () => {
+      const state = createState()
+      addPublication(state)
+      addArticle(state)
+      state.externalRecords.get(pubUri)!.record.icon = {
+        ...blob,
+        mimeType: 'application/pdf',
+      }
+      expect(views.externalRecordView(pubUri, state)).toBeUndefined()
+      expect(views.externalRecordView(docUri, state)).toBeUndefined()
+    })
+
+    it('omits gallery items and photos with timezone-less timestamps', () => {
+      const state = createState()
+      addGallery(state)
+      const kept = addPhoto(state, 'kept')
+      const badLink = addPhoto(state, 'bad-link')
+      state.externalRecords.get(badLink.linkUri)!.record.createdAt = naive
+      const badPhoto = addPhoto(state, 'bad-photo')
+      state.externalRecords.get(badPhoto.photoUri)!.record.createdAt = naive
+      const view = views.externalRecordView(galleryUri, state)
+      assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
+      assertValid(view)
+      expect(view.associatedRefs?.map((ref) => ref.uri)).toEqual([
+        galleryUri,
+        kept.linkUri,
+        kept.photoUri,
+      ])
+    })
+
+    it('omits backlink samples with timezone-less timestamps but keeps counts', () => {
+      const state = createState()
+      addPublication(state)
+      addArticle(state)
+      addGallery(state)
+      const reader = 'did:plc:reader'
+      addActor(state, reader)
+      const recommend = atUri(
+        reader,
+        site.standard.graph.recommend.$type,
+        'recommend',
+      )
+      const subscribe = atUri(
+        reader,
+        site.standard.graph.subscription.$type,
+        'subscription',
+      )
+      const favorite = atUri(reader, social.grain.favorite.$type, 'favorite')
+      addRecord(state, recommend, {
+        ...site.standard.graph.recommend.$build({
+          document: docUri,
+          createdAt,
+        }),
+        createdAt: naive,
+      })
+      addRecord(
+        state,
+        subscribe,
+        site.standard.graph.subscription.$build({
+          publication: pubUri,
+          createdAt: asDatetimeString(createdAt),
+        }),
+      )
+      state.externalRecords.get(subscribe)!.record.createdAt = naive
+      addRecord(state, favorite, {
+        ...social.grain.favorite.$build({ subject: galleryUri, createdAt }),
+        createdAt: naive,
+      })
+      state.externalRecordBacklinks.set(docUri, [recommend])
+      state.externalRecordBacklinks.set(pubUri, [subscribe])
+      state.externalRecordBacklinks.set(galleryUri, [favorite])
+      state.externalRecordBacklinkCounts.set(docUri, {
+        [site.standard.graph.recommend.$type]: 3,
+      })
+      state.externalRecordBacklinkCounts.set(pubUri, {
+        [site.standard.graph.subscription.$type]: 4,
+      })
+      state.externalRecordBacklinkCounts.set(galleryUri, {
+        [social.grain.favorite.$type]: 5,
+      })
+
+      const article = views.externalRecordView(docUri, state)
+      assert(article && app.bsky.embed.external.viewArticle.$isTypeOf(article))
+      assertValid(article)
+      expect(article.likers).toEqual([])
+      expect(article.likeCount).toBe(3)
+      expect(article.publisher?.subscribers).toEqual([])
+      expect(article.publisher?.subscriptionCount).toBe(4)
+      const gallery = views.externalRecordView(galleryUri, state)
+      assert(gallery && app.bsky.embed.external.viewGallery.$isTypeOf(gallery))
+      assertValid(gallery)
+      expect(gallery.likers).toEqual([])
+      expect(gallery.likeCount).toBe(5)
+    })
+
+    it('preserves valid timestamps and leaves source records untouched', () => {
+      const state = createState()
+      addArticle(state, 'https://example.com/blog')
+      const updatedAt = '2026-01-02T03:04:05.678+02:00'
+      state.externalRecords.get(docUri)!.record.updatedAt = updatedAt
+      addStream(state, {
+        endedAt: '2026-01-01T00:30:00Z',
+        lastSeenAt: '2026-01-01T00:20:00Z',
+      })
+      const before = [docUri, streamUri].map((uri) =>
+        lexStringify(state.externalRecords.get(uri)!.record),
+      )
+      const article = views.externalRecordView(docUri, state)
+      assertValid(article)
+      expect(article).toMatchObject({ createdAt, updatedAt })
+      const stream = views.externalRecordView(streamUri, state)
+      assertValid(stream)
+      expect(stream).toMatchObject({
+        createdAt,
+        startedAt: createdAt,
+        endedAt: '2026-01-01T00:30:00Z',
+        active: false,
+      })
+      expect(
+        [docUri, streamUri].map((uri) =>
+          lexStringify(state.externalRecords.get(uri)!.record),
+        ),
+      ).toEqual(before)
+    })
   })
 
   it('omits unsupported collections', () => {

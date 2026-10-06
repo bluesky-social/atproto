@@ -28,7 +28,7 @@ export function externalRecordView(
   if (!info) return
   const { record } = info
 
-  if (site.standard.document.$matches(record, { strict: false })) {
+  if (site.standard.document.$matches(record)) {
     let publisher:
       $Typed<app.bsky.embed.external.ViewArticlePublication> | undefined
     let base = record.site
@@ -68,16 +68,16 @@ export function externalRecordView(
     })
   }
 
-  if (site.standard.publication.$matches(record, { strict: false })) {
+  if (site.standard.publication.$matches(record)) {
     return publicationView(views, uri, state)
   }
 
-  if (social.grain.gallery.$matches(record, { strict: false })) {
+  if (social.grain.gallery.$matches(record)) {
     const links = (state.externalRecordBacklinks?.get(uri) ?? []).flatMap(
       (linkUri) => {
         const link = availableRecord(views, linkUri, state)?.record
         if (
-          !social.grain.gallery.item.$matches(link, { strict: false }) ||
+          !social.grain.gallery.item.$matches(link) ||
           link.gallery !== uri ||
           uriToDid(linkUri) !== uriToDid(uri)
         ) {
@@ -99,7 +99,7 @@ export function externalRecordView(
       const photoUri = link.record.item
       if (seenPhotos.has(photoUri)) continue
       const photo = availableRecord(views, photoUri, state)?.record
-      if (!social.grain.photo.$matches(photo, { strict: false })) continue
+      if (!social.grain.photo.$matches(photo)) continue
       seenPhotos.add(photoUri)
       refs.push(link.uri, photoUri)
       items.push(
@@ -136,7 +136,7 @@ export function externalRecordView(
     })
   }
 
-  if (place.stream.livestream.$matches(record, { strict: false })) {
+  if (place.stream.livestream.$matches(record)) {
     const timeout = record.idleTimeoutSeconds
     const lastSeen = Date.parse(record.lastSeenAt ?? record.createdAt)
     // @NOTE Only an explicit positive timeout expires a stream automatically.
@@ -168,7 +168,7 @@ function publicationView(
   state: HydrationState,
 ): $Typed<app.bsky.embed.external.ViewArticlePublication> | undefined {
   const record = availableRecord(views, uri, state)?.record
-  if (!site.standard.publication.$matches(record, { strict: false })) return
+  if (!site.standard.publication.$matches(record)) return
   const url = httpUri(record.url)
   if (!url || !record.name) return
   return app.bsky.embed.external.viewArticlePublication.$build({
@@ -299,14 +299,12 @@ function backlinkProfiles(
     const record = availableRecord(views, backlink, state)?.record
     const matches =
       kind === 'recommend'
-        ? site.standard.graph.recommend.$matches(record, { strict: false }) &&
+        ? site.standard.graph.recommend.$matches(record) &&
           record.document === uri
         : kind === 'subscription'
-          ? site.standard.graph.subscription.$matches(record, {
-              strict: false,
-            }) && record.publication === uri
-          : social.grain.favorite.$matches(record, { strict: false }) &&
-            record.subject === uri
+          ? site.standard.graph.subscription.$matches(record) &&
+            record.publication === uri
+          : social.grain.favorite.$matches(record) && record.subject === uri
     if (matches) dids.add(uriToDid(backlink))
   }
   const profiles: ProfileViewBasic[] = []
