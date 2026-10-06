@@ -1,4 +1,6 @@
-import { assert, describe, expect, it, test } from 'vitest'
+import { Timestamp } from '@bufbuild/protobuf'
+import { createPromiseClient, createRouterTransport } from '@connectrpc/connect'
+import { assert, describe, expect, it, test, vi } from 'vitest'
 import {
   type AtUriString,
   type DidString,
@@ -7,16 +9,24 @@ import {
   atUri,
   parseCid,
 } from '@atproto/lex'
+import type { ScopedFeatureGatesClient } from '../feature-gates/index.js'
+import { ActorHydrator } from '../hydration/actor.js'
 import type {
   ExternalRecordBacklinkCounts,
   ExternalRecordBacklinks,
   ExternalRecords,
 } from '../hydration/external.js'
-import { type HydrationState, mergeStates } from '../hydration/hydrator.js'
+import {
+  HydrateCtx,
+  type HydrationState,
+  mergeStates,
+} from '../hydration/hydrator.js'
 import { Labels } from '../hydration/label.js'
 import { HydrationMap } from '../hydration/util.js'
 import { ImageUriBuilder } from '../image/uri.js'
 import { app, com, place, site, social } from '../lexicons/index.js'
+import { Service } from '../proto/bsky_connect.js'
+import { ActorInfo, GetActorsResponse } from '../proto/bsky_pb.js'
 import { Views } from './index.js'
 import type { Label } from './types.js'
 import { VideoUriBuilder } from './util.js'
@@ -646,6 +656,162 @@ describe('record modality views', () => {
       state.labels.get(galleryUri)!.needsReview = true
     }
     expect(views.externalRecordView(galleryUri, state)).toBeUndefined()
+  })
+
+  describe('with actors from normal hydration', () => {
+    const dataplane = createPromiseClient(
+      Service,
+      createRouterTransport(() => {}),
+    )
+    const actorHydrator = new ActorHydrator(dataplane)
+    const reader = 'did:plc:reader'
+    const unavailableStatuses = {
+      deactivated: { upstreamStatus: 'deactivated' },
+      'taken-down': { takenDown: true },
+      suspended: { upstreamStatus: 'suspended' },
+      deleted: { exists: false },
+      tombstoned: { tombstonedAt: Timestamp.fromDate(new Date(createdAt)) },
+    } satisfies Record<string, Partial<ActorInfo>>
+    type Status = 'active' | keyof typeof unavailableStatuses
+
+    async function hydrateActors(
+      state: HydrationState,
+      statuses: Partial<Record<DidString, Status>>,
+      includeTakedowns = false,
+    ) {
+      const dids = Object.keys(statuses) as DidString[]
+      using _ = vi.spyOn(dataplane, 'getActors').mockResolvedValue(
+        new GetActorsResponse({
+          actors: dids.map((actorDid) => {
+            const status = statuses[actorDid]!
+            return new ActorInfo({
+              exists: true,
+              handle: 'user.example.com',
+              ...(status === 'active' ? {} : unavailableStatuses[status]),
+            })
+          }),
+        }),
+      )
+      state.actors = await actorHydrator.getActors(dids, { includeTakedowns })
+      state.ctx = new HydrateCtx({
+        labelers: { dids: [], redact: new Set() },
+        viewer: null,
+        includeTakedowns,
+        features: {} as ScopedFeatureGatesClient,
+      })
+    }
+
+    test.each(Object.keys(unavailableStatuses) as Status[])(
+      'omits a record whose owner is %s',
+      async (status) => {
+        const state = createState()
+        addGallery(state)
+        await hydrateActors(state, { [did]: status })
+        expect(state.actors.get(did)).toBeNull()
+        expect(views.externalRecordView(galleryUri, state)).toBeUndefined()
+      },
+    )
+
+    test.each([
+      { status: 'deactivated', available: true },
+      { status: 'taken-down', available: true },
+      { status: 'suspended', available: true },
+      { status: 'deleted', available: false },
+      { status: 'tombstoned', available: false },
+    ] as const)(
+      'with includeTakedowns, a $status owner keeps the record available: $available',
+      async ({ status, available }) => {
+        const state = createState()
+        addGallery(state)
+        await hydrateActors(state, { [did]: status }, true)
+        expect(state.actors.get(did) === null).toBe(!available)
+        const view = views.externalRecordView(galleryUri, state)
+        if (available) {
+          assertValid(view)
+          expect(view?.associatedProfiles?.map((p) => p.did)).toEqual([did])
+        } else {
+          expect(view).toBeUndefined()
+        }
+      },
+    )
+
+    it('keeps records whose owner is absent from hydration state', async () => {
+      const state = createState()
+      addGallery(state)
+      await hydrateActors(state, { [reader]: 'active' })
+      expect(state.actors.has(did)).toBe(false)
+      const view = views.externalRecordView(galleryUri, state)
+      assertValid(view)
+      expect(view?.associatedProfiles).toEqual([])
+    })
+
+    test.each(Object.keys(unavailableStatuses) as Status[])(
+      'omits an article and publication whose publisher is %s',
+      async (status) => {
+        const state = createState()
+        addPublication(state)
+        addArticle(state)
+        await hydrateActors(state, { [did]: 'active', [publisherDid]: status })
+        expect(views.externalRecordView(pubUri, state)).toBeUndefined()
+        expect(views.externalRecordView(docUri, state)).toBeUndefined()
+      },
+    )
+
+    test.each(Object.keys(unavailableStatuses) as Status[])(
+      'drops gallery photos and likers from a %s actor without changing counts',
+      async (status) => {
+        const state = createState()
+        addGallery(state)
+        const kept = addPhoto(state, 'kept')
+        const photoUri = atUri(reader, social.grain.photo.$type, 'photo')
+        const linkUri = atUri(did, social.grain.gallery.item.$type, 'photo')
+        addRecord(
+          state,
+          photoUri,
+          social.grain.photo.$build({ photo: blob, alt: 'leaked' }),
+        )
+        addRecord(
+          state,
+          linkUri,
+          social.grain.gallery.item.$build({
+            gallery: galleryUri,
+            item: photoUri,
+            createdAt,
+            position: -1,
+          }),
+        )
+        const favoriteUri = atUri(reader, social.grain.favorite.$type, 'fav')
+        addRecord(
+          state,
+          favoriteUri,
+          social.grain.favorite.$build({ subject: galleryUri, createdAt }),
+        )
+        state.externalRecordBacklinks
+          .get(galleryUri)!
+          .push(linkUri, favoriteUri)
+        state.externalRecordBacklinkCounts.set(galleryUri, {
+          [social.grain.favorite.$type]: 7,
+        })
+        await hydrateActors(state, { [did]: 'active', [reader]: status })
+
+        const view = views.externalRecordView(galleryUri, state)
+        assert(view && app.bsky.embed.external.viewGallery.$isTypeOf(view))
+        assertValid(view)
+        expect(
+          view.items
+            .filter(app.bsky.embed.external.viewGalleryImage.$isTypeOf)
+            .map((item) => item.alt),
+        ).toEqual(['kept'])
+        expect(view.associatedRefs?.map((ref) => ref.uri)).toEqual([
+          galleryUri,
+          kept.linkUri,
+          kept.photoUri,
+        ])
+        expect(view.associatedProfiles?.map((p) => p.did)).toEqual([did])
+        expect(view.likers).toEqual([])
+        expect(view.likeCount).toBe(7)
+      },
+    )
   })
 
   it('omits unsupported collections', () => {

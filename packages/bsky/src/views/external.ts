@@ -210,6 +210,9 @@ function availableRecord(
   const parsed = new AtUri(uri)
   if (!isDidString(parsed.host) || parsed.collection !== info.record.$type)
     return
+  // @NOTE Actor hydration nulls unavailable accounts (missing and tombstoned
+  // ones even with includeTakedowns). Absent entries just weren't hydrated.
+  if (state.actors?.get(parsed.host) === null) return
   if (views.viewerBlockExists(parsed.host, state)) return
   if (!views.viewerSeesNeedsReview({ uri }, state)) return
   if (
