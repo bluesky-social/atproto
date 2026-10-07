@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
-  lexiconsManifestSchema,
-  normalizeLexiconsManifest,
+  lexiconsManifestV1Schema,
+  normalizeManifest,
 } from './lexicons-manifest.js'
 
 describe('lexiconsManifestSchema', () => {
   it('parses a valid manifest', () => {
     expect(
-      lexiconsManifestSchema.parse({
+      lexiconsManifestV1Schema.parse({
         version: 1,
         lexicons: ['com.example.lexicon'],
         resolutions: {
@@ -31,7 +31,7 @@ describe('lexiconsManifestSchema', () => {
 
   it('rejects an invalid manifest', () => {
     expect(() =>
-      lexiconsManifestSchema.parse({
+      lexiconsManifestV1Schema.parse({
         version: 1,
         lexicons: ['com.example.lexicon'],
         resolutions: {
@@ -44,7 +44,7 @@ describe('lexiconsManifestSchema', () => {
     ).toThrow()
 
     expect(() =>
-      lexiconsManifestSchema.parse({
+      lexiconsManifestV1Schema.parse({
         version: 2,
         lexicons: ['com.example.lexicon'],
         resolutions: {},
@@ -71,7 +71,7 @@ describe('lexiconsManifestSchema', () => {
         },
       },
     }
-    expect(lexiconsManifestSchema.parse(manifest)).toEqual(manifest)
+    expect(lexiconsManifestV1Schema.parse(manifest)).toEqual(manifest)
   })
 
   it('parses a `repo` resolver', () => {
@@ -81,13 +81,13 @@ describe('lexiconsManifestSchema', () => {
       resolvers: [{ type: 'repo' as const, repo: 'did:plc:foobar' }],
       resolutions: {},
     }
-    expect(lexiconsManifestSchema.parse(manifest)).toEqual(manifest)
+    expect(lexiconsManifestV1Schema.parse(manifest)).toEqual(manifest)
   })
 
   it('rejects an unknown resolver type', () => {
     expect(() =>
-      lexiconsManifestSchema.parse({
-        version: 1,
+      lexiconsManifestV1Schema.parse({
+        version: 2,
         lexicons: [],
         resolvers: [{ type: 'bogus', path: 'x' }],
         resolutions: {},
@@ -98,7 +98,7 @@ describe('lexiconsManifestSchema', () => {
   it('rejects a non-URL lock uri as a clean failure (not a raw throw)', () => {
     // `garbage` is neither an at-uri nor parseable by `new URL`. The file-uri
     // branch must fail validation, not let the `new URL` TypeError escape.
-    const result = lexiconsManifestSchema.safeParse({
+    const result = lexiconsManifestV1Schema.safeParse({
       version: 1,
       lexicons: ['com.example.foo'],
       resolutions: {
@@ -114,8 +114,8 @@ describe('lexiconsManifestSchema', () => {
 
 describe('normalizeLexiconsManifest', () => {
   it('sorts lexicons and resolutions but preserves resolver order', () => {
-    const normalized = normalizeLexiconsManifest({
-      version: 1,
+    const normalized = normalizeManifest({
+      version: 2,
       lexicons: ['com.example.b', 'com.example.a'],
       resolvers: [
         { type: 'directory', path: './second' },
@@ -148,13 +148,12 @@ describe('normalizeLexiconsManifest', () => {
 
   it('omits the `resolvers` key entirely when absent or empty', () => {
     expect(
-      'resolvers' in
-        normalizeLexiconsManifest({
-          version: 1,
-          lexicons: [],
-          resolvers: [],
-          resolutions: {},
-        }),
-    ).toBe(false)
+      normalizeManifest({
+        version: 2,
+        lexicons: [],
+        resolvers: [],
+        resolutions: {},
+      }).resolvers,
+    ).toBeUndefined()
   })
 })

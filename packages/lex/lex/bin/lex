@@ -171,7 +171,6 @@ yargs(hideBin(process.argv))
         lexicons: argv.lexicons,
         manifest: argv.manifest,
       })
-      debugger
     },
   )
   .command(

@@ -10,7 +10,13 @@ import {
 import { tmpdir } from 'node:os'
 import { isAbsolute, join, resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { readJsonFile, symlinkLexicon, writeJsonFile } from './fs.js'
+import {
+  readJsonFile,
+  resolveFileUri,
+  symlinkLexicon,
+  toRelativeFileUri,
+  writeJsonFile,
+} from './fs.js'
 
 describe('writeJsonFile', () => {
   let dir: string
@@ -72,6 +78,40 @@ describe('writeJsonFile', () => {
     expect(await readJsonFile(dest)).toEqual({ written: true })
     // ...and the symlink's target was not followed/overwritten.
     expect(await readFile(source, 'utf8')).toBe(sourceContents)
+  })
+})
+
+describe('resolveFileUri', () => {
+  // Regression guard for the installer resolving locked file sources against the
+  // manifest *file* path instead of its directory: the base must be used as-is.
+  it('anchors a relative file:// uri to the given base, not process.cwd()', () => {
+    expect(resolveFileUri('/a/b', 'file://./c/d.json')).toBe(
+      resolve('/a/b', 'c/d.json'),
+    )
+    expect(resolveFileUri('/a/b', 'file://./c/d.json')).toBe('/a/b/c/d.json')
+  })
+
+  it('walks up for a file://../ uri', () => {
+    expect(resolveFileUri('/a/b', 'file://../c.json')).toBe('/a/c.json')
+  })
+
+  it('returns the absolute path for an absolute file:/// uri (base ignored)', () => {
+    expect(resolveFileUri('/a/b', 'file:///abs/c.json')).toBe('/abs/c.json')
+  })
+
+  // Regression guard for #9f79aa: re-normalizing an already-relative locked uri
+  // must round-trip to the same value regardless of process.cwd(). The base here
+  // is deliberately not the cwd; the old `relative(base, fromFileUri(uri))` form
+  // would resolve the relative path against cwd and drift.
+  it('round-trips an already-relative uri through toRelativeFileUri', () => {
+    const base = resolve('/some/manifest/dir')
+    for (const uri of [
+      'file://./c/d.json',
+      'file://../c.json',
+      'file://./foo.json',
+    ] as const) {
+      expect(toRelativeFileUri(base, uri)).toBe(uri)
+    }
   })
 })
 

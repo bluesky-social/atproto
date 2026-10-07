@@ -6,10 +6,11 @@ import type { AtUriString, NsidString } from '@atproto/lex-schema'
 import { type AtUri, NSID, isAtUriString } from '@atproto/syntax'
 import {
   type FileUriString,
-  enoentToNull,
   fromFileUri,
+  isEnoentError,
   isFileUriString,
   readJsonFile,
+  resolveFileUri,
   symlinkLexicon,
   toRelativeFileUri,
   writeJsonFile,
@@ -18,11 +19,14 @@ import {
   listDocumentNsidRefs,
   readLexiconDocument,
 } from './lexicon-document.js'
-import type { LexiconsManifest, Resolution } from './lexicons-manifest.js'
+import type {
+  LexiconsManifestV1,
+  LexiconsManifestV2,
+  Resolution,
+} from './lexicons-manifest.js'
 import {
-  EMPTY_MANIFEST,
   lexiconsManifestSchema,
-  normalizeLexiconsManifest,
+  normalizeManifest,
 } from './lexicons-manifest.js'
 import { NsidMap } from './nsid-map.js'
 import { NsidSet } from './nsid-set.js'
@@ -102,11 +106,10 @@ export type LexInstallerOptions = CreateResolversOptions & {
  */
 export class LexInstaller {
   static async load(options: LexInstallerOptions): Promise<LexInstaller> {
-    const manifest: LexiconsManifest | null = await readJsonFile(
-      options.manifest,
-    )
-      .then((json) => lexiconsManifestSchema.parse(json), enoentToNull)
+    const manifest = await readJsonFile(options.manifest)
+      .then((json) => lexiconsManifestSchema.parse(json))
       .catch((cause: unknown) => {
+        if (isEnoentError(cause)) return undefined
         throw new Error('Failed to read lexicons manifest', { cause })
       })
 
@@ -114,17 +117,17 @@ export class LexInstaller {
   }
 
   protected readonly workingLexicons = new NsidMap<LexiconDocument>()
-  protected readonly workingManifest: LexiconsManifest
-  protected readonly originalManifest: LexiconsManifest | null
+  protected readonly workingManifest: LexiconsManifestV2
+  protected readonly originalManifest: LexiconsManifestV2 | null
   protected readonly resolver: LexiconResolver
 
   constructor(
     protected readonly options: LexInstallerOptions,
-    manifest: LexiconsManifest | null = null,
+    manifest: LexiconsManifestV1 | LexiconsManifestV2 | undefined = undefined,
   ) {
-    this.workingManifest = structuredClone(manifest ?? EMPTY_MANIFEST)
-    this.originalManifest = manifest ? structuredClone(manifest) : null
-    this.resolver = createResolver(options, manifest?.resolvers)
+    this.workingManifest = normalizeManifest(manifest)
+    this.originalManifest = manifest ? normalizeManifest(manifest) : null
+    this.resolver = createResolver(options, this.workingManifest.resolvers)
   }
 
   /**
@@ -141,8 +144,8 @@ export class LexInstaller {
   requiresSave(): boolean {
     if (this.originalManifest == null) return true
     return !lexEquals(
-      normalizeLexiconsManifest(this.originalManifest),
-      normalizeLexiconsManifest(this.workingManifest),
+      normalizeManifest(this.originalManifest),
+      normalizeManifest(this.workingManifest),
     )
   }
 
@@ -262,10 +265,10 @@ export class LexInstaller {
     return this.install({ update: true })
   }
 
-  protected getResolution(id: NsidString | NSID): Resolution | null {
-    const nsid = NSID.from(id).toString()
-    const resolution = Object.hasOwn(this.workingManifest.resolutions, nsid)
-      ? (this.workingManifest.resolutions[nsid] ?? null)
+  protected getResolution(nsid: NsidString | NSID): Resolution | null {
+    const nsidStr = typeof nsid === 'string' ? nsid : nsid.toString()
+    const resolution = Object.hasOwn(this.workingManifest.resolutions, nsidStr)
+      ? (this.workingManifest.resolutions[nsidStr] ?? null)
       : null
     return resolution
   }
@@ -292,8 +295,10 @@ export class LexInstaller {
     this.workingManifest.resolutions[lexicon.id] = {
       cid: cid.toString(),
       uri: isFileUriString(uri)
-        ? // Make sure that the file uris are relative
-          toRelativeFileUri(this.manifestDirPath, fromFileUri(uri))
+        ? // Store file uris relative to the manifest directory. Anchor the
+          // (possibly already-relative) uri to that directory first, so the
+          // locked value never depends on process.cwd().
+          toRelativeFileUri(this.manifestDirPath, uri)
         : typeof uri === 'string'
           ? uri // AtUriString
           : uri.toString(), // AtUri
@@ -311,30 +316,29 @@ export class LexInstaller {
   protected async addLexicon(nsid: NSID, update: boolean): Promise<void> {
     const path = `${join(this.lexiconsDirPath, ...nsid.segments)}.json`
 
-    if (!update) {
-      const resolution = await this.getResolution(nsid)
+    // Existing lock entry, if any. Ignored in `update` mode, where we always
+    // re-resolve from scratch.
+    const resolution = update ? null : this.getResolution(nsid)
 
-      // Try to re-use the existing lexicon file from the lexicons folder, in
-      // order to avoid re-downloading it if it already exists locally.
-      if (resolution) {
-        if (!isAtUriString(resolution.uri)) {
-          // Ensure that, if the resolution is a file URI, the source file
-          // exists and is correctly linked.
-          const sourcePath = resolve(
-            this.options.manifest,
-            fromFileUri(resolution.uri),
-          )
-          await symlinkLexicon(path, sourcePath)
-        }
+    // Try to re-use the existing lexicon file from the lexicons folder, in
+    // order to avoid re-downloading it if it already exists locally.
+    if (resolution) {
+      if (!isAtUriString(resolution.uri)) {
+        // Ensure that, if the resolution is a file URI, the source file
+        // exists and is correctly linked. File uris are locked relative to the
+        // manifest *directory*, so resolve them against that (not the manifest
+        // file path, which would land one level too deep).
+        const sourcePath = resolveFileUri(this.manifestDirPath, resolution.uri)
+        await symlinkLexicon(path, sourcePath)
+      }
 
-        const lexicon = await readLexiconDocument(path)
+      const lexicon = await readLexiconDocument(path)
 
-        if (lexicon?.id === nsid.toString()) {
-          return this.addDocument(nsid, {
-            uri: resolution.uri,
-            lexicon,
-          })
-        }
+      if (lexicon?.id === nsid.toString()) {
+        return this.addDocument(nsid, {
+          uri: resolution.uri,
+          lexicon,
+        })
       }
     }
 
@@ -342,6 +346,12 @@ export class LexInstaller {
     if (!result) {
       throw new Error(`Unable to resolve lexicon for NSID: ${nsid}`)
     }
+
+    // @NOTE If a resolve entry existed but its file was missing (or no longer
+    // matched), we re-resolved. Re-resolution goes through NSID discovery,
+    // which can reach a different source (even a different DID) than the one
+    // originally locked. This will be surfaced as a new resolution in the
+    // manifest.
 
     if (isFileUriString(result.uri)) {
       const sourcePath = fromFileUri(result.uri)
@@ -382,7 +392,7 @@ export class LexInstaller {
     // @TODO use prettier to format the JSON before writing to disk
     await writeJsonFile(
       this.options.manifest,
-      normalizeLexiconsManifest(this.workingManifest),
+      normalizeManifest(this.workingManifest),
     )
   }
 }

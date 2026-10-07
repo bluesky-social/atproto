@@ -44,15 +44,28 @@ export function fromFileUri(uri: FileUriString): string {
   return uri.slice(FILE_URI_PREFIX.length)
 }
 
+/**
+ * Resolves a (possibly relative) `file://` URI to an absolute filesystem path.
+ *
+ * Relative URIs (`file://./x`, `file://../x`) are anchored to `base`, never to
+ * `process.cwd()`. The manifest stores file resolutions as paths relative to
+ * the manifest's directory, so callers must pass that directory as `base`;
+ * handing the raw relative path to `resolve`/`relative` without a base would
+ * silently resolve it against the current working directory instead.
+ */
+export function resolveFileUri(base: string, uri: FileUriString): string {
+  return resolve(base, fromFileUri(uri))
+}
+
 function isRelativePath(path: string): path is `./${string}` | `../${string}` {
   return path.startsWith('./') || path.startsWith('../')
 }
 
 export function toRelativeFileUri(
-  from: string,
-  to: string,
+  base: string,
+  uri: FileUriString,
 ): FileUriString<`./${string}` | `../${string}`> {
-  const path = relative(from, to).split(sep).join('/')
+  const path = relative(base, resolveFileUri(base, uri)).split(sep).join('/')
   return toFileUri(isRelativePath(path) ? path : `./${path}`)
 }
 
