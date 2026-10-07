@@ -24,6 +24,7 @@ import {
   unpackIdentityServices,
 } from '../../../../data-plane/index.js'
 import { Gate } from '../../../../feature-gates/gates.js'
+import { ANALYTICS_HEADER_DEVICE_ID } from '../../../../feature-gates/index.js'
 import type { FeedItem } from '../../../../hydration/feed.js'
 import type { HydrateCtx } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
@@ -57,6 +58,7 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ params, auth, req, signal }) => {
       const viewer = auth.credentials.iss
+      const stableDeviceId = req.header(ANALYTICS_HEADER_DEVICE_ID) ?? null
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
@@ -75,7 +77,14 @@ export default function (server: Server, ctx: AppContext) {
       // Do not refill filtered pages. Overfetching from algorithmic feeds can
       // advance their state and prevent omitted items from appearing later.
       const result = await getFeed(
-        { ...params, hydrateCtx, headers, passthroughHeaders, signal },
+        {
+          ...params,
+          hydrateCtx,
+          stableDeviceId,
+          headers,
+          passthroughHeaders,
+          signal,
+        },
         ctx,
       )
       const {
@@ -186,6 +195,7 @@ type Context = AppContext
 
 type Params = app.bsky.feed.getFeed.$Params & {
   hydrateCtx: HydrateCtx
+  stableDeviceId: string | null
   headers: HeadersMap
   passthroughHeaders: HeadersMap
   signal: AbortSignal
@@ -221,12 +231,16 @@ const IRIS_FEED_RKEY_GATES: Record<string, Gate> = {
  * Logged-in viewers are routed by their per-feed gate. Logged-out viewers
  * have no DID, but the client sends a stable device id (stable_id) that
  * GrowthBook can bucket on, so they are routed by the dedicated
- * Gate.IrisFeedLoggedOutEnable gate instead.
+ * Gate.IrisFeedLoggedOutEnable gate instead. Requests without a stable
+ * device id are never routed: the feature-gates context falls back to a
+ * random id per request, which would flip backends between pages and send a
+ * cursor to the backend that did not mint it.
  */
 export const irisUrlForFeed = (
   cfg: Pick<ServerConfig, 'irisUrl' | 'irisFeedUris'>,
   params: {
     feed: string
+    stableDeviceId: string | null
     hydrateCtx: {
       viewer: HydrateCtx['viewer']
       features: Pick<HydrateCtx['features'], 'Gate' | 'checkGate'>
@@ -237,6 +251,7 @@ export const irisUrlForFeed = (
   if (!irisUrl) return
   if (!cfg.irisFeedUris?.has(params.feed)) return
   if (!params.hydrateCtx.viewer) {
+    if (!params.stableDeviceId) return
     return params.hydrateCtx.features.checkGate(Gate.IrisFeedLoggedOutEnable)
       ? irisUrl
       : undefined
