@@ -22,6 +22,7 @@ const inputs = ({
   irisFeedUris = [ALLOWLISTED],
   feed = ALLOWLISTED,
   viewer = 'did:plc:viewer' as DidString | null,
+  stableDeviceId = 'stable-device-id' as string | null,
   gate = true,
   feedGates = {} as Partial<Record<Gate, boolean>>,
 } = {}) => {
@@ -34,7 +35,11 @@ const inputs = ({
       irisUrl: irisConfigured ? IRIS_URL : undefined,
       irisFeedUris: allowlistConfigured ? new Set(irisFeedUris) : undefined,
     },
-    params: { feed, hydrateCtx: { viewer, features: { Gate, checkGate } } },
+    params: {
+      feed,
+      stableDeviceId,
+      hydrateCtx: { viewer, features: { Gate, checkGate } },
+    },
   }
 }
 
@@ -64,11 +69,38 @@ describe('irisUrlForFeed', () => {
     expect(irisUrlForFeed(cfg, params)).toBeUndefined()
   })
 
-  // Unauthed viewers have no stable bucket, so they'd flip backends between
-  // pages and send a cursor to the backend that did not mint it.
-  it('does not route unauthed requests', () => {
-    const { cfg, params } = inputs({ viewer: null })
-    expect(irisUrlForFeed(cfg, params)).toBeUndefined()
+  // Logged-out viewers are bucketed by their stable device id (stable_id)
+  // instead of a DID, so they route behind a dedicated gate.
+  describe('logged-out viewers', () => {
+    it('does not route when the logged-out gate is off', () => {
+      const { cfg, params } = inputs({ viewer: null })
+      expect(irisUrlForFeed(cfg, params)).toBeUndefined()
+    })
+
+    it('routes when the logged-out gate is on', () => {
+      const { cfg, params } = inputs({
+        viewer: null,
+        feedGates: { [Gate.IrisFeedLoggedOutEnable]: true },
+      })
+      expect(irisUrlForFeed(cfg, params)).toBe(IRIS_URL)
+    })
+
+    it('evaluates only the logged-out gate, not the per-feed gate', () => {
+      const { cfg, params, checkGate } = inputs({ viewer: null })
+      irisUrlForFeed(cfg, params)
+      expect(checkGate).toHaveBeenCalledTimes(1)
+      expect(checkGate).toHaveBeenCalledWith(Gate.IrisFeedLoggedOutEnable)
+    })
+
+    it('does not route without a stable device id, even when the gate is on', () => {
+      const { cfg, params, checkGate } = inputs({
+        viewer: null,
+        stableDeviceId: null,
+        feedGates: { [Gate.IrisFeedLoggedOutEnable]: true },
+      })
+      expect(irisUrlForFeed(cfg, params)).toBeUndefined()
+      expect(checkGate).not.toHaveBeenCalled()
+    })
   })
 
   // Evaluating the gate emits a GrowthBook exposure event. This runs for every
@@ -77,12 +109,6 @@ describe('irisUrlForFeed', () => {
   describe('does not evaluate the gate', () => {
     it('for a feed that is not allowlisted', () => {
       const { cfg, params, checkGate } = inputs({ feed: OTHER_FEED })
-      irisUrlForFeed(cfg, params)
-      expect(checkGate).not.toHaveBeenCalled()
-    })
-
-    it('for an unauthed request', () => {
-      const { cfg, params, checkGate } = inputs({ viewer: null })
       irisUrlForFeed(cfg, params)
       expect(checkGate).not.toHaveBeenCalled()
     })
