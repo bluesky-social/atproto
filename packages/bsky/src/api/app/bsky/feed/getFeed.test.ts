@@ -22,6 +22,7 @@ const inputs = ({
   irisFeedUris = [ALLOWLISTED],
   feed = ALLOWLISTED,
   viewer = 'did:plc:viewer' as DidString | null,
+  stableDeviceId = 'stable-device-id' as string | null,
   gate = true,
   feedGates = {} as Partial<Record<Gate, boolean>>,
 } = {}) => {
@@ -34,7 +35,11 @@ const inputs = ({
       irisUrl: irisConfigured ? IRIS_URL : undefined,
       irisFeedUris: allowlistConfigured ? new Set(irisFeedUris) : undefined,
     },
-    params: { feed, hydrateCtx: { viewer, features: { Gate, checkGate } } },
+    params: {
+      feed,
+      stableDeviceId,
+      hydrateCtx: { viewer, features: { Gate, checkGate } },
+    },
   }
 }
 
@@ -85,6 +90,16 @@ describe('irisUrlForFeed', () => {
       irisUrlForFeed(cfg, params)
       expect(checkGate).toHaveBeenCalledTimes(1)
       expect(checkGate).toHaveBeenCalledWith(Gate.IrisFeedLoggedOutEnable)
+    })
+
+    it('does not route without a stable device id, even when the gate is on', () => {
+      const { cfg, params, checkGate } = inputs({
+        viewer: null,
+        stableDeviceId: null,
+        feedGates: { [Gate.IrisFeedLoggedOutEnable]: true },
+      })
+      expect(irisUrlForFeed(cfg, params)).toBeUndefined()
+      expect(checkGate).not.toHaveBeenCalled()
     })
   })
 
