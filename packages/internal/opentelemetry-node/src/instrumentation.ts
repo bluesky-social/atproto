@@ -31,9 +31,12 @@ export type DefaultAtprotoInstrumentationsOptions = {
   /**
    * The XRPC methods (NSIDs) this service may serve, including any it proxies.
    *
-   * Values provided here will be used to set the "http.route" attribute for
-   * XRPC requests. XRPC request not listed here will have their "http.route"
-   * attribute set to {@link UNKNOWN_XRPC_ROUTE}.
+   * Values provided here will be used to set the "http.route" attribute of
+   * server metrics for XRPC requests. XRPC requests not listed here will have
+   * their "http.route" attribute set to {@link UNKNOWN_XRPC_ROUTE}.
+   *
+   * When omitted, the metric route is left as set by the express
+   * instrumentation (no XRPC-specific handling).
    *
    * @note This only affects metrics, whose attributes must stay low-cardinality
    * since any client can make up an NSID. Spans keep being named after the
@@ -115,23 +118,27 @@ export function getDefaultAtprotoInstrumentations(
       // must be set on close rather than here. The http instrumentation adds
       // its own "close" listener right after calling this hook, so ours runs
       // first.
-      responseHook: (_span, response) => {
-        if (!isServerResponse(response)) return
+      // Opt-in: without a method list every XRPC request would be reported as
+      // "unknown", which is worse than the route express recorded.
+      responseHook: lxmToRoute
+        ? (_span, response) => {
+            if (!isServerResponse(response)) return
 
-        const rpcMetadata = getRPCMetadata(context.active())
-        if (!rpcMetadata || rpcMetadata.type !== RPCType.HTTP) return
+            const rpcMetadata = getRPCMetadata(context.active())
+            if (!rpcMetadata || rpcMetadata.type !== RPCType.HTTP) return
 
-        const { method, url } = response.req
-        if (!method || !XRPC_HTTP_METHODS.has(method)) return
+            const { method, url } = response.req
+            if (!method || !XRPC_HTTP_METHODS.has(method)) return
 
-        const lxm = extractUrlXrpcMethodName(url)
-        if (!lxm) return // Not an XRPC request
+            const lxm = extractUrlXrpcMethodName(url)
+            if (!lxm) return // Not an XRPC request
 
-        response.once('close', () => {
-          const route = lxmToRoute?.get(lxm) ?? UNKNOWN_XRPC_ROUTE
-          rpcMetadata.route = route
-        })
-      },
+            response.once('close', () => {
+              const route = lxmToRoute.get(lxm) ?? UNKNOWN_XRPC_ROUTE
+              rpcMetadata.route = route
+            })
+          }
+        : undefined,
     }),
     new ExpressInstrumentation({
       ignoreLayersType: [ExpressLayerType.MIDDLEWARE],
