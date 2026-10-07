@@ -26,6 +26,7 @@ import {
 } from '@atproto-labs/handle-resolver-node'
 import type { FileUriString } from './fs.js'
 import { readLexiconDocument } from './lexicon-document.js'
+import { com } from './lexicons/index.js'
 import type { LexiconResolverConfig } from './lexicons-manifest.js'
 
 /**
@@ -137,16 +138,25 @@ export class RepoResolver implements LexiconResolver {
     return (this.#clientPromise ??= Promise.resolve().then(this.buildClient))
   }
 
-  async resolve(nsid: NSID): Promise<ResolvedLexicon | null> {
+  /**
+   * @note we never return "null" on 404/Not-found errors to prevent the
+   * resolution from falling through the next resolver in the chain. Users are
+   * expected to use include/exclude filters to control which NSIDs are resolved
+   * in the defined repo.
+   */
+  async resolve(nsid: NSID): Promise<ResolvedLexicon> {
     const client = await this.initClient()
 
-    const res = await client.getRecord(
-      'com.atproto.lexicon.schema',
-      nsid.toString(),
-    )
+    const rkey = nsid.toString()
 
-    const lexicon = lexiconDocumentSchema.parse(res.body.value)
-    const uri = AtUri.make(client.assertDid, 'com.atproto.lexicon.schema', nsid)
+    const res = await client.get(com.atproto.lexicon.schema, { rkey })
+
+    const lexicon = lexiconDocumentSchema.parse(res.value)
+    const uri = AtUri.make(
+      client.assertDid,
+      com.atproto.lexicon.schema.$type,
+      rkey,
+    )
 
     return { uri, lexicon }
   }

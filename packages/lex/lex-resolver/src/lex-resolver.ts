@@ -1,14 +1,16 @@
 import { resolveTxt } from 'node:dns/promises'
 import * as crypto from '@atproto/crypto'
-import { buildAgent, xrpc } from '@atproto/lex-client'
+import { type Infer, buildAgent, xrpcSafe } from '@atproto/lex-client'
 import {
   type CborCid,
   type Cid,
   type LexMap,
+  checkCid,
   isCborCid,
 } from '@atproto/lex-data'
 import type { LexiconDocument } from '@atproto/lex-document'
 import { lexiconDocumentSchema } from '@atproto/lex-document'
+import { type Main, type RecordSchema, getMain } from '@atproto/lex-schema'
 import {
   MST,
   MemoryBlockstore,
@@ -16,7 +18,6 @@ import {
   readCarWithRoot,
   verifyCommitSig,
 } from '@atproto/repo'
-import type { NsidString } from '@atproto/syntax'
 import { AtUri, NSID } from '@atproto/syntax'
 import {
   assertDid,
@@ -59,7 +60,7 @@ export type LexResolverResult = {
 export type LexResolverFetchResult = {
   /** Content identifier (CID) of the lexicon record */
   cid: Cid
-  /** The parsed and validated lexicon document */
+  /** The lexicon document (it will be validated against the lexicon schema) */
   record: LexMap
 }
 
@@ -428,7 +429,7 @@ export class LexResolver {
     nsid: NSID,
     options?: ResolveDidOptions,
   ): Promise<LexResolverResult> {
-    const uri = AtUri.make(did, 'com.atproto.lexicon.schema', nsid.toString())
+    const uri = AtUri.make(did, com.atproto.lexicon.schema.$type, nsid)
     try {
       const hookResult = await this.options.hooks?.onFetch?.call(null, {
         did,
@@ -518,31 +519,41 @@ export class LexResolver {
       fetch: this.options.fetch,
     })
 
-    const collection = 'com.atproto.lexicon.schema'
     const rkey = nsid.toString()
 
-    return xrpc(agent, com.atproto.sync.getRecord, {
+    // @NOTE We are using xrpcSafe instead of client.get because we are using
+    // the **sync** version of getRecord (in order to obtain its raw bytes).
+    const res = await xrpcSafe(agent, com.atproto.sync.getRecord, {
       signal: options?.signal,
       headers: options?.noCache ? { 'Cache-Control': 'no-cache' } : undefined,
-      params: { did, collection, rkey },
-    }).then(
-      ({ body }) => {
-        return verifyRecordProof(body, did, key, collection, rkey).catch(
-          (cause) => {
-            throw new LexResolverError(
-              nsid,
-              `Failed to verify Lexicon record proof at ${uri}`,
-              { cause },
-            )
-          },
-        )
+      params: {
+        did,
+        collection: com.atproto.lexicon.schema.$nsid,
+        rkey,
       },
-      (cause) => {
-        throw new LexResolverError(nsid, `Failed to fetch Record ${uri}`, {
-          cause,
-        })
-      },
-    )
+    })
+
+    if (!res.success) {
+      throw new LexResolverError(nsid, `Failed to fetch Record ${uri}`, {
+        cause: res.reason,
+      })
+    }
+
+    try {
+      return await verifyRecordProof(
+        res.body,
+        did,
+        key,
+        com.atproto.lexicon.schema,
+        rkey,
+      )
+    } catch (cause) {
+      throw new LexResolverError(
+        nsid,
+        `Failed to verify Lexicon record proof at ${uri}`,
+        { cause },
+      )
+    }
   }
 }
 
@@ -562,13 +573,16 @@ async function getDomainTxtDid(domain: string): Promise<Did> {
     : new Error('No DID found in DNS TXT records')
 }
 
-async function verifyRecordProof(
+async function verifyRecordProof<T extends RecordSchema>(
   car: Uint8Array,
   did: Did,
   key: AtprotoVerificationMethod,
-  collection: NsidString,
+  ns: Main<T>,
   rkey: string,
-) {
+): Promise<{
+  cid: CborCid
+  record: Infer<T>
+}> {
   const { root, blocks } = await readCarWithRoot(car)
   const blockstore = new MemoryBlockstore(blocks)
 
@@ -585,15 +599,13 @@ async function verifyRecordProof(
 
   const mst = MST.load(blockstore, commit.data)
 
-  const cid = await mst.get(`${collection}/${rkey}`)
+  const schema = getMain(ns)
+  const cid = await mst.get(`${schema.$type}/${rkey}`)
   if (!cid) throw new Error('Record not found in proof')
+  if (!checkCid(cid, { flavor: 'cbor' }))
+    throw new Error('Invalid CID in proof')
 
-  const record = await blockstore.readRecord(cid)
-  if (record?.$type !== collection) {
-    throw new Error(
-      `Invalid record type: expected ${collection}, got ${record?.$type}`,
-    )
-  }
+  const record = schema.validate(await blockstore.readRecord(cid))
 
   return { cid, record }
 }

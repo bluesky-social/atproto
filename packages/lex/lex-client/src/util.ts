@@ -254,6 +254,14 @@ export function getDefaultRecordKey<const T extends RecordSchema>(
   return getLiteralRecordKey(schema)
 }
 
+export function getValidRecordKey<const T extends RecordSchema>(
+  schema: T,
+  rkey?: InferRecordKey<T>,
+): InferRecordKey<T> {
+  if (rkey == null) return getLiteralRecordKey(schema)
+  return schema.keySchema.parse(rkey) as InferRecordKey<T>
+}
+
 export function getLiteralRecordKey<const T extends RecordSchema>(
   schema: T,
 ): InferRecordKey<T> {
