@@ -1,3 +1,4 @@
+import { mkdirSync } from 'node:fs'
 import { lstat, mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -52,6 +53,13 @@ describe('LexInstaller', () => {
     manifest?: LexiconsManifestV2,
     overrides: Partial<LexInstallerOptions> = {},
   ) {
+    // Any directory referenced from "resolvers" needs to exist
+    for (const resolver of manifest?.resolvers ?? []) {
+      if (resolver.type === 'directory') {
+        mkdirSync(join(dir, resolver.path), { recursive: true })
+      }
+    }
+
     return new TestInstaller(
       {
         lexicons: join(dir, 'out'),

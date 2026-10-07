@@ -84,7 +84,8 @@ export class FilteredResolver implements LexiconResolver {
  */
 export class DirectoryResolver implements LexiconResolver {
   constructor(protected readonly directory: string) {
-    // Throw if the directory is not a directory
+    // Throw if the directory does not exist (shows an invalid configuration
+    // that could cause the wrong lexicons to be resolved)
     if (!statSync(directory).isDirectory()) {
       throw new Error(`Invalid directory: ${directory}`)
     }
