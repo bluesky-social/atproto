@@ -269,6 +269,7 @@ const handleModerationEvent = async ({
       const subjectUri = subject.isRecord() ? subject.uri : null
       try {
         await processReportAction({
+          inboxStartAt: ctx.cfg.inbox.startAt,
           db: dbTxn,
           reportAction: input.body.reportAction,
           subjectDid: subject.did,

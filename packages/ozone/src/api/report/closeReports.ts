@@ -30,6 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const result = await closeReportsForSubject({
+        inboxStartAt: ctx.cfg.inbox.startAt,
         db: ctx.db,
         subjectDid,
         subjectUri,

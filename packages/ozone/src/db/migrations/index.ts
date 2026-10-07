@@ -50,3 +50,4 @@ export * as _20260922T153505234Z from './20260922T153505234Z-add-report-closed-a
 export * as _20260928T000000000Z from './20260928T000000000Z-inbox-appeal.js'
 export * as _20261002T000000000Z from './20261002T000000000Z-add-report-reporter-did.js'
 export * as _20261005T000000000Z from './20261005T000000000Z-inbox-seen.js'
+export * as _20261005T000000001Z from './20261005T000000001Z-inbox-notifications.js'
