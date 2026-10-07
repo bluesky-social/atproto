@@ -74,7 +74,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
   const performAuth = ctx.authVerifier.authorization<RpcPermissionMatch>({
     authorize: (permissions, { params }) => permissions.assertRpc(params),
   })
-  const performAppealAuth = ctx.authVerifier.authorization<RpcPermissionMatch>({
+  const performInboxAuth = ctx.authVerifier.authorization<RpcPermissionMatch>({
     additional: [AuthScope.Takendown],
     authorize: (permissions, { params }) => permissions.assertRpc(params),
   })
@@ -117,9 +117,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       const tokenAud = did
 
       const authResult = await (
-        lxm === tools.ozone.inbox.appealActionedSubject.$lxm
-          ? performAppealAuth
-          : performAuth
+        lxm.startsWith('tools.ozone.inbox.') ? performInboxAuth : performAuth
       )({
         req,
         res,

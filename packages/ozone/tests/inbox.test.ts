@@ -1,4 +1,5 @@
 import { type DatetimeString, toDatetimeString } from '@atproto/lex'
+import { DEFAULT_INBOX_POLICY_URL } from '../src/config/config.js'
 import {
   appealWindowEnd,
   isAppealWindowOpen,
@@ -10,6 +11,7 @@ import {
   toEnforcementView,
   toSubjectView,
 } from '../src/inbox/views.ts'
+import { tools } from '../src/lexicons/index.js'
 import { RecordSubject, RepoSubject } from '../src/mod-service/subject.ts'
 import type {
   ModerationEventRow,
@@ -183,7 +185,7 @@ describe('inbox action mapper', () => {
     })
   })
 
-  it('maps emails and their policies, and drops internal event types', () => {
+  it('maps emails without takedown policies, and drops internal event types', () => {
     const actions = toActionViews([
       event({
         action: 'tools.ozone.moderation.defs#modEventEmail',
@@ -196,9 +198,41 @@ describe('inbox action mapper', () => {
     expect(actions).toHaveLength(1)
     expect(actions[0]).toMatchObject({
       type: 'communicationSent',
-      policies: ['spam-automation', 'impersonation'],
     })
+    expect(actions[0]).not.toHaveProperty('policies')
+    expect(tools.ozone.inbox.defs.actionView.$matches(actions[0])).toBe(true)
   })
+
+  it.each([undefined, 'https://example.com/community-guidelines'])(
+    'maps structured takedown policies with fallback URL %s',
+    (defaultPolicyUrl) => {
+      const actions = toActionViews(
+        [event({ meta: { policies: 'spam-automation,impersonation' } })],
+        {
+          'spam-automation': {
+            name: 'Spam and automation',
+            url: 'https://example.com/policies/spam',
+          },
+        },
+        defaultPolicyUrl,
+      )
+
+      expect(actions).toHaveLength(1)
+      expect(actions[0].policies).toEqual([
+        {
+          key: 'spam-automation',
+          displayName: 'Spam and automation',
+          link: 'https://example.com/policies/spam',
+        },
+        {
+          key: 'impersonation',
+          displayName: 'impersonation',
+          link: defaultPolicyUrl ?? DEFAULT_INBOX_POLICY_URL,
+        },
+      ])
+      expect(tools.ozone.inbox.defs.actionView.$matches(actions[0])).toBe(true)
+    },
+  )
 
   it('never exposes moderator comments', () => {
     const actions = toActionViews([event({ comment: 'internal reasoning' })])
@@ -284,9 +318,9 @@ describe('inbox appeal mapper', () => {
         id: number
         status: string
         createdAt: DatetimeString
+        updatedAt: DatetimeString
         closedAt: DatetimeString | null
       } | null
-      publicNote?: string | null
       latestAppealableAt?: DatetimeString | null
     } = {},
   ) =>
@@ -297,7 +331,6 @@ describe('inbox appeal mapper', () => {
         lastAppealedAt: args.lastAppealedAt ?? null,
       }),
       report: args.report ?? null,
-      publicNote: args.publicNote ?? null,
       windowMonths: 6,
       latestAppealableAt:
         args.latestAppealableAt === undefined
@@ -309,6 +342,7 @@ describe('inbox appeal mapper', () => {
     id: 7,
     status: 'open',
     createdAt: toDatetimeString('2026-01-02T00:00:00.000Z'),
+    updatedAt: toDatetimeString('2026-01-02T00:00:00.000Z'),
     closedAt: null,
   }
   const closedReport = {
@@ -342,7 +376,7 @@ describe('inbox appeal mapper', () => {
     expect(availableActions).toEqual([])
   })
 
-  it('reads pending off the same flag the submission guard writes', () => {
+  it('reads pending from the same report state as the submission guard', () => {
     const { view, availableActions } = appeal(ACCOUNT, {
       appealed: true,
       lastAppealedAt: toDatetimeString('2026-01-02T00:00:00.000Z'),
@@ -355,25 +389,29 @@ describe('inbox appeal mapper', () => {
     expect(availableActions).toEqual([])
   })
 
-  it('resolves with the close date and the public note', () => {
+  it('resolves with the close date even when the appeal flag is stale', () => {
     const { view } = appeal(ACCOUNT, {
-      appealed: false,
+      appealed: true,
       report: closedReport,
-      publicNote: 'We reviewed this again and the post still violates policy.',
     })
     expect(view).toMatchObject({
       state: 'resolved',
       resolvedAt: closedReport.closedAt,
-      note: 'We reviewed this again and the post still violates policy.',
     })
   })
 
-  it('supersedes an appeal cleared without ever being closed', () => {
-    const { view } = appeal(ACCOUNT, { appealed: false, report: openReport })
-    expect(view.state).toBe('superseded')
-    expect(view).not.toHaveProperty('resolvedAt')
-    expect(view).not.toHaveProperty('note')
-  })
+  it.each(['open', 'queued', 'assigned', 'escalated'])(
+    'keeps a %s appeal pending even when the appeal flag is cleared',
+    (reportStatus) => {
+      const { view } = appeal(ACCOUNT, {
+        appealed: false,
+        report: { ...openReport, status: reportStatus },
+      })
+      expect(view.state).toBe('pending')
+      expect(view).not.toHaveProperty('resolvedAt')
+      expect(view).not.toHaveProperty('note')
+    },
+  )
 
   it('gives an account another appeal after the last one closes', () => {
     expect(
@@ -401,7 +439,6 @@ describe('inbox subject view', () => {
     firstActionAt: null,
     latestAppealableAt: null,
     appealReport: null,
-    appealPublicNote: null,
     ...overrides,
   })
 
@@ -447,7 +484,7 @@ describe('inbox subject view', () => {
     const view = compose({ status: status({ appealed: true }) })
     expect(view).not.toHaveProperty('latestAction')
     expect(view).not.toHaveProperty('actionCount')
-    expect(view).not.toHaveProperty('isRead')
+    expect(view?.isRead).toBe(false)
   })
 
   it('lets a later appeal move updatedAt past the newest action', () => {
@@ -463,6 +500,7 @@ describe('inbox subject view', () => {
         id: 1,
         status: 'open',
         createdAt: '2026-02-01T00:00:00.000Z',
+        updatedAt: '2026-02-01T00:00:00.000Z',
         closedAt: null,
       },
     })
