@@ -217,6 +217,11 @@ const IRIS_FEED_RKEY_GATES: Record<string, Gate> = {
 /**
  * Iris' endpoint, when it should serve this request in place of the feed's
  * registered feed generator (seeemore).
+ *
+ * Logged-in viewers are routed by their per-feed gate. Logged-out viewers
+ * have no DID, but the client sends a stable device id (stable_id) that
+ * GrowthBook can bucket on, so they are routed by the dedicated
+ * Gate.IrisFeedLoggedOutEnable gate instead.
  */
 export const irisUrlForFeed = (
   cfg: Pick<ServerConfig, 'irisUrl' | 'irisFeedUris'>,
@@ -231,7 +236,11 @@ export const irisUrlForFeed = (
   const { irisUrl } = cfg
   if (!irisUrl) return
   if (!cfg.irisFeedUris?.has(params.feed)) return
-  if (!params.hydrateCtx.viewer) return
+  if (!params.hydrateCtx.viewer) {
+    return params.hydrateCtx.features.checkGate(Gate.IrisFeedLoggedOutEnable)
+      ? irisUrl
+      : undefined
+  }
   const rkey = params.feed.split('/').at(-1)
   const gate = (rkey && IRIS_FEED_RKEY_GATES[rkey]) || Gate.IrisFeed
   if (!params.hydrateCtx.features.checkGate(gate)) {
