@@ -4,11 +4,9 @@
 
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
-import { buildCommand } from '@atproto/lex-builder/cli'
 import { installCommand, updateCommand } from '@atproto/lex-installer/cli'
 
 void yargs(hideBin(process.argv))
-  .command(buildCommand)
   .command(installCommand)
   .command(updateCommand)
   .strict()

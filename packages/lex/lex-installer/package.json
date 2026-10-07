@@ -20,12 +20,19 @@
     "./README.md",
     "./CHANGELOG.md"
   ],
+  "bin": {
+    "lex-installer": "./bin/lex-installer"
+  },
   "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./cli": {
+      "types": "./dist/cli.d.ts",
+      "default": "./dist/cli.js"
     }
   },
   "engines": {
@@ -44,9 +51,11 @@
     "@atproto-labs/did-resolver": "workspace:^",
     "@atproto-labs/handle-resolver": "workspace:^",
     "@atproto-labs/handle-resolver-node": "workspace:^",
-    "tslib": "^2.8.1"
+    "tslib": "^2.8.1",
+    "yargs": "^18.2.0"
   },
   "devDependencies": {
+    "@types/yargs": "^17.0.33",
     "vitest": "^4.1.10"
   },
   "scripts": {

@@ -47,7 +47,7 @@
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "codegen:lex": "node ./scripts/lex-build.js",
+    "codegen:lex": "lex-builder build --lexicons ../../../lexicons --out ./src/lexicons --clear --lib @atproto/lex-schema --index-file --include com.atproto.sync.getRecord",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
     "test": "vitest run"

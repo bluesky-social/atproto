@@ -33,6 +33,14 @@ export type InstallOptions = LexInstallerOptions & {
   save?: boolean
 
   /**
+   * Whether to update existing lexicons during installation.
+   * When `true`, the installer will attempt to fetch and apply updates
+   * for already installed lexicons.
+   * @default false
+   */
+  update?: boolean
+
+  /**
    * Enable CI mode for strict manifest verification.
    * When `true`, throws an error if the manifest is out of date,
    * useful for continuous integration pipelines.
@@ -95,12 +103,13 @@ export async function install({
   ci = false,
   save = true,
   add: additions,
+  update = false,
   ...options
 }: InstallOptions) {
   // Perform the installation using the existing manifest as "hint"
   const installer = await LexInstaller.load(options)
 
-  await installer.install({ additions })
+  await installer.install({ additions, update })
 
   // Verify lockfile
   if (ci && installer.requiresSave()) {

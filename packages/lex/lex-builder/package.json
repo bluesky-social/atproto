@@ -20,12 +20,19 @@
     "./README.md",
     "./CHANGELOG.md"
   ],
+  "bin": {
+    "lex-builder": "./bin/lex-builder"
+  },
   "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./cli": {
+      "types": "./dist/cli.d.ts",
+      "default": "./dist/cli.js"
     }
   },
   "engines": {
@@ -36,10 +43,12 @@
     "@atproto/lex-schema": "workspace:^",
     "prettier": "^3.9.6",
     "ts-morph": "^27.0.0",
-    "tslib": "^2.8.1"
+    "tslib": "^2.8.1",
+    "yargs": "^18.2.0"
   },
   "devDependencies": {
     "@ts-morph/common": "^0.29.0",
+    "@types/yargs": "^17.0.33",
     "vitest": "^4.1.10"
   },
   "scripts": {

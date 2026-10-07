@@ -62,6 +62,15 @@ export type LexInstallerOptions = CreateResolversOptions & {
   manifest: string
 }
 
+export type InstallOptions = {
+  additions?: Iterable<string>
+  update?: boolean
+}
+
+export type UpdateOptions = {
+  additions?: never
+}
+
 /**
  * Manages the installation of Lexicon schemas from the AT Protocol network.
  *
@@ -181,10 +190,7 @@ export class LexInstaller {
   async install({
     additions,
     update = false,
-  }: {
-    additions?: Iterable<string>
-    update?: boolean
-  } = {}): Promise<void> {
+  }: InstallOptions = {}): Promise<void> {
     const roots = new NsidMap<{ update: boolean }>()
 
     // First, process explicit additions
