@@ -58,7 +58,13 @@
     "vite": "^8.3.1"
   },
   "scripts": {
-    "codegen:lex": "lex build --clear --indexFile --lexicons ../../../lexicons --out ./src/lexicons",
+    "lex:build": "lex build --clear --indexFile",
+    "lex:install": "lex install",
+    "postlex:install": "pnpm run lex:build",
+    "prelex:update": "rm -rf ./lexicons",
+    "lex:update": "lex update",
+    "postlex:update": "pnpm run lex:build",
+    "codegen:lex": "pnpm run lex:install --ci",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build:ui": "vite build --emptyOutDir",
     "build": "pnpm run build:ui -- ignore additional npm args",

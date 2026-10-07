@@ -127,7 +127,7 @@ export class LexInstaller {
 
   protected readonly workingLexicons = new NsidMap<LexiconDocument>()
   protected readonly workingManifest: LexiconsManifestV2
-  protected readonly originalManifest: LexiconsManifestV2 | null
+  protected readonly originalManifest?: LexiconsManifestV1 | LexiconsManifestV2
   protected readonly resolver: LexiconResolver
 
   constructor(
@@ -135,7 +135,7 @@ export class LexInstaller {
     manifest: LexiconsManifestV1 | LexiconsManifestV2 | undefined = undefined,
   ) {
     this.workingManifest = normalizeManifest(manifest)
-    this.originalManifest = manifest ? normalizeManifest(manifest) : null
+    this.originalManifest = manifest ? structuredClone(manifest) : undefined
     this.resolver = createResolver(options, this.workingManifest.resolvers)
   }
 
@@ -151,7 +151,7 @@ export class LexInstaller {
    *   state, `false` otherwise
    */
   requiresSave(): boolean {
-    if (this.originalManifest == null) return true
+    if (this.originalManifest?.version !== 2) return true
     return !lexEquals(
       normalizeManifest(this.originalManifest),
       normalizeManifest(this.workingManifest),
@@ -193,36 +193,16 @@ export class LexInstaller {
   }: InstallOptions = {}): Promise<void> {
     const roots = new NsidMap<{ update: boolean }>()
 
-    // First, process explicit additions
-    if (additions) {
-      for (const addition of additions) {
-        try {
-          const nsid = NSID.from(addition)
-
-          if (!roots.has(nsid)) {
-            roots.set(nsid, {
-              // Force a fresh installation of explicitly added lexicons
-              update: true,
-            })
-          }
-        } catch (cause) {
-          throw new Error(`Failed to process "${addition}"`, { cause })
-        }
-      }
+    // Restore previously existing manifest entries, updating their status based
+    // on the `update` option
+    for (const lexicon of this.workingManifest.lexicons) {
+      roots.set(NSID.from(lexicon), { update })
     }
 
-    // Next, restore previously existing manifest entries
-    for (const lexicon of this.workingManifest.lexicons) {
-      const nsid = NSID.from(lexicon)
-
-      // Skip entries already added explicitly
-      if (!roots.has(nsid)) {
-        roots.set(nsid, {
-          // Force an update of previously existing lexicons only when the
-          // `update` option is true
-          update,
-        })
-      }
+    // Force a fresh installation of explicitly added lexicons (overrides
+    // any existing entry)
+    for (const addition of additions ?? []) {
+      roots.set(NSID.from(addition), { update: true })
     }
 
     // Install all root lexicons (and store them in the manifest)

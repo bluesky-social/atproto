@@ -2,4 +2,10 @@
 packages/oauth/oauth-provider-ui/src/locales/**/messages.po linguist-generated=true
 
 # @tanstack/router-plugin
-packages/oauth/oauth-provider-ui/src/routeTree.gen.ts
+packages/oauth/oauth-provider-ui/src/routeTree.gen.ts linguist-generated=true
+
+# lexicons
+packages/api/lexicons linguist-generated=true
+packages/pds/lexicons linguist-generated=true
+packages/oauth/oauth-client-browser-example/lexicons linguist-generated=true
+

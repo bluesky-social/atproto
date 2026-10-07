@@ -62,7 +62,8 @@ export const lexiconsManifestSchema = l.discriminatedUnion('version', [
 export type LexiconsManifest = l.Infer<typeof lexiconsManifestSchema>
 
 /**
- * Normalizes a lexicons manifest for consistent storage and comparison.
+ * Normalizes a lexicons manifest for consistent storage and comparison. Returns
+ * a copy of the manifest with normalized structure.
  *
  * This function:
  * - Sorts the `lexicons` array alphabetically

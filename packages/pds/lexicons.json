@@ -198,10 +198,6 @@
       "uri": "at://did:plc:4v4y5r3lwsbtmsxhile2ljac/com.atproto.lexicon.schema/app.bsky.actor.putPreferences",
       "cid": "bafyreietfhhwbwb3ltcffsonhw5p62z233frhe6edls67su5a3evqrykju"
     },
-    "app.bsky.actor.status": {
-      "uri": "at://did:plc:4v4y5r3lwsbtmsxhile2ljac/com.atproto.lexicon.schema/app.bsky.actor.status",
-      "cid": "bafyreifdg4b64wohpwkh5lydc6tckvol2rspnpni6dec6recy2rhvlnz4a"
-    },
     "app.bsky.ageassurance.defs": {
       "uri": "at://did:plc:4v4y5r3lwsbtmsxhile2ljac/com.atproto.lexicon.schema/app.bsky.ageassurance.defs",
       "cid": "bafyreig2g6pata4a2yjc7aiqoyybi3jzu76trduxlswte2gzhqdx252sie"
@@ -810,10 +806,6 @@
       "uri": "file://../../lexicons/tools/ozone/communication/updateTemplate.json",
       "cid": "bafyreigk5sfl3u33sm4vytfzyyqwowhtox4pbjife37gcdn64zlpfekdya"
     },
-    "tools.ozone.hosting.getAccountHistory": {
-      "uri": "file://../../lexicons/tools/ozone/hosting/getAccountHistory.json",
-      "cid": "bafyreicvtqadzirxjjkbugm7j5wu37yi7fv63j2p6v6pgqollzxbw7hx7i"
-    },
     "tools.ozone.inbox.appealActionedSubject": {
       "uri": "file://../../lexicons/tools/ozone/inbox/appealActionedSubject.json",
       "cid": "bafyreiesyoleqourglbxfwh64ffd7hhbpojupbrcd73tiip5pq2qgjhw54"
@@ -869,14 +861,6 @@
     "tools.ozone.moderation.searchRepos": {
       "uri": "file://../../lexicons/tools/ozone/moderation/searchRepos.json",
       "cid": "bafyreiakxs3jepejip2weyhxfjmdvu4hwotqf3o3yycs6r6gwscnpw5rum"
-    },
-    "tools.ozone.queue.defs": {
-      "uri": "file://../../lexicons/tools/ozone/queue/defs.json",
-      "cid": "bafyreihw6lxgepg37qiqjz5trlokroadiodvelwwfh4xmavm4chjidpola"
-    },
-    "tools.ozone.report.defs": {
-      "uri": "file://../../lexicons/tools/ozone/report/defs.json",
-      "cid": "bafyreicorh7i66xxx3vocbkdhe634zaerroo365h4sxzdnbno5ntxqen2e"
     },
     "tools.ozone.safelink.addRule": {
       "uri": "file://../../lexicons/tools/ozone/safelink/addRule.json",

@@ -6,5 +6,6 @@
 # com.atproto and tools.ozone lexicons are symlinked from the repo-wide
 # canonical lexicons (matches "resolvers" in lexicons.json) and can be ignored
 # from Git.
+# /lexicons
 /lexicons/com/atproto
 /lexicons/tools/ozone

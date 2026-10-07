@@ -51,20 +51,6 @@ function* defRefs(
 ): Iterable<string> {
   switch (def.type) {
     case 'string':
-      if (def.knownValues) {
-        for (const val of def.knownValues) {
-          // Tokens ?
-          const { length, 0: nsid, 1: hash } = val.split('#')
-          if (length === 2 && hash) {
-            try {
-              NSID.from(nsid)
-              yield val
-            } catch {
-              // ignore invalid nsid
-            }
-          }
-        }
-      }
       return
     case 'array':
       return yield* defRefs(def.items)

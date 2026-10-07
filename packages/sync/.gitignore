@@ -1,2 +1,3 @@
 # @atproto/lex
-src/lexicons
+/src/lexicons
+/lexicons

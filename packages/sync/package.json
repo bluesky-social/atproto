@@ -45,7 +45,13 @@
     "jest": "^30.5.2"
   },
   "scripts": {
-    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.subscribeRepos",
+    "lex:build": "lex build --clear --indexFile",
+    "lex:install": "lex install",
+    "postlex:install": "pnpm run lex:build",
+    "prelex:update": "rm -rf ./lexicons",
+    "lex:update": "lex update",
+    "postlex:update": "pnpm run lex:build",
+    "codegen:lex": "pnpm run lex:install --ci",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest"

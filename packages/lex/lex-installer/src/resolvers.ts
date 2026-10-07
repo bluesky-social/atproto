@@ -1,3 +1,4 @@
+import { statSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import type { BuildFilterOptions, Filter } from '@atproto/lex-builder'
 import { buildFilter } from '@atproto/lex-builder'
@@ -82,7 +83,12 @@ export class FilteredResolver implements LexiconResolver {
  * mirroring the include/exclude semantics of {@link buildFilter}.
  */
 export class DirectoryResolver implements LexiconResolver {
-  constructor(protected readonly directory: string) {}
+  constructor(protected readonly directory: string) {
+    // Throw if the directory is not a directory
+    if (!statSync(directory).isDirectory()) {
+      throw new Error(`Invalid directory: ${directory}`)
+    }
+  }
 
   async resolve(nsid: NSID): Promise<ResolvedLexicon | null> {
     // @NOTE this assumes that the directory is structured according to NSID

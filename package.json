@@ -30,6 +30,7 @@
     "verify": "pnpm run --recursive --parallel --include-workspace-root '/^verify:.+$/'",
     "verify:style": "pnpm run style",
     "verify:lint": "pnpm lint",
+    "lex:update": "pnpm run --recursive --parallel lex:update",
     "format": "pnpm lint:fix && pnpm style:fix",
     "codegen": "pnpm run build:tooling --force && pnpm run --parallel --workspace-concurrency Infinity '/^(codegen:.+)$/'",
     "prebuild": "pnpm run build:tooling --force && pnpm run --parallel --workspace-concurrency Infinity 'prebuild'",
