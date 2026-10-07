@@ -84,6 +84,10 @@
             "chat.bsky.convo.defs#convoRef"
           ]
         },
+        "record": {
+          "type": "unknown",
+          "description": "Raw record JSON for the subject, when the subject is a record and the record is available."
+        },
         "status": {
           "type": "string",
           "knownValues": ["pending", "resolved"]

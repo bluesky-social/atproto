@@ -14,6 +14,7 @@ import {
   InvalidStateTransition,
   handleReportUpdate,
 } from './handle-report-update.js'
+import { notifyReportActivities } from './notifications.js'
 
 const VALID_ACTIVITY_TYPES = new Set([
   'queueActivity',
@@ -43,6 +44,7 @@ export type CreateActivityParams = {
   /** Set true for activities created by automated processes (e.g. queue router). */
   isAutomated?: boolean
   createdBy: DidString
+  inboxStartAt?: DatetimeString
 }
 
 export async function createReportActivity(
@@ -141,6 +143,19 @@ export async function createReportActivity(
       })
       .returningAll()
       .execute()
+
+    await notifyReportActivities(
+      dbTxn,
+      [
+        {
+          reportId: report.id,
+          activityId: activity.id,
+          activityType,
+          createdAt: now,
+        },
+      ],
+      params.inboxStartAt,
+    )
 
     return activity
   })

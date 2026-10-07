@@ -27,6 +27,15 @@ export default function (server: Server, ctx: AppContext) {
       )
       if (!detail)
         throw new InvalidRequestError('Subject not found', 'NotFound')
+      if (subject.isRecord()) {
+        const records = await ctx
+          .modService(ctx.db)
+          .views.fetchRecords([{ uri: subject.uri, cid: subject.cid }])
+        const record = records.get(subject.uri)?.value
+        if (record !== undefined) {
+          detail.record = record as NonNullable<typeof detail.record>
+        }
+      }
       return { encoding: 'application/json', body: detail }
     },
   })

@@ -15,6 +15,7 @@ import {
   InvalidStateTransition,
   handleReportUpdate,
 } from '../report/handle-report-update.js'
+import { notifyReportActivities } from '../report/notifications.js'
 import { CHAT_CONVO_COLLECTION, CHAT_MESSAGE_COLLECTION } from './subject.js'
 
 export type ReportWithEvent = Omit<Report, 'id'> & {
@@ -324,6 +325,7 @@ export async function findReportsForSubject(
 
 export type CloseReportsForSubjectParams = {
   db: Database
+  inboxStartAt?: DatetimeString
   subjectDid: DidString
   subjectUri: string | null
   reportTypes?: string[]
@@ -402,7 +404,7 @@ export async function closeReportsForSubject(
       .where('id', 'in', updateIds)
       .execute()
 
-    await dbTxn.db
+    const activities = await dbTxn.db
       .insertInto('report_activity')
       .values(
         validUpdates.map((u) => ({
@@ -417,7 +419,19 @@ export async function closeReportsForSubject(
           createdAt: now,
         })),
       )
+      .returning(['id', 'reportId', 'activityType', 'createdAt'])
       .execute()
+
+    await notifyReportActivities(
+      dbTxn,
+      activities.map((activity) => ({
+        reportId: activity.reportId,
+        activityId: activity.id,
+        activityType: activity.activityType,
+        createdAt: activity.createdAt,
+      })),
+      params.inboxStartAt,
+    )
 
     return { closedCount: validUpdates.length, reportIds: updateIds }
   })
@@ -425,6 +439,7 @@ export async function closeReportsForSubject(
 
 export type ProcessReportActionParams = {
   db: Database
+  inboxStartAt?: DatetimeString
   reportAction: {
     ids?: number[]
     types?: string[]
@@ -557,7 +572,7 @@ export async function processReportAction(
     .execute()
 
   // Bulk INSERT one activity per updated report
-  await db.db
+  const activities = await db.db
     .insertInto('report_activity')
     .values(
       validUpdates.map((u) => ({
@@ -575,7 +590,19 @@ export async function processReportAction(
         createdAt: now,
       })),
     )
+    .returning(['id', 'reportId', 'activityType', 'createdAt'])
     .execute()
+
+  await notifyReportActivities(
+    db,
+    activities.map((activity) => ({
+      reportId: activity.reportId,
+      activityId: activity.id,
+      activityType: activity.activityType,
+      createdAt: activity.createdAt,
+    })),
+    params.inboxStartAt,
+  )
 
   return validUpdates.length
 }
