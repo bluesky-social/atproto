@@ -820,7 +820,7 @@
     },
     "tools.ozone.inbox.defs": {
       "uri": "file://../../lexicons/tools/ozone/inbox/defs.json",
-      "cid": "bafyreihhzfo2ferm7aoqtsjnw5rwz5xl746qsb2cr43kjsa6valiksj3qe"
+      "cid": "bafyreig4pkotcoj4zflqijeuj73aqnvmioi76kgf4hgeg7gg6pce5bxcdi"
     },
     "tools.ozone.moderation.cancelScheduledActions": {
       "uri": "file://../../lexicons/tools/ozone/moderation/cancelScheduledActions.json",
@@ -828,7 +828,7 @@
     },
     "tools.ozone.moderation.defs": {
       "uri": "file://../../lexicons/tools/ozone/moderation/defs.json",
-      "cid": "bafyreihfuu5u5uiub2xvzt56re4pxor2mx7aoukt5kkvv65rfdvazyvn5e"
+      "cid": "bafyreib5p2d7gxoihcufeh4r6gvmlt4ydl5t5ueoqnib4vh2ce6hm4b674"
     },
     "tools.ozone.moderation.emitEvent": {
       "uri": "file://../../lexicons/tools/ozone/moderation/emitEvent.json",
