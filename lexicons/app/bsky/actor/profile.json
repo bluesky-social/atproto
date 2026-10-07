@@ -52,6 +52,12 @@
             "type": "ref",
             "ref": "com.atproto.repo.strongRef"
           },
+          "links": {
+            "type": "array",
+            "description": "Links shown on the profile, in display order. Each ref points to an app.bsky.actor.link record in this repo.",
+            "maxLength": 10,
+            "items": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
+          },
           "createdAt": { "type": "string", "format": "datetime" }
         }
       }
