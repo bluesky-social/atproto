@@ -1,0 +1,285 @@
+import { ComAtprotoModerationDefs } from '@atproto/api'
+import {
+  type ModeratorClient,
+  type SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
+import { toDatetimeString } from '@atproto/lex'
+import type { DidString } from '@atproto/syntax'
+import { parseStrikeSuspensionConfig } from '../src/config/strike-suspension.js'
+import { reportForEvent } from './_inbox.js'
+
+describe('viewer inbox reports', () => {
+  let network: TestNetwork
+  let sc: SeedClient
+  let modClient: ModeratorClient
+  let proxyHeader: string
+
+  beforeAll(async () => {
+    network = await TestNetwork.create({
+      dbPostgresSchema: 'ozone_inbox_report_reads',
+    })
+    sc = network.getSeedClient()
+    modClient = network.ozone.getModClient()
+    proxyHeader = `${network.ozone.ctx.cfg.service.did}#atproto_labeler`
+    await basicSeed(sc)
+    await network.processAll()
+  })
+
+  afterAll(async () => network?.close())
+
+  function call(did: DidString, method: string, params: object = {}) {
+    return sc.agent.call(method, params, undefined, {
+      headers: { ...sc.getHeaders(did), 'atproto-proxy': proxyHeader },
+    })
+  }
+
+  async function reportIdForEvent(eventId: number) {
+    return (await reportForEvent(modClient, eventId)).id
+  }
+
+  it("lists only the viewer's reports and uses report IDs for detail links", async () => {
+    const bobReport = await sc.createReport({
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
+      reason: 'Repeated scam links',
+      subject: { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.alice },
+      reportedBy: sc.dids.bob,
+    })
+    const carolReport = await sc.createReport({
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
+      subject: { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.alice },
+      reportedBy: sc.dids.carol,
+    })
+    await network.processAll()
+    const bobId = await reportIdForEvent(bobReport.id)
+    const carolId = await reportIdForEvent(carolReport.id)
+
+    const { data: page } = await call(
+      sc.dids.bob,
+      'tools.ozone.inbox.listReports',
+    )
+    expect(page.reports.map((r: { id: number }) => r.id)).toContain(bobId)
+    expect(page.reports.map((r: { id: number }) => r.id)).not.toContain(carolId)
+    const { data: detail } = await call(
+      sc.dids.bob,
+      'tools.ozone.inbox.getReport',
+      {
+        id: bobId,
+      },
+    )
+    expect(detail.report).toMatchObject({
+      id: bobId,
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
+      reason: 'Repeated scam links',
+      status: 'pending',
+    })
+    expect(detail.resolution).toBeUndefined()
+    await expect(
+      call(sc.dids.bob, 'tools.ozone.inbox.getReport', {
+        id: carolId,
+      }),
+    ).rejects.toMatchObject({ error: 'NotFound' })
+    const preview = await fetch(
+      `${network.ozone.url}/xrpc/tools.ozone.inbox.getReport?did=${encodeURIComponent(sc.dids.bob)}&id=${bobId}`,
+      {
+        headers: await network.ozone.modHeaders('tools.ozone.inbox.getReport'),
+      },
+    )
+    expect(preview.status).toBe(200)
+    expect((await preview.json()).report.id).toBe(bobId)
+    const forbidden = await sc.agent.fetchHandler(
+      `/xrpc/tools.ozone.inbox.getReport?did=${encodeURIComponent(sc.dids.bob)}&id=${bobId}`,
+      {
+        headers: {
+          ...sc.getHeaders(sc.dids.carol),
+          'atproto-proxy': proxyHeader,
+        },
+      },
+    )
+    expect(forbidden.status).toBe(403)
+  })
+
+  it('pages by a stable cursor and derives unread state from the section watermark', async () => {
+    const first = await sc.createReport({
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
+      subject: { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.carol },
+      reportedBy: sc.dids.bob,
+    })
+    const second = await sc.createReport({
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
+      subject: { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.carol },
+      reportedBy: sc.dids.bob,
+    })
+    await network.processAll()
+    const ids = [
+      await reportIdForEvent(first.id),
+      await reportIdForEvent(second.id),
+    ]
+
+    const { data: page1 } = await call(
+      sc.dids.bob,
+      'tools.ozone.inbox.listReports',
+      {
+        limit: 1,
+        sortField: 'createdAt',
+      },
+    )
+    const { data: page2 } = await call(
+      sc.dids.bob,
+      'tools.ozone.inbox.listReports',
+      {
+        limit: 1,
+        sortField: 'createdAt',
+        cursor: page1.cursor,
+      },
+    )
+    expect(page1.reports).toHaveLength(1)
+    expect(page2.reports).toHaveLength(1)
+    expect(page1.reports[0].id).not.toBe(page2.reports[0].id)
+    expect(ids).toContain(page1.reports[0].id)
+
+    await network.ozone.ctx.db.db
+      .insertInto('inbox_seen')
+      .values({
+        did: sc.dids.bob,
+        section: 'reports',
+        seenAt: toDatetimeString(Date.now() + 1000),
+      })
+      .execute()
+    const { data: read } = await call(
+      sc.dids.bob,
+      'tools.ozone.inbox.listReports',
+      {
+        filter: 'unread',
+      },
+    )
+    expect(read.reports).toHaveLength(0)
+    const { data: all } = await call(
+      sc.dids.bob,
+      'tools.ozone.inbox.listReports',
+    )
+    expect(all.reports.every((r: { isRead: boolean }) => r.isRead)).toBe(true)
+  })
+
+  it.each([
+    'bogus',
+    '2026-99-99T00:00:00.000Z::1',
+    'not-a-date::1',
+    '2026-09-29T00:00:00.000Z::9007199254740992',
+  ])('rejects malformed report cursor %s', async (cursor) => {
+    await expect(
+      call(sc.dids.bob, 'tools.ozone.inbox.listReports', { cursor }),
+    ).rejects.toMatchObject({ error: 'InvalidRequest' })
+  })
+
+  it('shows only the action linked to a resolved report', async () => {
+    const report = await sc.createReport({
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
+      subject: { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.carol },
+      reportedBy: sc.dids.bob,
+    })
+    await network.processAll()
+    const row = await reportForEvent(modClient, report.id)
+    await modClient.emitEvent({
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventTakedown',
+        comment: 'MODERATOR-ONLY-COMMENT',
+      },
+      subject: { $type: 'com.atproto.admin.defs#repoRef', did: sc.dids.carol },
+      reportAction: { ids: [row.id] },
+    })
+    await network.processAll()
+
+    const { data } = await call(sc.dids.bob, 'tools.ozone.inbox.getReport', {
+      id: row.id,
+    })
+    expect(data.report.status).toBe('resolved')
+    expect(data.resolution).toMatchObject({
+      outcome: 'actionTaken',
+      actionTaken: 'accountTakedown',
+      scope: 'network',
+    })
+    expect(JSON.stringify(data)).not.toContain('MODERATOR-ONLY-COMMENT')
+    const { data: standing } = await call(
+      sc.dids.carol,
+      'tools.ozone.inbox.getAccountStatus',
+    )
+    expect(standing.standing).toBe('atRisk')
+
+    const agent = network.ozone.getAgent()
+    const headers = await network.ozone.modHeaders(
+      'tools.ozone.report.createActivity',
+      'admin',
+    )
+    for (const type of ['reopenActivity', 'closeActivity']) {
+      await agent.tools.ozone.report.createActivity(
+        {
+          reportId: row.id,
+          activity: { $type: `tools.ozone.report.defs#${type}` },
+          internalNote: 'PRIVATE CLOSURE NOTE',
+        },
+        { headers, encoding: 'application/json' },
+      )
+    }
+    const { data: later } = await call(
+      sc.dids.bob,
+      'tools.ozone.inbox.getReport',
+      { id: row.id },
+    )
+    expect(later.resolution.outcome).toBe('other')
+    expect(later.resolution.actionTaken).toBeUndefined()
+    expect(JSON.stringify(later)).not.toContain('PRIVATE CLOSURE NOTE')
+  })
+
+  it('derives standing from configured strike thresholds and active enforcement through the API', async () => {
+    Object.assign(
+      network.ozone.ctx.cfg.strikeSuspension,
+      parseStrikeSuspensionConfig('3:24,6:72,9:168,15:Infinity'),
+    )
+    const { did } = await sc.createAccount('standing', {
+      handle: 'standing.test',
+      email: 'standing@test.com',
+      password: 'standing-pass',
+    })
+    for (let index = 0; index < 3; index++)
+      await sc.post(did, `Standing fixture ${index}`)
+    await network.processAll()
+    const getStanding = async () =>
+      (await call(did, 'tools.ozone.inbox.getAccountStatus')).data
+    expect((await getStanding()).standing).toBe('good')
+    for (const [index, expected] of ['good', 'warning', 'atRisk'].entries()) {
+      const { ref } = sc.posts[did][index]
+      await modClient.emitEvent({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventTakedown',
+          strikeCount: 3,
+        },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: ref.uriStr,
+          cid: ref.cidStr,
+        },
+      })
+      expect((await getStanding()).standing).toBe(expected)
+    }
+    const { ref } = sc.posts[did][2]
+    await modClient.emitEvent({
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
+        strikeCount: -9,
+      },
+      subject: {
+        $type: 'com.atproto.repo.strongRef',
+        uri: ref.uriStr,
+        cid: ref.cidStr,
+      },
+    })
+    expect((await getStanding()).standing).toBe('good')
+    await modClient.emitEvent({
+      event: { $type: 'tools.ozone.moderation.defs#modEventTakedown' },
+      subject: { $type: 'com.atproto.admin.defs#repoRef', did },
+    })
+    expect((await getStanding()).standing).toBe('atRisk')
+  })
+})

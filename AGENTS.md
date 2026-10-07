@@ -55,6 +55,8 @@ Run the formatter/linter once the work is complete: when about to commit, or whe
 
 ## Tests
 
+For Ozone integration tests, verify state through existing endpoints (for example, `queryEvents` for appeal events and `queryReports` for report state). Use direct database access only for fixtures that cannot be created through an API, or for tests specifically exercising database behavior.
+
 Before writing or extending any test, invoke the `testing` skill ([.agents/skills/testing/SKILL.md](.agents/skills/testing/SKILL.md)). It covers runner selection (vitest vs jest), file layout, and tsconfig setup. For browser-driven UI tests, or for demoing/debugging the OAuth flows or the Account Manager interface, invoke the `playwright` skill ([.agents/skills/playwright/SKILL.md](.agents/skills/playwright/SKILL.md)) instead.
 
 ## Codegen
@@ -75,6 +77,7 @@ For working with that SDK, invoke the focused skills under [.agents/skills/](.ag
   - `app.bsky.feed.getFeed` forwards passthrough headers to a feed generator only when its record's service DID is in `bskyFeedgenDids`; Iris routing overrides do not grant permission.
 - ([packages/bsync](packages/bsync)) — internal service for cross-AppView synchronization (mutes, notifications). Connect-RPC interface.
 - ([packages/ozone](packages/ozone)) — moderation service for `tools.ozone.*`.
+  - Design viewer queries for hundreds of millions of moderation events and tens of millions of reports. Batch hydration, bound returned rows, and check query plans against existing indexes before proposing new ones. Keep viewer projections explicit and test ownership and private-field isolation through the API.
   - Large report-table backfills run in the daemon as bounded primary-key batches. Lock a `job_cursor` row and commit each batch; schema migrations should add nullable columns only. After legacy report writers have rolled off, run `UPDATE job_cursor SET cursor = NULL WHERE job = 'report_reporter_did_backfill'` for a catch-up sweep. Advance past rows with missing or invalid source events and log their counts so they cannot stall the worker.
 - ([packages/dev-env](packages/dev-env)) — boots a full PDS + AppView + bsync + plc + ozone constellation in-process for tests and the `make run-dev-env` REPL. Most integration tests in `pds`/`bsky`/`ozone` use it as a fixture builder.
 
@@ -90,6 +93,8 @@ For working with that SDK, invoke the focused skills under [.agents/skills/](.ag
 ## Agent files
 
 Agent files — this `AGENTS.md`, the skills under [.agents/skills/](.agents/skills/), and any package-level equivalents — are part of the codebase and must stay in sync with it.
+
+- Keep working plans, handoffs, review reports, query-plan captures, and other session scratch files outside the repository, such as in the workspace directory containing the checkout. Do not add repository ignore rules for them. Never commit them. Before committing, inspect the staged file list for working documents; put only durable project guidance in tracked documentation.
 
 - **New pattern introduced** → document it in the relevant agent file (package-specific if scoped, global otherwise) so it can be re-applied.
 - **Existing important pattern found undocumented** → add it.

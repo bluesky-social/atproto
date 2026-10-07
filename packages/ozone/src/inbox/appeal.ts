@@ -38,14 +38,16 @@ export type AppealReport = {
   id: number
   status: string
   createdAt: DatetimeString
+  updatedAt: DatetimeString
   closedAt: DatetimeString | null
 }
 
 export type AppealInput = {
   subject: ModSubject
-  status: ModerationSubjectStatusRow | null
+  status: Pick<ModerationSubjectStatusRow, 'appealed' | 'lastAppealedAt'> | null
   report: AppealReport | null
-  publicNote: string | null
+  /** Eligibility retains older appeals even when their history is hidden. */
+  eligibilityReport?: AppealReport | null
 
   /** Calendar months an action stays appealable, from `InboxConfig`. */
   windowMonths: number
@@ -96,7 +98,7 @@ export const toAppealState = ({
   subject,
   status,
   report,
-  publicNote,
+  eligibilityReport = report,
   latestAppealableAt,
   windowMonths,
 }: AppealInput): AppealState => {
@@ -106,12 +108,10 @@ export const toAppealState = ({
   const windowOpen = !!appealableUntil && new Date(appealableUntil) > new Date()
 
   let state: AppealView['state']
-  if (status?.appealed) {
-    state = 'pending'
-  } else if (report) {
-    // Cleared without the appeal being worked - a takedown or an automatic
-    // resolution reset the flag - rather than actually reviewed.
-    state = report.closedAt ? 'resolved' : 'superseded'
+  if (report) {
+    // @NOTE Report activities do not maintain the subject's appealed flag.
+    // Use the same source of truth as the appeal submission guard.
+    state = report.status === 'closed' ? 'resolved' : 'pending'
   } else {
     state = appealableUntil && !windowOpen ? 'expired' : 'none'
   }
@@ -119,13 +119,15 @@ export const toAppealState = ({
   const view: AppealView = { state }
   if (report) {
     view.appealedAt = status?.lastAppealedAt ?? report.createdAt
-    if (report.closedAt) view.resolvedAt = report.closedAt
+    if (state === 'resolved' && report.closedAt)
+      view.resolvedAt = report.closedAt
   }
-  if (state === 'resolved' && publicNote) view.note = publicNote
   if (appealableUntil) view.appealableUntil = appealableUntil
 
   const availableActions =
-    windowOpen && !appealsExhausted(subject, report) ? ['appeal'] : []
+    windowOpen && !appealsExhausted(subject, eligibilityReport)
+      ? ['appeal']
+      : []
 
   return { view, availableActions }
 }
@@ -211,6 +213,7 @@ export const eventSubjectFilter = (
     return eb.and([
       eb('subjectDid', '=', subjectDid),
       eb('subjectUri', '=', subjectUri),
+      eb('subjectType', '=', subjectType),
     ])
   }
   return eb.and([
@@ -228,6 +231,9 @@ export const findAppealedEvent = async (
     .selectFrom('moderation_event')
     .where((eb) => eventSubjectFilter(eb, subject))
     .where('action', '=', action.type === 'label' ? LABEL : TAKEDOWN)
+    .$if(ctx.cfg.inbox.startAt !== undefined, (qb) =>
+      qb.where('createdAt', '>=', ctx.cfg.inbox.startAt!),
+    )
 
   if (action.type === 'label') {
     query = query.where(
@@ -276,9 +282,7 @@ export const subjectLabelUri = (subject: ModSubject): UriString =>
  * Whether the subject has used up its appeals.
  *
  * Non-account subjects get one ever, closed or not. An account gets one at a
- * time - and an appeal whose report is still open counts even when the
- * `appealed` flag was cleared out from under it, which is what happens when a
- * takedown supersedes an appeal nobody ever worked.
+ * time, based on whether the latest appeal report is closed.
  *
  * The read path calls this to decide whether to offer `appeal`, and the write
  * path calls it to decide whether to accept one. They have to be the same
@@ -301,7 +305,8 @@ export const findLatestAppealReport = async (
     .where('reportType', '=', APPEAL_REASON_TYPE)
     .where((eb) => reportSubjectFilter(eb, subject))
     .orderBy('id', 'desc')
-    .select(['id', 'status', 'createdAt', 'closedAt'])
+    .limit(1)
+    .select(['id', 'status', 'createdAt', 'updatedAt', 'closedAt'])
     .executeTakeFirst()
   return report ?? null
 }
@@ -334,8 +339,10 @@ export const assertAppealAllowed = async (
 }
 
 export type FileAppealInput = {
-  /** DID of the authenticated account filing the appeal. */
+  /** DID of the affected account, shown as the appeal reporter. */
   requester: DidString
+  /** Moderator filing on the affected account's behalf, when applicable. */
+  submittedBy?: DidString
   /** The subject being appealed, already resolved and authorized. */
   subject: ModSubject
   /** Resolved moderation event ID, when one could be found. */
@@ -469,6 +476,7 @@ export const fileAppeal = async (
   ctx: AppContext,
   {
     requester,
+    submittedBy,
     subject,
     resolvedActionId,
     action,
@@ -494,7 +502,10 @@ export const fileAppeal = async (
       reasonType: APPEAL_REASON_TYPE,
       reportedBy: requester,
       modTool,
-      eventMeta: buildAppealEventMeta(action),
+      eventMeta: {
+        ...buildAppealEventMeta(action),
+        ...(submittedBy ? { appealSubmittedBy: submittedBy } : {}),
+      },
     })
     return ctx.queueService(dbTxn).insertReportFromEvent({
       event: reportEvent,

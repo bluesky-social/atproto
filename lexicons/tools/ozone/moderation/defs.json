@@ -472,6 +472,21 @@
       "description": "Report a subject",
       "required": ["reportType"],
       "properties": {
+        "appealSubmittedBy": {
+          "type": "string",
+          "format": "did",
+          "description": "Moderator who submitted this appeal on behalf of the affected account. Returned by moderator event APIs."
+        },
+        "appealActionType": {
+          "type": "string",
+          "description": "Action reference type recorded when this appeal was submitted."
+        },
+        "appealActionId": {
+          "type": "integer"
+        },
+        "appealLabel": {
+          "type": "string"
+        },
         "comment": {
           "type": "string"
         },

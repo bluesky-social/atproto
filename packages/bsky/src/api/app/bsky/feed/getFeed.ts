@@ -23,6 +23,7 @@ import {
   isDataplaneError,
   unpackIdentityServices,
 } from '../../../../data-plane/index.js'
+import { Gate } from '../../../../feature-gates/gates.js'
 import type { FeedItem } from '../../../../hydration/feed.js'
 import type { HydrateCtx } from '../../../../hydration/hydrator.js'
 import { app } from '../../../../lexicons/index.js'
@@ -201,6 +202,19 @@ type Skeleton = {
 }
 
 /**
+ * Per-feed rollout gates for the iris cutover, keyed by feed rkey.
+ * Allowlisted feeds without a dedicated gate (whats-hot) use Gate.IrisFeed.
+ */
+const IRIS_FEED_RKEY_GATES: Record<string, Gate> = {
+  'with-friends': Gate.IrisFeedWithFriendsEnable,
+  thevids: Gate.IrisFeedThevidsEnable,
+  mutuals: Gate.IrisFeedMutualsEnable,
+  'bsky-team': Gate.IrisFeedBskyTeamEnable,
+  'best-of-follows': Gate.IrisFeedBestOfFollowsEnable,
+  followpics: Gate.IrisFeedFollowpicsEnable,
+}
+
+/**
  * Iris' endpoint, when it should serve this request in place of the feed's
  * registered feed generator (seeemore).
  */
@@ -218,11 +232,9 @@ export const irisUrlForFeed = (
   if (!irisUrl) return
   if (!cfg.irisFeedUris?.has(params.feed)) return
   if (!params.hydrateCtx.viewer) return
-  if (
-    !params.hydrateCtx.features.checkGate(
-      params.hydrateCtx.features.Gate.IrisFeed,
-    )
-  ) {
+  const rkey = params.feed.split('/').at(-1)
+  const gate = (rkey && IRIS_FEED_RKEY_GATES[rkey]) || Gate.IrisFeed
+  if (!params.hydrateCtx.features.checkGate(gate)) {
     return
   }
   return irisUrl

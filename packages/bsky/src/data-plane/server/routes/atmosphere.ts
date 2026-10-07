@@ -13,12 +13,6 @@ export function atmosphere(): Partial<ServiceImpl<typeof Service>> {
     async getRecordsByURI() {
       return { results: [] }
     },
-    async getSiteStandardRecordsByURI() {
-      return { documents: [], publications: [] }
-    },
-    async getSiteStandardRecordsByRef() {
-      return { documents: [], publications: [] }
-    },
     async getAtmosphereBacklinkCounts() {
       return { results: [] }
     },
