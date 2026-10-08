@@ -1,0 +1,33 @@
+{
+  "id": "social.grain.gallery.item",
+  "defs": {
+    "main": {
+      "key": "tid",
+      "type": "record",
+      "record": {
+        "type": "object",
+        "required": ["createdAt", "gallery", "item"],
+        "properties": {
+          "item": {
+            "type": "string",
+            "format": "at-uri"
+          },
+          "gallery": {
+            "type": "string",
+            "format": "at-uri"
+          },
+          "position": {
+            "type": "integer",
+            "default": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      }
+    }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
+}

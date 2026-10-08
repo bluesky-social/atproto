@@ -1,37 +1,38 @@
 {
+  "id": "site.standard.theme.basic",
   "defs": {
     "main": {
-      "description": "A simplified theme definition for publications, providing basic color customization for content display across different platforms and applications.",
       "key": "tid",
+      "type": "record",
       "record": {
+        "type": "object",
+        "required": ["background", "foreground", "accent", "accentForeground"],
         "properties": {
           "accent": {
-            "description": "Color used for links and button backgrounds.",
             "refs": ["site.standard.theme.color#rgb"],
-            "type": "union"
-          },
-          "accentForeground": {
-            "description": "Color used for button text.",
-            "refs": ["site.standard.theme.color#rgb"],
-            "type": "union"
+            "type": "union",
+            "description": "Color used for links and button backgrounds."
           },
           "background": {
-            "description": "Color used for content background.",
             "refs": ["site.standard.theme.color#rgb"],
-            "type": "union"
+            "type": "union",
+            "description": "Color used for content background."
           },
           "foreground": {
-            "description": "Color used for content text.",
             "refs": ["site.standard.theme.color#rgb"],
-            "type": "union"
+            "type": "union",
+            "description": "Color used for content text."
+          },
+          "accentForeground": {
+            "refs": ["site.standard.theme.color#rgb"],
+            "type": "union",
+            "description": "Color used for button text."
           }
-        },
-        "required": ["background", "foreground", "accent", "accentForeground"],
-        "type": "object"
+        }
       },
-      "type": "record"
+      "description": "A simplified theme definition for publications, providing basic color customization for content display across different platforms and applications."
     }
   },
-  "id": "site.standard.theme.basic",
+  "$type": "com.atproto.lexicon.schema",
   "lexicon": 1
 }
