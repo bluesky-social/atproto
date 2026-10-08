@@ -277,6 +277,31 @@
           "ref": "com.atproto.moderation.defs#reasonType",
           "description": "Type of report"
         },
+        "priorityLevel": {
+          "type": "string",
+          "description": "Priority level assigned to the report."
+        },
+        "priorityScore": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Report priority score. Higher scores have higher priority."
+        },
+        "priorityTargetMinutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647,
+          "description": "Target resolution duration in minutes."
+        },
+        "resolutionTimeSec": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Time from report creation to its last closure."
+        },
+        "priorityTargetMet": {
+          "type": "boolean",
+          "description": "Whether the current closure occurred within the report's snapshotted target."
+        },
         "reportedBy": {
           "type": "string",
           "format": "did",

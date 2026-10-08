@@ -4,13 +4,23 @@ import type { Setting } from '../db/schema/setting.js'
 import { tools } from '../lexicons/index.js'
 import {
   PolicyListSettingKey,
+  PriorityLevelSettingKey,
   ProtectedTagSettingKey,
+  ReportPriorityLevelSettingKey,
   SeverityLevelSettingKey,
 } from './constants.js'
+import type { SettingService } from './service.js'
+import type {
+  PriorityLevelSetting,
+  ReportReasonPrioritySetting,
+} from './types.js'
 
 export const settingValidators = new Map<
   string,
-  (setting: Partial<Selectable<Setting>>) => Promise<void>
+  (
+    setting: Partial<Selectable<Setting>>,
+    settingService: SettingService,
+  ) => Promise<void>
 >([
   [
     ProtectedTagSettingKey,
@@ -331,4 +341,126 @@ export const settingValidators = new Map<
       }
     },
   ],
+  [
+    PriorityLevelSettingKey,
+    async (setting, settingService) => {
+      if (setting.managerRole !== tools.ozone.team.defs.RoleAdmin) {
+        throw new InvalidRequestError(
+          'Priority levels must have an admin managerRole',
+        )
+      }
+      if (!isObject(setting.value)) {
+        throw new InvalidRequestError('Invalid priority levels configuration')
+      }
+
+      const levels = setting.value as PriorityLevelSetting
+      const scores = new Set<number>()
+
+      for (const [level, value] of Object.entries(levels)) {
+        if (!level.trim() || level !== level.trim() || !isObject(value)) {
+          throw new InvalidRequestError(`Invalid priority level ${level}`)
+        }
+        if (typeof value.name !== 'string' || !value.name.trim()) {
+          throw new InvalidRequestError(
+            `Priority level ${level} must define a name`,
+          )
+        }
+        if (
+          !isPositiveInteger(value.targetResolutionMinutes) ||
+          value.targetResolutionMinutes > 2_147_483_647
+        ) {
+          throw new InvalidRequestError(
+            `Priority level ${level} must define a positive integer targetResolutionMinutes no greater than 2147483647`,
+          )
+        }
+        if (
+          !Number.isInteger(value.score) ||
+          value.score < 0 ||
+          value.score > 100
+        ) {
+          throw new InvalidRequestError(
+            `Priority level ${level} must define an integer score between 0 and 100`,
+          )
+        }
+        if (scores.has(value.score)) {
+          throw new InvalidRequestError(
+            `Priority level score ${value.score} must be unique`,
+          )
+        }
+        scores.add(value.score)
+      }
+
+      const mappings = await getSettingValue<ReportReasonPrioritySetting>(
+        settingService,
+        ReportPriorityLevelSettingKey,
+      )
+      assertKnownPriorityLevels(mappings, levels)
+    },
+  ],
+  [
+    ReportPriorityLevelSettingKey,
+    async (setting, settingService) => {
+      if (setting.managerRole !== tools.ozone.team.defs.RoleAdmin) {
+        throw new InvalidRequestError(
+          'Report priority levels must have an admin managerRole',
+        )
+      }
+      if (!isObject(setting.value)) {
+        throw new InvalidRequestError(
+          'Invalid report priority levels configuration',
+        )
+      }
+      const mappings = setting.value as ReportReasonPrioritySetting
+      for (const [reason, level] of Object.entries(mappings)) {
+        if (!reason.trim() || typeof level !== 'string' || !level.trim()) {
+          throw new InvalidRequestError(
+            `Invalid priority mapping for report reason ${reason}`,
+          )
+        }
+      }
+      const levels = await getSettingValue<PriorityLevelSetting>(
+        settingService,
+        PriorityLevelSettingKey,
+      )
+      assertKnownPriorityLevels(mappings, levels)
+    },
+  ],
 ])
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0
+}
+
+async function getSettingValue<T>(
+  settingService: SettingService,
+  key: string,
+): Promise<T | undefined> {
+  const { options } = await settingService.query({
+    limit: 1,
+    scope: 'instance',
+    keys: [key],
+  })
+  return options[0]?.value as T | undefined
+}
+
+/**
+ * Assert that all report priority levels exist in priority levels definition.
+ */
+function assertKnownPriorityLevels(
+  mappings: ReportReasonPrioritySetting | undefined,
+  levels: PriorityLevelSetting | undefined,
+) {
+  if (!mappings) return
+  const unknown = Object.entries(mappings).filter(
+    ([, level]) => !levels || !Object.hasOwn(levels, level),
+  )
+  if (unknown.length) {
+    throw new InvalidRequestError(
+      `Unknown priority levels: ${unknown.map(([reason, level]) => `${reason} -> ${level}`).join(', ')}`,
+    )
+  }
+}

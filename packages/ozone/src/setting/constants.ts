@@ -2,3 +2,12 @@
 export const ProtectedTagSettingKey = 'tools.ozone.setting.protectedTags'
 export const PolicyListSettingKey = 'tools.ozone.setting.policyList'
 export const SeverityLevelSettingKey = 'tools.ozone.setting.severityLevels'
+export const PriorityLevelSettingKey = 'tools.ozone.setting.priorityLevels'
+export const ReportPriorityLevelSettingKey =
+  'tools.ozone.setting.reportPriorityLevels'
+
+export function isReportPrioritySetting(key: string): boolean {
+  return (
+    key === PriorityLevelSettingKey || key === ReportPriorityLevelSettingKey
+  )
+}
