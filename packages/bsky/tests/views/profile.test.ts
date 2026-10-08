@@ -757,6 +757,38 @@ describe('pds profile views', () => {
         before?.slice(1).map((link) => link.uri),
       )
     })
+
+    it("does not show another profile's link when profiles are fetched together", async () => {
+      await sc.createAccount('pinto', {
+        handle: 'pinto.test',
+        email: 'pinto@test.com',
+        password: 'pinto-pass',
+      })
+      const pinto = sc.dids.pinto
+      const pintos = await createLink(pinto, 'https://pinto.example')
+      await updateProfile(pinto, { displayName: 'pinto', links: [pintos] })
+      const own = await createLink(linky, 'https://linky.example')
+      await updateProfile(linky, { displayName: 'links', links: [own, pintos] })
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.actor.getProfiles(
+        { actors: [linky, pinto] },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfiles,
+          ),
+        },
+      )
+      const linkUris = (did: string) =>
+        (
+          data.profiles.find((profile) => profile.did === did) as {
+            links?: { uri: string }[]
+          }
+        ).links?.map((link) => link.uri)
+      expect(linkUris(linky)).toEqual([own.uri])
+      expect(linkUris(pinto)).toEqual([pintos.uri])
+    })
   })
 
   describe('germ', () => {

@@ -373,7 +373,9 @@ export class Views {
     if (!refs?.length) return
     const links: ProfileLinkView[] = []
     for (const ref of refs.slice(0, MAX_PROFILE_LINKS)) {
-      // missing when taken down, deleted, invalid, or in another repo
+      // the batch may include other actors' links, so check the repo here too
+      if (uriToDid(ref.uri) !== did) continue
+      // missing when taken down, deleted, or invalid
       const link = state.profileLinks?.get(ref.uri)
       if (!link || !isAllowedProfileLinkUrl(link.record.url)) continue
       links.push({
