@@ -706,12 +706,12 @@ describe('pds profile views', () => {
     }
 
     beforeAll(async () => {
-      await sc.createAccount('links', {
-        handle: 'links.test',
-        email: 'links@test.com',
-        password: 'links-pass',
+      await sc.createAccount('linky', {
+        handle: 'linky.test',
+        email: 'linky@test.com',
+        password: 'linky-pass',
       })
-      linky = sc.dids.links
+      linky = sc.dids.linky
     })
 
     it('omits links for profiles without them', async () => {
