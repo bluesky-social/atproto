@@ -1,3 +1,4 @@
+import { rm } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { cidForLex } from '@atproto/lex-cbor'
 import { lexEquals } from '@atproto/lex-data'
@@ -199,6 +200,10 @@ export class LexInstaller implements AsyncDisposable {
   }: InstallOptions = {}): Promise<void> {
     const roots = new NsidMap<{ update: boolean }>()
 
+    if (update) {
+      await rm(this.lexiconsDirPath, { force: true, recursive: true })
+    }
+
     // Restore previously existing manifest entries, updating their status based
     // on the `update` option
     for (const lexicon of this.workingManifest.lexicons) {
@@ -249,12 +254,10 @@ export class LexInstaller implements AsyncDisposable {
       }
     }
 
-    // @TODO should we clean the lexiconDirPath of files that are not referenced
-    // in the manifest?
-  }
-
-  public update() {
-    return this.install({ update: true })
+    // @TODO should we clean the lexiconsDirPath of files that are not
+    // referenced in the manifest? (only needed in non-update mode, since we
+    // already removed the entire lexiconsDirPath at the beginning of the update
+    // process)
   }
 
   protected getResolution(nsid: NsidString | NSID): Resolution | null {
@@ -265,7 +268,7 @@ export class LexInstaller implements AsyncDisposable {
     return resolution
   }
 
-  protected async addDocument(
+  protected async trackDocument(
     nsid: NSID,
     {
       uri,
@@ -327,7 +330,7 @@ export class LexInstaller implements AsyncDisposable {
       const lexicon = await readLexiconDocument(path)
 
       if (lexicon?.id === nsid.toString()) {
-        return this.addDocument(nsid, {
+        return this.trackDocument(nsid, {
           uri: resolution.uri,
           lexicon,
         })
@@ -351,12 +354,12 @@ export class LexInstaller implements AsyncDisposable {
       // Link the lexicon file at its right place
       await symlinkLexicon(path, sourcePath)
 
-      return this.addDocument(nsid, result)
+      return this.trackDocument(nsid, result)
     } else {
       // Write the file at it's destination path
       await writeJsonFile(path, result.lexicon)
 
-      return this.addDocument(nsid, result)
+      return this.trackDocument(nsid, result)
     }
   }
 
@@ -364,7 +367,10 @@ export class LexInstaller implements AsyncDisposable {
     const missing = new NsidSet()
 
     for (const document of this.workingLexicons.values()) {
-      for (const nsid of listDocumentNsidRefs(document)) {
+      for (const nsid of listDocumentNsidRefs(document, {
+        // @TODO should we make this configurable?
+        includeKnownValues: false,
+      })) {
         if (!this.workingLexicons.has(nsid)) {
           missing.add(nsid)
         }

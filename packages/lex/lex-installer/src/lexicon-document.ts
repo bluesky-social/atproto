@@ -24,11 +24,14 @@ export async function readLexiconDocument(
   }
 }
 
-export function* listDocumentNsidRefs(doc: LexiconDocument): Iterable<NSID> {
+export function* listDocumentNsidRefs(
+  doc: LexiconDocument,
+  options?: DefRefsOptions,
+): Iterable<NSID> {
   try {
     for (const def of Object.values(doc.defs)) {
       if (def) {
-        for (const ref of defRefs(def)) {
+        for (const ref of defRefs(def, options)) {
           const [nsid] = ref.split('#', 1)
           if (nsid) yield NSID.from(nsid)
         }
@@ -37,6 +40,14 @@ export function* listDocumentNsidRefs(doc: LexiconDocument): Iterable<NSID> {
   } catch (cause) {
     throw new Error(`Failed to extract refs from lexicon ${doc.id}`, { cause })
   }
+}
+
+type DefRefsOptions = {
+  /**
+   * Determines whether to include token references in string `knownValues` when
+   * listing lexicon dependencies.
+   */
+  includeKnownValues?: boolean
 }
 
 function* defRefs(
@@ -48,9 +59,24 @@ function* defRefs(
     | LexiconParameters
     | LexiconRef
     | LexiconRefUnion,
+  options?: DefRefsOptions,
 ): Iterable<string> {
   switch (def.type) {
     case 'string':
+      if (def.knownValues && options?.includeKnownValues) {
+        for (const val of def.knownValues) {
+          // Tokens ?
+          const { length, 0: nsid, 1: hash } = val.split('#')
+          if (length === 2 && hash) {
+            try {
+              NSID.from(nsid)
+              yield val
+            } catch {
+              // ignore invalid nsid
+            }
+          }
+        }
+      }
       return
     case 'array':
       return yield* defRefs(def.items)

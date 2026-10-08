@@ -33,24 +33,34 @@ _not_ re-exported; depend on it directly if the package encodes/decodes CBOR.
 
 ## Wiring a package in this monorepo
 
-[lexicons/](../../../lexicons/) at the repo root is the canonical source. Most
-packages compile it directly — no manifest, no `lex install`, no `postinstall`
-hook — because the schemas are committed source, so there is nothing to fetch or
-verify. (One exception: [packages/pds](../../../packages/pds/package.json)
-vendors the set through `lex install` + symlinks — see
-[Vendoring the canonical lexicons](#vendoring-the-canonical-lexicons-in-repo).)
+[lexicons/](../../../lexicons/) at the repo root is the canonical source for
+`com.atproto` and `tools.ozone` namespaces. Most packages compile it directly —
+no manifest, no `lex install`, no `postinstall` hook — because the schemas are
+committed source, so there is nothing to fetch or verify. (One exception:
+[packages/pds](../../../packages/pds/package.json) vendors the set through `lex
+install` + symlinks — see [Vendoring the canonical lexicons](#vendoring-the-canonical-lexicons-in-repo).)
 
 Copy the shape most consuming packages already use
-([packages/bsky](../../../packages/bsky/package.json),
-[packages/pds](../../../packages/pds/package.json),
+([packages/pds](../../../packages/pds/package.json),
 [packages/sync](../../../packages/sync/package.json)):
 
 ```json
 {
   "scripts": {
-    "codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons",
+    // Generate TypeScript schema from Lexicon JSON
+    "lex:build": "lex build --clear --indexFile",
+    // Install Lexicon JSON into ./lexicons/ and update the manifest. Use `pnpm lex:install foo.bar.baz` to install new lexicons
+    "lex:install": "lex install",
+    // Keep the TypeScript schema up to date after installing new lexicons
+    "postlex:install": "pnpm run lex:build",
+    // Allows to keep the manifest.json up-to-date when a canonical lexicon is updated. Also allows to fetch new lexicons from the network.
+    "lex:update": "lex update",
+    // Run the build step after updating the lexicons
+    "postlex:update": "pnpm run lex:build",
+    // When performing a regular build (eg. from CI), ensure that the lexicons are installed and match the manifest.
+    "codegen:lex": "pnpm run lex:install --ci",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
-    "build": "tsgo --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json"
   }
 }
 ```

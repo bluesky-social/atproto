@@ -184,7 +184,7 @@ export async function symlinkLexicon(
 
   await mkdir(dirname(dest), { recursive: true })
   // Replace any existing file/symlink so re-installs are idempotent.
-  await rm(dest, { force: true })
+  await rm(dest, { force: true, recursive: true })
   await symlink(relative(dirname(dest), source), dest)
 }
 

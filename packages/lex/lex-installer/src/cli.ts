@@ -6,6 +6,21 @@ function defineCommandModule<T, U>(
   return cmd
 }
 
+const INSTALLER_OPTIONS = {
+  manifest: {
+    type: 'string',
+    default: './lexicons.json',
+    normalize: true,
+    describe: 'path to lexicons manifest file',
+  },
+  lexicons: {
+    type: 'string',
+    default: './lexicons',
+    normalize: true,
+    describe: 'directory containing lexicon JSON files',
+  },
+} as const
+
 export const installCommand = defineCommandModule({
   command: ['install [nsid..]', 'i [nsid..]'],
   describe: 'Fetch and install lexicon documents',
@@ -18,48 +33,38 @@ export const installCommand = defineCommandModule({
         array: true,
       })
       .options({
-        manifest: {
-          type: 'string',
-          default: './lexicons.json',
-          describe: 'path to lexicons.json manifest file',
-        },
+        ...INSTALLER_OPTIONS,
         save: {
           alias: 's',
           type: 'boolean',
           default: true,
           describe:
-            'Updates lexicons.json with installed lexicons (use --no-save to disable)',
+            'Updates the manifest with installed lexicons (use --no-save to disable)',
         },
         update: {
           type: 'boolean',
-          default: false,
           deprecated: 'use the "update" command instead',
+          conflicts: ['ci'],
           describe:
             'update all installed lexicons to their latest versions by re-resolving and re-installing them',
         },
         ci: {
           type: 'boolean',
-          default: false,
           describe:
             'error if the installed lexicons do not match the CIDs in the lexicons.json manifest',
-        },
-        lexicons: {
-          type: 'string',
-          demandOption: true,
-          default: './lexicons',
-          describe: 'directory containing lexicon JSON files',
         },
       })
   },
   handler: async (argv) => {
     const { install } = await import('@atproto/lex-installer')
     await install({
-      add: argv.nsid,
+      lexicons: argv.lexicons,
+      manifest: argv.manifest,
+      //
+      additions: argv.nsid,
       save: argv.save,
       ci: argv.ci,
       update: argv.update,
-      lexicons: argv.lexicons,
-      manifest: argv.manifest,
     })
   },
 })
@@ -69,17 +74,7 @@ export const updateCommand = defineCommandModule({
   describe: 'Update all installed lexicons to their latest versions',
   builder: (yargs) => {
     return yargs.strict().options({
-      manifest: {
-        type: 'string',
-        default: './lexicons.json',
-        describe: 'path to lexicons.json manifest file',
-      },
-      lexicons: {
-        type: 'string',
-        demandOption: true,
-        default: './lexicons',
-        describe: 'directory containing lexicon JSON files',
-      },
+      ...INSTALLER_OPTIONS,
     })
   },
   handler: async (argv) => {

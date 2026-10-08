@@ -106,7 +106,6 @@
     "lex:build": "lex build --clear --indexFile",
     "lex:install": "lex install",
     "postlex:install": "pnpm run lex:build",
-    "prelex:update": "rm -rf ./lexicons",
     "lex:update": "lex update",
     "postlex:update": "pnpm run lex:build",
     "codegen:lex": "pnpm run lex:install --ci",

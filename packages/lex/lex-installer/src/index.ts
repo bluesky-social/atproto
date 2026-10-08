@@ -23,7 +23,7 @@ export type InstallOptions = LexInstallerOptions & {
    * Array of lexicons NSID strings (e.g., 'com.example.myLexicon') to add to
    * the installation.
    */
-  add?: string[]
+  additions?: string[]
 
   /**
    * Whether to save the updated manifest after installation.
@@ -37,6 +37,7 @@ export type InstallOptions = LexInstallerOptions & {
    * When `true`, the installer will attempt to fetch and apply updates
    * for already installed lexicons.
    * @default false
+   * @deprecated use {@link update} instead
    */
   update?: boolean
 
@@ -102,8 +103,8 @@ export type InstallOptions = LexInstallerOptions & {
 export async function install({
   ci = false,
   save = true,
-  add: additions,
   update = false,
+  additions = undefined,
   ...options
 }: InstallOptions) {
   // Perform the installation using the existing manifest as "hint"
@@ -127,10 +128,10 @@ export type UpdateOptions = LexInstallerOptions & {
 }
 
 export async function update(options: UpdateOptions) {
-  // Perform the installation with the update flag enabled
+  // Performs the installation with the update flag enabled
   await using installer = await LexInstaller.load(options)
 
-  await installer.update()
+  await installer.install({ update: true })
 
   await installer.save()
 }

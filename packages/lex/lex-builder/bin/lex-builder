@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-/* eslint-env node */
-
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import { buildCommand } from '@atproto/lex-builder/cli'
