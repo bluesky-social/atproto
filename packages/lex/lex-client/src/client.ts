@@ -41,9 +41,9 @@ import {
   type RecordKeyOptions,
   type XrpcRequestHeadersOptions,
   applyDefaults,
-  getDefaultRecordKey,
-  getValidRecordKey,
   mergeHeaders,
+  rkeyFor,
+  rkeyForCreate,
   throwIfAborted,
 } from './util.js'
 import {
@@ -1034,9 +1034,7 @@ export class Client {
     const schema: T = getMain(ns)
     const record = schema.build(input) as TypedLexMap<NsidString>
     if (options?.validateRequest) schema.validate(record)
-    const rkey = options?.rkey
-      ? schema.keySchema.parse(options.rkey)
-      : getDefaultRecordKey(schema)
+    const rkey = rkeyForCreate(schema, options?.rkey)
     const response = await this.createRecord(record, rkey, options)
     return response.body
   }
@@ -1064,7 +1062,7 @@ export class Client {
     options: DeleteOptions<T> = {} as DeleteOptions<T>,
   ): Promise<DeleteOutput> {
     const schema = getMain(ns)
-    const rkey = getValidRecordKey(schema, options.rkey)
+    const rkey = rkeyFor(schema, options.rkey)
     const response = await this.deleteRecord(schema.$type, rkey, options)
     return response.body
   }
@@ -1099,7 +1097,7 @@ export class Client {
     options: GetOptions<T> = {} as GetOptions<T>,
   ): Promise<GetOutput<T>> {
     const schema = getMain(ns)
-    const rkey = getValidRecordKey(schema, options.rkey)
+    const rkey = rkeyFor(schema, options.rkey)
     const response = await this.getRecord(schema.$type, rkey, options)
     const value = schema.validate(response.body.value)
     return { ...response.body, value }
@@ -1150,7 +1148,7 @@ export class Client {
     const schema: T = getMain(ns)
     const record = schema.build(input) as TypedLexMap<NsidString>
     if (options?.validateRequest) schema.validate(record)
-    const rkey = getValidRecordKey(schema, options.rkey)
+    const rkey = rkeyFor(schema, options.rkey)
     const response = await this.putRecord(record, rkey, options)
     return response.body
   }

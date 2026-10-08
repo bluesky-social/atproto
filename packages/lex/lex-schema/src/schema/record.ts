@@ -12,11 +12,16 @@ import {
   type ValidationContext,
   type ValidationResult,
   type Validator,
+  isNsidString,
+  isRecordKeyString,
+  isTidString,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
+import { custom } from './custom.js'
 import { literal } from './literal.js'
-import { string } from './string.js'
 import { withDefault } from './with-default.js'
+
+const SELF = 'self'
 
 /**
  * Infers the record key type from a RecordSchema.
@@ -127,32 +132,48 @@ export class RecordSchema<
   }
 }
 
-export type RecordKeySchemaOutput<Key extends LexiconRecordKey> =
-  RecordKeyValue<Key>
-
 export type RecordKeySchema<Key extends LexiconRecordKey> = Schema<
   RecordKeyValue<Key>
 >
 
-const keySchema = string({ format: 'record-key' })
-const tidSchema = string({ format: 'tid' })
-const nsidSchema = string({ format: 'nsid' })
-const selfLiteralSchema = withDefault(literal('self'), 'self')
+const keySchema: RecordKeySchema<'any'> = custom(
+  isRecordKeyString,
+  'Invalid record-key string format',
+)
+const tidSchema: RecordKeySchema<'tid'> = custom(
+  isTidString,
+  'Invalid TID string format',
+)
+const nsidSchema: RecordKeySchema<'nsid'> = custom(
+  isNsidString,
+  'Invalid NSID string format',
+)
+const selfLiteralSchema: RecordKeySchema<'literal:self'> =
+  recordKeyLiteral(SELF)
 
 function recordKey<Key extends LexiconRecordKey>(
   key: Key,
 ): RecordKeySchema<Key> {
   // @NOTE Use cached instances for common schemas
-  if (key === 'any') return keySchema as any
-  if (key === 'tid') return tidSchema as any
-  if (key === 'nsid') return nsidSchema as any
+  if (key === 'any') return keySchema as RecordKeySchema<Key>
+  if (key === 'tid') return tidSchema as RecordKeySchema<Key>
+  if (key === 'nsid') return nsidSchema as RecordKeySchema<Key>
   if (key.startsWith('literal:')) {
-    const value = key.slice(8) as RecordKeyValue<Key>
-    if (value === 'self') return selfLiteralSchema as any
-    return withDefault(literal(value), value)
+    const value = key.slice(8)
+    if (value === SELF) return selfLiteralSchema as RecordKeySchema<Key>
+    return recordKeyLiteral(value) as RecordKeySchema<Key>
   }
 
-  throw new Error(`Unsupported record key type: ${key}`)
+  throw new TypeError(`Unsupported record key type: ${key}`)
+}
+
+function recordKeyLiteral<T extends string>(
+  rkey: T,
+): RecordKeySchema<`literal:${T}`> {
+  if (!isRecordKeyString(rkey)) {
+    throw new TypeError(`Invalid record key value: ${rkey}`)
+  }
+  return withDefault(literal(rkey), rkey) as any
 }
 
 /**

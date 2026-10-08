@@ -107,7 +107,7 @@ export async function install({
   ...options
 }: InstallOptions) {
   // Perform the installation using the existing manifest as "hint"
-  const installer = await LexInstaller.load(options)
+  await using installer = await LexInstaller.load(options)
 
   await installer.install({ additions, update })
 
@@ -128,7 +128,7 @@ export type UpdateOptions = LexInstallerOptions & {
 
 export async function update(options: UpdateOptions) {
   // Perform the installation with the update flag enabled
-  const installer = await LexInstaller.load(options)
+  await using installer = await LexInstaller.load(options)
 
   await installer.update()
 

@@ -79,9 +79,9 @@ describe('LexInstaller', () => {
   })
 
   describe('requiresSave', () => {
-    it('returns true when constructed without a baseline manifest', () => {
+    it('returns true when constructed without a baseline manifest', async () => {
       // A missing lockfile is drift to report, not an unchanged state.
-      const installer = makeInstaller()
+      await using installer = makeInstaller()
       expect(installer.requiresSave()).toBe(true)
     })
 
@@ -91,7 +91,7 @@ describe('LexInstaller', () => {
         lexicons: [],
         resolutions: {},
       }
-      const installer = makeInstaller(manifest)
+      await using installer = makeInstaller(manifest)
       await installer.install({ additions: [] })
       expect(installer.requiresSave()).toBe(false)
     })
@@ -107,7 +107,7 @@ describe('LexInstaller', () => {
         resolutions: {},
       }
 
-      const installer = makeInstaller(manifest)
+      await using installer = makeInstaller(manifest)
       await installer.install({ additions: ['com.example.foo'] })
 
       const dest = join(dir, 'out', 'com', 'example', 'foo.json')
@@ -128,7 +128,7 @@ describe('LexInstaller', () => {
         resolutions: {},
       }
 
-      const installer = makeInstaller(manifest)
+      await using installer = makeInstaller(manifest)
       await installer.install({ additions: ['com.example.foo'] })
 
       expect((await lstat(source)).isSymbolicLink()).toBe(false)
@@ -147,7 +147,7 @@ describe('LexInstaller', () => {
         resolutions: {},
       }
 
-      const installer = makeInstaller(manifest)
+      await using installer = makeInstaller(manifest)
       await installer.install({ additions: ['com.example.foo'] })
 
       // The higher-priority './a' resolver answered, not './b'.
@@ -181,7 +181,7 @@ describe('LexInstaller', () => {
         },
       }
 
-      const installer = makeInstaller(manifest)
+      await using installer = makeInstaller(manifest)
       await installer.install()
 
       const dest = join(dir, 'out', 'com', 'example', 'foo.json')
@@ -242,7 +242,7 @@ describe('LexInstaller', () => {
         'stable',
       )
 
-      const installer = makeInstaller({
+      await using installer = makeInstaller({
         version: 2,
         lexicons: ['com.example.foo'],
         resolvers: [{ type: 'directory', path: './src' }],

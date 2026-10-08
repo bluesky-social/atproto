@@ -8,7 +8,7 @@ import {
 } from '@atproto/lex-schema'
 import { com } from './lexicons/index.js'
 import type { RecordKeyOptions } from './util.js'
-import { getDefaultRecordKey, getValidRecordKey } from './util.js'
+import { rkeyFor, rkeyForCreate } from './util.js'
 
 export type WriteOperation =
   | $Typed<com.atproto.repo.applyWrites.Create>
@@ -52,9 +52,7 @@ export class WriteOperationHelper {
     return com.atproto.repo.applyWrites.create.$build({
       collection: schema.$type,
       value,
-      rkey: options?.rkey
-        ? schema.keySchema.parse(options.rkey)
-        : getDefaultRecordKey(schema),
+      rkey: rkeyForCreate(schema, options?.rkey),
     })
   }
 
@@ -79,7 +77,7 @@ export class WriteOperationHelper {
     return com.atproto.repo.applyWrites.update.$build({
       collection: schema.$type,
       value,
-      rkey: getValidRecordKey(schema, options?.rkey),
+      rkey: rkeyFor(schema, options?.rkey),
     })
   }
 
@@ -99,7 +97,7 @@ export class WriteOperationHelper {
     const schema: T = getMain(ns)
     return com.atproto.repo.applyWrites.delete.$build({
       collection: schema.$type,
-      rkey: getValidRecordKey(schema, options?.rkey),
+      rkey: rkeyFor(schema, options?.rkey),
     })
   }
 

@@ -100,7 +100,7 @@ export type UpdateOptions = {
  * @example
  * Manual disposal:
  * ```typescript
- * const installer = new LexInstaller({
+ * await using installer = new LexInstaller({
  *   lexicons: './lexicons',
  *   manifest: './lexicons.manifest.json',
  * })
@@ -113,7 +113,7 @@ export type UpdateOptions = {
  * }
  * ```
  */
-export class LexInstaller {
+export class LexInstaller implements AsyncDisposable {
   static async load(options: LexInstallerOptions): Promise<LexInstaller> {
     const manifest = await readJsonFile(options.manifest)
       .then((json) => lexiconsManifestSchema.parse(json))
@@ -137,6 +137,12 @@ export class LexInstaller {
     this.workingManifest = normalizeManifest(manifest)
     this.originalManifest = manifest ? structuredClone(manifest) : undefined
     this.resolver = createResolver(options, this.workingManifest.resolvers)
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    // @NOTE This historically required a cleanup, which we might re-introduce
+    // later if needed, so we keep this to maintain the async disposal
+    // interface (future proofing + backward compatibility).
   }
 
   /**
