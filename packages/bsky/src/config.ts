@@ -68,6 +68,7 @@ export interface ServerConfigValues {
   searchTagsHideAll: Set<string>
   suggestionsUrl?: string
   suggestionsApiKey?: string
+  atmosphereExploreTabService?: string
   topicsUrl?: string
   topicsApiKey?: string
   irisUrl?: string
@@ -184,6 +185,8 @@ export class ServerConfig {
     )
     const suggestionsUrl = process.env.BSKY_SUGGESTIONS_URL || undefined
     const suggestionsApiKey = process.env.BSKY_SUGGESTIONS_API_KEY || undefined
+    const atmosphereExploreTabService =
+      process.env.BSKY_ATMOSPHERE_EXPLORE_TAB_SERVICE || undefined
     const topicsUrl = process.env.BSKY_TOPICS_URL || undefined
     const topicsApiKey = process.env.BSKY_TOPICS_API_KEY
     const irisUrl = process.env.BSKY_IRIS_URL || undefined
@@ -404,6 +407,7 @@ export class ServerConfig {
       searchTagsHideAll,
       suggestionsUrl,
       suggestionsApiKey,
+      atmosphereExploreTabService,
       topicsUrl,
       topicsApiKey,
       irisUrl,
@@ -595,6 +599,10 @@ export class ServerConfig {
 
   get suggestionsApiKey() {
     return this.cfg.suggestionsApiKey
+  }
+
+  get atmosphereExploreTabService() {
+    return this.cfg.atmosphereExploreTabService
   }
 
   get topicsUrl() {
