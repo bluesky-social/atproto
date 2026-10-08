@@ -677,6 +677,88 @@ describe('pds profile views', () => {
     })
   })
 
+  describe('links', () => {
+    let linky: DidString
+
+    const createLink = async (did: DidString, url: string, title?: string) => {
+      const res = await sc.agent.com.atproto.repo.createRecord(
+        {
+          repo: did,
+          collection: 'app.bsky.actor.link',
+          record: { url, title, createdAt: new Date().toISOString() },
+        },
+        { headers: sc.getHeaders(did), encoding: 'application/json' },
+      )
+      return { uri: res.data.uri, cid: res.data.cid }
+    }
+
+    const getLinks = async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: linky },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      return (data as { links?: { uri: string; url: string }[] }).links
+    }
+
+    beforeAll(async () => {
+      await sc.createAccount('links', {
+        handle: 'links.test',
+        email: 'links@test.com',
+        password: 'links-pass',
+      })
+      linky = sc.dids.links
+    })
+
+    it('omits links for profiles without them', async () => {
+      await updateProfile(linky, { displayName: 'links' })
+      await network.processAll()
+      expect(await getLinks()).toBeUndefined()
+    })
+
+    it('returns link records in profile order, skipping ones that break the rules', async () => {
+      const support = await createLink(
+        linky,
+        'https://ko-fi.com/linky',
+        'Tip jar',
+      )
+      const site = await createLink(linky, 'https://example.com')
+      const shortener = await createLink(linky, 'https://bit.ly/abc')
+      const someoneElses = await createLink(alice, 'https://alice.example')
+      await updateProfile(linky, {
+        displayName: 'links',
+        links: [site, shortener, someoneElses, support],
+      })
+      await network.processAll()
+
+      const links = await getLinks()
+      expect(links?.map((link) => link.uri)).toEqual([site.uri, support.uri])
+      expect(links?.[1]).toMatchObject({
+        uri: support.uri,
+        cid: support.cid,
+        url: 'https://ko-fi.com/linky',
+        title: 'Tip jar',
+      })
+    })
+
+    it('leaves out a link that was taken down', async () => {
+      const before = await getLinks()
+      const takenDown = before?.[0]?.uri
+      assert(takenDown)
+      await network.bsky.ctx.dataplane.takedownRecord({
+        recordUri: takenDown,
+      })
+      const links = await getLinks()
+      expect(links?.map((link) => link.uri)).toEqual(
+        before?.slice(1).map((link) => link.uri),
+      )
+    })
+  })
+
   describe('germ', () => {
     const germDeclaration: ComGermnetworkDeclaration.Main = {
       $type: ids.ComGermnetworkDeclaration,

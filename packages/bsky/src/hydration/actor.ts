@@ -20,6 +20,7 @@ import type {
   ChatDeclarationRecord,
   GermDeclarationRecord,
   NotificationDeclarationRecord,
+  ProfileLinkRecord,
   ProfileRecord,
   StatusRecord,
 } from '../views/types.js'
@@ -86,6 +87,9 @@ export type ChatDeclarations = HydrationMap<AtUriString, ChatDeclaration>
 
 export type GermDeclaration = RecordInfo<GermDeclarationRecord>
 export type GermDeclarations = HydrationMap<AtUriString, GermDeclaration>
+
+export type ProfileLink = RecordInfo<ProfileLinkRecord>
+export type ProfileLinks = HydrationMap<AtUriString, ProfileLink>
 
 export type NotificationDeclaration = RecordInfo<NotificationDeclarationRecord>
 export type NotificationDeclarations = HydrationMap<
@@ -366,6 +370,26 @@ export class ActorHydrator {
     for (let i = 0; i < uris.length; i++) {
       const record = parseRecord(
         com.germnetwork.declaration.main,
+        res.records[i],
+        includeTakedowns,
+      )
+      map.set(uris[i], record ?? null)
+    }
+
+    return map
+  }
+
+  async getProfileLinks(
+    uris: AtUriString[],
+    includeTakedowns = false,
+  ): Promise<ProfileLinks> {
+    const map: ProfileLinks = new HydrationMap()
+    if (!uris.length) return map
+
+    const res = await this.dataplane.getProfileLinkRecords({ uris })
+    for (let i = 0; i < uris.length; i++) {
+      const record = parseRecord(
+        app.bsky.actor.link.main,
         res.records[i],
         includeTakedowns,
       )
