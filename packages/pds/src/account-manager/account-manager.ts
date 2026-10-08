@@ -139,8 +139,8 @@ export class AccountManager {
     await getMigrator(this.db).migrateToLatestOrThrow()
   }
 
-  close() {
-    this.db.close()
+  async close() {
+    await this.db.close()
   }
 
   // Account

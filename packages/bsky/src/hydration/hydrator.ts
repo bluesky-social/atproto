@@ -23,10 +23,7 @@ import type {
   RecordRef,
 } from '../proto/bsky_pb.js'
 import { events } from '../telemetry/events.js'
-import {
-  SITE_STANDARD_NSID_PREFIX,
-  parseSiteStandardRecordKey,
-} from '../util/standard-site.js'
+import { SITE_STANDARD_NSID_PREFIX } from '../util/standard-site.js'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris.js'
 import type { ParsedLabelers } from '../util.js'
 import {
@@ -50,6 +47,7 @@ import {
   ExternalHydrator,
   type SiteStandardDocuments,
   type SiteStandardPublications,
+  parseGenericRecordKey,
 } from './external.js'
 import {
   type FeedGenAggs,
@@ -758,7 +756,7 @@ export class Hydrator {
     const knownProfileDidsSet = new Set(knownProfileDids)
     const extraSsDids: DidString[] = []
     for (const key of siteStandardPublications.keys()) {
-      const did = uriToDid(parseSiteStandardRecordKey(key).uri)
+      const did = uriToDid(parseGenericRecordKey(key).uri)
       if (!knownProfileDidsSet.has(did)) {
         knownProfileDidsSet.add(did)
         extraSsDids.push(did)
@@ -984,7 +982,7 @@ export class Hydrator {
     const knownDids = new Set<string>(dids)
     const extraDids: DidString[] = []
     for (const key of publications.keys()) {
-      const did = uriToDid(parseSiteStandardRecordKey(key).uri)
+      const did = uriToDid(parseGenericRecordKey(key).uri)
       if (!knownDids.has(did)) {
         knownDids.add(did)
         extraDids.push(did)
@@ -2054,7 +2052,7 @@ const actionSiteStandardTakedownLabels = (
   if (documents.size > 0 && publications.size > 0) {
     const pubKeysByUri = new Map<string, string[]>()
     for (const key of publications.keys()) {
-      const { uri } = parseSiteStandardRecordKey(key)
+      const { uri } = parseGenericRecordKey(key)
       const list = pubKeysByUri.get(uri)
       if (list) list.push(key)
       else pubKeysByUri.set(uri, [key])
@@ -2070,11 +2068,11 @@ const actionSiteStandardTakedownLabels = (
 
   // Per-record takedowns: null any entry whose subject URI is taken down.
   for (const key of documents.keys()) {
-    const { uri } = parseSiteStandardRecordKey(key)
+    const { uri } = parseGenericRecordKey(key)
     if (labels.get(uri)?.isTakendown) documents.set(key, null)
   }
   for (const key of publications.keys()) {
-    const { uri } = parseSiteStandardRecordKey(key)
+    const { uri } = parseGenericRecordKey(key)
     if (labels.get(uri)?.isTakendown) publications.set(key, null)
   }
 

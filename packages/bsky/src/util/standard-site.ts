@@ -1,25 +1,4 @@
-import type { AtUriString } from '@atproto/syntax'
-
 export const SITE_STANDARD_NSID_PREFIX = 'site.standard.'
-
-/**
- * Composes a stable map key from an `(uri, cid)` pair. A single hydration
- * batch can pull more than one version of the same SS record URI (different
- * posts pinning different cids), so the composite is needed for O(1)
- * version-exact lookups.
- */
-export const siteStandardRecordKey = (uri: string, cid: string) =>
-  `${uri}@${cid}`
-
-export const parseSiteStandardRecordKey = (
-  key: string,
-): { uri: AtUriString; cid: string } => {
-  const at = key.lastIndexOf('@')
-  return {
-    uri: key.slice(0, at) as AtUriString,
-    cid: key.slice(at + 1),
-  }
-}
 
 /**
  * Parse `url` as HTTP(S) and reduce it to a canonical

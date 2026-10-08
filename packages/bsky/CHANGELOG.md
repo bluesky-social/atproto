@@ -1,5 +1,85 @@
 # @atproto/bsky
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [[`3013430`](https://github.com/bluesky-social/atproto/commit/3013430ed7433edd4c70d2970428d0ab803f6e85), [`a044af7`](https://github.com/bluesky-social/atproto/commit/a044af7bd7b522ca51229d7686f5b6413be6eee7), [`38b10d1`](https://github.com/bluesky-social/atproto/commit/38b10d1b870a6a8f5da0eff32a136caadadd0184)]:
+  - @atproto/api@0.24.0
+  - @atproto-labs/opentelemetry-node@0.3.1
+
+## 0.1.3
+
+### Patch Changes
+
+- [#5598](https://github.com/bluesky-social/atproto/pull/5598) [`6570e75`](https://github.com/bluesky-social/atproto/commit/6570e750752eeabc8d81f9571d1dff378921e42c) Thanks [@blackmichael](https://github.com/blackmichael)! - Hydrate site.standard records through the generic record dataplane RPCs, resolving document publications with a second lookup, and remove the site.standard-specific dataplane RPCs.
+
+## 0.1.2
+
+### Patch Changes
+
+- [#5539](https://github.com/bluesky-social/atproto/pull/5539) [`3312992`](https://github.com/bluesky-social/atproto/commit/3312992fe2cb7ebc009fe4b1f4cc6bc7518b19db) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Route suggested feed and starter pack skeleton requests to Iris when their v2 gates are enabled.
+
+- [#5596](https://github.com/bluesky-social/atproto/pull/5596) [`8fbdf78`](https://github.com/bluesky-social/atproto/commit/8fbdf7885af60020cf218cef2f6d92923b38c864) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Share generic record key helpers across external record hydration.
+
+- [#5549](https://github.com/bluesky-social/atproto/pull/5549) [`a3bf283`](https://github.com/bluesky-social/atproto/commit/a3bf283c1ae1de683ff04872ff022035d21f9efc) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Read device and session identifiers from the `x-atproto-*` request headers.
+
+- [#5602](https://github.com/bluesky-social/atproto/pull/5602) [`2ac7cb5`](https://github.com/bluesky-social/atproto/commit/2ac7cb5dff0a443ff04220abb6e84821687f61d1) Thanks [@iwsmith](https://github.com/iwsmith)! - Gate each iris-served Discover feed separately: with-friends, thevids, mutuals, bsky-team, best-of-follows, and followpics get their own `iris:feed:<feed>:enable` gates, while whats-hot and any other allowlisted feed keep the original `iris:feed:enable` gate.
+
+- [#5605](https://github.com/bluesky-social/atproto/pull/5605) [`cb81a0f`](https://github.com/bluesky-social/atproto/commit/cb81a0f43fd1707d6a4722de37f25f1228a7390c) Thanks [@iwsmith](https://github.com/iwsmith)! - Route user-suggestion endpoints to Iris behind the `suggested_users:iris:enable` feature gate. When enabled, `getSuggestedUsers`, `getSuggestedUsersForDiscover`, `getSuggestedUsersForExplore`, `getSuggestedUsersForSeeMore`, `getSuggestedOnboardingUsers`, `getSuggestions`, and `getSuggestedFollowsByActor` fetch their skeletons from Iris instead of seeemore. `getSuggestions` still falls back to the dataplane when Iris is not configured, and `getSuggestedFollowsByActor` returns an empty list.
+
+- [#5596](https://github.com/bluesky-social/atproto/pull/5596) [`8fbdf78`](https://github.com/bluesky-social/atproto/commit/8fbdf7885af60020cf218cef2f6d92923b38c864) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add external hydration for generic records, Atmosphere timelines, and backlinks.
+
+- [#5596](https://github.com/bluesky-social/atproto/pull/5596) [`8fbdf78`](https://github.com/bluesky-social/atproto/commit/8fbdf7885af60020cf218cef2f6d92923b38c864) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Return empty generic record and Atmosphere responses from the local dataplane.
+
+- [#5595](https://github.com/bluesky-social/atproto/pull/5595) [`db3e7ad`](https://github.com/bluesky-social/atproto/commit/db3e7adc4bac5fc5e7f8632c8b9d64477d431a4b) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Restrict getFeed passthrough headers to allowlisted feed generators
+
+- [#5596](https://github.com/bluesky-social/atproto/pull/5596) [`8fbdf78`](https://github.com/bluesky-social/atproto/commit/8fbdf7885af60020cf218cef2f6d92923b38c864) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Consolidate local Site Standard stubs into the Atmosphere routes.
+
+- [#5539](https://github.com/bluesky-social/atproto/pull/5539) [`3312992`](https://github.com/bluesky-social/atproto/commit/3312992fe2cb7ebc009fe4b1f4cc6bc7518b19db) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Pass suggested feed and starter pack recommendation IDs through AppView responses.
+
+- [#5539](https://github.com/bluesky-social/atproto/pull/5539) [`3312992`](https://github.com/bluesky-social/atproto/commit/3312992fe2cb7ebc009fe4b1f4cc6bc7518b19db) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Authenticate AppView requests to Iris with a dedicated API key.
+
+- [#5595](https://github.com/bluesky-social/atproto/pull/5595) [`db3e7ad`](https://github.com/bluesky-social/atproto/commit/db3e7adc4bac5fc5e7f8632c8b9d64477d431a4b) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add config support for Bluesky-owned feed generator service DIDs
+- Updated dependencies [[`3312992`](https://github.com/bluesky-social/atproto/commit/3312992fe2cb7ebc009fe4b1f4cc6bc7518b19db)]:
+  - @atproto/api@0.23.2
+
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`38e2dc8`](https://github.com/bluesky-social/atproto/commit/38e2dc8eea64d4077155cf5bbdb84965d5c6dbf6)]:
+  - @atproto/api@0.23.1
+
+## 0.1.0
+
+### Minor Changes
+
+- [#5568](https://github.com/bluesky-social/atproto/pull/5568) [`61c915a`](https://github.com/bluesky-social/atproto/commit/61c915a4b7304720496975a07f2f35d38a23bcd4) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add `app.bsky.notification.getGroupedNotifications`.
+
+- [#5577](https://github.com/bluesky-social/atproto/pull/5577) [`3cd9fa6`](https://github.com/bluesky-social/atproto/commit/3cd9fa6013efad3ab57704ae804952be097e5d26) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Return grouped notification related views as a typed union array and include views for the first ten items per group.
+  
+  Remove the `utcOffset` parameter and allow notifications to group across day boundaries.
+  
+  Use one endpoint-supplied timestamp for grouping throughout each request.
+
+### Patch Changes
+
+- [#5493](https://github.com/bluesky-social/atproto/pull/5493) [`cd736b3`](https://github.com/bluesky-social/atproto/commit/cd736b3dbbec957cf4eaa7e67fa5b8be8f8ae04e) Thanks [@mozzius](https://github.com/mozzius)! - Add `since` and `startCursor` to `getTimeline` and `getListFeed`, for reading everything strictly newer than a previously returned position.
+
+- [#5571](https://github.com/bluesky-social/atproto/pull/5571) [`9ce8595`](https://github.com/bluesky-social/atproto/commit/9ce85957ce98c4b8a4ab6b51e0c24c4cd213d464) Thanks [@cuducos](https://github.com/cuducos)! - Route configured trending feeds through AppView's local Iris endpoint.
+- Updated dependencies [[`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e), [`cd736b3`](https://github.com/bluesky-social/atproto/commit/cd736b3dbbec957cf4eaa7e67fa5b8be8f8ae04e), [`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd), [`61c915a`](https://github.com/bluesky-social/atproto/commit/61c915a4b7304720496975a07f2f35d38a23bcd4), [`0593d81`](https://github.com/bluesky-social/atproto/commit/0593d818bc2b7f8a40c9d0fe036bf39c7a4eecda), [`a6561d5`](https://github.com/bluesky-social/atproto/commit/a6561d54227756876a0901e4a87675df17972d32)]:
+  - @atproto/repo@0.11.0
+  - @atproto/api@0.23.0
+  - @atproto/crypto@0.5.7
+  - @atproto-labs/opentelemetry-node@0.3.0
+  - @atproto/sync@0.4.13
+  - @atproto/identity@0.5.16
+  - @atproto/xrpc-server@0.13.4
+  - @atproto/common@0.8.5
+  - @atproto/lex@0.3.14
+  - @atproto-labs/xrpc-utils@0.1.25
+
 ## 0.0.282
 
 ### Patch Changes

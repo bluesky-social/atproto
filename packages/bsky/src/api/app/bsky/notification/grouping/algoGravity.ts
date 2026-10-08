@@ -10,7 +10,6 @@ import {
   canGroupNotification,
   compareNotificationGroupsNewestFirst,
   isNotificationRead,
-  localDay,
 } from './shared.js'
 
 type Zone = {
@@ -51,26 +50,19 @@ type CandidateGroup = {
 export const buildAlgoGravityGroups = (
   items: NotificationItem[],
   limit: number,
-  utcOffset: number,
+  now: number,
   seenAt?: number,
   feed = NotificationFeed.ALL,
 ): GroupingResult => {
-  const now = Date.now()
   const zones = PARAMS.zones
-  const currentDay = localDay(now, utcOffset)
   const chains = new Map<string, CandidateGroup[]>()
   let groupCount = 0
 
   for (const [itemIndex, item] of items.entries()) {
-    const dayBucket =
-      localDay(Date.parse(item.raw.indexedAt), utcOffset) === currentDay
-        ? 'current'
-        : 'older'
     const canGroup = canGroupNotification(item.raw.reason, feed)
     const key = JSON.stringify([
       item.raw.reason,
       item.groupingKey,
-      dayBucket,
       canGroup ? undefined : item.id,
     ])
     const candidateGroups = chains.get(key) ?? []

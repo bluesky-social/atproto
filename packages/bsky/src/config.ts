@@ -72,8 +72,12 @@ export interface ServerConfigValues {
   topicsApiKey?: string
   irisUrl?: string
   irisServiceDid?: DidString
+  seemoreServiceDid?: DidString
+  irisStagingServiceDid?: DidString
   trendingFeedDid?: DidString
-  irisFeedUris?: Set<string> // `iris:feed:enable` gate to serve via iris instead of seeemore
+  bskyFeedgenDids: Set<string>
+  irisApiKey?: string
+  irisFeedUris?: Set<string> // allowlist iris may serve instead of seeemore; whats-hot is gated by `iris:feed:enable`, other feeds by their per-rkey `iris:feed:<rkey>:enable` gate
   irisStagingUrl?: string
   irisStagingFeedUris?: Set<string> // serve via iris staging instead of the registered feed generator
   feedGenSkeletonTimeout: number
@@ -185,8 +189,17 @@ export class ServerConfig {
     const irisUrl = process.env.BSKY_IRIS_URL || undefined
     const irisServiceDid = process.env.BSKY_IRIS_SERVICE_DID || undefined
     assert(irisServiceDid == null || isDidString(irisServiceDid))
+    const seemoreServiceDid = process.env.BSKY_SEEMORE_SERVICE_DID || undefined
+    assert(seemoreServiceDid == null || isDidString(seemoreServiceDid))
+    const irisStagingServiceDid =
+      process.env.BSKY_IRIS_STAGING_SERVICE_DID || undefined
+    assert(irisStagingServiceDid == null || isDidString(irisStagingServiceDid))
     const trendingFeedDid = process.env.BSKY_TRENDING_FEED_DID || undefined
     assert(trendingFeedDid == null || isDidString(trendingFeedDid))
+    const bskyFeedgenDids = new Set(
+      envList(process.env.BSKY_FEEDGEN_DIDS).filter(isDidString),
+    )
+    const irisApiKey = process.env.BSKY_IRIS_API_KEY || undefined
     const irisFeedUris = new Set(envList(process.env.BSKY_IRIS_FEED_URIS))
     const irisStagingUrl = process.env.BSKY_IRIS_STAGING_URL || undefined
     const irisStagingFeedUris = new Set(
@@ -395,7 +408,11 @@ export class ServerConfig {
       topicsApiKey,
       irisUrl,
       irisServiceDid,
+      seemoreServiceDid,
+      irisStagingServiceDid,
       trendingFeedDid,
+      bskyFeedgenDids,
+      irisApiKey,
       irisFeedUris,
       irisStagingUrl,
       irisStagingFeedUris,
@@ -596,8 +613,24 @@ export class ServerConfig {
     return this.cfg.irisServiceDid
   }
 
+  get seemoreServiceDid() {
+    return this.cfg.seemoreServiceDid
+  }
+
+  get irisStagingServiceDid() {
+    return this.cfg.irisStagingServiceDid
+  }
+
   get trendingFeedDid() {
     return this.cfg.trendingFeedDid
+  }
+
+  get bskyFeedgenDids() {
+    return this.cfg.bskyFeedgenDids
+  }
+
+  get irisApiKey() {
+    return this.cfg.irisApiKey
   }
 
   get irisFeedUris() {

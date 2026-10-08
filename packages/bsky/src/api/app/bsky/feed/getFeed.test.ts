@@ -23,8 +23,11 @@ const inputs = ({
   feed = ALLOWLISTED,
   viewer = 'did:plc:viewer' as DidString | null,
   gate = true,
+  feedGates = {} as Partial<Record<Gate, boolean>>,
 } = {}) => {
-  const checkGate = vi.fn((g: Gate) => (g === Gate.IrisFeed ? gate : false))
+  const checkGate = vi.fn(
+    (g: Gate) => feedGates[g] ?? (g === Gate.IrisFeed ? gate : false),
+  )
   return {
     checkGate,
     cfg: {
@@ -94,6 +97,56 @@ describe('irisUrlForFeed', () => {
       const { cfg, params, checkGate } = inputs({ allowlistConfigured: false })
       irisUrlForFeed(cfg, params)
       expect(checkGate).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('per-feed gates', () => {
+    const dedicatedFeeds = [
+      ['with-friends', Gate.IrisFeedWithFriendsEnable],
+      ['thevids', Gate.IrisFeedThevidsEnable],
+      ['mutuals', Gate.IrisFeedMutualsEnable],
+      ['bsky-team', Gate.IrisFeedBskyTeamEnable],
+      ['best-of-follows', Gate.IrisFeedBestOfFollowsEnable],
+      ['followpics', Gate.IrisFeedFollowpicsEnable],
+    ] as const
+
+    it.each(dedicatedFeeds)(
+      'routes %s only when its dedicated gate is on',
+      (rkey, dedicatedGate) => {
+        const feed = `at://did:plc:feedgen/app.bsky.feed.generator/${rkey}`
+        const irisFeedUris = [ALLOWLISTED, feed]
+        const on = inputs({
+          feed,
+          irisFeedUris,
+          feedGates: { [dedicatedGate]: true },
+        })
+        expect(irisUrlForFeed(on.cfg, on.params)).toBe(IRIS_URL)
+
+        // The default gate being on must not route a feed that has its own.
+        const off = inputs({ feed, irisFeedUris })
+        expect(irisUrlForFeed(off.cfg, off.params)).toBeUndefined()
+        expect(off.checkGate).toHaveBeenCalledWith(dedicatedGate)
+        expect(off.checkGate).not.toHaveBeenCalledWith(Gate.IrisFeed)
+      },
+    )
+
+    it('keeps whats-hot on the original gate', () => {
+      const { cfg, params, checkGate } = inputs({
+        feedGates: { [Gate.IrisFeedWithFriendsEnable]: true },
+      })
+      expect(irisUrlForFeed(cfg, params)).toBe(IRIS_URL)
+      expect(checkGate).toHaveBeenCalledWith(Gate.IrisFeed)
+      expect(checkGate).not.toHaveBeenCalledWith(Gate.IrisFeedWithFriendsEnable)
+    })
+
+    it('falls back to the default gate for allowlisted feeds without a dedicated one', () => {
+      const other = 'at://did:plc:feedgen/app.bsky.feed.generator/some-other'
+      const { cfg, params, checkGate } = inputs({
+        feed: other,
+        irisFeedUris: [other],
+      })
+      expect(irisUrlForFeed(cfg, params)).toBe(IRIS_URL)
+      expect(checkGate).toHaveBeenCalledWith(Gate.IrisFeed)
     })
   })
 })

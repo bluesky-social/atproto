@@ -1654,40 +1654,110 @@ message StashRef {
   string key = 3;
 }
 
-// Standard.site records
-message GetSiteStandardRecordsByURIRequest {
-  // Mixed list of site.standard.document and site.standard.publication AT-URIs.
-  // URIs of other collections (or unparseable strings) are silently skipped.
-  repeated string uris = 1;
-}
-message GetSiteStandardRecordsByURIResponse {
-  // Latest indexed version of each requested document.
-  repeated SiteStandardRecord documents = 1;
-  // Latest indexed version of each requested publication AND each publication
-  // resolved from a document's `site` field. Each publication appears at most
-  // once across the two sources.
-  repeated SiteStandardRecord publications = 2;
-}
-message GetSiteStandardRecordsByRefRequest {
-  // Mixed list of site.standard.document and site.standard.publication refs
-  // (uri + cid). Refs whose URI is not a SiteStandard collection (or doesn't
-  // parse) are silently skipped.
+// Generic records
+message GetRecordsByRefRequest {
   repeated RecordRef refs = 1;
 }
-message GetSiteStandardRecordsByRefResponse {
-  // Document version exactly matching each requested doc ref.
-  repeated SiteStandardRecord documents = 1;
-  // Publication version exactly matching each requested pub ref. This RPC
-  // does NOT auto-resolve publications referenced by documents — callers who
-  // want a paired publication should pass its ref explicitly.
-  repeated SiteStandardRecord publications = 2;
+
+enum RecordLookupStatus {
+  RECORD_LOOKUP_STATUS_UNSPECIFIED = 0;
+  RECORD_LOOKUP_STATUS_FOUND = 1;
+  RECORD_LOOKUP_STATUS_NOT_FOUND = 2;
+  RECORD_LOOKUP_STATUS_TAKEN_DOWN = 3;
+  RECORD_LOOKUP_STATUS_INVALID_REF = 4;
+  RECORD_LOOKUP_STATUS_UNSUPPORTED_COLLECTION = 5;
 }
 
-// SiteStandardRecord pairs a record with its addressing ref so callers can
-// build a uri- or (uri,cid)-keyed lookup without server-side encoding.
-message SiteStandardRecord {
+message RecordLookupResult {
   RecordRef ref = 1;
   Record record = 2;
+  RecordLookupStatus status = 3;
+}
+
+message GetRecordsByRefResponse {
+  repeated RecordLookupResult results = 1;
+}
+
+message GetRecordsByURIRequest {
+  repeated string uris = 1;
+}
+
+message GetRecordsByURIResponse {
+  repeated RecordLookupResult results = 1;
+}
+
+message AtmosphereActivityItem {
+  string uri = 1;
+  google.protobuf.Timestamp sorted_at = 2;
+}
+
+message GetAtmosphereTimelineRequest {
+  string viewer_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetAtmosphereTimelineResponse {
+  repeated AtmosphereActivityItem items = 1;
+  string cursor = 2;
+}
+
+// Atmosphere backlinks: records in a source collection that reference a
+// target AT-URI through a registered backlink path.
+message AtmosphereBacklink {
+  string uri = 1;
+  google.protobuf.Timestamp sorted_at = 2;
+}
+
+message GetAtmosphereBacklinksRequest {
+  string target_uri = 1;
+  // Source collection NSID, e.g. site.standard.graph.recommend.
+  string collection = 2;
+  int32 limit = 3;
+  string cursor = 4;
+}
+
+message GetAtmosphereBacklinksResponse {
+  repeated AtmosphereBacklink backlinks = 1;
+  string cursor = 2;
+}
+
+message GetAtmosphereBacklinksByActorRequest {
+  string actor_did = 1;
+  // Source collection NSID.
+  string collection = 2;
+  repeated string target_uris = 3;
+}
+
+message AtmosphereBacklinksByActor {
+  string target_uri = 1;
+  // Source record URIs authored by the actor; empty if none.
+  repeated string uris = 2;
+}
+
+message GetAtmosphereBacklinksByActorResponse {
+  // One entry per requested target, in request order.
+  repeated AtmosphereBacklinksByActor results = 1;
+  // True if the actor has more matching records than the response limit, so
+  // some targets may be missing links.
+  bool truncated = 2;
+}
+
+message GetAtmosphereBacklinkCountsRequest {
+  repeated string target_uris = 1;
+  // Optional source collection NSID; empty returns counts for every collection.
+  string collection = 2;
+}
+
+message AtmosphereBacklinkCounts {
+  string target_uri = 1;
+  // Source collection NSID -> number of source records linking to the target.
+  map<string, int64> counts = 2;
+}
+
+message GetAtmosphereBacklinkCountsResponse {
+  // One entry per requested target, in request order.
+  repeated AtmosphereBacklinkCounts results = 1;
 }
 
 service Service {
@@ -1714,6 +1784,14 @@ service Service {
   rpc GetPostgateRecords(GetPostgateRecordsRequest) returns (GetPostgateRecordsResponse);
   rpc GetLabelerRecords(GetLabelerRecordsRequest) returns (GetLabelerRecordsResponse);
   rpc GetStarterPackRecords(GetStarterPackRecordsRequest) returns (GetStarterPackRecordsResponse);
+  rpc GetRecordsByURI(GetRecordsByURIRequest) returns (GetRecordsByURIResponse);
+  rpc GetRecordsByRef(GetRecordsByRefRequest) returns (GetRecordsByRefResponse);
+
+  // Atmosphere
+  rpc GetAtmosphereTimeline(GetAtmosphereTimelineRequest) returns (GetAtmosphereTimelineResponse);
+  rpc GetAtmosphereBacklinks(GetAtmosphereBacklinksRequest) returns (GetAtmosphereBacklinksResponse);
+  rpc GetAtmosphereBacklinksByActor(GetAtmosphereBacklinksByActorRequest) returns (GetAtmosphereBacklinksByActorResponse);
+  rpc GetAtmosphereBacklinkCounts(GetAtmosphereBacklinkCountsRequest) returns (GetAtmosphereBacklinkCountsResponse);
 
   // Follows
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);
@@ -1892,10 +1970,6 @@ service Service {
   rpc CreateThreadMute(CreateThreadMuteRequest) returns (CreateThreadMuteResponse);
   rpc DeleteThreadMute(DeleteThreadMuteRequest) returns (DeleteThreadMuteResponse);
   rpc ClearThreadMutes(ClearThreadMutesRequest) returns (ClearThreadMutesResponse);
-
-  // Standard.site records
-  rpc GetSiteStandardRecordsByURI(GetSiteStandardRecordsByURIRequest) returns (GetSiteStandardRecordsByURIResponse);
-  rpc GetSiteStandardRecordsByRef(GetSiteStandardRecordsByRefRequest) returns (GetSiteStandardRecordsByRefResponse);
 }
 
 

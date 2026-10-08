@@ -1,6 +1,7 @@
-import { CID } from 'multiformats/cid'
+import type { CID } from 'multiformats/cid'
 import { z } from 'zod'
 import { check, ipldToJson, schema } from '@atproto/common-web'
+import { parseCidString } from './util.js'
 
 export const typedJsonBlobRef = z
   .object({
@@ -51,7 +52,7 @@ export class BlobRef {
     if (check.is(json, typedJsonBlobRef)) {
       return new BlobRef(json.ref, json.mimeType, json.size)
     } else {
-      return new BlobRef(CID.parse(json.cid), json.mimeType, -1, json)
+      return new BlobRef(parseCidString(json.cid), json.mimeType, -1, json)
     }
   }
 
