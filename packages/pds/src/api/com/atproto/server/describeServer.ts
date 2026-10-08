@@ -25,6 +25,7 @@ export default function (server: Server, ctx: AppContext) {
         contact: {
           email: contactEmailAddress,
         },
+        spacesAlpha: true
       },
     }
   })
