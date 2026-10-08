@@ -43,6 +43,11 @@ export type GalleryImageEmbedView = app.bsky.embed.gallery.ViewImage
 export const isExternalEmbedType = app.bsky.embed.external.$isTypeOf
 export type ExternalEmbed = app.bsky.embed.external.Main
 export type ExternalEmbedView = app.bsky.embed.external.View
+export type ExternalRecordView =
+  | app.bsky.embed.external.ViewArticle
+  | app.bsky.embed.external.ViewArticlePublication
+  | app.bsky.embed.external.ViewGallery
+  | app.bsky.embed.external.ViewLivestream
 export type ExternalEmbedSourceView = app.bsky.embed.external.ViewExternalSource
 export type ExternalEmbedSourceThemeView =
   app.bsky.embed.external.ViewExternalSourceTheme
