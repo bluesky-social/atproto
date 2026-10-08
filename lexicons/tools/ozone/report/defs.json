@@ -533,7 +533,28 @@
       "properties": {
         "pendingCount": {
           "type": "integer",
-          "description": "Number of reports currently not closed."
+          "description": "Number of unmuted reports currently not closed."
+        },
+        "closureTargetOverdueCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Unmuted pending reports past their closure target."
+        },
+        "closureTargetMetCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reports whose closure meets their closure target."
+        },
+        "closureTargetMissedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reports whose closure exceeds their closure target."
+        },
+        "closureTargetMetRate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percent of reports meeting their closure target."
         },
         "closedCount": {
           "type": "integer",
@@ -618,7 +639,28 @@
         },
         "pendingCount": {
           "type": "integer",
-          "description": "Number of reports not closed at time of computation."
+          "description": "Number of unmuted reports not closed at the end of this UTC day, or at computation time for the current day."
+        },
+        "closureTargetOverdueCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Unmuted pending reports past their closure target at the snapshot time."
+        },
+        "closureTargetMetCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reports whose closure meets their closure target."
+        },
+        "closureTargetMissedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reports whose closure exceeds their closure target."
+        },
+        "closureTargetMetRate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percent of reports meeting their closure target."
         },
         "closedCount": {
           "type": "integer",

@@ -91,7 +91,28 @@
       "properties": {
         "pendingCount": {
           "type": "integer",
-          "description": "Number of reports in 'open' status"
+          "description": "Number of unmuted reports currently not closed."
+        },
+        "closureTargetOverdueCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Unmuted pending reports past their closure target."
+        },
+        "closureTargetMetCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reports whose closure meets their closure target."
+        },
+        "closureTargetMissedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reports whose closure exceeds their closure target."
+        },
+        "closureTargetMetRate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percent of reports meeting their closure target."
         },
         "actionedCount": {
           "type": "integer",
