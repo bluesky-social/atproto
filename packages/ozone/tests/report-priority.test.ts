@@ -146,6 +146,19 @@ describe('report priority', () => {
     return data
   }
 
+  async function setQueueEnabled(enabled: boolean) {
+    await agent.tools.ozone.queue.updateQueue(
+      { queueId, enabled },
+      {
+        encoding: 'application/json',
+        headers: await network.ozone.modHeaders(
+          tools.ozone.queue.updateQueue.$lxm,
+          'admin',
+        ),
+      },
+    )
+  }
+
   async function changeReportStatus(id: number, close: boolean) {
     return agent.tools.ozone.report.createActivity(
       {
@@ -188,6 +201,30 @@ describe('report priority', () => {
   })
 
   describe('manual routing', () => {
+    it('refreshes priority when no queues are enabled', async () => {
+      await setQueueEnabled(false)
+      try {
+        const report = await createReport(urgent)
+        expect(report.queueId).toBe(-1)
+        expect(report.priorityLevel).toBeNull()
+
+        await configure()
+        expect(await routeReports(report.id)).toEqual({
+          assigned: 0,
+          unmatched: 1,
+        })
+        expect(await getReport(report.id)).toMatchObject({
+          priorityLevel: 'urgent',
+          priorityScore: 100,
+          priorityTargetMinutes: 10,
+          status: 'open',
+          createdAt: report.createdAt,
+        })
+      } finally {
+        await setQueueEnabled(true)
+      }
+    })
+
     it('refreshes each reason from current settings while preserving creation time and existing escalation', async () => {
       await configure()
       const first = await createReport(urgent)

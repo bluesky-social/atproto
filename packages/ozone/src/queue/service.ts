@@ -503,10 +503,6 @@ export class QueueService {
   }> {
     const { queues } = await this.list({ limit: 1000, enabled: true })
 
-    if (!queues.length) {
-      return { processed: 0, assigned: 0, unmatched: 0, maxId: 0 }
-    }
-
     let query = this.db.db
       .selectFrom('report as r')
       .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
