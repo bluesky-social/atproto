@@ -1,5 +1,15 @@
 # @atproto/ozone
 
+## 0.6.2
+
+### Patch Changes
+
+- [#5581](https://github.com/bluesky-social/atproto/pull/5581) [`f069327`](https://github.com/bluesky-social/atproto/commit/f0693271583923f38d827b4d4387d065e2cb8be7) Thanks [@gcwill70](https://github.com/gcwill70)! - Add report closure target met and missed counts, target met percentages, and overdue pending-report snapshots to report and queue statistics. Exclude reports without closure targets and preserve unavailable historical metrics until recomputed.
+  
+  Include the updated Ozone report and queue statistics definitions in the generated API client.
+  
+  Exclude muted reports from current and recomputed historical pending and overdue counts. Inbound volume and closure outcomes continue to include muted reports.
+
 ## 0.6.1
 
 ### Patch Changes
