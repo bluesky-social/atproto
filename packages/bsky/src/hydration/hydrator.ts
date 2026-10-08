@@ -884,13 +884,6 @@ export class Hydrator {
     const posts = await this.feed.getPosts(
       items.map((item) => item.post.uri),
       ctx.includeTakedowns,
-      undefined,
-      undefined,
-      {
-        includeOpThreadMetadata: ctx.features.checkGate(
-          ctx.features.Gate.OpThreadMetadataEnable,
-        ),
-      },
     )
     const rootUris: AtUriString[] = []
     const parentUris: AtUriString[] = []

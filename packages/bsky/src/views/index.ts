@@ -2602,6 +2602,7 @@ export class Views {
   ): $Typed<PostEmbedView> | undefined {
     const postView = this.post(uri, state, depth)
     if (!postView) return
+    const postInfo = state.posts?.get(uri)
     return app.bsky.embed.record.viewRecord.$build({
       uri: postView.uri,
       cid: postView.cid,
@@ -2612,6 +2613,8 @@ export class Views {
       replyCount: postView.replyCount,
       repostCount: postView.repostCount,
       quoteCount: postView.quoteCount,
+      opThreadPostIndex: postInfo?.opThreadPostIndex,
+      opThreadPostCount: postInfo?.opThreadPostCount,
       indexedAt: postView.indexedAt,
       embeds: depth > 1 ? undefined : postView.embed ? [postView.embed] : [],
     })
