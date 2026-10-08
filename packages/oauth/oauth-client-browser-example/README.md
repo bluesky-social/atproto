@@ -1,67 +1,31 @@
 # OAuth browser example
 
-Run `pnpm dev` from this directory to serve the example at
-`http://127.0.0.1:8080`. The development environment defaults to the local
-dev-env services. Explicit endpoint query parameters can target another test
-environment.
+This single-page app signs in with AT Protocol OAuth and displays the account profile, session, and token information. Run `pnpm dev` here and open <http://127.0.0.1:8080>.
 
-## Account-first FedCM
+Enter a handle to sign in, or configure FedCM to choose a remembered account first. After selection, the app completes ordinary OAuth. Passive FedCM opens automatically; active FedCM waits for a click on **Choose an account**.
 
-FedCM is enabled only when the URL contains at least one `fedcm_provider`
-configuration URL. Repeat the parameter to include a controlled second provider:
+`pnpm dev` selects the `development` environment and local dev-env services. Only `env=development` selects local endpoint defaults; use the parameters below to target another stack.
 
-```text
-http://127.0.0.1:8080/?env=development&fedcm_provider=https%3A%2F%2Fidp-one.test%2Foauth%2Ffedcm%2Fconfig.json&fedcm_provider=https%3A%2F%2Fidp-two.test%2Foauth%2Ffedcm%2Fconfig.json
-```
+## Query parameters
 
-Use an HTTPS PDS with FedCM enabled. This loopback example additionally requires
-the PDS's development-only loopback-client allowance; see the
-[PDS configuration](../../pds/README.md#fedcm-prototype).
+| Parameter           | Purpose                                                                                                                     | Default                                                                   |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `env`               | Selects environment-specific endpoint and scope defaults.                                                                   | Build mode, usually `development` with `pnpm dev`.                        |
+| `pds_operator_url`  | PDS used by the **Login with…** button.                                                                                     | Development: `http://localhost:2583`; otherwise `https://bsky.social`.    |
+| `plc_directory_url` | PLC directory used to resolve DIDs.                                                                                         | Development: `http://localhost:2582`; otherwise the OAuth client default. |
+| `handle_resolver`   | Service used to resolve account handles.                                                                                    | Development: `http://localhost:2584`; otherwise `https://bsky.social`.    |
+| `bsky_api_url`      | Bluesky API endpoint used by the example.                                                                                   | Development: `http://localhost:2584`; otherwise `https://api.bsky.app`.   |
+| `bsky_api_did`      | Audience DID for Bluesky API OAuth permissions.                                                                             | Development: `did:example:invalid`; otherwise `did:web:api.bsky.app`.     |
+| `scope`             | Replaces environment-specific scopes; the app also requests `atproto` and the profile and preferences permissions it needs. | Environment-specific scopes.                                              |
+| `fedcm_provider`    | FedCM configuration URL; repeat to configure multiple identity providers. FedCM is off when omitted.                        | None.                                                                     |
+| `fedcm_mode`        | `passive` opens FedCM automatically; `active` adds a “Choose an account” button and requires exactly one provider.          | `passive`.                                                                |
 
-The example initializes its OAuth client, then asks for a passive FedCM chooser
-with required mediation. No PAR is sent until the user chooses an account.
-A valid DID result starts one ordinary OAuth redirect flow. The selected DID is
-preserved through the callback, and a different authenticated OAuth subject is
-reported explicitly. An unsupported browser, dismissal, or a non-DID result
-from another provider leaves the handle-entry flow available.
+For a local AppView, set `bsky_api_did` to its actual DID. FedCM needs Chrome 141+ and an HTTPS PDS with the [prototype settings](../../pds/README.md#fedcm-prototype) enabled. For example, add `fedcm_provider=https://pds.example.com/oauth/fedcm/config.json&fedcm_mode=active` to the query string.
 
-The ordinary OAuth client may retry a PAR POST after a DPoP nonce challenge;
-this still creates one pushed authorization request for the selected account.
+## Browser test
 
-To use explicit active FedCM instead, add `fedcm_mode=active` to the URL. The
-page shows a **Choose an account** button and opens FedCM only from that genuine
-user click, preserving the browser's transient user activation. Active mode
-requires exactly one `fedcm_provider`; multiple configured providers show an
-error and cannot start a request. The selected DID still goes through the same
-validation and account-first OAuth flow, with no PAR sent before selection.
-
-Provider URLs are explicit configuration, not decentralized IdP discovery.
-FedCM tokens in this prototype are DID hints, not identity credentials or OAuth
-access tokens. Do not use them to authenticate a relying-party session.
-
-## Browser validation
-
-The PDS browser suite uses its real OAuth provider and this example together
-with a controlled second provider. It runs only when
-`PUPPETEER_EXECUTABLE_PATH` points to Chrome 141 or later; Puppeteer's pinned
-Chrome is older. OpenSSL is used to create a temporary self-signed test
-certificate. The test launches Chrome with local host-resolution rules and
-certificate validation disabled for the fixture.
-
-Build the changed packages from their respective directories first:
-`oauth-provider-ui`, `oauth-provider`, `oauth-client-browser-example`, and `pds`.
-Then run from `packages/pds`:
+Build `oauth-provider-ui`, `oauth-provider`, `oauth-client-browser-example`, and `pds` from their package directories, then run from `packages/pds`:
 
 ```sh
 PUPPETEER_EXECUTABLE_PATH='/path/to/chrome' pnpm test:sqlite tests/fedcm.test.ts --runInBand
 ```
-
-The suite checks five accounts across two IdPs, cancellation, selection of the
-other provider, and our DID's assertion followed by exactly one PAR and ordinary
-OAuth authorization. It also checks the login-status transition when signing
-out one account versus the last remembered accounts, cancellation during PAR,
-and rejection of a differing OAuth subject.
-It also exercises Chrome's sign-in window when browser login status outlives
-the provider session, including remembered login and popup closure.
-Active-mode cases check click-triggered selection, retry after dismissal or
-cancellation, and rejection of multiple configured providers.

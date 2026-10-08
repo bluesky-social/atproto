@@ -9,46 +9,15 @@ If you are interested in self-hosting a PDS, you probably want this repository i
 
 ## FedCM prototype
 
-Set `PDS_OAUTH_FEDCM_ENABLED=1` to enable account-first FedCM on an HTTPS
-PDS. The browser chooser lists eligible accounts remembered on that device and
-returns the selected DID. The DID is a routing hint: the relying party resolves
-it and starts ordinary AT Protocol OAuth, including PAR, PKCE, DPoP, and consent.
-FedCM selection alone does not authenticate the application or authorize access.
+Set `PDS_OAUTH_FEDCM_ENABLED=1` on an HTTPS PDS to offer a browser account picker. It shows remembered accounts with active sessions and returns the selected DID. Apps must still complete AT Protocol OAuth to sign in.
 
-The PDS serves `/.well-known/web-identity`, `/oauth/fedcm/config.json`,
-`/oauth/fedcm/accounts`, and `/oauth/fedcm/assertion`. Chrome also discovers the
-well-known document at the registrable parent domain. For `pds.example.com`,
-the operator must publish the discovery document at `https://example.com` too.
-Enabling this flag cannot provision that parent domain. Multiple independent
-PDSes under one registrable domain need a shared discovery/deployment design.
-Entryway-backed PDSes must implement FedCM at the entryway's authorization-server
-origin; enabling it on those PDSes is rejected.
+The configuration URL is `/oauth/fedcm/config.json`. For `pds.example.com`, also publish the `/.well-known/web-identity` document at `https://example.com`. PDSes behind an entryway must enable FedCM at the entryway's authorization server instead.
 
-Production assertions require a discoverable HTTPS OAuth client ID whose origin
-matches the relying party. For the local browser example, enable
-`PDS_OAUTH_FEDCM_ALLOW_LOOPBACK_CLIENTS=1` together with `PDS_DEV_MODE=1`. This
-permits validated loopback client metadata and checks the relying party's origin
-against its loopback redirect URI. HTTPS is still required for the provider.
+Production requires a discoverable HTTPS OAuth client ID whose origin matches the relying party. For the local browser example, set `PDS_OAUTH_FEDCM_ALLOW_LOOPBACK_CLIENTS=1` and `PDS_DEV_MODE=1`; the PDS must still use HTTPS.
 
-Remembered first-party sessions issue dedicated `fedcm-dev-id` and `fedcm-ses-id`
-cookies with Secure, HttpOnly, SameSite=None, and Path=/oauth/fedcm.
-FedCM reads never create or rotate sessions;
-expired, revoked, deactivated, or taken-down accounts are excluded. First-party
-account and OAuth pages update the browser's login status. The FedCM sign-in
-window defaults to remembering the account and closes after a persisted login
-or an explicit choice of an eligible remembered account. Unchecked ephemeral
-sign-ins remain outside the chooser.
+Remembered sessions use dedicated `fedcm-dev-id` and `fedcm-ses-id` cookies containing the existing session values, with `Secure`, `HttpOnly`, `SameSite=None`, and `Path=/oauth/fedcm`. FedCM endpoints only read sessions and do not create or rotate them. Ordinary device cookies keep their `SameSite=Lax` or `Strict` policy.
 
-These cookies mirror the existing device and rotating session IDs, using the
-same server-side session. They are separate because FedCM's cross-site accounts
-and assertion requests include only `SameSite=None` cookies, while ordinary
-device cookies retain `SameSite=Lax` or `Strict`. Dedicated names and the narrow
-path keep those cookie policies separate without changing ordinary sign-in.
-
-See the [browser example instructions](../oauth/oauth-client-browser-example/README.md)
-for passive multi-provider selection and local browser validation. This prototype
-requires Chrome 141+ for username-only accounts; browser support and privacy
-settings can suppress the chooser, so relying parties should retain handle entry.
+See the [browser example instructions](../oauth/oauth-client-browser-example/README.md) for local validation. Chrome 141+ is required for username-only accounts; browser settings may hide the chooser, so relying parties should retain handle entry.
 
 ## License
 
