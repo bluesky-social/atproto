@@ -11,7 +11,7 @@ If you are interested in self-hosting a PDS, you probably want this repository i
 
 Set `PDS_OAUTH_FEDCM_ENABLED=1` on an HTTPS PDS to offer a browser account picker. It shows remembered accounts with active sessions and returns the selected DID. Apps must still complete AT Protocol OAuth to sign in.
 
-The configuration URL is `/oauth/fedcm/config.json`. For `pds.example.com`, also publish the `/.well-known/web-identity` document at `https://example.com`. PDSes behind an entryway must enable FedCM at the entryway's authorization server instead.
+The configuration URL is `/oauth/fedcm/config.json`. For `pds.example.com`, also publish the `/.well-known/web-identity` document at `https://example.com`. PDS hosts behind an entryway must enable FedCM at the entryway's authorization server instead.
 
 Production requires a discoverable HTTPS OAuth client ID whose origin matches the relying party. For the local browser example, set `PDS_OAUTH_FEDCM_ALLOW_LOOPBACK_CLIENTS=1` and `PDS_DEV_MODE=1`; the PDS must still use HTTPS.
 
