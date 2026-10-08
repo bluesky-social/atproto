@@ -60,6 +60,7 @@
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
     "start": "../dev-infra/with-test-redis-and-db.sh node --enable-source-maps dist/bin.js",
+    "start:fedcm": "../dev-infra/with-test-redis-and-db.sh node --enable-source-maps dist/fedcm.js",
     "dev": "../dev-infra/with-test-redis-and-db.sh node --enable-source-maps --watch dist/bin.js"
   }
 }
