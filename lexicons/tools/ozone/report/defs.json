@@ -402,6 +402,22 @@
         }
       }
     },
+    "unassignmentActivity": {
+      "type": "object",
+      "description": "Activity recording a moderator being unassigned from a report.",
+      "properties": {
+        "previousStatus": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+          "description": "The report's status immediately before the moderator was unassigned. May be absent on older activities."
+        },
+        "nextStatus": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+          "description": "The report's status immediately after the moderator was unassigned. May equal previousStatus if unassignment did not change the report's status, or be absent on older activities."
+        }
+      }
+    },
     "escalationActivity": {
       "type": "object",
       "description": "Activity recording a report being escalated.",
@@ -465,6 +481,7 @@
           "refs": [
             "#queueActivity",
             "#assignmentActivity",
+            "#unassignmentActivity",
             "#escalationActivity",
             "#closeActivity",
             "#reopenActivity",
@@ -516,12 +533,12 @@
       "properties": {
         "pendingCount": {
           "type": "integer",
-          "description": "Number of reports currently not closed."
+          "description": "Number of unmuted reports currently not closed."
         },
         "closureTargetOverdueCount": {
           "type": "integer",
           "minimum": 0,
-          "description": "Pending reports past their closure target."
+          "description": "Unmuted pending reports past their closure target."
         },
         "closureTargetMetCount": {
           "type": "integer",
@@ -622,12 +639,12 @@
         },
         "pendingCount": {
           "type": "integer",
-          "description": "Number of reports not closed at time of computation."
+          "description": "Number of unmuted reports not closed at the end of this UTC day, or at computation time for the current day."
         },
         "closureTargetOverdueCount": {
           "type": "integer",
           "minimum": 0,
-          "description": "Pending reports past their closure target."
+          "description": "Unmuted pending reports past their closure target at the snapshot time."
         },
         "closureTargetMetCount": {
           "type": "integer",

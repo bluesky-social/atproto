@@ -24,7 +24,7 @@ export interface ReportStat {
   inboundCount: number | null // Reports received during this calendar day
 
   // unresolved
-  pendingCount: number | null // Reports with status != 'closed' at time of computation
+  pendingCount: number | null // Unmuted reports not closed at the snapshot time
   escalatedCount: number | null // Reports escalated during this calendar day
 
   // resolved
@@ -51,7 +51,7 @@ export interface ReportStat {
   closureTargetMetCount: number | null
   /** Current closures exceeding the closure target. */
   closureTargetMissedCount: number | null
-  /** Pending reports past their closure target. */
+  /** Unmuted pending reports past their closure target. */
   closureTargetOverdueCount: number | null
 }
 

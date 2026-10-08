@@ -44,7 +44,7 @@ describe('queue-router', () => {
 
   // Creates a report event (account-level) directly via modClient for a given DID + reason
   const reportAccount = async (did: string, reportType: string) => {
-    await modClient.emitEvent({
+    return modClient.emitEvent({
       event: {
         $type: 'tools.ozone.moderation.defs#modEventReport',
         reportType,
@@ -134,7 +134,7 @@ describe('queue-router', () => {
     // This test intentionally runs before any queues are created. The daemon
     // still inserts the report row (with queueId = -1) so the invariant
     // "every modEventReport has a corresponding report row" holds.
-    await reportAccount(sc.dids.alice, REASON_SPAM)
+    const event = await reportAccount(sc.dids.alice, REASON_SPAM)
 
     await network.ozone.daemon.ctx.queueRouter.routeReports()
 
@@ -147,6 +147,62 @@ describe('queue-router', () => {
     const report = await queryLatestReportForSubject(sc.dids.alice, 'open')
     expect(report).toBeDefined()
     expect(report.queue).toBeUndefined()
+
+    const db = network.ozone.ctx.db.db
+    const storedReport = await db
+      .selectFrom('report')
+      .where('eventId', '=', event.id)
+      .select(['id', 'reporterDid', 'updatedAt', 'status', 'queueId'])
+      .executeTakeFirstOrThrow()
+    const sourceEvent = await db
+      .selectFrom('moderation_event')
+      .where('id', '=', event.id)
+      .select('createdBy')
+      .executeTakeFirstOrThrow()
+    expect(storedReport.reporterDid).toBe(sourceEvent.createdBy)
+
+    // Retrying ingestion repairs a legacy NULL owner without changing report
+    // state or timestamps.
+    await db
+      .updateTable('report')
+      .set({ reporterDid: null })
+      .where('id', '=', storedReport.id)
+      .execute()
+    await network.ozone.ctx
+      .queueService(network.ozone.ctx.db)
+      .insertReportsFromEvents({ cursor: event.id - 1, limit: 1 })
+    const repaired = await db
+      .selectFrom('report')
+      .where('id', '=', storedReport.id)
+      .select(['reporterDid', 'updatedAt', 'status', 'queueId'])
+      .executeTakeFirstOrThrow()
+    expect(repaired).toEqual({
+      reporterDid: sourceEvent.createdBy,
+      updatedAt: storedReport.updatedAt,
+      status: storedReport.status,
+      queueId: storedReport.queueId,
+    })
+
+    // A retry never transfers an already populated owner.
+    await db
+      .updateTable('report')
+      .set({ reporterDid: sc.dids.bob })
+      .where('id', '=', storedReport.id)
+      .execute()
+    await network.ozone.ctx
+      .queueService(network.ozone.ctx.db)
+      .insertReportsFromEvents({ cursor: event.id - 1, limit: 1 })
+    const preserved = await db
+      .selectFrom('report')
+      .where('id', '=', storedReport.id)
+      .select(['reporterDid', 'updatedAt', 'status', 'queueId'])
+      .executeTakeFirstOrThrow()
+    expect(preserved).toEqual({
+      reporterDid: sc.dids.bob,
+      updatedAt: storedReport.updatedAt,
+      status: storedReport.status,
+      queueId: storedReport.queueId,
+    })
   })
 
   describe('with queues configured', () => {

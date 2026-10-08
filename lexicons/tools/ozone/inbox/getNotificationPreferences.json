@@ -1,0 +1,32 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.inbox.getNotificationPreferences",
+  "defs": {
+    "main": {
+      "type": "query",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "Account to preview. Only Ozone staff can read another account; this does not change its read state."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["preferences"],
+          "properties": {
+            "preferences": {
+              "type": "ref",
+              "ref": "tools.ozone.inbox.defs#notificationPreferences"
+            }
+          }
+        }
+      }
+    }
+  }
+}

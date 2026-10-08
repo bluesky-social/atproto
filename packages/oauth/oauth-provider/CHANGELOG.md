@@ -1,5 +1,15 @@
 # @atproto/oauth-provider
 
+## 0.23.1
+
+### Patch Changes
+
+- [#5564](https://github.com/bluesky-social/atproto/pull/5564) [`cea6f5c`](https://github.com/bluesky-social/atproto/commit/cea6f5c4a034860c35eda03dbde207f5bdb9387f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Hash PII data using `scrypt` instead of easily revertable `sha256`.
+- Updated dependencies []:
+  - @atproto/lex-resolver@0.3.2
+  - @atproto/common@0.8.5
+  - @atproto/lex-document@0.1.13
+
 ## 0.23.0
 
 ### Minor Changes

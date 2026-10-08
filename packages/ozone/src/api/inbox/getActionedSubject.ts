@@ -1,0 +1,42 @@
+import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
+import type { AppContext } from '../../context.js'
+import { inboxViewerDid } from '../../inbox/access.js'
+import { getSeenAt } from '../../inbox/seen.js'
+import {
+  findActionedSubject,
+  getActionedSubjectDetail,
+} from '../../inbox/subjects.js'
+import { tools } from '../../lexicons/index.js'
+
+export default function (server: Server, ctx: AppContext) {
+  server.add(tools.ozone.inbox.getActionedSubject, {
+    auth: ctx.authVerifier.standard,
+    handler: async ({ auth, params }) => {
+      const did = inboxViewerDid(auth, params.did)
+      const subject = await findActionedSubject(ctx.db, did, params.subject)
+      if (!subject)
+        throw new InvalidRequestError('Subject not found', 'NotFound')
+      const seenAt = await getSeenAt(ctx.db, did, 'subjects')
+      const detail = await getActionedSubjectDetail(
+        ctx.db,
+        subject,
+        ctx.cfg.service.did,
+        ctx.cfg.inbox,
+        seenAt,
+        params,
+      )
+      if (!detail)
+        throw new InvalidRequestError('Subject not found', 'NotFound')
+      if (subject.isRecord()) {
+        const records = await ctx
+          .modService(ctx.db)
+          .views.fetchRecords([{ uri: subject.uri, cid: subject.cid }])
+        const record = records.get(subject.uri)?.value
+        if (record !== undefined) {
+          detail.record = record as NonNullable<typeof detail.record>
+        }
+      }
+      return { encoding: 'application/json', body: detail }
+    },
+  })
+}

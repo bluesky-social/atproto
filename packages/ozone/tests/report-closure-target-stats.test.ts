@@ -62,6 +62,7 @@ describe('report closure target statistics', () => {
     queue?: number | null
     moderator?: DidString
     status?: string
+    muted?: boolean
   }) {
     const event = await sc.createReport({
       reasonType: opts.reason ?? spam,
@@ -80,6 +81,7 @@ describe('report closure target statistics', () => {
         priorityTargetMinutes: opts.target === undefined ? 10 : opts.target,
         queueId: opts.queue === undefined ? queueId : opts.queue,
         assignedTo: opts.moderator ?? null,
+        isMuted: opts.muted ?? false,
       })
       .where('eventId', '=', event.id)
       .returningAll()
@@ -262,6 +264,61 @@ describe('report closure target statistics', () => {
     }
   })
 
+  it('excludes muted backlog while retaining inbound volume and closure results', async () => {
+    for (const queue of [queueId, null, -1]) {
+      for (const status of ['open', 'queued', 'assigned', 'escalated']) {
+        await createReport({
+          createdAt: now - 11 * minute,
+          queue,
+          status,
+          muted: true,
+        })
+      }
+      await createReport({ createdAt: now - 11 * minute, queue })
+    }
+    for (const duration of [5 * minute, 15 * minute]) {
+      await createReport({
+        createdAt: now - duration,
+        closedAt: now,
+        muted: true,
+      })
+    }
+    await computeLive()
+    for (const filters of [{}, { reportTypes: REPORT_TYPE_GROUPS.Legacy }]) {
+      expect(await live(filters)).toMatchObject({
+        inboundCount: 17,
+        pendingCount: 3,
+        closureTargetOverdueCount: 3,
+        closedCount: 2,
+        acknowledgedCount: 2,
+        resolutionSampleCount: 2,
+        avgResolutionTimeSec: 600,
+        closureTargetMetCount: 1,
+        closureTargetMissedCount: 1,
+        closureTargetMetRate: 50,
+      })
+    }
+    expect(await live({ queueId })).toMatchObject({
+      inboundCount: 7,
+      pendingCount: 1,
+      closureTargetOverdueCount: 1,
+      closedCount: 2,
+    })
+    expect(await live({ queueId: -1 })).toMatchObject({
+      inboundCount: 10,
+      pendingCount: 2,
+      closureTargetOverdueCount: 2,
+      closedCount: 0,
+    })
+    const { data } = await agent.tools.ozone.queue.listQueues(
+      {},
+      { headers: await headers(tools.ozone.queue.listQueues.$lxm) },
+    )
+    expect(
+      data.queues.find((queue) => queue.id === queueId)?.stats,
+    ).toMatchObject({ pendingCount: 1, closureTargetOverdueCount: 1 })
+  })
+
   it('uses the selected historical boundary rather than the current age', async () => {
     const cutoff = Date.parse('2020-01-02T00:00:00.000Z')
     for (const age of [10 * minute - 1, 10 * minute, 10 * minute + 1]) {
@@ -287,6 +344,24 @@ describe('report closure target statistics', () => {
   })
 
   it.each([
+    {
+      name: 'muted report still open',
+      offsets: [],
+      pending: 0,
+      muted: true,
+    },
+    {
+      name: 'muted report closed after midnight',
+      offsets: [1],
+      pending: 0,
+      muted: true,
+    },
+    {
+      name: 'muted report closed then reopened after midnight',
+      offsets: [1, minute],
+      pending: 0,
+      muted: true,
+    },
     { name: 'closed before midnight', offsets: [-1], pending: 0 },
     { name: 'closed exactly at midnight', offsets: [0], pending: 1 },
     { name: 'closed after midnight', offsets: [1], pending: 1 },
@@ -309,12 +384,13 @@ describe('report closure target statistics', () => {
     },
   ])(
     'reconstructs historical overdue membership: $name',
-    async ({ offsets, pending }) => {
+    async ({ offsets, pending, muted }) => {
       const cutoff = Date.parse('2020-01-02T00:00:00.000Z')
       const closed = offsets.length % 2 === 1
       const report = await createReport({
         createdAt: cutoff - 20 * minute,
         closedAt: closed ? cutoff + offsets.at(-1)! : undefined,
+        muted,
       })
       const db = network.ozone.ctx.db.db
       await db
@@ -334,13 +410,19 @@ describe('report closure target statistics', () => {
           })
           .execute()
       }
-      await refresh('2020-01-01', '2020-01-01', [queueId])
-      expect(
-        (await history('2020-01-01', '2020-01-01', { queueId }))[0],
-      ).toMatchObject({
-        pendingCount: pending,
-        closureTargetOverdueCount: pending,
-      })
+      await refresh('2020-01-01')
+      for (const filters of [
+        {},
+        { queueId },
+        { reportTypes: REPORT_TYPE_GROUPS.Legacy },
+      ]) {
+        expect(
+          (await history('2020-01-01', '2020-01-01', filters))[0],
+        ).toMatchObject({
+          pendingCount: pending,
+          closureTargetOverdueCount: pending,
+        })
+      }
     },
   )
 

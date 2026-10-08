@@ -1,5 +1,12 @@
 # @atproto/lex-cbor
 
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [[`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3)]:
+  - @atproto/lex-data@0.1.8
+
 ## 0.1.6
 
 ### Patch Changes

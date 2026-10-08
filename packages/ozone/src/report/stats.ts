@@ -460,11 +460,12 @@ export class ReportStatsService {
             order by "reportId", "createdAt", id
           ), candidates as (
             select id, "queueId", "reportType", "createdAt", "priorityTargetMinutes" from report
-            where status != 'closed' and "createdAt" < ${dayEnd}
+            where status != 'closed' and "isMuted" = false
+              and "createdAt" < ${dayEnd}
             union all
             select id, "queueId", "reportType", "createdAt", "priorityTargetMinutes" from report
             where status = 'closed' and "closedAt" >= ${dayEnd}
-              and "createdAt" < ${dayEnd}
+              and "isMuted" = false and "createdAt" < ${dayEnd}
           )
           select r."queueId", r."reportType", r."createdAt", r."priorityTargetMinutes"
           from candidates r
@@ -473,7 +474,7 @@ export class ReportStatsService {
         `
         : sql`
           select "queueId", "reportType", "createdAt", "priorityTargetMinutes"
-          from report where status != 'closed'
+          from report where status != 'closed' and "isMuted" = false
         `
     const pendingStats = () =>
       sql<PendingStatsRow>`

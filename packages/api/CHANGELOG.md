@@ -1,5 +1,45 @@
 # @atproto/api
 
+## 0.24.0
+
+### Minor Changes
+
+- [#5550](https://github.com/bluesky-social/atproto/pull/5550) [`3013430`](https://github.com/bluesky-social/atproto/commit/3013430ed7433edd4c70d2970428d0ab803f6e85) Thanks [@foysalit](https://github.com/foysalit)! - Add viewer-facing moderation inbox reads for configurable account standing, report details, and cursor-paginated action history, with PDS proxy access and read-only moderator previews. Include appeal attribution in moderator event views, structured policy details in takedown actions, and pending, resolved, and unread actioned-subject filters based on appeal report state. Keep moderator notes private.
+  
+  Page reports through reporter/time indexes with bounded hydration and source ownership validation. Batch subject hydration, reuse indexes for report summaries, and limit latest appeal lookups to one row in SQL. Add non-appeal reporter/time indexes, with the inbox migration ordered after the reporter DID column migration.
+  
+  Add OZONE_INBOX_START_AT to limit report, action, and appeal history by creation time, with a public subject/action creation-time index. Cover structured policy names, links, and fallback URLs in mapper regression tests.
+
+- [#5551](https://github.com/bluesky-social/atproto/pull/5551) [`38b10d1`](https://github.com/bluesky-social/atproto/commit/38b10d1b870a6a8f5da0eff32a136caadadd0184) Thanks [@foysalit](https://github.com/foysalit)! - Add moderation inbox notifications, preferences, unread counts, and independent per-section seen watermarks with normalized timestamps and read-only staff previews. Batch and isolate notification producers from moderation failures, reuse the UI strike suspension configuration for account standing, and keep moderator note text private. Include raw record values in report and actioned-subject details for record subjects.
+  
+  Apply OZONE_INBOX_START_AT to notification producers, lists, unread counts, and target visibility, including report closures and daemon standing changes.
+
+## 0.23.2
+
+### Patch Changes
+
+- [#5539](https://github.com/bluesky-social/atproto/pull/5539) [`3312992`](https://github.com/bluesky-social/atproto/commit/3312992fe2cb7ebc009fe4b1f4cc6bc7518b19db) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Pass suggested feed and starter pack recommendation IDs through AppView responses.
+
+## 0.23.1
+
+### Patch Changes
+
+- [#5558](https://github.com/bluesky-social/atproto/pull/5558) [`38e2dc8`](https://github.com/bluesky-social/atproto/commit/38e2dc8eea64d4077155cf5bbdb84965d5c6dbf6) Thanks [@gcwill70](https://github.com/gcwill70)! - Record report unassignment activity atomically with assignment and status updates.
+
+## 0.23.0
+
+### Minor Changes
+
+- [#5568](https://github.com/bluesky-social/atproto/pull/5568) [`61c915a`](https://github.com/bluesky-social/atproto/commit/61c915a4b7304720496975a07f2f35d38a23bcd4) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add `app.bsky.notification.getGroupedNotifications`.
+
+### Patch Changes
+
+- [#5493](https://github.com/bluesky-social/atproto/pull/5493) [`cd736b3`](https://github.com/bluesky-social/atproto/commit/cd736b3dbbec957cf4eaa7e67fa5b8be8f8ae04e) Thanks [@mozzius](https://github.com/mozzius)! - Add `since` and `startCursor` to `getTimeline` and `getListFeed`, for reading everything strictly newer than a previously returned position.
+- Updated dependencies [[`e8b89ff`](https://github.com/bluesky-social/atproto/commit/e8b89ff4c211a10519b54bd83eb64950035942c3)]:
+  - @atproto/lexicon@0.7.16
+  - @atproto/common-web@0.5.14
+  - @atproto/xrpc@0.8.15
+
 ## 0.22.0
 
 ### Minor Changes

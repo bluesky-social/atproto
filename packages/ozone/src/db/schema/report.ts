@@ -27,6 +27,7 @@ export interface Report {
    */
   priorityTargetMinutes: number | null
   did: DidString // Denormalized from moderation_event.subjectDid
+  reporterDid: DidString | null // Original moderation_event.createdBy for eventId
   recordPath: string // '' = account/message/conversation, 'collection/rkey' = record
   subjectMessageId: string | null // Denormalized from moderation_event.subjectMessageId
   subjectConvoId: string | null // Denormalized from moderation_event.subjectConvoId

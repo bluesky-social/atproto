@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-data",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "license": "MIT",
   "description": "Core utilities for AT Lexicons",
   "keywords": [

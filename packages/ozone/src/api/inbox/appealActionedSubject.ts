@@ -11,7 +11,9 @@ import {
   resolveAppealAction,
   subjectKey,
 } from '../../inbox/appeal.js'
-import { hydrateSubjectView } from '../../inbox/views.js'
+import { getSeenAt } from '../../inbox/seen.js'
+import { inboxHasStarted } from '../../inbox/start.js'
+import { hydrateSubjectView, loadSubject } from '../../inbox/views.js'
 import { tools } from '../../lexicons/index.js'
 import {
   subjectFromEventRow,
@@ -22,6 +24,12 @@ export default function (server: Server, ctx: AppContext) {
   server.add(tools.ozone.inbox.appealActionedSubject, {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
+      if (!inboxHasStarted(ctx.cfg.inbox.startAt)) {
+        throw new ForbiddenError(
+          'The moderation inbox has not started',
+          'NotAppealable',
+        )
+      }
       const { action: actionInput, subject: subjectInput } = input.body
       const requester = auth.credentials.iss
       const canAppealForOthers =
@@ -31,6 +39,16 @@ export default function (server: Server, ctx: AppContext) {
 
       const inputSubject = subjectFromInput(subjectInput)
       const action = await resolveAppealAction(ctx, inputSubject, actionInput)
+      if (
+        ctx.cfg.inbox.startAt &&
+        ((actionInput && !action) ||
+          (action && action.createdAt < ctx.cfg.inbox.startAt))
+      ) {
+        throw new ForbiddenError(
+          'Moderation action is not visible in the inbox',
+          'NotAppealable',
+        )
+      }
 
       // validate action event
       if (action) {
@@ -68,9 +86,19 @@ export default function (server: Server, ctx: AppContext) {
       if (!canAppealForOthers && requester !== subject.did) {
         throw new ForbiddenError('Subject is not appealable', 'NotAppealable')
       }
+      if (
+        ctx.cfg.inbox.startAt &&
+        !(await loadSubject(ctx.db, subject, ctx.cfg.inbox.startAt)).actionCount
+      ) {
+        throw new ForbiddenError(
+          'Subject is not visible in the inbox',
+          'NotAppealable',
+        )
+      }
 
       await fileAppeal(ctx, {
-        requester,
+        requester: subject.did,
+        submittedBy: requester !== subject.did ? requester : undefined,
         subject,
         action: actionInput,
         resolvedActionId: action?.id,
@@ -83,11 +111,13 @@ export default function (server: Server, ctx: AppContext) {
       // that was just filed, and treat a missing snapshot as a bug rather than
       // papering over it - the subject provably has moderation history, since
       // the write above just added to it.
+      const seenAt = await getSeenAt(ctx.db, subject.did, 'subjects')
       const view = await hydrateSubjectView(
         ctx.db,
         subject,
         ctx.cfg.service.did,
         ctx.cfg.inbox,
+        seenAt,
       )
       if (!view) {
         throw new InternalServerError(

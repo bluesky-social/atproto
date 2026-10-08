@@ -91,12 +91,12 @@
       "properties": {
         "pendingCount": {
           "type": "integer",
-          "description": "Number of reports in 'open' status"
+          "description": "Number of unmuted reports currently not closed."
         },
         "closureTargetOverdueCount": {
           "type": "integer",
           "minimum": 0,
-          "description": "Pending reports past their closure target."
+          "description": "Unmuted pending reports past their closure target."
         },
         "closureTargetMetCount": {
           "type": "integer",

@@ -33,6 +33,10 @@
                 "type": "string",
                 "format": "at-uri"
               }
+            },
+            "recIdStr": {
+              "type": "string",
+              "description": "Snowflake for this recommendation, use when submitting recommendation events."
             }
           }
         }

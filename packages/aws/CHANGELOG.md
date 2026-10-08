@@ -1,5 +1,18 @@
 # @atproto/aws
 
+## 0.3.19
+
+### Patch Changes
+
+- [#5576](https://github.com/bluesky-social/atproto/pull/5576) [`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add explicit resource management to `BlobStore` and `BlobStoreCreator` interfaces
+
+- [#5575](https://github.com/bluesky-social/atproto/pull/5575) [`52e51de`](https://github.com/bluesky-social/atproto/commit/52e51de0fc7b27173fe7ecc2c7b47ec476a8c1bf) Thanks [@jcalabro](https://github.com/jcalabro)! - Share one S3 client across the blob stores returned by `S3BlobStore.creator()` so that connections to S3 are reused instead of opening a new one for every blob request, and add a `maxSockets` option (uncapped by default).
+- Updated dependencies [[`13b7cb0`](https://github.com/bluesky-social/atproto/commit/13b7cb000d7358a570be46854a93e441c8fa791e), [`f8ed258`](https://github.com/bluesky-social/atproto/commit/f8ed25853dc91a16639decfaee2e0dcbb60808cd), [`a6561d5`](https://github.com/bluesky-social/atproto/commit/a6561d54227756876a0901e4a87675df17972d32)]:
+  - @atproto/repo@0.11.0
+  - @atproto/crypto@0.5.7
+  - @atproto/common@0.8.5
+  - @atproto/common-web@0.5.14
+
 ## 0.3.18
 
 ### Patch Changes
