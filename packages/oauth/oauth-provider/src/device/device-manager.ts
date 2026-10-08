@@ -213,6 +213,8 @@ export class DeviceManager {
         userAgent: deviceMetadata.userAgent || data.userAgent,
       })
     } else if (this.fedcmEnabled) {
+      // @NOTE Backfill FedCM cookies without rotating the existing session.
+      // Their narrow path hides their presence from first-party requests.
       this.writeFedcmCookies(res, {
         deviceId,
         sessionId: data.sessionId,
