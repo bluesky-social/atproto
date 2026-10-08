@@ -34,7 +34,7 @@
     "format": "pnpm lint:fix && pnpm style:fix",
     "codegen": "pnpm run build:tooling --force && pnpm run --parallel --workspace-concurrency Infinity '/^(codegen:.+)$/'",
     "prebuild": "pnpm run build:tooling --force && pnpm run --parallel --workspace-concurrency Infinity 'prebuild'",
-    "build:tooling": "pnpm run --workspace-concurrency 1 --recursive --filter @atproto/lex... --filter @atproto/lex-cli... build",
+    "build:tooling": "pnpm run --sequential --filter @atproto/lex... --filter @atproto/lex-cli... build",
     "build:ts": "tsc --build tsconfig.json",
     "build": "pnpm run build:ts",
     "postbuild": "pnpm run --parallel build:ui",
