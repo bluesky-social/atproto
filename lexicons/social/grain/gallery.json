@@ -6,19 +6,14 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "title",
-          "createdAt"
-        ],
+        "required": ["title", "createdAt"],
         "properties": {
           "title": {
             "type": "string",
             "maxLength": 100
           },
           "labels": {
-            "refs": [
-              "com.atproto.label.defs#selfLabels"
-            ],
+            "refs": ["com.atproto.label.defs#selfLabels"],
             "type": "union",
             "description": "Self-label values for this post. Effectively content warnings."
           },

@@ -6,10 +6,7 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "title",
-          "createdAt"
-        ],
+        "required": ["title", "createdAt"],
         "properties": {
           "url": {
             "type": "string",
@@ -37,9 +34,7 @@
           },
           "thumb": {
             "type": "blob",
-            "accept": [
-              "image/*"
-            ],
+            "accept": ["image/*"],
             "maxSize": 1000000
           },
           "title": {
@@ -90,9 +85,7 @@
     },
     "viewerCount": {
       "type": "object",
-      "required": [
-        "count"
-      ],
+      "required": ["count"],
       "properties": {
         "count": {
           "type": "integer"
@@ -101,13 +94,7 @@
     },
     "livestreamView": {
       "type": "object",
-      "required": [
-        "uri",
-        "cid",
-        "author",
-        "record",
-        "indexedAt"
-      ],
+      "required": ["uri", "cid", "author", "record", "indexedAt"],
       "properties": {
         "cid": {
           "type": "string",
@@ -137,12 +124,7 @@
     },
     "teleportArrival": {
       "type": "object",
-      "required": [
-        "teleportUri",
-        "source",
-        "viewerCount",
-        "startsAt"
-      ],
+      "required": ["teleportUri", "source", "viewerCount", "startsAt"],
       "properties": {
         "source": {
           "ref": "app.bsky.actor.defs#profileViewBasic",
@@ -172,17 +154,10 @@
     },
     "teleportCanceled": {
       "type": "object",
-      "required": [
-        "teleportUri",
-        "reason"
-      ],
+      "required": ["teleportUri", "reason"],
       "properties": {
         "reason": {
-          "enum": [
-            "deleted",
-            "denied",
-            "expired"
-          ],
+          "enum": ["deleted", "denied", "expired"],
           "type": "string",
           "description": "Why this teleport was canceled"
         },
@@ -195,9 +170,7 @@
     },
     "streamplaceAnything": {
       "type": "object",
-      "required": [
-        "livestream"
-      ],
+      "required": ["livestream"],
       "properties": {
         "livestream": {
           "refs": [

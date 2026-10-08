@@ -6,11 +6,7 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "createdAt",
-          "gallery",
-          "item"
-        ],
+        "required": ["createdAt", "gallery", "item"],
         "properties": {
           "item": {
             "type": "string",

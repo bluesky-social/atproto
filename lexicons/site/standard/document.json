@@ -6,11 +6,7 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "site",
-          "title",
-          "publishedAt"
-        ],
+        "required": ["site", "title", "publishedAt"],
         "properties": {
           "path": {
             "type": "string",
@@ -42,9 +38,7 @@
             "maxGraphemes": 500
           },
           "labels": {
-            "refs": [
-              "com.atproto.label.defs#selfLabels"
-            ],
+            "refs": ["com.atproto.label.defs#selfLabels"],
             "type": "union",
             "description": "Self-label values for this post. Effectively content warnings."
           },
@@ -61,9 +55,7 @@
           },
           "coverImage": {
             "type": "blob",
-            "accept": [
-              "image/*"
-            ],
+            "accept": ["image/*"],
             "maxSize": 1000000,
             "description": "Image to used for thumbnail or cover image. Less than 1MB is size."
           },
@@ -100,9 +92,7 @@
     },
     "contributor": {
       "type": "object",
-      "required": [
-        "did"
-      ],
+      "required": ["did"],
       "properties": {
         "did": {
           "type": "string",

@@ -31,11 +31,7 @@
     },
     "color": {
       "type": "object",
-      "required": [
-        "red",
-        "green",
-        "blue"
-      ],
+      "required": ["red", "green", "blue"],
       "properties": {
         "red": {
           "type": "integer",
@@ -58,9 +54,7 @@
     "selfLabel": {
       "type": "string",
       "description": "Label that a user can apply to their own profile.",
-      "knownValues": [
-        "bot"
-      ]
+      "knownValues": ["bot"]
     },
     "badgeSelections": {
       "type": "object",
@@ -84,10 +78,7 @@
     },
     "streamerBadgeSelection": {
       "type": "object",
-      "required": [
-        "streamer",
-        "badge"
-      ],
+      "required": ["streamer", "badge"],
       "properties": {
         "badge": {
           "ref": "com.atproto.repo.strongRef",

@@ -6,10 +6,7 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "photo",
-          "alt"
-        ],
+        "required": ["photo", "alt"],
         "properties": {
           "alt": {
             "type": "string",
@@ -17,9 +14,7 @@
           },
           "photo": {
             "type": "blob",
-            "accept": [
-              "image/*"
-            ],
+            "accept": ["image/*"],
             "maxSize": 1000000
           },
           "createdAt": {

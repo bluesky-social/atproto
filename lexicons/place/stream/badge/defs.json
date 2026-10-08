@@ -23,9 +23,7 @@
     },
     "badgeSlot": {
       "type": "object",
-      "required": [
-        "available"
-      ],
+      "required": ["available"],
       "properties": {
         "selected": {
           "ref": "#badgeIssuanceView",
@@ -45,11 +43,7 @@
     },
     "badgeView": {
       "type": "object",
-      "required": [
-        "badgeType",
-        "issuer",
-        "recipient"
-      ],
+      "required": ["badgeType", "issuer", "recipient"],
       "properties": {
         "name": {
           "type": "string",
@@ -93,11 +87,7 @@
     },
     "badgeIssuanceView": {
       "type": "object",
-      "required": [
-        "issuanceUri",
-        "badgeType",
-        "issuer"
-      ],
+      "required": ["issuanceUri", "badgeType", "issuer"],
       "properties": {
         "name": {
           "type": "string",

@@ -3,13 +3,7 @@
   "defs": {
     "messageView": {
       "type": "object",
-      "required": [
-        "uri",
-        "cid",
-        "author",
-        "record",
-        "indexedAt"
-      ],
+      "required": ["uri", "cid", "author", "record", "indexedAt"],
       "properties": {
         "cid": {
           "type": "string",
@@ -40,9 +34,7 @@
           "description": "If true, this message has been deleted or labeled and should be cleared from the cache"
         },
         "replyTo": {
-          "refs": [
-            "#messageView"
-          ],
+          "refs": ["#messageView"],
           "type": "union"
         },
         "indexedAt": {
@@ -57,12 +49,7 @@
     },
     "pinnedRecordView": {
       "type": "object",
-      "required": [
-        "uri",
-        "cid",
-        "record",
-        "indexedAt"
-      ],
+      "required": ["uri", "cid", "record", "indexedAt"],
       "properties": {
         "cid": {
           "type": "string",

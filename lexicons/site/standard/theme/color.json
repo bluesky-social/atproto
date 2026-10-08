@@ -3,11 +3,7 @@
   "defs": {
     "rgb": {
       "type": "object",
-      "required": [
-        "r",
-        "g",
-        "b"
-      ],
+      "required": ["r", "g", "b"],
       "properties": {
         "b": {
           "type": "integer",
@@ -28,12 +24,7 @@
     },
     "rgba": {
       "type": "object",
-      "required": [
-        "r",
-        "g",
-        "b",
-        "a"
-      ],
+      "required": ["r", "g", "b", "a"],
       "properties": {
         "a": {
           "type": "integer",

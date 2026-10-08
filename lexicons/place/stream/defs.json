@@ -3,13 +3,7 @@
   "defs": {
     "blockView": {
       "type": "object",
-      "required": [
-        "uri",
-        "cid",
-        "blocker",
-        "record",
-        "indexedAt"
-      ],
+      "required": ["uri", "cid", "blocker", "record", "indexedAt"],
       "properties": {
         "cid": {
           "type": "string",
@@ -35,9 +29,7 @@
     },
     "rendition": {
       "type": "object",
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "properties": {
         "name": {
           "type": "string"
@@ -46,9 +38,7 @@
     },
     "renditions": {
       "type": "object",
-      "required": [
-        "renditions"
-      ],
+      "required": ["renditions"],
       "properties": {
         "renditions": {
           "type": "array",
@@ -61,9 +51,7 @@
     },
     "activityGame": {
       "type": "object",
-      "required": [
-        "uri"
-      ],
+      "required": ["uri"],
       "properties": {
         "uri": {
           "type": "string",
@@ -78,9 +66,7 @@
     },
     "activityLabel": {
       "type": "object",
-      "required": [
-        "label"
-      ],
+      "required": ["label"],
       "properties": {
         "label": {
           "type": "string",

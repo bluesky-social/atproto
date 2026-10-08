@@ -3,10 +3,7 @@
   "defs": {
     "aspectRatio": {
       "type": "object",
-      "required": [
-        "width",
-        "height"
-      ],
+      "required": ["width", "height"],
       "properties": {
         "width": {
           "type": "integer",
