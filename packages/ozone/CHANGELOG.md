@@ -1,5 +1,13 @@
 # @atproto/ozone
 
+## 0.6.1
+
+### Patch Changes
+
+- [#5579](https://github.com/bluesky-social/atproto/pull/5579) [`b023046`](https://github.com/bluesky-social/atproto/commit/b023046f9266b8755ad9b44928032426bb05599e) Thanks [@gcwill70](https://github.com/gcwill70)! - Add configurable report priority levels and reason mappings, with priority scores and resolution targets in minutes snapshotted on reports at creation.
+  
+  Expose each closed report's resolution time and whether it met its priority target.
+
 ## 0.6.0
 
 ### Minor Changes
