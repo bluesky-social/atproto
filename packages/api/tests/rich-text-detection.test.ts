@@ -34,6 +34,7 @@ describe('detectFacets', () => {
     'foo@bar.com',
     '@alice-',
     '@nope',
+    '@handle.co-uk',
 
     'start https://middle.com end',
     'start https://middle.com/foo/bar end',
@@ -97,6 +98,8 @@ describe('detectFacets', () => {
     [['foo@bar.com']],
     [['@alice-']],
     [['@nope']],
+    // co-uk is not a TLD; trimming -uk leaves handle.co, and co IS a TLD
+    [['@handle.co', 'did:fake:handle.co'], ['-uk']],
 
     [['start '], ['https://middle.com', 'https://middle.com'], [' end']],
     [
@@ -451,6 +454,34 @@ describe('detectFacets', () => {
 
       expect(detectedTags).toEqual(tags)
       expect(detectedIndices).toEqual(indices)
+    })
+  })
+
+  describe('perf: long hyphenated non-handles', () => {
+    // Single ~10k-char mention with 5000 hyphens and no valid TLD anywhere.
+    // On commit 6a78856d88 (old O(n_TLDs) isValidDomain) this took ~11.5 s.
+    it('~10k-char @a-a-a-... finishes in < 500 ms and produces no facets', () => {
+      const text = '@' + 'a-'.repeat(5000) + 'a'
+      const rt = new RichText({ text })
+      const t0 = Date.now()
+      rt.detectFacetsWithoutResolution()
+      const elapsed = Date.now() - t0
+      expect(elapsed).toBeLessThan(500)
+      expect(rt.facets).toBeUndefined()
+    })
+
+    // ~10k chars built from many short hyphenated non-handles (50 hyphens each).
+    // On commit 6a78856d88 each mention triggered ~51 O(n_TLDs) scans; with
+    // ~97 mentions this totalled ~5000 O(1500) calls — measurably slow.
+    it('~10k-char run of many hyphenated mentions finishes in < 500 ms and produces no facets', () => {
+      const chunk = '@' + 'z-'.repeat(50) + 'z '
+      const text = chunk.repeat(Math.ceil(10000 / chunk.length))
+      const rt = new RichText({ text })
+      const t0 = Date.now()
+      rt.detectFacetsWithoutResolution()
+      const elapsed = Date.now() - t0
+      expect(elapsed).toBeLessThan(500)
+      expect(rt.facets).toBeUndefined()
     })
   })
 })

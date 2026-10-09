@@ -10,6 +10,8 @@ import {
   URL_REGEX,
 } from './util.js'
 
+const TLD_SET = new Set<string>(TLDs)
+
 export type Facet = AppBskyRichtextFacet.Main
 
 export function detectFacets(text: UnicodeString): Facet[] | undefined {
@@ -141,13 +143,8 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
 }
 
 function isValidDomain(str: string): boolean {
-  return !!TLDs.find((tld) => {
-    const i = str.lastIndexOf(tld)
-    if (i === -1) {
-      return false
-    }
-    return str.charAt(i - 1) === '.' && i === str.length - tld.length
-  })
+  const dot = str.lastIndexOf('.')
+  return dot >= 0 && TLD_SET.has(str.slice(dot + 1))
 }
 
 /**
