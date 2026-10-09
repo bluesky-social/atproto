@@ -453,12 +453,65 @@ export type ProcessReportActionParams = {
   createdBy: DidString
 }
 
+async function processEmailReportAction(
+  db: Database,
+  reportAction: ProcessReportActionParams['reportAction'],
+  subjectDid: DidString,
+  eventId: number,
+): Promise<number> {
+  if (
+    !reportAction.ids?.length ||
+    reportAction.types?.length ||
+    reportAction.all
+  ) {
+    return 0
+  }
+
+  const reportIds = [...new Set(reportAction.ids)]
+  // Email events target a repo DID even when the associated report is
+  // record-level; the explicit report IDs disambiguate reports on that repo.
+  const matchingReports = await reportQuery(db)
+    .where('r.did', '=', subjectDid)
+    .where('r.id', 'in', reportIds)
+    .select('r.id')
+    .execute()
+
+  const foundIds = new Set(matchingReports.map((report) => report.id))
+  if (!foundIds.size) {
+    throw new Error(
+      'No matching reports found for the specified report IDs on this subject',
+    )
+  }
+
+  const missingIds = reportIds.filter((id) => !foundIds.has(id))
+  if (missingIds.length) {
+    throw new Error(
+      `Report IDs ${missingIds.join(', ')} do not exist or do not belong to this subject`,
+    )
+  }
+
+  // Email events are supplemental report history; they must not reopen or
+  // otherwise change the status of reports that were already actioned.
+  await db.db
+    .updateTable('report')
+    .set({
+      actionEventIds: sql`COALESCE("actionEventIds", '[]'::jsonb) || ${JSON.stringify(eventId)}::jsonb`,
+    })
+    .where('id', 'in', reportIds)
+    .execute()
+
+  return matchingReports.length
+}
+
 /**
  * Validates and processes a report action by:
  * 1. Finding matching reports based on targeting criteria
  * 2. Validating that specified report IDs exist and belong to the subject
  * 3. Bulk-updating reports with the action event ID, note, and status
  * 4. Bulk-inserting a report_activity row for each updated report
+ *
+ * Email events only associate explicit report IDs and do not change report
+ * status or create report activities.
  *
  * @throws InvalidRequestError if validation fails
  */
@@ -474,6 +527,10 @@ export async function processReportAction(
     eventType,
     createdBy,
   } = params
+
+  if (eventType === tools.ozone.moderation.defs.modEventEmail.$type) {
+    return processEmailReportAction(db, reportAction, subjectDid, eventId)
+  }
 
   // Find reports matching the criteria
   const matchingReports = await findReportsForSubject(db, {
