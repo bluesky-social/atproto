@@ -21,7 +21,7 @@ import {
   type HydratorConfig,
   mergeStates,
 } from './hydrator.js'
-import type { Labels } from './label.js'
+import { Labels } from './label.js'
 import { HydrationMap } from './util.js'
 
 const pubUri = atUri('did:plc:pub', site.standard.publication.$type, 'self')
@@ -86,6 +86,10 @@ function createFixture() {
   const records = new Map<AtUriString, { body: object; takenDown?: boolean }>()
   const backlinks = new Map<AtUriString, AtUriString[]>()
   const counts = new Map<AtUriString, Record<string, bigint>>()
+  // Subjects with an actionable takedown label, and owner DIDs whose actor
+  // hydrates as explicitly unavailable (`null`).
+  const takedownLabeled = new Set<string>()
+  const unavailableOwners = new Set<string>()
   const seedBasic = () => {
     records.set(pubUri, { body: makePub() })
     records.set(doc1, { body: makeDoc(pubUri) })
@@ -121,6 +125,8 @@ function createFixture() {
     records,
     backlinks,
     counts,
+    takedownLabeled,
+    unavailableOwners,
     seedBasic,
   }
 }
@@ -129,7 +135,15 @@ const it = baseIt.extend<{ fixture: ReturnType<typeof createFixture> }>({
   // eslint-disable-next-line no-empty-pattern -- Vitest requires destructured fixture dependencies.
   fixture: async ({}, use) => {
     const fixture = createFixture()
-    const { dataplane, hydrator, records, backlinks, counts } = fixture
+    const {
+      dataplane,
+      hydrator,
+      records,
+      backlinks,
+      counts,
+      takedownLabeled,
+      unavailableOwners,
+    } = fixture
     using _lookup = vi.spyOn(dataplane, 'getRecordsByURI').mockImplementation(
       async ({ uris = [] }) =>
         new GetRecordsByURIResponse({
@@ -177,15 +191,22 @@ const it = baseIt.extend<{ fixture: ReturnType<typeof createFixture> }>({
     using _labels = vi
       .spyOn(hydrator.label, 'getLabelsForSubjects')
       .mockImplementation(async (subjects) => {
-        const labels = new HydrationMap() as Labels
-        for (const subject of subjects) labels.set(subject, null)
+        const labels = new Labels()
+        for (const subject of subjects) {
+          labels.set(subject, {
+            isImpersonation: false,
+            isTakendown: takedownLabeled.has(subject),
+            needsReview: false,
+            labels: new HydrationMap(),
+          })
+        }
         return labels
       })
     using _profiles = vi
       .spyOn(hydrator, 'hydrateProfilesBasic')
       .mockImplementation(async (dids) => ({
         actors: new HydrationMap(
-          dids.map((did) => [did, { did }]),
+          dids.map((did) => [did, unavailableOwners.has(did) ? null : { did }]),
         ) as unknown as Actors,
       }))
     await use(fixture)
@@ -541,6 +562,252 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         expect(state.externalRecords?.get(uri)).toBeTruthy()
         expect(state.labels?.has(uri)).toBe(true)
       }
+    })
+  })
+  describe('generic takedowns', () => {
+    const lookups = (
+      dataplane: ReturnType<typeof createFixture>['dataplane'],
+    ) =>
+      vi
+        .mocked(dataplane.getRecordsByURI)
+        .mock.calls.flatMap(([req]) => req.uris)
+    const backlinkTargets = (
+      dataplane: ReturnType<typeof createFixture>['dataplane'],
+    ) =>
+      vi
+        .mocked(dataplane.getAtmosphereBacklinks)
+        .mock.calls.map(([req]) => req.targetUri)
+    const countTargets = (
+      dataplane: ReturnType<typeof createFixture>['dataplane'],
+    ) =>
+      vi
+        .mocked(dataplane.getAtmosphereBacklinkCounts)
+        .mock.calls.flatMap(([req]) => req.targetUris)
+
+    it('nulls label-takendown roots in both maps without expanding them', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane, seedBasic, takedownLabeled } = fixture
+      seedBasic()
+      takedownLabeled.add(doc1).add(pubUri)
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [doc1, pubUri],
+        ctx,
+      )
+
+      // Known keys are retained with null values in both maps.
+      for (const uri of [doc1, pubUri]) {
+        expect(state.externalRecords?.has(uri)).toBe(true)
+        expect(state.externalRecords?.get(uri)).toBeNull()
+        const key = `${uri}@cid-${uri}`
+        expect(state.externalRecordsByRef?.has(key)).toBe(true)
+        expect(state.externalRecordsByRef?.get(key)).toBeNull()
+      }
+      // Hidden targets trigger no discovery, backlink, or count queries.
+      expect(backlinkTargets(dataplane)).toEqual([])
+      expect(countTargets(dataplane)).toEqual([])
+      expect(state.externalRecordBacklinks?.size ?? 0).toBe(0)
+      expect(state.externalRecordBacklinkCounts?.size ?? 0).toBe(0)
+    })
+
+    it('keeps labeled records and expands them with includeTakedowns', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane, seedBasic, takedownLabeled } = fixture
+      seedBasic()
+      takedownLabeled.add(doc1)
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [doc1],
+        ctx.copy({ includeTakedowns: true }),
+      )
+      expect(state.externalRecords?.get(doc1)).toBeTruthy()
+      expect(
+        state.externalRecordsByRef?.get(`${doc1}@cid-${doc1}`),
+      ).toBeTruthy()
+      expect(state.externalRecords?.get(pubUri)).toBeTruthy()
+      expect(backlinkTargets(dataplane)).toContain(doc1)
+    })
+
+    it('does not hide a publication because a document is hidden', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane, seedBasic, takedownLabeled } = fixture
+      seedBasic()
+      takedownLabeled.add(doc1)
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [doc1, doc2],
+        ctx,
+      )
+      expect(state.externalRecords?.get(doc1)).toBeNull()
+      expect(state.externalRecords?.get(doc2)).toBeTruthy()
+      expect(state.externalRecords?.get(pubUri)).toBeTruthy()
+      expect(backlinkTargets(dataplane)).not.toContain(doc1)
+      expect(backlinkTargets(dataplane)).toContain(pubUri)
+    })
+
+    it('nulls takendown discovered publications and their dependencies are not expanded', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane, seedBasic, takedownLabeled } = fixture
+      const { subs } = seedBasic()
+      takedownLabeled.add(pubUri)
+      const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
+      expect(state.externalRecords?.get(doc1)).toBeTruthy()
+      expect(state.externalRecords?.get(pubUri)).toBeNull()
+      expect(
+        state.externalRecordsByRef?.get(`${pubUri}@cid-${pubUri}`),
+      ).toBeNull()
+      expect(backlinkTargets(dataplane)).not.toContain(pubUri)
+      expect(lookups(dataplane)).not.toContain(subs[0])
+    })
+
+    it('nulls takendown recommends and subscriptions, keeping counts and siblings', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, seedBasic, takedownLabeled } = fixture
+      const { recs, subs } = seedBasic()
+      takedownLabeled.add(recs[0]).add(subs[0])
+      const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
+
+      for (const uri of [recs[0], subs[0]]) {
+        expect(state.externalRecords?.get(uri)).toBeNull()
+        expect(state.externalRecordsByRef?.get(`${uri}@cid-${uri}`)).toBeNull()
+      }
+      expect(state.externalRecords?.get(recs[1])).toBeTruthy()
+      expect(state.externalRecords?.get(subs[1])).toBeTruthy()
+      // The target documents and publication stay available.
+      expect(state.externalRecords?.get(doc1)).toBeTruthy()
+      expect(state.externalRecords?.get(pubUri)).toBeTruthy()
+      // Samples and aggregate counts are not adjusted for hidden sources.
+      expect(state.externalRecordBacklinks?.get(doc1)).toEqual(recs.slice(0, 3))
+      expect(state.externalRecordBacklinks?.get(pubUri)).toEqual(subs)
+      expect(
+        state.externalRecordBacklinkCounts?.get(doc1)?.[
+          site.standard.graph.recommend.$type
+        ],
+      ).toBe(42)
+      expect(
+        state.externalRecordBacklinkCounts?.get(pubUri)?.[
+          site.standard.graph.subscription.$type
+        ],
+      ).toBe(17)
+    })
+
+    it('does not retry null or takendown dependencies across passes', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records, seedBasic, takedownLabeled } = fixture
+      const { recs } = seedBasic()
+      takedownLabeled.add(recs[0])
+      records.delete(recs[1])
+      using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
+      await hydrator.hydrateEmbedExternalViewFromUris([doc1, doc2], ctx)
+      // Each dependency is requested by exactly one hydration pass.
+      const requested = embedSpy.mock.calls.flatMap(([uris]) => uris)
+      for (const uri of [recs[0], recs[1], pubUri]) {
+        expect(requested.filter((u) => u === uri)).toHaveLength(1)
+      }
+    })
+
+    it('hides records of explicitly unavailable owners even with includeTakedowns', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane, seedBasic, unavailableOwners } = fixture
+      seedBasic()
+      unavailableOwners.add('did:plc:author')
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [doc1],
+        ctx.copy({ includeTakedowns: true }),
+      )
+      expect(state.externalRecords?.get(doc1)).toBeNull()
+      expect(state.externalRecordsByRef?.get(`${doc1}@cid-${doc1}`)).toBeNull()
+      expect(backlinkTargets(dataplane)).toEqual([])
+    })
+
+    it('treats an absent actor entry as available', async ({ fixture }) => {
+      const { hydrator, ctx, seedBasic } = fixture
+      seedBasic()
+      vi.mocked(hydrator.hydrateProfilesBasic).mockResolvedValue({
+        actors: new HydrationMap() as unknown as Actors,
+      })
+      const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
+      expect(state.externalRecords?.get(doc1)).toBeTruthy()
+    })
+
+    it('hides unavailable owners of dependency records only', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, seedBasic, unavailableOwners } = fixture
+      const { recs } = seedBasic()
+      unavailableOwners.add('did:plc:a')
+      const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
+      expect(state.externalRecords?.get(doc1)).toBeTruthy()
+      expect(state.externalRecords?.get(recs[0])).toBeNull()
+      expect(state.externalRecords?.get(recs[1])).toBeTruthy()
+    })
+
+    it('hides records of owners taken down by account labels', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, seedBasic, takedownLabeled } = fixture
+      seedBasic()
+      // Use real profile hydration: it nulls actors with takedown labels.
+      vi.mocked(hydrator.hydrateProfilesBasic).mockRestore()
+      vi.spyOn(hydrator.actor, 'getActors').mockImplementation(
+        async (dids) =>
+          new HydrationMap(
+            dids.map((did) => [did, { did, verifications: [] }]),
+          ) as unknown as Awaited<ReturnType<typeof hydrator.actor.getActors>>,
+      )
+      takedownLabeled.add('did:plc:author')
+      const hidden = await hydrator.hydrateEmbedExternalViewFromUris(
+        [doc1],
+        ctx,
+      )
+      expect(hidden.externalRecords?.get(doc1)).toBeNull()
+      expect(hidden.actors?.get('did:plc:author' as DidString)).toBeNull()
+      expect(hidden.externalRecordsByRef?.get(`${doc1}@cid-${doc1}`)).toBeNull()
+    })
+
+    it('only actions takedown labels from redacting labelers', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane, seedBasic } = fixture
+      seedBasic()
+      // Use the real label hydrator for this test.
+      vi.mocked(hydrator.label.getLabelsForSubjects).mockRestore()
+      vi.spyOn(dataplane, 'getLabels').mockResolvedValue({
+        labels: [
+          Buffer.from(
+            JSON.stringify({
+              ver: 1,
+              src: 'did:plc:plain',
+              uri: doc1,
+              val: '!takedown',
+              cts: '2026-10-01T00:00:00.000Z',
+            }),
+          ),
+        ],
+      } as never)
+      const labelerCtx = (redact: DidString[]) =>
+        ctx.copy({
+          labelers: {
+            dids: ['did:plc:plain' as DidString],
+            redact: new Set(redact),
+          },
+        })
+
+      const ignored = await hydrator.hydrateEmbedExternalViewFromUris(
+        [doc1],
+        labelerCtx([]),
+      )
+      expect(ignored.externalRecords?.get(doc1)).toBeTruthy()
+
+      const actioned = await hydrator.hydrateEmbedExternalViewFromUris(
+        [doc1],
+        labelerCtx(['did:plc:plain' as DidString]),
+      )
+      expect(actioned.externalRecords?.get(doc1)).toBeNull()
     })
   })
 })
