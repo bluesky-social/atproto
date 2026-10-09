@@ -953,9 +953,10 @@ export class Hydrator {
   }
 
   /**
-   * Hydrate external records, labels, profiles, and their view dependencies.
-   * `hydrationPass` is the 1-based number of this generic batch within the traversal
-   * (the root batch is pass 1); nested batches continue the count.
+   * Hydrate the latest versions of external records, plus labels, profiles, and
+   * their view dependencies. `hydrationPass` is the 1-based number of this
+   * generic batch within the traversal (the root batch is pass 1); nested
+   * batches continue the count.
    */
   async hydrateEmbedExternalViewFromUris(
     uris: AtUriString[],
@@ -963,40 +964,98 @@ export class Hydrator {
     seenUris: Set<AtUriString> = new Set(),
     hydrationPass = 1,
   ): Promise<HydrationState> {
-    // Filter at the entry point so every URI is fetched at most once per shared
-    // traversal, even for callers that did not prefilter their input. Null or
-    // unavailable results stay in `seenUris` as completed lookups. Nothing
-    // unseen means no hydration work, and no pass is consumed.
-    const allUris = dedupeStrs(uris).filter((uri) => !seenUris.has(uri))
-    if (!allUris.length) return { ctx }
+    return this.hydrateEmbedExternalView({ uris }, ctx, seenUris, hydrationPass)
+  }
 
-    // Mark synchronously, before the first await, so concurrent work in this
-    // traversal cannot schedule these URIs again.
-    for (const uri of allUris) seenUris.add(uri)
+  /**
+   * Like `hydrateEmbedExternalViewFromUris`, but for exact record versions
+   * pinned by strong refs. Roots land only in `externalRecordsByRef`; their
+   * URI dependencies are hydrated as latest versions by the URI path.
+   */
+  async hydrateEmbedExternalViewFromRefs(
+    refs: Required<ItemRef>[],
+    ctx: HydrateCtx,
+    seenUris: Set<AtUriString> = new Set(),
+    hydrationPass = 1,
+  ): Promise<HydrationState> {
+    return this.hydrateEmbedExternalView({ refs }, ctx, seenUris, hydrationPass)
+  }
+
+  private async hydrateEmbedExternalView(
+    input: { uris: AtUriString[] } | { refs: Required<ItemRef>[] },
+    ctx: HydrateCtx,
+    seenUris: Set<AtUriString>,
+    hydrationPass: number,
+  ): Promise<HydrationState> {
+    const exactRefs = 'refs' in input ? input.refs : undefined
+    let items: ItemRef[]
+    if ('refs' in input) {
+      // Exact versions are identified by (uri, cid), separately from the
+      // latest-URI lookups tracked in `seenUris`: fetching one version neither
+      // implies nor suppresses a fetch of the latest, or of another version.
+      items = [
+        ...new Map(
+          input.refs.map((ref) => [genericRecordKey(ref.uri, ref.cid), ref]),
+        ).values(),
+      ]
+    } else {
+      // Filter at the entry point so every URI is fetched at most once per
+      // shared traversal, even for callers that did not prefilter their input.
+      // Null or unavailable results stay in `seenUris` as completed lookups.
+      // Nothing unseen means no hydration work, and no pass is consumed.
+      items = dedupeStrs(input.uris)
+        .filter((uri) => !seenUris.has(uri))
+        .map((uri) => ({ uri }))
+      // Mark synchronously, before the first await, so concurrent work in this
+      // traversal cannot schedule these URIs again.
+      for (const { uri } of items) seenUris.add(uri)
+    }
+    if (!items.length) return { ctx }
+    const allUris = dedupeStrs(items.map(({ uri }) => uri))
 
     // TODO Remove this once we're fully generic
-    const ssUris = allUris.filter((uri) =>
-      new AtUri(uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX),
-    )
+    const ssUris = exactRefs
+      ? []
+      : allUris.filter((uri) =>
+          new AtUri(uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX),
+        )
 
     // Get all the actors that are part of this hydration
     const dids = dedupeStrs(allUris.map(uriToDid))
     const seenDids = new Set<string>(dids)
 
-    const [externalRecords, { documents, publications }, labels, profiles] =
-      await Promise.all([
-        this.external.getRecordsByURI(allUris, ctx.includeTakedowns),
-        this.external.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
-        this.label.getLabelsForSubjects(allUris, ctx.labelers),
-        this.hydrateProfilesBasic(dids, ctx),
-      ])
-
-    // Build the by-ref map used by some endpoints
-    const externalRecordsByRef: ExternalRecordsByRef = new HydrationMap()
-    for (const [uri, info] of externalRecords) {
-      if (!info) continue
-      externalRecordsByRef.set(genericRecordKey(uri, info.cid), info)
+    const fetchRecords = async () => {
+      if (exactRefs) {
+        const externalRecordsByRef = await this.external.getRecordsByRef(
+          items as Required<ItemRef>[],
+          ctx.includeTakedowns,
+        )
+        return { externalRecords: undefined, externalRecordsByRef }
+      }
+      const externalRecords = await this.external.getRecordsByURI(
+        allUris,
+        ctx.includeTakedowns,
+      )
+      // Build the by-ref map used by some endpoints
+      const externalRecordsByRef: ExternalRecordsByRef = new HydrationMap()
+      for (const [uri, info] of externalRecords) {
+        if (!info) continue
+        externalRecordsByRef.set(genericRecordKey(uri, info.cid), info)
+      }
+      return { externalRecords, externalRecordsByRef }
     }
+
+    const [
+      { externalRecords, externalRecordsByRef },
+      { documents, publications },
+      labels,
+      profiles,
+    ] = await Promise.all([
+      fetchRecords(),
+      this.external.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
+      this.label.getLabelsForSubjects(allUris, ctx.labelers),
+      this.hydrateProfilesBasic(dids, ctx),
+    ])
 
     // Merge record and profile state, then hide moderated records so they
     // trigger no dependency expansion.
@@ -1008,10 +1067,15 @@ export class Hydrator {
     })
     actionExternalRecordTakedowns(baseState, ctx.includeTakedowns)
 
+    // Merging mutates these maps, so note the unavailable versions up front.
+    const unavailableKeys = [...externalRecordsByRef]
+      .filter(([, info]) => !info)
+      .map(([key]) => key)
+
     // Discover and hydrate any additional view dependencies
     const depsState = await this.hydrateExternalViewDependencies(
       baseState,
-      allUris,
+      items,
       ctx,
       seenUris,
       hydrationPass,
@@ -1041,7 +1105,7 @@ export class Hydrator {
       ? mergeStates(profiles, await this.hydrateProfilesBasic(newDids, ctx))
       : profiles
 
-    return mergeManyStates(
+    const merged = mergeManyStates(
       newProfiles,
       {
         ctx,
@@ -1053,11 +1117,19 @@ export class Hydrator {
       },
       depsState,
     )
+    // Supplemental latest-URI dependencies must never revive an exact version
+    // that was unavailable.
+    for (const key of unavailableKeys)
+      merged.externalRecordsByRef?.set(key, null)
+    return merged
   }
 
   /**
    * Discover view dependencies by URI collection and hydrate new URIs in a batch.
-   * Returns additional state.
+   * Returns additional state. Each input is inspected in the map matching its
+   * identity: `(uri, cid)` refs in `externalRecordsByRef`, bare URIs in
+   * `externalRecords`. Every pinned version is inspected, since versions of
+   * one URI can reference different dependencies.
    *
    * `seenUris` prevents repeated URIs and cycles across nested passes, but not
    * a chain of distinct URIs; `MAX_EXTERNAL_HYDRATION_PASSES` bounds that, as
@@ -1068,7 +1140,7 @@ export class Hydrator {
    */
   async hydrateExternalViewDependencies(
     state: HydrationState,
-    uris: AtUriString[],
+    refs: ItemRef[],
     ctx: HydrateCtx,
     seenUris: Set<AtUriString> = new Set(),
     hydrationPass = 1,
@@ -1084,8 +1156,16 @@ export class Hydrator {
     const discoveredUris = new Set<AtUriString>()
 
     // find all external records we care about
-    for (const uri of new Set(uris)) {
-      const record = state.externalRecords?.get(uri)?.record
+    const seenRefs = new Set<string>()
+    for (const { uri, cid } of refs) {
+      const key = cid ? genericRecordKey(uri, cid) : uri
+      if (seenRefs.has(key)) continue
+      seenRefs.add(key)
+      const record = (
+        cid
+          ? state.externalRecordsByRef?.get(key)
+          : state.externalRecords?.get(uri)
+      )?.record
       if (!record) continue
       const parsed = parseAtUriString(uri)
       if (
@@ -2303,16 +2383,20 @@ const actionExternalRecordTakedowns = (
   { externalRecords, externalRecordsByRef, actors, labels }: HydrationState,
   includeTakedowns?: boolean,
 ) => {
-  if (!externalRecords) return
-  for (const [uri, info] of externalRecords) {
-    if (!info) continue
-    // An absent actor entry was not hydrated; only `null` means unavailable.
-    const hidden =
-      actors?.get(uriToDid(uri)) === null ||
-      (!includeTakedowns && labels?.get(uri)?.isTakendown)
-    if (!hidden) continue
-    externalRecords.set(uri, null)
+  // An absent actor entry was not hydrated; only `null` means unavailable.
+  const isHidden = (uri: AtUriString) =>
+    actors?.get(uriToDid(uri)) === null ||
+    (!includeTakedowns && labels?.get(uri)?.isTakendown)
+  for (const [uri, info] of externalRecords ?? []) {
+    if (!info || !isHidden(uri)) continue
+    externalRecords?.set(uri, null)
     externalRecordsByRef?.set(genericRecordKey(uri, info.cid), null)
+  }
+  // Every exact version is checked on its own; versions are never collapsed.
+  for (const [key, info] of externalRecordsByRef ?? []) {
+    if (info && isHidden(parseGenericRecordKey(key).uri)) {
+      externalRecordsByRef?.set(key, null)
+    }
   }
 }
 
