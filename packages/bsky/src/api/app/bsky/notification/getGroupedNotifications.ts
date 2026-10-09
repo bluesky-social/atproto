@@ -438,9 +438,11 @@ const presentation = (
     groups,
     relatedViews: [
       ...mapDefined([...profileDids], (did) => {
-        const view = ctx.views.profileDetailed(did, hydration)
+        const view = ctx.views.profileBasic(did, hydration, {
+          includeKnownFollowers: true,
+        })
         if (!view) return
-        return app.bsky.actor.defs.profileViewDetailed.$build(view)
+        return app.bsky.actor.defs.profileViewBasic.$build(view)
       }),
       ...mapDefined([...recordUris], (uri) => {
         const collection = new AtUri(uri).collection

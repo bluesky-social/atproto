@@ -421,6 +421,7 @@ export class Views {
   profileBasic(
     did: DidString,
     state: HydrationState,
+    opts?: { includeKnownFollowers?: boolean },
   ): Un$Typed<ProfileViewBasic> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
@@ -434,6 +435,10 @@ export class Views {
         record: actor.profile,
       }),
     ]
+    const viewer = this.profileViewer(did, state)
+    if (viewer && opts?.includeKnownFollowers) {
+      viewer.knownFollowers = this.knownFollowers(did, state)
+    }
     return {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
@@ -459,7 +464,7 @@ export class Views {
             }
           : undefined,
       },
-      viewer: this.profileViewer(did, state),
+      viewer,
       labels,
       createdAt: actor.createdAt
         ? (actor.createdAt.toISOString() as DatetimeString)
