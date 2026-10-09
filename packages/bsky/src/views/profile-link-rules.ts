@@ -42,9 +42,7 @@ export function isAllowedProfileLinkUrl(url: string): boolean {
   } catch {
     return false
   }
-  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-    return false
-  }
+  if (parsed.protocol !== 'https:') return false
   const host = parsed.hostname.toLowerCase()
   return !SHORTENER_DOMAINS.some(
     (domain) => host === domain || host.endsWith(`.${domain}`),

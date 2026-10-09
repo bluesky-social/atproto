@@ -728,10 +728,11 @@ describe('pds profile views', () => {
       )
       const site = await createLink(linky, 'https://example.com')
       const shortener = await createLink(linky, 'https://bit.ly/abc')
+      const insecure = await createLink(linky, 'http://example.org')
       const someoneElses = await createLink(alice, 'https://alice.example')
       await updateProfile(linky, {
         displayName: 'links',
-        links: [site, shortener, someoneElses, support],
+        links: [site, shortener, insecure, someoneElses, support],
       })
       await network.processAll()
 

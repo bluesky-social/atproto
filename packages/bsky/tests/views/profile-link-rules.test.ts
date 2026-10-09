@@ -4,12 +4,12 @@ import { HydrationMap } from '../../src/hydration/util.js'
 import { isAllowedProfileLinkUrl } from '../../src/views/profile-link-rules.js'
 
 describe('isAllowedProfileLinkUrl', () => {
-  it('allows http(s) links', () => {
+  it('allows https links', () => {
     expect(isAllowedProfileLinkUrl('https://ko-fi.com/kat')).toBe(true)
-    expect(isAllowedProfileLinkUrl('http://example.com')).toBe(true)
   })
 
   it('rejects other schemes and invalid URLs', () => {
+    expect(isAllowedProfileLinkUrl('http://example.com')).toBe(false)
     expect(isAllowedProfileLinkUrl('javascript:alert(1)')).toBe(false)
     expect(isAllowedProfileLinkUrl('ftp://example.com')).toBe(false)
     expect(isAllowedProfileLinkUrl('example.com')).toBe(false)
