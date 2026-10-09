@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.24.3
+
+### Patch Changes
+
+- [#5617](https://github.com/bluesky-social/atproto/pull/5617) [`94e3838`](https://github.com/bluesky-social/atproto/commit/94e3838ea3bb1785a1989931a815b62b2057e5db) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add app.bsky.unspecced.getAtmosphereExploreTab with curated CMS content, canonical external modality views, and BSKY_ATMOSPHERE_EXPLORE_TAB_SERVICE configuration. Accept optional langs, countryCode, and regionCode parameters, forwarding countryCode and regionCode to the CMS.
+
+- [#5599](https://github.com/bluesky-social/atproto/pull/5599) [`648f7c9`](https://github.com/bluesky-social/atproto/commit/648f7c9ebff13a51341977abd7fe2f5b603a2783) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add canonical Atmosphere modality view schemas.
+
 ## 0.24.2
 
 ### Patch Changes
