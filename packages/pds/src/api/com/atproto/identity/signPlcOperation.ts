@@ -1,5 +1,6 @@
 import * as plc from '@did-plc/lib'
 import { check } from '@atproto/common'
+import { isPlainObject } from '@atproto/lex-data'
 import { InvalidRequestError, type Server } from '@atproto/xrpc-server'
 import { ACCESS_FULL, AuthScope } from '../../../../auth-scope.js'
 import type { AppContext } from '../../../../context.js'
@@ -44,6 +45,50 @@ export default function (server: Server, ctx: AppContext) {
             'email confirmation token required to sign PLC operations',
           )
         }
+
+        // checked before the token is consumed so a bad request doesn't burn it
+        const { verificationMethods, services } = input.body
+        if (verificationMethods !== undefined) {
+          if (!isPlainObject(verificationMethods)) {
+            throw new InvalidRequestError(
+              'verificationMethods must be an object',
+            )
+          }
+          for (const [key, value] of Object.entries(verificationMethods)) {
+            if (typeof value !== 'string') {
+              throw new InvalidRequestError(
+                `verificationMethods.${key} must be a string`,
+              )
+            }
+            if (!value.startsWith('did:key:')) {
+              throw new InvalidRequestError(
+                `verificationMethods.${key} must start with "did:key:"`,
+              )
+            }
+          }
+        }
+
+        if (services !== undefined) {
+          if (!isPlainObject(services)) {
+            throw new InvalidRequestError('services must be an object')
+          }
+          for (const [key, value] of Object.entries(services)) {
+            if (!isPlainObject(value)) {
+              throw new InvalidRequestError(`services.${key} must be an object`)
+            }
+            if (typeof value.type !== 'string') {
+              throw new InvalidRequestError(
+                `services.${key}.type must be a string`,
+              )
+            }
+            if (typeof value.endpoint !== 'string') {
+              throw new InvalidRequestError(
+                `services.${key}.endpoint must be a string`,
+              )
+            }
+          }
+        }
+
         await ctx.accountManager.assertValidEmailTokenAndCleanup(
           did,
           'plc_operation',
@@ -62,13 +107,10 @@ export default function (server: Server, ctx: AppContext) {
             rotationKeys: input.body.rotationKeys ?? lastOp.rotationKeys,
             alsoKnownAs: input.body.alsoKnownAs ?? lastOp.alsoKnownAs,
             verificationMethods:
-              // @TODO: actually validate instead of type casting
-              (input.body.verificationMethods as
-                undefined | Record<string, string>) ??
+              (verificationMethods as undefined | Record<string, string>) ??
               lastOp.verificationMethods,
             services:
-              // @TODO: actually validate instead of type casting
-              (input.body.services as
+              (services as
                 | undefined
                 | Record<string, { type: string; endpoint: string }>) ??
               lastOp.services,
