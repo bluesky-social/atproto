@@ -1,5 +1,11 @@
 # @atproto/ozone
 
+## 0.7.0
+
+### Minor Changes
+
+- [#5634](https://github.com/bluesky-social/atproto/pull/5634) [`c137c3b`](https://github.com/bluesky-social/atproto/commit/c137c3bc3cfbe96fab6886112a0599c2af518feb) Thanks [@foysalit](https://github.com/foysalit)! - Temporarily disable wildcard label queries by default to prevent expensive prefix scans. Set OZONE_LABEL_QUERY_WILDCARDS_ENABLED=true to restore support; exact URI queries remain available.
+
 ## 0.6.2
 
 ### Patch Changes
