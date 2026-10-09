@@ -80,11 +80,11 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   const { dids } = skeleton
-  const state = await ctx.hydrator.hydrateProfilesDetailed(
-    dids,
-    params.hydrateCtx,
-  )
-  return state
+  const [state, activitySubscriptions] = await Promise.all([
+    ctx.hydrator.hydrateProfiles(dids, params.hydrateCtx),
+    ctx.hydrator.actor.getActivitySubscriptions(dids, params.hydrateCtx.viewer),
+  ])
+  return { ...state, activitySubscriptions }
 }
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
