@@ -15,7 +15,7 @@ import type {
   FeatureGatesClient,
   ScopedFeatureGatesClient,
 } from '../feature-gates/index.js'
-import { app, chat, com, site } from '../lexicons/index.js'
+import { app, chat, com, place, site } from '../lexicons/index.js'
 import { hydrationLogger } from '../logger.js'
 import type {
   Bookmark as BookmarkLex,
@@ -1099,6 +1099,11 @@ export class Hydrator {
         site.standard.publication.$matches(record, { strict: false })
       ) {
         targets.set(uri, site.standard.graph.subscription.$type)
+      } else if (
+        collection === place.stream.livestream.$type &&
+        place.stream.livestream.$matches(record, { strict: false })
+      ) {
+        // Nothing to do atm
       }
     }
 
