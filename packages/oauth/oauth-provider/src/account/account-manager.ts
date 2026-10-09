@@ -69,33 +69,34 @@ export class AccountManager {
       throw new InvalidRequestError('hCaptcha token is required')
     }
 
-    const tokens = await this.hcaptchaClient.buildClientTokens(
-      deviceMetadata.ipAddress,
-      input.handle,
-      deviceMetadata.userAgent,
-    )
+    try {
+      const tokens = await this.hcaptchaClient.buildClientTokens(
+        deviceMetadata.ipAddress,
+        input.handle,
+        deviceMetadata.userAgent,
+      )
 
-    const result = await this.hcaptchaClient
-      .verify('signup', input.hcaptchaToken, deviceMetadata.ipAddress, tokens)
-      .catch((err) => {
-        throw InvalidRequestError.from(err, 'hCaptcha verification failed')
+      const result = await this.hcaptchaClient.verify(
+        'signup',
+        input.hcaptchaToken,
+        deviceMetadata.ipAddress,
+        tokens,
+      )
+
+      await this.hooks.onHcaptchaResult?.call(null, {
+        input,
+        deviceId,
+        deviceMetadata,
+        tokens,
+        result,
       })
 
-    await this.hooks.onHcaptchaResult?.call(null, {
-      input,
-      deviceId,
-      deviceMetadata,
-      tokens,
-      result,
-    })
-
-    try {
       this.hcaptchaClient.checkVerifyResult(result, tokens)
+
+      return result
     } catch (err) {
       throw InvalidRequestError.from(err, 'hCaptcha verification failed')
     }
-
-    return result
   }
 
   protected async enforceInviteCode(
@@ -143,9 +144,9 @@ export class AccountManager {
 
       const data = await this.buildSignupData(input, deviceId, deviceMetadata)
 
-      const account = await callAsync(() =>
-        this.store.createAccount(data),
-      ).catch((err) => {
+      const account = await callAsync(async () => {
+        return this.store.createAccount(data)
+      }).catch((err) => {
         throw InvalidRequestError.from(err, 'Account creation failed')
       })
 
@@ -255,16 +256,24 @@ export class AccountManager {
         await this.removeDeviceAccount(deviceId, account.did)
       }
 
-      await this.hooks.onSignedIn?.call(null, {
-        data,
-        account,
-        remembered,
-        deviceId,
-        deviceMetadata,
-        clientId,
-      })
+      try {
+        await callAsync(this.hooks.onSignedIn, {
+          data,
+          account,
+          remembered,
+          deviceId,
+          deviceMetadata,
+          clientId,
+        })
 
-      return { account, remembered }
+        return { account, remembered }
+      } catch (err) {
+        if (remembered) {
+          await this.removeDeviceAccount(deviceId, account.did)
+        }
+
+        throw err
+      }
     }).catch((err) => {
       throw InvalidRequestError.from(
         err,

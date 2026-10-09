@@ -477,8 +477,8 @@ export type OAuthHooks = {
    * `clientId` is populated when the sign-in is submitted in the context of
    * an OAuth authorization request; see {@link OAuthHooks.onSignInAttempt}.
    *
-   * Errors thrown from this hook are caught and ignored so that they do not
-   * mask the original authentication failure.
+   * Errors thrown from this hook will prevent the sign-in attempt from being
+   * processed further.
    */
   onSignInFailed?: (data: {
     data: SignInData
