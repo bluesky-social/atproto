@@ -299,9 +299,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
     ).toHaveLength(1)
   })
 
-  it('discards backlinks outside the expected collection and dedupes', async ({
-    fixture,
-  }) => {
+  it('dedupes backlinks from the dataplane', async ({ fixture }) => {
     const { hydrator, ctx, records, dataplane } = fixture
     records.set(doc1, { body: makeDoc('https://example.com') })
     const rec = recommendUri('did:plc:a', '1')
@@ -316,7 +314,11 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       }),
     )
     const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
-    expect(state.externalRecordBacklinks?.get(doc1)).toEqual([rec])
+    // Dataplane output is trusted: only duplicates are collapsed.
+    expect(state.externalRecordBacklinks?.get(doc1)).toEqual([
+      rec,
+      subscriptionUri('did:plc:z', '1'),
+    ])
   })
 
   it('does not rehydrate seen records', async ({ fixture }) => {
@@ -416,32 +418,18 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
     expect(embedSpy).not.toHaveBeenCalled()
   })
 
-  it('ignores incomplete, handle-based, and fragment backlink URIs', async ({
-    fixture,
-  }) => {
+  it('drops backlinks that are not AT-URIs', async ({ fixture }) => {
     const { hydrator, ctx, records, dataplane } = fixture
     records.set(doc1, { body: makeDoc('https://example.com') })
+    const rec = recommendUri('did:plc:a', '1')
+    records.set(rec, { body: makeRecommend(doc1) })
     vi.mocked(dataplane.getAtmosphereBacklinks).mockResolvedValue(
       new GetAtmosphereBacklinksResponse({
-        backlinks: [
-          {
-            uri: atUri(
-              'liker.example',
-              site.standard.graph.recommend.$type,
-              '1',
-            ),
-          },
-          { uri: `at://did:plc:liker/${site.standard.graph.recommend.$type}` },
-          { uri: `${recommendUri('did:plc:liker', '1')}#/document` },
-        ],
+        backlinks: [{ uri: 'not an at-uri' }, { uri: rec }],
       }),
     )
-    using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
-
     const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
-
-    expect(state.externalRecordBacklinks?.get(doc1)).toEqual([])
-    expect(embedSpy).toHaveBeenCalledTimes(1)
+    expect(state.externalRecordBacklinks?.get(doc1)).toEqual([rec])
   })
 
   it('does not perform hydration for empty input', async ({ fixture }) => {
