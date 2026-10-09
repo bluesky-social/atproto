@@ -1,5 +1,29 @@
 # @atproto/bsky
 
+## 0.2.0
+
+### Minor Changes
+
+- [#5615](https://github.com/bluesky-social/atproto/pull/5615) [`a6f5a3c`](https://github.com/bluesky-social/atproto/commit/a6f5a3c7f5e294e96971810d61f23b8f5998a5e2) Thanks [@vineyardbovines](https://github.com/vineyardbovines)! - Hydrate `app.bsky.actor.link` records into `links` on detailed profile views, leaving out taken-down links and links to URL shorteners.
+
+### Patch Changes
+
+- [#5631](https://github.com/bluesky-social/atproto/pull/5631) [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Return basic starter-pack views in grouped notifications, avoiding feed and list-member hydration.
+
+- [#5631](https://github.com/bluesky-social/atproto/pull/5631) [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Limit known-follower hydration in grouped notifications to the first ten actors per follow group.
+
+- [#5614](https://github.com/bluesky-social/atproto/pull/5614) [`976ebfb`](https://github.com/bluesky-social/atproto/commit/976ebfb1f1c0feea00d12e3eedbcaca2a690a030) Thanks [@foysalit](https://github.com/foysalit)! - Allow the trusted moderation service to bypass actor and list blocks when fetching author feeds.
+
+- [#5633](https://github.com/bluesky-social/atproto/pull/5633) [`dbb0bb5`](https://github.com/bluesky-social/atproto/commit/dbb0bb54a6228021b4169a82a3e8dbe38b42fd4c) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Extend grouped notification spotlighting to reposts and via-repost interactions, with up to three spotlights per page.
+
+- [#5631](https://github.com/bluesky-social/atproto/pull/5631) [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Run profile hydration through a shared worker and let callers request activity-subscription state alongside profile data.
+
+- [#5631](https://github.com/bluesky-social/atproto/pull/5631) [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Hydrate profiles and subscription settings in listActivitySubscriptions without fetching unused known followers, profile counts, or joined-via starter packs.
+
+- [#5631](https://github.com/bluesky-social/atproto/pull/5631) [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Return basic profiles with known followers in grouped notification related views, avoiding detailed-profile and activity-subscription hydration.
+- Updated dependencies [[`d70b673`](https://github.com/bluesky-social/atproto/commit/d70b673be6bce3b6f4d7478254e359913a101c18), [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d), [`dbb0bb5`](https://github.com/bluesky-social/atproto/commit/dbb0bb54a6228021b4169a82a3e8dbe38b42fd4c), [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d)]:
+  - @atproto/api@0.25.0
+
 ## 0.1.7
 
 ### Patch Changes
