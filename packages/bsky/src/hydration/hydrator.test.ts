@@ -6,7 +6,7 @@ import {
   atUri,
   lexStringify,
 } from '@atproto/lex'
-import { site, social } from '../lexicons/index.js'
+import { place, site, social } from '../lexicons/index.js'
 import { Service } from '../proto/bsky_connect.js'
 import {
   GetAtmosphereBacklinkCountsResponse,
@@ -808,6 +808,61 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         labelerCtx(['did:plc:plain' as DidString]),
       )
       expect(actioned.externalRecords?.get(doc1)).toBeNull()
+    })
+  })
+  describe('streamplace livestreams', () => {
+    const streamUri = atUri(
+      'did:plc:streamer',
+      place.stream.livestream.$type,
+      '1',
+    )
+    const makeStream = () =>
+      place.stream.livestream.$build({
+        title: 'Live',
+        createdAt: '2026-10-01T00:00:00.000Z',
+      })
+
+    it('hydrates records, labels, and owner profiles without dependency work', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records, dataplane } = fixture
+      records.set(streamUri, { body: makeStream() })
+      using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [streamUri],
+        ctx,
+      )
+
+      expect(state.externalRecords?.get(streamUri)).toBeTruthy()
+      expect(state.labels?.has(streamUri)).toBe(true)
+      expect(state.actors?.has('did:plc:streamer' as DidString)).toBe(true)
+      // Profiles are hydrated once, with no nested pass or dependency queries.
+      expect(hydrator.hydrateProfilesBasic).toHaveBeenCalledTimes(1)
+      expect(embedSpy).toHaveBeenCalledTimes(1)
+      expect(dataplane.getAtmosphereBacklinks).not.toHaveBeenCalled()
+      expect(dataplane.getAtmosphereBacklinkCounts).not.toHaveBeenCalled()
+      expect(state.externalRecordBacklinks?.size ?? 0).toBe(0)
+    })
+
+    it('keeps Standard Site expansion in mixed batches', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records, dataplane, seedBasic } = fixture
+      seedBasic()
+      records.set(streamUri, { body: makeStream() })
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [streamUri, doc1],
+        ctx,
+      )
+
+      const targets = vi
+        .mocked(dataplane.getAtmosphereBacklinks)
+        .mock.calls.map(([req]) => req.targetUri)
+      expect(targets).toEqual(expect.arrayContaining([doc1, pubUri]))
+      expect(targets).not.toContain(streamUri)
+      expect(state.externalRecordBacklinks?.has(streamUri)).toBe(false)
+      expect(state.externalRecords?.get(pubUri)).toBeTruthy()
+      expect(state.actors?.has('did:plc:streamer' as DidString)).toBe(true)
     })
   })
 })
