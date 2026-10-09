@@ -127,6 +127,7 @@ const hydration = async (
     return ctx.hydrator.hydrateProfilesDetailed(
       suggestedDids,
       params.hydrateCtx,
+      { knownFollowersDids: suggestedDids, activitySubscriptions: true },
     )
   } else {
     return ctx.hydrator.hydrateProfiles(suggestedDids, params.hydrateCtx)
@@ -151,7 +152,7 @@ const presentation = (
   const { ctx, hydration, skeleton } = input
   const { suggestedDids, contentLanguage } = skeleton
   const suggestions = mapDefined(suggestedDids, (did) =>
-    ctx.views.profileKnownFollowers(did, hydration),
+    ctx.views.profile(did, hydration),
   )
   return {
     recIdStr: skeleton.recIdStr,

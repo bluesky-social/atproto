@@ -56,7 +56,10 @@ const hydration = async (input: {
   return ctx.hydrator.hydrateProfilesDetailed(
     skeleton.dids,
     params.hydrateCtx,
-    { knownFollowersDids: skeleton.socialProofDids },
+    {
+      knownFollowersDids: skeleton.socialProofDids,
+      activitySubscriptions: true,
+    },
   )
 }
 

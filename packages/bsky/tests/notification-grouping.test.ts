@@ -7,6 +7,7 @@ import {
   type AtUriString,
   type DatetimeString,
   type DidString,
+  type HandleString,
   asStringFormat,
   toDatetimeString,
 } from '@atproto/lex'
@@ -1643,7 +1644,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         const followers: DidString[] = []
         const name = `social-proof-${fixtureIndex++}`
         for (let index = 0; index < 12; index++) {
-          const handle = `${name}-${index}.test`
+          const handle: HandleString = `${name}-${index}.test`
           const { did } = await sc.createAccount(`${name}-${index}`, {
             email: `${handle}@test.com`,
             handle,

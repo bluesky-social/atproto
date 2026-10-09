@@ -455,9 +455,7 @@ const presentation = (
     groups,
     relatedViews: [
       ...mapDefined([...profileDids], (did) => {
-        const view = ctx.views.profileBasic(did, hydration, {
-          includeKnownFollowers: true,
-        })
+        const view = ctx.views.profileBasic(did, hydration)
         if (!view) return
         return app.bsky.actor.defs.profileViewBasic.$build(view)
       }),

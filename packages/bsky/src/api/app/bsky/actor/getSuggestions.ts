@@ -118,7 +118,11 @@ const hydration = async (input: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, params.hydrateCtx)
+  return ctx.hydrator.hydrateProfilesDetailed(
+    skeleton.dids,
+    params.hydrateCtx,
+    { knownFollowersDids: skeleton.dids, activitySubscriptions: true },
+  )
 }
 
 const noBlocksOrMutes = (input: {
@@ -144,7 +148,7 @@ const presentation = (input: {
 }) => {
   const { ctx, skeleton, hydration } = input
   const actors = mapDefined(skeleton.dids, (did) =>
-    ctx.views.profileKnownFollowers(did, hydration),
+    ctx.views.profile(did, hydration),
   )
   return {
     actors,
