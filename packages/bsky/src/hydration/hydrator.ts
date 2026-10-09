@@ -51,6 +51,7 @@ import {
   type ExternalRecordsByRef,
   type SiteStandardDocuments,
   type SiteStandardPublications,
+  genericRecordKey,
   parseGenericRecordKey,
 } from './external.js'
 import {
@@ -968,11 +969,20 @@ export class Hydrator {
     if (!ssUris.length) return { ctx }
     const dids = dedupeStrs(ssUris.map((uri) => uriToDid(uri)))
 
-    const [{ documents, publications }, labels, profiles] = await Promise.all([
-      this.external.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
-      this.label.getLabelsForSubjects(ssUris, ctx.labelers),
-      this.hydrateProfilesBasic(dids, ctx),
-    ])
+    const [externalRecords, { documents, publications }, labels, profiles] =
+      await Promise.all([
+        this.external.getRecordsByURI(uris),
+        this.external.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
+        this.label.getLabelsForSubjects(ssUris, ctx.labelers),
+        this.hydrateProfilesBasic(dids, ctx),
+      ])
+
+    const externalRecordsByRef: ExternalRecordsByRef = new HydrationMap()
+    for (const [uri, info] of externalRecords) {
+      if (!info) continue
+      externalRecordsByRef.set(genericRecordKey(uri, info.cid), info)
+    }
+
     if (!ctx.includeTakedowns) {
       actionSiteStandardTakedownLabels(documents, publications, labels)
     }
@@ -994,9 +1004,12 @@ export class Hydrator {
       ? mergeStates(profiles, await this.hydrateProfilesBasic(extraDids, ctx))
       : profiles
 
+
     return mergeStates(profilesState, {
       ctx,
       labels,
+      externalRecords,
+      externalRecordsByRef,
       siteStandardDocuments: documents,
       siteStandardPublications: publications,
     })
