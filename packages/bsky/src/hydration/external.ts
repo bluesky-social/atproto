@@ -111,6 +111,7 @@ export type AssociatedSiteStandardRecord<T> = {
 
 export class ExternalHydrator {
   static readonly MAX_BACKLINK_PREVIEWS = 3
+  static readonly MAX_BACKLINK_GALLERY_ITEMS = 10
   static readonly MAX_BACKLINK_FANOUT = 8
 
   constructor(public dataplane: DataPlaneClient) {}

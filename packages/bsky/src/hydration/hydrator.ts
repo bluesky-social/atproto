@@ -15,7 +15,7 @@ import type {
   FeatureGatesClient,
   ScopedFeatureGatesClient,
 } from '../feature-gates/index.js'
-import { app, chat, com, place, site } from '../lexicons/index.js'
+import { app, chat, com, place, site, social } from '../lexicons/index.js'
 import { hydrationLogger } from '../logger.js'
 import type {
   Bookmark as BookmarkLex,
@@ -1057,7 +1057,11 @@ export class Hydrator {
     // @NOTE Null entries are completed lookups too, not candidates for retry.
     for (const uri of state.externalRecords?.keys() ?? []) seenUris.add(uri)
 
-    const targets = new Map<AtUriString, NsidString>()
+    // Backlink sources to sample per target, each with its own bound.
+    const targets = new Map<
+      AtUriString,
+      { collection: NsidString; limit: number }[]
+    >()
     const discoveredUris = new Set<AtUriString>()
 
     // find all external records we care about
@@ -1082,60 +1086,97 @@ export class Hydrator {
         collection === site.standard.document.$type &&
         site.standard.document.$matches(record, { strict: false })
       ) {
-        targets.set(uri, site.standard.graph.recommend.$type)
+        targets.set(uri, [
+          {
+            collection: site.standard.graph.recommend.$type,
+            limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
+          },
+        ])
 
-        const publication = parseAtUriString(record.site)
-        if (
-          publication.success &&
-          isDidString(publication.value.authority) &&
-          publication.value.collection === site.standard.publication.$type &&
-          publication.value.rkey &&
-          !publication.value.hash
-        ) {
-          discoveredUris.add(record.site as AtUriString)
-        }
+        const publicationUri = recordUriOf(
+          record.site,
+          site.standard.publication.$type,
+        )
+        if (publicationUri) discoveredUris.add(publicationUri)
       } else if (
         collection === site.standard.publication.$type &&
         site.standard.publication.$matches(record, { strict: false })
       ) {
-        targets.set(uri, site.standard.graph.subscription.$type)
+        targets.set(uri, [
+          {
+            collection: site.standard.graph.subscription.$type,
+            limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
+          },
+        ])
       } else if (
         collection === place.stream.livestream.$type &&
         place.stream.livestream.$matches(record, { strict: false })
       ) {
         // Nothing to do atm
+      } else if (
+        collection === social.grain.gallery.$type &&
+        social.grain.gallery.$matches(record, { strict: false })
+      ) {
+        targets.set(uri, [
+          {
+            collection: social.grain.favorite.$type,
+            limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
+          },
+          {
+            collection: social.grain.gallery.item.$type,
+            limit: ExternalHydrator.MAX_BACKLINK_GALLERY_ITEMS,
+          },
+        ])
+      } else if (
+        collection === social.grain.gallery.item.$type &&
+        social.grain.gallery.item.$matches(record, { strict: false })
+      ) {
+        // Items have no backlinks; they only point at their photo.
+        const photoUri = recordUriOf(record.item, social.grain.photo.$type)
+        if (photoUri) discoveredUris.add(photoUri)
       }
     }
 
-    if (!targets.size) return { ctx }
-
-    const externalRecordBacklinks: ExternalRecordBacklinks = new HydrationMap()
-    const [externalRecordBacklinkCounts] = await Promise.all([
-      this.external.getAtmosphereBacklinkCounts([...targets.keys()]),
-      (async () => {
-        // @NOTE Bound fan-out as well as each sample; counts are independent.
-        for (const batch of chunkArray(
-          [...targets],
-          ExternalHydrator.MAX_BACKLINK_FANOUT,
-        )) {
-          await Promise.all(
-            batch.map(async ([uri, collection]) => {
-              const page = await this.external.getAtmosphereBacklinks(
-                uri,
-                collection,
-                { limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS },
-              )
-              const links = page.backlinks
-                .filter((b) => parseAtUriString(b.uri).success)
-                .slice(0, ExternalHydrator.MAX_BACKLINK_PREVIEWS)
-                .map((b) => b.uri)
-              externalRecordBacklinks.set(uri, dedupeStrs(links))
-              links.forEach((link) => discoveredUris.add(link))
-            }),
-          )
-        }
-      })(),
-    ])
+    let externalRecordBacklinks: ExternalRecordBacklinks | undefined
+    let externalRecordBacklinkCounts: ExternalRecordBacklinkCounts | undefined
+    if (targets.size) {
+      const backlinks: ExternalRecordBacklinks = new HydrationMap()
+      for (const uri of targets.keys()) backlinks.set(uri, [])
+      const queries = [...targets].flatMap(([uri, sources]) =>
+        sources.map((source) => ({ uri, ...source })),
+      )
+      const [counts] = await Promise.all([
+        this.external.getAtmosphereBacklinkCounts([...targets.keys()]),
+        (async () => {
+          // @NOTE Bound fan-out as well as each sample; counts are independent.
+          for (const batch of chunkArray(
+            queries,
+            ExternalHydrator.MAX_BACKLINK_FANOUT,
+          )) {
+            await Promise.all(
+              batch.map(async ({ uri, collection, limit }) => {
+                const page = await this.external.getAtmosphereBacklinks(
+                  uri,
+                  collection,
+                  { limit },
+                )
+                const links = page.backlinks
+                  .filter((b) => parseAtUriString(b.uri).success)
+                  .slice(0, limit)
+                  .map((b) => b.uri)
+                backlinks.set(
+                  uri,
+                  dedupeStrs([...(backlinks.get(uri) ?? []), ...links]),
+                )
+                links.forEach((link) => discoveredUris.add(link))
+              }),
+            )
+          }
+        })(),
+      ])
+      externalRecordBacklinks = backlinks
+      externalRecordBacklinkCounts = counts
+    }
 
     const newUris = [...discoveredUris].filter((uri) => !seenUris.has(uri))
     const nested = newUris.length
@@ -2193,6 +2234,24 @@ const actionTakedownLabels = (
       hydrationMap.set(key, null)
     }
   }
+}
+
+/**
+ * The URI when an externally authored reference is a complete DID-based
+ * record URI in `collection`, with a record key and no fragment.
+ */
+const recordUriOf = (
+  value: string,
+  collection: NsidString,
+): AtUriString | undefined => {
+  const parsed = parseAtUriString(value)
+  return parsed.success &&
+    isDidString(parsed.value.authority) &&
+    parsed.value.collection === collection &&
+    parsed.value.rkey &&
+    !parsed.value.hash
+    ? (value as AtUriString)
+    : undefined
 }
 
 /**
