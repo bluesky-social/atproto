@@ -352,6 +352,7 @@ export async function generateMockSetup(env: TestNetwork) {
       repo: urip.host,
       rkey: urip.rkey,
     })
+    const targetRef = { uri: target.uri, cid: target.cid }
     const author = picka(userAgents)
     try {
       const post = await author.app.bsky.feed.post.create(
@@ -359,8 +360,8 @@ export async function generateMockSetup(env: TestNetwork) {
         {
           text: picka(replyTexts),
           reply: {
-            root: target.value.reply?.root ?? target,
-            parent: target,
+            root: target.value.reply?.root ?? targetRef,
+            parent: targetRef,
           },
           createdAt: date.next().value,
         },
@@ -368,7 +369,6 @@ export async function generateMockSetup(env: TestNetwork) {
 
       posts.push(post)
     } catch (err) {
-      // @TODO Investigate why this sometimes fails.
       console.error('Failed to create reply', err)
     }
   }
