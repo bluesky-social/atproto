@@ -11,6 +11,7 @@ import type {
 } from '@atproto/oauth-types'
 import type {
   DeleteAccountConfirmInput,
+  DeviceAccount,
   DisableEmailAuthFactorInput,
   EnableEmailAuthFactorInput,
   ResetPasswordConfirmInput,
@@ -354,6 +355,10 @@ export type OAuthHooks = {
     input: SignUpInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    /**
+     * If the user is signing up as part of an oauth flow, this will be the
+     * client ID of the oauth application that initiated the flow.
+     */
     clientId: ClientId | undefined
   }) => Awaitable<void>
 
@@ -436,6 +441,7 @@ export type OAuthHooks = {
     data: SignInData
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    deviceAccounts: readonly DeviceAccount[]
     clientId: ClientId | undefined
   }) => Awaitable<void>
 
@@ -450,6 +456,7 @@ export type OAuthHooks = {
   onSignedIn?: (data: {
     data: SignInData
     account: Account
+    remembered: boolean
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
     clientId: ClientId | undefined

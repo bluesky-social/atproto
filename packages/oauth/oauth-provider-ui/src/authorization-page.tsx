@@ -61,6 +61,8 @@ createRoot(container).render(
             <SessionProvider
               initialSessions={initialSessions}
               initialSelected={authorizeData.selectedDid}
+              disableRemember={false}
+              rememberDefault={false}
             >
               <App />
             </SessionProvider>
@@ -77,7 +79,8 @@ function App() {
   const loginHint = authorizeData.loginHint || undefined
 
   const { notifyError } = useNotificationsContext()
-  const { session, setSession, api } = useSessionContext()
+  const { session, setSession, api, disableRemember, rememberDefault } =
+    useSessionContext()
   const [rejected, setRejected] = useState<null | boolean>(null)
   const [redirectUrl, setRedirectUrl] = useState<string | undefined>(undefined)
 
@@ -178,6 +181,8 @@ function App() {
       onCancel={doRejectAndRedirect}
       forcedIdentifier={loginHint}
       promptMode={authorizeData.promptMode}
+      disableRemember={disableRemember}
+      rememberDefault={rememberDefault}
     >
       <ActivatedAccountGate
         onCancel={

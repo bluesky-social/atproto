@@ -890,22 +890,11 @@ export class OAuthProvider extends OAuthVerifier {
     const data = await this.requestManager
       .consumeCode(code)
       .catch(async (err) => {
-        // Code not found in request manager: check for replays
+        // Code not found in request manager: delete the existing OAuth session
+        // if the code was replayed (already converted into a token)
         const tokenInfo = await this.tokenManager.findByCode(code)
         if (tokenInfo) {
-          // try/finally to ensure that both code path get executed (sequentially)
-          try {
-            // "code" was replayed, delete existing session
-            await this.tokenManager.deleteToken(tokenInfo.id)
-          } finally {
-            // As an additional security measure, we also sign the device out,
-            // so that the device cannot be used to access the account anymore
-            // without a new authentication.
-            const { deviceId, did } = tokenInfo.data
-            if (deviceId) {
-              await this.accountManager.removeDeviceAccount(deviceId, did)
-            }
-          }
+          await this.tokenManager.deleteToken(tokenInfo.id)
         }
 
         throw InvalidGrantError.from(err, `Invalid code`)
