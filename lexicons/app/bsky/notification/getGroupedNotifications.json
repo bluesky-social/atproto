@@ -58,7 +58,7 @@
                   "app.bsky.feed.defs#generatorView",
                   "app.bsky.feed.defs#notFoundPost",
                   "app.bsky.feed.defs#postView",
-                  "app.bsky.graph.defs#starterPackView"
+                  "app.bsky.graph.defs#starterPackViewBasic"
                 ]
               }
             }

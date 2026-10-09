@@ -1464,7 +1464,7 @@ export class Hydrator {
         { posts },
       ),
       this.hydrateFeedGens([...feedGenUris], ctx),
-      this.hydrateStarterPacks([...starterPackUris], ctx),
+      this.hydrateStarterPacksBasic([...starterPackUris], ctx),
     ])
     return mergeManyStates(
       profileState,

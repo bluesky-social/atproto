@@ -2116,7 +2116,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
           uri: generator.uriStr,
         },
         {
-          $type: app.bsky.graph.defs.starterPackView.$type,
+          $type: app.bsky.graph.defs.starterPackViewBasic.$type,
           uri: starterPack.uriStr,
         },
       ]

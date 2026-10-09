@@ -468,9 +468,9 @@ const presentation = (
           if (!view) return
           return view
         } else if (collection === app.bsky.graph.starterpack.$type) {
-          const view = ctx.views.starterPack(uri, hydration)
+          const view = ctx.views.starterPackBasic(uri, hydration)
           if (!view) return
-          return app.bsky.graph.defs.starterPackView.$build(view)
+          return app.bsky.graph.defs.starterPackViewBasic.$build(view)
         } else if (collection === app.bsky.feed.generator.$type) {
           const view = ctx.views.feedGenerator(uri, hydration)
           if (!view) return
