@@ -988,14 +988,19 @@ export class Hydrator {
       externalRecordsByRef.set(genericRecordKey(uri, info.cid), info)
     }
 
+    // Merge record and profile state, then hide moderated records so they
+    // trigger no dependency expansion.
+    const baseState = mergeStates(profiles, {
+      ctx,
+      labels,
+      externalRecords,
+      externalRecordsByRef,
+    })
+    actionExternalRecordTakedowns(baseState, ctx.includeTakedowns)
+
     // Discover and hydrate any additional view dependencies
     const depsState = await this.hydrateExternalViewDependencies(
-      mergeStates(profiles, {
-        ctx,
-        labels,
-        externalRecords,
-        externalRecordsByRef,
-      }),
+      baseState,
       allUris,
       ctx,
       seenUris,
@@ -2186,6 +2191,29 @@ const actionTakedownLabels = (
     if (labels.get(key)?.isTakendown) {
       hydrationMap.set(key, null)
     }
+  }
+}
+
+/**
+ * Null generic external records (in both the URI-keyed and exact-ref maps,
+ * keeping their keys) that are taken down by an actionable label, unless
+ * takedowns are included, or whose owner is explicitly unavailable. Applies to
+ * each record independently; counts and other records are unaffected.
+ */
+const actionExternalRecordTakedowns = (
+  { externalRecords, externalRecordsByRef, actors, labels }: HydrationState,
+  includeTakedowns?: boolean,
+) => {
+  if (!externalRecords) return
+  for (const [uri, info] of externalRecords) {
+    if (!info) continue
+    // An absent actor entry was not hydrated; only `null` means unavailable.
+    const hidden =
+      actors?.get(uriToDid(uri)) === null ||
+      (!includeTakedowns && labels?.get(uri)?.isTakendown)
+    if (!hidden) continue
+    externalRecords.set(uri, null)
+    externalRecordsByRef?.set(genericRecordKey(uri, info.cid), null)
   }
 }
 
