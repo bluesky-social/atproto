@@ -48,6 +48,7 @@ import {
   type ExternalRecordBacklinkCounts,
   type ExternalRecordBacklinks,
   type ExternalRecords,
+  type ExternalRecordsByRef,
   type SiteStandardDocuments,
   type SiteStandardPublications,
   parseGenericRecordKey,
@@ -178,6 +179,7 @@ export type HydrationState = {
   verifications?: Verifications
   bookmarks?: Bookmarks
   externalRecords?: ExternalRecords
+  externalRecordsByRef?: ExternalRecordsByRef
   /** Available backlink source URIs per target, potentially from a partial page. */
   externalRecordBacklinks?: ExternalRecordBacklinks
   externalRecordBacklinkCounts?: ExternalRecordBacklinkCounts
@@ -2008,6 +2010,10 @@ export const mergeStates = (
     verifications: mergeMaps(stateA.verifications, stateB.verifications),
     bookmarks: mergeNestedMaps(stateA.bookmarks, stateB.bookmarks),
     externalRecords: mergeMaps(stateA.externalRecords, stateB.externalRecords),
+    externalRecordsByRef: mergeMaps(
+      stateA.externalRecordsByRef,
+      stateB.externalRecordsByRef,
+    ),
     externalRecordBacklinks: mergeMaps(
       stateA.externalRecordBacklinks,
       stateB.externalRecordBacklinks,
