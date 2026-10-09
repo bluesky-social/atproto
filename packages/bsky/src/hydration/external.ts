@@ -110,6 +110,9 @@ export type AssociatedSiteStandardRecord<T> = {
 }
 
 export class ExternalHydrator {
+  static readonly MAX_BACKLINK_PREVIEWS = 3
+  static readonly MAX_BACKLINK_FANOUT = 8
+
   constructor(public dataplane: DataPlaneClient) {}
 
   /** Fetch exact record versions; unavailable records are represented by null. */
