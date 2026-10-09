@@ -1,9 +1,16 @@
 import type stream from 'node:stream'
-import { NoSuchKey, S3, type S3ClientConfig } from '@aws-sdk/client-s3'
+import {
+  GetObjectCommand,
+  NoSuchKey,
+  NotFound,
+  S3,
+  type S3ClientConfig,
+} from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
-import type { CID } from 'multiformats/cid'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { SECOND, aggregateErrors, chunkArray } from '@atproto/common-web'
 import { randomStr } from '@atproto/crypto'
+import type { Cid } from '@atproto/lex-data'
 import {
   BlobNotFoundError,
   type BlobStore,
@@ -151,11 +158,11 @@ export class S3BlobStore implements BlobStore {
     return `tmp/${this.did}/${key}`
   }
 
-  private getStoredPath(cid: CID): string {
+  private getStoredPath(cid: Cid): string {
     return `blocks/${this.did}/${cid.toString()}`
   }
 
-  private getQuarantinedPath(cid: CID): string {
+  private getQuarantinedPath(cid: Cid): string {
     return `quarantine/${this.did}/${cid.toString()}`
   }
 
@@ -205,7 +212,7 @@ export class S3BlobStore implements BlobStore {
     return key
   }
 
-  async makePermanent(key: string, cid: CID): Promise<void> {
+  async makePermanent(key: string, cid: Cid): Promise<void> {
     try {
       // @NOTE we normally call this method when we know the file is temporary.
       // Because of this, we optimistically move the file, allowing to make
@@ -231,27 +238,27 @@ export class S3BlobStore implements BlobStore {
   }
 
   async putPermanent(
-    cid: CID,
+    cid: Cid,
     bytes: Uint8Array | stream.Readable,
   ): Promise<void> {
     await this.uploadBytes(this.getStoredPath(cid), bytes)
   }
 
-  async quarantine(cid: CID): Promise<void> {
+  async quarantine(cid: Cid): Promise<void> {
     await this.move({
       from: this.getStoredPath(cid),
       to: this.getQuarantinedPath(cid),
     })
   }
 
-  async unquarantine(cid: CID): Promise<void> {
+  async unquarantine(cid: Cid): Promise<void> {
     await this.move({
       from: this.getQuarantinedPath(cid),
       to: this.getStoredPath(cid),
     })
   }
 
-  private async getObject(cid: CID) {
+  private async getObject(cid: Cid) {
     const res = await this.client.getObject({
       Bucket: this.bucket,
       Key: this.getStoredPath(cid),
@@ -263,21 +270,51 @@ export class S3BlobStore implements BlobStore {
     }
   }
 
-  async getBytes(cid: CID): Promise<Uint8Array> {
+  async getBytes(cid: Cid): Promise<Uint8Array> {
     const res = await this.getObject(cid)
     return res.transformToByteArray()
   }
 
-  async getStream(cid: CID): Promise<stream.Readable> {
+  async getStream(cid: Cid): Promise<stream.Readable> {
     const res = await this.getObject(cid)
     return res as stream.Readable
   }
 
-  async delete(cid: CID): Promise<void> {
+  /** Creates a one-minute presigned GET URL with attachment response headers. */
+  async getDownloadUrl(cid: Cid, mimeType: string): Promise<string> {
+    const params = { Bucket: this.bucket, Key: this.getStoredPath(cid) }
+    try {
+      await this.client.headObject(params)
+    } catch (cause) {
+      if (cause instanceof NotFound || cause instanceof NoSuchKey) {
+        throw new BlobNotFoundError(undefined, { cause })
+      }
+      throw cause
+    }
+    const command = new GetObjectCommand({
+      ...params,
+      ResponseContentType: mimeType,
+      ResponseContentDisposition: `attachment; filename="${cid}"`,
+      ResponseCacheControl: 'no-store',
+    })
+    // @NOTE An optional checksum request can reduce S3-provider compatibility.
+    // The PDS does not consume the download to validate its checksum.
+    command.middlewareStack.add(
+      (next) => async (args) => {
+        const request = args.request as { headers: Record<string, string> }
+        delete request.headers['x-amz-checksum-mode']
+        return next(args)
+      },
+      { step: 'build', name: 'omitDownloadChecksumMode' },
+    )
+    return getSignedUrl(this.client, command, { expiresIn: 60 })
+  }
+
+  async delete(cid: Cid): Promise<void> {
     await this.deleteKey(this.getStoredPath(cid))
   }
 
-  async deleteMany(cids: CID[]): Promise<void> {
+  async deleteMany(cids: Cid[]): Promise<void> {
     const errors: unknown[] = []
     for (const chunk of chunkArray(cids, 500)) {
       try {
@@ -290,7 +327,7 @@ export class S3BlobStore implements BlobStore {
     if (errors.length) throw aggregateErrors(errors)
   }
 
-  async hasStored(cid: CID): Promise<boolean> {
+  async hasStored(cid: Cid): Promise<boolean> {
     return this.hasKey(this.getStoredPath(cid))
   }
 

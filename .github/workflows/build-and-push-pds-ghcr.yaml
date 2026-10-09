@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - msi/pds-otel
+      - divy/pds-blob-redirect
 
 env:
   REGISTRY: ghcr.io

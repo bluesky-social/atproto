@@ -7,6 +7,24 @@ TypeScript reference implementation of an atproto PDS.
 
 If you are interested in self-hosting a PDS, you probably want this repository instead, which has a thin service wrapper, documentation, a Dockerfile, etc: https://github.com/bluesky-social/pds
 
+## Blob downloads
+
+With S3 blob storage, `com.atproto.sync.getBlob` responds with a non-cacheable
+307 redirect to a presigned download URL valid for one minute. Disk blob
+storage streams the response directly. Downloads retain their MIME type and
+use `Content-Disposition: attachment`.
+
+Presigned URLs use the configured S3 region, endpoint, and path style. For
+Cloudflare R2, set `PDS_BLOBSTORE_S3_REGION=auto` and
+`PDS_BLOBSTORE_S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com`,
+along with the bucket and access credentials. The endpoint must be reachable
+by clients. Browser applications fetching redirected blobs also need the
+bucket's CORS rules to allow their origins and GET requests.
+
+Account and blob availability are checked before issuing each redirect.
+Already-issued URLs may remain usable until they expire, unless the object
+is removed or quarantined.
+
 ## License
 
 This project is dual-licensed under MIT and Apache 2.0 terms:
