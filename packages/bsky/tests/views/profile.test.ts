@@ -730,6 +730,76 @@ describe('pds profile views', () => {
     })
   })
 
+  describe('beta links', () => {
+    let linky: DidString
+
+    beforeAll(async () => {
+      await sc.createAccount('linky', {
+        handle: 'linky.test',
+        email: 'linky@test.com',
+        password: 'linky-pass',
+      })
+      linky = sc.dids.linky
+      await updateProfile(linky, {
+        displayName: 'linky',
+        betaLinks: [
+          { uri: 'https://ko-fi.com/linky', title: 'Tip jar' },
+          { uri: 'javascript:alert(1)' },
+          { uri: 'http://example.org' },
+          { uri: 'https://example.com' },
+        ],
+        betaLinksGermIndex: 1,
+      })
+      await network.processAll()
+    })
+
+    const getLinkyProfile = async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: linky },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      return data as typeof data & {
+        betaLinks?: unknown
+        betaLinksGermIndex?: unknown
+      }
+    }
+
+    it('returns well-formed links from the profile record', async () => {
+      const data = await getLinkyProfile()
+      expect(data.betaLinks).toEqual([
+        { uri: 'https://ko-fi.com/linky', title: 'Tip jar' },
+        { uri: 'https://example.com' },
+      ])
+      expect(data.betaLinksGermIndex).toEqual(1)
+    })
+
+    it('omits links for profiles without them', async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: alice },
+        {
+          headers: await network.serviceHeaders(
+            bob,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data).not.toHaveProperty('betaLinks')
+    })
+
+    it('hides links when the mod service applies the hide-links label', async () => {
+      await createLabel({ uri: linky, cid: '', val: 'hide-links' })
+      await network.processAll()
+      const data = await getLinkyProfile()
+      expect(data.betaLinks).toBeUndefined()
+      expect(data.betaLinksGermIndex).toBeUndefined()
+    })
+  })
+
   it('filters out Go zero-value dates from dataplane', async () => {
     using getActorsSpy = vi.spyOn(network.bsky.ctx.dataplane, 'getActors')
 
