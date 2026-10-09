@@ -13,7 +13,7 @@
           "url": {
             "type": "string",
             "format": "uri",
-            "description": "The link destination, an http(s) URL."
+            "description": "The link destination, an https URL."
           },
           "title": {
             "type": "string",
