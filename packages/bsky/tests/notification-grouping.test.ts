@@ -1556,7 +1556,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
               ...(remaining
                 ? [
                     {
-                      $type: app.bsky.actor.defs.profileViewDetailed.$type,
+                      $type: app.bsky.actor.defs.profileViewBasic.$type,
                       did: sc.dids.bob,
                     },
                   ]
