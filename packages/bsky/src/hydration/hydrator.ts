@@ -952,16 +952,26 @@ export class Hydrator {
     })
   }
 
-  /** Hydrate external records, labels, profiles, and their view dependencies. */
+  /**
+   * Hydrate external records, labels, profiles, and their view dependencies.
+   * `hydrationPass` is the 1-based number of this generic batch within the traversal
+   * (the root batch is pass 1); nested batches continue the count.
+   */
   async hydrateEmbedExternalViewFromUris(
     uris: AtUriString[],
     ctx: HydrateCtx,
     seenUris: Set<AtUriString> = new Set(),
+    hydrationPass = 1,
   ): Promise<HydrationState> {
-    const allUris = dedupeStrs(uris)
+    // Filter at the entry point so every URI is fetched at most once per shared
+    // traversal, even for callers that did not prefilter their input. Null or
+    // unavailable results stay in `seenUris` as completed lookups. Nothing
+    // unseen means no hydration work, and no pass is consumed.
+    const allUris = dedupeStrs(uris).filter((uri) => !seenUris.has(uri))
     if (!allUris.length) return { ctx }
 
-    // Cache of hydrated URIs
+    // Mark synchronously, before the first await, so concurrent work in this
+    // traversal cannot schedule these URIs again.
     for (const uri of allUris) seenUris.add(uri)
 
     // TODO Remove this once we're fully generic
@@ -1004,6 +1014,7 @@ export class Hydrator {
       allUris,
       ctx,
       seenUris,
+      hydrationPass,
     )
 
     // Set values to `null` in maps if records are taken down
@@ -1046,13 +1057,21 @@ export class Hydrator {
 
   /**
    * Discover view dependencies by URI collection and hydrate new URIs in a batch.
-   * Returns additional state; a shared seenUris set prevents refetches across nested passes.
+   * Returns additional state.
+   *
+   * `seenUris` prevents repeated URIs and cycles across nested passes, but not
+   * a chain of distinct URIs; `MAX_EXTERNAL_HYDRATION_PASSES` bounds that, as
+   * a guard against future association rules or unexpected expansion. `hydrationPass`
+   * is the number of the generic batch that produced `state` (1-based, default
+   * 1 for prehydrated state, which is treated as the root batch); the next
+   * nested batch is `hydrationPass + 1`.
    */
   async hydrateExternalViewDependencies(
     state: HydrationState,
     uris: AtUriString[],
     ctx: HydrateCtx,
     seenUris: Set<AtUriString> = new Set(),
+    hydrationPass = 1,
   ): Promise<HydrationState> {
     // @NOTE Null entries are completed lookups too, not candidates for retry.
     for (const uri of state.externalRecords?.keys() ?? []) seenUris.add(uri)
@@ -1179,9 +1198,29 @@ export class Hydrator {
     }
 
     const newUris = [...discoveredUris].filter((uri) => !seenUris.has(uri))
-    const nested = newUris.length
-      ? await this.hydrateEmbedExternalViewFromUris(newUris, ctx, seenUris)
-      : {}
+    let nested: HydrationState = {}
+    if (
+      newUris.length &&
+      hydrationPass >= ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES
+    ) {
+      // Keep the partial state. Skipped URIs are not marked seen: they were
+      // never fetched.
+      hydrationLogger.warn(
+        {
+          hydrationPass,
+          maxPasses: ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES,
+          skipped: newUris.length,
+        },
+        'external hydration pass limit reached, skipping dependencies',
+      )
+    } else if (newUris.length) {
+      nested = await this.hydrateEmbedExternalViewFromUris(
+        newUris,
+        ctx,
+        seenUris,
+        hydrationPass + 1,
+      )
+    }
 
     return mergeStates(
       { ctx, externalRecordBacklinks, externalRecordBacklinkCounts },

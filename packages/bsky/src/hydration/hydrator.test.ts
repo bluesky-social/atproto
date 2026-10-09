@@ -7,6 +7,7 @@ import {
   lexStringify,
 } from '@atproto/lex'
 import { place, site, social } from '../lexicons/index.js'
+import { hydrationLogger } from '../logger.js'
 import { Service } from '../proto/bsky_connect.js'
 import {
   GetAtmosphereBacklinkCountsResponse,
@@ -15,6 +16,7 @@ import {
   RecordLookupStatus,
 } from '../proto/bsky_pb.js'
 import type { Actors } from './actor.js'
+import { ExternalHydrator } from './external.js'
 import {
   HydrateCtx,
   Hydrator,
@@ -1133,6 +1135,179 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(state.externalRecords?.get(pubUri)).toBeTruthy()
       expect(state.externalRecords?.get(photoUris[0])).toBeTruthy()
       expect(state.actors?.has('did:plc:streamer' as DidString)).toBe(true)
+    })
+  })
+  describe('traversal control', () => {
+    type Fixture = ReturnType<typeof createFixture>
+    const chainUri = (n: number) =>
+      atUri('did:plc:chain', site.standard.document.$type, `c${n}`)
+    // A synthetic chain of distinct documents: each document's recommend
+    // backlinks (from the faked dataplane) return the next document.
+    const seedChain = ({ records, dataplane }: Fixture, length: number) => {
+      for (let i = 0; i < length; i++) {
+        records.set(chainUri(i), { body: makeDoc('https://example.com') })
+      }
+      vi.mocked(dataplane.getAtmosphereBacklinks).mockImplementation(
+        async ({ targetUri }) => {
+          const n = Number(targetUri?.split('/c').pop())
+          return new GetAtmosphereBacklinksResponse({
+            backlinks: n + 1 < length ? [{ uri: chainUri(n + 1) }] : [],
+          })
+        },
+      )
+    }
+    const labelSubjects = ({ hydrator }: Fixture) =>
+      vi
+        .mocked(hydrator.label.getLabelsForSubjects)
+        .mock.calls.map(([subjects]) => subjects)
+
+    it('fetches each unseen URI once and skips all-seen input', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane, records } = fixture
+      records.set(doc1, { body: makeDoc('https://example.com') })
+      records.set(doc2, { body: makeDoc('https://example.com') })
+      const seen = new Set<AtUriString>([doc2])
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [doc1, doc1, doc2],
+        ctx,
+        seen,
+      )
+      expect(labelSubjects(fixture)[0]).toEqual([doc1])
+      expect(state.externalRecords?.has(doc1)).toBe(true)
+      expect(state.externalRecords?.has(doc2)).toBe(false)
+      expect(seen.has(doc1)).toBe(true)
+
+      // Everything seen: no hydration work at all, and the state is bare.
+      vi.mocked(dataplane.getRecordsByURI).mockClear()
+      vi.mocked(hydrator.label.getLabelsForSubjects).mockClear()
+      vi.mocked(hydrator.hydrateProfilesBasic).mockClear()
+      using depsSpy = vi.spyOn(hydrator, 'hydrateExternalViewDependencies')
+      expect(
+        await hydrator.hydrateEmbedExternalViewFromUris(
+          [doc1, doc2, doc2],
+          ctx,
+          seen,
+        ),
+      ).toEqual({ ctx })
+      expect(dataplane.getRecordsByURI).not.toHaveBeenCalled()
+      expect(hydrator.label.getLabelsForSubjects).not.toHaveBeenCalled()
+      expect(hydrator.hydrateProfilesBasic).not.toHaveBeenCalled()
+      expect(depsSpy).not.toHaveBeenCalled()
+    })
+
+    it('does not retry unavailable records within a shared traversal', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx } = fixture
+      const seen = new Set<AtUriString>()
+      const first = await hydrator.hydrateEmbedExternalViewFromUris(
+        [missingDoc],
+        ctx,
+        seen,
+      )
+      expect(first.externalRecords?.get(missingDoc)).toBeNull()
+      expect(seen.has(missingDoc)).toBe(true)
+      const second = await hydrator.hydrateEmbedExternalViewFromUris(
+        [missingDoc],
+        ctx,
+        seen,
+      )
+      expect(second).toEqual({ ctx })
+      expect(labelSubjects(fixture)).toHaveLength(1)
+    })
+
+    it('allows exactly the maximum passes, retaining state and warning once', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx } = fixture
+      const max = ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES
+      expect(max).toBe(8)
+      seedChain(fixture, max + 4)
+      using warn = vi.spyOn(hydrationLogger, 'warn')
+      using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
+      const seen = new Set<AtUriString>()
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [chainUri(0)],
+        ctx,
+        seen,
+      )
+
+      expect(embedSpy).toHaveBeenCalledTimes(max)
+      expect(
+        embedSpy.mock.calls.map(([, , , hydrationPass]) => hydrationPass ?? 1),
+      ).toEqual(Array.from({ length: max }, (_, i) => i + 1))
+      expect(labelSubjects(fixture)).toHaveLength(max)
+      // Partial state is retained; the ninth URI was never fetched or seen.
+      for (let i = 0; i < max; i++) {
+        expect(state.externalRecords?.get(chainUri(i))).toBeTruthy()
+      }
+      expect(state.externalRecords?.has(chainUri(max))).toBe(false)
+      expect(seen.has(chainUri(max))).toBe(false)
+      expect(state.externalRecordBacklinks?.get(chainUri(max - 1))).toEqual([
+        chainUri(max),
+      ])
+      expect(warn).toHaveBeenCalledTimes(1)
+      expect(warn.mock.calls[0][0]).toMatchObject({
+        hydrationPass: max,
+        maxPasses: max,
+        skipped: 1,
+      })
+    })
+
+    it('does not warn when a traversal finishes at or below the limit', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx } = fixture
+      const max = ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES
+      using warn = vi.spyOn(hydrationLogger, 'warn')
+      seedChain(fixture, max)
+      using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
+      await hydrator.hydrateEmbedExternalViewFromUris([chainUri(0)], ctx)
+      expect(embedSpy).toHaveBeenCalledTimes(max)
+
+      seedChain(fixture, 3)
+      await hydrator.hydrateEmbedExternalViewFromUris([chainUri(0)], ctx)
+      await hydrator.hydrateEmbedExternalViewFromUris([], ctx)
+      expect(warn).not.toHaveBeenCalled()
+    })
+
+    it('propagates the pass count through direct dependency calls', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx } = fixture
+      const max = ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES
+      seedChain(fixture, max + 4)
+      const prehydrated = async () => ({
+        ctx,
+        externalRecords: await hydrator.external.getRecordsByURI([chainUri(0)]),
+      })
+      using warn = vi.spyOn(hydrationLogger, 'warn')
+      using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
+
+      // Prehydrated state counts as the root batch: passes 2..max remain.
+      await hydrator.hydrateExternalViewDependencies(
+        await prehydrated(),
+        [chainUri(0)],
+        ctx,
+      )
+      expect(embedSpy).toHaveBeenCalledTimes(max - 1)
+      expect(warn).toHaveBeenCalledTimes(1)
+
+      // A caller already at the last allowed pass fetches nothing further.
+      embedSpy.mockClear()
+      warn.mockClear()
+      const seen = new Set<AtUriString>()
+      await hydrator.hydrateExternalViewDependencies(
+        await prehydrated(),
+        [chainUri(0)],
+        ctx,
+        seen,
+        max,
+      )
+      expect(embedSpy).not.toHaveBeenCalled()
+      expect(seen.has(chainUri(1))).toBe(false)
+      expect(warn).toHaveBeenCalledTimes(1)
     })
   })
 })
