@@ -22,11 +22,13 @@ export type DataplaneNotificationReason =
 export const APPVIEW_NOTIFICATION_REASON = {
   ...NOTIFICATION_REASON,
   MULTI_POST_LIKE: 'multi-post-like',
+  MULTI_POST_REPOST: 'multi-post-repost',
+  MULTI_POST_LIKE_VIA_REPOST: 'multi-post-like-via-repost',
+  MULTI_POST_REPOST_VIA_REPOST: 'multi-post-repost-via-repost',
 } as const
 
 export type AppviewNotificationReason =
-  | DataplaneNotificationReason
-  | typeof APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE
+  (typeof APPVIEW_NOTIFICATION_REASON)[keyof typeof APPVIEW_NOTIFICATION_REASON]
 
 // Not a real notification the users see, but used to mark as read across user devices.
 export const MARK_READ_GENERIC = 'mark-read-generic'
