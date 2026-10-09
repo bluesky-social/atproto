@@ -1059,6 +1059,8 @@ export class Hydrator {
 
     const targets = new Map<AtUriString, NsidString>()
     const discoveredUris = new Set<AtUriString>()
+
+    // find all external records we care about
     for (const uri of new Set(uris)) {
       const record = state.externalRecords?.get(uri)?.record
       if (!record) continue
@@ -1071,12 +1073,17 @@ export class Hydrator {
       ) {
         continue
       }
+
+      /*
+       * Collection-specific rules for discovering additional view dependencies.
+       */
       const { collection } = parsed.value
       if (
         collection === site.standard.document.$type &&
         site.standard.document.$matches(record, { strict: false })
       ) {
         targets.set(uri, site.standard.graph.recommend.$type)
+
         const publication = parseAtUriString(record.site)
         if (
           publication.success &&
@@ -1113,29 +1120,18 @@ export class Hydrator {
                 collection,
                 { limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS },
               )
-              const links = mapDefined(
-                page.backlinks.slice(0, ExternalHydrator.MAX_BACKLINK_PREVIEWS),
-                (backlink) => {
-                  const parsed = parseAtUriString(backlink.uri)
-                  return parsed.success &&
-                    isDidString(parsed.value.authority) &&
-                    parsed.value.collection === collection &&
-                    parsed.value.rkey &&
-                    !parsed.value.hash
-                    ? backlink.uri
-                    : undefined
-                },
-              )
+              const links = page.backlinks
+                .filter((b) => parseAtUriString(b.uri).success)
+                .slice(0, ExternalHydrator.MAX_BACKLINK_PREVIEWS)
+                .map((b) => b.uri)
               externalRecordBacklinks.set(uri, dedupeStrs(links))
+              links.forEach((link) => discoveredUris.add(link))
             }),
           )
         }
       })(),
     ])
 
-    for (const links of externalRecordBacklinks.values()) {
-      for (const link of links ?? []) discoveredUris.add(link)
-    }
     const newUris = [...discoveredUris].filter((uri) => !seenUris.has(uri))
     const nested = newUris.length
       ? await this.hydrateEmbedExternalViewFromUris(newUris, ctx, seenUris)
