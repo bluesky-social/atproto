@@ -7,10 +7,11 @@ export const Route = createFileRoute('/account/sign-up')({
 })
 
 function SignUpPage() {
-  const { api } = useSessionContext()
+  const { api, rememberDefault } = useSessionContext()
   const navigate = useNavigate()
   return (
     <SignUpView
+      rememberDefault={rememberDefault}
       onValidateNewHandle={async (data) => {
         await api.validateHandleAvailability(data)
       }}

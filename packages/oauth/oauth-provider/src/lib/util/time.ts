@@ -47,3 +47,11 @@ export async function constantTime<R>(
     }
   }
 }
+
+export function isOlderThan(
+  date: number | Date,
+  duration: number,
+  reference: number | Date = Date.now(),
+): boolean {
+  return date.valueOf() < reference.valueOf() - duration
+}

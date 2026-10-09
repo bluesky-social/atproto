@@ -93,6 +93,7 @@ createRoot(container).render(
               initialSessions={deviceSessions}
               initialSelected={InitialSelectedSession.Only}
               disableRemember={isPopup}
+              rememberDefault={true}
               forcedIdentifier={forcedIdentifier}
               leave={done}
             >

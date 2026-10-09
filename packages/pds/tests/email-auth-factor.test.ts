@@ -5,6 +5,7 @@ import {
   type SeedClient,
   TestNetworkNoAppView,
 } from '@atproto/dev-env'
+import { AuthFactorRequiredError } from '../src/account-manager/account-manager.js'
 import type { AppContext } from '../src/index.js'
 
 describe('email auth factor', () => {
@@ -277,5 +278,47 @@ describe('email auth factor', () => {
     expect(session.data.email).toBe(faye.email)
     expect(session.data.emailConfirmed).toBe(true)
     expect(sendMailMock).not.toHaveBeenCalled()
+  })
+
+  // The OAuth sign-in path lets a device that was remembered within the last 30
+  // days skip the email OTP: `OAuthStore.authenticateAccount` turns that cutoff
+  // into an `allowOtpBypassFor` DID list that it hands to `login`. These two
+  // tests pin the security-sensitive contract that list controls — a device
+  // whose DID is absent (e.g. never trusted, or trusted >30 days ago) still
+  // owes an OTP, while a trusted DID skips it.
+  describe('OTP bypass for trusted devices', () => {
+    beforeEach(async () => {
+      // Re-enable the factor so these tests are independent of ordering.
+      await agent.api.com.atproto.server.updateEmail(
+        { email: faye.email, emailAuthFactor: true },
+        { headers: sc.getHeaders(faye.did), encoding: 'application/json' },
+      )
+      sendMailMock.mockClear()
+    })
+
+    it('requires an email OTP when the DID is not eligible for bypass', async () => {
+      const attempt = ctx.accountManager.login({
+        identifier: faye.did,
+        password: 'faye-pass',
+        allowOtpBypassFor: [],
+      })
+
+      await expect(attempt).rejects.toThrow(AuthFactorRequiredError)
+      // A challenge email is dispatched precisely because OTP is required.
+      expect(sendMailMock).toHaveBeenCalledTimes(1)
+    })
+
+    it('skips the email OTP when the DID is eligible for bypass', async () => {
+      const { user, appPassword } = await ctx.accountManager.login({
+        identifier: faye.did,
+        password: 'faye-pass',
+        allowOtpBypassFor: [faye.did],
+      })
+
+      expect(user.did).toBe(faye.did)
+      expect(appPassword).toBeNull()
+      // No OTP is minted or sent for a trusted device.
+      expect(sendMailMock).not.toHaveBeenCalled()
+    })
   })
 })

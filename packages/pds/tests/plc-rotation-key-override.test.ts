@@ -63,7 +63,7 @@ describe('plcRotationKey override', () => {
   it('uses the override for OAuth account creation', async () => {
     const provider = pds.ctx.oauthProvider
     assert(provider)
-    const account = await provider.accountManager.createAccount(
+    const { account } = await provider.accountManager.createAccount(
       `${DEVICE_ID_PREFIX}${randomBytes(DEVICE_ID_BYTES_LENGTH).toString('hex')}`,
       { ipAddress: '127.0.0.1', port: 0 },
       {

@@ -11,6 +11,7 @@ import type {
 } from '@atproto/oauth-types'
 import type {
   DeleteAccountConfirmInput,
+  DeviceAccount,
   DisableEmailAuthFactorInput,
   EnableEmailAuthFactorInput,
   ResetPasswordConfirmInput,
@@ -354,6 +355,10 @@ export type OAuthHooks = {
     input: SignUpInput
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    /**
+     * If the user is signing up as part of an oauth flow, this will be the
+     * client ID of the oauth application that initiated the flow.
+     */
     clientId: ClientId | undefined
   }) => Awaitable<void>
 
@@ -436,6 +441,7 @@ export type OAuthHooks = {
     data: SignInData
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    deviceAccounts: readonly DeviceAccount[]
     clientId: ClientId | undefined
   }) => Awaitable<void>
 
@@ -445,11 +451,12 @@ export type OAuthHooks = {
    * `clientId` is populated when the sign-in is submitted in the context of
    * an OAuth authorization request; see {@link OAuthHooks.onSignInAttempt}.
    *
-   * @throws {InvalidRequestError} when the sing-in should be denied
+   * @throws {InvalidRequestError} when the sign-in should be denied
    */
   onSignedIn?: (data: {
     data: SignInData
     account: Account
+    remembered: boolean
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
     clientId: ClientId | undefined
@@ -470,8 +477,8 @@ export type OAuthHooks = {
    * `clientId` is populated when the sign-in is submitted in the context of
    * an OAuth authorization request; see {@link OAuthHooks.onSignInAttempt}.
    *
-   * Errors thrown from this hook are caught and ignored so that they do not
-   * mask the original authentication failure.
+   * Errors thrown from this hook will prevent the sign-in attempt from being
+   * processed further.
    */
   onSignInFailed?: (data: {
     data: SignInData
