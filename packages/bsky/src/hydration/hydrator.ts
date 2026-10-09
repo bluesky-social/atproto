@@ -420,10 +420,15 @@ export class Hydrator {
     })
     const [starterPackState, profileLinks] = await Promise.all([
       this.hydrateStarterPacksBasic([...starterPackUriSet], ctx),
-      this.actor.getProfileLinks(
-        profileLinkUris(dids, state.actors),
-        ctx.includeTakedowns,
-      ),
+      this.actor
+        .getProfileLinks(
+          profileLinkUris(dids, state.actors),
+          ctx.includeTakedowns,
+        )
+        .catch((err): ProfileLinks => {
+          hydrationLogger.error({ err }, 'Failed to get profile links')
+          return new HydrationMap()
+        }),
     ])
     return mergeManyStates(state, starterPackState, {
       profileAggs,

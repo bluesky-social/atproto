@@ -759,6 +759,25 @@ describe('pds profile views', () => {
       )
     })
 
+    it('still returns the profile when link records fail to load', async () => {
+      using getLinksSpy = vi.spyOn(
+        network.bsky.ctx.dataplane,
+        'getProfileLinkRecords',
+      )
+      getLinksSpy.mockRejectedValueOnce(new Error('dataplane unavailable'))
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: linky },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.did).toEqual(linky)
+      expect((data as { links?: unknown }).links).toBeUndefined()
+    })
+
     it("does not show another profile's link when profiles are fetched together", async () => {
       await sc.createAccount('pinto', {
         handle: 'pinto.test',
