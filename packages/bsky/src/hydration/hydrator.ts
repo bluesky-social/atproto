@@ -26,6 +26,7 @@ import { events } from '../telemetry/events.js'
 import { SITE_STANDARD_NSID_PREFIX } from '../util/standard-site.js'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris.js'
 import type { ParsedLabelers } from '../util.js'
+import { MAX_PROFILE_LINKS } from '../views/profile-link-rules.js'
 import {
   type ProfileRecord,
   isExternalEmbedType,
@@ -40,6 +41,7 @@ import {
   type KnownFollowersStates,
   type KnownLikersStates,
   type ProfileAggs,
+  type ProfileLinks,
   type ProfileViewerState,
   type ProfileViewerStates,
 } from './actor.js'
@@ -168,6 +170,7 @@ export type HydrationState = {
   feedgenAggs?: FeedGenAggs
   starterPacks?: StarterPacks
   starterPackAggs?: StarterPackAggs
+  profileLinks?: ProfileLinks
   labelers?: Labelers
   labelerViewers?: LabelerViewerStates
   labelerAggs?: LabelerAggs
@@ -422,12 +425,21 @@ export class Hydrator {
         starterPackUriSet.add(actor?.profile?.joinedViaStarterPack?.uri)
       }
     })
-    const starterPackState = await this.hydrateStarterPacksBasic(
-      [...starterPackUriSet],
-      ctx,
-    )
+    const [starterPackState, profileLinks] = await Promise.all([
+      this.hydrateStarterPacksBasic([...starterPackUriSet], ctx),
+      this.actor
+        .getProfileLinks(
+          profileLinkUris(dids, state.actors),
+          ctx.includeTakedowns,
+        )
+        .catch((err): ProfileLinks => {
+          hydrationLogger.error({ err }, 'Failed to get profile links')
+          return new HydrationMap()
+        }),
+    ])
     return mergeManyStates(state, starterPackState, {
       profileAggs,
+      profileLinks,
       knownFollowers,
       activitySubscriptions,
       ctx,
@@ -1703,6 +1715,11 @@ export class Hydrator {
           uri,
         ) ?? undefined
       )
+    } else if (collection === app.bsky.actor.link.$type) {
+      return (
+        (await this.actor.getProfileLinks([uri], includeTakedowns)).get(uri) ??
+        undefined
+      )
     } else if (collection === app.bsky.notification.declaration.$type) {
       if (parsed.rkey !== 'self') return
       return (
@@ -1947,6 +1964,30 @@ const pairsToMap = <K extends string>(pairs: [a: K, b: K][]): Map<K, K[]> => {
   return map
 }
 
+/**
+ * The link records a profile points to, in order. Only the first
+ * MAX_PROFILE_LINKS are shown, and only links in the profile's own repo count.
+ */
+export const profileLinkUris = (
+  dids: DidString[],
+  actors: Actors | undefined,
+): AtUriString[] => {
+  const uris: AtUriString[] = []
+  for (const did of dids) {
+    const refs = actors?.get(did)?.profile?.links ?? []
+    for (const ref of refs.slice(0, MAX_PROFILE_LINKS)) {
+      const parsed = new AtUri(ref.uri)
+      if (
+        parsed.host === did &&
+        parsed.collection === app.bsky.actor.link.$type
+      ) {
+        uris.push(ref.uri)
+      }
+    }
+  }
+  return dedupeStrs(uris)
+}
+
 export const mergeStates = (
   stateA: HydrationState,
   stateB: HydrationState,
@@ -1992,6 +2033,7 @@ export const mergeStates = (
     feedgenViewers: mergeMaps(stateA.feedgenViewers, stateB.feedgenViewers),
     starterPacks: mergeMaps(stateA.starterPacks, stateB.starterPacks),
     starterPackAggs: mergeMaps(stateA.starterPackAggs, stateB.starterPackAggs),
+    profileLinks: mergeMaps(stateA.profileLinks, stateB.profileLinks),
     labelers: mergeMaps(stateA.labelers, stateB.labelers),
     labelerAggs: mergeMaps(stateA.labelerAggs, stateB.labelerAggs),
     labelerViewers: mergeMaps(stateA.labelerViewers, stateB.labelerViewers),
