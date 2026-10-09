@@ -1387,6 +1387,7 @@ export class Hydrator {
   async hydrateGroupedNotifications(
     notifs: RawNotification[],
     ctx: HydrateCtx,
+    opts?: { knownFollowersDids?: DidString[] },
   ): Promise<HydrationState> {
     if (!notifs.length) return { ctx }
     const notificationUris = dedupeStrs(notifs.map((notif) => notif.uri))
@@ -1437,8 +1438,9 @@ export class Hydrator {
           [...likeUris, ...followUris],
           ctx.labelers,
         ),
+        // Hydrate known followers only for the subset selected by the endpoint.
         this.hydrateProfilesBasic(authorDids, ctx, {
-          knownFollowersDids: authorDids,
+          knownFollowersDids: opts?.knownFollowersDids,
         }),
       ])
 

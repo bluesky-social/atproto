@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { mapDefined } from '@atproto/common'
+import { dedupeStrs, mapDefined } from '@atproto/common'
 import {
   type AtUriString,
   type DatetimeString,
@@ -211,7 +211,21 @@ const hydration = async (
   const notifs = skeleton.groups.flatMap((group) =>
     group.items.map((item) => item.raw),
   )
-  return ctx.hydrator.hydrateGroupedNotifications(notifs, params.hydrateCtx)
+
+  // Optimization: instead of fetching known followers for all users in all notifications,
+  // only fetch for the notifications type that want it (follow type), and only for the ones
+  // that appear before truncation.
+  const knownFollowersDids = dedupeStrs(
+    skeleton.groups.flatMap((group) =>
+      group.kind === NOTIFICATION_REASON.FOLLOW
+        ? truncateRelatedViewsItems(group.items).map((item) => item.actorDid)
+        : [],
+    ),
+  )
+
+  return ctx.hydrator.hydrateGroupedNotifications(notifs, params.hydrateCtx, {
+    knownFollowersDids,
+  })
 }
 
 const rules = (
@@ -375,6 +389,8 @@ const presentation = (
   const groups = mapDefined(skeleton.groups, (group) =>
     ctx.views.notificationGroup(group, hydration),
   )
+
+  // Build related profiles, records.
   const profileDids = new Set<DidString>()
   const recordUris = new Set<AtUriString>()
   for (const { kind } of groups) {
@@ -434,6 +450,7 @@ const presentation = (
       profileDids.add(kind.actor)
     }
   }
+
   return {
     groups,
     relatedViews: [

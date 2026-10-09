@@ -1584,7 +1584,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
     it('returns basic related profiles with filtered known followers', async () => {
       const { recipient, headers } = await seedSpotlight()
       const { bob, carol, dan } = sc.dids
-      await sc.follow(recipient, bob)
+      await sc.follow(bob, recipient)
       await sc.follow(recipient, carol)
       await sc.follow(recipient, dan)
       await sc.follow(carol, bob)
@@ -1629,6 +1629,79 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expect(profile).not.toHaveProperty('followersCount')
       expect(aggregates).not.toHaveBeenCalled()
     })
+
+    it.each(['all', 'followers'] as const)(
+      'hydrates known followers for the first ten actors per follow group in the %s feed',
+      async (feed) => {
+        const { recipient, headers } = await seedSpotlight()
+        const { carol, dan } = sc.dids
+        await sc.follow(recipient, carol)
+        await sc.follow(recipient, dan)
+        await network.processAll()
+        await sc.follow(carol, recipient)
+
+        const followers: DidString[] = []
+        const name = `social-proof-${fixtureIndex++}`
+        for (let index = 0; index < 12; index++) {
+          const handle = `${name}-${index}.test`
+          const { did } = await sc.createAccount(`${name}-${index}`, {
+            email: `${handle}@test.com`,
+            handle,
+            password: 'social-proof-pass',
+          })
+          followers.push(did)
+          await sc.follow(did, recipient)
+          await sc.follow(dan, did)
+        }
+        await network.processAll()
+        using knownFollowers = vi.spyOn(
+          network.bsky.ctx.hydrator.dataplane,
+          'sampleFollowsFollowing',
+        )
+
+        const response = await network.bsky
+          .getClient()
+          .call(defs, { feed, limit: 30 }, { headers })
+
+        const followGroups = response.groups
+          .map(({ kind }) => kind)
+          .filter(defs.followGroup.$isTypeOf)
+        expect(followGroups.map(({ items }) => items.length)).toEqual(
+          feed === 'all' ? [12] : Array(12).fill(1),
+        )
+        expect(
+          response.groups.filter(({ kind }) =>
+            defs.followBackNotification.$isTypeOf(kind),
+          ),
+        ).toHaveLength(1)
+        const expectedDids = followers
+          .slice()
+          .reverse()
+          .slice(0, feed === 'all' ? 10 : 12)
+        expect(
+          followGroups.flatMap(({ items }) =>
+            items.slice(0, 10).map(({ actor }) => actor),
+          ),
+        ).toEqual(expectedDids)
+        expect(
+          knownFollowers.mock.calls.flatMap(([req]) => req.targetDids),
+        ).toEqual(expectedDids)
+        const profiles = response.relatedViews?.filter(
+          app.bsky.actor.defs.profileViewBasic.$isTypeOf,
+        )
+        expect(
+          profiles
+            ?.filter((profile) => profile.viewer?.knownFollowers)
+            .map(({ did }) => did),
+        ).toEqual(expectedDids)
+        for (const did of expectedDids) {
+          expect(
+            profiles?.find((profile) => profile.did === did)?.viewer
+              ?.knownFollowers,
+          ).toMatchObject({ count: 1, followers: [{ did: dan }] })
+        }
+      },
+    )
 
     it.each([
       {
