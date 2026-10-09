@@ -1,11 +1,12 @@
 import assert from 'node:assert'
-import { dedupeStrs, mapDefined } from '@atproto/common'
-import { atUri } from '@atproto/lex'
+import { chunkArray, dedupeStrs, mapDefined } from '@atproto/common'
+import { type NsidString, atUri, isDidString } from '@atproto/lex'
 import {
   AtUri,
   type AtUriString,
   type DidString,
   type UriString,
+  parseAtUriString,
 } from '@atproto/syntax'
 import { NOTIFICATION_REASON } from '../api/app/bsky/notification/constants.js'
 import type { RawNotification } from '../api/app/bsky/notification/grouping/grouping.js'
@@ -14,7 +15,7 @@ import type {
   FeatureGatesClient,
   ScopedFeatureGatesClient,
 } from '../feature-gates/index.js'
-import { app, chat, com } from '../lexicons/index.js'
+import { app, chat, com, site } from '../lexicons/index.js'
 import { hydrationLogger } from '../logger.js'
 import type {
   Bookmark as BookmarkLex,
@@ -951,29 +952,25 @@ export class Hydrator {
     })
   }
 
-  /**
-   * Hydrate the state needed to build an `app.bsky.embed.external#view` for
-   * a set of `site.standard.*` AT-URIs at compose-time. Filters input URIs to
-   * SS collections, fetches latest indexed versions plus labels, and gates
-   * taken-down records.
-   */
+  /** Hydrate external records, labels, profiles, and their view dependencies. */
   async hydrateEmbedExternalViewFromUris(
     uris: AtUriString[],
     ctx: HydrateCtx,
+    seenUris: Set<AtUriString> = new Set(),
   ): Promise<HydrationState> {
-    const ssUris = dedupeStrs(
-      uris.filter((u) =>
-        new AtUri(u).collection.startsWith(SITE_STANDARD_NSID_PREFIX),
-      ),
-    ) as AtUriString[]
-    if (!ssUris.length) return { ctx }
-    const dids = dedupeStrs(ssUris.map((uri) => uriToDid(uri)))
+    const allUris = dedupeStrs(uris)
+    if (!allUris.length) return { ctx }
+    const ssUris = allUris.filter((uri) =>
+      new AtUri(uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX),
+    )
+    const dids = dedupeStrs(allUris.map(uriToDid))
+    for (const uri of allUris) seenUris.add(uri)
 
     const [externalRecords, { documents, publications }, labels, profiles] =
       await Promise.all([
-        this.external.getRecordsByURI(uris),
+        this.external.getRecordsByURI(allUris, ctx.includeTakedowns),
         this.external.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
-        this.label.getLabelsForSubjects(ssUris, ctx.labelers),
+        this.label.getLabelsForSubjects(allUris, ctx.labelers),
         this.hydrateProfilesBasic(dids, ctx),
       ])
 
@@ -982,6 +979,18 @@ export class Hydrator {
       if (!info) continue
       externalRecordsByRef.set(genericRecordKey(uri, info.cid), info)
     }
+
+    const depsState = await this.hydrateExternalViewDependencies(
+      mergeStates(profiles, {
+        ctx,
+        labels,
+        externalRecords,
+        externalRecordsByRef,
+      }),
+      allUris,
+      ctx,
+      seenUris,
+    )
 
     if (!ctx.includeTakedowns) {
       actionSiteStandardTakedownLabels(documents, publications, labels)
@@ -1003,16 +1012,121 @@ export class Hydrator {
     const profilesState = extraDids.length
       ? mergeStates(profiles, await this.hydrateProfilesBasic(extraDids, ctx))
       : profiles
+    return mergeManyStates(
+      profilesState,
+      {
+        ctx,
+        labels,
+        externalRecords,
+        externalRecordsByRef,
+        siteStandardDocuments: documents,
+        siteStandardPublications: publications,
+      },
+      depsState,
+    )
+  }
 
+  /**
+   * Discover view dependencies by URI collection and hydrate new URIs in a batch.
+   * Returns additional state; a shared seenUris set prevents refetches across nested passes.
+   */
+  async hydrateExternalViewDependencies(
+    state: HydrationState,
+    uris: AtUriString[],
+    ctx: HydrateCtx,
+    seenUris: Set<AtUriString> = new Set(),
+  ): Promise<HydrationState> {
+    // @NOTE Null entries are completed lookups too, not candidates for retry.
+    for (const uri of state.externalRecords?.keys() ?? []) seenUris.add(uri)
 
-    return mergeStates(profilesState, {
-      ctx,
-      labels,
-      externalRecords,
-      externalRecordsByRef,
-      siteStandardDocuments: documents,
-      siteStandardPublications: publications,
-    })
+    const targets = new Map<AtUriString, NsidString>()
+    const discoveredUris = new Set<AtUriString>()
+    for (const uri of new Set(uris)) {
+      const record = state.externalRecords?.get(uri)?.record
+      if (!record) continue
+      const parsed = parseAtUriString(uri)
+      if (
+        !parsed.success ||
+        !isDidString(parsed.value.authority) ||
+        !parsed.value.rkey ||
+        parsed.value.hash
+      ) {
+        continue
+      }
+      const { collection } = parsed.value
+      if (
+        collection === site.standard.document.$type &&
+        site.standard.document.$matches(record, { strict: false })
+      ) {
+        targets.set(uri, site.standard.graph.recommend.$type)
+        const publication = parseAtUriString(record.site)
+        if (
+          publication.success &&
+          isDidString(publication.value.authority) &&
+          publication.value.collection === site.standard.publication.$type &&
+          publication.value.rkey &&
+          !publication.value.hash
+        ) {
+          discoveredUris.add(record.site as AtUriString)
+        }
+      } else if (
+        collection === site.standard.publication.$type &&
+        site.standard.publication.$matches(record, { strict: false })
+      ) {
+        targets.set(uri, site.standard.graph.subscription.$type)
+      }
+    }
+
+    if (!targets.size) return { ctx }
+
+    const externalRecordBacklinks: ExternalRecordBacklinks = new HydrationMap()
+    const [externalRecordBacklinkCounts] = await Promise.all([
+      this.external.getAtmosphereBacklinkCounts([...targets.keys()]),
+      (async () => {
+        // @NOTE Bound fan-out as well as each sample; counts are independent.
+        for (const batch of chunkArray(
+          [...targets],
+          ExternalHydrator.MAX_BACKLINK_FANOUT,
+        )) {
+          await Promise.all(
+            batch.map(async ([uri, collection]) => {
+              const page = await this.external.getAtmosphereBacklinks(
+                uri,
+                collection,
+                { limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS },
+              )
+              const links = mapDefined(
+                page.backlinks.slice(0, ExternalHydrator.MAX_BACKLINK_PREVIEWS),
+                (backlink) => {
+                  const parsed = parseAtUriString(backlink.uri)
+                  return parsed.success &&
+                    isDidString(parsed.value.authority) &&
+                    parsed.value.collection === collection &&
+                    parsed.value.rkey &&
+                    !parsed.value.hash
+                    ? backlink.uri
+                    : undefined
+                },
+              )
+              externalRecordBacklinks.set(uri, dedupeStrs(links))
+            }),
+          )
+        }
+      })(),
+    ])
+
+    for (const links of externalRecordBacklinks.values()) {
+      for (const link of links ?? []) discoveredUris.add(link)
+    }
+    const newUris = [...discoveredUris].filter((uri) => !seenUris.has(uri))
+    const nested = newUris.length
+      ? await this.hydrateEmbedExternalViewFromUris(newUris, ctx, seenUris)
+      : {}
+
+    return mergeStates(
+      { ctx, externalRecordBacklinks, externalRecordBacklinkCounts },
+      nested,
+    )
   }
 
   // app.bsky.feed.defs#threadViewPost

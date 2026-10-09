@@ -7,3 +7,4 @@
 - Exact-ref hydration maps use `genericRecordKey(uri, cid)`, not URI alone. Unavailable records are `null`, and takedowns are excluded unless explicitly requested.
 - Preserve `truncated` from actor backlink lookups: an empty target entry in a truncated batch does not prove the actor has no links.
 - `ExternalHydrator.getSiteStandardRecordsByURI` / `ByRef` are built on the generic record lookups. Only `ByURI` follows a document's `site` to its publication, via a second lookup; `ByRef` never resolves publications.
+- Pass all external URIs to `Hydrator.hydrateExternalViewDependencies`; dispatch by URI collection and validate records inside it. Batch new dependencies through `hydrateEmbedExternalViewFromUris`, sharing a `seen` URI set (including null lookups) across nested passes. Follow only complete DID-based record URIs.
