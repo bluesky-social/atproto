@@ -960,11 +960,18 @@ export class Hydrator {
   ): Promise<HydrationState> {
     const allUris = dedupeStrs(uris)
     if (!allUris.length) return { ctx }
+
+    // Cache of hydrated URIs
+    for (const uri of allUris) seenUris.add(uri)
+
+    // TODO Remove this once we're fully generic
     const ssUris = allUris.filter((uri) =>
       new AtUri(uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX),
     )
+
+    // Get all the actors that are part of this hydration
     const dids = dedupeStrs(allUris.map(uriToDid))
-    for (const uri of allUris) seenUris.add(uri)
+    const seenDids = new Set<string>(dids)
 
     const [externalRecords, { documents, publications }, labels, profiles] =
       await Promise.all([
@@ -974,12 +981,14 @@ export class Hydrator {
         this.hydrateProfilesBasic(dids, ctx),
       ])
 
+    // Build the by-ref map used by some endpoints
     const externalRecordsByRef: ExternalRecordsByRef = new HydrationMap()
     for (const [uri, info] of externalRecords) {
       if (!info) continue
       externalRecordsByRef.set(genericRecordKey(uri, info.cid), info)
     }
 
+    // Discover and hydrate any additional view dependencies
     const depsState = await this.hydrateExternalViewDependencies(
       mergeStates(profiles, {
         ctx,
@@ -992,28 +1001,32 @@ export class Hydrator {
       seenUris,
     )
 
+    // Set values to `null` in maps if records are taken down
     if (!ctx.includeTakedowns) {
       actionSiteStandardTakedownLabels(documents, publications, labels)
     }
-    // Edge case: a document's `site` may resolve to a publication owned by a
-    // different repo than any of the input URIs (the dataplane returns it
-    // even though it wasn't requested directly). Top up profile coverage for
-    // any such DIDs with a serial second hydration so `associatedProfiles`
-    // is complete.
-    const knownDids = new Set<string>(dids)
-    const extraDids: DidString[] = []
+
+    /*
+     * Edge case: a document's `site` may resolve to a publication owned by a
+     * different repo than any of the input URIs (the dataplane returns it even
+     * though it wasn't requested directly). Top up profile coverage for any
+     * such DIDs with a serial second hydration so `associatedProfiles` is
+     * complete.
+     */
+    const newDids: DidString[] = []
     for (const key of publications.keys()) {
       const did = uriToDid(parseGenericRecordKey(key).uri)
-      if (!knownDids.has(did)) {
-        knownDids.add(did)
-        extraDids.push(did)
+      if (!seenDids.has(did)) {
+        seenDids.add(did)
+        newDids.push(did)
       }
     }
-    const profilesState = extraDids.length
-      ? mergeStates(profiles, await this.hydrateProfilesBasic(extraDids, ctx))
+    const newProfiles = newDids.length
+      ? mergeStates(profiles, await this.hydrateProfilesBasic(newDids, ctx))
       : profiles
+
     return mergeManyStates(
-      profilesState,
+      newProfiles,
       {
         ctx,
         labels,
