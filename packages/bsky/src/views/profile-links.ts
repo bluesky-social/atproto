@@ -63,7 +63,7 @@ function parseLink(
 ): BetaProfileLink | undefined {
   if (!raw || typeof raw !== 'object') return
   const { uri, title, icon } = raw as Record<string, unknown>
-  if (typeof uri !== 'string' || !isWebUrl(uri)) return
+  if (typeof uri !== 'string' || !isHttpsUrl(uri)) return
 
   const link: BetaProfileLink = { uri }
   if (typeof title === 'string') {
@@ -82,10 +82,9 @@ function parseLink(
   return link
 }
 
-function isWebUrl(value: string): boolean {
+function isHttpsUrl(value: string): boolean {
   try {
-    const { protocol } = new URL(value)
-    return protocol === 'https:' || protocol === 'http:'
+    return new URL(value).protocol === 'https:'
   } catch {
     return false
   }

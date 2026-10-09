@@ -49,6 +49,7 @@ describe('getBetaProfileLinks', () => {
             { uri: 42 },
             { uri: 'javascript:alert(1)' },
             { uri: 'ftp://example.com' },
+            { uri: 'http://example.com' },
             { uri: 'example.com' },
             { uri: 'https://ok.example' },
           ],

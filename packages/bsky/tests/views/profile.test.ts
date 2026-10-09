@@ -745,6 +745,7 @@ describe('pds profile views', () => {
         betaLinks: [
           { uri: 'https://ko-fi.com/linky', title: 'Tip jar' },
           { uri: 'javascript:alert(1)' },
+          { uri: 'http://example.org' },
           { uri: 'https://example.com' },
         ],
         betaLinksGermIndex: 1,
