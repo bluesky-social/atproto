@@ -451,7 +451,7 @@ export type OAuthHooks = {
    * `clientId` is populated when the sign-in is submitted in the context of
    * an OAuth authorization request; see {@link OAuthHooks.onSignInAttempt}.
    *
-   * @throws {InvalidRequestError} when the sing-in should be denied
+   * @throws {InvalidRequestError} when the sign-in should be denied
    */
   onSignedIn?: (data: {
     data: SignInData

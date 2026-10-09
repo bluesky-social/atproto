@@ -71,6 +71,7 @@ import type { RequestMetadata } from './lib/http/request.js'
 import { dateToRelativeSeconds } from './lib/util/date.js'
 import { formatError } from './lib/util/error.js'
 import type { MultiLangString } from './lib/util/locale.js'
+import { isOlderThan } from './lib/util/time.js'
 import {
   type CustomMetadata,
   buildMetadata,
@@ -385,8 +386,7 @@ export class OAuthProvider extends OAuthVerifier {
   }
 
   public checkLoginRequired(deviceAccount: DeviceAccount) {
-    const authAge = Date.now() - deviceAccount.updatedAt.getTime()
-    return authAge > this.authenticationMaxAge
+    return isOlderThan(deviceAccount.updatedAt, this.authenticationMaxAge)
   }
 
   protected async authenticateClient(

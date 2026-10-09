@@ -153,7 +153,7 @@ export class AccountManager {
       // @TODO Any error occurring below this point (server error most likely)
       // will not prevent the account from being created, but it will be
       // reported to the caller. We may want to wrap these errors in a way that
-      // allows the UI to detect that a sing-up attempt will fail ("account
+      // allows the UI to detect that a sign-up attempt will fail ("account
       // already exists"), and should provide appropriate feedback to the user
       // (eg. show sign-in form?).
 
