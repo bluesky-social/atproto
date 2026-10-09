@@ -19,7 +19,8 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
     // mentions
     const re = MENTION_REGEX
     while ((match = re.exec(text.utf16))) {
-      if (!isValidDomain(match[3]) && !match[3].endsWith('.test')) {
+      const handle = trimToValidHandle(match[3])
+      if (handle === null) {
         continue // probably not a handle
       }
 
@@ -28,12 +29,12 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
         $type: 'app.bsky.richtext.facet',
         index: {
           byteStart: text.utf16IndexToUtf8Index(start),
-          byteEnd: text.utf16IndexToUtf8Index(start + match[3].length + 1),
+          byteEnd: text.utf16IndexToUtf8Index(start + handle.length + 1),
         },
         features: [
           {
             $type: 'app.bsky.richtext.facet#mention',
-            did: match[3], // must be resolved afterwards
+            did: handle, // must be resolved afterwards
           },
         ],
       })
@@ -147,4 +148,21 @@ function isValidDomain(str: string): boolean {
     }
     return str.charAt(i - 1) === '.' && i === str.length - tld.length
   })
+}
+
+/**
+ * Returns the longest prefix of `raw` that is a valid handle domain or a
+ * `.test` handle, trimming trailing hyphen-separated segments that would
+ * otherwise prevent recognition (e.g. `handle.example.com-foo` → `handle.example.com`).
+ * Returns null when no valid prefix exists.
+ */
+function trimToValidHandle(raw: string): string | null {
+  let s = raw
+  while (s.length > 0) {
+    if (isValidDomain(s) || s.endsWith('.test')) return s
+    const hyphenIdx = s.lastIndexOf('-')
+    if (hyphenIdx <= 0) break
+    s = s.slice(0, hyphenIdx)
+  }
+  return null
 }

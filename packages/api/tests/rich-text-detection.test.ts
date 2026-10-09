@@ -27,6 +27,13 @@ describe('detectFacets', () => {
     '@handle.com\n@handle.com',
     'parenthetical (@handle.com)',
     '👨‍👩‍👧‍👧 @handle.com 👨‍👩‍👧‍👧',
+    '@handle.example.com-foo',
+    '@my-handle.bsky.social',
+    '@alice.bsky.social.',
+    '@alice.bsky.social,',
+    'foo@bar.com',
+    '@alice-',
+    '@nope',
 
     'start https://middle.com end',
     'start https://middle.com/foo/bar end',
@@ -83,6 +90,13 @@ describe('detectFacets', () => {
     ],
     [['parenthetical ('], ['@handle.com', 'did:fake:handle.com'], [')']],
     [['👨‍👩‍👧‍👧 '], ['@handle.com', 'did:fake:handle.com'], [' 👨‍👩‍👧‍👧']],
+    [['@handle.example.com', 'did:fake:handle.example.com'], ['-foo']],
+    [['@my-handle.bsky.social', 'did:fake:my-handle.bsky.social']],
+    [['@alice.bsky.social', 'did:fake:alice.bsky.social'], ['.']],
+    [['@alice.bsky.social', 'did:fake:alice.bsky.social'], [',']],
+    [['foo@bar.com']],
+    [['@alice-']],
+    [['@nope']],
 
     [['start '], ['https://middle.com', 'https://middle.com'], [' end']],
     [
