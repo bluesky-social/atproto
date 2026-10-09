@@ -2993,13 +2993,43 @@ export class Views {
         break
       }
       case NOTIFICATION_REASON.REPOST:
-        kind = defs.repostGroup.$build({
-          post: notif.reasonSubject,
-          items: actorItems,
-        })
+        kind =
+          group.kind === APPVIEW_NOTIFICATION_REASON.MULTI_POST_REPOST &&
+          group.items.length > 1
+            ? defs.multiPostRepostGroup.$build({
+                actor: newestItem.actorDid,
+                items: group.items.map((item) => ({
+                  post: item.raw.reasonSubject!,
+                })),
+              })
+            : defs.repostGroup.$build({
+                post: notif.reasonSubject,
+                items: actorItems,
+              })
         break
       case NOTIFICATION_REASON.LIKE_VIA_REPOST:
       case NOTIFICATION_REASON.REPOST_VIA_REPOST: {
+        if (
+          (group.kind ===
+            APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE_VIA_REPOST ||
+            group.kind ===
+              APPVIEW_NOTIFICATION_REASON.MULTI_POST_REPOST_VIA_REPOST) &&
+          group.items.length > 1
+        ) {
+          const items = mapDefined(group.items, (item) => {
+            const viaRepost = item.raw.reasonSubject!
+            const post = state.reposts?.get(viaRepost)?.record.subject.uri
+            if (!post) return
+            return { post, viaRepost }
+          })
+          if (items.length !== group.items.length) return
+          const fields = { actor: newestItem.actorDid, items }
+          kind =
+            notif.reason === NOTIFICATION_REASON.LIKE_VIA_REPOST
+              ? defs.multiPostLikeViaRepostGroup.$build(fields)
+              : defs.multiPostRepostViaRepostGroup.$build(fields)
+          break
+        }
         const subjectUri = notif.reasonSubject
         const originalPostUri =
           state.reposts?.get(subjectUri)?.record.subject.uri

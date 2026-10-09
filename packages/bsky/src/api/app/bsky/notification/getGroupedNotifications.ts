@@ -388,7 +388,12 @@ const presentation = (
       for (const item of truncateRelatedViewsItems(kind.items)) {
         profileDids.add(item.actor)
       }
-    } else if (defs.multiPostLikeGroup.$isTypeOf(kind)) {
+    } else if (
+      defs.multiPostLikeGroup.$isTypeOf(kind) ||
+      defs.multiPostRepostGroup.$isTypeOf(kind) ||
+      defs.multiPostLikeViaRepostGroup.$isTypeOf(kind) ||
+      defs.multiPostRepostViaRepostGroup.$isTypeOf(kind)
+    ) {
       profileDids.add(kind.actor)
       for (const item of truncateRelatedViewsItems(kind.items)) {
         recordUris.add(item.post)
