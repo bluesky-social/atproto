@@ -53,12 +53,12 @@
               "items": {
                 "type": "union",
                 "refs": [
-                  "app.bsky.actor.defs#profileViewDetailed",
+                  "app.bsky.actor.defs#profileViewBasic",
                   "app.bsky.feed.defs#blockedPost",
                   "app.bsky.feed.defs#generatorView",
                   "app.bsky.feed.defs#notFoundPost",
                   "app.bsky.feed.defs#postView",
-                  "app.bsky.graph.defs#starterPackView"
+                  "app.bsky.graph.defs#starterPackViewBasic"
                 ]
               }
             }

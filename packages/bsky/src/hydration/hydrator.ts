@@ -209,6 +209,14 @@ type HydrateFeedItemsOptions = {
   knownLikers?: boolean
 }
 
+export type HydrateProfilesOptions = {
+  // when set, restricts known followers hydration to this subset of dids
+  knownFollowersDids?: DidString[]
+  activitySubscriptions?: boolean
+}
+
+type ProfileHydrationLevel = 'basic' | 'profile' | 'detailed'
+
 export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
 export type PostBlocks = HydrationMap<AtUriString, PostBlock>
 type PostBlockPairs = {
@@ -306,6 +314,164 @@ export class Hydrator {
   async hydrateProfiles(
     dids: DidString[],
     ctx: HydrateCtx,
+    opts?: HydrateProfilesOptions,
+  ): Promise<HydrationState> {
+    return this.hydrateProfilesWorker(dids, ctx, 'profile', opts)
+  }
+
+  // app.bsky.actor.defs#profileViewBasic
+  // - profile basic
+  //   - profile
+  //     - list basic
+  async hydrateProfilesBasic(
+    dids: DidString[],
+    ctx: HydrateCtx,
+    opts?: HydrateProfilesOptions,
+  ): Promise<HydrationState> {
+    return this.hydrateProfilesWorker(dids, ctx, 'basic', opts)
+  }
+
+  // app.bsky.actor.defs#profileViewDetailed
+  // - profile detailed
+  //   - profile
+  //     - list basic
+  //   - starterpack
+  //     - profile
+  //       - list basic
+  //     - labels
+  async hydrateProfilesDetailed(
+    dids: DidString[],
+    ctx: HydrateCtx,
+    opts?: HydrateProfilesOptions,
+  ): Promise<HydrationState> {
+    return this.hydrateProfilesWorker(dids, ctx, 'detailed', opts)
+  }
+
+  private async hydrateProfilesWorker(
+    dids: DidString[],
+    ctx: HydrateCtx,
+    level: ProfileHydrationLevel,
+    opts?: HydrateProfilesOptions,
+  ): Promise<HydrationState> {
+    const detailed = level === 'detailed'
+    const knownFollowersDids = opts?.knownFollowersDids
+    const includeActivitySubscriptions = opts?.activitySubscriptions ?? false
+
+    // Batch 1: known followers, profile counts, activity subscriptions.
+    const knownFollowersPromise = knownFollowersDids?.length
+      ? this.actor
+          .getKnownFollowers(knownFollowersDids, ctx.viewer)
+          .catch((err): KnownFollowersStates => {
+            hydrationLogger.error(
+              { err },
+              'Failed to get known followers for profiles',
+            )
+            return new HydrationMap()
+          })
+      : Promise.resolve(undefined)
+
+    const profileAggsPromise = detailed
+      ? this.actor.getProfileAggregates(dids)
+      : Promise.resolve(undefined)
+
+    const activitySubscriptionsPromise = includeActivitySubscriptions
+      ? this.actor
+          .getActivitySubscriptions(dids, ctx.viewer)
+          .catch((err): ActivitySubscriptionStates => {
+            if (!detailed && opts?.activitySubscriptions) throw err
+            hydrationLogger.error(
+              { err },
+              'Failed to get activity subscriptions state for profiles',
+            )
+            return new HydrationMap()
+          })
+      : Promise.resolve(undefined)
+
+    const profilesPromise = (async () => {
+      // Wait for known followers to collect their DIDs for batch 2.
+      const knownFollowers = await knownFollowersPromise
+      const subjectsToKnownFollowersMap = new Map<DidString, DidString[]>()
+      knownFollowers?.forEach((known, did) => {
+        if (known) subjectsToKnownFollowersMap.set(did, known.followers)
+      })
+      const allKnownFollowerDids = knownFollowers
+        ? Array.from(knownFollowers.values())
+            .filter(Boolean)
+            .flatMap((f) => f!.followers)
+        : []
+      const allDids = Array.from(new Set(dids.concat(allKnownFollowerDids)))
+
+      // Batch 2: profiles, bidirectional blocks between requested DIDs and their known followers.
+      const profileStatePromise = this.hydrateProfileState(allDids, ctx)
+      const bidirectionalBlocksPromise = knownFollowers
+        ? this.hydrateBidirectionalBlocks(subjectsToKnownFollowersMap, ctx)
+        : undefined
+
+      // Batch 3: joined-via starter packs, profile links.
+      const starterPackStatePromise = detailed
+        ? (async () => {
+            const state = await profileStatePromise
+            const starterPackUriSet = new Set<AtUriString>()
+            state.actors?.forEach((actor) => {
+              if (actor?.profile?.joinedViaStarterPack) {
+                starterPackUriSet.add(actor.profile.joinedViaStarterPack.uri)
+              }
+            })
+            return this.hydrateStarterPacksBasic([...starterPackUriSet], ctx)
+          })()
+        : undefined
+      const profileLinksPromise = detailed
+        ? (async () => {
+            const state = await profileStatePromise
+            return this.actor
+              .getProfileLinks(
+                profileLinkUris(dids, state.actors),
+                ctx.includeTakedowns,
+              )
+              .catch((err): ProfileLinks => {
+                hydrationLogger.error({ err }, 'Failed to get profile links')
+                return new HydrationMap()
+              })
+          })()
+        : undefined
+
+      const [
+        profileState,
+        bidirectionalBlocks,
+        starterPackState,
+        profileLinks,
+      ] = await Promise.all([
+        profileStatePromise,
+        bidirectionalBlocksPromise,
+        starterPackStatePromise,
+        profileLinksPromise,
+      ])
+
+      return mergeManyStates(profileState, starterPackState ?? {}, {
+        knownFollowers,
+        bidirectionalBlocks,
+        profileLinks,
+        ctx,
+      })
+    })()
+
+    // Also await counts and subscriptions from batch 1.
+    const [state, profileAggs, activitySubscriptions] = await Promise.all([
+      profilesPromise,
+      profileAggsPromise,
+      activitySubscriptionsPromise,
+    ])
+
+    return mergeStates(state, {
+      profileAggs,
+      activitySubscriptions,
+      ctx,
+    })
+  }
+
+  private async hydrateProfileState(
+    dids: DidString[],
+    ctx: HydrateCtx,
   ): Promise<HydrationState> {
     /**
      * Special case here, we want to include takedowns in special cases, like
@@ -352,98 +518,6 @@ export class Hydrator {
       actors,
       labels,
       ctx,
-    })
-  }
-
-  // app.bsky.actor.defs#profileViewBasic
-  // - profile basic
-  //   - profile
-  //     - list basic
-  async hydrateProfilesBasic(
-    dids: DidString[],
-    ctx: HydrateCtx,
-  ): Promise<HydrationState> {
-    return this.hydrateProfiles(dids, ctx)
-  }
-
-  // app.bsky.actor.defs#profileViewDetailed
-  // - profile detailed
-  //   - profile
-  //     - list basic
-  //   - starterpack
-  //     - profile
-  //       - list basic
-  //     - labels
-  async hydrateProfilesDetailed(
-    dids: DidString[],
-    ctx: HydrateCtx,
-    opts?: {
-      // when set, restricts known followers hydration to this subset of dids
-      knownFollowersDids?: DidString[]
-    },
-  ): Promise<HydrationState> {
-    const [knownFollowers, activitySubscriptions] = await Promise.all([
-      this.actor
-        .getKnownFollowers(opts?.knownFollowersDids ?? dids, ctx.viewer)
-        .catch((err): KnownFollowersStates => {
-          hydrationLogger.error(
-            { err },
-            'Failed to get known followers for profiles',
-          )
-          return new HydrationMap()
-        }),
-      this.actor
-        .getActivitySubscriptions(dids, ctx.viewer)
-        .catch((err): ActivitySubscriptionStates => {
-          hydrationLogger.error(
-            { err },
-            'Failed to get activity subscriptions state for profiles',
-          )
-          return new HydrationMap()
-        }),
-    ])
-
-    const subjectsToKnownFollowersMap = new Map<DidString, DidString[]>()
-
-    for (const did of knownFollowers.keys()) {
-      const known = knownFollowers.get(did)
-      if (known) subjectsToKnownFollowersMap.set(did, known.followers)
-    }
-
-    const allKnownFollowerDids = Array.from(knownFollowers.values())
-      .filter(Boolean)
-      .flatMap((f) => f!.followers)
-    const allDids = Array.from(new Set(dids.concat(allKnownFollowerDids)))
-    const [state, profileAggs, bidirectionalBlocks] = await Promise.all([
-      this.hydrateProfiles(allDids, ctx),
-      this.actor.getProfileAggregates(dids),
-      this.hydrateBidirectionalBlocks(subjectsToKnownFollowersMap, ctx),
-    ])
-    const starterPackUriSet = new Set<AtUriString>()
-    state.actors?.forEach((actor) => {
-      if (actor?.profile?.joinedViaStarterPack) {
-        starterPackUriSet.add(actor?.profile?.joinedViaStarterPack?.uri)
-      }
-    })
-    const [starterPackState, profileLinks] = await Promise.all([
-      this.hydrateStarterPacksBasic([...starterPackUriSet], ctx),
-      this.actor
-        .getProfileLinks(
-          profileLinkUris(dids, state.actors),
-          ctx.includeTakedowns,
-        )
-        .catch((err): ProfileLinks => {
-          hydrationLogger.error({ err }, 'Failed to get profile links')
-          return new HydrationMap()
-        }),
-    ])
-    return mergeManyStates(state, starterPackState, {
-      profileAggs,
-      profileLinks,
-      knownFollowers,
-      activitySubscriptions,
-      ctx,
-      bidirectionalBlocks,
     })
   }
 
@@ -1377,9 +1451,11 @@ export class Hydrator {
   async hydrateGroupedNotifications(
     notifs: RawNotification[],
     ctx: HydrateCtx,
+    opts?: { knownFollowersDids?: DidString[] },
   ): Promise<HydrationState> {
     if (!notifs.length) return { ctx }
     const notificationUris = dedupeStrs(notifs.map((notif) => notif.uri))
+    const authorDids = dedupeStrs(notificationUris.map(didFromUri))
 
     const collections = urisByCollection(notificationUris)
     const notificationPostUris = collections.get(app.bsky.feed.post.$type) ?? []
@@ -1422,14 +1498,14 @@ export class Hydrator {
         this.feed.getReposts([...repostUris], ctx.includeTakedowns),
         this.graph.getFollows(followUris, ctx.includeTakedowns),
         this.label.getLabelsForSubjects(
-          // Fetch labels for likes and follows here; hydrateProfilesDetailed fetches profile labels, and hydratePosts fetches post labels later.
+          // Fetch labels for likes and follows here; profile and post hydration fetch their own labels.
           [...likeUris, ...followUris],
           ctx.labelers,
         ),
-        this.hydrateProfilesDetailed(
-          dedupeStrs(notificationUris.map(didFromUri)),
-          ctx,
-        ),
+        // Hydrate known followers only for the subset selected by the endpoint.
+        this.hydrateProfilesBasic(authorDids, ctx, {
+          knownFollowersDids: opts?.knownFollowersDids,
+        }),
       ])
 
     reposts.forEach((repost) => {
@@ -1452,7 +1528,7 @@ export class Hydrator {
         { posts },
       ),
       this.hydrateFeedGens([...feedGenUris], ctx),
-      this.hydrateStarterPacks([...starterPackUris], ctx),
+      this.hydrateStarterPacksBasic([...starterPackUris], ctx),
     ])
     return mergeManyStates(
       profileState,

@@ -167,6 +167,12 @@ const notificationDeletedRecordCid =
 // of 10 today. The AppView trims defensively at the view boundary.
 const GALLERY_SOFT_LIMIT = 10
 
+type ProfileViewOptions = {
+  // Normally known followers inclusion is decided by its presence on the hydration state.
+  // This is an override.
+  includeKnownFollowers?: boolean
+}
+
 export class Views {
   public imgUriBuilder: ImageUriBuilder = this.opts.imgUriBuilder
   public videoUriBuilder: VideoUriBuilder = this.opts.videoUriBuilder
@@ -318,23 +324,17 @@ export class Views {
   profileDetailed(
     did: DidString,
     state: HydrationState,
+    opts?: ProfileViewOptions,
   ): Un$Typed<ProfileViewDetailed> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
-    const baseView = this.profile(did, state)
+    const baseView = this.profile(did, state, opts)
     if (!baseView) return
-    const knownFollowers = this.knownFollowers(did, state)
     const profileAggs = state.profileAggs?.get(did)
 
     return {
       ...baseView,
       website: this.profileWebsite(did, state),
-      viewer: baseView.viewer
-        ? {
-            ...baseView.viewer,
-            knownFollowers,
-          }
-        : undefined,
       banner: actor.profile?.banner
         ? this.imgUriBuilder.getPresetUri(
             'banner',
@@ -400,10 +400,11 @@ export class Views {
   profile(
     did: DidString,
     state: HydrationState,
+    opts?: ProfileViewOptions,
   ): Un$Typed<ProfileView> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
-    const basicView = this.profileBasic(did, state)
+    const basicView = this.profileBasic(did, state, opts)
     if (!basicView) return
     return {
       ...basicView,
@@ -421,6 +422,7 @@ export class Views {
   profileBasic(
     did: DidString,
     state: HydrationState,
+    opts?: ProfileViewOptions,
   ): Un$Typed<ProfileViewBasic> | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
@@ -434,6 +436,12 @@ export class Views {
         record: actor.profile,
       }),
     ]
+    const viewer = this.profileViewer(did, state)
+    const knownFollowers =
+      viewer && (opts?.includeKnownFollowers ?? true)
+        ? this.knownFollowers(did, state)
+        : undefined
+    if (viewer && knownFollowers) viewer.knownFollowers = knownFollowers
     return {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
@@ -459,7 +467,7 @@ export class Views {
             }
           : undefined,
       },
-      viewer: this.profileViewer(did, state),
+      viewer,
       labels,
       createdAt: actor.createdAt
         ? (actor.createdAt.toISOString() as DatetimeString)
@@ -482,26 +490,6 @@ export class Views {
     actor: Actor,
   ): ProfileAssociatedActivitySubscription {
     return { allowSubscriptions: actor.allowActivitySubscriptionsFrom }
-  }
-
-  profileKnownFollowers(
-    did: DidString,
-    state: HydrationState,
-  ): ProfileView | undefined {
-    const actor = state.actors?.get(did)
-    if (!actor) return
-    const baseView = this.profile(did, state)
-    if (!baseView) return
-    const knownFollowers = this.knownFollowers(did, state)
-    return {
-      ...baseView,
-      viewer: baseView.viewer
-        ? {
-            ...baseView.viewer,
-            knownFollowers,
-          }
-        : undefined,
-    }
   }
 
   profileViewer(
@@ -623,7 +611,10 @@ export class Views {
       if (this.actorIsNoHosted(subjectDid, state)) {
         return undefined
       }
-      return this.profileBasic(subjectDid, state)
+      // @NOTE Nested known-subject views must not recursively expand social proof.
+      return this.profileBasic(subjectDid, state, {
+        includeKnownFollowers: false,
+      })
     })
     return { count, [key]: subjects } as { count: number } & Record<
       Key,

@@ -65,6 +65,7 @@ const hydration = async (input: {
     params.hydrateCtx.copy({
       overrideIncludeTakedownsForActor: true,
     }),
+    { knownFollowersDids: [skeleton.did], activitySubscriptions: true },
   )
 }
 
