@@ -853,4 +853,286 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(state.actors?.has('did:plc:streamer' as DidString)).toBe(true)
     })
   })
+  describe('grain galleries', () => {
+    const owner: DidString = 'did:plc:grain'
+    const galleryOf = (rkey: string) =>
+      atUri(owner, social.grain.gallery.$type, rkey)
+    const photoOf = (rkey: string, did: DidString = owner) =>
+      atUri(did, social.grain.photo.$type, rkey)
+    const itemOf = (rkey: string) =>
+      atUri(owner, social.grain.gallery.item.$type, rkey)
+    const favoriteOf = (did: DidString, rkey: string) =>
+      atUri(did, social.grain.favorite.$type, rkey)
+    const createdAt = '2026-10-01T00:00:00.000Z'
+    const makeGallery = () =>
+      social.grain.gallery.$build({ title: 'Photos', createdAt })
+    const makeItem = (gallery: AtUriString, item: string) =>
+      social.grain.gallery.item.$build({
+        gallery,
+        item: item as AtUriString,
+        createdAt,
+      })
+    // Photo bodies are terminal here, so a minimal body suffices.
+    const makePhoto = () => ({ $type: social.grain.photo.$type, alt: 'alt' })
+
+    type Fixture = ReturnType<typeof createFixture>
+    // Seeds a gallery with `favs` favorites and `items` items, each item
+    // pointing to its own photo (owned by `photoOwner`).
+    const seedGallery = (
+      { records, backlinks, counts }: Fixture,
+      gallery: AtUriString,
+      favs: number,
+      items: number,
+      photoOwner: DidString = owner,
+    ) => {
+      records.set(gallery, { body: makeGallery() })
+      const favUris = Array.from({ length: favs }, (_, i) =>
+        favoriteOf(
+          `did:plc:fan${i}` as DidString,
+          `${gallery}-${i}`.replace(/\W/g, ''),
+        ),
+      )
+      for (const uri of favUris) {
+        records.set(uri, {
+          body: social.grain.favorite.$build({ subject: gallery, createdAt }),
+        })
+      }
+      const key = gallery.split('/').pop()
+      const itemUris = Array.from({ length: items }, (_, i) =>
+        itemOf(`${key}-${i}`),
+      )
+      const photoUris = itemUris.map((_, i) =>
+        photoOf(`${key}-${i}`, photoOwner),
+      )
+      itemUris.forEach((uri, i) => {
+        records.set(uri, { body: makeItem(gallery, photoUris[i]) })
+        records.set(photoUris[i], { body: makePhoto() })
+      })
+      backlinks.set(gallery, [...favUris, ...itemUris])
+      counts.set(gallery, {
+        [social.grain.favorite.$type]: 99n,
+        [social.grain.gallery.item.$type]: 77n,
+      })
+      return { favUris, itemUris, photoUris }
+    }
+
+    it('hydrates favorites, items, then photos with independent bounds and counts', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane } = fixture
+      const gallery = galleryOf('g1')
+      const { favUris, itemUris, photoUris } = seedGallery(
+        fixture,
+        gallery,
+        5,
+        12,
+        'did:plc:photoowner',
+      )
+      using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [gallery],
+        ctx,
+      )
+
+      // Both source groups are retained, each bounded by its own limit.
+      expect(state.externalRecordBacklinks?.get(gallery)).toEqual([
+        ...favUris.slice(0, 3),
+        ...itemUris.slice(0, 10),
+      ])
+      const requestedLimits = vi
+        .mocked(dataplane.getAtmosphereBacklinks)
+        .mock.calls.map(([req]) => [req.collection, req.limit])
+      expect(requestedLimits).toEqual([
+        [social.grain.favorite.$type, 3],
+        [social.grain.gallery.item.$type, 10],
+      ])
+      // Counts are one batched call, independent of the samples.
+      expect(dataplane.getAtmosphereBacklinkCounts).toHaveBeenCalledTimes(1)
+      expect(state.externalRecordBacklinkCounts?.get(gallery)).toEqual({
+        [social.grain.favorite.$type]: 99,
+        [social.grain.gallery.item.$type]: 77,
+      })
+
+      // Pass 1: gallery. Pass 2: sources together. Pass 3: photos together.
+      expect(embedSpy).toHaveBeenCalledTimes(3)
+      expect(embedSpy.mock.calls[1][0].toSorted()).toEqual(
+        [...favUris.slice(0, 3), ...itemUris.slice(0, 10)].toSorted(),
+      )
+      expect(embedSpy.mock.calls[2][0].toSorted()).toEqual(
+        photoUris.slice(0, 10).toSorted(),
+      )
+
+      // Records, exact refs, labels, and profiles survive nested passes,
+      // including photo owners that weren't in the root batch.
+      const photo = photoUris[0]
+      expect(state.externalRecords?.get(photo)).toBeTruthy()
+      expect(state.externalRecordsByRef?.has(`${photo}@cid-${photo}`)).toBe(
+        true,
+      )
+      expect(state.labels?.has(photo)).toBe(true)
+      expect(state.actors?.has('did:plc:photoowner' as DidString)).toBe(true)
+      expect(state.externalRecords?.has(photoUris[10])).toBe(false)
+    })
+
+    it('hydrates photos for gallery-item-only input without backlink calls', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane } = fixture
+      const gallery = galleryOf('g1')
+      const { itemUris, photoUris } = seedGallery(fixture, gallery, 0, 2)
+      using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        itemUris,
+        ctx,
+      )
+
+      expect(embedSpy).toHaveBeenCalledTimes(2)
+      expect(embedSpy.mock.calls[1][0].toSorted()).toEqual(photoUris.toSorted())
+      expect(dataplane.getAtmosphereBacklinks).not.toHaveBeenCalled()
+      expect(dataplane.getAtmosphereBacklinkCounts).not.toHaveBeenCalled()
+      expect(state.externalRecordBacklinks?.size ?? 0).toBe(0)
+      for (const uri of photoUris) {
+        expect(state.externalRecords?.get(uri)).toBeTruthy()
+      }
+    })
+
+    it('batches shared photos once and does not retry unavailable ones', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records, backlinks } = fixture
+      const g1 = galleryOf('g1')
+      const g2 = galleryOf('g2')
+      const shared = photoOf('shared')
+      const gone = photoOf('gone')
+      const hidden = photoOf('hidden')
+      records.set(g1, { body: makeGallery() })
+      records.set(g2, { body: makeGallery() })
+      records.set(shared, { body: makePhoto() })
+      records.set(hidden, { body: makePhoto(), takenDown: true })
+      const items = [
+        [itemOf('a'), g1, shared],
+        [itemOf('b'), g2, shared],
+        [itemOf('c'), g1, gone],
+        [itemOf('d'), g2, hidden],
+      ] as const
+      for (const [uri, gallery, photo] of items) {
+        records.set(uri, { body: makeItem(gallery, photo) })
+      }
+      backlinks.set(g1, [itemOf('a'), itemOf('c')])
+      backlinks.set(g2, [itemOf('b'), itemOf('d')])
+      using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [g1, g2],
+        ctx,
+      )
+
+      expect(embedSpy).toHaveBeenCalledTimes(3)
+      expect(embedSpy.mock.calls[2][0].toSorted()).toEqual(
+        [shared, gone, hidden].toSorted(),
+      )
+      expect(state.externalRecords?.get(shared)).toBeTruthy()
+      expect(state.externalRecords?.get(gone)).toBeNull()
+      expect(state.externalRecords?.get(hidden)).toBeNull()
+      expect(
+        embedSpy.mock.calls.flatMap(([uris]) => uris).filter((u) => u === gone),
+      ).toHaveLength(1)
+    })
+
+    it('bounds total backlink concurrency', async ({ fixture }) => {
+      const { hydrator, ctx, dataplane } = fixture
+      const galleries = Array.from({ length: 10 }, (_, i) => galleryOf(`g${i}`))
+      for (const gallery of galleries) seedGallery(fixture, gallery, 1, 1)
+      const impl = vi
+        .mocked(dataplane.getAtmosphereBacklinks)
+        .getMockImplementation()!
+      let inFlight = 0
+      let peak = 0
+      vi.mocked(dataplane.getAtmosphereBacklinks).mockImplementation(
+        async (...args) => {
+          inFlight++
+          peak = Math.max(peak, inFlight)
+          await new Promise((resolve) => setTimeout(resolve, 5))
+          try {
+            return await impl(...args)
+          } finally {
+            inFlight--
+          }
+        },
+      )
+      await hydrator.hydrateEmbedExternalViewFromUris(galleries, ctx)
+      const galleryQueries = vi
+        .mocked(dataplane.getAtmosphereBacklinks)
+        .mock.calls.filter(([req]) =>
+          (galleries as string[]).includes(req.targetUri ?? ''),
+        )
+      expect(galleryQueries).toHaveLength(20)
+      expect(peak).toBeLessThanOrEqual(8)
+      expect(peak).toBeGreaterThan(1)
+    })
+
+    it('does not hydrate photos for invalid items or references', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records, dataplane } = fixture
+      const gallery = galleryOf('g1')
+      const photo = photoOf('p')
+      records.set(photo, { body: makePhoto() })
+      const bodies: Record<string, object> = {
+        invalidBody: { $type: social.grain.gallery.item.$type, gallery },
+        wrongCollection: makeItem(gallery, pubUri),
+        handleAuthority: makeItem(
+          gallery,
+          `at://photos.example/${social.grain.photo.$type}/p`,
+        ),
+        missingRkey: makeItem(
+          gallery,
+          `at://${owner}/${social.grain.photo.$type}`,
+        ),
+        fragment: makeItem(gallery, `${photo}#frag`),
+      }
+      const uris = Object.keys(bodies).map(itemOf)
+      Object.entries(bodies).forEach(([key, body]) => {
+        records.set(itemOf(key), { body })
+      })
+      using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
+      await hydrator.hydrateEmbedExternalViewFromUris(uris, ctx)
+
+      expect(embedSpy).toHaveBeenCalledTimes(1)
+      const lookups = vi
+        .mocked(dataplane.getRecordsByURI)
+        .mock.calls.flatMap(([req]) => req.uris)
+      expect(lookups).not.toContain(photo)
+      expect(lookups).not.toContain(pubUri)
+    })
+
+    it('preserves Standard Site and Streamplace behavior in mixed batches', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records, dataplane, seedBasic } = fixture
+      seedBasic()
+      const streamUri = atUri(
+        'did:plc:streamer',
+        place.stream.livestream.$type,
+        '1',
+      )
+      records.set(streamUri, {
+        body: place.stream.livestream.$build({ title: 'Live', createdAt }),
+      })
+      const gallery = galleryOf('g1')
+      const { photoUris } = seedGallery(fixture, gallery, 1, 1)
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [streamUri, doc1, gallery],
+        ctx,
+      )
+
+      const targets = vi
+        .mocked(dataplane.getAtmosphereBacklinks)
+        .mock.calls.map(([req]) => req.targetUri)
+      expect(targets).toEqual(expect.arrayContaining([doc1, pubUri, gallery]))
+      expect(targets).not.toContain(streamUri)
+      expect(state.externalRecords?.get(pubUri)).toBeTruthy()
+      expect(state.externalRecords?.get(photoUris[0])).toBeTruthy()
+      expect(state.actors?.has('did:plc:streamer' as DidString)).toBe(true)
+    })
+  })
 })
