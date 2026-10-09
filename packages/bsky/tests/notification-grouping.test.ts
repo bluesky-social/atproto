@@ -1419,13 +1419,6 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         const via =
           reason === NOTIFICATION_REASON.LIKE_VIA_REPOST ||
           reason === NOTIFICATION_REASON.REPOST_VIA_REPOST
-        const schema =
-          reason === NOTIFICATION_REASON.REPOST
-            ? defs.multiPostRepostGroup
-            : reason === NOTIFICATION_REASON.LIKE_VIA_REPOST
-              ? defs.multiPostLikeViaRepostGroup
-              : defs.multiPostRepostViaRepostGroup
-
         it.each([
           { remaining: 12, removal: 'none' },
           { remaining: 3, removal: 'interaction' },
@@ -1508,6 +1501,12 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
               .call(defs, { limit: 30 }, { headers })
             const kept = records.slice(12 - remaining)
             const newest = kept[0]
+            const viaRepostItems = via
+              ? kept.map(({ post, viaRepost }) => {
+                  assert(viaRepost)
+                  return { post, viaRepost }
+                })
+              : []
             expect(response.groups).toEqual(
               newest
                 ? [
@@ -1534,14 +1533,20 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
                                   viaRepost: newest.viaRepost!,
                                   items: [{ actor: sc.dids.bob }],
                                 })
-                          : {
-                              $type: schema.$type,
-                              actor: sc.dids.bob,
-                              items: kept.map(({ post, viaRepost }) => ({
-                                post,
-                                ...(viaRepost ? { viaRepost } : {}),
-                              })),
-                            },
+                          : reason === NOTIFICATION_REASON.REPOST
+                            ? defs.multiPostRepostGroup.$build({
+                                actor: sc.dids.bob,
+                                items: kept.map(({ post }) => ({ post })),
+                              })
+                            : reason === NOTIFICATION_REASON.LIKE_VIA_REPOST
+                              ? defs.multiPostLikeViaRepostGroup.$build({
+                                  actor: sc.dids.bob,
+                                  items: viaRepostItems,
+                                })
+                              : defs.multiPostRepostViaRepostGroup.$build({
+                                  actor: sc.dids.bob,
+                                  items: viaRepostItems,
+                                }),
                     }),
                   ]
                 : [],
