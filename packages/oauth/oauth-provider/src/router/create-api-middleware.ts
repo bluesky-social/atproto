@@ -69,6 +69,7 @@ import {
   buildRedirectUri,
 } from './assets/send-redirect.js'
 import type { MiddlewareOptions } from './middleware-options.js'
+import { setFedcmLoginStatus } from './set-fedcm-login-status.js'
 
 export function createApiMiddleware<
   Ctx extends object | void = void,
@@ -1051,7 +1052,9 @@ export function createApiMiddleware<
           deviceMetadata,
         })
 
-        return await handler.call(context, req, res)
+        const response = await handler.call(context, req, res)
+        await setFedcmLoginStatus(server, deviceId, res)
+        return response
       } catch (err) {
         onError?.(req, res, err, `Failed to handle API request`)
 

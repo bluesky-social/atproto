@@ -1,8 +1,23 @@
-import { type ReactNode, createContext, useContext, useMemo } from 'react'
+import {
+  type ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+} from 'react'
+import type { DidString } from '@atproto/lex'
 import type { OAuthSession } from '@atproto/oauth-client-browser'
 import { AtmosphereSignInForm } from '../components/AtmosphereSignInForm.tsx'
 import { Layout } from '../components/Layout.tsx'
-import { PDS_OPERATOR_URL } from '../constants.ts'
+import {
+  FEDCM_MODE,
+  FEDCM_PROVIDER_URLS,
+  PDS_OPERATOR_URL,
+} from '../constants.ts'
+import { createFedcmAppState } from '../lib/fedcm.ts'
+import { useFedcmSignIn } from '../lib/use-fedcm-sign-in.ts'
+import { oauthClient } from '../oauthClient.ts'
 import { useOAuthContext } from './OAuthProvider.tsx'
 
 export type AuthenticationType = {
@@ -15,14 +30,97 @@ export const AuthenticationContext = createContext<AuthenticationType | null>(
 )
 AuthenticationContext.displayName = 'AuthenticationContext'
 
+async function fedcmSignInRedirect(
+  did: DidString,
+  signal: AbortSignal,
+): Promise<never> {
+  const url = await oauthClient.authorize(did, {
+    signal,
+    state: createFedcmAppState(did),
+  })
+
+  // @NOTE authorize() can finish creating the PAR request after its signal is
+  // aborted. Do not let that stale FedCM selection redirect over a manual
+  // sign-in that the user started in the meantime.
+  if (signal.aborted) {
+    await oauthClient.abortRequest(url)
+    signal.throwIfAborted()
+  }
+
+  window.location.href = url.href
+
+  // @NOTE Match signInRedirect's cleanup when a user navigates back to this page.
+  return new Promise<never>((_resolve, reject) => {
+    window.setTimeout(
+      (err: Error) => {
+        oauthClient.abortRequest(url).then(
+          () => reject(err),
+          (reason) => reject(new AggregateError([err, reason])),
+        )
+      },
+      5e3,
+      new Error('User navigated back'),
+    )
+  })
+}
+
 /**
  * Gates children behind an authentication flow. If the user is not signed in,
  * it will render a sign-in form. If the user is signed in, it will render the
  * children and provide the session and signOut function via context.
  */
 export function AuthenticationProvider({ children }: { children?: ReactNode }) {
-  const { session, signIn, signUp, signOut } = useOAuthContext(
-    AuthenticationProvider.name,
+  const { session, signIn, signUp, signOut, fedcmDidMismatch } =
+    useOAuthContext(AuthenticationProvider.name)
+  const fedcmRedirectSignal = useRef<AbortSignal | undefined>(undefined)
+
+  const continueWithFedcmAccount = useCallback(
+    (did: DidString, signal: AbortSignal) => {
+      if (fedcmRedirectSignal.current && !fedcmRedirectSignal.current.aborted) {
+        return
+      }
+      signal.throwIfAborted()
+      fedcmRedirectSignal.current = signal
+
+      // @NOTE FedCM supplies the OAuth hint only; app state binds the callback
+      // to that DID before the example accepts the resulting session.
+      return fedcmSignInRedirect(did, signal).catch((err) => {
+        if (fedcmRedirectSignal.current === signal) {
+          fedcmRedirectSignal.current = undefined
+        }
+        if (!signal.aborted) {
+          throw err
+        }
+      })
+    },
+    [],
+  )
+
+  const {
+    cancel: cancelFedcm,
+    error: fedcmError,
+    pending: fedcmPending,
+    requestActiveSelection,
+  } = useFedcmSignIn(
+    session ? [] : FEDCM_PROVIDER_URLS,
+    continueWithFedcmAccount,
+    FEDCM_MODE === 'passive' && !fedcmDidMismatch,
+  )
+
+  const signInAfterFedcm = useCallback(
+    (input: string, options?: { display?: 'popup' }) => {
+      cancelFedcm()
+      return signIn(input, options)
+    },
+    [cancelFedcm, signIn],
+  )
+
+  const signUpAfterFedcm = useCallback(
+    (input: string, options?: { display?: 'popup' }) => {
+      cancelFedcm()
+      return signUp(input, options)
+    },
+    [cancelFedcm, signUp],
   )
 
   const value = useMemo<AuthenticationType | null>(
@@ -36,9 +134,32 @@ export function AuthenticationProvider({ children }: { children?: ReactNode }) {
         <div className="flex flex-grow flex-col items-center justify-center">
           <AtmosphereSignInForm
             pdsOperatorUrl={PDS_OPERATOR_URL}
-            signIn={signIn}
-            signUp={signUp}
+            signIn={signInAfterFedcm}
+            signUp={signUpAfterFedcm}
+            fedcmSignIn={
+              FEDCM_MODE === 'active' && FEDCM_PROVIDER_URLS.length === 1
+                ? requestActiveSelection
+                : undefined
+            }
+            fedcmPending={fedcmPending}
+            fedcmError={
+              FEDCM_MODE === 'active' && FEDCM_PROVIDER_URLS.length > 1
+                ? 'Active FedCM requires exactly one provider.'
+                : FEDCM_MODE === 'active' && fedcmError
+                  ? String(fedcmError)
+                  : undefined
+            }
           />
+          {fedcmDidMismatch && (
+            <p
+              className="mt-4 max-w-prose text-center text-red-700 dark:text-red-300"
+              role="alert"
+            >
+              FedCM selected {fedcmDidMismatch.expected}, but OAuth signed in as{' '}
+              {fedcmDidMismatch.actual}. This OAuth session was not accepted.
+              Please sign in again.
+            </p>
+          )}
         </div>
       </Layout>
     )

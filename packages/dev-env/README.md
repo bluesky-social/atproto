@@ -5,6 +5,8 @@ A command-line application for developers to construct and manage development en
 [![NPM](https://img.shields.io/npm/v/@atproto/dev-env)](https://www.npmjs.com/package/@atproto/dev-env)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
 
+For a seeded HTTPS OAuth/FedCM demo, follow [Run the full FedCM example](../oauth/oauth-client-browser-example/README.md#run-the-full-fedcm-example).
+
 ## REPL API
 
 The following methods are available in the REPL.

@@ -58,6 +58,7 @@ export function validateFetchDest(
     | 'serviceworker'
     | 'sharedworker'
     | 'style'
+    | 'webidentity'
     | 'worker'
     | 'xslt'
   )[],
