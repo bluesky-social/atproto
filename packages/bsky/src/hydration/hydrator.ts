@@ -45,6 +45,7 @@ import {
   type ProfileViewerStates,
 } from './actor.js'
 import {
+  type ExactRecordKey,
   ExternalHydrator,
   type ExternalRecordBacklinkCounts,
   type ExternalRecordBacklinks,
@@ -961,10 +962,15 @@ export class Hydrator {
   async hydrateEmbedExternalViewFromUris(
     uris: AtUriString[],
     ctx: HydrateCtx,
-    seenUris: Set<AtUriString> = new Set(),
+    seenRecordKeys: Set<string> = new Set(),
     hydrationPass = 1,
   ): Promise<HydrationState> {
-    return this.hydrateEmbedExternalView({ uris }, ctx, seenUris, hydrationPass)
+    return this.hydrateEmbedExternalView(
+      uris.map(uriToRef),
+      ctx,
+      seenRecordKeys,
+      hydrationPass,
+    )
   }
 
   /**
@@ -975,73 +981,65 @@ export class Hydrator {
   async hydrateEmbedExternalViewFromRefs(
     refs: Required<ItemRef>[],
     ctx: HydrateCtx,
-    seenUris: Set<AtUriString> = new Set(),
+    seenRecordKeys: Set<string> = new Set(),
     hydrationPass = 1,
   ): Promise<HydrationState> {
-    return this.hydrateEmbedExternalView({ refs }, ctx, seenUris, hydrationPass)
+    return this.hydrateEmbedExternalView(
+      refs,
+      ctx,
+      seenRecordKeys,
+      hydrationPass,
+    )
   }
 
   private async hydrateEmbedExternalView(
-    input: { uris: AtUriString[] } | { refs: Required<ItemRef>[] },
+    refs: ItemRef[],
     ctx: HydrateCtx,
-    seenUris: Set<AtUriString>,
+    seenRecordKeys: Set<string>,
     hydrationPass: number,
   ): Promise<HydrationState> {
-    const exactRefs = 'refs' in input ? input.refs : undefined
-    let items: ItemRef[]
-    if ('refs' in input) {
-      // Exact versions are identified by (uri, cid), separately from the
-      // latest-URI lookups tracked in `seenUris`: fetching one version neither
-      // implies nor suppresses a fetch of the latest, or of another version.
-      items = [
-        ...new Map(
-          input.refs.map((ref) => [genericRecordKey(ref.uri, ref.cid), ref]),
-        ).values(),
-      ]
-    } else {
-      // Filter at the entry point so every URI is fetched at most once per
-      // shared traversal, even for callers that did not prefilter their input.
-      // Null or unavailable results stay in `seenUris` as completed lookups.
-      // Nothing unseen means no hydration work, and no pass is consumed.
-      items = dedupeStrs(input.uris)
-        .filter((uri) => !seenUris.has(uri))
-        .map((uri) => ({ uri }))
-      // Mark synchronously, before the first await, so concurrent work in this
-      // traversal cannot schedule these URIs again.
-      for (const { uri } of items) seenUris.add(uri)
-    }
+    // Filter at the entry point so each lookup runs at most once per shared
+    // traversal, even for callers that did not prefilter their input. Null or
+    // unavailable results stay seen as completed lookups. Nothing unseen means
+    // no hydration work, and no pass is consumed.
+    const items = takeUnseenRefs(refs, seenRecordKeys)
     if (!items.length) return { ctx }
+    // Get any bare URIs to fetch
+    const byUriValues = items
+      .filter(({ cid }) => cid === undefined)
+      .map(({ uri }) => uri)
+    // Get any exact refs to fetch
+    const byRefValues = items.filter(isExactRef)
+    // Pull out all URIs for label/profile hydration
     const allUris = dedupeStrs(items.map(({ uri }) => uri))
 
     // TODO Remove this once we're fully generic
-    const ssUris = exactRefs
-      ? []
-      : allUris.filter((uri) =>
-          new AtUri(uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX),
-        )
+    const ssUris = byUriValues.filter((uri) =>
+      new AtUri(uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX),
+    )
 
     // Get all the actors that are part of this hydration
     const dids = dedupeStrs(allUris.map(uriToDid))
     const seenDids = new Set<string>(dids)
 
     const fetchRecords = async () => {
-      if (exactRefs) {
-        const externalRecordsByRef = await this.external.getRecordsByRef(
-          items as Required<ItemRef>[],
-          ctx.includeTakedowns,
-        )
-        return { externalRecords: undefined, externalRecordsByRef }
-      }
-      const externalRecords = await this.external.getRecordsByURI(
-        allUris,
-        ctx.includeTakedowns,
-      )
-      // Build the by-ref map used by some endpoints
+      const [externalRecords, exactRecords] = await Promise.all([
+        byUriValues.length
+          ? this.external.getRecordsByURI(byUriValues, ctx.includeTakedowns)
+          : undefined,
+        byRefValues.length
+          ? this.external.getRecordsByRef(byRefValues, ctx.includeTakedowns)
+          : undefined,
+      ])
+      // Build the by-ref map used by some endpoints. Latest versions were not
+      // requested exactly, so they are not marked as completed exact lookups,
+      // and requested exact entries take precedence over them.
       const externalRecordsByRef: ExternalRecordsByRef = new HydrationMap()
-      for (const [uri, info] of externalRecords) {
+      for (const [uri, info] of externalRecords ?? []) {
         if (!info) continue
-        externalRecordsByRef.set(genericRecordKey(uri, info.cid), info)
+        externalRecordsByRef.set(genericRecordKey({ uri, cid: info.cid }), info)
       }
+      if (exactRecords) externalRecordsByRef.merge(exactRecords)
       return { externalRecords, externalRecordsByRef }
     }
 
@@ -1067,21 +1065,17 @@ export class Hydrator {
     })
     actionExternalRecordTakedowns(baseState, ctx.includeTakedowns)
 
-    // Merging mutates these maps, so note the unavailable versions up front.
-    const unavailableKeys = [...externalRecordsByRef]
-      .filter(([, info]) => !info)
-      .map(([key]) => key)
-
     // Discover and hydrate any additional view dependencies
     const depsState = await this.hydrateExternalViewDependencies(
       baseState,
       items,
       ctx,
-      seenUris,
+      seenRecordKeys,
       hydrationPass,
     )
 
     // Set values to `null` in maps if records are taken down
+    // TODO Remove this once we're fully generic
     if (!ctx.includeTakedowns) {
       actionSiteStandardTakedownLabels(documents, publications, labels)
     }
@@ -1092,6 +1086,8 @@ export class Hydrator {
      * though it wasn't requested directly). Top up profile coverage for any
      * such DIDs with a serial second hydration so `associatedProfiles` is
      * complete.
+     *
+     * TODO maybe generalize this to any external record
      */
     const newDids: DidString[] = []
     for (const key of publications.keys()) {
@@ -1105,7 +1101,10 @@ export class Hydrator {
       ? mergeStates(profiles, await this.hydrateProfilesBasic(newDids, ctx))
       : profiles
 
-    const merged = mergeManyStates(
+    // A supplemental latest lookup returning the same URI and CID is the same
+    // version, so it may replace an unavailable exact entry; other CIDs have
+    // other keys and never satisfy a pin.
+    return mergeManyStates(
       newProfiles,
       {
         ctx,
@@ -1117,11 +1116,6 @@ export class Hydrator {
       },
       depsState,
     )
-    // Supplemental latest-URI dependencies must never revive an exact version
-    // that was unavailable.
-    for (const key of unavailableKeys)
-      merged.externalRecordsByRef?.set(key, null)
-    return merged
   }
 
   /**
@@ -1131,22 +1125,24 @@ export class Hydrator {
    * `externalRecords`. Every pinned version is inspected, since versions of
    * one URI can reference different dependencies.
    *
-   * `seenUris` prevents repeated URIs and cycles across nested passes, but not
-   * a chain of distinct URIs; `MAX_EXTERNAL_HYDRATION_PASSES` bounds that, as
-   * a guard against future association rules or unexpected expansion. `hydrationPass`
-   * is the number of the generic batch that produced `state` (1-based, default
-   * 1 for prehydrated state, which is treated as the root batch); the next
-   * nested batch is `hydrationPass + 1`.
+   * `seenRecordKeys` prevents repeated lookups and cycles across nested passes,
+   * but not a chain of distinct URIs; `MAX_EXTERNAL_HYDRATION_PASSES` bounds
+   * that, as a guard against future association rules or unexpected expansion.
+   * `hydrationPass` is the number of the generic batch that produced `state`
+   * (1-based, default 1 for prehydrated state, which is treated as the root
+   * batch); the next nested batch is `hydrationPass + 1`.
    */
   async hydrateExternalViewDependencies(
     state: HydrationState,
     refs: ItemRef[],
     ctx: HydrateCtx,
-    seenUris: Set<AtUriString> = new Set(),
+    seenRecordKeys: Set<string> = new Set(),
     hydrationPass = 1,
   ): Promise<HydrationState> {
     // @NOTE Null entries are completed lookups too, not candidates for retry.
-    for (const uri of state.externalRecords?.keys() ?? []) seenUris.add(uri)
+    for (const uri of state.externalRecords?.keys() ?? []) {
+      seenRecordKeys.add(genericRecordKey({ uri }))
+    }
 
     // Backlink sources to sample per target, each with its own bound.
     const targets = new Map<
@@ -1155,16 +1151,18 @@ export class Hydrator {
     >()
     const discoveredUris = new Set<AtUriString>()
 
-    // find all external records we care about
-    const seenRefs = new Set<string>()
-    for (const { uri, cid } of refs) {
-      const key = cid ? genericRecordKey(uri, cid) : uri
-      if (seenRefs.has(key)) continue
-      seenRefs.add(key)
+    // Deduplicate locally, not against `seenRecordKeys`: just-fetched roots
+    // are already marked there but must still be inspected.
+    const inspectedKeys = new Set<string>()
+    for (const ref of refs) {
+      const key = genericRecordKey(ref)
+      if (inspectedKeys.has(key)) continue
+      inspectedKeys.add(key)
+      const { uri, cid } = ref
       const record = (
-        cid
-          ? state.externalRecordsByRef?.get(key)
-          : state.externalRecords?.get(uri)
+        cid === undefined
+          ? state.externalRecords?.get(uri)
+          : state.externalRecordsByRef?.get(genericRecordKey({ uri, cid }))
       )?.record
       if (!record) continue
       const parsed = parseAtUriString(uri)
@@ -1277,7 +1275,9 @@ export class Hydrator {
       externalRecordBacklinkCounts = counts
     }
 
-    const newUris = [...discoveredUris].filter((uri) => !seenUris.has(uri))
+    const newUris = [...discoveredUris].filter(
+      (uri) => !seenRecordKeys.has(genericRecordKey({ uri })),
+    )
     let nested: HydrationState = {}
     if (
       newUris.length &&
@@ -1297,7 +1297,7 @@ export class Hydrator {
       nested = await this.hydrateEmbedExternalViewFromUris(
         newUris,
         ctx,
-        seenUris,
+        seenRecordKeys,
         hydrationPass + 1,
       )
     }
@@ -2390,7 +2390,7 @@ const actionExternalRecordTakedowns = (
   for (const [uri, info] of externalRecords ?? []) {
     if (!info || !isHidden(uri)) continue
     externalRecords?.set(uri, null)
-    externalRecordsByRef?.set(genericRecordKey(uri, info.cid), null)
+    externalRecordsByRef?.set(genericRecordKey({ uri, cid: info.cid }), null)
   }
   // Every exact version is checked on its own; versions are never collapsed.
   for (const [key, info] of externalRecordsByRef ?? []) {
@@ -2414,9 +2414,9 @@ const actionSiteStandardTakedownLabels = (
 ) => {
   // Pairings have to be captured before nulling — the doc record carries
   // the publication URI in its `site` field, and we lose it once we null.
-  const pairings: { docKey: string; pubKey: string }[] = []
+  const pairings: { docKey: ExactRecordKey; pubKey: ExactRecordKey }[] = []
   if (documents.size > 0 && publications.size > 0) {
-    const pubKeysByUri = new Map<string, string[]>()
+    const pubKeysByUri = new Map<string, ExactRecordKey[]>()
     for (const key of publications.keys()) {
       const { uri } = parseGenericRecordKey(key)
       const list = pubKeysByUri.get(uri)
@@ -2454,3 +2454,23 @@ const actionSiteStandardTakedownLabels = (
 const uriToRef = (uri: AtUriString): ItemRef => {
   return { uri }
 }
+
+/**
+ * Drop refs whose lookup key is already in `seenRecordKeys`, and mark the rest
+ * synchronously so concurrent work in the traversal cannot schedule them again.
+ * Latest (bare URI) and exact (`uri@cid`) keys are distinct identities in the
+ * shared set: neither implies nor suppresses the other, or another version.
+ */
+const takeUnseenRefs = (
+  refs: ItemRef[],
+  seenRecordKeys: Set<string>,
+): ItemRef[] =>
+  refs.filter((ref) => {
+    const key = genericRecordKey(ref)
+    if (seenRecordKeys.has(key)) return false
+    seenRecordKeys.add(key)
+    return true
+  })
+
+const isExactRef = (ref: ItemRef): ref is Required<ItemRef> =>
+  ref.cid !== undefined
