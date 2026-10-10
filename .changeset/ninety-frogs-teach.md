@@ -2,4 +2,4 @@
 '@atproto/bsky': patch
 ---
 
-Use generic external-view hydration for Atmosphere Explore, preserving CMS group validation and canonical views while sharing dependency discovery, moderation, and traversal metrics.
+Replace custom hydration in `getAtmosphereExploreTab` with generic external-view hydration, using the first URI in each worker group as its canonical root and discovering dependencies automatically.
