@@ -1,6 +1,6 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import { createPromiseClient, createRouterTransport } from '@connectrpc/connect'
-import { describe, expect, it, test, vi } from 'vitest'
+import { describe, expect, expectTypeOf, it, test, vi } from 'vitest'
 import { type AtUriString, lexStringify, parseCid } from '@atproto/lex'
 import { site } from '../lexicons/index.js'
 import { Service } from '../proto/bsky_connect.js'
@@ -15,7 +15,9 @@ import {
   RecordLookupStatus,
 } from '../proto/bsky_pb.js'
 import {
+  type ExactRecordKey,
   ExternalHydrator,
+  type ExternalRecordsByRef,
   type SiteStandardDocument,
   type SiteStandardDocuments,
   type SiteStandardPublication,
@@ -72,7 +74,7 @@ const makeDocuments = (
 ): SiteStandardDocuments => {
   const map: SiteStandardDocuments = new HydrationMap()
   for (const [uri, cid, info] of entries) {
-    map.set(genericRecordKey(uri, cid), info)
+    map.set(genericRecordKey({ uri, cid }), info)
   }
   return map
 }
@@ -86,20 +88,61 @@ const makePublications = (
 ): SiteStandardPublications => {
   const map: SiteStandardPublications = new HydrationMap()
   for (const [uri, cid, info] of entries) {
-    map.set(genericRecordKey(uri, cid), info)
+    map.set(genericRecordKey({ uri, cid }), info)
   }
   return map
 }
+
+describe(genericRecordKey, () => {
+  it('keys latest lookups by URI and exact lookups by uri@cid', () => {
+    const latest = genericRecordKey({ uri: docUri })
+    const exact = genericRecordKey({ uri: docUri, cid: docCid })
+    expect(latest).toBe(docUri)
+    expect(exact).toBe(`${docUri}@${docCid}`)
+    expectTypeOf(latest).toEqualTypeOf<string>()
+    expectTypeOf(exact).toEqualTypeOf<ExactRecordKey>()
+  })
+
+  it('rejects an empty CID rather than treating it as a latest lookup', () => {
+    expect(() => genericRecordKey({ uri: docUri, cid: '' })).toThrow()
+  })
+
+  it('only admits exact keys into exact-ref maps', () => {
+    const map: ExternalRecordsByRef = new HydrationMap()
+    const ref: ItemRef = { uri: docUri }
+    // @ts-expect-error a latest lookup key is not an exact key
+    map.set(genericRecordKey(ref), null)
+    // @ts-expect-error a bare string is not an exact key
+    map.set(`${docUri}@${docCid}`, null)
+    map.set(genericRecordKey({ uri: docUri, cid: docCid }), null)
+  })
+})
 
 describe(parseGenericRecordKey, () => {
   test.each([
     docUri,
     `at://${docDid}/${site.standard.document.$type}/a@b`,
   ] as const)('round-trips %s', (uri) => {
-    expect(parseGenericRecordKey(genericRecordKey(uri, docCid))).toEqual({
-      uri,
-      cid: docCid,
-    })
+    expect(
+      parseGenericRecordKey(genericRecordKey({ uri, cid: docCid })),
+    ).toEqual({ uri, cid: docCid })
+  })
+
+  it('does not accept latest lookup keys', () => {
+    // @ts-expect-error a latest lookup key is not an exact key
+    const parse = () => parseGenericRecordKey(genericRecordKey({ uri: docUri }))
+    expect(parse).toThrow('Malformed exact record key')
+  })
+
+  test.each([
+    ['a missing separator', docUri],
+    ['an empty URI', `@${docCid}`],
+    ['an empty CID', `${docUri}@`],
+  ])('rejects %s', (_, key) => {
+    // Deliberately malformed, to exercise the runtime safeguard.
+    expect(() => parseGenericRecordKey(key as ExactRecordKey)).toThrow(
+      'Malformed exact record key',
+    )
   })
 })
 
@@ -432,11 +475,15 @@ describe(ExternalHydrator, () => {
     const records = await hydrator.getRecordsByRef(refs)
     expect(lookup).toHaveBeenCalledExactlyOnceWith({ refs })
     expect(records.size).toBe(3)
-    expect(records.get(genericRecordKey(docUri, docCid))?.cid).toBe(docCid)
-    expect(records.get(genericRecordKey(docUri, 'other-cid'))?.cid).toBe(
-      'other-cid',
-    )
-    expect(records.get(genericRecordKey(pubUri, pubCid))).toBeNull()
+    expect(
+      records.get(genericRecordKey({ uri: docUri, cid: docCid }))?.cid,
+    ).toBe(docCid)
+    expect(
+      records.get(genericRecordKey({ uri: docUri, cid: 'other-cid' }))?.cid,
+    ).toBe('other-cid')
+    expect(
+      records.get(genericRecordKey({ uri: pubUri, cid: pubCid })),
+    ).toBeNull()
   })
 
   test.each([
@@ -734,7 +781,7 @@ describe('ExternalHydrator site.standard lookups', () => {
     ref: { uri },
     status: RecordLookupStatus.NOT_FOUND,
   })
-  const key = genericRecordKey
+  const key = (uri: AtUriString, cid: string) => genericRecordKey({ uri, cid })
 
   describe('getSiteStandardRecordsByURI', () => {
     it('short-circuits when no URIs are site.standard records', async () => {

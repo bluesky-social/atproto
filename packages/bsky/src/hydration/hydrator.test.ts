@@ -17,7 +17,7 @@ import {
   RecordLookupStatus,
 } from '../proto/bsky_pb.js'
 import type { Actors } from './actor.js'
-import { ExternalHydrator } from './external.js'
+import { ExternalHydrator, genericRecordKey } from './external.js'
 import {
   HydrateCtx,
   Hydrator,
@@ -48,6 +48,10 @@ const missingPub = atUri(
   site.standard.publication.$type,
   'self',
 )
+
+// The exact key of the version the faked `getRecordsByURI` returns.
+const fetchedKey = (uri: AtUriString) =>
+  genericRecordKey({ uri, cid: `cid-${uri}` })
 
 const recommendUri = (did: DidString, rkey: string) =>
   atUri(did, site.standard.graph.recommend.$type, rkey)
@@ -257,8 +261,8 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
     expect(state.externalRecords?.get(doc1)).toBeTruthy()
     expect(state.externalRecords?.get(doc2)).toBeTruthy()
 
-    expect(state.externalRecordsByRef?.has(`${doc1}@cid-${doc1}`)).toBe(true)
-    expect(state.siteStandardDocuments?.has(`${doc1}@cid-${doc1}`)).toBe(true)
+    expect(state.externalRecordsByRef?.has(fetchedKey(doc1))).toBe(true)
+    expect(state.siteStandardDocuments?.has(fetchedKey(doc1))).toBe(true)
     expect(state.labels?.has(doc1)).toBe(true)
 
     expect(state.externalRecordBacklinks?.get(doc1)).toEqual(recs.slice(0, 3))
@@ -357,7 +361,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
     expect(embedSpy.mock.calls[1][0]).not.toContain(pubUri)
 
     embedSpy.mockClear()
-    const seen = new Set<AtUriString>([pubUri, doc1, ...records.keys()])
+    const seen = new Set<string>([pubUri, doc1, ...records.keys()])
     await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx, seen)
     expect(embedSpy).toHaveBeenCalledTimes(1)
   })
@@ -513,9 +517,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         a: 1,
       })
       expect(state.externalRecords?.get(other2Uri)).toBeTruthy()
-      expect(
-        state.externalRecordsByRef?.has(`${otherUri}@cid-${otherUri}`),
-      ).toBe(true)
+      expect(state.externalRecordsByRef?.has(fetchedKey(otherUri))).toBe(true)
       expect(state.labels?.has(otherUri)).toBe(true)
       expect(state.labels?.has(other2Uri)).toBe(true)
       expect(state.actors?.has('did:plc:other' as DidString)).toBe(true)
@@ -619,7 +621,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       for (const uri of [doc1, pubUri]) {
         expect(state.externalRecords?.has(uri)).toBe(true)
         expect(state.externalRecords?.get(uri)).toBeNull()
-        const key = `${uri}@cid-${uri}`
+        const key = fetchedKey(uri)
         expect(state.externalRecordsByRef?.has(key)).toBe(true)
         expect(state.externalRecordsByRef?.get(key)).toBeNull()
       }
@@ -641,9 +643,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         ctx.copy({ includeTakedowns: true }),
       )
       expect(state.externalRecords?.get(doc1)).toBeTruthy()
-      expect(
-        state.externalRecordsByRef?.get(`${doc1}@cid-${doc1}`),
-      ).toBeTruthy()
+      expect(state.externalRecordsByRef?.get(fetchedKey(doc1))).toBeTruthy()
       expect(state.externalRecords?.get(pubUri)).toBeTruthy()
       expect(backlinkTargets(dataplane)).toContain(doc1)
     })
@@ -674,9 +674,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
       expect(state.externalRecords?.get(doc1)).toBeTruthy()
       expect(state.externalRecords?.get(pubUri)).toBeNull()
-      expect(
-        state.externalRecordsByRef?.get(`${pubUri}@cid-${pubUri}`),
-      ).toBeNull()
+      expect(state.externalRecordsByRef?.get(fetchedKey(pubUri))).toBeNull()
       expect(backlinkTargets(dataplane)).not.toContain(pubUri)
       expect(lookups(dataplane)).not.toContain(subs[0])
     })
@@ -691,7 +689,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
 
       for (const uri of [recs[0], subs[0]]) {
         expect(state.externalRecords?.get(uri)).toBeNull()
-        expect(state.externalRecordsByRef?.get(`${uri}@cid-${uri}`)).toBeNull()
+        expect(state.externalRecordsByRef?.get(fetchedKey(uri))).toBeNull()
       }
       expect(state.externalRecords?.get(recs[1])).toBeTruthy()
       expect(state.externalRecords?.get(subs[1])).toBeTruthy()
@@ -740,7 +738,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         ctx.copy({ includeTakedowns: true }),
       )
       expect(state.externalRecords?.get(doc1)).toBeNull()
-      expect(state.externalRecordsByRef?.get(`${doc1}@cid-${doc1}`)).toBeNull()
+      expect(state.externalRecordsByRef?.get(fetchedKey(doc1))).toBeNull()
       expect(backlinkTargets(dataplane)).toEqual([])
     })
 
@@ -786,7 +784,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       )
       expect(hidden.externalRecords?.get(doc1)).toBeNull()
       expect(hidden.actors?.get('did:plc:author' as DidString)).toBeNull()
-      expect(hidden.externalRecordsByRef?.get(`${doc1}@cid-${doc1}`)).toBeNull()
+      expect(hidden.externalRecordsByRef?.get(fetchedKey(doc1))).toBeNull()
     })
 
     it('only actions takedown labels from redacting labelers', async ({
@@ -997,9 +995,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       // including photo owners that weren't in the root batch.
       const photo = photoUris[0]
       expect(state.externalRecords?.get(photo)).toBeTruthy()
-      expect(state.externalRecordsByRef?.has(`${photo}@cid-${photo}`)).toBe(
-        true,
-      )
+      expect(state.externalRecordsByRef?.has(fetchedKey(photo))).toBe(true)
       expect(state.labels?.has(photo)).toBe(true)
       expect(state.actors?.has('did:plc:photoowner' as DidString)).toBe(true)
       expect(state.externalRecords?.has(photoUris[10])).toBe(false)
@@ -1173,7 +1169,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       const { hydrator, ctx, dataplane, records } = fixture
       records.set(doc1, { body: makeDoc('https://example.com') })
       records.set(doc2, { body: makeDoc('https://example.com') })
-      const seen = new Set<AtUriString>([doc2])
+      const seen = new Set<string>([doc2])
       const state = await hydrator.hydrateEmbedExternalViewFromUris(
         [doc1, doc1, doc2],
         ctx,
@@ -1206,7 +1202,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       fixture,
     }) => {
       const { hydrator, ctx } = fixture
-      const seen = new Set<AtUriString>()
+      const seen = new Set<string>()
       const first = await hydrator.hydrateEmbedExternalViewFromUris(
         [missingDoc],
         ctx,
@@ -1232,7 +1228,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       seedChain(fixture, max + 4)
       using warn = vi.spyOn(hydrationLogger, 'warn')
       using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
-      const seen = new Set<AtUriString>()
+      const seen = new Set<string>()
       const state = await hydrator.hydrateEmbedExternalViewFromUris(
         [chainUri(0)],
         ctx,
@@ -1303,7 +1299,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       // A caller already at the last allowed pass fetches nothing further.
       embedSpy.mockClear()
       warn.mockClear()
-      const seen = new Set<AtUriString>()
+      const seen = new Set<string>()
       await hydrator.hydrateExternalViewDependencies(
         await prehydrated(),
         [{ uri: chainUri(0) }],
@@ -1350,7 +1346,8 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
             }),
           })
         })
-    const key = (uri: AtUriString, version: string) => `${uri}@v${version}`
+    const key = (uri: AtUriString, version: string) =>
+      genericRecordKey(v(uri, version))
 
     it('keeps every requested version and inspects each for dependencies', async ({
       fixture,
@@ -1366,7 +1363,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         ]),
       )
       using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
-      const seen = new Set<AtUriString>()
+      const seen = new Set<string>()
       const state = await hydrator.hydrateEmbedExternalViewFromRefs(
         [v(doc1, '1'), v(doc1, '1'), v(doc1, '2')],
         ctx,
@@ -1385,6 +1382,8 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         state.externalRecordsByRef?.get(key(doc1, '2'))?.record,
       ).toMatchObject({ site: pub2Uri })
       expect(state.externalRecords?.has(doc1)).toBe(false)
+      expect(seen.has(key(doc1, '1'))).toBe(true)
+      expect(seen.has(key(doc1, '2'))).toBe(true)
       expect(seen.has(doc1)).toBe(false)
 
       // Both versions' publications are discovered in one nested batch, and
@@ -1405,36 +1404,37 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(state.actors?.has('did:plc:author' as DidString)).toBe(true)
     })
 
-    it('keeps an unavailable pinned version null despite latest records', async ({
+    it('fills an unavailable pin only from the same version', async ({
       fixture,
     }) => {
       const { hydrator, ctx, seedBasic } = fixture
       seedBasic()
-      // Latest doc1 exists, but version 2 is gone. The pinned publication
-      // version is also gone while the latest publication exists.
-      const pinnedPub = { uri: pubUri, cid: `cid-${pubUri}` }
+      // Version 2 of doc1 is gone, with no later success. Both pinned
+      // publication versions fail as exact lookups, but the latest publication
+      // (a dependency of doc1 version 1) returns the CID of one of them.
+      const samePub = { uri: pubUri, cid: `cid-${pubUri}` }
       mockRefs(fixture, new Map([[key(doc1, '1'), { body: makeDoc(pubUri) }]]))
       const state = await hydrator.hydrateEmbedExternalViewFromRefs(
-        [v(doc1, '1'), v(doc1, '2'), pinnedPub],
+        [v(doc1, '1'), v(doc1, '2'), samePub, v(pubUri, '2')],
         ctx,
       )
 
       expect(state.externalRecordsByRef?.get(key(doc1, '1'))).toBeTruthy()
       expect(state.externalRecordsByRef?.has(key(doc1, '2'))).toBe(true)
       expect(state.externalRecordsByRef?.get(key(doc1, '2'))).toBeNull()
-      // The latest publication is hydrated as a supplemental URI dependency
-      // and has the same exact key, but must not replace the unavailable pin.
+      // The same URI and CID is the same version, so it fills that pin.
       expect(state.externalRecords?.get(pubUri)).toBeTruthy()
-      expect(
-        state.externalRecordsByRef?.get(`${pubUri}@cid-${pubUri}`),
-      ).toBeNull()
+      expect(state.externalRecordsByRef?.get(fetchedKey(pubUri))).toBeTruthy()
+      // A different CID never satisfies the other pin.
+      expect(state.externalRecordsByRef?.has(key(pubUri, '2'))).toBe(true)
+      expect(state.externalRecordsByRef?.get(key(pubUri, '2'))).toBeNull()
     })
 
     it('does not suppress later latest lookups', async ({ fixture }) => {
       const { hydrator, ctx, seedBasic } = fixture
       seedBasic()
       mockRefs(fixture, new Map([[key(doc1, '1'), { body: makeDoc(pubUri) }]]))
-      const seen = new Set<AtUriString>()
+      const seen = new Set<string>()
       await hydrator.hydrateEmbedExternalViewFromRefs([v(doc1, '1')], ctx, seen)
       expect(seen.has(pubUri)).toBe(true)
       expect(seen.has(doc1)).toBe(false)
@@ -1444,6 +1444,108 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         seen,
       )
       expect(latest.externalRecords?.get(doc1)).toBeTruthy()
+    })
+
+    it('does not refetch completed exact versions in a shared traversal', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane } = fixture
+      // Version 2 is unavailable, which is a completed lookup too.
+      mockRefs(
+        fixture,
+        new Map([[key(doc1, '1'), { body: makeDoc('https://example.com') }]]),
+      )
+      const seen = new Set<string>()
+      const first = await hydrator.hydrateEmbedExternalViewFromRefs(
+        [v(doc1, '1'), v(doc1, '2')],
+        ctx,
+        seen,
+      )
+      expect(first.externalRecordsByRef?.get(key(doc1, '1'))).toBeTruthy()
+      expect(first.externalRecordsByRef?.get(key(doc1, '2'))).toBeNull()
+
+      vi.mocked(hydrator.label.getLabelsForSubjects).mockClear()
+      const again = await hydrator.hydrateEmbedExternalViewFromRefs(
+        [v(doc1, '2'), v(doc1, '1'), v(doc1, '2')],
+        ctx,
+        seen,
+      )
+      expect(again).toEqual({ ctx })
+      expect(dataplane.getRecordsByRef).toHaveBeenCalledTimes(1)
+      expect(hydrator.label.getLabelsForSubjects).not.toHaveBeenCalled()
+    })
+
+    it('keeps latest and exact lookups of one URI independent', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane, records } = fixture
+      records.set(doc1, { body: makeDoc('https://example.com') })
+      const fetched = { uri: doc1, cid: `cid-${doc1}` }
+      mockRefs(
+        fixture,
+        new Map([
+          [key(doc1, '1'), { body: makeDoc('https://example.com') }],
+          [key(doc1, '2'), { body: makeDoc('https://example.com') }],
+          [fetchedKey(doc1), { body: makeDoc('https://example.com') }],
+        ]),
+      )
+      const exactLookups = () =>
+        vi
+          .mocked(dataplane.getRecordsByRef)
+          .mock.calls.flatMap(([req]) => req.refs ?? [])
+          .map(({ uri, cid }) =>
+            genericRecordKey({ uri: uri as AtUriString, cid }),
+          )
+      const latestLookups = () =>
+        vi
+          .mocked(dataplane.getRecordsByURI)
+          .mock.calls.flatMap(([req]) => req.uris ?? [])
+
+      // Latest first: the version it returns is not a completed exact lookup.
+      const seen = new Set<string>()
+      await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx, seen)
+      expect(seen.has(fetchedKey(doc1))).toBe(false)
+      const latestAfterRoot = latestLookups()
+      expect(latestAfterRoot).toContain(doc1)
+      for (const ref of [fetched, v(doc1, '1'), v(doc1, '2')]) {
+        const state = await hydrator.hydrateEmbedExternalViewFromRefs(
+          [ref],
+          ctx,
+          seen,
+        )
+        expect(
+          state.externalRecordsByRef?.get(genericRecordKey(ref)),
+        ).toBeTruthy()
+      }
+      expect(exactLookups()).toEqual([
+        fetchedKey(doc1),
+        key(doc1, '1'),
+        key(doc1, '2'),
+      ])
+      expect(latestLookups()).toEqual(latestAfterRoot)
+
+      // Exact first: neither version suppresses the other or the latest.
+      vi.mocked(dataplane.getRecordsByRef).mockClear()
+      vi.mocked(dataplane.getRecordsByURI).mockClear()
+      const reversed = new Set<string>()
+      await hydrator.hydrateEmbedExternalViewFromRefs(
+        [v(doc1, '2')],
+        ctx,
+        reversed,
+      )
+      await hydrator.hydrateEmbedExternalViewFromRefs(
+        [v(doc1, '1')],
+        ctx,
+        reversed,
+      )
+      expect(latestLookups()).toEqual([])
+      const latest = await hydrator.hydrateEmbedExternalViewFromUris(
+        [doc1],
+        ctx,
+        reversed,
+      )
+      expect(latest.externalRecords?.get(doc1)).toBeTruthy()
+      expect(exactLookups()).toEqual([key(doc1, '2'), key(doc1, '1')])
     })
 
     it('does nothing for empty input', async ({ fixture }) => {
