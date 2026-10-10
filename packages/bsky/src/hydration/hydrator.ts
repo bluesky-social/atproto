@@ -1139,11 +1139,6 @@ export class Hydrator {
     seenRecordKeys: Set<string> = new Set(),
     hydrationPass = 1,
   ): Promise<HydrationState> {
-    // @NOTE Null entries are completed lookups too, not candidates for retry.
-    for (const uri of state.externalRecords?.keys() ?? []) {
-      seenRecordKeys.add(genericRecordKey({ uri }))
-    }
-
     // Backlink sources to sample per target, each with its own bound.
     const targets = new Map<
       AtUriString,
@@ -1151,13 +1146,13 @@ export class Hydrator {
     >()
     const discoveredUris = new Set<AtUriString>()
 
-    // Deduplicate locally, not against `seenRecordKeys`: just-fetched roots
-    // are already marked there but must still be inspected.
-    const inspectedKeys = new Set<string>()
     for (const ref of refs) {
-      const key = genericRecordKey(ref)
-      if (inspectedKeys.has(key)) continue
-      inspectedKeys.add(key)
+      /*
+       *  Additional safety in case this method is ever called directly.
+       *  `takeUnseenRefs` already populates this map, so this is a no-op under
+       *  normal circumstances.
+       */
+      seenRecordKeys.add(genericRecordKey(ref))
       const { uri, cid } = ref
       const record = (
         cid === undefined
