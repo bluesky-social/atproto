@@ -16,10 +16,19 @@ import {
   type RecordLookupResult,
   RecordLookupStatus,
 } from '../proto/bsky_pb.js'
+import {
+  type ExternalHydrationOutcome,
+  type ExternalHydrationRoot,
+  type ExternalHydrationWork,
+  events,
+} from '../telemetry/events.js'
+import { uriToDid } from '../util/uris.js'
 import type {
   SiteStandardDocumentRecord,
   SiteStandardPublicationRecord,
 } from '../views/types.js'
+import type { Actors } from './actor.js'
+import type { Labels } from './label.js'
 import {
   HydrationMap,
   type ItemRef,
@@ -31,8 +40,8 @@ import {
 /** Generic record bodies are decoded, but not validated against a Lexicon. */
 export type ExternalRecord = RecordInfo<TypedLexMap>
 export type ExternalRecords = HydrationMap<AtUriString, ExternalRecord>
-/** Keyed by `genericRecordKey(uri, cid)` to retain multiple versions of a URI. */
-export type ExternalRecordsByRef = HydrationMap<string, ExternalRecord>
+/** Keyed by `genericRecordKey({ uri, cid })` to retain versions of a URI. */
+export type ExternalRecordsByRef = HydrationMap<ExactRecordKey, ExternalRecord>
 export type ExternalRecordBacklinks = HydrationMap<AtUriString, AtUriString[]>
 
 export type AtmosphereActivityItem = {
@@ -60,25 +69,80 @@ export type AtmosphereBacklinksByActor = {
   truncated: boolean
 }
 
+declare const exactRecordKeySymbol: unique symbol
+
 /**
- * Composes a stable map key from an `(uri, cid)` pair. A single hydration
- * batch can pull more than one version of the same record URI (different
- * posts pinning different cids), so the composite is needed for O(1)
- * version-exact lookups.
+ * A version-exact `${uri}@${cid}` key, only produced by `genericRecordKey` for
+ * a ref with a CID, so it can be parsed back by `parseGenericRecordKey`.
  */
-export function genericRecordKey(uri: AtUriString, cid: string): string {
+export type ExactRecordKey = string & { [exactRecordKeySymbol]: true }
+
+/**
+ * Composes the lookup key for a ref: the bare URI for a latest-version lookup,
+ * or `${uri}@${cid}` for an exact version. A single hydration batch can pull
+ * several versions of one URI (different posts pinning different cids), so
+ * exact maps need the composite for O(1) version-exact lookups. The two forms
+ * never collide, so latest and exact lookups can share one traversal set.
+ *
+ * Throws on an empty CID rather than treating it as a latest lookup.
+ */
+export function genericRecordKey(ref: Required<ItemRef>): ExactRecordKey
+export function genericRecordKey(ref: ItemRef): string
+export function genericRecordKey({ uri, cid }: ItemRef): string {
+  if (cid === undefined) return uri
+  if (!cid) throw new Error(`Empty CID in record key for ${uri}`)
   return `${uri}@${cid}`
 }
 
-/** Recover the URI and CID from a composite hydration key. */
-export function parseGenericRecordKey(key: string): {
-  uri: AtUriString
-  cid: string
-} {
+/**
+ * Recover the URI and CID from an exact record key, splitting at the last `@`.
+ * Throws if either part is missing. Components are trusted, not revalidated.
+ */
+export function parseGenericRecordKey(key: ExactRecordKey): Required<ItemRef> {
   const at = key.lastIndexOf('@')
+  if (at <= 0 || at === key.length - 1) {
+    throw new Error(`Malformed exact record key: ${key}`)
+  }
   return {
     uri: key.slice(0, at) as AtUriString,
     cid: key.slice(at + 1),
+  }
+}
+
+/**
+ * Null generic external records (in both the URI-keyed and exact-ref maps,
+ * keeping their keys) that are taken down by an actionable label, unless
+ * takedowns are included, or whose owner is explicitly unavailable. Applies to
+ * each record independently; counts and other records are unaffected.
+ */
+export function actionExternalRecordTakedowns(
+  {
+    externalRecords,
+    externalRecordsByRef,
+    actors,
+    labels,
+  }: {
+    externalRecords?: ExternalRecords
+    externalRecordsByRef?: ExternalRecordsByRef
+    actors?: Actors
+    labels?: Labels
+  },
+  includeTakedowns?: boolean,
+): void {
+  // An absent actor entry was not hydrated; only `null` means unavailable.
+  const isHidden = (uri: AtUriString) =>
+    actors?.get(uriToDid(uri)) === null ||
+    (!includeTakedowns && labels?.get(uri)?.isTakendown)
+  for (const [uri, info] of externalRecords ?? []) {
+    if (!info || !isHidden(uri)) continue
+    externalRecords?.set(uri, null)
+    externalRecordsByRef?.set(genericRecordKey({ uri, cid: info.cid }), null)
+  }
+  // Every exact version is checked on its own; versions are never collapsed.
+  for (const [key, info] of externalRecordsByRef ?? []) {
+    if (info && isHidden(parseGenericRecordKey(key).uri)) {
+      externalRecordsByRef?.set(key, null)
+    }
   }
 }
 
@@ -91,12 +155,15 @@ export type SiteStandardPublication = RecordInfo<SiteStandardPublicationRecord>
  * pinning different cids), so the composite key is needed for O(1)
  * version-exact lookups.
  */
-export type SiteStandardDocuments = HydrationMap<string, SiteStandardDocument>
+export type SiteStandardDocuments = HydrationMap<
+  ExactRecordKey,
+  SiteStandardDocument
+>
 /**
  * Keyed by `${uri}@${cid}`. See `SiteStandardDocuments` for the rationale.
  */
 export type SiteStandardPublications = HydrationMap<
-  string,
+  ExactRecordKey,
   SiteStandardPublication
 >
 export type SiteStandardRecords = {
@@ -109,7 +176,53 @@ export type AssociatedSiteStandardRecord<T> = {
   info: T
 }
 
+/**
+ * Generic lookup work of one external hydration traversal, shared by reference
+ * through its nested passes. `capped` records hitting the pass limit.
+ */
+export type ExternalHydrationTracker = ExternalHydrationWork & {
+  capped: boolean
+}
+
+/**
+ * Run `fn` with the caller's tracker, or as the owner of a new traversal when
+ * there is none. Only the owner reports, once, including on failure. Owners
+ * that completed without scheduling a batch did no work and are not reported;
+ * caps and failures always are.
+ */
+export async function trackExternalHydration<T>(
+  root: ExternalHydrationRoot,
+  hydrationMetrics: ExternalHydrationTracker | undefined,
+  fn: (hydrationMetrics: ExternalHydrationTracker) => Promise<T>,
+): Promise<T> {
+  if (hydrationMetrics) return fn(hydrationMetrics)
+  const owned = { recordLookups: 0, batches: 0, maxPass: 0, capped: false }
+  let outcome: ExternalHydrationOutcome = 'failed'
+  try {
+    const state = await fn(owned)
+    outcome = owned.capped ? 'capped' : 'completed'
+    return state
+  } finally {
+    if (owned.batches || outcome !== 'completed') {
+      const { recordLookups, batches, maxPass } = owned
+      events.externalHydrationTraversal({
+        root,
+        outcome,
+        recordLookups,
+        batches,
+        maxPass,
+      })
+    }
+  }
+}
+
 export class ExternalHydrator {
+  static readonly MAX_BACKLINK_PREVIEWS = 3
+  static readonly MAX_BACKLINK_GALLERY_ITEMS = 10
+  static readonly MAX_BACKLINK_FANOUT = 8
+  /** Hard cap on generic batches per traversal, counting the root as pass 1. */
+  static readonly MAX_EXTERNAL_HYDRATION_PASSES = 8
+
   constructor(public dataplane: DataPlaneClient) {}
 
   /** Fetch exact record versions; unavailable records are represented by null. */
@@ -122,9 +235,8 @@ export class ExternalHydrator {
 
     const res = await this.dataplane.getRecordsByRef({ refs })
     for (let i = 0; i < refs.length; i++) {
-      const { uri, cid } = refs[i]
       map.set(
-        genericRecordKey(uri, cid),
+        genericRecordKey(refs[i]),
         parseGenericRecord(res.results[i], includeTakedowns) ?? null,
       )
     }
@@ -301,7 +413,12 @@ export class ExternalHydrator {
     for (const [uri, info] of records) {
       // Unavailable records have no CID to key on, so they are left out.
       if (!info) continue
-      setSiteStandardRecord(out, uri, genericRecordKey(uri, info.cid), info)
+      setSiteStandardRecord(
+        out,
+        uri,
+        genericRecordKey({ uri, cid: info.cid }),
+        info,
+      )
     }
   }
 }
@@ -386,7 +503,7 @@ const matchRecordInfo = <TSchema extends RecordSchema>(
 const setSiteStandardRecord = (
   out: SiteStandardRecords,
   uri: string,
-  key: string,
+  key: ExactRecordKey,
   info: ExternalRecord | null | undefined,
 ) => {
   switch (siteStandardKind(uri)) {
@@ -446,7 +563,7 @@ export const getSiteStandardRecordsFromHydrationMapsByRefs = (
   let publication:
     AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
   for (const ref of associatedRefs) {
-    const key = genericRecordKey(ref.uri, ref.cid)
+    const key = genericRecordKey(ref)
     if (!document) {
       const hit = documents?.get(key)
       if (hit) document = { ref, info: hit }

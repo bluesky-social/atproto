@@ -5,13 +5,21 @@ import { events } from './events.js'
 const otel = vi.hoisted(() => ({
   add: vi.fn(),
   emit: vi.fn(),
+  record: vi.fn<(name: string, value: number, attributes: object) => void>(),
+  diagError: vi.fn(),
 }))
 
 vi.mock('@opentelemetry/api', () => ({
   ValueType: { INT: 1 },
-  diag: { error: vi.fn() },
+  diag: { error: otel.diagError },
   metrics: {
-    getMeter: () => ({ createCounter: () => ({ add: otel.add }) }),
+    getMeter: () => ({
+      createCounter: () => ({ add: otel.add }),
+      createHistogram: (name: string) => ({
+        record: (value: number, attributes: object) =>
+          otel.record(name, value, attributes),
+      }),
+    }),
   },
 }))
 
@@ -20,12 +28,14 @@ vi.mock('@opentelemetry/api-logs', () => ({
   logs: { getLogger: () => ({ emit: otel.emit }) },
 }))
 
+const pino = vi.hoisted(() => ({ info: vi.fn() }))
 vi.mock('../logger.js', () => ({
-  eventsLogger: { info: vi.fn() },
+  eventsLogger: pino,
 }))
 
 beforeEach(() => {
-  vi.clearAllMocks()
+  // Reset implementations too: a test may make a sink throw.
+  vi.resetAllMocks()
 })
 
 describe('hydrationFailed', () => {
@@ -103,5 +113,46 @@ describe('hydrationFailed', () => {
       source: 'activity_subscriptions',
       reason: 'error',
     })
+  })
+})
+
+describe('externalHydrationTraversal', () => {
+  const summary = {
+    root: 'uris',
+    outcome: 'capped',
+    recordLookups: 24,
+    batches: 8,
+    maxPass: 8,
+  } as const
+
+  it('records totals with bounded attributes and logs the summary', () => {
+    events.externalHydrationTraversal(summary)
+
+    const attributes = { root: 'uris', outcome: 'capped' }
+    expect(otel.record.mock.calls).toEqual([
+      ['hydration.external.record_lookups', 24, attributes],
+      ['hydration.external.batches', 8, attributes],
+    ])
+    expect(otel.emit).toHaveBeenCalledWith({
+      eventName: 'external_hydration_traversal',
+      severityNumber: 9,
+      attributes: summary,
+    })
+    expect(pino.info).toHaveBeenCalledWith({
+      eventName: 'external_hydration_traversal',
+      ...summary,
+    })
+  })
+
+  it('never throws when a sink fails', () => {
+    otel.record.mockImplementation(() => {
+      throw new Error('histogram failure')
+    })
+    otel.emit.mockImplementation(() => {
+      throw new Error('log failure')
+    })
+
+    expect(() => events.externalHydrationTraversal(summary)).not.toThrow()
+    expect(otel.diagError).toHaveBeenCalledTimes(2)
   })
 })
