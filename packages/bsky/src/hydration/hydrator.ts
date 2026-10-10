@@ -48,6 +48,7 @@ import {
 } from './actor.js'
 import {
   type ExactRecordKey,
+  type ExternalHydrationTracker,
   ExternalHydrator,
   type ExternalRecordBacklinkCounts,
   type ExternalRecordBacklinks,
@@ -57,6 +58,7 @@ import {
   type SiteStandardPublications,
   genericRecordKey,
   parseGenericRecordKey,
+  trackExternalHydration,
 } from './external.js'
 import {
   type FeedGenAggs,
@@ -1043,19 +1045,28 @@ export class Hydrator {
    * Hydrate the latest versions of external records, plus labels, profiles, and
    * their view dependencies. `hydrationPass` is the 1-based number of this
    * generic batch within the traversal (the root batch is pass 1); nested
-   * batches continue the count.
+   * batches continue the count. Nested passes share the caller's
+   * `hydrationMetrics` tracker; without one, this call owns the traversal and
+   * reports its totals.
    */
   async hydrateEmbedExternalViewFromUris(
     uris: AtUriString[],
     ctx: HydrateCtx,
     seenRecordKeys: Set<string> = new Set(),
     hydrationPass = 1,
+    hydrationMetrics?: ExternalHydrationTracker,
   ): Promise<HydrationState> {
-    return this.hydrateEmbedExternalView(
-      uris.map(uriToRef),
-      ctx,
-      seenRecordKeys,
-      hydrationPass,
+    return trackExternalHydration(
+      'uris',
+      hydrationMetrics,
+      (hydrationMetrics) =>
+        this.hydrateEmbedExternalView(
+          uris.map(uriToRef),
+          ctx,
+          seenRecordKeys,
+          hydrationPass,
+          hydrationMetrics,
+        ),
     )
   }
 
@@ -1069,12 +1080,19 @@ export class Hydrator {
     ctx: HydrateCtx,
     seenRecordKeys: Set<string> = new Set(),
     hydrationPass = 1,
+    hydrationMetrics?: ExternalHydrationTracker,
   ): Promise<HydrationState> {
-    return this.hydrateEmbedExternalView(
-      refs,
-      ctx,
-      seenRecordKeys,
-      hydrationPass,
+    return trackExternalHydration(
+      'refs',
+      hydrationMetrics,
+      (hydrationMetrics) =>
+        this.hydrateEmbedExternalView(
+          refs,
+          ctx,
+          seenRecordKeys,
+          hydrationPass,
+          hydrationMetrics,
+        ),
     )
   }
 
@@ -1083,6 +1101,7 @@ export class Hydrator {
     ctx: HydrateCtx,
     seenRecordKeys: Set<string>,
     hydrationPass: number,
+    hydrationMetrics: ExternalHydrationTracker,
   ): Promise<HydrationState> {
     // Filter at the entry point so each lookup runs at most once per shared
     // traversal, even for callers that did not prefilter their input. Null or
@@ -1129,6 +1148,11 @@ export class Hydrator {
       return { externalRecords, externalRecordsByRef }
     }
 
+    // Count this batch where its generic fetches are scheduled; a failed batch
+    // was still attempted.
+    hydrationMetrics.recordLookups += items.length
+    hydrationMetrics.batches += 1
+    hydrationMetrics.maxPass = Math.max(hydrationMetrics.maxPass, hydrationPass)
     const [
       { externalRecords, externalRecordsByRef },
       { documents, publications },
@@ -1158,6 +1182,7 @@ export class Hydrator {
       ctx,
       seenRecordKeys,
       hydrationPass,
+      hydrationMetrics,
     )
 
     // Set values to `null` in maps if records are taken down
@@ -1216,7 +1241,8 @@ export class Hydrator {
    * that, as a guard against future association rules or unexpected expansion.
    * `hydrationPass` is the number of the generic batch that produced `state`
    * (1-based, default 1 for prehydrated state, which is treated as the root
-   * batch); the next nested batch is `hydrationPass + 1`.
+   * batch); the next nested batch is `hydrationPass + 1`. `hydrationMetrics`
+   * is shared as in `hydrateEmbedExternalViewFromUris`.
    */
   async hydrateExternalViewDependencies(
     state: HydrationState,
@@ -1224,6 +1250,30 @@ export class Hydrator {
     ctx: HydrateCtx,
     seenRecordKeys: Set<string> = new Set(),
     hydrationPass = 1,
+    hydrationMetrics?: ExternalHydrationTracker,
+  ): Promise<HydrationState> {
+    return trackExternalHydration(
+      'dependencies',
+      hydrationMetrics,
+      (hydrationMetrics) =>
+        this.discoverExternalViewDependencies(
+          state,
+          refs,
+          ctx,
+          seenRecordKeys,
+          hydrationPass,
+          hydrationMetrics,
+        ),
+    )
+  }
+
+  private async discoverExternalViewDependencies(
+    state: HydrationState,
+    refs: ItemRef[],
+    ctx: HydrateCtx,
+    seenRecordKeys: Set<string>,
+    hydrationPass: number,
+    hydrationMetrics: ExternalHydrationTracker,
   ): Promise<HydrationState> {
     // Backlink sources to sample per target, each with its own bound.
     const targets = new Map<
@@ -1366,6 +1416,7 @@ export class Hydrator {
     ) {
       // Keep the partial state. Skipped URIs are not marked seen: they were
       // never fetched.
+      hydrationMetrics.capped = true
       hydrationLogger.warn(
         {
           hydrationPass,
@@ -1380,6 +1431,7 @@ export class Hydrator {
         ctx,
         seenRecordKeys,
         hydrationPass + 1,
+        hydrationMetrics,
       )
     }
 
