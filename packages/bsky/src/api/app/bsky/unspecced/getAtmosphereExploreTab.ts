@@ -9,8 +9,7 @@ import {
 } from '@atproto/xrpc-server'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import type { AppContext } from '../../../../context.js'
-import type { HydrationState } from '../../../../hydration/hydrator.js'
-import { app, site, social } from '../../../../lexicons/index.js'
+import { app } from '../../../../lexicons/index.js'
 
 const MAX_CONFIG_BYTES = 512 * 1024
 const MAX_ATMOSPHERE_RECORDS = 500
@@ -33,7 +32,7 @@ const configSchema = l.object({
     }),
   ),
 })
-type RecordGroup = { featured: boolean; uris: AtUriString[] }
+type RecordGroup = { featured: boolean; uri: AtUriString }
 
 export default function (server: Server, ctx: AppContext) {
   // @NOTE The wrapper caps decoded response bytes, including compressed bodies.
@@ -104,24 +103,12 @@ export default function (server: Server, ctx: AppContext) {
       }
       const articles = completeGroups(config.articles)
       const publications = completeGroups(config.publications)
-      const photos = completeGroups(
-        config.photos?.map((group) => ({
-          ...group,
-          // @NOTE Gallery membership comes from backlinks, not loose CMS photo URIs.
-          uris: mapDefined(group.uris, (input) => {
-            const uri = recordUri(input)
-            return uri &&
-              new AtUri(uri).collection === social.grain.gallery.$type
-              ? uri
-              : undefined
-          }),
-        })),
-      )
+      const photos = completeGroups(config.photos)
       const livestreams = completeGroups(config.livestreams)
       const uris = [
         ...new Set(
-          [...articles, ...publications, ...photos, ...livestreams].flatMap(
-            ({ uris }) => uris,
+          [...articles, ...publications, ...photos, ...livestreams].map(
+            ({ uri }) => uri,
           ),
         ),
       ]
@@ -136,41 +123,29 @@ export default function (server: Server, ctx: AppContext) {
       const now = Date.now()
       const result: app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody = {
         announcementBanner: config.announcementBanner,
-        articles: mapDefined(articles, ({ featured, uris }) => {
-          const uri = articleUri(uris, state)
-          const view = uri
-            ? ctx.views.externalRecordView(uri, state, now)
-            : undefined
+        articles: mapDefined(articles, ({ featured, uri }) => {
+          const view = ctx.views.externalRecordView(uri, state, now)
           return view && app.bsky.embed.external.viewArticle.$isTypeOf(view)
             ? { featured, view }
             : undefined
         }),
-        publications: mapDefined(publications, ({ featured, uris }) => {
-          const view =
-            uris.length === 1
-              ? ctx.views.externalRecordView(uris[0], state, now)
-              : undefined
+        publications: mapDefined(publications, ({ featured, uri }) => {
+          const view = ctx.views.externalRecordView(uri, state, now)
           return view &&
             app.bsky.embed.external.viewArticlePublication.$isTypeOf(view)
             ? { featured, view }
             : undefined
         }),
-        photos: mapDefined(photos, ({ featured, uris }) => {
-          const view =
-            uris.length === 1
-              ? ctx.views.externalRecordView(uris[0], state, now)
-              : undefined
+        photos: mapDefined(photos, ({ featured, uri }) => {
+          const view = ctx.views.externalRecordView(uri, state, now)
           return view &&
             app.bsky.embed.external.viewGallery.$isTypeOf(view) &&
             view.items.length
             ? { featured, view }
             : undefined
         }),
-        livestreams: mapDefined(livestreams, ({ featured, uris }) => {
-          const view =
-            uris.length === 1
-              ? ctx.views.externalRecordView(uris[0], state, now)
-              : undefined
+        livestreams: mapDefined(livestreams, ({ featured, uri }) => {
+          const view = ctx.views.externalRecordView(uri, state, now)
           return view && app.bsky.embed.external.viewLivestream.$isTypeOf(view)
             ? { featured, view }
             : undefined
@@ -186,38 +161,10 @@ function completeGroups(
   groups: l.Infer<typeof groupSchema>[] = [],
 ): RecordGroup[] {
   return mapDefined(groups, ({ featured, uris }) => {
-    const valid = mapDefined(uris, recordUri)
-    if (!valid.length || valid.length !== uris.length) return
-    return { featured, uris: valid }
+    const uri = recordUri(uris[0])
+    if (!uri) return
+    return { featured, uri }
   })
-}
-
-// @NOTE A publication hydrated for another CMS group must not complete this article.
-function articleUri(
-  uris: AtUriString[],
-  state: HydrationState,
-): AtUriString | undefined {
-  const documents = uris.filter(
-    (uri) => new AtUri(uri).collection === site.standard.document.$type,
-  )
-  const publications = uris.filter(
-    (uri) => new AtUri(uri).collection === site.standard.publication.$type,
-  )
-  if (
-    documents.length !== 1 ||
-    publications.length > 1 ||
-    documents.length + publications.length !== uris.length
-  )
-    return
-  const uri = documents[0]
-  const document = site.standard.document.$ifMatches(
-    state.externalRecords?.get(uri)?.record,
-  )
-  if (!document) return
-  if (document.site.startsWith('at://')) {
-    if (document.site !== publications[0]) return
-  } else if (publications.length) return
-  return uri
 }
 
 function recordUri(value: unknown): AtUriString | undefined {
