@@ -77,75 +77,6 @@ declare const exactRecordKeySymbol: unique symbol
  */
 export type ExactRecordKey = string & { [exactRecordKeySymbol]: true }
 
-/**
- * Composes the lookup key for a ref: the bare URI for a latest-version lookup,
- * or `${uri}@${cid}` for an exact version. A single hydration batch can pull
- * several versions of one URI (different posts pinning different cids), so
- * exact maps need the composite for O(1) version-exact lookups. The two forms
- * never collide, so latest and exact lookups can share one traversal set.
- *
- * Throws on an empty CID rather than treating it as a latest lookup.
- */
-export function genericRecordKey(ref: Required<ItemRef>): ExactRecordKey
-export function genericRecordKey(ref: ItemRef): string
-export function genericRecordKey({ uri, cid }: ItemRef): string {
-  if (cid === undefined) return uri
-  if (!cid) throw new Error(`Empty CID in record key for ${uri}`)
-  return `${uri}@${cid}`
-}
-
-/**
- * Recover the URI and CID from an exact record key, splitting at the last `@`.
- * Throws if either part is missing. Components are trusted, not revalidated.
- */
-export function parseGenericRecordKey(key: ExactRecordKey): Required<ItemRef> {
-  const at = key.lastIndexOf('@')
-  if (at <= 0 || at === key.length - 1) {
-    throw new Error(`Malformed exact record key: ${key}`)
-  }
-  return {
-    uri: key.slice(0, at) as AtUriString,
-    cid: key.slice(at + 1),
-  }
-}
-
-/**
- * Null generic external records (in both the URI-keyed and exact-ref maps,
- * keeping their keys) that are taken down by an actionable label, unless
- * takedowns are included, or whose owner is explicitly unavailable. Applies to
- * each record independently; counts and other records are unaffected.
- */
-export function actionExternalRecordTakedowns(
-  {
-    externalRecords,
-    externalRecordsByRef,
-    actors,
-    labels,
-  }: {
-    externalRecords?: ExternalRecords
-    externalRecordsByRef?: ExternalRecordsByRef
-    actors?: Actors
-    labels?: Labels
-  },
-  includeTakedowns?: boolean,
-): void {
-  // An absent actor entry was not hydrated; only `null` means unavailable.
-  const isHidden = (uri: AtUriString) =>
-    actors?.get(uriToDid(uri)) === null ||
-    (!includeTakedowns && labels?.get(uri)?.isTakendown)
-  for (const [uri, info] of externalRecords ?? []) {
-    if (!info || !isHidden(uri)) continue
-    externalRecords?.set(uri, null)
-    externalRecordsByRef?.set(genericRecordKey({ uri, cid: info.cid }), null)
-  }
-  // Every exact version is checked on its own; versions are never collapsed.
-  for (const [key, info] of externalRecordsByRef ?? []) {
-    if (info && isHidden(parseGenericRecordKey(key).uri)) {
-      externalRecordsByRef?.set(key, null)
-    }
-  }
-}
-
 export type SiteStandardDocument = RecordInfo<SiteStandardDocumentRecord>
 export type SiteStandardPublication = RecordInfo<SiteStandardPublicationRecord>
 
@@ -169,51 +100,6 @@ export type SiteStandardPublications = HydrationMap<
 export type SiteStandardRecords = {
   documents: SiteStandardDocuments
   publications: SiteStandardPublications
-}
-
-export type AssociatedSiteStandardRecord<T> = {
-  ref: { uri: AtUriString; cid: string }
-  info: T
-}
-
-/**
- * Generic lookup work of one external hydration traversal, shared by reference
- * through its nested passes. `capped` records hitting the pass limit.
- */
-export type ExternalHydrationTracker = ExternalHydrationWork & {
-  capped: boolean
-}
-
-/**
- * Run `fn` with the caller's tracker, or as the owner of a new traversal when
- * there is none. Only the owner reports, once, including on failure. Owners
- * that completed without scheduling a batch did no work and are not reported;
- * caps and failures always are.
- */
-export async function trackExternalHydration<T>(
-  root: ExternalHydrationRoot,
-  hydrationMetrics: ExternalHydrationTracker | undefined,
-  fn: (hydrationMetrics: ExternalHydrationTracker) => Promise<T>,
-): Promise<T> {
-  if (hydrationMetrics) return fn(hydrationMetrics)
-  const owned = { recordLookups: 0, batches: 0, maxPass: 0, capped: false }
-  let outcome: ExternalHydrationOutcome = 'failed'
-  try {
-    const state = await fn(owned)
-    outcome = owned.capped ? 'capped' : 'completed'
-    return state
-  } finally {
-    if (owned.batches || outcome !== 'completed') {
-      const { recordLookups, batches, maxPass } = owned
-      events.externalHydrationTraversal({
-        root,
-        outcome,
-        recordLookups,
-        batches,
-        maxPass,
-      })
-    }
-  }
 }
 
 export class ExternalHydrator {
@@ -423,6 +309,115 @@ export class ExternalHydrator {
   }
 }
 
+/**
+ * Composes the lookup key for a ref: the bare URI for a latest-version lookup,
+ * or `${uri}@${cid}` for an exact version. A single hydration batch can pull
+ * several versions of one URI (different posts pinning different cids), so
+ * exact maps need the composite for O(1) version-exact lookups. The two forms
+ * never collide, so latest and exact lookups can share one traversal set.
+ *
+ * Throws on an empty CID rather than treating it as a latest lookup.
+ */
+export function genericRecordKey(ref: Required<ItemRef>): ExactRecordKey
+export function genericRecordKey(ref: ItemRef): string
+export function genericRecordKey({ uri, cid }: ItemRef): string {
+  if (cid === undefined) return uri
+  if (!cid) throw new Error(`Empty CID in record key for ${uri}`)
+  return `${uri}@${cid}`
+}
+
+/**
+ * Recover the URI and CID from an exact record key, splitting at the last `@`.
+ * Throws if either part is missing. Components are trusted, not revalidated.
+ */
+export function parseGenericRecordKey(key: ExactRecordKey): Required<ItemRef> {
+  const at = key.lastIndexOf('@')
+  if (at <= 0 || at === key.length - 1) {
+    throw new Error(`Malformed exact record key: ${key}`)
+  }
+  return {
+    uri: key.slice(0, at) as AtUriString,
+    cid: key.slice(at + 1),
+  }
+}
+
+/**
+ * Null generic external records (in both the URI-keyed and exact-ref maps,
+ * keeping their keys) that are taken down by an actionable label, unless
+ * takedowns are included, or whose owner is explicitly unavailable. Applies to
+ * each record independently; counts and other records are unaffected.
+ */
+export function actionExternalRecordTakedowns(
+  {
+    externalRecords,
+    externalRecordsByRef,
+    actors,
+    labels,
+  }: {
+    externalRecords?: ExternalRecords
+    externalRecordsByRef?: ExternalRecordsByRef
+    actors?: Actors
+    labels?: Labels
+  },
+  includeTakedowns?: boolean,
+): void {
+  // An absent actor entry was not hydrated; only `null` means unavailable.
+  const isHidden = (uri: AtUriString) =>
+    actors?.get(uriToDid(uri)) === null ||
+    (!includeTakedowns && labels?.get(uri)?.isTakendown)
+  for (const [uri, info] of externalRecords ?? []) {
+    if (!info || !isHidden(uri)) continue
+    externalRecords?.set(uri, null)
+    externalRecordsByRef?.set(genericRecordKey({ uri, cid: info.cid }), null)
+  }
+  // Every exact version is checked on its own; versions are never collapsed.
+  for (const [key, info] of externalRecordsByRef ?? []) {
+    if (info && isHidden(parseGenericRecordKey(key).uri)) {
+      externalRecordsByRef?.set(key, null)
+    }
+  }
+}
+
+/**
+ * Generic lookup work of one external hydration traversal, shared by reference
+ * through its nested passes. `capped` records hitting the pass limit.
+ */
+export type ExternalHydrationTracker = ExternalHydrationWork & {
+  capped: boolean
+}
+
+/**
+ * Run `fn` with the caller's tracker, or as the owner of a new traversal when
+ * there is none. Only the owner reports, once, including on failure. Owners
+ * that completed without scheduling a batch did no work and are not reported;
+ * caps and failures always are.
+ */
+export async function trackExternalHydration<T>(
+  root: ExternalHydrationRoot,
+  hydrationMetrics: ExternalHydrationTracker | undefined,
+  fn: (hydrationMetrics: ExternalHydrationTracker) => Promise<T>,
+): Promise<T> {
+  if (hydrationMetrics) return fn(hydrationMetrics)
+  const owned = { recordLookups: 0, batches: 0, maxPass: 0, capped: false }
+  let outcome: ExternalHydrationOutcome = 'failed'
+  try {
+    const state = await fn(owned)
+    outcome = owned.capped ? 'capped' : 'completed'
+    return state
+  } finally {
+    if (owned.batches || outcome !== 'completed') {
+      const { recordLookups, batches, maxPass } = owned
+      events.externalHydrationTraversal({
+        root,
+        outcome,
+        recordLookups,
+        batches,
+        maxPass,
+      })
+    }
+  }
+}
+
 function parseGenericRecord(
   result: RecordLookupResult | undefined,
   includeTakedowns: boolean,
@@ -517,6 +512,11 @@ const setSiteStandardRecord = (
       )
       break
   }
+}
+
+export type AssociatedSiteStandardRecord<T> = {
+  ref: { uri: AtUriString; cid: string }
+  info: T
 }
 
 /**
