@@ -16,6 +16,7 @@ import {
   GetRecordsByURIResponse,
   RecordLookupStatus,
 } from '../proto/bsky_pb.js'
+import { events } from '../telemetry/events.js'
 import type { Actors } from './actor.js'
 import { ExternalHydrator, genericRecordKey } from './external.js'
 import {
@@ -156,6 +157,10 @@ const seedChain = ({ records, dataplane }: Fixture, length: number) => {
     },
   )
 }
+const traversalReports = () =>
+  vi
+    .mocked(events.externalHydrationTraversal)
+    .mock.calls.map(([summary]) => summary)
 const labelSubjects = ({ hydrator }: Fixture) =>
   vi
     .mocked(hydrator.label.getLabelsForSubjects)
@@ -239,6 +244,9 @@ const it = baseIt.extend<{ fixture: ReturnType<typeof createFixture> }>({
           dids.map((did) => [did, unavailableOwners.has(did) ? null : { did }]),
         ) as unknown as Actors,
       }))
+    using _report = vi
+      .spyOn(events, 'externalHydrationTraversal')
+      .mockImplementation(() => {})
     await use(fixture)
   },
 })
@@ -1004,6 +1012,30 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(state.externalRecords?.has(photoUris[10])).toBe(false)
     })
 
+    it('reports lookups and batches across every nested pass once', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane } = fixture
+      const gallery = galleryOf('g1')
+      seedGallery(fixture, gallery, 5, 12)
+      await hydrator.hydrateEmbedExternalViewFromUris([gallery], ctx)
+
+      // Gallery, then 3 favorites and 10 items, then 10 photos.
+      expect(traversalReports()).toEqual([
+        {
+          root: 'uris',
+          outcome: 'completed',
+          recordLookups: 24,
+          batches: 3,
+          maxPass: 3,
+        },
+      ])
+      const fetched = vi
+        .mocked(dataplane.getRecordsByURI)
+        .mock.calls.flatMap(([req]) => req.uris ?? [])
+      expect(fetched).toHaveLength(24)
+    })
+
     it('hydrates photos for gallery-item-only input without backlink calls', async ({
       fixture,
     }) => {
@@ -1628,6 +1660,51 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(exactLookups()).toEqual([key(doc1, '2'), key(doc1, '1')])
     })
 
+    it('reports exact roots and latest dependencies as distinct work', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records, seedBasic } = fixture
+      seedBasic()
+      records.set(pub2Uri, { body: makePub() })
+      mockRefs(
+        fixture,
+        new Map([
+          [key(doc1, '1'), { body: makeDoc(pubUri) }],
+          [key(doc1, '2'), { body: makeDoc(pub2Uri) }],
+        ]),
+      )
+      const seen = new Set<string>()
+      // The latest version's CID is still a distinct (unavailable) exact lookup.
+      const fetched = { uri: doc1, cid: `cid-${doc1}` }
+      await hydrator.hydrateEmbedExternalViewFromRefs(
+        [v(doc1, '1'), v(doc1, '1'), v(doc1, '2'), fetched],
+        ctx,
+        seen,
+      )
+      // A later latest lookup of the same URI is new work; its dependencies
+      // are already seen.
+      await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx, seen)
+
+      expect(traversalReports()).toEqual([
+        {
+          // 3 exact roots, then 2 publications and 3 recommends, then 2
+          // subscriptions.
+          root: 'refs',
+          outcome: 'completed',
+          recordLookups: 10,
+          batches: 3,
+          maxPass: 3,
+        },
+        {
+          root: 'uris',
+          outcome: 'completed',
+          recordLookups: 1,
+          batches: 1,
+          maxPass: 1,
+        },
+      ])
+    })
+
     it('does nothing for empty input', async ({ fixture }) => {
       const { hydrator, ctx, dataplane } = fixture
       vi.spyOn(dataplane, 'getRecordsByRef')
@@ -1699,6 +1776,161 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(state.externalRecords?.has(chainUri(max - 1))).toBe(true)
       expect(state.externalRecords?.has(chainUri(max))).toBe(false)
       expect(warn).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('traversal work telemetry', () => {
+    it('reports Standard Site totals across nested passes once', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, seedBasic } = fixture
+      seedBasic()
+      using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
+      await hydrator.hydrateEmbedExternalViewFromUris([doc1, doc1, doc2], ctx)
+
+      expect(embedSpy).toHaveBeenCalledTimes(3)
+      // 2 documents, then the publication and 3 recommends, then 2
+      // subscriptions.
+      expect(traversalReports()).toEqual([
+        {
+          root: 'uris',
+          outcome: 'completed',
+          recordLookups: 8,
+          batches: 3,
+          maxPass: 3,
+        },
+      ])
+    })
+
+    it('counts accepted lookups rather than available records', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records } = fixture
+      records.set(httpDoc, { body: makeDoc('https://example.com') })
+      records.set(badDoc, { body: { $type: site.standard.document.$type } })
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [missingDoc, badDoc, httpDoc, httpDoc],
+        ctx,
+      )
+
+      expect(state.externalRecords?.get(missingDoc)).toBeNull()
+      expect(traversalReports()).toEqual([
+        {
+          root: 'uris',
+          outcome: 'completed',
+          recordLookups: 3,
+          batches: 1,
+          maxPass: 1,
+        },
+      ])
+    })
+
+    it('excludes prior work in supplied seen sets and does not report zero-work calls', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records } = fixture
+      records.set(doc1, { body: makeDoc('https://example.com') })
+      records.set(doc2, { body: makeDoc('https://example.com') })
+      const seen = new Set<string>()
+      await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx, seen)
+      await hydrator.hydrateEmbedExternalViewFromUris([doc1, doc2], ctx, seen)
+      expect(traversalReports().map((r) => r.recordLookups)).toEqual([1, 1])
+
+      vi.mocked(events.externalHydrationTraversal).mockClear()
+      await hydrator.hydrateEmbedExternalViewFromUris([doc1, doc2], ctx, seen)
+      await hydrator.hydrateEmbedExternalViewFromUris([], ctx)
+      await hydrator.hydrateEmbedExternalViewFromRefs([], ctx)
+      await hydrator.hydrateExternalViewDependencies({ ctx }, [], ctx)
+      expect(events.externalHydrationTraversal).not.toHaveBeenCalled()
+    })
+
+    it('reports a capped traversal without the skipped lookups', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx } = fixture
+      const max = ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES
+      seedChain(fixture, max + 4)
+      using warn = vi.spyOn(hydrationLogger, 'warn')
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [chainUri(0)],
+        ctx,
+      )
+      expect(state.externalRecords?.has(chainUri(max - 1))).toBe(true)
+      expect(state.externalRecords?.has(chainUri(max))).toBe(false)
+      expect(warn).toHaveBeenCalledTimes(1)
+
+      // Prehydrated state is pass 1, so direct calls fetch from pass 2. A
+      // caller already at the cap fetches nothing, but the cap is reported.
+      const prehydrated = async () => ({
+        ctx,
+        externalRecords: await hydrator.external.getRecordsByURI([chainUri(0)]),
+      })
+      await hydrator.hydrateExternalViewDependencies(
+        await prehydrated(),
+        [{ uri: chainUri(0) }],
+        ctx,
+      )
+      await hydrator.hydrateExternalViewDependencies(
+        await prehydrated(),
+        [{ uri: chainUri(0) }],
+        ctx,
+        new Set(),
+        max,
+      )
+
+      expect(traversalReports()).toEqual([
+        {
+          root: 'uris',
+          outcome: 'capped',
+          recordLookups: max,
+          batches: max,
+          maxPass: max,
+        },
+        {
+          root: 'dependencies',
+          outcome: 'capped',
+          recordLookups: max - 1,
+          batches: max - 1,
+          maxPass: max,
+        },
+        {
+          root: 'dependencies',
+          outcome: 'capped',
+          recordLookups: 0,
+          batches: 0,
+          maxPass: 0,
+        },
+      ])
+    })
+
+    it('reports attempted work once when fetching fails and rethrows', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane } = fixture
+      seedChain(fixture, 5)
+      const lookup = vi
+        .mocked(dataplane.getRecordsByURI)
+        .getMockImplementation()
+      const err = new Error('dataplane failure')
+      vi.mocked(dataplane.getRecordsByURI).mockImplementation(
+        async (req, options) => {
+          if (req.uris?.includes(chainUri(2))) throw err
+          return lookup!(req, options)
+        },
+      )
+
+      await expect(
+        hydrator.hydrateEmbedExternalViewFromUris([chainUri(0)], ctx),
+      ).rejects.toBe(err)
+      expect(traversalReports()).toEqual([
+        {
+          root: 'uris',
+          outcome: 'failed',
+          recordLookups: 3,
+          batches: 3,
+          maxPass: 3,
+        },
+      ])
     })
   })
 })

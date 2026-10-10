@@ -16,6 +16,12 @@ import {
   type RecordLookupResult,
   RecordLookupStatus,
 } from '../proto/bsky_pb.js'
+import {
+  type ExternalHydrationOutcome,
+  type ExternalHydrationRoot,
+  type ExternalHydrationWork,
+  events,
+} from '../telemetry/events.js'
 import type {
   SiteStandardDocumentRecord,
   SiteStandardPublicationRecord,
@@ -128,6 +134,46 @@ export type SiteStandardRecords = {
 export type AssociatedSiteStandardRecord<T> = {
   ref: { uri: AtUriString; cid: string }
   info: T
+}
+
+/**
+ * Generic lookup work of one external hydration traversal, shared by reference
+ * through its nested passes. `capped` records hitting the pass limit.
+ */
+export type ExternalHydrationTracker = ExternalHydrationWork & {
+  capped: boolean
+}
+
+/**
+ * Run `fn` with the caller's tracker, or as the owner of a new traversal when
+ * there is none. Only the owner reports, once, including on failure. Owners
+ * that completed without scheduling a batch did no work and are not reported;
+ * caps and failures always are.
+ */
+export async function trackExternalHydration<T>(
+  root: ExternalHydrationRoot,
+  hydrationMetrics: ExternalHydrationTracker | undefined,
+  fn: (hydrationMetrics: ExternalHydrationTracker) => Promise<T>,
+): Promise<T> {
+  if (hydrationMetrics) return fn(hydrationMetrics)
+  const owned = { recordLookups: 0, batches: 0, maxPass: 0, capped: false }
+  let outcome: ExternalHydrationOutcome = 'failed'
+  try {
+    const state = await fn(owned)
+    outcome = owned.capped ? 'capped' : 'completed'
+    return state
+  } finally {
+    if (owned.batches || outcome !== 'completed') {
+      const { recordLookups, batches, maxPass } = owned
+      events.externalHydrationTraversal({
+        root,
+        outcome,
+        recordLookups,
+        batches,
+        maxPass,
+      })
+    }
+  }
 }
 
 export class ExternalHydrator {
