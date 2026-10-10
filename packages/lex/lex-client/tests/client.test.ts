@@ -1108,7 +1108,7 @@ describe('Client', () => {
           }),
 
           op.delete(app.bsky.feed.post, {
-            rkey: 'old-post',
+            rkey: '2222222222224',
           }),
 
           op.delete(app.bsky.actor.profile),
@@ -1128,7 +1128,7 @@ describe('Client', () => {
           },
           {
             $type: 'com.atproto.repo.applyWrites#deleteResult',
-            uri: `at://${did}/app.bsky.feed.post/old-post`,
+            uri: `at://${did}/app.bsky.feed.post/2222222222224`,
           },
           {
             $type: 'com.atproto.repo.applyWrites#deleteResult',

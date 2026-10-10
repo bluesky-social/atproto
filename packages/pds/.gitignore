@@ -1,2 +1,11 @@
 # @atproto/lex
-src/lexicons
+/src/lexicons
+
+# @NOTE app.bsky and chat.bsky lexicons are installed from the network, and kept
+# as copy here to avoid network dependency during ci build.
+# com.atproto and tools.ozone lexicons are symlinked from the repo-wide
+# canonical lexicons (matches "resolvers" in lexicons.json) and can be ignored
+# from Git.
+# /lexicons
+/lexicons/com/atproto
+/lexicons/tools/ozone

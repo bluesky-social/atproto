@@ -244,19 +244,32 @@ export type RecordKeyOptions<
   ? { rkey?: InferRecordKey<T> }
   : { rkey: InferRecordKey<T> }
 
-export function getDefaultRecordKey<const T extends RecordSchema>(
+export function rkeyForCreate<const T extends RecordSchema>(
   schema: T,
+  rkey?: InferRecordKey<T>,
 ): undefined | InferRecordKey<T> {
-  // Let the server generate the TID
-  if (schema.key === 'tid') return undefined
-  if (schema.key === 'any') return undefined
+  if (rkey == null) {
+    // Lets the server generate the TID
+    if (schema.key === 'tid') return undefined
+    if (schema.key === 'any') return undefined
+  }
 
-  return getLiteralRecordKey(schema)
+  return rkeyFor(schema, rkey)
 }
 
-export function getLiteralRecordKey<const T extends RecordSchema>(
+/**
+ * Returns the record key for a given record schema, using the provided `rkey`
+ * if available (validating it against the schema), or deriving it from the
+ * schema if it is a literal key.
+ */
+export function rkeyFor<const T extends RecordSchema>(
   schema: T,
+  rkey?: InferRecordKey<T>,
 ): InferRecordKey<T> {
+  if (rkey != null) {
+    return schema.keySchema.parse(rkey) as InferRecordKey<T>
+  }
+
   if (schema.key.startsWith('literal:')) {
     return schema.key.slice(8) as InferRecordKey<T>
   }

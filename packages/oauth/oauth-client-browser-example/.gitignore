@@ -1,3 +1,5 @@
-src/lexicons
-dist
-.swc
+/src/lexicons
+# /lexicons
+/lexicons/com
+/dist
+/.swc

@@ -1,5 +1,73 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname } from 'node:path'
+import { mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { dirname, relative, resolve, sep } from 'node:path'
+
+const FILE_URI_PREFIX = 'file://'
+
+export type FileUriString<TPath extends string = string> =
+  `${typeof FILE_URI_PREFIX}${TPath}`
+
+export function isFileUriString(val: unknown): val is FileUriString {
+  if (typeof val !== 'string') return false
+  if (!val.startsWith(FILE_URI_PREFIX)) return false
+  try {
+    // `new URL` throws on a malformed string; a corrupt manifest value must
+    // surface as a clean validation issue, not a raw TypeError.
+    return new URL(val).protocol === 'file:'
+  } catch {
+    return false
+  }
+}
+
+export function isAbsoluteFileUriString(
+  val: unknown,
+): val is FileUriString<`/${string}`> {
+  return isFileUriString(val) && val.startsWith(`${FILE_URI_PREFIX}/`)
+}
+
+export function isRelativeFileUriString(
+  val: unknown,
+): val is FileUriString<`./${string}` | `../${string}`> {
+  return (
+    isFileUriString(val) &&
+    (val.startsWith(`${FILE_URI_PREFIX}./`) ||
+      val.startsWith(`${FILE_URI_PREFIX}../`))
+  )
+}
+
+export function toFileUri<TPath extends string>(
+  path: TPath,
+): FileUriString<TPath> {
+  return `${FILE_URI_PREFIX}${path}`
+}
+
+export function fromFileUri(uri: FileUriString): string {
+  return uri.slice(FILE_URI_PREFIX.length)
+}
+
+/**
+ * Resolves a (possibly relative) `file://` URI to an absolute filesystem path.
+ *
+ * Relative URIs (`file://./x`, `file://../x`) are anchored to `base`, never to
+ * `process.cwd()`. The manifest stores file resolutions as paths relative to
+ * the manifest's directory, so callers must pass that directory as `base`;
+ * handing the raw relative path to `resolve`/`relative` without a base would
+ * silently resolve it against the current working directory instead.
+ */
+export function resolveFileUri(base: string, uri: FileUriString): string {
+  return resolve(base, fromFileUri(uri))
+}
+
+function isRelativePath(path: string): path is `./${string}` | `../${string}` {
+  return path.startsWith('./') || path.startsWith('../')
+}
+
+export function toRelativeFileUri(
+  base: string,
+  uri: FileUriString,
+): FileUriString<`./${string}` | `../${string}`> {
+  const path = relative(base, resolveFileUri(base, uri)).split(sep).join('/')
+  return toFileUri(isRelativePath(path) ? path : `./${path}`)
+}
 
 /**
  * Reads and parses a JSON file from the filesystem.
@@ -43,7 +111,8 @@ export async function readJsonFile(path: string): Promise<unknown> {
  * The function:
  * - Creates parent directories if they don't exist
  * - Formats JSON with 2-space indentation
- * - Overwrites existing files
+ * - Replaces any existing entry at the path (including a symlink) with a new
+ *   regular file, rather than following it
  * - Sets file permissions to 0o644 (rw-r--r--)
  *
  * @param path - Absolute or relative path for the output file
@@ -73,6 +142,10 @@ export async function writeJsonFile(
   data: unknown,
 ): Promise<void> {
   await mkdir(dirname(path), { recursive: true })
+  // Replace any existing entry rather than writing through it. A local install
+  // leaves a symlink into the source tree at a lexicon's output path; writing
+  // with flag 'w' would follow that symlink and overwrite the canonical source.
+  await rm(path, { force: true })
   // Trailing newline so the written file is POSIX-friendly and does not thrash against
   // formatters/linters that enforce final newlines (e.g. the tooling in issue #5232).
   const contents = JSON.stringify(data, null, 2) + '\n'
@@ -81,6 +154,38 @@ export async function writeJsonFile(
     mode: 0o644,
     flag: 'w', // override
   })
+}
+
+/**
+ * Installs a lexicon file by creating a symbolic link at `destPath` pointing to
+ * `sourcePath`, rather than copying its contents.
+ *
+ * The symlink is written as a path relative to the destination directory so the
+ * output tree stays portable (e.g. survives being moved alongside its source).
+ * Parent directories are created as needed, and any existing file at the
+ * destination is replaced.
+ *
+ * If, after resolving both paths to absolute form, the destination equals the
+ * source, the file is left untouched (no symlink is created) — this covers the
+ * case where the lexicon is installed into the directory it already lives in.
+ *
+ * @param destPath - Where the symlink should be created
+ * @param sourcePath - The file the symlink should point to
+ */
+export async function symlinkLexicon(
+  destPath: string,
+  sourcePath: string,
+): Promise<void> {
+  const dest = resolve(destPath)
+  const source = resolve(sourcePath)
+
+  // Same path: leave the file in place.
+  if (dest === source) return
+
+  await mkdir(dirname(dest), { recursive: true })
+  // Replace any existing file/symlink so re-installs are idempotent.
+  await rm(dest, { force: true, recursive: true })
+  await symlink(relative(dirname(dest), source), dest)
 }
 
 /**
@@ -121,4 +226,9 @@ export async function writeJsonFile(
  */
 export function isEnoentError(err: unknown): boolean {
   return err instanceof Error && 'code' in err && err.code === 'ENOENT'
+}
+
+export function enoentToNull(err: unknown): null | never {
+  if (isEnoentError(err)) return null
+  throw err
 }

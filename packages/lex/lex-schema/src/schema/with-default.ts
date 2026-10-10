@@ -43,7 +43,7 @@ export class WithDefaultSchema<
   ): ValidationResult<InferInput<TValidator>> {
     // When in a validation context, the output should not be altered,
     // so we don't apply the default.
-    if (input === undefined && ctx.options.mode !== 'validate') {
+    if (input === undefined && ctx.options.mode === 'parse') {
       return ctx.validate(this.defaultValue, this.validator)
     }
 

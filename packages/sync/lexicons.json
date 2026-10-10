@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "resolvers": [
+    {
+      "type": "directory",
+      "path": "../../lexicons",
+      "include": [
+        "com.atproto.*"
+      ]
+    }
+  ],
+  "lexicons": [
+    "com.atproto.sync.subscribeRepos"
+  ],
+  "resolutions": {
+    "com.atproto.sync.subscribeRepos": {
+      "uri": "file://../../lexicons/com/atproto/sync/subscribeRepos.json",
+      "cid": "bafyreic6fm5atifiaq67u44dtxc3ufjbq3z7yysryjrzrw37hkb32yajbi"
+    }
+  }
+}

@@ -1,3 +1,8 @@
+import { negate } from './util.js'
+
+const yes = () => true as const
+const no = () => false as const
+
 /**
  * Options for building a filter function to include/exclude lexicon documents.
  */
@@ -61,8 +66,11 @@ export type Filter = (input: string) => boolean
  * ```
  */
 export function buildFilter(options: BuildFilterOptions): Filter {
-  const include = createMatcher(options.include, () => true)
-  const exclude = createMatcher(options.exclude, () => false)
+  const include = createMatcher(options.include, yes)
+  const exclude = createMatcher(options.exclude, no)
+
+  if (exclude === no) return include
+  if (include === yes) return negate(exclude)
 
   return (id) => include(id) && !exclude(id)
 }
