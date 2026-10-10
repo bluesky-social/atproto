@@ -54,6 +54,7 @@ import {
   type ExternalRecordsByRef,
   type SiteStandardDocuments,
   type SiteStandardPublications,
+  actionExternalRecordTakedowns,
   genericRecordKey,
   parseGenericRecordKey,
   trackExternalHydration,
@@ -2418,33 +2419,6 @@ const recordUriOf = (
     !parsed.value.hash
     ? (value as AtUriString)
     : undefined
-}
-
-/**
- * Null generic external records (in both the URI-keyed and exact-ref maps,
- * keeping their keys) that are taken down by an actionable label, unless
- * takedowns are included, or whose owner is explicitly unavailable. Applies to
- * each record independently; counts and other records are unaffected.
- */
-const actionExternalRecordTakedowns = (
-  { externalRecords, externalRecordsByRef, actors, labels }: HydrationState,
-  includeTakedowns?: boolean,
-) => {
-  // An absent actor entry was not hydrated; only `null` means unavailable.
-  const isHidden = (uri: AtUriString) =>
-    actors?.get(uriToDid(uri)) === null ||
-    (!includeTakedowns && labels?.get(uri)?.isTakendown)
-  for (const [uri, info] of externalRecords ?? []) {
-    if (!info || !isHidden(uri)) continue
-    externalRecords?.set(uri, null)
-    externalRecordsByRef?.set(genericRecordKey({ uri, cid: info.cid }), null)
-  }
-  // Every exact version is checked on its own; versions are never collapsed.
-  for (const [key, info] of externalRecordsByRef ?? []) {
-    if (info && isHidden(parseGenericRecordKey(key).uri)) {
-      externalRecordsByRef?.set(key, null)
-    }
-  }
 }
 
 /**

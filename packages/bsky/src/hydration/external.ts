@@ -22,10 +22,13 @@ import {
   type ExternalHydrationWork,
   events,
 } from '../telemetry/events.js'
+import { uriToDid } from '../util/uris.js'
 import type {
   SiteStandardDocumentRecord,
   SiteStandardPublicationRecord,
 } from '../views/types.js'
+import type { Actors } from './actor.js'
+import type { Labels } from './label.js'
 import {
   HydrationMap,
   type ItemRef,
@@ -103,6 +106,43 @@ export function parseGenericRecordKey(key: ExactRecordKey): Required<ItemRef> {
   return {
     uri: key.slice(0, at) as AtUriString,
     cid: key.slice(at + 1),
+  }
+}
+
+/**
+ * Null generic external records (in both the URI-keyed and exact-ref maps,
+ * keeping their keys) that are taken down by an actionable label, unless
+ * takedowns are included, or whose owner is explicitly unavailable. Applies to
+ * each record independently; counts and other records are unaffected.
+ */
+export function actionExternalRecordTakedowns(
+  {
+    externalRecords,
+    externalRecordsByRef,
+    actors,
+    labels,
+  }: {
+    externalRecords?: ExternalRecords
+    externalRecordsByRef?: ExternalRecordsByRef
+    actors?: Actors
+    labels?: Labels
+  },
+  includeTakedowns?: boolean,
+): void {
+  // An absent actor entry was not hydrated; only `null` means unavailable.
+  const isHidden = (uri: AtUriString) =>
+    actors?.get(uriToDid(uri)) === null ||
+    (!includeTakedowns && labels?.get(uri)?.isTakendown)
+  for (const [uri, info] of externalRecords ?? []) {
+    if (!info || !isHidden(uri)) continue
+    externalRecords?.set(uri, null)
+    externalRecordsByRef?.set(genericRecordKey({ uri, cid: info.cid }), null)
+  }
+  // Every exact version is checked on its own; versions are never collapsed.
+  for (const [key, info] of externalRecordsByRef ?? []) {
+    if (info && isHidden(parseGenericRecordKey(key).uri)) {
+      externalRecordsByRef?.set(key, null)
+    }
   }
 }
 
