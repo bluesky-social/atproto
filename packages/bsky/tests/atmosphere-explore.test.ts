@@ -249,6 +249,7 @@ async function setup(config: unknown = {}) {
     blockedActors,
     labels,
     dataplane,
+    hydrator,
     cfg,
     fetchMock,
     query: async (
@@ -302,7 +303,16 @@ const curated = {
 describe('Atmosphere Explore', () => {
   it('hydrates canonical views, associations, ordering, and featured flags', async () => {
     await using fixture = await setup(curated)
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
     const { status, body } = await fixture.query()
+    expect(hydrate).toHaveBeenCalledWith(
+      [missingUri, docUri, pubUri, galleryUri, liveUri],
+      expect.objectContaining({ viewer: null }),
+    )
+    expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
     expect(status).toBe(200)
     expect(body.announcementBanner).toEqual(curated.announcementBanner)
     expect(body.apps).toEqual(curated.apps)
@@ -426,6 +436,33 @@ describe('Atmosphere Explore', () => {
     expect((await fixture.query()).body.articles).toEqual([])
   })
 
+  test.each([
+    { note: 'automatically discovered', publications: [] },
+    { note: 'explicitly in another group', publications: [group([pubUri])] },
+  ])(
+    'does not complete an article group with a publication $note',
+    async ({ publications }) => {
+      await using fixture = await setup({
+        articles: [group([docUri])],
+        publications,
+      })
+      using dependencies = vi.spyOn(
+        fixture.hydrator,
+        'hydrateExternalViewDependencies',
+      )
+      const { status, body } = await fixture.query()
+
+      expect(status).toBe(200)
+      expect(
+        dependencies.mock.calls.some(
+          ([state]) => state.externalRecords?.get(pubUri)?.record,
+        ),
+      ).toBe(true)
+      expect(body.articles).toEqual([])
+      expect(body.publications).toHaveLength(publications.length)
+    },
+  )
+
   test.each(['record', 'label', 'actor', 'block'] as const)(
     'omits moderated content: %s',
     async (kind) => {
@@ -462,6 +499,64 @@ describe('Atmosphere Explore', () => {
     expect(fixture.records.get(itemUri)).not.toHaveProperty('position')
     fixture.takenDown.add(photoUri)
     expect((await fixture.query()).body.photos).toEqual([])
+  })
+
+  it('preserves gallery position ordering through nested hydration in mixed input', async () => {
+    await using fixture = await setup(curated)
+    const item2Uri = atUri(author, grainGalleryItem.$type, 'item2')
+    const photo2Uri = atUri(author, grainPhoto.$type, 'photo2')
+    fixture.records.set(itemUri, {
+      ...fixture.records.get(itemUri)!,
+      position: 1,
+    })
+    fixture.records.set(
+      item2Uri,
+      grainGalleryItem.$build({
+        gallery: galleryUri,
+        item: photo2Uri,
+        position: 0,
+        createdAt: publishedAt,
+      }),
+    )
+    fixture.records.set(photo2Uri, {
+      ...fixture.records.get(photoUri)!,
+      alt: 'Earlier photo',
+    })
+    using backlinks = vi
+      .spyOn(fixture.dataplane, 'getAtmosphereBacklinks')
+      .mockImplementation(
+        async ({ collection, targetUri }) =>
+          new GetAtmosphereBacklinksResponse({
+            backlinks:
+              collection === grainGalleryItem.$type && targetUri === galleryUri
+                ? [{ uri: itemUri }, { uri: item2Uri }]
+                : [],
+          }),
+      )
+
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    expect(body.articles).toHaveLength(2)
+    expect(body.publications).toHaveLength(1)
+    expect(body.livestreams).toHaveLength(1)
+    expect(
+      body.photos[0].view.items.map(
+        (item) =>
+          app.bsky.embed.external.viewGalleryImage.$ifMatches(item)?.alt,
+      ),
+    ).toEqual(['Earlier photo', 'A photo'])
+    expect(body.photos[0].view.associatedRefs?.map(({ uri }) => uri)).toEqual([
+      galleryUri,
+      item2Uri,
+      photo2Uri,
+      itemUri,
+      photoUri,
+    ])
+    expect(backlinks).toHaveBeenCalledWith({
+      targetUri: galleryUri,
+      collection: grainGalleryItem.$type,
+      limit: 10,
+    })
   })
 
   it('rejects gallery item shapes outside the canonical lexicon', async () => {

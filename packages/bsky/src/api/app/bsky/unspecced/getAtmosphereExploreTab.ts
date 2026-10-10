@@ -1,5 +1,5 @@
-import { chunkArray, mapDefined } from '@atproto/common'
-import { type AtUriString, type NsidString, l } from '@atproto/lex'
+import { mapDefined } from '@atproto/common'
+import { type AtUriString, l } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import {
   MethodNotImplementedError,
@@ -9,24 +9,11 @@ import {
 } from '@atproto/xrpc-server'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import type { AppContext } from '../../../../context.js'
-import type {
-  ExternalRecordBacklinks,
-  ExternalRecords,
-} from '../../../../hydration/external.js'
-import {
-  type HydrateCtx,
-  type HydrationState,
-  type Hydrator,
-  mergeManyStates,
-} from '../../../../hydration/hydrator.js'
-import { HydrationMap } from '../../../../hydration/util.js'
+import type { HydrationState } from '../../../../hydration/hydrator.js'
 import { app, site, social } from '../../../../lexicons/index.js'
-import { uriToDid } from '../../../../util/uris.js'
 
 const MAX_CONFIG_BYTES = 512 * 1024
 const MAX_ATMOSPHERE_RECORDS = 500
-const MAX_GALLERY_ITEMS = 10
-const MAX_PREVIEW_ACTORS = 3
 
 const groupSchema = l.object({
   featured: l.boolean(),
@@ -142,7 +129,10 @@ export default function (server: Server, ctx: AppContext) {
         viewer: auth.credentials.iss,
         labelers: ctx.reqLabelers(req),
       })
-      const state = await hydrateAtmosphere(uris, hydrateCtx, ctx.hydrator)
+      const state = await ctx.hydrator.hydrateEmbedExternalViewFromUris(
+        uris,
+        hydrateCtx,
+      )
       const now = Date.now()
       const result: app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody = {
         announcementBanner: config.announcementBanner,
@@ -200,126 +190,6 @@ function completeGroups(
     if (!valid.length || valid.length !== uris.length) return
     return { featured, uris: valid }
   })
-}
-
-async function hydrateAtmosphere(
-  uris: AtUriString[],
-  ctx: HydrateCtx,
-  hydrator: Hydrator,
-): Promise<HydrationState> {
-  const records = await hydrateRecords(uris, hydrator)
-  const available = uris.filter((uri) => records.get(uri))
-  const counts = await hydrator.external.getAtmosphereBacklinkCounts(available)
-  const backlinks: ExternalRecordBacklinks = new HydrationMap()
-
-  // @NOTE Bound fan-out as well as each backlink page; never scan a whole collection.
-  for (const batch of chunkArray(available, 8)) {
-    await Promise.all(
-      batch.map(async (uri) => {
-        const collection = new AtUri(uri).collection
-        const sources: { collection: NsidString; limit: number }[] = []
-        if (collection === site.standard.document.$type) {
-          sources.push({
-            collection: site.standard.graph.recommend.$type,
-            limit: MAX_PREVIEW_ACTORS,
-          })
-        } else if (collection === site.standard.publication.$type) {
-          sources.push({
-            collection: site.standard.graph.subscription.$type,
-            limit: MAX_PREVIEW_ACTORS,
-          })
-        } else if (collection === social.grain.gallery.$type) {
-          sources.push(
-            {
-              collection: social.grain.favorite.$type,
-              limit: MAX_PREVIEW_ACTORS,
-            },
-            {
-              collection: social.grain.gallery.item.$type,
-              limit: MAX_GALLERY_ITEMS,
-            },
-          )
-        }
-        const links: AtUriString[] = []
-        for (const { collection, limit } of sources) {
-          const page = await hydrator.external.getAtmosphereBacklinks(
-            uri,
-            collection,
-            { limit },
-          )
-          links.push(
-            ...mapDefined(page.backlinks.slice(0, limit), ({ uri: input }) => {
-              const uri = recordUri(input)
-              return uri && new AtUri(uri).collection === collection
-                ? uri
-                : undefined
-            }),
-          )
-        }
-        backlinks.set(uri, [...new Set(links)])
-      }),
-    )
-  }
-  records.merge(
-    await hydrateRecords(
-      [...backlinks.values()].flatMap((uris) => uris ?? []),
-      hydrator,
-    ),
-  )
-
-  const photoUris: AtUriString[] = []
-  for (const [galleryUri, links] of backlinks) {
-    if (new AtUri(galleryUri).collection !== social.grain.gallery.$type)
-      continue
-    for (const uri of links ?? []) {
-      const item = social.grain.gallery.item.$ifMatches(
-        records.get(uri)?.record,
-      )
-      if (
-        !item ||
-        item.gallery !== galleryUri ||
-        uriToDid(uri) !== uriToDid(galleryUri)
-      )
-        continue
-      const photoUri = recordUri(item.item)
-      if (
-        photoUri &&
-        new AtUri(photoUri).collection === social.grain.photo.$type
-      )
-        photoUris.push(photoUri)
-    }
-  }
-  records.merge(await hydrateRecords(photoUris, hydrator))
-
-  const allUris = [...records.keys()]
-  const dids = [...new Set(allUris.map(uriToDid))]
-  const states: HydrationState[] = []
-  for (const batch of chunkArray(dids, 200)) {
-    states.push(await hydrator.hydrateProfilesBasic(batch, ctx))
-  }
-  for (const batch of chunkArray(allUris, MAX_ATMOSPHERE_RECORDS)) {
-    states.push({
-      labels: await hydrator.label.getLabelsForSubjects(batch, ctx.labelers),
-    })
-  }
-  return {
-    ...mergeManyStates(...states),
-    ctx,
-    externalRecords: records,
-    externalRecordBacklinks: backlinks,
-    externalRecordBacklinkCounts: counts,
-  }
-}
-
-async function hydrateRecords(
-  uris: AtUriString[],
-  hydrator: Hydrator,
-): Promise<ExternalRecords> {
-  const records: ExternalRecords = new HydrationMap()
-  for (const batch of chunkArray([...new Set(uris)], MAX_ATMOSPHERE_RECORDS)) {
-    records.merge(await hydrator.external.getRecordsByURI(batch))
-  }
-  return records
 }
 
 // @NOTE A publication hydrated for another CMS group must not complete this article.
