@@ -397,12 +397,15 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
     records.set(pubUri, { body: makePub() })
     backlinks.set(pubUri, [sub])
     const externalRecords = await hydrator.external.getRecordsByURI([doc1, sub])
+    // @NOTE The shared traversal tracks completed lookups, including nulls.
+    const seenRecordKeys = new Set<string>(externalRecords.keys())
     using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
 
     const dependencies = await hydrator.hydrateExternalViewDependencies(
       { ctx, externalRecords },
       [{ uri: doc1 }],
       ctx,
+      seenRecordKeys,
     )
     const state = mergeStates({ ctx, externalRecords }, dependencies)
 
@@ -1473,6 +1476,83 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(again).toEqual({ ctx })
       expect(dataplane.getRecordsByRef).toHaveBeenCalledTimes(1)
       expect(hydrator.label.getLabelsForSubjects).not.toHaveBeenCalled()
+    })
+
+    it('marks direct dependency input refs seen, including unavailable and invalid ones', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx } = fixture
+      const handleDoc = atUri(
+        'author.example',
+        site.standard.document.$type,
+        'handle',
+      )
+      mockRefs(
+        fixture,
+        new Map([
+          [key(handleDoc, '1'), { body: makeDoc('https://example.com') }],
+          [key(badDoc, '1'), { body: { $type: site.standard.document.$type } }],
+        ]),
+      )
+      const exact = [v(doc1, '2'), v(handleDoc, '1'), v(badDoc, '1')]
+      const state = {
+        ctx,
+        externalRecordsByRef: await hydrator.external.getRecordsByRef(exact),
+      }
+      expect(state.externalRecordsByRef.get(key(doc1, '2'))).toBeNull()
+
+      // `missingDoc` is absent from state; the exact refs are unavailable,
+      // non-DID, or schema-invalid records, so none has dependencies.
+      const seen = new Set<string>()
+      await hydrator.hydrateExternalViewDependencies(
+        state,
+        [{ uri: missingDoc }, ...exact],
+        ctx,
+        seen,
+      )
+      expect([...seen].toSorted()).toEqual(
+        [missingDoc, ...exact.map((ref) => genericRecordKey(ref))].toSorted(),
+      )
+      // Exact keys mark neither the bare URI nor another version.
+      expect(seen.has(doc1)).toBe(false)
+      expect(seen.has(key(doc1, '1'))).toBe(false)
+    })
+
+    it('inspects already-seen and duplicate roots once', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane, records, seedBasic } = fixture
+      seedBasic()
+      records.set(pub2Uri, { body: makePub() })
+      mockRefs(fixture, new Map([[key(doc1, '1'), { body: makeDoc(pub2Uri) }]]))
+      const state = {
+        ctx,
+        externalRecords: await hydrator.external.getRecordsByURI([doc1]),
+        externalRecordsByRef: await hydrator.external.getRecordsByRef([
+          v(doc1, '1'),
+        ]),
+      }
+      using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
+      const seen = new Set<string>([doc1, key(doc1, '1')])
+      await hydrator.hydrateExternalViewDependencies(
+        state,
+        [{ uri: doc1 }, v(doc1, '1'), { uri: doc1 }, v(doc1, '1')],
+        ctx,
+        seen,
+      )
+
+      // Both versions' publications are discovered in one nested batch.
+      const nested = embedSpy.mock.calls[0][0]
+      expect(nested).toEqual(expect.arrayContaining([pubUri, pub2Uri]))
+      expect(new Set(nested).size).toBe(nested.length)
+      const targets = vi
+        .mocked(dataplane.getAtmosphereBacklinks)
+        .mock.calls.map(([req]) => req.targetUri)
+      expect(targets.filter((t) => t === doc1)).toHaveLength(1)
+      const countTargets = vi
+        .mocked(dataplane.getAtmosphereBacklinkCounts)
+        .mock.calls.flatMap(([req]) => req.targetUris ?? [])
+      expect(countTargets.filter((t) => t === doc1)).toHaveLength(1)
     })
 
     it('keeps latest and exact lookups of one URI independent', async ({
