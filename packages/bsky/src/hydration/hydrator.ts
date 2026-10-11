@@ -1370,12 +1370,21 @@ export class Hydrator {
     let externalRecordBacklinkCounts: ExternalRecordBacklinkCounts | undefined
     if (targets.size) {
       const backlinks: ExternalRecordBacklinks = new HydrationMap()
-      for (const uri of targets.keys()) backlinks.set(uri, [])
       const queries = [...targets].flatMap(([uri, sources]) =>
         sources.map((source) => ({ uri, ...source })),
       )
+      // @NOTE Backlink data is best effort: a failed lookup leaves its state
+      // absent and builders render what remains.
       const [counts] = await Promise.all([
-        this.external.getAtmosphereBacklinkCounts([...targets.keys()]),
+        this.external
+          .getAtmosphereBacklinkCounts([...targets.keys()])
+          .catch((err) => {
+            hydrationLogger.warn(
+              { err },
+              'failed to hydrate external record backlink counts',
+            )
+            return undefined
+          }),
         (async () => {
           // @NOTE Bound fan-out as well as each sample; counts are independent.
           for (const batch of chunkArray(
@@ -1384,11 +1393,22 @@ export class Hydrator {
           )) {
             await Promise.all(
               batch.map(async ({ uri, collection, limit }) => {
-                const page = await this.external.getAtmosphereBacklinks(
-                  uri,
-                  collection,
-                  { limit },
-                )
+                let page: Awaited<
+                  ReturnType<ExternalHydrator['getAtmosphereBacklinks']>
+                >
+                try {
+                  page = await this.external.getAtmosphereBacklinks(
+                    uri,
+                    collection,
+                    { limit },
+                  )
+                } catch (err) {
+                  hydrationLogger.warn(
+                    { err, uri, collection },
+                    'failed to hydrate external record backlinks',
+                  )
+                  return
+                }
                 const links = page.backlinks
                   .filter((b) => parseAtUriString(b.uri).success)
                   .slice(0, limit)
@@ -1427,13 +1447,21 @@ export class Hydrator {
         'external hydration pass limit reached, skipping dependencies',
       )
     } else if (newUris.length) {
-      nested = await this.hydrateEmbedExternalViewFromUris(
-        newUris,
-        ctx,
-        seenRecordKeys,
-        hydrationPass + 1,
-        hydrationMetrics,
-      )
+      try {
+        nested = await this.hydrateEmbedExternalViewFromUris(
+          newUris,
+          ctx,
+          seenRecordKeys,
+          hydrationPass + 1,
+          hydrationMetrics,
+        )
+      } catch (err) {
+        // Skip the whole batch; partial child state could miss moderation.
+        hydrationLogger.warn(
+          { err, hydrationPass, skipped: newUris.length },
+          'failed to hydrate external view dependencies',
+        )
+      }
     }
 
     return mergeStates(

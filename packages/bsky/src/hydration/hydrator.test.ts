@@ -166,6 +166,37 @@ const labelSubjects = ({ hydrator }: Fixture) =>
     .mocked(hydrator.label.getLabelsForSubjects)
     .mock.calls.map(([subjects]) => subjects)
 
+// Rejects matching dataplane backlink page queries; others use the fixture's.
+const failBacklinkPages = (
+  { dataplane }: Fixture,
+  match: (req: { targetUri?: string; collection?: string }) => boolean,
+  err: Error,
+) => {
+  const impl = vi
+    .mocked(dataplane.getAtmosphereBacklinks)
+    .getMockImplementation()!
+  vi.mocked(dataplane.getAtmosphereBacklinks).mockImplementation(
+    async (req, options) => {
+      if (match(req)) throw err
+      return impl(req, options)
+    },
+  )
+}
+// Rejects generic record batches that include a matching URI.
+const failRecordBatches = (
+  { dataplane }: Fixture,
+  match: (uri: string) => boolean,
+  err: Error,
+) => {
+  const impl = vi.mocked(dataplane.getRecordsByURI).getMockImplementation()!
+  vi.mocked(dataplane.getRecordsByURI).mockImplementation(
+    async (req, options) => {
+      if (req.uris?.some(match)) throw err
+      return impl(req, options)
+    },
+  )
+}
+
 const it = baseIt.extend<{ fixture: ReturnType<typeof createFixture> }>({
   // eslint-disable-next-line no-empty-pattern -- Vitest requires destructured fixture dependencies.
   fixture: async ({}, use) => {
@@ -894,6 +925,169 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(state.actors?.has('did:plc:streamer' as DidString)).toBe(true)
     })
   })
+  describe('best-effort dependencies', () => {
+    it('keeps roots, samples, and publications when counts fail', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane, seedBasic } = fixture
+      const { recs, subs } = seedBasic()
+      const err = new Error('counts failure')
+      vi.mocked(dataplane.getAtmosphereBacklinkCounts).mockRejectedValue(err)
+      using warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+      const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
+
+      expect(state.externalRecords?.get(doc1)).toBeTruthy()
+      expect(state.externalRecords?.get(pubUri)).toBeTruthy()
+      expect(state.externalRecordBacklinks?.get(doc1)).toEqual(recs.slice(0, 3))
+      expect(state.externalRecordBacklinks?.get(pubUri)).toEqual(subs)
+      expect(state.externalRecords?.get(recs[0])).toBeTruthy()
+      expect(state.externalRecords?.get(subs[0])).toBeTruthy()
+      expect(state.externalRecordBacklinkCounts).toBeUndefined()
+      // One failed lookup per pass that discovers backlink targets.
+      expect(warn).toHaveBeenCalledTimes(2)
+      for (const [fields] of warn.mock.calls) {
+        expect(fields).toMatchObject({ err })
+      }
+      expect(traversalReports()).toMatchObject([{ outcome: 'completed' }])
+    })
+
+    it('keeps sibling samples when recommendations fail, distinguishing empty from failed', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, seedBasic } = fixture
+      const { subs } = seedBasic()
+      const err = new Error('recommend failure')
+      failBacklinkPages(
+        fixture,
+        ({ targetUri, collection }) =>
+          targetUri === doc1 &&
+          collection === site.standard.graph.recommend.$type,
+        err,
+      )
+      using warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [doc1, doc2],
+        ctx,
+      )
+
+      // Failed lookup is absent; a successful empty lookup is an empty sample.
+      expect(state.externalRecordBacklinks?.has(doc1)).toBe(false)
+      expect(state.externalRecordBacklinks?.get(doc2)).toEqual([])
+      expect(state.externalRecordBacklinks?.get(pubUri)).toEqual(subs)
+      expect(state.externalRecords?.get(pubUri)).toBeTruthy()
+      expect(state.externalRecords?.get(subs[0])).toBeTruthy()
+      expect(
+        state.externalRecordBacklinkCounts?.get(doc1)?.[
+          site.standard.graph.recommend.$type
+        ],
+      ).toBe(42)
+      expect(warn).toHaveBeenCalledTimes(1)
+      expect(warn.mock.calls[0][0]).toMatchObject({
+        err,
+        uri: doc1,
+        collection: site.standard.graph.recommend.$type,
+      })
+    })
+
+    it('keeps recommendations and the publication when subscriptions fail', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, seedBasic } = fixture
+      const { recs } = seedBasic()
+      failBacklinkPages(
+        fixture,
+        ({ collection }) =>
+          collection === site.standard.graph.subscription.$type,
+        new Error('subscription failure'),
+      )
+      using _warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+      const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
+
+      expect(state.externalRecordBacklinks?.get(doc1)).toEqual(recs.slice(0, 3))
+      expect(state.externalRecordBacklinks?.has(pubUri)).toBe(false)
+      expect(state.externalRecords?.get(pubUri)).toBeTruthy()
+      expect(state.externalRecords?.get(recs[0])).toBeTruthy()
+      expect(
+        state.externalRecordBacklinkCounts?.get(pubUri)?.[
+          site.standard.graph.subscription.$type
+        ],
+      ).toBe(17)
+    })
+
+    it('continues later fan-out batches after a failed query', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane, records } = fixture
+      const docs = Array.from({ length: 10 }, (_, i) =>
+        atUri('did:plc:author', site.standard.document.$type, `fan${i}`),
+      )
+      for (const doc of docs)
+        records.set(doc, { body: makeDoc('https://example.com') })
+      failBacklinkPages(
+        fixture,
+        ({ targetUri }) => targetUri === docs[0],
+        new Error('fan-out'),
+      )
+      using _warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(docs, ctx)
+
+      expect(dataplane.getAtmosphereBacklinks).toHaveBeenCalledTimes(10)
+      expect(state.externalRecordBacklinks?.has(docs[0])).toBe(false)
+      for (const doc of docs.slice(1)) {
+        expect(state.externalRecordBacklinks?.get(doc)).toEqual([])
+      }
+    })
+
+    it('keeps root state when a nested dependency batch fails', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, seedBasic } = fixture
+      const { recs, subs } = seedBasic()
+      const err = new Error('nested failure')
+      // @NOTE The root wrapper's legacy Standard.site fetch also resolves the
+      // publication, so fail on a source record that only nested passes fetch.
+      failRecordBatches(fixture, (uri) => uri === recs[0], err)
+      using warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+      const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
+
+      expect(state.externalRecords?.get(doc1)).toBeTruthy()
+      expect(state.externalRecordBacklinks?.get(doc1)).toEqual(recs.slice(0, 3))
+      expect(state.externalRecordBacklinks?.get(pubUri)).toBeUndefined()
+      expect(state.externalRecordBacklinkCounts?.get(doc1)).toBeTruthy()
+      // The failed batch is skipped as a whole, including its siblings.
+      expect(state.externalRecords?.has(pubUri)).toBe(false)
+      expect(state.externalRecords?.has(recs[0])).toBe(false)
+      expect(state.externalRecords?.has(subs[0])).toBe(false)
+      expect(warn).toHaveBeenCalledTimes(1)
+      expect(warn.mock.calls[0][0]).toMatchObject({ err })
+      expect(traversalReports()).toMatchObject([{ outcome: 'completed' }])
+    })
+
+    it('still rejects and reports failure when the root fetch fails', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, seedBasic } = fixture
+      seedBasic()
+      const err = new Error('root failure')
+      failRecordBatches(fixture, (uri) => uri === doc1, err)
+      await expect(
+        hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx),
+      ).rejects.toBe(err)
+      expect(traversalReports()).toMatchObject([
+        { outcome: 'failed', batches: 1 },
+      ])
+    })
+  })
   describe('grain galleries', () => {
     const owner: DidString = 'did:plc:grain'
     const galleryOf = (rkey: string) =>
@@ -1195,6 +1389,117 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(state.externalRecords?.get(pubUri)).toBeTruthy()
       expect(state.externalRecords?.get(photoUris[0])).toBeTruthy()
       expect(state.actors?.has('did:plc:streamer' as DidString)).toBe(true)
+    })
+    it('keeps items and photos when favorites fail', async ({ fixture }) => {
+      const { hydrator, ctx } = fixture
+      const gallery = galleryOf('g1')
+      const { itemUris, photoUris } = seedGallery(fixture, gallery, 5, 2)
+      failBacklinkPages(
+        fixture,
+        ({ collection }) => collection === social.grain.favorite.$type,
+        new Error('favorites failure'),
+      )
+      using _warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [gallery],
+        ctx,
+      )
+
+      expect(state.externalRecordBacklinks?.get(gallery)).toEqual(itemUris)
+      for (const uri of [...itemUris, ...photoUris]) {
+        expect(state.externalRecords?.get(uri)).toBeTruthy()
+      }
+      expect(
+        state.externalRecordBacklinkCounts?.get(gallery)?.[
+          social.grain.favorite.$type
+        ],
+      ).toBe(99)
+    })
+
+    it('keeps the gallery root when its item pages fail', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx } = fixture
+      const gallery = galleryOf('g1')
+      const { favUris, itemUris } = seedGallery(fixture, gallery, 2, 2)
+      failBacklinkPages(
+        fixture,
+        ({ collection }) => collection === social.grain.gallery.item.$type,
+        new Error('items failure'),
+      )
+      using _warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [gallery],
+        ctx,
+      )
+
+      expect(state.externalRecords?.get(gallery)).toBeTruthy()
+      expect(state.externalRecordBacklinks?.get(gallery)).toEqual(favUris)
+      for (const uri of itemUris) {
+        expect(state.externalRecords?.has(uri)).toBe(false)
+      }
+    })
+
+    it('omits the gallery sample entirely when all of its pages fail', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx } = fixture
+      const gallery = galleryOf('g1')
+      seedGallery(fixture, gallery, 2, 2)
+      failBacklinkPages(fixture, () => true, new Error('pages failure'))
+      using _warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [gallery],
+        ctx,
+      )
+
+      expect(state.externalRecords?.get(gallery)).toBeTruthy()
+      expect(state.externalRecordBacklinks?.has(gallery)).toBe(false)
+      expect(state.externalRecordBacklinkCounts?.get(gallery)).toBeTruthy()
+    })
+
+    it('keeps gallery, favorites, and items when photo hydration fails', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx } = fixture
+      const gallery = galleryOf('g1')
+      const { favUris, itemUris, photoUris } = seedGallery(
+        fixture,
+        gallery,
+        2,
+        2,
+      )
+      failRecordBatches(
+        fixture,
+        (uri) => (photoUris as string[]).includes(uri),
+        new Error('photos failure'),
+      )
+      using warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [gallery],
+        ctx,
+      )
+
+      for (const uri of [gallery, ...favUris, ...itemUris]) {
+        expect(state.externalRecords?.get(uri)).toBeTruthy()
+      }
+      expect(state.externalRecordBacklinks?.get(gallery)).toEqual([
+        ...favUris,
+        ...itemUris,
+      ])
+      for (const uri of photoUris) {
+        expect(state.externalRecords?.has(uri)).toBe(false)
+      }
+      expect(warn).toHaveBeenCalledTimes(1)
+      expect(traversalReports()).toMatchObject([{ outcome: 'completed' }])
     })
   })
   describe('traversal control', () => {
@@ -1903,21 +2208,49 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       ])
     })
 
-    it('reports attempted work once when fetching fails and rethrows', async ({
+    it('reports attempted work once and keeps partial state when a nested fetch fails', async ({
       fixture,
     }) => {
-      const { hydrator, ctx, dataplane } = fixture
+      const { hydrator, ctx } = fixture
       seedChain(fixture, 5)
-      const lookup = vi
-        .mocked(dataplane.getRecordsByURI)
-        .getMockImplementation()
-      const err = new Error('dataplane failure')
-      vi.mocked(dataplane.getRecordsByURI).mockImplementation(
-        async (req, options) => {
-          if (req.uris?.includes(chainUri(2))) throw err
-          return lookup!(req, options)
-        },
+      failRecordBatches(
+        fixture,
+        (uri) => uri === chainUri(2),
+        new Error('dataplane failure'),
       )
+      using warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [chainUri(0)],
+        ctx,
+      )
+      expect(state.externalRecords?.get(chainUri(0))).toBeTruthy()
+      expect(state.externalRecords?.get(chainUri(1))).toBeTruthy()
+      expect(state.externalRecords?.has(chainUri(2))).toBe(false)
+      expect(state.externalRecordBacklinks?.get(chainUri(1))).toEqual([
+        chainUri(2),
+      ])
+      expect(warn).toHaveBeenCalledTimes(1)
+      expect(traversalReports()).toEqual([
+        {
+          root: 'uris',
+          outcome: 'completed',
+          recordLookups: 3,
+          batches: 3,
+          maxPass: 3,
+        },
+      ])
+    })
+
+    it('reports attempted work once when the root fetch fails and rethrows', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx } = fixture
+      seedChain(fixture, 5)
+      const err = new Error('dataplane failure')
+      failRecordBatches(fixture, (uri) => uri === chainUri(0), err)
 
       await expect(
         hydrator.hydrateEmbedExternalViewFromUris([chainUri(0)], ctx),
@@ -1926,9 +2259,9 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         {
           root: 'uris',
           outcome: 'failed',
-          recordLookups: 3,
-          batches: 3,
-          maxPass: 3,
+          recordLookups: 1,
+          batches: 1,
+          maxPass: 1,
         },
       ])
     })
