@@ -1,11 +1,12 @@
 import assert from 'node:assert'
-import { dedupeStrs, mapDefined } from '@atproto/common'
-import { atUri } from '@atproto/lex'
+import { chunkArray, dedupeStrs, mapDefined } from '@atproto/common'
+import { type NsidString, atUri, isDidString } from '@atproto/lex'
 import {
   AtUri,
   type AtUriString,
   type DidString,
   type UriString,
+  parseAtUriString,
 } from '@atproto/syntax'
 import { NOTIFICATION_REASON } from '../api/app/bsky/notification/constants.js'
 import type { RawNotification } from '../api/app/bsky/notification/grouping/grouping.js'
@@ -14,7 +15,7 @@ import type {
   FeatureGatesClient,
   ScopedFeatureGatesClient,
 } from '../feature-gates/index.js'
-import { app, chat, com } from '../lexicons/index.js'
+import { app, chat, com, place, site, social } from '../lexicons/index.js'
 import { hydrationLogger } from '../logger.js'
 import type {
   Bookmark as BookmarkLex,
@@ -46,13 +47,19 @@ import {
   type ProfileViewerStates,
 } from './actor.js'
 import {
+  type ExactRecordKey,
+  type ExternalHydrationTracker,
   ExternalHydrator,
   type ExternalRecordBacklinkCounts,
   type ExternalRecordBacklinks,
   type ExternalRecords,
+  type ExternalRecordsByRef,
   type SiteStandardDocuments,
   type SiteStandardPublications,
+  actionExternalRecordTakedowns,
+  genericRecordKey,
   parseGenericRecordKey,
+  trackExternalHydration,
 } from './external.js'
 import {
   type FeedGenAggs,
@@ -181,6 +188,7 @@ export type HydrationState = {
   verifications?: Verifications
   bookmarks?: Bookmarks
   externalRecords?: ExternalRecords
+  externalRecordsByRef?: ExternalRecordsByRef
   /** Available backlink source URIs per target, potentially from a partial page. */
   externalRecordBacklinks?: ExternalRecordBacklinks
   externalRecordBacklinkCounts?: ExternalRecordBacklinkCounts
@@ -1035,55 +1043,403 @@ export class Hydrator {
   }
 
   /**
-   * Hydrate the state needed to build an `app.bsky.embed.external#view` for
-   * a set of `site.standard.*` AT-URIs at compose-time. Filters input URIs to
-   * SS collections, fetches latest indexed versions plus labels, and gates
-   * taken-down records.
+   * Hydrate the latest versions of external records, plus labels, profiles, and
+   * their view dependencies. `hydrationPass` is the 1-based number of this
+   * generic batch within the traversal (the root batch is pass 1); nested
+   * batches continue the count. Nested passes share the caller's
+   * `hydrationMetrics` tracker; without one, this call owns the traversal and
+   * reports its totals.
    */
   async hydrateEmbedExternalViewFromUris(
     uris: AtUriString[],
     ctx: HydrateCtx,
+    seenRecordKeys: Set<string> = new Set(),
+    hydrationPass = 1,
+    hydrationMetrics?: ExternalHydrationTracker,
   ): Promise<HydrationState> {
-    const ssUris = dedupeStrs(
-      uris.filter((u) =>
-        new AtUri(u).collection.startsWith(SITE_STANDARD_NSID_PREFIX),
-      ),
-    ) as AtUriString[]
-    if (!ssUris.length) return { ctx }
-    const dids = dedupeStrs(ssUris.map((uri) => uriToDid(uri)))
+    return trackExternalHydration(
+      'uris',
+      hydrationMetrics,
+      (hydrationMetrics) =>
+        this.hydrateEmbedExternalView(
+          uris.map(uriToRef),
+          ctx,
+          seenRecordKeys,
+          hydrationPass,
+          hydrationMetrics,
+        ),
+    )
+  }
 
-    const [{ documents, publications }, labels, profiles] = await Promise.all([
+  /**
+   * Like `hydrateEmbedExternalViewFromUris`, but for exact record versions
+   * pinned by strong refs. Roots land only in `externalRecordsByRef`; their
+   * URI dependencies are hydrated as latest versions by the URI path.
+   */
+  async hydrateEmbedExternalViewFromRefs(
+    refs: Required<ItemRef>[],
+    ctx: HydrateCtx,
+    seenRecordKeys: Set<string> = new Set(),
+    hydrationPass = 1,
+    hydrationMetrics?: ExternalHydrationTracker,
+  ): Promise<HydrationState> {
+    return trackExternalHydration(
+      'refs',
+      hydrationMetrics,
+      (hydrationMetrics) =>
+        this.hydrateEmbedExternalView(
+          refs,
+          ctx,
+          seenRecordKeys,
+          hydrationPass,
+          hydrationMetrics,
+        ),
+    )
+  }
+
+  private async hydrateEmbedExternalView(
+    refs: ItemRef[],
+    ctx: HydrateCtx,
+    seenRecordKeys: Set<string>,
+    hydrationPass: number,
+    hydrationMetrics: ExternalHydrationTracker,
+  ): Promise<HydrationState> {
+    // Filter at the entry point so each lookup runs at most once per shared
+    // traversal, even for callers that did not prefilter their input. Null or
+    // unavailable results stay seen as completed lookups. Nothing unseen means
+    // no hydration work, and no pass is consumed.
+    const items = takeUnseenRefs(refs, seenRecordKeys)
+    if (!items.length) return { ctx }
+    // Get any bare URIs to fetch
+    const byUriValues = items
+      .filter(({ cid }) => cid === undefined)
+      .map(({ uri }) => uri)
+    // Get any exact refs to fetch
+    const byRefValues = items.filter(isExactRef)
+    // Pull out all URIs for label/profile hydration
+    const allUris = dedupeStrs(items.map(({ uri }) => uri))
+
+    // TODO Remove this once we're fully generic
+    const ssUris = byUriValues.filter((uri) =>
+      new AtUri(uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX),
+    )
+
+    // Get all the actors that are part of this hydration
+    const dids = dedupeStrs(allUris.map(uriToDid))
+    const seenDids = new Set<string>(dids)
+
+    const fetchRecords = async () => {
+      const [externalRecords, exactRecords] = await Promise.all([
+        byUriValues.length
+          ? this.external.getRecordsByURI(byUriValues, ctx.includeTakedowns)
+          : undefined,
+        byRefValues.length
+          ? this.external.getRecordsByRef(byRefValues, ctx.includeTakedowns)
+          : undefined,
+      ])
+      // Build the by-ref map used by some endpoints. Latest versions were not
+      // requested exactly, so they are not marked as completed exact lookups,
+      // and requested exact entries take precedence over them.
+      const externalRecordsByRef: ExternalRecordsByRef = new HydrationMap()
+      for (const [uri, info] of externalRecords ?? []) {
+        if (!info) continue
+        externalRecordsByRef.set(genericRecordKey({ uri, cid: info.cid }), info)
+      }
+      if (exactRecords) externalRecordsByRef.merge(exactRecords)
+      return { externalRecords, externalRecordsByRef }
+    }
+
+    // Count this batch where its generic fetches are scheduled; a failed batch
+    // was still attempted.
+    hydrationMetrics.recordLookups += items.length
+    hydrationMetrics.batches += 1
+    hydrationMetrics.maxPass = Math.max(hydrationMetrics.maxPass, hydrationPass)
+    const [
+      { externalRecords, externalRecordsByRef },
+      { documents, publications },
+      labels,
+      profiles,
+    ] = await Promise.all([
+      fetchRecords(),
       this.external.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
-      this.label.getLabelsForSubjects(ssUris, ctx.labelers),
+      this.label.getLabelsForSubjects(allUris, ctx.labelers),
       this.hydrateProfilesBasic(dids, ctx),
     ])
+
+    // Merge record and profile state, then hide moderated records so they
+    // trigger no dependency expansion.
+    const baseState = mergeStates(profiles, {
+      ctx,
+      labels,
+      externalRecords,
+      externalRecordsByRef,
+    })
+    actionExternalRecordTakedowns(baseState, ctx.includeTakedowns)
+
+    // Discover and hydrate any additional view dependencies
+    const depsState = await this.hydrateExternalViewDependencies(
+      baseState,
+      items,
+      ctx,
+      seenRecordKeys,
+      hydrationPass,
+      hydrationMetrics,
+    )
+
+    // Set values to `null` in maps if records are taken down
+    // TODO Remove this once we're fully generic
     if (!ctx.includeTakedowns) {
       actionSiteStandardTakedownLabels(documents, publications, labels)
     }
-    // Edge case: a document's `site` may resolve to a publication owned by a
-    // different repo than any of the input URIs (the dataplane returns it
-    // even though it wasn't requested directly). Top up profile coverage for
-    // any such DIDs with a serial second hydration so `associatedProfiles`
-    // is complete.
-    const knownDids = new Set<string>(dids)
-    const extraDids: DidString[] = []
+
+    /*
+     * Edge case: a document's `site` may resolve to a publication owned by a
+     * different repo than any of the input URIs (the dataplane returns it even
+     * though it wasn't requested directly). Top up profile coverage for any
+     * such DIDs with a serial second hydration so `associatedProfiles` is
+     * complete.
+     *
+     * TODO maybe generalize this to any external record
+     */
+    const newDids: DidString[] = []
     for (const key of publications.keys()) {
       const did = uriToDid(parseGenericRecordKey(key).uri)
-      if (!knownDids.has(did)) {
-        knownDids.add(did)
-        extraDids.push(did)
+      if (!seenDids.has(did)) {
+        seenDids.add(did)
+        newDids.push(did)
       }
     }
-    const profilesState = extraDids.length
-      ? mergeStates(profiles, await this.hydrateProfilesBasic(extraDids, ctx))
+    const newProfiles = newDids.length
+      ? mergeStates(profiles, await this.hydrateProfilesBasic(newDids, ctx))
       : profiles
 
-    return mergeStates(profilesState, {
-      ctx,
-      labels,
-      siteStandardDocuments: documents,
-      siteStandardPublications: publications,
-    })
+    // A supplemental latest lookup returning the same URI and CID is the same
+    // version, so it may replace an unavailable exact entry; other CIDs have
+    // other keys and never satisfy a pin.
+    return mergeManyStates(
+      newProfiles,
+      {
+        ctx,
+        labels,
+        externalRecords,
+        externalRecordsByRef,
+        siteStandardDocuments: documents,
+        siteStandardPublications: publications,
+      },
+      depsState,
+    )
+  }
+
+  /**
+   * Discover view dependencies by URI collection and hydrate new URIs in a batch.
+   * Returns additional state. Each input is inspected in the map matching its
+   * identity: `(uri, cid)` refs in `externalRecordsByRef`, bare URIs in
+   * `externalRecords`. Every pinned version is inspected, since versions of
+   * one URI can reference different dependencies.
+   *
+   * `seenRecordKeys` prevents repeated lookups and cycles across nested passes,
+   * but not a chain of distinct URIs; `MAX_EXTERNAL_HYDRATION_PASSES` bounds
+   * that, as a guard against future association rules or unexpected expansion.
+   * `hydrationPass` is the number of the generic batch that produced `state`
+   * (1-based, default 1 for prehydrated state, which is treated as the root
+   * batch); the next nested batch is `hydrationPass + 1`. `hydrationMetrics`
+   * is shared as in `hydrateEmbedExternalViewFromUris`.
+   */
+  async hydrateExternalViewDependencies(
+    state: HydrationState,
+    refs: ItemRef[],
+    ctx: HydrateCtx,
+    seenRecordKeys: Set<string> = new Set(),
+    hydrationPass = 1,
+    hydrationMetrics?: ExternalHydrationTracker,
+  ): Promise<HydrationState> {
+    return trackExternalHydration(
+      'dependencies',
+      hydrationMetrics,
+      (hydrationMetrics) =>
+        this.discoverExternalViewDependencies(
+          state,
+          refs,
+          ctx,
+          seenRecordKeys,
+          hydrationPass,
+          hydrationMetrics,
+        ),
+    )
+  }
+
+  private async discoverExternalViewDependencies(
+    state: HydrationState,
+    refs: ItemRef[],
+    ctx: HydrateCtx,
+    seenRecordKeys: Set<string>,
+    hydrationPass: number,
+    hydrationMetrics: ExternalHydrationTracker,
+  ): Promise<HydrationState> {
+    // Backlink sources to sample per target, each with its own bound.
+    const targets = new Map<
+      AtUriString,
+      { collection: NsidString; limit: number }[]
+    >()
+    const discoveredUris = new Set<AtUriString>()
+
+    for (const ref of refs) {
+      /*
+       *  Additional safety in case this method is ever called directly.
+       *  `takeUnseenRefs` already populates this map, so this is a no-op under
+       *  normal circumstances.
+       */
+      seenRecordKeys.add(genericRecordKey(ref))
+      const { uri, cid } = ref
+      const record = (
+        cid === undefined
+          ? state.externalRecords?.get(uri)
+          : state.externalRecordsByRef?.get(genericRecordKey({ uri, cid }))
+      )?.record
+      if (!record) continue
+      const parsed = parseAtUriString(uri)
+      if (
+        !parsed.success ||
+        !isDidString(parsed.value.authority) ||
+        !parsed.value.rkey ||
+        parsed.value.hash
+      ) {
+        continue
+      }
+
+      /*
+       * Collection-specific rules for discovering additional view dependencies.
+       */
+      const { collection } = parsed.value
+      if (
+        collection === site.standard.document.$type &&
+        site.standard.document.$matches(record, { strict: false })
+      ) {
+        targets.set(uri, [
+          {
+            collection: site.standard.graph.recommend.$type,
+            limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
+          },
+        ])
+
+        const publicationUri = recordUriOf(
+          record.site,
+          site.standard.publication.$type,
+        )
+        if (publicationUri) discoveredUris.add(publicationUri)
+      } else if (
+        collection === site.standard.publication.$type &&
+        site.standard.publication.$matches(record, { strict: false })
+      ) {
+        targets.set(uri, [
+          {
+            collection: site.standard.graph.subscription.$type,
+            limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
+          },
+        ])
+      } else if (
+        collection === place.stream.livestream.$type &&
+        place.stream.livestream.$matches(record, { strict: false })
+      ) {
+        // Nothing to do atm
+      } else if (
+        collection === social.grain.gallery.$type &&
+        social.grain.gallery.$matches(record, { strict: false })
+      ) {
+        targets.set(uri, [
+          {
+            collection: social.grain.favorite.$type,
+            limit: ExternalHydrator.MAX_BACKLINK_PREVIEWS,
+          },
+          {
+            collection: social.grain.gallery.item.$type,
+            limit: ExternalHydrator.MAX_BACKLINK_GALLERY_ITEMS,
+          },
+        ])
+      } else if (
+        collection === social.grain.gallery.item.$type &&
+        social.grain.gallery.item.$matches(record, { strict: false })
+      ) {
+        // Items have no backlinks; they only point at their photo.
+        const photoUri = recordUriOf(record.item, social.grain.photo.$type)
+        if (photoUri) discoveredUris.add(photoUri)
+      }
+    }
+
+    let externalRecordBacklinks: ExternalRecordBacklinks | undefined
+    let externalRecordBacklinkCounts: ExternalRecordBacklinkCounts | undefined
+    if (targets.size) {
+      const backlinks: ExternalRecordBacklinks = new HydrationMap()
+      for (const uri of targets.keys()) backlinks.set(uri, [])
+      const queries = [...targets].flatMap(([uri, sources]) =>
+        sources.map((source) => ({ uri, ...source })),
+      )
+      const [counts] = await Promise.all([
+        this.external.getAtmosphereBacklinkCounts([...targets.keys()]),
+        (async () => {
+          // @NOTE Bound fan-out as well as each sample; counts are independent.
+          for (const batch of chunkArray(
+            queries,
+            ExternalHydrator.MAX_BACKLINK_FANOUT,
+          )) {
+            await Promise.all(
+              batch.map(async ({ uri, collection, limit }) => {
+                const page = await this.external.getAtmosphereBacklinks(
+                  uri,
+                  collection,
+                  { limit },
+                )
+                const links = page.backlinks
+                  .filter((b) => parseAtUriString(b.uri).success)
+                  .slice(0, limit)
+                  .map((b) => b.uri)
+                backlinks.set(
+                  uri,
+                  dedupeStrs([...(backlinks.get(uri) ?? []), ...links]),
+                )
+                links.forEach((link) => discoveredUris.add(link))
+              }),
+            )
+          }
+        })(),
+      ])
+      externalRecordBacklinks = backlinks
+      externalRecordBacklinkCounts = counts
+    }
+
+    const newUris = [...discoveredUris].filter(
+      (uri) => !seenRecordKeys.has(genericRecordKey({ uri })),
+    )
+    let nested: HydrationState = {}
+    if (
+      newUris.length &&
+      hydrationPass >= ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES
+    ) {
+      // Keep the partial state. Skipped URIs are not marked seen: they were
+      // never fetched.
+      hydrationMetrics.capped = true
+      hydrationLogger.warn(
+        {
+          hydrationPass,
+          maxPasses: ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES,
+          skipped: newUris.length,
+        },
+        'external hydration pass limit reached, skipping dependencies',
+      )
+    } else if (newUris.length) {
+      nested = await this.hydrateEmbedExternalViewFromUris(
+        newUris,
+        ctx,
+        seenRecordKeys,
+        hydrationPass + 1,
+        hydrationMetrics,
+      )
+    }
+
+    return mergeStates(
+      { ctx, externalRecordBacklinks, externalRecordBacklinkCounts },
+      nested,
+    )
   }
 
   // app.bsky.feed.defs#threadViewPost
@@ -2126,6 +2482,10 @@ export const mergeStates = (
     verifications: mergeMaps(stateA.verifications, stateB.verifications),
     bookmarks: mergeNestedMaps(stateA.bookmarks, stateB.bookmarks),
     externalRecords: mergeMaps(stateA.externalRecords, stateB.externalRecords),
+    externalRecordsByRef: mergeMaps(
+      stateA.externalRecordsByRef,
+      stateB.externalRecordsByRef,
+    ),
     externalRecordBacklinks: mergeMaps(
       stateA.externalRecordBacklinks,
       stateB.externalRecordBacklinks,
@@ -2162,6 +2522,24 @@ const actionTakedownLabels = (
 }
 
 /**
+ * The URI when an externally authored reference is a complete DID-based
+ * record URI in `collection`, with a record key and no fragment.
+ */
+const recordUriOf = (
+  value: string,
+  collection: NsidString,
+): AtUriString | undefined => {
+  const parsed = parseAtUriString(value)
+  return parsed.success &&
+    isDidString(parsed.value.authority) &&
+    parsed.value.collection === collection &&
+    parsed.value.rkey &&
+    !parsed.value.hash
+    ? (value as AtUriString)
+    : undefined
+}
+
+/**
  * Apply takedown labels to the site.standard hydration maps. Per-record
  * takedowns null any entry whose subject URI is taken down; pair takedowns
  * propagate that null across doc/publication pairs so we never render half
@@ -2175,9 +2553,9 @@ const actionSiteStandardTakedownLabels = (
 ) => {
   // Pairings have to be captured before nulling — the doc record carries
   // the publication URI in its `site` field, and we lose it once we null.
-  const pairings: { docKey: string; pubKey: string }[] = []
+  const pairings: { docKey: ExactRecordKey; pubKey: ExactRecordKey }[] = []
   if (documents.size > 0 && publications.size > 0) {
-    const pubKeysByUri = new Map<string, string[]>()
+    const pubKeysByUri = new Map<string, ExactRecordKey[]>()
     for (const key of publications.keys()) {
       const { uri } = parseGenericRecordKey(key)
       const list = pubKeysByUri.get(uri)
@@ -2215,3 +2593,23 @@ const actionSiteStandardTakedownLabels = (
 const uriToRef = (uri: AtUriString): ItemRef => {
   return { uri }
 }
+
+/**
+ * Drop refs whose lookup key is already in `seenRecordKeys`, and mark the rest
+ * synchronously so concurrent work in the traversal cannot schedule them again.
+ * Latest (bare URI) and exact (`uri@cid`) keys are distinct identities in the
+ * shared set: neither implies nor suppresses the other, or another version.
+ */
+const takeUnseenRefs = (
+  refs: ItemRef[],
+  seenRecordKeys: Set<string>,
+): ItemRef[] =>
+  refs.filter((ref) => {
+    const key = genericRecordKey(ref)
+    if (seenRecordKeys.has(key)) return false
+    seenRecordKeys.add(key)
+    return true
+  })
+
+const isExactRef = (ref: ItemRef): ref is Required<ItemRef> =>
+  ref.cid !== undefined
