@@ -105,9 +105,11 @@ const canonicalUrlMatchesAssumed = (
  * side carries the slash.
  *
  * Structural validation of the doc/pub pair (matching `site` ↔ pub URI,
- * no orphan docs that claim a missing publication) happens upstream in
- * `getSiteStandardRecordsFromHydrationMapsByRefs` /
- * `…ByDocumentUri` (see `hydration/external.ts`); by the time this
+ * no orphan docs that claim a missing publication) happens upstream: in the
+ * pinned `getSiteStandardRecordsFromHydrationMapsByRefs`
+ * (`hydration/external.ts`), or by `validateStandardSiteRecordsForUrl` over
+ * `getStandardSiteRecordsForUri`'s selection (which alone leaves an orphan
+ * document selected with an absent publication). By the time this
  * function runs the pair is already known to be structurally consistent,
  * so we only check whether the records back the URL.
  *
@@ -124,7 +126,7 @@ const canonicalUrlMatchesAssumed = (
  * - Loose document (web-URL `site`): `document.site + document.path`
  *   must canonicalize to `assumedUrl` (or be a subpath-friendly prefix).
  *   (Doc with at-uri `site` but no publication can't reach this function
- *   — the lookups reject it.)
+ *   — callers reject it.)
  * - Publication only: `publication.url` must canonicalize exactly to
  *   `assumedUrl`.
  * - Neither: vacuously valid; the caller short-circuits before we get
