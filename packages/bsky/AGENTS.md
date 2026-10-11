@@ -19,3 +19,9 @@
 # External embed validation utilities
 
 - `util/external/standard-site.ts` (`getStandardSiteRecordsForUri`, `validateStandardSiteRecordsForUrl`) and `util/external/index.ts` (`isExternalRecordUrlSafe`) are pure and synchronous over caller-supplied hydrated records, URLs, and a domain list: no I/O, config reads, mutation, or view construction. They are not yet wired into any call site.
+
+# `app.bsky.embed.getEmbedExternalView`
+
+- The handler normalizes the request to one record URI before hydration: an explicit `canonicalUri` always wins (ignoring `uris`, with no fallback); otherwise the legacy `uris` input selects the first `site.standard.document`, else the first `site.standard.publication`. Only the one URI is hydrated; dependencies come from existing hydration.
+- Validate before building any view: Standard.site records via `getStandardSiteRecordsForUri` + `validateStandardSiteRecordsForUrl`, other records via `isExternalRecordUrlSafe(url, cfg.externalRecordsSafeDomains)`. Renderability is never the trust test.
+- Validated records return `data` and `associatedRefs`/`associatedRecords` (every available record resolved from the canonical URI, canonical first, index-aligned); failed validation returns only `unverifiedAssociatedRefs`/`unverifiedAssociatedRecords` and builds no view. The legacy `view` is returned for Standard.site records only.

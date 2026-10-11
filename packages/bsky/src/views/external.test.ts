@@ -1085,3 +1085,87 @@ describe('record modality views', () => {
     ])
   })
 })
+
+describe('legacy Standard.site overlay validation', () => {
+  const slot = <T extends TypedLexMap>(uri: AtUriString, record: T) => ({
+    ref: { uri, cid },
+    info: {
+      record,
+      cid,
+      indexedAt: new Date(createdAt),
+      sortedAt: new Date(createdAt),
+      takedownRef: undefined,
+    },
+  })
+  const makePublication = (uri: AtUriString = pubUri) =>
+    slot(
+      uri,
+      site.standard.publication.$build({
+        name: 'A publication',
+        url: 'https://example.com/blog',
+      }),
+    )
+
+  const build = (
+    documentSite: string,
+    publication: ReturnType<typeof makePublication> | undefined,
+    assumedUrl: string,
+  ) => {
+    const state = createState()
+    return views.externalEmbedFromStandardSiteRecords({
+      document: slot(
+        docUri,
+        site.standard.document.$build({
+          site: documentSite as site.standard.document.Main['site'],
+          path: '/article',
+          title: 'An article',
+          publishedAt: createdAt,
+        }),
+      ),
+      publication,
+      state,
+      assumedUrl,
+    })
+  }
+  it('renders a document with the publication it names', () => {
+    const overlay = build(
+      pubUri,
+      makePublication(),
+      'https://example.com/blog/article',
+    )
+    expect(overlay).toMatchObject({
+      uri: 'https://example.com/blog/article',
+      title: 'An article',
+    })
+  })
+
+  it('rejects a document paired with a publication it does not name', () => {
+    const other = atUri(publisherDid, site.standard.publication.$type, 'other')
+    expect(
+      build(pubUri, makePublication(other), 'https://example.com/blog/article'),
+    ).toBeUndefined()
+  })
+
+  it('rejects a document naming a publication that is not supplied', () => {
+    expect(
+      build(pubUri, undefined, 'https://example.com/blog/article'),
+    ).toBeUndefined()
+  })
+
+  it('renders a web-URL document alone and rejects a URL mismatch', () => {
+    expect(
+      build(
+        'https://example.com/blog',
+        undefined,
+        'https://example.com/blog/article',
+      ),
+    ).toMatchObject({ title: 'An article' })
+    expect(
+      build(
+        'https://example.com/blog',
+        undefined,
+        'https://evil.example/blog/article',
+      ),
+    ).toBeUndefined()
+  })
+})

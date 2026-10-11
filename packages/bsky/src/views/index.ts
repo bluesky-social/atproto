@@ -45,7 +45,7 @@ import { viewsLogger } from '../logger.js'
 import type { Notification } from '../proto/bsky_pb.js'
 import {
   estimateReadingTimeMinutes,
-  validateStandardSiteForUrl,
+  validateStandardSiteRecordsForUrl,
 } from '../util/external/standard-site.js'
 import {
   postUriToPostgateUri,
@@ -2440,7 +2440,7 @@ export class Views {
   /**
    * Compose-path entry point: caller already knows which document and
    * publication backed the request and has them in hand (e.g. from
-   * iterating the SS hydration maps directly). Skips the by-ref lookup
+   * `getStandardSiteRecordsForUri`). Skips the by-ref lookup
    * that `externalEmbedFromStandardSite` does. Used by
    * `getEmbedExternalView`.
    *
@@ -2477,13 +2477,14 @@ export class Views {
     //     — matching `site`/`uri`, no orphan doc claiming a missing
     //     publication (see `getSiteStandardRecordsFromHydrationMapsByRefs`
     //     and `…ByDocumentUri` in `hydration/external.ts`).
-    //  3. `validateStandardSiteForUrl` below checks that the records back
-    //     the URL the embed claims (see `util/external/standard-site.ts`).
+    //  3. `validateStandardSiteRecordsForUrl` below re-checks the doc/pub
+    //     relationship and that the records back the URL the embed claims
+    //     (see `util/external/standard-site.ts`).
     //
     // If any layer rejected, callers see `undefined` and fall back to the
     // bare embed rather than render partial / disagreeing enrichment.
     if (!document && !publication) return undefined
-    if (!validateStandardSiteForUrl(document, publication, assumedUrl)) {
+    if (!validateStandardSiteRecordsForUrl(document, publication, assumedUrl)) {
       viewsLogger.warn(
         {
           documentUri: document?.ref.uri,
