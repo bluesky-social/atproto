@@ -2476,7 +2476,7 @@ export class Views {
     //  2. The lookups guarantee structural agreement between doc and pub
     //     — matching `site`/`uri`, no orphan doc claiming a missing
     //     publication (see `getSiteStandardRecordsFromHydrationMapsByRefs`
-    //     and `…ByDocumentUri` in `hydration/external.ts`).
+    //     in `hydration/external.ts`).
     //  3. `validateStandardSiteRecordsForUrl` below re-checks the doc/pub
     //     relationship and that the records back the URL the embed claims
     //     (see `util/external/standard-site.ts`).

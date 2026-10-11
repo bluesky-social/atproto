@@ -1,6 +1,11 @@
 import { once } from 'node:events'
 import { createServer as createHttpServer } from 'node:http'
-import { createPromiseClient, createRouterTransport } from '@connectrpc/connect'
+import {
+  Code,
+  ConnectError,
+  createPromiseClient,
+  createRouterTransport,
+} from '@connectrpc/connect'
 import { describe, expect, it, test, vi } from 'vitest'
 import {
   type AtUriString,
@@ -177,6 +182,8 @@ async function setup(domains: string[] = safeDomains) {
     [backlinkKey(galleryUri, grainGalleryItem.$type), [itemUri]],
   ])
   const takenDown = new Set<string>()
+  // Record batches including any of these URIs fail.
+  const failing = new Set<string>()
   const labels: com.atproto.label.defs.Label[] = []
   const lookup = (uri: string) => {
     const record = records.get(uri as AtUriString)
@@ -197,7 +204,12 @@ async function setup(domains: string[] = safeDomains) {
     Service,
     createRouterTransport(({ service }) => {
       service(Service, {
-        getRecordsByURI: ({ uris }) => ({ results: uris.map(lookup) }),
+        getRecordsByURI: ({ uris }) => {
+          if (uris.some((uri) => failing.has(uri))) {
+            throw new ConnectError('lookup failed', Code.Unavailable)
+          }
+          return { results: uris.map(lookup) }
+        },
         getAtmosphereBacklinkCounts: ({ targetUris }) => ({
           results: targetUris.map((targetUri) => ({
             targetUri,
@@ -267,6 +279,7 @@ async function setup(domains: string[] = safeDomains) {
     legacy: vi.spyOn(views, 'externalEmbedFromStandardSiteRecords'),
   }
   return {
+    dataplane,
     records,
     backlinks,
     /** Link the stored recommendation, subscription and favorite records. */
@@ -284,6 +297,7 @@ async function setup(domains: string[] = safeDomains) {
     },
     cids,
     takenDown,
+    failing,
     labels,
     spies,
     /** Root hydration invocations, excluding nested dependency passes. */
@@ -809,6 +823,158 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
         canonicalUri: galleryUri,
       })
       expectPersisted(body.associatedRefs, body.associatedRecords, [galleryUri])
+    })
+  })
+
+  describe('Standard.site record lookups', () => {
+    test.each(formats(docUri, docUrl))(
+      'a document request makes two record lookups and keeps its outputs (%s)',
+      async (_, query) => {
+        await using fixture = await setup()
+        const { status, body } = await fixture.query(query)
+        expect(status).toBe(200)
+        expect(fixture.spies.lookup).toHaveBeenCalledTimes(2)
+        expect(fixture.lookedUp()).toEqual([docUri, pubUri])
+        expect(body.view?.external).toMatchObject({ title: 'Article' })
+        expect(app.bsky.embed.external.viewArticle.$matches(body.data)).toBe(
+          true,
+        )
+        expect(uriList(body.associatedRefs)).toEqual([docUri, pubUri])
+      },
+    )
+
+    it('legacy [document, publication] input still hydrates only the document root', async () => {
+      await using fixture = await setup()
+      const { body } = await fixture.query({
+        url: docUrl,
+        uris: [docUri, pubUri],
+      })
+      expect(fixture.roots()).toEqual([[docUri]])
+      expect(fixture.spies.lookup).toHaveBeenCalledTimes(2)
+      expect(uriList(body.associatedRefs)).toEqual([docUri, pubUri])
+    })
+
+    it('an explicit publication makes one record lookup', async () => {
+      await using fixture = await setup()
+      await fixture.query({
+        url: 'https://example.com/blog',
+        canonicalUri: pubUri,
+      })
+      expect(fixture.spies.lookup).toHaveBeenCalledTimes(1)
+    })
+
+    it('keeps the document as unverified output when its publication lookup fails', async () => {
+      await using fixture = await setup()
+      fixture.failing.add(pubUri)
+      const { status, body } = await fixture.query({
+        url: docUrl,
+        canonicalUri: docUri,
+      })
+      expect(status).toBe(200)
+      expect(body.data).toBeUndefined()
+      expect(body.view).toBeUndefined()
+      expect(body.associatedRefs).toBeUndefined()
+      expect(uriList(body.unverifiedAssociatedRefs)).toEqual([docUri])
+    })
+  })
+
+  describe('best-effort dependencies', () => {
+    const failure = () => new ConnectError('unavailable', Code.Unavailable)
+
+    test.each(formats(docUri, docUrl))(
+      'returns article data when counts and social pages fail (%s)',
+      async (_, query) => {
+        await using fixture = await setup()
+        using _counts = vi
+          .spyOn(fixture.dataplane, 'getAtmosphereBacklinkCounts')
+          .mockRejectedValue(failure())
+        using _pages = vi
+          .spyOn(fixture.dataplane, 'getAtmosphereBacklinks')
+          .mockRejectedValue(failure())
+        const { status, body } = await fixture.query(query)
+        expect(status).toBe(200)
+        expect(body.view?.external).toMatchObject({ title: 'Article' })
+        expect(app.bsky.embed.external.viewArticle.$matches(body.data)).toBe(
+          true,
+        )
+        expect(body.data).toMatchObject({
+          title: 'Article',
+          publisher: { title: 'Publication' },
+        })
+        expect(body.data).not.toHaveProperty('likeCount')
+        expect(uriList(body.associatedRefs)).toEqual([docUri, pubUri])
+        expect(body.unverifiedAssociatedRefs).toBeUndefined()
+      },
+    )
+
+    test.each(formats(pubUri, 'https://example.com/blog'))(
+      'returns publication data when counts and social pages fail (%s)',
+      async (_, query) => {
+        await using fixture = await setup()
+        using _counts = vi
+          .spyOn(fixture.dataplane, 'getAtmosphereBacklinkCounts')
+          .mockRejectedValue(failure())
+        using _pages = vi
+          .spyOn(fixture.dataplane, 'getAtmosphereBacklinks')
+          .mockRejectedValue(failure())
+        const { status, body } = await fixture.query(query)
+        expect(status).toBe(200)
+        expect(
+          app.bsky.embed.external.viewArticlePublication.$matches(body.data),
+        ).toBe(true)
+        expect(uriList(body.associatedRefs)).toEqual([pubUri])
+      },
+    )
+
+    it('returns an empty gallery when its item page lookup fails', async () => {
+      await using fixture = await setup()
+      using _pages = vi
+        .spyOn(fixture.dataplane, 'getAtmosphereBacklinks')
+        .mockRejectedValue(failure())
+      const { status, body } = await fixture.query({
+        url: 'https://good.com/gallery/1',
+        canonicalUri: galleryUri,
+      })
+      expect(status).toBe(200)
+      expect(app.bsky.embed.external.viewGallery.$matches(body.data)).toBe(true)
+      expect(body.data).toMatchObject({ items: [] })
+      expect(uriList(body.associatedRefs)).toEqual([galleryUri])
+      expect(body.unverifiedAssociatedRefs).toBeUndefined()
+    })
+
+    it('returns an empty gallery when photo hydration fails', async () => {
+      await using fixture = await setup()
+      fixture.failing.add(photoUri)
+      const { status, body } = await fixture.query({
+        url: 'https://good.com/gallery/1',
+        canonicalUri: galleryUri,
+      })
+      expect(status).toBe(200)
+      expect(app.bsky.embed.external.viewGallery.$matches(body.data)).toBe(true)
+      expect(body.data).toMatchObject({ items: [] })
+      expect(uriList(body.associatedRefs)?.[0]).toBe(galleryUri)
+      expect(uriList(body.associatedRefs)).not.toContain(photoUri)
+    })
+
+    it('still returns only unverified output for an invalid URL when metadata fails', async () => {
+      await using fixture = await setup()
+      using _counts = vi
+        .spyOn(fixture.dataplane, 'getAtmosphereBacklinkCounts')
+        .mockRejectedValue(failure())
+      using _pages = vi
+        .spyOn(fixture.dataplane, 'getAtmosphereBacklinks')
+        .mockRejectedValue(failure())
+      const { status, body } = await fixture.query({
+        url: 'https://example.com/blog/other',
+        canonicalUri: docUri,
+      })
+      expect(status).toBe(200)
+      expect(body.unverifiedAssociatedRefs?.[0].uri).toBe(docUri)
+      expect(body.data).toBeUndefined()
+      expect(body.view).toBeUndefined()
+      expect(body.associatedRefs).toBeUndefined()
+      expect(fixture.spies.data).not.toHaveBeenCalled()
+      expect(fixture.spies.legacy).not.toHaveBeenCalled()
     })
   })
 

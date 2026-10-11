@@ -256,57 +256,6 @@ export class ExternalHydrator {
     }
     return out
   }
-
-  /**
-   * Fetch the latest `site.standard.{document,publication}` versions. The
-   * generic record lookup does not follow references, so publications named
-   * by the `site` field of the hydrated documents are fetched in a second
-   * call.
-   */
-  async getSiteStandardRecordsByURI(
-    uris: AtUriString[],
-    includeTakedowns = false,
-  ): Promise<SiteStandardRecords> {
-    const requested = [...new Set(uris.filter((u) => siteStandardKind(u)))]
-    const out = emptySiteStandardRecords()
-    if (!requested.length) return out
-
-    await this.addSiteStandardRecordsByURI(out, requested, includeTakedowns)
-
-    // Publications referenced by documents but not already requested.
-    const requestedSet = new Set<string>(requested)
-    const pubUris = new Set<AtUriString>()
-    for (const doc of out.documents.values()) {
-      const pubUri = doc && publicationUriFromSite(doc.record.site)
-      if (pubUri && !requestedSet.has(pubUri)) pubUris.add(pubUri)
-    }
-    if (pubUris.size) {
-      await this.addSiteStandardRecordsByURI(
-        out,
-        [...pubUris],
-        includeTakedowns,
-      )
-    }
-    return out
-  }
-
-  private async addSiteStandardRecordsByURI(
-    out: SiteStandardRecords,
-    uris: AtUriString[],
-    includeTakedowns: boolean,
-  ) {
-    const records = await this.getRecordsByURI(uris, includeTakedowns)
-    for (const [uri, info] of records) {
-      // Unavailable records have no CID to key on, so they are left out.
-      if (!info) continue
-      setSiteStandardRecord(
-        out,
-        uri,
-        genericRecordKey({ uri, cid: info.cid }),
-        info,
-      )
-    }
-  }
 }
 
 /**
@@ -469,15 +418,6 @@ const siteStandardKind = (
   }
 }
 
-/** The AT-URI of the publication a document's `site` field points at. */
-const publicationUriFromSite = (value: string): AtUriString | undefined => {
-  const parsed = parseAtUriString(value)
-  return parsed.success &&
-    parsed.value.collection === site.standard.publication.$type
-    ? (value as AtUriString)
-    : undefined
-}
-
 /**
  * Generic record bodies are unvalidated, so check them against the Lexicon
  * before exposing typed fields. Parse mode is not used, to preserve the
@@ -524,14 +464,6 @@ export type AssociatedSiteStandardRecord<T> = {
  * the post at write time, and we honor those exact versions. Any pair
  * that doesn't structurally agree is rejected, so downstream callers can
  * trust the returned shape.
- *
- * Same observable contract as
- * `getSiteStandardRecordsFromHydrationMapsByDocumentUri` (the compose-path
- * sister) — both functions guarantee that a returned `(doc, pub)` pair
- * has matching site/uri, and reject orphan docs that claim a
- * non-hydrated publication. They differ only in how upstream availability
- * is asserted: this one trusts caller-supplied refs; the sister derives
- * everything from the dataplane response.
  *
  * Pairing rules:
  * - Both slots referenced: `doc.site` must equal `publication.ref.uri`,
@@ -593,8 +525,7 @@ export const getSiteStandardRecordsFromHydrationMapsByRefs = (
   }
 
   // Doc with at-uri `site` but no publication: the post should have
-  // pinned the publication too. Treat as misconstructed — same contract
-  // as the compose-path lookup.
+  // pinned the publication too. Treat as misconstructed.
   if (document && !publication) {
     const site = document.info.record.site
     if (site && site.startsWith('at://')) {
@@ -603,80 +534,6 @@ export const getSiteStandardRecordsFromHydrationMapsByRefs = (
         'site.standard byRefs lookup failed: document.site is AT URI but no matching publication was hydrated',
       )
       return { document: undefined, publication: undefined }
-    }
-  }
-
-  return { document, publication }
-}
-
-/**
- * Compose-path resolution: no caller-supplied refs — the dataplane
- * returned the latest version of each record (including any
- * publications it auto-resolved from a document's `site` field). Take
- * the first hydrated document and pair it with the publication its
- * `site` field points at.
- *
- * Same observable contract as
- * `getSiteStandardRecordsFromHydrationMapsByRefs` (the read-path
- * sister) — both functions guarantee that a returned `(doc, pub)` pair
- * has matching site/uri, and reject orphan docs that claim a
- * non-hydrated publication. They differ only in how upstream
- * availability is asserted: this one walks whatever was returned by the
- * dataplane; the sister checks against caller-supplied refs.
- *
- * Pairing rules:
- * - Doc with at-uri `site`: must find a hydrated publication at that
- *   URI. If none was hydrated, the doc/publication chain is incomplete
- *   and the function returns `undefined` for both slots; the doc alone
- *   isn't useful without its source (can't verify the pub)
- * - Doc with web-URL `site` (loose): no publication.
- * - No doc hydrated: fall through to the first hydrated publication for
- *   the publication-only resolution flow.
- */
-export const getSiteStandardRecordsFromHydrationMapsByDocumentUri = (
-  documents: SiteStandardDocuments | undefined,
-  publications: SiteStandardPublications | undefined,
-): {
-  document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
-  publication: AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
-} => {
-  // First hydrated doc.
-  let document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined
-  for (const [key, info] of documents ?? []) {
-    if (!info) continue
-    document = { ref: parseGenericRecordKey(key), info }
-    break
-  }
-
-  let publication:
-    AssociatedSiteStandardRecord<SiteStandardPublication> | undefined
-  if (document) {
-    const site = document.info.record.site
-    if (site && site.startsWith('at://')) {
-      // Doc declared an at-uri publication; we need it.
-      for (const [key, info] of publications ?? []) {
-        if (!info) continue
-        const ref = parseGenericRecordKey(key)
-        if (ref.uri === site) {
-          publication = { ref, info }
-          break
-        }
-      }
-      if (!publication) {
-        hydrationLogger.warn(
-          { documentUri: document.ref.uri, documentSite: site },
-          'site.standard byDocumentUri lookup failed: document.site is AT URI but no matching publication was hydrated',
-        )
-        return { document: undefined, publication: undefined }
-      }
-    }
-    // else: loose doc (web-URL site), no publication needed.
-  } else {
-    // Publication-only flow: no doc, take the first hydrated publication.
-    for (const [key, info] of publications ?? []) {
-      if (!info) continue
-      publication = { ref: parseGenericRecordKey(key), info }
-      break
     }
   }
 

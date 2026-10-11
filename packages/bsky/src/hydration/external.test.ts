@@ -23,7 +23,6 @@ import {
   type SiteStandardPublication,
   type SiteStandardPublications,
   genericRecordKey,
-  getSiteStandardRecordsFromHydrationMapsByDocumentUri,
   getSiteStandardRecordsFromHydrationMapsByRefs,
   parseGenericRecordKey,
 } from './external.js'
@@ -39,7 +38,6 @@ const otherPubUri = `at://${otherPubDid}/site.standard.publication/self`
 
 const docCid = 'bafydoc'
 const pubCid = 'bafypub'
-const otherPubCid = 'bafyother'
 
 const makeDocInfo = (
   record: { site: string; path?: string; title?: string },
@@ -266,93 +264,6 @@ describe(getSiteStandardRecordsFromHydrationMapsByRefs, () => {
       pubs,
     )
     expect(result).toEqual({ document: undefined, publication: undefined })
-  })
-})
-
-describe(getSiteStandardRecordsFromHydrationMapsByDocumentUri, () => {
-  it('pairs the first hydrated doc with the publication its site points to', () => {
-    const docs = makeDocuments([
-      [docUri, docCid, makeDocInfo({ site: pubUri })],
-    ])
-    const pubs = makePublications([
-      [pubUri, pubCid, makePubInfo({ url: 'https://example.com' })],
-    ])
-    const { document, publication } =
-      getSiteStandardRecordsFromHydrationMapsByDocumentUri(docs, pubs)
-    expect(document?.ref).toEqual({ uri: docUri, cid: docCid })
-    expect(publication?.ref).toEqual({ uri: pubUri, cid: pubCid })
-  })
-
-  it('rejects the pair when the declared publication was not hydrated', () => {
-    const docs = makeDocuments([
-      [docUri, docCid, makeDocInfo({ site: pubUri })],
-    ])
-    const pubs = makePublications()
-    const result = getSiteStandardRecordsFromHydrationMapsByDocumentUri(
-      docs,
-      pubs,
-    )
-    expect(result).toEqual({ document: undefined, publication: undefined })
-  })
-
-  it('returns only the doc when site is a web URL (loose doc)', () => {
-    const docs = makeDocuments([
-      [docUri, docCid, makeDocInfo({ site: 'https://example.com' })],
-    ])
-    const pubs = makePublications()
-    const { document, publication } =
-      getSiteStandardRecordsFromHydrationMapsByDocumentUri(docs, pubs)
-    expect(document?.ref).toEqual({ uri: docUri, cid: docCid })
-    expect(publication).toBeUndefined()
-  })
-
-  it('falls through to first hydrated publication when no doc was hydrated', () => {
-    const docs = makeDocuments()
-    const pubs = makePublications([
-      [pubUri, pubCid, makePubInfo({ url: 'https://example.com' })],
-    ])
-    const { document, publication } =
-      getSiteStandardRecordsFromHydrationMapsByDocumentUri(docs, pubs)
-    expect(document).toBeUndefined()
-    expect(publication?.ref).toEqual({ uri: pubUri, cid: pubCid })
-  })
-
-  it('ignores extraneous publications not referenced by the doc', () => {
-    const docs = makeDocuments([
-      [docUri, docCid, makeDocInfo({ site: pubUri })],
-    ])
-    const pubs = makePublications([
-      [pubUri, pubCid, makePubInfo({ url: 'https://example.com' })],
-      [
-        otherPubUri,
-        otherPubCid,
-        makePubInfo({ url: 'https://other.com' }, otherPubCid),
-      ],
-    ])
-    const { document, publication } =
-      getSiteStandardRecordsFromHydrationMapsByDocumentUri(docs, pubs)
-    expect(document?.ref.uri).toBe(docUri)
-    expect(publication?.ref.uri).toBe(pubUri)
-  })
-
-  it('returns nothing when both maps are empty', () => {
-    const result = getSiteStandardRecordsFromHydrationMapsByDocumentUri(
-      makeDocuments(),
-      makePublications(),
-    )
-    expect(result).toEqual({ document: undefined, publication: undefined })
-  })
-
-  it('skips null entries (taken-down records)', () => {
-    const docs = makeDocuments([[docUri, docCid, null]])
-    const pubs = makePublications([
-      [pubUri, pubCid, makePubInfo({ url: 'https://example.com' })],
-    ])
-    // No live doc -> falls through to publication-only.
-    const { document, publication } =
-      getSiteStandardRecordsFromHydrationMapsByDocumentUri(docs, pubs)
-    expect(document).toBeUndefined()
-    expect(publication?.ref.uri).toBe(pubUri)
   })
 })
 
@@ -782,147 +693,6 @@ describe('ExternalHydrator site.standard lookups', () => {
     status: RecordLookupStatus.NOT_FOUND,
   })
   const key = (uri: AtUriString, cid: string) => genericRecordKey({ uri, cid })
-
-  describe('getSiteStandardRecordsByURI', () => {
-    it('short-circuits when no URIs are site.standard records', async () => {
-      using byURI = vi.spyOn(dataplane, 'getRecordsByURI')
-      const res = await hydrator.getSiteStandardRecordsByURI([
-        'at://did:plc:a/app.bsky.feed.post/1' as AtUriString,
-      ])
-      expect(res.documents.size).toBe(0)
-      expect(res.publications.size).toBe(0)
-      expect(byURI).not.toHaveBeenCalled()
-    })
-
-    it('fetches the publications referenced by documents in a second call', async () => {
-      using byURI = vi
-        .spyOn(dataplane, 'getRecordsByURI')
-        .mockResolvedValueOnce(
-          new GetRecordsByURIResponse({
-            results: [found(docUri, docCid, doc)],
-          }),
-        )
-        .mockResolvedValueOnce(
-          new GetRecordsByURIResponse({
-            results: [found(pubUri, pubCid, pub)],
-          }),
-        )
-
-      const res = await hydrator.getSiteStandardRecordsByURI([docUri])
-      expect(byURI).toHaveBeenCalledTimes(2)
-      expect(byURI).toHaveBeenNthCalledWith(1, { uris: [docUri] })
-      expect(byURI).toHaveBeenNthCalledWith(2, { uris: [pubUri] })
-      expect(res.documents.get(key(docUri, docCid))?.record).toEqual(doc)
-      expect(res.publications.get(key(pubUri, pubCid))?.record).toEqual(pub)
-    })
-
-    it('skips the second call when the publication was requested directly', async () => {
-      using byURI = vi.spyOn(dataplane, 'getRecordsByURI').mockResolvedValue(
-        new GetRecordsByURIResponse({
-          results: [found(docUri, docCid, doc), found(pubUri, pubCid, pub)],
-        }),
-      )
-      const res = await hydrator.getSiteStandardRecordsByURI([docUri, pubUri])
-      expect(byURI).toHaveBeenCalledOnce()
-      expect(res.documents.size).toBe(1)
-      expect(res.publications.size).toBe(1)
-    })
-
-    it('skips the second call for loose documents with a web-URL site', async () => {
-      const loose = { ...doc, site: 'https://example.com' }
-      using byURI = vi.spyOn(dataplane, 'getRecordsByURI').mockResolvedValue(
-        new GetRecordsByURIResponse({
-          results: [found(docUri, docCid, loose)],
-        }),
-      )
-      const res = await hydrator.getSiteStandardRecordsByURI([docUri])
-      expect(byURI).toHaveBeenCalledOnce()
-      expect(res.documents.size).toBe(1)
-      expect(res.publications.size).toBe(0)
-    })
-
-    it('dedupes publication URIs shared by several documents', async () => {
-      const docUri2 = `at://${docDid}/site.standard.document/def` as AtUriString
-      using byURI = vi
-        .spyOn(dataplane, 'getRecordsByURI')
-        .mockResolvedValueOnce(
-          new GetRecordsByURIResponse({
-            results: [
-              found(docUri, docCid, doc),
-              found(docUri2, 'bafydoc2', doc),
-            ],
-          }),
-        )
-        .mockResolvedValueOnce(
-          new GetRecordsByURIResponse({
-            results: [found(pubUri, pubCid, pub)],
-          }),
-        )
-      await hydrator.getSiteStandardRecordsByURI([docUri, docUri2])
-      expect(byURI).toHaveBeenNthCalledWith(2, { uris: [pubUri] })
-    })
-
-    it('does not fetch a publication for a taken-down document', async () => {
-      using byURI = vi.spyOn(dataplane, 'getRecordsByURI').mockResolvedValue(
-        new GetRecordsByURIResponse({
-          results: [
-            {
-              ref: { uri: docUri },
-              status: RecordLookupStatus.TAKEN_DOWN,
-              record: {
-                ...found(docUri, docCid, doc).record,
-                takenDown: true,
-              },
-            },
-          ],
-        }),
-      )
-      const res = await hydrator.getSiteStandardRecordsByURI([docUri])
-      expect(byURI).toHaveBeenCalledOnce()
-      expect(res.documents.size).toBe(0)
-    })
-
-    it('ignores a document whose site points at a non-publication AT-URI', async () => {
-      const bad = { ...doc, site: 'at://did:plc:a/app.bsky.feed.post/1' }
-      using byURI = vi.spyOn(dataplane, 'getRecordsByURI').mockResolvedValue(
-        new GetRecordsByURIResponse({
-          results: [found(docUri, docCid, bad)],
-        }),
-      )
-      await hydrator.getSiteStandardRecordsByURI([docUri])
-      expect(byURI).toHaveBeenCalledOnce()
-    })
-
-    it('omits unavailable records and nulls records failing Lexicon validation', async () => {
-      using _ = vi.spyOn(dataplane, 'getRecordsByURI').mockResolvedValue(
-        new GetRecordsByURIResponse({
-          results: [
-            found(docUri, docCid, { ...doc, title: 42 }),
-            notFound(pubUri),
-          ],
-        }),
-      )
-      const res = await hydrator.getSiteStandardRecordsByURI([docUri, pubUri])
-      // Unavailable records have no CID to key on.
-      expect([...res.documents.values()]).toEqual([null])
-      expect(res.publications.size).toBe(0)
-    })
-
-    it('propagates a failure of the publication lookup', async () => {
-      const error = new Error('dataplane unavailable')
-      using _ = vi
-        .spyOn(dataplane, 'getRecordsByURI')
-        .mockResolvedValueOnce(
-          new GetRecordsByURIResponse({
-            results: [found(docUri, docCid, doc)],
-          }),
-        )
-        .mockRejectedValueOnce(error)
-      await expect(
-        hydrator.getSiteStandardRecordsByURI([docUri]),
-      ).rejects.toThrow(error)
-    })
-  })
 
   describe('getSiteStandardRecordsByRef', () => {
     it('short-circuits when no refs are site.standard records with a cid', async () => {

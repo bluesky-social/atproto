@@ -1119,14 +1119,8 @@ export class Hydrator {
     // Pull out all URIs for label/profile hydration
     const allUris = dedupeStrs(items.map(({ uri }) => uri))
 
-    // TODO Remove this once we're fully generic
-    const ssUris = byUriValues.filter((uri) =>
-      new AtUri(uri).collection.startsWith(SITE_STANDARD_NSID_PREFIX),
-    )
-
     // Get all the actors that are part of this hydration
     const dids = dedupeStrs(allUris.map(uriToDid))
-    const seenDids = new Set<string>(dids)
 
     const fetchRecords = async () => {
       const [externalRecords, exactRecords] = await Promise.all([
@@ -1154,17 +1148,12 @@ export class Hydrator {
     hydrationMetrics.recordLookups += items.length
     hydrationMetrics.batches += 1
     hydrationMetrics.maxPass = Math.max(hydrationMetrics.maxPass, hydrationPass)
-    const [
-      { externalRecords, externalRecordsByRef },
-      { documents, publications },
-      labels,
-      profiles,
-    ] = await Promise.all([
-      fetchRecords(),
-      this.external.getSiteStandardRecordsByURI(ssUris, ctx.includeTakedowns),
-      this.label.getLabelsForSubjects(allUris, ctx.labelers),
-      this.hydrateProfilesBasic(dids, ctx),
-    ])
+    const [{ externalRecords, externalRecordsByRef }, labels, profiles] =
+      await Promise.all([
+        fetchRecords(),
+        this.label.getLabelsForSubjects(allUris, ctx.labelers),
+        this.hydrateProfilesBasic(dids, ctx),
+      ])
 
     // Merge record and profile state, then hide moderated records so they
     // trigger no dependency expansion.
@@ -1186,48 +1175,10 @@ export class Hydrator {
       hydrationMetrics,
     )
 
-    // Set values to `null` in maps if records are taken down
-    // TODO Remove this once we're fully generic
-    if (!ctx.includeTakedowns) {
-      actionSiteStandardTakedownLabels(documents, publications, labels)
-    }
-
-    /*
-     * Edge case: a document's `site` may resolve to a publication owned by a
-     * different repo than any of the input URIs (the dataplane returns it even
-     * though it wasn't requested directly). Top up profile coverage for any
-     * such DIDs with a serial second hydration so `associatedProfiles` is
-     * complete.
-     *
-     * TODO maybe generalize this to any external record
-     */
-    const newDids: DidString[] = []
-    for (const key of publications.keys()) {
-      const did = uriToDid(parseGenericRecordKey(key).uri)
-      if (!seenDids.has(did)) {
-        seenDids.add(did)
-        newDids.push(did)
-      }
-    }
-    const newProfiles = newDids.length
-      ? mergeStates(profiles, await this.hydrateProfilesBasic(newDids, ctx))
-      : profiles
-
     // A supplemental latest lookup returning the same URI and CID is the same
     // version, so it may replace an unavailable exact entry; other CIDs have
     // other keys and never satisfy a pin.
-    return mergeManyStates(
-      newProfiles,
-      {
-        ctx,
-        labels,
-        externalRecords,
-        externalRecordsByRef,
-        siteStandardDocuments: documents,
-        siteStandardPublications: publications,
-      },
-      depsState,
-    )
+    return mergeStates(baseState, depsState)
   }
 
   /**
@@ -1370,12 +1321,21 @@ export class Hydrator {
     let externalRecordBacklinkCounts: ExternalRecordBacklinkCounts | undefined
     if (targets.size) {
       const backlinks: ExternalRecordBacklinks = new HydrationMap()
-      for (const uri of targets.keys()) backlinks.set(uri, [])
       const queries = [...targets].flatMap(([uri, sources]) =>
         sources.map((source) => ({ uri, ...source })),
       )
+      // @NOTE Backlink data is best effort: a failed lookup leaves its state
+      // absent and builders render what remains.
       const [counts] = await Promise.all([
-        this.external.getAtmosphereBacklinkCounts([...targets.keys()]),
+        this.external
+          .getAtmosphereBacklinkCounts([...targets.keys()])
+          .catch((err) => {
+            hydrationLogger.warn(
+              { err },
+              'failed to hydrate external record backlink counts',
+            )
+            return undefined
+          }),
         (async () => {
           // @NOTE Bound fan-out as well as each sample; counts are independent.
           for (const batch of chunkArray(
@@ -1384,11 +1344,22 @@ export class Hydrator {
           )) {
             await Promise.all(
               batch.map(async ({ uri, collection, limit }) => {
-                const page = await this.external.getAtmosphereBacklinks(
-                  uri,
-                  collection,
-                  { limit },
-                )
+                let page: Awaited<
+                  ReturnType<ExternalHydrator['getAtmosphereBacklinks']>
+                >
+                try {
+                  page = await this.external.getAtmosphereBacklinks(
+                    uri,
+                    collection,
+                    { limit },
+                  )
+                } catch (err) {
+                  hydrationLogger.warn(
+                    { err, uri, collection },
+                    'failed to hydrate external record backlinks',
+                  )
+                  return
+                }
                 const links = page.backlinks
                   .filter((b) => parseAtUriString(b.uri).success)
                   .slice(0, limit)
@@ -1427,13 +1398,21 @@ export class Hydrator {
         'external hydration pass limit reached, skipping dependencies',
       )
     } else if (newUris.length) {
-      nested = await this.hydrateEmbedExternalViewFromUris(
-        newUris,
-        ctx,
-        seenRecordKeys,
-        hydrationPass + 1,
-        hydrationMetrics,
-      )
+      try {
+        nested = await this.hydrateEmbedExternalViewFromUris(
+          newUris,
+          ctx,
+          seenRecordKeys,
+          hydrationPass + 1,
+          hydrationMetrics,
+        )
+      } catch (err) {
+        // Skip the whole batch; partial child state could miss moderation.
+        hydrationLogger.warn(
+          { err, hydrationPass, skipped: newUris.length },
+          'failed to hydrate external view dependencies',
+        )
+      }
     }
 
     return mergeStates(
