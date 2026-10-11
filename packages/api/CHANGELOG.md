@@ -1,5 +1,21 @@
 # @atproto/api
 
+## 0.25.0
+
+### Minor Changes
+
+- [#5610](https://github.com/bluesky-social/atproto/pull/5610) [`d70b673`](https://github.com/bluesky-social/atproto/commit/d70b673be6bce3b6f4d7478254e359913a101c18) Thanks [@vineyardbovines](https://github.com/vineyardbovines)! - Add the `app.bsky.actor.link` record, a `links` field on `app.bsky.actor.profile`, and `links` on `profileViewDetailed`.
+
+### Patch Changes
+
+- [#5631](https://github.com/bluesky-social/atproto/pull/5631) [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Return basic starter-pack views in grouped notifications, avoiding feed and list-member hydration.
+
+- [#5636](https://github.com/bluesky-social/atproto/pull/5636) [`5e0e11d`](https://github.com/bluesky-social/atproto/commit/5e0e11db6d42758e4fb763bcbfb6d2affdf7b2e9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Make `app.bsky.embed.getEmbedExternalView` resolve a single canonical record (from `canonicalUri`, or normalized from the legacy `uris` input, which is now optional), validate it against the requested URL before building views, return generic `data` alongside the Standard.site-only legacy `view`, and report records that fail validation in `unverifiedAssociatedRefs`/`unverifiedAssociatedRecords`.
+
+- [#5633](https://github.com/bluesky-social/atproto/pull/5633) [`dbb0bb5`](https://github.com/bluesky-social/atproto/commit/dbb0bb54a6228021b4169a82a3e8dbe38b42fd4c) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Extend grouped notification spotlighting to reposts and via-repost interactions, with up to three spotlights per page.
+
+- [#5631](https://github.com/bluesky-social/atproto/pull/5631) [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Return basic profiles with known followers in grouped notification related views, avoiding detailed-profile and activity-subscription hydration.
+
 ## 0.24.3
 
 ### Patch Changes
