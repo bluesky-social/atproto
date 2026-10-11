@@ -18,10 +18,11 @@
 
 # External embed validation utilities
 
-- `util/external/standard-site.ts` (`getStandardSiteRecordsForUri`, `validateStandardSiteRecordsForUrl`) and `util/external/index.ts` (`isExternalRecordUrlSafe`) are pure and synchronous over caller-supplied hydrated records, URLs, and a domain list: no I/O, config reads, mutation, or view construction. They are not yet wired into any call site.
+- `util/external/standard-site.ts` (`getStandardSiteRecordsForUri`, `validateStandardSiteRecordsForUrl`) and `util/external/index.ts` (`isExternalRecordUrlSafe`) are pure and synchronous over caller-supplied hydrated records, URLs, and a domain list: no I/O, config reads, mutation, or view construction.
 
 # `app.bsky.embed.getEmbedExternalView`
 
 - The handler normalizes the request to one record URI before hydration: an explicit `canonicalUri` always wins (ignoring `uris`, with no fallback); otherwise the legacy `uris` input selects the first `site.standard.document`, else the first `site.standard.publication`. Only the one URI is hydrated; dependencies come from existing hydration.
 - Validate before building any view: Standard.site records via `getStandardSiteRecordsForUri` + `validateStandardSiteRecordsForUrl`, other records via `isExternalRecordUrlSafe(url, cfg.externalRecordsSafeDomains)`. Renderability is never the trust test.
-- Validated records return `data` and `associatedRefs`/`associatedRecords` (every available record resolved from the canonical URI, canonical first, index-aligned); failed validation returns only `unverifiedAssociatedRefs`/`unverifiedAssociatedRecords` and builds no view. The legacy `view` is returned for Standard.site records only.
+- Validated records return `data` and `associatedRefs`/`associatedRecords`; failed validation returns only `unverifiedAssociatedRefs`/`unverifiedAssociatedRecords` and builds no view. The legacy `view` is returned for Standard.site records only. Both outputs and the legacy `view.external.associatedRefs` use the same index-aligned persisted subset, canonical first.
+- Render-time hydration and persistence are separate. Hydration may include engagement records (recommendations, subscriptions, favorites) that back `likers`/`subscribers` previews; that is intentional. `collectAssociations` persists the canonical record when available (whatever its collection) plus only the extra collections opted in by `PERSISTED_DEPENDENCY_COLLECTIONS` (document → publication; gallery → gallery item and photo), to keep post records slim. It is not an engagement blacklist. A new persisted dependency collection needs an explicit entry; do not change hydration or views for this.

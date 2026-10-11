@@ -46,6 +46,23 @@ const missingDocUri = atUri(author, site.standard.document.$type, 'missing')
 const noTitleUri = atUri(author, site.standard.document.$type, 'untitled')
 const brokenUri = atUri(author, site.standard.document.$type, 'broken')
 
+// Engagement records live in other repos, so a rendered profile proves the
+// record was hydrated.
+const recommender = 'did:plc:recommender'
+const subscriber = 'did:plc:subscriber'
+const favoriter = 'did:plc:favoriter'
+const recommendUri = atUri(
+  recommender,
+  site.standard.graph.recommend.$type,
+  'recommend',
+)
+const subscriptionUri = atUri(
+  subscriber,
+  site.standard.graph.subscription.$type,
+  'subscription',
+)
+const favoriteUri = atUri(favoriter, social.grain.favorite.$type, 'favorite')
+
 const docUrl = 'https://example.com/blog/story'
 const webDocUrl = 'https://web.example.com/posts/hello'
 const safeDomains = ['good.com', '*.good.com']
@@ -118,6 +135,27 @@ async function setup(domains: string[] = safeDomains) {
     ],
     [photoUri, grainPhoto.$build({ photo: blob, alt: 'A photo' })],
     [
+      recommendUri,
+      site.standard.graph.recommend.$build({
+        document: docUri,
+        createdAt: publishedAt,
+      }),
+    ],
+    [
+      subscriptionUri,
+      site.standard.graph.subscription.$build({
+        publication: pubUri,
+        createdAt: publishedAt,
+      }),
+    ],
+    [
+      favoriteUri,
+      social.grain.favorite.$build({
+        subject: galleryUri,
+        createdAt: publishedAt,
+      }),
+    ],
+    [
       liveUri,
       place.stream.livestream.$build({
         title: 'Live',
@@ -134,6 +172,10 @@ async function setup(domains: string[] = safeDomains) {
     ],
   ])
   const cids = new Map<string, string>([[docUri, docCid]])
+  /** Backlink results keyed by `backlinkKey(target, collection)`. */
+  const backlinks = new Map<string, AtUriString[]>([
+    [backlinkKey(galleryUri, grainGalleryItem.$type), [itemUri]],
+  ])
   const takenDown = new Set<string>()
   const labels: com.atproto.label.defs.Label[] = []
   const lookup = (uri: string) => {
@@ -166,10 +208,9 @@ async function setup(domains: string[] = safeDomains) {
           })),
         }),
         getAtmosphereBacklinks: ({ collection, targetUri }) => ({
-          backlinks:
-            collection === grainGalleryItem.$type && targetUri === galleryUri
-              ? [{ uri: itemUri }]
-              : [],
+          backlinks: (
+            backlinks.get(backlinkKey(targetUri, collection)) ?? []
+          ).map((uri) => ({ uri })),
         }),
         getActors: ({ dids }) => ({
           actors: dids.map(() => ({ exists: true, handle: 'author.test' })),
@@ -227,6 +268,20 @@ async function setup(domains: string[] = safeDomains) {
   }
   return {
     records,
+    backlinks,
+    /** Link the stored recommendation, subscription and favorite records. */
+    linkEngagement: () => {
+      backlinks.set(backlinkKey(docUri, site.standard.graph.recommend.$type), [
+        recommendUri,
+      ])
+      backlinks.set(
+        backlinkKey(pubUri, site.standard.graph.subscription.$type),
+        [subscriptionUri],
+      )
+      backlinks.set(backlinkKey(galleryUri, social.grain.favorite.$type), [
+        favoriteUri,
+      ])
+    },
     cids,
     takenDown,
     labels,
@@ -254,6 +309,9 @@ async function setup(domains: string[] = safeDomains) {
     },
   }
 }
+
+const backlinkKey = (targetUri: string, collection: string) =>
+  `${targetUri}|${collection}`
 
 const uriList = (refs: { uri: string }[] | undefined) => refs?.map((r) => r.uri)
 
@@ -565,6 +623,192 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
       expect(
         (body.data as { labels?: { val: string }[] }).labels?.map((l) => l.val),
       ).toEqual(['spicy'])
+    })
+  })
+
+  describe('persisted associations', () => {
+    const engagementUris = [recommendUri, subscriptionUri, favoriteUri]
+    const didsOf = (profiles: unknown) =>
+      (profiles as { did: string }[] | undefined)?.map((p) => p.did)
+
+    /** The persisted subset is the same everywhere it is exposed. */
+    const expectPersisted = (
+      refs: { uri: string }[] | undefined,
+      records: unknown[] | undefined,
+      expected: AtUriString[],
+    ) => {
+      expect(uriList(refs)).toEqual(expected)
+      expect(records).toHaveLength(expected.length)
+      for (const uri of engagementUris) expect(uriList(refs)).not.toContain(uri)
+    }
+
+    test.each(formats(docUri, docUrl))(
+      'an article renders recommender and subscriber previews but persists only the document and publication (%s)',
+      async (_, query) => {
+        await using fixture = await setup()
+        fixture.linkEngagement()
+        const { body } = await fixture.query(query)
+        expect(fixture.lookedUp()).toContain(recommendUri)
+        expect(fixture.lookedUp()).toContain(subscriptionUri)
+        expect(app.bsky.embed.external.viewArticle.$matches(body.data)).toBe(
+          true,
+        )
+        const data = body.data as {
+          likers?: unknown
+          publisher?: { subscribers?: unknown }
+        }
+        expect(didsOf(data.likers)).toEqual([recommender])
+        expect(didsOf(data.publisher?.subscribers)).toEqual([subscriber])
+        expectPersisted(body.associatedRefs, body.associatedRecords, [
+          docUri,
+          pubUri,
+        ])
+        expect(body.associatedRefs).toEqual([
+          { $type: 'com.atproto.repo.strongRef', uri: docUri, cid: docCid },
+          { $type: 'com.atproto.repo.strongRef', uri: pubUri, cid },
+        ])
+        expect(body.associatedRecords).toEqual([
+          fixtureRecord(fixture, docUri),
+          fixtureRecord(fixture, pubUri),
+        ])
+        expect(uriList(body.view?.external.associatedRefs)).toEqual([
+          docUri,
+          pubUri,
+        ])
+        expect(body.unverifiedAssociatedRefs).toBeUndefined()
+      },
+    )
+
+    it('a publication renders subscriber previews but persists only itself', async () => {
+      await using fixture = await setup()
+      fixture.linkEngagement()
+      const { body } = await fixture.query({
+        url: 'https://example.com/blog',
+        canonicalUri: pubUri,
+      })
+      expect(
+        app.bsky.embed.external.viewArticlePublication.$matches(body.data),
+      ).toBe(true)
+      expect(
+        didsOf((body.data as { subscribers?: unknown }).subscribers),
+      ).toEqual([subscriber])
+      expectPersisted(body.associatedRefs, body.associatedRecords, [pubUri])
+      expect(uriList(body.view?.external.associatedRefs)).toEqual([pubUri])
+    })
+
+    it('a gallery renders liker previews and images but persists only the gallery, item and photo', async () => {
+      await using fixture = await setup()
+      fixture.linkEngagement()
+      const { body } = await fixture.query({
+        url: 'https://good.com/gallery/1',
+        canonicalUri: galleryUri,
+      })
+      expect(fixture.lookedUp()).toContain(favoriteUri)
+      expect(app.bsky.embed.external.viewGallery.$matches(body.data)).toBe(true)
+      expect(body.data).toMatchObject({ items: [{ alt: 'A photo' }] })
+      expect(didsOf((body.data as { likers?: unknown }).likers)).toEqual([
+        favoriter,
+      ])
+      expectPersisted(body.associatedRefs, body.associatedRecords, [
+        galleryUri,
+        itemUri,
+        photoUri,
+      ])
+      expect(body.associatedRecords).toEqual([
+        fixtureRecord(fixture, galleryUri),
+        fixtureRecord(fixture, itemUri),
+        fixtureRecord(fixture, photoUri),
+      ])
+    })
+
+    test.each([
+      [
+        'an article',
+        { url: 'https://example.com/blog/other', canonicalUri: docUri },
+        [docUri, pubUri],
+      ],
+      [
+        'a legacy article',
+        { url: 'https://example.com/blog/other', uris: [docUri] },
+        [docUri, pubUri],
+      ],
+      [
+        'a publication',
+        { url: 'https://example.com/other', canonicalUri: pubUri },
+        [pubUri],
+      ],
+      [
+        'a gallery',
+        { url: 'https://evil.com/gallery', canonicalUri: galleryUri },
+        [galleryUri, itemUri, photoUri],
+      ],
+    ] as [string, Query, AtUriString[]][])(
+      'puts the same filtered subset in unverified output for %s',
+      async (_, query, expected) => {
+        await using fixture = await setup()
+        fixture.linkEngagement()
+        const { body } = await fixture.query(query)
+        expectPersisted(
+          body.unverifiedAssociatedRefs,
+          body.unverifiedAssociatedRecords,
+          expected,
+        )
+        expect(body.associatedRefs).toBeUndefined()
+        expect(body.associatedRecords).toBeUndefined()
+        expect(body.view).toBeUndefined()
+        expect(body.data).toBeUndefined()
+        expect(fixture.spies.data).not.toHaveBeenCalled()
+        expect(fixture.spies.legacy).not.toHaveBeenCalled()
+      },
+    )
+
+    it('always persists a canonical recommendation without opting in its dependencies', async () => {
+      await using fixture = await setup()
+      fixture.linkEngagement()
+      const { body } = await fixture.query({
+        url: 'https://good.com/recommend',
+        canonicalUri: recommendUri,
+      })
+      expect(body.associatedRefs).toEqual([
+        { $type: 'com.atproto.repo.strongRef', uri: recommendUri, cid },
+      ])
+      expect(body.associatedRecords).toEqual([
+        fixtureRecord(fixture, recommendUri),
+      ])
+    })
+
+    it('always persists a canonical subscription and favorite, only themselves', async () => {
+      await using fixture = await setup()
+      fixture.linkEngagement()
+      for (const uri of [subscriptionUri, favoriteUri]) {
+        const { body } = await fixture.query({
+          url: 'https://good.com/engagement',
+          canonicalUri: uri,
+        })
+        expect(uriList(body.associatedRefs)).toEqual([uri])
+      }
+    })
+
+    it('does not fabricate a ref for an unavailable canonical record', async () => {
+      await using fixture = await setup()
+      fixture.linkEngagement()
+      fixture.records.delete(recommendUri)
+      const { body } = await fixture.query({
+        url: 'https://good.com/recommend',
+        canonicalUri: recommendUri,
+      })
+      expect(body).toEqual({})
+    })
+
+    it('excludes an unavailable opted-in dependency while keeping order and alignment', async () => {
+      await using fixture = await setup()
+      fixture.linkEngagement()
+      fixture.records.delete(itemUri)
+      const { body } = await fixture.query({
+        url: 'https://good.com/gallery/1',
+        canonicalUri: galleryUri,
+      })
+      expectPersisted(body.associatedRefs, body.associatedRecords, [galleryUri])
     })
   })
 

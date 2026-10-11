@@ -14,7 +14,7 @@ import type {
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator.js'
-import { app, com, site } from '../../../../lexicons/index.js'
+import { app, com, site, social } from '../../../../lexicons/index.js'
 import {
   type HydrationFnInput,
   type PresentationFnInput,
@@ -180,10 +180,28 @@ const normalizeCanonicalUri = (params: Params): AtUriString | undefined => {
 }
 
 /**
- * Every available record resolved from the canonical URI (including its
- * hydrated dependencies), canonical first. Refs and associatedRecords are
- * index-aligned, with CIDs taken from hydration; unavailable records are
- * excluded.
+ * Persistence policy, not render-time hydration: the canonical record (when
+ * available, whatever its collection) plus only the additional collections
+ * opted in here, so records baked into a post stay slim. Hydration still holds
+ * the full state (e.g. recommendation, subscription and favorite records that
+ * back the rendered `likers`/`subscribers` previews); those are deliberately
+ * not persisted. An absent entry means no additional collections. Add a
+ * collection here only when a post must carry it.
+ */
+const PERSISTED_DEPENDENCY_COLLECTIONS: ReadonlyMap<string, readonly string[]> =
+  new Map<string, readonly string[]>([
+    [site.standard.document.$type, [site.standard.publication.$type]],
+    [
+      social.grain.gallery.$type,
+      [social.grain.gallery.item.$type, social.grain.photo.$type],
+    ],
+  ])
+
+/**
+ * The canonical record, then the hydrated dependencies whose URI collection is
+ * opted in by `PERSISTED_DEPENDENCY_COLLECTIONS` for the canonical collection.
+ * Refs and associatedRecords are index-aligned, with CIDs taken from
+ * hydration; unavailable records are excluded.
  */
 const collectAssociations = (
   canonicalUri: AtUriString,
@@ -191,6 +209,11 @@ const collectAssociations = (
 ): { associatedRefs: StrongRef[]; associatedRecords: LexMap[] } => {
   const associatedRefs: StrongRef[] = []
   const associatedRecords: LexMap[] = []
+  const canonicalCollection = parseRecordUri(canonicalUri)?.collection
+  const persisted =
+    (canonicalCollection &&
+      PERSISTED_DEPENDENCY_COLLECTIONS.get(canonicalCollection)) ||
+    []
   const uris = [
     canonicalUri,
     ...[...records.keys()].filter((uri) => uri !== canonicalUri),
@@ -198,6 +221,10 @@ const collectAssociations = (
   for (const uri of uris) {
     const info = records.get(uri)
     if (!info) continue
+    if (uri !== canonicalUri) {
+      const collection = parseRecordUri(uri)?.collection
+      if (!collection || !persisted.includes(collection)) continue
+    }
     associatedRefs.push(
       com.atproto.repo.strongRef.$build({ uri, cid: info.cid }),
     )
