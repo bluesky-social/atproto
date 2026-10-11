@@ -24,7 +24,7 @@ import type {
   RecordRef,
 } from '../proto/bsky_pb.js'
 import { events } from '../telemetry/events.js'
-import { SITE_STANDARD_NSID_PREFIX } from '../util/standard-site.js'
+import { SITE_STANDARD_NSID_PREFIX } from '../util/external/standard-site.js'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris.js'
 import type { ParsedLabelers } from '../util.js'
 import { MAX_PROFILE_LINKS } from '../views/profile-link-rules.js'

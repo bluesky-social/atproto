@@ -63,6 +63,7 @@ export interface ServerConfigValues {
   rolodexApiKey?: string
   rolodexHttpVersion?: '1.1' | '2'
   rolodexIgnoreBadTls?: boolean
+  externalRecordsSafeDomains?: string[]
   searchUrl?: string
   searchTagsHide: Set<string>
   searchTagsHideAll: Set<string>
@@ -249,6 +250,11 @@ export class ServerConfig {
     const rolodexIgnoreBadTls =
       process.env.BSKY_ROLODEX_IGNORE_BAD_TLS === 'true'
     assert(rolodexHttpVersion === '1.1' || rolodexHttpVersion === '2')
+    const externalRecordsSafeDomains = envList(
+      process.env.BSKY_EXTERNAL_RECORDS_SAFE_DOMAINS,
+    )
+      .map((value) => value.trim())
+      .filter(Boolean)
     const blobRateLimitBypassKey =
       process.env.BSKY_BLOB_RATE_LIMIT_BYPASS_KEY || undefined
     // single domain would be e.g. "mypds.com", subdomains are supported with a leading dot e.g. ".mypds.com"
@@ -440,6 +446,7 @@ export class ServerConfig {
       rolodexApiKey,
       rolodexHttpVersion,
       rolodexIgnoreBadTls,
+      externalRecordsSafeDomains,
       blobRateLimitBypassKey,
       blobRateLimitBypassHostname,
       adminPasswords,
@@ -811,6 +818,10 @@ export class ServerConfig {
 
   get searchV2OverrideHeader() {
     return this.cfg.searchV2OverrideHeader
+  }
+
+  get externalRecordsSafeDomains() {
+    return this.cfg.externalRecordsSafeDomains ?? []
   }
 }
 
