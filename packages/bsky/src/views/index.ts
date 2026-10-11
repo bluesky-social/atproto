@@ -46,7 +46,7 @@ import type { Notification } from '../proto/bsky_pb.js'
 import {
   estimateReadingTimeMinutes,
   validateStandardSiteForUrl,
-} from '../util/standard-site.js'
+} from '../util/external/standard-site.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -2478,7 +2478,7 @@ export class Views {
     //     publication (see `getSiteStandardRecordsFromHydrationMapsByRefs`
     //     and `…ByDocumentUri` in `hydration/external.ts`).
     //  3. `validateStandardSiteForUrl` below checks that the records back
-    //     the URL the embed claims (see `util/standard-site.ts`).
+    //     the URL the embed claims (see `util/external/standard-site.ts`).
     //
     // If any layer rejected, callers see `undefined` and fall back to the
     // bare embed rather than render partial / disagreeing enrichment.
