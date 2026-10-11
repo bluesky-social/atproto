@@ -301,7 +301,10 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
     expect(state.externalRecords?.get(doc2)).toBeTruthy()
 
     expect(state.externalRecordsByRef?.has(fetchedKey(doc1))).toBe(true)
-    expect(state.siteStandardDocuments?.has(fetchedKey(doc1))).toBe(true)
+    expect(state.externalRecordsByRef?.has(fetchedKey(pubUri))).toBe(true)
+    // Generic hydration populates no specialized Standard.site maps.
+    expect(state.siteStandardDocuments).toBeUndefined()
+    expect(state.siteStandardPublications).toBeUndefined()
     expect(state.labels?.has(doc1)).toBe(true)
 
     expect(state.externalRecordBacklinks?.get(doc1)).toEqual(recs.slice(0, 3))
@@ -925,6 +928,106 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(state.actors?.has('did:plc:streamer' as DidString)).toBe(true)
     })
   })
+  describe('single Standard.site pipeline', () => {
+    const requested = ({ dataplane }: Fixture) =>
+      vi
+        .mocked(dataplane.getRecordsByURI)
+        .mock.calls.map(([req]) => [...(req.uris ?? [])])
+
+    it('fetches a document, then its publication, once each', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records, backlinks } = fixture
+      records.set(doc1, { body: makeDoc(pub2Uri) })
+      records.set(pub2Uri, { body: makePub() })
+      backlinks.clear()
+      const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
+
+      expect(requested(fixture)).toEqual([[doc1], [pub2Uri]])
+      for (const uri of [doc1, pub2Uri]) {
+        expect(state.externalRecords?.get(uri)).toBeTruthy()
+        expect(state.externalRecordsByRef?.has(fetchedKey(uri))).toBe(true)
+        expect(state.labels?.has(uri)).toBe(true)
+      }
+      // The cross-repo publication owner's profile comes from its own batch.
+      expect(state.actors?.has('did:plc:pub2' as DidString)).toBe(true)
+      expect(state.siteStandardDocuments).toBeUndefined()
+      expect(state.siteStandardPublications).toBeUndefined()
+    })
+
+    it('combines directly supplied documents and publications in one lookup', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, seedBasic } = fixture
+      seedBasic()
+      await hydrator.hydrateEmbedExternalViewFromUris([doc1, pubUri], ctx)
+      expect(requested(fixture)[0]).toEqual([doc1, pubUri])
+      // The directly supplied publication is not fetched again.
+      expect(
+        requested(fixture)
+          .flat()
+          .filter((u) => u === pubUri),
+      ).toHaveLength(1)
+    })
+
+    it('needs one lookup for publications and web-site documents', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records } = fixture
+      records.set(pubUri, { body: makePub() })
+      records.set(httpDoc, { body: makeDoc('https://example.com') })
+      await hydrator.hydrateEmbedExternalViewFromUris([pubUri], ctx)
+      await hydrator.hydrateEmbedExternalViewFromUris([httpDoc], ctx)
+      expect(requested(fixture)).toEqual([[pubUri], [httpDoc]])
+    })
+
+    it('fetches a shared publication once and keeps missing ones seen', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records } = fixture
+      records.set(pubUri, { body: makePub() })
+      records.set(doc1, { body: makeDoc(pubUri) })
+      records.set(doc2, { body: makeDoc(pubUri) })
+      records.set(missingPubDoc, { body: makeDoc(missingPub) })
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [doc1, doc2, missingPubDoc],
+        ctx,
+      )
+      const lookups = requested(fixture)
+      expect(lookups).toHaveLength(2)
+      expect(lookups[1].toSorted()).toEqual([pubUri, missingPub].toSorted())
+      expect(state.externalRecords?.get(missingPub)).toBeNull()
+    })
+
+    it('does not follow malformed or wrong-collection references', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records } = fixture
+      records.set(doc1, { body: makeDoc(subscriptionUri('did:plc:s', '1')) })
+      records.set(doc2, {
+        body: makeDoc('at://handle.example/site.standard.publication/self'),
+      })
+      await hydrator.hydrateEmbedExternalViewFromUris([doc1, doc2], ctx)
+      expect(requested(fixture)).toEqual([[doc1, doc2]])
+    })
+
+    it('recovers when the referenced publication lookup fails', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records } = fixture
+      records.set(doc1, { body: makeDoc(pubUri) })
+      records.set(pubUri, { body: makePub() })
+      failRecordBatches(fixture, (uri) => uri === pubUri, new Error('nope'))
+      using _warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+      const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
+      expect(state.externalRecords?.get(doc1)).toBeTruthy()
+      expect(state.externalRecords?.has(pubUri)).toBe(false)
+      expect(traversalReports()).toMatchObject([{ outcome: 'completed' }])
+    })
+  })
+
   describe('best-effort dependencies', () => {
     it('keeps roots, samples, and publications when counts fail', async ({
       fixture,

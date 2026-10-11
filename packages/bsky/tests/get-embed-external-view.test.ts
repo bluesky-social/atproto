@@ -826,6 +826,58 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
     })
   })
 
+  describe('Standard.site record lookups', () => {
+    test.each(formats(docUri, docUrl))(
+      'a document request makes two record lookups and keeps its outputs (%s)',
+      async (_, query) => {
+        await using fixture = await setup()
+        const { status, body } = await fixture.query(query)
+        expect(status).toBe(200)
+        expect(fixture.spies.lookup).toHaveBeenCalledTimes(2)
+        expect(fixture.lookedUp()).toEqual([docUri, pubUri])
+        expect(body.view?.external).toMatchObject({ title: 'Article' })
+        expect(app.bsky.embed.external.viewArticle.$matches(body.data)).toBe(
+          true,
+        )
+        expect(uriList(body.associatedRefs)).toEqual([docUri, pubUri])
+      },
+    )
+
+    it('legacy [document, publication] input still hydrates only the document root', async () => {
+      await using fixture = await setup()
+      const { body } = await fixture.query({
+        url: docUrl,
+        uris: [docUri, pubUri],
+      })
+      expect(fixture.roots()).toEqual([[docUri]])
+      expect(fixture.spies.lookup).toHaveBeenCalledTimes(2)
+      expect(uriList(body.associatedRefs)).toEqual([docUri, pubUri])
+    })
+
+    it('an explicit publication makes one record lookup', async () => {
+      await using fixture = await setup()
+      await fixture.query({
+        url: 'https://example.com/blog',
+        canonicalUri: pubUri,
+      })
+      expect(fixture.spies.lookup).toHaveBeenCalledTimes(1)
+    })
+
+    it('keeps the document as unverified output when its publication lookup fails', async () => {
+      await using fixture = await setup()
+      fixture.failing.add(pubUri)
+      const { status, body } = await fixture.query({
+        url: docUrl,
+        canonicalUri: docUri,
+      })
+      expect(status).toBe(200)
+      expect(body.data).toBeUndefined()
+      expect(body.view).toBeUndefined()
+      expect(body.associatedRefs).toBeUndefined()
+      expect(uriList(body.unverifiedAssociatedRefs)).toEqual([docUri])
+    })
+  })
+
   describe('best-effort dependencies', () => {
     const failure = () => new ConnectError('unavailable', Code.Unavailable)
 
