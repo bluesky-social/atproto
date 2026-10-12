@@ -43,6 +43,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     poolSize: env.dbPoolSize,
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
+    cancelConnectionTimeoutMs: env.dbCancelConnectionTimeoutMs,
+    cancelStatementTimeoutMs: env.dbCancelStatementTimeoutMs,
     materializedViewRefreshIntervalMs: env.dbMaterializedViewRefreshIntervalMs,
     materializedViewRefreshTimeoutMs: env.dbMaterializedViewRefreshTimeoutMs,
     teamProfileRefreshIntervalMs: env.dbTeamProfileRefreshIntervalMs,
@@ -199,6 +201,10 @@ export type DatabaseConfig = {
   poolSize?: number
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
+  /** Cancellation-control connection timeout in milliseconds; defaults to 1000. */
+  cancelConnectionTimeoutMs?: number
+  /** Cancellation command timeout in milliseconds; defaults to 1000. */
+  cancelStatementTimeoutMs?: number
   materializedViewRefreshIntervalMs?: number
   materializedViewRefreshTimeoutMs?: number
   teamProfileRefreshIntervalMs?: number

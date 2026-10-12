@@ -2,6 +2,7 @@
 
 - Reject wildcard `queryLabels` requests before accessing the DB unless `OZONE_LABEL_QUERY_WILDCARDS_ENABLED` is enabled; exact queries remain available.
 - Pass the HTTP abort signal to `executeReadQuery` for cancellable listing SQL. Await pool setup before arming cancellation. Keep its connection reserved until SQL and cancellation settle; cancellation must use a separate control connection.
+- Thread `OZONE_DB_CANCEL_*_TIMEOUT_MS` through configuration; apply them only to cancellation-control clients, with 1000 ms defaults.
 
 - Read previews share `inboxViewerDid`; writes always use the authenticated DID.
 - Produce moderation notifications from the common `ModerationService.logEvent` path so daemon actions are covered. Keep source snapshots in the source transaction, and isolate optional queries/inserts with `runNotificationWork` savepoints; a caught SQL error alone leaves PostgreSQL's transaction aborted.

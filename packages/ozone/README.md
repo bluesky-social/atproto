@@ -11,6 +11,17 @@ Wildcard patterns in `com.atproto.label.queryLabels` are disabled by default, in
 
 Set `OZONE_LABEL_QUERY_WILDCARDS_ENABLED=true` and restart the API to restore wildcard support. Unset or `false` disables it.
 
+## Moderation query cancellation
+
+`queryEvents` and `queryStatuses` cancel their listing SQL when the HTTP client disconnects. Cancellation uses a separate PostgreSQL control connection so it can proceed when the API pool is busy.
+
+| Environment variable                    | Default | Controls                                                                        |
+| --------------------------------------- | ------- | ------------------------------------------------------------------------------- |
+| `OZONE_DB_CANCEL_CONNECTION_TIMEOUT_MS` | `1000`  | Time allowed to establish the cancellation connection, in milliseconds          |
+| `OZONE_DB_CANCEL_STATEMENT_TIMEOUT_MS`  | `1000`  | PostgreSQL execution time allowed for the cancellation command, in milliseconds |
+
+Restart the API after changing these values. Values must be decimal integers from `0` to `2147483647`; invalid values fail startup. Setting the connection timeout to `0` removes the client-side connection timer; a statement timeout of `0` leaves the PostgreSQL server/role setting in effect. These settings apply only to the cancellation connection and do not impose a deadline on the listing query. A failed cancellation is logged, and its listing connection remains reserved until the query finishes.
+
 ## Moderation inbox standing
 
 Set `NEXT_PUBLIC_STRIKE_SUSPENSION_CONFIG` to the same value used by Ozone UI, for example `4:72,8:168,12:336,16:Infinity`. Each entry maps a strike count to suspension hours; `Infinity` represents a permanent suspension. The backend retains the full map and uses the second and third thresholds, sorted by strike count, for `warning` and `atRisk`. The first tier does not change standing. With no configuration, standing derives from the account's enforcement and restrictions; strike thresholds are disabled. Invalid entries fail configuration at startup.

@@ -80,7 +80,7 @@ export class Database {
       this.db = new Kysely<DatabaseSchemaType>({
         dialect: new PostgresDialect({
           pool,
-          controlClient: QueryCancellationClient,
+          controlClient: createQueryCancellationClient(opts),
           onCreateConnection: async (connection) => {
             // @NOTE drain the pool's queued SETs before allowing cancellable SQL.
             await connection.executeQuery(CompiledQuery.raw('select 1'))
@@ -218,12 +218,14 @@ type TxnEvents = {
 const noopAsync = async () => {}
 
 // @NOTE cancellation must not wait for an idle connection in the API pool.
-class QueryCancellationClient extends pg.Client {
-  constructor(opts: pg.ClientConfig) {
-    super({
-      ...opts,
-      connectionTimeoutMillis: 1000,
-      statement_timeout: 1000,
-    })
+function createQueryCancellationClient(opts: PgOptions) {
+  return class QueryCancellationClient extends pg.Client {
+    constructor(clientOpts: pg.ClientConfig) {
+      super({
+        ...clientOpts,
+        connectionTimeoutMillis: opts.cancelConnectionTimeoutMs ?? 1000,
+        statement_timeout: opts.cancelStatementTimeoutMs ?? 1000,
+      })
+    }
   }
 }

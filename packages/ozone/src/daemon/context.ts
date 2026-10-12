@@ -57,6 +57,8 @@ export class DaemonContext {
     const db = new Database({
       url: cfg.db.postgresUrl,
       schema: cfg.db.postgresSchema,
+      cancelConnectionTimeoutMs: cfg.db.cancelConnectionTimeoutMs,
+      cancelStatementTimeoutMs: cfg.db.cancelStatementTimeoutMs,
     })
     const signingKey = await Secp256k1Keypair.import(secrets.signingKeyHex)
     const signingKeyId = await getSigningKeyId(db, signingKey.did())

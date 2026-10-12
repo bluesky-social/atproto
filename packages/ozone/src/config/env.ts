@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { envBool, envInt, envList, envStr } from '@atproto/common'
 import type { DidString, UriString } from '@atproto/lex'
 
@@ -25,6 +26,12 @@ export const readEnv = (): OzoneEnvironment => {
     dbPoolSize: envInt('OZONE_DB_POOL_SIZE'),
     dbPoolMaxUses: envInt('OZONE_DB_POOL_MAX_USES'),
     dbPoolIdleTimeoutMs: envInt('OZONE_DB_POOL_IDLE_TIMEOUT_MS'),
+    dbCancelConnectionTimeoutMs: envCancellationTimeoutMs(
+      'OZONE_DB_CANCEL_CONNECTION_TIMEOUT_MS',
+    ),
+    dbCancelStatementTimeoutMs: envCancellationTimeoutMs(
+      'OZONE_DB_CANCEL_STATEMENT_TIMEOUT_MS',
+    ),
     dbMaterializedViewRefreshIntervalMs: envInt(
       'OZONE_DB_MATERIALIZED_VIEW_REFRESH_INTERVAL_MS',
     ),
@@ -63,6 +70,19 @@ export const readEnv = (): OzoneEnvironment => {
   }
 }
 
+function envCancellationTimeoutMs(name: string): number | undefined {
+  const value = envStr(name)
+  if (value === undefined) return undefined
+  const timeout = Number(value)
+  assert(
+    /^\d+$/.test(value) &&
+      Number.isSafeInteger(timeout) &&
+      timeout <= 2_147_483_647,
+    `${name} must be an integer between 0 and 2147483647 milliseconds`,
+  )
+  return timeout
+}
+
 export type OzoneEnvironment = {
   nodeEnv?: string
   strikeSuspensionConfig?: string
@@ -90,6 +110,8 @@ export type OzoneEnvironment = {
   dbPoolSize?: number
   dbPoolMaxUses?: number
   dbPoolIdleTimeoutMs?: number
+  dbCancelConnectionTimeoutMs?: number
+  dbCancelStatementTimeoutMs?: number
   dbMaterializedViewRefreshIntervalMs?: number
   dbMaterializedViewRefreshTimeoutMs?: number
   dbTeamProfileRefreshIntervalMs?: number
