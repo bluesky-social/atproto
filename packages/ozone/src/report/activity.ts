@@ -75,7 +75,7 @@ export async function createReportActivity(
     // locks at most one row.
     const report = await dbTxn.db
       .selectFrom('report')
-      .select(['id', 'status'])
+      .select(['id', 'status', 'reportType'])
       .where((eb) =>
         reportId !== undefined
           ? eb('id', '=', reportId)
@@ -136,7 +136,11 @@ export async function createReportActivity(
         previousStatus: result.activity?.previousStatus ?? null,
         internalNote: internalNote ?? null,
         publicNote: publicNote ?? null,
-        meta: meta ?? null,
+        meta:
+          activityType === 'closeActivity' &&
+          report.reportType === tools.ozone.report.defs.ReasonAppeal
+            ? { ...meta, appealOutcome: 'denied' }
+            : (meta ?? null),
         isAutomated,
         createdBy,
         createdAt: now,

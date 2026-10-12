@@ -8,6 +8,7 @@ import type { InboxConfig } from '../config/config.js'
 import type { Database } from '../db/index.js'
 import { com } from '../lexicons/index.js'
 import { subjectFromStatusRow } from '../mod-service/subject.js'
+import { appealOutcomeSelection } from './appeal-outcome.js'
 import {
   APPEAL_REASON_TYPE,
   PUBLIC_EVENT_ACTIONS,
@@ -86,6 +87,7 @@ export async function hydrateSubjectViews(
         'closedAt',
       ])
       .orderBy('recordPath')
+      .select(appealOutcomeSelection())
       .orderBy('id', 'desc')
       .execute(),
     loadPolicyList(db, serviceDid),

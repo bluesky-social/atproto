@@ -18,6 +18,7 @@ import type { AppealView } from '../lexicons/tools/ozone/inbox/defs.js'
 import type { ModSubject } from '../mod-service/subject.js'
 import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
 import { findMatchingQueue } from '../queue/service.js'
+import { type AppealOutcome, appealOutcomeSelection } from './appeal-outcome.js'
 
 export const APPEAL_REASON_TYPE = 'tools.ozone.report.defs#reasonAppeal'
 export const TAKEDOWN = 'tools.ozone.moderation.defs#modEventTakedown'
@@ -40,6 +41,7 @@ export type AppealReport = {
   createdAt: DatetimeString
   updatedAt: DatetimeString
   closedAt: DatetimeString | null
+  outcome?: AppealOutcome | null
 }
 
 export type AppealInput = {
@@ -121,6 +123,7 @@ export const toAppealState = ({
     view.appealedAt = status?.lastAppealedAt ?? report.createdAt
     if (state === 'resolved' && report.closedAt)
       view.resolvedAt = report.closedAt
+    if (state === 'resolved' && report.outcome) view.outcome = report.outcome
   }
   if (appealableUntil) view.appealableUntil = appealableUntil
 
@@ -307,6 +310,7 @@ export const findLatestAppealReport = async (
     .orderBy('id', 'desc')
     .limit(1)
     .select(['id', 'status', 'createdAt', 'updatedAt', 'closedAt'])
+    .select(appealOutcomeSelection())
     .executeTakeFirst()
   return report ?? null
 }

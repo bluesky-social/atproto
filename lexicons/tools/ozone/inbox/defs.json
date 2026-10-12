@@ -117,6 +117,11 @@
           "format": "datetime",
           "description": "When the appeal's report was closed."
         },
+        "outcome": {
+          "type": "string",
+          "knownValues": ["approved", "denied"],
+          "description": "Decision on a resolved appeal. Approved means its closing action reverses a takedown or removes a label; denied means no-action closure or an action that upholds enforcement. Omitted for unresolved appeals or historical closures without sufficient resolution data."
+        },
         "appealableUntil": {
           "type": "string",
           "format": "datetime"
@@ -341,6 +346,11 @@
       "type": "object",
       "required": ["subject"],
       "properties": {
+        "appealOutcome": {
+          "type": "string",
+          "knownValues": ["approved", "denied"],
+          "description": "Decision captured when an appealResolved notification was created. Omitted when the outcome is unknown."
+        },
         "subject": {
           "type": "union",
           "refs": [
