@@ -144,6 +144,215 @@
         "g": { "type": "integer", "minimum": 0, "maximum": 255 },
         "b": { "type": "integer", "minimum": 0, "maximum": 255 }
       }
+    },
+    "viewArticle": {
+      "type": "object",
+      "required": ["uri", "title", "description"],
+      "properties": {
+        "uri": { "type": "string", "format": "uri" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "updatedAt": { "type": "string", "format": "datetime" },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
+        "associatedRefs": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
+        },
+        "associatedProfiles": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "app.bsky.actor.defs#profileViewBasic"
+          }
+        },
+        "image": { "type": "string", "format": "uri" },
+        "publisher": { "type": "ref", "ref": "#viewArticlePublication" },
+        "readingTime": { "type": "integer", "minimum": 1 },
+        "likeCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "likers": {
+          "type": "array",
+          "maxLength": 3,
+          "description": "Available profile previews. Selected deterministically by DID; not a ranking.",
+          "items": {
+            "type": "ref",
+            "ref": "app.bsky.actor.defs#profileViewBasic"
+          }
+        }
+      }
+    },
+    "viewArticlePublication": {
+      "type": "object",
+      "required": ["uri", "title", "description"],
+      "properties": {
+        "uri": { "type": "string", "format": "uri" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "updatedAt": { "type": "string", "format": "datetime" },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
+        "associatedRefs": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
+        },
+        "associatedProfiles": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "app.bsky.actor.defs#profileViewBasic"
+          }
+        },
+        "logo": { "type": "string", "format": "uri" },
+        "image": { "type": "string", "format": "uri" },
+        "theme": { "type": "ref", "ref": "#viewArticlePublicationTheme" },
+        "subscriptionCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "subscribers": {
+          "type": "array",
+          "maxLength": 3,
+          "description": "Available profile previews. Selected deterministically by DID; not a ranking.",
+          "items": {
+            "type": "ref",
+            "ref": "app.bsky.actor.defs#profileViewBasic"
+          }
+        }
+      }
+    },
+    "viewArticlePublicationTheme": {
+      "type": "object",
+      "properties": {
+        "background": {
+          "type": "string",
+          "description": "Hex color string, if available. Example: '#ffffff'."
+        },
+        "foreground": {
+          "type": "string",
+          "description": "Hex color string, if available. Example: '#ffffff'."
+        },
+        "accent": {
+          "type": "string",
+          "description": "Hex color string, if available. Example: '#ffffff'."
+        },
+        "accentForeground": {
+          "type": "string",
+          "description": "Hex color string, if available. Example: '#ffffff'."
+        }
+      }
+    },
+    "viewGallery": {
+      "type": "object",
+      "required": ["uri", "title", "description", "items"],
+      "properties": {
+        "uri": { "type": "string", "format": "uri" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "updatedAt": { "type": "string", "format": "datetime" },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
+        "associatedRefs": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
+        },
+        "associatedProfiles": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "app.bsky.actor.defs#profileViewBasic"
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "union",
+            "refs": ["#viewGalleryImage"]
+          },
+          "description": "The media items in the gallery. Each item may be of a different type, but all types must be supported by the client."
+        },
+        "likeCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "likers": {
+          "type": "array",
+          "maxLength": 3,
+          "description": "Available profile previews. Selected deterministically by DID; not a ranking.",
+          "items": {
+            "type": "ref",
+            "ref": "app.bsky.actor.defs#profileViewBasic"
+          }
+        }
+      }
+    },
+    "viewGalleryImage": {
+      "type": "object",
+      "required": ["thumbnail", "fullsize"],
+      "properties": {
+        "thumbnail": {
+          "type": "string",
+          "format": "uri",
+          "description": "Fully-qualified URL where a thumbnail of the image can be fetched. For example, CDN location provided by the App View."
+        },
+        "fullsize": {
+          "type": "string",
+          "format": "uri",
+          "description": "Fully-qualified URL where a large version of the image can be fetched. May or may not be the exact original blob. For example, CDN location provided by the App View."
+        },
+        "alt": {
+          "type": "string",
+          "description": "Alt text description of the image, for accessibility."
+        },
+        "aspectRatio": {
+          "type": "ref",
+          "ref": "app.bsky.embed.defs#aspectRatio"
+        }
+      }
+    },
+    "viewLivestream": {
+      "type": "object",
+      "required": ["uri", "title", "description", "active"],
+      "properties": {
+        "uri": { "type": "string", "format": "uri" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "updatedAt": { "type": "string", "format": "datetime" },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
+        "associatedRefs": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
+        },
+        "associatedProfiles": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "app.bsky.actor.defs#profileViewBasic"
+          }
+        },
+        "image": { "type": "string", "format": "uri" },
+        "active": {
+          "type": "boolean",
+          "description": "True if the livestream is currently active at the time this view is served, false if it has ended."
+        },
+        "startedAt": { "type": "string", "format": "datetime" },
+        "endedAt": { "type": "string", "format": "datetime" }
+      }
     }
   }
 }

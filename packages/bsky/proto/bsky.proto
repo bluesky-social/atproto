@@ -143,6 +143,14 @@ message GetGermDeclarationRecordsResponse {
   repeated Record records = 1;
 }
 
+message GetProfileLinkRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetProfileLinkRecordsResponse {
+  repeated Record records = 1;
+}
+
 message GetStatusRecordsRequest {
   repeated string uris = 1;
 }
@@ -1778,6 +1786,7 @@ service Service {
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
   rpc GetNotificationDeclarationRecords(GetNotificationDeclarationRecordsRequest) returns (GetNotificationDeclarationRecordsResponse);
   rpc GetGermDeclarationRecords(GetGermDeclarationRecordsRequest) returns (GetGermDeclarationRecordsResponse);
+  rpc GetProfileLinkRecords(GetProfileLinkRecordsRequest) returns (GetProfileLinkRecordsResponse);
   rpc GetStatusRecords(GetStatusRecordsRequest) returns (GetStatusRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);

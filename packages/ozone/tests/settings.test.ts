@@ -6,6 +6,11 @@ import type {
 import type AtpAgent from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import type { SettingScope } from '../dist/db/schema/setting.js'
+import { com, tools } from '../src/lexicons/index.js'
+import {
+  PriorityLevelSettingKey,
+  ReportPriorityLevelSettingKey,
+} from '../src/setting/constants.js'
 import { forSnapshot } from './_util.js'
 
 describe('ozone-settings', () => {
@@ -145,6 +150,182 @@ describe('ozone-settings', () => {
       )
       expect(afterUpdatedByAdmin.options[0].value?.['noDids']).toBeFalsy()
       expect(afterUpdatedByAdmin.options[0].value?.['dids']).toEqual('test')
+    })
+  })
+
+  describe('report priority settings', () => {
+    const levelsKey = PriorityLevelSettingKey
+    const mappingsKey = ReportPriorityLevelSettingKey
+    const reason = com.atproto.moderation.defs.ReasonSpam
+    const level = { name: 'Urgent', targetResolutionMinutes: 720, score: 100 }
+    const setting = (key: string, value: Record<string, unknown>) => ({
+      scope: 'instance',
+      key,
+      value,
+      managerRole: tools.ozone.team.defs.RoleAdmin,
+    })
+
+    beforeEach(async () => removeOptions([levelsKey, mappingsKey], 'instance'))
+    afterAll(async () => removeOptions([levelsKey, mappingsKey], 'instance'))
+
+    it.each(['moderator', 'triage'] as const)(
+      'only admins can create, update, or delete priorities (%s)',
+      async (role) => {
+        for (const key of [levelsKey, mappingsKey]) {
+          await expect(upsertOption(setting(key, {}), role)).rejects.toThrow(
+            'Only admins',
+          )
+          await upsertOption(setting(key, {}))
+          await expect(upsertOption(setting(key, {}), role)).rejects.toThrow(
+            'Only admins',
+          )
+          await expect(removeOptions([key], 'instance', role)).rejects.toThrow(
+            'Only admins',
+          )
+        }
+        expect(
+          (
+            await listOptions({
+              keys: [levelsKey, mappingsKey],
+              scope: 'instance',
+            })
+          ).options,
+        ).toHaveLength(2)
+      },
+    )
+
+    it('rejects personal scope', async () => {
+      for (const key of [levelsKey, mappingsKey]) {
+        await expect(
+          upsertOption({ ...setting(key, {}), scope: 'personal' }),
+        ).rejects.toThrow('instance scope')
+        await expect(removeOptions([key], 'personal')).rejects.toThrow(
+          'instance scope',
+        )
+      }
+    })
+
+    it('requires an admin manager role on creation and update', async () => {
+      for (const key of [levelsKey, mappingsKey]) {
+        for (const managerRole of [
+          undefined,
+          tools.ozone.team.defs.RoleModerator,
+          tools.ozone.team.defs.RoleTriage,
+          tools.ozone.team.defs.RoleVerifier,
+        ]) {
+          await expect(
+            upsertOption({ ...setting(key, {}), managerRole }),
+          ).rejects.toThrow('must have an admin managerRole')
+        }
+
+        await upsertOption(setting(key, {}))
+        await expect(
+          upsertOption({ ...setting(key, {}), managerRole: undefined }),
+        ).rejects.toThrow('must have an admin managerRole')
+        await expect(
+          upsertOption({
+            ...setting(key, {}),
+            managerRole: tools.ozone.team.defs.RoleModerator,
+          }),
+        ).rejects.toThrow('must have an admin managerRole')
+      }
+      const { options } = await listOptions({
+        scope: 'instance',
+        keys: [levelsKey, mappingsKey],
+      })
+      expect(options.map((option) => option.managerRole)).toEqual([
+        tools.ozone.team.defs.RoleAdmin,
+        tools.ozone.team.defs.RoleAdmin,
+      ])
+    })
+
+    it.each([
+      [{ ' ': level }, /Invalid priority level/],
+      [{ ' padded ': level }, /Invalid priority level/],
+      [{ urgent: null }, /Invalid priority level/],
+      [{ urgent: { ...level, name: '' } }, /name/],
+      [{ urgent: { ...level, name: 12 } }, /name/],
+      [{ urgent: { ...level, score: -1 } }, /integer score/],
+      [{ urgent: { ...level, score: 101 } }, /integer score/],
+      [{ urgent: { ...level, score: 1.5 } }, /integer/],
+      [{ urgent: { ...level, score: '50' } }, /integer score/],
+      [{ urgent: level, normal: level }, /unique/],
+      [
+        { urgent: { ...level, targetResolutionMinutes: 0 } },
+        /positive integer/,
+      ],
+      [{ urgent: { ...level, targetResolutionMinutes: 0.5 } }, /integer/],
+      [
+        { urgent: { ...level, targetResolutionMinutes: '720' } },
+        /positive integer/,
+      ],
+      [
+        { urgent: { ...level, targetResolutionMinutes: 2_147_483_648 } },
+        /positive integer/,
+      ],
+    ])('rejects invalid level definitions (%#)', async (value, message) => {
+      await expect(upsertOption(setting(levelsKey, value))).rejects.toThrow(
+        message,
+      )
+    })
+
+    it('accepts empty and partial configuration and boundary values', async () => {
+      await upsertOption(setting(mappingsKey, {}))
+      await expect(
+        upsertOption(setting(mappingsKey, { [reason]: 'urgent' })),
+      ).rejects.toThrow('Unknown priority levels')
+      await upsertOption(
+        setting(levelsKey, {
+          urgent: { ...level, targetResolutionMinutes: 1 },
+          low: { ...level, score: 0, targetResolutionMinutes: 2_147_483_647 },
+        }),
+      )
+      await upsertOption(
+        setting(mappingsKey, {
+          [reason]: 'urgent',
+          [com.atproto.moderation.defs.ReasonOther]: 'urgent',
+        }),
+      )
+      await upsertOption(setting(mappingsKey, {}))
+      await upsertOption(setting(levelsKey, {}))
+    })
+
+    it.each([
+      { '': 'urgent' },
+      { [reason]: '' },
+      { [reason]: 100 },
+      { [reason]: 'missing' },
+      { [reason]: 'constructor' },
+      { [reason]: '__proto__' },
+    ])('rejects invalid reason mappings (%#)', async (value) => {
+      await upsertOption(setting(levelsKey, { urgent: level }))
+      await expect(upsertOption(setting(mappingsKey, value))).rejects.toThrow(
+        /Invalid priority mapping|Unknown priority levels/,
+      )
+    })
+
+    it('requires removing references before deleting or renaming a level', async () => {
+      await upsertOption(setting(levelsKey, { urgent: level }))
+      await upsertOption(setting(mappingsKey, { [reason]: 'urgent' }))
+      await expect(upsertOption(setting(levelsKey, {}))).rejects.toThrow(
+        'Unknown priority levels',
+      )
+      await expect(
+        upsertOption(setting(levelsKey, { renamed: level })),
+      ).rejects.toThrow('Unknown priority levels')
+      await expect(removeOptions([levelsKey], 'instance')).rejects.toThrow(
+        'Remove report priority',
+      )
+      await removeOptions([mappingsKey], 'instance')
+      await removeOptions([levelsKey], 'instance')
+      expect(
+        (
+          await listOptions({
+            scope: 'instance',
+            keys: [levelsKey, mappingsKey],
+          })
+        ).options,
+      ).toHaveLength(0)
     })
   })
 

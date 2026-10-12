@@ -163,6 +163,7 @@ const noBlocksOrMutedReposts = (inputs: {
   const { ctx, skeleton, hydration } = inputs
   const relationship = hydration.profileViewers?.get(skeleton.actor.did)
   if (
+    !hydration.ctx?.skipViewerBlocks &&
     relationship &&
     (relationship.blocking || ctx.views.blockingByList(relationship, hydration))
   ) {
@@ -172,6 +173,7 @@ const noBlocksOrMutedReposts = (inputs: {
     )
   }
   if (
+    !hydration.ctx?.skipViewerBlocks &&
     relationship &&
     (relationship.blockedBy || ctx.views.blockedByList(relationship, hydration))
   ) {

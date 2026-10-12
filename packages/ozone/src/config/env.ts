@@ -12,6 +12,7 @@ export const readEnv = (): OzoneEnvironment => {
     publicUrl: envStr('OZONE_PUBLIC_URL') as UriString,
     serverDid: envStr('OZONE_SERVER_DID') as DidString,
     serviceRecordCacheTTL: envInt('OZONE_SERVICE_RECORD_CACHE_TTL'),
+    labelQueryWildcardsEnabled: envBool('OZONE_LABEL_QUERY_WILDCARDS_ENABLED'),
     appviewUrl: envStr('OZONE_APPVIEW_URL') as UriString,
     appviewDid: envStr('OZONE_APPVIEW_DID') as DidString,
     appviewPushEvents: envBool('OZONE_APPVIEW_PUSH_EVENTS'),
@@ -76,6 +77,7 @@ export type OzoneEnvironment = {
   publicUrl?: string
   serverDid?: DidString
   serviceRecordCacheTTL?: number
+  labelQueryWildcardsEnabled?: boolean
   appviewUrl?: UriString
   appviewDid?: DidString
   appviewPushEvents?: boolean

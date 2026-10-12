@@ -14,6 +14,18 @@ export interface Report {
   isAutomated: boolean // Denormalized from moderation_event.modTool.meta.isAutomated
   status: string // 'open', 'closed', 'escalated', 'queued', 'assigned'
   reportType: string // Denormalized from moderation_event.meta.reportType
+  /**
+   * Priority level assigned to the report from priority settings.
+   */
+  priorityLevel: string | null
+  /**
+   * Report priority score. Higher scores have higher priority.
+   */
+  priorityScore: number | null
+  /**
+   * Target resolution duration in minutes.
+   */
+  priorityTargetMinutes: number | null
   did: DidString // Denormalized from moderation_event.subjectDid
   reporterDid: DidString | null // Original moderation_event.createdBy for eventId
   recordPath: string // '' = account/message/conversation, 'collection/rkey' = record

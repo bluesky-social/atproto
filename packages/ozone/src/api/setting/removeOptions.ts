@@ -1,7 +1,16 @@
-import { AuthRequiredError, type Server } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  type Server,
+} from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import type { Member } from '../../db/schema/member.js'
 import { tools } from '../../lexicons/index.js'
+import {
+  PriorityLevelSettingKey,
+  ReportPriorityLevelSettingKey,
+  isReportPrioritySetting,
+} from '../../setting/constants.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(tools.ozone.setting.removeOptions, {
@@ -12,6 +21,18 @@ export default function (server: Server, ctx: AppContext) {
       const { keys, scope } = input.body
       let did = ctx.cfg.service.did
       let managerRole: Member['role'][] = []
+
+      if (keys.some(isReportPrioritySetting)) {
+        if (scope !== 'instance')
+          throw new InvalidRequestError(
+            'Report priority settings must have instance scope',
+          )
+        if (access.type !== 'admin_token' && !access.isAdmin) {
+          throw new AuthRequiredError(
+            'Only admins can manage report priorities',
+          )
+        }
+      }
 
       if (scope === 'personal') {
         if (access.type !== 'moderator') {
@@ -48,6 +69,22 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const settingService = ctx.settingService(db)
+      if (
+        scope === 'instance' &&
+        keys.includes(PriorityLevelSettingKey) &&
+        !keys.includes(ReportPriorityLevelSettingKey)
+      ) {
+        const { options } = await settingService.query({
+          limit: 1,
+          scope: 'instance',
+          keys: [ReportPriorityLevelSettingKey],
+        })
+        if (options[0] && Object.keys(options[0].value).length) {
+          throw new InvalidRequestError(
+            'Remove report priority levels before removing priority levels',
+          )
+        }
+      }
 
       await settingService.removeOptions(keys, {
         scope: scope === 'personal' ? 'personal' : 'instance',

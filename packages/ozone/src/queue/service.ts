@@ -13,7 +13,9 @@ import { handleReportUpdate } from '../report/handle-report-update.js'
 import { ReportStatsService } from '../report/stats.js'
 import { viewQueueStats } from '../report/views.js'
 import { PolicyListSettingKey } from '../setting/constants.js'
+import { resolveReportPriorities } from '../setting/report.js'
 import { SettingService } from '../setting/service.js'
+import type { ResolvedReportPriority } from '../setting/types.js'
 
 type SubjectType = 'account' | 'record' | 'message' | 'conversation'
 
@@ -46,12 +48,14 @@ function reportRowFromEvent({
   event,
   reportType,
   assignment,
+  priority,
   createdAt,
   actionEventIds = null,
 }: {
   event: ReportEvent
   reportType: string
   assignment: ResolvedAssignment
+  priority: ResolvedReportPriority | undefined
   createdAt: DatetimeString
   actionEventIds?: number[] | null
 }) {
@@ -72,6 +76,9 @@ function reportRowFromEvent({
     isAutomated: parseModTool(event.modTool).isAutomated,
     status: assignment.status,
     reportType,
+    priorityLevel: priority?.level ?? null,
+    priorityScore: priority?.score ?? null,
+    priorityTargetMinutes: priority?.targetResolutionMinutes ?? null,
     did: event.subjectDid,
     recordPath,
     subjectMessageId: event.subjectMessageId,
@@ -142,6 +149,7 @@ export class QueueService {
     actionEventIds?: number[] | null
   }): Promise<number> {
     this.db.assertTransaction()
+    const priorities = await resolveReportPriorities(this.db, [reportType])
     const assignment: ResolvedAssignment = {
       queueId,
       queuedAt,
@@ -154,6 +162,7 @@ export class QueueService {
           event,
           reportType,
           assignment,
+          priority: priorities.get(reportType),
           createdAt: event.createdAt,
           actionEventIds,
         }),
@@ -478,7 +487,7 @@ export class QueueService {
   }
 
   /**
-   * Re-route a range of existing reports against the current queue config.
+   * Re-route unassigned reports and refresh their priority from current settings.
    * Used by the manual `tools.ozone.queue.routeReports` endpoint to pick up
    * reports after queues are created or modified. New reports are inserted
    * by the daemon via `insertReportsFromEvents`, not here.
@@ -493,10 +502,6 @@ export class QueueService {
     maxId: number
   }> {
     const { queues } = await this.list({ limit: 1000, enabled: true })
-
-    if (!queues.length) {
-      return { processed: 0, assigned: 0, unmatched: 0, maxId: 0 }
-    }
 
     let query = this.db.db
       .selectFrom('report as r')
@@ -530,6 +535,22 @@ export class QueueService {
       return { processed: 0, assigned: 0, unmatched: 0, maxId: 0 }
     }
 
+    const priorities = await resolveReportPriorities(
+      this.db,
+      reports.map((report) => report.reportType),
+    )
+    const prioritiesByType = jsonb(Object.fromEntries(priorities))
+    const priorityUpdates = {
+      priorityLevel: sql<
+        string | null
+      >`${prioritiesByType} -> "reportType" ->> 'level'`,
+      priorityScore: sql<
+        number | null
+      >`(${prioritiesByType} -> "reportType" ->> 'score')::integer`,
+      priorityTargetMinutes: sql<
+        number | null
+      >`(${prioritiesByType} -> "reportType" ->> 'targetResolutionMinutes')::integer`,
+    }
     const now = currentDatetimeString()
 
     // Resolve each report's destination in memory — no DB calls in this loop
@@ -603,14 +624,20 @@ export class QueueService {
       if (withTransition.length) {
         await this.db.db
           .updateTable('report')
-          .set({ queueId, queuedAt: now, status: 'queued', updatedAt: now })
+          .set({
+            ...priorityUpdates,
+            queueId,
+            queuedAt: now,
+            status: 'queued',
+            updatedAt: now,
+          })
           .where('id', 'in', withTransition)
           .execute()
       }
       if (withoutTransition.length) {
         await this.db.db
           .updateTable('report')
-          .set({ queueId, queuedAt: now, updatedAt: now })
+          .set({ ...priorityUpdates, queueId, queuedAt: now, updatedAt: now })
           .where('id', 'in', withoutTransition)
           .execute()
       }
@@ -620,7 +647,12 @@ export class QueueService {
     if (unmatchedIds.length) {
       await this.db.db
         .updateTable('report')
-        .set({ queueId: -1, queuedAt: null, updatedAt: now })
+        .set({
+          ...priorityUpdates,
+          queueId: -1,
+          queuedAt: null,
+          updatedAt: now,
+        })
         .where('id', 'in', unmatchedIds)
         .execute()
     }
@@ -716,6 +748,13 @@ export class QueueService {
     let assigned = 0
     let unmatched = 0
 
+    const reportTypes = events.map(
+      (event) =>
+        (event.meta?.reportType as string | undefined) ??
+        com.atproto.moderation.defs.ReasonOther,
+    )
+    const priorities = await resolveReportPriorities(this.db, reportTypes)
+
     const rows = events.map((event) => {
       const subjectType = subjectTypeFromEvent(event)
 
@@ -728,6 +767,7 @@ export class QueueService {
       const reportType =
         (event.meta?.reportType as string | undefined) ??
         com.atproto.moderation.defs.ReasonOther
+      const priority = priorities.get(reportType)
 
       const tool = parseModTool(event.modTool)
 
@@ -748,6 +788,7 @@ export class QueueService {
         event,
         reportType,
         assignment,
+        priority,
         createdAt: now,
       })
     })

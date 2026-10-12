@@ -1,5 +1,47 @@
 # @atproto/api
 
+## 0.24.3
+
+### Patch Changes
+
+- [#5617](https://github.com/bluesky-social/atproto/pull/5617) [`94e3838`](https://github.com/bluesky-social/atproto/commit/94e3838ea3bb1785a1989931a815b62b2057e5db) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add app.bsky.unspecced.getAtmosphereExploreTab with curated CMS content, canonical external modality views, and BSKY_ATMOSPHERE_EXPLORE_TAB_SERVICE configuration. Accept optional langs, countryCode, and regionCode parameters, forwarding countryCode and regionCode to the CMS.
+
+- [#5599](https://github.com/bluesky-social/atproto/pull/5599) [`648f7c9`](https://github.com/bluesky-social/atproto/commit/648f7c9ebff13a51341977abd7fe2f5b603a2783) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add canonical Atmosphere modality view schemas.
+
+## 0.24.2
+
+### Patch Changes
+
+- [#5581](https://github.com/bluesky-social/atproto/pull/5581) [`f069327`](https://github.com/bluesky-social/atproto/commit/f0693271583923f38d827b4d4387d065e2cb8be7) Thanks [@gcwill70](https://github.com/gcwill70)! - Add report closure target met and missed counts, target met percentages, and overdue pending-report snapshots to report and queue statistics. Exclude reports without closure targets and preserve unavailable historical metrics until recomputed.
+  
+  Include the updated Ozone report and queue statistics definitions in the generated API client.
+  
+  Exclude muted reports from current and recomputed historical pending and overdue counts. Inbound volume and closure outcomes continue to include muted reports.
+
+## 0.24.1
+
+### Patch Changes
+
+- [#5579](https://github.com/bluesky-social/atproto/pull/5579) [`b023046`](https://github.com/bluesky-social/atproto/commit/b023046f9266b8755ad9b44928032426bb05599e) Thanks [@gcwill70](https://github.com/gcwill70)! - Add configurable report priority levels and reason mappings, with priority scores and resolution targets in minutes snapshotted on reports at creation.
+  
+  Expose each closed report's resolution time and whether it met its priority target.
+
+- [#5622](https://github.com/bluesky-social/atproto/pull/5622) [`2ee3a27`](https://github.com/bluesky-social/atproto/commit/2ee3a27d7095c836d51a077330174900f5c0e8ee) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Expose canonical OP thread numbering on embedded post views.
+
+## 0.24.0
+
+### Minor Changes
+
+- [#5550](https://github.com/bluesky-social/atproto/pull/5550) [`3013430`](https://github.com/bluesky-social/atproto/commit/3013430ed7433edd4c70d2970428d0ab803f6e85) Thanks [@foysalit](https://github.com/foysalit)! - Add viewer-facing moderation inbox reads for configurable account standing, report details, and cursor-paginated action history, with PDS proxy access and read-only moderator previews. Include appeal attribution in moderator event views, structured policy details in takedown actions, and pending, resolved, and unread actioned-subject filters based on appeal report state. Keep moderator notes private.
+  
+  Page reports through reporter/time indexes with bounded hydration and source ownership validation. Batch subject hydration, reuse indexes for report summaries, and limit latest appeal lookups to one row in SQL. Add non-appeal reporter/time indexes, with the inbox migration ordered after the reporter DID column migration.
+  
+  Add OZONE_INBOX_START_AT to limit report, action, and appeal history by creation time, with a public subject/action creation-time index. Cover structured policy names, links, and fallback URLs in mapper regression tests.
+
+- [#5551](https://github.com/bluesky-social/atproto/pull/5551) [`38b10d1`](https://github.com/bluesky-social/atproto/commit/38b10d1b870a6a8f5da0eff32a136caadadd0184) Thanks [@foysalit](https://github.com/foysalit)! - Add moderation inbox notifications, preferences, unread counts, and independent per-section seen watermarks with normalized timestamps and read-only staff previews. Batch and isolate notification producers from moderation failures, reuse the UI strike suspension configuration for account standing, and keep moderator note text private. Include raw record values in report and actioned-subject details for record subjects.
+  
+  Apply OZONE_INBOX_START_AT to notification producers, lists, unread counts, and target visibility, including report closures and daemon standing changes.
+
 ## 0.23.2
 
 ### Patch Changes

@@ -277,6 +277,31 @@
           "ref": "com.atproto.moderation.defs#reasonType",
           "description": "Type of report"
         },
+        "priorityLevel": {
+          "type": "string",
+          "description": "Priority level assigned to the report."
+        },
+        "priorityScore": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Report priority score. Higher scores have higher priority."
+        },
+        "priorityTargetMinutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647,
+          "description": "Target resolution duration in minutes."
+        },
+        "resolutionTimeSec": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Time from report creation to its last closure."
+        },
+        "priorityTargetMet": {
+          "type": "boolean",
+          "description": "Whether the current closure occurred within the report's snapshotted target."
+        },
         "reportedBy": {
           "type": "string",
           "format": "did",
@@ -508,7 +533,28 @@
       "properties": {
         "pendingCount": {
           "type": "integer",
-          "description": "Number of reports currently not closed."
+          "description": "Number of unmuted reports currently not closed."
+        },
+        "closureTargetOverdueCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Unmuted pending reports past their closure target."
+        },
+        "closureTargetMetCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reports whose closure meets their closure target."
+        },
+        "closureTargetMissedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reports whose closure exceeds their closure target."
+        },
+        "closureTargetMetRate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percent of reports meeting their closure target."
         },
         "closedCount": {
           "type": "integer",
@@ -593,7 +639,28 @@
         },
         "pendingCount": {
           "type": "integer",
-          "description": "Number of reports not closed at time of computation."
+          "description": "Number of unmuted reports not closed at the end of this UTC day, or at computation time for the current day."
+        },
+        "closureTargetOverdueCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Unmuted pending reports past their closure target at the snapshot time."
+        },
+        "closureTargetMetCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reports whose closure meets their closure target."
+        },
+        "closureTargetMissedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Reports whose closure exceeds their closure target."
+        },
+        "closureTargetMetRate": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percent of reports meeting their closure target."
         },
         "closedCount": {
           "type": "integer",

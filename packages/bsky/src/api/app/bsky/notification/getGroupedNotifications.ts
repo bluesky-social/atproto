@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { mapDefined } from '@atproto/common'
+import { dedupeStrs, mapDefined } from '@atproto/common'
 import {
   type AtUriString,
   type DatetimeString,
@@ -211,7 +211,21 @@ const hydration = async (
   const notifs = skeleton.groups.flatMap((group) =>
     group.items.map((item) => item.raw),
   )
-  return ctx.hydrator.hydrateGroupedNotifications(notifs, params.hydrateCtx)
+
+  // Optimization: instead of fetching known followers for all users in all notifications,
+  // only fetch for the notifications type that want it (follow type), and only for the ones
+  // that appear before truncation.
+  const knownFollowersDids = dedupeStrs(
+    skeleton.groups.flatMap((group) =>
+      group.kind === NOTIFICATION_REASON.FOLLOW
+        ? truncateRelatedViewsItems(group.items).map((item) => item.actorDid)
+        : [],
+    ),
+  )
+
+  return ctx.hydrator.hydrateGroupedNotifications(notifs, params.hydrateCtx, {
+    knownFollowersDids,
+  })
 }
 
 const rules = (
@@ -375,6 +389,8 @@ const presentation = (
   const groups = mapDefined(skeleton.groups, (group) =>
     ctx.views.notificationGroup(group, hydration),
   )
+
+  // Build related profiles, records.
   const profileDids = new Set<DidString>()
   const recordUris = new Set<AtUriString>()
   for (const { kind } of groups) {
@@ -388,7 +404,12 @@ const presentation = (
       for (const item of truncateRelatedViewsItems(kind.items)) {
         profileDids.add(item.actor)
       }
-    } else if (defs.multiPostLikeGroup.$isTypeOf(kind)) {
+    } else if (
+      defs.multiPostLikeGroup.$isTypeOf(kind) ||
+      defs.multiPostRepostGroup.$isTypeOf(kind) ||
+      defs.multiPostLikeViaRepostGroup.$isTypeOf(kind) ||
+      defs.multiPostRepostViaRepostGroup.$isTypeOf(kind)
+    ) {
       profileDids.add(kind.actor)
       for (const item of truncateRelatedViewsItems(kind.items)) {
         recordUris.add(item.post)
@@ -429,13 +450,14 @@ const presentation = (
       profileDids.add(kind.actor)
     }
   }
+
   return {
     groups,
     relatedViews: [
       ...mapDefined([...profileDids], (did) => {
-        const view = ctx.views.profileDetailed(did, hydration)
+        const view = ctx.views.profileBasic(did, hydration)
         if (!view) return
-        return app.bsky.actor.defs.profileViewDetailed.$build(view)
+        return app.bsky.actor.defs.profileViewBasic.$build(view)
       }),
       ...mapDefined([...recordUris], (uri) => {
         const collection = new AtUri(uri).collection
@@ -444,9 +466,9 @@ const presentation = (
           if (!view) return
           return view
         } else if (collection === app.bsky.graph.starterpack.$type) {
-          const view = ctx.views.starterPack(uri, hydration)
+          const view = ctx.views.starterPackBasic(uri, hydration)
           if (!view) return
-          return app.bsky.graph.defs.starterPackView.$build(view)
+          return app.bsky.graph.defs.starterPackViewBasic.$build(view)
         } else if (collection === app.bsky.feed.generator.$type) {
           const view = ctx.views.feedGenerator(uri, hydration)
           if (!view) return

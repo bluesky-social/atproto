@@ -677,6 +677,140 @@ describe('pds profile views', () => {
     })
   })
 
+  describe('links', () => {
+    let linky: DidString
+
+    const createLink = async (did: DidString, url: string, title?: string) => {
+      const res = await sc.agent.com.atproto.repo.createRecord(
+        {
+          repo: did,
+          collection: 'app.bsky.actor.link',
+          record: { url, title, createdAt: new Date().toISOString() },
+        },
+        { headers: sc.getHeaders(did), encoding: 'application/json' },
+      )
+      return { uri: res.data.uri, cid: res.data.cid }
+    }
+
+    const getLinks = async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: linky },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      return (data as { links?: { uri: string; url: string }[] }).links
+    }
+
+    beforeAll(async () => {
+      await sc.createAccount('linky', {
+        handle: 'linky.test',
+        email: 'linky@test.com',
+        password: 'linky-pass',
+      })
+      linky = sc.dids.linky
+    })
+
+    it('omits links for profiles without them', async () => {
+      await updateProfile(linky, { displayName: 'links' })
+      await network.processAll()
+      expect(await getLinks()).toBeUndefined()
+    })
+
+    it('returns link records in profile order, skipping ones that break the rules', async () => {
+      const support = await createLink(
+        linky,
+        'https://ko-fi.com/linky',
+        'Tip jar',
+      )
+      const site = await createLink(linky, 'https://example.com')
+      const shortener = await createLink(linky, 'https://bit.ly/abc')
+      const insecure = await createLink(linky, 'http://example.org')
+      const someoneElses = await createLink(alice, 'https://alice.example')
+      await updateProfile(linky, {
+        displayName: 'links',
+        links: [site, shortener, insecure, someoneElses, support],
+      })
+      await network.processAll()
+
+      const links = await getLinks()
+      expect(links?.map((link) => link.uri)).toEqual([site.uri, support.uri])
+      expect(links?.[1]).toMatchObject({
+        uri: support.uri,
+        cid: support.cid,
+        url: 'https://ko-fi.com/linky',
+        title: 'Tip jar',
+      })
+    })
+
+    it('leaves out a link that was taken down', async () => {
+      const before = await getLinks()
+      const takenDown = before?.[0]?.uri
+      assert(takenDown)
+      await network.bsky.ctx.dataplane.takedownRecord({
+        recordUri: takenDown,
+      })
+      const links = await getLinks()
+      expect(links?.map((link) => link.uri)).toEqual(
+        before?.slice(1).map((link) => link.uri),
+      )
+    })
+
+    it('still returns the profile when link records fail to load', async () => {
+      using getLinksSpy = vi.spyOn(
+        network.bsky.ctx.dataplane,
+        'getProfileLinkRecords',
+      )
+      getLinksSpy.mockRejectedValueOnce(new Error('dataplane unavailable'))
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: linky },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.did).toEqual(linky)
+      expect((data as { links?: unknown }).links).toBeUndefined()
+    })
+
+    it("does not show another profile's link when profiles are fetched together", async () => {
+      await sc.createAccount('pinto', {
+        handle: 'pinto.test',
+        email: 'pinto@test.com',
+        password: 'pinto-pass',
+      })
+      const pinto = sc.dids.pinto
+      const pintos = await createLink(pinto, 'https://pinto.example')
+      await updateProfile(pinto, { displayName: 'pinto', links: [pintos] })
+      const own = await createLink(linky, 'https://linky.example')
+      await updateProfile(linky, { displayName: 'links', links: [own, pintos] })
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.actor.getProfiles(
+        { actors: [linky, pinto] },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfiles,
+          ),
+        },
+      )
+      const linkUris = (did: string) =>
+        (
+          data.profiles.find((profile) => profile.did === did) as {
+            links?: { uri: string }[]
+          }
+        ).links?.map((link) => link.uri)
+      expect(linkUris(linky)).toEqual([own.uri])
+      expect(linkUris(pinto)).toEqual([pintos.uri])
+    })
+  })
+
   describe('germ', () => {
     const germDeclaration: ComGermnetworkDeclaration.Main = {
       $type: ids.ComGermnetworkDeclaration,

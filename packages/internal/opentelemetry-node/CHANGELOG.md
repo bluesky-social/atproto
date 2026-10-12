@@ -1,5 +1,11 @@
 # @atproto-labs/opentelemetry-node
 
+## 0.3.1
+
+### Patch Changes
+
+- [#5608](https://github.com/bluesky-social/atproto/pull/5608) [`a044af7`](https://github.com/bluesky-social/atproto/commit/a044af7bd7b522ca51229d7686f5b6413be6eee7) Thanks [@blackmichael](https://github.com/blackmichael)! - Make the `xrpcMethods` option truly opt-in. When omitted, the `http.route` attribute of the HTTP server metrics is left as set by the Express instrumentation, instead of reporting every XRPC request as `/xrpc/{unknown}`.
+
 ## 0.3.0
 
 ### Minor Changes
