@@ -71,7 +71,7 @@ export const installCommand: CommandModule<
 export const updateCommand: CommandModule<
   unknown,
   {
-    include: undefined | string[]
+    include: string[]
     exclude: undefined | string[]
     lexicons: string
     manifest: string
@@ -87,6 +87,7 @@ export const updateCommand: CommandModule<
         describe:
           'NSID pattern of the lexicons to include in the update (default: all)',
         array: true,
+        default: ['*'],
       })
       .options({
         manifest: {

@@ -1,6 +1,23 @@
 import { l } from '@atproto/lex-schema'
 import { isRelativeFileUriString } from './fs.js'
 
+export type HttpUrlString = `http://${string}` | `https://${string}`
+
+/**
+ * True for absolute `http:`/`https:` URLs. Used both to validate an `http`
+ * resolver's `base` and to validate the `https://…` URI locked for a lexicon
+ * resolved over HTTP.
+ */
+export function isHttpUrlString(val: unknown): val is HttpUrlString {
+  if (typeof val !== 'string') return false
+  try {
+    const { protocol } = new URL(val)
+    return protocol === 'https:' || protocol === 'http:'
+  } catch {
+    return false
+  }
+}
+
 export const directoryResolverSchema = l.object({
   type: l.literal('directory'),
   path: l.custom((val): val is `./${string}` | `../${string}` => {
@@ -18,9 +35,19 @@ export const repoResolverSchema = l.object({
   exclude: l.optional(l.array(l.string())),
 })
 
+export const httpResolverSchema = l.object({
+  type: l.literal('http'),
+  // The lexicon for an NSID is fetched from `<base>/<...nsid.segments>.json`
+  // (e.g. `app.bsky.feed.post` → `<base>/app/bsky/feed/post.json`).
+  base: l.custom(isHttpUrlString, 'Expected an http(s) URL'),
+  include: l.optional(l.array(l.string())),
+  exclude: l.optional(l.array(l.string())),
+})
+
 export const lexiconResolverConfigSchema = l.discriminatedUnion('type', [
   directoryResolverSchema,
   repoResolverSchema,
+  httpResolverSchema,
 ])
 
 export type LexiconResolverConfig = l.Infer<typeof lexiconResolverConfigSchema>
@@ -31,6 +58,8 @@ export const resolutionSchema = l.object({
     l.string({ format: 'at-uri' }),
     // Relative file URI (local file)
     l.custom(isRelativeFileUriString, 'Expected a relative file:// URI'),
+    // Web URL (http resolver)
+    l.custom(isHttpUrlString, 'Expected an http(s) URL'),
   ]),
   cid: l.string({ format: 'cid' }),
 })

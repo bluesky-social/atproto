@@ -50,10 +50,7 @@
             "thread": {
               "type": "array",
               "description": "A flat list of thread items. The depth of each item is indicated by the depth property inside the item.",
-              "items": {
-                "type": "ref",
-                "ref": "#threadItem"
-              }
+              "items": { "type": "ref", "ref": "#threadItem" }
             },
             "threadgate": {
               "type": "ref",
@@ -71,10 +68,7 @@
       "type": "object",
       "required": ["uri", "depth", "value"],
       "properties": {
-        "uri": {
-          "type": "string",
-          "format": "at-uri"
-        },
+        "uri": { "type": "string", "format": "at-uri" },
         "depth": {
           "type": "integer",
           "description": "The nesting level of this item in the thread. Depth 0 means the anchor item. Items above have negative depths, items below have positive depths."

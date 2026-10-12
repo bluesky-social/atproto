@@ -169,8 +169,6 @@ export async function writeJsonFile(
   // leaves a symlink into the source tree at a lexicon's output path; writing
   // with flag 'w' would follow that symlink and overwrite the canonical source.
   await rm(path, { force: true })
-  // Trailing newline so the written file is POSIX-friendly and does not thrash against
-  // formatters/linters that enforce final newlines (e.g. the tooling in issue #5232).
   const contents = await prettierFormat(JSON.stringify(data), {
     parser: 'json',
   })

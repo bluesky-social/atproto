@@ -79,7 +79,7 @@ function createMatcher(
   pattern: undefined | string | readonly string[],
   fallback: Filter,
 ): Filter {
-  if (!pattern?.length) {
+  if (pattern == null) {
     return fallback
   } else if (typeof pattern === 'string') {
     return buildMatcher(pattern)

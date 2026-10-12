@@ -5,7 +5,7 @@ import { cidForLex } from '@atproto/lex-cbor'
 import { lexEquals } from '@atproto/lex-data'
 import type { LexiconDocument } from '@atproto/lex-document'
 import type { AtUriString, NsidString } from '@atproto/lex-schema'
-import { type AtUri, NSID, isAtUriString } from '@atproto/syntax'
+import { type AtUri, NSID } from '@atproto/syntax'
 import {
   type FileUriString,
   fromFileUri,
@@ -23,6 +23,7 @@ import {
   readLexiconDocument,
 } from './lexicon-document.js'
 import type {
+  HttpUrlString,
   LexiconsManifestV1,
   LexiconsManifestV2,
   Resolution,
@@ -296,7 +297,7 @@ export class LexInstaller implements AsyncDisposable {
       uri,
       lexicon,
     }: {
-      uri: FileUriString | AtUri | AtUriString
+      uri: FileUriString | AtUri | AtUriString | HttpUrlString
       lexicon: LexiconDocument
     },
   ): Promise<void> {
@@ -343,11 +344,12 @@ export class LexInstaller implements AsyncDisposable {
     // Try to re-use the existing lexicon file from the lexicons folder, in
     // order to avoid re-downloading it if it already exists locally.
     if (resolution) {
-      if (!isAtUriString(resolution.uri)) {
+      if (isFileUriString(resolution.uri)) {
         // Ensure that, if the resolution is a file URI, the source file
         // exists and is correctly linked. File uris are locked relative to the
         // manifest *directory*, so resolve them against that (not the manifest
-        // file path, which would land one level too deep).
+        // file path, which would land one level too deep). Remote uris (at-uri,
+        // http(s)) were fetched and written to `path`, so they are read as-is.
         const sourcePath = resolveFileUri(this.manifestDirPath, resolution.uri)
         await symlinkLexicon(path, sourcePath)
       }

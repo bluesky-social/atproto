@@ -267,7 +267,12 @@ the locked CIDs. Tradeoff: the `lexicons` roots list is explicit, so adding a
 new canonical schema requires re-running `lex:install` to include it — unlike a
 plain `lex build --lexicons ../../lexicons`, which picks up every file
 implicitly. `resolvers` are priority-ordered with the network as the implicit
-last fallback; a `{ "type": "repo", … }` resolver is planned but not yet built.
+last fallback. Besides `directory`, two remote kinds exist: `{ "type": "repo",
+"repo": "<handle|did>" }` resolves each NSID from that repo's
+`com.atproto.lexicon.schema` records, and `{ "type": "http", "base":
+"https://…/" }` fetches `<base>/<…nsid.segments>.json` (e.g. a raw Git host).
+Both take `include`/`exclude` globs; `http` falls through on 404 but throws on
+other errors, `repo` never falls through.
 
 ## Removing legacy `@atproto/lex-cli` codegen
 

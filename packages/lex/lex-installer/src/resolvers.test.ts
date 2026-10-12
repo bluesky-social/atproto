@@ -1,16 +1,27 @@
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NSID } from '@atproto/syntax'
+import type { Fetch } from '@atproto-labs/fetch-node'
 import { writeJsonFile } from './fs.js'
 import { readLexiconDocument } from './lexicon-document.js'
 import type { CreateResolversOptions } from './resolvers.js'
 import {
   DirectoryResolver,
   FilteredResolver,
+  HttpResolver,
   createResolver,
 } from './resolvers.js'
+
+/** A minimal (ref-free) lexicon document for the given NSID. */
+function lexiconDoc(id: string) {
+  return {
+    lexicon: 1,
+    id,
+    defs: { main: { type: 'procedure', description: id } },
+  }
+}
 
 /** Writes a minimal (ref-free) lexicon document at its NSID-derived path. */
 async function writeLexicon(
@@ -108,6 +119,58 @@ describe('DirectoryResolver', () => {
   })
 })
 
+describe('HttpResolver', () => {
+  it('fetches <base>/<segments>.json and returns the url as uri', async () => {
+    const fetch = vi.fn<Fetch>(async () =>
+      Response.json(lexiconDoc('app.bsky.unspecced.defs')),
+    )
+    const resolver = new HttpResolver('https://example.com/lexicons/', fetch)
+
+    const resolved = await resolver.resolve(
+      NSID.from('app.bsky.unspecced.defs'),
+    )
+    expect(fetch).toHaveBeenCalledWith(
+      'https://example.com/lexicons/app/bsky/unspecced/defs.json',
+      { redirect: 'error' },
+    )
+    expect(resolved?.lexicon.id).toBe('app.bsky.unspecced.defs')
+    expect(resolved?.uri).toBe(
+      'https://example.com/lexicons/app/bsky/unspecced/defs.json',
+    )
+  })
+
+  it('tolerates a base without a trailing slash', async () => {
+    const fetch = vi.fn<Fetch>(async () =>
+      Response.json(lexiconDoc('com.example.foo')),
+    )
+    const resolver = new HttpResolver('https://example.com/lexicons', fetch)
+
+    await resolver.resolve(NSID.from('com.example.foo'))
+    expect(fetch).toHaveBeenCalledWith(
+      'https://example.com/lexicons/com/example/foo.json',
+      { redirect: 'error' },
+    )
+  })
+
+  it('returns null on a 404 (falls through to the next resolver)', async () => {
+    const fetch = vi.fn<Fetch>(async () => new Response(null, { status: 404 }))
+    const resolver = new HttpResolver('https://example.com/', fetch)
+
+    expect(await resolver.resolve(NSID.from('com.example.foo'))).toBeNull()
+  })
+
+  it('throws on a non-404 error status', async () => {
+    const fetch = vi.fn<Fetch>(
+      async () => new Response('oops', { status: 500 }),
+    )
+    const resolver = new HttpResolver('https://example.com/', fetch)
+
+    await expect(
+      resolver.resolve(NSID.from('com.example.foo')),
+    ).rejects.toThrow(/HTTP 500/)
+  })
+})
+
 describe('createResolver', () => {
   let dir: string
   function options(): CreateResolversOptions {
@@ -129,6 +192,27 @@ describe('createResolver', () => {
 
     const resolved = await resolver.resolve(NSID.from('com.example.foo'))
     expect(resolved?.lexicon.id).toBe('com.example.foo')
+  })
+
+  it('builds an http resolver and routes the shared fetch through it', async () => {
+    const fetch = vi.fn<Fetch>(async () =>
+      Response.json(lexiconDoc('app.bsky.internal.foo')),
+    )
+
+    const resolver = createResolver({ ...options(), fetch }, [
+      {
+        type: 'http',
+        base: 'https://example.com/lexicons/',
+        include: ['app.bsky.internal.*'],
+      },
+    ])
+
+    const resolved = await resolver.resolve(NSID.from('app.bsky.internal.foo'))
+    expect(resolved?.lexicon.id).toBe('app.bsky.internal.foo')
+    expect(fetch).toHaveBeenCalledWith(
+      'https://example.com/lexicons/app/bsky/internal/foo.json',
+      { redirect: 'error' },
+    )
   })
 
   it('throws on an unsupported resolver type', () => {

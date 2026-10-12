@@ -22,6 +22,7 @@ import { createDidResolver, extractPdsUrl } from '@atproto-labs/did-resolver'
 import type { CreateDidResolverOptions } from '@atproto-labs/did-resolver'
 import {
   DEFAULT_FORBIDDEN_DOMAIN_NAMES,
+  type Fetch,
   safeFetchWrap,
 } from '@atproto-labs/fetch-node'
 import type { HandleResolver } from '@atproto-labs/handle-resolver'
@@ -32,14 +33,17 @@ import {
 import type { FileUriString } from './fs.js'
 import { readLexiconDocument } from './lexicon-document.js'
 import { com } from './lexicons/index.js'
-import type { LexiconResolverConfig } from './lexicons-manifest.js'
+import type {
+  HttpUrlString,
+  LexiconResolverConfig,
+} from './lexicons-manifest.js'
 
 /**
  * A lexicon document resolved from a local file, along with the information
  * needed to install (symlink) and lock it.
  */
 export type ResolvedLexicon = {
-  uri: AtUri | AtUriString | FileUriString
+  uri: AtUri | AtUriString | FileUriString | HttpUrlString
   lexicon: LexiconDocument
 }
 
@@ -173,6 +177,55 @@ export class RepoResolver implements LexiconResolver {
   }
 }
 
+/**
+ * Resolves lexicons from a web server laid out by NSID
+ * (e.g. `app.bsky.feed.post` → `<base>/app/bsky/feed/post.json`).
+ *
+ * `base` should be an `http(s)` URL; a trailing slash is optional. The `fetch`
+ * is expected to be SSRF-safe (see {@link createResolver}) and to bound the
+ * response size, so the (externally-sourced) body can be buffered safely.
+ */
+export class HttpResolver implements LexiconResolver {
+  protected readonly base: HttpUrlString
+  constructor(
+    base: HttpUrlString,
+    protected readonly fetch: Fetch = globalThis.fetch,
+  ) {
+    // Normalize to a directory URL so NSID-relative paths join correctly
+    // regardless of whether the configured base carried a trailing slash.
+    this.base = base.endsWith('/') ? base : `${base}/`
+  }
+
+  /**
+   * @returns `null` on a 404 (the base does not host this NSID), letting the
+   * next resolver / network fallback try. Any other non-ok status throws, since
+   * it signals a misconfigured or broken base rather than a plain miss.
+   */
+  async resolve(nsid: NSID): Promise<null | ResolvedLexicon> {
+    const url = new URL(`${nsid.segments.join('/')}.json`, this.base)
+
+    const response = await this.fetch.call(null, url.href, {
+      redirect: 'error',
+    })
+
+    if (response.status === 404) {
+      await response.body?.cancel?.()
+      return null
+    }
+
+    if (!response.ok) {
+      await response.body?.cancel?.()
+      throw new Error(
+        `Failed to fetch lexicon ${nsid} from ${url.href}: HTTP ${response.status}`,
+      )
+    }
+
+    const lexicon = lexiconDocumentSchema.parse(await response.json())
+
+    return { uri: url.href as HttpUrlString, lexicon }
+  }
+}
+
 export type CreateResolversOptions = LexResolverOptions &
   BuildClientOptions & {
     manifest: string
@@ -225,6 +278,8 @@ function buildCustomResolver(
       return new RepoResolver(async () => {
         return buildClient(config.repo, options)
       })
+    case 'http':
+      return new HttpResolver(config.base, options.fetch)
     default:
       throw new Error(
         `Unsupported lexicon resolver type: ${(config as { type: string }).type}`,

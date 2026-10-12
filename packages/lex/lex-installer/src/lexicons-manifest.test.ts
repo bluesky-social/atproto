@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  lexiconResolverConfigSchema,
   lexiconsManifestV1Schema,
   normalizeManifest,
 } from './lexicons-manifest.js'
@@ -80,6 +81,38 @@ describe('lexiconsManifestSchema', () => {
       lexicons: [],
       resolvers: [{ type: 'repo' as const, repo: 'did:plc:foobar' }],
       resolutions: {},
+    }
+    expect(lexiconsManifestV1Schema.parse(manifest)).toEqual(manifest)
+  })
+
+  it('parses an `http` resolver config', () => {
+    const config = {
+      type: 'http' as const,
+      base: 'https://raw.githubusercontent.com/org/repo/main/lexicons/',
+      include: ['app.bsky.internal.*'],
+    }
+    expect(lexiconResolverConfigSchema.parse(config)).toEqual(config)
+  })
+
+  it('rejects an `http` resolver whose base is not an http(s) URL', () => {
+    expect(
+      lexiconResolverConfigSchema.safeParse({
+        type: 'http',
+        base: 'ftp://example.com/lexicons/',
+      }).success,
+    ).toBe(false)
+  })
+
+  it('parses an http(s) lock uri', () => {
+    const manifest = {
+      version: 1 as const,
+      lexicons: ['app.bsky.internal.foo'],
+      resolutions: {
+        'app.bsky.internal.foo': {
+          uri: 'https://raw.githubusercontent.com/org/repo/main/lexicons/app/bsky/internal/foo.json',
+          cid: 'bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku',
+        },
+      },
     }
     expect(lexiconsManifestV1Schema.parse(manifest)).toEqual(manifest)
   })
