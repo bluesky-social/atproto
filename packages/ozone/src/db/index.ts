@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import { EventEmitter } from 'node:events'
 import {
+  CompiledQuery,
   Kysely,
   type KyselyPlugin,
   type PluginTransformQueryArgs,
@@ -77,7 +78,14 @@ export class Database {
 
       this.pool = pool
       this.db = new Kysely<DatabaseSchemaType>({
-        dialect: new PostgresDialect({ pool }),
+        dialect: new PostgresDialect({
+          pool,
+          controlClient: QueryCancellationClient,
+          onCreateConnection: async (connection) => {
+            // @NOTE drain the pool's queued SETs before allowing cancellable SQL.
+            await connection.executeQuery(CompiledQuery.raw('select 1'))
+          },
+        }),
       })
     }
 
@@ -208,3 +216,14 @@ type TxnEvents = {
 }
 
 const noopAsync = async () => {}
+
+// @NOTE cancellation must not wait for an idle connection in the API pool.
+class QueryCancellationClient extends pg.Client {
+  constructor(opts: pg.ClientConfig) {
+    super({
+      ...opts,
+      connectionTimeoutMillis: 1000,
+      statement_timeout: 1000,
+    })
+  }
+}

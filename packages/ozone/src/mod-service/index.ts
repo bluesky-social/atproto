@@ -19,6 +19,7 @@ import type { OzoneConfig } from '../config/index.js'
 import type { EventPusher } from '../daemon/index.js'
 import type { Database } from '../db/index.js'
 import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination.js'
+import { executeReadQuery } from '../db/read-query.js'
 import type { BlobPushEvent } from '../db/schema/blob_push_event.js'
 import { LabelChannel } from '../db/schema/label.js'
 import type { ModerationEvent } from '../db/schema/moderation_event.js'
@@ -166,31 +167,34 @@ export class ModerationService {
     return !!result
   }
 
-  async getEvents(opts: {
-    subject?: string
-    createdBy?: DidString
-    limit: number
-    cursor?: string
-    includeAllUserRecords: boolean
-    types: ModerationEvent['action'][]
-    sortDirection?: 'asc' | 'desc'
-    hasComment?: boolean
-    comment?: string
-    createdAfter?: DatetimeString
-    createdBefore?: DatetimeString
-    addedLabels: string[]
-    removedLabels: string[]
-    addedTags: string[]
-    removedTags: string[]
-    reportTypes?: string[]
-    collections: string[]
-    subjectType?: string
-    policies?: string[]
-    modTool?: string[]
-    ageAssuranceState?: string
-    batchId?: string
-    withStrike?: boolean
-  }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
+  async getEvents(
+    opts: {
+      subject?: string
+      createdBy?: DidString
+      limit: number
+      cursor?: string
+      includeAllUserRecords: boolean
+      types: ModerationEvent['action'][]
+      sortDirection?: 'asc' | 'desc'
+      hasComment?: boolean
+      comment?: string
+      createdAfter?: DatetimeString
+      createdBefore?: DatetimeString
+      addedLabels: string[]
+      removedLabels: string[]
+      addedTags: string[]
+      removedTags: string[]
+      reportTypes?: string[]
+      collections: string[]
+      subjectType?: string
+      policies?: string[]
+      modTool?: string[]
+      ageAssuranceState?: string
+      batchId?: string
+      withStrike?: boolean
+    },
+    signal?: AbortSignal,
+  ): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
       createdBy,
@@ -379,7 +383,9 @@ export class ModerationService {
       tryIndex: true,
     })
 
-    const result = await paginatedBuilder.execute()
+    const result = signal
+      ? await executeReadQuery(this.db, paginatedBuilder.compile(), signal)
+      : await paginatedBuilder.execute()
 
     const infos = await this.views.getAccoutInfosByDid([
       ...result.map((row) => row.subjectDid),
@@ -1149,43 +1155,46 @@ export class ModerationService {
     })
   }
 
-  async getSubjectStatuses({
-    queueCount,
-    queueIndex,
-    queueSeed = '',
-    includeAllUserRecords,
-    cursor,
-    limit = 50,
-    takendown,
-    appealed,
-    reviewState,
-    reviewedAfter,
-    reviewedBefore,
-    reportedAfter,
-    reportedBefore,
-    includeMuted = false,
-    hostingDeletedBefore,
-    hostingDeletedAfter,
-    hostingUpdatedBefore,
-    hostingUpdatedAfter,
-    hostingStatuses,
-    onlyMuted = false,
-    ignoreSubjects,
-    sortDirection = 'desc',
-    lastReviewedBy,
-    sortField = 'lastReportedAt',
-    subject,
-    tags,
-    excludeTags,
-    collections,
-    subjectType,
-    minAccountSuspendCount,
-    minReportedRecordsCount,
-    minTakendownRecordsCount,
-    minPriorityScore,
-    minStrikeCount,
-    ageAssuranceState,
-  }: tools.ozone.moderation.queryStatuses.$Params): Promise<{
+  async getSubjectStatuses(
+    {
+      queueCount,
+      queueIndex,
+      queueSeed = '',
+      includeAllUserRecords,
+      cursor,
+      limit = 50,
+      takendown,
+      appealed,
+      reviewState,
+      reviewedAfter,
+      reviewedBefore,
+      reportedAfter,
+      reportedBefore,
+      includeMuted = false,
+      hostingDeletedBefore,
+      hostingDeletedAfter,
+      hostingUpdatedBefore,
+      hostingUpdatedAfter,
+      hostingStatuses,
+      onlyMuted = false,
+      ignoreSubjects,
+      sortDirection = 'desc',
+      lastReviewedBy,
+      sortField = 'lastReportedAt',
+      subject,
+      tags,
+      excludeTags,
+      collections,
+      subjectType,
+      minAccountSuspendCount,
+      minReportedRecordsCount,
+      minTakendownRecordsCount,
+      minPriorityScore,
+      minStrikeCount,
+      ageAssuranceState,
+    }: tools.ozone.moderation.queryStatuses.$Params,
+    signal?: AbortSignal,
+  ): Promise<{
     statuses: ModerationSubjectStatusRowWithHandle[]
     cursor?: string
   }> {
@@ -1510,7 +1519,9 @@ export class ModerationService {
       tryIndex: true,
       nullsLast: true,
     })
-    const results = await paginatedBuilder.execute()
+    const results = signal
+      ? await executeReadQuery(this.db, paginatedBuilder.compile(), signal)
+      : await paginatedBuilder.execute()
 
     const infos = await this.views.getAccoutInfosByDid(
       results.map((r) => r.did),
