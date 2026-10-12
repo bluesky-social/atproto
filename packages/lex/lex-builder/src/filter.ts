@@ -19,7 +19,7 @@ export type BuildFilterOptions = {
    * { include: ['com.atproto.*', 'app.bsky.*'] }  // Include multiple patterns
    * ```
    */
-  include?: string | readonly string[]
+  include?: string | Iterable<string>
   /**
    * Pattern(s) for lexicon NSIDs to exclude.
    *
@@ -32,7 +32,7 @@ export type BuildFilterOptions = {
    * { exclude: ['*.test', '*.mock'] }   // Exclude test and mock lexicons
    * ```
    */
-  exclude?: string | readonly string[]
+  exclude?: string | Iterable<string>
 }
 
 /**
@@ -69,14 +69,16 @@ export function buildFilter(options: BuildFilterOptions): Filter {
   const include = createMatcher(options.include, yes)
   const exclude = createMatcher(options.exclude, no)
 
-  if (exclude === no) return include
-  if (include === yes) return negate(exclude)
+  if (include === no) return no // Include nothing
+  if (exclude === yes) return no // Exclude everything
+  if (exclude === no) return include // Exclude nothing
+  if (include === yes) return negate(exclude) // Include everything except excluded
 
   return (id) => include(id) && !exclude(id)
 }
 
 function createMatcher(
-  pattern: undefined | string | readonly string[],
+  pattern: undefined | string | Iterable<string>,
   fallback: Filter,
 ): Filter {
   if (pattern == null) {
@@ -84,7 +86,11 @@ function createMatcher(
   } else if (typeof pattern === 'string') {
     return buildMatcher(pattern)
   } else {
-    return pattern.map(buildMatcher).reduce(combineFilters)
+    const filters = Array.from(pattern, buildMatcher)
+    // @NOTE this should logically be an error. Using fallback for legacy
+    // reasons.
+    if (!filters.length) return fallback
+    return filters.reduce(combineFilters)
   }
 }
 
