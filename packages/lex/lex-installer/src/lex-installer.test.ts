@@ -8,6 +8,7 @@ import { writeJsonFile } from './fs.js'
 import type { LexInstallerOptions } from './lex-installer.js'
 import { LexInstaller } from './lex-installer.js'
 import type { LexiconsManifestV2 } from './lexicons-manifest.js'
+import type { LexiconResolver } from './resolvers.js'
 
 /**
  * Test subclass exposing the protected working manifest so assertions can read
@@ -19,6 +20,10 @@ class TestInstaller extends LexInstaller {
   }
   get lexicons() {
     return this.workingManifest.lexicons
+  }
+  /** Swap the network resolver for a stub, to drive the resolve() outcome. */
+  useResolver(resolver: LexiconResolver) {
+    Object.assign(this, { resolver })
   }
 }
 
@@ -250,6 +255,55 @@ describe('LexInstaller', () => {
       })
 
       await installer.install()
+      expect(installer.resolutions['com.example.foo']?.cid).toBe(cid)
+    })
+  })
+
+  describe('resolver failure vs. miss, in update mode', () => {
+    // A lexicon previously locked to a remote at:// source, with the fetched
+    // copy committed on disk at the output path.
+    const lockedUri =
+      'at://did:plc:z72i7hdynmk6r22z27h6tvur/com.atproto.lexicon.schema/com.example.foo'
+
+    async function makeLockedInstaller() {
+      const cid = (await cidForLex(lexiconDoc('com.example.foo'))).toString()
+      // Committed copy the fallback could (wrongly) downgrade to.
+      await writeLexicon(join(dir, 'out'), 'com.example.foo')
+
+      const installer = makeInstaller({
+        version: 2,
+        lexicons: ['com.example.foo'],
+        resolutions: { 'com.example.foo': { cid, uri: lockedUri } },
+      })
+      return { installer, cid }
+    }
+
+    it('aborts (does not downgrade the remote lock) when the resolver rejects', async () => {
+      // A transient network failure during `pnpm lex:update` must surface, not
+      // silently relock the at:// source to the committed file://.
+      await using installer = (await makeLockedInstaller()).installer
+      installer.useResolver({
+        resolve: async () => {
+          throw new Error('network down')
+        },
+      })
+
+      await expect(installer.install({ update: () => true })).rejects.toThrow(
+        /Failed to resolve lexicon for NSID: com\.example\.foo/,
+      )
+    })
+
+    it('falls back to the committed local file when the resolver reports a miss', async () => {
+      // A plain miss (null) is the network-independence path: use the file.
+      const { installer, cid } = await makeLockedInstaller()
+      await using _installer = installer
+      installer.useResolver({ resolve: async () => null })
+
+      await installer.install({ update: () => true })
+
+      expect(installer.resolutions['com.example.foo']?.uri).toMatch(
+        /^file:\/\//,
+      )
       expect(installer.resolutions['com.example.foo']?.cid).toBe(cid)
     })
   })

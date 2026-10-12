@@ -1,4 +1,4 @@
-import { rm, stat } from 'node:fs/promises'
+import { rm } from 'node:fs/promises'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import type { Filter } from '@atproto/lex-builder'
 import { cidForLex } from '@atproto/lex-cbor'
@@ -364,39 +364,37 @@ export class LexInstaller implements AsyncDisposable {
       }
     }
 
-    const result: ResolvedLexicon = await this.resolver
-      .resolve(nsid)
-      .then(
-        (result) => {
-          if (result) return result
-          throw new Error(`Unable to resolve lexicon for NSID: ${nsid}`)
-        },
-        (cause) => {
-          throw new Error(`Failed to resolve lexicon for NSID: ${nsid}`, {
-            cause,
-          })
-        },
-      )
-      .catch(async (err): Promise<ResolvedLexicon> => {
-        // If the resolution failed, attempt to use the existing local lexicon
-        // **file**, if available.
+    const result: ResolvedLexicon = await this.resolver.resolve(nsid).then(
+      async (result): Promise<ResolvedLexicon> => {
+        if (result) return result
 
+        // The resolver reported no source for this NSID (a plain miss, e.g. a
+        // 404 or a lexicon that no configured resolver hosts). Fall back to the
+        // existing local lexicon **file**, if available, so installs that
+        // reference an un-hosted lexicon keep working offline.
+        //
         // @NOTE This requires that the local lexicon file be tracked by CVS
-        // (e.g., Git).
-        try {
-          const stats = await stat(path)
-          if (stats.isFile()) {
-            const lexicon = await readLexiconDocument(path)
-            if (lexicon && lexicon.id === nsid.toString()) {
-              return { uri: `file://${path}`, lexicon }
-            }
-          }
-        } catch {
-          // Ignore file reading errors
+        // (e.g., Git). Local read/parse errors are ignored so a corrupt file
+        // does not mask the "unable to resolve" result below.
+        const lexicon = await readLexiconDocument(path).catch(() => null)
+        if (lexicon?.id === nsid.toString()) {
+          return { uri: `file://${path}`, lexicon }
         }
 
-        throw err
-      })
+        throw new Error(`Unable to resolve lexicon for NSID: ${nsid}`)
+      },
+      (cause) => {
+        // A genuine resolver *rejection* (transport failure, non-404 HTTP
+        // status, redirect, SSRF rejection, parse error) deliberately does NOT
+        // fall back to the local file: propagating it aborts the install loudly
+        // rather than silently relocking a remote at:// source to a (possibly
+        // stale) committed file:// during a transient outage — which, in
+        // `update` mode, would commit an unintended downgrade unnoticed.
+        throw new Error(`Failed to resolve lexicon for NSID: ${nsid}`, {
+          cause,
+        })
+      },
+    )
 
     // @NOTE If a resolve entry existed but its file was missing (or no longer
     // matched), we re-resolved. Re-resolution goes through NSID discovery,
