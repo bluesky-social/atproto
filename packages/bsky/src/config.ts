@@ -320,24 +320,40 @@ export class ServerConfig {
       .BSKY_NOTIFICATIONS_V2_MIN_RAW_LIMIT
       ? parseInt(process.env.BSKY_NOTIFICATIONS_V2_MIN_RAW_LIMIT, 10)
       : 300
+    assert(
+      Number.isInteger(notificationsV2MinRawLimit),
+      'invalid BSKY_NOTIFICATIONS_V2_MIN_RAW_LIMIT',
+    )
     const notificationsV2MaxRawItems = process.env
       .BSKY_NOTIFICATIONS_V2_MAX_RAW_ITEMS
       ? parseInt(process.env.BSKY_NOTIFICATIONS_V2_MAX_RAW_ITEMS, 10)
       : 3000
+    assert(
+      Number.isInteger(notificationsV2MaxRawItems),
+      'invalid BSKY_NOTIFICATIONS_V2_MAX_RAW_ITEMS',
+    )
     assert(
       notificationsV2MinRawLimit <= notificationsV2MaxRawItems,
       'notificationsV2MinRawLimit must not exceed notificationsV2MaxRawItems',
     )
     const notificationsV2MaxReads = process.env.BSKY_NOTIFICATIONS_V2_MAX_READS
       ? parseInt(process.env.BSKY_NOTIFICATIONS_V2_MAX_READS, 10)
-      : undefined
+      : 3
+    assert(
+      Number.isInteger(notificationsV2MaxReads),
+      'invalid BSKY_NOTIFICATIONS_V2_MAX_READS',
+    )
     const notificationsV2MaxGroupItemsWithRelatedViews = process.env
       .BSKY_NOTIFICATIONS_V2_MAX_GROUP_ITEMS_WITH_RELATED_VIEWS
       ? parseInt(
           process.env.BSKY_NOTIFICATIONS_V2_MAX_GROUP_ITEMS_WITH_RELATED_VIEWS,
           10,
         )
-      : undefined
+      : 10
+    assert(
+      Number.isInteger(notificationsV2MaxGroupItemsWithRelatedViews),
+      'invalid BSKY_NOTIFICATIONS_V2_MAX_GROUP_ITEMS_WITH_RELATED_VIEWS',
+    )
 
     const disableSsrfProtection = process.env.BSKY_DISABLE_SSRF_PROTECTION
       ? process.env.BSKY_DISABLE_SSRF_PROTECTION === 'true'

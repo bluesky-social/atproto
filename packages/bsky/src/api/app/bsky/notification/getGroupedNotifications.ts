@@ -437,10 +437,7 @@ const presentation = (
         if (item.starterPack) recordUris.add(item.starterPack)
       }
     } else if (defs.subscribedPostGroup.$isTypeOf(kind)) {
-      for (const item of truncateRelatedViewsItems(
-        kind.items,
-        ctx.cfg.notificationsV2MaxGroupItemsWithRelatedViews,
-      )) {
+      for (const item of truncateRelatedViewsItems(kind.items, maxGroupItems)) {
         profileDids.add(item.actor)
         recordUris.add(item.post)
       }
