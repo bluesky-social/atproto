@@ -8,10 +8,22 @@
         "type": "object",
         "required": ["createdAt", "gallery", "item"],
         "properties": {
-          "item": { "type": "string", "format": "at-uri" },
-          "gallery": { "type": "string", "format": "at-uri" },
-          "position": { "type": "integer", "default": 0 },
-          "createdAt": { "type": "string", "format": "datetime" }
+          "item": {
+            "type": "string",
+            "format": "at-uri"
+          },
+          "gallery": {
+            "type": "string",
+            "format": "at-uri"
+          },
+          "position": {
+            "type": "integer",
+            "default": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          }
         }
       }
     }
