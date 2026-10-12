@@ -113,6 +113,10 @@ export interface ServerConfigValues {
   // notifications
   notificationsDelayMs?: number
   notificationsV2Algorithm?: NotificationsV2Algorithm
+  notificationsV2MinRawLimit?: number
+  notificationsV2MaxRawItems?: number
+  notificationsV2MaxReads?: number
+  notificationsV2MaxGroupItemsWithRelatedViews?: number
   // client config
   clientCheckEmailConfirmed?: boolean
   topicsEnabled?: boolean
@@ -312,6 +316,28 @@ export class ServerConfig {
       process.env.BSKY_NOTIFICATIONS_V2_ALGORITHM === 'algoLookback'
         ? 'algoLookback'
         : 'algoGravity'
+    const notificationsV2MinRawLimit = process.env
+      .BSKY_NOTIFICATIONS_V2_MIN_RAW_LIMIT
+      ? parseInt(process.env.BSKY_NOTIFICATIONS_V2_MIN_RAW_LIMIT, 10)
+      : 300
+    const notificationsV2MaxRawItems = process.env
+      .BSKY_NOTIFICATIONS_V2_MAX_RAW_ITEMS
+      ? parseInt(process.env.BSKY_NOTIFICATIONS_V2_MAX_RAW_ITEMS, 10)
+      : 3000
+    assert(
+      notificationsV2MinRawLimit <= notificationsV2MaxRawItems,
+      'notificationsV2MinRawLimit must not exceed notificationsV2MaxRawItems',
+    )
+    const notificationsV2MaxReads = process.env.BSKY_NOTIFICATIONS_V2_MAX_READS
+      ? parseInt(process.env.BSKY_NOTIFICATIONS_V2_MAX_READS, 10)
+      : undefined
+    const notificationsV2MaxGroupItemsWithRelatedViews = process.env
+      .BSKY_NOTIFICATIONS_V2_MAX_GROUP_ITEMS_WITH_RELATED_VIEWS
+      ? parseInt(
+          process.env.BSKY_NOTIFICATIONS_V2_MAX_GROUP_ITEMS_WITH_RELATED_VIEWS,
+          10,
+        )
+      : undefined
 
     const disableSsrfProtection = process.env.BSKY_DISABLE_SSRF_PROTECTION
       ? process.env.BSKY_DISABLE_SSRF_PROTECTION === 'true'
@@ -467,6 +493,10 @@ export class ServerConfig {
       visibilityTagRankPrefix,
       notificationsDelayMs,
       notificationsV2Algorithm,
+      notificationsV2MinRawLimit,
+      notificationsV2MaxRawItems,
+      notificationsV2MaxReads,
+      notificationsV2MaxGroupItemsWithRelatedViews,
       disableSsrfProtection,
       proxyAllowHTTP2,
       proxyConnectTimeout,
@@ -770,6 +800,22 @@ export class ServerConfig {
 
   get notificationsV2Algorithm(): NotificationsV2Algorithm {
     return this.cfg.notificationsV2Algorithm ?? 'algoGravity'
+  }
+
+  get notificationsV2MinRawLimit(): number {
+    return this.cfg.notificationsV2MinRawLimit ?? 300
+  }
+
+  get notificationsV2MaxRawItems(): number {
+    return this.cfg.notificationsV2MaxRawItems ?? 3000
+  }
+
+  get notificationsV2MaxReads(): number {
+    return this.cfg.notificationsV2MaxReads ?? 3
+  }
+
+  get notificationsV2MaxGroupItemsWithRelatedViews(): number {
+    return this.cfg.notificationsV2MaxGroupItemsWithRelatedViews ?? 10
   }
 
   get disableSsrfProtection(): boolean {

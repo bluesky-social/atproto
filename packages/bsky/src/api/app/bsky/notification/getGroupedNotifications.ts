@@ -48,24 +48,21 @@ import {
   shouldFilterReplyByThreadgate,
 } from './util.js'
 
-const MIN_RAW_LIMIT = 300
-const MAX_RAW_ITEMS = 3000
-const MAX_READS = 3
-const MAX_GROUP_ITEMS_WITH_RELATED_VIEWS = 10
-
 export const getNextRawLimit = (
   itemsFetched: number,
   groupsBuilt: number,
   groupsNeeded: number,
+  minRawLimit: number,
+  maxRawItems: number,
 ): number => {
   // How many raw items we still can fetch until hit the max.
-  const remainingItems = MAX_RAW_ITEMS - itemsFetched
+  const remainingItems = maxRawItems - itemsFetched
   if (remainingItems <= 0) return 0
 
   // Defensive fallback to avoid a division by 0 later.
   // This is for the scenario where fetched items but couldn't build any groups with them
   // (let's say all notifications are missing data and are filtered out, shouldn't happen in practice).
-  if (groupsBuilt === 0) return Math.min(MIN_RAW_LIMIT, remainingItems)
+  if (groupsBuilt === 0) return Math.min(minRawLimit, remainingItems)
 
   // How many groups still to be built - note that we might still fit items into existing groups.
   const groupsMissing = Math.max(0, groupsNeeded - groupsBuilt)
@@ -76,7 +73,7 @@ export const getNextRawLimit = (
   const estimatedRawItems = Math.ceil(averagePerGroup * groupsMissing)
 
   // Keep the estimate above the minimum batch and within the total raw-item budget.
-  return Math.min(remainingItems, Math.max(MIN_RAW_LIMIT, estimatedRawItems))
+  return Math.min(remainingItems, Math.max(minRawLimit, estimatedRawItems))
 }
 
 export default function (server: Server, ctx: AppContext) {
@@ -135,9 +132,9 @@ const skeleton = async (
   let groups: NotificationGroup[] = []
   let nextCursor: string | undefined
   let itemsFetched = 0
-  let rawLimit = MIN_RAW_LIMIT
+  let rawLimit = ctx.cfg.notificationsV2MinRawLimit
 
-  for (let read = 0; read < MAX_READS; read++) {
+  for (let read = 0; read < ctx.cfg.notificationsV2MaxReads; read++) {
     const response = await ctx.hydrator.dataplane.getNotificationsV2({
       actorDid: params.hydrateCtx.viewer,
       feed,
@@ -198,7 +195,13 @@ const skeleton = async (
     if (!shouldContinueBuildingPage) break
 
     cursor = response.cursor
-    rawLimit = getNextRawLimit(itemsFetched, groups.length, params.limit)
+    rawLimit = getNextRawLimit(
+      itemsFetched,
+      groups.length,
+      params.limit,
+      ctx.cfg.notificationsV2MinRawLimit,
+      ctx.cfg.notificationsV2MaxRawItems,
+    )
     if (rawLimit === 0) break
   }
 
@@ -222,7 +225,10 @@ const hydration = async (
   const knownFollowersDids = dedupeStrs(
     skeleton.groups.flatMap((group) =>
       group.kind === NOTIFICATION_REASON.FOLLOW
-        ? truncateRelatedViewsItems(group.items).map((item) => item.actorDid)
+        ? truncateRelatedViewsItems(
+            group.items,
+            ctx.cfg.notificationsV2MaxGroupItemsWithRelatedViews,
+          ).map((item) => item.actorDid)
         : [],
     ),
   )
@@ -394,6 +400,8 @@ const presentation = (
     ctx.views.notificationGroup(group, hydration),
   )
 
+  const maxGroupItems = ctx.cfg.notificationsV2MaxGroupItemsWithRelatedViews
+
   // Build related profiles, records.
   const profileDids = new Set<DidString>()
   const recordUris = new Set<AtUriString>()
@@ -405,7 +413,7 @@ const presentation = (
       defs.repostViaRepostGroup.$isTypeOf(kind)
     ) {
       recordUris.add(kind.post)
-      for (const item of truncateRelatedViewsItems(kind.items)) {
+      for (const item of truncateRelatedViewsItems(kind.items, maxGroupItems)) {
         profileDids.add(item.actor)
       }
     } else if (
@@ -415,21 +423,24 @@ const presentation = (
       defs.multiPostRepostViaRepostGroup.$isTypeOf(kind)
     ) {
       profileDids.add(kind.actor)
-      for (const item of truncateRelatedViewsItems(kind.items)) {
+      for (const item of truncateRelatedViewsItems(kind.items, maxGroupItems)) {
         recordUris.add(item.post)
       }
     } else if (defs.generatorLikeGroup.$isTypeOf(kind)) {
       recordUris.add(kind.generator)
-      for (const item of truncateRelatedViewsItems(kind.items)) {
+      for (const item of truncateRelatedViewsItems(kind.items, maxGroupItems)) {
         profileDids.add(item.actor)
       }
     } else if (defs.followGroup.$isTypeOf(kind)) {
-      for (const item of truncateRelatedViewsItems(kind.items)) {
+      for (const item of truncateRelatedViewsItems(kind.items, maxGroupItems)) {
         profileDids.add(item.actor)
         if (item.starterPack) recordUris.add(item.starterPack)
       }
     } else if (defs.subscribedPostGroup.$isTypeOf(kind)) {
-      for (const item of truncateRelatedViewsItems(kind.items)) {
+      for (const item of truncateRelatedViewsItems(
+        kind.items,
+        ctx.cfg.notificationsV2MaxGroupItemsWithRelatedViews,
+      )) {
         profileDids.add(item.actor)
         recordUris.add(item.post)
       }
@@ -494,7 +505,8 @@ const presentation = (
 
 const truncateRelatedViewsItems = <T extends unknown[]>(
   items: T,
-): T[number][] => items.slice(0, MAX_GROUP_ITEMS_WITH_RELATED_VIEWS)
+  maxItems: number,
+): T[number][] => items.slice(0, maxItems)
 
 const normalizeFeed = (feed: string): NotificationFeed => {
   switch (feed) {
