@@ -183,24 +183,13 @@ export class LexInstaller implements AsyncDisposable {
    * lexicons to ensure complete dependency trees.
    *
    * @param options - Installation options
-   * @param options.additions - Iterable of lexicon identifiers to add. Can be
-   *   NSID strings, AT URIs, or local file paths / `file://` URIs.
+   * @param options.additions - Iterable of lexicon NSID strings to add.
    *
    * @example
    * Install new lexicons:
    * ```typescript
    * await installer.install({
    *   additions: ['app.bsky.feed.post', 'app.bsky.actor.profile'],
-   * })
-   * ```
-   *
-   * @example
-   * Install from specific AT URIs:
-   * ```typescript
-   * await installer.install({
-   *   additions: [
-   *     'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post',
-   *   ],
    * })
    * ```
    */

@@ -13,7 +13,7 @@ import { LexInstaller } from './lex-installer.js'
  * const options: InstallOptions = {
  *   lexicons: './lexicons',
  *   manifest: './lexicons.manifest.json',
- *   additions: ['com.example.myLexicon', 'at://did:plc:xyz/com.example.otherLexicon'],
+ *   additions: ['com.example.myLexicon', 'com.example.otherLexicon'],
  *   save: true,
  *   ci: false,
  * }
@@ -85,19 +85,6 @@ export type InstallOptions = LexInstallerOptions & {
  *   lexicons: './lexicons',
  *   manifest: './lexicons.manifest.json',
  *   ci: true,
- * })
- * ```
- *
- * @example
- * Install from specific AT URIs:
- * ```typescript
- * import { install } from '@atproto/lex-installer'
- *
- * await install({
- *   lexicons: './lexicons',
- *   manifest: './lexicons.manifest.json',
- *   additions: ['at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post'],
- *   save: true,
  * })
  * ```
  */

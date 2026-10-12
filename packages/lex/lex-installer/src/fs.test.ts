@@ -38,9 +38,7 @@ describe('writeJsonFile', () => {
     // Prettier formats the compact `JSON.stringify` output; with its default
     // `objectWrap: "preserve"` a value that started on one line stays collapsed
     // when it fits the print width. Exactly one trailing newline.
-    expect(contents).toBe(
-      '{ "version": 1, "lexicons": ["com.example.foo"] }\n',
-    )
+    expect(contents).toBe('{ "version": 1, "lexicons": ["com.example.foo"] }\n')
   })
 
   it('creates missing parent directories', async () => {
