@@ -15,14 +15,6 @@ Set `OZONE_LABEL_QUERY_WILDCARDS_ENABLED=true` and restart the API to restore wi
 
 Set `NEXT_PUBLIC_STRIKE_SUSPENSION_CONFIG` to the same value used by Ozone UI, for example `4:72,8:168,12:336,16:Infinity`. Each entry maps a strike count to suspension hours; `Infinity` represents a permanent suspension. The backend retains the full map and uses the second and third thresholds, sorted by strike count, for `warning` and `atRisk`. The first tier does not change standing. With no configuration, standing derives from the account's enforcement and restrictions; strike thresholds are disabled. Invalid entries fail configuration at startup.
 
-## Moderation inbox notification preferences
-
-`tools.ozone.inbox.getNotificationPreferences` returns `{ preferences: { reports, account, labels } }`. These are independent push notification booleans: `reports` covers report resolution and reopening, `account` covers actions against the account or its content, reversals, appeal outcomes and standing changes, and `labels` covers label application and removal on accounts and content. All three default to `true` for new accounts. In-app notification history and unread counts remain available regardless of these preferences; push delivery is a separate integration.
-
-`tools.ozone.inbox.putNotificationPreferences` accepts any nonempty subset of the three booleans, for example `{ labels: false }`, and returns the full preferences object. Omitted fields retain their current values, including during concurrent updates. Staff previews use the existing read-only `did` parameter on the getter; writes always affect the authenticated account.
-
-Run migration `_20261012T000000000Z` before deploying the API. It adds nullable category columns; unset categories inherit the retained `push` column, preserving existing opt-outs without a table backfill. On rollback, any disabled category disables the global preference, preserving opt-outs when mixed preferences cannot be represented. Clients must replace the `push` request/response field with the three categories. A push-only write is rejected rather than silently ignored.
-
 ## Moderation inbox start date
 
 Set `OZONE_INBOX_START_AT` on both the API and daemon to an ISO 8601 timestamp with a timezone, for example `2026-10-15T00:00:00.000Z`. Configuration normalizes it to UTC milliseconds and rejects invalid values at startup. Unset exposes all history. A future date keeps history empty until eligible activity occurs; changing the value requires restarting the services.
