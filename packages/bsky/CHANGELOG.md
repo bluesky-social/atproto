@@ -1,5 +1,49 @@
 # @atproto/bsky
 
+## 0.2.0
+
+### Minor Changes
+
+- [#5615](https://github.com/bluesky-social/atproto/pull/5615) [`a6f5a3c`](https://github.com/bluesky-social/atproto/commit/a6f5a3c7f5e294e96971810d61f23b8f5998a5e2) Thanks [@vineyardbovines](https://github.com/vineyardbovines)! - Hydrate `app.bsky.actor.link` records into `links` on detailed profile views, leaving out taken-down links and links to URL shorteners.
+
+### Patch Changes
+
+- [#5631](https://github.com/bluesky-social/atproto/pull/5631) [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Return basic starter-pack views in grouped notifications, avoiding feed and list-member hydration.
+
+- [#5636](https://github.com/bluesky-social/atproto/pull/5636) [`5e0e11d`](https://github.com/bluesky-social/atproto/commit/5e0e11db6d42758e4fb763bcbfb6d2affdf7b2e9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add the optional `BSKY_EXTERNAL_RECORDS_SAFE_DOMAINS` comma-separated setting, exposed as `ServerConfig.externalRecordsSafeDomains`, which defaults to an empty list.
+
+- [#5638](https://github.com/bluesky-social/atproto/pull/5638) [`ba08e05`](https://github.com/bluesky-social/atproto/commit/ba08e05d86f7cdb71ea11d2b620ac2d7eec6b532) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Make external view dependency hydration best effort.
+
+- [#5631](https://github.com/bluesky-social/atproto/pull/5631) [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Limit known-follower hydration in grouped notifications to the first ten actors per follow group.
+
+- [#5635](https://github.com/bluesky-social/atproto/pull/5635) [`cffb239`](https://github.com/bluesky-social/atproto/commit/cffb239f483be851f3eb0e09243d4739f5bc9cd0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Replace custom hydration in `getAtmosphereExploreTab` with generic external-view hydration, using the first URI in each worker group as its canonical root and discovering dependencies automatically.
+
+- [#5636](https://github.com/bluesky-social/atproto/pull/5636) [`5e0e11d`](https://github.com/bluesky-social/atproto/commit/5e0e11db6d42758e4fb763bcbfb6d2affdf7b2e9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Organize external hydration helpers and their specific types below the hydrator class without changing behavior.
+
+- [#5614](https://github.com/bluesky-social/atproto/pull/5614) [`976ebfb`](https://github.com/bluesky-social/atproto/commit/976ebfb1f1c0feea00d12e3eedbcaca2a690a030) Thanks [@foysalit](https://github.com/foysalit)! - Allow the trusted moderation service to bypass actor and list blocks when fetching author feeds.
+
+- [#5635](https://github.com/bluesky-social/atproto/pull/5635) [`cffb239`](https://github.com/bluesky-social/atproto/commit/cffb239f483be851f3eb0e09243d4739f5bc9cd0) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Refactor external record hydration into a shared, bounded pipeline for latest-URI and exact-ref lookups, including dependency discovery, moderation, deduplication, and traversal metrics for Standard Site, Grain, and Streamplace records.
+
+- [#5636](https://github.com/bluesky-social/atproto/pull/5636) [`5e0e11d`](https://github.com/bluesky-social/atproto/commit/5e0e11db6d42758e4fb763bcbfb6d2affdf7b2e9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add standalone Standard.site record selection/validation and safe-domain URL matching utilities for external embeds.
+
+- [#5638](https://github.com/bluesky-social/atproto/pull/5638) [`ba08e05`](https://github.com/bluesky-social/atproto/commit/ba08e05d86f7cdb71ea11d2b620ac2d7eec6b532) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Remove legacy Standard.site external-view hydration.
+
+- [#5636](https://github.com/bluesky-social/atproto/pull/5636) [`5e0e11d`](https://github.com/bluesky-social/atproto/commit/5e0e11db6d42758e4fb763bcbfb6d2affdf7b2e9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Make `app.bsky.embed.getEmbedExternalView` resolve a single canonical record (from `canonicalUri`, or normalized from the legacy `uris` input, which is now optional), validate it against the requested URL before building views, return generic `data` alongside the Standard.site-only legacy `view`, and report records that fail validation in `unverifiedAssociatedRefs`/`unverifiedAssociatedRecords`.
+
+- [#5633](https://github.com/bluesky-social/atproto/pull/5633) [`dbb0bb5`](https://github.com/bluesky-social/atproto/commit/dbb0bb54a6228021b4169a82a3e8dbe38b42fd4c) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Extend grouped notification spotlighting to reposts and via-repost interactions, with up to three spotlights per page.
+
+- [#5631](https://github.com/bluesky-social/atproto/pull/5631) [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Run profile hydration through a shared worker and let callers request activity-subscription state alongside profile data.
+
+- [#5638](https://github.com/bluesky-social/atproto/pull/5638) [`ba08e05`](https://github.com/bluesky-social/atproto/commit/ba08e05d86f7cdb71ea11d2b620ac2d7eec6b532) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Delete unused legacy Standard.site URI hydration helpers.
+
+- [#5631](https://github.com/bluesky-social/atproto/pull/5631) [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Hydrate profiles and subscription settings in listActivitySubscriptions without fetching unused known followers, profile counts, or joined-via starter packs.
+
+- [#5636](https://github.com/bluesky-social/atproto/pull/5636) [`5e0e11d`](https://github.com/bluesky-social/atproto/commit/5e0e11db6d42758e4fb763bcbfb6d2affdf7b2e9) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Keep persisted `getEmbedExternalView` associations slim: always return the canonical record, plus only an opted-in set of dependency collections (a Standard.site document's publication, a Grain gallery's items and photos). Recommendation, subscription and favorite records still back rendered previews but are no longer returned for persistence.
+
+- [#5631](https://github.com/bluesky-social/atproto/pull/5631) [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Return basic profiles with known followers in grouped notification related views, avoiding detailed-profile and activity-subscription hydration.
+- Updated dependencies [[`d70b673`](https://github.com/bluesky-social/atproto/commit/d70b673be6bce3b6f4d7478254e359913a101c18), [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d), [`5e0e11d`](https://github.com/bluesky-social/atproto/commit/5e0e11db6d42758e4fb763bcbfb6d2affdf7b2e9), [`dbb0bb5`](https://github.com/bluesky-social/atproto/commit/dbb0bb54a6228021b4169a82a3e8dbe38b42fd4c), [`647cb41`](https://github.com/bluesky-social/atproto/commit/647cb412576f1ba92c63aa00c71743cb400bdf8d)]:
+  - @atproto/api@0.25.0
+
 ## 0.1.7
 
 ### Patch Changes
