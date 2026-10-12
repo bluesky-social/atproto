@@ -1,5 +1,8 @@
 {
-  "extends": ["../../../tsconfig/node.tsconfig.json"],
+  "extends": [
+    "../../../tsconfig/node.tsconfig.json",
+    "../../../tsconfig/isolated.tsconfig.json",
+  ],
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
   "references": [

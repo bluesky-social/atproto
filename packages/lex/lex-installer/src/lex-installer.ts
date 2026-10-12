@@ -1,5 +1,6 @@
 import { rm } from 'node:fs/promises'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join, relative, resolve, sep } from 'node:path'
+import type { Filter } from '@atproto/lex-builder'
 import { cidForLex } from '@atproto/lex-cbor'
 import { lexEquals } from '@atproto/lex-data'
 import type { LexiconDocument } from '@atproto/lex-document'
@@ -10,6 +11,7 @@ import {
   fromFileUri,
   isEnoentError,
   isFileUriString,
+  listFiles,
   readJsonFile,
   resolveFileUri,
   symlinkLexicon,
@@ -65,7 +67,7 @@ export type LexInstallerOptions = CreateResolversOptions & {
 
 export type InstallOptions = {
   additions?: Iterable<string>
-  update?: boolean
+  update?: Filter
 }
 
 export type UpdateOptions = {
@@ -126,7 +128,7 @@ export class LexInstaller implements AsyncDisposable {
     return new LexInstaller(options, manifest)
   }
 
-  protected readonly workingLexicons = new NsidMap<LexiconDocument>()
+  protected readonly workingLexicons: NsidMap<LexiconDocument> = new NsidMap()
   protected readonly workingManifest: LexiconsManifestV2
   protected readonly originalManifest?: LexiconsManifestV1 | LexiconsManifestV2
   protected readonly resolver: LexiconResolver
@@ -196,23 +198,20 @@ export class LexInstaller implements AsyncDisposable {
    */
   async install({
     additions,
-    update = false,
+    update = () => false,
   }: InstallOptions = {}): Promise<void> {
     const roots = new NsidMap<{ update: boolean }>()
-
-    if (update) {
-      await rm(this.lexiconsDirPath, { force: true, recursive: true })
-    }
 
     // Restore previously existing manifest entries, updating their status based
     // on the `update` option
     for (const lexicon of this.workingManifest.lexicons) {
-      roots.set(NSID.from(lexicon), { update })
+      const nsid = NSID.from(lexicon)
+      roots.set(nsid, { update: update(nsid.toString()) })
     }
 
-    // Force a fresh installation of explicitly added lexicons (overrides
-    // any existing entry)
+    // Force a fresh installation of explicitly added lexicons
     for (const addition of additions ?? []) {
+      // @NOTE overrides any existing entry
       roots.set(NSID.from(addition), { update: true })
     }
 
@@ -231,8 +230,9 @@ export class LexInstaller implements AsyncDisposable {
     do {
       results = await Promise.all(
         Array.from(this.getMissingIds(), async (nsid) => {
-          await this.addLexicon(nsid, update)
-          installed.add(nsid.toString())
+          const nsidStr = nsid.toString()
+          await this.addLexicon(nsid, update(nsidStr))
+          installed.add(nsidStr)
         }),
       )
     } while (results.length > 0)
@@ -254,10 +254,22 @@ export class LexInstaller implements AsyncDisposable {
       }
     }
 
-    // @TODO should we clean the lexiconsDirPath of files that are not
-    // referenced in the manifest? (only needed in non-update mode, since we
-    // already removed the entire lexiconsDirPath at the beginning of the update
-    // process)
+    // Clear lexiconsDirPath from any json file that is not referenced from the
+    // manifest.
+
+    // @NOTE We ony process files that would be processed by lex-builder (ie.
+    // json files), ensuring that "lex build" against the lexicons directory
+    // only includes files referenced from the manifest.
+    for await (const file of listFiles(this.lexiconsDirPath)) {
+      if (file.endsWith('.json')) {
+        const nsid = relative(this.lexiconsDirPath, file.slice(0, -5))
+          .split(sep)
+          .join('.')
+        if (!Object.hasOwn(this.workingManifest.resolutions, nsid)) {
+          await rm(file, { force: true })
+        }
+      }
+    }
   }
 
   protected getResolution(nsid: NsidString | NSID): Resolution | null {

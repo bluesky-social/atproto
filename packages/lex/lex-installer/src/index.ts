@@ -1,3 +1,4 @@
+import { buildFilter } from '@atproto/lex-builder'
 import type { LexInstallerOptions } from './lex-installer.js'
 import { LexInstaller } from './lex-installer.js'
 
@@ -106,11 +107,14 @@ export async function install({
   update = false,
   additions = undefined,
   ...options
-}: InstallOptions) {
+}: InstallOptions): Promise<void> {
   // Perform the installation using the existing manifest as "hint"
   await using installer = await LexInstaller.load(options)
 
-  await installer.install({ additions, update })
+  await installer.install({
+    additions,
+    update: () => update,
+  })
 
   // Verify lockfile
   if (ci && installer.requiresSave()) {
@@ -124,14 +128,37 @@ export async function install({
 }
 
 export type UpdateOptions = LexInstallerOptions & {
-  //
+  /**
+   * Pattern(s) for lexicon NSIDs to include in the update.
+   *
+   * Supports glob patterns with `*` as a wildcard that matches one or more
+   * characters.
+   */
+  include?: string | string[]
+
+  /**
+   * Pattern(s) for lexicon NSIDs to exclude from the update.
+   *
+   * Supports glob patterns with `*` as a wildcard that matches one or more
+   * characters.
+   */
+  exclude?: string | string[]
 }
 
-export async function update(options: UpdateOptions) {
+export async function update({
+  include,
+  exclude,
+  ...options
+}: UpdateOptions): Promise<void> {
   // Performs the installation with the update flag enabled
   await using installer = await LexInstaller.load(options)
 
-  await installer.install({ update: true })
+  await installer.install({
+    update: buildFilter({
+      include,
+      exclude,
+    }),
+  })
 
   await installer.save()
 }

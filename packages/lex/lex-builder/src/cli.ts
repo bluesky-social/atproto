@@ -6,7 +6,26 @@ function defineCommandModule<T, U>(
   return cmd
 }
 
-export const buildCommand = defineCommandModule({
+export const buildCommand: CommandModule<
+  unknown,
+  {
+    lexicons: string
+    out: string
+    clear: boolean
+    override: boolean
+    pretty: boolean
+    'ignore-errors': boolean
+    exclude: undefined | string[]
+    include: undefined | string[]
+    lib: string
+    'import-ext': string
+    'file-ext': string
+    'index-file': boolean
+    'defs-export': boolean
+    'default-export': boolean
+    'ignore-invalid-lexicons': boolean
+  }
+> = defineCommandModule({
   command: ['build', 'b'],
   describe:
     'Generate TypeScript lexicon schema files from JSON lexicon definitions',

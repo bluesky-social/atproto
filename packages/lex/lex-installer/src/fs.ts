@@ -1,5 +1,12 @@
-import { mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises'
-import { dirname, relative, resolve, sep } from 'node:path'
+import {
+  mkdir,
+  readFile,
+  readdir,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises'
+import { dirname, join, relative, resolve, sep } from 'node:path'
 
 const FILE_URI_PREFIX = 'file://'
 
@@ -67,6 +74,21 @@ export function toRelativeFileUri(
 ): FileUriString<`./${string}` | `../${string}`> {
   const path = relative(base, resolveFileUri(base, uri)).split(sep).join('/')
   return toFileUri(isRelativePath(path) ? path : `./${path}`)
+}
+
+export async function* listFiles(dir: string): AsyncGenerator<string> {
+  dir = resolve(dir)
+  const dirents = await readdir(dir, { withFileTypes: true }).catch((err) => {
+    if ((err as any)?.code === 'ENOENT') return []
+    throw err
+  })
+  for (const dirent of dirents) {
+    if (dirent.isDirectory()) {
+      yield* listFiles(join(dir, dirent.name))
+    } else if (dirent.isFile() || dirent.isSymbolicLink()) {
+      yield join(dir, dirent.name)
+    }
+  }
 }
 
 /**

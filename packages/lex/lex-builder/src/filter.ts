@@ -19,7 +19,7 @@ export type BuildFilterOptions = {
    * { include: ['com.atproto.*', 'app.bsky.*'] }  // Include multiple patterns
    * ```
    */
-  include?: string | string[]
+  include?: string | readonly string[]
   /**
    * Pattern(s) for lexicon NSIDs to exclude.
    *
@@ -32,7 +32,7 @@ export type BuildFilterOptions = {
    * { exclude: ['*.test', '*.mock'] }   // Exclude test and mock lexicons
    * ```
    */
-  exclude?: string | string[]
+  exclude?: string | readonly string[]
 }
 
 /**
@@ -76,15 +76,15 @@ export function buildFilter(options: BuildFilterOptions): Filter {
 }
 
 function createMatcher(
-  pattern: undefined | string | string[],
+  pattern: undefined | string | readonly string[],
   fallback: Filter,
 ): Filter {
   if (!pattern?.length) {
     return fallback
-  } else if (Array.isArray(pattern)) {
-    return pattern.map(buildMatcher).reduce(combineFilters)
-  } else {
+  } else if (typeof pattern === 'string') {
     return buildMatcher(pattern)
+  } else {
+    return pattern.map(buildMatcher).reduce(combineFilters)
   }
 }
 
