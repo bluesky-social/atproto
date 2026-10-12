@@ -13,7 +13,7 @@ import { LexInstaller } from './lex-installer.js'
  * const options: InstallOptions = {
  *   lexicons: './lexicons',
  *   manifest: './lexicons.manifest.json',
- *   add: ['com.example.myLexicon', 'at://did:plc:xyz/com.example.otherLexicon'],
+ *   additions: ['com.example.myLexicon', 'at://did:plc:xyz/com.example.otherLexicon'],
  *   save: true,
  *   ci: false,
  * }
@@ -70,7 +70,7 @@ export type InstallOptions = LexInstallerOptions & {
  * await install({
  *   lexicons: './lexicons',
  *   manifest: './lexicons.manifest.json',
- *   add: ['app.bsky.feed.post', 'app.bsky.actor.profile'],
+ *   additions: ['app.bsky.feed.post', 'app.bsky.actor.profile'],
  *   save: true,
  * })
  * ```
@@ -96,7 +96,7 @@ export type InstallOptions = LexInstallerOptions & {
  * await install({
  *   lexicons: './lexicons',
  *   manifest: './lexicons.manifest.json',
- *   add: ['at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post'],
+ *   additions: ['at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post'],
  *   save: true,
  * })
  * ```
