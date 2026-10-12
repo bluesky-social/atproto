@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import type { DatetimeString } from '@atproto/lex'
+import type { DatetimeString, DidString } from '@atproto/lex'
 import { com, tools } from '../lexicons/index.js'
 import {
   APPEAL_REASON_TYPE,
@@ -8,9 +8,14 @@ import {
 } from './appeal.js'
 
 /** Match notification targets to the same post-cutoff history their detail exposes. */
-export function notificationVisibility(startAt: DatetimeString) {
+export function notificationVisibility(
+  recipientDid: DidString,
+  startAt: DatetimeString,
+) {
   // @NOTE Guard integer casts for legacy/malformed targets; every source lookup
-  // uses a primary key or the subject/creation-time partial index.
+  // uses a primary key or the subject/creation-time partial index. Bind the
+  // subject DID as a constant: for large recipients the planner may hash the
+  // subplan, which drops the correlated DID and scans all post-cutoff events.
   return sql<boolean>`
     n."createdAt" >= ${startAt} AND CASE n.target->>'$type'
       WHEN 'tools.ozone.inbox.defs#reportRef' THEN EXISTS (
@@ -22,7 +27,7 @@ export function notificationVisibility(startAt: DatetimeString) {
       )
       WHEN 'tools.ozone.inbox.defs#subjectRef' THEN EXISTS (
         SELECT 1 FROM moderation_event e
-        WHERE e."subjectDid" = n."recipientDid" AND e."createdAt" >= ${startAt}
+        WHERE e."subjectDid" = ${recipientDid} AND e."createdAt" >= ${startAt}
           AND e."subjectType" IN (${com.atproto.admin.defs.repoRef.$type}, ${com.atproto.repo.strongRef.$type})
           AND e.action IN (${sql.join(PUBLIC_EVENT_ACTIONS)}) AND e.action <> ${REVERSE_TAKEDOWN}
           AND coalesce(e."subjectUri", e."subjectDid") = coalesce(n.target->'subject'->>'uri', n.target->'subject'->>'did')

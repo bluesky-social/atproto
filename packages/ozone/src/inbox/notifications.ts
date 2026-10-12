@@ -86,7 +86,7 @@ export async function listInboxNotifications(
     )
     .where('n.recipientDid', '=', did)
     .$if(startAt !== undefined, (qb) =>
-      qb.where(notificationVisibility(startAt!)),
+      qb.where(notificationVisibility(did, startAt!)),
     )
     .select([
       'n.id',
@@ -173,7 +173,7 @@ export async function countUnreadNotifications(
     .where('n.recipientDid', '=', did)
     .where('n.section', '=', section)
     .$if(startAt !== undefined, (qb) =>
-      qb.where(notificationVisibility(startAt!)),
+      qb.where(notificationVisibility(did, startAt!)),
     )
   if (seenAt) query = query.where('n.createdAt', '>', seenAt)
   if (section === 'accountStatus') {
