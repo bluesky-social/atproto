@@ -103,8 +103,8 @@ function buildMatcher(pattern: string): Filter {
     const regex = new RegExp(
       `^${pattern.replaceAll('.', '\\.').replaceAll('*', '.+')}$`,
     )
-    return (input: string) => regex.test(input)
+    return (input) => regex.test(input)
   }
 
-  return (input: string) => pattern === input
+  return (input) => pattern === input
 }

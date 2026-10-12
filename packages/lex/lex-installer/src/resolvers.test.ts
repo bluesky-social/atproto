@@ -11,7 +11,7 @@ import {
   DirectoryResolver,
   FilteredResolver,
   HttpResolver,
-  createResolver,
+  LexiconResolver,
 } from './resolvers.js'
 
 /** A minimal (ref-free) lexicon document for the given NSID. */
@@ -171,7 +171,7 @@ describe('HttpResolver', () => {
   })
 })
 
-describe('createResolver', () => {
+describe(LexiconResolver, () => {
   let dir: string
   function options(): CreateResolversOptions {
     return { manifest: join(dir, 'lexicons.json') }
@@ -186,7 +186,7 @@ describe('createResolver', () => {
   it('builds a directory resolver whose path is relative to the manifest dir', async () => {
     await writeLexicon(join(dir, 'nested'), 'com.example.foo')
 
-    const resolver = createResolver(options(), [
+    const resolver = new LexiconResolver(options(), [
       { type: 'directory', path: './nested' },
     ])
 
@@ -199,7 +199,7 @@ describe('createResolver', () => {
       Response.json(lexiconDoc('app.bsky.internal.foo')),
     )
 
-    const resolver = createResolver({ ...options(), fetch }, [
+    const resolver = new LexiconResolver({ ...options(), fetch }, [
       {
         type: 'http',
         base: 'https://example.com/lexicons/',
@@ -216,8 +216,8 @@ describe('createResolver', () => {
   })
 
   it('throws on an unsupported resolver type', () => {
-    expect(() =>
-      createResolver(options(), [{ type: 'bogus' } as never]),
+    expect(
+      () => new LexiconResolver(options(), [{ type: 'bogus' } as never]),
     ).toThrow(/Unsupported lexicon resolver type: bogus/)
   })
 })

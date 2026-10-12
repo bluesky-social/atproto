@@ -3,7 +3,7 @@ import { dirname, join, resolve } from 'node:path'
 import type { BuildFilterOptions, Filter } from '@atproto/lex-builder'
 import { buildFilter } from '@atproto/lex-builder'
 import type { AgentConfig } from '@atproto/lex-client'
-import { Client } from '@atproto/lex-client'
+import { Client, XrpcResponseError } from '@atproto/lex-client'
 import type { LexiconDocument } from '@atproto/lex-document'
 import { lexiconDocumentSchema } from '@atproto/lex-document'
 import {
@@ -47,13 +47,7 @@ export type ResolvedLexicon = {
   lexicon: LexiconDocument
 }
 
-/**
- * A pluggable, local source for resolving a lexicon by its NSID. Resolvers are
- * consulted (in order) as overrides before the network fallback.
- *
- * @see {@link DirectoryResolver}
- */
-export interface LexiconResolver {
+interface PartialLexiconResolver {
   /**
    * @returns the resolved lexicon, or `null` if this resolver does not provide
    *   the given NSID (so the next resolver / network fallback can be tried).
@@ -61,23 +55,37 @@ export interface LexiconResolver {
   resolve(nsid: NSID): Promise<ResolvedLexicon | null>
 }
 
-export class FilteredResolver implements LexiconResolver {
+export class FilteredResolver implements PartialLexiconResolver {
   protected readonly filter: Filter
+  protected readonly hasInclude: boolean
+
   constructor(
-    protected readonly resolver: LexiconResolver,
+    protected readonly resolver: PartialLexiconResolver,
     options: BuildFilterOptions,
   ) {
+    this.hasInclude = options?.include != null
     this.filter = buildFilter(options)
   }
 
   async resolve(nsid: NSID): Promise<ResolvedLexicon | null> {
-    return this.filter(nsid.toString()) ? this.resolver.resolve(nsid) : null
+    if (!this.filter(nsid.toString())) return null
+
+    const result = await this.resolver.resolve(nsid)
+    if (result) return result
+
+    // Every resolver that has an explicit "include" list must resolve the NSID,
+    // otherwise throw an error.
+    if (this.hasInclude) {
+      throw new Error(`NSID ${nsid.toString()} not resolved`)
+    }
+
+    return null
   }
 
   static for(
-    resolver: LexiconResolver,
+    resolver: PartialLexiconResolver,
     options?: BuildFilterOptions,
-  ): LexiconResolver {
+  ): PartialLexiconResolver {
     if (options?.include == null && options?.exclude == null) return resolver
     return new FilteredResolver(resolver, options)
   }
@@ -90,7 +98,7 @@ export class FilteredResolver implements LexiconResolver {
  * An optional {@link Filter} gates which NSIDs this resolver answers for,
  * mirroring the include/exclude semantics of {@link buildFilter}.
  */
-export class DirectoryResolver implements LexiconResolver {
+export class DirectoryResolver implements PartialLexiconResolver {
   constructor(protected readonly directory: string) {
     // Throw if the directory does not exist (shows an invalid configuration
     // that could cause the wrong lexicons to be resolved)
@@ -145,7 +153,7 @@ async function buildClientFromDid(
   return new Client({ service, did, fetch: options?.fetch })
 }
 
-export class RepoResolver implements LexiconResolver {
+export class RepoResolver implements PartialLexiconResolver {
   constructor(protected readonly buildClient: () => Client | Promise<Client>) {}
 
   #clientPromise: Promise<Client> | undefined
@@ -159,21 +167,29 @@ export class RepoResolver implements LexiconResolver {
    * expected to use include/exclude filters to control which NSIDs are resolved
    * in the defined repo.
    */
-  async resolve(nsid: NSID): Promise<ResolvedLexicon> {
+  async resolve(nsid: NSID): Promise<ResolvedLexicon | null> {
     const client = await this.initClient()
 
     const rkey = nsid.toString()
 
-    const res = await client.get(com.atproto.lexicon.schema, { rkey })
+    try {
+      const res = await client.get(com.atproto.lexicon.schema, { rkey })
 
-    const lexicon = lexiconDocumentSchema.parse(res.value)
-    const uri = AtUri.make(
-      client.assertDid,
-      com.atproto.lexicon.schema.$type,
-      rkey,
-    )
+      const lexicon = lexiconDocumentSchema.parse(res.value)
+      const uri = AtUri.make(
+        client.assertDid,
+        com.atproto.lexicon.schema.$type,
+        rkey,
+      )
 
-    return { uri, lexicon }
+      return { uri, lexicon }
+    } catch (err) {
+      if (err instanceof XrpcResponseError && err.error === 'RecordNotFound') {
+        return null
+      }
+
+      throw err
+    }
   }
 }
 
@@ -185,7 +201,7 @@ export class RepoResolver implements LexiconResolver {
  * is expected to be SSRF-safe (see {@link createResolver}) and to bound the
  * response size, so the (externally-sourced) body can be buffered safely.
  */
-export class HttpResolver implements LexiconResolver {
+export class HttpResolver implements PartialLexiconResolver {
   protected readonly base: HttpUrlString
   constructor(
     base: HttpUrlString,
@@ -231,44 +247,47 @@ export type CreateResolversOptions = LexResolverOptions &
     manifest: string
   }
 
-/**
- * Builds the ordered list of local resolvers declared in the manifest's
- * `resolvers` array. Paths are resolved relative to `manifestDir` (the directory
- * containing the manifest file).
- */
-export function createResolver(
-  {
-    fetch = safeFetchWrap({
-      allowHttp: false,
-      allowIpHost: false,
-      ssrfProtection: true,
-      forbiddenDomainNames: [...DEFAULT_FORBIDDEN_DOMAIN_NAMES, '*.internal'],
-    }),
-    ...opts
-  }: CreateResolversOptions,
-  configs: Iterable<LexiconResolverConfig> = [],
-): LexiconResolver {
-  const options: CreateResolversOptions = { ...opts, fetch }
-  const lexResolver = new LexResolver(options)
-  const resolvers = Array.from(configs, (config): LexiconResolver => {
-    const resolver = buildCustomResolver(options, config)
-    return FilteredResolver.for(resolver, config)
-  })
-  return {
-    async resolve(nsid) {
-      for (const resolver of resolvers) {
-        const result = await resolver.resolve(nsid)
-        if (result) return result
-      }
-      return lexResolver.get(nsid)
-    },
+export class LexiconResolver {
+  protected readonly lexResolver: LexResolver
+  protected readonly resolvers: PartialLexiconResolver[]
+
+  constructor(
+    {
+      fetch = safeFetchWrap({
+        allowHttp: false,
+        allowIpHost: false,
+        ssrfProtection: true,
+        forbiddenDomainNames: [...DEFAULT_FORBIDDEN_DOMAIN_NAMES, '*.internal'],
+      }),
+      ...opts
+    }: CreateResolversOptions,
+    configs: Iterable<LexiconResolverConfig> = [],
+  ) {
+    const options: CreateResolversOptions = { ...opts, fetch }
+    this.lexResolver = new LexResolver(options)
+    this.resolvers = Array.from(configs, (config): PartialLexiconResolver => {
+      const resolver = buildPartialResolver(options, config)
+      return FilteredResolver.for(resolver, config)
+    })
+  }
+
+  /**
+   * @returns the resolved lexicon, or `null` if this resolver does not provide
+   *   the given NSID (so the next resolver / network fallback can be tried).
+   */
+  async resolve(nsid: NSID): Promise<ResolvedLexicon> {
+    for (const resolver of this.resolvers) {
+      const result = await resolver.resolve(nsid)
+      if (result) return result
+    }
+    return this.lexResolver.get(nsid)
   }
 }
 
-function buildCustomResolver(
+function buildPartialResolver(
   options: CreateResolversOptions,
   config: LexiconResolverConfig,
-): LexiconResolver {
+): PartialLexiconResolver {
   switch (config.type) {
     case 'directory':
       return new DirectoryResolver(

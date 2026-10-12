@@ -2,7 +2,7 @@ import { rm } from 'node:fs/promises'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import type { Filter } from '@atproto/lex-builder'
 import { cidForLex } from '@atproto/lex-cbor'
-import { lexEquals } from '@atproto/lex-data'
+import { lexEquals, parseCid } from '@atproto/lex-data'
 import type { LexiconDocument } from '@atproto/lex-document'
 import type { AtUriString, NsidString } from '@atproto/lex-schema'
 import { type AtUri, NSID } from '@atproto/syntax'
@@ -34,12 +34,11 @@ import {
 } from './lexicons-manifest.js'
 import { NsidMap } from './nsid-map.js'
 import { NsidSet } from './nsid-set.js'
-import type {
-  CreateResolversOptions,
+import {
+  type CreateResolversOptions,
   LexiconResolver,
-  ResolvedLexicon,
+  type ResolvedLexicon,
 } from './resolvers.js'
-import { createResolver } from './resolvers.js'
 
 /**
  * Configuration options for the {@link LexInstaller} class.
@@ -148,7 +147,7 @@ export class LexInstaller implements AsyncDisposable {
   ) {
     this.workingManifest = normalizeManifest(manifest)
     this.originalManifest = manifest ? structuredClone(manifest) : undefined
-    this.resolver = createResolver(options, this.workingManifest.resolvers)
+    this.resolver = new LexiconResolver(options, this.workingManifest.resolvers)
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
@@ -337,13 +336,12 @@ export class LexInstaller implements AsyncDisposable {
   ): Promise<void> {
     const path = `${join(this.lexiconsDirPath, ...nsid.segments)}.json`
 
-    // Existing lock entry, if any. Ignored in `update` mode, where we always
-    // re-resolve from scratch.
-    const resolution = forceResolve ? null : this.getResolution(nsid)
+    // Existing lock entry, if any.
+    const resolution = this.getResolution(nsid)
 
     // Try to re-use the existing lexicon file from the lexicons folder, in
     // order to avoid re-downloading it if it already exists locally.
-    if (resolution) {
+    if (!forceResolve && resolution) {
       if (isFileUriString(resolution.uri)) {
         // Ensure that, if the resolution is a file URI, the source file
         // exists and is correctly linked. File uris are locked relative to the
@@ -364,37 +362,26 @@ export class LexInstaller implements AsyncDisposable {
       }
     }
 
-    const result: ResolvedLexicon = await this.resolver.resolve(nsid).then(
-      async (result): Promise<ResolvedLexicon> => {
-        if (result) return result
-
-        // The resolver reported no source for this NSID (a plain miss, e.g. a
-        // 404 or a lexicon that no configured resolver hosts). Fall back to the
-        // existing local lexicon **file**, if available, so installs that
-        // reference an un-hosted lexicon keep working offline.
-        //
-        // @NOTE This requires that the local lexicon file be tracked by CVS
-        // (e.g., Git). Local read/parse errors are ignored so a corrupt file
-        // does not mask the "unable to resolve" result below.
-        const lexicon = await readLexiconDocument(path).catch(() => null)
-        if (lexicon?.id === nsid.toString()) {
-          return { uri: `file://${path}`, lexicon }
+    const result: ResolvedLexicon = await this.resolver
+      .resolve(nsid)
+      .catch(async (cause) => {
+        // Unable to resolve a new version of the lexicon. If we have an
+        // existing resolution, and a matching file on disk, let's use it.
+        if (!forceResolve && resolution) {
+          const lexicon = await readLexiconDocument(path)
+          if (lexicon?.id === nsid.toString()) {
+            const cid = await cidForLex(lexicon)
+            if (cid.equals(parseCid(resolution.cid))) {
+              return { uri: resolution.uri, lexicon }
+            }
+          }
         }
 
-        throw new Error(`Unable to resolve lexicon for NSID: ${nsid}`)
-      },
-      (cause) => {
-        // A genuine resolver *rejection* (transport failure, non-404 HTTP
-        // status, redirect, SSRF rejection, parse error) deliberately does NOT
-        // fall back to the local file: propagating it aborts the install loudly
-        // rather than silently relocking a remote at:// source to a (possibly
-        // stale) committed file:// during a transient outage — which, in
-        // `update` mode, would commit an unintended downgrade unnoticed.
+        // Failed to resolve
         throw new Error(`Failed to resolve lexicon for NSID: ${nsid}`, {
           cause,
         })
-      },
-    )
+      })
 
     // @NOTE If a resolve entry existed but its file was missing (or no longer
     // matched), we re-resolved. Re-resolution goes through NSID discovery,

@@ -22,7 +22,7 @@ class TestInstaller extends LexInstaller {
     return this.workingManifest.lexicons
   }
   /** Swap the network resolver for a stub, to drive the resolve() outcome. */
-  useResolver(resolver: LexiconResolver) {
+  useResolver(resolver: Pick<LexiconResolver, 'resolve'>) {
     Object.assign(this, { resolver })
   }
 }
@@ -259,52 +259,77 @@ describe('LexInstaller', () => {
     })
   })
 
-  describe('resolver failure vs. miss, in update mode', () => {
-    // A lexicon previously locked to a remote at:// source, with the fetched
-    // copy committed on disk at the output path.
+  describe('resolver failure fallback, in update mode', () => {
+    // A lexicon previously locked to a remote at:// source. In update mode
+    // (forceResolve) the resolver is always consulted; when it fails, the
+    // installer may fall back to the committed on-disk copy — but only when
+    // that copy is provably the locked version (CID match), and without
+    // rewriting the lock.
     const lockedUri =
       'at://did:plc:z72i7hdynmk6r22z27h6tvur/com.atproto.lexicon.schema/com.example.foo'
 
-    async function makeLockedInstaller() {
+    // Lock `com.example.foo` to the CID of its default document, wire a resolver
+    // that always throws (a transient outage), and optionally write a committed
+    // copy whose `fileDescription` controls whether its CID matches the lock.
+    async function makeFailingInstaller(fileDescription?: string) {
       const cid = (await cidForLex(lexiconDoc('com.example.foo'))).toString()
-      // Committed copy the fallback could (wrongly) downgrade to.
-      await writeLexicon(join(dir, 'out'), 'com.example.foo')
+      if (fileDescription !== undefined) {
+        await writeLexicon(
+          join(dir, 'out'),
+          'com.example.foo',
+          'com.example.foo',
+          fileDescription,
+        )
+      }
 
       const installer = makeInstaller({
         version: 2,
         lexicons: ['com.example.foo'],
         resolutions: { 'com.example.foo': { cid, uri: lockedUri } },
       })
-      return { installer, cid }
-    }
-
-    it('aborts (does not downgrade the remote lock) when the resolver rejects', async () => {
-      // A transient network failure during `pnpm lex:update` must surface, not
-      // silently relock the at:// source to the committed file://.
-      await using installer = (await makeLockedInstaller()).installer
       installer.useResolver({
         resolve: async () => {
           throw new Error('network down')
         },
       })
+      return { installer, cid }
+    }
+
+    it('reuses the committed file and preserves the at:// lock when its CID matches', async () => {
+      // Transient resolve failure during `pnpm lex:update`: the on-disk copy is
+      // exactly the locked version (default description ⇒ CID matches), so keep
+      // the existing lock untouched — no abort, no file:// downgrade.
+      const { installer, cid } = await makeFailingInstaller('com.example.foo')
+      await using _installer = installer
+
+      await installer.install({ update: () => true })
+
+      expect(installer.resolutions['com.example.foo']?.uri).toBe(lockedUri)
+      expect(installer.resolutions['com.example.foo']?.cid).toBe(cid)
+      // The update was a no-op for this lexicon.
+      expect(installer.requiresSave()).toBe(false)
+    })
+
+    it('rethrows when resolve fails and the committed file CID does not match the lock', async () => {
+      // The on-disk copy diverges from the locked CID (hand-edited or stale), so
+      // the fallback must refuse it and fail loudly rather than lock mismatched
+      // content.
+      const { installer } = await makeFailingInstaller('diverged')
+      await using _installer = installer
 
       await expect(installer.install({ update: () => true })).rejects.toThrow(
         /Failed to resolve lexicon for NSID: com\.example\.foo/,
       )
     })
 
-    it('falls back to the committed local file when the resolver reports a miss', async () => {
-      // A plain miss (null) is the network-independence path: use the file.
-      const { installer, cid } = await makeLockedInstaller()
+    it('rethrows when resolve fails and no committed file exists', async () => {
+      // Nothing on disk to fall back to ⇒ loud failure.
+      const { installer } = await makeFailingInstaller()
       await using _installer = installer
-      installer.useResolver({ resolve: async () => null })
 
-      await installer.install({ update: () => true })
-
-      expect(installer.resolutions['com.example.foo']?.uri).toMatch(
-        /^file:\/\//,
+      await expect(installer.install({ update: () => true })).rejects.toThrow(
+        /Failed to resolve lexicon for NSID: com\.example\.foo/,
       )
-      expect(installer.resolutions['com.example.foo']?.cid).toBe(cid)
     })
   })
 })
