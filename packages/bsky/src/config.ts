@@ -113,10 +113,10 @@ export interface ServerConfigValues {
   // notifications
   notificationsDelayMs?: number
   notificationsV2Algorithm?: NotificationsV2Algorithm
-  notificationsV2MinRawLimit?: number
-  notificationsV2MaxRawItems?: number
-  notificationsV2MaxReads?: number
-  notificationsV2MaxGroupItemsWithRelatedViews?: number
+  notificationsV2MinRawLimit: number
+  notificationsV2MaxRawItems: number
+  notificationsV2MaxReads: number
+  notificationsV2MaxGroupItemsWithRelatedViews: number
   // client config
   clientCheckEmailConfirmed?: boolean
   topicsEnabled?: boolean
@@ -819,19 +819,19 @@ export class ServerConfig {
   }
 
   get notificationsV2MinRawLimit(): number {
-    return this.cfg.notificationsV2MinRawLimit ?? 300
+    return this.cfg.notificationsV2MinRawLimit
   }
 
   get notificationsV2MaxRawItems(): number {
-    return this.cfg.notificationsV2MaxRawItems ?? 3000
+    return this.cfg.notificationsV2MaxRawItems
   }
 
   get notificationsV2MaxReads(): number {
-    return this.cfg.notificationsV2MaxReads ?? 3
+    return this.cfg.notificationsV2MaxReads
   }
 
   get notificationsV2MaxGroupItemsWithRelatedViews(): number {
-    return this.cfg.notificationsV2MaxGroupItemsWithRelatedViews ?? 10
+    return this.cfg.notificationsV2MaxGroupItemsWithRelatedViews
   }
 
   get disableSsrfProtection(): boolean {
