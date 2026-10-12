@@ -1,4 +1,4 @@
-import { rm } from 'node:fs/promises'
+import { rm, stat } from 'node:fs/promises'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import type { Filter } from '@atproto/lex-builder'
 import { cidForLex } from '@atproto/lex-cbor'
@@ -33,7 +33,11 @@ import {
 } from './lexicons-manifest.js'
 import { NsidMap } from './nsid-map.js'
 import { NsidSet } from './nsid-set.js'
-import type { CreateResolversOptions, LexiconResolver } from './resolvers.js'
+import type {
+  CreateResolversOptions,
+  LexiconResolver,
+  ResolvedLexicon,
+} from './resolvers.js'
 import { createResolver } from './resolvers.js'
 
 /**
@@ -72,6 +76,10 @@ export type InstallOptions = {
 
 export type UpdateOptions = {
   additions?: never
+}
+
+type AddLexiconOptions = {
+  forceResolve: boolean
 }
 
 /**
@@ -200,25 +208,26 @@ export class LexInstaller implements AsyncDisposable {
     additions,
     update = () => false,
   }: InstallOptions = {}): Promise<void> {
-    const roots = new NsidMap<{ update: boolean }>()
+    const roots = new NsidMap<AddLexiconOptions>()
 
     // Restore previously existing manifest entries, updating their status based
     // on the `update` option
     for (const lexicon of this.workingManifest.lexicons) {
       const nsid = NSID.from(lexicon)
-      roots.set(nsid, { update: update(nsid.toString()) })
+      const forceResolve = update(nsid.toString())
+      roots.set(nsid, { forceResolve })
     }
 
     // Force a fresh installation of explicitly added lexicons
     for (const addition of additions ?? []) {
       // @NOTE overrides any existing entry
-      roots.set(NSID.from(addition), { update: true })
+      roots.set(NSID.from(addition), { forceResolve: true })
     }
 
     // Install all root lexicons (and store them in the manifest)
     const installedRootIds = await Promise.all(
-      Array.from(roots, async ([nsid, { update }]) => {
-        await this.addLexicon(nsid, update)
+      Array.from(roots, async ([nsid, options]) => {
+        await this.addLexicon(nsid, options)
         return nsid.toString()
       }),
     )
@@ -231,7 +240,8 @@ export class LexInstaller implements AsyncDisposable {
       results = await Promise.all(
         Array.from(this.getMissingIds(), async (nsid) => {
           const nsidStr = nsid.toString()
-          await this.addLexicon(nsid, update(nsidStr))
+          const forceResolve = update(nsidStr)
+          await this.addLexicon(nsid, { forceResolve })
           installed.add(nsidStr)
         }),
       )
@@ -320,12 +330,15 @@ export class LexInstaller implements AsyncDisposable {
     return resolve(dirname(this.options.manifest))
   }
 
-  protected async addLexicon(nsid: NSID, update: boolean): Promise<void> {
+  protected async addLexicon(
+    nsid: NSID,
+    { forceResolve }: AddLexiconOptions,
+  ): Promise<void> {
     const path = `${join(this.lexiconsDirPath, ...nsid.segments)}.json`
 
     // Existing lock entry, if any. Ignored in `update` mode, where we always
     // re-resolve from scratch.
-    const resolution = update ? null : this.getResolution(nsid)
+    const resolution = forceResolve ? null : this.getResolution(nsid)
 
     // Try to re-use the existing lexicon file from the lexicons folder, in
     // order to avoid re-downloading it if it already exists locally.
@@ -349,10 +362,39 @@ export class LexInstaller implements AsyncDisposable {
       }
     }
 
-    const result = await this.resolver.resolve(nsid)
-    if (!result) {
-      throw new Error(`Unable to resolve lexicon for NSID: ${nsid}`)
-    }
+    const result: ResolvedLexicon = await this.resolver
+      .resolve(nsid)
+      .then(
+        (result) => {
+          if (result) return result
+          throw new Error(`Unable to resolve lexicon for NSID: ${nsid}`)
+        },
+        (cause) => {
+          throw new Error(`Failed to resolve lexicon for NSID: ${nsid}`, {
+            cause,
+          })
+        },
+      )
+      .catch(async (err): Promise<ResolvedLexicon> => {
+        // If the resolution failed, attempt to use the existing local lexicon
+        // **file**, if available.
+
+        // @NOTE This requires that the local lexicon file be tracked by CVS
+        // (e.g., Git).
+        try {
+          const stats = await stat(path)
+          if (stats.isFile()) {
+            const lexicon = await readLexiconDocument(path)
+            if (lexicon && lexicon.id === nsid.toString()) {
+              return { uri: `file://${path}`, lexicon }
+            }
+          }
+        } catch {
+          // Ignore file reading errors
+        }
+
+        throw err
+      })
 
     // @NOTE If a resolve entry existed but its file was missing (or no longer
     // matched), we re-resolved. Re-resolution goes through NSID discovery,
@@ -363,7 +405,7 @@ export class LexInstaller implements AsyncDisposable {
     if (isFileUriString(result.uri)) {
       const sourcePath = fromFileUri(result.uri)
 
-      // Link the lexicon file at its right place
+      // Link the lexicon file at its right place (noop if file already at right location)
       await symlinkLexicon(path, sourcePath)
 
       return this.trackDocument(nsid, result)

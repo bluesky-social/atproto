@@ -1,0 +1,24 @@
+{
+  "id": "app.bsky.actor.contentVisibilityDeclaration",
+  "defs": {
+    "main": {
+      "key": "literal:self",
+      "type": "record",
+      "record": {
+        "type": "object",
+        "required": [
+          "hideFromAlgorithmicRecommendations"
+        ],
+        "properties": {
+          "hideFromAlgorithmicRecommendations": {
+            "type": "boolean",
+            "description": "Whether the account requests that its posts be hidden from algorithmic recommendations. Consumers must treat a missing record as false."
+          }
+        }
+      },
+      "description": "A declaration of an account's preferences for appearing in content discovery surfaces."
+    }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
+}
