@@ -24,6 +24,7 @@ import {
   createPipeline,
 } from '../../../../pipeline.js'
 import { NotificationFeed } from '../../../../proto/bsky_pb.js'
+import { events } from '../../../../telemetry/events.js'
 import { uriToDid } from '../../../../util/uris.js'
 import type { Views } from '../../../../views/index.js'
 import { resHeaders } from '../../../util.js'
@@ -201,7 +202,10 @@ const skeleton = async (
     if (rawLimit === 0) break
   }
 
-  return buildSpotlight(items, groups, nextCursor, params.limit, seenAt)
+  return {
+    ...buildSpotlight(items, groups, nextCursor, params.limit, seenAt),
+    itemsFetched,
+  }
 }
 
 const hydration = async (
@@ -451,7 +455,7 @@ const presentation = (
     }
   }
 
-  return {
+  const body = {
     groups,
     relatedViews: [
       ...mapDefined([...profileDids], (did) => {
@@ -479,6 +483,13 @@ const presentation = (
     cursor: skeleton.cursor,
     seenAt: params.seenAt,
   }
+
+  events.groupedNotifications({
+    itemsFetched: skeleton.itemsFetched,
+    itemsReturned: groups.reduce((count, group) => count + group.count, 0),
+  })
+
+  return body
 }
 
 const truncateRelatedViewsItems = <T extends unknown[]>(
@@ -514,4 +525,5 @@ type Params = app.bsky.notification.getGroupedNotifications.$Params & {
 type SkeletonState = {
   groups: NotificationGroup[]
   cursor?: string
+  itemsFetched: number
 }
