@@ -17,6 +17,7 @@ type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
 export type LocalViewerCreator = (
   actorStoreReader: ActorStoreReader,
+  bskyAppView?: BskyAppView,
 ) => LocalViewer
 
 export class LocalViewer {
@@ -36,8 +37,8 @@ export class LocalViewer {
     imageUrlBuilder: ImageUrlBuilder,
     bskyAppView?: BskyAppView,
   ): LocalViewerCreator {
-    return (actorStore) =>
-      new LocalViewer(actorStore, accountManager, imageUrlBuilder, bskyAppView)
+    return (actorStore, appView = bskyAppView) =>
+      new LocalViewer(actorStore, accountManager, imageUrlBuilder, appView)
   }
 
   getImageUrl(pattern: CommonSignedUris, cid: string) {
