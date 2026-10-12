@@ -259,12 +259,12 @@ describe('LexInstaller', () => {
     })
   })
 
-  describe('resolver failure fallback, in update mode', () => {
+  describe('resolver failure, in update mode', () => {
     // A lexicon previously locked to a remote at:// source. In update mode
     // (forceResolve) the resolver is always consulted; when it fails, the
-    // installer may fall back to the committed on-disk copy — but only when
-    // that copy is provably the locked version (CID match), and without
-    // rewriting the lock.
+    // install aborts loudly rather than silently relocking to the committed
+    // on-disk copy — even when that copy's CID matches the lock. The fallback to
+    // a committed file only applies outside update mode.
     const lockedUri =
       'at://did:plc:z72i7hdynmk6r22z27h6tvur/com.atproto.lexicon.schema/com.example.foo'
 
@@ -295,19 +295,17 @@ describe('LexInstaller', () => {
       return { installer, cid }
     }
 
-    it('reuses the committed file and preserves the at:// lock when its CID matches', async () => {
-      // Transient resolve failure during `pnpm lex:update`: the on-disk copy is
-      // exactly the locked version (default description ⇒ CID matches), so keep
-      // the existing lock untouched — no abort, no file:// downgrade.
-      const { installer, cid } = await makeFailingInstaller('com.example.foo')
+    it('rethrows even when the committed file CID matches the lock', async () => {
+      // Transient resolve failure during `pnpm lex:update`: even though the
+      // on-disk copy is exactly the locked version (default description ⇒ CID
+      // matches), update mode never falls back — it aborts loudly rather than
+      // risk locking to a stale committed copy.
+      const { installer } = await makeFailingInstaller('com.example.foo')
       await using _installer = installer
 
-      await installer.install({ update: () => true })
-
-      expect(installer.resolutions['com.example.foo']?.uri).toBe(lockedUri)
-      expect(installer.resolutions['com.example.foo']?.cid).toBe(cid)
-      // The update was a no-op for this lexicon.
-      expect(installer.requiresSave()).toBe(false)
+      await expect(installer.install({ update: () => true })).rejects.toThrow(
+        /Failed to resolve lexicon for NSID: com\.example\.foo/,
+      )
     })
 
     it('rethrows when resolve fails and the committed file CID does not match the lock', async () => {

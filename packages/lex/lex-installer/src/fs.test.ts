@@ -29,16 +29,17 @@ describe('writeJsonFile', () => {
     await rm(dir, { recursive: true, force: true })
   })
 
-  it('writes pretty-printed JSON with a trailing newline (issue #5232)', async () => {
+  it('writes prettier-formatted JSON with a trailing newline (issue #5232)', async () => {
     const path = join(dir, 'lexicons.json')
     await writeJsonFile(path, { version: 1, lexicons: ['com.example.foo'] })
 
     const contents = await readFile(path, 'utf8')
     expect(contents.endsWith('\n')).toBe(true)
-    // exactly one trailing newline, and the body is 2-space indented
+    // Prettier formats the compact `JSON.stringify` output; with its default
+    // `objectWrap: "preserve"` a value that started on one line stays collapsed
+    // when it fits the print width. Exactly one trailing newline.
     expect(contents).toBe(
-      JSON.stringify({ version: 1, lexicons: ['com.example.foo'] }, null, 2) +
-        '\n',
+      '{ "version": 1, "lexicons": ["com.example.foo"] }\n',
     )
   })
 
