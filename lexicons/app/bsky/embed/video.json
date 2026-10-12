@@ -1,30 +1,47 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.embed.video",
-  "description": "A video embedded in a Bluesky record (eg, a post).",
   "defs": {
     "main": {
       "type": "object",
       "required": ["video"],
       "properties": {
-        "video": {
-          "type": "blob",
-          "description": "The mp4 video file. May be up to 300mb, formerly limited to 100mb.",
-          "accept": ["video/mp4"],
-          "maxSize": 300000000
-        },
-        "captions": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "#caption" },
-          "maxLength": 20
-        },
         "alt": {
           "type": "string",
           "description": "Alt text description of the video, for accessibility."
         },
+        "video": {
+          "type": "blob",
+          "accept": ["video/mp4"],
+          "maxSize": 300000000,
+          "description": "The mp4 video file. May be up to 300mb, formerly limited to 100mb."
+        },
+        "captions": {
+          "type": "array",
+          "items": { "ref": "#caption", "type": "ref" },
+          "maxLength": 20
+        },
         "aspectRatio": {
-          "type": "ref",
-          "ref": "app.bsky.embed.defs#aspectRatio"
+          "ref": "app.bsky.embed.defs#aspectRatio",
+          "type": "ref"
+        },
+        "presentation": {
+          "type": "string",
+          "description": "A hint to the client about how to present the video.",
+          "knownValues": ["default", "gif"]
+        }
+      }
+    },
+    "view": {
+      "type": "object",
+      "required": ["cid", "playlist"],
+      "properties": {
+        "alt": { "type": "string" },
+        "cid": { "type": "string", "format": "cid" },
+        "playlist": { "type": "string", "format": "uri" },
+        "thumbnail": { "type": "string", "format": "uri" },
+        "aspectRatio": {
+          "ref": "app.bsky.embed.defs#aspectRatio",
+          "type": "ref"
         },
         "presentation": {
           "type": "string",
@@ -37,37 +54,12 @@
       "type": "object",
       "required": ["lang", "file"],
       "properties": {
-        "lang": {
-          "type": "string",
-          "format": "language"
-        },
-        "file": {
-          "type": "blob",
-          "accept": ["text/vtt"],
-          "maxSize": 20000
-        }
-      }
-    },
-    "view": {
-      "type": "object",
-      "required": ["cid", "playlist"],
-      "properties": {
-        "cid": { "type": "string", "format": "cid" },
-        "playlist": { "type": "string", "format": "uri" },
-        "thumbnail": { "type": "string", "format": "uri" },
-        "alt": {
-          "type": "string"
-        },
-        "aspectRatio": {
-          "type": "ref",
-          "ref": "app.bsky.embed.defs#aspectRatio"
-        },
-        "presentation": {
-          "type": "string",
-          "description": "A hint to the client about how to present the video.",
-          "knownValues": ["default", "gif"]
-        }
+        "file": { "type": "blob", "accept": ["text/vtt"], "maxSize": 20000 },
+        "lang": { "type": "string", "format": "language" }
       }
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1,
+  "description": "A video embedded in a Bluesky record (eg, a post)."
 }

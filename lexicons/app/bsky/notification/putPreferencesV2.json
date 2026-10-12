@@ -1,84 +1,85 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.notification.putPreferencesV2",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Set notification-related preferences for an account. Requires auth.",
       "input": {
-        "encoding": "application/json",
         "schema": {
           "type": "object",
           "properties": {
             "chat": {
-              "type": "ref",
               "ref": "app.bsky.notification.defs#chatPreference",
+              "type": "ref",
               "description": "Deprecated: use chat.bsky.notification preferences instead. Setting this won't stick and the default values will be returned."
             },
-            "follow": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#filterablePreference"
-            },
             "like": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#filterablePreference"
-            },
-            "likeViaRepost": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#filterablePreference"
-            },
-            "mention": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#filterablePreference"
+              "ref": "app.bsky.notification.defs#filterablePreference",
+              "type": "ref"
             },
             "quote": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#filterablePreference"
+              "ref": "app.bsky.notification.defs#filterablePreference",
+              "type": "ref"
             },
             "reply": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#filterablePreference"
+              "ref": "app.bsky.notification.defs#filterablePreference",
+              "type": "ref"
+            },
+            "follow": {
+              "ref": "app.bsky.notification.defs#filterablePreference",
+              "type": "ref"
             },
             "repost": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#filterablePreference"
+              "ref": "app.bsky.notification.defs#filterablePreference",
+              "type": "ref"
             },
-            "repostViaRepost": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#filterablePreference"
-            },
-            "starterpackJoined": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
-            },
-            "subscribedPost": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
-            },
-            "unverified": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
+            "mention": {
+              "ref": "app.bsky.notification.defs#filterablePreference",
+              "type": "ref"
             },
             "verified": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#preference"
+              "ref": "app.bsky.notification.defs#preference",
+              "type": "ref"
+            },
+            "unverified": {
+              "ref": "app.bsky.notification.defs#preference",
+              "type": "ref"
+            },
+            "likeViaRepost": {
+              "ref": "app.bsky.notification.defs#filterablePreference",
+              "type": "ref"
+            },
+            "subscribedPost": {
+              "ref": "app.bsky.notification.defs#preference",
+              "type": "ref"
+            },
+            "repostViaRepost": {
+              "ref": "app.bsky.notification.defs#filterablePreference",
+              "type": "ref"
+            },
+            "starterpackJoined": {
+              "ref": "app.bsky.notification.defs#preference",
+              "type": "ref"
             }
           }
-        }
+        },
+        "encoding": "application/json"
       },
       "output": {
-        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["preferences"],
           "properties": {
             "preferences": {
-              "type": "ref",
-              "ref": "app.bsky.notification.defs#preferences"
+              "ref": "app.bsky.notification.defs#preferences",
+              "type": "ref"
             }
           }
-        }
-      }
+        },
+        "encoding": "application/json"
+      },
+      "description": "Set notification-related preferences for an account. Requires auth."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

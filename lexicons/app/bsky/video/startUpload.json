@@ -1,35 +1,17 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.video.startUpload",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Start a multipart video upload. The declared size is exact, while optional media properties are advisory and used only for early failure; the authoritative probe runs asynchronously after upload.",
       "input": {
-        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["sizeBytes", "mimeType"],
           "properties": {
-            "sizeBytes": {
-              "type": "integer",
-              "minimum": 1,
-              "description": "Exact byte size of the complete upload-ready video file before it is split into parts."
-            },
-            "mimeType": {
-              "type": "string",
-              "minLength": 3,
-              "maxLength": 255,
-              "description": "Declared MIME type of the video."
-            },
             "name": {
               "type": "string",
               "maxLength": 256,
               "description": "Optional client-provided file name."
-            },
-            "durationMs": {
-              "type": "integer",
-              "description": "Advisory, non-authoritative duration used only for early failure; the authoritative probe runs asynchronously after upload."
             },
             "width": {
               "type": "integer",
@@ -38,22 +20,25 @@
             "height": {
               "type": "integer",
               "description": "Advisory, non-authoritative height used only for early failure; the authoritative probe runs asynchronously after upload."
+            },
+            "mimeType": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 3,
+              "description": "Declared MIME type of the video."
+            },
+            "sizeBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Exact byte size of the complete upload-ready video file before it is split into parts."
+            },
+            "durationMs": {
+              "type": "integer",
+              "description": "Advisory, non-authoritative duration used only for early failure; the authoritative probe runs asynchronously after upload."
             }
           }
-        }
-      },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["jobId", "partSizeBytes", "partCount", "expiresAt"],
-          "properties": {
-            "jobId": { "type": "string", "minLength": 1, "maxLength": 256 },
-            "partSizeBytes": { "type": "integer" },
-            "partCount": { "type": "integer" },
-            "expiresAt": { "type": "string", "format": "datetime" }
-          }
-        }
+        },
+        "encoding": "application/json"
       },
       "errors": [
         {
@@ -88,7 +73,23 @@
           "name": "ServiceOverloaded",
           "description": "The service is draining, at capacity, or temporarily unable to create the multipart upload."
         }
-      ]
+      ],
+      "output": {
+        "schema": {
+          "type": "object",
+          "required": ["jobId", "partSizeBytes", "partCount", "expiresAt"],
+          "properties": {
+            "jobId": { "type": "string", "maxLength": 256, "minLength": 1 },
+            "expiresAt": { "type": "string", "format": "datetime" },
+            "partCount": { "type": "integer" },
+            "partSizeBytes": { "type": "integer" }
+          }
+        },
+        "encoding": "application/json"
+      },
+      "description": "Start a multipart video upload. The declared size is exact, while optional media properties are advisory and used only for early failure; the authoritative probe runs asynchronously after upload."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

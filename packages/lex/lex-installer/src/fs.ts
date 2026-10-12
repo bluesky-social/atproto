@@ -7,6 +7,7 @@ import {
   writeFile,
 } from 'node:fs/promises'
 import { dirname, join, relative, resolve, sep } from 'node:path'
+import { format as prettierFormat } from 'prettier'
 
 const FILE_URI_PREFIX = 'file://'
 
@@ -170,7 +171,9 @@ export async function writeJsonFile(
   await rm(path, { force: true })
   // Trailing newline so the written file is POSIX-friendly and does not thrash against
   // formatters/linters that enforce final newlines (e.g. the tooling in issue #5232).
-  const contents = JSON.stringify(data, null, 2) + '\n'
+  const contents = await prettierFormat(JSON.stringify(data), {
+    parser: 'json',
+  })
   await writeFile(path, contents, {
     encoding: 'utf8',
     mode: 0o644,

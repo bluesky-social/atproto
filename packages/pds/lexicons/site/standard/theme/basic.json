@@ -6,38 +6,25 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "background",
-          "foreground",
-          "accent",
-          "accentForeground"
-        ],
+        "required": ["background", "foreground", "accent", "accentForeground"],
         "properties": {
           "accent": {
-            "refs": [
-              "site.standard.theme.color#rgb"
-            ],
+            "refs": ["site.standard.theme.color#rgb"],
             "type": "union",
             "description": "Color used for links and button backgrounds."
           },
           "background": {
-            "refs": [
-              "site.standard.theme.color#rgb"
-            ],
+            "refs": ["site.standard.theme.color#rgb"],
             "type": "union",
             "description": "Color used for content background."
           },
           "foreground": {
-            "refs": [
-              "site.standard.theme.color#rgb"
-            ],
+            "refs": ["site.standard.theme.color#rgb"],
             "type": "union",
             "description": "Color used for content text."
           },
           "accentForeground": {
-            "refs": [
-              "site.standard.theme.color#rgb"
-            ],
+            "refs": ["site.standard.theme.color#rgb"],
             "type": "union",
             "description": "Color used for button text."
           }

@@ -4,10 +4,7 @@
     {
       "type": "directory",
       "path": "../../lexicons",
-      "include": [
-        "com.atproto.*",
-        "tools.ozone.*"
-      ]
+      "include": ["com.atproto.*", "tools.ozone.*"]
     }
   ],
   "lexicons": [

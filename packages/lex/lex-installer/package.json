@@ -51,6 +51,7 @@
     "@atproto-labs/did-resolver": "workspace:^",
     "@atproto-labs/handle-resolver": "workspace:^",
     "@atproto-labs/handle-resolver-node": "workspace:^",
+    "prettier": "^3.9.6",
     "tslib": "^2.8.1",
     "yargs": "^18.2.0"
   },

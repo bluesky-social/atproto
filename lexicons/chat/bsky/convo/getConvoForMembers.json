@@ -1,10 +1,8 @@
 {
-  "lexicon": 1,
   "id": "chat.bsky.convo.getConvoForMembers",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get or create a 1-1 conversation for the given members. Always returns the same direct (non-group) conversation. To create a group conversation, use createGroup.",
       "errors": [
         { "name": "AccountSuspended" },
         { "name": "BlockedActor" },
@@ -13,34 +11,31 @@
         { "name": "NotFollowedBySender" },
         { "name": "RecipientNotFound" }
       ],
+      "output": {
+        "schema": {
+          "type": "object",
+          "required": ["convo"],
+          "properties": {
+            "convo": { "ref": "chat.bsky.convo.defs#convoView", "type": "ref" }
+          }
+        },
+        "encoding": "application/json"
+      },
       "parameters": {
         "type": "params",
         "required": ["members"],
         "properties": {
           "members": {
             "type": "array",
-            "minLength": 1,
+            "items": { "type": "string", "format": "did" },
             "maxLength": 10,
-            "items": {
-              "type": "string",
-              "format": "did"
-            }
+            "minLength": 1
           }
         }
       },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["convo"],
-          "properties": {
-            "convo": {
-              "type": "ref",
-              "ref": "chat.bsky.convo.defs#convoView"
-            }
-          }
-        }
-      }
+      "description": "Get or create a 1-1 conversation for the given members. Always returns the same direct (non-group) conversation. To create a group conversation, use createGroup."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

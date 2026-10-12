@@ -1,58 +1,57 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.notification.listNotifications",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Enumerate notifications for the requesting account. Requires auth.",
+      "output": {
+        "schema": {
+          "type": "object",
+          "required": ["notifications"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "seenAt": { "type": "string", "format": "datetime" },
+            "priority": {
+              "type": "boolean",
+              "description": "Deprecated: this field is no longer populated."
+            },
+            "notifications": {
+              "type": "array",
+              "items": { "ref": "#notification", "type": "ref" }
+            }
+          }
+        },
+        "encoding": "application/json"
+      },
       "parameters": {
         "type": "params",
         "properties": {
-          "reasons": {
-            "description": "Notification reasons to include in response.",
-            "type": "array",
-            "items": {
-              "type": "string",
-              "description": "A reason that matches the reason property of #notification."
-            }
-          },
           "limit": {
             "type": "integer",
-            "minimum": 1,
+            "default": 50,
             "maximum": 100,
-            "default": 50
-          },
-          "priority": {
-            "type": "boolean",
-            "description": "Deprecated: this parameter is ignored."
+            "minimum": 1
           },
           "cursor": { "type": "string" },
           "seenAt": {
             "type": "string",
             "format": "datetime",
             "description": "Deprecated: this parameter is unsupported and will cause an error."
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "A reason that matches the reason property of #notification."
+            },
+            "description": "Notification reasons to include in response."
+          },
+          "priority": {
+            "type": "boolean",
+            "description": "Deprecated: this parameter is ignored."
           }
         }
       },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["notifications"],
-          "properties": {
-            "cursor": { "type": "string" },
-            "notifications": {
-              "type": "array",
-              "items": { "type": "ref", "ref": "#notification" }
-            },
-            "priority": {
-              "type": "boolean",
-              "description": "Deprecated: this field is no longer populated."
-            },
-            "seenAt": { "type": "string", "format": "datetime" }
-          }
-        }
-      }
+      "description": "Enumerate notifications for the requesting account. Requires auth."
     },
     "notification": {
       "type": "object",
@@ -66,9 +65,14 @@
         "indexedAt"
       ],
       "properties": {
-        "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
-        "author": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
+        "uri": { "type": "string", "format": "at-uri" },
+        "author": { "ref": "app.bsky.actor.defs#profileView", "type": "ref" },
+        "isRead": { "type": "boolean" },
+        "labels": {
+          "type": "array",
+          "items": { "ref": "com.atproto.label.defs#label", "type": "ref" }
+        },
         "reason": {
           "type": "string",
           "description": "The reason why this notification was delivered - e.g. your post was liked, or you received a new follower.",
@@ -88,20 +92,17 @@
             "contact-match"
           ]
         },
-        "reasonSubject": { "type": "string", "format": "at-uri" },
         "record": { "type": "unknown" },
-        "starterPack": {
-          "description": "The starter pack associated with this notification. Present when the notification is for a follow originating from a starter pack.",
-          "type": "ref",
-          "ref": "app.bsky.graph.defs#starterPackViewBasic"
-        },
-        "isRead": { "type": "boolean" },
         "indexedAt": { "type": "string", "format": "datetime" },
-        "labels": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
-        }
+        "starterPack": {
+          "ref": "app.bsky.graph.defs#starterPackViewBasic",
+          "type": "ref",
+          "description": "The starter pack associated with this notification. Present when the notification is for a follow originating from a starter pack."
+        },
+        "reasonSubject": { "type": "string", "format": "at-uri" }
       }
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

@@ -1,34 +1,28 @@
 {
-  "lexicon": 1,
   "id": "chat.bsky.convo.sendMessageBatch",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Sends a batch of messages to a conversation.",
+      "input": {
+        "schema": {
+          "type": "object",
+          "required": ["items"],
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": { "ref": "#batchItem", "type": "ref" },
+              "maxLength": 100
+            }
+          }
+        },
+        "encoding": "application/json"
+      },
       "errors": [
         { "name": "ConvoLocked" },
         { "name": "InvalidConvo" },
         { "name": "ReplyTargetNotFound" }
       ],
-      "input": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["items"],
-          "properties": {
-            "items": {
-              "type": "array",
-              "maxLength": 100,
-              "items": {
-                "type": "ref",
-                "ref": "#batchItem"
-              }
-            }
-          }
-        }
-      },
       "output": {
-        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["items"],
@@ -36,24 +30,25 @@
             "items": {
               "type": "array",
               "items": {
-                "type": "ref",
-                "ref": "chat.bsky.convo.defs#messageView"
+                "ref": "chat.bsky.convo.defs#messageView",
+                "type": "ref"
               }
             }
           }
-        }
-      }
+        },
+        "encoding": "application/json"
+      },
+      "description": "Sends a batch of messages to a conversation."
     },
     "batchItem": {
       "type": "object",
       "required": ["convoId", "message"],
       "properties": {
         "convoId": { "type": "string" },
-        "message": {
-          "type": "ref",
-          "ref": "chat.bsky.convo.defs#messageInput"
-        }
+        "message": { "ref": "chat.bsky.convo.defs#messageInput", "type": "ref" }
       }
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

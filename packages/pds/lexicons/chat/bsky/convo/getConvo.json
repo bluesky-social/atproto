@@ -3,36 +3,21 @@
   "defs": {
     "main": {
       "type": "query",
-      "errors": [
-        {
-          "name": "InvalidConvo"
-        }
-      ],
+      "errors": [{ "name": "InvalidConvo" }],
       "output": {
         "schema": {
           "type": "object",
-          "required": [
-            "convo"
-          ],
+          "required": ["convo"],
           "properties": {
-            "convo": {
-              "ref": "chat.bsky.convo.defs#convoView",
-              "type": "ref"
-            }
+            "convo": { "ref": "chat.bsky.convo.defs#convoView", "type": "ref" }
           }
         },
         "encoding": "application/json"
       },
       "parameters": {
         "type": "params",
-        "required": [
-          "convoId"
-        ],
-        "properties": {
-          "convoId": {
-            "type": "string"
-          }
-        }
+        "required": ["convoId"],
+        "properties": { "convoId": { "type": "string" } }
       },
       "description": "Gets an existing conversation by its ID."
     }

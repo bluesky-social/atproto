@@ -3,21 +3,14 @@
   "defs": {
     "main": {
       "type": "object",
-      "required": [
-        "record"
-      ],
+      "required": ["record"],
       "properties": {
-        "record": {
-          "ref": "com.atproto.repo.strongRef",
-          "type": "ref"
-        }
+        "record": { "ref": "com.atproto.repo.strongRef", "type": "ref" }
       }
     },
     "view": {
       "type": "object",
-      "required": [
-        "record"
-      ],
+      "required": ["record"],
       "properties": {
         "record": {
           "refs": [
@@ -36,22 +29,10 @@
     },
     "viewRecord": {
       "type": "object",
-      "required": [
-        "uri",
-        "cid",
-        "author",
-        "value",
-        "indexedAt"
-      ],
+      "required": ["uri", "cid", "author", "value", "indexedAt"],
       "properties": {
-        "cid": {
-          "type": "string",
-          "format": "cid"
-        },
-        "uri": {
-          "type": "string",
-          "format": "at-uri"
-        },
+        "cid": { "type": "string", "format": "cid" },
+        "uri": { "type": "string", "format": "at-uri" },
         "value": {
           "type": "unknown",
           "description": "The record data itself."
@@ -76,27 +57,13 @@
         },
         "labels": {
           "type": "array",
-          "items": {
-            "ref": "com.atproto.label.defs#label",
-            "type": "ref"
-          }
+          "items": { "ref": "com.atproto.label.defs#label", "type": "ref" }
         },
-        "indexedAt": {
-          "type": "string",
-          "format": "datetime"
-        },
-        "likeCount": {
-          "type": "integer"
-        },
-        "quoteCount": {
-          "type": "integer"
-        },
-        "replyCount": {
-          "type": "integer"
-        },
-        "repostCount": {
-          "type": "integer"
-        },
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "likeCount": { "type": "integer" },
+        "quoteCount": { "type": "integer" },
+        "replyCount": { "type": "integer" },
+        "repostCount": { "type": "integer" },
         "opThreadPostCount": {
           "type": "integer",
           "description": "The total number of posts in the contiguous OP thread that this post belongs to. Only present when this post is part of the OP thread."
@@ -109,58 +76,27 @@
     },
     "viewBlocked": {
       "type": "object",
-      "required": [
-        "uri",
-        "blocked",
-        "author"
-      ],
+      "required": ["uri", "blocked", "author"],
       "properties": {
-        "uri": {
-          "type": "string",
-          "format": "at-uri"
-        },
-        "author": {
-          "ref": "app.bsky.feed.defs#blockedAuthor",
-          "type": "ref"
-        },
-        "blocked": {
-          "type": "boolean",
-          "const": true
-        }
+        "uri": { "type": "string", "format": "at-uri" },
+        "author": { "ref": "app.bsky.feed.defs#blockedAuthor", "type": "ref" },
+        "blocked": { "type": "boolean", "const": true }
       }
     },
     "viewDetached": {
       "type": "object",
-      "required": [
-        "uri",
-        "detached"
-      ],
+      "required": ["uri", "detached"],
       "properties": {
-        "uri": {
-          "type": "string",
-          "format": "at-uri"
-        },
-        "detached": {
-          "type": "boolean",
-          "const": true
-        }
+        "uri": { "type": "string", "format": "at-uri" },
+        "detached": { "type": "boolean", "const": true }
       }
     },
     "viewNotFound": {
       "type": "object",
-      "required": [
-        "uri",
-        "notFound"
-      ],
+      "required": ["uri", "notFound"],
       "properties": {
-        "uri": {
-          "type": "string",
-          "format": "at-uri"
-        },
-        "notFound": {
-          "type": "boolean",
-          "const": true
-        }
+        "uri": { "type": "string", "format": "at-uri" },
+        "notFound": { "type": "boolean", "const": true }
       }
     }
   },

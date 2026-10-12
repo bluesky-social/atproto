@@ -6,16 +6,11 @@
       "input": {
         "schema": {
           "type": "object",
-          "required": [
-            "items"
-          ],
+          "required": ["items"],
           "properties": {
             "items": {
               "type": "array",
-              "items": {
-                "ref": "#batchItem",
-                "type": "ref"
-              },
+              "items": { "ref": "#batchItem", "type": "ref" },
               "maxLength": 100
             }
           }
@@ -23,22 +18,14 @@
         "encoding": "application/json"
       },
       "errors": [
-        {
-          "name": "ConvoLocked"
-        },
-        {
-          "name": "InvalidConvo"
-        },
-        {
-          "name": "ReplyTargetNotFound"
-        }
+        { "name": "ConvoLocked" },
+        { "name": "InvalidConvo" },
+        { "name": "ReplyTargetNotFound" }
       ],
       "output": {
         "schema": {
           "type": "object",
-          "required": [
-            "items"
-          ],
+          "required": ["items"],
           "properties": {
             "items": {
               "type": "array",
@@ -55,18 +42,10 @@
     },
     "batchItem": {
       "type": "object",
-      "required": [
-        "convoId",
-        "message"
-      ],
+      "required": ["convoId", "message"],
       "properties": {
-        "convoId": {
-          "type": "string"
-        },
-        "message": {
-          "ref": "chat.bsky.convo.defs#messageInput",
-          "type": "ref"
-        }
+        "convoId": { "type": "string" },
+        "message": { "ref": "chat.bsky.convo.defs#messageInput", "type": "ref" }
       }
     }
   },

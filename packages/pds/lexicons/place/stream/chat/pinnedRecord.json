@@ -6,10 +6,7 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "pinnedMessage",
-          "createdAt"
-        ],
+        "required": ["pinnedMessage", "createdAt"],
         "properties": {
           "pinnedBy": {
             "type": "string",

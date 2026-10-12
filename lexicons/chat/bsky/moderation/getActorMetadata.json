@@ -1,27 +1,24 @@
 {
-  "lexicon": 1,
   "id": "chat.bsky.moderation.getActorMetadata",
   "defs": {
     "main": {
       "type": "query",
-      "parameters": {
-        "type": "params",
-        "required": ["actor"],
-        "properties": {
-          "actor": { "type": "string", "format": "did" }
-        }
-      },
       "output": {
-        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["day", "month", "all"],
           "properties": {
-            "day": { "type": "ref", "ref": "#metadata" },
-            "month": { "type": "ref", "ref": "#metadata" },
-            "all": { "type": "ref", "ref": "#metadata" }
+            "all": { "ref": "#metadata", "type": "ref" },
+            "day": { "ref": "#metadata", "type": "ref" },
+            "month": { "ref": "#metadata", "type": "ref" }
           }
-        }
+        },
+        "encoding": "application/json"
+      },
+      "parameters": {
+        "type": "params",
+        "required": ["actor"],
+        "properties": { "actor": { "type": "string", "format": "did" } }
       }
     },
     "metadata": {
@@ -33,11 +30,13 @@
         "convosStarted"
       ],
       "properties": {
-        "messagesSent": { "type": "integer" },
-        "messagesReceived": { "type": "integer" },
         "convos": { "type": "integer" },
-        "convosStarted": { "type": "integer" }
+        "messagesSent": { "type": "integer" },
+        "convosStarted": { "type": "integer" },
+        "messagesReceived": { "type": "integer" }
       }
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

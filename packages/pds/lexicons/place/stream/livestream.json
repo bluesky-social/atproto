@@ -6,10 +6,7 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "title",
-          "createdAt"
-        ],
+        "required": ["title", "createdAt"],
         "properties": {
           "url": {
             "type": "string",
@@ -23,11 +20,7 @@
           },
           "tags": {
             "type": "array",
-            "items": {
-              "type": "string",
-              "maxLength": 640,
-              "maxGraphemes": 64
-            },
+            "items": { "type": "string", "maxLength": 640, "maxGraphemes": 64 },
             "maxLength": 10,
             "description": "Freeform tags for this stream. Each tag must be alphanumeric (a-z, A-Z, 0-9) plus colon. Tags with colons indicate a specific tag group (e.g. 'lang:en' indicates the stream's primary language)."
           },
@@ -37,9 +30,7 @@
           },
           "thumb": {
             "type": "blob",
-            "accept": [
-              "image/*"
-            ],
+            "accept": ["image/*"],
             "maxSize": 1000000
           },
           "title": {
@@ -90,44 +81,21 @@
     },
     "viewerCount": {
       "type": "object",
-      "required": [
-        "count"
-      ],
-      "properties": {
-        "count": {
-          "type": "integer"
-        }
-      }
+      "required": ["count"],
+      "properties": { "count": { "type": "integer" } }
     },
     "livestreamView": {
       "type": "object",
-      "required": [
-        "uri",
-        "cid",
-        "author",
-        "record",
-        "indexedAt"
-      ],
+      "required": ["uri", "cid", "author", "record", "indexedAt"],
       "properties": {
-        "cid": {
-          "type": "string",
-          "format": "cid"
-        },
-        "uri": {
-          "type": "string",
-          "format": "at-uri"
-        },
+        "cid": { "type": "string", "format": "cid" },
+        "uri": { "type": "string", "format": "at-uri" },
         "author": {
           "ref": "app.bsky.actor.defs#profileViewBasic",
           "type": "ref"
         },
-        "record": {
-          "type": "unknown"
-        },
-        "indexedAt": {
-          "type": "string",
-          "format": "datetime"
-        },
+        "record": { "type": "unknown" },
+        "indexedAt": { "type": "string", "format": "datetime" },
         "viewerCount": {
           "ref": "#viewerCount",
           "type": "ref",
@@ -137,12 +105,7 @@
     },
     "teleportArrival": {
       "type": "object",
-      "required": [
-        "teleportUri",
-        "source",
-        "viewerCount",
-        "startsAt"
-      ],
+      "required": ["teleportUri", "source", "viewerCount", "startsAt"],
       "properties": {
         "source": {
           "ref": "app.bsky.actor.defs#profileViewBasic",
@@ -172,17 +135,10 @@
     },
     "teleportCanceled": {
       "type": "object",
-      "required": [
-        "teleportUri",
-        "reason"
-      ],
+      "required": ["teleportUri", "reason"],
       "properties": {
         "reason": {
-          "enum": [
-            "deleted",
-            "denied",
-            "expired"
-          ],
+          "enum": ["deleted", "denied", "expired"],
           "type": "string",
           "description": "Why this teleport was canceled"
         },
@@ -195,9 +151,7 @@
     },
     "streamplaceAnything": {
       "type": "object",
-      "required": [
-        "livestream"
-      ],
+      "required": ["livestream"],
       "properties": {
         "livestream": {
           "refs": [

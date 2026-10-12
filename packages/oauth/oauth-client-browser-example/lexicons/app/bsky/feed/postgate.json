@@ -6,37 +6,23 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "post",
-          "createdAt"
-        ],
+        "required": ["post", "createdAt"],
         "properties": {
           "post": {
             "type": "string",
             "format": "at-uri",
             "description": "Reference (AT-URI) to the post record."
           },
-          "createdAt": {
-            "type": "string",
-            "format": "datetime"
-          },
+          "createdAt": { "type": "string", "format": "datetime" },
           "embeddingRules": {
             "type": "array",
-            "items": {
-              "refs": [
-                "#disableRule"
-              ],
-              "type": "union"
-            },
+            "items": { "refs": ["#disableRule"], "type": "union" },
             "maxLength": 5,
             "description": "List of rules defining who can embed this post. If value is an empty array or is undefined, no particular rules apply and anyone can embed."
           },
           "detachedEmbeddingUris": {
             "type": "array",
-            "items": {
-              "type": "string",
-              "format": "at-uri"
-            },
+            "items": { "type": "string", "format": "at-uri" },
             "maxLength": 50,
             "description": "List of AT-URIs embedding this post that the author has detached from."
           }

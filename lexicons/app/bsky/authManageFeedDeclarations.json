@@ -1,21 +1,22 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.authManageFeedDeclarations",
   "defs": {
     "main": {
       "type": "permission-set",
       "title": "Manage Hosted Feeds",
-      "title:lang": {},
       "detail": "Configure feed generator declaration records.",
+      "title:lang": {},
       "detail:lang": {},
       "permissions": [
         {
           "type": "permission",
-          "resource": "repo",
           "action": ["create", "update", "delete"],
+          "resource": "repo",
           "collection": ["app.bsky.feed.generator"]
         }
       ]
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

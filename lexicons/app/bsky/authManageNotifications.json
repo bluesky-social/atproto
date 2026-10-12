@@ -1,18 +1,14 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.authManageNotifications",
   "defs": {
     "main": {
       "type": "permission-set",
       "title": "Manage Bluesky Notifications",
-      "title:lang": {},
       "detail": "View and configure notifications for the Bluesky app.",
+      "title:lang": {},
       "detail:lang": {},
       "permissions": [
         {
-          "type": "permission",
-          "resource": "rpc",
-          "inheritAud": true,
           "lxm": [
             "app.bsky.notification.getPreferences",
             "app.bsky.notification.getGroupedNotifications",
@@ -25,9 +21,14 @@
             "app.bsky.notification.registerPush",
             "app.bsky.notification.unregisterPush",
             "app.bsky.notification.updateSeen"
-          ]
+          ],
+          "type": "permission",
+          "resource": "rpc",
+          "inheritAud": true
         }
       ]
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

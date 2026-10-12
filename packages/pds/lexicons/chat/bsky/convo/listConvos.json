@@ -6,9 +6,7 @@
       "output": {
         "schema": {
           "type": "object",
-          "required": [
-            "convos"
-          ],
+          "required": ["convos"],
           "properties": {
             "convos": {
               "type": "array",
@@ -17,9 +15,7 @@
                 "type": "ref"
               }
             },
-            "cursor": {
-              "type": "string"
-            }
+            "cursor": { "type": "string" }
           }
         },
         "encoding": "application/json"
@@ -30,10 +26,7 @@
           "kind": {
             "type": "string",
             "description": "Filter by conversation kind.",
-            "knownValues": [
-              "direct",
-              "group"
-            ]
+            "knownValues": ["direct", "group"]
           },
           "limit": {
             "type": "integer",
@@ -41,31 +34,17 @@
             "maximum": 100,
             "minimum": 1
           },
-          "cursor": {
-            "type": "string"
-          },
+          "cursor": { "type": "string" },
           "status": {
             "type": "string",
             "description": "Filter convos by their status. It is discouraged to call with \"request\" and preferred to call chat.bsky.convo.listConvoRequests, which also includes group join requests made by the user.",
-            "knownValues": [
-              "request",
-              "accepted"
-            ]
+            "knownValues": ["request", "accepted"]
           },
-          "readState": {
-            "type": "string",
-            "knownValues": [
-              "unread"
-            ]
-          },
+          "readState": { "type": "string", "knownValues": ["unread"] },
           "lockStatus": {
             "type": "string",
             "description": "Filter by conversation lock status. Values follow chat.bsky.convo.defs#convoLockStatus.",
-            "knownValues": [
-              "unlocked",
-              "locked",
-              "locked-permanently"
-            ]
+            "knownValues": ["unlocked", "locked", "locked-permanently"]
           }
         }
       },

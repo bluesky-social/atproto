@@ -1,39 +1,40 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.feed.getSuggestedFeeds",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a list of suggested feeds (feed generators) for the requesting account.",
+      "output": {
+        "schema": {
+          "type": "object",
+          "required": ["feeds"],
+          "properties": {
+            "feeds": {
+              "type": "array",
+              "items": {
+                "ref": "app.bsky.feed.defs#generatorView",
+                "type": "ref"
+              }
+            },
+            "cursor": { "type": "string" }
+          }
+        },
+        "encoding": "application/json"
+      },
       "parameters": {
         "type": "params",
         "properties": {
           "limit": {
             "type": "integer",
-            "minimum": 1,
+            "default": 50,
             "maximum": 100,
-            "default": 50
+            "minimum": 1
           },
           "cursor": { "type": "string" }
         }
       },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["feeds"],
-          "properties": {
-            "cursor": { "type": "string" },
-            "feeds": {
-              "type": "array",
-              "items": {
-                "type": "ref",
-                "ref": "app.bsky.feed.defs#generatorView"
-              }
-            }
-          }
-        }
-      }
+      "description": "Get a list of suggested feeds (feed generators) for the requesting account."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

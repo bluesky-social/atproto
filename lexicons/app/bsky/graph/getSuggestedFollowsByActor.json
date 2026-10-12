@@ -1,29 +1,16 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.graph.getSuggestedFollowsByActor",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Enumerates follows similar to a given account (actor). Expected use is to recommend additional accounts immediately after following one account.",
-      "parameters": {
-        "type": "params",
-        "required": ["actor"],
-        "properties": {
-          "actor": { "type": "string", "format": "at-identifier" }
-        }
-      },
       "output": {
-        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["suggestions"],
           "properties": {
-            "suggestions": {
-              "type": "array",
-              "items": {
-                "type": "ref",
-                "ref": "app.bsky.actor.defs#profileView"
-              }
+            "recId": {
+              "type": "integer",
+              "description": "DEPRECATED: use recIdStr instead."
             },
             "recIdStr": {
               "type": "string",
@@ -31,16 +18,30 @@
             },
             "isFallback": {
               "type": "boolean",
-              "description": "DEPRECATED, unused. Previously: if true, response has fallen-back to generic results, and is not scoped using relativeToDid",
-              "default": false
+              "default": false,
+              "description": "DEPRECATED, unused. Previously: if true, response has fallen-back to generic results, and is not scoped using relativeToDid"
             },
-            "recId": {
-              "type": "integer",
-              "description": "DEPRECATED: use recIdStr instead."
+            "suggestions": {
+              "type": "array",
+              "items": {
+                "ref": "app.bsky.actor.defs#profileView",
+                "type": "ref"
+              }
             }
           }
+        },
+        "encoding": "application/json"
+      },
+      "parameters": {
+        "type": "params",
+        "required": ["actor"],
+        "properties": {
+          "actor": { "type": "string", "format": "at-identifier" }
         }
-      }
+      },
+      "description": "Enumerates follows similar to a given account (actor). Expected use is to recommend additional accounts immediately after following one account."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

@@ -6,11 +6,7 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "name",
-          "list",
-          "createdAt"
-        ],
+        "required": ["name", "list", "createdAt"],
         "properties": {
           "list": {
             "type": "string",
@@ -26,16 +22,10 @@
           },
           "feeds": {
             "type": "array",
-            "items": {
-              "ref": "#feedItem",
-              "type": "ref"
-            },
+            "items": { "ref": "#feedItem", "type": "ref" },
             "maxLength": 3
           },
-          "createdAt": {
-            "type": "string",
-            "format": "datetime"
-          },
+          "createdAt": { "type": "string", "format": "datetime" },
           "description": {
             "type": "string",
             "maxLength": 3000,
@@ -43,10 +33,7 @@
           },
           "descriptionFacets": {
             "type": "array",
-            "items": {
-              "ref": "app.bsky.richtext.facet",
-              "type": "ref"
-            }
+            "items": { "ref": "app.bsky.richtext.facet", "type": "ref" }
           }
         }
       },
@@ -54,15 +41,8 @@
     },
     "feedItem": {
       "type": "object",
-      "required": [
-        "uri"
-      ],
-      "properties": {
-        "uri": {
-          "type": "string",
-          "format": "at-uri"
-        }
-      }
+      "required": ["uri"],
+      "properties": { "uri": { "type": "string", "format": "at-uri" } }
     }
   },
   "$type": "com.atproto.lexicon.schema",

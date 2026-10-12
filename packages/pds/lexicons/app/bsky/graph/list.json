@@ -6,11 +6,7 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "name",
-          "purpose",
-          "createdAt"
-        ],
+        "required": ["name", "purpose", "createdAt"],
         "properties": {
           "name": {
             "type": "string",
@@ -20,16 +16,11 @@
           },
           "avatar": {
             "type": "blob",
-            "accept": [
-              "image/png",
-              "image/jpeg"
-            ],
+            "accept": ["image/png", "image/jpeg"],
             "maxSize": 1000000
           },
           "labels": {
-            "refs": [
-              "com.atproto.label.defs#selfLabels"
-            ],
+            "refs": ["com.atproto.label.defs#selfLabels"],
             "type": "union"
           },
           "purpose": {
@@ -37,10 +28,7 @@
             "type": "ref",
             "description": "Defines the purpose of the list (aka, moderation-oriented or curration-oriented)"
           },
-          "createdAt": {
-            "type": "string",
-            "format": "datetime"
-          },
+          "createdAt": { "type": "string", "format": "datetime" },
           "description": {
             "type": "string",
             "maxLength": 3000,
@@ -48,10 +36,7 @@
           },
           "descriptionFacets": {
             "type": "array",
-            "items": {
-              "ref": "app.bsky.richtext.facet",
-              "type": "ref"
-            }
+            "items": { "ref": "app.bsky.richtext.facet", "type": "ref" }
           }
         }
       },

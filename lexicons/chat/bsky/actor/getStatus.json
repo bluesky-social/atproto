@@ -1,12 +1,9 @@
 {
-  "lexicon": 1,
   "id": "chat.bsky.actor.getStatus",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get the authenticated viewer's chat status: whether their account is chat-disabled and whether their group-membership additions are restricted to accounts they follow.",
       "output": {
-        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["chatDisabled", "canCreateGroups", "groupMemberLimit"],
@@ -24,8 +21,12 @@
               "description": "The maximum number of members allowed in a group conversation."
             }
           }
-        }
-      }
+        },
+        "encoding": "application/json"
+      },
+      "description": "Get the authenticated viewer's chat status: whether their account is chat-disabled and whether their group-membership additions are restricted to accounts they follow."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

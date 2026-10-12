@@ -10,29 +10,19 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "status",
-          "createdAt"
-        ],
+        "required": ["status", "createdAt"],
         "properties": {
           "embed": {
-            "refs": [
-              "app.bsky.embed.external"
-            ],
+            "refs": ["app.bsky.embed.external"],
             "type": "union",
             "description": "An optional embed associated with the status."
           },
           "status": {
             "type": "string",
             "description": "The status for the account.",
-            "knownValues": [
-              "app.bsky.actor.status#live"
-            ]
+            "knownValues": ["app.bsky.actor.status#live"]
           },
-          "createdAt": {
-            "type": "string",
-            "format": "datetime"
-          },
+          "createdAt": { "type": "string", "format": "datetime" },
           "durationMinutes": {
             "type": "integer",
             "minimum": 1,

@@ -6,21 +6,13 @@
       "input": {
         "schema": {
           "type": "object",
-          "required": [
-            "convoId"
-          ],
-          "properties": {
-            "convoId": {
-              "type": "string"
-            }
-          }
+          "required": ["convoId"],
+          "properties": { "convoId": { "type": "string" } }
         },
         "encoding": "application/json"
       },
       "errors": [
-        {
-          "name": "InvalidConvo"
-        },
+        { "name": "InvalidConvo" },
         {
           "name": "AlreadyLeftConvo",
           "description": "The user has already left the conversation and is not back in (a direct conversation can be restarted by a new message, which allows leaving again)."
@@ -33,17 +25,10 @@
       "output": {
         "schema": {
           "type": "object",
-          "required": [
-            "convoId",
-            "rev"
-          ],
+          "required": ["convoId", "rev"],
           "properties": {
-            "rev": {
-              "type": "string"
-            },
-            "convoId": {
-              "type": "string"
-            }
+            "rev": { "type": "string" },
+            "convoId": { "type": "string" }
           }
         },
         "encoding": "application/json"

@@ -1,10 +1,24 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.feed.getFeedGenerators",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get information about a list of feed generators.",
+      "output": {
+        "schema": {
+          "type": "object",
+          "required": ["feeds"],
+          "properties": {
+            "feeds": {
+              "type": "array",
+              "items": {
+                "ref": "app.bsky.feed.defs#generatorView",
+                "type": "ref"
+              }
+            }
+          }
+        },
+        "encoding": "application/json"
+      },
       "parameters": {
         "type": "params",
         "required": ["feeds"],
@@ -15,22 +29,9 @@
           }
         }
       },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["feeds"],
-          "properties": {
-            "feeds": {
-              "type": "array",
-              "items": {
-                "type": "ref",
-                "ref": "app.bsky.feed.defs#generatorView"
-              }
-            }
-          }
-        }
-      }
+      "description": "Get information about a list of feed generators."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

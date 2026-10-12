@@ -3,17 +3,11 @@
   "defs": {
     "main": {
       "type": "query",
-      "errors": [
-        {
-          "name": "NotFound"
-        }
-      ],
+      "errors": [{ "name": "NotFound" }],
       "output": {
         "schema": {
           "type": "object",
-          "required": [
-            "thread"
-          ],
+          "required": ["thread"],
           "properties": {
             "thread": {
               "refs": [
@@ -33,9 +27,7 @@
       },
       "parameters": {
         "type": "params",
-        "required": [
-          "uri"
-        ],
+        "required": ["uri"],
         "properties": {
           "uri": {
             "type": "string",

@@ -1,19 +1,9 @@
 {
-  "lexicon": 1,
   "id": "chat.bsky.convo.deleteMessageForSelf",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Marks a message as deleted for the viewer, so they won't see that message in future enumerations.",
-      "errors": [
-        { "name": "InvalidConvo" },
-        {
-          "name": "MessageDeleteNotAllowed",
-          "description": "Indicates that this message cannot be deleted, e.g. because it is a system message."
-        }
-      ],
       "input": {
-        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["convoId", "messageId"],
@@ -21,15 +11,26 @@
             "convoId": { "type": "string" },
             "messageId": { "type": "string" }
           }
-        }
+        },
+        "encoding": "application/json"
       },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "ref",
-          "ref": "chat.bsky.convo.defs#deletedMessageView"
+      "errors": [
+        { "name": "InvalidConvo" },
+        {
+          "name": "MessageDeleteNotAllowed",
+          "description": "Indicates that this message cannot be deleted, e.g. because it is a system message."
         }
-      }
+      ],
+      "output": {
+        "schema": {
+          "ref": "chat.bsky.convo.defs#deletedMessageView",
+          "type": "ref"
+        },
+        "encoding": "application/json"
+      },
+      "description": "Marks a message as deleted for the viewer, so they won't see that message in future enumerations."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

@@ -6,18 +6,12 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "allowSubscriptions"
-        ],
+        "required": ["allowSubscriptions"],
         "properties": {
           "allowSubscriptions": {
             "type": "string",
             "description": "A declaration of the user's preference for allowing activity subscriptions from other users. Absence of a record implies 'followers'.",
-            "knownValues": [
-              "followers",
-              "mutuals",
-              "none"
-            ]
+            "knownValues": ["followers", "mutuals", "none"]
           }
         }
       },

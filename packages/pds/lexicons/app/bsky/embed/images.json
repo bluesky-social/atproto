@@ -3,42 +3,29 @@
   "defs": {
     "main": {
       "type": "object",
-      "required": [
-        "images"
-      ],
+      "required": ["images"],
       "properties": {
         "images": {
           "type": "array",
-          "items": {
-            "ref": "#image",
-            "type": "ref"
-          },
+          "items": { "ref": "#image", "type": "ref" },
           "maxLength": 4
         }
       }
     },
     "view": {
       "type": "object",
-      "required": [
-        "images"
-      ],
+      "required": ["images"],
       "properties": {
         "images": {
           "type": "array",
-          "items": {
-            "ref": "#viewImage",
-            "type": "ref"
-          },
+          "items": { "ref": "#viewImage", "type": "ref" },
           "maxLength": 4
         }
       }
     },
     "image": {
       "type": "object",
-      "required": [
-        "image",
-        "alt"
-      ],
+      "required": ["image", "alt"],
       "properties": {
         "alt": {
           "type": "string",
@@ -46,9 +33,7 @@
         },
         "image": {
           "type": "blob",
-          "accept": [
-            "image/*"
-          ],
+          "accept": ["image/*"],
           "maxSize": 2000000,
           "description": "The raw image file. May be up to 2 MB, formerly limited to 1 MB."
         },
@@ -60,11 +45,7 @@
     },
     "viewImage": {
       "type": "object",
-      "required": [
-        "thumb",
-        "fullsize",
-        "alt"
-      ],
+      "required": ["thumb", "fullsize", "alt"],
       "properties": {
         "alt": {
           "type": "string",

@@ -6,25 +6,17 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "policies",
-          "createdAt"
-        ],
+        "required": ["policies", "createdAt"],
         "properties": {
           "labels": {
-            "refs": [
-              "com.atproto.label.defs#selfLabels"
-            ],
+            "refs": ["com.atproto.label.defs#selfLabels"],
             "type": "union"
           },
           "policies": {
             "ref": "app.bsky.labeler.defs#labelerPolicies",
             "type": "ref"
           },
-          "createdAt": {
-            "type": "string",
-            "format": "datetime"
-          },
+          "createdAt": { "type": "string", "format": "datetime" },
           "reasonTypes": {
             "type": "array",
             "items": {
@@ -43,10 +35,7 @@
           },
           "subjectCollections": {
             "type": "array",
-            "items": {
-              "type": "string",
-              "format": "nsid"
-            },
+            "items": { "type": "string", "format": "nsid" },
             "description": "Set of record types (collection NSIDs) which can be reported to this service. If not defined (distinct from empty array), default is any record type."
           }
         }

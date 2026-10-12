@@ -6,10 +6,7 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "url",
-          "name"
-        ],
+        "required": ["url", "name"],
         "properties": {
           "url": {
             "type": "string",
@@ -18,9 +15,7 @@
           },
           "icon": {
             "type": "blob",
-            "accept": [
-              "image/*"
-            ],
+            "accept": ["image/*"],
             "maxSize": 1000000,
             "description": "Square image to identify the publication. Should be at least 256x256."
           },
@@ -31,9 +26,7 @@
             "maxGraphemes": 500
           },
           "labels": {
-            "refs": [
-              "com.atproto.label.defs#selfLabels"
-            ],
+            "refs": ["com.atproto.label.defs#selfLabels"],
             "type": "union",
             "description": "Self-label values for this publication. Effectively content warnings."
           },

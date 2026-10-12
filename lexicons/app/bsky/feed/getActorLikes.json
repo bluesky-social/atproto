@@ -1,10 +1,26 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.feed.getActorLikes",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a list of posts liked by an actor. Requires auth, actor must be the requesting account.",
+      "errors": [{ "name": "BlockedActor" }, { "name": "BlockedByActor" }],
+      "output": {
+        "schema": {
+          "type": "object",
+          "required": ["feed"],
+          "properties": {
+            "feed": {
+              "type": "array",
+              "items": {
+                "ref": "app.bsky.feed.defs#feedViewPost",
+                "type": "ref"
+              }
+            },
+            "cursor": { "type": "string" }
+          }
+        },
+        "encoding": "application/json"
+      },
       "parameters": {
         "type": "params",
         "required": ["actor"],
@@ -12,31 +28,16 @@
           "actor": { "type": "string", "format": "at-identifier" },
           "limit": {
             "type": "integer",
-            "minimum": 1,
+            "default": 50,
             "maximum": 100,
-            "default": 50
+            "minimum": 1
           },
           "cursor": { "type": "string" }
         }
       },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["feed"],
-          "properties": {
-            "cursor": { "type": "string" },
-            "feed": {
-              "type": "array",
-              "items": {
-                "type": "ref",
-                "ref": "app.bsky.feed.defs#feedViewPost"
-              }
-            }
-          }
-        }
-      },
-      "errors": [{ "name": "BlockedActor" }, { "name": "BlockedByActor" }]
+      "description": "Get a list of posts liked by an actor. Requires auth, actor must be the requesting account."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

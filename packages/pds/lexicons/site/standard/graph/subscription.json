@@ -6,14 +6,9 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "publication"
-        ],
+        "required": ["publication"],
         "properties": {
-          "createdAt": {
-            "type": "string",
-            "format": "datetime"
-          },
+          "createdAt": { "type": "string", "format": "datetime" },
           "publication": {
             "type": "string",
             "format": "at-uri",

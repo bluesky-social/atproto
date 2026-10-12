@@ -6,18 +6,11 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "text",
-          "createdAt"
-        ],
+        "required": ["text", "createdAt"],
         "properties": {
           "tags": {
             "type": "array",
-            "items": {
-              "type": "string",
-              "maxLength": 640,
-              "maxGraphemes": 64
-            },
+            "items": { "type": "string", "maxLength": 640, "maxGraphemes": 64 },
             "maxLength": 8,
             "description": "Additional hashtags, in addition to any included in post text and facets."
           },
@@ -40,38 +33,24 @@
           },
           "langs": {
             "type": "array",
-            "items": {
-              "type": "string",
-              "format": "language"
-            },
+            "items": { "type": "string", "format": "language" },
             "maxLength": 3,
             "description": "Indicates human language of post primary text content."
           },
-          "reply": {
-            "ref": "#replyRef",
-            "type": "ref"
-          },
+          "reply": { "ref": "#replyRef", "type": "ref" },
           "facets": {
             "type": "array",
-            "items": {
-              "ref": "app.bsky.richtext.facet",
-              "type": "ref"
-            },
+            "items": { "ref": "app.bsky.richtext.facet", "type": "ref" },
             "description": "Annotations of text (mentions, URLs, hashtags, etc)"
           },
           "labels": {
-            "refs": [
-              "com.atproto.label.defs#selfLabels"
-            ],
+            "refs": ["com.atproto.label.defs#selfLabels"],
             "type": "union",
             "description": "Self-label values for this post. Effectively content warnings."
           },
           "entities": {
             "type": "array",
-            "items": {
-              "ref": "#entity",
-              "type": "ref"
-            },
+            "items": { "ref": "#entity", "type": "ref" },
             "description": "DEPRECATED: replaced by app.bsky.richtext.facet."
           },
           "createdAt": {
@@ -85,58 +64,31 @@
     },
     "entity": {
       "type": "object",
-      "required": [
-        "index",
-        "type",
-        "value"
-      ],
+      "required": ["index", "type", "value"],
       "properties": {
         "type": {
           "type": "string",
           "description": "Expected values are 'mention' and 'link'."
         },
-        "index": {
-          "ref": "#textSlice",
-          "type": "ref"
-        },
-        "value": {
-          "type": "string"
-        }
+        "index": { "ref": "#textSlice", "type": "ref" },
+        "value": { "type": "string" }
       },
       "description": "Deprecated: use facets instead."
     },
     "replyRef": {
       "type": "object",
-      "required": [
-        "root",
-        "parent"
-      ],
+      "required": ["root", "parent"],
       "properties": {
-        "root": {
-          "ref": "com.atproto.repo.strongRef",
-          "type": "ref"
-        },
-        "parent": {
-          "ref": "com.atproto.repo.strongRef",
-          "type": "ref"
-        }
+        "root": { "ref": "com.atproto.repo.strongRef", "type": "ref" },
+        "parent": { "ref": "com.atproto.repo.strongRef", "type": "ref" }
       }
     },
     "textSlice": {
       "type": "object",
-      "required": [
-        "start",
-        "end"
-      ],
+      "required": ["start", "end"],
       "properties": {
-        "end": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "start": {
-          "type": "integer",
-          "minimum": 0
-        }
+        "end": { "type": "integer", "minimum": 0 },
+        "start": { "type": "integer", "minimum": 0 }
       },
       "description": "Deprecated. Use app.bsky.richtext instead -- A text segment. Start is inclusive, end is exclusive. Indices are for utf16-encoded strings."
     }

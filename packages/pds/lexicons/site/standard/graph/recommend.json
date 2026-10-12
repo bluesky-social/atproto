@@ -6,20 +6,14 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "document",
-          "createdAt"
-        ],
+        "required": ["document", "createdAt"],
         "properties": {
           "document": {
             "type": "string",
             "format": "at-uri",
             "description": "AT-URI reference to the document record being recommended (ex: at://did:plc:abc123/site.standard.document/xyz789)."
           },
-          "createdAt": {
-            "type": "string",
-            "format": "datetime"
-          }
+          "createdAt": { "type": "string", "format": "datetime" }
         }
       },
       "description": "Record declaring a recommendation of a document."

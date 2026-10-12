@@ -3,21 +3,13 @@
   "defs": {
     "main": {
       "type": "query",
-      "errors": [
-        {
-          "name": "InvalidConvo"
-        }
-      ],
+      "errors": [{ "name": "InvalidConvo" }],
       "output": {
         "schema": {
           "type": "object",
-          "required": [
-            "messages"
-          ],
+          "required": ["messages"],
           "properties": {
-            "cursor": {
-              "type": "string"
-            },
+            "cursor": { "type": "string" },
             "messages": {
               "type": "array",
               "items": {
@@ -43,9 +35,7 @@
       },
       "parameters": {
         "type": "params",
-        "required": [
-          "convoId"
-        ],
+        "required": ["convoId"],
         "properties": {
           "limit": {
             "type": "integer",
@@ -53,12 +43,8 @@
             "maximum": 100,
             "minimum": 1
           },
-          "cursor": {
-            "type": "string"
-          },
-          "convoId": {
-            "type": "string"
-          }
+          "cursor": { "type": "string" },
+          "convoId": { "type": "string" }
         }
       },
       "description": "Returns a page of messages from a conversation."

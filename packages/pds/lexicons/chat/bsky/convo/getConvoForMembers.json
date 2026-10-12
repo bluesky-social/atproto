@@ -4,52 +4,30 @@
     "main": {
       "type": "query",
       "errors": [
-        {
-          "name": "AccountSuspended"
-        },
-        {
-          "name": "BlockedActor"
-        },
-        {
-          "name": "BlockedSubject"
-        },
-        {
-          "name": "MessagesDisabled"
-        },
-        {
-          "name": "NotFollowedBySender"
-        },
-        {
-          "name": "RecipientNotFound"
-        }
+        { "name": "AccountSuspended" },
+        { "name": "BlockedActor" },
+        { "name": "BlockedSubject" },
+        { "name": "MessagesDisabled" },
+        { "name": "NotFollowedBySender" },
+        { "name": "RecipientNotFound" }
       ],
       "output": {
         "schema": {
           "type": "object",
-          "required": [
-            "convo"
-          ],
+          "required": ["convo"],
           "properties": {
-            "convo": {
-              "ref": "chat.bsky.convo.defs#convoView",
-              "type": "ref"
-            }
+            "convo": { "ref": "chat.bsky.convo.defs#convoView", "type": "ref" }
           }
         },
         "encoding": "application/json"
       },
       "parameters": {
         "type": "params",
-        "required": [
-          "members"
-        ],
+        "required": ["members"],
         "properties": {
           "members": {
             "type": "array",
-            "items": {
-              "type": "string",
-              "format": "did"
-            },
+            "items": { "type": "string", "format": "did" },
             "maxLength": 10,
             "minLength": 1
           }

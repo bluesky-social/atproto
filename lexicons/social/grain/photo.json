@@ -17,10 +17,7 @@
             "accept": ["image/*"],
             "maxSize": 1000000
           },
-          "createdAt": {
-            "type": "string",
-            "format": "datetime"
-          },
+          "createdAt": { "type": "string", "format": "datetime" },
           "aspectRatio": {
             "ref": "social.grain.defs#aspectRatio",
             "type": "ref"

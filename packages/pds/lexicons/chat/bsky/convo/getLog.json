@@ -6,9 +6,7 @@
       "output": {
         "schema": {
           "type": "object",
-          "required": [
-            "logs"
-          ],
+          "required": ["logs"],
           "properties": {
             "logs": {
               "type": "array",
@@ -48,9 +46,7 @@
                 "type": "union"
               }
             },
-            "cursor": {
-              "type": "string"
-            }
+            "cursor": { "type": "string" }
           }
         },
         "encoding": "application/json"
@@ -58,11 +54,7 @@
       "parameters": {
         "type": "params",
         "required": [],
-        "properties": {
-          "cursor": {
-            "type": "string"
-          }
-        }
+        "properties": { "cursor": { "type": "string" } }
       }
     }
   },

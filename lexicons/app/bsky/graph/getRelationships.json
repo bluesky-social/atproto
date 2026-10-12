@@ -1,10 +1,34 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.graph.getRelationships",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Enumerates public relationships between one account, and a list of other accounts. Does not require auth.",
+      "errors": [
+        {
+          "name": "ActorNotFound",
+          "description": "the primary actor at-identifier could not be resolved"
+        }
+      ],
+      "output": {
+        "schema": {
+          "type": "object",
+          "required": ["relationships"],
+          "properties": {
+            "actor": { "type": "string", "format": "did" },
+            "relationships": {
+              "type": "array",
+              "items": {
+                "refs": [
+                  "app.bsky.graph.defs#relationship",
+                  "app.bsky.graph.defs#notFoundActor"
+                ],
+                "type": "union"
+              }
+            }
+          }
+        },
+        "encoding": "application/json"
+      },
       "parameters": {
         "type": "params",
         "required": ["actor"],
@@ -16,41 +40,15 @@
           },
           "others": {
             "type": "array",
-            "description": "List of 'other' accounts to be related back to the primary.",
+            "items": { "type": "string", "format": "at-identifier" },
             "maxLength": 30,
-            "items": {
-              "type": "string",
-              "format": "at-identifier"
-            }
+            "description": "List of 'other' accounts to be related back to the primary."
           }
         }
       },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["relationships"],
-          "properties": {
-            "actor": { "type": "string", "format": "did" },
-            "relationships": {
-              "type": "array",
-              "items": {
-                "type": "union",
-                "refs": [
-                  "app.bsky.graph.defs#relationship",
-                  "app.bsky.graph.defs#notFoundActor"
-                ]
-              }
-            }
-          }
-        }
-      },
-      "errors": [
-        {
-          "name": "ActorNotFound",
-          "description": "the primary actor at-identifier could not be resolved"
-        }
-      ]
+      "description": "Enumerates public relationships between one account, and a list of other accounts. Does not require auth."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

@@ -224,6 +224,9 @@ importers:
       '@atproto/dev-env':
         specifier: workspace:^
         version: link:packages/dev-env
+      '@atproto/lex':
+        specifier: workspace:^
+        version: link:packages/lex/lex
       '@atproto/pds':
         specifier: workspace:^
         version: link:packages/pds
@@ -1219,6 +1222,9 @@ importers:
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../../syntax
+      prettier:
+        specifier: ^3.9.6
+        version: 3.9.9
       tslib:
         specifier: ^2.8.1
         version: 2.8.1

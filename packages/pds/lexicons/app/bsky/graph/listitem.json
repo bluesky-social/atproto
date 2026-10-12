@@ -6,11 +6,7 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "subject",
-          "list",
-          "createdAt"
-        ],
+        "required": ["subject", "list", "createdAt"],
         "properties": {
           "list": {
             "type": "string",
@@ -22,10 +18,7 @@
             "format": "did",
             "description": "The account which is included on the list."
           },
-          "createdAt": {
-            "type": "string",
-            "format": "datetime"
-          }
+          "createdAt": { "type": "string", "format": "datetime" }
         }
       },
       "description": "Record representing an account's inclusion on a specific list. The AppView will ignore duplicate listitem records."

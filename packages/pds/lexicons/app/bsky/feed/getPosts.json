@@ -6,16 +6,11 @@
       "output": {
         "schema": {
           "type": "object",
-          "required": [
-            "posts"
-          ],
+          "required": ["posts"],
           "properties": {
             "posts": {
               "type": "array",
-              "items": {
-                "ref": "app.bsky.feed.defs#postView",
-                "type": "ref"
-              }
+              "items": { "ref": "app.bsky.feed.defs#postView", "type": "ref" }
             }
           }
         },
@@ -23,16 +18,11 @@
       },
       "parameters": {
         "type": "params",
-        "required": [
-          "uris"
-        ],
+        "required": ["uris"],
         "properties": {
           "uris": {
             "type": "array",
-            "items": {
-              "type": "string",
-              "format": "at-uri"
-            },
+            "items": { "type": "string", "format": "at-uri" },
             "maxLength": 25,
             "description": "List of post AT-URIs to return hydrated views for."
           }

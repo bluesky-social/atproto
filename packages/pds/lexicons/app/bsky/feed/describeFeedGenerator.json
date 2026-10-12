@@ -3,41 +3,22 @@
   "defs": {
     "feed": {
       "type": "object",
-      "required": [
-        "uri"
-      ],
-      "properties": {
-        "uri": {
-          "type": "string",
-          "format": "at-uri"
-        }
-      }
+      "required": ["uri"],
+      "properties": { "uri": { "type": "string", "format": "at-uri" } }
     },
     "main": {
       "type": "query",
       "output": {
         "schema": {
           "type": "object",
-          "required": [
-            "did",
-            "feeds"
-          ],
+          "required": ["did", "feeds"],
           "properties": {
-            "did": {
-              "type": "string",
-              "format": "did"
-            },
+            "did": { "type": "string", "format": "did" },
             "feeds": {
               "type": "array",
-              "items": {
-                "ref": "#feed",
-                "type": "ref"
-              }
+              "items": { "ref": "#feed", "type": "ref" }
             },
-            "links": {
-              "ref": "#links",
-              "type": "ref"
-            }
+            "links": { "ref": "#links", "type": "ref" }
           }
         },
         "encoding": "application/json"
@@ -47,12 +28,8 @@
     "links": {
       "type": "object",
       "properties": {
-        "privacyPolicy": {
-          "type": "string"
-        },
-        "termsOfService": {
-          "type": "string"
-        }
+        "privacyPolicy": { "type": "string" },
+        "termsOfService": { "type": "string" }
       }
     }
   },

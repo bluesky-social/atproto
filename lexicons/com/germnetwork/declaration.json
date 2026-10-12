@@ -1,29 +1,27 @@
 {
-  "lexicon": 1,
   "id": "com.germnetwork.declaration",
   "defs": {
     "main": {
-      "type": "record",
-      "description": "A declaration of a Germ Network account",
       "key": "literal:self",
+      "type": "record",
       "record": {
         "type": "object",
         "required": ["version", "currentKey"],
         "properties": {
           "version": {
             "type": "string",
-            "description": "Semver version number, without pre-release or build information, for the format of opaque content",
+            "maxLength": 14,
             "minLength": 5,
-            "maxLength": 14
+            "description": "Semver version number, without pre-release or build information, for the format of opaque content"
+          },
+          "messageMe": {
+            "ref": "#messageMe",
+            "type": "ref",
+            "description": "Controls who can message this account"
           },
           "currentKey": {
             "type": "bytes",
             "description": "Opaque value, an ed25519 public key prefixed with a byte enum"
-          },
-          "messageMe": {
-            "type": "ref",
-            "description": "Controls who can message this account",
-            "ref": "#messageMe"
           },
           "keyPackage": {
             "type": "bytes",
@@ -31,14 +29,13 @@
           },
           "continuityProofs": {
             "type": "array",
-            "description": "Array of opaque values to allow for key rolling",
-            "items": {
-              "type": "bytes"
-            },
-            "maxLength": 1000
+            "items": { "type": "bytes" },
+            "maxLength": 1000,
+            "description": "Array of opaque values to allow for key rolling"
           }
         }
-      }
+      },
+      "description": "A declaration of a Germ Network account"
     },
     "messageMe": {
       "type": "object",
@@ -46,19 +43,21 @@
       "properties": {
         "messageMeUrl": {
           "type": "string",
-          "description": "A URL to present to an account that does not have its own com.germnetwork.declaration record, must have an empty fragment component, where the app should fill in the fragment component with the DIDs of the two accounts who wish to message each other",
           "format": "uri",
+          "maxLength": 2047,
           "minLength": 1,
-          "maxLength": 2047
+          "description": "A URL to present to an account that does not have its own com.germnetwork.declaration record, must have an empty fragment component, where the app should fill in the fragment component with the DIDs of the two accounts who wish to message each other"
         },
         "showButtonTo": {
           "type": "string",
-          "knownValues": ["none", "usersIFollow", "everyone"],
-          "description": "The policy of who can message the account, this value is included in the keyPackage, but is duplicated here to allow applications to decide if they should show a 'Message on Germ' button to the viewer.",
+          "maxLength": 100,
           "minLength": 1,
-          "maxLength": 100
+          "description": "The policy of who can message the account, this value is included in the keyPackage, but is duplicated here to allow applications to decide if they should show a 'Message on Germ' button to the viewer.",
+          "knownValues": ["none", "usersIFollow", "everyone"]
         }
       }
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

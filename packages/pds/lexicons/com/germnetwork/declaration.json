@@ -6,10 +6,7 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "version",
-          "currentKey"
-        ],
+        "required": ["version", "currentKey"],
         "properties": {
           "version": {
             "type": "string",
@@ -32,9 +29,7 @@
           },
           "continuityProofs": {
             "type": "array",
-            "items": {
-              "type": "bytes"
-            },
+            "items": { "type": "bytes" },
             "maxLength": 1000,
             "description": "Array of opaque values to allow for key rolling"
           }
@@ -44,10 +39,7 @@
     },
     "messageMe": {
       "type": "object",
-      "required": [
-        "showButtonTo",
-        "messageMeUrl"
-      ],
+      "required": ["showButtonTo", "messageMeUrl"],
       "properties": {
         "messageMeUrl": {
           "type": "string",
@@ -61,11 +53,7 @@
           "maxLength": 100,
           "minLength": 1,
           "description": "The policy of who can message the account, this value is included in the keyPackage, but is duplicated here to allow applications to decide if they should show a 'Message on Germ' button to the viewer.",
-          "knownValues": [
-            "none",
-            "usersIFollow",
-            "everyone"
-          ]
+          "knownValues": ["none", "usersIFollow", "everyone"]
         }
       }
     }

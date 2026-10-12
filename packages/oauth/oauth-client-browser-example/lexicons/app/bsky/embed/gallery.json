@@ -3,16 +3,12 @@
   "defs": {
     "main": {
       "type": "object",
-      "required": [
-        "items"
-      ],
+      "required": ["items"],
       "properties": {
         "items": {
           "type": "array",
           "items": {
-            "refs": [
-              "#image"
-            ],
+            "refs": ["#image"],
             "type": "union",
             "description": "The media items in the gallery. Each item may be of a different type, but all types must be supported by the client."
           },
@@ -23,40 +19,23 @@
     },
     "view": {
       "type": "object",
-      "required": [
-        "items"
-      ],
+      "required": ["items"],
       "properties": {
         "items": {
           "type": "array",
-          "items": {
-            "refs": [
-              "#viewImage"
-            ],
-            "type": "union"
-          }
+          "items": { "refs": ["#viewImage"], "type": "union" }
         }
       }
     },
     "image": {
       "type": "object",
-      "required": [
-        "image",
-        "alt",
-        "aspectRatio"
-      ],
+      "required": ["image", "alt", "aspectRatio"],
       "properties": {
         "alt": {
           "type": "string",
           "description": "Alt text description of the image, for accessibility."
         },
-        "image": {
-          "type": "blob",
-          "accept": [
-            "image/*"
-          ],
-          "maxSize": 2000000
-        },
+        "image": { "type": "blob", "accept": ["image/*"], "maxSize": 2000000 },
         "aspectRatio": {
           "ref": "app.bsky.embed.defs#aspectRatio",
           "type": "ref"
@@ -65,12 +44,7 @@
     },
     "viewImage": {
       "type": "object",
-      "required": [
-        "thumbnail",
-        "fullsize",
-        "alt",
-        "aspectRatio"
-      ],
+      "required": ["thumbnail", "fullsize", "alt", "aspectRatio"],
       "properties": {
         "alt": {
           "type": "string",

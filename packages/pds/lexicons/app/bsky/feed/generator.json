@@ -6,35 +6,20 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "did",
-          "displayName",
-          "createdAt"
-        ],
+        "required": ["did", "displayName", "createdAt"],
         "properties": {
-          "did": {
-            "type": "string",
-            "format": "did"
-          },
+          "did": { "type": "string", "format": "did" },
           "avatar": {
             "type": "blob",
-            "accept": [
-              "image/png",
-              "image/jpeg"
-            ],
+            "accept": ["image/png", "image/jpeg"],
             "maxSize": 1000000
           },
           "labels": {
-            "refs": [
-              "com.atproto.label.defs#selfLabels"
-            ],
+            "refs": ["com.atproto.label.defs#selfLabels"],
             "type": "union",
             "description": "Self-label values"
           },
-          "createdAt": {
-            "type": "string",
-            "format": "datetime"
-          },
+          "createdAt": { "type": "string", "format": "datetime" },
           "contentMode": {
             "type": "string",
             "knownValues": [
@@ -54,10 +39,7 @@
           },
           "descriptionFacets": {
             "type": "array",
-            "items": {
-              "ref": "app.bsky.richtext.facet",
-              "type": "ref"
-            }
+            "items": { "ref": "app.bsky.richtext.facet", "type": "ref" }
           },
           "acceptsInteractions": {
             "type": "boolean",

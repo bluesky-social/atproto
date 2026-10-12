@@ -6,9 +6,7 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "hideFromAlgorithmicRecommendations"
-        ],
+        "required": ["hideFromAlgorithmicRecommendations"],
         "properties": {
           "hideFromAlgorithmicRecommendations": {
             "type": "boolean",

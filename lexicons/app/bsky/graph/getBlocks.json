@@ -1,39 +1,40 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.graph.getBlocks",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Enumerates which accounts the requesting account is currently blocking. Requires auth.",
+      "output": {
+        "schema": {
+          "type": "object",
+          "required": ["blocks"],
+          "properties": {
+            "blocks": {
+              "type": "array",
+              "items": {
+                "ref": "app.bsky.actor.defs#profileView",
+                "type": "ref"
+              }
+            },
+            "cursor": { "type": "string" }
+          }
+        },
+        "encoding": "application/json"
+      },
       "parameters": {
         "type": "params",
         "properties": {
           "limit": {
             "type": "integer",
-            "minimum": 1,
+            "default": 50,
             "maximum": 100,
-            "default": 50
+            "minimum": 1
           },
           "cursor": { "type": "string" }
         }
       },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["blocks"],
-          "properties": {
-            "cursor": { "type": "string" },
-            "blocks": {
-              "type": "array",
-              "items": {
-                "type": "ref",
-                "ref": "app.bsky.actor.defs#profileView"
-              }
-            }
-          }
-        }
-      }
+      "description": "Enumerates which accounts the requesting account is currently blocking. Requires auth."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

@@ -6,25 +6,16 @@
       "input": {
         "schema": {
           "type": "object",
-          "required": [
-            "convoId",
-            "messageId"
-          ],
+          "required": ["convoId", "messageId"],
           "properties": {
-            "convoId": {
-              "type": "string"
-            },
-            "messageId": {
-              "type": "string"
-            }
+            "convoId": { "type": "string" },
+            "messageId": { "type": "string" }
           }
         },
         "encoding": "application/json"
       },
       "errors": [
-        {
-          "name": "InvalidConvo"
-        },
+        { "name": "InvalidConvo" },
         {
           "name": "MessageDeleteNotAllowed",
           "description": "Indicates that this message cannot be deleted, e.g. because it is a system message."

@@ -5,36 +5,20 @@
       "type": "object",
       "required": ["uri", "cid", "blocker", "record", "indexedAt"],
       "properties": {
-        "cid": {
-          "type": "string",
-          "format": "cid"
-        },
-        "uri": {
-          "type": "string",
-          "format": "at-uri"
-        },
-        "record": {
-          "ref": "app.bsky.graph.block",
-          "type": "ref"
-        },
+        "cid": { "type": "string", "format": "cid" },
+        "uri": { "type": "string", "format": "at-uri" },
+        "record": { "ref": "app.bsky.graph.block", "type": "ref" },
         "blocker": {
           "ref": "app.bsky.actor.defs#profileViewBasic",
           "type": "ref"
         },
-        "indexedAt": {
-          "type": "string",
-          "format": "datetime"
-        }
+        "indexedAt": { "type": "string", "format": "datetime" }
       }
     },
     "rendition": {
       "type": "object",
       "required": ["name"],
-      "properties": {
-        "name": {
-          "type": "string"
-        }
-      }
+      "properties": { "name": { "type": "string" } }
     },
     "renditions": {
       "type": "object",
@@ -42,10 +26,7 @@
       "properties": {
         "renditions": {
           "type": "array",
-          "items": {
-            "ref": "#rendition",
-            "type": "ref"
-          }
+          "items": { "ref": "#rendition", "type": "ref" }
         }
       }
     },
@@ -53,10 +34,7 @@
       "type": "object",
       "required": ["uri"],
       "properties": {
-        "uri": {
-          "type": "string",
-          "format": "at-uri"
-        },
+        "uri": { "type": "string", "format": "at-uri" },
         "name": {
           "type": "string",
           "description": "Cached display name of the game."

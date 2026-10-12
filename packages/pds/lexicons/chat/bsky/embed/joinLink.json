@@ -3,21 +3,14 @@
   "defs": {
     "main": {
       "type": "object",
-      "required": [
-        "code"
-      ],
+      "required": ["code"],
       "properties": {
-        "code": {
-          "type": "string",
-          "description": "The join link code."
-        }
+        "code": { "type": "string", "description": "The join link code." }
       }
     },
     "view": {
       "type": "object",
-      "required": [
-        "joinLinkPreview"
-      ],
+      "required": ["joinLinkPreview"],
       "properties": {
         "joinLinkPreview": {
           "refs": [

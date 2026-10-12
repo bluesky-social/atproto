@@ -3,66 +3,31 @@
   "defs": {
     "convoRef": {
       "type": "object",
-      "required": [
-        "did",
-        "convoId"
-      ],
+      "required": ["did", "convoId"],
       "properties": {
-        "did": {
-          "type": "string",
-          "format": "did"
-        },
-        "convoId": {
-          "type": "string"
-        }
+        "did": { "type": "string", "format": "did" },
+        "convoId": { "type": "string" }
       }
     },
     "replyRef": {
       "type": "object",
-      "required": [
-        "messageId"
-      ],
-      "properties": {
-        "messageId": {
-          "type": "string"
-        }
-      },
+      "required": ["messageId"],
+      "properties": { "messageId": { "type": "string" } },
       "description": "A reference to another message within the same convo, used to indicate that a message is a reply to it."
     },
-    "convoKind": {
-      "type": "string",
-      "knownValues": [
-        "direct",
-        "group"
-      ]
-    },
+    "convoKind": { "type": "string", "knownValues": ["direct", "group"] },
     "convoView": {
       "type": "object",
-      "required": [
-        "id",
-        "rev",
-        "members",
-        "muted",
-        "unreadCount"
-      ],
+      "required": ["id", "rev", "members", "muted", "unreadCount"],
       "properties": {
-        "id": {
-          "type": "string"
-        },
-        "rev": {
-          "type": "string"
-        },
+        "id": { "type": "string" },
+        "rev": { "type": "string" },
         "kind": {
-          "refs": [
-            "#directConvo",
-            "#groupConvo"
-          ],
+          "refs": ["#directConvo", "#groupConvo"],
           "type": "union",
           "description": "Union field that has data specific to different kinds of convos."
         },
-        "muted": {
-          "type": "boolean"
-        },
+        "muted": { "type": "boolean" },
         "status": {
           "ref": "#convoStatus",
           "type": "ref",
@@ -77,22 +42,11 @@
           "description": "Members of this conversation. For direct convos, it will be an immutable list of the 2 members. For group convos, it will a list of important members (the first few members, the viewer, the member who added the viewer, the member who sent the last message, the member who sent the last reaction), but will not contain the full list of members. Use chat.bsky.convo.getConvoMembers to list all members."
         },
         "lastMessage": {
-          "refs": [
-            "#messageView",
-            "#deletedMessageView",
-            "#systemMessageView"
-          ],
+          "refs": ["#messageView", "#deletedMessageView", "#systemMessageView"],
           "type": "union"
         },
-        "unreadCount": {
-          "type": "integer"
-        },
-        "lastReaction": {
-          "refs": [
-            "#messageAndReactionView"
-          ],
-          "type": "union"
-        }
+        "unreadCount": { "type": "integer" },
+        "lastReaction": { "refs": ["#messageAndReactionView"], "type": "union" }
       }
     },
     "groupConvo": {
@@ -116,10 +70,7 @@
           "ref": "chat.bsky.group.defs#joinLinkView",
           "type": "ref"
         },
-        "createdAt": {
-          "type": "string",
-          "format": "datetime"
-        },
+        "createdAt": { "type": "string", "format": "datetime" },
         "lockStatus": {
           "ref": "#convoLockStatus",
           "type": "ref",
@@ -149,56 +100,22 @@
     },
     "messageRef": {
       "type": "object",
-      "required": [
-        "did",
-        "messageId",
-        "convoId"
-      ],
+      "required": ["did", "messageId", "convoId"],
       "properties": {
-        "did": {
-          "type": "string",
-          "format": "did"
-        },
-        "convoId": {
-          "type": "string"
-        },
-        "messageId": {
-          "type": "string"
-        }
+        "did": { "type": "string", "format": "did" },
+        "convoId": { "type": "string" },
+        "messageId": { "type": "string" }
       }
     },
-    "convoStatus": {
-      "type": "string",
-      "knownValues": [
-        "request",
-        "accepted"
-      ]
-    },
-    "directConvo": {
-      "type": "object",
-      "properties": {}
-    },
+    "convoStatus": { "type": "string", "knownValues": ["request", "accepted"] },
+    "directConvo": { "type": "object", "properties": {} },
     "messageView": {
       "type": "object",
-      "required": [
-        "id",
-        "rev",
-        "text",
-        "sender",
-        "sentAt"
-      ],
+      "required": ["id", "rev", "text", "sender", "sentAt"],
       "properties": {
-        "id": {
-          "type": "string"
-        },
-        "rev": {
-          "type": "string"
-        },
-        "text": {
-          "type": "string",
-          "maxLength": 10000,
-          "maxGraphemes": 1000
-        },
+        "id": { "type": "string" },
+        "rev": { "type": "string" },
+        "text": { "type": "string", "maxLength": 10000, "maxGraphemes": 1000 },
         "embed": {
           "refs": [
             "app.bsky.embed.record#view",
@@ -208,20 +125,11 @@
         },
         "facets": {
           "type": "array",
-          "items": {
-            "ref": "app.bsky.richtext.facet",
-            "type": "ref"
-          },
+          "items": { "ref": "app.bsky.richtext.facet", "type": "ref" },
           "description": "Annotations of text (mentions, URLs, hashtags, etc)"
         },
-        "sender": {
-          "ref": "#messageViewSender",
-          "type": "ref"
-        },
-        "sentAt": {
-          "type": "string",
-          "format": "datetime"
-        },
+        "sender": { "ref": "#messageViewSender", "type": "ref" },
+        "sentAt": { "type": "string", "format": "datetime" },
         "replyTo": {
           "refs": [
             "#messageView",
@@ -233,29 +141,17 @@
         },
         "reactions": {
           "type": "array",
-          "items": {
-            "ref": "#reactionView",
-            "type": "ref"
-          },
+          "items": { "ref": "#reactionView", "type": "ref" },
           "description": "Reactions to this message, in ascending order of creation time."
         }
       }
     },
     "logAddMember": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message",
-        "relatedProfiles"
-      ],
+      "required": ["rev", "convoId", "message", "relatedProfiles"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
           "ref": "#systemMessageView",
           "type": "ref",
@@ -274,18 +170,10 @@
     },
     "logEditGroup": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message"
-      ],
+      "required": ["rev", "convoId", "message"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
           "ref": "#systemMessageView",
           "type": "ref",
@@ -296,19 +184,10 @@
     },
     "logLockConvo": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message",
-        "relatedProfiles"
-      ],
+      "required": ["rev", "convoId", "message", "relatedProfiles"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
           "ref": "#systemMessageView",
           "type": "ref",
@@ -327,40 +206,21 @@
     },
     "logMuteConvo": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId"
-      ],
+      "required": ["rev", "convoId"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        }
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" }
       },
       "description": "Event indicating the viewer muted a convo. Can be direct or group."
     },
     "logReadConvo": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message"
-      ],
+      "required": ["rev", "convoId", "message"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
-          "refs": [
-            "#messageView",
-            "#deletedMessageView",
-            "#systemMessageView"
-          ],
+          "refs": ["#messageView", "#deletedMessageView", "#systemMessageView"],
           "type": "union"
         }
       },
@@ -368,28 +228,16 @@
     },
     "messageInput": {
       "type": "object",
-      "required": [
-        "text"
-      ],
+      "required": ["text"],
       "properties": {
-        "text": {
-          "type": "string",
-          "maxLength": 10000,
-          "maxGraphemes": 1000
-        },
+        "text": { "type": "string", "maxLength": 10000, "maxGraphemes": 1000 },
         "embed": {
-          "refs": [
-            "app.bsky.embed.record",
-            "chat.bsky.embed.joinLink"
-          ],
+          "refs": ["app.bsky.embed.record", "chat.bsky.embed.joinLink"],
           "type": "union"
         },
         "facets": {
           "type": "array",
-          "items": {
-            "ref": "app.bsky.richtext.facet",
-            "type": "ref"
-          },
+          "items": { "ref": "app.bsky.richtext.facet", "type": "ref" },
           "description": "Annotations of text (mentions, URLs, hashtags, etc)"
         },
         "replyTo": {
@@ -401,72 +249,37 @@
     },
     "reactionView": {
       "type": "object",
-      "required": [
-        "value",
-        "sender",
-        "createdAt"
-      ],
+      "required": ["value", "sender", "createdAt"],
       "properties": {
-        "value": {
-          "type": "string"
-        },
-        "sender": {
-          "ref": "#reactionViewSender",
-          "type": "ref"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "datetime"
-        }
+        "value": { "type": "string" },
+        "sender": { "ref": "#reactionViewSender", "type": "ref" },
+        "createdAt": { "type": "string", "format": "datetime" }
       }
     },
     "logBeginConvo": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId"
-      ],
+      "required": ["rev", "convoId"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        }
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" }
       },
       "description": "Event indicating a convo containing the viewer was started. Can be direct or group. When a member is added to a group convo, they also get this event."
     },
     "logLeaveConvo": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId"
-      ],
+      "required": ["rev", "convoId"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        }
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" }
       },
       "description": "Event indicating the viewer left a convo. Can be direct or group."
     },
     "logMemberJoin": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message",
-        "relatedProfiles"
-      ],
+      "required": ["rev", "convoId", "message", "relatedProfiles"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
           "ref": "#systemMessageView",
           "type": "ref",
@@ -485,46 +298,24 @@
     },
     "logAcceptConvo": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId"
-      ],
+      "required": ["rev", "convoId"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        }
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" }
       },
       "description": "Event indicating the viewer accepted a convo, and it can be moved out of the request inbox. Can be direct or group."
     },
     "logAddReaction": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message",
-        "reaction"
-      ],
+      "required": ["rev", "convoId", "message", "reaction"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
-          "refs": [
-            "#messageView",
-            "#deletedMessageView"
-          ],
+          "refs": ["#messageView", "#deletedMessageView"],
           "type": "union"
         },
-        "reaction": {
-          "ref": "#reactionView",
-          "type": "ref"
-        },
+        "reaction": { "ref": "#reactionView", "type": "ref" },
         "relatedProfiles": {
           "type": "array",
           "items": {
@@ -538,19 +329,10 @@
     },
     "logMemberLeave": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message",
-        "relatedProfiles"
-      ],
+      "required": ["rev", "convoId", "message", "relatedProfiles"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
           "ref": "#systemMessageView",
           "type": "ref",
@@ -569,24 +351,12 @@
     },
     "logReadMessage": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message"
-      ],
+      "required": ["rev", "convoId", "message"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
-          "refs": [
-            "#messageView",
-            "#deletedMessageView",
-            "#systemMessageView"
-          ],
+          "refs": ["#messageView", "#deletedMessageView", "#systemMessageView"],
           "type": "union"
         }
       },
@@ -594,19 +364,10 @@
     },
     "logUnlockConvo": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message",
-        "relatedProfiles"
-      ],
+      "required": ["rev", "convoId", "message", "relatedProfiles"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
           "ref": "#systemMessageView",
           "type": "ref",
@@ -625,42 +386,23 @@
     },
     "logUnmuteConvo": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId"
-      ],
+      "required": ["rev", "convoId"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        }
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" }
       },
       "description": "Event indicating the viewer unmuted a convo. Can be direct or group."
     },
     "convoLockStatus": {
       "type": "string",
-      "knownValues": [
-        "unlocked",
-        "locked",
-        "locked-permanently"
-      ]
+      "knownValues": ["unlocked", "locked", "locked-permanently"]
     },
     "logEditJoinLink": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message"
-      ],
+      "required": ["rev", "convoId", "message"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
           "ref": "#systemMessageView",
           "type": "ref",
@@ -671,19 +413,10 @@
     },
     "logRemoveMember": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message",
-        "relatedProfiles"
-      ],
+      "required": ["rev", "convoId", "message", "relatedProfiles"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
           "ref": "#systemMessageView",
           "type": "ref",
@@ -702,23 +435,12 @@
     },
     "logCreateMessage": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message"
-      ],
+      "required": ["rev", "convoId", "message"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
-          "refs": [
-            "#messageView",
-            "#deletedMessageView"
-          ],
+          "refs": ["#messageView", "#deletedMessageView"],
           "type": "union"
         },
         "relatedProfiles": {
@@ -734,23 +456,12 @@
     },
     "logDeleteMessage": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message"
-      ],
+      "required": ["rev", "convoId", "message"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
-          "refs": [
-            "#messageView",
-            "#deletedMessageView"
-          ],
+          "refs": ["#messageView", "#deletedMessageView"],
           "type": "union"
         }
       },
@@ -758,18 +469,10 @@
     },
     "logCreateJoinLink": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message"
-      ],
+      "required": ["rev", "convoId", "message"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
           "ref": "#systemMessageView",
           "type": "ref",
@@ -780,18 +483,10 @@
     },
     "logEnableJoinLink": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message"
-      ],
+      "required": ["rev", "convoId", "message"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
           "ref": "#systemMessageView",
           "type": "ref",
@@ -802,30 +497,15 @@
     },
     "logRemoveReaction": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message",
-        "reaction"
-      ],
+      "required": ["rev", "convoId", "message", "reaction"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
-          "refs": [
-            "#messageView",
-            "#deletedMessageView"
-          ],
+          "refs": ["#messageView", "#deletedMessageView"],
           "type": "union"
         },
-        "reaction": {
-          "ref": "#reactionView",
-          "type": "ref"
-        },
+        "reaction": { "ref": "#reactionView", "type": "ref" },
         "relatedProfiles": {
           "type": "array",
           "items": {
@@ -839,31 +519,15 @@
     },
     "messageViewSender": {
       "type": "object",
-      "required": [
-        "did"
-      ],
-      "properties": {
-        "did": {
-          "type": "string",
-          "format": "did"
-        }
-      }
+      "required": ["did"],
+      "properties": { "did": { "type": "string", "format": "did" } }
     },
     "systemMessageView": {
       "type": "object",
-      "required": [
-        "id",
-        "rev",
-        "sentAt",
-        "data"
-      ],
+      "required": ["id", "rev", "sentAt", "data"],
       "properties": {
-        "id": {
-          "type": "string"
-        },
-        "rev": {
-          "type": "string"
-        },
+        "id": { "type": "string" },
+        "rev": { "type": "string" },
         "data": {
           "refs": [
             "#systemMessageDataAddMember",
@@ -881,51 +545,25 @@
           ],
           "type": "union"
         },
-        "sentAt": {
-          "type": "string",
-          "format": "datetime"
-        }
+        "sentAt": { "type": "string", "format": "datetime" }
       }
     },
     "deletedMessageView": {
       "type": "object",
-      "required": [
-        "id",
-        "rev",
-        "sender",
-        "sentAt"
-      ],
+      "required": ["id", "rev", "sender", "sentAt"],
       "properties": {
-        "id": {
-          "type": "string"
-        },
-        "rev": {
-          "type": "string"
-        },
-        "sender": {
-          "ref": "#messageViewSender",
-          "type": "ref"
-        },
-        "sentAt": {
-          "type": "string",
-          "format": "datetime"
-        }
+        "id": { "type": "string" },
+        "rev": { "type": "string" },
+        "sender": { "ref": "#messageViewSender", "type": "ref" },
+        "sentAt": { "type": "string", "format": "datetime" }
       }
     },
     "logDisableJoinLink": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message"
-      ],
+      "required": ["rev", "convoId", "message"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
           "ref": "#systemMessageView",
           "type": "ref",
@@ -936,146 +574,83 @@
     },
     "reactionViewSender": {
       "type": "object",
-      "required": [
-        "did"
-      ],
-      "properties": {
-        "did": {
-          "type": "string",
-          "format": "did"
-        }
-      }
+      "required": ["did"],
+      "properties": { "did": { "type": "string", "format": "did" } }
     },
     "logReadJoinRequests": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId"
-      ],
+      "required": ["rev", "convoId"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        }
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" }
       },
       "description": "Event indicating the group owner marked join requests as read. Only the owner gets this."
     },
     "logRejectJoinRequest": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "member"
-      ],
+      "required": ["rev", "convoId", "member"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
         "member": {
           "ref": "chat.bsky.actor.defs#profileViewBasic",
           "type": "ref",
           "description": "Prospective member who requested to join."
         },
-        "convoId": {
-          "type": "string"
-        }
+        "convoId": { "type": "string" }
       },
       "description": "Event indicating a join request was rejected by the viewer. Only the owner gets this."
     },
     "logApproveJoinRequest": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "member"
-      ],
+      "required": ["rev", "convoId", "member"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
         "member": {
           "ref": "chat.bsky.actor.defs#profileViewBasic",
           "type": "ref",
           "description": "Prospective member who requested to join."
         },
-        "convoId": {
-          "type": "string"
-        }
+        "convoId": { "type": "string" }
       },
       "description": "Event indicating a join request was approved by the viewer. Only the owner gets this. The approved member gets a logBeginConvo."
     },
     "logIncomingJoinRequest": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "member"
-      ],
+      "required": ["rev", "convoId", "member"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
         "member": {
           "ref": "chat.bsky.actor.defs#profileViewBasic",
           "type": "ref",
           "description": "Prospective member who requested to join."
         },
-        "convoId": {
-          "type": "string"
-        }
+        "convoId": { "type": "string" }
       },
       "description": "Event indicating a join request was made to a group the viewer owns. Only the owner gets this."
     },
     "logOutgoingJoinRequest": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId"
-      ],
+      "required": ["rev", "convoId"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        }
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" }
       },
       "description": "Event indicating a join request was made by the requester. Only requester actor gets this."
     },
     "messageAndReactionView": {
       "type": "object",
-      "required": [
-        "message",
-        "reaction"
-      ],
+      "required": ["message", "reaction"],
       "properties": {
-        "message": {
-          "ref": "#messageView",
-          "type": "ref"
-        },
-        "reaction": {
-          "ref": "#reactionView",
-          "type": "ref"
-        }
+        "message": { "ref": "#messageView", "type": "ref" },
+        "reaction": { "ref": "#reactionView", "type": "ref" }
       }
     },
     "logLockConvoPermanently": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "message",
-        "relatedProfiles"
-      ],
+      "required": ["rev", "convoId", "message", "relatedProfiles"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" },
         "message": {
           "ref": "#systemMessageView",
           "type": "ref",
@@ -1094,23 +669,12 @@
     },
     "systemMessageReferredUser": {
       "type": "object",
-      "required": [
-        "did"
-      ],
-      "properties": {
-        "did": {
-          "type": "string",
-          "format": "did"
-        }
-      }
+      "required": ["did"],
+      "properties": { "did": { "type": "string", "format": "did" } }
     },
     "systemMessageDataAddMember": {
       "type": "object",
-      "required": [
-        "member",
-        "role",
-        "addedBy"
-      ],
+      "required": ["member", "role", "addedBy"],
       "properties": {
         "role": {
           "ref": "chat.bsky.actor.defs#memberRole",
@@ -1122,10 +686,7 @@
           "type": "ref",
           "description": "Current view of the member who was added."
         },
-        "addedBy": {
-          "ref": "#systemMessageReferredUser",
-          "type": "ref"
-        }
+        "addedBy": { "ref": "#systemMessageReferredUser", "type": "ref" }
       },
       "description": "System message indicating a user was added to the group convo."
     },
@@ -1145,9 +706,7 @@
     },
     "systemMessageDataLockConvo": {
       "type": "object",
-      "required": [
-        "lockedBy"
-      ],
+      "required": ["lockedBy"],
       "properties": {
         "lockedBy": {
           "ref": "#systemMessageReferredUser",
@@ -1159,10 +718,7 @@
     },
     "systemMessageDataMemberJoin": {
       "type": "object",
-      "required": [
-        "member",
-        "role"
-      ],
+      "required": ["member", "role"],
       "properties": {
         "role": {
           "ref": "chat.bsky.actor.defs#memberRole",
@@ -1184,9 +740,7 @@
     },
     "systemMessageDataMemberLeave": {
       "type": "object",
-      "required": [
-        "member"
-      ],
+      "required": ["member"],
       "properties": {
         "member": {
           "ref": "#systemMessageReferredUser",
@@ -1198,9 +752,7 @@
     },
     "systemMessageDataUnlockConvo": {
       "type": "object",
-      "required": [
-        "unlockedBy"
-      ],
+      "required": ["unlockedBy"],
       "properties": {
         "unlockedBy": {
           "ref": "#systemMessageReferredUser",
@@ -1217,58 +769,37 @@
     },
     "systemMessageDataRemoveMember": {
       "type": "object",
-      "required": [
-        "member",
-        "removedBy"
-      ],
+      "required": ["member", "removedBy"],
       "properties": {
         "member": {
           "ref": "#systemMessageReferredUser",
           "type": "ref",
           "description": "Current view of the member who was removed."
         },
-        "removedBy": {
-          "ref": "#systemMessageReferredUser",
-          "type": "ref"
-        }
+        "removedBy": { "ref": "#systemMessageReferredUser", "type": "ref" }
       },
       "description": "System message indicating a user was removed from the group convo."
     },
     "logWithdrawIncomingJoinRequest": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId",
-        "member"
-      ],
+      "required": ["rev", "convoId", "member"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
+        "rev": { "type": "string" },
         "member": {
           "ref": "chat.bsky.actor.defs#profileViewBasic",
           "type": "ref",
           "description": "Prospective member who withdrew their join request."
         },
-        "convoId": {
-          "type": "string"
-        }
+        "convoId": { "type": "string" }
       },
       "description": "Event indicating a prospective member withdrew their join request. Only the owner gets this."
     },
     "logWithdrawOutgoingJoinRequest": {
       "type": "object",
-      "required": [
-        "rev",
-        "convoId"
-      ],
+      "required": ["rev", "convoId"],
       "properties": {
-        "rev": {
-          "type": "string"
-        },
-        "convoId": {
-          "type": "string"
-        }
+        "rev": { "type": "string" },
+        "convoId": { "type": "string" }
       },
       "description": "Event indicating the viewer withdrew their own join request. Only requester actor gets this."
     },
@@ -1294,9 +825,7 @@
     },
     "systemMessageDataLockConvoPermanently": {
       "type": "object",
-      "required": [
-        "lockedBy"
-      ],
+      "required": ["lockedBy"],
       "properties": {
         "lockedBy": {
           "ref": "#systemMessageReferredUser",

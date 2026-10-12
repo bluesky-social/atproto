@@ -6,36 +6,21 @@
       "input": {
         "schema": {
           "type": "object",
-          "required": [
-            "convoId"
-          ],
+          "required": ["convoId"],
           "properties": {
-            "convoId": {
-              "type": "string"
-            },
-            "messageId": {
-              "type": "string"
-            }
+            "convoId": { "type": "string" },
+            "messageId": { "type": "string" }
           }
         },
         "encoding": "application/json"
       },
-      "errors": [
-        {
-          "name": "InvalidConvo"
-        }
-      ],
+      "errors": [{ "name": "InvalidConvo" }],
       "output": {
         "schema": {
           "type": "object",
-          "required": [
-            "convo"
-          ],
+          "required": ["convo"],
           "properties": {
-            "convo": {
-              "ref": "chat.bsky.convo.defs#convoView",
-              "type": "ref"
-            }
+            "convo": { "ref": "chat.bsky.convo.defs#convoView", "type": "ref" }
           }
         },
         "encoding": "application/json"

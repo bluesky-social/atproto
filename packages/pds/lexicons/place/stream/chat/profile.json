@@ -7,10 +7,7 @@
       "record": {
         "type": "object",
         "properties": {
-          "color": {
-            "ref": "#color",
-            "type": "ref"
-          },
+          "color": { "ref": "#color", "type": "ref" },
           "badges": {
             "ref": "#badgeSelections",
             "type": "ref",
@@ -18,10 +15,7 @@
           },
           "selfLabels": {
             "type": "array",
-            "items": {
-              "ref": "#selfLabel",
-              "type": "ref"
-            },
+            "items": { "ref": "#selfLabel", "type": "ref" },
             "maxLength": 10,
             "description": "Self-applied labels for this profile, e.g. 'bot'."
           }
@@ -31,36 +25,18 @@
     },
     "color": {
       "type": "object",
-      "required": [
-        "red",
-        "green",
-        "blue"
-      ],
+      "required": ["red", "green", "blue"],
       "properties": {
-        "red": {
-          "type": "integer",
-          "maximum": 255,
-          "minimum": 0
-        },
-        "blue": {
-          "type": "integer",
-          "maximum": 255,
-          "minimum": 0
-        },
-        "green": {
-          "type": "integer",
-          "maximum": 255,
-          "minimum": 0
-        }
+        "red": { "type": "integer", "maximum": 255, "minimum": 0 },
+        "blue": { "type": "integer", "maximum": 255, "minimum": 0 },
+        "green": { "type": "integer", "maximum": 255, "minimum": 0 }
       },
       "description": "Customizations for the color of a user's name in chat"
     },
     "selfLabel": {
       "type": "string",
       "description": "Label that a user can apply to their own profile.",
-      "knownValues": [
-        "bot"
-      ]
+      "knownValues": ["bot"]
     },
     "badgeSelections": {
       "type": "object",
@@ -72,10 +48,7 @@
         },
         "streamer": {
           "type": "array",
-          "items": {
-            "ref": "#streamerBadgeSelection",
-            "type": "ref"
-          },
+          "items": { "ref": "#streamerBadgeSelection", "type": "ref" },
           "maxLength": 20,
           "description": "Selected streamer-issued badges, one per streamer channel."
         }
@@ -84,10 +57,7 @@
     },
     "streamerBadgeSelection": {
       "type": "object",
-      "required": [
-        "streamer",
-        "badge"
-      ],
+      "required": ["streamer", "badge"],
       "properties": {
         "badge": {
           "ref": "com.atproto.repo.strongRef",

@@ -1,41 +1,34 @@
 {
-  "lexicon": 1,
   "id": "chat.bsky.convo.getConvoAvailability",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Check whether the requester and the other members can start a 1-1 chat. Only applicable to direct (non-group) conversations. If an existing convo is found for these members, it is returned. Does not create a new convo if it doesn't exist.",
+      "output": {
+        "schema": {
+          "type": "object",
+          "required": ["canChat"],
+          "properties": {
+            "convo": { "ref": "chat.bsky.convo.defs#convoView", "type": "ref" },
+            "canChat": { "type": "boolean" }
+          }
+        },
+        "encoding": "application/json"
+      },
       "parameters": {
         "type": "params",
         "required": ["members"],
         "properties": {
           "members": {
             "type": "array",
-            "minLength": 1,
+            "items": { "type": "string", "format": "did" },
             "maxLength": 10,
-            "items": {
-              "type": "string",
-              "format": "did"
-            }
+            "minLength": 1
           }
         }
       },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["canChat"],
-          "properties": {
-            "canChat": {
-              "type": "boolean"
-            },
-            "convo": {
-              "type": "ref",
-              "ref": "chat.bsky.convo.defs#convoView"
-            }
-          }
-        }
-      }
+      "description": "Check whether the requester and the other members can start a 1-1 chat. Only applicable to direct (non-group) conversations. If an existing convo is found for these members, it is returned. Does not create a new convo if it doesn't exist."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

@@ -3,17 +3,11 @@
   "defs": {
     "main": {
       "type": "query",
-      "errors": [
-        {
-          "name": "UnknownFeed"
-        }
-      ],
+      "errors": [{ "name": "UnknownFeed" }],
       "output": {
         "schema": {
           "type": "object",
-          "required": [
-            "feed"
-          ],
+          "required": ["feed"],
           "properties": {
             "feed": {
               "type": "array",
@@ -22,32 +16,23 @@
                 "type": "ref"
               }
             },
-            "cursor": {
-              "type": "string"
-            }
+            "cursor": { "type": "string" }
           }
         },
         "encoding": "application/json"
       },
       "parameters": {
         "type": "params",
-        "required": [
-          "feed"
-        ],
+        "required": ["feed"],
         "properties": {
-          "feed": {
-            "type": "string",
-            "format": "at-uri"
-          },
+          "feed": { "type": "string", "format": "at-uri" },
           "limit": {
             "type": "integer",
             "default": 50,
             "maximum": 100,
             "minimum": 1
           },
-          "cursor": {
-            "type": "string"
-          }
+          "cursor": { "type": "string" }
         }
       },
       "description": "Get a hydrated feed from an actor's selected feed generator. Implemented by App View."

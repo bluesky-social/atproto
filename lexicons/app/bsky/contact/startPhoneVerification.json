@@ -1,44 +1,34 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.contact.startPhoneVerification",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Starts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication.",
       "input": {
-        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["phone"],
           "properties": {
             "phone": {
-              "description": "The phone number to receive the code via SMS.",
-              "type": "string"
+              "type": "string",
+              "description": "The phone number to receive the code via SMS."
             }
           }
-        }
-      },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "properties": {}
-        }
+        },
+        "encoding": "application/json"
       },
       "errors": [
-        {
-          "name": "RateLimitExceeded"
-        },
-        {
-          "name": "InvalidDid"
-        },
-        {
-          "name": "InvalidPhone"
-        },
-        {
-          "name": "InternalError"
-        }
-      ]
+        { "name": "RateLimitExceeded" },
+        { "name": "InvalidDid" },
+        { "name": "InvalidPhone" },
+        { "name": "InternalError" }
+      ],
+      "output": {
+        "schema": { "type": "object", "properties": {} },
+        "encoding": "application/json"
+      },
+      "description": "Starts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

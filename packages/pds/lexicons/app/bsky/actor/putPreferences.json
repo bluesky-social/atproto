@@ -6,9 +6,7 @@
       "input": {
         "schema": {
           "type": "object",
-          "required": [
-            "preferences"
-          ],
+          "required": ["preferences"],
           "properties": {
             "preferences": {
               "ref": "app.bsky.actor.defs#preferences",

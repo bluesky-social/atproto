@@ -3,20 +3,11 @@
   "defs": {
     "main": {
       "type": "query",
-      "errors": [
-        {
-          "name": "BlockedActor"
-        },
-        {
-          "name": "BlockedByActor"
-        }
-      ],
+      "errors": [{ "name": "BlockedActor" }, { "name": "BlockedByActor" }],
       "output": {
         "schema": {
           "type": "object",
-          "required": [
-            "feed"
-          ],
+          "required": ["feed"],
           "properties": {
             "feed": {
               "type": "array",
@@ -25,32 +16,23 @@
                 "type": "ref"
               }
             },
-            "cursor": {
-              "type": "string"
-            }
+            "cursor": { "type": "string" }
           }
         },
         "encoding": "application/json"
       },
       "parameters": {
         "type": "params",
-        "required": [
-          "actor"
-        ],
+        "required": ["actor"],
         "properties": {
-          "actor": {
-            "type": "string",
-            "format": "at-identifier"
-          },
+          "actor": { "type": "string", "format": "at-identifier" },
           "limit": {
             "type": "integer",
             "default": 50,
             "maximum": 100,
             "minimum": 1
           },
-          "cursor": {
-            "type": "string"
-          },
+          "cursor": { "type": "string" },
           "filter": {
             "type": "string",
             "default": "posts_with_replies",
@@ -63,10 +45,7 @@
               "posts_with_video"
             ]
           },
-          "includePins": {
-            "type": "boolean",
-            "default": false
-          }
+          "includePins": { "type": "boolean", "default": false }
         }
       },
       "description": "Get a view of an actor's 'author feed' (post and reposts by the author). Does not require auth."

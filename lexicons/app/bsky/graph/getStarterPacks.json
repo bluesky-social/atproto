@@ -1,10 +1,24 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.graph.getStarterPacks",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get views for a list of starter packs.",
+      "output": {
+        "schema": {
+          "type": "object",
+          "required": ["starterPacks"],
+          "properties": {
+            "starterPacks": {
+              "type": "array",
+              "items": {
+                "ref": "app.bsky.graph.defs#starterPackViewBasic",
+                "type": "ref"
+              }
+            }
+          }
+        },
+        "encoding": "application/json"
+      },
       "parameters": {
         "type": "params",
         "required": ["uris"],
@@ -16,22 +30,9 @@
           }
         }
       },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["starterPacks"],
-          "properties": {
-            "starterPacks": {
-              "type": "array",
-              "items": {
-                "type": "ref",
-                "ref": "app.bsky.graph.defs#starterPackViewBasic"
-              }
-            }
-          }
-        }
-      }
+      "description": "Get views for a list of starter packs."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

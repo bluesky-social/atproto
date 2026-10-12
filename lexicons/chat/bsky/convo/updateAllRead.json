@@ -1,12 +1,9 @@
 {
-  "lexicon": 1,
   "id": "chat.bsky.convo.updateAllRead",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Sets conversations from a user as read to the latest message, with filters.",
       "input": {
-        "encoding": "application/json",
         "schema": {
           "type": "object",
           "properties": {
@@ -15,21 +12,25 @@
               "knownValues": ["request", "accepted"]
             }
           }
-        }
+        },
+        "encoding": "application/json"
       },
       "output": {
-        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["updatedCount"],
           "properties": {
             "updatedCount": {
-              "description": "The count of updated convos.",
-              "type": "integer"
+              "type": "integer",
+              "description": "The count of updated convos."
             }
           }
-        }
-      }
+        },
+        "encoding": "application/json"
+      },
+      "description": "Sets conversations from a user as read to the latest message, with filters."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

@@ -4,14 +4,10 @@
     {
       "type": "directory",
       "path": "../../lexicons",
-      "include": [
-        "com.atproto.*"
-      ]
+      "include": ["com.atproto.*"]
     }
   ],
-  "lexicons": [
-    "com.atproto.sync.subscribeRepos"
-  ],
+  "lexicons": ["com.atproto.sync.subscribeRepos"],
   "resolutions": {
     "com.atproto.sync.subscribeRepos": {
       "uri": "file://../../lexicons/com/atproto/sync/subscribeRepos.json",

@@ -12,9 +12,7 @@
       },
       "parameters": {
         "type": "params",
-        "required": [
-          "actor"
-        ],
+        "required": ["actor"],
         "properties": {
           "actor": {
             "type": "string",

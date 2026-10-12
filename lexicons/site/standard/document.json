@@ -81,10 +81,7 @@
           },
           "contributors": {
             "type": "array",
-            "items": {
-              "ref": "#contributor",
-              "type": "ref"
-            }
+            "items": { "ref": "#contributor", "type": "ref" }
           }
         }
       },
@@ -94,15 +91,8 @@
       "type": "object",
       "required": ["did"],
       "properties": {
-        "did": {
-          "type": "string",
-          "format": "did"
-        },
-        "role": {
-          "type": "string",
-          "maxLength": 1000,
-          "maxGraphemes": 100
-        },
+        "did": { "type": "string", "format": "did" },
+        "role": { "type": "string", "maxLength": 1000, "maxGraphemes": 100 },
         "displayName": {
           "type": "string",
           "maxLength": 1000,

@@ -1,10 +1,22 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.graph.getStarterPacksWithMembership",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Enumerates the starter packs created by the session user, and includes membership information about `actor` in those starter packs. Requires auth.",
+      "output": {
+        "schema": {
+          "type": "object",
+          "required": ["starterPacksWithMembership"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "starterPacksWithMembership": {
+              "type": "array",
+              "items": { "ref": "#starterPackWithMembership", "type": "ref" }
+            }
+          }
+        },
+        "encoding": "application/json"
+      },
       "parameters": {
         "type": "params",
         "required": ["actor"],
@@ -16,42 +28,31 @@
           },
           "limit": {
             "type": "integer",
-            "minimum": 1,
+            "default": 50,
             "maximum": 100,
-            "default": 50
+            "minimum": 1
           },
           "cursor": { "type": "string" }
         }
       },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["starterPacksWithMembership"],
-          "properties": {
-            "cursor": { "type": "string" },
-            "starterPacksWithMembership": {
-              "type": "array",
-              "items": { "type": "ref", "ref": "#starterPackWithMembership" }
-            }
-          }
-        }
-      }
+      "description": "Enumerates the starter packs created by the session user, and includes membership information about `actor` in those starter packs. Requires auth."
     },
     "starterPackWithMembership": {
-      "description": "A starter pack and an optional list item indicating membership of a target user to that starter pack.",
       "type": "object",
       "required": ["starterPack"],
       "properties": {
-        "starterPack": {
-          "type": "ref",
-          "ref": "app.bsky.graph.defs#starterPackView"
-        },
         "listItem": {
-          "type": "ref",
-          "ref": "app.bsky.graph.defs#listItemView"
+          "ref": "app.bsky.graph.defs#listItemView",
+          "type": "ref"
+        },
+        "starterPack": {
+          "ref": "app.bsky.graph.defs#starterPackView",
+          "type": "ref"
         }
-      }
+      },
+      "description": "A starter pack and an optional list item indicating membership of a target user to that starter pack."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

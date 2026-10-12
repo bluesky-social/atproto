@@ -4,10 +4,7 @@
     "main": {
       "type": "procedure",
       "output": {
-        "schema": {
-          "type": "object",
-          "properties": {}
-        },
+        "schema": { "type": "object", "properties": {} },
         "encoding": "application/json"
       }
     }

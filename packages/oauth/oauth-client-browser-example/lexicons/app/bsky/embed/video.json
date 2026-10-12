@@ -3,9 +3,7 @@
   "defs": {
     "main": {
       "type": "object",
-      "required": [
-        "video"
-      ],
+      "required": ["video"],
       "properties": {
         "alt": {
           "type": "string",
@@ -13,18 +11,13 @@
         },
         "video": {
           "type": "blob",
-          "accept": [
-            "video/mp4"
-          ],
+          "accept": ["video/mp4"],
           "maxSize": 300000000,
           "description": "The mp4 video file. May be up to 300mb, formerly limited to 100mb."
         },
         "captions": {
           "type": "array",
-          "items": {
-            "ref": "#caption",
-            "type": "ref"
-          },
+          "items": { "ref": "#caption", "type": "ref" },
           "maxLength": 20
         },
         "aspectRatio": {
@@ -34,35 +27,18 @@
         "presentation": {
           "type": "string",
           "description": "A hint to the client about how to present the video.",
-          "knownValues": [
-            "default",
-            "gif"
-          ]
+          "knownValues": ["default", "gif"]
         }
       }
     },
     "view": {
       "type": "object",
-      "required": [
-        "cid",
-        "playlist"
-      ],
+      "required": ["cid", "playlist"],
       "properties": {
-        "alt": {
-          "type": "string"
-        },
-        "cid": {
-          "type": "string",
-          "format": "cid"
-        },
-        "playlist": {
-          "type": "string",
-          "format": "uri"
-        },
-        "thumbnail": {
-          "type": "string",
-          "format": "uri"
-        },
+        "alt": { "type": "string" },
+        "cid": { "type": "string", "format": "cid" },
+        "playlist": { "type": "string", "format": "uri" },
+        "thumbnail": { "type": "string", "format": "uri" },
         "aspectRatio": {
           "ref": "app.bsky.embed.defs#aspectRatio",
           "type": "ref"
@@ -70,31 +46,16 @@
         "presentation": {
           "type": "string",
           "description": "A hint to the client about how to present the video.",
-          "knownValues": [
-            "default",
-            "gif"
-          ]
+          "knownValues": ["default", "gif"]
         }
       }
     },
     "caption": {
       "type": "object",
-      "required": [
-        "lang",
-        "file"
-      ],
+      "required": ["lang", "file"],
       "properties": {
-        "file": {
-          "type": "blob",
-          "accept": [
-            "text/vtt"
-          ],
-          "maxSize": 20000
-        },
-        "lang": {
-          "type": "string",
-          "format": "language"
-        }
+        "file": { "type": "blob", "accept": ["text/vtt"], "maxSize": 20000 },
+        "lang": { "type": "string", "format": "language" }
       }
     }
   },

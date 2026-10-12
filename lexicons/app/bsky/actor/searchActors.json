@@ -1,47 +1,48 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.actor.searchActors",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Find actors (profiles) matching search criteria. Does not require auth.",
-      "parameters": {
-        "type": "params",
-        "properties": {
-          "term": {
-            "type": "string",
-            "description": "DEPRECATED: use 'q' instead."
-          },
-          "q": {
-            "type": "string",
-            "description": "Search query string. Syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended."
-          },
-          "limit": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 100,
-            "default": 25
-          },
-          "cursor": { "type": "string" }
-        }
-      },
       "output": {
-        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["actors"],
           "properties": {
-            "cursor": { "type": "string" },
             "actors": {
               "type": "array",
               "items": {
-                "type": "ref",
-                "ref": "app.bsky.actor.defs#profileView"
+                "ref": "app.bsky.actor.defs#profileView",
+                "type": "ref"
               }
-            }
+            },
+            "cursor": { "type": "string" }
           }
+        },
+        "encoding": "application/json"
+      },
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "q": {
+            "type": "string",
+            "description": "Search query string. Syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended."
+          },
+          "term": {
+            "type": "string",
+            "description": "DEPRECATED: use 'q' instead."
+          },
+          "limit": {
+            "type": "integer",
+            "default": 25,
+            "maximum": 100,
+            "minimum": 1
+          },
+          "cursor": { "type": "string" }
         }
-      }
+      },
+      "description": "Find actors (profiles) matching search criteria. Does not require auth."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

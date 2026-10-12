@@ -6,14 +6,9 @@
       "input": {
         "schema": {
           "type": "object",
-          "required": [
-            "convoId",
-            "message"
-          ],
+          "required": ["convoId", "message"],
           "properties": {
-            "convoId": {
-              "type": "string"
-            },
+            "convoId": { "type": "string" },
             "message": {
               "ref": "chat.bsky.convo.defs#messageInput",
               "type": "ref"
@@ -23,21 +18,12 @@
         "encoding": "application/json"
       },
       "errors": [
-        {
-          "name": "ConvoLocked"
-        },
-        {
-          "name": "InvalidConvo"
-        },
-        {
-          "name": "ReplyTargetNotFound"
-        }
+        { "name": "ConvoLocked" },
+        { "name": "InvalidConvo" },
+        { "name": "ReplyTargetNotFound" }
       ],
       "output": {
-        "schema": {
-          "ref": "chat.bsky.convo.defs#messageView",
-          "type": "ref"
-        },
+        "schema": { "ref": "chat.bsky.convo.defs#messageView", "type": "ref" },
         "encoding": "application/json"
       },
       "description": "Sends a message to a conversation."

@@ -1,32 +1,9 @@
 {
-  "lexicon": 1,
   "id": "app.bsky.video.uploadPart",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Upload one part. Parts are idempotent and may be retried or re-sent while the session is created. Each expected length is derived from the upload size and part size, and Content-Length must match exactly. ETags are never exposed to clients.",
-      "parameters": {
-        "type": "params",
-        "required": ["jobId", "partNumber"],
-        "properties": {
-          "jobId": { "type": "string", "minLength": 1, "maxLength": 256 },
-          "partNumber": { "type": "integer", "minimum": 1 }
-        }
-      },
-      "input": {
-        "encoding": "application/octet-stream"
-      },
-      "output": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["partNumber", "sizeBytes"],
-          "properties": {
-            "partNumber": { "type": "integer", "minimum": 1 },
-            "sizeBytes": { "type": "integer" }
-          }
-        }
-      },
+      "input": { "encoding": "application/octet-stream" },
       "errors": [
         {
           "name": "UploadNotFound",
@@ -64,7 +41,29 @@
           "name": "ServiceOverloaded",
           "description": "The service is draining or temporarily at capacity; retry on another worker."
         }
-      ]
+      ],
+      "output": {
+        "schema": {
+          "type": "object",
+          "required": ["partNumber", "sizeBytes"],
+          "properties": {
+            "sizeBytes": { "type": "integer" },
+            "partNumber": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "encoding": "application/json"
+      },
+      "parameters": {
+        "type": "params",
+        "required": ["jobId", "partNumber"],
+        "properties": {
+          "jobId": { "type": "string", "maxLength": 256, "minLength": 1 },
+          "partNumber": { "type": "integer", "minimum": 1 }
+        }
+      },
+      "description": "Upload one part. Parts are idempotent and may be retried or re-sent while the session is created. Each expected length is derived from the upload size and part size, and Content-Length must match exactly. ETags are never exposed to clients."
     }
-  }
+  },
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1
 }

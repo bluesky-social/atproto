@@ -3,10 +3,7 @@
   "defs": {
     "main": {
       "type": "object",
-      "required": [
-        "record",
-        "media"
-      ],
+      "required": ["record", "media"],
       "properties": {
         "media": {
           "refs": [
@@ -17,18 +14,12 @@
           ],
           "type": "union"
         },
-        "record": {
-          "ref": "app.bsky.embed.record",
-          "type": "ref"
-        }
+        "record": { "ref": "app.bsky.embed.record", "type": "ref" }
       }
     },
     "view": {
       "type": "object",
-      "required": [
-        "record",
-        "media"
-      ],
+      "required": ["record", "media"],
       "properties": {
         "media": {
           "refs": [
@@ -39,10 +30,7 @@
           ],
           "type": "union"
         },
-        "record": {
-          "ref": "app.bsky.embed.record#view",
-          "type": "ref"
-        }
+        "record": { "ref": "app.bsky.embed.record#view", "type": "ref" }
       }
     }
   },

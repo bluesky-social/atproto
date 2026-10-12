@@ -3,17 +3,10 @@
   "defs": {
     "preference": {
       "type": "object",
-      "required": [
-        "list",
-        "push"
-      ],
+      "required": ["list", "push"],
       "properties": {
-        "list": {
-          "type": "boolean"
-        },
-        "push": {
-          "type": "boolean"
-        }
+        "list": { "type": "boolean" },
+        "push": { "type": "boolean" }
       }
     },
     "preferences": {
@@ -39,129 +32,52 @@
           "type": "ref",
           "description": "Deprecated: use chat.bsky.notification preferences instead. This will only return a default value."
         },
-        "like": {
-          "ref": "#filterablePreference",
-          "type": "ref"
-        },
-        "quote": {
-          "ref": "#filterablePreference",
-          "type": "ref"
-        },
-        "reply": {
-          "ref": "#filterablePreference",
-          "type": "ref"
-        },
-        "follow": {
-          "ref": "#filterablePreference",
-          "type": "ref"
-        },
-        "repost": {
-          "ref": "#filterablePreference",
-          "type": "ref"
-        },
-        "mention": {
-          "ref": "#filterablePreference",
-          "type": "ref"
-        },
-        "verified": {
-          "ref": "#preference",
-          "type": "ref"
-        },
-        "unverified": {
-          "ref": "#preference",
-          "type": "ref"
-        },
-        "likeViaRepost": {
-          "ref": "#filterablePreference",
-          "type": "ref"
-        },
-        "subscribedPost": {
-          "ref": "#preference",
-          "type": "ref"
-        },
-        "repostViaRepost": {
-          "ref": "#filterablePreference",
-          "type": "ref"
-        },
-        "starterpackJoined": {
-          "ref": "#preference",
-          "type": "ref"
-        }
+        "like": { "ref": "#filterablePreference", "type": "ref" },
+        "quote": { "ref": "#filterablePreference", "type": "ref" },
+        "reply": { "ref": "#filterablePreference", "type": "ref" },
+        "follow": { "ref": "#filterablePreference", "type": "ref" },
+        "repost": { "ref": "#filterablePreference", "type": "ref" },
+        "mention": { "ref": "#filterablePreference", "type": "ref" },
+        "verified": { "ref": "#preference", "type": "ref" },
+        "unverified": { "ref": "#preference", "type": "ref" },
+        "likeViaRepost": { "ref": "#filterablePreference", "type": "ref" },
+        "subscribedPost": { "ref": "#preference", "type": "ref" },
+        "repostViaRepost": { "ref": "#filterablePreference", "type": "ref" },
+        "starterpackJoined": { "ref": "#preference", "type": "ref" }
       }
     },
-    "recordDeleted": {
-      "type": "object",
-      "properties": {}
-    },
+    "recordDeleted": { "type": "object", "properties": {} },
     "chatPreference": {
       "type": "object",
-      "required": [
-        "include",
-        "push"
-      ],
+      "required": ["include", "push"],
       "properties": {
-        "push": {
-          "type": "boolean"
-        },
-        "include": {
-          "type": "string",
-          "knownValues": [
-            "all",
-            "accepted"
-          ]
-        }
+        "push": { "type": "boolean" },
+        "include": { "type": "string", "knownValues": ["all", "accepted"] }
       },
       "description": "Deprecated: use chat.bsky.notification preferences instead. This will only return a default value."
     },
     "activitySubscription": {
       "type": "object",
-      "required": [
-        "post",
-        "reply"
-      ],
+      "required": ["post", "reply"],
       "properties": {
-        "post": {
-          "type": "boolean"
-        },
-        "reply": {
-          "type": "boolean"
-        }
+        "post": { "type": "boolean" },
+        "reply": { "type": "boolean" }
       }
     },
     "filterablePreference": {
       "type": "object",
-      "required": [
-        "include",
-        "list",
-        "push"
-      ],
+      "required": ["include", "list", "push"],
       "properties": {
-        "list": {
-          "type": "boolean"
-        },
-        "push": {
-          "type": "boolean"
-        },
-        "include": {
-          "type": "string",
-          "knownValues": [
-            "all",
-            "follows"
-          ]
-        }
+        "list": { "type": "boolean" },
+        "push": { "type": "boolean" },
+        "include": { "type": "string", "knownValues": ["all", "follows"] }
       }
     },
     "subjectActivitySubscription": {
       "type": "object",
-      "required": [
-        "subject",
-        "activitySubscription"
-      ],
+      "required": ["subject", "activitySubscription"],
       "properties": {
-        "subject": {
-          "type": "string",
-          "format": "did"
-        },
+        "subject": { "type": "string", "format": "did" },
         "activitySubscription": {
           "ref": "#activitySubscription",
           "type": "ref"

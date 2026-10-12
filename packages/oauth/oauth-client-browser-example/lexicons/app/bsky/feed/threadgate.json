@@ -6,10 +6,7 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "post",
-          "createdAt"
-        ],
+        "required": ["post", "createdAt"],
         "properties": {
           "post": {
             "type": "string",
@@ -30,16 +27,10 @@
             "maxLength": 5,
             "description": "List of rules defining who can reply to this post. If value is an empty array, no one can reply. If value is undefined, anyone can reply."
           },
-          "createdAt": {
-            "type": "string",
-            "format": "datetime"
-          },
+          "createdAt": { "type": "string", "format": "datetime" },
           "hiddenReplies": {
             "type": "array",
-            "items": {
-              "type": "string",
-              "format": "at-uri"
-            },
+            "items": { "type": "string", "format": "at-uri" },
             "maxLength": 300,
             "description": "List of hidden reply URIs."
           }
@@ -49,15 +40,8 @@
     },
     "listRule": {
       "type": "object",
-      "required": [
-        "list"
-      ],
-      "properties": {
-        "list": {
-          "type": "string",
-          "format": "at-uri"
-        }
-      },
+      "required": ["list"],
+      "properties": { "list": { "type": "string", "format": "at-uri" } },
       "description": "Allow replies from actors on a list."
     },
     "mentionRule": {

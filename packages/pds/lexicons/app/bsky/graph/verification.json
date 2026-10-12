@@ -6,12 +6,7 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "subject",
-          "handle",
-          "displayName",
-          "createdAt"
-        ],
+        "required": ["subject", "handle", "displayName", "createdAt"],
         "properties": {
           "handle": {
             "type": "string",

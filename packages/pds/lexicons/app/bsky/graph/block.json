@@ -6,20 +6,14 @@
       "type": "record",
       "record": {
         "type": "object",
-        "required": [
-          "subject",
-          "createdAt"
-        ],
+        "required": ["subject", "createdAt"],
         "properties": {
           "subject": {
             "type": "string",
             "format": "did",
             "description": "DID of the account to be blocked."
           },
-          "createdAt": {
-            "type": "string",
-            "format": "datetime"
-          }
+          "createdAt": { "type": "string", "format": "datetime" }
         }
       },
       "description": "Record declaring a 'block' relationship against another account. NOTE: blocks are public in Bluesky; see blog posts for details."

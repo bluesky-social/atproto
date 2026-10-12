@@ -88,6 +88,31 @@ Beyond style, two things are worth calling out up front: don't change tooling or
 
 - If your change introduces, alters, or removes a documented pattern, update [AGENTS.md](./AGENTS.md) and the skills under `.agents/skills/` in the same PR. Agent files are part of the codebase and must stay in sync with it.
 
+## Working with lexicons
+
+Lexicon NSIDs used in this repository have different sources:
+
+- This repository contains the canonical source for the `com.atproto.*` and `tools.ozone.*` lexicons namespaces.
+- The AT Protocol network.
+  - `app.bsky.*` and `chat.bsky.*` are defined in the [`bsky` repository](https://github.com/bluesky-social/bsky), and automatically published on the AT Protocol network from there.
+  - `site.standard.*`, `social.grain.*` lexicons are published on the AT Protocol network.
+- Some lexicons are not published on the AT Protocol network
+  - `internal.*`
+  - `app.bsky.unspecced.*`
+- Some lexicons are missing on the AT Protocol network (at the time of writing)
+  - `app.bsky.actor.link`
+  - `place.stream.badge.defs`
+
+Historically, every NPM package (`./packages/*`) depended on the repository root `./lexicons` directory to obtain its lexicon documents. This is no longer the recommended approach and is being phased out.
+
+Every package in this repository that works with lexicon documents should define its own lexicon manifest (`lexicons.json`), which acts as a "source of truth" for the lexicons it uses (similar to `package.json` for NPM modules).
+
+New lexicons dependencies can be added to individual packages by running `pnpm lex:install new.nsid.to.install` from the package root. Similarly, lexicon documents can be updated by running `pnpm lex:update`. These commands only work in packages that have been migrated to use the new lexicon management system (based on `lexicons.json` and the `@atproto/lex` CLI).
+
+When building this repository, packages will run `pnpm run lex:install --ci` as part of their `prebuild` command. This will ensure that the lexicon documents installed in their respective `./lexicons` directory are up-to-date and consistent with the package's `lexicons.json` manifest. That command will fetch/symlink any lexicon document that are missing or outdated, and return an error if any discrepancies are found (ie. if the file on disk does not match the CID defined in the manifest).
+
+Because of this behavior, keeping a working CI for this repo requires to be able to build packages "offline" (ie. without fetching lexicon documents from the network). Indeed, since we don't control the publishing of lexicons on the AT Protocol network, and because AT Protocol does not allow to fetch older versions of records, relying on network fetches would make the CI fail whenever an external lexicon is updated or temporarily unavailable. For this reason, external lexicons, once installed, are also committed to the repository to ensure consistent builds.
+
 ## LLM-assisted contributions
 
 Contributions written with the help of an LLM or coding agent are welcome, under three conditions.

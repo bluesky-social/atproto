@@ -4,9 +4,7 @@
     {
       "type": "directory",
       "path": "../../../lexicons",
-      "include": [
-        "com.atproto.*"
-      ]
+      "include": ["com.atproto.*"]
     }
   ],
   "lexicons": [
