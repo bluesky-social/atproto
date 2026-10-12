@@ -1,27 +1,26 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.notification.unregisterPush",
   "defs": {
     "main": {
       "type": "procedure",
+      "description": "The inverse of registerPush - inform a specified service that push notifications should no longer be sent to the given token for the requesting account. Requires auth.",
       "input": {
+        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["serviceDid", "token", "platform", "appId"],
           "properties": {
-            "appId": { "type": "string" },
+            "serviceDid": { "type": "string", "format": "did" },
             "token": { "type": "string" },
             "platform": {
               "type": "string",
               "knownValues": ["ios", "android", "web"]
             },
-            "serviceDid": { "type": "string", "format": "did" }
+            "appId": { "type": "string" }
           }
-        },
-        "encoding": "application/json"
-      },
-      "description": "The inverse of registerPush - inform a specified service that push notifications should no longer be sent to the given token for the requesting account. Requires auth."
+        }
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

@@ -1,30 +1,10 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.feed.getPostThread",
   "defs": {
     "main": {
       "type": "query",
-      "errors": [{ "name": "NotFound" }],
-      "output": {
-        "schema": {
-          "type": "object",
-          "required": ["thread"],
-          "properties": {
-            "thread": {
-              "refs": [
-                "app.bsky.feed.defs#threadViewPost",
-                "app.bsky.feed.defs#notFoundPost",
-                "app.bsky.feed.defs#blockedPost"
-              ],
-              "type": "union"
-            },
-            "threadgate": {
-              "ref": "app.bsky.feed.defs#threadgateView",
-              "type": "ref"
-            }
-          }
-        },
-        "encoding": "application/json"
-      },
+      "description": "Get posts in a thread. Does not require auth, but additional metadata and filtering will be applied for authed requests.",
       "parameters": {
         "type": "params",
         "required": ["uri"],
@@ -36,23 +16,42 @@
           },
           "depth": {
             "type": "integer",
+            "description": "How many levels of reply depth should be included in response.",
             "default": 6,
-            "maximum": 1000,
             "minimum": 0,
-            "description": "How many levels of reply depth should be included in response."
+            "maximum": 1000
           },
           "parentHeight": {
             "type": "integer",
+            "description": "How many levels of parent (and grandparent, etc) post to include.",
             "default": 80,
-            "maximum": 1000,
             "minimum": 0,
-            "description": "How many levels of parent (and grandparent, etc) post to include."
+            "maximum": 1000
           }
         }
       },
-      "description": "Get posts in a thread. Does not require auth, but additional metadata and filtering will be applied for authed requests."
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["thread"],
+          "properties": {
+            "thread": {
+              "type": "union",
+              "refs": [
+                "app.bsky.feed.defs#threadViewPost",
+                "app.bsky.feed.defs#notFoundPost",
+                "app.bsky.feed.defs#blockedPost"
+              ]
+            },
+            "threadgate": {
+              "type": "ref",
+              "ref": "app.bsky.feed.defs#threadgateView"
+            }
+          }
+        }
+      },
+      "errors": [{ "name": "NotFound" }]
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

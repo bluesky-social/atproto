@@ -48,6 +48,9 @@ type DefRefsOptions = {
    * listing lexicon dependencies.
    */
   includeKnownValues?: boolean
+
+  includePermissionRpc?: boolean
+  includePermissionRepo?: boolean
 }
 
 function* defRefs(
@@ -121,7 +124,7 @@ function* defRefs(
       return
     case 'permission':
       if (def.resource === 'rpc') {
-        if (Array.isArray(def.lxm)) {
+        if (options?.includePermissionRpc && Array.isArray(def.lxm)) {
           for (const lxm of def.lxm) {
             if (typeof lxm === 'string') {
               yield lxm
@@ -129,7 +132,7 @@ function* defRefs(
           }
         }
       } else if (def.resource === 'repo') {
-        if (Array.isArray(def.collection)) {
+        if (options?.includePermissionRepo && Array.isArray(def.collection)) {
           for (const lxm of def.collection) {
             if (typeof lxm === 'string') {
               yield lxm

@@ -1,15 +1,10 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.actor.getProfile",
   "defs": {
     "main": {
       "type": "query",
-      "output": {
-        "schema": {
-          "ref": "app.bsky.actor.defs#profileViewDetailed",
-          "type": "ref"
-        },
-        "encoding": "application/json"
-      },
+      "description": "Get detailed profile view of an actor. Does not require auth, but contains relevant metadata with auth.",
       "parameters": {
         "type": "params",
         "required": ["actor"],
@@ -21,9 +16,13 @@
           }
         }
       },
-      "description": "Get detailed profile view of an actor. Does not require auth, but contains relevant metadata with auth."
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileViewDetailed"
+        }
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

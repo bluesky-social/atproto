@@ -1,10 +1,27 @@
 {
+  "lexicon": 1,
   "id": "chat.bsky.group.listJoinRequests",
   "defs": {
     "main": {
       "type": "query",
+      "description": "Lists a page of request to join a group (via join link) the user owns. Shows the data from the owner's point of view.",
       "errors": [{ "name": "InvalidConvo" }, { "name": "InsufficientRole" }],
+      "parameters": {
+        "type": "params",
+        "required": ["convoId"],
+        "properties": {
+          "convoId": { "type": "string" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
+        }
+      },
       "output": {
+        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["requests"],
@@ -13,31 +30,13 @@
             "requests": {
               "type": "array",
               "items": {
-                "ref": "chat.bsky.group.defs#joinRequestView",
-                "type": "ref"
+                "type": "ref",
+                "ref": "chat.bsky.group.defs#joinRequestView"
               }
             }
           }
-        },
-        "encoding": "application/json"
-      },
-      "parameters": {
-        "type": "params",
-        "required": ["convoId"],
-        "properties": {
-          "limit": {
-            "type": "integer",
-            "default": 50,
-            "maximum": 100,
-            "minimum": 1
-          },
-          "cursor": { "type": "string" },
-          "convoId": { "type": "string" }
         }
-      },
-      "description": "Lists a page of request to join a group (via join link) the user owns. Shows the data from the owner's point of view."
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

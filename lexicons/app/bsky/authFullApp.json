@@ -1,14 +1,18 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.authFullApp",
   "defs": {
     "main": {
       "type": "permission-set",
       "title": "Full Bluesky Social App Permissions",
-      "detail": "Manage all public content and interactions, private preferences and subscriptions, and other Bluesky-specific app features and data.",
       "title:lang": {},
+      "detail": "Manage all public content and interactions, private preferences and subscriptions, and other Bluesky-specific app features and data.",
       "detail:lang": {},
       "permissions": [
         {
+          "type": "permission",
+          "resource": "rpc",
+          "inheritAud": true,
           "lxm": [
             "app.bsky.actor.getPreferences",
             "app.bsky.actor.getProfile",
@@ -27,6 +31,10 @@
             "app.bsky.contact.removeData",
             "app.bsky.contact.startPhoneVerification",
             "app.bsky.contact.verifyPhone",
+            "app.bsky.draft.createDraft",
+            "app.bsky.draft.deleteDraft",
+            "app.bsky.draft.getDrafts",
+            "app.bsky.draft.updateDraft",
             "app.bsky.feed.describeFeedGenerator",
             "app.bsky.feed.getActorFeeds",
             "app.bsky.feed.getActorLikes",
@@ -89,9 +97,13 @@
             "app.bsky.unspecced.getPostThreadV2",
             "app.bsky.unspecced.getSuggestedFeeds",
             "app.bsky.unspecced.getSuggestedFeedsSkeleton",
+            "app.bsky.unspecced.getSuggestedOnboardingUsers",
             "app.bsky.unspecced.getSuggestedStarterPacks",
             "app.bsky.unspecced.getSuggestedStarterPacksSkeleton",
             "app.bsky.unspecced.getSuggestedUsers",
+            "app.bsky.unspecced.getSuggestedUsersForDiscover",
+            "app.bsky.unspecced.getSuggestedUsersForExplore",
+            "app.bsky.unspecced.getSuggestedUsersForSeeMore",
             "app.bsky.unspecced.getSuggestedUsersSkeleton",
             "app.bsky.unspecced.getSuggestionsSkeleton",
             "app.bsky.unspecced.getTaggedSuggestions",
@@ -110,16 +122,15 @@
             "app.bsky.video.finishUpload",
             "app.bsky.video.abortUpload",
             "app.bsky.video.getUploadStatus"
-          ],
-          "type": "permission",
-          "resource": "rpc",
-          "inheritAud": true
+          ]
         },
         {
           "type": "permission",
-          "action": ["create", "update", "delete"],
           "resource": "repo",
+          "action": ["create", "update", "delete"],
           "collection": [
+            "app.bsky.actor.contentVisibilityDeclaration",
+            "app.bsky.actor.link",
             "app.bsky.actor.profile",
             "app.bsky.actor.status",
             "app.bsky.feed.like",
@@ -134,12 +145,11 @@
             "app.bsky.graph.listitem",
             "app.bsky.graph.referencelistoptout",
             "app.bsky.graph.starterpack",
+            "app.bsky.graph.verification",
             "app.bsky.notification.declaration"
           ]
         }
       ]
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

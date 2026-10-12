@@ -1,22 +1,21 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.authManageLabelerService",
   "defs": {
     "main": {
       "type": "permission-set",
       "title": "Manage Hosted Labeling Service",
-      "detail": "Configure labeler declaration records.",
       "title:lang": {},
+      "detail": "Configure labeler declaration records.",
       "detail:lang": {},
       "permissions": [
         {
           "type": "permission",
-          "action": ["create", "update", "delete"],
           "resource": "repo",
+          "action": ["create", "update", "delete"],
           "collection": ["app.bsky.labeler.service"]
         }
       ]
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

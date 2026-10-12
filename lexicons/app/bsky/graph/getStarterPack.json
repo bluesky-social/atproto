@@ -1,21 +1,10 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.graph.getStarterPack",
   "defs": {
     "main": {
       "type": "query",
-      "output": {
-        "schema": {
-          "type": "object",
-          "required": ["starterPack"],
-          "properties": {
-            "starterPack": {
-              "ref": "app.bsky.graph.defs#starterPackView",
-              "type": "ref"
-            }
-          }
-        },
-        "encoding": "application/json"
-      },
+      "description": "Gets a view of a starter pack.",
       "parameters": {
         "type": "params",
         "required": ["starterPack"],
@@ -27,9 +16,19 @@
           }
         }
       },
-      "description": "Gets a view of a starter pack."
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["starterPack"],
+          "properties": {
+            "starterPack": {
+              "type": "ref",
+              "ref": "app.bsky.graph.defs#starterPackView"
+            }
+          }
+        }
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

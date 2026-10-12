@@ -224,9 +224,9 @@ importers:
       '@atproto/dev-env':
         specifier: workspace:^
         version: link:packages/dev-env
-      '@atproto/lex':
+      '@atproto/lex-installer':
         specifier: workspace:^
-        version: link:packages/lex/lex
+        version: link:packages/lex/lex-installer
       '@atproto/pds':
         specifier: workspace:^
         version: link:packages/pds

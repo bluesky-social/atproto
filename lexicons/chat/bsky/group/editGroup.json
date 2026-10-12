@@ -1,42 +1,44 @@
 {
+  "lexicon": 1,
   "id": "chat.bsky.group.editGroup",
   "defs": {
     "main": {
       "type": "procedure",
-      "input": {
-        "schema": {
-          "type": "object",
-          "required": ["convoId", "name"],
-          "properties": {
-            "name": {
-              "type": "string",
-              "maxLength": 500,
-              "minLength": 1,
-              "maxGraphemes": 50
-            },
-            "convoId": { "type": "string" }
-          }
-        },
-        "encoding": "application/json"
-      },
+      "description": "Edits group settings.",
       "errors": [
         { "name": "ConvoLocked" },
         { "name": "InvalidConvo" },
         { "name": "InsufficientRole" }
       ],
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["convoId", "name"],
+          "properties": {
+            "convoId": { "type": "string" },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxGraphemes": 50,
+              "maxLength": 500
+            }
+          }
+        }
+      },
       "output": {
+        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["convo"],
           "properties": {
-            "convo": { "ref": "chat.bsky.convo.defs#convoView", "type": "ref" }
+            "convo": {
+              "type": "ref",
+              "ref": "chat.bsky.convo.defs#convoView"
+            }
           }
-        },
-        "encoding": "application/json"
-      },
-      "description": "Edits group settings."
+        }
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

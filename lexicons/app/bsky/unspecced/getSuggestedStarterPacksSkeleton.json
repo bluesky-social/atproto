@@ -29,7 +29,14 @@
           "properties": {
             "starterPacks": {
               "type": "array",
-              "items": { "type": "string", "format": "at-uri" }
+              "items": {
+                "type": "string",
+                "format": "at-uri"
+              }
+            },
+            "recIdStr": {
+              "type": "string",
+              "description": "Snowflake for this recommendation, use when submitting recommendation events."
             }
           }
         }

@@ -1,21 +1,20 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.feed.repost",
   "defs": {
     "main": {
-      "key": "tid",
+      "description": "Record representing a 'repost' of an existing Bluesky post.",
       "type": "record",
+      "key": "tid",
       "record": {
         "type": "object",
         "required": ["subject", "createdAt"],
         "properties": {
-          "via": { "ref": "com.atproto.repo.strongRef", "type": "ref" },
-          "subject": { "ref": "com.atproto.repo.strongRef", "type": "ref" },
-          "createdAt": { "type": "string", "format": "datetime" }
+          "subject": { "type": "ref", "ref": "com.atproto.repo.strongRef" },
+          "createdAt": { "type": "string", "format": "datetime" },
+          "via": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
         }
-      },
-      "description": "Record representing a 'repost' of an existing Bluesky post."
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

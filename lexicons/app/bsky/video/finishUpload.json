@@ -1,17 +1,38 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.video.finishUpload",
   "defs": {
     "main": {
       "type": "procedure",
+      "description": "Finish an upload. This call is idempotent and safe to retry. On deduplication completedJobId may differ from the input jobId; poll getJobStatus with completedJobId. Probe-based validation failures surface later as JOB_STATE_FAILED from getJobStatus, not as errors from this call.",
       "input": {
+        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["jobId"],
           "properties": {
-            "jobId": { "type": "string", "maxLength": 256, "minLength": 1 }
+            "jobId": { "type": "string", "minLength": 1, "maxLength": 256 }
           }
-        },
-        "encoding": "application/json"
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["completedJobId", "jobStatus"],
+          "properties": {
+            "completedJobId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "description": "The processing job to poll with getJobStatus; on deduplication this may differ from the input jobId."
+            },
+            "jobStatus": {
+              "type": "ref",
+              "ref": "app.bsky.video.defs#jobStatus"
+            }
+          }
+        }
       },
       "errors": [
         {
@@ -46,29 +67,7 @@
           "name": "ServiceOverloaded",
           "description": "The service is draining or temporarily at capacity; retry later."
         }
-      ],
-      "output": {
-        "schema": {
-          "type": "object",
-          "required": ["completedJobId", "jobStatus"],
-          "properties": {
-            "jobStatus": {
-              "ref": "app.bsky.video.defs#jobStatus",
-              "type": "ref"
-            },
-            "completedJobId": {
-              "type": "string",
-              "maxLength": 256,
-              "minLength": 1,
-              "description": "The processing job to poll with getJobStatus; on deduplication this may differ from the input jobId."
-            }
-          }
-        },
-        "encoding": "application/json"
-      },
-      "description": "Finish an upload. This call is idempotent and safe to retry. On deduplication completedJobId may differ from the input jobId; poll getJobStatus with completedJobId. Probe-based validation failures surface later as JOB_STATE_FAILED from getJobStatus, not as errors from this call."
+      ]
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

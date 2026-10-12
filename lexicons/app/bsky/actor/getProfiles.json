@@ -1,24 +1,10 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.actor.getProfiles",
   "defs": {
     "main": {
       "type": "query",
-      "output": {
-        "schema": {
-          "type": "object",
-          "required": ["profiles"],
-          "properties": {
-            "profiles": {
-              "type": "array",
-              "items": {
-                "ref": "app.bsky.actor.defs#profileViewDetailed",
-                "type": "ref"
-              }
-            }
-          }
-        },
-        "encoding": "application/json"
-      },
+      "description": "Get detailed profile views of multiple actors.",
       "parameters": {
         "type": "params",
         "required": ["actors"],
@@ -30,9 +16,22 @@
           }
         }
       },
-      "description": "Get detailed profile views of multiple actors."
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["profiles"],
+          "properties": {
+            "profiles": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.actor.defs#profileViewDetailed"
+              }
+            }
+          }
+        }
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

@@ -1,20 +1,32 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.contact.removeData",
   "defs": {
     "main": {
       "type": "procedure",
+      "description": "Removes all stored hashes used for contact matching, existing matches, and sync status. Requires authentication.",
       "input": {
-        "schema": { "type": "object", "properties": {} },
-        "encoding": "application/json"
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
       },
-      "errors": [{ "name": "InvalidDid" }, { "name": "InternalError" }],
       "output": {
-        "schema": { "type": "object", "properties": {} },
-        "encoding": "application/json"
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
       },
-      "description": "Removes all stored hashes used for contact matching, existing matches, and sync status. Requires authentication."
+      "errors": [
+        {
+          "name": "InvalidDid"
+        },
+        {
+          "name": "InternalError"
+        }
+      ]
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

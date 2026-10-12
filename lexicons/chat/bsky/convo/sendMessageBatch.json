@@ -1,28 +1,34 @@
 {
+  "lexicon": 1,
   "id": "chat.bsky.convo.sendMessageBatch",
   "defs": {
     "main": {
       "type": "procedure",
+      "description": "Sends a batch of messages to a conversation.",
+      "errors": [
+        { "name": "ConvoLocked" },
+        { "name": "InvalidConvo" },
+        { "name": "ReplyTargetNotFound" }
+      ],
       "input": {
+        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["items"],
           "properties": {
             "items": {
               "type": "array",
-              "items": { "ref": "#batchItem", "type": "ref" },
-              "maxLength": 100
+              "maxLength": 100,
+              "items": {
+                "type": "ref",
+                "ref": "#batchItem"
+              }
             }
           }
-        },
-        "encoding": "application/json"
+        }
       },
-      "errors": [
-        { "name": "ConvoLocked" },
-        { "name": "InvalidConvo" },
-        { "name": "ReplyTargetNotFound" }
-      ],
       "output": {
+        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["items"],
@@ -30,25 +36,24 @@
             "items": {
               "type": "array",
               "items": {
-                "ref": "chat.bsky.convo.defs#messageView",
-                "type": "ref"
+                "type": "ref",
+                "ref": "chat.bsky.convo.defs#messageView"
               }
             }
           }
-        },
-        "encoding": "application/json"
-      },
-      "description": "Sends a batch of messages to a conversation."
+        }
+      }
     },
     "batchItem": {
       "type": "object",
       "required": ["convoId", "message"],
       "properties": {
         "convoId": { "type": "string" },
-        "message": { "ref": "chat.bsky.convo.defs#messageInput", "type": "ref" }
+        "message": {
+          "type": "ref",
+          "ref": "chat.bsky.convo.defs#messageInput"
+        }
       }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

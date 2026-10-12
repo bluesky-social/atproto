@@ -1,15 +1,24 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.contact.getMatches",
   "defs": {
     "main": {
       "type": "query",
-      "errors": [
-        { "name": "InvalidDid" },
-        { "name": "InvalidLimit" },
-        { "name": "InvalidCursor" },
-        { "name": "InternalError" }
-      ],
+      "description": "Returns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
+        }
+      },
       "output": {
+        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["matches"],
@@ -18,29 +27,27 @@
             "matches": {
               "type": "array",
               "items": {
-                "ref": "app.bsky.actor.defs#profileView",
-                "type": "ref"
+                "type": "ref",
+                "ref": "app.bsky.actor.defs#profileView"
               }
             }
           }
-        },
-        "encoding": "application/json"
-      },
-      "parameters": {
-        "type": "params",
-        "properties": {
-          "limit": {
-            "type": "integer",
-            "default": 50,
-            "maximum": 100,
-            "minimum": 1
-          },
-          "cursor": { "type": "string" }
         }
       },
-      "description": "Returns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication."
+      "errors": [
+        {
+          "name": "InvalidDid"
+        },
+        {
+          "name": "InvalidLimit"
+        },
+        {
+          "name": "InvalidCursor"
+        },
+        {
+          "name": "InternalError"
+        }
+      ]
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

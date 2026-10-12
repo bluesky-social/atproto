@@ -1,26 +1,35 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.contact.getSyncStatus",
   "defs": {
     "main": {
       "type": "query",
-      "errors": [{ "name": "InvalidDid" }, { "name": "InternalError" }],
+      "description": "Gets the user's current contact import status. Requires authentication.",
+      "parameters": {
+        "type": "params",
+        "properties": {}
+      },
       "output": {
+        "encoding": "application/json",
         "schema": {
           "type": "object",
           "properties": {
             "syncStatus": {
-              "ref": "app.bsky.contact.defs#syncStatus",
+              "description": "If present, indicates the user has imported their contacts. If not present, indicates the user never used the feature or called `app.bsky.contact.removeData` and didn't import again since.",
               "type": "ref",
-              "description": "If present, indicates the user has imported their contacts. If not present, indicates the user never used the feature or called `app.bsky.contact.removeData` and didn't import again since."
+              "ref": "app.bsky.contact.defs#syncStatus"
             }
           }
-        },
-        "encoding": "application/json"
+        }
       },
-      "parameters": { "type": "params", "properties": {} },
-      "description": "Gets the user's current contact import status. Requires authentication."
+      "errors": [
+        {
+          "name": "InvalidDid"
+        },
+        {
+          "name": "InternalError"
+        }
+      ]
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

@@ -1,21 +1,28 @@
 {
+  "lexicon": 1,
   "id": "chat.bsky.moderation.defs",
   "defs": {
     "convoView": {
+      "description": "A view of a conversation for moderation purposes. Unlike chat.bsky.convo.defs#convoView, it does not include viewer-specific data (such as muted, unreadCount, status, lastMessage, lastReaction), since the requester is a moderator and not a member of the conversation. The member list is not included; use chat.bsky.moderation.getConvoMembers to list members.",
       "type": "object",
       "required": ["id", "rev"],
       "properties": {
         "id": { "type": "string" },
         "rev": { "type": "string" },
         "kind": {
-          "refs": ["#directConvo", "#groupConvo"],
+          "description": "Union field that has data specific to different kinds of convos.",
           "type": "union",
-          "description": "Union field that has data specific to different kinds of convos."
+          "refs": ["#directConvo", "#groupConvo"]
         }
-      },
-      "description": "A view of a conversation for moderation purposes. Unlike chat.bsky.convo.defs#convoView, it does not include viewer-specific data (such as muted, unreadCount, status, lastMessage, lastReaction), since the requester is a moderator and not a member of the conversation. The member list is not included; use chat.bsky.moderation.getConvoMembers to list members."
+      }
+    },
+    "directConvo": {
+      "description": "Data specific to a direct conversation, for moderation purposes.",
+      "type": "object",
+      "properties": {}
     },
     "groupConvo": {
+      "description": "Data specific to a group conversation, for moderation purposes. Unlike chat.bsky.convo.defs#groupConvo, it does not include viewer-specific data (such as unreadJoinRequestCount), since the requester is a moderator and not a member of the conversation.",
       "type": "object",
       "required": [
         "createdAt",
@@ -26,21 +33,22 @@
         "name"
       ],
       "properties": {
-        "name": {
+        "createdAt": {
           "type": "string",
-          "maxLength": 500,
-          "description": "The display name of the group conversation.",
-          "maxGraphemes": 50
+          "format": "datetime"
         },
         "joinLink": {
-          "ref": "chat.bsky.group.defs#joinLinkView",
-          "type": "ref"
-        },
-        "createdAt": { "type": "string", "format": "datetime" },
-        "lockStatus": {
-          "ref": "chat.bsky.convo.defs#convoLockStatus",
           "type": "ref",
-          "description": "The lock status of the conversation."
+          "ref": "chat.bsky.group.defs#joinLinkView"
+        },
+        "joinRequestCount": {
+          "type": "integer",
+          "description": "The total number of pending join requests for the group conversation. This information is only visible to the owner and to moderators. Capped at 21."
+        },
+        "lockStatus": {
+          "description": "The lock status of the conversation.",
+          "type": "ref",
+          "ref": "chat.bsky.convo.defs#convoLockStatus"
         },
         "memberCount": {
           "type": "integer",
@@ -50,19 +58,13 @@
           "type": "integer",
           "description": "The maximum number of members allowed in the group conversation."
         },
-        "joinRequestCount": {
-          "type": "integer",
-          "description": "The total number of pending join requests for the group conversation. This information is only visible to the owner and to moderators. Capped at 21."
+        "name": {
+          "type": "string",
+          "description": "The display name of the group conversation.",
+          "maxGraphemes": 50,
+          "maxLength": 500
         }
-      },
-      "description": "Data specific to a group conversation, for moderation purposes. Unlike chat.bsky.convo.defs#groupConvo, it does not include viewer-specific data (such as unreadJoinRequestCount), since the requester is a moderator and not a member of the conversation."
-    },
-    "directConvo": {
-      "type": "object",
-      "properties": {},
-      "description": "Data specific to a direct conversation, for moderation purposes."
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

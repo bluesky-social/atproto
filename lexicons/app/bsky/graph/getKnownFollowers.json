@@ -1,29 +1,10 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.graph.getKnownFollowers",
   "defs": {
     "main": {
       "type": "query",
-      "output": {
-        "schema": {
-          "type": "object",
-          "required": ["subject", "followers"],
-          "properties": {
-            "cursor": { "type": "string" },
-            "subject": {
-              "ref": "app.bsky.actor.defs#profileView",
-              "type": "ref"
-            },
-            "followers": {
-              "type": "array",
-              "items": {
-                "ref": "app.bsky.actor.defs#profileView",
-                "type": "ref"
-              }
-            }
-          }
-        },
-        "encoding": "application/json"
-      },
+      "description": "Enumerates accounts which follow a specified account (actor) and are followed by the viewer.",
       "parameters": {
         "type": "params",
         "required": ["actor"],
@@ -31,16 +12,34 @@
           "actor": { "type": "string", "format": "at-identifier" },
           "limit": {
             "type": "integer",
-            "default": 50,
+            "minimum": 1,
             "maximum": 100,
-            "minimum": 1
+            "default": 50
           },
           "cursor": { "type": "string" }
         }
       },
-      "description": "Enumerates accounts which follow a specified account (actor) and are followed by the viewer."
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["subject", "followers"],
+          "properties": {
+            "subject": {
+              "type": "ref",
+              "ref": "app.bsky.actor.defs#profileView"
+            },
+            "cursor": { "type": "string" },
+            "followers": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.actor.defs#profileView"
+              }
+            }
+          }
+        }
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

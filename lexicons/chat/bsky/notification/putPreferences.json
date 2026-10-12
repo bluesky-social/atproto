@@ -1,40 +1,39 @@
 {
+  "lexicon": 1,
   "id": "chat.bsky.notification.putPreferences",
   "defs": {
     "main": {
       "type": "procedure",
+      "description": "Set the requesting account's chat notification preferences. Only the provided preferences are updated; omitted preferences are left unchanged.",
       "input": {
+        "encoding": "application/json",
         "schema": {
           "type": "object",
           "properties": {
             "chat": {
-              "ref": "chat.bsky.notification.defs#chatPreference",
-              "type": "ref"
+              "type": "ref",
+              "ref": "chat.bsky.notification.defs#chatPreference"
             },
             "chatRequest": {
-              "ref": "chat.bsky.notification.defs#chatPreference",
-              "type": "ref"
+              "type": "ref",
+              "ref": "chat.bsky.notification.defs#chatPreference"
             }
           }
-        },
-        "encoding": "application/json"
+        }
       },
       "output": {
+        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["preferences"],
           "properties": {
             "preferences": {
-              "ref": "chat.bsky.notification.defs#preferences",
-              "type": "ref"
+              "type": "ref",
+              "ref": "chat.bsky.notification.defs#preferences"
             }
           }
-        },
-        "encoding": "application/json"
-      },
-      "description": "Set the requesting account's chat notification preferences. Only the provided preferences are updated; omitted preferences are left unchanged."
+        }
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

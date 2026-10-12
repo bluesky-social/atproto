@@ -1,14 +1,18 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.authViewAll",
   "defs": {
     "main": {
       "type": "permission-set",
       "title": "Read-only access to all content",
-      "detail": "View Bluesky network content from account perspective, and read all notifications and preferences.",
       "title:lang": {},
+      "detail": "View Bluesky network content from account perspective, and read all notifications and preferences.",
       "detail:lang": {},
       "permissions": [
         {
+          "type": "permission",
+          "resource": "rpc",
+          "inheritAud": true,
           "lxm": [
             "app.bsky.actor.getPreferences",
             "app.bsky.actor.getProfile",
@@ -79,14 +83,9 @@
             "app.bsky.unspecced.searchPostsSkeleton",
             "app.bsky.unspecced.searchStarterPacksSkeleton",
             "app.bsky.video.getUploadLimits"
-          ],
-          "type": "permission",
-          "resource": "rpc",
-          "inheritAud": true
+          ]
         }
       ]
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

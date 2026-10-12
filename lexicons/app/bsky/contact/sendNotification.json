@@ -1,34 +1,36 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.contact.sendNotification",
   "defs": {
     "main": {
       "type": "procedure",
+      "description": "System endpoint to send notifications related to contact imports. Requires role authentication.",
       "input": {
+        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["from", "to"],
           "properties": {
-            "to": {
-              "type": "string",
-              "format": "did",
-              "description": "The DID of who this notification should go to."
-            },
             "from": {
+              "description": "The DID of who this notification comes from.",
               "type": "string",
-              "format": "did",
-              "description": "The DID of who this notification comes from."
+              "format": "did"
+            },
+            "to": {
+              "description": "The DID of who this notification should go to.",
+              "type": "string",
+              "format": "did"
             }
           }
-        },
-        "encoding": "application/json"
+        }
       },
       "output": {
-        "schema": { "type": "object", "properties": {} },
-        "encoding": "application/json"
-      },
-      "description": "System endpoint to send notifications related to contact imports. Requires role authentication."
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

@@ -1,14 +1,18 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.authCreatePosts",
   "defs": {
     "main": {
       "type": "permission-set",
       "title": "Create Bluesky Posts",
-      "detail": "Can not update or delete posts.",
       "title:lang": {},
+      "detail": "Can not update or delete posts.",
       "detail:lang": {},
       "permissions": [
         {
+          "type": "permission",
+          "resource": "rpc",
+          "inheritAud": true,
           "lxm": [
             "app.bsky.video.uploadVideo",
             "app.bsky.video.getJobStatus",
@@ -18,15 +22,12 @@
             "app.bsky.video.finishUpload",
             "app.bsky.video.abortUpload",
             "app.bsky.video.getUploadStatus"
-          ],
-          "type": "permission",
-          "resource": "rpc",
-          "inheritAud": true
+          ]
         },
         {
           "type": "permission",
-          "action": ["create"],
           "resource": "repo",
+          "action": ["create"],
           "collection": [
             "app.bsky.feed.post",
             "app.bsky.feed.postgate",
@@ -35,7 +36,5 @@
         }
       ]
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

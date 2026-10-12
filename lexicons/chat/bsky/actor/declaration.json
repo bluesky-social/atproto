@@ -1,9 +1,11 @@
 {
+  "lexicon": 1,
   "id": "chat.bsky.actor.declaration",
   "defs": {
     "main": {
-      "key": "literal:self",
       "type": "record",
+      "description": "A declaration of a Bluesky chat account.",
+      "key": "literal:self",
       "record": {
         "type": "object",
         "required": ["allowIncoming"],
@@ -13,15 +15,12 @@
             "knownValues": ["all", "none", "following"]
           },
           "allowGroupInvites": {
-            "type": "string",
             "description": "Declaration about group chat invitation preferences for the record owner.",
+            "type": "string",
             "knownValues": ["all", "none", "following"]
           }
         }
-      },
-      "description": "A declaration of a Bluesky chat account."
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

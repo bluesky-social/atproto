@@ -1,26 +1,10 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.feed.getAuthorFeed",
   "defs": {
     "main": {
       "type": "query",
-      "errors": [{ "name": "BlockedActor" }, { "name": "BlockedByActor" }],
-      "output": {
-        "schema": {
-          "type": "object",
-          "required": ["feed"],
-          "properties": {
-            "feed": {
-              "type": "array",
-              "items": {
-                "ref": "app.bsky.feed.defs#feedViewPost",
-                "type": "ref"
-              }
-            },
-            "cursor": { "type": "string" }
-          }
-        },
-        "encoding": "application/json"
-      },
+      "description": "Get a view of an actor's 'author feed' (post and reposts by the author). Does not require auth.",
       "parameters": {
         "type": "params",
         "required": ["actor"],
@@ -28,14 +12,13 @@
           "actor": { "type": "string", "format": "at-identifier" },
           "limit": {
             "type": "integer",
-            "default": 50,
+            "minimum": 1,
             "maximum": 100,
-            "minimum": 1
+            "default": 50
           },
           "cursor": { "type": "string" },
           "filter": {
             "type": "string",
-            "default": "posts_with_replies",
             "description": "Combinations of post/repost types to include in response.",
             "knownValues": [
               "posts_with_replies",
@@ -43,14 +26,33 @@
               "posts_with_media",
               "posts_and_author_threads",
               "posts_with_video"
-            ]
+            ],
+            "default": "posts_with_replies"
           },
-          "includePins": { "type": "boolean", "default": false }
+          "includePins": {
+            "type": "boolean",
+            "default": false
+          }
         }
       },
-      "description": "Get a view of an actor's 'author feed' (post and reposts by the author). Does not require auth."
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["feed"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "feed": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.feed.defs#feedViewPost"
+              }
+            }
+          }
+        }
+      },
+      "errors": [{ "name": "BlockedActor" }, { "name": "BlockedByActor" }]
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

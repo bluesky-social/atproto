@@ -1,58 +1,66 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.actor.profile",
   "defs": {
     "main": {
-      "key": "literal:self",
       "type": "record",
+      "description": "A declaration of a Bluesky account profile.",
+      "key": "literal:self",
       "record": {
         "type": "object",
         "properties": {
+          "displayName": {
+            "type": "string",
+            "maxGraphemes": 64,
+            "maxLength": 640
+          },
+          "description": {
+            "type": "string",
+            "description": "Free-form profile description text.",
+            "maxGraphemes": 256,
+            "maxLength": 2560
+          },
+          "pronouns": {
+            "type": "string",
+            "description": "Free-form pronouns text.",
+            "maxGraphemes": 20,
+            "maxLength": 200
+          },
+          "website": { "type": "string", "format": "uri" },
           "avatar": {
             "type": "blob",
+            "description": "Small image to be displayed next to posts from account. AKA, 'profile picture'",
             "accept": ["image/png", "image/jpeg"],
-            "maxSize": 1000000,
-            "description": "Small image to be displayed next to posts from account. AKA, 'profile picture'"
+            "maxSize": 1000000
           },
           "banner": {
             "type": "blob",
+            "description": "Larger horizontal image to display behind profile view.",
             "accept": ["image/png", "image/jpeg"],
-            "maxSize": 1000000,
-            "description": "Larger horizontal image to display behind profile view."
+            "maxSize": 1000000
           },
           "labels": {
-            "refs": ["com.atproto.label.defs#selfLabels"],
             "type": "union",
-            "description": "Self-label values, specific to the Bluesky application, on the overall account."
-          },
-          "website": { "type": "string", "format": "uri" },
-          "pronouns": {
-            "type": "string",
-            "maxLength": 200,
-            "description": "Free-form pronouns text.",
-            "maxGraphemes": 20
-          },
-          "createdAt": { "type": "string", "format": "datetime" },
-          "pinnedPost": { "ref": "com.atproto.repo.strongRef", "type": "ref" },
-          "description": {
-            "type": "string",
-            "maxLength": 2560,
-            "description": "Free-form profile description text.",
-            "maxGraphemes": 256
-          },
-          "displayName": {
-            "type": "string",
-            "maxLength": 640,
-            "maxGraphemes": 64
+            "description": "Self-label values, specific to the Bluesky application, on the overall account.",
+            "refs": ["com.atproto.label.defs#selfLabels"]
           },
           "joinedViaStarterPack": {
-            "ref": "com.atproto.repo.strongRef",
-            "type": "ref"
-          }
+            "type": "ref",
+            "ref": "com.atproto.repo.strongRef"
+          },
+          "pinnedPost": {
+            "type": "ref",
+            "ref": "com.atproto.repo.strongRef"
+          },
+          "links": {
+            "type": "array",
+            "description": "Links shown on the profile, in display order. Each ref points to an app.bsky.actor.link record in this repo.",
+            "maxLength": 10,
+            "items": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
+          },
+          "createdAt": { "type": "string", "format": "datetime" }
         }
-      },
-      "description": "A declaration of a Bluesky account profile."
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

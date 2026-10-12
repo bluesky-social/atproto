@@ -1,9 +1,11 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.graph.listblock",
   "defs": {
     "main": {
-      "key": "tid",
       "type": "record",
+      "description": "Record representing a block relationship against an entire an entire list of accounts (actors).",
+      "key": "tid",
       "record": {
         "type": "object",
         "required": ["subject", "createdAt"],
@@ -15,10 +17,7 @@
           },
           "createdAt": { "type": "string", "format": "datetime" }
         }
-      },
-      "description": "Record representing a block relationship against an entire an entire list of accounts (actors)."
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

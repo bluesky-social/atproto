@@ -1,11 +1,13 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.embed.record",
+  "description": "A representation of a record embedded in a Bluesky record (eg, a post). For example, a quote-post, or sharing a feed generator record.",
   "defs": {
     "main": {
       "type": "object",
       "required": ["record"],
       "properties": {
-        "record": { "ref": "com.atproto.repo.strongRef", "type": "ref" }
+        "record": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
       }
     },
     "view": {
@@ -13,6 +15,7 @@
       "required": ["record"],
       "properties": {
         "record": {
+          "type": "union",
           "refs": [
             "#viewRecord",
             "#viewNotFound",
@@ -22,8 +25,7 @@
             "app.bsky.graph.defs#listView",
             "app.bsky.labeler.defs#labelerView",
             "app.bsky.graph.defs#starterPackViewBasic"
-          ],
-          "type": "union"
+          ]
         }
       }
     },
@@ -31,19 +33,36 @@
       "type": "object",
       "required": ["uri", "cid", "author", "value", "indexedAt"],
       "properties": {
-        "cid": { "type": "string", "format": "cid" },
         "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "author": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileViewBasic"
+        },
         "value": {
           "type": "unknown",
           "description": "The record data itself."
         },
-        "author": {
-          "ref": "app.bsky.actor.defs#profileViewBasic",
-          "type": "ref"
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
+        "replyCount": { "type": "integer" },
+        "repostCount": { "type": "integer" },
+        "likeCount": { "type": "integer" },
+        "quoteCount": { "type": "integer" },
+        "opThreadPostIndex": {
+          "type": "integer",
+          "description": "The 1-indexed position of this post within the contiguous OP thread. Only present when this post is part of the OP thread."
+        },
+        "opThreadPostCount": {
+          "type": "integer",
+          "description": "The total number of posts in the contiguous OP thread that this post belongs to. Only present when this post is part of the OP thread."
         },
         "embeds": {
           "type": "array",
           "items": {
+            "type": "union",
             "refs": [
               "app.bsky.embed.images#view",
               "app.bsky.embed.video#view",
@@ -51,44 +70,10 @@
               "app.bsky.embed.external#view",
               "app.bsky.embed.record#view",
               "app.bsky.embed.recordWithMedia#view"
-            ],
-            "type": "union"
+            ]
           }
         },
-        "labels": {
-          "type": "array",
-          "items": { "ref": "com.atproto.label.defs#label", "type": "ref" }
-        },
-        "indexedAt": { "type": "string", "format": "datetime" },
-        "likeCount": { "type": "integer" },
-        "quoteCount": { "type": "integer" },
-        "replyCount": { "type": "integer" },
-        "repostCount": { "type": "integer" },
-        "opThreadPostCount": {
-          "type": "integer",
-          "description": "The total number of posts in the contiguous OP thread that this post belongs to. Only present when this post is part of the OP thread."
-        },
-        "opThreadPostIndex": {
-          "type": "integer",
-          "description": "The 1-indexed position of this post within the contiguous OP thread. Only present when this post is part of the OP thread."
-        }
-      }
-    },
-    "viewBlocked": {
-      "type": "object",
-      "required": ["uri", "blocked", "author"],
-      "properties": {
-        "uri": { "type": "string", "format": "at-uri" },
-        "author": { "ref": "app.bsky.feed.defs#blockedAuthor", "type": "ref" },
-        "blocked": { "type": "boolean", "const": true }
-      }
-    },
-    "viewDetached": {
-      "type": "object",
-      "required": ["uri", "detached"],
-      "properties": {
-        "uri": { "type": "string", "format": "at-uri" },
-        "detached": { "type": "boolean", "const": true }
+        "indexedAt": { "type": "string", "format": "datetime" }
       }
     },
     "viewNotFound": {
@@ -98,9 +83,23 @@
         "uri": { "type": "string", "format": "at-uri" },
         "notFound": { "type": "boolean", "const": true }
       }
+    },
+    "viewBlocked": {
+      "type": "object",
+      "required": ["uri", "blocked", "author"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "blocked": { "type": "boolean", "const": true },
+        "author": { "type": "ref", "ref": "app.bsky.feed.defs#blockedAuthor" }
+      }
+    },
+    "viewDetached": {
+      "type": "object",
+      "required": ["uri", "detached"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "detached": { "type": "boolean", "const": true }
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1,
-  "description": "A representation of a record embedded in a Bluesky record (eg, a post). For example, a quote-post, or sharing a feed generator record."
+  }
 }

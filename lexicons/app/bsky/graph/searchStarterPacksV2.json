@@ -1,29 +1,10 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.graph.searchStarterPacksV2",
   "defs": {
     "main": {
       "type": "query",
-      "output": {
-        "schema": {
-          "type": "object",
-          "required": ["starterPacks"],
-          "properties": {
-            "cursor": { "type": "string" },
-            "hitsTotal": {
-              "type": "integer",
-              "description": "Estimated total number of matching hits. May be rounded or truncated."
-            },
-            "starterPacks": {
-              "type": "array",
-              "items": {
-                "ref": "app.bsky.graph.defs#starterPackView",
-                "type": "ref"
-              }
-            }
-          }
-        },
-        "encoding": "application/json"
-      },
+      "description": "Find starter packs matching search criteria. Does not require auth.",
       "parameters": {
         "type": "params",
         "required": ["q"],
@@ -34,16 +15,38 @@
           },
           "limit": {
             "type": "integer",
-            "default": 25,
+            "minimum": 1,
             "maximum": 100,
-            "minimum": 1
+            "default": 25
           },
-          "cursor": { "type": "string" }
+          "cursor": {
+            "type": "string"
+          }
         }
       },
-      "description": "Find starter packs matching search criteria. Does not require auth."
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["starterPacks"],
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "hitsTotal": {
+              "type": "integer",
+              "description": "Estimated total number of matching hits. May be rounded or truncated."
+            },
+            "starterPacks": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.graph.defs#starterPackView"
+              }
+            }
+          }
+        }
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

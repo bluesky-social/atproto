@@ -25,7 +25,12 @@
       "required": ["did", "domains"],
       "properties": {
         "did": { "type": "string", "format": "did" },
-        "domains": { "type": "array", "items": { "type": "string" } }
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     }
   }

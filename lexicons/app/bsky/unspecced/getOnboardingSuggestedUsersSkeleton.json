@@ -33,7 +33,10 @@
           "properties": {
             "dids": {
               "type": "array",
-              "items": { "type": "string", "format": "did" }
+              "items": {
+                "type": "string",
+                "format": "did"
+              }
             },
             "recId": {
               "type": "string",

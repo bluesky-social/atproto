@@ -5,7 +5,10 @@
     "main": {
       "type": "query",
       "description": "Get a list of suggestions (feeds and users) tagged with categories",
-      "parameters": { "type": "params", "properties": {} },
+      "parameters": {
+        "type": "params",
+        "properties": {}
+      },
       "output": {
         "encoding": "application/json",
         "schema": {
@@ -14,7 +17,10 @@
           "properties": {
             "suggestions": {
               "type": "array",
-              "items": { "type": "ref", "ref": "#suggestion" }
+              "items": {
+                "type": "ref",
+                "ref": "#suggestion"
+              }
             }
           }
         }
@@ -25,7 +31,10 @@
       "required": ["tag", "subjectType", "subject"],
       "properties": {
         "tag": { "type": "string" },
-        "subjectType": { "type": "string", "knownValues": ["actor", "feed"] },
+        "subjectType": {
+          "type": "string",
+          "knownValues": ["actor", "feed"]
+        },
         "subject": { "type": "string", "format": "uri" }
       }
     }

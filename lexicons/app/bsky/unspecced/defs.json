@@ -5,17 +5,23 @@
     "skeletonSearchPost": {
       "type": "object",
       "required": ["uri"],
-      "properties": { "uri": { "type": "string", "format": "at-uri" } }
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" }
+      }
     },
     "skeletonSearchActor": {
       "type": "object",
       "required": ["did"],
-      "properties": { "did": { "type": "string", "format": "did" } }
+      "properties": {
+        "did": { "type": "string", "format": "did" }
+      }
     },
     "skeletonSearchStarterPack": {
       "type": "object",
       "required": ["uri"],
-      "properties": { "uri": { "type": "string", "format": "at-uri" } }
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" }
+      }
     },
     "trendingTopic": {
       "type": "object",
@@ -48,7 +54,10 @@
         "category": { "type": "string" },
         "dids": {
           "type": "array",
-          "items": { "type": "string", "format": "did" }
+          "items": {
+            "type": "string",
+            "format": "did"
+          }
         }
       }
     },
@@ -122,8 +131,14 @@
         }
       }
     },
-    "threadItemNoUnauthenticated": { "type": "object", "properties": {} },
-    "threadItemNotFound": { "type": "object", "properties": {} },
+    "threadItemNoUnauthenticated": {
+      "type": "object",
+      "properties": {}
+    },
+    "threadItemNotFound": {
+      "type": "object",
+      "properties": {}
+    },
     "threadItemBlocked": {
       "type": "object",
       "required": ["author"],
@@ -167,7 +182,10 @@
           "type": "string",
           "description": "The unique identifier for this instance of the age assurance flow, in UUID format."
         },
-        "email": { "type": "string", "description": "The email used for AA." },
+        "email": {
+          "type": "string",
+          "description": "The email used for AA."
+        },
         "initIp": {
           "type": "string",
           "description": "The IP address used when initiating the AA flow."

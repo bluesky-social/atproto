@@ -1,37 +1,36 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.graph.getListMutes",
   "defs": {
     "main": {
       "type": "query",
-      "output": {
-        "schema": {
-          "type": "object",
-          "required": ["lists"],
-          "properties": {
-            "lists": {
-              "type": "array",
-              "items": { "ref": "app.bsky.graph.defs#listView", "type": "ref" }
-            },
-            "cursor": { "type": "string" }
-          }
-        },
-        "encoding": "application/json"
-      },
+      "description": "Enumerates mod lists that the requesting account (actor) currently has muted. Requires auth.",
       "parameters": {
         "type": "params",
         "properties": {
           "limit": {
             "type": "integer",
-            "default": 50,
+            "minimum": 1,
             "maximum": 100,
-            "minimum": 1
+            "default": 50
           },
           "cursor": { "type": "string" }
         }
       },
-      "description": "Enumerates mod lists that the requesting account (actor) currently has muted. Requires auth."
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["lists"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "lists": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "app.bsky.graph.defs#listView" }
+            }
+          }
+        }
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

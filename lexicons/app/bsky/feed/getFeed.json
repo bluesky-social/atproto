@@ -1,26 +1,10 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.feed.getFeed",
   "defs": {
     "main": {
       "type": "query",
-      "errors": [{ "name": "UnknownFeed" }],
-      "output": {
-        "schema": {
-          "type": "object",
-          "required": ["feed"],
-          "properties": {
-            "feed": {
-              "type": "array",
-              "items": {
-                "ref": "app.bsky.feed.defs#feedViewPost",
-                "type": "ref"
-              }
-            },
-            "cursor": { "type": "string" }
-          }
-        },
-        "encoding": "application/json"
-      },
+      "description": "Get a hydrated feed from an actor's selected feed generator. Implemented by App View.",
       "parameters": {
         "type": "params",
         "required": ["feed"],
@@ -28,16 +12,31 @@
           "feed": { "type": "string", "format": "at-uri" },
           "limit": {
             "type": "integer",
-            "default": 50,
+            "minimum": 1,
             "maximum": 100,
-            "minimum": 1
+            "default": 50
           },
           "cursor": { "type": "string" }
         }
       },
-      "description": "Get a hydrated feed from an actor's selected feed generator. Implemented by App View."
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["feed"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "feed": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.feed.defs#feedViewPost"
+              }
+            }
+          }
+        }
+      },
+      "errors": [{ "name": "UnknownFeed" }]
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

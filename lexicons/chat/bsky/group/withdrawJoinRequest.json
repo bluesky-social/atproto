@@ -1,24 +1,29 @@
 {
+  "lexicon": 1,
   "id": "chat.bsky.group.withdrawJoinRequest",
   "defs": {
     "main": {
       "type": "procedure",
+      "description": "Withdraws a pending request to join a group. Action taken by the prospective member who originally requested to join.",
+      "errors": [{ "name": "InvalidJoinRequest" }],
       "input": {
+        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["convoId"],
-          "properties": { "convoId": { "type": "string" } }
-        },
-        "encoding": "application/json"
+          "properties": {
+            "convoId": { "type": "string" }
+          }
+        }
       },
-      "errors": [{ "name": "InvalidJoinRequest" }],
       "output": {
-        "schema": { "type": "object", "required": [], "properties": {} },
-        "encoding": "application/json"
-      },
-      "description": "Withdraws a pending request to join a group. Action taken by the prospective member who originally requested to join."
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [],
+          "properties": {}
+        }
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

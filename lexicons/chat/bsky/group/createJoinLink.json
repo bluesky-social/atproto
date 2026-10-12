@@ -1,44 +1,46 @@
 {
+  "lexicon": 1,
   "id": "chat.bsky.group.createJoinLink",
   "defs": {
     "main": {
       "type": "procedure",
-      "input": {
-        "schema": {
-          "type": "object",
-          "required": ["convoId", "joinRule"],
-          "properties": {
-            "convoId": { "type": "string" },
-            "joinRule": {
-              "ref": "chat.bsky.group.defs#joinRule",
-              "type": "ref"
-            },
-            "requireApproval": { "type": "boolean", "default": false }
-          }
-        },
-        "encoding": "application/json"
-      },
+      "description": "Creates a join link for the group convo.",
       "errors": [
         { "name": "EnabledJoinLinkAlreadyExists" },
         { "name": "InvalidConvo" },
         { "name": "InsufficientRole" }
       ],
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["convoId", "joinRule"],
+          "properties": {
+            "convoId": { "type": "string" },
+            "requireApproval": {
+              "type": "boolean",
+              "default": false
+            },
+            "joinRule": {
+              "type": "ref",
+              "ref": "chat.bsky.group.defs#joinRule"
+            }
+          }
+        }
+      },
       "output": {
+        "encoding": "application/json",
         "schema": {
           "type": "object",
           "required": ["joinLink"],
           "properties": {
             "joinLink": {
-              "ref": "chat.bsky.group.defs#joinLinkView",
-              "type": "ref"
+              "type": "ref",
+              "ref": "chat.bsky.group.defs#joinLinkView"
             }
           }
-        },
-        "encoding": "application/json"
-      },
-      "description": "Creates a join link for the group convo."
+        }
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }

@@ -1,9 +1,11 @@
 {
+  "lexicon": 1,
   "id": "app.bsky.notification.declaration",
   "defs": {
     "main": {
-      "key": "literal:self",
       "type": "record",
+      "description": "A declaration of the user's choices related to notifications that can be produced by them.",
+      "key": "literal:self",
       "record": {
         "type": "object",
         "required": ["allowSubscriptions"],
@@ -14,10 +16,7 @@
             "knownValues": ["followers", "mutuals", "none"]
           }
         }
-      },
-      "description": "A declaration of the user's choices related to notifications that can be produced by them."
+      }
     }
-  },
-  "$type": "com.atproto.lexicon.schema",
-  "lexicon": 1
+  }
 }
