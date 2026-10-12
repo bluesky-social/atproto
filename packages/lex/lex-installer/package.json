@@ -49,6 +49,7 @@
     "@atproto/lex-schema": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto-labs/did-resolver": "workspace:^",
+    "@atproto-labs/fetch-node": "workspace:^",
     "@atproto-labs/handle-resolver": "workspace:^",
     "@atproto-labs/handle-resolver-node": "workspace:^",
     "prettier": "^3.9.6",

@@ -20,6 +20,10 @@ import {
 } from '@atproto/syntax'
 import { createDidResolver, extractPdsUrl } from '@atproto-labs/did-resolver'
 import type { CreateDidResolverOptions } from '@atproto-labs/did-resolver'
+import {
+  DEFAULT_FORBIDDEN_DOMAIN_NAMES,
+  safeFetchWrap,
+} from '@atproto-labs/fetch-node'
 import type { HandleResolver } from '@atproto-labs/handle-resolver'
 import {
   AtprotoHandleResolverNode,
@@ -180,9 +184,18 @@ export type CreateResolversOptions = LexResolverOptions &
  * containing the manifest file).
  */
 export function createResolver(
-  options: CreateResolversOptions,
+  {
+    fetch = safeFetchWrap({
+      allowHttp: false,
+      allowIpHost: false,
+      ssrfProtection: true,
+      forbiddenDomainNames: [...DEFAULT_FORBIDDEN_DOMAIN_NAMES, '*.internal'],
+    }),
+    ...opts
+  }: CreateResolversOptions,
   configs: Iterable<LexiconResolverConfig> = [],
 ): LexiconResolver {
+  const options: CreateResolversOptions = { ...opts, fetch }
   const lexResolver = new LexResolver(options)
   const resolvers = Array.from(configs, (config): LexiconResolver => {
     const resolver = buildCustomResolver(options, config)

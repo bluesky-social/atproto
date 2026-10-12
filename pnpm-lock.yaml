@@ -1189,6 +1189,9 @@ importers:
       '@atproto-labs/did-resolver':
         specifier: workspace:^
         version: link:../../internal/did-resolver
+      '@atproto-labs/fetch-node':
+        specifier: workspace:^
+        version: link:../../internal/fetch-node
       '@atproto-labs/handle-resolver':
         specifier: workspace:^
         version: link:../../internal/handle-resolver
