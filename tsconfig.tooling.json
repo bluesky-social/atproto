@@ -1,0 +1,7 @@
+{
+  "include": [],
+  "references": [
+    { "path": "./packages/lex/lex-installer/tsconfig.build.json" },
+    { "path": "./packages/lex-cli/tsconfig.build.json" },
+  ],
+}
