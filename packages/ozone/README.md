@@ -13,14 +13,7 @@ Set `OZONE_LABEL_QUERY_WILDCARDS_ENABLED=true` and restart the API to restore wi
 
 ## Moderation query cancellation
 
-`queryEvents` and `queryStatuses` use Kysely's `cancel query` abort strategy to cancel their listing SQL when the HTTP client disconnects. Cancellation uses a separate PostgreSQL control connection so it can proceed when the API pool is busy. Kysely keeps the listing connection reserved until SQL and cancellation finish.
-
-| Environment variable                    | Default | Controls                                                                        |
-| --------------------------------------- | ------- | ------------------------------------------------------------------------------- |
-| `OZONE_DB_CANCEL_CONNECTION_TIMEOUT_MS` | `1000`  | Time allowed to establish the cancellation connection, in milliseconds          |
-| `OZONE_DB_CANCEL_STATEMENT_TIMEOUT_MS`  | `1000`  | PostgreSQL execution time allowed for the cancellation command, in milliseconds |
-
-Restart the API after changing these values. Values must be decimal integers from `0` to `2147483647`; invalid values fail startup. Setting the connection timeout to `0` removes the client-side connection timer; a statement timeout of `0` leaves the PostgreSQL server/role setting in effect. These settings apply only to the cancellation connection and do not impose a deadline on the listing query. A failed cancellation is logged, and its listing connection remains reserved until the query finishes.
+`queryEvents` and `queryStatuses` cancel their listing SQL when the HTTP client disconnects, using Kysely's `cancel query` abort strategy. Kysely uses a separate PostgreSQL connection for cancellation and holds the listing connection until SQL and cancellation finish. This adds no query deadline.
 
 ## Moderation inbox standing
 

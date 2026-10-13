@@ -19,8 +19,6 @@ export type PgOptions = {
   poolSize?: number
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
-  cancelConnectionTimeoutMs?: number
-  cancelStatementTimeoutMs?: number
 }
 
 export const jsonb = <T>(val: T) => {

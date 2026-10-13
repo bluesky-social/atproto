@@ -166,35 +166,34 @@ export class ModerationService {
     return !!result
   }
 
-  async getEvents(
-    opts: {
-      subject?: string
-      createdBy?: DidString
-      limit: number
-      cursor?: string
-      includeAllUserRecords: boolean
-      types: ModerationEvent['action'][]
-      sortDirection?: 'asc' | 'desc'
-      hasComment?: boolean
-      comment?: string
-      createdAfter?: DatetimeString
-      createdBefore?: DatetimeString
-      addedLabels: string[]
-      removedLabels: string[]
-      addedTags: string[]
-      removedTags: string[]
-      reportTypes?: string[]
-      collections: string[]
-      subjectType?: string
-      policies?: string[]
-      modTool?: string[]
-      ageAssuranceState?: string
-      batchId?: string
-      withStrike?: boolean
-    },
-    signal?: AbortSignal,
-  ): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
+  async getEvents(opts: {
+    signal?: AbortSignal
+    subject?: string
+    createdBy?: DidString
+    limit: number
+    cursor?: string
+    includeAllUserRecords: boolean
+    types: ModerationEvent['action'][]
+    sortDirection?: 'asc' | 'desc'
+    hasComment?: boolean
+    comment?: string
+    createdAfter?: DatetimeString
+    createdBefore?: DatetimeString
+    addedLabels: string[]
+    removedLabels: string[]
+    addedTags: string[]
+    removedTags: string[]
+    reportTypes?: string[]
+    collections: string[]
+    subjectType?: string
+    policies?: string[]
+    modTool?: string[]
+    ageAssuranceState?: string
+    batchId?: string
+    withStrike?: boolean
+  }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
+      signal,
       subject,
       createdBy,
       limit,
@@ -1155,46 +1154,46 @@ export class ModerationService {
     })
   }
 
-  async getSubjectStatuses(
-    {
-      queueCount,
-      queueIndex,
-      queueSeed = '',
-      includeAllUserRecords,
-      cursor,
-      limit = 50,
-      takendown,
-      appealed,
-      reviewState,
-      reviewedAfter,
-      reviewedBefore,
-      reportedAfter,
-      reportedBefore,
-      includeMuted = false,
-      hostingDeletedBefore,
-      hostingDeletedAfter,
-      hostingUpdatedBefore,
-      hostingUpdatedAfter,
-      hostingStatuses,
-      onlyMuted = false,
-      ignoreSubjects,
-      sortDirection = 'desc',
-      lastReviewedBy,
-      sortField = 'lastReportedAt',
-      subject,
-      tags,
-      excludeTags,
-      collections,
-      subjectType,
-      minAccountSuspendCount,
-      minReportedRecordsCount,
-      minTakendownRecordsCount,
-      minPriorityScore,
-      minStrikeCount,
-      ageAssuranceState,
-    }: tools.ozone.moderation.queryStatuses.$Params,
-    signal?: AbortSignal,
-  ): Promise<{
+  async getSubjectStatuses({
+    signal,
+    queueCount,
+    queueIndex,
+    queueSeed = '',
+    includeAllUserRecords,
+    cursor,
+    limit = 50,
+    takendown,
+    appealed,
+    reviewState,
+    reviewedAfter,
+    reviewedBefore,
+    reportedAfter,
+    reportedBefore,
+    includeMuted = false,
+    hostingDeletedBefore,
+    hostingDeletedAfter,
+    hostingUpdatedBefore,
+    hostingUpdatedAfter,
+    hostingStatuses,
+    onlyMuted = false,
+    ignoreSubjects,
+    sortDirection = 'desc',
+    lastReviewedBy,
+    sortField = 'lastReportedAt',
+    subject,
+    tags,
+    excludeTags,
+    collections,
+    subjectType,
+    minAccountSuspendCount,
+    minReportedRecordsCount,
+    minTakendownRecordsCount,
+    minPriorityScore,
+    minStrikeCount,
+    ageAssuranceState,
+  }: tools.ozone.moderation.queryStatuses.$Params & {
+    signal?: AbortSignal
+  }): Promise<{
     statuses: ModerationSubjectStatusRowWithHandle[]
     cursor?: string
   }> {

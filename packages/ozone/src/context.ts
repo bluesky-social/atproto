@@ -112,8 +112,6 @@ export class AppContext {
       poolSize: cfg.db.poolSize,
       poolMaxUses: cfg.db.poolMaxUses,
       poolIdleTimeoutMs: cfg.db.poolIdleTimeoutMs,
-      cancelConnectionTimeoutMs: cfg.db.cancelConnectionTimeoutMs,
-      cancelStatementTimeoutMs: cfg.db.cancelStatementTimeoutMs,
     })
     const signingKey = await Secp256k1Keypair.import(secrets.signingKeyHex)
     const signingKeyId = await getSigningKeyId(db, signingKey.did())
