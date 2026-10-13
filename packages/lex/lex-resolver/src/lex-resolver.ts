@@ -7,8 +7,10 @@ import {
   checkCid,
   isCborCid,
 } from '@atproto/lex-data'
-import type { LexiconDocument } from '@atproto/lex-document'
-import { lexiconDocumentSchema } from '@atproto/lex-document'
+import {
+  type LexiconDocument,
+  lexiconDocumentSchema,
+} from '@atproto/lex-document'
 import { canParseUrl, rkeyFor, xrpcSafe } from '@atproto/lex-rpc'
 import type { RecordSchema } from '@atproto/lex-schema'
 import {
@@ -20,17 +22,15 @@ import {
 } from '@atproto/repo'
 import { AtUri, NSID } from '@atproto/syntax'
 import {
+  type AtprotoDidDocument,
+  type AtprotoVerificationMethod,
+  type CreateDidResolverOptions,
+  type Did,
+  type DidResolver,
+  type ResolveDidOptions,
   assertDid,
   createDidResolver,
   extractAtprotoData,
-} from '@atproto-labs/did-resolver'
-import type {
-  AtprotoDidDocument,
-  AtprotoVerificationMethod,
-  CreateDidResolverOptions,
-  Did,
-  DidResolver,
-  ResolveDidOptions,
 } from '@atproto-labs/did-resolver'
 import {
   LexResolverError,

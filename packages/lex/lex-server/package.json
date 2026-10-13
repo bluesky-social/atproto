@@ -49,7 +49,6 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@atproto/lex": "workspace:^",
     "@atproto/lex-client": "workspace:^",
     "@types/ws": "^8.18.1",
     "vitest": "^4.1.10"
