@@ -392,6 +392,7 @@ export class Views {
               getBlobCidString(link.record.icon),
             )
           : undefined,
+        labels: state.labels?.getBySubject(ref.uri) ?? [],
       })
     }
     return links.length ? links : undefined

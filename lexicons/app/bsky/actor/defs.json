@@ -206,6 +206,10 @@
           "type": "string",
           "format": "uri",
           "description": "Image URL for the destination site's icon."
+        },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         }
       }
     },

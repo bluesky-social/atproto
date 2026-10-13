@@ -692,17 +692,20 @@ describe('pds profile views', () => {
       return { uri: res.data.uri, cid: res.data.cid }
     }
 
-    const getLinks = async () => {
+    const getLinks = async (labelers?: string) => {
       const { data } = await agent.api.app.bsky.actor.getProfile(
         { actor: linky },
         {
-          headers: await network.serviceHeaders(
-            alice,
-            ids.AppBskyActorGetProfile,
-          ),
+          headers: {
+            ...(labelers ? { 'atproto-accept-labelers': labelers } : {}),
+            ...(await network.serviceHeaders(
+              alice,
+              ids.AppBskyActorGetProfile,
+            )),
+          },
         },
       )
-      return (data as { links?: { uri: string; url: string }[] }).links
+      return data.links
     }
 
     beforeAll(async () => {
@@ -775,7 +778,7 @@ describe('pds profile views', () => {
         },
       )
       expect(data.did).toEqual(linky)
-      expect((data as { links?: unknown }).links).toBeUndefined()
+      expect(data.links).toBeUndefined()
     })
 
     it("does not show another profile's link when profiles are fetched together", async () => {
@@ -801,13 +804,57 @@ describe('pds profile views', () => {
         },
       )
       const linkUris = (did: string) =>
-        (
-          data.profiles.find((profile) => profile.did === did) as {
-            links?: { uri: string }[]
-          }
-        ).links?.map((link) => link.uri)
+        data.profiles
+          .find((profile) => profile.did === did)
+          ?.links?.map((link) => link.uri)
       expect(linkUris(linky)).toEqual([own.uri])
       expect(linkUris(pinto)).toEqual([pintos.uri])
+    })
+
+    it('exposes labels applied to a link', async () => {
+      const labeled = await createLink(linky, 'https://labeled.example')
+      const unlabeled = await createLink(linky, 'https://unlabeled.example')
+      await updateProfile(linky, {
+        displayName: 'links',
+        links: [labeled, unlabeled],
+      })
+      await createLabel({ uri: labeled.uri, cid: labeled.cid, val: 'spam' })
+      await network.processAll()
+
+      const links = await getLinks(labelerDid)
+      expect(links?.map((link) => link.uri)).toEqual([
+        labeled.uri,
+        unlabeled.uri,
+      ])
+      expect(links?.[0].labels?.map((l) => [l.uri, l.val, l.src])).toEqual([
+        [labeled.uri, 'spam', labelerDid],
+      ])
+      expect(links?.[1].labels).toEqual([])
+    })
+
+    it('omits only the link with an actionable takedown label', async () => {
+      const kept = await createLink(linky, 'https://kept.example')
+      const removed = await createLink(linky, 'https://removed.example')
+      await updateProfile(linky, {
+        displayName: 'links',
+        links: [removed, kept],
+      })
+      await createLabel({
+        uri: removed.uri,
+        cid: removed.cid,
+        val: '!takedown',
+      })
+      await network.processAll()
+
+      const links = await getLinks(`${labelerDid};redact`)
+      expect(links?.map((link) => link.uri)).toEqual([kept.uri])
+
+      // Without redact authority the label is shown but does not hide the link.
+      const unredacted = await getLinks(labelerDid)
+      expect(unredacted?.map((link) => link.uri)).toEqual([
+        removed.uri,
+        kept.uri,
+      ])
     })
   })
 
