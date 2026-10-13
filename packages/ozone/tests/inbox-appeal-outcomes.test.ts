@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals'
+import type { CompiledQuery } from 'kysely'
 import {
   type ModeratorClient,
   type SeedClient,
@@ -271,6 +273,69 @@ describe('viewer appeal outcomes', () => {
         (n) => n.id === approved.id,
       )?.target,
     ).toMatchObject({ appealOutcome: 'approved' })
+  })
+
+  it('bounds latest-appeal and closure lookups by the subject page despite repeated appeals', async () => {
+    let subjectId = ''
+    for (let i = 0; i < 6; i++) {
+      const appeal = await startAppeal('label', 'account')
+      subjectId = appeal.subjectId
+      if (i === 5) {
+        await mod.emitEvent({
+          subject: appeal.subject,
+          event: {
+            $type: tools.ozone.moderation.defs.modEventLabel.$type,
+            createLabelVals: [],
+            negateLabelVals: ['spam'],
+          },
+          reportAction: { ids: [appeal.reportId] },
+        })
+      } else {
+        await activity(appeal.reportId, 'closeActivity')
+      }
+    }
+    await assertOutcome(subjectId, 'approved')
+
+    let query: CompiledQuery<unknown> | undefined
+    let subjectCount: number
+    {
+      using queries = jest.spyOn(
+        network.ozone.ctx.db.db.getExecutor(),
+        'executeQuery',
+      )
+      const { data } = await sc.agent.tools.ozone.inbox.listActionedSubjects(
+        { filter: 'resolved', limit: 100 },
+        { headers: inboxHeaders(network, sc, sc.dids.alice) },
+      )
+      subjectCount = data.subjects.length
+      query = queries.mock.calls
+        .map(([compiled]) => compiled)
+        .find((compiled) => compiled.sql.includes('report_activity'))
+    }
+    if (!query) throw new Error('Appeal hydration query not captured')
+
+    // @NOTE Check executed work, not SQL spelling: historical appeals must
+    // not multiply report rows or closure lookups for a resolved page.
+    type PlanNode = {
+      'Relation Name'?: string
+      'Actual Rows': number
+      'Actual Loops': number
+      Plans?: PlanNode[]
+    }
+    const { rows } = await network.ozone.ctx.db.pool.query<{
+      'QUERY PLAN': { Plan: PlanNode }[]
+    }>(`EXPLAIN (ANALYZE, FORMAT JSON) ${query.sql}`, [...query.parameters])
+    function nodes(plan: PlanNode): PlanNode[] {
+      return [plan, ...(plan.Plans ?? []).flatMap(nodes)]
+    }
+    const plan = nodes(rows[0]['QUERY PLAN'][0].Plan)
+    const reportScan = plan.find((node) => node['Relation Name'] === 'report')
+    const closureScan = plan.find(
+      (node) => node['Relation Name'] === 'report_activity',
+    )
+    expect(reportScan?.['Actual Rows']).toBe(1)
+    expect(reportScan?.['Actual Loops']).toBe(subjectCount)
+    expect(closureScan?.['Actual Loops']).toBe(subjectCount)
   })
 
   it.each(['legacy', 'challenged action', 'malformed action'] as const)(

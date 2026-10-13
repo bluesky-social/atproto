@@ -8,7 +8,11 @@ import type { InboxConfig } from '../config/config.js'
 import type { Database } from '../db/index.js'
 import { com } from '../lexicons/index.js'
 import { subjectFromStatusRow } from '../mod-service/subject.js'
-import { appealOutcomeSelection } from './appeal-outcome.js'
+import {
+  appealActivityOutcome,
+  appealReportSelection,
+  appealResolutionFilter,
+} from './appeal-outcome.js'
 import {
   APPEAL_REASON_TYPE,
   PUBLIC_EVENT_ACTIONS,
@@ -71,24 +75,55 @@ export async function hydrateSubjectViews(
       .where('position', '<=', 50)
       .execute(),
     db.db
-      .selectFrom('report')
-      .where('did', '=', did)
-      .where('recordPath', 'in', paths)
-      .where('subjectMessageId', 'is', null)
-      .where('subjectConvoId', 'is', null)
-      .where('reportType', '=', APPEAL_REASON_TYPE)
-      .distinctOn('recordPath')
+      // @NOTE LIMIT each indexed subject lookup before resolving its outcome;
+      // DISTINCT ON would evaluate outcomes for every historical appeal.
+      .selectFrom(
+        sql<{ recordPath: string }>`(
+          SELECT DISTINCT unnest(${paths}::text[]) AS "recordPath"
+        )`.as('subjects'),
+      )
+      .innerJoinLateral(
+        (eb) =>
+          eb
+            .selectFrom('report')
+            .where('did', '=', did)
+            .whereRef('recordPath', '=', 'subjects.recordPath')
+            .where('subjectMessageId', 'is', null)
+            .where('subjectConvoId', 'is', null)
+            .where('reportType', '=', APPEAL_REASON_TYPE)
+            .orderBy('id', 'desc')
+            .limit(1)
+            .select(appealReportSelection)
+            .as('report'),
+        (join) => join.onTrue(),
+      )
+      .leftJoinLateral(
+        (eb) =>
+          eb
+            .selectFrom('report_activity')
+            .where('report.status', '=', 'closed')
+            .whereRef('reportId', '=', 'report.id')
+            .where('activityType', '=', 'closeActivity')
+            .whereRef('createdAt', '=', 'report.closedAt')
+            .orderBy('id', 'desc')
+            .limit(1)
+            .select(['id', 'activityType', 'meta'])
+            .as('closure'),
+        (join) => join.onTrue(),
+      )
+      .leftJoin('moderation_event as resolution', (join) =>
+        join.on(appealResolutionFilter('report', 'closure')),
+      )
       .select([
-        'id',
-        'recordPath',
-        'status',
-        'createdAt',
-        'updatedAt',
-        'closedAt',
+        'report.id',
+        'report.recordPath',
+        'report.status',
+        'report.createdAt',
+        'report.updatedAt',
+        'report.closedAt',
       ])
-      .orderBy('recordPath')
-      .select(appealOutcomeSelection())
-      .orderBy('id', 'desc')
+      .select(appealActivityOutcome('report', 'closure').as('outcome'))
+      .orderBy('report.recordPath')
       .execute(),
     loadPolicyList(db, serviceDid),
   ])

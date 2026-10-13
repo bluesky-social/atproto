@@ -18,7 +18,12 @@ import type { AppealView } from '../lexicons/tools/ozone/inbox/defs.js'
 import type { ModSubject } from '../mod-service/subject.js'
 import type { ModerationSubjectStatusRow } from '../mod-service/types.js'
 import { findMatchingQueue } from '../queue/service.js'
-import { type AppealOutcome, appealOutcomeSelection } from './appeal-outcome.js'
+import {
+  type AppealOutcome,
+  appealActivityOutcome,
+  appealReportSelection,
+  appealResolutionFilter,
+} from './appeal-outcome.js'
 
 export const APPEAL_REASON_TYPE = 'tools.ozone.report.defs#reasonAppeal'
 export const TAKEDOWN = 'tools.ozone.moderation.defs#modEventTakedown'
@@ -304,13 +309,41 @@ export const findLatestAppealReport = async (
   subject: ModSubject,
 ): Promise<AppealReport | null> => {
   const report = await db.db
-    .selectFrom('report')
-    .where('reportType', '=', APPEAL_REASON_TYPE)
-    .where((eb) => reportSubjectFilter(eb, subject))
-    .orderBy('id', 'desc')
-    .limit(1)
-    .select(['id', 'status', 'createdAt', 'updatedAt', 'closedAt'])
-    .select(appealOutcomeSelection())
+    .selectFrom(
+      db.db
+        .selectFrom('report')
+        .where('reportType', '=', APPEAL_REASON_TYPE)
+        .where((eb) => reportSubjectFilter(eb, subject))
+        .orderBy('id', 'desc')
+        .limit(1)
+        .select(appealReportSelection)
+        .as('report'),
+    )
+    .leftJoinLateral(
+      (eb) =>
+        eb
+          .selectFrom('report_activity')
+          .where('report.status', '=', 'closed')
+          .whereRef('reportId', '=', 'report.id')
+          .where('activityType', '=', 'closeActivity')
+          .whereRef('createdAt', '=', 'report.closedAt')
+          .orderBy('id', 'desc')
+          .limit(1)
+          .select(['id', 'activityType', 'meta'])
+          .as('closure'),
+      (join) => join.onTrue(),
+    )
+    .leftJoin('moderation_event as resolution', (join) =>
+      join.on(appealResolutionFilter('report', 'closure')),
+    )
+    .select([
+      'report.id',
+      'report.status',
+      'report.createdAt',
+      'report.updatedAt',
+      'report.closedAt',
+    ])
+    .select(appealActivityOutcome('report', 'closure').as('outcome'))
     .executeTakeFirst()
   return report ?? null
 }

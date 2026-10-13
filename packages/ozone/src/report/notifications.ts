@@ -1,6 +1,9 @@
 import type { DatetimeString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
-import { appealActivityOutcome } from '../inbox/appeal-outcome.js'
+import {
+  appealActivityOutcome,
+  appealResolutionFilter,
+} from '../inbox/appeal-outcome.js'
 import {
   APPEAL_REASON_TYPE,
   PUBLIC_EVENT_ACTIONS,
@@ -43,6 +46,9 @@ export async function notifyReportActivities(
         .selectFrom('report as r')
         .innerJoin('report_activity as activity', 'activity.reportId', 'r.id')
         .innerJoin('moderation_event as e', 'e.id', 'r.eventId')
+        .leftJoin('moderation_event as resolution', (join) =>
+          join.on(appealResolutionFilter('r', 'activity')),
+        )
         .where(
           'e.action',
           '=',
