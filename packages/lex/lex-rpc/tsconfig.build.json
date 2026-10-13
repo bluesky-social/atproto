@@ -1,0 +1,14 @@
+{
+  "extends": ["../../../tsconfig/isomorphic.tsconfig.json"],
+  "include": ["./src"],
+  "exclude": ["**/*.bench.ts", "**/*.test.ts"],
+  "references": [
+    { "path": "../lex-data/tsconfig.build.json" },
+    { "path": "../lex-json/tsconfig.build.json" },
+    { "path": "../lex-schema/tsconfig.build.json" },
+  ],
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+  },
+}

@@ -57,6 +57,11 @@ export interface Agent {
   fetchHandler: FetchHandler
 }
 
+export interface AccountAgent extends Agent {
+  /** The DID of the authenticated user. */
+  readonly did: DidString
+}
+
 export function isAgent(value: unknown): value is Agent {
   return (
     typeof value === 'object' &&
@@ -151,7 +156,11 @@ export type AgentOptions = AgentConfig | FetchHandler | string | URL
  */
 export function buildAgent<O extends Agent | AgentOptions>(
   options: O,
-): O extends Agent ? O : Agent
+): O extends Agent
+  ? O
+  : O extends AgentConfig & { did: DidString }
+    ? AccountAgent
+    : Agent
 export function buildAgent(options: Agent | AgentOptions): Agent {
   if (typeof options === 'function') {
     return { did: undefined, fetchHandler: options }

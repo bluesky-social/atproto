@@ -1,24 +1,27 @@
 import { statSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
-import type { BuildFilterOptions, Filter } from '@atproto/lex-builder'
-import { buildFilter } from '@atproto/lex-builder'
-import type { AgentConfig } from '@atproto/lex-client'
-import { Client, XrpcResponseError } from '@atproto/lex-client'
-import type { LexiconDocument } from '@atproto/lex-document'
-import { lexiconDocumentSchema } from '@atproto/lex-document'
 import {
-  AtUri,
+  type BuildFilterOptions,
+  type Filter,
+  buildFilter,
+} from '@atproto/lex-builder'
+import {
+  type LexiconDocument,
+  lexiconDocumentSchema,
+} from '@atproto/lex-document'
+import {
+  type AtUri,
   LexResolver,
   type LexResolverOptions,
+  LexResolverRecordNotFoundError,
 } from '@atproto/lex-resolver'
+import type { AgentConfig, AtIdentifierString } from '@atproto/lex-rpc'
 import {
-  type AtIdentifierString,
   type AtUriString,
   type DidString,
   type NSID,
-  isHandleIdentifier,
+  isDidIdentifier,
 } from '@atproto/syntax'
-import { createDidResolver, extractPdsUrl } from '@atproto-labs/did-resolver'
 import type { CreateDidResolverOptions } from '@atproto-labs/did-resolver'
 import {
   DEFAULT_FORBIDDEN_DOMAIN_NAMES,
@@ -32,7 +35,6 @@ import {
 } from '@atproto-labs/handle-resolver-node'
 import type { FileUriString } from './fs.js'
 import { readLexiconDocument } from './lexicon-document.js'
-import { com } from './lexicons/index.js'
 import type {
   HttpUrlString,
   LexiconResolverConfig,
@@ -121,44 +123,32 @@ export class DirectoryResolver implements PartialLexiconResolver {
   }
 }
 
-type BuildClientOptions = BuildClientFromDidOptions &
+type RepoResolverOptions = BuildClientFromDidOptions &
   AtprotoHandleResolverNodeOptions & {
     handleResolver?: HandleResolver
   }
 
-async function buildClient(
-  repo: AtIdentifierString,
-  options: BuildClientOptions,
-) {
-  if (isHandleIdentifier(repo)) {
-    const handleResolver =
-      options?.handleResolver ?? new AtprotoHandleResolverNode(options)
-    const did = await handleResolver.resolve(repo)
-    if (did) return buildClientFromDid(did, options)
-    throw new Error(`Unable to resolve DID for handle: ${repo}`)
-  }
-  return buildClientFromDid(repo, options)
-}
-
 export type BuildClientFromDidOptions = CreateDidResolverOptions &
   Omit<AgentConfig, 'did' | 'service'>
 
-async function buildClientFromDid(
-  did: DidString,
-  options: BuildClientOptions,
-): Promise<Client> {
-  const didResolver = createDidResolver(options)
-  const document = await didResolver.resolve(did)
-  const service = extractPdsUrl(document)
-  return new Client({ service, did, fetch: options?.fetch })
-}
-
 export class RepoResolver implements PartialLexiconResolver {
-  constructor(protected readonly buildClient: () => Client | Promise<Client>) {}
+  constructor(
+    protected readonly repo: AtIdentifierString,
+    protected readonly lexResolver: LexResolver,
+    protected readonly options?: RepoResolverOptions,
+  ) {}
 
-  #clientPromise: Promise<Client> | undefined
-  protected async initClient(): Promise<Client> {
-    return (this.#clientPromise ??= Promise.resolve().then(this.buildClient))
+  #didPromise: Promise<DidString> | undefined
+  async getDid(): Promise<DidString> {
+    return (this.#didPromise ??= Promise.resolve().then(async () => {
+      const { repo, options } = this
+      if (isDidIdentifier(repo)) return repo
+      const handleResolver =
+        options?.handleResolver ?? new AtprotoHandleResolverNode(options)
+      const did = await handleResolver.resolve(repo)
+      if (did) return did
+      throw new Error(`Unable to resolve DID for handle: ${repo}`)
+    }))
   }
 
   /**
@@ -168,28 +158,11 @@ export class RepoResolver implements PartialLexiconResolver {
    * in the defined repo.
    */
   async resolve(nsid: NSID): Promise<ResolvedLexicon | null> {
-    const client = await this.initClient()
-
-    const rkey = nsid.toString()
-
-    try {
-      const res = await client.get(com.atproto.lexicon.schema, { rkey })
-
-      const lexicon = lexiconDocumentSchema.parse(res.value)
-      const uri = AtUri.make(
-        client.assertDid,
-        com.atproto.lexicon.schema.$type,
-        rkey,
-      )
-
-      return { uri, lexicon }
-    } catch (err) {
-      if (err instanceof XrpcResponseError && err.error === 'RecordNotFound') {
-        return null
-      }
-
+    const did = await this.getDid()
+    return this.lexResolver.fetch(did, nsid).catch((err) => {
+      if (err instanceof LexResolverRecordNotFoundError) return null
       throw err
-    }
+    })
   }
 }
 
@@ -243,7 +216,7 @@ export class HttpResolver implements PartialLexiconResolver {
 }
 
 export type CreateResolversOptions = LexResolverOptions &
-  BuildClientOptions & {
+  RepoResolverOptions & {
     manifest: string
   }
 
@@ -266,7 +239,7 @@ export class LexiconResolver {
     const options: CreateResolversOptions = { ...opts, fetch }
     this.lexResolver = new LexResolver(options)
     this.resolvers = Array.from(configs, (config): PartialLexiconResolver => {
-      const resolver = buildPartialResolver(options, config)
+      const resolver = buildPartialResolver(this.lexResolver, options, config)
       return FilteredResolver.for(resolver, config)
     })
   }
@@ -285,6 +258,7 @@ export class LexiconResolver {
 }
 
 function buildPartialResolver(
+  lexResolver: LexResolver,
   options: CreateResolversOptions,
   config: LexiconResolverConfig,
 ): PartialLexiconResolver {
@@ -293,10 +267,9 @@ function buildPartialResolver(
       return new DirectoryResolver(
         resolve(dirname(options.manifest), config.path),
       )
-    case 'repo':
-      return new RepoResolver(async () => {
-        return buildClient(config.repo, options)
-      })
+    case 'repo': {
+      return new RepoResolver(config.repo, lexResolver, options)
+    }
     case 'http':
       return new HttpResolver(config.base, options.fetch)
     default:

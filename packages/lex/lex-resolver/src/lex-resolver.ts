@@ -1,6 +1,5 @@
 import { resolveTxt } from 'node:dns/promises'
 import * as crypto from '@atproto/crypto'
-import { type Infer, buildAgent, xrpcSafe } from '@atproto/lex-client'
 import {
   type CborCid,
   type Cid,
@@ -10,7 +9,8 @@ import {
 } from '@atproto/lex-data'
 import type { LexiconDocument } from '@atproto/lex-document'
 import { lexiconDocumentSchema } from '@atproto/lex-document'
-import { type Main, type RecordSchema, getMain } from '@atproto/lex-schema'
+import { canParseUrl, rkeyFor, xrpcSafe } from '@atproto/lex-rpc'
+import type { RecordSchema } from '@atproto/lex-schema'
 import {
   MST,
   MemoryBlockstore,
@@ -25,15 +25,19 @@ import {
   extractAtprotoData,
 } from '@atproto-labs/did-resolver'
 import type {
+  AtprotoDidDocument,
   AtprotoVerificationMethod,
   CreateDidResolverOptions,
   Did,
   DidResolver,
   ResolveDidOptions,
 } from '@atproto-labs/did-resolver'
-import { LexResolverError } from './lex-resolver-error.js'
+import {
+  LexResolverError,
+  LexResolverRecordNotFoundError,
+} from './lex-resolver-error.js'
+import { main as lexiconSchemaRecord } from './lexicons/com/atproto/lexicon/schema.defs.js'
 import { com } from './lexicons/index.js'
-import { canParseUrl } from './util.js'
 
 /**
  * Result returned when successfully resolving a lexicon document.
@@ -429,7 +433,7 @@ export class LexResolver {
     nsid: NSID,
     options?: ResolveDidOptions,
   ): Promise<LexResolverResult> {
-    const uri = AtUri.make(did, com.atproto.lexicon.schema.$type, nsid)
+    const uri = AtUri.make(did, lexiconSchemaRecord.$type, nsid)
     try {
       const hookResult = await this.options.hooks?.onFetch?.call(null, {
         did,
@@ -440,7 +444,7 @@ export class LexResolver {
       })
 
       const { record, cid } =
-        hookResult ?? (await this.fetchNetworkLexicon(uri, did, nsid, options))
+        hookResult ?? (await this.fetchNetworkLexicon(did, nsid, options))
 
       if (!isCborCid(cid)) {
         throw new LexResolverError(
@@ -491,14 +495,12 @@ export class LexResolver {
   }
 
   protected async fetchNetworkLexicon(
-    uri: AtUri,
     did: Did,
     nsid: NSID,
     options?: ResolveDidOptions,
   ): Promise<LexResolverFetchResult> {
-    const { pds, key } = await this.didResolver
+    const document = await this.didResolver
       .resolve(did, options)
-      .then(extractAtprotoData)
       .catch((cause) => {
         throw new LexResolverError(
           nsid,
@@ -507,53 +509,11 @@ export class LexResolver {
         )
       })
 
-    if (!key || !pds || !canParseUrl(pds.serviceEndpoint)) {
-      throw new LexResolverError(
-        nsid,
-        `No atproto PDS service endpoint or signing key found in ${did} DID document`,
-      )
-    }
-
-    const agent = buildAgent({
-      service: pds.serviceEndpoint,
+    return fetchLexiconDocument(document, nsid, {
       fetch: this.options.fetch,
-    })
-
-    const rkey = nsid.toString()
-
-    // @NOTE We are using xrpcSafe instead of client.get because we are using
-    // the **sync** version of getRecord (in order to obtain its raw bytes).
-    const res = await xrpcSafe(agent, com.atproto.sync.getRecord, {
       signal: options?.signal,
-      headers: options?.noCache ? { 'Cache-Control': 'no-cache' } : undefined,
-      params: {
-        did,
-        collection: com.atproto.lexicon.schema.$nsid,
-        rkey,
-      },
+      noCache: options?.noCache,
     })
-
-    if (!res.success) {
-      throw new LexResolverError(nsid, `Failed to fetch Record ${uri}`, {
-        cause: res.reason,
-      })
-    }
-
-    try {
-      return await verifyRecordProof(
-        res.body,
-        did,
-        key,
-        com.atproto.lexicon.schema,
-        rkey,
-      )
-    } catch (cause) {
-      throw new LexResolverError(
-        nsid,
-        `Failed to verify Lexicon record proof at ${uri}`,
-        { cause },
-      )
-    }
   }
 }
 
@@ -573,16 +533,93 @@ async function getDomainTxtDid(domain: string): Promise<Did> {
     : new Error('No DID found in DNS TXT records')
 }
 
-async function verifyRecordProof<T extends RecordSchema>(
+type FetchLexiconSchemaOptions = {
+  fetch?: typeof fetch
+  signal?: AbortSignal
+  noCache?: boolean
+}
+
+async function fetchLexiconDocument(
+  document: AtprotoDidDocument,
+  nsid: NSID,
+  options?: FetchLexiconSchemaOptions,
+): Promise<LexResolverFetchResult> {
+  const did = document.id
+  const { pds, key } = extractAtprotoData(document)
+
+  if (!key) {
+    throw new LexResolverError(
+      nsid,
+      `No atproto signing key found in ${did} DID document`,
+    )
+  }
+
+  const service = pds?.serviceEndpoint
+  if (!service || !canParseUrl(service)) {
+    throw new LexResolverError(
+      nsid,
+      `No atproto PDS service endpoint found in ${did} DID document`,
+    )
+  }
+
+  const rkey = rkeyFor(lexiconSchemaRecord, nsid.toString())
+
+  // @NOTE We are using xrpcSafe instead of client.get because we are using
+  // the **sync** version of getRecord (in order to obtain its raw bytes).
+  const res = await xrpcSafe(
+    { service, fetch: options?.fetch },
+    com.atproto.sync.getRecord,
+    {
+      signal: options?.signal,
+      headers: options?.noCache ? { 'Cache-Control': 'no-cache' } : undefined,
+      params: {
+        did,
+        collection: lexiconSchemaRecord.$type,
+        rkey,
+      },
+    },
+  )
+
+  if (!res.success) {
+    // @NOTE Allow consumer to handle the case where the record is not found
+    // separately.
+    if (res.error === 'RecordNotFound') {
+      throw new LexResolverRecordNotFoundError(did, nsid, {
+        cause: res.reason,
+      })
+    }
+
+    throw new LexResolverError(
+      nsid,
+      `Failed to fetch Lexicon schema ${nsid} from ${did} (${res.error})`,
+      { cause: res.reason },
+    )
+  }
+
+  try {
+    return await verifyRecordProof(
+      res.body,
+      did,
+      key,
+      lexiconSchemaRecord,
+      rkey,
+    )
+  } catch (cause) {
+    throw new LexResolverError(
+      nsid,
+      `Failed to verify Lexicon schema proof for ${nsid} from ${did}`,
+      { cause },
+    )
+  }
+}
+
+async function verifyRecordProof(
   car: Uint8Array,
   did: Did,
   key: AtprotoVerificationMethod,
-  ns: Main<T>,
+  schema: RecordSchema,
   rkey: string,
-): Promise<{
-  cid: CborCid
-  record: Infer<T>
-}> {
+): Promise<LexResolverFetchResult> {
   const { root, blocks } = await readCarWithRoot(car)
   const blockstore = new MemoryBlockstore(blocks)
 
@@ -599,7 +636,6 @@ async function verifyRecordProof<T extends RecordSchema>(
 
   const mst = MST.load(blockstore, commit.data)
 
-  const schema = getMain(ns)
   const cid = await mst.get(`${schema.$type}/${rkey}`)
   if (!cid) throw new Error('Record not found in proof')
   if (!checkCid(cid, { flavor: 'cbor' }))

@@ -1,23 +1,45 @@
 import type { LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
-import type {
-  AtIdentifierString,
-  AtUriString,
-  CidString,
-  DidString,
-  Infer,
-  InferMethodInputBody,
-  InferMethodOutputBody,
-  InferRecordKey,
-  LexiconRecordKey,
-  Main,
-  NsidString,
-  Params,
-  Restricted,
+import {
+  type Agent,
+  type AgentOptions,
+  type BinaryBodyInit,
+  type RecordKeyOptions,
+  type Service,
+  type XrpcFailure,
+  type XrpcOptions,
+  type XrpcRequestHeadersOptions,
+  type XrpcRequestParams,
+  type XrpcRequestProcessingOptions,
+  type XrpcResponse,
+  type XrpcResponseBody,
+  type XrpcResponseOptions,
+  applyDefaults,
+  buildAgent,
+  isService,
+  mergeHeaders,
+  rkeyFor,
+  rkeyForCreate,
+  throwIfAborted,
+  xrpc,
+  xrpcSafe,
+} from '@atproto/lex-rpc'
+import {
+  type AtIdentifierString,
+  type AtUriString,
+  type CidString,
+  type DidString,
+  type Infer,
+  type InferMethodInputBody,
+  type InferMethodOutputBody,
+  type Main,
+  type NsidString,
+  type Params,
+  Procedure,
+  Query,
+  type RecordSchema,
+  type Restricted,
+  getMain,
 } from '@atproto/lex-schema'
-import { Procedure, Query, RecordSchema, getMain } from '@atproto/lex-schema'
-import type { Agent, AgentOptions } from './agent.js'
-import { buildAgent } from './agent.js'
-import type { XrpcFailure } from './errors.js'
 // @NOTE We could use import { com } from "./lexicons/index.js" here, but some
 // consumers might not know how to properly tree-shake that, so we import only
 // the needed lexicon schemas directly.
@@ -31,63 +53,10 @@ import listRecords, {
 import putRecord from './lexicons/com/atproto/repo/putRecord.js'
 import uploadBlob from './lexicons/com/atproto/repo/uploadBlob.js'
 import getBlob from './lexicons/com/atproto/sync/getBlob.js'
-import type {
-  XrpcResponse,
-  XrpcResponseBody,
-  XrpcResponseOptions,
-} from './response.js'
-import { type BinaryBodyInit, type Service, isService } from './types.js'
 import {
-  type RecordKeyOptions,
-  type XrpcRequestHeadersOptions,
-  applyDefaults,
-  mergeHeaders,
-  rkeyFor,
-  rkeyForCreate,
-  throwIfAborted,
-} from './util.js'
-import {
-  type WriteOperation,
-  type WriteOperationCreateOptions,
-  type WriteOperationDeleteOptions,
   WriteOperationHelper,
-  type WriteOperationUpdateOptions,
   type WriteOperationsFactory,
 } from './write-operation-builder.js'
-import {
-  type XrpcOptions,
-  type XrpcRequestParams,
-  type XrpcRequestProcessingOptions,
-  xrpc,
-  xrpcSafe,
-} from './xrpc.js'
-
-export {
-  type AtIdentifierString,
-  type CidString,
-  type DidString,
-  type Infer,
-  type InferMethodInputBody,
-  type InferMethodOutputBody,
-  type InferRecordKey,
-  type LexMap,
-  type LexValue,
-  type LexiconRecordKey,
-  type Main,
-  type NsidString,
-  type Params,
-  Procedure,
-  Query,
-  RecordSchema,
-  type Restricted,
-  type TypedLexMap,
-  type WriteOperation,
-  type WriteOperationCreateOptions,
-  type WriteOperationDeleteOptions,
-  WriteOperationHelper,
-  type WriteOperationUpdateOptions,
-  type WriteOperationsFactory,
-}
 
 /**
  * Configuration options for creating a {@link Client}.

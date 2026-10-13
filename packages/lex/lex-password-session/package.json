@@ -30,7 +30,7 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@atproto/lex-client": "workspace:^",
+    "@atproto/lex-rpc": "workspace:^",
     "@atproto/lex-schema": "workspace:^",
     "tslib": "^2.8.1"
   },

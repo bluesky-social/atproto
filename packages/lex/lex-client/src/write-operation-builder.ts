@@ -1,3 +1,4 @@
+import { type RecordKeyOptions, rkeyFor, rkeyForCreate } from '@atproto/lex-rpc'
 import {
   type $Typed,
   type InferInput,
@@ -7,8 +8,6 @@ import {
   getMain,
 } from '@atproto/lex-schema'
 import { com } from './lexicons/index.js'
-import type { RecordKeyOptions } from './util.js'
-import { rkeyFor, rkeyForCreate } from './util.js'
 
 export type WriteOperation =
   | $Typed<com.atproto.repo.applyWrites.Create>

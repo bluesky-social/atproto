@@ -1126,9 +1126,9 @@ importers:
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex-data
-      '@atproto/lex-json':
+      '@atproto/lex-rpc':
         specifier: workspace:^
-        version: link:../lex-json
+        version: link:../lex-rpc
       '@atproto/lex-schema':
         specifier: workspace:^
         version: link:../lex-schema
@@ -1142,6 +1142,9 @@ importers:
       '@atproto/lex-cbor':
         specifier: workspace:^
         version: link:../lex-cbor
+      '@atproto/lex-json':
+        specifier: workspace:^
+        version: link:../lex-json
       vitest:
         specifier: ^4.1.10
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))
@@ -1207,9 +1210,6 @@ importers:
       '@atproto/lex-cbor':
         specifier: workspace:^
         version: link:../lex-cbor
-      '@atproto/lex-client':
-        specifier: workspace:^
-        version: link:../lex-client
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex-data
@@ -1219,6 +1219,9 @@ importers:
       '@atproto/lex-resolver':
         specifier: workspace:^
         version: link:../lex-resolver
+      '@atproto/lex-rpc':
+        specifier: workspace:^
+        version: link:../lex-rpc
       '@atproto/lex-schema':
         specifier: workspace:^
         version: link:../lex-schema
@@ -1257,9 +1260,9 @@ importers:
 
   packages/lex/lex-password-session:
     dependencies:
-      '@atproto/lex-client':
+      '@atproto/lex-rpc':
         specifier: workspace:^
-        version: link:../lex-client
+        version: link:../lex-rpc
       '@atproto/lex-schema':
         specifier: workspace:^
         version: link:../lex-schema
@@ -1285,15 +1288,15 @@ importers:
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../../crypto
-      '@atproto/lex-client':
-        specifier: workspace:^
-        version: link:../lex-client
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex-data
       '@atproto/lex-document':
         specifier: workspace:^
         version: link:../lex-document
+      '@atproto/lex-rpc':
+        specifier: workspace:^
+        version: link:../lex-rpc
       '@atproto/lex-schema':
         specifier: workspace:^
         version: link:../lex-schema
@@ -1313,6 +1316,28 @@ importers:
       vitest:
         specifier: ^4.1.10
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.17)(@vitest/coverage-v8@4.1.10)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))
+
+  packages/lex/lex-rpc:
+    dependencies:
+      '@atproto/lex-data':
+        specifier: workspace:^
+        version: link:../lex-data
+      '@atproto/lex-json':
+        specifier: workspace:^
+        version: link:../lex-json
+      '@atproto/lex-schema':
+        specifier: workspace:^
+        version: link:../lex-schema
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
+    devDependencies:
+      '@atproto/lex-cbor':
+        specifier: workspace:^
+        version: link:../lex-cbor
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.20.4)(@vitest/coverage-v8@4.1.10)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))
 
   packages/lex/lex-schema:
     dependencies:
@@ -1347,15 +1372,15 @@ importers:
       '@atproto/lex-cbor':
         specifier: workspace:^
         version: link:../lex-cbor
-      '@atproto/lex-client':
-        specifier: workspace:^
-        version: link:../lex-client
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex-data
       '@atproto/lex-json':
         specifier: workspace:^
         version: link:../lex-json
+      '@atproto/lex-rpc':
+        specifier: workspace:^
+        version: link:../lex-rpc
       '@atproto/lex-schema':
         specifier: workspace:^
         version: link:../lex-schema
@@ -1372,6 +1397,9 @@ importers:
       '@atproto/lex':
         specifier: workspace:^
         version: link:../lex
+      '@atproto/lex-client':
+        specifier: workspace:^
+        version: link:../lex-client
       '@types/ws':
         specifier: ^8.18.1
         version: 8.18.1
@@ -20765,6 +20793,35 @@ snapshots:
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
       '@types/node': 22.20.1
+      '@vitest/coverage-v8': 4.1.10(vitest@4.1.10)
+    transitivePeerDependencies:
+      - msw
+
+  vitest@4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.20.4)(@vitest/coverage-v8@4.1.10)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1)):
+    dependencies:
+      '@vitest/expect': 4.1.10
+      '@vitest/mocker': 4.1.10(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))
+      '@vitest/pretty-format': 4.1.10
+      '@vitest/runner': 4.1.10
+      '@vitest/snapshot': 4.1.10
+      '@vitest/spy': 4.1.10
+      '@vitest/utils': 4.1.10
+      es-module-lexer: 2.3.1
+      expect-type: 1.3.0
+      magic-string: 0.30.21
+      obug: 2.1.1
+      pathe: 2.0.3
+      picomatch: 4.0.3
+      std-env: 4.2.0
+      tinybench: 2.9.0
+      tinyexec: 1.0.2
+      tinyglobby: 0.2.15
+      tinyrainbow: 3.1.1
+      vite: 8.3.1(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.1
+      '@types/node': 22.20.4
       '@vitest/coverage-v8': 4.1.10(vitest@4.1.10)
     transitivePeerDependencies:
       - msw

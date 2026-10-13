@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 
 import { afterAll, assert, beforeAll, describe, expect, it, vi } from 'vitest'
-import { Client, XrpcAuthenticationError } from '@atproto/lex-client'
+import { XrpcAuthenticationError, buildAgent, xrpcSafe } from '@atproto/lex-rpc'
 import { l } from '@atproto/lex-schema'
 import { LexRouter, LexServerAuthError } from '@atproto/lex-server'
 import { type Server, serve } from '@atproto/lex-server/nodejs'
@@ -228,18 +228,22 @@ describe(PasswordSession, () => {
 
     expect(onUpdated).toHaveBeenCalledTimes(1)
 
-    const client = new Client(session)
+    const response = await xrpcSafe(session, app.example.customMethod, {
+      body: { message: 'hello' },
+    })
 
-    await expect(
-      client.call(app.example.customMethod, { message: 'hello' }),
-    ).resolves.toMatchObject({
+    assert(response.success)
+    expect(response.body).toMatchObject({
       message: 'hello',
       did: 'did:example:alice',
     })
 
-    await expect(
-      client.call(app.example.customMethod, { message: 'world' }),
-    ).resolves.toMatchObject({
+    const secondResponse = await xrpcSafe(session, app.example.customMethod, {
+      body: { message: 'world' },
+    })
+
+    assert(secondResponse.success)
+    expect(secondResponse.body).toMatchObject({
       message: 'world',
       did: 'did:example:alice',
     })
@@ -250,19 +254,20 @@ describe(PasswordSession, () => {
 
     expect(onDeleted).toHaveBeenCalled()
 
-    await expect(
-      client.call(app.example.customMethod, { message: 'hello' }),
-    ).rejects.toMatchObject({
-      message: 'Unable to fulfill XRPC request',
-      cause: expect.objectContaining({
-        message: 'Logged out',
-      }),
+    const deletedResponse = await xrpcSafe(session, app.example.customMethod, {
+      body: { message: 'hello' },
+    })
+
+    assert(!deletedResponse.success)
+    expect(deletedResponse.message).toBe('Unable to fulfill XRPC request')
+    expect(deletedResponse.cause).toMatchObject({
+      message: 'Logged out',
     })
   })
 
   it('fails to perform unauthenticated call', async () => {
-    const client = new Client(pdsOrigin)
-    const result = await client.xrpcSafe(app.example.customMethod, {
+    const agent = buildAgent(pdsOrigin)
+    const result = await xrpcSafe(agent, app.example.customMethod, {
       body: { message: 'hello' },
     })
 
@@ -291,20 +296,21 @@ describe(PasswordSession, () => {
       onDeleted,
     })
 
-    const client = new Client(session)
+    const response = await xrpcSafe(session, app.example.customMethod, {
+      body: { message: 'before' },
+    })
 
-    await expect(
-      client.call(app.example.customMethod, { message: 'before' }),
-    ).resolves.toMatchObject({
+    assert(response.success)
+    expect(response.body).toMatchObject({
       message: 'before',
       did: 'did:example:bob',
     })
 
     expect(onUpdated).toHaveBeenCalledTimes(1)
 
-    await expect(client.call(app.example.expiredToken)).rejects.toThrow(
-      'Token expired',
-    )
+    const expiredResponse = await xrpcSafe(session, app.example.expiredToken)
+    assert(!expiredResponse.success)
+    expect(expiredResponse.error).toBe('ExpiredToken')
 
     expect(onUpdated).toHaveBeenCalledTimes(2)
     expect(onUpdated).toHaveBeenLastCalledWith(
@@ -323,9 +329,14 @@ describe(PasswordSession, () => {
       }),
     )
 
-    await expect(
-      client.call(app.example.customMethod, { message: 'after' }),
-    ).resolves.toMatchObject({
+    const refreshedResponse = await xrpcSafe(
+      session,
+      app.example.customMethod,
+      { body: { message: 'after' } },
+    )
+
+    assert(refreshedResponse.success)
+    expect(refreshedResponse.body).toMatchObject({
       message: 'after',
       did: 'did:example:bob',
     })
@@ -375,10 +386,13 @@ describe(PasswordSession, () => {
 
     expect(onDeleted).toHaveBeenCalledTimes(1)
 
-    const client = new Client(resumedAgent)
-    await expect(
-      client.call(app.example.customMethod, { message: 'resume' }),
-    ).resolves.toMatchObject({
+    const agent = buildAgent(resumedAgent)
+    const response = await xrpcSafe(agent, app.example.customMethod, {
+      body: { message: 'resume' },
+    })
+
+    assert(response.success)
+    expect(response.body).toMatchObject({
       message: 'resume',
       did: 'did:example:carla',
     })

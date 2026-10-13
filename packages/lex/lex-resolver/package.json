@@ -34,9 +34,9 @@
   "dependencies": {
     "@atproto-labs/did-resolver": "workspace:^",
     "@atproto/crypto": "workspace:^",
-    "@atproto/lex-client": "workspace:^",
     "@atproto/lex-data": "workspace:^",
     "@atproto/lex-document": "workspace:^",
+    "@atproto/lex-rpc": "workspace:^",
     "@atproto/lex-schema": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/syntax": "workspace:^",

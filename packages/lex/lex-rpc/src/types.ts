@@ -1,11 +1,42 @@
 import {
+  type AtIdentifierString,
+  type CidString,
   type DidString,
+  type Infer,
+  type InferMethodInputBody,
+  type InferMethodOutputBody,
+  type InferRecordKey,
+  type LexMap,
   type LexValue,
+  type LexiconRecordKey,
+  type Main,
+  type NsidString,
+  type Params,
+  Procedure,
+  Query,
+  type Restricted,
   type UnknownString,
   isDidString,
 } from '@atproto/lex-schema'
 
-export type { DidString, LexValue, UnknownString }
+export { Procedure, Query }
+export type {
+  AtIdentifierString,
+  CidString,
+  DidString,
+  Infer,
+  InferMethodInputBody,
+  InferMethodOutputBody,
+  InferRecordKey,
+  LexMap,
+  LexValue,
+  LexiconRecordKey,
+  Main,
+  NsidString,
+  Params,
+  Restricted,
+  UnknownString,
+}
 
 /**
  * Service identifier fragment for DID service endpoints.

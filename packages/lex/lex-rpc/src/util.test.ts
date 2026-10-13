@@ -8,10 +8,6 @@ import {
   toReadableStreamPonyfill,
 } from './util.js'
 
-// ============================================================================
-// applyDefaults
-// ============================================================================
-
 describe(applyDefaults, () => {
   it('fills in missing options from defaults', () => {
     expect(applyDefaults({ a: 1 }, { a: 0, b: 2 })).toEqual({ a: 1, b: 2 })
@@ -41,10 +37,6 @@ describe(applyDefaults, () => {
     expect(defaults).toEqual({ a: 1, b: 2 })
   })
 })
-
-// ============================================================================
-// isBlobLike
-// ============================================================================
 
 describe(isBlobLike, () => {
   it('returns true for native Blob', () => {
@@ -106,10 +98,6 @@ describe(isBlobLike, () => {
   })
 })
 
-// ============================================================================
-// isAsyncIterable
-// ============================================================================
-
 describe(isAsyncIterable, () => {
   it('returns true for async generators', () => {
     async function* gen() {
@@ -144,10 +132,6 @@ describe(isAsyncIterable, () => {
     expect(isAsyncIterable('string')).toBe(false)
   })
 })
-
-// ============================================================================
-// buildXrpcRequestHeaders
-// ============================================================================
 
 describe(buildXrpcRequestHeaders, () => {
   it('returns empty headers when no options are set', () => {
@@ -238,10 +222,6 @@ describe(buildXrpcRequestHeaders, () => {
   })
 })
 
-// ============================================================================
-// toReadableStream
-// ============================================================================
-
 describe(toReadableStream, () => {
   it('converts async iterable to ReadableStream', async () => {
     async function* gen() {
@@ -304,10 +284,6 @@ describe(toReadableStream, () => {
     await expect(reader.read()).rejects.toThrow('stream error')
   })
 })
-
-// ============================================================================
-// toReadableStreamPonyfill
-// ============================================================================
 
 describe(toReadableStreamPonyfill, () => {
   it('converts async iterable to ReadableStream', async () => {

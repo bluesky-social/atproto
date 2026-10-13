@@ -1,12 +1,8 @@
-import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
+import { assert, describe, expect, it, vi } from 'vitest'
 import { type LexValue, cidForLex } from '@atproto/lex-cbor'
 import { cidForRawBytes, isTypedBlobRef, parseCid } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
-import {
-  type $Typed,
-  LexValidationError,
-  currentDatetimeString,
-} from '@atproto/lex-schema'
+import { LexValidationError, currentDatetimeString } from '@atproto/lex-schema'
 import {
   type Action,
   Client,
@@ -25,41 +21,7 @@ const cborCid = parseCid(
 
 type Preference = app.bsky.actor.defs.Preferences[number]
 
-describe('utils', () => {
-  describe('TypedObjectSchema', () => {
-    describe('build()', () => {
-      it('overrides $type when building an object', () => {
-        function expectAdultContentPref(
-          _: app.bsky.actor.defs.AdultContentPref,
-        ) {}
-        function expectTypedAdultContentPref(
-          _: $Typed<app.bsky.actor.defs.AdultContentPref>,
-        ) {}
-
-        const pref = app.bsky.actor.defs.adultContentPref.build({
-          // @ts-expect-error
-          $type: 'foo',
-          enabled: true,
-        })
-
-        expectAdultContentPref(pref)
-        expectTypedAdultContentPref(pref)
-
-        expect(pref).toStrictEqual({
-          $type: 'app.bsky.actor.defs#adultContentPref',
-          enabled: true,
-        })
-
-        expectTypeOf(pref).toEqualTypeOf<{
-          $type: 'app.bsky.actor.defs#adultContentPref'
-          enabled: boolean
-        }>()
-      })
-    })
-  })
-})
-
-describe('Client', () => {
+describe(Client, () => {
   describe('atproto-* headers', () => {
     it('defaults "service" to atproto-proxy headers set through the per-request headers option', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async (_url, _init) => {

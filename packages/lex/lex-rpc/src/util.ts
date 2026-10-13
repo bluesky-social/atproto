@@ -1,9 +1,22 @@
-import type {
-  InferRecordKey,
-  LexiconRecordKey,
-  RecordSchema,
+import {
+  type InferRecordKey,
+  type LexiconRecordKey,
+  type Main,
+  type RecordSchema,
+  getMain,
 } from '@atproto/lex-schema'
 import type { DidString, Service } from './types.ts'
+
+export const canParseUrl =
+  URL.canParse ??
+  ((url: string) => {
+    try {
+      new URL(url)
+      return true
+    } catch {
+      return false
+    }
+  })
 
 type NonReadonly<T> = { -readonly [K in keyof T]: T[K] }
 
@@ -245,16 +258,17 @@ export type RecordKeyOptions<
   : { rkey: InferRecordKey<T> }
 
 export function rkeyForCreate<const T extends RecordSchema>(
-  schema: T,
+  ns: Main<T>,
   rkey?: InferRecordKey<T>,
 ): undefined | InferRecordKey<T> {
   if (rkey == null) {
+    const schema = getMain(ns)
     // Lets the server generate the TID
     if (schema.key === 'tid') return undefined
     if (schema.key === 'any') return undefined
   }
 
-  return rkeyFor(schema, rkey)
+  return rkeyFor(ns, rkey)
 }
 
 /**
@@ -263,9 +277,10 @@ export function rkeyForCreate<const T extends RecordSchema>(
  * schema if it is a literal key.
  */
 export function rkeyFor<const T extends RecordSchema>(
-  schema: T,
+  ns: Main<T>,
   rkey?: InferRecordKey<T>,
 ): InferRecordKey<T> {
+  const schema = getMain(ns)
   if (rkey != null) {
     return schema.keySchema.parse(rkey) as InferRecordKey<T>
   }

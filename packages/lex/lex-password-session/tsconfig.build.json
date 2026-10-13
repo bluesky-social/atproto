@@ -3,7 +3,7 @@
   "include": ["./src"],
   "exclude": ["**/*.test.ts"],
   "references": [
-    { "path": "../lex-client/tsconfig.build.json" },
+    { "path": "../lex-rpc/tsconfig.build.json" },
     { "path": "../lex-schema/tsconfig.build.json" },
   ],
   "compilerOptions": {
