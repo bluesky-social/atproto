@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "resolvers": [
+    {
+      "type": "directory",
+      "path": "../../lexicons",
+      "include": ["com.atproto.*"]
+    }
+  ],
+  "lexicons": ["com.atproto.lexicon.schema", "com.atproto.sync.getRecord"],
+  "resolutions": {
+    "com.atproto.lexicon.schema": {
+      "uri": "file://../../lexicons/com/atproto/lexicon/schema.json",
+      "cid": "bafyreibddpomwj65bmz3hl4he7payr46sditxqmuc3zw43cnev2s7wwa3i"
+    },
+    "com.atproto.sync.getRecord": {
+      "uri": "file://../../lexicons/com/atproto/sync/getRecord.json",
+      "cid": "bafyreiaqangr7wierobeonshlwcg6c2n7q6ighuudrrtvjedh5hfwj4oi4"
+    }
+  }
+}

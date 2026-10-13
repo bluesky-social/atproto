@@ -1,2 +1,3 @@
-# @atproto/lex-cli
-src/lexicons
+# @atproto/lex
+/lexicons
+/src/lexicons
