@@ -8,6 +8,7 @@ src/lexicons
 # The ones listed bellow are either symlinked from the root lexicons directory,
 # or fetched from GitHub
 lexicons/com/atproto
+lexicons/com/germnetwork
 lexicons/app/bsky
 lexicons/chat/bsky
 lexicons/tools/ozone

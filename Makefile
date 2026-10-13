@@ -50,7 +50,7 @@ deps: ## Installs dependent libs using 'pnpm install'
 clean: clean-deps clean-gen
 
 .PHONY: clean-gen
-clean-gen: clean-build clean-prebuild
+clean-gen: clean-build clean-prebuild clean-lexicons
 
 .PHONY: clean-deps
 clean-deps: ## Deletes all installed dependencies (node_modules) in all packages
@@ -71,7 +71,14 @@ clean-prebuild: ## Deletes all prebuild artifacts (codegen, lingui, etc.) in all
 	rm -rf packages/oauth/*/src/locales/*/messages.ts;
 	rm -rf packages/api/src/client;
 	rm -rf packages/api/src/moderation/const/labels.ts;
-	rm -rf packages/api/pds/lexicons;
+
+.PHONY: clean-lexicons
+clean-lexicons: ## Restore each package's resolved ./lexicons folder to its committed content
+	for d in packages/*/lexicons packages/*/*/lexicons; do \
+		[ -e "$$d" ] || continue; \
+		git clean -fdX -- "$$d"; \
+		git restore --source=HEAD -- "$$d" 2>/dev/null || true; \
+	done
 
 .PHONY: nvm-setup
 nvm-setup: ## Use NVM to install and activate node+pnpm
