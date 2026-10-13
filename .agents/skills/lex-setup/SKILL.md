@@ -88,7 +88,7 @@ lexicons/app/bsky
 lexicons/chat/bsky
 ```
 
-A package whose Lexicons are *all* symlinked canonical (e.g.
+A package whose Lexicons are _all_ symlinked canonical (e.g.
 [packages/sync](../../../packages/sync/package.json)) can gitignore the whole
 `/lexicons` tree instead.
 
@@ -293,7 +293,11 @@ diverge. [packages/pds](../../../packages/pds/package.json) is the reference:
   "version": 2,
   "lexicons": ["com.atproto.repo.getRecord", "…every vendored NSID…"],
   "resolvers": [
-    { "type": "directory", "path": "../../lexicons", "include": ["com.atproto.*", "tools.ozone.*"] }
+    {
+      "type": "directory",
+      "path": "../../lexicons",
+      "include": ["com.atproto.*", "tools.ozone.*"],
+    },
   ],
   "resolutions": {
     "com.atproto.repo.getRecord": {

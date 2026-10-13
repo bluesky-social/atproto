@@ -285,9 +285,10 @@ describe(Client, () => {
         } else if (url === '/xrpc/com.example.actor.putPreferences') {
           expect(init?.method).toBe('POST')
           expect(typeof init?.body).toBe('string')
-          const result = com.example.actor.putPreferences.$input.schema.safeParse(
-            lexParse(init?.body as string),
-          )
+          const result =
+            com.example.actor.putPreferences.$input.schema.safeParse(
+              lexParse(init?.body as string),
+            )
           if (result.success) {
             storedPreferences = result.value.preferences
             return new Response(null, { status: 204 })
@@ -433,7 +434,9 @@ describe(Client, () => {
 
       const client = new Client(fetchHandler)
 
-      const { preferences } = await client.call(com.example.actor.getPreferences)
+      const { preferences } = await client.call(
+        com.example.actor.getPreferences,
+      )
 
       expect(preferences).toEqual([
         {
@@ -706,7 +709,9 @@ describe(Client, () => {
 
       expect(nextTid).toHaveBeenCalledTimes(2)
       expect(fetchHandler).toHaveBeenCalledTimes(4)
-      expect(newPost.uri).toBe(`at://${did}/com.example.feed.post/2222222222322`)
+      expect(newPost.uri).toBe(
+        `at://${did}/com.example.feed.post/2222222222322`,
+      )
     })
 
     it('allows fetching records', async () => {
