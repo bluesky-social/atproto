@@ -1,15 +1,19 @@
 ---
 name: lex-setup
 description: >
-  Wire up, maintain, or troubleshoot `@atproto/lex` code generation for a
-  package. Use when a package needs generated Lexicon schemas, when adding a
-  `codegen:lex` / `prebuild` script, when `./src/lexicons/` is missing, stale,
-  or gitignored wrong, after editing anything under `lexicons/`, when adding an
-  NSID or an `--include` filter, when `pnpm codegen` or `lex build` fails, when
-  `lex` resolves to the wrong binary, when a post-lexicon-edit build reports
-  "type X is not assignable to Y", or when ripping out legacy `@atproto/lex-cli`
-  codegen. Reach for it before hand-editing anything under a `lexicons/` or
-  `src/lexicons/` directory.
+  Wire up, maintain, or troubleshoot `@atproto/lex` code generation and the
+  per-package `lexicons.json` manifest. Use when a package needs generated
+  Lexicon schemas; when adding or editing a `lexicons.json`, its `resolvers`
+  (`directory` / `http` / `repo`) or a `lexicons-overrides` directory; when
+  migrating a package off compiling the repo-root `lexicons` directory; when
+  adding a `codegen:lex` / `lex:install` / `prebuild` script; when `./src/lexicons/`
+  or `./lexicons/` is missing, stale, or gitignored wrong; after editing anything
+  under `lexicons/`; when adding an NSID; when `pnpm codegen`, `lex build`, or
+  `lex install` fails; when `lex` resolves to the wrong binary; when a
+  post-lexicon-edit build reports "type X is not assignable to Y"; or when ripping
+  out legacy `@atproto/lex-cli` codegen. Reach for it before hand-editing anything
+  under a `lexicons/`, `lexicons-overrides/`, or `src/lexicons/` directory, or any
+  `lexicons.json`.
 disable-model-invocation: false
 ---
 
@@ -19,12 +23,9 @@ Two commands do everything:
 
 - **`lex build`** — compiles Lexicon JSON into a TypeScript schema tree. Every
   package that uses `@atproto/lex` runs this.
-- **`lex install`** — resolves Lexicon JSON into `./lexicons/` plus a
-  `lexicons.json` manifest, from the network and/or local `resolvers`. Most
-  packages here point `lex build` straight at [lexicons/](../../../lexicons/)
-  and skip it; [packages/pds](../../../packages/pds/package.json) uses it to
-  vendor the canonical set via symlinks (see
-  [Vendoring the canonical lexicons](#vendoring-the-canonical-lexicons-in-repo)).
+- **`lex install`** — resolves the Lexicons a package's `lexicons.json` lists
+  into `./lexicons/`, recording each one's source + CID, from the manifest's
+  `resolvers` and the network.
 
 Both ship in the `lex` bin of `@atproto/lex`. Add `@atproto/lex` as a
 dependency — it re-exports `@atproto/lex-client`, `-schema`, `-data`, and
@@ -33,16 +34,20 @@ _not_ re-exported; depend on it directly if the package encodes/decodes CBOR.
 
 ## Wiring a package in this monorepo
 
-[lexicons/](../../../lexicons/) at the repo root is the canonical source for
-`com.atproto` and `tools.ozone` namespaces. Most packages compile it directly —
-no manifest, no `lex install`, no `postinstall` hook — because the schemas are
-committed source, so there is nothing to fetch or verify. (One exception:
-[packages/pds](../../../packages/pds/package.json) vendors the set through `lex
-install` + symlinks — see [Vendoring the canonical lexicons](#vendoring-the-canonical-lexicons-in-repo).)
+[lexicons/](../../../lexicons/) at the repo root is the canonical source for the
+`com.atproto` and `tools.ozone` namespaces **only**. Every package manages its
+Lexicons through its own committed `lexicons.json` manifest and resolves them
+with `lex install` — no package compiles the root directory directly (the one
+exception is [packages/lex/lex-resolver](../../../packages/lex/lex-resolver/package.json),
+which can't depend on the installer; see
+[Packages under `packages/lex/`](#packages-under-packageslex)). The manifest's
+`resolvers` decide where each NSID comes from; see
+[Manifest resolvers](#manifest-resolvers-lexiconsjson).
 
-Copy the shape most consuming packages already use
+Copy the shape consuming packages use
 ([packages/pds](../../../packages/pds/package.json),
-[packages/sync](../../../packages/sync/package.json)):
+[packages/sync](../../../packages/sync/package.json),
+[packages/bsky](../../../packages/bsky/package.json)):
 
 ```json
 {
@@ -65,14 +70,27 @@ Copy the shape most consuming packages already use
 }
 ```
 
-Adjust `../../lexicons` for the package's depth. Compile with `tsgo`, not
-`tsc` — there is no per-package `typescript` devDependency in this repo. Then
-gitignore the output, since generated files are build artifacts, not source:
+Then gitignore the build artifacts. The generated TypeScript (`src/lexicons`) is
+never committed. Under `./lexicons`, the rebuildable trees are gitignored too —
+the symlinked canonical set and anything fetched from a pinned source (e.g. the
+`app.bsky.*` / `chat.bsky.*` GitHub `http` resolver) — while `at://` network
+copies stay committed for offline builds (the network can't serve old versions)
+and `./lexicons-overrides` is always committed. See
+[packages/bsky/.gitignore](../../../packages/bsky/.gitignore) for the shape:
 
 ```
 # @atproto/lex
 src/lexicons
+# symlinked-canonical + GitHub-fetched: rebuildable, not committed
+lexicons/com/atproto
+lexicons/tools/ozone
+lexicons/app/bsky
+lexicons/chat/bsky
 ```
+
+A package whose Lexicons are *all* symlinked canonical (e.g.
+[packages/sync](../../../packages/sync/package.json)) can gitignore the whole
+`/lexicons` tree instead.
 
 The indirection through `codegen:lex` is deliberate:
 
@@ -87,40 +105,71 @@ The indirection through `codegen:lex` is deliberate:
 ### Which `lex` binary you get
 
 `@atproto/lex-cli` (legacy) and `@atproto/lex` both claim the `lex` bin name,
-and resolution is per-package. In `packages/api` and `packages/ozone` — which
-still depend on `lex-cli` — `pnpm exec lex` gives you the **legacy** CLI
-(`gen-api` / `gen-server`), not `lex build`. Everywhere else it is
-`@atproto/lex`.
+and resolution is per-package. In `packages/api` — which still depends on
+`lex-cli` for `gen-api` — `pnpm exec lex` gives you the **legacy** CLI, not
+`lex build`. `api` therefore installs its manifest with the `lex-installer`
+bin (`@atproto/lex-installer`) and feeds the installed `./lexicons` to
+`gen-api`. Everywhere else `lex` is `@atproto/lex`.
 
 If a `lex build` invocation errors about an unknown command, that collision is
 why. `@atproto/lex` also registers `ts-lex`, which is unambiguous. Outside a
 workspace, `npx @atproto/lex` avoids pulling the unrelated unscoped `lex`
 package that bare `npx lex` would fetch.
 
-### Narrow packages: `--include`
+### Manifest resolvers (`lexicons.json`)
 
-Compiling all of `lexicons/` into a small library is wasteful. Filter by NSID —
-schemas referenced by an included document are pulled in transitively, so only
-the entry points need listing:
+The manifest's `lexicons` array lists the NSID **entry points** the package
+needs; `lex install` pulls in schemas they reference transitively, so you only
+list the roots. `resolvers` is an **ordered** list deciding where each NSID is
+fetched from — earlier entries win, with the AT Protocol network as the implicit
+last fallback. The kinds:
 
-```jsonc
-"codegen:lex": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.subscribeRepos"
-```
+- `{ "type": "directory", "path": "../../lexicons", "include": ["com.atproto.*", "tools.ozone.*"] }`
+  — resolve from a local directory. The canonical set lives at the repo root;
+  matches are **symlinked** into `./lexicons` and locked with a `file://` URI, so
+  they can't drift. Adjust `path` for the package's depth.
+- `{ "type": "http", "base": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/", "include": ["app.bsky.*", "chat.bsky.*"] }`
+  — fetch `<base>/<…nsid.segments>.json` (e.g. a raw Git host). `http` falls
+  through on 404 but throws on other errors.
+- `{ "type": "repo", "repo": "<handle|did>" }` — resolve each NSID from that
+  repo's `com.atproto.lexicon.schema` records; never falls through.
+- A `directory` resolver pointing at a committed **`./lexicons-overrides`** dir,
+  listed **first** so it takes precedence. Put any document that must differ from
+  what the other resolvers return here: unpublished NSIDs (`internal.*`,
+  `place.stream.badge.defs`, a not-yet-published `app.bsky.unspecced.*`) and
+  documents whose local version is ahead of the published one. Copy the file in
+  from the root `lexicons`; it is committed, unlike the gitignored resolved set.
 
-Patterns accept `*` as a wildcard (`app.bsky.*`); `--exclude` is applied after
-`--include`.
+[packages/bsky/lexicons.json](../../../packages/bsky/lexicons.json) is the full
+reference (overrides + canonical directory + GitHub `http`).
+
+`include`/`exclude` globs accept `*` as a wildcard; `exclude` is applied after
+`include`.
 
 ### Packages under `packages/lex/`
 
-`@atproto/lex` depends on the SDK sub-packages, so they cannot depend back on
-it. They generate with `--lib @atproto/lex-schema` instead, which is what the
-generated files then import `l` from.
+`@atproto/lex` depends on the SDK sub-packages, so they cannot depend back on it
+(it would be circular). They generate with `@atproto/lex-builder`'s `lex-builder
+build --lib @atproto/lex-schema` (that is where the generated files import `l`
+from) instead of `lex build`, and install their manifest with `@atproto/lex-installer`'s
+`lex-installer install` instead of `lex install`:
 
-When the flags get unwieldy (long include lists, or two output trees), those
-packages call the builder API directly from a `scripts/lex-build.js` and keep
-`"codegen:lex": "node ./scripts/lex-build.js"` — see
-[packages/lex/lex-client/scripts/lex-build.js](../../../packages/lex/lex-client/scripts/lex-build.js).
-`build()` from `@atproto/lex-builder` takes the same options in camelCase.
+```jsonc
+"lex:build": "lex-builder build --out ./src/lexicons --clear --lib @atproto/lex-schema --index-file",
+"lex:install": "lex-installer install",
+"postlex:install": "pnpm run lex:build",
+"codegen:lex": "pnpm run lex:install --ci",
+```
+
+See [packages/lex/lex-password-session](../../../packages/lex/lex-password-session/package.json).
+Add `--default-export` to `lex:build` for a browser-facing client
+([packages/lex/lex-client](../../../packages/lex/lex-client/package.json)).
+
+One carve-out: a package that is itself inside `@atproto/lex-installer`'s
+dependency tree can't depend on the installer. Today that is
+[packages/lex/lex-resolver](../../../packages/lex/lex-resolver/package.json),
+which keeps the older `lex-builder build --lexicons ../../../lexicons --include …`
+form and compiles the canonical root directly.
 
 ## `lex build` flags
 
@@ -196,12 +245,12 @@ pnpm run prebuild   # inside one package
 `pnpm codegen` builds `@atproto/lex-builder` first via `build:tooling`. If
 codegen output still looks stale, that build is the thing to re-run.
 
-`packages/api` and `packages/ozone` guard their codegen behind an mtime check
-against `lexicons/`, so they can appear to skip regeneration; run their
-`codegen:lex` directly if you suspect that.
-
-Adding a new NSID needs no configuration — it appears under the matching
-namespace path on the next build, unless an `--include` filter excludes it.
+Adding a new external NSID means listing it in the package's `lexicons.json`
+`lexicons` array (or `pnpm lex:install <nsid>`), then re-running codegen. A new
+canonical (`com.atproto.*` / `tools.ozone.*`) schema is added at the repo root
+and picked up by each dependent package's next `lex:install`; run
+`pnpm lex:update-local` from the root to propagate a changed canonical CID into
+every manifest.
 
 ## Network-installed schemas (outside this repo)
 
@@ -231,23 +280,24 @@ Don't commit a second **copy** of schemas that already live in
 
 ## Vendoring the canonical lexicons (in-repo)
 
-A package can consume [lexicons/](../../../lexicons/) through `lex install`
-instead of pointing `lex build` at it directly, so its lexicon set is an
-explicit, CID-locked contract. The manifest's `resolvers` array resolves each
-NSID from a local directory; local-file resolutions are **symlinked** into
-`./lexicons/` (not copied) and locked with a `file://` URI relative to the
-manifest, so they can't diverge from the canonical files.
-[packages/pds](../../../packages/pds/package.json) is the reference:
+Consuming [lexicons/](../../../lexicons/) through `lex install` (rather than
+compiling it directly) is the standard setup — it makes a package's lexicon set
+an explicit, CID-locked contract. A `directory` resolver resolves each canonical
+NSID from the root; those resolutions are **symlinked** into `./lexicons/` (not
+copied) and locked with a `file://` URI relative to the manifest, so they can't
+diverge. [packages/pds](../../../packages/pds/package.json) is the reference:
 
 ```jsonc
 // lexicons.json (committed) — roots + resolvers + CID locks
 {
-  "version": 1,
-  "lexicons": ["app.bsky.feed.post", "…every vendored NSID…"],
-  "resolvers": [{ "type": "directory", "path": "../../lexicons" }],
+  "version": 2,
+  "lexicons": ["com.atproto.repo.getRecord", "…every vendored NSID…"],
+  "resolvers": [
+    { "type": "directory", "path": "../../lexicons", "include": ["com.atproto.*", "tools.ozone.*"] }
+  ],
   "resolutions": {
-    "app.bsky.feed.post": {
-      "uri": "file://../../lexicons/app/bsky/feed/post.json",
+    "com.atproto.repo.getRecord": {
+      "uri": "file://../../lexicons/com/atproto/repo/getRecord.json",
       "cid": "…",
     },
   },
@@ -255,9 +305,11 @@ manifest, so they can't diverge from the canonical files.
 ```
 
 ```jsonc
-// package.json — install (creating symlinks + verifying the lock) before build
-"codegen:lex": "lex install --ci && lex build --clear --indexFile",
-"lex:install": "lex install", // regenerate the manifest after adding/removing a lexicon
+// package.json — install (creating symlinks + verifying the lock), then build
+"codegen:lex": "pnpm run lex:install --ci",
+"lex:install": "lex install",     // regenerate the manifest after adding/removing a lexicon
+"postlex:install": "pnpm run lex:build",
+"lex:build": "lex build --clear --indexFile",
 ```
 
 Gitignore the symlinked `/lexicons` tree (a build artifact) but **commit
@@ -266,13 +318,9 @@ Gitignore the symlinked `/lexicons` tree (a build artifact) but **commit
 the locked CIDs. Tradeoff: the `lexicons` roots list is explicit, so adding a
 new canonical schema requires re-running `lex:install` to include it — unlike a
 plain `lex build --lexicons ../../lexicons`, which picks up every file
-implicitly. `resolvers` are priority-ordered with the network as the implicit
-last fallback. Besides `directory`, two remote kinds exist: `{ "type": "repo",
-"repo": "<handle|did>" }` resolves each NSID from that repo's
-`com.atproto.lexicon.schema` records, and `{ "type": "http", "base":
-"https://…/" }` fetches `<base>/<…nsid.segments>.json` (e.g. a raw Git host).
-Both take `include`/`exclude` globs; `http` falls through on 404 but throws on
-other errors, `repo` never falls through.
+implicitly. For the full resolver vocabulary (`directory` / `http` / `repo`,
+ordering, and the `lexicons-overrides` directory) see
+[Manifest resolvers](#manifest-resolvers-lexiconsjson) above.
 
 ## Removing legacy `@atproto/lex-cli` codegen
 
@@ -281,9 +329,13 @@ emits `./src/lexicon` (singular), `lex gen-api` emits `./src/client`. Both are
 fully generated and safe to delete. Leave `lexicons/` alone; it is input, not
 output.
 
-Then drop `@atproto/lex-cli` from `devDependencies`, replace the old
-`codegen:lex` script with the `lex build` form above, and repoint `.gitignore`
-at `src/lexicons`.
+Then drop `@atproto/lex-cli` from `devDependencies`, add a `lexicons.json`
+(resolving the canonical set from the root plus whatever external namespaces the
+package used), replace the old `codegen:lex` with the `lex:install` / `lex:build`
+form above, and repoint `.gitignore` at `src/lexicons` plus the rebuildable
+`/lexicons` trees. (`packages/api` is the exception — it keeps `gen-api` but now
+feeds it a locally-installed `./lexicons`; see
+[Which `lex` binary you get](#which-lex-binary-you-get).)
 
 ## Related skills
 
