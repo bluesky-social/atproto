@@ -78,6 +78,9 @@ export async function queryActionedSubjects(
   // @NOTE Aggregate the DID's history once, rather than rescanning it for
   // every status row before LIMIT. Exact history-derived sorting needs all
   // of this DID's public actions, but never another account's events.
+  // Derive recordPath (strip "at://<did>/") so each aggregated subject is a
+  // status unique-index lookup, not a scan of every status row for the DID.
+  const recordPath = sql<string>`CASE WHEN "subjectUri" IS NULL THEN '' ELSE substr("subjectUri", length("subjectDid") + 7) END`
   let query = db.db
     .with(
       (cte) => cte('inbox_actions').materialized(),
@@ -94,7 +97,7 @@ export async function queryActionedSubjects(
             qb.where('createdAt', '>=', startAt!),
           )
           .select([
-            sql<string>`coalesce("subjectUri", "subjectDid")`.as('subject'),
+            recordPath.as('recordPath'),
             sql<number>`count(*) FILTER (WHERE action <> ${REVERSE_TAKEDOWN})::int`.as(
               'actionCount',
             ),
@@ -106,7 +109,7 @@ export async function queryActionedSubjects(
               'latestAppealableAt',
             ),
           ])
-          .groupBy(sql`coalesce("subjectUri", "subjectDid")`),
+          .groupBy(recordPath),
     )
     .with('inbox_appeals', (qb) =>
       qb
@@ -121,13 +124,7 @@ export async function queryActionedSubjects(
         .orderBy('id', 'desc'),
     )
     .selectFrom('moderation_subject_status as s')
-    .innerJoin('inbox_actions as a', (join) =>
-      join.on(
-        'a.subject',
-        '=',
-        sql<string>`CASE WHEN s."recordPath" = '' THEN s.did ELSE 'at://' || s.did || '/' || s."recordPath" END`,
-      ),
-    )
+    .innerJoin('inbox_actions as a', 'a.recordPath', 's.recordPath')
     .leftJoin('inbox_appeals as r', (join) =>
       join
         .onRef('r.recordPath', '=', 's.recordPath')
