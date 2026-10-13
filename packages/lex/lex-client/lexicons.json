@@ -1,0 +1,58 @@
+{
+  "version": 2,
+  "resolvers": [
+    {
+      "type": "directory",
+      "path": "../../../lexicons",
+      "include": ["com.atproto.*"]
+    }
+  ],
+  "lexicons": [
+    "com.atproto.repo.applyWrites",
+    "com.atproto.repo.createRecord",
+    "com.atproto.repo.deleteRecord",
+    "com.atproto.repo.getRecord",
+    "com.atproto.repo.listRecords",
+    "com.atproto.repo.putRecord",
+    "com.atproto.repo.uploadBlob",
+    "com.atproto.sync.getBlob"
+  ],
+  "resolutions": {
+    "com.atproto.repo.applyWrites": {
+      "uri": "file://../../../lexicons/com/atproto/repo/applyWrites.json",
+      "cid": "bafyreigserrq6z46d7vgnxf3m2c4sgld2itq7eyapwfoc7gudfjry3h5ca"
+    },
+    "com.atproto.repo.createRecord": {
+      "uri": "file://../../../lexicons/com/atproto/repo/createRecord.json",
+      "cid": "bafyreian2jwdclnou5pwhoy23sous7qzkj5jqzdsnhso7aou26nwt5ziw4"
+    },
+    "com.atproto.repo.defs": {
+      "uri": "file://../../../lexicons/com/atproto/repo/defs.json",
+      "cid": "bafyreig6nmxec7j7ph2zx7shaljsugmndy7garsoi7td3x5bird6gllbpa"
+    },
+    "com.atproto.repo.deleteRecord": {
+      "uri": "file://../../../lexicons/com/atproto/repo/deleteRecord.json",
+      "cid": "bafyreigptpsppdmu6z2todwq6jbdslnx2s37rghzhieagfgtkhgw77ykh4"
+    },
+    "com.atproto.repo.getRecord": {
+      "uri": "file://../../../lexicons/com/atproto/repo/getRecord.json",
+      "cid": "bafyreiho5nshry2twf7p2emfsxyx22vjidufpef65c7khunteasgdxf37u"
+    },
+    "com.atproto.repo.listRecords": {
+      "uri": "file://../../../lexicons/com/atproto/repo/listRecords.json",
+      "cid": "bafyreiex5tdyevi7e4emkgnnngb36koqegu5zqxssnoq5xa4pln22nldau"
+    },
+    "com.atproto.repo.putRecord": {
+      "uri": "file://../../../lexicons/com/atproto/repo/putRecord.json",
+      "cid": "bafyreiarzlpc43cmf5zccaomgk5eaujipkgaxnlpyyhg4twbt3zrlzvv64"
+    },
+    "com.atproto.repo.uploadBlob": {
+      "uri": "file://../../../lexicons/com/atproto/repo/uploadBlob.json",
+      "cid": "bafyreiewhhnp2wiprruttkzd7fu52c5wxzkjislb3trn7whhn33aplxdoi"
+    },
+    "com.atproto.sync.getBlob": {
+      "uri": "file://../../../lexicons/com/atproto/sync/getBlob.json",
+      "cid": "bafyreifdvysv4cqey5zcsc6kwvzseu6lrazbkhw2nk7zojkjryqcbxjcp4"
+    }
+  }
+}

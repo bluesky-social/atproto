@@ -523,6 +523,9 @@ importers:
       structured-headers:
         specifier: ^1.0.1
         version: 1.0.1
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
       uint8arrays:
         specifier: ^5.0.0
         version: 5.1.1
@@ -1142,6 +1145,9 @@ importers:
       '@atproto/lex-cbor':
         specifier: workspace:^
         version: link:../lex-cbor
+      '@atproto/lex-installer':
+        specifier: workspace:^
+        version: link:../lex-installer
       '@atproto/lex-json':
         specifier: workspace:^
         version: link:../lex-json
