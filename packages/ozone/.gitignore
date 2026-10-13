@@ -1,2 +1,10 @@
 # @atproto/lex
 src/lexicons
+
+# Keep an offline copy of "at://" the lexicons locally for offline builds and CI.
+# The ones listed bellow are either symlinked from the root lexicons directory,
+# or fetched from GitHub
+lexicons/com/atproto
+lexicons/app/bsky
+lexicons/chat/bsky
+lexicons/tools/ozone
