@@ -1,0 +1,136 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.unspecced.getAtmosphereExploreTab",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get curated Atmosphere Explore content. Authentication is optional; authenticated requests include viewer-specific profile state.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "langs": {
+            "type": "array",
+            "description": "Preferred languages. Currently ignored.",
+            "items": { "type": "string", "format": "language" }
+          },
+          "countryCode": {
+            "type": "string",
+            "description": "The ISO 3166-1 alpha-2 country code used to select curated content."
+          },
+          "regionCode": {
+            "type": "string",
+            "description": "The ISO 3166-2 region code used to select curated content."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "articles",
+            "publications",
+            "photos",
+            "livestreams",
+            "apps"
+          ],
+          "properties": {
+            "announcementBanner": {
+              "type": "ref",
+              "ref": "#announcementBanner"
+            },
+            "articles": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "#articleItem" }
+            },
+            "publications": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "#publicationItem" }
+            },
+            "photos": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "#galleryItem" }
+            },
+            "livestreams": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "#livestreamItem" }
+            },
+            "apps": {
+              "type": "array",
+              "maxLength": 100,
+              "items": { "type": "ref", "ref": "#appCard" }
+            }
+          }
+        }
+      }
+    },
+    "articleItem": {
+      "type": "object",
+      "required": ["featured", "view"],
+      "properties": {
+        "featured": { "type": "boolean" },
+        "view": { "type": "ref", "ref": "app.bsky.embed.external#viewArticle" }
+      }
+    },
+    "publicationItem": {
+      "type": "object",
+      "required": ["featured", "view"],
+      "properties": {
+        "featured": { "type": "boolean" },
+        "view": {
+          "type": "ref",
+          "ref": "app.bsky.embed.external#viewArticlePublication"
+        }
+      }
+    },
+    "galleryItem": {
+      "type": "object",
+      "required": ["featured", "view"],
+      "properties": {
+        "featured": { "type": "boolean" },
+        "view": { "type": "ref", "ref": "app.bsky.embed.external#viewGallery" }
+      }
+    },
+    "livestreamItem": {
+      "type": "object",
+      "required": ["featured", "view"],
+      "properties": {
+        "featured": { "type": "boolean" },
+        "view": {
+          "type": "ref",
+          "ref": "app.bsky.embed.external#viewLivestream"
+        }
+      }
+    },
+    "announcementBanner": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 4096 },
+        "title": { "type": "string", "maxLength": 4096 },
+        "description": { "type": "string", "maxLength": 4096 },
+        "url": { "type": "string", "format": "uri", "maxLength": 4096 },
+        "image": { "type": "string", "format": "uri", "maxLength": 4096 },
+        "overlayColor": { "type": "string", "maxLength": 4096 },
+        "textColor": { "type": "string", "maxLength": 4096 }
+      }
+    },
+    "appCard": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 4096 },
+        "title": { "type": "string", "maxLength": 4096 },
+        "description": { "type": "string", "maxLength": 4096 },
+        "logo": { "type": "string", "format": "uri", "maxLength": 4096 },
+        "backgroundImage": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 4096
+        },
+        "overlayColor": { "type": "string", "maxLength": 4096 },
+        "textColor": { "type": "string", "maxLength": 4096 },
+        "url": { "type": "string", "format": "uri", "maxLength": 4096 },
+        "category": { "type": "string", "maxLength": 4096 }
+      }
+    }
+  }
+}

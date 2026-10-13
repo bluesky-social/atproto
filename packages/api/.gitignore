@@ -3,3 +3,12 @@ src/client
 
 # ./scripts/generate-code.js
 src/moderation/const/labels.ts
+
+# @atproto/lex — resolved lexicons are a build artifact. The trees below are
+# either symlinked from the root canonical lexicons or fetched from GitHub, so
+# they are rebuildable and not committed. Network ("at://") copies and any file
+# under ./lexicons-overrides stay committed for offline builds and CI.
+lexicons/com/atproto
+lexicons/tools/ozone
+lexicons/app/bsky
+lexicons/chat/bsky
