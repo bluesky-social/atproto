@@ -1,5 +1,17 @@
 # @atproto/dev-env
 
+## 0.6.19
+
+### Patch Changes
+
+- [#5643](https://github.com/bluesky-social/atproto/pull/5643) [`0bac60a`](https://github.com/bluesky-social/atproto/commit/0bac60a9ce84d05253a58b92a90ea12d6249c18c) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add histograms for raw notification items fetched and returned by grouped notifications.
+  
+  Make notifications V2 raw fetch limits, read count, and related-view item limit configurable.
+- Updated dependencies [[`f882504`](https://github.com/bluesky-social/atproto/commit/f88250427e91402d6142bf908074ac6e368c455d), [`7184ed7`](https://github.com/bluesky-social/atproto/commit/7184ed74423e1d976ceb9e57310d2983c90c2f18), [`dff8990`](https://github.com/bluesky-social/atproto/commit/dff8990f2fd409a0e78309f64e18e7ad36befcaf), [`f882504`](https://github.com/bluesky-social/atproto/commit/f88250427e91402d6142bf908074ac6e368c455d), [`8c05fa0`](https://github.com/bluesky-social/atproto/commit/8c05fa00d32e912bc75f4481274ca74ff4c8e6b0), [`0bac60a`](https://github.com/bluesky-social/atproto/commit/0bac60a9ce84d05253a58b92a90ea12d6249c18c)]:
+  - @atproto/bsky@0.2.1
+  - @atproto/api@0.26.0
+  - @atproto/ozone@0.8.0
+
 ## 0.6.18
 
 ### Patch Changes

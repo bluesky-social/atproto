@@ -1,5 +1,19 @@
 # @atproto/bsky
 
+## 0.2.1
+
+### Patch Changes
+
+- [#5647](https://github.com/bluesky-social/atproto/pull/5647) [`f882504`](https://github.com/bluesky-social/atproto/commit/f88250427e91402d6142bf908074ac6e368c455d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Support self-labels on profile link records and include them in profile link views.
+
+- [#5647](https://github.com/bluesky-social/atproto/pull/5647) [`f882504`](https://github.com/bluesky-social/atproto/commit/f88250427e91402d6142bf908074ac6e368c455d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Apply takedown labels to individual profile links and expose labels on profile link views.
+
+- [#5643](https://github.com/bluesky-social/atproto/pull/5643) [`0bac60a`](https://github.com/bluesky-social/atproto/commit/0bac60a9ce84d05253a58b92a90ea12d6249c18c) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add histograms for raw notification items fetched and returned by grouped notifications.
+  
+  Make notifications V2 raw fetch limits, read count, and related-view item limit configurable.
+- Updated dependencies [[`f882504`](https://github.com/bluesky-social/atproto/commit/f88250427e91402d6142bf908074ac6e368c455d), [`7184ed7`](https://github.com/bluesky-social/atproto/commit/7184ed74423e1d976ceb9e57310d2983c90c2f18), [`f882504`](https://github.com/bluesky-social/atproto/commit/f88250427e91402d6142bf908074ac6e368c455d)]:
+  - @atproto/api@0.26.0
+
 ## 0.2.0
 
 ### Minor Changes
