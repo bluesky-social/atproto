@@ -6,7 +6,7 @@ import {
   atUri,
   lexStringify,
 } from '@atproto/lex'
-import { place, site, social } from '../lexicons/index.js'
+import { app, place, site, social } from '../lexicons/index.js'
 import { hydrationLogger } from '../logger.js'
 import { Service } from '../proto/bsky_connect.js'
 import {
@@ -17,7 +17,7 @@ import {
   RecordLookupStatus,
 } from '../proto/bsky_pb.js'
 import { events } from '../telemetry/events.js'
-import type { Actors } from './actor.js'
+import type { Actors, ProfileLinks } from './actor.js'
 import { ExternalHydrator, genericRecordKey } from './external.js'
 import {
   HydrateCtx,
@@ -25,7 +25,7 @@ import {
   type HydratorConfig,
   mergeStates,
 } from './hydrator.js'
-import { Labels } from './label.js'
+import { type Label, Labels } from './label.js'
 import { HydrationMap } from './util.js'
 
 const pubUri = atUri('did:plc:pub', site.standard.publication.$type, 'self')
@@ -2368,5 +2368,189 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         },
       ])
     })
+  })
+})
+
+describe('Hydrator.hydrateProfilesDetailed profile links', () => {
+  const did = 'did:plc:linky' as DidString
+  const takenDownUri = atUri(did, app.bsky.actor.link.$type, 'down')
+  const keptUri = atUri(did, app.bsky.actor.link.$type, 'kept')
+  const createdAt = '2026-10-01T00:00:00.000Z'
+  const labelerDid = 'did:plc:labeler' as DidString
+
+  const makeLabels = (
+    subjects: Record<AtUriString, { val: string; isTakendown?: boolean }>,
+  ) => {
+    const labels = new Labels()
+    for (const [uri, { val, isTakendown = false }] of Object.entries(
+      subjects,
+    ) as [AtUriString, { val: string; isTakendown?: boolean }][]) {
+      const label: Label = { src: labelerDid, uri, val, cts: createdAt }
+      labels.set(uri, {
+        isImpersonation: false,
+        isTakendown,
+        needsReview: false,
+        labels: new HydrationMap([[Labels.key(label), label]]),
+      })
+    }
+    return labels
+  }
+
+  const createLinkFixture = (
+    labelsBySubject: Record<
+      AtUriString,
+      { val: string; isTakendown?: boolean }
+    >,
+  ) => {
+    const dataplane = createPromiseClient(
+      Service,
+      createRouterTransport(() => {}),
+    )
+    const hydrator = new Hydrator(dataplane, [], {} as HydratorConfig)
+    const ctx = new HydrateCtx({
+      labelers: { dids: [labelerDid], redact: new Set() },
+      viewer: null,
+      features: {} as never,
+    })
+    // Fresh maps on each call: hydration merges and nulls entries in place.
+    const spies = [
+      vi.spyOn(hydrator.actor, 'getActors').mockImplementation(
+        async (dids) =>
+          new HydrationMap(
+            dids.map((d) => [
+              d,
+              {
+                did: d,
+                handle: 'linky.test',
+                isLabeler: false,
+                verifications: [],
+                allowActivitySubscriptionsFrom: 'none',
+                accountModerationTags: new Set(),
+                profileModerationTags: new Set(),
+                profile: app.bsky.actor.profile.$build({
+                  links: [takenDownUri, keptUri].map((uri) => ({
+                    uri,
+                    cid: 'bafyreid6c2mfvztew4wrg7ld3m4o4ssbxz4miklv7u46mko3sjqdvaxzfa',
+                  })),
+                }),
+              },
+            ]),
+          ) as unknown as Actors,
+      ),
+      vi
+        .spyOn(hydrator.actor, 'getProfileAggregates')
+        .mockImplementation(async () => new HydrationMap()),
+      vi.spyOn(hydrator.actor, 'getProfileLinks').mockImplementation(
+        async (uris) =>
+          new HydrationMap(
+            uris.map((uri) => [
+              uri,
+              {
+                record: app.bsky.actor.link.$build({
+                  url: 'https://example.com',
+                  createdAt,
+                }),
+                cid: `cid-${uri}`,
+                sortedAt: new Date(createdAt),
+                indexedAt: new Date(createdAt),
+                takedownRef: undefined,
+              },
+            ]),
+          ) as ProfileLinks,
+      ),
+      vi.spyOn(hydrator, 'hydrateStarterPacksBasic').mockResolvedValue({}),
+      vi
+        .spyOn(hydrator.label, 'getLabelsForSubjects')
+        .mockImplementation(async (subjects) => {
+          const wanted = Object.fromEntries(
+            Object.entries(labelsBySubject).filter(([uri]) =>
+              subjects.includes(uri as AtUriString),
+            ),
+          )
+          return makeLabels(wanted)
+        }),
+    ]
+    return {
+      hydrator,
+      ctx,
+      [Symbol.dispose]: () => spies.forEach((spy) => spy.mockRestore()),
+    }
+  }
+
+  const profileUri = atUri(did, app.bsky.actor.profile.$type, 'self')
+
+  it('nulls only the link with an actionable takedown label', async () => {
+    using fixture = createLinkFixture({
+      [takenDownUri]: { val: '!takedown', isTakendown: true },
+      [keptUri]: { val: 'spam' },
+      [profileUri]: { val: 'profile-label' },
+    })
+    const { hydrator, ctx } = fixture
+    const state = await hydrator.hydrateProfilesDetailed([did], ctx)
+
+    expect(state.profileLinks?.get(takenDownUri)).toBeNull()
+    expect(state.profileLinks?.get(keptUri)).toBeTruthy()
+    expect(state.actors?.get(did)).toBeTruthy()
+    expect(state.labels?.getBySubject(takenDownUri).map((l) => l.val)).toEqual([
+      '!takedown',
+    ])
+    expect(state.labels?.getBySubject(keptUri).map((l) => l.val)).toEqual([
+      'spam',
+    ])
+    expect(state.labels?.getBySubject(profileUri).map((l) => l.val)).toEqual([
+      'profile-label',
+    ])
+  })
+
+  it('keeps links whose labels are not actionable takedowns', async () => {
+    using fixture = createLinkFixture({
+      [takenDownUri]: { val: 'spam', isTakendown: false },
+    })
+    const { hydrator, ctx } = fixture
+    const state = await hydrator.hydrateProfilesDetailed([did], ctx)
+
+    expect(state.profileLinks?.get(takenDownUri)).toBeTruthy()
+    expect(state.profileLinks?.get(keptUri)).toBeTruthy()
+  })
+
+  it('keeps taken-down links when includeTakedowns is set', async () => {
+    using fixture = createLinkFixture({
+      [takenDownUri]: { val: '!takedown', isTakendown: true },
+    })
+    const { hydrator, ctx } = fixture
+    const state = await hydrator.hydrateProfilesDetailed(
+      [did],
+      ctx.copy({ includeTakedowns: true }),
+    )
+
+    expect(state.profileLinks?.get(takenDownUri)).toBeTruthy()
+    expect(state.labels?.getBySubject(takenDownUri)).toHaveLength(1)
+  })
+
+  it('does not hydrate links or link labels for basic profiles', async () => {
+    using fixture = createLinkFixture({
+      [takenDownUri]: { val: '!takedown', isTakendown: true },
+    })
+    const { hydrator, ctx } = fixture
+    const state = await hydrator.hydrateProfilesBasic([did], ctx)
+
+    expect(state.profileLinks).toBeUndefined()
+    expect(state.labels?.get(takenDownUri)).toBeUndefined()
+    expect(hydrator.actor.getProfileLinks).not.toHaveBeenCalled()
+  })
+
+  it('handles profiles without links', async () => {
+    using fixture = createLinkFixture({})
+    const { hydrator, ctx } = fixture
+    vi.mocked(hydrator.actor.getActors).mockImplementation(
+      async (dids) =>
+        new HydrationMap(
+          dids.map((d) => [d, { did: d, verifications: [] }]),
+        ) as unknown as Actors,
+    )
+    const state = await hydrator.hydrateProfilesDetailed([did], ctx)
+
+    expect(state.actors?.get(did)).toBeTruthy()
+    expect(state.profileLinks?.size ?? 0).toBe(0)
   })
 })
