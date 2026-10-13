@@ -19,6 +19,7 @@ import {
 import { HOUR, MINUTE } from '@atproto/common'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
+import { com } from '../../src/lexicons/index.js'
 import { forSnapshot, stripViewer } from '../_util.js'
 
 describe('pds profile views', () => {
@@ -680,12 +681,26 @@ describe('pds profile views', () => {
   describe('links', () => {
     let linky: DidString
 
-    const createLink = async (did: DidString, url: string, title?: string) => {
+    const createLink = async (
+      did: DidString,
+      url: string,
+      title?: string,
+      selfLabels?: string[],
+    ) => {
       const res = await sc.agent.com.atproto.repo.createRecord(
         {
           repo: did,
           collection: 'app.bsky.actor.link',
-          record: { url, title, createdAt: new Date().toISOString() },
+          record: {
+            url,
+            title,
+            createdAt: new Date().toISOString(),
+            labels: selfLabels
+              ? com.atproto.label.defs.selfLabels.$build({
+                  values: selfLabels.map((val) => ({ val })),
+                })
+              : undefined,
+          },
         },
         { headers: sc.getHeaders(did), encoding: 'application/json' },
       )
@@ -830,6 +845,48 @@ describe('pds profile views', () => {
         [labeled.uri, 'spam', labelerDid],
       ])
       expect(links?.[1].labels).toEqual([])
+    })
+
+    it('exposes self-labels saved on a link', async () => {
+      const selfLabeled = await createLink(
+        linky,
+        'https://self-labeled.example',
+        undefined,
+        ['porn'],
+      )
+      const unlabeled = await createLink(linky, 'https://plain.example')
+      await updateProfile(linky, {
+        displayName: 'links',
+        links: [selfLabeled, unlabeled],
+      })
+      await network.processAll()
+
+      const links = await getLinks()
+      expect(links?.map((link) => link.uri)).toEqual([
+        selfLabeled.uri,
+        unlabeled.uri,
+      ])
+      expect(
+        links?.[0].labels?.map((l) => [l.src, l.uri, l.cid, l.val]),
+      ).toEqual([[linky, selfLabeled.uri, selfLabeled.cid, 'porn']])
+      expect(links?.[1].labels).toEqual([])
+    })
+
+    it('returns hydrated labels followed by self-labels', async () => {
+      const both = await createLink(linky, 'https://both.example', undefined, [
+        'gore',
+      ])
+      await updateProfile(linky, { displayName: 'links', links: [both] })
+      await createLabel({ uri: both.uri, cid: both.cid, val: 'spam' })
+      await network.processAll()
+
+      const links = await getLinks(labelerDid)
+      expect(
+        links?.[0].labels?.map((l) => [l.src, l.uri, l.cid, l.val]),
+      ).toEqual([
+        [labelerDid, both.uri, both.cid, 'spam'],
+        [linky, both.uri, both.cid, 'gore'],
+      ])
     })
 
     it('omits only the link with an actionable takedown label', async () => {

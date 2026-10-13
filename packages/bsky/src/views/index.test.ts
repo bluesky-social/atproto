@@ -12,7 +12,7 @@ import type { HydrationState } from '../hydration/hydrator.js'
 import { type Label, Labels } from '../hydration/label.js'
 import { HydrationMap } from '../hydration/util.js'
 import { ImageUriBuilder } from '../image/uri.js'
-import { app } from '../lexicons/index.js'
+import { app, com } from '../lexicons/index.js'
 import { Views } from './index.js'
 import { VideoUriBuilder } from './util.js'
 
@@ -149,5 +149,80 @@ describe('Views.profileLinks', () => {
     const links = views.profileLinks(did, state)
     expect(links?.map((l) => l.uri)).toEqual([plain])
     expect(links?.[0].labels).toEqual([])
+  })
+
+  it('adds authored self-labels after hydrated labels on the same link', () => {
+    const state = createState()
+    // Non-normalized so the label timestamp proves it comes from the record.
+    const authoredAt = '2026-02-03T04:05:06Z' as DatetimeString
+    addLink(
+      state,
+      labeled,
+      app.bsky.actor.link.$build({
+        url: 'https://example.com',
+        createdAt: authoredAt,
+        labels: com.atproto.label.defs.selfLabels.$build({
+          values: [{ val: 'porn' }, { val: 'gore' }],
+        }),
+      }),
+    )
+    addLink(
+      state,
+      plain,
+      app.bsky.actor.link.$build({ url: 'https://example.org', createdAt }),
+    )
+    addLabels(state.labels, labeled, 'spam')
+    addLabels(state.labels, did, 'actor-label')
+
+    const links = views.profileLinks(did, state)
+    for (const link of links ?? []) {
+      expect(
+        app.bsky.actor.defs.profileLinkView.$safeParse(link),
+      ).toMatchObject({ success: true })
+    }
+    const selfLabel = (val: string) => ({
+      src: did,
+      uri: labeled,
+      cid,
+      val,
+      cts: '2026-02-03T04:05:06.000Z',
+    })
+    expect(links?.[0].labels).toEqual([
+      makeLabel(labeled, 'spam'),
+      selfLabel('porn'),
+      selfLabel('gore'),
+    ])
+    expect(links?.[1].labels).toEqual([])
+  })
+
+  it('adds no authored labels for empty self-labels', () => {
+    const state = createState()
+    addLink(
+      state,
+      labeled,
+      app.bsky.actor.link.$build({
+        url: 'https://example.com',
+        createdAt,
+        labels: com.atproto.label.defs.selfLabels.$build({ values: [] }),
+      }),
+    )
+    expect(views.profileLinks(did, state)?.[0].labels).toEqual([])
+  })
+
+  it('omits unavailable links even when their records have self-labels', () => {
+    const state = createState()
+    addLink(
+      state,
+      labeled,
+      app.bsky.actor.link.$build({
+        url: 'https://example.com',
+        createdAt,
+        labels: com.atproto.label.defs.selfLabels.$build({
+          values: [{ val: 'porn' }],
+        }),
+      }),
+    )
+    state.profileLinks.set(labeled, null)
+    expect(views.profileLinks(did, state)).toBeUndefined()
   })
 })
