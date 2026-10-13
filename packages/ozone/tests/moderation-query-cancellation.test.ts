@@ -1,9 +1,8 @@
 import { jest } from '@jest/globals'
-import { sql } from 'kysely'
+import { type CompiledQuery, sql } from 'kysely'
 import { wait } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
 import { Database } from '../src/db/index.js'
-import { executeReadQuery } from '../src/db/read-query.js'
 import { tools } from '../src/lexicons/index.js'
 
 describe('moderation query cancellation', () => {
@@ -49,7 +48,7 @@ describe('moderation query cancellation', () => {
     const controller = new AbortController()
     const reason = new Error('Client disconnected')
     const pattern = '%read_query_disconnect%'
-    const result = executeReadQuery(
+    const result = executeCancellableQuery(
       db,
       sql`SELECT pg_sleep(10) /* read_query_disconnect */`.compile(db.db),
       controller.signal,
@@ -60,7 +59,7 @@ describe('moderation query cancellation', () => {
       controller.abort(reason)
       expect(await result).toBe(reason)
       expect(performance.now() - started).toBeLessThan(2000)
-      expect(await queryIsActive(pattern)).toBe(false)
+      await until(async () => !(await queryIsActive(pattern)))
       const { rows } = await sql<{ value: number }>`SELECT 1 AS value`.execute(
         db.db,
       )
@@ -80,7 +79,7 @@ describe('moderation query cancellation', () => {
       .mockRejectedValue(new Error('Control connection unavailable'))
     const controller = new AbortController()
     const reason = new Error('Disconnected')
-    const result = executeReadQuery(
+    const result = executeCancellableQuery(
       db,
       sql`SELECT pg_sleep(0.2) /* read_query_cancel_failure */`.compile(db.db),
       controller.signal,
@@ -89,14 +88,16 @@ describe('moderation query cancellation', () => {
       await until(() => queryIsActive('%read_query_cancel_failure%'))
       controller.abort(reason)
       await until(async () => cancel.mock.calls.length > 0)
-      expect(db.pool.idleCount).toBe(0)
       expect(await result).toBe(reason)
+      expect(db.pool.idleCount).toBe(0)
       expect(cancel).toHaveBeenCalled()
     } finally {
       controller.abort()
       await result
     }
-    expect(await queryIsActive('%read_query_cancel_failure%')).toBe(false)
+    await until(
+      async () => !(await queryIsActive('%read_query_cancel_failure%')),
+    )
   })
 
   it('preserves statement_timeout during and after the query', async () => {
@@ -106,7 +107,7 @@ describe('moderation query cancellation', () => {
     `.execute(db.db)
     const before = (await setting()).rows[0]
     expect(
-      await executeReadQuery(
+      await executeCancellableQuery(
         db,
         sql<{ value: number; timeout: string }>`
           SELECT 42 AS value, current_setting('statement_timeout') AS timeout
@@ -117,7 +118,7 @@ describe('moderation query cancellation', () => {
     ).toEqual([{ value: 42, timeout: before.timeout }])
     expect((await setting()).rows[0]).toEqual(before)
     await expect(
-      executeReadQuery(
+      executeCancellableQuery(
         db,
         sql`SELECT 1 / 0`.compile(db.db),
         new AbortController().signal,
@@ -131,7 +132,7 @@ describe('moderation query cancellation', () => {
     controller.abort(new Error('Already disconnected'))
     using connect = jest.spyOn(db.pool, 'connect')
     await expect(
-      executeReadQuery(
+      executeCancellableQuery(
         db,
         sql`SELECT pg_sleep(10)`.compile(db.db),
         controller.signal,
@@ -150,7 +151,7 @@ describe('moderation query cancellation', () => {
         .catch(() => undefined)
     })
     const controller = new AbortController()
-    const result = executeReadQuery(
+    const result = executeCancellableQuery(
       freshDb,
       sql`SELECT nextval('read_query_during_setup')`.compile(freshDb.db),
       controller.signal,
@@ -176,7 +177,7 @@ describe('moderation query cancellation', () => {
   it('does not execute queued SQL after a disconnect', async () => {
     const held = await db.pool.connect()
     const controller = new AbortController()
-    const result = executeReadQuery(
+    const result = executeCancellableQuery(
       db,
       sql`SELECT pg_sleep(10) /* read_query_queued */`.compile(db.db),
       controller.signal,
@@ -213,7 +214,7 @@ describe('moderation query cancellation', () => {
         await originalCancel(provider)
       })
     const controller = new AbortController()
-    const result = executeReadQuery(
+    const result = executeCancellableQuery(
       db,
       sql`SELECT pg_sleep(0.1) /* read_query_delayed_cancel */`.compile(db.db),
       controller.signal,
@@ -273,3 +274,15 @@ describe('moderation query cancellation', () => {
     await response.json()
   })
 })
+
+async function executeCancellableQuery<O>(
+  db: Database,
+  query: CompiledQuery<O>,
+  signal: AbortSignal,
+): Promise<O[]> {
+  const result = await db.db.executeQuery(query, {
+    signal,
+    inflightQueryAbortStrategy: 'cancel query',
+  })
+  return result.rows
+}

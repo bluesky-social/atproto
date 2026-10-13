@@ -13,7 +13,7 @@ Set `OZONE_LABEL_QUERY_WILDCARDS_ENABLED=true` and restart the API to restore wi
 
 ## Moderation query cancellation
 
-`queryEvents` and `queryStatuses` cancel their listing SQL when the HTTP client disconnects. Cancellation uses a separate PostgreSQL control connection so it can proceed when the API pool is busy.
+`queryEvents` and `queryStatuses` use Kysely's `cancel query` abort strategy to cancel their listing SQL when the HTTP client disconnects. Cancellation uses a separate PostgreSQL control connection so it can proceed when the API pool is busy. Kysely keeps the listing connection reserved until SQL and cancellation finish.
 
 | Environment variable                    | Default | Controls                                                                        |
 | --------------------------------------- | ------- | ------------------------------------------------------------------------------- |

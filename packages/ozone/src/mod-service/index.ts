@@ -19,7 +19,6 @@ import type { OzoneConfig } from '../config/index.js'
 import type { EventPusher } from '../daemon/index.js'
 import type { Database } from '../db/index.js'
 import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination.js'
-import { executeReadQuery } from '../db/read-query.js'
 import type { BlobPushEvent } from '../db/schema/blob_push_event.js'
 import { LabelChannel } from '../db/schema/label.js'
 import type { ModerationEvent } from '../db/schema/moderation_event.js'
@@ -383,9 +382,10 @@ export class ModerationService {
       tryIndex: true,
     })
 
-    const result = signal
-      ? await executeReadQuery(this.db, paginatedBuilder.compile(), signal)
-      : await paginatedBuilder.execute()
+    const result = await paginatedBuilder.execute({
+      signal,
+      inflightQueryAbortStrategy: 'cancel query',
+    })
 
     const infos = await this.views.getAccoutInfosByDid([
       ...result.map((row) => row.subjectDid),
@@ -1519,9 +1519,10 @@ export class ModerationService {
       tryIndex: true,
       nullsLast: true,
     })
-    const results = signal
-      ? await executeReadQuery(this.db, paginatedBuilder.compile(), signal)
-      : await paginatedBuilder.execute()
+    const results = await paginatedBuilder.execute({
+      signal,
+      inflightQueryAbortStrategy: 'cancel query',
+    })
 
     const infos = await this.views.getAccoutInfosByDid(
       results.map((r) => r.did),

@@ -1,7 +1,7 @@
 # Ozone moderation inbox
 
 - Reject wildcard `queryLabels` requests before accessing the DB unless `OZONE_LABEL_QUERY_WILDCARDS_ENABLED` is enabled; exact queries remain available.
-- Pass the HTTP abort signal to `executeReadQuery` for cancellable listing SQL. Await pool setup before arming cancellation. Keep its connection reserved until SQL and cancellation settle; cancellation must use a separate control connection.
+- Execute cancellable listing SQL with the HTTP signal and Kysely's `inflightQueryAbortStrategy: 'cancel query'`; a signal alone leaves PostgreSQL work running. Await pool setup before cancellation can be armed, and use a separate control connection.
 - Thread `OZONE_DB_CANCEL_*_TIMEOUT_MS` through configuration; apply them only to cancellation-control clients, with 1000 ms defaults.
 
 - Read previews share `inboxViewerDid`; writes always use the authenticated DID.
