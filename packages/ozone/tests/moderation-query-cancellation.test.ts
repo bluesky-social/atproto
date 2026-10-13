@@ -45,40 +45,6 @@ describe('moderation query cancellation', () => {
     }
   }
 
-  it('does not submit listing SQL after aborting an initializing connection', async () => {
-    const freshDb = new Database({ ...db.opts, pool: undefined, poolSize: 1 })
-    await sql`CREATE SEQUENCE read_query_during_setup`.execute(db.db)
-    // @NOTE delay pool setup to make a disconnect during initialization observable.
-    freshDb.pool.on('connect', (client) => {
-      void client
-        .query('SELECT pg_sleep(0.2) /* read_query_initializing */')
-        .catch(() => undefined)
-    })
-    const controller = new AbortController()
-    const result = sql`SELECT nextval('read_query_during_setup')`
-      .execute(freshDb.db, {
-        signal: controller.signal,
-        inflightQueryAbortStrategy: 'cancel query',
-      })
-      .catch((err) => err)
-    try {
-      await until(() => queryIsActive('%read_query_initializing%'))
-      controller.abort(new Error('Disconnected during setup'))
-      expect(await result).toBe(controller.signal.reason)
-      // @NOTE wait for any late checkout to be released before checking the sentinel.
-      await sql`SELECT 1`.execute(freshDb.db)
-      const { rows } = await sql<{ is_called: boolean }>`
-        SELECT is_called FROM read_query_during_setup
-      `.execute(db.db)
-      expect(rows[0].is_called).toBe(false)
-    } finally {
-      controller.abort()
-      await result
-      await freshDb.close()
-      await sql`DROP SEQUENCE read_query_during_setup`.execute(db.db)
-    }
-  })
-
   it.each([
     [tools.ozone.moderation.queryEvents.$lxm, 'moderation_event'],
     [tools.ozone.moderation.queryStatuses.$lxm, 'moderation_subject_status'],

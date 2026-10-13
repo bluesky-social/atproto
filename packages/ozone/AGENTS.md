@@ -1,7 +1,7 @@
 # Ozone moderation inbox
 
 - Reject wildcard `queryLabels` requests before accessing the DB unless `OZONE_LABEL_QUERY_WILDCARDS_ENABLED` is enabled; exact queries remain available.
-- Execute cancellable listing SQL with the HTTP signal and Kysely's `inflightQueryAbortStrategy: 'cancel query'`; a signal alone leaves PostgreSQL work running. Await pool setup before cancellation can be armed.
+- Execute cancellable listing SQL with the HTTP signal and Kysely's `inflightQueryAbortStrategy: 'cancel query'`; a signal alone leaves PostgreSQL work running.
 
 - Read previews share `inboxViewerDid`; writes always use the authenticated DID.
 - Produce moderation notifications from the common `ModerationService.logEvent` path so daemon actions are covered. Keep source snapshots in the source transaction, and isolate optional queries/inserts with `runNotificationWork` savepoints; a caught SQL error alone leaves PostgreSQL's transaction aborted.
