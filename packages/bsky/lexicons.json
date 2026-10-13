@@ -1,7 +1,7 @@
 {
   "version": 2,
   "resolvers": [
-    { "type": "directory", "path": "./lexicons-overrides" },
+    { "type": "directory", "path": "../../lexicons-overrides" },
     {
       "type": "directory",
       "path": "../../lexicons",
@@ -452,7 +452,7 @@
       "cid": "bafyreicbu47btc3xv4udarblekcvccvbvbgqlrqfojeucewksm4enbcfle"
     },
     "app.bsky.actor.defs": {
-      "uri": "file://./lexicons-overrides/app/bsky/actor/defs.json",
+      "uri": "file://../../lexicons-overrides/app/bsky/actor/defs.json",
       "cid": "bafyreifxbkh2t4lzrebnhsbcneu6ygzzku5vgvtwncxl7iw63qztx4zqse"
     },
     "app.bsky.actor.getPreferences": {
@@ -520,7 +520,7 @@
       "cid": "bafyreicmy2l7fqjzsbomf3swolyvx6zq5tln27uvyktcsgy2thkmmjlhou"
     },
     "app.bsky.authFullApp": {
-      "uri": "file://./lexicons-overrides/app/bsky/authFullApp.json",
+      "uri": "file://../../lexicons-overrides/app/bsky/authFullApp.json",
       "cid": "bafyreiewiftj3lkoz37wsmabvcmzy4f3f4imzeuswh3qhpjm5dssuvs3xq"
     },
     "app.bsky.authManageFeedDeclarations": {
@@ -624,7 +624,7 @@
       "cid": "bafyreibvucawor4ulbdorsclmbqdmknh27smp6xgswnxrfwthpeymebcxu"
     },
     "app.bsky.embed.external": {
-      "uri": "file://./lexicons-overrides/app/bsky/embed/external.json",
+      "uri": "file://../../lexicons-overrides/app/bsky/embed/external.json",
       "cid": "bafyreidp33zeeo7kwlj6qw5wyvbkdcs4fl4uj4dhgifpzgno3nfbl4amoq"
     },
     "app.bsky.embed.gallery": {
@@ -632,7 +632,7 @@
       "cid": "bafyreiepstd4a7mqporspzs5hdfy6azgqcp27z45haiiwjcyvxd2pnhkoi"
     },
     "app.bsky.embed.getEmbedExternalView": {
-      "uri": "file://./lexicons-overrides/app/bsky/embed/getEmbedExternalView.json",
+      "uri": "file://../../lexicons-overrides/app/bsky/embed/getEmbedExternalView.json",
       "cid": "bafyreifgysv4fwfmyl44dn5hq23sxvvjsxx3q2ngjy6ci4cauo77zgebhu"
     },
     "app.bsky.embed.images": {
@@ -776,11 +776,11 @@
       "cid": "bafyreigtkyath5qetuw7rumxnk6rvouro73nsiak3owwtq6w274x6arcoy"
     },
     "app.bsky.graph.getFollowers": {
-      "uri": "file://./lexicons-overrides/app/bsky/graph/getFollowers.json",
+      "uri": "file://../../lexicons-overrides/app/bsky/graph/getFollowers.json",
       "cid": "bafyreierv27tiobzlp6gvxcly22sc6pt4opbuh4q6l2f3h6drhykb5s7ba"
     },
     "app.bsky.graph.getFollows": {
-      "uri": "file://./lexicons-overrides/app/bsky/graph/getFollows.json",
+      "uri": "file://../../lexicons-overrides/app/bsky/graph/getFollows.json",
       "cid": "bafyreieajs5563pt6exwgkz2z3lz3l6tpxkvttb2vtbdhgsor7xedq5gtm"
     },
     "app.bsky.graph.getKnownFollowers": {
@@ -964,7 +964,7 @@
       "cid": "bafyreih4xza4elgwnr7oazzbuftplgvnbye2eleiaui7zfkrtlgmhiidfm"
     },
     "app.bsky.unspecced.getAtmosphereExploreTab": {
-      "uri": "file://./lexicons-overrides/app/bsky/unspecced/getAtmosphereExploreTab.json",
+      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getAtmosphereExploreTab.json",
       "cid": "bafyreig4i7wktr5h6ewf74zbszxjxbpzbdzccbpd2e4ntgccm5hthxbr2q"
     },
     "app.bsky.unspecced.getConfig": {
@@ -972,11 +972,11 @@
       "cid": "bafyreicy6hedmitk4y73bgtt3ogfrivhqsjg67jaksgynkonte5gjuvzjq"
     },
     "app.bsky.unspecced.getOnboardingSuggestedStarterPacks": {
-      "uri": "file://./lexicons-overrides/app/bsky/unspecced/getOnboardingSuggestedStarterPacks.json",
+      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getOnboardingSuggestedStarterPacks.json",
       "cid": "bafyreigyxfg7cktryihis2ehudvfug64ch2rqysg4wx4qh5xlr6dfwkgkm"
     },
     "app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton": {
-      "uri": "file://./lexicons-overrides/app/bsky/unspecced/getOnboardingSuggestedStarterPacksSkeleton.json",
+      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getOnboardingSuggestedStarterPacksSkeleton.json",
       "cid": "bafyreigw33v7niftbttd3v26obyzue2ir7faounjhcbhmpq4wjqtl5c3ve"
     },
     "app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton": {
@@ -996,11 +996,11 @@
       "cid": "bafyreiesr6gvuhu4476lxofrv4rrw5ptsisj4lqgxmxhss5o36km2h5224"
     },
     "app.bsky.unspecced.getSuggestedFeeds": {
-      "uri": "file://./lexicons-overrides/app/bsky/unspecced/getSuggestedFeeds.json",
+      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getSuggestedFeeds.json",
       "cid": "bafyreicy4z42rlebuctwb74bhhjivpzm3hqftvougcvdvzjj5yzfegp7r4"
     },
     "app.bsky.unspecced.getSuggestedFeedsSkeleton": {
-      "uri": "file://./lexicons-overrides/app/bsky/unspecced/getSuggestedFeedsSkeleton.json",
+      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getSuggestedFeedsSkeleton.json",
       "cid": "bafyreihej7se2qwff4ea5er7le3l7hh5v4murkko4mtyy3cm2tmyup7gcy"
     },
     "app.bsky.unspecced.getSuggestedOnboardingUsers": {
@@ -1008,11 +1008,11 @@
       "cid": "bafyreieot3hdk6h2enuivlp6m2jivd2y4npwbr4h7nsb3kutvnmtpkubm4"
     },
     "app.bsky.unspecced.getSuggestedStarterPacks": {
-      "uri": "file://./lexicons-overrides/app/bsky/unspecced/getSuggestedStarterPacks.json",
+      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getSuggestedStarterPacks.json",
       "cid": "bafyreifai36bnnsnyt4txgljzc6n6dgp5haz3hqbjsvqg4e5cqq3bmv7fa"
     },
     "app.bsky.unspecced.getSuggestedStarterPacksSkeleton": {
-      "uri": "file://./lexicons-overrides/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.json",
+      "uri": "file://../../lexicons-overrides/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.json",
       "cid": "bafyreicctxc3mt3ndxa5s6aat7awhcafdjz2es52jkmdor5gly2wa4yk74"
     },
     "app.bsky.unspecced.getSuggestedUsers": {
@@ -1140,7 +1140,7 @@
       "cid": "bafyreihbi5vbwwstjrawe4j5gqmwyhynkcvspvxoo6srqw55s4h32y3zeq"
     },
     "chat.bsky.authFullChatClient": {
-      "uri": "file://./lexicons-overrides/chat/bsky/authFullChatClient.json",
+      "uri": "file://../../lexicons-overrides/chat/bsky/authFullChatClient.json",
       "cid": "bafyreibnfw6z4hqugl6aakswxppudyjm7agxk26tpwyufvlbgskwkcprsi"
     },
     "chat.bsky.convo.acceptConvo": {
@@ -1188,7 +1188,7 @@
       "cid": "bafyreicx5fzsq6yk7b3jyrma2onftg64a7r5oyr4icihjo5l2rocfllddq"
     },
     "chat.bsky.convo.leaveConvo": {
-      "uri": "file://./lexicons-overrides/chat/bsky/convo/leaveConvo.json",
+      "uri": "file://../../lexicons-overrides/chat/bsky/convo/leaveConvo.json",
       "cid": "bafyreihvv4vhpnyct2ge4tzwk3n6bjmjfnhv6e3r4hocmobbubej3qgb3a"
     },
     "chat.bsky.convo.listConvoRequests": {
@@ -1732,15 +1732,15 @@
       "cid": "bafyreibspeagqwk57gin3zfxprgceqziootq5t7wogauo37avbrapr5ziy"
     },
     "com.germnetwork.declaration": {
-      "uri": "file://./lexicons-overrides/com/germnetwork/declaration.json",
+      "uri": "file://../../lexicons-overrides/com/germnetwork/declaration.json",
       "cid": "bafyreiekwjmxshje655olra4mata7npso7bbgytc4fop77ycjtrbewwi3y"
     },
     "internal.bsky.actor.getProfiles": {
-      "uri": "file://./lexicons-overrides/internal/bsky/actor/getProfiles.json",
+      "uri": "file://../../lexicons-overrides/internal/bsky/actor/getProfiles.json",
       "cid": "bafyreihdyn4pmc3brvufe7vp4c6psldxeumydfmeqvoswfydtw5fjcy6rq"
     },
     "place.stream.badge.defs": {
-      "uri": "file://./lexicons-overrides/place/stream/badge/defs.json",
+      "uri": "file://../../lexicons-overrides/place/stream/badge/defs.json",
       "cid": "bafyreidhldtcylff7awx67jd76miapjz3q4gumtq24opaaw345vznvftwm"
     },
     "place.stream.chat.defs": {
