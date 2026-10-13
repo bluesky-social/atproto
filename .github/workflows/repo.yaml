@@ -55,30 +55,22 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
 
-      # lex-cli code generation can be a bottleneck. The "prebuild" script in
-      # the "api" and "ozone" packages only re-runs lex-cli when needed: if the
-      # generated output is missing, or if any lexicon JSON has a newer mtime
-      # than the generated files. We cache the generated output keyed on the
-      # content of the lexicon JSONs (plus the package.json files that define
-      # the codegen command), so unchanged lexicons restore from cache.
-      #
-      # However, on a cache hit we have to fix mtimes by hand.
-      # `actions/checkout` writes every checked-out file (including
-      # lexicons/**/*.json) with mtime = checkout time, while `actions/cache`
-      # restores files with their original archived mtime (older). Without
-      # intervention, every lexicon JSON looks "newer" than the restored
-      # generated files and the prebuild script would re-run lex-cli even though
-      # nothing has changed. Touching the restored files brings their mtime to
-      # "now", so the prebuild's `find -newer` check correctly reports no newer
-      # lexicons.
+      # Each package resolves its own lexicons.json into ./lexicons during
+      # `prebuild` (via `lex install --ci`). Canonical com.atproto.*/tools.ozone.*
+      # schemas are symlinked from the repo root (instant) and at:// network
+      # copies are committed, but app.bsky.*/chat.bsky.* are fetched from the
+      # bluesky-social/bsky GitHub repo — the only part that costs a network
+      # round-trip on a clean build. Cache those fetched trees keyed on the
+      # lexicon manifests (each pins its documents' CIDs) plus the canonical
+      # source, so an unchanged set restores from cache and `lex install --ci`
+      # verifies it against the locked CIDs without re-fetching.
       - uses: actions/cache@v6
-        id: lex-cli-cache
+        id: lexicons-cache
         with:
           path: |
-            packages/api/src/client
-          key: lex-cli-${{ hashFiles('lexicons/**/*.json', 'packages/api/package.json', 'packages/ozone/package.json') }}
-      - if: steps.lex-cli-cache.outputs.cache-hit == 'true'
-        run: find packages/api/src/client -exec touch {} +
+            packages/*/lexicons/app/bsky
+            packages/*/lexicons/chat/bsky
+          key: lexicons-${{ hashFiles('packages/*/lexicons.json', 'packages/*/*/lexicons.json', 'packages/*/lexicons-overrides/**', 'lexicons/**/*.json') }}
 
       - run: pnpm build
 
@@ -92,7 +84,6 @@ jobs:
             packages/*/src/proto
             packages/*/src/lexicons
             packages/lex/*/src/lexicons
-            packages/lex/*/tests/lexicons
             packages/oauth/*/src/lexicons
             packages/oauth/*/src/locales/*/messages.ts
             packages/api/src/client
