@@ -1273,6 +1273,9 @@ importers:
       '@atproto/lex-builder':
         specifier: workspace:^
         version: link:../lex-builder
+      '@atproto/lex-installer':
+        specifier: workspace:^
+        version: link:../lex-installer
       '@atproto/lex-server':
         specifier: workspace:^
         version: link:../lex-server

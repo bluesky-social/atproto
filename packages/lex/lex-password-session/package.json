@@ -36,11 +36,17 @@
   },
   "devDependencies": {
     "@atproto/lex-builder": "workspace:^",
+    "@atproto/lex-installer": "workspace:^",
     "@atproto/lex-server": "workspace:^",
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "codegen:lex": "lex-builder build --lexicons ../../../lexicons --out ./src/lexicons --clear --lib @atproto/lex-schema --index-file --include com.atproto.server.getSession --include com.atproto.server.createAccount --include com.atproto.server.createSession --include com.atproto.server.deleteSession --include com.atproto.server.refreshSession",
+    "lex:build": "lex-builder build --out ./src/lexicons --clear --lib @atproto/lex-schema --index-file",
+    "lex:install": "lex-installer install",
+    "postlex:install": "pnpm run lex:build",
+    "lex:update": "lex-installer update",
+    "postlex:update": "pnpm run lex:build",
+    "codegen:lex": "pnpm run lex:install --ci",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
     "test": "vitest run"
