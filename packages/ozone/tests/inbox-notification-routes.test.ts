@@ -1,6 +1,15 @@
+import { type Kysely, sql } from 'kysely'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { type DidString, toDatetimeString } from '@atproto/lex'
+import {
+  down,
+  up,
+} from '../src/db/migrations/20261012T000000000Z-inbox-notification-categories.js'
 import { createInboxNotification } from '../src/inbox/notifications.js'
+import {
+  getNotificationPreferences,
+  putNotificationPreferences,
+} from '../src/inbox/preferences.js'
 import { tools } from '../src/lexicons/index.js'
 import { inboxHeaders, resetInbox } from './_inbox.js'
 
@@ -30,6 +39,59 @@ describe('viewer notification routes', () => {
       headers: inboxHeaders(network, sc, did),
     })
   }
+
+  it('migrates existing global values without backfilling and can roll back the schema', async () => {
+    await network.ozone.ctx.db.transaction(async (tx) => {
+      // @NOTE A temporary table shadows the live table for this transaction.
+      await sql`create temporary table inbox_notification_preference (
+        did varchar primary key, push boolean not null default true
+      ) on commit drop`.execute(tx.db)
+      await tx.db
+        .insertInto('inbox_notification_preference')
+        .values([
+          { did: sc.dids.bob, push: false },
+          { did: sc.dids.carol, push: true },
+          { did: sc.dids.dan, push: false },
+        ])
+        .execute()
+      const migrationDb = tx.db as unknown as Kysely<unknown>
+      await up(migrationDb)
+      expect(await getNotificationPreferences(tx, sc.dids.bob)).toEqual({
+        reports: false,
+        account: false,
+        labels: false,
+      })
+      expect(await getNotificationPreferences(tx, sc.dids.carol)).toEqual({
+        reports: true,
+        account: true,
+        labels: true,
+      })
+      const row = await tx.db
+        .selectFrom('inbox_notification_preference')
+        .select(['reports', 'account', 'labels'])
+        .where('did', '=', sc.dids.bob)
+        .executeTakeFirstOrThrow()
+      expect(row).toEqual({ reports: null, account: null, labels: null })
+      await putNotificationPreferences(tx, sc.dids.carol, { labels: false })
+      await putNotificationPreferences(tx, sc.dids.dan, {
+        reports: true,
+        account: true,
+        labels: true,
+      })
+      await down(migrationDb)
+      const legacy = await tx.db
+        .selectFrom('inbox_notification_preference')
+        .select(['did', 'push'])
+        .execute()
+      expect(legacy).toEqual(
+        expect.arrayContaining([
+          { did: sc.dids.bob, push: false },
+          { did: sc.dids.carol, push: false },
+          { did: sc.dids.dan, push: true },
+        ]),
+      )
+    })
+  })
 
   it('lists only recipient notifications with a stable cursor and idempotent source key', async () => {
     const db = network.ozone.ctx.db
@@ -124,24 +186,135 @@ describe('viewer notification routes', () => {
       sc.dids.bob,
       'tools.ozone.inbox.getNotificationPreferences',
     )
-    expect(initial.data.preferences.push).toBe(true)
+    expect(initial.data.preferences).toEqual({
+      reports: true,
+      account: true,
+      labels: true,
+    })
     const changed = await procedure(
       sc.dids.bob,
       'tools.ozone.inbox.putNotificationPreferences',
-      { push: false },
+      { reports: false },
     )
-    expect(changed.data.preferences.push).toBe(false)
+    expect(changed.data.preferences).toEqual({
+      reports: false,
+      account: true,
+      labels: true,
+    })
     const persisted = await query(
       sc.dids.bob,
       'tools.ozone.inbox.getNotificationPreferences',
     )
-    expect(persisted.data.preferences.push).toBe(false)
+    expect(persisted.data.preferences).toEqual(changed.data.preferences)
     const carolPrefs = await query(
       sc.dids.carol,
       'tools.ozone.inbox.getNotificationPreferences',
     )
-    expect(carolPrefs.data.preferences.push).toBe(true)
+    expect(carolPrefs.data.preferences).toEqual(initial.data.preferences)
   })
+
+  it('retains independent toggles during concurrent updates and can re-enable them', async () => {
+    await Promise.all([
+      procedure(
+        sc.dids.bob,
+        tools.ozone.inbox.putNotificationPreferences.$lxm,
+        {
+          account: false,
+        },
+      ),
+      procedure(
+        sc.dids.bob,
+        tools.ozone.inbox.putNotificationPreferences.$lxm,
+        {
+          labels: false,
+        },
+      ),
+    ])
+    const disabled = await query(
+      sc.dids.bob,
+      tools.ozone.inbox.getNotificationPreferences.$lxm,
+    )
+    expect(disabled.data.preferences).toEqual({
+      reports: false,
+      account: false,
+      labels: false,
+    })
+    const enabled = await procedure(
+      sc.dids.bob,
+      tools.ozone.inbox.putNotificationPreferences.$lxm,
+      { reports: true, labels: true },
+    )
+    expect(enabled.data.preferences).toEqual({
+      reports: true,
+      account: false,
+      labels: true,
+    })
+  })
+
+  it('preserves global opt-outs for unset categories and permits independent overrides', async () => {
+    // @NOTE This legacy row cannot be created through the category-only endpoint.
+    await network.ozone.ctx.db.db
+      .insertInto('inbox_notification_preference')
+      .values({ did: sc.dids.dan, push: false })
+      .execute()
+    const initial = await query(
+      sc.dids.dan,
+      tools.ozone.inbox.getNotificationPreferences.$lxm,
+    )
+    expect(initial.data.preferences).toEqual({
+      reports: false,
+      account: false,
+      labels: false,
+    })
+    const changed = await procedure(
+      sc.dids.dan,
+      tools.ozone.inbox.putNotificationPreferences.$lxm,
+      { labels: true },
+    )
+    expect(changed.data.preferences).toEqual({
+      reports: false,
+      account: false,
+      labels: true,
+    })
+    expect(
+      (
+        await query(
+          sc.dids.dan,
+          tools.ozone.inbox.getNotificationPreferences.$lxm,
+        )
+      ).data.preferences,
+    ).toEqual(changed.data.preferences)
+  })
+
+  it('rejects missing categories and invalid boolean values without changing preferences', async () => {
+    const before = await query(
+      sc.dids.bob,
+      tools.ozone.inbox.getNotificationPreferences.$lxm,
+    )
+    for (const input of [
+      {},
+      { push: false },
+      { labels: 'false' },
+      { account: null },
+    ]) {
+      await expect(
+        procedure(
+          sc.dids.bob,
+          tools.ozone.inbox.putNotificationPreferences.$lxm,
+          input,
+        ),
+      ).rejects.toMatchObject({ error: 'InvalidRequest' })
+    }
+    expect(
+      (
+        await query(
+          sc.dids.bob,
+          tools.ozone.inbox.getNotificationPreferences.$lxm,
+        )
+      ).data.preferences,
+    ).toEqual(before.data.preferences)
+  })
+
   it('filters by section and reason, and keeps section read state independent', async () => {
     const db = network.ozone.ctx.db
     await createInboxNotification(db, {
@@ -238,7 +411,7 @@ describe('viewer notification routes', () => {
     await procedure(
       sc.dids.carol,
       'tools.ozone.inbox.putNotificationPreferences',
-      { push: false },
+      { reports: false, account: true, labels: false },
     )
     const methods = [
       'tools.ozone.inbox.listNotifications',
@@ -280,7 +453,7 @@ describe('viewer notification routes', () => {
     await procedure(
       sc.dids.alice,
       'tools.ozone.inbox.putNotificationPreferences',
-      { push: true, did: sc.dids.carol },
+      { reports: true, account: false, labels: true, did: sc.dids.carol },
     )
     expect(
       (await query(sc.dids.carol, 'tools.ozone.inbox.listNotifications')).data,
@@ -291,7 +464,7 @@ describe('viewer notification routes', () => {
           sc.dids.carol,
           'tools.ozone.inbox.getNotificationPreferences',
         )
-      ).data.preferences.push,
-    ).toBe(false)
+      ).data.preferences,
+    ).toEqual({ reports: false, account: true, labels: false })
   })
 })

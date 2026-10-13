@@ -309,10 +309,20 @@
     },
     "notificationPreferences": {
       "type": "object",
-      "required": ["push"],
+      "description": "Push notification preferences by moderation notification category. These preferences do not hide in-app inbox activity. Each category defaults to enabled.",
+      "required": ["reports", "account", "labels"],
       "properties": {
-        "push": {
-          "type": "boolean"
+        "reports": {
+          "type": "boolean",
+          "description": "Notify about outcomes of reports filed by the account (reportResolved and reportReopened)."
+        },
+        "account": {
+          "type": "boolean",
+          "description": "Notify about moderation actions against the account or its content, action reversals, appeal outcomes, and standing changes. Label application and removal are controlled by labels."
+        },
+        "labels": {
+          "type": "boolean",
+          "description": "Notify when labels are applied to or removed from the account or its content (labelApplied and labelRemoved actions)."
         }
       }
     },
