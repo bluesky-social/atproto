@@ -66,12 +66,31 @@ export function SignInForm({
     useState<null | SecondAuthenticationFactorRequiredError>(null)
 
   const formRef = useRef<HTMLFormElement>(null)
+  const secondFactorCredentials = useRef<Pick<
+    Values,
+    'username' | 'password'
+  > | null>(null)
   const [otp, setOtp] = useState('')
 
   const clearSecondFactor = useCallback(() => {
+    secondFactorCredentials.current = null
     setOtp('')
     setSecondFactorError(null)
   }, [])
+
+  const clearSecondFactorIfCredentialsChanged = useCallback(() => {
+    const form = formRef.current
+    const credentials = secondFactorCredentials.current
+    if (!form || !credentials) return
+
+    const values = new FormData(form)
+    if (
+      values.get('username') !== credentials.username ||
+      values.get('password') !== credentials.password
+    ) {
+      clearSecondFactor()
+    }
+  }, [clearSecondFactor])
 
   return (
     <FormShell<Values>
@@ -103,6 +122,10 @@ export function SignInForm({
           await onSignIn(data, signal)
         } catch (err) {
           if (err instanceof SecondAuthenticationFactorRequiredError) {
+            secondFactorCredentials.current = {
+              username: data.username,
+              password: data.password,
+            }
             setSecondFactorError(err)
 
             // Prevent rethrowing (avoiding to display an error message) unless
@@ -150,8 +173,9 @@ export function SignInForm({
         // @NOTE readOnly, not disabled: a disabled control is omitted from the
         // form values entirely, which would submit without a username.
         autoFocus={!usernameReadonly}
+        onChange={clearSecondFactorIfCredentialsChanged}
         onBlur={(event) => {
-          clearSecondFactor()
+          clearSecondFactorIfCredentialsChanged()
           if (usernameReadonly) return
           let value = event.target.value.trim().toLowerCase()
           if (value.startsWith('@')) value = value.slice(1)
@@ -163,6 +187,7 @@ export function SignInForm({
             domains.length > 0
           ) {
             event.target.value = `${value}${domains[0]}`
+            clearSecondFactorIfCredentialsChanged()
           }
         }}
       />
@@ -174,7 +199,8 @@ export function SignInForm({
         enterKeyHint={secondFactorError ? 'next' : 'done'}
         autoFocus={usernameReadonly}
         required
-        onBlur={() => clearSecondFactor()}
+        onChange={clearSecondFactorIfCredentialsChanged}
+        onBlur={clearSecondFactorIfCredentialsChanged}
         labelAction={
           onForgotPassword && (
             <Button
