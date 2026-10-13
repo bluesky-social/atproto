@@ -37,7 +37,7 @@ import {
   LexResolverRecordNotFoundError,
 } from './lex-resolver-error.js'
 import { main as lexiconSchemaRecord } from './lexicons/com/atproto/lexicon/schema.defs.js'
-import { com } from './lexicons/index.js'
+import { main as getRecord } from './lexicons/com/atproto/sync/getRecord.defs.js'
 
 /**
  * Result returned when successfully resolving a lexicon document.
@@ -566,19 +566,15 @@ async function fetchLexiconDocument(
 
   // @NOTE We are using xrpcSafe instead of client.get because we are using
   // the **sync** version of getRecord (in order to obtain its raw bytes).
-  const res = await xrpcSafe(
-    { service, fetch: options?.fetch },
-    com.atproto.sync.getRecord,
-    {
-      signal: options?.signal,
-      headers: options?.noCache ? { 'Cache-Control': 'no-cache' } : undefined,
-      params: {
-        did,
-        collection: lexiconSchemaRecord.$type,
-        rkey,
-      },
+  const res = await xrpcSafe({ service, fetch: options?.fetch }, getRecord, {
+    signal: options?.signal,
+    headers: options?.noCache ? { 'Cache-Control': 'no-cache' } : undefined,
+    params: {
+      did,
+      collection: lexiconSchemaRecord.$type,
+      rkey,
     },
-  )
+  })
 
   if (!res.success) {
     // @NOTE Allow consumer to handle the case where the record is not found
