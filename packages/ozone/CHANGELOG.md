@@ -1,5 +1,17 @@
 # @atproto/ozone
 
+## 0.8.0
+
+### Minor Changes
+
+- [#5641](https://github.com/bluesky-social/atproto/pull/5641) [`7184ed7`](https://github.com/bluesky-social/atproto/commit/7184ed74423e1d976ceb9e57310d2983c90c2f18) Thanks [@foysalit](https://github.com/foysalit)! - Replace the moderation inbox global push preference with independent reports, account, and labels preferences. Support atomic partial updates and preserve existing opt-outs through nullable category columns that inherit the stored global value. Clients must switch to the category fields.
+
+### Patch Changes
+
+- [#5644](https://github.com/bluesky-social/atproto/pull/5644) [`dff8990`](https://github.com/bluesky-social/atproto/commit/dff8990f2fd409a0e78309f64e18e7ad36befcaf) Thanks [@foysalit](https://github.com/foysalit)! - Keep moderation inbox report pages, actioned subject lists and notification visibility checks bounded to the viewer's post-cutoff rows at scale
+
+- [#5597](https://github.com/bluesky-social/atproto/pull/5597) [`8c05fa0`](https://github.com/bluesky-social/atproto/commit/8c05fa00d32e912bc75f4481274ca74ff4c8e6b0) Thanks [@foysalit](https://github.com/foysalit)! - Associate email events with reports targeted by ID without changing report status. Other email report targeting modes remain no-ops.
+
 ## 0.7.0
 
 ### Minor Changes

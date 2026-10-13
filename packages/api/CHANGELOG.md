@@ -1,5 +1,17 @@
 # @atproto/api
 
+## 0.26.0
+
+### Minor Changes
+
+- [#5641](https://github.com/bluesky-social/atproto/pull/5641) [`7184ed7`](https://github.com/bluesky-social/atproto/commit/7184ed74423e1d976ceb9e57310d2983c90c2f18) Thanks [@foysalit](https://github.com/foysalit)! - Replace the moderation inbox global push preference with independent reports, account, and labels preferences. Support atomic partial updates and preserve existing opt-outs through nullable category columns that inherit the stored global value. Clients must switch to the category fields.
+
+### Patch Changes
+
+- [#5647](https://github.com/bluesky-social/atproto/pull/5647) [`f882504`](https://github.com/bluesky-social/atproto/commit/f88250427e91402d6142bf908074ac6e368c455d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Support self-labels on profile link records and include them in profile link views.
+
+- [#5647](https://github.com/bluesky-social/atproto/pull/5647) [`f882504`](https://github.com/bluesky-social/atproto/commit/f88250427e91402d6142bf908074ac6e368c455d) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Apply takedown labels to individual profile links and expose labels on profile link views.
+
 ## 0.25.0
 
 ### Minor Changes
