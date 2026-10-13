@@ -431,20 +431,15 @@ export class Hydrator {
       const profileLinksPromises = detailed
         ? (async () => {
             const state = await profileStatePromise
+            const linkUris = profileLinkUris(dids, state.actors)
             return Promise.all([
               this.actor
-                .getProfileLinks(
-                  profileLinkUris(dids, state.actors),
-                  ctx.includeTakedowns,
-                )
+                .getProfileLinks(linkUris, ctx.includeTakedowns)
                 .catch((err): ProfileLinks => {
                   hydrationLogger.error({ err }, 'Failed to get profile links')
                   return new HydrationMap()
                 }),
-              this.label.getLabelsForSubjects(
-                profileLinkUris(dids, state.actors),
-                ctx.labelers,
-              ),
+              this.label.getLabelsForSubjects(linkUris, ctx.labelers),
             ])
           })()
         : undefined
