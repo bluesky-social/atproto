@@ -86,6 +86,36 @@ class EventReporter {
     advice: { explicitBucketBoundaries: [0, 1, 2, 3, 4, 5, 6, 7, 8] },
   })
 
+  #groupedNotificationsItemsFetched = meter.createHistogram(
+    'notifications.grouped.items_fetched',
+    {
+      description:
+        'Raw notifications fetched across all dataplane reads per grouped notifications response',
+      unit: '{notification}',
+      valueType: ValueType.INT,
+      advice: {
+        explicitBucketBoundaries: [
+          50, 100, 150, 200, 300, 400, 500, 1000, 1500, 2000, 3000,
+        ],
+      },
+    },
+  )
+
+  #groupedNotificationsItemsReturned = meter.createHistogram(
+    'notifications.grouped.items_returned',
+    {
+      description:
+        'Raw notifications represented by the final groups per grouped notifications response',
+      unit: '{notification}',
+      valueType: ValueType.INT,
+      advice: {
+        explicitBucketBoundaries: [
+          50, 100, 150, 200, 300, 400, 500, 1000, 1500, 2000, 3000,
+        ],
+      },
+    },
+  )
+
   /**
    * Fans a single event out to both the pino logger (stdout/stderr) and the
    * OTEL Logs SDK (structured record).
@@ -150,6 +180,23 @@ class EventReporter {
       this.#externalHydrationBatches.record(batches, { root, outcome })
     } catch (err) {
       diag.error('Failed to record external_hydration_traversal:', err)
+    }
+  }
+
+  /** Reports fetched and returned raw-item counts once per completed page. */
+  groupedNotifications({
+    itemsFetched,
+    itemsReturned,
+  }: {
+    itemsFetched: number
+    itemsReturned: number
+  }) {
+    this.#log('grouped_notifications', { itemsFetched, itemsReturned })
+    try {
+      this.#groupedNotificationsItemsFetched.record(itemsFetched)
+      this.#groupedNotificationsItemsReturned.record(itemsReturned)
+    } catch (err) {
+      diag.error('Failed to record grouped_notifications:', err)
     }
   }
 }

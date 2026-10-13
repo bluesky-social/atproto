@@ -113,6 +113,10 @@ export interface ServerConfigValues {
   // notifications
   notificationsDelayMs?: number
   notificationsV2Algorithm?: NotificationsV2Algorithm
+  notificationsV2MinRawLimit: number
+  notificationsV2MaxRawItems: number
+  notificationsV2MaxReads: number
+  notificationsV2MaxGroupItemsWithRelatedViews: number
   // client config
   clientCheckEmailConfirmed?: boolean
   topicsEnabled?: boolean
@@ -312,6 +316,44 @@ export class ServerConfig {
       process.env.BSKY_NOTIFICATIONS_V2_ALGORITHM === 'algoLookback'
         ? 'algoLookback'
         : 'algoGravity'
+    const notificationsV2MinRawLimit = process.env
+      .BSKY_NOTIFICATIONS_V2_MIN_RAW_LIMIT
+      ? parseInt(process.env.BSKY_NOTIFICATIONS_V2_MIN_RAW_LIMIT, 10)
+      : 300
+    assert(
+      Number.isInteger(notificationsV2MinRawLimit),
+      'invalid BSKY_NOTIFICATIONS_V2_MIN_RAW_LIMIT',
+    )
+    const notificationsV2MaxRawItems = process.env
+      .BSKY_NOTIFICATIONS_V2_MAX_RAW_ITEMS
+      ? parseInt(process.env.BSKY_NOTIFICATIONS_V2_MAX_RAW_ITEMS, 10)
+      : 3000
+    assert(
+      Number.isInteger(notificationsV2MaxRawItems),
+      'invalid BSKY_NOTIFICATIONS_V2_MAX_RAW_ITEMS',
+    )
+    assert(
+      notificationsV2MinRawLimit <= notificationsV2MaxRawItems,
+      'notificationsV2MinRawLimit must not exceed notificationsV2MaxRawItems',
+    )
+    const notificationsV2MaxReads = process.env.BSKY_NOTIFICATIONS_V2_MAX_READS
+      ? parseInt(process.env.BSKY_NOTIFICATIONS_V2_MAX_READS, 10)
+      : 3
+    assert(
+      Number.isInteger(notificationsV2MaxReads),
+      'invalid BSKY_NOTIFICATIONS_V2_MAX_READS',
+    )
+    const notificationsV2MaxGroupItemsWithRelatedViews = process.env
+      .BSKY_NOTIFICATIONS_V2_MAX_GROUP_ITEMS_WITH_RELATED_VIEWS
+      ? parseInt(
+          process.env.BSKY_NOTIFICATIONS_V2_MAX_GROUP_ITEMS_WITH_RELATED_VIEWS,
+          10,
+        )
+      : 10
+    assert(
+      Number.isInteger(notificationsV2MaxGroupItemsWithRelatedViews),
+      'invalid BSKY_NOTIFICATIONS_V2_MAX_GROUP_ITEMS_WITH_RELATED_VIEWS',
+    )
 
     const disableSsrfProtection = process.env.BSKY_DISABLE_SSRF_PROTECTION
       ? process.env.BSKY_DISABLE_SSRF_PROTECTION === 'true'
@@ -467,6 +509,10 @@ export class ServerConfig {
       visibilityTagRankPrefix,
       notificationsDelayMs,
       notificationsV2Algorithm,
+      notificationsV2MinRawLimit,
+      notificationsV2MaxRawItems,
+      notificationsV2MaxReads,
+      notificationsV2MaxGroupItemsWithRelatedViews,
       disableSsrfProtection,
       proxyAllowHTTP2,
       proxyConnectTimeout,
@@ -770,6 +816,22 @@ export class ServerConfig {
 
   get notificationsV2Algorithm(): NotificationsV2Algorithm {
     return this.cfg.notificationsV2Algorithm ?? 'algoGravity'
+  }
+
+  get notificationsV2MinRawLimit(): number {
+    return this.cfg.notificationsV2MinRawLimit
+  }
+
+  get notificationsV2MaxRawItems(): number {
+    return this.cfg.notificationsV2MaxRawItems
+  }
+
+  get notificationsV2MaxReads(): number {
+    return this.cfg.notificationsV2MaxReads
+  }
+
+  get notificationsV2MaxGroupItemsWithRelatedViews(): number {
+    return this.cfg.notificationsV2MaxGroupItemsWithRelatedViews
   }
 
   get disableSsrfProtection(): boolean {
