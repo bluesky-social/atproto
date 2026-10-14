@@ -1,5 +1,7 @@
 # AppView hydration
 
+- BFF auth uses `BSKY_BFF_JWT_SECRET` to verify `bff+jwt` Bearer tokens with HS256, this service's DID as `aud`, a required expiry, and a valid DID `sub`. It does not use service-auth `lxm` checks or identity resolution.
+
 - Endpoint-specific viewer block checks must honor `HydrateCtx.skipViewerBlocks` for the trusted moderation service, while preserving viewer block metadata and mute filtering.
 - In `hydration/external.ts`, keep shared types above `ExternalHydrator`; place helpers and their specific types below the class.
 - `ExternalHydrator` generic record lookups decode record bodies without collection-specific validation. Validate against the relevant Lexicon before using typed fields; do not apply parse-mode defaults to stored records.

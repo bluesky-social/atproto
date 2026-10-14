@@ -260,6 +260,7 @@ export class BskyAppView {
       modServiceDid: config.modServiceDid,
       adminPasses: config.adminPasswords,
       entrywayJwtPublicKey,
+      bffJwtSecret: config.bffJwtSecret,
     })
 
     const blobDispatcher = createBlobDispatcher(config)

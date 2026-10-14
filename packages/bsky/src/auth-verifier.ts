@@ -79,6 +79,7 @@ export type AuthVerifierOpts = {
   modServiceDid: DidString
   adminPasses: string[]
   entrywayJwtPublicKey?: KeyObject
+  bffJwtSecret?: string
 }
 
 export class AuthVerifier {
@@ -87,6 +88,7 @@ export class AuthVerifier {
   public modServiceDid: DidString
   private adminPasses: Set<string>
   private entrywayJwtPublicKey?: KeyObject
+  private bffJwtSecret?: Uint8Array
 
   constructor(
     public dataplane: DataPlaneClient,
@@ -100,6 +102,9 @@ export class AuthVerifier {
     this.modServiceDid = opts.modServiceDid
     this.adminPasses = new Set(opts.adminPasses)
     this.entrywayJwtPublicKey = opts.entrywayJwtPublicKey
+    this.bffJwtSecret = opts.bffJwtSecret
+      ? Buffer.from(opts.bffJwtSecret, 'utf8')
+      : undefined
   }
 
   // verifiers (arrow fns to preserve scope)
@@ -123,6 +128,9 @@ export class AuthVerifier {
         // @NOTE temporarily accept entryway session tokens to shed load from PDS instances
         const token = bearerTokenFromReq(ctx.req)
         const header = token ? jose.decodeProtectedHeader(token) : undefined
+        if (header?.typ === 'bff+jwt') {
+          return this.bffSession(ctx)
+        }
         if (header?.typ === 'at+jwt') {
           // we should never use entryway session tokens in the case of flexible auth audiences (namely in the case of getFeed)
           if (opts.skipAudCheck) {
@@ -265,6 +273,41 @@ export class AuthVerifier {
         type: 'standard',
         aud: this.ownDid,
         iss: sub as DidString | `${DidString}#${string}`,
+      },
+    }
+  }
+
+  bffSession = async (reqCtx: ReqCtx): Promise<StandardOutput> => {
+    if (!this.bffJwtSecret) {
+      throw new AuthRequiredError('BFF authentication is not configured')
+    }
+    const token = bearerTokenFromReq(reqCtx.req)
+    if (!token) throw new AuthRequiredError(undefined, 'AuthMissing')
+
+    const { payload } = await jose
+      .jwtVerify(token, this.bffJwtSecret, {
+        algorithms: ['HS256'],
+        audience: this.ownDid,
+        requiredClaims: ['aud', 'exp', 'sub'],
+      })
+      .catch(() => {
+        throw new AuthRequiredError(
+          'BFF token could not be verified',
+          'InvalidToken',
+        )
+      })
+    if (
+      payload.aud !== this.ownDid ||
+      typeof payload.sub !== 'string' ||
+      !isDidString(payload.sub)
+    ) {
+      throw new AuthRequiredError('Malformed BFF token', 'InvalidToken')
+    }
+    return {
+      credentials: {
+        type: 'standard',
+        aud: this.ownDid,
+        iss: payload.sub,
       },
     }
   }
