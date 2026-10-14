@@ -5,7 +5,6 @@ import {
   type SeedClient,
   TestNetworkNoAppView,
 } from '@atproto/dev-env'
-import { AuthFactorRequiredError } from '../src/account-manager/account-manager.js'
 import type { AppContext } from '../src/index.js'
 
 describe('email auth factor', () => {
@@ -303,7 +302,9 @@ describe('email auth factor', () => {
         allowOtpBypassFor: [],
       })
 
-      await expect(attempt).rejects.toThrow(AuthFactorRequiredError)
+      await expect(attempt).rejects.toThrow(
+        'A sign in code has been sent to your email address',
+      )
       // A challenge email is dispatched precisely because OTP is required.
       expect(sendMailMock).toHaveBeenCalledTimes(1)
     })
