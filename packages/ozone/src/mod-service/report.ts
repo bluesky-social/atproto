@@ -261,6 +261,7 @@ export type ReportResult = {
   actionNote: string | null
   isMuted: boolean
   status: string
+  reportType: string
   createdAt: DatetimeString
   updatedAt: DatetimeString
 }
@@ -367,7 +368,11 @@ export async function closeReportsForSubject(
       lockForUpdate: true,
     })
 
-    const validUpdates: { id: number; previousStatus: string }[] = []
+    const validUpdates: {
+      id: number
+      previousStatus: string
+      reportType: string
+    }[] = []
     for (const report of matchingReports) {
       try {
         const result = handleReportUpdate(report.status, {
@@ -378,6 +383,7 @@ export async function closeReportsForSubject(
           validUpdates.push({
             id: report.id,
             previousStatus: result.activity.previousStatus,
+            reportType: report.reportType,
           })
         }
       } catch (err) {
@@ -413,7 +419,10 @@ export async function closeReportsForSubject(
           previousStatus: u.previousStatus,
           internalNote: internalNote ?? null,
           publicNote: null,
-          meta: null,
+          meta:
+            u.reportType === tools.ozone.report.defs.ReasonAppeal
+              ? { appealOutcome: 'denied' }
+              : null,
           isAutomated,
           createdBy,
           createdAt: now,
