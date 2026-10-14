@@ -104,6 +104,10 @@ Lexicon NSIDs used in this repository have different sources:
 
 The repository root `lexicons` directory holds **only** the canonical `com.atproto.*` and `tools.ozone.*` namespaces. Every package that works with lexicon documents defines its own lexicon manifest (`lexicons.json`), which acts as a "source of truth" for the lexicons it uses (similar to `package.json` for NPM modules). Packages no longer compile the root `lexicons` directory directly.
 
+> [!NOTE]
+>
+> One package is an exception: [`@atproto/lex-resolver`](./packages/lex/lex-resolver) has no `lexicons.json` and still compiles the canonical schemas straight from the root `lexicons` directory (`lex-builder build --lexicons ../../../lexicons --include …`). It sits inside `@atproto/lex-installer`'s own dependency tree, so it cannot depend on the installer to manage a manifest without creating a dependency cycle. See [its AGENTS.md](./packages/lex/lex-resolver/AGENTS.md).
+
 A package's `lexicons.json` lists its lexicons and an ordered `resolvers` array describing where each one comes from. The typical setup is:
 
 - a `directory` resolver pointing at the root `lexicons` directory, scoped to `com.atproto.*` / `tools.ozone.*` (these are **symlinked** into the package's `./lexicons`, so they can't drift from the canonical source);

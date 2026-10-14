@@ -37,11 +37,8 @@ _not_ re-exported; depend on it directly if the package encodes/decodes CBOR.
 [lexicons/](../../../lexicons/) at the repo root is the canonical source for the
 `com.atproto` and `tools.ozone` namespaces **only**. Every package manages its
 Lexicons through its own committed `lexicons.json` manifest and resolves them
-with `lex install` — no package compiles the root directory directly (the one
-exception is [packages/lex/lex-resolver](../../../packages/lex/lex-resolver/package.json),
-which can't depend on the installer; see
-[Packages under `packages/lex/`](#packages-under-packageslex)). The manifest's
-`resolvers` decide where each NSID comes from; see
+with `lex install` — no package compiles the root directory directly. The
+manifest's `resolvers` decide where each NSID comes from; see
 [Manifest resolvers](#manifest-resolvers-lexiconsjson).
 
 Copy the shape consuming packages use
@@ -175,12 +172,6 @@ from) instead of `lex build`, and install their manifest with `@atproto/lex-inst
 See [packages/lex/lex-password-session](../../../packages/lex/lex-password-session/package.json).
 Add `--default-export` to `lex:build` for a browser-facing client
 ([packages/lex/lex-client](../../../packages/lex/lex-client/package.json)).
-
-One carve-out: a package that is itself inside `@atproto/lex-installer`'s
-dependency tree can't depend on the installer. Today that is
-[packages/lex/lex-resolver](../../../packages/lex/lex-resolver/package.json),
-which keeps the older `lex-builder build --lexicons ../../../lexicons --include …`
-form and compiles the canonical root directly.
 
 ## `lex build` flags
 
