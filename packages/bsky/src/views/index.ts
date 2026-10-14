@@ -3059,6 +3059,7 @@ export class Views {
           items: group.items.map((item) => ({
             actor: item.actorDid,
             post: item.raw.uri,
+            parent: state.posts?.get(item.raw.uri)?.record.reply?.parent.uri,
           })),
         })
         break

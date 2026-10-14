@@ -2005,6 +2005,62 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expect(response.cursor).toBeUndefined()
     })
 
+    it('names the parent of a subscribed post that is a reply, with its view', async () => {
+      const root = await sc.post(sc.dids.dan, 'Subscribed root')
+      const reply = await sc.reply(
+        sc.dids.bob,
+        root.ref,
+        root.ref,
+        'Subscribed reply',
+      )
+      await network.processAll()
+      // The test dataplane doesn't generate subscribed-post notifications.
+      using notifications = vi
+        .spyOn(network.bsky.ctx.hydrator.dataplane, 'getNotificationsV2')
+        .mockResolvedValue(
+          new GetNotificationsV2Response({
+            notifications: [reply, root].map(
+              ({ ref }, index) =>
+                new Notification({
+                  recipientDid: sc.dids.carol,
+                  uri: ref.uriStr,
+                  reason: NOTIFICATION_REASON.SUBSCRIBED_POST,
+                  timestamp: Timestamp.fromJson(minutesAgo(index)),
+                }),
+            ),
+          }),
+        )
+      const headers = await network.serviceHeaders(sc.dids.carol, defs.$lxm)
+
+      const response = await network.bsky
+        .getClient()
+        .call(defs, { limit: 2 }, { headers })
+
+      expect(notifications).toHaveBeenCalledTimes(1)
+      expect(response.groups.map(({ kind }) => kind)).toEqual([
+        defs.subscribedPostGroup.$build({
+          items: [
+            {
+              actor: sc.dids.bob,
+              post: reply.ref.uriStr,
+              parent: root.ref.uriStr,
+            },
+          ],
+        }),
+        // Not a reply, so no parent
+        defs.subscribedPostGroup.$build({
+          items: [{ actor: sc.dids.dan, post: root.ref.uriStr }],
+        }),
+      ])
+      expect(response.groups[1]!.kind).not.toHaveProperty('items.0.parent')
+      expect(response.relatedViews).toMatchObject([
+        { $type: app.bsky.actor.defs.profileViewBasic.$type, did: sc.dids.bob },
+        { $type: app.bsky.actor.defs.profileViewBasic.$type, did: sc.dids.dan },
+        { $type: app.bsky.feed.defs.postView.$type, uri: reply.ref.uriStr },
+        { $type: app.bsky.feed.defs.postView.$type, uri: root.ref.uriStr },
+      ])
+    })
+
     it.each([4, 3, 2, 1, 0])(
       'renders %i surviving likes with exact metadata and related views after rules filtering',
       async (remaining) => {
