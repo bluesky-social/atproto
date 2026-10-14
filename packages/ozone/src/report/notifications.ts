@@ -1,6 +1,10 @@
 import type { DatetimeString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
 import {
+  appealActivityOutcome,
+  appealResolutionFilter,
+} from '../inbox/appeal-outcome.js'
+import {
   APPEAL_REASON_TYPE,
   PUBLIC_EVENT_ACTIONS,
   REVERSE_TAKEDOWN,
@@ -40,7 +44,11 @@ export async function notifyReportActivities(
       // @NOTE Both sides are primary-key lookups, independent of table size.
       const reports = await txn.db
         .selectFrom('report as r')
+        .innerJoin('report_activity as activity', 'activity.reportId', 'r.id')
         .innerJoin('moderation_event as e', 'e.id', 'r.eventId')
+        .leftJoin('moderation_event as resolution', (join) =>
+          join.on(appealResolutionFilter('r', 'activity')),
+        )
         .where(
           'e.action',
           '=',
@@ -80,9 +88,9 @@ export async function notifyReportActivities(
           ),
         )
         .where(
-          'r.id',
+          'activity.id',
           'in',
-          batch.map((activity) => activity.reportId),
+          batch.map((activity) => activity.activityId),
         )
         .where('e.subjectType', 'in', [
           com.atproto.admin.defs.repoRef.$type,
@@ -90,17 +98,19 @@ export async function notifyReportActivities(
         ])
         .select([
           'r.id as reportId',
+          'activity.id as activityId',
           'r.reportType',
           'e.createdBy',
           'e.subjectDid',
           'e.subjectUri',
           'e.subjectCid',
         ])
+        .select(appealActivityOutcome('r', 'activity').as('appealOutcome'))
         .execute()
-      const byId = new Map(reports.map((report) => [report.reportId, report]))
+      const byId = new Map(reports.map((report) => [report.activityId, report]))
       const notifications: NotificationInput[] = []
       for (const activity of batch) {
-        const report = byId.get(activity.reportId)
+        const report = byId.get(activity.activityId)
         if (!report) continue
         const isAppeal = report.reportType === APPEAL_REASON_TYPE
         if (isAppeal && activity.activityType !== 'closeActivity') continue
@@ -120,7 +130,13 @@ export async function notifyReportActivities(
           recipientDid: report.createdBy,
           reason,
           target: isAppeal
-            ? { $type: 'tools.ozone.inbox.defs#subjectRef', subject }
+            ? {
+                $type: 'tools.ozone.inbox.defs#subjectRef',
+                subject,
+                ...(report.appealOutcome && {
+                  appealOutcome: report.appealOutcome,
+                }),
+              }
             : {
                 $type: 'tools.ozone.inbox.defs#reportRef',
                 reportId: report.reportId,
