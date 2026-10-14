@@ -1,0 +1,55 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.video.abortUpload",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Abort an upload only while it is created, releasing its quota reservation immediately. Terminal sessions are unchanged and return their terminal outcome. A finishing session returns UploadNotReady.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["jobId"],
+          "properties": {
+            "jobId": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["state"],
+          "properties": {
+            "state": {
+              "type": "string",
+              "maxLength": 32,
+              "knownValues": ["aborted", "completed", "failed", "expired"]
+            },
+            "completedJobId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "description": "Present only when state is completed."
+            },
+            "failureReason": {
+              "type": "string",
+              "maxLength": 1024,
+              "description": "Present only when state is failed."
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "UploadNotFound",
+          "description": "The job ID is unknown or aged out of retention; known terminal sessions return their outcome and are never reported as not found."
+        },
+        {
+          "name": "UploadNotReady",
+          "description": "A finish is in progress; check getUploadStatus and retry."
+        }
+      ]
+    }
+  }
+}

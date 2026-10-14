@@ -1,14 +1,12 @@
 # @bufbuild/buf
-src/proto
+/src/proto
 
 # @atproto/lex
-src/lexicons
+/src/lexicons
 
-# Keep an offline copy of "at://" the lexicons locally for offline builds and CI.
-# The ones listed bellow are either symlinked from the root lexicons directory,
-# or fetched from GitHub
-lexicons/com/atproto
-lexicons/com/germnetwork
-lexicons/app/bsky
-lexicons/chat/bsky
-lexicons/tools/ozone
+# @NOTE lexicons are installed from the network, and kept as copy here to avoid
+# network dependency during ci build. com.atproto.* and tools.ozone.* lexicons
+# are symlinked from the repo-wide canonical lexicons (see "resolvers" in
+# lexicons.json) and can be ignored from Git.
+/lexicons/com/atproto
+/lexicons/tools/ozone
