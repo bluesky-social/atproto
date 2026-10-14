@@ -78,6 +78,15 @@ type CookieValue = {
   sessionId: string
 }
 
+// @NOTE FedCM sends only SameSite=None cookies; ordinary cookies stay Lax/Strict.
+const FEDCM_DEVICE_COOKIE = 'fedcm-dev-id'
+const FEDCM_SESSION_COOKIE = 'fedcm-ses-id'
+const FEDCM_COOKIE_PATH = '/oauth/fedcm'
+
+function cookieHashName(name: string) {
+  return `${name}-hash`
+}
+
 export type DeviceInfo = {
   deviceId: DeviceId
   deviceMetadata: RequestMetadata
@@ -94,6 +103,7 @@ export class DeviceManager {
   constructor(
     private readonly store: DeviceStore,
     options: DeviceManagerOptions = {},
+    private readonly fedcmEnabled = false,
   ) {
     this.options = deviceManagerOptionsSchema.parse(options)
   }
@@ -101,6 +111,27 @@ export class DeviceManager {
   public async hasSession(req: IncomingMessage): Promise<boolean> {
     const cookies = await this.getCookies(req)
     return cookies !== null
+  }
+
+  /**
+   * Reads the FedCM shadow session without changing device state or renewing
+   * either cookie.
+   */
+  public async readFedcmDevice(
+    req: IncomingMessage,
+  ): Promise<DeviceInfo | null> {
+    if (!this.fedcmEnabled) return null
+
+    const cookie = this.getFedcmCookies(req)
+    if (!cookie) return null
+
+    const data = await this.store.readDevice(cookie.deviceId)
+    if (!data || data.sessionId !== cookie.sessionId) return null
+
+    return {
+      deviceId: cookie.deviceId,
+      deviceMetadata: this.getRequestMetadata(req),
+    }
   }
 
   public async load(
@@ -181,6 +212,13 @@ export class DeviceManager {
         ipAddress: deviceMetadata.ipAddress,
         userAgent: deviceMetadata.userAgent || data.userAgent,
       })
+    } else if (this.fedcmEnabled) {
+      // @NOTE Backfill FedCM cookies without rotating the existing session.
+      // Their narrow path hides their presence from first-party requests.
+      this.writeFedcmCookies(res, {
+        deviceId,
+        sessionId: data.sessionId,
+      })
     }
 
     return { deviceId, deviceMetadata }
@@ -228,10 +266,32 @@ export class DeviceManager {
     }
   }
 
+  private getFedcmCookies(req: IncomingMessage): CookieValue | null {
+    const cookies = parseHttpCookies(req)
+
+    const device = this.parseCookie(
+      cookies,
+      FEDCM_DEVICE_COOKIE,
+      deviceIdSchema,
+      cookieHashName(FEDCM_DEVICE_COOKIE),
+    )
+    const session = this.parseCookie(
+      cookies,
+      FEDCM_SESSION_COOKIE,
+      sessionIdSchema,
+      cookieHashName(FEDCM_SESSION_COOKIE),
+    )
+
+    if (!device || !session) return null
+
+    return { deviceId: device.value, sessionId: session.value }
+  }
+
   private parseCookie<T>(
     cookies: Record<string, string | undefined>,
     name: string,
     schema: z.ZodType<T> | z.ZodEffects<z.ZodTypeAny, T, string>,
+    hashName = `${name}:hash`,
   ): null | { value: T; mustRotate: boolean } {
     const rawValue = Object.hasOwn(cookies, name) ? cookies[name] : null
     if (!rawValue) return null
@@ -242,8 +302,6 @@ export class DeviceManager {
     const value = result.data
 
     if (this.options.cookie.keys) {
-      const hashName = `${name}:hash`
-
       const hash = Object.hasOwn(cookies, hashName) ? cookies[hashName] : null
       if (!hash) return null
 
@@ -263,6 +321,38 @@ export class DeviceManager {
   ) {
     this.writeCookie(res, `dev-id`, deviceId)
     this.writeCookie(res, `ses-id`, sessionId)
+
+    if (this.fedcmEnabled) {
+      this.writeFedcmCookies(res, { deviceId, sessionId })
+    }
+  }
+
+  private writeFedcmCookies(
+    res: ServerResponse,
+    { deviceId, sessionId }: CookieValue,
+  ) {
+    this.writeFedcmCookie(res, FEDCM_DEVICE_COOKIE, deviceId)
+    this.writeFedcmCookie(res, FEDCM_SESSION_COOKIE, sessionId)
+  }
+
+  private writeFedcmCookie(res: ServerResponse, name: string, value: string) {
+    const cookieOptions = {
+      maxAge:
+        this.options.cookie.age == null
+          ? undefined
+          : this.options.cookie.age / 1000,
+      httpOnly: true,
+      path: FEDCM_COOKIE_PATH,
+      secure: true,
+      sameSite: 'none',
+    } as const
+
+    setCookie(res, name, value, cookieOptions)
+
+    if (this.options.cookie.keys) {
+      const hash = this.options.cookie.keys.sign(value)
+      setCookie(res, cookieHashName(name), hash, cookieOptions)
+    }
   }
 
   private writeCookie(res: ServerResponse, name: string, value?: string) {

@@ -11,6 +11,7 @@ import {
 import { useErrorBoundary } from 'react-error-boundary'
 import type { Account, DidString, Session } from '@atproto/oauth-provider-api'
 import { Api, UnauthorizedError, UnknownRequestUriError } from '#/lib/api.ts'
+import { completeFedcmLogin } from '#/lib/fedcm.ts'
 import { upsert } from '#/lib/util.ts'
 import { useCurrentLocale } from '#/locales/locale-provider.jsx'
 import { useCustomizationData } from './customization.js'
@@ -39,8 +40,8 @@ export type SessionStore = {
 }
 
 export type SessionContextType = {
-  sessions: readonly Session[]
-  session: Session | null
+  sessions: readonly SessionWithToken[]
+  session: SessionWithToken | null
   setSession: (session: Pick<Session, 'account'> | null) => void
 
   api: Api
@@ -48,6 +49,8 @@ export type SessionContextType = {
   canSignUp: boolean
   canSwitchAccounts: boolean
   disableRemember: boolean
+  fedcm: boolean
+  completeFedcmLogin: () => Promise<void>
   forcedIdentifier: undefined | string
   leave: undefined | (() => void | Promise<void>)
 }
@@ -78,6 +81,7 @@ export type SessionProviderProps = {
   initialSessions: readonly Session[]
   initialSelected?: DidString | InitialSelectedSession
   disableRemember?: boolean
+  fedcm?: boolean
   forcedIdentifier?: string
   leave?: () => void | Promise<void>
 }
@@ -87,6 +91,7 @@ export function SessionProvider({
   initialSessions,
   initialSelected,
   disableRemember = false,
+  fedcm = false,
   forcedIdentifier = undefined,
   leave = undefined,
 }: SessionProviderProps) {
@@ -198,6 +203,10 @@ export function SessionProvider({
     [update],
   )
 
+  const completeFedcmLoginIfEnabled = useCallback(async () => {
+    if (fedcm) await completeFedcmLogin()
+  }, [fedcm])
+
   const api = useMemo(() => {
     return new Api({
       locale,
@@ -215,8 +224,18 @@ export function SessionProvider({
       },
       onFetchSuccess: {
         // Session updates
-        '/sign-in': ({ output }) => upsertSession(output),
-        '/sign-up': ({ output }) => upsertSession(output),
+        '/sign-in': ({ output }) => {
+          upsertSession(output)
+          if (!output.ephemeralToken && !output.account.deactivated) {
+            void completeFedcmLoginIfEnabled()
+          }
+        },
+        '/sign-up': ({ output }) => {
+          upsertSession(output)
+          if (!output.ephemeralToken && !output.account.deactivated) {
+            void completeFedcmLoginIfEnabled()
+          }
+        },
         '/sign-out': ({ input }) => removeSession(input.did),
         '/delete-account-confirm': ({ input }) => removeSession(input.did),
 
@@ -239,6 +258,7 @@ export function SessionProvider({
     showBoundary,
     upsertAccount,
     upsertSession,
+    completeFedcmLoginIfEnabled,
     removeSession,
     notifyError,
   ])
@@ -271,6 +291,8 @@ export function SessionProvider({
       setSession,
       leave,
       disableRemember,
+      fedcm,
+      completeFedcmLogin: completeFedcmLoginIfEnabled,
       forcedIdentifier,
       canSignUp,
       canSwitchAccounts,
@@ -283,6 +305,8 @@ export function SessionProvider({
       setSession,
       leave,
       disableRemember,
+      fedcm,
+      completeFedcmLoginIfEnabled,
       forcedIdentifier,
       canSignUp,
       canSwitchAccounts,

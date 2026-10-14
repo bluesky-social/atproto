@@ -9,8 +9,16 @@ export const Route = createFileRoute('/account/sign-in')({
 })
 
 function SignInPage() {
-  const { sessions, api, canSignUp, disableRemember, forcedIdentifier, leave } =
-    useSessionContext()
+  const {
+    sessions,
+    api,
+    canSignUp,
+    disableRemember,
+    fedcm,
+    completeFedcmLogin,
+    forcedIdentifier,
+    leave,
+  } = useSessionContext()
   const navigate = useNavigate()
 
   // The account awaiting password confirmation — a `loginRequired` session
@@ -35,6 +43,7 @@ function SignInPage() {
   return (
     <SignInView
       disableRemember={disableRemember}
+      rememberDefault={fedcm}
       forcedIdentifier={forcedIdentifier}
       sessions={sessions}
       session={pending}
@@ -42,8 +51,20 @@ function SignInPage() {
         // A remembered session goes straight in; anything else confirms its
         // password first.
         if (next?.loginRequired) setPending(next)
-        else if (next) goToAccount(next.account)
-        else setPending(null)
+        else if (next) {
+          const selectedSession = sessions.find(
+            (item) => item.account.did === next.account.did,
+          )
+          if (
+            fedcm &&
+            selectedSession &&
+            !selectedSession.ephemeralToken &&
+            !selectedSession.account.deactivated
+          ) {
+            void completeFedcmLogin()
+          }
+          goToAccount(next.account)
+        } else setPending(null)
       }}
       onSignIn={async (data) => {
         const { account } = await api.signIn(data)
