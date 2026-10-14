@@ -55,23 +55,6 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
 
-      # Each package resolves its own lexicons.json into ./lexicons during
-      # `prebuild` (via `lex install --ci`). Canonical com.atproto.*/tools.ozone.*
-      # schemas are symlinked from the repo root (instant) and at:// network
-      # copies are committed, but app.bsky.*/chat.bsky.* are fetched from the
-      # bluesky-social/bsky GitHub repo — the only part that costs a network
-      # round-trip on a clean build. Cache those fetched trees keyed on the
-      # lexicon manifests (each pins its documents' CIDs) plus the canonical
-      # source, so an unchanged set restores from cache and `lex install --ci`
-      # verifies it against the locked CIDs without re-fetching.
-      - uses: actions/cache@v6
-        id: lexicons-cache
-        with:
-          path: |
-            packages/*/lexicons/app/bsky
-            packages/*/lexicons/chat/bsky
-          key: lexicons-${{ hashFiles('packages/*/lexicons.json') }}
-
       # The "api" package generates its client with the legacy, slow `gen-api`.
       # Its `lex:gen` is mtime-guarded (only re-runs when some lexicon is newer
       # than ./src/client/index.ts), but on a clean checkout ./src/client is
