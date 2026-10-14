@@ -111,6 +111,13 @@ and resolution is per-package. In `packages/api` — which still depends on
 bin (`@atproto/lex-installer`) and feeds the installed `./lexicons` to
 `gen-api`. Everywhere else `lex` is `@atproto/lex`.
 
+`gen-api` is slow, so `api`'s `lex:gen` is mtime-guarded: it only re-runs when
+`./src/client/index.ts` is missing or some lexicon content is newer than it.
+Use `find -L ./lexicons -type f` (not the symlinks themselves) — `lex install`
+re-creates the canonical symlinks and rewrites `lexicons.json` on every run, so
+their mtimes are meaningless; `-L` follows each symlink to its (stable) target,
+and the regular files are the committed/fetched copies.
+
 If a `lex build` invocation errors about an unknown command, that collision is
 why. `@atproto/lex` also registers `ts-lex`, which is unambiguous. Outside a
 workspace, `npx @atproto/lex` avoids pulling the unrelated unscoped `lex`

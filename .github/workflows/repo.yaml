@@ -70,7 +70,23 @@ jobs:
           path: |
             packages/*/lexicons/app/bsky
             packages/*/lexicons/chat/bsky
-          key: lexicons-${{ hashFiles('packages/*/lexicons.json', 'packages/*/*/lexicons.json', 'packages/*/lexicons-overrides/**', 'lexicons/**/*.json') }}
+          key: lexicons-${{ hashFiles('packages/*/lexicons.json') }}
+
+      # The "api" package generates its client with the legacy, slow `gen-api`.
+      # Its `lex:gen` is mtime-guarded (only re-runs when some lexicon is newer
+      # than ./src/client/index.ts), but on a clean checkout ./src/client is
+      # absent, so it would always run. Cache it keyed on api's lexicon inputs
+      # and, on a hit, bump ./src/client/index.ts past the just-checked-out
+      # lexicon sources so the guard correctly reports nothing newer and skips
+      # `gen-api`. `lex install --ci` does not re-touch the committed/fetched
+      # lexicon files, so the guard stays satisfied through the build.
+      - uses: actions/cache@v6
+        id: gen-api-cache
+        with:
+          path: packages/api/src/client
+          key: gen-api-${{ hashFiles('packages/api/lexicons.json', 'packages/api/lexicons-overrides/**', 'lexicons/**/*.json') }}
+      - if: steps.gen-api-cache.outputs.cache-hit == 'true'
+        run: touch packages/api/src/client/index.ts
 
       - run: pnpm build
 

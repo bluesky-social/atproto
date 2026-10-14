@@ -49,7 +49,7 @@
     "prettier": "^3.9.6"
   },
   "scripts": {
-    "lex:gen": "lex gen-api --yes ./src/client ./lexicons/com/atproto/*/* ./lexicons/app/bsky/*/* ./lexicons/chat/bsky/*/* ./lexicons/tools/ozone/*/* ./lexicons/com/germnetwork/*",
+    "lex:gen": "if [ ! -f ./src/client/index.ts ] || [ -n \"$(find -L ./lexicons -type f -newer ./src/client/index.ts -print -quit)\" ]; then lex gen-api --yes ./src/client ./lexicons/com/atproto/*/* ./lexicons/app/bsky/*/* ./lexicons/chat/bsky/*/* ./lexicons/tools/ozone/*/* ./lexicons/com/germnetwork/*; fi",
     "lex:install": "lex-installer install",
     "postlex:install": "pnpm run lex:gen",
     "lex:update": "lex-installer update",
