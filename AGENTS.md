@@ -96,10 +96,8 @@ Agent files — this `AGENTS.md`, the skills under [.agents/skills/](.agents/ski
 
 - Keep working plans, handoffs, review reports, query-plan captures, and other session scratch files outside the repository, such as in the workspace directory containing the checkout. Do not add repository ignore rules for them. Never commit them. Before committing, inspect the staged file list for working documents; put only durable project guidance in tracked documentation.
 
-- **New pattern introduced** → document it in the relevant agent file (package-specific if scoped, global otherwise) so it can be re-applied.
-- **Existing important pattern found undocumented** → add it.
-- **Concept removed** → remove it from the agent files in the same change. Reviewers should check for this (see [.github/claude-review-prompt.md](.github/claude-review-prompt.md)).
-- Keep them **as concise as possible**: only the minimal directives an expert needs. No tutorials, no restating what the code already says.
+- Keeping these files in sync with the code is a **session-closing step, not a mid-task reflex** — don't stop to document every new route, metric, or migration as you add it. When wrapping up a change that introduces, changes, or removes a durable pattern, update the agent file that owns it (repo-wide → this file or [STYLE_GUIDE.md](./STYLE_GUIDE.md); scoped to one package → that package's nested `AGENTS.md`; a workflow an agent follows → the relevant skill). A removed concept must be deleted in the same change — stale guidance is worse than none. Reviewers check for drift as a backstop (see [.github/claude-review-prompt.md](.github/claude-review-prompt.md)).
+- Keep them **as concise as possible**: only the minimal directives an expert needs. No tutorials, no restating what the code already says. Skip routine additions (a new route, metric, or test) that re-apply an existing pattern rather than establishing one.
 
 ## Troubleshooting
 
