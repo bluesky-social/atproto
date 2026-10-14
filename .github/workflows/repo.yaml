@@ -84,7 +84,7 @@ jobs:
         id: gen-api-cache
         with:
           path: packages/api/src/client
-          key: gen-api-${{ hashFiles('packages/api/lexicons.json', 'packages/api/lexicons-overrides/**', 'lexicons/**/*.json') }}
+          key: gen-api-${{ hashFiles('packages/api/lexicons.json') }}
       - if: steps.gen-api-cache.outputs.cache-hit == 'true'
         run: touch packages/api/src/client/index.ts
 
