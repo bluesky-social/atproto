@@ -6,7 +6,7 @@ import { getEventType } from '../util.js'
 export default function (server: Server, ctx: AppContext) {
   server.add(tools.ozone.moderation.queryEvents, {
     auth: ctx.authVerifier.modOrAdminToken,
-    handler: async ({ params }) => {
+    handler: async ({ params, signal }) => {
       const {
         subject,
         limit = 50,
@@ -35,6 +35,7 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db
       const modService = ctx.modService(db)
       const results = await modService.getEvents({
+        signal,
         types: types?.length ? types.map(getEventType) : [],
         subject,
         createdBy,

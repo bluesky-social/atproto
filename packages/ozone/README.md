@@ -11,6 +11,10 @@ Wildcard patterns in `com.atproto.label.queryLabels` are disabled by default, in
 
 Set `OZONE_LABEL_QUERY_WILDCARDS_ENABLED=true` and restart the API to restore wildcard support. Unset or `false` disables it.
 
+## Moderation query cancellation
+
+`queryEvents` and `queryStatuses` cancel their listing SQL when the HTTP client disconnects, using Kysely's `cancel query` abort strategy. Kysely uses a separate PostgreSQL connection for cancellation and holds the listing connection until SQL and cancellation finish. This adds no query deadline.
+
 ## Moderation inbox standing
 
 Set `NEXT_PUBLIC_STRIKE_SUSPENSION_CONFIG` to the same value used by Ozone UI, for example `4:72,8:168,12:336,16:Infinity`. Each entry maps a strike count to suspension hours; `Infinity` represents a permanent suspension. The backend retains the full map and uses the second and third thresholds, sorted by strike count, for `warning` and `atRisk`. The first tier does not change standing. With no configuration, standing derives from the account's enforcement and restrictions; strike thresholds are disabled. Invalid entries fail configuration at startup.
