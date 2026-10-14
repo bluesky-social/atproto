@@ -9,7 +9,7 @@ Any lexicon document placed in this directory will override the corresponding le
     // Canonical lexicons from this repository, always included first
     {
       "type": "directory",
-      "path": "./",
+      "path": "../../lexicons",
       "include": ["com.atproto.*", "tools.ozone.*"]
     },
 
@@ -24,11 +24,11 @@ Any lexicon document placed in this directory will override the corresponding le
 }
 ```
 
-Valid use cases for this directory include:
+Because this resolver is listed after the canonical one (which resolves `com.atproto.*` / `tools.ozone.*` first), overrides apply to lexicons that would otherwise be resolved from the network or the `bsky` GitHub repository — not to the canonical namespaces. Valid use cases include:
 
 - Providing prototypes or experimental versions of lexicons before they are finalized.
-- Overriding canonical lexicons for testing or development purposes.
-- Providing a copy of a lexicon document that can no longer be resolved from the canonical source.
+- Overriding a network- or GitHub-resolved lexicon for testing or development purposes.
+- Providing a copy of a lexicon document that can no longer be resolved from its upstream source.
 
 > [!NOTE]
 >

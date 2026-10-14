@@ -8,4 +8,4 @@ The canonical source for the `app.bsky` and `chat.bsky` lexicons is the [bluesky
 
 Other lexicons namespaces used in this repository are either resolved from the AT Protocol network, or hard wired in the [lexicons-overrides](../lexicons-overrides) directory.
 
-Any lexicon document fetched from the network is hard wired into the repository for offline builds and CI.
+Any lexicon document fetched from the network or the `bsky` GitHub repository is committed (hard wired) into the consuming package for offline builds and CI. Only the canonical `com.atproto` / `tools.ozone` schemas, which each package symlinks back to this directory, are left out of version control there.

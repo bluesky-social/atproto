@@ -71,26 +71,28 @@ Copy the shape consuming packages use
 ```
 
 Then gitignore the build artifacts. The generated TypeScript (`src/lexicons`) is
-never committed. Under `./lexicons`, the rebuildable trees are gitignored too —
-the symlinked canonical set and anything fetched from a pinned source (e.g. the
-`app.bsky.*` / `chat.bsky.*` GitHub `http` resolver) — while `at://` network
-copies stay committed for offline builds (the network can't serve old versions)
-and `./lexicons-overrides` is always committed. See
+never committed, and the canonical schemas symlinked into `./lexicons` from the
+repo root (`com.atproto` / `tools.ozone`) are gitignored too — they can't drift
+and are recreated on every install. Everything else resolved into `./lexicons` is
+**committed**: the `at://` network copies and the `app.bsky.*` / `chat.bsky.*`
+documents fetched from the bsky GitHub repo, so builds and CI work offline (the
+network can't serve old record versions). The shared repo-root
+[lexicons-overrides/](../../../lexicons-overrides/) is committed too. See
 [packages/bsky/.gitignore](../../../packages/bsky/.gitignore) for the shape:
 
 ```
 # @atproto/lex
-src/lexicons
-# symlinked-canonical + GitHub-fetched: rebuildable, not committed
-lexicons/com/atproto
-lexicons/tools/ozone
-lexicons/app/bsky
-lexicons/chat/bsky
+/src/lexicons
+# Canonical schemas are symlinked from the repo-wide source; everything else
+# under ./lexicons is a committed copy kept for offline builds and CI.
+/lexicons/com/atproto
+/lexicons/tools/ozone
 ```
 
 A package whose Lexicons are _all_ symlinked canonical (e.g.
-[packages/sync](../../../packages/sync/package.json)) can gitignore the whole
-`/lexicons` tree instead.
+[packages/lex/lex-password-session](../../../packages/lex/lex-password-session/package.json))
+has nothing to commit under `./lexicons` and can gitignore the whole `/lexicons`
+tree instead.
 
 The indirection through `codegen:lex` is deliberate:
 
@@ -140,12 +142,14 @@ last fallback. The kinds:
   through on 404 but throws on other errors.
 - `{ "type": "repo", "repo": "<handle|did>" }` — resolve each NSID from that
   repo's `com.atproto.lexicon.schema` records; never falls through.
-- A `directory` resolver pointing at a committed **`./lexicons-overrides`** dir,
-  listed **first** so it takes precedence. Put any document that must differ from
-  what the other resolvers return here: unpublished NSIDs (`internal.*`,
+- A `directory` resolver pointing at the shared, committed repo-root
+  **`../../lexicons-overrides`** directory, listed **after** the canonical
+  resolver but **before** the `http`/network ones, so it overrides the lexicons
+  they would otherwise return (it cannot override canonical, which resolves
+  first). Put any document that must differ here: unpublished NSIDs (`internal.*`,
   `place.stream.badge.defs`, a not-yet-published `app.bsky.unspecced.*`) and
-  documents whose local version is ahead of the published one. Copy the file in
-  from the root `lexicons`; it is committed, unlike the gitignored resolved set.
+  documents whose local version is ahead of the published one. All packages share
+  the one [lexicons-overrides/](../../../lexicons-overrides/) at the repo root.
 
 [packages/bsky/lexicons.json](../../../packages/bsky/lexicons.json) is the full
 reference (overrides + canonical directory + GitHub `http`).
@@ -323,8 +327,9 @@ diverge. [packages/pds](../../../packages/pds/package.json) is the reference:
 "lex:build": "lex build --clear --indexFile",
 ```
 
-Gitignore the symlinked `/lexicons` tree (a build artifact) but **commit
-`lexicons.json`** (the contract). Generate/refresh the manifest with
+Gitignore the symlinked canonical dirs under `/lexicons` (`com/atproto`,
+`tools/ozone` — build artifacts) but **commit `lexicons.json`** (the contract),
+along with any network- or GitHub-resolved copies. Generate/refresh the manifest with
 `pnpm run lex:install`; `--ci` then fails the build if `/lexicons` drifts from
 the locked CIDs. Tradeoff: the `lexicons` roots list is explicit, so adding a
 new canonical schema requires re-running `lex:install` to include it — unlike a
@@ -343,8 +348,8 @@ output.
 Then drop `@atproto/lex-cli` from `devDependencies`, add a `lexicons.json`
 (resolving the canonical set from the root plus whatever external namespaces the
 package used), replace the old `codegen:lex` with the `lex:install` / `lex:build`
-form above, and repoint `.gitignore` at `src/lexicons` plus the rebuildable
-`/lexicons` trees. (`packages/api` is the exception — it keeps `gen-api` but now
+form above, and repoint `.gitignore` at `src/lexicons` plus the symlinked
+canonical dirs under `/lexicons`. (`packages/api` is the exception — it keeps `gen-api` but now
 feeds it a locally-installed `./lexicons`; see
 [Which `lex` binary you get](#which-lex-binary-you-get).)
 

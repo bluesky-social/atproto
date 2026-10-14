@@ -110,13 +110,13 @@ A package's `lexicons.json` lists its lexicons and an ordered `resolvers` array 
 - a `directory` resolver pointing at the root `lexicons` directory, scoped to `com.atproto.*` / `tools.ozone.*` (these are **symlinked** into the package's `./lexicons`, so they can't drift from the canonical source);
 - for `app.bsky.*` / `chat.bsky.*`, an `http` resolver pointing at the [`bsky` repository](https://github.com/bluesky-social/bsky) raw lexicons;
 - the AT Protocol network (the implicit last fallback) for other published namespaces (`site.standard.*`, `social.grain.*`, …);
-- a `directory` resolver pointing at a committed `./lexicons-overrides` directory, listed **first** so it takes precedence. This holds any document that must differ locally — unpublished lexicons (e.g. `internal.*`, `place.stream.badge.defs`) and documents whose local version is ahead of what the resolvers would otherwise return.
+- a `directory` resolver pointing at the shared, committed repo-root [`lexicons-overrides`](./lexicons-overrides) directory, listed **after** the canonical resolver but before the network ones, so it overrides the lexicons that would otherwise be resolved from the `bsky` repo or the network (it cannot override the canonical lexicons, which resolve first). This holds any document that must differ locally — unpublished lexicons (e.g. `internal.*`, `place.stream.badge.defs`) and documents whose local version is ahead of what the resolvers would otherwise return.
 
 New lexicon dependencies can be added to a package by running `pnpm lex:install new.nsid.to.install` from the package root; `pnpm lex:update` refreshes them.
 
 When building, each package runs `pnpm run lex:install --ci` as part of its `prebuild`. This resolves every lexicon the manifest lists into the package's `./lexicons` directory and fails if any installed document does not match the CID recorded in `lexicons.json`.
 
-Resolved documents that are rebuildable — the symlinked canonical set and the GitHub-fetched `app.bsky.*` / `chat.bsky.*` — are gitignored. Documents resolved from the AT Protocol network (`at://`) are committed to the package for offline builds, since AT Protocol does not allow fetching older versions of records and relying on a live fetch would break CI whenever an external lexicon changes or is temporarily unavailable. The contents of `./lexicons-overrides` are always committed.
+Only the generated TypeScript (`src/lexicons`) and the canonical schemas symlinked from the repo root (`com.atproto.*` / `tools.ozone.*`) are gitignored. Every other document resolved into a package's `./lexicons` directory — the `at://` network copies and the `app.bsky.*` / `chat.bsky.*` documents fetched from the `bsky` repo — is committed to the package for offline builds, since AT Protocol does not allow fetching older versions of records and relying on a live fetch would break CI whenever an external lexicon changes or is temporarily unavailable. The shared repo-root `lexicons-overrides` directory is always committed too.
 
 ### Updating Lexicons
 
