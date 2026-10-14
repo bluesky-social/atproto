@@ -5,6 +5,11 @@
       "type": "directory",
       "path": "../../lexicons",
       "include": ["com.atproto.*", "tools.ozone.*"]
+    },
+    {
+      "type": "directory",
+      "path": "../../lexicons-overrides",
+      "exclude": ["app.bsky.*", "chat.bsky.*"]
     }
   ],
   "lexicons": [
@@ -203,7 +208,7 @@
     },
     "app.bsky.actor.defs": {
       "uri": "at://did:plc:4v4y5r3lwsbtmsxhile2ljac/com.atproto.lexicon.schema/app.bsky.actor.defs",
-      "cid": "bafyreidv4wr3sla7dvnhdcxw6fkg4wst4njoifeysti7mmgflfhl36yxjq"
+      "cid": "bafyreibhvgz2t4kjfgkg5yo6couskvumhaqigdubpnincchyk3kpzavnie"
     },
     "app.bsky.actor.getPreferences": {
       "uri": "at://did:plc:4v4y5r3lwsbtmsxhile2ljac/com.atproto.lexicon.schema/app.bsky.actor.getPreferences",
@@ -218,12 +223,12 @@
       "cid": "bafyreihphrndnt2cvnv3nk442f6kohdnpagk4xip74f2jn36uoal25vhta"
     },
     "app.bsky.actor.link": {
-      "uri": "file://./lexicons/app/bsky/actor/link.json",
-      "cid": "bafyreifyqcqtomxwendlngvsjr5ejaxxlwia6ecdfvvm2dbqckla3fyvom"
+      "uri": "at://did:plc:4v4y5r3lwsbtmsxhile2ljac/com.atproto.lexicon.schema/app.bsky.actor.link",
+      "cid": "bafyreidpr5c7556s44rorfwp4d5amzksnjoo6uvrgsny2tfzxxtiwfdnpu"
     },
     "app.bsky.actor.profile": {
       "uri": "at://did:plc:4v4y5r3lwsbtmsxhile2ljac/com.atproto.lexicon.schema/app.bsky.actor.profile",
-      "cid": "bafyreia6umzg3a6d7mjbow4p57tviey45muohklhgsvjoamcctoiusr4pe"
+      "cid": "bafyreib57i4ahnr7e4uzoewdetkepfsbiqnw4la73hk5hgjp4zdbalfko4"
     },
     "app.bsky.actor.putPreferences": {
       "uri": "at://did:plc:4v4y5r3lwsbtmsxhile2ljac/com.atproto.lexicon.schema/app.bsky.actor.putPreferences",
@@ -854,11 +859,11 @@
       "cid": "bafyreibspeagqwk57gin3zfxprgceqziootq5t7wogauo37avbrapr5ziy"
     },
     "com.germnetwork.declaration": {
-      "uri": "at://did:plc:qyqmmncrm6qx33kpy7vqndik/com.atproto.lexicon.schema/com.germnetwork.declaration",
-      "cid": "bafyreickqsspgkujwucg3low5or64ywjryf44eua6xtszd6zsl2yteumoi"
+      "uri": "file://../../lexicons-overrides/com/germnetwork/declaration.json",
+      "cid": "bafyreiekwjmxshje655olra4mata7npso7bbgytc4fop77ycjtrbewwi3y"
     },
     "place.stream.badge.defs": {
-      "uri": "file://./lexicons/place/stream/badge/defs.json",
+      "uri": "file://../../lexicons-overrides/place/stream/badge/defs.json",
       "cid": "bafyreidhldtcylff7awx67jd76miapjz3q4gumtq24opaaw345vznvftwm"
     },
     "place.stream.chat.defs": {
@@ -951,7 +956,7 @@
     },
     "tools.ozone.inbox.defs": {
       "uri": "file://../../lexicons/tools/ozone/inbox/defs.json",
-      "cid": "bafyreig4pkotcoj4zflqijeuj73aqnvmioi76kgf4hgeg7gg6pce5bxcdi"
+      "cid": "bafyreihivx7ing5cfbqlazl2kbhy3xjep5kmxoft4otsavbbcowmml7nny"
     },
     "tools.ozone.moderation.cancelScheduledActions": {
       "uri": "file://../../lexicons/tools/ozone/moderation/cancelScheduledActions.json",
