@@ -120,7 +120,7 @@
         "outcome": {
           "type": "string",
           "knownValues": ["approved", "denied"],
-          "description": "Decision on a resolved appeal. Approved means its closing action reverses a takedown or removes a label; denied means no-action closure or an action that upholds enforcement. Omitted for unresolved appeals or historical closures without sufficient resolution data."
+          "description": "Decision on a resolved appeal."
         },
         "appealableUntil": {
           "type": "string",
