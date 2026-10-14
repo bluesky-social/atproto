@@ -76,6 +76,7 @@ AuthenticationContext.displayName = 'AuthenticationContext'
 
 export type AuthenticationProviderProps = {
   disableRemember?: boolean
+  rememberDefault?: boolean
   promptMode?: OAuthPromptMode
   forcedIdentifier?: string
   onCancel?: () => void
@@ -88,6 +89,7 @@ export type AuthenticationProviderProps = {
  */
 export function AuthenticationProvider({
   disableRemember = false,
+  rememberDefault = false,
   promptMode,
   forcedIdentifier,
   onCancel,
@@ -227,6 +229,7 @@ export function AuthenticationProvider({
             await api.signUp(data)
             showHome()
           }}
+          rememberDefault={rememberDefault}
         />
       )
     }
@@ -251,6 +254,7 @@ export function AuthenticationProvider({
     return (
       <SignInView
         disableRemember={disableRemember}
+        rememberDefault={rememberDefault}
         forcedIdentifier={forcedIdentifier}
         sessions={sessions}
         session={session}

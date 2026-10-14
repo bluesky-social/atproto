@@ -80,7 +80,12 @@ export type AuthenticateAccountData = {
   locale: string
   password: string
   username: string
-  emailOtp?: string | undefined
+  emailOtp: string | undefined
+  /**
+   * Lists the accounts that were previously remembered on the device, allowing
+   * OTP bypass for these accounts (based on the store's own logic)
+   */
+  deviceAccounts: readonly DeviceAccount[]
 }
 
 export type AuthorizedClientData = { authorizedScopes: readonly string[] }
@@ -135,11 +140,8 @@ export interface AccountStore {
   /**
    * @throws {InvalidCredentialsError} - When the credentials are not valid.
    * Populate {@link InvalidCredentialsError.did} with the subject identifier
-   * when the identifier matched an existing account (e.g. wrong password for
-   * a known user); omit it when the identifier was not found. Throwing the
-   * generic {@link InvalidRequestError} is also accepted for backward
-   * compatibility but prevents the `onSignInFailed` hook from distinguishing
-   * the two cases.
+   * when the identifier matched an existing account (e.g. wrong password for a
+   * known user); omit it when the identifier was not found.
    * @throws {SecondAuthenticationFactorRequiredError} - To indicate that an {@link SecondAuthenticationFactorRequiredError.type} is required in the credentials
    */
   authenticateAccount(data: AuthenticateAccountData): Awaitable<Account>

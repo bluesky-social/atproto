@@ -1,6 +1,7 @@
 # Ozone moderation inbox
 
 - Reject wildcard `queryLabels` requests before accessing the DB unless `OZONE_LABEL_QUERY_WILDCARDS_ENABLED` is enabled; exact queries remain available.
+- Execute cancellable listing SQL with the HTTP signal and Kysely's `inflightQueryAbortStrategy: 'cancel query'`; a signal alone leaves PostgreSQL work running.
 
 - Read previews share `inboxViewerDid`; writes always use the authenticated DID.
 - Notification preference writes atomically patch only provided categories. Unset category columns inherit the retained push column to preserve existing opt-outs without a backfill; preferences do not suppress in-app inbox activity.

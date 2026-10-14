@@ -276,6 +276,7 @@ export class Api extends JsonClient<ApiEndpoints> {
       handle,
       email,
       password,
+      remember,
       inviteCode,
       hcaptchaToken,
     }: WithOptionalLocale<SignUpInput>,
@@ -284,7 +285,7 @@ export class Api extends JsonClient<ApiEndpoints> {
     return this.fetch(
       'POST',
       '/sign-up',
-      { locale, handle, email, password, inviteCode, hcaptchaToken },
+      { locale, handle, email, password, remember, inviteCode, hcaptchaToken },
       options,
     )
   }

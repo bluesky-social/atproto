@@ -620,6 +620,7 @@ export class AccountManager {
     password,
     authFactorToken,
     locale,
+    allowOtpBypassFor = [],
   }: {
     identifier: string
     password: string
@@ -628,6 +629,7 @@ export class AccountManager {
     // declares no locale input, so the challenge email falls back to the
     // default template there.
     locale?: string | undefined
+    allowOtpBypassFor?: readonly DidString[]
   }): Promise<{
     // @TODO we should rename this "account" for consistency
     user: ActorAccount
@@ -681,6 +683,7 @@ export class AccountManager {
       } else if (
         user.email !== null &&
         user.emailAuthFactorAt !== null &&
+        !allowOtpBypassFor.includes(user.did) &&
         appPassword === null
       ) {
         const token = await this.createEmailToken(user.did, 'auth_factor')

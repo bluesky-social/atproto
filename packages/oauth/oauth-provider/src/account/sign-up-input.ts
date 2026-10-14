@@ -12,6 +12,7 @@ export const signUpInputSchema = z
     handle: handleSchema,
     email: emailSchema,
     password: newPasswordSchema,
+    remember: z.boolean().optional(),
     inviteCode: inviteCodeSchema.optional(),
     hcaptchaToken: hcaptchaTokenSchema.optional(),
   })

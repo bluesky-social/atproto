@@ -167,6 +167,7 @@ export class ModerationService {
   }
 
   async getEvents(opts: {
+    signal?: AbortSignal
     subject?: string
     createdBy?: DidString
     limit: number
@@ -192,6 +193,7 @@ export class ModerationService {
     withStrike?: boolean
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
+      signal,
       subject,
       createdBy,
       limit,
@@ -379,7 +381,10 @@ export class ModerationService {
       tryIndex: true,
     })
 
-    const result = await paginatedBuilder.execute()
+    const result = await paginatedBuilder.execute({
+      signal,
+      inflightQueryAbortStrategy: 'cancel query',
+    })
 
     const infos = await this.views.getAccoutInfosByDid([
       ...result.map((row) => row.subjectDid),
@@ -1150,6 +1155,7 @@ export class ModerationService {
   }
 
   async getSubjectStatuses({
+    signal,
     queueCount,
     queueIndex,
     queueSeed = '',
@@ -1185,7 +1191,9 @@ export class ModerationService {
     minPriorityScore,
     minStrikeCount,
     ageAssuranceState,
-  }: tools.ozone.moderation.queryStatuses.$Params): Promise<{
+  }: tools.ozone.moderation.queryStatuses.$Params & {
+    signal?: AbortSignal
+  }): Promise<{
     statuses: ModerationSubjectStatusRowWithHandle[]
     cursor?: string
   }> {
@@ -1510,7 +1518,10 @@ export class ModerationService {
       tryIndex: true,
       nullsLast: true,
     })
-    const results = await paginatedBuilder.execute()
+    const results = await paginatedBuilder.execute({
+      signal,
+      inflightQueryAbortStrategy: 'cancel query',
+    })
 
     const infos = await this.views.getAccoutInfosByDid(
       results.map((r) => r.did),

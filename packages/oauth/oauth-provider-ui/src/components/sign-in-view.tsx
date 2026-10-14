@@ -9,6 +9,7 @@ import { SignInPicker } from './sign-in-picker.tsx'
 
 export type SignInViewProps = {
   disableRemember?: boolean
+  rememberDefault?: boolean
   sessions: readonly Session[]
   session: Session | null
   setSession: (session: Session | null) => void
@@ -23,6 +24,7 @@ export type SignInViewProps = {
 
 export function SignInView({
   disableRemember,
+  rememberDefault,
   forcedIdentifier,
   sessions,
   session,
@@ -56,6 +58,8 @@ export function SignInView({
   }, [session])
 
   if (session) {
+    // A session is selected but "loginRequired" is set, so the user must
+    // re-authenticate.
     return (
       <AuthShell
         title={title}
@@ -64,12 +68,14 @@ export function SignInView({
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}
+          // Since this is a re-authentication, we keep the "remember"
+          // preference enabled (instead of the prop's value).
+          rememberDefault={true}
           onSignIn={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={clearSession}
           usernameDefault={session.account.handle || session.account.did}
           usernameReadonly={true}
-          rememberDefault={true}
         />
       </AuthShell>
     )
@@ -81,6 +87,7 @@ export function SignInView({
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}
+          rememberDefault={rememberDefault}
           onSignIn={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={onBack}
@@ -98,6 +105,7 @@ export function SignInView({
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}
+          rememberDefault={rememberDefault}
           onSignIn={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={onBack}
@@ -113,6 +121,7 @@ export function SignInView({
         <SignInForm
           domains={availableUserDomains}
           disableRemember={disableRemember}
+          rememberDefault={rememberDefault}
           onSignIn={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={() => setShowSignInForm(false)}
