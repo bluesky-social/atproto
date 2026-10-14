@@ -452,7 +452,7 @@
       "cid": "bafyreicbu47btc3xv4udarblekcvccvbvbgqlrqfojeucewksm4enbcfle"
     },
     "app.bsky.actor.defs": {
-      "uri": "file://../../lexicons-overrides/app/bsky/actor/defs.json",
+      "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/actor/defs.json",
       "cid": "bafyreiehx4vin52pllf6ctb6snn4pto5asolzzfq5gio7i3u77eg34oeqm"
     },
     "app.bsky.actor.getPreferences": {
