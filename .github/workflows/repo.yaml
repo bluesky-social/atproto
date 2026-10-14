@@ -100,6 +100,7 @@ jobs:
             packages/*/src/proto
             packages/*/src/lexicons
             packages/lex/*/src/lexicons
+            packages/lex/*/tests/lexicons
             packages/oauth/*/src/lexicons
             packages/oauth/*/src/locales/*/messages.ts
             packages/api/src/client
