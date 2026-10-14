@@ -1681,7 +1681,9 @@ export class ModerationService {
   ): Promise<ReporterStats[]> {
     if (!dids?.length) return []
 
-    const since = toDatetimeString(Date.now() - 90 * DAY)
+    const since = toDatetimeString(
+      Date.now() - this.cfg.stats.reporterWindowDays * DAY,
+    )
     const takedown = sql.lit(tools.ozone.moderation.defs.modEventTakedown.$type)
     const label = sql.lit(tools.ozone.moderation.defs.modEventLabel.$type)
 

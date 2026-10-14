@@ -2,4 +2,4 @@
 "@atproto/ozone": patch
 ---
 
-Bound reporter statistics to the last 90 days and count only explicitly linked actions using primary-key lookups.
+Bound reporter statistics to a configurable history window (180 days by default) and count only explicitly linked actions using primary-key lookups.

@@ -60,6 +60,7 @@ export const readEnv = (): OzoneEnvironment => {
     statsComputerIntervalMinutes: envInt(
       'OZONE_STATS_COMPUTER_INTERVAL_MINUTES',
     ),
+    reporterStatsWindowDays: envInt('OZONE_REPORTER_STATS_WINDOW_DAYS'),
   }
 }
 
@@ -113,4 +114,5 @@ export type OzoneEnvironment = {
   assignmentQueueDurationMs?: number
   assignmentReportDurationMs?: number
   statsComputerIntervalMinutes?: number
+  reporterStatsWindowDays?: number
 }

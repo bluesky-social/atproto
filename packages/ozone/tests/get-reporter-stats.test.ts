@@ -22,6 +22,7 @@ describe('reporter-stats', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_reporter_stats',
+      ozone: { reporterStatsWindowDays: 30 },
     })
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
@@ -261,7 +262,7 @@ describe('reporter-stats', () => {
     })
   })
 
-  it('includes the 90-day boundary and excludes old reports, their linked actions, and appeals', async () => {
+  it('uses the configured window inclusively and excludes old reports, their linked actions, and appeals', async () => {
     const reporter = await createReporter('window')
     const subjects = [sc.dids.alice, sc.dids.carol].map((did) => ({
       $type: 'com.atproto.admin.defs#repoRef',
@@ -294,7 +295,7 @@ describe('reporter-stats', () => {
     await network.processAll()
 
     const now = Date.now()
-    const since = now - 90 * DAY
+    const since = now - 30 * DAY
     const db = network.ozone.ctx.db.db
     // @NOTE Historical dates cannot be supplied through the report API.
     for (const [index, offset] of [0, -1].entries()) {
