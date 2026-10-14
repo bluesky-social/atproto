@@ -318,7 +318,12 @@
       "required": ["actor", "post"],
       "properties": {
         "actor": { "type": "string", "format": "did" },
-        "post": { "type": "string", "format": "at-uri" }
+        "post": { "type": "string", "format": "at-uri" },
+        "parent": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "The post this one replies to, if it is a reply."
+        }
       }
     },
     "generatorLikeGroup": {
