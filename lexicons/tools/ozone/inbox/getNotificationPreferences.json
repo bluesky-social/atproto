@@ -4,6 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
+      "description": "Get moderation push notification preferences for report outcomes, account actions, and labeling. Returns all three categories, defaulting to enabled for an account without saved preferences.",
       "parameters": {
         "type": "params",
         "properties": {

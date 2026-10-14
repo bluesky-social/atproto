@@ -7,6 +7,7 @@ import {
   type AtUriString,
   type DatetimeString,
   type DidString,
+  type HandleString,
   asStringFormat,
   toDatetimeString,
 } from '@atproto/lex'
@@ -459,6 +460,46 @@ const postLikes = (pairs: [actor: string, subject: string][]) =>
     ),
   )
 
+const spotlightTypes = [
+  {
+    reason: NOTIFICATION_REASON.LIKE,
+    kind: APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
+    collection: app.bsky.feed.post.$type,
+  },
+  {
+    reason: NOTIFICATION_REASON.REPOST,
+    kind: APPVIEW_NOTIFICATION_REASON.MULTI_POST_REPOST,
+    collection: app.bsky.feed.post.$type,
+  },
+  {
+    reason: NOTIFICATION_REASON.LIKE_VIA_REPOST,
+    kind: APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE_VIA_REPOST,
+    collection: app.bsky.feed.repost.$type,
+  },
+  {
+    reason: NOTIFICATION_REASON.REPOST_VIA_REPOST,
+    kind: APPVIEW_NOTIFICATION_REASON.MULTI_POST_REPOST_VIA_REPOST,
+    collection: app.bsky.feed.repost.$type,
+  },
+] as const
+
+const spotlightItems = (
+  type: (typeof spotlightTypes)[number],
+  count: number,
+  { actor = 'alice', offset = 0 } = {},
+) =>
+  Array.from({ length: count }, (_, index) =>
+    item(
+      `${type.reason}-${actor}-${index}`,
+      minutesAgo(offset + index / 1000),
+      type.reason,
+      {
+        actor,
+        subject: `at://did:plc:viewer/${type.collection}/post-${index}`,
+      },
+    ),
+  )
+
 const expectPage = (
   page: ReturnType<typeof buildSpotlight>,
   items: NotificationItem[],
@@ -507,6 +548,319 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expect(page.groups).toBe(ordinary.groups)
       expectPage(page, [], [])
     })
+
+    describe.each(spotlightTypes)('$reason', (type) => {
+      it('spotlights only the top actor and leaves other actors in ordinary groups', () => {
+        const alice = spotlightItems(type, 4)
+        const bob = spotlightItems(type, 4, { actor: 'bob', offset: 1 })
+        const items = [...alice, ...bob]
+        const { page } = buildPage(items, 5)
+
+        expectPage(page, items, [
+          alice.map(({ id }) => id),
+          ...bob.map(({ id }) => [id]),
+        ])
+        expect(page.groups.map(({ kind }) => kind)).toEqual([
+          type.kind,
+          ...Array(4).fill(type.reason),
+        ])
+      })
+
+      it.each([
+        { count: 200, matches: 4, eligible: true },
+        { count: 201, matches: 7, eligible: false },
+        { count: 201, matches: 8, eligible: true },
+        { count: 500, matches: 8, eligible: true },
+        { count: 501, matches: 8, eligible: false },
+      ])(
+        'uses page-volume thresholds: $count items, $matches matching, eligible=$eligible',
+        ({ count, matches, eligible }) => {
+          const matching = spotlightItems(type, matches)
+          const items = [
+            ...matching,
+            ...Array.from({ length: count - matches }, (_, index) =>
+              item(
+                `follow-${index}`,
+                minutesAgo(1 + index / 1000),
+                NOTIFICATION_REASON.FOLLOW,
+              ),
+            ),
+          ]
+          const { page } = buildPage(items, 30)
+          expect(page.groups.some(({ kind }) => kind === type.kind)).toBe(
+            eligible,
+          )
+        },
+      )
+
+      it('trims across groups without losing notifications on the next page', () => {
+        const alice = spotlightItems(type, 4)
+        const bob = spotlightItems(type, 4, { actor: 'bob' })
+        const items = alice.flatMap((notification, index) => [
+          notification,
+          bob[index]!,
+        ])
+        items.forEach((notification, index) => {
+          notification.raw.indexedAt = toDatetimeString(new Date(now - index))
+        })
+        const { page } = buildPage(items, 4)
+        expectPage(
+          page,
+          items,
+          [alice.map(({ id }) => id), ...bob.slice(0, 3).map(({ id }) => [id])],
+          items[6]!.raw.indexedAt,
+        )
+        expect(page.groups[0]?.kind).toBe(type.kind)
+        const { page: next } = buildPage(items.slice(7), 4)
+        expectPage(next, items.slice(7), [[bob[3]!.id]])
+      })
+
+      it('leaves items beyond the spotlight size cap in ordinary groups', () => {
+        const items = spotlightItems(type, 201)
+        const { page } = buildPage(items, 201)
+        expectPage(page, items, [
+          items.slice(0, 200).map(({ id }) => id),
+          [items[200]!.id],
+        ])
+        expect(
+          page.groups.map(({ kind, itemCount }) => [kind, itemCount]),
+        ).toEqual([
+          [type.kind, 200],
+          [type.reason, 1],
+        ])
+      })
+    })
+
+    it.each([false, true])(
+      'caps spotlights at three types, ranking by count then recency (tied=%s)',
+      (tied) => {
+        const batches = spotlightTypes.map((type, index) =>
+          spotlightItems(type, tied ? 4 : index + 4, { offset: index }),
+        )
+        const items = batches.flat()
+        const { page } = buildPage(items, 30)
+        const omitted = tied ? 3 : 0
+        expectPage(
+          page,
+          items,
+          batches.flatMap((batch, index) =>
+            index === omitted
+              ? batch.map(({ id }) => [id])
+              : [batch.map(({ id }) => id)],
+          ),
+        )
+        expect(
+          page.groups
+            .filter(({ kind }) =>
+              spotlightTypes.some((type) => type.kind === kind),
+            )
+            .map(({ kind }) => kind),
+        ).toEqual(
+          spotlightTypes
+            .filter((_, index) => index !== omitted)
+            .map(({ kind }) => kind),
+        )
+      },
+    )
+
+    it('does not combine different reasons to reach eligibility', () => {
+      const items = spotlightTypes.flatMap((type, index) =>
+        spotlightItems(type, 3, { offset: index }),
+      )
+      const { ordinary, page } = buildPage(items, 30)
+      expect(page.groups).toBe(ordinary.groups)
+    })
+
+    it('uses the fourth eligible type when trimming rejects a higher-ranked spotlight', () => {
+      const top = spotlightTypes.map((type, index) =>
+        spotlightItems(type, index === 0 ? 5 : 4),
+      )
+      const others = spotlightTypes.map((type, index) =>
+        spotlightItems(type, index === 0 ? 5 : 4, { actor: 'bob' }),
+      )
+      const likes = top[0]!
+      const otherLikes = others[0]!
+      const items = [
+        ...likes.slice(0, 3),
+        ...top.slice(1).flat(),
+        ...others.flat(),
+        ...likes.slice(3),
+      ]
+      items.forEach((notification, index) => {
+        notification.raw.indexedAt = toDatetimeString(new Date(now - index))
+      })
+      const { page } = buildPage(items, 17)
+      expect(
+        page.groups
+          .filter(({ kind }) => kind.startsWith('multi-post-'))
+          .map(({ kind }) => kind),
+      ).toEqual(spotlightTypes.slice(1).map(({ kind }) => kind))
+      expectPage(
+        page,
+        items,
+        [
+          ...likes
+            .slice(0, 3)
+            .map(({ id }, index) => [id, otherLikes[index]!.id]),
+          ...top.slice(1).map((batch) => batch.map(({ id }) => id)),
+          ...otherLikes.slice(3).map(({ id }) => [id]),
+          ...others[1]!.slice(0, 3).map(({ id }) => [id]),
+        ],
+        others[1]![2]!.raw.indexedAt,
+      )
+      const remaining = items.slice(items.indexOf(others[1]![2]!) + 1)
+      const { page: nextPage } = buildPage(remaining, 17)
+      expectPage(nextPage, remaining, [
+        [others[1]![3]!.id],
+        ...others.slice(2).map((batch) => batch.map(({ id }) => id)),
+        ...likes.slice(3).map(({ id }) => [id]),
+      ])
+    })
+
+    it('keeps valid spotlights when trimming disqualifies another type', () => {
+      const likes = spotlightItems(spotlightTypes[0], 4)
+      const reposts = spotlightItems(spotlightTypes[1], 4, { offset: 1 })
+      const others = spotlightItems(spotlightTypes[1], 4, {
+        actor: 'bob',
+        offset: 2,
+      })
+      const otherLikes = spotlightItems(spotlightTypes[0], 4, {
+        actor: 'carol',
+        offset: 3,
+      })
+      const items = [
+        ...likes,
+        ...otherLikes.slice(0, 3),
+        ...reposts.slice(0, 3),
+        ...others,
+        reposts[3]!,
+        otherLikes[3]!,
+      ]
+      items.forEach((notification, index) => {
+        notification.raw.indexedAt = toDatetimeString(new Date(now - index))
+      })
+      const { page } = buildPage(items, 8)
+      expect(
+        page.groups
+          .filter(({ kind }) => kind.startsWith('multi-post-'))
+          .map(({ kind }) => kind),
+      ).toEqual([APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE])
+      expectPage(
+        page,
+        items,
+        [
+          likes.map(({ id }) => id),
+          ...otherLikes.slice(0, 3).map(({ id }) => [id]),
+          ...reposts
+            .slice(0, 3)
+            .map(({ id }, index) => [id, others[index]!.id]),
+          [others[3]!.id, reposts[3]!.id],
+        ],
+        reposts[3]!.raw.indexedAt,
+      )
+    })
+
+    it.each([
+      { invalidated: 'earlier', tryFourth: false },
+      { invalidated: 'new', tryFourth: false },
+      { invalidated: 'earlier', tryFourth: true },
+      { invalidated: 'new', tryFourth: true },
+    ] as const)(
+      'preserves accepted spotlights when a third invalidates the $invalidated spotlight (fourth=$tryFourth)',
+      ({ invalidated, tryFourth }) => {
+        const likes = spotlightItems(spotlightTypes[0], 6)
+        const reposts = spotlightItems(spotlightTypes[1], 5)
+        const viaRepost = spotlightItems(spotlightTypes[2], 4)
+        const fourth = tryFourth ? spotlightItems(spotlightTypes[3], 4) : []
+        const otherItems = (batch: NotificationItem[]) =>
+          batch.map(({ raw }, index) =>
+            item(`other-${raw.reason}-${index}`, NOW, raw.reason, {
+              actor: `other-${index}`,
+              subject: raw.reasonSubject,
+            }),
+          )
+        const otherLikes = otherItems(likes)
+        const otherReposts = otherItems(reposts)
+        const otherViaRepost = otherItems(viaRepost)
+        const invalidatesEarlier = invalidated === 'earlier'
+        const fourthItem = invalidatesEarlier ? likes[3]! : viaRepost[3]!
+        const items = [
+          ...(invalidatesEarlier ? likes.slice(0, 3) : likes),
+          ...reposts,
+          ...(invalidatesEarlier ? viaRepost : viaRepost.slice(0, 3)),
+          ...fourth,
+          ...otherViaRepost,
+          ...otherReposts,
+          ...otherLikes.slice(0, 4),
+          fourthItem,
+          ...otherLikes.slice(4),
+          ...(invalidatesEarlier ? likes.slice(4) : []),
+        ]
+        items.forEach((notification, index) => {
+          notification.raw.indexedAt = toDatetimeString(new Date(now - index))
+        })
+        // @NOTE Each of the first three spotlight attempts forces one more ordinary group off the page.
+        // The third attempt trims away the fourth item of either itself or the accepted like spotlight.
+        const { page } = buildPage(items, tryFourth ? 19 : 15, { seenAt: now })
+
+        expectPage(
+          page,
+          items,
+          [
+            (invalidatesEarlier ? likes.slice(0, 4) : likes).map(
+              ({ id }) => id,
+            ),
+            reposts.map(({ id }) => id),
+            ...(invalidatesEarlier ? viaRepost : viaRepost.slice(0, 3)).map(
+              ({ id }, index) => [id, otherViaRepost[index]!.id],
+            ),
+            ...(tryFourth ? [fourth.map(({ id }) => id)] : []),
+            ...(!invalidatesEarlier
+              ? [[otherViaRepost[3]!.id, viaRepost[3]!.id]]
+              : []),
+            ...otherReposts.map(({ id }) => [id]),
+            ...otherLikes.slice(0, 4).map(({ id }) => [id]),
+          ],
+          fourthItem.raw.indexedAt,
+        )
+        expect(
+          page.groups
+            .filter(({ kind }) => kind.startsWith('multi-post-'))
+            .map(({ kind, itemCount, isRead }) => ({
+              kind,
+              itemCount,
+              isRead,
+            })),
+        ).toEqual([
+          {
+            kind: APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
+            itemCount: invalidatesEarlier ? 4 : 6,
+            isRead: false,
+          },
+          {
+            kind: APPVIEW_NOTIFICATION_REASON.MULTI_POST_REPOST,
+            itemCount: 5,
+            isRead: true,
+          },
+          ...(tryFourth
+            ? [
+                {
+                  kind: APPVIEW_NOTIFICATION_REASON.MULTI_POST_REPOST_VIA_REPOST,
+                  itemCount: 4,
+                  isRead: true,
+                },
+              ]
+            : []),
+        ])
+
+        const remaining = items.slice(items.indexOf(fourthItem) + 1)
+        const { page: nextPage } = buildPage(remaining, 15)
+        expectPage(nextPage, remaining, [
+          [otherLikes[4]!.id, ...(invalidatesEarlier ? [likes[4]!.id] : [])],
+          [otherLikes[5]!.id, ...(invalidatesEarlier ? [likes[5]!.id] : [])],
+        ])
+      },
+    )
 
     it('combines recent and older likes into one spotlight across days', () => {
       const items = Array.from({ length: 4 }, (_, index) =>
@@ -945,7 +1299,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
     })
 
     it.each([NOTIFICATION_REASON.LIKE, NOTIFICATION_REASON.LIKE_VIA_REPOST])(
-      'excludes non-post %s notifications from eligibility',
+      'does not count generator likes or %s notifications toward a post-like spotlight',
       (reason) => {
         const items = [
           ...postLikes([
@@ -1060,12 +1414,295 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       return { recipient, records, headers }
     }
 
+    describe.each(spotlightTypes.slice(1))(
+      '$reason spotlight',
+      ({ reason }) => {
+        const via =
+          reason === NOTIFICATION_REASON.LIKE_VIA_REPOST ||
+          reason === NOTIFICATION_REASON.REPOST_VIA_REPOST
+        it.each([
+          { remaining: 12, removal: 'none' },
+          { remaining: 3, removal: 'interaction' },
+          { remaining: 2, removal: 'subject' },
+          { remaining: 1, removal: 'post' },
+          { remaining: 0, removal: 'block' },
+        ] as const)(
+          'renders $remaining surviving items after $removal filtering',
+          async ({ remaining, removal }) => {
+            const name = `rp-spotlight-${fixtureIndex++}`
+            const { did: recipient } = await sc.createAccount(name, {
+              email: `${name}@test.com`,
+              handle: `${name}.test`,
+              password: 'spotlight-pass',
+            })
+            const records: {
+              post: AtUriString
+              viaRepost?: AtUriString
+              uri: AtUriString
+              indexedAt: DatetimeString
+              id: string
+            }[] = []
+            for (let index = 0; index < 12; index++) {
+              const post = await sc.post(
+                via ? sc.dids.carol : recipient,
+                `Post ${index}`,
+              )
+              const repost = via
+                ? await sc.repost(recipient, post.ref)
+                : undefined
+              const overrides = repost ? { via: repost.raw } : undefined
+              const uri =
+                reason === NOTIFICATION_REASON.LIKE_VIA_REPOST
+                  ? ((
+                      await sc.like(sc.dids.bob, post.ref, overrides)
+                    ).toString() as AtUriString)
+                  : (await sc.repost(sc.dids.bob, post.ref, overrides)).uriStr
+              const indexedAt = Timestamp.fromDate(
+                new Date(now - index * 1000),
+              ).toJson() as DatetimeString
+              records.push({
+                post: post.ref.uriStr,
+                ...(repost ? { viaRepost: repost.uriStr } : {}),
+                uri,
+                indexedAt,
+                id: createHash('sha256')
+                  .update(`${indexedAt}\0${uri}`)
+                  .digest('base64url'),
+              })
+            }
+            if (removal === 'block') await sc.block(recipient, sc.dids.bob)
+            await network.processAll()
+            for (const { uri, indexedAt } of records) {
+              await network.bsky.db.db
+                .updateTable('notification')
+                .set({ sortAt: toDatetimeString(new Date(indexedAt)) })
+                .where('recordUri', '=', uri)
+                .where('did', '=', recipient)
+                .execute()
+            }
+            if (removal !== 'block') {
+              for (const record of records.slice(0, 12 - remaining)) {
+                await network.bsky.ctx.dataplane.takedownRecord({
+                  recordUri:
+                    removal === 'interaction'
+                      ? record.uri
+                      : removal === 'subject'
+                        ? (record.viaRepost ?? record.post)
+                        : record.post,
+                })
+              }
+            }
+            await network.bsky.ctx.dataplane.updateNotificationSeen({
+              actorDid: recipient,
+              timestamp: Timestamp.fromJson(records[10]!.indexedAt),
+            })
+            const headers = await network.serviceHeaders(recipient, defs.$lxm)
+            const response = await network.bsky
+              .getClient()
+              .call(defs, { limit: 30 }, { headers })
+            const kept = records.slice(12 - remaining)
+            const newest = kept[0]
+            const viaRepostItems = via
+              ? kept.map(({ post, viaRepost }) => {
+                  assert(viaRepost)
+                  return { post, viaRepost }
+                })
+              : []
+            expect(response.groups).toEqual(
+              newest
+                ? [
+                    defs.group.$build({
+                      id: newest.id,
+                      indexedAt: newest.indexedAt,
+                      isRead: remaining === 1,
+                      count: remaining,
+                      kind:
+                        remaining === 1
+                          ? reason === NOTIFICATION_REASON.REPOST
+                            ? defs.repostGroup.$build({
+                                post: newest.post,
+                                items: [{ actor: sc.dids.bob }],
+                              })
+                            : reason === NOTIFICATION_REASON.LIKE_VIA_REPOST
+                              ? defs.likeViaRepostGroup.$build({
+                                  post: newest.post,
+                                  viaRepost: newest.viaRepost!,
+                                  items: [{ actor: sc.dids.bob }],
+                                })
+                              : defs.repostViaRepostGroup.$build({
+                                  post: newest.post,
+                                  viaRepost: newest.viaRepost!,
+                                  items: [{ actor: sc.dids.bob }],
+                                })
+                          : reason === NOTIFICATION_REASON.REPOST
+                            ? defs.multiPostRepostGroup.$build({
+                                actor: sc.dids.bob,
+                                items: kept.map(({ post }) => ({ post })),
+                              })
+                            : reason === NOTIFICATION_REASON.LIKE_VIA_REPOST
+                              ? defs.multiPostLikeViaRepostGroup.$build({
+                                  actor: sc.dids.bob,
+                                  items: viaRepostItems,
+                                })
+                              : defs.multiPostRepostViaRepostGroup.$build({
+                                  actor: sc.dids.bob,
+                                  items: viaRepostItems,
+                                }),
+                    }),
+                  ]
+                : [],
+            )
+            expect(response.relatedViews).toMatchObject([
+              ...(remaining
+                ? [
+                    {
+                      $type: app.bsky.actor.defs.profileViewBasic.$type,
+                      did: sc.dids.bob,
+                    },
+                  ]
+                : []),
+              ...kept.slice(0, 10).map(({ post }) => ({
+                $type: app.bsky.feed.defs.postView.$type,
+                uri: post,
+              })),
+            ])
+            expect(response.cursor).toBeUndefined()
+            expect(response.seenAt).toBe(records[10]!.indexedAt)
+            for (const group of response.groups)
+              expect(defs.group.$matches(group)).toBe(true)
+          },
+        )
+      },
+    )
+
     const cappedPost = post('capped')
     const cappedGenerator: AtUriString = `at://did:plc:viewer/${app.bsky.feed.generator.$type}/capped`
     const cappedRepost: AtUriString = `at://did:plc:viewer/${app.bsky.feed.repost.$type}/capped`
     const allActors = Array.from({ length: 8 }, (_, index) => ({
       actor: `did:plc:cap-actor-${index}` as DidString,
     }))
+
+    it('returns basic related profiles with filtered known followers', async () => {
+      const { recipient, headers } = await seedSpotlight()
+      const { bob, carol, dan } = sc.dids
+      await sc.follow(bob, recipient)
+      await sc.follow(recipient, carol)
+      await sc.follow(recipient, dan)
+      await sc.follow(carol, bob)
+      await sc.follow(dan, bob)
+      await sc.block(bob, dan)
+      await network.processAll()
+      const client = network.bsky.getClient()
+      const detailed = await client.call(
+        app.bsky.actor.getProfile,
+        { actor: bob },
+        {
+          headers: await network.serviceHeaders(
+            recipient,
+            app.bsky.actor.getProfile.$lxm,
+          ),
+        },
+      )
+      using aggregates = vi.spyOn(
+        network.bsky.ctx.hydrator.dataplane,
+        'getCountsForUsers',
+      )
+
+      const response = await client.call(defs, { limit: 4 }, { headers })
+
+      const profile = response.relatedViews?.find(
+        app.bsky.actor.defs.profileViewBasic.$isTypeOf,
+      )
+      assert(profile)
+      expect(profile.did).toBe(bob)
+      expect(profile.viewer).toEqual(detailed.viewer)
+      expect(profile.viewer?.knownFollowers).toMatchObject({
+        count: 2,
+        followers: [{ did: carol }],
+      })
+      expect(profile.viewer?.knownFollowers?.followers).toHaveLength(1)
+      expect(
+        profile.viewer?.knownFollowers?.followers[0]?.viewer?.knownFollowers,
+      ).toBeUndefined()
+      expect(profile.labels).toEqual(detailed.labels)
+      expect(profile.verification).toEqual(detailed.verification)
+      expect(profile).not.toHaveProperty('description')
+      expect(profile).not.toHaveProperty('followersCount')
+      expect(aggregates).not.toHaveBeenCalled()
+    })
+
+    it.each(['all', 'followers'] as const)(
+      'hydrates known followers for the first ten actors per follow group in the %s feed',
+      async (feed) => {
+        const { recipient, headers } = await seedSpotlight()
+        const { carol, dan } = sc.dids
+        await sc.follow(recipient, carol)
+        await sc.follow(recipient, dan)
+        await network.processAll()
+        await sc.follow(carol, recipient)
+
+        const followers: DidString[] = []
+        const name = `social-proof-${fixtureIndex++}`
+        for (let index = 0; index < 12; index++) {
+          const handle: HandleString = `${name}-${index}.test`
+          const { did } = await sc.createAccount(`${name}-${index}`, {
+            email: `${handle}@test.com`,
+            handle,
+            password: 'social-proof-pass',
+          })
+          followers.push(did)
+          await sc.follow(did, recipient)
+          await sc.follow(dan, did)
+        }
+        await network.processAll()
+        using knownFollowers = vi.spyOn(
+          network.bsky.ctx.hydrator.dataplane,
+          'sampleFollowsFollowing',
+        )
+
+        const response = await network.bsky
+          .getClient()
+          .call(defs, { feed, limit: 30 }, { headers })
+
+        const followGroups = response.groups
+          .map(({ kind }) => kind)
+          .filter(defs.followGroup.$isTypeOf)
+        expect(followGroups.map(({ items }) => items.length)).toEqual(
+          feed === 'all' ? [12] : Array(12).fill(1),
+        )
+        expect(
+          response.groups.filter(({ kind }) =>
+            defs.followBackNotification.$isTypeOf(kind),
+          ),
+        ).toHaveLength(1)
+        const expectedDids = followers
+          .slice()
+          .reverse()
+          .slice(0, feed === 'all' ? 10 : 12)
+        expect(
+          followGroups.flatMap(({ items }) =>
+            items.slice(0, 10).map(({ actor }) => actor),
+          ),
+        ).toEqual(expectedDids)
+        expect(
+          knownFollowers.mock.calls.flatMap(([req]) => req.targetDids),
+        ).toEqual(expectedDids)
+        const profiles = response.relatedViews?.filter(
+          app.bsky.actor.defs.profileViewBasic.$isTypeOf,
+        )
+        expect(
+          profiles
+            ?.filter((profile) => profile.viewer?.knownFollowers)
+            .map(({ did }) => did),
+        ).toEqual(expectedDids)
+        for (const did of expectedDids) {
+          expect(
+            profiles?.find((profile) => profile.did === did)?.viewer
+              ?.knownFollowers,
+          ).toMatchObject({ count: 1, followers: [{ did: dan }] })
+        }
+      },
+    )
 
     it.each([
       {
@@ -1260,7 +1897,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expect(group.kind.items).toEqual(follows.map(({ actor }) => ({ actor })))
       expect(response.relatedViews).toMatchObject(
         follows.slice(0, 10).map(({ actor }) => ({
-          $type: app.bsky.actor.defs.profileViewDetailed.$type,
+          $type: app.bsky.actor.defs.profileViewBasic.$type,
           did: actor,
         })),
       )
@@ -1296,7 +1933,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         expect(group.indexedAt).toBe(remaining[0]!.indexedAt)
         expect(response.relatedViews).toMatchObject([
           {
-            $type: app.bsky.actor.defs.profileViewDetailed.$type,
+            $type: app.bsky.actor.defs.profileViewBasic.$type,
             did: sc.dids.bob,
           },
           ...remaining.slice(0, 10).map(({ post }) => ({
@@ -1355,7 +1992,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       )
       expect(response.relatedViews).toMatchObject([
         ...authors.map((did) => ({
-          $type: app.bsky.actor.defs.profileViewDetailed.$type,
+          $type: app.bsky.actor.defs.profileViewBasic.$type,
           did,
         })),
         ...postGroups.flatMap(({ posts }) =>
@@ -1425,7 +2062,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
           ...(remaining
             ? [
                 {
-                  $type: app.bsky.actor.defs.profileViewDetailed.$type,
+                  $type: app.bsky.actor.defs.profileViewBasic.$type,
                   did: sc.dids.bob,
                 },
               ]
@@ -1437,7 +2074,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
         ])
         for (const view of response.relatedViews ?? []) {
           expect(
-            app.bsky.actor.defs.profileViewDetailed.$matches(view) ||
+            app.bsky.actor.defs.profileViewBasic.$matches(view) ||
               app.bsky.feed.defs.postView.$matches(view),
           ).toBe(true)
         }
@@ -1468,7 +2105,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expect(response.groups).toHaveLength(4)
       const expectedViews = [
         ...[sc.dids.bob, sc.dids.carol].map((did) => ({
-          $type: app.bsky.actor.defs.profileViewDetailed.$type,
+          $type: app.bsky.actor.defs.profileViewBasic.$type,
           did,
         })),
         ...records.map(({ post }) => ({
@@ -1480,7 +2117,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
           uri: generator.uriStr,
         },
         {
-          $type: app.bsky.graph.defs.starterPackView.$type,
+          $type: app.bsky.graph.defs.starterPackViewBasic.$type,
           uri: starterPack.uriStr,
         },
       ]
@@ -1680,7 +2317,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expect(first.cursor).toBe(records[3]!.indexedAt)
       expect(first.relatedViews).toMatchObject([
         ...[sc.dids.carol, sc.dids.bob].map((did) => ({
-          $type: app.bsky.actor.defs.profileViewDetailed.$type,
+          $type: app.bsky.actor.defs.profileViewBasic.$type,
           did,
         })),
         ...records.map(({ post }) => ({
@@ -1705,7 +2342,7 @@ describe.each(['algoGravity', 'algoLookback'] as const)(
       expect(second.cursor).toBeUndefined()
       expect(second.relatedViews).toMatchObject([
         {
-          $type: app.bsky.actor.defs.profileViewDetailed.$type,
+          $type: app.bsky.actor.defs.profileViewBasic.$type,
           did: sc.dids.carol,
         },
         {
@@ -1778,9 +2415,9 @@ describe('adaptive raw notification fetch limit', () => {
   ])(
     '$description',
     ({ itemsFetched, groupsBuilt, groupsNeeded, expected }) => {
-      expect(getNextRawLimit(itemsFetched, groupsBuilt, groupsNeeded)).toBe(
-        expected,
-      )
+      expect(
+        getNextRawLimit(itemsFetched, groupsBuilt, groupsNeeded, 300, 3000),
+      ).toBe(expected)
     },
   )
 })

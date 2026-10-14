@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { validateStandardSiteForUrl } from './standard-site.js'
+import type { AtUriString } from '@atproto/lex'
+import type { ExternalRecord } from '../../hydration/external.js'
+import { HydrationMap } from '../../hydration/util.js'
+import {
+  getStandardSiteRecordsForUri,
+  validateStandardSiteForUrl,
+  validateStandardSiteRecordsForUrl,
+} from './standard-site.js'
 
 const docDid = 'did:plc:doc'
 const pubDid = 'did:plc:pub'
@@ -419,5 +426,320 @@ describe(validateStandardSiteForUrl, () => {
         ),
       ).toBe(true)
     })
+  })
+})
+
+const docUriT = docUri as AtUriString
+const pubUriT = pubUri as AtUriString
+
+const stored = (
+  record: Record<string, unknown>,
+  cid: string,
+): ExternalRecord => ({
+  record: record as ExternalRecord['record'],
+  cid,
+  sortedAt: new Date(0),
+  indexedAt: new Date(0),
+  takedownRef: undefined,
+})
+
+const storedDoc = (site: string, extra: Record<string, unknown> = {}) =>
+  stored(
+    {
+      $type: 'site.standard.document',
+      site,
+      title: 'Title',
+      publishedAt: '2025-01-01T00:00:00.000Z',
+      path: '/posts/hello',
+      ...extra,
+    },
+    'bafydoc',
+  )
+
+const storedPub = (url = 'https://example.com') =>
+  stored({ $type: 'site.standard.publication', url, name: 'Pub' }, 'bafypub')
+
+const recordsOf = (entries: [string, ExternalRecord | null][]) =>
+  new HydrationMap<AtUriString, ExternalRecord>(
+    entries as [AtUriString, ExternalRecord | null][],
+  )
+
+describe(getStandardSiteRecordsForUri, () => {
+  it('selects a document and the publication named by its site', () => {
+    const doc = storedDoc(pubUri)
+    const pub = storedPub()
+    const sel = getStandardSiteRecordsForUri(
+      docUriT,
+      recordsOf([
+        [docUri, doc],
+        [pubUri, pub],
+      ]),
+    )
+    expect(sel.document?.ref).toEqual({ uri: docUri, cid: 'bafydoc' })
+    expect(sel.document?.info.record).toBe(doc.record)
+    expect(sel.publication?.ref).toEqual({ uri: pubUri, cid: 'bafypub' })
+    expect(sel.publication?.info.record).toBe(pub.record)
+  })
+
+  it('selects only the document for a web-URL site', () => {
+    const sel = getStandardSiteRecordsForUri(
+      docUriT,
+      recordsOf([
+        [docUri, storedDoc('https://example.com')],
+        [pubUri, storedPub()],
+      ]),
+    )
+    expect(sel.document).toBeDefined()
+    expect(sel.publication).toBeUndefined()
+  })
+
+  it('selects only a canonical publication', () => {
+    const sel = getStandardSiteRecordsForUri(
+      pubUriT,
+      recordsOf([
+        [pubUri, storedPub()],
+        [docUri, storedDoc(pubUri)],
+      ]),
+    )
+    expect(sel.document).toBeUndefined()
+    expect(sel.publication?.ref.uri).toBe(pubUri)
+  })
+
+  it('keeps the document when its publication is missing or null', () => {
+    const missing = getStandardSiteRecordsForUri(
+      docUriT,
+      recordsOf([[docUri, storedDoc(pubUri)]]),
+    )
+    expect(missing.document).toBeDefined()
+    expect(missing.publication).toBeUndefined()
+    const nulled = getStandardSiteRecordsForUri(
+      docUriT,
+      recordsOf([
+        [docUri, storedDoc(pubUri)],
+        [pubUri, null],
+      ]),
+    )
+    expect(nulled.document).toBeDefined()
+    expect(nulled.publication).toBeUndefined()
+  })
+
+  it('keeps the document when the referenced publication body is invalid', () => {
+    const sel = getStandardSiteRecordsForUri(
+      docUriT,
+      recordsOf([
+        [docUri, storedDoc(pubUri)],
+        [pubUri, stored({ $type: 'site.standard.publication', url: 1 }, 'x')],
+      ]),
+    )
+    expect(sel.document).toBeDefined()
+    expect(sel.publication).toBeUndefined()
+  })
+
+  it('selects nothing for an invalid body', () => {
+    const bad = stored({ $type: 'site.standard.document', site: pubUri }, 'x')
+    expect(
+      getStandardSiteRecordsForUri(docUriT, recordsOf([[docUri, bad]])),
+    ).toEqual({})
+  })
+
+  it('selects nothing when the body type does not match the URI collection', () => {
+    expect(
+      getStandardSiteRecordsForUri(docUriT, recordsOf([[docUri, storedPub()]])),
+    ).toEqual({})
+  })
+
+  it('selects nothing for other collections, missing roots, or no records', () => {
+    const other = `at://${docDid}/app.bsky.feed.post/abc` as AtUriString
+    expect(
+      getStandardSiteRecordsForUri(other, recordsOf([[other, storedPub()]])),
+    ).toEqual({})
+    expect(getStandardSiteRecordsForUri(docUriT, recordsOf([]))).toEqual({})
+    expect(getStandardSiteRecordsForUri(docUriT, undefined)).toEqual({})
+  })
+
+  it('does not substitute unrelated hydrated records for the canonical URI', () => {
+    const otherDoc =
+      `at://${docDid}/site.standard.document/other` as AtUriString
+    const otherPub =
+      `at://${pubDid}/site.standard.publication/other` as AtUriString
+    const records = recordsOf([
+      [otherDoc, storedDoc(otherPub)],
+      [otherPub, storedPub()],
+    ])
+    expect(getStandardSiteRecordsForUri(docUriT, records)).toEqual({})
+    expect(getStandardSiteRecordsForUri(pubUriT, records)).toEqual({})
+    // an unrelated publication is not used for a document naming a different one
+    const sel = getStandardSiteRecordsForUri(
+      docUriT,
+      recordsOf([
+        [docUri, storedDoc(pubUri)],
+        [otherPub, storedPub()],
+      ]),
+    )
+    expect(sel.document).toBeDefined()
+    expect(sel.publication).toBeUndefined()
+  })
+
+  it('does not mutate the supplied records', () => {
+    const doc = storedDoc(pubUri)
+    const snapshot = structuredClone(doc.record)
+    getStandardSiteRecordsForUri(docUriT, recordsOf([[docUri, doc]]))
+    expect(doc.record).toEqual(snapshot)
+  })
+})
+
+describe(validateStandardSiteRecordsForUrl, () => {
+  const select = (entries: [string, ExternalRecord | null][], uri: string) =>
+    getStandardSiteRecordsForUri(uri as AtUriString, recordsOf(entries))
+
+  it('rejects when neither slot is present', () => {
+    expect(
+      validateStandardSiteRecordsForUrl(
+        undefined,
+        undefined,
+        'https://example.com',
+      ),
+    ).toBe(false)
+  })
+
+  it('accepts a document with its matching publication', () => {
+    const { document, publication } = select(
+      [
+        [docUri, storedDoc(pubUri)],
+        [pubUri, storedPub()],
+      ],
+      docUri,
+    )
+    expect(
+      validateStandardSiteRecordsForUrl(
+        document,
+        publication,
+        'https://example.com/posts/hello',
+      ),
+    ).toBe(true)
+    expect(
+      validateStandardSiteRecordsForUrl(
+        document,
+        publication,
+        'https://example.com/posts/other',
+      ),
+    ).toBe(false)
+  })
+
+  it('rejects a document whose publication is missing', () => {
+    const { document, publication } = select(
+      [[docUri, storedDoc(pubUri)]],
+      docUri,
+    )
+    expect(
+      validateStandardSiteRecordsForUrl(
+        document,
+        publication,
+        'https://example.com/posts/hello',
+      ),
+    ).toBe(false)
+  })
+
+  it('rejects a supplied publication the document does not name', () => {
+    const { document } = select([[docUri, storedDoc(pubUri)]], docUri)
+    const { publication } = select(
+      [[`at://${pubDid}/site.standard.publication/other`, storedPub()]],
+      `at://${pubDid}/site.standard.publication/other`,
+    )
+    expect(
+      validateStandardSiteRecordsForUrl(
+        document,
+        publication,
+        'https://example.com/posts/hello',
+      ),
+    ).toBe(false)
+  })
+
+  it('accepts a web-URL document alone and rejects a URL mismatch', () => {
+    const { document } = select(
+      [[docUri, storedDoc('https://example.com')]],
+      docUri,
+    )
+    expect(
+      validateStandardSiteRecordsForUrl(
+        document,
+        undefined,
+        'https://example.com/posts/hello',
+      ),
+    ).toBe(true)
+    expect(
+      validateStandardSiteRecordsForUrl(
+        document,
+        undefined,
+        'https://evil.com/posts/hello',
+      ),
+    ).toBe(false)
+  })
+
+  it('rejects a web-URL document paired with a publication', () => {
+    const { document } = select(
+      [[docUri, storedDoc('https://example.com')]],
+      docUri,
+    )
+    const { publication } = select([[pubUri, storedPub()]], pubUri)
+    expect(
+      validateStandardSiteRecordsForUrl(
+        document,
+        publication,
+        'https://example.com/posts/hello',
+      ),
+    ).toBe(false)
+  })
+
+  it('accepts a standalone publication on an exact URL only', () => {
+    const { publication } = select([[pubUri, storedPub()]], pubUri)
+    expect(
+      validateStandardSiteRecordsForUrl(
+        undefined,
+        publication,
+        'https://example.com/',
+      ),
+    ).toBe(true)
+    expect(
+      validateStandardSiteRecordsForUrl(
+        undefined,
+        publication,
+        'https://example.com/other',
+      ),
+    ).toBe(false)
+  })
+
+  it('keeps platform subpath exceptions', () => {
+    const { document, publication } = select(
+      [
+        [docUri, storedDoc(pubUri, { path: '/post' })],
+        [pubUri, storedPub('https://author.pckt.blog')],
+      ],
+      docUri,
+    )
+    expect(
+      validateStandardSiteRecordsForUrl(
+        document,
+        publication,
+        'https://author.pckt.blog/post/extra',
+      ),
+    ).toBe(true)
+  })
+
+  it('does not fail an empty title (renderability is not validated)', () => {
+    const { document, publication } = select(
+      [
+        [docUri, storedDoc(pubUri, { title: '' })],
+        [pubUri, storedPub()],
+      ],
+      docUri,
+    )
+    expect(
+      validateStandardSiteRecordsForUrl(
+        document,
+        publication,
+        'https://example.com/posts/hello',
+      ),
+    ).toBe(true)
   })
 })

@@ -33,6 +33,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     version: env.version,
     devMode: env.devMode,
     serviceRecordCacheTTL: env.serviceRecordCacheTTL ?? 5 * MINUTE, // default 5 mins
+    labelQueryWildcardsEnabled: env.labelQueryWildcardsEnabled ?? false,
   }
 
   assert(env.dbPostgresUrl, 'dbPostgresUrl is required')
@@ -183,6 +184,8 @@ export type ServiceConfig = {
   version?: string
   devMode?: boolean
   serviceRecordCacheTTL: number // in ms, default 5 mins
+  /** Allow wildcard label queries; disabled by default. */
+  labelQueryWildcardsEnabled?: boolean
 }
 
 export type BlobDivertConfig = {

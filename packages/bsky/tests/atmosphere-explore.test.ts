@@ -249,6 +249,7 @@ async function setup(config: unknown = {}) {
     blockedActors,
     labels,
     dataplane,
+    hydrator,
     cfg,
     fetchMock,
     query: async (
@@ -287,14 +288,9 @@ const curated = {
     title: 'Explore',
     image: 'https://example.com/banner.jpg',
   },
-  articles: [
-    group([missingUri], true),
-    group([docUri, pubUri], true),
-    group([docUri]),
-    group([pubUri, docUri]),
-  ],
+  articles: [group([missingUri], true), group([docUri], true), group([docUri])],
   publications: [group([pubUri])],
-  photos: [group([photoUri, galleryUri], true)],
+  photos: [group([galleryUri], true)],
   livestreams: [group([liveUri])],
   apps: [{ id: 'app', title: 'An app', url: 'https://example.com/app' }],
 }
@@ -302,7 +298,16 @@ const curated = {
 describe('Atmosphere Explore', () => {
   it('hydrates canonical views, associations, ordering, and featured flags', async () => {
     await using fixture = await setup(curated)
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
     const { status, body } = await fixture.query()
+    expect(hydrate).toHaveBeenCalledWith(
+      [missingUri, docUri, pubUri, galleryUri, liveUri],
+      expect.objectContaining({ viewer: null }),
+    )
+    expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
     expect(status).toBe(200)
     expect(body.announcementBanner).toEqual(curated.announcementBanner)
     expect(body.apps).toEqual(curated.apps)
@@ -352,6 +357,86 @@ describe('Atmosphere Explore', () => {
     expect(request.url).toBe(service)
     expect(request.headers.get('authorization')).toBeNull()
     expect(request.redirect).toBe('error')
+  })
+
+  it('uses only the first URI as the canonical root for every section', async () => {
+    await using fixture = await setup({
+      articles: [group([docUri, missingUri], true)],
+      publications: [group([pubUri, 'bad'])],
+      photos: [group([galleryUri, photoUri, null], true)],
+      livestreams: [group([liveUri, missingUri])],
+    })
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
+    using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+    const { status, body } = await fixture.query()
+
+    expect(status).toBe(200)
+    expect(hydrate).toHaveBeenCalledWith(
+      [docUri, pubUri, galleryUri, liveUri],
+      expect.objectContaining({ viewer: null }),
+    )
+    expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
+    expect(lookup.mock.calls.flatMap(([params]) => params.uris)).not.toContain(
+      missingUri,
+    )
+    expect(body.articles).toHaveLength(1)
+    expect(body.articles[0].featured).toBe(true)
+    expect(body.publications).toHaveLength(1)
+    expect(body.photos).toHaveLength(1)
+    expect(body.photos[0].featured).toBe(true)
+    expect(body.photos[0].view.associatedRefs?.map(({ uri }) => uri)).toEqual([
+      galleryUri,
+      itemUri,
+      photoUri,
+    ])
+    expect(body.livestreams).toHaveLength(1)
+  })
+
+  test.each([
+    { uris: [] },
+    { uris: [null, docUri] },
+    { uris: ['bad', docUri] },
+    { uris: [missingUri, docUri] },
+  ])(
+    'does not fall back to another article URI when the first is absent or unavailable: $uris',
+    async ({ uris }) => {
+      await using fixture = await setup({ articles: [group(uris)] })
+      using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+      const { status, body } = await fixture.query()
+
+      expect(status).toBe(200)
+      expect(body.articles).toEqual([])
+      expect(
+        lookup.mock.calls.flatMap(([params]) => params.uris),
+      ).not.toContain(docUri)
+    },
+  )
+
+  it('does not substitute a later URI with the correct section type', async () => {
+    await using fixture = await setup({
+      articles: [group([pubUri, docUri])],
+      publications: [group([docUri, pubUri])],
+      photos: [group([photoUri, galleryUri])],
+      livestreams: [group([pubUri, liveUri])],
+    })
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
+    const { status, body } = await fixture.query()
+
+    expect(status).toBe(200)
+    expect(hydrate).toHaveBeenCalledWith(
+      [pubUri, docUri, photoUri],
+      expect.objectContaining({ viewer: null }),
+    )
+    expect(body.articles).toEqual([])
+    expect(body.publications).toEqual([])
+    expect(body.photos).toEqual([])
+    expect(body.livestreams).toEqual([])
   })
 
   test.each<app.bsky.unspecced.getAtmosphereExploreTab.$Params>([
@@ -407,10 +492,9 @@ describe('Atmosphere Explore', () => {
     ).toBeNull()
   })
 
-  it('omits unavailable or mismatched associations instead of borrowing another group', async () => {
+  it('omits articles with unavailable publication dependencies', async () => {
     await using fixture = await setup({
-      articles: [group([docUri]), group([docUri, pubUri])],
-      publications: [group([pubUri])],
+      articles: [group([docUri])],
     })
     fixture.takenDown.add(pubUri)
     expect((await fixture.query()).body.articles).toEqual([])
@@ -425,6 +509,41 @@ describe('Atmosphere Explore', () => {
     )
     expect((await fixture.query()).body.articles).toEqual([])
   })
+
+  test.each([
+    { note: 'automatically discovered', publications: [] },
+    { note: 'explicitly in another group', publications: [group([pubUri])] },
+  ])(
+    'renders a canonical document root with its publication $note',
+    async ({ publications }) => {
+      await using fixture = await setup({
+        articles: [group([docUri])],
+        publications,
+      })
+      using dependencies = vi.spyOn(
+        fixture.hydrator,
+        'hydrateExternalViewDependencies',
+      )
+      const { status, body } = await fixture.query()
+
+      expect(status).toBe(200)
+      expect(
+        dependencies.mock.calls.some(
+          ([state]) => state.externalRecords?.get(pubUri)?.record,
+        ),
+      ).toBe(true)
+      expect(body.articles).toHaveLength(1)
+      expect(body.articles[0].view).toMatchObject({
+        title: 'Article',
+        uri: 'https://example.com/blog/story',
+        publisher: { title: 'Publication', subscriptionCount: 4 },
+      })
+      expect(
+        body.articles[0].view.associatedRefs?.map(({ uri }) => uri),
+      ).toEqual([docUri, pubUri])
+      expect(body.publications).toHaveLength(publications.length)
+    },
+  )
 
   test.each(['record', 'label', 'actor', 'block'] as const)(
     'omits moderated content: %s',
@@ -462,6 +581,64 @@ describe('Atmosphere Explore', () => {
     expect(fixture.records.get(itemUri)).not.toHaveProperty('position')
     fixture.takenDown.add(photoUri)
     expect((await fixture.query()).body.photos).toEqual([])
+  })
+
+  it('preserves gallery position ordering through nested hydration in mixed input', async () => {
+    await using fixture = await setup(curated)
+    const item2Uri = atUri(author, grainGalleryItem.$type, 'item2')
+    const photo2Uri = atUri(author, grainPhoto.$type, 'photo2')
+    fixture.records.set(itemUri, {
+      ...fixture.records.get(itemUri)!,
+      position: 1,
+    })
+    fixture.records.set(
+      item2Uri,
+      grainGalleryItem.$build({
+        gallery: galleryUri,
+        item: photo2Uri,
+        position: 0,
+        createdAt: publishedAt,
+      }),
+    )
+    fixture.records.set(photo2Uri, {
+      ...fixture.records.get(photoUri)!,
+      alt: 'Earlier photo',
+    })
+    using backlinks = vi
+      .spyOn(fixture.dataplane, 'getAtmosphereBacklinks')
+      .mockImplementation(
+        async ({ collection, targetUri }) =>
+          new GetAtmosphereBacklinksResponse({
+            backlinks:
+              collection === grainGalleryItem.$type && targetUri === galleryUri
+                ? [{ uri: itemUri }, { uri: item2Uri }]
+                : [],
+          }),
+      )
+
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    expect(body.articles).toHaveLength(2)
+    expect(body.publications).toHaveLength(1)
+    expect(body.livestreams).toHaveLength(1)
+    expect(
+      body.photos[0].view.items.map(
+        (item) =>
+          app.bsky.embed.external.viewGalleryImage.$ifMatches(item)?.alt,
+      ),
+    ).toEqual(['Earlier photo', 'A photo'])
+    expect(body.photos[0].view.associatedRefs?.map(({ uri }) => uri)).toEqual([
+      galleryUri,
+      item2Uri,
+      photo2Uri,
+      itemUri,
+      photoUri,
+    ])
+    expect(backlinks).toHaveBeenCalledWith({
+      targetUri: galleryUri,
+      collection: grainGalleryItem.$type,
+      limit: 10,
+    })
   })
 
   it('rejects gallery item shapes outside the canonical lexicon', async () => {
@@ -507,7 +684,7 @@ describe('Atmosphere Explore', () => {
   })
 
   it('uses bounded, deduplicated profile previews', async () => {
-    await using fixture = await setup({ articles: [group([docUri, pubUri])] })
+    await using fixture = await setup({ articles: [group([docUri])] })
     using backlinks = vi
       .spyOn(fixture.dataplane, 'getAtmosphereBacklinks')
       .mockResolvedValue(
@@ -554,6 +731,7 @@ describe('Atmosphere Explore', () => {
     const { body } = await fixture.query()
     expect(lookup).toHaveBeenCalledWith({
       uris: [
+        pubUri,
         atUri('did:plc:z', site.standard.graph.recommend.$type, 'one'),
         atUri('did:plc:a', site.standard.graph.recommend.$type, 'one'),
         atUri('did:plc:a', site.standard.graph.recommend.$type, 'two'),

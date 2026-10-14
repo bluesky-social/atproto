@@ -1,3 +1,15 @@
+import type { AtUriString, InferInput, RecordSchema } from '@atproto/lex'
+import { parseAtUriString } from '@atproto/syntax'
+import type {
+  AssociatedSiteStandardRecord,
+  ExternalRecord,
+  ExternalRecords,
+  SiteStandardDocument,
+  SiteStandardPublication,
+} from '../../hydration/external.js'
+import type { RecordInfo } from '../../hydration/util.js'
+import { site } from '../../lexicons/index.js'
+
 export const SITE_STANDARD_NSID_PREFIX = 'site.standard.'
 
 /**
@@ -93,9 +105,11 @@ const canonicalUrlMatchesAssumed = (
  * side carries the slash.
  *
  * Structural validation of the doc/pub pair (matching `site` ↔ pub URI,
- * no orphan docs that claim a missing publication) happens upstream in
- * `getSiteStandardRecordsFromHydrationMapsByRefs` /
- * `…ByDocumentUri` (see `hydration/external.ts`); by the time this
+ * no orphan docs that claim a missing publication) happens upstream: in the
+ * pinned `getSiteStandardRecordsFromHydrationMapsByRefs`
+ * (`hydration/external.ts`), or by `validateStandardSiteRecordsForUrl` over
+ * `getStandardSiteRecordsForUri`'s selection (which alone leaves an orphan
+ * document selected with an absent publication). By the time this
  * function runs the pair is already known to be structurally consistent,
  * so we only check whether the records back the URL.
  *
@@ -112,7 +126,7 @@ const canonicalUrlMatchesAssumed = (
  * - Loose document (web-URL `site`): `document.site + document.path`
  *   must canonicalize to `assumedUrl` (or be a subpath-friendly prefix).
  *   (Doc with at-uri `site` but no publication can't reach this function
- *   — the lookups reject it.)
+ *   — callers reject it.)
  * - Publication only: `publication.url` must canonicalize exactly to
  *   `assumedUrl`.
  * - Neither: vacuously valid; the caller short-circuits before we get
@@ -155,6 +169,100 @@ export const validateStandardSiteForUrl = (
     return canonicalizeHttpUrl(publication.info.record.url) === canonicalAssumed
   }
   return true
+}
+
+export type StandardSiteRecordSelection = {
+  document?: AssociatedSiteStandardRecord<SiteStandardDocument>
+  publication?: AssociatedSiteStandardRecord<SiteStandardPublication>
+}
+
+const matchStoredRecord = <TSchema extends RecordSchema>(
+  schema: TSchema,
+  uri: AtUriString,
+  info: ExternalRecord | null | undefined,
+): AssociatedSiteStandardRecord<RecordInfo<InferInput<TSchema>>> | undefined =>
+  info && schema.$matches(info.record, { strict: false })
+    ? { ref: { uri, cid: info.cid }, info: { ...info, record: info.record } }
+    : undefined
+
+/**
+ * Select the Standard.site records backing `canonicalUri` from in-memory
+ * hydrated `records`: the canonical record itself and, for a document whose
+ * `site` is a publication AT-URI, that publication. Stored bodies are checked
+ * against the Lexicon without parsing or defaulting. Nothing is fetched, and a
+ * missing or invalid referenced publication leaves that slot empty while the
+ * document stays selected.
+ */
+export const getStandardSiteRecordsForUri = (
+  canonicalUri: AtUriString,
+  records: ExternalRecords | undefined,
+): StandardSiteRecordSelection => {
+  const parsed = parseAtUriString(canonicalUri)
+  if (!parsed.success) return {}
+  const info = records?.get(canonicalUri)
+
+  switch (parsed.value.collection) {
+    case site.standard.publication.$type: {
+      const publication = matchStoredRecord(
+        site.standard.publication.main,
+        canonicalUri,
+        info,
+      )
+      return publication ? { publication } : {}
+    }
+    case site.standard.document.$type: {
+      const document = matchStoredRecord(
+        site.standard.document.main,
+        canonicalUri,
+        info,
+      )
+      if (!document) return {}
+      const publicationUri = publicationUriOf(document.info.record.site)
+      if (!publicationUri) return { document }
+      const publication = matchStoredRecord(
+        site.standard.publication.main,
+        publicationUri,
+        records?.get(publicationUri),
+      )
+      return publication ? { document, publication } : { document }
+    }
+    default:
+      return {}
+  }
+}
+
+const publicationUriOf = (value: string): AtUriString | undefined => {
+  const parsed = parseAtUriString(value)
+  return parsed.success &&
+    parsed.value.collection === site.standard.publication.$type
+    ? (value as AtUriString)
+    : undefined
+}
+
+/**
+ * Whether the selected records form a valid association that backs
+ * `assumedUrl`. A document naming a publication AT-URI needs exactly that
+ * publication; a supplied publication must be the one the document names.
+ * Standalone publications and documents with a web-URL `site` are valid on
+ * their own. URL comparison is `validateStandardSiteForUrl`; renderability
+ * (e.g. empty titles) is not considered.
+ */
+export const validateStandardSiteRecordsForUrl = (
+  document: AssociatedSiteStandardRecord<SiteStandardDocument> | undefined,
+  publication:
+    AssociatedSiteStandardRecord<SiteStandardPublication> | undefined,
+  assumedUrl: string,
+): boolean => {
+  if (!document && !publication) return false
+  if (document) {
+    const documentSite = document.info.record.site
+    if (publication) {
+      if (documentSite !== publication.ref.uri) return false
+    } else if (publicationUriOf(documentSite)) {
+      return false
+    }
+  }
+  return validateStandardSiteForUrl(document, publication, assumedUrl)
 }
 
 const WORDS_PER_MINUTE = 200

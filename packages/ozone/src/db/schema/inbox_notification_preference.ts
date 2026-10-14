@@ -1,3 +1,4 @@
+import type { Generated } from 'kysely'
 import type { DidString } from '@atproto/lex'
 
 export const inboxNotificationPreferenceTableName =
@@ -5,7 +6,11 @@ export const inboxNotificationPreferenceTableName =
 
 export interface InboxNotificationPreference {
   did: DidString
-  push: boolean
+  // @NOTE Retained as the fallback for category preferences not yet set.
+  push: Generated<boolean>
+  reports: Generated<boolean | null>
+  account: Generated<boolean | null>
+  labels: Generated<boolean | null>
 }
 
 export type PartialDB = {

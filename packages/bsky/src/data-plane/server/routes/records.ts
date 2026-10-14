@@ -31,6 +31,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     app.bsky.notification.declaration,
   ),
   getGermDeclarationRecords: getRecords(db, com.germnetwork.declaration),
+  getProfileLinkRecords: getRecords(db, app.bsky.actor.link),
   getStarterPackRecords: getRecords(db, app.bsky.graph.starterpack),
   getVerificationRecords: getRecords(db, app.bsky.graph.verification),
   getStatusRecords: getRecords(db, app.bsky.actor.status),

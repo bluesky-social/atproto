@@ -10,6 +10,7 @@ export type KnownFollowers = app.bsky.actor.defs.KnownFollowers
 export type ProfileAssociatedActivitySubscription =
   app.bsky.actor.defs.ProfileAssociatedActivitySubscription
 export type ProfileAssociatedChat = app.bsky.actor.defs.ProfileAssociatedChat
+export type ProfileLinkView = app.bsky.actor.defs.ProfileLinkView
 export type ProfileView = app.bsky.actor.defs.ProfileView
 export type ProfileViewBasic = app.bsky.actor.defs.ProfileViewBasic
 export type ProfileViewDetailed = app.bsky.actor.defs.ProfileViewDetailed
@@ -188,6 +189,7 @@ export const validateStrongRef = com.atproto.repo.strongRef.$safeValidate
 // com.germnetwork.declaration
 
 export type GermDeclarationRecord = com.germnetwork.declaration.Main
+export type ProfileLinkRecord = app.bsky.actor.link.Main
 
 // site.standard
 
