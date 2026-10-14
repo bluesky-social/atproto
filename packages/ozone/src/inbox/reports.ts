@@ -96,7 +96,13 @@ export async function queryInboxReports(
     )
     .where('r.reporterDid', '=', reporter)
     .where('r.reportType', '!=', APPEAL_REASON_TYPE)
-    .$if(startAt !== undefined, (qb) => qb.where('r.createdAt', '>=', startAt!))
+    // @NOTE updatedAt never precedes createdAt. The redundant bound lets the
+    // updated-time index skip pre-cutoff history instead of filtering it.
+    .$if(startAt !== undefined, (qb) =>
+      qb
+        .where('r.createdAt', '>=', startAt!)
+        .where('r.updatedAt', '>=', startAt!),
+    )
   if (params.filter === 'pending')
     query = query.where('r.status', '!=', 'closed')
   if (params.filter === 'resolved')

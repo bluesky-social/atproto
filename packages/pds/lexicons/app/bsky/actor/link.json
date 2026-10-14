@@ -27,7 +27,12 @@
             "accept": ["image/png", "image/jpeg", "image/webp"],
             "maxSize": 100000
           },
-          "createdAt": { "type": "string", "format": "datetime" }
+          "createdAt": { "type": "string", "format": "datetime" },
+          "labels": {
+            "type": "union",
+            "description": "Self-label values for this link.",
+            "refs": ["com.atproto.label.defs#selfLabels"]
+          }
         }
       }
     }

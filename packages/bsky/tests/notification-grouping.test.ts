@@ -2415,9 +2415,9 @@ describe('adaptive raw notification fetch limit', () => {
   ])(
     '$description',
     ({ itemsFetched, groupsBuilt, groupsNeeded, expected }) => {
-      expect(getNextRawLimit(itemsFetched, groupsBuilt, groupsNeeded)).toBe(
-        expected,
-      )
+      expect(
+        getNextRawLimit(itemsFetched, groupsBuilt, groupsNeeded, 300, 3000),
+      ).toBe(expected)
     },
   )
 })

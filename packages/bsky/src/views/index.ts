@@ -111,6 +111,7 @@ import {
   type PostView,
   type ProfileAssociatedActivitySubscription,
   type ProfileAssociatedChat,
+  type ProfileLinkRecord,
   type ProfileLinkView,
   type ProfileRecord,
   type ProfileView,
@@ -392,6 +393,14 @@ export class Views {
               getBlobCidString(link.record.icon),
             )
           : undefined,
+        labels: [
+          ...(state.labels?.getBySubject(ref.uri) ?? []),
+          ...this.selfLabels({
+            uri: ref.uri,
+            cid: link.cid,
+            record: link.record,
+          }),
+        ],
       })
     }
     return links.length ? links : undefined
@@ -910,6 +919,7 @@ export class Views {
       | ProfileRecord
       | LabelerRecord
       | VerificationRecord
+      | ProfileLinkRecord
       | NotificationRecordDeleted
   }): Label[] {
     if (!uri || !cid || !record) return []
@@ -918,7 +928,8 @@ export class Views {
     if (
       !isPostRecordType(record) &&
       !isProfileRecordType(record) &&
-      !isLabelerRecordType(record)
+      !isLabelerRecordType(record) &&
+      !app.bsky.actor.link.$isTypeOf(record)
     ) {
       return []
     }

@@ -428,18 +428,19 @@ export class Hydrator {
             return this.hydrateStarterPacksBasic([...starterPackUriSet], ctx)
           })()
         : undefined
-      const profileLinksPromise = detailed
+      const profileLinksPromises = detailed
         ? (async () => {
             const state = await profileStatePromise
-            return this.actor
-              .getProfileLinks(
-                profileLinkUris(dids, state.actors),
-                ctx.includeTakedowns,
-              )
-              .catch((err): ProfileLinks => {
-                hydrationLogger.error({ err }, 'Failed to get profile links')
-                return new HydrationMap()
-              })
+            const linkUris = profileLinkUris(dids, state.actors)
+            return Promise.all([
+              this.actor
+                .getProfileLinks(linkUris, ctx.includeTakedowns)
+                .catch((err): ProfileLinks => {
+                  hydrationLogger.error({ err }, 'Failed to get profile links')
+                  return new HydrationMap()
+                }),
+              this.label.getLabelsForSubjects(linkUris, ctx.labelers),
+            ])
           })()
         : undefined
 
@@ -447,18 +448,27 @@ export class Hydrator {
         profileState,
         bidirectionalBlocks,
         starterPackState,
-        profileLinks,
+        [profileLinks, profileLinksLabels],
       ] = await Promise.all([
         profileStatePromise,
         bidirectionalBlocksPromise,
         starterPackStatePromise,
-        profileLinksPromise,
+        profileLinksPromises || [],
       ])
+
+      if (!ctx.includeTakedowns && profileLinks && profileLinksLabels) {
+        actionTakedownLabels(
+          [...profileLinks.keys()],
+          profileLinks,
+          profileLinksLabels,
+        )
+      }
 
       return mergeManyStates(profileState, starterPackState ?? {}, {
         knownFollowers,
         bidirectionalBlocks,
         profileLinks,
+        labels: profileLinksLabels,
         ctx,
       })
     })()
