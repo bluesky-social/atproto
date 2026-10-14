@@ -59,14 +59,21 @@ interface PartialLexiconResolver {
 
 export class FilteredResolver implements PartialLexiconResolver {
   protected readonly filter: Filter
-  protected readonly hasInclude: boolean
+
+  /**
+   * Whether this resolver should throw an error if it fails to resolve an NSID
+   * that is included in its explicit "include" list and not excluded by an
+   * "exclude" list.
+   */
+  protected readonly shouldErrorOnMissing: boolean
 
   constructor(
     protected readonly resolver: PartialLexiconResolver,
     options: BuildFilterOptions,
   ) {
-    this.hasInclude = options?.include != null
     this.filter = buildFilter(options)
+    this.shouldErrorOnMissing =
+      options?.include != null && options?.exclude == null
   }
 
   async resolve(nsid: NSID): Promise<ResolvedLexicon | null> {
@@ -75,9 +82,7 @@ export class FilteredResolver implements PartialLexiconResolver {
     const result = await this.resolver.resolve(nsid)
     if (result) return result
 
-    // Every resolver that has an explicit "include" list must resolve the NSID,
-    // otherwise throw an error.
-    if (this.hasInclude) {
+    if (this.shouldErrorOnMissing) {
       throw new Error(`NSID ${nsid.toString()} not resolved`)
     }
 
