@@ -1,12 +1,12 @@
 {
   "version": 2,
   "resolvers": [
-    { "type": "directory", "path": "../../lexicons-overrides" },
     {
       "type": "directory",
       "path": "../../lexicons",
       "include": ["com.atproto.*", "tools.ozone.*"]
     },
+    { "type": "directory", "path": "../../lexicons-overrides" },
     {
       "type": "http",
       "base": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/",

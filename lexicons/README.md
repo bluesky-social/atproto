@@ -1,3 +1,5 @@
+# Canonical Lexicons Directory
+
 This folder contains the canonical lexicons definitions of the `com.atproto` and `tools.ozone` namespaces.
 
 Any change made to these lexicons will be [published](https://atproto.com/specs/lexicon#lexicon-publication-and-resolution) on the AT Protocol once landed on the `main` branch.
