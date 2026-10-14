@@ -1,5 +1,13 @@
 # @atproto/oauth-provider-ui
 
+## 0.10.6
+
+### Patch Changes
+
+- [#5629](https://github.com/bluesky-social/atproto/pull/5629) [`32f8e45`](https://github.com/bluesky-social/atproto/commit/32f8e454f199f4355574e452f660098a55365706) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve handling of "remember" setting during sign-in and sign-up. Keeps current "remember me" status when user did not explicitly enable/disable it (avoiding sign users out when they are presented with a UI that does not show the "remember me" option)
+- Updated dependencies [[`32f8e45`](https://github.com/bluesky-social/atproto/commit/32f8e454f199f4355574e452f660098a55365706)]:
+  - @atproto/oauth-provider-api@0.10.0
+
 ## 0.10.5
 
 ### Patch Changes

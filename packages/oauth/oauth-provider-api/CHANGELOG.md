@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-api
 
+## 0.10.0
+
+### Minor Changes
+
+- [#5629](https://github.com/bluesky-social/atproto/pull/5629) [`32f8e45`](https://github.com/bluesky-social/atproto/commit/32f8e454f199f4355574e452f660098a55365706) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update sign-out endpoint input
+
 ## 0.9.0
 
 ### Minor Changes
