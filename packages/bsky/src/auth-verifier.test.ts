@@ -15,7 +15,7 @@ function createVerifier(secret = Buffer.from(randomBytes(32).toString('hex'))) {
       alternateAudienceDids: [],
       modServiceDid: 'did:example:moderation',
       adminPasses: [],
-      bffJwtSecret: secret.toString('utf8'),
+      bffJwtSecret: secret,
     }),
   }
 }
@@ -59,7 +59,12 @@ describe('BFF session auth', () => {
   })
 
   it('rejects BFF tokens when no shared secret is configured', async () => {
-    const { verifier } = createVerifier(Buffer.from(''))
+    const verifier = new AuthVerifier({} as DataPlaneClient, {
+      ownDid: serviceDid,
+      alternateAudienceDids: [],
+      modServiceDid: 'did:example:moderation',
+      adminPasses: [],
+    })
     const token = await createToken(randomBytes(32))
 
     await expect(

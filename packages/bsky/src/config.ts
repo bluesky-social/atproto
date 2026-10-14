@@ -138,7 +138,13 @@ export interface ServerConfigValues {
 
 export class ServerConfig {
   private assignedPort?: number
-  constructor(private cfg: ServerConfigValues) {}
+  constructor(private cfg: ServerConfigValues) {
+    assert(
+      cfg.bffJwtSecret == null ||
+        Buffer.byteLength(cfg.bffJwtSecret, 'utf8') >= 32,
+      'BSKY_BFF_JWT_SECRET must be generated from at least 32 random bytes (minimum key length: 32 bytes)',
+    )
+  }
 
   static readEnv(overrides?: Partial<ServerConfigValues>) {
     const version = process.env.BSKY_VERSION || undefined

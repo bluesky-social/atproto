@@ -79,7 +79,7 @@ export type AuthVerifierOpts = {
   modServiceDid: DidString
   adminPasses: string[]
   entrywayJwtPublicKey?: KeyObject
-  bffJwtSecret?: string
+  bffJwtSecret?: Uint8Array
 }
 
 export class AuthVerifier {
@@ -103,8 +103,6 @@ export class AuthVerifier {
     this.adminPasses = new Set(opts.adminPasses)
     this.entrywayJwtPublicKey = opts.entrywayJwtPublicKey
     this.bffJwtSecret = opts.bffJwtSecret
-      ? Buffer.from(opts.bffJwtSecret, 'utf8')
-      : undefined
   }
 
   // verifiers (arrow fns to preserve scope)
