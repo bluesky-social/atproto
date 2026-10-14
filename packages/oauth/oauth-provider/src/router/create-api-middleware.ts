@@ -47,7 +47,6 @@ import {
   validateReferrer,
 } from '../lib/http/index.js'
 import { type RouteCtx, createRoute } from '../lib/http/route.js'
-import { asArray } from '../lib/util/cast.js'
 import { localeSchema } from '../lib/util/locale.js'
 import type { Awaitable } from '../lib/util/type.js'
 import type { OAuthProvider } from '../oauth-provider.js'
@@ -107,23 +106,15 @@ export function createApiMiddleware<
           ? await server.requestManager.peekClientId(requestUri)
           : undefined
 
-        const account = await server.accountManager.createAccount(
-          deviceId,
-          deviceMetadata,
-          input,
-          clientId,
-        )
+        const { account, remembered } =
+          await server.accountManager.createAccount(
+            deviceId,
+            deviceMetadata,
+            input,
+            clientId,
+          )
 
-        // Remember when not in the context of a request by default
-        const remember = requestUri == null
-
-        // Only "remember" the newly created account if it was not created during an
-        // OAuth flow.
-        if (remember) {
-          await server.accountManager.upsertDeviceAccount(deviceId, account.did)
-        }
-
-        const ephemeralToken = remember
+        const ephemeralToken = remembered
           ? undefined
           : await server.signer.createEphemeralToken({
               sub: account.did,
@@ -141,13 +132,10 @@ export function createApiMiddleware<
     apiRoute({
       method: 'POST',
       endpoint: '/sign-in',
-      schema: signInDataSchema.extend({ remember: z.boolean().optional() }),
+      schema: signInDataSchema,
       rotateDeviceCookies: true,
       async handler() {
         const { deviceId, deviceMetadata, requestUri } = this
-
-        // Remember when not in the context of a request by default
-        const { remember = requestUri == null, ...input } = this.input
 
         // Look up the client identifier associated with the pending OAuth
         // request, if any, so it can be surfaced to the sign-in hooks.
@@ -155,22 +143,18 @@ export function createApiMiddleware<
           ? await server.requestManager.peekClientId(requestUri)
           : undefined
 
-        const account = await server.accountManager.authenticateAccount(
-          deviceId,
-          deviceMetadata,
-          input,
-          clientId,
-        )
+        const { account, remembered } =
+          await server.accountManager.authenticateAccount(
+            deviceId,
+            deviceMetadata,
+            this.input,
+            clientId,
+          )
 
-        if (remember) {
-          await server.accountManager.upsertDeviceAccount(deviceId, account.did)
-        } else {
-          // In case the user was already signed in, and signed in again, this
-          // time without "remember me", let's sign them off of the device.
-          await server.accountManager.removeDeviceAccount(deviceId, account.did)
-        }
-
-        const ephemeralToken = remember
+        // If the user was not "remembered", it's device-account association was
+        // removed and any future interaction will require an ephemeral token
+        // to authenticate the user.
+        const ephemeralToken = remembered
           ? undefined
           : await server.signer.createEphemeralToken({
               sub: account.did,
@@ -178,8 +162,7 @@ export function createApiMiddleware<
               requestUri,
             })
 
-        const json = { account, ephemeralToken }
-        return { json }
+        return { json: { account, ephemeralToken } }
       },
     }),
   )
@@ -188,20 +171,12 @@ export function createApiMiddleware<
     apiRoute({
       method: 'POST',
       endpoint: '/sign-out',
-      schema: z
-        .object({
-          did: z.union([didSchema, z.array(didSchema)]),
-        })
-        .strict(),
+      schema: z.object({ did: didSchema }).strict(),
       rotateDeviceCookies: true,
       async handler() {
-        const uniqueSubs = new Set(asArray(this.input.did))
+        await server.accountManager.signOut(this.deviceId, this.input.did)
 
-        for (const sub of uniqueSubs) {
-          await server.accountManager.removeDeviceAccount(this.deviceId, sub)
-        }
-
-        return { json: { success: true as const } }
+        return { json: { success: true } }
       },
     }),
   )
@@ -652,10 +627,7 @@ export function createApiMiddleware<
         // another user's session cookie, we allow them to revoke the device
         // session.
 
-        await server.accountManager.removeDeviceAccount(
-          this.input.deviceId,
-          this.input.did,
-        )
+        await server.accountManager.signOut(this.input.deviceId, this.input.did)
 
         return { json: { success: true } }
       },

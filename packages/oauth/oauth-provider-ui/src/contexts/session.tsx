@@ -48,6 +48,7 @@ export type SessionContextType = {
   canSignUp: boolean
   canSwitchAccounts: boolean
   disableRemember: boolean
+  rememberDefault: boolean
   forcedIdentifier: undefined | string
   leave: undefined | (() => void | Promise<void>)
 }
@@ -77,7 +78,8 @@ export type SessionProviderProps = {
   children: ReactNode
   initialSessions: readonly Session[]
   initialSelected?: DidString | InitialSelectedSession
-  disableRemember?: boolean
+  disableRemember: boolean
+  rememberDefault: boolean
   forcedIdentifier?: string
   leave?: () => void | Promise<void>
 }
@@ -85,8 +87,9 @@ export type SessionProviderProps = {
 export function SessionProvider({
   children,
   initialSessions,
-  initialSelected,
-  disableRemember = false,
+  initialSelected = undefined,
+  disableRemember,
+  rememberDefault,
   forcedIdentifier = undefined,
   leave = undefined,
 }: SessionProviderProps) {
@@ -271,6 +274,7 @@ export function SessionProvider({
       setSession,
       leave,
       disableRemember,
+      rememberDefault,
       forcedIdentifier,
       canSignUp,
       canSwitchAccounts,
@@ -283,6 +287,7 @@ export function SessionProvider({
       setSession,
       leave,
       disableRemember,
+      rememberDefault,
       forcedIdentifier,
       canSignUp,
       canSwitchAccounts,

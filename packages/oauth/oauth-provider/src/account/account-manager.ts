@@ -69,33 +69,34 @@ export class AccountManager {
       throw new InvalidRequestError('hCaptcha token is required')
     }
 
-    const tokens = await this.hcaptchaClient.buildClientTokens(
-      deviceMetadata.ipAddress,
-      input.handle,
-      deviceMetadata.userAgent,
-    )
+    try {
+      const tokens = await this.hcaptchaClient.buildClientTokens(
+        deviceMetadata.ipAddress,
+        input.handle,
+        deviceMetadata.userAgent,
+      )
 
-    const result = await this.hcaptchaClient
-      .verify('signup', input.hcaptchaToken, deviceMetadata.ipAddress, tokens)
-      .catch((err) => {
-        throw InvalidRequestError.from(err, 'hCaptcha verification failed')
+      const result = await this.hcaptchaClient.verify(
+        'signup',
+        input.hcaptchaToken,
+        deviceMetadata.ipAddress,
+        tokens,
+      )
+
+      await this.hooks.onHcaptchaResult?.call(null, {
+        input,
+        deviceId,
+        deviceMetadata,
+        tokens,
+        result,
       })
 
-    await this.hooks.onHcaptchaResult?.call(null, {
-      input,
-      deviceId,
-      deviceMetadata,
-      tokens,
-      result,
-    })
-
-    try {
       this.hcaptchaClient.checkVerifyResult(result, tokens)
+
+      return result
     } catch (err) {
       throw InvalidRequestError.from(err, 'hCaptcha verification failed')
     }
-
-    return result
   }
 
   protected async enforceInviteCode(
@@ -132,9 +133,9 @@ export class AccountManager {
     deviceMetadata: RequestMetadata,
     input: SignUpInput,
     clientId?: ClientId,
-  ): Promise<Account> {
+  ): Promise<{ account: Account; remembered: boolean }> {
     return constantTime(BRUTE_FORCE_MITIGATION_DELAY, async () => {
-      await this.hooks.onSignUpAttempt?.call(null, {
+      await callAsync(this.hooks.onSignUpAttempt, {
         input,
         deviceId,
         deviceMetadata,
@@ -143,14 +144,31 @@ export class AccountManager {
 
       const data = await this.buildSignupData(input, deviceId, deviceMetadata)
 
-      const account = await callAsync(() =>
-        this.store.createAccount(data),
-      ).catch((err) => {
+      const account = await callAsync(async () => {
+        return this.store.createAccount(data)
+      }).catch((err) => {
         throw InvalidRequestError.from(err, 'Account creation failed')
       })
 
+      // @TODO Any error occurring below this point (server error most likely)
+      // will not prevent the account from being created, but it will be
+      // reported to the caller. We may want to wrap these errors in a way that
+      // allows the UI to detect that a sign-up attempt will fail ("account
+      // already exists"), and should provide appropriate feedback to the user
+      // (eg. show sign-in form?).
+
+      const isOAuthFlow = clientId != null
+      const remembered = input.remember ?? !isOAuthFlow
+
+      if (remembered) {
+        await this.upsertDeviceAccount(deviceId, account.did)
+      } else {
+        // no need to remove the device account since it was never added (the
+        // account was just created).
+      }
+
       try {
-        await this.hooks.onSignedUp?.call(null, {
+        await callAsync(this.hooks.onSignedUp, {
           data,
           account,
           deviceId,
@@ -158,9 +176,12 @@ export class AccountManager {
           clientId,
         })
 
-        return account
+        return { account, remembered }
       } catch (err) {
-        await this.removeDeviceAccount(deviceId, account.did)
+        // Delete the device account if an error occurred during the hook
+        if (remembered) {
+          await this.removeDeviceAccount(deviceId, account.did)
+        }
 
         throw InvalidRequestError.from(
           err,
@@ -175,70 +196,84 @@ export class AccountManager {
     deviceMetadata: RequestMetadata,
     data: SignInData,
     clientId?: ClientId,
-  ): Promise<Account> {
+  ): Promise<{ account: Account; remembered: boolean }> {
     return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
+      // @NOTE If the user did not explicitly specify a "remember" preference,
+      // we will use the existence of previously remembered device accounts to
+      // determine the default "remember" behavior.
+      const deviceAccounts = await this.listDeviceAccounts(deviceId)
+
       await this.hooks.onSignInAttempt?.call(null, {
         data,
         deviceId,
         deviceMetadata,
+        deviceAccounts,
         clientId,
       })
 
-      const account = await callAsync(() =>
-        this.store.authenticateAccount(data),
-      ).catch(async (err) => {
+      const account = await callAsync(async () => {
+        return this.store.authenticateAccount({
+          locale: data.locale,
+          password: data.password,
+          username: data.username,
+          emailOtp: data.emailOtp,
+          deviceAccounts,
+        })
+      }).catch(async (error) => {
         // Only notify for credential failures (e.g. unknown identifier, wrong
         // password). Server errors and flows that require an additional factor
-        // are not "failed sign-ins" and do not trigger the hook.
-        //
-        // @NOTE That exclusion rests on the error hierarchy rather than an
-        // explicit guard: `SecondAuthenticationFactorRequiredError` extends
-        // `OAuthError` directly, so it misses this branch and falls through to
-        // the rethrow below. Re-parenting it under `InvalidRequestError` would
-        // silently start reporting second-factor challenges as failed
-        // sign-ins.
-        if (err instanceof InvalidRequestError) {
-          // Stores that throw the more specific `InvalidCredentialsError`
-          // can attach the matched subject identifier to distinguish
-          // "identifier known, password wrong" from "identifier unknown".
-          // This information is only exposed to the hook and is never
-          // surfaced to the client.
-          const isCredentialsError = err instanceof InvalidCredentialsError
-          const did = isCredentialsError ? (err.did ?? null) : null
+        // (SecondAuthenticationFactorRequiredError) are not "failed sign-ins"
+        // and do not trigger the hook.
 
-          // Swallow any error from the hook itself so that it does not mask
-          // the underlying authentication failure being reported.
-          try {
-            await this.hooks.onSignInFailed?.call(null, {
-              data,
-              error: err,
-              did,
-              deviceId,
-              deviceMetadata,
-              clientId,
-            })
-          } catch {
-            // noop
-          }
+        // Stores that throw the more specific `InvalidCredentialsError`
+        // can attach the matched subject identifier to distinguish
+        // "identifier known, password wrong" from "identifier unknown".
+        if (error instanceof InvalidRequestError) {
+          await this.hooks.onSignInFailed?.call(null, {
+            data,
+            error,
+            did: error instanceof InvalidCredentialsError ? error.did : null,
+            deviceId,
+            deviceMetadata,
+            clientId,
+          })
+        }
 
-          if (isCredentialsError) {
-            // Defensively downgrade to a plain InvalidRequestError
-            throw new InvalidRequestError(err.error_description)
-          }
+        throw error
+      })
+
+      const remembered =
+        // If the user has explicitly specified a "remember" preference, use it.
+        data.remember ??
+        // Fall back to checking if the account was previously remembered.
+        deviceAccounts.some((da) => da.account.did === account.did)
+
+      if (remembered) {
+        await this.upsertDeviceAccount(deviceId, account.did)
+      } else {
+        // In case the user was already signed in, and signed in again, this
+        // time without "remember me", let's sign them off of the device.
+        await this.removeDeviceAccount(deviceId, account.did)
+      }
+
+      try {
+        await callAsync(this.hooks.onSignedIn, {
+          data,
+          account,
+          remembered,
+          deviceId,
+          deviceMetadata,
+          clientId,
+        })
+
+        return { account, remembered }
+      } catch (err) {
+        if (remembered) {
+          await this.removeDeviceAccount(deviceId, account.did)
         }
 
         throw err
-      })
-
-      await this.hooks.onSignedIn?.call(null, {
-        data,
-        account,
-        deviceId,
-        deviceMetadata,
-        clientId,
-      })
-
-      return account
+      }
     }).catch((err) => {
       throw InvalidRequestError.from(
         err,
@@ -247,11 +282,19 @@ export class AccountManager {
     })
   }
 
-  public async upsertDeviceAccount(
+  public async signOut(deviceId: DeviceId, did: Did) {
+    await this.removeDeviceAccount(deviceId, did)
+  }
+
+  protected async upsertDeviceAccount(
     deviceId: DeviceId,
     did: Did,
   ): Promise<void> {
     await this.store.upsertDeviceAccount(deviceId, did)
+  }
+
+  protected async removeDeviceAccount(deviceId: DeviceId, did: Did) {
+    return this.store.removeDeviceAccount(deviceId, did)
   }
 
   public async getDeviceAccount(
@@ -277,10 +320,6 @@ export class AccountManager {
 
   public async getAccount(did: Did) {
     return this.store.getAccount(did)
-  }
-
-  public async removeDeviceAccount(deviceId: DeviceId, did: Did) {
-    return this.store.removeDeviceAccount(deviceId, did)
   }
 
   public async listDeviceAccounts(

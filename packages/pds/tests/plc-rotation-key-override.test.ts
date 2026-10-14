@@ -63,14 +63,22 @@ describe('plcRotationKey override', () => {
   it('uses the override for OAuth account creation', async () => {
     const provider = pds.ctx.oauthProvider
     assert(provider)
-    const account = await provider.accountManager.createAccount(
-      `${DEVICE_ID_PREFIX}${randomBytes(DEVICE_ID_BYTES_LENGTH).toString('hex')}`,
+
+    const deviceId =
+      `${DEVICE_ID_PREFIX}${randomBytes(DEVICE_ID_BYTES_LENGTH).toString('hex')}` as const
+
+    const { account } = await provider.accountManager.createAccount(
+      deviceId,
       { ipAddress: '127.0.0.1', port: 0 },
       {
         locale: 'en',
         handle: 'bob.test',
         email: 'bob@test.com',
         password: 'hunter2hunter2',
+        // @NOTE We disable the remembering to prevent the account manager
+        // to attempt creating a device-session association that would fail due
+        // the device not existing (the device ID was forged just)
+        remember: false,
       },
     )
     await expectOverrideKey(account.did)

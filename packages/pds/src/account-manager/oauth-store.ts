@@ -1,6 +1,7 @@
 import assert from 'node:assert'
 import { type Client, createOp as createPlcOp } from '@did-plc/lib'
 import type { Selectable } from 'kysely'
+import { DAY } from '@atproto/common'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
   type DidString,
@@ -254,6 +255,7 @@ export class OAuthStore
     username: identifier,
     password,
     emailOtp,
+    deviceAccounts,
   }: AuthenticateAccountData): Promise<Account> {
     // @TODO (?) Send an email to the user to notify them of the login attempt
     try {
@@ -263,6 +265,19 @@ export class OAuthStore
           password,
           authFactorToken: emailOtp,
           locale,
+          // Allow users that last signed in on the same device within 30 days
+          // to skip OTP.
+
+          // @NOTE that oauth-provider will require a fresh sign-in (password)
+          // after one week. This allows to improve UX by reducing the frequency
+          // of OTP prompts for trusted devices.
+
+          // @NOTE this is based on Google Workspace approach that requires a
+          // fresh sign-in (password) every week, but does not require OTP when
+          // it does.
+          allowOtpBypassFor: deviceAccounts
+            .filter((da) => Date.now() - da.updatedAt.getTime() < 30 * DAY)
+            .map((da) => da.account.did),
         })
 
       if (isSoftDeleted) {
@@ -281,7 +296,7 @@ export class OAuthStore
         // Surfacing the matched `did` as the `sub` lets the oauth-provider's
         // `onSignInFailed` hook distinguish "identifier known, credentials wrong"
         // from "identifier unknown".
-        throw new InvalidCredentialsError(err.message, err.did, err)
+        throw new InvalidCredentialsError(err.did, err)
       }
       // @NOTE The credentials were valid here — the account simply owes a
       // second factor, and `login()` has already sent the code. This is the
@@ -294,7 +309,7 @@ export class OAuthStore
         )
       }
       if (err instanceof XrpcAuthRequiredError) {
-        throw new InvalidCredentialsError(err.message, undefined, err)
+        throw new InvalidCredentialsError(null, err)
       }
       throw err
     }
@@ -834,7 +849,7 @@ export class OAuthStore
       password,
     )
     if (!validPass) {
-      throw new InvalidCredentialsError('Invalid did or password', did)
+      throw new InvalidCredentialsError(did)
     }
 
     await this.accountManager.assertValidEmailToken(

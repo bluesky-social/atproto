@@ -204,6 +204,7 @@ export type SignUpInput = {
   handle: string
   email: string
   password: string
+  remember?: boolean
   inviteCode?: string
   hcaptchaToken?: string
 }
@@ -214,7 +215,7 @@ export type SignUpOutput = {
 }
 
 export type SignOutInput = {
-  did: DidString | DidString[]
+  did: DidString
 }
 
 export type InitiatePasswordResetInput = {
