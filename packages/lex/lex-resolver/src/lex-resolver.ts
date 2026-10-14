@@ -405,27 +405,27 @@ export class LexResolver {
    * 4. Validates the lexicon document structure
    * 5. Ensures the document ID matches the URI rkey
    *
-   * Use this when you already have an AT URI (e.g., from {@link resolve})
-   * and want to fetch the lexicon document.
+   * Use this when you already know the hosting DID and the NSID (e.g., the
+   * authority resolved by {@link resolve}) and want to fetch the lexicon
+   * document directly from that DID.
    *
-   * @param uriStr - The AT URI to fetch, either as a string or AtUri object
+   * @param did - The DID hosting the lexicon (the `com.atproto.lexicon.schema` record authority)
+   * @param nsid - The NSID of the lexicon to fetch
    * @param options - Optional DID resolution options (e.g., signal for cancellation, noCache)
    * @returns The resolved lexicon result containing URI, CID, and lexicon document
    * @throws {LexResolverError} If fetching or validation fails
    *
    * @example
    * ```typescript
-   * // Fetch from a known URI
-   * const result = await resolver.fetch(
-   *   'at://did:plc:xyz/com.atproto.lexicon.schema/app.bsky.feed.post'
-   * )
+   * // Fetch a lexicon from a known DID
+   * const result = await resolver.fetch(did, nsid)
    *
    * // Fetch with no-cache to bypass any upstream caching
-   * const result = await resolver.fetch(uri, { noCache: true })
+   * const result = await resolver.fetch(did, nsid, { noCache: true })
    *
    * // Fetch with abort signal
    * const controller = new AbortController()
-   * const result = await resolver.fetch(uri, { signal: controller.signal })
+   * const result = await resolver.fetch(did, nsid, { signal: controller.signal })
    * ```
    */
   async fetch(

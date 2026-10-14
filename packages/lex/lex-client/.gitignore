@@ -1,2 +1,8 @@
-src/lexicons
+# @atproto/lex
+/src/lexicons
 /lexicons
+
+# legacy (old compiled lexicons schemas location)
+# can safely be removed but will cause a these files to appear as untracked in git
+# for any user that has previously compiled lexicons
+/tests/lexicons
