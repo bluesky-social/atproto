@@ -15,6 +15,12 @@ Set `OZONE_LABEL_QUERY_WILDCARDS_ENABLED=true` and restart the API to restore wi
 
 `queryEvents` and `queryStatuses` cancel their listing SQL when the HTTP client disconnects, using Kysely's `cancel query` abort strategy. Kysely uses a separate PostgreSQL connection for cancellation and holds the listing connection until SQL and cancellation finish. This adds no query deadline.
 
+## Reporter statistics
+
+`tools.ozone.moderation.getReporterStats` counts reports created in the last 90 days, excluding appeals. Report counts include repeat reports; subject and action counts count each subject once per reporter. Labels and takedowns count only when explicitly linked through an eligible report’s `actionEventIds`, including linked actions that were subsequently reversed. Unlinked actions no longer count. Reporters without eligible reports are omitted.
+
+The query uses `idx_report_reporter_created` and primary-key lookups for distinct linked action IDs; it never searches subject event history. Complete the `reporterDid` backfill and catch-up sweep before deploying this reader. HTTP disconnects cancel the SQL using the same Kysely strategy as the moderation listings.
+
 ## Moderation inbox standing
 
 Set `NEXT_PUBLIC_STRIKE_SUSPENSION_CONFIG` to the same value used by Ozone UI, for example `4:72,8:168,12:336,16:Infinity`. Each entry maps a strike count to suspension hours; `Infinity` represents a permanent suspension. The backend retains the full map and uses the second and third thresholds, sorted by strike count, for `warning` and `atRisk`. The first tier does not change standing. With no configuration, standing derives from the account's enforcement and restrictions; strike thresholds are disabled. Invalid entries fail configuration at startup.

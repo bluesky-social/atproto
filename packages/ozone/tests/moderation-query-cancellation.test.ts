@@ -46,11 +46,20 @@ describe('moderation query cancellation', () => {
   }
 
   it.each([
-    [tools.ozone.moderation.queryEvents.$lxm, 'moderation_event'],
-    [tools.ozone.moderation.queryStatuses.$lxm, 'moderation_subject_status'],
+    [tools.ozone.moderation.queryEvents.$lxm, 'moderation_event', 'limit=1'],
+    [
+      tools.ozone.moderation.queryStatuses.$lxm,
+      'moderation_subject_status',
+      'limit=1',
+    ],
+    [
+      tools.ozone.moderation.getReporterStats.$lxm,
+      'report',
+      'dids=did:example:reporter',
+    ],
   ])(
     'cancels %s SQL on HTTP disconnect with a full API pool',
-    async (nsid, table) => {
+    async (nsid, table, params) => {
       const apiDb = network.ozone.ctx.db
       const locker = await db.pool.connect()
       const controller = new AbortController()
@@ -58,12 +67,14 @@ describe('moderation query cancellation', () => {
       const pattern =
         table === 'moderation_subject_status'
           ? 'select "moderation_subject_status".*%'
-          : `%from "${table}"%limit%`
+          : table === 'report'
+            ? '%WITH reports AS MATERIALIZED%'
+            : `%from "${table}"%limit%`
       let request: Promise<unknown> | undefined
       try {
         await locker.query('BEGIN')
         await locker.query(`LOCK TABLE "${table}" IN ACCESS EXCLUSIVE MODE`)
-        request = fetch(`${network.ozone.url}/xrpc/${nsid}?limit=1`, {
+        request = fetch(`${network.ozone.url}/xrpc/${nsid}?${params}`, {
           headers: await network.ozone.modHeaders(nsid),
           signal: controller.signal,
         }).catch((err) => err)
@@ -82,7 +93,7 @@ describe('moderation query cancellation', () => {
         locker.release()
       }
       const response = await fetch(
-        `${network.ozone.url}/xrpc/${nsid}?limit=1`,
+        `${network.ozone.url}/xrpc/${nsid}?${params}`,
         {
           headers: await network.ozone.modHeaders(nsid),
         },

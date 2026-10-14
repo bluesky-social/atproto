@@ -1,5 +1,5 @@
-import { type Expression, type Insertable, sql } from 'kysely'
-import { addHoursToDate, chunkArray } from '@atproto/common'
+import { type Insertable, sql } from 'kysely'
+import { DAY, addHoursToDate, chunkArray } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'
 import type { IdResolver } from '@atproto/identity'
 import {
@@ -50,7 +50,6 @@ import type {
   ModerationSubjectStatusRow,
   ModerationSubjectStatusRowWithHandle,
   ReporterStats,
-  ReporterStatsResult,
   ReversibleModerationEvent,
 } from './types.js'
 import {
@@ -1676,181 +1675,60 @@ export class ModerationService {
     }
   }
 
-  async buildModerationQuery(
-    subjectType: 'account' | 'record',
-    createdByDids: DidString[] | undefined,
-    isActionQuery: boolean,
-  ): Promise<(Partial<ReporterStatsResult> & { did: DidString })[]> {
-    if (!createdByDids?.length) return []
+  async getReporterStats(
+    dids?: DidString[],
+    signal?: AbortSignal,
+  ): Promise<ReporterStats[]> {
+    if (!dids?.length) return []
 
-    const actionTypes = [
-      tools.ozone.moderation.defs.modEventTakedown.$type,
-      tools.ozone.moderation.defs.modEventLabel.$type,
-    ] as const
+    const since = toDatetimeString(Date.now() - 90 * DAY)
+    const takedown = sql.lit(tools.ozone.moderation.defs.modEventTakedown.$type)
+    const label = sql.lit(tools.ozone.moderation.defs.modEventLabel.$type)
 
-    const countAll = () => {
-      return sql<number>`COUNT(*)`
-    }
-    const countAllDistinctBy = (ref: Expression<unknown>) => {
-      return sql<number>`COUNT(DISTINCT ${ref})`
-    }
-    const countTakedownsDistinctBy = (ref: Expression<unknown>) => {
-      return sql<number>`COUNT(DISTINCT ${ref}) FILTER (
-        WHERE actions."action" = ${tools.ozone.moderation.defs.modEventTakedown.$type}
-      )`
-    }
-    const countLabelsDistinctBy = (ref: Expression<unknown>) => {
-      return sql<number>`COUNT(DISTINCT ${ref}) FILTER (
-        WHERE actions."action" = ${tools.ozone.moderation.defs.modEventLabel.$type}
-      )`
-    }
-
-    const query = this.db.db
-      .selectFrom('moderation_event as reports')
-      .where(
-        'reports.action',
-        '=',
-        tools.ozone.moderation.defs.modEventReport.$type,
+    const { rows } = await sql<ReporterStats>`
+      WITH reports AS MATERIALIZED (
+        SELECT r."reporterDid" AS reporter, r.did, r."recordPath", r."actionEventIds"
+        FROM report r
+        WHERE r."reporterDid" IN (${sql.join(dids)})
+          AND r."createdAt" >= ${since}
+          AND r."reportType" <> ${sql.lit(tools.ozone.report.defs.ReasonAppeal)}
+      ), subjects AS (
+        SELECT reporter, did, "recordPath", count(*) AS "reportCount"
+        FROM reports
+        GROUP BY reporter, did, "recordPath"
+      ), linked_actions AS MATERIALIZED (
+        SELECT DISTINCT reporter, did, "recordPath",
+          jsonb_array_elements_text("actionEventIds")::integer AS "actionEventId"
+        FROM reports
+      ), outcomes AS (
+        SELECT l.reporter, l.did, l."recordPath",
+          bool_or(a.action = ${takedown}) AS takendown,
+          bool_or(a.action = ${label}) AS labeled
+        FROM linked_actions l
+        -- @NOTE LIMIT keeps event lookups on the primary key even when JSON
+        -- array cardinality estimates would favor scanning the event table.
+        JOIN LATERAL (
+          SELECT action FROM moderation_event WHERE id = l."actionEventId" LIMIT 1
+        ) a ON true
+        GROUP BY l.reporter, l.did, l."recordPath"
       )
-      .where(
-        'reports.subjectUri',
-        subjectType === 'account' ? 'is' : 'is not',
-        null,
-      )
-      .where('reports.createdBy', 'in', createdByDids)
-      .select(['reports.createdBy as did'])
-
-    if (!isActionQuery) {
-      if (subjectType === 'account') {
-        return query
-          .select([
-            () => countAll().as('accountReportCount'),
-            (eb) =>
-              countAllDistinctBy(eb.ref('reports.subjectDid')).as(
-                'reportedAccountCount',
-              ),
-          ])
-          .groupBy('reports.createdBy')
-          .execute()
-      } else {
-        return query
-          .select([
-            () => countAll().as('recordReportCount'),
-            (eb) =>
-              countAllDistinctBy(eb.ref('reports.subjectUri')).as(
-                'reportedRecordCount',
-              ),
-          ])
-          .groupBy('reports.createdBy')
-          .execute()
-      }
-    }
-
-    if (subjectType === 'account') {
-      return query
-        .leftJoin('moderation_event as actions', (join) =>
-          join
-            .onRef('actions.subjectDid', '=', 'reports.subjectDid')
-            .on('actions.subjectUri', 'is', null)
-            .onRef('actions.createdAt', '>', 'reports.createdAt')
-            .on('actions.action', 'in', actionTypes),
-        )
-        .select([
-          (eb) =>
-            countTakedownsDistinctBy(eb.ref('actions.subjectDid')).as(
-              'takendownAccountCount',
-            ),
-          (eb) =>
-            countLabelsDistinctBy(eb.ref('actions.subjectDid')).as(
-              'labeledAccountCount',
-            ),
-        ])
-        .groupBy('reports.createdBy')
-        .execute()
-    } else {
-      return query
-        .leftJoin('moderation_event as actions', (join) =>
-          join
-            .onRef('actions.subjectDid', '=', 'reports.subjectDid')
-            .onRef('actions.subjectUri', '=', 'reports.subjectUri')
-            .onRef('actions.createdAt', '>', 'reports.createdAt')
-            .on('actions.action', 'in', actionTypes),
-        )
-        .select([
-          (eb) =>
-            countTakedownsDistinctBy(eb.ref('actions.subjectUri')).as(
-              'takendownRecordCount',
-            ),
-          (eb) =>
-            countLabelsDistinctBy(eb.ref('actions.subjectUri')).as(
-              'labeledRecordCount',
-            ),
-        ])
-        .groupBy('reports.createdBy')
-        .execute()
-    }
-  }
-
-  async getReporterStats(dids?: DidString[]) {
-    const [accountReports, recordReports, accountActions, recordActions] =
-      await Promise.all([
-        this.buildModerationQuery('account', dids, false),
-        this.buildModerationQuery('record', dids, false),
-        this.buildModerationQuery('account', dids, true),
-        this.buildModerationQuery('record', dids, true),
-      ])
-
-    // Create a map to hold the aggregated stats for each `did`
-    const statsMap = new Map<string, ReporterStats>()
-
-    // Helper function to ensure a `did` entry exists in the map
-    const ensureDidEntry = (did: DidString) => {
-      if (!statsMap.has(did)) {
-        statsMap.set(did, {
-          did,
-          accountReportCount: 0,
-          recordReportCount: 0,
-          reportedAccountCount: 0,
-          reportedRecordCount: 0,
-          takendownAccountCount: 0,
-          takendownRecordCount: 0,
-          labeledAccountCount: 0,
-          labeledRecordCount: 0,
-        })
-      }
-      return statsMap.get(did)!
-    }
-
-    // Merge accountReports
-    for (const report of accountReports) {
-      const entry = ensureDidEntry(report.did)
-      entry.accountReportCount = report.accountReportCount ?? 0
-      entry.reportedAccountCount = report.reportedAccountCount ?? 0
-    }
-
-    // Merge recordReports
-    for (const report of recordReports) {
-      const entry = ensureDidEntry(report.did)
-      entry.recordReportCount = report.recordReportCount ?? 0
-      entry.reportedRecordCount = report.reportedRecordCount ?? 0
-    }
-
-    // Merge accountActions
-    for (const action of accountActions) {
-      const entry = ensureDidEntry(action.did)
-      entry.takendownAccountCount = action.takendownAccountCount ?? 0
-      entry.labeledAccountCount = action.labeledAccountCount ?? 0
-    }
-
-    // Merge recordActions
-    for (const action of recordActions) {
-      const entry = ensureDidEntry(action.did)
-      entry.takendownRecordCount = action.takendownRecordCount ?? 0
-      entry.labeledRecordCount = action.labeledRecordCount ?? 0
-    }
-
-    // Convert map values to an array and return
-    return Array.from(statsMap.values())
+      SELECT s.reporter AS did,
+        coalesce(sum(s."reportCount") FILTER (WHERE s."recordPath" = ''), 0)::bigint AS "accountReportCount",
+        coalesce(sum(s."reportCount") FILTER (WHERE s."recordPath" <> ''), 0)::bigint AS "recordReportCount",
+        count(*) FILTER (WHERE s."recordPath" = '') AS "reportedAccountCount",
+        count(*) FILTER (WHERE s."recordPath" <> '') AS "reportedRecordCount",
+        count(*) FILTER (WHERE s."recordPath" = '' AND o.takendown) AS "takendownAccountCount",
+        count(*) FILTER (WHERE s."recordPath" <> '' AND o.takendown) AS "takendownRecordCount",
+        count(*) FILTER (WHERE s."recordPath" = '' AND o.labeled) AS "labeledAccountCount",
+        count(*) FILTER (WHERE s."recordPath" <> '' AND o.labeled) AS "labeledRecordCount"
+      FROM subjects s
+      LEFT JOIN outcomes o USING (reporter, did, "recordPath")
+      GROUP BY s.reporter
+    `.execute(this.db.db, {
+      signal,
+      inflightQueryAbortStrategy: 'cancel query',
+    })
+    return rows
   }
 
   async getAccountTimeline(did: DidString) {
