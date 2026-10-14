@@ -12,7 +12,11 @@
         "properties": {
           "subject": { "type": "ref", "ref": "com.atproto.repo.strongRef" },
           "createdAt": { "type": "string", "format": "datetime" },
-          "via": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
+          "via": { "type": "ref", "ref": "com.atproto.repo.strongRef" },
+          "hideLike": {
+            "type": "boolean",
+            "description": "When true, this like will not be broadcast on the firehose or surfaced in public like counts/lists. The like still exists in the user's repo."
+          }
         }
       }
     }
