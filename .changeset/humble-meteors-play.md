@@ -1,5 +1,5 @@
 ---
-"@atproto/oauth-provider-api": patch
+"@atproto/oauth-provider-api": minor
 ---
 
 Update sign-out endpoint input
