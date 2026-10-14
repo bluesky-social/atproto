@@ -117,43 +117,19 @@ describe('simplespace', () => {
       expect(otherListed.spaces.map((s) => s.uri)).toEqual([other])
     })
 
-    it('governs a space written to before createSpace', async () => {
-      // Writing to at://me/space/<type>/<skey> materializes a repo but does not
-      // create a simplespace: there is no config until the owner asks for one,
-      // and no default to guess at. So the space isn't administrable yet, and
-      // createSpace over the existing repo is what makes it so.
+    it('refuses an owner write until createSpace', async () => {
+      // A write to another authority's space creates the repo unchecked, but the
+      // owner's own space must exist first: a write never conjures one.
       const skey = 'lazy'
       const space =
         `at://${alice.did}/space/${TEST_SPACE_TYPE}/${skey}` as SpaceRefString
-      await sc.write(alice, space, { text: 'lazy space' })
-
       await expect(
-        alice.client.call(
-          com.atproto.simplespace.getSpace,
-          { space },
-          { headers: alice.headers },
-        ),
+        sc.write(alice, space, { text: 'too early' }),
       ).rejects.toMatchObject({ error: 'SpaceNotFound' })
-      await expect(sc.putMember(alice, space, bob)).rejects.toMatchObject({
-        error: 'SpaceNotFound',
-      })
 
       await sc.createSpace(alice, { skey })
-      await sc.putMember(alice, space, bob)
+      await sc.write(alice, space, { text: 'lazy space' })
 
-      const got = await alice.client.call(
-        com.atproto.simplespace.getSpace,
-        { space },
-        { headers: alice.headers },
-      )
-      expect(got.readPolicy.$type).toBe(
-        'com.atproto.simplespace.defs#memberListPolicy',
-      )
-      expect(got.writePolicy.$type).toBe(
-        'com.atproto.simplespace.defs#memberListPolicy',
-      )
-
-      // And the records that were already there stay put.
       const listed = await alice.client.call(
         com.atproto.space.listRecords,
         { space, repo: alice.did },
