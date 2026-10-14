@@ -100,7 +100,6 @@ Lexicon NSIDs used in this repository have different sources:
   - `internal.*`
   - `app.bsky.unspecced.*` (fetched from the [`bsky` repository](https://github.com/bluesky-social/bsky))
 - Some lexicons are missing on the AT Protocol network (at the time of writing)
-  - `app.bsky.actor.link`
   - `place.stream.badge.defs`
 
 The repository root `lexicons` directory holds **only** the canonical `com.atproto.*` and `tools.ozone.*` namespaces. Every package that works with lexicon documents defines its own lexicon manifest (`lexicons.json`), which acts as a "source of truth" for the lexicons it uses (similar to `package.json` for NPM modules). Packages no longer compile the root `lexicons` directory directly.

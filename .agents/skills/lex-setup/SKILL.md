@@ -184,7 +184,7 @@ form and compiles the canonical root directly.
 
 ## `lex build` flags
 
-Defaults: `--lexicons ./lexicons`, `--out ./src/lexicons`, `--pretty`,
+Defaults: `--lexicons ./lexicons`, `--out ./src/lexicons`, `--no-pretty`,
 `--default-export`. yargs accepts either kebab-case or camelCase
 (`--index-file` == `--indexFile`).
 
