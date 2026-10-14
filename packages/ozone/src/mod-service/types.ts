@@ -83,14 +83,3 @@ export type ReporterStats = {
   labeledAccountCount: number
   labeledRecordCount: number
 }
-
-export type ReporterStatsResult = {
-  accountReportCount?: number
-  recordReportCount?: number
-  reportedAccountCount?: number
-  reportedRecordCount?: number
-  takendownAccountCount?: number
-  takendownRecordCount?: number
-  labeledAccountCount?: number
-  labeledRecordCount?: number
-}
