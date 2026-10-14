@@ -1,5 +1,17 @@
 # @atproto/ozone
 
+## 0.9.0
+
+### Minor Changes
+
+- [#5642](https://github.com/bluesky-social/atproto/pull/5642) [`2db2f9d`](https://github.com/bluesky-social/atproto/commit/2db2f9d9cc619906d4cde3284d512c87bf26b9e7) Thanks [@foysalit](https://github.com/foysalit)! - Expose approved or denied outcomes on resolved moderation inbox appeals and snapshot outcomes in appeal resolution notifications. Preserve unknown historical outcomes, record no-action denials, and close targeted appeal reports when reversing a takedown.
+  
+  Resolve outcomes only after indexed lookups select each subject's latest appeal, keeping page hydration independent of appeal history.
+
+### Patch Changes
+
+- [#5640](https://github.com/bluesky-social/atproto/pull/5640) [`b05cf65`](https://github.com/bluesky-social/atproto/commit/b05cf65ad24cbe76d79ce40795be3e5f5e1af67b) Thanks [@foysalit](https://github.com/foysalit)! - Cancel queryEvents and queryStatuses listing SQL when the HTTP client disconnects.
+
 ## 0.8.0
 
 ### Minor Changes

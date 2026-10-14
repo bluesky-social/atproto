@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.27.0
+
+### Minor Changes
+
+- [#5642](https://github.com/bluesky-social/atproto/pull/5642) [`2db2f9d`](https://github.com/bluesky-social/atproto/commit/2db2f9d9cc619906d4cde3284d512c87bf26b9e7) Thanks [@foysalit](https://github.com/foysalit)! - Expose approved or denied outcomes on resolved moderation inbox appeals and snapshot outcomes in appeal resolution notifications. Preserve unknown historical outcomes, record no-action denials, and close targeted appeal reports when reversing a takedown.
+  
+  Resolve outcomes only after indexed lookups select each subject's latest appeal, keeping page hydration independent of appeal history.
+
 ## 0.26.0
 
 ### Minor Changes
