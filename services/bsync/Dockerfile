@@ -11,6 +11,7 @@ COPY ./pnpm-lock.yaml ./
 COPY ./pnpm-workspace.yaml ./
 COPY ./tsconfig ./tsconfig
 # COPY ./lexicons ./lexicons
+# COPY ./lexicons-overrides ./lexicons-overrides
 
 # NOTE bsync's transitive dependencies go here: if that changes, this needs to be updated.
 # pnpm list --filter 'bsync-service...' --depth 0 --json | jq '.[].path' | sort -u | sed "s|\"$PWD/|./|; s|\"\$||"
