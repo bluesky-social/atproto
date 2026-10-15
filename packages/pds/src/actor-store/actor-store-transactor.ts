@@ -24,6 +24,7 @@ export class ActorStoreTransactor {
     this.record = new RecordTransactor(db, blobstore)
     this.pref = new PreferenceTransactor(db)
     this.space = new SpaceTransactor(
+      did,
       db,
       new BlobTransactor(db, blobstore, resources.backgroundQueue),
     )

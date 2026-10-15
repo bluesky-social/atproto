@@ -21,6 +21,7 @@ import { SpaceReader } from './reader.js'
 
 export class SpaceTransactor extends SpaceReader {
   constructor(
+    public did: string,
     public db: ActorDb,
     public blob: BlobTransactor,
   ) {
@@ -168,6 +169,15 @@ export class SpaceTransactor extends SpaceReader {
     this.db.assertTransaction()
     if (writes.length === 0) return null
 
+    // A write to another authority's space creates the repo without checking that
+    // the space exists. The authority's own spaces must already exist: a write must
+    // neither conjure an ungoverned space nor revive a deleted one.
+    if (SpaceRef.parse(space).spaceDid === this.did) {
+      const existing = await this.getSpace(space)
+      if (!existing || existing.deletedAt) {
+        throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+      }
+    }
     await this.ensureSpace(space)
 
     const state = await this.getRepoState(space)
