@@ -246,7 +246,7 @@ export const settingValidators = new Map<
      *   },
      *   "sev-4": {
      *     "strikeCount": 4,
-     *     "expiresInDays": 365
+     *     "expiryInDays": 365
      *   },
      *   "sev-5": {
      *     "needsTakedown": true
@@ -315,14 +315,20 @@ export const settingValidators = new Map<
           }
         }
 
-        if (val['expiresInDays'] !== undefined) {
+        if (Object.hasOwn(val, 'expiresInDays')) {
+          throw new InvalidRequestError(
+            `Use expiryInDays instead of expiresInDays for severity level ${key}`,
+          )
+        }
+
+        if (val['expiryInDays'] !== undefined) {
           if (
-            typeof val['expiresInDays'] !== 'number' ||
-            !Number.isInteger(val['expiresInDays']) ||
-            val['expiresInDays'] < 0
+            typeof val['expiryInDays'] !== 'number' ||
+            !Number.isSafeInteger(val['expiryInDays']) ||
+            val['expiryInDays'] < 0
           ) {
             throw new InvalidRequestError(
-              `Expires in days must be a non-negative integer for severity level ${key}`,
+              `Expiry in days must be a non-negative safe integer for severity level ${key}`,
             )
           }
         }
