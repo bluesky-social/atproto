@@ -1,11 +1,9 @@
-import type { Selectable } from 'kysely'
+import { type Selectable, sql } from 'kysely'
 import type { DatetimeString, DidString } from '@atproto/lex'
 import { currentDatetimeString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
 import type { ExpiringTag } from '../db/schema/expiring_tag.js'
-import { tools } from '../lexicons/index.js'
-import type { ModerationSubjectStatusRow } from './types.js'
 
 export type ExpiringTagRow = Selectable<ExpiringTag>
 
@@ -18,41 +16,28 @@ export type ExpiringTagGroup = {
   ids: number[]
 }
 
+/** Serialize tag writes and expiry for one subject until the transaction ends. */
 export async function lockTagSubject(
   db: Database,
   params: {
     did: DidString
     recordPath: string
     convoId: string
-    recordCid: string | null
   },
 ): Promise<void> {
   db.assertTransaction()
-  const now = currentDatetimeString()
-  // @NOTE create before locking so concurrent first writes also serialize.
-  await db.db
-    .insertInto('moderation_subject_status')
-    .values({
-      ...params,
-      reviewState: tools.ozone.moderation.defs.reviewNone.value,
-      ageAssuranceState: 'unknown',
-      takendown: false,
-      createdAt: now,
-      updatedAt: now,
-    } as ModerationSubjectStatusRow)
-    .onConflict((oc) =>
-      oc.constraint('moderation_status_unique_idx').doNothing(),
-    )
-    .execute()
-  // @NOTE lock before allocating the event ID; expiry uses that ordering.
-  await db.db
-    .selectFrom('moderation_subject_status')
-    .where('did', '=', params.did)
-    .where('recordPath', '=', params.recordPath)
-    .where('convoId', '=', params.convoId)
-    .select('id')
-    .forUpdate()
-    .executeTakeFirstOrThrow()
+  const key = JSON.stringify([
+    'ozone-tag',
+    db.schema ?? 'public',
+    params.did,
+    params.recordPath,
+    params.convoId,
+  ])
+  // @NOTE lock before allocating the event ID, including for new subjects,
+  // without inserting a status row or consuming its sequence.
+  await sql`select pg_advisory_xact_lock(hashtextextended(${key}, 0))`.execute(
+    db.db,
+  )
 }
 
 export async function insertExpiringTags(

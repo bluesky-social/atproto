@@ -1,4 +1,6 @@
+import { sql } from 'kysely'
 import { ComAtprotoModerationDefs } from '@atproto/api'
+import { wait } from '@atproto/common'
 import {
   type ModeratorClient,
   type SeedClient,
@@ -8,7 +10,12 @@ import {
 import type { DidString } from '@atproto/lex'
 import { toDatetimeString } from '@atproto/lex'
 import { EventReverser } from '../src/daemon/event-reverser.js'
-import { getExpiredTags } from '../src/mod-service/expiring-tags.js'
+import { tools } from '../src/lexicons/index.js'
+import {
+  getExpiredTags,
+  lockTagSubject,
+} from '../src/mod-service/expiring-tags.js'
+import { RepoSubject } from '../src/mod-service/subject.js'
 
 describe('expiring tags', () => {
   let network: TestNetwork
@@ -361,6 +368,60 @@ describe('expiring tags', () => {
       removedTags: [tag],
     })
     expect(events.events).toHaveLength(1)
+  })
+
+  it('waits for an in-flight renewal before locking the status for expiry', async () => {
+    const tag = 'in-flight-renewal'
+    await emitTagEvent(sc.dids.bob, [tag], [], 1)
+    const group = await expireTag(tag)
+    const db = network.ozone.ctx.db
+    let reversal: Promise<void> | undefined
+    try {
+      await db.transaction(async (dbTxn) => {
+        await lockTagSubject(dbTxn, group)
+        const { rows } = await sql<{ pid: number }>`
+          select pg_backend_pid() as pid
+        `.execute(dbTxn.db)
+        reversal = createReverser().revertExpiredTags(group)
+
+        // @NOTE wait for actual lock contention, not a timing assumption.
+        const deadline = performance.now() + 2000
+        let blocked = false
+        do {
+          const { rows: waiters } = await sql<{ blocked: boolean }>`
+            select exists (
+              select 1 from pg_stat_activity
+              where wait_event = 'advisory'
+                and ${rows[0].pid} = any(pg_blocking_pids(pid))
+            ) as blocked
+          `.execute(db.db)
+          blocked = waiters[0].blocked
+          if (!blocked) await wait(10)
+        } while (!blocked && performance.now() < deadline)
+        expect(blocked).toBe(true)
+
+        await network.ozone.ctx.modService(dbTxn).logEvent({
+          subject: new RepoSubject(group.did),
+          createdBy: group.createdBy,
+          createdAt: new Date(),
+          event: tools.ozone.moderation.defs.modEventTag.$build({
+            add: [tag],
+            remove: [],
+            durationInHours: 24,
+          }),
+        })
+      })
+    } finally {
+      await reversal
+    }
+
+    expect(await getSubjectTags(sc.dids.bob)).toContain(tag)
+    const events = await modClient.queryEvents({
+      subject: sc.dids.bob,
+      types: ['tools.ozone.moderation.defs#modEventTag'],
+      removedTags: [tag],
+    })
+    expect(events.events).toHaveLength(0)
   })
 
   it('serializes concurrent first tag writes on a new subject', async () => {

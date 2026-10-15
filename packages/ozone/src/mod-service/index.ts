@@ -664,13 +664,13 @@ export class ModerationService {
 
     const subjectInfo = subject.info()
     if (tools.ozone.moderation.defs.modEventTag.$isTypeOf(event)) {
-      await lockTagSubject(this.db, {
-        ...getStatusIdentifierFromSubject(
+      await lockTagSubject(
+        this.db,
+        getStatusIdentifierFromSubject(
           subjectInfo.subjectUri ?? subjectInfo.subjectDid,
           subjectInfo.subjectConvoId,
         ),
-        recordCid: subjectInfo.subjectCid,
-      })
+      )
     }
 
     // Store severityLevel, strikeCount, and strikeExpiresAt if provided
@@ -759,7 +759,7 @@ export class ModerationService {
 
     // Manage expiring tag rows for temporary tags
     if (tools.ozone.moderation.defs.modEventTag.$isTypeOf(event)) {
-      // @NOTE the subject-status lock also serializes expiry replacement.
+      // @NOTE the tag-subject lock also serializes expiry replacement.
       const tagSubject = {
         did: subjectInfo.subjectDid,
         recordPath: subjectStatus?.recordPath ?? '',

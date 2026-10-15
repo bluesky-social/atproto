@@ -8,6 +8,7 @@ import {
   type ExpiringTagGroup,
   deleteExpiringTagsByIds,
   getExpiredTags,
+  lockTagSubject,
 } from '../mod-service/expiring-tags.js'
 import type {
   ModerationServiceCreator,
@@ -91,6 +92,7 @@ export class EventReverser {
 
   async revertExpiredTags(group: ExpiringTagGroup) {
     await this.db.transaction(async (dbTxn) => {
+      await lockTagSubject(dbTxn, group)
       // Check which tags are still present on the subject
       const status = await dbTxn.db
         .selectFrom('moderation_subject_status')
