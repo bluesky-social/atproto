@@ -440,6 +440,7 @@ const presentation = (
       for (const item of truncateRelatedViewsItems(kind.items, maxGroupItems)) {
         profileDids.add(item.actor)
         recordUris.add(item.post)
+        if (item.parent) recordUris.add(item.parent)
       }
     } else if (
       defs.replyNotification.$isTypeOf(kind) ||
