@@ -29,7 +29,11 @@ import { com, tools } from '../lexicons/index.js'
 import { httpLogger as log } from '../logger.js'
 import { LABELER_HEADER_NAME, type ParsedLabelers } from '../util.js'
 import type { VideoInvalidator } from '../video-invalidator.js'
-import { insertExpiringTags, removeExpiringTags } from './expiring-tags.js'
+import {
+  insertExpiringTags,
+  lockTagSubject,
+  removeExpiringTags,
+} from './expiring-tags.js'
 import {
   adjustModerationSubjectStatus,
   getStatusIdentifierFromSubject,
@@ -659,6 +663,15 @@ export class ModerationService {
     }
 
     const subjectInfo = subject.info()
+    if (tools.ozone.moderation.defs.modEventTag.$isTypeOf(event)) {
+      await lockTagSubject(this.db, {
+        ...getStatusIdentifierFromSubject(
+          subjectInfo.subjectUri ?? subjectInfo.subjectDid,
+          subjectInfo.subjectConvoId,
+        ),
+        recordCid: subjectInfo.subjectCid,
+      })
+    }
 
     // Store severityLevel, strikeCount, and strikeExpiresAt if provided
     // These values should be calculated by the client based on configuration
@@ -746,26 +759,26 @@ export class ModerationService {
 
     // Manage expiring tag rows for temporary tags
     if (tools.ozone.moderation.defs.modEventTag.$isTypeOf(event)) {
+      // @NOTE the subject-status lock also serializes expiry replacement.
+      const tagSubject = {
+        did: subjectInfo.subjectDid,
+        recordPath: subjectStatus?.recordPath ?? '',
+        convoId: subjectStatus?.convoId ?? '',
+      }
+      await removeExpiringTags(this.db, {
+        ...tagSubject,
+        tags: [...event.add, ...event.remove],
+      })
       if (event.durationInHours && event.add.length > 0) {
         const expiresAt = toDatetimeString(
           addHoursToDate(event.durationInHours, createdAt),
         )
         await insertExpiringTags(this.db, {
           eventId: modEvent.id,
-          did: subjectInfo.subjectDid,
-          recordPath: subjectInfo.subjectUri ?? '',
-          convoId: subjectInfo.subjectConvoId ?? '',
-          tags: event.add,
+          ...tagSubject,
+          tags: event.add.filter((tag) => !event.remove.includes(tag)),
           expiresAt: expiresAt as DatetimeString,
           createdBy,
-        })
-      }
-      if (event.remove.length > 0) {
-        await removeExpiringTags(this.db, {
-          did: subjectInfo.subjectDid,
-          recordPath: subjectInfo.subjectUri ?? '',
-          convoId: subjectInfo.subjectConvoId ?? '',
-          tags: event.remove,
         })
       }
     }
