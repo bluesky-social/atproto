@@ -113,6 +113,30 @@ describe('space records', () => {
       ).rejects.toMatchObject({ error: 'Forbidden' })
     })
 
+    it("creates a repo in another authority's space without checking it exists", async () => {
+      // Never created: the writer's PDS does not ask the authority.
+      const space = await sc.createSpace(alice, { ungoverned: true })
+      await sc.write(bob, space, { text: 'first write' })
+      await sc.expectSetHashMatchesStore(bob, space)
+    })
+
+    it('refuses an authority write to its own deleted space', async () => {
+      const space = await sc.createSpace(alice)
+      await alice.client.call(
+        com.atproto.simplespace.deleteSpace,
+        { space },
+        { headers: alice.headers },
+      )
+      await expect(
+        sc.write(alice, space, { text: 'revived?' }),
+      ).rejects.toMatchObject({ error: 'SpaceNotFound' })
+      // The tombstone survives the attempt.
+      const row = await network.pds.ctx.actorStore.read(alice.did, (store) =>
+        store.space.getSpace(space),
+      )
+      expect(row?.deletedAt).toBeTruthy()
+    })
+
     it('deletes a record', async () => {
       const space = await sc.createSpace(alice, { members: [dan] })
       const created = await sc.write(dan, space, { text: 'to be deleted' })
