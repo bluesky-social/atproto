@@ -172,7 +172,7 @@ export class AppContext {
     const reportStatsService = ReportStatsService.creator()
     const setService = SetService.creator()
     const settingService = SettingService.creator()
-    const strikeService = StrikeService.creator()
+    const strikeService = StrikeService.creator(cfg.strikeExpiryDays)
     const verificationService = VerificationService.creator()
     const verificationIssuer = VerificationIssuer.creator()
     const moderationServiceProfile = ModerationServiceProfile.creator(

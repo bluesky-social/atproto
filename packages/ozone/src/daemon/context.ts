@@ -87,7 +87,7 @@ export class DaemonContext {
     const backgroundQueue = new BackgroundQueue(db, { concurrency: 20 })
 
     const settingService = SettingService.creator()
-    const strikeService = StrikeService.creator()
+    const strikeService = StrikeService.creator(cfg.strikeExpiryDays)
     const modService = ModerationService.creator(
       signingKey,
       signingKeyId,

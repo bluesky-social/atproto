@@ -39,6 +39,36 @@ Notification producers skip activity before the date and skip transitions on rep
 
 Report-first pagination requires the `reporterDid` backfill and the post-retirement catch-up sweep to finish before deploying this reader. Pre-create the reporter/time indexes and `idx_moderation_event_inbox_public_created` concurrently in production before the inbox migration. The latter indexes `(subjectDid, createdAt DESC, id DESC)` so subject history can seek the configured date.
 
+## Strike expiry
+
+The client chooses severity, signed strike amounts, occurrence rules and
+suspension/restoration actions. If a nonzero strike event omits `strikeExpiresAt`,
+the backend uses the level's positive `expiryInDays` and the event's own creation
+time. This applies equally to positive and negative adjustments; reversals are
+not matched to source events or restricted to their amounts. Zero-strike warnings,
+permanent severities, and explicit expiry overrides retain their behavior.
+
+Set `OZONE_STRIKE_EXPIRY_DAYS=365` on API and daemon, then change it to `180` and
+roll both services to shorten managed expiry to exactly 180 24-hour days. Unset
+uses each event's saved severity duration. Invalid overrides fail at startup.
+The override only affects events with a positive severity duration, not permanent
+strikes or explicit timestamps. `meta.strikeExpiryDays` records the original
+configured duration for these managed events.
+
+The daemon reconciles adopted history in batches of 50 accounts, committing each
+account and progress separately under `job_cursor.job='strike_expiry_policy'`.
+Changes take effect gradually; inspect the cursor's `days` and `complete` fields.
+An hourly catch-up handles writes from older pods during a rolling deployment.
+Policy failures are logged separately and do not stop ordinary expiry processing.
+Active counts change; signed lifetime totals and enforcement do not.
+
+Deployment does not adopt legacy NULL expiries. Complete the writer rollout,
+then run the separate historical adoption before switching the duration. Writers
+and repairs serialize with `pg_advisory_xact_lock(hashtextextended(did, 1))`.
+The moderator UI must use stored expiry, including for negative adjustments, to
+follow the backend override. Signed totals can be negative under the existing
+adjustment rules; this change neither clamps them nor rewrites their amounts.
+
 ## License
 
 This project is dual-licensed under MIT and Apache 2.0 terms:
