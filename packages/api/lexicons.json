@@ -527,7 +527,7 @@
     },
     "app.bsky.authViewAll": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/authViewAll.json",
-      "cid": "bafyreigbz5igyiugtfhfi7uk5ffatjb3m423ba6oe2mr2g6d4qrmab4wke"
+      "cid": "bafyreibcfnrbow6p3hw5zxner2jbdgwdiqead3y5pqfezrwstta5jiww5a"
     },
     "app.bsky.bookmark.createBookmark": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/bookmark/createBookmark.json",
@@ -891,7 +891,7 @@
     },
     "app.bsky.notification.getGroupedNotifications": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/notification/getGroupedNotifications.json",
-      "cid": "bafyreic6sez4zpwyqm53qv7js5olhrsflleryv3wygjfdbpupwao7huqwu"
+      "cid": "bafyreibpnglgftinjqgaydiy2xgnnyet43yg5sw2kshk4uwb5sinmcewtq"
     },
     "app.bsky.notification.getPreferences": {
       "uri": "https://raw.githubusercontent.com/bluesky-social/bsky/refs/heads/main/lexicons/app/bsky/notification/getPreferences.json",
