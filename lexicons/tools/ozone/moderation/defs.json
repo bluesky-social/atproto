@@ -416,7 +416,7 @@
         "strikeExpiresAt": {
           "type": "string",
           "format": "datetime",
-          "description": "When the strike should expire. If not provided, the strike never expires."
+          "description": "Explicit strike expiry. When omitted, the service may apply the configured severity expiry."
         }
       }
     },
@@ -424,6 +424,11 @@
       "type": "object",
       "description": "Revert take down action on a subject",
       "properties": {
+        "strikeExpiresAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Expiry of the strike reversal, inherited from the reversed takedown."
+        },
         "comment": {
           "type": "string",
           "description": "Describe reasoning behind the reversal."
@@ -724,7 +729,7 @@
         "strikeExpiresAt": {
           "type": "string",
           "format": "datetime",
-          "description": "When the strike should expire. If not provided, the strike never expires."
+          "description": "Explicit strike expiry. When omitted, the service may apply the configured severity expiry."
         },
         "isDelivered": {
           "type": "boolean",

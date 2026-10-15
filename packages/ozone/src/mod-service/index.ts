@@ -660,9 +660,6 @@ export class ModerationService {
 
     const subjectInfo = subject.info()
 
-    // Store severityLevel, strikeCount, and strikeExpiresAt if provided
-    // These values should be calculated by the client based on configuration
-    // processNewEvent will update the account_strike table with the new strike count
     let severityLevel: string | null = null
     let strikeCount: number | null = null
     let strikeExpiresAt: DatetimeString | null = null
@@ -686,6 +683,14 @@ export class ModerationService {
       }
     }
 
+    if (
+      strikeCount !== null ||
+      tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
+      tools.ozone.moderation.defs.modEventReverseTakedown.$isTypeOf(event)
+    ) {
+      await this.strikeService.lockSubject(subjectInfo.subjectDid)
+    }
+
     const notifications = new InboxNotificationService(
       this.db,
       this.cfg.strikeSuspension,
@@ -695,6 +700,26 @@ export class ModerationService {
       subject,
       event,
     )
+
+    if (strikeCount !== null && strikeCount !== 0) {
+      const prepared = await this.strikeService.prepareEvent(
+        subjectInfo.subjectDid,
+        {
+          action: event.$type as ModerationEvent['action'],
+          subjectType: subjectInfo.subjectType,
+          subjectUri: subjectInfo.subjectUri ?? null,
+          subjectConvoId: subjectInfo.subjectConvoId ?? null,
+          subjectMessageId: subjectInfo.subjectMessageId ?? null,
+          createdAt: toDatetimeString(createdAt),
+          severityLevel,
+          strikeCount,
+          strikeExpiresAt,
+          meta,
+        },
+      )
+      strikeExpiresAt = prepared.strikeExpiresAt
+      Object.assign(meta, prepared.meta)
+    }
 
     const modEvent = await this.db.db
       .insertInto('moderation_event')
@@ -776,15 +801,7 @@ export class ModerationService {
 
     // Updates are only needed if strikeCount is numeric (in some cases even 0)
     if (modEvent.strikeCount !== null) {
-      try {
-        await this.strikeService.updateSubjectStrikeCount(modEvent.subjectDid)
-      } catch (error) {
-        // Log error but don't fail the entire operation to ensure that events are logged even if updating strike count fails
-        log.error(
-          { err: error, modEventId: modEvent.id },
-          'Error processing strikes for moderation event',
-        )
-      }
+      await this.strikeService.updateSubjectStrikeCount(modEvent.subjectDid)
     }
 
     await notifications.notifyModerationEvent(

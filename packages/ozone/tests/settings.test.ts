@@ -202,6 +202,17 @@ describe('ozone-settings', () => {
       },
     )
 
+    it('rejects severity keys that normalize to the same name', async () => {
+      await expect(
+        upsertOption(
+          setting({
+            'Sev 1': { expiryInDays: 365 },
+            'sev-1': { expiryInDays: 180 },
+          }),
+        ),
+      ).rejects.toThrow('Conflicting strike severity keys')
+    })
+
     it.each([
       { expiresInDays: 365 },
       { expiresInDays: 365, expiryInDays: 365 },
