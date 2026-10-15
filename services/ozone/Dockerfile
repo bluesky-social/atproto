@@ -11,6 +11,7 @@ COPY ./pnpm-lock.yaml ./
 COPY ./pnpm-workspace.yaml ./
 COPY ./tsconfig ./tsconfig
 COPY ./lexicons ./lexicons
+COPY ./lexicons-overrides ./lexicons-overrides
 
 # bsync is not a runtime dep but bsky's "codegen:buf" script reads ../bsync/proto at build time
 COPY ./packages/bsync/proto ./packages/bsync/proto
@@ -28,6 +29,7 @@ COPY ./packages/internal/did-resolver ./packages/internal/did-resolver
 COPY ./packages/internal/fetch-node ./packages/internal/fetch-node
 COPY ./packages/internal/fetch ./packages/internal/fetch
 COPY ./packages/internal/handle-resolver ./packages/internal/handle-resolver
+COPY ./packages/internal/handle-resolver-node ./packages/internal/handle-resolver-node
 COPY ./packages/internal/identity-resolver ./packages/internal/identity-resolver
 COPY ./packages/internal/opentelemetry-node ./packages/internal/opentelemetry-node
 COPY ./packages/internal/pipe ./packages/internal/pipe
@@ -46,7 +48,9 @@ COPY ./packages/lex/lex-installer ./packages/lex/lex-installer
 COPY ./packages/lex/lex-json ./packages/lex/lex-json
 COPY ./packages/lex/lex-password-session ./packages/lex/lex-password-session
 COPY ./packages/lex/lex-resolver ./packages/lex/lex-resolver
+COPY ./packages/lex/lex-rpc ./packages/lex/lex-rpc
 COPY ./packages/lex/lex-schema ./packages/lex/lex-schema
+COPY ./packages/lex/lex-server ./packages/lex/lex-server
 COPY ./packages/lex/lex ./packages/lex/lex
 COPY ./packages/lexicon ./packages/lexicon
 COPY ./packages/oauth/jwk-jose ./packages/oauth/jwk-jose
@@ -54,6 +58,7 @@ COPY ./packages/oauth/jwk-webcrypto ./packages/oauth/jwk-webcrypto
 COPY ./packages/oauth/jwk ./packages/oauth/jwk
 COPY ./packages/oauth/oauth-client-browser-example ./packages/oauth/oauth-client-browser-example
 COPY ./packages/oauth/oauth-client-browser ./packages/oauth/oauth-client-browser
+COPY ./packages/oauth/oauth-client-node ./packages/oauth/oauth-client-node
 COPY ./packages/oauth/oauth-client ./packages/oauth/oauth-client
 COPY ./packages/oauth/oauth-provider-api ./packages/oauth/oauth-provider-api
 COPY ./packages/oauth/oauth-provider-ui ./packages/oauth/oauth-provider-ui
