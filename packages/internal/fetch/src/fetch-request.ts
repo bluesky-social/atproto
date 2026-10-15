@@ -225,7 +225,7 @@ export function requireHostHeaderTransform() {
   }
 }
 
-export const DEFAULT_FORBIDDEN_DOMAIN_NAMES = [
+export const DEFAULT_FORBIDDEN_DOMAIN_NAMES = Object.freeze([
   'example.com',
   '*.example.com',
   'example.org',
@@ -234,7 +234,7 @@ export const DEFAULT_FORBIDDEN_DOMAIN_NAMES = [
   '*.example.net',
   'googleusercontent.com',
   '*.googleusercontent.com',
-]
+])
 
 export function forbiddenDomainNameRequestTransform(
   denyList: Iterable<string> = DEFAULT_FORBIDDEN_DOMAIN_NAMES,

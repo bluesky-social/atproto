@@ -1,3 +1,8 @@
+import { negate } from './util.js'
+
+const yes = () => true as const
+const no = () => false as const
+
 /**
  * Options for building a filter function to include/exclude lexicon documents.
  */
@@ -14,7 +19,7 @@ export type BuildFilterOptions = {
    * { include: ['com.atproto.*', 'app.bsky.*'] }  // Include multiple patterns
    * ```
    */
-  include?: string | string[]
+  include?: string | Iterable<string>
   /**
    * Pattern(s) for lexicon NSIDs to exclude.
    *
@@ -27,7 +32,7 @@ export type BuildFilterOptions = {
    * { exclude: ['*.test', '*.mock'] }   // Exclude test and mock lexicons
    * ```
    */
-  exclude?: string | string[]
+  exclude?: string | Iterable<string>
 }
 
 /**
@@ -61,22 +66,31 @@ export type Filter = (input: string) => boolean
  * ```
  */
 export function buildFilter(options: BuildFilterOptions): Filter {
-  const include = createMatcher(options.include, () => true)
-  const exclude = createMatcher(options.exclude, () => false)
+  const include = createMatcher(options.include, yes)
+  const exclude = createMatcher(options.exclude, no)
+
+  if (include === no) return no // Include nothing
+  if (exclude === yes) return no // Exclude everything
+  if (exclude === no) return include // Exclude nothing
+  if (include === yes) return negate(exclude) // Include everything except excluded
 
   return (id) => include(id) && !exclude(id)
 }
 
 function createMatcher(
-  pattern: undefined | string | string[],
+  pattern: undefined | string | Iterable<string>,
   fallback: Filter,
 ): Filter {
-  if (!pattern?.length) {
+  if (pattern == null) {
     return fallback
-  } else if (Array.isArray(pattern)) {
-    return pattern.map(buildMatcher).reduce(combineFilters)
-  } else {
+  } else if (typeof pattern === 'string') {
     return buildMatcher(pattern)
+  } else {
+    const filters = Array.from(pattern, buildMatcher)
+    // @NOTE this should logically be an error. Using fallback for legacy
+    // reasons.
+    if (!filters.length) return fallback
+    return filters.reduce(combineFilters)
   }
 }
 
@@ -89,8 +103,8 @@ function buildMatcher(pattern: string): Filter {
     const regex = new RegExp(
       `^${pattern.replaceAll('.', '\\.').replaceAll('*', '.+')}$`,
     )
-    return (input: string) => regex.test(input)
+    return (input) => regex.test(input)
   }
 
-  return (input: string) => pattern === input
+  return (input) => pattern === input
 }

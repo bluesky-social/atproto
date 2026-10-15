@@ -1,29 +1,44 @@
-import { join } from 'node:path'
-import { LexiconDirectoryIndexer } from '@atproto/lex-builder'
+import { rm } from 'node:fs/promises'
+import { dirname, join, relative, resolve, sep } from 'node:path'
+import type { Filter } from '@atproto/lex-builder'
 import { cidForLex } from '@atproto/lex-cbor'
-import { lexEquals } from '@atproto/lex-data'
+import { lexEquals, parseCid } from '@atproto/lex-data'
+import type { LexiconDocument } from '@atproto/lex-document'
+import type { AtUriString, NsidString } from '@atproto/lex-schema'
+import { type AtUri, NSID } from '@atproto/syntax'
+import {
+  type FileUriString,
+  fromFileUri,
+  isEnoentError,
+  isFileUriString,
+  listFiles,
+  readJsonFile,
+  resolveFileUri,
+  symlinkLexicon,
+  toRelativeFileUri,
+  writeJsonFile,
+} from './fs.js'
+import {
+  listDocumentNsidRefs,
+  readLexiconDocument,
+} from './lexicon-document.js'
 import type {
-  LexiconDocument,
-  LexiconParameters,
-  LexiconPermission,
-  LexiconRef,
-  LexiconRefUnion,
-  LexiconUnknown,
-  MainLexiconDefinition,
-  NamedLexiconDefinition,
-} from '@atproto/lex-document'
-import type {
-  LexResolverOptions,
-  LexResolverResult,
-} from '@atproto/lex-resolver'
-import { LexResolver } from '@atproto/lex-resolver'
-import type { DidString, NsidString } from '@atproto/lex-schema'
-import { AtUri, NSID } from '@atproto/syntax'
-import { isEnoentError, writeJsonFile } from './fs.js'
-import type { LexiconsManifest } from './lexicons-manifest.js'
-import { normalizeLexiconsManifest } from './lexicons-manifest.js'
+  HttpUrlString,
+  LexiconsManifestV1,
+  LexiconsManifestV2,
+  Resolution,
+} from './lexicons-manifest.js'
+import {
+  lexiconsManifestSchema,
+  normalizeManifest,
+} from './lexicons-manifest.js'
 import { NsidMap } from './nsid-map.js'
 import { NsidSet } from './nsid-set.js'
+import {
+  type CreateResolversOptions,
+  LexiconResolver,
+  type ResolvedLexicon,
+} from './resolvers.js'
 
 /**
  * Configuration options for the {@link LexInstaller} class.
@@ -40,7 +55,7 @@ import { NsidSet } from './nsid-set.js'
  * }
  * ```
  */
-export type LexInstallerOptions = LexResolverOptions & {
+export type LexInstallerOptions = CreateResolversOptions & {
   /**
    * Path to the directory where lexicon JSON files will be stored.
    * The directory structure mirrors the NSID hierarchy
@@ -52,19 +67,19 @@ export type LexInstallerOptions = LexResolverOptions & {
    * Path to the manifest file that tracks installed lexicons and their resolutions.
    */
   manifest: string
-
-  /**
-   * When `true`, forces re-fetching of lexicons from the network even if they
-   * already exist locally. Useful for updating to newer versions.
-   * @default false
-   */
-  update?: boolean
 }
 
-export type { LexResolverResult }
-export type InstallResult = {
-  lexicon: LexiconDocument
-  uri: AtUri
+export type InstallOptions = {
+  additions?: Iterable<string>
+  update?: Filter
+}
+
+export type UpdateOptions = {
+  additions?: never
+}
+
+type AddLexiconOptions = {
+  forceResolve: boolean
 }
 
 /**
@@ -96,7 +111,7 @@ export type InstallResult = {
  * @example
  * Manual disposal:
  * ```typescript
- * const installer = new LexInstaller({
+ * await using installer = new LexInstaller({
  *   lexicons: './lexicons',
  *   manifest: './lexicons.manifest.json',
  * })
@@ -110,39 +125,53 @@ export type InstallResult = {
  * ```
  */
 export class LexInstaller implements AsyncDisposable {
-  protected readonly lexiconResolver: LexResolver
-  protected readonly indexer: LexiconDirectoryIndexer
-  protected readonly documents = new NsidMap<LexiconDocument>()
-  protected readonly manifest: LexiconsManifest = {
-    version: 1,
-    lexicons: [],
-    resolutions: {},
+  static async load(options: LexInstallerOptions): Promise<LexInstaller> {
+    const manifest = await readJsonFile(options.manifest)
+      .then((json) => lexiconsManifestSchema.parse(json))
+      .catch((cause: unknown) => {
+        if (isEnoentError(cause)) return undefined
+        throw new Error('Failed to read lexicons manifest', { cause })
+      })
+
+    return new LexInstaller(options, manifest)
   }
 
-  constructor(protected readonly options: LexInstallerOptions) {
-    this.lexiconResolver = new LexResolver(options)
-    this.indexer = new LexiconDirectoryIndexer({
-      lexicons: options.lexicons,
-    })
+  protected readonly workingLexicons: NsidMap<LexiconDocument> = new NsidMap()
+  protected readonly workingManifest: LexiconsManifestV2
+  protected readonly originalManifest?: LexiconsManifestV1 | LexiconsManifestV2
+  protected readonly resolver: LexiconResolver
+
+  constructor(
+    protected readonly options: LexInstallerOptions,
+    manifest: LexiconsManifestV1 | LexiconsManifestV2 | undefined = undefined,
+  ) {
+    this.workingManifest = normalizeManifest(manifest)
+    this.originalManifest = manifest ? structuredClone(manifest) : undefined
+    this.resolver = new LexiconResolver(options, this.workingManifest.resolvers)
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
-    await this.indexer[Symbol.asyncDispose]()
+    // @NOTE This historically required a cleanup, which we might re-introduce
+    // later if needed, so we keep this to maintain the async disposal
+    // interface (future proofing + backward compatibility).
   }
 
   /**
-   * Compares the current manifest state with another manifest for equality.
+   * Whether installation left the manifest equivalent to the one loaded from
+   * disk. Both are normalized before comparison so entry ordering is irrelevant.
+   * Used by `--ci` to detect drift.
    *
-   * Both manifests are normalized before comparison to ensure consistent
-   * ordering of entries. Useful for detecting changes during CI verification.
+   * Returns `false` when no manifest file existed to begin with: a missing
+   * lockfile is drift to report, not an unchanged state.
    *
-   * @param manifest - The manifest to compare against
-   * @returns `true` if the manifests are equivalent, `false` otherwise
+   * @returns `true` if a baseline manifest existed and still matches the current
+   *   state, `false` otherwise
    */
-  equals(manifest: LexiconsManifest): boolean {
-    return lexEquals(
-      normalizeLexiconsManifest(manifest),
-      normalizeLexiconsManifest(this.manifest),
+  requiresSave(): boolean {
+    if (this.originalManifest?.version !== 2) return true
+    return !lexEquals(
+      normalizeManifest(this.originalManifest),
+      normalizeManifest(this.workingManifest),
     )
   }
 
@@ -154,10 +183,7 @@ export class LexInstaller implements AsyncDisposable {
    * lexicons to ensure complete dependency trees.
    *
    * @param options - Installation options
-   * @param options.additions - Iterable of lexicon identifiers to add.
-   *   Can be NSID strings or AT URIs.
-   * @param options.manifest - Existing manifest to use as a baseline.
-   *   Previously resolved URIs are preserved unless explicitly overridden.
+   * @param options.additions - Iterable of lexicon NSID strings to add.
    *
    * @example
    * Install new lexicons:
@@ -166,197 +192,222 @@ export class LexInstaller implements AsyncDisposable {
    *   additions: ['app.bsky.feed.post', 'app.bsky.actor.profile'],
    * })
    * ```
-   *
-   * @example
-   * Install with existing manifest as hint:
-   * ```typescript
-   * const existingManifest = await readJsonFile('./lexicons.manifest.json')
-   * await installer.install({
-   *   additions: ['com.example.newLexicon'],
-   *   manifest: existingManifest,
-   * })
-   * ```
-   *
-   * @example
-   * Install from specific AT URIs:
-   * ```typescript
-   * await installer.install({
-   *   additions: [
-   *     'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post',
-   *   ],
-   * })
-   * ```
    */
   async install({
     additions,
-    manifest,
-  }: {
-    additions?: Iterable<string>
-    manifest?: LexiconsManifest
-  } = {}): Promise<void> {
-    const roots = new NsidMap<AtUri | null>()
+    update = () => false,
+  }: InstallOptions = {}): Promise<void> {
+    const roots = new NsidMap<AddLexiconOptions>()
 
-    // First, process explicit additions
-    for (const lexicon of new Set(additions)) {
-      const [nsid, uri]: [NSID, AtUri | null] = lexicon.startsWith('at://')
-        ? ((uri) => [NSID.from(uri.rkey), uri])(new AtUri(lexicon))
-        : [NSID.from(lexicon), null]
-
-      if (roots.has(nsid)) {
-        throw new Error(
-          `Duplicate lexicon addition: ${nsid} (${roots.get(nsid) ?? lexicon})`,
-        )
-      }
-
-      roots.set(nsid, uri)
-      console.debug(`Adding new lexicon: ${nsid} (${uri ?? 'from NSID'})`)
+    // Restore previously existing manifest entries, updating their status based
+    // on the `update` option
+    for (const lexicon of this.workingManifest.lexicons) {
+      const nsid = NSID.from(lexicon)
+      const forceResolve = update(nsid.toString())
+      roots.set(nsid, { forceResolve })
     }
 
-    // Next, restore previously existing manifest entries
-    if (manifest) {
-      for (const lexicon of manifest.lexicons) {
-        const nsid = NSID.from(lexicon)
-
-        // Skip entries already added explicitly
-        if (!roots.has(nsid)) {
-          const uri = manifest.resolutions[lexicon]
-            ? new AtUri(manifest.resolutions[lexicon].uri)
-            : null
-
-          roots.set(nsid, uri)
-
-          console.debug(
-            `Adding lexicon from manifest: ${nsid} (${uri ?? 'from NSID'})`,
-          )
-        }
-      }
+    // Force a fresh installation of explicitly added lexicons
+    for (const addition of additions ?? []) {
+      // @NOTE overrides any existing entry
+      roots.set(NSID.from(addition), { forceResolve: true })
     }
 
     // Install all root lexicons (and store them in the manifest)
-    await Promise.all(
-      Array.from(roots, async ([nsid, sourceUri]) => {
-        console.debug(`Installing lexicon: ${nsid}`)
-
-        const { lexicon: document } = sourceUri
-          ? await this.installFromUri(sourceUri)
-          : await this.installFromNsid(nsid)
-
-        // Store the direct reference in the new manifest
-        this.manifest.lexicons.push(document.id)
+    const installedRootIds = await Promise.all(
+      Array.from(roots, async ([nsid, options]) => {
+        await this.addLexicon(nsid, options)
+        return nsid.toString()
       }),
     )
+
+    const installed = new Set<NsidString>(installedRootIds)
 
     // Then recursively install all referenced lexicons
     let results: unknown[]
     do {
       results = await Promise.all(
         Array.from(this.getMissingIds(), async (nsid) => {
-          console.debug(`Resolving dependency lexicon: ${nsid}`)
-
-          const nsidStr = nsid.toString() as NsidString
-          const resolvedUri = manifest?.resolutions[nsidStr]?.uri
-            ? new AtUri(manifest.resolutions[nsidStr].uri)
-            : null
-          if (resolvedUri) {
-            await this.installFromUri(resolvedUri)
-          } else {
-            await this.installFromNsid(nsid)
-          }
+          const nsidStr = nsid.toString()
+          const forceResolve = update(nsidStr)
+          await this.addLexicon(nsid, { forceResolve })
+          installed.add(nsidStr)
         }),
       )
     } while (results.length > 0)
+
+    // Add newly installed root lexicons to the manifest if they are not already
+    // present
+    for (const id of installedRootIds) {
+      if (!this.workingManifest.lexicons.includes(id)) {
+        this.workingManifest.lexicons.push(id)
+      }
+    }
+
+    // Finally, clear resolutions for lexicons that were not referenced
+    for (const id of Object.keys(
+      this.workingManifest.resolutions,
+    ) as NsidString[]) {
+      if (!installed.has(id)) {
+        delete this.workingManifest.resolutions[id]
+      }
+    }
+
+    // Clear lexiconsDirPath from any json file that is not referenced from the
+    // manifest.
+
+    // @NOTE We ony process files that would be processed by lex-builder (ie.
+    // json files), ensuring that "lex build" against the lexicons directory
+    // only includes files referenced from the manifest.
+    for await (const file of listFiles(this.lexiconsDirPath)) {
+      if (file.endsWith('.json')) {
+        const nsid = relative(this.lexiconsDirPath, file.slice(0, -5))
+          .split(sep)
+          .join('.')
+        if (!Object.hasOwn(this.workingManifest.resolutions, nsid)) {
+          await rm(file, { force: true })
+        }
+      }
+    }
+  }
+
+  protected getResolution(nsid: NsidString | NSID): Resolution | null {
+    const nsidStr = typeof nsid === 'string' ? nsid : nsid.toString()
+    const resolution = Object.hasOwn(this.workingManifest.resolutions, nsidStr)
+      ? (this.workingManifest.resolutions[nsidStr] ?? null)
+      : null
+    return resolution
+  }
+
+  protected async trackDocument(
+    nsid: NSID,
+    {
+      uri,
+      lexicon,
+    }: {
+      uri: FileUriString | AtUri | AtUriString | HttpUrlString
+      lexicon: LexiconDocument
+    },
+  ): Promise<void> {
+    if (nsid.toString() !== lexicon.id) {
+      throw new Error(
+        `NSID mismatch: expected ${nsid.toString()}, got ${lexicon.id}`,
+      )
+    }
+
+    const cid = await cidForLex(lexicon)
+
+    this.workingLexicons.set(nsid, lexicon)
+    this.workingManifest.resolutions[lexicon.id] = {
+      cid: cid.toString(),
+      uri: isFileUriString(uri)
+        ? // Store file uris relative to the manifest directory. Anchor the
+          // (possibly already-relative) uri to that directory first, so the
+          // locked value never depends on process.cwd().
+          toRelativeFileUri(this.manifestDirPath, uri)
+        : typeof uri === 'string'
+          ? uri // AtUriString
+          : uri.toString(), // AtUri
+    }
+  }
+
+  get lexiconsDirPath(): string {
+    return resolve(this.options.lexicons)
+  }
+
+  get manifestDirPath(): string {
+    return resolve(dirname(this.options.manifest))
+  }
+
+  protected async addLexicon(
+    nsid: NSID,
+    { forceResolve }: AddLexiconOptions,
+  ): Promise<void> {
+    const path = `${join(this.lexiconsDirPath, ...nsid.segments)}.json`
+
+    // Existing lock entry, if any.
+    const resolution = this.getResolution(nsid)
+
+    // Try to re-use the existing lexicon file from the lexicons folder, in
+    // order to avoid re-downloading it if it already exists locally.
+    if (!forceResolve && resolution) {
+      if (isFileUriString(resolution.uri)) {
+        // Ensure that, if the resolution is a file URI, the source file
+        // exists and is correctly linked. File uris are locked relative to the
+        // manifest *directory*, so resolve them against that (not the manifest
+        // file path, which would land one level too deep). Remote uris (at-uri,
+        // http(s)) were fetched and written to `path`, so they are read as-is.
+        const sourcePath = resolveFileUri(this.manifestDirPath, resolution.uri)
+        await symlinkLexicon(path, sourcePath)
+      }
+
+      const lexicon = await readLexiconDocument(path)
+
+      if (lexicon?.id === nsid.toString()) {
+        return this.trackDocument(nsid, {
+          uri: resolution.uri,
+          lexicon,
+        })
+      }
+    }
+
+    const result: ResolvedLexicon = await this.resolver
+      .resolve(nsid)
+      .catch(async (cause) => {
+        // Unable to resolve a new version of the lexicon. If we have an
+        // existing resolution, and a matching file on disk, let's use it.
+        if (!forceResolve && resolution) {
+          const lexicon = await readLexiconDocument(path)
+          if (lexicon?.id === nsid.toString()) {
+            const cid = await cidForLex(lexicon)
+            if (cid.equals(parseCid(resolution.cid))) {
+              return { uri: resolution.uri, lexicon }
+            }
+          }
+        }
+
+        // Failed to resolve
+        throw new Error(`Failed to resolve lexicon for NSID: ${nsid}`, {
+          cause,
+        })
+      })
+
+    // @NOTE If a resolve entry existed but its file was missing (or no longer
+    // matched), we re-resolved. Re-resolution goes through NSID discovery,
+    // which can reach a different source (even a different DID) than the one
+    // originally locked. This will be surfaced as a new resolution in the
+    // manifest.
+
+    if (isFileUriString(result.uri)) {
+      const sourcePath = fromFileUri(result.uri)
+
+      // Link the lexicon file at its right place (noop if file already at right location)
+      await symlinkLexicon(path, sourcePath)
+
+      return this.trackDocument(nsid, result)
+    } else {
+      // Write the file at it's destination path
+      await writeJsonFile(path, result.lexicon)
+
+      return this.trackDocument(nsid, result)
+    }
   }
 
   protected getMissingIds(): NsidSet {
     const missing = new NsidSet()
 
-    for (const document of this.documents.values()) {
-      for (const nsid of listDocumentNsidRefs(document)) {
-        if (!this.documents.has(nsid)) {
+    for (const document of this.workingLexicons.values()) {
+      for (const nsid of listDocumentNsidRefs(document, {
+        // @TODO should we make this configurable?
+        includeKnownValues: false,
+      })) {
+        if (!this.workingLexicons.has(nsid)) {
           missing.add(nsid)
         }
       }
     }
 
     return missing
-  }
-
-  protected async installFromNsid(nsid: NSID): Promise<InstallResult> {
-    const did = await this.lexiconResolver.resolve(nsid)
-    return this.installFromDid(did, nsid)
-  }
-
-  /**
-   * @throws if the uri is not a valid AT URI pointing to a lexicon document.
-   */
-  protected async installFromUri(uri: AtUri): Promise<InstallResult> {
-    if (uri.collection !== 'com.atproto.lexicon.schema') {
-      throw new Error(`Invalid lexicon document uri: ${uri.toString()}`)
-    }
-    const did = uri.did
-    const nsid = NSID.from(uri.rkey)
-    return this.installFromDid(did, nsid)
-  }
-
-  protected async installFromDid(
-    did: DidString,
-    nsid: NSID,
-  ): Promise<InstallResult> {
-    const { lexicon, cid } = this.options.update
-      ? await this.fetch(did, nsid)
-      : await this.indexer
-          .get(nsid)
-          .then(async (lexicon) => {
-            const cid = await cidForLex(lexicon)
-            console.debug(`Re-using existing lexicon ${nsid} from indexer`)
-            return { cid, lexicon }
-          })
-          .catch((err) => {
-            if (isEnoentError(err)) return this.fetch(did, nsid)
-            throw err
-          })
-
-    if (lexicon.id !== nsid.toString()) {
-      throw new Error(
-        `NSID mismatch: expected ${nsid.toString()}, got ${lexicon.id}`,
-      )
-    }
-
-    const uri = AtUri.make(did, 'com.atproto.lexicon.schema', nsid.toString())
-
-    this.documents.set(nsid, lexicon)
-    this.manifest.resolutions[lexicon.id] = {
-      cid: cid.toString(),
-      uri: uri.toString(),
-    }
-
-    return { lexicon, uri }
-  }
-
-  /**
-   * Fetches a lexicon document from the network and saves it locally.
-   *
-   * The lexicon is retrieved from the specified AT URI, written to the
-   * local lexicons directory, and its metadata is recorded for the manifest.
-   *
-   * @param uri - The AT URI pointing to the lexicon document
-   * @returns An object containing the fetched lexicon document and its CID
-   */
-  protected async fetch(
-    did: DidString,
-    nsid: NSID,
-  ): Promise<LexResolverResult> {
-    console.debug(`Fetching lexicon ${nsid} from repo ${did}...`)
-
-    const result = await this.lexiconResolver.fetch(did, nsid, {
-      noCache: this.options.update,
-    })
-
-    const { lexicon } = result
-    const basePath = join(this.options.lexicons, ...lexicon.id.split('.'))
-    await writeJsonFile(`${basePath}.json`, lexicon)
-
-    return result
   }
 
   /**
@@ -366,127 +417,10 @@ export class LexInstaller implements AsyncDisposable {
    * of entries, making it suitable for version control.
    */
   async save(): Promise<void> {
+    // @TODO use prettier to format the JSON before writing to disk
     await writeJsonFile(
       this.options.manifest,
-      normalizeLexiconsManifest(this.manifest),
+      normalizeManifest(this.workingManifest),
     )
-  }
-}
-
-function* listDocumentNsidRefs(doc: LexiconDocument): Iterable<NSID> {
-  try {
-    for (const def of Object.values(doc.defs)) {
-      if (def) {
-        for (const ref of defRefs(def)) {
-          const [nsid] = ref.split('#', 1)
-          if (nsid) yield NSID.from(nsid)
-        }
-      }
-    }
-  } catch (cause) {
-    throw new Error(`Failed to extract refs from lexicon ${doc.id}`, { cause })
-  }
-}
-
-function* defRefs(
-  def:
-    | MainLexiconDefinition
-    | NamedLexiconDefinition
-    | LexiconPermission
-    | LexiconUnknown
-    | LexiconParameters
-    | LexiconRef
-    | LexiconRefUnion,
-): Iterable<string> {
-  switch (def.type) {
-    case 'string':
-      if (def.knownValues) {
-        for (const val of def.knownValues) {
-          // Tokens ?
-          const { length, 0: nsid, 1: hash } = val.split('#')
-          if (length === 2 && hash) {
-            try {
-              NSID.from(nsid)
-              yield val
-            } catch {
-              // ignore invalid nsid
-            }
-          }
-        }
-      }
-      return
-    case 'array':
-      return yield* defRefs(def.items)
-    case 'params':
-    case 'object':
-      for (const prop of Object.values(def.properties)) {
-        yield* defRefs(prop)
-      }
-      return
-    case 'union':
-      yield* def.refs
-      return
-    case 'ref': {
-      yield def.ref
-      return
-    }
-    case 'record':
-      yield* defRefs(def.record)
-      return
-    case 'procedure':
-      if (def.input?.schema) {
-        yield* defRefs(def.input.schema)
-      }
-    // fallthrough
-    case 'query':
-      if (def.output?.schema) {
-        yield* defRefs(def.output.schema)
-      }
-    // fallthrough
-    case 'subscription':
-      if (def.parameters) {
-        yield* defRefs(def.parameters)
-      }
-      if ('message' in def && def.message?.schema) {
-        yield* defRefs(def.message.schema)
-      }
-      return
-    case 'permission-set':
-      for (const permission of def.permissions) {
-        yield* defRefs(permission)
-      }
-      return
-    case 'permission':
-      if (def.resource === 'rpc') {
-        if (Array.isArray(def.lxm)) {
-          for (const lxm of def.lxm) {
-            if (typeof lxm === 'string') {
-              yield lxm
-            }
-          }
-        }
-      } else if (def.resource === 'repo') {
-        if (Array.isArray(def.collection)) {
-          for (const lxm of def.collection) {
-            if (typeof lxm === 'string') {
-              yield lxm
-            }
-          }
-        }
-      }
-      return
-    case 'boolean':
-    case 'cid-link':
-    case 'token':
-    case 'bytes':
-    case 'blob':
-    case 'integer':
-    case 'unknown':
-      // @NOTE We explicitly list all types here to ensure exhaustiveness
-      // causing TS to error if a new type is added without updating this switch
-      return
-    default:
-      // @ts-expect-error
-      throw new Error(`Unknown lexicon def type: ${def.type}`)
   }
 }
