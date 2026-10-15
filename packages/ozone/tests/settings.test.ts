@@ -10,6 +10,7 @@ import { com, tools } from '../src/lexicons/index.js'
 import {
   PriorityLevelSettingKey,
   ReportPriorityLevelSettingKey,
+  SeverityLevelSettingKey,
 } from '../src/setting/constants.js'
 import { forSnapshot } from './_util.js'
 
@@ -150,6 +151,65 @@ describe('ozone-settings', () => {
       )
       expect(afterUpdatedByAdmin.options[0].value?.['noDids']).toBeFalsy()
       expect(afterUpdatedByAdmin.options[0].value?.['dids']).toEqual('test')
+    })
+  })
+
+  describe('severity expiry settings', () => {
+    const setting = (value: Record<string, unknown>) => ({
+      scope: 'instance',
+      key: SeverityLevelSettingKey,
+      value,
+      managerRole: tools.ozone.team.defs.RoleAdmin,
+    })
+
+    afterAll(async () => removeOptions([SeverityLevelSettingKey], 'instance'))
+
+    it.each([undefined, 0, 180, 365])(
+      'persists canonical expiry (%s) and permanent severities',
+      async (expiryInDays) => {
+        const value = {
+          'sev-1': {
+            strikeCount: 1,
+            ...(expiryInDays !== undefined && { expiryInDays }),
+          },
+          permanent: { strikeCount: 4 },
+        }
+        await upsertOption(setting(value))
+        const { options } = await listOptions({
+          scope: 'instance',
+          keys: [SeverityLevelSettingKey],
+        })
+        expect(options).toHaveLength(1)
+        expect(options[0].value).toEqual(value)
+      },
+    )
+
+    it.each([-1, 1.5, '365', null, true, Number.MAX_SAFE_INTEGER + 1, 1e20])(
+      'rejects invalid canonical expiry (%s) without replacing the setting',
+      async (expiryInDays) => {
+        const original = { 'sev-1': { strikeCount: 1, expiryInDays: 365 } }
+        await upsertOption(setting(original))
+        await expect(
+          upsertOption(setting({ 'sev-1': { strikeCount: 1, expiryInDays } })),
+        ).rejects.toThrow(
+          /Expiry in days must be a non-negative safe integer|Expected one of .* value type/,
+        )
+        const { options } = await listOptions({
+          scope: 'instance',
+          keys: [SeverityLevelSettingKey],
+        })
+        expect(options[0].value).toEqual(original)
+      },
+    )
+
+    it.each([
+      { expiresInDays: 365 },
+      { expiresInDays: 365, expiryInDays: 365 },
+      { expiresInDays: 365, expiryInDays: 180 },
+    ])('rejects the obsolete expiry property (%#)', async (expiry) => {
+      await expect(
+        upsertOption(setting({ 'sev-1': { strikeCount: 1, ...expiry } })),
+      ).rejects.toThrow('Use expiryInDays instead of expiresInDays')
     })
   })
 

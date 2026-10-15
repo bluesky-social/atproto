@@ -14,10 +14,10 @@ const strikeConfig = {
   'sev-1': {
     strikeCount: 1,
     strikeOnOccurrence: 2,
-    expiresInDays: 365,
+    expiryInDays: 365,
   },
-  'sev-2': { strikeCount: 2, expiresInDays: 365 },
-  'sev-4': { strikeCount: 4, expiresInDays: 0 },
+  'sev-2': { strikeCount: 2, expiryInDays: 365 },
+  'sev-4': { strikeCount: 4, expiryInDays: 0 },
   'sev-5': { needsTakedown: true },
 }
 

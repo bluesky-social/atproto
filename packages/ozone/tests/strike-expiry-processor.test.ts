@@ -12,11 +12,11 @@ import { SeverityLevelSettingKey } from '../src/setting/constants.js'
 const strikeConfig = {
   'sev-1': {
     strikeCount: 1,
-    expiresInDays: 0, // Set to 0 so we can use future timestamps
+    expiryInDays: 0, // Set to 0 so we can use future timestamps
   },
   'sev-2': {
     strikeCount: 2,
-    expiresInDays: 0,
+    expiryInDays: 0,
   },
 }
 
