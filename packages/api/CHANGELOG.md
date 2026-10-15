@@ -1,5 +1,18 @@
 # @atproto/api
 
+## 0.27.1
+
+### Patch Changes
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Source Lexicons through each package's own `lexicons.json` manifest instead of compiling the repo-root `lexicons` directory directly. Canonical `com.atproto.*` / `tools.ozone.*` schemas are symlinked from the root, `app.bsky.*` / `chat.bsky.*` are fetched from the `bluesky-social/bsky` Github repo, other external namespaces resolve from the network, and locally diverging documents are kept under a tracked `lexicons-overrides` directory. The root `lexicons` directory now only holds the canonical `com.atproto` and `tools.ozone` namespaces. No change to generated output or published API.
+
+- [#5656](https://github.com/bluesky-social/atproto/pull/5656) [`388dac9`](https://github.com/bluesky-social/atproto/commit/388dac9f7fdfa5ba8e4af08217b4afdc30d993ee) Thanks [@mozzius](https://github.com/mozzius)! - Name the parent of a subscribed post that is a reply in grouped notifications, and return its view in `relatedViews`, as for reply, quote and mention notifications.
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto/syntax@0.7.7
+  - @atproto/common-web@0.5.15
+  - @atproto/lexicon@0.7.17
+  - @atproto/xrpc@0.8.16
+
 ## 0.27.0
 
 ### Minor Changes

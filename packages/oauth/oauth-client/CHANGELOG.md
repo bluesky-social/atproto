@@ -1,5 +1,15 @@
 # @atproto/oauth-client
 
+## 0.8.10
+
+### Patch Changes
+
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto-labs/fetch@0.4.0
+  - @atproto-labs/did-resolver@0.3.11
+  - @atproto-labs/identity-resolver@0.4.11
+  - @atproto/xrpc@0.8.16
+
 ## 0.8.9
 
 ### Patch Changes
