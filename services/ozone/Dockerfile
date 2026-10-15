@@ -28,8 +28,8 @@ COPY ./packages/identity ./packages/identity
 COPY ./packages/internal/did-resolver ./packages/internal/did-resolver
 COPY ./packages/internal/fetch-node ./packages/internal/fetch-node
 COPY ./packages/internal/fetch ./packages/internal/fetch
-COPY ./packages/internal/handle-resolver ./packages/internal/handle-resolver
 COPY ./packages/internal/handle-resolver-node ./packages/internal/handle-resolver-node
+COPY ./packages/internal/handle-resolver ./packages/internal/handle-resolver
 COPY ./packages/internal/identity-resolver ./packages/internal/identity-resolver
 COPY ./packages/internal/opentelemetry-node ./packages/internal/opentelemetry-node
 COPY ./packages/internal/pipe ./packages/internal/pipe
