@@ -1,10 +1,14 @@
+import { sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
+import { currentDatetimeString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
 import { tools } from '../lexicons/index.js'
 import { dbLogger } from '../logger.js'
 import {
+  type ExpiringTagGroup,
   deleteExpiringTagsByIds,
   getExpiredTags,
+  lockTagSubject,
 } from '../mod-service/expiring-tags.js'
 import type {
   ModerationServiceCreator,
@@ -82,40 +86,92 @@ export class EventReverser {
     if (!groups.length) return
 
     for (const group of groups) {
-      await this.db.transaction(async (dbTxn) => {
-        // Check which tags are still present on the subject
-        const status = await dbTxn.db
-          .selectFrom('moderation_subject_status')
-          .where('did', '=', group.did)
-          .where('recordPath', '=', group.recordPath)
-          .where('convoId', '=', group.convoId)
-          .selectAll()
-          .executeTakeFirst()
-
-        const currentTags: string[] = status?.tags ?? []
-        const tagsToRemove = group.tags.filter((t) => currentTags.includes(t))
-
-        // Delete the expiring_tag rows regardless
-        await deleteExpiringTagsByIds(dbTxn, group.ids)
-
-        // Only emit removal event if there are tags still present to remove
-        if (tagsToRemove.length > 0 && status) {
-          const subject = subjectFromStatusRow(status)
-          const moderationTxn = this.modService(dbTxn)
-          await moderationTxn.logEvent({
-            event: tools.ozone.moderation.defs.modEventTag.$build({
-              add: [],
-              remove: tagsToRemove,
-              comment:
-                '[SCHEDULED_REVERSAL] Reverting temporary tags as originally scheduled',
-            }),
-            createdBy: group.createdBy,
-            subject,
-            createdAt: new Date(),
-          })
-        }
-      })
+      await this.revertExpiredTags(group)
     }
+  }
+
+  async revertExpiredTags(group: ExpiringTagGroup) {
+    await this.db.transaction(async (dbTxn) => {
+      await lockTagSubject(dbTxn, group)
+      // Check which tags are still present on the subject
+      const status = await dbTxn.db
+        .selectFrom('moderation_subject_status')
+        .where('did', '=', group.did)
+        .where('recordPath', '=', group.recordPath)
+        .where('convoId', '=', group.convoId)
+        .forUpdate()
+        .selectAll()
+        .executeTakeFirst()
+
+      // @NOTE re-read after the status lock: writers may have replaced these
+      // rows, and another worker may already have consumed this snapshot.
+      const expiredRows = await dbTxn.db
+        .selectFrom('expiring_tag')
+        .where('id', 'in', group.ids)
+        .where('expiresAt', '<=', currentDatetimeString())
+        .selectAll()
+        .execute()
+      if (!expiredRows.length) return
+
+      const tagsToRemove: string[] = []
+      for (const row of expiredRows) {
+        if (
+          !status?.tags?.includes(row.tag) ||
+          tagsToRemove.includes(row.tag)
+        ) {
+          continue
+        }
+        // @NOTE legacy rows may predate a renewal or a permanent reissue.
+        let laterMutationQuery = dbTxn.db
+          .selectFrom('moderation_event')
+          .where('subjectDid', '=', group.did)
+          .where('action', '=', tools.ozone.moderation.defs.modEventTag.$type)
+          .where('id', '>', row.eventId)
+          .where(
+            sql<boolean>`(
+              ${sql.ref('addedTags')} ? ${row.tag} or
+              ${sql.ref('removedTags')} ? ${row.tag}
+            )`,
+          )
+          .select('id')
+          .limit(1)
+        laterMutationQuery = group.recordPath
+          ? laterMutationQuery.where(
+              'subjectUri',
+              '=',
+              `at://${group.did}/${group.recordPath}`,
+            )
+          : laterMutationQuery.where('subjectUri', 'is', null)
+        laterMutationQuery = group.convoId
+          ? laterMutationQuery.where('subjectConvoId', '=', group.convoId)
+          : laterMutationQuery.where('subjectConvoId', 'is', null)
+        const laterMutation = await laterMutationQuery.executeTakeFirst()
+        if (!laterMutation) tagsToRemove.push(row.tag)
+      }
+
+      // Delete the expiring_tag rows regardless
+      await deleteExpiringTagsByIds(
+        dbTxn,
+        expiredRows.map((row) => row.id),
+      )
+
+      // Only emit removal event if there are tags still present to remove
+      if (tagsToRemove.length > 0 && status) {
+        const subject = subjectFromStatusRow(status)
+        const moderationTxn = this.modService(dbTxn)
+        await moderationTxn.logEvent({
+          event: tools.ozone.moderation.defs.modEventTag.$build({
+            add: [],
+            remove: tagsToRemove,
+            comment:
+              '[SCHEDULED_REVERSAL] Reverting temporary tags as originally scheduled',
+          }),
+          createdBy: group.createdBy,
+          subject,
+          createdAt: new Date(),
+        })
+      }
+    })
   }
 }
 
