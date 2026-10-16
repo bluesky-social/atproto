@@ -5,6 +5,7 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { com, tools } from '../src/lexicons/index.js'
 
 describe('moderation subject content tagging', () => {
   let network: TestNetwork
@@ -140,7 +141,7 @@ describe('moderation subject content tagging', () => {
   })
 
   describe('report tagger', () => {
-    it('Adds report reason tag', async () => {
+    it('Adds report reason tag by default', async () => {
       await Promise.all([
         sc.createReport({
           reasonType: ComAtprotoModerationDefs.REASONSPAM,
@@ -164,6 +165,60 @@ describe('moderation subject content tagging', () => {
 
       expect(accountStatus.tags).toContain('report:spam')
       expect(accountStatus.tags).toContain('report:misleading')
+    })
+
+    it('Disables report tags while preserving content and existing tags', async () => {
+      const service = network.ozone.ctx.cfg.service
+      const original = service.reportTagsEnabled
+      service.reportTagsEnabled = false
+
+      try {
+        const subject = com.atproto.admin.defs.repoRef.$build({
+          did: sc.dids.bob,
+        })
+        await modClient.emitEvent({
+          subject,
+          event: tools.ozone.moderation.defs.modEventTag.$build({
+            add: ['manual-tag', 'report:other'],
+            remove: [],
+          }),
+        })
+        const post = await sc.post(
+          sc.dids.carol,
+          'Xで有名な人達＋反AIや絵描きによくない',
+          undefined,
+          sc.posts[sc.dids.carol][0].images,
+        )
+        await network.processAll()
+
+        await sc.createReport({
+          reasonType: ComAtprotoModerationDefs.REASONSPAM,
+          subject,
+          reportedBy: sc.dids.alice,
+        })
+        await sc.createReport({
+          reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
+          subject: com.atproto.repo.strongRef.$build({
+            uri: post.ref.uriStr,
+            cid: post.ref.cidStr,
+          }),
+          reportedBy: sc.dids.alice,
+        })
+
+        const accountStatus = await getStatus(sc.dids.bob)
+        expect(accountStatus.tags).toEqual(
+          expect.arrayContaining(['manual-tag', 'report:other']),
+        )
+        expect(accountStatus.tags).not.toContain('report:spam')
+
+        const postStatus = await getStatus(post.ref.uriStr)
+        expect(postStatus.tags).toEqual(
+          expect.arrayContaining(['lang:ja', 'embed:image']),
+        )
+        expect(postStatus.tags).not.toContain('report:misleading')
+      } finally {
+        service.reportTagsEnabled = original
+      }
     })
   })
 })
