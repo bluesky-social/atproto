@@ -100,6 +100,7 @@ export async function deleteExpiringTagsByIds(
   await db.db.deleteFrom('expiring_tag').where('id', 'in', ids).execute()
 }
 
+/** Return one bounded batch of due tag rows, grouped for reversal. */
 export async function getExpiredTags(
   db: Database,
 ): Promise<ExpiringTagGroup[]> {
@@ -107,6 +108,8 @@ export async function getExpiredTags(
   const rows = await db.db
     .selectFrom('expiring_tag')
     .where('expiresAt', '<=', now)
+    .orderBy('expiresAt', 'asc')
+    .limit(1_000)
     .selectAll()
     .execute()
 

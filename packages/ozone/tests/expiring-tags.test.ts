@@ -498,4 +498,67 @@ describe('expiring tags', () => {
       .execute()
     expect(rows).toHaveLength(0)
   })
+
+  it('bounds each expiry pass and resumes oldest-first without losing renewals', async () => {
+    const tiedTags = Array.from({ length: 1_000 }, (_, i) => `batch-tied-${i}`)
+    const oldest = 'batch-oldest'
+    const newer = 'batch-newer'
+    const future = 'batch-future'
+    // @NOTE insert out of expiry order, including more than a batch at one deadline.
+    const tags = [newer, ...tiedTags, oldest, future]
+    await emitTagEvent(sc.dids.bob, tags, [], 24)
+    const db = network.ozone.ctx.db
+    const now = Date.now()
+    await db.db
+      .updateTable('expiring_tag')
+      .set({ expiresAt: toDatetimeString(now - 2_000) })
+      .where('tag', 'in', tiedTags)
+      .execute()
+    await db.db
+      .updateTable('expiring_tag')
+      .set({ expiresAt: toDatetimeString(now - 3_000) })
+      .where('tag', '=', oldest)
+      .execute()
+    await db.db
+      .updateTable('expiring_tag')
+      .set({ expiresAt: toDatetimeString(now - 1_000) })
+      .where('tag', '=', newer)
+      .execute()
+
+    const groups = await getExpiredTags(db)
+    expect(groups.flatMap((group) => group.ids)).toHaveLength(1_000)
+    const selectedTags = groups.flatMap((group) => group.tags)
+    expect(selectedTags).toContain(oldest)
+    expect(selectedTags).not.toContain(newer)
+    expect(selectedTags).not.toContain(future)
+
+    const reverser = createReverser()
+    await reverser.findAndRevertExpiredTags()
+    const remainingTags = (await getSubjectTags(sc.dids.bob)).filter((tag) =>
+      tags.includes(tag),
+    )
+    expect(remainingTags).toHaveLength(3)
+    expect(remainingTags).not.toContain(oldest)
+    expect(remainingTags).toEqual(expect.arrayContaining([newer, future]))
+
+    const remainingDue = (await getExpiredTags(db)).flatMap(
+      (group) => group.tags,
+    )
+    expect(remainingDue).toHaveLength(2)
+    const renewed = remainingDue.find((tag) => tag !== newer)!
+    await emitTagEvent(sc.dids.bob, [renewed], [], 24)
+    await reverser.findAndRevertExpiredTags()
+
+    const finalTags = (await getSubjectTags(sc.dids.bob)).filter((tag) =>
+      tags.includes(tag),
+    )
+    expect(finalTags.sort()).toEqual([future, renewed].sort())
+    expect(await getExpiredTags(db)).toHaveLength(0)
+    const removals = await modClient.queryEvents({
+      subject: sc.dids.bob,
+      types: [tools.ozone.moderation.defs.modEventTag.$type],
+      removedTags: [renewed],
+    })
+    expect(removals.events).toHaveLength(0)
+  })
 })
