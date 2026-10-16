@@ -20,6 +20,7 @@ export enum Gate {
   IrisFeedBskyTeamEnable = 'iris:feed:bsky-team:enable',
   IrisFeedBestOfFollowsEnable = 'iris:feed:best-of-follows:enable',
   IrisFeedFollowpicsEnable = 'iris:feed:followpics:enable',
+  IrisFeedLoggedOutEnable = 'iris:feed:logged_out:enable',
   KnownLikersFeedEnable = 'known_likers:feed:enable',
   SuggestedFeedsV2Enable = 'suggested_feeds_v2:enable',
   SuggestedStarterPacksV2Enable = 'suggested_starter_packs_v2:enable',
