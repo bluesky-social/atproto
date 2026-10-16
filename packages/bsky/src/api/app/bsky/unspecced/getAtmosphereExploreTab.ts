@@ -121,38 +121,21 @@ async function skeleton({
   params,
 }: SkeletonFnInput<Context, Params>): Promise<SkeletonState> {
   const { iris, workerUrl, signal } = params
-  const { fetchExploreTabSkeleton } = ctx
-  if (!iris) {
-    const config = parseConfig(await fetchExploreTabSkeleton(workerUrl, signal))
-    const now = Date.now()
-    const announcementBanner = selectBanner(
-      config.announcementBanners,
-      params,
-      now,
-    )
-    const select = createSelector(params, params.requestHeaders, now)
-    return {
-      now,
-      announcementBanner,
-      articles: completeGroups(select(config.articles)),
-      publications: completeGroups(select(config.publications)),
-      photos: completeGroups(select(config.photos)),
-      livestreams: completeGroups(select(config.livestreams)),
-      apps: config.apps ?? [],
-    }
-  }
-  const [body, recommendations] = await Promise.all([
-    fetchExploreTabSkeleton(workerUrl, signal),
-    fetchAtmosphereArticleRecommendations(
-      iris,
-      {
-        viewer: params.hydrateCtx.viewer ?? undefined,
-        limit: IRIS_ARTICLE_LIMIT,
-      },
-      { headers: params.headers, signal },
-    ),
+  const [config, recommendations] = await Promise.all([
+    ctx.fetchExploreTabSkeleton(workerUrl, signal),
+    iris
+      ? fetchAtmosphereArticleRecommendations(
+          iris,
+          {
+            viewer: params.hydrateCtx.viewer ?? undefined,
+            limit: IRIS_ARTICLE_LIMIT,
+          },
+          { headers: params.headers, signal },
+        )
+      : undefined,
   ])
-  const config = parseConfig(body)
+  // Presence of the response, not its length: an empty Iris list is still
+  // authoritative and never falls back to curated articles.
   const now = Date.now()
   const announcementBanner = selectBanner(
     config.announcementBanners,
@@ -164,13 +147,16 @@ async function skeleton({
     now,
     announcementBanner,
     // Iris order is authoritative: no selection, cap, or featured metadata.
-    articles: mapDefined(recommendations.articles, ({ uri }) => {
-      const root = recordUri(uri)
-      return root && new AtUri(root).collection === site.standard.document.$type
-        ? { featured: false, uri: root }
-        : undefined
-    }),
-    articleRecIdStr: recommendations.recIdStr,
+    articles: recommendations
+      ? mapDefined(recommendations.articles, ({ uri }) => {
+          const root = recordUri(uri)
+          return root &&
+            new AtUri(root).collection === site.standard.document.$type
+            ? { featured: false, uri: root }
+            : undefined
+        })
+      : completeGroups(select(config.articles)),
+    articleRecIdStr: recommendations?.recIdStr,
     publications: completeGroups(select(config.publications)),
     photos: completeGroups(select(config.photos)),
     livestreams: completeGroups(select(config.livestreams)),
@@ -258,7 +244,7 @@ function createFetchExploreTabSkeleton() {
   return async function fetchExploreTabSkeleton(
     url: URL,
     signal: AbortSignal,
-  ): Promise<unknown> {
+  ): Promise<l.Infer<typeof configSchema>> {
     try {
       const response = await fetchConfig(url, {
         headers: { accept: 'application/json' },
@@ -271,7 +257,12 @@ function createFetchExploreTabSkeleton() {
           `Atmosphere Explore service returned HTTP ${response.status}`,
         )
       }
-      return await response.json()
+      const parsed = configSchema.safeParse(await response.json())
+      if (!parsed.success)
+        throw new UpstreamFailureError(
+          'Invalid Atmosphere Explore configuration',
+        )
+      return parsed.value
     } catch (err) {
       if (err instanceof UpstreamFailureError) throw err
       if (
@@ -285,13 +276,6 @@ function createFetchExploreTabSkeleton() {
       )
     }
   }
-}
-
-function parseConfig(body: unknown): l.Infer<typeof configSchema> {
-  const parsed = configSchema.safeParse(body)
-  if (!parsed.success)
-    throw new UpstreamFailureError('Invalid Atmosphere Explore configuration')
-  return parsed.value
 }
 
 type Context = {

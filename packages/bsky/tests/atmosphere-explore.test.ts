@@ -1970,6 +1970,7 @@ describe('Atmosphere Explore article source (gate off)', () => {
     const { status, body } = await fixture.query(true)
     expect(status).toBe(200)
     expect(body.articles.items).toHaveLength(2)
+    expect(fixture.fetchMock).toHaveBeenCalledOnce()
     expect(fixture.iris.fetchMock).not.toHaveBeenCalled()
     for (const section of sections) {
       expect(body[section]).not.toHaveProperty('recIdStr')
@@ -2050,6 +2051,8 @@ describe('Atmosphere Explore article source (gate on)', () => {
     const { status, body } = await fixture.query()
 
     expect(status).toBe(200)
+    expect(fixture.fetchMock).toHaveBeenCalledOnce()
+    expect(fixture.iris.fetchMock).toHaveBeenCalledOnce()
     // Presentation keeps duplicates; hydration roots are deduplicated, and
     // worker-only article roots are never hydrated.
     expect(body.articles.items.map(({ view }) => view.title)).toEqual([
@@ -2280,6 +2283,8 @@ describe('Atmosphere Explore article source (gate on)', () => {
     const { status, body } = await pending
     expect(status).toBe(200)
     expect(body.articles.recIdStr).toBe('late')
+    expect(fixture.fetchMock).toHaveBeenCalledOnce()
+    expect(fixture.iris.fetchMock).toHaveBeenCalledOnce()
   })
 
   describe('existing article scenarios', () => {
@@ -2399,6 +2404,7 @@ describe.each(['worker', 'iris'] as const)(
     test.each([
       ['http', () => new Response('', { status: 503 }), 502],
       ['json', () => new Response('{'), 502],
+      ['schema', () => Response.json({ apps: [{ url: 123 }] }), 502],
       ['network', () => Promise.reject(new TypeError('down')), 502],
       [
         'timeout',
