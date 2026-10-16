@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import type { DatetimeString, DidString } from '@atproto/lex'
 import { currentDatetimeString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
@@ -82,7 +81,6 @@ export async function insertExpiringTags(
         tag,
         expiresAt: params.expiresAt,
         createdBy: params.createdBy,
-        version: 1,
       })),
     )
     .execute()
@@ -100,7 +98,6 @@ export async function removeExpiringTags(
   if (!params.tags.length) return
   await db.db
     .deleteFrom('expiring_tag')
-    .where('version', '=', sql.lit(1))
     .where('did', '=', params.did)
     .where('recordPath', '=', params.recordPath)
     .where('convoId', '=', params.convoId)
@@ -122,7 +119,6 @@ export async function getExpiredTags(
   const now = currentDatetimeString()
   const rows = await db.db
     .selectFrom('expiring_tag')
-    .where('version', '=', sql.lit(1))
     .where('expiresAt', '<=', now)
     .orderBy('expiresAt', 'asc')
     .limit(1_000)

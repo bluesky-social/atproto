@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
 import { currentDatetimeString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
@@ -105,7 +104,6 @@ export class EventReverser {
       // rows, and another worker may already have consumed this snapshot.
       const expiredRows = await dbTxn.db
         .selectFrom('expiring_tag')
-        .where('version', '=', sql.lit(1))
         .where('id', 'in', group.ids)
         .where('expiresAt', '<=', currentDatetimeString())
         .selectAll()

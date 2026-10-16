@@ -12,7 +12,6 @@ export interface ExpiringTag {
   tag: string
   expiresAt: DatetimeString
   createdBy: DidString
-  version: Generated<number | null>
 }
 
 export type PartialDB = {

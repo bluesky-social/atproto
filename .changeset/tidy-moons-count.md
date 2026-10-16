@@ -2,4 +2,4 @@
 '@atproto/ozone': patch
 ---
 
-Avoid tag expiry lock contention with reports. Process versioned expiry rows without history scans; leave existing unversioned rows for separate reconciliation.
+Avoid report/tag deadlocks and remove event-history queries from tag expiry.
