@@ -1814,10 +1814,10 @@ describe('Atmosphere Explore', () => {
     expect(await fixture.query()).toEqual({
       status: 200,
       body: {
-        articles: [],
-        publications: [],
-        photos: [],
-        livestreams: [],
+        articles: { items: [] },
+        publications: { items: [] },
+        photos: { items: [] },
+        livestreams: { items: [] },
         apps: [],
       },
     })
@@ -1937,7 +1937,7 @@ type Fixture = Awaited<ReturnType<typeof setup>>
 
 const articleUris = (...uris: string[]) => uris.map((uri) => ({ uri }))
 // Worker article content that must never matter once Iris is the source.
-const conflictingArticles = [group([missingUri]), group([doc2Uri])]
+const conflictingArticles = [group(missingUri), group(doc2Uri)]
 const sections = ['articles', 'publications', 'photos', 'livestreams'] as const
 
 async function setupIris(
@@ -2089,14 +2089,21 @@ describe('Atmosphere Explore article source (gate on)', () => {
     expect(body.apps).toEqual(curated.apps)
   })
 
-  it('ignores worker articles, including their record budget', async () => {
+  it('ignores worker article selection and hydration', async () => {
     await using fixture = await setupIris([docUri], {
-      articles: Array.from({ length: 6 }, () =>
-        group(Array.from({ length: 100 }, () => doc2Uri)),
-      ),
+      articles: Array.from({ length: 6 }, () => group(doc2Uri)),
     })
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
+    using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
     const { status, body } = await fixture.query()
     expect(status).toBe(200)
+    expect(hydrate.mock.calls[0][0]).toEqual([docUri])
+    expect(lookup.mock.calls.flatMap(([params]) => params.uris)).not.toContain(
+      doc2Uri,
+    )
     expect(body.articles.items).toHaveLength(1)
     expect(body.articles.items[0].view.title).toBe('Article')
   })
@@ -2110,8 +2117,8 @@ describe('Atmosphere Explore article source (gate on)', () => {
     const twelve = Array.from({ length: 12 }, () => docUri)
     await using fixture = await setupIris(twelve, {
       photos: [
-        { uris: [photoUri], locations: ['JP'] },
-        { uris: [galleryUri], locations: ['US-WI'] },
+        { canonicalUri: photoUri, locations: ['JP'] },
+        { canonicalUri: galleryUri, locations: ['US-WI'] },
       ],
     })
     using hydrate = vi.spyOn(
@@ -2309,7 +2316,7 @@ describe('Atmosphere Explore article source (gate on)', () => {
 
     test.each([
       { note: 'automatically discovered', publications: [] },
-      { note: 'explicitly in another group', publications: [group([pubUri])] },
+      { note: 'explicitly in another group', publications: [group(pubUri)] },
     ])(
       'renders an Iris document root with its publication $note',
       async ({ publications }) => {
@@ -2423,23 +2430,6 @@ describe.each(['worker', 'iris'] as const)(
       expect((await fixture.query()).status).toBe(status)
       expect(lookup).not.toHaveBeenCalled()
     })
-
-    it('enforces the 500-reference budget before hydration', async () => {
-      const filler = (count: number) => [
-        group(Array.from({ length: count }, () => pubUri)),
-      ]
-      // Gate off counts worker articles; gate on counts Iris articles instead.
-      await using fixture = await arrange({
-        articles: iris ? conflictingArticles : filler(100).concat(filler(100)),
-        publications: filler(100).concat(filler(100)).concat(filler(100)),
-        photos: filler(100),
-        livestreams: filler(iris ? 100 : 1),
-      })
-      using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
-      // off: 200 + 300 + 100 + 1 = 601; on: 300 + 100 + 100 + 1 Iris = 501.
-      expect((await fixture.query()).status).toBe(502)
-      expect(lookup).not.toHaveBeenCalled()
-    })
   },
 )
 
@@ -2485,25 +2475,4 @@ describe('Atmosphere Explore Iris requirements and failures', () => {
       expect(lookup).not.toHaveBeenCalled()
     },
   )
-
-  it('counts Iris articles toward the record budget at the limit', async () => {
-    const photos = (count: number) =>
-      Array.from({ length: Math.ceil(count / 100) }, (_, i) =>
-        group(
-          Array.from(
-            { length: Math.min(100, count - i * 100) },
-            () => galleryUri,
-          ),
-        ),
-      )
-    const iris25 = Array.from({ length: 25 }, () => docUri)
-    // 475 worker + 25 Iris = 500: allowed.
-    await using exact = await setupIris(iris25, { photos: photos(475) })
-    expect((await exact.query()).status).toBe(200)
-    // 476 + 25 = 501: rejected before hydration.
-    await using over = await setupIris(iris25, { photos: photos(476) })
-    using lookup = vi.spyOn(over.dataplane, 'getRecordsByURI')
-    expect((await over.query()).status).toBe(502)
-    expect(lookup).not.toHaveBeenCalled()
-  })
 })
