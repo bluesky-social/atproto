@@ -1,11 +1,8 @@
-import { type Selectable, sql } from 'kysely'
 import type { DatetimeString, DidString } from '@atproto/lex'
 import { currentDatetimeString } from '@atproto/lex'
-import { AtUri } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
-import type { ExpiringTag } from '../db/schema/expiring_tag.js'
-
-export type ExpiringTagRow = Selectable<ExpiringTag>
+import { tools } from '../lexicons/index.js'
+import type { ModerationSubjectStatusRow } from './types.js'
 
 export type ExpiringTagGroup = {
   did: DidString
@@ -16,28 +13,48 @@ export type ExpiringTagGroup = {
   ids: number[]
 }
 
-/** Serialize tag writes and expiry for one subject until the transaction ends. */
+/** Serialize tag writes, reserving a status row for new subjects. */
 export async function lockTagSubject(
   db: Database,
   params: {
     did: DidString
     recordPath: string
     convoId: string
+    recordCid?: string | null
   },
-): Promise<void> {
+): Promise<number | undefined> {
   db.assertTransaction()
-  const key = JSON.stringify([
-    'ozone-tag',
-    db.schema ?? 'public',
-    params.did,
-    params.recordPath,
-    params.convoId,
-  ])
-  // @NOTE lock before allocating the event ID, including for new subjects,
-  // without inserting a status row or consuming its sequence.
-  await sql`select pg_advisory_xact_lock(hashtextextended(${key}, 0))`.execute(
-    db.db,
-  )
+  const statusQuery = db.db
+    .selectFrom('moderation_subject_status')
+    .where('did', '=', params.did)
+    .where('recordPath', '=', params.recordPath)
+    .where('convoId', '=', params.convoId)
+    .select('id')
+    .forUpdate()
+  if (await statusQuery.executeTakeFirst()) return
+
+  const now = currentDatetimeString()
+  const inserted = await db.db
+    .insertInto('moderation_subject_status')
+    .values({
+      did: params.did,
+      recordPath: params.recordPath,
+      convoId: params.convoId,
+      recordCid: params.recordCid ?? null,
+      reviewState: tools.ozone.moderation.defs.reviewNone.value,
+      ageAssuranceState: 'unknown',
+      takendown: false,
+      createdAt: now,
+      updatedAt: now,
+    } as ModerationSubjectStatusRow)
+    .onConflict((oc) =>
+      oc.constraint('moderation_status_unique_idx').doNothing(),
+    )
+    .returning('id')
+    .executeTakeFirst()
+  // @NOTE a concurrent first report or tag write may have created the row.
+  if (!inserted) await statusQuery.executeTakeFirstOrThrow()
+  return inserted?.id
 }
 
 export async function insertExpiringTags(
@@ -79,15 +96,10 @@ export async function removeExpiringTags(
   },
 ): Promise<void> {
   if (!params.tags.length) return
-  const recordPaths = [params.recordPath]
-  if (params.recordPath) {
-    // @NOTE older record expiry rows stored the full URI.
-    recordPaths.push(`at://${params.did}/${params.recordPath}`)
-  }
   await db.db
     .deleteFrom('expiring_tag')
     .where('did', '=', params.did)
-    .where('recordPath', 'in', recordPaths)
+    .where('recordPath', '=', params.recordPath)
     .where('convoId', '=', params.convoId)
     .where('tag', 'in', params.tags)
     .execute()
@@ -118,10 +130,7 @@ export async function getExpiredTags(
   // Group by (did, recordPath, convoId, createdBy) so each reversal event has the correct author
   const grouped = new Map<string, ExpiringTagGroup>()
   for (const row of rows) {
-    const uri = row.recordPath.startsWith('at://')
-      ? new AtUri(row.recordPath)
-      : undefined
-    const recordPath = uri ? `${uri.collection}/${uri.rkey}` : row.recordPath
+    const recordPath = row.recordPath
     const key = `${row.did}|${recordPath}|${row.convoId}|${row.createdBy}`
     let group = grouped.get(key)
     if (!group) {

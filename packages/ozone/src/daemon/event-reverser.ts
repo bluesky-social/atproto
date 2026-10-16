@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
 import { currentDatetimeString } from '@atproto/lex'
 import type { Database } from '../db/index.js'
@@ -8,7 +7,6 @@ import {
   type ExpiringTagGroup,
   deleteExpiringTagsByIds,
   getExpiredTags,
-  lockTagSubject,
 } from '../mod-service/expiring-tags.js'
 import type {
   ModerationServiceCreator,
@@ -92,7 +90,6 @@ export class EventReverser {
 
   async revertExpiredTags(group: ExpiringTagGroup) {
     await this.db.transaction(async (dbTxn) => {
-      await lockTagSubject(dbTxn, group)
       // Check which tags are still present on the subject
       const status = await dbTxn.db
         .selectFrom('moderation_subject_status')
@@ -121,32 +118,7 @@ export class EventReverser {
         ) {
           continue
         }
-        // @NOTE legacy rows may predate a renewal or a permanent reissue.
-        let laterMutationQuery = dbTxn.db
-          .selectFrom('moderation_event')
-          .where('subjectDid', '=', group.did)
-          .where('action', '=', tools.ozone.moderation.defs.modEventTag.$type)
-          .where('id', '>', row.eventId)
-          .where(
-            sql<boolean>`(
-              ${sql.ref('addedTags')} ? ${row.tag} or
-              ${sql.ref('removedTags')} ? ${row.tag}
-            )`,
-          )
-          .select('id')
-          .limit(1)
-        laterMutationQuery = group.recordPath
-          ? laterMutationQuery.where(
-              'subjectUri',
-              '=',
-              `at://${group.did}/${group.recordPath}`,
-            )
-          : laterMutationQuery.where('subjectUri', 'is', null)
-        laterMutationQuery = group.convoId
-          ? laterMutationQuery.where('subjectConvoId', '=', group.convoId)
-          : laterMutationQuery.where('subjectConvoId', 'is', null)
-        const laterMutation = await laterMutationQuery.executeTakeFirst()
-        if (!laterMutation) tagsToRemove.push(row.tag)
+        tagsToRemove.push(row.tag)
       }
 
       // Delete the expiring_tag rows regardless

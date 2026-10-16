@@ -280,6 +280,7 @@ export const adjustModerationSubjectStatus = async (
   db: Database,
   moderationEvent: ModerationEventRow,
   blobCids?: string[],
+  initialStatusId?: number,
 ): Promise<ModerationSubjectStatusRow | null> => {
   const {
     action,
@@ -504,6 +505,8 @@ export const adjustModerationSubjectStatus = async (
   const insertQuery = db.db
     .insertInto('moderation_subject_status')
     .values({
+      // @NOTE reuse a newly reserved status ID without advancing its sequence twice.
+      id: initialStatusId,
       ...identifier,
       ...newStatus,
       createdAt: now,
