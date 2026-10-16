@@ -90,9 +90,6 @@ export class EventReverser {
   }
 
   async revertExpiredTags(group: ExpiringTagGroup) {
-    // @NOTE history probes must not hold the status lock needed by reports.
-    const candidates = await this.getExpiredTagCandidates(group)
-    const candidateIds = new Set(candidates.map((row) => row.id))
     await this.db.transaction(async (dbTxn) => {
       // Check which tags are still present on the subject
       const status = await dbTxn.db
@@ -102,23 +99,13 @@ export class EventReverser {
         .where('convoId', '=', group.convoId)
         .forUpdate()
         .selectAll()
-        .select(sql<string>`xmin::text`.as('statusVersion'))
         .executeTakeFirst()
-
-      // @NOTE defer changed subjects to the next pass, including mutations by
-      // older writers that do not replace expiry rows.
-      if (
-        candidates.some(
-          (row) => row.statusVersion !== (status?.statusVersion ?? null),
-        )
-      ) {
-        return
-      }
 
       // @NOTE re-read after the status lock: writers may have replaced these
       // rows, and another worker may already have consumed this snapshot.
       const expiredRows = await dbTxn.db
         .selectFrom('expiring_tag')
+        .where('version', '=', sql.lit(1))
         .where('id', 'in', group.ids)
         .where('expiresAt', '<=', currentDatetimeString())
         .selectAll()
@@ -128,7 +115,6 @@ export class EventReverser {
       const tagsToRemove: string[] = []
       for (const row of expiredRows) {
         if (
-          !candidateIds.has(row.id) ||
           !status?.tags?.includes(row.tag) ||
           tagsToRemove.includes(row.tag)
         ) {
@@ -160,49 +146,6 @@ export class EventReverser {
         })
       }
     })
-  }
-
-  async getExpiredTagCandidates(
-    group: ExpiringTagGroup,
-  ): Promise<{ id: number; statusVersion: string | null }[]> {
-    // @NOTE legacy rows may predate a renewal or a permanent reissue.
-    return this.db.db
-      .selectFrom('expiring_tag as expiry')
-      .leftJoin('moderation_subject_status as status', (join) =>
-        join
-          .on('status.did', '=', group.did)
-          .on('status.recordPath', '=', group.recordPath)
-          .on('status.convoId', '=', group.convoId),
-      )
-      .where('expiry.id', 'in', group.ids)
-      .where('expiry.expiresAt', '<=', currentDatetimeString())
-      .where(({ not, exists, selectFrom }) => {
-        let laterMutation = selectFrom('moderation_event')
-          .select('id')
-          .where('subjectDid', '=', group.did)
-          .where('action', '=', tools.ozone.moderation.defs.modEventTag.$type)
-          .whereRef('id', '>', 'expiry.eventId')
-          .where(
-            sql<boolean>`(
-              ${sql.ref('addedTags')} ? ${sql.ref('expiry.tag')} or
-              ${sql.ref('removedTags')} ? ${sql.ref('expiry.tag')}
-            )`,
-          )
-        laterMutation = group.recordPath
-          ? laterMutation.where(
-              'subjectUri',
-              '=',
-              `at://${group.did}/${group.recordPath}`,
-            )
-          : laterMutation.where('subjectUri', 'is', null)
-        laterMutation = group.convoId
-          ? laterMutation.where('subjectConvoId', '=', group.convoId)
-          : laterMutation.where('subjectConvoId', 'is', null)
-        return not(exists(laterMutation))
-      })
-      .select('expiry.id')
-      .select(sql<string | null>`status.xmin::text`.as('statusVersion'))
-      .execute()
   }
 }
 

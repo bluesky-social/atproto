@@ -1,13 +1,9 @@
-import type { Selectable } from 'kysely'
+import { sql } from 'kysely'
 import type { DatetimeString, DidString } from '@atproto/lex'
 import { currentDatetimeString } from '@atproto/lex'
-import { AtUri } from '@atproto/syntax'
 import type { Database } from '../db/index.js'
-import type { ExpiringTag } from '../db/schema/expiring_tag.js'
 import { tools } from '../lexicons/index.js'
 import type { ModerationSubjectStatusRow } from './types.js'
-
-export type ExpiringTagRow = Selectable<ExpiringTag>
 
 export type ExpiringTagGroup = {
   did: DidString
@@ -18,7 +14,7 @@ export type ExpiringTagGroup = {
   ids: number[]
 }
 
-/** Lock before allocating a tag event ID, reserving a status for new subjects. */
+/** Serialize tag writes, reserving a status row for new subjects. */
 export async function lockTagSubject(
   db: Database,
   params: {
@@ -86,6 +82,7 @@ export async function insertExpiringTags(
         tag,
         expiresAt: params.expiresAt,
         createdBy: params.createdBy,
+        version: 1,
       })),
     )
     .execute()
@@ -101,15 +98,11 @@ export async function removeExpiringTags(
   },
 ): Promise<void> {
   if (!params.tags.length) return
-  const recordPaths = [params.recordPath]
-  if (params.recordPath) {
-    // @NOTE older record expiry rows stored the full URI.
-    recordPaths.push(`at://${params.did}/${params.recordPath}`)
-  }
   await db.db
     .deleteFrom('expiring_tag')
+    .where('version', '=', sql.lit(1))
     .where('did', '=', params.did)
-    .where('recordPath', 'in', recordPaths)
+    .where('recordPath', '=', params.recordPath)
     .where('convoId', '=', params.convoId)
     .where('tag', 'in', params.tags)
     .execute()
@@ -129,6 +122,7 @@ export async function getExpiredTags(
   const now = currentDatetimeString()
   const rows = await db.db
     .selectFrom('expiring_tag')
+    .where('version', '=', sql.lit(1))
     .where('expiresAt', '<=', now)
     .orderBy('expiresAt', 'asc')
     .limit(1_000)
@@ -140,10 +134,7 @@ export async function getExpiredTags(
   // Group by (did, recordPath, convoId, createdBy) so each reversal event has the correct author
   const grouped = new Map<string, ExpiringTagGroup>()
   for (const row of rows) {
-    const uri = row.recordPath.startsWith('at://')
-      ? new AtUri(row.recordPath)
-      : undefined
-    const recordPath = uri ? `${uri.collection}/${uri.rkey}` : row.recordPath
+    const recordPath = row.recordPath
     const key = `${row.did}|${recordPath}|${row.convoId}|${row.createdBy}`
     let group = grouped.get(key)
     if (!group) {

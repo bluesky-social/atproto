@@ -89,6 +89,7 @@ describe('expiring tags', () => {
       'temp-tag-2',
     ])
     expect(expiringRows[0].expiresAt).toBeTruthy()
+    expect(expiringRows.every((row) => row.version === 1)).toBe(true)
   })
 
   it('does not create expiring_tag rows without durationInHours', async () => {
@@ -201,6 +202,7 @@ describe('expiring tags', () => {
         recordPath: '',
         convoId: '',
         tag: 'skip-tag',
+        version: 1,
         expiresAt: toDatetimeString(Date.now() - 1000),
         createdBy: sc.dids.alice as DidString,
       })
@@ -305,54 +307,40 @@ describe('expiring tags', () => {
     expect(await getSubjectTags(sc.dids.bob)).toContain(tag)
   })
 
-  it.each([24, undefined])(
-    'ignores legacy stale rows after reissue with duration %s',
-    async (hours) => {
-      const tag = `legacy-reissue-${hours}`
+  it.each([false, true])(
+    'leaves unversioned expiry rows untouched (legacy URI: %s)',
+    async (legacyUri) => {
+      const tag = `unversioned-${legacyUri}`
       await emitTagEvent(sc.dids.bob, [tag], [], 1)
-      const oldRow = await network.ozone.ctx.db.db
-        .selectFrom('expiring_tag')
-        .where('tag', '=', tag)
-        .selectAll()
-        .executeTakeFirstOrThrow()
-      await emitTagEvent(sc.dids.bob, [tag], [], hours)
-      const { id: _, ...oldValues } = oldRow
+      const group = await expireTag(tag)
       await network.ozone.ctx.db.db
-        .insertInto('expiring_tag')
-        .values({
-          ...oldValues,
-          expiresAt: toDatetimeString(Date.now() - 1000),
+        .updateTable('expiring_tag')
+        .set({
+          version: null,
+          ...(legacyUri
+            ? { recordPath: `at://${sc.dids.bob}/app.bsky.feed.post/old` }
+            : {}),
         })
+        .where('id', 'in', group.ids)
         .execute()
-      await createReverser().revertExpiredTags(
-        await expireTagLegacy(tag, oldRow.eventId),
-      )
+      expect(
+        (await getExpiredTags(network.ozone.ctx.db)).flatMap((g) => g.ids),
+      ).not.toEqual(expect.arrayContaining(group.ids))
+      await createReverser().revertExpiredTags(group)
       expect(await getSubjectTags(sc.dids.bob)).toContain(tag)
+      // @NOTE current renewals must leave legacy metadata for separate reconciliation.
+      await emitTagEvent(sc.dids.bob, [tag], [], 24)
+      await createReverser().revertExpiredTags(await expireTag(tag))
+      expect(await getSubjectTags(sc.dids.bob)).not.toContain(tag)
       const rows = await network.ozone.ctx.db.db
         .selectFrom('expiring_tag')
         .where('tag', '=', tag)
         .selectAll()
         .execute()
-      expect(rows).toHaveLength(hours === undefined ? 0 : 1)
+      expect(rows).toHaveLength(1)
+      expect(rows[0].version).toBeNull()
     },
   )
-
-  const expireTagLegacy = async (tag: string, eventId: number) => {
-    const row = await network.ozone.ctx.db.db
-      .selectFrom('expiring_tag')
-      .where('tag', '=', tag)
-      .where('eventId', '=', eventId)
-      .selectAll()
-      .executeTakeFirstOrThrow()
-    return {
-      did: row.did,
-      recordPath: row.recordPath,
-      convoId: row.convoId,
-      createdBy: row.createdBy,
-      tags: [tag],
-      ids: [row.id],
-    }
-  }
 
   it('emits only one removal when two workers process the same snapshot', async () => {
     const tag = 'concurrent-expiry'
@@ -498,70 +486,6 @@ describe('expiring tags', () => {
     },
   )
 
-  it.each([false, true])(
-    'allows reports and renewal during expiry history checks (legacy writer: %s)',
-    async (legacy) => {
-      const did: DidString = `did:plc:reportduringhistory${legacy ? 'legacy' : 'current'}`
-      const tag = `history-contention-${legacy}`
-      await emitTagEvent(did, [tag], [], 1)
-      const group = await expireTag(tag)
-      const originalRow = await network.ozone.ctx.db.db
-        .selectFrom('expiring_tag')
-        .where('id', '=', group.ids[0])
-        .selectAll()
-        .executeTakeFirstOrThrow()
-      const reverser = createReverser()
-      const originalCandidates = reverser.getExpiredTagCandidates.bind(reverser)
-      let historyChecked!: () => void
-      const checked = new Promise<void>((resolve) => {
-        historyChecked = resolve
-      })
-      let release!: () => void
-      const released = new Promise<void>((resolve) => {
-        release = resolve
-      })
-      using _candidatesSpy = jest
-        .spyOn(reverser, 'getExpiredTagCandidates')
-        .mockImplementation(async (candidateGroup) => {
-          const candidates = await originalCandidates(candidateGroup)
-          historyChecked()
-          await released
-          return candidates
-        })
-      const reversal = reverser.revertExpiredTags(group)
-      try {
-        await checked
-        const report = await sc.createReport({
-          reasonType: com.atproto.moderation.defs.ReasonSpam,
-          subject: com.atproto.admin.defs.repoRef.$build({ did }),
-          reportedBy: sc.dids.alice,
-        })
-        const events = await modClient.queryEvents({ subject: did })
-        expect(events.events.some((event) => event.id === report.id)).toBe(true)
-        expect(await getSubjectTags(did)).toContain('report:spam')
-        await emitTagEvent(did, [tag], [], legacy ? undefined : 24)
-        if (legacy) {
-          // @NOTE simulate a permanent reissue by a writer that leaves old expiry metadata.
-          await network.ozone.ctx.db.db
-            .insertInto('expiring_tag')
-            .values(originalRow)
-            .execute()
-        }
-      } finally {
-        release()
-        await reversal
-      }
-      expect(await getSubjectTags(did)).toContain(tag)
-      const removals = await modClient.queryEvents({
-        subject: did,
-        removedTags: [tag],
-      })
-      expect(removals.events).toHaveLength(0)
-      await reverser.findAndRevertExpiredTags()
-      expect(await getSubjectTags(did)).toContain(tag)
-    },
-  )
-
   it('serializes concurrent first tag writes on a new subject', async () => {
     const subject = 'did:plc:newtagsubject'
     await Promise.all([
@@ -578,52 +502,49 @@ describe('expiring tags', () => {
     expect(rows).toHaveLength(2)
   })
 
-  it.each([false, true])(
-    'expires record tags independently of account tags (legacy URI: %s)',
-    async (legacy) => {
-      const post = await sc.post(sc.dids.alice, `expiry record ${legacy}`)
-      const tag = `record-expiry-${legacy}`
-      await emitTagEvent(sc.dids.alice, [tag], [], 24)
-      await modClient.emitEvent({
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.ref.uriStr,
-          cid: post.ref.cidStr,
-        },
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventTag',
-          add: [tag],
-          remove: [],
-          durationInHours: 1,
-        },
+  it('expires record tags independently of account tags', async () => {
+    const post = await sc.post(sc.dids.alice, 'expiry record')
+    const tag = 'record-expiry'
+    await emitTagEvent(sc.dids.alice, [tag], [], 24)
+    await modClient.emitEvent({
+      subject: {
+        $type: 'com.atproto.repo.strongRef',
+        uri: post.ref.uriStr,
+        cid: post.ref.cidStr,
+      },
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventTag',
+        add: [tag],
+        remove: [],
+        durationInHours: 1,
+      },
+    })
+    const recordPath = post.ref.uriStr.split('/').slice(3).join('/')
+    const row = await network.ozone.ctx.db.db
+      .selectFrom('expiring_tag')
+      .where('tag', '=', tag)
+      .where('recordPath', '=', recordPath)
+      .selectAll()
+      .executeTakeFirstOrThrow()
+    await network.ozone.ctx.db.db
+      .updateTable('expiring_tag')
+      .set({
+        recordPath,
+        expiresAt: toDatetimeString(Date.now() - 1000),
       })
-      const recordPath = post.ref.uriStr.split('/').slice(3).join('/')
-      const row = await network.ozone.ctx.db.db
-        .selectFrom('expiring_tag')
-        .where('tag', '=', tag)
-        .where('recordPath', '=', recordPath)
-        .selectAll()
-        .executeTakeFirstOrThrow()
-      await network.ozone.ctx.db.db
-        .updateTable('expiring_tag')
-        .set({
-          recordPath: legacy ? post.ref.uriStr : recordPath,
-          expiresAt: toDatetimeString(Date.now() - 1000),
-        })
-        .where('id', '=', row.id)
-        .execute()
-      await createReverser().findAndRevertExpiredTags()
-      expect(await getSubjectTags(post.ref.uriStr)).not.toContain(tag)
-      expect(await getSubjectTags(sc.dids.alice)).toContain(tag)
-      const events = await modClient.queryEvents({
-        subject: post.ref.uriStr,
-        types: ['tools.ozone.moderation.defs#modEventTag'],
-        removedTags: [tag],
-      })
-      expect(events.events).toHaveLength(1)
-      expect(events.events[0].createdBy).toBe(row.createdBy)
-    },
-  )
+      .where('id', '=', row.id)
+      .execute()
+    await createReverser().findAndRevertExpiredTags()
+    expect(await getSubjectTags(post.ref.uriStr)).not.toContain(tag)
+    expect(await getSubjectTags(sc.dids.alice)).toContain(tag)
+    const events = await modClient.queryEvents({
+      subject: post.ref.uriStr,
+      types: ['tools.ozone.moderation.defs#modEventTag'],
+      removedTags: [tag],
+    })
+    expect(events.events).toHaveLength(1)
+    expect(events.events[0].createdBy).toBe(row.createdBy)
+  })
 
   it('does not retain expiry work for a tag added and removed in one event', async () => {
     const tag = 'add-and-remove'
@@ -643,10 +564,28 @@ describe('expiring tags', () => {
     const newer = 'batch-newer'
     const future = 'batch-future'
     // @NOTE insert out of expiry order, including more than a batch at one deadline.
+    const legacyTags = Array.from(
+      { length: 1_001 },
+      (_, i) => `batch-legacy-${i}`,
+    )
     const tags = [newer, ...tiedTags, oldest, future]
     await emitTagEvent(sc.dids.bob, tags, [], 24)
     const db = network.ozone.ctx.db
     const now = Date.now()
+    await db.db
+      .insertInto('expiring_tag')
+      .values(
+        legacyTags.map((tag) => ({
+          eventId: 0,
+          did: sc.dids.bob as DidString,
+          recordPath: '',
+          convoId: '',
+          tag,
+          expiresAt: toDatetimeString(now - 4_000),
+          createdBy: sc.dids.alice as DidString,
+        })),
+      )
+      .execute()
     await db.db
       .updateTable('expiring_tag')
       .set({ expiresAt: toDatetimeString(now - 2_000) })
