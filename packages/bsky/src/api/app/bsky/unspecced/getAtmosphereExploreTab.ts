@@ -24,8 +24,7 @@ import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
 import type { Views } from '../../../../views/index.js'
 
 const MAX_CONFIG_BYTES = 512 * 1024
-const MAX_SELECTED_GROUPS = 10
-const IRIS_ARTICLE_LIMIT = 25
+const MAX_LIST_ITEMS = 10
 
 const groupSchema = l.object({
   canonicalUri: l.optional(l.unknown()),
@@ -128,7 +127,7 @@ async function skeleton({
           iris,
           {
             viewer: params.hydrateCtx.viewer ?? undefined,
-            limit: IRIS_ARTICLE_LIMIT,
+            limit: MAX_LIST_ITEMS,
           },
           { headers: params.headers, signal },
         )
@@ -146,21 +145,25 @@ async function skeleton({
   return {
     now,
     announcementBanner,
-    // Iris order is authoritative: no selection, cap, or featured metadata.
-    articles: recommendations
-      ? mapDefined(recommendations.articles, ({ uri }) => {
-          const root = recordUri(uri)
-          return root &&
-            new AtUri(root).collection === site.standard.document.$type
-            ? { featured: false, uri: root }
-            : undefined
-        })
-      : completeGroups(select(config.articles)),
+    // Iris articles carry no selection or featured metadata; they are
+    // normalized, then shuffled like every other list.
+    articles: orderGroups(
+      recommendations
+        ? mapDefined(recommendations.articles, ({ uri }) => {
+            const root = recordUri(uri)
+            return root &&
+              new AtUri(root).collection === site.standard.document.$type
+              ? { featured: false, uri: root }
+              : undefined
+          })
+        : completeGroups(select(config.articles)),
+    ),
     articleRecIdStr: recommendations?.recIdStr,
-    publications: completeGroups(select(config.publications)),
-    photos: completeGroups(select(config.photos)),
-    livestreams: completeGroups(select(config.livestreams)),
-    apps: config.apps ?? [],
+    publications: orderGroups(completeGroups(select(config.publications))),
+    photos: orderGroups(completeGroups(select(config.photos))),
+    livestreams: orderGroups(completeGroups(select(config.livestreams))),
+    // Apps have no hydration root or featured flag: keep worker order.
+    apps: (config.apps ?? []).slice(0, MAX_LIST_ITEMS),
   }
 }
 
@@ -308,6 +311,22 @@ type SkeletonState = {
   apps: app.bsky.unspecced.getAtmosphereExploreTab.AppCard[]
 }
 
+/**
+ * Randomizes a selected list (Fisher-Yates), then places featured items ahead
+ * of ordinary ones. Runs before hydration, so presentation keeps this order.
+ */
+function orderGroups(groups: RecordGroup[]): RecordGroup[] {
+  const shuffled = [...groups]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return [
+    ...shuffled.filter(({ featured }) => featured),
+    ...shuffled.filter(({ featured }) => !featured),
+  ].slice(0, MAX_LIST_ITEMS)
+}
+
 function completeGroups(groups: SelectedGroup[] = []): RecordGroup[] {
   return mapDefined(groups, ({ featured, canonicalUri }) => {
     const uri = recordUri(canonicalUri)
@@ -378,7 +397,7 @@ type SelectedGroup = l.Infer<typeof groupSchema> & { featured: boolean }
  * the rest by priority bucket (location, requested topic, `general`, untagged;
  * stable within a bucket), moves entries with an active schedule window ahead
  * of the rest (stable, so bucket order holds within each side), and keeps the
- * first `MAX_SELECTED_GROUPS`. A worker-supplied `featured` flag is ignored.
+ * first `MAX_LIST_ITEMS`. A worker-supplied `featured` flag is ignored.
  */
 function createSelector(
   params: { countryCode?: string; regionCode?: string },
@@ -398,7 +417,7 @@ function createSelector(
       const active = isFeatured(group, now)
       ;(active ? featured : ordinary).push({ ...group, featured: active })
     }
-    return [...featured, ...ordinary].slice(0, MAX_SELECTED_GROUPS)
+    return [...featured, ...ordinary].slice(0, MAX_LIST_ITEMS)
   }
 }
 

@@ -1,7 +1,7 @@
 import { once } from 'node:events'
 import { createServer as createHttpServer } from 'node:http'
 import { createPromiseClient, createRouterTransport } from '@connectrpc/connect'
-import { describe, expect, it, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, test, vi } from 'vitest'
 import {
   type AtUriString,
   Client,
@@ -52,6 +52,16 @@ const group = (canonicalUri: unknown) => ({ canonicalUri })
 const service = 'https://cms.bsky.app/atmosphere-explore-tab'
 const frozenNow = Date.parse(publishedAt)
 const at = (offsetMs: number) => toDatetimeString(frozenNow + offsetMs)
+
+// Lists are shuffled before hydration. Default to a Fisher-Yates no-op (every
+// swap index equals the current index) so order assertions are deterministic;
+// shuffle tests override the value. Restored after every test.
+beforeEach(() => {
+  vi.spyOn(Math, 'random').mockReturnValue(1 - Number.EPSILON)
+})
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 const lists = [
   {
     key: 'articles',
@@ -1963,6 +1973,101 @@ function deferred<T>() {
   return { promise, resolve }
 }
 
+describe('Atmosphere Explore list ordering and caps', () => {
+  const active = { startsAt: at(-1), endsAt: at(1) }
+  const names = ['f1', 'f2', 'n1', 'n2']
+  const titleField = {
+    articles: 'title',
+    publications: 'name',
+    livestreams: 'title',
+  } as const
+
+  const rootOf = (view: { associatedRefs?: { uri: string }[] }) =>
+    view.associatedRefs?.[0]?.uri
+
+  it('shuffles each selected list before hydration, featured items first', async () => {
+    using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+    // Index 0 on every swap: [f1, f2, n1, n2] shuffles to [f2, n1, n2, f1],
+    // then featured items are hoisted to give [f2, f1, n1, n2].
+    using _random = vi.spyOn(Math, 'random').mockReturnValue(0)
+    await using fixture = await setup(
+      Object.fromEntries(
+        lists.map(({ key, uriFor }) => [
+          key,
+          names.map((name) => ({
+            canonicalUri: uriFor(name),
+            ...(name.startsWith('f') ? active : {}),
+          })),
+        ]),
+      ),
+    )
+    for (const { key, baseUri, uriFor } of lists) {
+      if (key === 'photos') continue
+      for (const name of names)
+        fixture.records.set(uriFor(name), {
+          ...fixture.records.get(baseUri)!,
+          [titleField[key]]: name,
+        })
+    }
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+
+    const expected = ['f2', 'f1', 'n1', 'n2']
+    expect(hydrate.mock.calls[0][0]).toEqual(
+      lists.flatMap(({ uriFor }) => expected.map((name) => uriFor(name))),
+    )
+    for (const { key, uriFor } of lists) {
+      if (key === 'photos') continue
+      const items = body[key].items
+      expect(items.map(({ view }) => rootOf(view))).toEqual(
+        expected.map((name) => uriFor(name)),
+      )
+      expect(items.map(({ featured }) => featured)).toEqual([
+        true,
+        true,
+        false,
+        false,
+      ])
+    }
+  })
+
+  it('shuffles Iris articles without marking them featured', async () => {
+    using _random = vi.spyOn(Math, 'random').mockReturnValue(0)
+    await using fixture = await setupIris([docUri, doc2Uri, docUri], {}, '9')
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
+    const { body } = await fixture.query()
+    // [docUri, doc2Uri, docUri] -> [doc2Uri, docUri, docUri] under index 0.
+    expect(hydrate.mock.calls[0][0]).toEqual([doc2Uri, docUri])
+    expect(body.articles.items.map(({ view }) => rootOf(view))).toEqual([
+      doc2Uri,
+      docUri,
+      docUri,
+    ])
+    expect(body.articles.items.every(({ featured }) => !featured)).toBe(true)
+    expect(body.articles.recIdStr).toBe('9')
+  })
+
+  it('returns at most 10 apps in worker order without hydrating them', async () => {
+    const apps = Array.from({ length: 12 }, (_, i) => ({
+      ...curated.apps[0],
+      title: `App ${i}`,
+    }))
+    await using fixture = await setup({ apps })
+    using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    expect(body.apps).toEqual(apps.slice(0, 10))
+    expect(lookup).not.toHaveBeenCalled()
+  })
+})
+
 describe('Atmosphere Explore article source (gate off)', () => {
   it('uses worker-curated articles without touching Iris or its client', async () => {
     await using fixture = await setup(curated)
@@ -2037,7 +2142,7 @@ describe('Atmosphere Explore article source (gate off)', () => {
 })
 
 describe('Atmosphere Explore article source (gate on)', () => {
-  it('uses Iris as the exclusive, ordered, non-featured article source', async () => {
+  it('uses Iris as the exclusive, non-featured article source', async () => {
     await using fixture = await setupIris(
       [doc2Uri, docUri, doc2Uri],
       curated,
@@ -2113,9 +2218,9 @@ describe('Atmosphere Explore article source (gate on)', () => {
     expect((await fixture.query()).status).toBe(502)
   })
 
-  it('keeps Iris order uncapped while selecting other sections locally', async () => {
-    const twelve = Array.from({ length: 12 }, () => docUri)
-    await using fixture = await setupIris(twelve, {
+  it('caps Iris articles at 10 while selecting other sections locally', async () => {
+    const ten = Array.from({ length: 10 }, () => docUri)
+    await using fixture = await setupIris(ten, {
       photos: [
         { canonicalUri: photoUri, locations: ['JP'] },
         { canonicalUri: galleryUri, locations: ['US-WI'] },
@@ -2130,8 +2235,9 @@ describe('Atmosphere Explore article source (gate on)', () => {
       regionCode: 'US-WI',
     })
     expect(status).toBe(200)
-    // Worker selection and its 10-group cap never apply to Iris articles.
-    expect(body.articles.items).toHaveLength(12)
+    // Worker location/topic selection never applies to Iris articles.
+    expect(body.articles.items).toHaveLength(10)
+    expect(body.articles.items.every(({ featured }) => !featured)).toBe(true)
     expect(hydrate.mock.calls[0][0]).toEqual([docUri, galleryUri])
     expect(body.photos.items).toHaveLength(1)
   })
@@ -2219,7 +2325,7 @@ describe('Atmosphere Explore article source (gate on)', () => {
       `https://iris.test/xrpc/${app.bsky.unspecced.getAtmosphereExploreArticleRecommendations.$lxm}`,
     )
     expect(Object.fromEntries(irisUrl.searchParams)).toEqual({
-      limit: '25',
+      limit: '10',
       ...(route.viewer ? { viewer: route.viewer } : {}),
     })
     // The Iris bearer authenticates anonymous and authenticated viewers alike.
@@ -2454,7 +2560,7 @@ describe('Atmosphere Explore Iris requirements and failures', () => {
       'too many articles',
       () =>
         Response.json({
-          articles: articleUris(...Array.from({ length: 26 }, () => docUri)),
+          articles: articleUris(...Array.from({ length: 11 }, () => docUri)),
           recIdStr: '1',
         }),
       502,
