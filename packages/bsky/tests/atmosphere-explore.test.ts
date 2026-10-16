@@ -45,8 +45,32 @@ const itemUri = atUri(author, grainGalleryItem.$type, 'item')
 const photoUri = atUri(author, grainPhoto.$type, 'photo')
 const liveUri = atUri(author, streamLivestream.$type, 'live')
 const missingUri = atUri(author, site.standard.document.$type, 'missing')
-const group = (uris: unknown[], featured = false) => ({ uris, featured })
+const group = (uris: unknown[]) => ({ uris })
 const service = 'https://cms.bsky.app/atmosphere-explore-tab'
+const lists = [
+  {
+    key: 'articles',
+    baseUri: docUri,
+    uriFor: (name: string) => atUri(author, site.standard.document.$type, name),
+  },
+  {
+    key: 'publications',
+    baseUri: pubUri,
+    uriFor: (name: string) =>
+      atUri(author, site.standard.publication.$type, name),
+  },
+  {
+    key: 'photos',
+    baseUri: galleryUri,
+    uriFor: (name: string) => atUri(author, grainGallery.$type, name),
+  },
+  {
+    key: 'livestreams',
+    baseUri: liveUri,
+    uriFor: (name: string) => atUri(author, streamLivestream.$type, name),
+  },
+] as const
+type ListKey = (typeof lists)[number]['key']
 
 async function setup(config: unknown = {}) {
   const records = new Map<AtUriString, TypedLexMap>([
@@ -255,6 +279,7 @@ async function setup(config: unknown = {}) {
     query: async (
       authenticated = false,
       params: app.bsky.unspecced.getAtmosphereExploreTab.$Params = {},
+      headers: Record<string, string> = {},
     ) => {
       const url = new URL(
         `http://127.0.0.1:${address.port}/xrpc/${app.bsky.unspecced.getAtmosphereExploreTab.$lxm}`,
@@ -267,7 +292,10 @@ async function setup(config: unknown = {}) {
         }
       }
       const response = await nativeFetch(url, {
-        headers: authenticated ? { authorization: 'Bearer valid' } : {},
+        headers: {
+          ...(authenticated ? { authorization: 'Bearer valid' } : {}),
+          ...headers,
+        },
       })
       const body = await response.json()
       return {
@@ -288,15 +316,15 @@ const curated = {
     title: 'Explore',
     image: 'https://example.com/banner.jpg',
   },
-  articles: [group([missingUri], true), group([docUri], true), group([docUri])],
+  articles: [group([missingUri]), group([docUri]), group([docUri])],
   publications: [group([pubUri])],
-  photos: [group([galleryUri], true)],
+  photos: [group([galleryUri])],
   livestreams: [group([liveUri])],
   apps: [{ id: 'app', title: 'An app', url: 'https://example.com/app' }],
 }
 
 describe('Atmosphere Explore', () => {
-  it('hydrates canonical views, associations, ordering, and featured flags', async () => {
+  it('hydrates canonical views, associations, and ordering', async () => {
     await using fixture = await setup(curated)
     using hydrate = vi.spyOn(
       fixture.hydrator,
@@ -311,7 +339,10 @@ describe('Atmosphere Explore', () => {
     expect(status).toBe(200)
     expect(body.announcementBanner).toEqual(curated.announcementBanner)
     expect(body.apps).toEqual(curated.apps)
-    expect(body.articles.map(({ featured }) => featured)).toEqual([true, false])
+    expect(body.articles.map(({ featured }) => featured)).toEqual([
+      false,
+      false,
+    ])
     const article = body.articles[0].view
     expect(app.bsky.embed.external.viewArticle.$matches(article)).toBe(true)
     expect(article).toMatchObject({
@@ -361,9 +392,9 @@ describe('Atmosphere Explore', () => {
 
   it('uses only the first URI as the canonical root for every section', async () => {
     await using fixture = await setup({
-      articles: [group([docUri, missingUri], true)],
+      articles: [group([docUri, missingUri])],
       publications: [group([pubUri, 'bad'])],
-      photos: [group([galleryUri, photoUri, null], true)],
+      photos: [group([galleryUri, photoUri, null])],
       livestreams: [group([liveUri, missingUri])],
     })
     using hydrate = vi.spyOn(
@@ -383,10 +414,10 @@ describe('Atmosphere Explore', () => {
       missingUri,
     )
     expect(body.articles).toHaveLength(1)
-    expect(body.articles[0].featured).toBe(true)
+    expect(body.articles[0].featured).toBe(false)
     expect(body.publications).toHaveLength(1)
     expect(body.photos).toHaveLength(1)
-    expect(body.photos[0].featured).toBe(true)
+    expect(body.photos[0].featured).toBe(false)
     expect(body.photos[0].view.associatedRefs?.map(({ uri }) => uri)).toEqual([
       galleryUri,
       itemUri,
@@ -446,28 +477,373 @@ describe('Atmosphere Explore', () => {
     { regionCode: 'WI' },
     { langs: ['en', 'es'], countryCode: 'US', regionCode: 'WI' },
     { countryCode: 'US&extra=value', regionCode: 'WI +/?#' },
-  ])('forwards only the supplied location params: %j', async (params) => {
-    await using fixture = await setup()
-    expect((await fixture.query(false, params)).status).toBe(200)
-    const request = fixture.fetchMock.mock.calls[0][0] as Request
-    expect(Object.fromEntries(new URL(request.url).searchParams)).toEqual(
-      Object.fromEntries(
-        Object.entries(params).filter(([key]) => key !== 'langs'),
-      ),
-    )
-  })
+  ])(
+    'always fetches the full config regardless of request params: %j',
+    async (params) => {
+      await using fixture = await setup()
+      expect(
+        (
+          await fixture.query(true, params, {
+            'x-atproto-bsky-topics': 'news',
+            'x-bsky-topics': 'news',
+          })
+        ).status,
+      ).toBe(200)
+      const request = fixture.fetchMock.mock.calls[0][0] as Request
+      expect(request.url).toBe(service)
+      expect(request.headers.get('authorization')).toBeNull()
+      expect(request.headers.get('x-atproto-bsky-topics')).toBeNull()
+      expect(request.headers.get('x-bsky-topics')).toBeNull()
+    },
+  )
 
-  it('preserves configured query params and replaces location params without duplicating them', async () => {
+  it('fetches the configured service URL as-is', async () => {
     await using fixture = await setup()
-    fixture.cfg.atmosphereExploreTabService = `${service}?config=curated&countryCode=CA&regionCode=ON`
+    fixture.cfg.atmosphereExploreTabService = `${service}?config=curated&countryCode=CA`
     expect(
       (await fixture.query(false, { countryCode: 'US', regionCode: 'WI' }))
         .status,
     ).toBe(200)
     const request = fixture.fetchMock.mock.calls[0][0] as Request
-    expect(request.url).toBe(
-      `${service}?config=curated&countryCode=US&regionCode=WI`,
+    expect(request.url).toBe(`${service}?config=curated&countryCode=CA`)
+  })
+
+  it('accepts worker-shaped groups and always returns featured false', async () => {
+    const metadata = { canonicalUri: null, startsAt: null, endsAt: null }
+    await using fixture = await setup({
+      ...curated,
+      articles: [
+        { uris: [docUri], ...metadata },
+        { uris: [docUri], featured: true, tags: [], locations: [] },
+        { uris: [docUri], featured: false, tags: ['general'], ...metadata },
+      ],
+      publications: [{ uris: [pubUri], ...metadata }],
+      photos: [{ uris: [galleryUri], tags: ['general'] }],
+      livestreams: [{ uris: [liveUri], locations: [] }],
+    })
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    // A worker-supplied `featured` is ignored.
+    expect(body.articles.map(({ featured }) => featured)).toEqual([
+      false,
+      false,
+      false,
+    ])
+    expect(body.publications.map(({ featured }) => featured)).toEqual([false])
+    expect(body.photos.map(({ featured }) => featured)).toEqual([false])
+    expect(body.livestreams.map(({ featured }) => featured)).toEqual([false])
+    expect(body.announcementBanner).toEqual(curated.announcementBanner)
+    expect(body.apps).toEqual(curated.apps)
+    for (const key of lists.map(({ key }) => key))
+      for (const item of body[key])
+        expect(Object.keys(item).sort()).toEqual(['featured', 'view'])
+  })
+
+  describe('selection before hydration', () => {
+    const topics = { 'x-atproto-bsky-topics': ' news , ,news,sports' }
+    const us = { countryCode: 'US', regionCode: 'WI' }
+
+    async function selectedRoots(
+      key: ListKey,
+      entries: unknown[],
+      params: app.bsky.unspecced.getAtmosphereExploreTab.$Params = {},
+      headers: Record<string, string> = {},
+    ) {
+      await using fixture = await setup({ [key]: entries })
+      using hydrate = vi.spyOn(
+        fixture.hydrator,
+        'hydrateEmbedExternalViewFromUris',
+      )
+      expect((await fixture.query(false, params, headers)).status).toBe(200)
+      return (
+        hydrate.mock.calls.find(([, , seen]) => !seen)?.[0] ??
+        ([] as AtUriString[])
+      )
+    }
+
+    test.each(lists)(
+      'orders $key by location, topic, general, then untagged, stably',
+      async ({ key, uriFor }) => {
+        const u = (name: string) => uriFor(name)
+        const entry = (name: string, extra: object) => ({
+          uris: [u(name)],
+          ...extra,
+        })
+        const entries = [
+          entry('untagged', {}),
+          entry('empty', { tags: [] }),
+          entry('general', { tags: ['general'] }),
+          entry('topic', { tags: ['news'], locations: [] }),
+          entry('country', { tags: ['other'], locations: ['US'] }),
+          entry('unrelated', { tags: ['other'] }),
+          entry('multi-topic', { tags: ['general', 'sports', 'news'] }),
+          entry('region', { locations: ['US-WI'] }),
+          entry('wrong-topic', { tags: ['news'], locations: ['JP'] }),
+          entry('wrong-general', { tags: ['general'], locations: ['JP'] }),
+          entry('wrong-untagged', { locations: ['JP'] }),
+          entry('wrong-region', { locations: ['US-CA'] }),
+          entry('multi-location', {
+            tags: ['news', 'general'],
+            locations: ['JP', 'US'],
+          }),
+        ]
+        expect(await selectedRoots(key, entries, us, topics)).toEqual(
+          [
+            'country',
+            'region',
+            'multi-location',
+            'topic',
+            'multi-topic',
+            'general',
+            'untagged',
+            'empty',
+          ].map(u),
+        )
+      },
     )
+
+    test.each(lists)(
+      'selects at most 10 $key before hydration without backfilling',
+      async ({ key, uriFor }) => {
+        const roots = Array.from({ length: 12 }, (_, i) => uriFor(`root-${i}`))
+        // General entries fill the cap; a later location match outranks them.
+        const entries = [
+          ...roots
+            .slice(0, 11)
+            .map((uri) => ({ uris: [uri], tags: ['general'] })),
+          { uris: [roots[11]], locations: ['US'] },
+        ]
+        await using fixture = await setup({ [key]: entries })
+        using hydrate = vi.spyOn(
+          fixture.hydrator,
+          'hydrateEmbedExternalViewFromUris',
+        )
+        using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+        expect((await fixture.query(false, us)).status).toBe(200)
+        const selected = [roots[11], ...roots.slice(0, 9)]
+        expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
+        expect(hydrate.mock.calls[0][0]).toEqual(selected)
+        expect(lookup.mock.calls[0][0].uris).toEqual(selected)
+        const looked = lookup.mock.calls.flatMap(([params]) => params.uris)
+        expect(looked).not.toContain(roots[9])
+        expect(looked).not.toContain(roots[10])
+      },
+    )
+
+    test.each(lists)(
+      'lets a selected unavailable $key root consume its slot',
+      async ({ key, uriFor, baseUri }) => {
+        const missing = Array.from({ length: 10 }, (_, i) =>
+          uriFor(`missing-${i}`),
+        )
+        await using fixture = await setup({
+          [key]: [
+            ...missing.map((uri) => ({ uris: [uri] })),
+            { uris: [baseUri] },
+          ],
+        })
+        using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body[key]).toEqual([])
+        expect(lookup.mock.calls[0][0].uris).toEqual(missing)
+        expect(
+          lookup.mock.calls.flatMap(([params]) => params.uris),
+        ).not.toContain(baseUri)
+      },
+    )
+
+    test.each(lists)(
+      'renders a selected $key entry and keeps repeated worker entries',
+      async ({ key, baseUri }) => {
+        await using fixture = await setup({
+          [key]: [
+            { uris: [baseUri], tags: ['news'] },
+            { uris: [baseUri], tags: ['other'] },
+            { uris: [baseUri], tags: ['general'] },
+            { uris: [baseUri] },
+          ],
+        })
+        using hydrate = vi.spyOn(
+          fixture.hydrator,
+          'hydrateEmbedExternalViewFromUris',
+        )
+        const { body } = await fixture.query(false, {}, topics)
+        expect(hydrate.mock.calls[0][0]).toEqual([baseUri])
+        expect(body[key]).toHaveLength(3)
+      },
+    )
+
+    test.each<{
+      note: string
+      headers: Record<string, string>
+      expected: string[]
+    }>([
+      {
+        note: 'missing header',
+        headers: {},
+        expected: ['general', 'untagged'],
+      },
+      {
+        note: 'empty header',
+        headers: { 'x-atproto-bsky-topics': ' , ,' },
+        expected: ['general', 'untagged'],
+      },
+      {
+        note: 'deprecated header only',
+        headers: { 'x-bsky-topics': 'news' },
+        expected: ['general', 'untagged'],
+      },
+      {
+        note: 'exact, case-sensitive matches',
+        headers: { 'x-atproto-bsky-topics': 'news' },
+        expected: ['news', 'general', 'untagged'],
+      },
+      {
+        note: 'trimmed and repeated tokens',
+        headers: { 'x-atproto-bsky-topics': '\tNews ,, news ,news' },
+        expected: ['news', 'News', 'general', 'untagged'],
+      },
+      {
+        note: 'general as a requested topic',
+        headers: { 'x-atproto-bsky-topics': 'general' },
+        expected: ['general', 'untagged'],
+      },
+    ])('matches request topics: $note', async ({ headers, expected }) => {
+      const entries = [
+        { uris: [liveUri], tags: [] },
+        { uris: [docUri], tags: ['general'] },
+        { uris: [pubUri], tags: ['news-today'] },
+        { uris: [galleryUri], tags: ['Newsletter'] },
+        { uris: [itemUri], tags: ['New'] },
+        { uris: [photoUri], tags: ['news'] },
+        { uris: [missingUri], tags: ['News'] },
+      ]
+      const names = new Map<AtUriString, string>([
+        [liveUri, 'untagged'],
+        [docUri, 'general'],
+        [photoUri, 'news'],
+        [missingUri, 'News'],
+      ])
+      const roots = await selectedRoots('articles', entries, {}, headers)
+      expect(roots.map((uri) => names.get(uri))).toEqual(expected)
+    })
+
+    test.each([
+      { locations: ['US'], params: { countryCode: 'US' }, match: true },
+      {
+        locations: ['us'],
+        params: { countryCode: 'us', regionCode: 'wi' },
+        match: true,
+      },
+      { locations: ['US'], params: us, match: true },
+      { locations: ['US-WI'], params: us, match: true },
+      {
+        locations: ['US-WI'],
+        params: { countryCode: 'US', regionCode: 'US-WI' },
+        match: true,
+      },
+      { locations: ['JP', 'US-WI'], params: us, match: true },
+      {
+        locations: ['US'],
+        params: { countryCode: 'US', regionCode: 'CA-ON' },
+        match: true,
+      },
+      {
+        locations: ['US-WI'],
+        params: { countryCode: 'US', regionCode: 'CA-WI' },
+        match: false,
+      },
+      {
+        locations: ['US-WI'],
+        params: { countryCode: 'US', regionCode: 'US-CA' },
+        match: false,
+      },
+      { locations: ['US-WI'], params: { countryCode: 'US' }, match: false },
+      {
+        locations: ['US-WI'],
+        params: { countryCode: 'CA', regionCode: 'WI' },
+        match: false,
+      },
+      { locations: ['US-WI'], params: { regionCode: 'WI' }, match: false },
+      { locations: ['US-WI'], params: { regionCode: 'US-WI' }, match: false },
+      { locations: ['US'], params: { regionCode: 'WI' }, match: false },
+      {
+        locations: ['US-'],
+        params: { countryCode: 'US', regionCode: '' },
+        match: false,
+      },
+      { locations: ['WI'], params: us, match: false },
+      { locations: ['JP'], params: us, match: false },
+      { locations: ['JP'], params: {}, match: false },
+      {
+        locations: ['JP-13'],
+        params: { countryCode: 'US', regionCode: '13' },
+        match: false,
+      },
+    ])(
+      'location $locations with $params matches: $match',
+      async ({ locations, params, match }) => {
+        for (const key of lists.map((list) => list.key)) {
+          const uri = lists.find((list) => list.key === key)!.uriFor('x')
+          // Tags that would otherwise qualify never override a location miss.
+          const entries = [
+            { uris: [uri], locations, tags: ['news'] },
+            { uris: [uri], locations, tags: ['general'] },
+            { uris: [uri], locations },
+            { uris: [uri], locations, tags: [] },
+          ]
+          expect(await selectedRoots(key, entries, params, topics)).toEqual(
+            match ? [uri] : [],
+          )
+        }
+      },
+    )
+
+    it('treats missing or empty locations as unrestricted, not as a location match', async () => {
+      const entries = [
+        { uris: [pubUri], locations: [] },
+        { uris: [docUri], tags: ['general'], locations: [] },
+        { uris: [liveUri], tags: ['news'] },
+        { uris: [galleryUri], locations: ['US'] },
+      ]
+      expect(await selectedRoots('articles', entries, us, topics)).toEqual([
+        galleryUri,
+        liveUri,
+        docUri,
+        pubUri,
+      ])
+      expect(await selectedRoots('articles', entries, {}, topics)).toEqual([
+        liveUri,
+        docUri,
+        pubUri,
+      ])
+    })
+
+    it('selects each list independently', async () => {
+      await using fixture = await setup({
+        articles: Array.from({ length: 11 }, (_, i) => ({
+          uris: [atUri(author, site.standard.document.$type, `a${i}`)],
+        })),
+        publications: [{ uris: [pubUri], locations: ['JP'] }],
+        photos: [{ uris: [galleryUri] }],
+        livestreams: [{ uris: [liveUri], tags: ['other'] }],
+      })
+      using hydrate = vi.spyOn(
+        fixture.hydrator,
+        'hydrateEmbedExternalViewFromUris',
+      )
+      const { body } = await fixture.query(false, us)
+      expect(hydrate.mock.calls[0][0]).toEqual([
+        ...Array.from({ length: 10 }, (_, i) =>
+          atUri(author, site.standard.document.$type, `a${i}`),
+        ),
+        galleryUri,
+      ])
+      expect(body.publications).toEqual([])
+      expect(body.photos).toHaveLength(1)
+      expect(body.livestreams).toEqual([])
+    })
   })
 
   it('uses viewer-specific profile state only on authenticated requests', async () => {
@@ -657,7 +1033,7 @@ describe('Atmosphere Explore', () => {
   it('keeps loose documents, but skips invalid URI groups and invalid records', async () => {
     await using fixture = await setup({
       articles: [
-        group([docUri], true),
+        group([docUri]),
         group(['bad', docUri]),
         group([null, docUri]),
       ],
@@ -831,7 +1207,33 @@ describe('Atmosphere Explore', () => {
 
   test.each([
     null,
-    { articles: [group([docUri], true), { uris: [pubUri] }] },
+    { articles: [group([docUri]), { uris: 'not-an-array' }] },
+    { articles: [{ uris: [docUri], tags: 'general' }] },
+    { articles: [{ uris: [docUri], tags: [1] }] },
+    { articles: [{ uris: [docUri], tags: ['x'.repeat(129)] }] },
+    {
+      articles: [
+        { uris: [docUri], tags: Array.from({ length: 101 }, () => 'a') },
+      ],
+    },
+    { articles: [{ uris: [docUri], locations: 'US' }] },
+    { articles: [{ uris: [docUri], locations: [null] }] },
+    { articles: [{ uris: [docUri], locations: ['U'.repeat(17)] }] },
+    {
+      photos: [
+        {
+          uris: [galleryUri],
+          locations: Array.from({ length: 101 }, () => 'US'),
+        },
+      ],
+    },
+    { livestreams: [{ uris: [liveUri], tags: null }] },
+    // Slicing to the selection limit must not bypass the input URI cap.
+    {
+      publications: Array.from({ length: 12 }, () =>
+        group(Array.from({ length: 50 }, () => pubUri)),
+      ),
+    },
     { announcementBanner: { title: 123 } },
     { apps: [{ url: 123 }] },
     { articles: Array.from({ length: 101 }, () => group([docUri])) },
