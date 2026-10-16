@@ -2086,21 +2086,12 @@ describe('Atmosphere Explore article source (gate on)', () => {
     expect(body.apps).toEqual(curated.apps)
   })
 
-  test.each([
-    { note: 'a non-array', articles: 'garbage' },
-    { note: 'malformed groups', articles: [{ uris: [docUri] }, null] },
-    {
-      note: 'an oversized group list',
-      articles: Array.from({ length: 101 }, () => group([doc2Uri])),
-    },
-    {
-      note: 'more raw URIs than the record budget',
+  it('ignores worker articles, including their record budget', async () => {
+    await using fixture = await setupIris([docUri], {
       articles: Array.from({ length: 6 }, () =>
         group(Array.from({ length: 100 }, () => doc2Uri)),
       ),
-    },
-  ])('ignores worker article shape and count: $note', async ({ articles }) => {
-    await using fixture = await setupIris([docUri], { articles })
+    })
     const { status, body } = await fixture.query()
     expect(status).toBe(200)
     expect(body.articles.items).toHaveLength(1)

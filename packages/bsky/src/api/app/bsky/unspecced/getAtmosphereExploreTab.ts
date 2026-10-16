@@ -47,8 +47,9 @@ const bannerSchema = l.object({
 function groups() {
   return l.optional(l.array(groupSchema, { maxLength: 100 }))
 }
-const nonArticleConfig = {
+const configSchema = l.object({
   announcementBanners: l.optional(l.array(bannerSchema, { maxLength: 100 })),
+  articles: groups(),
   publications: groups(),
   photos: groups(),
   livestreams: groups(),
@@ -57,13 +58,7 @@ const nonArticleConfig = {
       maxLength: 100,
     }),
   ),
-}
-// Worker articles are validated only when they are the article source.
-const curatedConfigSchema = l.object({
-  ...nonArticleConfig,
-  articles: groups(),
 })
-const irisConfigSchema = l.object(nonArticleConfig)
 
 export default function (server: Server, ctx: AppContext) {
   const getExplore = createPipeline(skeleton, hydration, noRules, presentation)
@@ -128,10 +123,7 @@ async function skeleton({
   const { iris, workerUrl, signal } = params
   const { fetchExploreTabSkeleton } = ctx
   if (!iris) {
-    const config = parseConfig(
-      curatedConfigSchema,
-      await fetchExploreTabSkeleton(workerUrl, signal),
-    )
+    const config = parseConfig(await fetchExploreTabSkeleton(workerUrl, signal))
     const now = Date.now()
     const announcementBanner = selectBanner(
       config.announcementBanners,
@@ -160,7 +152,7 @@ async function skeleton({
       { headers: params.headers, signal },
     ),
   ])
-  const config = parseConfig(irisConfigSchema, body)
+  const config = parseConfig(body)
   const now = Date.now()
   const announcementBanner = selectBanner(
     config.announcementBanners,
@@ -295,13 +287,11 @@ function createFetchExploreTabSkeleton() {
   }
 }
 
-function parseConfig<
-  S extends typeof curatedConfigSchema | typeof irisConfigSchema,
->(schema: S, body: unknown): l.Infer<S> {
-  const parsed = schema.safeParse(body)
+function parseConfig(body: unknown): l.Infer<typeof configSchema> {
+  const parsed = configSchema.safeParse(body)
   if (!parsed.success)
     throw new UpstreamFailureError('Invalid Atmosphere Explore configuration')
-  return parsed.value as l.Infer<S>
+  return parsed.value
 }
 
 type Context = {
