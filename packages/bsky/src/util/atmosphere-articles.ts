@@ -1,4 +1,4 @@
-import { Client } from '@atproto/lex'
+import { Client, l } from '@atproto/lex'
 import {
   UpstreamFailureError,
   UpstreamTimeoutError,
@@ -11,27 +11,43 @@ const TIMEOUT_MS = 5000
 
 const capDecodedSize = fetchMaxSizeProcessor(MAX_RESPONSE_BYTES)
 
+type Article =
+  app.bsky.unspecced.getAtmosphereExploreArticleRecommendations.Article
+
+/** A best-effort normalization: the rec ID is absent unless Iris sent one. */
+export type ArticleRecommendations = {
+  articles: Article[]
+  recIdStr?: string
+}
+
+const bodySchema = l.object({
+  articles: l.optional(l.unknown()),
+  recIdStr: l.optional(l.unknown()),
+})
+
 /**
  * Fetches Iris's ordered Atmosphere Explore article skeleton with a deadline,
- * decoded-size cap, no redirects, and response validation, without altering
- * the shared Iris client.
+ * decoded-size cap, and no redirects, without altering the shared Iris client.
+ * Transport failures throw; a decoded body is normalized best-effort: only the
+ * first `params.limit` articles are considered, malformed ones are dropped,
+ * and an invalid rec ID is omitted.
  */
 export async function fetchAtmosphereArticleRecommendations(
   client: Client,
   params: app.bsky.unspecced.getAtmosphereExploreArticleRecommendations.$Params,
   options: { headers: Record<string, string>; signal: AbortSignal },
-): Promise<app.bsky.unspecced.getAtmosphereExploreArticleRecommendations.$OutputBody> {
+): Promise<ArticleRecommendations> {
   const signal = AbortSignal.any([
     options.signal,
     AbortSignal.timeout(TIMEOUT_MS),
   ])
   const bounded = boundedClient(client)
-  let output: app.bsky.unspecced.getAtmosphereExploreArticleRecommendations.$OutputBody
+  let output: unknown
   try {
     output = await bounded.call(
       app.bsky.unspecced.getAtmosphereExploreArticleRecommendations,
       params,
-      { headers: options.headers, signal },
+      { headers: options.headers, signal, validateResponse: false },
     )
   } catch (err) {
     // @NOTE Lex errors can wrap the abort reason, so the signals decide.
@@ -44,12 +60,26 @@ export async function fetchAtmosphereArticleRecommendations(
       'Atmosphere Explore article recommendations failed',
     )
   }
-  if (output.articles.length > params.limit) {
-    throw new UpstreamFailureError(
-      'Atmosphere Explore article recommendations exceeded the requested limit',
-    )
+  return normalize(output, params.limit)
+}
+
+function normalize(output: unknown, limit: number): ArticleRecommendations {
+  const body = bodySchema.safeParse(output)
+  if (!body.success) return { articles: [] }
+  const { articles, recIdStr } = body.value
+  const result: ArticleRecommendations = {
+    articles: Array.isArray(articles)
+      ? articles.slice(0, limit).flatMap((entry) => {
+          const article =
+            app.bsky.unspecced.getAtmosphereExploreArticleRecommendations.article.$safeValidate(
+              entry,
+            )
+          return article.success ? [article.value] : []
+        })
+      : [],
   }
-  return output
+  if (typeof recIdStr === 'string') result.recIdStr = recIdStr
+  return result
 }
 
 function boundedClient(client: Client): Client {
@@ -74,7 +104,7 @@ function boundedClient(client: Client): Client {
       appLabelers: xrpcDefaults.appLabelers,
       validateRequest: xrpcDefaults.validateRequest,
       strictResponseProcessing: xrpcDefaults.strictResponseProcessing,
-      validateResponse: true,
+      validateResponse: xrpcDefaults.validateResponse,
     },
   )
 }

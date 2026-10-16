@@ -43,21 +43,17 @@ const bannerSchema = l.object({
     l.array(l.string({ maxLength: 16 }), { maxLength: 100 }),
   ),
 })
-function groups() {
-  return l.optional(l.array(groupSchema, { maxLength: 100 }))
-}
+// Ingestion is best-effort per item: each section is an unvalidated value, and
+// every entry is validated on its own so one bad entry never fails the rest.
 const configSchema = l.object({
-  announcementBanners: l.optional(l.array(bannerSchema, { maxLength: 100 })),
-  articles: groups(),
-  publications: groups(),
-  photos: groups(),
-  livestreams: groups(),
-  apps: l.optional(
-    l.array(app.bsky.unspecced.getAtmosphereExploreTab.appCard, {
-      maxLength: 100,
-    }),
-  ),
+  announcementBanners: l.optional(l.unknown()),
+  articles: l.optional(l.unknown()),
+  publications: l.optional(l.unknown()),
+  photos: l.optional(l.unknown()),
+  livestreams: l.optional(l.unknown()),
+  apps: l.optional(l.unknown()),
 })
+const MAX_INPUT_ENTRIES = 100
 
 export default function (server: Server, ctx: AppContext) {
   const getExplore = createPipeline(skeleton, hydration, noRules, presentation)
@@ -163,7 +159,7 @@ async function skeleton({
     photos: orderGroups(completeGroups(select(config.photos))),
     livestreams: orderGroups(completeGroups(select(config.livestreams))),
     // Apps have no hydration root or featured flag: keep worker order.
-    apps: (config.apps ?? []).slice(0, MAX_LIST_ITEMS),
+    apps: config.apps.slice(0, MAX_LIST_ITEMS),
   }
 }
 
@@ -247,7 +243,7 @@ function createFetchExploreTabSkeleton() {
   return async function fetchExploreTabSkeleton(
     url: URL,
     signal: AbortSignal,
-  ): Promise<l.Infer<typeof configSchema>> {
+  ): Promise<ExploreConfig> {
     try {
       const response = await fetchConfig(url, {
         headers: { accept: 'application/json' },
@@ -260,12 +256,7 @@ function createFetchExploreTabSkeleton() {
           `Atmosphere Explore service returned HTTP ${response.status}`,
         )
       }
-      const parsed = configSchema.safeParse(await response.json())
-      if (!parsed.success)
-        throw new UpstreamFailureError(
-          'Invalid Atmosphere Explore configuration',
-        )
-      return parsed.value
+      return normalizeConfig(await response.json())
     } catch (err) {
       if (err instanceof UpstreamFailureError) throw err
       if (
@@ -278,6 +269,60 @@ function createFetchExploreTabSkeleton() {
         'Unable to fetch Atmosphere Explore configuration',
       )
     }
+  }
+}
+
+type Group = l.Infer<typeof groupSchema>
+type AppCard = app.bsky.unspecced.getAtmosphereExploreTab.AppCard
+type ValidBanner = {
+  banner: l.Infer<typeof bannerSchema>
+  presentation: AnnouncementBanner
+}
+type ExploreConfig = {
+  announcementBanners: ValidBanner[]
+  articles: Group[]
+  publications: Group[]
+  photos: Group[]
+  livestreams: Group[]
+  apps: AppCard[]
+}
+
+/**
+ * Keeps only the well-formed items of a successfully decoded worker body. Only
+ * the first `MAX_INPUT_ENTRIES` entries of each section are examined, and
+ * malformed entries are skipped whole, never coerced or repaired.
+ */
+function normalizeConfig(body: unknown): ExploreConfig {
+  const raw = configSchema.safeParse(body)
+  const config = raw.success ? raw.value : {}
+  const entries = (value: unknown): unknown[] =>
+    Array.isArray(value) ? value.slice(0, MAX_INPUT_ENTRIES) : []
+  const valid = <T>(schema: l.Schema<T>, value: unknown): T[] =>
+    entries(value).flatMap((entry) => {
+      const result = schema.safeParse(entry)
+      return result.success ? [result.value] : []
+    })
+  return {
+    announcementBanners: entries(config.announcementBanners).flatMap(
+      (entry) => {
+        const banner = bannerSchema.safeParse(entry)
+        const presentation =
+          app.bsky.unspecced.getAtmosphereExploreTab.announcementBanner.$safeValidate(
+            entry,
+          )
+        return banner.success && presentation.success
+          ? [{ banner: banner.value, presentation: presentation.value }]
+          : []
+      },
+    ),
+    articles: valid(groupSchema, config.articles),
+    publications: valid(groupSchema, config.publications),
+    photos: valid(groupSchema, config.photos),
+    livestreams: valid(groupSchema, config.livestreams),
+    apps: valid(
+      app.bsky.unspecced.getAtmosphereExploreTab.appCard,
+      config.apps,
+    ),
   }
 }
 
@@ -335,34 +380,23 @@ function completeGroups(groups: SelectedGroup[] = []): RecordGroup[] {
   })
 }
 
-type Banner = l.Infer<typeof bannerSchema>
 type AnnouncementBanner =
   app.bsky.unspecced.getAtmosphereExploreTab.AnnouncementBanner
 
 /**
- * Validates every banner's presentation, then returns the single banner to
- * show. Eligible (enabled, in window) banners targeted at a matching location
+ * Returns the single (already validated) banner to show. Eligible (enabled, in window) banners targeted at a matching location
  * win, first in worker order; otherwise the unrestricted eligible banner with
  * the furthest-out `endsAt` (absent means no expiration; ties keep worker order).
  */
 function selectBanner(
-  banners: Banner[] = [],
+  banners: ValidBanner[],
   params: { countryCode?: string; regionCode?: string },
   now: number,
 ): AnnouncementBanner | undefined {
-  const validated = banners.map((banner) => {
-    const presentation =
-      app.bsky.unspecced.getAtmosphereExploreTab.announcementBanner.$safeValidate(
-        banner,
-      )
-    if (!presentation.success)
-      throw new UpstreamFailureError('Invalid Atmosphere Explore configuration')
-    return { banner, presentation: presentation.value }
-  })
   let matched: AnnouncementBanner | undefined
   let fallback: AnnouncementBanner | undefined
   let fallbackEnd = -Infinity
-  for (const { banner, presentation } of validated) {
+  for (const { banner, presentation } of banners) {
     const { status, startsAt, endsAt, locations } = banner
     if (status !== 'enabled') continue
     if (startsAt != null && Date.parse(startsAt) > now) continue

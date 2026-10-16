@@ -112,44 +112,119 @@ describe(fetchAtmosphereArticleRecommendations, () => {
     const { client } = setup(
       respond({ articles: [{ uri: 'bad' }], recIdStr: '1' }),
     )
-    await expect(fetchWith(client)).rejects.toBeInstanceOf(UpstreamFailureError)
+    await expect(fetchWith(client)).resolves.toEqual({
+      articles: [],
+      recIdStr: '1',
+    })
     expect(client.xrpcDefaults.validateResponse).toBe(false)
   })
 
-  test.each([
-    ['missing rec ID', { articles: [] }],
-    ['non-string rec ID', { articles: [], recIdStr: 1 }],
-    ['missing articles', { recIdStr: '1' }],
-    ['non-AT-URI', { articles: [{ uri: 'not-a-uri' }], recIdStr: '1' }],
-    ['missing uri', { articles: [{}], recIdStr: '1' }],
-    [
-      'too many articles',
-      {
-        articles: Array.from({ length: 101 }, () => ({ uri: documentUri })),
-        recIdStr: '1',
-      },
-    ],
-    ['non-object body', []],
-  ])(
-    'rejects invalid payloads even with client validation off: %s',
-    async (_, body) => {
-      const { client } = setup(respond(body))
-      await expect(fetchWith(client, { limit: 100 })).rejects.toBeInstanceOf(
-        UpstreamFailureError,
-      )
-    },
-  )
-
-  it('rejects more articles than requested', async () => {
-    const articles = Array.from({ length: 3 }, () => ({ uri: documentUri }))
-    const { client } = setup(respond({ articles, recIdStr: '1' }))
-    await expect(fetchWith(client, { limit: 2 })).rejects.toBeInstanceOf(
-      UpstreamFailureError,
+  it('skips response validation for this call even if the client validates', async () => {
+    const fetchMock = vi.fn<typeof globalThis.fetch>(async () =>
+      Response.json({ articles: [{ uri: 'bad' }, { uri: documentUri }] }),
     )
-    await expect(fetchWith(client, { limit: 3 })).resolves.toMatchObject({
-      articles,
+    const client = new Client(
+      { service: 'https://iris.test', fetch: fetchMock },
+      { validateResponse: true },
+    )
+    await expect(fetchWith(client)).resolves.toEqual({
+      articles: [{ uri: documentUri }],
+    })
+    expect(client.xrpcDefaults.validateResponse).toBe(true)
+  })
+
+  test.each([
+    ['missing rec ID', { articles: [{ uri: documentUri }] }, undefined],
+    [
+      'non-string rec ID',
+      { articles: [{ uri: documentUri }], recIdStr: 1 },
+      undefined,
+    ],
+    ['valid rec ID', { articles: [{ uri: documentUri }], recIdStr: 'r' }, 'r'],
+  ])('handles the rec ID: %s', async (_, body, recIdStr) => {
+    const { client } = setup(respond(body))
+    const result = await fetchWith(client)
+    expect(result.articles).toEqual([{ uri: documentUri }])
+    expect(result.recIdStr).toBe(recIdStr)
+    expect('recIdStr' in result).toBe(recIdStr !== undefined)
+  })
+
+  test.each([
+    ['missing articles', { recIdStr: '1' }],
+    ['non-array articles', { articles: 'nope', recIdStr: '1' }],
+    ['null articles', { articles: null, recIdStr: '1' }],
+    ['object articles', { articles: {}, recIdStr: '1' }],
+  ])('normalizes %s to an empty list', async (_, body) => {
+    const { client } = setup(respond(body))
+    await expect(fetchWith(client)).resolves.toEqual({
+      articles: [],
+      recIdStr: '1',
     })
   })
+
+  test.each([
+    ['an empty object', {}],
+    ['an array', []],
+    ['null', null],
+    ['a string', 'text'],
+  ])('normalizes a successfully decoded body that is %s', async (_, body) => {
+    const { client } = setup(respond(body))
+    await expect(fetchWith(client)).resolves.toEqual({ articles: [] })
+  })
+
+  it('drops malformed articles and keeps valid siblings in order', async () => {
+    const other = 'at://did:plc:author/site.standard.document/other'
+    const { client } = setup(
+      respond({
+        articles: [
+          { uri: documentUri },
+          null,
+          7,
+          'at://x',
+          {},
+          { uri: 'not-a-uri' },
+          { uri: 5 },
+          { uri: other, extra: true },
+        ],
+        recIdStr: '1',
+      }),
+    )
+    await expect(fetchWith(client)).resolves.toEqual({
+      articles: [{ uri: documentUri }, { uri: other, extra: true }],
+      recIdStr: '1',
+    })
+  })
+
+  it('examines only the requested prefix without backfilling', async () => {
+    const other = 'at://did:plc:author/site.standard.document/other'
+    const { client, fetchMock } = setup(
+      respond({
+        articles: [
+          { uri: 'bad' },
+          { uri: documentUri },
+          { uri: other },
+          { uri: documentUri },
+        ],
+        recIdStr: '1',
+      }),
+    )
+    // Prefix of 3: one bad entry is dropped, the 4th is never considered.
+    await expect(fetchWith(client, { limit: 3 })).resolves.toEqual({
+      articles: [{ uri: documentUri }, { uri: other }],
+      recIdStr: '1',
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it.each([2, 3, 10])(
+    'truncates more articles than requested to %i',
+    async (limit) => {
+      const articles = Array.from({ length: 11 }, () => ({ uri: documentUri }))
+      const { client } = setup(respond({ articles, recIdStr: '1' }))
+      const result = await fetchWith(client, { limit })
+      expect(result.articles).toEqual(articles.slice(0, limit))
+    },
+  )
 
   it('caps decoded bytes even without Content-Length', async () => {
     const { client } = setup(

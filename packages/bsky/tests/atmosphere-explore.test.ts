@@ -1057,31 +1057,37 @@ describe('Atmosphere Explore', () => {
     })
 
     test.each([
-      { articles: [{ canonicalUri: docUri, startsAt: 1 }] },
-      { articles: [{ canonicalUri: docUri, endsAt: true }] },
-      { publications: [{ canonicalUri: pubUri, startsAt: 'tomorrow' }] },
-      { photos: [{ canonicalUri: galleryUri, endsAt: '2026-10-01' }] },
-      {
-        livestreams: [
-          { canonicalUri: liveUri },
-          { canonicalUri: liveUri, startsAt: 'soon' },
-        ],
+      { key: 'articles', bad: { startsAt: 1 } },
+      { key: 'articles', bad: { endsAt: true } },
+      { key: 'publications', bad: { startsAt: 'tomorrow' } },
+      { key: 'photos', bad: { endsAt: '2026-10-01' } },
+      { key: 'livestreams', bad: { startsAt: 'soon' } },
+      // Skipped even when the entry would be excluded by location.
+      { key: 'articles', bad: { locations: ['JP'], endsAt: 'bad' } },
+    ] as const)(
+      'skips a $key entry with a malformed schedule $bad',
+      async ({ key, bad }) => {
+        const { baseUri } = lists.find((list) => list.key === key)!
+        using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+        await using fixture = await setup({
+          [key]: [{ canonicalUri: baseUri, ...bad }, { canonicalUri: baseUri }],
+        })
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body[key].items.map((item) => item.featured)).toEqual([false])
       },
-      // Invalid even when the entry is excluded or beyond the selection cap.
-      {
-        articles: [{ canonicalUri: docUri, locations: ['JP'], endsAt: 'bad' }],
-      },
-      {
+    )
+
+    it('skips malformed entries beyond the selection cap', async () => {
+      await using fixture = await setup({
         articles: [
           ...Array.from({ length: 10 }, () => ({ canonicalUri: docUri })),
           { canonicalUri: docUri, startsAt: 'bad' },
         ],
-      },
-    ])('rejects malformed content schedules %#', async (config) => {
-      await using fixture = await setup(config)
-      using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
-      expect((await fixture.query()).status).toBe(502)
-      expect(lookup).not.toHaveBeenCalled()
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.articles.items).toHaveLength(10)
     })
   })
 
@@ -1834,65 +1840,203 @@ describe('Atmosphere Explore', () => {
     expect(lookup).not.toHaveBeenCalled()
   })
 
-  test.each([
-    null,
-    { articles: [group(docUri), 'not-an-object'] },
-    { articles: [{ canonicalUri: docUri, tags: 'general' }] },
-    { articles: [{ canonicalUri: docUri, tags: [1] }] },
-    { articles: [{ canonicalUri: docUri, tags: ['x'.repeat(129)] }] },
-    {
-      articles: [
-        { canonicalUri: docUri, tags: Array.from({ length: 101 }, () => 'a') },
-      ],
-    },
-    { articles: [{ canonicalUri: docUri, locations: 'US' }] },
-    { articles: [{ canonicalUri: docUri, locations: [null] }] },
-    { articles: [{ canonicalUri: docUri, locations: ['U'.repeat(17)] }] },
-    {
-      photos: [
-        {
-          canonicalUri: galleryUri,
-          locations: Array.from({ length: 101 }, () => 'US'),
+  describe('best-effort ingestion', () => {
+    const bad = [
+      'not-an-object',
+      null,
+      7,
+      [],
+      { canonicalUri: 'x', tags: 'general' },
+      { canonicalUri: 'x', tags: [1] },
+      { canonicalUri: 'x', tags: ['x'.repeat(129)] },
+      { canonicalUri: 'x', tags: Array.from({ length: 101 }, () => 'a') },
+      { canonicalUri: 'x', tags: null },
+      { canonicalUri: 'x', locations: 'US' },
+      { canonicalUri: 'x', locations: [null] },
+      { canonicalUri: 'x', locations: ['U'.repeat(17)] },
+      { canonicalUri: 'x', locations: Array.from({ length: 101 }, () => 'US') },
+      { canonicalUri: 'x', startsAt: 'tomorrow' },
+      { canonicalUri: 'x', endsAt: 1 },
+    ]
+
+    describe.each(lists)('$key', ({ key, baseUri }) => {
+      test.each(bad.map((entry, i) => [i, entry] as const))(
+        'skips malformed entry %i and keeps its valid siblings',
+        async (_, entry) => {
+          const fixed =
+            entry && typeof entry === 'object' && !Array.isArray(entry)
+              ? { ...entry, canonicalUri: baseUri }
+              : entry
+          await using fixture = await setup({
+            [key]: [fixed, group(baseUri), fixed],
+          })
+          using hydrate = vi.spyOn(
+            fixture.hydrator,
+            'hydrateEmbedExternalViewFromUris',
+          )
+          const { status, body } = await fixture.query()
+          expect(status).toBe(200)
+          expect(body[key].items).toHaveLength(1)
+          expect(hydrate.mock.calls[0][0]).toEqual([baseUri])
         },
-      ],
-    },
-    { livestreams: [{ canonicalUri: liveUri, tags: null }] },
-    { announcementBanners: [{ status: 'enabled', title: 123 }] },
-    { announcementBanners: [{ status: 'enabled', url: 'not a uri' }] },
-    { announcementBanners: [{ title: 'No status' }] },
-    { announcementBanners: [{ status: 1 }] },
-    { announcementBanners: [{ status: 'x'.repeat(129) }] },
-    { announcementBanners: [{ status: 'enabled', startsAt: 'tomorrow' }] },
-    { announcementBanners: [{ status: 'enabled', endsAt: 1 }] },
-    { announcementBanners: [{ status: 'enabled', locations: 'US' }] },
-    { announcementBanners: [{ status: 'enabled', locations: [1] }] },
-    {
-      announcementBanners: [{ status: 'enabled', locations: ['U'.repeat(17)] }],
-    },
-    { announcementBanners: 'banner' },
-    {
-      announcementBanners: Array.from({ length: 101 }, () => ({
+      )
+
+      it('examines only the first 100 entries', async () => {
+        await using fixture = await setup({
+          [key]: [...Array.from({ length: 100 }, () => 'bad'), group(baseUri)],
+        })
+        using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body[key].items).toEqual([])
+        expect(lookup).not.toHaveBeenCalled()
+      })
+
+      it('does not reject more than 100 valid entries', async () => {
+        await using fixture = await setup({
+          [key]: Array.from({ length: 150 }, () => group(baseUri)),
+        })
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body[key].items).toHaveLength(10)
+      })
+    })
+
+    it('treats missing, non-array, and malformed sections as empty without clearing others', async () => {
+      await using fixture = await setup({
+        articles: 'articles',
+        publications: { 0: group(pubUri) },
+        photos: null,
+        livestreams: [group(liveUri)],
+        apps: 5,
+        announcementBanners: 'banner',
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.articles.items).toEqual([])
+      expect(body.publications.items).toEqual([])
+      expect(body.photos.items).toEqual([])
+      expect(body.livestreams.items).toHaveLength(1)
+      expect(body.apps).toEqual([])
+      expect(body.announcementBanner).toBeUndefined()
+    })
+
+    test.each([null, [], 'text', 7, true])(
+      'returns empty sections for a decoded non-object body: %j',
+      async (config) => {
+        await using fixture = await setup(config)
+        using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+        expect(await fixture.query()).toEqual({
+          status: 200,
+          body: {
+            articles: { items: [] },
+            publications: { items: [] },
+            photos: { items: [] },
+            livestreams: { items: [] },
+            apps: [],
+          },
+        })
+        expect(lookup).not.toHaveBeenCalled()
+      },
+    )
+
+    describe('apps', () => {
+      const app = (n: number) => ({
+        id: `app-${n}`,
+        title: `App ${n}`,
+        url: 'https://example.com/app',
+      })
+
+      it('skips malformed app cards, keeping valid ones in order', async () => {
+        await using fixture = await setup({
+          apps: [
+            app(1),
+            { url: 123 },
+            null,
+            'app',
+            { ...app(2), url: 5 },
+            app(3),
+          ],
+        })
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body.apps).toEqual([app(1), app(3)])
+      })
+
+      it('examines only the first 100 app entries', async () => {
+        await using fixture = await setup({
+          apps: [...Array.from({ length: 100 }, () => 'bad'), app(1)],
+        })
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body.apps).toEqual([])
+      })
+    })
+
+    describe('announcement banners', () => {
+      const banner = (id: string, extra: object = {}) => ({
+        id,
         status: 'enabled',
-      })),
-    },
-    // An invalid later banner fails the config even after an eligible first.
-    {
-      announcementBanners: [
-        { status: 'enabled', title: 'First' },
-        { status: 'disabled', title: 123 },
-      ],
-    },
-    { apps: [{ url: 123 }] },
-    // Slicing to the selection limit must not bypass the section cap.
-    { articles: Array.from({ length: 101 }, () => group(docUri)) },
-    { publications: Array.from({ length: 101 }, () => group(pubUri)) },
-    { photos: Array.from({ length: 101 }, () => group(galleryUri)) },
-    { livestreams: Array.from({ length: 101 }, () => group(liveUri)) },
-  ])('rejects malformed or excessive config %#', async (config) => {
-    await using fixture = await setup(config)
-    using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
-    expect((await fixture.query()).status).toBe(502)
-    expect(lookup).not.toHaveBeenCalled()
+        ...extra,
+      })
+      const us = { countryCode: 'US', regionCode: 'WI' }
+      const malformed = [
+        { status: 'enabled', title: 123 },
+        { id: 'x', status: 'enabled', title: 123 },
+        { id: 'x', status: 'enabled', url: 'not a uri' },
+        { id: 'x', title: 'No status' },
+        { id: 'x', status: 1 },
+        { id: 'x', status: 'x'.repeat(129) },
+        { id: 'x', status: 'enabled', startsAt: 'tomorrow' },
+        { id: 'x', status: 'enabled', endsAt: 1 },
+        { id: 'x', status: 'enabled', locations: 'US' },
+        { id: 'x', status: 'enabled', locations: [1] },
+        { id: 'x', status: 'enabled', locations: ['U'.repeat(17)] },
+        null,
+        'banner',
+      ]
+
+      async function pick(banners: unknown, params = {}) {
+        await using fixture = await setup({
+          announcementBanners: banners,
+          articles: [group(docUri)],
+        })
+        const { status, body } = await fixture.query(false, params)
+        expect(status).toBe(200)
+        // Nonbanner content always survives bad banners.
+        expect(body.articles.items).toHaveLength(1)
+        return body.announcementBanner?.id
+      }
+
+      test.each(malformed.map((entry, i) => [i, entry] as const))(
+        'keeps a valid banner despite malformed later banner %i',
+        async (_, entry) => {
+          expect(await pick([banner('valid'), entry])).toBe('valid')
+        },
+      )
+
+      test.each(malformed.map((entry, i) => [i, entry] as const))(
+        'lets a valid alternative win over malformed preferred banner %i',
+        async (_, entry) => {
+          const preferred =
+            entry && typeof entry === 'object'
+              ? { locations: ['US'], ...entry }
+              : entry
+          const expected = 'unrestricted'
+          expect(await pick([preferred, banner(expected)], us)).toBe(expected)
+          expect(
+            await pick(
+              [preferred, banner('targeted', { locations: ['US'] })],
+              us,
+            ),
+          ).toBe('targeted')
+        },
+      )
+
+      it('omits the banner when every banner is malformed', async () => {
+        expect(await pick(malformed)).toBeUndefined()
+      })
+    })
   })
 
   it('rejects oversized decoded bodies even without Content-Length', async () => {
@@ -2213,10 +2357,28 @@ describe('Atmosphere Explore article source (gate on)', () => {
     expect(body.articles.items[0].view.title).toBe('Article')
   })
 
-  it('still validates the worker nonarticle sections', async () => {
-    await using fixture = await setupIris([docUri], { apps: [{ url: 123 }] })
-    expect((await fixture.query()).status).toBe(502)
+  it('drops malformed worker apps and non-article entries without failing', async () => {
+    const goodApp = { id: 'ok', title: 'OK', url: 'https://example.com/ok' }
+    await using fixture = await setupIris([docUri], {
+      apps: [{ url: 123 }, goodApp],
+      publications: ['bad', group(pubUri)],
+    })
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    expect(body.apps).toEqual([goodApp])
+    expect(body.publications.items).toHaveLength(1)
+    expect(body.articles.items).toHaveLength(1)
   })
+
+  test.each(['garbage', null, [null, { tags: 5 }, 'x'], { a: 1 }])(
+    'ignores malformed worker articles: %j',
+    async (articles) => {
+      await using fixture = await setupIris([docUri], { articles })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.articles.items).toHaveLength(1)
+    },
+  )
 
   it('caps Iris articles at 10 while selecting other sections locally', async () => {
     const ten = Array.from({ length: 10 }, () => docUri)
@@ -2517,7 +2679,6 @@ describe.each(['worker', 'iris'] as const)(
     test.each([
       ['http', () => new Response('', { status: 503 }), 502],
       ['json', () => new Response('{'), 502],
-      ['schema', () => Response.json({ apps: [{ url: 123 }] }), 502],
       ['network', () => Promise.reject(new TypeError('down')), 502],
       [
         'timeout',
@@ -2536,6 +2697,16 @@ describe.each(['worker', 'iris'] as const)(
       expect((await fixture.query()).status).toBe(status)
       expect(lookup).not.toHaveBeenCalled()
     })
+
+    test.each([
+      { apps: [{ url: 123 }] },
+      { articles: 5, publications: 'x', photos: [1], livestreams: [null] },
+      'not an object',
+    ])('ignores malformed worker content: %j', async (config) => {
+      await using fixture = await arrange()
+      fixture.fetchMock.mockImplementation(async () => Response.json(config))
+      expect((await fixture.query()).status).toBe(200)
+    })
   },
 )
 
@@ -2550,21 +2721,8 @@ describe('Atmosphere Explore Iris requirements and failures', () => {
   test.each([
     ['http', () => new Response('', { status: 503 }), 502],
     ['network', () => Promise.reject(new TypeError('down')), 502],
-    [
-      'invalid payload',
-      () => Response.json({ articles: [{ uri: 'bad' }], recIdStr: '1' }),
-      502,
-    ],
-    ['missing rec ID', () => Response.json({ articles: [] }), 502],
-    [
-      'too many articles',
-      () =>
-        Response.json({
-          articles: articleUris(...Array.from({ length: 11 }, () => docUri)),
-          recIdStr: '1',
-        }),
-      502,
-    ],
+    ['redirect', () => new Response('', { status: 302 }), 502],
+    ['invalid JSON', () => new Response('{'), 502],
     [
       'timeout',
       () => Promise.reject(new DOMException('Timed out', 'TimeoutError')),
@@ -2581,4 +2739,91 @@ describe('Atmosphere Explore Iris requirements and failures', () => {
       expect(lookup).not.toHaveBeenCalled()
     },
   )
+
+  describe('best-effort normalization', () => {
+    async function withIris(body: unknown) {
+      const fixture = await setupIris([], curated)
+      fixture.iris.respond = async () => Response.json(body)
+      return fixture
+    }
+
+    it('keeps valid articles among malformed entries and retains the rec ID', async () => {
+      await using fixture = await withIris({
+        articles: [
+          null,
+          { uri: 'bad' },
+          { uri: docUri },
+          {},
+          { uri: doc2Uri },
+          'x',
+        ],
+        recIdStr: 'r1',
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.articles.recIdStr).toBe('r1')
+      expect(body.articles.items).toHaveLength(2)
+    })
+
+    test.each([undefined, 7, null])(
+      'omits an invalid rec ID (%j) without losing articles',
+      async (recIdStr) => {
+        await using fixture = await withIris({
+          articles: [{ uri: docUri }],
+          recIdStr,
+        })
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body.articles.items).toHaveLength(1)
+        expect(body.articles).not.toHaveProperty('recIdStr')
+      },
+    )
+
+    test.each([
+      { recIdStr: '5' },
+      { articles: 'x', recIdStr: '5' },
+      { articles: [{ uri: 'bad' }], recIdStr: '5' },
+      [],
+      null,
+    ])(
+      'treats %j as an empty authoritative section with no curated fallback',
+      async (payload) => {
+        await using fixture = await withIris(payload)
+        using hydrate = vi.spyOn(
+          fixture.hydrator,
+          'hydrateEmbedExternalViewFromUris',
+        )
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body.articles.items).toEqual([])
+        // The worker's curated articles are never used.
+        expect(hydrate.mock.calls[0][0]).not.toContain(docUri)
+        expect(hydrate.mock.calls[0][0]).not.toContain(missingUri)
+      },
+    )
+
+    it('truncates 11 articles to the 10 requested', async () => {
+      await using fixture = await withIris({
+        articles: articleUris(...Array.from({ length: 11 }, () => docUri)),
+        recIdStr: '1',
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.articles.items).toHaveLength(10)
+    })
+
+    it('drops malformed entries within the prefix without backfilling', async () => {
+      await using fixture = await withIris({
+        articles: [
+          ...Array.from({ length: 3 }, () => ({ uri: 'bad' })),
+          ...articleUris(...Array.from({ length: 8 }, () => docUri)),
+        ],
+        recIdStr: '1',
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      // 10 examined: 3 bad, 7 valid; the 11th is never considered.
+      expect(body.articles.items).toHaveLength(7)
+    })
+  })
 })
