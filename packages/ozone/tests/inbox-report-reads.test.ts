@@ -8,6 +8,7 @@ import {
 import { toDatetimeString } from '@atproto/lex'
 import type { DidString } from '@atproto/syntax'
 import { parseStrikeSuspensionConfig } from '../src/config/strike-suspension.js'
+import { tools } from '../src/lexicons/index.js'
 import { reportForEvent } from './_inbox.js'
 
 describe('viewer inbox reports', () => {
@@ -227,10 +228,59 @@ describe('viewer inbox reports', () => {
       'tools.ozone.inbox.getReport',
       { id: row.id },
     )
-    expect(later.resolution.outcome).toBe('other')
+    expect(later.resolution.outcome).toBe('noAction')
     expect(later.resolution.actionTaken).toBeUndefined()
     expect(JSON.stringify(later)).not.toContain('PRIVATE CLOSURE NOTE')
   })
+
+  it.each(['createActivity', 'closeReports'] as const)(
+    'returns noAction for a report closed through %s without a linked action',
+    async (method) => {
+      const report = await sc.createReport({
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.alice,
+        },
+        reportedBy: sc.dids.bob,
+      })
+      await network.processAll()
+      const id = await reportIdForEvent(report.id)
+      const agent = network.ozone.getAgent()
+
+      if (method === 'createActivity') {
+        await agent.tools.ozone.report.createActivity(
+          {
+            reportId: id,
+            activity: tools.ozone.report.defs.closeActivity.$build({}),
+          },
+          {
+            headers: await network.ozone.modHeaders(
+              tools.ozone.report.createActivity.$lxm,
+              'admin',
+            ),
+          },
+        )
+      } else {
+        await agent.tools.ozone.report.closeReports(
+          { subject: sc.dids.alice },
+          {
+            headers: await network.ozone.modHeaders(
+              tools.ozone.report.closeReports.$lxm,
+              'admin',
+            ),
+          },
+        )
+      }
+
+      const { data } = await call(sc.dids.bob, 'tools.ozone.inbox.getReport', {
+        id,
+      })
+      expect(data.report.status).toBe('resolved')
+      expect(data.resolution.outcome).toBe('noAction')
+      expect(data.resolution.actionTaken).toBeUndefined()
+    },
+  )
 
   it('derives standing from configured strike thresholds and active enforcement through the API', async () => {
     Object.assign(
