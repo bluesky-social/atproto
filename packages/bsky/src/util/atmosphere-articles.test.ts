@@ -374,6 +374,105 @@ describe(fetchAtmosphereArticleRecommendations, () => {
     })
   })
 
+  describe('bounded wrapper reuse', () => {
+    const empty = respond({ articles: [], recIdStr: '1' })
+
+    it('reuses one wrapper per source client', async () => {
+      using call = vi.spyOn(Client.prototype, 'call')
+      const a = setup(empty)
+      const b = setup(empty)
+      await fetchWith(a.client)
+      await fetchWith(a.client)
+      await fetchWith(b.client)
+      const [first, second, third] = call.mock.contexts
+      expect(first).toBe(second)
+      expect(third).not.toBe(first)
+      expect(first).not.toBe(a.client)
+      expect(third).not.toBe(b.client)
+    })
+
+    it('does not leak request headers or limits across calls', async () => {
+      const { client, fetchMock } = setup(empty)
+      await fetchWith(client, { viewer, limit: 7 }, undefined, {
+        'accept-language': 'en,es',
+        'x-atproto-bsky-topics': 'a,b',
+        'x-bsky-device-id': 'device-1',
+      })
+      await fetchWith(client, { limit: 3 }, undefined, {
+        'x-atproto-bsky-topics': 'c',
+      })
+      const [first, second] = fetchMock.mock.calls.map(([input, init]) => ({
+        url: new URL(String(input instanceof Request ? input.url : input)),
+        headers: new Headers(init?.headers),
+      }))
+      expect(Object.fromEntries(first.url.searchParams)).toEqual({
+        viewer,
+        limit: '7',
+      })
+      expect(first.headers.get('accept-language')).toBe('en,es')
+      expect(first.headers.get('x-bsky-device-id')).toBe('device-1')
+      expect(Object.fromEntries(second.url.searchParams)).toEqual({
+        limit: '3',
+      })
+      expect(second.headers.get('x-atproto-bsky-topics')).toBe('c')
+      expect(second.headers.has('accept-language')).toBe(false)
+      expect(second.headers.has('x-bsky-device-id')).toBe(false)
+      // Source defaults still apply to every call, and stay unchanged.
+      for (const { headers } of [first, second]) {
+        expect(headers.get('authorization')).toBe('Bearer iris-key')
+        expect(headers.get('x-client-default')).toBe('default')
+      }
+      expect([...client.headers]).toEqual([['x-client-default', 'default']])
+    })
+
+    it('keeps abort signals independent across concurrent calls', async () => {
+      let release!: () => void
+      const released = new Promise<void>((resolve) => (release = resolve))
+      let started = 0
+      let markStarted!: () => void
+      const bothStarted = new Promise<void>(
+        (resolve) => (markStarted = resolve),
+      )
+      const { client } = setup(async (request) => {
+        if (++started === 2) markStarted()
+        if (request.headers.get('x-call') === 'a') {
+          return new Promise<never>((_, reject) =>
+            request.signal.addEventListener(
+              'abort',
+              () => reject(request.signal.reason),
+              { once: true },
+            ),
+          )
+        }
+        await released
+        return Response.json({
+          articles: [{ uri: documentUri }],
+          recIdStr: '2',
+        })
+      })
+      const aborted = new AbortController()
+      const a = fetchWith(client, undefined, aborted.signal, { 'x-call': 'a' })
+      const b = fetchWith(client, undefined, undefined, { 'x-call': 'b' })
+      await bothStarted
+      aborted.abort(new Error('client went away'))
+      await expect(a).rejects.toBeInstanceOf(UpstreamTimeoutError)
+      release()
+      await expect(b).resolves.toEqual({
+        articles: [{ uri: documentUri }],
+        recIdStr: '2',
+      })
+    })
+
+    it('applies a fresh five second deadline to every call', async () => {
+      using timeout = vi.spyOn(AbortSignal, 'timeout')
+      const { client } = setup(empty)
+      await fetchWith(client)
+      await fetchWith(client)
+      expect(timeout).toHaveBeenCalledTimes(2)
+      expect(timeout).toHaveBeenCalledWith(5000)
+    })
+  })
+
   it('does not retry failures', async () => {
     const { client, fetchMock } = setup(() => new Response('', { status: 503 }))
     await expect(fetchWith(client)).rejects.toBeInstanceOf(UpstreamFailureError)

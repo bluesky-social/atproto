@@ -11,6 +11,10 @@ const TIMEOUT_MS = 5000
 
 const capDecodedSize = fetchMaxSizeProcessor(MAX_RESPONSE_BYTES)
 
+// @NOTE Transport-only wrapper cache, keyed weakly by the shared Iris client
+// (never mutated). Headers, params, and abort signals stay call-scoped.
+const boundedClients = new WeakMap<Client, Client>()
+
 type Article =
   app.bsky.unspecced.getAtmosphereExploreArticleRecommendations.Article
 
@@ -83,8 +87,10 @@ function normalize(output: unknown, limit: number): ArticleRecommendations {
 }
 
 function boundedClient(client: Client): Client {
+  const cached = boundedClients.get(client)
+  if (cached) return cached
   const { xrpcDefaults } = client
-  return new Client(
+  const bounded = new Client(
     {
       get did() {
         return client.agent.did
@@ -107,6 +113,8 @@ function boundedClient(client: Client): Client {
       validateResponse: xrpcDefaults.validateResponse,
     },
   )
+  boundedClients.set(client, bounded)
+  return bounded
 }
 
 function isTimeoutOrAbort(err: unknown): boolean {
