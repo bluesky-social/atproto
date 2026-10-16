@@ -1006,9 +1006,6 @@ importers:
 
   packages/internal/xrpc-utils:
     dependencies:
-      '@atproto/xrpc':
-        specifier: workspace:^
-        version: link:../../xrpc
       '@atproto/xrpc-server':
         specifier: workspace:^
         version: link:../../xrpc-server
