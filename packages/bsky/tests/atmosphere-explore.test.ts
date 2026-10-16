@@ -342,11 +342,11 @@ describe('Atmosphere Explore', () => {
     expect(status).toBe(200)
     expect(body.announcementBanner).toEqual(curatedBanner)
     expect(body.apps).toEqual(curated.apps)
-    expect(body.articles.map(({ featured }) => featured)).toEqual([
+    expect(body.articles.items.map(({ featured }) => featured)).toEqual([
       false,
       false,
     ])
-    const article = body.articles[0].view
+    const article = body.articles.items[0].view
     expect(app.bsky.embed.external.viewArticle.$matches(article)).toBe(true)
     expect(article).toMatchObject({
       title: 'Article',
@@ -354,9 +354,9 @@ describe('Atmosphere Explore', () => {
       likeCount: 7,
       readingTime: 1,
     })
-    expect(body.articles[1].view.associatedRefs?.map(({ uri }) => uri)).toEqual(
-      [docUri, pubUri],
-    )
+    expect(
+      body.articles.items[1].view.associatedRefs?.map(({ uri }) => uri),
+    ).toEqual([docUri, pubUri])
     expect(article.publisher).toMatchObject({
       title: 'Publication',
       subscriptionCount: 4,
@@ -364,10 +364,10 @@ describe('Atmosphere Explore', () => {
     })
     expect(
       app.bsky.embed.external.viewArticlePublication.$matches(
-        body.publications[0].view,
+        body.publications.items[0].view,
       ),
     ).toBe(true)
-    const gallery = body.photos[0].view
+    const gallery = body.photos.items[0].view
     expect(app.bsky.embed.external.viewGallery.$matches(gallery)).toBe(true)
     expect(gallery.uri).toBe(galleryUri)
     expect(gallery.associatedRefs?.map(({ uri }) => uri)).toEqual([
@@ -380,7 +380,7 @@ describe('Atmosphere Explore', () => {
       thumbnail: `https://images.example.com/feed_thumbnail/plain/${author}/${photoCid}`,
       alt: 'A photo',
     })
-    expect(body.livestreams[0].view).toMatchObject({
+    expect(body.livestreams.items[0].view).toMatchObject({
       $type: app.bsky.embed.external.viewLivestream.$type,
       uri: 'https://stream.place/author',
       image: `https://images.example.com/feed_thumbnail/plain/${author}/${photoCid}`,
@@ -422,17 +422,15 @@ describe('Atmosphere Explore', () => {
     expect(lookup.mock.calls.flatMap(([params]) => params.uris)).not.toContain(
       missingUri,
     )
-    expect(body.articles).toHaveLength(1)
-    expect(body.articles[0].featured).toBe(false)
-    expect(body.publications).toHaveLength(1)
-    expect(body.photos).toHaveLength(1)
-    expect(body.photos[0].featured).toBe(false)
-    expect(body.photos[0].view.associatedRefs?.map(({ uri }) => uri)).toEqual([
-      galleryUri,
-      itemUri,
-      photoUri,
-    ])
-    expect(body.livestreams).toHaveLength(1)
+    expect(body.articles.items).toHaveLength(1)
+    expect(body.articles.items[0].featured).toBe(false)
+    expect(body.publications.items).toHaveLength(1)
+    expect(body.photos.items).toHaveLength(1)
+    expect(body.photos.items[0].featured).toBe(false)
+    expect(
+      body.photos.items[0].view.associatedRefs?.map(({ uri }) => uri),
+    ).toEqual([galleryUri, itemUri, photoUri])
+    expect(body.livestreams.items).toHaveLength(1)
   })
 
   it('renders canonical-only entries and discovers their dependencies', async () => {
@@ -447,14 +445,12 @@ describe('Atmosphere Explore', () => {
     expect(lookup.mock.calls[0][0].uris).toEqual([docUri, galleryUri])
     const looked = lookup.mock.calls.flatMap(([params]) => params.uris)
     expect(looked).toEqual(expect.arrayContaining([pubUri, photoUri]))
-    expect(body.articles[0].view.publisher).toMatchObject({
+    expect(body.articles.items[0].view.publisher).toMatchObject({
       title: 'Publication',
     })
-    expect(body.photos[0].view.associatedRefs?.map(({ uri }) => uri)).toEqual([
-      galleryUri,
-      itemUri,
-      photoUri,
-    ])
+    expect(
+      body.photos.items[0].view.associatedRefs?.map(({ uri }) => uri),
+    ).toEqual([galleryUri, itemUri, photoUri])
   })
 
   describe('invalid canonical roots', () => {
@@ -490,7 +486,7 @@ describe('Atmosphere Explore', () => {
           const { status, body } = await fixture.query()
 
           expect(status).toBe(200)
-          expect(body[key]).toEqual([])
+          expect(body[key].items).toEqual([])
           expect(lookup.mock.calls.flatMap(([params]) => params.uris)).toEqual(
             [],
           )
@@ -520,7 +516,7 @@ describe('Atmosphere Explore', () => {
           const { status, body } = await fixture.query()
 
           expect(status).toBe(200)
-          expect(body[key]).toEqual([])
+          expect(body[key].items).toEqual([])
           expect(hydrate.mock.calls[0][0]).toEqual([canonicalUri])
           expect(
             lookup.mock.calls.flatMap(([params]) => params.uris),
@@ -571,7 +567,7 @@ describe('Atmosphere Explore', () => {
         const { status, body } = await fixture.query()
 
         expect(status).toBe(200)
-        expect(body[key]).toHaveLength(1)
+        expect(body[key].items).toHaveLength(1)
       }
     })
 
@@ -858,18 +854,22 @@ describe('Atmosphere Explore', () => {
     const { status, body } = await fixture.query()
     expect(status).toBe(200)
     // Null schedules are not featured; a worker-supplied `featured` is ignored.
-    expect(body.articles.map(({ featured }) => featured)).toEqual([
+    expect(body.articles.items.map(({ featured }) => featured)).toEqual([
       false,
       false,
       false,
     ])
-    expect(body.publications.map(({ featured }) => featured)).toEqual([false])
-    expect(body.photos.map(({ featured }) => featured)).toEqual([false])
-    expect(body.livestreams.map(({ featured }) => featured)).toEqual([false])
+    expect(body.publications.items.map(({ featured }) => featured)).toEqual([
+      false,
+    ])
+    expect(body.photos.items.map(({ featured }) => featured)).toEqual([false])
+    expect(body.livestreams.items.map(({ featured }) => featured)).toEqual([
+      false,
+    ])
     expect(body.announcementBanner).toEqual(curatedBanner)
     expect(body.apps).toEqual(curated.apps)
     for (const key of lists.map(({ key }) => key))
-      for (const item of body[key])
+      for (const item of body[key].items)
         expect(Object.keys(item).sort()).toEqual(['featured', 'view'])
   })
 
@@ -950,8 +950,10 @@ describe('Atmosphere Explore', () => {
           const { status, body } = await fixture.query()
           expect(status).toBe(200)
           for (const { key } of lists) {
-            expect(body[key].map((item) => item.featured)).toEqual([featured])
-            expect(Object.keys(body[key][0]).sort()).toEqual([
+            expect(body[key].items.map((item) => item.featured)).toEqual([
+              featured,
+            ])
+            expect(Object.keys(body[key].items[0]).sort()).toEqual([
               'featured',
               'view',
             ])
@@ -975,7 +977,7 @@ describe('Atmosphere Explore', () => {
       )
       const { body } = await fixture.query()
       expect(hydrate.mock.calls[0][0]).toEqual([docUri])
-      expect(body.articles.map(({ featured }) => featured)).toEqual([
+      expect(body.articles.items.map(({ featured }) => featured)).toEqual([
         true,
         false,
         false,
@@ -1118,7 +1120,7 @@ describe('Atmosphere Explore', () => {
         using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
         const { status, body } = await fixture.query()
         expect(status).toBe(200)
-        expect(body[key]).toEqual([])
+        expect(body[key].items).toEqual([])
         expect(lookup.mock.calls[0][0].uris).toEqual(missing)
         expect(
           lookup.mock.calls.flatMap(([params]) => params.uris),
@@ -1143,7 +1145,7 @@ describe('Atmosphere Explore', () => {
         )
         const { body } = await fixture.query(false, {}, topics)
         expect(hydrate.mock.calls[0][0]).toEqual([baseUri])
-        expect(body[key]).toHaveLength(3)
+        expect(body[key].items).toHaveLength(3)
       },
     )
 
@@ -1313,9 +1315,9 @@ describe('Atmosphere Explore', () => {
         ),
         galleryUri,
       ])
-      expect(body.publications).toEqual([])
-      expect(body.photos).toHaveLength(1)
-      expect(body.livestreams).toEqual([])
+      expect(body.publications.items).toEqual([])
+      expect(body.photos.items).toHaveLength(1)
+      expect(body.livestreams.items).toEqual([])
     })
 
     const active = { startsAt: at(-1), endsAt: at(1) }
@@ -1392,7 +1394,7 @@ describe('Atmosphere Explore', () => {
         using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
         const { status, body } = await fixture.query()
         expect(status).toBe(200)
-        expect(body[key]).toEqual([])
+        expect(body[key].items).toEqual([])
         expect(lookup.mock.calls[0][0].uris).toEqual(missing)
         expect(
           lookup.mock.calls.flatMap(([params]) => params.uris),
@@ -1406,13 +1408,13 @@ describe('Atmosphere Explore', () => {
     using relationships = vi.spyOn(fixture.dataplane, 'getRelationships')
     const anonymous = await fixture.query()
     expect(
-      anonymous.body.articles[0].view.associatedProfiles?.[0].viewer,
+      anonymous.body.articles.items[0].view.associatedProfiles?.[0].viewer,
     ).toBeUndefined()
     expect(relationships).not.toHaveBeenCalled()
     const authenticated = await fixture.query(true)
     expect(authenticated.status).toBe(200)
     expect(
-      authenticated.body.articles[0].view.associatedProfiles?.[0].viewer
+      authenticated.body.articles.items[0].view.associatedProfiles?.[0].viewer
         ?.following,
     ).toBe(atUri(viewer, app.bsky.graph.follow.$type, 'follow'))
     expect(relationships.mock.calls[0][0].actorDid).toBe(viewer)
@@ -1428,7 +1430,7 @@ describe('Atmosphere Explore', () => {
       articles: [group(docUri)],
     })
     fixture.takenDown.add(pubUri)
-    expect((await fixture.query()).body.articles).toEqual([])
+    expect((await fixture.query()).body.articles.items).toEqual([])
     fixture.takenDown.clear()
     fixture.records.set(
       docUri,
@@ -1438,7 +1440,7 @@ describe('Atmosphere Explore', () => {
         publishedAt,
       }),
     )
-    expect((await fixture.query()).body.articles).toEqual([])
+    expect((await fixture.query()).body.articles.items).toEqual([])
   })
 
   test.each([
@@ -1463,16 +1465,16 @@ describe('Atmosphere Explore', () => {
           ([state]) => state.externalRecords?.get(pubUri)?.record,
         ),
       ).toBe(true)
-      expect(body.articles).toHaveLength(1)
-      expect(body.articles[0].view).toMatchObject({
+      expect(body.articles.items).toHaveLength(1)
+      expect(body.articles.items[0].view).toMatchObject({
         title: 'Article',
         uri: 'https://example.com/blog/story',
         publisher: { title: 'Publication', subscriptionCount: 4 },
       })
       expect(
-        body.articles[0].view.associatedRefs?.map(({ uri }) => uri),
+        body.articles.items[0].view.associatedRefs?.map(({ uri }) => uri),
       ).toEqual([docUri, pubUri])
-      expect(body.publications).toHaveLength(publications.length)
+      expect(body.publications.items).toHaveLength(publications.length)
     },
   )
 
@@ -1492,7 +1494,7 @@ describe('Atmosphere Explore', () => {
       if (kind === 'block') fixture.blockedActors.add(author)
       const { status, body } = await fixture.query(true)
       expect(status).toBe(200)
-      expect(body.articles).toEqual([])
+      expect(body.articles.items).toEqual([])
     },
   )
 
@@ -1507,11 +1509,11 @@ describe('Atmosphere Explore', () => {
       }),
     )
     using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
-    expect((await fixture.query()).body.photos).toHaveLength(1)
+    expect((await fixture.query()).body.photos.items).toHaveLength(1)
     expect(lookup).toHaveBeenCalledWith({ uris: [photoUri] })
     expect(fixture.records.get(itemUri)).not.toHaveProperty('position')
     fixture.takenDown.add(photoUri)
-    expect((await fixture.query()).body.photos).toEqual([])
+    expect((await fixture.query()).body.photos.items).toEqual([])
   })
 
   it('preserves gallery position ordering through nested hydration in mixed input', async () => {
@@ -1549,22 +1551,18 @@ describe('Atmosphere Explore', () => {
 
     const { status, body } = await fixture.query()
     expect(status).toBe(200)
-    expect(body.articles).toHaveLength(2)
-    expect(body.publications).toHaveLength(1)
-    expect(body.livestreams).toHaveLength(1)
+    expect(body.articles.items).toHaveLength(2)
+    expect(body.publications.items).toHaveLength(1)
+    expect(body.livestreams.items).toHaveLength(1)
     expect(
-      body.photos[0].view.items.map(
+      body.photos.items[0].view.items.map(
         (item) =>
           app.bsky.embed.external.viewGalleryImage.$ifMatches(item)?.alt,
       ),
     ).toEqual(['Earlier photo', 'A photo'])
-    expect(body.photos[0].view.associatedRefs?.map(({ uri }) => uri)).toEqual([
-      galleryUri,
-      item2Uri,
-      photo2Uri,
-      itemUri,
-      photoUri,
-    ])
+    expect(
+      body.photos.items[0].view.associatedRefs?.map(({ uri }) => uri),
+    ).toEqual([galleryUri, item2Uri, photo2Uri, itemUri, photoUri])
     expect(backlinks).toHaveBeenCalledWith({
       targetUri: galleryUri,
       collection: grainGalleryItem.$type,
@@ -1579,7 +1577,7 @@ describe('Atmosphere Explore', () => {
       item: { uri: photoUri, cid },
     })
     using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
-    expect((await fixture.query()).body.photos).toEqual([])
+    expect((await fixture.query()).body.photos.items).toEqual([])
     expect(lookup.mock.calls.flatMap(([params]) => params.uris)).not.toContain(
       photoUri,
     )
@@ -1603,15 +1601,15 @@ describe('Atmosphere Explore', () => {
       }),
     )
     const { body } = await fixture.query()
-    expect(body.articles).toHaveLength(1)
-    expect(body.articles[0].view.uri).toBe('https://example.com/loose')
-    expect(body.articles[0].view.publisher).toBeUndefined()
+    expect(body.articles.items).toHaveLength(1)
+    expect(body.articles.items[0].view.uri).toBe('https://example.com/loose')
+    expect(body.articles.items[0].view.publisher).toBeUndefined()
     fixture.records.set(docUri, {
       $type: site.standard.document.$type,
       title: 42,
       site: pubUri,
     })
-    expect((await fixture.query()).body.articles).toEqual([])
+    expect((await fixture.query()).body.articles.items).toEqual([])
   })
 
   it('uses bounded, deduplicated profile previews', async () => {
@@ -1668,7 +1666,7 @@ describe('Atmosphere Explore', () => {
         atUri('did:plc:a', site.standard.graph.recommend.$type, 'two'),
       ],
     })
-    expect(body.articles[0].view.likers?.map(({ did }) => did)).toEqual([
+    expect(body.articles.items[0].view.likers?.map(({ did }) => did)).toEqual([
       'did:plc:a',
       'did:plc:z',
     ])
@@ -1680,7 +1678,7 @@ describe('Atmosphere Explore', () => {
         fixture.takenDown.add(uri)
       }
     }
-    const moderated = (await fixture.query()).body.articles[0].view
+    const moderated = (await fixture.query()).body.articles.items[0].view
     expect(moderated.likers).toEqual([])
     expect(moderated.likeCount).toBe(7)
   })
@@ -1696,7 +1694,7 @@ describe('Atmosphere Explore', () => {
         createdAt: publishedAt,
       }),
     )
-    expect((await fixture.query()).body.photos).toEqual([])
+    expect((await fixture.query()).body.photos.items).toEqual([])
   })
 
   it('returns ended livestreams with their end timestamp', async () => {
@@ -1710,7 +1708,9 @@ describe('Atmosphere Explore', () => {
         endedAt: publishedAt,
       }),
     )
-    expect((await fixture.query()).body.livestreams[0].view).toMatchObject({
+    expect(
+      (await fixture.query()).body.livestreams.items[0].view,
+    ).toMatchObject({
       active: false,
       endedAt: publishedAt,
     })
@@ -1736,7 +1736,9 @@ describe('Atmosphere Explore', () => {
           lastSeenAt,
         }),
       )
-      expect((await fixture.query()).body.livestreams[0].view).toMatchObject({
+      expect(
+        (await fixture.query()).body.livestreams.items[0].view,
+      ).toMatchObject({
         uri: liveUri,
         active,
       })

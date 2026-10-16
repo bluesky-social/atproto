@@ -122,33 +122,42 @@ export default function (server: Server, ctx: AppContext) {
       )
       const result: app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody = {
         announcementBanner,
-        articles: mapDefined(articles, ({ featured, uri }) => {
-          const view = ctx.views.externalRecordView(uri, state, now)
-          return view && app.bsky.embed.external.viewArticle.$isTypeOf(view)
-            ? { featured, view }
-            : undefined
-        }),
-        publications: mapDefined(publications, ({ featured, uri }) => {
-          const view = ctx.views.externalRecordView(uri, state, now)
-          return view &&
-            app.bsky.embed.external.viewArticlePublication.$isTypeOf(view)
-            ? { featured, view }
-            : undefined
-        }),
-        photos: mapDefined(photos, ({ featured, uri }) => {
-          const view = ctx.views.externalRecordView(uri, state, now)
-          return view &&
-            app.bsky.embed.external.viewGallery.$isTypeOf(view) &&
-            view.items.length
-            ? { featured, view }
-            : undefined
-        }),
-        livestreams: mapDefined(livestreams, ({ featured, uri }) => {
-          const view = ctx.views.externalRecordView(uri, state, now)
-          return view && app.bsky.embed.external.viewLivestream.$isTypeOf(view)
-            ? { featured, view }
-            : undefined
-        }),
+        articles: {
+          items: mapDefined(articles, ({ featured, uri }) => {
+            const view = ctx.views.externalRecordView(uri, state, now)
+            return view && app.bsky.embed.external.viewArticle.$isTypeOf(view)
+              ? { featured, view }
+              : undefined
+          }),
+        },
+        publications: {
+          items: mapDefined(publications, ({ featured, uri }) => {
+            const view = ctx.views.externalRecordView(uri, state, now)
+            return view &&
+              app.bsky.embed.external.viewArticlePublication.$isTypeOf(view)
+              ? { featured, view }
+              : undefined
+          }),
+        },
+        photos: {
+          items: mapDefined(photos, ({ featured, uri }) => {
+            const view = ctx.views.externalRecordView(uri, state, now)
+            return view &&
+              app.bsky.embed.external.viewGallery.$isTypeOf(view) &&
+              view.items.length
+              ? { featured, view }
+              : undefined
+          }),
+        },
+        livestreams: {
+          items: mapDefined(livestreams, ({ featured, uri }) => {
+            const view = ctx.views.externalRecordView(uri, state, now)
+            return view &&
+              app.bsky.embed.external.viewLivestream.$isTypeOf(view)
+              ? { featured, view }
+              : undefined
+          }),
+        },
         apps: config.apps ?? [],
       }
       return { encoding: 'application/json', body: result }
