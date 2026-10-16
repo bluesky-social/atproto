@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { sql } from 'kysely'
 import { ComAtprotoModerationDefs } from '@atproto/api'
 import { wait } from '@atproto/common'
@@ -10,7 +11,7 @@ import {
 import type { DidString } from '@atproto/lex'
 import { toDatetimeString } from '@atproto/lex'
 import { EventReverser } from '../src/daemon/event-reverser.js'
-import { tools } from '../src/lexicons/index.js'
+import { com, tools } from '../src/lexicons/index.js'
 import {
   getExpiredTags,
   lockTagSubject,
@@ -391,8 +392,7 @@ describe('expiring tags', () => {
           const { rows: waiters } = await sql<{ blocked: boolean }>`
             select exists (
               select 1 from pg_stat_activity
-              where wait_event = 'advisory'
-                and ${rows[0].pid} = any(pg_blocking_pids(pid))
+              where ${rows[0].pid} = any(pg_blocking_pids(pid))
             ) as blocked
           `.execute(db.db)
           blocked = waiters[0].blocked
@@ -423,6 +423,144 @@ describe('expiring tags', () => {
     })
     expect(events.events).toHaveLength(0)
   })
+
+  it.each(['tag writer', 'expiry worker'])(
+    'persists a report and automatic tags while a %s waits for its status',
+    async (writer) => {
+      const did: DidString = `did:plc:report${writer === 'tag writer' ? 'tag' : 'expiry'}`
+      const tag = `report-contention-${writer}`
+      await emitTagEvent(did, [tag], [], 1)
+      const group = await expireTag(tag)
+      const ctx = network.ozone.ctx
+      const prototype = Object.getPrototypeOf(
+        ctx.modService(ctx.db),
+      ) as ReturnType<typeof ctx.modService>
+      const originalReport = prototype.report
+      let reportHeld!: (pid: number) => void
+      const held = new Promise<number>((resolve) => {
+        reportHeld = resolve
+      })
+      let release!: () => void
+      const released = new Promise<void>((resolve) => {
+        release = resolve
+      })
+      using _reportSpy = jest
+        .spyOn(prototype, 'report')
+        .mockImplementation(async function (this: typeof prototype, info) {
+          const result = await originalReport.call(this, info)
+          const { rows } = await sql<{ pid: number }>`
+            select pg_backend_pid() as pid
+          `.execute(this.db.db)
+          reportHeld(rows[0].pid)
+          await released
+          return result
+        })
+      const report = sc.createReport({
+        reasonType: com.atproto.moderation.defs.ReasonSpam,
+        subject: com.atproto.admin.defs.repoRef.$build({ did }),
+        reportedBy: sc.dids.alice,
+      })
+      let competing: Promise<unknown> | undefined
+      try {
+        const pid = await held
+        competing =
+          writer === 'tag writer'
+            ? emitTagEvent(did, ['concurrent-manual-tag'], [])
+            : createReverser().revertExpiredTags(group)
+        const deadline = performance.now() + 2000
+        let blocked = false
+        do {
+          const { rows } = await sql<{ blocked: boolean }>`
+            select exists (
+              select 1 from pg_stat_activity
+              where ${pid} = any(pg_blocking_pids(pid))
+            ) as blocked
+          `.execute(ctx.db.db)
+          blocked = rows[0].blocked
+          if (!blocked) await wait(10)
+        } while (!blocked && performance.now() < deadline)
+        expect(blocked).toBe(true)
+      } finally {
+        release()
+        await Promise.all([report, competing])
+      }
+
+      const result = await report
+      const events = await modClient.queryEvents({ subject: did })
+      expect(events.events.some((event) => event.id === result.id)).toBe(true)
+      expect(await getSubjectTags(did)).toContain('report:spam')
+      if (writer === 'tag writer') {
+        expect(await getSubjectTags(did)).toContain('concurrent-manual-tag')
+      } else {
+        await createReverser().revertExpiredTags(group)
+        expect(await getSubjectTags(did)).not.toContain(tag)
+      }
+    },
+  )
+
+  it.each([false, true])(
+    'allows reports and renewal during expiry history checks (legacy writer: %s)',
+    async (legacy) => {
+      const did: DidString = `did:plc:reportduringhistory${legacy ? 'legacy' : 'current'}`
+      const tag = `history-contention-${legacy}`
+      await emitTagEvent(did, [tag], [], 1)
+      const group = await expireTag(tag)
+      const originalRow = await network.ozone.ctx.db.db
+        .selectFrom('expiring_tag')
+        .where('id', '=', group.ids[0])
+        .selectAll()
+        .executeTakeFirstOrThrow()
+      const reverser = createReverser()
+      const originalCandidates = reverser.getExpiredTagCandidates.bind(reverser)
+      let historyChecked!: () => void
+      const checked = new Promise<void>((resolve) => {
+        historyChecked = resolve
+      })
+      let release!: () => void
+      const released = new Promise<void>((resolve) => {
+        release = resolve
+      })
+      using _candidatesSpy = jest
+        .spyOn(reverser, 'getExpiredTagCandidates')
+        .mockImplementation(async (candidateGroup) => {
+          const candidates = await originalCandidates(candidateGroup)
+          historyChecked()
+          await released
+          return candidates
+        })
+      const reversal = reverser.revertExpiredTags(group)
+      try {
+        await checked
+        const report = await sc.createReport({
+          reasonType: com.atproto.moderation.defs.ReasonSpam,
+          subject: com.atproto.admin.defs.repoRef.$build({ did }),
+          reportedBy: sc.dids.alice,
+        })
+        const events = await modClient.queryEvents({ subject: did })
+        expect(events.events.some((event) => event.id === report.id)).toBe(true)
+        expect(await getSubjectTags(did)).toContain('report:spam')
+        await emitTagEvent(did, [tag], [], legacy ? undefined : 24)
+        if (legacy) {
+          // @NOTE simulate a permanent reissue by a writer that leaves old expiry metadata.
+          await network.ozone.ctx.db.db
+            .insertInto('expiring_tag')
+            .values(originalRow)
+            .execute()
+        }
+      } finally {
+        release()
+        await reversal
+      }
+      expect(await getSubjectTags(did)).toContain(tag)
+      const removals = await modClient.queryEvents({
+        subject: did,
+        removedTags: [tag],
+      })
+      expect(removals.events).toHaveLength(0)
+      await reverser.findAndRevertExpiredTags()
+      expect(await getSubjectTags(did)).toContain(tag)
+    },
+  )
 
   it('serializes concurrent first tag writes on a new subject', async () => {
     const subject = 'did:plc:newtagsubject'
