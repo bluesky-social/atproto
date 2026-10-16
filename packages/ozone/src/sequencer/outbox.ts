@@ -1,10 +1,12 @@
 import { AsyncBuffer } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import type { BackfillRateLimiter } from './backfill-rate-limiter.js'
 import type { LabelsEvt, Sequencer } from './sequencer.js'
 
 export type OutboxOpts = {
   maxBufferSize: number
   onOverflow?: () => void
+  backfillLimiter?: BackfillRateLimiter
 }
 
 export class Outbox {
@@ -40,12 +42,14 @@ export class Outbox {
   ): AsyncGenerator<LabelsEvt> {
     if (signal?.aborted || this.sequencer.destroyed) return
     let stopped = false
+    const backfillAbort = new AbortController()
 
     // 1. create lifecycle events
     // (stop, overflow, adding events, cutover)
     const stop = (err?: unknown) => {
       if (stopped) return
       stopped = true
+      backfillAbort.abort()
       this.sequencer.off('events', addToBuffer)
       this.sequencer.off('close', onClose)
       signal?.removeEventListener('abort', onClose)
@@ -102,7 +106,10 @@ export class Outbox {
     try {
       // backfill if needed
       if (backfillCursor !== undefined) {
-        for await (const evt of this.getBackfill(backfillCursor)) {
+        for await (const evt of this.getBackfill(
+          backfillCursor,
+          backfillAbort.signal,
+        )) {
           if (stopped) return
           this.lastSeen = evt.seq
           yield evt
@@ -132,9 +139,13 @@ export class Outbox {
   }
 
   // yields only historical events
-  async *getBackfill(backfillCursor: number) {
-    const PAGE_SIZE = 500
-    while (true) {
+  async *getBackfill(backfillCursor: number, signal: AbortSignal) {
+    const PAGE_SIZE = this.opts.backfillLimiter?.pageSize ?? 500
+    while (!signal.aborted && !this.sequencer.destroyed) {
+      if (this.opts.backfillLimiter) {
+        if (!(await this.opts.backfillLimiter.wait(signal))) return
+      }
+      if (signal.aborted || this.sequencer.destroyed) return
       const evts = await this.sequencer.requestLabelRange({
         earliestId: this.lastSeen > -1 ? this.lastSeen : backfillCursor,
         limit: PAGE_SIZE,

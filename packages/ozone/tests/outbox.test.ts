@@ -8,6 +8,8 @@ import { Frame, Server } from '@atproto/xrpc-server'
 import subscribeLabels from '../src/api/label/subscribeLabels.js'
 import type { AppContext } from '../src/context.js'
 import { com } from '../src/lexicons/index.js'
+import { labelStreamLogger } from '../src/logger.js'
+import { BackfillRateLimiter } from '../src/sequencer/backfill-rate-limiter.js'
 import { Outbox } from '../src/sequencer/outbox.js'
 import type { LabelsEvt, Sequencer } from '../src/sequencer/sequencer.js'
 
@@ -273,10 +275,80 @@ describe('outbox lifecycle', () => {
   })
 })
 
+describe('historical label replay budget', () => {
+  it('shares the budget across fast subscribers and wakes cancelled waiters', async () => {
+    const sequencer = createSequencer()
+    sequencer.lastSeen = 10000
+    using request = jest
+      .spyOn(sequencer, 'requestLabelRange')
+      .mockResolvedValue([event(1)])
+    const backfillLimiter = new BackfillRateLimiter(500)
+    const a = new AbortController()
+    const b = new AbortController()
+    const first = new Outbox(sequencer, { backfillLimiter }).events(0, a.signal)
+    const second = new Outbox(sequencer, { backfillLimiter }).events(
+      0,
+      b.signal,
+    )
+    expect(await first.next()).toEqual({ done: false, value: event(1) })
+    const nextPage = first.next()
+    const otherSubscriber = second.next()
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 20))
+      expect(request).toHaveBeenCalledTimes(1)
+      a.abort()
+      b.abort()
+      await expect(nextPage).resolves.toMatchObject({ done: true })
+      await expect(otherSubscriber).resolves.toMatchObject({ done: true })
+      expect(request).toHaveBeenCalledTimes(1)
+      expect(sequencer.listenerCount('close')).toBe(0)
+      expect(getEventListeners(a.signal, 'abort')).toHaveLength(0)
+      expect(getEventListeners(b.signal, 'abort')).toHaveLength(0)
+    } finally {
+      a.abort()
+      b.abort()
+      await first.return(undefined)
+      await second.return(undefined)
+    }
+  })
+
+  it('delivers live events while historical replay waits for its budget', async () => {
+    const sequencer = createSequencer()
+    const backfillLimiter = new BackfillRateLimiter(500)
+    const ac = new AbortController()
+    await backfillLimiter.wait(ac.signal)
+    const replay = new Outbox(sequencer, { backfillLimiter }).events(
+      0,
+      ac.signal,
+    )
+    const live = new Outbox(sequencer, { backfillLimiter }).events(
+      undefined,
+      ac.signal,
+    )
+    const waiting = replay.next()
+    const nextLive = live.next()
+    try {
+      sequencer.emit('events', [event(1)])
+      expect(await nextLive).toEqual({ done: false, value: event(1) })
+      expect(sequencer.requestLabelRange).not.toHaveBeenCalled()
+      sequencer.emit('close')
+      await expect(waiting).resolves.toMatchObject({ done: true })
+      expect(sequencer.listenerCount('close')).toBe(0)
+    } finally {
+      ac.abort()
+      await replay.return(undefined)
+      await live.return(undefined)
+    }
+  })
+})
+
 it('disconnects a stalled label socket before its send callback completes', async () => {
   const sequencer = createSequencer()
   const server = new Server()
-  subscribeLabels(server, { sequencer } as AppContext)
+  subscribeLabels(server, {
+    sequencer,
+    cfg: { service: {} },
+  } as AppContext)
   const app = express()
   app.use(server.router)
   await using httpServer = app.listen(0)
@@ -322,4 +394,61 @@ it('disconnects a stalled label socket before its send callback completes', asyn
     await new Promise<void>((resolve) => wss.close(() => resolve()))
   }
   expect(sequencer.listenerCount('events')).toBe(0)
+})
+
+it('attributes an upgraded replay connection without logging secret headers', async () => {
+  const sequencer = createSequencer()
+  sequencer.lastSeen = 1
+  sequencer.curr = jest.fn<Sequencer['curr']>().mockResolvedValue(1)
+  using _request = jest
+    .spyOn(sequencer, 'requestLabelRange')
+    .mockResolvedValueOnce([event(1)])
+  const closed = createDeferrable()
+  using info = jest
+    .spyOn(labelStreamLogger, 'info')
+    .mockImplementation((...args) => {
+      if (args[1] === 'label subscription closed') closed.resolve()
+    })
+  const server = new Server()
+  subscribeLabels(server, { sequencer, cfg: { service: {} } } as AppContext)
+  const app = express()
+  app.use(server.router)
+  await using httpServer = app.listen(0)
+  await once(httpServer, 'listening')
+  const { port } = httpServer.address() as AddressInfo
+  const nsid = com.atproto.label.subscribeLabels.$lxm
+  const { wss } = server.subscriptions.get(nsid)!
+  const client = new WebSocket(`ws://127.0.0.1:${port}/xrpc/${nsid}?cursor=0`, {
+    headers: {
+      'user-agent': 'replay-test',
+      'x-forwarded-for': '198.51.100.44',
+      authorization: 'Bearer secret-authorization-marker',
+      cookie: 'session=secret-cookie-marker',
+    },
+  })
+  const message = once(client, 'message')
+  try {
+    await once(client, 'open')
+    await message
+    client.terminate()
+    await closed.complete
+    expect(info).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cursor: 0,
+        userAgent: 'replay-test',
+        forwardedFor: '198.51.100.44',
+        remotePort: expect.any(Number),
+      }),
+      'label subscription started',
+    )
+    expect(info).toHaveBeenCalledWith(
+      expect.objectContaining({ cursor: 0, lastSeq: 1, eventsSent: 1 }),
+      'label subscription closed',
+    )
+    expect(JSON.stringify(info.mock.calls)).not.toContain('secret-')
+  } finally {
+    client.terminate()
+    for (const ws of wss.clients) ws.terminate()
+    await new Promise<void>((resolve) => wss.close(() => resolve()))
+  }
 })
