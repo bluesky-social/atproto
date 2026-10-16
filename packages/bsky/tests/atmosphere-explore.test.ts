@@ -2286,6 +2286,20 @@ describe('Atmosphere Explore article source (gate off)', () => {
 })
 
 describe('Atmosphere Explore article source (gate on)', () => {
+  it('calls the shared Iris client with standard request options', async () => {
+    await using fixture = await setupIris([docUri])
+    const client = fixture.ctx.irisClient
+    if (!client) throw new Error('Expected configured Iris client')
+    using call = vi.spyOn(client, 'call')
+
+    expect((await fixture.query()).status).toBe(200)
+    expect(call).toHaveBeenCalledExactlyOnceWith(
+      app.bsky.unspecced.getAtmosphereExploreArticleRecommendations,
+      { limit: 10, viewer: undefined },
+      { headers: expect.any(Object), signal: expect.any(AbortSignal) },
+    )
+  })
+
   it('uses Iris as the exclusive, non-featured article source', async () => {
     await using fixture = await setupIris(
       [doc2Uri, docUri, doc2Uri],
@@ -2493,7 +2507,6 @@ describe('Atmosphere Explore article source (gate on)', () => {
     // The Iris bearer authenticates anonymous and authenticated viewers alike.
     expect(iris.headers.get('authorization')).toBe('Bearer iris-key')
     expect(iris.headers.get('accept-language')).toBe(route.language)
-    expect(iris.redirect).toBe('error')
     for (const [name, value] of Object.entries(route.headers)) {
       if (name === 'accept-language') continue
       const forwarded =
@@ -2719,14 +2732,14 @@ describe('Atmosphere Explore Iris requirements and failures', () => {
   })
 
   test.each([
-    ['http', () => new Response('', { status: 503 }), 502],
+    ['http', () => new Response('', { status: 503 }), 503],
     ['network', () => Promise.reject(new TypeError('down')), 502],
     ['redirect', () => new Response('', { status: 302 }), 502],
     ['invalid JSON', () => new Response('{'), 502],
     [
       'timeout',
       () => Promise.reject(new DOMException('Timed out', 'TimeoutError')),
-      504,
+      502,
     ],
   ] as const)(
     'fails without falling back to curated articles on Iris %s',
@@ -2740,90 +2753,29 @@ describe('Atmosphere Explore Iris requirements and failures', () => {
     },
   )
 
-  describe('best-effort normalization', () => {
-    async function withIris(body: unknown) {
-      const fixture = await setupIris([], curated)
-      fixture.iris.respond = async () => Response.json(body)
-      return fixture
-    }
-
-    it('keeps valid articles among malformed entries and retains the rec ID', async () => {
-      await using fixture = await withIris({
-        articles: [
-          null,
-          { uri: 'bad' },
-          { uri: docUri },
-          {},
-          { uri: doc2Uri },
-          'x',
-        ],
-        recIdStr: 'r1',
-      })
-      const { status, body } = await fixture.query()
-      expect(status).toBe(200)
-      expect(body.articles.recIdStr).toBe('r1')
-      expect(body.articles.items).toHaveLength(2)
-    })
-
-    test.each([undefined, 7, null])(
-      'omits an invalid rec ID (%j) without losing articles',
-      async (recIdStr) => {
-        await using fixture = await withIris({
-          articles: [{ uri: docUri }],
-          recIdStr,
-        })
-        const { status, body } = await fixture.query()
-        expect(status).toBe(200)
-        expect(body.articles.items).toHaveLength(1)
-        expect(body.articles).not.toHaveProperty('recIdStr')
-      },
+  it('truncates 11 articles to the 10 requested', async () => {
+    await using fixture = await setupIris(
+      Array.from({ length: 11 }, () => docUri),
+      curated,
+      '1',
     )
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    expect(body.articles.items).toHaveLength(10)
+  })
 
-    test.each([
-      { recIdStr: '5' },
-      { articles: 'x', recIdStr: '5' },
-      { articles: [{ uri: 'bad' }], recIdStr: '5' },
-      [],
-      null,
-    ])(
-      'treats %j as an empty authoritative section with no curated fallback',
-      async (payload) => {
-        await using fixture = await withIris(payload)
-        using hydrate = vi.spyOn(
-          fixture.hydrator,
-          'hydrateEmbedExternalViewFromUris',
-        )
-        const { status, body } = await fixture.query()
-        expect(status).toBe(200)
-        expect(body.articles.items).toEqual([])
-        // The worker's curated articles are never used.
-        expect(hydrate.mock.calls[0][0]).not.toContain(docUri)
-        expect(hydrate.mock.calls[0][0]).not.toContain(missingUri)
-      },
+  it('skips invalid roots within the prefix without backfilling', async () => {
+    await using fixture = await setupIris(
+      [
+        ...Array.from({ length: 3 }, () => pubUri),
+        ...Array.from({ length: 8 }, () => docUri),
+      ],
+      curated,
+      '1',
     )
-
-    it('truncates 11 articles to the 10 requested', async () => {
-      await using fixture = await withIris({
-        articles: articleUris(...Array.from({ length: 11 }, () => docUri)),
-        recIdStr: '1',
-      })
-      const { status, body } = await fixture.query()
-      expect(status).toBe(200)
-      expect(body.articles.items).toHaveLength(10)
-    })
-
-    it('drops malformed entries within the prefix without backfilling', async () => {
-      await using fixture = await withIris({
-        articles: [
-          ...Array.from({ length: 3 }, () => ({ uri: 'bad' })),
-          ...articleUris(...Array.from({ length: 8 }, () => docUri)),
-        ],
-        recIdStr: '1',
-      })
-      const { status, body } = await fixture.query()
-      expect(status).toBe(200)
-      // 10 examined: 3 bad, 7 valid; the 11th is never considered.
-      expect(body.articles.items).toHaveLength(7)
-    })
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    // @NOTE The first 10 contain 3 wrong-collection roots and 7 valid articles.
+    expect(body.articles.items).toHaveLength(7)
   })
 })

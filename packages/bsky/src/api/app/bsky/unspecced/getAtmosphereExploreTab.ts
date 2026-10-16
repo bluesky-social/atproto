@@ -19,7 +19,6 @@ import {
   createPipeline,
   noRules,
 } from '../../../../pipeline.js'
-import { fetchAtmosphereArticleRecommendations } from '../../../../util/atmosphere-articles.js'
 import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
 import type { Views } from '../../../../views/index.js'
 
@@ -94,7 +93,6 @@ export default function (server: Server, ctx: AppContext) {
           ...params,
           hydrateCtx,
           workerUrl,
-          iris: useIris ? ctx.irisClient : undefined,
           requestHeaders: req.headers,
           headers: noUndefinedVals({
             'accept-language': params.langs?.length
@@ -104,7 +102,12 @@ export default function (server: Server, ctx: AppContext) {
           }),
           signal,
         },
-        { hydrator: ctx.hydrator, views: ctx.views, fetchExploreTabSkeleton },
+        {
+          hydrator: ctx.hydrator,
+          views: ctx.views,
+          irisClient: useIris ? ctx.irisClient : undefined,
+          fetchExploreTabSkeleton,
+        },
       )
       return { encoding: 'application/json', body: result }
     },
@@ -115,22 +118,22 @@ async function skeleton({
   ctx,
   params,
 }: SkeletonFnInput<Context, Params>): Promise<SkeletonState> {
-  const { iris, workerUrl, signal } = params
   const [config, recommendations] = await Promise.all([
-    ctx.fetchExploreTabSkeleton(workerUrl, signal),
-    iris
-      ? fetchAtmosphereArticleRecommendations(
-          iris,
+    ctx.fetchExploreTabSkeleton(params.workerUrl, params.signal),
+    ctx.irisClient
+      ? ctx.irisClient.call(
+          app.bsky.unspecced.getAtmosphereExploreArticleRecommendations,
           {
-            viewer: params.hydrateCtx.viewer ?? undefined,
             limit: MAX_LIST_ITEMS,
+            viewer: params.hydrateCtx.viewer ?? undefined,
           },
-          { headers: params.headers, signal },
+          {
+            headers: params.headers,
+            signal: params.signal,
+          },
         )
       : undefined,
   ])
-  // Presence of the response, not its length: an empty Iris list is still
-  // authoritative and never falls back to curated articles.
   const now = Date.now()
   const announcementBanner = selectBanner(
     config.announcementBanners,
@@ -141,17 +144,19 @@ async function skeleton({
   return {
     now,
     announcementBanner,
-    // Iris articles carry no selection or featured metadata; they are
-    // normalized, then shuffled like every other list.
+    // @NOTE Iris articles bypass worker selection and are never featured.
     articles: orderGroups(
       recommendations
-        ? mapDefined(recommendations.articles, ({ uri }) => {
-            const root = recordUri(uri)
-            return root &&
-              new AtUri(root).collection === site.standard.document.$type
-              ? { featured: false, uri: root }
-              : undefined
-          })
+        ? mapDefined(
+            recommendations.articles.slice(0, MAX_LIST_ITEMS),
+            ({ uri }) => {
+              const root = recordUri(uri)
+              return root &&
+                new AtUri(root).collection === site.standard.document.$type
+                ? { featured: false, uri: root }
+                : undefined
+            },
+          )
         : completeGroups(select(config.articles)),
     ),
     articleRecIdStr: recommendations?.recIdStr,
@@ -329,14 +334,13 @@ function normalizeConfig(body: unknown): ExploreConfig {
 type Context = {
   hydrator: Hydrator
   views: Views
+  irisClient: Client | undefined
   fetchExploreTabSkeleton: ReturnType<typeof createFetchExploreTabSkeleton>
 }
 
 type Params = app.bsky.unspecced.getAtmosphereExploreTab.$Params & {
   hydrateCtx: HydrateCtx
   workerUrl: URL
-  /** Set only when Iris is the article source. */
-  iris: Client | undefined
   /** Recommendation headers for Iris only. */
   headers: Record<string, string>
   requestHeaders: IncomingHttpHeaders
