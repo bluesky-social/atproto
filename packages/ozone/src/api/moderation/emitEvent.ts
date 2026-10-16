@@ -295,7 +295,7 @@ const handleModerationEvent = async ({
     )
 
     const initialTags =
-      ctx.cfg.service.reportTagsEnabled !== false &&
+      !ctx.cfg.service.reportTagsDisabled &&
       tools.ozone.moderation.defs.modEventReport.$isTypeOf(event)
         ? [getTagForReport(event.reportType)]
         : undefined

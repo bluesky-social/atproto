@@ -45,9 +45,9 @@ export default function (server: Server, ctx: AppContext) {
           moderationTxn,
         )
         await tagService.evaluateForSubject(
-          ctx.cfg.service.reportTagsEnabled !== false
-            ? [getTagForReport(reasonType)]
-            : [],
+          ctx.cfg.service.reportTagsDisabled
+            ? []
+            : [getTagForReport(reasonType)],
         )
 
         return reportEvent

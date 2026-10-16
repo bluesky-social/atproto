@@ -7,7 +7,7 @@ Backend service for moderating the Bluesky network.
 
 ## Report tags
 
-Reports automatically add a reason tag such as `report:spam` to their subject by default. Set `OZONE_REPORT_TAGS_ENABLED=false` and restart the API to disable these automatic report tags. Unset or `true` keeps them enabled.
+Reports automatically add a reason tag such as `report:spam` to their subject by default. Set `OZONE_REPORT_TAGS_DISABLED=true` and restart the API to disable these automatic report tags. Unset or `false` keeps them enabled.
 
 The setting applies to reports submitted through both `com.atproto.moderation.createReport` and `tools.ozone.moderation.emitEvent`.
 

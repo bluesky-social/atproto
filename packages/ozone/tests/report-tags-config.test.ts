@@ -8,15 +8,15 @@ describe('report tagging configuration', () => {
   })
 
   it.each([
-    [undefined, true],
-    ['', true],
+    [undefined, false],
+    ['', false],
     ['true', true],
     ['1', true],
     ['false', false],
     ['0', false],
-  ])('OZONE_REPORT_TAGS_ENABLED=%s enables tags: %s', (value, enabled) => {
+  ])('OZONE_REPORT_TAGS_DISABLED=%s disables tags: %s', (value, disabled) => {
     jest.replaceProperty(process, 'env', {
-      ...(value === undefined ? {} : { OZONE_REPORT_TAGS_ENABLED: value }),
+      ...(value === undefined ? {} : { OZONE_REPORT_TAGS_DISABLED: value }),
     })
 
     const cfg = envToCfg({
@@ -29,6 +29,6 @@ describe('report tagging configuration', () => {
       didPlcUrl: 'https://plc.example.com',
     })
 
-    expect(cfg.service.reportTagsEnabled).toBe(enabled)
+    expect(cfg.service.reportTagsDisabled).toBe(disabled)
   })
 })

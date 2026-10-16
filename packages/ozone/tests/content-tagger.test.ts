@@ -185,8 +185,8 @@ describe('moderation subject content tagging', () => {
       'Disables report tags through %s while preserving content and existing tags',
       async (endpoint) => {
         const service = network.ozone.ctx.cfg.service
-        const original = service.reportTagsEnabled
-        service.reportTagsEnabled = false
+        const original = service.reportTagsDisabled
+        service.reportTagsDisabled = true
 
         try {
           const subject = com.atproto.admin.defs.repoRef.$build({
@@ -249,7 +249,7 @@ describe('moderation subject content tagging', () => {
           )
           expect(postStatus.tags).not.toContain('report:misleading')
         } finally {
-          service.reportTagsEnabled = original
+          service.reportTagsDisabled = original
         }
       },
     )
