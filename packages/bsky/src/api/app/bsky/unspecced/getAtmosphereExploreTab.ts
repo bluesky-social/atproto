@@ -44,7 +44,9 @@ const bannerSchema = l.object({
     l.array(l.string({ maxLength: 16 }), { maxLength: 100 }),
   ),
 })
-const groups = () => l.optional(l.array(groupSchema, { maxLength: 100 }))
+function groups() {
+  return l.optional(l.array(groupSchema, { maxLength: 100 }))
+}
 const nonArticleConfig = {
   announcementBanners: l.optional(l.array(bannerSchema, { maxLength: 100 })),
   publications: groups(),
@@ -64,17 +66,8 @@ const curatedConfigSchema = l.object({
 const irisConfigSchema = l.object(nonArticleConfig)
 
 export default function (server: Server, ctx: AppContext) {
-  // @NOTE The wrapper caps decoded response bytes, including compressed bodies.
-  const fetchConfig = safeFetchWrap({
-    timeout: 5000,
-    responseMaxSize: MAX_CONFIG_BYTES,
-  })
-  const getExplore = createPipeline(
-    createSkeleton(fetchConfig),
-    hydration,
-    noRules,
-    presentation,
-  )
+  const getExplore = createPipeline(skeleton, hydration, noRules, presentation)
+  const fetchExploreTabSkeleton = createFetchExploreTabSkeleton()
   server.add(app.bsky.unspecced.getAtmosphereExploreTab, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req, signal }) => {
@@ -121,83 +114,24 @@ export default function (server: Server, ctx: AppContext) {
           }),
           signal,
         },
-        ctx,
+        { hydrator: ctx.hydrator, views: ctx.views, fetchExploreTabSkeleton },
       )
       return { encoding: 'application/json', body: result }
     },
   })
 }
 
-function createSkeleton(fetchConfig: typeof fetch) {
-  const fetchWorker = async (
-    url: URL,
-    signal: AbortSignal,
-  ): Promise<unknown> => {
-    try {
-      const response = await fetchConfig(url, {
-        headers: { accept: 'application/json' },
-        redirect: 'error',
-        signal,
-      })
-      if (!response.ok) {
-        await response.body?.cancel()
-        throw new UpstreamFailureError(
-          `Atmosphere Explore service returned HTTP ${response.status}`,
-        )
-      }
-      return await response.json()
-    } catch (err) {
-      if (err instanceof UpstreamFailureError) throw err
-      if (
-        err instanceof Error &&
-        (err.name === 'TimeoutError' || err.name === 'AbortError')
-      ) {
-        throw new UpstreamTimeoutError('Atmosphere Explore request timed out')
-      }
-      throw new UpstreamFailureError(
-        'Unable to fetch Atmosphere Explore configuration',
-      )
-    }
-  }
-
-  return async ({
-    params,
-  }: SkeletonFnInput<Context, Params>): Promise<SkeletonState> => {
-    const { iris, workerUrl, signal } = params
-    if (!iris) {
-      const config = parseConfig(
-        curatedConfigSchema,
-        await fetchWorker(workerUrl, signal),
-      )
-      const now = Date.now()
-      const announcementBanner = selectBanner(
-        config.announcementBanners,
-        params,
-        now,
-      )
-      const select = createSelector(params, params.requestHeaders, now)
-      return {
-        now,
-        announcementBanner,
-        articles: completeGroups(select(config.articles)),
-        publications: completeGroups(select(config.publications)),
-        photos: completeGroups(select(config.photos)),
-        livestreams: completeGroups(select(config.livestreams)),
-        apps: config.apps ?? [],
-      }
-    }
-    const [body, recommendations] = await Promise.all([
-      fetchWorker(workerUrl, signal),
-      fetchAtmosphereArticleRecommendations(
-        iris,
-        {
-          viewer: params.hydrateCtx.viewer ?? undefined,
-          limit: IRIS_ARTICLE_LIMIT,
-        },
-        { headers: params.headers, signal },
-      ),
-    ])
-    const config = parseConfig(irisConfigSchema, body)
+async function skeleton({
+  ctx,
+  params,
+}: SkeletonFnInput<Context, Params>): Promise<SkeletonState> {
+  const { iris, workerUrl, signal } = params
+  const { fetchExploreTabSkeleton } = ctx
+  if (!iris) {
+    const config = parseConfig(
+      curatedConfigSchema,
+      await fetchExploreTabSkeleton(workerUrl, signal),
+    )
     const now = Date.now()
     const announcementBanner = selectBanner(
       config.announcementBanners,
@@ -208,37 +142,55 @@ function createSkeleton(fetchConfig: typeof fetch) {
     return {
       now,
       announcementBanner,
-      // Iris order is authoritative: no selection, cap, or featured metadata.
-      articles: mapDefined(recommendations.articles, ({ uri }) => {
-        const root = recordUri(uri)
-        return root &&
-          new AtUri(root).collection === site.standard.document.$type
-          ? { featured: false, uri: root }
-          : undefined
-      }),
-      articleRecIdStr: recommendations.recIdStr,
+      articles: completeGroups(select(config.articles)),
       publications: completeGroups(select(config.publications)),
       photos: completeGroups(select(config.photos)),
       livestreams: completeGroups(select(config.livestreams)),
       apps: config.apps ?? [],
     }
   }
+  const [body, recommendations] = await Promise.all([
+    fetchExploreTabSkeleton(workerUrl, signal),
+    fetchAtmosphereArticleRecommendations(
+      iris,
+      {
+        viewer: params.hydrateCtx.viewer ?? undefined,
+        limit: IRIS_ARTICLE_LIMIT,
+      },
+      { headers: params.headers, signal },
+    ),
+  ])
+  const config = parseConfig(irisConfigSchema, body)
+  const now = Date.now()
+  const announcementBanner = selectBanner(
+    config.announcementBanners,
+    params,
+    now,
+  )
+  const select = createSelector(params, params.requestHeaders, now)
+  return {
+    now,
+    announcementBanner,
+    // Iris order is authoritative: no selection, cap, or featured metadata.
+    articles: mapDefined(recommendations.articles, ({ uri }) => {
+      const root = recordUri(uri)
+      return root && new AtUri(root).collection === site.standard.document.$type
+        ? { featured: false, uri: root }
+        : undefined
+    }),
+    articleRecIdStr: recommendations.recIdStr,
+    publications: completeGroups(select(config.publications)),
+    photos: completeGroups(select(config.photos)),
+    livestreams: completeGroups(select(config.livestreams)),
+    apps: config.apps ?? [],
+  }
 }
 
-function parseConfig<
-  S extends typeof curatedConfigSchema | typeof irisConfigSchema,
->(schema: S, body: unknown): l.Infer<S> {
-  const parsed = schema.safeParse(body)
-  if (!parsed.success)
-    throw new UpstreamFailureError('Invalid Atmosphere Explore configuration')
-  return parsed.value as l.Infer<S>
-}
-
-const hydration = async ({
+async function hydration({
   ctx,
   params,
   skeleton,
-}: HydrationFnInput<Context, Params, SkeletonState>) => {
+}: HydrationFnInput<Context, Params, SkeletonState>) {
   const uris = [
     ...new Set(
       [
@@ -252,7 +204,7 @@ const hydration = async ({
   return ctx.hydrator.hydrateEmbedExternalViewFromUris(uris, params.hydrateCtx)
 }
 
-const presentation = ({
+function presentation({
   ctx,
   skeleton,
   hydration: state,
@@ -260,7 +212,7 @@ const presentation = ({
   Context,
   Params,
   SkeletonState
->): app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody => {
+>): app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody {
   const { now, articles, publications, photos, livestreams } = skeleton
   return {
     announcementBanner: skeleton.announcementBanner,
@@ -304,9 +256,58 @@ const presentation = ({
   }
 }
 
+function createFetchExploreTabSkeleton() {
+  // @NOTE The wrapper caps decoded response bytes, including compressed bodies.
+  const fetchConfig = safeFetchWrap({
+    timeout: 5000,
+    responseMaxSize: MAX_CONFIG_BYTES,
+  })
+
+  return async function fetchExploreTabSkeleton(
+    url: URL,
+    signal: AbortSignal,
+  ): Promise<unknown> {
+    try {
+      const response = await fetchConfig(url, {
+        headers: { accept: 'application/json' },
+        redirect: 'error',
+        signal,
+      })
+      if (!response.ok) {
+        await response.body?.cancel()
+        throw new UpstreamFailureError(
+          `Atmosphere Explore service returned HTTP ${response.status}`,
+        )
+      }
+      return await response.json()
+    } catch (err) {
+      if (err instanceof UpstreamFailureError) throw err
+      if (
+        err instanceof Error &&
+        (err.name === 'TimeoutError' || err.name === 'AbortError')
+      ) {
+        throw new UpstreamTimeoutError('Atmosphere Explore request timed out')
+      }
+      throw new UpstreamFailureError(
+        'Unable to fetch Atmosphere Explore configuration',
+      )
+    }
+  }
+}
+
+function parseConfig<
+  S extends typeof curatedConfigSchema | typeof irisConfigSchema,
+>(schema: S, body: unknown): l.Infer<S> {
+  const parsed = schema.safeParse(body)
+  if (!parsed.success)
+    throw new UpstreamFailureError('Invalid Atmosphere Explore configuration')
+  return parsed.value as l.Infer<S>
+}
+
 type Context = {
   hydrator: Hydrator
   views: Views
+  fetchExploreTabSkeleton: ReturnType<typeof createFetchExploreTabSkeleton>
 }
 
 type Params = app.bsky.unspecced.getAtmosphereExploreTab.$Params & {
