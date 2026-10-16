@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     rateLimit: {
-      calcKey: ({ auth, req }) => `${auth.credentials.did}-${req.ip}`,
+      calcKey: ({ auth }) => auth.credentials.did,
       durationMs: DAY,
       points: 1000,
     },
