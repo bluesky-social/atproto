@@ -47,6 +47,8 @@ const liveUri = atUri(author, streamLivestream.$type, 'live')
 const missingUri = atUri(author, site.standard.document.$type, 'missing')
 const group = (uris: unknown[]) => ({ uris })
 const service = 'https://cms.bsky.app/atmosphere-explore-tab'
+const frozenNow = Date.parse(publishedAt)
+const at = (offsetMs: number) => toDatetimeString(frozenNow + offsetMs)
 const lists = [
   {
     key: 'articles',
@@ -718,7 +720,7 @@ describe('Atmosphere Explore', () => {
     )
   })
 
-  it('accepts worker-shaped groups and always returns featured false', async () => {
+  it('accepts worker-shaped groups; schedules, not raw featured, decide the flag', async () => {
     const metadata = { canonicalUri: null, startsAt: null, endsAt: null }
     await using fixture = await setup({
       ...curated,
@@ -733,7 +735,7 @@ describe('Atmosphere Explore', () => {
     })
     const { status, body } = await fixture.query()
     expect(status).toBe(200)
-    // A worker-supplied `featured` is ignored.
+    // Null schedules are not featured; a worker-supplied `featured` is ignored.
     expect(body.articles.map(({ featured }) => featured)).toEqual([
       false,
       false,
@@ -749,6 +751,144 @@ describe('Atmosphere Explore', () => {
         expect(Object.keys(item).sort()).toEqual(['featured', 'view'])
   })
 
+  describe('scheduled featured flags', () => {
+    const day = 24 * 60 * 60 * 1000
+    const windows = [
+      {
+        note: 'active',
+        schedule: { startsAt: at(-1), endsAt: at(1) },
+        featured: true,
+      },
+      {
+        note: 'start inclusive',
+        schedule: { startsAt: at(0), endsAt: at(day) },
+        featured: true,
+      },
+      {
+        note: 'end exclusive',
+        schedule: { startsAt: at(-day), endsAt: at(0) },
+        featured: false,
+      },
+      {
+        note: 'future',
+        schedule: { startsAt: at(1), endsAt: at(day) },
+        featured: false,
+      },
+      {
+        note: 'expired',
+        schedule: { startsAt: at(-day), endsAt: at(-1) },
+        featured: false,
+      },
+      { note: 'no dates', schedule: {}, featured: false },
+      {
+        note: 'null dates',
+        schedule: { startsAt: null, endsAt: null },
+        featured: false,
+      },
+      { note: 'missing end', schedule: { startsAt: at(-1) }, featured: false },
+      {
+        note: 'null end',
+        schedule: { startsAt: at(-1), endsAt: null },
+        featured: false,
+      },
+      { note: 'missing start', schedule: { endsAt: at(1) }, featured: false },
+      {
+        note: 'null start',
+        schedule: { startsAt: null, endsAt: at(1) },
+        featured: false,
+      },
+      {
+        note: 'reversed',
+        schedule: { startsAt: at(day), endsAt: at(-day) },
+        featured: false,
+      },
+      {
+        note: 'equal bounds',
+        schedule: { startsAt: at(0), endsAt: at(0) },
+        featured: false,
+      },
+    ]
+
+    test.each(windows)(
+      'computes featured from the window in every list, ignoring raw featured: $note',
+      async ({ schedule, featured }) => {
+        using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+        const withRaw = (uri: AtUriString, raw: boolean) => ({
+          uris: [uri],
+          ...schedule,
+          featured: raw,
+        })
+        for (const raw of [true, false]) {
+          await using fixture = await setup({
+            articles: [withRaw(docUri, raw)],
+            publications: [withRaw(pubUri, raw)],
+            photos: [withRaw(galleryUri, raw)],
+            livestreams: [withRaw(liveUri, raw)],
+          })
+          const { status, body } = await fixture.query()
+          expect(status).toBe(200)
+          for (const { key } of lists) {
+            expect(body[key].map((item) => item.featured)).toEqual([featured])
+            expect(Object.keys(body[key][0]).sort()).toEqual([
+              'featured',
+              'view',
+            ])
+          }
+        }
+      },
+    )
+
+    it('keeps distinct entries for one root with per-entry flags', async () => {
+      using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+      await using fixture = await setup({
+        articles: [
+          { uris: [docUri] },
+          { uris: [docUri], startsAt: at(-1), endsAt: at(1) },
+          { uris: [docUri], startsAt: at(1), endsAt: at(2) },
+        ],
+      })
+      using hydrate = vi.spyOn(
+        fixture.hydrator,
+        'hydrateEmbedExternalViewFromUris',
+      )
+      const { body } = await fixture.query()
+      expect(hydrate.mock.calls[0][0]).toEqual([docUri])
+      expect(body.articles.map(({ featured }) => featured)).toEqual([
+        true,
+        false,
+        false,
+      ])
+    })
+
+    test.each([
+      { articles: [{ uris: [docUri], startsAt: 1 }] },
+      { articles: [{ uris: [docUri], endsAt: true }] },
+      { publications: [{ uris: [pubUri], startsAt: 'tomorrow' }] },
+      { photos: [{ uris: [galleryUri], endsAt: '2026-10-01' }] },
+      {
+        livestreams: [
+          { uris: [liveUri] },
+          { uris: [liveUri], startsAt: 'soon' },
+        ],
+      },
+      // Invalid even when the entry is excluded or beyond the selection cap.
+      {
+        articles: [{ uris: [docUri], locations: ['JP'], endsAt: 'bad' }],
+      },
+      {
+        articles: [
+          ...Array.from({ length: 10 }, () => ({ uris: [docUri] })),
+          { uris: [docUri], startsAt: 'bad' },
+        ],
+      },
+    ])('rejects malformed content schedules %#', async (config) => {
+      await using fixture = await setup(config)
+      using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+      expect((await fixture.query()).status).toBe(502)
+      expect(lookup).not.toHaveBeenCalled()
+    })
+  })
+
   describe('selection before hydration', () => {
     const topics = { 'x-atproto-bsky-topics': ' news , ,news,sports' }
     const us = { countryCode: 'US', regionCode: 'WI' }
@@ -759,6 +899,7 @@ describe('Atmosphere Explore', () => {
       params: app.bsky.unspecced.getAtmosphereExploreTab.$Params = {},
       headers: Record<string, string> = {},
     ) {
+      using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
       await using fixture = await setup({ [key]: entries })
       using hydrate = vi.spyOn(
         fixture.hydrator,
@@ -1054,6 +1195,88 @@ describe('Atmosphere Explore', () => {
       expect(body.photos).toHaveLength(1)
       expect(body.livestreams).toEqual([])
     })
+
+    const active = { startsAt: at(-1), endsAt: at(1) }
+    const expired = { startsAt: at(-2), endsAt: at(-1) }
+
+    test.each(lists)(
+      'places featured $key entries first, then bucket order, before the cap',
+      async ({ key, uriFor }) => {
+        const u = (name: string) => uriFor(name)
+        const entry = (name: string, extra: object) => ({
+          uris: [u(name)],
+          ...extra,
+        })
+        const entries = [
+          entry('o-untagged', {}),
+          entry('o-location', { locations: ['US'] }),
+          entry('f-untagged', active),
+          entry('f-general', { tags: ['general'], ...active }),
+          entry('f-location', { locations: ['US-WI'], ...active }),
+          entry('o-topic', { tags: ['news'] }),
+          entry('f-wrong-location', {
+            tags: ['news'],
+            locations: ['JP'],
+            ...active,
+          }),
+          entry('f-wrong-location-untagged', { locations: ['JP'], ...active }),
+          entry('f-unrelated', { tags: ['other'], ...active }),
+          entry('o-expired-topic', { tags: ['news'], ...expired }),
+          entry('f-topic', { tags: ['sports'], ...active }),
+        ]
+        expect(await selectedRoots(key, entries, us, topics)).toEqual(
+          [
+            'f-location',
+            'f-topic',
+            'f-general',
+            'f-untagged',
+            'o-location',
+            'o-topic',
+            'o-expired-topic',
+            'o-untagged',
+          ].map(u),
+        )
+      },
+    )
+
+    test.each(lists)(
+      'lets a later featured $key entry displace an ordinary one before hydration',
+      async ({ key, uriFor }) => {
+        const roots = Array.from({ length: 11 }, (_, i) => uriFor(`root-${i}`))
+        const entries = [
+          ...roots.slice(0, 10).map((uri) => ({ uris: [uri] })),
+          { uris: [roots[10]], ...active },
+        ]
+        expect(await selectedRoots(key, entries)).toEqual([
+          roots[10],
+          ...roots.slice(0, 9),
+        ])
+      },
+    )
+
+    test.each(lists)(
+      'does not backfill when featured $key roots are unavailable',
+      async ({ key, uriFor, baseUri }) => {
+        using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+        const missing = Array.from({ length: 10 }, (_, i) =>
+          uriFor(`missing-${i}`),
+        )
+        await using fixture = await setup({
+          [key]: [
+            { uris: [baseUri] },
+            ...missing.map((uri) => ({ uris: [uri], ...active })),
+          ],
+        })
+        using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body[key]).toEqual([])
+        expect(lookup.mock.calls[0][0].uris).toEqual(missing)
+        expect(
+          lookup.mock.calls.flatMap(([params]) => params.uris),
+        ).not.toContain(baseUri)
+      },
+    )
   })
 
   it('uses viewer-specific profile state only on authenticated requests', async () => {

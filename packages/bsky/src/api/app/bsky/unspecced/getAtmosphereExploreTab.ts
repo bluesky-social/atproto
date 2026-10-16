@@ -18,6 +18,8 @@ const MAX_SELECTED_GROUPS = 10
 
 const groupSchema = l.object({
   uris: l.array(l.unknown(), { maxLength: 100 }),
+  startsAt: l.optional(l.nullable(l.string({ format: 'datetime' }))),
+  endsAt: l.optional(l.nullable(l.string({ format: 'datetime' }))),
   tags: l.optional(l.array(l.string({ maxLength: 128 }), { maxLength: 100 })),
   locations: l.optional(
     l.array(l.string({ maxLength: 16 }), { maxLength: 100 }),
@@ -43,7 +45,7 @@ const configSchema = l.object({
     }),
   ),
 })
-type RecordGroup = { uri: AtUriString }
+type RecordGroup = { featured: boolean; uri: AtUriString }
 
 export default function (server: Server, ctx: AppContext) {
   // @NOTE The wrapper caps decoded response bytes, including compressed bodies.
@@ -113,7 +115,7 @@ export default function (server: Server, ctx: AppContext) {
         params,
         now,
       )
-      const select = createSelector(params, req.headers)
+      const select = createSelector(params, req.headers, now)
       const articles = completeGroups(select(config.articles))
       const publications = completeGroups(select(config.publications))
       const photos = completeGroups(select(config.photos))
@@ -135,31 +137,31 @@ export default function (server: Server, ctx: AppContext) {
       )
       const result: app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody = {
         announcementBanner,
-        articles: mapDefined(articles, ({ uri }) => {
+        articles: mapDefined(articles, ({ featured, uri }) => {
           const view = ctx.views.externalRecordView(uri, state, now)
           return view && app.bsky.embed.external.viewArticle.$isTypeOf(view)
-            ? { featured: false, view }
+            ? { featured, view }
             : undefined
         }),
-        publications: mapDefined(publications, ({ uri }) => {
+        publications: mapDefined(publications, ({ featured, uri }) => {
           const view = ctx.views.externalRecordView(uri, state, now)
           return view &&
             app.bsky.embed.external.viewArticlePublication.$isTypeOf(view)
-            ? { featured: false, view }
+            ? { featured, view }
             : undefined
         }),
-        photos: mapDefined(photos, ({ uri }) => {
+        photos: mapDefined(photos, ({ featured, uri }) => {
           const view = ctx.views.externalRecordView(uri, state, now)
           return view &&
             app.bsky.embed.external.viewGallery.$isTypeOf(view) &&
             view.items.length
-            ? { featured: false, view }
+            ? { featured, view }
             : undefined
         }),
-        livestreams: mapDefined(livestreams, ({ uri }) => {
+        livestreams: mapDefined(livestreams, ({ featured, uri }) => {
           const view = ctx.views.externalRecordView(uri, state, now)
           return view && app.bsky.embed.external.viewLivestream.$isTypeOf(view)
-            ? { featured: false, view }
+            ? { featured, view }
             : undefined
         }),
         apps: config.apps ?? [],
@@ -169,13 +171,11 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-function completeGroups(
-  groups: l.Infer<typeof groupSchema>[] = [],
-): RecordGroup[] {
-  return mapDefined(groups, ({ uris }) => {
+function completeGroups(groups: SelectedGroup[] = []): RecordGroup[] {
+  return mapDefined(groups, ({ featured, uris }) => {
     const uri = recordUri(uris[0])
     if (!uri) return
-    return { uri }
+    return { featured, uri }
   })
 }
 
@@ -228,26 +228,51 @@ function selectBanner(
   return { id, title, description, url, image, overlayColor, textColor }
 }
 
-type Selectable = { tags?: string[]; locations?: string[] }
+type Selectable = {
+  tags?: string[]
+  locations?: string[]
+  startsAt?: string | null
+  endsAt?: string | null
+}
+type SelectedGroup = l.Infer<typeof groupSchema> & { featured: boolean }
 
 /**
  * Builds a per-list selector that drops location-ineligible entries, orders
  * the rest by priority bucket (location, requested topic, `general`, untagged;
- * stable within a bucket), and keeps the first `MAX_SELECTED_GROUPS`.
+ * stable within a bucket), moves entries with an active schedule window ahead
+ * of the rest (stable, so bucket order holds within each side), and keeps the
+ * first `MAX_SELECTED_GROUPS`. A worker-supplied `featured` flag is ignored.
  */
 function createSelector(
   params: { countryCode?: string; regionCode?: string },
   headers: IncomingHttpHeaders,
+  now: number,
 ) {
   const topics = parseTopics(headers['x-atproto-bsky-topics'])
-  return <T extends Selectable>(groups: T[] = []): T[] => {
-    const buckets: T[][] = [[], [], [], []]
+  return (groups: l.Infer<typeof groupSchema>[] = []): SelectedGroup[] => {
+    const buckets: l.Infer<typeof groupSchema>[][] = [[], [], [], []]
     for (const group of groups) {
       const bucket = selectionBucket(group, params, topics)
       if (bucket !== undefined) buckets[bucket].push(group)
     }
-    return buckets.flat().slice(0, MAX_SELECTED_GROUPS)
+    const featured: SelectedGroup[] = []
+    const ordinary: SelectedGroup[] = []
+    for (const group of buckets.flat()) {
+      const active = isFeatured(group, now)
+      ;(active ? featured : ordinary).push({ ...group, featured: active })
+    }
+    return [...featured, ...ordinary].slice(0, MAX_SELECTED_GROUPS)
   }
+}
+
+/** Unlike banners, content needs both bounds to define a featured window. */
+function isFeatured({ startsAt, endsAt }: Selectable, now: number): boolean {
+  return (
+    startsAt != null &&
+    endsAt != null &&
+    Date.parse(startsAt) <= now &&
+    now < Date.parse(endsAt)
+  )
 }
 
 function selectionBucket(
