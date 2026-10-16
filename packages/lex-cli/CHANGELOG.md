@@ -1,5 +1,14 @@
 # @atproto/lex-cli
 
+## 0.10.16
+
+### Patch Changes
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for processing permission-set documents
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto/syntax@0.7.7
+  - @atproto/lexicon@0.7.17
+
 ## 0.10.15
 
 ### Patch Changes

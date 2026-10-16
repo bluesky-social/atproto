@@ -1,5 +1,14 @@
 # @atproto/repo
 
+## 0.11.1
+
+### Patch Changes
+
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto/syntax@0.7.7
+  - @atproto/common-web@0.5.15
+  - @atproto/common@0.8.6
+
 ## 0.11.0
 
 ### Minor Changes

@@ -1,5 +1,12 @@
 # @atproto-labs/handle-resolver-node
 
+## 0.2.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/fetch-node@0.4.1
+
 ## 0.2.11
 
 ### Patch Changes

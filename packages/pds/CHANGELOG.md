@@ -1,5 +1,26 @@
 # @atproto/pds
 
+## 0.5.40
+
+### Patch Changes
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix the `chat.bsky.authFullChatClient` permission set: it granted the non-existent `chat.bsky.convo.exportAccountData` RPC method instead of `chat.bsky.actor.exportAccountData`.
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Vendor the canonical repo-wide Lexicons through `lex install` + a `directory` resolver (symlinked, CID-locked in a committed `lexicons.json`) instead of building `../../lexicons` directly.
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto/lex@0.4.0
+  - @atproto/syntax@0.7.7
+  - @atproto/oauth-provider@0.24.1
+  - @atproto/xrpc-server@0.13.5
+  - @atproto-labs/fetch-node@0.4.1
+  - @atproto/lex-document@0.1.14
+  - @atproto/oauth-scopes@0.5.14
+  - @atproto/repo@0.11.1
+  - @atproto-labs/xrpc-utils@0.1.26
+  - @atproto/identity@0.5.17
+  - @atproto/aws@0.3.20
+  - @atproto/common@0.8.6
+
 ## 0.5.39
 
 ### Patch Changes

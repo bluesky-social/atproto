@@ -1,5 +1,18 @@
 # @atproto/sync
 
+## 0.4.14
+
+### Patch Changes
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Vendor the canonical repo-wide Lexicons through `lex install` (symlinked, CID-locked in a committed `lexicons.json`) instead of building `../../lexicons` directly.
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto/lex@0.4.0
+  - @atproto/syntax@0.7.7
+  - @atproto/xrpc-server@0.13.5
+  - @atproto/repo@0.11.1
+  - @atproto/identity@0.5.17
+  - @atproto/common@0.8.6
+
 ## 0.4.13
 
 ### Patch Changes

@@ -1,5 +1,25 @@
 # @atproto/ozone
 
+## 0.9.1
+
+### Patch Changes
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix the `chat.bsky.authFullChatClient` permission set: it granted the non-existent `chat.bsky.convo.exportAccountData` RPC method instead of `chat.bsky.actor.exportAccountData`.
+
+- [#5591](https://github.com/bluesky-social/atproto/pull/5591) [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Source Lexicons through each package's own `lexicons.json` manifest instead of compiling the repo-root `lexicons` directory directly. Canonical `com.atproto.*` / `tools.ozone.*` schemas are symlinked from the root, `app.bsky.*` / `chat.bsky.*` are fetched from the `bluesky-social/bsky` Github repo, other external namespaces resolve from the network, and locally diverging documents are kept under a tracked `lexicons-overrides` directory. The root `lexicons` directory now only holds the canonical `com.atproto` and `tools.ozone` namespaces. No change to generated output or published API.
+
+- [#5658](https://github.com/bluesky-social/atproto/pull/5658) [`9eeaa86`](https://github.com/bluesky-social/atproto/commit/9eeaa86a279a4dc9d0e80e653a385bd1d62896d1) Thanks [@foysalit](https://github.com/foysalit)! - Validate the canonical severity expiryInDays property and reject the obsolete spelling.
+
+- [#5651](https://github.com/bluesky-social/atproto/pull/5651) [`7c90f02`](https://github.com/bluesky-social/atproto/commit/7c90f0216c9fc2dbe8b3c1b193d34f2138c2a26c) Thanks [@foysalit](https://github.com/foysalit)! - Bound reporter statistics to a configurable history window (180 days by default) and count only explicitly linked actions using primary-key lookups.
+- Updated dependencies [[`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2), [`f98b78a`](https://github.com/bluesky-social/atproto/commit/f98b78adbc8963e49823117b007422211f6d3ff2)]:
+  - @atproto/lex-password-session@0.3.0
+  - @atproto/lex@0.4.0
+  - @atproto/syntax@0.7.7
+  - @atproto/xrpc-server@0.13.5
+  - @atproto-labs/fetch-node@0.4.1
+  - @atproto/identity@0.5.17
+  - @atproto/common@0.8.6
+
 ## 0.9.0
 
 ### Minor Changes
