@@ -1,6 +1,6 @@
 import type { IncomingHttpHeaders } from 'node:http'
-import { mapDefined } from '@atproto/common'
-import { type AtUriString, l } from '@atproto/lex'
+import { mapDefined, noUndefinedVals } from '@atproto/common'
+import { type AtUriString, type Client, l } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import {
   MethodNotImplementedError,
@@ -10,10 +10,22 @@ import {
 } from '@atproto/xrpc-server'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import type { AppContext } from '../../../../context.js'
-import { app } from '../../../../lexicons/index.js'
+import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
+import { app, site } from '../../../../lexicons/index.js'
+import {
+  type HydrationFnInput,
+  type PresentationFnInput,
+  type SkeletonFnInput,
+  createPipeline,
+  noRules,
+} from '../../../../pipeline.js'
+import { fetchAtmosphereArticleRecommendations } from '../../../../util/atmosphere-articles.js'
+import { getAtprotoPassthroughHeaders } from '../../../../util/headers.js'
+import type { Views } from '../../../../views/index.js'
 
 const MAX_CONFIG_BYTES = 512 * 1024
 const MAX_SELECTED_GROUPS = 10
+const IRIS_ARTICLE_LIMIT = 25
 
 const groupSchema = l.object({
   canonicalUri: l.optional(l.unknown()),
@@ -32,19 +44,24 @@ const bannerSchema = l.object({
     l.array(l.string({ maxLength: 16 }), { maxLength: 100 }),
   ),
 })
-const configSchema = l.object({
+const groups = () => l.optional(l.array(groupSchema, { maxLength: 100 }))
+const nonArticleConfig = {
   announcementBanners: l.optional(l.array(bannerSchema, { maxLength: 100 })),
-  articles: l.optional(l.array(groupSchema, { maxLength: 100 })),
-  publications: l.optional(l.array(groupSchema, { maxLength: 100 })),
-  photos: l.optional(l.array(groupSchema, { maxLength: 100 })),
-  livestreams: l.optional(l.array(groupSchema, { maxLength: 100 })),
+  publications: groups(),
+  photos: groups(),
+  livestreams: groups(),
   apps: l.optional(
     l.array(app.bsky.unspecced.getAtmosphereExploreTab.appCard, {
       maxLength: 100,
     }),
   ),
+}
+// Worker articles are validated only when they are the article source.
+const curatedConfigSchema = l.object({
+  ...nonArticleConfig,
+  articles: groups(),
 })
-type RecordGroup = { featured: boolean; uri: AtUriString }
+const irisConfigSchema = l.object(nonArticleConfig)
 
 export default function (server: Server, ctx: AppContext) {
   // @NOTE The wrapper caps decoded response bytes, including compressed bodies.
@@ -52,6 +69,12 @@ export default function (server: Server, ctx: AppContext) {
     timeout: 5000,
     responseMaxSize: MAX_CONFIG_BYTES,
   })
+  const getExplore = createPipeline(
+    createSkeleton(fetchConfig),
+    hydration,
+    noRules,
+    presentation,
+  )
   server.add(app.bsky.unspecced.getAtmosphereExploreTab, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req, signal }) => {
@@ -60,109 +83,254 @@ export default function (server: Server, ctx: AppContext) {
         throw new MethodNotImplementedError(
           'Atmosphere Explore service not configured',
         )
-      let body: unknown
+      let workerUrl: URL
       try {
         // Location filtering happens locally, so fetch the full config as-is.
-        const url = new URL(service)
-        const response = await fetchConfig(url, {
-          headers: { accept: 'application/json' },
-          redirect: 'error',
-          signal,
-        })
-        if (!response.ok) {
-          await response.body?.cancel()
-          throw new UpstreamFailureError(
-            `Atmosphere Explore service returned HTTP ${response.status}`,
-          )
-        }
-        body = await response.json()
-      } catch (err) {
-        if (err instanceof UpstreamFailureError) throw err
-        if (
-          err instanceof Error &&
-          (err.name === 'TimeoutError' || err.name === 'AbortError')
-        ) {
-          throw new UpstreamTimeoutError('Atmosphere Explore request timed out')
-        }
+        workerUrl = new URL(service)
+      } catch {
         throw new UpstreamFailureError(
           'Unable to fetch Atmosphere Explore configuration',
         )
       }
-      const parsed = configSchema.safeParse(body)
-      if (!parsed.success)
+      const viewer = auth.credentials.iss
+      const hydrateCtx = await ctx.hydrator.createContext({
+        viewer,
+        labelers: ctx.reqLabelers(req),
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({ viewer, req }),
+        ),
+      })
+      const useIris = hydrateCtx.features.checkGate(
+        hydrateCtx.features.Gate.AtmosphereExploreArticlesIrisEnable,
+      )
+      // Use 501 instead of 500 as these are not considered retry-able by clients
+      if (useIris && !ctx.irisClient)
+        throw new MethodNotImplementedError('Iris agent not available')
+      const result = await getExplore(
+        {
+          ...params,
+          hydrateCtx,
+          workerUrl,
+          iris: useIris ? ctx.irisClient : undefined,
+          requestHeaders: req.headers,
+          headers: noUndefinedVals({
+            'accept-language': params.langs?.length
+              ? params.langs.join(',')
+              : req.headers['accept-language'],
+            ...getAtprotoPassthroughHeaders(req),
+          }),
+          signal,
+        },
+        ctx,
+      )
+      return { encoding: 'application/json', body: result }
+    },
+  })
+}
+
+function createSkeleton(fetchConfig: typeof fetch) {
+  const fetchWorker = async (
+    url: URL,
+    signal: AbortSignal,
+  ): Promise<unknown> => {
+    try {
+      const response = await fetchConfig(url, {
+        headers: { accept: 'application/json' },
+        redirect: 'error',
+        signal,
+      })
+      if (!response.ok) {
+        await response.body?.cancel()
         throw new UpstreamFailureError(
-          'Invalid Atmosphere Explore configuration',
+          `Atmosphere Explore service returned HTTP ${response.status}`,
         )
-      const config = parsed.value
+      }
+      return await response.json()
+    } catch (err) {
+      if (err instanceof UpstreamFailureError) throw err
+      if (
+        err instanceof Error &&
+        (err.name === 'TimeoutError' || err.name === 'AbortError')
+      ) {
+        throw new UpstreamTimeoutError('Atmosphere Explore request timed out')
+      }
+      throw new UpstreamFailureError(
+        'Unable to fetch Atmosphere Explore configuration',
+      )
+    }
+  }
+
+  return async ({
+    params,
+  }: SkeletonFnInput<Context, Params>): Promise<SkeletonState> => {
+    const { iris, workerUrl, signal } = params
+    if (!iris) {
+      const config = parseConfig(
+        curatedConfigSchema,
+        await fetchWorker(workerUrl, signal),
+      )
       const now = Date.now()
       const announcementBanner = selectBanner(
         config.announcementBanners,
         params,
         now,
       )
-      const select = createSelector(params, req.headers, now)
-      const articles = completeGroups(select(config.articles))
-      const publications = completeGroups(select(config.publications))
-      const photos = completeGroups(select(config.photos))
-      const livestreams = completeGroups(select(config.livestreams))
-      const uris = [
-        ...new Set(
-          [...articles, ...publications, ...photos, ...livestreams].map(
-            ({ uri }) => uri,
-          ),
-        ),
-      ]
-      const hydrateCtx = await ctx.hydrator.createContext({
-        viewer: auth.credentials.iss,
-        labelers: ctx.reqLabelers(req),
-      })
-      const state = await ctx.hydrator.hydrateEmbedExternalViewFromUris(
-        uris,
-        hydrateCtx,
-      )
-      const result: app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody = {
+      const select = createSelector(params, params.requestHeaders, now)
+      return {
+        now,
         announcementBanner,
-        articles: {
-          items: mapDefined(articles, ({ featured, uri }) => {
-            const view = ctx.views.externalRecordView(uri, state, now)
-            return view && app.bsky.embed.external.viewArticle.$isTypeOf(view)
-              ? { featured, view }
-              : undefined
-          }),
-        },
-        publications: {
-          items: mapDefined(publications, ({ featured, uri }) => {
-            const view = ctx.views.externalRecordView(uri, state, now)
-            return view &&
-              app.bsky.embed.external.viewArticlePublication.$isTypeOf(view)
-              ? { featured, view }
-              : undefined
-          }),
-        },
-        photos: {
-          items: mapDefined(photos, ({ featured, uri }) => {
-            const view = ctx.views.externalRecordView(uri, state, now)
-            return view &&
-              app.bsky.embed.external.viewGallery.$isTypeOf(view) &&
-              view.items.length
-              ? { featured, view }
-              : undefined
-          }),
-        },
-        livestreams: {
-          items: mapDefined(livestreams, ({ featured, uri }) => {
-            const view = ctx.views.externalRecordView(uri, state, now)
-            return view &&
-              app.bsky.embed.external.viewLivestream.$isTypeOf(view)
-              ? { featured, view }
-              : undefined
-          }),
-        },
+        articles: completeGroups(select(config.articles)),
+        publications: completeGroups(select(config.publications)),
+        photos: completeGroups(select(config.photos)),
+        livestreams: completeGroups(select(config.livestreams)),
         apps: config.apps ?? [],
       }
-      return { encoding: 'application/json', body: result }
+    }
+    const [body, recommendations] = await Promise.all([
+      fetchWorker(workerUrl, signal),
+      fetchAtmosphereArticleRecommendations(
+        iris,
+        {
+          viewer: params.hydrateCtx.viewer ?? undefined,
+          limit: IRIS_ARTICLE_LIMIT,
+        },
+        { headers: params.headers, signal },
+      ),
+    ])
+    const config = parseConfig(irisConfigSchema, body)
+    const now = Date.now()
+    const announcementBanner = selectBanner(
+      config.announcementBanners,
+      params,
+      now,
+    )
+    const select = createSelector(params, params.requestHeaders, now)
+    return {
+      now,
+      announcementBanner,
+      // Iris order is authoritative: no selection, cap, or featured metadata.
+      articles: mapDefined(recommendations.articles, ({ uri }) => {
+        const root = recordUri(uri)
+        return root &&
+          new AtUri(root).collection === site.standard.document.$type
+          ? { featured: false, uri: root }
+          : undefined
+      }),
+      articleRecIdStr: recommendations.recIdStr,
+      publications: completeGroups(select(config.publications)),
+      photos: completeGroups(select(config.photos)),
+      livestreams: completeGroups(select(config.livestreams)),
+      apps: config.apps ?? [],
+    }
+  }
+}
+
+function parseConfig<
+  S extends typeof curatedConfigSchema | typeof irisConfigSchema,
+>(schema: S, body: unknown): l.Infer<S> {
+  const parsed = schema.safeParse(body)
+  if (!parsed.success)
+    throw new UpstreamFailureError('Invalid Atmosphere Explore configuration')
+  return parsed.value as l.Infer<S>
+}
+
+const hydration = async ({
+  ctx,
+  params,
+  skeleton,
+}: HydrationFnInput<Context, Params, SkeletonState>) => {
+  const uris = [
+    ...new Set(
+      [
+        ...skeleton.articles,
+        ...skeleton.publications,
+        ...skeleton.photos,
+        ...skeleton.livestreams,
+      ].map(({ uri }) => uri),
+    ),
+  ]
+  return ctx.hydrator.hydrateEmbedExternalViewFromUris(uris, params.hydrateCtx)
+}
+
+const presentation = ({
+  ctx,
+  skeleton,
+  hydration: state,
+}: PresentationFnInput<
+  Context,
+  Params,
+  SkeletonState
+>): app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody => {
+  const { now, articles, publications, photos, livestreams } = skeleton
+  return {
+    announcementBanner: skeleton.announcementBanner,
+    articles: {
+      items: mapDefined(articles, ({ featured, uri }) => {
+        const view = ctx.views.externalRecordView(uri, state, now)
+        return view && app.bsky.embed.external.viewArticle.$isTypeOf(view)
+          ? { featured, view }
+          : undefined
+      }),
+      recIdStr: skeleton.articleRecIdStr,
     },
-  })
+    publications: {
+      items: mapDefined(publications, ({ featured, uri }) => {
+        const view = ctx.views.externalRecordView(uri, state, now)
+        return view &&
+          app.bsky.embed.external.viewArticlePublication.$isTypeOf(view)
+          ? { featured, view }
+          : undefined
+      }),
+    },
+    photos: {
+      items: mapDefined(photos, ({ featured, uri }) => {
+        const view = ctx.views.externalRecordView(uri, state, now)
+        return view &&
+          app.bsky.embed.external.viewGallery.$isTypeOf(view) &&
+          view.items.length
+          ? { featured, view }
+          : undefined
+      }),
+    },
+    livestreams: {
+      items: mapDefined(livestreams, ({ featured, uri }) => {
+        const view = ctx.views.externalRecordView(uri, state, now)
+        return view && app.bsky.embed.external.viewLivestream.$isTypeOf(view)
+          ? { featured, view }
+          : undefined
+      }),
+    },
+    apps: skeleton.apps,
+  }
+}
+
+type Context = {
+  hydrator: Hydrator
+  views: Views
+}
+
+type Params = app.bsky.unspecced.getAtmosphereExploreTab.$Params & {
+  hydrateCtx: HydrateCtx
+  workerUrl: URL
+  /** Set only when Iris is the article source. */
+  iris: Client | undefined
+  /** Recommendation headers for Iris only. */
+  headers: Record<string, string>
+  requestHeaders: IncomingHttpHeaders
+  signal: AbortSignal
+}
+
+type RecordGroup = { featured: boolean; uri: AtUriString }
+
+type SkeletonState = {
+  now: number
+  announcementBanner?: app.bsky.unspecced.getAtmosphereExploreTab.AnnouncementBanner
+  articles: RecordGroup[]
+  articleRecIdStr?: string
+  publications: RecordGroup[]
+  photos: RecordGroup[]
+  livestreams: RecordGroup[]
+  apps: app.bsky.unspecced.getAtmosphereExploreTab.AppCard[]
 }
 
 function completeGroups(groups: SelectedGroup[] = []): RecordGroup[] {

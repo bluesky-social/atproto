@@ -4,13 +4,13 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get curated Atmosphere Explore content. Authentication is optional; authenticated requests include viewer-specific profile state.",
+      "description": "Get Atmosphere Explore content. Articles are recommended when algorithmic recommendations are enabled for the request, and curated otherwise; other sections are curated. Authentication is optional; authenticated requests include viewer-specific profile state.",
       "parameters": {
         "type": "params",
         "properties": {
           "langs": {
             "type": "array",
-            "description": "Preferred languages. Currently ignored.",
+            "description": "Preferred languages for article recommendations when algorithmic recommendations are enabled. Ignored otherwise.",
             "items": { "type": "string", "format": "language" }
           },
           "countryCode": {
