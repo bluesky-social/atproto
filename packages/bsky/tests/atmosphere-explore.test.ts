@@ -45,7 +45,7 @@ const itemUri = atUri(author, grainGalleryItem.$type, 'item')
 const photoUri = atUri(author, grainPhoto.$type, 'photo')
 const liveUri = atUri(author, streamLivestream.$type, 'live')
 const missingUri = atUri(author, site.standard.document.$type, 'missing')
-const group = (uris: unknown[]) => ({ uris })
+const group = (canonicalUri: unknown) => ({ canonicalUri })
 const service = 'https://cms.bsky.app/atmosphere-explore-tab'
 const frozenNow = Date.parse(publishedAt)
 const at = (offsetMs: number) => toDatetimeString(frozenNow + offsetMs)
@@ -319,10 +319,10 @@ const curatedBanner = {
 }
 const curated = {
   announcementBanners: [{ ...curatedBanner, status: 'enabled' }],
-  articles: [group([missingUri]), group([docUri]), group([docUri])],
-  publications: [group([pubUri])],
-  photos: [group([galleryUri])],
-  livestreams: [group([liveUri])],
+  articles: [group(missingUri), group(docUri), group(docUri)],
+  publications: [group(pubUri)],
+  photos: [group(galleryUri)],
+  livestreams: [group(liveUri)],
   apps: [{ id: 'app', title: 'An app', url: 'https://example.com/app' }],
 }
 
@@ -393,12 +393,12 @@ describe('Atmosphere Explore', () => {
     expect(request.redirect).toBe('error')
   })
 
-  it('uses only the first URI as the canonical root for every section', async () => {
+  it('uses only canonicalUri as the root for every section, ignoring uris', async () => {
     await using fixture = await setup({
-      articles: [group([docUri, missingUri])],
-      publications: [group([pubUri, 'bad'])],
-      photos: [group([galleryUri, photoUri, null])],
-      livestreams: [group([liveUri, missingUri])],
+      articles: [{ canonicalUri: docUri, uris: [missingUri, pubUri] }],
+      publications: [{ canonicalUri: pubUri, uris: ['bad'] }],
+      photos: [{ canonicalUri: galleryUri, uris: [photoUri, null] }],
+      livestreams: [{ canonicalUri: liveUri, uris: [missingUri] }],
     })
     using hydrate = vi.spyOn(
       fixture.hydrator,
@@ -413,6 +413,12 @@ describe('Atmosphere Explore', () => {
       expect.objectContaining({ viewer: null }),
     )
     expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
+    expect(lookup.mock.calls[0][0].uris).toEqual([
+      docUri,
+      pubUri,
+      galleryUri,
+      liveUri,
+    ])
     expect(lookup.mock.calls.flatMap(([params]) => params.uris)).not.toContain(
       missingUri,
     )
@@ -429,48 +435,159 @@ describe('Atmosphere Explore', () => {
     expect(body.livestreams).toHaveLength(1)
   })
 
-  test.each([
-    { uris: [] },
-    { uris: [null, docUri] },
-    { uris: ['bad', docUri] },
-    { uris: [missingUri, docUri] },
-  ])(
-    'does not fall back to another article URI when the first is absent or unavailable: $uris',
-    async ({ uris }) => {
-      await using fixture = await setup({ articles: [group(uris)] })
-      using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
-      const { status, body } = await fixture.query()
-
-      expect(status).toBe(200)
-      expect(body.articles).toEqual([])
-      expect(
-        lookup.mock.calls.flatMap(([params]) => params.uris),
-      ).not.toContain(docUri)
-    },
-  )
-
-  it('does not substitute a later URI with the correct section type', async () => {
+  it('renders canonical-only entries and discovers their dependencies', async () => {
     await using fixture = await setup({
-      articles: [group([pubUri, docUri])],
-      publications: [group([docUri, pubUri])],
-      photos: [group([photoUri, galleryUri])],
-      livestreams: [group([pubUri, liveUri])],
+      articles: [{ canonicalUri: docUri }],
+      photos: [{ canonicalUri: galleryUri }],
     })
-    using hydrate = vi.spyOn(
-      fixture.hydrator,
-      'hydrateEmbedExternalViewFromUris',
-    )
+    using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
     const { status, body } = await fixture.query()
 
     expect(status).toBe(200)
-    expect(hydrate).toHaveBeenCalledWith(
-      [pubUri, docUri, photoUri],
-      expect.objectContaining({ viewer: null }),
+    expect(lookup.mock.calls[0][0].uris).toEqual([docUri, galleryUri])
+    const looked = lookup.mock.calls.flatMap(([params]) => params.uris)
+    expect(looked).toEqual(expect.arrayContaining([pubUri, photoUri]))
+    expect(body.articles[0].view.publisher).toMatchObject({
+      title: 'Publication',
+    })
+    expect(body.photos[0].view.associatedRefs?.map(({ uri }) => uri)).toEqual([
+      galleryUri,
+      itemUri,
+      photoUri,
+    ])
+  })
+
+  describe('invalid canonical roots', () => {
+    const badRoots = (baseUri: AtUriString) => {
+      const col = baseUri.split('/')[3]
+      return [
+        { note: 'missing', worker: {} },
+        { note: 'null', worker: { canonicalUri: null } },
+        { note: 'number', worker: { canonicalUri: 42 } },
+        { note: 'array', worker: { canonicalUri: [baseUri] } },
+        { note: 'empty', worker: { canonicalUri: '' } },
+        { note: 'malformed', worker: { canonicalUri: 'bad' } },
+        { note: 'authority only', worker: { canonicalUri: `at://${author}` } },
+        {
+          note: 'missing rkey',
+          worker: { canonicalUri: `at://${author}/${col}` },
+        },
+        {
+          note: 'handle authority',
+          worker: { canonicalUri: `at://author.test/${col}/x` },
+        },
+      ]
+    }
+
+    test.each(lists)(
+      'does not fall back to uris for $key when canonicalUri is unusable',
+      async ({ key, baseUri }) => {
+        for (const { worker } of badRoots(baseUri)) {
+          await using fixture = await setup({
+            [key]: [{ ...worker, uris: [baseUri, baseUri] }],
+          })
+          using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+          const { status, body } = await fixture.query()
+
+          expect(status).toBe(200)
+          expect(body[key]).toEqual([])
+          expect(lookup.mock.calls.flatMap(([params]) => params.uris)).toEqual(
+            [],
+          )
+        }
+      },
     )
-    expect(body.articles).toEqual([])
-    expect(body.publications).toEqual([])
-    expect(body.photos).toEqual([])
-    expect(body.livestreams).toEqual([])
+
+    const wrongModality = {
+      articles: pubUri,
+      publications: liveUri,
+      photos: photoUri,
+      livestreams: pubUri,
+    } as const
+
+    test.each(lists)(
+      'does not substitute uris for an unavailable or wrong-type $key root',
+      async ({ key, baseUri, uriFor }) => {
+        for (const canonicalUri of [uriFor('missing'), wrongModality[key]]) {
+          await using fixture = await setup({
+            [key]: [{ canonicalUri, uris: [baseUri] }],
+          })
+          using hydrate = vi.spyOn(
+            fixture.hydrator,
+            'hydrateEmbedExternalViewFromUris',
+          )
+          using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+          const { status, body } = await fixture.query()
+
+          expect(status).toBe(200)
+          expect(body[key]).toEqual([])
+          expect(hydrate.mock.calls[0][0]).toEqual([canonicalUri])
+          expect(
+            lookup.mock.calls.flatMap(([params]) => params.uris),
+          ).not.toContain(baseUri)
+        }
+      },
+    )
+
+    test.each(lists)(
+      'lets invalid $key roots consume selection slots without refilling',
+      async ({ key, uriFor }) => {
+        const roots = Array.from({ length: 8 }, (_, i) => uriFor(`root-${i}`))
+        await using fixture = await setup({
+          [key]: [
+            { uris: [roots[0]] },
+            { canonicalUri: null, uris: [roots[0]] },
+            { canonicalUri: 'bad', uris: [roots[0]] },
+            ...roots.slice(0, 7).map((canonicalUri) => ({ canonicalUri })),
+            { canonicalUri: roots[7] },
+          ],
+        })
+        using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+        const { status } = await fixture.query()
+
+        expect(status).toBe(200)
+        expect(lookup.mock.calls[0][0].uris).toEqual(roots.slice(0, 7))
+        expect(
+          lookup.mock.calls.flatMap(([params]) => params.uris),
+        ).not.toContain(roots[7])
+      },
+    )
+  })
+
+  describe('ignored uris metadata', () => {
+    test.each([
+      { note: 'string', uris: 'not-an-array' },
+      { note: 'null', uris: null },
+      { note: 'number', uris: 42 },
+      { note: 'object', uris: { a: 1 } },
+      { note: 'empty', uris: [] },
+      { note: 'non-URIs', uris: [1, null, 'bad'] },
+      { note: 'oversized', uris: Array.from({ length: 5000 }, () => docUri) },
+    ])('does not validate or count a $note uris value', async ({ uris }) => {
+      for (const { key, baseUri } of lists) {
+        await using fixture = await setup({
+          [key]: [{ canonicalUri: baseUri, uris }],
+        })
+        const { status, body } = await fixture.query()
+
+        expect(status).toBe(200)
+        expect(body[key]).toHaveLength(1)
+      }
+    })
+
+    it('still counts ignored uris metadata toward the decoded body cap', async () => {
+      await using fixture = await setup({
+        articles: [
+          {
+            canonicalUri: docUri,
+            uris: Array.from({ length: 12_000 }, () => docUri),
+          },
+        ],
+      })
+      using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+      expect((await fixture.query()).status).toBe(502)
+      expect(lookup).not.toHaveBeenCalled()
+    })
   })
 
   test.each<app.bsky.unspecced.getAtmosphereExploreTab.$Params>([
@@ -721,17 +838,22 @@ describe('Atmosphere Explore', () => {
   })
 
   it('accepts worker-shaped groups; schedules, not raw featured, decide the flag', async () => {
-    const metadata = { canonicalUri: null, startsAt: null, endsAt: null }
+    const metadata = { startsAt: null, endsAt: null, uris: ['ignored'] }
     await using fixture = await setup({
       ...curated,
       articles: [
-        { uris: [docUri], ...metadata },
-        { uris: [docUri], featured: true, tags: [], locations: [] },
-        { uris: [docUri], featured: false, tags: ['general'], ...metadata },
+        { canonicalUri: docUri, ...metadata },
+        { canonicalUri: docUri, featured: true, tags: [], locations: [] },
+        {
+          canonicalUri: docUri,
+          featured: false,
+          tags: ['general'],
+          ...metadata,
+        },
       ],
-      publications: [{ uris: [pubUri], ...metadata }],
-      photos: [{ uris: [galleryUri], tags: ['general'] }],
-      livestreams: [{ uris: [liveUri], locations: [] }],
+      publications: [{ canonicalUri: pubUri, ...metadata }],
+      photos: [{ canonicalUri: galleryUri, tags: ['general'] }],
+      livestreams: [{ canonicalUri: liveUri, locations: [] }],
     })
     const { status, body } = await fixture.query()
     expect(status).toBe(200)
@@ -814,7 +936,7 @@ describe('Atmosphere Explore', () => {
       async ({ schedule, featured }) => {
         using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
         const withRaw = (uri: AtUriString, raw: boolean) => ({
-          uris: [uri],
+          canonicalUri: uri,
           ...schedule,
           featured: raw,
         })
@@ -842,9 +964,9 @@ describe('Atmosphere Explore', () => {
       using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
       await using fixture = await setup({
         articles: [
-          { uris: [docUri] },
-          { uris: [docUri], startsAt: at(-1), endsAt: at(1) },
-          { uris: [docUri], startsAt: at(1), endsAt: at(2) },
+          { canonicalUri: docUri },
+          { canonicalUri: docUri, startsAt: at(-1), endsAt: at(1) },
+          { canonicalUri: docUri, startsAt: at(1), endsAt: at(2) },
         ],
       })
       using hydrate = vi.spyOn(
@@ -861,24 +983,24 @@ describe('Atmosphere Explore', () => {
     })
 
     test.each([
-      { articles: [{ uris: [docUri], startsAt: 1 }] },
-      { articles: [{ uris: [docUri], endsAt: true }] },
-      { publications: [{ uris: [pubUri], startsAt: 'tomorrow' }] },
-      { photos: [{ uris: [galleryUri], endsAt: '2026-10-01' }] },
+      { articles: [{ canonicalUri: docUri, startsAt: 1 }] },
+      { articles: [{ canonicalUri: docUri, endsAt: true }] },
+      { publications: [{ canonicalUri: pubUri, startsAt: 'tomorrow' }] },
+      { photos: [{ canonicalUri: galleryUri, endsAt: '2026-10-01' }] },
       {
         livestreams: [
-          { uris: [liveUri] },
-          { uris: [liveUri], startsAt: 'soon' },
+          { canonicalUri: liveUri },
+          { canonicalUri: liveUri, startsAt: 'soon' },
         ],
       },
       // Invalid even when the entry is excluded or beyond the selection cap.
       {
-        articles: [{ uris: [docUri], locations: ['JP'], endsAt: 'bad' }],
+        articles: [{ canonicalUri: docUri, locations: ['JP'], endsAt: 'bad' }],
       },
       {
         articles: [
-          ...Array.from({ length: 10 }, () => ({ uris: [docUri] })),
-          { uris: [docUri], startsAt: 'bad' },
+          ...Array.from({ length: 10 }, () => ({ canonicalUri: docUri })),
+          { canonicalUri: docUri, startsAt: 'bad' },
         ],
       },
     ])('rejects malformed content schedules %#', async (config) => {
@@ -917,7 +1039,7 @@ describe('Atmosphere Explore', () => {
       async ({ key, uriFor }) => {
         const u = (name: string) => uriFor(name)
         const entry = (name: string, extra: object) => ({
-          uris: [u(name)],
+          canonicalUri: u(name),
           ...extra,
         })
         const entries = [
@@ -961,8 +1083,8 @@ describe('Atmosphere Explore', () => {
         const entries = [
           ...roots
             .slice(0, 11)
-            .map((uri) => ({ uris: [uri], tags: ['general'] })),
-          { uris: [roots[11]], locations: ['US'] },
+            .map((uri) => ({ canonicalUri: uri, tags: ['general'] })),
+          { canonicalUri: roots[11], locations: ['US'] },
         ]
         await using fixture = await setup({ [key]: entries })
         using hydrate = vi.spyOn(
@@ -989,8 +1111,8 @@ describe('Atmosphere Explore', () => {
         )
         await using fixture = await setup({
           [key]: [
-            ...missing.map((uri) => ({ uris: [uri] })),
-            { uris: [baseUri] },
+            ...missing.map((uri) => ({ canonicalUri: uri })),
+            { canonicalUri: baseUri },
           ],
         })
         using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
@@ -1009,10 +1131,10 @@ describe('Atmosphere Explore', () => {
       async ({ key, baseUri }) => {
         await using fixture = await setup({
           [key]: [
-            { uris: [baseUri], tags: ['news'] },
-            { uris: [baseUri], tags: ['other'] },
-            { uris: [baseUri], tags: ['general'] },
-            { uris: [baseUri] },
+            { canonicalUri: baseUri, tags: ['news'] },
+            { canonicalUri: baseUri, tags: ['other'] },
+            { canonicalUri: baseUri, tags: ['general'] },
+            { canonicalUri: baseUri },
           ],
         })
         using hydrate = vi.spyOn(
@@ -1062,13 +1184,13 @@ describe('Atmosphere Explore', () => {
       },
     ])('matches request topics: $note', async ({ headers, expected }) => {
       const entries = [
-        { uris: [liveUri], tags: [] },
-        { uris: [docUri], tags: ['general'] },
-        { uris: [pubUri], tags: ['news-today'] },
-        { uris: [galleryUri], tags: ['Newsletter'] },
-        { uris: [itemUri], tags: ['New'] },
-        { uris: [photoUri], tags: ['news'] },
-        { uris: [missingUri], tags: ['News'] },
+        { canonicalUri: liveUri, tags: [] },
+        { canonicalUri: docUri, tags: ['general'] },
+        { canonicalUri: pubUri, tags: ['news-today'] },
+        { canonicalUri: galleryUri, tags: ['Newsletter'] },
+        { canonicalUri: itemUri, tags: ['New'] },
+        { canonicalUri: photoUri, tags: ['news'] },
+        { canonicalUri: missingUri, tags: ['News'] },
       ]
       const names = new Map<AtUriString, string>([
         [liveUri, 'untagged'],
@@ -1139,10 +1261,10 @@ describe('Atmosphere Explore', () => {
           const uri = lists.find((list) => list.key === key)!.uriFor('x')
           // Tags that would otherwise qualify never override a location miss.
           const entries = [
-            { uris: [uri], locations, tags: ['news'] },
-            { uris: [uri], locations, tags: ['general'] },
-            { uris: [uri], locations },
-            { uris: [uri], locations, tags: [] },
+            { canonicalUri: uri, locations, tags: ['news'] },
+            { canonicalUri: uri, locations, tags: ['general'] },
+            { canonicalUri: uri, locations },
+            { canonicalUri: uri, locations, tags: [] },
           ]
           expect(await selectedRoots(key, entries, params, topics)).toEqual(
             match ? [uri] : [],
@@ -1153,10 +1275,10 @@ describe('Atmosphere Explore', () => {
 
     it('treats missing or empty locations as unrestricted, not as a location match', async () => {
       const entries = [
-        { uris: [pubUri], locations: [] },
-        { uris: [docUri], tags: ['general'], locations: [] },
-        { uris: [liveUri], tags: ['news'] },
-        { uris: [galleryUri], locations: ['US'] },
+        { canonicalUri: pubUri, locations: [] },
+        { canonicalUri: docUri, tags: ['general'], locations: [] },
+        { canonicalUri: liveUri, tags: ['news'] },
+        { canonicalUri: galleryUri, locations: ['US'] },
       ]
       expect(await selectedRoots('articles', entries, us, topics)).toEqual([
         galleryUri,
@@ -1174,11 +1296,11 @@ describe('Atmosphere Explore', () => {
     it('selects each list independently', async () => {
       await using fixture = await setup({
         articles: Array.from({ length: 11 }, (_, i) => ({
-          uris: [atUri(author, site.standard.document.$type, `a${i}`)],
+          canonicalUri: atUri(author, site.standard.document.$type, `a${i}`),
         })),
-        publications: [{ uris: [pubUri], locations: ['JP'] }],
-        photos: [{ uris: [galleryUri] }],
-        livestreams: [{ uris: [liveUri], tags: ['other'] }],
+        publications: [{ canonicalUri: pubUri, locations: ['JP'] }],
+        photos: [{ canonicalUri: galleryUri }],
+        livestreams: [{ canonicalUri: liveUri, tags: ['other'] }],
       })
       using hydrate = vi.spyOn(
         fixture.hydrator,
@@ -1204,7 +1326,7 @@ describe('Atmosphere Explore', () => {
       async ({ key, uriFor }) => {
         const u = (name: string) => uriFor(name)
         const entry = (name: string, extra: object) => ({
-          uris: [u(name)],
+          canonicalUri: u(name),
           ...extra,
         })
         const entries = [
@@ -1244,8 +1366,8 @@ describe('Atmosphere Explore', () => {
       async ({ key, uriFor }) => {
         const roots = Array.from({ length: 11 }, (_, i) => uriFor(`root-${i}`))
         const entries = [
-          ...roots.slice(0, 10).map((uri) => ({ uris: [uri] })),
-          { uris: [roots[10]], ...active },
+          ...roots.slice(0, 10).map((uri) => ({ canonicalUri: uri })),
+          { canonicalUri: roots[10], ...active },
         ]
         expect(await selectedRoots(key, entries)).toEqual([
           roots[10],
@@ -1263,8 +1385,8 @@ describe('Atmosphere Explore', () => {
         )
         await using fixture = await setup({
           [key]: [
-            { uris: [baseUri] },
-            ...missing.map((uri) => ({ uris: [uri], ...active })),
+            { canonicalUri: baseUri },
+            ...missing.map((uri) => ({ canonicalUri: uri, ...active })),
           ],
         })
         using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
@@ -1303,7 +1425,7 @@ describe('Atmosphere Explore', () => {
 
   it('omits articles with unavailable publication dependencies', async () => {
     await using fixture = await setup({
-      articles: [group([docUri])],
+      articles: [group(docUri)],
     })
     fixture.takenDown.add(pubUri)
     expect((await fixture.query()).body.articles).toEqual([])
@@ -1321,12 +1443,12 @@ describe('Atmosphere Explore', () => {
 
   test.each([
     { note: 'automatically discovered', publications: [] },
-    { note: 'explicitly in another group', publications: [group([pubUri])] },
+    { note: 'explicitly in another group', publications: [group(pubUri)] },
   ])(
     'renders a canonical document root with its publication $note',
     async ({ publications }) => {
       await using fixture = await setup({
-        articles: [group([docUri])],
+        articles: [group(docUri)],
         publications,
       })
       using dependencies = vi.spyOn(
@@ -1463,12 +1585,12 @@ describe('Atmosphere Explore', () => {
     )
   })
 
-  it('keeps loose documents, but skips invalid URI groups and invalid records', async () => {
+  it('keeps loose documents, but skips invalid canonical roots and invalid records', async () => {
     await using fixture = await setup({
       articles: [
-        group([docUri]),
-        group(['bad', docUri]),
-        group([null, docUri]),
+        group(docUri),
+        { canonicalUri: 'bad', uris: [docUri] },
+        { canonicalUri: null, uris: [docUri] },
       ],
     })
     fixture.records.set(
@@ -1493,7 +1615,7 @@ describe('Atmosphere Explore', () => {
   })
 
   it('uses bounded, deduplicated profile previews', async () => {
-    await using fixture = await setup({ articles: [group([docUri])] })
+    await using fixture = await setup({ articles: [group(docUri)] })
     using backlinks = vi
       .spyOn(fixture.dataplane, 'getAtmosphereBacklinks')
       .mockResolvedValue(
@@ -1605,7 +1727,7 @@ describe('Atmosphere Explore', () => {
     'uses shared livestream heartbeat semantics: $lastSeenAt',
     async ({ lastSeenAt, active }) => {
       using now = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(publishedAt))
-      await using fixture = await setup({ livestreams: [group([liveUri])] })
+      await using fixture = await setup({ livestreams: [group(liveUri)] })
       fixture.records.set(
         liveUri,
         streamLivestream.$build({
@@ -1640,33 +1762,27 @@ describe('Atmosphere Explore', () => {
 
   test.each([
     null,
-    { articles: [group([docUri]), { uris: 'not-an-array' }] },
-    { articles: [{ uris: [docUri], tags: 'general' }] },
-    { articles: [{ uris: [docUri], tags: [1] }] },
-    { articles: [{ uris: [docUri], tags: ['x'.repeat(129)] }] },
+    { articles: [group(docUri), 'not-an-object'] },
+    { articles: [{ canonicalUri: docUri, tags: 'general' }] },
+    { articles: [{ canonicalUri: docUri, tags: [1] }] },
+    { articles: [{ canonicalUri: docUri, tags: ['x'.repeat(129)] }] },
     {
       articles: [
-        { uris: [docUri], tags: Array.from({ length: 101 }, () => 'a') },
+        { canonicalUri: docUri, tags: Array.from({ length: 101 }, () => 'a') },
       ],
     },
-    { articles: [{ uris: [docUri], locations: 'US' }] },
-    { articles: [{ uris: [docUri], locations: [null] }] },
-    { articles: [{ uris: [docUri], locations: ['U'.repeat(17)] }] },
+    { articles: [{ canonicalUri: docUri, locations: 'US' }] },
+    { articles: [{ canonicalUri: docUri, locations: [null] }] },
+    { articles: [{ canonicalUri: docUri, locations: ['U'.repeat(17)] }] },
     {
       photos: [
         {
-          uris: [galleryUri],
+          canonicalUri: galleryUri,
           locations: Array.from({ length: 101 }, () => 'US'),
         },
       ],
     },
-    { livestreams: [{ uris: [liveUri], tags: null }] },
-    // Slicing to the selection limit must not bypass the input URI cap.
-    {
-      publications: Array.from({ length: 12 }, () =>
-        group(Array.from({ length: 50 }, () => pubUri)),
-      ),
-    },
+    { livestreams: [{ canonicalUri: liveUri, tags: null }] },
     { announcementBanners: [{ status: 'enabled', title: 123 }] },
     { announcementBanners: [{ status: 'enabled', url: 'not a uri' }] },
     { announcementBanners: [{ title: 'No status' }] },
@@ -1693,13 +1809,11 @@ describe('Atmosphere Explore', () => {
       ],
     },
     { apps: [{ url: 123 }] },
-    { articles: Array.from({ length: 101 }, () => group([docUri])) },
-    { photos: [group(Array.from({ length: 101 }, () => photoUri))] },
-    {
-      articles: Array.from({ length: 6 }, () =>
-        group(Array.from({ length: 100 }, () => docUri)),
-      ),
-    },
+    // Slicing to the selection limit must not bypass the section cap.
+    { articles: Array.from({ length: 101 }, () => group(docUri)) },
+    { publications: Array.from({ length: 101 }, () => group(pubUri)) },
+    { photos: Array.from({ length: 101 }, () => group(galleryUri)) },
+    { livestreams: Array.from({ length: 101 }, () => group(liveUri)) },
   ])('rejects malformed or excessive config %#', async (config) => {
     await using fixture = await setup(config)
     using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')

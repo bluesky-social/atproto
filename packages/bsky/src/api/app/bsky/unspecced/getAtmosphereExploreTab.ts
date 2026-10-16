@@ -13,11 +13,10 @@ import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 
 const MAX_CONFIG_BYTES = 512 * 1024
-const MAX_ATMOSPHERE_RECORDS = 500
 const MAX_SELECTED_GROUPS = 10
 
 const groupSchema = l.object({
-  uris: l.array(l.unknown(), { maxLength: 100 }),
+  canonicalUri: l.optional(l.unknown()),
   startsAt: l.optional(l.nullable(l.string({ format: 'datetime' }))),
   endsAt: l.optional(l.nullable(l.string({ format: 'datetime' }))),
   tags: l.optional(l.array(l.string({ maxLength: 128 }), { maxLength: 100 })),
@@ -95,20 +94,6 @@ export default function (server: Server, ctx: AppContext) {
           'Invalid Atmosphere Explore configuration',
         )
       const config = parsed.value
-      const groups = [
-        ...(config.articles ?? []),
-        ...(config.publications ?? []),
-        ...(config.photos ?? []),
-        ...(config.livestreams ?? []),
-      ]
-      if (
-        groups.reduce((count, group) => count + group.uris.length, 0) >
-        MAX_ATMOSPHERE_RECORDS
-      ) {
-        throw new UpstreamFailureError(
-          'Atmosphere Explore configuration exceeds its record limit',
-        )
-      }
       const now = Date.now()
       const announcementBanner = selectBanner(
         config.announcementBanners,
@@ -172,8 +157,8 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 function completeGroups(groups: SelectedGroup[] = []): RecordGroup[] {
-  return mapDefined(groups, ({ featured, uris }) => {
-    const uri = recordUri(uris[0])
+  return mapDefined(groups, ({ featured, canonicalUri }) => {
+    const uri = recordUri(canonicalUri)
     if (!uri) return
     return { featured, uri }
   })
