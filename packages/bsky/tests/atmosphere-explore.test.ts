@@ -310,12 +310,13 @@ async function setup(config: unknown = {}) {
   }
 }
 
+const curatedBanner = {
+  id: 'banner',
+  title: 'Explore',
+  image: 'https://example.com/banner.jpg',
+}
 const curated = {
-  announcementBanner: {
-    id: 'banner',
-    title: 'Explore',
-    image: 'https://example.com/banner.jpg',
-  },
+  announcementBanners: [{ ...curatedBanner, status: 'enabled' }],
   articles: [group([missingUri]), group([docUri]), group([docUri])],
   publications: [group([pubUri])],
   photos: [group([galleryUri])],
@@ -337,7 +338,7 @@ describe('Atmosphere Explore', () => {
     )
     expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
     expect(status).toBe(200)
-    expect(body.announcementBanner).toEqual(curated.announcementBanner)
+    expect(body.announcementBanner).toEqual(curatedBanner)
     expect(body.apps).toEqual(curated.apps)
     expect(body.articles.map(({ featured }) => featured)).toEqual([
       false,
@@ -508,6 +509,215 @@ describe('Atmosphere Explore', () => {
     expect(request.url).toBe(`${service}?config=curated&countryCode=CA`)
   })
 
+  describe('announcement banner', () => {
+    const now = Date.parse(publishedAt)
+    const at = (offsetMs: number) => new Date(now + offsetMs).toISOString()
+    const day = 24 * 60 * 60 * 1000
+    const banner = (id: string, extra: object = {}) => ({
+      id,
+      status: 'enabled',
+      ...extra,
+    })
+    const us = { countryCode: 'US', regionCode: 'WI' }
+
+    async function pickBanner(
+      banners: unknown,
+      params: app.bsky.unspecced.getAtmosphereExploreTab.$Params = {},
+    ) {
+      using _now = vi.spyOn(Date, 'now').mockReturnValue(now)
+      await using fixture = await setup({ announcementBanners: banners })
+      const { status, body } = await fixture.query(false, params)
+      expect(status).toBe(200)
+      return body.announcementBanner?.id
+    }
+
+    test.each([undefined, [], [banner('off', { status: 'disabled' })]])(
+      'omits the banner when none is eligible: %j',
+      async (banners) => {
+        expect(await pickBanner(banners)).toBeUndefined()
+      },
+    )
+
+    it('returns only presentation fields', async () => {
+      using _now = vi.spyOn(Date, 'now').mockReturnValue(now)
+      const presentation = {
+        id: 'full',
+        title: 'Title',
+        description: 'Description',
+        url: 'https://example.com/url',
+        image: 'https://example.com/image.jpg',
+        overlayColor: '#000000',
+        textColor: '#ffffff',
+      }
+      await using fixture = await setup({
+        announcementBanners: [
+          {
+            ...presentation,
+            status: 'enabled',
+            startsAt: at(-day),
+            endsAt: at(day),
+            locations: [],
+            tags: ['news'],
+            extra: 'value',
+          },
+        ],
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.announcementBanner).toStrictEqual(presentation)
+      // The fixture server validates responses against the lexicon too.
+      expect(
+        app.bsky.unspecced.getAtmosphereExploreTab.announcementBanner.$matches(
+          body.announcementBanner,
+        ),
+      ).toBe(true)
+    })
+
+    it('ignores the legacy singular worker input', async () => {
+      await using fixture = await setup({ announcementBanner: curatedBanner })
+      expect((await fixture.query()).body.announcementBanner).toBeUndefined()
+    })
+
+    it('prefers an eligible matching-location banner over later-expiring unrestricted ones', async () => {
+      const banners = [
+        banner('open', { endsAt: at(30 * day) }),
+        banner('none'),
+        banner('first-match', { locations: ['US'], endsAt: at(day) }),
+        banner('second-match', { locations: ['US-WI'] }),
+      ]
+      expect(await pickBanner(banners, us)).toBe('first-match')
+      expect(await pickBanner(banners, { countryCode: 'JP' })).toBe('none')
+    })
+
+    it('does not let ineligible targeted banners override an eligible unrestricted one', async () => {
+      expect(
+        await pickBanner(
+          [
+            banner('future', { locations: ['US'], startsAt: at(1) }),
+            banner('expired', { locations: ['US'], endsAt: at(0) }),
+            banner('off', { locations: ['US'], status: 'disabled' }),
+            banner('open', { endsAt: at(day) }),
+          ],
+          us,
+        ),
+      ).toBe('open')
+    })
+
+    it('falls back to the eligible unrestricted banner with the furthest endsAt', async () => {
+      expect(
+        await pickBanner([
+          banner('soon', { endsAt: at(day) }),
+          banner('latest', { endsAt: at(3 * day), locations: [] }),
+          banner('mid', { endsAt: at(2 * day) }),
+          banner('future-latest', { startsAt: at(1), endsAt: at(9 * day) }),
+          banner('expired-latest', { startsAt: at(-day), endsAt: at(-1) }),
+          banner('disabled-latest', {
+            status: 'disabled',
+            endsAt: at(9 * day),
+          }),
+          banner('wrong-place', { locations: ['JP'], endsAt: at(9 * day) }),
+        ]),
+      ).toBe('latest')
+    })
+
+    it('chooses furthest unrestricted banner when other targeted banners do not match', async () => {
+      expect(
+        await pickBanner(
+          [
+            banner('jp', { locations: ['JP'], endsAt: at(30 * day) }),
+            banner('us-ca', { locations: ['US-CA'], endsAt: at(30 * day) }),
+            banner('short', { endsAt: at(day) }),
+            banner('long', { endsAt: at(2 * day) }),
+          ],
+          us,
+        ),
+      ).toBe('long')
+    })
+
+    it('breaks equal expirations by worker order and ranks no expiration furthest', async () => {
+      expect(
+        await pickBanner([
+          banner('a', { endsAt: at(day) }),
+          banner('b', { endsAt: at(day) }),
+        ]),
+      ).toBe('a')
+      expect(
+        await pickBanner([
+          banner('finite', { endsAt: at(100 * day) }),
+          banner('missing'),
+          banner('null', { endsAt: null }),
+        ]),
+      ).toBe('missing')
+    })
+
+    test.each([
+      { note: 'start inclusive', extra: { startsAt: at(0) }, eligible: true },
+      { note: 'before start', extra: { startsAt: at(1) }, eligible: false },
+      { note: 'end exclusive', extra: { endsAt: at(0) }, eligible: false },
+      { note: 'before end', extra: { endsAt: at(1) }, eligible: true },
+      {
+        note: 'null bounds',
+        extra: { startsAt: null, endsAt: null },
+        eligible: true,
+      },
+      {
+        note: 'reversed window',
+        extra: { startsAt: at(day), endsAt: at(-day) },
+        eligible: false,
+      },
+      {
+        note: 'empty window',
+        extra: { startsAt: at(0), endsAt: at(0) },
+        eligible: false,
+      },
+    ])('applies the scheduling window: $note', async ({ extra, eligible }) => {
+      expect(await pickBanner([banner('b', extra)])).toBe(
+        eligible ? 'b' : undefined,
+      )
+    })
+
+    test.each([
+      { locations: ['US'], params: { countryCode: 'US' }, match: true },
+      { locations: ['US'], params: us, match: true },
+      { locations: ['US-WI'], params: us, match: true },
+      {
+        locations: ['US-WI'],
+        params: { countryCode: 'US', regionCode: 'US-WI' },
+        match: true,
+      },
+      { locations: ['US-WI'], params: { countryCode: 'US' }, match: false },
+      {
+        locations: ['US-WI'],
+        params: { countryCode: 'US', regionCode: 'CA' },
+        match: false,
+      },
+      {
+        locations: ['US-WI'],
+        params: { countryCode: 'CA', regionCode: 'WI' },
+        match: false,
+      },
+      { locations: ['US'], params: { regionCode: 'WI' }, match: false },
+      { locations: ['JP'], params: {}, match: false },
+      { locations: ['JP'], params: us, match: false },
+    ])(
+      'location $locations with $params matches: $match',
+      async ({ locations, params, match }) => {
+        // A wrong-location banner never leaks through, even as the only banner.
+        expect(await pickBanner([banner('t', { locations })], params)).toBe(
+          match ? 't' : undefined,
+        )
+      },
+    )
+
+    test.each([{}, { locations: [] }])(
+      'treats missing or empty locations as unrestricted: %j',
+      async (extra) => {
+        expect(await pickBanner([banner('open', extra)], {})).toBe('open')
+        expect(await pickBanner([banner('open', extra)], us)).toBe('open')
+      },
+    )
+  })
+
   it('accepts worker-shaped groups and always returns featured false', async () => {
     const metadata = { canonicalUri: null, startsAt: null, endsAt: null }
     await using fixture = await setup({
@@ -532,7 +742,7 @@ describe('Atmosphere Explore', () => {
     expect(body.publications.map(({ featured }) => featured)).toEqual([false])
     expect(body.photos.map(({ featured }) => featured)).toEqual([false])
     expect(body.livestreams.map(({ featured }) => featured)).toEqual([false])
-    expect(body.announcementBanner).toEqual(curated.announcementBanner)
+    expect(body.announcementBanner).toEqual(curatedBanner)
     expect(body.apps).toEqual(curated.apps)
     for (const key of lists.map(({ key }) => key))
       for (const item of body[key])
@@ -1234,7 +1444,31 @@ describe('Atmosphere Explore', () => {
         group(Array.from({ length: 50 }, () => pubUri)),
       ),
     },
-    { announcementBanner: { title: 123 } },
+    { announcementBanners: [{ status: 'enabled', title: 123 }] },
+    { announcementBanners: [{ status: 'enabled', url: 'not a uri' }] },
+    { announcementBanners: [{ title: 'No status' }] },
+    { announcementBanners: [{ status: 1 }] },
+    { announcementBanners: [{ status: 'x'.repeat(129) }] },
+    { announcementBanners: [{ status: 'enabled', startsAt: 'tomorrow' }] },
+    { announcementBanners: [{ status: 'enabled', endsAt: 1 }] },
+    { announcementBanners: [{ status: 'enabled', locations: 'US' }] },
+    { announcementBanners: [{ status: 'enabled', locations: [1] }] },
+    {
+      announcementBanners: [{ status: 'enabled', locations: ['U'.repeat(17)] }],
+    },
+    { announcementBanners: 'banner' },
+    {
+      announcementBanners: Array.from({ length: 101 }, () => ({
+        status: 'enabled',
+      })),
+    },
+    // An invalid later banner fails the config even after an eligible first.
+    {
+      announcementBanners: [
+        { status: 'enabled', title: 'First' },
+        { status: 'disabled', title: 123 },
+      ],
+    },
     { apps: [{ url: 123 }] },
     { articles: Array.from({ length: 101 }, () => group([docUri])) },
     { photos: [group(Array.from({ length: 101 }, () => photoUri))] },

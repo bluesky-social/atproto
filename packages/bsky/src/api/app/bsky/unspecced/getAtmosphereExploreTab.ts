@@ -23,10 +23,16 @@ const groupSchema = l.object({
     l.array(l.string({ maxLength: 16 }), { maxLength: 100 }),
   ),
 })
-const configSchema = l.object({
-  announcementBanner: l.optional(
-    app.bsky.unspecced.getAtmosphereExploreTab.announcementBanner,
+const bannerSchema = l.object({
+  status: l.string({ maxLength: 128 }),
+  startsAt: l.optional(l.nullable(l.string({ format: 'datetime' }))),
+  endsAt: l.optional(l.nullable(l.string({ format: 'datetime' }))),
+  locations: l.optional(
+    l.array(l.string({ maxLength: 16 }), { maxLength: 100 }),
   ),
+})
+const configSchema = l.object({
+  announcementBanners: l.optional(l.array(bannerSchema, { maxLength: 100 })),
   articles: l.optional(l.array(groupSchema, { maxLength: 100 })),
   publications: l.optional(l.array(groupSchema, { maxLength: 100 })),
   photos: l.optional(l.array(groupSchema, { maxLength: 100 })),
@@ -101,6 +107,12 @@ export default function (server: Server, ctx: AppContext) {
           'Atmosphere Explore configuration exceeds its record limit',
         )
       }
+      const now = Date.now()
+      const announcementBanner = selectBanner(
+        config.announcementBanners,
+        params,
+        now,
+      )
       const select = createSelector(params, req.headers)
       const articles = completeGroups(select(config.articles))
       const publications = completeGroups(select(config.publications))
@@ -121,9 +133,8 @@ export default function (server: Server, ctx: AppContext) {
         uris,
         hydrateCtx,
       )
-      const now = Date.now()
       const result: app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody = {
-        announcementBanner: config.announcementBanner,
+        announcementBanner,
         articles: mapDefined(articles, ({ uri }) => {
           const view = ctx.views.externalRecordView(uri, state, now)
           return view && app.bsky.embed.external.viewArticle.$isTypeOf(view)
@@ -166,6 +177,55 @@ function completeGroups(
     if (!uri) return
     return { uri }
   })
+}
+
+type Banner = l.Infer<typeof bannerSchema>
+type AnnouncementBanner =
+  app.bsky.unspecced.getAtmosphereExploreTab.AnnouncementBanner
+
+/**
+ * Validates every banner's presentation, then returns the single banner to
+ * show. Eligible (enabled, in window) banners targeted at a matching location
+ * win, first in worker order; otherwise the unrestricted eligible banner with
+ * the furthest-out `endsAt` (absent means no expiration; ties keep worker order).
+ */
+function selectBanner(
+  banners: Banner[] = [],
+  params: { countryCode?: string; regionCode?: string },
+  now: number,
+): AnnouncementBanner | undefined {
+  const validated = banners.map((banner) => {
+    const presentation =
+      app.bsky.unspecced.getAtmosphereExploreTab.announcementBanner.$safeValidate(
+        banner,
+      )
+    if (!presentation.success)
+      throw new UpstreamFailureError('Invalid Atmosphere Explore configuration')
+    return { banner, presentation: presentation.value }
+  })
+  let matched: AnnouncementBanner | undefined
+  let fallback: AnnouncementBanner | undefined
+  let fallbackEnd = -Infinity
+  for (const { banner, presentation } of validated) {
+    const { status, startsAt, endsAt, locations } = banner
+    if (status !== 'enabled') continue
+    if (startsAt != null && Date.parse(startsAt) > now) continue
+    const end = endsAt == null ? Infinity : Date.parse(endsAt)
+    if (end <= now) continue
+    if (locations?.length) {
+      if (!matched && matchesLocation(locations, params)) {
+        matched = presentation
+      }
+    } else if (end > fallbackEnd) {
+      fallback = presentation
+      fallbackEnd = end
+    }
+  }
+  const selected = matched ?? fallback
+  if (!selected) return
+  const { id, title, description, url, image, overlayColor, textColor } =
+    selected
+  return { id, title, description, url, image, overlayColor, textColor }
 }
 
 type Selectable = { tags?: string[]; locations?: string[] }
