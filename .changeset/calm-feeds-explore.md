@@ -3,4 +3,9 @@
 "@atproto/api": minor
 ---
 
-Breaking: `app.bsky.unspecced.getAtmosphereExploreTab` now returns `articles`, `publications`, `photos`, and `livestreams` as `{ items, recIdStr? }` section objects instead of arrays, and adds the `app.bsky.unspecced.getAtmosphereExploreArticleRecommendations` skeleton lexicon. AppView adds a bounded Iris article-recommendation client helper and the `atmosphere_explore:articles:iris:enable` feature gate declaration.
+Update Atmosphere Explore recommendations and curated content selection:
+
+- **Breaking:** `app.bsky.unspecced.getAtmosphereExploreTab` returns `articles`, `publications`, `photos`, and `livestreams` as `{ items, recIdStr? }` section objects instead of arrays.
+- Add the `app.bsky.unspecced.getAtmosphereExploreArticleRecommendations` skeleton lexicon and source articles from Iris behind the `atmosphere_explore:articles:iris:enable` gate, returning the recommendation ID on `articles.recIdStr`. With the gate off, retain worker-curated articles.
+- Select curated content by location and request topics, prioritize active featured windows, and cap each curated section at 10 groups before hydrating each group's `canonicalUri`.
+- Select a single active announcement banner by location, falling back to the untargeted banner with the latest expiration.
