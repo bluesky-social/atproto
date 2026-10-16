@@ -276,7 +276,15 @@ export const settingValidators = new Map<
         throw new InvalidRequestError('Invalid value')
       }
 
+      const normalizedKeys = new Set<string>()
       for (const [key, val] of Object.entries(setting.value)) {
+        const normalized = key.toLowerCase().replace(/\s/g, '-')
+        if (normalizedKeys.has(normalized)) {
+          throw new InvalidRequestError(
+            `Conflicting strike severity keys: ${normalized}`,
+          )
+        }
+        normalizedKeys.add(normalized)
         if (!val || typeof val !== 'object') {
           throw new InvalidRequestError(
             `Invalid configuration for severity level ${key}`,

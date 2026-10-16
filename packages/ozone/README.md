@@ -31,6 +31,33 @@ Notification producers skip activity before the date and skip transitions on rep
 
 Report-first pagination requires the `reporterDid` backfill and the post-retirement catch-up sweep to finish before deploying this reader. Pre-create the reporter/time indexes and `idx_moderation_event_inbox_public_created` concurrently in production before the inbox migration. The latter indexes `(subjectDid, createdAt DESC, id DESC)` so subject history can seek the configured date.
 
+## Strike expiry
+
+For strike-bearing takedowns and emails without an explicit `strikeExpiresAt`,
+Ozone uses the instance `tools.ozone.setting.severityLevels` setting. A positive
+`expiryInDays` expires the strike that many 24-hour days after the event's
+creation time. Zero or an omitted duration keeps the strike permanent. Warning
+events with zero strikes do not get an expiry. Explicit timestamps are retained.
+
+Policy-managed expiries follow subsequent edits to `expiryInDays`, including
+existing strikes. The daemon checks for edits every minute and commits batches
+of 50 account DIDs, with progress in `job_cursor` under `strike_expiry_policy`.
+It refreshes event expiries and active account counts directly, including when
+a shorter policy moves an expiry behind the normal expiry cursor. Removing a
+severity retains its saved expiries. Lifetime net strike totals are unchanged.
+
+Negative strike reversals reference the most recent takedown for that subject,
+cannot exceed its remaining strikes, and inherit its expiry. Reversing an
+already expired strike therefore does not create a negative active count.
+
+Existing NULL expiries are not automatically adopted on deployment. Historical
+repair must explicitly mark policy-managed strikes and link their reversals,
+then reconcile account counts. All strike writers and repairs must acquire the
+transaction advisory lock `pg_advisory_xact_lock(hashtextextended(did, 1))`
+before reading or changing an account's strike history. Complete the API and
+daemon rollout before repairing history. Expiry does not restore content or
+reverse account enforcement.
+
 ## License
 
 This project is dual-licensed under MIT and Apache 2.0 terms:
