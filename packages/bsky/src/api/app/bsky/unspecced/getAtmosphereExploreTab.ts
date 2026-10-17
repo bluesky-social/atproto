@@ -82,6 +82,7 @@ export default function (server: Server, ctx: AppContext) {
         features: ctx.featureGatesClient.scope(
           ctx.featureGatesClient.parseUserContextFromHandler({ viewer, req }),
         ),
+        xrpcEndpoint: app.bsky.unspecced.getAtmosphereExploreTab.$lxm,
       })
       const useIris = hydrateCtx.features.checkGate(
         hydrateCtx.features.Gate.AtmosphereExploreArticlesIrisEnable,

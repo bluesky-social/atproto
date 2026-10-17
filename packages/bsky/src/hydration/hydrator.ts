@@ -23,7 +23,7 @@ import type {
   Notification,
   RecordRef,
 } from '../proto/bsky_pb.js'
-import { events } from '../telemetry/events.js'
+import { type HydrationXrpcEndpoint, events } from '../telemetry/events.js'
 import { SITE_STANDARD_NSID_PREFIX } from '../util/external/standard-site.js'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris.js'
 import type { ParsedLabelers } from '../util.js'
@@ -122,6 +122,7 @@ export class HydrateCtx {
   skipViewerBlocks = this.vals.skipViewerBlocks
   includeDebugField = this.vals.includeDebugField
   features = this.vals.features
+  xrpcEndpoint = this.vals.xrpcEndpoint
   constructor(private vals: HydrateCtxVals) {}
   // Convenience with use with dataplane.getActors cache control
   get skipCacheForViewer() {
@@ -144,6 +145,8 @@ export type HydrateCtxVals = {
   skipViewerBlocks?: boolean
   includeDebugField?: boolean
   features: ScopedFeatureGatesClient
+  /** Set by handlers from their method's `$lxm`, never from request input. */
+  xrpcEndpoint?: HydrationXrpcEndpoint
 }
 
 export type ListItemSubjectOptOuts = HydrationMap<AtUriString, true>
@@ -1069,6 +1072,7 @@ export class Hydrator {
   ): Promise<HydrationState> {
     return trackExternalHydration(
       'uris',
+      ctx.xrpcEndpoint,
       hydrationMetrics,
       (hydrationMetrics) =>
         this.hydrateEmbedExternalView(
@@ -1095,6 +1099,7 @@ export class Hydrator {
   ): Promise<HydrationState> {
     return trackExternalHydration(
       'refs',
+      ctx.xrpcEndpoint,
       hydrationMetrics,
       (hydrationMetrics) =>
         this.hydrateEmbedExternalView(
@@ -1216,6 +1221,7 @@ export class Hydrator {
   ): Promise<HydrationState> {
     return trackExternalHydration(
       'dependencies',
+      ctx.xrpcEndpoint,
       hydrationMetrics,
       (hydrationMetrics) =>
         this.discoverExternalViewDependencies(
@@ -1244,6 +1250,8 @@ export class Hydrator {
     >()
     const discoveredUris = new Set<AtUriString>()
 
+    const rootBatch = !hydrationMetrics.rootsCounted
+    hydrationMetrics.rootsCounted = true
     for (const ref of refs) {
       /*
        *  Additional safety in case this method is ever called directly.
@@ -1257,6 +1265,13 @@ export class Hydrator {
           ? state.externalRecords?.get(uri)
           : state.externalRecordsByRef?.get(genericRecordKey({ uri, cid }))
       )?.record
+      if (rootBatch) {
+        hydrationMetrics.roots += 1
+        if (record) hydrationMetrics.rootsResolved += 1
+      } else {
+        hydrationMetrics.dependencies += 1
+        if (record) hydrationMetrics.dependenciesResolved += 1
+      }
       if (!record) continue
       const parsed = parseAtUriString(uri)
       if (
@@ -1340,6 +1355,7 @@ export class Hydrator {
         this.external
           .getAtmosphereBacklinkCounts([...targets.keys()])
           .catch((err) => {
+            hydrationMetrics.partial = true
             hydrationLogger.warn(
               { err },
               'failed to hydrate external record backlink counts',
@@ -1364,6 +1380,7 @@ export class Hydrator {
                     { limit },
                   )
                 } catch (err) {
+                  hydrationMetrics.partial = true
                   hydrationLogger.warn(
                     { err, uri, collection },
                     'failed to hydrate external record backlinks',
@@ -1418,6 +1435,7 @@ export class Hydrator {
         )
       } catch (err) {
         // Skip the whole batch; partial child state could miss moderation.
+        hydrationMetrics.partial = true
         hydrationLogger.warn(
           { err, hydrationPass, skipped: newUris.length },
           'failed to hydrate external view dependencies',
@@ -2203,6 +2221,7 @@ export class Hydrator {
       includeDebugField,
       // create default anonymous scope
       features: vals.features || this.config.featureGatesClient.scope({}),
+      xrpcEndpoint: vals.xrpcEndpoint,
     })
   }
 
