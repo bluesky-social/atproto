@@ -11,7 +11,12 @@ export type HydrationSource =
 
 /** Entry point that owns an external hydration traversal. */
 export type ExternalHydrationRoot = 'uris' | 'refs' | 'dependencies'
-export type ExternalHydrationOutcome = 'completed' | 'capped' | 'failed'
+/**
+ * `partial` is a returned traversal that recovered from a best-effort
+ * dependency failure; `capped` takes precedence over it.
+ */
+export type ExternalHydrationOutcome =
+  'completed' | 'capped' | 'partial' | 'failed'
 
 /**
  * Generic record lookup work of one external hydration traversal, across the

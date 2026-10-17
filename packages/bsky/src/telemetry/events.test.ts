@@ -144,6 +144,26 @@ describe('externalHydrationTraversal', () => {
     })
   })
 
+  it('forwards a partial outcome unchanged to every sink', () => {
+    const partial = { ...summary, outcome: 'partial', batches: 3 } as const
+    events.externalHydrationTraversal(partial)
+
+    const attributes = { root: 'uris', outcome: 'partial' }
+    expect(otel.record.mock.calls).toEqual([
+      ['hydration.external.record_lookups', 24, attributes],
+      ['hydration.external.batches', 3, attributes],
+    ])
+    expect(otel.emit).toHaveBeenCalledWith({
+      eventName: 'external_hydration_traversal',
+      severityNumber: 9,
+      attributes: partial,
+    })
+    expect(pino.info).toHaveBeenCalledWith({
+      eventName: 'external_hydration_traversal',
+      ...partial,
+    })
+  })
+
   it('never throws when a sink fails', () => {
     otel.record.mockImplementation(() => {
       throw new Error('histogram failure')
@@ -153,6 +173,9 @@ describe('externalHydrationTraversal', () => {
     })
 
     expect(() => events.externalHydrationTraversal(summary)).not.toThrow()
-    expect(otel.diagError).toHaveBeenCalledTimes(2)
+    expect(() =>
+      events.externalHydrationTraversal({ ...summary, outcome: 'partial' }),
+    ).not.toThrow()
+    expect(otel.diagError).toHaveBeenCalledTimes(4)
   })
 })

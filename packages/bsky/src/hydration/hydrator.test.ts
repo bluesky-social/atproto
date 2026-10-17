@@ -1,4 +1,9 @@
-import { createPromiseClient, createRouterTransport } from '@connectrpc/connect'
+import {
+  Code,
+  ConnectError,
+  createPromiseClient,
+  createRouterTransport,
+} from '@connectrpc/connect'
 import { describe, expect, it as baseIt, vi } from 'vitest'
 import {
   type AtUriString,
@@ -49,6 +54,17 @@ const missingPub = atUri(
   site.standard.publication.$type,
   'self',
 )
+
+// The dataplane rejects larger generic record requests; the fakes do too.
+const DATAPLANE_RECORD_LIMIT = 100
+const assertRecordLimit = (count: number) => {
+  if (count > DATAPLANE_RECORD_LIMIT) {
+    throw new ConnectError(
+      `at most ${DATAPLANE_RECORD_LIMIT} URIs are allowed`,
+      Code.InvalidArgument,
+    )
+  }
+}
 
 // The exact key of the version the faked `getRecordsByURI` returns.
 const fetchedKey = (uri: AtUriString) =>
@@ -210,9 +226,11 @@ const it = baseIt.extend<{ fixture: ReturnType<typeof createFixture> }>({
       takedownLabeled,
       unavailableOwners,
     } = fixture
-    using _lookup = vi.spyOn(dataplane, 'getRecordsByURI').mockImplementation(
-      async ({ uris = [] }) =>
-        new GetRecordsByURIResponse({
+    using _lookup = vi
+      .spyOn(dataplane, 'getRecordsByURI')
+      .mockImplementation(async ({ uris = [] }) => {
+        assertRecordLimit(uris.length)
+        return new GetRecordsByURIResponse({
           results: uris.map((uri) => {
             const entry = records.get(uri as AtUriString)
             if (!entry)
@@ -229,8 +247,8 @@ const it = baseIt.extend<{ fixture: ReturnType<typeof createFixture> }>({
               },
             }
           }),
-        }),
-    )
+        })
+      })
     using _links = vi
       .spyOn(dataplane, 'getAtmosphereBacklinks')
       .mockImplementation(
@@ -1024,7 +1042,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
       expect(state.externalRecords?.get(doc1)).toBeTruthy()
       expect(state.externalRecords?.has(pubUri)).toBe(false)
-      expect(traversalReports()).toMatchObject([{ outcome: 'completed' }])
+      expect(traversalReports()).toMatchObject([{ outcome: 'partial' }])
     })
   })
 
@@ -1053,7 +1071,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       for (const [fields] of warn.mock.calls) {
         expect(fields).toMatchObject({ err })
       }
-      expect(traversalReports()).toMatchObject([{ outcome: 'completed' }])
+      expect(traversalReports()).toMatchObject([{ outcome: 'partial' }])
     })
 
     it('keeps sibling samples when recommendations fail, distinguishing empty from failed', async ({
@@ -1094,6 +1112,15 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         uri: doc1,
         collection: site.standard.graph.recommend.$type,
       })
+      expect(traversalReports()).toEqual([
+        {
+          root: 'uris',
+          outcome: 'partial',
+          recordLookups: 5,
+          batches: 3,
+          maxPass: 3,
+        },
+      ])
     })
 
     it('keeps recommendations and the publication when subscriptions fail', async ({
@@ -1173,7 +1200,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(state.externalRecords?.has(subs[0])).toBe(false)
       expect(warn).toHaveBeenCalledTimes(1)
       expect(warn.mock.calls[0][0]).toMatchObject({ err })
-      expect(traversalReports()).toMatchObject([{ outcome: 'completed' }])
+      expect(traversalReports()).toMatchObject([{ outcome: 'partial' }])
     })
 
     it('still rejects and reports failure when the root fetch fails', async ({
@@ -1331,6 +1358,107 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         .mocked(dataplane.getRecordsByURI)
         .mock.calls.flatMap(([req]) => req.uris ?? [])
       expect(fetched).toHaveLength(24)
+    })
+
+    // 11 galleries of 10 items each, so dependency passes exceed the request
+    // limit. A root item is already seen when its gallery's items are
+    // discovered, and its photo is discovered with the items.
+    const seedLargeTraversal = (fixture: Fixture) => {
+      const galleries = Array.from({ length: 11 }, (_, i) =>
+        galleryOf(`big${i}`),
+      )
+      const seeded = galleries.map((gallery) =>
+        seedGallery(fixture, gallery, 0, 10),
+      )
+      const itemUris = seeded.flatMap(({ itemUris }) => itemUris)
+      const photoUris = seeded.flatMap(({ photoUris }) => photoUris)
+      const roots = [...galleries, itemUris[0], galleries[0]]
+      return { galleries, itemUris, photoUris, roots }
+    }
+    const recordRequests = ({ dataplane }: Fixture) =>
+      vi
+        .mocked(dataplane.getRecordsByURI)
+        .mock.calls.map(([req]) => req.uris ?? [])
+
+    it('chunks large dependency passes without consuming extra passes', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx } = fixture
+      const { galleries, itemUris, photoUris, roots } =
+        seedLargeTraversal(fixture)
+      using embedSpy = vi.spyOn(hydrator, 'hydrateEmbedExternalViewFromUris')
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(roots, ctx)
+
+      // Pass 2 is 109 unseen items plus the root item's photo; pass 3 is the
+      // remaining 109 photos.
+      const requests = recordRequests(fixture)
+      expect(requests.map((uris) => uris.length)).toEqual([12, 100, 10, 100, 9])
+      expect(requests.flat().toSorted()).toEqual(
+        [...galleries, ...itemUris, ...photoUris].toSorted(),
+      )
+      expect(
+        embedSpy.mock.calls.map(([, , , hydrationPass]) => hydrationPass ?? 1),
+      ).toEqual([1, 2, 3])
+      for (const gallery of galleries) {
+        expect(state.externalRecordBacklinks?.get(gallery)).toHaveLength(10)
+      }
+      for (const uri of [...itemUris, ...photoUris]) {
+        expect(state.externalRecords?.get(uri)).toBeTruthy()
+        expect(state.externalRecordsByRef?.has(fetchedKey(uri))).toBe(true)
+      }
+      expect(traversalReports()).toEqual([
+        {
+          root: 'uris',
+          outcome: 'completed',
+          recordLookups: 231,
+          batches: 3,
+          maxPass: 3,
+        },
+      ])
+    })
+
+    it('skips a whole dependency pass when one of its requests fails', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane } = fixture
+      const { galleries, itemUris, photoUris, roots } =
+        seedLargeTraversal(fixture)
+      const err = new Error('second request failure')
+      const impl = vi.mocked(dataplane.getRecordsByURI).getMockImplementation()!
+      // Roots, then the first dependency request, then a failure.
+      vi.mocked(dataplane.getRecordsByURI)
+        .mockImplementationOnce(impl)
+        .mockImplementationOnce(impl)
+        .mockRejectedValueOnce(err)
+      using warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(roots, ctx)
+
+      expect(recordRequests(fixture).map((uris) => uris.length)).toEqual([
+        12, 100, 10,
+      ])
+      for (const gallery of galleries) {
+        expect(state.externalRecords?.get(gallery)).toBeTruthy()
+      }
+      expect(state.externalRecords?.get(itemUris[0])).toBeTruthy()
+      // Records from the successful request are discarded with the batch.
+      for (const uri of [...itemUris.slice(1), ...photoUris]) {
+        expect(state.externalRecords?.has(uri)).toBe(false)
+      }
+      expect(warn).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ err, hydrationPass: 1, skipped: 110 }),
+        'failed to hydrate external view dependencies',
+      )
+      expect(traversalReports()).toEqual([
+        {
+          root: 'uris',
+          outcome: 'partial',
+          recordLookups: 122,
+          batches: 2,
+          maxPass: 2,
+        },
+      ])
     })
 
     it('hydrates photos for gallery-item-only input without backlink calls', async ({
@@ -1602,7 +1730,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
         expect(state.externalRecords?.has(uri)).toBe(false)
       }
       expect(warn).toHaveBeenCalledTimes(1)
-      expect(traversalReports()).toMatchObject([{ outcome: 'completed' }])
+      expect(traversalReports()).toMatchObject([{ outcome: 'partial' }])
     })
   })
   describe('traversal control', () => {
@@ -1769,6 +1897,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       vi
         .spyOn(dataplane, 'getRecordsByRef')
         .mockImplementation(async ({ refs = [] }) => {
+          assertRecordLimit(refs.length)
           return new GetRecordsByRefResponse({
             results: refs.map(({ uri, cid }) => {
               const entry = versions.get(`${uri}@${cid}`)
@@ -1845,6 +1974,78 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(state.externalRecords?.get(pub2Uri)).toBeTruthy()
       expect(state.labels?.has(doc1)).toBe(true)
       expect(state.actors?.has('did:plc:author' as DidString)).toBe(true)
+    })
+
+    it('chunks exact roots and latest dependencies, keeping identities distinct', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records, dataplane } = fixture
+      // 60 documents pinned at two versions, each version referencing its own
+      // publication, so both passes exceed the request limit.
+      const docs = Array.from({ length: 60 }, (_, i) =>
+        atUri('did:plc:author', site.standard.document.$type, `big${i}`),
+      )
+      const pubOf = (i: number, version: string) =>
+        atUri(
+          'did:plc:pub',
+          site.standard.publication.$type,
+          `big${i}v${version}`,
+        )
+      const versions = new Map<string, { body: object }>()
+      const pubs: AtUriString[] = []
+      const refs = docs.flatMap((doc, i) =>
+        ['1', '2'].map((version) => {
+          const pub = pubOf(i, version)
+          versions.set(key(doc, version), { body: makeDoc(pub) })
+          records.set(pub, { body: makePub() })
+          pubs.push(pub)
+          return v(doc, version)
+        }),
+      )
+      using _refs = mockRefs(fixture, versions)
+      const seen = new Set<string>()
+      const state = await hydrator.hydrateEmbedExternalViewFromRefs(
+        [...refs, ...refs.slice(0, 5)],
+        ctx,
+        seen,
+      )
+
+      const refRequests = vi
+        .mocked(dataplane.getRecordsByRef)
+        .mock.calls.map(([req]) => req.refs ?? [])
+      expect(refRequests.map((chunk) => chunk.length)).toEqual([100, 20])
+      expect(refRequests.flat()).toEqual(refs)
+      const uriRequests = vi
+        .mocked(dataplane.getRecordsByURI)
+        .mock.calls.map(([req]) => req.uris ?? [])
+      expect(uriRequests.map((chunk) => chunk.length)).toEqual([100, 20])
+      expect(uriRequests.flat().toSorted()).toEqual(pubs.toSorted())
+
+      // Exact roots are never latest lookups, and vice versa.
+      for (const ref of refs) {
+        expect(
+          state.externalRecordsByRef?.get(genericRecordKey(ref)),
+        ).toBeTruthy()
+        expect(seen.has(genericRecordKey(ref))).toBe(true)
+      }
+      for (const doc of docs) {
+        expect(state.externalRecords?.has(doc)).toBe(false)
+        expect(seen.has(doc)).toBe(false)
+      }
+      for (const pub of pubs) {
+        expect(state.externalRecords?.get(pub)).toBeTruthy()
+        expect(state.externalRecordsByRef?.has(fetchedKey(pub))).toBe(true)
+        expect(seen.has(pub)).toBe(true)
+      }
+      expect(traversalReports()).toEqual([
+        {
+          root: 'refs',
+          outcome: 'completed',
+          recordLookups: 240,
+          batches: 2,
+          maxPass: 2,
+        },
+      ])
     })
 
     it('fills an unavailable pin only from the same version', async ({
@@ -2339,7 +2540,7 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
       expect(traversalReports()).toEqual([
         {
           root: 'uris',
-          outcome: 'completed',
+          outcome: 'partial',
           recordLookups: 3,
           batches: 3,
           maxPass: 3,
@@ -2365,6 +2566,83 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
           recordLookups: 1,
           batches: 1,
           maxPass: 1,
+        },
+      ])
+    })
+
+    it('fails the traversal when a later root request fails', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane } = fixture
+      seedChain(fixture, 101)
+      const roots = Array.from({ length: 101 }, (_, i) => chainUri(i))
+      const err = new Error('dataplane failure')
+      failRecordBatches(fixture, (uri) => uri === chainUri(100), err)
+
+      await expect(
+        hydrator.hydrateEmbedExternalViewFromUris(roots, ctx),
+      ).rejects.toBe(err)
+      expect(dataplane.getRecordsByURI).toHaveBeenCalledTimes(2)
+      expect(traversalReports()).toEqual([
+        {
+          root: 'uris',
+          outcome: 'failed',
+          recordLookups: 101,
+          batches: 1,
+          maxPass: 1,
+        },
+      ])
+    })
+
+    it('reports successful empty pages and unavailable records as completed', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, records } = fixture
+      records.set(doc1, { body: makeDoc(missingPub) })
+      using warn = vi.spyOn(hydrationLogger, 'warn')
+      const state = await hydrator.hydrateEmbedExternalViewFromUris(
+        [doc1, missingDoc],
+        ctx,
+      )
+
+      expect(state.externalRecordBacklinks?.get(doc1)).toEqual([])
+      expect(state.externalRecords?.get(missingDoc)).toBeNull()
+      expect(state.externalRecords?.get(missingPub)).toBeNull()
+      expect(warn).not.toHaveBeenCalled()
+      expect(traversalReports()).toEqual([
+        {
+          root: 'uris',
+          outcome: 'completed',
+          recordLookups: 3,
+          batches: 2,
+          maxPass: 2,
+        },
+      ])
+    })
+
+    it('reports a capped traversal as capped despite recovered failures', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane } = fixture
+      const max = ExternalHydrator.MAX_EXTERNAL_HYDRATION_PASSES
+      seedChain(fixture, max + 4)
+      vi.mocked(dataplane.getAtmosphereBacklinkCounts).mockRejectedValue(
+        new Error('counts failure'),
+      )
+      using warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+      await hydrator.hydrateEmbedExternalViewFromUris([chainUri(0)], ctx)
+
+      // A counts failure per pass, then the cap.
+      expect(warn).toHaveBeenCalledTimes(max + 1)
+      expect(traversalReports()).toEqual([
+        {
+          root: 'uris',
+          outcome: 'capped',
+          recordLookups: max,
+          batches: max,
+          maxPass: max,
         },
       ])
     })

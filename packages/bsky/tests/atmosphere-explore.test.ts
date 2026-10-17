@@ -1,6 +1,11 @@
 import { once } from 'node:events'
 import { createServer as createHttpServer } from 'node:http'
-import { createPromiseClient, createRouterTransport } from '@connectrpc/connect'
+import {
+  Code,
+  ConnectError,
+  createPromiseClient,
+  createRouterTransport,
+} from '@connectrpc/connect'
 import { afterEach, beforeEach, describe, expect, it, test, vi } from 'vitest'
 import {
   type AtUriString,
@@ -51,6 +56,8 @@ const doc2Uri = atUri(author, site.standard.document.$type, 'story2')
 const missingUri = atUri(author, site.standard.document.$type, 'missing')
 const group = (canonicalUri: unknown) => ({ canonicalUri })
 const service = 'https://cms.bsky.app/atmosphere-explore-tab'
+// The dataplane rejects larger record lookups; the fixture does too.
+const dataplaneRecordLimit = 100
 const frozenNow = Date.parse(publishedAt)
 const at = (offsetMs: number) => toDatetimeString(frozenNow + offsetMs)
 
@@ -181,6 +188,10 @@ async function setup(config: unknown = {}) {
       }),
     ],
   ])
+  // Gallery item backlinks by gallery.
+  const galleryItems = new Map<AtUriString, AtUriString[]>([
+    [galleryUri, [itemUri]],
+  ])
   const takenDown = new Set<string>()
   const takenDownActors = new Set<string>()
   const blockedActors = new Set<string>()
@@ -203,7 +214,15 @@ async function setup(config: unknown = {}) {
     Service,
     createRouterTransport(({ service }) => {
       service(Service, {
-        getRecordsByURI: ({ uris }) => ({ results: uris.map(lookup) }),
+        getRecordsByURI: ({ uris }) => {
+          if (uris.length > dataplaneRecordLimit) {
+            throw new ConnectError(
+              `at most ${dataplaneRecordLimit} URIs are allowed`,
+              Code.InvalidArgument,
+            )
+          }
+          return { results: uris.map(lookup) }
+        },
         getAtmosphereBacklinkCounts: ({ targetUris }) => ({
           results: targetUris.map((targetUri) => ({
             targetUri,
@@ -215,8 +234,10 @@ async function setup(config: unknown = {}) {
         }),
         getAtmosphereBacklinks: ({ collection, targetUri }) => ({
           backlinks:
-            collection === grainGalleryItem.$type && targetUri === galleryUri
-              ? [{ uri: itemUri }]
+            collection === grainGalleryItem.$type
+              ? (galleryItems.get(targetUri as AtUriString) ?? []).map(
+                  (uri) => ({ uri }),
+                )
               : [],
         }),
         getActors: ({ dids }) => ({
@@ -318,6 +339,7 @@ async function setup(config: unknown = {}) {
     throw new Error('Missing listen address')
   return {
     records,
+    galleryItems,
     takenDown,
     takenDownActors,
     blockedActors,
@@ -524,6 +546,73 @@ describe('Atmosphere Explore', () => {
     expect(
       body.photos.items[0].view.associatedRefs?.map(({ uri }) => uri),
     ).toEqual([galleryUri, itemUri, photoUri])
+  })
+
+  it('renders dependency passes larger than one record request', async () => {
+    const galleries = Array.from({ length: 10 }, (_, i) =>
+      atUri(author, grainGallery.$type, `large${i}`),
+    )
+    // The publication is not a root, so the first dependency pass is the
+    // publication plus 100 items, and the next is 100 photos.
+    await using fixture = await setup({
+      articles: [group(docUri)],
+      photos: galleries.map(group),
+    })
+    const alts = galleries.map((gallery, g) => {
+      fixture.records.set(
+        gallery,
+        grainGallery.$build({ title: `Gallery ${g}`, createdAt: publishedAt }),
+      )
+      const items = Array.from({ length: 10 }, (_, i) => {
+        const rkey = `large${g}-${i}`
+        const item = atUri(author, grainGalleryItem.$type, rkey)
+        const photo = atUri(author, grainPhoto.$type, rkey)
+        fixture.records.set(
+          item,
+          grainGalleryItem.$build({
+            gallery,
+            item: photo,
+            position: i,
+            createdAt: publishedAt,
+          }),
+        )
+        fixture.records.set(
+          photo,
+          grainPhoto.$build({
+            photo: {
+              $type: 'blob',
+              ref: parseCid(photoCid),
+              mimeType: 'image/jpeg',
+              size: 12,
+            },
+            alt: `Photo ${rkey}`,
+          }),
+        )
+        return item
+      })
+      fixture.galleryItems.set(gallery, items)
+      return items.map((_, i) => `Photo large${g}-${i}`)
+    })
+    using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+    const { status, body } = await fixture.query()
+
+    expect(status).toBe(200)
+    const requests = lookup.mock.calls.map(([params]) => params.uris ?? [])
+    expect(requests.map((uris) => uris.length)).toEqual([11, 100, 1, 100])
+    expect(new Set(requests.flat()).size).toBe(212)
+    expect(body.articles.items).toHaveLength(1)
+    expect(body.articles.items[0].view.publisher).toMatchObject({
+      title: 'Publication',
+    })
+    expect(body.photos.items.map(({ view }) => view.uri)).toEqual(galleries)
+    expect(
+      body.photos.items.map(({ view }) =>
+        view.items.map(
+          (item) =>
+            app.bsky.embed.external.viewGalleryImage.$ifMatches(item)?.alt,
+        ),
+      ),
+    ).toEqual(alts)
   })
 
   describe('invalid canonical roots', () => {

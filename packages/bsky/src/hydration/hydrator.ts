@@ -1340,6 +1340,7 @@ export class Hydrator {
         this.external
           .getAtmosphereBacklinkCounts([...targets.keys()])
           .catch((err) => {
+            hydrationMetrics.partial = true
             hydrationLogger.warn(
               { err },
               'failed to hydrate external record backlink counts',
@@ -1364,6 +1365,7 @@ export class Hydrator {
                     { limit },
                   )
                 } catch (err) {
+                  hydrationMetrics.partial = true
                   hydrationLogger.warn(
                     { err, uri, collection },
                     'failed to hydrate external record backlinks',
@@ -1418,6 +1420,7 @@ export class Hydrator {
         )
       } catch (err) {
         // Skip the whole batch; partial child state could miss moderation.
+        hydrationMetrics.partial = true
         hydrationLogger.warn(
           { err, hydrationPass, skipped: newUris.length },
           'failed to hydrate external view dependencies',
