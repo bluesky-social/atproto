@@ -1,5 +1,13 @@
 # @atproto/bsky
 
+## 0.3.2
+
+### Patch Changes
+
+- [#5679](https://github.com/bluesky-social/atproto/pull/5679) [`3380a6c`](https://github.com/bluesky-social/atproto/commit/3380a6c2f80b127de8ac13e7202760c9532a1398) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Gate the Atmosphere Explore tab endpoint and return 403 when disabled.
+
+- [#5680](https://github.com/bluesky-social/atproto/pull/5680) [`9f66a7e`](https://github.com/bluesky-social/atproto/commit/9f66a7e54b030700c03eda0bdbf35ffe756f4cd8) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add a `social.grain.photo` compatibility override that no longer requires `alt`, so the AppView renders Grain gallery photos that omit it. Ozone resolves the override; the PDS keeps validating writes against the published lexicon.
+
 ## 0.3.1
 
 ### Patch Changes
