@@ -1809,8 +1809,8 @@
       "cid": "bafyreiawd6n4mlqng7w4kdbux7qzidpzhda3qun7n7xnilurtsxvwdpmje"
     },
     "social.grain.photo": {
-      "uri": "at://did:plc:e7rftrdyz5e2rw4y6ocszew2/com.atproto.lexicon.schema/social.grain.photo",
-      "cid": "bafyreiec24azdo2caoijpefea3x6qfewjvkfu3zcjj3u3lwf3nx3q7nunu"
+      "uri": "file://../../lexicons-overrides/social/grain/photo.json",
+      "cid": "bafyreicyugyl45yfydyxrhy4ii5zrxsnl75yqq6nopevaw7cv5do4pl5oa"
     },
     "tools.ozone.communication.createTemplate": {
       "uri": "file://../../lexicons/tools/ozone/communication/createTemplate.json",

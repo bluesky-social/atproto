@@ -144,8 +144,13 @@ last fallback. The kinds:
   resolver but **before** the `http`/network ones, so it overrides the lexicons
   they would otherwise return (it cannot override canonical, which resolves
   first). Put any document that must differ here: unpublished NSIDs (`internal.*`,
-  `place.stream.badge.defs`, a not-yet-published `app.bsky.unspecced.*`) and
-  documents whose local version is ahead of the published one. All packages share
+  `place.stream.badge.defs`, a not-yet-published `app.bsky.unspecced.*`),
+  documents whose local version is ahead of the published one, and minimal
+  compatibility relaxations of published third-party lexicons that network
+  records violate (see
+  [Compatibility overrides](../../../lexicons-overrides/README.md#compatibility-overrides);
+  the PDS must `exclude` them so writes keep validating against the published
+  schema). All packages share
   the one [lexicons-overrides/](../../../lexicons-overrides/) at the repo root.
 
 [packages/bsky/lexicons.json](../../../packages/bsky/lexicons.json) is the full

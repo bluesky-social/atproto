@@ -9,7 +9,7 @@
     {
       "type": "directory",
       "path": "../../lexicons-overrides",
-      "exclude": ["app.bsky.*", "chat.bsky.*"]
+      "exclude": ["app.bsky.*", "chat.bsky.*", "social.grain.photo"]
     }
   ],
   "lexicons": [
