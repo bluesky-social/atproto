@@ -45,7 +45,7 @@ Create JSON Lexicon schemas in this directory to provide custom implementations 
 
 A compatibility override is a copy of a published third-party lexicon with the smallest relaxation that lets read paths accept records already on the network. Keep every other constraint identical to the upstream document.
 
-Packages that validate writes (the PDS) must keep validating against the publisher's schema, so they must exclude every compatibility override from their overrides resolver (see the `exclude` list in [packages/pds/lexicons.json](../packages/pds/lexicons.json)).
+Packages that validate writes (the PDS) must keep validating against the publisher's schema, so they must exclude every compatibility override from their overrides resolver (see the `exclude` list in [packages/pds/lexicons.json](../packages/pds/lexicons.json)). Read-only consumers (the AppView and Ozone) resolve them like any other override.
 
 - `social.grain.photo`
   - Upstream: `at://did:plc:e7rftrdyz5e2rw4y6ocszew2/com.atproto.lexicon.schema/social.grain.photo` (CID `bafyreiec24azdo2caoijpefea3x6qfewjvkfu3zcjj3u3lwf3nx3q7nunu`).
