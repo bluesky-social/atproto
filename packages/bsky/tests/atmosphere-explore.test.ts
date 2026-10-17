@@ -21,6 +21,7 @@ import { FeatureGatesClient } from '../src/feature-gates/index.js'
 import { Hydrator } from '../src/hydration/hydrator.js'
 import { ImageUriBuilder } from '../src/image/uri.js'
 import { app, type com, place, site, social } from '../src/lexicons/index.js'
+import { httpLogger } from '../src/logger.js'
 import { Service } from '../src/proto/bsky_connect.js'
 import {
   GetAtmosphereBacklinksResponse,
@@ -2731,25 +2732,89 @@ describe('Atmosphere Explore Iris requirements and failures', () => {
     expect(fixture.fetchMock).not.toHaveBeenCalled()
   })
 
-  test.each([
-    ['http', () => new Response('', { status: 503 }), 503],
-    ['network', () => Promise.reject(new TypeError('down')), 502],
-    ['redirect', () => new Response('', { status: 302 }), 502],
-    ['invalid JSON', () => new Response('{'), 502],
+  const irisFailures = [
+    ['http', () => new Response('', { status: 503 })],
+    ['network', () => Promise.reject(new TypeError('down'))],
+    ['redirect', () => new Response('', { status: 302 })],
+    ['invalid JSON', () => new Response('{')],
     [
       'timeout',
       () => Promise.reject(new DOMException('Timed out', 'TimeoutError')),
-      502,
     ],
-  ] as const)(
-    'fails without falling back to curated articles on Iris %s',
-    async (_, respond, status) => {
+  ] as const
+
+  test.each(irisFailures)(
+    'falls back to worker-curated articles, without a rec ID, on Iris %s',
+    async (_, respond) => {
       await using fixture = await setupIris([docUri], curated)
       fixture.iris.respond = async () => respond()
-      using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
-      const { status: actual } = await fixture.query()
-      expect(actual).toBe(status)
-      expect(lookup).not.toHaveBeenCalled()
+      using hydrate = vi.spyOn(
+        fixture.hydrator,
+        'hydrateEmbedExternalViewFromUris',
+      )
+      using warn = vi.spyOn(httpLogger, 'warn')
+      const { status, body } = await fixture.query()
+
+      expect(status).toBe(200)
+      // Worker articles [missing, doc, doc]: the missing root is dropped.
+      expect(body.articles.items.map(({ view }) => view.title)).toEqual([
+        'Article',
+        'Article',
+      ])
+      expect(body.articles).not.toHaveProperty('recIdStr')
+      expect(body.publications.items).toHaveLength(1)
+      expect(body.photos.items).toHaveLength(1)
+      expect(body.livestreams.items).toHaveLength(1)
+      expect(body.apps).toEqual(curated.apps)
+      expect(body.announcementBanner).toEqual(curatedBanner)
+      // Worker-curated article roots are hydrated; Iris roots never are.
+      expect(hydrate).toHaveBeenCalledWith(
+        [missingUri, docUri, pubUri, galleryUri, liveUri],
+        expect.objectContaining({ viewer: null }),
+      )
+      expect(fixture.fetchMock).toHaveBeenCalledOnce()
+      expect(fixture.iris.fetchMock).toHaveBeenCalledOnce()
+      expect(warn).toHaveBeenCalledOnce()
+      expect(JSON.stringify(warn.mock.calls)).not.toContain('iris-key')
+    },
+  )
+
+  it('falls back to worker articles when Iris fails while the worker is pending', async () => {
+    await using fixture = await setupIris([docUri], curated)
+    const worker = deferred<Response>()
+    fixture.fetchMock.mockImplementation(() => worker.promise)
+    fixture.iris.respond = async () => new Response('', { status: 503 })
+    const pending = fixture.query()
+
+    // Both started concurrently; Iris has failed before the worker completes.
+    await vi.waitFor(() => {
+      expect(fixture.fetchMock).toHaveBeenCalledTimes(1)
+      expect(fixture.iris.fetchMock).toHaveBeenCalledTimes(1)
+    })
+    worker.resolve(Response.json(curated))
+    const { status, body } = await pending
+    expect(status).toBe(200)
+    expect(body.articles.items).toHaveLength(2)
+    expect(body.articles).not.toHaveProperty('recIdStr')
+    expect(body.publications.items).toHaveLength(1)
+    expect(fixture.fetchMock).toHaveBeenCalledOnce()
+    expect(fixture.iris.fetchMock).toHaveBeenCalledOnce()
+  })
+
+  test.each([
+    ['http', () => new Response('', { status: 503 }), 502],
+    [
+      'timeout',
+      () => Promise.reject(new DOMException('Timed out', 'TimeoutError')),
+      504,
+    ],
+  ] as const)(
+    'still fails on worker %s errors when Iris also fails',
+    async (_, respond, status) => {
+      await using fixture = await setupIris([docUri], curated)
+      fixture.fetchMock.mockImplementation(async () => respond())
+      fixture.iris.respond = async () => new Response('', { status: 503 })
+      expect((await fixture.query()).status).toBe(status)
     },
   )
 

@@ -12,6 +12,7 @@ import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import type { AppContext } from '../../../../context.js'
 import type { HydrateCtx, Hydrator } from '../../../../hydration/hydrator.js'
 import { app, site } from '../../../../lexicons/index.js'
+import { httpLogger } from '../../../../logger.js'
 import {
   type HydrationFnInput,
   type PresentationFnInput,
@@ -121,17 +122,27 @@ async function skeleton({
   const [config, recommendations] = await Promise.all([
     ctx.fetchExploreTabSkeleton(params.workerUrl, params.signal),
     ctx.irisClient
-      ? ctx.irisClient.call(
-          app.bsky.unspecced.getAtmosphereExploreArticleRecommendations,
-          {
-            limit: MAX_LIST_ITEMS,
-            viewer: params.hydrateCtx.viewer ?? undefined,
-          },
-          {
-            headers: params.headers,
-            signal: params.signal,
-          },
-        )
+      ? ctx.irisClient
+          .call(
+            app.bsky.unspecced.getAtmosphereExploreArticleRecommendations,
+            {
+              limit: MAX_LIST_ITEMS,
+              viewer: params.hydrateCtx.viewer ?? undefined,
+            },
+            {
+              headers: params.headers,
+              signal: params.signal,
+            },
+          )
+          // On an Iris failure, fall back to worker-curated articles.
+          .catch((err) => {
+            if (params.signal.aborted) throw err
+            httpLogger.warn(
+              { err },
+              'Unable to fetch Atmosphere Explore article recommendations',
+            )
+            return undefined
+          })
       : undefined,
   ])
   const now = Date.now()
