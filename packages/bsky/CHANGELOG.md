@@ -1,5 +1,13 @@
 # @atproto/bsky
 
+## 0.3.1
+
+### Patch Changes
+
+- [#5677](https://github.com/bluesky-social/atproto/pull/5677) [`9354e5d`](https://github.com/bluesky-social/atproto/commit/9354e5d9b12ebf1add5ebccf36596031992abc1a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Report external view hydration XRPC endpoint, duration, and root/dependency resolution.
+
+- [#5677](https://github.com/bluesky-social/atproto/pull/5677) [`9354e5d`](https://github.com/bluesky-social/atproto/commit/9354e5d9b12ebf1add5ebccf36596031992abc1a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fetch generic external records in requests of at most 100 entries so large dependency passes, such as Atmosphere Explore galleries, no longer exceed the dataplane limit, and report external hydration traversals that recovered from dependency failures with a `partial` outcome.
+
 ## 0.3.0
 
 ### Minor Changes

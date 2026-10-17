@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsky",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [
