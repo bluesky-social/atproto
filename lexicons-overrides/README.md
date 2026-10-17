@@ -29,6 +29,7 @@ Because this resolver is listed after the canonical one (which resolves `com.atp
 - Providing prototypes or experimental versions of lexicons before they are finalized.
 - Overriding a network- or GitHub-resolved lexicon for testing or development purposes.
 - Providing a copy of a lexicon document that can no longer be resolved from its upstream source.
+- Relaxing a published third-party lexicon that existing network records violate, so read paths accept them (see [Compatibility overrides](#compatibility-overrides)).
 
 > [!NOTE]
 >
@@ -39,3 +40,15 @@ Create JSON Lexicon schemas in this directory to provide custom implementations 
 > [!NOTE]
 >
 > Please keep this directory tidy. Do remove any override file that is no longer needed (then run `pnpm run lex:update`).
+
+## Compatibility overrides
+
+A compatibility override is a copy of a published third-party lexicon with the smallest relaxation that lets read paths accept records already on the network. Keep every other constraint identical to the upstream document.
+
+Packages that validate writes (the PDS) must keep validating against the publisher's schema, so they must exclude every compatibility override from their overrides resolver (see the `exclude` list in [packages/pds/lexicons.json](../packages/pds/lexicons.json)).
+
+- `social.grain.photo`
+  - Upstream: `at://did:plc:e7rftrdyz5e2rw4y6ocszew2/com.atproto.lexicon.schema/social.grain.photo` (CID `bafyreiec24azdo2caoijpefea3x6qfewjvkfu3zcjj3u3lwf3nx3q7nunu`).
+  - Relaxation: `alt` is no longer required.
+  - Evidence: published Grain photo records omit `alt` (observed 2026-10-17), so the AppView dropped them from gallery views.
+  - Remove when: Grain backfills `alt` on existing records or publishes the relaxation.

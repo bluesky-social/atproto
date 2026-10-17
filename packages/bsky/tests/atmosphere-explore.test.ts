@@ -6,7 +6,16 @@ import {
   createPromiseClient,
   createRouterTransport,
 } from '@connectrpc/connect'
-import { afterEach, beforeEach, describe, expect, it, test, vi } from 'vitest'
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  test,
+  vi,
+} from 'vitest'
 import {
   type AtUriString,
   Client,
@@ -585,6 +594,70 @@ describe('Atmosphere Explore', () => {
     expect(
       body.photos.items[0].view.associatedRefs?.map(({ uri }) => uri),
     ).toEqual([galleryUri, itemUri, photoUri])
+  })
+
+  it('renders a selected gallery whose photos all omit alt', async () => {
+    const noAltGalleryUri = atUri(author, grainGallery.$type, 'no-alt')
+    await using fixture = await setup({
+      photos: [group(galleryUri), group(noAltGalleryUri)],
+    })
+    fixture.records.set(
+      noAltGalleryUri,
+      grainGallery.$build({ title: 'No alt', createdAt: publishedAt }),
+    )
+    const noAltItems = Array.from({ length: 2 }, (_, i) => {
+      const rkey = `no-alt-${i}`
+      const item = atUri(author, grainGalleryItem.$type, rkey)
+      const photo = atUri(author, grainPhoto.$type, rkey)
+      fixture.records.set(
+        item,
+        grainGalleryItem.$build({
+          gallery: noAltGalleryUri,
+          item: photo,
+          position: i,
+          createdAt: publishedAt,
+        }),
+      )
+      fixture.records.set(
+        photo,
+        grainPhoto.$build({
+          photo: {
+            $type: 'blob',
+            ref: parseCid(photoCid),
+            mimeType: 'image/jpeg',
+            size: 12,
+          },
+          aspectRatio: { width: 4, height: 3 },
+        }),
+      )
+      return { item, photo }
+    })
+    fixture.galleryItems.set(
+      noAltGalleryUri,
+      noAltItems.map(({ item }) => item),
+    )
+    const { status, body } = await fixture.query()
+
+    expect(status).toBe(200)
+    expect(body.photos.items.map(({ view }) => view.uri)).toEqual([
+      galleryUri,
+      noAltGalleryUri,
+    ])
+    const gallery = body.photos.items[1].view
+    assert(app.bsky.embed.external.viewGallery.$matches(gallery))
+    expect(gallery.associatedRefs?.map(({ uri }) => uri)).toEqual([
+      noAltGalleryUri,
+      ...noAltItems.flatMap(({ item, photo }) => [item, photo]),
+    ])
+    expect(gallery.items).toHaveLength(2)
+    for (const image of gallery.items) {
+      expect(image).toMatchObject({
+        $type: app.bsky.embed.external.viewGalleryImage.$type,
+        thumbnail: `https://images.example.com/feed_thumbnail/plain/${author}/${photoCid}`,
+        aspectRatio: { width: 4, height: 3 },
+      })
+      expect(image).not.toHaveProperty('alt')
+    }
   })
 
   it('renders dependency passes larger than one record request', async () => {
