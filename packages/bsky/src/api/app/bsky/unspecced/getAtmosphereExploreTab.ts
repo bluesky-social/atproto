@@ -156,9 +156,8 @@ async function skeleton({
   return {
     now,
     announcementBanner,
-    // @NOTE Iris articles bypass worker selection and are never featured.
     articles: orderGroups(
-      recommendations
+      recommendations && recommendations.articles.length > 0
         ? mapDefined(
             recommendations.articles.slice(0, MAX_LIST_ITEMS),
             ({ uri }) => {

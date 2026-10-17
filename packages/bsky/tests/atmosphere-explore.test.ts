@@ -2424,12 +2424,15 @@ describe('Atmosphere Explore article source (gate on)', () => {
     expect(body.photos.items).toHaveLength(1)
   })
 
-  it('returns the rec ID for a successful empty or fully filtered result', async () => {
+  it('falls back to worker articles for an empty Iris list, but not a fully filtered one', async () => {
     await using fixture = await setupIris([], curated, '77')
-    expect((await fixture.query()).body.articles).toEqual({
-      items: [],
-      recIdStr: '77',
-    })
+    const { body } = await fixture.query()
+    // Worker articles [missing, doc, doc]: the missing root is dropped.
+    expect(body.articles.items.map(({ view }) => view.title)).toEqual([
+      'Article',
+      'Article',
+    ])
+    expect(body.articles.recIdStr).toBe('77')
     fixture.iris.response = {
       articles: articleUris(missingUri, pubUri),
       recIdStr: '78',
