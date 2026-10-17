@@ -1,3 +1,4 @@
+import type { IncomingHttpHeaders } from 'node:http'
 import { mapDefined } from '@atproto/common'
 import { type AtUriString, l } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
@@ -12,16 +13,27 @@ import type { AppContext } from '../../../../context.js'
 import { app } from '../../../../lexicons/index.js'
 
 const MAX_CONFIG_BYTES = 512 * 1024
-const MAX_ATMOSPHERE_RECORDS = 500
+const MAX_SELECTED_GROUPS = 10
 
 const groupSchema = l.object({
-  featured: l.boolean(),
-  uris: l.array(l.unknown(), { maxLength: 100 }),
+  canonicalUri: l.optional(l.unknown()),
+  startsAt: l.optional(l.nullable(l.string({ format: 'datetime' }))),
+  endsAt: l.optional(l.nullable(l.string({ format: 'datetime' }))),
+  tags: l.optional(l.array(l.string({ maxLength: 128 }), { maxLength: 100 })),
+  locations: l.optional(
+    l.array(l.string({ maxLength: 16 }), { maxLength: 100 }),
+  ),
+})
+const bannerSchema = l.object({
+  status: l.string({ maxLength: 128 }),
+  startsAt: l.optional(l.nullable(l.string({ format: 'datetime' }))),
+  endsAt: l.optional(l.nullable(l.string({ format: 'datetime' }))),
+  locations: l.optional(
+    l.array(l.string({ maxLength: 16 }), { maxLength: 100 }),
+  ),
 })
 const configSchema = l.object({
-  announcementBanner: l.optional(
-    app.bsky.unspecced.getAtmosphereExploreTab.announcementBanner,
-  ),
+  announcementBanners: l.optional(l.array(bannerSchema, { maxLength: 100 })),
   articles: l.optional(l.array(groupSchema, { maxLength: 100 })),
   publications: l.optional(l.array(groupSchema, { maxLength: 100 })),
   photos: l.optional(l.array(groupSchema, { maxLength: 100 })),
@@ -50,13 +62,8 @@ export default function (server: Server, ctx: AppContext) {
         )
       let body: unknown
       try {
+        // Location filtering happens locally, so fetch the full config as-is.
         const url = new URL(service)
-        if (params.countryCode !== undefined) {
-          url.searchParams.set('countryCode', params.countryCode)
-        }
-        if (params.regionCode !== undefined) {
-          url.searchParams.set('regionCode', params.regionCode)
-        }
         const response = await fetchConfig(url, {
           headers: { accept: 'application/json' },
           redirect: 'error',
@@ -87,24 +94,17 @@ export default function (server: Server, ctx: AppContext) {
           'Invalid Atmosphere Explore configuration',
         )
       const config = parsed.value
-      const groups = [
-        ...(config.articles ?? []),
-        ...(config.publications ?? []),
-        ...(config.photos ?? []),
-        ...(config.livestreams ?? []),
-      ]
-      if (
-        groups.reduce((count, group) => count + group.uris.length, 0) >
-        MAX_ATMOSPHERE_RECORDS
-      ) {
-        throw new UpstreamFailureError(
-          'Atmosphere Explore configuration exceeds its record limit',
-        )
-      }
-      const articles = completeGroups(config.articles)
-      const publications = completeGroups(config.publications)
-      const photos = completeGroups(config.photos)
-      const livestreams = completeGroups(config.livestreams)
+      const now = Date.now()
+      const announcementBanner = selectBanner(
+        config.announcementBanners,
+        params,
+        now,
+      )
+      const select = createSelector(params, req.headers, now)
+      const articles = completeGroups(select(config.articles))
+      const publications = completeGroups(select(config.publications))
+      const photos = completeGroups(select(config.photos))
+      const livestreams = completeGroups(select(config.livestreams))
       const uris = [
         ...new Set(
           [...articles, ...publications, ...photos, ...livestreams].map(
@@ -120,9 +120,8 @@ export default function (server: Server, ctx: AppContext) {
         uris,
         hydrateCtx,
       )
-      const now = Date.now()
       const result: app.bsky.unspecced.getAtmosphereExploreTab.$OutputBody = {
-        announcementBanner: config.announcementBanner,
+        announcementBanner,
         articles: mapDefined(articles, ({ featured, uri }) => {
           const view = ctx.views.externalRecordView(uri, state, now)
           return view && app.bsky.embed.external.viewArticle.$isTypeOf(view)
@@ -157,13 +156,159 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-function completeGroups(
-  groups: l.Infer<typeof groupSchema>[] = [],
-): RecordGroup[] {
-  return mapDefined(groups, ({ featured, uris }) => {
-    const uri = recordUri(uris[0])
+function completeGroups(groups: SelectedGroup[] = []): RecordGroup[] {
+  return mapDefined(groups, ({ featured, canonicalUri }) => {
+    const uri = recordUri(canonicalUri)
     if (!uri) return
     return { featured, uri }
+  })
+}
+
+type Banner = l.Infer<typeof bannerSchema>
+type AnnouncementBanner =
+  app.bsky.unspecced.getAtmosphereExploreTab.AnnouncementBanner
+
+/**
+ * Validates every banner's presentation, then returns the single banner to
+ * show. Eligible (enabled, in window) banners targeted at a matching location
+ * win, first in worker order; otherwise the unrestricted eligible banner with
+ * the furthest-out `endsAt` (absent means no expiration; ties keep worker order).
+ */
+function selectBanner(
+  banners: Banner[] = [],
+  params: { countryCode?: string; regionCode?: string },
+  now: number,
+): AnnouncementBanner | undefined {
+  const validated = banners.map((banner) => {
+    const presentation =
+      app.bsky.unspecced.getAtmosphereExploreTab.announcementBanner.$safeValidate(
+        banner,
+      )
+    if (!presentation.success)
+      throw new UpstreamFailureError('Invalid Atmosphere Explore configuration')
+    return { banner, presentation: presentation.value }
+  })
+  let matched: AnnouncementBanner | undefined
+  let fallback: AnnouncementBanner | undefined
+  let fallbackEnd = -Infinity
+  for (const { banner, presentation } of validated) {
+    const { status, startsAt, endsAt, locations } = banner
+    if (status !== 'enabled') continue
+    if (startsAt != null && Date.parse(startsAt) > now) continue
+    const end = endsAt == null ? Infinity : Date.parse(endsAt)
+    if (end <= now) continue
+    if (locations?.length) {
+      if (!matched && matchesLocation(locations, params)) {
+        matched = presentation
+      }
+    } else if (end > fallbackEnd) {
+      fallback = presentation
+      fallbackEnd = end
+    }
+  }
+  const selected = matched ?? fallback
+  if (!selected) return
+  const { id, title, description, url, image, overlayColor, textColor } =
+    selected
+  return { id, title, description, url, image, overlayColor, textColor }
+}
+
+type Selectable = {
+  tags?: string[]
+  locations?: string[]
+  startsAt?: string | null
+  endsAt?: string | null
+}
+type SelectedGroup = l.Infer<typeof groupSchema> & { featured: boolean }
+
+/**
+ * Builds a per-list selector that drops location-ineligible entries, orders
+ * the rest by priority bucket (location, requested topic, `general`, untagged;
+ * stable within a bucket), moves entries with an active schedule window ahead
+ * of the rest (stable, so bucket order holds within each side), and keeps the
+ * first `MAX_SELECTED_GROUPS`. A worker-supplied `featured` flag is ignored.
+ */
+function createSelector(
+  params: { countryCode?: string; regionCode?: string },
+  headers: IncomingHttpHeaders,
+  now: number,
+) {
+  const topics = parseTopics(headers['x-atproto-bsky-topics'])
+  return (groups: l.Infer<typeof groupSchema>[] = []): SelectedGroup[] => {
+    const buckets: l.Infer<typeof groupSchema>[][] = [[], [], [], []]
+    for (const group of groups) {
+      const bucket = selectionBucket(group, params, topics)
+      if (bucket !== undefined) buckets[bucket].push(group)
+    }
+    const featured: SelectedGroup[] = []
+    const ordinary: SelectedGroup[] = []
+    for (const group of buckets.flat()) {
+      const active = isFeatured(group, now)
+      ;(active ? featured : ordinary).push({ ...group, featured: active })
+    }
+    return [...featured, ...ordinary].slice(0, MAX_SELECTED_GROUPS)
+  }
+}
+
+/** Unlike banners, content needs both bounds to define a featured window. */
+function isFeatured({ startsAt, endsAt }: Selectable, now: number): boolean {
+  return (
+    startsAt != null &&
+    endsAt != null &&
+    Date.parse(startsAt) <= now &&
+    now < Date.parse(endsAt)
+  )
+}
+
+function selectionBucket(
+  { tags, locations }: Selectable,
+  params: { countryCode?: string; regionCode?: string },
+  topics: Set<string>,
+): 0 | 1 | 2 | 3 | undefined {
+  if (locations?.length) {
+    if (!matchesLocation(locations, params)) return
+    return 0
+  }
+  if (tags?.some((tag) => topics.has(tag))) return 1
+  if (tags?.includes('general')) return 2
+  if (!tags?.length) return 3
+}
+
+function parseTopics(header: string | string[] | undefined): Set<string> {
+  const topics = new Set<string>()
+  const value = Array.isArray(header) ? header.join(',') : header
+  for (const token of value?.split(',') ?? []) {
+    const topic = token.trim()
+    if (topic) topics.add(topic)
+  }
+  return topics
+}
+
+/**
+ * True only when a nonempty `locations` list matches the request. Entries are
+ * a country (`JP`) or country and region (`US-WI`); a region alone never
+ * matches. A full `regionCode` (`US-WI`) is honored only when its country
+ * agrees with `countryCode`.
+ */
+function matchesLocation(
+  locations: string[] | undefined,
+  { countryCode, regionCode }: { countryCode?: string; regionCode?: string },
+): boolean {
+  const country = countryCode?.toUpperCase()
+  if (!locations?.length || !country) return false
+  let region = regionCode?.toUpperCase() || undefined
+  if (region?.includes('-')) {
+    const [regionCountry, subdivision] = region.split('-')
+    region = regionCountry === country ? subdivision : undefined
+  }
+  return locations.some((location) => {
+    const [locationCountry, locationRegion, ...rest] = location
+      .toUpperCase()
+      .split('-')
+    if (rest.length || locationCountry !== country) return false
+    return (
+      locationRegion === undefined || (!!region && locationRegion === region)
+    )
   })
 }
 

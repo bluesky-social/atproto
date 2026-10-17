@@ -45,8 +45,34 @@ const itemUri = atUri(author, grainGalleryItem.$type, 'item')
 const photoUri = atUri(author, grainPhoto.$type, 'photo')
 const liveUri = atUri(author, streamLivestream.$type, 'live')
 const missingUri = atUri(author, site.standard.document.$type, 'missing')
-const group = (uris: unknown[], featured = false) => ({ uris, featured })
+const group = (canonicalUri: unknown) => ({ canonicalUri })
 const service = 'https://cms.bsky.app/atmosphere-explore-tab'
+const frozenNow = Date.parse(publishedAt)
+const at = (offsetMs: number) => toDatetimeString(frozenNow + offsetMs)
+const lists = [
+  {
+    key: 'articles',
+    baseUri: docUri,
+    uriFor: (name: string) => atUri(author, site.standard.document.$type, name),
+  },
+  {
+    key: 'publications',
+    baseUri: pubUri,
+    uriFor: (name: string) =>
+      atUri(author, site.standard.publication.$type, name),
+  },
+  {
+    key: 'photos',
+    baseUri: galleryUri,
+    uriFor: (name: string) => atUri(author, grainGallery.$type, name),
+  },
+  {
+    key: 'livestreams',
+    baseUri: liveUri,
+    uriFor: (name: string) => atUri(author, streamLivestream.$type, name),
+  },
+] as const
+type ListKey = (typeof lists)[number]['key']
 
 async function setup(config: unknown = {}) {
   const records = new Map<AtUriString, TypedLexMap>([
@@ -255,6 +281,7 @@ async function setup(config: unknown = {}) {
     query: async (
       authenticated = false,
       params: app.bsky.unspecced.getAtmosphereExploreTab.$Params = {},
+      headers: Record<string, string> = {},
     ) => {
       const url = new URL(
         `http://127.0.0.1:${address.port}/xrpc/${app.bsky.unspecced.getAtmosphereExploreTab.$lxm}`,
@@ -267,7 +294,10 @@ async function setup(config: unknown = {}) {
         }
       }
       const response = await nativeFetch(url, {
-        headers: authenticated ? { authorization: 'Bearer valid' } : {},
+        headers: {
+          ...(authenticated ? { authorization: 'Bearer valid' } : {}),
+          ...headers,
+        },
       })
       const body = await response.json()
       return {
@@ -282,21 +312,22 @@ async function setup(config: unknown = {}) {
   }
 }
 
+const curatedBanner = {
+  id: 'banner',
+  title: 'Explore',
+  image: 'https://example.com/banner.jpg',
+}
 const curated = {
-  announcementBanner: {
-    id: 'banner',
-    title: 'Explore',
-    image: 'https://example.com/banner.jpg',
-  },
-  articles: [group([missingUri], true), group([docUri], true), group([docUri])],
-  publications: [group([pubUri])],
-  photos: [group([galleryUri], true)],
-  livestreams: [group([liveUri])],
+  announcementBanners: [{ ...curatedBanner, status: 'enabled' }],
+  articles: [group(missingUri), group(docUri), group(docUri)],
+  publications: [group(pubUri)],
+  photos: [group(galleryUri)],
+  livestreams: [group(liveUri)],
   apps: [{ id: 'app', title: 'An app', url: 'https://example.com/app' }],
 }
 
 describe('Atmosphere Explore', () => {
-  it('hydrates canonical views, associations, ordering, and featured flags', async () => {
+  it('hydrates canonical views, associations, and ordering', async () => {
     await using fixture = await setup(curated)
     using hydrate = vi.spyOn(
       fixture.hydrator,
@@ -309,9 +340,12 @@ describe('Atmosphere Explore', () => {
     )
     expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
     expect(status).toBe(200)
-    expect(body.announcementBanner).toEqual(curated.announcementBanner)
+    expect(body.announcementBanner).toEqual(curatedBanner)
     expect(body.apps).toEqual(curated.apps)
-    expect(body.articles.map(({ featured }) => featured)).toEqual([true, false])
+    expect(body.articles.map(({ featured }) => featured)).toEqual([
+      false,
+      false,
+    ])
     const article = body.articles[0].view
     expect(app.bsky.embed.external.viewArticle.$matches(article)).toBe(true)
     expect(article).toMatchObject({
@@ -359,12 +393,12 @@ describe('Atmosphere Explore', () => {
     expect(request.redirect).toBe('error')
   })
 
-  it('uses only the first URI as the canonical root for every section', async () => {
+  it('uses only canonicalUri as the root for every section, ignoring uris', async () => {
     await using fixture = await setup({
-      articles: [group([docUri, missingUri], true)],
-      publications: [group([pubUri, 'bad'])],
-      photos: [group([galleryUri, photoUri, null], true)],
-      livestreams: [group([liveUri, missingUri])],
+      articles: [{ canonicalUri: docUri, uris: [missingUri, pubUri] }],
+      publications: [{ canonicalUri: pubUri, uris: ['bad'] }],
+      photos: [{ canonicalUri: galleryUri, uris: [photoUri, null] }],
+      livestreams: [{ canonicalUri: liveUri, uris: [missingUri] }],
     })
     using hydrate = vi.spyOn(
       fixture.hydrator,
@@ -379,14 +413,20 @@ describe('Atmosphere Explore', () => {
       expect.objectContaining({ viewer: null }),
     )
     expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
+    expect(lookup.mock.calls[0][0].uris).toEqual([
+      docUri,
+      pubUri,
+      galleryUri,
+      liveUri,
+    ])
     expect(lookup.mock.calls.flatMap(([params]) => params.uris)).not.toContain(
       missingUri,
     )
     expect(body.articles).toHaveLength(1)
-    expect(body.articles[0].featured).toBe(true)
+    expect(body.articles[0].featured).toBe(false)
     expect(body.publications).toHaveLength(1)
     expect(body.photos).toHaveLength(1)
-    expect(body.photos[0].featured).toBe(true)
+    expect(body.photos[0].featured).toBe(false)
     expect(body.photos[0].view.associatedRefs?.map(({ uri }) => uri)).toEqual([
       galleryUri,
       itemUri,
@@ -395,48 +435,159 @@ describe('Atmosphere Explore', () => {
     expect(body.livestreams).toHaveLength(1)
   })
 
-  test.each([
-    { uris: [] },
-    { uris: [null, docUri] },
-    { uris: ['bad', docUri] },
-    { uris: [missingUri, docUri] },
-  ])(
-    'does not fall back to another article URI when the first is absent or unavailable: $uris',
-    async ({ uris }) => {
-      await using fixture = await setup({ articles: [group(uris)] })
-      using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
-      const { status, body } = await fixture.query()
-
-      expect(status).toBe(200)
-      expect(body.articles).toEqual([])
-      expect(
-        lookup.mock.calls.flatMap(([params]) => params.uris),
-      ).not.toContain(docUri)
-    },
-  )
-
-  it('does not substitute a later URI with the correct section type', async () => {
+  it('renders canonical-only entries and discovers their dependencies', async () => {
     await using fixture = await setup({
-      articles: [group([pubUri, docUri])],
-      publications: [group([docUri, pubUri])],
-      photos: [group([photoUri, galleryUri])],
-      livestreams: [group([pubUri, liveUri])],
+      articles: [{ canonicalUri: docUri }],
+      photos: [{ canonicalUri: galleryUri }],
     })
-    using hydrate = vi.spyOn(
-      fixture.hydrator,
-      'hydrateEmbedExternalViewFromUris',
-    )
+    using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
     const { status, body } = await fixture.query()
 
     expect(status).toBe(200)
-    expect(hydrate).toHaveBeenCalledWith(
-      [pubUri, docUri, photoUri],
-      expect.objectContaining({ viewer: null }),
+    expect(lookup.mock.calls[0][0].uris).toEqual([docUri, galleryUri])
+    const looked = lookup.mock.calls.flatMap(([params]) => params.uris)
+    expect(looked).toEqual(expect.arrayContaining([pubUri, photoUri]))
+    expect(body.articles[0].view.publisher).toMatchObject({
+      title: 'Publication',
+    })
+    expect(body.photos[0].view.associatedRefs?.map(({ uri }) => uri)).toEqual([
+      galleryUri,
+      itemUri,
+      photoUri,
+    ])
+  })
+
+  describe('invalid canonical roots', () => {
+    const badRoots = (baseUri: AtUriString) => {
+      const col = baseUri.split('/')[3]
+      return [
+        { note: 'missing', worker: {} },
+        { note: 'null', worker: { canonicalUri: null } },
+        { note: 'number', worker: { canonicalUri: 42 } },
+        { note: 'array', worker: { canonicalUri: [baseUri] } },
+        { note: 'empty', worker: { canonicalUri: '' } },
+        { note: 'malformed', worker: { canonicalUri: 'bad' } },
+        { note: 'authority only', worker: { canonicalUri: `at://${author}` } },
+        {
+          note: 'missing rkey',
+          worker: { canonicalUri: `at://${author}/${col}` },
+        },
+        {
+          note: 'handle authority',
+          worker: { canonicalUri: `at://author.test/${col}/x` },
+        },
+      ]
+    }
+
+    test.each(lists)(
+      'does not fall back to uris for $key when canonicalUri is unusable',
+      async ({ key, baseUri }) => {
+        for (const { worker } of badRoots(baseUri)) {
+          await using fixture = await setup({
+            [key]: [{ ...worker, uris: [baseUri, baseUri] }],
+          })
+          using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+          const { status, body } = await fixture.query()
+
+          expect(status).toBe(200)
+          expect(body[key]).toEqual([])
+          expect(lookup.mock.calls.flatMap(([params]) => params.uris)).toEqual(
+            [],
+          )
+        }
+      },
     )
-    expect(body.articles).toEqual([])
-    expect(body.publications).toEqual([])
-    expect(body.photos).toEqual([])
-    expect(body.livestreams).toEqual([])
+
+    const wrongModality = {
+      articles: pubUri,
+      publications: liveUri,
+      photos: photoUri,
+      livestreams: pubUri,
+    } as const
+
+    test.each(lists)(
+      'does not substitute uris for an unavailable or wrong-type $key root',
+      async ({ key, baseUri, uriFor }) => {
+        for (const canonicalUri of [uriFor('missing'), wrongModality[key]]) {
+          await using fixture = await setup({
+            [key]: [{ canonicalUri, uris: [baseUri] }],
+          })
+          using hydrate = vi.spyOn(
+            fixture.hydrator,
+            'hydrateEmbedExternalViewFromUris',
+          )
+          using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+          const { status, body } = await fixture.query()
+
+          expect(status).toBe(200)
+          expect(body[key]).toEqual([])
+          expect(hydrate.mock.calls[0][0]).toEqual([canonicalUri])
+          expect(
+            lookup.mock.calls.flatMap(([params]) => params.uris),
+          ).not.toContain(baseUri)
+        }
+      },
+    )
+
+    test.each(lists)(
+      'lets invalid $key roots consume selection slots without refilling',
+      async ({ key, uriFor }) => {
+        const roots = Array.from({ length: 8 }, (_, i) => uriFor(`root-${i}`))
+        await using fixture = await setup({
+          [key]: [
+            { uris: [roots[0]] },
+            { canonicalUri: null, uris: [roots[0]] },
+            { canonicalUri: 'bad', uris: [roots[0]] },
+            ...roots.slice(0, 7).map((canonicalUri) => ({ canonicalUri })),
+            { canonicalUri: roots[7] },
+          ],
+        })
+        using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+        const { status } = await fixture.query()
+
+        expect(status).toBe(200)
+        expect(lookup.mock.calls[0][0].uris).toEqual(roots.slice(0, 7))
+        expect(
+          lookup.mock.calls.flatMap(([params]) => params.uris),
+        ).not.toContain(roots[7])
+      },
+    )
+  })
+
+  describe('ignored uris metadata', () => {
+    test.each([
+      { note: 'string', uris: 'not-an-array' },
+      { note: 'null', uris: null },
+      { note: 'number', uris: 42 },
+      { note: 'object', uris: { a: 1 } },
+      { note: 'empty', uris: [] },
+      { note: 'non-URIs', uris: [1, null, 'bad'] },
+      { note: 'oversized', uris: Array.from({ length: 5000 }, () => docUri) },
+    ])('does not validate or count a $note uris value', async ({ uris }) => {
+      for (const { key, baseUri } of lists) {
+        await using fixture = await setup({
+          [key]: [{ canonicalUri: baseUri, uris }],
+        })
+        const { status, body } = await fixture.query()
+
+        expect(status).toBe(200)
+        expect(body[key]).toHaveLength(1)
+      }
+    })
+
+    it('still counts ignored uris metadata toward the decoded body cap', async () => {
+      await using fixture = await setup({
+        articles: [
+          {
+            canonicalUri: docUri,
+            uris: Array.from({ length: 12_000 }, () => docUri),
+          },
+        ],
+      })
+      using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+      expect((await fixture.query()).status).toBe(502)
+      expect(lookup).not.toHaveBeenCalled()
+    })
   })
 
   test.each<app.bsky.unspecced.getAtmosphereExploreTab.$Params>([
@@ -446,27 +597,807 @@ describe('Atmosphere Explore', () => {
     { regionCode: 'WI' },
     { langs: ['en', 'es'], countryCode: 'US', regionCode: 'WI' },
     { countryCode: 'US&extra=value', regionCode: 'WI +/?#' },
-  ])('forwards only the supplied location params: %j', async (params) => {
-    await using fixture = await setup()
-    expect((await fixture.query(false, params)).status).toBe(200)
-    const request = fixture.fetchMock.mock.calls[0][0] as Request
-    expect(Object.fromEntries(new URL(request.url).searchParams)).toEqual(
-      Object.fromEntries(
-        Object.entries(params).filter(([key]) => key !== 'langs'),
-      ),
-    )
-  })
+  ])(
+    'always fetches the full config regardless of request params: %j',
+    async (params) => {
+      await using fixture = await setup()
+      expect(
+        (
+          await fixture.query(true, params, {
+            'x-atproto-bsky-topics': 'news',
+            'x-bsky-topics': 'news',
+          })
+        ).status,
+      ).toBe(200)
+      const request = fixture.fetchMock.mock.calls[0][0] as Request
+      expect(request.url).toBe(service)
+      expect(request.headers.get('authorization')).toBeNull()
+      expect(request.headers.get('x-atproto-bsky-topics')).toBeNull()
+      expect(request.headers.get('x-bsky-topics')).toBeNull()
+    },
+  )
 
-  it('preserves configured query params and replaces location params without duplicating them', async () => {
+  it('fetches the configured service URL as-is', async () => {
     await using fixture = await setup()
-    fixture.cfg.atmosphereExploreTabService = `${service}?config=curated&countryCode=CA&regionCode=ON`
+    fixture.cfg.atmosphereExploreTabService = `${service}?config=curated&countryCode=CA`
     expect(
       (await fixture.query(false, { countryCode: 'US', regionCode: 'WI' }))
         .status,
     ).toBe(200)
     const request = fixture.fetchMock.mock.calls[0][0] as Request
-    expect(request.url).toBe(
-      `${service}?config=curated&countryCode=US&regionCode=WI`,
+    expect(request.url).toBe(`${service}?config=curated&countryCode=CA`)
+  })
+
+  describe('announcement banner', () => {
+    const now = Date.parse(publishedAt)
+    const at = (offsetMs: number) => new Date(now + offsetMs).toISOString()
+    const day = 24 * 60 * 60 * 1000
+    const banner = (id: string, extra: object = {}) => ({
+      id,
+      status: 'enabled',
+      ...extra,
+    })
+    const us = { countryCode: 'US', regionCode: 'WI' }
+
+    async function pickBanner(
+      banners: unknown,
+      params: app.bsky.unspecced.getAtmosphereExploreTab.$Params = {},
+    ) {
+      using _now = vi.spyOn(Date, 'now').mockReturnValue(now)
+      await using fixture = await setup({ announcementBanners: banners })
+      const { status, body } = await fixture.query(false, params)
+      expect(status).toBe(200)
+      return body.announcementBanner?.id
+    }
+
+    test.each([undefined, [], [banner('off', { status: 'disabled' })]])(
+      'omits the banner when none is eligible: %j',
+      async (banners) => {
+        expect(await pickBanner(banners)).toBeUndefined()
+      },
+    )
+
+    it('returns only presentation fields', async () => {
+      using _now = vi.spyOn(Date, 'now').mockReturnValue(now)
+      const presentation = {
+        id: 'full',
+        title: 'Title',
+        description: 'Description',
+        url: 'https://example.com/url',
+        image: 'https://example.com/image.jpg',
+        overlayColor: '#000000',
+        textColor: '#ffffff',
+      }
+      await using fixture = await setup({
+        announcementBanners: [
+          {
+            ...presentation,
+            status: 'enabled',
+            startsAt: at(-day),
+            endsAt: at(day),
+            locations: [],
+            tags: ['news'],
+            extra: 'value',
+          },
+        ],
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.announcementBanner).toStrictEqual(presentation)
+      // The fixture server validates responses against the lexicon too.
+      expect(
+        app.bsky.unspecced.getAtmosphereExploreTab.announcementBanner.$matches(
+          body.announcementBanner,
+        ),
+      ).toBe(true)
+    })
+
+    it('ignores the legacy singular worker input', async () => {
+      await using fixture = await setup({ announcementBanner: curatedBanner })
+      expect((await fixture.query()).body.announcementBanner).toBeUndefined()
+    })
+
+    it('prefers an eligible matching-location banner over later-expiring unrestricted ones', async () => {
+      const banners = [
+        banner('open', { endsAt: at(30 * day) }),
+        banner('none'),
+        banner('first-match', { locations: ['US'], endsAt: at(day) }),
+        banner('second-match', { locations: ['US-WI'] }),
+      ]
+      expect(await pickBanner(banners, us)).toBe('first-match')
+      expect(await pickBanner(banners, { countryCode: 'JP' })).toBe('none')
+    })
+
+    it('does not let ineligible targeted banners override an eligible unrestricted one', async () => {
+      expect(
+        await pickBanner(
+          [
+            banner('future', { locations: ['US'], startsAt: at(1) }),
+            banner('expired', { locations: ['US'], endsAt: at(0) }),
+            banner('off', { locations: ['US'], status: 'disabled' }),
+            banner('open', { endsAt: at(day) }),
+          ],
+          us,
+        ),
+      ).toBe('open')
+    })
+
+    it('falls back to the eligible unrestricted banner with the furthest endsAt', async () => {
+      expect(
+        await pickBanner([
+          banner('soon', { endsAt: at(day) }),
+          banner('latest', { endsAt: at(3 * day), locations: [] }),
+          banner('mid', { endsAt: at(2 * day) }),
+          banner('future-latest', { startsAt: at(1), endsAt: at(9 * day) }),
+          banner('expired-latest', { startsAt: at(-day), endsAt: at(-1) }),
+          banner('disabled-latest', {
+            status: 'disabled',
+            endsAt: at(9 * day),
+          }),
+          banner('wrong-place', { locations: ['JP'], endsAt: at(9 * day) }),
+        ]),
+      ).toBe('latest')
+    })
+
+    it('chooses furthest unrestricted banner when other targeted banners do not match', async () => {
+      expect(
+        await pickBanner(
+          [
+            banner('jp', { locations: ['JP'], endsAt: at(30 * day) }),
+            banner('us-ca', { locations: ['US-CA'], endsAt: at(30 * day) }),
+            banner('short', { endsAt: at(day) }),
+            banner('long', { endsAt: at(2 * day) }),
+          ],
+          us,
+        ),
+      ).toBe('long')
+    })
+
+    it('breaks equal expirations by worker order and ranks no expiration furthest', async () => {
+      expect(
+        await pickBanner([
+          banner('a', { endsAt: at(day) }),
+          banner('b', { endsAt: at(day) }),
+        ]),
+      ).toBe('a')
+      expect(
+        await pickBanner([
+          banner('finite', { endsAt: at(100 * day) }),
+          banner('missing'),
+          banner('null', { endsAt: null }),
+        ]),
+      ).toBe('missing')
+    })
+
+    test.each([
+      { note: 'start inclusive', extra: { startsAt: at(0) }, eligible: true },
+      { note: 'before start', extra: { startsAt: at(1) }, eligible: false },
+      { note: 'end exclusive', extra: { endsAt: at(0) }, eligible: false },
+      { note: 'before end', extra: { endsAt: at(1) }, eligible: true },
+      {
+        note: 'null bounds',
+        extra: { startsAt: null, endsAt: null },
+        eligible: true,
+      },
+      {
+        note: 'reversed window',
+        extra: { startsAt: at(day), endsAt: at(-day) },
+        eligible: false,
+      },
+      {
+        note: 'empty window',
+        extra: { startsAt: at(0), endsAt: at(0) },
+        eligible: false,
+      },
+    ])('applies the scheduling window: $note', async ({ extra, eligible }) => {
+      expect(await pickBanner([banner('b', extra)])).toBe(
+        eligible ? 'b' : undefined,
+      )
+    })
+
+    test.each([
+      { locations: ['US'], params: { countryCode: 'US' }, match: true },
+      { locations: ['US'], params: us, match: true },
+      { locations: ['US-WI'], params: us, match: true },
+      {
+        locations: ['US-WI'],
+        params: { countryCode: 'US', regionCode: 'US-WI' },
+        match: true,
+      },
+      { locations: ['US-WI'], params: { countryCode: 'US' }, match: false },
+      {
+        locations: ['US-WI'],
+        params: { countryCode: 'US', regionCode: 'CA' },
+        match: false,
+      },
+      {
+        locations: ['US-WI'],
+        params: { countryCode: 'CA', regionCode: 'WI' },
+        match: false,
+      },
+      { locations: ['US'], params: { regionCode: 'WI' }, match: false },
+      { locations: ['JP'], params: {}, match: false },
+      { locations: ['JP'], params: us, match: false },
+    ])(
+      'location $locations with $params matches: $match',
+      async ({ locations, params, match }) => {
+        // A wrong-location banner never leaks through, even as the only banner.
+        expect(await pickBanner([banner('t', { locations })], params)).toBe(
+          match ? 't' : undefined,
+        )
+      },
+    )
+
+    test.each([{}, { locations: [] }])(
+      'treats missing or empty locations as unrestricted: %j',
+      async (extra) => {
+        expect(await pickBanner([banner('open', extra)], {})).toBe('open')
+        expect(await pickBanner([banner('open', extra)], us)).toBe('open')
+      },
+    )
+  })
+
+  it('accepts worker-shaped groups; schedules, not raw featured, decide the flag', async () => {
+    const metadata = { startsAt: null, endsAt: null, uris: ['ignored'] }
+    await using fixture = await setup({
+      ...curated,
+      articles: [
+        { canonicalUri: docUri, ...metadata },
+        { canonicalUri: docUri, featured: true, tags: [], locations: [] },
+        {
+          canonicalUri: docUri,
+          featured: false,
+          tags: ['general'],
+          ...metadata,
+        },
+      ],
+      publications: [{ canonicalUri: pubUri, ...metadata }],
+      photos: [{ canonicalUri: galleryUri, tags: ['general'] }],
+      livestreams: [{ canonicalUri: liveUri, locations: [] }],
+    })
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    // Null schedules are not featured; a worker-supplied `featured` is ignored.
+    expect(body.articles.map(({ featured }) => featured)).toEqual([
+      false,
+      false,
+      false,
+    ])
+    expect(body.publications.map(({ featured }) => featured)).toEqual([false])
+    expect(body.photos.map(({ featured }) => featured)).toEqual([false])
+    expect(body.livestreams.map(({ featured }) => featured)).toEqual([false])
+    expect(body.announcementBanner).toEqual(curatedBanner)
+    expect(body.apps).toEqual(curated.apps)
+    for (const key of lists.map(({ key }) => key))
+      for (const item of body[key])
+        expect(Object.keys(item).sort()).toEqual(['featured', 'view'])
+  })
+
+  describe('scheduled featured flags', () => {
+    const day = 24 * 60 * 60 * 1000
+    const windows = [
+      {
+        note: 'active',
+        schedule: { startsAt: at(-1), endsAt: at(1) },
+        featured: true,
+      },
+      {
+        note: 'start inclusive',
+        schedule: { startsAt: at(0), endsAt: at(day) },
+        featured: true,
+      },
+      {
+        note: 'end exclusive',
+        schedule: { startsAt: at(-day), endsAt: at(0) },
+        featured: false,
+      },
+      {
+        note: 'future',
+        schedule: { startsAt: at(1), endsAt: at(day) },
+        featured: false,
+      },
+      {
+        note: 'expired',
+        schedule: { startsAt: at(-day), endsAt: at(-1) },
+        featured: false,
+      },
+      { note: 'no dates', schedule: {}, featured: false },
+      {
+        note: 'null dates',
+        schedule: { startsAt: null, endsAt: null },
+        featured: false,
+      },
+      { note: 'missing end', schedule: { startsAt: at(-1) }, featured: false },
+      {
+        note: 'null end',
+        schedule: { startsAt: at(-1), endsAt: null },
+        featured: false,
+      },
+      { note: 'missing start', schedule: { endsAt: at(1) }, featured: false },
+      {
+        note: 'null start',
+        schedule: { startsAt: null, endsAt: at(1) },
+        featured: false,
+      },
+      {
+        note: 'reversed',
+        schedule: { startsAt: at(day), endsAt: at(-day) },
+        featured: false,
+      },
+      {
+        note: 'equal bounds',
+        schedule: { startsAt: at(0), endsAt: at(0) },
+        featured: false,
+      },
+    ]
+
+    test.each(windows)(
+      'computes featured from the window in every list, ignoring raw featured: $note',
+      async ({ schedule, featured }) => {
+        using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+        const withRaw = (uri: AtUriString, raw: boolean) => ({
+          canonicalUri: uri,
+          ...schedule,
+          featured: raw,
+        })
+        for (const raw of [true, false]) {
+          await using fixture = await setup({
+            articles: [withRaw(docUri, raw)],
+            publications: [withRaw(pubUri, raw)],
+            photos: [withRaw(galleryUri, raw)],
+            livestreams: [withRaw(liveUri, raw)],
+          })
+          const { status, body } = await fixture.query()
+          expect(status).toBe(200)
+          for (const { key } of lists) {
+            expect(body[key].map((item) => item.featured)).toEqual([featured])
+            expect(Object.keys(body[key][0]).sort()).toEqual([
+              'featured',
+              'view',
+            ])
+          }
+        }
+      },
+    )
+
+    it('keeps distinct entries for one root with per-entry flags', async () => {
+      using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+      await using fixture = await setup({
+        articles: [
+          { canonicalUri: docUri },
+          { canonicalUri: docUri, startsAt: at(-1), endsAt: at(1) },
+          { canonicalUri: docUri, startsAt: at(1), endsAt: at(2) },
+        ],
+      })
+      using hydrate = vi.spyOn(
+        fixture.hydrator,
+        'hydrateEmbedExternalViewFromUris',
+      )
+      const { body } = await fixture.query()
+      expect(hydrate.mock.calls[0][0]).toEqual([docUri])
+      expect(body.articles.map(({ featured }) => featured)).toEqual([
+        true,
+        false,
+        false,
+      ])
+    })
+
+    test.each([
+      { articles: [{ canonicalUri: docUri, startsAt: 1 }] },
+      { articles: [{ canonicalUri: docUri, endsAt: true }] },
+      { publications: [{ canonicalUri: pubUri, startsAt: 'tomorrow' }] },
+      { photos: [{ canonicalUri: galleryUri, endsAt: '2026-10-01' }] },
+      {
+        livestreams: [
+          { canonicalUri: liveUri },
+          { canonicalUri: liveUri, startsAt: 'soon' },
+        ],
+      },
+      // Invalid even when the entry is excluded or beyond the selection cap.
+      {
+        articles: [{ canonicalUri: docUri, locations: ['JP'], endsAt: 'bad' }],
+      },
+      {
+        articles: [
+          ...Array.from({ length: 10 }, () => ({ canonicalUri: docUri })),
+          { canonicalUri: docUri, startsAt: 'bad' },
+        ],
+      },
+    ])('rejects malformed content schedules %#', async (config) => {
+      await using fixture = await setup(config)
+      using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+      expect((await fixture.query()).status).toBe(502)
+      expect(lookup).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('selection before hydration', () => {
+    const topics = { 'x-atproto-bsky-topics': ' news , ,news,sports' }
+    const us = { countryCode: 'US', regionCode: 'WI' }
+
+    async function selectedRoots(
+      key: ListKey,
+      entries: unknown[],
+      params: app.bsky.unspecced.getAtmosphereExploreTab.$Params = {},
+      headers: Record<string, string> = {},
+    ) {
+      using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+      await using fixture = await setup({ [key]: entries })
+      using hydrate = vi.spyOn(
+        fixture.hydrator,
+        'hydrateEmbedExternalViewFromUris',
+      )
+      expect((await fixture.query(false, params, headers)).status).toBe(200)
+      return (
+        hydrate.mock.calls.find(([, , seen]) => !seen)?.[0] ??
+        ([] as AtUriString[])
+      )
+    }
+
+    test.each(lists)(
+      'orders $key by location, topic, general, then untagged, stably',
+      async ({ key, uriFor }) => {
+        const u = (name: string) => uriFor(name)
+        const entry = (name: string, extra: object) => ({
+          canonicalUri: u(name),
+          ...extra,
+        })
+        const entries = [
+          entry('untagged', {}),
+          entry('empty', { tags: [] }),
+          entry('general', { tags: ['general'] }),
+          entry('topic', { tags: ['news'], locations: [] }),
+          entry('country', { tags: ['other'], locations: ['US'] }),
+          entry('unrelated', { tags: ['other'] }),
+          entry('multi-topic', { tags: ['general', 'sports', 'news'] }),
+          entry('region', { locations: ['US-WI'] }),
+          entry('wrong-topic', { tags: ['news'], locations: ['JP'] }),
+          entry('wrong-general', { tags: ['general'], locations: ['JP'] }),
+          entry('wrong-untagged', { locations: ['JP'] }),
+          entry('wrong-region', { locations: ['US-CA'] }),
+          entry('multi-location', {
+            tags: ['news', 'general'],
+            locations: ['JP', 'US'],
+          }),
+        ]
+        expect(await selectedRoots(key, entries, us, topics)).toEqual(
+          [
+            'country',
+            'region',
+            'multi-location',
+            'topic',
+            'multi-topic',
+            'general',
+            'untagged',
+            'empty',
+          ].map(u),
+        )
+      },
+    )
+
+    test.each(lists)(
+      'selects at most 10 $key before hydration without backfilling',
+      async ({ key, uriFor }) => {
+        const roots = Array.from({ length: 12 }, (_, i) => uriFor(`root-${i}`))
+        // General entries fill the cap; a later location match outranks them.
+        const entries = [
+          ...roots
+            .slice(0, 11)
+            .map((uri) => ({ canonicalUri: uri, tags: ['general'] })),
+          { canonicalUri: roots[11], locations: ['US'] },
+        ]
+        await using fixture = await setup({ [key]: entries })
+        using hydrate = vi.spyOn(
+          fixture.hydrator,
+          'hydrateEmbedExternalViewFromUris',
+        )
+        using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+        expect((await fixture.query(false, us)).status).toBe(200)
+        const selected = [roots[11], ...roots.slice(0, 9)]
+        expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
+        expect(hydrate.mock.calls[0][0]).toEqual(selected)
+        expect(lookup.mock.calls[0][0].uris).toEqual(selected)
+        const looked = lookup.mock.calls.flatMap(([params]) => params.uris)
+        expect(looked).not.toContain(roots[9])
+        expect(looked).not.toContain(roots[10])
+      },
+    )
+
+    test.each(lists)(
+      'lets a selected unavailable $key root consume its slot',
+      async ({ key, uriFor, baseUri }) => {
+        const missing = Array.from({ length: 10 }, (_, i) =>
+          uriFor(`missing-${i}`),
+        )
+        await using fixture = await setup({
+          [key]: [
+            ...missing.map((uri) => ({ canonicalUri: uri })),
+            { canonicalUri: baseUri },
+          ],
+        })
+        using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body[key]).toEqual([])
+        expect(lookup.mock.calls[0][0].uris).toEqual(missing)
+        expect(
+          lookup.mock.calls.flatMap(([params]) => params.uris),
+        ).not.toContain(baseUri)
+      },
+    )
+
+    test.each(lists)(
+      'renders a selected $key entry and keeps repeated worker entries',
+      async ({ key, baseUri }) => {
+        await using fixture = await setup({
+          [key]: [
+            { canonicalUri: baseUri, tags: ['news'] },
+            { canonicalUri: baseUri, tags: ['other'] },
+            { canonicalUri: baseUri, tags: ['general'] },
+            { canonicalUri: baseUri },
+          ],
+        })
+        using hydrate = vi.spyOn(
+          fixture.hydrator,
+          'hydrateEmbedExternalViewFromUris',
+        )
+        const { body } = await fixture.query(false, {}, topics)
+        expect(hydrate.mock.calls[0][0]).toEqual([baseUri])
+        expect(body[key]).toHaveLength(3)
+      },
+    )
+
+    test.each<{
+      note: string
+      headers: Record<string, string>
+      expected: string[]
+    }>([
+      {
+        note: 'missing header',
+        headers: {},
+        expected: ['general', 'untagged'],
+      },
+      {
+        note: 'empty header',
+        headers: { 'x-atproto-bsky-topics': ' , ,' },
+        expected: ['general', 'untagged'],
+      },
+      {
+        note: 'deprecated header only',
+        headers: { 'x-bsky-topics': 'news' },
+        expected: ['general', 'untagged'],
+      },
+      {
+        note: 'exact, case-sensitive matches',
+        headers: { 'x-atproto-bsky-topics': 'news' },
+        expected: ['news', 'general', 'untagged'],
+      },
+      {
+        note: 'trimmed and repeated tokens',
+        headers: { 'x-atproto-bsky-topics': '\tNews ,, news ,news' },
+        expected: ['news', 'News', 'general', 'untagged'],
+      },
+      {
+        note: 'general as a requested topic',
+        headers: { 'x-atproto-bsky-topics': 'general' },
+        expected: ['general', 'untagged'],
+      },
+    ])('matches request topics: $note', async ({ headers, expected }) => {
+      const entries = [
+        { canonicalUri: liveUri, tags: [] },
+        { canonicalUri: docUri, tags: ['general'] },
+        { canonicalUri: pubUri, tags: ['news-today'] },
+        { canonicalUri: galleryUri, tags: ['Newsletter'] },
+        { canonicalUri: itemUri, tags: ['New'] },
+        { canonicalUri: photoUri, tags: ['news'] },
+        { canonicalUri: missingUri, tags: ['News'] },
+      ]
+      const names = new Map<AtUriString, string>([
+        [liveUri, 'untagged'],
+        [docUri, 'general'],
+        [photoUri, 'news'],
+        [missingUri, 'News'],
+      ])
+      const roots = await selectedRoots('articles', entries, {}, headers)
+      expect(roots.map((uri) => names.get(uri))).toEqual(expected)
+    })
+
+    test.each([
+      { locations: ['US'], params: { countryCode: 'US' }, match: true },
+      {
+        locations: ['us'],
+        params: { countryCode: 'us', regionCode: 'wi' },
+        match: true,
+      },
+      { locations: ['US'], params: us, match: true },
+      { locations: ['US-WI'], params: us, match: true },
+      {
+        locations: ['US-WI'],
+        params: { countryCode: 'US', regionCode: 'US-WI' },
+        match: true,
+      },
+      { locations: ['JP', 'US-WI'], params: us, match: true },
+      {
+        locations: ['US'],
+        params: { countryCode: 'US', regionCode: 'CA-ON' },
+        match: true,
+      },
+      {
+        locations: ['US-WI'],
+        params: { countryCode: 'US', regionCode: 'CA-WI' },
+        match: false,
+      },
+      {
+        locations: ['US-WI'],
+        params: { countryCode: 'US', regionCode: 'US-CA' },
+        match: false,
+      },
+      { locations: ['US-WI'], params: { countryCode: 'US' }, match: false },
+      {
+        locations: ['US-WI'],
+        params: { countryCode: 'CA', regionCode: 'WI' },
+        match: false,
+      },
+      { locations: ['US-WI'], params: { regionCode: 'WI' }, match: false },
+      { locations: ['US-WI'], params: { regionCode: 'US-WI' }, match: false },
+      { locations: ['US'], params: { regionCode: 'WI' }, match: false },
+      {
+        locations: ['US-'],
+        params: { countryCode: 'US', regionCode: '' },
+        match: false,
+      },
+      { locations: ['WI'], params: us, match: false },
+      { locations: ['JP'], params: us, match: false },
+      { locations: ['JP'], params: {}, match: false },
+      {
+        locations: ['JP-13'],
+        params: { countryCode: 'US', regionCode: '13' },
+        match: false,
+      },
+    ])(
+      'location $locations with $params matches: $match',
+      async ({ locations, params, match }) => {
+        for (const key of lists.map((list) => list.key)) {
+          const uri = lists.find((list) => list.key === key)!.uriFor('x')
+          // Tags that would otherwise qualify never override a location miss.
+          const entries = [
+            { canonicalUri: uri, locations, tags: ['news'] },
+            { canonicalUri: uri, locations, tags: ['general'] },
+            { canonicalUri: uri, locations },
+            { canonicalUri: uri, locations, tags: [] },
+          ]
+          expect(await selectedRoots(key, entries, params, topics)).toEqual(
+            match ? [uri] : [],
+          )
+        }
+      },
+    )
+
+    it('treats missing or empty locations as unrestricted, not as a location match', async () => {
+      const entries = [
+        { canonicalUri: pubUri, locations: [] },
+        { canonicalUri: docUri, tags: ['general'], locations: [] },
+        { canonicalUri: liveUri, tags: ['news'] },
+        { canonicalUri: galleryUri, locations: ['US'] },
+      ]
+      expect(await selectedRoots('articles', entries, us, topics)).toEqual([
+        galleryUri,
+        liveUri,
+        docUri,
+        pubUri,
+      ])
+      expect(await selectedRoots('articles', entries, {}, topics)).toEqual([
+        liveUri,
+        docUri,
+        pubUri,
+      ])
+    })
+
+    it('selects each list independently', async () => {
+      await using fixture = await setup({
+        articles: Array.from({ length: 11 }, (_, i) => ({
+          canonicalUri: atUri(author, site.standard.document.$type, `a${i}`),
+        })),
+        publications: [{ canonicalUri: pubUri, locations: ['JP'] }],
+        photos: [{ canonicalUri: galleryUri }],
+        livestreams: [{ canonicalUri: liveUri, tags: ['other'] }],
+      })
+      using hydrate = vi.spyOn(
+        fixture.hydrator,
+        'hydrateEmbedExternalViewFromUris',
+      )
+      const { body } = await fixture.query(false, us)
+      expect(hydrate.mock.calls[0][0]).toEqual([
+        ...Array.from({ length: 10 }, (_, i) =>
+          atUri(author, site.standard.document.$type, `a${i}`),
+        ),
+        galleryUri,
+      ])
+      expect(body.publications).toEqual([])
+      expect(body.photos).toHaveLength(1)
+      expect(body.livestreams).toEqual([])
+    })
+
+    const active = { startsAt: at(-1), endsAt: at(1) }
+    const expired = { startsAt: at(-2), endsAt: at(-1) }
+
+    test.each(lists)(
+      'places featured $key entries first, then bucket order, before the cap',
+      async ({ key, uriFor }) => {
+        const u = (name: string) => uriFor(name)
+        const entry = (name: string, extra: object) => ({
+          canonicalUri: u(name),
+          ...extra,
+        })
+        const entries = [
+          entry('o-untagged', {}),
+          entry('o-location', { locations: ['US'] }),
+          entry('f-untagged', active),
+          entry('f-general', { tags: ['general'], ...active }),
+          entry('f-location', { locations: ['US-WI'], ...active }),
+          entry('o-topic', { tags: ['news'] }),
+          entry('f-wrong-location', {
+            tags: ['news'],
+            locations: ['JP'],
+            ...active,
+          }),
+          entry('f-wrong-location-untagged', { locations: ['JP'], ...active }),
+          entry('f-unrelated', { tags: ['other'], ...active }),
+          entry('o-expired-topic', { tags: ['news'], ...expired }),
+          entry('f-topic', { tags: ['sports'], ...active }),
+        ]
+        expect(await selectedRoots(key, entries, us, topics)).toEqual(
+          [
+            'f-location',
+            'f-topic',
+            'f-general',
+            'f-untagged',
+            'o-location',
+            'o-topic',
+            'o-expired-topic',
+            'o-untagged',
+          ].map(u),
+        )
+      },
+    )
+
+    test.each(lists)(
+      'lets a later featured $key entry displace an ordinary one before hydration',
+      async ({ key, uriFor }) => {
+        const roots = Array.from({ length: 11 }, (_, i) => uriFor(`root-${i}`))
+        const entries = [
+          ...roots.slice(0, 10).map((uri) => ({ canonicalUri: uri })),
+          { canonicalUri: roots[10], ...active },
+        ]
+        expect(await selectedRoots(key, entries)).toEqual([
+          roots[10],
+          ...roots.slice(0, 9),
+        ])
+      },
+    )
+
+    test.each(lists)(
+      'does not backfill when featured $key roots are unavailable',
+      async ({ key, uriFor, baseUri }) => {
+        using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+        const missing = Array.from({ length: 10 }, (_, i) =>
+          uriFor(`missing-${i}`),
+        )
+        await using fixture = await setup({
+          [key]: [
+            { canonicalUri: baseUri },
+            ...missing.map((uri) => ({ canonicalUri: uri, ...active })),
+          ],
+        })
+        using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body[key]).toEqual([])
+        expect(lookup.mock.calls[0][0].uris).toEqual(missing)
+        expect(
+          lookup.mock.calls.flatMap(([params]) => params.uris),
+        ).not.toContain(baseUri)
+      },
     )
   })
 
@@ -494,7 +1425,7 @@ describe('Atmosphere Explore', () => {
 
   it('omits articles with unavailable publication dependencies', async () => {
     await using fixture = await setup({
-      articles: [group([docUri])],
+      articles: [group(docUri)],
     })
     fixture.takenDown.add(pubUri)
     expect((await fixture.query()).body.articles).toEqual([])
@@ -512,12 +1443,12 @@ describe('Atmosphere Explore', () => {
 
   test.each([
     { note: 'automatically discovered', publications: [] },
-    { note: 'explicitly in another group', publications: [group([pubUri])] },
+    { note: 'explicitly in another group', publications: [group(pubUri)] },
   ])(
     'renders a canonical document root with its publication $note',
     async ({ publications }) => {
       await using fixture = await setup({
-        articles: [group([docUri])],
+        articles: [group(docUri)],
         publications,
       })
       using dependencies = vi.spyOn(
@@ -654,12 +1585,12 @@ describe('Atmosphere Explore', () => {
     )
   })
 
-  it('keeps loose documents, but skips invalid URI groups and invalid records', async () => {
+  it('keeps loose documents, but skips invalid canonical roots and invalid records', async () => {
     await using fixture = await setup({
       articles: [
-        group([docUri], true),
-        group(['bad', docUri]),
-        group([null, docUri]),
+        group(docUri),
+        { canonicalUri: 'bad', uris: [docUri] },
+        { canonicalUri: null, uris: [docUri] },
       ],
     })
     fixture.records.set(
@@ -684,7 +1615,7 @@ describe('Atmosphere Explore', () => {
   })
 
   it('uses bounded, deduplicated profile previews', async () => {
-    await using fixture = await setup({ articles: [group([docUri])] })
+    await using fixture = await setup({ articles: [group(docUri)] })
     using backlinks = vi
       .spyOn(fixture.dataplane, 'getAtmosphereBacklinks')
       .mockResolvedValue(
@@ -796,7 +1727,7 @@ describe('Atmosphere Explore', () => {
     'uses shared livestream heartbeat semantics: $lastSeenAt',
     async ({ lastSeenAt, active }) => {
       using now = vi.spyOn(Date, 'now').mockReturnValue(Date.parse(publishedAt))
-      await using fixture = await setup({ livestreams: [group([liveUri])] })
+      await using fixture = await setup({ livestreams: [group(liveUri)] })
       fixture.records.set(
         liveUri,
         streamLivestream.$build({
@@ -831,16 +1762,58 @@ describe('Atmosphere Explore', () => {
 
   test.each([
     null,
-    { articles: [group([docUri], true), { uris: [pubUri] }] },
-    { announcementBanner: { title: 123 } },
-    { apps: [{ url: 123 }] },
-    { articles: Array.from({ length: 101 }, () => group([docUri])) },
-    { photos: [group(Array.from({ length: 101 }, () => photoUri))] },
+    { articles: [group(docUri), 'not-an-object'] },
+    { articles: [{ canonicalUri: docUri, tags: 'general' }] },
+    { articles: [{ canonicalUri: docUri, tags: [1] }] },
+    { articles: [{ canonicalUri: docUri, tags: ['x'.repeat(129)] }] },
     {
-      articles: Array.from({ length: 6 }, () =>
-        group(Array.from({ length: 100 }, () => docUri)),
-      ),
+      articles: [
+        { canonicalUri: docUri, tags: Array.from({ length: 101 }, () => 'a') },
+      ],
     },
+    { articles: [{ canonicalUri: docUri, locations: 'US' }] },
+    { articles: [{ canonicalUri: docUri, locations: [null] }] },
+    { articles: [{ canonicalUri: docUri, locations: ['U'.repeat(17)] }] },
+    {
+      photos: [
+        {
+          canonicalUri: galleryUri,
+          locations: Array.from({ length: 101 }, () => 'US'),
+        },
+      ],
+    },
+    { livestreams: [{ canonicalUri: liveUri, tags: null }] },
+    { announcementBanners: [{ status: 'enabled', title: 123 }] },
+    { announcementBanners: [{ status: 'enabled', url: 'not a uri' }] },
+    { announcementBanners: [{ title: 'No status' }] },
+    { announcementBanners: [{ status: 1 }] },
+    { announcementBanners: [{ status: 'x'.repeat(129) }] },
+    { announcementBanners: [{ status: 'enabled', startsAt: 'tomorrow' }] },
+    { announcementBanners: [{ status: 'enabled', endsAt: 1 }] },
+    { announcementBanners: [{ status: 'enabled', locations: 'US' }] },
+    { announcementBanners: [{ status: 'enabled', locations: [1] }] },
+    {
+      announcementBanners: [{ status: 'enabled', locations: ['U'.repeat(17)] }],
+    },
+    { announcementBanners: 'banner' },
+    {
+      announcementBanners: Array.from({ length: 101 }, () => ({
+        status: 'enabled',
+      })),
+    },
+    // An invalid later banner fails the config even after an eligible first.
+    {
+      announcementBanners: [
+        { status: 'enabled', title: 'First' },
+        { status: 'disabled', title: 123 },
+      ],
+    },
+    { apps: [{ url: 123 }] },
+    // Slicing to the selection limit must not bypass the section cap.
+    { articles: Array.from({ length: 101 }, () => group(docUri)) },
+    { publications: Array.from({ length: 101 }, () => group(pubUri)) },
+    { photos: Array.from({ length: 101 }, () => group(galleryUri)) },
+    { livestreams: Array.from({ length: 101 }, () => group(liveUri)) },
   ])('rejects malformed or excessive config %#', async (config) => {
     await using fixture = await setup(config)
     using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
