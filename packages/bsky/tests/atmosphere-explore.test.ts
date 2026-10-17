@@ -95,7 +95,7 @@ const lists = [
 ] as const
 type ListKey = (typeof lists)[number]['key']
 
-async function setup(config: unknown = {}) {
+async function setup(config: unknown = {}, exploreEnabled = true) {
   const records = new Map<AtUriString, TypedLexMap>([
     [
       docUri,
@@ -261,7 +261,6 @@ async function setup(config: unknown = {}) {
       })
     }),
   )
-  // Unconfigured, so every gate is off unless a test enables one.
   const featureGatesClient = new FeatureGatesClient({})
   const hydrator = new Hydrator(dataplane, [labeler], {
     debugFieldAllowedDids: new Set(),
@@ -330,7 +329,17 @@ async function setup(config: unknown = {}) {
     .spyOn(globalThis, 'fetch')
     .mockImplementation(async () => Response.json(config))
   register(xrpc, ctx)
-  const gateSpies: { mockRestore(): void }[] = []
+  const enabledGates = new Set(
+    exploreEnabled ? [Gate.AtmosphereScreenEndpointsEnable] : [],
+  )
+  const gateScope = vi
+    .spyOn(featureGatesClient, 'scope')
+    .mockImplementation(() => ({
+      Gate,
+      checkGate: (gate) => enabledGates.has(gate),
+      checkGates: (gates) =>
+        new Map(gates.map((gate) => [gate, enabledGates.has(gate)])),
+    }))
   const server = createHttpServer(xrpc.router)
   server.listen(0, '127.0.0.1')
   await once(server, 'listening')
@@ -351,24 +360,12 @@ async function setup(config: unknown = {}) {
     fetchMock,
     iris,
     featureGatesClient,
+    gateScope,
     /** Turns the Iris article gate on (or off) for this fixture's requests. */
     setIrisGate(enabled = true) {
-      const spy = vi
-        .spyOn(featureGatesClient, 'scope')
-        .mockImplementation(() => ({
-          Gate,
-          checkGate: (gate) =>
-            enabled && gate === Gate.AtmosphereExploreArticlesIrisEnable,
-          checkGates: (gates) =>
-            new Map(
-              gates.map((gate) => [
-                gate,
-                enabled && gate === Gate.AtmosphereExploreArticlesIrisEnable,
-              ]),
-            ),
-        }))
-      gateSpies.push(spy)
-      return spy
+      if (enabled) enabledGates.add(Gate.AtmosphereExploreArticlesIrisEnable)
+      else enabledGates.delete(Gate.AtmosphereExploreArticlesIrisEnable)
+      return gateScope
     },
     query: async (
       authenticated = false,
@@ -400,7 +397,7 @@ async function setup(config: unknown = {}) {
       }
     },
     async [Symbol.asyncDispose]() {
-      for (const spy of gateSpies) spy.mockRestore()
+      gateScope.mockRestore()
       fetchMock.mockRestore()
       await server[Symbol.asyncDispose]()
     },
@@ -420,6 +417,45 @@ const curated = {
   livestreams: [group(liveUri)],
   apps: [{ id: 'app', title: 'An app', url: 'https://example.com/app' }],
 }
+
+describe('Atmosphere Explore access gate', () => {
+  test.each([false, true])(
+    'returns 403 when disabled (authenticated: %s)',
+    async (authenticated) => {
+      await using fixture = await setup(curated, false)
+      fixture.setIrisGate()
+      using hydrate = vi.spyOn(fixture.hydrator, 'createContext')
+      expect(await fixture.query(authenticated)).toEqual({
+        status: 403,
+        body: {
+          error: 'Forbidden',
+          message: 'Atmosphere Explore is not enabled',
+        },
+      })
+      expect(hydrate).not.toHaveBeenCalled()
+      expect(fixture.fetchMock).not.toHaveBeenCalled()
+      expect(fixture.iris.fetchMock).not.toHaveBeenCalled()
+    },
+  )
+
+  it('returns 403 when feature gates are unconfigured, even without a worker', async () => {
+    await using fixture = await setup()
+    fixture.gateScope.mockRestore()
+    fixture.cfg.atmosphereExploreTabService = undefined
+    expect((await fixture.query()).status).toBe(403)
+    expect(fixture.fetchMock).not.toHaveBeenCalled()
+    expect(fixture.iris.fetchMock).not.toHaveBeenCalled()
+  })
+
+  test.each([false, true])(
+    'allows access when enabled (authenticated: %s)',
+    async (authenticated) => {
+      await using fixture = await setup(curated)
+      expect((await fixture.query(authenticated)).status).toBe(200)
+      expect(fixture.fetchMock).toHaveBeenCalledOnce()
+    },
+  )
+})
 
 describe('Atmosphere Explore', () => {
   it('hydrates canonical views, associations, and ordering', async () => {
@@ -2319,7 +2355,7 @@ describe('Atmosphere Explore article source (gate off)', () => {
     }
   })
 
-  it('stays off when the gate client is unconfigured, even with Iris configured', async () => {
+  it('stays off when only the endpoint gate is enabled, even with Iris configured', async () => {
     await using fixture = await setup(curated)
     const { status, body } = await fixture.query(true)
     expect(status).toBe(200)

@@ -3,6 +3,7 @@ import { mapDefined, noUndefinedVals } from '@atproto/common'
 import { type AtUriString, type Client, l } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import {
+  ForbiddenError,
   MethodNotImplementedError,
   type Server,
   UpstreamFailureError,
@@ -61,6 +62,13 @@ export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.unspecced.getAtmosphereExploreTab, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req, signal }) => {
+      const viewer = auth.credentials.iss
+      const features = ctx.featureGatesClient.scope(
+        ctx.featureGatesClient.parseUserContextFromHandler({ viewer, req }),
+      )
+      if (!features.checkGate(features.Gate.AtmosphereScreenEndpointsEnable)) {
+        throw new ForbiddenError('Atmosphere Explore is not enabled')
+      }
       const service = ctx.cfg.atmosphereExploreTabService
       if (!service)
         throw new MethodNotImplementedError(
@@ -75,13 +83,10 @@ export default function (server: Server, ctx: AppContext) {
           'Unable to fetch Atmosphere Explore configuration',
         )
       }
-      const viewer = auth.credentials.iss
       const hydrateCtx = await ctx.hydrator.createContext({
         viewer,
         labelers: ctx.reqLabelers(req),
-        features: ctx.featureGatesClient.scope(
-          ctx.featureGatesClient.parseUserContextFromHandler({ viewer, req }),
-        ),
+        features,
         xrpcEndpoint: app.bsky.unspecced.getAtmosphereExploreTab.$lxm,
       })
       const useIris = hydrateCtx.features.checkGate(
