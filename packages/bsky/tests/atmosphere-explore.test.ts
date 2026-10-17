@@ -2287,7 +2287,7 @@ describe('Atmosphere Explore article source (gate off)', () => {
 })
 
 describe('Atmosphere Explore article source (gate on)', () => {
-  it('calls the shared Iris client with standard request options', async () => {
+  it('validates Iris responses even when shared-client validation is off', async () => {
     await using fixture = await setupIris([docUri])
     const client = fixture.ctx.irisClient
     if (!client) throw new Error('Expected configured Iris client')
@@ -2297,8 +2297,13 @@ describe('Atmosphere Explore article source (gate on)', () => {
     expect(call).toHaveBeenCalledExactlyOnceWith(
       app.bsky.unspecced.getAtmosphereExploreArticleRecommendations,
       { limit: 10, viewer: undefined },
-      { headers: expect.any(Object), signal: expect.any(AbortSignal) },
+      {
+        headers: expect.any(Object),
+        signal: expect.any(AbortSignal),
+        validateResponse: true,
+      },
     )
+    expect(client.xrpcDefaults.validateResponse).toBe(false)
   })
 
   it('uses Iris as the exclusive, non-featured article source', async () => {
@@ -2732,6 +2737,39 @@ describe('Atmosphere Explore Iris requirements and failures', () => {
     expect(fixture.fetchMock).not.toHaveBeenCalled()
   })
 
+  const malformedIrisBodies = [
+    ['null body', null],
+    ['array body', []],
+    ['string body', 'text'],
+    ['boolean body', true],
+    ['number body', 7],
+    ['empty object', {}],
+    ['missing articles', { recIdStr: '1' }],
+    ['null articles', { articles: null, recIdStr: '1' }],
+    ['string articles', { articles: 'text', recIdStr: '1' }],
+    ['object articles', { articles: {}, recIdStr: '1' }],
+    ['missing rec ID', { articles: [] }],
+    ['invalid rec ID', { articles: [{ uri: docUri }], recIdStr: 7 }],
+    ['null article', { articles: [null], recIdStr: '1' }],
+    ['missing article URI', { articles: [{}], recIdStr: '1' }],
+    ['invalid article URI', { articles: [{ uri: 7 }], recIdStr: '1' }],
+    ['malformed article URI', { articles: [{ uri: 'bad' }], recIdStr: '1' }],
+    [
+      'mixed valid and invalid articles',
+      { articles: [{ uri: docUri }, null], recIdStr: '1' },
+    ],
+    [
+      'invalid article beyond the output cap',
+      {
+        articles: [
+          ...articleUris(...Array.from({ length: 10 }, () => docUri)),
+          null,
+        ],
+        recIdStr: '1',
+      },
+    ],
+  ] as const
+
   const irisFailures = [
     ['http', () => new Response('', { status: 503 })],
     ['network', () => Promise.reject(new TypeError('down'))],
@@ -2743,7 +2781,16 @@ describe('Atmosphere Explore Iris requirements and failures', () => {
     ],
   ] as const
 
-  test.each(irisFailures)(
+  test.each([
+    ...irisFailures,
+    ...malformedIrisBodies.map(
+      ([name, payload]) =>
+        [
+          `malformed 200 response: ${name}`,
+          () => Response.json(payload),
+        ] as const,
+    ),
+  ])(
     'falls back to worker-curated articles, without a rec ID, on Iris %s',
     async (_, respond) => {
       await using fixture = await setupIris([docUri], curated)

@@ -132,9 +132,10 @@ async function skeleton({
             {
               headers: params.headers,
               signal: params.signal,
+              validateResponse: true,
             },
           )
-          // On an Iris failure, fall back to worker-curated articles.
+          // @NOTE Request and response-validation failures use curated articles.
           .catch((err) => {
             if (params.signal.aborted) throw err
             httpLogger.warn(
