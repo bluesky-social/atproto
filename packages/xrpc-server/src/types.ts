@@ -92,9 +92,17 @@ export const handlerPipeThrough = l.union([
 
 export type HandlerPipeThrough = l.Infer<typeof handlerPipeThrough>
 
+/** An HTTP redirect that bypasses Lexicon response body validation. */
+export type HandlerRedirect = {
+  status: 301 | 302 | 303 | 307 | 308
+  location: string
+  headers?: Headers
+}
+
 export type Auth = void | AuthResult
 export type Input = void | HandlerInput
-export type Output = void | HandlerSuccess | HandlerPipeThrough | ErrorResult
+export type Output =
+  void | HandlerSuccess | HandlerPipeThrough | HandlerRedirect | ErrorResult
 
 export type AuthVerifier<C, A extends AuthResult = AuthResult> =
   ((ctx: C) => Awaitable<A | ErrorResult>) | ((ctx: C) => Awaitable<A>)
@@ -126,7 +134,9 @@ export type MethodHandler<
   P extends Params = Params,
   I extends Input = Input,
   O extends Output = Output,
-> = (ctx: HandlerContext<A, P, I>) => Awaitable<O | HandlerPipeThrough>
+> = (
+  ctx: HandlerContext<A, P, I>,
+) => Awaitable<O | HandlerPipeThrough | HandlerRedirect>
 
 export type RateLimiterCreator<T extends HandlerContext = HandlerContext> = <
   C extends T = T,
@@ -311,6 +321,15 @@ export function isHandlerSuccess(output: Output): output is HandlerSuccess {
     (!('status' in output) ||
       output.status == null ||
       Number(output.status) < 400)
+  )
+}
+
+export function isHandlerRedirect(output: Output): output is HandlerRedirect {
+  return (
+    output != null &&
+    'location' in output &&
+    'status' in output &&
+    [301, 302, 303, 307, 308].includes(output.status)
   )
 }
 

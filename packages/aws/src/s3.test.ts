@@ -2,11 +2,21 @@ import http from 'node:http'
 import type { AddressInfo, Socket } from 'node:net'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { S3 } from '@aws-sdk/client-s3'
-import { CID } from 'multiformats/cid'
-import { afterEach, assert, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  test,
+  vi,
+} from 'vitest'
+import { parseCid } from '@atproto/lex-data'
+import { BlobNotFoundError } from '@atproto/repo'
 import { S3BlobStore } from './s3.js'
 
-const testCid = CID.parse(
+const testCid = parseCid(
   'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
 )
 
@@ -119,6 +129,119 @@ describe(S3BlobStore, () => {
   const createBlobStore = (cfg: Parameters<typeof createConfig>[0]) => {
     return new S3BlobStore('did:example:alice', createConfig(cfg))
   }
+
+  describe('presigned downloads', () => {
+    test.each([
+      {
+        name: 'AWS S3',
+        region: 'us-east-1',
+        endpoint: undefined,
+        forcePathStyle: false,
+        host: 'test-bucket.s3.us-east-1.amazonaws.com',
+        prefix: '',
+      },
+      {
+        name: 'Cloudflare R2',
+        region: 'auto',
+        endpoint: 'https://account.r2.cloudflarestorage.com',
+        forcePathStyle: false,
+        host: 'test-bucket.account.r2.cloudflarestorage.com',
+        prefix: '',
+      },
+      {
+        name: 'S3-compatible path-style endpoint',
+        region: 'auto',
+        endpoint: 'https://objects.example.com',
+        forcePathStyle: true,
+        host: 'objects.example.com',
+        prefix: '/test-bucket',
+      },
+    ])('$name', async ({ region, endpoint, forcePathStyle, host, prefix }) => {
+      using head = vi
+        .spyOn(S3.prototype, 'headObject')
+        .mockImplementation(async () => ({
+          $metadata: { httpStatusCode: 200 },
+        }))
+      await using store = new S3BlobStore('did:example:alice', {
+        ...createConfig({}),
+        region,
+        endpoint,
+        forcePathStyle,
+        credentials: {
+          accessKeyId: 'key',
+          secretAccessKey: 'secret',
+          sessionToken: 'session-token',
+        },
+      })
+      const url = new URL(await store.getDownloadUrl(testCid, 'image/jpeg'))
+      expect(url.host).toBe(host)
+      expect(decodeURIComponent(url.pathname)).toBe(
+        `${prefix}/blocks/did:example:alice/${testCid}`,
+      )
+      expect(url.searchParams.get('X-Amz-Algorithm')).toBe('AWS4-HMAC-SHA256')
+      expect(url.searchParams.get('X-Amz-Credential')).toContain(
+        `/${region}/s3/aws4_request`,
+      )
+      expect(url.searchParams.get('X-Amz-Security-Token')).toBe('session-token')
+      expect(url.searchParams.get('X-Amz-Signature')).toMatch(/^[a-f0-9]{64}$/)
+      expect(url.searchParams.get('X-Amz-Expires')).toBe('60')
+      expect(url.searchParams.get('X-Amz-SignedHeaders')).toBe('host')
+      expect(url.searchParams.get('response-content-type')).toBe('image/jpeg')
+      expect(url.searchParams.get('response-content-disposition')).toBe(
+        `attachment; filename="${testCid}"`,
+      )
+      expect(url.searchParams.get('response-cache-control')).toBe('no-store')
+      expect(url.searchParams.has('x-amz-checksum-mode')).toBe(false)
+      expect(head).toHaveBeenCalledWith({
+        Bucket: 'test-bucket',
+        Key: `blocks/did:example:alice/${testCid}`,
+      })
+      expect(server.connectionCount).toBe(0)
+    })
+
+    it('does not download the blob when creating a URL', async () => {
+      using handler = vi
+        .spyOn(server, 'handler')
+        .mockImplementation((req, res) => {
+          expect(req.method).toBe('HEAD')
+          res.writeHead(200).end()
+        })
+      await using store = createBlobStore({})
+      const url = new URL(await store.getDownloadUrl(testCid, 'text/html'))
+      expect(url.origin).toBe(endpoint)
+      expect(url.searchParams.get('response-content-type')).toBe('text/html')
+      expect(url.searchParams.get('response-content-disposition')).toContain(
+        'attachment;',
+      )
+      expect(handler).toHaveBeenCalledOnce()
+    })
+
+    it('rejects missing objects before issuing a URL', async () => {
+      using handler = vi
+        .spyOn(server, 'handler')
+        .mockImplementation((req, res) => {
+          res.writeHead(404).end()
+        })
+      await using store = createBlobStore({})
+      await expect(
+        store.getDownloadUrl(testCid, 'image/jpeg'),
+      ).rejects.toSatisfy((err) => err instanceof BlobNotFoundError)
+      expect(handler).toHaveBeenCalledOnce()
+    })
+
+    it('preserves storage errors', async () => {
+      using handler = vi
+        .spyOn(server, 'handler')
+        .mockImplementation((req, res) => {
+          res.writeHead(403).end()
+        })
+      await using store = createBlobStore({})
+      await expect(
+        store.getDownloadUrl(testCid, 'image/jpeg'),
+      ).rejects.toSatisfy((err) => !(err instanceof BlobNotFoundError))
+      expect(handler).toHaveBeenCalledOnce()
+    })
+  })
 
   it('reaps stalled requests at requestTimeoutMs and succeeds on retry', async () => {
     // First request stalls, second succeeds. The SDK should reap the stalled

@@ -52,6 +52,8 @@ export interface BlobStore extends AsyncDisposable {
   unquarantine(cid: Cid): Promise<void>
   getBytes(cid: Cid): Promise<Uint8Array>
   getStream(cid: Cid): Promise<Readable>
+  /** Returns a short-lived attachment download URL for a stored blob, if supported. */
+  getDownloadUrl?(cid: Cid, mimeType: string): Promise<string>
   hasTemp(key: string): Promise<boolean>
   hasStored(cid: Cid): Promise<boolean>
   delete(cid: Cid): Promise<void>
