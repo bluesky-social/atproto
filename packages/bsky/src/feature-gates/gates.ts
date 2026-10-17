@@ -25,6 +25,7 @@ export enum Gate {
   SuggestedFeedsV2Enable = 'suggested_feeds_v2:enable',
   SuggestedStarterPacksV2Enable = 'suggested_starter_packs_v2:enable',
   SuggestedStarterPacksOnboardingV2Enable = 'suggested_starter_packs_onboarding_v2:enable',
+  AtmosphereExploreArticlesIrisEnable = 'atmosphere_explore:articles:iris:enable',
 
   // temp
   AATest = 'aa-test-appview',

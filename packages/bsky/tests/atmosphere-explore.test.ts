@@ -1,9 +1,10 @@
 import { once } from 'node:events'
 import { createServer as createHttpServer } from 'node:http'
 import { createPromiseClient, createRouterTransport } from '@connectrpc/connect'
-import { describe, expect, it, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, test, vi } from 'vitest'
 import {
   type AtUriString,
+  Client,
   type TypedLexMap,
   atUri,
   currentDatetimeString,
@@ -15,10 +16,12 @@ import { AuthRequiredError, createServer } from '@atproto/xrpc-server'
 import register from '../src/api/app/bsky/unspecced/getAtmosphereExploreTab.js'
 import { ServerConfig } from '../src/config.js'
 import type { AppContext } from '../src/context.js'
+import { Gate } from '../src/feature-gates/gates.js'
 import { FeatureGatesClient } from '../src/feature-gates/index.js'
 import { Hydrator } from '../src/hydration/hydrator.js'
 import { ImageUriBuilder } from '../src/image/uri.js'
 import { app, type com, place, site, social } from '../src/lexicons/index.js'
+import { httpLogger } from '../src/logger.js'
 import { Service } from '../src/proto/bsky_connect.js'
 import {
   GetAtmosphereBacklinksResponse,
@@ -44,11 +47,22 @@ const galleryUri = atUri(author, grainGallery.$type, 'gallery')
 const itemUri = atUri(author, grainGalleryItem.$type, 'item')
 const photoUri = atUri(author, grainPhoto.$type, 'photo')
 const liveUri = atUri(author, streamLivestream.$type, 'live')
+const doc2Uri = atUri(author, site.standard.document.$type, 'story2')
 const missingUri = atUri(author, site.standard.document.$type, 'missing')
 const group = (canonicalUri: unknown) => ({ canonicalUri })
 const service = 'https://cms.bsky.app/atmosphere-explore-tab'
 const frozenNow = Date.parse(publishedAt)
 const at = (offsetMs: number) => toDatetimeString(frozenNow + offsetMs)
+
+// Lists are shuffled before hydration. Default to a Fisher-Yates no-op (every
+// swap index equals the current index) so order assertions are deterministic;
+// shuffle tests override the value. Restored after every test.
+beforeEach(() => {
+  vi.spyOn(Math, 'random').mockReturnValue(1 - Number.EPSILON)
+})
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 const lists = [
   {
     key: 'articles',
@@ -84,6 +98,16 @@ async function setup(config: unknown = {}) {
         path: '/story',
         publishedAt,
         textContent: 'one two three',
+      }),
+    ],
+    [
+      doc2Uri,
+      site.standard.document.$build({
+        title: 'Second article',
+        site: pubUri,
+        path: '/story2',
+        publishedAt,
+        textContent: 'four five six',
       }),
     ],
     [
@@ -216,9 +240,11 @@ async function setup(config: unknown = {}) {
       })
     }),
   )
+  // Unconfigured, so every gate is off unless a test enables one.
+  const featureGatesClient = new FeatureGatesClient({})
   const hydrator = new Hydrator(dataplane, [labeler], {
     debugFieldAllowedDids: new Set(),
-    featureGatesClient: new FeatureGatesClient({}),
+    featureGatesClient,
   })
   const views = new Views({
     imgUriBuilder: new ImageUriBuilder('https://images.example.com'),
@@ -233,10 +259,31 @@ async function setup(config: unknown = {}) {
     visibilityTagRankPrefix: '',
   })
   const cfg = { atmosphereExploreTabService: service as string | undefined }
+  // Independent Iris upstream with its own client and fetch; never derived from
+  // worker content.
+  const iris = {
+    response: { articles: [], recIdStr: '123' } as unknown,
+    respond: undefined as
+      undefined | ((request: Request) => Response | Promise<Response>),
+    fetchMock: vi.fn<typeof globalThis.fetch>(),
+  }
+  iris.fetchMock.mockImplementation(async (input, init) => {
+    const request = new Request(input, init)
+    return iris.respond ? iris.respond(request) : Response.json(iris.response)
+  })
   const ctx = {
     cfg,
     hydrator,
     views,
+    featureGatesClient,
+    irisClient: new Client(
+      {
+        service: 'https://iris.test',
+        headers: { authorization: 'Bearer iris-key' },
+        fetch: iris.fetchMock,
+      },
+      { strictResponseProcessing: false, validateResponse: false },
+    ) as Client | undefined,
     reqLabelers: () => ({ dids: [labeler], redact: new Set([labeler]) }),
     authVerifier: {
       standardOptional: async ({ req }) => {
@@ -262,6 +309,7 @@ async function setup(config: unknown = {}) {
     .spyOn(globalThis, 'fetch')
     .mockImplementation(async () => Response.json(config))
   register(xrpc, ctx)
+  const gateSpies: { mockRestore(): void }[] = []
   const server = createHttpServer(xrpc.router)
   server.listen(0, '127.0.0.1')
   await once(server, 'listening')
@@ -277,11 +325,33 @@ async function setup(config: unknown = {}) {
     dataplane,
     hydrator,
     cfg,
+    ctx: ctx as unknown as { irisClient: Client | undefined },
     fetchMock,
+    iris,
+    featureGatesClient,
+    /** Turns the Iris article gate on (or off) for this fixture's requests. */
+    setIrisGate(enabled = true) {
+      const spy = vi
+        .spyOn(featureGatesClient, 'scope')
+        .mockImplementation(() => ({
+          Gate,
+          checkGate: (gate) =>
+            enabled && gate === Gate.AtmosphereExploreArticlesIrisEnable,
+          checkGates: (gates) =>
+            new Map(
+              gates.map((gate) => [
+                gate,
+                enabled && gate === Gate.AtmosphereExploreArticlesIrisEnable,
+              ]),
+            ),
+        }))
+      gateSpies.push(spy)
+      return spy
+    },
     query: async (
       authenticated = false,
       params: app.bsky.unspecced.getAtmosphereExploreTab.$Params = {},
-      headers: Record<string, string> = {},
+      headers: Partial<Record<string, string>> = {},
     ) => {
       const url = new URL(
         `http://127.0.0.1:${address.port}/xrpc/${app.bsky.unspecced.getAtmosphereExploreTab.$lxm}`,
@@ -296,7 +366,9 @@ async function setup(config: unknown = {}) {
       const response = await nativeFetch(url, {
         headers: {
           ...(authenticated ? { authorization: 'Bearer valid' } : {}),
-          ...headers,
+          ...(Object.fromEntries(
+            Object.entries(headers).filter(([, value]) => value !== undefined),
+          ) as Record<string, string>),
         },
       })
       const body = await response.json()
@@ -306,6 +378,7 @@ async function setup(config: unknown = {}) {
       }
     },
     async [Symbol.asyncDispose]() {
+      for (const spy of gateSpies) spy.mockRestore()
       fetchMock.mockRestore()
       await server[Symbol.asyncDispose]()
     },
@@ -342,11 +415,11 @@ describe('Atmosphere Explore', () => {
     expect(status).toBe(200)
     expect(body.announcementBanner).toEqual(curatedBanner)
     expect(body.apps).toEqual(curated.apps)
-    expect(body.articles.map(({ featured }) => featured)).toEqual([
+    expect(body.articles.items.map(({ featured }) => featured)).toEqual([
       false,
       false,
     ])
-    const article = body.articles[0].view
+    const article = body.articles.items[0].view
     expect(app.bsky.embed.external.viewArticle.$matches(article)).toBe(true)
     expect(article).toMatchObject({
       title: 'Article',
@@ -354,9 +427,9 @@ describe('Atmosphere Explore', () => {
       likeCount: 7,
       readingTime: 1,
     })
-    expect(body.articles[1].view.associatedRefs?.map(({ uri }) => uri)).toEqual(
-      [docUri, pubUri],
-    )
+    expect(
+      body.articles.items[1].view.associatedRefs?.map(({ uri }) => uri),
+    ).toEqual([docUri, pubUri])
     expect(article.publisher).toMatchObject({
       title: 'Publication',
       subscriptionCount: 4,
@@ -364,10 +437,10 @@ describe('Atmosphere Explore', () => {
     })
     expect(
       app.bsky.embed.external.viewArticlePublication.$matches(
-        body.publications[0].view,
+        body.publications.items[0].view,
       ),
     ).toBe(true)
-    const gallery = body.photos[0].view
+    const gallery = body.photos.items[0].view
     expect(app.bsky.embed.external.viewGallery.$matches(gallery)).toBe(true)
     expect(gallery.uri).toBe(galleryUri)
     expect(gallery.associatedRefs?.map(({ uri }) => uri)).toEqual([
@@ -380,7 +453,7 @@ describe('Atmosphere Explore', () => {
       thumbnail: `https://images.example.com/feed_thumbnail/plain/${author}/${photoCid}`,
       alt: 'A photo',
     })
-    expect(body.livestreams[0].view).toMatchObject({
+    expect(body.livestreams.items[0].view).toMatchObject({
       $type: app.bsky.embed.external.viewLivestream.$type,
       uri: 'https://stream.place/author',
       image: `https://images.example.com/feed_thumbnail/plain/${author}/${photoCid}`,
@@ -422,17 +495,15 @@ describe('Atmosphere Explore', () => {
     expect(lookup.mock.calls.flatMap(([params]) => params.uris)).not.toContain(
       missingUri,
     )
-    expect(body.articles).toHaveLength(1)
-    expect(body.articles[0].featured).toBe(false)
-    expect(body.publications).toHaveLength(1)
-    expect(body.photos).toHaveLength(1)
-    expect(body.photos[0].featured).toBe(false)
-    expect(body.photos[0].view.associatedRefs?.map(({ uri }) => uri)).toEqual([
-      galleryUri,
-      itemUri,
-      photoUri,
-    ])
-    expect(body.livestreams).toHaveLength(1)
+    expect(body.articles.items).toHaveLength(1)
+    expect(body.articles.items[0].featured).toBe(false)
+    expect(body.publications.items).toHaveLength(1)
+    expect(body.photos.items).toHaveLength(1)
+    expect(body.photos.items[0].featured).toBe(false)
+    expect(
+      body.photos.items[0].view.associatedRefs?.map(({ uri }) => uri),
+    ).toEqual([galleryUri, itemUri, photoUri])
+    expect(body.livestreams.items).toHaveLength(1)
   })
 
   it('renders canonical-only entries and discovers their dependencies', async () => {
@@ -447,14 +518,12 @@ describe('Atmosphere Explore', () => {
     expect(lookup.mock.calls[0][0].uris).toEqual([docUri, galleryUri])
     const looked = lookup.mock.calls.flatMap(([params]) => params.uris)
     expect(looked).toEqual(expect.arrayContaining([pubUri, photoUri]))
-    expect(body.articles[0].view.publisher).toMatchObject({
+    expect(body.articles.items[0].view.publisher).toMatchObject({
       title: 'Publication',
     })
-    expect(body.photos[0].view.associatedRefs?.map(({ uri }) => uri)).toEqual([
-      galleryUri,
-      itemUri,
-      photoUri,
-    ])
+    expect(
+      body.photos.items[0].view.associatedRefs?.map(({ uri }) => uri),
+    ).toEqual([galleryUri, itemUri, photoUri])
   })
 
   describe('invalid canonical roots', () => {
@@ -490,7 +559,7 @@ describe('Atmosphere Explore', () => {
           const { status, body } = await fixture.query()
 
           expect(status).toBe(200)
-          expect(body[key]).toEqual([])
+          expect(body[key].items).toEqual([])
           expect(lookup.mock.calls.flatMap(([params]) => params.uris)).toEqual(
             [],
           )
@@ -520,7 +589,7 @@ describe('Atmosphere Explore', () => {
           const { status, body } = await fixture.query()
 
           expect(status).toBe(200)
-          expect(body[key]).toEqual([])
+          expect(body[key].items).toEqual([])
           expect(hydrate.mock.calls[0][0]).toEqual([canonicalUri])
           expect(
             lookup.mock.calls.flatMap(([params]) => params.uris),
@@ -571,7 +640,7 @@ describe('Atmosphere Explore', () => {
         const { status, body } = await fixture.query()
 
         expect(status).toBe(200)
-        expect(body[key]).toHaveLength(1)
+        expect(body[key].items).toHaveLength(1)
       }
     })
 
@@ -858,18 +927,22 @@ describe('Atmosphere Explore', () => {
     const { status, body } = await fixture.query()
     expect(status).toBe(200)
     // Null schedules are not featured; a worker-supplied `featured` is ignored.
-    expect(body.articles.map(({ featured }) => featured)).toEqual([
+    expect(body.articles.items.map(({ featured }) => featured)).toEqual([
       false,
       false,
       false,
     ])
-    expect(body.publications.map(({ featured }) => featured)).toEqual([false])
-    expect(body.photos.map(({ featured }) => featured)).toEqual([false])
-    expect(body.livestreams.map(({ featured }) => featured)).toEqual([false])
+    expect(body.publications.items.map(({ featured }) => featured)).toEqual([
+      false,
+    ])
+    expect(body.photos.items.map(({ featured }) => featured)).toEqual([false])
+    expect(body.livestreams.items.map(({ featured }) => featured)).toEqual([
+      false,
+    ])
     expect(body.announcementBanner).toEqual(curatedBanner)
     expect(body.apps).toEqual(curated.apps)
     for (const key of lists.map(({ key }) => key))
-      for (const item of body[key])
+      for (const item of body[key].items)
         expect(Object.keys(item).sort()).toEqual(['featured', 'view'])
   })
 
@@ -950,8 +1023,10 @@ describe('Atmosphere Explore', () => {
           const { status, body } = await fixture.query()
           expect(status).toBe(200)
           for (const { key } of lists) {
-            expect(body[key].map((item) => item.featured)).toEqual([featured])
-            expect(Object.keys(body[key][0]).sort()).toEqual([
+            expect(body[key].items.map((item) => item.featured)).toEqual([
+              featured,
+            ])
+            expect(Object.keys(body[key].items[0]).sort()).toEqual([
               'featured',
               'view',
             ])
@@ -975,7 +1050,7 @@ describe('Atmosphere Explore', () => {
       )
       const { body } = await fixture.query()
       expect(hydrate.mock.calls[0][0]).toEqual([docUri])
-      expect(body.articles.map(({ featured }) => featured)).toEqual([
+      expect(body.articles.items.map(({ featured }) => featured)).toEqual([
         true,
         false,
         false,
@@ -983,31 +1058,37 @@ describe('Atmosphere Explore', () => {
     })
 
     test.each([
-      { articles: [{ canonicalUri: docUri, startsAt: 1 }] },
-      { articles: [{ canonicalUri: docUri, endsAt: true }] },
-      { publications: [{ canonicalUri: pubUri, startsAt: 'tomorrow' }] },
-      { photos: [{ canonicalUri: galleryUri, endsAt: '2026-10-01' }] },
-      {
-        livestreams: [
-          { canonicalUri: liveUri },
-          { canonicalUri: liveUri, startsAt: 'soon' },
-        ],
+      { key: 'articles', bad: { startsAt: 1 } },
+      { key: 'articles', bad: { endsAt: true } },
+      { key: 'publications', bad: { startsAt: 'tomorrow' } },
+      { key: 'photos', bad: { endsAt: '2026-10-01' } },
+      { key: 'livestreams', bad: { startsAt: 'soon' } },
+      // Skipped even when the entry would be excluded by location.
+      { key: 'articles', bad: { locations: ['JP'], endsAt: 'bad' } },
+    ] as const)(
+      'skips a $key entry with a malformed schedule $bad',
+      async ({ key, bad }) => {
+        const { baseUri } = lists.find((list) => list.key === key)!
+        using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+        await using fixture = await setup({
+          [key]: [{ canonicalUri: baseUri, ...bad }, { canonicalUri: baseUri }],
+        })
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body[key].items.map((item) => item.featured)).toEqual([false])
       },
-      // Invalid even when the entry is excluded or beyond the selection cap.
-      {
-        articles: [{ canonicalUri: docUri, locations: ['JP'], endsAt: 'bad' }],
-      },
-      {
+    )
+
+    it('skips malformed entries beyond the selection cap', async () => {
+      await using fixture = await setup({
         articles: [
           ...Array.from({ length: 10 }, () => ({ canonicalUri: docUri })),
           { canonicalUri: docUri, startsAt: 'bad' },
         ],
-      },
-    ])('rejects malformed content schedules %#', async (config) => {
-      await using fixture = await setup(config)
-      using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
-      expect((await fixture.query()).status).toBe(502)
-      expect(lookup).not.toHaveBeenCalled()
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.articles.items).toHaveLength(10)
     })
   })
 
@@ -1118,7 +1199,7 @@ describe('Atmosphere Explore', () => {
         using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
         const { status, body } = await fixture.query()
         expect(status).toBe(200)
-        expect(body[key]).toEqual([])
+        expect(body[key].items).toEqual([])
         expect(lookup.mock.calls[0][0].uris).toEqual(missing)
         expect(
           lookup.mock.calls.flatMap(([params]) => params.uris),
@@ -1143,7 +1224,7 @@ describe('Atmosphere Explore', () => {
         )
         const { body } = await fixture.query(false, {}, topics)
         expect(hydrate.mock.calls[0][0]).toEqual([baseUri])
-        expect(body[key]).toHaveLength(3)
+        expect(body[key].items).toHaveLength(3)
       },
     )
 
@@ -1313,9 +1394,9 @@ describe('Atmosphere Explore', () => {
         ),
         galleryUri,
       ])
-      expect(body.publications).toEqual([])
-      expect(body.photos).toHaveLength(1)
-      expect(body.livestreams).toEqual([])
+      expect(body.publications.items).toEqual([])
+      expect(body.photos.items).toHaveLength(1)
+      expect(body.livestreams.items).toEqual([])
     })
 
     const active = { startsAt: at(-1), endsAt: at(1) }
@@ -1392,7 +1473,7 @@ describe('Atmosphere Explore', () => {
         using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
         const { status, body } = await fixture.query()
         expect(status).toBe(200)
-        expect(body[key]).toEqual([])
+        expect(body[key].items).toEqual([])
         expect(lookup.mock.calls[0][0].uris).toEqual(missing)
         expect(
           lookup.mock.calls.flatMap(([params]) => params.uris),
@@ -1406,13 +1487,13 @@ describe('Atmosphere Explore', () => {
     using relationships = vi.spyOn(fixture.dataplane, 'getRelationships')
     const anonymous = await fixture.query()
     expect(
-      anonymous.body.articles[0].view.associatedProfiles?.[0].viewer,
+      anonymous.body.articles.items[0].view.associatedProfiles?.[0].viewer,
     ).toBeUndefined()
     expect(relationships).not.toHaveBeenCalled()
     const authenticated = await fixture.query(true)
     expect(authenticated.status).toBe(200)
     expect(
-      authenticated.body.articles[0].view.associatedProfiles?.[0].viewer
+      authenticated.body.articles.items[0].view.associatedProfiles?.[0].viewer
         ?.following,
     ).toBe(atUri(viewer, app.bsky.graph.follow.$type, 'follow'))
     expect(relationships.mock.calls[0][0].actorDid).toBe(viewer)
@@ -1428,7 +1509,7 @@ describe('Atmosphere Explore', () => {
       articles: [group(docUri)],
     })
     fixture.takenDown.add(pubUri)
-    expect((await fixture.query()).body.articles).toEqual([])
+    expect((await fixture.query()).body.articles.items).toEqual([])
     fixture.takenDown.clear()
     fixture.records.set(
       docUri,
@@ -1438,7 +1519,7 @@ describe('Atmosphere Explore', () => {
         publishedAt,
       }),
     )
-    expect((await fixture.query()).body.articles).toEqual([])
+    expect((await fixture.query()).body.articles.items).toEqual([])
   })
 
   test.each([
@@ -1463,16 +1544,16 @@ describe('Atmosphere Explore', () => {
           ([state]) => state.externalRecords?.get(pubUri)?.record,
         ),
       ).toBe(true)
-      expect(body.articles).toHaveLength(1)
-      expect(body.articles[0].view).toMatchObject({
+      expect(body.articles.items).toHaveLength(1)
+      expect(body.articles.items[0].view).toMatchObject({
         title: 'Article',
         uri: 'https://example.com/blog/story',
         publisher: { title: 'Publication', subscriptionCount: 4 },
       })
       expect(
-        body.articles[0].view.associatedRefs?.map(({ uri }) => uri),
+        body.articles.items[0].view.associatedRefs?.map(({ uri }) => uri),
       ).toEqual([docUri, pubUri])
-      expect(body.publications).toHaveLength(publications.length)
+      expect(body.publications.items).toHaveLength(publications.length)
     },
   )
 
@@ -1492,7 +1573,7 @@ describe('Atmosphere Explore', () => {
       if (kind === 'block') fixture.blockedActors.add(author)
       const { status, body } = await fixture.query(true)
       expect(status).toBe(200)
-      expect(body.articles).toEqual([])
+      expect(body.articles.items).toEqual([])
     },
   )
 
@@ -1507,11 +1588,11 @@ describe('Atmosphere Explore', () => {
       }),
     )
     using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
-    expect((await fixture.query()).body.photos).toHaveLength(1)
+    expect((await fixture.query()).body.photos.items).toHaveLength(1)
     expect(lookup).toHaveBeenCalledWith({ uris: [photoUri] })
     expect(fixture.records.get(itemUri)).not.toHaveProperty('position')
     fixture.takenDown.add(photoUri)
-    expect((await fixture.query()).body.photos).toEqual([])
+    expect((await fixture.query()).body.photos.items).toEqual([])
   })
 
   it('preserves gallery position ordering through nested hydration in mixed input', async () => {
@@ -1549,22 +1630,18 @@ describe('Atmosphere Explore', () => {
 
     const { status, body } = await fixture.query()
     expect(status).toBe(200)
-    expect(body.articles).toHaveLength(2)
-    expect(body.publications).toHaveLength(1)
-    expect(body.livestreams).toHaveLength(1)
+    expect(body.articles.items).toHaveLength(2)
+    expect(body.publications.items).toHaveLength(1)
+    expect(body.livestreams.items).toHaveLength(1)
     expect(
-      body.photos[0].view.items.map(
+      body.photos.items[0].view.items.map(
         (item) =>
           app.bsky.embed.external.viewGalleryImage.$ifMatches(item)?.alt,
       ),
     ).toEqual(['Earlier photo', 'A photo'])
-    expect(body.photos[0].view.associatedRefs?.map(({ uri }) => uri)).toEqual([
-      galleryUri,
-      item2Uri,
-      photo2Uri,
-      itemUri,
-      photoUri,
-    ])
+    expect(
+      body.photos.items[0].view.associatedRefs?.map(({ uri }) => uri),
+    ).toEqual([galleryUri, item2Uri, photo2Uri, itemUri, photoUri])
     expect(backlinks).toHaveBeenCalledWith({
       targetUri: galleryUri,
       collection: grainGalleryItem.$type,
@@ -1579,7 +1656,7 @@ describe('Atmosphere Explore', () => {
       item: { uri: photoUri, cid },
     })
     using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
-    expect((await fixture.query()).body.photos).toEqual([])
+    expect((await fixture.query()).body.photos.items).toEqual([])
     expect(lookup.mock.calls.flatMap(([params]) => params.uris)).not.toContain(
       photoUri,
     )
@@ -1603,15 +1680,15 @@ describe('Atmosphere Explore', () => {
       }),
     )
     const { body } = await fixture.query()
-    expect(body.articles).toHaveLength(1)
-    expect(body.articles[0].view.uri).toBe('https://example.com/loose')
-    expect(body.articles[0].view.publisher).toBeUndefined()
+    expect(body.articles.items).toHaveLength(1)
+    expect(body.articles.items[0].view.uri).toBe('https://example.com/loose')
+    expect(body.articles.items[0].view.publisher).toBeUndefined()
     fixture.records.set(docUri, {
       $type: site.standard.document.$type,
       title: 42,
       site: pubUri,
     })
-    expect((await fixture.query()).body.articles).toEqual([])
+    expect((await fixture.query()).body.articles.items).toEqual([])
   })
 
   it('uses bounded, deduplicated profile previews', async () => {
@@ -1668,7 +1745,7 @@ describe('Atmosphere Explore', () => {
         atUri('did:plc:a', site.standard.graph.recommend.$type, 'two'),
       ],
     })
-    expect(body.articles[0].view.likers?.map(({ did }) => did)).toEqual([
+    expect(body.articles.items[0].view.likers?.map(({ did }) => did)).toEqual([
       'did:plc:a',
       'did:plc:z',
     ])
@@ -1680,7 +1757,7 @@ describe('Atmosphere Explore', () => {
         fixture.takenDown.add(uri)
       }
     }
-    const moderated = (await fixture.query()).body.articles[0].view
+    const moderated = (await fixture.query()).body.articles.items[0].view
     expect(moderated.likers).toEqual([])
     expect(moderated.likeCount).toBe(7)
   })
@@ -1696,7 +1773,7 @@ describe('Atmosphere Explore', () => {
         createdAt: publishedAt,
       }),
     )
-    expect((await fixture.query()).body.photos).toEqual([])
+    expect((await fixture.query()).body.photos.items).toEqual([])
   })
 
   it('returns ended livestreams with their end timestamp', async () => {
@@ -1710,7 +1787,9 @@ describe('Atmosphere Explore', () => {
         endedAt: publishedAt,
       }),
     )
-    expect((await fixture.query()).body.livestreams[0].view).toMatchObject({
+    expect(
+      (await fixture.query()).body.livestreams.items[0].view,
+    ).toMatchObject({
       active: false,
       endedAt: publishedAt,
     })
@@ -1736,7 +1815,9 @@ describe('Atmosphere Explore', () => {
           lastSeenAt,
         }),
       )
-      expect((await fixture.query()).body.livestreams[0].view).toMatchObject({
+      expect(
+        (await fixture.query()).body.livestreams.items[0].view,
+      ).toMatchObject({
         uri: liveUri,
         active,
       })
@@ -1750,75 +1831,213 @@ describe('Atmosphere Explore', () => {
     expect(await fixture.query()).toEqual({
       status: 200,
       body: {
-        articles: [],
-        publications: [],
-        photos: [],
-        livestreams: [],
+        articles: { items: [] },
+        publications: { items: [] },
+        photos: { items: [] },
+        livestreams: { items: [] },
         apps: [],
       },
     })
     expect(lookup).not.toHaveBeenCalled()
   })
 
-  test.each([
-    null,
-    { articles: [group(docUri), 'not-an-object'] },
-    { articles: [{ canonicalUri: docUri, tags: 'general' }] },
-    { articles: [{ canonicalUri: docUri, tags: [1] }] },
-    { articles: [{ canonicalUri: docUri, tags: ['x'.repeat(129)] }] },
-    {
-      articles: [
-        { canonicalUri: docUri, tags: Array.from({ length: 101 }, () => 'a') },
-      ],
-    },
-    { articles: [{ canonicalUri: docUri, locations: 'US' }] },
-    { articles: [{ canonicalUri: docUri, locations: [null] }] },
-    { articles: [{ canonicalUri: docUri, locations: ['U'.repeat(17)] }] },
-    {
-      photos: [
-        {
-          canonicalUri: galleryUri,
-          locations: Array.from({ length: 101 }, () => 'US'),
+  describe('best-effort ingestion', () => {
+    const bad = [
+      'not-an-object',
+      null,
+      7,
+      [],
+      { canonicalUri: 'x', tags: 'general' },
+      { canonicalUri: 'x', tags: [1] },
+      { canonicalUri: 'x', tags: ['x'.repeat(129)] },
+      { canonicalUri: 'x', tags: Array.from({ length: 101 }, () => 'a') },
+      { canonicalUri: 'x', tags: null },
+      { canonicalUri: 'x', locations: 'US' },
+      { canonicalUri: 'x', locations: [null] },
+      { canonicalUri: 'x', locations: ['U'.repeat(17)] },
+      { canonicalUri: 'x', locations: Array.from({ length: 101 }, () => 'US') },
+      { canonicalUri: 'x', startsAt: 'tomorrow' },
+      { canonicalUri: 'x', endsAt: 1 },
+    ]
+
+    describe.each(lists)('$key', ({ key, baseUri }) => {
+      test.each(bad.map((entry, i) => [i, entry] as const))(
+        'skips malformed entry %i and keeps its valid siblings',
+        async (_, entry) => {
+          const fixed =
+            entry && typeof entry === 'object' && !Array.isArray(entry)
+              ? { ...entry, canonicalUri: baseUri }
+              : entry
+          await using fixture = await setup({
+            [key]: [fixed, group(baseUri), fixed],
+          })
+          using hydrate = vi.spyOn(
+            fixture.hydrator,
+            'hydrateEmbedExternalViewFromUris',
+          )
+          const { status, body } = await fixture.query()
+          expect(status).toBe(200)
+          expect(body[key].items).toHaveLength(1)
+          expect(hydrate.mock.calls[0][0]).toEqual([baseUri])
         },
-      ],
-    },
-    { livestreams: [{ canonicalUri: liveUri, tags: null }] },
-    { announcementBanners: [{ status: 'enabled', title: 123 }] },
-    { announcementBanners: [{ status: 'enabled', url: 'not a uri' }] },
-    { announcementBanners: [{ title: 'No status' }] },
-    { announcementBanners: [{ status: 1 }] },
-    { announcementBanners: [{ status: 'x'.repeat(129) }] },
-    { announcementBanners: [{ status: 'enabled', startsAt: 'tomorrow' }] },
-    { announcementBanners: [{ status: 'enabled', endsAt: 1 }] },
-    { announcementBanners: [{ status: 'enabled', locations: 'US' }] },
-    { announcementBanners: [{ status: 'enabled', locations: [1] }] },
-    {
-      announcementBanners: [{ status: 'enabled', locations: ['U'.repeat(17)] }],
-    },
-    { announcementBanners: 'banner' },
-    {
-      announcementBanners: Array.from({ length: 101 }, () => ({
+      )
+
+      it('examines only the first 100 entries', async () => {
+        await using fixture = await setup({
+          [key]: [...Array.from({ length: 100 }, () => 'bad'), group(baseUri)],
+        })
+        using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body[key].items).toEqual([])
+        expect(lookup).not.toHaveBeenCalled()
+      })
+
+      it('does not reject more than 100 valid entries', async () => {
+        await using fixture = await setup({
+          [key]: Array.from({ length: 150 }, () => group(baseUri)),
+        })
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body[key].items).toHaveLength(10)
+      })
+    })
+
+    it('treats missing, non-array, and malformed sections as empty without clearing others', async () => {
+      await using fixture = await setup({
+        articles: 'articles',
+        publications: { 0: group(pubUri) },
+        photos: null,
+        livestreams: [group(liveUri)],
+        apps: 5,
+        announcementBanners: 'banner',
+      })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.articles.items).toEqual([])
+      expect(body.publications.items).toEqual([])
+      expect(body.photos.items).toEqual([])
+      expect(body.livestreams.items).toHaveLength(1)
+      expect(body.apps).toEqual([])
+      expect(body.announcementBanner).toBeUndefined()
+    })
+
+    test.each([null, [], 'text', 7, true])(
+      'returns empty sections for a decoded non-object body: %j',
+      async (config) => {
+        await using fixture = await setup(config)
+        using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+        expect(await fixture.query()).toEqual({
+          status: 200,
+          body: {
+            articles: { items: [] },
+            publications: { items: [] },
+            photos: { items: [] },
+            livestreams: { items: [] },
+            apps: [],
+          },
+        })
+        expect(lookup).not.toHaveBeenCalled()
+      },
+    )
+
+    describe('apps', () => {
+      const app = (n: number) => ({
+        id: `app-${n}`,
+        title: `App ${n}`,
+        url: 'https://example.com/app',
+      })
+
+      it('skips malformed app cards, keeping valid ones in order', async () => {
+        await using fixture = await setup({
+          apps: [
+            app(1),
+            { url: 123 },
+            null,
+            'app',
+            { ...app(2), url: 5 },
+            app(3),
+          ],
+        })
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body.apps).toEqual([app(1), app(3)])
+      })
+
+      it('examines only the first 100 app entries', async () => {
+        await using fixture = await setup({
+          apps: [...Array.from({ length: 100 }, () => 'bad'), app(1)],
+        })
+        const { status, body } = await fixture.query()
+        expect(status).toBe(200)
+        expect(body.apps).toEqual([])
+      })
+    })
+
+    describe('announcement banners', () => {
+      const banner = (id: string, extra: object = {}) => ({
+        id,
         status: 'enabled',
-      })),
-    },
-    // An invalid later banner fails the config even after an eligible first.
-    {
-      announcementBanners: [
-        { status: 'enabled', title: 'First' },
-        { status: 'disabled', title: 123 },
-      ],
-    },
-    { apps: [{ url: 123 }] },
-    // Slicing to the selection limit must not bypass the section cap.
-    { articles: Array.from({ length: 101 }, () => group(docUri)) },
-    { publications: Array.from({ length: 101 }, () => group(pubUri)) },
-    { photos: Array.from({ length: 101 }, () => group(galleryUri)) },
-    { livestreams: Array.from({ length: 101 }, () => group(liveUri)) },
-  ])('rejects malformed or excessive config %#', async (config) => {
-    await using fixture = await setup(config)
-    using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
-    expect((await fixture.query()).status).toBe(502)
-    expect(lookup).not.toHaveBeenCalled()
+        ...extra,
+      })
+      const us = { countryCode: 'US', regionCode: 'WI' }
+      const malformed = [
+        { status: 'enabled', title: 123 },
+        { id: 'x', status: 'enabled', title: 123 },
+        { id: 'x', status: 'enabled', url: 'not a uri' },
+        { id: 'x', title: 'No status' },
+        { id: 'x', status: 1 },
+        { id: 'x', status: 'x'.repeat(129) },
+        { id: 'x', status: 'enabled', startsAt: 'tomorrow' },
+        { id: 'x', status: 'enabled', endsAt: 1 },
+        { id: 'x', status: 'enabled', locations: 'US' },
+        { id: 'x', status: 'enabled', locations: [1] },
+        { id: 'x', status: 'enabled', locations: ['U'.repeat(17)] },
+        null,
+        'banner',
+      ]
+
+      async function pick(banners: unknown, params = {}) {
+        await using fixture = await setup({
+          announcementBanners: banners,
+          articles: [group(docUri)],
+        })
+        const { status, body } = await fixture.query(false, params)
+        expect(status).toBe(200)
+        // Nonbanner content always survives bad banners.
+        expect(body.articles.items).toHaveLength(1)
+        return body.announcementBanner?.id
+      }
+
+      test.each(malformed.map((entry, i) => [i, entry] as const))(
+        'keeps a valid banner despite malformed later banner %i',
+        async (_, entry) => {
+          expect(await pick([banner('valid'), entry])).toBe('valid')
+        },
+      )
+
+      test.each(malformed.map((entry, i) => [i, entry] as const))(
+        'lets a valid alternative win over malformed preferred banner %i',
+        async (_, entry) => {
+          const preferred =
+            entry && typeof entry === 'object'
+              ? { locations: ['US'], ...entry }
+              : entry
+          const expected = 'unrestricted'
+          expect(await pick([preferred, banner(expected)], us)).toBe(expected)
+          expect(
+            await pick(
+              [preferred, banner('targeted', { locations: ['US'] })],
+              us,
+            ),
+          ).toBe('targeted')
+        },
+      )
+
+      it('omits the banner when every banner is malformed', async () => {
+        expect(await pick(malformed)).toBeUndefined()
+      })
+    })
   })
 
   it('rejects oversized decoded bodies even without Content-Length', async () => {
@@ -1866,5 +2085,812 @@ describe('Atmosphere Explore', () => {
     } finally {
       vi.unstubAllEnvs()
     }
+  })
+})
+
+type Fixture = Awaited<ReturnType<typeof setup>>
+
+const articleUris = (...uris: string[]) => uris.map((uri) => ({ uri }))
+// Worker article content that must never matter once Iris is the source.
+const conflictingArticles = [group(missingUri), group(doc2Uri)]
+const sections = ['articles', 'publications', 'photos', 'livestreams'] as const
+
+async function setupIris(
+  uris: string[] = [],
+  config: Record<string, unknown> = {},
+  recIdStr = 'rec-1',
+) {
+  const fixture = await setup({ articles: conflictingArticles, ...config })
+  fixture.setIrisGate()
+  fixture.iris.response = { articles: articleUris(...uris), recIdStr }
+  return fixture
+}
+
+function irisRequests(fixture: Fixture) {
+  return fixture.iris.fetchMock.mock.calls.map(
+    ([input, init]) => new Request(input, init),
+  )
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((res) => (resolve = res))
+  return { promise, resolve }
+}
+
+describe('Atmosphere Explore list ordering and caps', () => {
+  const active = { startsAt: at(-1), endsAt: at(1) }
+  const names = ['f1', 'f2', 'n1', 'n2']
+  const titleField = {
+    articles: 'title',
+    publications: 'name',
+    livestreams: 'title',
+  } as const
+
+  const rootOf = (view: { associatedRefs?: { uri: string }[] }) =>
+    view.associatedRefs?.[0]?.uri
+
+  it('shuffles each selected list before hydration, featured items first', async () => {
+    using _now = vi.spyOn(Date, 'now').mockReturnValue(frozenNow)
+    // Index 0 on every swap: [f1, f2, n1, n2] shuffles to [f2, n1, n2, f1],
+    // then featured items are hoisted to give [f2, f1, n1, n2].
+    using _random = vi.spyOn(Math, 'random').mockReturnValue(0)
+    await using fixture = await setup(
+      Object.fromEntries(
+        lists.map(({ key, uriFor }) => [
+          key,
+          names.map((name) => ({
+            canonicalUri: uriFor(name),
+            ...(name.startsWith('f') ? active : {}),
+          })),
+        ]),
+      ),
+    )
+    for (const { key, baseUri, uriFor } of lists) {
+      if (key === 'photos') continue
+      for (const name of names)
+        fixture.records.set(uriFor(name), {
+          ...fixture.records.get(baseUri)!,
+          [titleField[key]]: name,
+        })
+    }
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+
+    const expected = ['f2', 'f1', 'n1', 'n2']
+    expect(hydrate.mock.calls[0][0]).toEqual(
+      lists.flatMap(({ uriFor }) => expected.map((name) => uriFor(name))),
+    )
+    for (const { key, uriFor } of lists) {
+      if (key === 'photos') continue
+      const items = body[key].items
+      expect(items.map(({ view }) => rootOf(view))).toEqual(
+        expected.map((name) => uriFor(name)),
+      )
+      expect(items.map(({ featured }) => featured)).toEqual([
+        true,
+        true,
+        false,
+        false,
+      ])
+    }
+  })
+
+  it('shuffles Iris articles without marking them featured', async () => {
+    using _random = vi.spyOn(Math, 'random').mockReturnValue(0)
+    await using fixture = await setupIris([docUri, doc2Uri, docUri], {}, '9')
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
+    const { body } = await fixture.query()
+    // [docUri, doc2Uri, docUri] -> [doc2Uri, docUri, docUri] under index 0.
+    expect(hydrate.mock.calls[0][0]).toEqual([doc2Uri, docUri])
+    expect(body.articles.items.map(({ view }) => rootOf(view))).toEqual([
+      doc2Uri,
+      docUri,
+      docUri,
+    ])
+    expect(body.articles.items.every(({ featured }) => !featured)).toBe(true)
+    expect(body.articles.recIdStr).toBe('9')
+  })
+
+  it('returns at most 10 apps in worker order without hydrating them', async () => {
+    const apps = Array.from({ length: 12 }, (_, i) => ({
+      ...curated.apps[0],
+      title: `App ${i}`,
+    }))
+    await using fixture = await setup({ apps })
+    using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    expect(body.apps).toEqual(apps.slice(0, 10))
+    expect(lookup).not.toHaveBeenCalled()
+  })
+})
+
+describe('Atmosphere Explore article source (gate off)', () => {
+  it('uses worker-curated articles without touching Iris or its client', async () => {
+    await using fixture = await setup(curated)
+    fixture.ctx.irisClient = undefined
+    const { status, body } = await fixture.query(true)
+    expect(status).toBe(200)
+    expect(body.articles.items).toHaveLength(2)
+    expect(fixture.fetchMock).toHaveBeenCalledOnce()
+    expect(fixture.iris.fetchMock).not.toHaveBeenCalled()
+    for (const section of sections) {
+      expect(body[section]).not.toHaveProperty('recIdStr')
+    }
+  })
+
+  it('stays off when the gate client is unconfigured, even with Iris configured', async () => {
+    await using fixture = await setup(curated)
+    const { status, body } = await fixture.query(true)
+    expect(status).toBe(200)
+    expect(body.articles.items).toHaveLength(2)
+    expect(fixture.iris.fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('does not fetch Iris when the gate is explicitly off', async () => {
+    await using fixture = await setup(curated)
+    using scope = fixture.setIrisGate(false)
+    expect((await fixture.query()).status).toBe(200)
+    expect(scope).toHaveBeenCalledOnce()
+    expect(fixture.iris.fetchMock).not.toHaveBeenCalled()
+  })
+
+  test.each([
+    {
+      name: 'authenticated with device and session',
+      authenticated: true,
+      headers: { 'x-atproto-device-id': 'dev', 'x-atproto-session-id': 'sess' },
+      expected: { did: viewer, deviceId: 'dev', sessionId: 'sess' },
+    },
+    {
+      name: 'anonymous with device and session',
+      authenticated: false,
+      headers: { 'x-atproto-device-id': 'dev', 'x-atproto-session-id': 'sess' },
+      expected: { did: undefined, deviceId: 'dev', sessionId: 'sess' },
+    },
+    {
+      name: 'anonymous without analytics headers',
+      authenticated: false,
+      headers: {},
+      expected: {
+        did: undefined,
+        deviceId: expect.stringMatching(/^anon-/),
+        sessionId: expect.stringMatching(/^anon-/),
+      },
+    },
+  ])(
+    'evaluates the gate once, scoped to the request: $name',
+    async ({ authenticated, headers, expected }) => {
+      await using fixture = await setup()
+      using scope = fixture.setIrisGate(false)
+      using hydrate = vi.spyOn(
+        fixture.hydrator,
+        'hydrateEmbedExternalViewFromUris',
+      )
+      expect((await fixture.query(authenticated, {}, headers)).status).toBe(200)
+      expect(scope).toHaveBeenCalledOnce()
+      expect(scope.mock.calls[0][0]).toEqual(expected)
+      // The same scoped client is shared with hydration.
+      expect(hydrate.mock.calls[0][1].features.checkGate(Gate.AATest)).toBe(
+        false,
+      )
+    },
+  )
+})
+
+describe('Atmosphere Explore article source (gate on)', () => {
+  it('validates Iris responses even when shared-client validation is off', async () => {
+    await using fixture = await setupIris([docUri])
+    const client = fixture.ctx.irisClient
+    if (!client) throw new Error('Expected configured Iris client')
+    using call = vi.spyOn(client, 'call')
+
+    expect((await fixture.query()).status).toBe(200)
+    expect(call).toHaveBeenCalledExactlyOnceWith(
+      app.bsky.unspecced.getAtmosphereExploreArticleRecommendations,
+      { limit: 10, viewer: undefined },
+      {
+        headers: expect.any(Object),
+        signal: expect.any(AbortSignal),
+        validateResponse: true,
+      },
+    )
+    expect(client.xrpcDefaults.validateResponse).toBe(false)
+  })
+
+  it('uses Iris as the exclusive, non-featured article source', async () => {
+    await using fixture = await setupIris(
+      [doc2Uri, docUri, doc2Uri],
+      curated,
+      '4242',
+    )
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
+    using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+    const { status, body } = await fixture.query()
+
+    expect(status).toBe(200)
+    expect(fixture.fetchMock).toHaveBeenCalledOnce()
+    expect(fixture.iris.fetchMock).toHaveBeenCalledOnce()
+    // Presentation keeps duplicates; hydration roots are deduplicated, and
+    // worker-only article roots are never hydrated.
+    expect(body.articles.items.map(({ view }) => view.title)).toEqual([
+      'Second article',
+      'Article',
+      'Second article',
+    ])
+    expect(body.articles.items.map(({ featured }) => featured)).toEqual([
+      false,
+      false,
+      false,
+    ])
+    expect(hydrate).toHaveBeenCalledWith(
+      [doc2Uri, docUri, pubUri, galleryUri, liveUri],
+      expect.objectContaining({ viewer: null }),
+    )
+    expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
+    expect(lookup.mock.calls.flatMap(([params]) => params.uris)).not.toContain(
+      missingUri,
+    )
+    expect(body.articles.recIdStr).toBe('4242')
+    for (const section of ['publications', 'photos', 'livestreams'] as const) {
+      expect(body[section]).not.toHaveProperty('recIdStr')
+    }
+    expect(body).not.toHaveProperty('recIdStr')
+    expect(body.articles.items.some((item) => 'recIdStr' in item)).toBe(false)
+    // Other sections are unchanged worker content.
+    expect(body.publications.items.map(({ featured }) => featured)).toEqual([
+      false,
+    ])
+    expect(body.photos.items.map(({ featured }) => featured)).toEqual([false])
+    expect(body.livestreams.items).toHaveLength(1)
+    expect(body.announcementBanner).toEqual(curatedBanner)
+    expect(body.apps).toEqual(curated.apps)
+  })
+
+  it('ignores worker article selection and hydration', async () => {
+    await using fixture = await setupIris([docUri], {
+      articles: Array.from({ length: 6 }, () => group(doc2Uri)),
+    })
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
+    using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    expect(hydrate.mock.calls[0][0]).toEqual([docUri])
+    expect(lookup.mock.calls.flatMap(([params]) => params.uris)).not.toContain(
+      doc2Uri,
+    )
+    expect(body.articles.items).toHaveLength(1)
+    expect(body.articles.items[0].view.title).toBe('Article')
+  })
+
+  it('drops malformed worker apps and non-article entries without failing', async () => {
+    const goodApp = { id: 'ok', title: 'OK', url: 'https://example.com/ok' }
+    await using fixture = await setupIris([docUri], {
+      apps: [{ url: 123 }, goodApp],
+      publications: ['bad', group(pubUri)],
+    })
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    expect(body.apps).toEqual([goodApp])
+    expect(body.publications.items).toHaveLength(1)
+    expect(body.articles.items).toHaveLength(1)
+  })
+
+  test.each(['garbage', null, [null, { tags: 5 }, 'x'], { a: 1 }])(
+    'ignores malformed worker articles: %j',
+    async (articles) => {
+      await using fixture = await setupIris([docUri], { articles })
+      const { status, body } = await fixture.query()
+      expect(status).toBe(200)
+      expect(body.articles.items).toHaveLength(1)
+    },
+  )
+
+  it('caps Iris articles at 10 while selecting other sections locally', async () => {
+    const ten = Array.from({ length: 10 }, () => docUri)
+    await using fixture = await setupIris(ten, {
+      photos: [
+        { canonicalUri: photoUri, locations: ['JP'] },
+        { canonicalUri: galleryUri, locations: ['US-WI'] },
+      ],
+    })
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
+    const { status, body } = await fixture.query(false, {
+      countryCode: 'US',
+      regionCode: 'US-WI',
+    })
+    expect(status).toBe(200)
+    // Worker location/topic selection never applies to Iris articles.
+    expect(body.articles.items).toHaveLength(10)
+    expect(body.articles.items.every(({ featured }) => !featured)).toBe(true)
+    expect(hydrate.mock.calls[0][0]).toEqual([docUri, galleryUri])
+    expect(body.photos.items).toHaveLength(1)
+  })
+
+  it('falls back to worker articles for an empty Iris list, but not a fully filtered one', async () => {
+    await using fixture = await setupIris([], curated, '77')
+    const { body } = await fixture.query()
+    // Worker articles [missing, doc, doc]: the missing root is dropped.
+    expect(body.articles.items.map(({ view }) => view.title)).toEqual([
+      'Article',
+      'Article',
+    ])
+    expect(body.articles.recIdStr).toBe('77')
+    fixture.iris.response = {
+      articles: articleUris(missingUri, pubUri),
+      recIdStr: '78',
+    }
+    fixture.takenDown.add(docUri)
+    expect((await fixture.query()).body.articles).toEqual({
+      items: [],
+      recIdStr: '78',
+    })
+  })
+
+  it('skips incomplete, handle-based, and wrong-collection roots', async () => {
+    await using fixture = await setupIris(
+      [
+        pubUri,
+        `at://${author}`,
+        `at://${author}/${site.standard.document.$type}`,
+        `at://author.test/${site.standard.document.$type}/story`,
+        galleryUri,
+        docUri,
+      ],
+      {},
+    )
+    using hydrate = vi.spyOn(
+      fixture.hydrator,
+      'hydrateEmbedExternalViewFromUris',
+    )
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    expect(hydrate).toHaveBeenCalledWith(
+      [docUri],
+      expect.objectContaining({ viewer: null }),
+    )
+    expect(body.articles.items).toHaveLength(1)
+    expect(body.articles.recIdStr).toBe('rec-1')
+  })
+
+  test.each([
+    {
+      name: 'authenticated viewer, request language header',
+      authenticated: true,
+      params: {},
+      headers: { 'accept-language': 'fr', 'x-atproto-bsky-topics': 'a,b' },
+      viewer: viewer as string | null,
+      language: 'fr',
+    },
+    {
+      name: 'anonymous viewer, params.langs overrides the header',
+      authenticated: false,
+      params: { langs: ['en', 'es'], countryCode: 'US', regionCode: 'WI' },
+      headers: { 'accept-language': 'fr', 'x-bsky-topics': 'legacy' },
+      viewer: null,
+      language: 'en,es',
+    },
+    {
+      name: 'anonymous viewer, default client language header',
+      authenticated: false,
+      params: {},
+      headers: { 'x-atproto-device-id': 'dev', 'x-atproto-session-id': 's' },
+      viewer: null,
+      language: '*',
+    },
+  ])('routes headers and query correctly: $name', async (route) => {
+    await using fixture = await setupIris([docUri])
+    const response = await fixture.query(
+      route.authenticated,
+      route.params,
+      route.headers,
+    )
+    expect(response.status).toBe(200)
+
+    const [iris] = irisRequests(fixture)
+    const irisUrl = new URL(iris.url)
+    expect(irisUrl.origin + irisUrl.pathname).toBe(
+      `https://iris.test/xrpc/${app.bsky.unspecced.getAtmosphereExploreArticleRecommendations.$lxm}`,
+    )
+    expect(Object.fromEntries(irisUrl.searchParams)).toEqual({
+      limit: '10',
+      ...(route.viewer ? { viewer: route.viewer } : {}),
+    })
+    // The Iris bearer authenticates anonymous and authenticated viewers alike.
+    expect(iris.headers.get('authorization')).toBe('Bearer iris-key')
+    expect(iris.headers.get('accept-language')).toBe(route.language)
+    for (const [name, value] of Object.entries(route.headers)) {
+      if (name === 'accept-language') continue
+      const forwarded =
+        name === 'x-bsky-topics'
+          ? iris.headers.get('x-atproto-bsky-topics')
+          : iris.headers.get(name)
+      expect(forwarded).toBe(value)
+    }
+
+    // Location is applied locally: it reaches neither upstream. Recommendation
+    // headers go only to Iris.
+    const worker = fixture.fetchMock.mock.calls[0][0] as Request
+    expect([...new URL(worker.url).searchParams]).toEqual([])
+    expect(worker.headers.get('authorization')).toBeNull()
+    expect(worker.headers.get('accept-language')).toBeNull()
+    expect(
+      [...worker.headers.keys()].filter((name) => name.startsWith('x-')),
+    ).toEqual([])
+  })
+
+  it('does not forward the user Authorization header to Iris or the worker', async () => {
+    await using fixture = await setupIris([docUri])
+    await fixture.query(true)
+    expect(irisRequests(fixture)[0].headers.get('authorization')).toBe(
+      'Bearer iris-key',
+    )
+    expect(
+      (fixture.fetchMock.mock.calls[0][0] as Request).headers.get(
+        'authorization',
+      ),
+    ).toBeNull()
+  })
+
+  it('scopes the gate to the verified viewer and request attributes', async () => {
+    await using fixture = await setupIris([docUri])
+    const scope = fixture.setIrisGate()
+    await fixture.query(true, {}, { 'x-atproto-device-id': 'dev' })
+    expect(scope).toHaveBeenCalledOnce()
+    expect(scope.mock.calls[0][0]).toMatchObject({
+      did: viewer,
+      deviceId: 'dev',
+    })
+  })
+
+  it('starts the worker and Iris requests concurrently', async () => {
+    await using fixture = await setupIris([docUri])
+    const worker = deferred<Response>()
+    const iris = deferred<Response>()
+    fixture.fetchMock.mockImplementation(() => worker.promise)
+    fixture.iris.respond = () => iris.promise
+    const pending = fixture.query()
+
+    // Both started before either is released.
+    await vi.waitFor(() => {
+      expect(fixture.fetchMock).toHaveBeenCalledTimes(1)
+      expect(fixture.iris.fetchMock).toHaveBeenCalledTimes(1)
+    })
+    worker.resolve(Response.json(curated))
+    iris.resolve(
+      Response.json({ articles: articleUris(docUri), recIdStr: 'late' }),
+    )
+    const { status, body } = await pending
+    expect(status).toBe(200)
+    expect(body.articles.recIdStr).toBe('late')
+    expect(fixture.fetchMock).toHaveBeenCalledOnce()
+    expect(fixture.iris.fetchMock).toHaveBeenCalledOnce()
+  })
+
+  describe('existing article scenarios', () => {
+    it('omits articles with unavailable publication dependencies', async () => {
+      await using fixture = await setupIris([docUri])
+      fixture.takenDown.add(pubUri)
+      expect((await fixture.query()).body.articles).toEqual({
+        items: [],
+        recIdStr: 'rec-1',
+      })
+      fixture.takenDown.clear()
+      fixture.records.set(
+        docUri,
+        site.standard.document.$build({
+          title: 'Wrong site',
+          site: atUri(author, site.standard.publication.$type, 'other'),
+          publishedAt,
+        }),
+      )
+      expect((await fixture.query()).body.articles.items).toEqual([])
+    })
+
+    test.each([
+      { note: 'automatically discovered', publications: [] },
+      { note: 'explicitly in another group', publications: [group(pubUri)] },
+    ])(
+      'renders an Iris document root with its publication $note',
+      async ({ publications }) => {
+        await using fixture = await setupIris([docUri], { publications })
+        using dependencies = vi.spyOn(
+          fixture.hydrator,
+          'hydrateExternalViewDependencies',
+        )
+        const { status, body } = await fixture.query()
+
+        expect(status).toBe(200)
+        expect(
+          dependencies.mock.calls.some(
+            ([state]) => state.externalRecords?.get(pubUri)?.record,
+          ),
+        ).toBe(true)
+        expect(body.articles.items).toHaveLength(1)
+        expect(body.articles.items[0].view).toMatchObject({
+          title: 'Article',
+          uri: 'https://example.com/blog/story',
+          likeCount: 7,
+          publisher: { title: 'Publication', subscriptionCount: 4 },
+        })
+        expect(
+          body.articles.items[0].view.associatedRefs?.map(({ uri }) => uri),
+        ).toEqual([docUri, pubUri])
+        expect(body.publications.items).toHaveLength(publications.length)
+      },
+    )
+
+    it('uses viewer-specific profile state only on authenticated requests', async () => {
+      await using fixture = await setupIris([docUri])
+      using relationships = vi.spyOn(fixture.dataplane, 'getRelationships')
+      const anonymous = await fixture.query()
+      expect(
+        anonymous.body.articles.items[0].view.associatedProfiles?.[0].viewer,
+      ).toBeUndefined()
+      expect(relationships).not.toHaveBeenCalled()
+      const authenticated = await fixture.query(true)
+      expect(
+        authenticated.body.articles.items[0].view.associatedProfiles?.[0].viewer
+          ?.following,
+      ).toBe(atUri(viewer, app.bsky.graph.follow.$type, 'follow'))
+      expect(relationships.mock.calls[0][0].actorDid).toBe(viewer)
+    })
+
+    test.each(['record', 'label', 'actor', 'block'] as const)(
+      'omits moderated Iris articles: %s',
+      async (kind) => {
+        await using fixture = await setupIris([docUri], {}, 'moderated')
+        if (kind === 'record') fixture.takenDown.add(docUri)
+        if (kind === 'label')
+          fixture.labels.push({
+            src: labeler,
+            uri: docUri,
+            val: '!takedown',
+            cts: publishedAt,
+          })
+        if (kind === 'actor') fixture.takenDownActors.add(author)
+        if (kind === 'block') fixture.blockedActors.add(author)
+        const { status, body } = await fixture.query(true)
+        expect(status).toBe(200)
+        expect(body.articles).toEqual({ items: [], recIdStr: 'moderated' })
+      },
+    )
+  })
+})
+
+describe.each(['worker', 'iris'] as const)(
+  'Atmosphere Explore failure handling (%s articles)',
+  (arm) => {
+    const iris = arm === 'iris'
+    async function arrange(config: unknown = curated) {
+      const fixture = await setup(config)
+      if (iris) {
+        fixture.setIrisGate()
+        fixture.iris.response = { articles: articleUris(docUri), recIdStr: '1' }
+      }
+      return fixture
+    }
+    const upstreamCalls = (fixture: Fixture) =>
+      fixture.fetchMock.mock.calls.length +
+      fixture.iris.fetchMock.mock.calls.length
+
+    it('requires the worker and starts no fetch without it', async () => {
+      await using fixture = await arrange()
+      fixture.cfg.atmosphereExploreTabService = undefined
+      expect((await fixture.query()).status).toBe(501)
+      expect(upstreamCalls(fixture)).toBe(0)
+    })
+
+    test.each([
+      ['http', () => new Response('', { status: 503 }), 502],
+      ['json', () => new Response('{'), 502],
+      ['network', () => Promise.reject(new TypeError('down')), 502],
+      [
+        'timeout',
+        () => Promise.reject(new DOMException('Timed out', 'TimeoutError')),
+        504,
+      ],
+      [
+        'oversized',
+        () => new Response(JSON.stringify({ padding: 'x'.repeat(512 * 1024) })),
+        502,
+      ],
+    ] as const)('fails on worker %s errors', async (_, respond, status) => {
+      await using fixture = await arrange()
+      fixture.fetchMock.mockImplementation(async () => respond())
+      using lookup = vi.spyOn(fixture.dataplane, 'getRecordsByURI')
+      expect((await fixture.query()).status).toBe(status)
+      expect(lookup).not.toHaveBeenCalled()
+    })
+
+    test.each([
+      { apps: [{ url: 123 }] },
+      { articles: 5, publications: 'x', photos: [1], livestreams: [null] },
+      'not an object',
+    ])('ignores malformed worker content: %j', async (config) => {
+      await using fixture = await arrange()
+      fixture.fetchMock.mockImplementation(async () => Response.json(config))
+      expect((await fixture.query()).status).toBe(200)
+    })
+  },
+)
+
+describe('Atmosphere Explore Iris requirements and failures', () => {
+  it('is unavailable without Iris when the gate is on, without fetching', async () => {
+    await using fixture = await setupIris([docUri], curated)
+    fixture.ctx.irisClient = undefined
+    expect((await fixture.query()).status).toBe(501)
+    expect(fixture.fetchMock).not.toHaveBeenCalled()
+  })
+
+  const malformedIrisBodies = [
+    ['null body', null],
+    ['array body', []],
+    ['string body', 'text'],
+    ['boolean body', true],
+    ['number body', 7],
+    ['empty object', {}],
+    ['missing articles', { recIdStr: '1' }],
+    ['null articles', { articles: null, recIdStr: '1' }],
+    ['string articles', { articles: 'text', recIdStr: '1' }],
+    ['object articles', { articles: {}, recIdStr: '1' }],
+    ['missing rec ID', { articles: [] }],
+    ['invalid rec ID', { articles: [{ uri: docUri }], recIdStr: 7 }],
+    ['null article', { articles: [null], recIdStr: '1' }],
+    ['missing article URI', { articles: [{}], recIdStr: '1' }],
+    ['invalid article URI', { articles: [{ uri: 7 }], recIdStr: '1' }],
+    ['malformed article URI', { articles: [{ uri: 'bad' }], recIdStr: '1' }],
+    [
+      'mixed valid and invalid articles',
+      { articles: [{ uri: docUri }, null], recIdStr: '1' },
+    ],
+    [
+      'invalid article beyond the output cap',
+      {
+        articles: [
+          ...articleUris(...Array.from({ length: 10 }, () => docUri)),
+          null,
+        ],
+        recIdStr: '1',
+      },
+    ],
+  ] as const
+
+  const irisFailures = [
+    ['http', () => new Response('', { status: 503 })],
+    ['network', () => Promise.reject(new TypeError('down'))],
+    ['redirect', () => new Response('', { status: 302 })],
+    ['invalid JSON', () => new Response('{')],
+    [
+      'timeout',
+      () => Promise.reject(new DOMException('Timed out', 'TimeoutError')),
+    ],
+  ] as const
+
+  test.each([
+    ...irisFailures,
+    ...malformedIrisBodies.map(
+      ([name, payload]) =>
+        [
+          `malformed 200 response: ${name}`,
+          () => Response.json(payload),
+        ] as const,
+    ),
+  ])(
+    'falls back to worker-curated articles, without a rec ID, on Iris %s',
+    async (_, respond) => {
+      await using fixture = await setupIris([docUri], curated)
+      fixture.iris.respond = async () => respond()
+      using hydrate = vi.spyOn(
+        fixture.hydrator,
+        'hydrateEmbedExternalViewFromUris',
+      )
+      using warn = vi.spyOn(httpLogger, 'warn')
+      const { status, body } = await fixture.query()
+
+      expect(status).toBe(200)
+      // Worker articles [missing, doc, doc]: the missing root is dropped.
+      expect(body.articles.items.map(({ view }) => view.title)).toEqual([
+        'Article',
+        'Article',
+      ])
+      expect(body.articles).not.toHaveProperty('recIdStr')
+      expect(body.publications.items).toHaveLength(1)
+      expect(body.photos.items).toHaveLength(1)
+      expect(body.livestreams.items).toHaveLength(1)
+      expect(body.apps).toEqual(curated.apps)
+      expect(body.announcementBanner).toEqual(curatedBanner)
+      // Worker-curated article roots are hydrated; Iris roots never are.
+      expect(hydrate).toHaveBeenCalledWith(
+        [missingUri, docUri, pubUri, galleryUri, liveUri],
+        expect.objectContaining({ viewer: null }),
+      )
+      expect(fixture.fetchMock).toHaveBeenCalledOnce()
+      expect(fixture.iris.fetchMock).toHaveBeenCalledOnce()
+      expect(warn).toHaveBeenCalledOnce()
+      expect(JSON.stringify(warn.mock.calls)).not.toContain('iris-key')
+    },
+  )
+
+  it('falls back to worker articles when Iris fails while the worker is pending', async () => {
+    await using fixture = await setupIris([docUri], curated)
+    const worker = deferred<Response>()
+    fixture.fetchMock.mockImplementation(() => worker.promise)
+    fixture.iris.respond = async () => new Response('', { status: 503 })
+    const pending = fixture.query()
+
+    // Both started concurrently; Iris has failed before the worker completes.
+    await vi.waitFor(() => {
+      expect(fixture.fetchMock).toHaveBeenCalledTimes(1)
+      expect(fixture.iris.fetchMock).toHaveBeenCalledTimes(1)
+    })
+    worker.resolve(Response.json(curated))
+    const { status, body } = await pending
+    expect(status).toBe(200)
+    expect(body.articles.items).toHaveLength(2)
+    expect(body.articles).not.toHaveProperty('recIdStr')
+    expect(body.publications.items).toHaveLength(1)
+    expect(fixture.fetchMock).toHaveBeenCalledOnce()
+    expect(fixture.iris.fetchMock).toHaveBeenCalledOnce()
+  })
+
+  test.each([
+    ['http', () => new Response('', { status: 503 }), 502],
+    [
+      'timeout',
+      () => Promise.reject(new DOMException('Timed out', 'TimeoutError')),
+      504,
+    ],
+  ] as const)(
+    'still fails on worker %s errors when Iris also fails',
+    async (_, respond, status) => {
+      await using fixture = await setupIris([docUri], curated)
+      fixture.fetchMock.mockImplementation(async () => respond())
+      fixture.iris.respond = async () => new Response('', { status: 503 })
+      expect((await fixture.query()).status).toBe(status)
+    },
+  )
+
+  it('truncates 11 articles to the 10 requested', async () => {
+    await using fixture = await setupIris(
+      Array.from({ length: 11 }, () => docUri),
+      curated,
+      '1',
+    )
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    expect(body.articles.items).toHaveLength(10)
+  })
+
+  it('skips invalid roots within the prefix without backfilling', async () => {
+    await using fixture = await setupIris(
+      [
+        ...Array.from({ length: 3 }, () => pubUri),
+        ...Array.from({ length: 8 }, () => docUri),
+      ],
+      curated,
+      '1',
+    )
+    const { status, body } = await fixture.query()
+    expect(status).toBe(200)
+    // @NOTE The first 10 contain 3 wrong-collection roots and 7 valid articles.
+    expect(body.articles.items).toHaveLength(7)
   })
 })
