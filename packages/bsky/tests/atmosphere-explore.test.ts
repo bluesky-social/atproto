@@ -431,7 +431,10 @@ describe('Atmosphere Explore', () => {
     const { status, body } = await fixture.query()
     expect(hydrate).toHaveBeenCalledWith(
       [missingUri, docUri, pubUri, galleryUri, liveUri],
-      expect.objectContaining({ viewer: null }),
+      expect.objectContaining({
+        viewer: null,
+        xrpcEndpoint: app.bsky.unspecced.getAtmosphereExploreTab.$lxm,
+      }),
     )
     expect(hydrate.mock.calls.filter(([, , seen]) => !seen)).toHaveLength(1)
     expect(status).toBe(200)

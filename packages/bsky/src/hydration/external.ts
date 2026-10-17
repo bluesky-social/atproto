@@ -1,3 +1,4 @@
+import { performance } from 'node:perf_hooks'
 import { chunkArray } from '@atproto/common'
 import {
   type AtUriString,
@@ -21,6 +22,7 @@ import {
   type ExternalHydrationOutcome,
   type ExternalHydrationRoot,
   type ExternalHydrationWork,
+  type HydrationXrpcEndpoint,
   events,
 } from '../telemetry/events.js'
 import { uriToDid } from '../util/uris.js'
@@ -357,18 +359,25 @@ export function actionExternalRecordTakedowns(
 export type ExternalHydrationTracker = ExternalHydrationWork & {
   capped: boolean
   partial: boolean
+  /**
+   * Internal: set by the traversal's first dependency discovery, whose refs
+   * are its roots.
+   */
+  rootsCounted: boolean
 }
 
 /**
  * Run `fn` with the caller's tracker, or as the owner of a new traversal when
- * there is none. Only the owner reports, once, including on failure. A returned
- * traversal is `capped` if it hit the pass limit, else `partial` if it
- * recovered from a dependency failure. Owners that completed without
+ * there is none. Only the owner reports, once, including on failure, with the
+ * context's XRPC endpoint (`'unknown'` if unset) and the traversal's wall time. A
+ * returned traversal is `capped` if it hit the pass limit, else `partial` if
+ * it recovered from a dependency failure. Owners that completed without
  * scheduling a batch did no work and are not reported; other outcomes always
  * are.
  */
 export async function trackExternalHydration<T>(
   root: ExternalHydrationRoot,
+  xrpcEndpoint: HydrationXrpcEndpoint | undefined,
   hydrationMetrics: ExternalHydrationTracker | undefined,
   fn: (hydrationMetrics: ExternalHydrationTracker) => Promise<T>,
 ): Promise<T> {
@@ -377,23 +386,34 @@ export async function trackExternalHydration<T>(
     recordLookups: 0,
     batches: 0,
     maxPass: 0,
+    roots: 0,
+    rootsResolved: 0,
+    dependencies: 0,
+    dependenciesResolved: 0,
     capped: false,
     partial: false,
+    rootsCounted: false,
   }
   let outcome: ExternalHydrationOutcome = 'failed'
+  const start = performance.now()
   try {
     const state = await fn(owned)
     outcome = owned.capped ? 'capped' : owned.partial ? 'partial' : 'completed'
     return state
   } finally {
     if (owned.batches || outcome !== 'completed') {
-      const { recordLookups, batches, maxPass } = owned
       events.externalHydrationTraversal({
+        xrpcEndpoint: xrpcEndpoint ?? 'unknown',
         root,
         outcome,
-        recordLookups,
-        batches,
-        maxPass,
+        durationMs: performance.now() - start,
+        recordLookups: owned.recordLookups,
+        batches: owned.batches,
+        maxPass: owned.maxPass,
+        roots: owned.roots,
+        rootsResolved: owned.rootsResolved,
+        dependencies: owned.dependencies,
+        dependenciesResolved: owned.dependenciesResolved,
       })
     }
   }

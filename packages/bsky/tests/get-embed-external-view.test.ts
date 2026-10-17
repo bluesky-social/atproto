@@ -404,6 +404,12 @@ describe('app.bsky.embed.getEmbedExternalView', () => {
         uris: [docUri, pubUri],
       })
       expect(fixture.roots()).toEqual([[galleryUri]])
+      expect(fixture.spies.hydrate).toHaveBeenCalledWith(
+        [galleryUri],
+        expect.objectContaining({
+          xrpcEndpoint: app.bsky.embed.getEmbedExternalView.$lxm,
+        }),
+      )
       expect(fixture.lookedUp()).not.toContain(docUri)
       expect(fixture.lookedUp()).not.toContain(pubUri)
       expect(body.data?.$type).toBe(app.bsky.embed.external.viewGallery.$type)

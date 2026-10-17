@@ -173,10 +173,21 @@ const seedChain = ({ records, dataplane }: Fixture, length: number) => {
     },
   )
 }
-const traversalReports = () =>
+const fullTraversalReports = () =>
   vi
     .mocked(events.externalHydrationTraversal)
     .mock.calls.map(([summary]) => summary)
+// Lookup work only; see `fullTraversalReports` for endpoint, timing and counts.
+const traversalReports = () =>
+  fullTraversalReports().map(
+    ({ root, outcome, recordLookups, batches, maxPass }) => ({
+      root,
+      outcome,
+      recordLookups,
+      batches,
+      maxPass,
+    }),
+  )
 const labelSubjects = ({ hydrator }: Fixture) =>
   vi
     .mocked(hydrator.label.getLabelsForSubjects)
@@ -2645,6 +2656,185 @@ describe('Hydrator.hydrateExternalViewDependencies', () => {
           maxPass: max,
         },
       ])
+    })
+  })
+  describe('traversal health telemetry', () => {
+    const counts = ({
+      roots,
+      rootsResolved,
+      dependencies,
+      dependenciesResolved,
+    }: ReturnType<typeof fullTraversalReports>[number]) => ({
+      roots,
+      rootsResolved,
+      dependencies,
+      dependenciesResolved,
+    })
+    // doc1 links its publication and one recommendation; the publication has
+    // one subscription.
+    const seedLinkedDoc = ({ records, backlinks }: Fixture) => {
+      const rec = recommendUri('did:plc:a', '1')
+      const sub = subscriptionUri('did:plc:s1', '1')
+      records.set(doc1, { body: makeDoc(pubUri) })
+      records.set(pubUri, { body: makePub() })
+      records.set(rec, { body: makeRecommend(doc1) })
+      records.set(sub, { body: makeSubscription(pubUri) })
+      backlinks.set(doc1, [rec])
+      backlinks.set(pubUri, [sub])
+      return { rec, sub }
+    }
+
+    it('reports the context XRPC endpoint from every entry point, or unknown, with a duration', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, dataplane, records } = fixture
+      records.set(doc1, { body: makeDoc(pubUri) })
+      records.set(pubUri, { body: makePub() })
+      using _refs = vi
+        .spyOn(dataplane, 'getRecordsByRef')
+        .mockResolvedValue(new GetRecordsByRefResponse())
+      const xrpcEndpoint = app.bsky.unspecced.getAtmosphereExploreTab.$lxm
+      const scoped = ctx.copy({ xrpcEndpoint })
+      await hydrator.hydrateEmbedExternalViewFromUris([doc1], scoped)
+      await hydrator.hydrateEmbedExternalViewFromRefs(
+        [{ uri: doc1, cid: 'v1' }],
+        scoped,
+      )
+      await hydrator.hydrateExternalViewDependencies(
+        {
+          ctx: scoped,
+          externalRecords: await hydrator.external.getRecordsByURI([doc1]),
+        },
+        [{ uri: doc1 }],
+        scoped,
+      )
+      await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
+
+      const reports = fullTraversalReports()
+      expect(
+        reports.map(({ root, xrpcEndpoint }) => ({ root, xrpcEndpoint })),
+      ).toEqual([
+        { root: 'uris', xrpcEndpoint },
+        { root: 'refs', xrpcEndpoint },
+        { root: 'dependencies', xrpcEndpoint },
+        { root: 'uris', xrpcEndpoint: 'unknown' },
+      ])
+      for (const { durationMs } of reports) {
+        expect(durationMs).toBeGreaterThanOrEqual(0)
+      }
+    })
+
+    it('counts roots and fetched dependencies by availability', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx } = fixture
+      seedLinkedDoc(fixture)
+      await hydrator.hydrateEmbedExternalViewFromUris([doc1, missingDoc], ctx)
+
+      // Pass 2 fetches the publication and recommendation, pass 3 the
+      // subscription.
+      const [report] = fullTraversalReports()
+      expect(report).toMatchObject({ outcome: 'completed', recordLookups: 5 })
+      expect(counts(report)).toEqual({
+        roots: 2,
+        rootsResolved: 1,
+        dependencies: 3,
+        dependenciesResolved: 3,
+      })
+    })
+
+    it('counts a takedown-hidden dependency as unresolved', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx, takedownLabeled } = fixture
+      seedLinkedDoc(fixture)
+      takedownLabeled.add(pubUri)
+      const state = await hydrator.hydrateEmbedExternalViewFromUris([doc1], ctx)
+
+      // The hidden publication is not expanded to its subscription.
+      expect(state.externalRecords?.get(pubUri)).toBeNull()
+      expect(counts(fullTraversalReports()[0])).toEqual({
+        roots: 1,
+        rootsResolved: 1,
+        dependencies: 2,
+        dependenciesResolved: 1,
+      })
+    })
+
+    it('excludes refs of a failed nested batch from dependencies', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx } = fixture
+      seedChain(fixture, 5)
+      failRecordBatches(
+        fixture,
+        (uri) => uri === chainUri(2),
+        new Error('dataplane failure'),
+      )
+      using _warn = vi
+        .spyOn(hydrationLogger, 'warn')
+        .mockImplementation(() => {})
+      await hydrator.hydrateEmbedExternalViewFromUris([chainUri(0)], ctx)
+
+      const [report] = fullTraversalReports()
+      expect(report).toMatchObject({ outcome: 'partial', recordLookups: 3 })
+      expect(counts(report)).toEqual({
+        roots: 1,
+        rootsResolved: 1,
+        dependencies: 1,
+        dependenciesResolved: 1,
+      })
+    })
+
+    it('reports no roots when the root batch fails', async ({ fixture }) => {
+      const { hydrator, ctx } = fixture
+      seedChain(fixture, 5)
+      const err = new Error('dataplane failure')
+      failRecordBatches(fixture, (uri) => uri === chainUri(0), err)
+      await expect(
+        hydrator.hydrateEmbedExternalViewFromUris([chainUri(0)], ctx),
+      ).rejects.toBe(err)
+
+      const [report] = fullTraversalReports()
+      expect(report).toMatchObject({ outcome: 'failed', recordLookups: 1 })
+      expect(counts(report)).toEqual({
+        roots: 0,
+        rootsResolved: 0,
+        dependencies: 0,
+        dependenciesResolved: 0,
+      })
+    })
+
+    it('counts direct dependency calls at a later pass from their own roots', async ({
+      fixture,
+    }) => {
+      const { hydrator, ctx } = fixture
+      seedChain(fixture, 5)
+      await hydrator.hydrateExternalViewDependencies(
+        {
+          ctx,
+          externalRecords: await hydrator.external.getRecordsByURI([
+            chainUri(2),
+          ]),
+        },
+        [{ uri: chainUri(2) }],
+        ctx,
+        new Set(),
+        3,
+      )
+
+      const [report] = fullTraversalReports()
+      expect(report).toMatchObject({
+        root: 'dependencies',
+        batches: 2,
+        maxPass: 5,
+      })
+      expect(counts(report)).toEqual({
+        roots: 1,
+        rootsResolved: 1,
+        dependencies: 2,
+        dependenciesResolved: 2,
+      })
     })
   })
 })
