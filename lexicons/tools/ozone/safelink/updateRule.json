@@ -27,6 +27,12 @@
               "type": "ref",
               "ref": "tools.ozone.safelink.defs#reasonType"
             },
+            "source": {
+              "type": "string",
+              "maxLength": 128,
+              "default": "ozone/default",
+              "description": "Source of the rule to update"
+            },
             "comment": {
               "type": "string",
               "description": "Optional comment about the update"

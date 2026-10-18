@@ -2045,11 +2045,11 @@
     },
     "tools.ozone.safelink.addRule": {
       "uri": "file://../../lexicons/tools/ozone/safelink/addRule.json",
-      "cid": "bafyreigsxudmpaaxu4iblhr2ytzxwipmm4pwbpzjhnjauibbfblm25l5di"
+      "cid": "bafyreigzdzi5i3gnnoasusaowl4764in2ne2g4cmjx4j7lr6njvv5jhgwe"
     },
     "tools.ozone.safelink.defs": {
       "uri": "file://../../lexicons/tools/ozone/safelink/defs.json",
-      "cid": "bafyreihk3ybpjqdrtxsp6uhoe5agsxmmy2j4sigbf35bfltxehrr3ypabi"
+      "cid": "bafyreih6luwqubjdbspyinjcshg64l76rbtc644wom7lxighmx6r34cqrm"
     },
     "tools.ozone.safelink.queryEvents": {
       "uri": "file://../../lexicons/tools/ozone/safelink/queryEvents.json",
@@ -2061,11 +2061,11 @@
     },
     "tools.ozone.safelink.removeRule": {
       "uri": "file://../../lexicons/tools/ozone/safelink/removeRule.json",
-      "cid": "bafyreigikalah724nhr34sp6nfoyqs6zjelgcm6xidq2hqsswv6jnjk5y4"
+      "cid": "bafyreid4v36yqar42fowjeunh75hay3k34rmqcrb7lfqg4n3wisajixw5e"
     },
     "tools.ozone.safelink.updateRule": {
       "uri": "file://../../lexicons/tools/ozone/safelink/updateRule.json",
-      "cid": "bafyreiglv4brdeezg7fnkml3ls7td6c7u4cp2kshoj7jzwelea3oa5xlra"
+      "cid": "bafyreidcticahnlcxll5c4i7iihw2jyohue6srlwo6lgezt56sduvrll6m"
     },
     "tools.ozone.server.getCapabilities": {
       "uri": "file://../../lexicons/tools/ozone/server/getCapabilities.json",

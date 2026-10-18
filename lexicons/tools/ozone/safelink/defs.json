@@ -12,6 +12,7 @@
         "pattern",
         "action",
         "reason",
+        "source",
         "createdBy",
         "createdAt"
       ],
@@ -39,6 +40,10 @@
         "reason": {
           "type": "ref",
           "ref": "#reasonType"
+        },
+        "source": {
+          "type": "string",
+          "description": "Source of the decision"
         },
         "createdBy": {
           "type": "string",
@@ -73,12 +78,13 @@
     },
     "urlRule": {
       "type": "object",
-      "description": "Input for creating a URL safety rule",
+      "description": "An active URL safety rule",
       "required": [
         "url",
         "pattern",
         "action",
         "reason",
+        "source",
         "createdBy",
         "createdAt",
         "updatedAt"
@@ -99,6 +105,10 @@
         "reason": {
           "type": "ref",
           "ref": "#reasonType"
+        },
+        "source": {
+          "type": "string",
+          "description": "Source of the rule"
         },
         "comment": {
           "type": "string",
