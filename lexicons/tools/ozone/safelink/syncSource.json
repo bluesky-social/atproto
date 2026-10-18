@@ -1,0 +1,64 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.safelink.syncSource",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Replace stored rules for one source from a complete snapshot. Incoming rules owned by another source are skipped unless this source is ozone/default.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["source", "rules"],
+          "properties": {
+            "source": {
+              "type": "string",
+              "maxLength": 128,
+              "description": "Source whose rules are being synchronized"
+            },
+            "rules": {
+              "type": "array",
+              "maxLength": 50000,
+              "items": {
+                "type": "ref",
+                "ref": "#sourceRule"
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["added", "updated", "removed", "events"],
+          "properties": {
+            "added": { "type": "integer" },
+            "updated": { "type": "integer" },
+            "removed": { "type": "integer" },
+            "events": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "sourceRule": {
+      "type": "object",
+      "required": ["url", "pattern", "action", "reason"],
+      "properties": {
+        "url": { "type": "string" },
+        "pattern": {
+          "type": "ref",
+          "ref": "tools.ozone.safelink.defs#patternType"
+        },
+        "action": {
+          "type": "ref",
+          "ref": "tools.ozone.safelink.defs#actionType"
+        },
+        "reason": {
+          "type": "ref",
+          "ref": "tools.ozone.safelink.defs#reasonType"
+        }
+      }
+    }
+  }
+}
