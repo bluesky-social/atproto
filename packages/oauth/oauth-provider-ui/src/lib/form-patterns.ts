@@ -33,7 +33,9 @@ export function formatOtpCode(value: string): string {
 }
 
 /**
- * Email, handle (with at least one dot), or DID.
+ * Email, handle, or DID, optionally preceded by `@`. A bare name without a
+ * dot is allowed: {@link normalizeSignInIdentifier} completes it on submit,
+ * because password managers fill saved values without blurring the field.
  *
  * @NOTE All three alternatives sit inside one group. The regex this replaced
  * read `^(email|handle)|did:…$`, which by alternation precedence anchored only
@@ -41,4 +43,27 @@ export function formatOtpCode(value: string): string {
  * `pattern` attribute every branch is anchored, which is what was meant.
  */
 export const SIGN_IN_IDENTIFIER_PATTERN =
-  '([^@]+@[^@]+|[^.@]+(\\.[^.@]+)+|did:[a-z0-9]+:.+)'
+  '@?([^@]+@[^@]+|[^.@]+(\\.[^.@]+)*|did:[a-z0-9]+:.+)'
+
+/**
+ * Trims, lowercases, strips a leading `@`, and appends the first available
+ * domain to a bare name. Applied on blur (so the field shows the result) and
+ * on submit (so a value filled by a password manager is normalised too).
+ */
+export function normalizeSignInIdentifier(
+  value: string,
+  domains: readonly string[],
+): string {
+  let normalized = value.trim().toLowerCase()
+  if (normalized.startsWith('@')) normalized = normalized.slice(1)
+  if (
+    normalized.length > 0 &&
+    domains.length > 0 &&
+    !normalized.startsWith('did:') &&
+    !normalized.includes('@') &&
+    !normalized.includes('.')
+  ) {
+    return `${normalized}${domains[0]}`
+  }
+  return normalized
+}

@@ -14,7 +14,10 @@ import {
   InvalidCredentialsError,
   SecondAuthenticationFactorRequiredError,
 } from '#/lib/api.ts'
-import { SIGN_IN_IDENTIFIER_PATTERN } from '#/lib/form-patterns.ts'
+import {
+  SIGN_IN_IDENTIFIER_PATTERN,
+  normalizeSignInIdentifier,
+} from '#/lib/form-patterns.ts'
 import { isValidDomain } from '#/lib/handle.ts'
 
 // @NOTE `username`, not `identifier`: the key becomes the rendered `name`,
@@ -100,7 +103,7 @@ export function SignInForm({
       }}
       onSubmit={async (values, signal) => {
         const data: SignInData = {
-          username: values.username,
+          username: normalizeSignInIdentifier(values.username, domains),
           password: values.password,
         }
 
@@ -170,17 +173,10 @@ export function SignInForm({
         autoFocus={!usernameReadonly}
         onBlur={(event) => {
           if (usernameReadonly) return
-          let value = event.target.value.trim().toLowerCase()
-          if (value.startsWith('@')) value = value.slice(1)
-          if (
-            value.length > 0 &&
-            !value.startsWith('did:') &&
-            !value.includes('@') &&
-            !value.includes('.') &&
-            domains.length > 0
-          ) {
-            event.target.value = `${value}${domains[0]}`
-          }
+          event.target.value = normalizeSignInIdentifier(
+            event.target.value,
+            domains,
+          )
         }}
       />
 
