@@ -7,7 +7,6 @@ import {
   isDatetimeString,
   toDatetimeString,
 } from '@atproto/lex'
-import { parseStrikeExpiryDays } from '../mod-service/strike-expiry.js'
 import type { OzoneEnvironment } from './env.js'
 import {
   type StrikeSuspensionConfig,
@@ -146,7 +145,6 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     assignments: assignmentsCfg,
     inbox: inboxCfg,
     strikeSuspension: parseStrikeSuspensionConfig(env.strikeSuspensionConfig),
-    strikeExpiryDays: parseStrikeExpiryDays(env.strikeExpiryDays),
     stats: statsCfg,
     jetstreamUrl: env.jetstreamUrl,
   }
@@ -164,7 +162,6 @@ export type OzoneConfig = {
   access: AccessConfig
   assignments: AssignmentsConfig
   strikeSuspension: StrikeSuspensionConfig
-  strikeExpiryDays?: number
   inbox: InboxConfig
   stats: StatsConfig
   jetstreamUrl?: string

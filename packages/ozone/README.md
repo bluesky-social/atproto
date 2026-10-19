@@ -41,33 +41,11 @@ Report-first pagination requires the `reporterDid` backfill and the post-retirem
 
 ## Strike expiry
 
-The client chooses severity, signed strike amounts, occurrence rules and
-suspension/restoration actions. If a nonzero strike event omits `strikeExpiresAt`,
-the backend uses the level's positive `expiryInDays` and the event's own creation
-time. This applies equally to positive and negative adjustments; reversals are
-not matched to source events or restricted to their amounts. Zero-strike warnings,
-permanent severities, and explicit expiry overrides retain their behavior.
+Clients supply strike amounts and expiry timestamps from severity settings.
+The backend stores them and excludes expired strikes from active totals.
 
-Set `OZONE_STRIKE_EXPIRY_DAYS=365` on API and daemon, then change it to `180` and
-roll both services to shorten managed expiry to exactly 180 24-hour days. Unset
-uses each event's saved severity duration. Invalid overrides fail at startup.
-The override only affects events with a positive severity duration, not permanent
-strikes or explicit timestamps. `meta.strikeExpiryDays` records the original
-configured duration for these managed events.
-
-The daemon reconciles adopted history in batches of 50 accounts, committing each
-account and progress separately under `job_cursor.job='strike_expiry_policy'`.
-Changes take effect gradually; inspect the cursor's `days` and `complete` fields.
-An hourly catch-up handles writes from older pods during a rolling deployment.
-Policy failures are logged separately and do not stop ordinary expiry processing.
-Active counts change; signed lifetime totals and enforcement do not.
-
-Deployment does not adopt legacy NULL expiries. Complete the writer rollout,
-then run the separate historical adoption before switching the duration. Writers
-and repairs serialize with `pg_advisory_xact_lock(hashtextextended(did, 1))`.
-The moderator UI must use stored expiry, including for negative adjustments, to
-follow the backend override. Signed totals can be negative under the existing
-adjustment rules; this change neither clamps them nor rewrites their amounts.
+Legacy events without expiry require a separate repair. Changing expiry does
+not undo takedowns, suspensions, or lifetime strike totals.
 
 ## License
 

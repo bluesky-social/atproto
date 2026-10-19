@@ -5,6 +5,6 @@
 '@atproto/pds': patch
 ---
 
-Supply missing strike expiry from severity settings, with an optional
-OZONE_STRIKE_EXPIRY_DAYS override and bounded reconciliation of adopted history.
-Retain signed strike adjustments and expose their saved expiry in event views.
+Expose client-supplied expiry on strike reversals and preserve supplied expiry
+when executing scheduled takedowns. Strike amounts and expiry policy remain
+client-controlled.

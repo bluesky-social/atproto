@@ -674,7 +674,9 @@ export class ModerationService {
       })
     }
 
-    // The client chooses severity and signed strike amounts. Supply missing expiry only.
+    // Store severityLevel, strikeCount, and strikeExpiresAt if provided
+    // These values should be calculated by the client based on configuration
+    // processNewEvent will update the account_strike table with the new strike count
     let severityLevel: string | null = null
     let strikeCount: number | null = null
     let strikeExpiresAt: DatetimeString | null = null
@@ -698,14 +700,6 @@ export class ModerationService {
       }
     }
 
-    if (
-      strikeCount !== null ||
-      tools.ozone.moderation.defs.modEventTakedown.$isTypeOf(event) ||
-      tools.ozone.moderation.defs.modEventReverseTakedown.$isTypeOf(event)
-    ) {
-      await this.strikeService.lockSubject(subjectInfo.subjectDid)
-    }
-
     const notifications = new InboxNotificationService(
       this.db,
       this.cfg.strikeSuspension,
@@ -715,17 +709,6 @@ export class ModerationService {
       subject,
       event,
     )
-
-    if (strikeCount && severityLevel && !strikeExpiresAt) {
-      const expiry = await this.strikeService.getEventExpiry(
-        severityLevel,
-        toDatetimeString(createdAt),
-      )
-      if (expiry) {
-        strikeExpiresAt = expiry.strikeExpiresAt
-        Object.assign(meta, expiry.meta)
-      }
-    }
 
     const modEvent = await this.db.db
       .insertInto('moderation_event')

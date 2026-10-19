@@ -181,4 +181,40 @@ describe('account-strikes', () => {
 
     expect(forSnapshot(eventsWithStrikes.events)).toMatchSnapshot()
   })
+  it('returns client-supplied reversal expiry and excludes expired signed adjustments', async () => {
+    const subject = repoSubject(sc.dids.bob)
+    const strikeExpiresAt = '2000-01-01T00:00:00.000Z'
+    const takedown = await modClient.emitEvent({
+      subject,
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventTakedown',
+        severityLevel: 'sev-2',
+        strikeCount: 2,
+      },
+    })
+    expect(takedown.event['strikeExpiresAt']).toBeUndefined()
+    const { event } = await modClient.emitEvent({
+      subject,
+      event: {
+        $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
+        severityLevel: 'sev-2',
+        strikeCount: -2,
+        strikeExpiresAt,
+      },
+    })
+    expect(event).toMatchObject({ strikeCount: -2, strikeExpiresAt })
+    const { events } = await modClient.queryEvents({
+      subject: sc.dids.bob,
+      withStrike: true,
+      types: ['tools.ozone.moderation.defs#modEventReverseTakedown'],
+    })
+    expect(events[0].event).toMatchObject({ strikeCount: -2, strikeExpiresAt })
+    const { subjectStatuses } = await modClient.queryStatuses({
+      subject: sc.dids.bob,
+    })
+    expect(subjectStatuses[0].accountStrike).toMatchObject({
+      activeStrikeCount: 2,
+      totalStrikeCount: 0,
+    })
+  })
 })

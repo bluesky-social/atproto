@@ -50,7 +50,6 @@ exports[`account-strikes tracks strikes and exposes them through queryStatuses a
       "comment": "Appeal granted - reversing first takedown",
       "severityLevel": "sev-2",
       "strikeCount": -2,
-      "strikeExpiresAt": "1970-01-01T00:00:00.000Z",
     },
     "id": 11,
     "subject": {
@@ -89,7 +88,6 @@ exports[`account-strikes tracks strikes and exposes them through queryStatuses a
       ],
       "severityLevel": "sev-1",
       "strikeCount": 1,
-      "strikeExpiresAt": "1970-01-01T00:00:00.000Z",
     },
     "id": 7,
     "subject": {
@@ -129,7 +127,6 @@ exports[`account-strikes tracks strikes and exposes them through queryStatuses a
       "comment": "Second violation",
       "severityLevel": "sev-2",
       "strikeCount": 2,
-      "strikeExpiresAt": "1970-01-01T00:00:00.000Z",
     },
     "id": 3,
     "subject": {
@@ -148,7 +145,6 @@ exports[`account-strikes tracks strikes and exposes them through queryStatuses a
       "comment": "First violation",
       "severityLevel": "sev-2",
       "strikeCount": 2,
-      "strikeExpiresAt": "1970-01-01T00:00:00.000Z",
     },
     "id": 1,
     "subject": {

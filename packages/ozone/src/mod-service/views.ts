@@ -212,7 +212,6 @@ export class ModerationViews {
 
       event.strikeCount = ifNumber(row.strikeCount)
       event.severityLevel = ifString(row.severityLevel)
-
       event.strikeExpiresAt = ifDatetime(row.strikeExpiresAt)
     }
 
