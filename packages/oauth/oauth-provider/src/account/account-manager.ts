@@ -135,7 +135,7 @@ export class AccountManager {
     clientId?: ClientId,
   ): Promise<{ account: Account; remembered: boolean }> {
     return constantTime(BRUTE_FORCE_MITIGATION_DELAY, async () => {
-      await callAsync(this.hooks.onSignUpAttempt, {
+      await this.hooks.onSignUpAttempt?.call(null, {
         input,
         deviceId,
         deviceMetadata,
@@ -168,7 +168,7 @@ export class AccountManager {
       }
 
       try {
-        await callAsync(this.hooks.onSignedUp, {
+        await this.hooks.onSignedUp?.call(null, {
           data,
           account,
           deviceId,
@@ -257,7 +257,7 @@ export class AccountManager {
       }
 
       try {
-        await callAsync(this.hooks.onSignedIn, {
+        await this.hooks.onSignedIn?.call(null, {
           data,
           account,
           remembered,
