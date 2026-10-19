@@ -45,6 +45,15 @@ export class SafelinkRuleService {
     rules: SourceRuleInput[],
     createdBy: DidString,
   ): Promise<SyncResult> {
+    const keys = new Set<string>()
+    for (const { url, pattern } of rules) {
+      const key = JSON.stringify([url, pattern])
+      if (keys.has(key)) {
+        throw new InvalidRequestError('Duplicate URL rule in source snapshot')
+      }
+      keys.add(key)
+    }
+
     const serializedRules = JSON.stringify(rules)
 
     return this.db.transaction(async (txn) => {
