@@ -8,7 +8,15 @@ export interface ReportQueue {
   name: string
   subjectTypes: string[] // ['account'] or ['record'] or ['account', 'record']
   collection: NsidString | null // Collection name (e.g., 'app.bsky.feed.post'), NULL for accounts
-  reportTypes: string[] // Array of report reason types (fully qualified NSIDs)
+  reportTypes: string[] // Report reason types (fully qualified NSIDs), or '*' for every reason
+  /**
+   * Match tags on the account submitting the report.
+   */
+  reporterTags: string[] | null
+  /**
+   * Match tags on the account that is being reported against.
+   */
+  accountTags: string[] | null
   description: string | null // Optional description of the queue
   recommendedPolicies: string[] // Policy keys recommended for reports in this queue
   recommendedLabels: string[] // Label values recommended for this queue and used for appeal routing
