@@ -192,6 +192,7 @@
     "tools.ozone.safelink.queryEvents",
     "tools.ozone.safelink.queryRules",
     "tools.ozone.safelink.removeRule",
+    "tools.ozone.safelink.syncSource",
     "tools.ozone.safelink.updateRule",
     "tools.ozone.team.addMember",
     "tools.ozone.team.deleteMember",
@@ -1025,6 +1026,10 @@
     "tools.ozone.safelink.removeRule": {
       "uri": "file://../../lexicons/tools/ozone/safelink/removeRule.json",
       "cid": "bafyreid4v36yqar42fowjeunh75hay3k34rmqcrb7lfqg4n3wisajixw5e"
+    },
+    "tools.ozone.safelink.syncSource": {
+      "uri": "file://../../lexicons/tools/ozone/safelink/syncSource.json",
+      "cid": "bafyreidxkdxn77gvwohbdjgns5cs3md7yqyni3ywn7atb5s7w3djoxcrlu"
     },
     "tools.ozone.safelink.updateRule": {
       "uri": "file://../../lexicons/tools/ozone/safelink/updateRule.json",
