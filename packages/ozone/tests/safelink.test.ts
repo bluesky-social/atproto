@@ -1,7 +1,7 @@
 import {
-  ids,
   ToolsOzoneSafelinkAddRule,
   ToolsOzoneSafelinkUpdateRule,
+  ids,
 } from '@atproto/api'
 import type { AtpAgent } from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
