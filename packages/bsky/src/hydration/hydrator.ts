@@ -105,7 +105,7 @@ import {
   HydrationMap,
   type ItemRef,
   type RecordInfo,
-  getStarterPackUriFromFollow,
+  getStarterPackUriFromNotification,
   mergeManyMaps,
   mergeMaps,
   mergeNestedMaps,
@@ -1787,11 +1787,19 @@ export class Hydrator {
       }
     }
     const starterPackUris = new Set<AtUriString>()
-    follows.forEach((follow) => {
-      if (!follow) return
-      const starterPackUri = getStarterPackUriFromFollow(follow.record)
+    for (const notif of notifs) {
+      // Skip other notification types; this loop collects starter-pack attribution for follows and follow-backs.
+      if (
+        notif.reason !== NOTIFICATION_REASON.FOLLOW &&
+        notif.reason !== NOTIFICATION_REASON.FOLLOW_BACK
+      ) {
+        continue
+      }
+      const starterPackUri = getStarterPackUriFromNotification(
+        notif.reasonSubject,
+      )
       if (starterPackUri) starterPackUris.add(starterPackUri)
-    })
+    }
     const [threadgates, starterPackState] = await Promise.all([
       this.feed.getThreadgatesForPosts([...viewerRootPostUris.values()]),
       starterPackUris.size
@@ -1852,6 +1860,14 @@ export class Hydrator {
         case NOTIFICATION_REASON.STARTERPACK_JOINED:
           starterPackUris.add(notif.reasonSubject)
           break
+        case NOTIFICATION_REASON.FOLLOW:
+        case NOTIFICATION_REASON.FOLLOW_BACK: {
+          const starterPackUri = getStarterPackUriFromNotification(
+            notif.reasonSubject,
+          )
+          if (starterPackUri) starterPackUris.add(starterPackUri)
+          break
+        }
       }
     }
     const [posts, likes, reposts, follows, labels, profileState] =
@@ -1878,12 +1894,6 @@ export class Hydrator {
       const parentUri = post?.record.reply?.parent.uri
       if (parentUri) postUris.add(parentUri)
     })
-    follows.forEach((follow) => {
-      const starterPackUri =
-        follow && getStarterPackUriFromFollow(follow.record)
-      if (starterPackUri) starterPackUris.add(starterPackUri)
-    })
-
     const [postState, feedGenState, starterPackState] = await Promise.all([
       this.hydratePosts(
         [...postUris].map((uri) => ({ uri })),
