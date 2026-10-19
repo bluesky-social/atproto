@@ -1,14 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import {
-  oauthAuthorizationRequestParSchema,
-  oauthClientCredentialsSchema,
-  oauthTokenIdentificationSchema,
-  oauthTokenRequestSchema,
-} from '@atproto/oauth-types'
 import { buildErrorPayload, buildErrorStatus } from '../errors/error-parser.js'
-import { InvalidClientError } from '../errors/invalid-client-error.js'
-import { InvalidGrantError } from '../errors/invalid-grant-error.js'
-import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { OAuthError } from '../errors/oauth-error.js'
 import { WWWAuthenticateError } from '../errors/www-authenticate-error.js'
 import {
@@ -20,7 +11,6 @@ import {
   parseHttpRequest,
   staticJsonMiddleware,
 } from '../lib/http/index.js'
-import { formatError } from '../lib/util/error.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import type { MiddlewareOptions } from './middleware-options.js'
 
@@ -92,31 +82,13 @@ export function createOAuthMiddleware<
     '/oauth/par',
     corsHeaders,
     oauthHandler(async function (req) {
-      const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
+      const httpPayload = await parseHttpRequest(req, ['json', 'urlencoded'])
 
-      // https://datatracker.ietf.org/doc/html/rfc9126#name-error-response
-      // https://datatracker.ietf.org/doc/html/rfc6749#autoid-56
-
-      const credentials = await oauthClientCredentialsSchema
-        .parseAsync(payload, { path: ['body'] })
-        .catch((err) => throwInvalidClient(err, 'Client credentials missing'))
-
-      const authorizationRequest = await oauthAuthorizationRequestParSchema
-        .parseAsync(payload, { path: ['body'] })
-        .catch((err) =>
-          throwInvalidRequest(err, 'Invalid authorization request'),
-        )
-
-      const dpopProof = await server.checkDpopProof(
+      return server.handlePARRequest(
         req.method!,
         this.url,
         req.headers,
-      )
-
-      return server.pushedAuthorizationRequest(
-        credentials,
-        authorizationRequest,
-        dpopProof,
+        httpPayload,
       )
     }, 201),
   )
@@ -132,29 +104,15 @@ export function createOAuthMiddleware<
     '/oauth/token',
     corsHeaders,
     oauthHandler(async function (req) {
-      const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
+      const httpPayload = await parseHttpRequest(req, ['json', 'urlencoded'])
+      const httpMetadata = await server.deviceManager.getRequestMetadata(req)
 
-      const clientMetadata = await server.deviceManager.getRequestMetadata(req)
-
-      const clientCredentials = await oauthClientCredentialsSchema
-        .parseAsync(payload, { path: ['body'] })
-        .catch((err) => throwInvalidGrant(err, 'Client credentials missing'))
-
-      const tokenRequest = await oauthTokenRequestSchema
-        .parseAsync(payload, { path: ['body'] })
-        .catch((err) => throwInvalidGrant(err, 'Invalid request payload'))
-
-      const dpopProof = await server.checkDpopProof(
+      return server.handleTokenRequest(
         req.method!,
         this.url,
         req.headers,
-      )
-
-      return server.token(
-        clientCredentials,
-        clientMetadata,
-        tokenRequest,
-        dpopProof,
+        httpPayload,
+        httpMetadata,
       )
     }),
   )
@@ -164,24 +122,15 @@ export function createOAuthMiddleware<
     '/oauth/revoke',
     corsHeaders,
     oauthHandler(async function (req, res) {
-      const payload = await parseHttpRequest(req, ['json', 'urlencoded'])
-
-      const credentials = await oauthClientCredentialsSchema
-        .parseAsync(payload, { path: ['body'] })
-        .catch((err) => throwInvalidRequest(err, 'Client credentials missing'))
-
-      const tokenIdentification = await oauthTokenIdentificationSchema
-        .parseAsync(payload, { path: ['body'] })
-        .catch((err) => throwInvalidRequest(err, 'Invalid request payload'))
-
-      const dpopProof = await server.checkDpopProof(
-        req.method!,
-        this.url,
-        req.headers,
-      )
+      const httpPayload = await parseHttpRequest(req, ['json', 'urlencoded'])
 
       try {
-        await server.revoke(credentials, tokenIdentification, dpopProof)
+        await server.handleRevokeRequest(
+          req.method!,
+          this.url,
+          req.headers,
+          httpPayload,
+        )
       } catch (err) {
         // > Note: invalid tokens do not cause an error response since the
         // > client cannot handle such an error in a reasonable way.  Moreover,
@@ -242,16 +191,4 @@ export function createOAuthMiddleware<
       }
     })
   }
-}
-
-function throwInvalidGrant(err: unknown, prefix: string): never {
-  throw new InvalidGrantError(formatError(err, prefix), err)
-}
-
-function throwInvalidClient(err: unknown, prefix: string): never {
-  throw new InvalidClientError(formatError(err, prefix), err)
-}
-
-function throwInvalidRequest(err: unknown, prefix: string): never {
-  throw new InvalidRequestError(formatError(err, prefix), err)
 }

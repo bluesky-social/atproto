@@ -21,7 +21,11 @@ import {
   type OAuthTokenResponse,
   type OAuthTokenType,
   atprotoLoopbackClientMetadata,
+  oauthAuthorizationRequestParSchema,
   oauthAuthorizationRequestParametersSchema,
+  oauthClientCredentialsSchema,
+  oauthTokenIdentificationSchema,
+  oauthTokenRequestSchema,
 } from '@atproto/oauth-types'
 import { safeFetchWrap } from '@atproto-labs/fetch-node'
 import type { SimpleStore } from '@atproto-labs/simple-store'
@@ -59,6 +63,7 @@ import { type DeviceStore, asDeviceStore } from './device/device-store.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
 import { AuthorizationError } from './errors/authorization-error.js'
 import { ConsentRequiredError } from './errors/consent-required-error.js'
+import { InvalidClientError } from './errors/invalid-client-error.js'
 import { InvalidDpopKeyBindingError } from './errors/invalid-dpop-key-binding-error.js'
 import { InvalidDpopProofError } from './errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from './errors/invalid-grant-error.js'
@@ -67,6 +72,7 @@ import { LoginRequiredError } from './errors/login-required-error.js'
 import { LexiconManager } from './lexicon/lexicon-manager.js'
 import { type LexiconStore, asLexiconStore } from './lexicon/lexicon-store.js'
 import type { HcaptchaConfig } from './lib/hcaptcha.js'
+import type { Json } from './lib/http/index.js'
 import type { RequestMetadata } from './lib/http/request.js'
 import { dateToRelativeSeconds } from './lib/util/date.js'
 import { formatError } from './lib/util/error.js'
@@ -138,6 +144,10 @@ export type OAuthStore = AccountStore &
   ReplayStore &
   RequestStore &
   TokenStore
+
+export type ClientAuthenticationOptions = {
+  allowMissingDpopProof?: boolean
+}
 
 type OAuthProviderConfig = {
   /**
@@ -389,12 +399,10 @@ export class OAuthProvider extends OAuthVerifier {
     return isOlderThan(deviceAccount.updatedAt, this.authenticationMaxAge)
   }
 
-  protected async authenticateClient(
+  public async authenticateClient(
     clientCredentials: OAuthClientCredentials,
     dpopProof: null | DpopProof,
-    options?: {
-      allowMissingDpopProof?: boolean
-    },
+    options?: ClientAuthenticationOptions,
   ): Promise<{
     client: Client
     clientAuth: ClientAuth
@@ -446,7 +454,7 @@ export class OAuthProvider extends OAuthVerifier {
     return { client, clientAuth }
   }
 
-  async decodeJAR(
+  public async decodeJAR(
     client: Client,
     input: OAuthAuthorizationRequestJar,
   ): Promise<OAuthAuthorizationRequestParameters> {
@@ -473,6 +481,39 @@ export class OAuthProvider extends OAuthVerifier {
       })
 
     return parameters
+  }
+
+  /**
+   * @see {@link https://datatracker.ietf.org/doc/html/rfc9126}
+   */
+  public async handlePARRequest(
+    httpMethod: string,
+    httpUrl: Readonly<URL>,
+    httpHeaders: Record<string, undefined | string | string[]>,
+    httpPayload: Json,
+  ): Promise<OAuthParResponse> {
+    // https://datatracker.ietf.org/doc/html/rfc9126#name-error-response
+    // https://datatracker.ietf.org/doc/html/rfc6749#autoid-56
+
+    const authorizationRequest = await oauthAuthorizationRequestParSchema
+      .parseAsync(httpPayload, { path: ['body'] })
+      .catch((err) => throwInvalidRequest(err, 'Invalid authorization request'))
+
+    const credentials = await oauthClientCredentialsSchema
+      .parseAsync(httpPayload, { path: ['body'] })
+      .catch((err) => throwInvalidClient(err, 'Client credentials missing'))
+
+    const dpopProof = await this.checkDpopProof(
+      httpMethod,
+      httpUrl,
+      httpHeaders,
+    )
+
+    return this.pushedAuthorizationRequest(
+      credentials,
+      authorizationRequest,
+      dpopProof,
+    )
   }
 
   /**
@@ -751,6 +792,30 @@ export class OAuthProvider extends OAuthVerifier {
 
       throw AuthorizationError.from(parameters, err)
     }
+  }
+
+  public async handleTokenRequest(
+    httpMethod: string,
+    httpUrl: Readonly<URL>,
+    httpHeaders: Record<string, undefined | string | string[]>,
+    httpPayload: Json,
+    clientMetadata: RequestMetadata,
+  ): Promise<OAuthTokenResponse> {
+    const request = await oauthTokenRequestSchema
+      .parseAsync(httpPayload, { path: ['body'] })
+      .catch((err) => throwInvalidGrant(err, 'Invalid request payload'))
+
+    const clientCredentials = await oauthClientCredentialsSchema
+      .parseAsync(httpPayload, { path: ['body'] })
+      .catch((err) => throwInvalidClient(err, 'Client credentials missing'))
+
+    const dpopProof = await this.checkDpopProof(
+      httpMethod,
+      httpUrl,
+      httpHeaders,
+    )
+
+    return this.token(clientCredentials, clientMetadata, request, dpopProof)
   }
 
   public async token(
@@ -1045,6 +1110,34 @@ export class OAuthProvider extends OAuthVerifier {
 
   /**
    * @see {@link https://datatracker.ietf.org/doc/html/rfc7009#section-2.1 rfc7009}
+   * @note Any error thrown from this method should not be exposed on the HTTP
+   * response (per spec).
+   */
+  public async handleRevokeRequest(
+    httpMethod: string,
+    httpUrl: Readonly<URL>,
+    httpHeaders: Record<string, undefined | string | string[]>,
+    httpPayload: Json,
+  ): Promise<void> {
+    const tokenIdentification = await oauthTokenIdentificationSchema
+      .parseAsync(httpPayload, { path: ['body'] })
+      .catch((err) => throwInvalidRequest(err, 'Invalid request payload'))
+
+    const credentials = await oauthClientCredentialsSchema
+      .parseAsync(httpPayload, { path: ['body'] })
+      .catch((err) => throwInvalidClient(err, 'Client credentials missing'))
+
+    const dpopProof = await this.checkDpopProof(
+      httpMethod,
+      httpUrl,
+      httpHeaders,
+    )
+
+    return this.revoke(credentials, tokenIdentification, dpopProof)
+  }
+
+  /**
+   * @see {@link https://datatracker.ietf.org/doc/html/rfc7009#section-2.1 rfc7009}
    */
   public async revoke(
     clientCredentials: OAuthClientCredentials,
@@ -1109,4 +1202,16 @@ function matchesHint(
 
 function hasActiveAccount({ account }: { account: Account }): boolean {
   return !account.deactivated
+}
+
+function throwInvalidGrant(err: unknown, prefix: string): never {
+  throw new InvalidGrantError(formatError(err, prefix), err)
+}
+
+function throwInvalidClient(err: unknown, prefix: string): never {
+  throw new InvalidClientError(formatError(err, prefix), err)
+}
+
+function throwInvalidRequest(err: unknown, prefix: string): never {
+  throw new InvalidRequestError(formatError(err, prefix), err)
 }
