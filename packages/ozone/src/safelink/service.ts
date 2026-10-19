@@ -219,8 +219,8 @@ export class SafelinkRuleService {
         .executeTakeFirst()
       if (existingRule && existingRule.source !== source) {
         throw new InvalidRequestError(
-          'A rule for this URL/domain already exists',
-          'RuleAlreadyExists',
+          `A rule for this URL/domain is owned by source ${JSON.stringify(existingRule.source)}. Remove it before adding a rule from ${JSON.stringify(source)}.`,
+          'RuleSourceConflict',
         )
       }
 
@@ -290,13 +290,16 @@ export class SafelinkRuleService {
         .where('pattern', '=', pattern)
         .forUpdate()
         .executeTakeFirst()
-      if (
-        !existingRule ||
-        (source !== undefined && existingRule.source !== source)
-      ) {
+      if (!existingRule) {
         throw new InvalidRequestError(
           'No active rule found for this URL/domain',
           'RuleNotFound',
+        )
+      }
+      if (existingRule.source !== source) {
+        throw new InvalidRequestError(
+          `A rule for this URL/domain is owned by source ${JSON.stringify(existingRule.source)}. Use that source to update it, or remove it before adding a rule from ${JSON.stringify(source)}.`,
+          'RuleSourceConflict',
         )
       }
       const event = await txn.db

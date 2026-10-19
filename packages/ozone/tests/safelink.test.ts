@@ -1,4 +1,8 @@
-import { ids } from '@atproto/api'
+import {
+  ids,
+  ToolsOzoneSafelinkAddRule,
+  ToolsOzoneSafelinkUpdateRule,
+} from '@atproto/api'
 import type { AtpAgent } from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from './_util.js'
@@ -596,7 +600,9 @@ describe('safelink management', () => {
         { urls: [url] },
         await getAdminHeaders(ids.ToolsOzoneSafelinkQueryRules),
       )
-      expect(rules.rules).toEqual([expect.objectContaining({ source, ...existing })])
+      expect(rules.rules).toEqual([
+        expect.objectContaining({ source, ...existing }),
+      ])
 
       const { data: events } =
         await adminAgent.tools.ozone.safelink.queryEvents(
@@ -750,17 +756,41 @@ describe('safelink management', () => {
         await syncHeaders(),
       )
 
-      await expect(
-        adminAgent.tools.ozone.safelink.addRule(
-          {
-            url,
-            pattern: 'url',
-            action: 'whitelist',
-            reason: 'none',
-          },
-          await getAdminHeaders(ids.ToolsOzoneSafelinkAddRule),
-        ),
-      ).rejects.toThrow('A rule for this URL/domain already exists')
+      const addConflict = adminAgent.tools.ozone.safelink.addRule(
+        {
+          url,
+          pattern: 'url',
+          action: 'whitelist',
+          reason: 'none',
+        },
+        await getAdminHeaders(ids.ToolsOzoneSafelinkAddRule),
+      )
+      await expect(addConflict).rejects.toBeInstanceOf(
+        ToolsOzoneSafelinkAddRule.RuleSourceConflictError,
+      )
+      await expect(addConflict).rejects.toMatchObject({
+        status: 400,
+        error: 'RuleSourceConflict',
+        message: `A rule for this URL/domain is owned by source "${source}". Remove it before adding a rule from "ozone/default".`,
+      })
+
+      const updateConflict = adminAgent.tools.ozone.safelink.updateRule(
+        {
+          url,
+          pattern: 'url',
+          action: 'whitelist',
+          reason: 'none',
+        },
+        await getAdminHeaders(ids.ToolsOzoneSafelinkUpdateRule),
+      )
+      await expect(updateConflict).rejects.toBeInstanceOf(
+        ToolsOzoneSafelinkUpdateRule.RuleSourceConflictError,
+      )
+      await expect(updateConflict).rejects.toMatchObject({
+        status: 400,
+        error: 'RuleSourceConflict',
+        message: `A rule for this URL/domain is owned by source "${source}". Use that source to update it, or remove it before adding a rule from "ozone/default".`,
+      })
 
       const { data: active } = await adminAgent.tools.ozone.safelink.queryRules(
         { urls: [url] },

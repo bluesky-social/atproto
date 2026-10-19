@@ -56,6 +56,10 @@
         {
           "name": "RuleNotFound",
           "description": "No active rule found for this URL/domain"
+        },
+        {
+          "name": "RuleSourceConflict",
+          "description": "A rule for this URL/domain is owned by another source"
         }
       ]
     }

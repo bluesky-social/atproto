@@ -60,6 +60,10 @@
         {
           "name": "RuleAlreadyExists",
           "description": "A rule for this URL/domain already exists"
+        },
+        {
+          "name": "RuleSourceConflict",
+          "description": "A rule for this URL/domain is owned by another source"
         }
       ]
     }
