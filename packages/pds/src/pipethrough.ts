@@ -718,6 +718,7 @@ const defaultService = (
     case tools.ozone.safelink.queryEvents.$lxm:
     case tools.ozone.safelink.queryRules.$lxm:
     case tools.ozone.safelink.removeRule.$lxm:
+    case tools.ozone.safelink.syncSource.$lxm:
     case tools.ozone.safelink.updateRule.$lxm:
     case tools.ozone.team.addMember.$lxm:
     case tools.ozone.team.deleteMember.$lxm:
