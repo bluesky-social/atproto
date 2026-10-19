@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   OTP_CODE_PATTERN,
-  SIGN_IN_IDENTIFIER_PATTERN,
   formatOtpCode,
   normalizeSignInIdentifier,
+  signInIdentifierPattern,
 } from './form-patterns.ts'
 
 describe(formatOtpCode, () => {
@@ -42,8 +42,8 @@ describe(formatOtpCode, () => {
 describe(normalizeSignInIdentifier, () => {
   const domains = ['.bsky.social']
   // Browsers compile `pattern` with the `v` flag and anchor it.
-  const matchesPattern = (value: string) =>
-    new RegExp(`^(?:${SIGN_IN_IDENTIFIER_PATTERN})$`, 'v').test(value)
+  const matchesPattern = (value: string, available = domains) =>
+    new RegExp(`^(?:${signInIdentifierPattern(available)})$`, 'v').test(value)
 
   it.each([
     ['alice', 'alice.bsky.social'],
@@ -79,4 +79,22 @@ describe(normalizeSignInIdentifier, () => {
       expect(matchesPattern(value)).toBe(false)
     },
   )
+
+  // Nothing would complete a bare name, so it must fail in the browser rather
+  // than reach the server as invalid credentials.
+  it.each(['alice', '@alice'])(
+    'pattern rejects %j when no domain is available',
+    (value) => {
+      expect(matchesPattern(value, [])).toBe(false)
+    },
+  )
+
+  it.each([
+    '@alice.example.com',
+    'alice@example.com',
+    'did:plc:abc123',
+    ' did:plc:abc123 ',
+  ])('pattern accepts %j when no domain is available', (value) => {
+    expect(matchesPattern(value, [])).toBe(true)
+  })
 })

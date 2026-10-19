@@ -33,17 +33,23 @@ export function formatOtpCode(value: string): string {
 }
 
 /**
- * Email, handle, or DID, optionally preceded by `@`. A bare name without a
- * dot is allowed: {@link normalizeSignInIdentifier} completes it on submit,
- * because password managers fill saved values without blurring the field.
+ * Email, handle, or DID, optionally preceded by `@` and surrounded by
+ * whitespace, both of which {@link normalizeSignInIdentifier} strips. A bare
+ * name without a dot is allowed only when a domain is available: the
+ * normalizer then completes it on submit, because password managers fill
+ * saved values without blurring the field. Without a domain nothing would
+ * complete it, so the browser rejects it inline instead of the server
+ * rejecting it as invalid credentials.
  *
  * @NOTE All three alternatives sit inside one group. The regex this replaced
  * read `^(email|handle)|did:…$`, which by alternation precedence anchored only
  * the first two — so anything merely *containing* `did:x:y` passed. As a
  * `pattern` attribute every branch is anchored, which is what was meant.
  */
-export const SIGN_IN_IDENTIFIER_PATTERN =
-  '@?([^@]+@[^@]+|[^.@]+(\\.[^.@]+)*|did:[a-z0-9]+:.+)'
+export function signInIdentifierPattern(domains: readonly string[]): string {
+  const labels = domains.length > 0 ? '*' : '+'
+  return `\\s*@?([^@]+@[^@]+|[^.@]+(\\.[^.@]+)${labels}|did:[a-z0-9]+:.+)\\s*`
+}
 
 /**
  * Trims, lowercases, strips a leading `@`, and appends the first available

@@ -15,8 +15,8 @@ import {
   SecondAuthenticationFactorRequiredError,
 } from '#/lib/api.ts'
 import {
-  SIGN_IN_IDENTIFIER_PATTERN,
   normalizeSignInIdentifier,
+  signInIdentifierPattern,
 } from '#/lib/form-patterns.ts'
 import { isValidDomain } from '#/lib/handle.ts'
 
@@ -150,7 +150,7 @@ export function SignInForm({
       <TextField
         name="username"
         defaultValue={usernameDefault}
-        pattern={SIGN_IN_IDENTIFIER_PATTERN}
+        pattern={signInIdentifierPattern(domains)}
         label={<Trans>Username or Email</Trans>}
         placeholder={
           domains.length > 0
