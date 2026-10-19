@@ -63,6 +63,7 @@ import addSafelinkRule from './safelink/addRule.js'
 import querySafelinkEvents from './safelink/queryEvents.js'
 import querySafelinkRules from './safelink/queryRules.js'
 import removeSafelinkRule from './safelink/removeRule.js'
+import syncSource from './safelink/syncSource.js'
 import updateSafelinkRule from './safelink/updateRule.js'
 import getCapabilities from './server/getCapabilities.js'
 import getConfig from './server/getConfig.js'
@@ -148,6 +149,7 @@ export default function (server: Server, ctx: AppContext) {
   addSafelinkRule(server, ctx)
   updateSafelinkRule(server, ctx)
   removeSafelinkRule(server, ctx)
+  syncSource(server, ctx)
   querySafelinkEvents(server, ctx)
   querySafelinkRules(server, ctx)
   getAccountTimeline(server, ctx)
