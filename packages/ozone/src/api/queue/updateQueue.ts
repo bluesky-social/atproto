@@ -20,6 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         queueId,
         name,
         enabled,
+        strictAccess,
         description,
         recommendedPolicies,
         recommendedLabels,
@@ -28,6 +29,7 @@ export default function (server: Server, ctx: AppContext) {
       if (
         name === undefined &&
         enabled === undefined &&
+        strictAccess === undefined &&
         description === undefined &&
         recommendedPolicies === undefined &&
         recommendedLabels === undefined
@@ -37,9 +39,12 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      if (strictAccess !== undefined && !access.isAdmin) {
+        throw new AuthRequiredError('Only admins can change strict access')
+      }
       const queue = await ctx.db.transaction(async (dbTxn) => {
         const queueService = ctx.queueService(dbTxn)
-        const existing = await queueService.getById(queueId)
+        const existing = await queueService.getById(queueId, true)
         if (!existing) {
           throw new InvalidRequestError(
             `Queue with id ${queueId} does not exist`,
@@ -50,10 +55,12 @@ export default function (server: Server, ctx: AppContext) {
         const updates: {
           name?: string
           enabled?: boolean
+          strictAccess?: boolean
           description?: string
           recommendedPolicies?: string[]
           recommendedLabels?: string[]
         } = {}
+        if (strictAccess !== undefined) updates.strictAccess = strictAccess
         if (name !== undefined) updates.name = name
         if (enabled !== undefined) updates.enabled = enabled
         if (description !== undefined) updates.description = description
