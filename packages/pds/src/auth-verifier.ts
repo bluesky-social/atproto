@@ -383,7 +383,10 @@ export class AuthVerifier {
       try {
         await verifyCredentialSig(ctx.req.headers, payload.cnf!.kid)
       } catch (err) {
-        throw spaceSigAuthError(err)
+        if (err instanceof SpaceSignatureError) {
+          throw new AuthRequiredError(err.message, err.code)
+        }
+        throw err
       }
 
       const revoked = await this.accountManager.isSpaceCredentialRevoked(
@@ -841,13 +844,6 @@ const isDefinitelyServiceAuth = (req: IncomingMessage): boolean => {
   if (!token) return false
   const payload = jose.decodeJwt(token)
   return payload['lxm'] != null
-}
-
-const spaceSigAuthError = (err: unknown): unknown => {
-  if (err instanceof SpaceSignatureError) {
-    return new AuthRequiredError(err.message, err.code)
-  }
-  return err
 }
 
 const isSpaceCredentialAuth = (req: IncomingMessage): boolean => {

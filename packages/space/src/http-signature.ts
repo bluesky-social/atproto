@@ -76,7 +76,18 @@ export async function verifyCredentialSig(
       'signature keyid does not match the credential key',
     )
   }
-  await verifySpaceSig(keyId, components, sig)
+  assertP256DidKey(keyId)
+
+  const base = signatureBase(components, sig.signatureInput)
+  const valid =
+    sig.signature.length === 64 &&
+    (await verifySignature(keyId, base, sig.signature, {
+      format: 'compact',
+      allowMalleableSig: true,
+    }).catch(() => false))
+  if (!valid) {
+    throw new SpaceSignatureError('invalid HTTP message signature')
+  }
 }
 
 type ParsedSpaceSig = {
@@ -136,25 +147,6 @@ function parseSpaceSig(
     signatureInput: serializeInnerList(input),
     params,
     signature: fromBase64(signature[0].toBase64()),
-  }
-}
-
-/** Verify a parsed signature over `components` against a P-256 did:key. */
-async function verifySpaceSig(
-  keyId: string,
-  components: Component[],
-  { signatureInput, signature }: ParsedSpaceSig,
-): Promise<void> {
-  assertP256DidKey(keyId)
-  const base = signatureBase(components, signatureInput)
-  const valid =
-    signature.length === 64 &&
-    (await verifySignature(keyId, base, signature, {
-      format: 'compact',
-      allowMalleableSig: true,
-    }).catch(() => false))
-  if (!valid) {
-    throw new SpaceSignatureError('invalid HTTP message signature')
   }
 }
 
