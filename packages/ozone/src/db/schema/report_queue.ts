@@ -8,7 +8,7 @@ export interface ReportQueue {
   name: string
   subjectTypes: string[] // ['account'] or ['record'] or ['account', 'record']
   collection: NsidString | null // Collection name (e.g., 'app.bsky.feed.post'), NULL for accounts
-  reportTypes: string[] | null // NULL accepts every report reason type; [] accepts none.
+  reportTypes: string[] // Report reason types; [] matches no reports automatically.
   /**
    * Match tags on the account submitting the report.
    */
