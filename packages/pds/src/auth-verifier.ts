@@ -26,7 +26,8 @@ import {
   SpaceTokenError,
   type SpaceTokenType,
   spaceHostAud,
-  verifySpaceSignature,
+  verifyCredentialRequestSig,
+  verifyCredentialSig,
   verifySpaceToken,
 } from '@atproto/space'
 import { SpaceRef } from '@atproto/syntax'
@@ -47,12 +48,12 @@ import type { ActorAccount } from './account-manager/helpers/account.js'
 import type {
   AccessOutput,
   AdminTokenOutput,
-  DelegationTokenOutput,
   ModServiceOutput,
   OAuthOutput,
   RefreshOutput,
   ServiceAuthOutput,
   SpaceCredentialOutput,
+  SpaceCredentialRequestOutput,
   UnauthenticatedOutput,
   UserServiceAuthOutput,
 } from './auth-output.js'
@@ -381,7 +382,11 @@ export class AuthVerifier {
           'BadSpaceSignature',
         )
       }
-      await this.verifySpaceSignature(ctx.req, payload.cnf!.kid)
+      try {
+        await verifyCredentialSig(ctx.req.headers, payload.cnf!.kid)
+      } catch (err) {
+        throw spaceSigAuthError(err)
+      }
 
       const revoked = await this.accountManager.isSpaceCredentialRevoked(
         space.toString(),
@@ -404,35 +409,30 @@ export class AuthVerifier {
       }
     }
 
-  private async verifySpaceSignature(
-    req: MethodAuthContext['req'],
-    keyId?: DidString,
-  ): Promise<DidString> {
-    const singleHeaders = keyId
-      ? ['authorization', 'atproto-space-audience']
-      : ['authorization']
-    for (const name of singleHeaders) {
-      if (req.headersDistinct[name]?.length !== 1) {
-        throw new AuthRequiredError(
-          `request requires exactly one "${name}" field`,
-          'BadSpaceSignature',
-        )
-      }
-    }
-    try {
-      return await verifySpaceSignature(req.headers, keyId)
-    } catch (err) {
-      if (err instanceof SpaceSignatureError) {
-        throw new AuthRequiredError(err.message, err.code)
-      }
-      throw err
-    }
-  }
-
-  /** Verify a delegation token and the signature supplying its credential key binding. */
-  public delegationTokenAuth: MethodAuthVerifier<DelegationTokenOutput> =
+  /**
+   * Verify the signature supplying a credential request's key binding, and its
+   * delegation token if it carries one. A request without one can only be granted
+   * a credential for a space that does not gate on the user; the handler decides.
+   */
+  public spaceCredentialRequestAuth: MethodAuthVerifier<SpaceCredentialRequestOutput> =
     async (ctx) => {
       setAuthHeaders(ctx.res)
+
+      let keyId: DidString
+      try {
+        keyId = await verifyCredentialRequestSig(ctx.req.headers)
+      } catch (err) {
+        throw spaceSigAuthError(err)
+      }
+
+      if (ctx.req.headers.authorization === undefined) {
+        return {
+          credentials: {
+            type: 'space_credential_request',
+            keyId,
+          },
+        }
+      }
 
       const token = bearerTokenFromReq(ctx.req)
       if (!token) {
@@ -457,8 +457,6 @@ export class AuthVerifier {
         )
       }
 
-      const keyId = await this.verifySpaceSignature(ctx.req)
-
       const unique = await this.oauthVerifier.replayManager.uniqueSpaceToken(
         'delegation',
         payload.iss,
@@ -474,10 +472,10 @@ export class AuthVerifier {
 
       return {
         credentials: {
-          type: 'delegation_token',
+          type: 'space_credential_request',
+          keyId,
           userDid: payload.iss,
           space: space.toString(),
-          keyId,
         },
       }
     }
@@ -865,6 +863,13 @@ const isDefinitelyServiceAuth = (req: IncomingMessage): boolean => {
   if (!token) return false
   const payload = jose.decodeJwt(token)
   return payload['lxm'] != null
+}
+
+const spaceSigAuthError = (err: unknown): unknown => {
+  if (err instanceof SpaceSignatureError) {
+    return new AuthRequiredError(err.message, err.code)
+  }
+  return err
 }
 
 const isSpaceCredentialAuth = (req: IncomingMessage): boolean => {

@@ -98,13 +98,21 @@ export class SimpleSpaceManager {
    * Both perimeters a credential has to clear. The app goes first because it decides
    * from the config alone, so a refused app is never disclosed to a third-party
    * managing app.
+   *
+   * `userDid` is absent when the request carries no delegation token, which only a
+   * space with a public read policy accepts. Any other space answers as though it
+   * does not exist, so a request without a token can't learn that it does.
    */
   async authorizeCredential(opts: {
     config: SimplespaceConfig
-    userDid: string
+    userDid?: string
     clientId?: string
   }): Promise<void> {
-    const { config, clientId } = opts
+    const { config, userDid, clientId } = opts
+
+    if (!userDid && config.readPolicy !== 'public') {
+      throw new InvalidRequestError('Space not found', 'SpaceNotFound')
+    }
 
     if (config.appAccessType === 'allowList') {
       const allowed: string[] = JSON.parse(config.appAllowed)
@@ -116,9 +124,11 @@ export class SimpleSpaceManager {
       }
     }
 
+    if (!userDid) return
+
     const authorized = await this.authorizeUser({
       config,
-      userDid: opts.userDid,
+      userDid,
       access: 'read',
       clientId,
     })

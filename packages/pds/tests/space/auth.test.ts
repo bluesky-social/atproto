@@ -230,7 +230,6 @@ describe('space auth', () => {
       })
 
       it.each([
-        { name: 'authorization', extra: undefined, expectedStatus: 401 },
         {
           name: 'atproto-space-audience',
           extra: undefined,
@@ -725,6 +724,16 @@ describe('space auth', () => {
           { space },
           { headers: { authorization: `Bearer ${token}` } },
         ),
+      ).rejects.toMatchObject({ error: 'BadSpaceSignature' })
+    })
+
+    it('requires proof of possession for a request without a delegation token', async () => {
+      const space = await sc.createSpace(alice, {
+        readPolicy: com.atproto.simplespace.defs.publicPolicy.build({}),
+      })
+
+      await expect(
+        alice.client.call(com.atproto.space.getSpaceCredential, { space }),
       ).rejects.toMatchObject({ error: 'BadSpaceSignature' })
     })
 

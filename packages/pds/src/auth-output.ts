@@ -70,12 +70,13 @@ export type SpaceCredentialOutput = {
   }
 }
 
-export type DelegationTokenOutput = {
+export type SpaceCredentialRequestOutput = {
   credentials: {
-    type: 'delegation_token'
-    userDid: DidString
-    space: SpaceRefString
+    type: 'space_credential_request'
     keyId: DidString
+    // Absent when the request carries no delegation token.
+    userDid?: DidString
+    space?: SpaceRefString
   }
 }
 

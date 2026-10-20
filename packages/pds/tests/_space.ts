@@ -253,6 +253,23 @@ export class SpaceClient {
     return new SpaceCredential(res.credential, key)
   }
 
+  /** Request a credential without a delegation token, as for a public space. */
+  async publicCredential(
+    space: SpaceRefString,
+    opts: { clientAttestation?: string } = {},
+  ): Promise<SpaceCredential> {
+    const key = await P256Keypair.create()
+    const res = await this.authority.getClient().call(
+      com.atproto.space.getSpaceCredential,
+      {
+        space,
+        clientAttestation: opts.clientAttestation,
+      },
+      { headers: await createSpaceSigHeaders(key, {}) },
+    )
+    return new SpaceCredential(res.credential, key)
+  }
+
   async delegationTokenFor(
     actor: Actor,
     space: SpaceRefString,
