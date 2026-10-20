@@ -1,5 +1,12 @@
 # @atproto/lex
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-installer@0.2.1
+
 ## 0.4.0
 
 ### Minor Changes

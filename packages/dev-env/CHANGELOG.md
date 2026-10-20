@@ -1,5 +1,17 @@
 # @atproto/dev-env
 
+## 0.6.26
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/bsky@0.3.4
+  - @atproto/identity@0.5.18
+  - @atproto/ozone@0.10.2
+  - @atproto/pds@0.5.43
+  - @atproto/sync@0.4.15
+  - @atproto/lex@0.4.1
+
 ## 0.6.25
 
 ### Patch Changes
