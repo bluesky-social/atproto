@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.10.2
+
+### Patch Changes
+
+- Updated dependencies [[`fc60876`](https://github.com/bluesky-social/atproto/commit/fc60876949cca1ca28e98273ecfc97a151d3ebfc)]:
+  - @atproto-labs/fetch-node@0.4.2
+  - @atproto/identity@0.5.18
+  - @atproto/lex@0.4.1
+
 ## 0.10.1
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @atproto-labs/handle-resolver-node
 
+## 0.2.13
+
+### Patch Changes
+
+- Updated dependencies [[`fc60876`](https://github.com/bluesky-social/atproto/commit/fc60876949cca1ca28e98273ecfc97a151d3ebfc)]:
+  - @atproto-labs/fetch-node@0.4.2
+
 ## 0.2.12
 
 ### Patch Changes
