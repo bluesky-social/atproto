@@ -1,5 +1,17 @@
 # @atproto/api
 
+## 0.29.0
+
+### Minor Changes
+
+- [#5662](https://github.com/bluesky-social/atproto/pull/5662) [`a2840e2`](https://github.com/bluesky-social/atproto/commit/a2840e277d5ed0d01b97fd4d2427b676e6c90bf2) Thanks [@foysalit](https://github.com/foysalit)! - Expose client-supplied expiry on strike reversals and preserve supplied expiry
+  when executing scheduled takedowns. Strike amounts and expiry policy remain
+  client-controlled.
+
+### Patch Changes
+
+- [#5693](https://github.com/bluesky-social/atproto/pull/5693) [`1a99766`](https://github.com/bluesky-social/atproto/commit/1a99766791d15cf62e8508cf2b5abc8e9bbb25aa) Thanks [@gcwill70](https://github.com/gcwill70)! - Route reports using reporter and reported-account tags. Record automated notes with the matched tag values.
+
 ## 0.28.1
 
 ### Patch Changes

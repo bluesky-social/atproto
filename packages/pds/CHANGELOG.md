@@ -1,5 +1,15 @@
 # @atproto/pds
 
+## 0.5.42
+
+### Patch Changes
+
+- [#5692](https://github.com/bluesky-social/atproto/pull/5692) [`063542d`](https://github.com/bluesky-social/atproto/commit/063542dcb0e9367004dc241bc68d29c7d0ec294c) Thanks [@devinivy](https://github.com/devinivy)! - Require privileged app passwords for all chat.bsky RPC methods.
+
+- [#5662](https://github.com/bluesky-social/atproto/pull/5662) [`a2840e2`](https://github.com/bluesky-social/atproto/commit/a2840e277d5ed0d01b97fd4d2427b676e6c90bf2) Thanks [@foysalit](https://github.com/foysalit)! - Expose client-supplied expiry on strike reversals and preserve supplied expiry
+  when executing scheduled takedowns. Strike amounts and expiry policy remain
+  client-controlled.
+
 ## 0.5.41
 
 ### Patch Changes
