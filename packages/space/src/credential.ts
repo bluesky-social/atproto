@@ -5,12 +5,11 @@ import { SpaceTokenError } from './error.js'
 
 /**
  * How a space authority is addressed when acting as the space host: the service
- * entry a delegation token and a client attestation name as their audience. Note
- * this is the *audience*, not necessarily where requests are sent — an authority
- * that publishes no such entry is still reached at its `#atproto_pds` endpoint.
+ * entry a delegation token and a client attestation name as their audience. The
+ * space host is the authority's PDS, like any other atproto account.
  */
 export const spaceHostAud = (spaceDid: string): string =>
-  `${spaceDid}#atproto_space_host`
+  `${spaceDid}#atproto_pds`
 
 // @NOTE credentials carry no audience; HTTP message signatures bind each use to an audience DID.
 export const SPACE_TOKEN_TYPES = {
@@ -22,9 +21,6 @@ export const SPACE_TOKEN_TYPES = {
     requireCnf: false,
     singleUse: true,
   },
-  // An authority that publishes a dedicated `#atproto_space` key signs with it
-  // and passes that `kid`. Absent one, the space signing key is the account's
-  // `#atproto` key, which is the case for any authority hosted on a PDS.
   credential: {
     typ: 'atproto-space-credential+jwt',
     kid: '#atproto',

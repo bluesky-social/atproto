@@ -508,8 +508,7 @@ export class AuthVerifier {
     if (!kid) {
       throw new AuthRequiredError('missing token "kid"', 'BadJwt')
     }
-    const keyId = kid.replace(/^#/, '')
-    if (keyId !== 'atproto' && keyId !== 'atproto_space') {
+    if (kid !== '#atproto') {
       throw new AuthRequiredError(
         `unsupported space token "kid": ${kid}`,
         'BadJwt',
@@ -520,11 +519,11 @@ export class AuthVerifier {
     if (!didDoc) {
       throw new AuthRequiredError(`could not resolve DID: ${iss}`, 'BadJwtIss')
     }
-    const material = getVerificationMaterial(didDoc, keyId)
+    const material = getVerificationMaterial(didDoc, 'atproto')
     const didKey = material && getDidKeyFromMultibase(material)
     if (!didKey) {
       throw new AuthRequiredError(
-        `missing or bad key (#${keyId}) in did doc: ${iss}`,
+        `missing or bad key (#atproto) in did doc: ${iss}`,
         'BadJwtIss',
       )
     }

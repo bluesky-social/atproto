@@ -12,7 +12,7 @@ import {
 const SPACE = 'at://did:example:space/space/app.bsky.group/test'
 const USER = 'did:example:alice'
 const AUTHORITY = 'did:example:space'
-const SPACE_HOST = `${AUTHORITY}#atproto_space_host`
+const SPACE_HOST = `${AUTHORITY}#atproto_pds`
 const CLIENT_ID = 'https://app.example.com/client-metadata.json'
 const KEY_ID = (await P256Keypair.create()).did() as DidString
 
@@ -91,7 +91,7 @@ describe('space tokens', () => {
       await expect(
         verifySpaceToken('delegation', jwt, {
           getSigningKey: getKey(userKey),
-          aud: 'did:example:other#atproto_space_host',
+          aud: 'did:example:other#atproto_pds',
         }),
       ).rejects.toMatchObject({ code: 'BadJwtAudience' })
     })
@@ -128,7 +128,7 @@ describe('space tokens', () => {
   })
 
   describe('space credential', () => {
-    const create = (opts?: { expiresInSec?: number; kid?: string }) =>
+    const create = (opts?: { expiresInSec?: number }) =>
       createSpaceToken(
         'credential',
         { iss: AUTHORITY, sub: SPACE, keyId: KEY_ID, ...opts },
@@ -243,17 +243,6 @@ describe('space tokens', () => {
       const getSigningKey = vi.fn(() => authorityKey.did())
       await verifySpaceToken('credential', await create(), { getSigningKey })
       expect(getSigningKey).toHaveBeenCalledWith(AUTHORITY, '#atproto', false)
-    })
-
-    it('honours a kid override for authorities with a dedicated space key', async () => {
-      const getSigningKey = vi.fn(() => authorityKey.did())
-      const jwt = await create({ kid: '#atproto_space' })
-      await verifySpaceToken('credential', jwt, { getSigningKey })
-      expect(getSigningKey).toHaveBeenCalledWith(
-        AUTHORITY,
-        '#atproto_space',
-        false,
-      )
     })
 
     it('retries with a freshly resolved key when the signing key has rotated', async () => {

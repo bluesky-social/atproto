@@ -462,16 +462,14 @@ describe('space auth', () => {
       ).rejects.toThrow(/issuer is not the space authority/)
     })
 
-    it('refuses one whose kid names a key the authority does not publish', async () => {
-      // The authority signs with its #atproto key and says so. A credential
-      // claiming #atproto_space must be verified against that key, which alice
-      // does not publish — so it cannot pass by falling back to #atproto.
+    it('refuses one whose kid is not #atproto', async () => {
+      // Signed by the right key, but a space credential must name #atproto.
       const space = await sc.createSpace(alice)
       const aliceKeypair = await network.pds.ctx.actorStore.keypair(alice.did)
       const mismatched = await sc.forgedCredential((keyId) =>
         createSpaceToken(
           'credential',
-          { iss: alice.did, sub: space, kid: '#atproto_space', keyId },
+          { iss: alice.did, sub: space, kid: '#other_key', keyId },
           aliceKeypair,
         ),
       )
@@ -483,7 +481,7 @@ describe('space auth', () => {
             space,
             repo: alice.did,
           }),
-      ).rejects.toThrow(/missing or bad key/)
+      ).rejects.toThrow(/unsupported space token "kid"/)
     })
 
     it('refuses one for a revoked member', async () => {

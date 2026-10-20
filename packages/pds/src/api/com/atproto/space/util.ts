@@ -168,14 +168,6 @@ export async function resolveServiceEndpoint(
     return null
   })
   if (!didDoc) return undefined
-  if (fragment === 'atproto_space_host') {
-    const dedicated = didDoc.service?.some(
-      (entry) => entry.id === '#atproto_space_host' || entry.id === service,
-    )
-    return dedicated
-      ? getServiceEndpoint(didDoc, { id: '#atproto_space_host' })
-      : getPdsEndpoint(didDoc)
-  }
   return fragment
     ? getServiceEndpoint(didDoc, { id: `#${fragment}` })
     : getPdsEndpoint(didDoc)
