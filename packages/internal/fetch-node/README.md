@@ -1,5 +1,32 @@
 # Node.js fetch utilities
 
+Fetch helpers for Node.js 22+ that help protect services when fetching URLs supplied by users.
+
+## Usage
+
+Create a fetch wrapper once and reuse it:
+
+```js
+import { safeFetchWrap } from '@atproto-labs/fetch-node'
+
+const safeFetch = safeFetchWrap()
+const response = await safeFetch('https://api.github.com/repos/nodejs/node', {
+  redirect: 'follow',
+})
+const data = await response.json()
+```
+
+By default, `safeFetchWrap` allows HTTPS on port 443, blocks private and reserved IP addresses and a list of forbidden domains, sets a 10-second timeout, and limits response bodies to 512 KiB. Destination checks also apply to redirects, and IP addresses are checked when connecting.
+
+Pass `redirect` explicitly on each call: use `'follow'`, `'manual'`, or `'error'`. Configure the wrapper with options such as `timeout` (milliseconds), `responseMaxSize` (bytes), and `forbiddenDomainNames`. If you supply a custom `fetch`, it must honor Undici's `dispatcher` option; do not pass a separate dispatcher on individual calls.
+
+## Other helpers
+
+- `unicastFetchWrap()` restricts destinations to public IP addresses, including redirects, without adding the HTTPS, timeout, or response-size rules.
+- `safeDispatchFetchWrap({ checkUrl, lookup })` lets you supply your own destination checks. `checkUrl` receives the origin of each request, including redirects, and returns a reason string to block it or `undefined` to allow it.
+- `unicastLookup` checks DNS results before connecting. `isUnicastIpHostname(hostname)` checks a literal IP address and returns `undefined` for a domain name.
+- This package also exports the helpers from `@atproto-labs/fetch` for working with requests, responses, errors, and fetch wrappers.
+
 ## Temporary eMudhra TLS mitigation
 
 `emudhra-preload` blocks HTTPS connections that use any of the eight intermediate keys affected by the [eMudhra compromise](https://emudhra.we-have-a-problem.com/), as listed in [nodejs/node#66871](https://github.com/nodejs/node/pull/66871). It keeps the existing trusted roots, so other intermediates under those roots still work. Remove it once you deploy Node.js with the fix.
