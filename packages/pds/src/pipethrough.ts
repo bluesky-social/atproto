@@ -637,18 +637,30 @@ export class LxmSet {
   }
 }
 
+/** Matches methods within a namespace, case-insensitively. */
+export class LxmPrefix {
+  private readonly prefix: string
+  constructor(namespace: string) {
+    this.prefix = `${normalizeLxm(namespace)}.`
+  }
+  has(lxm: string): boolean {
+    return normalizeLxm(lxm).startsWith(this.prefix)
+  }
+}
+
 export function normalizeLxm(lxm: string) {
   return lxm.toLowerCase()
 }
 
 /** Whether a method requires full access or a privileged app password. */
 export function isPrivilegedMethod(lxm: string): boolean {
-  const normalized = normalizeLxm(lxm)
-  return (
-    normalized.startsWith('chat.bsky.') ||
-    normalized === normalizeLxm(com.atproto.server.createAccount.$lxm)
-  )
+  return CHAT_PRIVILEGED_METHODS.has(lxm) || LOCAL_PRIVILEGED_METHODS.has(lxm)
 }
+
+const CHAT_PRIVILEGED_METHODS = new LxmPrefix('chat.bsky')
+const LOCAL_PRIVILEGED_METHODS = new LxmSet([
+  com.atproto.server.createAccount.$lxm,
+])
 
 /** Whether a method is reserved for direct account-management requests. */
 export function isProtectedMethod(lxm: string): boolean {
