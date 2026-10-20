@@ -9,7 +9,6 @@ import {
   resolveNotifyTarget,
   toSpaceRef,
 } from '../api/com/atproto/space/util.js'
-import type { BackgroundQueue } from '../background.js'
 import { com } from '../lexicons/index.js'
 import { spaceLogger } from '../logger.js'
 import { lexAppAccessToDb, lexPolicyToDb, toLexConfig } from './config.js'
@@ -22,7 +21,6 @@ export class SimpleSpaceManager {
   constructor(
     public actorStore: ActorStore,
     public idResolver: IdResolver,
-    private backgroundQueue: BackgroundQueue,
   ) {}
 
   async createSpace(
@@ -177,48 +175,18 @@ export class SimpleSpaceManager {
    *
    * The space row stays as a tombstone so getSpaceCredential keeps answering
    * SpaceDeleted, which is how a syncer that missed the notification finds out.
+   *
+   * Returns the syncers registered at the time of deletion, which are owed a
+   * notifySpaceDeleted.
    */
-  async deleteSpace(space: SpaceRefString): Promise<void> {
+  async deleteSpace(
+    space: SpaceRefString,
+  ): Promise<{ serviceDid: string; expiresAt: string }[]> {
     const { spaceDid } = toSpaceRef(space)
-
-    const services = await this.actorStore.transact(
-      spaceDid,
-      async (actorTxn) => {
-        const services = await actorTxn.space.getCredentialRecipients(space)
-        await actorTxn.space.deleteSpace(space)
-        return services
-      },
-    )
-
-    const lxm = com.atproto.space.notifySpaceDeleted.$lxm
-    this.backgroundQueue.add(async () => {
-      for (const { serviceDid } of services) {
-        // Best effort: a syncer that misses this learns the space is gone from
-        // SpaceDeleted on its next credential renewal.
-        try {
-          const target = await resolveNotifyTarget(this, {
-            iss: spaceDid,
-            service: serviceDid,
-            lxm,
-          })
-          if (!target) {
-            spaceLogger.warn(
-              { space, service: serviceDid, lxm },
-              'could not resolve recipient',
-            )
-            continue
-          }
-          await xrpc(target.endpoint, com.atproto.space.notifySpaceDeleted, {
-            headers: target.headers,
-            body: { space },
-          })
-        } catch (err) {
-          spaceLogger.warn(
-            { err, space, service: serviceDid, lxm },
-            'notify failed',
-          )
-        }
-      }
+    return this.actorStore.transact(spaceDid, async (actorTxn) => {
+      const recipients = await actorTxn.space.getCredentialRecipients(space)
+      await actorTxn.space.deleteSpace(space)
+      return recipients
     })
   }
 
