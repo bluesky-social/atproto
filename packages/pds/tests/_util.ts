@@ -1,10 +1,35 @@
 import { type RequestListener, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
+import type * as plc from '@did-plc/lib'
 import { createHttpTerminator } from 'http-terminator'
 import { type ToolsOzoneModerationDefs, lexToJson } from '@atproto/api'
+import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import type { Account, SeedClient } from '@atproto/dev-env'
 import { isCidString } from '@atproto/lex'
 import { isCid, isPlainObject } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
+
+// Creates an account, then transfers its did:plc rotation key away from the
+// server to a freshly-generated one the caller holds - simulating a
+// self-custodied account for tests.
+export const createSelfCustodiedAccount = async (
+  sc: SeedClient,
+  ctx: { plcClient: plc.Client; plcRotationKey: Keypair },
+  name: string,
+): Promise<{ account: Account; key: Secp256k1Keypair }> => {
+  const account = await sc.createAccount(name, {
+    handle: `${name}.test`,
+    email: `${name}@test.com`,
+    password: `${name}-pass`,
+  })
+  const key = await Secp256k1Keypair.create()
+  await ctx.plcClient.updateRotationKeys(account.did, ctx.plcRotationKey, [
+    key.did(),
+    ctx.plcRotationKey.did(),
+  ])
+  await ctx.plcClient.updateRotationKeys(account.did, key, [key.did()])
+  return { account, key }
+}
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing

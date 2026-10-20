@@ -1,6 +1,7 @@
 import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../../../context.js'
 import { com } from '../../../../lexicons/index.js'
+import { serverRotationKeyDid } from '../server/util.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.identity.getRecommendedDidCredentials, {
@@ -22,9 +23,7 @@ export default function (server: Server, ctx: AppContext) {
         ? [`at://${account.handle}`]
         : undefined
 
-      const plcRotationKey =
-        ctx.cfg.entryway?.plcRotationKey ?? ctx.plcRotationKey.did()
-      const rotationKeys = [plcRotationKey]
+      const rotationKeys = [serverRotationKeyDid(ctx)]
       if (ctx.cfg.identity.recoveryDidKey) {
         rotationKeys.unshift(ctx.cfg.identity.recoveryDidKey)
       }
