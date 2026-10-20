@@ -2,6 +2,7 @@ import type { Server } from '@atproto/xrpc-server'
 import type { AppContext } from '../../context.js'
 import { tools } from '../../lexicons/index.js'
 import { queryReports } from '../../mod-service/report.js'
+import { QueueAccess } from '../../queue/access.js'
 import { buildReportView, hydrateReportInfo } from '../../report/views.js'
 import { getPdsAccountInfos } from '../util.js'
 
@@ -10,6 +11,10 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params, auth, req }) => {
       const db = ctx.db
+      if (params.queueId != null && params.queueId !== -1) {
+        const access = await QueueAccess.forActor(db, auth.credentials)
+        access.assertQueue(params.queueId)
+      }
       const modService = ctx.modService(db)
       const labelers = ctx.reqLabelers(req)
 
