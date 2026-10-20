@@ -264,6 +264,7 @@ export type Bookmarks = HydrationMap<DidString, HydrationMap<string, Bookmark>>
 export type HydratorConfig = {
   debugFieldAllowedDids: Set<string>
   featureGatesClient: FeatureGatesClient
+  needsReviewTagSources?: readonly DidString[]
 }
 
 export class Hydrator {
@@ -285,7 +286,7 @@ export class Hydrator {
     this.external = new ExternalHydrator(dataplane)
     this.feed = new FeedHydrator(dataplane)
     this.graph = new GraphHydrator(dataplane)
-    this.label = new LabelHydrator(dataplane)
+    this.label = new LabelHydrator(dataplane, config.needsReviewTagSources)
     this.serviceLabelers = new Set(serviceLabelers)
   }
 
